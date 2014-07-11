@@ -111,7 +111,7 @@ static inline string managementPath(const char *file_path, const char *file_name
             tPath, PATH_BUF_SIZE);
 	assert(length);
     if (length == 0)
-        throw bad_alloc();
+        throw bad_alloc(); // BUG: there are other errors possible beside out of memory
 
 	CreateDirectory(tPath, NULL);
 	DWORD error = GetLastError();

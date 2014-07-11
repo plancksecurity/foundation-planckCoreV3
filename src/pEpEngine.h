@@ -578,6 +578,21 @@ DYNAMIC_API PEP_STATUS send_key(PEP_SESSION session, const char *pattern);
 
 DYNAMIC_API void pEp_free(void *p);
 
+
+// get_trust() - get the trust level a key has for a person
+//
+//  parameters:
+//      session (in)            session handle
+//      identity (inout)        user_id and fpr to check as UTF-8 strings (in)
+//                              user_id and comm_type as result (out)
+//
+//  this function modifies the given identity struct; the struct remains in the
+//  ownership of the caller
+//  if the trust level cannot be determined identity->comm_type is set to PEP_ct_unknown
+
+DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity);
+
+
 #ifdef __cplusplus
 }
 #endif

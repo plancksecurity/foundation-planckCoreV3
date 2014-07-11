@@ -8,10 +8,6 @@
 #include "../src/pEpEngine.h"
 #include "../src/keymanagement.h"
 
-#ifdef _WIN32
-#define strdup _strdup
-#endif
-
 using namespace std;
 
 int main(int argc, char* argv[])
@@ -165,10 +161,10 @@ int main(int argc, char* argv[])
 	pEp_identity *identity;
 
     identity = new_identity(
-            strdup("leon.schumacher@digitalekho.com"),
-            strdup("8BD08954C74D830EEFFB5DEB2682A17F7C87F73D"),
-            strdup("23"),
-            strdup("Leon Schumacher")
+            "leon.schumacher@digitalekho.com",
+            "8BD08954C74D830EEFFB5DEB2682A17F7C87F73D",
+            "23",
+            "Leon Schumacher"
         );
 	identity->comm_type = PEP_ct_pEp;
 
@@ -179,7 +175,14 @@ int main(int argc, char* argv[])
 	get_identity(session, "leon.schumacher@digitalekho.com", &identity);
 	assert(identity);
 	cout << "set: " << identity->address << ", " << identity->fpr << ", " << identity->user_id << ", " << identity->username << "\n";
+
+    PEP_STATUS get_trust_result = get_trust(session, identity);
+    assert(get_trust_result == PEP_STATUS_OK);
+    cout << "trust of " << identity->user_id << " is " << identity->comm_type << "\n";
+
     free_identity(identity);
+
+    // testing key management
 
     stringlist_t *addresses = new_stringlist("leon.schumacher@digitalekho.com");
     PEP_comm_type comm_type;
@@ -200,10 +203,10 @@ int main(int argc, char* argv[])
 
     cout << "\ngenerating key for testuser\n";
     identity = new_identity(
-            strdup("testuser@pibit.ch"),
+            "testuser@pibit.ch",
             NULL,
-            strdup("423"),
-            strdup("Alfred E. Neuman")
+            "423",
+            "Alfred E. Neuman"
         );
     assert(identity);
     PEP_STATUS generate_status = generate_keypair(session, identity);

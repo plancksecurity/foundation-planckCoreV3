@@ -130,6 +130,7 @@ typedef struct {
 	sqlite3_stmt *set_pgp_keypair;
 	sqlite3_stmt *set_identity;
 	sqlite3_stmt *set_trust;
+    sqlite3_stmt *get_trust;
 
 	gpgme_check_version_t gpgme_check;
 	gpgme_set_locale_t gpgme_set_locale;
@@ -214,6 +215,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 	const char *sql_set_pgp_keypair;
 	const char *sql_set_identity;
 	const char *sql_set_trust;
+    const char *sql_get_trust;
+
     bool bResult;
 
 	assert(sqlite3_threadsafe());
@@ -571,6 +574,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     sql_set_trust = "insert or replace into trust (user_id, pgp_keypair_fpr, comm_type)"
                         "values (?1, ?2, ?3) ;";
 	
+    sql_get_trust = "select user_id, comm_type from trust where user_id = ?1 and pgp_keypair_fpr = ?2 ;";
+
     int_result = sqlite3_prepare_v2(_session->db, sql_set_person,
             strlen(sql_set_person), &_session->set_person, NULL);
     assert(int_result == SQLITE_OK);
@@ -583,6 +588,9 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     int_result = sqlite3_prepare_v2(_session->db, sql_set_trust,
             strlen(sql_set_trust), &_session->set_trust, NULL);
 	assert(int_result == SQLITE_OK);
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_trust,
+            strlen(sql_get_trust), &_session->get_trust, NULL);
+    assert(int_result == SQLITE_OK);
 
 	sqlite3_reset(_session->log);
     sqlite3_bind_text(_session->log, 1, "init", -1, SQLITE_STATIC);
@@ -1354,6 +1362,7 @@ DYNAMIC_API PEP_STATUS get_identity(
 
 	assert(session);
 	assert(address);
+    assert(address[0]);
 
     sqlite3_reset(_session->get_identity);
     sqlite3_bind_text(_session->get_identity, 1, address, -1, SQLITE_STATIC);
@@ -1853,6 +1862,9 @@ PEP_STATUS send_key(PEP_SESSION session, const char *pattern)
 	pEpSession *_session = (pEpSession *) session;
 	gpgme_error_t gpgme_error;
 
+    assert(session);
+    assert(pattern);
+
     gpgme_error = _session->gpgme_op_export(_session->ctx, pattern,
             GPGME_EXPORT_MODE_EXTERN, NULL);
     assert(gpgme_error != GPG_ERR_INV_VALUE);
@@ -1867,3 +1879,46 @@ void pEp_free(void *p)
     free(p);
 }
 
+DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
+{
+    pEpSession *_session = (pEpSession *) session;
+    PEP_STATUS status = PEP_STATUS_OK;
+    int result;
+
+    assert(session);
+    assert(identity);
+    assert(identity->user_id);
+    assert(identity->user_id[0]);
+    assert(identity->fpr);
+    assert(identity->fpr[0]);
+
+    identity->comm_type = PEP_ct_unknown;
+
+    sqlite3_reset(_session->get_trust);
+    sqlite3_bind_text(_session->get_trust, 1, identity->user_id, -1, SQLITE_STATIC);
+    sqlite3_bind_text(_session->get_trust, 2, identity->fpr, -1, SQLITE_STATIC);
+
+    result = sqlite3_step(_session->get_trust);
+    switch (result) {
+    case SQLITE_ROW: {
+        const char * user_id = (const char *) sqlite3_column_text(_session->get_trust, 1);
+        int comm_type = (PEP_comm_type) sqlite3_column_int(_session->get_trust, 2);
+
+        if (strcmp(user_id, identity->user_id) != 0) {
+            free(identity->user_id);
+            identity->user_id = strdup(user_id);
+            assert(identity->user_id);
+            if (identity->user_id == NULL)
+                return PEP_OUT_OF_MEMORY;
+        }
+        identity->comm_type = comm_type;
+        break;
+    }
+ 
+    default:
+        status = PEP_CANNOT_FIND_IDENTITY;
+    }
+
+    sqlite3_reset(_session->get_trust);
+    return status;
+}

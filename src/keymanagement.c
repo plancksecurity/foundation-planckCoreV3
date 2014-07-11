@@ -17,13 +17,16 @@
 #define MIN(A, B) ((B) > (A) ? (A) : (B))
 #endif
 
+#ifndef EMPTY
+#define EMPTY(STR) ((STR == NULL) || (STR)[0] == 0)
+#endif
+
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
     )
 {
     pEp_identity *stored_identity;
     PEP_STATUS status;
-    bool bDirty;
 
     assert(session);
     assert(identity);
@@ -35,25 +38,105 @@ DYNAMIC_API PEP_STATUS update_identity(
         return PEP_OUT_OF_MEMORY;
 
     if (stored_identity) {
-        if (identity->username == NULL || identity->username[0] == 0) {
+        if (EMPTY(identity->fpr)) {
+            identity->comm_type = PEP_ct_unknown;
+
+            stringlist_t *keylist;
+
+            status = find_keys(session, stored_identity->fpr, &keylist);
+            assert(status != PEP_OUT_OF_MEMORY);
+            if (status == PEP_OUT_OF_MEMORY)
+                return PEP_OUT_OF_MEMORY;
+
+            if (keylist && keylist->value) {
+                identity->comm_type = stored_identity->comm_type;
+            }
+
+            free_stringlist(keylist);
+
+            identity->fpr = strdup(stored_identity->fpr);
+            assert(identity->fpr);
+            if (identity->fpr == NULL)
+                return PEP_OUT_OF_MEMORY;
+            identity->fpr_size = stored_identity->address_size;
+        }
+        else /* !EMPTY(identity->fpr) */ {
+            stringlist_t *keylist;
+
+            status = find_keys(session, identity->fpr, &keylist);
+            assert(status != PEP_OUT_OF_MEMORY);
+            if (status == PEP_OUT_OF_MEMORY)
+                return PEP_OUT_OF_MEMORY;
+
+            if (keylist && keylist->value) {
+                if (identity->comm_type == PEP_ct_unknown) {
+                    if (strcmp(identity->fpr, stored_identity->fpr) == 0) {
+                        identity->comm_type = stored_identity->comm_type;
+                    }
+                    else {
+                        status = get_trust(session, identity);
+                        assert(status != PEP_OUT_OF_MEMORY);
+                        if (status == PEP_OUT_OF_MEMORY)
+                            return PEP_OUT_OF_MEMORY;
+                    }
+                }
+            }
+            else
+                identity->comm_type = PEP_ct_unknown;
+
+            free_stringlist(keylist);
+        }
+
+        if (EMPTY(identity->username)) {
             free(identity->username);
             identity->username = strdup(stored_identity->username);
+            assert(identity->username);
+            if (identity->username == NULL)
+                return PEP_OUT_OF_MEMORY;
+            identity->username_size = stored_identity->username_size;
         }
-        if (identity->user_id == NULL || identity->user_id[0] == 0) {
+
+        if (EMPTY(identity->user_id)) {
             free(identity->user_id);
             identity->user_id = strdup(stored_identity->user_id);
+            assert(identity->user_id);
+            if (identity->user_id == NULL)
+                return PEP_OUT_OF_MEMORY;
+            identity->user_id_size = stored_identity->user_id_size;
         }
-        if (identity->fpr != NULL && identity->fpr[0] != 0) {
-            if (strcmp(identity->fpr, stored_identity->fpr) != 0)
-                identity->comm_type = PEP_ct_unknown;
+
+        if (identity->lang[0] == 0) {
+            identity->lang[0] = stored_identity->lang[0];
+            identity->lang[1] = stored_identity->lang[1];
+            identity->lang[2] = 0;
         }
     }
-    else
-        identity->comm_type = PEP_ct_unknown;
+    else /* stored_identity == NULL */ {
+        if (identity->fpr && identity->user_id) {
+            if (identity->comm_type == PEP_ct_unknown) {
+                status = get_trust(session, identity);
+                assert(status != PEP_OUT_OF_MEMORY);
+                if (status == PEP_OUT_OF_MEMORY)
+                    return PEP_OUT_OF_MEMORY;
+            }
+            if (identity->comm_type != PEP_ct_unknown && EMPTY(identity->username)) {
+                free(identity->username);
+                identity->username = strdup("anonymous");
+                identity->username_size = 10;
+            }
+        }
+        else
+            identity->comm_type = PEP_ct_unknown;
+    }
 
-    status = set_identity(session, identity);
+    status = PEP_STATUS_OK;
 
-    return PEP_STATUS_OK;
+    if (identity->comm_type != PEP_ct_unknown) {
+        status = set_identity(session, identity);
+        assert(status == PEP_STATUS_OK);
+    }
+
+    return status;
 }
 
 DYNAMIC_API PEP_STATUS outgoing_comm_type(
@@ -62,7 +145,6 @@ DYNAMIC_API PEP_STATUS outgoing_comm_type(
         PEP_comm_type *comm_type
     )
 {
-    int i;
     const stringlist_t *l;
 
     assert(session);
@@ -167,6 +249,7 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     free_stringlist(keylist);
     if (identity->fpr == NULL)
         return PEP_OUT_OF_MEMORY;
+    identity->fpr_size = strlen(identity->fpr);
 
     status = set_identity(session, identity);
     assert(status == PEP_STATUS_OK);
