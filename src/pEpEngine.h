@@ -166,7 +166,7 @@ DYNAMIC_API void free_stringlist(stringlist_t *stringlist);
 //		csize (in)		size of cipher text
 //		ptext (out)		pointer to internal buffer with plain text
 //		psize (out)		size of plain text
-//		keylist (out)	array of key ids which where used to encrypt or NULL on
+//		keylist (out)	list of key ids which where used to encrypt or NULL on
 //		                error
 //
 //	return value:
@@ -197,7 +197,7 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
 //      size (in)       size of text
 //      signature (in)  signature text
 //      sig_size (in)   size of signature
-//		keylist (out)	array of key ids which where used to encrypt or NULL on
+//		keylist (out)	list of key ids which where used to encrypt or NULL on
 //		                error
 //
 //  return value:
@@ -215,7 +215,7 @@ DYNAMIC_API PEP_STATUS verify_text(
 //
 //	parameters:
 //		session (in)	session handle
-//		keylist (in)	array of key ids to encrypt with as C strings
+//		keylist (in)	list of key ids to encrypt with as C strings
 //		ptext (in)		plain text to decrypt and/or verify
 //		psize (in)		size of plain text
 //		ctext (out)		pointer to internal buffer with cipher text
