@@ -51,4 +51,4 @@ elif len(_words) < 65536:
 assert len(_words) == 65536, "lenght is {}".format(len(_words))
 
 for i, w in enumerate(_words):
-    print("{l},{i},{w}".format(l=args.lang[:2], i=i, w=w))
+    print("{l},{i},{w},0".format(l=args.lang[:2], i=i, w=w))
