@@ -127,7 +127,9 @@ int main(int argc, char* argv[])
     assert(verify_result == PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
     free_stringlist(keylist);
 
-    keylist = new_stringlist("FA7261F7");
+    keylist = new_stringlist("49422235FC99585B891C66530C7B109BFA7261F7");
+    // stringlist_add(keylist, "C6FAA231A2B43252B9526D119550C6B6B8B0FCD6");
+    stringlist_add(keylist, "5DC8CAC595EDAD6598DD4732DD55BF29DF9B1541");
 
     cout << "\ncalling encrypt_and_sign()\n";
     PEP_STATUS encrypt_result = encrypt_and_sign(session, keylist, plain.c_str(), plain.length(), &buf_text, &buf_size);
@@ -258,6 +260,11 @@ int main(int argc, char* argv[])
     PEP_STATUS send_key_status = send_key(session, "vb@ulm.ccc.de");
     assert(recv_key_status == PEP_STATUS_OK);
 
+    PEP_comm_type tcomm_type;
+    PEP_STATUS tstatus = get_key_rating(session, "49422235FC99585B891C66530C7B109BFA7261F7", &tcomm_type);
+    assert(tstatus == PEP_STATUS_OK);
+    assert(tcomm_type == PEP_ct_OpenPGP_unconfirmed);
+    
 	cout << "\ncalling release()\n";
 	release(session);
 	return 0;

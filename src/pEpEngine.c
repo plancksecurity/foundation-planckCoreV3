@@ -1922,3 +1922,100 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
     sqlite3_reset(_session->get_trust);
     return status;
 }
+
+DYNAMIC_API PEP_STATUS get_key_rating(
+    PEP_SESSION session,
+    const char *fpr,
+    PEP_comm_type *comm_type
+    )
+{
+    pEpSession *_session = (pEpSession *) session;
+    PEP_STATUS status = PEP_STATUS_OK;
+    gpgme_error_t gpgme_error;
+    gpgme_key_t key;
+
+    assert(session);
+    assert(fpr);
+    assert(comm_type);
+    
+    *comm_type = PEP_ct_unknown;
+
+    gpgme_error = _session->gpgme_op_keylist_start(_session->ctx, fpr, 0);
+    switch (gpgme_error) {
+    case GPG_ERR_NO_ERROR:
+        break;
+    case GPG_ERR_INV_VALUE:
+        assert(0);
+        return PEP_UNKNOWN_ERROR;
+    default:
+        return PEP_GET_KEY_FAILED;
+    };
+
+    gpgme_error = _session->gpgme_op_keylist_next(_session->ctx, &key);
+    assert(gpgme_error != GPG_ERR_INV_VALUE);
+
+    switch (key->protocol) {
+    case GPGME_PROTOCOL_OpenPGP:
+    case GPGME_PROTOCOL_DEFAULT:
+        *comm_type = PEP_ct_OpenPGP_unconfirmed;
+        break;
+    case GPGME_PROTOCOL_CMS:
+        *comm_type = PEP_ct_CMS_unconfirmed;
+        break;
+    default:
+        *comm_type = PEP_ct_unknown;
+        _session->gpgme_op_keylist_end(_session->ctx);
+        return PEP_STATUS_OK;
+    }
+
+    switch (gpgme_error) {
+    case GPG_ERR_EOF:
+        break;
+    case GPG_ERR_NO_ERROR:
+        assert(key);
+        assert(key->subkeys);
+        for (gpgme_subkey_t sk = key->subkeys; sk != NULL; sk = sk->next) {
+            if (sk->length < 1024)
+                *comm_type = PEP_ct_key_too_short;
+            else if (
+                (
+                       (sk->pubkey_algo == GPGME_PK_RSA)
+                    || (sk->pubkey_algo == GPGME_PK_RSA_E)
+                    || (sk->pubkey_algo == GPGME_PK_RSA_S)
+                )
+                && sk->length == 1024
+            )
+                *comm_type = PEP_ct_OpenPGP_1024_RSA_unconfirmed;
+
+            if (sk->invalid) {
+                *comm_type = PEP_ct_key_b0rken;
+                break;
+            }
+            if (sk->expired) {
+                *comm_type = PEP_ct_key_expired;
+                break;
+            }
+            if (sk->revoked) {
+                *comm_type = PEP_ct_key_revoked;
+                break;
+            }
+        }
+        break;
+    case GPG_ERR_ENOMEM:
+        _session->gpgme_op_keylist_end(_session->ctx);
+        return PEP_OUT_OF_MEMORY;
+    default:
+        // BUG: GPGME returns an illegal value instead of GPG_ERR_EOF after
+        // reading first key
+#ifndef NDEBUG
+        fprintf(stderr, "warning: unknown result 0x%x of"
+            " gpgme_op_keylist_next()\n", gpgme_error);
+#endif
+        gpgme_error = GPG_ERR_EOF;
+        break;
+    };
+
+    _session->gpgme_op_keylist_end(_session->ctx);
+
+    return status;
+}

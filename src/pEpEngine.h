@@ -321,32 +321,45 @@ DYNAMIC_API PEP_STATUS safewords(
 
 
 typedef enum _PEP_comm_type {
-	PEP_ct_unknown = 0,
+    PEP_ct_unknown = 0,
 
-	// range 0x01 to 0x0f: no encryption or nothing reasonable
+    // range 0x01 to 0x09: no encryption, 0x0a to 0x0e: nothing reasonable
 
-	PEP_ct_no_encryption = 0x01,                // generic
-	PEP_ct_key_too_short = 0x02,                // key too short to talk
-                                                // about encryption
+    PEP_ct_no_encryption = 0x01,                // generic
+    PEP_ct_no_encrypted_channel = 0x02,
+    PEP_ct_key_not_found = 0x03,
+    PEP_ct_key_expired = 0x04,
+    PEP_ct_key_revoked = 0x05,
+    PEP_ct_key_b0rken = 0x06,
+    PEP_ct_my_key_not_included = 0x09,
+
+    PEP_ct_security_by_obscurity = 0x0a,
+    PEP_ct_b0rken_crypto = 0x0b,
+    PEP_ct_key_too_short = 0x0e,
+
     PEP_ct_compromized = 0x0f,                  // known compromized connection
 
-	// range 0x10 to 0x3f: unconfirmed encryption
+    // range 0x10 to 0x3f: unconfirmed encryption
 
     PEP_ct_unconfirmed_encryption = 0x10,       // generic
-	PEP_ct_OpenPGP_1024_RSA_unconfirmed = 0x11,	// RSA 1024 is weak
-	PEP_ct_OpenPGP_unconfirmed = 0x3f,          // key at least 2048 bit RSA
-                                                // or 1024 bit DSA
+    PEP_ct_OpenPGP_1024_RSA_unconfirmed = 0x11,	// RSA 1024 is weak
+    PEP_ct_CMS_unconfirmed = 0x30,
+    PEP_ct_OpenPGP_unconfirmed = 0x3f,          // key at least 2048 bit RSA
+    // or 1024 bit DSA
 
-	// range 0x40 to 0x7f: unconfirmed encryption and anonymization
+    // range 0x40 to 0x7f: unconfirmed encryption and anonymization
 
     PEP_ct_unconfirmed_enc_anon = 0x40,         // generic
-	PEP_ct_PEP_unconfirmed = 0x7f,
+    PEP_ct_PEP_unconfirmed = 0x7f,
 
-	// range 0x80 to 0x8f: reserved
-	// range 0x90 to 0xbf: confirmed encryption
+    PEP_ct_confirmed = 0x80,                    // this bit decides if trust is confirmed
+
+    // range 0x81 to 0x8f: reserved
+    // range 0x90 to 0xbf: confirmed encryption
 
     PEP_ct_confirmed_encryption = 0x90,         // generic
 	PEP_ct_OpenPGP_1024_RSA = 0x91, // RSA 1024 is weak
+    PEP_ct_CMS = 0xb0,
 	PEP_ct_OpenPGP = 0xbf, // key at least 2048 bit RSA or 1024 bit DSA
 
     // range 0xc0 to 0xff: confirmed encryption and anonymization
@@ -591,6 +604,20 @@ DYNAMIC_API void pEp_free(void *p);
 //  if the trust level cannot be determined identity->comm_type is set to PEP_ct_unknown
 
 DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity);
+
+
+// get_key_rating() - get the rating a bare key has
+//
+//  parameters:
+//      session (in)            session handle
+//      fpr (in)                unique identifyer for key as UTF-8 string
+//      comm_type (out)         key rating
+
+DYNAMIC_API PEP_STATUS get_key_rating(
+    PEP_SESSION session,
+    const char *fpr,
+    PEP_comm_type *comm_type
+    );
 
 
 #ifdef __cplusplus
