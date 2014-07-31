@@ -9,10 +9,10 @@ extern "C" {
 //      identity (inout)    identity information of communication partner
 //
 //  caveat:
-//      if this function returns PEP_ct_unknown in identity->comm_type, the
-//      caller must insert the identity into the asynchronous management
-//      implementation, so retrieve_next_identity() will return this identity
-//      later
+//      if this function returns PEP_ct_unknown or PEP_ct_key_expired in
+//      identity->comm_type, the caller must insert the identity into the
+//      asynchronous management implementation, so retrieve_next_identity()
+//      will return this identity later
 //      at least identity->address must be a valid UTF-8 string as input
 
 DYNAMIC_API PEP_STATUS update_identity(

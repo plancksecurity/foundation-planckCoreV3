@@ -37,23 +37,14 @@ DYNAMIC_API PEP_STATUS update_identity(
     if (status == PEP_OUT_OF_MEMORY)
         return PEP_OUT_OF_MEMORY;
 
+    PEP_comm_type _comm_type_key;
+    status = get_key_rating(session, stored_identity->fpr, &_comm_type_key);
+    assert(status != PEP_OUT_OF_MEMORY);
+    if (status == PEP_OUT_OF_MEMORY)
+        return PEP_OUT_OF_MEMORY;
+
     if (stored_identity) {
         if (EMPTY(identity->fpr)) {
-            identity->comm_type = PEP_ct_unknown;
-
-            stringlist_t *keylist;
-
-            status = find_keys(session, stored_identity->fpr, &keylist);
-            assert(status != PEP_OUT_OF_MEMORY);
-            if (status == PEP_OUT_OF_MEMORY)
-                return PEP_OUT_OF_MEMORY;
-
-            if (keylist && keylist->value) {
-                identity->comm_type = stored_identity->comm_type;
-            }
-
-            free_stringlist(keylist);
-
             identity->fpr = strdup(stored_identity->fpr);
             assert(identity->fpr);
             if (identity->fpr == NULL)

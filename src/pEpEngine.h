@@ -612,6 +612,9 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity);
 //      session (in)            session handle
 //      fpr (in)                unique identifyer for key as UTF-8 string
 //      comm_type (out)         key rating
+//
+//  if an error occurs, *comm_type is set to PEP_ct_unknown and an error status
+//  is returned
 
 DYNAMIC_API PEP_STATUS get_key_rating(
     PEP_SESSION session,

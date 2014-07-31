@@ -2003,6 +2003,7 @@ DYNAMIC_API PEP_STATUS get_key_rating(
         break;
     case GPG_ERR_ENOMEM:
         _session->gpgme_op_keylist_end(_session->ctx);
+        *comm_type = PEP_ct_unknown;
         return PEP_OUT_OF_MEMORY;
     default:
         // BUG: GPGME returns an illegal value instead of GPG_ERR_EOF after
