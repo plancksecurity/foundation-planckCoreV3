@@ -599,9 +599,10 @@ DYNAMIC_API void pEp_free(void *p);
 //      identity (inout)        user_id and fpr to check as UTF-8 strings (in)
 //                              user_id and comm_type as result (out)
 //
-//  this function modifies the given identity struct; the struct remains in the
-//  ownership of the caller
-//  if the trust level cannot be determined identity->comm_type is set to PEP_ct_unknown
+//  this function modifies the given identity struct; the struct remains in
+// the ownership of the caller
+//  if the trust level cannot be determined identity->comm_type is set
+//  to PEP_ct_unknown
 
 DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity);
 
@@ -613,13 +614,13 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity);
 //      fpr (in)                unique identifyer for key as UTF-8 string
 //      comm_type (out)         key rating
 //
-//  if an error occurs, *comm_type is set to PEP_ct_unknown and an error status
+//  if an error occurs, *comm_type is set to PEP_ct_unknown and an error
 //  is returned
 
 DYNAMIC_API PEP_STATUS get_key_rating(
-    PEP_SESSION session,
-    const char *fpr,
-    PEP_comm_type *comm_type
+        PEP_SESSION session,
+        const char *fpr,
+        PEP_comm_type *comm_type
     );
 
 

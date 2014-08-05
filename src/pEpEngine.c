@@ -749,7 +749,7 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
 		switch (gpgme_error) {
 		case GPG_ERR_NO_ERROR:
 			{
-				gpgme_verify_result_t gpgme_verify_result;
+                gpgme_verify_result_t gpgme_verify_result;
                 char *_buffer = NULL;
 				size_t reading;
                 size_t length = _session->gpgme_data_seek(plain, 0, SEEK_END);
@@ -837,8 +837,34 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
 			break;
 		case GPG_ERR_BAD_PASSPHRASE:
 			NOT_IMPLEMENTED;
-		default:
-			result = PEP_CANNOT_DECRYPT_UNKNOWN;
+        default:
+            {
+                gpgme_decrypt_result_t gpgme_decrypt_result = _session->gpgme_op_decrypt_result(_session->ctx);
+                result = PEP_CANNOT_DECRYPT_UNKNOWN;
+
+                if (gpgme_decrypt_result != NULL) {
+                    *keylist = new_stringlist(gpgme_decrypt_result->unsupported_algorithm);
+                    assert(*keylist);
+                    if (*keylist == NULL) {
+                        result = PEP_OUT_OF_MEMORY;
+                        break;
+                    }
+                    
+                    stringlist_t *_keylist = *keylist;
+                    for (gpgme_recipient_t r = gpgme_decrypt_result->recipients; r != NULL; r = r->next) {
+                        _keylist = stringlist_add(_keylist, r->keyid);
+                        assert(_keylist);
+                        if (_keylist == NULL) {
+                            free_stringlist(*keylist);
+                            *keylist = NULL;
+                            result = PEP_OUT_OF_MEMORY;
+                            break;
+                        }
+                    }
+                    if (result == PEP_OUT_OF_MEMORY)
+                        break;
+                }
+            }
 		}
 		break;
 
@@ -1953,6 +1979,11 @@ DYNAMIC_API PEP_STATUS get_key_rating(
 
     gpgme_error = _session->gpgme_op_keylist_next(_session->ctx, &key);
     assert(gpgme_error != GPG_ERR_INV_VALUE);
+
+    if (key == NULL) {
+        _session->gpgme_op_keylist_end(_session->ctx);
+        return PEP_KEY_NOT_FOUND;
+    }
 
     switch (key->protocol) {
     case GPGME_PROTOCOL_OpenPGP:

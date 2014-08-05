@@ -37,30 +37,32 @@ DYNAMIC_API PEP_STATUS update_identity(
     if (status == PEP_OUT_OF_MEMORY)
         return PEP_OUT_OF_MEMORY;
 
-    PEP_comm_type _comm_type_key;
-    status = get_key_rating(session, stored_identity->fpr, &_comm_type_key);
-    assert(status != PEP_OUT_OF_MEMORY);
-    if (status == PEP_OUT_OF_MEMORY)
-        return PEP_OUT_OF_MEMORY;
-
     if (stored_identity) {
+        PEP_comm_type _comm_type_key;
+        status = get_key_rating(session, stored_identity->fpr, &_comm_type_key);
+        assert(status != PEP_OUT_OF_MEMORY);
+        if (status == PEP_OUT_OF_MEMORY)
+            return PEP_OUT_OF_MEMORY;
+
         if (EMPTY(identity->fpr)) {
             identity->fpr = strdup(stored_identity->fpr);
             assert(identity->fpr);
             if (identity->fpr == NULL)
                 return PEP_OUT_OF_MEMORY;
             identity->fpr_size = stored_identity->address_size;
+            if (_comm_type_key < PEP_ct_unconfirmed_encryption) {
+                identity->comm_type = _comm_type_key;
+            }
+            else {
+                identity->comm_type = stored_identity->comm_type;
+            }
         }
         else /* !EMPTY(identity->fpr) */ {
-            stringlist_t *keylist;
-
-            status = find_keys(session, identity->fpr, &keylist);
-            assert(status != PEP_OUT_OF_MEMORY);
-            if (status == PEP_OUT_OF_MEMORY)
-                return PEP_OUT_OF_MEMORY;
-
-            if (keylist && keylist->value) {
-                if (identity->comm_type == PEP_ct_unknown) {
+            if (_comm_type_key != PEP_ct_unknown) {
+                if (_comm_type_key < PEP_ct_unconfirmed_encryption) {
+                    identity->comm_type = _comm_type_key;
+                }
+                else if (identity->comm_type == PEP_ct_unknown) {
                     if (strcmp(identity->fpr, stored_identity->fpr) == 0) {
                         identity->comm_type = stored_identity->comm_type;
                     }
@@ -74,8 +76,6 @@ DYNAMIC_API PEP_STATUS update_identity(
             }
             else
                 identity->comm_type = PEP_ct_unknown;
-
-            free_stringlist(keylist);
         }
 
         if (EMPTY(identity->username)) {
@@ -103,21 +103,7 @@ DYNAMIC_API PEP_STATUS update_identity(
         }
     }
     else /* stored_identity == NULL */ {
-        if (identity->fpr && identity->user_id) {
-            if (identity->comm_type == PEP_ct_unknown) {
-                status = get_trust(session, identity);
-                assert(status != PEP_OUT_OF_MEMORY);
-                if (status == PEP_OUT_OF_MEMORY)
-                    return PEP_OUT_OF_MEMORY;
-            }
-            if (identity->comm_type != PEP_ct_unknown && EMPTY(identity->username)) {
-                free(identity->username);
-                identity->username = strdup("anonymous");
-                identity->username_size = 10;
-            }
-        }
-        else
-            identity->comm_type = PEP_ct_unknown;
+        identity->comm_type = PEP_ct_unknown;
     }
 
     status = PEP_STATUS_OK;
@@ -128,63 +114,6 @@ DYNAMIC_API PEP_STATUS update_identity(
     }
 
     return status;
-}
-
-DYNAMIC_API PEP_STATUS outgoing_comm_type(
-        PEP_SESSION session,
-        const stringlist_t *addresses,
-        PEP_comm_type *comm_type
-    )
-{
-    const stringlist_t *l;
-
-    assert(session);
-    assert(addresses);
-    assert(addresses->value);
-    assert(comm_type);
-
-    *comm_type = PEP_ct_unknown;
-
-    for (l=addresses; l && l->value; l = l->next) {
-        PEP_STATUS _status;
-        pEp_identity *identity;
-
-        _status = get_identity(session, l->value, &identity);
-        assert(_status != PEP_OUT_OF_MEMORY);
-
-        if (identity == NULL) {
-            *comm_type = PEP_ct_no_encryption;
-            return PEP_STATUS_OK;
-        }
-        else if (identity->comm_type == PEP_ct_unknown) {
-            *comm_type = PEP_ct_no_encryption;
-            free_identity(identity);
-            return PEP_STATUS_OK;
-        }
-        else if (*comm_type == PEP_ct_unknown) {
-            *comm_type = identity->comm_type;
-        }
-        else if (*comm_type != identity->comm_type) {
-            PEP_comm_type min = MIN(*comm_type, identity->comm_type);
-            if (min < PEP_ct_unconfirmed_encryption) {
-                *comm_type = PEP_ct_no_encryption;
-                free_identity(identity);
-                return PEP_STATUS_OK;
-            }
-            else if (min < PEP_ct_unconfirmed_enc_anon)
-                *comm_type = PEP_ct_unconfirmed_encryption;
-            else if (min < PEP_ct_confirmed_encryption)
-                *comm_type = PEP_ct_unconfirmed_enc_anon;
-            else if (min < PEP_ct_confirmed_enc_anon)
-                *comm_type = PEP_ct_confirmed_encryption;
-            else
-                *comm_type = PEP_ct_confirmed_enc_anon;
-        }
-
-        free_identity(identity);
-    }
-
-    return PEP_STATUS_OK;
 }
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)

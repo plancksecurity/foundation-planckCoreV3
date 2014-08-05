@@ -20,21 +20,6 @@ DYNAMIC_API PEP_STATUS update_identity(
     );
 
 
-// outgoing_comm_type() - minimum comm_type for a list of addresses
-//
-//  parameters:
-//      session (in)        session to use
-//      addresses (in)      list of addresses
-//      comm_type (out)     comm_type which can be used to communicate with
-//                          addresses
-
-DYNAMIC_API PEP_STATUS outgoing_comm_type(
-        PEP_SESSION session,
-        const stringlist_t *addresses,
-        PEP_comm_type *comm_type
-    );
-
-
 // myself() - ensures that the own identity is being complete
 //
 //  parameters:

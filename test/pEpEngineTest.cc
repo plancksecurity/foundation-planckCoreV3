@@ -184,25 +184,6 @@ int main(int argc, char* argv[])
 
     free_identity(identity);
 
-    // testing key management
-
-    stringlist_t *addresses = new_stringlist("leon.schumacher@digitalekho.com");
-    PEP_comm_type comm_type;
-    cout << "\nretrieving communication type for leon.schumacher@digitalekho.com\n";
-    PEP_STATUS oct_result = outgoing_comm_type(session, addresses, &comm_type);
-    cout << "communication type is " << comm_type << "\n";
-    free_stringlist(addresses);
-    assert(oct_result == PEP_STATUS_OK && comm_type == PEP_ct_pEp);
-
-    stringlist_t *addresses2 = new_stringlist("leon.schumacher@digitalekho.com");
-    stringlist_add(addresses2, "this.email@is.invalid");
-    cout << "\nretrieving communication type for an unknown address\n";
-    oct_result = outgoing_comm_type(session, addresses2, &comm_type);
-    cout << "communication type is " << comm_type << "\n";
-    cout << "status is " << oct_result << "\n";
-    free_stringlist(addresses2);
-    assert(oct_result == PEP_STATUS_OK && comm_type == PEP_ct_no_encryption);
-
     cout << "\ngenerating key for testuser\n";
     identity = new_identity(
             "testuser@pibit.ch",
