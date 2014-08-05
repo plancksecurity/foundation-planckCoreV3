@@ -166,8 +166,7 @@ DYNAMIC_API void free_stringlist(stringlist_t *stringlist);
 //		csize (in)		size of cipher text
 //		ptext (out)		pointer to internal buffer with plain text
 //		psize (out)		size of plain text
-//		keylist (out)	list of key ids which where used to encrypt or NULL on
-//		                error
+//		keylist (out)	list of key ids which where used to encrypt
 //
 //	return value:
 //		PEP_UNENCRYPTED				message was unencrypted and not signed
@@ -182,6 +181,9 @@ DYNAMIC_API void free_stringlist(stringlist_t *stringlist);
 //	    the ownerships of ptext as well as keylist are going to the caller
 //	    the caller must use free() (or an Windoze pEp_free()) and
 //	    free_stringlist() to free them
+//
+//      if this function failes an error message may be the first element of
+//      keylist and the other elements may be the keys used for encryption
 
 DYNAMIC_API PEP_STATUS decrypt_and_verify(
         PEP_SESSION session, const char *ctext, size_t csize,

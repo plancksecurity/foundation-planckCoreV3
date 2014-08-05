@@ -840,16 +840,18 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
         default:
             {
                 gpgme_decrypt_result_t gpgme_decrypt_result = _session->gpgme_op_decrypt_result(_session->ctx);
-                result = PEP_CANNOT_DECRYPT_UNKNOWN;
+                result = PEP_DECRYPT_NO_KEY;
 
                 if (gpgme_decrypt_result != NULL) {
-                    *keylist = new_stringlist(gpgme_decrypt_result->unsupported_algorithm);
+                    if (gpgme_decrypt_result->unsupported_algorithm)
+                        *keylist = new_stringlist(gpgme_decrypt_result->unsupported_algorithm);
+                    else
+                        *keylist = new_stringlist("");
                     assert(*keylist);
                     if (*keylist == NULL) {
                         result = PEP_OUT_OF_MEMORY;
                         break;
                     }
-                    
                     stringlist_t *_keylist = *keylist;
                     for (gpgme_recipient_t r = gpgme_decrypt_result->recipients; r != NULL; r = r->next) {
                         _keylist = stringlist_add(_keylist, r->keyid);
