@@ -234,6 +234,8 @@ DYNAMIC_API PEP_STATUS verify_text(
 //	caveat:
 //	    the ownership of ctext is going to the caller
 //      the caller is responsible to free() it (on Windoze use pEp_free())
+//      the first key in keylist is being used to sign the message
+//      this implies there has to be a private key for that keypair
 
 DYNAMIC_API PEP_STATUS encrypt_and_sign(
         PEP_SESSION session, const stringlist_t *keylist, const char *ptext,

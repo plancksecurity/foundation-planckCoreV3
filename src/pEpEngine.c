@@ -87,6 +87,8 @@ typedef gpgme_error_t (*gpgme_op_encrypt_sign_t)(gpgme_ctx_t CTX,
         gpgme_key_t RECP[], gpgme_encrypt_flags_t FLAGS, gpgme_data_t PLAIN,
         gpgme_data_t CIPHER);
 typedef gpgme_verify_result_t (*gpgme_op_verify_result_t)(gpgme_ctx_t CTX);
+typedef void (*gpgme_signers_clear_t)(gpgme_ctx_t CTX);
+typedef gpgme_error_t (*gpgme_signers_add_t)(gpgme_ctx_t CTX, const gpgme_key_t KEY);
 
 // keys
 
@@ -152,6 +154,8 @@ typedef struct {
 	gpgme_op_decrypt_result_t gpgme_op_decrypt_result;
 	gpgme_op_encrypt_sign_t gpgme_op_encrypt_sign;
 	gpgme_op_verify_result_t gpgme_op_verify_result;
+    gpgme_signers_clear_t gpgme_signers_clear;
+    gpgme_signers_add_t gpgme_signers_add;
 
 	gpgme_get_key_t gpgme_get_key;
 	gpgme_op_genkey_t gpgme_op_genkey;
@@ -332,7 +336,17 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         = (gpgme_op_verify_result_t) (intptr_t) dlsym(_session->gpgme,
                 "gpgme_op_verify_result");
 	assert(_session->gpgme_op_verify_result);
-	
+
+    _session->gpgme_signers_clear
+        = (gpgme_signers_clear_t) (intptr_t) dlsym(_session->gpgme,
+        "gpgme_signers_clear");
+    assert(_session->gpgme_signers_clear);
+
+    _session->gpgme_signers_add
+        = (gpgme_signers_add_t) (intptr_t) dlsym(_session->gpgme,
+        "gpgme_signers_add");
+    assert(_session->gpgme_signers_add);
+
 	_session->gpgme_get_key
         = (gpgme_get_key_t) (intptr_t) dlsym(_session->gpgme, "gpgme_get_key");
 	assert(_session->gpgme_get_key);
@@ -1061,6 +1075,8 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
 		return PEP_OUT_OF_MEMORY;
 	}
 
+    _session->gpgme_signers_clear(_session->ctx);
+
     for (_keylist=keylist, i=0; _keylist!=NULL; _keylist=_keylist->next, i++) {
 		assert(_keylist->value);
         gpgme_error = _session->gpgme_get_key(_session->ctx, _keylist->value,
@@ -1076,6 +1092,10 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
 			_session->gpgme_data_release(cipher);
 			return PEP_OUT_OF_MEMORY;
 		case GPG_ERR_NO_ERROR:
+            if (i == 0) {
+                gpgme_error_t _gpgme_error = _session->gpgme_signers_add(_session->ctx, rcpt[0]);
+                assert(_gpgme_error == GPG_ERR_NO_ERROR);
+            }
 			break;
 		case GPG_ERR_EOF:
             for (j=0; j<i; j++)
