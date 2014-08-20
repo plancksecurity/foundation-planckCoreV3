@@ -44,6 +44,22 @@ DYNAMIC_API PEP_STATUS update_identity(
         if (status == PEP_OUT_OF_MEMORY)
             return PEP_OUT_OF_MEMORY;
 
+        if (EMPTY(identity->user_id)) {
+            free(identity->user_id);
+            identity->user_id = strdup(stored_identity->user_id);
+            if (identity->user_id == NULL)
+                return PEP_OUT_OF_MEMORY;
+            identity->user_id_size = stored_identity->user_id_size;
+        }
+
+        if (EMPTY(identity->username)) {
+            free(identity->username);
+            identity->username = strdup(stored_identity->username);
+            if (identity->username == NULL)
+                return PEP_OUT_OF_MEMORY;
+            identity->username_size = stored_identity->username_size;
+        }
+
         if (EMPTY(identity->fpr)) {
             identity->fpr = strdup(stored_identity->fpr);
             assert(identity->fpr);
@@ -150,13 +166,14 @@ DYNAMIC_API PEP_STATUS update_identity(
     status = PEP_STATUS_OK;
 
     if (identity->comm_type != PEP_ct_unknown && !EMPTY(identity->user_id)) {
-        if (EMPTY(identity->username)) {
+        assert(!EMPTY(identity->username)); // this should not happen
+
+        if (EMPTY(identity->username)) { // mitigate
             free(identity->username);
-            identity->username = strdup(stored_identity->username);
-            assert(identity->username);
+            identity->username = strdup("anonymous");
             if (identity->username == NULL)
                 return PEP_OUT_OF_MEMORY;
-            identity->username_size = stored_identity->username_size;
+            identity->username_size = 9;
         }
 
         status = set_identity(session, identity);
