@@ -13,7 +13,7 @@ extern "C" {
 //      identity->comm_type, the caller must insert the identity into the
 //      asynchronous management implementation, so retrieve_next_identity()
 //      will return this identity later
-//      at least identity->address must be a valid UTF-8 string as input
+//      at least identity->address must be a non-empty UTF-8 string as input
 
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
