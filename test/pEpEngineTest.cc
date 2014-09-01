@@ -20,6 +20,7 @@ int main(int argc, char* argv[])
     cout << "returning from init() with result == " << init_result << "\n";
 	assert(init_result == PEP_STATUS_OK);
 
+    /*
     PEP_SESSION second_session;
     cout << "second session test\n";
     PEP_STATUS second_init_result = init(&second_session);
@@ -28,6 +29,7 @@ int main(int argc, char* argv[])
     assert(second_session);
     cout << "dropping second session\n";
 	release(second_session);
+    */
 
 	cout << "logging test\n";
 	log_event(session, "log test", "pEp Enginge Test", "This is a logging test sample.", "please ignore this line");

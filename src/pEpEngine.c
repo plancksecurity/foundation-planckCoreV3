@@ -32,7 +32,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 	
 	_session->version = PEP_ENGINE_VERSION;
 
-    status_result = pgp_init(session);
+    status_result = pgp_init(_session);
     assert(status_result == PEP_STATUS_OK);
     if (status_result != PEP_STATUS_OK) {
         free(_session);
@@ -244,6 +244,11 @@ DYNAMIC_API void release(PEP_SESSION session)
 			sqlite3_finalize(_session->log);
 			sqlite3_finalize(_session->get_identity);
 			sqlite3_finalize(_session->set_identity);
+            sqlite3_finalize(_session->set_person);
+            sqlite3_finalize(_session->set_pgp_keypair);
+            sqlite3_finalize(_session->set_trust);
+            sqlite3_finalize(_session->get_trust);
+
 			sqlite3_close_v2(_session->db);
 			sqlite3_close_v2(_session->system_db);
 		}

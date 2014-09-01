@@ -35,9 +35,8 @@ static bool ensure_keyserver()
     return true;
 }
 
-PEP_STATUS pgp_init(PEP_SESSION session)
+PEP_STATUS pgp_init(pEpSession *_session)
 {
-    pEpSession *_session = (pEpSession *) session;
     gpgme_error_t gpgme_error;
     bool bResult = ensure_keyserver();
     assert(bResult);
@@ -214,6 +213,7 @@ PEP_STATUS pgp_init(PEP_SESSION session)
         free(_session);
         return PEP_INIT_GPGME_INIT_FAILED;
     }
+    assert(_session->ctx);
 
     gpgme_error = _session->gpg.gpgme_set_protocol(_session->ctx,
         GPGME_PROTOCOL_OpenPGP);
