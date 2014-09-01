@@ -4,10 +4,10 @@
 
 typedef enum _PEP_cryptotech {
     PEP_crypt_none = 0,
-    PEP_crypt_OpenPGP = 0x2f,
-//    PEP_ctypt_PEP = 0x6f,
-//    PEP_crypt_SMIME = 0x10,
-//    PEP_crypt_CMS = 0x20,
+    PEP_crypt_OpenPGP,
+    //    PEP_ctypt_PEP,
+    //    PEP_crypt_SMIME,
+    //    PEP_crypt_CMS,
 
     PEP_crypt__count
 };
@@ -27,11 +27,48 @@ typedef PEP_STATUS (*encrypt_and_sign_t)(
     size_t psize, char **ctext, size_t *csize
     );
 
+typedef PEP_STATUS (*delete_keypair_t)(PEP_SESSION session, const char *fpr);
+
+typedef PEP_STATUS (*export_key_t)(
+    PEP_SESSION session, const char *fpr, char **key_data, size_t *size
+    );
+
+typedef PEP_STATUS (*find_keys_t)(
+    PEP_SESSION session, const char *pattern, stringlist_t **keylist
+    );
+
+typedef PEP_STATUS (*generate_keypair_t)(
+    PEP_SESSION session, pEp_identity *identity
+    );
+
+typedef PEP_STATUS (*get_key_rating_t)(
+    PEP_SESSION session,
+    const char *fpr,
+    PEP_comm_type *comm_type
+    );
+
+typedef PEP_STATUS (*import_key_t)(PEP_SESSION session, const char *key_data, size_t size);
+
+typedef PEP_STATUS (*recv_key_t)(PEP_SESSION session, const char *pattern);
+
+typedef PEP_STATUS (*send_key_t)(PEP_SESSION session, const char *pattern);
+
 typedef struct _PEP_cryptotech_t {
     uint8_t id;
+    // the following are default values; comm_type may vary with key length or b0rken crypto
+    uint8_t unconfirmed_comm_type;
+    uint8_t confirmed_comm_type;
     decrypt_and_verify_t decrypt_and_verify;
     verify_text_t verify_text;
     encrypt_and_sign_t encrypt_and_sign;
+    delete_keypair_t delete_keypair;
+    export_key_t export_key;
+    find_keys_t find_keys;
+    generate_keypair_t generate_keypair;
+    get_key_rating_t get_key_rating;
+    import_key_t import_key;
+    recv_key_t recv_key;
+    send_key_t send_key;
 } PEP_cryptotech_t;
 
 typedef uint64_t cryptotech_mask;

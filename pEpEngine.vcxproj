@@ -84,6 +84,7 @@
     <ClCompile Include="src\cryptotech.c" />
     <ClCompile Include="src\keymanagement.c" />
     <ClCompile Include="src\pEpEngine.c" />
+    <ClCompile Include="src\pgp_gpg.c" />
     <ClCompile Include="src\platform_windows.cpp" />
     <ClCompile Include="src\sqlite3.c" />
     <ClCompile Include="src\transport.c" />
@@ -92,6 +93,9 @@
     <ClInclude Include="src\cryptotech.h" />
     <ClInclude Include="src\keymanagement.h" />
     <ClInclude Include="src\pEpEngine.h" />
+    <ClInclude Include="src\pEp_internal.h" />
+    <ClInclude Include="src\pgp_gpg.h" />
+    <ClInclude Include="src\pgp_gpg_internal.h" />
     <ClInclude Include="src\platform_windows.h" />
     <ClInclude Include="src\sqlite3.h" />
     <ClInclude Include="src\transport.h" />

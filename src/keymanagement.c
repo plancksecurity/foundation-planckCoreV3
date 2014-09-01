@@ -257,6 +257,9 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
     if (status != PEP_STATUS_OK)
         return status;
 
+    assert(retrieve_next_identity);
+    assert(management);
+
     log_event(session, "keymanagement thread started", "pEp engine", NULL, NULL);
 
     while (identity = retrieve_next_identity(management)) {

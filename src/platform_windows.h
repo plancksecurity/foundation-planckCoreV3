@@ -9,8 +9,7 @@
 #ifndef snprintf
 #define snprintf _snprintf
 #endif
-#define _CRT_NONSTDC_NO_DEPRECATE
-#define _CRT_SECURE_NO_WARNINGS
+#pragma warning(disable : 4996)
 
 #ifdef __cplusplus
 extern "C" {

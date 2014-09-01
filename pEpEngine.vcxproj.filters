@@ -33,6 +33,9 @@
     <ClCompile Include="src\cryptotech.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="src\pgp_gpg.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\keymanagement.h">
@@ -51,6 +54,15 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="src\cryptotech.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pgp_gpg.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pEp_internal.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pgp_gpg_internal.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
