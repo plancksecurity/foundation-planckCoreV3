@@ -4,8 +4,8 @@
 
 typedef enum _PEP_transports {
     PEP_trans_auto = 0,
-//    PEP_trans_email = 1,
-//    PEP_trans_whatsapp = 2,
+//    PEP_trans_email,
+//    PEP_trans_whatsapp,
 
     PEP_trans__count
 } PEP_transports;
@@ -22,3 +22,6 @@ struct _PEP_transport_t {
 };
 
 typedef uint64_t transports_mask;
+
+PEP_STATUS init_transport_system(PEP_SESSION session);
+void release_transport_system(PEP_SESSION session);

@@ -1,13 +1,9 @@
 #include "pEp_internal.h"
-#ifndef NO_GPG
-#include "pgp_gpg.h"
-#else
-#include "pgp_netpgp.h"
-#endif
+#include "cryptotech.h"
+#include "transport.h"
 
 DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 {
-    PEP_STATUS status_result;
 	int int_result;
 	const char *sql_log;
 	const char *sql_safeword;
@@ -32,16 +28,12 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 	
 	_session->version = PEP_ENGINE_VERSION;
 
-    status_result = pgp_init(_session);
-    assert(status_result == PEP_STATUS_OK);
-    if (status_result != PEP_STATUS_OK) {
-        free(_session);
-        return status_result;
-    }
+    init_cryptotech(_session);
+    init_transport_system(_session->transports);
 
     assert(LOCAL_DB);
     if (LOCAL_DB == NULL) {
-        pgp_release(session);
+        release_cryptotech(_session);
         free(_session);
         return PEP_INIT_CANNOT_OPEN_DB;
     }
@@ -58,7 +50,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
 	if (int_result != SQLITE_OK) {
 		sqlite3_close_v2(_session->db);
-        pgp_release(session);
+        release_cryptotech(_session);
         free(_session);
 		return PEP_INIT_CANNOT_OPEN_DB;
 	}
@@ -68,7 +60,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     assert(SYSTEM_DB);
     if (SYSTEM_DB == NULL) {
 		sqlite3_close_v2(_session->db);
-        pgp_release(session);
+        release_cryptotech(_session);
         free(_session);
 		return PEP_INIT_CANNOT_OPEN_SYSTEM_DB;
     }
@@ -84,7 +76,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 	if (int_result != SQLITE_OK) {
 		sqlite3_close_v2(_session->system_db);
 		sqlite3_close_v2(_session->db);
-        pgp_release(session);
+        release_cryptotech(_session);
         free(_session);
 		return PEP_INIT_CANNOT_OPEN_SYSTEM_DB;
 	}
@@ -252,7 +244,9 @@ DYNAMIC_API void release(PEP_SESSION session)
 			sqlite3_close_v2(_session->db);
 			sqlite3_close_v2(_session->system_db);
 		}
-        pgp_release(session);
+
+        release_cryptotech(_session);
+        release_transport_system(_session);
     }
 	free(_session);
 }
@@ -280,7 +274,6 @@ stringlist_t *stringlist_add(stringlist_t *stringlist, const char *value)
 
     if (stringlist->next != NULL)
         return stringlist_add(stringlist->next, value);
-
     if (stringlist->value == NULL) {
         stringlist->value = strdup(value);
         assert(stringlist->value);
@@ -731,7 +724,8 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
     char **ptext, size_t *psize, stringlist_t **keylist
     )
 {
-    return pgp_decrypt_and_verify(session, ctext, csize, ptext, psize, keylist);
+    pEpSession *_session = (pEpSession *) session;
+    return _session->cryptotech[PEP_crypt_OpenPGP].decrypt_and_verify(session, ctext, csize, ptext, psize, keylist);
 }
 
 DYNAMIC_API PEP_STATUS encrypt_and_sign(
@@ -739,7 +733,8 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
     size_t psize, char **ctext, size_t *csize
     )
 {
-    return pgp_encrypt_and_sign(session, keylist, ptext, psize, ctext, csize);
+    pEpSession *_session = (pEpSession *) session;
+    return _session->cryptotech[PEP_crypt_OpenPGP].encrypt_and_sign(session, keylist, ptext, psize, ctext, csize);
 }
 
 DYNAMIC_API PEP_STATUS verify_text(
@@ -747,33 +742,38 @@ DYNAMIC_API PEP_STATUS verify_text(
     const char *signature, size_t sig_size, stringlist_t **keylist
     )
 {
-    return pgp_verify_text(session, text, size, signature, sig_size, keylist);
+    pEpSession *_session = (pEpSession *) session;
+    return _session->cryptotech[PEP_crypt_OpenPGP].verify_text(session, text, size, signature, sig_size, keylist);
 }
 
 DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr)
 {
-    return pgp_delete_keypair(session, fpr);
+    pEpSession *_session = (pEpSession *) session;
+    return _session->cryptotech[PEP_crypt_OpenPGP].delete_keypair(session, fpr);
 }
 
 DYNAMIC_API PEP_STATUS export_key(
     PEP_SESSION session, const char *fpr, char **key_data, size_t *size
     )
 {
-    return pgp_export_key(session, fpr, key_data, size);
+    pEpSession *_session = (pEpSession *) session;
+    return _session->cryptotech[PEP_crypt_OpenPGP].export_key(session, fpr, key_data, size);
 }
 
 DYNAMIC_API PEP_STATUS find_keys(
     PEP_SESSION session, const char *pattern, stringlist_t **keylist
     )
 {
-    return pgp_find_keys(session, pattern, keylist);
+    pEpSession *_session = (pEpSession *) session;
+    return _session->cryptotech[PEP_crypt_OpenPGP].find_keys(session, pattern, keylist);
 }
 
 DYNAMIC_API PEP_STATUS generate_keypair(
     PEP_SESSION session, pEp_identity *identity
     )
 {
-    return pgp_generate_keypair(session, identity);
+    pEpSession *_session = (pEpSession *) session;
+    return _session->cryptotech[PEP_crypt_OpenPGP].generate_keypair(session, identity);
 }
 
 DYNAMIC_API PEP_STATUS get_key_rating(
@@ -782,20 +782,24 @@ DYNAMIC_API PEP_STATUS get_key_rating(
     PEP_comm_type *comm_type
     )
 {
-    return pgp_get_key_rating(session, fpr, comm_type);
+    pEpSession *_session = (pEpSession *) session;
+    return _session->cryptotech[PEP_crypt_OpenPGP].get_key_rating(session, fpr, comm_type);
 }
 
 DYNAMIC_API PEP_STATUS import_key(PEP_SESSION session, const char *key_data, size_t size)
 {
-    return pgp_import_key(session, key_data, size);
+    pEpSession *_session = (pEpSession *) session;
+    return _session->cryptotech[PEP_crypt_OpenPGP].import_key(session, key_data, size);
 }
 
 DYNAMIC_API PEP_STATUS recv_key(PEP_SESSION session, const char *pattern)
 {
-    return pgp_recv_key(session, pattern);
+    pEpSession *_session = (pEpSession *) session;
+    return _session->cryptotech[PEP_crypt_OpenPGP].recv_key(session, pattern);
 }
 
 DYNAMIC_API PEP_STATUS send_key(PEP_SESSION session, const char *pattern)
 {
-    return pgp_send_key(session, pattern);
+    pEpSession *_session = (pEpSession *) session;
+    return _session->cryptotech[PEP_crypt_OpenPGP].send_key(session, pattern);
 }

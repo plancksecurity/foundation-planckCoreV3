@@ -55,6 +55,9 @@
 #include "pgp_gpg_internal.h"
 #endif
 
+#include "cryptotech.h"
+#include "transport.h"
+
 #define NOT_IMPLEMENTED assert(0)
 
 typedef struct {
@@ -65,6 +68,9 @@ typedef struct {
     struct gpg_s gpg;
     gpgme_ctx_t ctx;
 #endif
+
+    PEP_cryptotech_t cryptotech[PEP_crypt__count];
+    PEP_transport_t transports[PEP_trans__count];
 
     sqlite3 *db;
     sqlite3 *system_db;
