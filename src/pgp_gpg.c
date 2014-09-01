@@ -35,8 +35,9 @@ static bool ensure_keyserver()
     return true;
 }
 
-PEP_STATUS pgp_init(pEpSession *_session)
+PEP_STATUS pgp_init(PEP_SESSION session)
 {
+    pEpSession *_session = (pEpSession *) session;
     gpgme_error_t gpgme_error;
     bool bResult = ensure_keyserver();
     assert(bResult);
