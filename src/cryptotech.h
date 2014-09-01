@@ -10,7 +10,7 @@ typedef enum _PEP_cryptotech {
     //    PEP_crypt_CMS,
 
     PEP_crypt__count
-};
+} PEP_cryptotech;
 
 typedef PEP_STATUS (*decrypt_and_verify_t)(
     PEP_SESSION session, const char *ctext, size_t csize,
