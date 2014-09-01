@@ -1,3 +1,5 @@
+#pragma once
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -347,6 +349,7 @@ typedef enum _PEP_comm_type {
 
     PEP_ct_unconfirmed_encryption = 0x10,       // generic
     PEP_ct_OpenPGP_1024_RSA_unconfirmed = 0x11,	// RSA 1024 is weak
+    PEP_ct_SMIME_unconfirmed = 0x20,
     PEP_ct_CMS_unconfirmed = 0x30,
     PEP_ct_OpenPGP_unconfirmed = 0x3f,          // key at least 2048 bit RSA
     // or 1024 bit DSA
@@ -363,6 +366,7 @@ typedef enum _PEP_comm_type {
 
     PEP_ct_confirmed_encryption = 0x90,         // generic
 	PEP_ct_OpenPGP_1024_RSA = 0x91, // RSA 1024 is weak
+    PEP_ct_SMIME = 0xa0,
     PEP_ct_CMS = 0xb0,
 	PEP_ct_OpenPGP = 0xbf, // key at least 2048 bit RSA or 1024 bit DSA
 

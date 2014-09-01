@@ -27,6 +27,12 @@
     <ClCompile Include="src\sqlite3.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="src\transport.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cryptotech.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\keymanagement.h">
@@ -39,6 +45,12 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="src\sqlite3.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\transport.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cryptotech.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

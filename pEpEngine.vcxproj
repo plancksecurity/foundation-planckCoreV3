@@ -81,16 +81,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\cryptotech.c" />
     <ClCompile Include="src\keymanagement.c" />
     <ClCompile Include="src\pEpEngine.c" />
     <ClCompile Include="src\platform_windows.cpp" />
     <ClCompile Include="src\sqlite3.c" />
+    <ClCompile Include="src\transport.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\cryptotech.h" />
     <ClInclude Include="src\keymanagement.h" />
     <ClInclude Include="src\pEpEngine.h" />
     <ClInclude Include="src\platform_windows.h" />
     <ClInclude Include="src\sqlite3.h" />
+    <ClInclude Include="src\transport.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
