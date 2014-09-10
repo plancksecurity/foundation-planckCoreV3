@@ -90,6 +90,8 @@ struct _PEP_transport_t {
     uint8_t id;
     sendto_t sendto;
     readnext_t readnext;
+    bool long_message_supported;
+    msg_format native_format;
 };
 
 typedef uint64_t transports_mask;

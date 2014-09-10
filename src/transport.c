@@ -5,6 +5,8 @@
 
 PEP_STATUS init_transport_system(PEP_SESSION session)
 {
+    assert(session);
+
     pEpSession *_session = (pEpSession *) session;
     PEP_transport_t* transports = _session->transports;
 
@@ -18,11 +20,14 @@ PEP_STATUS init_transport_system(PEP_SESSION session)
 
 void release_transport_system(PEP_SESSION session)
 {
+    assert(session);
     // nothing yet
 }
 
 pEp_identity *identity_dup(const pEp_identity *src)
 {
+    assert(src);
+
     pEp_identity *dup = new_identity(src->address, src->fpr, src->user_id, src->username);
     assert(dup);
     if (dup == NULL)
