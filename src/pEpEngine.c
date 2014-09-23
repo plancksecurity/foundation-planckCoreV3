@@ -33,6 +33,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     assert(LOCAL_DB);
     if (LOCAL_DB == NULL) {
+        release_transport_system(_session);
         release_cryptotech(_session);
         free(_session);
         return PEP_INIT_CANNOT_OPEN_DB;
@@ -50,6 +51,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
 	if (int_result != SQLITE_OK) {
 		sqlite3_close_v2(_session->db);
+        release_transport_system(_session);
         release_cryptotech(_session);
         free(_session);
 		return PEP_INIT_CANNOT_OPEN_DB;
@@ -60,6 +62,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     assert(SYSTEM_DB);
     if (SYSTEM_DB == NULL) {
 		sqlite3_close_v2(_session->db);
+        release_transport_system(_session);
         release_cryptotech(_session);
         free(_session);
 		return PEP_INIT_CANNOT_OPEN_SYSTEM_DB;
@@ -76,6 +79,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 	if (int_result != SQLITE_OK) {
 		sqlite3_close_v2(_session->system_db);
 		sqlite3_close_v2(_session->db);
+        release_transport_system(_session);
         release_cryptotech(_session);
         free(_session);
 		return PEP_INIT_CANNOT_OPEN_SYSTEM_DB;
@@ -245,8 +249,8 @@ DYNAMIC_API void release(PEP_SESSION session)
 			sqlite3_close_v2(_session->system_db);
 		}
 
-        release_cryptotech(_session);
         release_transport_system(_session);
+        release_cryptotech(_session);
     }
 	free(_session);
 }
