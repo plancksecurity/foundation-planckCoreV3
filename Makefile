@@ -19,7 +19,7 @@ test: all
 	$(MAKE) -C test test
 
 package: clean
-	cd .. ; COPYFILE_DISABLE=true tar  cjf pEpEngine.tar.bz2 pEpEngine
+	cd .. ; COPYFILE_DISABLE=true tar cjf pEpEngine.tar.bz2 pEpEngine
 
 windist:
 ifneq ($(BUILD_FOR),Windoze)

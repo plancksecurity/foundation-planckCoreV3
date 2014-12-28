@@ -7,6 +7,8 @@ pEp Engine
 The pEp Engine encapsulates all real functionality of pEp.
 It has an old style Makefile for building it.
 
+The build is configured in Makefile.conf
+
 It supports the common targets
 
 $ make all

@@ -415,6 +415,21 @@ DYNAMIC_API pEp_identity *new_identity(
     );
 
 
+// identity_dup() - allocate memory and set the string and size fields
+//
+//  parameters:
+//      src (in)            identity to duplicate
+//
+//  return value:
+//      pEp_identity struct with correct size values or NULL if out of memory
+//
+//  caveat:
+//      the strings are copied; the original strings are still being owned by
+//      the caller
+
+DYNAMIC_API pEp_identity *identity_dup(const pEp_identity *src);
+
+
 // free_identity() - free all memory being occupied by a pEp_identity struct
 //
 //  parameters:

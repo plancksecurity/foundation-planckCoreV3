@@ -534,6 +534,24 @@ pEp_identity *new_identity(
     return result;
 }
 
+pEp_identity *identity_dup(const pEp_identity *src)
+{
+    assert(src);
+
+    pEp_identity *dup = new_identity(src->address, src->fpr, src->user_id, src->username);
+    assert(dup);
+    if (dup == NULL)
+        return NULL;
+    
+    dup->comm_type = src->comm_type;
+    dup->lang[0] = src->lang[0];
+    dup->lang[1] = src->lang[1];
+    dup->lang[2] = 0;
+    dup->me = src->me;
+
+    return dup;
+}
+
 void free_identity(pEp_identity *identity)
 {
     if (identity) {

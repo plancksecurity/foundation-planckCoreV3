@@ -4,9 +4,12 @@
 #include <time.h>
 #include <stdlib.h>
 
+// all functions are using POSIX struct tm
+
 typedef struct tm timestamp;
 
 typedef enum _PEP_transports {
+    // auto transport chooses transport per message automatically
     PEP_trans_auto = 0,
 //    PEP_trans_email,
 //    PEP_trans_whatsapp,
@@ -16,14 +19,13 @@ typedef enum _PEP_transports {
 
 typedef struct _PEP_transport_t PEP_transport_t;
 
-pEp_identity *identity_dup(const pEp_identity *src);
-
 typedef struct _identity_list {
     pEp_identity *ident;
     struct _identity_list *next;
 } identity_list;
 
 identity_list *new_identity_list(const pEp_identity *ident);
+identity_list *identity_list_dup(const identity_list *src);
 void free_identity_list(identity_list *id_list);
 identity_list *identity_list_add(identity_list *id_list, const pEp_identity *ident);
 
@@ -73,7 +75,7 @@ typedef struct _message_ref_list {
 message *new_message(
         msg_direction dir,
         const pEp_identity *from,
-        const pEp_identity *to,
+        const identity_list *to,
         const char *shortmsg
     );
 
@@ -98,3 +100,4 @@ typedef uint64_t transports_mask;
 
 PEP_STATUS init_transport_system(PEP_SESSION session);
 void release_transport_system(PEP_SESSION session);
+
