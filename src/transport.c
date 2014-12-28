@@ -42,6 +42,8 @@ pEp_identity *identity_dup(const pEp_identity *src)
     dup->lang[1] = src->lang[1];
     dup->lang[2] = 0;
     dup->me = src->me;
+
+    return dup;
 }
 
 identity_list *new_identity_list(const pEp_identity *ident)

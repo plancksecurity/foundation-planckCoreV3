@@ -262,7 +262,7 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
 
     log_event(session, "keymanagement thread started", "pEp engine", NULL, NULL);
 
-    while (identity = retrieve_next_identity(management)) {
+    while ((identity = retrieve_next_identity(management))) {
         assert(identity->address);
         log_event(session, "do_keymanagement", "debug", identity->address, NULL);
         if (identity->me) {
