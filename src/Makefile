@@ -10,7 +10,8 @@ LIBGPGME=libgpgme-pthread.dylib
 CC=gcc -std=c99
 CFLAGS=-I$(GPGME_IN)/include -I/opt/local/include $(OPTIMIZE) -pedantic \
 	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -DLIBGPGME=\"$(LIBGPGME)\"  -DSQLITE_THREADSAFE=1
-LDFLAGS=-lc -macosx_version_min $(MACOSX_VERSION_MIN) -dylib -arch x86_64
+LDFLAGS=-lc -macosx_version_min $(MACOSX_VERSION_MIN) -dylib -arch x86_64 \
+	-L/opt/local/lib -letpan
 
 else ifeq ($(BUILD_FOR),Windoze)
 

@@ -74,8 +74,10 @@ void free_identity_list(identity_list *id_list)
 
 identity_list *identity_list_add(identity_list *id_list, const pEp_identity *ident)
 {
-    assert(id_list);
     assert(ident);
+
+    if (id_list == NULL)
+        return new_identity_list(ident);
 
     if (id_list->ident == NULL) {
         id_list->ident = identity_dup(ident);
@@ -95,8 +97,61 @@ identity_list *identity_list_add(identity_list *id_list, const pEp_identity *ide
     }
 }
 
+bloblist_t *new_bloblist(char *blob, size_t size)
+{
+    bloblist_t * bloblist = calloc(1, sizeof(bloblist_t));
+    if (bloblist == NULL)
+        return NULL;
+    bloblist->data_ref = blob;
+    bloblist->size = size;
+    return bloblist;
+}
+
+bloblist_t *bloblist_dup(const bloblist_t *src)
+{
+    assert(src);
+
+    if (src) {
+        bloblist_t * dst = new_bloblist(src->data_ref, src->size);
+        if (dst == NULL)
+            return NULL;
+        dst->next = bloblist_dup(src->next);
+        return dst;
+    }
+    else
+        return NULL;
+}
+
+void free_bloblist(bloblist_t *bloblist)
+{
+    if (bloblist && bloblist->next)
+        free_bloblist(bloblist->next);
+    free(bloblist);
+}
+
+bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t size)
+{
+    assert(blob);
+
+    if (bloblist == NULL)
+        return new_bloblist(blob, size);
+
+    if (bloblist->data_ref == NULL) {
+        bloblist->data_ref = blob;
+        bloblist->size = size;
+        return bloblist;
+    }
+
+    if (bloblist->next == NULL) {
+        bloblist->next = new_bloblist(blob, size);
+        return bloblist->next;
+    }
+
+    return bloblist_add(bloblist->next, blob, size);
+}
+
 message *new_message(
-        msg_direction dir,
+        PEP_msg_direction dir,
         const pEp_identity *from,
         const identity_list *to,
         const char *shortmsg
@@ -142,6 +197,7 @@ void free_message(message *msg)
     free(msg->shortmsg);
     free(msg->longmsg);
     free(msg->longmsg_formatted);
+    free_bloblist(msg->attachments);
     free(msg->rawmsg);
     free_identity_list(msg->to);
     free_identity_list(msg->cc);
@@ -173,8 +229,10 @@ void free_message_ref_list(message_ref_list *msg_list)
 
 message_ref_list *message_ref_list_add(message_ref_list *msg_list, message *msg)
 {
-    assert(msg_list);
     assert(msg);
+
+    if (msg_list == NULL)
+        return new_message_ref_list(msg);
 
     if (msg_list->msg_ref == NULL) {
         msg_list->msg_ref = msg;

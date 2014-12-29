@@ -29,20 +29,31 @@ identity_list *identity_list_dup(const identity_list *src);
 void free_identity_list(identity_list *id_list);
 identity_list *identity_list_add(identity_list *id_list, const pEp_identity *ident);
 
-typedef enum _msg_format {
-    format_plain = 0,
-    format_html
-} msg_format;
+typedef enum _PEP_msg_format {
+    PEP_format_plain = 0,
+    PEP_format_html
+} PEP_msg_format;
 
-typedef enum _msg_direction {
-    dir_incoming = 0,
-    dir_outgoing
-} msg_direction;
+typedef enum _PEP_msg_direction {
+    PEP_dir_incoming = 0,
+    PEP_dir_outgoing
+} PEP_msg_direction;
+
+typedef struct _bloblist_t {
+    char *data_ref;
+    size_t size;
+    struct _bloblist_t *next;
+} bloblist_t;
+
+bloblist_t *new_bloblist(char *blob, size_t size);
+bloblist_t *bloblist_dup(const bloblist_t *src);
+void free_bloblist(bloblist_t *bloblist);
+bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t size);
 
 struct _message_ref_list;
 
 typedef struct _message {
-    msg_direction dir;
+    PEP_msg_direction dir;
     char * id;
     size_t id_size;
     char * shortmsg;
@@ -51,7 +62,8 @@ typedef struct _message {
     size_t longmsg_size;
     char * longmsg_formatted;
     size_t longmsg_formatted_size;
-    msg_format format;
+    PEP_msg_format format;
+    bloblist_t * attachments;
     char * rawmsg;
     size_t rawmsg_size;
     timestamp sent;
@@ -65,6 +77,7 @@ typedef struct _message {
     size_t refering_id_size;
     struct _message *refering_msg;
     struct _message_ref_list *refered_by;
+    bool encrypted;
 } message;
 
 typedef struct _message_ref_list {
@@ -73,7 +86,7 @@ typedef struct _message_ref_list {
 } message_ref_list;
 
 message *new_message(
-        msg_direction dir,
+        PEP_msg_direction dir,
         const pEp_identity *from,
         const identity_list *to,
         const char *shortmsg
@@ -93,7 +106,7 @@ struct _PEP_transport_t {
     sendto_t sendto;
     readnext_t readnext;
     bool long_message_supported;
-    msg_format native_format;
+    PEP_msg_format native_format;
 };
 
 typedef uint64_t transports_mask;
