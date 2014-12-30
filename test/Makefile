@@ -9,11 +9,12 @@ CXX=g++ -std=gnu++11 -DWIN32
 LD=g++
 LDFLAGS=-pthread -L../src -lpEpEngine -lstdc++
 else
+CC=g++ -std=gnu++11
 CXX=g++ -std=gnu++11
 LD=g++
-LDFLAGS=-L~/lib -pthread -L../src -lpEpEngine -lstdc++
+LDFLAGS=-L$(HOME)/lib -pthread -lpEpEngine -lstdc++
 endif
-CXXFLAGS=-g -O0
+CXXFLAGS=-g -O0 -I../src
 # CXXFLAGS=-O3 -DNDEBUG
 
 TARGET=pEpEngineTest
@@ -44,8 +45,11 @@ pEpEngine.dll: ../src/pEpEngine.dll
 .PHONY: clean
 
 clean:
-	rm -f *.o $(TARGET) *.exe *.a *~ pEpEngine.dll
+	rm -f *.o $(TARGET) *.exe *.a *~ pEpEngine.dll message_api_test
 
 test: all
 	LD_LIBRARY_PATH=~/lib:../src ./pEpEngineTest
+
+message_api_test: message_api_test.o
+	$(CXX) $(LDFLAGS) -o message_api_test message_api_test.o
 

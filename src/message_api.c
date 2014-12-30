@@ -4,6 +4,9 @@
 #include <libetpan/libetpan.h>
 #include <assert.h>
 #include <string.h>
+#include <stdlib.h>
+
+#define NOT_IMPLEMENTED assert(0);
 
 PEP_STATUS encrypt_message(
         PEP_SESSION session,
@@ -40,25 +43,30 @@ PEP_STATUS encrypt_message(
         return PEP_OUT_OF_MEMORY;
     }
 
-    stringlist_t *_x;
-    for (_x = extra; _x && _x->value; _x = _x->next) {
-        if (stringlist_add(keys, _x->value) == NULL) {
-            free_message(msg);
+    stringlist_t *_k = keys;
+
+    if (extra) {
+        _k = stringlist_append(_k, extra);
+        if (_k == NULL) {
             free_stringlist(keys);
+            free_message(msg);
             return PEP_OUT_OF_MEMORY;
         }
     }
-    
+
+    bool dest_keys_found = false;
     identity_list * _il;
     for (_il = msg->to; _il && _il->ident; _il = _il->next) {
-        status = update_identity(session, _il->ident);
-        if (status != PEP_STATUS_OK) {
+        PEP_STATUS _status = update_identity(session, _il->ident);
+        if (_status != PEP_STATUS_OK) {
             free_message(msg);
             free_stringlist(keys);
-            return status;
+            return _status;
         }
         if (_il->ident->fpr) {
-            if (stringlist_add(keys, _il->ident->fpr) == NULL) {
+            dest_keys_found = true;
+            _k = stringlist_add(_k, _il->ident->fpr);
+            if (_k == NULL) {
                 free_message(msg);
                 free_stringlist(keys);
                 return PEP_OUT_OF_MEMORY;
@@ -68,22 +76,20 @@ PEP_STATUS encrypt_message(
             status = PEP_KEY_NOT_FOUND;
     }
 
-    int _own_keys = 1;
-    if (extra)
-        _own_keys += stringlist_length(extra);
-    
-    if (stringlist_length(keys) > _own_keys) {
+    if (dest_keys_found) {
         char *ptext;
         char *ctext = NULL;
         size_t csize = 0;
 
         switch (format) {
         case PEP_enc_MIME_multipart:
+            NOT_IMPLEMENTED
             break;
 
         case PEP_enc_pieces:
             if (src->shortmsg && src->longmsg) {
-                ptext = calloc(1, strlen(src->shortmsg) + strlen(src->longmsg) + 12);
+                ptext = calloc(1, strlen(src->shortmsg) + strlen(src->longmsg)
+                        + 12);
                 if (ptext == NULL) {
                     free_message(msg);
                     free_stringlist(keys);
@@ -93,10 +99,10 @@ PEP_STATUS encrypt_message(
                 strcat(ptext, src->shortmsg);
                 strcat(ptext, "\n\n");
                 strcat(ptext, src->longmsg);
-                status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext, &csize);
+                status = encrypt_and_sign(session, keys, ptext, strlen(ptext),
+                        &ctext, &csize);
                 if (ctext) {
                     msg->longmsg = ctext;
-                    msg->longmsg_size = csize;
                     msg->shortmsg = strdup("pEp");
                 }
                 else {
@@ -106,10 +112,10 @@ PEP_STATUS encrypt_message(
             }
             else if (src->shortmsg) {
                 ptext = src->shortmsg;
-                status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext, &csize);
+                status = encrypt_and_sign(session, keys, ptext, strlen(ptext),
+                        &ctext, &csize);
                 if (ctext) {
                     msg->shortmsg = ctext;
-                    msg->shortmsg_size = csize;
                 }
                 else {
                     free_message(msg);
@@ -118,10 +124,10 @@ PEP_STATUS encrypt_message(
             }
             else if (src->longmsg) {
                 ptext = src->longmsg;
-                status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext, &csize);
+                status = encrypt_and_sign(session, keys, ptext, strlen(ptext),
+                        &ctext, &csize);
                 if (ctext) {
                     msg->longmsg = ctext;
-                    msg->longmsg_size = csize;
                     msg->shortmsg = strdup("pEp");
                 }
                 else {
@@ -131,10 +137,10 @@ PEP_STATUS encrypt_message(
             }
             if (msg && msg->longmsg_formatted) {
                 ptext = src->longmsg_formatted;
-                status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext, &csize);
+                status = encrypt_and_sign(session, keys, ptext, strlen(ptext),
+                        &ctext, &csize);
                 if (ctext) {
                     msg->longmsg_formatted = ctext;
-                    msg->longmsg_formatted_size = csize;
                 }
                 else {
                     free_message(msg);
@@ -143,7 +149,7 @@ PEP_STATUS encrypt_message(
             }
             if (msg) {
                 bloblist_t *_s;
-                bloblist_t *_d = new_bloblist(NULL, 0);
+                bloblist_t *_d = new_bloblist(NULL, 0, NULL, NULL);
                 if (_d == NULL) {
                     free_message(msg);
                     free_stringlist(keys);
@@ -153,9 +159,16 @@ PEP_STATUS encrypt_message(
                 for (_s = src->attachments; _s && _s->data_ref; _s = _s->next) {
                     int psize = _s->size;
                     ptext = _s->data_ref;
-                    status = encrypt_and_sign(session, keys, ptext, psize, &ctext, &csize);
+                    status = encrypt_and_sign(session, keys, ptext, psize,
+                            &ctext, &csize);
                     if (ctext) {
-                        _d = bloblist_add(_d, ctext, csize);
+                        _d = bloblist_add(_d, ctext, csize, _s->mime_type,
+                                _s->file_name);
+                        if (_d == NULL) {
+                            free_message(msg);
+                            free_stringlist(keys);
+                            return PEP_OUT_OF_MEMORY;
+                        }
                     }
                     else {
                         free_message(msg);
@@ -163,6 +176,7 @@ PEP_STATUS encrypt_message(
                         break;
                     }
                 }
+                msg->enc_format = PEP_enc_pieces;
                 *dst = msg;
             }
             break;
@@ -185,6 +199,8 @@ PEP_STATUS decrypt_message(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
+
+    NOT_IMPLEMENTED
 
     return status;
 }

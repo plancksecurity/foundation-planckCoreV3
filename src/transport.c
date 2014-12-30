@@ -24,21 +24,14 @@ void release_transport_system(PEP_SESSION session)
     // nothing yet
 }
 
-identity_list *new_identity_list(const pEp_identity *ident)
+identity_list *new_identity_list(pEp_identity *ident)
 {
     identity_list *id_list = calloc(1, sizeof(identity_list));
     assert(id_list);
     if (id_list == NULL)
         return NULL;
 
-    if (ident) {
-        id_list->ident = identity_dup(ident);
-        assert(id_list->ident);
-        if (id_list->ident == NULL) {
-            free(id_list);
-            return NULL;
-        }
-    }
+    id_list->ident = ident;
 
     return id_list;
 }
@@ -72,7 +65,7 @@ void free_identity_list(identity_list *id_list)
     }
 }
 
-identity_list *identity_list_add(identity_list *id_list, const pEp_identity *ident)
+identity_list *identity_list_add(identity_list *id_list, pEp_identity *ident)
 {
     assert(ident);
 
@@ -80,16 +73,11 @@ identity_list *identity_list_add(identity_list *id_list, const pEp_identity *ide
         return new_identity_list(ident);
 
     if (id_list->ident == NULL) {
-        id_list->ident = identity_dup(ident);
-        assert(id_list->ident);
-        if (id_list->ident == NULL)
-            return NULL;
-        else
-            return id_list;
+        id_list->ident = ident;
+        return id_list;
     }
     else if (id_list->next == NULL) {
         id_list->next = new_identity_list(ident);
-        assert(id_list->next);
         return id_list->next;
     }
     else {
@@ -97,13 +85,29 @@ identity_list *identity_list_add(identity_list *id_list, const pEp_identity *ide
     }
 }
 
-bloblist_t *new_bloblist(char *blob, size_t size)
+bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_type,
+        const char *file_name)
 {
     bloblist_t * bloblist = calloc(1, sizeof(bloblist_t));
     if (bloblist == NULL)
         return NULL;
     bloblist->data_ref = blob;
     bloblist->size = size;
+    if (mime_type) {
+        bloblist->mime_type = strdup(mime_type);
+        if (bloblist->mime_type == NULL) {
+            free(bloblist);
+            return NULL;
+        }
+    }
+    if (file_name) {
+        bloblist->file_name = strdup(file_name);
+        if (bloblist->file_name == NULL) {
+            free(bloblist->mime_type);
+            free(bloblist);
+            return NULL;
+        }
+    }
     return bloblist;
 }
 
@@ -112,7 +116,8 @@ bloblist_t *bloblist_dup(const bloblist_t *src)
     assert(src);
 
     if (src) {
-        bloblist_t * dst = new_bloblist(src->data_ref, src->size);
+        bloblist_t * dst = new_bloblist(src->data_ref, src->size,
+                src->mime_type, src->file_name);
         if (dst == NULL)
             return NULL;
         dst->next = bloblist_dup(src->next);
@@ -124,36 +129,58 @@ bloblist_t *bloblist_dup(const bloblist_t *src)
 
 void free_bloblist(bloblist_t *bloblist)
 {
-    if (bloblist && bloblist->next)
-        free_bloblist(bloblist->next);
-    free(bloblist);
+    if (bloblist) {
+        if (bloblist->next)
+            free_bloblist(bloblist->next);
+        if (bloblist->mime_type)
+            free(bloblist->mime_type);
+        if (bloblist->file_name)
+            free(bloblist->file_name);
+        free(bloblist);
+    }
 }
 
-bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t size)
+bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t size,
+        const char *mime_type, const char *file_name)
 {
     assert(blob);
 
     if (bloblist == NULL)
-        return new_bloblist(blob, size);
+        return new_bloblist(blob, size, mime_type, file_name);
 
     if (bloblist->data_ref == NULL) {
         bloblist->data_ref = blob;
         bloblist->size = size;
+        if (mime_type) {
+            bloblist->mime_type = strdup(mime_type);
+            if (bloblist->mime_type == NULL) {
+                free(bloblist);
+                return NULL;
+            }
+        }
+        if (file_name) {
+            bloblist->file_name = strdup(file_name);
+            if (bloblist->file_name == NULL) {
+                free(bloblist->mime_type);
+                free(bloblist);
+                return NULL;
+            }
+        }
         return bloblist;
     }
 
     if (bloblist->next == NULL) {
-        bloblist->next = new_bloblist(blob, size);
+        bloblist->next = new_bloblist(blob, size, mime_type, file_name);
         return bloblist->next;
     }
 
-    return bloblist_add(bloblist->next, blob, size);
+    return bloblist_add(bloblist->next, blob, size, mime_type, file_name);
 }
 
 message *new_message(
         PEP_msg_direction dir,
-        const pEp_identity *from,
-        const identity_list *to,
+        pEp_identity *from,
+        identity_list *to,
         const char *shortmsg
     )
 {
@@ -162,31 +189,18 @@ message *new_message(
     if (msg == NULL)
         return NULL;
 
-    if (msg->shortmsg) {
+    if (shortmsg) {
         msg->shortmsg = strdup(shortmsg);
         assert(msg->shortmsg);
         if (msg->shortmsg == NULL) {
             free(msg);
             return NULL;
         }
-        msg->shortmsg_size = strlen(msg->shortmsg);
     }
 
     msg->dir = dir;
-
-    msg->from = identity_dup(from);
-    assert(msg->from);
-    if (msg->from == NULL) {
-        free_message(msg);
-        return NULL;
-    }
-
-    msg->to = identity_list_dup(to);
-    assert(msg->to);
-    if (msg->to == NULL) {
-        free_message(msg);
-        return NULL;
-    }
+    msg->from = from;
+    msg->to = to;
 
     return msg;
 }
@@ -198,7 +212,6 @@ void free_message(message *msg)
     free(msg->longmsg);
     free(msg->longmsg_formatted);
     free_bloblist(msg->attachments);
-    free(msg->rawmsg);
     free_identity_list(msg->to);
     free_identity_list(msg->cc);
     free_identity_list(msg->bcc);

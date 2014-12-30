@@ -126,6 +126,17 @@ typedef struct _stringlist_t {
 DYNAMIC_API stringlist_t *new_stringlist(const char *value);
 
 
+// stringlist_dup() - duplicate a stringlist
+//
+//  parameters:
+//      src (in)            stringlist to copy
+//
+//  return value:
+//      pointer to stringlist_t object or NULL if out of memory
+
+DYNAMIC_API stringlist_t *stringlist_dup(const stringlist_t *src);
+
+
 // stringlist_add() - add key to stringlist
 //
 //  parameters:
@@ -140,6 +151,23 @@ DYNAMIC_API stringlist_t *new_stringlist(const char *value);
 //      the original string is still being owned by the caller
 
 DYNAMIC_API stringlist_t *stringlist_add(stringlist_t *stringlist, const char *value);
+
+
+// stringlist_append() - append stringlist to stringlist
+//
+//  parameters:
+//      stringlist (in)     stringlist struct to append to
+//      second (in)         stringlist struct to append
+//
+//  return value:
+//      pointer to last element in stringlist or NULL if out of memory
+//
+//  caveat:
+//      all values are being copied before being added to the list
+//      the original values are still being owned by the caller
+
+DYNAMIC_API stringlist_t *stringlist_append(stringlist_t *stringlist,
+        stringlist_t *second);
 
 
 // stringlist_length() - get length of stringlist

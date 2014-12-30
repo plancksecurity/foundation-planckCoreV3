@@ -269,6 +269,27 @@ stringlist_t *new_stringlist(const char *value)
     return result;
 }
 
+DYNAMIC_API stringlist_t *stringlist_dup(const stringlist_t *src)
+{
+    assert(src);
+    if (src == NULL)
+        return NULL;
+
+    stringlist_t *dst = new_stringlist(src->value);
+    if (dst == NULL)
+        return NULL;
+
+    if (src->next) {
+        dst->next = stringlist_dup(src->next);
+        if (dst->next == NULL) {
+            free(dst);
+            return NULL;
+        }
+    }
+
+    return dst;
+}
+
 stringlist_t *stringlist_add(stringlist_t *stringlist, const char *value)
 {
     assert(value);
@@ -292,6 +313,24 @@ stringlist_t *stringlist_add(stringlist_t *stringlist, const char *value)
         return NULL;
 
     return stringlist->next;
+}
+
+DYNAMIC_API stringlist_t *stringlist_append(stringlist_t *stringlist,
+        stringlist_t *second)
+{
+    assert(stringlist);
+
+    if (second == NULL || second->value == NULL)
+        return stringlist;
+
+    stringlist_t *_s = stringlist;
+    stringlist_t *_s2;
+    for (_s2 = second; _s2 != NULL; _s2 = _s2->next) {
+        _s = stringlist_add(_s, _s2->value);
+        if (_s == NULL)
+            return NULL;
+    }
+    return _s;
 }
 
 int stringlist_length(const stringlist_t *stringlist)
