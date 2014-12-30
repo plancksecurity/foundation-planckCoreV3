@@ -28,8 +28,10 @@ identity_list *new_identity_list(pEp_identity *ident)
 {
     identity_list *id_list = calloc(1, sizeof(identity_list));
     assert(id_list);
-    if (id_list == NULL)
+    if (id_list == NULL) {
+        free(ident);
         return NULL;
+    }
 
     id_list->ident = ident;
 
@@ -40,7 +42,7 @@ identity_list *identity_list_dup(const identity_list *src)
 {
     assert(src);
 
-    identity_list *id_list = new_identity_list(src->ident);
+    identity_list *id_list = new_identity_list(identity_dup(src->ident));
     assert(id_list);
     if (id_list == NULL)
         return NULL;
@@ -212,7 +214,9 @@ void free_message(message *msg)
     free(msg->longmsg);
     free(msg->longmsg_formatted);
     free_bloblist(msg->attachments);
+    free_identity(msg->from);
     free_identity_list(msg->to);
+    free_identity(msg->recv_by);
     free_identity_list(msg->cc);
     free_identity_list(msg->bcc);
     free(msg->refering_id);

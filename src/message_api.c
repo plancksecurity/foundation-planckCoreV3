@@ -25,19 +25,29 @@ PEP_STATUS encrypt_message(
     *dst = NULL;
     assert(format != PEP_enc_none);
 
-    message *msg = new_message(src->dir, src->from, src->to, NULL);
+    pEp_identity *from = identity_dup(src->from);
+    if (from == NULL)
+        return PEP_OUT_OF_MEMORY;
+
+    identity_list *to = identity_list_dup(src->to);
+    if (to == NULL) {
+        free_identity(from);
+        return PEP_OUT_OF_MEMORY;
+    }
+
+    message *msg = new_message(src->dir, from, to, NULL);
     if (msg == NULL)
         return PEP_OUT_OF_MEMORY;
 
-    msg->from->me = true;
+    from->me = true;
 
-    status = myself(session, msg->from);
+    status = myself(session, from);
     if (status != PEP_STATUS_OK) {
         free_message(msg);
         return status;
     }
 
-    stringlist_t * keys = new_stringlist(msg->from->fpr);
+    stringlist_t * keys = new_stringlist(from->fpr);
     if (keys == NULL) {
         free_message(msg);
         return PEP_OUT_OF_MEMORY;
@@ -56,7 +66,7 @@ PEP_STATUS encrypt_message(
 
     bool dest_keys_found = false;
     identity_list * _il;
-    for (_il = msg->to; _il && _il->ident; _il = _il->next) {
+    for (_il = to; _il && _il->ident; _il = _il->next) {
         PEP_STATUS _status = update_identity(session, _il->ident);
         if (_status != PEP_STATUS_OK) {
             free_message(msg);
@@ -101,9 +111,14 @@ PEP_STATUS encrypt_message(
                 strcat(ptext, src->longmsg);
                 status = encrypt_and_sign(session, keys, ptext, strlen(ptext),
                         &ctext, &csize);
+                free(ptext);
                 if (ctext) {
-                    msg->longmsg = ctext;
+                    msg->longmsg = strdup(ctext);
                     msg->shortmsg = strdup("pEp");
+                    if (!(msg->longmsg && msg->shortmsg)) {
+                        free_message(msg);
+                        return PEP_OUT_OF_MEMORY;
+                    }
                 }
                 else {
                     free_message(msg);
@@ -115,7 +130,12 @@ PEP_STATUS encrypt_message(
                 status = encrypt_and_sign(session, keys, ptext, strlen(ptext),
                         &ctext, &csize);
                 if (ctext) {
-                    msg->shortmsg = ctext;
+                    msg->longmsg = strdup(ctext);
+                    msg->shortmsg = strdup("pEp");
+                    if (!(msg->longmsg && msg->shortmsg)) {
+                        free_message(msg);
+                        return PEP_OUT_OF_MEMORY;
+                    }
                 }
                 else {
                     free_message(msg);
@@ -127,8 +147,12 @@ PEP_STATUS encrypt_message(
                 status = encrypt_and_sign(session, keys, ptext, strlen(ptext),
                         &ctext, &csize);
                 if (ctext) {
-                    msg->longmsg = ctext;
+                    msg->longmsg = strdup(ctext);
                     msg->shortmsg = strdup("pEp");
+                    if (!(msg->longmsg && msg->shortmsg)) {
+                        free_message(msg);
+                        return PEP_OUT_OF_MEMORY;
+                    }
                 }
                 else {
                     free_message(msg);
@@ -140,7 +164,11 @@ PEP_STATUS encrypt_message(
                 status = encrypt_and_sign(session, keys, ptext, strlen(ptext),
                         &ctext, &csize);
                 if (ctext) {
-                    msg->longmsg_formatted = ctext;
+                    msg->longmsg_formatted = strdup(ctext);
+                    if (msg->longmsg_formatted == NULL) {
+                        free_message(msg);
+                        return PEP_OUT_OF_MEMORY;
+                    }
                 }
                 else {
                     free_message(msg);
@@ -162,7 +190,13 @@ PEP_STATUS encrypt_message(
                     status = encrypt_and_sign(session, keys, ptext, psize,
                             &ctext, &csize);
                     if (ctext) {
-                        _d = bloblist_add(_d, ctext, csize, _s->mime_type,
+                        char * _c = strdup(ctext);
+                        if (_c == NULL) {
+                            free_message(msg);
+                            free_stringlist(keys);
+                            return PEP_OUT_OF_MEMORY;
+                        }
+                        _d = bloblist_add(_d, _c, csize, _s->mime_type,
                                 _s->file_name);
                         if (_d == NULL) {
                             free_message(msg);

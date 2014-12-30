@@ -209,6 +209,7 @@ PEP_STATUS pgp_init(PEP_SESSION session)
     _session->gpg.gpgme_set_locale(NULL, LC_CTYPE, setlocale(LC_CTYPE, NULL));
 
     gpgme_error = _session->gpg.gpgme_new(&_session->ctx);
+    gpgme_error = gpg_err_code(gpgme_error);
     if (gpgme_error != GPG_ERR_NO_ERROR) {
         dlclose(_session->gpgme);
         free(_session);
@@ -218,6 +219,7 @@ PEP_STATUS pgp_init(PEP_SESSION session)
 
     gpgme_error = _session->gpg.gpgme_set_protocol(_session->ctx,
         GPGME_PROTOCOL_OpenPGP);
+    gpgme_error = gpg_err_code(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
 
     _session->gpg.gpgme_set_armor(_session->ctx, 1);
@@ -262,6 +264,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     *keylist = NULL;
 
     gpgme_error = _session->gpg.gpgme_data_new_from_mem(&cipher, ctext, csize, 0);
+    gpgme_error = gpg_err_code(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
     if (gpgme_error != GPG_ERR_NO_ERROR) {
         if (gpgme_error == GPG_ERR_ENOMEM)
@@ -271,6 +274,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     }
 
     gpgme_error = _session->gpg.gpgme_data_new(&plain);
+    gpgme_error = gpg_err_code(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
     if (gpgme_error != GPG_ERR_NO_ERROR) {
         _session->gpg.gpgme_data_release(cipher);
@@ -286,6 +290,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     case GPGME_DATA_TYPE_PGP_OTHER:
         gpgme_error = _session->gpg.gpgme_op_decrypt_verify(_session->ctx, cipher,
             plain);
+        gpgme_error = gpg_err_code(gpgme_error);
         assert(gpgme_error != GPG_ERR_INV_VALUE);
         assert(gpgme_error != GPG_ERR_NO_DATA);
 
@@ -445,6 +450,7 @@ PEP_STATUS pgp_verify_text(
     *keylist = NULL;
 
     gpgme_error = _session->gpg.gpgme_data_new_from_mem(&d_text, text, size, 0);
+    gpgme_error = gpg_err_code(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
     if (gpgme_error != GPG_ERR_NO_ERROR) {
         if (gpgme_error == GPG_ERR_ENOMEM)
@@ -454,6 +460,7 @@ PEP_STATUS pgp_verify_text(
     }
 
     gpgme_error = _session->gpg.gpgme_data_new_from_mem(&d_sig, signature, sig_size, 0);
+    gpgme_error = gpg_err_code(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
     if (gpgme_error != GPG_ERR_NO_ERROR) {
         _session->gpg.gpgme_data_release(d_text);
@@ -464,6 +471,7 @@ PEP_STATUS pgp_verify_text(
     }
 
     gpgme_error = _session->gpg.gpgme_op_verify(_session->ctx, d_sig, d_text, NULL);
+    gpgme_error = gpg_err_code(gpgme_error);
     assert(gpgme_error != GPG_ERR_INV_VALUE);
 
     switch (gpgme_error) {
@@ -579,6 +587,7 @@ PEP_STATUS pgp_encrypt_and_sign(
     *csize = 0;
 
     gpgme_error = _session->gpg.gpgme_data_new_from_mem(&plain, ptext, psize, 0);
+    gpgme_error = gpg_err_code(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
     if (gpgme_error != GPG_ERR_NO_ERROR) {
         if (gpgme_error == GPG_ERR_ENOMEM)
@@ -588,6 +597,7 @@ PEP_STATUS pgp_encrypt_and_sign(
     }
 
     gpgme_error = _session->gpg.gpgme_data_new(&cipher);
+    gpgme_error = gpg_err_code(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
     if (gpgme_error != GPG_ERR_NO_ERROR) {
         _session->gpg.gpgme_data_release(plain);
@@ -612,6 +622,7 @@ PEP_STATUS pgp_encrypt_and_sign(
         assert(_keylist->value);
         gpgme_error = _session->gpg.gpgme_get_key(_session->ctx, _keylist->value,
             &rcpt[i], 0);
+        gpgme_error = gpg_err_code(gpgme_error);
         assert(gpgme_error != GPG_ERR_ENOMEM);
 
         switch (gpgme_error) {
@@ -625,6 +636,7 @@ PEP_STATUS pgp_encrypt_and_sign(
         case GPG_ERR_NO_ERROR:
             if (i == 0) {
                 gpgme_error_t _gpgme_error = _session->gpg.gpgme_signers_add(_session->ctx, rcpt[0]);
+                _gpgme_error = gpg_err_code(_gpgme_error);
                 assert(_gpgme_error == GPG_ERR_NO_ERROR);
             }
             break;
@@ -658,6 +670,7 @@ PEP_STATUS pgp_encrypt_and_sign(
 
     gpgme_error = _session->gpg.gpgme_op_encrypt_sign(_session->ctx, rcpt, flags,
         plain, cipher);
+    gpgme_error = gpg_err_code(gpgme_error);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
     {
@@ -741,6 +754,7 @@ PEP_STATUS pgp_generate_keypair(
     }
 
     gpgme_error = _session->gpg.gpgme_op_genkey(_session->ctx, parms, NULL, NULL);
+    gpgme_error = gpg_err_code(gpgme_error);
     free(parms);
 
     switch (gpgme_error) {
@@ -774,6 +788,7 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
     assert(fpr);
 
     gpgme_error = _session->gpg.gpgme_get_key(_session->ctx, fpr, &key, 0);
+    gpgme_error = gpg_err_code(gpgme_error);
     assert(gpgme_error != GPG_ERR_ENOMEM);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
@@ -792,6 +807,7 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
     }
 
     gpgme_error = _session->gpg.gpgme_op_delete(_session->ctx, key, 1);
+    gpgme_error = gpg_err_code(gpgme_error);
     _session->gpg.gpgme_key_unref(key);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
@@ -823,6 +839,7 @@ PEP_STATUS pgp_import_key(PEP_SESSION session, const char *key_data, size_t size
     assert(key_data);
 
     gpgme_error = _session->gpg.gpgme_data_new_from_mem(&dh, key_data, size, 0);
+    gpgme_error = gpg_err_code(gpgme_error);
     assert(gpgme_error != GPG_ERR_ENOMEM);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
@@ -838,6 +855,7 @@ PEP_STATUS pgp_import_key(PEP_SESSION session, const char *key_data, size_t size
     }
 
     gpgme_error = _session->gpg.gpgme_op_import(_session->ctx, dh);
+    gpgme_error = gpg_err_code(gpgme_error);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
         break;
@@ -875,6 +893,7 @@ PEP_STATUS pgp_export_key(
     assert(size);
 
     gpgme_error = _session->gpg.gpgme_data_new(&dh);
+    gpgme_error = gpg_err_code(gpgme_error);
     assert(gpgme_error != GPG_ERR_ENOMEM);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
@@ -891,6 +910,7 @@ PEP_STATUS pgp_export_key(
 
     gpgme_error = _session->gpg.gpgme_op_export(_session->ctx, fpr,
         GPGME_EXPORT_MODE_MINIMAL, dh);
+    gpgme_error = gpg_err_code(gpgme_error);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
         break;
@@ -943,6 +963,7 @@ static void _switch_mode(pEpSession *_session, gpgme_keylist_mode_t remove_mode,
     mode |= add_mode;
 
     gpgme_error = _session->gpg.gpgme_set_keylist_mode(_session->ctx, mode);
+    gpgme_error = gpg_err_code(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
 }
 
@@ -958,6 +979,7 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
     _switch_mode(_session, GPGME_KEYLIST_MODE_LOCAL, GPGME_KEYLIST_MODE_EXTERN);
 
     gpgme_error = _session->gpg.gpgme_op_keylist_start(_session->ctx, pattern, 0);
+    gpgme_error = gpg_err_code(gpgme_error);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
         break;
@@ -974,6 +996,7 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
 
     do {
         gpgme_error = _session->gpg.gpgme_op_keylist_next(_session->ctx, &key);
+        gpgme_error = gpg_err_code(gpgme_error);
         assert(gpgme_error != GPG_ERR_INV_VALUE);
         switch (gpgme_error) {
         case GPG_ERR_EOF:
@@ -987,6 +1010,7 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
             keys[1] = NULL;
 
             gpgme_error = _session->gpg.gpgme_op_import_keys(_session->ctx, keys);
+            gpgme_error = gpg_err_code(gpgme_error);
             _session->gpg.gpgme_key_unref(key);
             assert(gpgme_error != GPG_ERR_INV_VALUE);
             assert(gpgme_error != GPG_ERR_CONFLICT);
@@ -1032,6 +1056,7 @@ PEP_STATUS pgp_find_keys(
     *keylist = NULL;
 
     gpgme_error = _session->gpg.gpgme_op_keylist_start(_session->ctx, pattern, 0);
+    gpgme_error = gpg_err_code(gpgme_error);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
         break;
@@ -1047,6 +1072,7 @@ PEP_STATUS pgp_find_keys(
 
     do {
         gpgme_error = _session->gpg.gpgme_op_keylist_next(_session->ctx, &key);
+        gpgme_error = gpg_err_code(gpgme_error);
         assert(gpgme_error != GPG_ERR_INV_VALUE);
         switch (gpgme_error) {
         case GPG_ERR_EOF:
@@ -1091,6 +1117,7 @@ PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
 
     gpgme_error = _session->gpg.gpgme_op_export(_session->ctx, pattern,
         GPGME_EXPORT_MODE_EXTERN, NULL);
+    gpgme_error = gpg_err_code(gpgme_error);
     assert(gpgme_error != GPG_ERR_INV_VALUE);
     if (gpgme_error == GPG_ERR_NO_ERROR)
         return PEP_STATUS_OK;
@@ -1117,6 +1144,7 @@ PEP_STATUS pgp_get_key_rating(
     *comm_type = PEP_ct_unknown;
 
     gpgme_error = _session->gpg.gpgme_op_keylist_start(_session->ctx, fpr, 0);
+    gpgme_error = gpg_err_code(gpgme_error);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
         break;
@@ -1128,6 +1156,7 @@ PEP_STATUS pgp_get_key_rating(
     };
 
     gpgme_error = _session->gpg.gpgme_op_keylist_next(_session->ctx, &key);
+    gpgme_error = gpg_err_code(gpgme_error);
     assert(gpgme_error != GPG_ERR_INV_VALUE);
 
     if (key == NULL) {
