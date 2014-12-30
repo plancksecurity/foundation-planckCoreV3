@@ -86,7 +86,7 @@ typedef enum _PEP_msg_direction {
 } PEP_msg_direction;
 
 typedef struct _bloblist_t {
-    char *data_ref;                 // reference to blob
+    char *data;                     // blob
     size_t size;                    // size of blob
     char *mime_type;                // UTF-8 string of MIME type of blob or
                                     // NULL if unknown
@@ -99,7 +99,7 @@ typedef struct _bloblist_t {
 // new_bloblist() - allocate a new bloblist
 //
 //  parameters:
-//      blob            pointer to blob to add to the list
+//      blob            blob to add to the list
 //      size            size of the blob
 //      mime_type       MIME type of the blob data or NULL if unknown
 //      file_name       file name of origin of blob data or NULL if unknown
@@ -108,39 +108,17 @@ typedef struct _bloblist_t {
 //      pointer to new bloblist_t or NULL if out of memory
 //
 //  caveat:
-//      the blob isn't copied, but only a reference is handled; the blob
-//      remains in the ownership of the caller and must not be deleted until
-//      the bloblist is deleted first; mime_type and file_name are being
-//      copied, the originals remain in the ownership of the caller
+//      the ownership of the blob goes to the bloblist; mime_type and file_name
+//      are being copied, the originals remain in the ownership of the caller
 
 bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_type,
         const char *file_name);
-
-
-// bloblist_dup() - duplicate bloblist (deep copy)
-//
-//  paramters:
-//      src             bloblist to duplicate
-//
-//  return value:
-//      new bloblist or NULL if out of memory
-//
-//  caveat:
-//      the blobs referenced by the lists aren't copied, so both bloblists
-//      reference the same blob data; mime_types and file_names are duplicated
-//      as well, though
-
-bloblist_t *bloblist_dup(const bloblist_t *src);
 
 
 // free_bloblist() - free bloblist
 //
 //  parameters:
 //      bloblist        bloblist to free
-//
-//  caveat:
-//      the blobs in the bloblist aren't freed and remain in the ownership of
-//      the caller; all other data is being freed
 
 void free_bloblist(bloblist_t *bloblist);
 
@@ -149,7 +127,7 @@ void free_bloblist(bloblist_t *bloblist);
 //
 //  parameters:
 //      bloblist        bloblist to add to
-//      blob            reference to a blob
+//      blob            blob
 //      size            size of the blob
 //      mime_type       MIME type of the blob or NULL if unknown
 //      file_name       file name of the blob or NULL if unknown
@@ -158,9 +136,8 @@ void free_bloblist(bloblist_t *bloblist);
 //      pointer to the last element of bloblist or NULL if out of memory
 //
 //  caveat:
-//      the blob isn't copied, instead a reference is added to bloblist;
-//      mime_type and file_name are copied, the originals remain in the
-//      ownership of the caller
+//      the ownership of the blob goes to the bloblist; mime_type and file_name
+//      are being copied, the originals remain in the ownership of the caller
 
 bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t size,
         const char *mime_type, const char *file_name);

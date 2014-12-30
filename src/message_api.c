@@ -184,9 +184,9 @@ PEP_STATUS encrypt_message(
                     return PEP_OUT_OF_MEMORY;
                 }
                 msg->attachments = _d;
-                for (_s = src->attachments; _s && _s->data_ref; _s = _s->next) {
+                for (_s = src->attachments; _s && _s->data; _s = _s->next) {
                     int psize = _s->size;
-                    ptext = _s->data_ref;
+                    ptext = _s->data;
                     status = encrypt_and_sign(session, keys, ptext, psize,
                             &ctext, &csize);
                     if (ctext) {

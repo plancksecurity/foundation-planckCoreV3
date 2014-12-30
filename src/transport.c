@@ -93,8 +93,6 @@ bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_type,
     bloblist_t * bloblist = calloc(1, sizeof(bloblist_t));
     if (bloblist == NULL)
         return NULL;
-    bloblist->data_ref = blob;
-    bloblist->size = size;
     if (mime_type) {
         bloblist->mime_type = strdup(mime_type);
         if (bloblist->mime_type == NULL) {
@@ -110,23 +108,9 @@ bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_type,
             return NULL;
         }
     }
+    bloblist->data = blob;
+    bloblist->size = size;
     return bloblist;
-}
-
-bloblist_t *bloblist_dup(const bloblist_t *src)
-{
-    assert(src);
-
-    if (src) {
-        bloblist_t * dst = new_bloblist(src->data_ref, src->size,
-                src->mime_type, src->file_name);
-        if (dst == NULL)
-            return NULL;
-        dst->next = bloblist_dup(src->next);
-        return dst;
-    }
-    else
-        return NULL;
 }
 
 void free_bloblist(bloblist_t *bloblist)
@@ -134,10 +118,9 @@ void free_bloblist(bloblist_t *bloblist)
     if (bloblist) {
         if (bloblist->next)
             free_bloblist(bloblist->next);
-        if (bloblist->mime_type)
-            free(bloblist->mime_type);
-        if (bloblist->file_name)
-            free(bloblist->file_name);
+        free(bloblist->data);
+        free(bloblist->mime_type);
+        free(bloblist->file_name);
         free(bloblist);
     }
 }
@@ -150,9 +133,7 @@ bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t size,
     if (bloblist == NULL)
         return new_bloblist(blob, size, mime_type, file_name);
 
-    if (bloblist->data_ref == NULL) {
-        bloblist->data_ref = blob;
-        bloblist->size = size;
+    if (bloblist->data == NULL) {
         if (mime_type) {
             bloblist->mime_type = strdup(mime_type);
             if (bloblist->mime_type == NULL) {
@@ -168,6 +149,8 @@ bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t size,
                 return NULL;
             }
         }
+        bloblist->data = blob;
+        bloblist->size = size;
         return bloblist;
     }
 
