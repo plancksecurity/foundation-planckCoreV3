@@ -20,7 +20,6 @@ PEP_STATUS encrypt_message(
 
     assert(session);
     assert(src);
-    assert(src->shortmsg || src->longmsg);
     assert(dst);
     *dst = NULL;
     assert(format != PEP_enc_none);
@@ -126,9 +125,18 @@ PEP_STATUS encrypt_message(
                 }
             }
             else if (src->shortmsg) {
-                ptext = src->shortmsg;
+                ptext = calloc(1, strlen(src->shortmsg) + 12);
+                if (ptext == NULL) {
+                    free_message(msg);
+                    free_stringlist(keys);
+                    return PEP_OUT_OF_MEMORY;
+                }
+                strcpy(ptext, "subject: ");
+                strcat(ptext, src->shortmsg);
+                strcat(ptext, "\n\n");
                 status = encrypt_and_sign(session, keys, ptext, strlen(ptext),
                         &ctext, &csize);
+                free(ptext);
                 if (ctext) {
                     msg->longmsg = strdup(ctext);
                     msg->shortmsg = strdup("pEp");
