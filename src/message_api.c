@@ -176,38 +176,40 @@ PEP_STATUS encrypt_message(
                 }
             }
             if (msg) {
-                bloblist_t *_s;
-                bloblist_t *_d = new_bloblist(NULL, 0, NULL, NULL);
-                if (_d == NULL) {
-                    free_message(msg);
-                    free_stringlist(keys);
-                    return PEP_OUT_OF_MEMORY;
-                }
-                msg->attachments = _d;
-                for (_s = src->attachments; _s && _s->data; _s = _s->next) {
-                    int psize = _s->size;
-                    ptext = _s->data;
-                    status = encrypt_and_sign(session, keys, ptext, psize,
-                            &ctext, &csize);
-                    if (ctext) {
-                        char * _c = strdup(ctext);
-                        if (_c == NULL) {
-                            free_message(msg);
-                            free_stringlist(keys);
-                            return PEP_OUT_OF_MEMORY;
-                        }
-                        _d = bloblist_add(_d, _c, csize, _s->mime_type,
-                                _s->file_name);
-                        if (_d == NULL) {
-                            free_message(msg);
-                            free_stringlist(keys);
-                            return PEP_OUT_OF_MEMORY;
-                        }
-                    }
-                    else {
+                if (src->attachments) {
+                    bloblist_t *_s;
+                    bloblist_t *_d = new_bloblist(NULL, 0, NULL, NULL);
+                    if (_d == NULL) {
                         free_message(msg);
-                        msg = NULL;
-                        break;
+                        free_stringlist(keys);
+                        return PEP_OUT_OF_MEMORY;
+                    }
+                    msg->attachments = _d;
+                    for (_s = src->attachments; _s && _s->data; _s = _s->next) {
+                        int psize = _s->size;
+                        ptext = _s->data;
+                        status = encrypt_and_sign(session, keys, ptext, psize,
+                                &ctext, &csize);
+                        if (ctext) {
+                            char * _c = strdup(ctext);
+                            if (_c == NULL) {
+                                free_message(msg);
+                                free_stringlist(keys);
+                                return PEP_OUT_OF_MEMORY;
+                            }
+                            _d = bloblist_add(_d, _c, csize, _s->mime_type,
+                                    _s->file_name);
+                            if (_d == NULL) {
+                                free_message(msg);
+                                free_stringlist(keys);
+                                return PEP_OUT_OF_MEMORY;
+                            }
+                        }
+                        else {
+                            free_message(msg);
+                            msg = NULL;
+                            break;
+                        }
                     }
                 }
                 msg->enc_format = PEP_enc_pieces;
