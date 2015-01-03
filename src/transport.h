@@ -144,9 +144,14 @@ bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t size,
 
 
 typedef enum _PEP_enc_format {
-    PEP_enc_none = 0,
-    PEP_enc_MIME_multipart,
-    PEP_enc_pieces
+    PEP_enc_none = 0,                       // message is in pieces and nor
+                                            // encoded nor encrypted
+    PEP_enc_none_MIME,                      // message is MIME encoded but not
+                                            // encrypted
+    PEP_enc_pieces,                         // message is encrypted but not
+                                            // MIME encoded
+    PEP_enc_MIME_multipart                  // message is encrypted and MIME
+                                            // encoded
 } PEP_enc_format;
 
 struct _message_ref_list;

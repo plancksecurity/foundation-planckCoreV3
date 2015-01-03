@@ -7,6 +7,34 @@ extern "C" {
 #include "transport.h"
 
 
+// mime_encode_parts() - encode message with MIME
+//  parameters:
+//      src                 message to encode
+//      dst                 encoded message or NULL on error
+//
+//  return value:
+//      error status or PEP_STATUS_OK on success
+//
+//  caveat:
+//      message must be unencrypted
+
+DYNAMIC_API PEP_STATUS mime_encode_parts(const message *src, message **dst);
+
+
+// mime_decode_parts() - decode MIME message
+//  parameters:
+//      src                 message to decode
+//      dst                 decoded message or NULL on error
+//
+//  return value:
+//      error status or PEP_STATUS_OK on success
+//
+//  caveat:
+//      message must be unencrypted
+
+DYNAMIC_API PEP_STATUS mime_decode_parts(const message *src, message **dst);
+
+
 // encrypt_message() - encrypt message in memory
 //
 //  parameters:
@@ -21,7 +49,7 @@ extern "C" {
 //      or more keys couldn't be found, but the message could be encrypted
 //      with other keys
 
-PEP_STATUS encrypt_message(
+DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
         const message *src,
         stringlist_t *extra,
@@ -40,7 +68,7 @@ PEP_STATUS encrypt_message(
 //  return value:
 //      error status or PEP_STATUS_OK on success
 
-PEP_STATUS decrypt_message(
+DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
         const message *src,
         message **dst

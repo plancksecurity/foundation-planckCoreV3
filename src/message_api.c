@@ -1,12 +1,156 @@
 #include "message_api.h"
 #include "keymanagement.h"
 
-#include <libetpan/libetpan.h>
+#include <libetpan/mailmime.h>
+#ifndef mailmime_param_new_with_data
+#include <libetpan/mailprivacy_tools.h>
+#endif
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 
 #define NOT_IMPLEMENTED assert(0);
+
+PEP_STATUS mime_encode_parts(const message *src, message **dst)
+{
+    struct mailmime * mime_body;
+
+    assert(src);
+    assert(src->enc_format == PEP_enc_none);
+    assert(dst);
+
+    if (src->enc_format != PEP_enc_none)
+        return PEP_ILLEGAL_VALUE;
+
+    *dst = NULL;
+
+    if (src->longmsg && src->longmsg_formatted) {
+        struct mailmime * mime_text;
+        struct mailmime * mime_html;
+        NOT_IMPLEMENTED
+    }
+    else if (src->longmsg) {
+        struct mailmime_fields * mime_fields
+                = mailmime_fields_new_encoding(MAILMIME_MECHANISM_8BIT);
+        assert(mime_fields);
+        if (mime_fields == NULL)
+            return PEP_OUT_OF_MEMORY;
+
+        struct mailmime_content * content
+                = mailmime_content_new_with_str("text/plain");
+        assert(content);
+        if (content == NULL) {
+            mailmime_fields_free(mime_fields);
+            return PEP_OUT_OF_MEMORY;
+        }
+
+        struct mailmime_parameter * param
+                = mailmime_param_new_with_data("charset", "utf-8");
+        assert(param);
+        if (param == NULL) {
+            mailmime_fields_free(mime_fields);
+            mailmime_content_free(content);
+            return PEP_OUT_OF_MEMORY;
+        }
+
+        int r = clist_append(content->ct_parameters, param);
+        if (r < 0) {
+            mailmime_fields_free(mime_fields);
+            mailmime_content_free(content);
+            mailmime_parameter_free(param);
+            return PEP_OUT_OF_MEMORY;
+        }
+
+        mime_body = mailmime_new_empty(content, mime_fields);
+        if (mime_body == NULL) {
+            mailmime_fields_free(mime_fields);
+            mailmime_content_free(content);
+            return PEP_OUT_OF_MEMORY;
+        }
+
+        r = mailmime_set_body_text(mime_body, src->longmsg, strlen(src->longmsg));
+        if (r != MAILIMF_NO_ERROR) {
+            mailmime_free(mime_body);
+            return PEP_OUT_OF_MEMORY;
+        }
+    }
+    else if (src->longmsg_formatted) {
+        NOT_IMPLEMENTED
+    }
+ 
+    char *fn = strdup("/tmp/pEp.XXXXXXXXXX");
+    assert(fn);
+    if (fn == NULL) {
+        mailmime_free(mime_body);
+        return PEP_OUT_OF_MEMORY;
+    }
+
+    int f = mkstemp(fn);
+    assert(f != -1);
+    free(fn);
+    if (f == -1) {
+        mailmime_free(mime_body);
+        return PEP_CANNOT_CREATE_TEMP_FILE;
+    }
+
+    FILE *fp = fdopen(f, "w+");
+    assert(fp);
+    if (fp == NULL) {
+        return PEP_CANNOT_CREATE_TEMP_FILE;
+    }
+
+    int col = 0;
+    int r = mailmime_write_file(fp, &col, mime_body);
+    assert(r == MAILIMF_NO_ERROR);
+    mailmime_free(mime_body);
+    if (r != MAILIMF_NO_ERROR) {
+        fclose(fp);
+        return PEP_CANNOT_CREATE_TEMP_FILE;
+    }
+
+    rewind(fp);
+
+    char *buf = (char *) calloc(1, col + 1);
+    assert(buf);
+    if (buf == NULL) {
+        fclose(fp);
+        return PEP_OUT_OF_MEMORY;
+    }
+
+    size_t size = fread(buf, col, 1, fp);
+    assert(size);
+    fclose(fp);
+    if (size == 0L) {
+        free(buf);
+        return PEP_CANNOT_CREATE_TEMP_FILE;
+    }
+
+    message *msg = new_message(src->dir, src->from, src->to, src->shortmsg);
+    if (msg == NULL) {
+        free(buf);
+        return PEP_OUT_OF_MEMORY;
+    }
+    msg->longmsg = buf;
+
+    *dst = msg;
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS mime_decode_parts(const message *src, message **dst)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(src);
+    assert(src->enc_format == PEP_enc_none_MIME);
+    assert(dst);
+
+    if (src->enc_format != PEP_enc_none_MIME)
+        return PEP_ILLEGAL_VALUE;
+
+    *dst = NULL;
+
+    return status;
+}
 
 PEP_STATUS encrypt_message(
         PEP_SESSION session,
@@ -91,9 +235,10 @@ PEP_STATUS encrypt_message(
         size_t csize = 0;
 
         switch (format) {
-        case PEP_enc_MIME_multipart:
-            NOT_IMPLEMENTED
+        case PEP_enc_MIME_multipart: {
+            *dst = msg;
             break;
+        }
 
         case PEP_enc_pieces:
             if (src->shortmsg && src->longmsg) {
