@@ -98,6 +98,7 @@ PEP_STATUS mime_encode_parts(const message *src, message **dst)
     if (fp == NULL) {
         return PEP_CANNOT_CREATE_TEMP_FILE;
     }
+    // unlink(fn);
 
     int col = 0;
     int r = mailmime_write_file(fp, &col, mime_body);

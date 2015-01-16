@@ -29,9 +29,19 @@ int main() {
     assert(enc_msg);
     cout << "message encrypted.\n";
 
+//     cout << "MIME encoding message…\n";
+//     message *mmsg;
+//     PEP_STATUS status3 = mime_encode_parts(msg, &mmsg);
+//     assert(mmsg);
+//     assert(status3 == PEP_STATUS_OK);
+//     cout << "message:\n";
+//     cout << mmsg->longmsg;
+//     cout << "\n";
+
     cout << "freeing messages…\n";
     free_message(msg);
     free_message(enc_msg);
+//     free_message(mmsg);
     cout << "done.\n";
 
     cout << "calling release()\n";

@@ -35,7 +35,7 @@ typedef struct _identity_list {
 //  caveat:
 //      ident is being moved, the caller loses ownership
 
-identity_list *new_identity_list(pEp_identity *ident);
+DYNAMIC_API identity_list *new_identity_list(pEp_identity *ident);
 
 
 // identity_list_dup() - duplicate identity_list (deep copy)
@@ -46,7 +46,7 @@ identity_list *new_identity_list(pEp_identity *ident);
 //  return value:
 //      new identity_list or NULL if out of memory
 
-identity_list *identity_list_dup(const identity_list *src);
+DYNAMIC_API identity_list *identity_list_dup(const identity_list *src);
 
 
 // free_identity_list() - free memory allocated by identity_list
@@ -58,7 +58,7 @@ identity_list *identity_list_dup(const identity_list *src);
 //      this function frees all identities in the list additional to the
 //      identity_list itself
 
-void free_identity_list(identity_list *id_list);
+DYNAMIC_API void free_identity_list(identity_list *id_list);
 
 
 // identity_list_add - add identity to an identity_list
@@ -73,7 +73,7 @@ void free_identity_list(identity_list *id_list);
 //  caveat:
 //      ident is being moved, the caller loses ownership
 
-identity_list *identity_list_add(identity_list *id_list, pEp_identity *ident);
+DYNAMIC_API identity_list *identity_list_add(identity_list *id_list, pEp_identity *ident);
 
 typedef enum _PEP_msg_format {
     PEP_format_plain = 0,
@@ -111,7 +111,7 @@ typedef struct _bloblist_t {
 //      the ownership of the blob goes to the bloblist; mime_type and file_name
 //      are being copied, the originals remain in the ownership of the caller
 
-bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_type,
+DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_type,
         const char *file_name);
 
 
@@ -120,7 +120,7 @@ bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_type,
 //  parameters:
 //      bloblist        bloblist to free
 
-void free_bloblist(bloblist_t *bloblist);
+DYNAMIC_API void free_bloblist(bloblist_t *bloblist);
 
 
 // bloblist_add() - add reference to a blob to bloblist
@@ -139,7 +139,7 @@ void free_bloblist(bloblist_t *bloblist);
 //      the ownership of the blob goes to the bloblist; mime_type and file_name
 //      are being copied, the originals remain in the ownership of the caller
 
-bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t size,
+DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t size,
         const char *mime_type, const char *file_name);
 
 
@@ -205,7 +205,7 @@ typedef struct _message_ref_list {
 //      them; shortmsg is being copied, the ownership of the original remains
 //      with the caller
 
-message *new_message(
+DYNAMIC_API message *new_message(
         PEP_msg_direction dir,
         pEp_identity *from,
         identity_list *to,
@@ -222,7 +222,7 @@ message *new_message(
 //      raw data as well as referenced other messages aren't freed and remain
 //      in the ownership of the caller
 
-void free_message(message *msg);
+DYNAMIC_API void free_message(message *msg);
 
 
 // new_message_ref_list() - allocate new message reference list
@@ -233,7 +233,7 @@ void free_message(message *msg);
 //  return value:
 //      pointer to new message_ref_list or NULL if out of memory
 
-message_ref_list *new_message_ref_list(message *msg);
+DYNAMIC_API message_ref_list *new_message_ref_list(message *msg);
 
 
 // free_message_ref_list() - free message reference list
@@ -241,7 +241,7 @@ message_ref_list *new_message_ref_list(message *msg);
 //  parameters:
 //      msg_list        message_ref_list to free
 
-void free_message_ref_list(message_ref_list *msg_list);
+DYNAMIC_API void free_message_ref_list(message_ref_list *msg_list);
 
 
 // message_ref_list_add() - add a reference to a message to a message reference
@@ -255,7 +255,7 @@ void free_message_ref_list(message_ref_list *msg_list);
 //      pointer to the last element of message_ref_list or NULL if out of
 //      memory
 
-message_ref_list *message_ref_list_add(message_ref_list *msg_list,
+DYNAMIC_API message_ref_list *message_ref_list_add(message_ref_list *msg_list,
         message *msg);
 
 
