@@ -186,7 +186,7 @@ DYNAMIC_API PEP_STATUS update_identity(
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 {
     PEP_STATUS status;
-    stringlist_t *keylist;
+    stringlist_t *keylist = NULL;
 
     assert(session);
     assert(identity);

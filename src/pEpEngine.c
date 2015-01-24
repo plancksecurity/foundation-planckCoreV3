@@ -29,8 +29,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 	_session->version = PEP_ENGINE_VERSION;
 
     init_cryptotech(_session);
-    init_transport_system(_session->transports);
-
+    init_transport_system(_session);
+    
     assert(LOCAL_DB);
     if (LOCAL_DB == NULL) {
         release_transport_system(_session);
@@ -232,27 +232,26 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 DYNAMIC_API void release(PEP_SESSION session)
 {
 	assert(session);
-	pEpSession *_session = (pEpSession *) session;
 
-	if (_session) {
-		if (_session->db) {
-			sqlite3_finalize(_session->safeword);
-			sqlite3_finalize(_session->log);
-			sqlite3_finalize(_session->get_identity);
-			sqlite3_finalize(_session->set_identity);
-            sqlite3_finalize(_session->set_person);
-            sqlite3_finalize(_session->set_pgp_keypair);
-            sqlite3_finalize(_session->set_trust);
-            sqlite3_finalize(_session->get_trust);
+	if (session) {
+		if (session->db) {
+			sqlite3_finalize(session->safeword);
+			sqlite3_finalize(session->log);
+			sqlite3_finalize(session->get_identity);
+			sqlite3_finalize(session->set_identity);
+            sqlite3_finalize(session->set_person);
+            sqlite3_finalize(session->set_pgp_keypair);
+            sqlite3_finalize(session->set_trust);
+            sqlite3_finalize(session->get_trust);
 
-			sqlite3_close_v2(_session->db);
-			sqlite3_close_v2(_session->system_db);
+			sqlite3_close_v2(session->db);
+			sqlite3_close_v2(session->system_db);
 		}
 
-        release_transport_system(_session);
-        release_cryptotech(_session);
+        release_transport_system(session);
+        release_cryptotech(session);
     }
-	free(_session);
+	free(session);
 }
 
 stringlist_t *new_stringlist(const char *value)
@@ -363,32 +362,31 @@ DYNAMIC_API PEP_STATUS log_event(
         const char *description, const char *comment
     )
 {
-	pEpSession *_session = (pEpSession *) session;
 	PEP_STATUS status = PEP_STATUS_OK;
 	int result;
 
-	assert(_session);
+	assert(session);
 	assert(title);
 	assert(entity);
 
-	sqlite3_reset(_session->log);
-	sqlite3_bind_text(_session->log, 1, title, -1, SQLITE_STATIC);
-	sqlite3_bind_text(_session->log, 2, entity, -1, SQLITE_STATIC);
+	sqlite3_reset(session->log);
+	sqlite3_bind_text(session->log, 1, title, -1, SQLITE_STATIC);
+	sqlite3_bind_text(session->log, 2, entity, -1, SQLITE_STATIC);
 	if (description)
-        sqlite3_bind_text(_session->log, 3, description, -1, SQLITE_STATIC);
+        sqlite3_bind_text(session->log, 3, description, -1, SQLITE_STATIC);
 	else
-		sqlite3_bind_null(_session->log, 3);
+		sqlite3_bind_null(session->log, 3);
 	if (comment)
-		sqlite3_bind_text(_session->log, 4, comment, -1, SQLITE_STATIC);
+		sqlite3_bind_text(session->log, 4, comment, -1, SQLITE_STATIC);
 	else
-		sqlite3_bind_null(_session->log, 4);
+		sqlite3_bind_null(session->log, 4);
 	do {
-		result = sqlite3_step(_session->log);
+		result = sqlite3_step(session->log);
 		assert(result == SQLITE_DONE || result == SQLITE_BUSY);
 		if (result != SQLITE_DONE && result != SQLITE_BUSY)
 			status = PEP_UNKNOWN_ERROR;
 	} while (result == SQLITE_BUSY);
-	sqlite3_reset(_session->log);
+	sqlite3_reset(session->log);
 
 	return status;
 }
@@ -398,11 +396,10 @@ DYNAMIC_API PEP_STATUS safeword(
             char **word, size_t *wsize
         )
 {
-	pEpSession *_session = (pEpSession *) session;
 	PEP_STATUS status = PEP_STATUS_OK;
 	int result;
 
-	assert(_session);
+	assert(session);
 	assert(word);
 	assert(wsize);
 
@@ -418,22 +415,22 @@ DYNAMIC_API PEP_STATUS safeword(
             || (lang[1] >= 'a' && lang[1] <= 'z'));
 	assert(lang[2] == 0);
 
-	sqlite3_reset(_session->safeword);
-    sqlite3_bind_text(_session->safeword, 1, lang, -1, SQLITE_STATIC);
-	sqlite3_bind_int(_session->safeword, 2, value);
+	sqlite3_reset(session->safeword);
+    sqlite3_bind_text(session->safeword, 1, lang, -1, SQLITE_STATIC);
+	sqlite3_bind_int(session->safeword, 2, value);
 
-	result = sqlite3_step(_session->safeword);
+	result = sqlite3_step(session->safeword);
 	if (result == SQLITE_ROW) {
-        *word = strdup((const char *) sqlite3_column_text(_session->safeword,
+        *word = strdup((const char *) sqlite3_column_text(session->safeword,
                     1));
 		if (*word)
-            *wsize = sqlite3_column_bytes(_session->safeword, 1);
+            *wsize = sqlite3_column_bytes(session->safeword, 1);
 		else
 			status = PEP_SAFEWORD_NOT_FOUND;
 	} else
 		status = PEP_SAFEWORD_NOT_FOUND;
 
-	sqlite3_reset(_session->safeword);
+	sqlite3_reset(session->safeword);
 	return status;
 }
 
@@ -607,7 +604,6 @@ DYNAMIC_API PEP_STATUS get_identity(
         pEp_identity **identity
     )
 {
-	pEpSession *_session = (pEpSession *) session;
 	PEP_STATUS status = PEP_STATUS_OK;
 	static pEp_identity *_identity;
 	int result;
@@ -617,24 +613,24 @@ DYNAMIC_API PEP_STATUS get_identity(
 	assert(address);
     assert(address[0]);
 
-    sqlite3_reset(_session->get_identity);
-    sqlite3_bind_text(_session->get_identity, 1, address, -1, SQLITE_STATIC);
+    sqlite3_reset(session->get_identity);
+    sqlite3_bind_text(session->get_identity, 1, address, -1, SQLITE_STATIC);
 
-    result = sqlite3_step(_session->get_identity);
+    result = sqlite3_step(session->get_identity);
 	switch (result) {
 	case SQLITE_ROW:
         _identity = new_identity(
                 address,
-                (const char *) sqlite3_column_text(_session->get_identity, 0),
-                (const char *) sqlite3_column_text(_session->get_identity, 1),
-                (const char *) sqlite3_column_text(_session->get_identity, 2)
+                (const char *) sqlite3_column_text(session->get_identity, 0),
+                (const char *) sqlite3_column_text(session->get_identity, 1),
+                (const char *) sqlite3_column_text(session->get_identity, 2)
                 );
         assert(_identity);
         if (_identity == NULL)
             return PEP_OUT_OF_MEMORY;
 
-        _identity->comm_type = (PEP_comm_type) sqlite3_column_int(_session->get_identity, 3);
-        _lang = (const char *) sqlite3_column_text(_session->get_identity, 4);
+        _identity->comm_type = (PEP_comm_type) sqlite3_column_int(session->get_identity, 3);
+        _lang = (const char *) sqlite3_column_text(session->get_identity, 4);
         if (_lang && _lang[0]) {
 			assert(_lang[0] >= 'a' && _lang[0] <= 'z');
 			assert(_lang[1] >= 'a' && _lang[1] <= 'z');
@@ -650,7 +646,7 @@ DYNAMIC_API PEP_STATUS get_identity(
 		*identity = NULL;
 	}
 
-    sqlite3_reset(_session->get_identity);
+    sqlite3_reset(session->get_identity);
 	return status;
 }
 
@@ -658,7 +654,6 @@ DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
     )
 {
-	pEpSession *_session = (pEpSession *) session;
 	int result;
 
 	assert(session);
@@ -668,63 +663,63 @@ DYNAMIC_API PEP_STATUS set_identity(
 	assert(identity->user_id);
 	assert(identity->username);
 
-	sqlite3_exec(_session->db, "BEGIN ;", NULL, NULL, NULL);
+	sqlite3_exec(session->db, "BEGIN ;", NULL, NULL, NULL);
 
-	sqlite3_reset(_session->set_person);
-    sqlite3_bind_text(_session->set_person, 1, identity->user_id, -1,
+	sqlite3_reset(session->set_person);
+    sqlite3_bind_text(session->set_person, 1, identity->user_id, -1,
             SQLITE_STATIC);
-    sqlite3_bind_text(_session->set_person, 2, identity->username, -1,
+    sqlite3_bind_text(session->set_person, 2, identity->username, -1,
             SQLITE_STATIC);
 	if (identity->lang[0])
-        sqlite3_bind_text(_session->set_person, 3, identity->lang, 1,
+        sqlite3_bind_text(session->set_person, 3, identity->lang, 1,
                 SQLITE_STATIC);
 	else
-		sqlite3_bind_null(_session->set_person, 3);
-	result = sqlite3_step(_session->set_person);
-	sqlite3_reset(_session->set_person);
+		sqlite3_bind_null(session->set_person, 3);
+	result = sqlite3_step(session->set_person);
+	sqlite3_reset(session->set_person);
 	if (result != SQLITE_DONE) {
-		sqlite3_exec(_session->db, "ROLLBACK ;", NULL, NULL, NULL);
+		sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
 		return PEP_CANNOT_SET_PERSON;
 	}
 
-	sqlite3_reset(_session->set_pgp_keypair);
-    sqlite3_bind_text(_session->set_pgp_keypair, 1, identity->fpr, -1,
+	sqlite3_reset(session->set_pgp_keypair);
+    sqlite3_bind_text(session->set_pgp_keypair, 1, identity->fpr, -1,
             SQLITE_STATIC);
-	result = sqlite3_step(_session->set_pgp_keypair);
-	sqlite3_reset(_session->set_pgp_keypair);
+	result = sqlite3_step(session->set_pgp_keypair);
+	sqlite3_reset(session->set_pgp_keypair);
 	if (result != SQLITE_DONE) {
-		sqlite3_exec(_session->db, "ROLLBACK ;", NULL, NULL, NULL);
+		sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
 		return PEP_CANNOT_SET_PGP_KEYPAIR;
 	}
 
-	sqlite3_reset(_session->set_identity);
-    sqlite3_bind_text(_session->set_identity, 1, identity->address, -1,
+	sqlite3_reset(session->set_identity);
+    sqlite3_bind_text(session->set_identity, 1, identity->address, -1,
             SQLITE_STATIC);
-    sqlite3_bind_text(_session->set_identity, 2, identity->fpr, -1,
+    sqlite3_bind_text(session->set_identity, 2, identity->fpr, -1,
             SQLITE_STATIC);
-    sqlite3_bind_text(_session->set_identity, 3, identity->user_id, -1,
+    sqlite3_bind_text(session->set_identity, 3, identity->user_id, -1,
             SQLITE_STATIC);
-	result = sqlite3_step(_session->set_identity);
-	sqlite3_reset(_session->set_identity);
+	result = sqlite3_step(session->set_identity);
+	sqlite3_reset(session->set_identity);
 	if (result != SQLITE_DONE) {
-		sqlite3_exec(_session->db, "ROLLBACK ;", NULL, NULL, NULL);
+		sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
 		return PEP_CANNOT_SET_IDENTITY;
 	}
 
-	sqlite3_reset(_session->set_trust);
-    sqlite3_bind_text(_session->set_trust, 1, identity->user_id, -1,
+	sqlite3_reset(session->set_trust);
+    sqlite3_bind_text(session->set_trust, 1, identity->user_id, -1,
             SQLITE_STATIC);
-    sqlite3_bind_text(_session->set_trust, 2, identity->fpr, -1,
+    sqlite3_bind_text(session->set_trust, 2, identity->fpr, -1,
             SQLITE_STATIC);
-	sqlite3_bind_int(_session->set_trust, 3, identity->comm_type);
-	result = sqlite3_step(_session->set_trust);
-	sqlite3_reset(_session->set_trust);
+	sqlite3_bind_int(session->set_trust, 3, identity->comm_type);
+	result = sqlite3_step(session->set_trust);
+	sqlite3_reset(session->set_trust);
 	if (result != SQLITE_DONE) {
-		sqlite3_exec(_session->db, "ROLLBACK ;", NULL, NULL, NULL);
+		sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
 		return PEP_CANNOT_SET_IDENTITY;
 	}
 
-    result = sqlite3_exec(_session->db, "COMMIT ;", NULL, NULL, NULL);
+    result = sqlite3_exec(session->db, "COMMIT ;", NULL, NULL, NULL);
 	if (result == SQLITE_OK)
 		return PEP_STATUS_OK;
 	else
@@ -738,7 +733,6 @@ void pEp_free(void *p)
 
 DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
 {
-    pEpSession *_session = (pEpSession *) session;
     PEP_STATUS status = PEP_STATUS_OK;
     int result;
 
@@ -751,15 +745,15 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
 
     identity->comm_type = PEP_ct_unknown;
 
-    sqlite3_reset(_session->get_trust);
-    sqlite3_bind_text(_session->get_trust, 1, identity->user_id, -1, SQLITE_STATIC);
-    sqlite3_bind_text(_session->get_trust, 2, identity->fpr, -1, SQLITE_STATIC);
+    sqlite3_reset(session->get_trust);
+    sqlite3_bind_text(session->get_trust, 1, identity->user_id, -1, SQLITE_STATIC);
+    sqlite3_bind_text(session->get_trust, 2, identity->fpr, -1, SQLITE_STATIC);
 
-    result = sqlite3_step(_session->get_trust);
+    result = sqlite3_step(session->get_trust);
     switch (result) {
     case SQLITE_ROW: {
-        const char * user_id = (const char *) sqlite3_column_text(_session->get_trust, 1);
-        int comm_type = (PEP_comm_type) sqlite3_column_int(_session->get_trust, 2);
+        const char * user_id = (const char *) sqlite3_column_text(session->get_trust, 1);
+        int comm_type = (PEP_comm_type) sqlite3_column_int(session->get_trust, 2);
 
         if (strcmp(user_id, identity->user_id) != 0) {
             free(identity->user_id);
@@ -776,7 +770,7 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
         status = PEP_CANNOT_FIND_IDENTITY;
     }
 
-    sqlite3_reset(_session->get_trust);
+    sqlite3_reset(session->get_trust);
     return status;
 }
 
@@ -785,8 +779,7 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
     char **ptext, size_t *psize, stringlist_t **keylist
     )
 {
-    pEpSession *_session = (pEpSession *) session;
-    return _session->cryptotech[PEP_crypt_OpenPGP].decrypt_and_verify(session, ctext, csize, ptext, psize, keylist);
+    return session->cryptotech[PEP_crypt_OpenPGP].decrypt_and_verify(session, ctext, csize, ptext, psize, keylist);
 }
 
 DYNAMIC_API PEP_STATUS encrypt_and_sign(
@@ -794,8 +787,7 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
     size_t psize, char **ctext, size_t *csize
     )
 {
-    pEpSession *_session = (pEpSession *) session;
-    return _session->cryptotech[PEP_crypt_OpenPGP].encrypt_and_sign(session, keylist, ptext, psize, ctext, csize);
+    return session->cryptotech[PEP_crypt_OpenPGP].encrypt_and_sign(session, keylist, ptext, psize, ctext, csize);
 }
 
 DYNAMIC_API PEP_STATUS verify_text(
@@ -803,64 +795,55 @@ DYNAMIC_API PEP_STATUS verify_text(
     const char *signature, size_t sig_size, stringlist_t **keylist
     )
 {
-    pEpSession *_session = (pEpSession *) session;
-    return _session->cryptotech[PEP_crypt_OpenPGP].verify_text(session, text, size, signature, sig_size, keylist);
+    return session->cryptotech[PEP_crypt_OpenPGP].verify_text(session, text, size, signature, sig_size, keylist);
 }
 
 DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr)
 {
-    pEpSession *_session = (pEpSession *) session;
-    return _session->cryptotech[PEP_crypt_OpenPGP].delete_keypair(session, fpr);
+    return session->cryptotech[PEP_crypt_OpenPGP].delete_keypair(session, fpr);
 }
 
 DYNAMIC_API PEP_STATUS export_key(
-    PEP_SESSION session, const char *fpr, char **key_data, size_t *size
+        PEP_SESSION session, const char *fpr, char **key_data, size_t *size
     )
 {
-    pEpSession *_session = (pEpSession *) session;
-    return _session->cryptotech[PEP_crypt_OpenPGP].export_key(session, fpr, key_data, size);
+    return session->cryptotech[PEP_crypt_OpenPGP].export_key(session, fpr, key_data, size);
 }
 
 DYNAMIC_API PEP_STATUS find_keys(
-    PEP_SESSION session, const char *pattern, stringlist_t **keylist
+        PEP_SESSION session, const char *pattern, stringlist_t **keylist
     )
 {
-    pEpSession *_session = (pEpSession *) session;
-    return _session->cryptotech[PEP_crypt_OpenPGP].find_keys(session, pattern, keylist);
+    return session->cryptotech[PEP_crypt_OpenPGP].find_keys(session, pattern, keylist);
 }
 
 DYNAMIC_API PEP_STATUS generate_keypair(
-    PEP_SESSION session, pEp_identity *identity
+        PEP_SESSION session, pEp_identity *identity
     )
 {
-    pEpSession *_session = (pEpSession *) session;
-    return _session->cryptotech[PEP_crypt_OpenPGP].generate_keypair(session, identity);
+    return session->cryptotech[PEP_crypt_OpenPGP].generate_keypair(session, identity);
 }
 
 DYNAMIC_API PEP_STATUS get_key_rating(
-    PEP_SESSION session,
-    const char *fpr,
-    PEP_comm_type *comm_type
+        PEP_SESSION session,
+        const char *fpr,
+        PEP_comm_type *comm_type
     )
 {
-    pEpSession *_session = (pEpSession *) session;
-    return _session->cryptotech[PEP_crypt_OpenPGP].get_key_rating(session, fpr, comm_type);
+    return session->cryptotech[PEP_crypt_OpenPGP].get_key_rating(session, fpr, comm_type);
 }
 
 DYNAMIC_API PEP_STATUS import_key(PEP_SESSION session, const char *key_data, size_t size)
 {
-    pEpSession *_session = (pEpSession *) session;
-    return _session->cryptotech[PEP_crypt_OpenPGP].import_key(session, key_data, size);
+    return session->cryptotech[PEP_crypt_OpenPGP].import_key(session, key_data, size);
 }
 
 DYNAMIC_API PEP_STATUS recv_key(PEP_SESSION session, const char *pattern)
 {
-    pEpSession *_session = (pEpSession *) session;
-    return _session->cryptotech[PEP_crypt_OpenPGP].recv_key(session, pattern);
+    return session->cryptotech[PEP_crypt_OpenPGP].recv_key(session, pattern);
 }
 
 DYNAMIC_API PEP_STATUS send_key(PEP_SESSION session, const char *pattern)
 {
-    pEpSession *_session = (pEpSession *) session;
-    return _session->cryptotech[PEP_crypt_OpenPGP].send_key(session, pattern);
+    return session->cryptotech[PEP_crypt_OpenPGP].send_key(session, pattern);
 }

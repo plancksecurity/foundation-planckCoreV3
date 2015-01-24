@@ -39,204 +39,204 @@ static bool ensure_keyserver()
 
 PEP_STATUS pgp_init(PEP_SESSION session)
 {
-    pEpSession *_session = (pEpSession *) session;
     gpgme_error_t gpgme_error;
     bool bResult = ensure_keyserver();
     assert(bResult);
 
-    _session->gpgme = dlopen(LIBGPGME, RTLD_LAZY);
-    if (_session->gpgme == NULL) {
-        free(_session);
+    session->gpgme = dlopen(LIBGPGME, RTLD_LAZY);
+    if (session->gpgme == NULL) {
+        free(session);
         return PEP_INIT_CANNOT_LOAD_GPGME;
     }
 
-    memset(&(_session->gpg), 0, sizeof(struct gpg_s));
+    memset(&(session->gpg), 0, sizeof(struct gpg_s));
 
-    _session->gpg.gpgme_set_locale
-        = (gpgme_set_locale_t) (intptr_t) dlsym(_session->gpgme,
+    session->gpg.gpgme_set_locale
+        = (gpgme_set_locale_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_set_locale");
-    assert(_session->gpg.gpgme_set_locale);
+    assert(session->gpg.gpgme_set_locale);
 
-    _session->gpg.gpgme_check
-        = (gpgme_check_version_t) (intptr_t) dlsym(_session->gpgme,
+    session->gpg.gpgme_check
+        = (gpgme_check_version_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_check_version");
-    assert(_session->gpg.gpgme_check);
+    assert(session->gpg.gpgme_check);
 
-    _session->gpg.gpgme_new
-        = (gpgme_new_t) (intptr_t) dlsym(_session->gpgme, "gpgme_new");
-    assert(_session->gpg.gpgme_new);
+    session->gpg.gpgme_new
+        = (gpgme_new_t) (intptr_t) dlsym(session->gpgme, "gpgme_new");
+    assert(session->gpg.gpgme_new);
 
-    _session->gpg.gpgme_release
-        = (gpgme_release_t) (intptr_t) dlsym(_session->gpgme, "gpgme_release");
-    assert(_session->gpg.gpgme_release);
+    session->gpg.gpgme_release
+        = (gpgme_release_t) (intptr_t) dlsym(session->gpgme, "gpgme_release");
+    assert(session->gpg.gpgme_release);
 
-    _session->gpg.gpgme_set_protocol
-        = (gpgme_set_protocol_t) (intptr_t) dlsym(_session->gpgme,
+    session->gpg.gpgme_set_protocol
+        = (gpgme_set_protocol_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_set_protocol");
-    assert(_session->gpg.gpgme_set_protocol);
+    assert(session->gpg.gpgme_set_protocol);
 
-    _session->gpg.gpgme_set_armor
-        = (gpgme_set_armor_t) (intptr_t) dlsym(_session->gpgme,
+    session->gpg.gpgme_set_armor
+        = (gpgme_set_armor_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_set_armor");
-    assert(_session->gpg.gpgme_set_armor);
+    assert(session->gpg.gpgme_set_armor);
 
-    _session->gpg.gpgme_data_new
-        = (gpgme_data_new_t) (intptr_t) dlsym(_session->gpgme,
+    session->gpg.gpgme_data_new
+        = (gpgme_data_new_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_data_new");
-    assert(_session->gpg.gpgme_data_new);
+    assert(session->gpg.gpgme_data_new);
 
-    _session->gpg.gpgme_data_new_from_mem
-        = (gpgme_data_new_from_mem_t) (intptr_t) dlsym(_session->gpgme,
+    session->gpg.gpgme_data_new_from_mem
+        = (gpgme_data_new_from_mem_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_data_new_from_mem");
-    assert(_session->gpg.gpgme_data_new_from_mem);
+    assert(session->gpg.gpgme_data_new_from_mem);
 
-    _session->gpg.gpgme_data_release
-        = (gpgme_data_release_t) (intptr_t) dlsym(_session->gpgme,
+    session->gpg.gpgme_data_release
+        = (gpgme_data_release_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_data_release");
-    assert(_session->gpg.gpgme_data_release);
+    assert(session->gpg.gpgme_data_release);
 
-    _session->gpg.gpgme_data_identify
-        = (gpgme_data_identify_t) (intptr_t) dlsym(_session->gpgme,
+    session->gpg.gpgme_data_identify
+        = (gpgme_data_identify_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_data_identify");
-    assert(_session->gpg.gpgme_data_identify);
-    _session->gpg.gpgme_data_seek
-        = (gpgme_data_seek_t) (intptr_t) dlsym(_session->gpgme,
+    assert(session->gpg.gpgme_data_identify);
+
+    session->gpg.gpgme_data_seek
+        = (gpgme_data_seek_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_data_seek");
-    assert(_session->gpg.gpgme_data_seek);
+    assert(session->gpg.gpgme_data_seek);
 
-    _session->gpg.gpgme_data_read
-        = (gpgme_data_read_t) (intptr_t) dlsym(_session->gpgme,
+    session->gpg.gpgme_data_read
+        = (gpgme_data_read_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_data_read");
-    assert(_session->gpg.gpgme_data_read);
+    assert(session->gpg.gpgme_data_read);
 
-    _session->gpg.gpgme_op_decrypt
-        = (gpgme_op_decrypt_t) (intptr_t) dlsym(_session->gpgme,
+    session->gpg.gpgme_op_decrypt
+        = (gpgme_op_decrypt_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_op_decrypt");
-    assert(_session->gpg.gpgme_op_decrypt);
+    assert(session->gpg.gpgme_op_decrypt);
 
-    _session->gpg.gpgme_op_verify
-        = (gpgme_op_verify_t) (intptr_t) dlsym(_session->gpgme,
+    session->gpg.gpgme_op_verify
+        = (gpgme_op_verify_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_op_verify");
-    assert(_session->gpg.gpgme_op_verify);
+    assert(session->gpg.gpgme_op_verify);
 
-    _session->gpg.gpgme_op_decrypt_verify
-        = (gpgme_op_decrypt_verify_t) (intptr_t) dlsym(_session->gpgme,
+    session->gpg.gpgme_op_decrypt_verify
+        = (gpgme_op_decrypt_verify_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_op_decrypt_verify");
-    assert(_session->gpg.gpgme_op_decrypt_verify);
+    assert(session->gpg.gpgme_op_decrypt_verify);
 
-    _session->gpg.gpgme_op_decrypt_result
-        = (gpgme_op_decrypt_result_t) (intptr_t) dlsym(_session->gpgme,
+    session->gpg.gpgme_op_decrypt_result
+        = (gpgme_op_decrypt_result_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_op_decrypt_result");
-    assert(_session->gpg.gpgme_op_decrypt_result);
+    assert(session->gpg.gpgme_op_decrypt_result);
 
-    _session->gpg.gpgme_op_encrypt_sign
-        = (gpgme_op_encrypt_sign_t) (intptr_t) dlsym(_session->gpgme,
+    session->gpg.gpgme_op_encrypt_sign
+        = (gpgme_op_encrypt_sign_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_op_encrypt_sign");
-    assert(_session->gpg.gpgme_op_encrypt_sign);
+    assert(session->gpg.gpgme_op_encrypt_sign);
 
-    _session->gpg.gpgme_op_verify_result
-        = (gpgme_op_verify_result_t) (intptr_t) dlsym(_session->gpgme,
+    session->gpg.gpgme_op_verify_result
+        = (gpgme_op_verify_result_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_op_verify_result");
-    assert(_session->gpg.gpgme_op_verify_result);
+    assert(session->gpg.gpgme_op_verify_result);
 
-    _session->gpg.gpgme_signers_clear
-        = (gpgme_signers_clear_t) (intptr_t) dlsym(_session->gpgme,
+    session->gpg.gpgme_signers_clear
+        = (gpgme_signers_clear_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_signers_clear");
-    assert(_session->gpg.gpgme_signers_clear);
+    assert(session->gpg.gpgme_signers_clear);
 
-    _session->gpg.gpgme_signers_add
-        = (gpgme_signers_add_t) (intptr_t) dlsym(_session->gpgme,
+    session->gpg.gpgme_signers_add
+        = (gpgme_signers_add_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_signers_add");
-    assert(_session->gpg.gpgme_signers_add);
-    _session->gpg.gpgme_get_key
-        = (gpgme_get_key_t) (intptr_t) dlsym(_session->gpgme, "gpgme_get_key");
-    assert(_session->gpg.gpgme_get_key);
+    assert(session->gpg.gpgme_signers_add);
 
-    _session->gpg.gpgme_op_genkey
-        = (gpgme_op_genkey_t) (intptr_t) dlsym(_session->gpgme,
+    session->gpg.gpgme_get_key
+        = (gpgme_get_key_t) (intptr_t) dlsym(session->gpgme, "gpgme_get_key");
+    assert(session->gpg.gpgme_get_key);
+
+    session->gpg.gpgme_op_genkey
+        = (gpgme_op_genkey_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_op_genkey");
-    assert(_session->gpg.gpgme_op_genkey);
+    assert(session->gpg.gpgme_op_genkey);
 
-    _session->gpg.gpgme_op_genkey_result
-        = (gpgme_op_genkey_result_t) (intptr_t) dlsym(_session->gpgme,
+    session->gpg.gpgme_op_genkey_result
+        = (gpgme_op_genkey_result_t) (intptr_t) dlsym(session->gpgme,
         "gpgme_op_genkey_result");
-    assert(_session->gpg.gpgme_op_genkey_result);
+    assert(session->gpg.gpgme_op_genkey_result);
 
-    _session->gpg.gpgme_op_delete = (gpgme_op_delete_t) (intptr_t)
-        dlsym(_session->gpgme, "gpgme_op_delete");
-    assert(_session->gpg.gpgme_op_delete);
+    session->gpg.gpgme_op_delete = (gpgme_op_delete_t) (intptr_t)
+        dlsym(session->gpgme, "gpgme_op_delete");
+    assert(session->gpg.gpgme_op_delete);
 
-    _session->gpg.gpgme_op_import = (gpgme_op_import_t) (intptr_t)
-        dlsym(_session->gpgme, "gpgme_op_import");
-    assert(_session->gpg.gpgme_op_import);
+    session->gpg.gpgme_op_import = (gpgme_op_import_t) (intptr_t)
+        dlsym(session->gpgme, "gpgme_op_import");
+    assert(session->gpg.gpgme_op_import);
 
-    _session->gpg.gpgme_op_export = (gpgme_op_export_t) (intptr_t)
-        dlsym(_session->gpgme, "gpgme_op_export");
-    assert(_session->gpg.gpgme_op_export);
+    session->gpg.gpgme_op_export = (gpgme_op_export_t) (intptr_t)
+        dlsym(session->gpgme, "gpgme_op_export");
+    assert(session->gpg.gpgme_op_export);
 
-    _session->gpg.gpgme_set_keylist_mode = (gpgme_set_keylist_mode_t) (intptr_t)
-        dlsym(_session->gpgme, "gpgme_set_keylist_mode");
-    assert(_session->gpg.gpgme_set_keylist_mode);
+    session->gpg.gpgme_set_keylist_mode = (gpgme_set_keylist_mode_t) (intptr_t)
+        dlsym(session->gpgme, "gpgme_set_keylist_mode");
+    assert(session->gpg.gpgme_set_keylist_mode);
 
-    _session->gpg.gpgme_get_keylist_mode = (gpgme_get_keylist_mode_t) (intptr_t)
-        dlsym(_session->gpgme, "gpgme_get_keylist_mode");
-    assert(_session->gpg.gpgme_get_keylist_mode);
+    session->gpg.gpgme_get_keylist_mode = (gpgme_get_keylist_mode_t) (intptr_t)
+        dlsym(session->gpgme, "gpgme_get_keylist_mode");
+    assert(session->gpg.gpgme_get_keylist_mode);
 
-    _session->gpg.gpgme_op_keylist_start = (gpgme_op_keylist_start_t) (intptr_t)
-        dlsym(_session->gpgme, "gpgme_op_keylist_start");
-    assert(_session->gpg.gpgme_op_keylist_start);
+    session->gpg.gpgme_op_keylist_start = (gpgme_op_keylist_start_t) (intptr_t)
+        dlsym(session->gpgme, "gpgme_op_keylist_start");
+    assert(session->gpg.gpgme_op_keylist_start);
 
-    _session->gpg.gpgme_op_keylist_next = (gpgme_op_keylist_next_t) (intptr_t)
-        dlsym(_session->gpgme, "gpgme_op_keylist_next");
-    assert(_session->gpg.gpgme_op_keylist_next);
+    session->gpg.gpgme_op_keylist_next = (gpgme_op_keylist_next_t) (intptr_t)
+        dlsym(session->gpgme, "gpgme_op_keylist_next");
+    assert(session->gpg.gpgme_op_keylist_next);
 
-    _session->gpg.gpgme_op_keylist_end = (gpgme_op_keylist_end_t) (intptr_t)
-        dlsym(_session->gpgme, "gpgme_op_keylist_end");
-    assert(_session->gpg.gpgme_op_keylist_end);
+    session->gpg.gpgme_op_keylist_end = (gpgme_op_keylist_end_t) (intptr_t)
+        dlsym(session->gpgme, "gpgme_op_keylist_end");
+    assert(session->gpg.gpgme_op_keylist_end);
 
-    _session->gpg.gpgme_op_import_keys = (gpgme_op_import_keys_t) (intptr_t)
-        dlsym(_session->gpgme, "gpgme_op_import_keys");
-    assert(_session->gpg.gpgme_op_import_keys);
+    session->gpg.gpgme_op_import_keys = (gpgme_op_import_keys_t) (intptr_t)
+        dlsym(session->gpgme, "gpgme_op_import_keys");
+    assert(session->gpg.gpgme_op_import_keys);
 
-    _session->gpg.gpgme_key_ref = (gpgme_key_ref_t) (intptr_t)
-        dlsym(_session->gpgme, "gpgme_key_ref");
-    assert(_session->gpg.gpgme_key_ref);
+    session->gpg.gpgme_key_ref = (gpgme_key_ref_t) (intptr_t)
+        dlsym(session->gpgme, "gpgme_key_ref");
+    assert(session->gpg.gpgme_key_ref);
 
-    _session->gpg.gpgme_key_unref = (gpgme_key_unref_t) (intptr_t)
-        dlsym(_session->gpgme, "gpgme_key_unref");
-    assert(_session->gpg.gpgme_key_unref);
+    session->gpg.gpgme_key_unref = (gpgme_key_unref_t) (intptr_t)
+        dlsym(session->gpgme, "gpgme_key_unref");
+    assert(session->gpg.gpgme_key_unref);
 
     setlocale(LC_ALL, "");
-    _session->version = _session->gpg.gpgme_check(NULL);
-    _session->gpg.gpgme_set_locale(NULL, LC_CTYPE, setlocale(LC_CTYPE, NULL));
+    session->version = session->gpg.gpgme_check(NULL);
+    session->gpg.gpgme_set_locale(NULL, LC_CTYPE, setlocale(LC_CTYPE, NULL));
 
-    gpgme_error = _session->gpg.gpgme_new(&_session->ctx);
+    gpgme_error = session->gpg.gpgme_new(&session->ctx);
     gpgme_error = _GPGERR(gpgme_error);
     if (gpgme_error != GPG_ERR_NO_ERROR) {
-        dlclose(_session->gpgme);
-        free(_session);
+        dlclose(session->gpgme);
+        free(session);
         return PEP_INIT_GPGME_INIT_FAILED;
     }
-    assert(_session->ctx);
+    assert(session->ctx);
 
-    gpgme_error = _session->gpg.gpgme_set_protocol(_session->ctx,
+    gpgme_error = session->gpg.gpgme_set_protocol(session->ctx,
         GPGME_PROTOCOL_OpenPGP);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
 
-    _session->gpg.gpgme_set_armor(_session->ctx, 1);
+    session->gpg.gpgme_set_armor(session->ctx, 1);
 
     return PEP_STATUS_OK;
 }
 
 void pgp_release(PEP_SESSION session)
 {
-    pEpSession *_session = (pEpSession *) session;
-    if (_session->ctx)
-        _session->gpg.gpgme_release(_session->ctx);
-    _session->ctx = NULL;
-    memset(&(_session->gpg), 0, sizeof(struct gpg_s));
-    dlclose(_session->gpgme);
+    if (session->ctx)
+        session->gpg.gpgme_release(session->ctx);
+    session->ctx = NULL;
+    memset(&(session->gpg), 0, sizeof(struct gpg_s));
+    dlclose(session->gpgme);
 }
 
 PEP_STATUS pgp_decrypt_and_verify(
@@ -244,8 +244,6 @@ PEP_STATUS pgp_decrypt_and_verify(
     char **ptext, size_t *psize, stringlist_t **keylist
     )
 {
-    pEpSession *_session = (pEpSession *) session;
-
     PEP_STATUS result;
     gpgme_error_t gpgme_error;
     gpgme_data_t cipher, plain;
@@ -254,7 +252,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     stringlist_t *_keylist = NULL;
     int i_key = 0;
 
-    assert(_session);
+    assert(session);
     assert(ctext);
     assert(csize);
     assert(ptext);
@@ -265,7 +263,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     *psize = 0;
     *keylist = NULL;
 
-    gpgme_error = _session->gpg.gpgme_data_new_from_mem(&cipher, ctext, csize, 0);
+    gpgme_error = session->gpg.gpgme_data_new_from_mem(&cipher, ctext, csize, 0);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
     if (gpgme_error != GPG_ERR_NO_ERROR) {
@@ -275,22 +273,22 @@ PEP_STATUS pgp_decrypt_and_verify(
             return PEP_UNKNOWN_ERROR;
     }
 
-    gpgme_error = _session->gpg.gpgme_data_new(&plain);
+    gpgme_error = session->gpg.gpgme_data_new(&plain);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
     if (gpgme_error != GPG_ERR_NO_ERROR) {
-        _session->gpg.gpgme_data_release(cipher);
+        session->gpg.gpgme_data_release(cipher);
         if (gpgme_error == GPG_ERR_ENOMEM)
             return PEP_OUT_OF_MEMORY;
         else
             return PEP_UNKNOWN_ERROR;
     }
 
-    dt = _session->gpg.gpgme_data_identify(cipher);
+    dt = session->gpg.gpgme_data_identify(cipher);
     switch (dt) {
     case GPGME_DATA_TYPE_PGP_SIGNED:
     case GPGME_DATA_TYPE_PGP_OTHER:
-        gpgme_error = _session->gpg.gpgme_op_decrypt_verify(_session->ctx, cipher,
+        gpgme_error = session->gpg.gpgme_op_decrypt_verify(session->ctx, cipher,
             plain);
         gpgme_error = _GPGERR(gpgme_error);
         assert(gpgme_error != GPG_ERR_INV_VALUE);
@@ -302,11 +300,11 @@ PEP_STATUS pgp_decrypt_and_verify(
             gpgme_verify_result_t gpgme_verify_result;
             char *_buffer = NULL;
             size_t reading;
-            size_t length = _session->gpg.gpgme_data_seek(plain, 0, SEEK_END);
+            size_t length = session->gpg.gpgme_data_seek(plain, 0, SEEK_END);
             gpgme_signature_t gpgme_signature;
 
             assert(length != -1);
-            _session->gpg.gpgme_data_seek(plain, 0, SEEK_SET);
+            session->gpg.gpgme_data_seek(plain, 0, SEEK_SET);
 
             // TODO: make things less memory consuming
             // the following algorithm allocates memory for the complete
@@ -315,16 +313,16 @@ PEP_STATUS pgp_decrypt_and_verify(
             _buffer = malloc(length + 1);
             assert(_buffer);
             if (_buffer == NULL) {
-                _session->gpg.gpgme_data_release(plain);
-                _session->gpg.gpgme_data_release(cipher);
+                session->gpg.gpgme_data_release(plain);
+                session->gpg.gpgme_data_release(cipher);
                 return PEP_OUT_OF_MEMORY;
             }
 
-            reading = _session->gpg.gpgme_data_read(plain, _buffer, length);
+            reading = session->gpg.gpgme_data_read(plain, _buffer, length);
             assert(length == reading);
 
             gpgme_verify_result =
-                _session->gpg.gpgme_op_verify_result(_session->ctx);
+                session->gpg.gpgme_op_verify_result(session->ctx);
             assert(gpgme_verify_result);
             gpgme_signature = gpgme_verify_result->signatures;
 
@@ -333,8 +331,8 @@ PEP_STATUS pgp_decrypt_and_verify(
                 _keylist = new_stringlist(NULL);
                 assert(_keylist);
                 if (_keylist == NULL) {
-                    _session->gpg.gpgme_data_release(plain);
-                    _session->gpg.gpgme_data_release(cipher);
+                    session->gpg.gpgme_data_release(plain);
+                    session->gpg.gpgme_data_release(cipher);
                     free(_buffer);
                     return PEP_OUT_OF_MEMORY;
                 }
@@ -390,7 +388,7 @@ PEP_STATUS pgp_decrypt_and_verify(
             NOT_IMPLEMENTED;
         default:
         {
-            gpgme_decrypt_result_t gpgme_decrypt_result = _session->gpg.gpgme_op_decrypt_result(_session->ctx);
+            gpgme_decrypt_result_t gpgme_decrypt_result = session->gpg.gpgme_op_decrypt_result(session->ctx);
             result = PEP_DECRYPT_NO_KEY;
 
             if (gpgme_decrypt_result != NULL) {
@@ -425,8 +423,8 @@ PEP_STATUS pgp_decrypt_and_verify(
         result = PEP_DECRYPT_WRONG_FORMAT;
     }
 
-    _session->gpg.gpgme_data_release(plain);
-    _session->gpg.gpgme_data_release(cipher);
+    session->gpg.gpgme_data_release(plain);
+    session->gpg.gpgme_data_release(cipher);
     return result;
 }
 
@@ -435,8 +433,6 @@ PEP_STATUS pgp_verify_text(
     const char *signature, size_t sig_size, stringlist_t **keylist
     )
 {
-    pEpSession *_session = (pEpSession *) session;
-
     PEP_STATUS result;
     gpgme_error_t gpgme_error;
     gpgme_data_t d_text, d_sig;
@@ -451,7 +447,7 @@ PEP_STATUS pgp_verify_text(
 
     *keylist = NULL;
 
-    gpgme_error = _session->gpg.gpgme_data_new_from_mem(&d_text, text, size, 0);
+    gpgme_error = session->gpg.gpgme_data_new_from_mem(&d_text, text, size, 0);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
     if (gpgme_error != GPG_ERR_NO_ERROR) {
@@ -461,18 +457,18 @@ PEP_STATUS pgp_verify_text(
             return PEP_UNKNOWN_ERROR;
     }
 
-    gpgme_error = _session->gpg.gpgme_data_new_from_mem(&d_sig, signature, sig_size, 0);
+    gpgme_error = session->gpg.gpgme_data_new_from_mem(&d_sig, signature, sig_size, 0);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
     if (gpgme_error != GPG_ERR_NO_ERROR) {
-        _session->gpg.gpgme_data_release(d_text);
+        session->gpg.gpgme_data_release(d_text);
         if (gpgme_error == GPG_ERR_ENOMEM)
             return PEP_OUT_OF_MEMORY;
         else
             return PEP_UNKNOWN_ERROR;
     }
 
-    gpgme_error = _session->gpg.gpgme_op_verify(_session->ctx, d_sig, d_text, NULL);
+    gpgme_error = session->gpg.gpgme_op_verify(session->ctx, d_sig, d_text, NULL);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error != GPG_ERR_INV_VALUE);
 
@@ -483,7 +479,7 @@ PEP_STATUS pgp_verify_text(
         gpgme_signature_t gpgme_signature;
 
         gpgme_verify_result =
-            _session->gpg.gpgme_op_verify_result(_session->ctx);
+            session->gpg.gpgme_op_verify_result(session->ctx);
         assert(gpgme_verify_result);
         gpgme_signature = gpgme_verify_result->signatures;
 
@@ -492,8 +488,8 @@ PEP_STATUS pgp_verify_text(
             _keylist = new_stringlist(NULL);
             assert(_keylist);
             if (_keylist == NULL) {
-                _session->gpg.gpgme_data_release(d_text);
-                _session->gpg.gpgme_data_release(d_sig);
+                session->gpg.gpgme_data_release(d_text);
+                session->gpg.gpgme_data_release(d_sig);
                 return PEP_OUT_OF_MEMORY;
             }
             k = _keylist;
@@ -503,8 +499,8 @@ PEP_STATUS pgp_verify_text(
                 k = stringlist_add(k, gpgme_signature->fpr);
                 if (k == NULL) {
                     free_stringlist(_keylist);
-                    _session->gpg.gpgme_data_release(d_text);
-                    _session->gpg.gpgme_data_release(d_sig);
+                    session->gpg.gpgme_data_release(d_text);
+                    session->gpg.gpgme_data_release(d_sig);
                     return PEP_OUT_OF_MEMORY;
                 }
                 if (gpgme_signature->summary & GPGME_SIGSUM_RED) {
@@ -557,8 +553,8 @@ PEP_STATUS pgp_verify_text(
         break;
     }
 
-    _session->gpg.gpgme_data_release(d_text);
-    _session->gpg.gpgme_data_release(d_sig);
+    session->gpg.gpgme_data_release(d_text);
+    session->gpg.gpgme_data_release(d_sig);
 
     return result;
 }
@@ -568,8 +564,6 @@ PEP_STATUS pgp_encrypt_and_sign(
     size_t psize, char **ctext, size_t *csize
     )
 {
-    pEpSession *_session = (pEpSession *) session;
-
     PEP_STATUS result;
     gpgme_error_t gpgme_error;
     gpgme_data_t plain, cipher;
@@ -578,7 +572,7 @@ PEP_STATUS pgp_encrypt_and_sign(
     const stringlist_t *_keylist;
     int i, j;
 
-    assert(_session);
+    assert(session);
     assert(keylist);
     assert(ptext);
     assert(psize);
@@ -588,7 +582,7 @@ PEP_STATUS pgp_encrypt_and_sign(
     *ctext = NULL;
     *csize = 0;
 
-    gpgme_error = _session->gpg.gpgme_data_new_from_mem(&plain, ptext, psize, 0);
+    gpgme_error = session->gpg.gpgme_data_new_from_mem(&plain, ptext, psize, 0);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
     if (gpgme_error != GPG_ERR_NO_ERROR) {
@@ -598,11 +592,11 @@ PEP_STATUS pgp_encrypt_and_sign(
             return PEP_UNKNOWN_ERROR;
     }
 
-    gpgme_error = _session->gpg.gpgme_data_new(&cipher);
+    gpgme_error = session->gpg.gpgme_data_new(&cipher);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
     if (gpgme_error != GPG_ERR_NO_ERROR) {
-        _session->gpg.gpgme_data_release(plain);
+        session->gpg.gpgme_data_release(plain);
         if (gpgme_error == GPG_ERR_ENOMEM)
             return PEP_OUT_OF_MEMORY;
         else
@@ -613,16 +607,16 @@ PEP_STATUS pgp_encrypt_and_sign(
         sizeof(gpgme_key_t));
     assert(rcpt);
     if (rcpt == NULL) {
-        _session->gpg.gpgme_data_release(plain);
-        _session->gpg.gpgme_data_release(cipher);
+        session->gpg.gpgme_data_release(plain);
+        session->gpg.gpgme_data_release(cipher);
         return PEP_OUT_OF_MEMORY;
     }
 
-    _session->gpg.gpgme_signers_clear(_session->ctx);
+    session->gpg.gpgme_signers_clear(session->ctx);
 
     for (_keylist = keylist, i = 0; _keylist != NULL; _keylist = _keylist->next, i++) {
         assert(_keylist->value);
-        gpgme_error = _session->gpg.gpgme_get_key(_session->ctx, _keylist->value,
+        gpgme_error = session->gpg.gpgme_get_key(session->ctx, _keylist->value,
             &rcpt[i], 0);
         gpgme_error = _GPGERR(gpgme_error);
         assert(gpgme_error != GPG_ERR_ENOMEM);
@@ -630,39 +624,39 @@ PEP_STATUS pgp_encrypt_and_sign(
         switch (gpgme_error) {
         case GPG_ERR_ENOMEM:
             for (j = 0; j<i; j++)
-                _session->gpg.gpgme_key_unref(rcpt[j]);
+                session->gpg.gpgme_key_unref(rcpt[j]);
             free(rcpt);
-            _session->gpg.gpgme_data_release(plain);
-            _session->gpg.gpgme_data_release(cipher);
+            session->gpg.gpgme_data_release(plain);
+            session->gpg.gpgme_data_release(cipher);
             return PEP_OUT_OF_MEMORY;
         case GPG_ERR_NO_ERROR:
             if (i == 0) {
-                gpgme_error_t _gpgme_error = _session->gpg.gpgme_signers_add(_session->ctx, rcpt[0]);
+                gpgme_error_t _gpgme_error = session->gpg.gpgme_signers_add(session->ctx, rcpt[0]);
                 _gpgme_error = _GPGERR(_gpgme_error);
                 assert(_gpgme_error == GPG_ERR_NO_ERROR);
             }
             break;
         case GPG_ERR_EOF:
             for (j = 0; j<i; j++)
-                _session->gpg.gpgme_key_unref(rcpt[j]);
+                session->gpg.gpgme_key_unref(rcpt[j]);
             free(rcpt);
-            _session->gpg.gpgme_data_release(plain);
-            _session->gpg.gpgme_data_release(cipher);
+            session->gpg.gpgme_data_release(plain);
+            session->gpg.gpgme_data_release(cipher);
             return PEP_KEY_NOT_FOUND;
         case GPG_ERR_AMBIGUOUS_NAME:
             for (j = 0; j<i; j++)
-                _session->gpg.gpgme_key_unref(rcpt[j]);
+                session->gpg.gpgme_key_unref(rcpt[j]);
             free(rcpt);
-            _session->gpg.gpgme_data_release(plain);
-            _session->gpg.gpgme_data_release(cipher);
+            session->gpg.gpgme_data_release(plain);
+            session->gpg.gpgme_data_release(cipher);
             return PEP_KEY_HAS_AMBIG_NAME;
         default: // GPG_ERR_INV_VALUE if CTX or R_KEY is not a valid pointer or
             // FPR is not a fingerprint or key ID
             for (j = 0; j<i; j++)
-                _session->gpg.gpgme_key_unref(rcpt[j]);
+                session->gpg.gpgme_key_unref(rcpt[j]);
             free(rcpt);
-            _session->gpg.gpgme_data_release(plain);
-            _session->gpg.gpgme_data_release(cipher);
+            session->gpg.gpgme_data_release(plain);
+            session->gpg.gpgme_data_release(cipher);
             return PEP_GET_KEY_FAILED;
         }
     }
@@ -670,7 +664,7 @@ PEP_STATUS pgp_encrypt_and_sign(
     // TODO: remove that and replace with proper key management
     flags = GPGME_ENCRYPT_ALWAYS_TRUST;
 
-    gpgme_error = _session->gpg.gpgme_op_encrypt_sign(_session->ctx, rcpt, flags,
+    gpgme_error = session->gpg.gpgme_op_encrypt_sign(session->ctx, rcpt, flags,
         plain, cipher);
     gpgme_error = _GPGERR(gpgme_error);
     switch (gpgme_error) {
@@ -678,9 +672,9 @@ PEP_STATUS pgp_encrypt_and_sign(
     {
         char *_buffer = NULL;
         size_t reading;
-        size_t length = _session->gpg.gpgme_data_seek(cipher, 0, SEEK_END);
+        size_t length = session->gpg.gpgme_data_seek(cipher, 0, SEEK_END);
         assert(length != -1);
-        _session->gpg.gpgme_data_seek(cipher, 0, SEEK_SET);
+        session->gpg.gpgme_data_seek(cipher, 0, SEEK_SET);
 
         // TODO: make things less memory consuming
         // the following algorithm allocates a buffer for the complete text
@@ -689,14 +683,14 @@ PEP_STATUS pgp_encrypt_and_sign(
         assert(_buffer);
         if (_buffer == NULL) {
             for (j = 0; j<stringlist_length(keylist); j++)
-                _session->gpg.gpgme_key_unref(rcpt[j]);
+                session->gpg.gpgme_key_unref(rcpt[j]);
             free(rcpt);
-            _session->gpg.gpgme_data_release(plain);
-            _session->gpg.gpgme_data_release(cipher);
+            session->gpg.gpgme_data_release(plain);
+            session->gpg.gpgme_data_release(cipher);
             return PEP_OUT_OF_MEMORY;
         }
 
-        reading = _session->gpg.gpgme_data_read(cipher, _buffer, length);
+        reading = session->gpg.gpgme_data_read(cipher, _buffer, length);
         assert(length == reading);
 
         *ctext = _buffer;
@@ -710,10 +704,10 @@ PEP_STATUS pgp_encrypt_and_sign(
     }
 
     for (j = 0; j<stringlist_length(keylist); j++)
-        _session->gpg.gpgme_key_unref(rcpt[j]);
+        session->gpg.gpgme_key_unref(rcpt[j]);
     free(rcpt);
-    _session->gpg.gpgme_data_release(plain);
-    _session->gpg.gpgme_data_release(cipher);
+    session->gpg.gpgme_data_release(plain);
+    session->gpg.gpgme_data_release(cipher);
     return result;
 }
 
@@ -721,7 +715,6 @@ PEP_STATUS pgp_generate_keypair(
     PEP_SESSION session, pEp_identity *identity
     )
 {
-    pEpSession *_session = (pEpSession *) session;
     gpgme_error_t gpgme_error;
     char *parms;
     const char *template =
@@ -748,14 +741,14 @@ PEP_STATUS pgp_generate_keypair(
         return PEP_OUT_OF_MEMORY;
 
     result = snprintf(parms, PARMS_MAX, template, identity->username,
-        identity->address); // , _session->passphrase);
+        identity->address); // , session->passphrase);
     assert(result < PARMS_MAX);
     if (result >= PARMS_MAX) {
         free(parms);
         return PEP_BUFFER_TOO_SMALL;
     }
 
-    gpgme_error = _session->gpg.gpgme_op_genkey(_session->ctx, parms, NULL, NULL);
+    gpgme_error = session->gpg.gpgme_op_genkey(session->ctx, parms, NULL, NULL);
     gpgme_error = _GPGERR(gpgme_error);
     free(parms);
 
@@ -771,7 +764,7 @@ PEP_STATUS pgp_generate_keypair(
         return PEP_UNKNOWN_ERROR;
     }
 
-    gpgme_genkey_result = _session->gpg.gpgme_op_genkey_result(_session->ctx);
+    gpgme_genkey_result = session->gpg.gpgme_op_genkey_result(session->ctx);
     assert(gpgme_genkey_result);
     assert(gpgme_genkey_result->fpr);
 
@@ -782,14 +775,13 @@ PEP_STATUS pgp_generate_keypair(
 
 PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
 {
-    pEpSession *_session = (pEpSession *) session;
     gpgme_error_t gpgme_error;
     gpgme_key_t key;
 
     assert(session);
     assert(fpr);
 
-    gpgme_error = _session->gpg.gpgme_get_key(_session->ctx, fpr, &key, 0);
+    gpgme_error = session->gpg.gpgme_get_key(session->ctx, fpr, &key, 0);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error != GPG_ERR_ENOMEM);
     switch (gpgme_error) {
@@ -808,9 +800,9 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
         return PEP_UNKNOWN_ERROR;
     }
 
-    gpgme_error = _session->gpg.gpgme_op_delete(_session->ctx, key, 1);
+    gpgme_error = session->gpg.gpgme_op_delete(session->ctx, key, 1);
     gpgme_error = _GPGERR(gpgme_error);
-    _session->gpg.gpgme_key_unref(key);
+    session->gpg.gpgme_key_unref(key);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
         break;
@@ -833,14 +825,13 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
 
 PEP_STATUS pgp_import_key(PEP_SESSION session, const char *key_data, size_t size)
 {
-    pEpSession *_session = (pEpSession *) session;
     gpgme_error_t gpgme_error;
     gpgme_data_t dh;
 
     assert(session);
     assert(key_data);
 
-    gpgme_error = _session->gpg.gpgme_data_new_from_mem(&dh, key_data, size, 0);
+    gpgme_error = session->gpg.gpgme_data_new_from_mem(&dh, key_data, size, 0);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error != GPG_ERR_ENOMEM);
     switch (gpgme_error) {
@@ -856,25 +847,25 @@ PEP_STATUS pgp_import_key(PEP_SESSION session, const char *key_data, size_t size
         return PEP_UNKNOWN_ERROR;
     }
 
-    gpgme_error = _session->gpg.gpgme_op_import(_session->ctx, dh);
+    gpgme_error = session->gpg.gpgme_op_import(session->ctx, dh);
     gpgme_error = _GPGERR(gpgme_error);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
         break;
     case GPG_ERR_INV_VALUE:
         assert(0);
-        _session->gpg.gpgme_data_release(dh);
+        session->gpg.gpgme_data_release(dh);
         return PEP_UNKNOWN_ERROR;
     case GPG_ERR_NO_DATA:
-        _session->gpg.gpgme_data_release(dh);
+        session->gpg.gpgme_data_release(dh);
         return PEP_ILLEGAL_VALUE;
     default:
         assert(0);
-        _session->gpg.gpgme_data_release(dh);
+        session->gpg.gpgme_data_release(dh);
         return PEP_UNKNOWN_ERROR;
     }
 
-    _session->gpg.gpgme_data_release(dh);
+    session->gpg.gpgme_data_release(dh);
     return PEP_STATUS_OK;
 }
 
@@ -882,7 +873,6 @@ PEP_STATUS pgp_export_key(
     PEP_SESSION session, const char *fpr, char **key_data, size_t *size
     )
 {
-    pEpSession *_session = (pEpSession *) session;
     gpgme_error_t gpgme_error;
     gpgme_data_t dh;
     size_t _size;
@@ -894,7 +884,7 @@ PEP_STATUS pgp_export_key(
     assert(key_data);
     assert(size);
 
-    gpgme_error = _session->gpg.gpgme_data_new(&dh);
+    gpgme_error = session->gpg.gpgme_data_new(&dh);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error != GPG_ERR_ENOMEM);
     switch (gpgme_error) {
@@ -910,37 +900,37 @@ PEP_STATUS pgp_export_key(
         return PEP_UNKNOWN_ERROR;
     }
 
-    gpgme_error = _session->gpg.gpgme_op_export(_session->ctx, fpr,
+    gpgme_error = session->gpg.gpgme_op_export(session->ctx, fpr,
         GPGME_EXPORT_MODE_MINIMAL, dh);
     gpgme_error = _GPGERR(gpgme_error);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
         break;
     case GPG_ERR_EOF:
-        _session->gpg.gpgme_data_release(dh);
+        session->gpg.gpgme_data_release(dh);
         return PEP_KEY_NOT_FOUND;
     case GPG_ERR_INV_VALUE:
         assert(0);
-        _session->gpg.gpgme_data_release(dh);
+        session->gpg.gpgme_data_release(dh);
         return PEP_UNKNOWN_ERROR;
     default:
         assert(0);
-        _session->gpg.gpgme_data_release(dh);
+        session->gpg.gpgme_data_release(dh);
         return PEP_UNKNOWN_ERROR;
     };
 
-    _size = _session->gpg.gpgme_data_seek(dh, 0, SEEK_END);
+    _size = session->gpg.gpgme_data_seek(dh, 0, SEEK_END);
     assert(_size != -1);
-    _session->gpg.gpgme_data_seek(dh, 0, SEEK_SET);
+    session->gpg.gpgme_data_seek(dh, 0, SEEK_SET);
 
     buffer = malloc(_size + 1);
     assert(buffer);
     if (buffer == NULL) {
-        _session->gpg.gpgme_data_release(dh);
+        session->gpg.gpgme_data_release(dh);
         return PEP_OUT_OF_MEMORY;
     }
 
-    reading = _session->gpg.gpgme_data_read(dh, buffer, _size);
+    reading = session->gpg.gpgme_data_read(dh, buffer, _size);
     assert(_size == reading);
 
     // safeguard for the naive user
@@ -949,55 +939,54 @@ PEP_STATUS pgp_export_key(
     *key_data = buffer;
     *size = _size;
 
-    _session->gpg.gpgme_data_release(dh);
+    session->gpg.gpgme_data_release(dh);
     return PEP_STATUS_OK;
 }
 
-static void _switch_mode(pEpSession *_session, gpgme_keylist_mode_t remove_mode,
+static void _switch_mode(pEpSession *session, gpgme_keylist_mode_t remove_mode,
     gpgme_keylist_mode_t add_mode)
 {
     gpgme_error_t gpgme_error;
     gpgme_keylist_mode_t mode;
 
-    mode = _session->gpg.gpgme_get_keylist_mode(_session->ctx);
+    mode = session->gpg.gpgme_get_keylist_mode(session->ctx);
 
     mode &= ~remove_mode;
     mode |= add_mode;
 
-    gpgme_error = _session->gpg.gpgme_set_keylist_mode(_session->ctx, mode);
+    gpgme_error = session->gpg.gpgme_set_keylist_mode(session->ctx, mode);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
 }
 
 PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
 {
-    pEpSession *_session = (pEpSession *) session;
     gpgme_error_t gpgme_error;
     gpgme_key_t key;
 
     assert(session);
     assert(pattern);
 
-    _switch_mode(_session, GPGME_KEYLIST_MODE_LOCAL, GPGME_KEYLIST_MODE_EXTERN);
+    _switch_mode(session, GPGME_KEYLIST_MODE_LOCAL, GPGME_KEYLIST_MODE_EXTERN);
 
-    gpgme_error = _session->gpg.gpgme_op_keylist_start(_session->ctx, pattern, 0);
+    gpgme_error = session->gpg.gpgme_op_keylist_start(session->ctx, pattern, 0);
     gpgme_error = _GPGERR(gpgme_error);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
         break;
     case GPG_ERR_INV_VALUE:
         assert(0);
-        _switch_mode(_session, GPGME_KEYLIST_MODE_EXTERN,
+        _switch_mode(session, GPGME_KEYLIST_MODE_EXTERN,
             GPGME_KEYLIST_MODE_LOCAL);
         return PEP_UNKNOWN_ERROR;
     default:
-        _switch_mode(_session, GPGME_KEYLIST_MODE_EXTERN,
+        _switch_mode(session, GPGME_KEYLIST_MODE_EXTERN,
             GPGME_KEYLIST_MODE_LOCAL);
         return PEP_GET_KEY_FAILED;
     };
 
     do {
-        gpgme_error = _session->gpg.gpgme_op_keylist_next(_session->ctx, &key);
+        gpgme_error = session->gpg.gpgme_op_keylist_next(session->ctx, &key);
         gpgme_error = _GPGERR(gpgme_error);
         assert(gpgme_error != GPG_ERR_INV_VALUE);
         switch (gpgme_error) {
@@ -1011,32 +1000,26 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
             keys[0] = key;
             keys[1] = NULL;
 
-            gpgme_error = _session->gpg.gpgme_op_import_keys(_session->ctx, keys);
+            gpgme_error = session->gpg.gpgme_op_import_keys(session->ctx, keys);
             gpgme_error = _GPGERR(gpgme_error);
-            _session->gpg.gpgme_key_unref(key);
+            session->gpg.gpgme_key_unref(key);
             assert(gpgme_error != GPG_ERR_INV_VALUE);
             assert(gpgme_error != GPG_ERR_CONFLICT);
         }
             break;
         case GPG_ERR_ENOMEM:
-            _switch_mode(_session, GPGME_KEYLIST_MODE_EXTERN,
+            _switch_mode(session, GPGME_KEYLIST_MODE_EXTERN,
                 GPGME_KEYLIST_MODE_LOCAL);
-            _session->gpg.gpgme_op_keylist_end(_session->ctx);
+            session->gpg.gpgme_op_keylist_end(session->ctx);
             return PEP_OUT_OF_MEMORY;
         default:
-            // BUG: GPGME returns an illegal value instead of GPG_ERR_EOF after
-            // reading first key
-#ifndef NDEBUG
-            fprintf(stderr, "warning: unknown result 0x%x of"
-                " gpgme_op_keylist_next()\n", gpgme_error);
-#endif
-            gpgme_error = GPG_ERR_EOF;
-            break;
+            session->gpg.gpgme_op_keylist_end(session->ctx);
+            return PEP_UNKNOWN_ERROR;
         };
     } while (gpgme_error != GPG_ERR_EOF);
 
-    _session->gpg.gpgme_op_keylist_end(_session->ctx);
-    _switch_mode(_session, GPGME_KEYLIST_MODE_EXTERN,
+    session->gpg.gpgme_op_keylist_end(session->ctx);
+    _switch_mode(session, GPGME_KEYLIST_MODE_EXTERN,
         GPGME_KEYLIST_MODE_LOCAL);
     return PEP_STATUS_OK;
 }
@@ -1045,7 +1028,6 @@ PEP_STATUS pgp_find_keys(
     PEP_SESSION session, const char *pattern, stringlist_t **keylist
     )
 {
-    pEpSession *_session = (pEpSession *) session;
     gpgme_error_t gpgme_error;
     gpgme_key_t key;
     stringlist_t *_keylist;
@@ -1057,7 +1039,7 @@ PEP_STATUS pgp_find_keys(
 
     *keylist = NULL;
 
-    gpgme_error = _session->gpg.gpgme_op_keylist_start(_session->ctx, pattern, 0);
+    gpgme_error = session->gpg.gpgme_op_keylist_start(session->ctx, pattern, 0);
     gpgme_error = _GPGERR(gpgme_error);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
@@ -1066,6 +1048,7 @@ PEP_STATUS pgp_find_keys(
         assert(0);
         return PEP_UNKNOWN_ERROR;
     default:
+        session->gpg.gpgme_op_keylist_end(session->ctx);
         return PEP_GET_KEY_FAILED;
     };
 
@@ -1073,7 +1056,7 @@ PEP_STATUS pgp_find_keys(
     stringlist_t *_k = _keylist;
 
     do {
-        gpgme_error = _session->gpg.gpgme_op_keylist_next(_session->ctx, &key);
+        gpgme_error = session->gpg.gpgme_op_keylist_next(session->ctx, &key);
         gpgme_error = _GPGERR(gpgme_error);
         assert(gpgme_error != GPG_ERR_INV_VALUE);
         switch (gpgme_error) {
@@ -1090,34 +1073,27 @@ PEP_STATUS pgp_find_keys(
                 break;
         case GPG_ERR_ENOMEM:
             free_stringlist(_keylist);
-            _session->gpg.gpgme_op_keylist_end(_session->ctx);
+            session->gpg.gpgme_op_keylist_end(session->ctx);
             return PEP_OUT_OF_MEMORY;
         default:
-            // BUG: GPGME returns an illegal value instead of GPG_ERR_EOF after
-            // reading first key
-#ifndef NDEBUG
-            fprintf(stderr, "warning: unknown result 0x%x of"
-                " gpgme_op_keylist_next()\n", gpgme_error);
-#endif
-            gpgme_error = GPG_ERR_EOF;
-            break;
+            session->gpg.gpgme_op_keylist_end(session->ctx);
+            return PEP_UNKNOWN_ERROR;
         };
     } while (gpgme_error != GPG_ERR_EOF);
 
-    _session->gpg.gpgme_op_keylist_end(_session->ctx);
+    session->gpg.gpgme_op_keylist_end(session->ctx);
     *keylist = _keylist;
     return PEP_STATUS_OK;
 }
 
 PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
 {
-    pEpSession *_session = (pEpSession *) session;
     gpgme_error_t gpgme_error;
 
     assert(session);
     assert(pattern);
 
-    gpgme_error = _session->gpg.gpgme_op_export(_session->ctx, pattern,
+    gpgme_error = session->gpg.gpgme_op_export(session->ctx, pattern,
         GPGME_EXPORT_MODE_EXTERN, NULL);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error != GPG_ERR_INV_VALUE);
@@ -1134,7 +1110,6 @@ PEP_STATUS pgp_get_key_rating(
     PEP_comm_type *comm_type
     )
 {
-    pEpSession *_session = (pEpSession *) session;
     PEP_STATUS status = PEP_STATUS_OK;
     gpgme_error_t gpgme_error;
     gpgme_key_t key;
@@ -1145,7 +1120,7 @@ PEP_STATUS pgp_get_key_rating(
 
     *comm_type = PEP_ct_unknown;
 
-    gpgme_error = _session->gpg.gpgme_op_keylist_start(_session->ctx, fpr, 0);
+    gpgme_error = session->gpg.gpgme_op_keylist_start(session->ctx, fpr, 0);
     gpgme_error = _GPGERR(gpgme_error);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
@@ -1157,12 +1132,12 @@ PEP_STATUS pgp_get_key_rating(
         return PEP_GET_KEY_FAILED;
     };
 
-    gpgme_error = _session->gpg.gpgme_op_keylist_next(_session->ctx, &key);
+    gpgme_error = session->gpg.gpgme_op_keylist_next(session->ctx, &key);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error != GPG_ERR_INV_VALUE);
 
     if (key == NULL) {
-        _session->gpg.gpgme_op_keylist_end(_session->ctx);
+        session->gpg.gpgme_op_keylist_end(session->ctx);
         return PEP_KEY_NOT_FOUND;
     }
 
@@ -1176,7 +1151,7 @@ PEP_STATUS pgp_get_key_rating(
         break;
     default:
         *comm_type = PEP_ct_unknown;
-        _session->gpg.gpgme_op_keylist_end(_session->ctx);
+        session->gpg.gpgme_op_keylist_end(session->ctx);
         return PEP_STATUS_OK;
     }
 
@@ -1214,21 +1189,15 @@ PEP_STATUS pgp_get_key_rating(
         }
         break;
     case GPG_ERR_ENOMEM:
-        _session->gpg.gpgme_op_keylist_end(_session->ctx);
+        session->gpg.gpgme_op_keylist_end(session->ctx);
         *comm_type = PEP_ct_unknown;
         return PEP_OUT_OF_MEMORY;
     default:
-        // BUG: GPGME returns an illegal value instead of GPG_ERR_EOF after
-        // reading first key
-#ifndef NDEBUG
-        fprintf(stderr, "warning: unknown result 0x%x of"
-            " gpgme_op_keylist_next()\n", gpgme_error);
-#endif
-        gpgme_error = GPG_ERR_EOF;
-        break;
+        session->gpg.gpgme_op_keylist_end(session->ctx);
+        return PEP_UNKNOWN_ERROR;
     };
 
-    _session->gpg.gpgme_op_keylist_end(_session->ctx);
+    session->gpg.gpgme_op_keylist_end(session->ctx);
 
     return status;
 }

@@ -26,7 +26,8 @@ extern "C" {
 //      UTF-8 strings are UTF-8 encoded C strings (zero terminated)
 
 
-typedef void * PEP_SESSION;
+struct _pEpSession;
+typedef struct _pEpSession * PEP_SESSION;
 
 typedef enum {
 	PEP_STATUS_OK									= 0,

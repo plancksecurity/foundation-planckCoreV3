@@ -20,7 +20,6 @@ int main(int argc, char* argv[])
     cout << "returning from init() with result == " << init_result << "\n";
 	assert(init_result == PEP_STATUS_OK);
 
-    /*
     PEP_SESSION second_session;
     cout << "second session test\n";
     PEP_STATUS second_init_result = init(&second_session);
@@ -29,7 +28,6 @@ int main(int argc, char* argv[])
     assert(second_session);
     cout << "dropping second session\n";
 	release(second_session);
-    */
 
 	cout << "logging test\n";
 	log_event(session, "log test", "pEp Enginge Test", "This is a logging test sample.", "please ignore this line");
@@ -131,7 +129,7 @@ int main(int argc, char* argv[])
 
     keylist = new_stringlist("49422235FC99585B891C66530C7B109BFA7261F7");
     // stringlist_add(keylist, "C6FAA231A2B43252B9526D119550C6B6B8B0FCD6");
-    stringlist_add(keylist, "5DC8CAC595EDAD6598DD4732DD55BF29DF9B1541");
+    // stringlist_add(keylist, "5DC8CAC595EDAD6598DD4732DD55BF29DF9B1541");
 
     cout << "\ncalling encrypt_and_sign()\n";
     PEP_STATUS encrypt_result = encrypt_and_sign(session, keylist, plain.c_str(), plain.length(), &buf_text, &buf_size);

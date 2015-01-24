@@ -60,7 +60,7 @@
 
 #define NOT_IMPLEMENTED assert(0)
 
-typedef struct {
+typedef struct _pEpSession {
     const char *version;
 
 #ifndef NO_GPG
