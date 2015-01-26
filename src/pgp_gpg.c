@@ -976,14 +976,16 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
         break;
     case GPG_ERR_INV_VALUE:
         assert(0);
-        _switch_mode(session, GPGME_KEYLIST_MODE_EXTERN,
-            GPGME_KEYLIST_MODE_LOCAL);
+        _switch_mode(session, GPGME_KEYLIST_MODE_EXTERN, GPGME_KEYLIST_MODE_LOCAL);
         return PEP_UNKNOWN_ERROR;
     default:
-        _switch_mode(session, GPGME_KEYLIST_MODE_EXTERN,
-            GPGME_KEYLIST_MODE_LOCAL);
+        _switch_mode(session, GPGME_KEYLIST_MODE_EXTERN, GPGME_KEYLIST_MODE_LOCAL);
         return PEP_GET_KEY_FAILED;
     };
+
+    gpgme_ctx_t import_ctx;
+    gpgme_error = session->gpg.gpgme_new(&import_ctx);
+    assert(gpgme_error == GPG_ERR_NO_ERROR);
 
     do {
         gpgme_error = session->gpg.gpgme_op_keylist_next(session->ctx, &key);
@@ -1000,7 +1002,7 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
             keys[0] = key;
             keys[1] = NULL;
 
-            gpgme_error = session->gpg.gpgme_op_import_keys(session->ctx, keys);
+            gpgme_error = session->gpg.gpgme_op_import_keys(import_ctx, keys);
             gpgme_error = _GPGERR(gpgme_error);
             session->gpg.gpgme_key_unref(key);
             assert(gpgme_error != GPG_ERR_INV_VALUE);
@@ -1008,19 +1010,21 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
         }
             break;
         case GPG_ERR_ENOMEM:
-            _switch_mode(session, GPGME_KEYLIST_MODE_EXTERN,
-                GPGME_KEYLIST_MODE_LOCAL);
             session->gpg.gpgme_op_keylist_end(session->ctx);
+            session->gpg.gpgme_release(import_ctx);
+            _switch_mode(session, GPGME_KEYLIST_MODE_EXTERN, GPGME_KEYLIST_MODE_LOCAL);
             return PEP_OUT_OF_MEMORY;
         default:
             session->gpg.gpgme_op_keylist_end(session->ctx);
+            session->gpg.gpgme_release(import_ctx);
+            _switch_mode(session, GPGME_KEYLIST_MODE_EXTERN, GPGME_KEYLIST_MODE_LOCAL);
             return PEP_UNKNOWN_ERROR;
         };
     } while (gpgme_error != GPG_ERR_EOF);
 
     session->gpg.gpgme_op_keylist_end(session->ctx);
-    _switch_mode(session, GPGME_KEYLIST_MODE_EXTERN,
-        GPGME_KEYLIST_MODE_LOCAL);
+    session->gpg.gpgme_release(import_ctx);
+    _switch_mode(session, GPGME_KEYLIST_MODE_EXTERN, GPGME_KEYLIST_MODE_LOCAL);
     return PEP_STATUS_OK;
 }
 
