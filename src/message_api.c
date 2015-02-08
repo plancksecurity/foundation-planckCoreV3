@@ -39,8 +39,11 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     message *msg = new_message(src->dir, from, to, NULL);
-    if (msg == NULL)
+    if (msg == NULL) {
+        free_identity(from);
+        free_identity_list(to);
         return PEP_OUT_OF_MEMORY;
+    }
     msg->enc_format = PEP_enc_pieces;
 
     from->me = true;
