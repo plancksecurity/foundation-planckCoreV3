@@ -5,6 +5,8 @@
 using namespace std;
 
 int main() {
+    cout << "*** message_api_test ***\n\n";
+
     PEP_SESSION session;
     
     cout << "calling init()\n";

@@ -75,7 +75,7 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
     }
     // mailmime_add_part() takes ownership of mime
 
-    char *template = strdup("/tmp/temp.XXXXXXXXXXXXXXXXXXXX");
+    char *template = strdup("/tmp/pEp.XXXXXXXXXXXXXXXXXXXX");
     assert(template);
     if (template == NULL)
         goto enomem;
@@ -130,7 +130,10 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
 
     size = (size_t) len;
 
+    errno = 0;
     rewind(file);
+    assert(errno == 0);
+    clearerr(file);
 
     buf = calloc(1, size + 1);
     assert(buf);
@@ -143,7 +146,7 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
         assert(feof(file) == 0);
         if (feof(file))
             goto err_file;
-        bytes_read = fread(_buf, rest, 1, file);
+        bytes_read = rest * fread(_buf, rest, 1, file);
         if (ferror(file))
             goto err_file;
     }
