@@ -44,28 +44,58 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
 
     mailmime_set_imf_fields(msg_mime, fields);
 
-    mime = part_multiple_new("multipart/mixed", NULL);
-    assert(mime);
-    if (mime == NULL)
-        goto enomem;
+    if (htmltext) {
+        mime = part_multiple_new("multipart/alternative", NULL);
+        assert(mime);
+        if (mime == NULL)
+            goto enomem;
 
-    submime = get_text_part("text/plain", plaintext, strlen(plaintext),
-            MAILMIME_MECHANISM_QUOTED_PRINTABLE);
-    assert(submime);
-    if (submime == NULL) {
-        mailmime_free(msg_mime);
-        goto enomem;
-    }
+        submime = get_text_part("text/plain", plaintext, strlen(plaintext),
+                MAILMIME_MECHANISM_QUOTED_PRINTABLE);
+        assert(submime);
+        if (submime == NULL) {
+            mailmime_free(msg_mime);
+            goto enomem;
+        }
 
-    r = mailmime_smart_add_part(mime, submime);
-    assert(r == MAILIMF_NO_ERROR);
-    if (r == MAILIMF_ERROR_MEMORY) {
-        mailmime_free(msg_mime);
-        goto enomem;
+        r = mailmime_smart_add_part(mime, submime);
+        assert(r == MAILIMF_NO_ERROR);
+        if (r == MAILIMF_ERROR_MEMORY) {
+            mailmime_free(msg_mime);
+            goto enomem;
+        }
+        else {
+            // mailmime_smart_add_part() takes ownership of submime
+            submime = NULL;
+        }
+
+        submime = get_text_part("text/html", htmltext, strlen(htmltext),
+                MAILMIME_MECHANISM_QUOTED_PRINTABLE);
+        assert(submime);
+        if (submime == NULL) {
+            mailmime_free(msg_mime);
+            goto enomem;
+        }
+
+        r = mailmime_smart_add_part(mime, submime);
+        assert(r == MAILIMF_NO_ERROR);
+        if (r == MAILIMF_ERROR_MEMORY) {
+            mailmime_free(msg_mime);
+            goto enomem;
+        }
+        else {
+            // mailmime_smart_add_part() takes ownership of submime
+            submime = NULL;
+        }
     }
     else {
-        // mailmime_smart_add_part() takes ownership of submime
-        submime = NULL;
+        mime = get_text_part("text/plain", plaintext, strlen(plaintext),
+                MAILMIME_MECHANISM_QUOTED_PRINTABLE);
+        assert(mime);
+        if (mime == NULL) {
+            mailmime_free(msg_mime);
+            goto enomem;
+        }
     }
 
     r = mailmime_add_part(msg_mime, mime);
