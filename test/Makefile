@@ -9,8 +9,8 @@ CXXFLAGS=-g -O0 -I../src
 
 TARGET=pEpEngineTest
 
-UNIT_TEST_SOURCE=$(wildcard *_test.cc)
-UNIT_TESTS=$(subst .cc,,$(UNIT_TEST_SOURCE))
+UNIT_TESTS_SOURCE=$(wildcard *_test.cc)
+UNIT_TESTS=$(subst .cc,,$(UNIT_TESTS_SOURCE))
 
 all: $(TARGET) $(UNIT_TESTS)
 
@@ -23,4 +23,6 @@ test: pEpEngineTest
 	LD_LIBRARY_PATH=~/lib:../src ./pEpEngineTest
 
 unit_tests: $(UNIT_TESTS)
-	LD_LIBRARY_PATH=~/lib:../src ./unit_tests
+	for t in ./*_test ; do \
+		LD_LIBRARY_PATH=~/lib:../src $$t ; \
+	done
