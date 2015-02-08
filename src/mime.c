@@ -25,7 +25,7 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
     FILE *file = NULL;
     size_t size;
     char *buf = NULL;
-    PEP_STATUS error = PEP_OUT_OF_MEMORY;
+    PEP_STATUS error;
 
     assert(plaintext);
     assert(resulttext);
@@ -158,12 +158,16 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
 
 err_buffer:
     error = PEP_BUFFER_TOO_SMALL;
-    goto enomem;
+    goto release;
 
 err_file:
     error = PEP_CANNOT_CREATE_TEMP_FILE;
+    goto release;
 
 enomem:
+    error = PEP_OUT_OF_MEMORY;
+
+release:
     free(buf);
     free(template);
 
