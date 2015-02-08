@@ -1,0 +1,26 @@
+#include <iostream>
+#include <string>
+#include <assert.h>
+#include "MODULE.h"
+
+using namespace std;
+
+int main() {
+    cout << "\n*** MODULE_test ***\n\n";
+
+    PEP_SESSION session;
+    
+    cout << "calling init()\n";
+    PEP_STATUS status1 = init(&session);   
+    assert(status1 == PEP_STATUS_OK);
+    assert(session);
+    cout << "init() completed.\n";
+
+    // MODULE test code
+
+
+    cout << "calling release()\n";
+    release(session);
+    return 0;
+}
+

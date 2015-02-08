@@ -5,7 +5,7 @@
 using namespace std;
 
 int main() {
-    cout << "*** message_api_test ***\n\n";
+    cout << "\n*** message_api_test ***\n\n";
 
     PEP_SESSION session;
     
@@ -14,6 +14,8 @@ int main() {
     assert(status1 == PEP_STATUS_OK);
     assert(session);
     cout << "init() completed.\n";
+
+    // message_api test code
 
     cout << "creating message…\n";
     pEp_identity * me = new_identity("outlooktest@dingens.org", NULL, "23", "Outlook Test");
