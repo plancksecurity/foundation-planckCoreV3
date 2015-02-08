@@ -166,21 +166,21 @@ void *dlsym(void *handle, const char *symbol) {
 	return (void *) (intptr_t) GetProcAddress((HMODULE) handle, symbol);
 }
 
-const char *windoze_local_db() {
+const char *windoze_local_db(void) {
 	static string path;
 	if (path.length() == 0)
         path = managementPath("%LOCALAPPDATA%\\pEp", "management.db");
     return path.c_str();
 }
 
-const char *windoze_system_db() {
+const char *windoze_system_db(void) {
 	static string path;
 	if (path.length() == 0)
 		path = managementPath("%ALLUSERSPROFILE%\\pEp", "system.db");
     return path.c_str();
 }
 
-const char *gpg_conf()
+const char *gpg_conf(void)
 {
     static string path;
     if (path.length() == 0)

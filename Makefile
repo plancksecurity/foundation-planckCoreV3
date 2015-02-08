@@ -18,6 +18,9 @@ clean:
 test: all
 	$(MAKE) -C test test
 
+unittest: all
+	$(MAKE) -C test unittest
+
 package: clean
 	cd .. ; COPYFILE_DISABLE=true tar cjf pEpEngine.tar.bz2 pEpEngine
 
