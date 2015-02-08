@@ -13,7 +13,7 @@ extern "C" {
 //      plaintext (in)          plaintext of message as UTF-8 string
 //      htmltext (in)           optional HTML version of message as UTF-8
 //                              string or NULL if it does not apply
-//      resulttext (out)        the resulting encoded text
+//      resulttext (out)        the resulting encoded text or NULL on any error
 //
 //  return value:
 //      PEP_STATUS_OK           if everything worked

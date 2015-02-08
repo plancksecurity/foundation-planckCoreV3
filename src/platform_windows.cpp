@@ -7,6 +7,8 @@
 #define _WIN32_WINNT 0x0600
 
 #include <windows.h>
+#define _CRT_RAND_S
+#include <stdlib.h>
 #include <assert.h>
 #include <string>
 #include <stdexcept>
@@ -184,6 +186,20 @@ const char *gpg_conf()
     if (path.length() == 0)
         path = managementPath("%APPDATA%\\gnupg", "gpg.conf");
     return path.c_str();
+}
+
+long random(void)
+{
+    unsigned int r;
+    errno_t e;
+
+    assert(sizeof(unsigned int) == sizeof(long)); // this is Windoze
+
+    do {
+        e = rand_s(&r);
+    } while (e);
+
+    return (long) (r & ((1<<31)-1));
 }
 
 } // "C"

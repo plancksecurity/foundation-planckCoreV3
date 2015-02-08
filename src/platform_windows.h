@@ -23,6 +23,8 @@ const char *windoze_local_db(void);
 const char *windoze_system_db(void);
 const char *gpg_conf(void);
 
+long random(void);
+
 #ifdef __cplusplus
 }
 #endif

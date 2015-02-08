@@ -12,12 +12,15 @@ static char * generate_boundary(const char * boundary_prefix)
     time_t now;
     char name[MAX_MESSAGE_ID];
     long value;
-    
+ 
+    id[MAX_MESSAGE_ID - 1] = 0;
+    name[MAX_MESSAGE_ID - 1] = 0;
+
     now = time(NULL);
 #ifndef WIN32
     value = random();
     
-    gethostname(name, MAX_MESSAGE_ID);
+    gethostname(name, MAX_MESSAGE_ID - 1);
 #else
     value = now;
     strcpy(name, "WINDOWS");
