@@ -7,47 +7,22 @@ extern "C" {
 #include "transport.h"
 
 
-// mime_encode_parts() - encode message with MIME
-//  parameters:
-//      src                 message to encode
-//      dst                 encoded message or NULL on error
-//
-//  return value:
-//      error status or PEP_STATUS_OK on success
-//
-//  caveat:
-//      message must be unencrypted
-
-DYNAMIC_API PEP_STATUS mime_encode_parts(const message *src, message **dst);
-
-
-// mime_decode_parts() - decode MIME message
-//  parameters:
-//      src                 message to decode
-//      dst                 decoded message or NULL on error
-//
-//  return value:
-//      error status or PEP_STATUS_OK on success
-//
-//  caveat:
-//      message must be unencrypted
-
-DYNAMIC_API PEP_STATUS mime_decode_parts(const message *src, message **dst);
-
-
 // encrypt_message() - encrypt message in memory
 //
 //  parameters:
-//      session             session handle
-//      src                 message to encrypt
-//      extra               extra keys for encryption
-//      dst                 pointer to encrypted message or NULL on failure
-//      format              encryption format
+//      session (in)        session handle
+//      src (in)            message to encrypt
+//      extra (in)          extra keys for encryption
+//      dst (out)           pointer to encrypted message or NULL on failure
+//      format (in)         encryption format
 //
 //  return value:
-//      error status or PEP_STATUS_OK on success; PEP_KEY_NOT_FOUND if one
-//      or more keys couldn't be found, but the message could be encrypted
-//      with other keys
+//      PEP_STATUS_OK                   on success
+//		PEP_KEY_NOT_FOUND	            at least one of the receipient keys
+//		                                could not be found
+//		PEP_KEY_HAS_AMBIG_NAME          at least one of the receipient keys has
+//		                                an ambiguous name
+//		PEP_GET_KEY_FAILED		        cannot retrieve key
 
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
@@ -61,9 +36,9 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 // decrypt_message() - decrypt message in memory
 //
 //  parameters:
-//      session             session handle
-//      src                 message to decrypt
-//      dst                 pointer to decrypted message or NULL on failure
+//      session (in)        session handle
+//      src (in)            message to decrypt
+//      dst (out)           pointer to decrypted message or NULL on failure
 //
 //  return value:
 //      error status or PEP_STATUS_OK on success

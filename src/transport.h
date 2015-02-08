@@ -1,9 +1,13 @@
 #pragma once
 
-#include "pEpEngine.h"
 #include <time.h>
+#include "pEpEngine.h"
 
-// all functions are using POSIX struct tm
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// for time values all functions are using POSIX struct tm
 
 typedef struct tm timestamp;
 
@@ -27,7 +31,7 @@ typedef struct _identity_list {
 // new_identity_list() - allocate a new identity list
 //
 //  parameters:
-//      ident               identity to move for first element
+//      ident (in)          identity to move for first element
 //
 //  return value:
 //      new identity_list or NULL if out of memory
@@ -41,7 +45,7 @@ DYNAMIC_API identity_list *new_identity_list(pEp_identity *ident);
 // identity_list_dup() - duplicate identity_list (deep copy)
 //
 //  parameters:
-//      id_list             identity_list to copy
+//      id_list (in)        identity_list to copy
 //
 //  return value:
 //      new identity_list or NULL if out of memory
@@ -52,7 +56,7 @@ DYNAMIC_API identity_list *identity_list_dup(const identity_list *src);
 // free_identity_list() - free memory allocated by identity_list
 //
 //  parameters:
-//      id_list             identity_list to free
+//      id_list (in)        identity_list to free
 //
 //  caveat:
 //      this function frees all identities in the list additional to the
@@ -64,8 +68,8 @@ DYNAMIC_API void free_identity_list(identity_list *id_list);
 // identity_list_add - add identity to an identity_list
 //
 //  parameters:
-//      id_list             identity_list to add to
-//      ident               identity being added
+//      id_list (in)        identity_list to add to
+//      ident (in)          identity being added
 //
 //  return value:
 //      pointer to the last element in identity_list or NULL if out of memory
@@ -99,10 +103,10 @@ typedef struct _bloblist_t {
 // new_bloblist() - allocate a new bloblist
 //
 //  parameters:
-//      blob            blob to add to the list
-//      size            size of the blob
-//      mime_type       MIME type of the blob data or NULL if unknown
-//      file_name       file name of origin of blob data or NULL if unknown
+//      blob (in)       blob to add to the list
+//      size (in)       size of the blob
+//      mime_type (in)  MIME type of the blob data or NULL if unknown
+//      file_name (in)  file name of origin of blob data or NULL if unknown
 //
 //  return value:
 //      pointer to new bloblist_t or NULL if out of memory
@@ -118,7 +122,7 @@ DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_t
 // free_bloblist() - free bloblist
 //
 //  parameters:
-//      bloblist        bloblist to free
+//      bloblist (in)   bloblist to free
 
 DYNAMIC_API void free_bloblist(bloblist_t *bloblist);
 
@@ -126,11 +130,11 @@ DYNAMIC_API void free_bloblist(bloblist_t *bloblist);
 // bloblist_add() - add reference to a blob to bloblist
 //
 //  parameters:
-//      bloblist        bloblist to add to
-//      blob            blob
-//      size            size of the blob
-//      mime_type       MIME type of the blob or NULL if unknown
-//      file_name       file name of the blob or NULL if unknown
+//      bloblist (in)   bloblist to add to
+//      blob (in)       blob
+//      size (in)       size of the blob
+//      mime_type (in)  MIME type of the blob or NULL if unknown
+//      file_name (in)  file name of the blob or NULL if unknown
 //
 //  return value:
 //      pointer to the last element of bloblist or NULL if out of memory
@@ -176,6 +180,7 @@ typedef struct _message {
                                             // is received
     identity_list *cc;                      // whom a CC is being sent
     identity_list *bcc;                     // whom a BCC is being sent
+    pEp_identity *reply_to;                 // where a reply should go to
     char * refering_id;                     // UTF-8 string of refering message ID
     struct _message *refering_msg_ref;      // reference to refering message
     struct _message_ref_list *refered_by;   // list of references to messages being
@@ -192,10 +197,10 @@ typedef struct _message_ref_list {
 // new_message() - allocate new message
 //
 //  parameters:
-//      dir             PEP_dir_incoming or PEP_dir_outgoing
-//      from            identity whom the message is from
-//      to              identity list whom the message is sent to
-//      shortmsg        UTF-8 string of short message
+//      dir (in)        PEP_dir_incoming or PEP_dir_outgoing
+//      from (in)       identity whom the message is from
+//      to (in)         identity list whom the message is sent to
+//      shortmsg (in)   UTF-8 string of short message
 //
 //  return value:
 //      pointer to new message or NULL if out of memory
@@ -216,7 +221,7 @@ DYNAMIC_API message *new_message(
 // free_message() - free message struct
 //
 //  parameters:
-//      msg             message struct to free
+//      msg (in)        message struct to free
 //
 //  caveat:
 //      raw data as well as referenced other messages aren't freed and remain
@@ -228,7 +233,7 @@ DYNAMIC_API void free_message(message *msg);
 // new_message_ref_list() - allocate new message reference list
 //
 //  parameters:
-//      msg             message to add a reference to or NULL
+//      msg (in)        message to add a reference to or NULL
 //
 //  return value:
 //      pointer to new message_ref_list or NULL if out of memory
@@ -239,7 +244,7 @@ DYNAMIC_API message_ref_list *new_message_ref_list(message *msg);
 // free_message_ref_list() - free message reference list
 //
 //  parameters:
-//      msg_list        message_ref_list to free
+//      msg_list (in)   message_ref_list to free
 
 DYNAMIC_API void free_message_ref_list(message_ref_list *msg_list);
 
@@ -248,8 +253,8 @@ DYNAMIC_API void free_message_ref_list(message_ref_list *msg_list);
 // list
 //
 //  parameters:
-//      msg_list        message_ref_list to add to
-//      msg             message to add a reference to
+//      msg_list (in)   message_ref_list to add to
+//      msg (in)        message to add a reference to
 //
 //  return value:
 //      pointer to the last element of message_ref_list or NULL if out of
@@ -276,6 +281,7 @@ struct _PEP_transport_t {
 
 typedef uint64_t transports_mask;
 
-PEP_STATUS init_transport_system(PEP_SESSION session);
-void release_transport_system(PEP_SESSION session);
+#ifdef __cplusplus
+}
+#endif
 

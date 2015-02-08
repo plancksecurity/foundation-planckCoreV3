@@ -21,27 +21,26 @@ int main() {
     assert(msg);
     cout << "message created.\n";
 
-    cout << "encrypting message…\n";
-    message *enc_msg;
+//     cout << "encrypting message in pieces…\n";
+//     message *enc_msg;
+//     cout << "calling encrypt_message()\n";
+//     PEP_STATUS status2 = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_pieces);
+//     assert(status2 == PEP_STATUS_OK);
+//     assert(enc_msg);
+//     cout << "message encrypted.\n";
+
+    cout << "encrypting message as MIME multipart…\n";
+    message *enc_msg2;
     cout << "calling encrypt_message()\n";
-    PEP_STATUS status2 = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_pieces);
-    assert(status2 == PEP_STATUS_OK);
-    assert(enc_msg);
+    PEP_STATUS status3 = encrypt_message(session, msg, NULL, &enc_msg2, PEP_enc_MIME_multipart);
+    assert(status3 == PEP_STATUS_OK);
+    assert(enc_msg2);
     cout << "message encrypted.\n";
-
-//     cout << "MIME encoding message…\n";
-//     message *mmsg;
-//     PEP_STATUS status3 = mime_encode_parts(msg, &mmsg);
-//     assert(mmsg);
-//     assert(status3 == PEP_STATUS_OK);
-//     cout << "message:\n";
-//     cout << mmsg->longmsg;
-//     cout << "\n";
-
+    
     cout << "freeing messages…\n";
     free_message(msg);
-    free_message(enc_msg);
-//     free_message(mmsg);
+//    free_message(enc_msg);
+    free_message(enc_msg2);
     cout << "done.\n";
 
     cout << "calling release()\n";

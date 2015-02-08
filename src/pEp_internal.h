@@ -84,3 +84,7 @@ typedef struct _pEpSession {
     sqlite3_stmt *set_trust;
     sqlite3_stmt *get_trust;
 } pEpSession;
+
+PEP_STATUS init_transport_system(PEP_SESSION session);
+void release_transport_system(PEP_SESSION session);
+

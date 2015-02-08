@@ -13,38 +13,38 @@ typedef enum _PEP_cryptotech {
 } PEP_cryptotech;
 
 typedef PEP_STATUS (*decrypt_and_verify_t)(
-    PEP_SESSION session, const char *ctext, size_t csize,
-    char **ptext, size_t *psize, stringlist_t **keylist
+        PEP_SESSION session, const char *ctext, size_t csize,
+        char **ptext, size_t *psize, stringlist_t **keylist
     );
 
 typedef PEP_STATUS (*verify_text_t)(
-    PEP_SESSION session, const char *text, size_t size,
-    const char *signature, size_t sig_size, stringlist_t **keylist
+        PEP_SESSION session, const char *text, size_t size,
+        const char *signature, size_t sig_size, stringlist_t **keylist
     );
 
 typedef PEP_STATUS (*encrypt_and_sign_t)(
-    PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
-    size_t psize, char **ctext, size_t *csize
+        PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+        size_t psize, char **ctext, size_t *csize
     );
 
 typedef PEP_STATUS (*delete_keypair_t)(PEP_SESSION session, const char *fpr);
 
 typedef PEP_STATUS (*export_key_t)(
-    PEP_SESSION session, const char *fpr, char **key_data, size_t *size
+        PEP_SESSION session, const char *fpr, char **key_data, size_t *size
     );
 
 typedef PEP_STATUS (*find_keys_t)(
-    PEP_SESSION session, const char *pattern, stringlist_t **keylist
+        PEP_SESSION session, const char *pattern, stringlist_t **keylist
     );
 
 typedef PEP_STATUS (*generate_keypair_t)(
-    PEP_SESSION session, pEp_identity *identity
+        PEP_SESSION session, pEp_identity *identity
     );
 
 typedef PEP_STATUS (*get_key_rating_t)(
-    PEP_SESSION session,
-    const char *fpr,
-    PEP_comm_type *comm_type
+        PEP_SESSION session,
+        const char *fpr,
+        PEP_comm_type *comm_type
     );
 
 typedef PEP_STATUS (*import_key_t)(PEP_SESSION session, const char *key_data, size_t size);
