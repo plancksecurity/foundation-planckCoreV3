@@ -17,6 +17,13 @@ struct mailmime * get_text_part(
         int encoding_type
     );
 
+struct mailmime * get_file_part(
+        const char * filename,
+        const char * mime_type,
+        char * data,
+        size_t length
+    );
+
 struct mailmime * part_multiple_new(
         const char * type,
         const char * boundary_prefix

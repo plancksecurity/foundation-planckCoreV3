@@ -12,11 +12,10 @@
 DYNAMIC_API PEP_STATUS mime_encode_text(
         const char *plaintext,
         const char *htmltext,
+        bloblist_t *attachments,
         char **resulttext
     )
 {
-    struct mailmime * msg_mime = NULL;
-	struct mailimf_fields * fields = NULL;
     struct mailmime * mime = NULL;
     struct mailmime * submime = NULL;
     int col;
@@ -32,18 +31,6 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
 
     *resulttext = NULL;
 
-    msg_mime = mailmime_new_message_data(NULL);
-    assert(msg_mime);
-    if (msg_mime == NULL)
-        goto enomem;
-
-    fields = mailimf_fields_new_empty();
-    assert(fields);
-    if (fields == NULL)
-        goto enomem;
-
-    mailmime_set_imf_fields(msg_mime, fields);
-
     if (htmltext) {
         mime = part_multiple_new("multipart/alternative", NULL);
         assert(mime);
@@ -53,15 +40,12 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
         submime = get_text_part("text/plain", plaintext, strlen(plaintext),
                 MAILMIME_MECHANISM_QUOTED_PRINTABLE);
         assert(submime);
-        if (submime == NULL) {
-            mailmime_free(msg_mime);
+        if (submime == NULL)
             goto enomem;
-        }
 
         r = mailmime_smart_add_part(mime, submime);
         assert(r == MAILIMF_NO_ERROR);
         if (r == MAILIMF_ERROR_MEMORY) {
-            mailmime_free(msg_mime);
             goto enomem;
         }
         else {
@@ -72,17 +56,13 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
         submime = get_text_part("text/html", htmltext, strlen(htmltext),
                 MAILMIME_MECHANISM_QUOTED_PRINTABLE);
         assert(submime);
-        if (submime == NULL) {
-            mailmime_free(msg_mime);
+        if (submime == NULL)
             goto enomem;
-        }
 
         r = mailmime_smart_add_part(mime, submime);
         assert(r == MAILIMF_NO_ERROR);
-        if (r == MAILIMF_ERROR_MEMORY) {
-            mailmime_free(msg_mime);
+        if (r == MAILIMF_ERROR_MEMORY)
             goto enomem;
-        }
         else {
             // mailmime_smart_add_part() takes ownership of submime
             submime = NULL;
@@ -92,18 +72,55 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
         mime = get_text_part("text/plain", plaintext, strlen(plaintext),
                 MAILMIME_MECHANISM_QUOTED_PRINTABLE);
         assert(mime);
-        if (mime == NULL) {
-            mailmime_free(msg_mime);
+        if (mime == NULL)
             goto enomem;
-        }
     }
 
-    r = mailmime_add_part(msg_mime, mime);
-    assert(r == MAILIMF_NO_ERROR);
-    if (r == MAILIMF_ERROR_MEMORY) {
-        goto enomem;
+    if (attachments) {
+        submime = mime;
+        mime = part_multiple_new("multipart/mixed", NULL);
+        assert(mime);
+        if (mime == NULL)
+            goto enomem;
+
+        r = mailmime_smart_add_part(mime, submime);
+        assert(r == MAILIMF_NO_ERROR);
+        if (r == MAILIMF_ERROR_MEMORY) {
+            goto enomem;
+        }
+        else {
+            // mailmime_smart_add_part() takes ownership of submime
+            submime = NULL;
+        }
+
+        bloblist_t *_a;
+        for (_a = attachments; _a != NULL; _a = _a->next) {
+            char * mime_type;
+
+            assert(_a->data);
+            assert(_a->size);
+
+            if (_a->mime_type == NULL)
+                mime_type = "application/octet-stream";
+            else
+                mime_type = _a->mime_type;
+
+            submime = get_file_part(_a->file_name, mime_type, _a->data, _a->size);
+            assert(submime);
+            if (submime == NULL)
+                goto enomem;
+
+            r = mailmime_smart_add_part(mime, submime);
+            assert(r == MAILIMF_NO_ERROR);
+            if (r == MAILIMF_ERROR_MEMORY) {
+                goto enomem;
+            }
+            else {
+                // mailmime_smart_add_part() takes ownership of submime
+                submime = NULL;
+            }
+        }
     }
-    // mailmime_add_part() takes ownership of mime
 
     char *template = strdup("/tmp/pEp.XXXXXXXXXXXXXXXXXXXX");
     assert(template);
@@ -182,7 +199,7 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
     }
 
     fclose(file);
-    mailmime_free(msg_mime);
+    mailmime_free(mime);
     *resulttext = buf;
     return PEP_STATUS_OK;
 
@@ -206,10 +223,8 @@ release:
     else if (fd != -1)
         close(fd);
 
-    if (msg_mime)
-        mailmime_free(msg_mime);
-    if (fields)
-        mailimf_fields_free(fields);
+    if (mime)
+        mailmime_free(mime);
     if (submime)
         mailmime_free(submime);
 

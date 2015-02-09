@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pEpEngine.h"
+#include "transport.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -13,6 +13,7 @@ extern "C" {
 //      plaintext (in)          plaintext of message as UTF-8 string
 //      htmltext (in)           optional HTML version of message as UTF-8
 //                              string or NULL if it does not apply
+//      attachments (in)        attatchments or NULL if there are none
 //      resulttext (out)        the resulting encoded text or NULL on any error
 //
 //  return value:
@@ -25,12 +26,13 @@ extern "C" {
 //      PEP_OUT_OF_MEMORY       if not enough memory could be allocated
 //
 //  caveat:
-//      the resulttext will go to the ownership of the caller; plaintext
-//      and htmltext will remain in the ownership of the caller
+//      the resulttext will go to the ownership of the caller; plaintext,
+//      htmltext and attachments will remain in the ownership of the caller
 
 DYNAMIC_API PEP_STATUS mime_encode_text(
         const char *plaintext,
         const char *htmltext,
+        bloblist_t *attachments,
         char **resulttext
     );
 

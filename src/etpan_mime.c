@@ -174,6 +174,40 @@ struct mailmime * get_text_part(
 	return mime;
 }
 
+struct mailmime * get_file_part(
+        const char * filename,
+        const char * mime_type,
+        char * data,
+        size_t length
+    )
+{
+    char * disposition_name;
+    int encoding_type;
+    struct mailmime_disposition * disposition;
+    struct mailmime_mechanism * encoding;
+    struct mailmime_content * content;
+    struct mailmime * mime;
+    struct mailmime_fields * mime_fields;
+
+    disposition_name = NULL;
+    if (filename != NULL) {
+        disposition_name = strdup(filename);
+    }
+    disposition =
+        mailmime_disposition_new_with_data(MAILMIME_DISPOSITION_TYPE_ATTACHMENT,
+                disposition_name, NULL, NULL, NULL, (size_t) -1);
+    content = mailmime_content_new_with_str(mime_type);
+
+    encoding_type = MAILMIME_MECHANISM_BASE64;
+    encoding = mailmime_mechanism_new(encoding_type, NULL);
+    mime_fields = mailmime_fields_new_with_data(encoding,
+        NULL, NULL, disposition, NULL);
+    mime = part_new_empty(content, mime_fields, NULL, 1);
+    mailmime_set_body_text(mime, data, length);
+
+    return mime;
+}
+
 struct mailmime * part_multiple_new(
         const char * type,
         const char * boundary_prefix
