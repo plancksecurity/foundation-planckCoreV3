@@ -1,16 +1,31 @@
 #include "message_api.h"
 #include "keymanagement.h"
+#include "mime.h"
 
-#include <libetpan/mailmime.h>
-#ifndef mailmime_param_new_with_data
-#include <libetpan/mailprivacy_tools.h>
-#endif
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 
 #define NOT_IMPLEMENTED assert(0);
 
+static char * combine_short_and_long(const message * src)
+{
+    char * ptext;
+    assert(src);
+    assert(src->shortmsg && src->longmsg && strcmp(src->shortmsg, "pEp") != 0);
+
+    ptext = calloc(1, strlen(src->shortmsg) + strlen(src->longmsg)
+            + 12);
+    if (ptext == NULL)
+        return NULL;
+
+    strcpy(ptext, "subject: ");
+    strcat(ptext, src->shortmsg);
+    strcat(ptext, "\n\n");
+    strcat(ptext, src->longmsg);
+
+    return ptext;
+}
 
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
@@ -101,27 +116,64 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
         switch (format) {
         case PEP_enc_MIME_multipart: {
-            message *interim;
-//            status = mime_encode_parts(src, &interim);
-//            assert(status == PEP_STATUS_OK);
-//            if (status != PEP_STATUS_OK)
-//                break;
+            char *resulttext;
+            bool free_ptext = false;
             msg->enc_format = PEP_enc_MIME_multipart;
-        }
 
-        case PEP_enc_pieces:
             if (src->shortmsg && src->longmsg && strcmp(src->shortmsg, "pEp") != 0) {
-                ptext = calloc(1, strlen(src->shortmsg) + strlen(src->longmsg)
-                        + 12);
+                ptext = combine_short_and_long(src);
                 if (ptext == NULL) {
                     free_message(msg);
                     free_stringlist(keys);
                     return PEP_OUT_OF_MEMORY;
                 }
-                strcpy(ptext, "subject: ");
-                strcat(ptext, src->shortmsg);
-                strcat(ptext, "\n\n");
-                strcat(ptext, src->longmsg);
+                free_ptext = true;
+            }
+            else if (src->longmsg) {
+                ptext = src->longmsg;
+            }
+            else {
+                ptext = NULL;
+            }
+
+            // TO EXTEND: we only support HTML yet
+            assert(src->format == PEP_format_plain
+                    || src->format == PEP_format_html);
+
+            status = mime_encode_text(ptext, src->longmsg_formatted,
+                    src->attachments, &resulttext);
+            assert(status == PEP_STATUS_OK);
+            if (free_ptext)
+                free(ptext);
+            assert(resulttext);
+            if (resulttext == NULL) {
+                free_message(msg);
+                free_stringlist(keys);
+                return status;
+            }
+            
+            status = encrypt_and_sign(session, keys, resulttext, strlen(resulttext),
+                    &ctext, &csize);
+            free(resulttext);
+            free_stringlist(keys);
+            if (ctext) {
+                msg->longmsg = strdup(ctext);
+                msg->shortmsg = strdup("pEp");
+                if (!(msg->longmsg && msg->shortmsg)) {
+                    free_message(msg);
+                    return PEP_OUT_OF_MEMORY;
+                }
+            }
+        }
+
+        case PEP_enc_pieces:
+            if (src->shortmsg && src->longmsg && strcmp(src->shortmsg, "pEp") != 0) {
+                ptext = combine_short_and_long(src);
+                if (ptext == NULL) {
+                    free_message(msg);
+                    free_stringlist(keys);
+                    return PEP_OUT_OF_MEMORY;
+                }
                 status = encrypt_and_sign(session, keys, ptext, strlen(ptext),
                         &ctext, &csize);
                 free(ptext);
@@ -129,12 +181,14 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                     msg->longmsg = strdup(ctext);
                     msg->shortmsg = strdup("pEp");
                     if (!(msg->longmsg && msg->shortmsg)) {
+                        free_stringlist(keys);
                         free_message(msg);
                         return PEP_OUT_OF_MEMORY;
                     }
                 }
                 else {
                     free_message(msg);
+                    free_stringlist(keys);
                     msg = NULL;
                 }
             }
@@ -156,6 +210,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                     msg->shortmsg = strdup("pEp");
                     if (!(msg->longmsg && msg->shortmsg)) {
                         free_message(msg);
+                        free_stringlist(keys);
                         return PEP_OUT_OF_MEMORY;
                     }
                 }

@@ -2,21 +2,32 @@
 #include "cryptotech.h"
 #include "transport.h"
 
+int init_count = -1;
+
 DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 {
 	int int_result;
-	const char *sql_log;
-	const char *sql_safeword;
-	const char *sql_get_identity;
-	const char *sql_set_person;
-	const char *sql_set_pgp_keypair;
-	const char *sql_set_identity;
-	const char *sql_set_trust;
-    const char *sql_get_trust;
+	static const char *sql_log;
+	static const char *sql_safeword;
+	static const char *sql_get_identity;
+	static const char *sql_set_person;
+	static const char *sql_set_pgp_keypair;
+	static const char *sql_set_identity;
+	static const char *sql_set_trust;
+    static const char *sql_get_trust;
+    bool in_first = false;
 
-	assert(sqlite3_threadsafe());
-	if (!sqlite3_threadsafe())
-		return PEP_INIT_SQLITE3_WITHOUT_MUTEX;
+    assert(sqlite3_threadsafe());
+    if (!sqlite3_threadsafe())
+        return PEP_INIT_SQLITE3_WITHOUT_MUTEX;
+
+    // a little race condition - but still a race condition
+    // removed by calling caveat (see documentation)
+
+    ++init_count;
+    if (init_count == 0) {
+        in_first = true;
+    }
 
 	assert(session);
 	*session = NULL;
@@ -25,16 +36,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 	assert(_session);
 	if (_session == NULL)
 		return PEP_OUT_OF_MEMORY;
-	
+
 	_session->version = PEP_ENGINE_VERSION;
 
-    init_cryptotech(_session);
-    init_transport_system(_session);
-    
     assert(LOCAL_DB);
     if (LOCAL_DB == NULL) {
-        release_transport_system(_session);
-        release_cryptotech(_session);
         free(_session);
         return PEP_INIT_CANNOT_OPEN_DB;
     }
@@ -51,8 +57,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
 	if (int_result != SQLITE_OK) {
 		sqlite3_close_v2(_session->db);
-        release_transport_system(_session);
-        release_cryptotech(_session);
         free(_session);
 		return PEP_INIT_CANNOT_OPEN_DB;
 	}
@@ -62,8 +66,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     assert(SYSTEM_DB);
     if (SYSTEM_DB == NULL) {
 		sqlite3_close_v2(_session->db);
-        release_transport_system(_session);
-        release_cryptotech(_session);
         free(_session);
 		return PEP_INIT_CANNOT_OPEN_SYSTEM_DB;
     }
@@ -79,138 +81,148 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 	if (int_result != SQLITE_OK) {
 		sqlite3_close_v2(_session->system_db);
 		sqlite3_close_v2(_session->db);
-        release_transport_system(_session);
-        release_cryptotech(_session);
         free(_session);
 		return PEP_INIT_CANNOT_OPEN_SYSTEM_DB;
 	}
 
 	sqlite3_busy_timeout(_session->system_db, 1000);
 
-	int_result = sqlite3_exec(
-		_session->db,
-			"create table if not exists version_info ("
-			"	id integer primary key,"
-			"	timestamp integer default (datetime('now')) ,"
-			"	version text,"
-			"	comment text"
-			");"
-			"create table if not exists log ("
-			"	timestamp integer default (datetime('now')) ,"
-			"	title text not null,"
-			"	entity text not null,"
-			"	description text,"
-			"	comment text"
-			");"
-			"create index if not exists log_timestamp on log ("
-			"	timestamp"
-			");"
-			"create table if not exists pgp_keypair ("
-			"	fpr text primary key,"
-			"	public_id text unique,"
-			"   private_id text,"
-			"	created integer,"
-			"	expires integer,"
-			"	comment text"
-			");"
-            "create index if not exists pgp_keypair_expires on pgp_keypair ("
-			"	expires"
-			");"
-			"create table if not exists person ("
-			"	id text primary key,"
-			"	username text not null,"
-			"	main_key_id text"
-			"		references pgp_keypair (fpr)"
-			"		on delete set null,"
-			"   lang text,"
-			"	comment text"
-			");"
-			"create table if not exists identity ("
-			"	address text primary key,"
-			"	user_id text"
-			"		references person (id)"
-			"		on delete cascade,"
-			"	main_key_id text"
-			"		references pgp_keypair (fpr)"
-			"		on delete set null,"
-			"	comment text"
-			");"
-            "create table if not exists trust ("
-            "   user_id text not null"
-            "       references person (id)"
-			"		on delete cascade,"
-            "   pgp_keypair_fpr text not null"
-            "       references pgp_keypair (fpr)"
-            "       on delete cascade,"
-            "   comm_type integer not null,"
-			"	comment text"
-            ");"
-            "create unique index if not exists trust_index on trust ("
-            "   user_id,"
-            "   pgp_keypair_fpr"
-            ");",
-		NULL,
-		NULL,
-		NULL
-	);
-	assert(int_result == SQLITE_OK);
+    if (in_first) {
+        int_result = sqlite3_exec(
+            _session->db,
+                "create table if not exists version_info ("
+                "	id integer primary key,"
+                "	timestamp integer default (datetime('now')) ,"
+                "	version text,"
+                "	comment text"
+                ");"
+                "create table if not exists log ("
+                "	timestamp integer default (datetime('now')) ,"
+                "	title text not null,"
+                "	entity text not null,"
+                "	description text,"
+                "	comment text"
+                ");"
+                "create index if not exists log_timestamp on log ("
+                "	timestamp"
+                ");"
+                "create table if not exists pgp_keypair ("
+                "	fpr text primary key,"
+                "	public_id text unique,"
+                "   private_id text,"
+                "	created integer,"
+                "	expires integer,"
+                "	comment text"
+                ");"
+                "create index if not exists pgp_keypair_expires on pgp_keypair ("
+                "	expires"
+                ");"
+                "create table if not exists person ("
+                "	id text primary key,"
+                "	username text not null,"
+                "	main_key_id text"
+                "		references pgp_keypair (fpr)"
+                "		on delete set null,"
+                "   lang text,"
+                "	comment text"
+                ");"
+                "create table if not exists identity ("
+                "	address text primary key,"
+                "	user_id text"
+                "		references person (id)"
+                "		on delete cascade,"
+                "	main_key_id text"
+                "		references pgp_keypair (fpr)"
+                "		on delete set null,"
+                "	comment text"
+                ");"
+                "create table if not exists trust ("
+                "   user_id text not null"
+                "       references person (id)"
+                "		on delete cascade,"
+                "   pgp_keypair_fpr text not null"
+                "       references pgp_keypair (fpr)"
+                "       on delete cascade,"
+                "   comm_type integer not null,"
+                "	comment text"
+                ");"
+                "create unique index if not exists trust_index on trust ("
+                "   user_id,"
+                "   pgp_keypair_fpr"
+                ");",
+            NULL,
+            NULL,
+            NULL
+        );
+        assert(int_result == SQLITE_OK);
 
-	int_result = sqlite3_exec(
-		_session->db,
-        "insert or replace into version_info (id, version) values (1, '1.0');",
-		NULL,
-		NULL,
-		NULL
-	);
-	assert(int_result == SQLITE_OK);
+        int_result = sqlite3_exec(
+            _session->db,
+            "insert or replace into version_info (id, version) values (1, '1.0');",
+            NULL,
+            NULL,
+            NULL
+        );
+        assert(int_result == SQLITE_OK);
 
-	sql_log = "insert into log (title, entity, description, comment)"
-			  "values (?1, ?2, ?3, ?4);";
+        sql_log = "insert into log (title, entity, description, comment)"
+                  "values (?1, ?2, ?3, ?4);";
+
+        sql_get_identity =	"select fpr, identity.user_id, username, comm_type, lang"
+                            "   from identity"
+                            "   join person on id = identity.user_id"
+                            "   join pgp_keypair on fpr = identity.main_key_id"
+                            "   join trust on id = trust.user_id"
+                            "       and pgp_keypair_fpr = identity.main_key_id"
+                            "   where address = ?1 ;";
+
+        sql_safeword = "select id, word from wordlist where lang = lower(?1) "
+                       "and id = ?2 ;";
+
+        sql_set_person = "insert or replace into person (id, username, lang) "
+                         "values (?1, ?2, ?3) ;";
+
+        sql_set_pgp_keypair = "insert or replace into pgp_keypair (fpr) "
+                              "values (?1) ;";
+
+        sql_set_identity = "insert or replace into identity (address, main_key_id, "
+                           "user_id) values (?1, ?2, ?3) ;";
+
+        sql_set_trust = "insert or replace into trust (user_id, pgp_keypair_fpr, comm_type) "
+                        "values (?1, ?2, ?3) ;";
+
+        sql_get_trust = "select user_id, comm_type from trust where user_id = ?1 "
+                        "and pgp_keypair_fpr = ?2 ;";
+    }
+
     int_result = sqlite3_prepare_v2(_session->db, sql_log, strlen(sql_log),
             &_session->log, NULL);
 	assert(int_result == SQLITE_OK);
 
-	sql_safeword = "select id, word from wordlist where lang = lower(?1)"
-                   "and id = ?2 ;";
     int_result = sqlite3_prepare_v2(_session->system_db, sql_safeword,
             strlen(sql_safeword), &_session->safeword, NULL);
 	assert(int_result == SQLITE_OK);
-
-	sql_get_identity =	"select fpr, identity.user_id, username, comm_type, lang"
-                        "   from identity"
-						"   join person on id = identity.user_id"
-						"   join pgp_keypair on fpr = identity.main_key_id"
-                        "   join trust on id = trust.user_id"
-                        "       and pgp_keypair_fpr = identity.main_key_id"
-						"   where address = ?1 ;";
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_identity,
             strlen(sql_get_identity), &_session->get_identity, NULL);
 	assert(int_result == SQLITE_OK);
 
-	sql_set_person = "insert or replace into person (id, username, lang)"
-                     "values (?1, ?2, ?3) ;";
-	sql_set_pgp_keypair = "insert or replace into pgp_keypair (fpr)"
-                          "values (?1) ;";
-    sql_set_identity = "insert or replace into identity (address, main_key_id,"
-                       "user_id) values (?1, ?2, ?3) ;";
-    sql_set_trust = "insert or replace into trust (user_id, pgp_keypair_fpr, comm_type)"
-                        "values (?1, ?2, ?3) ;";
-	
-    sql_get_trust = "select user_id, comm_type from trust where user_id = ?1 and pgp_keypair_fpr = ?2 ;";
-
     int_result = sqlite3_prepare_v2(_session->db, sql_set_person,
             strlen(sql_set_person), &_session->set_person, NULL);
     assert(int_result == SQLITE_OK);
+
     int_result = sqlite3_prepare_v2(_session->db, sql_set_pgp_keypair,
             strlen(sql_set_pgp_keypair), &_session->set_pgp_keypair, NULL);
 	assert(int_result == SQLITE_OK);
+
     int_result = sqlite3_prepare_v2(_session->db, sql_set_identity,
             strlen(sql_set_identity), &_session->set_identity, NULL);
 	assert(int_result == SQLITE_OK);
+
     int_result = sqlite3_prepare_v2(_session->db, sql_set_trust,
             strlen(sql_set_trust), &_session->set_trust, NULL);
 	assert(int_result == SQLITE_OK);
+
     int_result = sqlite3_prepare_v2(_session->db, sql_get_trust,
             strlen(sql_get_trust), &_session->get_trust, NULL);
     assert(int_result == SQLITE_OK);
@@ -225,13 +237,26 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 	} while (int_result == SQLITE_BUSY);
     sqlite3_reset(_session->log);
 
+    init_cryptotech(_session, in_first);
+    init_transport_system(_session, in_first);
+
 	*session = (void *) _session;
 	return PEP_STATUS_OK;
 }
 
 DYNAMIC_API void release(PEP_SESSION session)
 {
+    bool out_last = false;
+
+    assert(init_count >= 0);
 	assert(session);
+
+    // a small race condition but still a race condition
+    // removed by calling caveat (see documentation)
+
+    if (init_count == 0)
+        out_last = true;
+    --init_count;
 
 	if (session) {
 		if (session->db) {
@@ -247,10 +272,11 @@ DYNAMIC_API void release(PEP_SESSION session)
 			sqlite3_close_v2(session->db);
 			sqlite3_close_v2(session->system_db);
 		}
-
-        release_transport_system(session);
-        release_cryptotech(session);
     }
+
+    release_transport_system(session, out_last);
+    release_cryptotech(session, out_last);
+
 	free(session);
 }
 

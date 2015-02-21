@@ -73,5 +73,5 @@ typedef struct _PEP_cryptotech_t {
 
 typedef uint64_t cryptotech_mask;
 
-PEP_STATUS init_cryptotech(PEP_SESSION session);
-void release_cryptotech(PEP_SESSION session);
+PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first);
+void release_cryptotech(PEP_SESSION session, bool out_last);

@@ -62,15 +62,14 @@
 
 typedef struct _pEpSession {
     const char *version;
-
 #ifndef NO_GPG
     void *gpgme;
-    struct gpg_s gpg;
+    struct gpg_s *gpg;
     gpgme_ctx_t ctx;
 #endif
 
-    PEP_cryptotech_t cryptotech[PEP_crypt__count];
-    PEP_transport_t transports[PEP_trans__count];
+    PEP_cryptotech_t *cryptotech;
+    PEP_transport_t *transports;
 
     sqlite3 *db;
     sqlite3 *system_db;
@@ -85,6 +84,6 @@ typedef struct _pEpSession {
     sqlite3_stmt *get_trust;
 } pEpSession;
 
-PEP_STATUS init_transport_system(PEP_SESSION session);
-void release_transport_system(PEP_SESSION session);
+PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
+void release_transport_system(PEP_SESSION session, bool out_last);
 

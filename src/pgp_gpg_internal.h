@@ -68,6 +68,7 @@ typedef void(*gpgme_key_ref_t)(gpgme_key_t KEY);
 typedef void(*gpgme_key_unref_t)(gpgme_key_t KEY);
 
 struct gpg_s {
+    const char * version;
     gpgme_check_version_t gpgme_check;
     gpgme_set_locale_t gpgme_set_locale;
     gpgme_new_t gpgme_new;

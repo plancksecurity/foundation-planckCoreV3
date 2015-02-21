@@ -2,8 +2,8 @@
 
 #include "pEpEngine.h"
 
-PEP_STATUS pgp_init(PEP_SESSION session);
-void pgp_release(PEP_SESSION session);
+PEP_STATUS pgp_init(PEP_SESSION session, bool in_first);
+void pgp_release(PEP_SESSION session, bool out_last);
 
 PEP_STATUS pgp_decrypt_and_verify(
         PEP_SESSION session, const char *ctext, size_t csize,

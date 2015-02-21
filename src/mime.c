@@ -1,6 +1,6 @@
 #include "mime.h"
 
-#include <libetpan/libetpan.h>
+#include <libetpan/mailmime.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -179,8 +179,14 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
 
     errno = 0;
     rewind(file);
+
     assert(errno == 0);
-    clearerr(file);
+    switch (errno) {
+        case ENOMEM:
+            goto enomem;
+        default:
+            goto err_file;
+    }
 
     buf = calloc(1, size + 1);
     assert(buf);
@@ -190,15 +196,23 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
     char *_buf = buf;
     size_t rest = size;
     for (size_t bytes_read = 0; rest > 0; rest -= bytes_read, _buf += rest) {
-        assert(feof(file) == 0);
-        if (feof(file))
-            goto err_file;
+        clearerr(file);
         bytes_read = rest * fread(_buf, rest, 1, file);
-        if (ferror(file))
+
+        assert(ferror(file) == 0 || ferror(file) == EINTR);
+        if (ferror(file) != 0 && ferror(file) != EINTR)
+            goto err_file;
+
+        assert(!feof(file));
+        if (feof(file))
             goto err_file;
     }
 
-    fclose(file);
+    do {
+        r = fclose(file);
+    } while (r == -1 && errno == EINTR);
+    assert(r == 0);
+
     mailmime_free(mime);
     *resulttext = buf;
     return PEP_STATUS_OK;
@@ -218,10 +232,18 @@ release:
     free(buf);
     free(template);
 
-    if (file)
-        fclose(file);
-    else if (fd != -1)
-        close(fd);
+    if (file) {
+        do {
+            r = fclose(file);
+        } while (r == -1 && errno == EINTR);
+        assert(r == 0);
+    }
+    else if (fd != -1) {
+        do {
+            r = close(fd);
+        } while (r == -1 && errno == EINTR);
+        assert(r == 0);
+    }
 
     if (mime)
         mailmime_free(mime);

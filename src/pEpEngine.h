@@ -95,6 +95,9 @@ typedef enum {
 //      the pointer is valid only if the return value is PEP_STATUS_OK
 //      in other case a NULL pointer will be returned; a valid handle must
 //      be released using release() when it's no longer needed
+//
+//      the caller has to guarantee that the first call to this function
+//      will succeed before further calls can be done
 
 DYNAMIC_API PEP_STATUS init(PEP_SESSION *session);
 
@@ -103,6 +106,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session);
 //
 //  parameters:
 //		session (in)	session handle to release
+//
+//	caveat:
+//	    the last release() can be called only when all other release() calls
+//	    are done
 
 DYNAMIC_API void release(PEP_SESSION session);
 
