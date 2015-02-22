@@ -1,5 +1,3 @@
-#include <errno.h>
-
 #include "pgp_gpg.h"
 #include "pEp_internal.h"
 
@@ -15,17 +13,15 @@ static bool ensure_keyserver()
     int r;
 
     f = Fopen(gpg_conf(), "r");
-    if (errno == ENOMEM)
+    assert(f);
+    if (f == NULL && errno == ENOMEM)
         return false;
 
     if (f != NULL) {
         do {
             char * s;
 
-            do {
-                s = fgets(buf, MAX_LINELENGTH, f);
-            } while (s == NULL && !feof(f) && errno == EINTR);
-
+            s = Fgets(buf, MAX_LINELENGTH, f);
             assert(s);
             if (s == NULL)
                 return false;
@@ -33,36 +29,26 @@ static bool ensure_keyserver()
             if (s && !feof(f)) {
                 char * t = strtok(s, " ");
                 if (t && strcmp(t, "keyserver") == 0) {
-                    do {
-                        r = fclose(f);
-                    } while (r == -1 && errno == EINTR);
+                    r = Fclose(f);
                     assert(r == 0);
                     return true;
                 }
             }
         } while (!feof(f));
-        do {
-            f = freopen(gpg_conf(), "a", f);
-        } while (f == NULL && errno == EINTR);
+        f = Freopen(gpg_conf(), "a", f);
     }
     else {
-        do {
-            f = fopen(gpg_conf(), "w");
-        } while (f == NULL && errno == EINTR);
+        f = Fopen(gpg_conf(), "w");
     }
 
     assert(f);
     if (f == NULL)
         return false;
 
-    do {
-        n = fprintf(f, "keyserver %s\n", DEFAULT_KEYSERVER);
-    } while (n < 0 && errno == EINTR);
+    n = Fprintf(f, "keyserver %s\n", DEFAULT_KEYSERVER);
     assert(n >= 0);
 
-    do {
-        r = fclose(f);
-    } while (r == -1 && errno == EINTR);
+    r = Fclose(f);
     assert(r == 0);
 
     return true;

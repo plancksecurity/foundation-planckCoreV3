@@ -11,18 +11,23 @@
 static char * combine_short_and_long(const message * src)
 {
     char * ptext;
+    char * longmsg;
     assert(src);
-    assert(src->shortmsg && src->longmsg && strcmp(src->shortmsg, "pEp") != 0);
+    assert(src->shortmsg && strcmp(src->shortmsg, "pEp") != 0);
 
-    ptext = calloc(1, strlen(src->shortmsg) + strlen(src->longmsg)
-            + 12);
+    if (src->longmsg)
+        longmsg = src->longmsg;
+    else
+        longmsg = "";
+
+    ptext = calloc(1, strlen(src->shortmsg) + strlen(longmsg) + 12);
     if (ptext == NULL)
         return NULL;
 
     strcpy(ptext, "subject: ");
     strcat(ptext, src->shortmsg);
     strcat(ptext, "\n\n");
-    strcat(ptext, src->longmsg);
+    strcat(ptext, longmsg);
 
     return ptext;
 }
@@ -36,6 +41,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
+    message * msg = NULL;
+    stringlist_t * keys = NULL;
 
     assert(session);
     assert(src);
@@ -45,64 +52,51 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
     pEp_identity *from = identity_dup(src->from);
     if (from == NULL)
-        return PEP_OUT_OF_MEMORY;
+        goto enomem;
+    from->me = true;
 
     identity_list *to = identity_list_dup(src->to);
     if (to == NULL) {
         free_identity(from);
-        return PEP_OUT_OF_MEMORY;
+        goto enomem;
     }
 
-    message *msg = new_message(src->dir, from, to, NULL);
+    msg = new_message(src->dir, from, to, NULL);
     if (msg == NULL) {
         free_identity(from);
         free_identity_list(to);
-        return PEP_OUT_OF_MEMORY;
+        goto enomem;
     }
     msg->enc_format = PEP_enc_pieces;
 
-    from->me = true;
-
     status = myself(session, from);
-    if (status != PEP_STATUS_OK) {
-        free_message(msg);
-        return status;
-    }
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
 
-    stringlist_t * keys = new_stringlist(from->fpr);
-    if (keys == NULL) {
-        free_message(msg);
-        return PEP_OUT_OF_MEMORY;
-    }
+    keys = new_stringlist(from->fpr);
+    if (keys == NULL)
+        goto enomem;
 
     stringlist_t *_k = keys;
 
     if (extra) {
         _k = stringlist_append(_k, extra);
-        if (_k == NULL) {
-            free_stringlist(keys);
-            free_message(msg);
-            return PEP_OUT_OF_MEMORY;
-        }
+        if (_k == NULL)
+            goto enomem;
     }
 
     bool dest_keys_found = false;
     identity_list * _il;
     for (_il = to; _il && _il->ident; _il = _il->next) {
-        PEP_STATUS _status = update_identity(session, _il->ident);
-        if (_status != PEP_STATUS_OK) {
-            free_message(msg);
-            free_stringlist(keys);
-            return _status;
-        }
+        PEP_STATUS status = update_identity(session, _il->ident);
+        if (status != PEP_STATUS_OK)
+            goto pep_error;
+
         if (_il->ident->fpr) {
             dest_keys_found = true;
             _k = stringlist_add(_k, _il->ident->fpr);
-            if (_k == NULL) {
-                free_message(msg);
-                free_stringlist(keys);
-                return PEP_OUT_OF_MEMORY;
-            }
+            if (_k == NULL)
+                goto enomem;
         }
         else
             status = PEP_KEY_NOT_FOUND;
@@ -116,29 +110,24 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
         switch (format) {
         case PEP_enc_MIME_multipart: {
-            char *resulttext;
+            char *resulttext = NULL;
             bool free_ptext = false;
             msg->enc_format = PEP_enc_MIME_multipart;
 
-            if (src->shortmsg && src->longmsg && strcmp(src->shortmsg, "pEp") != 0) {
+            if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0) {
                 ptext = combine_short_and_long(src);
-                if (ptext == NULL) {
-                    free_message(msg);
-                    free_stringlist(keys);
-                    return PEP_OUT_OF_MEMORY;
-                }
+                if (ptext == NULL)
+                    goto enomem;
                 free_ptext = true;
             }
             else if (src->longmsg) {
                 ptext = src->longmsg;
             }
             else {
-                ptext = NULL;
+                assert(0);
+                status = PEP_ILLEGAL_VALUE;
+                goto pep_error;
             }
-
-            // TO EXTEND: we only support HTML yet
-            assert(src->format == PEP_format_plain
-                    || src->format == PEP_format_html);
 
             status = mime_encode_text(ptext, src->longmsg_formatted,
                     src->attachments, &resulttext);
@@ -146,77 +135,41 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             if (free_ptext)
                 free(ptext);
             assert(resulttext);
-            if (resulttext == NULL) {
-                free_message(msg);
-                free_stringlist(keys);
-                return status;
-            }
+            if (resulttext == NULL)
+                goto pep_error;
             
             status = encrypt_and_sign(session, keys, resulttext, strlen(resulttext),
                     &ctext, &csize);
             free(resulttext);
-            free_stringlist(keys);
             if (ctext) {
                 msg->longmsg = strdup(ctext);
                 msg->shortmsg = strdup("pEp");
-                if (!(msg->longmsg && msg->shortmsg)) {
-                    free_message(msg);
-                    return PEP_OUT_OF_MEMORY;
-                }
+                if (!(msg->longmsg && msg->shortmsg))
+                    goto enomem;
+            }
+            else {
+                goto pep_error;
             }
         }
+        break;
 
         case PEP_enc_pieces:
-            if (src->shortmsg && src->longmsg && strcmp(src->shortmsg, "pEp") != 0) {
+            if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0) {
                 ptext = combine_short_and_long(src);
-                if (ptext == NULL) {
-                    free_message(msg);
-                    free_stringlist(keys);
-                    return PEP_OUT_OF_MEMORY;
-                }
+                if (ptext == NULL)
+                    goto enomem;
+
                 status = encrypt_and_sign(session, keys, ptext, strlen(ptext),
                         &ctext, &csize);
                 free(ptext);
                 if (ctext) {
                     msg->longmsg = strdup(ctext);
                     msg->shortmsg = strdup("pEp");
-                    if (!(msg->longmsg && msg->shortmsg)) {
-                        free_stringlist(keys);
-                        free_message(msg);
-                        return PEP_OUT_OF_MEMORY;
-                    }
+                    if (!(msg->longmsg && msg->shortmsg))
+                        goto enomem;
                 }
                 else {
-                    free_message(msg);
-                    free_stringlist(keys);
-                    msg = NULL;
-                }
-            }
-            else if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0) {
-                ptext = calloc(1, strlen(src->shortmsg) + 12);
-                if (ptext == NULL) {
-                    free_message(msg);
-                    free_stringlist(keys);
-                    return PEP_OUT_OF_MEMORY;
-                }
-                strcpy(ptext, "subject: ");
-                strcat(ptext, src->shortmsg);
-                strcat(ptext, "\n\n");
-                status = encrypt_and_sign(session, keys, ptext, strlen(ptext),
-                        &ctext, &csize);
-                free(ptext);
-                if (ctext) {
-                    msg->longmsg = strdup(ctext);
-                    msg->shortmsg = strdup("pEp");
-                    if (!(msg->longmsg && msg->shortmsg)) {
-                        free_message(msg);
-                        free_stringlist(keys);
-                        return PEP_OUT_OF_MEMORY;
-                    }
-                }
-                else {
-                    free_message(msg);
-                    msg = NULL;
+                    goto pep_error;
                 }
             }
             else if (src->longmsg) {
@@ -226,81 +179,76 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 if (ctext) {
                     msg->longmsg = strdup(ctext);
                     msg->shortmsg = strdup("pEp");
-                    if (!(msg->longmsg && msg->shortmsg)) {
-                        free_message(msg);
-                        return PEP_OUT_OF_MEMORY;
-                    }
+                    if (!(msg->longmsg && msg->shortmsg))
+                        goto enomem;
                 }
                 else {
-                    free_message(msg);
-                    msg = NULL;
+                    goto pep_error;
                 }
             }
-            if (msg && msg->longmsg_formatted) {
+
+            if (msg->longmsg_formatted) {
                 ptext = src->longmsg_formatted;
                 status = encrypt_and_sign(session, keys, ptext, strlen(ptext),
                         &ctext, &csize);
                 if (ctext) {
                     msg->longmsg_formatted = strdup(ctext);
-                    if (msg->longmsg_formatted == NULL) {
-                        free_message(msg);
-                        return PEP_OUT_OF_MEMORY;
-                    }
+                    if (msg->longmsg_formatted == NULL)
+                        goto enomem;
                 }
                 else {
-                    free_message(msg);
-                    msg = NULL;
+                    goto pep_error;
                 }
             }
-            if (msg) {
-                if (src->attachments) {
-                    bloblist_t *_s;
-                    bloblist_t *_d = new_bloblist(NULL, 0, NULL, NULL);
-                    if (_d == NULL) {
-                        free_message(msg);
-                        free_stringlist(keys);
-                        return PEP_OUT_OF_MEMORY;
+
+            if (src->attachments) {
+                bloblist_t *_s;
+                bloblist_t *_d = new_bloblist(NULL, 0, NULL, NULL);
+                if (_d == NULL)
+                    goto enomem;
+
+                msg->attachments = _d;
+                for (_s = src->attachments; _s && _s->data; _s = _s->next) {
+                    int psize = _s->size;
+                    ptext = _s->data;
+                    status = encrypt_and_sign(session, keys, ptext, psize,
+                            &ctext, &csize);
+                    if (ctext) {
+                        char * _c = strdup(ctext);
+                        if (_c == NULL)
+                            goto enomem;
+
+                        _d = bloblist_add(_d, _c, csize, _s->mime_type,
+                                _s->file_name);
+                        if (_d == NULL)
+                            goto enomem;
                     }
-                    msg->attachments = _d;
-                    for (_s = src->attachments; _s && _s->data; _s = _s->next) {
-                        int psize = _s->size;
-                        ptext = _s->data;
-                        status = encrypt_and_sign(session, keys, ptext, psize,
-                                &ctext, &csize);
-                        if (ctext) {
-                            char * _c = strdup(ctext);
-                            if (_c == NULL) {
-                                free_message(msg);
-                                free_stringlist(keys);
-                                return PEP_OUT_OF_MEMORY;
-                            }
-                            _d = bloblist_add(_d, _c, csize, _s->mime_type,
-                                    _s->file_name);
-                            if (_d == NULL) {
-                                free_message(msg);
-                                free_stringlist(keys);
-                                return PEP_OUT_OF_MEMORY;
-                            }
-                        }
-                        else {
-                            free_message(msg);
-                            msg = NULL;
-                            break;
-                        }
+                    else {
+                        goto pep_error;
                     }
                 }
-                *dst = msg;
             }
             break;
 
         default:
             assert(0);
+            status = PEP_ILLEGAL_VALUE;
+            goto pep_error;
         }
     }
-    else
-        free_message(msg);
 
     free_stringlist(keys);
+
+    *dst = msg;
+    return PEP_STATUS_OK;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+pep_error:
+    free_stringlist(keys);
+    free_message(msg);
+
     return status;
 }
 

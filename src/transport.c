@@ -197,19 +197,21 @@ DYNAMIC_API message *new_message(
 
 DYNAMIC_API void free_message(message *msg)
 {
-    free(msg->id);
-    free(msg->shortmsg);
-    free(msg->longmsg);
-    free(msg->longmsg_formatted);
-    free_bloblist(msg->attachments);
-    free_identity(msg->from);
-    free_identity_list(msg->to);
-    free_identity(msg->recv_by);
-    free_identity_list(msg->cc);
-    free_identity_list(msg->bcc);
-    free(msg->refering_id);
-    free_message_ref_list(msg->refered_by);
-    free(msg);
+    if (msg) {
+        free(msg->id);
+        free(msg->shortmsg);
+        free(msg->longmsg);
+        free(msg->longmsg_formatted);
+        free_bloblist(msg->attachments);
+        free_identity(msg->from);
+        free_identity_list(msg->to);
+        free_identity(msg->recv_by);
+        free_identity_list(msg->cc);
+        free_identity_list(msg->bcc);
+        free(msg->refering_id);
+        free_message_ref_list(msg->refered_by);
+        free(msg);
+    }
 }
 
 DYNAMIC_API message_ref_list *new_message_ref_list(message *msg)

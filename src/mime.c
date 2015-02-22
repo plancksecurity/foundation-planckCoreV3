@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include "etpan_mime.h"
+#include "wrappers.h"
 
 DYNAMIC_API PEP_STATUS mime_encode_text(
         const char *plaintext,
@@ -127,10 +128,7 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
     if (template == NULL)
         goto enomem;
 
-    do {
-        fd = mkstemp(template);
-    } while (fd == -1 && errno == EINTR);
-
+    fd = Mkstemp(template);
     assert(fd != -1);
     if (fd == -1)
         goto err_file;
@@ -143,10 +141,7 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
     free(template);
     template = NULL;
 
-    do {
-        file = fdopen(fd, "w+");
-    } while (file == NULL && errno == EINTR);
-
+    file = Fdopen(fd, "w+");
     assert(file);
     if (file == NULL) {
         switch (errno) {
@@ -179,38 +174,28 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
 
     errno = 0;
     rewind(file);
-
     assert(errno == 0);
+#ifdef NDEBUG
     switch (errno) {
+        case 0:
+            break;
         case ENOMEM:
             goto enomem;
         default:
             goto err_file;
     }
+#endif
 
     buf = calloc(1, size + 1);
     assert(buf);
     if (buf == NULL)
         goto enomem;
-    
-    char *_buf = buf;
-    size_t rest = size;
-    for (size_t bytes_read = 0; rest > 0; rest -= bytes_read, _buf += rest) {
-        clearerr(file);
-        bytes_read = rest * fread(_buf, rest, 1, file);
+ 
+    size_t _read;
+    _read = Fread1(buf, size, file);
+    assert(_read == size);
 
-        assert(ferror(file) == 0 || ferror(file) == EINTR);
-        if (ferror(file) != 0 && ferror(file) != EINTR)
-            goto err_file;
-
-        assert(!feof(file));
-        if (feof(file))
-            goto err_file;
-    }
-
-    do {
-        r = fclose(file);
-    } while (r == -1 && errno == EINTR);
+    r = Fclose(file);
     assert(r == 0);
 
     mailmime_free(mime);
@@ -233,15 +218,11 @@ release:
     free(template);
 
     if (file) {
-        do {
-            r = fclose(file);
-        } while (r == -1 && errno == EINTR);
+        r = Fclose(file);
         assert(r == 0);
     }
     else if (fd != -1) {
-        do {
-            r = close(fd);
-        } while (r == -1 && errno == EINTR);
+        r = Close(fd);
         assert(r == 0);
     }
 
