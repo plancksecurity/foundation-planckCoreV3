@@ -6,6 +6,7 @@ int init_count = -1;
 
 DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 {
+    PEP_STATUS status = PEP_STATUS_OK;
 	int int_result;
 	static const char *sql_log;
 	static const char *sql_safeword;
@@ -35,14 +36,14 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     pEpSession *_session = (pEpSession *) calloc(1, sizeof(pEpSession));
 	assert(_session);
 	if (_session == NULL)
-		return PEP_OUT_OF_MEMORY;
+		goto enomem;
 
 	_session->version = PEP_ENGINE_VERSION;
 
     assert(LOCAL_DB);
     if (LOCAL_DB == NULL) {
-        free(_session);
-        return PEP_INIT_CANNOT_OPEN_DB;
+        status = PEP_INIT_CANNOT_OPEN_DB;
+        goto pep_error;
     }
 
 	int_result = sqlite3_open_v2(
@@ -56,18 +57,16 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 		);
 
 	if (int_result != SQLITE_OK) {
-		sqlite3_close_v2(_session->db);
-        free(_session);
-		return PEP_INIT_CANNOT_OPEN_DB;
+		status = PEP_INIT_CANNOT_OPEN_DB;
+        goto pep_error;
 	}
 
 	sqlite3_busy_timeout(_session->db, BUSY_WAIT_TIME);
 
     assert(SYSTEM_DB);
     if (SYSTEM_DB == NULL) {
-		sqlite3_close_v2(_session->db);
-        free(_session);
-		return PEP_INIT_CANNOT_OPEN_SYSTEM_DB;
+		status = PEP_INIT_CANNOT_OPEN_SYSTEM_DB;
+        goto pep_error;
     }
 
 	int_result = sqlite3_open_v2(
@@ -79,10 +78,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 		);
 
 	if (int_result != SQLITE_OK) {
-		sqlite3_close_v2(_session->system_db);
-		sqlite3_close_v2(_session->db);
-        free(_session);
-		return PEP_INIT_CANNOT_OPEN_SYSTEM_DB;
+		status = PEP_INIT_CANNOT_OPEN_SYSTEM_DB;
+        goto pep_error;
 	}
 
 	sqlite3_busy_timeout(_session->system_db, 1000);
@@ -227,21 +224,27 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             strlen(sql_get_trust), &_session->get_trust, NULL);
     assert(int_result == SQLITE_OK);
 
-	sqlite3_reset(_session->log);
-    sqlite3_bind_text(_session->log, 1, "init", -1, SQLITE_STATIC);
-    sqlite3_bind_text(_session->log, 2, "pEp " PEP_ENGINE_VERSION, -1,
-            SQLITE_STATIC);
-	do {
-		int_result = sqlite3_step(_session->log);
-		assert(int_result == SQLITE_DONE || int_result == SQLITE_BUSY);
-	} while (int_result == SQLITE_BUSY);
-    sqlite3_reset(_session->log);
+    status = init_cryptotech(_session, in_first);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
 
-    init_cryptotech(_session, in_first);
-    init_transport_system(_session, in_first);
+    status = init_transport_system(_session, in_first);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
 
-	*session = (void *) _session;
+    status = log_event(_session, "init", "pEp " PEP_ENGINE_VERSION, NULL, NULL);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+
+	*session = _session;
 	return PEP_STATUS_OK;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+pep_error:
+    release(_session);
+    return status;
 }
 
 DYNAMIC_API void release(PEP_SESSION session)
@@ -260,24 +263,34 @@ DYNAMIC_API void release(PEP_SESSION session)
 
 	if (session) {
 		if (session->db) {
-			sqlite3_finalize(session->safeword);
-			sqlite3_finalize(session->log);
-			sqlite3_finalize(session->get_identity);
-			sqlite3_finalize(session->set_identity);
-            sqlite3_finalize(session->set_person);
-            sqlite3_finalize(session->set_pgp_keypair);
-            sqlite3_finalize(session->set_trust);
-            sqlite3_finalize(session->get_trust);
+            if (session->safeword)
+                sqlite3_finalize(session->safeword);
+            if (session->log)
+                sqlite3_finalize(session->log);
+            if (session->get_identity)
+                sqlite3_finalize(session->get_identity);
+            if (session->set_identity)
+                sqlite3_finalize(session->set_identity);
+            if (session->set_person)
+                sqlite3_finalize(session->set_person);
+            if (session->set_pgp_keypair)
+                sqlite3_finalize(session->set_pgp_keypair);
+            if (session->set_trust)
+                sqlite3_finalize(session->set_trust);
+            if (session->get_trust)
+                sqlite3_finalize(session->get_trust);
 
-			sqlite3_close_v2(session->db);
-			sqlite3_close_v2(session->system_db);
+            if (session->db)
+                sqlite3_close_v2(session->db);
+            if (session->system_db)
+                sqlite3_close_v2(session->system_db);
 		}
+
+        release_transport_system(session, out_last);
+        release_cryptotech(session, out_last);
+
+        free(session);
     }
-
-    release_transport_system(session, out_last);
-    release_cryptotech(session, out_last);
-
-	free(session);
 }
 
 stringlist_t *new_stringlist(const char *value)
