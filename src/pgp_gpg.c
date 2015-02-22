@@ -56,6 +56,7 @@ static bool ensure_keyserver()
 
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
+    PEP_STATUS status = PEP_STATUS_OK;
     static struct gpg_s gpg;
     static void *gpgme;
     gpgme_error_t gpgme_error;
@@ -67,7 +68,8 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
         gpgme = dlopen(LIBGPGME, RTLD_LAZY);
         if (gpgme == NULL) {
-            return PEP_INIT_CANNOT_LOAD_GPGME;
+            status = PEP_INIT_CANNOT_LOAD_GPGME;
+            goto pep_error;
         }
 
         memset(&gpg, 0, sizeof(struct gpg_s));
@@ -244,7 +246,8 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     gpgme_error = gpg.gpgme_new(&session->ctx);
     gpgme_error = _GPGERR(gpgme_error);
     if (gpgme_error != GPG_ERR_NO_ERROR) {
-        return PEP_INIT_GPGME_INIT_FAILED;
+        status = PEP_INIT_GPGME_INIT_FAILED;
+        goto pep_error;
     }
     assert(session->ctx);
 
@@ -255,6 +258,10 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     gpg.gpgme_set_armor(session->ctx, 1);
 
     return PEP_STATUS_OK;
+
+pep_error:
+    pgp_release(session, in_first);
+    return status;
 }
 
 void pgp_release(PEP_SESSION session, bool out_last)

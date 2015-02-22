@@ -7,11 +7,11 @@ TARGET=libpEpEngine.dylib
 MACOSX_VERSION_MIN=10.6
 GPGME_IN=$(HOME)
 LIBGPGME=libgpgme-pthread.dylib
-CC=clang -std=c99 -pthread
-LD=clang
-CFLAGS=-I$(GPGME_IN)/include -I/opt/local/include $(OPTIMIZE) -pedantic \
+CC?=clang -std=c99 -pthread
+LD?=clang
+CFLAGS?=-I$(GPGME_IN)/include -I/opt/local/include $(OPTIMIZE) -pedantic \
 	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -DLIBGPGME=\"$(LIBGPGME)\"
-LDFLAGS=-lc -shared -arch x86_64 \
+LDFLAGS?=-lc -shared -arch x86_64 \
 	-L/opt/local/lib -letpan -lgpgme-pthread -lsqlite3
 
 else
@@ -24,10 +24,10 @@ ifeq ($(BUILD_FOR),Linux)
 TARGET=libpEpEngine.so
 GPGME_IN=$(HOME)
 LIBGPGME=libgpgme.so.11
-CC=gcc -std=c99
-CFLAGS=-I$(GPGME_IN)/include $(OPTIMIZE) -fPIC -pedantic \
+CC?=gcc -std=c99
+CFLAGS?=-I$(GPGME_IN)/include $(OPTIMIZE) -fPIC -pedantic \
 	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -DLIBGPGME=\"$(LIBGPGME)\" -DSQLITE_THREADSAFE=1
-LDFLAGS=-L$(GPGME_IN) -shared -lc -ldl -letpan -lgpgme-pthread -lsqlite3
+LDFLAGS?=-L$(GPGME_IN) -shared -lc -ldl -letpan -lgpgme-pthread -lsqlite3
 
 else
 $(error don't know how to make for $(BUILD_FOR) on $(BUILD_ON))

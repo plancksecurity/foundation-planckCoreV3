@@ -13,7 +13,7 @@
 PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first)
 {
     static PEP_cryptotech_t cryptotech[PEP_crypt__count];
-    PEP_STATUS _status;
+    PEP_STATUS status = PEP_STATUS_OK;
 
     assert(PEP_crypt__count == 2);
 
@@ -42,12 +42,15 @@ PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first)
 
     session->cryptotech = cryptotech;
 
-    _status = pgp_init(session, in_first);
-    assert(_status == PEP_STATUS_OK);
-    if (_status != PEP_STATUS_OK)
-        return _status;
+    status = pgp_init(session, in_first);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
 
     return PEP_STATUS_OK;
+
+pep_error:
+    pgp_release(session, in_first);
+    return status;
 }
 
 void release_cryptotech(PEP_SESSION session, bool out_last)
