@@ -106,12 +106,12 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         char *ptext;
         char *ctext = NULL;
         size_t csize = 0;
-        msg->enc_format = PEP_enc_pieces;
 
         switch (format) {
         case PEP_enc_MIME_multipart: {
             char *resulttext = NULL;
             bool free_ptext = false;
+
             msg->enc_format = PEP_enc_MIME_multipart;
 
             if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0) {
@@ -122,11 +122,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             }
             else if (src->longmsg) {
                 ptext = src->longmsg;
-            }
-            else {
-                assert(0);
-                status = PEP_ILLEGAL_VALUE;
-                goto pep_error;
             }
 
             status = mime_encode_text(ptext, src->longmsg_formatted,
@@ -143,8 +138,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             free(resulttext);
             if (ctext) {
                 msg->longmsg = strdup(ctext);
-                msg->shortmsg = strdup("pEp");
-                if (!(msg->longmsg && msg->shortmsg))
+                if (msg->longmsg == NULL)
                     goto enomem;
             }
             else {
@@ -154,6 +148,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         break;
 
         case PEP_enc_pieces:
+            msg->enc_format = PEP_enc_pieces;
+
             if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0) {
                 ptext = combine_short_and_long(src);
                 if (ptext == NULL)
@@ -164,8 +160,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 free(ptext);
                 if (ctext) {
                     msg->longmsg = strdup(ctext);
-                    msg->shortmsg = strdup("pEp");
-                    if (!(msg->longmsg && msg->shortmsg))
+                    if (msg->longmsg == NULL)
                         goto enomem;
                 }
                 else {
@@ -178,8 +173,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                         &ctext, &csize);
                 if (ctext) {
                     msg->longmsg = strdup(ctext);
-                    msg->shortmsg = strdup("pEp");
-                    if (!(msg->longmsg && msg->shortmsg))
+                    if (msg->longmsg == NULL)
                         goto enomem;
                 }
                 else {
@@ -238,6 +232,9 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     free_stringlist(keys);
+
+    if (msg->shortmsg == NULL)
+        msg->shortmsg = strdup("pEp");
 
     *dst = msg;
     return PEP_STATUS_OK;
