@@ -26,9 +26,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     // removed by calling caveat (see documentation)
 
     ++init_count;
-    if (init_count == 0) {
+    if (init_count == 0)
         in_first = true;
-    }
 
 	assert(session);
 	*session = NULL;

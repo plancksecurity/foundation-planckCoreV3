@@ -154,8 +154,10 @@ typedef enum _PEP_enc_format {
                                             // encrypted
     PEP_enc_pieces,                         // message is encrypted but not
                                             // MIME encoded
-    PEP_enc_MIME_multipart                  // message is encrypted and MIME
-                                            // encoded
+    PEP_enc_MIME_multipart,                 // message is encrypted and MIME
+                                            // encoded; this is being used for
+                                            // PGP/MIME as well as S/MIME
+    PEP_enc_PEP                             // pEp encryption format
 } PEP_enc_format;
 
 struct _message_ref_list;

@@ -48,7 +48,12 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     assert(src);
     assert(dst);
     *dst = NULL;
-    assert(format != PEP_enc_none);
+    assert(format != PEP_enc_none && format != PEP_enc_none_MIME);
+
+    // TODO: we don't yet support re-encrypting already encrypted messages
+    if ((int) src->format >= (int) PEP_enc_pieces) {
+        NOT_IMPLEMENTED   
+    }
 
     pEp_identity *from = identity_dup(src->from);
     if (from == NULL)
@@ -109,7 +114,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
         switch (format) {
         case PEP_enc_MIME_multipart: {
-            char *resulttext = NULL;
             bool free_ptext = false;
 
             msg->enc_format = PEP_enc_MIME_multipart;
@@ -124,18 +128,31 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 ptext = src->longmsg;
             }
 
-            status = mime_encode_text(ptext, src->longmsg_formatted,
-                    src->attachments, &resulttext);
-            assert(status == PEP_STATUS_OK);
+            if (src->format == PEP_enc_none) {
+                char *_ptext = ptext;
+                status = mime_encode_text(_ptext, src->longmsg_formatted,
+                        src->attachments, &ptext);
+                assert(status == PEP_STATUS_OK);
+                if (free_ptext)
+                    free(_ptext);
+                assert(ptext);
+                if (ptext == NULL)
+                    goto pep_error;
+                free_ptext = true;
+            }
+            else if (src->format == PEP_enc_none_MIME) {
+                assert(src->longmsg);
+                if (src->longmsg == NULL) {
+                    status = PEP_ILLEGAL_VALUE;
+                    goto pep_error;
+                }
+                ptext = src->longmsg;
+            }
+
+            status = encrypt_and_sign(session, keys, ptext, strlen(ptext),
+                    &ctext, &csize);
             if (free_ptext)
                 free(ptext);
-            assert(resulttext);
-            if (resulttext == NULL)
-                goto pep_error;
-            
-            status = encrypt_and_sign(session, keys, resulttext, strlen(resulttext),
-                    &ctext, &csize);
-            free(resulttext);
             if (ctext) {
                 msg->longmsg = strdup(ctext);
                 if (msg->longmsg == NULL)
@@ -149,6 +166,11 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
         case PEP_enc_pieces:
             msg->enc_format = PEP_enc_pieces;
+
+            // TODO: decoding MIME
+            if (src->format == PEP_enc_none_MIME) {
+                NOT_IMPLEMENTED
+            }
 
             if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0) {
                 ptext = combine_short_and_long(src);
