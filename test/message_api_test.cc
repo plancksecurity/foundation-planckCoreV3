@@ -32,10 +32,18 @@ int main() {
     assert(status3 == PEP_STATUS_OK);
     assert(enc_msg3);
     cout << "message encrypted.\n";
-    free_message(enc_msg3);
     
+    cout << "encrypting message in pieces…\n";
+    message *enc_msg4;
+    cout << "calling encrypt_message()\n";
+    PEP_STATUS status4 = encrypt_message(session, msg, NULL, &enc_msg4, PEP_enc_pieces);
+    assert(status4 == PEP_STATUS_OK);
+    assert(enc_msg4);
+    cout << "message encrypted.\n";
+
     cout << "freeing messages…\n";
     free_message(msg);
+    free_message(enc_msg3);
     cout << "done.\n";
 
     cout << "calling release()\n";
