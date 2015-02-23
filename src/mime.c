@@ -167,7 +167,7 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
     if (len == -1 && errno == EOVERFLOW)
         goto err_file;
 
-    if (len + 1 > SIZE_T_MAX)
+    if (len + 1 > SIZE_MAX)
         goto err_buffer;
 
     size = (size_t) len;
