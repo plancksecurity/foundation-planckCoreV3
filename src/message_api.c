@@ -280,9 +280,16 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     PEP_STATUS status = PEP_STATUS_OK;
     message *msg = NULL;
 
-    msg = new_message(src->dir, from, to, NULL);
+    assert(session);
+    assert(src);
+    assert(dst);
 
-    return msg;
+    *dst = NULL;
+    
+    // msg = new_message(src->dir, from, to, NULL);
+
+    *dst = msg;
+    return PEP_STATUS_OK;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;

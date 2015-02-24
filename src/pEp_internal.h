@@ -63,8 +63,6 @@
 typedef struct _pEpSession {
     const char *version;
 #ifndef NO_GPG
-    void *gpgme;
-    struct gpg_s *gpg;
     gpgme_ctx_t ctx;
 #endif
 

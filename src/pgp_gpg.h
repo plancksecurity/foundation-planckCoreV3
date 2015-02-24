@@ -35,9 +35,9 @@ PEP_STATUS pgp_generate_keypair(
     );
 
 PEP_STATUS pgp_get_key_rating(
-    PEP_SESSION session,
-    const char *fpr,
-    PEP_comm_type *comm_type
+        PEP_SESSION session,
+        const char *fpr,
+        PEP_comm_type *comm_type
     );
 
 PEP_STATUS pgp_import_key(PEP_SESSION session, const char *key_data,
