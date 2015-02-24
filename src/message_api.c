@@ -278,8 +278,17 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
+    message *msg = NULL;
 
-    NOT_IMPLEMENTED
+    msg = new_message(src->dir, from, to, NULL);
+
+    return msg;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+pep_error:
+    free_message(msg);
 
     return status;
 }
