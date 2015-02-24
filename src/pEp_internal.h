@@ -43,10 +43,6 @@
 #include <stdio.h>
 #endif
 
-#ifndef NO_GPG
-#include <gpgme.h>
-#endif
-
 #include "sqlite3.h"
 
 #define _EXPORT_PEP_ENGINE_DLL
