@@ -13,12 +13,11 @@ static struct gpg_s gpg;
 static bool ensure_config_values(stringlist_t *keys, stringlist_t *values)
 {
     static char buf[MAX_LINELENGTH];
-    int n;
-    unsigned int i;
     int r;
     FILE *f;
     stringlist_t *_k;
     stringlist_t *_v;
+    unsigned int i;
     unsigned int found = 0;
 
     f = Fopen(gpg_conf(), "r");
@@ -28,11 +27,10 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values)
 
     if (f != NULL) {
         int length = stringlist_length(keys);
+        unsigned int n = (1 << length) - 1;
 
         assert(length <= sizeof(unsigned int) * CHAR_BIT);
         assert(length == stringlist_length(values));
-
-        unsigned int n = (1 << length) - 1;
 
         do {
             char * s;
@@ -71,8 +69,8 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values)
     for (i = 1, _k = keys, _v = values; _k != NULL; _k = _k->next,
             _v = _v->next, i <<= 1) {
         if ((found & i) == 0) {
-            n = Fprintf(f, "%s %s\n", _k->value, _v->value);
-            assert(n >= 0);
+            r = Fprintf(f, "%s %s\n", _k->value, _v->value);
+            assert(r >= 0);
         }
     }
 
@@ -91,6 +89,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     if (in_first) {
         stringlist_t *conf_keys   = new_stringlist("keyserver");
         stringlist_t *conf_values = new_stringlist("hkp://keys.gnupg.net");
+
         stringlist_add(conf_keys, "cert-digest-algo");
         stringlist_add(conf_values, "SHA256");
 
