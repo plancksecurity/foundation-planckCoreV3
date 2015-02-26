@@ -9,10 +9,10 @@ GPGME_IN=$(HOME)
 LIBGPGME=libgpgme-pthread.dylib
 CC?=clang -std=c99 -pthread
 LD?=clang
-CFLAGS?=-I$(GPGME_IN)/include -I/opt/local/include $(OPTIMIZE) -pedantic \
+CFLAGS?=-I$(GPGME_IN)/include -I$(HOME)/include -I/opt/local/include $(OPTIMIZE) -pedantic \
 	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -DLIBGPGME=\"$(LIBGPGME)\"
 LDFLAGS?=-lc -shared -arch x86_64 \
-	-L/opt/local/lib -letpan -lgpgme-pthread -lsqlite3
+	-L$(HOME)/lib -L/opt/local/lib -letpan -lgpgme-pthread -lsqlite3
 
 else
 $(error don't know how to make for $(BUILD_FOR) on $(BUILD_ON))

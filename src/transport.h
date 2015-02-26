@@ -37,7 +37,8 @@ typedef struct _identity_list {
 //      new identity_list or NULL if out of memory
 //
 //  caveat:
-//      ident is being moved, the caller loses ownership
+//      ident is being moved if the function succeeds, the caller loses
+//      ownership
 
 DYNAMIC_API identity_list *new_identity_list(pEp_identity *ident);
 
@@ -75,7 +76,8 @@ DYNAMIC_API void free_identity_list(identity_list *id_list);
 //      pointer to the last element in identity_list or NULL if out of memory
 //
 //  caveat:
-//      ident is being moved, the caller loses ownership
+//      ident is being moved, the caller loses ownership if the function is
+//      successful
 
 DYNAMIC_API identity_list *identity_list_add(identity_list *id_list, pEp_identity *ident);
 

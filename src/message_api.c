@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define NOT_IMPLEMENTED assert(0);
+#define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
 
 static char * combine_short_and_long(const message * src)
 {
@@ -287,6 +287,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     *dst = NULL;
     
     // msg = new_message(src->dir, from, to, NULL);
+    NOT_IMPLEMENTED
 
     *dst = msg;
     return PEP_STATUS_OK;

@@ -5,8 +5,8 @@
 
 #define _GPGERR(X) ((X) & 0xffffL)
 
-void *gpgme;
-struct gpg_s gpg;
+static void *gpgme;
+static struct gpg_s gpg;
 
 static bool ensure_keyserver()
 {

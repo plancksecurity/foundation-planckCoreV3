@@ -319,7 +319,7 @@ DYNAMIC_API stringlist_t *stringlist_dup(const stringlist_t *src)
     if (src->next) {
         dst->next = stringlist_dup(src->next);
         if (dst->next == NULL) {
-            free(dst);
+            free_stringlist(dst);
             return NULL;
         }
     }

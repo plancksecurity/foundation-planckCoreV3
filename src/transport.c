@@ -33,10 +33,8 @@ DYNAMIC_API identity_list *new_identity_list(pEp_identity *ident)
 {
     identity_list *id_list = calloc(1, sizeof(identity_list));
     assert(id_list);
-    if (id_list == NULL) {
-        free(ident);
+    if (id_list == NULL)
         return NULL;
-    }
 
     id_list->ident = ident;
 
