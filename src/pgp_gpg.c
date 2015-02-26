@@ -1,6 +1,8 @@
 #include "pgp_gpg.h"
 #include "pEp_internal.h"
 
+#include <limits.h>
+
 #include "wrappers.h"
 
 #define _GPGERR(X) ((X) & 0xffffL)
@@ -8,12 +10,16 @@
 static void *gpgme;
 static struct gpg_s gpg;
 
-static bool ensure_keyserver()
+static bool ensure_config_values(stringlist_t *keys, stringlist_t *values)
 {
     static char buf[MAX_LINELENGTH];
     int n;
-    FILE *f;
+    unsigned int i;
     int r;
+    FILE *f;
+    stringlist_t *_k;
+    stringlist_t *_v;
+    unsigned int found = 0;
 
     f = Fopen(gpg_conf(), "r");
     assert(f);
@@ -21,20 +27,34 @@ static bool ensure_keyserver()
         return false;
 
     if (f != NULL) {
+        int length = stringlist_length(keys);
+
+        assert(length <= sizeof(unsigned int) * CHAR_BIT);
+        assert(length == stringlist_length(values));
+
+        unsigned int n = (1 << length) - 1;
+
         do {
             char * s;
 
             s = Fgets(buf, MAX_LINELENGTH, f);
-            assert(s);
-            if (s == NULL)
-                return false;
+            if (!feof(f)) {
+                assert(s);
+                if (s == NULL)
+                    return false;
 
-            if (s && !feof(f)) {
-                char * t = strtok(s, " ");
-                if (t && strcmp(t, "keyserver") == 0) {
-                    r = Fclose(f);
-                    assert(r == 0);
-                    return true;
+                if (s && !feof(f)) {
+                    char * t = strtok(s, " ");
+                    for (i = 1, _k = keys, _v = values; _k != NULL;
+                            _k = _k->next, _v = _v->next, i <<= 1) {
+                        if (t && strcmp(t, _k->value) == 0)
+                            found |= i;
+
+                        if (i == n) {
+                            r = Fclose(f);
+                            return true;
+                        }
+                    }
                 }
             }
         } while (!feof(f));
@@ -48,8 +68,13 @@ static bool ensure_keyserver()
     if (f == NULL)
         return false;
 
-    n = Fprintf(f, "keyserver %s\n", DEFAULT_KEYSERVER);
-    assert(n >= 0);
+    for (i = 1, _k = keys, _v = values; _k != NULL; _k = _k->next,
+            _v = _v->next, i <<= 1) {
+        if ((found & i) == 0) {
+            n = Fprintf(f, "%s %s\n", _k->value, _v->value);
+            assert(n >= 0);
+        }
+    }
 
     r = Fclose(f);
     assert(r == 0);
@@ -64,8 +89,16 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     bool bResult;
     
     if (in_first) {
-        bResult = ensure_keyserver();
+        stringlist_t *conf_keys   = new_stringlist("keyserver");
+        stringlist_t *conf_values = new_stringlist("hkp://keys.gnupg.net");
+        stringlist_add(conf_keys, "cert-digest-algo");
+        stringlist_add(conf_values, "SHA256");
+
+        bResult = ensure_config_values(conf_keys, conf_values);
         assert(bResult);
+
+        free_stringlist(conf_keys);
+        free_stringlist(conf_values);
 
         gpgme = dlopen(LIBGPGME, RTLD_LAZY);
         if (gpgme == NULL) {
