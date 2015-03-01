@@ -19,11 +19,11 @@ void *dlopen(const char *filename, int flag);
 int dlclose(void *handle);
 void *dlsym(void *handle, const char *symbol);
 
-char *strtok_r(
-        char *restrict str,
-        const char *restrict sep,
-        char **restrict lasts
-    );
+#ifndef strtok_r
+#define strtok_r(A, B, C) strtok_s((A), (B), (C))
+#endif
+
+char *strndup(const char *s1, size_t n);
 
 const char *windoze_local_db(void);
 const char *windoze_system_db(void);

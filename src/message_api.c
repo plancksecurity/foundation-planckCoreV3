@@ -33,6 +33,61 @@ static char * combine_short_and_long(const message * src)
     return ptext;
 }
 
+static int seperate_short_and_long(const char *src, char **shortmsg, char **longmsg)
+{
+    char *_shortmsg = NULL;
+    char *_longmsg = NULL;
+
+    assert(src);
+    assert(shortmsg);
+    assert(longmsg);
+
+    *shortmsg = NULL;
+    *longmsg = NULL;
+
+    if (strncmp(src, "subject: ", 9) == 0) {
+        char *line_end = strchr(src, '\n');
+        
+        if (line_end == NULL) {
+            _shortmsg = strdup(src + 9);
+            if (_shortmsg == NULL)
+                goto enomem;
+            // _longmsg = NULL;
+        }
+        else {
+            size_t n = line_end - src;
+            if (*(line_end - 1) == '\r')
+                _shortmsg = strndup(src + 9, n - 1);
+            else
+                _shortmsg = strndup(src + 9, n);
+            if (_shortmsg == NULL)
+                goto enomem;
+            _longmsg = strdup(src + n);
+            if (_longmsg == NULL)
+                goto enomem;
+        }
+    }
+    else {
+        _shortmsg = strdup("pEp");
+        if (_shortmsg == NULL)
+            goto enomem;
+        _longmsg = strdup(src);
+        if (_longmsg == NULL)
+            goto enomem;
+    }
+    
+    *shortmsg = _shortmsg;
+    *longmsg = _longmsg;
+
+    return 0;
+
+enomem:
+    free(_shortmsg);
+    free(_longmsg);
+
+    return -1;
+}
+
 static message * clone_to_empty_message(const message * src)
 {
     pEp_identity *from = NULL;
@@ -43,8 +98,6 @@ static message * clone_to_empty_message(const message * src)
     assert(src);
     assert(src->from);
     assert(src->to);
-
-    msg->dir = src->dir;
 
     from = identity_dup(src->from);
     if (from == NULL)
@@ -59,6 +112,8 @@ static message * clone_to_empty_message(const message * src)
     msg = new_message(src->dir, from, to, NULL);
     if (msg == NULL)
         goto enomem;
+
+    msg->dir = src->dir;
 
     if (src->cc) {
         msg->cc = identity_list_dup(src->cc);
@@ -373,9 +428,55 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     switch (enc_format) {
         case PEP_enc_none:
+            if (src->enc_format == PEP_enc_PEP) {
+                // TODO: implement
+                NOT_IMPLEMENTED
+            }
+
             break;
 
         case PEP_enc_none_MIME:
+            if (src->enc_format == PEP_enc_PEP) {
+                // TODO: implement
+                NOT_IMPLEMENTED
+            }
+
+            char *ctext = src->longmsg;
+            size_t csize = strlen(src->longmsg);
+            char *ptext;
+            size_t psize;
+            stringlist_t *keylist;
+
+            status = decrypt_and_verify(session, ctext, csize, &ptext, &psize,
+                    &keylist);
+            if (ptext == NULL)
+                goto pep_error;
+
+            if (src->enc_format == PEP_enc_MIME_multipart) {
+                if (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0)
+                {
+                    char * shortmsg;
+                    char * longmsg;
+
+                    int r = seperate_short_and_long(ptext, &shortmsg,
+                            &longmsg);
+                    free(ptext);
+                    if (r == -1)
+                        goto enomem;
+
+                    msg->shortmsg = shortmsg;
+                    msg->longmsg = longmsg;
+                }
+                else {
+                    msg->shortmsg = strdup(src->shortmsg);
+                    if (msg->shortmsg == NULL)
+                        goto enomem;
+                    msg->longmsg = ptext;
+                }
+            }
+            else {
+                
+            }
             break;
 
         default:

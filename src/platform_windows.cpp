@@ -203,9 +203,15 @@ long random(void)
     return (long) (r & ((1<<31)-1));
 }
 
-#ifndef strtok_r
-#define strtok_r(A, B, C) strtok_s((A), (B), (C))
-#endif
+char *strndup(const char *s1, size_t n)
+{
+    char *str = (char *) calloc(n + 1, 1);
+    if (str == NULL)
+        return NULL;
+
+    strncpy(str, s1, n);
+    return str;
+}
 
 } // "C"
 
