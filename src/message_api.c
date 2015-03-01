@@ -32,6 +32,37 @@ static char * combine_short_and_long(const message * src)
     return ptext;
 }
 
+static message * clone_empty_message(const message * src)
+{
+    pEp_identity *from = NULL;
+    identity_list *to = NULL;
+    message * msg = NULL;
+
+    from = identity_dup(src->from);
+    assert(from);
+    if (from == NULL)
+        goto enomem;
+
+    from->me = true;
+
+    to = identity_list_dup(src->to);
+    assert(to);
+    if (to == NULL)
+        goto enomem;
+
+    msg = new_message(src->dir, from, to, NULL);
+    assert(msg);
+    if (msg == NULL)
+        goto enomem;
+
+    return msg;
+
+enomem:
+    free_identity(from);
+    free_identity_list(to);
+    return NULL;
+}
+
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
         const message *src,
@@ -55,30 +86,17 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         NOT_IMPLEMENTED   
     }
 
-    pEp_identity *from = identity_dup(src->from);
-    if (from == NULL)
+    msg = clone_empty_message(src);
+    if (msg == NULL)
         goto enomem;
-    from->me = true;
 
-    identity_list *to = identity_list_dup(src->to);
-    if (to == NULL) {
-        free_identity(from);
-        goto enomem;
-    }
-
-    msg = new_message(src->dir, from, to, NULL);
-    if (msg == NULL) {
-        free_identity(from);
-        free_identity_list(to);
-        goto enomem;
-    }
     msg->enc_format = PEP_enc_pieces;
 
-    status = myself(session, from);
+    status = myself(session, src->from);
     if (status != PEP_STATUS_OK)
         goto pep_error;
 
-    keys = new_stringlist(from->fpr);
+    keys = new_stringlist(src->from->fpr);
     if (keys == NULL)
         goto enomem;
 
@@ -92,7 +110,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
     bool dest_keys_found = false;
     identity_list * _il;
-    for (_il = to; _il && _il->ident; _il = _il->next) {
+    for (_il = msg->to; _il && _il->ident; _il = _il->next) {
         PEP_STATUS status = update_identity(session, _il->ident);
         if (status != PEP_STATUS_OK)
             goto pep_error;

@@ -42,10 +42,11 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values)
                     return false;
 
                 if (s && !feof(f)) {
-                    char * t = strtok(s, " ");
+                    char * rest;
+                    char * t = strtok_r(s, " ", &rest);
                     for (i = 1, _k = keys, _v = values; _k != NULL;
                             _k = _k->next, _v = _v->next, i <<= 1) {
-                        if (t && strcmp(t, _k->value) == 0)
+                        if (t && strncmp(t, _k->value, strlen(_k->value)) == 0)
                             found |= i;
 
                         if (i == n) {
@@ -93,6 +94,18 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         stringlist_add(conf_keys, "cert-digest-algo");
         stringlist_add(conf_values, "SHA256");
 
+        stringlist_add(conf_keys, "no-emit-version");
+        stringlist_add(conf_values, "");
+
+        stringlist_add(conf_keys, "no-comments");
+        stringlist_add(conf_values, "");
+
+        stringlist_add(conf_keys, "personal-cipher-preferences");
+        stringlist_add(conf_values, "AES AES256 AES192 CAST5");
+
+        stringlist_add(conf_keys, "personal-digest-preferences");
+        stringlist_add(conf_values, "SHA512 SHA384 SHA256 SHA224");
+        
         bResult = ensure_config_values(conf_keys, conf_values);
         assert(bResult);
 

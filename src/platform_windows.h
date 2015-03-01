@@ -19,6 +19,12 @@ void *dlopen(const char *filename, int flag);
 int dlclose(void *handle);
 void *dlsym(void *handle, const char *symbol);
 
+char *strtok_r(
+        char *restrict str,
+        const char *restrict sep,
+        char **restrict lasts
+    );
+
 const char *windoze_local_db(void);
 const char *windoze_system_db(void);
 const char *gpg_conf(void);

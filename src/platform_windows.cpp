@@ -10,6 +10,7 @@
 #define _CRT_RAND_S
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 #include <string>
 #include <stdexcept>
 #include "platform_windows.h"
@@ -201,6 +202,10 @@ long random(void)
 
     return (long) (r & ((1<<31)-1));
 }
+
+#ifndef strtok_r
+#define strtok_r(A, B, C) strtok_s((A), (B), (C))
+#endif
 
 } // "C"
 
