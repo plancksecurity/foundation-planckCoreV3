@@ -81,10 +81,11 @@ DYNAMIC_API void free_identity_list(identity_list *id_list);
 
 DYNAMIC_API identity_list *identity_list_add(identity_list *id_list, pEp_identity *ident);
 
-typedef enum _PEP_msg_format {
-    PEP_format_plain = 0,
-    PEP_format_html
-} PEP_msg_format;
+typedef enum _PEP_text_format {
+    PEP_text_format_plain = 0,
+    PEP_text_format_html,
+    PEP_text_format_other = 0xff
+} PEP_text_format;
 
 typedef enum _PEP_msg_direction {
     PEP_dir_incoming = 0,
@@ -129,6 +130,19 @@ DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_t
 DYNAMIC_API void free_bloblist(bloblist_t *bloblist);
 
 
+// bloblist_dup() - duplicate bloblist
+//
+//  parameters:
+//      src (in)    bloblist to duplicate
+//
+//  return value:
+//      pointer to a new bloblist_t or NULL if out of memory
+//
+//  caveat:
+//      this is an expensive operation because all blobs are copied
+
+DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src);
+
 // bloblist_add() - add reference to a blob to bloblist
 //
 //  parameters:
@@ -172,7 +186,6 @@ typedef struct _message {
                                             // (plain)
     char * longmsg_formatted;               // UTF-8 string of long message
                                             // (formatted)
-    PEP_msg_format format;                  // format type
     bloblist_t * attachments;               // blobs with attachements
     char * rawmsg_ref;                      // reference to raw message data
     size_t rawmsg_size;                     // size of raw message data
@@ -225,14 +238,24 @@ DYNAMIC_API message *new_message(
 // free_message() - free message struct
 //
 //  parameters:
-//      msg (in)        message struct to free
+//      src (in)        message struct to free
 //
 //  caveat:
 //      raw data as well as referenced other messages aren't freed and remain
 //      in the ownership of the caller
 
-DYNAMIC_API void free_message(message *msg);
+DYNAMIC_API void free_message(message *src);
 
+
+// message_dup - duplicate message (deep copy)
+//
+//  parameters:
+//      msg (in)        message to duplicate
+//
+//  return value:
+//      pointer to duplicate of message pointed by msg or NULL
+
+DYNAMIC_API message * message_dup(const message *msg);
 
 // new_message_ref_list() - allocate new message reference list
 //
@@ -252,6 +275,18 @@ DYNAMIC_API message_ref_list *new_message_ref_list(message *msg);
 
 DYNAMIC_API void free_message_ref_list(message_ref_list *msg_list);
 
+
+// message_ref_list_dup() - duplicate message reference list
+//
+//  paramters:
+//      src (in)        message_ref_list to duplicate
+//
+//  return value:
+//      pointer to new message_ref_list or NULL if out of memory
+
+DYNAMIC_API message_ref_list *message_ref_list_dup(
+        const message_ref_list *src
+    );
 
 // message_ref_list_add() - add a reference to a message to a message reference
 // list
@@ -280,7 +315,7 @@ struct _PEP_transport_t {
                                             // long messages
     bool formatted_message_supported;       // flag if this transport supports
                                             // formatted messages
-    PEP_msg_format native_format;           // native format of the transport
+    PEP_text_format native_text_format;     // native format of the transport
 };
 
 typedef uint64_t transports_mask;

@@ -94,8 +94,10 @@ DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_t
         const char *file_name)
 {
     bloblist_t * bloblist = calloc(1, sizeof(bloblist_t));
+    assert(bloblist);
     if (bloblist == NULL)
         return NULL;
+
     if (mime_type) {
         bloblist->mime_type = strdup(mime_type);
         if (bloblist->mime_type == NULL) {
@@ -103,6 +105,7 @@ DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_t
             return NULL;
         }
     }
+
     if (file_name) {
         bloblist->file_name = strdup(file_name);
         if (bloblist->file_name == NULL) {
@@ -111,8 +114,10 @@ DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_t
             return NULL;
         }
     }
+
     bloblist->data = blob;
     bloblist->size = size;
+
     return bloblist;
 }
 
@@ -126,6 +131,29 @@ DYNAMIC_API void free_bloblist(bloblist_t *bloblist)
         free(bloblist->file_name);
         free(bloblist);
     }
+}
+
+DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src)
+{
+    bloblist_t *bloblist = NULL;
+
+    assert(src);
+
+    bloblist = new_bloblist(src->data, src->size, src->mime_type, src->file_name);
+    if (bloblist == NULL)
+        goto enomem;
+
+    if (src->next) {
+        bloblist->next = bloblist_dup(src->next);
+        if (bloblist->next == NULL)
+            goto enomem;
+    }
+
+    return bloblist;
+
+enomem:
+    free_bloblist(bloblist);
+    return NULL;
 }
 
 DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t size,
@@ -206,10 +234,117 @@ DYNAMIC_API void free_message(message *msg)
         free_identity(msg->recv_by);
         free_identity_list(msg->cc);
         free_identity_list(msg->bcc);
+        free_identity(msg->reply_to);
         free(msg->refering_id);
-        free_message_ref_list(msg->refered_by);
         free(msg);
     }
+}
+
+DYNAMIC_API message * message_dup(const message *src)
+{
+    message * msg = NULL;
+    pEp_identity * from = NULL;
+    identity_list * to = NULL;
+
+    assert(src);
+
+    from = identity_dup(src->from);
+    if (from == NULL)
+        goto enomem;
+
+    to = identity_list_dup(src->to);
+    if (to == NULL)
+        goto enomem;
+
+    msg = new_message(src->dir, from, to, src->shortmsg);
+    if (msg == NULL)
+        goto enomem;
+
+    if (src->id) {
+        msg->id = strdup(src->id);
+        assert(msg->id);
+        if (msg->id == NULL)
+            goto enomem;
+    }
+
+    if (src->longmsg) {
+        msg->longmsg = strdup(src->longmsg);
+        assert(msg->longmsg);
+        if (msg->longmsg == NULL)
+            goto enomem;
+    }
+    
+    if (src->longmsg_formatted) {
+        msg->longmsg_formatted = strdup(src->longmsg_formatted);
+        assert(msg->longmsg_formatted);
+        if (msg->longmsg_formatted == NULL)
+            goto enomem;
+    }
+
+    if (src->attachments) {
+        msg->attachments = bloblist_dup(src->attachments);
+        if (msg->attachments == NULL)
+            goto enomem;
+    }
+
+    msg->rawmsg_ref = src->rawmsg_ref;
+    msg->rawmsg_size = src->rawmsg_size;
+    msg->sent = src->sent;
+    msg->recv = src->recv;
+
+    if (src->recv_by) {
+        msg->recv_by = identity_dup(src->recv_by);
+        if (msg->recv_by == NULL)
+            goto enomem;
+    }
+
+    if (src->cc) {
+        msg->cc = identity_list_dup(src->cc);
+        if (msg->cc == NULL)
+            goto enomem;
+    }
+
+    if (src->bcc) {
+        msg->bcc = identity_list_dup(src->bcc);
+        if (msg->bcc == NULL)
+            goto enomem;
+    }
+
+    if (src->reply_to) {
+        msg->reply_to = identity_dup(src->reply_to);
+        if (msg->reply_to == NULL)
+            goto enomem;
+    }
+
+    if (src->refering_id) {
+        msg->refering_id = strdup(src->refering_id);
+        assert(msg->refering_id);
+        if (msg->refering_id == NULL)
+            goto enomem;
+    }
+
+    msg->refering_msg_ref = src->refering_msg_ref;
+    
+    if (src->refered_by) {
+        msg->refered_by = message_ref_list_dup(src->refered_by);
+        if (msg->refered_by == NULL)
+            goto enomem;
+    }
+
+    msg->enc_format = src->enc_format;
+
+    return msg;
+
+enomem:
+    if (msg) {
+        free_message(msg);
+    }
+    else {
+        free_identity(from);
+        free_identity_list(to);
+    }
+
+    return NULL;
 }
 
 DYNAMIC_API message_ref_list *new_message_ref_list(message *msg)
@@ -230,6 +365,31 @@ DYNAMIC_API void free_message_ref_list(message_ref_list *msg_list)
         free_message_ref_list(msg_list->next);
         free(msg_list);
     }
+}
+
+DYNAMIC_API message_ref_list *message_ref_list_dup(
+        const message_ref_list *src
+    )
+{
+    message_ref_list * msg_list = NULL;
+
+    assert(src);
+
+    msg_list = new_message_ref_list(src->msg_ref);
+    if (msg_list == NULL)
+        goto enomem;
+
+    if (src->next) {
+        msg_list->next = message_ref_list_dup(src->next);
+        if (msg_list->next == NULL)
+            goto enomem;
+    }
+
+    return msg_list;
+
+enomem:
+    free_message_ref_list(msg_list);
+    return NULL;
 }
 
 DYNAMIC_API message_ref_list *message_ref_list_add(message_ref_list *msg_list, message *msg)

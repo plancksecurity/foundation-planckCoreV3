@@ -14,7 +14,7 @@ extern "C" {
 //      src (in)            message to encrypt
 //      extra (in)          extra keys for encryption
 //      dst (out)           pointer to encrypted message or NULL on failure
-//      format (in)         encryption format
+//      format (in)         unencrypted format
 //
 //  return value:
 //      PEP_STATUS_OK                   on success
@@ -29,7 +29,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         const message *src,
         stringlist_t *extra,
         message **dst,
-        PEP_enc_format format
+        PEP_enc_format enc_format
     );
 
 
@@ -46,7 +46,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
         const message *src,
-        message **dst
+        message **dst,
+        PEP_enc_format enc_format
     );
 
 #ifdef __cplusplus

@@ -12,6 +12,7 @@ static char * combine_short_and_long(const message * src)
 {
     char * ptext;
     char * longmsg;
+
     assert(src);
     assert(src->shortmsg && strcmp(src->shortmsg, "pEp") != 0);
 
@@ -32,34 +33,65 @@ static char * combine_short_and_long(const message * src)
     return ptext;
 }
 
-static message * clone_empty_message(const message * src)
+static message * clone_to_empty_message(const message * src)
 {
     pEp_identity *from = NULL;
     identity_list *to = NULL;
+
     message * msg = NULL;
 
+    assert(src);
+    assert(src->from);
+    assert(src->to);
+
+    msg->dir = src->dir;
+
     from = identity_dup(src->from);
-    assert(from);
     if (from == NULL)
         goto enomem;
 
     from->me = true;
 
     to = identity_list_dup(src->to);
-    assert(to);
     if (to == NULL)
         goto enomem;
 
     msg = new_message(src->dir, from, to, NULL);
-    assert(msg);
     if (msg == NULL)
         goto enomem;
+
+    if (src->cc) {
+        msg->cc = identity_list_dup(src->cc);
+        if (msg->cc == NULL)
+            goto enomem;
+    }
+
+    if (src->bcc) {
+        msg->bcc = identity_list_dup(src->bcc);
+        if (msg->bcc == NULL)
+            goto enomem;
+    }
+
+    if (src->reply_to) {
+        msg->reply_to = identity_dup(src->reply_to);
+        if (msg->reply_to == NULL)
+            goto enomem;
+    }
+
+    msg->sent = src->sent;
+    msg->recv = src->recv;
 
     return msg;
 
 enomem:
-    free_identity(from);
-    free_identity_list(to);
+    if (msg) {
+        free_message(msg);
+    }
+    else {
+        free_identity(from);
+        free_identity_list(to);
+    }
+
     return NULL;
 }
 
@@ -68,7 +100,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         const message *src,
         stringlist_t * extra,
         message **dst,
-        PEP_enc_format format
+        PEP_enc_format enc_format
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -78,15 +110,25 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     assert(session);
     assert(src);
     assert(dst);
-    *dst = NULL;
-    assert(format != PEP_enc_none && format != PEP_enc_none_MIME);
+    assert(enc_format >= PEP_enc_pieces);
 
-    // TODO: we don't yet support re-encrypting already encrypted messages
-    if ((int) src->format >= (int) PEP_enc_pieces) {
-        NOT_IMPLEMENTED   
+    *dst = NULL;
+
+    if (src->enc_format >= PEP_enc_pieces) {
+        if (src->enc_format == enc_format) {
+            msg = message_dup(src);
+            if (msg == NULL)
+                goto enomem;
+            *dst = msg;
+            return PEP_STATUS_OK;
+        }
+        else {
+            // TODO: we don't re-encrypt yet
+            NOT_IMPLEMENTED
+        }
     }
 
-    msg = clone_empty_message(src);
+    msg = clone_to_empty_message(src);
     if (msg == NULL)
         goto enomem;
 
@@ -130,7 +172,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         char *ctext = NULL;
         size_t csize = 0;
 
-        switch (format) {
+        switch (enc_format) {
         case PEP_enc_MIME_multipart: {
             bool free_ptext = false;
 
@@ -146,7 +188,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 ptext = src->longmsg;
             }
 
-            if (src->format == PEP_enc_none) {
+            if (src->enc_format == PEP_enc_none) {
                 char *_ptext = ptext;
                 status = mime_encode_text(_ptext, src->longmsg_formatted,
                         src->attachments, &ptext);
@@ -158,7 +200,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                     goto pep_error;
                 free_ptext = true;
             }
-            else if (src->format == PEP_enc_none_MIME) {
+            else if (src->enc_format == PEP_enc_none_MIME) {
                 assert(src->longmsg);
                 if (src->longmsg == NULL) {
                     status = PEP_ILLEGAL_VALUE;
@@ -186,7 +228,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             msg->enc_format = PEP_enc_pieces;
 
             // TODO: decoding MIME
-            if (src->format == PEP_enc_none_MIME) {
+            if (src->enc_format == PEP_enc_none_MIME) {
                 NOT_IMPLEMENTED
             }
 
@@ -264,6 +306,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             }
             break;
 
+        case PEP_enc_PEP:
+            // TODO: implement
+            NOT_IMPLEMENTED
+
         default:
             assert(0);
             status = PEP_ILLEGAL_VALUE;
@@ -292,7 +338,8 @@ pep_error:
 DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
         const message *src,
-        message **dst
+        message **dst,
+        PEP_enc_format enc_format
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -300,12 +347,42 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     assert(session);
     assert(src);
+    assert(src->dir == PEP_dir_incoming);
     assert(dst);
+    assert(enc_format < PEP_enc_pieces);
 
     *dst = NULL;
-    
-    // msg = new_message(src->dir, from, to, NULL);
-    NOT_IMPLEMENTED
+ 
+    if (src->enc_format < PEP_enc_pieces) {
+        if (enc_format == src->enc_format) {
+            msg = message_dup(src);
+            if (msg == NULL)
+                goto enomem;
+            *dst = msg;
+            return PEP_STATUS_OK;
+        }
+        else {
+            // TODO: we don't re-encode yet
+            NOT_IMPLEMENTED
+        }
+    }
+
+    msg = clone_to_empty_message(src);
+    if (msg == NULL)
+        goto enomem;
+
+    switch (enc_format) {
+        case PEP_enc_none:
+            break;
+
+        case PEP_enc_none_MIME:
+            break;
+
+        default:
+            assert(0);
+            status = PEP_ILLEGAL_VALUE;
+            goto pep_error;
+    }
 
     *dst = msg;
     return PEP_STATUS_OK;
