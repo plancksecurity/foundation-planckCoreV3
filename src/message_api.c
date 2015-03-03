@@ -2,6 +2,13 @@
 #include "keymanagement.h"
 #include "mime.h"
 
+#ifndef WIN32 // POSIX
+#define _POSIX_C_SOURCE 200809L
+#include <strings.h>
+#else
+#include "platform_windows.h"
+#endif
+
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
@@ -22,7 +29,7 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     if (ptext == NULL)
         return NULL;
 
-    strcpy(ptext, "subject: ");
+    strcpy(ptext, "Subject: ");
     strcat(ptext, shortmsg);
     strcat(ptext, "\n\n");
     strcat(ptext, longmsg);
@@ -42,7 +49,7 @@ static int seperate_short_and_long(const char *src, char **shortmsg, char **long
     *shortmsg = NULL;
     *longmsg = NULL;
 
-    if (strncmp(src, "subject: ", 9) == 0) {
+    if (strncasecmp(src, "subject: ", 9) == 0) {
         char *line_end = strchr(src, '\n');
         
         if (line_end == NULL) {
@@ -425,12 +432,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     switch (enc_format) {
         case PEP_enc_none:
-            if (src->enc_format == PEP_enc_PEP) {
-                // TODO: implement
-                NOT_IMPLEMENTED
-            }
-
-            break;
+            // TODO: implement
+            NOT_IMPLEMENTED
 
         case PEP_enc_none_MIME:
             if (src->enc_format == PEP_enc_PEP) {
