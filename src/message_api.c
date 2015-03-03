@@ -8,25 +8,22 @@
 
 #define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
 
-static char * combine_short_and_long(const message * src)
+static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
 {
     char * ptext;
-    char * longmsg;
 
-    assert(src);
-    assert(src->shortmsg && strcmp(src->shortmsg, "pEp") != 0);
+    assert(shortmsg);
+    assert(strcmp(shortmsg, "pEp") != 0);
 
-    if (src->longmsg)
-        longmsg = src->longmsg;
-    else
+    if (longmsg == NULL)
         longmsg = "";
 
-    ptext = calloc(1, strlen(src->shortmsg) + strlen(longmsg) + 12);
+    ptext = calloc(1, strlen(shortmsg) + strlen(longmsg) + 12);
     if (ptext == NULL)
         return NULL;
 
     strcpy(ptext, "subject: ");
-    strcat(ptext, src->shortmsg);
+    strcat(ptext, shortmsg);
     strcat(ptext, "\n\n");
     strcat(ptext, longmsg);
 
@@ -234,7 +231,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             msg->enc_format = PEP_enc_MIME_multipart;
 
             if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0) {
-                ptext = combine_short_and_long(src);
+                ptext = combine_short_and_long(src->shortmsg, src->longmsg);
                 if (ptext == NULL)
                     goto enomem;
                 free_ptext = true;
@@ -288,7 +285,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             }
 
             if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0) {
-                ptext = combine_short_and_long(src);
+                ptext = combine_short_and_long(src->shortmsg, src->longmsg);
                 if (ptext == NULL)
                     goto enomem;
 
