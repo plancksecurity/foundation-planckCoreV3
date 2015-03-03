@@ -2,23 +2,24 @@
 
 // Windows platform specifica
 
-#define RTLD_LAZY 1
-#ifndef strdup
-#define strdup _strdup
-#endif
-#ifndef snprintf
-#define snprintf _snprintf
-#endif
 #pragma warning(disable : 4996)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#define RTLD_LAZY 1
+
 void *dlopen(const char *filename, int flag);
 int dlclose(void *handle);
 void *dlsym(void *handle, const char *symbol);
 
+#ifndef strdup
+#define strdup(A) _strdup(A)
+#endif
+#ifndef snprintf
+#define snprintf _snprintf
+#endif
 #ifndef strtok_r
 #define strtok_r(A, B, C) strtok_s((A), (B), (C))
 #endif
