@@ -14,7 +14,7 @@ extern "C" {
 //      src (in)            message to encrypt
 //      extra (in)          extra keys for encryption
 //      dst (out)           pointer to new encrypted message or NULL on failure
-//      format (in)         encrypted format
+//      enc_format (in)     encrypted format
 //
 //  return value:
 //      PEP_STATUS_OK                   on success
@@ -42,7 +42,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 //      session (in)        session handle
 //      src (in)            message to decrypt
 //      dst (out)           pointer to new decrypted message or NULL on failure
-//      format (in)         unencrypted format
+//      enc_format (in)     unencrypted format
 //
 //  return value:
 //      error status or PEP_STATUS_OK on success
