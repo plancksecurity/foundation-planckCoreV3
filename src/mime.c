@@ -14,7 +14,7 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
         const char *plaintext,
         const char *htmltext,
         bloblist_t *attachments,
-        char **resulttext
+        char **mimetext
     )
 {
     struct mailmime * mime = NULL;
@@ -28,9 +28,9 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
     PEP_STATUS error;
 
     assert(plaintext);
-    assert(resulttext);
+    assert(mimetext);
 
-    *resulttext = NULL;
+    *mimetext = NULL;
 
     if (htmltext) {
         mime = part_multiple_new("multipart/alternative", NULL);
@@ -199,7 +199,7 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
     assert(r == 0);
 
     mailmime_free(mime);
-    *resulttext = buf;
+    *mimetext = buf;
     return PEP_STATUS_OK;
 
 err_buffer:
