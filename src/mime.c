@@ -25,7 +25,7 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
     FILE *file = NULL;
     size_t size;
     char *buf = NULL;
-    PEP_STATUS error;
+    PEP_STATUS status;
 
     assert(plaintext);
     assert(mimetext);
@@ -175,7 +175,6 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
     errno = 0;
     rewind(file);
     assert(errno == 0);
-#ifdef NDEBUG
     switch (errno) {
         case 0:
             break;
@@ -184,7 +183,6 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
         default:
             goto err_file;
     }
-#endif
 
     buf = calloc(1, size + 1);
     assert(buf);
@@ -203,17 +201,17 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
     return PEP_STATUS_OK;
 
 err_buffer:
-    error = PEP_BUFFER_TOO_SMALL;
-    goto release;
+    status = PEP_BUFFER_TOO_SMALL;
+    goto pep_error;
 
 err_file:
-    error = PEP_CANNOT_CREATE_TEMP_FILE;
-    goto release;
+    status = PEP_CANNOT_CREATE_TEMP_FILE;
+    goto pep_error;
 
 enomem:
-    error = PEP_OUT_OF_MEMORY;
+    status = PEP_OUT_OF_MEMORY;
 
-release:
+pep_error:
     free(buf);
     free(template);
 
@@ -231,5 +229,33 @@ release:
     if (submime)
         mailmime_free(submime);
 
-    return error;
+    return status;
 }
+
+DYNAMIC_API PEP_STATUS mime_decode_text(
+        const char *mimetext,
+        char **plaintext,
+        char **htmltext,
+        bloblist_t **attachments
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(mimetext);
+    assert(plaintext);
+    assert(htmltext);
+    assert(attachments);
+
+    *plaintext = NULL;
+    *htmltext = NULL;
+    *attachments = NULL;
+
+    return status;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+pep_error:
+    return status;
+}
+
