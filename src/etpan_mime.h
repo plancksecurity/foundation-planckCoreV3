@@ -48,3 +48,8 @@ int _append_field(
 struct mailimf_date_time * timestamp_to_etpantime(const struct tm *ts);
 struct tm * etpantime_to_timestamp(const struct mailimf_date_time *et);
 
+struct mailimf_mailbox * mailbox_from_string(
+        const char *name,
+        const char *address
+    );
+

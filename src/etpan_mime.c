@@ -23,14 +23,9 @@ static char * generate_boundary(const char * boundary_prefix)
     name[MAX_MESSAGE_ID - 1] = 0;
 
     now = time(NULL);
-#ifndef WIN32
+
     value = random();
-    
     gethostname(name, MAX_MESSAGE_ID - 1);
-#else
-    value = now;
-    strcpy(name, "WINDOWS");
-#endif
     
     if (boundary_prefix == NULL)
         boundary_prefix = "";
@@ -124,7 +119,7 @@ struct mailmime * part_new_empty(
 			parameters = content->ct_parameters;
 
 		r = clist_append(parameters, param);
-		if (r != 0) {
+		if (r) {
 			clist_free(parameters);
 			mailmime_parameter_free(param);
 			goto free_list;
@@ -294,9 +289,8 @@ int _append_field(
     if (field == NULL)
         return -1;
 
-
     r = clist_append(list, field);
-    if (r == -1)
+    if (r)
         _free_field(field);
 
     return r;
@@ -341,5 +335,38 @@ struct tm * etpantime_to_timestamp(const struct mailimf_date_time *et)
     result->tm_gmtoff = 36L * (long) et->dt_zone;
 
     return result;
+}
+
+struct mailimf_mailbox * mailbox_from_string(
+        const char *name,
+        const char *address
+    )
+{
+    struct mailimf_mailbox *mb = NULL;
+    char *_name = NULL;
+    char *_address = NULL;
+
+    assert(address);
+
+    _name = name ? strdup(name) : strdup("");
+    if (_name == NULL)
+        goto enomem;
+
+    _address = strdup(address);
+    if (_address == NULL)
+        goto enomem;
+
+    mb = mailimf_mailbox_new(_name, _address);
+    assert(mb);
+    if (mb == NULL)
+        goto enomem;
+
+    return mb;
+
+enomem:
+    free(_name);
+    free(_address);
+
+    return NULL;
 }
 

@@ -255,7 +255,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 memcpy(_src, src, sizeof(message));
                 _src->shortmsg = "pEp";
                 _src->longmsg = ptext;
-                status = mime_encode_message(src, &ptext);
+                status = mime_encode_message(_src, &ptext);
                 assert(status == PEP_STATUS_OK);
                 if (free_ptext)
                     free(_src->longmsg);
@@ -412,7 +412,6 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     assert(session);
     assert(src);
-    assert(src->dir == PEP_dir_incoming);
     assert(dst);
     assert(enc_format < PEP_enc_pieces);
 
