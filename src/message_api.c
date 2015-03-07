@@ -248,12 +248,18 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             }
 
             if (src->enc_format == PEP_enc_none) {
-                char *_ptext = ptext;
-                status = mime_encode_text(_ptext, src->longmsg_formatted,
-                        src->attachments, &ptext);
+                message *_src = (message *) malloc(sizeof(message));
+                assert(_src);
+                if (_src == NULL)
+                    goto enomem;
+                memcpy(_src, src, sizeof(message));
+                _src->shortmsg = "pEp";
+                _src->longmsg = ptext;
+                status = mime_encode_message(src, &ptext);
                 assert(status == PEP_STATUS_OK);
                 if (free_ptext)
-                    free(_ptext);
+                    free(_src->longmsg);
+                free(_src);
                 assert(ptext);
                 if (ptext == NULL)
                     goto pep_error;

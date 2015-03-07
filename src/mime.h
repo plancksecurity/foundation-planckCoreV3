@@ -7,13 +7,10 @@ extern "C" {
 #endif
 
 
-// mime_encode_text() - encode a MIME message
+// mime_encode_message() - encode a MIME message
 //
 //  parameters:
-//      plaintext (in)          plaintext of message as UTF-8 string
-//      htmltext (in)           optional HTML version of message as UTF-8
-//                              string or NULL if it does not apply
-//      attachments (in)        attatchments or NULL if there are none
+//      msg (in)                message to encode
 //      mimetext (out)          the resulting encoded text or NULL on any error
 //
 //  return value:
@@ -26,25 +23,20 @@ extern "C" {
 //      PEP_OUT_OF_MEMORY       if not enough memory could be allocated
 //
 //  caveat:
-//      the resulttext will go to the ownership of the caller; plaintext,
-//      htmltext and attachments will remain in the ownership of the caller
+//      the resulttext will go to the ownership of the caller
+//      the message will remain in the ownership of the caller
 
-DYNAMIC_API PEP_STATUS mime_encode_text(
-        const char *plaintext,
-        const char *htmltext,
-        bloblist_t *attachments,
+DYNAMIC_API PEP_STATUS mime_encode_message(
+        const message * msg,
         char **mimetext
     );
 
 
-// mime_decode_text() - decode a MIME message
+// mime_decode_message() - decode a MIME message
 //
 //  parameters:
 //      mimetext (in)           MIME encoded text to decode
-//      plaintext (out)         plaintext of message as UTF-8 string
-//      htmltext (out)          optional HTML version of message as UTF-8
-//                              string or NULL if it does not apply
-//      attachments (out)       attatchments or NULL if there are none
+//      msg (out)               decoded message
 //
 //  return value:
 //      PEP_STATUS_OK           if everything worked
@@ -56,14 +48,12 @@ DYNAMIC_API PEP_STATUS mime_encode_text(
 //      PEP_OUT_OF_MEMORY       if not enough memory could be allocated
 //
 //  caveat:
-//      plaintext, htmltext and attachments will go to the ownership of the
-//      caller; mimetext will remain in the ownership of the caller
+//      the decoded message will go to the ownership of the caller; mimetext
+//      will remain in the ownership of the caller
 
-DYNAMIC_API PEP_STATUS mime_decode_text(
+DYNAMIC_API PEP_STATUS mime_decode_message(
         const char *mimetext,
-        char **plaintext,
-        char **htmltext,
-        bloblist_t **attachments
+        message **msg
     );
 
 #ifdef __cplusplus

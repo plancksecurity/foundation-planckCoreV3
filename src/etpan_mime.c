@@ -1,11 +1,14 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <assert.h>
 
 #include "etpan_mime.h"
 #ifndef mailmime_param_new_with_data
 #include <libetpan/mailprivacy_tools.h>
 #endif
+
+time_t mail_mkgmtime(struct tm * tmp);
 
 #define MAX_MESSAGE_ID 512
 
@@ -240,5 +243,103 @@ free_fields:
     mailmime_fields_free(mime_fields);
 err:
     return NULL;
+}
+
+struct mailimf_field * _new_field(
+        int type,
+        _new_func_t new_func,
+        void *value
+    )
+{
+    void *data = new_func(value);
+    assert(data);
+    if (data == NULL)
+        return NULL;
+
+    struct mailimf_field * result = calloc(1, sizeof(struct mailimf_field));
+    assert(result);
+    if (result == NULL) {
+        free(data);
+        return NULL;
+    }
+
+    result->fld_type = type;
+    result->fld_data.fld_return_path = data;
+
+    return result;
+}
+
+void _free_field(struct mailimf_field *field)
+{
+    if (field)
+        free(field->fld_data.fld_return_path);
+    free(field);
+}
+
+int _append_field(
+        clist *list,
+        int type,
+        _new_func_t new_func,
+        void *value
+    )
+{
+    int r;
+    struct mailimf_field * field;
+
+    assert(list);
+    assert(new_func);
+    assert(value);
+
+    field = _new_field(type, new_func, value);
+    if (field == NULL)
+        return -1;
+
+
+    r = clist_append(list, field);
+    if (r == -1)
+        _free_field(field);
+
+    return r;
+}
+
+struct mailimf_date_time * timestamp_to_etpantime(const struct tm *ts)
+{
+    struct mailimf_date_time * result = calloc(1,
+            sizeof(struct mailimf_date_time));
+    assert(result);
+    if (result == NULL)
+        return NULL;
+
+    assert(ts);
+
+    result->dt_sec = ts->tm_sec;
+    result->dt_min = ts->tm_min;
+    result->dt_hour = ts->tm_hour;
+    result->dt_day = ts->tm_mday;
+    result->dt_month = ts->tm_mon + 1;
+    result->dt_year = ts->tm_year + 1900;
+    result->dt_zone = (int) (ts->tm_gmtoff / 36L);
+
+    return result;
+}
+
+struct tm * etpantime_to_timestamp(const struct mailimf_date_time *et)
+{
+    struct tm * result = calloc(1, sizeof(struct tm));
+    assert(result);
+    if (result == NULL)
+        return NULL;
+
+    assert(et);
+
+    result->tm_sec = et->dt_sec;
+    result->tm_min = et->dt_min;
+    result->tm_hour = et->dt_hour;
+    result->tm_mday = et->dt_day;
+    result->tm_mon = et->dt_month - 1;
+    result->tm_year = et->dt_year - 1900;
+    result->tm_gmtoff = 36L * (long) et->dt_zone;
+
+    return result;
 }
 

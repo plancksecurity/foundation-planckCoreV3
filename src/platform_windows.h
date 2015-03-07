@@ -18,7 +18,7 @@ void *dlsym(void *handle, const char *symbol);
 #define strdup(A) _strdup(A)
 #endif
 #ifndef snprintf
-#define snprintf _snprintf
+#define snprintf(...) _snprintf(__VA_ARGS__)
 #endif
 #ifndef strtok_r
 #define strtok_r(A, B, C) strtok_s((A), (B), (C))

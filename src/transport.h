@@ -180,17 +180,17 @@ struct _message_ref_list;
 
 typedef struct _message {
     PEP_msg_direction dir;
-    char * id;                              // UTF-8 string of message ID
-    char * shortmsg;                        // UTF-8 string of short message
-    char * longmsg;                         // UTF-8 string of long message
+    char *id;                               // UTF-8 string of message ID
+    char *shortmsg;                         // UTF-8 string of short message
+    char *longmsg;                          // UTF-8 string of long message
                                             // (plain)
-    char * longmsg_formatted;               // UTF-8 string of long message
+    char *longmsg_formatted;                // UTF-8 string of long message
                                             // (formatted)
-    bloblist_t * attachments;               // blobs with attachements
-    char * rawmsg_ref;                      // reference to raw message data
+    bloblist_t *attachments;                // blobs with attachements
+    char *rawmsg_ref;                       // reference to raw message data
     size_t rawmsg_size;                     // size of raw message data
-    timestamp sent;                         // when the message is sent
-    timestamp recv;                         // when the message is received
+    timestamp *sent;                        // when the message is sent
+    timestamp *recv;                        // when the message is received
     pEp_identity *from;                     // whom the message is from
     identity_list *to;                      // whom the message is to
     pEp_identity *recv_by;                  // via which identity the message
@@ -198,10 +198,14 @@ typedef struct _message {
     identity_list *cc;                      // whom a CC is being sent
     identity_list *bcc;                     // whom a BCC is being sent
     pEp_identity *reply_to;                 // where a reply should go to
-    char * refering_id;                     // UTF-8 string of refering message ID
+    char *in_reply_to;                      // UTF-8 string with MessageID of
+                                            // refering message
     struct _message *refering_msg_ref;      // reference to refering message
+    stringlist_t *references;               // list of UTF-8 strings with references
     struct _message_ref_list *refered_by;   // list of references to messages being
                                             // refered
+    stringlist_t *keywords;                 // list of UTF-8 strings with keywords
+    char *comments;                         // UTF-8 string with comments
     PEP_enc_format enc_format;              // format of encrypted data
 } message;
 

@@ -229,13 +229,18 @@ DYNAMIC_API void free_message(message *msg)
         free(msg->longmsg);
         free(msg->longmsg_formatted);
         free_bloblist(msg->attachments);
+        free(msg->sent);
+        free(msg->recv);
         free_identity(msg->from);
         free_identity_list(msg->to);
         free_identity(msg->recv_by);
         free_identity_list(msg->cc);
         free_identity_list(msg->bcc);
         free_identity(msg->reply_to);
-        free(msg->refering_id);
+        free(msg->in_reply_to);
+        free_stringlist(msg->references);
+        free_stringlist(msg->keywords);
+        free(msg->comments);
         free(msg);
     }
 }
@@ -289,8 +294,20 @@ DYNAMIC_API message * message_dup(const message *src)
 
     msg->rawmsg_ref = src->rawmsg_ref;
     msg->rawmsg_size = src->rawmsg_size;
-    msg->sent = src->sent;
-    msg->recv = src->recv;
+
+    if (src->sent) {
+        msg->sent = malloc(sizeof(timestamp));
+        if (msg->sent == NULL)
+            goto enomem;
+        memcpy(msg->sent, src->sent, sizeof(timestamp));
+    }
+
+    if (src->recv) {
+        msg->recv = malloc(sizeof(timestamp));
+        if (msg->recv == NULL)
+            goto enomem;
+        memcpy(msg->recv, src->recv, sizeof(timestamp));
+    }
 
     if (src->recv_by) {
         msg->recv_by = identity_dup(src->recv_by);
@@ -316,18 +333,37 @@ DYNAMIC_API message * message_dup(const message *src)
             goto enomem;
     }
 
-    if (src->refering_id) {
-        msg->refering_id = strdup(src->refering_id);
-        assert(msg->refering_id);
-        if (msg->refering_id == NULL)
+    if (src->in_reply_to) {
+        msg->in_reply_to = strdup(src->in_reply_to);
+        assert(msg->in_reply_to);
+        if (msg->in_reply_to == NULL)
             goto enomem;
     }
 
     msg->refering_msg_ref = src->refering_msg_ref;
     
+    if (src->references) {
+        msg->references = stringlist_dup(src->references);
+        if (msg->references == NULL)
+            goto enomem;
+    }
+
     if (src->refered_by) {
         msg->refered_by = message_ref_list_dup(src->refered_by);
         if (msg->refered_by == NULL)
+            goto enomem;
+    }
+
+    if (src->keywords) {
+        msg->keywords = stringlist_dup(src->keywords);
+        if (msg->keywords == NULL)
+            goto enomem;
+    }
+
+    if (src->comments) {
+        msg->comments = strdup(src->comments);
+        assert(msg->comments);
+        if (msg->comments == NULL)
             goto enomem;
     }
 

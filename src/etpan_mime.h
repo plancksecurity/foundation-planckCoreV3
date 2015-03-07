@@ -2,7 +2,6 @@
 
 #include <libetpan/libetpan.h>
 
-
 struct mailmime * part_new_empty(
         struct mailmime_content * content,
         struct mailmime_fields * mime_fields,
@@ -28,4 +27,24 @@ struct mailmime * part_multiple_new(
         const char * type,
         const char * boundary_prefix
     );
+
+typedef void *(*_new_func_t)(void *);
+
+struct mailimf_field * _new_field(
+        int type,
+        _new_func_t new_func,
+        void *value
+    );
+
+void _free_field(struct mailimf_field *field);
+
+int _append_field(
+        clist *list,
+        int type,
+        _new_func_t new_func,
+        void *value
+    );
+
+struct mailimf_date_time * timestamp_to_etpantime(const struct tm *ts);
+struct tm * etpantime_to_timestamp(const struct mailimf_date_time *et);
 
