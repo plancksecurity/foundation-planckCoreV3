@@ -307,6 +307,34 @@ enomem:
     return NULL;
 }
 
+static clist * clist_from_stringlist(stringlist_t *sl)
+{
+    clist * cl = clist_new();
+    assert(cl);
+    if (cl == NULL)
+        return NULL;
+
+    stringlist_t *_sl;
+    for (_sl = sl; _sl; _sl = _sl->next) {
+        int r;
+        char * value = strdup(_sl->value);
+        assert(value);
+        if (value == NULL) {
+            clist_free(cl);
+            return NULL;
+        }
+        r = clist_append(cl, value);
+        assert(r == 0);
+        if (r) {
+            free(value);
+            clist_free(cl);
+            return NULL;
+        }
+    }
+
+    return cl;
+}
+
 static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **result)
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -367,7 +395,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
         dt = NULL;
     }
 
-    if (msg->from) {
+    /* if (msg->from) */ {
         struct mailimf_mailbox_list *from = mbl_from_identity(msg->from);
         if (from == NULL)
             goto enomem;
@@ -385,10 +413,101 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
         if (to == NULL)
             goto enomem;
 
-        r = _append_field(fields_list, MAILIMF_FIELD_FROM,
+        r = _append_field(fields_list, MAILIMF_FIELD_TO,
                 (_new_func_t) mailimf_to_new, to);
         if (r) {
             mailimf_mailbox_list_free(to);
+            goto enomem;
+        }
+    }
+
+    if (msg->cc) {
+        struct mailimf_mailbox_list *cc = mbl_from_identity_list(msg->cc);
+        if (cc == NULL)
+            goto enomem;
+
+        r = _append_field(fields_list, MAILIMF_FIELD_CC,
+                (_new_func_t) mailimf_cc_new, cc);
+        if (r) {
+            mailimf_mailbox_list_free(cc);
+            goto enomem;
+        }
+    }
+    
+    if (msg->bcc) {
+        struct mailimf_mailbox_list *bcc = mbl_from_identity_list(msg->bcc);
+        if (bcc == NULL)
+            goto enomem;
+
+        r = _append_field(fields_list, MAILIMF_FIELD_BCC,
+                (_new_func_t) mailimf_bcc_new, bcc);
+        if (r) {
+            mailimf_mailbox_list_free(bcc);
+            goto enomem;
+        }
+    }
+    
+    if (msg->reply_to) {
+        struct mailimf_mailbox_list *reply_to= mbl_from_identity(msg->reply_to);
+        if (reply_to == NULL)
+            goto enomem;
+
+        r = _append_field(fields_list, MAILIMF_FIELD_REPLY_TO,
+                (_new_func_t) mailimf_reply_to_new, reply_to);
+        if (r) {
+            mailimf_mailbox_list_free(reply_to);
+            goto enomem;
+        }
+    }
+
+    if (msg->in_reply_to) {
+        char *in_reply_to = strdup(msg->in_reply_to);
+        if (in_reply_to == NULL)
+            goto enomem;
+
+        r = _append_field(fields_list, MAILIMF_FIELD_IN_REPLY_TO,
+                (_new_func_t) mailimf_in_reply_to_new, in_reply_to);
+        if (r) {
+            free(in_reply_to);
+            goto enomem;
+        }
+    }
+
+    if (msg->references) {
+        clist *references = clist_from_stringlist(msg->references);
+        if (references == NULL)
+            goto enomem;
+
+        r = _append_field(fields_list, MAILIMF_FIELD_REFERENCES,
+                (_new_func_t) mailimf_references_new, references);
+        if (r) {
+            clist_free(references);
+            goto enomem;
+        }
+    }
+
+    if (msg->keywords) {
+        clist *keywords = clist_from_stringlist(msg->keywords);
+        if (keywords == NULL)
+            goto enomem;
+
+        r = _append_field(fields_list, MAILIMF_FIELD_KEYWORDS,
+                (_new_func_t) mailimf_keywords_new, keywords);
+        if (r) {
+            clist_free(keywords);
+            goto enomem;
+        }
+    }
+
+    if (msg->comments) {
+        char *comments = strdup(msg->comments);
+        if (comments == NULL)
+            goto enomem;
+
+        r = _append_field(fields_list, MAILIMF_FIELD_COMMENTS,
+                (_new_func_t) mailimf_comments_new, comments);
+        if (r) {
+            free(comments);
             goto enomem;
         }
     }
