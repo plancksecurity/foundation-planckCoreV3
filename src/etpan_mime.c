@@ -296,6 +296,8 @@ int _append_field(
     return r;
 }
 
+// http://media2.giga.de/2014/02/Image-28.jpg
+
 struct mailimf_date_time * timestamp_to_etpantime(const struct tm *ts)
 {
     struct mailimf_date_time * result = calloc(1,
