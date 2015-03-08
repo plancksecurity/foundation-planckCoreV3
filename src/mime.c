@@ -267,10 +267,11 @@ enomem:
     return NULL;
 }
 
-static struct mailimf_mailbox_list * mbl_from_identity_list(identity_list *il)
+static struct mailimf_address_list * mal_from_identity_list(identity_list *il)
 {
-    struct mailimf_mailbox_list *mbl = NULL;
+    struct mailimf_address_list *mal = NULL;
     struct mailimf_mailbox *mb = NULL;
+    struct mailimf_address * addr = NULL;
     clist *list = NULL;
     int r;
 
@@ -286,20 +287,28 @@ static struct mailimf_mailbox_list * mbl_from_identity_list(identity_list *il)
         if (mb == NULL)
             goto enomem;
 
-        r = clist_append(list, mb);
+        addr = mailimf_address_new(MAILIMF_ADDRESS_MAILBOX, mb, NULL);
+        if (addr == NULL)
+            goto enomem;
+        mb = NULL;
+
+        r = clist_append(list, addr);
         if (r)
             goto enomem;
+        addr = NULL;
     }
-
-    mbl = mailimf_mailbox_list_new(list);
-    if (mbl == NULL)
+    mal = mailimf_address_list_new(list);
+    if (mal == NULL)
         goto enomem;
 
-    return mbl;
+    return mal;
 
 enomem:
     if (mb)
         mailimf_mailbox_free(mb);
+
+    if (addr)
+        mailimf_address_free(addr);
 
     if (list)
         clist_free(list);
@@ -409,40 +418,40 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
 
     if (msg->to) {
-        struct mailimf_mailbox_list *to = mbl_from_identity_list(msg->to);
+        struct mailimf_address_list *to = mal_from_identity_list(msg->to);
         if (to == NULL)
             goto enomem;
 
         r = _append_field(fields_list, MAILIMF_FIELD_TO,
                 (_new_func_t) mailimf_to_new, to);
         if (r) {
-            mailimf_mailbox_list_free(to);
+            mailimf_address_list_free(to);
             goto enomem;
         }
     }
 
     if (msg->cc) {
-        struct mailimf_mailbox_list *cc = mbl_from_identity_list(msg->cc);
+        struct mailimf_address_list *cc = mal_from_identity_list(msg->cc);
         if (cc == NULL)
             goto enomem;
 
         r = _append_field(fields_list, MAILIMF_FIELD_CC,
                 (_new_func_t) mailimf_cc_new, cc);
         if (r) {
-            mailimf_mailbox_list_free(cc);
+            mailimf_address_list_free(cc);
             goto enomem;
         }
     }
     
     if (msg->bcc) {
-        struct mailimf_mailbox_list *bcc = mbl_from_identity_list(msg->bcc);
+        struct mailimf_address_list *bcc = mal_from_identity_list(msg->bcc);
         if (bcc == NULL)
             goto enomem;
 
         r = _append_field(fields_list, MAILIMF_FIELD_BCC,
                 (_new_func_t) mailimf_bcc_new, bcc);
         if (r) {
-            mailimf_mailbox_list_free(bcc);
+            mailimf_address_list_free(bcc);
             goto enomem;
         }
     }
