@@ -19,6 +19,8 @@ extern "C" {
 #endif
 
 
+#define PEP_VERSION "1.0"
+
 // pEp Engine API
 
 //  caveat:

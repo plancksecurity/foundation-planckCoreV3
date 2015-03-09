@@ -1,6 +1,8 @@
 #pragma once
 
 #include <libetpan/libetpan.h>
+#include <libetpan/mailmime.h>
+#include <libetpan/mailmime_encode.h>
 
 struct mailmime * part_new_empty(
         struct mailmime_content * content,
@@ -51,5 +53,16 @@ struct tm * etpantime_to_timestamp(const struct mailimf_date_time *et);
 struct mailimf_mailbox * mailbox_from_string(
         const char *name,
         const char *address
+    );
+
+struct mailimf_field * create_optional_field(
+        const char *field,
+        const char *value
+    );
+
+int _append_optional_field(
+        clist *list,
+        const char *field,
+        const char *value
     );
 

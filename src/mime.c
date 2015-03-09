@@ -1,6 +1,5 @@
 #include "mime.h"
 
-#include <libetpan/mailmime.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -9,6 +8,8 @@
 
 #include "etpan_mime.h"
 #include "wrappers.h"
+
+#define NOT_IMPLEMENTED assert(0);
 
 static PEP_STATUS render_mime(struct mailmime *mime, char **mimetext)
 {
@@ -230,7 +231,31 @@ pep_error:
     return status;
 }
 
-static struct mailimf_mailbox_list * mbl_from_identity(const pEp_identity *ident)
+static struct mailimf_mailbox * identity_to_mailbox(const pEp_identity *ident)
+{
+    char *_username = NULL;
+    struct mailimf_mailbox *mb;
+
+    _username = mailmime_encode_subject_header("utf-8", ident->username, 0);
+    if (_username == NULL)
+        goto enomem;
+
+    mb = mailbox_from_string(_username, ident->address);
+    if (mb == NULL)
+        goto enomem;
+
+    free(_username);
+    _username = NULL;
+
+    return mb;
+
+enomem:
+    free(_username);
+    return NULL;
+}
+
+static struct mailimf_mailbox_list * identity_to_mbl(
+        const pEp_identity *ident)
 {
     struct mailimf_mailbox_list *mbl = NULL;
     struct mailimf_mailbox *mb = NULL;
@@ -243,7 +268,7 @@ static struct mailimf_mailbox_list * mbl_from_identity(const pEp_identity *ident
     if (list == NULL)
         goto enomem;
 
-    mb = mailbox_from_string(ident->username, ident->address);
+    mb = identity_to_mailbox(ident);
     if (mb == NULL)
         goto enomem;
 
@@ -267,7 +292,7 @@ enomem:
     return NULL;
 }
 
-static struct mailimf_address_list * mal_from_identity_list(identity_list *il)
+static struct mailimf_address_list * identity_list_to_mal(identity_list *il)
 {
     struct mailimf_address_list *mal = NULL;
     struct mailimf_mailbox *mb = NULL;
@@ -283,7 +308,7 @@ static struct mailimf_address_list * mal_from_identity_list(identity_list *il)
 
     identity_list *_il;
     for (_il = il; _il; _il = _il->next) {
-        mb = mailbox_from_string(_il->ident->username, _il->ident->address);
+        mb = identity_to_mailbox(_il->ident);
         if (mb == NULL)
             goto enomem;
 
@@ -316,7 +341,7 @@ enomem:
     return NULL;
 }
 
-static clist * clist_from_stringlist(stringlist_t *sl)
+static clist * stringlist_to_clist(stringlist_t *sl)
 {
     clist * cl = clist_new();
     assert(cl);
@@ -326,7 +351,7 @@ static clist * clist_from_stringlist(stringlist_t *sl)
     stringlist_t *_sl;
     for (_sl = sl; _sl; _sl = _sl->next) {
         int r;
-        char * value = strdup(_sl->value);
+        char * value = mailmime_encode_subject_header("utf-8", _sl->value, 0);
         assert(value);
         if (value == NULL) {
             clist_free(cl);
@@ -378,7 +403,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
 
     /* if (subject) */ {
-        char *_subject = strdup(subject);
+        char *_subject = mailmime_encode_subject_header("utf-8", subject, 1);
         if (_subject == NULL)
             goto enomem;
 
@@ -405,7 +430,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
 
     /* if (msg->from) */ {
-        struct mailimf_mailbox_list *from = mbl_from_identity(msg->from);
+        struct mailimf_mailbox_list *from = identity_to_mbl(msg->from);
         if (from == NULL)
             goto enomem;
 
@@ -418,7 +443,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
 
     if (msg->to) {
-        struct mailimf_address_list *to = mal_from_identity_list(msg->to);
+        struct mailimf_address_list *to = identity_list_to_mal(msg->to);
         if (to == NULL)
             goto enomem;
 
@@ -431,7 +456,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
 
     if (msg->cc) {
-        struct mailimf_address_list *cc = mal_from_identity_list(msg->cc);
+        struct mailimf_address_list *cc = identity_list_to_mal(msg->cc);
         if (cc == NULL)
             goto enomem;
 
@@ -444,7 +469,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
     
     if (msg->bcc) {
-        struct mailimf_address_list *bcc = mal_from_identity_list(msg->bcc);
+        struct mailimf_address_list *bcc = identity_list_to_mal(msg->bcc);
         if (bcc == NULL)
             goto enomem;
 
@@ -457,33 +482,33 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
     
     if (msg->reply_to) {
-        struct mailimf_mailbox_list *reply_to= mbl_from_identity(msg->reply_to);
+        struct mailimf_address_list *reply_to = identity_list_to_mal(msg->reply_to);
         if (reply_to == NULL)
             goto enomem;
 
         r = _append_field(fields_list, MAILIMF_FIELD_REPLY_TO,
                 (_new_func_t) mailimf_reply_to_new, reply_to);
         if (r) {
-            mailimf_mailbox_list_free(reply_to);
+            mailimf_address_list_free(reply_to);
             goto enomem;
         }
     }
 
     if (msg->in_reply_to) {
-        char *in_reply_to = strdup(msg->in_reply_to);
+        clist *in_reply_to = stringlist_to_clist(msg->in_reply_to);
         if (in_reply_to == NULL)
             goto enomem;
 
         r = _append_field(fields_list, MAILIMF_FIELD_IN_REPLY_TO,
                 (_new_func_t) mailimf_in_reply_to_new, in_reply_to);
         if (r) {
-            free(in_reply_to);
+            clist_free(in_reply_to);
             goto enomem;
         }
     }
 
     if (msg->references) {
-        clist *references = clist_from_stringlist(msg->references);
+        clist *references = stringlist_to_clist(msg->references);
         if (references == NULL)
             goto enomem;
 
@@ -496,7 +521,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
 
     if (msg->keywords) {
-        clist *keywords = clist_from_stringlist(msg->keywords);
+        clist *keywords = stringlist_to_clist(msg->keywords);
         if (keywords == NULL)
             goto enomem;
 
@@ -509,7 +534,8 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
 
     if (msg->comments) {
-        char *comments = strdup(msg->comments);
+        char *comments = mailmime_encode_subject_header("utf-8", msg->comments,
+                0);
         if (comments == NULL)
             goto enomem;
 
@@ -520,6 +546,10 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
             goto enomem;
         }
     }
+
+    r = _append_optional_field(fields_list, "X-pEp-Version", PEP_VERSION);
+    if (r)
+        goto enomem;
 
     fields = mailimf_fields_new(fields_list);
     assert(fields);
@@ -663,6 +693,293 @@ pep_error:
     return status;
 }
 
+static pEp_identity *mailbox_to_identity(const struct mailimf_mailbox * mb)
+{
+    pEp_identity *ident;
+    char *username = NULL;
+    size_t index;
+    int r;
+
+    index = 0;
+    r = mailmime_encoded_phrase_parse("utf-8", mb->mb_display_name,
+            strlen(mb->mb_display_name), &index, "utf-8", &username);
+    if (r)
+        goto enomem;
+
+    ident = new_identity(mb->mb_addr_spec, NULL, NULL, username);
+    if (ident == NULL)
+        goto enomem;
+    free(username);
+
+    return ident;
+
+enomem:
+    free(username);
+
+    return NULL;
+}
+
+static pEp_identity * mbl_to_identity(const struct mailimf_mailbox_list * mbl)
+{
+    struct mailimf_mailbox * mb = clist_content(clist_begin(mbl->mb_list));
+    return mailbox_to_identity(mb);
+}
+
+static identity_list * mal_to_identity_list(
+        const struct mailimf_address_list *mal
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    identity_list *il = NULL;
+    clist *list = mal->ad_list;
+    struct mailimf_address * addr = NULL;
+    struct mailimf_mailbox *mb = NULL;
+    clistiter *cur;
+    int r;
+
+    assert(mal);
+
+    il = new_identity_list(NULL);
+    if (il == NULL)
+        goto enomem;
+
+    identity_list *_il = il;
+    for (cur = clist_begin(list); cur != NULL ; cur = clist_next(cur)) {
+        pEp_identity *ident;
+
+        addr = clist_content(cur);
+        switch(addr->ad_type) {
+            case MAILIMF_ADDRESS_MAILBOX:
+                ident = mailbox_to_identity(addr->ad_data.ad_mailbox);
+                if (ident == NULL)
+                    goto enomem;
+                _il = identity_list_add(_il, ident);
+                if (_il == NULL)
+                    goto enomem;
+                break;
+
+            case MAILIMF_ADDRESS_GROUP:
+                {
+                    clistiter *cur2;
+                    struct mailimf_mailbox_list * mbl =
+                            addr->ad_data.ad_group->grp_mb_list;
+                    for (cur2 = clist_begin(mbl->mb_list); cur2 != NULL;
+                            cur2 = clist_next(cur2)) {
+                        ident = mailbox_to_identity(clist_content(cur));
+                        if (ident == NULL)
+                            goto enomem;
+                        _il = identity_list_add(_il, ident);
+                        if (_il == NULL)
+                            goto enomem;
+                    }
+                }
+                break;
+
+            default:
+                assert(0);
+                goto enomem;
+        }
+    }
+
+    return il;
+
+enomem:
+    free_identity_list(il);
+
+    return NULL;
+}
+
+static stringlist_t * clist_to_stringlist(const clist *list)
+{
+    char *text = NULL;;
+    stringlist_t * sl = new_stringlist(NULL);
+    if (sl == NULL)
+        return NULL;
+
+    clistiter *cur;
+    stringlist_t *_sl = sl;
+    for (cur = clist_begin(list); cur != NULL; cur = clist_next(cur)) {
+        char *phrase = clist_content(cur);
+        size_t index;
+        int r;
+
+        index = 0;
+        r = mailmime_encoded_phrase_parse("utf-8", phrase, strlen(phrase),
+                &index, "utf-8", &text);
+        if (r)
+            goto enomem;
+
+        _sl = stringlist_add(_sl, text);
+        if (_sl == NULL)
+            goto enomem;
+
+        free(text);
+        text = NULL;
+    }
+
+    return _sl;
+
+enomem:
+    free_stringlist(sl);
+    free(text);
+
+    return NULL;
+}
+
+static PEP_STATUS read_fields(message *msg, clist *fieldlist)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    struct mailimf_field * _field;
+    clistiter *cur;
+    size_t index;
+    int r;
+
+    for (cur = clist_begin(fieldlist); cur != NULL; cur = clist_next(cur)) {
+        _field = clist_content(cur);
+
+        switch (_field->fld_type) {
+            case MAILIMF_FIELD_MESSAGE_ID:
+                {
+                    char * text = _field->fld_data.fld_message_id->mid_value;
+                    index = 0;
+                    r = mailmime_encoded_phrase_parse("utf-8", text,
+                            strlen(text), &index, "utf-8", &msg->id);
+                    if (r)
+                        goto enomem;
+                }
+                break;
+
+            case MAILIMF_FIELD_SUBJECT:
+                {
+                    char * text = _field->fld_data.fld_subject->sbj_value;
+                    index = 0;
+                    r = mailmime_encoded_phrase_parse("utf-8", text,
+                            strlen(text), &index, "utf-8", &msg->shortmsg);
+                    if (r)
+                        goto enomem;
+                }
+                break;
+
+            case MAILIMF_FIELD_ORIG_DATE:
+                {
+                    struct mailimf_date_time *date =
+                        _field->fld_data.fld_orig_date->dt_date_time;
+                    msg->sent = etpantime_to_timestamp(date);
+                    if (msg->sent == NULL)
+                        goto enomem;
+                }
+                break;
+
+            case MAILIMF_FIELD_FROM:
+                {
+                    struct mailimf_mailbox_list *mbl =
+                            _field->fld_data.fld_from->frm_mb_list;
+                    pEp_identity *ident;
+
+                    ident = mbl_to_identity(mbl);
+                    if (ident == NULL)
+                        goto pep_error;
+
+                    msg->from = ident;
+                }
+                break;
+
+            case MAILIMF_FIELD_TO:
+                {
+                    struct mailimf_address_list *mal =
+                            _field->fld_data.fld_to->to_addr_list;
+                    identity_list *il = mal_to_identity_list(mal);
+                    if (il == NULL)
+                        goto enomem;
+                    msg->to = il;
+                }
+                break;
+
+            case MAILIMF_FIELD_CC:
+                {
+                    struct mailimf_address_list *mal =
+                            _field->fld_data.fld_cc->cc_addr_list;
+                    identity_list *il = mal_to_identity_list(mal);
+                    if (il == NULL)
+                        goto enomem;
+                    msg->cc = il;
+                }
+                break;
+
+            case MAILIMF_FIELD_BCC:
+                {
+                    struct mailimf_address_list *mal =
+                            _field->fld_data.fld_bcc->bcc_addr_list;
+                    identity_list *il = mal_to_identity_list(mal);
+                    if (il == NULL)
+                        goto enomem;
+                    msg->bcc = il;
+                }
+                break;
+
+            case MAILIMF_FIELD_REPLY_TO:
+                {
+                    struct mailimf_address_list *mal =
+                            _field->fld_data.fld_reply_to->rt_addr_list;
+                    identity_list *il = mal_to_identity_list(mal);
+                    if (il == NULL)
+                        goto enomem;
+                    msg->reply_to = il;
+                }
+                break;
+
+            case MAILIMF_FIELD_IN_REPLY_TO:
+                {
+                    clist *list = _field->fld_data.fld_in_reply_to->mid_list;
+                    stringlist_t *sl = clist_to_stringlist(list);
+                    if (sl == NULL)
+                        goto enomem;
+                    msg->in_reply_to = sl;
+                }
+                break;
+
+            case MAILIMF_FIELD_REFERENCES:
+                {
+                    clist *list = _field->fld_data.fld_references->mid_list;
+                    stringlist_t *sl = clist_to_stringlist(list);
+                    if (sl == NULL)
+                        goto enomem;
+                    msg->references = sl;
+                }
+                break;
+
+            case MAILIMF_FIELD_KEYWORDS:
+                {
+                    clist *list = _field->fld_data.fld_keywords->kw_list;
+                    stringlist_t *sl = clist_to_stringlist(list);
+                    if (sl == NULL)
+                        goto enomem;
+                    msg->keywords = sl;
+                }
+                break;
+
+            case MAILIMF_FIELD_COMMENTS:
+                {
+                    char * text = _field->fld_data.fld_comments->cm_value;
+                    index = 0;
+                    r = mailmime_encoded_phrase_parse("utf-8", text,
+                            strlen(text), &index, "utf-8", &msg->comments);
+                    if (r)
+                        goto enomem;
+                }
+                break;
+        }
+    }
+
+    return PEP_STATUS_OK;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+pep_error:
+    return status;
+}
+
 DYNAMIC_API PEP_STATUS mime_decode_message(
         const char *mimetext,
         message **msg
@@ -671,13 +988,15 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
     PEP_STATUS status = PEP_STATUS_OK;
     struct mailmime * mime = NULL;
     int r;
+    message *_msg = NULL;
+    size_t index;
 
     assert(mimetext);
     assert(msg);
 
     *msg = NULL;
     
-    size_t index = 0;
+    index = 0;
     r = mailmime_parse(mimetext, strlen(mimetext), &index, &mime);
     assert(r == 0);
     assert(mime);
@@ -688,7 +1007,17 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
             goto err_mime;
     }
 
+    _msg = calloc(1, sizeof(message));
+    if (_msg == NULL)
+        goto enomem;
+
+    clist * _fieldlist = mime->mm_data.mm_message.mm_fields->fld_list;
+    status = read_fields(_msg, _fieldlist);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+
     mailmime_free(mime);
+    *msg = _msg;
 
     return status;
 
@@ -700,6 +1029,8 @@ enomem:
     status = PEP_OUT_OF_MEMORY;
 
 pep_error:
+    free_message(_msg);
+
     if (mime)
         mailmime_free(mime);
 

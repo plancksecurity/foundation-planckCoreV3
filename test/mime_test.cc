@@ -22,8 +22,8 @@ int main() {
     // testing multipart/alternative
 
     message *msg2 = new_message(PEP_dir_incoming,
-            new_identity("vb@dingens.org", NULL, NULL, NULL),
-            new_identity_list(new_identity("trischa@dingens.org", NULL, NULL, NULL)),
+            new_identity("vb@dingens.org", NULL, NULL, "Volker Birk"),
+            new_identity_list(new_identity("trischa@dingens.org", NULL, NULL, "Patricia Bädnar")),
             "my sübject");
     assert(msg2);
     string text2 = "my mèssage to yoü";
@@ -43,6 +43,23 @@ int main() {
 
     free(result2);
     free_message(msg2);
+
+    cout << "opening mime_sample.txt for reading\n";
+    ifstream inFile3 ("mime_sample.txt");
+    assert(inFile3.is_open());
+
+    string mimetext3;
+
+    cout << "reading mime sample\n";
+    while (!inFile3.eof()) {
+        static string line;
+        getline(inFile3, line);
+        mimetext3 += line + "\n";
+    }
+    inFile3.close();
+
+    message *msg3;
+    PEP_STATUS status3 = mime_decode_message(mimetext3.c_str(), &msg3);
 
     cout << "calling release()\n";
     release(session);

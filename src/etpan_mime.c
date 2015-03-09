@@ -372,3 +372,66 @@ enomem:
     return NULL;
 }
 
+struct mailimf_field * create_optional_field(
+        const char *field,
+        const char *value
+    )
+{
+    char *_field = NULL;
+    char *_value = NULL;
+    struct mailimf_optional_field *optional_field = NULL;
+
+    _field = strdup(field);
+    if (_field == NULL)
+        goto enomem;
+
+    _value = mailmime_encode_subject_header("utf-8", value, 0);
+    if (_value == NULL)
+        goto enomem;
+
+    optional_field = mailimf_optional_field_new(_field, _value);
+    if (optional_field == NULL)
+        goto enomem;
+
+    struct mailimf_field * result = calloc(1, sizeof(struct mailimf_field));
+    assert(result);
+    if (result == NULL)
+        goto enomem;
+
+    result->fld_type = MAILIMF_FIELD_OPTIONAL_FIELD;
+    result->fld_data.fld_optional_field = optional_field;
+
+    return result;
+
+enomem:
+    if (optional_field) {
+        mailimf_optional_field_free(optional_field);
+    }
+    else {
+        free(_field);
+        free(_value);
+    }
+
+    return NULL;
+}
+
+int _append_optional_field(
+        clist *list,
+        const char *field,
+        const char *value
+    )
+{
+    int r;
+    struct mailimf_field * optional_field =
+            create_optional_field(field, value);
+
+    if (optional_field == NULL)
+        return -1;
+
+    r = clist_append(list, optional_field);
+    if (r)
+        mailimf_field_free(optional_field);
+
+    return r;
+}
+

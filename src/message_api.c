@@ -132,7 +132,7 @@ static message * clone_to_empty_message(const message * src)
     }
 
     if (src->reply_to) {
-        msg->reply_to = identity_dup(src->reply_to);
+        msg->reply_to = identity_list_dup(src->reply_to);
         if (msg->reply_to == NULL)
             goto enomem;
     }

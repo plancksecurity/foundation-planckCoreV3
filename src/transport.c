@@ -236,8 +236,8 @@ DYNAMIC_API void free_message(message *msg)
         free_identity(msg->recv_by);
         free_identity_list(msg->cc);
         free_identity_list(msg->bcc);
-        free_identity(msg->reply_to);
-        free(msg->in_reply_to);
+        free_identity_list(msg->reply_to);
+        free_stringlist(msg->in_reply_to);
         free_stringlist(msg->references);
         free_stringlist(msg->keywords);
         free(msg->comments);
@@ -328,13 +328,13 @@ DYNAMIC_API message * message_dup(const message *src)
     }
 
     if (src->reply_to) {
-        msg->reply_to = identity_dup(src->reply_to);
+        msg->reply_to = identity_list_dup(src->reply_to);
         if (msg->reply_to == NULL)
             goto enomem;
     }
 
     if (src->in_reply_to) {
-        msg->in_reply_to = strdup(src->in_reply_to);
+        msg->in_reply_to = stringlist_dup(src->in_reply_to);
         assert(msg->in_reply_to);
         if (msg->in_reply_to == NULL)
             goto enomem;
