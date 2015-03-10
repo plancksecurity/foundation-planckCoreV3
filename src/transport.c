@@ -595,6 +595,7 @@ DYNAMIC_API void free_message(message *msg)
         free_stringlist(msg->references);
         free_stringlist(msg->keywords);
         free(msg->comments);
+        free_stringpair_map(msg->opt_fields);
         free(msg);
     }
 }
@@ -718,6 +719,12 @@ DYNAMIC_API message * message_dup(const message *src)
         msg->comments = strdup(src->comments);
         assert(msg->comments);
         if (msg->comments == NULL)
+            goto enomem;
+    }
+
+    if (src->opt_fields) {
+        msg->opt_fields = stringpair_map_dup(src->opt_fields);
+        if (msg->opt_fields == NULL)
             goto enomem;
     }
 

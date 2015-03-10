@@ -332,6 +332,7 @@ typedef struct _message {
                                             // refered
     stringlist_t *keywords;                 // list of UTF-8 strings with keywords
     char *comments;                         // UTF-8 string with comments
+    stringpair_map_t *opt_fields;           // optional fields
     PEP_enc_format enc_format;              // format of encrypted data
 } message;
 
