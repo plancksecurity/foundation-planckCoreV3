@@ -193,6 +193,360 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
     return bloblist_add(bloblist->next, blob, size, mime_type, file_name);
 }
 
+DYNAMIC_API stringpair_t * new_stringpair(const char *key, const char *value)
+{
+    stringpair_t *pair = NULL;
+
+    assert(key);
+    assert(value),
+
+    pair = calloc(1, sizeof(stringpair_t));
+    assert(pair);
+    if (pair == NULL)
+        goto enomem;
+
+    pair->key = strdup(key);
+    assert(pair->key);
+    if (pair->key == NULL)
+        goto enomem;
+
+    pair->value = strdup(value);
+    assert(pair->value);
+    if (pair->value == NULL)
+        goto enomem;
+
+    return pair;
+
+enomem:
+    free_stringpair(pair);
+    return NULL;
+}
+
+DYNAMIC_API void free_stringpair(stringpair_t * pair)
+{
+    if (pair) {
+        free(pair->key);
+        free(pair->value);
+        free(pair);
+    }
+}
+
+DYNAMIC_API stringpair_t * stringpair_dup(const stringpair_t *src)
+{
+    assert(src);
+    return new_stringpair(src->key, src->value);
+}
+
+DYNAMIC_API stringpair_map_t * new_stringpair_map(const stringpair_t *pair)
+{
+    stringpair_map_t *map = NULL;
+
+    map = calloc(1, sizeof(stringpair_map_t));
+    assert(map);
+    if (map == NULL)
+        goto enomem;
+
+    if (pair) {
+        map->pair = stringpair_dup(pair);
+        if (map->pair == NULL)
+            goto enomem;
+    }
+
+    return map;
+
+enomem:
+    free_stringpair_map(map);
+    return NULL;
+}
+
+DYNAMIC_API void free_stringpair_map(stringpair_map_t *map)
+{
+    if (map) {
+        free_stringpair_map(map->left);
+        free_stringpair_map(map->right);
+        free_stringpair(map->pair);
+        free(map);
+    }
+}
+
+static stringpair_map_t * _stringpair_map_dup(
+        const stringpair_map_t *src,
+        stringpair_map_t *parent
+    )
+{
+    stringpair_map_t *map = NULL;   
+
+    assert(src);
+
+    map = new_stringpair_map(src->pair);
+    if (map == NULL)
+        goto enomem;
+
+    map->color = src->color;
+
+    if (src->left) {
+        map->left = _stringpair_map_dup(src->left, map);
+        if (map->left == NULL)
+            goto enomem;
+    }
+
+    if (src->right) {
+        map->right = _stringpair_map_dup(src->right, map);
+        if (map->right == NULL)
+            goto enomem;
+    }
+
+    map->parent_ref = parent;
+
+    return map;
+
+enomem:
+    free_stringpair_map(map);
+    return NULL;
+}
+
+DYNAMIC_API stringpair_map_t * stringpair_map_dup(const stringpair_map_t *src)
+{
+    return _stringpair_map_dup(src, NULL);
+}
+
+static bool stringpair_map_is_leave(const stringpair_map_t *node)
+{
+    assert(node);
+    return node->left == NULL && node->right == NULL;
+}
+
+DYNAMIC_API stringpair_map_t * stringpair_map_find(
+        stringpair_map_t *map,
+        const char *key
+    )
+{
+    int c;
+
+    assert(key);
+
+    if (map == NULL || map->pair == NULL) // empty map
+        return NULL;
+
+    c = strcmp(map->pair->key, key);
+
+    if (c == 0)
+        return map;
+    else if (c < 0)
+        return stringpair_map_find(map->left, key);
+    else
+        return stringpair_map_find(map->right, key);
+}
+
+static stringpair_map_t * stringpair_map_grandparent(stringpair_map_t *node)
+{
+    assert(node);
+
+    if (node->parent_ref == NULL)
+        return NULL;
+
+    return node->parent_ref->parent_ref;
+}
+
+static stringpair_map_t * stringpair_map_uncle(stringpair_map_t *node)
+{
+    assert(stringpair_map_grandparent(node));
+
+    if (node->parent_ref == stringpair_map_grandparent(node)->left)
+        return stringpair_map_grandparent(node)->right;
+    else
+        return stringpair_map_grandparent(node)->left;
+}
+
+static stringpair_map_t * _stringpair_map_add(
+        stringpair_map_t *map,
+        stringpair_t * pair
+    )
+{
+    int c;
+
+    assert(map);
+    assert(pair);
+
+    if (map->pair == NULL) {
+        map->pair = stringpair_dup(pair);
+        if (map->pair == NULL)
+            return NULL;
+        return map;
+    }
+
+    assert(map->pair->key);
+    assert(pair->key);
+
+    c = strcmp(map->pair->key, pair->key);
+    if (c == 0) {
+        free(map->pair->value);
+
+        assert(pair->value);
+
+        map->pair->value = strdup(pair->value);
+        assert(map->pair->value);
+        if (map->pair->value == NULL)
+            return NULL;
+    }
+    else if (c < 0) {
+        if (map->left == NULL) {
+            map->left = new_stringpair_map(pair);
+            if (map->left)
+                return NULL;
+            map = map->left;
+        }
+        else {
+            map = _stringpair_map_add(map->left, pair);
+        }
+    }
+    else {
+        if (map->right == NULL) {
+            map->right = new_stringpair_map(pair);
+            if (map->right)
+                return NULL;
+            map = map->right;
+        }
+        else {
+            map = _stringpair_map_add(map->right, pair);
+        }
+    }
+
+    return map;
+}
+
+static void stringpair_map_rotate_left(stringpair_map_t *l)
+{
+    stringpair_map_t * _parent;
+    stringpair_map_t * _r;
+
+    assert(l);
+    assert(l->parent_ref);
+    assert(l->right);
+
+    _parent = l->parent_ref;
+    _r = l->right;
+
+    l->right = _r->left;
+    _r->left = l;
+
+    if (_parent->left == l)
+        _parent->left = _r;
+    else
+        _parent->right = _r;
+}
+
+static void stringpair_map_rotate_right(stringpair_map_t *r)
+{
+    stringpair_map_t * _parent;
+    stringpair_map_t * _l;
+
+    assert(r);
+    assert(r->parent_ref);
+    assert(r->left);
+
+    _parent = r->parent_ref;
+    _l = r->left;
+
+    r->left = _l->right;
+    _l->right = r;
+
+    if (_parent->left == r)
+        _parent->left = _l;
+    else
+        _parent->right = _l;
+}
+
+static void stringpair_map_case5(stringpair_map_t *map)
+{
+    map->parent_ref->color = rbt_black;
+    stringpair_map_grandparent(map)->color = rbt_red;
+    if (map == map->parent_ref->left &&
+            map->parent_ref == stringpair_map_grandparent(map)->left) {
+        stringpair_map_rotate_right(stringpair_map_grandparent(map));
+    }
+    else {
+        assert(map == map->parent_ref->right &&
+                map->parent_ref == stringpair_map_grandparent(map)->right);
+        stringpair_map_rotate_left(stringpair_map_grandparent(map));
+    }
+}
+
+static void stringpair_map_case4(stringpair_map_t *map)
+{
+    if (map == map->parent_ref->right &&
+            map->parent_ref == stringpair_map_grandparent(map)->left) {
+        stringpair_map_rotate_left(map->parent_ref);
+        map = map->left;
+    }
+    else if (map == map->parent_ref->left &&
+            map->parent_ref == stringpair_map_grandparent(map)->right) {
+        stringpair_map_rotate_right(map->parent_ref);
+        map = map->right;
+    }
+
+    stringpair_map_case5(map);
+}
+
+static void stringpair_map_case1(stringpair_map_t *map);
+
+static void stringpair_map_case3(stringpair_map_t *map)
+{
+    if (stringpair_map_uncle(map) != NULL &&
+            stringpair_map_uncle(map)->color == rbt_red) {
+        map->parent_ref->color = rbt_black;
+        stringpair_map_uncle(map)->color = rbt_black;
+        stringpair_map_grandparent(map)->color = rbt_red;
+
+        stringpair_map_case1(stringpair_map_grandparent(map));
+    }
+    else {
+        stringpair_map_case4(map);
+    }
+}
+
+static void stringpair_map_case2(stringpair_map_t *map)
+{
+    if (map->parent_ref->color == rbt_black)
+        return;
+    else
+        stringpair_map_case3(map);
+}
+
+static void stringpair_map_case1(stringpair_map_t *map)
+{
+    assert(map);
+
+    if (map->parent_ref == NULL)
+        map->color = rbt_black;
+    else
+        stringpair_map_case2(map);
+}
+
+static void stringpair_map_repair(stringpair_map_t *map)
+{
+    stringpair_map_case1(map);
+}
+
+DYNAMIC_API stringpair_map_t * stringpair_map_add(
+        stringpair_map_t *map,
+        stringpair_t * pair
+    )
+{
+    stringpair_map_t * _map = NULL;
+
+    assert(map);
+    assert(pair);
+
+    _map = _stringpair_map_add(map, pair);
+    if (_map == NULL)
+        return NULL;
+
+    stringpair_map_repair(_map);
+
+    return _map;
+}
+
 DYNAMIC_API message *new_message(
         PEP_msg_direction dir,
         pEp_identity *from,

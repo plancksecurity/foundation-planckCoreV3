@@ -22,6 +22,7 @@ typedef enum _PEP_transports {
 
 typedef struct _PEP_transport_t PEP_transport_t;
 
+
 typedef struct _identity_list {
     pEp_identity *ident;
     struct _identity_list *next;
@@ -161,6 +162,131 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src);
 
 DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t size,
         const char *mime_type, const char *file_name);
+
+
+typedef struct _stringpair_t {
+    char * key;
+    char * value;
+} stringpair_t;
+
+
+// new_stringpair() - allocate new stringpair_t
+//
+//  parameters:
+//      key (in)        utf-8 string used as key
+//      value (in)      utf-8 string containing the value
+//
+//  return value:
+//      pointer to stringpair_t or NULL on failure
+//
+//  caveat:
+//      key and value are copied and remain in the ownership of the caller
+
+DYNAMIC_API stringpair_t * new_stringpair(const char *key, const char *value);
+
+
+// free_stringpair() - free memory allocated by stringpair_t
+//
+//  parameters:
+//      pair (in)       pointer to stringpair_t to free
+
+DYNAMIC_API void free_stringpair(stringpair_t * pair);
+
+
+// stringpair_dup() - duplicate stringpair_t (deep copy)
+//
+//  parameters:
+//      src (in)        pointer to stringpair_t to duplicate
+//
+//  return value:
+//      pointer to copy of src or NULL on failure
+
+DYNAMIC_API stringpair_t * stringpair_dup(const stringpair_t *src);
+
+
+typedef enum _rbt_color_t {
+    rbt_red = 0,
+    rbt_black
+} rbt_color_t;
+
+// stringpair_map_t is implemented as red-black-tree
+
+typedef struct _stringpair_map_t {
+    rbt_color_t color;
+    struct _stringpair_map_t *parent_ref;
+    struct _stringpair_map_t *left;
+    struct _stringpair_map_t *right;
+
+    stringpair_t *pair;
+} stringpair_map_t;
+
+
+// new_stringpair_map() - allocate root node of new stringpair_map_t
+//
+//  parameters:
+//      pair (in)       optional pointer to pair for root node or NULL
+//
+//  return value:
+//      pointer to rood node of new stringpair_map_t or NULL on failure
+//
+//  caveat:
+//      if a pair is given it is being copied; the original remains in the
+//      ownership of the caller
+
+DYNAMIC_API stringpair_map_t * new_stringpair_map(const stringpair_t *pair);
+
+
+// free_stringpair_map() - free memory allocated by stringpair_map_t
+//
+//  parameters:
+//      map (in)        pointer to stringpair_map_t to release
+
+DYNAMIC_API void free_stringpair_map(stringpair_map_t *map);
+
+
+// stringpair_map_dup() - duplicate stringpair_map_t (deep copy)
+//
+//  parameters:
+//      src (in)        pointer to stringpair_map_t to duplicate
+//
+//  return value:
+//      pointer to copy of src of NULL on failure
+
+DYNAMIC_API stringpair_map_t * stringpair_map_dup(const stringpair_map_t *src);
+
+
+// stringpair_map_find() - find node with key
+//
+//  parameters:
+//      map (in)        pointer to map to search
+//      key (in)        pointer to key to search for
+//
+//  return value:
+//      pointer to node with result or NULL if not found
+
+DYNAMIC_API stringpair_map_t * stringpair_map_find(
+        stringpair_map_t *map,
+        const char *key
+    );
+
+
+// stringpair_map_add() - add stringpair_t to map
+//
+//  parameters:
+//      map (in)        pointer to map to add to
+//      pair (in)       pointer to pair to add
+//
+//  return value:
+//      pointer to node with added value
+//
+//  caveat:
+//      a copy of pair is added to the map; the original pair remains in the
+//      ownership of the caller
+
+DYNAMIC_API stringpair_map_t * stringpair_map_add(
+        stringpair_map_t *map,
+        stringpair_t * pair
+    );
 
 
 typedef enum _PEP_enc_format {
