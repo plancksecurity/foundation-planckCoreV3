@@ -310,12 +310,6 @@ DYNAMIC_API stringpair_map_t * stringpair_map_dup(const stringpair_map_t *src)
     return _stringpair_map_dup(src, NULL);
 }
 
-static bool stringpair_map_is_leave(const stringpair_map_t *node)
-{
-    assert(node);
-    return node->left == NULL && node->right == NULL;
-}
-
 DYNAMIC_API stringpair_map_t * stringpair_map_find(
         stringpair_map_t *map,
         const char *key
@@ -328,7 +322,7 @@ DYNAMIC_API stringpair_map_t * stringpair_map_find(
     if (map == NULL || map->pair == NULL) // empty map
         return NULL;
 
-    c = strcmp(map->pair->key, key);
+    c = strcoll(map->pair->key, key);
 
     if (c == 0)
         return map;
@@ -378,7 +372,7 @@ static stringpair_map_t * _stringpair_map_add(
     assert(map->pair->key);
     assert(pair->key);
 
-    c = strcmp(map->pair->key, pair->key);
+    c = strcoll(map->pair->key, pair->key);
     if (c == 0) {
         free(map->pair->value);
 
@@ -461,6 +455,7 @@ static void stringpair_map_case5(stringpair_map_t *map)
 {
     map->parent_ref->color = rbt_black;
     stringpair_map_grandparent(map)->color = rbt_red;
+
     if (map == map->parent_ref->left &&
             map->parent_ref == stringpair_map_grandparent(map)->left) {
         stringpair_map_rotate_right(stringpair_map_grandparent(map));
@@ -571,6 +566,16 @@ DYNAMIC_API message *new_message(
     msg->dir = dir;
     msg->from = from;
     msg->to = to;
+
+    stringpair_t version;
+    version.key = "X-pEp-Version";
+    version.value = PEP_VERSION;
+
+    msg->opt_fields = new_stringpair_map(&version);
+    if (msg->opt_fields == NULL) {
+        free_message(msg);
+        return NULL;
+    }
 
     return msg;
 }
