@@ -1,6 +1,6 @@
 #pragma once
 
-#include "transport.h"
+#include "message.h"
 
 #ifdef __cplusplus
 extern "C" {

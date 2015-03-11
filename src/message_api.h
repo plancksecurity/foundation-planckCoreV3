@@ -1,10 +1,11 @@
 #pragma once
 
+#include "message.h"
+#include "mime.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "message.h"
 
 
 // encrypt_message() - encrypt message in memory
