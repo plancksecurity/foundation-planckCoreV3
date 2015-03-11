@@ -1010,6 +1010,7 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
     }
 
     _msg = calloc(1, sizeof(message));
+    assert(_msg);
     if (_msg == NULL)
         goto enomem;
 
