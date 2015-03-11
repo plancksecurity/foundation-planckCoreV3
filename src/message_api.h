@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#include "transport.h"
+#include "message.h"
 
 
 // encrypt_message() - encrypt message in memory
