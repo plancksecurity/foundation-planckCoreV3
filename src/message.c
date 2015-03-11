@@ -1,7 +1,9 @@
-#include "pEp_internal.h"
-
-#include <memory.h>
+#include <stdlib.h>
+#include <string.h>
 #include <assert.h>
+
+#include "message.h"
+#include "dynamic_api.h"
 
 DYNAMIC_API message *new_message(
         PEP_msg_direction dir,
