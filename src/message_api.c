@@ -1,5 +1,4 @@
 #include "message_api.h"
-#include "keymanagement.h"
 
 #ifndef WIN32 // POSIX
 #define _POSIX_C_SOURCE 200809L
