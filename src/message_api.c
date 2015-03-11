@@ -24,6 +24,7 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
         longmsg = "";
 
     ptext = calloc(1, strlen(shortmsg) + strlen(longmsg) + 12);
+    assert(ptext);
     if (ptext == NULL)
         return NULL;
 

@@ -376,7 +376,7 @@ DYNAMIC_API PEP_STATUS safewords(
     )
 {
 	const char *source = fingerprint;
-	char *buffer = calloc(1, MAX_SAFEWORDS_SPACE);
+	char *buffer;
 	char *dest = buffer;
 	size_t fsize;
     PEP_STATUS _status;
@@ -390,6 +390,7 @@ DYNAMIC_API PEP_STATUS safewords(
 	*words = NULL;
 	*wsize = 0;
 
+    buffer = calloc(1, MAX_SAFEWORDS_SPACE);
     assert(buffer);
     if (buffer == NULL)
         return PEP_OUT_OF_MEMORY;

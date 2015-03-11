@@ -119,6 +119,7 @@ DYNAMIC_API message * message_dup(const message *src)
 
     if (src->sent) {
         msg->sent = malloc(sizeof(timestamp));
+        assert(msg->sent);
         if (msg->sent == NULL)
             goto enomem;
         memcpy(msg->sent, src->sent, sizeof(timestamp));
@@ -126,6 +127,7 @@ DYNAMIC_API message * message_dup(const message *src)
 
     if (src->recv) {
         msg->recv = malloc(sizeof(timestamp));
+        assert(msg->recv);
         if (msg->recv == NULL)
             goto enomem;
         memcpy(msg->recv, src->recv, sizeof(timestamp));

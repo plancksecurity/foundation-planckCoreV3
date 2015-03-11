@@ -8,6 +8,8 @@
 DYNAMIC_API stringlist_t *new_stringlist(const char *value)
 {
     stringlist_t *result = calloc(1, sizeof(stringlist_t));
+    assert(result);
+
     if (result && value) {
         result->value = strdup(value);
         assert(result->value);
@@ -16,6 +18,7 @@ DYNAMIC_API stringlist_t *new_stringlist(const char *value)
             return NULL;
         }
     }
+
     return result;
 }
 
