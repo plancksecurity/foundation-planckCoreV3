@@ -547,9 +547,11 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
         }
     }
 
-    r = _append_optional_field(fields_list, "X-pEp-Version", PEP_VERSION);
-    if (r)
-        goto enomem;
+    if (msg->opt_fields) {
+        r = _append_optional_field(fields_list, "X-pEp-Version", PEP_VERSION);
+        if (r)
+            goto enomem;
+    }
 
     fields = mailimf_fields_new(fields_list);
     assert(fields);

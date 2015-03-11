@@ -2,6 +2,9 @@
 
 #include <time.h>
 #include "pEpEngine.h"
+#include "identity_list.h"
+#include "bloblist.h"
+#include "stringpair.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,66 +25,6 @@ typedef enum _PEP_transports {
 
 typedef struct _PEP_transport_t PEP_transport_t;
 
-
-typedef struct _identity_list {
-    pEp_identity *ident;
-    struct _identity_list *next;
-} identity_list;
-
-
-// new_identity_list() - allocate a new identity list
-//
-//  parameters:
-//      ident (in)          identity to move for first element
-//
-//  return value:
-//      new identity_list or NULL if out of memory
-//
-//  caveat:
-//      ident is being moved if the function succeeds, the caller loses
-//      ownership
-
-DYNAMIC_API identity_list *new_identity_list(pEp_identity *ident);
-
-
-// identity_list_dup() - duplicate identity_list (deep copy)
-//
-//  parameters:
-//      id_list (in)        identity_list to copy
-//
-//  return value:
-//      new identity_list or NULL if out of memory
-
-DYNAMIC_API identity_list *identity_list_dup(const identity_list *src);
-
-
-// free_identity_list() - free memory allocated by identity_list
-//
-//  parameters:
-//      id_list (in)        identity_list to free
-//
-//  caveat:
-//      this function frees all identities in the list additional to the
-//      identity_list itself
-
-DYNAMIC_API void free_identity_list(identity_list *id_list);
-
-
-// identity_list_add - add identity to an identity_list
-//
-//  parameters:
-//      id_list (in)        identity_list to add to
-//      ident (in)          identity being added
-//
-//  return value:
-//      pointer to the last element in identity_list or NULL if out of memory
-//
-//  caveat:
-//      ident is being moved, the caller loses ownership if the function is
-//      successful
-
-DYNAMIC_API identity_list *identity_list_add(identity_list *id_list, pEp_identity *ident);
-
 typedef enum _PEP_text_format {
     PEP_text_format_plain = 0,
     PEP_text_format_html,
@@ -92,202 +35,6 @@ typedef enum _PEP_msg_direction {
     PEP_dir_incoming = 0,
     PEP_dir_outgoing
 } PEP_msg_direction;
-
-typedef struct _bloblist_t {
-    char *data;                     // blob
-    size_t size;                    // size of blob
-    char *mime_type;                // UTF-8 string of MIME type of blob or
-                                    // NULL if unknown
-    char *file_name;                // UTF-8 string of file name of blob or
-                                    // NULL if unknown
-    struct _bloblist_t *next;
-} bloblist_t;
-
-
-// new_bloblist() - allocate a new bloblist
-//
-//  parameters:
-//      blob (in)       blob to add to the list
-//      size (in)       size of the blob
-//      mime_type (in)  MIME type of the blob data or NULL if unknown
-//      file_name (in)  file name of origin of blob data or NULL if unknown
-//
-//  return value:
-//      pointer to new bloblist_t or NULL if out of memory
-//
-//  caveat:
-//      the ownership of the blob goes to the bloblist; mime_type and file_name
-//      are being copied, the originals remain in the ownership of the caller
-
-DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_type,
-        const char *file_name);
-
-
-// free_bloblist() - free bloblist
-//
-//  parameters:
-//      bloblist (in)   bloblist to free
-
-DYNAMIC_API void free_bloblist(bloblist_t *bloblist);
-
-
-// bloblist_dup() - duplicate bloblist
-//
-//  parameters:
-//      src (in)    bloblist to duplicate
-//
-//  return value:
-//      pointer to a new bloblist_t or NULL if out of memory
-//
-//  caveat:
-//      this is an expensive operation because all blobs are copied
-
-DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src);
-
-// bloblist_add() - add reference to a blob to bloblist
-//
-//  parameters:
-//      bloblist (in)   bloblist to add to
-//      blob (in)       blob
-//      size (in)       size of the blob
-//      mime_type (in)  MIME type of the blob or NULL if unknown
-//      file_name (in)  file name of the blob or NULL if unknown
-//
-//  return value:
-//      pointer to the last element of bloblist or NULL if out of memory
-//
-//  caveat:
-//      the ownership of the blob goes to the bloblist; mime_type and file_name
-//      are being copied, the originals remain in the ownership of the caller
-
-DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t size,
-        const char *mime_type, const char *file_name);
-
-
-typedef struct _stringpair_t {
-    char * key;
-    char * value;
-} stringpair_t;
-
-
-// new_stringpair() - allocate new stringpair_t
-//
-//  parameters:
-//      key (in)        utf-8 string used as key
-//      value (in)      utf-8 string containing the value
-//
-//  return value:
-//      pointer to stringpair_t or NULL on failure
-//
-//  caveat:
-//      key and value are copied and remain in the ownership of the caller
-
-DYNAMIC_API stringpair_t * new_stringpair(const char *key, const char *value);
-
-
-// free_stringpair() - free memory allocated by stringpair_t
-//
-//  parameters:
-//      pair (in)       pointer to stringpair_t to free
-
-DYNAMIC_API void free_stringpair(stringpair_t * pair);
-
-
-// stringpair_dup() - duplicate stringpair_t (deep copy)
-//
-//  parameters:
-//      src (in)        pointer to stringpair_t to duplicate
-//
-//  return value:
-//      pointer to copy of src or NULL on failure
-
-DYNAMIC_API stringpair_t * stringpair_dup(const stringpair_t *src);
-
-
-typedef enum _rbt_color_t {
-    rbt_red = 0,
-    rbt_black
-} rbt_color_t;
-
-// stringpair_map_t is implemented as red-black-tree
-
-typedef struct _stringpair_map_t {
-    rbt_color_t color;
-    struct _stringpair_map_t *parent_ref;
-    struct _stringpair_map_t *left;
-    struct _stringpair_map_t *right;
-
-    stringpair_t *pair;
-} stringpair_map_t;
-
-
-// new_stringpair_map() - allocate root node of new stringpair_map_t
-//
-//  parameters:
-//      pair (in)       optional pointer to pair for root node or NULL
-//
-//  return value:
-//      pointer to rood node of new stringpair_map_t or NULL on failure
-//
-//  caveat:
-//      if a pair is given it is being copied; the original remains in the
-//      ownership of the caller
-
-DYNAMIC_API stringpair_map_t * new_stringpair_map(const stringpair_t *pair);
-
-
-// free_stringpair_map() - free memory allocated by stringpair_map_t
-//
-//  parameters:
-//      map (in)        pointer to stringpair_map_t to release
-
-DYNAMIC_API void free_stringpair_map(stringpair_map_t *map);
-
-
-// stringpair_map_dup() - duplicate stringpair_map_t (deep copy)
-//
-//  parameters:
-//      src (in)        pointer to stringpair_map_t to duplicate
-//
-//  return value:
-//      pointer to copy of src of NULL on failure
-
-DYNAMIC_API stringpair_map_t * stringpair_map_dup(const stringpair_map_t *src);
-
-
-// stringpair_map_find() - find node with key
-//
-//  parameters:
-//      map (in)        pointer to map to search
-//      key (in)        pointer to key to search for
-//
-//  return value:
-//      pointer to node with result or NULL if not found
-
-DYNAMIC_API stringpair_map_t * stringpair_map_find(
-        stringpair_map_t *map,
-        const char *key
-    );
-
-
-// stringpair_map_add() - add stringpair_t to map
-//
-//  parameters:
-//      map (in)        pointer to map to add to
-//      pair (in)       pointer to pair to add
-//
-//  return value:
-//      pointer to node with added value
-//
-//  caveat:
-//      a copy of pair is added to the map; the original pair remains in the
-//      ownership of the caller
-
-DYNAMIC_API stringpair_map_t * stringpair_map_add(
-        stringpair_map_t *map,
-        stringpair_t * pair
-    );
-
 
 typedef enum _PEP_enc_format {
     PEP_enc_none = 0,                       // message is in pieces and nor
@@ -332,7 +79,7 @@ typedef struct _message {
                                             // refered
     stringlist_t *keywords;                 // list of UTF-8 strings with keywords
     char *comments;                         // UTF-8 string with comments
-    stringpair_map_t *opt_fields;           // optional fields
+    stringpair_list_t *opt_fields;          // optional fields
     PEP_enc_format enc_format;              // format of encrypted data
 } message;
 

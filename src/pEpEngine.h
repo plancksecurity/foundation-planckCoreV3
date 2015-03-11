@@ -8,16 +8,8 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-#ifdef WIN32
-#ifdef _EXPORT_PEP_ENGINE_DLL
-#define DYNAMIC_API __declspec(dllexport)
-#else
-#define DYNAMIC_API __declspec(dllimport)
-#endif
-#else
-#define DYNAMIC_API
-#endif
-
+#include "dynamic_api.h"
+#include "stringlist.h"
 
 #define PEP_VERSION "1.0"
 
@@ -114,90 +106,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session);
 //	    are done
 
 DYNAMIC_API void release(PEP_SESSION session);
-
-
-typedef struct _stringlist_t {
-    char *value;
-    struct _stringlist_t *next;
-} stringlist_t;
-
-
-// new_stringlist() - allocate a new stringlist
-//
-//  parameters:
-//      value (in)        initial value as C string or NULL for empty list
-//
-//  return value:
-//      pointer to stringlist_t object or NULL if out of memory
-//
-//  caveat:
-//      the value is being copied before being added to the list
-//      the original string is still being owned by the caller
-
-DYNAMIC_API stringlist_t *new_stringlist(const char *value);
-
-
-// stringlist_dup() - duplicate a stringlist
-//
-//  parameters:
-//      src (in)            stringlist to copy
-//
-//  return value:
-//      pointer to stringlist_t object or NULL if out of memory
-
-DYNAMIC_API stringlist_t *stringlist_dup(const stringlist_t *src);
-
-
-// stringlist_add() - add key to stringlist
-//
-//  parameters:
-//      stringlist (in)     stringlist struct or NULL to create a new one
-//      value (in)          value as C string
-//
-//  return value:
-//      pointer to last element in stringlist or NULL if out of memory
-//
-//  caveat:
-//      the value is being copied before being added to the list
-//      the original string is still being owned by the caller
-
-DYNAMIC_API stringlist_t *stringlist_add(stringlist_t *stringlist, const char *value);
-
-
-// stringlist_append() - append stringlist to stringlist
-//
-//  parameters:
-//      stringlist (in)     stringlist struct to append to
-//      second (in)         stringlist struct to append
-//
-//  return value:
-//      pointer to last element in stringlist or NULL if out of memory
-//
-//  caveat:
-//      all values are being copied before being added to the list
-//      the original values are still being owned by the caller
-
-DYNAMIC_API stringlist_t *stringlist_append(stringlist_t *stringlist,
-        stringlist_t *second);
-
-
-// stringlist_length() - get length of stringlist
-//
-//  parameters:
-//      stringlist (in)     stringlist struct to determine length of
-//
-//  return value:
-//      length of stringlist in number of elements
-
-DYNAMIC_API int stringlist_length(const stringlist_t *stringlist);
-
-
-// free_stringlist() - free memory occupied by stringlist
-//
-//  parameters:
-//      stringlist (in)    stringlist to free
-
-DYNAMIC_API void free_stringlist(stringlist_t *stringlist);
 
 
 // decrypt_and_verify() - decrypt and/or verify a message
