@@ -159,19 +159,19 @@ DYNAMIC_API void free_stringpair_list(stringpair_list_t *stringpair_list)
     }
 }
 
-DYNAMIC_API stringpair_t *stringpair_list_find(
+DYNAMIC_API stringpair_list_t *stringpair_list_find(
         stringpair_list_t *stringpair_list,
         const char *key
     )
 {
     assert(key);
 
-    if (stringpair_list == NULL)
-        return NULL;
+    stringpair_list_t *_l;
+    for (_l = stringpair_list; _l; _l = _l->next) {
+        if (strcoll(key, _l->value->key) == 0)
+            return _l;
+    }
 
-    if (strcoll(stringpair_list->value->key, key) == 0)
-        return stringpair_list->value;
-    else
-        return stringpair_list_find(stringpair_list->next, key);
+    return NULL;
 }
 

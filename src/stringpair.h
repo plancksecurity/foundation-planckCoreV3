@@ -149,9 +149,9 @@ DYNAMIC_API void free_stringpair_list(stringpair_list_t *stringpair_list);
 //      key (in)                key to search for
 //
 //  return value:
-//      stringpair_t if found or NULL if not
+//      node with result if found or NULL if not
 
-DYNAMIC_API stringpair_t *stringpair_list_find(
+DYNAMIC_API stringpair_list_t *stringpair_list_find(
         stringpair_list_t *stringpair_list,
         const char *key
     );
