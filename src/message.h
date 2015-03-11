@@ -1,9 +1,11 @@
 #pragma once
 
 #include <time.h>
+
 #include "pEpEngine.h"
 #include "identity_list.h"
 #include "bloblist.h"
+#include "stringlist.h"
 #include "stringpair.h"
 
 #ifdef __cplusplus
