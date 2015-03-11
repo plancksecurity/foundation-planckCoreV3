@@ -7,7 +7,7 @@
 
 DYNAMIC_API stringlist_t *new_stringlist(const char *value)
 {
-    stringlist_t *result = (stringlist_t *) calloc(1, sizeof(stringlist_t));
+    stringlist_t *result = calloc(1, sizeof(stringlist_t));
     if (result && value) {
         result->value = strdup(value);
         assert(result->value);

@@ -684,7 +684,7 @@ PEP_STATUS pgp_encrypt_and_sign(
             return PEP_UNKNOWN_ERROR;
     }
 
-    rcpt = (gpgme_key_t *) calloc(stringlist_length(keylist) + 1,
+    rcpt = calloc(stringlist_length(keylist) + 1,
         sizeof(gpgme_key_t));
     assert(rcpt);
     if (rcpt == NULL) {

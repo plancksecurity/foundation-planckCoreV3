@@ -33,7 +33,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 	assert(session);
 	*session = NULL;
 
-    pEpSession *_session = (pEpSession *) calloc(1, sizeof(pEpSession));
+    pEpSession *_session = calloc(1, sizeof(pEpSession));
 	assert(_session);
 	if (_session == NULL)
 		goto enomem;

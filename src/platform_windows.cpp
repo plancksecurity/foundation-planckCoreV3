@@ -205,7 +205,7 @@ long random(void)
 
 char *strndup(const char *s1, size_t n)
 {
-    char *str = (char *) calloc(n + 1, 1);
+    char *str = calloc(n + 1, 1);
     if (str == NULL)
         return NULL;
 
