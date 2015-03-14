@@ -402,19 +402,6 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
         }
     }
 
-    /* if (subject) */ {
-        char *_subject = mailmime_encode_subject_header("utf-8", subject, 1);
-        if (_subject == NULL)
-            goto enomem;
-
-        r = _append_field(fields_list, MAILIMF_FIELD_SUBJECT,
-                (_new_func_t) mailimf_subject_new, _subject);
-        if (r) {
-            free(_subject);
-            goto enomem;
-        }
-    }
-
     if (msg->sent) {
         struct mailimf_date_time * dt = timestamp_to_etpantime(msg->sent);
         if (dt == NULL)
@@ -451,6 +438,19 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
                 (_new_func_t) mailimf_to_new, to);
         if (r) {
             mailimf_address_list_free(to);
+            goto enomem;
+        }
+    }
+
+    /* if (subject) */ {
+        char *_subject = mailmime_encode_subject_header("utf-8", subject, 1);
+        if (_subject == NULL)
+            goto enomem;
+
+        r = _append_field(fields_list, MAILIMF_FIELD_SUBJECT,
+                (_new_func_t) mailimf_subject_new, _subject);
+        if (r) {
+            free(_subject);
             goto enomem;
         }
     }
@@ -605,6 +605,15 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
     assert(mimetext);
 
     *mimetext = NULL;
+
+    if (msg->enc_format == PEP_enc_none_MIME) {
+        assert(0); // why encoding again what is already encoded?
+        buf = strdup(msg->longmsg);
+        if (buf == NULL)
+            return PEP_OUT_OF_MEMORY;
+        *mimetext = buf;
+        return PEP_STATUS_OK;
+    }
 
     subject = (msg->shortmsg) ? msg->shortmsg : "pEp";
     plaintext = (msg->longmsg) ? msg->longmsg : "";

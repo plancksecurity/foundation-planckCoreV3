@@ -759,7 +759,7 @@ PEP_STATUS pgp_encrypt_and_sign(
         // TODO: make things less memory consuming
         // the following algorithm allocates a buffer for the complete text
 
-        _buffer = (char *) malloc(length + 1);
+        _buffer = malloc(length + 1);
         assert(_buffer);
         if (_buffer == NULL) {
             for (j = 0; j<stringlist_length(keylist); j++)

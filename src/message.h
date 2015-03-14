@@ -31,12 +31,10 @@ typedef enum _PEP_enc_format {
     PEP_enc_none = 0,                       // message is in pieces and nor
                                             // encoded nor encrypted
     PEP_enc_none_MIME,                      // message is MIME encoded but not
-                                            // encrypted
-    PEP_enc_pieces,                         // message is encrypted but not
-                                            // MIME encoded
-    PEP_enc_MIME_multipart,                 // message is encrypted and MIME
-                                            // encoded; this is being used for
-                                            // PGP/MIME as well as S/MIME
+                                            // encrypted; all code is in longmsg
+    PEP_enc_pieces,                         // inline PGP + PGP extensions
+    PEP_ecn_S_MIME,                         // RFC5751
+    PEP_enc_PGP_MIME,                       // RFC3156
     PEP_enc_PEP                             // pEp encryption format
 } PEP_enc_format;
 

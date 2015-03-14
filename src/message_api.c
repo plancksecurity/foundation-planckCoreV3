@@ -231,10 +231,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         size_t csize = 0;
 
         switch (enc_format) {
-        case PEP_enc_MIME_multipart: {
+        case PEP_enc_PGP_MIME: {
             bool free_ptext = false;
 
-            msg->enc_format = PEP_enc_MIME_multipart;
+            msg->enc_format = PEP_enc_PGP_MIME;
 
             if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0) {
                 ptext = combine_short_and_long(src->shortmsg, src->longmsg);
@@ -247,7 +247,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             }
 
             if (src->enc_format == PEP_enc_none) {
-                message *_src = (message *) malloc(sizeof(message));
+                message *_src = malloc(sizeof(message));
                 assert(_src);
                 if (_src == NULL)
                     goto enomem;
@@ -408,6 +408,11 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 {
     PEP_STATUS status = PEP_STATUS_OK;
     message *msg = NULL;
+    char *ctext;
+    size_t csize;
+    char *ptext;
+    size_t psize;
+    stringlist_t *keylist;
 
     assert(session);
     assert(src);
@@ -445,18 +450,15 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                 NOT_IMPLEMENTED
             }
 
-            char *ctext = src->longmsg;
-            size_t csize = strlen(src->longmsg);
-            char *ptext;
-            size_t psize;
-            stringlist_t *keylist;
+            ctext = src->longmsg;
+            csize = strlen(src->longmsg);
 
             status = decrypt_and_verify(session, ctext, csize, &ptext, &psize,
                     &keylist);
             if (ptext == NULL)
                 goto pep_error;
 
-            if (src->enc_format == PEP_enc_MIME_multipart) {
+            if (src->enc_format == PEP_enc_PGP_MIME) {
                 if (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0)
                 {
                     char * shortmsg;
