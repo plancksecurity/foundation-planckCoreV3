@@ -1185,6 +1185,68 @@ pep_error:
     return status;
 }
 
+static PEP_STATUS interpret_MIME(
+        struct mailmime *mime,
+        message *msg
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(mime);
+    assert(msg);
+
+    struct mailmime_content *content = mime->mm_content_type;
+    if (content) {
+        if (msg->longmsg == NULL && content->ct_type &&
+                content->ct_type->tp_type == MAILMIME_TYPE_COMPOSITE_TYPE
+                && content->ct_type->tp_data.tp_composite_type
+                && content->ct_type->tp_data.tp_composite_type->ct_type ==
+                        MAILMIME_COMPOSITE_TYPE_MULTIPART
+                && content->ct_subtype
+                && strcmp(content->ct_subtype, "alternative") == 0) {
+
+            clist *partlist = mime->mm_data.mm_multipart.mm_mp_list;
+            if (partlist == NULL)
+                return PEP_ILLEGAL_VALUE;
+
+            clistiter *cur;
+            for (cur = clist_begin(partlist); cur; cur = clist_next(cur)) {
+                struct mailmime *part= clist_content(cur);
+                if (part == NULL)
+                    return PEP_ILLEGAL_VALUE;
+
+
+            }
+        }
+        if (content->ct_type &&
+                content->ct_type->tp_type == MAILMIME_TYPE_COMPOSITE_TYPE
+                && content->ct_type->tp_data.tp_composite_type
+                && content->ct_type->tp_data.tp_composite_type->ct_type ==
+                        MAILMIME_COMPOSITE_TYPE_MULTIPART) {
+
+            clist *partlist = mime->mm_data.mm_multipart.mm_mp_list;
+            if (partlist == NULL)
+                return PEP_ILLEGAL_VALUE;
+
+            clistiter *cur;
+            for (cur = clist_begin(partlist); cur; cur = clist_next(cur)) {
+                struct mailmime *part= clist_content(cur);
+                if (part == NULL)
+                    return PEP_ILLEGAL_VALUE;
+
+                status = interpret_MIME(part, msg);
+                if (status != PEP_STATUS_OK)
+                    return status;
+            }
+        }
+        else {
+
+        }
+    }
+
+    return PEP_STATUS_OK;
+}
+
 static PEP_STATUS interpret_PGP_MIME(struct mailmime *mime, message *msg)
 {
     assert(mime);
@@ -1310,6 +1372,10 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
                 goto pep_error;
         }
         else {
+            status = interpret_MIME(mime->mm_data.mm_message.mm_msg_mime,
+                    _msg);
+            if (status != PEP_STATUS_OK)
+                goto pep_error;
         }
     }
 
