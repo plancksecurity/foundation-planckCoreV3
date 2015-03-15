@@ -147,7 +147,7 @@ static PEP_STATUS mime_html_text(
     if (mime == NULL)
         goto enomem;
 
-    submime = get_text_part("text/plain", plaintext, strlen(plaintext),
+    submime = get_text_part("msg.txt", "text/plain", plaintext, strlen(plaintext),
             MAILMIME_MECHANISM_QUOTED_PRINTABLE);
     assert(submime);
     if (submime == NULL)
@@ -163,7 +163,7 @@ static PEP_STATUS mime_html_text(
         submime = NULL;
     }
 
-    submime = get_text_part("text/html", htmltext, strlen(htmltext),
+    submime = get_text_part("msg.html", "text/html", htmltext, strlen(htmltext),
             MAILMIME_MECHANISM_QUOTED_PRINTABLE);
     assert(submime);
     if (submime == NULL)
@@ -585,17 +585,23 @@ pep_error:
     return status;
 }
 
-DYNAMIC_API PEP_STATUS mime_encode_message(
+bool is_PGP_message(const char *text)
+{
+    assert(text);
+    if (text == NULL)
+        return false;
+
+    return strncmp(text, "-----BEGIN PGP MESSAGE-----", 27) == 0;
+}
+
+static PEP_STATUS mime_encode_message_plain(
         const message *msg,
         bool omit_fields,
-        char **mimetext
+        struct mailmime **result
     )
 {
-    struct mailmime * msg_mime = NULL;
     struct mailmime * mime = NULL;
     struct mailmime * submime = NULL;
-    struct mailimf_fields * fields = NULL;
-    char *buf = NULL;
     int r;
     PEP_STATUS status;
     char *subject;
@@ -603,18 +609,7 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
     char *htmltext;
 
     assert(msg);
-    assert(mimetext);
-
-    *mimetext = NULL;
-
-    if (msg->mime == PEP_MIME) {
-        assert(0); // why encoding again what is already encoded?
-        buf = strdup(msg->longmsg);
-        if (buf == NULL)
-            return PEP_OUT_OF_MEMORY;
-        *mimetext = buf;
-        return PEP_STATUS_OK;
-    }
+    assert(result);
 
     subject = (msg->shortmsg) ? msg->shortmsg : "pEp";
     plaintext = (msg->longmsg) ? msg->longmsg : "";
@@ -626,8 +621,12 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
             goto pep_error;
     }
     else {
-        mime = get_text_part("text/plain", plaintext, strlen(plaintext),
-                MAILMIME_MECHANISM_QUOTED_PRINTABLE);
+        if (is_PGP_message(plaintext))
+            mime = get_text_part("msg.asc", "application/octet-stream", plaintext,
+                    strlen(plaintext), MAILMIME_MECHANISM_7BIT);
+        else
+            mime = get_text_part("msg.txt", "text/plain", plaintext, strlen(plaintext),
+                    MAILMIME_MECHANISM_QUOTED_PRINTABLE);
         assert(mime);
         if (mime == NULL)
             goto enomem;
@@ -673,6 +672,138 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
         }
     }
 
+    *result = mime;
+    return PEP_STATUS_OK;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+pep_error:
+    if (mime)
+        mailmime_free(mime);
+
+    if (submime)
+        mailmime_free(submime);
+
+    return status;
+}
+
+static PEP_STATUS mime_encode_message_PGP_MIME(
+        const message * msg,
+        bool omit_fields,
+        struct mailmime **result
+    )
+{
+    struct mailmime * mime = NULL;
+    struct mailmime * submime = NULL;
+	struct mailmime_parameter * param;
+    int r;
+    PEP_STATUS status;
+    char *subject;
+    char *plaintext;
+
+    assert(msg->longmsg);
+
+    subject = (msg->shortmsg) ? msg->shortmsg : "pEp";
+    plaintext = msg->longmsg;
+
+    mime = part_multiple_new("multipart/encrypted", NULL);
+    assert(mime);
+    if (mime == NULL)
+        goto enomem;
+
+    param = mailmime_param_new_with_data("protocol", "application/pgp-encrypted");
+    clist_append(mime->mm_content_type->ct_parameters, param);
+
+    submime = get_pgp_encrypted_part();
+    assert(submime);
+    if (submime == NULL)
+        goto enomem;
+
+    r = mailmime_smart_add_part(mime, submime);
+    assert(r == MAILIMF_NO_ERROR);
+    if (r == MAILIMF_ERROR_MEMORY) {
+        goto enomem;
+    }
+    else {
+        // mailmime_smart_add_part() takes ownership of submime
+        submime = NULL;
+    }
+
+    submime = get_text_part("msg.asc", "application/octet-stream", plaintext,
+            strlen(plaintext), MAILMIME_MECHANISM_7BIT);
+    assert(submime);
+    if (submime == NULL)
+        goto enomem;
+
+    r = mailmime_smart_add_part(mime, submime);
+    assert(r == MAILIMF_NO_ERROR);
+    if (r == MAILIMF_ERROR_MEMORY) {
+        goto enomem;
+    }
+    else {
+        // mailmime_smart_add_part() takes ownership of submime
+        submime = NULL;
+    }
+
+    *result = mime;
+    return PEP_STATUS_OK;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+pep_error:
+    if (mime)
+        mailmime_free(mime);
+
+    if (submime)
+        mailmime_free(submime);
+
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS mime_encode_message(
+        const message * msg,
+        bool omit_fields,
+        char **mimetext
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    struct mailmime * msg_mime = NULL;
+    struct mailmime * mime = NULL;
+    struct mailimf_fields * fields = NULL;
+    char *buf = NULL;
+    int r;
+
+    assert(msg);
+    assert(msg->mime == PEP_MIME_none);
+    assert(mimetext);
+
+    *mimetext = NULL;
+
+    switch (msg->enc_format) {
+        case PEP_enc_none:
+            status = mime_encode_message_plain(msg, omit_fields, &mime);
+            break;
+
+        case PEP_enc_pieces:
+            status = mime_encode_message_plain(msg, omit_fields, &mime);
+            break;
+
+        case PEP_enc_S_MIME:
+            NOT_IMPLEMENTED
+                
+        case PEP_enc_PGP_MIME:
+            status = mime_encode_message_PGP_MIME(msg, omit_fields, &mime);
+            break;
+
+        case PEP_enc_PEP:
+            NOT_IMPLEMENTED
+    }
+
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+
     msg_mime = mailmime_new_message_data(NULL);
     assert(msg_mime);
     if (msg_mime == NULL)
@@ -683,6 +814,7 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
         mailmime_free(mime);
         goto enomem;
     }
+    mime = NULL;
 
     if (!omit_fields) {
         status = build_fields(msg, &fields);
@@ -710,9 +842,6 @@ pep_error:
     else
         if (mime)
             mailmime_free(mime);
-
-    if (submime)
-        mailmime_free(submime);
 
     return status;
 }

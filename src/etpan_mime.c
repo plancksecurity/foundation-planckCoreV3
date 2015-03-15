@@ -146,31 +146,59 @@ struct mailmime * part_new_empty(
 	return NULL;
 }
 
+struct mailmime * get_pgp_encrypted_part(void)
+{
+	struct mailmime * mime;
+	struct mailmime_fields * mime_fields;
+	struct mailmime_content * content;
+
+	content = mailmime_content_new_with_str("application/pgp-encrypted");
+    mime_fields = mailmime_fields_new_empty();
+	mime = part_new_empty(content, mime_fields, NULL, 1);
+    mailmime_set_body_text(mime, "Version: 1\n", 10);
+
+	return mime;
+}
+
 struct mailmime * get_text_part(
+        const char * filename,
         const char * mime_type,
         const char * text,
         size_t length,
         int encoding_type
     )
 {
+    char * disposition_name = NULL;
 	struct mailmime_fields * mime_fields;
 	struct mailmime * mime;
 	struct mailmime_content * content;
 	struct mailmime_parameter * param;
 	struct mailmime_disposition * disposition;
-	struct mailmime_mechanism * encoding;
+	struct mailmime_mechanism * encoding = NULL;
     
-	encoding = mailmime_mechanism_new(encoding_type, NULL);
+    if (filename != NULL)
+        disposition_name = strdup(filename);
+
+    if (encoding_type)
+        encoding = mailmime_mechanism_new(encoding_type, NULL);
+
 	disposition = mailmime_disposition_new_with_data(MAILMIME_DISPOSITION_TYPE_INLINE,
-		NULL, NULL, NULL, NULL, (size_t) -1);
+		disposition_name, NULL, NULL, NULL, (size_t) -1);
+
 	mime_fields = mailmime_fields_new_with_data(encoding,
 		NULL, NULL, disposition, NULL);
 
 	content = mailmime_content_new_with_str(mime_type);
-	param = mailmime_param_new_with_data("charset", "utf-8");
-	clist_append(content->ct_parameters, param);
+    
+    if (encoding_type != MAILMIME_MECHANISM_7BIT) {
+        param = mailmime_param_new_with_data("charset", "utf-8");
+        clist_append(content->ct_parameters, param);
+    }
+
 	mime = part_new_empty(content, mime_fields, NULL, 1);
-	mailmime_set_body_text(mime, (char *) text, length);
+
+    if (text)
+        mailmime_set_body_text(mime, (char *) text, length);
 	
 	return mime;
 }

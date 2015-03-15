@@ -1,0 +1,2 @@
+- check if own key is good; if not: create a new keypair
+

@@ -11,7 +11,10 @@ struct mailmime * part_new_empty(
         int force_single
     );
 
+struct mailmime * get_pgp_encrypted_part(void);
+
 struct mailmime * get_text_part(
+        const char * filename,
         const char * mime_type,
         const char * text,
         size_t length,
