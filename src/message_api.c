@@ -554,24 +554,6 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     *dst = NULL;
  
-    if (src->enc_format < PEP_enc_pieces) {
-        assert(0); // message is not encrypted
-        if (mime == src->mime) {
-            msg = message_dup(src);
-            if (msg == NULL)
-                goto enomem;
-            *dst = msg;
-            return PEP_STATUS_OK;
-        }
-        else {
-            // TODO: we don't re-encode yet
-            NOT_IMPLEMENTED
-        }
-    }
-
-    // src message is encrypted
-    assert(src->enc_format >= PEP_enc_pieces);
-
     if (src->mime == PEP_MIME_fields_omitted || src->mime == PEP_MIME) {
         message *_src = NULL;
         status = mime_decode_message(src->longmsg, &_src);
@@ -590,8 +572,13 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         free_src = true;
     }
 
-    // src message is not MIME encoded but still encrypted
+    // src message is not MIME encoded
     assert(src->mime == PEP_MIME_none);
+
+    if (!is_PGP_message_text(src->longmsg)) {
+        status = PEP_UNENCRYPTED;
+        goto pep_error;
+    }
 
     ctext = src->longmsg;
     csize = strlen(src->longmsg);

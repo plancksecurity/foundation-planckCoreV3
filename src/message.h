@@ -108,13 +108,13 @@ DYNAMIC_API message *new_message(
 // free_message() - free message struct
 //
 //  parameters:
-//      src (in)        message struct to free
+//      msg (in)        message struct to free
 //
 //  caveat:
 //      raw data as well as referenced other messages aren't freed and remain
 //      in the ownership of the caller
 
-DYNAMIC_API void free_message(message *src);
+DYNAMIC_API void free_message(message *msg);
 
 
 // message_dup - duplicate message (deep copy)

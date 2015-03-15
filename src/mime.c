@@ -11,6 +11,15 @@
 
 #define NOT_IMPLEMENTED assert(0);
 
+DYNAMIC_API bool is_PGP_message_text(const char *text)
+{
+    assert(text);
+    if (text == NULL)
+        return false;
+
+    return strncmp(text, "-----BEGIN PGP MESSAGE-----", 27) == 0;
+}
+
 static PEP_STATUS render_mime(struct mailmime *mime, char **mimetext)
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -585,15 +594,6 @@ pep_error:
     return status;
 }
 
-bool is_PGP_message(const char *text)
-{
-    assert(text);
-    if (text == NULL)
-        return false;
-
-    return strncmp(text, "-----BEGIN PGP MESSAGE-----", 27) == 0;
-}
-
 static PEP_STATUS mime_encode_message_plain(
         const message *msg,
         bool omit_fields,
@@ -621,7 +621,7 @@ static PEP_STATUS mime_encode_message_plain(
             goto pep_error;
     }
     else {
-        if (is_PGP_message(plaintext))
+        if (is_PGP_message_text(plaintext))
             mime = get_text_part("msg.asc", "application/octet-stream", plaintext,
                     strlen(plaintext), MAILMIME_MECHANISM_7BIT);
         else
@@ -1185,30 +1185,45 @@ pep_error:
     return status;
 }
 
-static PEP_STATUS interpret_PGP_MIME(struct mailmime *mime, message **msg)
+static PEP_STATUS interpret_PGP_MIME(struct mailmime *mime, message *msg)
 {
-    PEP_STATUS status = PEP_STATUS_OK;
-    message *_msg = NULL;
-
     assert(mime);
     assert(msg);
 
-    *msg = NULL;
+    clist *partlist = mime->mm_data.mm_multipart.mm_mp_list;
+    if (partlist == NULL)
+        return PEP_ILLEGAL_VALUE;
 
-    _msg = calloc(1, sizeof(message));
-    assert(_msg);
-    if (_msg == NULL)
-        goto enomem;
+    clistiter *cur = clist_begin(partlist);
+    if (cur == NULL)
+        return PEP_ILLEGAL_VALUE;
 
-    *msg = _msg;
+    cur = clist_next(cur);
+    if (cur == NULL)
+        return PEP_ILLEGAL_VALUE;
+
+    struct mailmime *second = clist_content(cur);
+    if (second == NULL)
+        return PEP_ILLEGAL_VALUE;
+
+    if (second->mm_body == NULL)
+        return PEP_ILLEGAL_VALUE;
+
+    const char *text = second->mm_body->dt_data.dt_text.dt_data;
+    if (text == NULL)
+        return PEP_ILLEGAL_VALUE;
+
+    char *_text = strdup(text);
+    if (_text == NULL)
+        return PEP_OUT_OF_MEMORY;
+
+    msg->mime = PEP_MIME_fields_omitted;
+    msg->enc_format = PEP_enc_PGP_MIME;
+
+    free(msg->longmsg);
+    msg->longmsg = _text;
+
     return PEP_STATUS_OK;
-
-enomem:
-    status = PEP_OUT_OF_MEMORY;
-
-pep_error:
-    free_message(msg);
-    return status;
 }
 
 static bool parameter_has_value(
@@ -1219,10 +1234,15 @@ static bool parameter_has_value(
 {
     clistiter *cur;
 
+    assert(list);
+    assert(name);
+    assert(value);
+
     for (cur = clist_begin(list); cur != NULL ; cur = clist_next(cur)) {
         struct mailmime_parameter * param = clist_content(cur);
-        if (strcmp(name, param->pa_name) == 0 &&
-                strcmp(value, param->pa_value) == 0)
+        if (param &&
+                param->pa_name && strcmp(name, param->pa_name) == 0 &&
+                param->pa_value && strcmp(value, param->pa_value) == 0)
             return true;
     }
 
@@ -1256,30 +1276,42 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
             goto err_mime;
     }
 
-    struct mailmime_content *content =
-            mime->mm_data.mm_message.mm_msg_mime->mm_content_type;
+    _msg = calloc(1, sizeof(message));
+    assert(_msg);
+    if (_msg == NULL)
+        goto enomem;
 
-    if (content->ct_type->tp_type == MAILMIME_TYPE_COMPOSITE_TYPE
-            && content->ct_type->tp_data.tp_composite_type->ct_type ==
-                    MAILMIME_COMPOSITE_TYPE_MULTIPART
-            && strcmp(content->ct_subtype, "encrypted") == 0
-            && parameter_has_value(content->ct_parameters, "protocol",
-                    "application/pgp-encrypted")) {
-
-        status = interpret_PGP_MIME(mime, &_msg);
+    if (mime->mm_data.mm_message.mm_fields
+            && mime->mm_data.mm_message.mm_fields->fld_list) {
+        clist * _fieldlist = mime->mm_data.mm_message.mm_fields->fld_list;
+        status = read_fields(_msg, _fieldlist);
         if (status != PEP_STATUS_OK)
             goto pep_error;
     }
-    else {
 
+    if (mime->mm_data.mm_message.mm_msg_mime) {
+        struct mailmime_content *content =
+                mime->mm_data.mm_message.mm_msg_mime->mm_content_type;
+
+        if (content->ct_type &&
+                content->ct_type->tp_type == MAILMIME_TYPE_COMPOSITE_TYPE
+                && content->ct_type->tp_data.tp_composite_type
+                && content->ct_type->tp_data.tp_composite_type->ct_type ==
+                        MAILMIME_COMPOSITE_TYPE_MULTIPART
+                && content->ct_subtype
+                && strcmp(content->ct_subtype, "encrypted") == 0
+                && content->ct_parameters
+                && parameter_has_value(content->ct_parameters, "protocol",
+                        "application/pgp-encrypted")) {
+
+            status = interpret_PGP_MIME(mime->mm_data.mm_message.mm_msg_mime,
+                    _msg);
+            if (status != PEP_STATUS_OK)
+                goto pep_error;
+        }
+        else {
+        }
     }
-
-    assert(_msg);
-
-    clist * _fieldlist = mime->mm_data.mm_message.mm_fields->fld_list;
-    status = read_fields(_msg, _fieldlist);
-    if (status != PEP_STATUS_OK)
-        goto pep_error;
 
     mailmime_free(mime);
     *msg = _msg;

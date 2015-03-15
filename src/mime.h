@@ -7,6 +7,17 @@ extern "C" {
 #endif
 
 
+// is_PGP_message_text() - determine if text encodes a PGP message
+//
+//  parameters:
+//      text (in)               text to examine
+//
+//  return value:
+//      true if text is a PGP message, false otherwise
+
+DYNAMIC_API bool is_PGP_message_text(const char *text);
+
+
 // mime_encode_message() - encode a MIME message
 //
 //  parameters:

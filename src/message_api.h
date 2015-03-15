@@ -29,6 +29,8 @@ extern "C" {
 //
 //	caveat:
 //	    the ownership of the new message goes to the caller
+//	    if src is unencrypted this function returns PEP_UNENCRYPTED and sets
+//	    dst to NULL
 
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
