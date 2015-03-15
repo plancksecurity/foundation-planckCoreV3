@@ -18,6 +18,7 @@ static char * generate_boundary(const char * boundary_prefix)
     time_t now;
     char name[MAX_MESSAGE_ID];
     long value;
+    int r;
  
     id[MAX_MESSAGE_ID - 1] = 0;
     name[MAX_MESSAGE_ID - 1] = 0;
@@ -25,7 +26,9 @@ static char * generate_boundary(const char * boundary_prefix)
     now = time(NULL);
 
     value = random();
-    gethostname(name, MAX_MESSAGE_ID - 1);
+    r = gethostname(name, MAX_MESSAGE_ID - 1);
+    if (r == -1)
+        return NULL;
     
     if (boundary_prefix == NULL)
         boundary_prefix = "";
@@ -44,9 +47,15 @@ struct mailmime * part_new_empty(
     )
 {
 	struct mailmime * build_info;
-	clist * list;
+	clist * list = NULL;
 	int r;
 	int mime_type;
+    char * attr_name = NULL;
+    char * attr_value = NULL;
+    struct mailmime_parameter * param = NULL;
+    clist * parameters = NULL;
+    char * boundary = NULL;
+
 
 	list = NULL;
 
@@ -56,108 +65,130 @@ struct mailmime * part_new_empty(
 	else {
 		switch (content->ct_type->tp_type) {
 			case MAILMIME_TYPE_DISCRETE_TYPE:
-			mime_type = MAILMIME_SINGLE;
-			break;
+                mime_type = MAILMIME_SINGLE;
+                break;
 
 			case MAILMIME_TYPE_COMPOSITE_TYPE:
-			switch (content->ct_type->tp_data.tp_composite_type->ct_type) {
-				case MAILMIME_COMPOSITE_TYPE_MULTIPART:
-				mime_type = MAILMIME_MULTIPLE;
-				break;
+                switch (content->ct_type->tp_data.tp_composite_type->ct_type) {
+                    case MAILMIME_COMPOSITE_TYPE_MULTIPART:
+                        mime_type = MAILMIME_MULTIPLE;
+                        break;
 
-				case MAILMIME_COMPOSITE_TYPE_MESSAGE:
-				if (strcasecmp(content->ct_subtype, "rfc822") == 0)
-					mime_type = MAILMIME_MESSAGE;
-				else
-					mime_type = MAILMIME_SINGLE;
-				break;
+                    case MAILMIME_COMPOSITE_TYPE_MESSAGE:
+                        if (strcasecmp(content->ct_subtype, "rfc822") == 0)
+                            mime_type = MAILMIME_MESSAGE;
+                        else
+                            mime_type = MAILMIME_SINGLE;
+                        break;
 
-				default:
-				goto err;
-			}
-			break;
+                    default:
+                        goto enomem;
+                }
+                break;
 
 			default:
-			goto err;
+                goto enomem;
 		}
 	}
 
 	if (mime_type == MAILMIME_MULTIPLE) {
-		char * attr_name;
-		char * attr_value;
-		struct mailmime_parameter * param;
-		clist * parameters;
-		char * boundary;
-
 		list = clist_new();
+        assert(list);
 		if (list == NULL)
-			goto err;
+			goto enomem;
 
 		attr_name = strdup("boundary");
+        assert(attr_name);
+        if (attr_name == NULL)
+            goto enomem;
+
 		boundary = generate_boundary(boundary_prefix);
+        assert(boundary);
 		attr_value = boundary;
-		if (attr_name == NULL) {
-			free(attr_name);
-			goto free_list;
-		}
+		if (attr_value == NULL)
+			goto enomem;
 
 		param = mailmime_parameter_new(attr_name, attr_value);
-		if (param == NULL) {
-			free(attr_value);
-			free(attr_name);
-			goto free_list;
-		}
+        assert(param);
+		if (param == NULL)
+			goto enomem;
+        attr_name = NULL;
+        attr_value = NULL;
 
 		if (content->ct_parameters == NULL) {
 			parameters = clist_new();
-			if (parameters == NULL) {
-				mailmime_parameter_free(param);
-				goto free_list;
-			}
+            assert(parameters);
+			if (parameters == NULL)
+				goto enomem;
 		}
-		else
+		else {
 			parameters = content->ct_parameters;
+        }
 
 		r = clist_append(parameters, param);
-		if (r) {
-			clist_free(parameters);
-			mailmime_parameter_free(param);
-			goto free_list;
-		}
+		if (r)
+			goto enomem;
+        param = NULL;
 
 		if (content->ct_parameters == NULL)
 			content->ct_parameters = parameters;
 	}
 
-	build_info = mailmime_new(mime_type,
-		NULL, 0, mime_fields, content,
-		NULL, NULL, NULL, list,
-		NULL, NULL);
-	if (build_info == NULL) {
-		clist_free(list);
-		return NULL;
-	}
+    build_info = mailmime_new(mime_type, NULL, 0, mime_fields, content, NULL,
+            NULL, NULL, list, NULL, NULL);
+	if (build_info == NULL)
+		goto enomem;
 
 	return build_info;
 
-	free_list:
-	clist_free(list);
-	err:
+enomem:
+    if (list)
+        clist_free(list);
+    free(attr_name);
+    free(attr_value);
+    if (content->ct_parameters == NULL)
+        if (parameters)
+            clist_free(parameters);
+
 	return NULL;
 }
 
 struct mailmime * get_pgp_encrypted_part(void)
 {
-	struct mailmime * mime;
-	struct mailmime_fields * mime_fields;
-	struct mailmime_content * content;
+	struct mailmime * mime = NULL;
+	struct mailmime_fields * mime_fields = NULL;
+	struct mailmime_content * content = NULL;
+    int r;
 
 	content = mailmime_content_new_with_str("application/pgp-encrypted");
+    if (content == NULL)
+        goto enomem;
+
     mime_fields = mailmime_fields_new_empty();
+    if (mime_fields == NULL)
+        goto enomem;
+
 	mime = part_new_empty(content, mime_fields, NULL, 1);
-    mailmime_set_body_text(mime, "Version: 1\n", 10);
+    if (mime == NULL)
+        goto enomem;
+    mime_fields = NULL;
+    content = NULL;
+
+    r = mailmime_set_body_text(mime, "Version: 1\n", 10);
+    if (r != 0)
+        goto enomem;
 
 	return mime;
+
+enomem:
+    if (content)
+        mailmime_content_free(content);
+    if (mime_fields)
+        mailmime_fields_free(mime_fields);
+    if (mime)
+        mailmime_free(mime);
+
+    return NULL;
 }
 
 struct mailmime * get_text_part(
@@ -169,38 +200,81 @@ struct mailmime * get_text_part(
     )
 {
     char * disposition_name = NULL;
-	struct mailmime_fields * mime_fields;
-	struct mailmime * mime;
-	struct mailmime_content * content;
-	struct mailmime_parameter * param;
-	struct mailmime_disposition * disposition;
+	struct mailmime_fields * mime_fields = NULL;
+	struct mailmime * mime = NULL;
+	struct mailmime_content * content = NULL;
+	struct mailmime_parameter * param = NULL;
+	struct mailmime_disposition * disposition = NULL;
 	struct mailmime_mechanism * encoding = NULL;
+    int r;
     
-    if (filename != NULL)
+    if (filename != NULL) {
         disposition_name = strdup(filename);
+        if (disposition_name == NULL)
+            goto enomem;
+    }
 
-    if (encoding_type)
+    if (encoding_type) {
         encoding = mailmime_mechanism_new(encoding_type, NULL);
+        if (encoding == NULL)
+            goto enomem;
+    }
 
-	disposition = mailmime_disposition_new_with_data(MAILMIME_DISPOSITION_TYPE_INLINE,
-		disposition_name, NULL, NULL, NULL, (size_t) -1);
+    disposition =
+            mailmime_disposition_new_with_data(MAILMIME_DISPOSITION_TYPE_INLINE,
+                    disposition_name, NULL, NULL, NULL, (size_t) -1);
+    if (disposition == NULL)
+        goto enomem;
+    disposition_name = NULL;
 
-	mime_fields = mailmime_fields_new_with_data(encoding,
-		NULL, NULL, disposition, NULL);
+    mime_fields = mailmime_fields_new_with_data(encoding, NULL, NULL,
+            disposition, NULL);
+    if (mime_fields == NULL)
+        goto enomem;
+    encoding = NULL;
+    disposition = NULL;
 
 	content = mailmime_content_new_with_str(mime_type);
+    if (content == NULL)
+        goto enomem;
     
     if (encoding_type != MAILMIME_MECHANISM_7BIT) {
         param = mailmime_param_new_with_data("charset", "utf-8");
-        clist_append(content->ct_parameters, param);
+        r = clist_append(content->ct_parameters, param);
+        if (r != 0)
+            goto enomem;
     }
 
 	mime = part_new_empty(content, mime_fields, NULL, 1);
+    if (mime == NULL)
+        goto enomem;
+    content = NULL;
+    mime_fields = NULL;
 
-    if (text)
-        mailmime_set_body_text(mime, (char *) text, length);
+    if (text) {
+        r = mailmime_set_body_text(mime, (char *) text, length);
+        if (r != 0)
+            goto enomem;
+    }
 	
 	return mime;
+
+enomem:
+    free(disposition_name);
+    if (mime_fields)
+        mailmime_fields_free(mime_fields);
+    if (mime)
+        mailmime_free(mime);
+    if (content)
+        mailmime_content_free(content);
+    if (param)
+        mailmime_parameter_free(param);
+    if (disposition)
+        mailmime_disposition_free(disposition);
+    if (encoding)
+        mailmime_mechanism_free(encoding);
+
+    return NULL;
 }
 
 struct mailmime * get_file_part(
@@ -210,31 +284,70 @@ struct mailmime * get_file_part(
         size_t length
     )
 {
-    char * disposition_name;
+    char * disposition_name = NULL;
     int encoding_type;
-    struct mailmime_disposition * disposition;
-    struct mailmime_mechanism * encoding;
-    struct mailmime_content * content;
-    struct mailmime * mime;
-    struct mailmime_fields * mime_fields;
+    struct mailmime_disposition * disposition = NULL;
+    struct mailmime_mechanism * encoding = NULL;
+    struct mailmime_content * content = NULL;
+    struct mailmime * mime = NULL;
+    struct mailmime_fields * mime_fields = NULL;
+    int r;
 
-    disposition_name = NULL;
     if (filename != NULL) {
         disposition_name = strdup(filename);
+        if (disposition_name == NULL)
+            goto enomem;
     }
+
     disposition =
-        mailmime_disposition_new_with_data(MAILMIME_DISPOSITION_TYPE_ATTACHMENT,
-                disposition_name, NULL, NULL, NULL, (size_t) -1);
+            mailmime_disposition_new_with_data(MAILMIME_DISPOSITION_TYPE_ATTACHMENT,
+                    disposition_name, NULL, NULL, NULL, (size_t) -1);
+    if (disposition == NULL)
+        goto enomem;
+    disposition_name = NULL;
+
     content = mailmime_content_new_with_str(mime_type);
+    if (content == NULL)
+        goto enomem;
 
     encoding_type = MAILMIME_MECHANISM_BASE64;
     encoding = mailmime_mechanism_new(encoding_type, NULL);
-    mime_fields = mailmime_fields_new_with_data(encoding,
-        NULL, NULL, disposition, NULL);
+    if (encoding == NULL)
+        goto enomem;
+
+    mime_fields = mailmime_fields_new_with_data(encoding, NULL, NULL,
+            disposition, NULL);
+    if (mime_fields == NULL)
+        goto enomem;
+    encoding = NULL;
+    disposition = NULL;
+
     mime = part_new_empty(content, mime_fields, NULL, 1);
-    mailmime_set_body_text(mime, data, length);
+    if (mime == NULL)
+        goto enomem;
+    content = NULL;
+    mime_fields = NULL;
+
+    r = mailmime_set_body_text(mime, data, length);
+    if (r != 0)
+        goto enomem;
 
     return mime;
+
+enomem:
+    free(disposition_name);
+    if (disposition)
+        mailmime_disposition_free(disposition);
+    if (encoding)
+        mailmime_mechanism_free(encoding);
+    if (content)
+        mailmime_content_free(content);
+    if (mime_fields)
+        mailmime_fields_free(mime_fields);
+    if (mime)
+        mailmime_free(mime);
+
+    return NULL;
 }
 
 struct mailmime * part_multiple_new(
@@ -242,29 +355,30 @@ struct mailmime * part_multiple_new(
         const char * boundary_prefix
     )
 {
-    struct mailmime_fields * mime_fields;
-    struct mailmime_content * content;
-    struct mailmime * mp;
+    struct mailmime_fields *mime_fields = NULL;
+    struct mailmime_content *content = NULL;
+    struct mailmime *mp = NULL;
     
     mime_fields = mailmime_fields_new_empty();
     if (mime_fields == NULL)
-        goto err;
+        goto enomem;
     
     content = mailmime_content_new_with_str(type);
     if (content == NULL)
-        goto free_fields;
+        goto enomem;
     
     mp = part_new_empty(content, mime_fields, boundary_prefix, 0);
     if (mp == NULL)
-        goto free_content;
+        goto enomem;
     
     return mp;
     
-free_content:
-    mailmime_content_free(content);
-free_fields:
-    mailmime_fields_free(mime_fields);
-err:
+enomem:
+    if (content)
+        mailmime_content_free(content);
+    if (mime_fields)
+        mailmime_fields_free(mime_fields);
+
     return NULL;
 }
 
