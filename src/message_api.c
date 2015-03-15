@@ -572,7 +572,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         free_src = true;
     }
 
-    // src message is not MIME encoded
+    // src message is not MIME encoded (any more)
     assert(src->mime == PEP_MIME_none);
 
     if (!is_PGP_message_text(src->longmsg)) {
