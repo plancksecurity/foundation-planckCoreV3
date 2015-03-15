@@ -50,9 +50,13 @@ int main() {
     cout << "encrypted:\n\n";
     cout << text2 << "\n";
 
-    free(text2);
+    message *msg3;
+    PEP_STATUS status3 = mime_decode_message(text2, &msg3);
+    assert(status3 == PEP_STATUS_OK);
 
     cout << "freeing messages…\n";
+    free_message(msg3);
+    free(text2);
     free_message(msg2);
     free_message(enc_msg2);
     cout << "done.\n";

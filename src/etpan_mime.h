@@ -7,7 +7,6 @@
 struct mailmime * part_new_empty(
         struct mailmime_content * content,
         struct mailmime_fields * mime_fields,
-        const char * boundary_prefix,
         int force_single
     );
 
@@ -28,10 +27,7 @@ struct mailmime * get_file_part(
         size_t length
     );
 
-struct mailmime * part_multiple_new(
-        const char * type,
-        const char * boundary_prefix
-    );
+struct mailmime * part_multiple_new(const char *type);
 
 typedef void *(*_new_func_t)(void *);
 

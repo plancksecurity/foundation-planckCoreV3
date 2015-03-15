@@ -12,29 +12,24 @@ time_t mail_mkgmtime(struct tm * tmp);
 
 #define MAX_MESSAGE_ID 512
 
-static char * generate_boundary(const char * boundary_prefix)
+static char * generate_boundary(void)
 {
     char id[MAX_MESSAGE_ID];
-    time_t now;
-    char name[MAX_MESSAGE_ID];
-    long value;
+    long value1;
+    long value2;
+    long value3;
+    long value4;
     int r;
  
-    id[MAX_MESSAGE_ID - 1] = 0;
-    name[MAX_MESSAGE_ID - 1] = 0;
+    // no random needed here
 
-    now = time(NULL);
+    value1 = random();
+    value2 = random();
+    value3 = random();
+    value4 = random();
 
-    value = random();
-    r = gethostname(name, MAX_MESSAGE_ID - 1);
-    if (r == -1)
-        return NULL;
-    
-    if (boundary_prefix == NULL)
-        boundary_prefix = "";
-    
-    snprintf(id, MAX_MESSAGE_ID, "%s%lx_%lx_%x", boundary_prefix, now, value,
-            getpid());
+    snprintf(id, MAX_MESSAGE_ID, "%.4lx%.4lx%.4lx%.4lx", value1, value2,
+            value3, value4);
     
     return strdup(id);
 }
@@ -42,7 +37,6 @@ static char * generate_boundary(const char * boundary_prefix)
 struct mailmime * part_new_empty(
         struct mailmime_content * content,
         struct mailmime_fields * mime_fields,
-        const char * boundary_prefix,
         int force_single
     )
 {
@@ -54,8 +48,7 @@ struct mailmime * part_new_empty(
     char * attr_value = NULL;
     struct mailmime_parameter * param = NULL;
     clist * parameters = NULL;
-    char * boundary = NULL;
-
+    char *boundary = NULL;
 
 	list = NULL;
 
@@ -102,7 +95,7 @@ struct mailmime * part_new_empty(
         if (attr_name == NULL)
             goto enomem;
 
-		boundary = generate_boundary(boundary_prefix);
+		boundary = generate_boundary();
         assert(boundary);
 		attr_value = boundary;
 		if (attr_value == NULL)
@@ -168,7 +161,7 @@ struct mailmime * get_pgp_encrypted_part(void)
     if (mime_fields == NULL)
         goto enomem;
 
-	mime = part_new_empty(content, mime_fields, NULL, 1);
+	mime = part_new_empty(content, mime_fields, 1);
     if (mime == NULL)
         goto enomem;
     mime_fields = NULL;
@@ -245,7 +238,7 @@ struct mailmime * get_text_part(
             goto enomem;
     }
 
-	mime = part_new_empty(content, mime_fields, NULL, 1);
+	mime = part_new_empty(content, mime_fields, 1);
     if (mime == NULL)
         goto enomem;
     content = NULL;
@@ -322,7 +315,7 @@ struct mailmime * get_file_part(
     encoding = NULL;
     disposition = NULL;
 
-    mime = part_new_empty(content, mime_fields, NULL, 1);
+    mime = part_new_empty(content, mime_fields, 1);
     if (mime == NULL)
         goto enomem;
     content = NULL;
@@ -350,10 +343,7 @@ enomem:
     return NULL;
 }
 
-struct mailmime * part_multiple_new(
-        const char * type,
-        const char * boundary_prefix
-    )
+struct mailmime * part_multiple_new(const char *type)
 {
     struct mailmime_fields *mime_fields = NULL;
     struct mailmime_content *content = NULL;
@@ -367,7 +357,7 @@ struct mailmime * part_multiple_new(
     if (content == NULL)
         goto enomem;
     
-    mp = part_new_empty(content, mime_fields, boundary_prefix, 0);
+    mp = part_new_empty(content, mime_fields, 0);
     if (mp == NULL)
         goto enomem;
     

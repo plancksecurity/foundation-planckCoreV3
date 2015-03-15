@@ -142,7 +142,7 @@ static PEP_STATUS mime_html_text(
 
     *result = NULL;
 
-    mime = part_multiple_new("multipart/alternative", NULL);
+    mime = part_multiple_new("multipart/alternative");
     assert(mime);
     if (mime == NULL)
         goto enomem;
@@ -634,7 +634,7 @@ static PEP_STATUS mime_encode_message_plain(
 
     if (msg->attachments) {
         submime = mime;
-        mime = part_multiple_new("multipart/mixed", NULL);
+        mime = part_multiple_new("multipart/mixed");
         assert(mime);
         if (mime == NULL)
             goto enomem;
@@ -707,7 +707,7 @@ static PEP_STATUS mime_encode_message_PGP_MIME(
     subject = (msg->shortmsg) ? msg->shortmsg : "pEp";
     plaintext = msg->longmsg;
 
-    mime = part_multiple_new("multipart/encrypted", NULL);
+    mime = part_multiple_new("multipart/encrypted");
     assert(mime);
     if (mime == NULL)
         goto enomem;
@@ -995,6 +995,8 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
             case MAILIMF_FIELD_MESSAGE_ID:
                 {
                     char * text = _field->fld_data.fld_message_id->mid_value;
+
+                    free(msg->id);
                     index = 0;
                     r = mailmime_encoded_phrase_parse("utf-8", text,
                             strlen(text), &index, "utf-8", &msg->id);
@@ -1006,6 +1008,8 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
             case MAILIMF_FIELD_SUBJECT:
                 {
                     char * text = _field->fld_data.fld_subject->sbj_value;
+
+                    free(msg->shortmsg);
                     index = 0;
                     r = mailmime_encoded_phrase_parse("utf-8", text,
                             strlen(text), &index, "utf-8", &msg->shortmsg);
@@ -1018,6 +1022,8 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
                 {
                     struct mailimf_date_time *date =
                         _field->fld_data.fld_orig_date->dt_date_time;
+
+                    free_timestamp(msg->sent);
                     msg->sent = etpantime_to_timestamp(date);
                     if (msg->sent == NULL)
                         goto enomem;
@@ -1034,6 +1040,7 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
                     if (ident == NULL)
                         goto pep_error;
 
+                    free_identity(msg->from);
                     msg->from = ident;
                 }
                 break;
@@ -1045,6 +1052,8 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
                     identity_list *il = mal_to_identity_list(mal);
                     if (il == NULL)
                         goto enomem;
+
+                    free_identity_list(msg->to);
                     msg->to = il;
                 }
                 break;
@@ -1056,6 +1065,8 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
                     identity_list *il = mal_to_identity_list(mal);
                     if (il == NULL)
                         goto enomem;
+
+                    free_identity_list(msg->cc);
                     msg->cc = il;
                 }
                 break;
@@ -1067,6 +1078,8 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
                     identity_list *il = mal_to_identity_list(mal);
                     if (il == NULL)
                         goto enomem;
+
+                    free_identity_list(msg->bcc);
                     msg->bcc = il;
                 }
                 break;
@@ -1078,6 +1091,8 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
                     identity_list *il = mal_to_identity_list(mal);
                     if (il == NULL)
                         goto enomem;
+
+                    free_identity_list(msg->reply_to);
                     msg->reply_to = il;
                 }
                 break;
@@ -1088,6 +1103,8 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
                     stringlist_t *sl = clist_to_stringlist(list);
                     if (sl == NULL)
                         goto enomem;
+
+                    free_stringlist(msg->in_reply_to);
                     msg->in_reply_to = sl;
                 }
                 break;
@@ -1098,6 +1115,8 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
                     stringlist_t *sl = clist_to_stringlist(list);
                     if (sl == NULL)
                         goto enomem;
+
+                    free_stringlist(msg->references);
                     msg->references = sl;
                 }
                 break;
@@ -1108,6 +1127,8 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
                     stringlist_t *sl = clist_to_stringlist(list);
                     if (sl == NULL)
                         goto enomem;
+
+                    free_stringlist(msg->keywords);
                     msg->keywords = sl;
                 }
                 break;
@@ -1115,6 +1136,8 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
             case MAILIMF_FIELD_COMMENTS:
                 {
                     char * text = _field->fld_data.fld_comments->cm_value;
+
+                    free(msg->comments);
                     index = 0;
                     r = mailmime_encoded_phrase_parse("utf-8", text,
                             strlen(text), &index, "utf-8", &msg->comments);
@@ -1162,6 +1185,50 @@ pep_error:
     return status;
 }
 
+static PEP_STATUS interpret_PGP_MIME(struct mailmime *mime, message **msg)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    message *_msg = NULL;
+
+    assert(mime);
+    assert(msg);
+
+    *msg = NULL;
+
+    _msg = calloc(1, sizeof(message));
+    assert(_msg);
+    if (_msg == NULL)
+        goto enomem;
+
+    *msg = _msg;
+    return PEP_STATUS_OK;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+pep_error:
+    free_message(msg);
+    return status;
+}
+
+static bool parameter_has_value(
+        clist *list,
+        const char *name,
+        const char *value
+    )
+{
+    clistiter *cur;
+
+    for (cur = clist_begin(list); cur != NULL ; cur = clist_next(cur)) {
+        struct mailmime_parameter * param = clist_content(cur);
+        if (strcmp(name, param->pa_name) == 0 &&
+                strcmp(value, param->pa_value) == 0)
+            return true;
+    }
+
+    return false;
+}
+
 DYNAMIC_API PEP_STATUS mime_decode_message(
         const char *mimetext,
         message **msg
@@ -1189,10 +1256,25 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
             goto err_mime;
     }
 
-    _msg = calloc(1, sizeof(message));
+    struct mailmime_content *content =
+            mime->mm_data.mm_message.mm_msg_mime->mm_content_type;
+
+    if (content->ct_type->tp_type == MAILMIME_TYPE_COMPOSITE_TYPE
+            && content->ct_type->tp_data.tp_composite_type->ct_type ==
+                    MAILMIME_COMPOSITE_TYPE_MULTIPART
+            && strcmp(content->ct_subtype, "encrypted") == 0
+            && parameter_has_value(content->ct_parameters, "protocol",
+                    "application/pgp-encrypted")) {
+
+        status = interpret_PGP_MIME(mime, &_msg);
+        if (status != PEP_STATUS_OK)
+            goto pep_error;
+    }
+    else {
+
+    }
+
     assert(_msg);
-    if (_msg == NULL)
-        goto enomem;
 
     clist * _fieldlist = mime->mm_data.mm_message.mm_fields->fld_list;
     status = read_fields(_msg, _fieldlist);
