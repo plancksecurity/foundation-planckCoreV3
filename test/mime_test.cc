@@ -34,7 +34,7 @@ int main() {
 
     cout << "encoding message…\n";
     char *result2;
-    PEP_STATUS status2 = mime_encode_message(msg2, &result2);
+    PEP_STATUS status2 = mime_encode_message(msg2, false, &result2);
     assert(result2);
     assert(status2 == PEP_STATUS_OK);
 

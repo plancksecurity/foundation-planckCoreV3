@@ -12,7 +12,7 @@ typedef struct _bloblist_t {
     size_t size;                    // size of blob
     char *mime_type;                // UTF-8 string of MIME type of blob or
                                     // NULL if unknown
-    char *file_name;                // UTF-8 string of file name of blob or
+    char *filename;                // UTF-8 string of file name of blob or
                                     // NULL if unknown
     struct _bloblist_t *next;
 } bloblist_t;
@@ -24,17 +24,17 @@ typedef struct _bloblist_t {
 //      blob (in)       blob to add to the list
 //      size (in)       size of the blob
 //      mime_type (in)  MIME type of the blob data or NULL if unknown
-//      file_name (in)  file name of origin of blob data or NULL if unknown
+//      filename (in)  file name of origin of blob data or NULL if unknown
 //
 //  return value:
 //      pointer to new bloblist_t or NULL if out of memory
 //
 //  caveat:
-//      the ownership of the blob goes to the bloblist; mime_type and file_name
+//      the ownership of the blob goes to the bloblist; mime_type and filename
 //      are being copied, the originals remain in the ownership of the caller
 
 DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_type,
-        const char *file_name);
+        const char *filename);
 
 
 // free_bloblist() - free bloblist
@@ -65,17 +65,17 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src);
 //      blob (in)       blob
 //      size (in)       size of the blob
 //      mime_type (in)  MIME type of the blob or NULL if unknown
-//      file_name (in)  file name of the blob or NULL if unknown
+//      filename (in)  file name of the blob or NULL if unknown
 //
 //  return value:
 //      pointer to the last element of bloblist or NULL if out of memory
 //
 //  caveat:
-//      the ownership of the blob goes to the bloblist; mime_type and file_name
+//      the ownership of the blob goes to the bloblist; mime_type and filename
 //      are being copied, the originals remain in the ownership of the caller
 
 DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t size,
-        const char *mime_type, const char *file_name);
+        const char *mime_type, const char *filename);
 
 
 #ifdef __cplusplus

@@ -24,7 +24,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         return PEP_INIT_SQLITE3_WITHOUT_MUTEX;
 
     // a little race condition - but still a race condition
-    // removed by calling caveat (see documentation)
+    // mitigated by calling caveat (see documentation)
 
     ++init_count;
     if (init_count == 0)
@@ -255,7 +255,7 @@ DYNAMIC_API void release(PEP_SESSION session)
 	assert(session);
 
     // a small race condition but still a race condition
-    // removed by calling caveat (see documentation)
+    // mitigated by calling caveat (see documentation)
 
     if (init_count == 0)
         out_last = true;

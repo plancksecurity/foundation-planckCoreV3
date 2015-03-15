@@ -11,6 +11,7 @@ extern "C" {
 //
 //  parameters:
 //      msg (in)                message to encode
+//      omit_fields (in)        only encode message body and attachments
 //      mimetext (out)          the resulting encoded text or NULL on any error
 //
 //  return value:
@@ -25,9 +26,11 @@ extern "C" {
 //  caveat:
 //      the resulttext will go to the ownership of the caller
 //      the message will remain in the ownership of the caller
+//      omit_fields is true for payload of PGP/MIME messages
 
 DYNAMIC_API PEP_STATUS mime_encode_message(
         const message * msg,
+        bool omit_fields,
         char **mimetext
     );
 

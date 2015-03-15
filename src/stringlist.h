@@ -52,7 +52,10 @@ DYNAMIC_API stringlist_t *stringlist_dup(const stringlist_t *src);
 //      the value is being copied before being added to the list
 //      the original string is still being owned by the caller
 
-DYNAMIC_API stringlist_t *stringlist_add(stringlist_t *stringlist, const char *value);
+DYNAMIC_API stringlist_t *stringlist_add(
+        stringlist_t *stringlist,
+        const char *value
+    );
 
 
 // stringlist_append() - append stringlist to stringlist
@@ -68,8 +71,10 @@ DYNAMIC_API stringlist_t *stringlist_add(stringlist_t *stringlist, const char *v
 //      all values are being copied before being added to the list
 //      the original values are still being owned by the caller
 
-DYNAMIC_API stringlist_t *stringlist_append(stringlist_t *stringlist,
-        stringlist_t *second);
+DYNAMIC_API stringlist_t *stringlist_append(
+        stringlist_t *stringlist,
+        stringlist_t *second
+    );
 
 
 // stringlist_length() - get length of stringlist

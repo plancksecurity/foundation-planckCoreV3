@@ -71,7 +71,7 @@ static int seperate_short_and_long(const char *src, char **shortmsg, char **long
         }
     }
     else {
-        _shortmsg = strdup("pEp");
+        _shortmsg = strdup("");
         if (_shortmsg == NULL)
             goto enomem;
         _longmsg = strdup(src);
@@ -91,71 +91,136 @@ enomem:
     return -1;
 }
 
+static PEP_STATUS copy_fields(message *dst, const message *src)
+{
+    free_timestamp(dst->sent);
+    dst->sent = NULL;
+    if (src->sent) {
+        dst->sent = timestamp_dup(src->sent);
+        if (dst->sent == NULL)
+            return PEP_OUT_OF_MEMORY;
+    }
+
+    free_timestamp(dst->recv);
+    dst->recv = NULL;
+    if (src->recv) {
+        dst->recv = timestamp_dup(src->recv);
+        if (dst->recv == NULL)
+            return PEP_OUT_OF_MEMORY;
+    }
+
+    free_identity(dst->from);
+    dst->from = NULL;
+    if (src->from) {
+        dst->from = identity_dup(src->from);
+        if (dst->from == NULL)
+            return PEP_OUT_OF_MEMORY;
+    }
+
+    free_identity_list(dst->to);
+    dst->to = NULL;
+    if (src->to) {
+        dst->to = identity_list_dup(src->to);
+        if (dst->to == NULL)
+            return PEP_OUT_OF_MEMORY;
+    }
+
+    free_identity(dst->recv_by);
+    dst->recv_by = NULL;
+    if (src->recv_by) {
+        dst->recv_by = identity_dup(src->recv_by);
+        if (dst->recv_by == NULL)
+            return PEP_OUT_OF_MEMORY;
+    }
+
+    free_identity_list(dst->cc);
+    dst->cc = NULL;
+    if (src->cc) {
+        dst->cc = identity_list_dup(src->cc);
+        if (dst->cc == NULL)
+            return PEP_OUT_OF_MEMORY;
+    }
+
+    free_identity_list(dst->bcc);
+    dst->bcc = NULL;
+    if (src->bcc) {
+        dst->bcc = identity_list_dup(src->bcc);
+        if (dst->bcc == NULL)
+            return PEP_OUT_OF_MEMORY;
+    }
+
+    free_identity_list(dst->reply_to);
+    dst->reply_to = NULL;
+    if (src->reply_to) {
+        dst->reply_to = identity_list_dup(src->reply_to);
+        if (dst->reply_to == NULL)
+            return PEP_OUT_OF_MEMORY;
+    }
+
+    free_stringlist(dst->in_reply_to);
+    dst->in_reply_to = NULL;
+    if (src->in_reply_to) {
+        dst->in_reply_to = stringlist_dup(src->in_reply_to);
+        if (dst->in_reply_to == NULL)
+            return PEP_OUT_OF_MEMORY;
+    }
+
+    free_stringlist(dst->references);
+    dst->references = NULL;
+    if (src->references) {
+        dst->references = stringlist_dup(src->references);
+        if (dst->references == NULL)
+            return PEP_OUT_OF_MEMORY;
+    }
+
+    free_stringlist(dst->keywords);
+    dst->keywords = NULL;
+    if (src->keywords) {
+        dst->keywords = stringlist_dup(src->keywords);
+        if (dst->keywords == NULL)
+            return PEP_OUT_OF_MEMORY;
+    }
+
+    free(dst->comments);
+    dst->comments = NULL;
+    if (src->comments) {
+        dst->comments = strdup(src->comments);
+        assert(dst->comments);
+        if (dst->comments == NULL)
+            return PEP_OUT_OF_MEMORY;
+    }
+
+    return PEP_STATUS_OK;
+}
+
 static message * clone_to_empty_message(const message * src)
 {
-    pEp_identity *from = NULL;
-    identity_list *to = NULL;
-
+    PEP_STATUS status;
     message * msg = NULL;
 
     assert(src);
-    assert(src->from);
-    assert(src->to);
 
-    from = identity_dup(src->from);
-    if (from == NULL)
-        goto enomem;
-
-    from->me = true;
-
-    to = identity_list_dup(src->to);
-    if (to == NULL)
-        goto enomem;
-
-    msg = new_message(src->dir, from, to, NULL);
+    msg = calloc(1, sizeof(message));
+    assert(msg);
     if (msg == NULL)
         goto enomem;
 
     msg->dir = src->dir;
 
-    if (src->cc) {
-        msg->cc = identity_list_dup(src->cc);
-        if (msg->cc == NULL)
-            goto enomem;
-    }
-
-    if (src->bcc) {
-        msg->bcc = identity_list_dup(src->bcc);
-        if (msg->bcc == NULL)
-            goto enomem;
-    }
-
-    if (src->reply_to) {
-        msg->reply_to = identity_list_dup(src->reply_to);
-        if (msg->reply_to == NULL)
-            goto enomem;
-    }
-
-    msg->sent = src->sent;
-    msg->recv = src->recv;
+    status = copy_fields(msg, src);
+    if (status != PEP_STATUS_OK)
+        goto enomem;
 
     return msg;
 
 enomem:
-    if (msg) {
-        free_message(msg);
-    }
-    else {
-        free_identity(from);
-        free_identity_list(to);
-    }
-
+    free_message(msg);
     return NULL;
 }
 
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
-        const message *src,
+        message *src,
         stringlist_t * extra,
         message **dst,
         PEP_enc_format enc_format
@@ -163,7 +228,9 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 {
     PEP_STATUS status = PEP_STATUS_OK;
     message * msg = NULL;
+    message * _src;
     stringlist_t * keys = NULL;
+    bool free_src = false;
 
     assert(session);
     assert(src);
@@ -174,6 +241,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
     if (src->enc_format >= PEP_enc_pieces) {
         if (src->enc_format == enc_format) {
+            assert(0); // the message is encrypted this way already
             msg = message_dup(src);
             if (msg == NULL)
                 goto enomem;
@@ -181,16 +249,23 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             return PEP_STATUS_OK;
         }
         else {
-            // TODO: we don't re-encrypt yet
-            NOT_IMPLEMENTED
+            // decrypt and re-encrypt again
+            message * _dst = NULL;
+            PEP_MIME_format mime = (enc_format == PEP_enc_PEP) ? PEP_MIME :
+                    PEP_MIME_fields_omitted;
+
+            status = decrypt_message(session, src, mime, &_dst);
+            if (status != PEP_STATUS_OK)
+                goto pep_error;
+
+            src = _dst;
+            free_src = true;
         }
     }
 
     msg = clone_to_empty_message(src);
     if (msg == NULL)
         goto enomem;
-
-    msg->enc_format = PEP_enc_pieces;
 
     status = myself(session, src->from);
     if (status != PEP_STATUS_OK)
@@ -236,25 +311,38 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
             msg->enc_format = PEP_enc_PGP_MIME;
 
-            if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0) {
-                ptext = combine_short_and_long(src->shortmsg, src->longmsg);
-                if (ptext == NULL)
-                    goto enomem;
-                free_ptext = true;
-            }
-            else if (src->longmsg) {
-                ptext = src->longmsg;
+            if (src->mime == PEP_MIME) {
+                message *_src = NULL;
+                assert(src->longmsg);
+                status = mime_decode_message(src->longmsg, &_src);
+                if (status != PEP_STATUS_OK)
+                    goto pep_error;
+                if (free_src)
+                    free_message(src);
+                src = _src;
+                free_src = true;
             }
 
-            if (src->enc_format == PEP_enc_none) {
-                message *_src = malloc(sizeof(message));
+            if (src->mime == PEP_MIME_none) {
+                if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0) {
+                    ptext = combine_short_and_long(src->shortmsg, src->longmsg);
+                    if (ptext == NULL)
+                        goto enomem;
+                    free_ptext = true;
+                }
+                else if (src->longmsg) {
+                    ptext = src->longmsg;
+                }
+
+                message *_src = calloc(1, sizeof(message));
                 assert(_src);
                 if (_src == NULL)
                     goto enomem;
-                memcpy(_src, src, sizeof(message));
-                _src->shortmsg = "pEp";
                 _src->longmsg = ptext;
-                status = mime_encode_message(_src, &ptext);
+                _src->longmsg_formatted = src->longmsg_formatted;
+                _src->attachments = src->attachments;
+                _src->enc_format = PEP_enc_PGP_MIME;
+                status = mime_encode_message(_src, true, &ptext);
                 assert(status == PEP_STATUS_OK);
                 if (free_ptext)
                     free(_src->longmsg);
@@ -264,12 +352,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                     goto pep_error;
                 free_ptext = true;
             }
-            else if (src->enc_format == PEP_enc_none_MIME) {
-                assert(src->longmsg);
-                if (src->longmsg == NULL) {
-                    status = PEP_ILLEGAL_VALUE;
-                    goto pep_error;
-                }
+            else /* if (src->mime == PEP_MIME_fields_omitted) */ {
                 ptext = src->longmsg;
             }
 
@@ -277,24 +360,17 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                     &ctext, &csize);
             if (free_ptext)
                 free(ptext);
-            if (ctext) {
-                msg->longmsg = strdup(ctext);
-                if (msg->longmsg == NULL)
-                    goto enomem;
-            }
-            else {
+            if (ctext == NULL)
                 goto pep_error;
-            }
+
+            msg->longmsg = strdup(ctext);
+            if (msg->longmsg == NULL)
+                goto enomem;
         }
         break;
 
         case PEP_enc_pieces:
             msg->enc_format = PEP_enc_pieces;
-
-            // TODO: decoding MIME
-            if (src->enc_format == PEP_enc_none_MIME) {
-                NOT_IMPLEMENTED
-            }
 
             if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0) {
                 ptext = combine_short_and_long(src->shortmsg, src->longmsg);
@@ -359,7 +435,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                             goto enomem;
 
                         _d = bloblist_add(_d, _c, csize, _s->mime_type,
-                                _s->file_name);
+                                _s->filename);
                         if (_d == NULL)
                             goto enomem;
                     }
@@ -382,6 +458,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     free_stringlist(keys);
+    if (free_src)
+        free_message(src);
 
     if (msg->shortmsg == NULL)
         msg->shortmsg = strdup("pEp");
@@ -395,15 +473,70 @@ enomem:
 pep_error:
     free_stringlist(keys);
     free_message(msg);
+    if (free_src)
+        free_message(src);
 
     return status;
 }
 
+static bool is_encrypted_attachment(const bloblist_t *blob)
+{
+    char *ext;
+ 
+    assert(blob);
+
+    if (blob->filename == NULL)
+        return false;
+
+    ext = strrchr(blob->filename, '.');
+    if (ext == NULL)
+        return false;
+
+    if (strcmp(blob->mime_type, "application/octet-stream")) {
+        if (strcmp(ext, ".pgp") == 0 || strcmp(ext, ".gpg") == 0 ||
+                strcmp(ext, ".asc") == 0)
+            return true;
+    }
+    else if (strcmp(blob->mime_type, "application/octet-stream")) {
+        if (strcmp(ext, ".asc") == 0)
+            return true;
+    }
+
+    return false;
+}
+
+static bool is_encrypted_html_attachment(const bloblist_t *blob)
+{
+    assert(blob);
+    assert(blob->filename);
+
+    if (strncmp(blob->filename, "PGPexch.htm.", 12) == 0) {
+        if (strcmp(blob->filename + 11, ".pgp") == 0 ||
+                strcmp(blob->filename + 11, ".asc") == 0)
+            return true;
+    }
+
+    return false;
+}
+
+char * without_double_ending(const char *filename)
+{
+    char *ext;
+
+    assert(filename);
+
+    ext = strrchr(filename, '.');
+    if (ext == NULL)
+        return NULL;
+
+    return strndup(filename, ext - filename);
+}
+
 DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
-        const message *src,
-        message **dst,
-        PEP_enc_format enc_format
+        message *src,
+        PEP_MIME_format mime,
+        message **dst
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -413,16 +546,17 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     char *ptext;
     size_t psize;
     stringlist_t *keylist;
+    bool free_src = false;
 
     assert(session);
     assert(src);
     assert(dst);
-    assert(enc_format < PEP_enc_pieces);
 
     *dst = NULL;
  
     if (src->enc_format < PEP_enc_pieces) {
-        if (enc_format == src->enc_format) {
+        assert(0); // message is not encrypted
+        if (mime == src->mime) {
             msg = message_dup(src);
             if (msg == NULL)
                 goto enomem;
@@ -435,62 +569,167 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         }
     }
 
-    msg = clone_to_empty_message(src);
-    if (msg == NULL)
-        goto enomem;
+    // src message is encrypted
+    assert(src->enc_format >= PEP_enc_pieces);
 
-    switch (enc_format) {
-        case PEP_enc_none:
-            // TODO: implement
-            NOT_IMPLEMENTED
+    if (src->mime == PEP_MIME_fields_omitted || src->mime == PEP_MIME) {
+        message *_src = NULL;
+        status = mime_decode_message(src->longmsg, &_src);
+        if (status != PEP_STATUS_OK)
+            goto pep_error;
 
-        case PEP_enc_none_MIME:
-            if (src->enc_format == PEP_enc_PEP) {
-                // TODO: implement
-                NOT_IMPLEMENTED
+        if ( src->mime == PEP_MIME_fields_omitted) {
+            status = copy_fields(_src, src);
+            if (status != PEP_STATUS_OK) {
+                free_message(_src);
+                goto pep_error;
             }
+        }
 
-            ctext = src->longmsg;
-            csize = strlen(src->longmsg);
+        src = _src;
+        free_src = true;
+    }
 
-            status = decrypt_and_verify(session, ctext, csize, &ptext, &psize,
-                    &keylist);
-            if (ptext == NULL)
+    // src message is not MIME encoded but still encrypted
+    assert(src->mime == PEP_MIME_none);
+
+    ctext = src->longmsg;
+    csize = strlen(src->longmsg);
+
+    status = decrypt_and_verify(session, ctext, csize, &ptext, &psize,
+            &keylist);
+    if (ptext == NULL)
+        goto pep_error;
+
+    switch (src->enc_format) {
+        case PEP_enc_PGP_MIME:
+            status = mime_decode_message(ptext, &msg);
+            if (status != PEP_STATUS_OK)
                 goto pep_error;
 
-            if (src->enc_format == PEP_enc_PGP_MIME) {
-                if (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0)
-                {
-                    char * shortmsg;
-                    char * longmsg;
+            break;
 
-                    int r = seperate_short_and_long(ptext, &shortmsg,
-                            &longmsg);
-                    free(ptext);
-                    if (r == -1)
-                        goto enomem;
+        case PEP_enc_pieces:
+            msg = clone_to_empty_message(src);
+            if (msg == NULL)
+                goto enomem;
 
-                    msg->shortmsg = shortmsg;
-                    msg->longmsg = longmsg;
-                }
-                else {
-                    msg->shortmsg = strdup(src->shortmsg);
-                    if (msg->shortmsg == NULL)
-                        goto enomem;
-                    msg->longmsg = ptext;
+            msg->longmsg = strdup(ptext);
+            if (msg->longmsg == NULL)
+                goto enomem;
+
+            bloblist_t *_m = msg->attachments;
+            bloblist_t *_s;
+            for (_s = src->attachments; _s; _s = _s->next) {
+                if (is_encrypted_attachment(_s)) {
+                    ctext = _s->data;
+                    csize = _s->size;
+
+                    status = decrypt_and_verify(session, ctext, csize, &ptext,
+                            &psize, &keylist);
+                    if (ptext == NULL)
+                        goto pep_error;
+                    
+                    if (is_encrypted_html_attachment(_s)) {
+                        msg->longmsg_formatted = strdup(ptext);
+                        if (msg->longmsg_formatted == NULL)
+                            goto pep_error;
+                    }
+                    else {
+                        char * mime_type = "application/octet-stream";
+                        char * filename = without_double_ending(_s->filename);
+                        if (filename == NULL)
+                            goto enomem;
+
+                        _m = bloblist_add(_m, ptext, psize, mime_type, filename);
+                        if (_m == NULL)
+                            goto enomem;
+
+                       if (msg->attachments == NULL)
+                            msg->attachments = _m;
+                    }
                 }
             }
-            else {
-                
-            }
+
             break;
 
         default:
-            assert(0);
-            status = PEP_ILLEGAL_VALUE;
-            goto pep_error;
+            // BUG: must implement more
+            NOT_IMPLEMENTED
     }
 
+    switch (src->enc_format) {
+        case PEP_enc_PGP_MIME:
+        case PEP_enc_pieces:
+            status = copy_fields(msg, src);
+            if (status != PEP_STATUS_OK)
+                goto pep_error;
+
+            if (src->shortmsg) {
+                free(msg->shortmsg);
+                msg->shortmsg = strdup(src->shortmsg);
+                if (msg->shortmsg == NULL)
+                    goto enomem;
+            }
+
+            if (msg->shortmsg == NULL || strcmp(msg->shortmsg, "pEp") == 0)
+            {
+                char * shortmsg;
+                char * longmsg;
+
+                int r = seperate_short_and_long(msg->longmsg, &shortmsg,
+                        &longmsg);
+                if (r == -1)
+                    goto enomem;
+
+                free(msg->shortmsg);
+                free(msg->longmsg);
+
+                msg->shortmsg = shortmsg;
+                msg->longmsg = longmsg;
+            }
+            else {
+                msg->shortmsg = strdup(src->shortmsg);
+                if (msg->shortmsg == NULL)
+                    goto enomem;
+                msg->longmsg = ptext;
+            }
+
+        default:
+            // BUG: must implement more
+            NOT_IMPLEMENTED
+    }
+
+    switch (mime) {
+        case PEP_MIME_none:
+            break;
+
+        case PEP_MIME:
+        case PEP_MIME_fields_omitted:
+            {
+                char *text = NULL;
+                status = mime_encode_message(msg,
+                        mime == PEP_MIME_fields_omitted, &text);
+                if (status != PEP_STATUS_OK)
+                    goto pep_error;
+
+                message *_msg = clone_to_empty_message(msg);
+                if (_msg == NULL) {
+                    free(text);
+                    goto enomem;
+                }
+                _msg->longmsg = text;
+                _msg->shortmsg = strdup(msg->shortmsg);
+                if (msg->shortmsg == NULL)
+                    goto enomem;
+
+                free_message(msg);
+                msg = _msg;
+            }
+    }
+
+    if (free_src)
+        free_message(src);
     *dst = msg;
     return PEP_STATUS_OK;
 
@@ -499,6 +738,8 @@ enomem:
 
 pep_error:
     free_message(msg);
+    if (free_src)
+        free_message(src);
 
     return status;
 }

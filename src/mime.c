@@ -213,7 +213,7 @@ static PEP_STATUS mime_attachment(
     else
         mime_type = blob->mime_type;
 
-    mime = get_file_part(blob->file_name, mime_type, blob->data, blob->size);
+    mime = get_file_part(blob->filename, mime_type, blob->data, blob->size);
     assert(mime);
     if (mime == NULL)
         goto enomem;
@@ -587,6 +587,7 @@ pep_error:
 
 DYNAMIC_API PEP_STATUS mime_encode_message(
         const message *msg,
+        bool omit_fields,
         char **mimetext
     )
 {
@@ -606,7 +607,7 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
 
     *mimetext = NULL;
 
-    if (msg->enc_format == PEP_enc_none_MIME) {
+    if (msg->mime == PEP_MIME) {
         assert(0); // why encoding again what is already encoded?
         buf = strdup(msg->longmsg);
         if (buf == NULL)
@@ -683,11 +684,13 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
         goto enomem;
     }
 
-    status = build_fields(msg, &fields);
-    if (status != PEP_STATUS_OK)
-        goto pep_error;
+    if (!omit_fields) {
+        status = build_fields(msg, &fields);
+        if (status != PEP_STATUS_OK)
+            goto pep_error;
 
-    mailmime_set_imf_fields(msg_mime, fields);
+        mailmime_set_imf_fields(msg_mime, fields);
+    }
 
     status = render_mime(msg_mime, &buf);
     if (status != PEP_STATUS_OK)
@@ -1045,7 +1048,7 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
     assert(msg);
 
     *msg = NULL;
-    
+
     index = 0;
     r = mailmime_parse(mimetext, strlen(mimetext), &index, &mime);
     assert(r == 0);

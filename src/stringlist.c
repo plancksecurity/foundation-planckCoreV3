@@ -43,7 +43,10 @@ DYNAMIC_API stringlist_t *stringlist_dup(const stringlist_t *src)
     return dst;
 }
 
-DYNAMIC_API stringlist_t *stringlist_add(stringlist_t *stringlist, const char *value)
+DYNAMIC_API stringlist_t *stringlist_add(
+        stringlist_t *stringlist,
+        const char *value
+    )
 {
     assert(value);
 
@@ -68,8 +71,10 @@ DYNAMIC_API stringlist_t *stringlist_add(stringlist_t *stringlist, const char *v
     return stringlist->next;
 }
 
-DYNAMIC_API stringlist_t *stringlist_append(stringlist_t *stringlist,
-        stringlist_t *second)
+DYNAMIC_API stringlist_t *stringlist_append(
+        stringlist_t *stringlist,
+        stringlist_t *second
+    )
 {
     assert(stringlist);
 
@@ -96,7 +101,8 @@ DYNAMIC_API int stringlist_length(const stringlist_t *stringlist)
     if (stringlist->value == NULL)
         return 0;
 
-    for (_stringlist=stringlist->next; _stringlist!=NULL; _stringlist=_stringlist->next)
+    for (_stringlist=stringlist->next; _stringlist!=NULL;
+            _stringlist=_stringlist->next)
         len += 1;
 
     return len;

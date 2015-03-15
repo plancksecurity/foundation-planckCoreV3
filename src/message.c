@@ -50,8 +50,8 @@ DYNAMIC_API void free_message(message *msg)
         free(msg->longmsg);
         free(msg->longmsg_formatted);
         free_bloblist(msg->attachments);
-        free(msg->sent);
-        free(msg->recv);
+        free_timestamp(msg->sent);
+        free_timestamp(msg->recv);
         free_identity(msg->from);
         free_identity_list(msg->to);
         free_identity(msg->recv_by);
@@ -118,19 +118,15 @@ DYNAMIC_API message * message_dup(const message *src)
     msg->rawmsg_size = src->rawmsg_size;
 
     if (src->sent) {
-        msg->sent = malloc(sizeof(timestamp));
-        assert(msg->sent);
+        msg->sent = timestamp_dup(src->sent);
         if (msg->sent == NULL)
             goto enomem;
-        memcpy(msg->sent, src->sent, sizeof(timestamp));
     }
 
     if (src->recv) {
-        msg->recv = malloc(sizeof(timestamp));
-        assert(msg->recv);
+        msg->recv = timestamp_dup(src->recv);
         if (msg->recv == NULL)
             goto enomem;
-        memcpy(msg->recv, src->recv, sizeof(timestamp));
     }
 
     if (src->recv_by) {

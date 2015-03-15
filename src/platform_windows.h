@@ -15,7 +15,7 @@ int dlclose(void *handle);
 void *dlsym(void *handle, const char *symbol);
 
 #ifndef strdup
-#define strdup(A) _strdup(A)
+#define strdup(A) _strdup((A))
 #endif
 #ifndef snprintf
 #define snprintf(...) _snprintf(__VA_ARGS__)
@@ -26,6 +26,10 @@ void *dlsym(void *handle, const char *symbol);
 #ifndef strncasecmp
 #define strncasecmp(A, B, C) _strnicmp((A), (B), (C))
 #endif
+#ifndef gmtime_r
+#define gmtime_r(A, B) gmtime_s((B), (A))
+#endif
+
 char *strndup(const char *s1, size_t n);
 
 const char *windoze_local_db(void);

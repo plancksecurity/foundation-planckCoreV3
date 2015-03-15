@@ -26,7 +26,7 @@ int main() {
     cout << "message created.\n";
 
     char *text2;
-    PEP_STATUS status2 = mime_encode_message(msg2, &text2);
+    PEP_STATUS status2 = mime_encode_message(msg2, false, &text2);
     assert(status2 == PEP_STATUS_OK);
     assert(text2);
 
@@ -38,12 +38,12 @@ int main() {
     cout << "encrypting message as MIME multipart…\n";
     message *enc_msg2;
     cout << "calling encrypt_message()\n";
-    status2 = encrypt_message(session, msg2, NULL, &enc_msg2, PEP_enc_MIME_multipart);
+    status2 = encrypt_message(session, msg2, NULL, &enc_msg2, PEP_enc_PGP_MIME);
     assert(status2 == PEP_STATUS_OK);
     assert(enc_msg2);
     cout << "message encrypted.\n";
     
-    status2 = mime_encode_message(enc_msg2, &text2);
+    status2 = mime_encode_message(enc_msg2, false, &text2);
     assert(status2 == PEP_STATUS_OK);
     assert(text2);
 

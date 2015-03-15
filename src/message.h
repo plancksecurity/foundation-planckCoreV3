@@ -7,14 +7,12 @@
 #include "bloblist.h"
 #include "stringlist.h"
 #include "stringpair.h"
+#include "timestamp.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// for time values all functions are using POSIX struct tm
-
-typedef struct tm timestamp;
 
 typedef enum _PEP_text_format {
     PEP_text_format_plain = 0,
@@ -27,13 +25,16 @@ typedef enum _PEP_msg_direction {
     PEP_dir_outgoing
 } PEP_msg_direction;
 
+typedef enum _PEP_MIME_format {
+    PEP_MIME_none = 0,                      // message is not MIME encoded
+    PEP_MIME_fields_omitted,                // message content but no fields
+    PEP_MIME                                // message is fully MIME encoded
+} PEP_MIME_format;
+
 typedef enum _PEP_enc_format {
-    PEP_enc_none = 0,                       // message is in pieces and nor
-                                            // encoded nor encrypted
-    PEP_enc_none_MIME,                      // message is MIME encoded but not
-                                            // encrypted; all code is in longmsg
+    PEP_enc_none = 0,                       // message is not encrypted
     PEP_enc_pieces,                         // inline PGP + PGP extensions
-    PEP_ecn_S_MIME,                         // RFC5751
+    PEP_enc_S_MIME,                         // RFC5751
     PEP_enc_PGP_MIME,                       // RFC3156
     PEP_enc_PEP                             // pEp encryption format
 } PEP_enc_format;
@@ -70,6 +71,8 @@ typedef struct _message {
     char *comments;                         // UTF-8 string with comments
     stringpair_list_t *opt_fields;          // optional fields
     PEP_enc_format enc_format;              // format of encrypted data
+    PEP_MIME_format mime;                   // if this is not PEP_MIME_none the
+                                            // message content is in longmsg
 } message;
 
 typedef struct _message_ref_list {

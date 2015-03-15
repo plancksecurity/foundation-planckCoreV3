@@ -32,7 +32,7 @@ extern "C" {
 
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
-        const message *src,
+        message *src,
         stringlist_t *extra,
         message **dst,
         PEP_enc_format enc_format
@@ -44,8 +44,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 //  parameters:
 //      session (in)        session handle
 //      src (in)            message to decrypt
+//      mime (in)           MIME encoding wanted
 //      dst (out)           pointer to new decrypted message or NULL on failure
-//      enc_format (in)     unencrypted format
 //
 //  return value:
 //      error status or PEP_STATUS_OK on success
@@ -55,9 +55,9 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
 DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
-        const message *src,
-        message **dst,
-        PEP_enc_format enc_format
+        message *src,
+        PEP_MIME_format mime,
+        message **dst
     );
 
 #ifdef __cplusplus
