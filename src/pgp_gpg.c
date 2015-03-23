@@ -1256,7 +1256,7 @@ PEP_STATUS pgp_get_key_rating(
                 )
                 && sk->length == 1024
                 )
-                *comm_type = PEP_ct_OpenPGP_1024_RSA_unconfirmed;
+                *comm_type = PEP_ct_OpenPGP_weak_unconfirmed;
 
             if (sk->invalid) {
                 *comm_type = PEP_ct_key_b0rken;

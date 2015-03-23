@@ -296,11 +296,11 @@ typedef enum _PEP_comm_type {
     // range 0x10 to 0x3f: unconfirmed encryption
 
     PEP_ct_unconfirmed_encryption = 0x10,       // generic
-    PEP_ct_OpenPGP_1024_RSA_unconfirmed = 0x11,	// RSA 1024 is weak
+    PEP_ct_OpenPGP_weak_unconfirmed = 0x11,	    // RSA 1024 is weak
     PEP_ct_SMIME_unconfirmed = 0x20,
     PEP_ct_CMS_unconfirmed = 0x30,
-    PEP_ct_OpenPGP_unconfirmed = 0x3f,          // key at least 2048 bit RSA
-    // or 1024 bit DSA
+    PEP_ct_OpenPGP_unconfirmed = 0x38,          // key at least 2048 bit RSA or EC
+    PEP_ct_OTR_unconfirmed = 0x3a,
 
     // range 0x40 to 0x7f: unconfirmed encryption and anonymization
 
@@ -313,10 +313,11 @@ typedef enum _PEP_comm_type {
     // range 0x90 to 0xbf: confirmed encryption
 
     PEP_ct_confirmed_encryption = 0x90,         // generic
-	PEP_ct_OpenPGP_1024_RSA = 0x91, // RSA 1024 is weak
+	PEP_ct_OpenPGP_weak = 0x91,                 // RSA 1024 is weak
     PEP_ct_SMIME = 0xa0,
     PEP_ct_CMS = 0xb0,
-	PEP_ct_OpenPGP = 0xbf, // key at least 2048 bit RSA or 1024 bit DSA
+	PEP_ct_OpenPGP = 0xb8,                      // key at least 2048 bit RSA or EC
+	PEP_ct_OTR = 0xba,
 
     // range 0xc0 to 0xff: confirmed encryption and anonymization
 
