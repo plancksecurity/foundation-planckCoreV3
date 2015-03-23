@@ -1211,11 +1211,92 @@ static PEP_STATUS interpret_MIME(
 
             clistiter *cur;
             for (cur = clist_begin(partlist); cur; cur = clist_next(cur)) {
-                struct mailmime *part= clist_content(cur);
+                size_t index;
+                int r;
+                struct mailmime *part = clist_content(cur);
                 if (part == NULL)
                     return PEP_ILLEGAL_VALUE;
 
+                content = part->mm_content_type;
+                assert(content);
+                if (content == NULL)
+                    return PEP_ILLEGAL_VALUE;
 
+                if (content->ct_type == NULL)
+                    return PEP_ILLEGAL_VALUE;
+
+                switch (content->ct_type->tp_type) {
+                    case MAILMIME_TYPE_DISCRETE_TYPE:
+                        if (content->ct_type->tp_data.tp_discrete_type == NULL)
+                            return PEP_ILLEGAL_VALUE;
+
+                        switch (content->ct_type->tp_data.tp_discrete_type->
+                                dt_type) {
+                            case MAILMIME_DISCRETE_TYPE_TEXT:
+                                if (strcmp(content->ct_subtype, "plain") ==
+                                        0) {
+                                    const char *text;
+                                    size_t length;
+
+                                    if (part->mm_body == NULL)
+                                        return PEP_ILLEGAL_VALUE;
+
+                                    text = part->mm_body->
+                                            dt_data.dt_text.dt_data;
+                                    length =
+                                        part->mm_body->dt_data.dt_text.dt_length;
+                                    index = 0;
+                                    r = mailmime_encoded_phrase_parse(
+                                            "utf-8", text, length, &index,
+                                            "utf-8", &msg->longmsg);
+                                    if (r)
+                                        return PEP_ILLEGAL_VALUE;
+                                }
+                                else if (strcmp(content->ct_subtype, "html") ==
+                                        0) {
+                                    const char *html;
+                                    size_t length;
+
+                                    if (part->mm_body == NULL)
+                                        return PEP_ILLEGAL_VALUE;
+
+                                    html = part->mm_body->
+                                            dt_data.dt_text.dt_data;
+                                    length =
+                                        part->mm_body->dt_data.dt_text.dt_length;
+                                    index = 0;
+                                    r = mailmime_encoded_phrase_parse(
+                                            "utf-8", html, length, &index,
+                                            "utf-8", &msg->longmsg_formatted);
+                                    if (r)
+                                        return PEP_ILLEGAL_VALUE;
+                                }
+                                else {
+                                    return interpret_MIME(part, msg);
+                                }
+
+                                break;
+                                
+                            case MAILMIME_DISCRETE_TYPE_IMAGE:
+                            case MAILMIME_DISCRETE_TYPE_AUDIO:
+                            case MAILMIME_DISCRETE_TYPE_VIDEO:
+                            case MAILMIME_DISCRETE_TYPE_APPLICATION:
+                            case MAILMIME_DISCRETE_TYPE_EXTENSION:
+                                    return interpret_MIME(part, msg);
+
+                                break;
+                                
+                            default:
+                                return PEP_ILLEGAL_VALUE;
+                        }
+                        break;
+
+                    case MAILMIME_TYPE_COMPOSITE_TYPE:
+
+                        break;
+                    default:
+                        return PEP_ILLEGAL_VALUE;
+                }
             }
         }
         if (content->ct_type &&

@@ -24,8 +24,20 @@ p.add_argument('--encoding', '-e', type=str, default="utf-8",
 
 args = p.parse_args()
 
+try:
+    from icu import UnicodeString, Locale
+except ImportError:
+    print("warning: PyICU not installed, using fallback", file=sys.stderr)
+    def upper(x):
+        return x.upper();
+else:
+    locale = Locale(args.lang)
+    def upper(x):
+        u = UnicodeString(x)
+        return str(u.toUpper(locale))
+
 _all = (
-    word.match(line).group(1).upper()
+    upper(word.match(line).group(1))
         for line in FileInput(
                 args.hunspell + "/" + args.lang + ".dic",
                 openhook=hook_encoded(args.encoding)
@@ -35,6 +47,9 @@ _all = (
 _words = [w for w in _all if len(w) > 2 and not unwanted.match(w)]
 _words.sort()
 _words = [w for w, g in itertools.groupby(_words)]
+
+while len(_words) > 65536 * 2:
+    _words = _words[::2]
 
 if len(_words) > 65536:
     _words = _words[:65536]

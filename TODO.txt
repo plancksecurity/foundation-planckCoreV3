@@ -1,2 +1,4 @@
 - check if own key is good; if not: create a new keypair
+- warning with forwarding former encrypted messages unencryptedly
+- remove four-letter-words from dicts
 
