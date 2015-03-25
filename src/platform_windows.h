@@ -4,6 +4,8 @@
 
 #pragma warning(disable : 4996)
 
+#include <string.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -37,6 +39,10 @@ const char *windoze_system_db(void);
 const char *gpg_conf(void);
 
 long random(void);
+
+#ifndef inline
+#define inline _inline
+#endif
 
 #ifdef __cplusplus
 }

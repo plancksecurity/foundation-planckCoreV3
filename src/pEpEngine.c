@@ -1,5 +1,5 @@
-#include "dynamic_api.h"
 #include "pEp_internal.h"
+#include "dynamic_api.h"
 #include "cryptotech.h"
 #include "transport.h"
 
@@ -377,7 +377,7 @@ DYNAMIC_API PEP_STATUS safewords(
 {
 	const char *source = fingerprint;
 	char *buffer;
-	char *dest = buffer;
+	char *dest;
 	size_t fsize;
     PEP_STATUS _status;
 
@@ -394,6 +394,7 @@ DYNAMIC_API PEP_STATUS safewords(
     assert(buffer);
     if (buffer == NULL)
         return PEP_OUT_OF_MEMORY;
+    dest = buffer;
 
 	fsize = strlen(fingerprint);
 

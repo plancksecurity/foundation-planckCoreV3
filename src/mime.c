@@ -4,8 +4,9 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
+#ifndef WIN32
 #include <unistd.h>
-
+#endif
 #include "etpan_mime.h"
 #include "wrappers.h"
 

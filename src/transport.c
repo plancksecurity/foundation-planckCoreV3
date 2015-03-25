@@ -23,7 +23,7 @@ PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first)
     return PEP_STATUS_OK;
 }
 
-DYNAMIC_API void release_transport_system(PEP_SESSION session, bool out_last)
+void release_transport_system(PEP_SESSION session, bool out_last)
 {
     assert(session);
     // nothing yet
