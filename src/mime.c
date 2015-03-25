@@ -11,8 +11,6 @@
 #include "etpan_mime.h"
 #include "wrappers.h"
 
-//def
-
 DYNAMIC_API bool is_PGP_message_text(const char *text)
 {
     assert(text);
