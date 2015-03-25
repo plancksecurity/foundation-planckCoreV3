@@ -1,15 +1,15 @@
+#include "pEp_internal.h"
 #include "mime.h"
 
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
+#ifndef WIN32
 #include <unistd.h>
-
+#endif
 #include "etpan_mime.h"
 #include "wrappers.h"
-
-#define NOT_IMPLEMENTED assert(0);
 
 DYNAMIC_API bool is_PGP_message_text(const char *text)
 {

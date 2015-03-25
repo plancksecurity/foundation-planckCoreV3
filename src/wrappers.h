@@ -3,6 +3,10 @@
 #include <errno.h>
 #include <stdarg.h>
 
+#ifdef WIN32
+#include "platform_windows.h"
+#endif
+
 #ifdef EOF // stdio.h
 
 static inline FILE * Fopen(const char *filename, const char *mode)

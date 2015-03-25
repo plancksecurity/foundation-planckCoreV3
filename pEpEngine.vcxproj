@@ -81,24 +81,49 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\bloblist.c" />
     <ClCompile Include="src\cryptotech.c" />
+    <ClCompile Include="src\email.c" />
+    <ClCompile Include="src\etpan_mime.c" />
+    <ClCompile Include="src\identity_list.c" />
     <ClCompile Include="src\keymanagement.c" />
+    <ClCompile Include="src\message.c" />
+    <ClCompile Include="src\message_api.c" />
+    <ClCompile Include="src\mime.c" />
     <ClCompile Include="src\pEpEngine.c" />
     <ClCompile Include="src\pgp_gpg.c" />
     <ClCompile Include="src\platform_windows.cpp" />
     <ClCompile Include="src\sqlite3.c" />
+    <ClCompile Include="src\stringlist.c" />
+    <ClCompile Include="src\stringpair.c" />
+    <ClCompile Include="src\timestamp.c" />
     <ClCompile Include="src\transport.c" />
+    <ClCompile Include="src\trans_auto.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\bloblist.h" />
     <ClInclude Include="src\cryptotech.h" />
+    <ClInclude Include="src\dynamic_api.h" />
+    <ClInclude Include="src\email.h" />
+    <ClInclude Include="src\etpan_mime.h" />
+    <ClInclude Include="src\identity_list.h" />
     <ClInclude Include="src\keymanagement.h" />
+    <ClInclude Include="src\message.h" />
+    <ClInclude Include="src\message_api.h" />
+    <ClInclude Include="src\mime.h" />
     <ClInclude Include="src\pEpEngine.h" />
     <ClInclude Include="src\pEp_internal.h" />
     <ClInclude Include="src\pgp_gpg.h" />
     <ClInclude Include="src\pgp_gpg_internal.h" />
     <ClInclude Include="src\platform_windows.h" />
+    <ClInclude Include="src\resource.h" />
     <ClInclude Include="src\sqlite3.h" />
+    <ClInclude Include="src\stringlist.h" />
+    <ClInclude Include="src\stringpair.h" />
+    <ClInclude Include="src\timestamp.h" />
     <ClInclude Include="src\transport.h" />
+    <ClInclude Include="src\trans_auto.h" />
+    <ClInclude Include="src\wrappers.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />

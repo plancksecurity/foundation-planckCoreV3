@@ -1,3 +1,5 @@
+#include "pEp_internal.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>

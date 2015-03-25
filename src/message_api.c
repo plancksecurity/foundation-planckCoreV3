@@ -1,3 +1,4 @@
+#include "pEp_internal.h"
 #include "message_api.h"
 
 #ifndef WIN32 // POSIX
@@ -10,8 +11,6 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
-
-#define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
 
 static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
 {
@@ -228,7 +227,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 {
     PEP_STATUS status = PEP_STATUS_OK;
     message * msg = NULL;
-    message * _src;
     stringlist_t * keys = NULL;
     bool free_src = false;
 
@@ -332,6 +330,9 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 }
                 else if (src->longmsg) {
                     ptext = src->longmsg;
+                }
+                else {
+                    ptext = "pEp";
                 }
 
                 message *_src = calloc(1, sizeof(message));

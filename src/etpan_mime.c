@@ -1,6 +1,8 @@
 #include <string.h>
 #include <stdlib.h>
+#ifndef WIN32
 #include <unistd.h>
+#endif
 #include <assert.h>
 
 #include "etpan_mime.h"

@@ -54,7 +54,7 @@
 #include "cryptotech.h"
 #include "transport.h"
 
-#define NOT_IMPLEMENTED assert(0)
+#define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
 
 typedef struct _pEpSession {
     const char *version;
