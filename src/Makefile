@@ -28,7 +28,7 @@ CC=gcc -std=c99
 CFLAGS?=-I$(GPGME_IN)/include $(OPTIMIZE) -fPIC -pedantic \
 	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -DLIBGPGME=\"$(LIBGPGME)\" \
 	-DSQLITE_THREADSAFE=1 -D_GNU_SOURCE
-LDFLAGS?=-L$(GPGME_IN) -shared -lc -ldl -letpan -lgpgme-pthread -lsqlite3
+LDFLAGS?=-L$(GPGME_IN)/lib -shared -lc -ldl -letpan -lgpgme-pthread -lsqlite3
 
 else
 $(error don't know how to make for $(BUILD_FOR) on $(BUILD_ON))

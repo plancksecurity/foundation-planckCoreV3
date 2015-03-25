@@ -3,7 +3,8 @@ include ../Makefile.conf
 CC?=g++ -std=gnu++11 -pthread
 CXX?=g++ -std=gnu++11 -pthread
 LD?=$(CXX)
-LDFLAGS?=-L$(HOME)/lib -lpEpEngine -lstdc++
+LDFLAGS?=-L$(HOME)/lib
+LDLIBS?=-letpan -lpEpEngine -lstdc++
 CXXFLAGS?=-g -O0 -I../src
 # CXXFLAGS=-O3 -DNDEBUG
 
