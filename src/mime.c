@@ -1,3 +1,4 @@
+#include "pEp_internal.h"
 #include "mime.h"
 
 #include <string.h>
