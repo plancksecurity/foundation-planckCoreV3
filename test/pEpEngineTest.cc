@@ -10,6 +10,35 @@
 
 using namespace std;
 
+void ReadFileIntoMem(const char *fname, char* &buffer, size_t &length){
+    buffer = NULL;
+    length = 0;
+	cout << "opening " << fname << " for reading\n";
+	ifstream txtFile (fname, ifstream::binary);
+	assert(txtFile.is_open());
+    if (txtFile) {
+        // get length of file:
+        txtFile.seekg (0, txtFile.end);
+        length = txtFile.tellg();
+        txtFile.seekg (0, txtFile.beg);
+
+        buffer = new char [length];
+
+        cout << "Reading " << length << " characters... ";
+        txtFile.read (buffer,length);
+
+        if (txtFile)
+          cout << "all characters read successfully.\n";
+        else
+          cout << "error: only " << txtFile.gcount() << " could be read\n";
+        txtFile.close();
+    }
+
+	txtFile.close();
+    assert(buffer);
+    assert(length);
+}
+
 int main(int argc, char* argv[])
 {
 	PEP_SESSION session;
@@ -32,28 +61,18 @@ int main(int argc, char* argv[])
 	cout << "logging test\n";
 	log_event(session, "log test", "pEp Enginge Test", "This is a logging test sample.", "please ignore this line");
 
-	string cipher;
+    char * cipher_buffer = NULL;
+    size_t cipher_length = 0;
+    ReadFileIntoMem("msg.asc", cipher_buffer, cipher_length);
 
-	cout << "opening msc.asc for reading\n";
-	ifstream inFile ("msg.asc");
-	assert(inFile.is_open());
+	cout << "\n" << cipher_buffer;
 
-	cout << "reading cipher text of msc.asc\n";
-	while (!inFile.eof()) {
-		static string line;
-		getline(inFile, line);
-		cipher += line + "\n";
-	}
-	inFile.close();
-
-	cout << "\n" << cipher;
-
-	char *buf_text;
-	size_t buf_size;
+	char *buf_text = NULL;
+	size_t buf_size = 0;
 	stringlist_t *keylist;
 
     cout << "calling decrypt_and_verify()\n";
-    PEP_STATUS decrypt_result = decrypt_and_verify(session, cipher.c_str(), cipher.length(), &buf_text, &buf_size, &keylist);
+    PEP_STATUS decrypt_result = decrypt_and_verify(session, cipher_buffer, cipher_length, &buf_text, &buf_size, &keylist);
 
     cout << "returning from decrypt_and_verify() with result == " << decrypt_result << "\n";
     assert(decrypt_result == PEP_DECRYPTED_AND_VERIFIED);
@@ -71,69 +90,40 @@ int main(int argc, char* argv[])
     pEp_free(buf_text);
     cout << "\n" << plain;
 
-    string t1, t2, sig;
+    char * t1_buffer = NULL;
+    size_t t1_length = 0;
+    ReadFileIntoMem("t1.txt", t1_buffer, t1_length);
 
-	cout << "\nopening t1.txt for reading\n";
-	ifstream txtFile ("t1.txt");
-	assert(txtFile.is_open());
-
-	cout << "reading t1 from t1.txt\n";
-	while (!txtFile.eof()) {
-		static string line;
-		getline(txtFile, line);
-		t1 += line + "\r\n";
-	}
-	txtFile.close();
-    assert(t1.size());
-    t1.erase(t1.size()-2, 2);
-
-	cout << "opening signature.asc for reading\n";
-	ifstream sigFile ("signature.asc");
-	assert(sigFile.is_open());
-
-	cout << "reading sig from signature.asc\n";
-	while (!sigFile.eof()) {
-		static string line;
-		getline(sigFile, line);
-		sig += line + "\n";
-	}
-	sigFile.close();
+    char * sig_buffer = NULL;
+    size_t sig_length = 0;
+    ReadFileIntoMem("signature.asc", sig_buffer, sig_length);
 
     cout << "\ncalling verify_test()\n";
-    PEP_STATUS verify_result = verify_text(session, t1.c_str(), t1.size(), sig.c_str(), sig.size(), &keylist);
-    cout << "result = " << verify_result << "\n";
+    PEP_STATUS verify_result = verify_text(session, t1_buffer, t1_length, sig_buffer, sig_length, &keylist);
     assert(verify_result == PEP_VERIFIED || verify_result == PEP_VERIFIED_AND_TRUSTED);
     assert(keylist->value);
     cout << "signed with " << keylist->value << "\n";
     free_stringlist(keylist);
 
-	cout << "\nopening t2.txt for reading\n";
-	ifstream txt2File ("t2.txt");
-	assert(txt2File.is_open());
-
-	cout << "reading t2 from t2.txt\n";
-	while (!txt2File.eof()) {
-		static string line;
-		getline(txt2File, line);
-		t2 += line + "\r\n";
-	}
-	txt2File.close();
-    assert(t2.size());
-    t1.erase(t2.size()-2, 2);
+    char * t2_buffer = NULL;
+    size_t t2_length = 0;
+    ReadFileIntoMem("t2.txt", t2_buffer, t2_length);
 
     cout << "\ncalling verify_test()\n";
-    verify_result = verify_text(session, t2.c_str(), t2.size(), sig.c_str(), sig.size(), &keylist);
-    cout << "result = " << verify_result << "\n";
+    verify_result = verify_text(session, t2_buffer, t2_length, sig_buffer, sig_length, &keylist);
     assert(verify_result == PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
     free_stringlist(keylist);
 
-    keylist = new_stringlist("49422235FC99585B891C66530C7B109BFA7261F7");
+    keylist = new_stringlist("DD55BF29DF9B1541");
+    //keylist = new_stringlist("49422235FC99585B891C66530C7B109BFA7261F7");
     // stringlist_add(keylist, "C6FAA231A2B43252B9526D119550C6B6B8B0FCD6");
     // stringlist_add(keylist, "5DC8CAC595EDAD6598DD4732DD55BF29DF9B1541");
 
+	buf_text = NULL;
+	buf_size = 0;
+
     cout << "\ncalling encrypt_and_sign()\n";
     PEP_STATUS encrypt_result = encrypt_and_sign(session, keylist, plain.c_str(), plain.length(), &buf_text, &buf_size);
-    
     cout << "returning from encrypt_and_sign() with result == " << encrypt_result << "\n";
     assert(encrypt_result == PEP_STATUS_OK);
     free_stringlist(keylist);
@@ -142,6 +132,11 @@ int main(int argc, char* argv[])
     string cipher2(buf_text);
     cout << "\n" << cipher2;
     pEp_free(buf_text);
+
+    delete[] cipher_buffer;
+    delete[] t1_buffer;
+    delete[] sig_buffer;
+    delete[] t2_buffer;
 
 	cout << "\nfinding English safeword for 2342...\n";
 	char * word;
@@ -242,7 +237,7 @@ int main(int argc, char* argv[])
     assert(recv_key_status == PEP_STATUS_OK);
 
     PEP_comm_type tcomm_type;
-    PEP_STATUS tstatus = get_key_rating(session, "49422235FC99585B891C66530C7B109BFA7261F7", &tcomm_type);
+    PEP_STATUS tstatus = get_key_rating(session, "DD55BF29DF9B1541", &tcomm_type);
     assert(tstatus == PEP_STATUS_OK);
     assert(tcomm_type == PEP_ct_OpenPGP_unconfirmed);
     
