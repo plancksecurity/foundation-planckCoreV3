@@ -1,14 +1,14 @@
-#include <string.h>
-#include <stdlib.h>
-#ifndef WIN32
-#include <unistd.h>
-#endif
-#include <assert.h>
-
 #include "etpan_mime.h"
 #ifndef mailmime_param_new_with_data
 #include <libetpan/mailprivacy_tools.h>
 #endif
+
+#include "platform.h"
+
+#include <string.h>
+#include <stdlib.h>
+#include <assert.h>
+
 
 time_t mail_mkgmtime(struct tm * tmp);
 
@@ -21,7 +21,6 @@ static char * generate_boundary(void)
     long value2;
     long value3;
     long value4;
-    int r;
  
     // no random needed here
 
@@ -448,8 +447,9 @@ struct mailimf_date_time * timestamp_to_etpantime(const struct tm *ts)
     result->dt_day = ts->tm_mday;
     result->dt_month = ts->tm_mon + 1;
     result->dt_year = ts->tm_year + 1900;
+#ifndef WIN32
     result->dt_zone = (int) (ts->tm_gmtoff / 36L);
-
+#endif
     return result;
 }
 
@@ -468,8 +468,9 @@ struct tm * etpantime_to_timestamp(const struct mailimf_date_time *et)
     result->tm_mday = et->dt_day;
     result->tm_mon = et->dt_month - 1;
     result->tm_year = et->dt_year - 1900;
+#ifndef WIN32
     result->tm_gmtoff = 36L * (long) et->dt_zone;
-
+#endif
     return result;
 }
 

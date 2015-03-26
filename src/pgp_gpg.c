@@ -1,5 +1,5 @@
-#include "pgp_gpg.h"
 #include "pEp_internal.h"
+#include "pgp_gpg.h"
 
 #include <limits.h>
 

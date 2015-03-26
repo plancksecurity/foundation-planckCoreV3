@@ -15,15 +15,15 @@
 // default keyserver
 #define DEFAULT_KEYSERVER "hkp://keys.gnupg.net"
 
+#include "platform.h"
+
 #ifdef WIN32
-#include "platform_windows.h"
 #define LOCAL_DB windoze_local_db()
 #define SYSTEM_DB windoze_system_db()
 #define LIBGPGME "libgpgme-11.dll"
 #else // UNIX
 #define _POSIX_C_SOURCE 200809L
 #include <dlfcn.h>
-#include "platform_unix.h"
 #define LOCAL_DB unix_local_db()
 #ifndef SYSTEM_DB
 #define SYSTEM_DB "/usr/share/pEp/system.db"

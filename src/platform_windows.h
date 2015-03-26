@@ -5,16 +5,19 @@
 #pragma warning(disable : 4996)
 
 #include <string.h>
+#include <io.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #define RTLD_LAZY 1
+#define mode_t int
 
 void *dlopen(const char *filename, int flag);
 int dlclose(void *handle);
 void *dlsym(void *handle, const char *symbol);
+int mkstemp(char *templ);
 
 #ifndef strdup
 #define strdup(A) _strdup((A))
@@ -31,6 +34,15 @@ void *dlsym(void *handle, const char *symbol);
 #ifndef gmtime_r
 #define gmtime_r(A, B) gmtime_s((B), (A))
 #endif
+#ifndef ftruncate
+#define ftruncate(A, B) _chsize((A), (B))
+#endif
+#ifndef ftello
+#define ftello(A) ((off_t) _ftelli64(A))
+#endif
+#ifndef mkstemp
+#define mkstemp(A) _mktemp(A)
+#endif
 
 char *strndup(const char *s1, size_t n);
 
@@ -41,7 +53,7 @@ const char *gpg_conf(void);
 long random(void);
 
 #ifndef inline
-#define inline _inline
+#define inline __inline
 #endif
 
 #ifdef __cplusplus
