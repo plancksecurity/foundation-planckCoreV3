@@ -40,6 +40,9 @@ int mkstemp(char *templ);
 #ifndef ftello
 #define ftello(A) ((off_t) _ftelli64(A))
 #endif
+#ifndef mkstemp
+#define mkstemp(A) _mktemp(A)
+#endif
 
 char *strndup(const char *s1, size_t n);
 
