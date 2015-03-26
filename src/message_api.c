@@ -1,12 +1,7 @@
 #include "pEp_internal.h"
 #include "message_api.h"
 
-#ifndef WIN32 // POSIX
-#define _POSIX_C_SOURCE 200809L
-#include <strings.h>
-#else
-#include "platform_windows.h"
-#endif
+#include "platform.h"
 
 #include <assert.h>
 #include <string.h>

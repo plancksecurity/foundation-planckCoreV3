@@ -1,8 +1,4 @@
-#ifndef WIN32 // POSIX
-#define _POSIX_C_SOURCE 200809L
-#else
-#include "platform_windows.h"
-#endif
+#include "platform.h"
 
 #include <string.h>
 #include <stdio.h>

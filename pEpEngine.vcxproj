@@ -41,8 +41,9 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Program Files %28x86%29\GNU\GnuPG\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\vb\Documents\Visual Studio 2013\Projects\libetpan\build-windows\include;C:\Program Files %28x86%29\GNU\GnuPG\include;$(IncludePath)</IncludePath>
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <LibraryPath>C:\Users\vb\Documents\Visual Studio 2013\Projects\libetpan\build-windows\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -60,6 +61,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -115,6 +117,7 @@
     <ClInclude Include="src\pEp_internal.h" />
     <ClInclude Include="src\pgp_gpg.h" />
     <ClInclude Include="src\pgp_gpg_internal.h" />
+    <ClInclude Include="src\platform.h" />
     <ClInclude Include="src\platform_windows.h" />
     <ClInclude Include="src\resource.h" />
     <ClInclude Include="src\sqlite3.h" />
@@ -127,6 +130,11 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libetpan\build-windows\libetpan\libetpan.vcxproj">
+      <Project>{ba4ded3c-e56f-4484-bfc3-9c13e461a1be}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

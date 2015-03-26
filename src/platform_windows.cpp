@@ -14,6 +14,8 @@
 #include <string>
 #include <stdexcept>
 #include "platform_windows.h"
+#include <fcntl.h>
+#include <sys\stat.h>
 
 #ifndef WC_ERR_INVALID_CHARS
 #define WC_ERR_INVALID_CHARS      0x00000080  // error for invalid chars
@@ -200,12 +202,12 @@ long random(void)
         e = rand_s(&r);
     } while (e);
 
-    return (long) (r & ((1<<31)-1));
+    return (long) (r & ((1U<<31)-1));
 }
 
 char *strndup(const char *s1, size_t n)
 {
-    char *str = calloc(n + 1, 1);
+    char *str = (char *) calloc(n + 1, 1);
     if (str == NULL)
         return NULL;
 
@@ -213,5 +215,12 @@ char *strndup(const char *s1, size_t n)
     return str;
 }
 
-} // "C"
+int mkstemp(char *templ)
+{
+    char *pathname = _mktemp(templ);
+    if (errno)
+        return -1;
+    return _open(pathname, _O_RDWR | _O_CREAT | _O_EXCL, _S_IREAD | _S_IWRITE);
+}
 
+} // "C"

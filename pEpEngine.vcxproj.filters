@@ -140,6 +140,9 @@
     <ClInclude Include="src\mime.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="src\platform.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />
