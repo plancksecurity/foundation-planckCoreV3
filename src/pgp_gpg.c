@@ -421,7 +421,7 @@ PEP_STATUS pgp_decrypt_and_verify(
 
                 result = PEP_DECRYPTED_AND_VERIFIED;
                 do {
-                    switch (gpgme_signature->status) {
+                    switch (_GPGERR(gpgme_signature->status)) {
                     case GPG_ERR_NO_ERROR:
                         k = stringlist_add(k, gpgme_signature->fpr);
                         break;
