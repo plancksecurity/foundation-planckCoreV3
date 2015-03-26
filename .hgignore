@@ -1,0 +1,11 @@
+syntax: glob
+*.d
+*.o
+*~
+*.swp
+db/*.csv
+db/*.db
+*.a
+*.so
+test/pEpEngineTest
+
