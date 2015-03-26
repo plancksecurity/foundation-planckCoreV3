@@ -191,7 +191,6 @@ static PEP_STATUS mime_html_text(
 enomem:
     status = PEP_OUT_OF_MEMORY;
 
-pep_error:
     if (mime)
         mailmime_free(mime);
 
@@ -231,7 +230,6 @@ static PEP_STATUS mime_attachment(
 enomem:
     status = PEP_OUT_OF_MEMORY;
 
-pep_error:
     if (mime)
         mailmime_free(mime);
 
@@ -582,7 +580,6 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
 enomem:
     status = PEP_OUT_OF_MEMORY;
 
-pep_error:
     if (fields_list)
         clist_free(fields_list);
 
@@ -649,8 +646,6 @@ static PEP_STATUS mime_encode_message_plain(
 
         bloblist_t *_a;
         for (_a = msg->attachments; _a != NULL; _a = _a->next) {
-            char * mime_type;
-
             assert(_a->data);
             assert(_a->size);
 
@@ -750,7 +745,6 @@ static PEP_STATUS mime_encode_message_PGP_MIME(
 enomem:
     status = PEP_OUT_OF_MEMORY;
 
-pep_error:
     if (mime)
         mailmime_free(mime);
 
@@ -886,7 +880,6 @@ static identity_list * mal_to_identity_list(
     struct mailimf_address * addr = NULL;
     struct mailimf_mailbox *mb = NULL;
     clistiter *cur;
-    int r;
 
     assert(mal);
 
