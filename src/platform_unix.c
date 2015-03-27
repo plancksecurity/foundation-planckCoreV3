@@ -60,6 +60,11 @@ const char *gpg_conf(void)
         *p++ = '/';
         strncpy(p, gpg_conf_name, len);
 
+        // GPG creates conf dir if missing.
+        // --gen-random of one byte is most
+        // non-intrusive command
+        system("gpg --gen-random 0 1");
+
         done = true;
     }
     return buffer;
