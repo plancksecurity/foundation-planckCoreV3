@@ -1228,39 +1228,79 @@ static PEP_STATUS interpret_MIME(
                                         0) {
                                     const char *text;
                                     size_t length;
+                                    size_t s;
+                                    int code;
 
                                     if (part->mm_body == NULL)
                                         return PEP_ILLEGAL_VALUE;
 
                                     text = part->mm_body->
                                             dt_data.dt_text.dt_data;
+                                    if (text == NULL)
+                                        return PEP_ILLEGAL_VALUE;
+
                                     length =
                                         part->mm_body->dt_data.dt_text.dt_length;
-                                    index = 0;
-                                    r = mailmime_encoded_phrase_parse(
-                                            "utf-8", text, length, &index,
-                                            "utf-8", &msg->longmsg);
-                                    if (r)
-                                        return PEP_ILLEGAL_VALUE;
+
+                                    if (part->mm_body->dt_encoded) {
+                                        code = part->mm_body->dt_encoding;
+                                        index = 0;
+                                        r = mailmime_part_parse(text, length,
+                                                &index, code, &msg->longmsg,
+                                                &s);
+                                        switch (r) {
+                                            case MAILIMF_NO_ERROR:
+                                                break;
+                                            case MAILIMF_ERROR_MEMORY:
+                                                return PEP_OUT_OF_MEMORY;
+                                            default:
+                                                return PEP_ILLEGAL_VALUE;
+                                        }
+                                    }
+                                    else {
+                                        msg->longmsg = strdup(text);
+                                        if (msg->longmsg == NULL)
+                                            return PEP_OUT_OF_MEMORY;
+                                    }
                                 }
                                 else if (strcmp(content->ct_subtype, "html") ==
                                         0) {
                                     const char *html;
                                     size_t length;
+                                    size_t s;
+                                    int code;
 
                                     if (part->mm_body == NULL)
                                         return PEP_ILLEGAL_VALUE;
 
                                     html = part->mm_body->
                                             dt_data.dt_text.dt_data;
+                                    if (html == NULL)
+                                        return PEP_ILLEGAL_VALUE;
+
                                     length =
                                         part->mm_body->dt_data.dt_text.dt_length;
-                                    index = 0;
-                                    r = mailmime_encoded_phrase_parse(
-                                            "utf-8", html, length, &index,
-                                            "utf-8", &msg->longmsg_formatted);
-                                    if (r)
-                                        return PEP_ILLEGAL_VALUE;
+
+                                    if (part->mm_body->dt_encoded) {
+                                        code = part->mm_body->dt_encoding;
+                                        index = 0;
+                                        r = mailmime_part_parse(html, length,
+                                                &index, code,
+                                                &msg->longmsg_formatted, &s);
+                                        switch (r) {
+                                            case MAILIMF_NO_ERROR:
+                                                break;
+                                            case MAILIMF_ERROR_MEMORY:
+                                                return PEP_OUT_OF_MEMORY;
+                                            default:
+                                                return PEP_ILLEGAL_VALUE;
+                                        }
+                                    }
+                                    else {
+                                        msg->longmsg_formatted = strdup(html);
+                                        if (msg->longmsg_formatted == NULL)
+                                            return PEP_OUT_OF_MEMORY;
+                                    }
                                 }
                                 else {
                                     return interpret_MIME(part, msg);
