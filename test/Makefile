@@ -27,3 +27,6 @@ unit_tests: $(UNIT_TESTS)
 	for t in ./*_test ; do \
 		LD_LIBRARY_PATH=~/lib:../src $$t ; \
 	done
+
+install:
+	make -C .. install
