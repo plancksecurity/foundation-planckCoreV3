@@ -657,7 +657,9 @@ bool _is_text_part(struct mailmime_content *content, const char *subtype)
 {
     assert(content);
 
-    if (content->ct_type && content->ct_type->tp_data.tp_discrete_type &&
+    if (content->ct_type && content->ct_type->tp_type ==
+            MAILMIME_TYPE_DISCRETE_TYPE &&
+            content->ct_type->tp_data.tp_discrete_type &&
             content->ct_type->tp_data.tp_discrete_type->dt_type ==
             MAILMIME_DISCRETE_TYPE_TEXT) {
         if (subtype)
