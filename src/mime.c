@@ -1314,12 +1314,7 @@ static PEP_STATUS interpret_MIME(
                 }
             }
         }
-        if (content->ct_type &&
-                content->ct_type->tp_type == MAILMIME_TYPE_COMPOSITE_TYPE
-                && content->ct_type->tp_data.tp_composite_type
-                && content->ct_type->tp_data.tp_composite_type->ct_type ==
-                        MAILMIME_COMPOSITE_TYPE_MULTIPART) {
-
+        if (_is_multipart(content)) {
             clist *partlist = mime->mm_data.mm_multipart.mm_mp_list;
             if (partlist == NULL)
                 return PEP_ILLEGAL_VALUE;
