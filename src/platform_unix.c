@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "platform_unix.h"
 
 #define MAX_PATH 1024
@@ -55,17 +57,17 @@ const char *gpg_conf(void)
 
         *p++ = '/';
         strncpy(p, gpg_conf_path, len);
+
+        mkdir(p, 0700);
+        // we ignore the return value intentionally
+
         p += strlen(gpg_conf_path);
         len -= strlen(gpg_conf_path) - 1;
         *p++ = '/';
         strncpy(p, gpg_conf_name, len);
 
-        // GPG creates conf dir if missing.
-        // --gen-random of one byte is most
-        // non-intrusive command
-        system("gpg --gen-random 0 1");
-
         done = true;
     }
+
     return buffer;
 }

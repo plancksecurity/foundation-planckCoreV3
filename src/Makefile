@@ -12,7 +12,7 @@ LD?=clang
 CFLAGS?=-I$(GPGME_IN)/include -I$(HOME)/include -I/opt/local/include $(OPTIMIZE) -pedantic \
 	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -DLIBGPGME=\"$(LIBGPGME)\"
 LDFLAGS?=-lc -shared -arch x86_64 \
-	-L$(HOME)/lib -L/opt/local/lib -letpan -lgpgme-pthread -lsqlite
+	-L$(HOME)/lib -L/opt/local/lib -letpan -lgpgme-pthread -lsqlite3
 
 else
 $(error don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
