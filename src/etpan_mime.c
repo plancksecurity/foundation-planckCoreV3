@@ -570,31 +570,6 @@ int _append_optional_field(
     return r;
 }
 
-static bool parameter_has_value(
-        clist *list,
-        const char *name,
-        const char *value
-    )
-{
-    clistiter *cur;
-
-    assert(name);
-    assert(value);
-
-    if (list == NULL)
-        return false;
-
-    for (cur = clist_begin(list); cur != NULL ; cur = clist_next(cur)) {
-        struct mailmime_parameter * param = clist_content(cur);
-        if (param &&
-                param->pa_name && strcmp(name, param->pa_name) == 0 &&
-                param->pa_value && strcmp(value, param->pa_value) == 0)
-            return true;
-    }
-
-    return false;
-}
-
 clist * _get_fields(struct mailmime * mime)
 {
     clist * _fieldlist = NULL;
@@ -621,6 +596,32 @@ struct mailmime_content * _get_content(struct mailmime * mime)
     return content;
 }
 
+bool parameter_has_value(
+        struct mailmime_content *content,       
+        const char *name,
+        const char *value
+    )
+{
+    clistiter *cur;
+
+    assert(name);
+    assert(value);
+
+    clist * list = content->ct_parameters;
+    if (list == NULL)
+        return false;
+
+    for (cur = clist_begin(list); cur != NULL ; cur = clist_next(cur)) {
+        struct mailmime_parameter * param = clist_content(cur);
+        if (param &&
+                param->pa_name && strcmp(name, param->pa_name) == 0 &&
+                param->pa_value && strcmp(value, param->pa_value) == 0)
+            return true;
+    }
+
+    return false;
+}
+
 bool _is_multipart(struct mailmime_content *content, const char *subtype)
 {
     assert(content);
@@ -645,9 +646,26 @@ bool _is_PGP_MIME(struct mailmime_content *content)
     assert(content);
 
     if (_is_multipart(content, "encrypted") &&
-            parameter_has_value(content->ct_parameters, "protocol",
+            parameter_has_value(content, "protocol",
                     "application/pgp-encrypted"))
         return true;
+
+    return false;
+}
+
+bool _is_text_part(struct mailmime_content *content, const char *subtype)
+{
+    assert(content);
+
+    if (content->ct_type && content->ct_type->tp_data.tp_discrete_type &&
+            content->ct_type->tp_data.tp_discrete_type->dt_type ==
+            MAILMIME_DISCRETE_TYPE_TEXT) {
+        if (subtype)
+            return content->ct_subtype &&
+                    strcmp(content->ct_subtype, subtype) == 0;
+        else
+            return true;
+    }
 
     return false;
 }

@@ -1239,7 +1239,7 @@ static PEP_STATUS interpret_MIME(
 
     struct mailmime_content *content = mime->mm_content_type;
     if (content) {
-        if (msg->longmsg == NULL && _is_multipart(content, "alternative")) {
+        if (_is_multipart(content, "alternative")) {
             clist *partlist = mime->mm_data.mm_multipart.mm_mp_list;
             if (partlist == NULL)
                 return PEP_ILLEGAL_VALUE;
@@ -1257,64 +1257,26 @@ static PEP_STATUS interpret_MIME(
                 if (content == NULL)
                     return PEP_ILLEGAL_VALUE;
 
-                if (content->ct_type == NULL)
-                    return PEP_ILLEGAL_VALUE;
-
-                switch (content->ct_type->tp_type) {
-                    case MAILMIME_TYPE_DISCRETE_TYPE:
-                        if (content->ct_type->tp_data.tp_discrete_type == NULL)
-                            return PEP_ILLEGAL_VALUE;
-
-                        switch (content->ct_type->tp_data.tp_discrete_type->
-                                dt_type) {
-                            case MAILMIME_DISCRETE_TYPE_TEXT:
-                                if (strcmp(content->ct_subtype, "plain") ==
-                                        0) {
-                                    status = interpret_body(part,
-                                            &msg->longmsg, NULL);
-                                    if (status)
-                                        return status;
-                                }
-                                else if (strcmp(content->ct_subtype, "html") ==
-                                        0) {
-                                    status = interpret_body(part,
-                                            &msg->longmsg_formatted, NULL);
-                                    if (status)
-                                        return status;
-                                }
-                                break;
-                                
-                            case MAILMIME_DISCRETE_TYPE_IMAGE:
-                            case MAILMIME_DISCRETE_TYPE_AUDIO:
-                            case MAILMIME_DISCRETE_TYPE_VIDEO:
-                            case MAILMIME_DISCRETE_TYPE_APPLICATION:
-                            case MAILMIME_DISCRETE_TYPE_EXTENSION: {
-                                char *data = NULL;
-                                size_t size;
-                                char * mime_type = NULL;
-                                char * filename = NULL;
-                                status = interpret_body(part, &data, &size);
-                                if (status)
-                                    return status;
-                                msg->attachments =
-                                    bloblist_add(msg->attachments, data, size,
-                                            mime_type, filename);
-                                break;
-                            }
-                            default:
-                                return PEP_ILLEGAL_VALUE;
-                        }
-                        break;
-
-                    case MAILMIME_TYPE_COMPOSITE_TYPE:
-
-                        break;
-                    default:
-                        return PEP_ILLEGAL_VALUE;
+                if (_is_text_part(content, "plain") && msg->longmsg == NULL) {
+                    status = interpret_body(part, &msg->longmsg, NULL);
+                    if (status)
+                        return status;
+                }
+                else if (_is_text_part(content, "html") &&
+                        msg->longmsg_formatted == NULL) {
+                    status = interpret_body(part, &msg->longmsg_formatted,
+                            NULL);
+                    if (status)
+                        return status;
+                }
+                else /* add as attachment */ {
+                    status = interpret_MIME(part, msg);
+                    if (status)
+                        return status;
                 }
             }
         }
-        if (_is_multipart(content, NULL)) {
+        else if (_is_multipart(content, NULL)) {
             clist *partlist = mime->mm_data.mm_multipart.mm_mp_list;
             if (partlist == NULL)
                 return PEP_ILLEGAL_VALUE;
@@ -1331,7 +1293,26 @@ static PEP_STATUS interpret_MIME(
             }
         }
         else {
+            if (_is_text_part(content, NULL) && msg->longmsg == NULL) {
+                status = interpret_body(mime, &msg->longmsg, NULL);
+                if (status)
+                    return status;
+            }
+            else {
+                char *data = NULL;
+                size_t size;
+                char * mime_type = NULL;
+                char * filename = NULL;
 
+                status = interpret_body(mime, &data, &size);
+                if (status)
+                    return status;
+
+                msg->attachments = bloblist_add(msg->attachments, data, size,
+                        mime_type, filename);
+                if (msg->attachments == NULL)
+                    return PEP_OUT_OF_MEMORY;
+            }
         }
     }
 
