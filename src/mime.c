@@ -1239,7 +1239,7 @@ static PEP_STATUS interpret_MIME(
 
     struct mailmime_content *content = mime->mm_content_type;
     if (content) {
-        if (msg->longmsg == NULL && _is_multipart_alternative(content)) {
+        if (msg->longmsg == NULL && _is_multipart(content, "alternative")) {
             clist *partlist = mime->mm_data.mm_multipart.mm_mp_list;
             if (partlist == NULL)
                 return PEP_ILLEGAL_VALUE;
@@ -1314,7 +1314,7 @@ static PEP_STATUS interpret_MIME(
                 }
             }
         }
-        if (_is_multipart(content)) {
+        if (_is_multipart(content, NULL)) {
             clist *partlist = mime->mm_data.mm_multipart.mm_mp_list;
             if (partlist == NULL)
                 return PEP_ILLEGAL_VALUE;

@@ -578,9 +578,11 @@ static bool parameter_has_value(
 {
     clistiter *cur;
 
-    assert(list);
     assert(name);
     assert(value);
+
+    if (list == NULL)
+        return false;
 
     for (cur = clist_begin(list); cur != NULL ; cur = clist_next(cur)) {
         struct mailmime_parameter * param = clist_content(cur);
@@ -619,48 +621,34 @@ struct mailmime_content * _get_content(struct mailmime * mime)
     return content;
 }
 
-bool _is_multipart(struct mailmime_content *content)
+bool _is_multipart(struct mailmime_content *content, const char *subtype)
 {
-    bool result = false;
-
     assert(content);
 
     if (content->ct_type && content->ct_type->tp_type ==
             MAILMIME_TYPE_COMPOSITE_TYPE &&
             content->ct_type->tp_data.tp_composite_type &&
             content->ct_type->tp_data.tp_composite_type->ct_type ==
-            MAILMIME_COMPOSITE_TYPE_MULTIPART)
-        result = true;
+            MAILMIME_COMPOSITE_TYPE_MULTIPART) {
+        if (subtype)
+            return content->ct_subtype &&
+                    strcmp(content->ct_subtype, subtype) == 0;
+        else
+            return true;
+    }
 
-    return result;
-}
-
-bool _is_multipart_alternative(struct mailmime_content *content)
-{
-    bool result = false;
-
-    assert(content);
-
-    if (_is_multipart(content) && content->ct_subtype &&
-            strcmp(content->ct_subtype, "alternative") == 0)
-        result = true;
-
-    return result;
+    return false;
 }
 
 bool _is_PGP_MIME(struct mailmime_content *content)
 {
-    bool result = false;
-
     assert(content);
 
-    if (_is_multipart(content) && content->ct_subtype &&
-            strcmp(content->ct_subtype, "encrypted") == 0 &&
-            content->ct_parameters &&
+    if (_is_multipart(content, "encrypted") &&
             parameter_has_value(content->ct_parameters, "protocol",
                     "application/pgp-encrypted"))
-        result = true;
+        return true;
 
-    return result;
+    return false;
 }
 

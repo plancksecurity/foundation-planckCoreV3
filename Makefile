@@ -17,6 +17,7 @@ clean:
 
 test: all
 	$(MAKE) -C test test
+	$(MAKE) -C test unit_tests
 
 unit_tests: all
 	$(MAKE) -C test unit_tests
