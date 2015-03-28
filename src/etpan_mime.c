@@ -570,3 +570,97 @@ int _append_optional_field(
     return r;
 }
 
+static bool parameter_has_value(
+        clist *list,
+        const char *name,
+        const char *value
+    )
+{
+    clistiter *cur;
+
+    assert(list);
+    assert(name);
+    assert(value);
+
+    for (cur = clist_begin(list); cur != NULL ; cur = clist_next(cur)) {
+        struct mailmime_parameter * param = clist_content(cur);
+        if (param &&
+                param->pa_name && strcmp(name, param->pa_name) == 0 &&
+                param->pa_value && strcmp(value, param->pa_value) == 0)
+            return true;
+    }
+
+    return false;
+}
+
+clist * _get_fields(struct mailmime * mime)
+{
+    clist * _fieldlist = NULL;
+
+    assert(mime);
+
+    if (mime->mm_data.mm_message.mm_fields &&
+            mime->mm_data.mm_message.mm_fields->fld_list) {
+        _fieldlist = mime->mm_data.mm_message.mm_fields->fld_list;
+    }
+
+    return _fieldlist;
+}
+
+struct mailmime_content * _get_content(struct mailmime * mime)
+{
+    struct mailmime_content * content = NULL;
+
+    assert(mime);
+
+    if (mime->mm_data.mm_message.mm_msg_mime)
+        content = mime->mm_data.mm_message.mm_msg_mime->mm_content_type;
+
+    return content;
+}
+
+bool _is_multipart(struct mailmime_content *content)
+{
+    bool result = false;
+
+    assert(content);
+
+    if (content->ct_type && content->ct_type->tp_type ==
+            MAILMIME_TYPE_COMPOSITE_TYPE &&
+            content->ct_type->tp_data.tp_composite_type &&
+            content->ct_type->tp_data.tp_composite_type->ct_type ==
+            MAILMIME_COMPOSITE_TYPE_MULTIPART)
+        result = true;
+
+    return result;
+}
+
+bool _is_multipart_alternative(struct mailmime_content *content)
+{
+    bool result = false;
+
+    assert(content);
+
+    if (_is_multipart(content) && content->ct_subtype &&
+            strcmp(content->ct_subtype, "alternative") == 0)
+        result = true;
+
+    return result;
+}
+
+bool _is_PGP_MIME(struct mailmime_content *content)
+{
+    bool result = false;
+
+    assert(content);
+
+    if (_is_multipart(content) && content->ct_subtype &&
+            strcmp(content->ct_subtype, "encrypted") == 0 &&
+            content->ct_parameters &&
+            parameter_has_value(content->ct_parameters, "protocol",
+                    "application/pgp-encrypted"))
+        result = true;
+
+    return result;
+}
+

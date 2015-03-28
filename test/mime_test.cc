@@ -58,8 +58,19 @@ int main() {
     }
     inFile3.close();
 
+    cout << "decoding message…\n";
     message *msg3;
     PEP_STATUS status3 = mime_decode_message(mimetext3.c_str(), &msg3);
+    assert(status3 == PEP_STATUS_OK);
+    assert(msg3);
+    cout << "decoded.\n\n";
+    cout << "Subject: " << msg3->shortmsg << "\n\n";
+    if (msg3->longmsg)
+        cout << msg3->longmsg << "\n\n";
+    if (msg3->longmsg_formatted)
+        cout << msg3->longmsg_formatted << "\n\n";
+
+    free_message(msg3);
 
     cout << "calling release()\n";
     release(session);

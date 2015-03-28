@@ -65,3 +65,9 @@ int _append_optional_field(
         const char *value
     );
 
+clist * _get_fields(struct mailmime * mime);
+struct mailmime_content * _get_content(struct mailmime * mime);
+bool _is_multipart(struct mailmime_content *content);
+bool _is_multipart_alternative(struct mailmime_content * content);
+bool _is_PGP_MIME(struct mailmime_content *content);
+

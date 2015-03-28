@@ -1176,6 +1176,57 @@ pep_error:
     return status;
 }
 
+static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *size)
+{
+    const char *text;
+    size_t length;
+    size_t s;
+    int code;
+    int r;
+    size_t index;
+
+    assert(part);
+    assert(longmsg);
+
+    *longmsg = NULL;
+    if (size)
+        *size = 0;
+
+    if (part->mm_body == NULL)
+        return PEP_ILLEGAL_VALUE;
+
+    text = part->mm_body-> dt_data.dt_text.dt_data;
+    if (text == NULL)
+        return PEP_ILLEGAL_VALUE;
+
+    length = part->mm_body->dt_data.dt_text.dt_length;
+
+    if (part->mm_body->dt_encoded) {
+        code = part->mm_body->dt_encoding;
+        index = 0;
+        r = mailmime_part_parse(text, length, &index, code, longmsg, &s);
+        switch (r) {
+            case MAILIMF_NO_ERROR:
+                break;
+            case MAILIMF_ERROR_MEMORY:
+                return PEP_OUT_OF_MEMORY;
+            default:
+                return PEP_ILLEGAL_VALUE;
+        }
+        if (size)
+            *size = s;
+    }
+    else {
+        *longmsg = strndup(text, length);
+        if (*longmsg == NULL)
+            return PEP_OUT_OF_MEMORY;
+        if (size)
+            *size = length;
+    }
+
+    return PEP_STATUS_OK;
+}
+
 static PEP_STATUS interpret_MIME(
         struct mailmime *mime,
         message *msg
@@ -1188,14 +1239,7 @@ static PEP_STATUS interpret_MIME(
 
     struct mailmime_content *content = mime->mm_content_type;
     if (content) {
-        if (msg->longmsg == NULL && content->ct_type &&
-                content->ct_type->tp_type == MAILMIME_TYPE_COMPOSITE_TYPE
-                && content->ct_type->tp_data.tp_composite_type
-                && content->ct_type->tp_data.tp_composite_type->ct_type ==
-                        MAILMIME_COMPOSITE_TYPE_MULTIPART
-                && content->ct_subtype
-                && strcmp(content->ct_subtype, "alternative") == 0) {
-
+        if (msg->longmsg == NULL && _is_multipart_alternative(content)) {
             clist *partlist = mime->mm_data.mm_multipart.mm_mp_list;
             if (partlist == NULL)
                 return PEP_ILLEGAL_VALUE;
@@ -1226,97 +1270,37 @@ static PEP_STATUS interpret_MIME(
                             case MAILMIME_DISCRETE_TYPE_TEXT:
                                 if (strcmp(content->ct_subtype, "plain") ==
                                         0) {
-                                    const char *text;
-                                    size_t length;
-                                    size_t s;
-                                    int code;
-
-                                    if (part->mm_body == NULL)
-                                        return PEP_ILLEGAL_VALUE;
-
-                                    text = part->mm_body->
-                                            dt_data.dt_text.dt_data;
-                                    if (text == NULL)
-                                        return PEP_ILLEGAL_VALUE;
-
-                                    length =
-                                        part->mm_body->dt_data.dt_text.dt_length;
-
-                                    if (part->mm_body->dt_encoded) {
-                                        code = part->mm_body->dt_encoding;
-                                        index = 0;
-                                        r = mailmime_part_parse(text, length,
-                                                &index, code, &msg->longmsg,
-                                                &s);
-                                        switch (r) {
-                                            case MAILIMF_NO_ERROR:
-                                                break;
-                                            case MAILIMF_ERROR_MEMORY:
-                                                return PEP_OUT_OF_MEMORY;
-                                            default:
-                                                return PEP_ILLEGAL_VALUE;
-                                        }
-                                    }
-                                    else {
-                                        msg->longmsg = strdup(text);
-                                        if (msg->longmsg == NULL)
-                                            return PEP_OUT_OF_MEMORY;
-                                    }
+                                    status = interpret_body(part,
+                                            &msg->longmsg, NULL);
+                                    if (status)
+                                        return status;
                                 }
                                 else if (strcmp(content->ct_subtype, "html") ==
                                         0) {
-                                    const char *html;
-                                    size_t length;
-                                    size_t s;
-                                    int code;
-
-                                    if (part->mm_body == NULL)
-                                        return PEP_ILLEGAL_VALUE;
-
-                                    html = part->mm_body->
-                                            dt_data.dt_text.dt_data;
-                                    if (html == NULL)
-                                        return PEP_ILLEGAL_VALUE;
-
-                                    length =
-                                        part->mm_body->dt_data.dt_text.dt_length;
-
-                                    if (part->mm_body->dt_encoded) {
-                                        code = part->mm_body->dt_encoding;
-                                        index = 0;
-                                        r = mailmime_part_parse(html, length,
-                                                &index, code,
-                                                &msg->longmsg_formatted, &s);
-                                        switch (r) {
-                                            case MAILIMF_NO_ERROR:
-                                                break;
-                                            case MAILIMF_ERROR_MEMORY:
-                                                return PEP_OUT_OF_MEMORY;
-                                            default:
-                                                return PEP_ILLEGAL_VALUE;
-                                        }
-                                    }
-                                    else {
-                                        msg->longmsg_formatted = strdup(html);
-                                        if (msg->longmsg_formatted == NULL)
-                                            return PEP_OUT_OF_MEMORY;
-                                    }
+                                    status = interpret_body(part,
+                                            &msg->longmsg_formatted, NULL);
+                                    if (status)
+                                        return status;
                                 }
-                                else {
-                                    return interpret_MIME(part, msg);
-                                }
-
                                 break;
                                 
                             case MAILMIME_DISCRETE_TYPE_IMAGE:
                             case MAILMIME_DISCRETE_TYPE_AUDIO:
                             case MAILMIME_DISCRETE_TYPE_VIDEO:
                             case MAILMIME_DISCRETE_TYPE_APPLICATION:
-                            case MAILMIME_DISCRETE_TYPE_EXTENSION:
-                                    return interpret_MIME(part, msg);
-
+                            case MAILMIME_DISCRETE_TYPE_EXTENSION: {
+                                char *data = NULL;
+                                size_t size;
+                                char * mime_type = NULL;
+                                char * filename = NULL;
+                                status = interpret_body(part, &data, &size);
+                                if (status)
+                                    return status;
+                                msg->attachments =
+                                    bloblist_add(msg->attachments, data, size,
+                                            mime_type, filename);
                                 break;
-                                
+                            }
                             default:
                                 return PEP_ILLEGAL_VALUE;
                         }
@@ -1400,29 +1384,6 @@ static PEP_STATUS interpret_PGP_MIME(struct mailmime *mime, message *msg)
     return PEP_STATUS_OK;
 }
 
-static bool parameter_has_value(
-        clist *list,
-        const char *name,
-        const char *value
-    )
-{
-    clistiter *cur;
-
-    assert(list);
-    assert(name);
-    assert(value);
-
-    for (cur = clist_begin(list); cur != NULL ; cur = clist_next(cur)) {
-        struct mailmime_parameter * param = clist_content(cur);
-        if (param &&
-                param->pa_name && strcmp(name, param->pa_name) == 0 &&
-                param->pa_value && strcmp(value, param->pa_value) == 0)
-            return true;
-    }
-
-    return false;
-}
-
 DYNAMIC_API PEP_STATUS mime_decode_message(
         const char *mimetext,
         message **msg
@@ -1455,29 +1416,17 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
     if (_msg == NULL)
         goto enomem;
 
-    if (mime->mm_data.mm_message.mm_fields
-            && mime->mm_data.mm_message.mm_fields->fld_list) {
-        clist * _fieldlist = mime->mm_data.mm_message.mm_fields->fld_list;
+    clist * _fieldlist = _get_fields(mime);
+    if (_fieldlist) {
         status = read_fields(_msg, _fieldlist);
         if (status != PEP_STATUS_OK)
             goto pep_error;
     }
 
-    if (mime->mm_data.mm_message.mm_msg_mime) {
-        struct mailmime_content *content =
-                mime->mm_data.mm_message.mm_msg_mime->mm_content_type;
+    struct mailmime_content *content = _get_content(mime);
 
-        if (content->ct_type &&
-                content->ct_type->tp_type == MAILMIME_TYPE_COMPOSITE_TYPE
-                && content->ct_type->tp_data.tp_composite_type
-                && content->ct_type->tp_data.tp_composite_type->ct_type ==
-                        MAILMIME_COMPOSITE_TYPE_MULTIPART
-                && content->ct_subtype
-                && strcmp(content->ct_subtype, "encrypted") == 0
-                && content->ct_parameters
-                && parameter_has_value(content->ct_parameters, "protocol",
-                        "application/pgp-encrypted")) {
-
+    if (content) {
+        if (_is_PGP_MIME(content)) {
             status = interpret_PGP_MIME(mime->mm_data.mm_message.mm_msg_mime,
                     _msg);
             if (status != PEP_STATUS_OK)
