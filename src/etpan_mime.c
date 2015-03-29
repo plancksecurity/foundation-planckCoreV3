@@ -596,6 +596,40 @@ struct mailmime_content * _get_content(struct mailmime * mime)
     return content;
 }
 
+char * _get_filename(struct mailmime *mime)
+{
+    clist * _fieldlist = NULL;
+
+    assert(mime);
+
+    if (mime->mm_mime_fields && mime->mm_mime_fields->fld_list)
+        _fieldlist = mime->mm_mime_fields->fld_list;
+    else
+        return NULL;
+
+    clistiter *cur;
+    for (cur = clist_begin(_fieldlist); cur; cur = clist_next(cur)) {
+        struct mailmime_field * _field = clist_content(cur);
+        if (_field && _field->fld_type == MAILMIME_FIELD_DISPOSITION) {
+            if (_field->fld_data.fld_disposition &&
+                    _field->fld_data.fld_disposition->dsp_parms) {
+                clist * _parmlist =
+                        _field->fld_data.fld_disposition->dsp_parms;
+                clistiter *cur2;
+                for (cur2 = clist_begin(_parmlist); cur2; cur2 =
+                        clist_next(cur2)) {
+                    struct mailmime_parameter * param = clist_content(cur2);
+                    if (param && (param->pa_name == NULL || 
+                            strcmp("filename", param->pa_name) == 0))
+                        return param->pa_value;
+                }
+            }
+        }
+    }
+
+    return NULL;
+}
+
 bool parameter_has_value(
         struct mailmime_content *content,       
         const char *name,
@@ -670,5 +704,58 @@ bool _is_text_part(struct mailmime_content *content, const char *subtype)
     }
 
     return false;
+}
+
+char * _get_content_type(struct mailmime_content *content)
+{
+    const char *_type;
+
+    assert(content);
+
+    if (content->ct_subtype == NULL)
+        return NULL;
+
+    if (content->ct_type && content->ct_type->tp_data.tp_discrete_type) {
+        size_t len;
+        char *type;
+
+        switch  (content->ct_type->tp_data.tp_discrete_type->dt_type) {
+            case MAILMIME_DISCRETE_TYPE_TEXT:
+                _type = "text";
+                break;
+            case MAILMIME_DISCRETE_TYPE_IMAGE:
+                _type = "image";
+                break;
+            case MAILMIME_DISCRETE_TYPE_AUDIO:
+                _type = "audio";
+                break;
+            case MAILMIME_DISCRETE_TYPE_VIDEO:
+                _type = "video";
+                break;
+            case MAILMIME_DISCRETE_TYPE_APPLICATION:
+                _type = "application";
+                break;
+            case MAILMIME_DISCRETE_TYPE_EXTENSION:
+                _type = "extension";
+                break;
+            default:
+                return NULL;
+        }
+
+        len = strlen(_type) + 1 + strlen(content->ct_subtype) + 1;
+        type = calloc(1, len);
+        assert(type);
+        // BUG: out of memory cannot be signaled
+        if (type == NULL)
+            return NULL;
+
+        strcpy(type, _type);
+        strcat(type, "/");
+        strcat(type, content->ct_subtype);
+
+        return type;
+    }
+
+    return NULL;
 }
 

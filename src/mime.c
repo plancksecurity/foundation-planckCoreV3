@@ -1304,9 +1304,15 @@ static PEP_STATUS interpret_MIME(
                 char * mime_type = NULL;
                 char * filename = NULL;
 
+                mime_type = _get_content_type(content);
+                if (mime_type == NULL)
+                    return PEP_ILLEGAL_VALUE;
+
                 status = interpret_body(mime, &data, &size);
                 if (status)
                     return status;
+
+                filename = _get_filename(mime);
 
                 msg->attachments = bloblist_add(msg->attachments, data, size,
                         mime_type, filename);
