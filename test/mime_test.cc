@@ -1,7 +1,10 @@
+#include "platform.h"
+
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <assert.h>
+
 #include "mime.h"
 
 using namespace std;
@@ -69,6 +72,17 @@ int main() {
         cout << msg3->longmsg << "\n\n";
     if (msg3->longmsg_formatted)
         cout << msg3->longmsg_formatted << "\n\n";
+    bloblist_t *_b;
+    for (_b = msg3->attachments; _b; _b = _b->next) {
+        cout << "attachment of type " << _b->mime_type << "\n";
+        if (_b->filename) {
+            cout << "filename: " << _b->filename << "\n";
+            unlink(_b->filename);
+            ofstream outFile3(_b->filename);
+            outFile3.write(_b->data, _b->size);
+            outFile3.close();
+        }
+    }
 
     free_message(msg3);
 

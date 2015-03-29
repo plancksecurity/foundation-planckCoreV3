@@ -845,11 +845,19 @@ static pEp_identity *mailbox_to_identity(const struct mailimf_mailbox * mb)
     size_t index;
     int r;
 
-    index = 0;
-    r = mailmime_encoded_phrase_parse("utf-8", mb->mb_display_name,
-            strlen(mb->mb_display_name), &index, "utf-8", &username);
-    if (r)
-        goto enomem;
+    assert(mb);
+    assert(mb->mb_addr_spec);
+
+    if (mb->mb_addr_spec == NULL)
+        return NULL;
+
+    if (mb->mb_display_name) {
+        index = 0;
+        r = mailmime_encoded_phrase_parse("utf-8", mb->mb_display_name,
+                strlen(mb->mb_display_name), &index, "utf-8", &username);
+        if (r)
+            goto enomem;
+    }
 
     ident = new_identity(mb->mb_addr_spec, NULL, NULL, username);
     if (ident == NULL)
@@ -1179,11 +1187,14 @@ pep_error:
 static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *size)
 {
     const char *text;
+    char *_longmsg;
     size_t length;
-    size_t s;
+    size_t _size;
     int code;
     int r;
     size_t index;
+    char *type = NULL;
+    char *charset = NULL;
 
     assert(part);
     assert(longmsg);
@@ -1204,7 +1215,7 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
     if (part->mm_body->dt_encoded) {
         code = part->mm_body->dt_encoding;
         index = 0;
-        r = mailmime_part_parse(text, length, &index, code, longmsg, &s);
+        r = mailmime_part_parse(text, length, &index, code, &_longmsg, &_size);
         switch (r) {
             case MAILIMF_NO_ERROR:
                 break;
@@ -1213,16 +1224,36 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
             default:
                 return PEP_ILLEGAL_VALUE;
         }
-        if (size)
-            *size = s;
     }
     else {
-        *longmsg = strndup(text, length);
-        if (*longmsg == NULL)
+        _size = length;
+        _longmsg = strndup(text, _size);
+        if (_longmsg == NULL)
             return PEP_OUT_OF_MEMORY;
-        if (size)
-            *size = length;
     }
+
+    if (part->mm_content_type) {
+        if (_get_content_type(part->mm_content_type, &type, &charset) == 0) {
+            if (charset && strcmp(charset, "utf-8") != 0) {
+                char * _text;
+                int r = charconv("utf-8", charset, _longmsg, _size, &_text);
+                switch (r) {
+                    case MAILIMF_NO_ERROR:
+                        break;
+                    case MAILIMF_ERROR_MEMORY:
+                        return PEP_OUT_OF_MEMORY;
+                    default:
+                        return PEP_ILLEGAL_VALUE;
+                }
+                free(_longmsg);
+                _longmsg = _text;
+            }
+        }
+    }
+
+    *longmsg = _longmsg;
+    if (size)
+        *size = _size;
 
     return PEP_STATUS_OK;
 }
@@ -1302,19 +1333,23 @@ static PEP_STATUS interpret_MIME(
                 char *data = NULL;
                 size_t size = 0;
                 char * mime_type;
+                char * charset;
                 char * filename;
+                int r;
 
-                mime_type = _get_content_type(content);
-                if (mime_type == NULL) {
-                    switch (errno) {
-                        case EINVAL:
-                            return PEP_ILLEGAL_VALUE;
-                        case ENOMEM:
-                            return PEP_OUT_OF_MEMORY;
-                        default:
-                            return PEP_UNKNOWN_ERROR;
-                    }
+                r = _get_content_type(content, &mime_type, &charset);
+                switch (r) {
+                    case 0:
+                        break;
+                    case EINVAL:
+                        return PEP_ILLEGAL_VALUE;
+                    case ENOMEM:
+                        return PEP_OUT_OF_MEMORY;
+                    default:
+                        return PEP_UNKNOWN_ERROR;
                 }
+
+                assert(mime_type);
 
                 status = interpret_body(mime, &data, &size);
                 if (status)

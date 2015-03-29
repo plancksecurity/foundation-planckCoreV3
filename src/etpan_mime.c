@@ -704,62 +704,81 @@ bool _is_text_part(struct mailmime_content *content, const char *subtype)
     return false;
 }
 
-char * _get_content_type(struct mailmime_content *content)
+int _get_content_type(
+        const struct mailmime_content *content,
+        char **type,
+        char **charset
+    )
 {
-    const char *_type;
+    char *_type = NULL;
+    char *_charset = NULL;
 
     assert(content);
+    assert(type);
+    assert(charset);
 
-    if (content->ct_subtype == NULL) {
-        errno = EINVAL;
-        return NULL;
-    }
+    *type = NULL;
+    *charset = NULL;
+
+    if (content->ct_subtype == NULL)
+        return EINVAL;
 
     if (content->ct_type && content->ct_type->tp_data.tp_discrete_type) {
         size_t len;
-        char *type;
+        const char *_main_type;
 
         switch  (content->ct_type->tp_data.tp_discrete_type->dt_type) {
             case MAILMIME_DISCRETE_TYPE_TEXT:
-                _type = "text";
+                _main_type = "text";
                 break;
             case MAILMIME_DISCRETE_TYPE_IMAGE:
-                _type = "image";
+                _main_type = "image";
                 break;
             case MAILMIME_DISCRETE_TYPE_AUDIO:
-                _type = "audio";
+                _main_type = "audio";
                 break;
             case MAILMIME_DISCRETE_TYPE_VIDEO:
-                _type = "video";
+                _main_type = "video";
                 break;
             case MAILMIME_DISCRETE_TYPE_APPLICATION:
-                _type = "application";
+                _main_type = "application";
                 break;
             case MAILMIME_DISCRETE_TYPE_EXTENSION:
-                _type = "extension";
+                _main_type = "extension";
                 break;
             default:
-                errno = EINVAL;
-                return NULL;
+                return EINVAL;
         }
 
-        len = strlen(_type) + 1 + strlen(content->ct_subtype) + 1;
-        type = calloc(1, len);
-        assert(type);
-        if (type == NULL) {
-            errno = ENOMEM;
-            return NULL;
+        len = strlen(_main_type) + 1 + strlen(content->ct_subtype) + 1;
+        _type = calloc(1, len);
+        assert(_type);
+        if (_type == NULL)
+            return ENOMEM;
+
+        strcpy(_type, _main_type);
+        strcat(_type, "/");
+        strcat(_type, content->ct_subtype);
+
+        if (content->ct_parameters) {
+            clistiter *cur;
+            for (cur = clist_begin(content->ct_parameters); cur; cur =
+                    clist_next(cur)) {
+                struct mailmime_parameter * param = clist_content(cur);
+                if (param && param->pa_name && strcmp(param->pa_name,
+                            "charset") == 0) {
+                    _charset = param->pa_value;
+                    break;
+                }
+            }
+            if (_charset)
+                *charset = strdup(_charset);
         }
 
-        strcpy(type, _type);
-        strcat(type, "/");
-        strcat(type, content->ct_subtype);
-
-        errno = 0;
-        return type;
+        *type = _type;
+        return 0;
     }
 
-    errno = EINVAL;
-    return NULL;
+    return EINVAL;
 }
 

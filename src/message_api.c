@@ -515,7 +515,7 @@ static bool is_encrypted_html_attachment(const bloblist_t *blob)
     return false;
 }
 
-char * without_double_ending(const char *filename)
+static char * without_double_ending(const char *filename)
 {
     char *ext;
 
