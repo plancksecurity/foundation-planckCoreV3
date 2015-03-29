@@ -618,9 +618,10 @@ char * _get_filename(struct mailmime *mime)
                 clistiter *cur2;
                 for (cur2 = clist_begin(_parmlist); cur2; cur2 =
                         clist_next(cur2)) {
-                    struct mailmime_parameter * param = clist_content(cur2);
-                    if (param && param->pa_name == NULL)
-                        return param->pa_value;
+                    struct mailmime_disposition_parm * param =
+                            clist_content(cur2);
+                    if (param->pa_type == MAILMIME_DISPOSITION_PARM_FILENAME)
+                        return param->pa_data.pa_filename;
                 }
             }
         }
