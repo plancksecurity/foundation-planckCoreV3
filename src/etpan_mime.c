@@ -8,9 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
-
-
-time_t mail_mkgmtime(struct tm * tmp);
+#include <errno.h>
 
 #define MAX_MESSAGE_ID 512
 
@@ -630,7 +628,7 @@ char * _get_filename(struct mailmime *mime)
     return NULL;
 }
 
-bool parameter_has_value(
+static bool parameter_has_value(
         struct mailmime_content *content,       
         const char *name,
         const char *value
@@ -712,8 +710,10 @@ char * _get_content_type(struct mailmime_content *content)
 
     assert(content);
 
-    if (content->ct_subtype == NULL)
+    if (content->ct_subtype == NULL) {
+        errno = EINVAL;
         return NULL;
+    }
 
     if (content->ct_type && content->ct_type->tp_data.tp_discrete_type) {
         size_t len;
@@ -739,23 +739,27 @@ char * _get_content_type(struct mailmime_content *content)
                 _type = "extension";
                 break;
             default:
+                errno = EINVAL;
                 return NULL;
         }
 
         len = strlen(_type) + 1 + strlen(content->ct_subtype) + 1;
         type = calloc(1, len);
         assert(type);
-        // BUG: out of memory cannot be signaled
-        if (type == NULL)
+        if (type == NULL) {
+            errno = ENOMEM;
             return NULL;
+        }
 
         strcpy(type, _type);
         strcat(type, "/");
         strcat(type, content->ct_subtype);
 
+        errno = 0;
         return type;
     }
 
+    errno = EINVAL;
     return NULL;
 }
 

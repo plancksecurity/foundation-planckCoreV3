@@ -1300,13 +1300,21 @@ static PEP_STATUS interpret_MIME(
             }
             else {
                 char *data = NULL;
-                size_t size;
-                char * mime_type = NULL;
-                char * filename = NULL;
+                size_t size = 0;
+                char * mime_type;
+                char * filename;
 
                 mime_type = _get_content_type(content);
-                if (mime_type == NULL)
-                    return PEP_ILLEGAL_VALUE;
+                if (mime_type == NULL) {
+                    switch (errno) {
+                        case EINVAL:
+                            return PEP_ILLEGAL_VALUE;
+                        case ENOMEM:
+                            return PEP_OUT_OF_MEMORY;
+                        default:
+                            return PEP_UNKNOWN_ERROR;
+                    }
+                }
 
                 status = interpret_body(mime, &data, &size);
                 if (status)
