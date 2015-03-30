@@ -63,7 +63,13 @@ int main() {
     outFile3.write(string3.c_str(), string3.size());
     outFile3.close();
 
+    message *msg4;
+    PEP_STATUS status4 = decrypt_message(session, enc_msg2, PEP_MIME_none, &msg4);
+    assert(status4 == PEP_STATUS_OK);
+    assert(msg4);
+
     cout << "freeing messages…\n";
+    free_message(msg4);
     free_message(msg3);
     free_message(msg2);
     free_message(enc_msg2);
