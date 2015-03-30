@@ -87,6 +87,9 @@ enomem:
 
 static PEP_STATUS copy_fields(message *dst, const message *src)
 {
+    assert(dst);
+    assert(src);
+
     free_timestamp(dst->sent);
     dst->sent = NULL;
     if (src->sent) {
@@ -493,7 +496,7 @@ static bool is_encrypted_attachment(const bloblist_t *blob)
                 strcmp(ext, ".asc") == 0)
             return true;
     }
-    else if (strcmp(blob->mime_type, "application/octet-stream")) {
+    else if (strcmp(blob->mime_type, "text/plain")) {
         if (strcmp(ext, ".asc") == 0)
             return true;
     }
