@@ -721,6 +721,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                 free_message(msg);
                 msg = _msg;
             }
+            break;
     }
 
     if (free_src)
