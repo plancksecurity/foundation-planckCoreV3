@@ -646,8 +646,8 @@ static bool parameter_has_value(
     for (cur = clist_begin(list); cur != NULL ; cur = clist_next(cur)) {
         struct mailmime_parameter * param = clist_content(cur);
         if (param &&
-                param->pa_name && strcmp(name, param->pa_name) == 0 &&
-                param->pa_value && strcmp(value, param->pa_value) == 0)
+                param->pa_name && strcasecmp(name, param->pa_name) == 0 &&
+                param->pa_value && strcasecmp(value, param->pa_value) == 0)
             return true;
     }
 
@@ -665,7 +665,7 @@ bool _is_multipart(struct mailmime_content *content, const char *subtype)
             MAILMIME_COMPOSITE_TYPE_MULTIPART) {
         if (subtype)
             return content->ct_subtype &&
-                    strcmp(content->ct_subtype, subtype) == 0;
+                    strcasecmp(content->ct_subtype, subtype) == 0;
         else
             return true;
     }
@@ -696,7 +696,7 @@ bool _is_text_part(struct mailmime_content *content, const char *subtype)
             MAILMIME_DISCRETE_TYPE_TEXT) {
         if (subtype)
             return content->ct_subtype &&
-                    strcmp(content->ct_subtype, subtype) == 0;
+                    strcasecmp(content->ct_subtype, subtype) == 0;
         else
             return true;
     }
@@ -765,7 +765,7 @@ int _get_content_type(
             for (cur = clist_begin(content->ct_parameters); cur; cur =
                     clist_next(cur)) {
                 struct mailmime_parameter * param = clist_content(cur);
-                if (param && param->pa_name && strcmp(param->pa_name,
+                if (param && param->pa_name && strcasecmp(param->pa_name,
                             "charset") == 0) {
                     _charset = param->pa_value;
                     break;
