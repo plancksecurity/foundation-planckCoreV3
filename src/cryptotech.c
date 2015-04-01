@@ -1,9 +1,9 @@
 #include "pEp_internal.h"
 
-#ifdef NO_GPG
-#include "pgp_netpgp.h"
-#else
+#ifdef USE_GPG
 #include "pgp_gpg.h"
+#elif USE_NETPGP
+#include "pgp_netpgp.h"
 #endif
 
 #include <stdlib.h>

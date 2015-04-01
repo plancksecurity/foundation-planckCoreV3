@@ -43,55 +43,55 @@ static const char *gpg_conf_path = ".gnupg";
 static const char *gpg_conf_name = "gpg.conf";
 static const char *gpg_conf_empty = "# Created by pEpEngine\n";
 
-const char *gpg_conf(void)
-{
-    static char buffer[MAX_PATH];
+static bool ensure_gpg_home(const char **conf, const char **home){
+    static char path[MAX_PATH];
     static char dirname[MAX_PATH];
     static bool done = false;
 
     if (!done) {
-        char *gpg_home = getenv("GNUPGHOME");
-        if(gpg_home){
+        char *p;
+        size_t len;
+        char *gpg_home_env = getenv("GNUPGHOME");
 
-            char *p = stpncpy(buffer, gpg_home, MAX_PATH);
-            size_t len = MAX_PATH - (p - buffer) - 2;
+        if(gpg_home_env){
+
+            p = stpncpy(path, gpg_home_env, MAX_PATH);
+            len = MAX_PATH - (p - path) - 2;
+
             if (len < strlen(gpg_conf_name))
             {
                 assert(0);
-                return NULL;
+                return false;
             }
-
-            strncpy(dirname, buffer, MAX_PATH);
-            *p++ = '/';
-            strncpy(p, gpg_conf_name, len);
 
         }else{
 
-            char *p = stpncpy(buffer, getenv("HOME"), MAX_PATH);
-            size_t len = MAX_PATH - (p - buffer) - 3;
+            p = stpncpy(path, getenv("HOME"), MAX_PATH);
+            len = MAX_PATH - (p - path) - 3;
 
             if (len < strlen(gpg_conf_path) + strlen(gpg_conf_name))
             {
                 assert(0);
-                return NULL;
+                return false;
             }
 
             *p++ = '/';
             strncpy(p, gpg_conf_path, len);
-            strncpy(dirname, buffer, MAX_PATH);
             p += strlen(gpg_conf_path);
             len -= strlen(gpg_conf_path) - 1;
-            *p++ = '/';
-            strncpy(p, gpg_conf_name, len);
         }
 
-        if(access(buffer, F_OK)){ 
+        strncpy(dirname, path, MAX_PATH);
+        *p++ = '/';
+        strncpy(p, gpg_conf_name, len);
+
+        if(access(path, F_OK)){ 
             int fd;
             if(access(dirname, F_OK )) { 
                 mkdir(dirname, S_IRUSR | S_IWUSR | S_IXUSR);
             }
 
-            fd = open(buffer, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
+            fd = open(path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
 
             if(fd>0) {
                 write(fd, gpg_conf_empty, strlen(gpg_conf_empty));
@@ -101,5 +101,25 @@ const char *gpg_conf(void)
 
         done = true;
     }
-    return buffer;
+
+    if(conf) *conf=path;
+    if(home) *home=dirname;
+
+    return true;
+}
+
+const char *gpg_conf(void)
+{
+    const char *conf;
+    if(ensure_gpg_home(&conf, NULL))
+        return conf;
+    return NULL;
+}
+
+const char *gpg_home(void)
+{
+    const char *home;
+    if(ensure_gpg_home(NULL, &home))
+        return home;
+    return NULL;
 }

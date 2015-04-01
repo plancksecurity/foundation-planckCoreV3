@@ -1,5 +1,7 @@
 include ../Makefile.conf
 
+OPENPGP?=GPG
+
 ifeq ($(BUILD_ON),Darwin)
 ifeq ($(BUILD_FOR),Darwin)
 
@@ -38,7 +40,18 @@ else
 $(error don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
 endif
 
-ALL_SOURCE=$(wildcard *.c)
+ifeq ("$(OPENPGP)","GPG")
+	NO_SOURCE=pgp_netpgp.c
+	CFLAGS+= -DUSE_GPG
+else ifeq ("$(OPENPGP)","NETPGP")
+	NO_SOURCE=pgp_gpg.c
+	CFLAGS+= -DUSE_NETPGP
+	LDFLAGS+= -lnetpgp
+else
+	$(error Unknown OpenPGP library : $(OPENPGP))
+endif
+
+ALL_SOURCE=$(subst $(NO_SOURCE),,$(wildcard *.c))
 DEPENDS=$(subst .c,.d,$(ALL_SOURCE))
 ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
 

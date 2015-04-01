@@ -47,8 +47,18 @@
 
 #define _EXPORT_PEP_ENGINE_DLL
 #include "pEpEngine.h"
-#ifndef NO_GPG
+
+// If not specified, build for GPG
+#ifndef USE_NETPGP
+#ifndef USE_GPG
+#define USE_GPG
+#endif
+#endif
+
+#ifdef USE_GPG
 #include "pgp_gpg_internal.h"
+#elif USE_NETPGP
+#include "pgp_netpgp_internal.h"
 #endif
 
 #include "cryptotech.h"
@@ -58,8 +68,10 @@
 
 typedef struct _pEpSession {
     const char *version;
-#ifndef NO_GPG
+#ifdef USE_GPG
     gpgme_ctx_t ctx;
+#elif USE_NETPGP
+    netpgp_t ctx;
 #endif
 
     PEP_cryptotech_t *cryptotech;
