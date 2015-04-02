@@ -1,4 +1,6 @@
+#include "platform.h"
 #include <iostream>
+#include <fstream>
 #include <assert.h>
 #include "message_api.h"
 
@@ -53,10 +55,22 @@ int main() {
     message *msg3;
     PEP_STATUS status3 = mime_decode_message(text2, &msg3);
     assert(status3 == PEP_STATUS_OK);
+    string string3 = text2;
+    free(text2);
+
+    unlink("msg4.asc");
+    ofstream outFile3("msg4.asc");
+    outFile3.write(string3.c_str(), string3.size());
+    outFile3.close();
+
+    message *msg4;
+    PEP_STATUS status4 = decrypt_message(session, enc_msg2, PEP_MIME_none, &msg4);
+    assert(status4 == PEP_STATUS_OK);
+    assert(msg4);
 
     cout << "freeing messages…\n";
+    free_message(msg4);
     free_message(msg3);
-    free(text2);
     free_message(msg2);
     free_message(enc_msg2);
     cout << "done.\n";

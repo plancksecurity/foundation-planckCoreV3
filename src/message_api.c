@@ -53,15 +53,23 @@ static int seperate_short_and_long(const char *src, char **shortmsg, char **long
         }
         else {
             size_t n = line_end - src;
+
             if (*(line_end - 1) == '\r')
-                _shortmsg = strndup(src + 9, n - 1);
+                _shortmsg = strndup(src + 9, n - 10);
             else
-                _shortmsg = strndup(src + 9, n);
+                _shortmsg = strndup(src + 9, n - 9);
+
             if (_shortmsg == NULL)
                 goto enomem;
-            _longmsg = strdup(src + n);
-            if (_longmsg == NULL)
-                goto enomem;
+
+            while (*(src + n) && (*(src + n) == '\n' || *(src + n) == '\r'))
+                ++n;
+
+            if (*(src + n)) {
+                _longmsg = strdup(src + n);
+                if (_longmsg == NULL)
+                    goto enomem;
+            }
         }
     }
     else {
@@ -651,7 +659,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
             if (status != PEP_STATUS_OK)
                 goto pep_error;
 
-            if (src->shortmsg) {
+            if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0) {
                 free(msg->shortmsg);
                 msg->shortmsg = strdup(src->shortmsg);
                 if (msg->shortmsg == NULL)
@@ -680,6 +688,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                     goto enomem;
                 msg->longmsg = ptext;
             }
+            break;
 
         default:
             // BUG: must implement more
@@ -712,6 +721,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                 free_message(msg);
                 msg = _msg;
             }
+            break;
     }
 
     if (free_src)

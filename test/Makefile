@@ -18,7 +18,7 @@ all: $(TARGET) $(UNIT_TESTS)
 .PHONY: clean
 
 clean:
-	rm -f *.o $(TARGET) *.a *~ $(UNIT_TESTS)
+	rm -f *.o $(TARGET) *.a *~ $(UNIT_TESTS) pep_Dokument_Titel.pdf
 
 test: pEpEngineTest
 	LD_LIBRARY_PATH=~/lib:../src ./pEpEngineTest
