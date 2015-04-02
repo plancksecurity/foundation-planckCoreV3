@@ -9,51 +9,35 @@
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
     PEP_STATUS status = PEP_STATUS_OK;
+    const char *home = NULL;
    
     if (in_first) {
-        /* TODO something maybe */
-    }
-
-        // TODO ensure minimal config
-          
-        // "keyserver"
-        // "hkp://keys.gnupg.net"
-
-        // "cert-digest-algo"
-        // "SHA256"
-
-        // "no-emit-version"
-        // ""
-
-        // "no-comments"
-        // ""
-
-        // "personal-cipher-preferences"
-        // "AES AES256 AES192 CAST5"
-
-        // "personal-digest-preferences"
-        // "SHA512 SHA384 SHA256 SHA224"
-        
         if (strcmp(setlocale(LC_ALL, NULL), "C") == 0)
             setlocale(LC_ALL, "");
-
-        // TODO unsset netpgp locale if any
-        // LC_CTYPE
-#ifdef LC_MESSAGES // Windoze
-        // LC_MESSAGES
-#endif
     }
 
-    // TODO Create netpgp handle
-    // session->ctx = ...
-    if (/* create error */) {
-        status = PEP_INIT_GPGME_INIT_FAILED;
+	memset(&session->ctx, 0x0, sizeof(session->ctx));
+
+    // NetPGP shares home with GPG
+    home = gpg_home();
+    if(home){
+        netpgp_set_homedir(&session->ctx,(char*)home, NULL, 0);
+    }else{
+        status = PEP_INIT_NO_GPG_HOME;
         goto pep_error;
     }
-    assert(session->ctx);
 
-    // TODO set protocol to OpenPGP
-    // TODO set to use armoring
+    // pair with gpg's cert-digest-algo
+	netpgp_setvar(&session->ctx, "hash", "SHA256");
+
+    // subset of gpg's personal-cipher-preferences
+    // here only one cipher can be selected
+    netpgp_setvar(&session->ctx, "cipher", "AES256");
+
+	if (!netpgp_init(&session->ctx)) {
+        status = PEP_INIT_NETPGP_INIT_FAILED;
+        goto pep_error;
+    }
 
     return PEP_STATUS_OK;
 
@@ -64,15 +48,10 @@ pep_error:
 
 void pgp_release(PEP_SESSION session, bool out_last)
 {
-    if (session->ctx) {
-        // TODO : release session->ctx
-        session->ctx = NULL;
-    }
+	netpgp_end(&session->ctx);
+	memset(&session->ctx, 0x0, sizeof(session->ctx));
 
-    if (out_last){
-        // TODO anything ?
-    }
-
+    // out_last unused here
 }
 
 PEP_STATUS pgp_decrypt_and_verify(
@@ -130,8 +109,6 @@ PEP_STATUS pgp_verify_text(
     )
 {
     PEP_STATUS result;
-    gpgme_error_t gpgme_error;
-    gpgme_data_t d_text, d_sig;
     stringlist_t *_keylist;
 
     assert(session);
@@ -196,26 +173,25 @@ PEP_STATUS pgp_encrypt_and_sign(
     }
 
     /* Do encrypt and sign */ 
-        char *_buffer = NULL;
-        size_t length = /* TODO length*/ 0;
-        assert(length != -1);
+    char *_buffer = NULL;
+    size_t length = /* TODO length*/ 0;
+    assert(length != -1);
 
-        /* Allocate transferable buffer */
-        _buffer = malloc(length + 1);
-        assert(_buffer);
-        if (_buffer == NULL) {
-            /* TODO clean */
-            return PEP_OUT_OF_MEMORY;
-        }
-
-        *ctext = _buffer;
-        *csize = length;
-        (*ctext)[*csize] = 0; // safeguard for naive users
-        result = PEP_STATUS_OK;
+    /* Allocate transferable buffer */
+    _buffer = malloc(length + 1);
+    assert(_buffer);
+    if (_buffer == NULL) {
+        /* TODO clean */
+        return PEP_OUT_OF_MEMORY;
     }
 
+    *ctext = _buffer;
+    *csize = length;
+    (*ctext)[*csize] = 0; // safeguard for naive users
+    result = PEP_STATUS_OK;
+
     
-        result = PEP_UNKNOWN_ERROR;
+    result = PEP_UNKNOWN_ERROR;
     return result;
 }
 
@@ -336,6 +312,8 @@ PEP_STATUS pgp_export_key(
     return PEP_STATUS_OK;
 }
 
+// "keyserver"
+// "hkp://keys.gnupg.net"
 PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
 {
     assert(session);
@@ -453,7 +431,7 @@ PEP_STATUS pgp_get_key_rating(
                 *comm_type = PEP_ct_key_expired;
                 break;
             }
-            if (/* TODO revoked*/) {
+            if (/* TODO revoked*/ 1) {
                 *comm_type = PEP_ct_key_revoked;
                 break;
             }
