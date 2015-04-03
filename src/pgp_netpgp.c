@@ -6,35 +6,45 @@
 #include "wrappers.h"
 
 #include <netpgp.h>
+#include <netpgp/config.h>
+#include <netpgp/memory.h>
+#include <netpgp/crypto.h>
+
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
+    netpgp_t *netpgp;
     PEP_STATUS status = PEP_STATUS_OK;
     const char *home = NULL;
+
+    assert(session);
+    if(!session) return PEP_UNKNOWN_ERROR;
+
+    netpgp = &session->ctx;
    
     if (in_first) {
         if (strcmp(setlocale(LC_ALL, NULL), "C") == 0)
             setlocale(LC_ALL, "");
     }
 
-	memset(&session->ctx, 0x0, sizeof(session->ctx));
+	memset(netpgp, 0x0, sizeof(session->ctx));
 
     // NetPGP shares home with GPG
     home = gpg_home();
     if(home){
-        netpgp_set_homedir(&session->ctx,(char*)home, NULL, 0);
+        netpgp_set_homedir(netpgp,(char*)home, NULL, 0);
     }else{
         status = PEP_INIT_NO_GPG_HOME;
         goto pep_error;
     }
 
     // pair with gpg's cert-digest-algo
-	netpgp_setvar(&session->ctx, "hash", "SHA256");
+	netpgp_setvar(netpgp, "hash", "SHA256");
 
     // subset of gpg's personal-cipher-preferences
     // here only one cipher can be selected
-    netpgp_setvar(&session->ctx, "cipher", "AES256");
+    netpgp_setvar(netpgp, "cipher", "AES256");
 
-	if (!netpgp_init(&session->ctx)) {
+	if (!netpgp_init(netpgp)) {
         status = PEP_INIT_NETPGP_INIT_FAILED;
         goto pep_error;
     }
@@ -48,8 +58,15 @@ pep_error:
 
 void pgp_release(PEP_SESSION session, bool out_last)
 {
-	netpgp_end(&session->ctx);
-	memset(&session->ctx, 0x0, sizeof(session->ctx));
+    netpgp_t *netpgp;
+
+    assert(session);
+    if(!session) return;
+
+    netpgp = &session->ctx;
+
+	netpgp_end(netpgp);
+	memset(netpgp, 0x0, sizeof(session->ctx));
 
     // out_last unused here
 }
@@ -59,8 +76,11 @@ PEP_STATUS pgp_decrypt_and_verify(
     char **ptext, size_t *psize, stringlist_t **keylist
     )
 {
-    PEP_STATUS result;
+    netpgp_t *netpgp;
+	pgp_memory_t *mem;
+	pgp_io_t *io;
 
+    PEP_STATUS result;
     stringlist_t *_keylist = NULL;
     int i_key = 0;
 
@@ -71,11 +91,34 @@ PEP_STATUS pgp_decrypt_and_verify(
     assert(psize);
     assert(keylist);
 
+    if(!session || !ctext || !csize || !ptext || !psize || !keylist) 
+        return PEP_UNKNOWN_ERROR;
+
+    netpgp = &session->ctx;
+	io = netpgp->io;
+
     *ptext = NULL;
     *psize = 0;
     *keylist = NULL;
 
-    /* TODO identify cipher text */
+    mem = pgp_decrypt_buf(netpgp->io, ctext, csize,
+                netpgp->secring, netpgp->pubring,
+                1 /* armoured */,
+                0 /* sshkeys */,
+                NULL, 0, NULL /* pass fp,attempts,cb */);
+    if (mem == NULL) {
+        return PEP_OUT_OF_MEMORY;
+    }
+
+	*psize = pgp_mem_len(mem);
+	if ((ptext = calloc(1, *psize)) == NULL) {
+        return PEP_OUT_OF_MEMORY;
+	}
+	memcpy(*ptext, pgp_mem_data(mem), *psize);
+	pgp_memory_free(mem);
+
+    result = PEP_DECRYPTED;
+
     /* if recognized */
     /* decrypt */
     /* if OK, verify */
@@ -87,18 +130,18 @@ PEP_STATUS pgp_decrypt_and_verify(
     result = PEP_DECRYPT_NO_KEY;
     return PEP_OUT_OF_MEMORY;
     */
-    result = PEP_UNKNOWN_ERROR;
-                stringlist_t *k;
-                _keylist = new_stringlist(NULL);
-                assert(_keylist);
-                if (_keylist == NULL) {
-                    /* TODO */
-                    return PEP_OUT_OF_MEMORY;
-                }
-                k = _keylist;
-                do {
-                        k = stringlist_add(k, "SIGNATURE FPR"/*TODO*/);
-                } while (0 /* TODO sign next*/);
+    //result = PEP_UNKNOWN_ERROR;
+    //            stringlist_t *k;
+    //            _keylist = new_stringlist(NULL);
+    //            assert(_keylist);
+    //            if (_keylist == NULL) {
+    //                /* TODO */
+    //                return PEP_OUT_OF_MEMORY;
+    //            }
+    //            k = _keylist;
+    //            do {
+    //                    k = stringlist_add(k, "SIGNATURE FPR"/*TODO*/);
+    //            } while (0 /* TODO sign next*/);
 
     return result;
 }
@@ -262,7 +305,7 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS pgp_import_key(PEP_SESSION session, const char *key_data, size_t size)
+PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data, size_t size)
 {
     assert(session);
     assert(key_data);
@@ -274,7 +317,7 @@ PEP_STATUS pgp_import_key(PEP_SESSION session, const char *key_data, size_t size
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS pgp_export_key(
+PEP_STATUS pgp_export_keydata(
     PEP_SESSION session, const char *fpr, char **key_data, size_t *size
     )
 {
