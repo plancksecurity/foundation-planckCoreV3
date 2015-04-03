@@ -9,6 +9,8 @@
 #include <netpgp/config.h>
 #include <netpgp/memory.h>
 #include <netpgp/crypto.h>
+#include <netpgp/netpgpsdk.h>
+#include <netpgp/validate.h>
 
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
@@ -27,6 +29,10 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     }
 
 	memset(netpgp, 0x0, sizeof(session->ctx));
+
+    // netpgp_setvar(netpgp, "max mem alloc", "4194304");
+    netpgp_setvar(netpgp, "need seckey", "1");
+    netpgp_setvar(netpgp, "need userid", "1");
 
     // NetPGP shares home with GPG
     home = gpg_home();
@@ -78,7 +84,12 @@ PEP_STATUS pgp_decrypt_and_verify(
 {
     netpgp_t *netpgp;
 	pgp_memory_t *mem;
+	pgp_memory_t *cat;
+	pgp_validation_t vresult;
 	pgp_io_t *io;
+    char *_ptext = NULL;
+    size_t _psize = 0;
+	int ret;
 
     PEP_STATUS result;
     stringlist_t *_keylist = NULL;
@@ -105,19 +116,20 @@ PEP_STATUS pgp_decrypt_and_verify(
                 netpgp->secring, netpgp->pubring,
                 1 /* armoured */,
                 0 /* sshkeys */,
-                NULL, 0, NULL /* pass fp,attempts,cb */);
+                NULL, -1, NULL  /* pass fp,attempts,cb */);
     if (mem == NULL) {
         return PEP_OUT_OF_MEMORY;
     }
 
-	*psize = pgp_mem_len(mem);
-	if ((ptext = calloc(1, *psize)) == NULL) {
+	_psize = pgp_mem_len(mem);
+	if ((_ptext = calloc(1, _psize)) == NULL) {
         return PEP_OUT_OF_MEMORY;
 	}
-	memcpy(*ptext, pgp_mem_data(mem), *psize);
-	pgp_memory_free(mem);
+	memcpy(_ptext, pgp_mem_data(mem), _psize);
 
     result = PEP_DECRYPTED;
+
+    cat = pgp_memory_new();
 
     /* if recognized */
     /* decrypt */
@@ -130,6 +142,30 @@ PEP_STATUS pgp_decrypt_and_verify(
     result = PEP_DECRYPT_NO_KEY;
     return PEP_OUT_OF_MEMORY;
     */
+	(void) memset(&vresult, 0x0, sizeof(vresult));
+	ret = pgp_validate_mem(io, &vresult, mem,
+				&cat, 1, netpgp->pubring);
+
+	// pgp_memory_free(mem) done by pgp_validate_mem
+
+	if (ret) {
+		// resultp(io, "<stdin>", &vresult, netpgp->pubring);
+	    // signedmem is freed from pgp_validate_mem
+        result = PEP_DECRYPTED_AND_VERIFIED;
+	}else{
+        if (vresult.validc + vresult.invalidc + vresult.unknownc == 0) {
+            // No signatures found - is this memory signed?
+            result = PEP_DECRYPT_NO_KEY;
+        } else if (vresult.invalidc == 0 && vresult.unknownc == 0) {
+            // memory verification failure: invalid signature time
+            result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
+        } else {
+            // memory verification failure: 
+            // invalid signatures result.invalidc
+            // unknown signatures result.unknownc
+            result = PEP_DECRYPT_WRONG_FORMAT;
+        }
+    }
     //result = PEP_UNKNOWN_ERROR;
     //            stringlist_t *k;
     //            _keylist = new_stringlist(NULL);
@@ -143,6 +179,19 @@ PEP_STATUS pgp_decrypt_and_verify(
     //                    k = stringlist_add(k, "SIGNATURE FPR"/*TODO*/);
     //            } while (0 /* TODO sign next*/);
 
+    pgp_memory_free(cat);
+
+    if (result == PEP_DECRYPTED_AND_VERIFIED
+        || result == PEP_DECRYPTED) {
+        *ptext = _ptext;
+        *psize = _psize;
+        (*ptext)[*psize] = 0; // safeguard for naive users
+        // *keylist = _keylist;
+    }
+    else {
+        // free_stringlist(_keylist);
+        free(_ptext);
+    }
     return result;
 }
 
