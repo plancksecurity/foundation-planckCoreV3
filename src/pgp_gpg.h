@@ -22,7 +22,7 @@ PEP_STATUS pgp_verify_text(
 
 PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr);
 
-PEP_STATUS pgp_export_key(
+PEP_STATUS pgp_export_keydata(
         PEP_SESSION session, const char *fpr, char **key_data, size_t *size
     );
 
@@ -40,7 +40,7 @@ PEP_STATUS pgp_get_key_rating(
         PEP_comm_type *comm_type
     );
 
-PEP_STATUS pgp_import_key(PEP_SESSION session, const char *key_data,
+PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
         size_t size);
 
 PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern);

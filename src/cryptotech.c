@@ -31,11 +31,11 @@ PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first)
         cryptotech[PEP_crypt_OpenPGP].encrypt_and_sign = pgp_encrypt_and_sign;
         cryptotech[PEP_crypt_OpenPGP].verify_text = pgp_verify_text;
         cryptotech[PEP_crypt_OpenPGP].delete_keypair = pgp_delete_keypair;
-        cryptotech[PEP_crypt_OpenPGP].export_key = pgp_export_key;
+        cryptotech[PEP_crypt_OpenPGP].export_key = pgp_export_keydata;
         cryptotech[PEP_crypt_OpenPGP].find_keys = pgp_find_keys;
         cryptotech[PEP_crypt_OpenPGP].generate_keypair = pgp_generate_keypair;
         cryptotech[PEP_crypt_OpenPGP].get_key_rating = pgp_get_key_rating;
-        cryptotech[PEP_crypt_OpenPGP].import_key = pgp_import_key;
+        cryptotech[PEP_crypt_OpenPGP].import_key = pgp_import_keydata;
         cryptotech[PEP_crypt_OpenPGP].recv_key = pgp_recv_key;
         cryptotech[PEP_crypt_OpenPGP].send_key = pgp_send_key;
     }
