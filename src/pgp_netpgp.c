@@ -85,7 +85,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     netpgp_t *netpgp;
 	pgp_memory_t *mem;
 	pgp_memory_t *cat;
-	pgp_validation_t vresult;
+	pgp_validation_t *vresult;
 	pgp_io_t *io;
     char *_ptext = NULL;
     size_t _psize = 0;
@@ -112,9 +112,10 @@ PEP_STATUS pgp_decrypt_and_verify(
     *psize = 0;
     *keylist = NULL;
 
-	memset(&vresult, 0x0, sizeof(vresult));
+    vresult = malloc(sizeof(pgp_validation_t));
+	memset(vresult, 0x0, sizeof(pgp_validation_t));
 
-    mem = pgp_decrypt_and_validate_buf(netpgp->io, &vresult, ctext, csize,
+    mem = pgp_decrypt_and_validate_buf(netpgp->io, vresult, ctext, csize,
                 netpgp->secring, netpgp->pubring,
                 1 /* armoured */,
                 0 /* sshkeys */,
@@ -126,66 +127,78 @@ PEP_STATUS pgp_decrypt_and_verify(
 	_psize = pgp_mem_len(mem);
     if (_psize){
         if ((_ptext = calloc(1, _psize)) == NULL) {
-            return PEP_OUT_OF_MEMORY;
+            result = PEP_OUT_OF_MEMORY;
+            goto free_pgp;
         }
+	    memcpy(_ptext, pgp_mem_data(mem), _psize);
         result = PEP_DECRYPTED;
     }else{
-        return PEP_DECRYPT_NO_KEY;
+        result = PEP_DECRYPT_NO_KEY;
+        goto free_pgp;
     }
 
-	memcpy(_ptext, pgp_mem_data(mem), _psize);
-	pgp_memory_free(mem);
+    if (result == PEP_DECRYPTED &&
+        vresult->validc && !vresult->invalidc && !vresult->unknownc ) {
+        unsigned	n;
+        stringlist_t *k;
+        _keylist = new_stringlist(NULL);
+        assert(_keylist);
+        if (_keylist == NULL) {
+            result = PEP_OUT_OF_MEMORY;
+            goto free_keylist;
+        }
+        k = _keylist;
+        for (n = 0; n < vresult->validc; ++n) {
+            int i;
+            static const char *hexes = "0123456789abcdef";
+	        char id[MAX_ID_LENGTH + 1];
+            const uint8_t *userid = vresult->valid_sigs[n].signer_id;
 
-    if (vresult.validc && !vresult.invalidc && !vresult.unknownc ) {
-		// resultp(io, "<stdin>", &vresult, netpgp->pubring);
-	    // signedmem is freed from pgp_validate_mem
+            for (i = 0; i < 8 ; i++) {
+                id[i * 2] = hexes[(unsigned)(userid[i] & 0xf0) >> 4];
+                id[(i * 2) + 1] = hexes[userid[i] & 0xf];
+            }
+            id[8 * 2] = 0x0;
+            k = stringlist_add(k, id);
+        }
         result = PEP_DECRYPTED_AND_VERIFIED;
 	}else{
-        if (vresult.validc + vresult.invalidc + vresult.unknownc == 0) {
+        if (vresult->validc + vresult->invalidc + vresult->unknownc == 0) {
             // No signatures found - is this memory signed?
             result = PEP_VERIFY_NO_KEY; 
-        } else if (vresult.invalidc == 0 && vresult.unknownc == 0) {
-            // memory verification failure: invalid signature time
+            goto free_ptext;
+        } else if (vresult->invalidc) {
+            // invalid memory
             result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
+            goto free_ptext;
         } else {
-            // memory verification failure: 
-            // invalid signatures result.invalidc
-            // unknown signatures result.unknownc
+            // only unknown sigs
             result = PEP_DECRYPT_WRONG_FORMAT;
+            goto free_ptext;
         }
     }
-    /*
-    result = PEP_DECRYPTED_AND_VERIFIED;
-    result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
-    result = PEP_DECRYPTED;
-    result = PEP_DECRYPT_WRONG_FORMAT;
-    result = PEP_DECRYPT_NO_KEY;
-    return PEP_OUT_OF_MEMORY;
-    */
-    //result = PEP_UNKNOWN_ERROR;
-    //            stringlist_t *k;
-    //            _keylist = new_stringlist(NULL);
-    //            assert(_keylist);
-    //            if (_keylist == NULL) {
-    //                /* TODO */
-    //                return PEP_OUT_OF_MEMORY;
-    //            }
-    //            k = _keylist;
-    //            do {
-    //                    k = stringlist_add(k, "SIGNATURE FPR"/*TODO*/);
-    //            } while (0 /* TODO sign next*/);
 
     if (result == PEP_DECRYPTED_AND_VERIFIED
         || result == PEP_DECRYPTED) {
         *ptext = _ptext;
         *psize = _psize;
         (*ptext)[*psize] = 0; // safeguard for naive users
-        // *keylist = _keylist;
+        *keylist = _keylist;
+
+        /* _ptext and _keylist ownership transfer, don't free */
+        goto free_pgp;
     }
-    else {
-        // free_stringlist(_keylist);
-        free(_ptext);
-    }
+
+free_keylist:
+    free_stringlist(_keylist);
+
+free_ptext:
+    free(_ptext);
+
+free_pgp:
+	pgp_memory_free(mem);
+    pgp_validate_result_free(vresult);
+
     return result;
 }
 
