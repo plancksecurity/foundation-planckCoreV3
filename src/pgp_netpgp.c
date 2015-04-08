@@ -138,7 +138,8 @@ PEP_STATUS pgp_decrypt_and_verify(
     }
 
     if (result == PEP_DECRYPTED &&
-        vresult->validc && !vresult->invalidc && !vresult->unknownc ) {
+        vresult->validc && vresult->valid_sigs &&
+        !vresult->invalidc && !vresult->unknownc ) {
         unsigned	n;
         stringlist_t *k;
         _keylist = new_stringlist(NULL);
@@ -151,7 +152,7 @@ PEP_STATUS pgp_decrypt_and_verify(
         for (n = 0; n < vresult->validc; ++n) {
             int i;
             static const char *hexes = "0123456789abcdef";
-	        char id[MAX_ID_LENGTH + 1];
+            char id[MAX_ID_LENGTH + 1];
             const uint8_t *userid = vresult->valid_sigs[n].signer_id;
 
             for (i = 0; i < 8 ; i++) {
@@ -173,6 +174,7 @@ PEP_STATUS pgp_decrypt_and_verify(
             goto free_ptext;
         } else {
             // only unknown sigs
+            // or valid sig not provided in result
             result = PEP_DECRYPT_WRONG_FORMAT;
             goto free_ptext;
         }
