@@ -112,7 +112,9 @@ PEP_STATUS pgp_decrypt_and_verify(
     *psize = 0;
     *keylist = NULL;
 
-    mem = pgp_decrypt_buf(netpgp->io, ctext, csize,
+	memset(&vresult, 0x0, sizeof(vresult));
+
+    mem = pgp_decrypt_and_validate_buf(netpgp->io, &vresult, ctext, csize,
                 netpgp->secring, netpgp->pubring,
                 1 /* armoured */,
                 0 /* sshkeys */,
@@ -122,40 +124,26 @@ PEP_STATUS pgp_decrypt_and_verify(
     }
 
 	_psize = pgp_mem_len(mem);
-	if ((_ptext = calloc(1, _psize)) == NULL) {
-        return PEP_OUT_OF_MEMORY;
-	}
+    if (_psize){
+        if ((_ptext = calloc(1, _psize)) == NULL) {
+            return PEP_OUT_OF_MEMORY;
+        }
+        result = PEP_DECRYPTED;
+    }else{
+        return PEP_DECRYPT_NO_KEY;
+    }
+
 	memcpy(_ptext, pgp_mem_data(mem), _psize);
+	pgp_memory_free(mem);
 
-    result = PEP_DECRYPTED;
-
-    cat = pgp_memory_new();
-
-    /* if recognized */
-    /* decrypt */
-    /* if OK, verify */
-    /*
-    result = PEP_DECRYPTED_AND_VERIFIED;
-    result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
-    result = PEP_DECRYPTED;
-    result = PEP_DECRYPT_WRONG_FORMAT;
-    result = PEP_DECRYPT_NO_KEY;
-    return PEP_OUT_OF_MEMORY;
-    */
-	(void) memset(&vresult, 0x0, sizeof(vresult));
-	ret = pgp_validate_mem(io, &vresult, mem,
-				&cat, 1, netpgp->pubring);
-
-	// pgp_memory_free(mem) done by pgp_validate_mem
-
-	if (ret) {
+    if (vresult.validc && !vresult.invalidc && !vresult.unknownc ) {
 		// resultp(io, "<stdin>", &vresult, netpgp->pubring);
 	    // signedmem is freed from pgp_validate_mem
         result = PEP_DECRYPTED_AND_VERIFIED;
 	}else{
         if (vresult.validc + vresult.invalidc + vresult.unknownc == 0) {
             // No signatures found - is this memory signed?
-            result = PEP_DECRYPT_NO_KEY;
+            result = PEP_VERIFY_NO_KEY; 
         } else if (vresult.invalidc == 0 && vresult.unknownc == 0) {
             // memory verification failure: invalid signature time
             result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
@@ -166,6 +154,14 @@ PEP_STATUS pgp_decrypt_and_verify(
             result = PEP_DECRYPT_WRONG_FORMAT;
         }
     }
+    /*
+    result = PEP_DECRYPTED_AND_VERIFIED;
+    result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
+    result = PEP_DECRYPTED;
+    result = PEP_DECRYPT_WRONG_FORMAT;
+    result = PEP_DECRYPT_NO_KEY;
+    return PEP_OUT_OF_MEMORY;
+    */
     //result = PEP_UNKNOWN_ERROR;
     //            stringlist_t *k;
     //            _keylist = new_stringlist(NULL);
@@ -178,8 +174,6 @@ PEP_STATUS pgp_decrypt_and_verify(
     //            do {
     //                    k = stringlist_add(k, "SIGNATURE FPR"/*TODO*/);
     //            } while (0 /* TODO sign next*/);
-
-    pgp_memory_free(cat);
 
     if (result == PEP_DECRYPTED_AND_VERIFIED
         || result == PEP_DECRYPTED) {
