@@ -12,6 +12,8 @@
 #include <netpgp/netpgpsdk.h>
 #include <netpgp/validate.h>
 
+#define PEP_NETPGP_DEBUG
+
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
     netpgp_t *netpgp;
@@ -28,7 +30,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
             setlocale(LC_ALL, "");
     }
 
-	memset(netpgp, 0x0, sizeof(session->ctx));
+    memset(netpgp, 0x0, sizeof(session->ctx));
 
     // netpgp_setvar(netpgp, "max mem alloc", "4194304");
     netpgp_setvar(netpgp, "need seckey", "1");
@@ -44,13 +46,13 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     }
 
     // pair with gpg's cert-digest-algo
-	netpgp_setvar(netpgp, "hash", "SHA256");
+    netpgp_setvar(netpgp, "hash", "SHA256");
 
     // subset of gpg's personal-cipher-preferences
     // here only one cipher can be selected
     netpgp_setvar(netpgp, "cipher", "AES256");
 
-	if (!netpgp_init(netpgp)) {
+    if (!netpgp_init(netpgp)) {
         status = PEP_INIT_NETPGP_INIT_FAILED;
         goto pep_error;
     }
@@ -71,10 +73,113 @@ void pgp_release(PEP_SESSION session, bool out_last)
 
     netpgp = &session->ctx;
 
-	netpgp_end(netpgp);
-	memset(netpgp, 0x0, sizeof(session->ctx));
+    netpgp_end(netpgp);
+    memset(netpgp, 0x0, sizeof(session->ctx));
 
     // out_last unused here
+}
+
+// Iterate through netpgp' reported valid signatures 
+// fill a list of valid figerprints
+// returns PEP_STATUS_OK if all sig reported valid
+// error status otherwise.
+static PEP_STATUS _validation_results(netpgp_t *netpgp, pgp_validation_t *vresult,
+                                             stringlist_t **_keylist)
+{
+	time_t	now;
+	time_t	t;
+	char	buf[128];
+
+	now = time(NULL);
+	if (now < vresult->birthtime) {
+		// signature is not valid yet
+#ifdef PEP_NETPGP_DEBUG
+		(void) printf(
+			"signature not valid until %.24s\n",
+			ctime(&vresult->birthtime));
+#endif //PEP_NETPGP_DEBUG
+		return PEP_UNENCRYPTED;
+	}
+	if (vresult->duration != 0 && now > vresult->birthtime + vresult->duration) {
+		// signature has expired
+		t = vresult->duration + vresult->birthtime;
+#ifdef PEP_NETPGP_DEBUG
+		(void) printf(
+			"signature not valid after %.24s\n",
+			ctime(&t));
+#endif //PEP_NETPGP_DEBUG
+		return PEP_UNENCRYPTED;
+	}
+    if (vresult->validc && vresult->valid_sigs &&
+        !vresult->invalidc && !vresult->unknownc ) {
+        unsigned    n;
+        stringlist_t *k;
+        // caller responsible to free
+        *_keylist = new_stringlist(NULL);
+        assert(*_keylist);
+        if (*_keylist == NULL) {
+            return PEP_OUT_OF_MEMORY;
+        }
+        k = *_keylist;
+        for (n = 0; n < vresult->validc; ++n) {
+            int i;
+            char id[MAX_ID_LENGTH + 1];
+            static const char *hexes = "0123456789abcdef";
+            const uint8_t *userid = vresult->valid_sigs[n].signer_id;
+
+#ifdef PEP_NETPGP_DEBUG
+            const pgp_key_t *key;
+            pgp_pubkey_t *sigkey;
+	        unsigned from = 0;
+            key = pgp_getkeybyid(netpgp->io, netpgp->pubring,
+                (const uint8_t *) vresult->valid_sigs[n].signer_id,
+                &from, &sigkey);
+            pgp_print_keydata(netpgp->io, netpgp->pubring, key, "valid signature ", &key->key.pubkey, 0);
+#endif //PEP_NETPGP_DEBUG
+
+            for (i = 0; i < 8 ; i++) {
+                id[i * 2] = hexes[(unsigned)(userid[i] & 0xf0) >> 4];
+                id[(i * 2) + 1] = hexes[userid[i] & 0xf];
+            }
+            id[8 * 2] = 0x0;
+
+            k = stringlist_add(k, id);
+            if(!k){
+                free_stringlist(*_keylist);
+                return PEP_OUT_OF_MEMORY;
+            }
+        }
+        return PEP_STATUS_OK;
+    }
+    if (vresult->validc + vresult->invalidc + vresult->unknownc == 0) {
+        // No signatures found - is this memory signed?
+        return PEP_VERIFY_NO_KEY; 
+    } 
+    
+    if (vresult->invalidc) {
+        // some invalid signatures
+
+#ifdef PEP_NETPGP_DEBUG
+        unsigned    n;
+        for (n = 0; n < vresult->invalidc; ++n) {
+            const pgp_key_t *key;
+            pgp_pubkey_t *sigkey;
+            unsigned from = 0;
+            key = pgp_getkeybyid(netpgp->io, netpgp->pubring,
+                (const uint8_t *) vresult->invalid_sigs[n].signer_id,
+                &from, &sigkey);
+            pgp_print_keydata(netpgp->io, netpgp->pubring, key, "invalid signature ", &key->key.pubkey, 0);
+	        if (sigkey->duration != 0 && now > sigkey->birthtime + sigkey->duration) {
+                printf("EXPIRED !\n");
+            }
+        }
+#endif //PEP_NETPGP_DEBUG
+
+        return PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
+    }
+    
+    // only unknown sigs
+    return PEP_DECRYPT_WRONG_FORMAT;
 }
 
 PEP_STATUS pgp_decrypt_and_verify(
@@ -83,13 +188,12 @@ PEP_STATUS pgp_decrypt_and_verify(
     )
 {
     netpgp_t *netpgp;
-	pgp_memory_t *mem;
-	pgp_memory_t *cat;
-	pgp_validation_t *vresult;
-	pgp_io_t *io;
+    pgp_memory_t *mem;
+    pgp_memory_t *cat;
+    pgp_validation_t *vresult;
     char *_ptext = NULL;
     size_t _psize = 0;
-	int ret;
+    int ret;
 
     PEP_STATUS result;
     stringlist_t *_keylist = NULL;
@@ -106,14 +210,13 @@ PEP_STATUS pgp_decrypt_and_verify(
         return PEP_UNKNOWN_ERROR;
 
     netpgp = &session->ctx;
-	io = netpgp->io;
 
     *ptext = NULL;
     *psize = 0;
     *keylist = NULL;
 
     vresult = malloc(sizeof(pgp_validation_t));
-	memset(vresult, 0x0, sizeof(pgp_validation_t));
+    memset(vresult, 0x0, sizeof(pgp_validation_t));
 
     mem = pgp_decrypt_and_validate_buf(netpgp->io, vresult, ctext, csize,
                 netpgp->secring, netpgp->pubring,
@@ -124,60 +227,25 @@ PEP_STATUS pgp_decrypt_and_verify(
         return PEP_OUT_OF_MEMORY;
     }
 
-	_psize = pgp_mem_len(mem);
+    _psize = pgp_mem_len(mem);
     if (_psize){
         if ((_ptext = calloc(1, _psize)) == NULL) {
             result = PEP_OUT_OF_MEMORY;
             goto free_pgp;
         }
-	    memcpy(_ptext, pgp_mem_data(mem), _psize);
+        memcpy(_ptext, pgp_mem_data(mem), _psize);
         result = PEP_DECRYPTED;
     }else{
         result = PEP_DECRYPT_NO_KEY;
         goto free_pgp;
     }
 
-    if (result == PEP_DECRYPTED &&
-        vresult->validc && vresult->valid_sigs &&
-        !vresult->invalidc && !vresult->unknownc ) {
-        unsigned	n;
-        stringlist_t *k;
-        _keylist = new_stringlist(NULL);
-        assert(_keylist);
-        if (_keylist == NULL) {
-            result = PEP_OUT_OF_MEMORY;
-            goto free_keylist;
-        }
-        k = _keylist;
-        for (n = 0; n < vresult->validc; ++n) {
-            int i;
-            static const char *hexes = "0123456789abcdef";
-            char id[MAX_ID_LENGTH + 1];
-            const uint8_t *userid = vresult->valid_sigs[n].signer_id;
-
-            for (i = 0; i < 8 ; i++) {
-                id[i * 2] = hexes[(unsigned)(userid[i] & 0xf0) >> 4];
-                id[(i * 2) + 1] = hexes[userid[i] & 0xf];
-            }
-            id[8 * 2] = 0x0;
-            k = stringlist_add(k, id);
+    if (result == PEP_DECRYPTED) {
+        result = _validation_results(netpgp, vresult, &_keylist);
+        if (result != PEP_STATUS_OK) {
+            goto free_ptext;
         }
         result = PEP_DECRYPTED_AND_VERIFIED;
-	}else{
-        if (vresult->validc + vresult->invalidc + vresult->unknownc == 0) {
-            // No signatures found - is this memory signed?
-            result = PEP_VERIFY_NO_KEY; 
-            goto free_ptext;
-        } else if (vresult->invalidc) {
-            // invalid memory
-            result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
-            goto free_ptext;
-        } else {
-            // only unknown sigs
-            // or valid sig not provided in result
-            result = PEP_DECRYPT_WRONG_FORMAT;
-            goto free_ptext;
-        }
     }
 
     if (result == PEP_DECRYPTED_AND_VERIFIED
@@ -185,7 +253,9 @@ PEP_STATUS pgp_decrypt_and_verify(
         *ptext = _ptext;
         *psize = _psize;
         (*ptext)[*psize] = 0; // safeguard for naive users
-        *keylist = _keylist;
+        if (result == PEP_DECRYPTED_AND_VERIFIED) {
+            *keylist = _keylist;
+        }
 
         /* _ptext and _keylist ownership transfer, don't free */
         goto free_pgp;
@@ -198,7 +268,7 @@ free_ptext:
     free(_ptext);
 
 free_pgp:
-	pgp_memory_free(mem);
+    pgp_memory_free(mem);
     pgp_validate_result_free(vresult);
 
     return result;
@@ -209,6 +279,12 @@ PEP_STATUS pgp_verify_text(
     const char *signature, size_t sig_size, stringlist_t **keylist
     )
 {
+    netpgp_t *netpgp;
+    pgp_memory_t *signedmem;
+    pgp_memory_t *sig;
+    pgp_validation_t *vresult;
+    pgp_io_t *io;
+
     PEP_STATUS result;
     stringlist_t *_keylist;
 
@@ -219,21 +295,65 @@ PEP_STATUS pgp_verify_text(
     assert(sig_size);
     assert(keylist);
 
+    if(!session || !text || !size || !signature || !sig_size || !keylist) 
+        return PEP_UNKNOWN_ERROR;
+
+    netpgp = &session->ctx;
+
     *keylist = NULL;
-    /* if OK, verify */
-            stringlist_t *k;
-            k = _keylist;
-            result = PEP_VERIFIED;
-            do {
-                k = stringlist_add(k, "TODO");
-                if (k == NULL) {
-                    free_stringlist(_keylist);
-                    /* TODO */
-                    return PEP_OUT_OF_MEMORY;
-                }
-            } while (0 /*TODO*/);
-            *keylist = _keylist;
-    /*
+
+    vresult = malloc(sizeof(pgp_validation_t));
+    memset(vresult, 0x0, sizeof(pgp_validation_t));
+
+    signedmem = pgp_memory_new();
+    if (signedmem == NULL) {
+        return PEP_OUT_OF_MEMORY;
+    }
+    pgp_memory_add(signedmem, (const uint8_t*)text, size);
+
+    sig = pgp_memory_new();
+    if (sig == NULL) {
+        pgp_memory_free(signedmem);
+        return PEP_OUT_OF_MEMORY;
+    }
+    pgp_memory_add(sig, (const uint8_t*)signature, sig_size);
+
+    pgp_validate_mem_detached(netpgp->io, vresult, sig,
+                NULL,/* output */
+                1,/* armored */
+                netpgp->pubring,
+                signedmem);
+
+    result = _validation_results(netpgp, vresult, &_keylist);
+    if (result != PEP_STATUS_OK) {
+        goto free_pgp;
+    }else{
+        result = PEP_VERIFIED;
+    }
+
+    if (result == PEP_VERIFIED) {
+        /* TODO : check trust level */
+        result = PEP_VERIFIED_AND_TRUSTED;
+    }
+
+    if (result == PEP_VERIFIED || result == PEP_VERIFIED_AND_TRUSTED) {
+        *keylist = _keylist;
+
+        /* _keylist ownership transfer, don't free */
+        goto free_pgp;
+    }
+
+free_keylist:
+    free_stringlist(_keylist);
+
+free_pgp:
+    // pgp_memory_free(sig) done by pgp_validate_mem - why ?
+    pgp_memory_free(signedmem);
+    pgp_validate_result_free(vresult);
+
+    return result;
+
+    /* TODO check
     result = PEP_UNENCRYPTED;
     result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
     result = PEP_VERIFIED_AND_TRUSTED;
@@ -242,9 +362,6 @@ PEP_STATUS pgp_verify_text(
     result = PEP_DECRYPT_WRONG_FORMAT;
     return PEP_OUT_OF_MEMORY;
     */
-    result = PEP_UNKNOWN_ERROR;
-
-    return result;
 }
 
 PEP_STATUS pgp_encrypt_and_sign(

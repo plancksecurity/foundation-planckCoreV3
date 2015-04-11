@@ -98,8 +98,9 @@ int main(int argc, char* argv[])
     size_t sig_length = 0;
     ReadFileIntoMem("signature.asc", sig_buffer, sig_length);
 
-    cout << "\ncalling verify_test()\n";
+    cout << "\ncalling verify_text()\n";
     PEP_STATUS verify_result = verify_text(session, t1_buffer, t1_length, sig_buffer, sig_length, &keylist);
+    cout << "returning from verify_text() with result == " << verify_result << "\n";
     assert(verify_result == PEP_VERIFIED || verify_result == PEP_VERIFIED_AND_TRUSTED);
     assert(keylist->value);
     cout << "signed with " << keylist->value << "\n";
