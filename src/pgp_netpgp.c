@@ -348,7 +348,7 @@ free_keylist:
 
 free_pgp:
     // pgp_memory_free(sig) done by pgp_validate_mem - why ?
-    pgp_memory_free(signedmem);
+    // pgp_memory_free(signedmem); -- idem ?
     pgp_validate_result_free(vresult);
 
     return result;
