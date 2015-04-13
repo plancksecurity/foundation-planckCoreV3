@@ -12,6 +12,8 @@
 #include <netpgp/netpgpsdk.h>
 #include <netpgp/validate.h>
 
+#include <regex.h>
+
 #define PEP_NETPGP_DEBUG
 
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
@@ -79,6 +81,23 @@ void pgp_release(PEP_SESSION session, bool out_last)
     // out_last unused here
 }
 
+/* return 1 if the file contains ascii-armoured text 
+ * buf MUST be \0 terminated to be checked for armour */
+static unsigned
+_armoured(const char *buf, size_t size, const char *pattern)
+{
+    unsigned armoured = 0;
+    if(buf[size]=='\0'){
+        regex_t r;
+        regcomp(&r, pattern, REG_EXTENDED|REG_NEWLINE|REG_NOSUB);
+        if (regexec(&r, buf, 0, NULL, 0) == 0) {
+            armoured = 1;
+        }
+        regfree(&r);
+    }
+    return armoured;
+}
+
 // Iterate through netpgp' reported valid signatures 
 // fill a list of valid figerprints
 // returns PEP_STATUS_OK if all sig reported valid
@@ -86,30 +105,30 @@ void pgp_release(PEP_SESSION session, bool out_last)
 static PEP_STATUS _validation_results(netpgp_t *netpgp, pgp_validation_t *vresult,
                                              stringlist_t **_keylist)
 {
-	time_t	now;
-	time_t	t;
-	char	buf[128];
+    time_t    now;
+    time_t    t;
+    char    buf[128];
 
-	now = time(NULL);
-	if (now < vresult->birthtime) {
-		// signature is not valid yet
+    now = time(NULL);
+    if (now < vresult->birthtime) {
+        // signature is not valid yet
 #ifdef PEP_NETPGP_DEBUG
-		(void) printf(
-			"signature not valid until %.24s\n",
-			ctime(&vresult->birthtime));
+        (void) printf(
+            "signature not valid until %.24s\n",
+            ctime(&vresult->birthtime));
 #endif //PEP_NETPGP_DEBUG
-		return PEP_UNENCRYPTED;
-	}
-	if (vresult->duration != 0 && now > vresult->birthtime + vresult->duration) {
-		// signature has expired
-		t = vresult->duration + vresult->birthtime;
+        return PEP_UNENCRYPTED;
+    }
+    if (vresult->duration != 0 && now > vresult->birthtime + vresult->duration) {
+        // signature has expired
+        t = vresult->duration + vresult->birthtime;
 #ifdef PEP_NETPGP_DEBUG
-		(void) printf(
-			"signature not valid after %.24s\n",
-			ctime(&t));
+        (void) printf(
+            "signature not valid after %.24s\n",
+            ctime(&t));
 #endif //PEP_NETPGP_DEBUG
-		return PEP_UNENCRYPTED;
-	}
+        return PEP_UNENCRYPTED;
+    }
     if (vresult->validc && vresult->valid_sigs &&
         !vresult->invalidc && !vresult->unknownc ) {
         unsigned    n;
@@ -130,7 +149,7 @@ static PEP_STATUS _validation_results(netpgp_t *netpgp, pgp_validation_t *vresul
 #ifdef PEP_NETPGP_DEBUG
             const pgp_key_t *key;
             pgp_pubkey_t *sigkey;
-	        unsigned from = 0;
+            unsigned from = 0;
             key = pgp_getkeybyid(netpgp->io, netpgp->pubring,
                 (const uint8_t *) vresult->valid_sigs[n].signer_id,
                 &from, &sigkey);
@@ -169,7 +188,7 @@ static PEP_STATUS _validation_results(netpgp_t *netpgp, pgp_validation_t *vresul
                 (const uint8_t *) vresult->invalid_sigs[n].signer_id,
                 &from, &sigkey);
             pgp_print_keydata(netpgp->io, netpgp->pubring, key, "invalid signature ", &key->key.pubkey, 0);
-	        if (sigkey->duration != 0 && now > sigkey->birthtime + sigkey->duration) {
+            if (sigkey->duration != 0 && now > sigkey->birthtime + sigkey->duration) {
                 printf("EXPIRED !\n");
             }
         }
@@ -182,6 +201,7 @@ static PEP_STATUS _validation_results(netpgp_t *netpgp, pgp_validation_t *vresul
     return PEP_DECRYPT_WRONG_FORMAT;
 }
 
+#define ARMOR_HEAD	"^-----BEGIN PGP MESSAGE-----\\s*$"
 PEP_STATUS pgp_decrypt_and_verify(
     PEP_SESSION session, const char *ctext, size_t csize,
     char **ptext, size_t *psize, stringlist_t **keylist
@@ -220,7 +240,7 @@ PEP_STATUS pgp_decrypt_and_verify(
 
     mem = pgp_decrypt_and_validate_buf(netpgp->io, vresult, ctext, csize,
                 netpgp->secring, netpgp->pubring,
-                1 /* armoured */,
+                _armoured(ctext, csize, ARMOR_HEAD),
                 0 /* sshkeys */,
                 NULL, -1, NULL  /* pass fp,attempts,cb */);
     if (mem == NULL) {
@@ -274,6 +294,7 @@ free_pgp:
     return result;
 }
 
+#define ARMOR_SIG_HEAD	"^-----BEGIN PGP (SIGNATURE|SIGNED MESSAGE)-----\\s*$"
 PEP_STATUS pgp_verify_text(
     PEP_SESSION session, const char *text, size_t size,
     const char *signature, size_t sig_size, stringlist_t **keylist
@@ -320,7 +341,7 @@ PEP_STATUS pgp_verify_text(
 
     pgp_validate_mem_detached(netpgp->io, vresult, sig,
                 NULL,/* output */
-                1,/* armored */
+                _armoured(text, size, ARMOR_SIG_HEAD),
                 netpgp->pubring,
                 signedmem);
 
