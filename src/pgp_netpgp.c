@@ -347,21 +347,12 @@ free_keylist:
     free_stringlist(_keylist);
 
 free_pgp:
-    // pgp_memory_free(sig) done by pgp_validate_mem - why ?
-    // pgp_memory_free(signedmem); -- idem ?
+    // free done by pgp_validate_mem_detached
+    // pgp_memory_free(sig);
+    // pgp_memory_free(signedmem);
     pgp_validate_result_free(vresult);
 
     return result;
-
-    /* TODO check
-    result = PEP_UNENCRYPTED;
-    result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
-    result = PEP_VERIFIED_AND_TRUSTED;
-    result = PEP_VERIFY_NO_KEY;
-    result = PEP_UNENCRYPTED;
-    result = PEP_DECRYPT_WRONG_FORMAT;
-    return PEP_OUT_OF_MEMORY;
-    */
 }
 
 PEP_STATUS pgp_encrypt_and_sign(

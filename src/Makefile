@@ -26,7 +26,7 @@ ifeq ($(BUILD_FOR),Linux)
 TARGET=libpEpEngine.so
 GPGME_IN=$(HOME)
 LIBGPGME=libgpgme.so.11
-CC=gcc -std=c99
+CC=gcc -std=c99 -ggdb3 -O0
 CFLAGS?=-I$(GPGME_IN)/include $(OPTIMIZE) -fPIC -pedantic \
 	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -DLIBGPGME=\"$(LIBGPGME)\" \
 	-DSQLITE_THREADSAFE=1 -D_GNU_SOURCE
