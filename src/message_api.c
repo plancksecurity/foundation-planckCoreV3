@@ -245,6 +245,9 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     assert(dst);
     assert(enc_format >= PEP_enc_pieces);
 
+    if (!(session && src && dst && (enc_format >= PEP_enc_pieces)))
+        return PEP_ILLEGAL_VALUE;
+
     *dst = NULL;
 
     if (src->enc_format >= PEP_enc_pieces) {
@@ -563,6 +566,9 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     assert(src);
     assert(dst);
 
+    if (!(session && src && dst))
+        return PEP_ILLEGAL_VALUE;
+
     *dst = NULL;
  
     if (src->mime == PEP_MIME_fields_omitted || src->mime == PEP_MIME) {
@@ -781,6 +787,9 @@ DYNAMIC_API PEP_STATUS get_color(
     assert(msg);
     assert(color);
 
+    if (!(session && msg && color))
+        return PEP_ILLEGAL_VALUE;
+
     *color = pEp_undefined;
 
     assert(msg->from);
@@ -804,7 +813,8 @@ DYNAMIC_API PEP_STATUS get_color(
             if (msg->to) {
                 for (il = msg->to; il != NULL; il = il->next) {
                     if (il->ident) {
-                        max_comm_type = _get_comm_type(session, max_comm_type, il->ident);
+                        max_comm_type = _get_comm_type(session, max_comm_type,
+                                il->ident);
                         comm_type_determined = true;
                     }
                 }
@@ -813,7 +823,8 @@ DYNAMIC_API PEP_STATUS get_color(
             if (msg->cc) {
                 for (il = msg->cc; il != NULL; il = il->next) {
                     if (il->ident) {
-                        max_comm_type = _get_comm_type(session, max_comm_type, il->ident);
+                        max_comm_type = _get_comm_type(session, max_comm_type,
+                                il->ident);
                         comm_type_determined = true;
                     }
                 }
@@ -822,7 +833,8 @@ DYNAMIC_API PEP_STATUS get_color(
             if (msg->bcc) {
                 for (il = msg->bcc; il != NULL; il = il->next) {
                     if (il->ident) {
-                        max_comm_type = _get_comm_type(session, max_comm_type, il->ident);
+                        max_comm_type = _get_comm_type(session, max_comm_type,
+                                il->ident);
                         comm_type_determined = true;
                     }
                 }
