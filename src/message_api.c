@@ -772,7 +772,7 @@ static PEP_comm_type _get_comm_type(
     }
 }
 
-DYNAMIC_API PEP_STATUS get_color(
+DYNAMIC_API PEP_STATUS get_message_color(
         PEP_SESSION session,
         message *msg,
         pEp_color *color
