@@ -79,7 +79,7 @@ typedef enum _pEp_color {
     pEp_b0rken = -2
 } pEp_color;
 
-// get_color() - get color for a message
+// get_message_color() - get color for a message
 //
 //  parameters:
 //      session (in)        session handle
@@ -92,7 +92,7 @@ typedef enum _pEp_color {
 //  caveat:
 //      msg->from must point to a valid pEp_identity
 
-DYNAMIC_API PEP_STATUS get_color(
+DYNAMIC_API PEP_STATUS get_message_color(
         PEP_SESSION session,
         message *msg,
         pEp_color *color
