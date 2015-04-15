@@ -107,10 +107,16 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         stringlist_add(conf_values, "SHA512 SHA384 SHA256 SHA224");
         
         bResult = ensure_config_values(conf_keys, conf_values);
-        assert(bResult);
 
         free_stringlist(conf_keys);
         free_stringlist(conf_values);
+
+        assert(bResult);
+        if(!bResult){
+            status = PEP_INIT_NO_GPG_HOME;
+            goto pep_error;
+        }
+
 
         gpgme = dlopen(LIBGPGME, RTLD_LAZY);
         if (gpgme == NULL) {

@@ -8,6 +8,10 @@ LDLIBS?=-letpan -lpEpEngine -lstdc++
 CXXFLAGS?=-g -O0 -I../src
 # CXXFLAGS=-O3 -DNDEBUG
 
+ifeq ("$(OPENPGP)","NETPGP")
+	LDLIBS+= -lnetpgp
+endif
+
 TARGET=pEpEngineTest
 
 UNIT_TESTS_SOURCE=$(wildcard *_test.cc)
