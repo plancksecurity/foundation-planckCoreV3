@@ -88,10 +88,13 @@ typedef enum _pEp_color {
 //
 //  return value:
 //      error status or PEP_STATUS_OK on success
+//
+//  caveat:
+//      msg->from must point to a valid pEp_identity
 
 DYNAMIC_API PEP_STATUS get_color(
         PEP_SESSION session,
-        const message *msg,
+        message *msg,
         pEp_color *color
     );
 
