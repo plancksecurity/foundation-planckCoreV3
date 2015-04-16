@@ -810,33 +810,27 @@ DYNAMIC_API PEP_STATUS get_message_color(
             if (status != PEP_STATUS_OK)
                 return status;
 
-            if (msg->to) {
-                for (il = msg->to; il != NULL; il = il->next) {
-                    if (il->ident) {
-                        max_comm_type = _get_comm_type(session, max_comm_type,
-                                il->ident);
-                        comm_type_determined = true;
-                    }
+            for (il = msg->to; il != NULL; il = il->next) {
+                if (il->ident) {
+                    max_comm_type = _get_comm_type(session, max_comm_type,
+                            il->ident);
+                    comm_type_determined = true;
                 }
             }
 
-            if (msg->cc) {
-                for (il = msg->cc; il != NULL; il = il->next) {
-                    if (il->ident) {
-                        max_comm_type = _get_comm_type(session, max_comm_type,
-                                il->ident);
-                        comm_type_determined = true;
-                    }
+            for (il = msg->cc; il != NULL; il = il->next) {
+                if (il->ident) {
+                    max_comm_type = _get_comm_type(session, max_comm_type,
+                            il->ident);
+                    comm_type_determined = true;
                 }
             }
 
-            if (msg->bcc) {
-                for (il = msg->bcc; il != NULL; il = il->next) {
-                    if (il->ident) {
-                        max_comm_type = _get_comm_type(session, max_comm_type,
-                                il->ident);
-                        comm_type_determined = true;
-                    }
+            for (il = msg->bcc; il != NULL; il = il->next) {
+                if (il->ident) {
+                    max_comm_type = _get_comm_type(session, max_comm_type,
+                            il->ident);
+                    comm_type_determined = true;
                 }
             }
             break;
