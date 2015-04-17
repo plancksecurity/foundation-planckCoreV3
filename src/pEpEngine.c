@@ -898,7 +898,7 @@ DYNAMIC_API PEP_STATUS send_key(PEP_SESSION session, const char *pattern)
     return session->cryptotech[PEP_crypt_OpenPGP].send_key(session, pattern);
 }
 
-DYNAMIC_API PEP_STATUS key_renew(PEP_SESSION session, const char *key_id)
+DYNAMIC_API PEP_STATUS renew_key(PEP_SESSION session, const char *key_id)
 {
     assert(session);
     assert(key_id);
