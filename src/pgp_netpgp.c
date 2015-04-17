@@ -401,6 +401,8 @@ PEP_STATUS pgp_encrypt_and_sign(
     if(!session || !ptext || !psize || !ctext || !csize || !keylist) 
         return PEP_UNKNOWN_ERROR;
 
+    netpgp = &session->ctx;
+
     *ctext = NULL;
     *csize = 0;
 
