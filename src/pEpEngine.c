@@ -909,7 +909,7 @@ DYNAMIC_API PEP_STATUS key_renew(PEP_SESSION session, const char *key_id)
     return PEP_UNKNOWN_ERROR;
 }
 
-DYNAMIC_API PEP_STATUS key_revoke(PEP_SESSION session, const char *key_id)
+DYNAMIC_API PEP_STATUS revoke_key(PEP_SESSION session, const char *key_id)
 {
     assert(session);
     assert(key_id);

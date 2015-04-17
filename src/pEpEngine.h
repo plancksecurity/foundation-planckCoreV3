@@ -606,22 +606,22 @@ DYNAMIC_API PEP_STATUS get_key_rating(
     );
 
 
-// key_renew() - renew an expired key
+// renew_key() - renew an expired key
 //
 //  parameters:
 //      session (in)            session handle
 //      key_id (in)             ID of key to renew as UTF-8 string
 
-DYNAMIC_API PEP_STATUS key_renew(PEP_SESSION session, const char *key_id);
+DYNAMIC_API PEP_STATUS renew_key(PEP_SESSION session, const char *key_id);
 
 
-// key_revoke() - revoke an expired key
+// revoke_key() - revoke an expired key
 //
 //  parameters:
 //      session (in)            session handle
 //      key_id (in)             ID of key to revoke as UTF-8 string
 
-DYNAMIC_API PEP_STATUS key_revoke(PEP_SESSION session, const char *key_id);
+DYNAMIC_API PEP_STATUS revoke_key(PEP_SESSION session, const char *key_id);
 
 
 #ifdef __cplusplus
