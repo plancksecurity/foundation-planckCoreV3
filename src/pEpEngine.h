@@ -606,6 +606,15 @@ DYNAMIC_API PEP_STATUS get_key_rating(
     );
 
 
+// key_renew() - renew an expired key
+//
+//  parameters:
+//      session (in)            session handle
+//      key_id (in)             ID of key to renew as UTF-8 string
+
+DYNAMIC_API PEP_STATUS key_renew(PEP_SESSION session, const char *key_id);
+
+
 #ifdef __cplusplus
 }
 #endif
