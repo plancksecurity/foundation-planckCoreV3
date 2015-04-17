@@ -81,8 +81,8 @@ void pgp_release(PEP_SESSION session, bool out_last)
     // out_last unused here
 }
 
-/* return 1 if the file contains ascii-armoured text 
- * buf MUST be \0 terminated to be checked for armour */
+// return 1 if the file contains ascii-armoured text 
+// buf MUST be \0 terminated to be checked for armour
 static unsigned
 _armoured(const char *buf, size_t size, const char *pattern)
 {
@@ -201,7 +201,7 @@ static PEP_STATUS _validation_results(netpgp_t *netpgp, pgp_validation_t *vresul
     return PEP_DECRYPT_WRONG_FORMAT;
 }
 
-#define ARMOR_HEAD	"^-----BEGIN PGP MESSAGE-----\\s*$"
+#define ARMOR_HEAD    "^-----BEGIN PGP MESSAGE-----\\s*$"
 PEP_STATUS pgp_decrypt_and_verify(
     PEP_SESSION session, const char *ctext, size_t csize,
     char **ptext, size_t *psize, stringlist_t **keylist
@@ -294,7 +294,7 @@ free_pgp:
     return result;
 }
 
-#define ARMOR_SIG_HEAD	"^-----BEGIN PGP (SIGNATURE|SIGNED MESSAGE)-----\\s*$"
+#define ARMOR_SIG_HEAD    "^-----BEGIN PGP (SIGNATURE|SIGNED MESSAGE)-----\\s*$"
 PEP_STATUS pgp_verify_text(
     PEP_SESSION session, const char *text, size_t size,
     const char *signature, size_t sig_size, stringlist_t **keylist
@@ -304,7 +304,6 @@ PEP_STATUS pgp_verify_text(
     pgp_memory_t *signedmem;
     pgp_memory_t *sig;
     pgp_validation_t *vresult;
-    pgp_io_t *io;
 
     PEP_STATUS result;
     stringlist_t *_keylist;
@@ -341,7 +340,7 @@ PEP_STATUS pgp_verify_text(
 
     pgp_validate_mem_detached(netpgp->io, vresult, sig,
                 NULL,/* output */
-                _armoured(text, size, ARMOR_SIG_HEAD),
+                _armoured(signature, sig_size, ARMOR_SIG_HEAD),
                 netpgp->pubring,
                 signedmem);
 
@@ -381,9 +380,16 @@ PEP_STATUS pgp_encrypt_and_sign(
     size_t psize, char **ctext, size_t *csize
     )
 {
+    netpgp_t *netpgp;
+    const pgp_key_t *keypair;
+    pgp_seckey_t *seckey;
+	pgp_memory_t *signedmem;
+    const char *userid;
+    const char *hashalg;
+
     PEP_STATUS result;
     const stringlist_t *_keylist;
-    int i, j;
+    int i;
 
     assert(session);
     assert(keylist);
@@ -392,9 +398,53 @@ PEP_STATUS pgp_encrypt_and_sign(
     assert(ctext);
     assert(csize);
 
+    if(!session || !ptext || !psize || !ctext || !csize || !keylist) 
+        return PEP_UNKNOWN_ERROR;
+
     *ctext = NULL;
     *csize = 0;
 
+    // Get signing details from netpgp
+    if ((userid = netpgp_getvar(netpgp, "userid")) == NULL || 
+        (keypair = pgp_getkeybyname(netpgp->io, netpgp->secring, userid)) == NULL ||
+        (seckey = pgp_decrypt_seckey(keypair, NULL /*passfp*/)) == NULL) {
+        return PEP_UNKNOWN_ERROR;
+    }
+    hashalg = netpgp_getvar(netpgp, "hash");
+    if (seckey->pubkey.alg == PGP_PKA_DSA) {
+    	hashalg = "sha1";
+    }
+
+    // Sign data
+    signedmem = pgp_sign_buf(netpgp->io, ptext, psize, seckey,
+    			time(NULL), /* birthtime */
+    			0 /* duration */,
+    			hashalg, 
+                0 /* armored */,
+                0 /* cleartext */);
+
+    pgp_forget(seckey, (unsigned)sizeof(*seckey));
+
+    if (!signedmem) {
+        return PEP_UNENCRYPTED;
+    }
+
+    // Encrypt signed data
+    pgp_memory_free(signedmem);
+    result = PEP_UNKNOWN_ERROR;
+    return result;
+/*
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ * */
     for (_keylist = keylist, i = 0; _keylist != NULL; _keylist = _keylist->next, i++) {
         assert(_keylist->value);
         /* TODO */
