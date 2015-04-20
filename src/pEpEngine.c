@@ -2,6 +2,7 @@
 #include "dynamic_api.h"
 #include "cryptotech.h"
 #include "transport.h"
+#include "timestamp.h"
 
 int init_count = -1;
 
@@ -898,7 +899,11 @@ DYNAMIC_API PEP_STATUS send_key(PEP_SESSION session, const char *pattern)
     return session->cryptotech[PEP_crypt_OpenPGP].send_key(session, pattern);
 }
 
-DYNAMIC_API PEP_STATUS renew_key(PEP_SESSION session, const char *fpr)
+DYNAMIC_API PEP_STATUS renew_key(
+        PEP_SESSION session,
+        const char *fpr,
+        const timestamp *ts
+    )
 {
     assert(session);
     assert(fpr);
@@ -906,7 +911,7 @@ DYNAMIC_API PEP_STATUS renew_key(PEP_SESSION session, const char *fpr)
     if (!(session && fpr))
         return PEP_ILLEGAL_VALUE;
 
-    return session->cryptotech[PEP_crypt_OpenPGP].renew_key(session, fpr);
+    return session->cryptotech[PEP_crypt_OpenPGP].renew_key(session, fpr, ts);
 }
 
 DYNAMIC_API PEP_STATUS revoke_key(PEP_SESSION session, const char *fpr)

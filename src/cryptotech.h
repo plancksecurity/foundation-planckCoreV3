@@ -47,13 +47,15 @@ typedef PEP_STATUS (*get_key_rating_t)(
         PEP_comm_type *comm_type
     );
 
-typedef PEP_STATUS (*import_key_t)(PEP_SESSION session, const char *key_data, size_t size);
+typedef PEP_STATUS (*import_key_t)(PEP_SESSION session, const char *key_data,
+        size_t size);
 
 typedef PEP_STATUS (*recv_key_t)(PEP_SESSION session, const char *pattern);
 
 typedef PEP_STATUS (*send_key_t)(PEP_SESSION session, const char *pattern);
 
-typedef PEP_STATUS (*renew_key_t)(PEP_SESSION session, const char *key_id);
+typedef PEP_STATUS (*renew_key_t)(PEP_SESSION session, const char *key_id,
+        const timestamp *ts);
 
 typedef PEP_STATUS (*revoke_key_t)(PEP_SESSION session, const char *key_id);
 

@@ -10,6 +10,7 @@ extern "C" {
 
 #include "dynamic_api.h"
 #include "stringlist.h"
+#include "timestamp.h"
 
 #define PEP_VERSION "1.0"
 
@@ -611,8 +612,14 @@ DYNAMIC_API PEP_STATUS get_key_rating(
 //  parameters:
 //      session (in)            session handle
 //      key_id (in)             ID of key to renew as UTF-8 string
+//      ts (in)                 timestamp when key should expire or NULL for
+//                              default
 
-DYNAMIC_API PEP_STATUS renew_key(PEP_SESSION session, const char *fpr);
+DYNAMIC_API PEP_STATUS renew_key(
+        PEP_SESSION session,
+        const char *fpr,
+        const timestamp *ts
+    );
 
 
 // revoke_key() - revoke an expired key
