@@ -1334,7 +1334,6 @@ typedef struct _renew_state {
         renew_exit,
         renew_error = -1
     } state;
-    const char *fpr_ref;
     const char *date_ref;
 } renew_state;
 
@@ -1468,7 +1467,6 @@ PEP_STATUS pgp_renew_key(
     assert(fpr);
 
     memset(&handle, 0, sizeof(renew_state));
-    handle.fpr_ref = fpr;
     snprintf(date_text, 12, "%.4d-%.2d-%.2d\n", ts->tm_year + 1900,
             ts->tm_mon + 1, ts->tm_mday);
     handle.date_ref = date_text;
