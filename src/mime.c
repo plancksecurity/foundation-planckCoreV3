@@ -771,6 +771,9 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
     assert(msg->mime == PEP_MIME_none);
     assert(mimetext);
 
+    if (!(msg && msg->mime == PEP_MIME_none && mimetext))
+        return PEP_ILLEGAL_VALUE;
+
     *mimetext = NULL;
 
     switch (msg->enc_format) {
@@ -1422,6 +1425,9 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
 
     assert(mimetext);
     assert(msg);
+
+    if (!(mimetext && msg))
+        return PEP_ILLEGAL_VALUE;
 
     *msg = NULL;
 

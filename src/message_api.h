@@ -62,6 +62,42 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         message **dst
     );
 
+
+typedef enum _pEp_color {
+    pEp_undefined = 0,
+    pEp_unencrypted,
+    pEp_unreliable,
+    pEp_reliable,
+    pEp_yellow = pEp_reliable,
+    pEp_trusted,
+    pEp_green = pEp_trusted,
+    pEp_trusted_and_anonymized,
+    pEp_fully_anonymous,   
+
+    pEp_under_attack = -1,
+    pEp_red = pEp_under_attack,
+    pEp_b0rken = -2
+} pEp_color;
+
+// get_message_color() - get color for a message
+//
+//  parameters:
+//      session (in)        session handle
+//      msg (in)            message to get the color for
+//      color (out)         color for the message
+//
+//  return value:
+//      error status or PEP_STATUS_OK on success
+//
+//  caveat:
+//      msg->from must point to a valid pEp_identity
+
+DYNAMIC_API PEP_STATUS get_message_color(
+        PEP_SESSION session,
+        message *msg,
+        pEp_color *color
+    );
+
 #ifdef __cplusplus
 }
 #endif

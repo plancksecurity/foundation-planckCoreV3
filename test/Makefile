@@ -29,7 +29,7 @@ test: pEpEngineTest
 
 unit_tests: $(UNIT_TESTS)
 	for t in ./*_test ; do \
-		LD_LIBRARY_PATH=~/lib:../src $$t ; \
+		if LD_LIBRARY_PATH=~/lib:../src $$t ; then true; else break; fi \
 	done
 
 install:

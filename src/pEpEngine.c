@@ -31,6 +31,9 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         in_first = true;
 
 	assert(session);
+    if (session == NULL)
+        return PEP_ILLEGAL_VALUE;
+
 	*session = NULL;
 
     pEpSession *_session = calloc(1, sizeof(pEpSession));
@@ -254,6 +257,9 @@ DYNAMIC_API void release(PEP_SESSION session)
     assert(init_count >= 0);
 	assert(session);
 
+    if (!(init_count && session))
+        return;
+
     // a small race condition but still a race condition
     // mitigated by calling caveat (see documentation)
 
@@ -305,6 +311,9 @@ DYNAMIC_API PEP_STATUS log_event(
 	assert(title);
 	assert(entity);
 
+    if (!(session && title && entity))
+        return PEP_ILLEGAL_VALUE;
+
 	sqlite3_reset(session->log);
 	sqlite3_bind_text(session->log, 1, title, -1, SQLITE_STATIC);
 	sqlite3_bind_text(session->log, 2, entity, -1, SQLITE_STATIC);
@@ -338,6 +347,9 @@ DYNAMIC_API PEP_STATUS safeword(
 	assert(session);
 	assert(word);
 	assert(wsize);
+
+    if (!(session && word && wsize))
+        return PEP_ILLEGAL_VALUE;
 
 	*word = NULL;
 	*wsize = 0;
@@ -386,6 +398,9 @@ DYNAMIC_API PEP_STATUS safewords(
 	assert(words);
 	assert(wsize);
 	assert(max_words >= 0);
+
+    if (!(session && fingerprint && words && wsize && max_words >= 0))
+        return PEP_ILLEGAL_VALUE;
 
 	*words = NULL;
 	*wsize = 0;
@@ -551,6 +566,9 @@ DYNAMIC_API PEP_STATUS get_identity(
 	assert(address);
     assert(address[0]);
 
+    if (!(session && address && address[0]))
+        return PEP_ILLEGAL_VALUE;
+
     sqlite3_reset(session->get_identity);
     sqlite3_bind_text(session->get_identity, 1, address, -1, SQLITE_STATIC);
 
@@ -600,6 +618,10 @@ DYNAMIC_API PEP_STATUS set_identity(
 	assert(identity->fpr);
 	assert(identity->user_id);
 	assert(identity->username);
+
+    if (!(session && identity && identity->address && identity->fpr &&
+                identity->user_id && identity->username))
+        return PEP_ILLEGAL_VALUE;
 
 	sqlite3_exec(session->db, "BEGIN ;", NULL, NULL, NULL);
 
@@ -681,6 +703,10 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
     assert(identity->fpr);
     assert(identity->fpr[0]);
 
+    if (!(session && identity && identity->user_id && identity->user_id[0] &&
+                identity->fpr && identity->fpr[0]))
+        return PEP_ILLEGAL_VALUE;
+
     identity->comm_type = PEP_ct_unknown;
 
     sqlite3_reset(session->get_trust);
@@ -717,6 +743,16 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
     char **ptext, size_t *psize, stringlist_t **keylist
     )
 {
+    assert(session);
+    assert(ctext);
+    assert(csize);
+    assert(ptext);
+    assert(psize);
+    assert(keylist);
+
+    if (!(session && ctext && csize && ptext && psize && keylist && keylist))
+        return PEP_ILLEGAL_VALUE;
+
     return session->cryptotech[PEP_crypt_OpenPGP].decrypt_and_verify(session, ctext, csize, ptext, psize, keylist);
 }
 
@@ -725,6 +761,16 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
     size_t psize, char **ctext, size_t *csize
     )
 {
+    assert(session);
+    assert(keylist);
+    assert(ptext);
+    assert(psize);
+    assert(ctext);
+    assert(csize);
+
+    if (!(session && keylist && ptext && psize && ctext && csize))
+        return PEP_ILLEGAL_VALUE;
+
     return session->cryptotech[PEP_crypt_OpenPGP].encrypt_and_sign(session, keylist, ptext, psize, ctext, csize);
 }
 
@@ -733,11 +779,27 @@ DYNAMIC_API PEP_STATUS verify_text(
     const char *signature, size_t sig_size, stringlist_t **keylist
     )
 {
+    assert(session);
+    assert(text);
+    assert(size);
+    assert(signature);
+    assert(sig_size);
+    assert(keylist);
+
+    if (!(session && text && size && signature && sig_size && keylist))
+        return PEP_ILLEGAL_VALUE;
+
     return session->cryptotech[PEP_crypt_OpenPGP].verify_text(session, text, size, signature, sig_size, keylist);
 }
 
 DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr)
 {
+    assert(session);
+    assert(fpr);
+
+    if (!(session && fpr))
+        return PEP_ILLEGAL_VALUE;
+
     return session->cryptotech[PEP_crypt_OpenPGP].delete_keypair(session, fpr);
 }
 
@@ -745,6 +807,14 @@ DYNAMIC_API PEP_STATUS export_key(
         PEP_SESSION session, const char *fpr, char **key_data, size_t *size
     )
 {
+    assert(session);
+    assert(fpr);
+    assert(key_data);
+    assert(size);
+
+    if (!(session && fpr && key_data && size))
+        return PEP_ILLEGAL_VALUE;
+
     return session->cryptotech[PEP_crypt_OpenPGP].export_key(session, fpr, key_data, size);
 }
 
@@ -752,6 +822,13 @@ DYNAMIC_API PEP_STATUS find_keys(
         PEP_SESSION session, const char *pattern, stringlist_t **keylist
     )
 {
+    assert(session);
+    assert(pattern);
+    assert(keylist);
+
+    if (!(session && pattern && keylist))
+        return PEP_ILLEGAL_VALUE;
+
     return session->cryptotech[PEP_crypt_OpenPGP].find_keys(session, pattern, keylist);
 }
 
@@ -759,6 +836,16 @@ DYNAMIC_API PEP_STATUS generate_keypair(
         PEP_SESSION session, pEp_identity *identity
     )
 {
+    assert(session);
+    assert(identity);
+    assert(identity->address);
+    assert(identity->fpr == NULL);
+    assert(identity->username);
+
+    if (!(session && identity && identity->address && identity->fpr == NULL &&
+                identity->username))
+        return PEP_ILLEGAL_VALUE;
+
     return session->cryptotech[PEP_crypt_OpenPGP].generate_keypair(session, identity);
 }
 
@@ -768,20 +855,72 @@ DYNAMIC_API PEP_STATUS get_key_rating(
         PEP_comm_type *comm_type
     )
 {
+    assert(session);
+    assert(fpr);
+    assert(comm_type);
+
+    if (!(session && fpr && comm_type))
+        return PEP_ILLEGAL_VALUE;
+
     return session->cryptotech[PEP_crypt_OpenPGP].get_key_rating(session, fpr, comm_type);
 }
 
 DYNAMIC_API PEP_STATUS import_key(PEP_SESSION session, const char *key_data, size_t size)
 {
+    assert(session);
+    assert(key_data);
+
+    if (!(session && key_data))
+        return PEP_ILLEGAL_VALUE;
+
     return session->cryptotech[PEP_crypt_OpenPGP].import_key(session, key_data, size);
 }
 
 DYNAMIC_API PEP_STATUS recv_key(PEP_SESSION session, const char *pattern)
 {
+    assert(session);
+    assert(pattern);
+
+    if (!(session && pattern))
+        return PEP_ILLEGAL_VALUE;
+
     return session->cryptotech[PEP_crypt_OpenPGP].recv_key(session, pattern);
 }
 
 DYNAMIC_API PEP_STATUS send_key(PEP_SESSION session, const char *pattern)
 {
+    assert(session);
+    assert(pattern);
+
+    if (!(session && pattern))
+        return PEP_ILLEGAL_VALUE;
+
     return session->cryptotech[PEP_crypt_OpenPGP].send_key(session, pattern);
 }
+
+DYNAMIC_API PEP_STATUS renew_key(
+        PEP_SESSION session,
+        const char *fpr,
+        const timestamp *ts
+    )
+{
+    assert(session);
+    assert(fpr);
+
+    if (!(session && fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    return session->cryptotech[PEP_crypt_OpenPGP].renew_key(session, fpr, ts);
+}
+
+DYNAMIC_API PEP_STATUS revoke_key(PEP_SESSION session, const char *fpr)
+{
+    assert(session);
+    assert(fpr);
+
+    if (!(session && fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    return session->cryptotech[PEP_crypt_OpenPGP].revoke_key(session, fpr);
+}
+

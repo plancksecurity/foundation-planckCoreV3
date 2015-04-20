@@ -28,6 +28,9 @@ DYNAMIC_API PEP_STATUS update_identity(
     assert(identity);
     assert(!EMPTY(identity->address));
 
+    if (!(session && identity && !EMPTY(identity->address)))
+        return PEP_ILLEGAL_VALUE;
+
     status = get_identity(session, identity->address, &stored_identity);
     assert(status != PEP_OUT_OF_MEMORY);
     if (status == PEP_OUT_OF_MEMORY)
@@ -189,6 +192,10 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     assert(identity->address);
     assert(identity->username);
     assert(identity->user_id);
+
+    if (!(session && identity && identity->address && identity->username &&
+                identity->user_id))
+        return PEP_ILLEGAL_VALUE;
 
     identity->comm_type = PEP_ct_pEp;
     identity->me = true;

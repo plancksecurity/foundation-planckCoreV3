@@ -1193,7 +1193,6 @@ PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
         return PEP_CANNOT_SEND_KEY;
 }
 
-
 PEP_STATUS pgp_get_key_rating(
     PEP_SESSION session,
     const char *fpr,
@@ -1291,3 +1290,218 @@ PEP_STATUS pgp_get_key_rating(
 
     return status;
 }
+
+static PEP_STATUS find_single_key(
+        PEP_SESSION session,
+        const char *fpr,
+        gpgme_key_t *key
+    )
+{
+    gpgme_error_t gpgme_error;
+
+    *key = NULL;
+
+    gpgme_error = gpg.gpgme_op_keylist_start(session->ctx, fpr, 0);
+    gpgme_error = _GPGERR(gpgme_error);
+    switch (gpgme_error) {
+    case GPG_ERR_NO_ERROR:
+        break;
+    case GPG_ERR_INV_VALUE:
+        assert(0);
+        return PEP_UNKNOWN_ERROR;
+    default:
+        return PEP_GET_KEY_FAILED;
+    };
+
+    gpgme_error = gpg.gpgme_op_keylist_next(session->ctx, key);
+    gpgme_error = _GPGERR(gpgme_error);
+    assert(gpgme_error != GPG_ERR_INV_VALUE);
+
+    gpg.gpgme_op_keylist_end(session->ctx);
+
+    return PEP_STATUS_OK;
+}
+
+typedef struct _renew_state {
+    enum state_t {
+        renew_command = 0,
+        renew_date,
+        renew_secret_key,
+        renew_command2,
+        renew_date2,
+        renew_quit,
+        renew_save,
+        renew_exit,
+        renew_error = -1
+    } state;
+    const char *date_ref;
+} renew_state;
+
+static gpgme_error_t renew_fsm(
+        void *_handle,
+        gpgme_status_code_t statuscode,
+        const char *args,
+        int fd
+    )
+{
+    renew_state *handle = _handle;
+
+    switch (handle->state) {
+        case renew_command:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "keyedit.prompt") == 0);
+                if (strcmp(args, "keyedit.prompt")) {
+                    handle->state = renew_error;
+                    return GPG_ERR_GENERAL;
+                }
+                write(fd, "expire\n", 7);
+                handle->state = renew_date;
+            }
+            break;
+
+        case renew_date:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "keygen.valid") == 0);
+                if (strcmp(args, "keygen.valid")) {
+                    handle->state = renew_error;
+                    return GPG_ERR_GENERAL;
+                }
+                write(fd, handle->date_ref, 11);
+                handle->state = renew_secret_key;
+            }
+            break;
+
+        case renew_secret_key:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "keyedit.prompt") == 0);
+                if (strcmp(args, "keyedit.prompt")) {
+                    handle->state = renew_error;
+                    return GPG_ERR_GENERAL;
+                }
+                write(fd, "key 1\n", 6);
+                handle->state = renew_command2;
+            }
+            break;
+
+        case renew_command2:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "keyedit.prompt") == 0);
+                if (strcmp(args, "keyedit.prompt")) {
+                    handle->state = renew_error;
+                    return GPG_ERR_GENERAL;
+                }
+                write(fd, "expire\n", 7);
+                handle->state = renew_date2;
+            }
+            break;
+
+        case renew_date2:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "keygen.valid") == 0);
+                if (strcmp(args, "keygen.valid")) {
+                    handle->state = renew_error;
+                    return GPG_ERR_GENERAL;
+                }
+                write(fd, handle->date_ref, 11);
+                handle->state = renew_quit;
+            }
+            break;
+
+        case renew_quit:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "keyedit.prompt") == 0);
+                if (strcmp(args, "keyedit.prompt")) {
+                    handle->state = renew_error;
+                    return GPG_ERR_GENERAL;
+                }
+                write(fd, "quit\n", 5);
+                handle->state = renew_save;
+            }
+            break;
+
+        case renew_save:
+            if (statuscode == GPGME_STATUS_GET_BOOL) {
+                assert(strcmp(args, "keyedit.save.okay") == 0);
+                if (strcmp(args, "keyedit.save.okay")) {
+                    handle->state = renew_error;
+                    return GPG_ERR_GENERAL;
+                }
+                write(fd, "Y\n", 2);
+                handle->state = renew_exit;
+            }
+            break;
+
+        case renew_exit:
+            break;
+
+        case renew_error:
+            return GPG_ERR_GENERAL;
+    }
+
+    return GPG_ERR_NO_ERROR;
+}
+
+static ssize_t _nullwriter(
+        void *_handle,
+        const void *buffer,
+        size_t size
+    )
+{
+    return size;
+}
+
+PEP_STATUS pgp_renew_key(
+        PEP_SESSION session,
+        const char *fpr,
+        const timestamp *ts
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    gpgme_error_t gpgme_error;
+    gpgme_key_t key;
+    gpgme_data_t output;
+    renew_state handle;
+    char date_text[12];
+
+    assert(session);
+    assert(fpr);
+
+    memset(&handle, 0, sizeof(renew_state));
+    snprintf(date_text, 12, "%.4d-%.2d-%.2d\n", ts->tm_year + 1900,
+            ts->tm_mon + 1, ts->tm_mday);
+    handle.date_ref = date_text;
+
+    status = find_single_key(session, fpr, &key);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    struct gpgme_data_cbs data_cbs;
+    memset(&data_cbs, 0, sizeof(struct gpgme_data_cbs));
+    data_cbs.write = _nullwriter;
+    gpgme_data_new_from_cbs(&output, &data_cbs, &handle);
+
+    gpgme_error = gpgme_op_edit(session->ctx, key, renew_fsm, &handle,
+            output);
+    assert(gpgme_error == GPG_ERR_NO_ERROR);
+
+    gpg.gpgme_data_release(output);
+    gpg.gpgme_key_unref(key);
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS pgp_revoke_key(PEP_SESSION session, const char *fpr)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    gpgme_key_t key;
+    
+    assert(session);
+    assert(fpr);
+
+    status = find_single_key(session, fpr, &key);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    return PEP_STATUS_OK;
+}
+

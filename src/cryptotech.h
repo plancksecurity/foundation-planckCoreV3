@@ -47,11 +47,17 @@ typedef PEP_STATUS (*get_key_rating_t)(
         PEP_comm_type *comm_type
     );
 
-typedef PEP_STATUS (*import_key_t)(PEP_SESSION session, const char *key_data, size_t size);
+typedef PEP_STATUS (*import_key_t)(PEP_SESSION session, const char *key_data,
+        size_t size);
 
 typedef PEP_STATUS (*recv_key_t)(PEP_SESSION session, const char *pattern);
 
 typedef PEP_STATUS (*send_key_t)(PEP_SESSION session, const char *pattern);
+
+typedef PEP_STATUS (*renew_key_t)(PEP_SESSION session, const char *key_id,
+        const timestamp *ts);
+
+typedef PEP_STATUS (*revoke_key_t)(PEP_SESSION session, const char *key_id);
 
 typedef struct _PEP_cryptotech_t {
     uint8_t id;
@@ -69,6 +75,8 @@ typedef struct _PEP_cryptotech_t {
     import_key_t import_key;
     recv_key_t recv_key;
     send_key_t send_key;
+    renew_key_t renew_key;
+    revoke_key_t revoke_key;
 } PEP_cryptotech_t;
 
 typedef uint64_t cryptotech_mask;

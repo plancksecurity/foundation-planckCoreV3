@@ -7,6 +7,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifndef MIN
+#define MIN(A, B) ((B) > (A) ? (A) : (B))
+#endif
+
 static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
 {
     char * ptext;
@@ -240,6 +244,9 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     assert(src);
     assert(dst);
     assert(enc_format >= PEP_enc_pieces);
+
+    if (!(session && src && dst && (enc_format >= PEP_enc_pieces)))
+        return PEP_ILLEGAL_VALUE;
 
     *dst = NULL;
 
@@ -559,6 +566,9 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     assert(src);
     assert(dst);
 
+    if (!(session && src && dst))
+        return PEP_ILLEGAL_VALUE;
+
     *dst = NULL;
  
     if (src->mime == PEP_MIME_fields_omitted || src->mime == PEP_MIME) {
@@ -738,5 +748,123 @@ pep_error:
         free_message(src);
 
     return status;
+}
+
+static PEP_comm_type _get_comm_type(
+        PEP_SESSION session,
+        PEP_comm_type max_comm_type,
+        pEp_identity *ident
+    )
+{
+    PEP_STATUS status = update_identity(session, ident);
+
+    if (max_comm_type == PEP_ct_compromized)
+        return PEP_ct_compromized;
+
+    if (status == PEP_STATUS_OK) {
+        if (ident->comm_type == PEP_ct_compromized)
+            return PEP_ct_compromized;
+        else
+            return MIN(max_comm_type, ident->comm_type);
+    }
+    else {
+        return PEP_ct_unknown;
+    }
+}
+
+DYNAMIC_API PEP_STATUS get_message_color(
+        PEP_SESSION session,
+        message *msg,
+        pEp_color *color
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    PEP_comm_type max_comm_type = PEP_ct_pEp;
+    bool comm_type_determined = false;
+    identity_list * il;
+
+    assert(session);
+    assert(msg);
+    assert(color);
+
+    if (!(session && msg && color))
+        return PEP_ILLEGAL_VALUE;
+
+    *color = pEp_undefined;
+
+    assert(msg->from);
+    if (msg->from == NULL)
+        return PEP_ILLEGAL_VALUE;
+
+    switch (msg->dir) {
+        case PEP_dir_incoming:
+            status = update_identity(session, msg->from);
+            if (status != PEP_STATUS_OK)
+                return status;
+            max_comm_type = msg->from->comm_type;
+            comm_type_determined = true;
+            break;
+        
+        case PEP_dir_outgoing:
+            status = myself(session, msg->from);
+            if (status != PEP_STATUS_OK)
+                return status;
+
+            for (il = msg->to; il != NULL; il = il->next) {
+                if (il->ident) {
+                    max_comm_type = _get_comm_type(session, max_comm_type,
+                            il->ident);
+                    comm_type_determined = true;
+                }
+            }
+
+            for (il = msg->cc; il != NULL; il = il->next) {
+                if (il->ident) {
+                    max_comm_type = _get_comm_type(session, max_comm_type,
+                            il->ident);
+                    comm_type_determined = true;
+                }
+            }
+
+            for (il = msg->bcc; il != NULL; il = il->next) {
+                if (il->ident) {
+                    max_comm_type = _get_comm_type(session, max_comm_type,
+                            il->ident);
+                    comm_type_determined = true;
+                }
+            }
+            break;
+
+        default:
+            return PEP_ILLEGAL_VALUE;
+    }
+
+    if (comm_type_determined == false)
+        *color = pEp_undefined;
+
+    else if (max_comm_type == PEP_ct_compromized)
+        *color = pEp_under_attack;
+
+    else if (max_comm_type >= PEP_ct_confirmed_enc_anon)
+        *color = pEp_trusted_and_anonymized;
+
+    else if (max_comm_type >= PEP_ct_strong_encryption)
+        *color = pEp_trusted;
+
+    else if (max_comm_type >= PEP_ct_strong_but_unconfirmed &&
+            max_comm_type < PEP_ct_confirmed)
+        *color = pEp_reliable;
+    
+    else if (max_comm_type == PEP_ct_no_encryption ||
+            max_comm_type == PEP_ct_no_encrypted_channel)
+        *color = pEp_unencrypted;
+
+    else if (max_comm_type == PEP_ct_unknown)
+        *color = pEp_undefined;
+
+    else
+        *color = pEp_unreliable;
+
+    return PEP_STATUS_OK;
 }
 

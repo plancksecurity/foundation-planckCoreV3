@@ -38,6 +38,8 @@ PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first)
         cryptotech[PEP_crypt_OpenPGP].import_key = pgp_import_keydata;
         cryptotech[PEP_crypt_OpenPGP].recv_key = pgp_recv_key;
         cryptotech[PEP_crypt_OpenPGP].send_key = pgp_send_key;
+        cryptotech[PEP_crypt_OpenPGP].renew_key = pgp_renew_key;
+        cryptotech[PEP_crypt_OpenPGP].revoke_key = pgp_revoke_key;
     }
 
     session->cryptotech = cryptotech;

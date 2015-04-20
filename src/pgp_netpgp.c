@@ -753,3 +753,36 @@ PEP_STATUS pgp_get_key_rating(
 
     return status;
 }
+
+PEP_STATUS pgp_renew_key(
+        PEP_SESSION session,
+        const char *fpr,
+        const timestamp *ts
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    char date_text[12];
+
+    assert(session);
+    assert(fpr);
+
+    snprintf(date_text, 12, "%.4d-%.2d-%.2d\n", ts->tm_year + 1900,
+            ts->tm_mon + 1, ts->tm_mday);
+
+
+        return PEP_UNKNOWN_ERROR;
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS pgp_revoke_key(PEP_SESSION session, const char *fpr)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    assert(session);
+    assert(fpr);
+
+        return PEP_UNKNOWN_ERROR;
+
+    return PEP_STATUS_OK;
+}
+

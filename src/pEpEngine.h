@@ -10,6 +10,7 @@ extern "C" {
 
 #include "dynamic_api.h"
 #include "stringlist.h"
+#include "timestamp.h"
 
 #define PEP_VERSION "1.0"
 
@@ -299,8 +300,12 @@ typedef enum _PEP_comm_type {
 
     PEP_ct_unconfirmed_encryption = 0x10,       // generic
     PEP_ct_OpenPGP_weak_unconfirmed = 0x11,	    // RSA 1024 is weak
-    PEP_ct_SMIME_unconfirmed = 0x20,
-    PEP_ct_CMS_unconfirmed = 0x30,
+
+    PEP_ct_to_be_checked = 0x20,                // generic
+    PEP_ct_SMIME_unconfirmed = 0x21,
+    PEP_ct_CMS_unconfirmed = 0x22,
+
+    PEP_ct_strong_but_unconfirmed = 0x30,       // generic
     PEP_ct_OpenPGP_unconfirmed = 0x38,          // key at least 2048 bit RSA or EC
     PEP_ct_OTR_unconfirmed = 0x3a,
 
@@ -316,8 +321,12 @@ typedef enum _PEP_comm_type {
 
     PEP_ct_confirmed_encryption = 0x90,         // generic
 	PEP_ct_OpenPGP_weak = 0x91,                 // RSA 1024 is weak
-    PEP_ct_SMIME = 0xa0,
-    PEP_ct_CMS = 0xb0,
+
+    PEP_ct_to_be_checked_confirmed = 0xa0,      //generic
+    PEP_ct_SMIME = 0xa1,
+    PEP_ct_CMS = 0xa2,
+
+    PEP_ct_strong_encryption = 0xb0,            // generic
 	PEP_ct_OpenPGP = 0xb8,                      // key at least 2048 bit RSA or EC
 	PEP_ct_OTR = 0xba,
 
@@ -596,6 +605,30 @@ DYNAMIC_API PEP_STATUS get_key_rating(
         const char *fpr,
         PEP_comm_type *comm_type
     );
+
+
+// renew_key() - renew an expired key
+//
+//  parameters:
+//      session (in)            session handle
+//      key_id (in)             ID of key to renew as UTF-8 string
+//      ts (in)                 timestamp when key should expire or NULL for
+//                              default
+
+DYNAMIC_API PEP_STATUS renew_key(
+        PEP_SESSION session,
+        const char *fpr,
+        const timestamp *ts
+    );
+
+
+// revoke_key() - revoke an expired key
+//
+//  parameters:
+//      session (in)            session handle
+//      key_id (in)             ID of key to revoke as UTF-8 string
+
+DYNAMIC_API PEP_STATUS revoke_key(PEP_SESSION session, const char *fpr);
 
 
 #ifdef __cplusplus
