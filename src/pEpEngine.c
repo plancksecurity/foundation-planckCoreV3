@@ -898,25 +898,25 @@ DYNAMIC_API PEP_STATUS send_key(PEP_SESSION session, const char *pattern)
     return session->cryptotech[PEP_crypt_OpenPGP].send_key(session, pattern);
 }
 
-DYNAMIC_API PEP_STATUS renew_key(PEP_SESSION session, const char *key_id)
+DYNAMIC_API PEP_STATUS renew_key(PEP_SESSION session, const char *fpr)
 {
     assert(session);
-    assert(key_id);
+    assert(fpr);
 
-    if (!(session && key_id))
+    if (!(session && fpr))
         return PEP_ILLEGAL_VALUE;
 
-    return PEP_UNKNOWN_ERROR;
+    return session->cryptotech[PEP_crypt_OpenPGP].renew_key(session, fpr);
 }
 
-DYNAMIC_API PEP_STATUS revoke_key(PEP_SESSION session, const char *key_id)
+DYNAMIC_API PEP_STATUS revoke_key(PEP_SESSION session, const char *fpr)
 {
     assert(session);
-    assert(key_id);
+    assert(fpr);
 
-    if (!(session && key_id))
+    if (!(session && fpr))
         return PEP_ILLEGAL_VALUE;
 
-    return PEP_UNKNOWN_ERROR;
+    return session->cryptotech[PEP_crypt_OpenPGP].revoke_key(session, fpr);
 }
 

@@ -53,6 +53,10 @@ typedef PEP_STATUS (*recv_key_t)(PEP_SESSION session, const char *pattern);
 
 typedef PEP_STATUS (*send_key_t)(PEP_SESSION session, const char *pattern);
 
+typedef PEP_STATUS (*renew_key_t)(PEP_SESSION session, const char *key_id);
+
+typedef PEP_STATUS (*revoke_key_t)(PEP_SESSION session, const char *key_id);
+
 typedef struct _PEP_cryptotech_t {
     uint8_t id;
     // the following are default values; comm_type may vary with key length or b0rken crypto
@@ -69,6 +73,8 @@ typedef struct _PEP_cryptotech_t {
     import_key_t import_key;
     recv_key_t recv_key;
     send_key_t send_key;
+    renew_key_t renew_key;
+    revoke_key_t revoke_key;
 } PEP_cryptotech_t;
 
 typedef uint64_t cryptotech_mask;
