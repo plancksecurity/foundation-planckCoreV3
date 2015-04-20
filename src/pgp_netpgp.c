@@ -383,9 +383,11 @@ PEP_STATUS pgp_encrypt_and_sign(
     netpgp_t *netpgp;
     const pgp_key_t *keypair;
     pgp_seckey_t *seckey;
-	pgp_memory_t *signedmem;
+    pgp_memory_t *signedmem;
+    pgp_memory_t *cmem;
     const char *userid;
     const char *hashalg;
+    pgp_keyring_t *rcpts;
 
     PEP_STATUS result;
     const stringlist_t *_keylist;
@@ -412,16 +414,18 @@ PEP_STATUS pgp_encrypt_and_sign(
         (seckey = pgp_decrypt_seckey(keypair, NULL /*passfp*/)) == NULL) {
         return PEP_UNKNOWN_ERROR;
     }
+
     hashalg = netpgp_getvar(netpgp, "hash");
+    // netpgp (l)imitation - XXX why ? 
     if (seckey->pubkey.alg == PGP_PKA_DSA) {
-    	hashalg = "sha1";
+        hashalg = "sha1";
     }
 
     // Sign data
     signedmem = pgp_sign_buf(netpgp->io, ptext, psize, seckey,
-    			time(NULL), /* birthtime */
-    			0 /* duration */,
-    			hashalg, 
+                time(NULL), /* birthtime */
+                0 /* duration */,
+                hashalg, 
                 0 /* armored */,
                 0 /* cleartext */);
 
@@ -432,48 +436,72 @@ PEP_STATUS pgp_encrypt_and_sign(
     }
 
     // Encrypt signed data
-    pgp_memory_free(signedmem);
-    result = PEP_UNKNOWN_ERROR;
-    return result;
-/*
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- * */
-    for (_keylist = keylist, i = 0; _keylist != NULL; _keylist = _keylist->next, i++) {
+    if ((rcpts = calloc(1, sizeof(*rcpts))) == NULL) {
+        result = PEP_OUT_OF_MEMORY;
+        goto free_signedmem;
+    }
+    for (_keylist = keylist; _keylist != NULL; _keylist = _keylist->next) {
         assert(_keylist->value);
-        /* TODO */
-        /* get key from  _keylist->value */
-        /* add key to recipients/signers */
+        // get key from netpgp's pubring
+        const pgp_key_t *key;
+        key = pgp_getkeybyname(netpgp->io,
+                               netpgp->pubring,
+                               _keylist->value);
+
+        if(key == NULL){
+            result = PEP_KEY_NOT_FOUND;
+            goto free_rcpts;
+        }
+#ifdef PEP_NETPGP_DEBUG
+        pgp_print_keydata(netpgp->io, netpgp->pubring, key,
+                          "recipient pubkey ", &key->key.pubkey, 0);
+#endif //PEP_NETPGP_DEBUG
+
+        // add key to recipients/signers
+        pgp_keyring_add(rcpts, key);
+        if(rcpts->keys == NULL){
+            result = PEP_OUT_OF_MEMORY;
+            goto free_signedmem;
+        }
     }
 
-    /* Do encrypt and sign */ 
-    char *_buffer = NULL;
-    size_t length = /* TODO length*/ 0;
-    assert(length != -1);
+    cmem = pgp_encrypt_buf(netpgp->io, pgp_mem_data(signedmem),
+            pgp_mem_len(signedmem), rcpts, 1 /* armored */,
+            netpgp_getvar(netpgp, "cipher"), 
+            1 /* takes raw OpenPGP message */);
 
-    /* Allocate transferable buffer */
-    _buffer = malloc(length + 1);
-    assert(_buffer);
-    if (_buffer == NULL) {
-        /* TODO clean */
-        return PEP_OUT_OF_MEMORY;
+    if (cmem == NULL) {
+        result = PEP_OUT_OF_MEMORY;
+        goto free_signedmem;
+    }else{
+
+        char *_buffer = NULL;
+        size_t length = pgp_mem_len(cmem);
+        assert(length != -1);
+
+        // Allocate transferable buffer
+        _buffer = malloc(length + 1);
+        assert(_buffer);
+        if (_buffer == NULL) {
+            result = PEP_OUT_OF_MEMORY;
+            goto free_cmem;
+        }
+
+        memcpy(_buffer, pgp_mem_data(cmem), length);
+
+        *ctext = _buffer;
+        *csize = length;
+        (*ctext)[*csize] = 0; // safeguard for naive users
+        result = PEP_STATUS_OK;
     }
 
-    *ctext = _buffer;
-    *csize = length;
-    (*ctext)[*csize] = 0; // safeguard for naive users
-    result = PEP_STATUS_OK;
+free_cmem :
+    pgp_memory_free(cmem);
+free_rcpts :
+    pgp_keyring_free(rcpts);
+free_signedmem :
+    pgp_memory_free(signedmem);
 
-    
-    result = PEP_UNKNOWN_ERROR;
     return result;
 }
 
