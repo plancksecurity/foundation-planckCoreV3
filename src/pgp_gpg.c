@@ -1367,7 +1367,7 @@ static gpgme_error_t renew_fsm(
                     handle->state = renew_error;
                     return GPG_ERR_GENERAL;
                 }
-                write(fd, "2015-12-31\n", 11);
+                write(fd, handle->date_ref, 11);
                 handle->state = renew_secret_key;
             }
             break;
@@ -1403,7 +1403,7 @@ static gpgme_error_t renew_fsm(
                     handle->state = renew_error;
                     return GPG_ERR_GENERAL;
                 }
-                write(fd, "2015-12-31\n", 11);
+                write(fd, handle->date_ref, 11);
                 handle->state = renew_quit;
             }
             break;
@@ -1462,14 +1462,14 @@ PEP_STATUS pgp_renew_key(
     gpgme_key_t key;
     gpgme_data_t output;
     renew_state handle;
-    char date_text[11];
+    char date_text[12];
 
     assert(session);
     assert(fpr);
 
     memset(&handle, 0, sizeof(renew_state));
     handle.fpr_ref = fpr;
-    snprintf(date_text, 11, "%.4d-%.2d-%.2d", ts->tm_year + 1900,
+    snprintf(date_text, 12, "%.4d-%.2d-%.2d\n", ts->tm_year + 1900,
             ts->tm_mon + 1, ts->tm_mday);
     handle.date_ref = date_text;
 
