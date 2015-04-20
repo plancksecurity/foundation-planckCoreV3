@@ -2,7 +2,6 @@
 #include "dynamic_api.h"
 #include "cryptotech.h"
 #include "transport.h"
-#include "timestamp.h"
 
 int init_count = -1;
 

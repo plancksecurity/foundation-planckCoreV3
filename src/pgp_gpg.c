@@ -4,7 +4,6 @@
 #include <limits.h>
 
 #include "wrappers.h"
-#include "timestamp.h"
 
 #define _GPGERR(X) ((X) & 0xffffL)
 
