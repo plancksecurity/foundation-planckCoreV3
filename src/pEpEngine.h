@@ -611,7 +611,7 @@ DYNAMIC_API PEP_STATUS get_key_rating(
 //
 //  parameters:
 //      session (in)            session handle
-//      key_id (in)             ID of key to renew as UTF-8 string
+//      fpr (in)                ID of key to renew as UTF-8 string
 //      ts (in)                 timestamp when key should expire or NULL for
 //                              default
 
@@ -626,7 +626,7 @@ DYNAMIC_API PEP_STATUS renew_key(
 //
 //  parameters:
 //      session (in)            session handle
-//      key_id (in)             ID of key to revoke as UTF-8 string
+//      fpr (in)                ID of key to revoke as UTF-8 string
 //      reason (in)             text with reason for revoke as UTF-8 string
 //                              or NULL if reason unknown
 //
@@ -637,6 +637,20 @@ DYNAMIC_API PEP_STATUS revoke_key(
         PEP_SESSION session,
         const char *fpr,
         const char *reason
+    );
+
+
+// key_expired() - flags if a key is already expired
+//
+//  parameters:
+//      session (in)            session handle
+//      fpr (in)                ID of key to check as UTF-8 string
+//      expired (out)           flag if key expired
+
+DYNAMIC_API PEP_STATUS key_expired(
+        PEP_SESSION session,
+        const char *fpr,
+        bool *expired
     );
 
 

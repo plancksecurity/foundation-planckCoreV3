@@ -1673,3 +1673,28 @@ PEP_STATUS pgp_revoke_key(
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS pgp_key_expired(
+        PEP_SESSION session,
+        const char *fpr,
+        bool *expired
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    gpgme_key_t key;
+
+    assert(session);
+    assert(fpr);
+    assert(expired);
+
+    *expired = false;
+
+    status = find_single_key(session, fpr, &key);
+    assert(status != PEP_OUT_OF_MEMORY);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    *expired = key->subkeys->expired;
+    gpg.gpgme_key_unref(key);
+    return PEP_STATUS_OK;
+}
+

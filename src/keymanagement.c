@@ -17,6 +17,8 @@
 #define EMPTY(STR) ((STR == NULL) || (STR)[0] == 0)
 #endif
 
+#define KEY_EXPIRE_DELTA (60 * 60 * 24 * 365)
+
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
     )
@@ -230,6 +232,17 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
             return PEP_OUT_OF_MEMORY;
 
         assert(keylist);
+    }
+    else {
+        bool expired;
+        status = key_expired(session, keylist->value, &expired);
+        assert(status == PEP_STATUS_OK);
+
+        if (status == PEP_STATUS_OK && expired) {
+            timestamp *ts = new_timestamp(time(NULL) + KEY_EXPIRE_DELTA);
+            renew_key(session, keylist->value, ts);
+            free_timestamp(ts);
+        }
     }
 
     if (identity->fpr)

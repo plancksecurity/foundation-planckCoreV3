@@ -925,6 +925,24 @@ DYNAMIC_API PEP_STATUS revoke_key(
     if (!(session && fpr))
         return PEP_ILLEGAL_VALUE;
 
-    return session->cryptotech[PEP_crypt_OpenPGP].revoke_key(session, fpr, reason);
+    return session->cryptotech[PEP_crypt_OpenPGP].revoke_key(session, fpr,
+            reason);
+}
+
+DYNAMIC_API PEP_STATUS key_expired(
+        PEP_SESSION session,
+        const char *fpr,
+        bool *expired
+    )
+{
+    assert(session);
+    assert(fpr);
+    assert(expired);
+
+    if (!(session && fpr && expired))
+        return PEP_ILLEGAL_VALUE;
+
+    return session->cryptotech[PEP_crypt_OpenPGP].key_expired(session, fpr,
+            expired);
 }
 
