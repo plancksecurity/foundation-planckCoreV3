@@ -22,7 +22,7 @@ int main() {
 
     // generate test key
 
-    cout << "\ngenerating key for expire test\n";
+    cout << "\ngenerating key for keyedit test\n";
     pEp_identity *identity = new_identity(
             "expire@dingens.org",
             NULL,
@@ -51,6 +51,13 @@ int main() {
     free_timestamp(ts);
 
     cout << "key renewed.\n";
+
+    cout << "key will be revoked\n";
+    PEP_STATUS status3 = revoke_key(session, key.c_str(), "revoke test");
+    cout << "revoke_key() exited with " << status3 << "\n";
+    assert(status3 == PEP_STATUS_OK);
+    
+    cout << "key revoked.\n";
 
     cout << "deleting key pair " << key.c_str() << "\n";
     PEP_STATUS delete_status = delete_keypair(session, key.c_str());

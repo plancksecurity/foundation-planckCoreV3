@@ -1323,7 +1323,7 @@ static PEP_STATUS find_single_key(
 }
 
 typedef struct _renew_state {
-    enum state_t {
+    enum {
         renew_command = 0,
         renew_date,
         renew_secret_key,
@@ -1490,17 +1490,179 @@ PEP_STATUS pgp_renew_key(
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS pgp_revoke_key(PEP_SESSION session, const char *fpr)
+typedef struct _revoke_state {
+    enum {
+        revoke_command = 0,
+        revoke_approve,
+        revoke_reason_code,
+        revoke_reason_text,
+        revoke_reason_ok,
+        revoke_quit,
+        revoke_save,
+        revoke_exit,
+        revoke_error = -1
+    } state;
+    const char *reason_ref;
+} revoke_state;
+
+static bool isemptystring(const char *str)
+{
+    if (str == NULL)
+        return true;
+
+    for (; str; str++) {
+        if (*str != ' ' && *str != '\t' && *str != '\n')
+            return false;
+    }
+
+    return true;
+}
+
+static gpgme_error_t revoke_fsm(
+        void *_handle,
+        gpgme_status_code_t statuscode,
+        const char *args,
+        int fd
+    )
+{
+    revoke_state *handle = _handle;
+
+    switch (handle->state) {
+        case revoke_command:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "keyedit.prompt") == 0);
+                if (strcmp(args, "keyedit.prompt")) {
+                    handle->state = revoke_error;
+                    return GPG_ERR_GENERAL;
+                }
+                write(fd, "revkey\n", 7);
+                handle->state = revoke_approve;
+            }
+            break;
+
+        case revoke_approve:
+            if (statuscode == GPGME_STATUS_GET_BOOL) {
+                assert(strcmp(args, "keyedit.revoke.subkey.okay") == 0);
+                if (strcmp(args, "keyedit.revoke.subkey.okay")) {
+                    handle->state = revoke_error;
+                    return GPG_ERR_GENERAL;
+                }
+                write(fd, "Y\n", 2);
+                handle->state = revoke_reason_code;
+            }
+            break;
+
+        case revoke_reason_code:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "ask_revocation_reason.code") == 0);
+                if (strcmp(args, "ask_revocation_reason.code")) {
+                    handle->state = revoke_error;
+                    return GPG_ERR_GENERAL;
+                }
+                write(fd, "1\n", 2);
+                handle->state = revoke_reason_text;
+            }
+            break;
+
+        case revoke_reason_text:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "ask_revocation_reason.text") == 0);
+                if (strcmp(args, "ask_revocation_reason.text")) {
+                    handle->state = revoke_error;
+                    return GPG_ERR_GENERAL;
+                }
+                if (isemptystring(handle->reason_ref))
+                    write(fd, "\n", 1);
+                else {
+                    size_t len = strlen(handle->reason_ref);
+                    write(fd, handle->reason_ref, len);
+                    if (handle->reason_ref[len - 1] == '\n')
+                        write(fd, "\n", 1);
+                    else
+                        write(fd, "\n\n", 2);
+                }
+                handle->state = revoke_reason_ok;
+            }
+            break;
+
+        case revoke_reason_ok:
+            if (statuscode == GPGME_STATUS_GET_BOOL) {
+                assert(strcmp(args, "ask_revocation_reason.okay") == 0);
+                if (strcmp(args, "ask_revocation_reason.okay")) {
+                    handle->state = revoke_error;
+                    return GPG_ERR_GENERAL;
+                }
+                write(fd, "Y\n", 2);
+                handle->state = revoke_quit;
+            }
+            break;
+
+        case revoke_quit:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "keyedit.prompt") == 0);
+                if (strcmp(args, "keyedit.prompt")) {
+                    handle->state = revoke_error;
+                    return GPG_ERR_GENERAL;
+                }
+                write(fd, "quit\n", 5);
+                handle->state = revoke_save;
+            }
+            break;
+
+        case revoke_save:
+            if (statuscode == GPGME_STATUS_GET_BOOL) {
+                assert(strcmp(args, "keyedit.save.okay") == 0);
+                if (strcmp(args, "keyedit.save.okay")) {
+                    handle->state = revoke_error;
+                    return GPG_ERR_GENERAL;
+                }
+                write(fd, "Y\n", 2);
+                handle->state = revoke_exit;
+            }
+            break;
+
+        case revoke_exit:
+            break;
+
+        case revoke_error:
+            return GPG_ERR_GENERAL;
+    }
+
+    return GPG_ERR_NO_ERROR;
+}
+
+PEP_STATUS pgp_revoke_key(
+        PEP_SESSION session,
+        const char *fpr,
+        const char *reason
+    )
 {
     PEP_STATUS status = PEP_STATUS_OK;
+    gpgme_error_t gpgme_error;
     gpgme_key_t key;
-    
+    gpgme_data_t output;
+    revoke_state handle;
+
     assert(session);
     assert(fpr);
+
+    memset(&handle, 0, sizeof(revoke_state));
 
     status = find_single_key(session, fpr, &key);
     if (status != PEP_STATUS_OK)
         return status;
+
+    struct gpgme_data_cbs data_cbs;
+    memset(&data_cbs, 0, sizeof(struct gpgme_data_cbs));
+    data_cbs.write = _nullwriter;
+    gpgme_data_new_from_cbs(&output, &data_cbs, &handle);
+
+    gpgme_error = gpgme_op_edit(session->ctx, key, revoke_fsm, &handle,
+            output);
+    assert(gpgme_error == GPG_ERR_NO_ERROR);
+
+    gpg.gpgme_data_release(output);
+    gpg.gpgme_key_unref(key);
 
     return PEP_STATUS_OK;
 }

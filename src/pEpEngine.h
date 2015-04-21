@@ -627,8 +627,17 @@ DYNAMIC_API PEP_STATUS renew_key(
 //  parameters:
 //      session (in)            session handle
 //      key_id (in)             ID of key to revoke as UTF-8 string
+//      reason (in)             text with reason for revoke as UTF-8 string
+//                              or NULL if reason unknown
+//
+//  caveat:
+//      reason text must not include empty lines
 
-DYNAMIC_API PEP_STATUS revoke_key(PEP_SESSION session, const char *fpr);
+DYNAMIC_API PEP_STATUS revoke_key(
+        PEP_SESSION session,
+        const char *fpr,
+        const char *reason
+    );
 
 
 #ifdef __cplusplus

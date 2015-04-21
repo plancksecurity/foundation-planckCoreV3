@@ -57,7 +57,8 @@ typedef PEP_STATUS (*send_key_t)(PEP_SESSION session, const char *pattern);
 typedef PEP_STATUS (*renew_key_t)(PEP_SESSION session, const char *key_id,
         const timestamp *ts);
 
-typedef PEP_STATUS (*revoke_key_t)(PEP_SESSION session, const char *key_id);
+typedef PEP_STATUS (*revoke_key_t)(PEP_SESSION session, const char *key_id,
+        const char *reason);
 
 typedef struct _PEP_cryptotech_t {
     uint8_t id;
