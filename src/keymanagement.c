@@ -298,12 +298,16 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
 
 DYNAMIC_API PEP_STATUS key_compromized(PEP_SESSION session, const char *fpr)
 {
+    PEP_STATUS status = PEP_STATUS_OK;
+
     assert(session);
     assert(fpr);
 
     if (!(session && fpr))
         return PEP_ILLEGAL_VALUE;
 
-    return PEP_STATUS_OK;
+    status = revoke_key(session, fpr, NULL);
+
+    return status;
 }
 
