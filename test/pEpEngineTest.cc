@@ -22,10 +22,11 @@ void ReadFileIntoMem(const char *fname, char* &buffer, size_t &length){
         length = txtFile.tellg();
         txtFile.seekg (0, txtFile.beg);
 
-        buffer = new char [length];
+        buffer = new char [length+1];
 
         cout << "Reading " << length << " characters... ";
         txtFile.read (buffer,length);
+        buffer[length]='\0';
 
         if (txtFile)
           cout << "all characters read successfully.\n";
@@ -110,7 +111,7 @@ int main(int argc, char* argv[])
     size_t t2_length = 0;
     ReadFileIntoMem("t2.txt", t2_buffer, t2_length);
 
-    cout << "\ncalling verify_test()\n";
+    cout << "\ncalling verify_text()\n";
     verify_result = verify_text(session, t2_buffer, t2_length, sig_buffer, sig_length, &keylist);
     assert(verify_result == PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
     free_stringlist(keylist);

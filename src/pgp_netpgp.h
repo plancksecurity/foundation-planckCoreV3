@@ -47,3 +47,10 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern);
 
 PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern);
 
+PEP_STATUS pgp_renew_key(
+        PEP_SESSION session,
+        const char *fpr,
+        const timestamp *ts
+    );
+
+PEP_STATUS pgp_revoke_key(PEP_SESSION session, const char *fpr);
