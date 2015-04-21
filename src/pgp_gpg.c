@@ -1571,16 +1571,21 @@ static gpgme_error_t revoke_fsm(
                     handle->state = revoke_error;
                     return GPG_ERR_GENERAL;
                 }
-                if (isemptystring(handle->reason_ref))
+                // BUG: issues when reason given
+                // Assertion failed: (gpg->cmd.code), function command_handler,
+                // file engine-gpg.c, line 662.
+                //
+                // if (isemptystring(handle->reason_ref)) {
                     write(fd, "\n", 1);
-                else {
-                    size_t len = strlen(handle->reason_ref);
-                    write(fd, handle->reason_ref, len);
-                    if (handle->reason_ref[len - 1] == '\n')
-                        write(fd, "\n", 1);
-                    else
-                        write(fd, "\n\n", 2);
-                }
+                // }
+                // else {
+                //     size_t len = strlen(handle->reason_ref);
+                //     write(fd, handle->reason_ref, len);
+                //     if (handle->reason_ref[len - 1] == '\n')
+                //         write(fd, "\n", 1);
+                //     else
+                //         write(fd, "\n\n", 2);
+                // }
                 handle->state = revoke_reason_ok;
             }
             break;
@@ -1647,6 +1652,7 @@ PEP_STATUS pgp_revoke_key(
     assert(fpr);
 
     memset(&handle, 0, sizeof(revoke_state));
+    handle.reason_ref = reason;
 
     status = find_single_key(session, fpr, &key);
     if (status != PEP_STATUS_OK)
