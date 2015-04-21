@@ -5,8 +5,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define _EXPORT_PEP_ENGINE_DLL
-#include "pEpEngine.h"
+#include "pEp_internal.h"
 #include "keymanagement.h"
 
 #ifndef MIN
