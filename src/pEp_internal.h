@@ -39,10 +39,6 @@
 #include <assert.h>
 #include <stdio.h>
 
-#ifndef NDEBUG
-#include <stdio.h>
-#endif
-
 #include "sqlite3.h"
 
 #define _EXPORT_PEP_ENGINE_DLL
@@ -92,4 +88,11 @@ typedef struct _pEpSession {
 
 PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
 void release_transport_system(PEP_SESSION session, bool out_last);
+
+#ifdef NDEBUG
+#define DEBUG_LOG(TITLE, ENTITY, DESC)
+#else
+#define DEBUG_LOG(TITLE, ENTITY, DESC) \
+    log_event(session, (TITLE), (ENTITY), (DESC), "debug");
+#endif
 

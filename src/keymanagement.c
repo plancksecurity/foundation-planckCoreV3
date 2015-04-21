@@ -19,13 +19,6 @@
 
 #define KEY_EXPIRE_DELTA (60 * 60 * 24 * 365)
 
-#ifdef NDEBUG
-#define DEBUG_LOG(TITLE, ENTITY, DESC)
-#else
-#define DEBUG_LOG(TITLE, ENTITY, DESC) \
-    log_event(session, (TITLE), (ENTITY), (DESC), "debug");
-#endif
-
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
     )
