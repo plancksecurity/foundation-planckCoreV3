@@ -84,6 +84,16 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
         void *management
     );
 
+
+// key_compromized() - mark key as being compromized
+//
+//  parameters:
+//      session (in)        session to use
+//      fpr (in)            key which was compromized
+
+DYNAMIC_API PEP_STATUS key_compromized(PEP_SESSION session, const char *fpr);
+
+
 #ifdef __cplusplus
 }
 #endif
