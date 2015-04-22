@@ -279,7 +279,7 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
 
     while ((identity = retrieve_next_identity(management))) {
         assert(identity->address);
-        DEBUG_LOG("do_keymanagement", "debug", identity->address);
+        DEBUG_LOG("do_keymanagement", "retrieve_next_identity", identity->address);
         if (identity->me) {
             status = myself(session, identity);
             assert(status != PEP_OUT_OF_MEMORY);

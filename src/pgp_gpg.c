@@ -1479,9 +1479,9 @@ PEP_STATUS pgp_renew_key(
     struct gpgme_data_cbs data_cbs;
     memset(&data_cbs, 0, sizeof(struct gpgme_data_cbs));
     data_cbs.write = _nullwriter;
-    gpgme_data_new_from_cbs(&output, &data_cbs, &handle);
+    gpg.gpgme_data_new_from_cbs(&output, &data_cbs, &handle);
 
-    gpgme_error = gpgme_op_edit(session->ctx, key, renew_fsm, &handle,
+    gpgme_error = gpg.gpgme_op_edit(session->ctx, key, renew_fsm, &handle,
             output);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
 
@@ -1662,9 +1662,9 @@ PEP_STATUS pgp_revoke_key(
     struct gpgme_data_cbs data_cbs;
     memset(&data_cbs, 0, sizeof(struct gpgme_data_cbs));
     data_cbs.write = _nullwriter;
-    gpgme_data_new_from_cbs(&output, &data_cbs, &handle);
+    gpg.gpgme_data_new_from_cbs(&output, &data_cbs, &handle);
 
-    gpgme_error = gpgme_op_edit(session->ctx, key, revoke_fsm, &handle,
+    gpgme_error = gpg.gpgme_op_edit(session->ctx, key, revoke_fsm, &handle,
             output);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
 
