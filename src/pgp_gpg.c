@@ -165,6 +165,11 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
             "gpgme_data_new_from_mem");
         assert(gpg.gpgme_data_new_from_mem);
 
+        gpg.gpgme_data_new_from_cbs
+            = (gpgme_data_new_from_cbs_t) (intptr_t) dlsym(gpgme,
+            "gpgme_data_new_from_cbs");
+        assert(gpg.gpgme_data_new_from_cbs);
+
         gpg.gpgme_data_release
             = (gpgme_data_release_t) (intptr_t) dlsym(gpgme,
             "gpgme_data_release");
@@ -282,6 +287,10 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         gpg.gpgme_key_unref = (gpgme_key_unref_t) (intptr_t)
             dlsym(gpgme, "gpgme_key_unref");
         assert(gpg.gpgme_key_unref);
+
+        gpg.gpgme_op_edit = (gpgme_op_edit_t) (intptr_t)
+            dlsym(gpgme, "gpgme_op_edit");
+        assert(gpg.gpgme_op_edit);
 
         gpg.version = gpg.gpgme_check(NULL);
         

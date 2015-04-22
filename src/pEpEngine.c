@@ -3,7 +3,7 @@
 #include "cryptotech.h"
 #include "transport.h"
 
-int init_count = -1;
+static int init_count = -1;
 
 DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 {
