@@ -4,6 +4,11 @@
 
 #include <limits.h>
 
+#ifdef WIN32
+#include <winsock2.h>
+#pragma comment(lib, "Ws2_32.lib")
+#endif
+
 #include "wrappers.h"
 
 #define _GPGERR(X) ((X) & 0xffffL)
@@ -1347,6 +1352,10 @@ typedef struct _renew_state {
     const char *date_ref;
 } renew_state;
 
+#ifdef WIN32
+#define write(A, B, C) send((A), (B), (C), 0)
+#endif
+
 static gpgme_error_t renew_fsm(
         void *_handle,
         gpgme_status_code_t statuscode,
@@ -1451,6 +1460,10 @@ static gpgme_error_t renew_fsm(
     return GPG_ERR_NO_ERROR;
 }
 
+#ifdef WIN32
+#undef write
+#endif
+
 static ssize_t _nullwriter(
         void *_handle,
         const void *buffer,
@@ -1527,6 +1540,10 @@ static bool isemptystring(const char *str)
 
     return true;
 }
+
+#ifdef WIN32
+#define write(A, B, C) send((A), (B), (C), 0)
+#endif
 
 static gpgme_error_t revoke_fsm(
         void *_handle,
@@ -1645,6 +1662,10 @@ static gpgme_error_t revoke_fsm(
 
     return GPG_ERR_NO_ERROR;
 }
+
+#ifdef WIN32
+#undef write
+#endif
 
 PEP_STATUS pgp_revoke_key(
         PEP_SESSION session,
