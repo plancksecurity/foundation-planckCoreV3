@@ -4,11 +4,6 @@
 
 #include <limits.h>
 
-#ifdef WIN32
-#include <winsock2.h>
-#pragma comment(lib, "Ws2_32.lib")
-#endif
-
 #include "wrappers.h"
 
 #define _GPGERR(X) ((X) & 0xffffL)
@@ -296,6 +291,10 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         gpg.gpgme_op_edit = (gpgme_op_edit_t) (intptr_t)
             dlsym(gpgme, "gpgme_op_edit");
         assert(gpg.gpgme_op_edit);
+
+        gpg.gpgme_io_write = (gpgme_io_write_t) (intptr_t)
+            dlsym(gpgme, "gpgme_io_write");
+        assert(gpg.gpgme_io_write);
 
         gpg.version = gpg.gpgme_check(NULL);
         
@@ -1352,10 +1351,6 @@ typedef struct _renew_state {
     const char *date_ref;
 } renew_state;
 
-#ifdef WIN32
-#define write(A, B, C) send((A), (B), (C), 0)
-#endif
-
 static gpgme_error_t renew_fsm(
         void *_handle,
         gpgme_status_code_t statuscode,
@@ -1373,7 +1368,7 @@ static gpgme_error_t renew_fsm(
                     handle->state = renew_error;
                     return GPG_ERR_GENERAL;
                 }
-                write(fd, "expire\n", 7);
+                gpg.gpgme_io_write(fd, "expire\n", 7);
                 handle->state = renew_date;
             }
             break;
@@ -1385,7 +1380,7 @@ static gpgme_error_t renew_fsm(
                     handle->state = renew_error;
                     return GPG_ERR_GENERAL;
                 }
-                write(fd, handle->date_ref, 11);
+                gpg.gpgme_io_write(fd, handle->date_ref, 11);
                 handle->state = renew_secret_key;
             }
             break;
@@ -1397,7 +1392,7 @@ static gpgme_error_t renew_fsm(
                     handle->state = renew_error;
                     return GPG_ERR_GENERAL;
                 }
-                write(fd, "key 1\n", 6);
+                gpg.gpgme_io_write(fd, "key 1\n", 6);
                 handle->state = renew_command2;
             }
             break;
@@ -1409,7 +1404,7 @@ static gpgme_error_t renew_fsm(
                     handle->state = renew_error;
                     return GPG_ERR_GENERAL;
                 }
-                write(fd, "expire\n", 7);
+                gpg.gpgme_io_write(fd, "expire\n", 7);
                 handle->state = renew_date2;
             }
             break;
@@ -1421,7 +1416,7 @@ static gpgme_error_t renew_fsm(
                     handle->state = renew_error;
                     return GPG_ERR_GENERAL;
                 }
-                write(fd, handle->date_ref, 11);
+                gpg.gpgme_io_write(fd, handle->date_ref, 11);
                 handle->state = renew_quit;
             }
             break;
@@ -1433,7 +1428,7 @@ static gpgme_error_t renew_fsm(
                     handle->state = renew_error;
                     return GPG_ERR_GENERAL;
                 }
-                write(fd, "quit\n", 5);
+                gpg.gpgme_io_write(fd, "quit\n", 5);
                 handle->state = renew_save;
             }
             break;
@@ -1445,7 +1440,7 @@ static gpgme_error_t renew_fsm(
                     handle->state = renew_error;
                     return GPG_ERR_GENERAL;
                 }
-                write(fd, "Y\n", 2);
+                gpg.gpgme_io_write(fd, "Y\n", 2);
                 handle->state = renew_exit;
             }
             break;
@@ -1459,10 +1454,6 @@ static gpgme_error_t renew_fsm(
 
     return GPG_ERR_NO_ERROR;
 }
-
-#ifdef WIN32
-#undef write
-#endif
 
 static ssize_t _nullwriter(
         void *_handle,
@@ -1541,10 +1532,6 @@ static bool isemptystring(const char *str)
     return true;
 }
 
-#ifdef WIN32
-#define write(A, B, C) send((A), (B), (C), 0)
-#endif
-
 static gpgme_error_t revoke_fsm(
         void *_handle,
         gpgme_status_code_t statuscode,
@@ -1562,7 +1549,7 @@ static gpgme_error_t revoke_fsm(
                     handle->state = revoke_error;
                     return GPG_ERR_GENERAL;
                 }
-                write(fd, "revkey\n", 7);
+                gpg.gpgme_io_write(fd, "revkey\n", 7);
                 handle->state = revoke_approve;
             }
             break;
@@ -1574,7 +1561,7 @@ static gpgme_error_t revoke_fsm(
                     handle->state = revoke_error;
                     return GPG_ERR_GENERAL;
                 }
-                write(fd, "Y\n", 2);
+                gpg.gpgme_io_write(fd, "Y\n", 2);
                 handle->state = revoke_reason_code;
             }
             break;
@@ -1586,7 +1573,7 @@ static gpgme_error_t revoke_fsm(
                     handle->state = revoke_error;
                     return GPG_ERR_GENERAL;
                 }
-                write(fd, "1\n", 2);
+                gpg.gpgme_io_write(fd, "1\n", 2);
                 handle->state = revoke_reason_text;
             }
             break;
@@ -1603,15 +1590,15 @@ static gpgme_error_t revoke_fsm(
                 // file engine-gpg.c, line 662.
                 //
                 // if (isemptystring(handle->reason_ref)) {
-                    write(fd, "\n", 1);
+                    gpg.gpgme_io_write(fd, "\n", 1);
                 // }
                 // else {
                 //     size_t len = strlen(handle->reason_ref);
-                //     write(fd, handle->reason_ref, len);
+                //     gpg.gpgme_io_write(fd, handle->reason_ref, len);
                 //     if (handle->reason_ref[len - 1] == '\n')
-                //         write(fd, "\n", 1);
+                //         gpg.gpgme_io_write(fd, "\n", 1);
                 //     else
-                //         write(fd, "\n\n", 2);
+                //         gpg.gpgme_io_write(fd, "\n\n", 2);
                 // }
                 handle->state = revoke_reason_ok;
             }
@@ -1624,7 +1611,7 @@ static gpgme_error_t revoke_fsm(
                     handle->state = revoke_error;
                     return GPG_ERR_GENERAL;
                 }
-                write(fd, "Y\n", 2);
+                gpg.gpgme_io_write(fd, "Y\n", 2);
                 handle->state = revoke_quit;
             }
             break;
@@ -1636,7 +1623,7 @@ static gpgme_error_t revoke_fsm(
                     handle->state = revoke_error;
                     return GPG_ERR_GENERAL;
                 }
-                write(fd, "quit\n", 5);
+                gpg.gpgme_io_write(fd, "quit\n", 5);
                 handle->state = revoke_save;
             }
             break;
@@ -1648,7 +1635,7 @@ static gpgme_error_t revoke_fsm(
                     handle->state = revoke_error;
                     return GPG_ERR_GENERAL;
                 }
-                write(fd, "Y\n", 2);
+                gpg.gpgme_io_write(fd, "Y\n", 2);
                 handle->state = revoke_exit;
             }
             break;
@@ -1662,10 +1649,6 @@ static gpgme_error_t revoke_fsm(
 
     return GPG_ERR_NO_ERROR;
 }
-
-#ifdef WIN32
-#undef write
-#endif
 
 PEP_STATUS pgp_revoke_key(
         PEP_SESSION session,
