@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <assert.h>
+#include "mime.h"
 #include "message_api.h"
 
 using namespace std;

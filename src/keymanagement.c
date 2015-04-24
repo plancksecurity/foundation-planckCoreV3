@@ -5,8 +5,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define _EXPORT_PEP_ENGINE_DLL
-#include "pEpEngine.h"
+#include "pEp_internal.h"
 #include "keymanagement.h"
 
 #ifndef MIN
@@ -16,6 +15,8 @@
 #ifndef EMPTY
 #define EMPTY(STR) ((STR == NULL) || (STR)[0] == 0)
 #endif
+
+#define KEY_EXPIRE_DELTA (60 * 60 * 24 * 365)
 
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
@@ -202,7 +203,7 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 
     pEp_identity *_identity;
 
-    log_event(session, "myself", "debug", identity->address, NULL);
+    DEBUG_LOG("myself", "debug", identity->address);
     status = get_identity(session, identity->address, &_identity);
     assert(status != PEP_OUT_OF_MEMORY);
     if (status == PEP_OUT_OF_MEMORY)
@@ -214,13 +215,13 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
         return PEP_OUT_OF_MEMORY;
 
     if (keylist == NULL || keylist->value == NULL) {
-        log_event(session, "generating key pair", "debug", identity->address, NULL);
+        DEBUG_LOG("generating key pair", "debug", identity->address);
         status = generate_keypair(session, identity);
         assert(status != PEP_OUT_OF_MEMORY);
         if (status != PEP_STATUS_OK) {
             char buf[11];
             snprintf(buf, 11, "%d", status);
-            log_event(session, "generating key pair failed", "debug", buf, NULL);
+            DEBUG_LOG("generating key pair failed", "debug", buf);
             return status;
         }
 
@@ -230,6 +231,17 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
             return PEP_OUT_OF_MEMORY;
 
         assert(keylist);
+    }
+    else {
+        bool expired;
+        status = key_expired(session, keylist->value, &expired);
+        assert(status == PEP_STATUS_OK);
+
+        if (status == PEP_STATUS_OK && expired) {
+            timestamp *ts = new_timestamp(time(NULL) + KEY_EXPIRE_DELTA);
+            renew_key(session, keylist->value, ts);
+            free_timestamp(ts);
+        }
     }
 
     if (identity->fpr)
@@ -267,7 +279,7 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
 
     while ((identity = retrieve_next_identity(management))) {
         assert(identity->address);
-        log_event(session, "do_keymanagement", "debug", identity->address, NULL);
+        DEBUG_LOG("do_keymanagement", "retrieve_next_identity", identity->address);
         if (identity->me) {
             status = myself(session, identity);
             assert(status != PEP_OUT_OF_MEMORY);
@@ -282,5 +294,20 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
 
     release(session);
     return PEP_STATUS_OK;
+}
+
+DYNAMIC_API PEP_STATUS key_compromized(PEP_SESSION session, const char *fpr)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(fpr);
+
+    if (!(session && fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    status = revoke_key(session, fpr, NULL);
+
+    return status;
 }
 

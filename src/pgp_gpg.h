@@ -52,5 +52,15 @@ PEP_STATUS pgp_renew_key(
         const timestamp *ts
     );
 
-PEP_STATUS pgp_revoke_key(PEP_SESSION session, const char *fpr);
+PEP_STATUS pgp_revoke_key(
+        PEP_SESSION session,
+        const char *fpr,
+        const char *reason
+    );
+
+PEP_STATUS pgp_key_expired(
+        PEP_SESSION session,
+        const char *fpr,
+        bool *expired
+    );
 

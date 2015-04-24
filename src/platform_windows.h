@@ -6,11 +6,13 @@
 
 #include <string.h>
 #include <io.h>
+#include <basetsd.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#define ssize_t SSIZE_T
 #define RTLD_LAZY 1
 #define mode_t int
 

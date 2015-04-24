@@ -2,6 +2,7 @@
 #include "message_api.h"
 
 #include "platform.h"
+#include "mime.h"
 
 #include <assert.h>
 #include <string.h>

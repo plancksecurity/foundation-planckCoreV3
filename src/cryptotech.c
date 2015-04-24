@@ -40,6 +40,7 @@ PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first)
         cryptotech[PEP_crypt_OpenPGP].send_key = pgp_send_key;
         cryptotech[PEP_crypt_OpenPGP].renew_key = pgp_renew_key;
         cryptotech[PEP_crypt_OpenPGP].revoke_key = pgp_revoke_key;
+        cryptotech[PEP_crypt_OpenPGP].key_expired = pgp_key_expired;
     }
 
     session->cryptotech = cryptotech;

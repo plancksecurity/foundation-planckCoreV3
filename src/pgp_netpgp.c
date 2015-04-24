@@ -807,7 +807,11 @@ PEP_STATUS pgp_renew_key(
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS pgp_revoke_key(PEP_SESSION session, const char *fpr)
+PEP_STATUS pgp_revoke_key(
+        PEP_SESSION session,
+        const char *fpr,
+        const char *reason
+    )
 {
     PEP_STATUS status = PEP_STATUS_OK;
     
@@ -815,6 +819,26 @@ PEP_STATUS pgp_revoke_key(PEP_SESSION session, const char *fpr)
     assert(fpr);
 
         return PEP_UNKNOWN_ERROR;
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS pgp_key_expired(
+        PEP_SESSION session,
+        const char *fpr,
+        bool *expired
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(fpr);
+    assert(expired);
+
+    *expired = false;
+
+    if (status != PEP_STATUS_OK)
+        return status;
 
     return PEP_STATUS_OK;
 }

@@ -18,6 +18,8 @@ typedef void(*gpgme_set_armor_t)(gpgme_ctx_t CTX, int YES);
 typedef gpgme_error_t(*gpgme_data_new_t)(gpgme_data_t *DH);
 typedef gpgme_error_t(*gpgme_data_new_from_mem_t)(gpgme_data_t *DH,
     const char *BUFFER, size_t SIZE, int COPY);
+typedef gpgme_error_t (*gpgme_data_new_from_cbs_t)(gpgme_data_t *DH,
+        gpgme_data_cbs_t CBS, void *HANDLE);
 typedef void(*gpgme_data_release_t)(gpgme_data_t DH);
 typedef gpgme_data_type_t(*gpgme_data_identify_t)(gpgme_data_t DH);
 typedef size_t(*gpgme_data_seek_t)(gpgme_data_t DH, size_t OFFSET,
@@ -66,6 +68,10 @@ typedef gpgme_error_t(*gpgme_op_import_keys_t)(gpgme_ctx_t CTX,
     gpgme_key_t *KEYS);
 typedef void(*gpgme_key_ref_t)(gpgme_key_t KEY);
 typedef void(*gpgme_key_unref_t)(gpgme_key_t KEY);
+typedef gpgme_error_t (*gpgme_op_edit_t)(gpgme_ctx_t CTX, gpgme_key_t KEY,
+        gpgme_edit_cb_t FNC, void *HANDLE, gpgme_data_t OUT);
+typedef gpgme_ssize_t (*gpgme_io_write_t)(int fd, const void *buffer,
+        size_t count);
 
 struct gpg_s {
     const char * version;
@@ -78,6 +84,7 @@ struct gpg_s {
 
     gpgme_data_new_t gpgme_data_new;
     gpgme_data_new_from_mem_t gpgme_data_new_from_mem;
+    gpgme_data_new_from_cbs_t gpgme_data_new_from_cbs;
     gpgme_data_release_t gpgme_data_release;
     gpgme_data_identify_t gpgme_data_identify;
     gpgme_data_seek_t gpgme_data_seek;
@@ -106,4 +113,6 @@ struct gpg_s {
     gpgme_op_import_keys_t gpgme_op_import_keys;
     gpgme_key_ref_t gpgme_key_ref;
     gpgme_key_unref_t gpgme_key_unref;
+    gpgme_op_edit_t gpgme_op_edit;
+    gpgme_io_write_t gpgme_io_write;
 };

@@ -3,7 +3,7 @@
 #include "cryptotech.h"
 #include "transport.h"
 
-int init_count = -1;
+static int init_count = -1;
 
 DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 {
@@ -913,7 +913,11 @@ DYNAMIC_API PEP_STATUS renew_key(
     return session->cryptotech[PEP_crypt_OpenPGP].renew_key(session, fpr, ts);
 }
 
-DYNAMIC_API PEP_STATUS revoke_key(PEP_SESSION session, const char *fpr)
+DYNAMIC_API PEP_STATUS revoke_key(
+        PEP_SESSION session,
+        const char *fpr,
+        const char *reason
+    )
 {
     assert(session);
     assert(fpr);
@@ -921,6 +925,24 @@ DYNAMIC_API PEP_STATUS revoke_key(PEP_SESSION session, const char *fpr)
     if (!(session && fpr))
         return PEP_ILLEGAL_VALUE;
 
-    return session->cryptotech[PEP_crypt_OpenPGP].revoke_key(session, fpr);
+    return session->cryptotech[PEP_crypt_OpenPGP].revoke_key(session, fpr,
+            reason);
+}
+
+DYNAMIC_API PEP_STATUS key_expired(
+        PEP_SESSION session,
+        const char *fpr,
+        bool *expired
+    )
+{
+    assert(session);
+    assert(fpr);
+    assert(expired);
+
+    if (!(session && fpr && expired))
+        return PEP_ILLEGAL_VALUE;
+
+    return session->cryptotech[PEP_crypt_OpenPGP].key_expired(session, fpr,
+            expired);
 }
 

@@ -54,10 +54,14 @@ typedef PEP_STATUS (*recv_key_t)(PEP_SESSION session, const char *pattern);
 
 typedef PEP_STATUS (*send_key_t)(PEP_SESSION session, const char *pattern);
 
-typedef PEP_STATUS (*renew_key_t)(PEP_SESSION session, const char *key_id,
+typedef PEP_STATUS (*renew_key_t)(PEP_SESSION session, const char *fpr,
         const timestamp *ts);
 
-typedef PEP_STATUS (*revoke_key_t)(PEP_SESSION session, const char *key_id);
+typedef PEP_STATUS (*revoke_key_t)(PEP_SESSION session, const char *fpr,
+        const char *reason);
+
+typedef PEP_STATUS (*key_expired_t)(PEP_SESSION session, const char *fpr,
+        bool *expired);
 
 typedef struct _PEP_cryptotech_t {
     uint8_t id;
@@ -77,6 +81,7 @@ typedef struct _PEP_cryptotech_t {
     send_key_t send_key;
     renew_key_t renew_key;
     revoke_key_t revoke_key;
+    key_expired_t key_expired;
 } PEP_cryptotech_t;
 
 typedef uint64_t cryptotech_mask;

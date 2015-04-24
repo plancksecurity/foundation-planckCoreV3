@@ -44,7 +44,6 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
         size_t size);
 
 PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern);
-
 PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern);
 
 PEP_STATUS pgp_renew_key(
@@ -53,4 +52,15 @@ PEP_STATUS pgp_renew_key(
         const timestamp *ts
     );
 
-PEP_STATUS pgp_revoke_key(PEP_SESSION session, const char *fpr);
+PEP_STATUS pgp_revoke_key(
+        PEP_SESSION session,
+        const char *fpr,
+        const char *reason
+    );
+
+PEP_STATUS pgp_key_expired(
+        PEP_SESSION session,
+        const char *fpr,
+        bool *expired
+    );
+
