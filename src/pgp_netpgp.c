@@ -52,7 +52,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
     // subset of gpg's personal-cipher-preferences
     // here only one cipher can be selected
-    netpgp_setvar(netpgp, "cipher", "AES256");
+    netpgp_setvar(netpgp, "cipher", "CAST5");
 
     if (!netpgp_init(netpgp)) {
         status = PEP_INIT_NETPGP_INIT_FAILED;
@@ -98,6 +98,17 @@ _armoured(const char *buf, size_t size, const char *pattern)
     return armoured;
 }
 
+static void id_to_fpr(const uint8_t *userid, char *fpr)
+{
+    int i;
+    static const char *hexes = "0123456789abcdef";
+    for (i = 0; i < 8 ; i++) {
+        fpr[i * 2] = hexes[(unsigned)(userid[i] & 0xf0) >> 4];
+        fpr[(i * 2) + 1] = hexes[userid[i] & 0xf];
+    }
+    fpr[8 * 2] = 0x0;
+}
+
 // Iterate through netpgp' reported valid signatures 
 // fill a list of valid figerprints
 // returns PEP_STATUS_OK if all sig reported valid
@@ -141,9 +152,7 @@ static PEP_STATUS _validation_results(netpgp_t *netpgp, pgp_validation_t *vresul
         }
         k = *_keylist;
         for (n = 0; n < vresult->validc; ++n) {
-            int i;
             char id[MAX_ID_LENGTH + 1];
-            static const char *hexes = "0123456789abcdef";
             const uint8_t *userid = vresult->valid_sigs[n].signer_id;
 
 #ifdef PEP_NETPGP_DEBUG
@@ -156,11 +165,7 @@ static PEP_STATUS _validation_results(netpgp_t *netpgp, pgp_validation_t *vresul
             pgp_print_keydata(netpgp->io, netpgp->pubring, key, "valid signature ", &key->key.pubkey, 0);
 #endif //PEP_NETPGP_DEBUG
 
-            for (i = 0; i < 8 ; i++) {
-                id[i * 2] = hexes[(unsigned)(userid[i] & 0xf0) >> 4];
-                id[(i * 2) + 1] = hexes[userid[i] & 0xf];
-            }
-            id[8 * 2] = 0x0;
+            id_to_fpr(userid, id);
 
             k = stringlist_add(k, id);
             if(!k){
@@ -391,7 +396,6 @@ PEP_STATUS pgp_encrypt_and_sign(
 
     PEP_STATUS result;
     const stringlist_t *_keylist;
-    int i;
 
     assert(session);
     assert(keylist);
@@ -509,15 +513,14 @@ PEP_STATUS pgp_generate_keypair(
     PEP_SESSION session, pEp_identity *identity
     )
 {
-    char *parms;
-    const char *template =
-        "Key-Type: RSA\n"
-        "Key-Length: 4096\n"
-        "Name-Real: %s\n"
-        "Name-Email: %s\n"
-        /* "Passphrase: %s\n" */
-        "Expire-Date: 1y\n";
-    int result;
+    netpgp_t *netpgp;
+	pgp_key_t	newkey;
+	pgp_key_t	pubkey;
+
+    PEP_STATUS result;
+	char newid[1024];
+    const char *hashalg;
+    const char *cipher;
 
     assert(session);
     assert(identity);
@@ -525,30 +528,60 @@ PEP_STATUS pgp_generate_keypair(
     assert(identity->fpr == NULL);
     assert(identity->username);
 
-    parms = calloc(1, PARMS_MAX);
-    assert(parms);
-    if (parms == NULL)
-        return PEP_OUT_OF_MEMORY;
+    if(!session || !identity || 
+       !identity->address || identity->fpr || !identity->username)
+        return PEP_UNKNOWN_ERROR;
 
-    result = snprintf(parms, PARMS_MAX, template, identity->username,
-        identity->address);
-    assert(result < PARMS_MAX);
-    if (result >= PARMS_MAX) {
-        free(parms);
+    netpgp = &session->ctx;
+
+    if(snprintf(newid, sizeof(newid),
+        "%s <%s>", identity->username, identity->address) >= sizeof(newid)){
         return PEP_BUFFER_TOO_SMALL;
     }
+    
+    hashalg = netpgp_getvar(netpgp, "hash");
+    cipher = netpgp_getvar(netpgp, "cipher");
 
-    /* TODO generate key */
+    bzero(&newkey, sizeof(newkey));
+    bzero(&pubkey, sizeof(pubkey));
 
-    free(parms);
-
-        return PEP_UNKNOWN_ERROR;
-        return PEP_ILLEGAL_VALUE;
+    // Generate the key
+    if (!pgp_rsa_generate_keypair(&newkey, 4096, 65537UL, hashalg, cipher,
+                                  (const uint8_t *) "", (const size_t) 0) ||
+        !pgp_add_selfsigned_userid(&newkey, newid)) {
         return PEP_CANNOT_CREATE_KEY;
+	}
 
-    identity->fpr = strdup("TODO generated key fpr");
+    // TODO "Expire-Date: 1y\n";
 
-    return PEP_STATUS_OK;
+    // Duplicate key as public only
+    pgp_keydata_dup(&pubkey, &newkey, 1 /* make_public */);
+
+    // Append generated key to netpgp's rings
+    pgp_keyring_add(netpgp->secring, &newkey);
+    pgp_keyring_add(netpgp->pubring, &pubkey);
+    // FIXME doesn't check result since always true 
+    // TODO alloc error feedback in netpgp
+
+    // save rings
+    if (netpgp_save_pubring(netpgp) && 
+        netpgp_save_secring(netpgp))
+    {
+        char fpr[MAX_ID_LENGTH + 1];
+        id_to_fpr(pubkey.sigid, fpr);
+
+        if ((identity->fpr = strdup(fpr)) == NULL) {
+            result = PEP_OUT_OF_MEMORY;
+        }else{
+            result = PEP_STATUS_OK;
+        }
+    }else{
+        result = PEP_UNKNOWN_ERROR;
+    }
+
+    // pgp_keydata_free(key);
+
+    return result;
 }
 
 PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
