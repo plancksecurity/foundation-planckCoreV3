@@ -98,7 +98,8 @@ _armoured(const char *buf, size_t size, const char *pattern)
     return armoured;
 }
 
-static void id_to_fpr(const uint8_t *userid, char *fpr)
+/* return key ID's hexdump as a string */
+static void id_to_str(const uint8_t *userid, char *fpr)
 {
     int i;
     static const char *hexes = "0123456789abcdef";
@@ -165,7 +166,7 @@ static PEP_STATUS _validation_results(netpgp_t *netpgp, pgp_validation_t *vresul
             pgp_print_keydata(netpgp->io, netpgp->pubring, key, "valid signature ", &key->key.pubkey, 0);
 #endif //PEP_NETPGP_DEBUG
 
-            id_to_fpr(userid, id);
+            id_to_str(userid, id);
 
             k = stringlist_add(k, id);
             if(!k){
@@ -509,6 +510,57 @@ free_signedmem :
     return result;
 }
 
+/* return the hexdump as a string */
+static unsigned
+fpr_to_str (char **str, const uint8_t *fpr, size_t length)
+{
+	unsigned i;
+	int	n;
+
+    /* 5 char per byte (hexes + space) tuple -1 space at the end + null */
+    *str = malloc((length / 2) * 5 - 1 + 1);
+
+    if(*str == NULL)
+        return 0;
+
+	for (n = 0, i = 0 ; i < length - 1; i += 2) {
+		n += snprintf(&((*str)[n]), 6, "%02x%02x ", *fpr++, *fpr++);
+	}
+    snprintf(&((*str)[n]), 5, "%02x%02x", *fpr++, *fpr++);
+
+	return 1;
+}
+
+static unsigned
+str_to_fpr (const char *str, uint8_t *fpr, size_t *length)
+{
+    unsigned i,j;
+
+    *length = 0;
+
+    while(*str && *length < PGP_FINGERPRINT_SIZE){
+        while (*str == ' ') str++;
+        for (j = 0; j < 2; j++) {
+            uint8_t *byte = &fpr[*length];
+            for (i = 0; i < 2; i++) {
+                if (i > 0)
+                    *byte *= 16;
+                if (*str >= 'a' && *str <= 'f')
+                    *byte += 10 + *str - 'a';
+                else if (*str >= 'A' && *str <= 'F')
+                    *byte += 10 + *str - 'A';
+                else if (*str >= '0' && *str <= '9')
+                    *byte += *str - '0';
+                else 
+                    return 0;
+                str++;
+            }
+            *length++;
+        }
+    }
+    return 1;
+}
+
 PEP_STATUS pgp_generate_keypair(
     PEP_SESSION session, pEp_identity *identity
     )
@@ -548,7 +600,7 @@ PEP_STATUS pgp_generate_keypair(
     // Generate the key
     if (!pgp_rsa_generate_keypair(&newkey, 4096, 65537UL, hashalg, cipher,
                                   (const uint8_t *) "", (const size_t) 0) ||
-        !pgp_add_selfsigned_userid(&newkey, newid)) {
+        !pgp_add_selfsigned_userid(&newkey, (const uint8_t *)newid)) {
         return PEP_CANNOT_CREATE_KEY;
 	}
 
@@ -563,14 +615,15 @@ PEP_STATUS pgp_generate_keypair(
     // FIXME doesn't check result since always true 
     // TODO alloc error feedback in netpgp
 
-    // save rings
+    // save rings (key ownership transfered)
     if (netpgp_save_pubring(netpgp) && 
         netpgp_save_secring(netpgp))
     {
-        char fpr[MAX_ID_LENGTH + 1];
-        id_to_fpr(pubkey.sigid, fpr);
-
-        if ((identity->fpr = strdup(fpr)) == NULL) {
+        char *fprstr = NULL;
+        fpr_to_str(&fprstr,
+                   newkey.sigfingerprint.fingerprint,
+                   newkey.sigfingerprint.length);
+        if ((identity->fpr = fprstr) == NULL) {
             result = PEP_OUT_OF_MEMORY;
         }else{
             result = PEP_STATUS_OK;
@@ -579,30 +632,54 @@ PEP_STATUS pgp_generate_keypair(
         result = PEP_UNKNOWN_ERROR;
     }
 
-    // pgp_keydata_free(key);
-
     return result;
 }
 
-PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
+PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fprstr)
 {
+    netpgp_t *netpgp;
+    uint8_t fpr[PGP_FINGERPRINT_SIZE];
+    size_t length;
+    unsigned res;
+
+    PEP_STATUS result;
+
     assert(session);
     assert(fpr);
 
-    /* TODO get key with given fpr */
-        return PEP_KEY_NOT_FOUND;
-        return PEP_ILLEGAL_VALUE;
-        return PEP_KEY_HAS_AMBIG_NAME;
+    if (!session || !fpr)
+        return PEP_UNKNOWN_ERROR;
+
+    netpgp = &session->ctx;
+    
+    if (str_to_fpr(fprstr, fpr, &length)) {
+        if (!pgp_deletekeybyfpr(netpgp->io,
+                                (pgp_pubkey_t *)netpgp->secring, 
+                                fpr, length)) {
+            return PEP_KEY_NOT_FOUND;
+        }
+    }else{
         return PEP_OUT_OF_MEMORY;
-        return PEP_UNKNOWN_ERROR;
+    }
 
-    /* TODO delete that key */
-        return PEP_UNKNOWN_ERROR;
-        return PEP_KEY_NOT_FOUND;
-        return PEP_KEY_HAS_AMBIG_NAME;
-        return PEP_UNKNOWN_ERROR;
+    /* pair was found in secring delete also corresponding pubkey 
+     * in pubring if it exists */
+    if(res) {
+        pgp_deletekeybyfpr(netpgp->io,
+                           (pgp_pubkey_t *)netpgp->pubring, 
+                           fpr, length);
+    }
 
-    return PEP_STATUS_OK;
+    // save rings (key ownership transfered)
+    if (netpgp_save_pubring(netpgp) && 
+        netpgp_save_secring(netpgp))
+    {
+        result = PEP_STATUS_OK;
+    }else{
+        result = PEP_UNKNOWN_ERROR;
+    }
+
+    return result;
 }
 
 PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data, size_t size)
