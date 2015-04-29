@@ -53,7 +53,7 @@
 
 #ifdef USE_GPG
 #include "pgp_gpg_internal.h"
-#elif USE_NETPGP
+#elif defined(USE_NETPGP)
 #include "pgp_netpgp_internal.h"
 #endif
 
@@ -66,7 +66,7 @@ typedef struct _pEpSession {
     const char *version;
 #ifdef USE_GPG
     gpgme_ctx_t ctx;
-#elif USE_NETPGP
+#elif defined(USE_NETPGP)
     netpgp_t ctx;
 #endif
 
