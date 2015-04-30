@@ -622,7 +622,7 @@ DYNAMIC_API PEP_STATUS renew_key(
     );
 
 
-// revoke_key() - revoke an expired key
+// revoke_key() - revoke a key
 //
 //  parameters:
 //      session (in)            session handle
@@ -632,6 +632,8 @@ DYNAMIC_API PEP_STATUS renew_key(
 //
 //  caveat:
 //      reason text must not include empty lines
+//      this function is meant for internal use only; better use
+//      key_compromized() of keymanagement API
 
 DYNAMIC_API PEP_STATUS revoke_key(
         PEP_SESSION session,
