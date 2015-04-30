@@ -78,6 +78,17 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
         const char *mime_type, const char *filename);
 
 
+// bloblist_length() - get length of bloblist
+//
+//  parameters:
+//      bloblist (in)   bloblist struct to determine length of
+//
+//  return value:
+//      length of bloblist in number of elements
+
+DYNAMIC_API int bloblist_length(const bloblist_t *bloblist);
+
+
 #ifdef __cplusplus
 }
 #endif

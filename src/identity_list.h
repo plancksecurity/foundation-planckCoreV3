@@ -67,6 +67,17 @@ DYNAMIC_API void free_identity_list(identity_list *id_list);
 DYNAMIC_API identity_list *identity_list_add(identity_list *id_list, pEp_identity *ident);
 
 
+// identity_list_length() - get length of identity_list
+//
+//  parameters:
+//      id_list (in)        identity_list struct to determine length of
+//
+//  return value:
+//      length of identity_list in number of elements
+
+DYNAMIC_API int identity_list_length(const identity_list *id_list);
+
+
 #ifdef __cplusplus
 }
 #endif

@@ -109,3 +109,19 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
     return bloblist_add(bloblist->next, blob, size, mime_type, filename);
 }
 
+DYNAMIC_API int bloblist_length(const bloblist_t *bloblist)
+{
+    int len = 1;
+    bloblist_t *_bloblist;
+
+    assert(bloblist);
+
+    if (bloblist->data == NULL)
+        return 0;
+
+    for (_bloblist = bloblist->next; _bloblist != NULL;
+        _bloblist = _bloblist->next)
+        len += 1;
+
+    return len;
+}

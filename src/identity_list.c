@@ -67,3 +67,12 @@ DYNAMIC_API identity_list *identity_list_add(identity_list *id_list, pEp_identit
     }
 }
 
+DYNAMIC_API int identity_list_length(const identity_list *id_list)
+{
+    int len = 0;
+
+    for (; id_list && id_list->ident; id_list = id_list->next)
+        ++len;
+
+    return len;
+}
