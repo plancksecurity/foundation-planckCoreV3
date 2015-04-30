@@ -776,7 +776,7 @@ static PEP_comm_type _get_comm_type(
 DYNAMIC_API PEP_STATUS get_message_color(
         PEP_SESSION session,
         message *msg,
-        pEp_color *color
+        PEP_color *color
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -791,7 +791,7 @@ DYNAMIC_API PEP_STATUS get_message_color(
     if (!(session && msg && color))
         return PEP_ILLEGAL_VALUE;
 
-    *color = pEp_undefined;
+    *color = PEP_undefined;
 
     assert(msg->from);
     if (msg->from == NULL)
@@ -841,30 +841,30 @@ DYNAMIC_API PEP_STATUS get_message_color(
     }
 
     if (comm_type_determined == false)
-        *color = pEp_undefined;
+        *color = PEP_undefined;
 
     else if (max_comm_type == PEP_ct_compromized)
-        *color = pEp_under_attack;
+        *color = PEP_under_attack;
 
     else if (max_comm_type >= PEP_ct_confirmed_enc_anon)
-        *color = pEp_trusted_and_anonymized;
+        *color = PEP_trusted_and_anonymized;
 
     else if (max_comm_type >= PEP_ct_strong_encryption)
-        *color = pEp_trusted;
+        *color = PEP_trusted;
 
     else if (max_comm_type >= PEP_ct_strong_but_unconfirmed &&
             max_comm_type < PEP_ct_confirmed)
-        *color = pEp_reliable;
+        *color = PEP_reliable;
     
     else if (max_comm_type == PEP_ct_no_encryption ||
             max_comm_type == PEP_ct_no_encrypted_channel)
-        *color = pEp_unencrypted;
+        *color = PEP_unencrypted;
 
     else if (max_comm_type == PEP_ct_unknown)
-        *color = pEp_undefined;
+        *color = PEP_undefined;
 
     else
-        *color = pEp_unreliable;
+        *color = PEP_unreliable;
 
     return PEP_STATUS_OK;
 }
