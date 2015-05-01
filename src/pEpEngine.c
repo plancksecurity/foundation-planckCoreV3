@@ -10,7 +10,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     PEP_STATUS status = PEP_STATUS_OK;
 	int int_result;
 	static const char *sql_log;
-	static const char *sql_safeword;
+	static const char *sql_trustword;
 	static const char *sql_get_identity;
 	static const char *sql_set_person;
 	static const char *sql_set_pgp_keypair;
@@ -176,7 +176,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                             "       and pgp_keypair_fpr = identity.main_key_id"
                             "   where address = ?1 ;";
 
-        sql_safeword = "select id, word from wordlist where lang = lower(?1) "
+        sql_trustword = "select id, word from wordlist where lang = lower(?1) "
                        "and id = ?2 ;";
 
         sql_set_person = "insert or replace into person (id, username, lang) "
@@ -199,8 +199,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             &_session->log, NULL);
 	assert(int_result == SQLITE_OK);
 
-    int_result = sqlite3_prepare_v2(_session->system_db, sql_safeword,
-            strlen(sql_safeword), &_session->safeword, NULL);
+    int_result = sqlite3_prepare_v2(_session->system_db, sql_trustword,
+            strlen(sql_trustword), &_session->trustword, NULL);
 	assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_identity,
@@ -269,8 +269,8 @@ DYNAMIC_API void release(PEP_SESSION session)
 
 	if (session) {
 		if (session->db) {
-            if (session->safeword)
-                sqlite3_finalize(session->safeword);
+            if (session->trustword)
+                sqlite3_finalize(session->trustword);
             if (session->log)
                 sqlite3_finalize(session->log);
             if (session->get_identity)
@@ -336,7 +336,7 @@ DYNAMIC_API PEP_STATUS log_event(
 	return status;
 }
 
-DYNAMIC_API PEP_STATUS safeword(
+DYNAMIC_API PEP_STATUS trustword(
             PEP_SESSION session, uint16_t value, const char *lang,
             char **word, size_t *wsize
         )
@@ -363,26 +363,26 @@ DYNAMIC_API PEP_STATUS safeword(
             || (lang[1] >= 'a' && lang[1] <= 'z'));
 	assert(lang[2] == 0);
 
-	sqlite3_reset(session->safeword);
-    sqlite3_bind_text(session->safeword, 1, lang, -1, SQLITE_STATIC);
-	sqlite3_bind_int(session->safeword, 2, value);
+	sqlite3_reset(session->trustword);
+    sqlite3_bind_text(session->trustword, 1, lang, -1, SQLITE_STATIC);
+	sqlite3_bind_int(session->trustword, 2, value);
 
-	result = sqlite3_step(session->safeword);
+	result = sqlite3_step(session->trustword);
 	if (result == SQLITE_ROW) {
-        *word = strdup((const char *) sqlite3_column_text(session->safeword,
+        *word = strdup((const char *) sqlite3_column_text(session->trustword,
                     1));
 		if (*word)
-            *wsize = sqlite3_column_bytes(session->safeword, 1);
+            *wsize = sqlite3_column_bytes(session->trustword, 1);
 		else
 			status = PEP_SAFEWORD_NOT_FOUND;
 	} else
 		status = PEP_SAFEWORD_NOT_FOUND;
 
-	sqlite3_reset(session->safeword);
+	sqlite3_reset(session->trustword);
 	return status;
 }
 
-DYNAMIC_API PEP_STATUS safewords(
+DYNAMIC_API PEP_STATUS trustwords(
         PEP_SESSION session, const char *fingerprint, const char *lang,
         char **words, size_t *wsize, int max_words
     )
@@ -440,7 +440,7 @@ DYNAMIC_API PEP_STATUS safewords(
 			source++;
 		}
 
-		_status = safeword(session, value, lang, &word, &_wsize);
+		_status = trustword(session, value, lang, &word, &_wsize);
         if (_status == PEP_OUT_OF_MEMORY) {
             free(buffer);
             return PEP_OUT_OF_MEMORY;

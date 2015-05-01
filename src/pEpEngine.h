@@ -217,49 +217,49 @@ DYNAMIC_API PEP_STATUS log_event(
     );
 
 
-// safeword() - get the corresponding safeword for a 16 bit value
+// trustword() - get the corresponding trustword for a 16 bit value
 //
 //	parameters:
 //		session (in)		    session handle
-//		value (in)			    value to find a safeword for
+//		value (in)			    value to find a trustword for
 //		lang (in)			    C string with ISO 3166-1 ALPHA-2 language code
-//		word (out)			    pointer to C string with safeword UTF-8 encoded
-//							    NULL if language is not supported or safeword
+//		word (out)			    pointer to C string with trustword UTF-8 encoded
+//							    NULL if language is not supported or trustword
 //							    wordlist is damaged or unavailable
-//		wsize (out)			    length of safeword
+//		wsize (out)			    length of trustword
 //
 //	return value:
-//	    PEP_STATUS_OK           safeword retrieved
-//	    PEP_SAFEWORD_NOT_FOUND  safeword not found
+//	    PEP_STATUS_OK           trustword retrieved
+//	    PEP_SAFEWORD_NOT_FOUND  trustword not found
 //
 //	caveat:
 //		the word pointer goes to the ownership of the caller
 //      the caller is responsible to free() it (on Windoze use pEp_free())
 
-DYNAMIC_API PEP_STATUS safeword(
+DYNAMIC_API PEP_STATUS trustword(
             PEP_SESSION session, uint16_t value, const char *lang,
             char **word, size_t *wsize
         );
 
 
-// safewords() - get safewords for a string of hex values of a fingerprint
+// trustwords() - get trustwords for a string of hex values of a fingerprint
 //
 //	parameters:
 //		session (in)		session handle
-//		fingerprint (in)	C string with hex values to find safewords for
+//		fingerprint (in)	C string with hex values to find trustwords for
 //		lang (in)			C string with ISO 3166-1 ALPHA-2 language code
-//		words (out)			pointer to C string with safewords UTF-8 encoded,
+//		words (out)			pointer to C string with trustwords UTF-8 encoded,
 //		                    separated by a blank each
-//							NULL if language is not supported or safeword
+//							NULL if language is not supported or trustword
 //							wordlist is damaged or unavailable
-//		wsize (out)			length of safewords string
+//		wsize (out)			length of trustwords string
 //		max_words (in)		only generate a string with max_words;
 //							if max_words == 0 there is no such limit
 //
 //	return value:
-//	    PEP_STATUS_OK           safewords retrieved
+//	    PEP_STATUS_OK           trustwords retrieved
 //      PEP_OUT_OF_MEMORY       out of memory
-//	    PEP_SAFEWORD_NOT_FOUND  at least one safeword not found
+//	    PEP_SAFEWORD_NOT_FOUND  at least one trustword not found
 //
 //	caveat:
 //		the word pointer goes to the ownership of the caller
@@ -267,11 +267,11 @@ DYNAMIC_API PEP_STATUS safeword(
 //
 //  DON'T USE THIS FUNCTION FROM HIGH LEVEL LANGUAGES!
 //
-//  Better implement a simple one in the adapter yourself using safeword(), and
-//  return a list of safewords.
+//  Better implement a simple one in the adapter yourself using trustword(), and
+//  return a list of trustwords.
 //  This function is provided for being used by C and C++ programs only.
 
-DYNAMIC_API PEP_STATUS safewords(
+DYNAMIC_API PEP_STATUS trustwords(
         PEP_SESSION session, const char *fingerprint, const char *lang,
         char **words, size_t *wsize, int max_words
     );
