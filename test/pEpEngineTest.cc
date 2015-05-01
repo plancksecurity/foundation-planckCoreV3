@@ -140,19 +140,19 @@ int main(int argc, char* argv[])
     delete[] sig_buffer;
     delete[] t2_buffer;
 
-	cout << "\nfinding English safeword for 2342...\n";
+	cout << "\nfinding English trustword for 2342...\n";
 	char * word;
 	size_t wsize;
-	safeword(session, 2342, "en", &word, &wsize);
+	trustword(session, 2342, "en", &word, &wsize);
 	assert(word);
-	cout << "the safeword for 2342 is " << word << "\n";
+	cout << "the trustword for 2342 is " << word << "\n";
     pEp_free(word);
 
     string fingerprint = "4942 2235 FC99 585B 891C  6653 0C7B 109B FA72 61F7";
     char * words;
 
-    cout << "\nfinding German safewords for " << fingerprint << "...\n";
-    safewords(session, fingerprint.c_str(), "de", &words, &wsize, 5);
+    cout << "\nfinding German trustwords for " << fingerprint << "...\n";
+    trustwords(session, fingerprint.c_str(), "de", &words, &wsize, 5);
     assert(words);
     cout << words << "\n";
     pEp_free(words);
