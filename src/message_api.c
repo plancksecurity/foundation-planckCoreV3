@@ -12,6 +12,70 @@
 #define MIN(A, B) ((B) > (A) ? (A) : (B))
 #endif
 
+
+static bool string_equality(const char *s1, const char *s2)
+{
+    if (s1 == NULL || s2 == NULL)
+        return false;
+
+    assert(s1 && s2);
+
+    return strcmp(s1, s2) == 0;
+}
+
+static bool is_mime_type(const bloblist_t *bl, const char *mt)
+{
+    assert(mt);
+
+    return bl && string_equality(bl->mime_type, mt);
+}
+
+static bool is_fileending(const bloblist_t *bl, const char *fe)
+{
+    assert(fe);
+
+    if (bl == NULL || bl->filename == NULL)
+        return false;
+
+    assert(bl && bl->filename);
+
+    size_t fe_len = strlen(fe);
+    size_t fn_len = strlen(bl->filename);
+
+    if (fn_len <= fe_len)
+        return false;
+
+    assert(fn_len > fe_len);
+
+    return strcmp(bl->filename + (fn_len - fe_len), fe) == 0;
+}
+
+void import_attached_keys(PEP_SESSION session, const message *msg)
+{
+    assert(msg);
+
+    bloblist_t *bl;
+    for (bl = msg->attachments; bl && bl->data; bl = bl->next) {
+        assert(bl && bl->data && bl->size);
+
+        if (bl->mime_type == NULL ||
+                    is_mime_type(bl, "application/octet-stream")) {
+            if (is_fileending(bl, ".pgp") || is_fileending(bl, ".gpg") ||
+                    is_fileending(bl, ".key") ||
+                    string_equality(bl->filename, "key.asc"))
+                import_key(session, bl->data, bl->size);
+        }
+        else if (is_mime_type(bl, "application/pgp-keys")) {
+            import_key(session, bl->data, bl->size);
+        }
+        else if (is_mime_type(bl, "text/plain")) {
+            if (is_fileending(bl, ".pgp") || is_fileending(bl, ".gpg") ||
+                    is_fileending(bl, ".key") || is_fileending(bl, ".asc"))
+                import_key(session, bl->data, bl->size);
+        }
+    }
+}
+
 static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
 {
     char * ptext;
@@ -251,6 +315,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
     *dst = NULL;
 
+    import_attached_keys(session, src);
+
     if (src->enc_format >= PEP_enc_pieces) {
         if (src->enc_format == enc_format) {
             assert(0); // the message is encrypted this way already
@@ -479,6 +545,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     if (msg->shortmsg == NULL)
         msg->shortmsg = strdup("pEp");
 
+    import_attached_keys(session, msg);
+
     *dst = msg;
     return PEP_STATUS_OK;
 
@@ -572,6 +640,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     *dst = NULL;
  
+    import_attached_keys(session, src);
+
     if (src->mime == PEP_MIME_fields_omitted || src->mime == PEP_MIME) {
         message *_src = NULL;
         status = mime_decode_message(src->longmsg, &_src);
@@ -737,6 +807,9 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     if (free_src)
         free_message(src);
+
+    import_attached_keys(session, msg);
+
     *dst = msg;
     return PEP_STATUS_OK;
 

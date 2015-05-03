@@ -31,6 +31,8 @@ DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_t
         }
     }
 
+    assert((blob == NULL && size == 0) || (blob && size));
+
     bloblist->data = blob;
     bloblist->size = size;
 
@@ -96,8 +98,12 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
                 return NULL;
             }
         }
+
+        assert((blob == NULL && size == 0) || (blob && size));
+
         bloblist->data = blob;
         bloblist->size = size;
+
         return bloblist;
     }
 

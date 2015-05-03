@@ -9,6 +9,9 @@ extern "C" {
 #endif
 
 
+void import_attached_keys(PEP_SESSION session, const message *msg);
+
+
 // encrypt_message() - encrypt message in memory
 //
 //  parameters:
