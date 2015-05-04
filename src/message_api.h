@@ -67,19 +67,19 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
 
 typedef enum _PEP_color {
-    PEP_undefined = 0,
-    PEP_unencrypted,
-    PEP_unreliable,
-    PEP_reliable,
-    PEP_yellow = PEP_reliable,
-    PEP_trusted,
-    PEP_green = PEP_trusted,
-    PEP_trusted_and_anonymized,
-    PEP_fully_anonymous,   
+    PEP_rating_undefined = 0,
+    PEP_rating_unencrypted,
+    PEP_rating_unreliable,
+    PEP_rating_reliable,
+    PEP_rating_yellow = PEP_rating_reliable,
+    PEP_rating_trusted,
+    PEP_rating_green = PEP_rating_trusted,
+    PEP_rating_trusted_and_anonymized,
+    PEP_rating_fully_anonymous,   
 
-    PEP_under_attack = -1,
-    PEP_red = PEP_under_attack,
-    PEP_b0rken = -2
+    PEP_rating_under_attack = -1,
+    PEP_rating_red = PEP_rating_under_attack,
+    PEP_rating_b0rken = -2
 } PEP_color;
 
 // get_message_color() - get color for a message

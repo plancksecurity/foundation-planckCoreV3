@@ -893,7 +893,7 @@ DYNAMIC_API PEP_STATUS get_message_color(
     if (!(session && msg && color))
         return PEP_ILLEGAL_VALUE;
 
-    *color = PEP_undefined;
+    *color = PEP_rating_undefined;
 
     assert(msg->from);
     if (msg->from == NULL)
@@ -943,30 +943,30 @@ DYNAMIC_API PEP_STATUS get_message_color(
     }
 
     if (comm_type_determined == false)
-        *color = PEP_undefined;
+        *color = PEP_rating_undefined;
 
     else if (max_comm_type == PEP_ct_compromized)
-        *color = PEP_under_attack;
+        *color = PEP_rating_under_attack;
 
     else if (max_comm_type >= PEP_ct_confirmed_enc_anon)
-        *color = PEP_trusted_and_anonymized;
+        *color = PEP_rating_trusted_and_anonymized;
 
     else if (max_comm_type >= PEP_ct_strong_encryption)
-        *color = PEP_trusted;
+        *color = PEP_rating_trusted;
 
     else if (max_comm_type >= PEP_ct_strong_but_unconfirmed &&
             max_comm_type < PEP_ct_confirmed)
-        *color = PEP_reliable;
+        *color = PEP_rating_reliable;
     
     else if (max_comm_type == PEP_ct_no_encryption ||
             max_comm_type == PEP_ct_no_encrypted_channel)
-        *color = PEP_unencrypted;
+        *color = PEP_rating_unencrypted;
 
     else if (max_comm_type == PEP_ct_unknown)
-        *color = PEP_undefined;
+        *color = PEP_rating_undefined;
 
     else
-        *color = PEP_unreliable;
+        *color = PEP_rating_unreliable;
 
     return PEP_STATUS_OK;
 }
