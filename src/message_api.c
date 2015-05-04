@@ -52,6 +52,7 @@ static bool is_fileending(const bloblist_t *bl, const char *fe)
 
 void import_attached_keys(PEP_SESSION session, const message *msg)
 {
+    assert(session);
     assert(msg);
 
     bloblist_t *bl;
@@ -74,6 +75,34 @@ void import_attached_keys(PEP_SESSION session, const message *msg)
                 import_key(session, bl->data, bl->size);
         }
     }
+}
+
+void attach_own_key(PEP_SESSION session, message *msg)
+{
+    char *keydata;
+    size_t size;
+    bloblist_t *bl;
+
+    assert(session);
+    assert(msg);
+
+    if (msg->dir == PEP_dir_incoming)
+        return;
+
+    assert(msg->from && msg->from->fpr);
+    if (msg->from == NULL || msg->from->fpr == NULL)
+        return;
+
+    PEP_STATUS status = export_key(session, msg->from->fpr, &keydata, &size);
+    assert(status == PEP_STATUS_OK);
+    if (status != PEP_STATUS_OK)
+        return;
+    assert(size);
+
+    bl = bloblist_add(msg->attachments, keydata, size, "application/pgp-keys",
+            "pEp_key.asc");
+    if (bl)
+        msg->attachments = bl;
 }
 
 static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
@@ -341,13 +370,13 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         }
     }
 
-    msg = clone_to_empty_message(src);
-    if (msg == NULL)
-        goto enomem;
-
     status = myself(session, src->from);
     if (status != PEP_STATUS_OK)
         goto pep_error;
+
+    msg = clone_to_empty_message(src);
+    if (msg == NULL)
+        goto enomem;
 
     keys = new_stringlist(src->from->fpr);
     if (keys == NULL)
@@ -545,7 +574,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     if (msg->shortmsg == NULL)
         msg->shortmsg = strdup("pEp");
 
-    import_attached_keys(session, msg);
+    attach_own_key(session, msg);
 
     *dst = msg;
     return PEP_STATUS_OK;
