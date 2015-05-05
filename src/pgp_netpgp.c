@@ -697,21 +697,19 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fprstr)
     netpgp = &session->ctx;
     
     if (str_to_fpr(fprstr, fpr, &length)) {
-        if (!pgp_deletekeybyfpr(netpgp->io,
+        unsigned insec = pgp_deletekeybyfpr(netpgp->io,
                                 (pgp_keyring_t *)netpgp->secring, 
-                                (const uint8_t *)fpr, length)) {
-            return PEP_KEY_NOT_FOUND;
+                                (const uint8_t *)fpr, length);
+        unsigned inpub = pgp_deletekeybyfpr(netpgp->io,
+                                (pgp_keyring_t *)netpgp->pubring, 
+                                (const uint8_t *)fpr, length);
+        if(!insec && !inpub){
+            result = PEP_KEY_NOT_FOUND;
+        } else {
+            result = PEP_STATUS_OK;
         }
     }else{
         return PEP_OUT_OF_MEMORY;
-    }
-
-    /* pair was found in secring delete also corresponding pubkey 
-     * in pubring if it exists */
-    if(res) {
-        pgp_deletekeybyfpr(netpgp->io,
-                           (pgp_keyring_t *)netpgp->pubring, 
-                           (const uint8_t *)fpr, length);
     }
 
     // save rings (key ownership transfered)
@@ -750,6 +748,8 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data, size_t 
     }
     pgp_memory_add(mem, (const uint8_t*)key_data, size);
 
+    bzero(&tmpring, sizeof(tmpring));
+
     if (pgp_keyring_read_from_mem(netpgp->io, &tmpring, 
                                   _armoured(key_data, size, ARMOR_KEY_HEAD),
                                   mem) == 0){
@@ -765,7 +765,9 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data, size_t 
     
     pgp_memory_free(mem);
 
-    if (result != PEP_STATUS_OK){
+    if (result == PEP_STATUS_OK){
+        pgp_keyring_free(&tmpring);
+    }else{
         pgp_keyring_purge(&tmpring);
     }
 
