@@ -202,6 +202,7 @@ int main(int argc, char* argv[])
 
     cout << "export_key()\n\n";
     PEP_STATUS export_status = export_key(session, key.c_str(), &key_data, &size);
+    cout << "export_key() exits with " << export_status << "\n";
     assert(export_status == PEP_STATUS_OK);
     cout << key_data << "\n\n";
 

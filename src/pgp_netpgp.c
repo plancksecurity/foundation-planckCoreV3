@@ -523,10 +523,10 @@ fpr_to_str (char **str, const uint8_t *fpr, size_t length)
     if(*str == NULL)
         return 0;
 
-    for (n = 0, i = 0 ; i < length - 1; i += 2) {
-    	n += snprintf(&((*str)[n]), 6, "%02x%02x ", *fpr++, *fpr++);
+    for (n = 0, i = 0 ; i < length - 2; i += 2) {
+    	n += snprintf(&((*str)[n]), 6, "%02x%02x ", fpr[i], fpr[i+1]);
     }
-    snprintf(&((*str)[n]), 5, "%02x%02x", *fpr++, *fpr++);
+    snprintf(&((*str)[n]), 5, "%02x%02x", fpr[i], fpr[i+1]);
 
     return 1;
 }
@@ -542,9 +542,10 @@ str_to_fpr (const char *str, uint8_t *fpr, size_t *length)
         while (*str == ' ') str++;
         for (j = 0; j < 2; j++) {
             uint8_t *byte = &fpr[*length];
+            *byte = 0;
             for (i = 0; i < 2; i++) {
                 if (i > 0)
-                    *byte *= 16;
+                    *byte = *byte << 4;
                 if (*str >= 'a' && *str <= 'f')
                     *byte += 10 + *str - 'a';
                 else if (*str >= 'A' && *str <= 'F')
@@ -555,7 +556,7 @@ str_to_fpr (const char *str, uint8_t *fpr, size_t *length)
                     return 0;
                 str++;
             }
-            *length++;
+            (*length)++;
         }
     }
     return 1;
@@ -565,11 +566,13 @@ static PEP_STATUS import_key_or_keypair(netpgp_t *netpgp, pgp_key_t *newkey){
     pgp_key_t	pubkey;
     unsigned public;
     PEP_STATUS result;
+    
 
     if ((public = (newkey->type == PGP_PTAG_CT_PUBLIC_KEY))){
         pubkey = *newkey;
     } else {
         // Duplicate key as public only
+        bzero(&pubkey, sizeof(pubkey));
         if (!pgp_keydata_dup(&pubkey, newkey, 1 /* make_public */)){
             return PEP_OUT_OF_MEMORY;
         }
@@ -613,7 +616,6 @@ PEP_STATUS pgp_generate_keypair(
 {
     netpgp_t *netpgp;
     pgp_key_t	newkey;
-    pgp_key_t	pubkey;
 
     PEP_STATUS result;
     char newid[1024];
@@ -642,7 +644,6 @@ PEP_STATUS pgp_generate_keypair(
     cipher = netpgp_getvar(netpgp, "cipher");
 
     bzero(&newkey, sizeof(newkey));
-    bzero(&pubkey, sizeof(pubkey));
 
     // Generate the key
     if (!pgp_rsa_generate_keypair(&newkey, 4096, 65537UL, hashalg, cipher,
@@ -696,21 +697,19 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fprstr)
     netpgp = &session->ctx;
     
     if (str_to_fpr(fprstr, fpr, &length)) {
-        if (!pgp_deletekeybyfpr(netpgp->io,
+        unsigned insec = pgp_deletekeybyfpr(netpgp->io,
                                 (pgp_keyring_t *)netpgp->secring, 
-                                (const uint8_t *)fpr, length)) {
-            return PEP_KEY_NOT_FOUND;
+                                (const uint8_t *)fpr, length);
+        unsigned inpub = pgp_deletekeybyfpr(netpgp->io,
+                                (pgp_keyring_t *)netpgp->pubring, 
+                                (const uint8_t *)fpr, length);
+        if(!insec && !inpub){
+            result = PEP_KEY_NOT_FOUND;
+        } else {
+            result = PEP_STATUS_OK;
         }
     }else{
         return PEP_OUT_OF_MEMORY;
-    }
-
-    /* pair was found in secring delete also corresponding pubkey 
-     * in pubring if it exists */
-    if(res) {
-        pgp_deletekeybyfpr(netpgp->io,
-                           (pgp_keyring_t *)netpgp->pubring, 
-                           (const uint8_t *)fpr, length);
     }
 
     // save rings (key ownership transfered)
@@ -749,6 +748,8 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data, size_t 
     }
     pgp_memory_add(mem, (const uint8_t*)key_data, size);
 
+    bzero(&tmpring, sizeof(tmpring));
+
     if (pgp_keyring_read_from_mem(netpgp->io, &tmpring, 
                                   _armoured(key_data, size, ARMOR_KEY_HEAD),
                                   mem) == 0){
@@ -764,7 +765,9 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data, size_t 
     
     pgp_memory_free(mem);
 
-    if (result != PEP_STATUS_OK){
+    if (result == PEP_STATUS_OK){
+        pgp_keyring_free(&tmpring);
+    }else{
         pgp_keyring_purge(&tmpring);
     }
 
@@ -787,13 +790,13 @@ PEP_STATUS pgp_export_keydata(
     size_t buflen;
 
     assert(session);
-    assert(fpr);
+    assert(fprstr);
     assert(key_data);
     assert(size);
 
     netpgp = &session->ctx;
 
-    if (!session || !fpr || !key_data || !size)
+    if (!session || !fprstr || !key_data || !size)
         return PEP_UNKNOWN_ERROR;
 
     if (str_to_fpr(fprstr, fpr, &fprlen)) {
