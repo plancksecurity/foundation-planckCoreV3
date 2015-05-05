@@ -899,7 +899,7 @@ static PEP_color _rating(PEP_comm_type ct)
         return PEP_rating_unreliable;
 }
 
-DYNAMIC_API PEP_STATUS get_message_color(
+DYNAMIC_API PEP_STATUS message_color(
         PEP_SESSION session,
         message *msg,
         PEP_color *color
@@ -974,7 +974,7 @@ DYNAMIC_API PEP_STATUS get_message_color(
     return PEP_STATUS_OK;
 }
 
-DYNAMIC_API PEP_STATUS get_identity_color(
+DYNAMIC_API PEP_STATUS identity_color(
         PEP_SESSION session,
         pEp_identity *ident,
         PEP_color *color

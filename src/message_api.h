@@ -83,7 +83,7 @@ typedef enum _PEP_color {
     PEP_rating_b0rken = -2
 } PEP_color;
 
-// get_message_color() - get color for a message
+// message_color() - get color for a message
 //
 //  parameters:
 //      session (in)        session handle
@@ -96,14 +96,14 @@ typedef enum _PEP_color {
 //  caveat:
 //      msg->from must point to a valid pEp_identity
 
-DYNAMIC_API PEP_STATUS get_message_color(
+DYNAMIC_API PEP_STATUS message_color(
         PEP_SESSION session,
         message *msg,
         PEP_color *color
     );
 
 
-// get_identity_color() - get color for a single identity
+// identity_color() - get color for a single identity
 //
 //  parameters:
 //      session (in)        session handle
@@ -113,7 +113,7 @@ DYNAMIC_API PEP_STATUS get_message_color(
 //  return value:
 //      error status or PEP_STATUS_OK on success
 
-DYNAMIC_API PEP_STATUS get_identity_color(
+DYNAMIC_API PEP_STATUS identity_color(
         PEP_SESSION session,
         pEp_identity *ident,
         PEP_color *color
