@@ -52,6 +52,7 @@ static bool is_fileending(const bloblist_t *bl, const char *fe)
 
 void import_attached_keys(PEP_SESSION session, const message *msg)
 {
+    assert(session);
     assert(msg);
 
     bloblist_t *bl;
@@ -74,6 +75,34 @@ void import_attached_keys(PEP_SESSION session, const message *msg)
                 import_key(session, bl->data, bl->size);
         }
     }
+}
+
+void attach_own_key(PEP_SESSION session, message *msg)
+{
+    char *keydata;
+    size_t size;
+    bloblist_t *bl;
+
+    assert(session);
+    assert(msg);
+
+    if (msg->dir == PEP_dir_incoming)
+        return;
+
+    assert(msg->from && msg->from->fpr);
+    if (msg->from == NULL || msg->from->fpr == NULL)
+        return;
+
+    PEP_STATUS status = export_key(session, msg->from->fpr, &keydata, &size);
+    assert(status == PEP_STATUS_OK);
+    if (status != PEP_STATUS_OK)
+        return;
+    assert(size);
+
+    bl = bloblist_add(msg->attachments, keydata, size, "application/pgp-keys",
+            "pEp_key.asc");
+    if (bl)
+        msg->attachments = bl;
 }
 
 static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
@@ -329,25 +358,27 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         else {
             // decrypt and re-encrypt again
             message * _dst = NULL;
+            stringlist_t *_keylist = NULL;
             PEP_MIME_format mime = (enc_format == PEP_enc_PEP) ? PEP_MIME :
                     PEP_MIME_fields_omitted;
 
-            status = decrypt_message(session, src, mime, &_dst);
+            status = decrypt_message(session, src, mime, &_dst, &_keylist);
             if (status != PEP_STATUS_OK)
                 goto pep_error;
+            free_stringlist(_keylist);
 
             src = _dst;
             free_src = true;
         }
     }
 
-    msg = clone_to_empty_message(src);
-    if (msg == NULL)
-        goto enomem;
-
     status = myself(session, src->from);
     if (status != PEP_STATUS_OK)
         goto pep_error;
+
+    msg = clone_to_empty_message(src);
+    if (msg == NULL)
+        goto enomem;
 
     keys = new_stringlist(src->from->fpr);
     if (keys == NULL)
@@ -545,7 +576,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     if (msg->shortmsg == NULL)
         msg->shortmsg = strdup("pEp");
 
-    import_attached_keys(session, msg);
+    attach_own_key(session, msg);
 
     *dst = msg;
     return PEP_STATUS_OK;
@@ -619,7 +650,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
         message *src,
         PEP_MIME_format mime,
-        message **dst
+        message **dst,
+        stringlist_t **keylist
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -628,14 +660,15 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     size_t csize;
     char *ptext;
     size_t psize;
-    stringlist_t *keylist;
+    stringlist_t *_keylist = NULL;
     bool free_src = false;
 
     assert(session);
     assert(src);
     assert(dst);
+    assert(keylist);
 
-    if (!(session && src && dst))
+    if (!(session && src && dst && keylist))
         return PEP_ILLEGAL_VALUE;
 
     *dst = NULL;
@@ -672,7 +705,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     csize = strlen(src->longmsg);
 
     status = decrypt_and_verify(session, ctext, csize, &ptext, &psize,
-            &keylist);
+            &_keylist);
     if (ptext == NULL)
         goto pep_error;
 
@@ -697,14 +730,16 @@ DYNAMIC_API PEP_STATUS decrypt_message(
             bloblist_t *_s;
             for (_s = src->attachments; _s; _s = _s->next) {
                 if (is_encrypted_attachment(_s)) {
+                    stringlist_t *_keylist = NULL;
                     ctext = _s->data;
                     csize = _s->size;
 
                     status = decrypt_and_verify(session, ctext, csize, &ptext,
-                            &psize, &keylist);
+                            &psize, &_keylist);
                     if (ptext == NULL)
                         goto pep_error;
-                    
+                    free_stringlist(_keylist);
+
                     if (is_encrypted_html_attachment(_s)) {
                         msg->longmsg_formatted = strdup(ptext);
                         if (msg->longmsg_formatted == NULL)
@@ -811,6 +846,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     import_attached_keys(session, msg);
 
     *dst = msg;
+    *keylist = _keylist;
+
     return PEP_STATUS_OK;
 
 enomem:
@@ -818,6 +855,7 @@ enomem:
 
 pep_error:
     free_message(msg);
+    free_stringlist(_keylist);
     if (free_src)
         free_message(src);
 
@@ -846,7 +884,31 @@ static PEP_comm_type _get_comm_type(
     }
 }
 
-DYNAMIC_API PEP_STATUS get_message_color(
+static PEP_color _rating(PEP_comm_type ct)
+{
+    if (ct == PEP_ct_unknown)
+        return PEP_rating_undefined;
+
+    else if (ct == PEP_ct_compromized)
+        return PEP_rating_under_attack;
+
+    else if (ct >= PEP_ct_confirmed_enc_anon)
+        return PEP_rating_trusted_and_anonymized;
+
+    else if (ct >= PEP_ct_strong_encryption)
+        return PEP_rating_trusted;
+
+    else if (ct >= PEP_ct_strong_but_unconfirmed && ct < PEP_ct_confirmed)
+        return PEP_rating_reliable;
+    
+    else if (ct == PEP_ct_no_encryption || ct == PEP_ct_no_encrypted_channel)
+        return PEP_rating_unencrypted;
+
+    else
+        return PEP_rating_unreliable;
+}
+
+DYNAMIC_API PEP_STATUS message_color(
         PEP_SESSION session,
         message *msg,
         PEP_color *color
@@ -864,7 +926,7 @@ DYNAMIC_API PEP_STATUS get_message_color(
     if (!(session && msg && color))
         return PEP_ILLEGAL_VALUE;
 
-    *color = PEP_undefined;
+    *color = PEP_rating_undefined;
 
     assert(msg->from);
     if (msg->from == NULL)
@@ -899,14 +961,6 @@ DYNAMIC_API PEP_STATUS get_message_color(
                     comm_type_determined = true;
                 }
             }
-
-            for (il = msg->bcc; il != NULL; il = il->next) {
-                if (il->ident) {
-                    max_comm_type = _get_comm_type(session, max_comm_type,
-                            il->ident);
-                    comm_type_determined = true;
-                }
-            }
             break;
 
         default:
@@ -914,31 +968,36 @@ DYNAMIC_API PEP_STATUS get_message_color(
     }
 
     if (comm_type_determined == false)
-        *color = PEP_undefined;
-
-    else if (max_comm_type == PEP_ct_compromized)
-        *color = PEP_under_attack;
-
-    else if (max_comm_type >= PEP_ct_confirmed_enc_anon)
-        *color = PEP_trusted_and_anonymized;
-
-    else if (max_comm_type >= PEP_ct_strong_encryption)
-        *color = PEP_trusted;
-
-    else if (max_comm_type >= PEP_ct_strong_but_unconfirmed &&
-            max_comm_type < PEP_ct_confirmed)
-        *color = PEP_reliable;
-    
-    else if (max_comm_type == PEP_ct_no_encryption ||
-            max_comm_type == PEP_ct_no_encrypted_channel)
-        *color = PEP_unencrypted;
-
-    else if (max_comm_type == PEP_ct_unknown)
-        *color = PEP_undefined;
-
+        *color = PEP_rating_undefined;
     else
-        *color = PEP_unreliable;
+        *color = _rating(max_comm_type);
 
     return PEP_STATUS_OK;
+}
+
+DYNAMIC_API PEP_STATUS identity_color(
+        PEP_SESSION session,
+        pEp_identity *ident,
+        PEP_color *color
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(ident);
+    assert(color);
+
+    if (!(session && ident && color))
+        return PEP_ILLEGAL_VALUE;
+
+    if (ident->me)
+        status = myself(session, ident);
+    else
+        status = update_identity(session, ident);
+
+    if (status == PEP_STATUS_OK)
+        *color = _rating(ident->comm_type);
+
+    return status;
 }
 
