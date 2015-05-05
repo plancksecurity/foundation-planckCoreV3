@@ -12,13 +12,13 @@ except KeyError:
 else:
     db_file = environ["ALLUSERSPROFILE"] + r"\pEp\system.db"
 
-p = ArgumentParser(description="show safewords instead of hex fingerprint")
+p = ArgumentParser(description="show trustwords instead of hex fingerprint")
 p.add_argument('--db-path', '-d', type=str, default=db_file,
         help='path to pEp system db (default: ' + db_file + ')')
 p.add_argument('--lang', '-l', type=str, default="en",
         help='use dictionary for language LANG (default: en)')
 p.add_argument('--short', '-s', action='store_true',
-        help='display the first 5 of the safewords')
+        help='display the first 5 of the trustwords')
 p.add_argument('hex', metavar="hex", type=str, nargs='+',
         help='hex values of fingerprint')
 
