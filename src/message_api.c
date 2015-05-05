@@ -358,12 +358,14 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         else {
             // decrypt and re-encrypt again
             message * _dst = NULL;
+            stringlist_t *_keylist = NULL;
             PEP_MIME_format mime = (enc_format == PEP_enc_PEP) ? PEP_MIME :
                     PEP_MIME_fields_omitted;
 
-            status = decrypt_message(session, src, mime, &_dst);
+            status = decrypt_message(session, src, mime, &_dst, &_keylist);
             if (status != PEP_STATUS_OK)
                 goto pep_error;
+            free_stringlist(_keylist);
 
             src = _dst;
             free_src = true;
@@ -648,7 +650,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
         message *src,
         PEP_MIME_format mime,
-        message **dst
+        message **dst,
+        stringlist_t **keylist
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -657,14 +660,15 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     size_t csize;
     char *ptext;
     size_t psize;
-    stringlist_t *keylist;
+    stringlist_t *_keylist = NULL;
     bool free_src = false;
 
     assert(session);
     assert(src);
     assert(dst);
+    assert(keylist);
 
-    if (!(session && src && dst))
+    if (!(session && src && dst && keylist))
         return PEP_ILLEGAL_VALUE;
 
     *dst = NULL;
@@ -701,7 +705,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     csize = strlen(src->longmsg);
 
     status = decrypt_and_verify(session, ctext, csize, &ptext, &psize,
-            &keylist);
+            &_keylist);
     if (ptext == NULL)
         goto pep_error;
 
@@ -726,14 +730,16 @@ DYNAMIC_API PEP_STATUS decrypt_message(
             bloblist_t *_s;
             for (_s = src->attachments; _s; _s = _s->next) {
                 if (is_encrypted_attachment(_s)) {
+                    stringlist_t *_keylist = NULL;
                     ctext = _s->data;
                     csize = _s->size;
 
                     status = decrypt_and_verify(session, ctext, csize, &ptext,
-                            &psize, &keylist);
+                            &psize, &_keylist);
                     if (ptext == NULL)
                         goto pep_error;
-                    
+                    free_stringlist(_keylist);
+
                     if (is_encrypted_html_attachment(_s)) {
                         msg->longmsg_formatted = strdup(ptext);
                         if (msg->longmsg_formatted == NULL)
@@ -840,6 +846,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     import_attached_keys(session, msg);
 
     *dst = msg;
+    *keylist = _keylist;
+
     return PEP_STATUS_OK;
 
 enomem:
@@ -847,6 +855,7 @@ enomem:
 
 pep_error:
     free_message(msg);
+    free_stringlist(_keylist);
     if (free_src)
         free_message(src);
 

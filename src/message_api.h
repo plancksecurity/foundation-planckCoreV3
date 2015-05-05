@@ -51,6 +51,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 //      src (in)            message to decrypt
 //      mime (in)           MIME encoding wanted
 //      dst (out)           pointer to new decrypted message or NULL on failure
+//      keylist (out)       stringlist with keyids
 //
 //  return value:
 //      error status or PEP_STATUS_OK on success
@@ -62,7 +63,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
         message *src,
         PEP_MIME_format mime,
-        message **dst
+        message **dst,
+        stringlist_t **keylist
     );
 
 

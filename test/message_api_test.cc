@@ -65,9 +65,19 @@ int main() {
     outFile3.close();
 
     message *msg4;
-    PEP_STATUS status4 = decrypt_message(session, enc_msg2, PEP_MIME_none, &msg4);
+    stringlist_t *keylist4;
+    PEP_STATUS status4 = decrypt_message(session, enc_msg2, PEP_MIME_none, &msg4, &keylist4);
     assert(status4 == PEP_STATUS_OK);
     assert(msg4);
+    assert(keylist4);
+
+    cout << "keys used:";
+    stringlist_t *kl4;
+    for (kl4 = keylist4; kl4 && kl4->value; kl4 = kl4->next)
+        cout << " " << kl4->value;
+    cout << "\n\n";
+
+    free_stringlist(keylist4);
 
     cout << "freeing messages…\n";
     free_message(msg4);
