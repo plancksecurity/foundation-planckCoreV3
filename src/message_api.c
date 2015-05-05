@@ -961,14 +961,6 @@ DYNAMIC_API PEP_STATUS message_color(
                     comm_type_determined = true;
                 }
             }
-
-            for (il = msg->bcc; il != NULL; il = il->next) {
-                if (il->ident) {
-                    max_comm_type = _get_comm_type(session, max_comm_type,
-                            il->ident);
-                    comm_type_determined = true;
-                }
-            }
             break;
 
         default:
