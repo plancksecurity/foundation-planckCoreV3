@@ -875,6 +875,30 @@ static PEP_comm_type _get_comm_type(
     }
 }
 
+static PEP_color _rating(PEP_comm_type ct)
+{
+    if (ct == PEP_ct_unknown)
+        return PEP_rating_undefined;
+
+    else if (ct == PEP_ct_compromized)
+        return PEP_rating_under_attack;
+
+    else if (ct >= PEP_ct_confirmed_enc_anon)
+        return PEP_rating_trusted_and_anonymized;
+
+    else if (ct >= PEP_ct_strong_encryption)
+        return PEP_rating_trusted;
+
+    else if (ct >= PEP_ct_strong_but_unconfirmed && ct < PEP_ct_confirmed)
+        return PEP_rating_reliable;
+    
+    else if (ct == PEP_ct_no_encryption || ct == PEP_ct_no_encrypted_channel)
+        return PEP_rating_unencrypted;
+
+    else
+        return PEP_rating_unreliable;
+}
+
 DYNAMIC_API PEP_STATUS get_message_color(
         PEP_SESSION session,
         message *msg,
@@ -944,30 +968,35 @@ DYNAMIC_API PEP_STATUS get_message_color(
 
     if (comm_type_determined == false)
         *color = PEP_rating_undefined;
-
-    else if (max_comm_type == PEP_ct_compromized)
-        *color = PEP_rating_under_attack;
-
-    else if (max_comm_type >= PEP_ct_confirmed_enc_anon)
-        *color = PEP_rating_trusted_and_anonymized;
-
-    else if (max_comm_type >= PEP_ct_strong_encryption)
-        *color = PEP_rating_trusted;
-
-    else if (max_comm_type >= PEP_ct_strong_but_unconfirmed &&
-            max_comm_type < PEP_ct_confirmed)
-        *color = PEP_rating_reliable;
-    
-    else if (max_comm_type == PEP_ct_no_encryption ||
-            max_comm_type == PEP_ct_no_encrypted_channel)
-        *color = PEP_rating_unencrypted;
-
-    else if (max_comm_type == PEP_ct_unknown)
-        *color = PEP_rating_undefined;
-
     else
-        *color = PEP_rating_unreliable;
+        *color = _rating(max_comm_type);
 
     return PEP_STATUS_OK;
+}
+
+DYNAMIC_API PEP_STATUS get_identity_color(
+        PEP_SESSION session,
+        pEp_identity *ident,
+        PEP_color *color
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(ident);
+    assert(color);
+
+    if (!(session && ident && color))
+        return PEP_ILLEGAL_VALUE;
+
+    if (ident->me)
+        status = myself(session, ident);
+    else
+        status = update_identity(session, ident);
+
+    if (status == PEP_STATUS_OK)
+        *color = _rating(ident->comm_type);
+
+    return status;
 }
 

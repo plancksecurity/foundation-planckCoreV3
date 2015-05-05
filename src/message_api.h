@@ -102,6 +102,24 @@ DYNAMIC_API PEP_STATUS get_message_color(
         PEP_color *color
     );
 
+
+// get_identity_color() - get color for a single identity
+//
+//  parameters:
+//      session (in)        session handle
+//      ident (in)          identity to get the color for
+//      color (out)         color for the identity
+//
+//  return value:
+//      error status or PEP_STATUS_OK on success
+
+DYNAMIC_API PEP_STATUS get_identity_color(
+        PEP_SESSION session,
+        pEp_identity *ident,
+        PEP_color *color
+    );
+
+
 #ifdef __cplusplus
 }
 #endif
