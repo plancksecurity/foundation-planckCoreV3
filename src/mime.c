@@ -11,7 +11,6 @@
 
 DYNAMIC_API bool is_PGP_message_text(const char *text)
 {
-    assert(text);
     if (text == NULL)
         return false;
 
@@ -1280,8 +1279,6 @@ static PEP_STATUS interpret_MIME(
 
             clistiter *cur;
             for (cur = clist_begin(partlist); cur; cur = clist_next(cur)) {
-                size_t index;
-                int r;
                 struct mailmime *part = clist_content(cur);
                 if (part == NULL)
                     return PEP_ILLEGAL_VALUE;
