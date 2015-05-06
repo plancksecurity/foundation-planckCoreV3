@@ -31,7 +31,8 @@ void attach_own_key(PEP_SESSION session, message *msg);
 //		PEP_GET_KEY_FAILED		        cannot retrieve key
 //
 //	caveat:
-//	    the ownership of the new message goes to the caller
+//	    the ownershop of src remains with the caller
+//	    the ownership of dst goes to the caller
 //	    if src is unencrypted this function returns PEP_UNENCRYPTED and sets
 //	    dst to NULL
 
@@ -41,30 +42,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         stringlist_t *extra,
         message **dst,
         PEP_enc_format enc_format
-    );
-
-
-// decrypt_message() - decrypt message in memory
-//
-//  parameters:
-//      session (in)        session handle
-//      src (in)            message to decrypt
-//      mime (in)           MIME encoding wanted
-//      dst (out)           pointer to new decrypted message or NULL on failure
-//      keylist (out)       stringlist with keyids
-//
-//  return value:
-//      error status or PEP_STATUS_OK on success
-//
-//	caveat:
-//	    the ownership of the new message goes to the caller
-
-DYNAMIC_API PEP_STATUS decrypt_message(
-        PEP_SESSION session,
-        message *src,
-        PEP_MIME_format mime,
-        message **dst,
-        stringlist_t **keylist
     );
 
 
@@ -85,7 +62,35 @@ typedef enum _PEP_color {
     PEP_rating_b0rken = -2
 } PEP_color;
 
-// message_color() - get color for a message
+// decrypt_message() - decrypt message in memory
+//
+//  parameters:
+//      session (in)        session handle
+//      src (in)            message to decrypt
+//      mime (in)           MIME encoding wanted
+//      dst (out)           pointer to new decrypted message or NULL on failure
+//      keylist (out)       stringlist with keyids
+//      color (out)         color for the message
+//
+//  return value:
+//      error status or PEP_STATUS_OK on success
+//
+//	caveat:
+//	    the ownership of src remains with the caller
+//	    the ownership of dst goes to the caller
+//	    the ownership of keylist goes to the caller
+
+DYNAMIC_API PEP_STATUS decrypt_message(
+        PEP_SESSION session,
+        message *src,
+        PEP_MIME_format mime,
+        message **dst,
+        stringlist_t **keylist,
+        PEP_color *color
+    );
+
+
+// outgoing_message_color() - get color for an outgoing message
 //
 //  parameters:
 //      session (in)        session handle
@@ -97,8 +102,10 @@ typedef enum _PEP_color {
 //
 //  caveat:
 //      msg->from must point to a valid pEp_identity
+//      msg->dir must be PEP_dir_outgoing
+//      the ownership of msg remains with the caller
 
-DYNAMIC_API PEP_STATUS message_color(
+DYNAMIC_API PEP_STATUS outgoing_message_color(
         PEP_SESSION session,
         message *msg,
         PEP_color *color
@@ -114,6 +121,9 @@ DYNAMIC_API PEP_STATUS message_color(
 //
 //  return value:
 //      error status or PEP_STATUS_OK on success
+//
+//  caveat:
+//      the ownership of ident remains with the caller
 
 DYNAMIC_API PEP_STATUS identity_color(
         PEP_SESSION session,

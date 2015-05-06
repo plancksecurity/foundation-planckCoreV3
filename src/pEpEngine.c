@@ -17,6 +17,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 	static const char *sql_set_identity;
 	static const char *sql_set_trust;
     static const char *sql_get_trust;
+    static const char *sql_least_trust;
     bool in_first = false;
 
     assert(sqlite3_threadsafe());
@@ -193,6 +194,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
         sql_get_trust = "select user_id, comm_type from trust where user_id = ?1 "
                         "and pgp_keypair_fpr = ?2 ;";
+
+        sql_least_trust = "select min(comm_type) from trust where pgp_keypair_fpr = ?1 ;";
     }
 
     int_result = sqlite3_prepare_v2(_session->db, sql_log, strlen(sql_log),
@@ -225,6 +228,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_trust,
             strlen(sql_get_trust), &_session->get_trust, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_least_trust,
+            strlen(sql_least_trust), &_session->least_trust, NULL);
     assert(int_result == SQLITE_OK);
 
     status = init_cryptotech(_session, in_first);
@@ -285,6 +292,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->set_trust);
             if (session->get_trust)
                 sqlite3_finalize(session->get_trust);
+            if (session->least_trust)
+                sqlite3_finalize(session->least_trust);
 
             if (session->db)
                 sqlite3_close_v2(session->db);
@@ -374,9 +383,9 @@ DYNAMIC_API PEP_STATUS trustword(
 		if (*word)
             *wsize = sqlite3_column_bytes(session->trustword, 1);
 		else
-			status = PEP_SAFEWORD_NOT_FOUND;
+			status = PEP_TRUSTWORD_NOT_FOUND;
 	} else
-		status = PEP_SAFEWORD_NOT_FOUND;
+		status = PEP_TRUSTWORD_NOT_FOUND;
 
 	sqlite3_reset(session->trustword);
 	return status;
@@ -405,7 +414,7 @@ DYNAMIC_API PEP_STATUS trustwords(
 	*words = NULL;
 	*wsize = 0;
 
-    buffer = calloc(1, MAX_SAFEWORDS_SPACE);
+    buffer = calloc(1, MAX_TRUSTWORDS_SPACE);
     assert(buffer);
     if (buffer == NULL)
         return PEP_OUT_OF_MEMORY;
@@ -447,10 +456,10 @@ DYNAMIC_API PEP_STATUS trustwords(
         }
 		if (word == NULL) {
             free(buffer);
-			return PEP_SAFEWORD_NOT_FOUND;
+			return PEP_TRUSTWORD_NOT_FOUND;
         }
 
-		if (dest + _wsize < buffer + MAX_SAFEWORDS_SPACE - 1) {
+		if (dest + _wsize < buffer + MAX_TRUSTWORDS_SPACE - 1) {
 			strncpy(dest, word, _wsize);
             free(word);
 			dest += _wsize;
@@ -461,7 +470,7 @@ DYNAMIC_API PEP_STATUS trustwords(
         }
 
 		if (source < fingerprint + fsize
-                && dest + _wsize < buffer + MAX_SAFEWORDS_SPACE - 1)
+                && dest + _wsize < buffer + MAX_TRUSTWORDS_SPACE - 1)
 			*dest++ = ' ';
 
 		++n_words;
@@ -735,6 +744,41 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
     }
 
     sqlite3_reset(session->get_trust);
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS least_trust(
+        PEP_SESSION session,
+        const char *fpr,
+        PEP_comm_type *comm_type
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    int result;
+    PEP_comm_type _comm_type = PEP_ct_unknown;
+
+    assert(session);
+    assert(fpr);
+    assert(comm_type);
+
+    if (!(session && fpr && comm_type))
+        return PEP_ILLEGAL_VALUE;
+
+    sqlite3_reset(session->least_trust);
+    sqlite3_bind_text(session->least_trust, 1, fpr, -1, SQLITE_STATIC);
+
+    result = sqlite3_step(session->least_trust);
+    switch (result) {
+        case SQLITE_ROW: {
+            *comm_type = (PEP_comm_type)
+                    sqlite3_column_int(session->get_identity, 1);
+            break;
+        }
+        default:
+            status = PEP_CANNOT_FIND_IDENTITY;
+    }
+
+    sqlite3_reset(session->least_trust);
     return status;
 }
 

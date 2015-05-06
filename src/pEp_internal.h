@@ -1,7 +1,7 @@
 #define PEP_ENGINE_VERSION "0.5.0"
 
 // this is 20 trustwords with 79 chars max
-#define MAX_SAFEWORDS_SPACE (20 * 80)
+#define MAX_TRUSTWORDS_SPACE (20 * 80)
 
 // XML parameters string
 #define PARMS_MAX 32768
@@ -84,6 +84,7 @@ typedef struct _pEpSession {
     sqlite3_stmt *set_identity;
     sqlite3_stmt *set_trust;
     sqlite3_stmt *get_trust;
+    sqlite3_stmt *least_trust;
 } pEpSession;
 
 PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);

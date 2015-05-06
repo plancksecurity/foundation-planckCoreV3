@@ -379,7 +379,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             PEP_MIME_format mime = (enc_format == PEP_enc_PEP) ? PEP_MIME :
                     PEP_MIME_fields_omitted;
 
-            status = decrypt_message(session, src, mime, &_dst, &_keylist);
+            PEP_color color;
+            status = decrypt_message(session, src, mime, &_dst, &_keylist, &color);
             if (status != PEP_STATUS_OK)
                 goto pep_error;
             free_stringlist(_keylist);
@@ -663,12 +664,109 @@ static char * without_double_ending(const char *filename)
     return strndup(filename, ext - filename);
 }
 
+static PEP_color decrypt_color(PEP_STATUS status)
+{
+    switch (status) {
+        case PEP_UNENCRYPTED:
+        case PEP_VERIFIED:
+        case PEP_VERIFY_NO_KEY:
+        case PEP_VERIFIED_AND_TRUSTED:
+            return PEP_rating_unencrypted;
+
+        case PEP_DECRYPTED:
+            return PEP_rating_unreliable;
+
+        case PEP_DECRYPTED_AND_VERIFIED:
+            return PEP_rating_reliable;
+
+        case PEP_DECRYPT_WRONG_FORMAT:
+        case PEP_DECRYPT_NO_KEY:
+        case PEP_CANNOT_DECRYPT_UNKNOWN:
+            return PEP_rating_cannot_decrypt;
+
+        default:
+            return PEP_rating_undefined;
+    }
+}
+
+static PEP_color _rating(PEP_comm_type ct)
+{
+    if (ct == PEP_ct_unknown)
+        return PEP_rating_undefined;
+
+    else if (ct == PEP_ct_compromized)
+        return PEP_rating_under_attack;
+
+    else if (ct >= PEP_ct_confirmed_enc_anon)
+        return PEP_rating_trusted_and_anonymized;
+
+    else if (ct >= PEP_ct_strong_encryption)
+        return PEP_rating_trusted;
+
+    else if (ct >= PEP_ct_strong_but_unconfirmed && ct < PEP_ct_confirmed)
+        return PEP_rating_reliable;
+    
+    else if (ct == PEP_ct_no_encryption || ct == PEP_ct_no_encrypted_channel)
+        return PEP_rating_unencrypted;
+
+    else
+        return PEP_rating_unreliable;
+}
+
+static PEP_color key_color(PEP_SESSION session, const char *fpr) {
+    PEP_comm_type comm_type = PEP_ct_unknown;
+
+    assert(session);
+    assert(fpr);
+
+    PEP_STATUS status = get_key_rating(session, fpr, &comm_type);
+    if (status != PEP_STATUS_OK)
+        return PEP_rating_undefined;
+
+    return _rating(comm_type);
+}
+
+static PEP_color keylist_color(PEP_SESSION session, stringlist_t *keylist)
+{
+    PEP_color color = PEP_rating_reliable;
+
+    assert(keylist && keylist->value);
+    if (keylist == NULL || keylist->value == NULL)
+        return PEP_rating_unencrypted;
+
+    stringlist_t *_kl;
+    for (_kl = keylist; _kl && _kl->value; _kl = _kl->next) {
+        PEP_comm_type ct;
+        PEP_STATUS status;
+        PEP_color _color;
+
+        _color = key_color(session, _kl->value);
+        if (_color == PEP_rating_under_attack)
+            return PEP_rating_under_attack;
+
+        color = MIN(color, _color);
+
+        status = least_trust(session, _kl->value, &ct);
+        if (status != PEP_STATUS_OK)
+            return PEP_rating_undefined;
+
+        _color = _rating(ct);
+        if (_color == PEP_rating_under_attack)
+            return PEP_rating_under_attack;
+
+        color = MIN(color, _color);
+    }
+
+    return color;
+}
+
 DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
         message *src,
         PEP_MIME_format mime,
         message **dst,
-        stringlist_t **keylist
+        stringlist_t **keylist,
+        PEP_color *color
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -684,11 +782,14 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     assert(src);
     assert(dst);
     assert(keylist);
+    assert(color);
 
-    if (!(session && src && dst && keylist))
+    if (!(session && src && dst && keylist && color))
         return PEP_ILLEGAL_VALUE;
 
     *dst = NULL;
+    *keylist = NULL;
+    *color = PEP_rating_undefined;
  
     determine_encryption_format(src);
     import_attached_keys(session, src);
@@ -724,8 +825,17 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     status = decrypt_and_verify(session, ctext, csize, &ptext, &psize,
             &_keylist);
+    *color = decrypt_color(status);
     if (ptext == NULL)
         goto pep_error;
+
+    if (*color != PEP_rating_under_attack) {
+        PEP_color _color = keylist_color(session, _keylist);
+        if (_color == PEP_rating_under_attack)
+            *color = PEP_rating_under_attack;
+        else
+            *color = MIN(*color, _color);
+    }
 
     switch (src->enc_format) {
         case PEP_enc_PGP_MIME:
@@ -902,31 +1012,7 @@ static PEP_comm_type _get_comm_type(
     }
 }
 
-static PEP_color _rating(PEP_comm_type ct)
-{
-    if (ct == PEP_ct_unknown)
-        return PEP_rating_undefined;
-
-    else if (ct == PEP_ct_compromized)
-        return PEP_rating_under_attack;
-
-    else if (ct >= PEP_ct_confirmed_enc_anon)
-        return PEP_rating_trusted_and_anonymized;
-
-    else if (ct >= PEP_ct_strong_encryption)
-        return PEP_rating_trusted;
-
-    else if (ct >= PEP_ct_strong_but_unconfirmed && ct < PEP_ct_confirmed)
-        return PEP_rating_reliable;
-    
-    else if (ct == PEP_ct_no_encryption || ct == PEP_ct_no_encrypted_channel)
-        return PEP_rating_unencrypted;
-
-    else
-        return PEP_rating_unreliable;
-}
-
-DYNAMIC_API PEP_STATUS message_color(
+DYNAMIC_API PEP_STATUS outgoing_message_color(
         PEP_SESSION session,
         message *msg,
         PEP_color *color
@@ -939,9 +1025,14 @@ DYNAMIC_API PEP_STATUS message_color(
 
     assert(session);
     assert(msg);
+    assert(msg->from);
+    assert(msg->dir == PEP_dir_outgoing);
     assert(color);
 
     if (!(session && msg && color))
+        return PEP_ILLEGAL_VALUE;
+
+    if (msg->from == NULL || msg->dir != PEP_dir_outgoing)
         return PEP_ILLEGAL_VALUE;
 
     *color = PEP_rating_undefined;
@@ -950,39 +1041,24 @@ DYNAMIC_API PEP_STATUS message_color(
     if (msg->from == NULL)
         return PEP_ILLEGAL_VALUE;
 
-    switch (msg->dir) {
-        case PEP_dir_incoming:
-            status = update_identity(session, msg->from);
-            if (status != PEP_STATUS_OK)
-                return status;
-            max_comm_type = msg->from->comm_type;
+    status = myself(session, msg->from);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    for (il = msg->to; il != NULL; il = il->next) {
+        if (il->ident) {
+            max_comm_type = _get_comm_type(session, max_comm_type,
+                    il->ident);
             comm_type_determined = true;
-            break;
-        
-        case PEP_dir_outgoing:
-            status = myself(session, msg->from);
-            if (status != PEP_STATUS_OK)
-                return status;
+        }
+    }
 
-            for (il = msg->to; il != NULL; il = il->next) {
-                if (il->ident) {
-                    max_comm_type = _get_comm_type(session, max_comm_type,
-                            il->ident);
-                    comm_type_determined = true;
-                }
-            }
-
-            for (il = msg->cc; il != NULL; il = il->next) {
-                if (il->ident) {
-                    max_comm_type = _get_comm_type(session, max_comm_type,
-                            il->ident);
-                    comm_type_determined = true;
-                }
-            }
-            break;
-
-        default:
-            return PEP_ILLEGAL_VALUE;
+    for (il = msg->cc; il != NULL; il = il->next) {
+        if (il->ident) {
+            max_comm_type = _get_comm_type(session, max_comm_type,
+                    il->ident);
+            comm_type_determined = true;
+        }
     }
 
     if (comm_type_determined == false)
