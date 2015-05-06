@@ -105,6 +105,22 @@ void attach_own_key(PEP_SESSION session, message *msg)
         msg->attachments = bl;
 }
 
+void determine_encryption_format(message *msg)
+{
+    assert(msg);
+
+    if (msg->enc_format != PEP_enc_none)
+        return;
+
+    if (is_PGP_message_text(msg->longmsg))
+        msg->enc_format = PEP_enc_pieces;
+    else if (msg->attachments && msg->attachments->next &&
+            is_mime_type(msg->attachments, "multipart/encrypted") &&
+            is_PGP_message_text(msg->attachments->next->data)
+        )
+        msg->enc_format = PEP_enc_PGP_MIME;
+}
+
 static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
 {
     char * ptext;
@@ -344,6 +360,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
     *dst = NULL;
 
+    determine_encryption_format(src);
     import_attached_keys(session, src);
 
     if (src->enc_format >= PEP_enc_pieces) {
@@ -673,6 +690,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     *dst = NULL;
  
+    determine_encryption_format(src);
     import_attached_keys(session, src);
 
     if (src->mime == PEP_MIME_fields_omitted || src->mime == PEP_MIME) {
