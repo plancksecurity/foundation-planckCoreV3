@@ -56,7 +56,7 @@ typedef enum {
     PEP_VERIFIED_AND_TRUSTED                        = 0x0408,
 	PEP_CANNOT_DECRYPT_UNKNOWN						= 0x04ff,
 
-	PEP_SAFEWORD_NOT_FOUND							= 0x0501,
+	PEP_TRUSTWORD_NOT_FOUND							= 0x0501,
 
     PEP_CANNOT_CREATE_KEY                           = 0x0601,
     PEP_CANNOT_SEND_KEY                             = 0x0602,
@@ -230,7 +230,7 @@ DYNAMIC_API PEP_STATUS log_event(
 //
 //	return value:
 //	    PEP_STATUS_OK           trustword retrieved
-//	    PEP_SAFEWORD_NOT_FOUND  trustword not found
+//	    PEP_TRUSTWORD_NOT_FOUND  trustword not found
 //
 //	caveat:
 //		the word pointer goes to the ownership of the caller
@@ -259,7 +259,7 @@ DYNAMIC_API PEP_STATUS trustword(
 //	return value:
 //	    PEP_STATUS_OK           trustwords retrieved
 //      PEP_OUT_OF_MEMORY       out of memory
-//	    PEP_SAFEWORD_NOT_FOUND  at least one trustword not found
+//	    PEP_TRUSTWORD_NOT_FOUND at least one trustword not found
 //
 //	caveat:
 //		the word pointer goes to the ownership of the caller
@@ -583,11 +583,27 @@ DYNAMIC_API void pEp_free(void *p);
 //                              user_id and comm_type as result (out)
 //
 //  this function modifies the given identity struct; the struct remains in
-// the ownership of the caller
+//  the ownership of the caller
 //  if the trust level cannot be determined identity->comm_type is set
 //  to PEP_ct_unknown
 
 DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity);
+
+
+// least_trust() - get the least known trust level for a key in the database
+//
+//  parameters:
+//      session (in)            session handle
+//      fpr (in)                fingerprint of key to check
+//      comm_type (out)         least comm_type as result (out)
+//
+//  if the trust level cannot be determined comm_type is set to PEP_ct_unknown
+
+DYNAMIC_API PEP_STATUS least_trust(
+        PEP_SESSION session,
+        const char *fpr,
+        PEP_comm_type *comm_type
+    );
 
 
 // get_key_rating() - get the rating a bare key has
