@@ -67,7 +67,7 @@ typedef struct _pEpSession {
 #ifdef USE_GPG
     gpgme_ctx_t ctx;
 #elif defined(USE_NETPGP)
-    netpgp_t ctx;
+    pEpNetPGPSession ctx;
 #endif
 
     PEP_cryptotech_t *cryptotech;
