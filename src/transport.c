@@ -4,10 +4,10 @@
 #include <memory.h>
 #include <assert.h>
 
+PEP_transport_t transports[PEP_trans__count];
+    
 PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first)
 {
-    static PEP_transport_t transports[PEP_trans__count];
-    
     assert(session);
     session->transports = transports;
 

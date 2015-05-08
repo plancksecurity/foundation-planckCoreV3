@@ -3,6 +3,7 @@
 #include "pEpEngine.h"
 #include "keymanagement.h"
 #include "message.h"
+#include "cryptotech.h"
 
 #ifdef __cplusplus
 extern "C" {

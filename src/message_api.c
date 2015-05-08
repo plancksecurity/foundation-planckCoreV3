@@ -363,37 +363,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     if (!(session && src && dst && (enc_format >= PEP_enc_pieces)))
         return PEP_ILLEGAL_VALUE;
 
-    *dst = NULL;
-
-    determine_encryption_format(src);
     import_attached_keys(session, src);
+    determine_encryption_format(src);
 
-    if (src->enc_format >= PEP_enc_pieces) {
-        if (src->enc_format == enc_format) {
-            assert(0); // the message is encrypted this way already
-            msg = message_dup(src);
-            if (msg == NULL)
-                goto enomem;
-            *dst = msg;
-            return PEP_STATUS_OK;
-        }
-        else {
-            // decrypt and re-encrypt again
-            message * _dst = NULL;
-            stringlist_t *_keylist = NULL;
-            PEP_MIME_format mime = (enc_format == PEP_enc_PEP) ? PEP_MIME :
-                    PEP_MIME_fields_omitted;
-
-            PEP_color color;
-            status = decrypt_message(session, src, mime, &_dst, &_keylist, &color);
-            if (status != PEP_STATUS_OK)
-                goto pep_error;
-            free_stringlist(_keylist);
-
-            src = _dst;
-            free_src = true;
-        }
-    }
+    *dst = NULL;
 
     status = myself(session, src->from);
     if (status != PEP_STATUS_OK)
@@ -792,13 +765,13 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     if (!(session && src && dst && keylist && color))
         return PEP_ILLEGAL_VALUE;
 
+    import_attached_keys(session, src);
+    PEP_cryptotech crypto = determine_encryption_format(src);
+
     *dst = NULL;
     *keylist = NULL;
     *color = PEP_rating_undefined;
  
-    determine_encryption_format(src);
-    import_attached_keys(session, src);
-
     if (src->mime == PEP_MIME_fields_omitted || src->mime == PEP_MIME) {
         message *_src = NULL;
         status = mime_decode_message(src->longmsg, &_src);
@@ -820,26 +793,40 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     // src message is not MIME encoded (any more)
     assert(src->mime == PEP_MIME_none);
 
-    if (!is_PGP_message_text(src->longmsg)) {
-        status = PEP_UNENCRYPTED;
-    }
-    else {
+    if (crypto) {
         ctext = src->longmsg;
         csize = strlen(src->longmsg);
 
-        status = decrypt_and_verify(session, ctext, csize, &ptext, &psize,
-                &_keylist);
+        status = cryptotech[crypto].decrypt_and_verify(session, ctext, csize,
+                &ptext, &psize, &_keylist);
         if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
             goto pep_error;
     }
+    else {
+        status = PEP_UNENCRYPTED;
+    }
 
     *color = decrypt_color(status);
-    if (*color != PEP_rating_under_attack && _keylist) {
-        PEP_color _color = keylist_color(session, _keylist);
-        if (_color == PEP_rating_under_attack)
+
+    if (*color != PEP_rating_under_attack) {
+        PEP_color kl_color = PEP_rating_undefined;
+
+        if (_keylist)
+            kl_color = keylist_color(session, _keylist);
+
+        if (kl_color == PEP_rating_under_attack)
             *color = PEP_rating_under_attack;
+
+        else if (*color == PEP_rating_reliable &&
+                kl_color >= PEP_rating_trusted)
+            *color = kl_color;
+
+        else if (*color == PEP_rating_reliable &&
+                kl_color < PEP_rating_reliable)
+            *color = PEP_rating_unreliable;
+
         else
-            *color = MIN(*color, _color);
+            *color = MIN(*color, kl_color);
     }
 
     if (ptext) {
