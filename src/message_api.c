@@ -105,20 +105,25 @@ void attach_own_key(PEP_SESSION session, message *msg)
         msg->attachments = bl;
 }
 
-void determine_encryption_format(message *msg)
+PEP_cryptotech determine_encryption_format(message *msg)
 {
     assert(msg);
 
-    if (msg->enc_format != PEP_enc_none)
-        return;
-
-    if (is_PGP_message_text(msg->longmsg))
+    if (is_PGP_message_text(msg->longmsg)) {
         msg->enc_format = PEP_enc_pieces;
+        return PEP_crypt_OpenPGP;
+    }
     else if (msg->attachments && msg->attachments->next &&
             is_mime_type(msg->attachments, "multipart/encrypted") &&
             is_PGP_message_text(msg->attachments->next->data)
-        )
+        ) {
         msg->enc_format = PEP_enc_PGP_MIME;
+        return PEP_crypt_OpenPGP;
+    }
+    else {
+        msg->enc_format = PEP_enc_none;
+        return PEP_crypt_none;
+    }
 }
 
 static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
@@ -817,16 +822,16 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     if (!is_PGP_message_text(src->longmsg)) {
         status = PEP_UNENCRYPTED;
-        goto pep_error;
     }
+    else {
+        ctext = src->longmsg;
+        csize = strlen(src->longmsg);
 
-    ctext = src->longmsg;
-    csize = strlen(src->longmsg);
-
-    status = decrypt_and_verify(session, ctext, csize, &ptext, &psize,
-            &_keylist);
-    if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
-        goto pep_error;
+        status = decrypt_and_verify(session, ctext, csize, &ptext, &psize,
+                &_keylist);
+        if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
+            goto pep_error;
+    }
 
     *color = decrypt_color(status);
     if (*color != PEP_rating_under_attack && _keylist) {
