@@ -114,7 +114,7 @@ PEP_cryptotech determine_encryption_format(message *msg)
         return PEP_crypt_OpenPGP;
     }
     else if (msg->attachments && msg->attachments->next &&
-            is_mime_type(msg->attachments, "multipart/encrypted") &&
+            is_mime_type(msg->attachments, "application/pgp-encrypted") &&
             is_PGP_message_text(msg->attachments->next->data)
         ) {
         msg->enc_format = PEP_enc_PGP_MIME;
@@ -797,6 +797,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
+    PEP_STATUS decrypt_status = PEP_CANNOT_DECRYPT_UNKNOWN;
     message *msg = NULL;
     char *ctext;
     size_t csize;
@@ -821,18 +822,31 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     *keylist = NULL;
     *color = PEP_rating_undefined;
  
-    if (crypto) {
-        ctext = src->longmsg;
-        csize = strlen(src->longmsg);
+    switch (src->enc_format) {
+        case PEP_enc_PGP_MIME:
+            ctext = src->attachments->next->data;
+            csize = strlen(ctext);
 
-        status = cryptotech[crypto].decrypt_and_verify(session, ctext, csize,
-                &ptext, &psize, &_keylist);
-        if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
-            goto pep_error;
-    }
-    else {
-        status = PEP_UNENCRYPTED;
-        goto theend;
+            status = cryptotech[crypto].decrypt_and_verify(session,
+                    ctext, csize, &ptext, &psize, &_keylist);
+            if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
+                goto pep_error;
+            decrypt_status = status;
+            break;
+
+        case PEP_enc_pieces:
+            ctext = src->longmsg;
+            csize = strlen(ctext);
+
+            decrypt_status = cryptotech[crypto].decrypt_and_verify(session, ctext, csize,
+                    &ptext, &psize, &_keylist);
+            if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
+                goto pep_error;
+            decrypt_status = status;
+            break;
+
+        default:
+            NOT_IMPLEMENTED
     }
 
     *color = decrypt_color(status);
@@ -861,7 +875,6 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                 status = mime_decode_message(ptext, &msg);
                 if (status != PEP_STATUS_OK)
                     goto pep_error;
-
                 break;
 
             case PEP_enc_pieces:
@@ -970,7 +983,7 @@ theend:
     *dst = msg;
     *keylist = _keylist;
 
-    return PEP_STATUS_OK;
+    return decrypt_status;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
