@@ -694,10 +694,11 @@ static PEP_STATUS mime_encode_message_PGP_MIME(
     char *subject;
     char *plaintext;
 
-    assert(msg->longmsg);
+    assert(msg->attachments && msg->attachments->next &&
+            msg->attachments->next->data);
 
     subject = (msg->shortmsg) ? msg->shortmsg : "pEp";
-    plaintext = msg->longmsg;
+    plaintext = msg->attachments->next->data;
 
     mime = part_multiple_new("multipart/encrypted");
     assert(mime);
@@ -767,10 +768,9 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
     int r;
 
     assert(msg);
-    assert(msg->mime == PEP_MIME_none);
     assert(mimetext);
 
-    if (!(msg && msg->mime == PEP_MIME_none && mimetext))
+    if (!(msg && mimetext))
         return PEP_ILLEGAL_VALUE;
 
     *mimetext = NULL;
@@ -1307,6 +1307,25 @@ static PEP_STATUS interpret_MIME(
                 }
             }
         }
+        else if (_is_multipart(content, "encrypted")) {
+            if (msg->longmsg == NULL)
+                msg->longmsg = strdup("");
+
+            clist *partlist = mime->mm_data.mm_multipart.mm_mp_list;
+            if (partlist == NULL)
+                return PEP_ILLEGAL_VALUE;
+
+            clistiter *cur;
+            for (cur = clist_begin(partlist); cur; cur = clist_next(cur)) {
+                struct mailmime *part= clist_content(cur);
+                if (part == NULL)
+                    return PEP_ILLEGAL_VALUE;
+
+                status = interpret_MIME(part, msg);
+                if (status != PEP_STATUS_OK)
+                    return status;
+            }
+        }
         else if (_is_multipart(content, NULL)) {
             clist *partlist = mime->mm_data.mm_multipart.mm_mp_list;
             if (partlist == NULL)
@@ -1357,54 +1376,15 @@ static PEP_STATUS interpret_MIME(
 
                 filename = _get_filename(mime);
 
-                msg->attachments = bloblist_add(msg->attachments, data, size,
+                bloblist_t *_a = bloblist_add(msg->attachments, data, size,
                         mime_type, filename);
-                if (msg->attachments == NULL)
+                if (_a == NULL)
                     return PEP_OUT_OF_MEMORY;
+                if (msg->attachments == NULL)
+                    msg->attachments = _a;
             }
         }
     }
-
-    return PEP_STATUS_OK;
-}
-
-static PEP_STATUS interpret_PGP_MIME(struct mailmime *mime, message *msg)
-{
-    assert(mime);
-    assert(msg);
-
-    clist *partlist = mime->mm_data.mm_multipart.mm_mp_list;
-    if (partlist == NULL)
-        return PEP_ILLEGAL_VALUE;
-
-    clistiter *cur = clist_begin(partlist);
-    if (cur == NULL)
-        return PEP_ILLEGAL_VALUE;
-
-    cur = clist_next(cur);
-    if (cur == NULL)
-        return PEP_ILLEGAL_VALUE;
-
-    struct mailmime *second = clist_content(cur);
-    if (second == NULL)
-        return PEP_ILLEGAL_VALUE;
-
-    if (second->mm_body == NULL)
-        return PEP_ILLEGAL_VALUE;
-
-    const char *text = second->mm_body->dt_data.dt_text.dt_data;
-    if (text == NULL)
-        return PEP_ILLEGAL_VALUE;
-
-    char *_text = strdup(text);
-    if (_text == NULL)
-        return PEP_OUT_OF_MEMORY;
-
-    msg->mime = PEP_MIME_fields_omitted;
-    msg->enc_format = PEP_enc_PGP_MIME;
-
-    free(msg->longmsg);
-    msg->longmsg = _text;
 
     return PEP_STATUS_OK;
 }
@@ -1454,18 +1434,10 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
     struct mailmime_content *content = _get_content(mime);
 
     if (content) {
-        if (_is_PGP_MIME(content)) {
-            status = interpret_PGP_MIME(mime->mm_data.mm_message.mm_msg_mime,
-                    _msg);
-            if (status != PEP_STATUS_OK)
-                goto pep_error;
-        }
-        else {
-            status = interpret_MIME(mime->mm_data.mm_message.mm_msg_mime,
-                    _msg);
-            if (status != PEP_STATUS_OK)
-                goto pep_error;
-        }
+        status = interpret_MIME(mime->mm_data.mm_message.mm_msg_mime,
+                _msg);
+        if (status != PEP_STATUS_OK)
+            goto pep_error;
     }
 
     mailmime_free(mime);

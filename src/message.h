@@ -25,12 +25,6 @@ typedef enum _PEP_msg_direction {
     PEP_dir_outgoing
 } PEP_msg_direction;
 
-typedef enum _PEP_MIME_format {
-    PEP_MIME_none = 0,                      // message is not MIME encoded
-    PEP_MIME_fields_omitted,                // message content but no fields
-    PEP_MIME                                // message is fully MIME encoded
-} PEP_MIME_format;
-
 typedef enum _PEP_enc_format {
     PEP_enc_none = 0,                       // message is not encrypted
     PEP_enc_pieces,                         // inline PGP + PGP extensions
@@ -71,8 +65,6 @@ typedef struct _message {
     char *comments;                         // UTF-8 string with comments
     stringpair_list_t *opt_fields;          // optional fields
     PEP_enc_format enc_format;              // format of encrypted data
-    PEP_MIME_format mime;                   // if this is not PEP_MIME_none the
-                                            // message content is in longmsg
 } message;
 
 typedef struct _message_ref_list {

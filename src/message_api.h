@@ -68,7 +68,6 @@ typedef enum _PEP_color {
 //  parameters:
 //      session (in)        session handle
 //      src (in)            message to decrypt
-//      mime (in)           MIME encoding wanted
 //      dst (out)           pointer to new decrypted message or NULL on failure
 //      keylist (out)       stringlist with keyids
 //      color (out)         color for the message
@@ -84,7 +83,6 @@ typedef enum _PEP_color {
 DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
         message *src,
-        PEP_MIME_format mime,
         message **dst,
         stringlist_t **keylist,
         PEP_color *color
