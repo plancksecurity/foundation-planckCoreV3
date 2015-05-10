@@ -838,7 +838,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
             ctext = src->longmsg;
             csize = strlen(ctext);
 
-            decrypt_status = cryptotech[crypto].decrypt_and_verify(session, ctext, csize,
+            status = cryptotech[crypto].decrypt_and_verify(session, ctext, csize,
                     &ptext, &psize, &_keylist);
             if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
                 goto pep_error;
