@@ -21,67 +21,160 @@
 
 static netpgp_t netpgp;
 static pthread_mutex_t netpgp_mutex;
-static pthread_mutex_t curl_mutex;
 
-PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
+static PEP_STATUS init_netpgp()
 {
     PEP_STATUS status = PEP_STATUS_OK;
     const char *home = NULL;
-
-    assert(session);
-    if(!session) return PEP_UNKNOWN_ERROR;
 
     if(pthread_mutex_init(&netpgp_mutex, NULL)){
         return PEP_OUT_OF_MEMORY;
     }
 
-    if(pthread_mutex_lock(&netpgp_mutex)){;
+    if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
     }
-   
-    if (in_first) {
-        if (strcmp(setlocale(LC_ALL, NULL), "C") == 0)
-            setlocale(LC_ALL, "");
 
-        memset(&netpgp, 0x0, sizeof(netpgp_t));
+    if (strcmp(setlocale(LC_ALL, NULL), "C") == 0)
+        setlocale(LC_ALL, "");
 
+    memset(&netpgp, 0x0, sizeof(netpgp_t));
 
-        // netpgp_setvar(&netpgp, "max mem alloc", "4194304");
-        netpgp_setvar(&netpgp, "need seckey", "1");
-        netpgp_setvar(&netpgp, "need userid", "1");
+    // netpgp_setvar(&netpgp, "max mem alloc", "4194304");
+    netpgp_setvar(&netpgp, "need seckey", "1");
+    netpgp_setvar(&netpgp, "need userid", "1");
 
-        // NetPGP shares home with GPG
-        home = gpg_home();
-        if(home){
-            netpgp_set_homedir(&netpgp,(char*)home, NULL, 0);
-        }else{
-            status = PEP_INIT_NO_GPG_HOME;
-            goto unlock_netpgp;
-        }
-
-        // pair with gpg's cert-digest-algo
-        netpgp_setvar(&netpgp, "hash", "SHA256");
-
-        // subset of gpg's personal-cipher-preferences
-        // here only one cipher can be selected
-        netpgp_setvar(&netpgp, "cipher", "CAST5");
-
-        if (!netpgp_init(&netpgp)) {
-            status = PEP_INIT_NETPGP_INIT_FAILED;
-            goto unlock_netpgp;
-        }
+    // NetPGP shares home with GPG
+    home = gpg_home();
+    if(home){
+        netpgp_set_homedir(&netpgp,(char*)home, NULL, 0);
+    }else{
+        status = PEP_INIT_NO_GPG_HOME;
+        goto unlock_netpgp;
     }
 
-    status = PEP_STATUS_OK;
+    // pair with gpg's cert-digest-algo
+    netpgp_setvar(&netpgp, "hash", "SHA256");
+
+    // subset of gpg's personal-cipher-preferences
+    // here only one cipher can be selected
+    netpgp_setvar(&netpgp, "cipher", "CAST5");
+
+    if (!netpgp_init(&netpgp)) {
+        status = PEP_INIT_NETPGP_INIT_FAILED;
+        goto unlock_netpgp;
+    }
 
 unlock_netpgp:
     pthread_mutex_unlock(&netpgp_mutex);
+    
+    return status;
+}
 
-    if(status != PEP_STATUS_OK){
-        pgp_release(session, in_first);
+static void release_netpgp()
+{
+    if(pthread_mutex_lock(&netpgp_mutex)){
+        return;
+    }
+    netpgp_end(&netpgp);
+    memset(&netpgp, 0x0, sizeof(netpgp_t));
+
+    pthread_mutex_destroy(&netpgp_mutex);
+
+    return;
+}
+
+static PEP_STATUS init_curl(
+    CURL **curl,
+    pthread_mutex_t *curl_mutex,
+    bool in_first)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    struct curl_slist *headers=NULL;
+
+    if(pthread_mutex_init(curl_mutex, NULL)){
+        return PEP_OUT_OF_MEMORY;
     }
 
+    if(pthread_mutex_lock(curl_mutex)){
+        return PEP_UNKNOWN_ERROR;
+    }
+
+    if(in_first){
+        curl_global_init(CURL_GLOBAL_DEFAULT);
+    }
+
+    if ((*curl = curl_easy_init()) == NULL) {
+        return PEP_OUT_OF_MEMORY;
+    }
+
+    curl_easy_setopt(*curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(*curl, CURLOPT_MAXREDIRS, 3L);
+
+    headers=curl_slist_append(headers,"Pragma: no-cache");
+    if(headers)
+        headers=curl_slist_append(headers,"Cache-Control: no-cache");
+
+    if(!headers)
+    {
+        status = PEP_OUT_OF_MEMORY;
+        goto unlock_curl;
+    }
+
+    curl_easy_setopt(curl,CURLOPT_HTTPHEADER,headers);
+    curl_slist_free_all(headers);
+
+    // TODO curl_easy_setopt(curl,CURLOPT_PROXY,proxy);
+
+unlock_curl:
+    pthread_mutex_unlock(curl_mutex);
     return status;
+}
+
+static void release_curl(
+    CURL **curl,
+    pthread_mutex_t *curl_mutex, 
+    bool out_last)
+{
+    if(pthread_mutex_lock(curl_mutex)){
+        return;
+    }
+
+    if(*curl)
+        curl_easy_cleanup(*curl);
+
+    *curl = NULL;
+
+    if(out_last){
+        curl_global_cleanup();
+    }
+
+    pthread_mutex_destroy(curl_mutex);
+
+    return;
+}
+
+PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    if(!session) return PEP_UNKNOWN_ERROR;
+
+    if (in_first) {
+        if((status = init_netpgp()) != PEP_STATUS_OK)
+        return status;
+    }
+
+    if((status = init_curl(
+                    &session->ctx.curl,
+                    &session->ctx.curl_mutex,
+                    in_first) != PEP_STATUS_OK)){
+        if(in_first) release_netpgp();
+        return status;
+    }
+
+    return PEP_STATUS_OK;
 }
 
 void pgp_release(PEP_SESSION session, bool out_last)
@@ -89,19 +182,10 @@ void pgp_release(PEP_SESSION session, bool out_last)
     assert(session);
     if(!session) return;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){;
-        return;
-    }
-
     if (out_last){
-        netpgp_end(&netpgp);
-        memset(&netpgp, 0x0, sizeof(netpgp_t));
-        pthread_mutex_destroy(&netpgp_mutex);
-        return;
+        release_netpgp();
     }
-
-    pthread_mutex_unlock(&netpgp_mutex);
-    // out_last unused here
+    release_curl(&session->ctx.curl, &session->ctx.curl_mutex, out_last);
 }
 
 // return 1 if the file contains ascii-armoured text 
@@ -257,7 +341,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     if(!session || !ctext || !csize || !ptext || !psize || !keylist) 
         return PEP_UNKNOWN_ERROR;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){;
+    if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
     }
 
@@ -351,7 +435,7 @@ PEP_STATUS pgp_verify_text(
     if(!session || !text || !size || !signature || !sig_size || !keylist) 
         return PEP_UNKNOWN_ERROR;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){;
+    if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
     }
 
@@ -441,7 +525,7 @@ PEP_STATUS pgp_encrypt_and_sign(
     if(!session || !ptext || !psize || !ctext || !csize || !keylist) 
         return PEP_UNKNOWN_ERROR;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){;
+    if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
     }
 
@@ -667,7 +751,7 @@ PEP_STATUS pgp_generate_keypair(
        !identity->address || identity->fpr || !identity->username)
         return PEP_UNKNOWN_ERROR;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){;
+    if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
     }
 
@@ -731,7 +815,7 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fprstr)
     if (!session || !fpr)
         return PEP_UNKNOWN_ERROR;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){;
+    if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
     }
     
@@ -783,7 +867,7 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data, size_t 
     if(!session || !key_data) 
         return PEP_UNKNOWN_ERROR;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){;
+    if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
     }
 
@@ -846,7 +930,7 @@ PEP_STATUS pgp_export_keydata(
     if (!session || !fprstr || !key_data || !size)
         return PEP_UNKNOWN_ERROR;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){;
+    if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
     }
 
@@ -963,7 +1047,7 @@ PEP_STATUS pgp_find_keys(
     if (!session || !pattern || !keylist )
         return PEP_UNKNOWN_ERROR;
 
-    if(pthread_mutex_lock(&netpgp_mutex)){;
+    if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
     }
 
@@ -974,8 +1058,6 @@ PEP_STATUS pgp_find_keys(
         goto unlock_netpgp;
     }
     _k = _keylist;
-
-    result = PEP_STATUS_OK;
 
     // Try find a fingerprint in pattern
     if (str_to_fpr(pattern, fpr, &length)) {
@@ -996,6 +1078,7 @@ PEP_STATUS pgp_find_keys(
     } else {
         // Search by name for pattern. Can match many.
         unsigned from = 0;
+        result = PEP_KEY_NOT_FOUND;
         while((key = (pgp_key_t *)pgp_getnextkeybyname(
                         netpgp.io,
                         (pgp_keyring_t *)netpgp.pubring, 
