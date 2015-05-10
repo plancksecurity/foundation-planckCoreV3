@@ -116,3 +116,4 @@ struct gpg_s {
     gpgme_op_edit_t gpgme_op_edit;
     gpgme_io_write_t gpgme_io_write;
 };
+

@@ -84,6 +84,8 @@ typedef struct _PEP_cryptotech_t {
     key_expired_t key_expired;
 } PEP_cryptotech_t;
 
+extern PEP_cryptotech_t cryptotech[PEP_crypt__count];
+
 typedef uint64_t cryptotech_mask;
 
 PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first);

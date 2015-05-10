@@ -725,8 +725,8 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
     result = sqlite3_step(session->get_trust);
     switch (result) {
     case SQLITE_ROW: {
-        const char * user_id = (const char *) sqlite3_column_text(session->get_trust, 1);
-        int comm_type = (PEP_comm_type) sqlite3_column_int(session->get_trust, 2);
+        const char * user_id = (const char *) sqlite3_column_text(session->get_trust, 0);
+        int comm_type = (PEP_comm_type) sqlite3_column_int(session->get_trust, 1);
 
         if (strcmp(user_id, identity->user_id) != 0) {
             free(identity->user_id);
@@ -755,11 +755,12 @@ DYNAMIC_API PEP_STATUS least_trust(
 {
     PEP_STATUS status = PEP_STATUS_OK;
     int result;
-    PEP_comm_type _comm_type = PEP_ct_unknown;
 
     assert(session);
     assert(fpr);
     assert(comm_type);
+
+    *comm_type = PEP_ct_unknown;
 
     if (!(session && fpr && comm_type))
         return PEP_ILLEGAL_VALUE;
@@ -770,8 +771,8 @@ DYNAMIC_API PEP_STATUS least_trust(
     result = sqlite3_step(session->least_trust);
     switch (result) {
         case SQLITE_ROW: {
-            *comm_type = (PEP_comm_type)
-                    sqlite3_column_int(session->get_identity, 1);
+            int _comm_type = sqlite3_column_int(session->least_trust, 0);
+            *comm_type = (PEP_comm_type) _comm_type;
             break;
         }
         default:

@@ -33,6 +33,8 @@ struct _PEP_transport_t {
     PEP_text_format native_text_format;     // native format of the transport
 };
 
+extern PEP_transport_t transports[PEP_trans__count];
+
 typedef uint64_t transports_mask;
 
 #ifdef __cplusplus

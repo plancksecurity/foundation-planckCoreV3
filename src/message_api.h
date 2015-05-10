@@ -3,6 +3,7 @@
 #include "pEpEngine.h"
 #include "keymanagement.h"
 #include "message.h"
+#include "cryptotech.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -11,7 +12,7 @@ extern "C" {
 
 void import_attached_keys(PEP_SESSION session, const message *msg);
 void attach_own_key(PEP_SESSION session, message *msg);
-
+PEP_cryptotech determine_encryption_format(message *msg);
 
 // encrypt_message() - encrypt message in memory
 //
@@ -47,8 +48,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
 typedef enum _PEP_color {
     PEP_rating_undefined = 0,
-    PEP_rating_unencrypted,
     PEP_rating_cannot_decrypt,
+    PEP_rating_unencrypted,
     PEP_rating_unreliable,
     PEP_rating_reliable,
     PEP_rating_yellow = PEP_rating_reliable,
@@ -67,7 +68,6 @@ typedef enum _PEP_color {
 //  parameters:
 //      session (in)        session handle
 //      src (in)            message to decrypt
-//      mime (in)           MIME encoding wanted
 //      dst (out)           pointer to new decrypted message or NULL on failure
 //      keylist (out)       stringlist with keyids
 //      color (out)         color for the message
@@ -83,7 +83,6 @@ typedef enum _PEP_color {
 DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
         message *src,
-        PEP_MIME_format mime,
         message **dst,
         stringlist_t **keylist,
         PEP_color *color

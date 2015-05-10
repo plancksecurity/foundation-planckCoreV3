@@ -10,9 +10,10 @@
 #include <memory.h>
 #include <assert.h>
 
+PEP_cryptotech_t cryptotech[PEP_crypt__count];
+
 PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first)
 {
-    static PEP_cryptotech_t cryptotech[PEP_crypt__count];
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(PEP_crypt__count == 2);
