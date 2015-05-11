@@ -17,8 +17,6 @@
 #include <pthread.h>
 #include <regex.h>
 
-#define PEP_NETPGP_DEBUG
-
 static netpgp_t netpgp;
 static pthread_mutex_t netpgp_mutex;
 
@@ -231,21 +229,11 @@ static PEP_STATUS _validation_results(netpgp_t *netpgp, pgp_validation_t *vresul
     now = time(NULL);
     if (now < vresult->birthtime) {
         // signature is not valid yet
-#ifdef PEP_NETPGP_DEBUG
-        (void) printf(
-            "signature not valid until %.24s\n",
-            ctime(&vresult->birthtime));
-#endif //PEP_NETPGP_DEBUG
         return PEP_UNENCRYPTED;
     }
     if (vresult->duration != 0 && now > vresult->birthtime + vresult->duration) {
         // signature has expired
         t = vresult->duration + vresult->birthtime;
-#ifdef PEP_NETPGP_DEBUG
-        (void) printf(
-            "signature not valid after %.24s\n",
-            ctime(&t));
-#endif //PEP_NETPGP_DEBUG
         return PEP_UNENCRYPTED;
     }
     if (vresult->validc && vresult->valid_sigs &&
@@ -262,16 +250,6 @@ static PEP_STATUS _validation_results(netpgp_t *netpgp, pgp_validation_t *vresul
         for (n = 0; n < vresult->validc; ++n) {
             char id[MAX_ID_LENGTH + 1];
             const uint8_t *userid = vresult->valid_sigs[n].signer_id;
-
-#ifdef PEP_NETPGP_DEBUG
-            const pgp_key_t *key;
-            pgp_pubkey_t *sigkey;
-            unsigned from = 0;
-            key = pgp_getkeybyid(netpgp->io, netpgp->pubring,
-                (const uint8_t *) vresult->valid_sigs[n].signer_id,
-                &from, &sigkey);
-            pgp_print_keydata(netpgp->io, netpgp->pubring, key, "valid signature ", &key->key.pubkey, 0);
-#endif //PEP_NETPGP_DEBUG
 
             id_to_str(userid, id);
 
@@ -290,23 +268,6 @@ static PEP_STATUS _validation_results(netpgp_t *netpgp, pgp_validation_t *vresul
     
     if (vresult->invalidc) {
         // some invalid signatures
-
-#ifdef PEP_NETPGP_DEBUG
-        unsigned    n;
-        for (n = 0; n < vresult->invalidc; ++n) {
-            const pgp_key_t *key;
-            pgp_pubkey_t *sigkey;
-            unsigned from = 0;
-            key = pgp_getkeybyid(netpgp->io, netpgp->pubring,
-                (const uint8_t *) vresult->invalid_sigs[n].signer_id,
-                &from, &sigkey);
-            pgp_print_keydata(netpgp->io, netpgp->pubring, key, "invalid signature ", &key->key.pubkey, 0);
-            if (sigkey->duration != 0 && now > sigkey->birthtime + sigkey->duration) {
-                printf("EXPIRED !\n");
-            }
-        }
-#endif //PEP_NETPGP_DEBUG
-
         return PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
     }
     
@@ -577,10 +538,6 @@ PEP_STATUS pgp_encrypt_and_sign(
             result = PEP_KEY_NOT_FOUND;
             goto free_rcpts;
         }
-#ifdef PEP_NETPGP_DEBUG
-        pgp_print_keydata(netpgp.io, netpgp.pubring, key,
-                          "recipient pubkey ", &key->key.pubkey, 0);
-#endif //PEP_NETPGP_DEBUG
 
         // add key to recipients/signers
         pgp_keyring_add(rcpts, key);
