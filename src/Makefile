@@ -47,7 +47,7 @@ ifeq ("$(OPENPGP)","GPG")
 else ifeq ("$(OPENPGP)","NETPGP")
 	NO_SOURCE=pgp_gpg.c
 	CFLAGS+= -DUSE_NETPGP
-	LDFLAGS+= -lnetpgp
+	LDFLAGS+= -lnetpgp -lcurl
 else
 	$(error Unknown OpenPGP library : $(OPENPGP))
 endif
