@@ -827,8 +827,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
             ctext = src->attachments->next->data;
             csize = strlen(ctext);
 
-            status = cryptotech[crypto].decrypt_and_verify(session,
-                    ctext, csize, &ptext, &psize, &_keylist);
+            status = cryptotech[crypto].decrypt_and_verify(session, ctext,
+                    csize, &ptext, &psize, &_keylist);
             if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
                 goto pep_error;
             decrypt_status = status;
@@ -838,8 +838,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
             ctext = src->longmsg;
             csize = strlen(ctext);
 
-            status = cryptotech[crypto].decrypt_and_verify(session, ctext, csize,
-                    &ptext, &psize, &_keylist);
+            status = cryptotech[crypto].decrypt_and_verify(session, ctext,
+                    csize, &ptext, &psize, &_keylist);
             if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
                 goto pep_error;
             decrypt_status = status;
