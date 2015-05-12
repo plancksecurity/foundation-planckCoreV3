@@ -404,6 +404,10 @@ PEP_STATUS pgp_verify_text(
     *keylist = NULL;
 
     vresult = malloc(sizeof(pgp_validation_t));
+    if (vresult == NULL) {
+        result = PEP_OUT_OF_MEMORY;
+        goto unlock_netpgp;
+    }
     memset(vresult, 0x0, sizeof(pgp_validation_t));
 
     signedmem = pgp_memory_new();
@@ -1025,7 +1029,6 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
         goto free_request;
     }
 
-    printf("request :\n %s\n\nanswer :\n%s\n", request, answer);
     result = pgp_import_keydata(session, 
                                 answer.memory, 
                                 answer.size);
@@ -1042,8 +1045,56 @@ unlock_curl:
     return result;
 }
 
-PEP_STATUS add_key_fpr_to_stringlist(stringlist_t **keylist, pgp_key_t *key)
+typedef PEP_STATUS (*find_key_cb_t)(void*, pgp_key_t *);
+
+static PEP_STATUS find_keys_do(
+        const char *pattern, find_key_cb_t cb, void* cb_arg)
 {
+    uint8_t fpr[PGP_FINGERPRINT_SIZE];
+    size_t length;
+    pgp_key_t *key;
+
+    PEP_STATUS result;
+
+    // Try find a fingerprint in pattern
+    if (str_to_fpr(pattern, fpr, &length)) {
+
+        // Only one fingerprint can match
+        if ((key = (pgp_key_t *)pgp_getkeybyfpr(
+                        netpgp.io,
+                        (pgp_keyring_t *)netpgp.pubring, 
+                        (const uint8_t *)fpr, length,
+                        NULL)) == NULL) {
+
+            return PEP_KEY_NOT_FOUND;
+        }
+
+        result = cb(cb_arg, key);
+
+    } else {
+        // Search by name for pattern. Can match many.
+        unsigned from = 0;
+        result = PEP_KEY_NOT_FOUND;
+        while((key = (pgp_key_t *)pgp_getnextkeybyname(
+                        netpgp.io,
+                        (pgp_keyring_t *)netpgp.pubring, 
+			            (const char *)pattern,
+                        &from)) != NULL) {
+
+            result = cb(cb_arg, key);
+            if (result != PEP_STATUS_OK)
+                break;
+
+            from++;
+        }
+    }
+
+    return result;
+}
+
+static PEP_STATUS add_key_fpr_to_stringlist(void *arg, pgp_key_t *key)
+{
+    stringlist_t **keylist = arg;
     char *newfprstr = NULL;
 
     fpr_to_str(&newfprstr,
@@ -1068,10 +1119,6 @@ PEP_STATUS pgp_find_keys(
     )
 {
     stringlist_t *_keylist, *_k;
-    uint8_t fpr[PGP_FINGERPRINT_SIZE];
-    size_t length;
-    pgp_key_t *key;
-    char *newfprstr = NULL;
 
     PEP_STATUS result;
 
@@ -1094,39 +1141,7 @@ PEP_STATUS pgp_find_keys(
     }
     _k = _keylist;
 
-    // Try find a fingerprint in pattern
-    if (str_to_fpr(pattern, fpr, &length)) {
-
-        // Only one fingerprint can match
-        if ((key = (pgp_key_t *)pgp_getkeybyfpr(
-                        netpgp.io,
-                        (pgp_keyring_t *)netpgp.pubring, 
-                        (const uint8_t *)fpr, length,
-                        NULL)) == NULL) {
-
-            result = PEP_KEY_NOT_FOUND;
-            goto unlock_netpgp;
-        }
-
-        result = add_key_fpr_to_stringlist(&_k, key);
-
-    } else {
-        // Search by name for pattern. Can match many.
-        unsigned from = 0;
-        result = PEP_KEY_NOT_FOUND;
-        while((key = (pgp_key_t *)pgp_getnextkeybyname(
-                        netpgp.io,
-                        (pgp_keyring_t *)netpgp.pubring, 
-			            (const char *)pattern,
-                        &from)) != NULL) {
-
-            result = add_key_fpr_to_stringlist(&_k, key);
-            if (result != PEP_STATUS_OK)
-                goto free_keylist;
-
-            from++;
-        }
-    }
+    result = find_keys_do(pattern, &add_key_fpr_to_stringlist, &_k);
 
     if (result == PEP_STATUS_OK) {
         *keylist = _keylist;
@@ -1143,15 +1158,47 @@ unlock_netpgp:
     return result;
 }
 
+static PEP_STATUS send_key_cb(void *arg, pgp_key_t *key)
+{
+    char *newfprstr = NULL;
+
+    fpr_to_str(&newfprstr,
+               key->sigfingerprint.fingerprint,
+               key->sigfingerprint.length);
+
+    if (newfprstr == NULL) {
+        return PEP_OUT_OF_MEMORY;
+    } else { 
+
+        printf("would send:\n%s\n", newfprstr);
+        pgp_print_keydata(netpgp.io, netpgp.pubring, key, "to send", &key->key.pubkey, 0);
+        free(newfprstr);
+    }
+    return PEP_STATUS_OK;
+}
+
 PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
 {
+
+    PEP_STATUS result;
+
     assert(session);
     assert(pattern);
 
-    /* TODO send key */
+    if (!session || !pattern )
+        return PEP_UNKNOWN_ERROR;
 
-        return PEP_CANNOT_SEND_KEY;
-        return PEP_STATUS_OK;
+    if(pthread_mutex_lock(&netpgp_mutex)){
+        return PEP_UNKNOWN_ERROR;
+    }
+
+    result = find_keys_do(pattern, &send_key_cb, NULL);
+
+    result = PEP_CANNOT_SEND_KEY;
+unlock_netpgp:
+    pthread_mutex_unlock(&netpgp_mutex);
+
+    return result;
 }
 
 
