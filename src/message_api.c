@@ -243,7 +243,7 @@ static PEP_STATUS copy_fields(message *dst, const message *src)
 
     free_identity_list(dst->to);
     dst->to = NULL;
-    if (src->to) {
+    if (src->to && src->to->ident) {
         dst->to = identity_list_dup(src->to);
         if (dst->to == NULL)
             return PEP_OUT_OF_MEMORY;
@@ -259,7 +259,7 @@ static PEP_STATUS copy_fields(message *dst, const message *src)
 
     free_identity_list(dst->cc);
     dst->cc = NULL;
-    if (src->cc) {
+    if (src->cc && src->cc->ident) {
         dst->cc = identity_list_dup(src->cc);
         if (dst->cc == NULL)
             return PEP_OUT_OF_MEMORY;
@@ -267,7 +267,7 @@ static PEP_STATUS copy_fields(message *dst, const message *src)
 
     free_identity_list(dst->bcc);
     dst->bcc = NULL;
-    if (src->bcc) {
+    if (src->bcc && src->bcc->ident) {
         dst->bcc = identity_list_dup(src->bcc);
         if (dst->bcc == NULL)
             return PEP_OUT_OF_MEMORY;
@@ -275,7 +275,7 @@ static PEP_STATUS copy_fields(message *dst, const message *src)
 
     free_identity_list(dst->reply_to);
     dst->reply_to = NULL;
-    if (src->reply_to) {
+    if (src->reply_to && src->reply_to->ident) {
         dst->reply_to = identity_list_dup(src->reply_to);
         if (dst->reply_to == NULL)
             return PEP_OUT_OF_MEMORY;
@@ -283,7 +283,7 @@ static PEP_STATUS copy_fields(message *dst, const message *src)
 
     free_stringlist(dst->in_reply_to);
     dst->in_reply_to = NULL;
-    if (src->in_reply_to) {
+    if (src->in_reply_to && src->in_reply_to->value) {
         dst->in_reply_to = stringlist_dup(src->in_reply_to);
         if (dst->in_reply_to == NULL)
             return PEP_OUT_OF_MEMORY;
@@ -299,7 +299,7 @@ static PEP_STATUS copy_fields(message *dst, const message *src)
 
     free_stringlist(dst->keywords);
     dst->keywords = NULL;
-    if (src->keywords) {
+    if (src->keywords && src->keywords->value) {
         dst->keywords = stringlist_dup(src->keywords);
         if (dst->keywords == NULL)
             return PEP_OUT_OF_MEMORY;

@@ -22,8 +22,11 @@ DYNAMIC_API identity_list *identity_list_dup(const identity_list *src)
 {
     assert(src);
 
-    identity_list *id_list = new_identity_list(identity_dup(src->ident));
-    assert(id_list);
+    pEp_identity *_ident = identity_dup(src->ident);
+    if (_ident == NULL)
+        return NULL;
+
+    identity_list *id_list = new_identity_list(_ident);
     if (id_list == NULL)
         return NULL;
 
