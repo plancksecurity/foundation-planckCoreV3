@@ -803,7 +803,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     message *msg = NULL;
     char *ctext;
     size_t csize;
-    char *ptext;
+    char *ptext = NULL;
     size_t psize;
     stringlist_t *_keylist = NULL;
     bool free_src = false;
@@ -825,9 +825,13 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     *color = PEP_rating_undefined;
  
     switch (src->enc_format) {
+        case PEP_enc_none:
+            status = PEP_UNENCRYPTED;
+            break;
+
         case PEP_enc_PGP_MIME:
             ctext = src->attachments->next->data;
-            csize = strlen(ctext);
+            csize = src->attachments->next->size;
 
             status = cryptotech[crypto].decrypt_and_verify(session, ctext,
                     csize, &ptext, &psize, &_keylist);
@@ -874,7 +878,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     if (ptext) {
         switch (src->enc_format) {
             case PEP_enc_PGP_MIME:
-                status = mime_decode_message(ptext, &msg);
+                status = mime_decode_message(ptext, psize, &msg);
                 if (status != PEP_STATUS_OK)
                     goto pep_error;
                 break;

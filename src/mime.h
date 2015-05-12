@@ -50,6 +50,7 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
 //
 //  parameters:
 //      mimetext (in)           MIME encoded text to decode
+//      size (in)               size of text to decode
 //      msg (out)               decoded message
 //
 //  return value:
@@ -67,6 +68,7 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
 
 DYNAMIC_API PEP_STATUS mime_decode_message(
         const char *mimetext,
+        size_t size,
         message **msg
     );
 
