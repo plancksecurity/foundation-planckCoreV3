@@ -33,6 +33,13 @@ DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_t
 
     assert((blob == NULL && size == 0) || (blob && size));
 
+    void *result = realloc(blob, size + 1);
+    if (result == NULL) {
+        free_bloblist(bloblist);
+        return NULL;
+    }
+    blob[size] = 0; // safeguard
+
     bloblist->data = blob;
     bloblist->size = size;
 
@@ -57,9 +64,18 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src)
 
     assert(src);
 
-    bloblist = new_bloblist(src->data, src->size, src->mime_type, src->filename);
+    char *blob2 = malloc(src->size + 1);
+    assert(blob2);
+    if (blob2 == NULL)
+        goto enomem;
+
+    memcpy(blob2, src->data, src->size);
+    blob2[src->size] = 0; // safeguard
+
+    bloblist = new_bloblist(blob2, src->size, src->mime_type, src->filename);
     if (bloblist == NULL)
         goto enomem;
+    blob2 = NULL;
 
     if (src->next) {
         bloblist->next = bloblist_dup(src->next);
@@ -70,6 +86,7 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src)
     return bloblist;
 
 enomem:
+    free(blob2);
     free_bloblist(bloblist);
     return NULL;
 }
@@ -100,6 +117,13 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
         }
 
         assert((blob == NULL && size == 0) || (blob && size));
+
+        void *result = realloc(blob, size + 1);
+        if (result == NULL) {
+            free_bloblist(bloblist);
+            return NULL;
+        }
+        blob[size] = 0; // safeguard
 
         bloblist->data = blob;
         bloblist->size = size;
