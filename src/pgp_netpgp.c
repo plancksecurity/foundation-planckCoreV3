@@ -404,6 +404,10 @@ PEP_STATUS pgp_verify_text(
     *keylist = NULL;
 
     vresult = malloc(sizeof(pgp_validation_t));
+    if (vresult == NULL) {
+        result = PEP_OUT_OF_MEMORY;
+        goto unlock_netpgp;
+    }
     memset(vresult, 0x0, sizeof(pgp_validation_t));
 
     signedmem = pgp_memory_new();
