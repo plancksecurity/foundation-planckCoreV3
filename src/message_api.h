@@ -49,6 +49,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 typedef enum _PEP_color {
     PEP_rating_undefined = 0,
     PEP_rating_cannot_decrypt,
+    PEP_rating_have_no_key,
     PEP_rating_unencrypted,
     PEP_rating_unreliable,
     PEP_rating_reliable,

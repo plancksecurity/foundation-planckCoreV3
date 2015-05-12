@@ -710,8 +710,10 @@ static PEP_color decrypt_color(PEP_STATUS status)
         case PEP_DECRYPTED_AND_VERIFIED:
             return PEP_rating_reliable;
 
-        case PEP_DECRYPT_WRONG_FORMAT:
         case PEP_DECRYPT_NO_KEY:
+            return PEP_rating_have_no_key;
+
+        case PEP_DECRYPT_WRONG_FORMAT:
         case PEP_CANNOT_DECRYPT_UNKNOWN:
             return PEP_rating_cannot_decrypt;
 
@@ -801,7 +803,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     message *msg = NULL;
     char *ctext;
     size_t csize;
-    char *ptext;
+    char *ptext = NULL;
     size_t psize;
     stringlist_t *_keylist = NULL;
     bool free_src = false;
@@ -823,12 +825,16 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     *color = PEP_rating_undefined;
  
     switch (src->enc_format) {
+        case PEP_enc_none:
+            status = PEP_UNENCRYPTED;
+            break;
+
         case PEP_enc_PGP_MIME:
             ctext = src->attachments->next->data;
-            csize = strlen(ctext);
+            csize = src->attachments->next->size;
 
-            status = cryptotech[crypto].decrypt_and_verify(session,
-                    ctext, csize, &ptext, &psize, &_keylist);
+            status = cryptotech[crypto].decrypt_and_verify(session, ctext,
+                    csize, &ptext, &psize, &_keylist);
             if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
                 goto pep_error;
             decrypt_status = status;
@@ -838,8 +844,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
             ctext = src->longmsg;
             csize = strlen(ctext);
 
-            status = cryptotech[crypto].decrypt_and_verify(session, ctext, csize,
-                    &ptext, &psize, &_keylist);
+            status = cryptotech[crypto].decrypt_and_verify(session, ctext,
+                    csize, &ptext, &psize, &_keylist);
             if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
                 goto pep_error;
             decrypt_status = status;
@@ -872,7 +878,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     if (ptext) {
         switch (src->enc_format) {
             case PEP_enc_PGP_MIME:
-                status = mime_decode_message(ptext, &msg);
+                status = mime_decode_message(ptext, psize, &msg);
                 if (status != PEP_STATUS_OK)
                     goto pep_error;
                 break;
@@ -983,7 +989,7 @@ theend:
     *dst = msg;
     *keylist = _keylist;
 
-    return decrypt_status;
+    return PEP_STATUS_OK;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;

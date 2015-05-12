@@ -1391,6 +1391,7 @@ static PEP_STATUS interpret_MIME(
 
 DYNAMIC_API PEP_STATUS mime_decode_message(
         const char *mimetext,
+        size_t size,
         message **msg
     )
 {
@@ -1409,7 +1410,7 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
     *msg = NULL;
 
     index = 0;
-    r = mailmime_parse(mimetext, strlen(mimetext), &index, &mime);
+    r = mailmime_parse(mimetext, size, &index, &mime);
     assert(r == 0);
     assert(mime);
     if (r) {
