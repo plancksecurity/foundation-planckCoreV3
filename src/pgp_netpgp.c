@@ -17,8 +17,6 @@
 #include <pthread.h>
 #include <regex.h>
 
-#define PEP_NETPGP_DEBUG
-
 static netpgp_t netpgp;
 static pthread_mutex_t netpgp_mutex;
 
@@ -231,21 +229,11 @@ static PEP_STATUS _validation_results(netpgp_t *netpgp, pgp_validation_t *vresul
     now = time(NULL);
     if (now < vresult->birthtime) {
         // signature is not valid yet
-#ifdef PEP_NETPGP_DEBUG
-        (void) printf(
-            "signature not valid until %.24s\n",
-            ctime(&vresult->birthtime));
-#endif //PEP_NETPGP_DEBUG
         return PEP_UNENCRYPTED;
     }
     if (vresult->duration != 0 && now > vresult->birthtime + vresult->duration) {
         // signature has expired
         t = vresult->duration + vresult->birthtime;
-#ifdef PEP_NETPGP_DEBUG
-        (void) printf(
-            "signature not valid after %.24s\n",
-            ctime(&t));
-#endif //PEP_NETPGP_DEBUG
         return PEP_UNENCRYPTED;
     }
     if (vresult->validc && vresult->valid_sigs &&
@@ -262,16 +250,6 @@ static PEP_STATUS _validation_results(netpgp_t *netpgp, pgp_validation_t *vresul
         for (n = 0; n < vresult->validc; ++n) {
             char id[MAX_ID_LENGTH + 1];
             const uint8_t *userid = vresult->valid_sigs[n].signer_id;
-
-#ifdef PEP_NETPGP_DEBUG
-            const pgp_key_t *key;
-            pgp_pubkey_t *sigkey;
-            unsigned from = 0;
-            key = pgp_getkeybyid(netpgp->io, netpgp->pubring,
-                (const uint8_t *) vresult->valid_sigs[n].signer_id,
-                &from, &sigkey);
-            pgp_print_keydata(netpgp->io, netpgp->pubring, key, "valid signature ", &key->key.pubkey, 0);
-#endif //PEP_NETPGP_DEBUG
 
             id_to_str(userid, id);
 
@@ -290,23 +268,6 @@ static PEP_STATUS _validation_results(netpgp_t *netpgp, pgp_validation_t *vresul
     
     if (vresult->invalidc) {
         // some invalid signatures
-
-#ifdef PEP_NETPGP_DEBUG
-        unsigned    n;
-        for (n = 0; n < vresult->invalidc; ++n) {
-            const pgp_key_t *key;
-            pgp_pubkey_t *sigkey;
-            unsigned from = 0;
-            key = pgp_getkeybyid(netpgp->io, netpgp->pubring,
-                (const uint8_t *) vresult->invalid_sigs[n].signer_id,
-                &from, &sigkey);
-            pgp_print_keydata(netpgp->io, netpgp->pubring, key, "invalid signature ", &key->key.pubkey, 0);
-            if (sigkey->duration != 0 && now > sigkey->birthtime + sigkey->duration) {
-                printf("EXPIRED !\n");
-            }
-        }
-#endif //PEP_NETPGP_DEBUG
-
         return PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
     }
     
@@ -364,11 +325,12 @@ PEP_STATUS pgp_decrypt_and_verify(
 
     _psize = pgp_mem_len(mem);
     if (_psize){
-        if ((_ptext = calloc(1, _psize)) == NULL) {
+        if ((_ptext = malloc(_psize + 1)) == NULL) {
             result = PEP_OUT_OF_MEMORY;
             goto free_pgp;
         }
         memcpy(_ptext, pgp_mem_data(mem), _psize);
+        _ptext[_psize] = '\0'; // safeguard for naive users
         result = PEP_DECRYPTED;
     }else{
         result = PEP_DECRYPT_NO_KEY;
@@ -577,10 +539,6 @@ PEP_STATUS pgp_encrypt_and_sign(
             result = PEP_KEY_NOT_FOUND;
             goto free_rcpts;
         }
-#ifdef PEP_NETPGP_DEBUG
-        pgp_print_keydata(netpgp.io, netpgp.pubring, key,
-                          "recipient pubkey ", &key->key.pubkey, 0);
-#endif //PEP_NETPGP_DEBUG
 
         // add key to recipients/signers
         pgp_keyring_add(rcpts, key);
@@ -688,6 +646,9 @@ static PEP_STATUS import_key_or_keypair(netpgp_t *netpgp, pgp_key_t *newkey){
     unsigned public;
     PEP_STATUS result;
     
+    /* XXX TODO : check key is valid */
+    /* XXX TODO : replace/update key if already in ring */
+
     if ((public = (newkey->type == PGP_PTAG_CT_PUBLIC_KEY))){
         pubkey = *newkey;
     } else {
@@ -858,8 +819,9 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data, size_t 
 
     pgp_memory_t *mem;
     pgp_keyring_t tmpring;
+    unsigned i = 0;
 
-    PEP_STATUS result;
+    PEP_STATUS result = PEP_STATUS_OK;
 
     assert(session);
     assert(key_data);
@@ -886,12 +848,8 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data, size_t 
         result = PEP_ILLEGAL_VALUE;
     }else if (tmpring.keyc == 0){
         result = PEP_UNKNOWN_ERROR;
-    }else if (tmpring.keyc > 1){
-        /* too many keys given */
-        /* XXX TODO accept many */
-        result = PEP_ILLEGAL_VALUE;
-    }else{
-        result = import_key_or_keypair(&netpgp, &tmpring.keys[0]);
+    }else while(result == PEP_STATUS_OK && i < tmpring.keyc){
+        result = import_key_or_keypair(&netpgp, &tmpring.keys[i++]);
     }
     
     pgp_memory_free(mem);
@@ -984,27 +942,104 @@ unlock_netpgp:
     return result;
 }
 
-// "keyserver"
-// "hkp://keys.gnupg.net"
+struct HKP_answer {
+  char *memory;
+  size_t size;
+};
+ 
+static size_t
+HKPAnswerWriter(void *contents, size_t size, size_t nmemb, void *userp)
+{
+  size_t realsize = size * nmemb;
+  struct HKP_answer *mem = (struct HKP_answer *)userp;
+ 
+  mem->memory = realloc(mem->memory, mem->size + realsize + 1);
+  if(mem->memory == NULL) {
+    mem->size = 0;
+    return 0;
+  }
+ 
+  memcpy(&(mem->memory[mem->size]), contents, realsize);
+  mem->size += realsize;
+  mem->memory[mem->size] = 0;
+ 
+  return realsize;
+}
+
 PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
 {
+    static const char *ks_cmd = "http://keys.gnupg.net:11371/pks/lookup?"
+                                "op=get&options=mr&exact=on&"
+                                "search=";
+    char *encoded_pattern;
+    char *request = NULL;
+    struct HKP_answer answer;
+    CURLcode curlres;
+       
+    PEP_STATUS result;
+
+    CURL *curl;
+
     assert(session);
     assert(pattern);
 
-    CURL *curl;
+    if (!session || !pattern )
+        return PEP_UNKNOWN_ERROR;
+
+    if(pthread_mutex_lock(&session->ctx.curl_mutex)){
+        return PEP_UNKNOWN_ERROR;
+    }
+
     curl = session->ctx.curl;
 
-    /* TODO ask for key */
-        return PEP_UNKNOWN_ERROR;
-        return PEP_GET_KEY_FAILED;
+    encoded_pattern = curl_easy_escape(curl, (char*)pattern, 0);
+    if(!encoded_pattern){
+        result = PEP_OUT_OF_MEMORY;
+        goto unlock_curl;
+    }
 
-    do {
+    if((request = malloc(strlen(ks_cmd) + strlen(encoded_pattern) + 1))==NULL){
+        result = PEP_OUT_OF_MEMORY;
+        goto free_encoded_pattern;
+    }
 
-        /* For each key */
-        /* import key */
-    } while (0);
+    //(*stpcpy(stpcpy(request, ks_cmd), encoded_pattern)) = '\0';
+    stpcpy(stpcpy(request, ks_cmd), encoded_pattern);
 
-    return PEP_STATUS_OK;
+    curl_easy_setopt(curl, CURLOPT_URL,request);
+
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, HKPAnswerWriter);
+
+    answer.memory = NULL;
+    answer.size = 0;
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&answer);
+
+    curlres = curl_easy_perform(curl);
+    if(curlres != CURLE_OK) {
+        result = PEP_GET_KEY_FAILED;
+        goto free_request;
+    }
+
+    if(!answer.memory || !answer.size) {
+        result = PEP_OUT_OF_MEMORY;
+        goto free_request;
+    }
+
+    printf("request :\n %s\n\nanswer :\n%s\n", request, answer);
+    result = pgp_import_keydata(session, 
+                                answer.memory, 
+                                answer.size);
+
+free_answer:
+    free(answer.memory);
+free_request:
+    free(request);
+free_encoded_pattern:
+    curl_free(encoded_pattern);
+unlock_curl:
+    pthread_mutex_unlock(&session->ctx.curl_mutex);
+
+    return result;
 }
 
 PEP_STATUS add_key_fpr_to_stringlist(stringlist_t **keylist, pgp_key_t *key)
