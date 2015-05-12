@@ -325,11 +325,12 @@ PEP_STATUS pgp_decrypt_and_verify(
 
     _psize = pgp_mem_len(mem);
     if (_psize){
-        if ((_ptext = calloc(1, _psize)) == NULL) {
+        if ((_ptext = malloc(_psize + 1)) == NULL) {
             result = PEP_OUT_OF_MEMORY;
             goto free_pgp;
         }
         memcpy(_ptext, pgp_mem_data(mem), _psize);
+        _ptext[_psize] = '\0'; // safeguard for naive users
         result = PEP_DECRYPTED;
     }else{
         result = PEP_DECRYPT_NO_KEY;
