@@ -233,6 +233,7 @@ int main(int argc, char* argv[])
 
     cout << "searching for vb@ulm.ccc.de on keyserver\n";
     PEP_STATUS recv_key_status = recv_key(session, "vb@ulm.ccc.de");
+    cout << "recv_key() exits with " << recv_key_status << "\n";
     assert(recv_key_status == PEP_STATUS_OK);
 
     cout << "sending vb@ulm.ccc.de to keyserver\n";
