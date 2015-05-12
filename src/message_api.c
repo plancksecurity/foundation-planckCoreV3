@@ -710,8 +710,10 @@ static PEP_color decrypt_color(PEP_STATUS status)
         case PEP_DECRYPTED_AND_VERIFIED:
             return PEP_rating_reliable;
 
-        case PEP_DECRYPT_WRONG_FORMAT:
         case PEP_DECRYPT_NO_KEY:
+            return PEP_rating_have_no_key;
+
+        case PEP_DECRYPT_WRONG_FORMAT:
         case PEP_CANNOT_DECRYPT_UNKNOWN:
             return PEP_rating_cannot_decrypt;
 
@@ -983,7 +985,7 @@ theend:
     *dst = msg;
     *keylist = _keylist;
 
-    return decrypt_status;
+    return PEP_STATUS_OK;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;

@@ -68,9 +68,10 @@ int main() {
     stringlist_t *keylist4;
     PEP_color color;
     PEP_STATUS status4 = decrypt_message(session, enc_msg2, &msg4, &keylist4, &color);
-    assert(status4 == PEP_DECRYPTED_AND_VERIFIED);
+    assert(status4 == PEP_STATUS_OK);
     assert(msg4);
     assert(keylist4);
+    assert(color);
 
     cout << "keys used:";
     stringlist_t *kl4;
