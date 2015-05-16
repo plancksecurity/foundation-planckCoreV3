@@ -225,6 +225,7 @@ int main(int argc, char* argv[])
 
     cout << "finding key for outlooktest@dingens.org\n";
     PEP_STATUS find_keys_status = find_keys(session, "outlooktest@dingens.org", &keylist);
+    cout << "find_keys() exits with " << find_keys_status << "\n";
     assert(find_keys_status == PEP_STATUS_OK);
     assert(keylist);
     cout << "found: " << keylist->value << "\n";
@@ -238,7 +239,7 @@ int main(int argc, char* argv[])
 
     cout << "sending vb@ulm.ccc.de to keyserver\n";
     PEP_STATUS send_key_status = send_key(session, "vb@ulm.ccc.de");
-    assert(recv_key_status == PEP_STATUS_OK);
+    assert(send_key_status == PEP_STATUS_OK);
 
     PEP_comm_type tcomm_type;
     PEP_STATUS tstatus = get_key_rating(session, "DD55BF29DF9B1541", &tcomm_type);

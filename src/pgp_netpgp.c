@@ -219,8 +219,11 @@ static void id_to_str(const uint8_t *userid, char *fpr)
 // fill a list of valid figerprints
 // returns PEP_STATUS_OK if all sig reported valid
 // error status otherwise.
-static PEP_STATUS _validation_results(netpgp_t *netpgp, pgp_validation_t *vresult,
-                                             stringlist_t **_keylist)
+static PEP_STATUS _validation_results(
+        netpgp_t *netpgp,
+        pgp_validation_t *vresult,
+        stringlist_t **_keylist
+    )
 {
     time_t    now;
     time_t    t;
@@ -500,7 +503,9 @@ PEP_STATUS pgp_encrypt_and_sign(
 
     // Get signing details from netpgp
     if ((userid = netpgp_getvar(&netpgp, "userid")) == NULL || 
-        (keypair = pgp_getkeybyname(netpgp.io, netpgp.secring, userid)) == NULL ||
+        (keypair = pgp_getkeybyname(netpgp.io, 
+                                    netpgp.secring, 
+                                    userid)) == NULL ||
         (seckey = pgp_decrypt_seckey(keypair, NULL /*passfp*/)) == NULL) {
         return PEP_UNKNOWN_ERROR;
     }
@@ -646,11 +651,12 @@ str_to_fpr (const char *str, uint8_t *fpr, size_t *length)
 }
 
 static PEP_STATUS import_key_or_keypair(netpgp_t *netpgp, pgp_key_t *newkey){
-    pgp_key_t	pubkey;
+    pgp_key_t pubkey;
     unsigned public;
     PEP_STATUS result;
-    
-    /* XXX TODO : check key is valid */
+    pgp_keyring_t tmpring;
+	pgp_validation_t *vresult;
+
     /* XXX TODO : replace/update key if already in ring */
 
     if ((public = (newkey->type == PGP_PTAG_CT_PUBLIC_KEY))){
@@ -663,6 +669,52 @@ static PEP_STATUS import_key_or_keypair(netpgp_t *netpgp, pgp_key_t *newkey){
         }
     }
 
+    // Verify pubkey against a temporary keyring containing the key itself
+    // (netpgp does check subkey binding sigs agains all the given ring,
+    // and doesn't ensure signer is the primary key itself)
+    bzero(&tmpring, sizeof(tmpring));
+    if(!pgp_keyring_add(&tmpring, &pubkey)){
+        result = PEP_OUT_OF_MEMORY;
+        goto free_pubkey;
+    }
+
+    vresult = malloc(sizeof(pgp_validation_t));
+    memset(vresult, 0x0, sizeof(pgp_validation_t));
+    pgp_validate_key_sigs(vresult, &pubkey, &tmpring, NULL);
+    pgp_keyring_free(&tmpring);
+    
+    // There may be no single valid signature (not mandatory)
+    // but at least there must be no invalid signature
+    if (vresult->invalidc) {
+        result = PEP_UNKNOWN_ERROR;
+    } else {
+
+        // check key consistency by ensuring no subkey or 
+        // direct signature are unknown
+        unsigned    n;
+        result = PEP_STATUS_OK;
+        for (n = 0; n < vresult->unknownc && result == PEP_STATUS_OK; ++n) {
+            switch (vresult->unknown_sigs[n].type) {
+            case PGP_SIG_SUBKEY:
+            case PGP_SIG_DIRECT:
+	        case PGP_SIG_PRIMARY: /* TODO is ignored by netpgp XXX */
+                result = PEP_UNKNOWN_ERROR;
+                break;
+            default:
+                break;
+            }
+        }
+        // TODO check in netpgp parser source that 
+        // presence of a subkey binding signature
+        // is enforced
+    }
+
+    pgp_validate_result_free(vresult);
+
+    if (result != PEP_STATUS_OK) {
+        if (!public) goto free_pubkey;
+        return result;
+    }
     // Append key to netpgp's rings (key ownership transfered)
     if (!public && !pgp_keyring_add(netpgp->secring, newkey)){
         result = PEP_OUT_OF_MEMORY;
@@ -818,9 +870,12 @@ unlock_netpgp:
 }
 
 #define ARMOR_KEY_HEAD    "^-----BEGIN PGP (PUBLIC|PRIVATE) KEY BLOCK-----\\s*$"
-PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data, size_t size)
+PEP_STATUS pgp_import_keydata(
+        PEP_SESSION session,
+        const char *key_data, 
+        size_t size
+    )
 {
-
     pgp_memory_t *mem;
     pgp_keyring_t tmpring;
     unsigned i = 0;
