@@ -943,14 +943,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                 if (status != PEP_STATUS_OK)
                     goto pep_error;
 
-                if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0) {
-                    free(msg->shortmsg);
-                    msg->shortmsg = strdup(src->shortmsg);
-                    if (msg->shortmsg == NULL)
-                        goto enomem;
-                }
-
-                if (msg->shortmsg == NULL || strcmp(msg->shortmsg, "pEp") == 0)
+                if (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0)
                 {
                     char * shortmsg;
                     char * longmsg;
@@ -970,7 +963,6 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                     msg->shortmsg = strdup(src->shortmsg);
                     if (msg->shortmsg == NULL)
                         goto enomem;
-                    msg->longmsg = ptext;
                 }
                 break;
 
