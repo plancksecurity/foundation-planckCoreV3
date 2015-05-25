@@ -31,16 +31,6 @@ DYNAMIC_API message *new_message(
     msg->from = from;
     msg->to = to;
 
-    stringpair_t version;
-    version.key = "X-pEp-Version";
-    version.value = PEP_VERSION;
-
-    msg->opt_fields = new_stringpair_list(&version);
-    if (msg->opt_fields == NULL) {
-        free_message(msg);
-        return NULL;
-    }
-
     return msg;
 }
 

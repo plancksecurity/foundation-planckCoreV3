@@ -534,7 +534,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     PEP_STATUS status = PEP_STATUS_OK;
     message * msg = NULL;
     stringlist_t * keys = NULL;
-    bool free_src = false;
 
     assert(session);
     assert(src);
@@ -621,8 +620,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     free_stringlist(keys);
-    if (free_src)
-        free_message(src);
 
     if (msg->shortmsg == NULL)
         msg->shortmsg = strdup("pEp");
@@ -636,8 +633,6 @@ enomem:
 pep_error:
     free_stringlist(keys);
     free_message(msg);
-    if (free_src)
-        free_message(src);
 
     return status;
 }
@@ -790,6 +785,96 @@ static PEP_color keylist_color(PEP_SESSION session, stringlist_t *keylist)
     return color;
 }
 
+static void add_opt_field(message *msg, const char *name, const char *value)
+{
+    assert(msg);
+
+    if (msg && name && value) {
+        stringpair_t *pair = new_stringpair(name, value);
+        if (pair == NULL)
+            return;
+
+        stringpair_list_t *field = stringpair_list_add(msg->opt_fields, pair);
+        if (field == NULL)
+            return;
+
+        if (msg->opt_fields == NULL)
+            msg->opt_fields = field;
+    }
+}
+
+static char * keylist_to_string(const stringlist_t *keylist)
+{
+    if (keylist) {
+        size_t size = stringlist_length(keylist);
+
+        const stringlist_t *_kl;
+        for (_kl = keylist; _kl && _kl->value; _kl = _kl->next) {
+            size += strlen(_kl->value);
+        }
+
+        char *result = calloc(1, size);
+        if (result == NULL)
+            return NULL;
+
+        char *_r = result;
+        for (_kl = keylist; _kl && _kl->value; _kl = _kl->next) {
+            _r = stpcpy(_r, _kl->value);
+            if (_kl->next && _kl->next->value)
+                _r = stpcpy(_r, ",");
+        }
+
+        return result;
+    }
+    else {
+        return NULL;
+    }
+}
+
+static const char * color_to_string(PEP_color color)
+{
+    switch (color) {
+        case PEP_rating_cannot_decrypt:
+            return "cannot_decrypt";
+        case PEP_rating_have_no_key:
+            return "have_no_key";
+        case PEP_rating_unencrypted:
+            return "unencrypted";
+        case PEP_rating_unreliable:
+            return "unreliable";
+        case PEP_rating_reliable:
+            return "reliable";
+        case PEP_rating_trusted:
+            return "trusted";
+        case PEP_rating_trusted_and_anonymized:
+            return "trusted_and_anonymized";
+        case PEP_rating_fully_anonymous:
+            return "fully_anonymous";
+        case PEP_rating_under_attack:
+            return "unter_attack";
+        case PEP_rating_b0rken:
+            return "b0rken";
+        default:
+            return "undefined";
+    }
+}
+
+static void decorate_message(
+        message *msg,
+        stringlist_t *keylist,
+        PEP_color color
+    )
+{
+    assert(msg);
+
+    add_opt_field(msg, "X-pEp-Version", "1.0");
+    add_opt_field(msg, "X-EncStatus", color_to_string(color));
+
+    char *_keylist = keylist_to_string(keylist);
+    add_opt_field(msg, "X-KeyList", _keylist);
+    free(_keylist);
+}
+
 DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -806,7 +891,6 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     char *ptext = NULL;
     size_t psize;
     stringlist_t *_keylist = NULL;
-    bool free_src = false;
 
     assert(session);
     assert(src);
@@ -975,8 +1059,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     }
 
 theend:
-    if (free_src)
-        free_message(src);
+    decorate_message(msg, _keylist, *color);
 
     *dst = msg;
     *keylist = _keylist;
@@ -989,8 +1072,6 @@ enomem:
 pep_error:
     free_message(msg);
     free_stringlist(_keylist);
-    if (free_src)
-        free_message(src);
 
     return status;
 }
