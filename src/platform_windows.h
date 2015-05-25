@@ -44,6 +44,7 @@ int mkstemp(char *templ);
 #endif
 
 char *strndup(const char *s1, size_t n);
+char *stpcpy(char *dst, const char *src);
 
 const char *windoze_local_db(void);
 const char *windoze_system_db(void);

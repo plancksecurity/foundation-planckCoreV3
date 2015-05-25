@@ -215,6 +215,16 @@ char *strndup(const char *s1, size_t n)
     return str;
 }
 
+char *stpcpy(char *dst, const char *src)
+{
+    for (;; ++dst, ++src) {
+        *dst = *src;
+        if (*dst == 0)
+            break;
+    }
+    return dst;
+}
+
 int mkstemp(char *templ)
 {
     char *pathname = _mktemp(templ);

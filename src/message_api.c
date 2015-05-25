@@ -412,7 +412,6 @@ static PEP_STATUS encrypt_PGP_MIME(
     if (_a == NULL)
         goto enomem;
 
-theend:
     return PEP_STATUS_OK;
 
 enomem:
@@ -513,7 +512,6 @@ static PEP_STATUS encrypt_PGP_in_pieces(
         }
     }
 
-theend:
     return PEP_STATUS_OK;
 
 enomem:
@@ -587,7 +585,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     if (dest_keys_found) {
-        char *ptext;
         char *ctext = NULL;
         size_t csize = 0;
 
@@ -1058,7 +1055,6 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         import_attached_keys(session, msg);
     }
 
-theend:
     decorate_message(msg, _keylist, *color);
 
     *dst = msg;
