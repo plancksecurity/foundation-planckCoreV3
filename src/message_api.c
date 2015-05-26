@@ -1055,7 +1055,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         import_attached_keys(session, msg);
     }
 
-    decorate_message(msg, _keylist, *color);
+    if (msg)
+        decorate_message(msg, _keylist, *color);
 
     *dst = msg;
     *keylist = _keylist;
