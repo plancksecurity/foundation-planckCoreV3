@@ -101,7 +101,7 @@ void attach_own_key(PEP_SESSION session, message *msg)
 
     bl = bloblist_add(msg->attachments, keydata, size, "application/pgp-keys",
             "pEp_key.asc");
-    if (bl)
+    if (msg->attachments == NULL && bl)
         msg->attachments = bl;
 }
 
@@ -497,9 +497,6 @@ static PEP_STATUS encrypt_PGP_in_pieces(
                 goto enomem;
             if (dst->attachments == NULL)
                 dst->attachments = _a;
-
-            add_opt_field(dst, "X-Content-PGP-Universal-Saved-Content-Type",
-                    "text/html; charset=US-ASCII");
         }
         else {
             goto pep_error;
@@ -522,10 +519,27 @@ static PEP_STATUS encrypt_PGP_in_pieces(
             status = encrypt_and_sign(session, keys, ptext, psize, &ctext,
                     &csize);
             if (ctext) {
-                char *filename = calloc(1, 20);
-                ++n;
-                n &= 0xffff;
-                snprintf(filename, 20, "Attachment%d.pgp", n);
+                char *filename = NULL;
+
+                if (_s->filename) {
+                    size_t len = strlen(_s->filename);
+                    filename = calloc(1, len + 5);
+                    if (filename == NULL)
+                        goto enomem;
+
+                    strcpy(filename, _s->filename);
+                    strcpy(filename + len, ".pgp");
+                }
+                else {
+                    filename = calloc(1, 20);
+                    if (filename == NULL)
+                        goto enomem;
+
+                    ++n;
+                    n &= 0xffff;
+                    snprintf(filename, 20, "Attachment%d.pgp", n);
+                }
+
                 _d = bloblist_add(_d, ctext, csize, "application/octet-stream",
                         filename);
                 if (_d == NULL)
