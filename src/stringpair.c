@@ -50,18 +50,13 @@ DYNAMIC_API stringpair_t * stringpair_dup(const stringpair_t *src)
     return new_stringpair(src->key, src->value);
 }
 
-DYNAMIC_API stringpair_list_t *new_stringpair_list(const stringpair_t *value)
+DYNAMIC_API stringpair_list_t *new_stringpair_list(stringpair_t *value)
 {
     stringpair_list_t *result = calloc(1, sizeof(stringpair_list_t));
     assert(result);
 
-    if (result && value) {
-        result->value = stringpair_dup(value);
-        if (result->value == 0) {
-            free(result);
-            return NULL;
-        }
-    }
+    if (result && value)
+        result->value = value;
 
     return result;
 }
@@ -91,7 +86,7 @@ DYNAMIC_API stringpair_list_t *stringpair_list_dup(
 
 DYNAMIC_API stringpair_list_t *stringpair_list_add(
         stringpair_list_t *stringpair_list,
-        const stringpair_t *value
+        stringpair_t *value
     )
 {
     assert(value);
@@ -99,12 +94,11 @@ DYNAMIC_API stringpair_list_t *stringpair_list_add(
     if (stringpair_list == NULL)
         return new_stringpair_list(value);
 
-    if (stringpair_list->next != NULL)
+    if (stringpair_list->next)
         return stringpair_list_add(stringpair_list->next, value);
+
     if (stringpair_list->value == NULL) {
-        stringpair_list->value = stringpair_dup(value);
-        if (stringpair_list->value == NULL)
-            return NULL;
+        stringpair_list->value = value;
         return stringpair_list;
     }
 

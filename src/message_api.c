@@ -101,8 +101,26 @@ void attach_own_key(PEP_SESSION session, message *msg)
 
     bl = bloblist_add(msg->attachments, keydata, size, "application/pgp-keys",
             "pEp_key.asc");
-    if (bl)
+    if (msg->attachments == NULL && bl)
         msg->attachments = bl;
+}
+
+static void add_opt_field(message *msg, const char *name, const char *value)
+{
+    assert(msg);
+
+    if (msg && name && value) {
+        stringpair_t *pair = new_stringpair(name, value);
+        if (pair == NULL)
+            return;
+
+        stringpair_list_t *field = stringpair_list_add(msg->opt_fields, pair);
+        if (field == NULL)
+            return;
+
+        if (msg->opt_fields == NULL)
+            msg->opt_fields = field;
+    }
 }
 
 PEP_cryptotech determine_encryption_format(message *msg)
@@ -412,7 +430,6 @@ static PEP_STATUS encrypt_PGP_MIME(
     if (_a == NULL)
         goto enomem;
 
-theend:
     return PEP_STATUS_OK;
 
 enomem:
@@ -449,27 +466,24 @@ static PEP_STATUS encrypt_PGP_in_pieces(
         status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
                 &csize);
         free(ptext);
-        if (ctext) {
-            dst->longmsg = strdup(ctext);
-            if (dst->longmsg == NULL)
-                goto enomem;
-        }
-        else {
+        if (ctext)
+            dst->longmsg = ctext;
+        else
             goto pep_error;
-        }
     }
     else if (src->longmsg) {
         char *ptext = src->longmsg;
         status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
                 &csize);
-        if (ctext) {
-            dst->longmsg = strdup(ctext);
-            if (dst->longmsg == NULL)
-                goto enomem;
-        }
-        else {
+        if (ctext)
+            dst->longmsg = ctext;
+        else
             goto pep_error;
-        }
+    }
+    else {
+        dst->longmsg = strdup("");
+        if (dst->longmsg == NULL)
+            goto enomem;
     }
 
     if (src->longmsg_formatted) {
@@ -477,9 +491,12 @@ static PEP_STATUS encrypt_PGP_in_pieces(
         status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
                 &csize);
         if (ctext) {
-            dst->longmsg_formatted = strdup(ctext);
-            if (dst->longmsg_formatted == NULL)
+            bloblist_t *_a = bloblist_add(dst->attachments, ctext, csize,
+                    "application/octet-stream", "PGPexch.htm.pgp");
+            if (_a == NULL)
                 goto enomem;
+            if (dst->attachments == NULL)
+                dst->attachments = _a;
         }
         else {
             goto pep_error;
@@ -487,23 +504,44 @@ static PEP_STATUS encrypt_PGP_in_pieces(
     }
 
     if (src->attachments) {
-        bloblist_t *_s;
-        bloblist_t *_d = new_bloblist(NULL, 0, NULL, NULL);
-        if (_d == NULL)
-            goto enomem;
+        if (dst->attachments == NULL) {
+            dst->attachments = new_bloblist(NULL, 0, NULL, NULL);
+            if (dst->attachments == NULL)
+                goto enomem;
+        }
 
-        dst->attachments = _d;
-        for (_s = src->attachments; _s && _s->data; _s = _s->next) {
+        bloblist_t *_s = src->attachments;
+        bloblist_t *_d = dst->attachments;
+
+        for (int n = 0; _s && _s->data; _s = _s->next) {
             int psize = _s->size;
             char *ptext = _s->data;
             status = encrypt_and_sign(session, keys, ptext, psize, &ctext,
                     &csize);
             if (ctext) {
-                char * _c = strdup(ctext);
-                if (_c == NULL)
-                    goto enomem;
+                char *filename = NULL;
 
-                _d = bloblist_add(_d, _c, csize, _s->mime_type, _s->filename);
+                if (_s->filename) {
+                    size_t len = strlen(_s->filename);
+                    filename = calloc(1, len + 5);
+                    if (filename == NULL)
+                        goto enomem;
+
+                    strcpy(filename, _s->filename);
+                    strcpy(filename + len, ".pgp");
+                }
+                else {
+                    filename = calloc(1, 20);
+                    if (filename == NULL)
+                        goto enomem;
+
+                    ++n;
+                    n &= 0xffff;
+                    snprintf(filename, 20, "Attachment%d.pgp", n);
+                }
+
+                _d = bloblist_add(_d, ctext, csize, "application/octet-stream",
+                        filename);
                 if (_d == NULL)
                     goto enomem;
             }
@@ -513,7 +551,6 @@ static PEP_STATUS encrypt_PGP_in_pieces(
         }
     }
 
-theend:
     return PEP_STATUS_OK;
 
 enomem:
@@ -534,7 +571,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     PEP_STATUS status = PEP_STATUS_OK;
     message * msg = NULL;
     stringlist_t * keys = NULL;
-    bool free_src = false;
 
     assert(session);
     assert(src);
@@ -588,7 +624,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     if (dest_keys_found) {
-        char *ptext;
         char *ctext = NULL;
         size_t csize = 0;
 
@@ -621,8 +656,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     free_stringlist(keys);
-    if (free_src)
-        free_message(src);
 
     if (msg->shortmsg == NULL)
         msg->shortmsg = strdup("pEp");
@@ -636,8 +669,6 @@ enomem:
 pep_error:
     free_stringlist(keys);
     free_message(msg);
-    if (free_src)
-        free_message(src);
 
     return status;
 }
@@ -790,6 +821,78 @@ static PEP_color keylist_color(PEP_SESSION session, stringlist_t *keylist)
     return color;
 }
 
+static char * keylist_to_string(const stringlist_t *keylist)
+{
+    if (keylist) {
+        size_t size = stringlist_length(keylist);
+
+        const stringlist_t *_kl;
+        for (_kl = keylist; _kl && _kl->value; _kl = _kl->next) {
+            size += strlen(_kl->value);
+        }
+
+        char *result = calloc(1, size);
+        if (result == NULL)
+            return NULL;
+
+        char *_r = result;
+        for (_kl = keylist; _kl && _kl->value; _kl = _kl->next) {
+            _r = stpcpy(_r, _kl->value);
+            if (_kl->next && _kl->next->value)
+                _r = stpcpy(_r, ",");
+        }
+
+        return result;
+    }
+    else {
+        return NULL;
+    }
+}
+
+static const char * color_to_string(PEP_color color)
+{
+    switch (color) {
+        case PEP_rating_cannot_decrypt:
+            return "cannot_decrypt";
+        case PEP_rating_have_no_key:
+            return "have_no_key";
+        case PEP_rating_unencrypted:
+            return "unencrypted";
+        case PEP_rating_unreliable:
+            return "unreliable";
+        case PEP_rating_reliable:
+            return "reliable";
+        case PEP_rating_trusted:
+            return "trusted";
+        case PEP_rating_trusted_and_anonymized:
+            return "trusted_and_anonymized";
+        case PEP_rating_fully_anonymous:
+            return "fully_anonymous";
+        case PEP_rating_under_attack:
+            return "unter_attack";
+        case PEP_rating_b0rken:
+            return "b0rken";
+        default:
+            return "undefined";
+    }
+}
+
+static void decorate_message(
+        message *msg,
+        stringlist_t *keylist,
+        PEP_color color
+    )
+{
+    assert(msg);
+
+    add_opt_field(msg, "X-pEp-Version", "1.0");
+    add_opt_field(msg, "X-EncStatus", color_to_string(color));
+
+    char *_keylist = keylist_to_string(keylist);
+    add_opt_field(msg, "X-KeyList", _keylist);
+    free(_keylist);
+}
+
 DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -806,7 +909,6 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     char *ptext = NULL;
     size_t psize;
     stringlist_t *_keylist = NULL;
-    bool free_src = false;
 
     assert(session);
     assert(src);
@@ -943,14 +1045,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                 if (status != PEP_STATUS_OK)
                     goto pep_error;
 
-                if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0) {
-                    free(msg->shortmsg);
-                    msg->shortmsg = strdup(src->shortmsg);
-                    if (msg->shortmsg == NULL)
-                        goto enomem;
-                }
-
-                if (msg->shortmsg == NULL || strcmp(msg->shortmsg, "pEp") == 0)
+                if (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0)
                 {
                     char * shortmsg;
                     char * longmsg;
@@ -970,7 +1065,6 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                     msg->shortmsg = strdup(src->shortmsg);
                     if (msg->shortmsg == NULL)
                         goto enomem;
-                    msg->longmsg = ptext;
                 }
                 break;
 
@@ -982,9 +1076,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         import_attached_keys(session, msg);
     }
 
-theend:
-    if (free_src)
-        free_message(src);
+    if (msg)
+        decorate_message(msg, _keylist, *color);
 
     *dst = msg;
     *keylist = _keylist;
@@ -997,8 +1090,6 @@ enomem:
 pep_error:
     free_message(msg);
     free_stringlist(_keylist);
-    if (free_src)
-        free_message(src);
 
     return status;
 }

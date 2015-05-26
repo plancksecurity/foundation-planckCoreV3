@@ -553,17 +553,19 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
 
     if (msg->opt_fields) {
         stringpair_list_t *_l;
-        for (_l = msg->opt_fields; _l; _l = _l->next) {
+        for (_l = msg->opt_fields; _l && _l->value; _l = _l->next) {
             char *key = _l->value->key;
             char *value = _l->value->value;
-            char *_value = mailmime_encode_subject_header("utf-8", value, 0);
-            if (_value == NULL)
-                goto enomem;
+            if (key && value) {
+                char *_value = mailmime_encode_subject_header("utf-8", value, 0);
+                if (_value == NULL)
+                    goto enomem;
 
-            r = _append_optional_field(fields_list, key, _value);
-            free(_value);
-            if (r)
-                goto enomem;
+                r = _append_optional_field(fields_list, key, _value);
+                free(_value);
+                if (r)
+                    goto enomem;
+            }
         }
     }
 
@@ -1161,11 +1163,11 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
                     if (r)
                         goto enomem;
 
-                    stringpair_t pair;
-                    pair.key = name;
-                    pair.value = _value;
+                    stringpair_t *pair = new_stringpair(name, _value);
+                    if (pair == NULL)
+                        goto enomem;
 
-                    opt = stringpair_list_add(opt, &pair);
+                    opt = stringpair_list_add(opt, pair);
                     free(_value);
                     if (opt == NULL)
                         goto enomem;

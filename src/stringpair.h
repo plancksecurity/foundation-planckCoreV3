@@ -56,17 +56,15 @@ typedef struct _stringpair_list_t {
 // new_stringpair_list() - allocate a new stringpair_list
 //
 //  parameters:
-//      value (in)              initial value as C string or NULL for empty
-//                              list
+//      value (in)              initial value
 //
 //  return value:
 //      pointer to stringpair_list_t object or NULL if out of memory
 //
 //  caveat:
-//      the value is being copied before being added to the list
-//      the original value is still being owned by the caller
+//      the ownership of the value goes to the stringpair_list
 
-DYNAMIC_API stringpair_list_t *new_stringpair_list(const stringpair_t *value);
+DYNAMIC_API stringpair_list_t *new_stringpair_list(stringpair_t *value);
 
 
 // stringpair_list_dup() - duplicate a stringpair_list
@@ -87,18 +85,17 @@ DYNAMIC_API stringpair_list_t *stringpair_list_dup(
 //  parameters:
 //      stringpair_list (in)    stringpair_list struct or NULL to create a new
 //                              one
-//      value (in)              value as C string
+//      value (in)              stringpair to add
 //
 //  return value:
 //      pointer to last element in stringpair_list or NULL if out of memory
 //
 //  caveat:
-//      the value is being copied before being added to the list
-//      the original value is still being owned by the caller
+//      the ownership of the value goes to the stringpair_list
 
 DYNAMIC_API stringpair_list_t *stringpair_list_add(
         stringpair_list_t *stringpair_list,
-        const stringpair_t *value
+        stringpair_t *value
     );
 
 

@@ -54,7 +54,7 @@ int main() {
     cout << text2 << "\n";
 
     message *msg3;
-    PEP_STATUS status3 = mime_decode_message(text2, &msg3);
+    PEP_STATUS status3 = mime_decode_message(text2, strlen(text2), &msg3);
     assert(status3 == PEP_STATUS_OK);
     string string3 = text2;
     free(text2);

@@ -26,7 +26,7 @@ void test_mime_decoding(string filename) {
 
     cout << "decoding message…\n";
     message *msg3;
-    PEP_STATUS status3 = mime_decode_message(mimetext3.c_str(), &msg3);
+    PEP_STATUS status3 = mime_decode_message(mimetext3.c_str(), mimetext3.length(), &msg3);
     assert(status3 == PEP_STATUS_OK);
     assert(msg3);
     cout << "decoded.\n\n";
