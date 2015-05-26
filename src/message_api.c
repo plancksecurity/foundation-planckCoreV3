@@ -105,6 +105,24 @@ void attach_own_key(PEP_SESSION session, message *msg)
         msg->attachments = bl;
 }
 
+static void add_opt_field(message *msg, const char *name, const char *value)
+{
+    assert(msg);
+
+    if (msg && name && value) {
+        stringpair_t *pair = new_stringpair(name, value);
+        if (pair == NULL)
+            return;
+
+        stringpair_list_t *field = stringpair_list_add(msg->opt_fields, pair);
+        if (field == NULL)
+            return;
+
+        if (msg->opt_fields == NULL)
+            msg->opt_fields = field;
+    }
+}
+
 PEP_cryptotech determine_encryption_format(message *msg)
 {
     assert(msg);
@@ -448,27 +466,24 @@ static PEP_STATUS encrypt_PGP_in_pieces(
         status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
                 &csize);
         free(ptext);
-        if (ctext) {
-            dst->longmsg = strdup(ctext);
-            if (dst->longmsg == NULL)
-                goto enomem;
-        }
-        else {
+        if (ctext)
+            dst->longmsg = ctext;
+        else
             goto pep_error;
-        }
     }
     else if (src->longmsg) {
         char *ptext = src->longmsg;
         status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
                 &csize);
-        if (ctext) {
-            dst->longmsg = strdup(ctext);
-            if (dst->longmsg == NULL)
-                goto enomem;
-        }
-        else {
+        if (ctext)
+            dst->longmsg = ctext;
+        else
             goto pep_error;
-        }
+    }
+    else {
+        dst->longmsg = strdup("");
+        if (dst->longmsg == NULL)
+            goto enomem;
     }
 
     if (src->longmsg_formatted) {
@@ -476,9 +491,15 @@ static PEP_STATUS encrypt_PGP_in_pieces(
         status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
                 &csize);
         if (ctext) {
-            dst->longmsg_formatted = strdup(ctext);
-            if (dst->longmsg_formatted == NULL)
+            bloblist_t *_a = bloblist_add(dst->attachments, ctext, csize,
+                    "application/octet-stream", "PGPexch.htm.pgp");
+            if (_a == NULL)
                 goto enomem;
+            if (dst->attachments == NULL)
+                dst->attachments = _a;
+
+            add_opt_field(dst, "X-Content-PGP-Universal-Saved-Content-Type",
+                    "text/html; charset=US-ASCII");
         }
         else {
             goto pep_error;
@@ -486,23 +507,27 @@ static PEP_STATUS encrypt_PGP_in_pieces(
     }
 
     if (src->attachments) {
-        bloblist_t *_s;
-        bloblist_t *_d = new_bloblist(NULL, 0, NULL, NULL);
-        if (_d == NULL)
-            goto enomem;
+        if (dst->attachments == NULL) {
+            dst->attachments = new_bloblist(NULL, 0, NULL, NULL);
+            if (dst->attachments == NULL)
+                goto enomem;
+        }
 
-        dst->attachments = _d;
-        for (_s = src->attachments; _s && _s->data; _s = _s->next) {
+        bloblist_t *_s = src->attachments;
+        bloblist_t *_d = dst->attachments;
+
+        for (int n = 0; _s && _s->data; _s = _s->next) {
             int psize = _s->size;
             char *ptext = _s->data;
             status = encrypt_and_sign(session, keys, ptext, psize, &ctext,
                     &csize);
             if (ctext) {
-                char * _c = strdup(ctext);
-                if (_c == NULL)
-                    goto enomem;
-
-                _d = bloblist_add(_d, _c, csize, _s->mime_type, _s->filename);
+                char *filename = calloc(1, 20);
+                ++n;
+                n &= 0xffff;
+                snprintf(filename, 20, "Attachment%d.pgp", n);
+                _d = bloblist_add(_d, ctext, csize, "application/octet-stream",
+                        filename);
                 if (_d == NULL)
                     goto enomem;
             }
@@ -780,24 +805,6 @@ static PEP_color keylist_color(PEP_SESSION session, stringlist_t *keylist)
     }
 
     return color;
-}
-
-static void add_opt_field(message *msg, const char *name, const char *value)
-{
-    assert(msg);
-
-    if (msg && name && value) {
-        stringpair_t *pair = new_stringpair(name, value);
-        if (pair == NULL)
-            return;
-
-        stringpair_list_t *field = stringpair_list_add(msg->opt_fields, pair);
-        if (field == NULL)
-            return;
-
-        if (msg->opt_fields == NULL)
-            msg->opt_fields = field;
-    }
 }
 
 static char * keylist_to_string(const stringlist_t *keylist)
