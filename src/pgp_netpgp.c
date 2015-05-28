@@ -505,10 +505,12 @@ PEP_STATUS pgp_encrypt_and_sign(
     if ((userid = netpgp_getvar(&netpgp, "userid")) == NULL || 
         (keypair = pgp_getkeybyname(netpgp.io, 
                                     netpgp.secring, 
-                                    userid)) == NULL ||
-        (seckey = pgp_decrypt_seckey(keypair, NULL /*passfp*/)) == NULL) {
+                                    userid)) == NULL) {
         return PEP_UNKNOWN_ERROR;
     }
+
+    /* TODO select data signing subkey if defined */
+    seckey = &keypair->key.seckey;
 
     hashalg = netpgp_getvar(&netpgp, "hash");
     // netpgp (l)imitation - XXX why ? 
@@ -657,8 +659,6 @@ static PEP_STATUS import_key_or_keypair(netpgp_t *netpgp, pgp_key_t *newkey){
     pgp_keyring_t tmpring;
 	pgp_validation_t *vresult;
 
-    /* XXX TODO : replace/update key if already in ring */
-
     if ((public = (newkey->type == PGP_PTAG_CT_PUBLIC_KEY))){
         pubkey = *newkey;
     } else {
@@ -715,6 +715,9 @@ static PEP_STATUS import_key_or_keypair(netpgp_t *netpgp, pgp_key_t *newkey){
         if (!public) goto free_pubkey;
         return result;
     }
+
+    /* XXX TODO : replace/update key if already in ring */
+
     // Append key to netpgp's rings (key ownership transfered)
     if (!public && !pgp_keyring_add(netpgp->secring, newkey)){
         result = PEP_OUT_OF_MEMORY;
