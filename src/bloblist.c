@@ -31,17 +31,16 @@ DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_t
         }
     }
 
-    assert((blob == NULL && size == 0) || (blob && size));
+    if (blob) {
+        void *result = realloc(blob, size + 1);
+        if (result == NULL) {
+            free_bloblist(bloblist);
+            return NULL;
+        }
 
-    void *result = realloc(blob, size + 1);
-    if (result == NULL) {
-        free_bloblist(bloblist);
-        return NULL;
+        bloblist->data = blob;
+        bloblist->size = size;
     }
-    blob[size] = 0; // safeguard
-
-    bloblist->data = blob;
-    bloblist->size = size;
 
     return bloblist;
 }

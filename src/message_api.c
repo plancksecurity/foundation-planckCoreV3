@@ -1004,30 +1004,35 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
                         status = decrypt_and_verify(session, ctext, csize,
                                 &ptext, &psize, &_keylist);
-                        if (ptext == NULL)
-                            goto pep_error;
                         free_stringlist(_keylist);
 
-                        if (is_encrypted_html_attachment(_s)) {
-                            msg->longmsg_formatted = strdup(ptext);
-                            if (msg->longmsg_formatted == NULL)
-                                goto pep_error;
+                        if (ptext) {
+                            if (is_encrypted_html_attachment(_s)) {
+                                msg->longmsg_formatted = ptext;
+                            }
+                            else {
+                                char * mime_type = "application/octet-stream";
+                                char * filename =
+                                    without_double_ending(_s->filename);
+                                if (filename == NULL)
+                                    goto enomem;
+
+                                _m = bloblist_add(_m, ptext, psize, mime_type,
+                                    filename);
+                                if (_m == NULL) {
+                                    free(ptext);
+                                    goto enomem;
+                                }
+                            }
                         }
                         else {
-                            char * mime_type = "application/octet-stream";
-                            char * filename =
-                                    without_double_ending(_s->filename);
-                            if (filename == NULL)
-                                goto enomem;
-
-                            _m = bloblist_add(_m, ptext, psize, mime_type,
-                                    filename);
+                            _m = bloblist_dup(_s);
                             if (_m == NULL)
                                 goto enomem;
-
-                           if (msg->attachments == NULL)
-                                msg->attachments = _m;
                         }
+
+                        if (msg->attachments == NULL)
+                            msg->attachments = _m;
                     }
                 }
 

@@ -1230,8 +1230,8 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
         }
     }
     else {
-        _size = length;
-        _longmsg = strndup(text, _size);
+        _size = length + 1;
+        _longmsg = strndup(text, length);
         if (_longmsg == NULL)
             return PEP_OUT_OF_MEMORY;
     }
