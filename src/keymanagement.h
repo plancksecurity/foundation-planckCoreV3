@@ -63,6 +63,32 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity);
 typedef pEp_identity *(*retrieve_next_identity_t)(void *management);
 
 
+// examine_identity() - callback for appending to queue
+//
+//  parameters:
+//      ident (in)          identity to examine
+//      management (in)     data structure to deliver (implementation defined)
+//
+//  return value:
+//      0 if identity was added successfully to queue or nonzero otherwise
+
+typedef int *(*examine_identity_t)(pEp_identity *ident, void *management);
+
+
+// register_examine_function() - register examine_identity() callback
+//
+//  parameters:
+//      session (in)            session to use
+//      examine_identity (in)   examine_identity() function to register
+//      management (in)     data structure to deliver (implementation defined)
+
+PEP_STATUS register_examine_function(
+        PEP_SESSION session, 
+        examine_identity_t examine_identity,
+        void *management
+    );
+
+
 // do_keymanagement() - function to be run on an extra thread
 //
 //  parameters:
