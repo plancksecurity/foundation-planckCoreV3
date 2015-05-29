@@ -832,7 +832,7 @@ PEP_STATUS pgp_generate_keypair(
     assert(session);
     assert(identity);
     assert(identity->address);
-    assert(identity->fpr == NULL);
+    assert(identity->fpr == NULL || identity->fpr[0] == 0);
     assert(identity->username);
 
     parms = calloc(1, PARMS_MAX);
@@ -868,7 +868,10 @@ PEP_STATUS pgp_generate_keypair(
     assert(gpgme_genkey_result);
     assert(gpgme_genkey_result->fpr);
 
+    free(identity->fpr);
     identity->fpr = strdup(gpgme_genkey_result->fpr);
+    if (identity->fpr == NULL)
+        return PEP_OUT_OF_MEMORY;
 
     return PEP_STATUS_OK;
 }

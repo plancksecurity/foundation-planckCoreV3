@@ -884,11 +884,11 @@ DYNAMIC_API PEP_STATUS generate_keypair(
     assert(session);
     assert(identity);
     assert(identity->address);
-    assert(identity->fpr == NULL);
+    assert(identity->fpr == NULL || identity->fpr[0] == 0);
     assert(identity->username);
 
-    if (!(session && identity && identity->address && identity->fpr == NULL &&
-                identity->username))
+    if (!(session && identity && identity->address &&
+        (identity->fpr == NULL || identity->fpr[0] == 0) && identity->username))
         return PEP_ILLEGAL_VALUE;
 
     return session->cryptotech[PEP_crypt_OpenPGP].generate_keypair(session, identity);
