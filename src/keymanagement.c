@@ -263,7 +263,7 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS register_examine_function(
+DYNAMIC_API PEP_STATUS register_examine_function(
         PEP_SESSION session, 
         examine_identity_t examine_identity,
         void *management

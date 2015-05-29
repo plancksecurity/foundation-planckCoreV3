@@ -72,7 +72,7 @@ typedef pEp_identity *(*retrieve_next_identity_t)(void *management);
 //  return value:
 //      0 if identity was added successfully to queue or nonzero otherwise
 
-typedef int *(*examine_identity_t)(pEp_identity *ident, void *management);
+typedef int (*examine_identity_t)(pEp_identity *ident, void *management);
 
 
 // register_examine_function() - register examine_identity() callback
@@ -82,7 +82,7 @@ typedef int *(*examine_identity_t)(pEp_identity *ident, void *management);
 //      examine_identity (in)   examine_identity() function to register
 //      management (in)     data structure to deliver (implementation defined)
 
-PEP_STATUS register_examine_function(
+DYNAMIC_API PEP_STATUS register_examine_function(
         PEP_SESSION session, 
         examine_identity_t examine_identity,
         void *management
