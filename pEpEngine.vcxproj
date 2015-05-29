@@ -47,7 +47,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Program Files %28x86%29\GNU\GnuPG\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\vb\Documents\Visual Studio 2013\Projects\libetpan\build-windows\include;C:\Program Files %28x86%29\GNU\GnuPG\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
