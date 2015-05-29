@@ -1191,6 +1191,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_color(
 
     for (il = msg->to; il != NULL; il = il->next) {
         if (il->ident) {
+            update_identity(session, il->ident);
             max_comm_type = _get_comm_type(session, max_comm_type,
                     il->ident);
             comm_type_determined = true;
@@ -1199,6 +1200,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_color(
 
     for (il = msg->cc; il != NULL; il = il->next) {
         if (il->ident) {
+            update_identity(session, il->ident);
             max_comm_type = _get_comm_type(session, max_comm_type,
                     il->ident);
             comm_type_determined = true;
