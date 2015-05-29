@@ -122,10 +122,6 @@ DYNAMIC_API PEP_STATUS update_identity(
             if (status == PEP_OUT_OF_MEMORY)
                 return PEP_OUT_OF_MEMORY;
 
-            if (keylist == NULL || keylist->value == NULL)
-                if (session->examine_identity)
-                    session->examine_identity(identity, session->examine_management);
-
             stringlist_t *_keylist;
             for (_keylist = keylist; _keylist && _keylist->value; _keylist = _keylist->next) {
                 PEP_comm_type _comm_type_key;
@@ -183,6 +179,11 @@ DYNAMIC_API PEP_STATUS update_identity(
         status = set_identity(session, identity);
         assert(status == PEP_STATUS_OK);
     }
+
+    if (identity->comm_type != PEP_ct_compromized &&
+            identity->comm_type < PEP_ct_strong_but_unconfirmed)
+        if (session->examine_identity)
+            session->examine_identity(identity, session->examine_management);
 
     return status;
 }
