@@ -57,6 +57,7 @@
 #include "pgp_netpgp_internal.h"
 #endif
 
+#include "keymanagement.h"
 #include "cryptotech.h"
 #include "transport.h"
 
@@ -85,6 +86,9 @@ typedef struct _pEpSession {
     sqlite3_stmt *set_trust;
     sqlite3_stmt *get_trust;
     sqlite3_stmt *least_trust;
+
+    examine_identity_t examine_identity;
+    void *examine_management;
 } pEpSession;
 
 PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
