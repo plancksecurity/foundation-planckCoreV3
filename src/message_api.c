@@ -620,10 +620,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     if (status != PEP_STATUS_OK)
         goto pep_error;
 
-    msg = clone_to_empty_message(src);
-    if (msg == NULL)
-        goto enomem;
-
     keys = new_stringlist(src->from->fpr);
     if (keys == NULL)
         goto enomem;
@@ -636,24 +632,51 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             goto enomem;
     }
 
-    bool dest_keys_found = false;
-    identity_list * _il;
-    for (_il = msg->to; _il && _il->ident; _il = _il->next) {
-        PEP_STATUS status = update_identity(session, _il->ident);
-        if (status != PEP_STATUS_OK)
-            goto pep_error;
+    bool dest_keys_found = true;
 
-        if (_il->ident->fpr) {
-            dest_keys_found = true;
+    identity_list * _il;
+    for (_il = src->to; _il && _il->ident; _il = _il->next) {
+        PEP_STATUS _status = update_identity(session, _il->ident);
+        if (_status != PEP_STATUS_OK) {
+            status = _status;
+            goto pep_error;
+        }
+
+        if (_il->ident->fpr && _il->ident->fpr[0]) {
             _k = stringlist_add(_k, _il->ident->fpr);
             if (_k == NULL)
                 goto enomem;
         }
-        else
+        else {
+            dest_keys_found = false;
             status = PEP_KEY_NOT_FOUND;
+        }
+    }
+
+    for (_il = src->cc; _il && _il->ident; _il = _il->next) {
+        PEP_STATUS _status = update_identity(session, _il->ident);
+        if (_status != PEP_STATUS_OK)
+        {
+            status = _status;
+            goto pep_error;
+        }
+
+        if (_il->ident->fpr && _il->ident->fpr[0]) {
+            _k = stringlist_add(_k, _il->ident->fpr);
+            if (_k == NULL)
+                goto enomem;
+        }
+        else {
+            dest_keys_found = false;
+            status = PEP_KEY_NOT_FOUND;
+        }
     }
 
     if (dest_keys_found) {
+        msg = clone_to_empty_message(src);
+        if (msg == NULL)
+            goto enomem;
+
         switch (enc_format) {
         case PEP_enc_PGP_MIME:
             status = encrypt_PGP_MIME(session, src, keys, msg);
@@ -679,16 +702,16 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         }
     }
     else {
-        attach_own_key(session, msg);
+        attach_own_key(session, src);
     }
 
     free_stringlist(keys);
 
-    if (msg->shortmsg == NULL)
+    if (msg && msg->shortmsg == NULL)
         msg->shortmsg = strdup("pEp");
 
     *dst = msg;
-    return PEP_STATUS_OK;
+    return status;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
