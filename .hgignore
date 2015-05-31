@@ -8,4 +8,9 @@ db/*.db
 *.a
 *.so
 test/pEpEngineTest
+*.exe
+Debug
+Release
+*.lib
+*.obj
 
