@@ -983,7 +983,6 @@ DYNAMIC_API PEP_STATUS decrypt_message(
  
     switch (src->enc_format) {
         case PEP_enc_none:
-            import_attached_keys(session, src);
             *color = PEP_rating_unencrypted;
             return PEP_UNENCRYPTED;
 
