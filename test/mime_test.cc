@@ -42,7 +42,7 @@ void test_mime_decoding(string filename) {
             cout << "filename: " << _b->filename << "\n";
             unlink(_b->filename);
             ofstream outFile3(_b->filename);
-            outFile3.write(_b->data, _b->size);
+            outFile3.write(_b->value, _b->size);
             outFile3.close();
         }
     }

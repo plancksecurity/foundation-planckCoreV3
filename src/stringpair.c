@@ -135,7 +135,7 @@ DYNAMIC_API int stringpair_list_length(
 {
     int len = 0;
 
-    stringpair_list_t *_sl;
+    const stringpair_list_t *_sl;
     for (_sl = stringpair_list; _sl && _sl->value; _sl = _sl->next)
         len++;
 

@@ -142,7 +142,7 @@ DYNAMIC_API int bloblist_length(const bloblist_t *bloblist)
 {
     int len = 0;
 
-    for (bloblist_t *_bl = bloblist; _bl && _bl->value; _bl = _bl->next)
+    for (const bloblist_t *_bl = bloblist; _bl && _bl->value; _bl = _bl->next)
         len++;
 
     return len;
