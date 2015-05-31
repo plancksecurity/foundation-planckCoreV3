@@ -65,11 +65,12 @@ int main() {
 
     // testing multipart/alternative
 
-    message *msg2 = new_message(PEP_dir_incoming,
-            new_identity("vb@dingens.org", NULL, NULL, "Volker Birk"),
-            new_identity_list(new_identity("trischa@dingens.org", NULL, NULL, "Patricia Bädnar")),
-            "my sübject");
+    message *msg2 = new_message(PEP_dir_incoming);
     assert(msg2);
+    msg2->from = new_identity("vb@dingens.org", NULL, NULL, "Volker Birk");
+    msg2->to = new_identity_list(new_identity("trischa@dingens.org", NULL, NULL, "Patricia Bädnar")),
+    msg2->shortmsg = strdup("my sübject");
+
     string text2 = "my mèssage to yoü";
     msg2->longmsg = strdup(text2.c_str());
     string html2 = "<html><body><p>my message to you</p></body></html>";

@@ -24,8 +24,11 @@ int main() {
     pEp_identity * me2 = new_identity("outlooktest@dingens.org", NULL, "23", "Outlook Test");
     me2->me = true;
     identity_list *to2 = new_identity_list(new_identity("vb@dingens.org", NULL, "42", "Volker Birk"));
-    message *msg2 = new_message(PEP_dir_outgoing, me2, to2, "hello, world");
+    message *msg2 = new_message(PEP_dir_outgoing);
     assert(msg2);
+    msg2->from = me2;
+    msg2->to = to2;
+    msg2->shortmsg = strdup("hello, world");
     cout << "message created.\n";
 
     char *text2;
