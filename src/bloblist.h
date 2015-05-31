@@ -8,7 +8,7 @@ extern "C" {
 
 
 typedef struct _bloblist_t {
-    char *data;                     // blob
+    char *value;                    // blob
     size_t size;                    // size of blob
     char *mime_type;                // UTF-8 string of MIME type of blob or
                                     // NULL if unknown

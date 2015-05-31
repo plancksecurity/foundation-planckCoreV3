@@ -59,23 +59,23 @@ void import_attached_keys(PEP_SESSION session, const message *msg)
     assert(msg);
 
     bloblist_t *bl;
-    for (bl = msg->attachments; bl && bl->data; bl = bl->next) {
-        assert(bl && bl->data && bl->size);
+    for (bl = msg->attachments; bl && bl->value; bl = bl->next) {
+        assert(bl && bl->value && bl->size);
 
         if (bl->mime_type == NULL ||
                     is_mime_type(bl, "application/octet-stream")) {
             if (is_fileending(bl, ".pgp") || is_fileending(bl, ".gpg") ||
                     is_fileending(bl, ".key") ||
                     string_equality(bl->filename, "key.asc"))
-                import_key(session, bl->data, bl->size);
+                import_key(session, bl->value, bl->size);
         }
         else if (is_mime_type(bl, "application/pgp-keys")) {
-            import_key(session, bl->data, bl->size);
+            import_key(session, bl->value, bl->size);
         }
         else if (is_mime_type(bl, "text/plain")) {
             if (is_fileending(bl, ".pgp") || is_fileending(bl, ".gpg") ||
                     is_fileending(bl, ".key") || is_fileending(bl, ".asc"))
-                import_key(session, bl->data, bl->size);
+                import_key(session, bl->value, bl->size);
         }
     }
 }
@@ -136,7 +136,7 @@ PEP_cryptotech determine_encryption_format(message *msg)
     }
     else if (msg->attachments && msg->attachments->next &&
             is_mime_type(msg->attachments, "application/pgp-encrypted") &&
-            is_PGP_message_text(msg->attachments->next->data)
+            is_PGP_message_text(msg->attachments->next->value)
         ) {
         msg->enc_format = PEP_enc_PGP_MIME;
         return PEP_crypt_OpenPGP;
@@ -540,9 +540,9 @@ static PEP_STATUS encrypt_PGP_in_pieces(
         bloblist_t *_s = src->attachments;
         bloblist_t *_d = dst->attachments;
 
-        for (int n = 0; _s && _s->data; _s = _s->next) {
+        for (int n = 0; _s && _s->value; _s = _s->next) {
             int psize = _s->size;
-            char *ptext = _s->data;
+            char *ptext = _s->value;
             status = encrypt_and_sign(session, keys, ptext, psize, &ctext,
                     &csize);
             if (ctext) {
@@ -675,7 +675,12 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         }
     }
 
-    if (dest_keys_found) {
+    if (!dest_keys_found) {
+        free_stringlist(keys);
+        attach_own_key(session, src);
+        return PEP_UNENCRYPTED;
+    }
+    else {
         msg = clone_to_empty_message(src);
         if (msg == NULL)
             goto enomem;
@@ -703,9 +708,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             status = PEP_ILLEGAL_VALUE;
             goto pep_error;
         }
-    }
-    else {
-        attach_own_key(session, src);
     }
 
     free_stringlist(keys);
@@ -981,11 +983,12 @@ DYNAMIC_API PEP_STATUS decrypt_message(
  
     switch (src->enc_format) {
         case PEP_enc_none:
-            status = PEP_UNENCRYPTED;
-            break;
+            import_attached_keys(session, src);
+            *color = PEP_rating_unencrypted;
+            return PEP_UNENCRYPTED;
 
         case PEP_enc_PGP_MIME:
-            ctext = src->attachments->next->data;
+            ctext = src->attachments->next->value;
             csize = src->attachments->next->size;
 
             status = cryptotech[crypto].decrypt_and_verify(session, ctext,
@@ -1052,7 +1055,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                 for (_s = src->attachments; _s; _s = _s->next) {
                     if (is_encrypted_attachment(_s)) {
                         stringlist_t *_keylist = NULL;
-                        ctext = _s->data;
+                        ctext = _s->value;
                         csize = _s->size;
 
                         status = decrypt_and_verify(session, ctext, csize,

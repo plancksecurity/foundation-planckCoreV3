@@ -38,7 +38,7 @@ DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_t
             return NULL;
         }
 
-        bloblist->data = blob;
+        bloblist->value = blob;
         bloblist->size = size;
     }
 
@@ -50,7 +50,7 @@ DYNAMIC_API void free_bloblist(bloblist_t *bloblist)
     if (bloblist) {
         if (bloblist->next)
             free_bloblist(bloblist->next);
-        free(bloblist->data);
+        free(bloblist->value);
         free(bloblist->mime_type);
         free(bloblist->filename);
         free(bloblist);
@@ -68,7 +68,7 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src)
     if (blob2 == NULL)
         goto enomem;
 
-    memcpy(blob2, src->data, src->size);
+    memcpy(blob2, src->value, src->size);
     blob2[src->size] = 0; // safeguard
 
     bloblist = new_bloblist(blob2, src->size, src->mime_type, src->filename);
@@ -98,7 +98,7 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
     if (bloblist == NULL)
         return new_bloblist(blob, size, mime_type, filename);
 
-    if (bloblist->data == NULL) {
+    if (bloblist->value == NULL) {
         if (mime_type) {
             bloblist->mime_type = strdup(mime_type);
             if (bloblist->mime_type == NULL) {
@@ -124,7 +124,7 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
         }
         blob[size] = 0; // safeguard
 
-        bloblist->data = blob;
+        bloblist->value = blob;
         bloblist->size = size;
 
         return bloblist;
@@ -140,17 +140,10 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
 
 DYNAMIC_API int bloblist_length(const bloblist_t *bloblist)
 {
-    int len = 1;
-    bloblist_t *_bloblist;
+    int len = 0;
 
-    assert(bloblist);
-
-    if (bloblist->data == NULL)
-        return 0;
-
-    for (_bloblist = bloblist->next; _bloblist != NULL;
-        _bloblist = _bloblist->next)
-        len += 1;
+    for (bloblist_t *_bl = bloblist; _bl && _bl->value; _bl = _bl->next)
+        len++;
 
     return len;
 }

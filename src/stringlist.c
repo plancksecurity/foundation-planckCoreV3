@@ -95,17 +95,11 @@ DYNAMIC_API stringlist_t *stringlist_append(
 
 DYNAMIC_API int stringlist_length(const stringlist_t *stringlist)
 {
-    int len = 1;
-    stringlist_t *_stringlist;
+    int len = 0;
 
-    assert(stringlist);
-
-    if (stringlist->value == NULL)
-        return 0;
-
-    for (_stringlist=stringlist->next; _stringlist!=NULL;
-            _stringlist=_stringlist->next)
-        len += 1;
+    const stringlist_t *_sl;
+    for (_sl = stringlist; _sl && _sl->value; _sl = _sl->next)
+        len++;
 
     return len;
 }

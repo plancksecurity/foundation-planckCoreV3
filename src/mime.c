@@ -218,7 +218,7 @@ static PEP_STATUS mime_attachment(
     else
         mime_type = blob->mime_type;
 
-    mime = get_file_part(blob->filename, mime_type, blob->data, blob->size);
+    mime = get_file_part(blob->filename, mime_type, blob->value, blob->size);
     assert(mime);
     if (mime == NULL)
         goto enomem;
@@ -647,7 +647,7 @@ static PEP_STATUS mime_encode_message_plain(
 
         bloblist_t *_a;
         for (_a = msg->attachments; _a != NULL; _a = _a->next) {
-            assert(_a->data);
+            assert(_a->value);
             assert(_a->size);
 
             status = mime_attachment(_a, &submime);
@@ -697,10 +697,10 @@ static PEP_STATUS mime_encode_message_PGP_MIME(
     char *plaintext;
 
     assert(msg->attachments && msg->attachments->next &&
-            msg->attachments->next->data);
+            msg->attachments->next->value);
 
     subject = (msg->shortmsg) ? msg->shortmsg : "pEp";
-    plaintext = msg->attachments->next->data;
+    plaintext = msg->attachments->next->value;
 
     mime = part_multiple_new("multipart/encrypted");
     assert(mime);

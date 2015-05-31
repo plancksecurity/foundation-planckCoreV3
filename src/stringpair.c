@@ -133,17 +133,11 @@ DYNAMIC_API int stringpair_list_length(
         const stringpair_list_t *stringpair_list
     )
 {
-    int len = 1;
-    stringpair_list_t *_stringpair_list;
+    int len = 0;
 
-    assert(stringpair_list);
-
-    if (stringpair_list->value == NULL)
-        return 0;
-
-    for (_stringpair_list=stringpair_list->next; _stringpair_list!=NULL;
-            _stringpair_list=_stringpair_list->next)
-        len += 1;
+    stringpair_list_t *_sl;
+    for (_sl = stringpair_list; _sl && _sl->value; _sl = _sl->next)
+        len++;
 
     return len;
 }
