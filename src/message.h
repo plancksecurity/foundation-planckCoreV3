@@ -77,23 +77,12 @@ typedef struct _message_ref_list {
 //
 //  parameters:
 //      dir (in)        PEP_dir_incoming or PEP_dir_outgoing
-//      from (in)       identity whom the message is from
-//      to (in)         identity list whom the message is sent to
-//      shortmsg (in)   UTF-8 string of short message
 //
 //  return value:
 //      pointer to new message or NULL if out of memory
-//
-//  caveat:
-//      from and to are moved into the message, the caller loses ownership for
-//      them; shortmsg is being copied, the ownership of the original remains
-//      with the caller
 
 DYNAMIC_API message *new_message(
-        PEP_msg_direction dir,
-        pEp_identity *from,
-        identity_list *to,
-        const char *shortmsg
+        PEP_msg_direction dir
     );
 
 

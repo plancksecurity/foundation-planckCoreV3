@@ -7,10 +7,7 @@
 #include "message.h"
 
 DYNAMIC_API message *new_message(
-        PEP_msg_direction dir,
-        pEp_identity *from,
-        identity_list *to,
-        const char *shortmsg
+        PEP_msg_direction dir
     )
 {
     message *msg = calloc(1, sizeof(message));
@@ -18,18 +15,7 @@ DYNAMIC_API message *new_message(
     if (msg == NULL)
         return NULL;
 
-    if (shortmsg) {
-        msg->shortmsg = strdup(shortmsg);
-        assert(msg->shortmsg);
-        if (msg->shortmsg == NULL) {
-            free(msg);
-            return NULL;
-        }
-    }
-
     msg->dir = dir;
-    msg->from = from;
-    msg->to = to;
 
     return msg;
 }
@@ -67,15 +53,7 @@ DYNAMIC_API message * message_dup(const message *src)
 
     assert(src);
 
-    from = identity_dup(src->from);
-    if (from == NULL)
-        goto enomem;
-
-    to = identity_list_dup(src->to);
-    if (to == NULL)
-        goto enomem;
-
-    msg = new_message(src->dir, from, to, src->shortmsg);
+    msg = new_message(src->dir);
     if (msg == NULL)
         goto enomem;
 
@@ -83,6 +61,13 @@ DYNAMIC_API message * message_dup(const message *src)
         msg->id = strdup(src->id);
         assert(msg->id);
         if (msg->id == NULL)
+            goto enomem;
+    }
+
+    if (src->shortmsg) {
+        msg->shortmsg = strdup(src->shortmsg);
+        assert(msg->shortmsg);
+        if (msg->shortmsg == NULL)
             goto enomem;
     }
 
@@ -121,9 +106,21 @@ DYNAMIC_API message * message_dup(const message *src)
             goto enomem;
     }
 
+    if (src->from) {
+        msg->from = identity_dup(src->from);
+        if (msg->from == NULL)
+            goto enomem;
+    }
+
     if (src->recv_by) {
         msg->recv_by = identity_dup(src->recv_by);
         if (msg->recv_by == NULL)
+            goto enomem;
+    }
+
+    if (src->to) {
+        msg->to = identity_list_dup(src->to);
+        if (msg->to == NULL)
             goto enomem;
     }
 
