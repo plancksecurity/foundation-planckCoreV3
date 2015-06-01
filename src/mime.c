@@ -9,10 +9,26 @@
 #include "etpan_mime.h"
 #include "wrappers.h"
 
+static bool iswhitespace(char c)
+{
+    switch (c) {
+        case ' ':
+        case '\t':
+        case '\r':
+        case '\n':
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 DYNAMIC_API bool is_PGP_message_text(const char *text)
 {
     if (text == NULL)
         return false;
+
+    for (; *text && iswhitespace(*text); text++);
 
     return strncmp(text, "-----BEGIN PGP MESSAGE-----", 27) == 0;
 }
