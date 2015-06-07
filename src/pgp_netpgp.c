@@ -474,7 +474,7 @@ PEP_STATUS pgp_encrypt_and_sign(
     )
 {
     const pgp_key_t *keypair;
-    pgp_seckey_t *seckey;
+    const pgp_seckey_t *seckey;
     pgp_memory_t *signedmem;
     pgp_memory_t *cmem;
     const char *userid;
@@ -510,13 +510,9 @@ PEP_STATUS pgp_encrypt_and_sign(
     }
 
     /* TODO select data signing subkey if defined */
-    seckey = &keypair->key.seckey;
+    seckey = pgp_key_get_certkey(keypair);
 
     hashalg = netpgp_getvar(&netpgp, "hash");
-    // netpgp (l)imitation - XXX why ? 
-    if (seckey->pubkey.alg == PGP_PKA_DSA) {
-        hashalg = "sha1";
-    }
 
     // Sign data
     signedmem = pgp_sign_buf(netpgp.io, ptext, psize, seckey,
@@ -525,8 +521,6 @@ PEP_STATUS pgp_encrypt_and_sign(
                 hashalg, 
                 0 /* armored */,
                 0 /* cleartext */);
-
-    pgp_forget(seckey, (unsigned)sizeof(*seckey));
 
     if (!signedmem) {
         result = PEP_UNENCRYPTED;
@@ -652,114 +646,18 @@ str_to_fpr (const char *str, uint8_t *fpr, size_t *length)
     return 1;
 }
 
-static PEP_STATUS import_key_or_keypair(netpgp_t *netpgp, pgp_key_t *newkey){
-    pgp_key_t pubkey;
-    unsigned public;
-    PEP_STATUS result;
-    pgp_keyring_t tmpring;
-	pgp_validation_t *vresult;
-
-    if ((public = (newkey->type == PGP_PTAG_CT_PUBLIC_KEY))){
-        pubkey = *newkey;
-    } else {
-        // Duplicate key as public only
-        bzero(&pubkey, sizeof(pubkey));
-        if (!pgp_keydata_dup(&pubkey, newkey, 1 /* make_public */)){
-            return PEP_OUT_OF_MEMORY;
-        }
-    }
-
-    // Verify pubkey against a temporary keyring containing the key itself
-    // (netpgp does check subkey binding sigs agains all the given ring,
-    // and doesn't ensure signer is the primary key itself)
-    bzero(&tmpring, sizeof(tmpring));
-    if(!pgp_keyring_add(&tmpring, &pubkey)){
-        result = PEP_OUT_OF_MEMORY;
-        goto free_pubkey;
-    }
-
-    vresult = malloc(sizeof(pgp_validation_t));
-    memset(vresult, 0x0, sizeof(pgp_validation_t));
-    pgp_validate_key_sigs(vresult, &pubkey, &tmpring, NULL);
-    pgp_keyring_free(&tmpring);
-    
-    // There may be no single valid signature (not mandatory)
-    // but at least there must be no invalid signature
-    if (vresult->invalidc) {
-        result = PEP_UNKNOWN_ERROR;
-    } else {
-
-        // check key consistency by ensuring no subkey or 
-        // direct signature are unknown
-        unsigned    n;
-        result = PEP_STATUS_OK;
-        for (n = 0; n < vresult->unknownc && result == PEP_STATUS_OK; ++n) {
-            switch (vresult->unknown_sigs[n].type) {
-            case PGP_SIG_SUBKEY:
-            case PGP_SIG_DIRECT:
-	        case PGP_SIG_PRIMARY: /* TODO is ignored by netpgp XXX */
-                result = PEP_UNKNOWN_ERROR;
-                break;
-            default:
-                break;
-            }
-        }
-        // TODO check in netpgp parser source that 
-        // presence of a subkey binding signature
-        // is enforced
-    }
-
-    pgp_validate_result_free(vresult);
-
-    if (result != PEP_STATUS_OK) {
-        if (!public) goto free_pubkey;
-        return result;
-    }
-
-    /* XXX TODO : replace/update key if already in ring */
-
-    // Append key to netpgp's rings (key ownership transfered)
-    if (!public && !pgp_keyring_add(netpgp->secring, newkey)){
-        result = PEP_OUT_OF_MEMORY;
-        goto free_pubkey;
-    } else if (!pgp_keyring_add(netpgp->pubring, &pubkey)){
-        result = PEP_OUT_OF_MEMORY;
-        goto pop_secring;
-    }
-
-    // save rings 
-    if (netpgp_save_pubring(netpgp) && 
-        (!public || netpgp_save_secring(netpgp)))
-    {
-        /* free nothing, everything transfered */
-        return PEP_STATUS_OK;
-    } else {
-        /* XXX in case only pubring save succeed
-         * pubring file is left as-is, but backup restore
-         * could be attempted if such corner case matters */
-        result = PEP_UNKNOWN_ERROR;
-    }
-
-pop_pubring:
-    ((pgp_keyring_t *)netpgp->pubring)->keyc--;
-pop_secring:
-    ((pgp_keyring_t *)netpgp->secring)->keyc--;
-free_pubkey:
-    pgp_key_free(&pubkey);
-
-    return result;
-}
-
 PEP_STATUS pgp_generate_keypair(
     PEP_SESSION session, pEp_identity *identity
     )
 {
-    pgp_key_t	newkey;
+    pgp_key_t	newseckey;
+    pgp_key_t	newpubkey;
 
     PEP_STATUS result;
     char newid[1024];
     const char *hashalg;
     const char *cipher;
+    char *fprstr = NULL;
 
     assert(session);
     assert(identity);
@@ -784,38 +682,69 @@ PEP_STATUS pgp_generate_keypair(
     hashalg = netpgp_getvar(&netpgp, "hash");
     cipher = netpgp_getvar(&netpgp, "cipher");
 
-    bzero(&newkey, sizeof(newkey));
-
-    // Generate the key
-    if (!pgp_rsa_generate_keypair(&newkey, 4096, 65537UL, hashalg, cipher,
-                                  (const uint8_t *) "", (const size_t) 0) ||
-        !pgp_add_selfsigned_userid(&newkey, (uint8_t *)newid)) {
-        result = PEP_CANNOT_CREATE_KEY;
-        goto free_newkey;
-    }
+    bzero(&newseckey, sizeof(newseckey));
+    bzero(&newpubkey, sizeof(newpubkey));
 
     // TODO "Expire-Date: 1y\n";
-
-
-    result = import_key_or_keypair(&netpgp, &newkey);
-
-    if (result == PEP_STATUS_OK) {
-        char *fprstr = NULL;
-        fpr_to_str(&fprstr,
-                   newkey.sigfingerprint.fingerprint,
-                   newkey.sigfingerprint.length);
-        if (fprstr == NULL) {
-            result = PEP_OUT_OF_MEMORY;
-            goto free_newkey;
-        } 
-        identity->fpr = fprstr;
-        /* free nothing, everything transfered */
-        result = PEP_STATUS_OK;
-        goto unlock_netpgp;
+    // Generate the key
+    if (!pgp_rsa_generate_keypair(&newseckey, 4096, 65537UL, hashalg, cipher,
+                                  (const uint8_t *) "", (const size_t) 0) ||
+        !pgp_add_selfsigned_userid(&newseckey, (uint8_t *)newid)) {
+        result = PEP_CANNOT_CREATE_KEY;
+        goto free_seckey;
     }
 
-free_newkey:
-    pgp_key_free(&newkey);
+    /* duplicate public part of generated secret key */
+    newpubkey.type = PGP_PTAG_CT_PUBLIC_KEY;
+    pgp_pubkey_dup(&newpubkey.key.pubkey, &newseckey.key.seckey.pubkey);
+    pgp_update_userid(&newpubkey,
+                      newseckey.uids[0], 
+                      &newseckey.uidsigs[0].packet, 
+                      &newseckey.uidsigs[0].siginfo);
+
+    fpr_to_str(&fprstr,
+               newseckey.pubkeyfpr.fingerprint,
+               newseckey.pubkeyfpr.length);
+
+    if (fprstr == NULL) {
+        result = PEP_OUT_OF_MEMORY;
+        goto free_pubkey;
+    } 
+
+    // Append key to netpgp's rings (key ownership transfered)
+    if (!pgp_keyring_add(netpgp.secring, &newseckey)){
+        result = PEP_OUT_OF_MEMORY;
+        goto free_pubkey;
+    } else if (!pgp_keyring_add(netpgp.pubring, &newpubkey)){
+        result = PEP_OUT_OF_MEMORY;
+        goto pop_secring;
+    }
+
+    // save rings 
+    if (netpgp_save_pubring(&netpgp) && netpgp_save_secring(&netpgp))
+    {
+        /* keys saved, now send ID back to */
+        identity->fpr = fprstr;
+        result = PEP_STATUS_OK;
+        /* free nothing, everything transfered */
+        goto unlock_netpgp;
+    } else {
+        /* XXX in case only pubring save succeed
+         * pubring file is left as-is, but backup restore
+         * could be attempted if such corner case matters */
+        result = PEP_UNKNOWN_ERROR;
+    }
+
+pop_pubring:
+    ((pgp_keyring_t *)netpgp.pubring)->keyc--;
+pop_secring:
+    ((pgp_keyring_t *)netpgp.secring)->keyc--;
+free_fpr:
+    free(fprstr);
+free_pubkey:
+    pgp_key_free(&newpubkey);
+free_seckey:
+    pgp_key_free(&newseckey);
 unlock_netpgp:
     pthread_mutex_unlock(&netpgp_mutex);
 
@@ -880,7 +809,6 @@ PEP_STATUS pgp_import_keydata(
     )
 {
     pgp_memory_t *mem;
-    pgp_keyring_t tmpring;
     unsigned i = 0;
 
     PEP_STATUS result = PEP_STATUS_OK;
@@ -902,25 +830,13 @@ PEP_STATUS pgp_import_keydata(
     }
     pgp_memory_add(mem, (const uint8_t*)key_data, size);
 
-    bzero(&tmpring, sizeof(tmpring));
-
-    if (pgp_keyring_read_from_mem(netpgp.io, &tmpring, 
+    if (pgp_keyring_read_from_mem(netpgp.io, netpgp.pubring, netpgp.secring, 
                                   _armoured(key_data, size, ARMOR_KEY_HEAD),
                                   mem) == 0){
         result = PEP_ILLEGAL_VALUE;
-    }else if (tmpring.keyc == 0){
-        result = PEP_UNKNOWN_ERROR;
-    }else while(result == PEP_STATUS_OK && i < tmpring.keyc){
-        result = import_key_or_keypair(&netpgp, &tmpring.keys[i++]);
-    }
-    
-    pgp_memory_free(mem);
+    }    
 
-    if (result == PEP_STATUS_OK){
-        pgp_keyring_free(&tmpring);
-    }else{
-        pgp_keyring_purge(&tmpring);
-    }
+    pgp_memory_free(mem);
 
 unlock_netpgp:
     pthread_mutex_unlock(&netpgp_mutex);
@@ -973,7 +889,7 @@ PEP_STATUS pgp_export_keydata(
         goto unlock_netpgp;
     }
 
-    if (!pgp_write_xfer_pubkey(output, key, 1)) {
+    if (!pgp_write_xfer_key(output, key, 1)) {
         result = PEP_UNKNOWN_ERROR;
         goto free_mem;
     }
@@ -1156,8 +1072,8 @@ static PEP_STATUS add_key_fpr_to_stringlist(void *arg, pgp_key_t *key)
     char *newfprstr = NULL;
 
     fpr_to_str(&newfprstr,
-               key->sigfingerprint.fingerprint,
-               key->sigfingerprint.length);
+               key->pubkeyfpr.fingerprint,
+               key->pubkeyfpr.length);
 
     if (newfprstr == NULL) {
         return PEP_OUT_OF_MEMORY;
@@ -1221,8 +1137,8 @@ static PEP_STATUS send_key_cb(void *arg, pgp_key_t *key)
     char *newfprstr = NULL;
 
     fpr_to_str(&newfprstr,
-               key->sigfingerprint.fingerprint,
-               key->sigfingerprint.length);
+               key->pubkeyfpr.fingerprint,
+               key->pubkeyfpr.length);
 
     if (newfprstr == NULL) {
         return PEP_OUT_OF_MEMORY;
