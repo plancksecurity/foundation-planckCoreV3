@@ -62,6 +62,39 @@ int main(int argc, char* argv[])
 	cout << "logging test\n";
 	log_event(session, "log test", "pEp Enginge Test", "This is a logging test sample.", "please ignore this line");
 
+    // Our test user :
+    // pEp Test Alice (test key don't use) <pep.test.alice@pep-project.org>
+    //         6FF00E97
+    // A9411D176FF00E97
+    // 
+    // Other peers :
+    // pEp Test Bob (test key, don't use) <pep.test.bob@pep-project.org> 
+    //         C9C2EE39
+    // 59BFF488C9C2EE39
+    // 
+    // pEp Test John (test key, don't use) <pep.test.john@pep-project.org>
+    //         70DCF575
+    // 135CD6D170DCF575
+
+    const char *kflist[] = {
+        "6FF00E97_sec.asc",
+        "C9C2EE39_pub.asc",
+        "70DCF575_pub.asc",
+        NULL
+    };
+    const char** kf = kflist;
+    while(*kf){
+        char * k_user_buffer = NULL;
+        size_t k_user_length = 0;
+        ReadFileIntoMem(*kf, k_user_buffer, k_user_length);
+        cout << "import_key(" << *kf << ")\n";
+        PEP_STATUS import_status = import_key(session, k_user_buffer, k_user_length);
+        assert(import_status == PEP_STATUS_OK);
+        cout << "successfully imported key\n";
+        delete[] k_user_buffer;
+        kf++;
+    }
+
     char * cipher_buffer = NULL;
     size_t cipher_length = 0;
     ReadFileIntoMem("msg.asc", cipher_buffer, cipher_length);
@@ -116,10 +149,9 @@ int main(int argc, char* argv[])
     assert(verify_result == PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
     free_stringlist(keylist);
 
-    keylist = new_stringlist("DD55BF29DF9B1541");
-    //keylist = new_stringlist("49422235FC99585B891C66530C7B109BFA7261F7");
-    // stringlist_add(keylist, "C6FAA231A2B43252B9526D119550C6B6B8B0FCD6");
-    // stringlist_add(keylist, "5DC8CAC595EDAD6598DD4732DD55BF29DF9B1541");
+    keylist = new_stringlist("A9411D176FF00E97");
+    stringlist_add(keylist, "59BFF488C9C2EE39");
+    stringlist_add(keylist, "135CD6D170DCF575");
 
 	buf_text = NULL;
 	buf_size = 0;

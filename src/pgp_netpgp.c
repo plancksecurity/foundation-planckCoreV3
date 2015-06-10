@@ -40,7 +40,7 @@ static PEP_STATUS init_netpgp()
 
     // netpgp_setvar(&netpgp, "max mem alloc", "4194304");
     netpgp_setvar(&netpgp, "need seckey", "1");
-    netpgp_setvar(&netpgp, "need userid", "1");
+    // netpgp_setvar(&netpgp, "need userid", "1");
 
     // NetPGP shares home with GPG
     home = gpg_home();
@@ -62,6 +62,8 @@ static PEP_STATUS init_netpgp()
         status = PEP_INIT_NETPGP_INIT_FAILED;
         goto unlock_netpgp;
     }
+
+    // netpgp_set_debug("packet-parse.c");
 
 unlock_netpgp:
     pthread_mutex_unlock(&netpgp_mutex);
@@ -204,15 +206,41 @@ _armoured(const char *buf, size_t size, const char *pattern)
 }
 
 /* return key ID's hexdump as a string */
-static void id_to_str(const uint8_t *userid, char *fpr)
+static void id_to_str(const uint8_t *keyid, char *str)
 {
     int i;
     static const char *hexes = "0123456789abcdef";
-    for (i = 0; i < 8 ; i++) {
-        fpr[i * 2] = hexes[(unsigned)(userid[i] & 0xf0) >> 4];
-        fpr[(i * 2) + 1] = hexes[userid[i] & 0xf];
+    for (i = 0; i < PGP_KEY_ID_SIZE ; i++) {
+        str[i * 2] = hexes[(unsigned)(keyid[i] & 0xf0) >> 4];
+        str[(i * 2) + 1] = hexes[keyid[i] & 0xf];
     }
-    fpr[8 * 2] = 0x0;
+    str[PGP_KEY_ID_SIZE * 2] = 0x0;
+}
+
+/* return key ID's hexdump as a string */
+static unsigned str_to_id(uint8_t *keyid, const char *str)
+{
+    int i, n;
+    static const char *hexes = "0123456789abcdef";
+    for (i = 0; i < PGP_KEY_ID_SIZE ; i++) {
+        uint8_t b = 0;
+        for (n = 0; n < 2; n++) {
+            char c = str[i * 2 + n];
+            uint8_t q;
+            if(c >= '0' &&  c <= '9'){
+                q = (c - '0');
+            }else if(c >= 'a' &&  c <= 'z'){
+                q = (c - 'a' + 0xA);
+            }else if(c >= 'A' &&  c <= 'Z'){
+                q = (c - 'A' + 0xA);
+            }else{
+                return 0;
+            }
+            b |= q << (4 * (1 - n));
+        }
+        keyid[i] = b;
+    }
+    return 1;
 }
 
 // Iterate through netpgp' reported valid signatures 
@@ -252,9 +280,9 @@ static PEP_STATUS _validation_results(
         k = *_keylist;
         for (n = 0; n < vresult->validc; ++n) {
             char id[MAX_ID_LENGTH + 1];
-            const uint8_t *userid = vresult->valid_sigs[n].signer_id;
+            const uint8_t *keyid = vresult->valid_sigs[n].signer_id;
 
-            id_to_str(userid, id);
+            id_to_str(keyid, id);
 
             k = stringlist_add(k, id);
             if(!k){
@@ -473,11 +501,10 @@ PEP_STATUS pgp_encrypt_and_sign(
     size_t psize, char **ctext, size_t *csize
     )
 {
-    const pgp_key_t *keypair;
-    const pgp_seckey_t *seckey;
+    const pgp_key_t *signer = NULL;
+    const pgp_seckey_t *seckey = NULL;
     pgp_memory_t *signedmem;
     pgp_memory_t *cmem;
-    const char *userid;
     const char *hashalg;
     pgp_keyring_t *rcpts;
 
@@ -501,16 +528,65 @@ PEP_STATUS pgp_encrypt_and_sign(
     *ctext = NULL;
     *csize = 0;
 
-    // Get signing details from netpgp
-    if ((userid = netpgp_getvar(&netpgp, "userid")) == NULL || 
-        (keypair = pgp_getkeybyname(netpgp.io, 
-                                    netpgp.secring, 
-                                    userid)) == NULL) {
-        return PEP_UNKNOWN_ERROR;
+    if ((rcpts = calloc(1, sizeof(*rcpts))) == NULL) {
+        result = PEP_OUT_OF_MEMORY;
+        goto free_signedmem;
+    }
+    for (_keylist = keylist; _keylist != NULL; _keylist = _keylist->next) {
+        assert(_keylist->value);
+        const pgp_key_t *key;
+        uint8_t keyid[PGP_KEY_ID_SIZE];
+        unsigned from = 0;
+
+        if(!str_to_id(keyid, _keylist->value))
+        {
+            result = PEP_ILLEGAL_VALUE;
+            goto free_rcpts;
+        }
+
+        key = pgp_getkeybyid(netpgp.io, netpgp.pubring, 
+                 keyid, &from, NULL, NULL, 
+                 1, 0); /* reject revoked, accept expired */
+        if(key == NULL){
+            result = PEP_KEY_NOT_FOUND;
+            goto free_rcpts;
+        }
+
+        /* Signer is the first key in the list */
+        if(signer == NULL){
+            from = 0;
+            signer = pgp_getkeybyid(netpgp.io, netpgp.secring, 
+                     keyid, &from, NULL, NULL, 
+                     0, 0); /* accept any */
+            if(signer == NULL){
+                result = PEP_KEY_NOT_FOUND;
+                goto free_rcpts;
+            }
+        }
+
+        printf("ZZ %s\n", _keylist->value);
+        // add key to recipients/signers
+        pgp_keyring_add(rcpts, key);
+        if(rcpts->keys == NULL){
+            result = PEP_OUT_OF_MEMORY;
+            goto free_signedmem;
+        }
+           printf("ZZ %s\n", _keylist->value);
     }
 
-    /* TODO select data signing subkey if defined */
-    seckey = pgp_key_get_certkey(keypair);
+    /* Empty keylist ?*/
+    if(rcpts->keyc == 0){
+        result = PEP_ILLEGAL_VALUE;
+        goto free_signedmem;
+    }
+
+    seckey = pgp_key_get_certkey(signer);
+
+    /* No signig key. Revoked ? */
+    if(seckey == NULL){
+        result = PEP_GET_KEY_FAILED;
+        goto free_signedmem;
+    }
 
     hashalg = netpgp_getvar(&netpgp, "hash");
 
@@ -528,30 +604,6 @@ PEP_STATUS pgp_encrypt_and_sign(
     }
 
     // Encrypt signed data
-    if ((rcpts = calloc(1, sizeof(*rcpts))) == NULL) {
-        result = PEP_OUT_OF_MEMORY;
-        goto free_signedmem;
-    }
-    for (_keylist = keylist; _keylist != NULL; _keylist = _keylist->next) {
-        assert(_keylist->value);
-        // get key from netpgp's pubring
-        const pgp_key_t *key;
-        key = pgp_getkeybyname(netpgp.io,
-                               netpgp.pubring,
-                               _keylist->value);
-
-        if(key == NULL){
-            result = PEP_KEY_NOT_FOUND;
-            goto free_rcpts;
-        }
-
-        // add key to recipients/signers
-        pgp_keyring_add(rcpts, key);
-        if(rcpts->keys == NULL){
-            result = PEP_OUT_OF_MEMORY;
-            goto free_signedmem;
-        }
-    }
 
     cmem = pgp_encrypt_buf(netpgp.io, pgp_mem_data(signedmem),
             pgp_mem_len(signedmem), rcpts, 1 /* armored */,
@@ -584,10 +636,10 @@ PEP_STATUS pgp_encrypt_and_sign(
 
 free_cmem :
     pgp_memory_free(cmem);
-free_rcpts :
-    pgp_keyring_free(rcpts);
 free_signedmem :
     pgp_memory_free(signedmem);
+free_rcpts :
+    pgp_keyring_free(rcpts);
 unlock_netpgp:
     pthread_mutex_unlock(&netpgp_mutex);
 
