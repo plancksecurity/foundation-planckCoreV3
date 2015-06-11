@@ -205,7 +205,7 @@ _armoured(const char *buf, size_t size, const char *pattern)
     return armoured;
 }
 
-/* return key ID's hexdump as a string */
+/* write key ID's hexdump as a string */
 static void id_to_str(const uint8_t *keyid, char *str)
 {
     int i;
@@ -217,11 +217,11 @@ static void id_to_str(const uint8_t *keyid, char *str)
     str[PGP_KEY_ID_SIZE * 2] = 0x0;
 }
 
-/* return key ID's hexdump as a string */
+/* write key ID bytes read from hex string 
+ * tolerates no space, only hexes */
 static unsigned str_to_id(uint8_t *keyid, const char *str)
 {
     int i, n;
-    static const char *hexes = "0123456789abcdef";
     for (i = 0; i < PGP_KEY_ID_SIZE ; i++) {
         uint8_t b = 0;
         for (n = 0; n < 2; n++) {
@@ -229,9 +229,9 @@ static unsigned str_to_id(uint8_t *keyid, const char *str)
             uint8_t q;
             if(c >= '0' &&  c <= '9'){
                 q = (c - '0');
-            }else if(c >= 'a' &&  c <= 'z'){
+            }else if(c >= 'a' &&  c <= 'f'){
                 q = (c - 'a' + 0xA);
-            }else if(c >= 'A' &&  c <= 'Z'){
+            }else if(c >= 'A' &&  c <= 'F'){
                 q = (c - 'A' + 0xA);
             }else{
                 return 0;
@@ -564,14 +564,12 @@ PEP_STATUS pgp_encrypt_and_sign(
             }
         }
 
-        printf("ZZ %s\n", _keylist->value);
         // add key to recipients/signers
         pgp_keyring_add(rcpts, key);
         if(rcpts->keys == NULL){
             result = PEP_OUT_OF_MEMORY;
             goto free_signedmem;
         }
-           printf("ZZ %s\n", _keylist->value);
     }
 
     /* Empty keylist ?*/
@@ -646,7 +644,7 @@ unlock_netpgp:
     return result;
 }
 
-/* return the hexdump as a string */
+/* write key fingerprint hexdump as a string */
 static unsigned
 fpr_to_str (char **str, const uint8_t *fpr, size_t length)
 {
@@ -667,6 +665,8 @@ fpr_to_str (char **str, const uint8_t *fpr, size_t length)
     return 1;
 }
 
+/* write key fingerprint bytes read from hex string 
+ * accept spaces and hexes */
 static unsigned
 str_to_fpr (const char *str, uint8_t *fpr, size_t *length)
 {
@@ -703,13 +703,12 @@ PEP_STATUS pgp_generate_keypair(
     )
 {
     pgp_key_t	newseckey;
-    pgp_key_t	newpubkey;
+    pgp_key_t	*newpubkey;
 
     PEP_STATUS result;
     char newid[1024];
     const char *hashalg;
     const char *cipher;
-    char *fprstr = NULL;
 
     assert(session);
     assert(identity);
@@ -735,7 +734,6 @@ PEP_STATUS pgp_generate_keypair(
     cipher = netpgp_getvar(&netpgp, "cipher");
 
     bzero(&newseckey, sizeof(newseckey));
-    bzero(&newpubkey, sizeof(newpubkey));
 
     // TODO "Expire-Date: 1y\n";
     // Generate the key
@@ -746,38 +744,48 @@ PEP_STATUS pgp_generate_keypair(
         goto free_seckey;
     }
 
-    /* duplicate public part of generated secret key */
-    newpubkey.type = PGP_PTAG_CT_PUBLIC_KEY;
-    pgp_pubkey_dup(&newpubkey.key.pubkey, &newseckey.key.seckey.pubkey);
-    pgp_update_userid(&newpubkey,
+    /* make a public key out of generated secret key */
+    newpubkey = pgp_ensure_pubkey(
+            netpgp.pubring,
+            &newseckey.key.seckey.pubkey,
+            newseckey.pubkeyid);
+
+    if (newpubkey == NULL) {
+        result = PEP_OUT_OF_MEMORY;
+        goto free_seckey;
+    }
+
+    /* Copy the only user ID given to that key */
+    pgp_update_userid(newpubkey,
                       newseckey.uids[0], 
                       &newseckey.uidsigs[0].packet, 
                       &newseckey.uidsigs[0].siginfo);
 
-    fpr_to_str(&fprstr,
-               newseckey.pubkeyfpr.fingerprint,
-               newseckey.pubkeyfpr.length);
-
-    if (fprstr == NULL) {
-        result = PEP_OUT_OF_MEMORY;
-        goto free_pubkey;
-    } 
+    /* No subkey have been created nothing else to copy to public */
 
     // Append key to netpgp's rings (key ownership transfered)
     if (!pgp_keyring_add(netpgp.secring, &newseckey)){
         result = PEP_OUT_OF_MEMORY;
-        goto free_pubkey;
-    } else if (!pgp_keyring_add(netpgp.pubring, &newpubkey)){
-        result = PEP_OUT_OF_MEMORY;
-        goto pop_secring;
-    }
+        goto delete_pubkey;
+    } 
 
     // save rings 
     if (netpgp_save_pubring(&netpgp) && netpgp_save_secring(&netpgp))
     {
-        /* keys saved, now send ID back to */
+        char *fprstr = NULL;
+        fpr_to_str(&fprstr,
+                   newseckey.pubkeyfpr.fingerprint,
+                   newseckey.pubkeyfpr.length);
+
+        if (fprstr == NULL) {
+            result = PEP_OUT_OF_MEMORY;
+            goto pop_secring;
+        } 
+
+        /* keys saved, pass fingerprint back */
         identity->fpr = fprstr;
         result = PEP_STATUS_OK;
+
         /* free nothing, everything transfered */
         goto unlock_netpgp;
     } else {
@@ -787,14 +795,15 @@ PEP_STATUS pgp_generate_keypair(
         result = PEP_UNKNOWN_ERROR;
     }
 
-pop_pubring:
-    ((pgp_keyring_t *)netpgp.pubring)->keyc--;
 pop_secring:
     ((pgp_keyring_t *)netpgp.secring)->keyc--;
-free_fpr:
-    free(fprstr);
-free_pubkey:
-    pgp_key_free(&newpubkey);
+delete_pubkey:
+    pgp_deletekeybyfpr(netpgp.io,
+                    (pgp_keyring_t *)netpgp.pubring, 
+                    newseckey.pubkeyfpr.fingerprint,
+                    newseckey.pubkeyfpr.length);
+    /* TODO delete key from ring */
+    /* pgp_key_free(newpubkey);*/ 
 free_seckey:
     pgp_key_free(&newseckey);
 unlock_netpgp:
