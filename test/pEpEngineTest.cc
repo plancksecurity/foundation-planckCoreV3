@@ -255,8 +255,8 @@ int main(int argc, char* argv[])
     cout << "delete_keypair() exits with " << delete_status << "\n";
     assert(delete_status == PEP_STATUS_OK);
 
-    cout << "finding key for outlooktest@dingens.org\n";
-    PEP_STATUS find_keys_status = find_keys(session, "outlooktest@dingens.org", &keylist);
+    cout << "finding key for pep.test.john@pep-project.org\n";
+    PEP_STATUS find_keys_status = find_keys(session, "pep.test.john@pep-project.org", &keylist);
     cout << "find_keys() exits with " << find_keys_status << "\n";
     assert(find_keys_status == PEP_STATUS_OK);
     assert(keylist);
