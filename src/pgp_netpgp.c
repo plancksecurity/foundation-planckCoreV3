@@ -905,13 +905,53 @@ unlock_netpgp:
     return result;
 }
 
+static PEP_STATUS _export_keydata(
+    pgp_key_t *key,
+    char **buffer,
+    size_t *buflen
+    )
+{
+    PEP_STATUS result;
+	pgp_output_t *output;
+    pgp_memory_t *mem;
+	pgp_setup_memory_write(&output, &mem, 128);
+
+    if (mem == NULL || output == NULL) {
+        return PEP_OUT_OF_MEMORY;
+    }
+
+    if (!pgp_write_xfer_key(output, key, 1)) {
+        result = PEP_UNKNOWN_ERROR;
+        goto free_mem;
+    }
+
+    *buffer = NULL;
+    *buflen = pgp_mem_len(mem);
+
+    // Allocate transferable buffer
+    *buffer = malloc(*buflen + 1);
+    assert(*buffer);
+    if (*buffer == NULL) {
+        result = PEP_OUT_OF_MEMORY;
+        goto free_mem;
+    }
+
+    memcpy(*buffer, pgp_mem_data(mem), *buflen);
+    (*buffer)[*buflen] = 0; // safeguard for naive users
+
+    return PEP_STATUS_OK;
+
+free_mem :
+	pgp_teardown_memory_write(output, mem);
+
+    return result;
+}
+
 PEP_STATUS pgp_export_keydata(
     PEP_SESSION session, const char *fprstr, char **key_data, size_t *size
     )
 {
     pgp_key_t *key;
-	pgp_output_t *output;
-    pgp_memory_t *mem;
     uint8_t fpr[PGP_FINGERPRINT_SIZE];
     size_t fprlen;
 
@@ -943,38 +983,15 @@ PEP_STATUS pgp_export_keydata(
         goto unlock_netpgp;
     }
     
-	pgp_setup_memory_write(&output, &mem, 128);
-
-    if (mem == NULL || output == NULL) {
-        result = PEP_OUT_OF_MEMORY;
-        goto unlock_netpgp;
+    result = _export_keydata(key, &buffer, &buflen);
+    
+    if(result == PEP_STATUS_OK)
+    {
+        *key_data = buffer;
+        *size = buflen;
+        result = PEP_STATUS_OK;
     }
 
-    if (!pgp_write_xfer_key(output, key, 1)) {
-        result = PEP_UNKNOWN_ERROR;
-        goto free_mem;
-    }
-
-    buffer = NULL;
-    buflen = pgp_mem_len(mem);
-
-    // Allocate transferable buffer
-    buffer = malloc(buflen + 1);
-    assert(buffer);
-    if (buffer == NULL) {
-        result = PEP_OUT_OF_MEMORY;
-        goto free_mem;
-    }
-
-    memcpy(buffer, pgp_mem_data(mem), buflen);
-
-    *key_data = buffer;
-    *size = buflen;
-    (*key_data)[*size] = 0; // safeguard for naive users
-    result = PEP_STATUS_OK;
-
-free_mem :
-	pgp_teardown_memory_write(output, mem);
 unlock_netpgp:
     pthread_mutex_unlock(&netpgp_mutex);
 
@@ -1195,25 +1212,35 @@ unlock_netpgp:
 
 static PEP_STATUS send_key_cb(void *arg, pgp_key_t *key)
 {
-    char *newfprstr = NULL;
+    char *buffer = NULL;
+    size_t buflen = 0;
+    PEP_STATUS result;
+    stringlist_t *encoded_keys;
+    encoded_keys = (stringlist_t*)arg;
 
-    fpr_to_str(&newfprstr,
-               key->pubkeyfpr.fingerprint,
-               key->pubkeyfpr.length);
-
-    if (newfprstr == NULL) {
-        return PEP_OUT_OF_MEMORY;
-    } else { 
-
-        printf("would send:\n%s\n", newfprstr);
-        pgp_print_keydata(netpgp.io, netpgp.pubring, key, "to send", &key->key.pubkey, 0);
-        free(newfprstr);
+    result = _export_keydata(key, &buffer, &buflen);
+    
+    if(result == PEP_STATUS_OK){
+        char *encoded_key;
+        encoded_key = curl_escape(buffer, buflen);
+        if(!encoded_key){
+            return PEP_OUT_OF_MEMORY;
+        }
+        if(!stringlist_add(encoded_keys, buffer)){
+            result = PEP_OUT_OF_MEMORY;
+        }
+        curl_free(encoded_key);
     }
-    return PEP_STATUS_OK;
+
+    return result;
 }
 
 PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
 {
+    static const char *ks_cmd = "http://keys.gnupg.net:11371/pks/add";
+
+    stringlist_t *encoded_keys;
+    const stringlist_t *post;
 
     PEP_STATUS result;
 
@@ -1223,15 +1250,59 @@ PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
     if (!session || !pattern )
         return PEP_UNKNOWN_ERROR;
 
+    encoded_keys = new_stringlist(NULL);
+    assert(encoded_keys);
+    if (encoded_keys == NULL) {
+        return PEP_OUT_OF_MEMORY;
+    }
+
     if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
     }
 
-    result = find_keys_do(pattern, &send_key_cb, NULL);
+    result = find_keys_do(pattern, &send_key_cb, (void*)encoded_keys);
 
-    result = PEP_CANNOT_SEND_KEY;
 unlock_netpgp:
     pthread_mutex_unlock(&netpgp_mutex);
+
+    if(pthread_mutex_lock(&session->ctx.curl_mutex)){
+        return PEP_UNKNOWN_ERROR;
+    }
+
+    if(result == PEP_STATUS_OK){
+        CURLcode curlres;
+        CURL *curl;
+
+        curl = session->ctx.curl;
+
+        for (post = encoded_keys; post != NULL; post = post->next) {
+            assert(post->value);
+
+            curl_easy_setopt(curl, CURLOPT_URL, ks_cmd);
+            curl_easy_setopt(curl, CURLOPT_POST, 1L);
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post->value);
+            curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
+
+            /* TODO remove */
+            curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+
+            curlres = curl_easy_perform(curl);
+
+            if(curlres != CURLE_OK) {
+
+                continue; /* TODO Stop ignoring it doens't work */
+
+                result = PEP_CANNOT_SEND_KEY;
+                goto free_encoded_keys;
+            }
+        }
+    }
+
+free_encoded_keys:
+    free_stringlist(encoded_keys);
+
+unlock_curl:
+    pthread_mutex_unlock(&session->ctx.curl_mutex);
 
     return result;
 }
