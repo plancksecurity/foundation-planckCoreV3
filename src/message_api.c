@@ -393,7 +393,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
 
     dst->enc_format = PEP_enc_pieces;
 
-    if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0) {
+    if (src->shortmsg && src->shortmsg[0] && strcmp(src->shortmsg, "pEp") != 0) {
         char *ptext = combine_short_and_long(src->shortmsg, src->longmsg);
         if (ptext == NULL)
             goto enomem;
@@ -411,7 +411,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
             goto pep_error;
         }
     }
-    else if (src->longmsg) {
+    else if (src->longmsg && src->longmsg[0]) {
         char *ptext = src->longmsg;
         status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
             &csize);
@@ -431,7 +431,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
             goto enomem;
     }
 
-    if (src->longmsg_formatted) {
+    if (src->longmsg_formatted && src->longmsg_formatted[0]) {
         char *ptext = src->longmsg_formatted;
         status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
             &csize);
@@ -630,12 +630,12 @@ static bool is_encrypted_attachment(const bloblist_t *blob)
     if (ext == NULL)
         return false;
 
-    if (strcmp(blob->mime_type, "application/octet-stream")) {
+    if (strcmp(blob->mime_type, "application/octet-stream") == 0) {
         if (strcmp(ext, ".pgp") == 0 || strcmp(ext, ".gpg") == 0 ||
             strcmp(ext, ".asc") == 0)
             return true;
     }
-    else if (strcmp(blob->mime_type, "text/plain")) {
+    else if (strcmp(blob->mime_type, "text/plain") == 0) {
         if (strcmp(ext, ".asc") == 0)
             return true;
     }
@@ -1086,8 +1086,13 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                     goto enomem;
 
                 bloblist_t *_m = msg->attachments;
+                if (_m == NULL && src->attachments && src->attachments->value) {
+                    msg->attachments = new_bloblist(NULL, 0, NULL, NULL);
+                    _m = msg->attachments;
+                }
+
                 bloblist_t *_s;
-                for (_s = src->attachments; _s; _s = _s->next) {
+                for (_s = src->attachments; _s && _s->value; _s = _s->next) {
                     if (is_encrypted_attachment(_s)) {
                         stringlist_t *_keylist = NULL;
                         ctext = _s->value;
@@ -1126,12 +1131,19 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                             }
                         }
                         else {
-                            _m = bloblist_dup(_s);
+                            char *copy = malloc(_s->size);
+                            memcpy(copy, _s->value, _s->size);
+                            _m = bloblist_add(_m, copy, _s->size, _s->mime_type, _s->filename);
                             if (_m == NULL)
                                 goto enomem;
-                            if (msg->attachments == NULL)
-                                msg->attachments = _m;
                         }
+                    }
+                    else {
+                        char *copy = malloc(_s->size);
+                        memcpy(copy, _s->value, _s->size);
+                        _m = bloblist_add(_m, copy, _s->size, _s->mime_type, _s->filename);
+                        if (_m == NULL)
+                            goto enomem;
                     }
                 }
 

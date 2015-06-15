@@ -120,7 +120,6 @@ static inline string managementPath(const char *file_path, const char *file_name
 
 	CreateDirectory(tPath, NULL);
 	DWORD error = GetLastError();
-	assert(error == 0 || error == ERROR_ALREADY_EXISTS);
 
 	path = utf8_string(tPath);
 	path += "\\";

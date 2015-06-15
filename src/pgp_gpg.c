@@ -22,7 +22,6 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values)
     unsigned int found = 0;
 
     f = Fopen(gpg_conf(), "r");
-    assert(f);
     if (f == NULL && errno == ENOMEM)
         return false;
 
