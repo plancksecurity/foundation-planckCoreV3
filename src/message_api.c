@@ -941,9 +941,15 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
         case PEP_enc_pieces:
             status = encrypt_PGP_in_pieces(session, src, keys, msg);
-            if (status != PEP_STATUS_OK)
+            if (status == PEP_OUT_OF_MEMORY)
+                goto enomem;
+            if (status != PEP_STATUS_OK) {
+                attach_own_key(session, src);
                 goto pep_error;
-            attach_own_key(session, msg);
+            }
+            else {
+                attach_own_key(session, msg);
+            }
             break;
 
         case PEP_enc_PEP:
