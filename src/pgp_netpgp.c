@@ -1022,9 +1022,13 @@ HKPAnswerWriter(void *contents, size_t size, size_t nmemb, void *userp)
   return realsize;
 }
 
+// #define HKP_SERVER "http://keys.gnupg.net:11371"
+#define HKP_SERVER "http://127.0.0.1:11371"
+
 PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
 {
-    static const char *ks_cmd = "http://keys.gnupg.net:11371/pks/lookup?"
+    static const char *ks_cmd = HKP_SERVER
+                                "/pks/lookup?"
                                 "op=get&options=mr&exact=on&"
                                 "search=";
     char *encoded_pattern;
@@ -1210,6 +1214,9 @@ unlock_netpgp:
     return result;
 }
 
+#define HKP_REQ_PREFIX "keytext="
+#define HKP_REQ_PREFIX_LEN 8
+
 static PEP_STATUS send_key_cb(void *arg, pgp_key_t *key)
 {
     char *buffer = NULL;
@@ -1222,14 +1229,37 @@ static PEP_STATUS send_key_cb(void *arg, pgp_key_t *key)
     
     if(result == PEP_STATUS_OK){
         char *encoded_key;
+        char *request;
+        size_t encoded_key_len;
+
         encoded_key = curl_escape(buffer, buflen);
         if(!encoded_key){
-            return PEP_OUT_OF_MEMORY;
+            result = PEP_OUT_OF_MEMORY;
+            goto free_buffer;
         }
-        if(!stringlist_add(encoded_keys, buffer)){
+        encoded_key_len = strlen(encoded_key);
+
+        request = calloc(1, HKP_REQ_PREFIX_LEN + encoded_key_len + 1);
+        if(!request){
+            result = PEP_OUT_OF_MEMORY;
+            goto free_encoded_key;
+        }
+        
+        memcpy(request, HKP_REQ_PREFIX, HKP_REQ_PREFIX_LEN);
+        memcpy(request + HKP_REQ_PREFIX_LEN, encoded_key, encoded_key_len);
+        request[HKP_REQ_PREFIX_LEN + encoded_key_len] = '\0';
+
+        if(!stringlist_add(encoded_keys, request)){
             result = PEP_OUT_OF_MEMORY;
         }
+
+        free(request);
+
+free_encoded_key:
         curl_free(encoded_key);
+
+free_buffer:        
+        free(buffer);
     }
 
     return result;
@@ -1237,7 +1267,7 @@ static PEP_STATUS send_key_cb(void *arg, pgp_key_t *key)
 
 PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
 {
-    static const char *ks_cmd = "http://keys.gnupg.net:11371/pks/add";
+    static const char *ks_cmd = HKP_SERVER "/pks/add";
 
     stringlist_t *encoded_keys;
     const stringlist_t *post;
@@ -1289,8 +1319,6 @@ unlock_netpgp:
             curlres = curl_easy_perform(curl);
 
             if(curlres != CURLE_OK) {
-
-                continue; /* TODO Stop ignoring it doens't work */
 
                 result = PEP_CANNOT_SEND_KEY;
                 goto free_encoded_keys;
