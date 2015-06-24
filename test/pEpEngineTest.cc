@@ -271,6 +271,7 @@ int main(int argc, char* argv[])
 
     cout << "sending vb@ulm.ccc.de to keyserver\n";
     PEP_STATUS send_key_status = send_key(session, "vb@ulm.ccc.de");
+    cout << "send_key() exits with " << send_key_status << "\n";
     assert(send_key_status == PEP_STATUS_OK);
 
     PEP_comm_type tcomm_type;

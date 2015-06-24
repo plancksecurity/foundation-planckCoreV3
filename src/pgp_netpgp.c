@@ -85,7 +85,6 @@ static void release_netpgp()
 }
 
 static PEP_STATUS init_curl(
-    CURL **curl,
     pthread_mutex_t *curl_mutex,
     bool in_first)
 {
@@ -104,6 +103,33 @@ static PEP_STATUS init_curl(
         curl_global_init(CURL_GLOBAL_DEFAULT);
     }
 
+    pthread_mutex_unlock(curl_mutex);
+    return status;
+}
+
+static void release_curl(
+    pthread_mutex_t *curl_mutex, 
+    bool out_last)
+{
+    if(pthread_mutex_lock(curl_mutex)){
+        return;
+    }
+
+    if(out_last){
+        curl_global_cleanup();
+    }
+
+    pthread_mutex_destroy(curl_mutex);
+
+    return;
+}
+
+static PEP_STATUS curl_get_ctx(
+    CURL **curl)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    struct curl_slist *headers=NULL;
+
     if ((*curl = curl_easy_init()) == NULL) {
         return PEP_OUT_OF_MEMORY;
     }
@@ -117,39 +143,23 @@ static PEP_STATUS init_curl(
 
     if(!headers)
     {
-        status = PEP_OUT_OF_MEMORY;
-        goto unlock_curl;
+        return PEP_OUT_OF_MEMORY;
     }
 
     curl_easy_setopt(curl,CURLOPT_HTTPHEADER,headers);
     curl_slist_free_all(headers);
 
     // TODO curl_easy_setopt(curl,CURLOPT_PROXY,proxy);
-
-unlock_curl:
-    pthread_mutex_unlock(curl_mutex);
     return status;
 }
 
-static void release_curl(
-    CURL **curl,
-    pthread_mutex_t *curl_mutex, 
-    bool out_last)
+static void curl_release_ctx(
+    CURL **curl)
 {
-    if(pthread_mutex_lock(curl_mutex)){
-        return;
-    }
-
     if(*curl)
         curl_easy_cleanup(*curl);
 
     *curl = NULL;
-
-    if(out_last){
-        curl_global_cleanup();
-    }
-
-    pthread_mutex_destroy(curl_mutex);
 
     return;
 }
@@ -167,7 +177,6 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     }
 
     if((status = init_curl(
-                    &session->ctx.curl,
                     &session->ctx.curl_mutex,
                     in_first) != PEP_STATUS_OK)){
         if(in_first) release_netpgp();
@@ -185,7 +194,7 @@ void pgp_release(PEP_SESSION session, bool out_last)
     if (out_last){
         release_netpgp();
     }
-    release_curl(&session->ctx.curl, &session->ctx.curl_mutex, out_last);
+    release_curl(&session->ctx.curl_mutex, out_last);
 }
 
 // return 1 if the file contains ascii-armoured text 
@@ -1050,12 +1059,15 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
         return PEP_UNKNOWN_ERROR;
     }
 
-    curl = session->ctx.curl;
+    result = curl_get_ctx(&curl);
+    if(result != PEP_STATUS_OK){
+        goto unlock_curl;
+    }
 
     encoded_pattern = curl_easy_escape(curl, (char*)pattern, 0);
     if(!encoded_pattern){
         result = PEP_OUT_OF_MEMORY;
-        goto unlock_curl;
+        goto release_curl_ctx;
     }
 
     if((request = malloc(strlen(ks_cmd) + strlen(encoded_pattern) + 1))==NULL){
@@ -1095,6 +1107,8 @@ free_request:
     free(request);
 free_encoded_pattern:
     curl_free(encoded_pattern);
+release_curl_ctx:
+    curl_release_ctx(&curl);
 unlock_curl:
     pthread_mutex_unlock(&session->ctx.curl_mutex);
 
@@ -1274,6 +1288,8 @@ PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
 
     PEP_STATUS result;
 
+    CURL *curl;
+
     assert(session);
     assert(pattern);
 
@@ -1287,23 +1303,30 @@ PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
     }
 
     if(pthread_mutex_lock(&netpgp_mutex)){
-        return PEP_UNKNOWN_ERROR;
+        result = PEP_UNKNOWN_ERROR;
+        goto free_encoded_keys;
     }
 
     result = find_keys_do(pattern, &send_key_cb, (void*)encoded_keys);
 
-unlock_netpgp:
     pthread_mutex_unlock(&netpgp_mutex);
 
+    if(result != PEP_STATUS_OK){
+        goto free_encoded_keys;
+    }
+
     if(pthread_mutex_lock(&session->ctx.curl_mutex)){
-        return PEP_UNKNOWN_ERROR;
+        result = PEP_UNKNOWN_ERROR;
+        goto free_encoded_keys;
+    }
+
+    result = curl_get_ctx(&curl);
+    if(result != PEP_STATUS_OK){
+        goto unlock_curl;
     }
 
     if(result == PEP_STATUS_OK){
         CURLcode curlres;
-        CURL *curl;
-
-        curl = session->ctx.curl;
 
         for (post = encoded_keys; post != NULL; post = post->next) {
             assert(post->value);
@@ -1321,16 +1344,17 @@ unlock_netpgp:
             if(curlres != CURLE_OK) {
 
                 result = PEP_CANNOT_SEND_KEY;
-                goto free_encoded_keys;
+                goto release_curl_ctx;
             }
         }
     }
 
-free_encoded_keys:
-    free_stringlist(encoded_keys);
-
+release_curl_ctx:
+    curl_release_ctx(&curl);
 unlock_curl:
     pthread_mutex_unlock(&session->ctx.curl_mutex);
+free_encoded_keys:
+    free_stringlist(encoded_keys);
 
     return result;
 }
