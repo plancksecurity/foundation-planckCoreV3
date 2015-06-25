@@ -1031,8 +1031,8 @@ HKPAnswerWriter(void *contents, size_t size, size_t nmemb, void *userp)
   return realsize;
 }
 
-// #define HKP_SERVER "http://keys.gnupg.net:11371"
-#define HKP_SERVER "http://127.0.0.1:11371"
+#define HKP_SERVER "http://keys.gnupg.net:11371"
+// #define HKP_SERVER "http://127.0.0.1:11371"
 
 PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
 {
@@ -1336,8 +1336,8 @@ PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post->value);
             curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
 
-            /* TODO remove */
-            curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+            // Uncomment if debugging
+            // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
             curlres = curl_easy_perform(curl);
 
