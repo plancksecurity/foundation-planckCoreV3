@@ -856,7 +856,7 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fprstr)
         goto unlock_netpgp;
     }
 
-    // save rings (key ownership transfered)
+    // save rings 
     if (netpgp_save_pubring(&netpgp) && 
         netpgp_save_secring(&netpgp))
     {
@@ -907,6 +907,15 @@ PEP_STATUS pgp_import_keydata(
     }    
 
     pgp_memory_free(mem);
+
+    // save rings 
+    if (netpgp_save_pubring(&netpgp) && 
+        netpgp_save_secring(&netpgp))
+    {
+        result = PEP_STATUS_OK;
+    }else{
+        result = PEP_UNKNOWN_ERROR;
+    }
 
 unlock_netpgp:
     pthread_mutex_unlock(&netpgp_mutex);
@@ -1467,20 +1476,27 @@ PEP_STATUS pgp_revoke_key(
 
 PEP_STATUS pgp_key_expired(
         PEP_SESSION session,
-        const char *fpr,
+        const char *keyidstr,
         bool *expired
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
+    PEP_comm_type comm_type;
 
     assert(session);
-    assert(fpr);
+    assert(keyidstr);
     assert(expired);
 
     *expired = false;
 
+    status = pgp_get_key_rating(session, keyidstr, &comm_type);
+
     if (status != PEP_STATUS_OK)
         return status;
+
+    if (comm_type == PEP_ct_key_expired){
+        *expired = true;
+    }
 
     return PEP_STATUS_OK;
 }
