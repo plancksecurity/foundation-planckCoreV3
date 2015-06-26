@@ -1362,65 +1362,69 @@ free_encoded_keys:
 
 PEP_STATUS pgp_get_key_rating(
     PEP_SESSION session,
-    const char *fpr,
+    const char *keyidstr,
     PEP_comm_type *comm_type
     )
 {
+    const pgp_key_t *key;
+    uint8_t keyid[PGP_KEY_ID_SIZE];
+    unsigned from = 0;
+
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-    assert(fpr);
+    assert(keyidstr);
     assert(comm_type);
 
-    *comm_type = PEP_ct_unknown;
+    if (!session || !keyidstr || !comm_type )
+        return PEP_UNKNOWN_ERROR;
 
-    /* TODO get key from fpr */
-    return PEP_UNKNOWN_ERROR;
-    return PEP_GET_KEY_FAILED;
+    if(pthread_mutex_lock(&netpgp_mutex)){
+        return PEP_UNKNOWN_ERROR;
+    }
 
-    switch (/*TODO key->protocol*/ 4) {
-    case /* TODO  OpenPGP */0:
-    case /* TODO DEFAULT */1:
+    if(!str_to_id(keyid, keyidstr))
+    {
+        status = PEP_ILLEGAL_VALUE;
+        goto unlock_netpgp;
+    }
+
+    key = pgp_getkeybyid(netpgp.io, netpgp.pubring, 
+             keyid, &from, NULL, NULL, 
+             0, 0); /* accept revoked and expired */
+
+    if(key == NULL)
+    {
+        status = PEP_KEY_NOT_FOUND;
+        goto unlock_netpgp;
+    }
+
+    switch(pgp_key_get_rating(key)){
+	case PGP_VALID:
         *comm_type = PEP_ct_OpenPGP_unconfirmed;
         break;
-    case /* TODO CMS */2:
-        *comm_type = PEP_ct_CMS_unconfirmed;
+    case PGP_WEAK:
+        *comm_type = PEP_ct_OpenPGP_weak_unconfirmed;
+        break;
+    case PGP_TOOSHORT:
+        *comm_type = PEP_ct_key_too_short;
+        break;
+	case PGP_INVALID:
+        *comm_type = PEP_ct_key_b0rken;
+        break;
+	case PGP_EXPIRED:
+        *comm_type = PEP_ct_key_expired;
+        break;
+    case PGP_REVOKED:
+        *comm_type = PEP_ct_key_revoked;
         break;
     default:
         *comm_type = PEP_ct_unknown;
-        return PEP_STATUS_OK;
+        break;
     }
 
-        for (; 1 == 0; /* Each subkeys */ ) {
-            if (/* TODO length */0 < 1024)
-                *comm_type = PEP_ct_key_too_short;
-            else if (
-                (
-                (   /* TODO pubkey_algo == RSA  */ 0)
-                || (/* TODO pubkey_algo == RSA_E*/ 0)
-                || (/* TODO pubkey_algo == RSA_S*/ 0)
-                )
-                && /* sk->length */0 == 1024
-                )
-                *comm_type = PEP_ct_OpenPGP_weak_unconfirmed;
-
-            if (/* TODO invalid */ 1) {
-                *comm_type = PEP_ct_key_b0rken;
-                break;
-            }
-            if (/* TODO expired */ 1) {
-                *comm_type = PEP_ct_key_expired;
-                break;
-            }
-            if (/* TODO revoked*/ 1) {
-                *comm_type = PEP_ct_key_revoked;
-                break;
-            }
-        }
-        *comm_type = PEP_ct_unknown;
-        return PEP_OUT_OF_MEMORY;
-        return PEP_UNKNOWN_ERROR;
-
+unlock_netpgp:
+    pthread_mutex_unlock(&netpgp_mutex);
 
     return status;
 }
