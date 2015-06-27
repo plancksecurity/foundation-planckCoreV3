@@ -744,33 +744,36 @@ PEP_STATUS pgp_generate_keypair(
 
     bzero(&newseckey, sizeof(newseckey));
 
-    // TODO "Expire-Date: 1y\n";
     // Generate the key
     if (!pgp_rsa_generate_keypair(&newseckey, 4096, 65537UL, hashalg, cipher,
-                                  (const uint8_t *) "", (const size_t) 0) ||
-        !pgp_add_selfsigned_userid(&newseckey, (uint8_t *)newid)) {
+                                  (const uint8_t *) "", (const size_t) 0))
+    {
         result = PEP_CANNOT_CREATE_KEY;
         goto free_seckey;
     }
 
     /* make a public key out of generated secret key */
-    newpubkey = pgp_ensure_pubkey(
+    if((newpubkey = pgp_ensure_pubkey(
             netpgp.pubring,
             &newseckey.key.seckey.pubkey,
-            newseckey.pubkeyid);
-
-    if (newpubkey == NULL) {
+            newseckey.pubkeyid))==NULL)
+    {
         result = PEP_OUT_OF_MEMORY;
         goto free_seckey;
     }
 
-    /* Copy the only user ID given to that key */
-    pgp_update_userid(newpubkey,
-                      newseckey.uids[0], 
-                      &newseckey.uidsigs[0].packet, 
-                      &newseckey.uidsigs[0].siginfo);
+    // TODO "Expire-Date: 1y\n";
+    if (!pgp_add_selfsigned_userid(&newseckey, newpubkey, (uint8_t *)newid)) 
+    {
+        result = PEP_CANNOT_CREATE_KEY;
+        goto delete_pubkey;
+    }
 
-    /* No subkey have been created nothing else to copy to public */
+    if (newpubkey == NULL)
+    {
+        result = PEP_OUT_OF_MEMORY;
+        goto delete_pubkey;
+    }
 
     // Append key to netpgp's rings (key ownership transfered)
     if (!pgp_keyring_add(netpgp.secring, &newseckey)){
