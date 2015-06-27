@@ -762,8 +762,8 @@ PEP_STATUS pgp_generate_keypair(
         goto free_seckey;
     }
 
-    // TODO "Expire-Date: 1y\n";
-    if (!pgp_add_selfsigned_userid(&newseckey, newpubkey, (uint8_t *)newid)) 
+    // "Expire-Date: 1y\n";
+    if (!pgp_add_selfsigned_userid(&newseckey, newpubkey, (uint8_t *)newid, 365*24*3600))
     {
         result = PEP_CANNOT_CREATE_KEY;
         goto delete_pubkey;
