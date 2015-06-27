@@ -811,8 +811,6 @@ delete_pubkey:
                     (pgp_keyring_t *)netpgp.pubring, 
                     newseckey.pubkeyfpr.fingerprint,
                     newseckey.pubkeyfpr.length);
-    /* TODO delete key from ring */
-    /* pgp_key_free(newpubkey);*/ 
 free_seckey:
     pgp_key_free(&newseckey);
 unlock_netpgp:
@@ -1460,18 +1458,63 @@ PEP_STATUS pgp_renew_key(
 
 PEP_STATUS pgp_revoke_key(
         PEP_SESSION session,
-        const char *fpr,
+        const char *keyidstr,
         const char *reason
     )
 {
-    PEP_STATUS status = PEP_STATUS_OK;
-    
-    assert(session);
-    assert(fpr);
+    pgp_key_t *pkey;
+    pgp_key_t *skey;
+    uint8_t keyid[PGP_KEY_ID_SIZE];
+    unsigned from = 0;
 
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(keyidstr);
+    assert(reason);
+
+    if (!session || !keyidstr || !reason )
         return PEP_UNKNOWN_ERROR;
 
-    return PEP_STATUS_OK;
+    if(pthread_mutex_lock(&netpgp_mutex)){
+        return PEP_UNKNOWN_ERROR;
+    }
+
+    if(!str_to_id(keyid, keyidstr))
+    {
+        status = PEP_ILLEGAL_VALUE;
+        goto unlock_netpgp;
+    }
+
+    pkey = pgp_getkeybyid(netpgp.io, netpgp.pubring, 
+             keyid, &from, NULL, NULL, 
+             1, 0); /* reject (already) revoked, accept expired */
+
+    if(pkey == NULL)
+    {
+        status = PEP_KEY_NOT_FOUND;
+        goto unlock_netpgp;
+    }
+
+    from = 0;
+    skey = pgp_getkeybyid(netpgp.io, netpgp.secring, 
+             keyid, &from, NULL, NULL, 
+             1, 0); /* reject (already) revoked, accept expired */
+
+    if(skey == NULL)
+    {
+        status = PEP_KEY_NOT_FOUND;
+        goto unlock_netpgp;
+    }
+
+    pgp_key_revoke(skey, pkey,
+                   0, /* no reason code specified */
+                   reason);
+
+unlock_netpgp:
+    pthread_mutex_unlock(&netpgp_mutex);
+
+    return status;
 }
 
 PEP_STATUS pgp_key_expired(
