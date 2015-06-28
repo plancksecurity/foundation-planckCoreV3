@@ -763,7 +763,8 @@ PEP_STATUS pgp_generate_keypair(
     }
 
     // "Expire-Date: 1y\n";
-    if (!pgp_add_selfsigned_userid(&newseckey, newpubkey, (uint8_t *)newid, 365*24*3600))
+    if (!pgp_add_selfsigned_userid(&newseckey, newpubkey, 
+                                  (uint8_t *)newid, 365*24*3600))
     {
         result = PEP_CANNOT_CREATE_KEY;
         goto delete_pubkey;
@@ -1441,22 +1442,88 @@ unlock_netpgp:
 
 PEP_STATUS pgp_renew_key(
         PEP_SESSION session,
-        const char *fpr,
+        const char *keyidstr,
         const timestamp *ts
     )
 {
+    pgp_key_t *pkey;
+    pgp_key_t *skey;
+    uint8_t keyid[PGP_KEY_ID_SIZE];
+    unsigned from = 0;
+    uint64_t duration;
+    uint8_t *primid;
+
     PEP_STATUS status = PEP_STATUS_OK;
-    char date_text[12];
 
     assert(session);
-    assert(fpr);
+    assert(keyidstr);
 
-    snprintf(date_text, 12, "%.4d-%.2d-%.2d\n", ts->tm_year + 1900,
-            ts->tm_mon + 1, ts->tm_mday);
-
-
+    if (!session || !keyidstr )
         return PEP_UNKNOWN_ERROR;
-    return PEP_STATUS_OK;
+
+    if(ts)
+    {
+        time_t    now, when;
+        now = time(NULL);
+        when = mktime((struct tm*)ts);
+        if(now && when && when > now){
+            duration = (uint64_t)(when - now);
+        }else{
+            return PEP_ILLEGAL_VALUE;
+        }
+    }else{
+        /* Default 1 year from now */
+        duration = 365*24*3600;
+    }
+
+    if(pthread_mutex_lock(&netpgp_mutex)){
+        return PEP_UNKNOWN_ERROR;
+    }
+
+    if(!str_to_id(keyid, keyidstr))
+    {
+        status = PEP_ILLEGAL_VALUE;
+        goto unlock_netpgp;
+    }
+
+    pkey = (pgp_key_t*)pgp_getkeybyid(netpgp.io, netpgp.pubring, 
+             keyid, &from, NULL, NULL, 
+             1, 0); /* reject revoked, accept expired */
+
+    if(pkey == NULL)
+    {
+        status = PEP_KEY_NOT_FOUND;
+        goto unlock_netpgp;
+    }
+
+    from = 0;
+    skey = (pgp_key_t*)pgp_getkeybyid(netpgp.io, netpgp.secring, 
+             keyid, &from, NULL, NULL, 
+             1, 0); /* reject revoked, accept expired */
+
+    if(skey == NULL)
+    {
+        status = PEP_KEY_NOT_FOUND;
+        goto unlock_netpgp;
+    }
+
+    if((primid = *pgp_key_get_primary_userid(skey)) == NULL)
+    {
+        status = PEP_KEY_HAS_AMBIG_NAME;
+        goto unlock_netpgp;
+    }
+
+
+    if (!pgp_add_selfsigned_userid(skey, pkey, primid, duration))
+    {
+        status = PEP_CANNOT_CREATE_KEY;
+        goto unlock_netpgp;
+    }
+
+unlock_netpgp:
+    pthread_mutex_unlock(&netpgp_mutex);
+
+    return status;
 }
 
 PEP_STATUS pgp_revoke_key(
