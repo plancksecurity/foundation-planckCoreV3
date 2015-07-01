@@ -34,8 +34,6 @@ PEP_cryptotech determine_encryption_format(message *msg);
 //	caveat:
 //	    the ownershop of src remains with the caller
 //	    the ownership of dst goes to the caller
-//	    if src is unencrypted this function returns PEP_UNENCRYPTED and sets
-//	    dst to NULL
 
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
@@ -80,6 +78,8 @@ typedef enum _PEP_color {
 //	    the ownership of src remains with the caller
 //	    the ownership of dst goes to the caller
 //	    the ownership of keylist goes to the caller
+//	    if src is unencrypted this function returns PEP_UNENCRYPTED and sets
+//	    dst to NULL
 
 DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
