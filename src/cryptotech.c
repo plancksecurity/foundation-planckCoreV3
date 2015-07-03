@@ -2,9 +2,12 @@
 
 #ifdef USE_GPG
 #include "pgp_gpg.h"
-#elif USE_NETPGP
+#else
+#ifdef USE_NETPGP
 #include "pgp_netpgp.h"
 #endif
+#endif
+
 
 #include <stdlib.h>
 #include <memory.h>

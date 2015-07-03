@@ -4,10 +4,6 @@
 #include <strings.h>
 #include <sys/select.h>
 
-#ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
-#define USE_NETPGP
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
