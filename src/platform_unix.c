@@ -18,13 +18,34 @@
 #define false 0
 #endif
 
+char *
+local_stpncpy(char *dst, const char *src, size_t n)
+{
+    if (n != 0) {
+        char *d = dst;
+        const char *s = src;
+
+        dst = &dst[n];
+        do {
+            if ((*d++ = *s++) == 0) {
+                dst = d - 1;
+                /* NUL pad the remaining n-1 bytes */
+                while (--n != 0)
+                    *d++ = 0;
+                break;
+            }
+        } while (--n != 0);
+    }
+    return (dst);
+}
+
 const char *unix_local_db(void)
 {
     static char buffer[MAX_PATH];
     static bool done = false;
 
     if (!done) {
-        char *p = stpncpy(buffer, getenv("HOME"), MAX_PATH);
+        char *p = local_stpncpy(buffer, getenv("HOME"), MAX_PATH);
         size_t len = MAX_PATH - (p - buffer) - 2;
 
         if (len < strlen(LOCAL_DB_FILENAME)) {
@@ -55,7 +76,7 @@ static bool ensure_gpg_home(const char **conf, const char **home){
 
         if(gpg_home_env){
 
-            p = stpncpy(path, gpg_home_env, MAX_PATH);
+            p = local_stpncpy(path, gpg_home_env, MAX_PATH);
             len = MAX_PATH - (p - path) - 2;
 
             if (len < strlen(gpg_conf_name))
@@ -66,7 +87,7 @@ static bool ensure_gpg_home(const char **conf, const char **home){
 
         }else{
 
-            p = stpncpy(path, getenv("HOME"), MAX_PATH);
+            p = local_stpncpy(path, getenv("HOME"), MAX_PATH);
             len = MAX_PATH - (p - path) - 3;
 
             if (len < strlen(gpg_conf_path) + strlen(gpg_conf_name))
