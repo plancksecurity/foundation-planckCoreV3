@@ -5,7 +5,7 @@
 
 #include "wrappers.h"
 
-#include <netpgp.h>
+#include "netpgp.h"
 #include <netpgp/config.h>
 #include <netpgp/memory.h>
 #include <netpgp/crypto.h>

@@ -465,7 +465,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
         bloblist_t *_d = dst->attachments;
 
         for (int n = 0; _s && _s->value; _s = _s->next) {
-            int psize = _s->size;
+            size_t psize = _s->size;
             char *ptext = _s->value;
             status = encrypt_and_sign(session, keys, ptext, psize, &ctext,
                 &csize);
