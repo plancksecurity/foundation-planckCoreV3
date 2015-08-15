@@ -934,6 +934,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
         switch (enc_format) {
         case PEP_enc_PGP_MIME:
+        case PEP_enc_PEP: // BUG: should be implemented extra
             status = encrypt_PGP_MIME(session, src, keys, msg);
             if (status != PEP_STATUS_OK)
                 goto pep_error;
@@ -952,9 +953,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             }
             break;
 
-        case PEP_enc_PEP:
+
+        /* case PEP_enc_PEP:
             // TODO: implement
-            NOT_IMPLEMENTED
+            NOT_IMPLEMENTED */
 
         default:
             assert(0);
