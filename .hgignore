@@ -13,4 +13,5 @@ Debug
 Release
 *.lib
 *.obj
+build-android/pEpEngine-android-1.zip
 
