@@ -12,6 +12,11 @@ const char *unix_local_db(void);
 const char *gpg_conf(void);
 const char *gpg_home(void);
 
+#ifdef ANDROID
+char *stpcpy(char *dst, const char *src);
+long int random(void);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

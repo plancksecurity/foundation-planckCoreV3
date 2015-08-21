@@ -39,6 +39,23 @@ local_stpncpy(char *dst, const char *src, size_t n)
     return (dst);
 }
 
+#ifdef ANDROID
+char *stpcpy(char *dst, const char *src)
+{
+    for (;; ++dst, ++src) {
+        *dst = *src;
+        if (*dst == 0)
+            break;
+    }
+    return dst;
+}
+
+long int random(void){
+  unsigned short xsubi[3] = {'p', 'E', 'p'};
+  return nrand48(xsubi);
+}
+#endif
+
 const char *unix_local_db(void)
 {
     static char buffer[MAX_PATH];
