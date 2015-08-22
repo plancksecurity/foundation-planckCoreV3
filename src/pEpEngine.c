@@ -422,7 +422,7 @@ DYNAMIC_API PEP_STATUS trustwords(
 
 	fsize = strlen(fingerprint);
 
-	if (lang == NULL)
+	if (!lang || !lang[0])
 		lang = "en";
 
 	assert((lang[0] >= 'A' && lang[0] <= 'Z')
