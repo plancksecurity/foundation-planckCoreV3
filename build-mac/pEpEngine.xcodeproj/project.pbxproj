@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6400FB861B8CA1C6005221E3 /* libnetpgp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 645922521B8BD32B00A5AF93 /* libnetpgp.a */; };
+		6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E371B8B630200FC617B /* libetpan-ios.a */; };
 		649DE08B1B45C19100912F72 /* libcurl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 649DE08A1B45C19100912F72 /* libcurl.a */; };
 		64A826781B455D0800EECAF0 /* bloblist.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8264C1B455D0800EECAF0 /* bloblist.c */; };
 		64A826791B455D0800EECAF0 /* cryptotech.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8264E1B455D0800EECAF0 /* cryptotech.c */; };
@@ -141,6 +143,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */,
+				6400FB861B8CA1C6005221E3 /* libnetpgp.a in Frameworks */,
 				649DE08B1B45C19100912F72 /* libcurl.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
