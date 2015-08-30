@@ -395,127 +395,125 @@ PEP_STATUS pgp_decrypt_and_verify(
         assert(gpgme_error != GPG_ERR_NO_DATA);
 
         switch (gpgme_error) {
-        case GPG_ERR_NO_ERROR:
-        {
-            gpgme_verify_result_t gpgme_verify_result;
-            char *_buffer = NULL;
-            size_t reading;
-            size_t length = gpg.gpgme_data_seek(plain, 0, SEEK_END);
-            gpgme_signature_t gpgme_signature;
+            case GPG_ERR_NO_ERROR:
+            {
+                gpgme_verify_result_t gpgme_verify_result;
+                char *_buffer = NULL;
+                size_t reading;
+                size_t length = gpg.gpgme_data_seek(plain, 0, SEEK_END);
+                gpgme_signature_t gpgme_signature;
 
-            assert(length != -1);
-            gpg.gpgme_data_seek(plain, 0, SEEK_SET);
+                assert(length != -1);
+                gpg.gpgme_data_seek(plain, 0, SEEK_SET);
 
-            // TODO: make things less memory consuming
-            // the following algorithm allocates memory for the complete
-            // text
+                // TODO: make things less memory consuming
+                // the following algorithm allocates memory for the complete
+                // text
 
-            _buffer = malloc(length + 1);
-            assert(_buffer);
-            if (_buffer == NULL) {
-                gpg.gpgme_data_release(plain);
-                gpg.gpgme_data_release(cipher);
-                return PEP_OUT_OF_MEMORY;
-            }
-
-            reading = gpg.gpgme_data_read(plain, _buffer, length);
-            assert(length == reading);
-
-            gpgme_verify_result =
-                gpg.gpgme_op_verify_result(session->ctx);
-            assert(gpgme_verify_result);
-            gpgme_signature = gpgme_verify_result->signatures;
-
-            if (gpgme_signature) {
-                stringlist_t *k;
-                _keylist = new_stringlist(NULL);
-                assert(_keylist);
-                if (_keylist == NULL) {
+                _buffer = malloc(length + 1);
+                assert(_buffer);
+                if (_buffer == NULL) {
                     gpg.gpgme_data_release(plain);
                     gpg.gpgme_data_release(cipher);
-                    free(_buffer);
                     return PEP_OUT_OF_MEMORY;
                 }
-                k = _keylist;
 
-                result = PEP_DECRYPTED_AND_VERIFIED;
-                do {
-                    switch (_GPGERR(gpgme_signature->status)) {
-                    case GPG_ERR_NO_ERROR:
-                        k = stringlist_add(k, gpgme_signature->fpr);
-                        break;
-                    case GPG_ERR_CERT_REVOKED:
-                    case GPG_ERR_BAD_SIGNATURE:
-                        result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
-                        break;
-                    case GPG_ERR_SIG_EXPIRED:
-                    case GPG_ERR_KEY_EXPIRED:
-                    case GPG_ERR_NO_PUBKEY:
-                        k = stringlist_add(k, gpgme_signature->fpr);
-                        if (result == PEP_DECRYPTED_AND_VERIFIED)
-                            result = PEP_DECRYPTED;
-                        break;
-                    case GPG_ERR_GENERAL:
-                        break;
-                    default:
-                        if (result == PEP_DECRYPTED_AND_VERIFIED)
-                            result = PEP_DECRYPTED;
-                        break;
-                    }
-                } while ((gpgme_signature = gpgme_signature->next));
-            }
-            else {
-                result = PEP_DECRYPTED;
-            }
+                reading = gpg.gpgme_data_read(plain, _buffer, length);
+                assert(length == reading);
 
-            if (result == PEP_DECRYPTED_AND_VERIFIED
-                || result == PEP_DECRYPTED) {
-                *ptext = _buffer;
-                *psize = reading;
-                (*ptext)[*psize] = 0; // safeguard for naive users
-                *keylist = _keylist;
-            }
-            else {
-                free_stringlist(_keylist);
-                free(_buffer);
-            }
-            break;
-        }
-        case GPG_ERR_DECRYPT_FAILED:
-            result = PEP_DECRYPT_NO_KEY;
-            break;
-        case GPG_ERR_BAD_PASSPHRASE:
-            NOT_IMPLEMENTED;
-        default:
-        {
-            gpgme_decrypt_result_t gpgme_decrypt_result = gpg.gpgme_op_decrypt_result(session->ctx);
-            result = PEP_DECRYPT_NO_KEY;
+                gpgme_verify_result =
+                    gpg.gpgme_op_verify_result(session->ctx);
+                assert(gpgme_verify_result);
+                gpgme_signature = gpgme_verify_result->signatures;
 
-            if (gpgme_decrypt_result != NULL) {
-                if (gpgme_decrypt_result->unsupported_algorithm)
-                    *keylist = new_stringlist(gpgme_decrypt_result->unsupported_algorithm);
-                else
-                    *keylist = new_stringlist("");
-                assert(*keylist);
-                if (*keylist == NULL) {
-                    result = PEP_OUT_OF_MEMORY;
-                    break;
-                }
-                stringlist_t *_keylist = *keylist;
-                for (gpgme_recipient_t r = gpgme_decrypt_result->recipients; r != NULL; r = r->next) {
-                    _keylist = stringlist_add(_keylist, r->keyid);
+                if (gpgme_signature) {
+                    stringlist_t *k;
+                    _keylist = new_stringlist(NULL);
                     assert(_keylist);
                     if (_keylist == NULL) {
-                        free_stringlist(*keylist);
-                        *keylist = NULL;
+                        gpg.gpgme_data_release(plain);
+                        gpg.gpgme_data_release(cipher);
+                        free(_buffer);
+                        return PEP_OUT_OF_MEMORY;
+                    }
+                    k = _keylist;
+
+                    result = PEP_DECRYPTED_AND_VERIFIED;
+                    do {
+                        switch (_GPGERR(gpgme_signature->status)) {
+                        case GPG_ERR_NO_ERROR:
+                            k = stringlist_add(k, gpgme_signature->fpr);
+                            break;
+                        case GPG_ERR_CERT_REVOKED:
+                        case GPG_ERR_BAD_SIGNATURE:
+                            result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
+                            break;
+                        case GPG_ERR_SIG_EXPIRED:
+                        case GPG_ERR_KEY_EXPIRED:
+                        case GPG_ERR_NO_PUBKEY:
+                            k = stringlist_add(k, gpgme_signature->fpr);
+                            if (result == PEP_DECRYPTED_AND_VERIFIED)
+                                result = PEP_DECRYPTED;
+                            break;
+                        case GPG_ERR_GENERAL:
+                            break;
+                        default:
+                            if (result == PEP_DECRYPTED_AND_VERIFIED)
+                                result = PEP_DECRYPTED;
+                            break;
+                        }
+                    } while ((gpgme_signature = gpgme_signature->next));
+                }
+                else {
+                    result = PEP_DECRYPTED;
+                }
+
+                if (result == PEP_DECRYPTED_AND_VERIFIED
+                    || result == PEP_DECRYPTED) {
+                    *ptext = _buffer;
+                    *psize = reading;
+                    (*ptext)[*psize] = 0; // safeguard for naive users
+                    *keylist = _keylist;
+                }
+                else {
+                    free_stringlist(_keylist);
+                    free(_buffer);
+                }
+                break;
+            }
+            case GPG_ERR_BAD_PASSPHRASE:
+                NOT_IMPLEMENTED;
+            case GPG_ERR_DECRYPT_FAILED:
+            default:
+            {
+                gpgme_decrypt_result_t gpgme_decrypt_result = gpg.gpgme_op_decrypt_result(session->ctx);
+                result = PEP_DECRYPT_NO_KEY;
+
+                if (gpgme_decrypt_result != NULL) {
+                    if (gpgme_decrypt_result->unsupported_algorithm)
+                        *keylist = new_stringlist(gpgme_decrypt_result->unsupported_algorithm);
+                    else
+                        *keylist = new_stringlist("");
+                    assert(*keylist);
+                    if (*keylist == NULL) {
                         result = PEP_OUT_OF_MEMORY;
                         break;
                     }
+                    stringlist_t *_keylist = *keylist;
+                    for (gpgme_recipient_t r = gpgme_decrypt_result->recipients; r != NULL; r = r->next) {
+                        _keylist = stringlist_add(_keylist, r->keyid);
+                        assert(_keylist);
+                        if (_keylist == NULL) {
+                            free_stringlist(*keylist);
+                            *keylist = NULL;
+                            result = PEP_OUT_OF_MEMORY;
+                            break;
+                        }
+                    }
+                    if (result == PEP_OUT_OF_MEMORY)
+                        break;
                 }
-                if (result == PEP_OUT_OF_MEMORY)
-                    break;
             }
-        }
         }
         break;
 
