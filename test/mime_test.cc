@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include <string.h>
 #include "platform.h"
 
 #include <iostream>
@@ -11,7 +13,7 @@ using namespace std;
 
 void test_mime_decoding(string filename) {
     cout << "opening " << filename << " for reading\n";
-    ifstream inFile3 (filename);
+    ifstream inFile3 (filename.c_str());
     assert(inFile3.is_open());
 
     string mimetext3;
