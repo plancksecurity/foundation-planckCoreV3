@@ -62,17 +62,23 @@ const char *unix_local_db(void)
     static bool done = false;
 
     if (!done) {
-        char *p = local_stpncpy(buffer, getenv("HOME"), MAX_PATH);
-        size_t len = MAX_PATH - (p - buffer) - 2;
+        char *home_env;
+        if(home_env = getenv("HOME")){
+            char *p = local_stpncpy(buffer, home_env, MAX_PATH);
+            size_t len = MAX_PATH - (p - buffer) - 2;
 
-        if (len < strlen(LOCAL_DB_FILENAME)) {
-            assert(0);
+            if (len < strlen(LOCAL_DB_FILENAME)) {
+                assert(0);
+                return NULL;
+            }
+
+            *p++ = '/';
+            strncpy(p, LOCAL_DB_FILENAME, len);
+            done = true;
+        }else{
             return NULL;
         }
 
-        *p++ = '/';
-        strncpy(p, LOCAL_DB_FILENAME, len);
-        done = true;
     }
     return buffer;
 }
@@ -90,6 +96,7 @@ static bool ensure_gpg_home(const char **conf, const char **home){
         char *p;
         size_t len;
         char *gpg_home_env = getenv("GNUPGHOME");
+        char *home_env = getenv("HOME");
 
         if(gpg_home_env){
 
@@ -102,9 +109,9 @@ static bool ensure_gpg_home(const char **conf, const char **home){
                 return false;
             }
 
-        }else{
+        }else if(home_env){
 
-            p = local_stpncpy(path, getenv("HOME"), MAX_PATH);
+            p = local_stpncpy(path, home_env, MAX_PATH);
             len = MAX_PATH - (p - path) - 3;
 
             if (len < strlen(gpg_conf_path) + strlen(gpg_conf_name))
@@ -117,6 +124,11 @@ static bool ensure_gpg_home(const char **conf, const char **home){
             strncpy(p, gpg_conf_path, len);
             p += strlen(gpg_conf_path);
             len -= strlen(gpg_conf_path) - 1;
+
+        }else{
+
+            assert(0);
+            return false;
         }
 
         strncpy(dirname, path, MAX_PATH);
