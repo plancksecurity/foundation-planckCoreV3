@@ -11,6 +11,7 @@
 
 #define MAX_PATH 1024
 #define LOCAL_DB_FILENAME ".pEp_management.db"
+#define SYSTEM_DB_FILENAME "system.db"
 
 #ifndef bool
 #define bool int
@@ -18,8 +19,8 @@
 #define false 0
 #endif
 
-char *
-local_stpncpy(char *dst, const char *src, size_t n)
+#ifdef ANDROID
+char *stpncpy(char *dst, const char *src, size_t n)
 {
     if (n != 0) {
         char *d = dst;
@@ -39,7 +40,6 @@ local_stpncpy(char *dst, const char *src, size_t n)
     return (dst);
 }
 
-#ifdef ANDROID
 char *stpcpy(char *dst, const char *src)
 {
     for (;; ++dst, ++src) {
@@ -54,6 +54,33 @@ long int random(void){
   unsigned short xsubi[3] = {'p', 'E', 'p'};
   return nrand48(xsubi);
 }
+
+const char *android_system_db(void)
+{
+    static char buffer[MAX_PATH];
+    static bool done = false;
+
+    if (!done) {
+        char *sw_env;
+        if(sw_env = getenv("SAFEWORDS")){
+            char *p = stpncpy(buffer, sw_env, MAX_PATH);
+            size_t len = MAX_PATH - (p - buffer) - 2;
+
+            if (len < strlen(SYSTEM_DB_FILENAME)) {
+                assert(0);
+                return NULL;
+            }
+
+            *p++ = '/';
+            strncpy(p, SYSTEM_DB_FILENAME, len);
+            done = true;
+        }else{
+            return NULL;
+        }
+
+    }
+    return buffer;
+}
 #endif
 
 const char *unix_local_db(void)
@@ -64,7 +91,7 @@ const char *unix_local_db(void)
     if (!done) {
         char *home_env;
         if(home_env = getenv("HOME")){
-            char *p = local_stpncpy(buffer, home_env, MAX_PATH);
+            char *p = stpncpy(buffer, home_env, MAX_PATH);
             size_t len = MAX_PATH - (p - buffer) - 2;
 
             if (len < strlen(LOCAL_DB_FILENAME)) {
@@ -100,7 +127,7 @@ static bool ensure_gpg_home(const char **conf, const char **home){
 
         if(gpg_home_env){
 
-            p = local_stpncpy(path, gpg_home_env, MAX_PATH);
+            p = stpncpy(path, gpg_home_env, MAX_PATH);
             len = MAX_PATH - (p - path) - 2;
 
             if (len < strlen(gpg_conf_name))
@@ -111,7 +138,7 @@ static bool ensure_gpg_home(const char **conf, const char **home){
 
         }else if(home_env){
 
-            p = local_stpncpy(path, home_env, MAX_PATH);
+            p = stpncpy(path, home_env, MAX_PATH);
             len = MAX_PATH - (p - path) - 3;
 
             if (len < strlen(gpg_conf_path) + strlen(gpg_conf_name))

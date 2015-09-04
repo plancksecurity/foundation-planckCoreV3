@@ -9,6 +9,9 @@ extern "C" {
 #endif
 
 const char *unix_local_db(void);
+const char *android_system_db(void);
+#define SYSTEM_DB android_system_db()
+
 const char *gpg_conf(void);
 const char *gpg_home(void);
 
