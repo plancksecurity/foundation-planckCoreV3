@@ -61,9 +61,9 @@ const char *android_system_db(void)
     static bool done = false;
 
     if (!done) {
-        char *sw_env;
-        if(sw_env = getenv("SAFEWORDS")){
-            char *p = stpncpy(buffer, sw_env, MAX_PATH);
+        char *tw_env;
+        if(tw_env = getenv("TRUSTWORDS")){
+            char *p = stpncpy(buffer, tw_env, MAX_PATH);
             size_t len = MAX_PATH - (p - buffer) - 2;
 
             if (len < strlen(SYSTEM_DB_FILENAME)) {
