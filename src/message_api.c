@@ -1134,6 +1134,9 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                         }
                         else {
                             char *copy = malloc(_s->size);
+                            assert(copy);
+                            if (copy == NULL)
+                                goto enomem;
                             memcpy(copy, _s->value, _s->size);
                             _m = bloblist_add(_m, copy, _s->size, _s->mime_type, _s->filename);
                             if (_m == NULL)
@@ -1142,6 +1145,9 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                     }
                     else {
                         char *copy = malloc(_s->size);
+                        assert(copy);
+                        if (copy == NULL)
+                            goto enomem;
                         memcpy(copy, _s->value, _s->size);
                         _m = bloblist_add(_m, copy, _s->size, _s->mime_type, _s->filename);
                         if (_m == NULL)
