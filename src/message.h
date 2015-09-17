@@ -56,7 +56,7 @@ typedef struct _message {
     identity_list *bcc;                     // whom a BCC is being sent
     identity_list *reply_to;                // where a reply should go to
     stringlist_t *in_reply_to;              // list of UTF-8 strings with
-                                            // MessageIDs ofrefering messages
+                                            // MessageIDs of refering messages
     struct _message *refering_msg_ref;      // reference to refering message
     stringlist_t *references;               // list of UTF-8 strings with references
     struct _message_ref_list *refered_by;   // list of references to messages being
