@@ -90,7 +90,7 @@ const char *unix_local_db(void)
 
     if (!done) {
         char *home_env;
-        if(home_env = getenv("HOME")){
+        if((home_env = getenv("HOME"))){
             char *p = stpncpy(buffer, home_env, MAX_PATH);
             size_t len = MAX_PATH - (p - buffer) - 2;
 
