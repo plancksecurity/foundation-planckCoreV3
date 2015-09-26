@@ -16,6 +16,10 @@ ifeq ($(LIBETPAN_PATH),)
 $(error LIBETPAN_PATH must be set)
 endif
 
+ifeq ($(GPGME_INCLUDE_PATH),)
+$(error GPGME_INCLUDE_PATH must be set)
+endif
+
 LOCAL_MODULE    := pEpEngine
 LOCAL_CFLAGS    += -std=c99
 LOCAL_SRC_FILES := ../../src/bloblist.c \
@@ -38,7 +42,7 @@ LOCAL_SRC_FILES := ../../src/bloblist.c \
                    ../../src/transport.c
 
 LOCAL_C_INCLUDES := ../../src \
-                    ../../../gnupg-for-android/external/data/data/info.guardianproject.gpg/app_opt/include \
+                    $(GPGME_INCLUDE_PATH) \
                     $(OPENSSL_PATH)/include \
                     $(CYRUS_SASL_PATH)/include \
                     $(LIBETPAN_PATH)/include
