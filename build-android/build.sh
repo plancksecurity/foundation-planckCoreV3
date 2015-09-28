@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 build_version=1
 ANDROID_PLATFORM=android-21
 openssl_build_version=1
@@ -13,6 +15,11 @@ libetpan_dir="$current_dir/../../libetpan/build-android"
 
 if test "x$ANDROID_NDK" = x ; then
   echo should set ANDROID_NDK before running this script.
+  exit 1
+fi
+
+if test "x$GPGME_INCLUDE_PATH" = x ; then
+  echo should set GPGME_INCLUDE_PATH before running this script.
   exit 1
 fi
 
