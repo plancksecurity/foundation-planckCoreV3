@@ -332,3 +332,31 @@ DYNAMIC_API PEP_STATUS key_compromized(PEP_SESSION session, const char *fpr)
     return status;
 }
 
+DYNAMIC_API PEP_STATUS trust_personal_key(
+        PEP_SESSION session,
+        pEp_identity *ident
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(ident);
+    assert(!EMPTY(ident->address));
+    assert(!EMPTY(ident->user_id));
+    assert(!EMPTY(ident->fpr));
+    assert(!ident->me);
+
+    if (!ident || EMPTY(ident->address) || EMPTY(ident->user_id) ||
+            EMPTY(ident->fpr) || ident->me)
+        return PEP_ILLEGAL_VALUE;
+
+    status = update_identity(session, ident);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    ident->comm_type |= PEP_ct_confirmed;
+
+    status = update_identity(session, ident);
+    return status;
+}
+

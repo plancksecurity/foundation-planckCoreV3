@@ -122,6 +122,21 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
 DYNAMIC_API PEP_STATUS key_compromized(PEP_SESSION session, const char *fpr);
 
 
+// trust_personal_key() - mark a key as trusted with a person
+//
+//  parameters:
+//      session (in)        session to use
+//      ident (in)          person and key to trust in
+//
+//  caveat:
+//      the fields user_id, address and fpr must be supplied
+
+DYNAMIC_API PEP_STATUS trust_personal_key(
+        PEP_SESSION session,
+        pEp_identity *ident
+    );
+
+
 #ifdef __cplusplus
 }
 #endif
