@@ -1058,16 +1058,32 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         if (_keylist)
             kl_color = keylist_color(session, _keylist);
 
-        if (kl_color == PEP_rating_under_attack)
+        if (kl_color == PEP_rating_under_attack) {
             *color = PEP_rating_under_attack;
-
+        }
         else if (*color >= PEP_rating_reliable &&
-                kl_color < PEP_rating_reliable)
+               kl_color < PEP_rating_reliable) {
             *color = PEP_rating_unreliable;
-
+        }
         else if (*color >= PEP_rating_reliable &&
-                kl_color >= PEP_rating_trusted)
-            *color = kl_color;
+               kl_color == PEP_rating_reliable) {
+            if (!(src->from && src->from->user_id && src->from->user_id[0])) {
+                *color = PEP_rating_unreliable;
+            }
+            else {
+                char *fpr = _keylist->value;
+                pEp_identity *_from = new_identity(src->from->address, fpr,
+                        src->from->user_id, src->from->username);
+                if (_from == NULL)
+                    goto enomem;
+                status = update_identity(session, _from);
+                if (_from->comm_type != PEP_ct_unknown)
+                    *color = _rating(_from->comm_type);
+                free_identity(_from);
+                if (status != PEP_STATUS_OK)
+                    goto pep_error;
+            }
+        }
     }
 
     if (ptext) {
