@@ -354,9 +354,15 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     if (status != PEP_STATUS_OK)
         return status;
 
-    ident->comm_type |= PEP_ct_confirmed;
+    if (ident->comm_type > PEP_ct_strong_but_unconfirmed) {
+        ident->comm_type |= PEP_ct_confirmed;
+        status = update_identity(session, ident);
+    }
+    else {
+        // MISSING: S/MIME has to be handled depending on trusted CAs
+        status = PEP_ILLEGAL_VALUE;
+    }
 
-    status = update_identity(session, ident);
     return status;
 }
 
