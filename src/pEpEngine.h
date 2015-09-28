@@ -445,6 +445,18 @@ DYNAMIC_API PEP_STATUS set_identity(
     );
 
 
+// mark_as_compromized() - mark key in trust db as compromized
+//
+//	parameters:
+//		session (in)		session handle
+//		fpr (in)            fingerprint of key to mark
+
+DYNAMIC_API PEP_STATUS mark_as_compromized(
+        PEP_SESSION session,
+        const char *fpr
+    );
+
+
 // generate_keypair() - generate a new key pair and add it to the key ring
 //
 //  parameters:

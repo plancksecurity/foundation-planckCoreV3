@@ -117,9 +117,12 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
 //
 //  parameters:
 //      session (in)        session to use
-//      fpr (in)            key which was compromized
+//      ident (in)          person and key which was compromized
 
-DYNAMIC_API PEP_STATUS key_compromized(PEP_SESSION session, const char *fpr);
+DYNAMIC_API PEP_STATUS key_compromized(
+        PEP_SESSION session,
+        pEp_identity *ident
+    );
 
 
 // trust_personal_key() - mark a key as trusted with a person

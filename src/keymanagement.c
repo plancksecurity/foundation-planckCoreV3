@@ -317,17 +317,23 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
     return PEP_STATUS_OK;
 }
 
-DYNAMIC_API PEP_STATUS key_compromized(PEP_SESSION session, const char *fpr)
+DYNAMIC_API PEP_STATUS key_compromized(
+        PEP_SESSION session,
+        pEp_identity *ident
+    )
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-    assert(fpr);
+    assert(ident);
+    assert(!EMPTY(ident->fpr));
 
-    if (!(session && fpr))
+    if (!(session && ident && ident->fpr))
         return PEP_ILLEGAL_VALUE;
 
-    status = revoke_key(session, fpr, NULL);
+    if (ident->me)
+        revoke_key(session, ident->fpr, NULL);
+    status = mark_as_compromized(session, ident->fpr);
 
     return status;
 }
