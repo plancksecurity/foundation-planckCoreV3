@@ -3,7 +3,7 @@ include Makefile.conf
 all:
 	$(MAKE) -C src all
 
-.PHONY: clean build_test test package install uninstall
+.PHONY: clean build_test test package install uninstall db
 
 install:
 	$(MAKE) -C src install
@@ -14,6 +14,7 @@ uninstall:
 clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C test clean
+	$(MAKE) -C db clean
 
 test: all
 	$(MAKE) -C test test
@@ -24,6 +25,9 @@ unit_tests: all
 
 package: clean
 	cd .. ; COPYFILE_DISABLE=true tar cjf pEpEngine.tar.bz2 pEpEngine
+
+db:
+	$(MAKE) -C db db
 
 windist:
 ifneq ($(BUILD_FOR),Windoze)

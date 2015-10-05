@@ -14,4 +14,4 @@ CREATE TABLE i18n (
 
 INSERT INTO i18n VALUES ('en', 'I want to have this conversation in English language');
 INSERT INTO i18n VALUES ('de', 'Ich möchte diese Unterhaltung auf Deutsch führen');
-' add more languages here
+-- add more languages here
