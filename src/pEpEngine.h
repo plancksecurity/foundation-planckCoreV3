@@ -222,7 +222,7 @@ DYNAMIC_API PEP_STATUS log_event(
 //	parameters:
 //		session (in)		    session handle
 //		value (in)			    value to find a trustword for
-//		lang (in)			    C string with ISO 3166-1 ALPHA-2 language code
+//		lang (in)			    C string with ISO 639-1 language code
 //		word (out)			    pointer to C string with trustword UTF-8 encoded
 //							    NULL if language is not supported or trustword
 //							    wordlist is damaged or unavailable
@@ -247,7 +247,7 @@ DYNAMIC_API PEP_STATUS trustword(
 //	parameters:
 //		session (in)		session handle
 //		fingerprint (in)	C string with hex values to find trustwords for
-//		lang (in)			C string with ISO 3166-1 ALPHA-2 language code
+//		lang (in)			C string with ISO 639-1 language code
 //		words (out)			pointer to C string with trustwords UTF-8 encoded,
 //		                    separated by a blank each
 //							NULL if language is not supported or trustword
