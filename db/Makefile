@@ -2,9 +2,12 @@ include ../Makefile.conf
 
 db: system.db
 
-system.db: create_system_db.sql
+dicos=$(wildcard *.csv)
+
+system.db: create_system_db.sql $(dicos)
+	-mv -f $@ $@~ 
 	sqlite3 -batch $@ < $<
-	for c in *.csv ; do echo $$c ; echo .import "$$c" wordlist | sqlite3 -batch -csv $@ ; done
+	for c in $(dicos); do echo $$c ; echo .import "$$c" wordlist | sqlite3 -batch -csv $@ ; done
 
 .PHONY: clean install
 
