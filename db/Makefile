@@ -4,8 +4,7 @@ db: system.db
 
 system.db: create_system_db.sql
 	sqlite3 -batch $@ < $<
-	echo .import en.csv wordlist | sqlite3 -batch -csv $@
-	echo .import de.csv wordlist | sqlite3 -batch -csv $@
+	for c in *.csv ; do echo $$c ; echo .import "$$c" wordlist | sqlite3 -batch -csv $@ ; done
 
 .PHONY: clean install
 

@@ -1,8 +1,0 @@
-To create system.db:
-
-1) run the create script
-
-2) import wordlists, 65535 words each language
-
-3) insert an i18n text per language
-
