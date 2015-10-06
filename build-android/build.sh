@@ -11,7 +11,6 @@ archs="armeabi armeabi-v7a x86 x86_64"
 package_name=pEpEngine-android
 
 current_dir="`pwd`"
-libetpan_dir="$current_dir/../../libetpan/build-android"
 
 if test "x$ANDROID_NDK" = x ; then
   echo should set ANDROID_NDK before running this script.
@@ -22,6 +21,13 @@ if test "x$GPGME_INCLUDE_PATH" = x ; then
   echo should set GPGME_INCLUDE_PATH before running this script.
   exit 1
 fi
+
+if test "x$LIBETPAN_PATH" = x ; then
+  echo should set LIBETPAN_PATH before running this script.
+  exit 1
+fi
+
+libetpan_dir=$LIBETPAN_PATH
 
 function build {
   rm -rf "$current_dir/obj"
