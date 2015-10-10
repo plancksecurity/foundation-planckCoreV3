@@ -327,8 +327,10 @@ static PEP_STATUS encrypt_PGP_MIME(
     _src->enc_format = PEP_enc_none;
     status = mime_encode_message(_src, true, &mimetext);
     assert(status == PEP_STATUS_OK);
-    if (free_ptext)
+    if (free_ptext){
         free(ptext);
+        free_ptext=0;
+    }
     free(_src);
     assert(mimetext);
     if (mimetext == NULL)

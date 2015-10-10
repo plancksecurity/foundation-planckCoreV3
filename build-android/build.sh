@@ -7,7 +7,8 @@ ANDROID_PLATFORM=android-21
 openssl_build_version=1
 cyrus_sasl_build_version=1
 libetpan_build_version=1
-archs="armeabi armeabi-v7a x86 x86_64"
+# archs="armeabi armeabi-v7a x86 x86_64"
+archs="armeabi"
 package_name=pEpEngine-android
 
 current_dir="`pwd`"

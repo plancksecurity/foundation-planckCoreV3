@@ -235,7 +235,10 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
         if (status == PEP_OUT_OF_MEMORY)
             return PEP_OUT_OF_MEMORY;
 
-        assert(keylist);
+        assert(keylist || keylist->value);
+        if (keylist == NULL || keylist->value == NULL) {
+            return PEP_UNKNOWN_ERROR;
+        }
     }
     else {
         bool expired;
