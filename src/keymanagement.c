@@ -366,7 +366,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     }
     else {
         // MISSING: S/MIME has to be handled depending on trusted CAs
-        status = PEP_ILLEGAL_VALUE;
+        status = PEP_CANNOT_SET_TRUST;
     }
 
     return status;

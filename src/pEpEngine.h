@@ -44,6 +44,7 @@ typedef enum {
 	PEP_CANNOT_SET_PERSON							= 0x0381,
 	PEP_CANNOT_SET_PGP_KEYPAIR						= 0x0382,
 	PEP_CANNOT_SET_IDENTITY							= 0x0383,
+    PEP_CANNOT_SET_TRUST                            = 0x0384,
 	
 	PEP_UNENCRYPTED									= 0x0400,
 	PEP_VERIFIED									= 0x0401,
