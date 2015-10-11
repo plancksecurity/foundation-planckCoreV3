@@ -33,6 +33,13 @@ DYNAMIC_API bool is_PGP_message_text(const char *text)
     return strncmp(text, "-----BEGIN PGP MESSAGE-----", 27) == 0;
 }
 
+#define TMP_TEMPLATE "pEp.XXXXXXXXXXXXXXXXXXXX"
+#ifdef _WIN32
+#define PATH_SEP '\\'
+#else
+#define PATH_SEP '/'
+#endif
+
 static PEP_STATUS render_mime(struct mailmime *mime, char **mimetext)
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -42,10 +49,30 @@ static PEP_STATUS render_mime(struct mailmime *mime, char **mimetext)
     char *buf = NULL;
     int col;
     int r;
-    char *template = strdup("/tmp/pEp.XXXXXXXXXXXXXXXXXXXX");
+
+    char *template;
+    char *envTmp = getenv("TEMP");
+
+    if(envTmp){
+        int tmpL = strlen(envTmp);
+        int needSep = envTmp[tmpL-1] == PATH_SEP;
+        template = calloc(1, tmpL + 
+                             (needSep ? 1 : 0) +
+                             sizeof(TMP_TEMPLATE));
+        if (template == NULL)
+            goto enomem;
+
+        memcpy(template, envTmp, tmpL);
+        if(needSep)
+            template[tmpL] = PATH_SEP;
+        memcpy(template + tmpL + (needSep ? 1 : 0), TMP_TEMPLATE, sizeof(TMP_TEMPLATE));
+
+    }else{
+        template = strdup("/tmp/" TMP_TEMPLATE);
+        if (template == NULL)
+            goto enomem;
+    }
     assert(template);
-    if (template == NULL)
-        goto enomem;
 
     *mimetext = NULL;
 
