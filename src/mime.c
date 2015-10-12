@@ -55,18 +55,21 @@ static PEP_STATUS render_mime(struct mailmime *mime, char **mimetext)
 
     if(env_tmp){
         int tmp_l = strlen(env_tmp);
-        int need_sep = (env_tmp[tmp_l-1] != PATH_SEP);
-        template = calloc(1, tmp_l + 
-                             (need_sep ? 1 : 0) +
-                             sizeof(TMP_TEMPLATE));
-        if (template == NULL)
-            goto enomem;
+        if(tmp_l == 0 ) {
+            goto err_file;
+        } else {
+            int need_sep = (env_tmp[tmp_l-1] != PATH_SEP);
+            template = calloc(1, tmp_l + 
+                                 (need_sep ? 1 : 0) +
+                                 sizeof(TMP_TEMPLATE));
+            if (template == NULL)
+                goto enomem;
 
-        memcpy(template, env_tmp, tmp_l);
-        if(need_sep)
-            template[tmp_l] = PATH_SEP;
-        memcpy(template + tmp_l + (need_sep ? 1 : 0), TMP_TEMPLATE, sizeof(TMP_TEMPLATE));
-
+            memcpy(template, env_tmp, tmp_l);
+            if(need_sep)
+                template[tmp_l] = PATH_SEP;
+            memcpy(template + tmp_l + (need_sep ? 1 : 0), TMP_TEMPLATE, sizeof(TMP_TEMPLATE));
+        }
     }else{
         template = strdup("/tmp/" TMP_TEMPLATE);
         if (template == NULL)
