@@ -775,7 +775,17 @@ void import_attached_keys(PEP_SESSION session, const message *msg)
     for (bl = msg->attachments; bl && bl->value; bl = bl->next) {
         assert(bl && bl->value && bl->size);
 
-        if (bl->mime_type == NULL ||
+        // workaround for Apple Mail bugs
+        if (is_mime_type(bl, "application/x-apple-msg-attachment")) {
+            if (is_fileending(bl, ".asc")) {
+                if (strlen(bl->filename) == 14 &&
+                        bl->filename[0] == '0' && bl->filename[1] == 'x')
+                    import_key(session, bl->value, bl->size);
+                else if (strlen(bl->filename) == 12)
+                    import_key(session, bl->value, bl->size);
+            }
+        }
+        else if (bl->mime_type == NULL ||
                     is_mime_type(bl, "application/octet-stream")) {
             if (is_fileending(bl, ".pgp") || is_fileending(bl, ".gpg") ||
                     is_fileending(bl, ".key") || is_fileending(bl, ".asc"))
