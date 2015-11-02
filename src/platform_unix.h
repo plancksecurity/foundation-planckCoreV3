@@ -14,12 +14,22 @@ const char *gpg_conf(void);
 const char *gpg_home(void);
 
 #ifdef ANDROID
+
 char *stpncpy(char *, const char *, size_t);
 char *stpcpy(char *, const char *);
 long int random(void);
 const char *android_system_db(void);
 #define SYSTEM_DB android_system_db()
 #define LIBGPGME "libgpgme.so"
+
+#elif __APPLE__
+#include "TargetConditionals.h"
+#if TARGET_OS_IPHONE
+
+extern char* SystemDB;
+#define SYSTEM_DB SystemDB
+    
+#endif
 #endif
 
 #ifdef __cplusplus
