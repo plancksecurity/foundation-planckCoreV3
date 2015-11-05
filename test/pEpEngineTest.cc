@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
     // 135CD6D170DCF575
 
     const char *kflist[] = {
-        "6FF00E97_sec.asc",
+        "0x6FF00E97.asc",
         "C9C2EE39_pub.asc",
         "70DCF575_pub.asc",
         NULL
