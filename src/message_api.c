@@ -1270,6 +1270,10 @@ DYNAMIC_API PEP_STATUS outgoing_message_color(
 
     *color = PEP_rating_undefined;
 
+    status = update_identity(session,msg->from);
+    if (status != PEP_STATUS_OK)
+        return status;
+    
     status = myself(session, msg->from);
     if (status != PEP_STATUS_OK)
         return status;
