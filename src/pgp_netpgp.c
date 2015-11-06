@@ -1216,7 +1216,7 @@ PEP_STATUS pgp_find_keys(
 
     *keylist = NULL;
     _keylist = new_stringlist(NULL);
-    if (_k == NULL) {
+    if (_keylist == NULL) {
         result = PEP_OUT_OF_MEMORY;
         goto unlock_netpgp;
     }
@@ -1373,36 +1373,40 @@ free_encoded_keys:
 
 PEP_STATUS pgp_get_key_rating(
     PEP_SESSION session,
-    const char *keyidstr,
+    const char *fprstr,
     PEP_comm_type *comm_type
     )
 {
     const pgp_key_t *key;
-    uint8_t keyid[PGP_KEY_ID_SIZE];
+    uint8_t fpr[PGP_FINGERPRINT_SIZE];
     unsigned from = 0;
+    size_t length;
+
 
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-    assert(keyidstr);
+    assert(fprstr);
     assert(comm_type);
 
-    if (!session || !keyidstr || !comm_type )
+    if (!session || !fprstr || !comm_type )
         return PEP_UNKNOWN_ERROR;
+
+    *comm_type = PEP_ct_unknown;
 
     if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
     }
 
-    if(!str_to_id(keyid, keyidstr))
-    {
+    if (!str_to_fpr(fprstr, fpr, &length)) {
         status = PEP_ILLEGAL_VALUE;
         goto unlock_netpgp;
     }
-
-    key = pgp_getkeybyid(netpgp.io, netpgp.pubring, 
-             keyid, &from, NULL, NULL, 
-             0, 0); /* accept revoked and expired */
+        
+    key = pgp_getkeybyfpr(
+           netpgp.io,
+           netpgp.pubring,
+           fpr, length, NULL);
 
     if(key == NULL)
     {
@@ -1430,7 +1434,6 @@ PEP_STATUS pgp_get_key_rating(
         *comm_type = PEP_ct_key_revoked;
         break;
     default:
-        *comm_type = PEP_ct_unknown;
         break;
     }
 
