@@ -209,10 +209,6 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     pEp_identity *_identity;
 
     DEBUG_LOG("myself", "debug", identity->address);
-    status = get_identity(session, identity->address, &_identity);
-    assert(status != PEP_OUT_OF_MEMORY);
-    if (status == PEP_OUT_OF_MEMORY)
-        return PEP_OUT_OF_MEMORY;
 
     status = find_keys(session, identity->address, &keylist);
     assert(status != PEP_OUT_OF_MEMORY);
