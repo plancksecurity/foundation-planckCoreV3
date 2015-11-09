@@ -206,8 +206,6 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     identity->comm_type = PEP_ct_pEp;
     identity->me = true;
 
-    pEp_identity *_identity;
-
     DEBUG_LOG("myself", "debug", identity->address);
 
     status = find_keys(session, identity->address, &keylist);
