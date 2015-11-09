@@ -831,9 +831,9 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fprstr)
     PEP_STATUS result;
 
     assert(session);
-    assert(fpr);
+    assert(fprstr);
 
-    if (!session || !fpr)
+    if (!session || !fprstr)
         return PEP_UNKNOWN_ERROR;
 
     if(pthread_mutex_lock(&netpgp_mutex)){
