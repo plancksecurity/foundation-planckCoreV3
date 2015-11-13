@@ -203,14 +203,12 @@ static unsigned
 _armoured(const char *buf, size_t size, const char *pattern)
 {
     unsigned armoured = 0;
-    if(buf[size]=='\0'){
-        regex_t r;
-        regcomp(&r, pattern, REG_EXTENDED|REG_NEWLINE|REG_NOSUB);
-        if (regexec(&r, buf, 0, NULL, 0) == 0) {
-            armoured = 1;
-        }
-        regfree(&r);
+    regex_t r;
+    regcomp(&r, pattern, REG_EXTENDED|REG_NOSUB);
+    if (regnexec(&r, buf, size, 0, NULL, 0) == 0) {
+        armoured = 1;
     }
+    regfree(&r);
     return armoured;
 }
 
@@ -315,7 +313,8 @@ static PEP_STATUS _validation_results(
     return PEP_DECRYPT_WRONG_FORMAT;
 }
 
-#define ARMOR_HEAD    "^-----BEGIN PGP MESSAGE-----\\s*$"
+#define _ENDL    "\\s*(\r\n|\r|\n)"
+#define ARMOR_HEAD    "^-----BEGIN PGP MESSAGE-----"_ENDL
 PEP_STATUS pgp_decrypt_and_verify(
     PEP_SESSION session, const char *ctext, size_t csize,
     char **ptext, size_t *psize, stringlist_t **keylist
@@ -414,7 +413,7 @@ unlock_netpgp:
     return result;
 }
 
-#define ARMOR_SIG_HEAD    "^-----BEGIN PGP (SIGNATURE|SIGNED MESSAGE)-----\\s*$"
+#define ARMOR_SIG_HEAD    "^-----BEGIN PGP (SIGNATURE|SIGNED MESSAGE)-----"_ENDL
 PEP_STATUS pgp_verify_text(
     PEP_SESSION session, const char *text, size_t size,
     const char *signature, size_t sig_size, stringlist_t **keylist
@@ -873,7 +872,7 @@ unlock_netpgp:
     return result;
 }
 
-#define ARMOR_KEY_HEAD    "^-----BEGIN PGP (PUBLIC|PRIVATE) KEY BLOCK-----\\s*$"
+#define ARMOR_KEY_HEAD    "^-----BEGIN PGP (PUBLIC|PRIVATE) KEY BLOCK-----"_ENDL
 PEP_STATUS pgp_import_keydata(
         PEP_SESSION session,
         const char *key_data, 
