@@ -506,6 +506,60 @@ unlock_netpgp:
     return result;
 }
 
+/* write key fingerprint hexdump as a string */
+static unsigned
+fpr_to_str (char **str, const uint8_t *fpr, size_t length)
+{
+    unsigned i;
+    int	n;
+    
+    /* 5 char per byte (hexes + space) tuple -1 space at the end + null */
+    *str = malloc((length / 2) * 5 - 1 + 1);
+    
+    if(*str == NULL)
+        return 0;
+    
+    for (n = 0, i = 0 ; i < length - 2; i += 2) {
+        n += snprintf(&((*str)[n]), 6, "%02x%02x ", fpr[i], fpr[i+1]);
+    }
+    snprintf(&((*str)[n]), 5, "%02x%02x", fpr[i], fpr[i+1]);
+    
+    return 1;
+}
+
+/* write key fingerprint bytes read from hex string
+ * accept spaces and hexes */
+static unsigned
+str_to_fpr (const char *str, uint8_t *fpr, size_t *length)
+{
+    unsigned i,j;
+    
+    *length = 0;
+    
+    while(*str && *length < PGP_FINGERPRINT_SIZE){
+        while (*str == ' ') str++;
+        for (j = 0; j < 2; j++) {
+            uint8_t *byte = &fpr[*length];
+            *byte = 0;
+            for (i = 0; i < 2; i++) {
+                if (i > 0)
+                    *byte = *byte << 4;
+                if (*str >= 'a' && *str <= 'f')
+                    *byte += 10 + *str - 'a';
+                else if (*str >= 'A' && *str <= 'F')
+                    *byte += 10 + *str - 'A';
+                else if (*str >= '0' && *str <= '9')
+                    *byte += *str - '0';
+                else
+                    return 0;
+                str++;
+            }
+            (*length)++;
+        }
+    }
+    return 1;
+}
+
 PEP_STATUS pgp_encrypt_and_sign(
     PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
     size_t psize, char **ctext, size_t *csize
@@ -540,34 +594,37 @@ PEP_STATUS pgp_encrypt_and_sign(
 
     if ((rcpts = calloc(1, sizeof(*rcpts))) == NULL) {
         result = PEP_OUT_OF_MEMORY;
-        goto free_signedmem;
+        goto unlock_netpgp;
     }
     for (_keylist = keylist; _keylist != NULL; _keylist = _keylist->next) {
         assert(_keylist->value);
+        
         const pgp_key_t *key;
-        uint8_t keyid[PGP_KEY_ID_SIZE];
+        uint8_t fpr[PGP_FINGERPRINT_SIZE];
+        size_t fprlen;
         unsigned from = 0;
 
-        if(!str_to_id(keyid, _keylist->value))
-        {
+        if (str_to_fpr(_keylist->value, fpr, &fprlen)) {
+            if ((key = (pgp_key_t *)pgp_getkeybyfpr(netpgp.io, netpgp.pubring,
+                                                    fpr, fprlen, &from, NULL,
+                                                    /* reject revoked, accept expired */
+                                                    1,0)) == NULL) {
+                result = PEP_KEY_NOT_FOUND;
+                goto free_rcpts;
+            }
+        }else{
             result = PEP_ILLEGAL_VALUE;
-            goto free_rcpts;
-        }
-
-        key = pgp_getkeybyid(netpgp.io, netpgp.pubring, 
-                 keyid, &from, NULL, NULL, 
-                 1, 0); /* reject revoked, accept expired */
-        if(key == NULL){
-            result = PEP_KEY_NOT_FOUND;
             goto free_rcpts;
         }
 
         /* Signer is the first key in the list */
         if(signer == NULL){
             from = 0;
-            signer = pgp_getkeybyid(netpgp.io, netpgp.secring, 
-                     keyid, &from, NULL, NULL, 
-                     0, 0); /* accept any */
+            signer = (pgp_key_t *)pgp_getkeybyfpr(netpgp.io, netpgp.secring,
+                                                  fpr, fprlen,
+                                                  &from,
+                                                  NULL,
+                                                  0,0); /* accept any */
             if(signer == NULL){
                 result = PEP_KEY_NOT_FOUND;
                 goto free_rcpts;
@@ -578,14 +635,14 @@ PEP_STATUS pgp_encrypt_and_sign(
         pgp_keyring_add(rcpts, key);
         if(rcpts->keys == NULL){
             result = PEP_OUT_OF_MEMORY;
-            goto free_signedmem;
+            goto free_rcpts;
         }
     }
 
     /* Empty keylist ?*/
     if(rcpts->keyc == 0){
         result = PEP_ILLEGAL_VALUE;
-        goto free_signedmem;
+        goto free_rcpts;
     }
 
     seckey = pgp_key_get_certkey(signer);
@@ -593,7 +650,7 @@ PEP_STATUS pgp_encrypt_and_sign(
     /* No signig key. Revoked ? */
     if(seckey == NULL){
         result = PEP_GET_KEY_FAILED;
-        goto free_signedmem;
+        goto free_rcpts;
     }
 
     hashalg = netpgp_getvar(&netpgp, "hash");
@@ -608,7 +665,7 @@ PEP_STATUS pgp_encrypt_and_sign(
 
     if (!signedmem) {
         result = PEP_UNENCRYPTED;
-        goto unlock_netpgp;
+        goto free_rcpts;
     }
 
     // Encrypt signed data
@@ -652,60 +709,6 @@ unlock_netpgp:
     pthread_mutex_unlock(&netpgp_mutex);
 
     return result;
-}
-
-/* write key fingerprint hexdump as a string */
-static unsigned
-fpr_to_str (char **str, const uint8_t *fpr, size_t length)
-{
-    unsigned i;
-    int	n;
-
-    /* 5 char per byte (hexes + space) tuple -1 space at the end + null */
-    *str = malloc((length / 2) * 5 - 1 + 1);
-
-    if(*str == NULL)
-        return 0;
-
-    for (n = 0, i = 0 ; i < length - 2; i += 2) {
-    	n += snprintf(&((*str)[n]), 6, "%02x%02x ", fpr[i], fpr[i+1]);
-    }
-    snprintf(&((*str)[n]), 5, "%02x%02x", fpr[i], fpr[i+1]);
-
-    return 1;
-}
-
-/* write key fingerprint bytes read from hex string 
- * accept spaces and hexes */
-static unsigned
-str_to_fpr (const char *str, uint8_t *fpr, size_t *length)
-{
-    unsigned i,j;
-
-    *length = 0;
-
-    while(*str && *length < PGP_FINGERPRINT_SIZE){
-        while (*str == ' ') str++;
-        for (j = 0; j < 2; j++) {
-            uint8_t *byte = &fpr[*length];
-            *byte = 0;
-            for (i = 0; i < 2; i++) {
-                if (i > 0)
-                    *byte = *byte << 4;
-                if (*str >= 'a' && *str <= 'f')
-                    *byte += 10 + *str - 'a';
-                else if (*str >= 'A' && *str <= 'F')
-                    *byte += 10 + *str - 'A';
-                else if (*str >= '0' && *str <= '9')
-                    *byte += *str - '0';
-                else 
-                    return 0;
-                str++;
-            }
-            (*length)++;
-        }
-    }
-    return 1;
 }
 
 PEP_STATUS pgp_generate_keypair(
@@ -993,9 +996,11 @@ PEP_STATUS pgp_export_keydata(
     }
 
     if (str_to_fpr(fprstr, fpr, &fprlen)) {
-        if ((key = (pgp_key_t *)pgp_getkeybyfpr(netpgp.io, netpgp.pubring, 
-                                                fpr, fprlen,
-                                                NULL)) == NULL) {
+        unsigned from = 0;
+
+        if ((key = (pgp_key_t *)pgp_getkeybyfpr(netpgp.io, netpgp.pubring,
+                                                fpr, fprlen, &from,
+                                                NULL,0,0)) == NULL) {
             result = PEP_KEY_NOT_FOUND;
             goto unlock_netpgp;
         }
@@ -1140,13 +1145,16 @@ static PEP_STATUS find_keys_do(
 
     // Try find a fingerprint in pattern
     if (str_to_fpr(pattern, fpr, &length)) {
+        unsigned from = 0;
+
 
         // Only one fingerprint can match
         if ((key = (pgp_key_t *)pgp_getkeybyfpr(
                         netpgp.io,
                         (pgp_keyring_t *)netpgp.pubring, 
                         (const uint8_t *)fpr, length,
-                        NULL)) == NULL) {
+                        &from,
+                        NULL, 0, 0)) == NULL) {
 
             return PEP_KEY_NOT_FOUND;
         }
@@ -1407,7 +1415,7 @@ PEP_STATUS pgp_get_key_rating(
     key = pgp_getkeybyfpr(
            netpgp.io,
            netpgp.pubring,
-           fpr, length, NULL);
+           fpr, length, &from, NULL,0,0);
 
     if(key == NULL)
     {
