@@ -252,6 +252,60 @@ static unsigned str_to_id(uint8_t *keyid, const char *str)
     return 1;
 }
 
+/* write key fingerprint hexdump as a string */
+static unsigned
+fpr_to_str (char **str, const uint8_t *fpr, size_t length)
+{
+    unsigned i;
+    int	n;
+    
+    /* 5 char per byte (hexes + space) tuple -1 space at the end + null */
+    *str = malloc((length / 2) * 5 - 1 + 1);
+    
+    if(*str == NULL)
+        return 0;
+    
+    for (n = 0, i = 0 ; i < length - 2; i += 2) {
+        n += snprintf(&((*str)[n]), 6, "%02x%02x ", fpr[i], fpr[i+1]);
+    }
+    snprintf(&((*str)[n]), 5, "%02x%02x", fpr[i], fpr[i+1]);
+    
+    return 1;
+}
+
+/* write key fingerprint bytes read from hex string
+ * accept spaces and hexes */
+static unsigned
+str_to_fpr (const char *str, uint8_t *fpr, size_t *length)
+{
+    unsigned i,j;
+    
+    *length = 0;
+    
+    while(*str && *length < PGP_FINGERPRINT_SIZE){
+        while (*str == ' ') str++;
+        for (j = 0; j < 2; j++) {
+            uint8_t *byte = &fpr[*length];
+            *byte = 0;
+            for (i = 0; i < 2; i++) {
+                if (i > 0)
+                    *byte = *byte << 4;
+                if (*str >= 'a' && *str <= 'f')
+                    *byte += 10 + *str - 'a';
+                else if (*str >= 'A' && *str <= 'F')
+                    *byte += 10 + *str - 'A';
+                else if (*str >= '0' && *str <= '9')
+                    *byte += *str - '0';
+                else
+                    return 0;
+                str++;
+            }
+            (*length)++;
+        }
+    }
+    return 1;
+}
+
 // Iterate through netpgp' reported valid signatures 
 // fill a list of valid figerprints
 // returns PEP_STATUS_OK if all sig reported valid
@@ -288,12 +342,29 @@ static PEP_STATUS _validation_results(
         }
         k = *_keylist;
         for (n = 0; n < vresult->validc; ++n) {
-            char id[MAX_ID_LENGTH + 1];
+            unsigned from = 0;
+            const pgp_key_t	 *signer;
+            char *fprstr = NULL;
             const uint8_t *keyid = vresult->valid_sigs[n].signer_id;
-
-            id_to_str(keyid, id);
-
-            k = stringlist_add(k, id);
+            
+            signer = pgp_getkeybyid(netpgp->io, netpgp->pubring,
+                                    keyid, &from, NULL, NULL,
+                                    0, 0); /* check neither revocation nor expiry 
+                                              as is should be checked already */
+            if(signer)
+                fpr_to_str(&fprstr,
+                           signer->pubkeyfpr.fingerprint,
+                           signer->pubkeyfpr.length);
+            else
+                return PEP_VERIFY_NO_KEY;
+            
+            if (fprstr == NULL)
+                return PEP_OUT_OF_MEMORY;
+            
+            k = stringlist_add(k, fprstr);
+            
+            free(fprstr);
+            
             if(!k){
                 free_stringlist(*_keylist);
                 return PEP_OUT_OF_MEMORY;
@@ -504,60 +575,6 @@ unlock_netpgp:
     pthread_mutex_unlock(&netpgp_mutex);
 
     return result;
-}
-
-/* write key fingerprint hexdump as a string */
-static unsigned
-fpr_to_str (char **str, const uint8_t *fpr, size_t length)
-{
-    unsigned i;
-    int	n;
-    
-    /* 5 char per byte (hexes + space) tuple -1 space at the end + null */
-    *str = malloc((length / 2) * 5 - 1 + 1);
-    
-    if(*str == NULL)
-        return 0;
-    
-    for (n = 0, i = 0 ; i < length - 2; i += 2) {
-        n += snprintf(&((*str)[n]), 6, "%02x%02x ", fpr[i], fpr[i+1]);
-    }
-    snprintf(&((*str)[n]), 5, "%02x%02x", fpr[i], fpr[i+1]);
-    
-    return 1;
-}
-
-/* write key fingerprint bytes read from hex string
- * accept spaces and hexes */
-static unsigned
-str_to_fpr (const char *str, uint8_t *fpr, size_t *length)
-{
-    unsigned i,j;
-    
-    *length = 0;
-    
-    while(*str && *length < PGP_FINGERPRINT_SIZE){
-        while (*str == ' ') str++;
-        for (j = 0; j < 2; j++) {
-            uint8_t *byte = &fpr[*length];
-            *byte = 0;
-            for (i = 0; i < 2; i++) {
-                if (i > 0)
-                    *byte = *byte << 4;
-                if (*str >= 'a' && *str <= 'f')
-                    *byte += 10 + *str - 'a';
-                else if (*str >= 'A' && *str <= 'F')
-                    *byte += 10 + *str - 'A';
-                else if (*str >= '0' && *str <= '9')
-                    *byte += *str - '0';
-                else
-                    return 0;
-                str++;
-            }
-            (*length)++;
-        }
-    }
-    return 1;
 }
 
 PEP_STATUS pgp_encrypt_and_sign(
