@@ -947,23 +947,11 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         case PEP_enc_PGP_MIME:
         case PEP_enc_PEP: // BUG: should be implemented extra
             status = encrypt_PGP_MIME(session, src, keys, msg);
-            if (status != PEP_STATUS_OK)
-                goto pep_error;
             break;
 
         case PEP_enc_pieces:
             status = encrypt_PGP_in_pieces(session, src, keys, msg);
-            if (status == PEP_OUT_OF_MEMORY)
-                goto enomem;
-            if (status != PEP_STATUS_OK) {
-                attach_own_key(session, src);
-                goto pep_error;
-            }
-            else {
-                attach_own_key(session, msg);
-            }
             break;
-
 
         /* case PEP_enc_PEP:
             // TODO: implement
@@ -973,6 +961,17 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             assert(0);
             status = PEP_ILLEGAL_VALUE;
             goto pep_error;
+        }
+        
+        if (status == PEP_OUT_OF_MEMORY)
+            goto enomem;
+        
+        if (status != PEP_STATUS_OK) {
+            attach_own_key(session, src);
+            goto pep_error;
+        }
+        else {
+            attach_own_key(session, msg);
         }
     }
 
