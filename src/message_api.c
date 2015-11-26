@@ -775,11 +775,20 @@ void import_attached_keys(PEP_SESSION session, const message *msg)
     for (bl = msg->attachments; bl && bl->value; bl = bl->next) {
         assert(bl && bl->value && bl->size);
 
-        if (bl->mime_type == NULL ||
+        // workaround for Apple Mail bugs
+        if (is_mime_type(bl, "application/x-apple-msg-attachment")) {
+            if (is_fileending(bl, ".asc")) {
+                if (strlen(bl->filename) == 14 &&
+                        bl->filename[0] == '0' && bl->filename[1] == 'x')
+                    import_key(session, bl->value, bl->size);
+                else if (strlen(bl->filename) == 12)
+                    import_key(session, bl->value, bl->size);
+            }
+        }
+        else if (bl->mime_type == NULL ||
                     is_mime_type(bl, "application/octet-stream")) {
             if (is_fileending(bl, ".pgp") || is_fileending(bl, ".gpg") ||
-                    is_fileending(bl, ".key") ||
-                    string_equality(bl->filename, "key.asc"))
+                    is_fileending(bl, ".key") || is_fileending(bl, ".asc"))
                 import_key(session, bl->value, bl->size);
         }
         else if (is_mime_type(bl, "application/pgp-keys")) {
@@ -938,23 +947,11 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         case PEP_enc_PGP_MIME:
         case PEP_enc_PEP: // BUG: should be implemented extra
             status = encrypt_PGP_MIME(session, src, keys, msg);
-            if (status != PEP_STATUS_OK)
-                goto pep_error;
             break;
 
         case PEP_enc_pieces:
             status = encrypt_PGP_in_pieces(session, src, keys, msg);
-            if (status == PEP_OUT_OF_MEMORY)
-                goto enomem;
-            if (status != PEP_STATUS_OK) {
-                attach_own_key(session, src);
-                goto pep_error;
-            }
-            else {
-                attach_own_key(session, msg);
-            }
             break;
-
 
         /* case PEP_enc_PEP:
             // TODO: implement
@@ -964,6 +961,17 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             assert(0);
             status = PEP_ILLEGAL_VALUE;
             goto pep_error;
+        }
+        
+        if (status == PEP_OUT_OF_MEMORY)
+            goto enomem;
+        
+        if (status != PEP_STATUS_OK) {
+            attach_own_key(session, src);
+            goto pep_error;
+        }
+        else {
+            attach_own_key(session, msg);
         }
     }
 

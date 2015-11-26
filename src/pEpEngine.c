@@ -271,7 +271,7 @@ DYNAMIC_API void release(PEP_SESSION session)
     assert(init_count >= 0);
 	assert(session);
 
-    if (!(init_count && session))
+    if (!((init_count >= 0) && session))
         return;
 
     // a small race condition but still a race condition
