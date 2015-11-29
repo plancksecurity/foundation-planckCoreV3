@@ -50,7 +50,7 @@ static PEP_STATUS render_mime(struct mailmime *mime, char **mimetext)
     int col;
     int r;
 
-    char *template;
+    char *template = NULL;
     char *env_tmp = getenv("TEMP");
 
     if(env_tmp){
