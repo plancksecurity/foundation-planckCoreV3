@@ -41,9 +41,9 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\vb\Documents\Visual Studio 2013\Projects\libetpan\build-windows\include;C:\Program Files %28x86%29\GNU\GnuPG\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\..\libetpan\build-windows\include;C:\Program Files %28x86%29\GNU\GnuPG\include;$(IncludePath)</IncludePath>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <LibraryPath>C:\Users\vb\Documents\Visual Studio 2013\Projects\libetpan\build-windows\Debug;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)\..\libetpan\build-windows\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
