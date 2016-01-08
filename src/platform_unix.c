@@ -1,9 +1,5 @@
 #define _POSIX_C_SOURCE 200809L
 
-#if __APPLE__
-#include "TargetConditionals.h"
-#endif
-
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -11,14 +7,14 @@
 #include <sys/types.h>
 #include <fcntl.h>
 
-#if TARGET_OS_IPHONE
-#include <stdio.h>
-#endif
-
 #include "platform_unix.h"
 
 #define MAX_PATH 1024
+#if TARGET_OS_IPHONE
+#define LOCAL_DB_FILENAME "Library/.pEp_management.db"
+#else
 #define LOCAL_DB_FILENAME ".pEp_management.db"
+#endif
 #define SYSTEM_DB_FILENAME "system.db"
 
 #ifndef bool
@@ -107,13 +103,8 @@ const char *unix_local_db(void)
                 return NULL;
             }
 
-#if TARGET_OS_IPHONE
-            snprintf(buffer, MAX_PATH, "%s/Library/%s", buffer, LOCAL_DB_FILENAME);
-            printf("buffer %s", buffer);
-#else
             *p++ = '/';
             strncpy(p, LOCAL_DB_FILENAME, len);
-#endif
             done = true;
         }else{
             return NULL;
