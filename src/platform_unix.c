@@ -10,11 +10,7 @@
 #include "platform_unix.h"
 
 #define MAX_PATH 1024
-#if TARGET_OS_IPHONE
-#define LOCAL_DB_FILENAME "Library/.pEp_management.db"
-#else
 #define LOCAL_DB_FILENAME ".pEp_management.db"
-#endif
 #define SYSTEM_DB_FILENAME "system.db"
 
 #ifndef bool
