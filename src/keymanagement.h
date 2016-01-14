@@ -140,6 +140,18 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     );
 
 
+// key_reset_trust() - undo key_compromized or trust_personal_key 
+//
+//  parameters:
+//      session (in)        session to use
+//      ident (in)          person and key which was compromized
+
+DYNAMIC_API PEP_STATUS key_reset_trust(
+        PEP_SESSION session,
+        pEp_identity *ident
+    );
+
+
 #ifdef __cplusplus
 }
 #endif

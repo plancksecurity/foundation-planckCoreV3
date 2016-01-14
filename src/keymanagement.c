@@ -335,6 +335,27 @@ DYNAMIC_API PEP_STATUS key_compromized(
     return status;
 }
 
+DYNAMIC_API PEP_STATUS key_reset_trust(
+        PEP_SESSION session,
+        pEp_identity *ident
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(ident);
+    assert(!EMPTY(ident->fpr));
+
+    if (!(session && ident && ident->fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    if (ident->me)
+        revoke_key(session, ident->fpr, NULL);
+    status = reset_trust(session, ident->fpr);
+
+    return status;
+}
+
 DYNAMIC_API PEP_STATUS trust_personal_key(
         PEP_SESSION session,
         pEp_identity *ident

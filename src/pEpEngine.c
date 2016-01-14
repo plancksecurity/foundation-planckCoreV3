@@ -735,9 +735,9 @@ DYNAMIC_API PEP_STATUS mark_as_compromized(
 }
 
 DYNAMIC_API PEP_STATUS reset_trust(
-                                           PEP_SESSION session,
-                                           const char *fpr
-                                           )
+        PEP_SESSION session,
+        const char *fpr
+    )
 {
     int result;
     
