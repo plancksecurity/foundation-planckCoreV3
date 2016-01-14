@@ -65,7 +65,7 @@ DYNAMIC_API PEP_STATUS update_identity(
             assert(identity->fpr);
             if (identity->fpr == NULL)
                 return PEP_OUT_OF_MEMORY;
-            identity->fpr_size = stored_identity->address_size;
+            identity->fpr_size = stored_identity->fpr_size;
             if (_comm_type_key < PEP_ct_unconfirmed_encryption) {
                 identity->comm_type = _comm_type_key;
             }
