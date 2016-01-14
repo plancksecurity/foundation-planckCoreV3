@@ -1076,7 +1076,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
             *color = PEP_rating_unreliable;
         }
         else if (*color >= PEP_rating_reliable &&
-               kl_color == PEP_rating_reliable) {
+               kl_color >= PEP_rating_reliable) {
             if (!(src->from && src->from->user_id && src->from->user_id[0])) {
                 *color = PEP_rating_unreliable;
             }
