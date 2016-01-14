@@ -19,6 +19,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     static const char *sql_get_trust;
     static const char *sql_least_trust;
     static const char *sql_mark_as_compromized;
+    static const char *sql_reset_trust;
     bool in_first = false;
 
     assert(sqlite3_threadsafe());
@@ -199,6 +200,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         sql_least_trust = "select min(comm_type) from trust where pgp_keypair_fpr = ?1 ;";
 
         sql_mark_as_compromized = "update trust set comm_type = 15 where pgp_keypair_fpr = ?1 ;";
+
+        sql_reset_trust = "delete from trust where pgp_keypair_fpr = ?1 ;";
     }
 
     int_result = sqlite3_prepare_v2(_session->db, sql_log, strlen(sql_log),
@@ -241,6 +244,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             strlen(sql_mark_as_compromized), &_session->mark_compromized, NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_reset_trust,
+                                    strlen(sql_reset_trust), &_session->reset_trust, NULL);
+    assert(int_result == SQLITE_OK);
+    
     status = init_cryptotech(_session, in_first);
     if (status != PEP_STATUS_OK)
         goto pep_error;
@@ -724,6 +731,31 @@ DYNAMIC_API PEP_STATUS mark_as_compromized(
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_IDENTITY;
 
+    return PEP_STATUS_OK;
+}
+
+DYNAMIC_API PEP_STATUS reset_trust(
+                                           PEP_SESSION session,
+                                           const char *fpr
+                                           )
+{
+    int result;
+    
+    assert(session);
+    assert(fpr && fpr[0]);
+    
+    if (!(session && fpr && fpr[0]))
+        return PEP_ILLEGAL_VALUE;
+    
+    sqlite3_reset(session->reset_trust);
+    sqlite3_bind_text(session->reset_trust, 1, fpr, -1,
+                      SQLITE_STATIC);
+    result = sqlite3_step(session->reset_trust);
+    sqlite3_reset(session->reset_trust);
+    
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_IDENTITY;
+    
     return PEP_STATUS_OK;
 }
 
