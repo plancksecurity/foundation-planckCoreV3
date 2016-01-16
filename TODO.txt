@@ -2,5 +2,4 @@
 - describe, how to configure pEpEngine to use self-compiled libetpan (in $HOME/local/ or the like)
 - check if own key is good; if not: create a new keypair
 - warning with forwarding former encrypted messages unencryptedly
-- remove four-letter-words from dicts
 
