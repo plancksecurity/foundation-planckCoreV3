@@ -43,7 +43,7 @@ DYNAMIC_API bool is_PGP_message_text(const char *text)
 static PEP_STATUS render_mime(struct mailmime *mime, char **mimetext)
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    int fd;
+    int fd = -1;
     FILE *file = NULL;
     size_t size;
     char *buf = NULL;
@@ -932,11 +932,9 @@ static identity_list * mal_to_identity_list(
         const struct mailimf_address_list *mal
     )
 {
-    PEP_STATUS status = PEP_STATUS_OK;
     identity_list *il = NULL;
     clist *list = mal->ad_list;
     struct mailimf_address * addr = NULL;
-    struct mailimf_mailbox *mb = NULL;
     clistiter *cur;
 
     assert(mal);

@@ -89,7 +89,6 @@ static PEP_STATUS init_curl(
     bool in_first)
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    struct curl_slist *headers=NULL;
 
     if(pthread_mutex_init(curl_mutex, NULL)){
         return PEP_OUT_OF_MEMORY;
@@ -214,18 +213,6 @@ _armoured(const char *buf, size_t size, const char *pattern)
     return armoured;
 }
 
-/* write key ID's hexdump as a string */
-static void id_to_str(const uint8_t *keyid, char *str)
-{
-    int i;
-    static const char *hexes = "0123456789abcdef";
-    for (i = 0; i < PGP_KEY_ID_SIZE ; i++) {
-        str[i * 2] = hexes[(unsigned)(keyid[i] & 0xf0) >> 4];
-        str[(i * 2) + 1] = hexes[keyid[i] & 0xf];
-    }
-    str[PGP_KEY_ID_SIZE * 2] = 0x0;
-}
-
 /* write key ID bytes read from hex string 
  * tolerates no space, only hexes */
 static unsigned str_to_id(uint8_t *keyid, const char *str)
@@ -318,7 +305,6 @@ static PEP_STATUS _validation_results(
 {
     time_t    now;
     time_t    t;
-    char    buf[128];
 
     now = time(NULL);
     if (now < vresult->birthtime) {
@@ -394,15 +380,12 @@ PEP_STATUS pgp_decrypt_and_verify(
     )
 {
     pgp_memory_t *mem;
-    pgp_memory_t *cat;
     pgp_validation_t *vresult;
     char *_ptext = NULL;
     size_t _psize = 0;
-    int ret;
 
     PEP_STATUS result;
     stringlist_t *_keylist = NULL;
-    int i_key = 0;
 
     assert(session);
     assert(ctext);
@@ -582,8 +565,8 @@ PEP_STATUS pgp_encrypt_and_sign(
     size_t psize, char **ctext, size_t *csize
     )
 {
-    const pgp_key_t *signer = NULL;
-    const pgp_seckey_t *seckey = NULL;
+    pgp_key_t *signer = NULL;
+    pgp_seckey_t *seckey = NULL;
     pgp_memory_t *signedmem;
     pgp_memory_t *cmem;
     const char *hashalg;
@@ -902,7 +885,6 @@ PEP_STATUS pgp_import_keydata(
     )
 {
     pgp_memory_t *mem;
-    unsigned i = 0;
 
     PEP_STATUS result = PEP_STATUS_OK;
 
@@ -1403,7 +1385,7 @@ PEP_STATUS pgp_get_key_rating(
     PEP_comm_type *comm_type
     )
 {
-    const pgp_key_t *key;
+    pgp_key_t *key;
     uint8_t fpr[PGP_FINGERPRINT_SIZE];
     unsigned from = 0;
     size_t length;
@@ -1479,8 +1461,8 @@ PEP_STATUS pgp_renew_key(
     pgp_key_t *skey;
     uint8_t keyid[PGP_KEY_ID_SIZE];
     unsigned from = 0;
-    uint64_t duration;
-    uint8_t *primid;
+    time_t duration;
+    const uint8_t *primid;
 
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -1496,7 +1478,7 @@ PEP_STATUS pgp_renew_key(
         now = time(NULL);
         when = mktime((struct tm*)ts);
         if(now && when && when > now){
-            duration = (uint64_t)(when - now);
+            duration = when - now;
         }else{
             return PEP_ILLEGAL_VALUE;
         }
@@ -1536,7 +1518,7 @@ PEP_STATUS pgp_renew_key(
         goto unlock_netpgp;
     }
 
-    if((primid = *pgp_key_get_primary_userid(skey)) == NULL)
+    if((primid = pgp_key_get_primary_userid(skey)) == NULL)
     {
         status = PEP_KEY_HAS_AMBIG_NAME;
         goto unlock_netpgp;
