@@ -597,6 +597,7 @@
 					"$(PROJECT_DIR)",
 				);
 				New_Setting = "";
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
