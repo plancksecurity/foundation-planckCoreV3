@@ -78,8 +78,8 @@ int main(int argc, char* argv[])
 
     const char *kflist[] = {
         "0x6FF00E97.asc",
-        "C9C2EE39_pub.asc",
-        "70DCF575_pub.asc",
+        "0xC9C2EE39.asc",
+        "0x70DCF575.asc",
         NULL
     };
     const char** kf = kflist;
