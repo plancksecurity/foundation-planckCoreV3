@@ -204,48 +204,48 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         sql_reset_trust = "delete from trust where pgp_keypair_fpr = ?1 ;";
     }
 
-    int_result = sqlite3_prepare_v2(_session->db, sql_log, strlen(sql_log),
+    int_result = sqlite3_prepare_v2(_session->db, sql_log, (int)strlen(sql_log),
             &_session->log, NULL);
 	assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->system_db, sql_trustword,
-            strlen(sql_trustword), &_session->trustword, NULL);
+            (int)strlen(sql_trustword), &_session->trustword, NULL);
 	assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_identity,
-            strlen(sql_get_identity), &_session->get_identity, NULL);
+            (int)strlen(sql_get_identity), &_session->get_identity, NULL);
 	assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_person,
-            strlen(sql_set_person), &_session->set_person, NULL);
+            (int)strlen(sql_set_person), &_session->set_person, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_pgp_keypair,
-            strlen(sql_set_pgp_keypair), &_session->set_pgp_keypair, NULL);
+            (int)strlen(sql_set_pgp_keypair), &_session->set_pgp_keypair, NULL);
 	assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_identity,
-            strlen(sql_set_identity), &_session->set_identity, NULL);
+            (int)strlen(sql_set_identity), &_session->set_identity, NULL);
 	assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_trust,
-            strlen(sql_set_trust), &_session->set_trust, NULL);
+            (int)strlen(sql_set_trust), &_session->set_trust, NULL);
 	assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_trust,
-            strlen(sql_get_trust), &_session->get_trust, NULL);
+            (int)strlen(sql_get_trust), &_session->get_trust, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_least_trust,
-            strlen(sql_least_trust), &_session->least_trust, NULL);
+            (int)strlen(sql_least_trust), &_session->least_trust, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_mark_as_compromized,
-            strlen(sql_mark_as_compromized), &_session->mark_compromized, NULL);
+            (int)strlen(sql_mark_as_compromized), &_session->mark_compromized, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_reset_trust,
-                                    strlen(sql_reset_trust), &_session->reset_trust, NULL);
+                                    (int)strlen(sql_reset_trust), &_session->reset_trust, NULL);
     assert(int_result == SQLITE_OK);
     
     status = init_cryptotech(_session, in_first);

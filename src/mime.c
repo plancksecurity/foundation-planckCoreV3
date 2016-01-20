@@ -54,7 +54,7 @@ static PEP_STATUS render_mime(struct mailmime *mime, char **mimetext)
     char *env_tmp = getenv("TEMP");
 
     if(env_tmp){
-        int tmp_l = strlen(env_tmp);
+        unsigned long tmp_l = strlen(env_tmp);
         if(tmp_l == 0 ) {
             goto err_file;
         } else {
