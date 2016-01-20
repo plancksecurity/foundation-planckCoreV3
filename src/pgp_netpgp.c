@@ -1265,7 +1265,7 @@ static PEP_STATUS send_key_cb(void *arg, pgp_key_t *key)
         char *request;
         size_t encoded_key_len;
 
-        encoded_key = curl_escape(buffer, buflen);
+        encoded_key = curl_escape(buffer, (int)buflen);
         if(!encoded_key){
             result = PEP_OUT_OF_MEMORY;
             goto free_buffer;

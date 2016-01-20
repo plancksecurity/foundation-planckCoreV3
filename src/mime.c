@@ -54,7 +54,7 @@ static PEP_STATUS render_mime(struct mailmime *mime, char **mimetext)
     char *env_tmp = getenv("TEMP");
 
     if(env_tmp){
-        int tmp_l = strlen(env_tmp);
+        unsigned long tmp_l = strlen(env_tmp);
         if(tmp_l == 0 ) {
             goto err_file;
         } else {
@@ -664,7 +664,7 @@ static PEP_STATUS mime_encode_message_plain(
     }
     else {
         if (is_PGP_message_text(plaintext))
-            mime = get_text_part("msg.asc", "application/octet-stream", plaintext,
+            mime = get_text_part("PGPexch.htm.pgp", "application/octet-stream", plaintext,
                     strlen(plaintext), MAILMIME_MECHANISM_7BIT);
         else
             mime = get_text_part("msg.txt", "text/plain", plaintext, strlen(plaintext),
