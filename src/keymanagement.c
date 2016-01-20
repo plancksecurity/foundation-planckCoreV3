@@ -344,15 +344,22 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
 
     assert(session);
     assert(ident);
+    assert(!ident->me);
     assert(!EMPTY(ident->fpr));
+    assert(!EMPTY(ident->address));
+    assert(!EMPTY(ident->user_id));
 
-    if (!(session && ident && ident->fpr))
+    if (!(session && ident && !ident->me && ident->fpr && ident->address &&
+            ident->user_id))
         return PEP_ILLEGAL_VALUE;
 
-    if (ident->me)
-        revoke_key(session, ident->fpr, NULL);
-    status = reset_trust(session, ident->fpr);
+    status = update_identity(session, ident);
+    if (status != PEP_STATUS_OK)
+        return status;
 
+    ident->comm_type = PEP_ct_unknown;
+    status = set_identity(session, ident);
+    
     return status;
 }
 
