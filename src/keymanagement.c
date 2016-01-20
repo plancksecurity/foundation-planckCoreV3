@@ -357,9 +357,16 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
     if (status != PEP_STATUS_OK)
         return status;
 
-    ident->comm_type = PEP_ct_unknown;
+    if (ident->comm_type == PEP_ct_compromized)
+        ident->comm_type = PEP_ct_unknown;
+    else
+        ident->comm_type &= ~PEP_ct_confirmed;
+
     status = set_identity(session, ident);
-    
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    status = update_identity(session, ident);
     return status;
 }
 
