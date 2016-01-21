@@ -664,7 +664,7 @@ static PEP_STATUS mime_encode_message_plain(
     }
     else {
         if (is_PGP_message_text(plaintext))
-            mime = get_text_part("PGPexch.htm.pgp", "application/octet-stream", plaintext,
+            mime = get_text_part("msg.asc", "application/octet-stream", plaintext,
                     strlen(plaintext), MAILMIME_MECHANISM_7BIT);
         else
             mime = get_text_part("msg.txt", "text/plain", plaintext, strlen(plaintext),
