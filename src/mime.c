@@ -771,7 +771,7 @@ static PEP_STATUS mime_encode_message_PGP_MIME(
         submime = NULL;
     }
 
-    submime = get_text_part("PGPexch.htm.pgp", "application/octet-stream", plaintext,
+    submime = get_text_part("msg.asc", "application/octet-stream", plaintext,
             strlen(plaintext), MAILMIME_MECHANISM_7BIT);
     assert(submime);
     if (submime == NULL)
