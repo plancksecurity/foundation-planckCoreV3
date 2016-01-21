@@ -363,7 +363,7 @@ static PEP_STATUS encrypt_PGP_MIME(
     memcpy(_ctext, ctext, csize);
 
     _a = bloblist_add(_a, _ctext, csize, "application/octet-stream",
-        "msg.asc");
+        "PGPexch.htm.pgp");
     if (_a == NULL)
         goto enomem;
 
