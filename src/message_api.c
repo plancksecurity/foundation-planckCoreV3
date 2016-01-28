@@ -943,6 +943,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         if (msg == NULL)
             goto enomem;
 
+        attach_own_key(session, msg);
+
         switch (enc_format) {
         case PEP_enc_PGP_MIME:
         case PEP_enc_PEP: // BUG: should be implemented extra
@@ -969,9 +971,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         if (status != PEP_STATUS_OK) {
             attach_own_key(session, src);
             goto pep_error;
-        }
-        else {
-            attach_own_key(session, msg);
         }
     }
 
