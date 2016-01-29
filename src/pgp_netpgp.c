@@ -309,12 +309,12 @@ static PEP_STATUS _validation_results(
     now = time(NULL);
     if (now < vresult->birthtime) {
         // signature is not valid yet
-        return PEP_UNENCRYPTED;
+        return PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
     }
     if (vresult->duration != 0 && now > vresult->birthtime + vresult->duration) {
         // signature has expired
         t = vresult->duration + vresult->birthtime;
-        return PEP_UNENCRYPTED;
+        return PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
     }
     if (vresult->validc && vresult->valid_sigs &&
         !vresult->invalidc && !vresult->unknownc ) {
@@ -369,7 +369,7 @@ static PEP_STATUS _validation_results(
     }
     
     // only unknown sigs
-    return PEP_DECRYPT_WRONG_FORMAT;
+    return PEP_DECRYPTED;
 }
 
 #define _ENDL    "\\s*(\r\n|\r|\n)"
@@ -434,10 +434,13 @@ PEP_STATUS pgp_decrypt_and_verify(
 
     if (result == PEP_DECRYPTED) {
         result = _validation_results(&netpgp, vresult, &_keylist);
-        if (result != PEP_STATUS_OK) {
+        if (result == PEP_DECRYPTED) {
+            //no change
+        }else if (result != PEP_STATUS_OK) {
             goto free_ptext;
+        }else{
+            result = PEP_DECRYPTED_AND_VERIFIED;
         }
-        result = PEP_DECRYPTED_AND_VERIFIED;
     }
 
     if (result == PEP_DECRYPTED_AND_VERIFIED

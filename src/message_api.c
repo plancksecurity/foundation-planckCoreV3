@@ -943,6 +943,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         if (msg == NULL)
             goto enomem;
 
+        attach_own_key(session, src);
+
         switch (enc_format) {
         case PEP_enc_PGP_MIME:
         case PEP_enc_PEP: // BUG: should be implemented extra
@@ -969,9 +971,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         if (status != PEP_STATUS_OK) {
             attach_own_key(session, src);
             goto pep_error;
-        }
-        else {
-            attach_own_key(session, msg);
         }
     }
 
@@ -1037,64 +1036,22 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         case PEP_enc_PGP_MIME:
             ctext = src->attachments->next->value;
             csize = src->attachments->next->size;
-
-            status = cryptotech[crypto].decrypt_and_verify(session, ctext,
-                    csize, &ptext, &psize, &_keylist);
-            if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
-                goto pep_error;
-            decrypt_status = status;
             break;
 
         case PEP_enc_pieces:
             ctext = src->longmsg;
             csize = strlen(ctext);
-
-            status = cryptotech[crypto].decrypt_and_verify(session, ctext,
-                    csize, &ptext, &psize, &_keylist);
-            if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
-                goto pep_error;
-            decrypt_status = status;
             break;
 
         default:
             NOT_IMPLEMENTED
     }
+    status = cryptotech[crypto].decrypt_and_verify(session, ctext,
+                                                   csize, &ptext, &psize, &_keylist);
+    if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
+        goto pep_error;
 
-    *color = decrypt_color(status);
-
-    if (*color != PEP_rating_under_attack) {
-        PEP_color kl_color = PEP_rating_undefined;
-
-        if (_keylist)
-            kl_color = keylist_color(session, _keylist);
-
-        if (kl_color == PEP_rating_under_attack) {
-            *color = PEP_rating_under_attack;
-        }
-        else if (*color >= PEP_rating_reliable &&
-               kl_color < PEP_rating_reliable) {
-            *color = PEP_rating_unreliable;
-        }
-        else if (*color >= PEP_rating_reliable &&
-               kl_color >= PEP_rating_reliable) {
-            if (!(src->from && src->from->user_id && src->from->user_id[0])) {
-                *color = PEP_rating_unreliable;
-            }
-            else {
-                char *fpr = _keylist->value;
-                pEp_identity *_from = new_identity(src->from->address, fpr,
-                        src->from->user_id, src->from->username);
-                if (_from == NULL)
-                    goto enomem;
-                status = update_identity(session, _from);
-                if (_from->comm_type != PEP_ct_unknown)
-                    *color = _rating(_from->comm_type);
-                free_identity(_from);
-                if (status != PEP_STATUS_OK)
-                    goto pep_error;
-            }
-        }
-    }
+    decrypt_status = status;
 
     if (ptext) {
         switch (src->enc_format) {
@@ -1123,10 +1080,13 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                 for (_s = src->attachments; _s && _s->value; _s = _s->next) {
                     if (is_encrypted_attachment(_s)) {
                         stringlist_t *_keylist = NULL;
-                        ctext = _s->value;
-                        csize = _s->size;
+                        char *attctext;
+                        size_t attcsize;
 
-                        status = decrypt_and_verify(session, ctext, csize,
+                        attctext = _s->value;
+                        attcsize = _s->size;
+
+                        status = decrypt_and_verify(session, attctext, attcsize,
                                 &ptext, &psize, &_keylist);
                         free_stringlist(_keylist);
 
@@ -1187,7 +1147,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                 // BUG: must implement more
                 NOT_IMPLEMENTED
         }
-
+        
         switch (src->enc_format) {
             case PEP_enc_PGP_MIME:
             case PEP_enc_pieces:
@@ -1222,8 +1182,67 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                 // BUG: must implement more
                 NOT_IMPLEMENTED
         }
-
+        
         import_attached_keys(session, msg);
+        
+        if(decrypt_status == PEP_DECRYPTED){
+            
+            // In case message did decrypt, but no valid signature could be found
+            // then retry decrypt+verify after importing key.
+            // TODO optimize if import_attached_keys didn't import any key
+            
+            char *re_ptext = NULL;
+            size_t re_psize;
+            free_stringlist(_keylist);
+            _keylist = NULL;
+
+            status = cryptotech[crypto].decrypt_and_verify(session, ctext,
+                csize, &re_ptext, &re_psize, &_keylist);
+            
+            if(re_ptext)
+                free(re_ptext);
+            
+            if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
+                goto pep_error;
+            
+            decrypt_status = status;
+        }
+        
+        *color = decrypt_color(decrypt_status);
+        
+        if (*color != PEP_rating_under_attack) {
+            PEP_color kl_color = PEP_rating_undefined;
+            
+            if (_keylist)
+                kl_color = keylist_color(session, _keylist);
+            
+            if (kl_color == PEP_rating_under_attack) {
+                *color = PEP_rating_under_attack;
+            }
+            else if (*color >= PEP_rating_reliable &&
+                     kl_color < PEP_rating_reliable) {
+                *color = PEP_rating_unreliable;
+            }
+            else if (*color >= PEP_rating_reliable &&
+                     kl_color >= PEP_rating_reliable) {
+                if (!(src->from && src->from->user_id && src->from->user_id[0])) {
+                    *color = PEP_rating_unreliable;
+                }
+                else {
+                    char *fpr = _keylist->value;
+                    pEp_identity *_from = new_identity(src->from->address, fpr,
+                                                       src->from->user_id, src->from->username);
+                    if (_from == NULL)
+                        goto enomem;
+                    status = update_identity(session, _from);
+                    if (_from->comm_type != PEP_ct_unknown)
+                        *color = _rating(_from->comm_type);
+                    free_identity(_from);
+                    if (status != PEP_STATUS_OK)
+                        goto pep_error;
+                }
+            }
+        }
     }
 
     if (msg)

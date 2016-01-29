@@ -820,6 +820,8 @@ PEP_STATUS pgp_generate_keypair(
         "<GnupgKeyParms format=\"internal\">\n"
         "Key-Type: RSA\n"
         "Key-Length: 4096\n"
+        "Subkey-Type: RSA\n"
+        "Subkey-Length: 4096\n"
         "Name-Real: %s\n"
         "Name-Email: %s\n"
         /* "Passphrase: %s\n" */
