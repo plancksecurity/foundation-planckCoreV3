@@ -1198,6 +1198,10 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
             status = cryptotech[crypto].decrypt_and_verify(session, ctext,
                 csize, &re_ptext, &re_psize, &_keylist);
+            
+            if(re_ptext)
+                free(re_ptext);
+            
             if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
                 goto pep_error;
             
