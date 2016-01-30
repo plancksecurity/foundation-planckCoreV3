@@ -10,22 +10,17 @@
 #include <assert.h>
 #include <errno.h>
 
-#define MAX_MESSAGE_ID 512
+#define MAX_MESSAGE_ID 128
 
 static char * generate_boundary(void)
 {
     char id[MAX_MESSAGE_ID];
-    long value1;
-    long value2;
-    long value3;
-    long value4;
- 
-    // no random needed here
 
-    value1 = random();
-    value2 = random();
-    value3 = random();
-    value4 = random();
+    // no cryptographically strong random needed here
+    const long value1 = random();
+    const long value2 = random();
+    const long value3 = random();
+    const long value4 = random();
 
     snprintf(id, MAX_MESSAGE_ID, "%.4lx%.4lx%.4lx%.4lx", value1, value2,
             value3, value4);
