@@ -293,9 +293,10 @@ typedef enum _PEP_comm_type {
 
     PEP_ct_security_by_obscurity = 0x0a,
     PEP_ct_b0rken_crypto = 0x0b,
-    PEP_ct_key_too_short = 0x0e,
+    PEP_ct_key_too_short = 0x0c,
 
-    PEP_ct_compromized = 0x0f,                  // known compromized connection
+    PEP_ct_compromized = 0x0e,                  // known compromized connection
+    PEP_ct_mistrusted = 0x0f,                   // known mistrusted key
 
     // range 0x10 to 0x3f: unconfirmed encryption
 

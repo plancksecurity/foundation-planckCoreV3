@@ -566,10 +566,12 @@ static const char * color_to_string(PEP_color color)
         return "trusted_and_anonymized";
     case PEP_rating_fully_anonymous:
         return "fully_anonymous";
-    case PEP_rating_under_attack:
-        return "unter_attack";
+    case PEP_rating_mistrust:
+        return "mistrust";
     case PEP_rating_b0rken:
         return "b0rken";
+    case PEP_rating_under_attack:
+        return "unter_attack";
     default:
         return "undefined";
     }
@@ -603,6 +605,9 @@ static PEP_color _rating(PEP_comm_type ct)
     else if (ct == PEP_ct_compromized)
         return PEP_rating_under_attack;
 
+    else if (ct == PEP_ct_mistrusted)
+        return PEP_rating_mistrust;
+    
     else if (ct >= PEP_ct_confirmed_enc_anon)
         return PEP_rating_trusted_and_anonymized;
 
