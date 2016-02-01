@@ -50,9 +50,10 @@ char *stpcpy(char *dst, const char *src)
     return dst;
 }
 
-long int random(void){
-  unsigned short xsubi[3] = {'p', 'E', 'p'};
-  return nrand48(xsubi);
+long int random(void)
+{
+    static unsigned short xsubi[3] = {'p', 'E', 'p'};
+    return nrand48(xsubi);
 }
 
 const char *android_system_db(void)
