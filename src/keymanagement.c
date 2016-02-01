@@ -12,8 +12,8 @@
 #define MIN(A, B) ((B) > (A) ? (A) : (B))
 #endif
 
-#ifndef EMPTY
-#define EMPTY(STR) ((STR == NULL) || (STR)[0] == 0)
+#ifndef EMPTYSTR
+#define EMPTYSTR(STR) ((STR == NULL) || (STR)[0] == 0)
 #endif
 
 #define KEY_EXPIRE_DELTA (60 * 60 * 24 * 365)
@@ -27,9 +27,9 @@ DYNAMIC_API PEP_STATUS update_identity(
 
     assert(session);
     assert(identity);
-    assert(!EMPTY(identity->address));
+    assert(!EMPTYSTR(identity->address));
 
-    if (!(session && identity && !EMPTY(identity->address)))
+    if (!(session && identity && !EMPTYSTR(identity->address)))
         return PEP_ILLEGAL_VALUE;
 
     status = get_identity(session, identity->address, &stored_identity);
@@ -44,7 +44,7 @@ DYNAMIC_API PEP_STATUS update_identity(
         if (status == PEP_OUT_OF_MEMORY)
             return PEP_OUT_OF_MEMORY;
 
-        if (EMPTY(identity->user_id)) {
+        if (EMPTYSTR(identity->user_id)) {
             free(identity->user_id);
             identity->user_id = strdup(stored_identity->user_id);
             if (identity->user_id == NULL)
@@ -52,7 +52,7 @@ DYNAMIC_API PEP_STATUS update_identity(
             identity->user_id_size = stored_identity->user_id_size;
         }
 
-        if (EMPTY(identity->username)) {
+        if (EMPTYSTR(identity->username)) {
             free(identity->username);
             identity->username = strdup(stored_identity->username);
             if (identity->username == NULL)
@@ -60,7 +60,7 @@ DYNAMIC_API PEP_STATUS update_identity(
             identity->username_size = stored_identity->username_size;
         }
 
-        if (EMPTY(identity->fpr)) {
+        if (EMPTYSTR(identity->fpr)) {
             identity->fpr = strdup(stored_identity->fpr);
             assert(identity->fpr);
             if (identity->fpr == NULL)
@@ -73,7 +73,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                 identity->comm_type = stored_identity->comm_type;
             }
         }
-        else /* !EMPTY(identity->fpr) */ {
+        else /* !EMPTYSTR(identity->fpr) */ {
             if (_comm_type_key != PEP_ct_unknown) {
                 if (_comm_type_key < PEP_ct_unconfirmed_encryption) {
                     identity->comm_type = _comm_type_key;
@@ -101,7 +101,7 @@ DYNAMIC_API PEP_STATUS update_identity(
         }
     }
     else /* stored_identity == NULL */ {
-        if (!EMPTY(identity->fpr)) {
+        if (!EMPTYSTR(identity->fpr)) {
             PEP_comm_type _comm_type_key;
 
             status = get_key_rating(session, identity->fpr, &_comm_type_key);
@@ -111,7 +111,7 @@ DYNAMIC_API PEP_STATUS update_identity(
 
             identity->comm_type = _comm_type_key;
         }
-        else /* EMPTY(identity->fpr) */ {
+        else /* EMPTYSTR(identity->fpr) */ {
             PEP_STATUS status;
             stringlist_t *keylist;
             char *_fpr = NULL;
@@ -165,10 +165,10 @@ DYNAMIC_API PEP_STATUS update_identity(
 
     status = PEP_STATUS_OK;
 
-    if (identity->comm_type != PEP_ct_unknown && !EMPTY(identity->user_id)) {
-        assert(!EMPTY(identity->username)); // this should not happen
+    if (identity->comm_type != PEP_ct_unknown && !EMPTYSTR(identity->user_id)) {
+        assert(!EMPTYSTR(identity->username)); // this should not happen
 
-        if (EMPTY(identity->username)) { // mitigate
+        if (EMPTYSTR(identity->username)) { // mitigate
             free(identity->username);
             identity->username = strdup("anonymous");
             if (identity->username == NULL)
@@ -323,7 +323,7 @@ DYNAMIC_API PEP_STATUS key_compromized(
 
     assert(session);
     assert(ident);
-    assert(!EMPTY(ident->fpr));
+    assert(!EMPTYSTR(ident->fpr));
 
     if (!(session && ident && ident->fpr))
         return PEP_ILLEGAL_VALUE;
@@ -345,9 +345,9 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
     assert(session);
     assert(ident);
     assert(!ident->me);
-    assert(!EMPTY(ident->fpr));
-    assert(!EMPTY(ident->address));
-    assert(!EMPTY(ident->user_id));
+    assert(!EMPTYSTR(ident->fpr));
+    assert(!EMPTYSTR(ident->address));
+    assert(!EMPTYSTR(ident->user_id));
 
     if (!(session && ident && !ident->me && ident->fpr && ident->address &&
             ident->user_id))
@@ -380,13 +380,13 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
 
     assert(session);
     assert(ident);
-    assert(!EMPTY(ident->address));
-    assert(!EMPTY(ident->user_id));
-    assert(!EMPTY(ident->fpr));
+    assert(!EMPTYSTR(ident->address));
+    assert(!EMPTYSTR(ident->user_id));
+    assert(!EMPTYSTR(ident->fpr));
     assert(!ident->me);
 
-    if (!ident || EMPTY(ident->address) || EMPTY(ident->user_id) ||
-            EMPTY(ident->fpr) || ident->me)
+    if (!ident || EMPTYSTR(ident->address) || EMPTYSTR(ident->user_id) ||
+            EMPTYSTR(ident->fpr) || ident->me)
         return PEP_ILLEGAL_VALUE;
 
     status = update_identity(session, ident);
