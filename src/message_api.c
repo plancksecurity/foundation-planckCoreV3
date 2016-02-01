@@ -800,6 +800,8 @@ void import_attached_keys(PEP_SESSION session, const message *msg)
                 import_key(session, bl->value, bl->size);
         }
     }
+    if(msg->from && msg->from->user_id && msg->from->address)
+        update_identity(session, msg->from);
 }
 
 void attach_own_key(PEP_SESSION session, message *msg)
@@ -1193,6 +1195,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
             
             char *re_ptext = NULL;
             size_t re_psize;
+            
             free_stringlist(_keylist);
             _keylist = NULL;
 
