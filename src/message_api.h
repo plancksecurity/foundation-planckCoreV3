@@ -57,9 +57,10 @@ typedef enum _PEP_color {
     PEP_rating_trusted_and_anonymized,
     PEP_rating_fully_anonymous,   
 
-    PEP_rating_under_attack = -1,
-    PEP_rating_red = PEP_rating_under_attack,
-    PEP_rating_b0rken = -2
+    PEP_rating_mistrust = -1,
+    PEP_rating_red = PEP_rating_mistrust,
+    PEP_rating_b0rken = -2,
+    PEP_rating_under_attack = -3,
 } PEP_color;
 
 // decrypt_message() - decrypt message in memory
