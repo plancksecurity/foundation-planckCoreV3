@@ -1227,6 +1227,9 @@ DYNAMIC_API PEP_STATUS decrypt_message(
             if (kl_color == PEP_rating_under_attack) {
                 *color = PEP_rating_under_attack;
             }
+            else if (kl_color == PEP_rating_mistrust) {
+                *color = PEP_rating_mistrust;
+            }
             else if (*color >= PEP_rating_reliable &&
                      kl_color < PEP_rating_reliable) {
                 *color = PEP_rating_unreliable;
