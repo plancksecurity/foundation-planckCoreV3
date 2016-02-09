@@ -196,20 +196,17 @@ void pgp_release(PEP_SESSION session, bool out_last)
     release_curl(&session->ctx.curl_mutex, out_last);
 }
 
-// return 1 if the file contains ascii-armoured text 
-// buf MUST be \0 terminated to be checked for armour
+// return 1 if the file contains ascii-armoured text
 static unsigned
 _armoured(const char *buf, size_t size, const char *pattern)
 {
     unsigned armoured = 0;
-    if(buf[size]=='\0'){
-        regex_t r;
-        regcomp(&r, pattern, REG_EXTENDED|REG_NOSUB);
-        if (regnexec(&r, buf, size, 0, NULL, 0) == 0) {
-            armoured = 1;
-        }
-        regfree(&r);
+    regex_t r;
+    regcomp(&r, pattern, REG_EXTENDED|REG_NOSUB);
+    if (regnexec(&r, buf, size, 0, NULL, 0) == 0) {
+        armoured = 1;
     }
+    regfree(&r);
     return armoured;
 }
 
