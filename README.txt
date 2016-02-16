@@ -1,8 +1,8 @@
 p≡p Engine
 ==========
 
-0. What it is and building it
------------------------------
+0. What it is
+-------------
 
 The p≡p engine is a Free Software library encapsulating implementations of:
 
@@ -37,6 +37,24 @@ adapters for a variety of programming languages and development environments.
 p≡p engine is under Gnu General Public License v3. If you want to use it under
 a different license, please contact mailto:council@pep.foundation.
 
+
+1. Dependencies
+---------------
+
+p≡p engine is depending on the following FOSS libraries:
+
+libetpan, see https://github.com/fdik/libetpan
+zlib, see http://zlib.net/
+OpenSSL, see http://openssl.org/
+iconv, see http://www.gnu.org/software/libiconv/
+Cyrus SASL, see http://cyrusimap.org/
+GnuPG via GPGME, see https://gnupg.org/
+NetPGP/p≡p, see https://cacert.pep.foundation/dev/repos/netpgp-et/
+
+
+2. Building p≡p engine
+----------------------
+
 p≡p engine has an old style Makefile for building it.
 
 The build is configured in Makefile.conf
@@ -58,7 +76,8 @@ On Windows, use Visual Studio.
 
 For cross-building, BUILD_FOR is being used. I.e.:
 
-$ BUILD_FOR=yourOS make -e windist
+$ BUILD_FOR=yourOS make -e
+
 
 2. How to build the databases
 -----------------------------
@@ -72,7 +91,11 @@ The managment db is being created by the first call of init() of p≡p Engine. I
 does not need to be created manually. system.db is being created by using the
 DDL in db/create_system_db.sql – the content is created by db/dic2csv.py
 out of hunspell's dictionary packages (or something similar) and then being
-imported using sqlite3's .import command.
+imported using sqlite3's .import command. Dictionary files for different
+languages are part of p≡p engine source distribution.
+
+$ make db
+$ make -C db install
 
 You can test the Trustwords in system.db using db/trustwords.py
 Both Python tools have a switch --help
