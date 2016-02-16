@@ -1,11 +1,43 @@
-pEp Engine
+p≡p Engine
 ==========
 
 0. What it is and building it
 -----------------------------
 
-The pEp Engine encapsulates all real functionality of pEp.
-It has an old style Makefile for building it.
+The p≡p engine is a Free Software library encapsulating implementations of:
+
+- Key Management
+
+  Key Management in p≡p engine is based on GnuPG key chains (NetPGP on iOS).
+  Keys are stored in an OpenPGP compatbile format and can be used for different
+  crypto implementations.
+
+- Trust Rating
+
+  p≡p engine is sporting a two phase trust rating system. In phase one there is
+  a rating based on channel, crypto and key security named “comm_types”. In
+  phase 2 these are mapped to user representable values which have attached
+  colors to present them in traffic light semantics.
+
+- Abstract Crypto API
+
+  The Abstract Crypto API is providing functions to encrypt and decrypt data or
+  full messages without requiring an application programmer to understand the
+  different formats and standards.
+
+- Message Transports
+
+  p≡p engine will sport a growing list of Message Transports to support any
+  widespread text messaging system including E-Mail, SMS, XMPP and many more.
+
+p≡p engine is written in C99. It is not meant to be used in application code
+directly. Instead, p≡p engine is coming together with a list of software
+adapters for a variety of programming languages and development environments.
+
+p≡p engine is under Gnu General Public License v3. If you want to use it under
+a different license, please contact mailto:council@pep.foundation.
+
+p≡p engine has an old style Makefile for building it.
 
 The build is configured in Makefile.conf
 
@@ -19,44 +51,29 @@ and additionally
 
 $ make package # for building a .tar.bz2 with the source distribution
 
-To build on platforms without uname(1) use BUILD_ON:
-
-C:\pEpEngine> :for building a .zip with a binary distribution
-C:\pEpEngine> set BUILD_ON=Windoze && make -e windist
+On Windows, use Visual Studio.
 
 1. How to cross-build
 ---------------------
 
 For cross-building, BUILD_FOR is being used. I.e.:
 
-$ BUILD_FOR=Windoze make -e windist
-
-Supported platforms are Darwin, Windoze, Linux.
-
-1. a) Cross-building for Windoze
-................................
-
-Cross-building for Windoze requires mingw-w64.
-
-Easier linking to Visual Studio can be achieved by using Microsoft's LIB.EXE
-tool; this command created the needed pEpEngine.lib import library:
-
-C:\pEpEngine> lib /def:pEpEngine.def
+$ BUILD_FOR=yourOS make -e windist
 
 2. How to build the databases
 -----------------------------
 
-pEp Engine uses two databases: ~/.pEp_management (on *NIX) or
+p≡p Engine uses two databases: ~/.pEp_management (on *NIX) or
 %LOCALAPPDATA%\pEp\management.db on Windoze respectively, and
 /usr/local/share/system.db on *NIX or %ALLUSERSPROFILE%\pEp\system.db
-respectively. The latter contains the safewords dbs.
+respectively. The latter contains the Trustwords dbs.
 
-The managment db is being created by the first call of init() of pEp Engine. It
+The managment db is being created by the first call of init() of p≡p Engine. It
 does not need to be created manually. system.db is being created by using the
 DDL in db/create_system_db.sql – the content is created by db/dic2csv.py
 out of hunspell's dictionary packages (or something similar) and then being
 imported using sqlite3's .import command.
 
-You can test the safewords in system.db using db/safewords.py
+You can test the Trustwords in system.db using db/trustwords.py
 Both Python tools have a switch --help
 
