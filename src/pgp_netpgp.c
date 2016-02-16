@@ -433,6 +433,8 @@ PEP_STATUS pgp_decrypt_and_verify(
         result = _validation_results(&netpgp, vresult, &_keylist);
         if (result == PEP_DECRYPTED) {
             //no change
+        } else if (result == PEP_VERIFY_NO_KEY) {
+            result = PEP_DECRYPTED;
         }else if (result != PEP_STATUS_OK) {
             goto free_ptext;
         }else{
