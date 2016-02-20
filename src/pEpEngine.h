@@ -213,8 +213,11 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
 //	    PEP_STATUS_OK       log entry created
 
 DYNAMIC_API PEP_STATUS log_event(
-        PEP_SESSION session, const char *title, const char *entity,
-        const char *description, const char *comment
+        PEP_SESSION session,
+        char *title,
+        char *entity,
+        char *description,
+        char *comment
     );
 
 
@@ -683,6 +686,20 @@ DYNAMIC_API PEP_STATUS key_expired(
         PEP_SESSION session,
         const char *fpr,
         bool *expired
+    );
+
+
+// get_crashdump_log() - get the last log messages out
+//
+//  parameters:
+//      session (in)            session handle
+//      maxlines (in)           maximum number of lines (0 for default)
+//      logdata (out)           logdata
+
+DYNAMIC_API PEP_STATUS get_crashdump_log(
+        PEP_SESSION session,
+        int maxlines,
+        char **logdata
     );
 
 

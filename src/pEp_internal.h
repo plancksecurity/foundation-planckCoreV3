@@ -1,4 +1,4 @@
-#define PEP_ENGINE_VERSION "0.5.0"
+#define PEP_ENGINE_VERSION "0.6.0"
 
 // this is 20 trustwords with 79 chars max
 #define MAX_TRUSTWORDS_SPACE (20 * 80)
@@ -13,7 +13,15 @@
 #define MAX_LINELENGTH 1024
 
 // default keyserver
+#ifndef DEFAULT_KEYSERVER
 #define DEFAULT_KEYSERVER "hkp://keys.gnupg.net"
+#endif
+
+// crashdump constants
+#ifndef CRASHDUMP_DEFAULT_LINES
+#define CRASHDUMP_DEFAULT_LINES 100
+#endif
+#define CRASHDUMP_MAX_LINES 32767
 
 #include "platform.h"
 
@@ -88,6 +96,7 @@ typedef struct _pEpSession {
     sqlite3_stmt *least_trust;
     sqlite3_stmt *mark_compromized;
     sqlite3_stmt *reset_trust;
+    sqlite3_stmt *crashdump;
 
     examine_identity_t examine_identity;
     void *examine_management;

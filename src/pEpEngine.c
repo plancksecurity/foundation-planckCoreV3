@@ -19,6 +19,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     static const char *sql_get_trust;
     static const char *sql_least_trust;
     static const char *sql_mark_as_compromized;
+    static const char *sql_crashdump;
+
     bool in_first = false;
 
     assert(sqlite3_threadsafe());
@@ -199,6 +201,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         sql_least_trust = "select min(comm_type) from trust where pgp_keypair_fpr = ?1 ;";
 
         sql_mark_as_compromized = "update trust not indexed set comm_type = 15 where pgp_keypair_fpr = ?1 ;";
+
+        sql_crashdump = "select title, entity, description, comment from log order by timestamp desc limit ?1 ;";
     }
 
     int_result = sqlite3_prepare_v2(_session->db, sql_log, (int)strlen(sql_log),
@@ -315,9 +319,24 @@ DYNAMIC_API void release(PEP_SESSION session)
     }
 }
 
+static void _clean_log_value(char *text)
+{
+    if (text) {
+        for (char *c = text; *c; c++) {
+            if (*c < 32)
+                *c = 32;
+            else if (*c == '"')
+                *c = '\'';
+        }
+    }
+}
+
 DYNAMIC_API PEP_STATUS log_event(
-        PEP_SESSION session, const char *title, const char *entity,
-        const char *description, const char *comment
+        PEP_SESSION session,
+        char *title,
+        char *entity,
+        char *description,
+        char *comment
     )
 {
 	PEP_STATUS status = PEP_STATUS_OK;
@@ -329,6 +348,11 @@ DYNAMIC_API PEP_STATUS log_event(
 
     if (!(session && title && entity))
         return PEP_ILLEGAL_VALUE;
+
+    _clean_log_value(title);
+    _clean_log_value(entity);
+    _clean_log_value(description);
+    _clean_log_value(comment);
 
 	sqlite3_reset(session->log);
 	sqlite3_bind_text(session->log, 1, title, -1, SQLITE_STATIC);
@@ -1021,5 +1045,106 @@ DYNAMIC_API PEP_STATUS key_expired(
 
     return session->cryptotech[PEP_crypt_OpenPGP].key_expired(session, fpr,
             expired);
+}
+
+static char *_concat_string(char *str1, const char *str2, char delim)
+{
+    assert(str2);
+
+    size_t len1 = str1 ? strlen(str1) : 0;
+    size_t len2 = strlen(str2);
+    size_t len = len1 + len2 + 3;
+    char * result = realloc(str1, len + 1);
+
+    if (result) {
+        result[len1] = '"';
+        strcpy(result + len1 + 1, str2);
+        _clean_log_value(result + len1 + 1);
+        result[len - 2] = '"';
+        result[len - 1] = delim;
+        result[len] = 0;
+    }
+    else {
+        free(str1);
+    }
+
+    return result;
+}
+
+DYNAMIC_API PEP_STATUS get_crashdump_log(
+        PEP_SESSION session,
+        int maxlines,
+        char **logdata
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    char *_logdata= NULL;
+
+    assert(session);
+    assert(maxlines >= 0 && maxlines <= CRASHDUMP_MAX_LINES);
+    assert(logdata);
+
+    if (!(session && logdata && maxlines >= 0 && maxlines <=
+            CRASHDUMP_MAX_LINES))
+        return PEP_ILLEGAL_VALUE;
+
+    int limit = maxlines ? maxlines : CRASHDUMP_DEFAULT_LINES;
+    const char *title;
+    const char *entity;
+    const char *desc;
+    const char *comment;
+
+    sqlite3_reset(session->crashdump);
+	sqlite3_bind_int(session->crashdump, 1, limit);
+
+    int result;
+
+    do {
+        result = sqlite3_step(session->crashdump);
+        switch (result) {
+        case SQLITE_ROW:
+            title   = (const char *) sqlite3_column_text(session->crashdump, 0);
+            entity  = (const char *) sqlite3_column_text(session->crashdump, 1);
+            desc    = (const char *) sqlite3_column_text(session->crashdump, 2);
+            comment = (const char *) sqlite3_column_text(session->crashdump, 3);
+
+            _logdata = _concat_string(_logdata, title, ',');
+            if (_logdata == NULL)
+                goto enomem;
+
+            _logdata = _concat_string(_logdata, entity, ',');
+            if (_logdata == NULL)
+                goto enomem;
+
+            _logdata = _concat_string(_logdata, desc, ',');
+            if (_logdata == NULL)
+                goto enomem;
+
+            _logdata = _concat_string(_logdata, comment, '\n');
+            if (_logdata == NULL)
+                goto enomem;
+
+            break;
+
+        case SQLITE_DONE:
+            break;
+
+        default:
+            status = PEP_UNKNOWN_ERROR;
+            result = SQLITE_DONE;
+        }
+    } while (result != SQLITE_DONE);
+
+    sqlite3_reset(session->crashdump);
+    if (status == PEP_STATUS_OK)
+        *logdata = _logdata;
+
+    goto the_end;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+the_end:
+    return status;
 }
 
