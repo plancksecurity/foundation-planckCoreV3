@@ -215,7 +215,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
         sql_languagelist = "select lang, name from i18n_language order by lang ;";
 
-        sql_i18n_token = "select phrase from i18n_token where lang = ?1 and id = ?2 ;";
+        sql_i18n_token = "select phrase from i18n_token where lang = lower(?1) and id = ?2 ;";
     }
 
     int_result = sqlite3_prepare_v2(_session->db, sql_log, (int)strlen(sql_log),

@@ -34,6 +34,10 @@ int main() {
     cout << "\nGerman: " << phrase << "\n";
     pEp_free(phrase);
 
+    status3 = get_phrase(session, "zz", 1, &phrase);
+    assert(status3 == PEP_PHRASE_NOT_FOUND);
+    assert(phrase == NULL);
+
     cout << "calling release()\n";
     release(session);
     return 0;
