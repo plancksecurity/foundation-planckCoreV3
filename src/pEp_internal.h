@@ -97,6 +97,7 @@ typedef struct _pEpSession {
     sqlite3_stmt *mark_compromized;
     sqlite3_stmt *reset_trust;
     sqlite3_stmt *crashdump;
+    sqlite3_stmt *blacklist_keys;
 
     examine_identity_t examine_identity;
     void *examine_management;
