@@ -1048,8 +1048,7 @@ static void _clean_log_value(char *text)
 
 static char *_concat_string(char *str1, const char *str2, char delim)
 {
-    assert(str2);
-
+    str2 = str2 ? str2 : "";
     size_t len1 = str1 ? strlen(str1) : 0;
     size_t len2 = strlen(str2);
     size_t len = len1 + len2 + 3;
