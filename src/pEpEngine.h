@@ -214,10 +214,10 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
 
 DYNAMIC_API PEP_STATUS log_event(
         PEP_SESSION session,
-        char *title,
-        char *entity,
-        char *description,
-        char *comment
+        const char *title,
+        const char *entity,
+        const char *description,
+        const char *comment
     );
 
 

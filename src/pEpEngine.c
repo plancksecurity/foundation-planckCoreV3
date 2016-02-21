@@ -319,24 +319,12 @@ DYNAMIC_API void release(PEP_SESSION session)
     }
 }
 
-static void _clean_log_value(char *text)
-{
-    if (text) {
-        for (char *c = text; *c; c++) {
-            if (*c < 32)
-                *c = 32;
-            else if (*c == '"')
-                *c = '\'';
-        }
-    }
-}
-
 DYNAMIC_API PEP_STATUS log_event(
         PEP_SESSION session,
-        char *title,
-        char *entity,
-        char *description,
-        char *comment
+        const char *title,
+        const char *entity,
+        const char *description,
+        const char *comment
     )
 {
 	PEP_STATUS status = PEP_STATUS_OK;
@@ -348,11 +336,6 @@ DYNAMIC_API PEP_STATUS log_event(
 
     if (!(session && title && entity))
         return PEP_ILLEGAL_VALUE;
-
-    _clean_log_value(title);
-    _clean_log_value(entity);
-    _clean_log_value(description);
-    _clean_log_value(comment);
 
 	sqlite3_reset(session->log);
 	sqlite3_bind_text(session->log, 1, title, -1, SQLITE_STATIC);
@@ -1045,6 +1028,18 @@ DYNAMIC_API PEP_STATUS key_expired(
 
     return session->cryptotech[PEP_crypt_OpenPGP].key_expired(session, fpr,
             expired);
+}
+
+static void _clean_log_value(char *text)
+{
+    if (text) {
+        for (char *c = text; *c; c++) {
+            if (*c < 32)
+                *c = 32;
+            else if (*c == '"')
+                *c = '\'';
+        }
+    }
 }
 
 static char *_concat_string(char *str1, const char *str2, char delim)
