@@ -98,6 +98,8 @@ typedef struct _pEpSession {
     sqlite3_stmt *reset_trust;
     sqlite3_stmt *crashdump;
     sqlite3_stmt *blacklist_keys;
+    sqlite3_stmt *languagelist;
+    sqlite3_stmt *i18n_token;
 
     examine_identity_t examine_identity;
     void *examine_management;

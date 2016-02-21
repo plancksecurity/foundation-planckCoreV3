@@ -21,6 +21,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     static const char *sql_mark_as_compromized;
     static const char *sql_crashdump;
     static const char *sql_blacklist_keys;
+    static const char *sql_languagelist;
+    static const char *sql_i18n_token;
 
     bool in_first = false;
 
@@ -210,6 +212,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
         sql_crashdump = "select timestamp, title, entity, description, comment"
                         " from log order by timestamp desc limit ?1 ;";
+
+        sql_languagelist = "select lang, name from i18n_language order by lang ;";
+
+        sql_i18n_token = "select phrase from i18n_token where lang = ?1 and id = ?2 ;";
     }
 
     int_result = sqlite3_prepare_v2(_session->db, sql_log, (int)strlen(sql_log),
@@ -255,6 +261,14 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     int_result = sqlite3_prepare_v2(_session->db, sql_crashdump,
             (int)strlen(sql_crashdump), &_session->crashdump, NULL);
     assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->system_db, sql_languagelist,
+            (int)strlen(sql_languagelist), &_session->languagelist, NULL);
+	assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->system_db, sql_i18n_token,
+            (int)strlen(sql_i18n_token), &_session->i18n_token, NULL);
+	assert(int_result == SQLITE_OK);
 
     status = init_cryptotech(_session, in_first);
     if (status != PEP_STATUS_OK)
@@ -1094,11 +1108,11 @@ DYNAMIC_API PEP_STATUS get_crashdump_log(
         return PEP_ILLEGAL_VALUE;
 
     int limit = maxlines ? maxlines : CRASHDUMP_DEFAULT_LINES;
-    const char *timestamp;
-    const char *title;
-    const char *entity;
-    const char *desc;
-    const char *comment;
+    const char *timestamp = NULL;
+    const char *title = NULL;
+    const char *entity = NULL;
+    const char *desc = NULL;
+    const char *comment = NULL;
 
     sqlite3_reset(session->crashdump);
     sqlite3_bind_int(session->crashdump, 1, limit);
@@ -1150,6 +1164,120 @@ DYNAMIC_API PEP_STATUS get_crashdump_log(
     if (status == PEP_STATUS_OK)
         *logdata = _logdata;
 
+    goto the_end;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+the_end:
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS get_languagelist(
+        PEP_SESSION session,
+        char **languages
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    char *_languages= NULL;
+
+    assert(session);
+    assert(languages);
+
+    if (!(session && languages))
+        return PEP_ILLEGAL_VALUE;
+
+    const char *lang = NULL;
+    const char *name = NULL;
+
+    sqlite3_reset(session->languagelist);
+
+    int result;
+
+    do {
+        result = sqlite3_step(session->languagelist);
+        switch (result) {
+        case SQLITE_ROW:
+            lang = (const char *) sqlite3_column_text(session->languagelist, 0);
+            name = (const char *) sqlite3_column_text(session->languagelist, 1);
+
+            _languages = _concat_string(_languages, lang, ',');
+            if (_languages == NULL)
+                goto enomem;
+
+            _languages = _concat_string(_languages, name, '\n');
+            if (_languages == NULL)
+                goto enomem;
+
+            break;
+
+        case SQLITE_DONE:
+            break;
+
+        default:
+            status = PEP_UNKNOWN_ERROR;
+            result = SQLITE_DONE;
+        }
+    } while (result != SQLITE_DONE);
+
+    sqlite3_reset(session->languagelist);
+    if (status == PEP_STATUS_OK)
+        *languages = _languages;
+
+    goto the_end;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+the_end:
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS get_phrase(
+        PEP_SESSION session,
+        const char *lang,
+        int phrase_id,
+        char **phrase
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    *phrase = NULL;
+
+    assert(session && lang && lang[0] && lang[1] && lang[2] == 0 &&
+            phrase_id >= 0 && phrase);
+
+    if (!(session && lang && lang[0] && lang[1] && lang[2] == 0 &&
+            phrase_id >= 0 && phrase))
+        return PEP_ILLEGAL_VALUE;
+
+    sqlite3_reset(session->i18n_token);
+	sqlite3_bind_text(session->i18n_token, 1, lang, -1, SQLITE_STATIC);
+	sqlite3_bind_int(session->i18n_token, 2, phrase_id);
+
+    const char *_phrase = NULL;
+    int result;
+
+    result = sqlite3_step(session->i18n_token);
+    switch (result) {
+    case SQLITE_ROW:
+        _phrase = (const char *) sqlite3_column_text(session->i18n_token, 0);
+        break;
+
+    case SQLITE_DONE:
+        status = PEP_PHRASE_NOT_FOUND;
+        break;
+
+    default:
+        status = PEP_UNKNOWN_ERROR;
+    }
+
+    sqlite3_reset(session->i18n_token);
+
+    if (status == PEP_STATUS_OK) {
+        *phrase = strdup(_phrase);
+        if (*phrase == NULL)
+            goto enomem;
+    }
     goto the_end;
 
 enomem:

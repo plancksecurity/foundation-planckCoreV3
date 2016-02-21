@@ -62,6 +62,8 @@ typedef enum {
     PEP_CANNOT_CREATE_KEY                           = 0x0601,
     PEP_CANNOT_SEND_KEY                             = 0x0602,
 
+    PEP_PHRASE_NOT_FOUND                            = 0x0701,
+
 	PEP_COMMIT_FAILED								= 0xff01,
 
     PEP_CANNOT_CREATE_TEMP_FILE                     = -5,
@@ -694,12 +696,40 @@ DYNAMIC_API PEP_STATUS key_expired(
 //  parameters:
 //      session (in)            session handle
 //      maxlines (in)           maximum number of lines (0 for default)
-//      logdata (out)           logdata
+//      logdata (out)           logdata as string in double quoted CSV format
 
 DYNAMIC_API PEP_STATUS get_crashdump_log(
         PEP_SESSION session,
         int maxlines,
         char **logdata
+    );
+
+
+// get_languagelist() - get the last log messages out
+//
+//  parameters:
+//      session (in)            session handle
+//      languages (out)         languages as string in double quoted CSV format
+
+DYNAMIC_API PEP_STATUS get_languagelist(
+        PEP_SESSION session,
+        char **languages
+    );
+
+
+// get_phrase() - get phrase in a dedicated language through i18n
+//
+//  parameters:
+//      session (in)            session handle
+//		lang (in)			    C string with ISO 639-1 language code
+//      phrase_id (in)          id of phrase in i18n
+//      phrase (out)            phrase as UTF-8 string
+
+DYNAMIC_API PEP_STATUS get_phrase(
+        PEP_SESSION session,
+        const char *lang,
+        int phrase_id,
+        char **phrase
     );
 
 

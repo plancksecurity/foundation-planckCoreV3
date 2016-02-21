@@ -22,7 +22,7 @@ all: $(TARGET) $(UNIT_TESTS)
 .PHONY: clean
 
 clean:
-	rm -f *.o $(TARGET) *.a *~ $(UNIT_TESTS) pep_Dokument_Titel.pdf
+	rm -f *.o $(TARGET) *.a *~ $(UNIT_TESTS) pep_Dokument_Titel.pdf msg4.asc
 	rm -Rf *.dSYM
 
 test: pEpEngineTest
