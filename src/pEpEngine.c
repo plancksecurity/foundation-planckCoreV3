@@ -1271,13 +1271,13 @@ DYNAMIC_API PEP_STATUS get_phrase(
         status = PEP_UNKNOWN_ERROR;
     }
 
-    sqlite3_reset(session->i18n_token);
-
     if (status == PEP_STATUS_OK) {
         *phrase = strdup(_phrase);
         if (*phrase == NULL)
             goto enomem;
     }
+
+    sqlite3_reset(session->i18n_token);
     goto the_end;
 
 enomem:
