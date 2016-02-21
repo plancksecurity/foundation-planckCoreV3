@@ -202,7 +202,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
         sql_mark_as_compromized = "update trust not indexed set comm_type = 15 where pgp_keypair_fpr = ?1 ;";
 
-        sql_crashdump = "select title, entity, description, comment from log order by timestamp desc limit ?1 ;";
+        sql_crashdump = "select timestamp, title, entity, description, comment from log order by timestamp desc limit ?1 ;";
     }
 
     int_result = sqlite3_prepare_v2(_session->db, sql_log, (int)strlen(sql_log),
@@ -1084,13 +1084,14 @@ DYNAMIC_API PEP_STATUS get_crashdump_log(
         return PEP_ILLEGAL_VALUE;
 
     int limit = maxlines ? maxlines : CRASHDUMP_DEFAULT_LINES;
+    const char *timestamp;
     const char *title;
     const char *entity;
     const char *desc;
     const char *comment;
 
     sqlite3_reset(session->crashdump);
-	sqlite3_bind_int(session->crashdump, 1, limit);
+    sqlite3_bind_int(session->crashdump, 1, limit);
 
     int result;
 
@@ -1098,10 +1099,15 @@ DYNAMIC_API PEP_STATUS get_crashdump_log(
         result = sqlite3_step(session->crashdump);
         switch (result) {
         case SQLITE_ROW:
-            title   = (const char *) sqlite3_column_text(session->crashdump, 0);
-            entity  = (const char *) sqlite3_column_text(session->crashdump, 1);
-            desc    = (const char *) sqlite3_column_text(session->crashdump, 2);
-            comment = (const char *) sqlite3_column_text(session->crashdump, 3);
+            timestamp = (const char *) sqlite3_column_text(session->crashdump, 0);
+            title   = (const char *) sqlite3_column_text(session->crashdump, 1);
+            entity  = (const char *) sqlite3_column_text(session->crashdump, 2);
+            desc    = (const char *) sqlite3_column_text(session->crashdump, 3);
+            comment = (const char *) sqlite3_column_text(session->crashdump, 4);
+
+            _logdata = _concat_string(_logdata, timestamp, ',');
+            if (_logdata == NULL)
+                goto enomem;
 
             _logdata = _concat_string(_logdata, title, ',');
             if (_logdata == NULL)
