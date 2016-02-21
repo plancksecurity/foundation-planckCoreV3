@@ -245,6 +245,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_mark_as_compromized), &_session->mark_compromized, NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_crashdump,
+            (int)strlen(sql_crashdump), &_session->crashdump, NULL);
+    assert(int_result == SQLITE_OK);
+
     status = init_cryptotech(_session, in_first);
     if (status != PEP_STATUS_OK)
         goto pep_error;
