@@ -13,6 +13,8 @@ Debug
 Release
 *.lib
 *.obj
+.DS_Store
+ws
 build-android/pEpEngine-android-1.zip
 build-android/third-party
 build-android/pEpEngine-android-1

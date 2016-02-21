@@ -205,9 +205,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
         sql_least_trust = "select min(comm_type) from trust where pgp_keypair_fpr = ?1 ;";
 
-        sql_mark_as_compromized = "update trust not indexed set comm_type = 15 where pgp_keypair_fpr = ?1 ;";
+        sql_mark_as_compromized = "update trust not indexed set comm_type = 15"
+                                  " where pgp_keypair_fpr = ?1 ;";
 
-        sql_crashdump = "select timestamp, title, entity, description, comment from log order by timestamp desc limit ?1 ;";
+        sql_crashdump = "select timestamp, title, entity, description, comment"
+                        " from log order by timestamp desc limit ?1 ;";
     }
 
     int_result = sqlite3_prepare_v2(_session->db, sql_log, (int)strlen(sql_log),

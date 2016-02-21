@@ -1,17 +1,36 @@
+-- DDL
+
+CREATE TABLE i18n_language (
+    lang text primary key,
+    name text
+);
+
 CREATE TABLE wordlist (
-   lang text,
-   id integer,
-   word text,
-   entropy integer
+    lang text
+        references i18n_language (lang),
+    id integer,
+    word text,
+    entropy integer
 );
 
 CREATE UNIQUE INDEX wordlist_pk on wordlist (lang, id);
 
-CREATE TABLE i18n (
-    lang text primary key,
+CREATE TABLE i18n_token (
+    lang text
+        references i18n_language (lang),
+    id integer,
     phrase text
 );
 
-INSERT INTO i18n VALUES ('en', 'I want to have this conversation in English language');
-INSERT INTO i18n VALUES ('de', 'Ich möchte diese Unterhaltung auf Deutsch führen');
+CREATE UNIQUE INDEX i18n_token_pk on i18n_token (lang, id);
+
+-- DML
+
+INSERT INTO i18n_language VALUES ('en', 'English');
+INSERT INTO i18n_token VALUES ('en', 1, 'I want to have this conversation in English language');
+
+INSERT INTO i18n_language VALUES ('de', 'Deutsch');
+INSERT INTO i18n_token VALUES ('de', 1, 'Ich möchte dieses Gespräch auf Deutsch führen');
+
 -- add more languages here
+

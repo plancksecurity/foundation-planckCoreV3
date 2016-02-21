@@ -23,6 +23,7 @@ all: $(TARGET) $(UNIT_TESTS)
 
 clean:
 	rm -f *.o $(TARGET) *.a *~ $(UNIT_TESTS) pep_Dokument_Titel.pdf
+	rm -Rf *.dSYM
 
 test: pEpEngineTest
 	LD_LIBRARY_PATH=~/lib:../src ./pEpEngineTest
