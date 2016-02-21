@@ -697,6 +697,9 @@ DYNAMIC_API PEP_STATUS key_expired(
 //      session (in)            session handle
 //      maxlines (in)           maximum number of lines (0 for default)
 //      logdata (out)           logdata as string in double quoted CSV format
+//
+//  caveat:
+//      the ownership of logdata goes to the caller
 
 DYNAMIC_API PEP_STATUS get_crashdump_log(
         PEP_SESSION session,
@@ -710,6 +713,9 @@ DYNAMIC_API PEP_STATUS get_crashdump_log(
 //  parameters:
 //      session (in)            session handle
 //      languages (out)         languages as string in double quoted CSV format
+//
+//  caveat:
+//      the ownership of languages goes to the caller
 
 DYNAMIC_API PEP_STATUS get_languagelist(
         PEP_SESSION session,
@@ -724,6 +730,9 @@ DYNAMIC_API PEP_STATUS get_languagelist(
 //		lang (in)			    C string with ISO 639-1 language code
 //      phrase_id (in)          id of phrase in i18n
 //      phrase (out)            phrase as UTF-8 string
+//
+//  caveat:
+//      the ownership of phrase goes to the caller
 
 DYNAMIC_API PEP_STATUS get_phrase(
         PEP_SESSION session,
