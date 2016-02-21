@@ -6,7 +6,7 @@
 using namespace std;
 
 int main() {
-    cout << "\n*** MODULE_test ***\n\n";
+    cout << "\n*** crashdump_test ***\n\n";
 
     PEP_SESSION session;
     
@@ -19,7 +19,7 @@ int main() {
     // MODULE test code
 
     char *text;
-    PEP_STATUS status2 = get_crashdump_log(session, 10, &text);
+    PEP_STATUS status2 = get_crashdump_log(session, 0, &text);
     assert(status2 == PEP_STATUS_OK);
     cout << text;
 
