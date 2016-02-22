@@ -103,6 +103,11 @@ typedef struct _pEpSession {
 
     examine_identity_t examine_identity;
     void *examine_management;
+
+    // runtime config
+
+    bool passive_mode;
+    bool unencrypted_subject;
 } pEpSession;
 
 PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);

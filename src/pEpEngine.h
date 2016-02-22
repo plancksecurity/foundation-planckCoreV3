@@ -114,6 +114,15 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session);
 DYNAMIC_API void release(PEP_SESSION session);
 
 
+// config_passive_mode() - enable passive mode
+//
+//  parameters:
+//      session (in)    session handle
+//      enabled (in)    flag if enabled or disabled
+
+DYNAMIC_API void config_passive_mode(PEP_SESSION session, bool value);
+
+
 // decrypt_and_verify() - decrypt and/or verify a message
 //
 //	parameters:

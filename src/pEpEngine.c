@@ -282,6 +282,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     if (status != PEP_STATUS_OK)
         goto pep_error;
 
+    // runtime config
+
+    _session->passive_mode = false;
+    _session->unencrypted_subject = false;
+
 	*session = _session;
 	return PEP_STATUS_OK;
 
@@ -342,6 +347,18 @@ DYNAMIC_API void release(PEP_SESSION session)
 
         free(session);
     }
+}
+
+DYNAMIC_API void config_passive_mode(PEP_SESSION session, bool value)
+{
+    assert(session);
+    session->passive_mode = value;
+}
+
+DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool value)
+{
+    assert(session);
+    session->unencrypted_subject = value;
 }
 
 DYNAMIC_API PEP_STATUS log_event(
