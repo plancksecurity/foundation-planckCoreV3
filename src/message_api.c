@@ -942,7 +942,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
     if (!dest_keys_found) {
         free_stringlist(keys);
-        attach_own_key(session, src);
+        if (!session->passive_mode)
+            attach_own_key(session, src);
         return PEP_UNENCRYPTED;
     }
     else {
