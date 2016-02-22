@@ -118,9 +118,18 @@ DYNAMIC_API void release(PEP_SESSION session);
 //
 //  parameters:
 //      session (in)    session handle
-//      enabled (in)    flag if enabled or disabled
+//      enable (in)     flag if enabled or disabled
 
-DYNAMIC_API void config_passive_mode(PEP_SESSION session, bool value);
+DYNAMIC_API void config_passive_mode(PEP_SESSION session, bool enable);
+
+
+// config_unencrypted_subject() - enable passive mode
+//
+//  parameters:
+//      session (in)    session handle
+//      enable (in)     flag if enabled or disabled
+
+DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable);
 
 
 // decrypt_and_verify() - decrypt and/or verify a message

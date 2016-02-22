@@ -349,16 +349,16 @@ DYNAMIC_API void release(PEP_SESSION session)
     }
 }
 
-DYNAMIC_API void config_passive_mode(PEP_SESSION session, bool value)
+DYNAMIC_API void config_passive_mode(PEP_SESSION session, bool enable)
 {
     assert(session);
-    session->passive_mode = value;
+    session->passive_mode = enable;
 }
 
-DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool value)
+DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable)
 {
     assert(session);
-    session->unencrypted_subject = value;
+    session->unencrypted_subject = enable;
 }
 
 DYNAMIC_API PEP_STATUS log_event(
