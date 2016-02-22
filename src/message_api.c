@@ -649,7 +649,8 @@ static PEP_color _rating(PEP_comm_type ct)
     else if (ct >= PEP_ct_strong_but_unconfirmed && ct < PEP_ct_confirmed)
         return PEP_rating_reliable;
 
-    else if (ct == PEP_ct_no_encryption || ct == PEP_ct_no_encrypted_channel)
+    else if (ct == PEP_ct_no_encryption || ct == PEP_ct_no_encrypted_channel ||
+            ct == PEP_ct_my_key_not_included)
         return PEP_rating_unencrypted;
 
     else
