@@ -111,6 +111,7 @@ static int seperate_short_and_long(const char *src, char **shortmsg, char **long
 
         if (line_end == NULL) {
             _shortmsg = strdup(src + 9);
+            assert(_shortmsg);
             if (_shortmsg == NULL)
                 goto enomem;
             // _longmsg = NULL;
@@ -122,7 +123,7 @@ static int seperate_short_and_long(const char *src, char **shortmsg, char **long
                 _shortmsg = strndup(src + 9, n - 10);
             else
                 _shortmsg = strndup(src + 9, n - 9);
-
+            assert(_shortmsg);
             if (_shortmsg == NULL)
                 goto enomem;
 
@@ -131,6 +132,7 @@ static int seperate_short_and_long(const char *src, char **shortmsg, char **long
 
             if (*(src + n)) {
                 _longmsg = strdup(src + n);
+                assert(_longmsg);
                 if (_longmsg == NULL)
                     goto enomem;
             }
@@ -138,9 +140,11 @@ static int seperate_short_and_long(const char *src, char **shortmsg, char **long
     }
     else {
         _shortmsg = strdup("");
+        assert(_shortmsg);
         if (_shortmsg == NULL)
             goto enomem;
         _longmsg = strdup(src);
+        assert(_longmsg);
         if (_longmsg == NULL)
             goto enomem;
     }
@@ -307,6 +311,7 @@ static PEP_STATUS encrypt_PGP_MIME(
     if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0) {
         if (session->unencrypted_subject) {
             dst->shortmsg = strdup(src->shortmsg);
+            assert(dst->shortmsg);
             if (dst->shortmsg == NULL)
                 goto enomem;
             ptext = src->longmsg;
@@ -352,10 +357,12 @@ static PEP_STATUS encrypt_PGP_MIME(
 
     dst->longmsg = strdup("this message was encrypted with p≡p "
         "http://pEp-project.org");
+    assert(dst->longmsg);
     if (dst->longmsg == NULL)
         goto enomem;
 
     char *v = strdup("Version: 1");
+    assert(v);
     if (v == NULL)
         goto enomem;
 
@@ -408,6 +415,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
     if (src->shortmsg && src->shortmsg[0] && strcmp(src->shortmsg, "pEp") != 0) {
         if (session->unencrypted_subject) {
             dst->shortmsg = strdup(src->shortmsg);
+            assert(dst->shortmsg);
             if (dst->shortmsg == NULL)
                 goto enomem;
             ptext = src->longmsg;
@@ -450,6 +458,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
     }
     else {
         dst->longmsg = strdup("");
+        assert(dst->longmsg);
         if (dst->longmsg == NULL)
             goto enomem;
     }
@@ -697,7 +706,9 @@ static char * without_double_ending(const char *filename)
     if (ext == NULL)
         return NULL;
 
-    return strndup(filename, ext - filename);
+    char *result = strndup(filename, ext - filename);
+    assert(result);
+    return result;
 }
 
 static PEP_color decrypt_color(PEP_STATUS status)
@@ -1007,8 +1018,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
     free_stringlist(keys);
 
-    if (msg && msg->shortmsg == NULL)
+    if (msg && msg->shortmsg == NULL) {
         msg->shortmsg = strdup("pEp");
+        assert(msg->shortmsg);
+    }
 
     if (msg)
         decorate_message(msg, PEP_rating_undefined, NULL);
@@ -1098,6 +1111,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                     goto enomem;
 
                 msg->longmsg = strdup(ptext);
+                assert(msg->longmsg);
                 if (msg->longmsg == NULL)
                     goto enomem;
 
@@ -1124,6 +1138,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                         if (ptext) {
                             if (is_encrypted_html_attachment(_s)) {
                                 msg->longmsg_formatted = strdup(ptext);
+                                assert(msg->longmsg_formatted);
                                 if (msg->longmsg_formatted == NULL)
                                     goto pep_error;
                             }
@@ -1204,6 +1219,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                 }
                 else {
                     msg->shortmsg = strdup(src->shortmsg);
+                    assert(msg->shortmsg);
                     if (msg->shortmsg == NULL)
                         goto enomem;
                 }
