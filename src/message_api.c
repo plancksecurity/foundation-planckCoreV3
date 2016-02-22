@@ -305,10 +305,18 @@ static PEP_STATUS encrypt_PGP_MIME(
     dst->enc_format = PEP_enc_PGP_MIME;
 
     if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0) {
-        ptext = combine_short_and_long(src->shortmsg, src->longmsg);
-        if (ptext == NULL)
-            goto enomem;
-        free_ptext = true;
+        if (session->unencrypted_subject) {
+            dst->shortmsg = strdup(src->shortmsg);
+            if (dst->shortmsg == NULL)
+                goto enomem;
+            ptext = src->longmsg;
+        }
+        else {
+            ptext = combine_short_and_long(src->shortmsg, src->longmsg);
+            if (ptext == NULL)
+                goto enomem;
+            free_ptext = true;
+        }
     }
     else if (src->longmsg) {
         ptext = src->longmsg;
@@ -389,6 +397,8 @@ static PEP_STATUS encrypt_PGP_in_pieces(
     PEP_STATUS status = PEP_STATUS_OK;
     char *ctext;
     size_t csize;
+    char *ptext;
+    bool free_ptext = false;
 
     assert(dst->longmsg == NULL);
     assert(dst->attachments == NULL);
@@ -396,13 +406,24 @@ static PEP_STATUS encrypt_PGP_in_pieces(
     dst->enc_format = PEP_enc_pieces;
 
     if (src->shortmsg && src->shortmsg[0] && strcmp(src->shortmsg, "pEp") != 0) {
-        char *ptext = combine_short_and_long(src->shortmsg, src->longmsg);
-        if (ptext == NULL)
-            goto enomem;
+        if (session->unencrypted_subject) {
+            dst->shortmsg = strdup(src->shortmsg);
+            if (dst->shortmsg == NULL)
+                goto enomem;
+            ptext = src->longmsg;
+        }
+        else {
+            ptext = combine_short_and_long(src->shortmsg, src->longmsg);
+            if (ptext == NULL)
+                goto enomem;
+            free_ptext = true;
+        }
 
         status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
             &csize);
-        free(ptext);
+        if (free_ptext)
+            free(ptext);
+        free_ptext = false;
         if (ctext) {
             dst->longmsg = strndup(ctext, csize);
             assert(dst->longmsg);
@@ -414,7 +435,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
         }
     }
     else if (src->longmsg && src->longmsg[0]) {
-        char *ptext = src->longmsg;
+        ptext = src->longmsg;
         status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
             &csize);
         if (ctext) {
@@ -434,7 +455,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
     }
 
     if (src->longmsg_formatted && src->longmsg_formatted[0]) {
-        char *ptext = src->longmsg_formatted;
+        ptext = src->longmsg_formatted;
         status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
             &csize);
         if (ctext) {
@@ -468,7 +489,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
 
         for (int n = 0; _s && _s->value; _s = _s->next) {
             size_t psize = _s->size;
-            char *ptext = _s->value;
+            ptext = _s->value;
             status = encrypt_and_sign(session, keys, ptext, psize, &ctext,
                 &csize);
             if (ctext) {
@@ -516,6 +537,8 @@ enomem:
     status = PEP_OUT_OF_MEMORY;
 
 pep_error:
+    if (free_ptext)
+        free(ptext);
     return status;
 }
 
