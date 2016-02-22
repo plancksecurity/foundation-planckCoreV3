@@ -296,7 +296,7 @@ static PEP_STATUS encrypt_PGP_MIME(
 {
     PEP_STATUS status = PEP_STATUS_OK;
     bool free_ptext = false;
-    char *ptext;
+    char *ptext = NULL;
     char *ctext;
     char *_ctext = NULL;
     char *mimetext = NULL;
@@ -397,7 +397,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
     PEP_STATUS status = PEP_STATUS_OK;
     char *ctext;
     size_t csize;
-    char *ptext;
+    char *ptext = NULL;
     bool free_ptext = false;
 
     assert(dst->longmsg == NULL);
