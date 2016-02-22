@@ -4,14 +4,6 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
-ifeq ($(OPENSSL_PATH),)
-$(error OPENSSL_PATH must be set)
-endif
-
-ifeq ($(CYRUS_SASL_PATH),)
-$(error CYRUS_SASL_PATH must be set)
-endif
-
 ifeq ($(LIBETPAN_PATH),)
 $(error LIBETPAN_PATH must be set)
 endif
@@ -43,8 +35,6 @@ LOCAL_SRC_FILES := ../../src/bloblist.c \
 
 LOCAL_C_INCLUDES := ../../src \
                     $(GPGME_INCLUDE_PATH) \
-                    $(OPENSSL_PATH)/include \
-                    $(CYRUS_SASL_PATH)/include \
                     $(LIBETPAN_PATH)/include
 
 include $(BUILD_STATIC_LIBRARY)
