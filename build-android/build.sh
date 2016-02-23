@@ -4,8 +4,6 @@ set -e
 
 build_version=1
 ANDROID_PLATFORM=android-21
-openssl_build_version=1
-cyrus_sasl_build_version=1
 libetpan_build_version=1
 archs="armeabi armeabi-v7a x86 x86_64"
 package_name=pEpEngine-android
@@ -34,8 +32,6 @@ function build {
   
   cd "$current_dir/jni"
   $ANDROID_NDK/ndk-build V=1 TARGET_PLATFORM=$ANDROID_PLATFORM TARGET_ARCH_ABI=$TARGET_ARCH_ABI \
-    OPENSSL_PATH="$current_dir/third-party/openssl-android-$openssl_build_version" \
-    CYRUS_SASL_PATH="$current_dir/third-party/cyrus-sasl-android-$cyrus_sasl_build_version" \
     LIBETPAN_PATH="$current_dir/third-party/libetpan-android-$libetpan_build_version"
 
   mkdir -p "$current_dir/$package_name-$build_version/libs/$TARGET_ARCH_ABI"
@@ -45,8 +41,6 @@ function build {
 
 mkdir -p "$current_dir/third-party"
 cd "$current_dir/third-party"
-unzip -qo "$libetpan_dir/dependencies/openssl/openssl-android-$openssl_build_version.zip"
-unzip -qo "$libetpan_dir/dependencies/cyrus-sasl/cyrus-sasl-android-$cyrus_sasl_build_version.zip"
 unzip -qo "$libetpan_dir/libetpan-android-$libetpan_build_version.zip"
 
 # Copy public headers to include
