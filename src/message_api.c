@@ -867,7 +867,7 @@ void attach_own_key(PEP_SESSION session, message *msg)
     assert(size);
 
     bl = bloblist_add(msg->attachments, keydata, size, "application/pgp-keys",
-            "pEp_key.asc");
+            "pEpkey.asc");
     if (msg->attachments == NULL && bl)
         msg->attachments = bl;
 }
