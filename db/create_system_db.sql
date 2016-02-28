@@ -27,10 +27,10 @@ CREATE UNIQUE INDEX i18n_token_pk on i18n_token (lang, id);
 -- DML
 
 INSERT INTO i18n_language VALUES ('en', 'English');
-INSERT INTO i18n_token VALUES ('en', 1, 'I want to have this conversation in English language');
+INSERT INTO i18n_token VALUES ('en', 1000, 'I want to have this conversation in English language');
 
 INSERT INTO i18n_language VALUES ('de', 'Deutsch');
-INSERT INTO i18n_token VALUES ('de', 1, 'Ich möchte dieses Gespräch auf Deutsch führen');
+INSERT INTO i18n_token VALUES ('de', 1000, 'Ich möchte dieses Gespräch auf Deutsch führen');
 
 -- add more languages here
 
