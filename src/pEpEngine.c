@@ -1260,11 +1260,9 @@ DYNAMIC_API PEP_STATUS get_phrase(
     PEP_STATUS status = PEP_STATUS_OK;
     *phrase = NULL;
 
-    assert(session && lang && lang[0] && lang[1] && lang[2] == 0 &&
-            phrase_id >= 0 && phrase);
+    assert(session && lang && lang[0] && lang[1] && lang[2] == 0 && phrase);
 
-    if (!(session && lang && lang[0] && lang[1] && lang[2] == 0 &&
-            phrase_id >= 0 && phrase))
+    if (!(session && lang && lang[0] && lang[1] && lang[2] == 0 && phrase))
         return PEP_ILLEGAL_VALUE;
 
     sqlite3_reset(session->i18n_token);
