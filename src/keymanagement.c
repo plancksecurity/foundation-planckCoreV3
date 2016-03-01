@@ -81,9 +81,6 @@ DYNAMIC_API PEP_STATUS update_identity(
                 else if (identity->comm_type == PEP_ct_unknown) {
                     if (strcmp(identity->fpr, stored_identity->fpr) == 0) {
                         identity->comm_type = stored_identity->comm_type;
-                        if (identity->comm_type == PEP_ct_unknown) {
-                            identity->comm_type = _comm_type_key;
-                        }
                     }
                     else {
                         status = get_trust(session, identity);
@@ -91,12 +88,6 @@ DYNAMIC_API PEP_STATUS update_identity(
                         if (status == PEP_OUT_OF_MEMORY)
                             return PEP_OUT_OF_MEMORY;
                     }
-                } else if(stored_identity->comm_type != identity->comm_type)
-                    {
-                        // Ignore given comm_type, if not matching stored.
-                        // XXX This may be symptom of missuse of API
-                        // Shall we error ? Or log a warning ?
-                        identity->comm_type = stored_identity->comm_type;
                 }
             }
             else
@@ -404,7 +395,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
 
     if (ident->comm_type > PEP_ct_strong_but_unconfirmed) {
         ident->comm_type |= PEP_ct_confirmed;
-        status = set_identity(session, ident);
+        status = update_identity(session, ident);
     }
     else {
         // MISSING: S/MIME has to be handled depending on trusted CAs
