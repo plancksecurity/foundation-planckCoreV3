@@ -23,6 +23,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     static const char *sql_blacklist_keys;
     static const char *sql_languagelist;
     static const char *sql_i18n_token;
+    static const char *sql_peptest_hack;
 
     bool in_first = false;
 
@@ -216,6 +217,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         sql_languagelist = "select lang, name from i18n_language order by lang ;";
 
         sql_i18n_token = "select phrase from i18n_token where lang = lower(?1) and id = ?2 ;";
+
+        sql_peptest_hack = "delete from identity where address like '%@peptest.ch' ;";
     }
 
     int_result = sqlite3_prepare_v2(_session->db, sql_log, (int)strlen(sql_log),
@@ -269,6 +272,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     int_result = sqlite3_prepare_v2(_session->system_db, sql_i18n_token,
             (int)strlen(sql_i18n_token), &_session->i18n_token, NULL);
 	assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_peptest_hack,
+            (int)strlen(sql_peptest_hack), &_session->peptest_hack, NULL);
+    assert(int_result == SQLITE_OK);
 
     status = init_cryptotech(_session, in_first);
     if (status != PEP_STATUS_OK)
@@ -1293,6 +1300,40 @@ DYNAMIC_API PEP_STATUS get_phrase(
     }
 
     sqlite3_reset(session->i18n_token);
+    goto the_end;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+the_end:
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    sqlite3_reset(session->peptest_hack);
+
+    int result;
+
+    result = sqlite3_step(session->peptest_hack);
+    switch (result) {
+    case SQLITE_ROW:
+    case SQLITE_DONE:
+        status = PEP_STATUS_OK;
+        break;
+
+    default:
+        status = PEP_UNKNOWN_ERROR;
+    }
+
+    sqlite3_reset(session->peptest_hack);
     goto the_end;
 
 enomem:

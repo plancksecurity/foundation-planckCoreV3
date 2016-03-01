@@ -100,6 +100,7 @@ typedef struct _pEpSession {
     sqlite3_stmt *blacklist_keys;
     sqlite3_stmt *languagelist;
     sqlite3_stmt *i18n_token;
+    sqlite3_stmt *peptest_hack;
 
     examine_identity_t examine_identity;
     void *examine_management;

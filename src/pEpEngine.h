@@ -766,6 +766,8 @@ DYNAMIC_API PEP_STATUS get_phrase(
     );
 
 
+DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session);
+
 #ifdef __cplusplus
 }
 #endif
