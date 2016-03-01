@@ -1421,9 +1421,18 @@ static PEP_STATUS interpret_MIME(
                     return status;
 
                 filename = _get_filename(mime);
+                char *_filename = NULL;
+                if (filename) {
+                    size_t index = 0;
+                    r = mailmime_encoded_phrase_parse("utf-8", filename,
+                            strlen(filename), &index, "utf-8", &_filename);
+                    if (r)
+                        goto enomem;
+                }
 
                 bloblist_t *_a = bloblist_add(msg->attachments, data, size,
-                        mime_type, filename);
+                        mime_type, _filename);
+                free(_filename);
                 if (_a == NULL)
                     return PEP_OUT_OF_MEMORY;
                 if (msg->attachments == NULL)
@@ -1433,6 +1442,9 @@ static PEP_STATUS interpret_MIME(
     }
 
     return PEP_STATUS_OK;
+
+enomem:
+    return PEP_OUT_OF_MEMORY;
 }
 
 DYNAMIC_API PEP_STATUS mime_decode_message(
