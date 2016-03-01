@@ -1011,10 +1011,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         if (status == PEP_OUT_OF_MEMORY)
             goto enomem;
         
-        if (status != PEP_STATUS_OK) {
-            attach_own_key(session, src);
+        if (status != PEP_STATUS_OK)
             goto pep_error;
-        }
     }
 
     free_stringlist(keys);
