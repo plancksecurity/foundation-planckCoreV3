@@ -767,8 +767,8 @@ static PEP_color keylist_color(PEP_SESSION session, stringlist_t *keylist)
         PEP_STATUS status;
 
         color = key_color(session, _kl->value);
-        if (color == PEP_rating_under_attack)
-            return PEP_rating_under_attack;
+        if (color <= PEP_rating_mistrust)
+            return color;
 
         if (color >= PEP_rating_reliable) {
             status = least_trust(session, _kl->value, &ct);
@@ -1257,17 +1257,14 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         
         *color = decrypt_color(decrypt_status);
         
-        if (*color != PEP_rating_under_attack) {
+        if (*color > PEP_rating_mistrust) {
             PEP_color kl_color = PEP_rating_undefined;
             
             if (_keylist)
                 kl_color = keylist_color(session, _keylist);
             
-            if (kl_color == PEP_rating_under_attack) {
-                *color = PEP_rating_under_attack;
-            }
-            else if (kl_color == PEP_rating_mistrust) {
-                *color = PEP_rating_mistrust;
+            if (kl_color <= PEP_rating_mistrust) {
+                *color = kl_color;
             }
             else if (*color >= PEP_rating_reliable &&
                      kl_color < PEP_rating_reliable) {
