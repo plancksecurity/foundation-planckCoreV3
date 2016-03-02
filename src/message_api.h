@@ -49,6 +49,7 @@ typedef enum _PEP_color {
     PEP_rating_cannot_decrypt,
     PEP_rating_have_no_key,
     PEP_rating_unencrypted,
+    PEP_rating_unencrypted_for_some,
     PEP_rating_unreliable,
     PEP_rating_reliable,
     PEP_rating_yellow = PEP_rating_reliable,
