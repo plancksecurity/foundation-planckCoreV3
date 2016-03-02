@@ -243,16 +243,15 @@ fpr_to_str (char **str, const uint8_t *fpr, size_t length)
     unsigned i;
     int	n;
     
-    /* 5 char per byte (hexes + space) tuple -1 space at the end + null */
-    *str = malloc((length / 2) * 5 - 1 + 1);
+    /* 4 char per short (hexes + space) + null */
+    *str = malloc((length / 2) + 1);
     
     if(*str == NULL)
         return 0;
     
-    for (n = 0, i = 0 ; i < length - 2; i += 2) {
-        n += snprintf(&((*str)[n]), 6, "%02x%02x ", fpr[i], fpr[i+1]);
+    for (n = 0, i = 0 ; i < length; i += 2) {
+        n += snprintf(&((*str)[n]), 5, "%02x%02x", fpr[i], fpr[i+1]);
     }
-    snprintf(&((*str)[n]), 5, "%02x%02x", fpr[i], fpr[i+1]);
     
     return 1;
 }
