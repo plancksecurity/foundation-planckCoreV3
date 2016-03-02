@@ -356,7 +356,7 @@ static PEP_STATUS encrypt_PGP_MIME(
         goto pep_error;
 
     dst->longmsg = strdup("this message was encrypted with p≡p "
-        "http://pEp-project.org");
+        "https://pEp-project.org");
     assert(dst->longmsg);
     if (dst->longmsg == NULL)
         goto enomem;
