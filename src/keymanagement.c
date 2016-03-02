@@ -74,24 +74,21 @@ DYNAMIC_API PEP_STATUS update_identity(
             }
         }
         else /* !EMPTYSTR(identity->fpr) */ {
-            if (_comm_type_key != PEP_ct_unknown) {
+            if (strcmp(identity->fpr, stored_identity->fpr) == 0) {
                 if (_comm_type_key < PEP_ct_unconfirmed_encryption) {
                     identity->comm_type = _comm_type_key;
-                }
-                else if (identity->comm_type == PEP_ct_unknown) {
-                    if (strcmp(identity->fpr, stored_identity->fpr) == 0) {
-                        identity->comm_type = stored_identity->comm_type;
-                    }
-                    else {
-                        status = get_trust(session, identity);
-                        assert(status != PEP_OUT_OF_MEMORY);
-                        if (status == PEP_OUT_OF_MEMORY)
-                            return PEP_OUT_OF_MEMORY;
+                }else{
+                    identity->comm_type = stored_identity->comm_type;
+                    if (identity->comm_type == PEP_ct_unknown) {
+                        identity->comm_type = _comm_type_key;
                     }
                 }
+            }else{
+                status = get_trust(session, identity);
+                assert(status != PEP_OUT_OF_MEMORY);
+                if (status == PEP_OUT_OF_MEMORY)
+                    return PEP_OUT_OF_MEMORY;
             }
-            else
-                identity->comm_type = PEP_ct_unknown;
         }
 
         if (identity->lang[0] == 0) {
@@ -395,7 +392,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
 
     if (ident->comm_type > PEP_ct_strong_but_unconfirmed) {
         ident->comm_type |= PEP_ct_confirmed;
-        status = update_identity(session, ident);
+        status = set_identity(session, ident);
     }
     else {
         // MISSING: S/MIME has to be handled depending on trusted CAs
