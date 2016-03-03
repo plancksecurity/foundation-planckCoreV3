@@ -20,10 +20,14 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     static const char *sql_least_trust;
     static const char *sql_mark_as_compromized;
     static const char *sql_crashdump;
-    static const char *sql_blacklist_keys;
     static const char *sql_languagelist;
     static const char *sql_i18n_token;
-    static const char *sql_peptest_hack;
+
+    // blacklist
+    static const char *sql_blacklist_add;
+    static const char *sql_blacklist_delete;
+    static const char *sql_blacklist_is_listed;
+    static const char *sql_blacklist_retrieve;
 
     bool in_first = false;
 
@@ -158,6 +162,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "   user_id,\n"
                 "   pgp_keypair_fpr\n"
                 ");\n"
+                // blacklist
                 "create table if not exists blacklist_keys (\n"
                 "   fpr text primary key\n"
                 ");\n"
@@ -170,7 +175,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
         int_result = sqlite3_exec(
             _session->db,
-            "insert or replace into version_info (id, version) values (1, '1.0');",
+            "insert or replace into version_info (id, version) values (1, '1.1');",
             NULL,
             NULL,
             NULL
@@ -218,7 +223,12 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
         sql_i18n_token = "select phrase from i18n_token where lang = lower(?1) and id = ?2 ;";
 
-        sql_peptest_hack = "delete from identity where address like '%@peptest.ch' ;";
+        // blacklist
+
+        sql_blacklist_add = "insert or replace into blacklist_keys (fpr) values (?1) ;";
+        sql_blacklist_delete = "delete from blacklist_keys where fpr = ?1 ;";
+        sql_blacklist_is_listed = "select count(*) from blacklist_keys where fpr = ?1 ;";
+        sql_blacklist_retrieve = "select * from blacklist_keys ;";
     }
 
     int_result = sqlite3_prepare_v2(_session->db, sql_log, (int)strlen(sql_log),
@@ -273,8 +283,22 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_i18n_token), &_session->i18n_token, NULL);
 	assert(int_result == SQLITE_OK);
 
-    int_result = sqlite3_prepare_v2(_session->db, sql_peptest_hack,
-            (int)strlen(sql_peptest_hack), &_session->peptest_hack, NULL);
+    // blacklist
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_blacklist_add,
+            (int)strlen(sql_blacklist_add), &_session->blacklist_add, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_blacklist_delete,
+            (int)strlen(sql_blacklist_delete), &_session->blacklist_delete, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_blacklist_is_listed,
+            (int)strlen(sql_blacklist_is_listed), &_session->blacklist_is_listed, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_blacklist_retrieve,
+            (int)strlen(sql_blacklist_retrieve), &_session->blacklist_retrieve, NULL);
     assert(int_result == SQLITE_OK);
 
     status = init_cryptotech(_session, in_first);
@@ -1311,35 +1335,20 @@ the_end:
 
 DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session)
 {
-    PEP_STATUS status = PEP_STATUS_OK;
-
     assert(session);
 
     if (!session)
         return PEP_ILLEGAL_VALUE;
 
-    sqlite3_reset(session->peptest_hack);
+    int int_result = sqlite3_exec(
+        session->db,
+        "delete from identity where address like '%@peptest.ch' ;",
+        NULL,
+        NULL,
+        NULL
+    );
+    assert(int_result == SQLITE_OK);
 
-    int result;
-
-    result = sqlite3_step(session->peptest_hack);
-    switch (result) {
-    case SQLITE_ROW:
-    case SQLITE_DONE:
-        status = PEP_STATUS_OK;
-        break;
-
-    default:
-        status = PEP_UNKNOWN_ERROR;
-    }
-
-    sqlite3_reset(session->peptest_hack);
-    goto the_end;
-
-enomem:
-    status = PEP_OUT_OF_MEMORY;
-
-the_end:
-    return status;
+    return PEP_STATUS_OK;
 }
 

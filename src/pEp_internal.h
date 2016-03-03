@@ -97,10 +97,14 @@ typedef struct _pEpSession {
     sqlite3_stmt *mark_compromized;
     sqlite3_stmt *reset_trust;
     sqlite3_stmt *crashdump;
-    sqlite3_stmt *blacklist_keys;
     sqlite3_stmt *languagelist;
     sqlite3_stmt *i18n_token;
-    sqlite3_stmt *peptest_hack;
+
+    // blacklist
+    sqlite3_stmt *blacklist_add;
+    sqlite3_stmt *blacklist_delete;
+    sqlite3_stmt *blacklist_is_listed;
+    sqlite3_stmt *blacklist_retrieve;
 
     examine_identity_t examine_identity;
     void *examine_management;
