@@ -244,7 +244,7 @@ fpr_to_str (char **str, const uint8_t *fpr, size_t length)
     int	n;
     
     /* 4 char per short (hexes + space) + null */
-    *str = malloc((length / 2) + 1);
+    *str = malloc((length / 2) * 4 + 1);
     
     if(*str == NULL)
         return 0;
