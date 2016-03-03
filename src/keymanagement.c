@@ -83,13 +83,13 @@ DYNAMIC_API PEP_STATUS update_identity(
                         identity->comm_type = _comm_type_key;
                     }
                 }
-            }else{
+            } else {
                 status = get_trust(session, identity);
                 assert(status != PEP_OUT_OF_MEMORY);
                 if (status == PEP_OUT_OF_MEMORY)
                     return PEP_OUT_OF_MEMORY;
-                if(identity->comm_type < stored_identity->comm_type)
-                    identity->comm_type == PEP_ct_unknown;
+                if (identity->comm_type < stored_identity->comm_type)
+                    identity->comm_type = PEP_ct_unknown;
             }
         }
 
