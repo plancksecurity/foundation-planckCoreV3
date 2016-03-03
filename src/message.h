@@ -44,7 +44,7 @@ typedef struct _message {
     char *longmsg_formatted;                // UTF-8 string of long message
                                             // (formatted)
     bloblist_t *attachments;                // blobs with attachements
-    char *rawmsg_ref;                       // reference to raw message data (NOT owned by struct _message, not used by pEpEngine)
+    char *rawmsg_ref;                       // reference to raw message data
     size_t rawmsg_size;                     // size of raw message data
     timestamp *sent;                        // when the message is sent
     timestamp *recv;                        // when the message is received
