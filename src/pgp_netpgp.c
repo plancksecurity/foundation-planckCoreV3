@@ -243,7 +243,7 @@ fpr_to_str (char **str, const uint8_t *fpr, size_t length)
     unsigned i;
     int	n;
     
-    /* 4 char per short (hexes + space) + null */
+    /* 4 hexes per short + null */
     *str = malloc((length / 2) * 4 + 1);
     
     if(*str == NULL)
