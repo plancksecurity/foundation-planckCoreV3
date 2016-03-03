@@ -44,7 +44,7 @@ typedef struct _message {
     char *longmsg_formatted;                // UTF-8 string of long message
                                             // (formatted)
     bloblist_t *attachments;                // blobs with attachements
-    char *rawmsg_ref;                       // reference to raw message data
+    char *rawmsg_ref;                       // reference to raw message data (NOT owned by struct _message, not used by pEpEngine)
     size_t rawmsg_size;                     // size of raw message data
     timestamp *sent;                        // when the message is sent
     timestamp *recv;                        // when the message is received
@@ -91,9 +91,9 @@ DYNAMIC_API message *new_message(
 //  parameters:
 //      msg (in)        message struct to free
 //
-//  caveat:
-//      raw data as well as referenced other messages aren't freed and remain
-//      in the ownership of the caller
+//  NOTA BENE:
+//      raw data (msg->rawmsg_ref) and referenced other messages (msg->refering_msg_ref)
+//      aren't freed and remain in the ownership of the caller!
 
 DYNAMIC_API void free_message(message *msg);
 
@@ -105,6 +105,8 @@ DYNAMIC_API void free_message(message *msg);
 //
 //  return value:
 //      pointer to duplicate of message pointed by msg or NULL
+//  NOTA BENE:
+//      not owned pointees (msg->rawmsg_ref and msg->refering_msg_ref) are shared!
 
 DYNAMIC_API message * message_dup(const message *msg);
 
