@@ -8,12 +8,9 @@
 #include "pEp_internal.h"
 #include "keymanagement.h"
 
-#ifndef MIN
-#define MIN(A, B) ((B) > (A) ? (A) : (B))
-#endif
 
 #ifndef EMPTYSTR
-#define EMPTYSTR(STR) ((STR == NULL) || (STR)[0] == 0)
+#define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
 #endif
 
 #define KEY_EXPIRE_DELTA (60 * 60 * 24 * 365)
