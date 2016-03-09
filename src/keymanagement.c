@@ -46,7 +46,8 @@ DYNAMIC_API PEP_STATUS update_identity(
 
         if (EMPTYSTR(identity->user_id)) {
             free(identity->user_id);
-            identity->user_id = strdup(stored_identity->user_id);
+            identity->user_id = strndup(stored_identity->user_id, stored_identity->user_id_size);
+            assert(identity->user_id);
             if (identity->user_id == NULL)
                 return PEP_OUT_OF_MEMORY;
             identity->user_id_size = stored_identity->user_id_size;
@@ -54,14 +55,15 @@ DYNAMIC_API PEP_STATUS update_identity(
 
         if (EMPTYSTR(identity->username)) {
             free(identity->username);
-            identity->username = strdup(stored_identity->username);
+            identity->username = strndup(stored_identity->username, stored_identity->username_size);
+            assert(identity->username);
             if (identity->username == NULL)
                 return PEP_OUT_OF_MEMORY;
             identity->username_size = stored_identity->username_size;
         }
 
         if (EMPTYSTR(identity->fpr)) {
-            identity->fpr = strdup(stored_identity->fpr);
+            identity->fpr = strndup(stored_identity->fpr, stored_identity->fpr_size);
             assert(identity->fpr);
             if (identity->fpr == NULL)
                 return PEP_OUT_OF_MEMORY;
@@ -74,7 +76,7 @@ DYNAMIC_API PEP_STATUS update_identity(
             }
         }
         else /* !EMPTYSTR(identity->fpr) */ {
-            if (strcmp(identity->fpr, stored_identity->fpr) == 0) {
+            if (strncmp(identity->fpr, stored_identity->fpr, stored_identity->fpr_size) == 0) {
                 if (_comm_type_key < PEP_ct_unconfirmed_encryption) {
                     identity->comm_type = _comm_type_key;
                 }else{
