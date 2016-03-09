@@ -179,6 +179,9 @@ DYNAMIC_API PEP_STATUS update_identity(
 
         status = set_identity(session, identity);
         assert(status == PEP_STATUS_OK);
+        if (status != PEP_STATUS_OK) {
+            return status;
+        }
     }
 
     if (identity->comm_type != PEP_ct_compromized &&
@@ -239,6 +242,9 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
         bool expired;
         status = key_expired(session, keylist->value, &expired);
         assert(status == PEP_STATUS_OK);
+        if (status != PEP_STATUS_OK) {
+            goto free_keylist;
+        }
 
         if (status == PEP_STATUS_OK && expired) {
             timestamp *ts = new_timestamp(time(NULL) + KEY_EXPIRE_DELTA);
@@ -251,15 +257,23 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
         free(identity->fpr);
     identity->fpr = strdup(keylist->value);
     assert(identity->fpr);
-    free_stringlist(keylist);
-    if (identity->fpr == NULL)
-        return PEP_OUT_OF_MEMORY;
+    if (identity->fpr == NULL){
+        status = PEP_OUT_OF_MEMORY;
+        goto free_keylist;
+    }
     identity->fpr_size = strlen(identity->fpr);
 
     status = set_identity(session, identity);
     assert(status == PEP_STATUS_OK);
+    if (status != PEP_STATUS_OK) {
+        goto free_keylist;
+    }
 
     return PEP_STATUS_OK;
+
+free_keylist:
+    free_stringlist(keylist);
+    return status;
 }
 
 DYNAMIC_API PEP_STATUS register_examine_function(
@@ -285,26 +299,37 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
 {
     PEP_SESSION session;
     pEp_identity *identity;
-    PEP_STATUS status = init(&session);
-
-    assert(status == PEP_STATUS_OK);
-    if (status != PEP_STATUS_OK)
-        return status;
+    PEP_STATUS status;
 
     assert(retrieve_next_identity);
     assert(management);
 
+    if (!retrieve_next_identity || !management)
+        return PEP_ILLEGAL_VALUE;
+
+    status = init(&session);
+    assert(status == PEP_STATUS_OK);
+    if (status != PEP_STATUS_OK)
+        return status;
+
     log_event(session, "keymanagement thread started", "pEp engine", NULL, NULL);
 
-    while ((identity = retrieve_next_identity(management))) {
+    while ((identity = retrieve_next_identity(management))) 
+    {
         assert(identity->address);
-        DEBUG_LOG("do_keymanagement", "retrieve_next_identity", identity->address);
-        if (identity->me) {
-            status = myself(session, identity);
+        if(identity->address)
+        {
+            DEBUG_LOG("do_keymanagement", "retrieve_next_identity", identity->address);
+
+            if (identity->me) {
+                status = myself(session, identity);
+            } else {
+                status = recv_key(session, identity->address);
+            }
+
             assert(status != PEP_OUT_OF_MEMORY);
-        } else {
-            status = recv_key(session, identity->address);
-            assert(status != PEP_OUT_OF_MEMORY);
+            if(status == PEP_OUT_OF_MEMORY)
+                return PEP_OUT_OF_MEMORY;
         }
         free_identity(identity);
     }
