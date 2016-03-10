@@ -730,7 +730,7 @@ DYNAMIC_API PEP_STATUS get_crashdump_log(
     );
 
 
-// get_languagelist() - get the last log messages out
+// get_languagelist() - get the list of languages
 //
 //  parameters:
 //      session (in)            session handle
