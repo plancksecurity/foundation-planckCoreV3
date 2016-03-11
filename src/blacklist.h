@@ -29,6 +29,7 @@ DYNAMIC_API PEP_STATUS blacklist_delete(PEP_SESSION session, const char *fpr);
 //  parameters:
 //      session (in)        session to use
 //      fpr (in)            fingerprint of key to blacklist
+//      bool (out)          flags if key is blacklisted
 
 DYNAMIC_API PEP_STATUS blacklist_is_listed(
         PEP_SESSION session,
