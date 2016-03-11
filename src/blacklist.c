@@ -1,4 +1,3 @@
-#include "blacklist.h"
 #include "pEp_internal.h"
 
 DYNAMIC_API PEP_STATUS blacklist_add(PEP_SESSION session, const char *fpr)
