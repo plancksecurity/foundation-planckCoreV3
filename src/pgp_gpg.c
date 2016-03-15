@@ -611,8 +611,8 @@ PEP_STATUS pgp_verify_text(
                     return PEP_OUT_OF_MEMORY;
                 }
                 // Primary key is given as the first subkey
-                if (key.subkeys && key.subkeys->fpr && key.subkeys->fpr[0]){
-                    k = stringlist_add(k, key.subkeys->fpr);
+                if (key->subkeys && key->subkeys->fpr && key->subkeys->fpr[0]){
+                    k = stringlist_add(k, key->subkeys->fpr);
                     if (k == NULL) {
                         free_stringlist(_keylist);
                         gpg.gpgme_data_release(d_text);
