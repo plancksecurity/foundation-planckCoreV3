@@ -449,8 +449,40 @@ PEP_STATUS pgp_decrypt_and_verify(
                     do {
                         switch (_GPGERR(gpgme_signature->status)) {
                         case GPG_ERR_NO_ERROR:
-                            k = stringlist_add(k, gpgme_signature->fpr);
+                        {
+                            gpgme_key_t key;
+                            memset(&key,0,sizeof(key));
+
+                            gpgme_error = gpg.gpgme_get_key(session->ctx,
+                                gpgme_signature->fpr, &key, 0);
+                            gpgme_error = _GPGERR(gpgme_error);
+                            assert(gpgme_error != GPG_ERR_ENOMEM);
+                            if (gpgme_error == GPG_ERR_ENOMEM) {
+                                free_stringlist(_keylist);
+                                gpg.gpgme_data_release(plain);
+                                gpg.gpgme_data_release(cipher);
+                                free(_buffer);
+                                return PEP_OUT_OF_MEMORY;
+                            }
+                            // Primary key is given as the first subkey
+                            if (key->subkeys && key->subkeys->fpr && key->subkeys->fpr[0]){
+                                k = stringlist_add(k, key->subkeys->fpr);
+                                if (k == NULL) {
+                                    free_stringlist(_keylist);
+                                    gpg.gpgme_data_release(plain);
+                                    gpg.gpgme_data_release(cipher);
+                                    free(_buffer);
+                                    return PEP_OUT_OF_MEMORY;
+                                }
+                            }
+                            else {
+                                result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
+                                break;
+                            }
+
+                            gpg.gpgme_key_unref(key);
                             break;
+                        }
                         case GPG_ERR_CERT_REVOKED:
                         case GPG_ERR_BAD_SIGNATURE:
                             result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
@@ -601,13 +633,39 @@ PEP_STATUS pgp_verify_text(
 
             result = PEP_VERIFIED;
             do {
-                k = stringlist_add(k, gpgme_signature->fpr);
-                if (k == NULL) {
+                gpgme_key_t key;
+                memset(&key,0,sizeof(key));
+
+                // GPGME may give subkey's fpr instead of primary key's fpr. 
+                // Therefore we ask for the primary fingerprint instead
+                // we assume that gpgme_get_key can find key by subkey's fpr
+                gpgme_error = gpg.gpgme_get_key(session->ctx,
+                    gpgme_signature->fpr, &key, 0);
+                gpgme_error = _GPGERR(gpgme_error);
+                assert(gpgme_error != GPG_ERR_ENOMEM);
+                if (gpgme_error == GPG_ERR_ENOMEM) {
                     free_stringlist(_keylist);
                     gpg.gpgme_data_release(d_text);
                     gpg.gpgme_data_release(d_sig);
                     return PEP_OUT_OF_MEMORY;
                 }
+                // Primary key is given as the first subkey
+                if (key->subkeys && key->subkeys->fpr && key->subkeys->fpr[0]){
+                    k = stringlist_add(k, key->subkeys->fpr);
+                    if (k == NULL) {
+                        free_stringlist(_keylist);
+                        gpg.gpgme_data_release(d_text);
+                        gpg.gpgme_data_release(d_sig);
+                        return PEP_OUT_OF_MEMORY;
+                    }
+                }
+                else {
+                    result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
+                    break;
+                }
+
+                gpg.gpgme_key_unref(key);
+
                 if (gpgme_signature->summary & GPGME_SIGSUM_RED) {
                     if (gpgme_signature->summary & GPGME_SIGSUM_KEY_EXPIRED
                         || gpgme_signature->summary & GPGME_SIGSUM_SIG_EXPIRED) {
