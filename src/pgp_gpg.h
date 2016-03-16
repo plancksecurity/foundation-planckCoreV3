@@ -64,3 +64,6 @@ PEP_STATUS pgp_key_expired(
         bool *expired
     );
 
+PEP_STATUS pgp_binary(const char **path);
+#define PGP_BINARY_PATH pgp_binary
+

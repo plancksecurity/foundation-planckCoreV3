@@ -145,6 +145,11 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
             = (gpgme_release_t) (intptr_t) dlsym(gpgme, "gpgme_release");
         assert(gpg.gpgme_release);
 
+        gpg.gpgme_get_engine_info
+            = (gpgme_get_engine_info_t) (intptr_t) dlsym(gpgme,
+            "gpgme_get_engine_info");
+        assert(gpg.gpgme_get_engine_info);
+
         gpg.gpgme_set_protocol
             = (gpgme_set_protocol_t) (intptr_t) dlsym(gpgme,
             "gpgme_set_protocol");
@@ -1713,6 +1718,25 @@ PEP_STATUS pgp_key_expired(
 
     *expired = key->subkeys->expired;
     gpg.gpgme_key_unref(key);
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS pgp_binary(const char **path)
+{
+    assert(path);
+    if (path == NULL)
+        return PEP_ILLEGAL_VALUE;
+
+    *path = NULL;
+
+    gpgme_engine_info_t info;
+    int err = gpg.gpgme_get_engine_info(&info);
+    assert(err == GPG_ERR_NO_ERROR);
+    if (err != GPG_ERR_NO_ERROR)
+        return PEP_OUT_OF_MEMORY;
+
+    *path = info->file_name;
+
     return PEP_STATUS_OK;
 }
 

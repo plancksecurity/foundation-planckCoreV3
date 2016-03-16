@@ -63,6 +63,8 @@ typedef PEP_STATUS (*revoke_key_t)(PEP_SESSION session, const char *fpr,
 typedef PEP_STATUS (*key_expired_t)(PEP_SESSION session, const char *fpr,
         bool *expired);
 
+typedef PEP_STATUS (*binary_path_t)(const char **path);
+
 typedef struct _PEP_cryptotech_t {
     uint8_t id;
     // the following are default values; comm_type may vary with key length or b0rken crypto
@@ -82,6 +84,7 @@ typedef struct _PEP_cryptotech_t {
     renew_key_t renew_key;
     revoke_key_t revoke_key;
     key_expired_t key_expired;
+    binary_path_t binary_path;
 } PEP_cryptotech_t;
 
 extern PEP_cryptotech_t cryptotech[PEP_crypt__count];

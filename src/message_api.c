@@ -1411,3 +1411,19 @@ DYNAMIC_API PEP_STATUS identity_color(
     return status;
 }
 
+DYNAMIC_API PEP_STATUS get_binary_path(PEP_cryptotech tech, const char **path)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(path);
+    if (path == NULL)
+        return PEP_ILLEGAL_VALUE;
+
+    if (cryptotech[tech].binary_path == NULL)
+        *path = NULL;
+    else
+        status = cryptotech[tech].binary_path(path);
+
+    return status;
+}
+
