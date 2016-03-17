@@ -21,6 +21,9 @@ int main() {
     const char *path;
     PEP_STATUS status2 = get_binary_path(PEP_crypt_OpenPGP, &path);
     assert(status2 == PEP_STATUS_OK);
+#ifdef USE_GPG
+    assert(path);
+#endif
     if (path)
         cout << "PGP binary at " << path << "\n";
     else
