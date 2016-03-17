@@ -7,7 +7,7 @@
 
 #include "pEp_internal.h"
 #include "keymanagement.h"
-
+#include "blacklist.h"
 
 #ifndef EMPTYSTR
 #define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')

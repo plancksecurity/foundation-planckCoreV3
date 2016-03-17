@@ -225,9 +225,14 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
         // blacklist
 
-        sql_blacklist_add = "insert or replace into blacklist_keys (fpr) values (?1) ;";
+        sql_blacklist_add = "insert or replace into blacklist_keys (fpr) values (?1) ;"
+                            "delete from identity where main_key_id = ?1 ;"
+                            "delete from pgp_keypair where fpr = ?1 ;";
+
         sql_blacklist_delete = "delete from blacklist_keys where fpr = ?1 ;";
+
         sql_blacklist_is_listed = "select count(*) from blacklist_keys where fpr = ?1 ;";
+
         sql_blacklist_retrieve = "select * from blacklist_keys ;";
     }
 
