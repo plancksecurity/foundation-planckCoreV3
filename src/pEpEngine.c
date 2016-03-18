@@ -2,6 +2,7 @@
 #include "dynamic_api.h"
 #include "cryptotech.h"
 #include "transport.h"
+#include "blacklist.h"
 
 static int init_count = -1;
 
@@ -723,6 +724,15 @@ DYNAMIC_API PEP_STATUS set_identity(
     if (!(session && identity && identity->address && identity->fpr &&
                 identity->user_id && identity->username))
         return PEP_ILLEGAL_VALUE;
+
+    bool listed;
+    PEP_STATUS status = blacklist_is_listed(session, identity->fpr, &listed);
+    assert(status == PEP_STATUS_OK);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    if (listed)
+        return PEP_KEY_BLACKLISTED;
 
 	sqlite3_exec(session->db, "BEGIN ;", NULL, NULL, NULL);
 

@@ -45,6 +45,7 @@ typedef enum {
 	PEP_CANNOT_SET_PGP_KEYPAIR						= 0x0382,
 	PEP_CANNOT_SET_IDENTITY							= 0x0383,
     PEP_CANNOT_SET_TRUST                            = 0x0384,
+    PEP_KEY_BLACKLISTED                             = 0x0385,
 	
 	PEP_UNENCRYPTED									= 0x0400,
 	PEP_VERIFIED									= 0x0401,
@@ -459,6 +460,7 @@ DYNAMIC_API PEP_STATUS get_identity(
 //		PEP_CANNOT_SET_PGP_KEYPAIR	    writing to table pgp_keypair failed
 //		PEP_CANNOT_SET_IDENTITY		    writing to table identity failed
 //		PEP_COMMIT_FAILED			    SQL commit failed
+//      PEP_KEY_BLACKLISTED             Key blacklisted, cannot set identity
 //
 //	caveat:
 //		in the identity structure you need to set the const char * fields to
