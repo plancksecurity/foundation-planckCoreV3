@@ -1454,13 +1454,14 @@ unlock_netpgp:
 
 PEP_STATUS pgp_renew_key(
         PEP_SESSION session,
-        const char *keyidstr,
+        const char *fprstr,
         const timestamp *ts
     )
 {
     pgp_key_t *pkey;
     pgp_key_t *skey;
-    uint8_t keyid[PGP_KEY_ID_SIZE];
+    uint8_t fpr[PGP_FINGERPRINT_SIZE];
+    size_t length;
     unsigned from = 0;
     time_t duration;
     const uint8_t *primid;
@@ -1468,9 +1469,9 @@ PEP_STATUS pgp_renew_key(
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-    assert(keyidstr);
+    assert(fprstr);
 
-    if (!session || !keyidstr )
+    if (!session || !fprstr )
         return PEP_UNKNOWN_ERROR;
 
     if(ts)
@@ -1492,15 +1493,17 @@ PEP_STATUS pgp_renew_key(
         return PEP_UNKNOWN_ERROR;
     }
 
-    if(!str_to_id(keyid, keyidstr))
-    {
+    
+    if (!str_to_fpr(fprstr, fpr, &length)) {
         status = PEP_ILLEGAL_VALUE;
         goto unlock_netpgp;
     }
-
-    pkey = (pgp_key_t*)pgp_getkeybyid(netpgp.io, netpgp.pubring, 
-             keyid, &from, NULL, NULL, 
-             1, 0); /* reject revoked, accept expired */
+    
+    pkey = pgp_getkeybyfpr(
+                          netpgp.io,
+                          netpgp.pubring,
+                          fpr, length, &from, NULL,
+                          1, 0); /* reject revoked, accept expired */
 
     if(pkey == NULL)
     {
@@ -1509,9 +1512,11 @@ PEP_STATUS pgp_renew_key(
     }
 
     from = 0;
-    skey = (pgp_key_t*)pgp_getkeybyid(netpgp.io, netpgp.secring, 
-             keyid, &from, NULL, NULL, 
-             1, 0); /* reject revoked, accept expired */
+    skey = pgp_getkeybyfpr(
+                           netpgp.io,
+                           netpgp.pubring,
+                           fpr, length, &from, NULL,
+                           1, 0); /* reject revoked, accept expired */
 
     if(skey == NULL)
     {
