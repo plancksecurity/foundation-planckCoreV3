@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		430D258B1C9ED75A00B94535 /* blacklist.c in Sources */ = {isa = PBXBuildFile; fileRef = 430D258A1C9ED75A00B94535 /* blacklist.c */; };
 		6400FB861B8CA1C6005221E3 /* libnetpgp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 645922521B8BD32B00A5AF93 /* libnetpgp.a */; };
 		6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E371B8B630200FC617B /* libetpan-ios.a */; };
 		644297C51BE11CE0002BC73B /* system.db in Resources */ = {isa = PBXBuildFile; fileRef = 64951A1B1BE0FCD800B10E71 /* system.db */; };
@@ -90,6 +91,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		430D258A1C9ED75A00B94535 /* blacklist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = blacklist.c; path = ../src/blacklist.c; sourceTree = "<group>"; };
 		644297BF1BE11C65002BC73B /* pEpTrustWords.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pEpTrustWords.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		644297C11BE11C65002BC73B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		64796A3F1B455AA5004B1C24 /* libpEpEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -215,6 +217,7 @@
 		64A8264B1B455C5600EECAF0 /* srcref */ = {
 			isa = PBXGroup;
 			children = (
+				430D258A1C9ED75A00B94535 /* blacklist.c */,
 				64A8264C1B455D0800EECAF0 /* bloblist.c */,
 				64A8264D1B455D0800EECAF0 /* bloblist.h */,
 				64A8264E1B455D0800EECAF0 /* cryptotech.c */,
@@ -458,6 +461,7 @@
 				64A826791B455D0800EECAF0 /* cryptotech.c in Sources */,
 				64A826781B455D0800EECAF0 /* bloblist.c in Sources */,
 				64A826881B455D0800EECAF0 /* timestamp.c in Sources */,
+				430D258B1C9ED75A00B94535 /* blacklist.c in Sources */,
 				64A826801B455D0800EECAF0 /* mime.c in Sources */,
 				64A8267F1B455D0800EECAF0 /* message.c in Sources */,
 				64A826811B455D0800EECAF0 /* pEpEngine.c in Sources */,
