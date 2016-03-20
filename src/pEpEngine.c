@@ -354,24 +354,40 @@ DYNAMIC_API void release(PEP_SESSION session)
 
 	if (session) {
 		if (session->db) {
-            if (session->trustword)
-                sqlite3_finalize(session->trustword);
             if (session->log)
                 sqlite3_finalize(session->log);
+            if (session->trustword)
+                sqlite3_finalize(session->trustword);
             if (session->get_identity)
                 sqlite3_finalize(session->get_identity);
-            if (session->set_identity)
-                sqlite3_finalize(session->set_identity);
             if (session->set_person)
                 sqlite3_finalize(session->set_person);
             if (session->set_pgp_keypair)
                 sqlite3_finalize(session->set_pgp_keypair);
+            if (session->set_identity)
+                sqlite3_finalize(session->set_identity);
             if (session->set_trust)
                 sqlite3_finalize(session->set_trust);
             if (session->get_trust)
                 sqlite3_finalize(session->get_trust);
             if (session->least_trust)
                 sqlite3_finalize(session->least_trust);
+            if (session->mark_compromized)
+                sqlite3_finalize(session->mark_compromized);
+            if (session->crashdump)
+                sqlite3_finalize(session->crashdump);
+            if (session->languagelist)
+                sqlite3_finalize(session->languagelist);
+            if (session->i18n_token)
+                sqlite3_finalize(session->i18n_token);
+            if (session->blacklist_add)
+                sqlite3_finalize(session->blacklist_add);
+            if (session->blacklist_delete)
+                sqlite3_finalize(session->blacklist_delete);
+            if (session->blacklist_is_listed)
+                sqlite3_finalize(session->blacklist_is_listed);
+            if (session->blacklist_retrieve)
+                sqlite3_finalize(session->blacklist_retrieve);
 
             if (session->db)
                 sqlite3_close_v2(session->db);
