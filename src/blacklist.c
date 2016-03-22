@@ -26,12 +26,6 @@ DYNAMIC_API PEP_STATUS blacklist_add(PEP_SESSION session, const char *fpr)
     }
 
     sqlite3_reset(session->blacklist_add);
-    goto the_end;
-
-enomem:
-    status = PEP_OUT_OF_MEMORY;
-
-the_end:
     return status;
 }
 
@@ -60,12 +54,6 @@ DYNAMIC_API PEP_STATUS blacklist_delete(PEP_SESSION session, const char *fpr)
     }
 
     sqlite3_reset(session->blacklist_delete);
-    goto the_end;
-
-enomem:
-    status = PEP_OUT_OF_MEMORY;
-
-the_end:
     return status;
 }
 
@@ -103,12 +91,6 @@ DYNAMIC_API PEP_STATUS blacklist_is_listed(
     }
 
     sqlite3_reset(session->blacklist_is_listed);
-    goto the_end;
-
-enomem:
-    status = PEP_OUT_OF_MEMORY;
-
-the_end:
     return status;
 }
 
