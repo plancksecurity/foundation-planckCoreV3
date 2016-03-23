@@ -1514,7 +1514,7 @@ PEP_STATUS pgp_renew_key(
     from = 0;
     skey = pgp_getkeybyfpr(
                            netpgp.io,
-                           netpgp.pubring,
+                           netpgp.secring,
                            fpr, length, &from, NULL,
                            1, 0); /* reject revoked, accept expired */
 
@@ -1537,6 +1537,15 @@ PEP_STATUS pgp_renew_key(
         goto unlock_netpgp;
     }
 
+    // save rings
+    if (netpgp_save_pubring(&netpgp) &&
+        netpgp_save_secring(&netpgp))
+    {
+        status = PEP_STATUS_OK;
+    }else{
+        status = PEP_UNKNOWN_ERROR;
+    }
+    
 unlock_netpgp:
     pthread_mutex_unlock(&netpgp_mutex);
 
