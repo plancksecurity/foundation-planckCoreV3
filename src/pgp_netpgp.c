@@ -1530,7 +1530,7 @@ PEP_STATUS pgp_renew_key(
         goto unlock_netpgp;
     }
 
-
+    // FIXME : renew in a more gentle way
     if (!pgp_add_selfsigned_userid(skey, pkey, primid, duration))
     {
         status = PEP_CANNOT_CREATE_KEY;
@@ -1554,49 +1554,53 @@ unlock_netpgp:
 
 PEP_STATUS pgp_revoke_key(
         PEP_SESSION session,
-        const char *keyidstr,
+        const char *fprstr,
         const char *reason
     )
 {
     pgp_key_t *pkey;
     pgp_key_t *skey;
-    uint8_t keyid[PGP_KEY_ID_SIZE];
+    uint8_t fpr[PGP_FINGERPRINT_SIZE];
+    size_t length;
     unsigned from = 0;
 
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-    assert(keyidstr);
-    assert(reason);
+    assert(fprstr);
 
-    if (!session || !keyidstr || !reason )
+    if (!session || !fprstr)
         return PEP_UNKNOWN_ERROR;
 
     if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
     }
 
-    if(!str_to_id(keyid, keyidstr))
-    {
+    // FIXME : deduplicate that code w/ renew
+    if (!str_to_fpr(fprstr, fpr, &length)) {
         status = PEP_ILLEGAL_VALUE;
         goto unlock_netpgp;
     }
-
-    pkey = pgp_getkeybyid(netpgp.io, netpgp.pubring, 
-             keyid, &from, NULL, NULL, 
-             1, 0); /* reject (already) revoked, accept expired */
-
+    
+    pkey = pgp_getkeybyfpr(
+                           netpgp.io,
+                           netpgp.pubring,
+                           fpr, length, &from, NULL,
+                           1, 0); /* reject revoked, accept expired */
+    
     if(pkey == NULL)
     {
         status = PEP_KEY_NOT_FOUND;
         goto unlock_netpgp;
     }
-
+    
     from = 0;
-    skey = pgp_getkeybyid(netpgp.io, netpgp.secring, 
-             keyid, &from, NULL, NULL, 
-             1, 0); /* reject (already) revoked, accept expired */
-
+    skey = pgp_getkeybyfpr(
+                           netpgp.io,
+                           netpgp.secring,
+                           fpr, length, &from, NULL,
+                           1, 0); /* reject revoked, accept expired */
+    
     if(skey == NULL)
     {
         status = PEP_KEY_NOT_FOUND;
