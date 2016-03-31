@@ -88,6 +88,21 @@ DYNAMIC_API stringlist_t *stringlist_append(
 DYNAMIC_API int stringlist_length(const stringlist_t *stringlist);
 
 
+// stringlist_delete() - delete entry from stringlist
+//
+//  parameters:
+//      stringlist (in)     stringlist struct to delete from
+//      value (in)          data to delete
+//
+//  return value:
+//      modified stringlist
+
+DYNAMIC_API stringlist_t *stringlist_delete(
+        stringlist_t *stringlist,
+        const char *value
+    );
+
+
 // free_stringlist() - free memory occupied by stringlist
 //
 //  parameters:

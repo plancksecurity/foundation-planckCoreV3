@@ -1253,6 +1253,10 @@ PEP_STATUS pgp_find_keys(
     } while (gpgme_error != GPG_ERR_EOF);
 
     gpg.gpgme_op_keylist_end(session->ctx);
+    if (_keylist->value == NULL) {
+        free_stringlist(_keylist);
+        _keylist = NULL;
+    }
     *keylist = _keylist;
     return PEP_STATUS_OK;
 }

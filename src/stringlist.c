@@ -104,6 +104,39 @@ DYNAMIC_API int stringlist_length(const stringlist_t *stringlist)
     return len;
 }
 
+DYNAMIC_API stringlist_t *stringlist_delete(
+        stringlist_t *stringlist,
+        const char *value
+    )
+{
+    assert(stringlist);
+    assert(value);
+
+    if (stringlist->value == NULL) {
+        free_stringlist(stringlist);
+        return NULL;
+    }
+
+    if (value == NULL)
+        return stringlist;
+
+    stringlist_t *_sl;
+    stringlist_t *last = NULL;
+    for (_sl = stringlist; _sl && _sl->value; _sl = _sl->next) {
+        if (strcmp(_sl->value, value) == 0) {
+            if (last == NULL)
+                stringlist = stringlist->next;
+            else
+                last->next = _sl->next;
+            _sl->next = NULL;
+            free_stringlist(_sl);
+            break;
+        }
+        last = _sl;
+    }
+    return stringlist;
+}
+
 DYNAMIC_API void free_stringlist(stringlist_t *stringlist)
 {
     if (stringlist) {
