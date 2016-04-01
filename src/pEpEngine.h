@@ -124,7 +124,7 @@ DYNAMIC_API void release(PEP_SESSION session);
 DYNAMIC_API void config_passive_mode(PEP_SESSION session, bool enable);
 
 
-// config_unencrypted_subject() - enable passive mode
+// config_unencrypted_subject() - disable subject encryption
 //
 //  parameters:
 //      session (in)    session handle
