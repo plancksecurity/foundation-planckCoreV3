@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <cstring> // for strcmp()
 #include <assert.h>
 #include "blacklist.h"
 
@@ -38,7 +39,7 @@ int main() {
     cout << "the blacklist contains now: ";
     for (stringlist_t *bl = blacklist; bl && bl->value; bl = bl->next) {
         cout << bl->value << ", ";
-        if (strcmp(bl->value, "23") == 0)
+        if (std::strcmp(bl->value, "23") == 0)
             in23 = true;
     }
     cout << "END\n";
