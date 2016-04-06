@@ -71,7 +71,8 @@ $ make package # for building a .tar.bz2 with the source distribution
 
 On Windows, use Visual Studio.
 
-1. How to cross-build
+
+3. How to cross-build
 ---------------------
 
 For cross-building, BUILD_FOR is being used. I.e.:
@@ -79,7 +80,7 @@ For cross-building, BUILD_FOR is being used. I.e.:
 $ BUILD_FOR=yourOS make -e
 
 
-2. How to build the databases
+4. How to build the databases
 -----------------------------
 
 p≡p Engine uses two databases: ~/.pEp_management (on *NIX) or
@@ -99,4 +100,13 @@ $ make -C db install
 
 You can test the Trustwords in system.db using db/trustwords.py
 Both Python tools have a switch --help
+
+
+5. How to run the tests
+-----------------------
+
+You have to import all the test keys into your local gpg instance:
+
+	cd test
+	cat *.asc | gpg --import
 
