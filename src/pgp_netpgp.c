@@ -6,12 +6,12 @@
 #include "wrappers.h"
 
 #include "netpgp.h"
-#include "config.h"
-#include "memory.h"
-#include "crypto.h"
-#include "netpgpsdk.h"
-#include "validate.h"
-#include "readerwriter.h"
+#include <netpgp/config.h>
+#include <netpgp/memory.h>
+#include <netpgp/crypto.h>
+#include <netpgp/netpgpsdk.h>
+#include <netpgp/validate.h>
+#include <netpgp/readerwriter.h>
 
 #include <curl/curl.h>
 #include <pthread.h>
