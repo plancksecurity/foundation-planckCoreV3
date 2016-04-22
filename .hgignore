@@ -6,7 +6,7 @@ syntax: glob
 *.swp
 db/*.csv
 db/*.db
-*.a
+#*.a
 *.so
 test/pEpEngineTest
 *.exe
