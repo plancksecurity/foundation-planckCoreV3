@@ -47,7 +47,13 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity);
 // retrieve_next_identity() - callback being called by do_keymanagement()
 //
 //  parameters:
-//      management (in)     data structure to deliver (implementation defined)
+//      management (in)               data structure to deliver
+//                                    (implementation defined)
+//      processed_identity (in)       identity previously processed
+//                                    by management
+//      allow_keyserver_lookup (out)  allow management to lookup for
+//                                    missing key on keyserver
+//                                    (applies only on returned identity)
 //
 //  return value:
 //      identity to check or NULL to terminate do_keymanagement()
@@ -59,8 +65,13 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity);
 //      this callback has to block until an identity or NULL can be returned
 //      an implementation is not provided by this library; instead it has to be
 //      implemented by the user of this library
+//      memory ownership of indentity remains to pEpEngine
 
-typedef pEp_identity *(*retrieve_next_identity_t)(void *management);
+typedef pEp_identity *(*retrieve_next_identity_t)(
+        pEp_identity * processed_identity,
+        void *management,
+        bool *allow_keyserver_lookup
+    );
 
 
 // examine_identity() - callback for appending to queue
@@ -113,13 +124,13 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
     );
 
 
-// key_compromized() - mark key as being compromized
+// key_mistrusted() - mark key as being compromized
 //
 //  parameters:
 //      session (in)        session to use
 //      ident (in)          person and key which was compromized
 
-DYNAMIC_API PEP_STATUS key_compromized(
+DYNAMIC_API PEP_STATUS key_mistrusted(
         PEP_SESSION session,
         pEp_identity *ident
     );
@@ -140,7 +151,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     );
 
 
-// key_reset_trust() - undo trust_personal_key and key_compromized() for keys
+// key_reset_trust() - undo trust_personal_key and key_mistrusted() for keys
 //                     we don't own
 //
 //  parameters:

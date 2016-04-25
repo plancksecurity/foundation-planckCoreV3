@@ -13,13 +13,15 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 	static const char *sql_log;
 	static const char *sql_trustword;
 	static const char *sql_get_identity;
+    static const char *sql_get_best_user;
 	static const char *sql_set_person;
 	static const char *sql_set_pgp_keypair;
+    static const char *sql_get_pgp_keypair_created;
 	static const char *sql_set_identity;
 	static const char *sql_set_trust;
     static const char *sql_get_trust;
     static const char *sql_least_trust;
-    static const char *sql_mark_as_compromized;
+    static const char *sql_set_fpr_trust;
     static const char *sql_crashdump;
     static const char *sql_languagelist;
     static const char *sql_i18n_token;
@@ -127,12 +129,9 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "   expires integer,\n"
                 "   comment text\n"
                 ");\n"
-                "create index if not exists pgp_keypair_expires on pgp_keypair (\n"
-                "   expires\n"
-                ");\n"
                 "create table if not exists person (\n"
                 "   id text primary key,\n"
-                "   username text not null,\n"
+                "   username text,\n"
                 "   main_key_id text\n"
                 "       references pgp_keypair (fpr)\n"
                 "       on delete set null,\n"
@@ -140,14 +139,15 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "   comment text\n"
                 ");\n"
                 "create table if not exists identity (\n"
-                "   address text primary key,\n"
+                "   address text,\n"
                 "   user_id text\n"
                 "       references person (id)\n"
                 "       on delete cascade,\n"
                 "   main_key_id text\n"
                 "       references pgp_keypair (fpr)\n"
                 "       on delete set null,\n"
-                "   comment text\n"
+                "   comment text,\n"
+                "   primary key (address, user_id)\n"
                 ");\n"
                 "create table if not exists trust (\n"
                 "   user_id text not null\n"
@@ -186,36 +186,64 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         sql_log = "insert into log (title, entity, description, comment)"
                   "values (?1, ?2, ?3, ?4);";
 
-        sql_get_identity =	"select fpr, identity.user_id, username, comm_type, lang"
+        sql_get_identity =	"select fpr, username, comm_type, lang, pgp_keypair.created"
                             "   from identity"
                             "   join person on id = identity.user_id"
                             "   join pgp_keypair on fpr = identity.main_key_id"
                             "   join trust on id = trust.user_id"
                             "       and pgp_keypair_fpr = identity.main_key_id"
-                            "   where address = ?1 ;";
+                            "   where address = ?1 and identity.user_id = ?2;";
+
+        sql_get_best_user = "select identity.user_id"
+                            "   from identity"
+                            "   join trust on trust.user_id = identity.user_id"
+                            "       and pgp_keypair_fpr = identity.main_key_id"
+                            "   where address = ?1"
+                            "   order by comm_type DESC, identity.rowid DESC"
+                            "   limit 1;";
 
         sql_trustword = "select id, word from wordlist where lang = lower(?1) "
                        "and id = ?2 ;";
 
-        sql_set_person = "insert or replace into person (id, username, lang) "
-                         "values (?1, ?2, ?3) ;";
+        // "replace" cannot be used here because of "on delete" triggers
+        // First try to update, then try to insert.
+        // Update is first to avoid firing unnecessary triggers.
+        sql_set_person = "update or ignore person"
+                         "    set username = ?2,"
+                         "        lang = ?3"
+                         "    where id = ?1;\n"
+                         "insert or ignore into person (id, username, lang)"
+                         "    values (?1, ?2, ?3);";
 
-        sql_set_pgp_keypair = "insert or replace into pgp_keypair (fpr) "
-                              "values (?1) ;";
+        // Use pgp_keypair.created to mark keys created by pEp (i.e. own keys)
+        // Once set, "created" cannot be reset.
+        //
+        // "replace" cannot be used here because of "on delete" triggers
+        sql_set_pgp_keypair = "update or ignore pgp_keypair"
+                              "    set created = case created"
+                              "                    when 0 then ?2"
+                              "                    else created"
+                              "                  end"
+                              "    where fpr = upper(replace(?1,' ','')) ;\n"
+                              "insert or ignore into pgp_keypair (fpr, created)"
+                              "    values (upper(replace(?1,' ','')), ?2) ;";
+        
+        sql_get_pgp_keypair_created = "select created from pgp_keypair"
+                                      "    where fpr = upper(replace(?1,' ',''));";
 
         sql_set_identity = "insert or replace into identity (address, main_key_id, "
-                           "user_id) values (?1, ?2, ?3) ;";
+                           "user_id) values (?1, upper(replace(?2,' ','')), ?3) ;";
 
         sql_set_trust = "insert or replace into trust (user_id, pgp_keypair_fpr, comm_type) "
-                        "values (?1, ?2, ?3) ;";
+                        "values (?1, upper(replace(?2,' ','')), ?3) ;";
 
-        sql_get_trust = "select user_id, comm_type from trust where user_id = ?1 "
-                        "and pgp_keypair_fpr = ?2 ;";
+        sql_get_trust = "select comm_type from trust where user_id = ?1 "
+                        "and pgp_keypair_fpr = upper(replace(?2,' ','')) ;";
 
-        sql_least_trust = "select min(comm_type) from trust where pgp_keypair_fpr = ?1 ;";
+        sql_least_trust = "select min(comm_type) from trust where pgp_keypair_fpr = upper(replace(?1,' ','')) ;";
 
-        sql_mark_as_compromized = "update trust not indexed set comm_type = 15"
-                                  " where pgp_keypair_fpr = ?1 ;";
+        sql_set_fpr_trust = "update trust not indexed set comm_type = ?2"
+                                  " where pgp_keypair_fpr = upper(replace(?1,' ','')) ;";
 
         sql_crashdump = "select timestamp, title, entity, description, comment"
                         " from log order by timestamp desc limit ?1 ;";
@@ -226,13 +254,13 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
         // blacklist
 
-        sql_blacklist_add = "insert or replace into blacklist_keys (fpr) values (?1) ;"
-                            "delete from identity where main_key_id = ?1 ;"
-                            "delete from pgp_keypair where fpr = ?1 ;";
+        sql_blacklist_add = "insert or replace into blacklist_keys (fpr) values (upper(replace(?1,' ',''))) ;"
+                            "delete from identity where main_key_id = upper(replace(?1,' ','')) ;"
+                            "delete from pgp_keypair where fpr = upper(replace(?1,' ','')) ;";
 
-        sql_blacklist_delete = "delete from blacklist_keys where fpr = ?1 ;";
+        sql_blacklist_delete = "delete from blacklist_keys where fpr = upper(replace(?1,' ','')) ;";
 
-        sql_blacklist_is_listed = "select count(*) from blacklist_keys where fpr = ?1 ;";
+        sql_blacklist_is_listed = "select count(*) from blacklist_keys where fpr = upper(replace(?1,' ','')) ;";
 
         sql_blacklist_retrieve = "select * from blacklist_keys ;";
     }
@@ -248,6 +276,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     int_result = sqlite3_prepare_v2(_session->db, sql_get_identity,
             (int)strlen(sql_get_identity), &_session->get_identity, NULL);
 	assert(int_result == SQLITE_OK);
+    
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_best_user,
+            (int)strlen(sql_get_best_user), &_session->get_best_user, NULL);
+    assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_person,
             (int)strlen(sql_set_person), &_session->set_person, NULL);
@@ -255,6 +287,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_pgp_keypair,
             (int)strlen(sql_set_pgp_keypair), &_session->set_pgp_keypair, NULL);
+	assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_pgp_keypair_created,
+            (int)strlen(sql_get_pgp_keypair_created), &_session->get_pgp_keypair_created, NULL);
+    const char *plop = sqlite3_errmsg(_session->db);
 	assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_identity,
@@ -273,8 +310,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_least_trust), &_session->least_trust, NULL);
     assert(int_result == SQLITE_OK);
 
-    int_result = sqlite3_prepare_v2(_session->db, sql_mark_as_compromized,
-            (int)strlen(sql_mark_as_compromized), &_session->mark_compromized, NULL);
+    int_result = sqlite3_prepare_v2(_session->db, sql_set_fpr_trust,
+            (int)strlen(sql_set_fpr_trust), &_session->mark_compromized, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_crashdump,
@@ -360,10 +397,14 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->trustword);
             if (session->get_identity)
                 sqlite3_finalize(session->get_identity);
+            if (session->get_best_user)
+                sqlite3_finalize(session->get_best_user);
             if (session->set_person)
                 sqlite3_finalize(session->set_person);
             if (session->set_pgp_keypair)
                 sqlite3_finalize(session->set_pgp_keypair);
+            if (session->get_pgp_keypair_created)
+                sqlite3_finalize(session->get_pgp_keypair_created);
             if (session->set_identity)
                 sqlite3_finalize(session->set_identity);
             if (session->set_trust)
@@ -670,8 +711,23 @@ void free_identity(pEp_identity *identity)
     }
 }
 
+static void _set_identity_lang(pEp_identity *identity, 	const char *lang)
+{
+    if (lang && lang[0]) {
+        assert(lang[0] >= 'a' && lang[0] <= 'z');
+        assert(lang[1] >= 'a' && lang[1] <= 'z');
+        assert(lang[2] == 0);
+        // FIXME : assert without if
+        identity->lang[0] = lang[0];
+        identity->lang[1] = lang[1];
+        identity->lang[2] = 0;
+    }
+}
+
 DYNAMIC_API PEP_STATUS get_identity(
-        PEP_SESSION session, const char *address,
+        PEP_SESSION session,
+        const char *address,
+        const char *user_id,
         pEp_identity **identity
     )
 {
@@ -689,6 +745,7 @@ DYNAMIC_API PEP_STATUS get_identity(
 
     sqlite3_reset(session->get_identity);
     sqlite3_bind_text(session->get_identity, 1, address, -1, SQLITE_STATIC);
+    sqlite3_bind_text(session->get_identity, 2, user_id, -1, SQLITE_STATIC);
 
     result = sqlite3_step(session->get_identity);
 	switch (result) {
@@ -696,23 +753,17 @@ DYNAMIC_API PEP_STATUS get_identity(
         _identity = new_identity(
                 address,
                 (const char *) sqlite3_column_text(session->get_identity, 0),
-                (const char *) sqlite3_column_text(session->get_identity, 1),
-                (const char *) sqlite3_column_text(session->get_identity, 2)
+                user_id,
+                (const char *) sqlite3_column_text(session->get_identity, 1)
                 );
         assert(_identity);
         if (_identity == NULL)
             return PEP_OUT_OF_MEMORY;
 
-        _identity->comm_type = (PEP_comm_type) sqlite3_column_int(session->get_identity, 3);
-        _lang = (const char *) sqlite3_column_text(session->get_identity, 4);
-        if (_lang && _lang[0]) {
-			assert(_lang[0] >= 'a' && _lang[0] <= 'z');
-			assert(_lang[1] >= 'a' && _lang[1] <= 'z');
-			assert(_lang[2] == 0);
-			_identity->lang[0] = _lang[0];
-			_identity->lang[1] = _lang[1];
-            _identity->lang[2] = 0;
-		}
+        _identity->comm_type = (PEP_comm_type) sqlite3_column_int(session->get_identity, 2);
+        _lang = (const char *) sqlite3_column_text(session->get_identity, 3);
+        _set_identity_lang(_identity,_lang);
+        _identity->me = (PEP_comm_type) sqlite3_column_int(session->get_identity, 4);
 		*identity = _identity;
 		break;
 	default:
@@ -722,6 +773,41 @@ DYNAMIC_API PEP_STATUS get_identity(
 
     sqlite3_reset(session->get_identity);
 	return status;
+}
+
+DYNAMIC_API PEP_STATUS get_best_user(
+       PEP_SESSION session,
+       const char *address,
+       char **user_id
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    int result;
+    
+    assert(session);
+    assert(address);
+    assert(user_id);
+    
+    *user_id = NULL;
+    
+    if (!(session && address && user_id))
+        return PEP_ILLEGAL_VALUE;
+    
+    sqlite3_reset(session->get_best_user);
+    sqlite3_bind_text(session->get_best_user, 1, address, -1, SQLITE_STATIC);
+    
+    result = sqlite3_step(session->get_best_user);
+    switch (result) {
+        case SQLITE_ROW: {
+            *user_id = strdup((const char *)sqlite3_column_text(session->get_identity, 0));
+            break;
+        }
+        default:
+            status = PEP_CANNOT_FIND_IDENTITY;
+    }
+    
+    sqlite3_reset(session->get_best_user);
+    return status;
 }
 
 DYNAMIC_API PEP_STATUS set_identity(
@@ -735,10 +821,9 @@ DYNAMIC_API PEP_STATUS set_identity(
 	assert(identity->address);
 	assert(identity->fpr);
 	assert(identity->user_id);
-	assert(identity->username);
 
     if (!(session && identity && identity->address && identity->fpr &&
-                identity->user_id && identity->username))
+                identity->user_id))
         return PEP_ILLEGAL_VALUE;
 
     bool listed;
@@ -755,9 +840,18 @@ DYNAMIC_API PEP_STATUS set_identity(
 	sqlite3_reset(session->set_person);
     sqlite3_bind_text(session->set_person, 1, identity->user_id, -1,
             SQLITE_STATIC);
-    sqlite3_bind_text(session->set_person, 2, identity->username, -1,
-            SQLITE_STATIC);
-	if (identity->lang[0])
+
+    if(!identity->username || identity->username[0]==0)
+    {
+        sqlite3_bind_null(session->set_person, 2);
+    }
+    else
+    {
+        sqlite3_bind_text(session->set_person, 2, identity->username, -1,
+                          SQLITE_STATIC);
+    }
+
+    if (identity->lang[0])
         sqlite3_bind_text(session->set_person, 3, identity->lang, 1,
                 SQLITE_STATIC);
 	else
@@ -772,6 +866,7 @@ DYNAMIC_API PEP_STATUS set_identity(
 	sqlite3_reset(session->set_pgp_keypair);
     sqlite3_bind_text(session->set_pgp_keypair, 1, identity->fpr, -1,
             SQLITE_STATIC);
+    sqlite3_bind_int(session->set_pgp_keypair, 2, identity->me);
 	result = sqlite3_step(session->set_pgp_keypair);
 	sqlite3_reset(session->set_pgp_keypair);
 	if (result != SQLITE_DONE) {
@@ -813,9 +908,11 @@ DYNAMIC_API PEP_STATUS set_identity(
 		return PEP_COMMIT_FAILED;
 }
 
-DYNAMIC_API PEP_STATUS mark_as_compromized(
+DYNAMIC_API PEP_STATUS set_fpr_trust(
         PEP_SESSION session,
-        const char *fpr
+        const char *fpr,
+        PEP_comm_type trust
+                                     
     )
 {
 	int result;
@@ -829,6 +926,8 @@ DYNAMIC_API PEP_STATUS mark_as_compromized(
 	sqlite3_reset(session->mark_compromized);
     sqlite3_bind_text(session->mark_compromized, 1, fpr, -1,
             SQLITE_STATIC);
+    sqlite3_bind_int(session->set_trust, 2, trust);
+
     result = sqlite3_step(session->mark_compromized);
 	sqlite3_reset(session->mark_compromized);
 
@@ -868,16 +967,7 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
     result = sqlite3_step(session->get_trust);
     switch (result) {
     case SQLITE_ROW: {
-        const char * user_id = (const char *) sqlite3_column_text(session->get_trust, 0);
-        int comm_type = (PEP_comm_type) sqlite3_column_int(session->get_trust, 1);
-
-        if (strcmp(user_id, identity->user_id) != 0) {
-            free(identity->user_id);
-            identity->user_id = strdup(user_id);
-            assert(identity->user_id);
-            if (identity->user_id == NULL)
-                return PEP_OUT_OF_MEMORY;
-        }
+        int comm_type = (PEP_comm_type) sqlite3_column_int(session->get_trust, 0);
         identity->comm_type = comm_type;
         break;
     }
@@ -925,6 +1015,45 @@ DYNAMIC_API PEP_STATUS least_trust(
     sqlite3_reset(session->least_trust);
     return status;
 }
+
+
+DYNAMIC_API PEP_STATUS get_pgp_keypair_created(
+        PEP_SESSION session,
+        const char *fpr,
+        int *created
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    int result;
+
+    assert(session);
+    assert(fpr);
+    assert(created);
+
+    *created = PEP_ct_unknown;
+
+    if (!(session && fpr && created))
+        return PEP_ILLEGAL_VALUE;
+
+    sqlite3_reset(session->get_pgp_keypair_created);
+    sqlite3_bind_text(session->get_pgp_keypair_created, 1, fpr, -1, SQLITE_STATIC);
+
+    result = sqlite3_step(session->get_pgp_keypair_created);
+    switch (result) {
+        case SQLITE_ROW: {
+            *created = sqlite3_column_int(session->get_pgp_keypair_created, 0);
+            break;
+        }
+        default:
+            status = PEP_CANNOT_FIND_IDENTITY;
+    }
+
+    sqlite3_reset(session->get_pgp_keypair_created);
+    return status;
+}
+
+
+
 
 DYNAMIC_API PEP_STATUS decrypt_and_verify(
     PEP_SESSION session, const char *ctext, size_t csize,
@@ -1132,6 +1261,23 @@ DYNAMIC_API PEP_STATUS key_expired(
 
     return session->cryptotech[PEP_crypt_OpenPGP].key_expired(session, fpr,
             expired);
+}
+
+DYNAMIC_API PEP_STATUS key_revoked(
+        PEP_SESSION session,
+        const char *fpr,
+        bool *revoked
+    )
+{
+    assert(session);
+    assert(fpr);
+    assert(revoked);
+    
+    if (!(session && fpr && revoked))
+        return PEP_ILLEGAL_VALUE;
+    
+    return session->cryptotech[PEP_crypt_OpenPGP].key_revoked(session, fpr,
+            revoked);
 }
 
 static void _clean_log_value(char *text)

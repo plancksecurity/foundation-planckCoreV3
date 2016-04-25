@@ -168,7 +168,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-    if(!session) return PEP_UNKNOWN_ERROR;
+    if(!session) return PEP_ILLEGAL_VALUE;
 
     if (in_first) {
         if((status = init_netpgp()) != PEP_STATUS_OK)
@@ -208,32 +208,6 @@ _armoured(const char *buf, size_t size, const char *pattern)
     }
     regfree(&r);
     return armoured;
-}
-
-/* write key ID bytes read from hex string 
- * tolerates no space, only hexes */
-static unsigned str_to_id(uint8_t *keyid, const char *str)
-{
-    int i, n;
-    for (i = 0; i < PGP_KEY_ID_SIZE ; i++) {
-        uint8_t b = 0;
-        for (n = 0; n < 2; n++) {
-            char c = str[i * 2 + n];
-            uint8_t q;
-            if(c >= '0' &&  c <= '9'){
-                q = (c - '0');
-            }else if(c >= 'a' &&  c <= 'f'){
-                q = (c - 'a' + 0xA);
-            }else if(c >= 'A' &&  c <= 'F'){
-                q = (c - 'A' + 0xA);
-            }else{
-                return 0;
-            }
-            b |= q << (4 * (1 - n));
-        }
-        keyid[i] = b;
-    }
-    return 1;
 }
 
 /* write key fingerprint hexdump as a string */
@@ -391,7 +365,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     assert(keylist);
 
     if(!session || !ctext || !csize || !ptext || !psize || !keylist) 
-        return PEP_UNKNOWN_ERROR;
+        return PEP_ILLEGAL_VALUE;
 
     if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
@@ -491,7 +465,7 @@ PEP_STATUS pgp_verify_text(
     assert(keylist);
 
     if(!session || !text || !size || !signature || !sig_size || !keylist) 
-        return PEP_UNKNOWN_ERROR;
+        return PEP_ILLEGAL_VALUE;
 
     if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
@@ -584,7 +558,7 @@ PEP_STATUS pgp_encrypt_and_sign(
     assert(csize);
 
     if(!session || !ptext || !psize || !ctext || !csize || !keylist) 
-        return PEP_UNKNOWN_ERROR;
+        return PEP_ILLEGAL_VALUE;
 
     if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
@@ -732,7 +706,7 @@ PEP_STATUS pgp_generate_keypair(
 
     if(!session || !identity || 
        !identity->address || identity->fpr || !identity->username)
-        return PEP_UNKNOWN_ERROR;
+        return PEP_ILLEGAL_VALUE;
 
     if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
@@ -839,7 +813,7 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fprstr)
     assert(fprstr);
 
     if (!session || !fprstr)
-        return PEP_UNKNOWN_ERROR;
+        return PEP_ILLEGAL_VALUE;
 
     if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
@@ -893,7 +867,7 @@ PEP_STATUS pgp_import_keydata(
     assert(key_data);
 
     if(!session || !key_data) 
-        return PEP_UNKNOWN_ERROR;
+        return PEP_ILLEGAL_VALUE;
 
     if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
@@ -941,7 +915,7 @@ static PEP_STATUS _export_keydata(
 	pgp_setup_memory_write(&output, &mem, 128);
 
     if (mem == NULL || output == NULL) {
-        return PEP_OUT_OF_MEMORY;
+        return PEP_ILLEGAL_VALUE;
     }
 
     if (!pgp_write_xfer_key(output, key, 1)) {
@@ -989,7 +963,7 @@ PEP_STATUS pgp_export_keydata(
     assert(size);
 
     if (!session || !fprstr || !key_data || !size)
-        return PEP_UNKNOWN_ERROR;
+        return PEP_ILLEGAL_VALUE;
 
     if(pthread_mutex_lock(&netpgp_mutex)){
         return PEP_UNKNOWN_ERROR;
@@ -1070,7 +1044,7 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
     assert(pattern);
 
     if (!session || !pattern )
-        return PEP_UNKNOWN_ERROR;
+        return PEP_ILLEGAL_VALUE;
 
     if(pthread_mutex_lock(&session->ctx.curl_mutex)){
         return PEP_UNKNOWN_ERROR;
@@ -1217,9 +1191,12 @@ PEP_STATUS pgp_find_keys(
     assert(keylist);
 
     if (!session || !pattern || !keylist )
-        return PEP_UNKNOWN_ERROR;
+    {
+        return PEP_ILLEGAL_VALUE;
+    }
 
-    if(pthread_mutex_lock(&netpgp_mutex)){
+    if (pthread_mutex_lock(&netpgp_mutex))
+    {
         return PEP_UNKNOWN_ERROR;
     }
 
@@ -1314,7 +1291,7 @@ PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
     assert(pattern);
 
     if (!session || !pattern )
-        return PEP_UNKNOWN_ERROR;
+        return PEP_ILLEGAL_VALUE;
 
     encoded_keys = new_stringlist(NULL);
     assert(encoded_keys);
@@ -1399,7 +1376,7 @@ PEP_STATUS pgp_get_key_rating(
     assert(comm_type);
 
     if (!session || !fprstr || !comm_type )
-        return PEP_UNKNOWN_ERROR;
+        return PEP_ILLEGAL_VALUE;
 
     *comm_type = PEP_ct_unknown;
 
@@ -1472,7 +1449,7 @@ PEP_STATUS pgp_renew_key(
     assert(fprstr);
 
     if (!session || !fprstr )
-        return PEP_UNKNOWN_ERROR;
+        return PEP_ILLEGAL_VALUE;
 
     if(ts)
     {
@@ -1619,7 +1596,7 @@ unlock_netpgp:
 
 PEP_STATUS pgp_key_expired(
         PEP_SESSION session,
-        const char *keyidstr,
+        const char *fprstr,
         bool *expired
     )
 {
@@ -1627,12 +1604,16 @@ PEP_STATUS pgp_key_expired(
     PEP_comm_type comm_type;
 
     assert(session);
-    assert(keyidstr);
+    assert(fprstr);
     assert(expired);
+
+    if (!session || !fprstr || !expired)
+        return PEP_UNKNOWN_ERROR;
+
 
     *expired = false;
 
-    status = pgp_get_key_rating(session, keyidstr, &comm_type);
+    status = pgp_get_key_rating(session, fprstr, &comm_type);
 
     if (status != PEP_STATUS_OK)
         return status;
@@ -1644,3 +1625,29 @@ PEP_STATUS pgp_key_expired(
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS pgp_key_revoked(
+        PEP_SESSION session,
+        const char *fprstr,
+        bool *revoked
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    PEP_comm_type comm_type;
+    
+    assert(session);
+    assert(fprstr);
+    assert(revoked);
+    
+    *revoked = false;
+    
+    status = pgp_get_key_rating(session, fprstr, &comm_type);
+    
+    if (status != PEP_STATUS_OK)
+        return status;
+    
+    if (comm_type == PEP_ct_key_revoked){
+        *revoked = true;
+    }
+    
+    return PEP_STATUS_OK;
+}

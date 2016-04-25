@@ -809,25 +809,18 @@ static PEP_comm_type _get_comm_type(
     pEp_identity *ident
     )
 {
-    PEP_STATUS status = update_identity(session, ident);
-
     if (max_comm_type == PEP_ct_compromized)
         return PEP_ct_compromized;
     
     if (max_comm_type == PEP_ct_mistrusted)
         return PEP_ct_mistrusted;
 
-    if (status == PEP_STATUS_OK) {
-        if (ident->comm_type == PEP_ct_compromized)
-            return PEP_ct_compromized;
-        else if (ident->comm_type == PEP_ct_mistrusted)
-            return PEP_ct_mistrusted;
-        else
-            return MIN(max_comm_type, ident->comm_type);
-    }
-    else {
-        return PEP_ct_unknown;
-    }
+    if (ident->comm_type == PEP_ct_compromized)
+        return PEP_ct_compromized;
+    else if (ident->comm_type == PEP_ct_mistrusted)
+        return PEP_ct_mistrusted;
+    else
+        return MIN(max_comm_type, ident->comm_type);
 }
 
 void import_attached_keys(PEP_SESSION session, const message *msg)

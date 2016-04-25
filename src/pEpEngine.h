@@ -27,54 +27,55 @@ typedef struct _pEpSession * PEP_SESSION;
 typedef enum {
 	PEP_STATUS_OK									= 0,
 
-	PEP_INIT_CANNOT_LOAD_GPGME						= 0x0110,
-	PEP_INIT_GPGME_INIT_FAILED						= 0x0111,
-	PEP_INIT_NO_GPG_HOME							= 0x0112,
-	PEP_INIT_NETPGP_INIT_FAILED						= 0x0113,
+	PEP_INIT_CANNOT_LOAD_GPGME                      = 0x0110,
+	PEP_INIT_GPGME_INIT_FAILED                      = 0x0111,
+	PEP_INIT_NO_GPG_HOME                            = 0x0112,
+	PEP_INIT_NETPGP_INIT_FAILED                     = 0x0113,
 
-	PEP_INIT_SQLITE3_WITHOUT_MUTEX					= 0x0120,
-	PEP_INIT_CANNOT_OPEN_DB							= 0x0121,
-	PEP_INIT_CANNOT_OPEN_SYSTEM_DB					= 0x0122,
+	PEP_INIT_SQLITE3_WITHOUT_MUTEX                  = 0x0120,
+	PEP_INIT_CANNOT_OPEN_DB                         = 0x0121,
+	PEP_INIT_CANNOT_OPEN_SYSTEM_DB                  = 0x0122,
 	
-	PEP_KEY_NOT_FOUND						        = 0x0201,
-	PEP_KEY_HAS_AMBIG_NAME					        = 0x0202,
-	PEP_GET_KEY_FAILED						        = 0x0203,
+	PEP_KEY_NOT_FOUND                               = 0x0201,
+	PEP_KEY_HAS_AMBIG_NAME                          = 0x0202,
+	PEP_GET_KEY_FAILED                              = 0x0203,
 	
-	PEP_CANNOT_FIND_IDENTITY						= 0x0301,
-	PEP_CANNOT_SET_PERSON							= 0x0381,
-	PEP_CANNOT_SET_PGP_KEYPAIR						= 0x0382,
-	PEP_CANNOT_SET_IDENTITY							= 0x0383,
+	PEP_CANNOT_FIND_IDENTITY                        = 0x0301,
+	PEP_CANNOT_SET_PERSON                           = 0x0381,
+	PEP_CANNOT_SET_PGP_KEYPAIR                      = 0x0382,
+	PEP_CANNOT_SET_IDENTITY                         = 0x0383,
     PEP_CANNOT_SET_TRUST                            = 0x0384,
     PEP_KEY_BLACKLISTED                             = 0x0385,
 	
-	PEP_UNENCRYPTED									= 0x0400,
-	PEP_VERIFIED									= 0x0401,
-	PEP_DECRYPTED									= 0x0402,
-	PEP_DECRYPTED_AND_VERIFIED						= 0x0403,
-	PEP_DECRYPT_WRONG_FORMAT						= 0x0404,
-	PEP_DECRYPT_NO_KEY								= 0x0405,
-	PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH			= 0x0406,
+	PEP_UNENCRYPTED                                 = 0x0400,
+	PEP_VERIFIED                                    = 0x0401,
+	PEP_DECRYPTED                                   = 0x0402,
+	PEP_DECRYPTED_AND_VERIFIED                      = 0x0403,
+	PEP_DECRYPT_WRONG_FORMAT                        = 0x0404,
+	PEP_DECRYPT_NO_KEY                              = 0x0405,
+	PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH            = 0x0406,
     PEP_VERIFY_NO_KEY                               = 0x0407,
     PEP_VERIFIED_AND_TRUSTED                        = 0x0408,
-	PEP_CANNOT_DECRYPT_UNKNOWN						= 0x04ff,
+	PEP_CANNOT_DECRYPT_UNKNOWN                      = 0x04ff,
 
-	PEP_TRUSTWORD_NOT_FOUND							= 0x0501,
+	PEP_TRUSTWORD_NOT_FOUND                         = 0x0501,
 
     PEP_CANNOT_CREATE_KEY                           = 0x0601,
     PEP_CANNOT_SEND_KEY                             = 0x0602,
 
     PEP_PHRASE_NOT_FOUND                            = 0x0701,
 
-	PEP_COMMIT_FAILED								= 0xff01,
+	PEP_COMMIT_FAILED                               = 0xff01,
 
+    PEP_NO_MANAGEMENT_THREAD                        = -6,
     PEP_CANNOT_CREATE_TEMP_FILE                     = -5,
     PEP_ILLEGAL_VALUE                               = -4,
     PEP_BUFFER_TOO_SMALL                            = -3,
-	PEP_OUT_OF_MEMORY								= -2,
-	PEP_UNKNOWN_ERROR								= -1
+	PEP_OUT_OF_MEMORY                               = -2,
+	PEP_UNKNOWN_ERROR                               = -1
 } PEP_STATUS;
 
-
+    
 // INIT_STATUS init() - initialize pEpEngine for a thread
 //
 //  parameters:
@@ -443,10 +444,32 @@ DYNAMIC_API void free_identity(pEp_identity *identity);
 //		more
 
 DYNAMIC_API PEP_STATUS get_identity(
-        PEP_SESSION session, const char *address,
+        PEP_SESSION session,
+        const char *address,
+        const char *user_id,
         pEp_identity **identity
     );
-
+    
+// get_best_user() - get best user_id candidate for a given address
+//
+//	parameters:
+//		session (in)		session handle
+//		address (in)		C string with communication address, UTF-8 encoded
+//		user_id (out)		pointer to user_id string
+//
+//	caveat:
+//	    the address string is being copied; the original string remains in the
+//	    ownership of the caller
+//		the resulting user_id string goes to the ownership of the
+//		caller and has to be freed with free() when not in use any
+//		more
+    
+DYNAMIC_API PEP_STATUS get_best_user(
+        PEP_SESSION session,
+        const char *address,
+        char **user_id
+    );
+    
 
 // set_identity() - set identity information
 //
@@ -472,15 +495,16 @@ DYNAMIC_API PEP_STATUS set_identity(
     );
 
 
-// mark_as_compromized() - mark key in trust db as compromized
+// set_fpr_trust() - mark key in trust db as compromized
 //
 //	parameters:
 //		session (in)		session handle
 //		fpr (in)            fingerprint of key to mark
 
-DYNAMIC_API PEP_STATUS mark_as_compromized(
+DYNAMIC_API PEP_STATUS set_fpr_trust(
         PEP_SESSION session,
-        const char *fpr
+        const char *fpr,
+        PEP_comm_type trust
     );
 
 
@@ -584,7 +608,6 @@ DYNAMIC_API PEP_STATUS recv_key(PEP_SESSION session, const char *pattern);
 //	    the ownerships of keylist isgoing to the caller
 //	    the caller must use free_stringlist() to free it
 
-
 DYNAMIC_API PEP_STATUS find_keys(
         PEP_SESSION session, const char *pattern, stringlist_t **keylist
     );
@@ -645,6 +668,24 @@ DYNAMIC_API PEP_STATUS least_trust(
     );
 
 
+// get_pgp_keypair_created() - get the created flag for a key in the database
+//
+//  parameters:
+//      session (in)            session handle
+//      fpr (in)                fingerprint of key to check
+//      created (out)           created flag as result (out)
+//
+//  a key with created flag non-null has either been generated by pEp, or
+//  might have been imported, but then explicitely trusted as own key, as
+//  if it would have been created
+    
+DYNAMIC_API PEP_STATUS get_pgp_keypair_created(
+        PEP_SESSION session,
+        const char *fpr,
+        int *created
+    );
+    
+    
 // get_key_rating() - get the rating a bare key has
 //
 //  parameters:
@@ -661,6 +702,7 @@ DYNAMIC_API PEP_STATUS get_key_rating(
         PEP_comm_type *comm_type
     );
 
+    
 
 // renew_key() - renew an expired key
 //
@@ -688,7 +730,7 @@ DYNAMIC_API PEP_STATUS renew_key(
 //  caveat:
 //      reason text must not include empty lines
 //      this function is meant for internal use only; better use
-//      key_compromized() of keymanagement API
+//      key_mistrusted() of keymanagement API
 
 DYNAMIC_API PEP_STATUS revoke_key(
         PEP_SESSION session,
@@ -711,6 +753,20 @@ DYNAMIC_API PEP_STATUS key_expired(
     );
 
 
+// key_revoked() - flags if a key is already revoked
+//
+//  parameters:
+//      session (in)            session handle
+//      fpr (in)                ID of key to check as UTF-8 string
+//      revoked (out)           flag if key revoked
+
+DYNAMIC_API PEP_STATUS key_revoked(
+        PEP_SESSION session,
+        const char *fpr,
+        bool *revoked
+    );
+    
+    
 // get_crashdump_log() - get the last log messages out
 //
 //  parameters:
