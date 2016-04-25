@@ -208,25 +208,25 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         // "replace" cannot be used here because of "on delete" triggers
         // First try to update, then try to insert.
         // Update is first to avoid firing unnecessary triggers.
-        sql_set_person = "update or ignore person"
+        sql_set_person = "update person"
                          "    set username = ?2,"
                          "        lang = ?3"
-                         "    where id = ?1;\n"
+                         "    where id = ?1 ;"
                          "insert or ignore into person (id, username, lang)"
-                         "    values (?1, ?2, ?3);";
+                         "    values (?1, ?2, ?3) ;";
 
         // Use pgp_keypair.created to mark keys created by pEp (i.e. own keys)
         // Once set, "created" cannot be reset.
         //
         // "replace" cannot be used here because of "on delete" triggers
-        sql_set_pgp_keypair = "update or ignore pgp_keypair"
+        sql_set_pgp_keypair = "update pgp_keypair"
                               "    set created = case created"
                               "                    when 0 then ?2"
                               "                    else created"
                               "                  end"
-                              "    where fpr = upper(replace(?1,' ','')) ;\n"
+                              "    where fpr = upper(replace(?1,' ','')) ;"
                               "insert or ignore into pgp_keypair (fpr, created)"
-                              "    values (upper(replace(?1,' ','')), ?2) ;";
+                              "    values (upper(replace(?1,' ','')), ?2) ; ";
         
         sql_get_pgp_keypair_created = "select created from pgp_keypair"
                                       "    where fpr = upper(replace(?1,' ',''));";

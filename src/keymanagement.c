@@ -33,20 +33,31 @@ static int _same_fpr(
     size_t ai = 0;
     size_t bi = 0;
     
-    do {
-        if(fpra[ai] == 0 || fprb[bi] == 0) {
-            return 0;
-        } else if(fpra[ai] == ' ') {
-            ai++;
-        } else if(fprb[bi] == ' ') {
-            bi++;
-        } else if(toupper(fpra[ai]) == toupper(fprb[bi])) {
-            ai++;
-            bi++;
-        }else{
+    do
+    {
+        if(fpra[ai] == 0 || fprb[bi] == 0)
+        {
             return 0;
         }
-    }while(ai < fpras && bi < fprbs);
+        else if(fpra[ai] == ' ')
+        {
+            ai++;
+        }
+        else if(fprb[bi] == ' ')
+        {
+            bi++;
+        }
+        else if(toupper(fpra[ai]) == toupper(fprb[bi]))
+        {
+            ai++;
+            bi++;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    while(ai < fpras && bi < fprbs);
     
     return ai == fpras && bi == fprbs;
 }
@@ -686,7 +697,7 @@ static PEP_STATUS confront_identity(
                 
                 // In that case comm_type is set to target,
                 // but fpr is left empty.
-                identity->comm_type = _elected_comm_type;
+                identity->comm_type = target_comm_type;
             }
             free_stringlist(keylist);
         }
@@ -703,11 +714,13 @@ DYNAMIC_API PEP_STATUS update_identity(
     bool outstanding_changes = false;
 
     assert(session);
+    assert(session->examine_identity);
     assert(identity);
     assert(!EMPTYSTR(identity->address));
     assert(!identity->me);
 
     if (!(session &&
+          session->examine_identity &&
           identity &&
           !EMPTYSTR(identity->address) &&
           !identity->me))
@@ -727,28 +740,13 @@ DYNAMIC_API PEP_STATUS update_identity(
     if (identity->comm_type != PEP_ct_unknown &&
         outstanding_changes)
     {
-        assert(session->examine_identity);
-        if (session->examine_identity)
+        // This causes identity to be re-confronted and stored
+        // asynchronously, by keymanagement thread.
+        
+        if (session->examine_identity(identity,
+                                      session->examine_management))
         {
-            // This causes identity to be re-confronted and stored
-            // asynchronously, by keymanagement thread.
-            
-            if (session->examine_identity(identity,
-                                          session->examine_management))
-            {
-                return PEP_OUT_OF_MEMORY;
-            }
-        }
-        else
-        {
-            // FIXME : having no keymanagement thread
-            // shouldn't be allowed. Should return an error.
-            
-            status = set_identity(session, identity);
-            assert(status == PEP_STATUS_OK);
-            if (status != PEP_STATUS_OK) {
-                return status;
-            }
+            return PEP_OUT_OF_MEMORY;
         }
     }
 
@@ -854,11 +852,13 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     bool outstanding_changes = false;
 
     assert(session);
+    assert(session->examine_identity);
     assert(identity);
     assert(!EMPTYSTR(identity->address));
     assert(!EMPTYSTR(identity->user_id));
 
     if (!(session &&
+          session->examine_identity &&
           identity &&
           identity->address &&
           identity->user_id))
@@ -875,27 +875,30 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
                                PEP_ct_pEp,
                                &outstanding_changes);
     
-    assert(status != PEP_STATUS_OK);
+    assert(status == PEP_STATUS_OK);
     if (status != PEP_STATUS_OK)
         return status;
     
-    if (identity->me &&
-        identity->comm_type != PEP_ct_unknown)
+    if (// Case something was given or found
+        (identity->me &&
+         identity->comm_type != PEP_ct_unknown &&
+         !EMPTYSTR(identity->fpr) &&
+         outstanding_changes) ||
+        
+        // Case there is nothing else than an address
+        (identity->me &&
+         identity->comm_type == PEP_ct_pEp &&
+         EMPTYSTR(identity->fpr)))
     {
-        if(outstanding_changes)
+        if (session->examine_identity(identity,
+                                      session->examine_management))
         {
-            assert(session->examine_identity);
-            if (session->examine_identity)
-            {
-                session->examine_identity(identity,
-                                          session->examine_management);
-            }
+            return PEP_OUT_OF_MEMORY;
         }
         return PEP_STATUS_OK;
     }
     
-    // FIXME : find better return value when identity ownership is refused
-    return PEP_KEY_NOT_FOUND;
+    return PEP_UNKNOWN_ERROR;
 }
 
 DYNAMIC_API PEP_STATUS register_examine_function(
@@ -984,12 +987,18 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
                                        identity,
                                        PEP_ct_pEp,
                                        &outstanding_changes);
-            
-            if(status == PEP_STATUS_OK &&
-               identity->comm_type != PEP_ct_unknown &&
-               outstanding_changes)
-            {
+        
+            if (// Case something was found
+                (identity->me &&
+                 identity->comm_type != PEP_ct_unknown &&
+                 !EMPTYSTR(identity->fpr) &&
+                 outstanding_changes) ||
                 
+                // Case there is nothing else than an address
+                (identity->me &&
+                 identity->comm_type == PEP_ct_pEp &&
+                 EMPTYSTR(identity->fpr)))
+            {
                 // TODO : move key-gen op to a different thread
                 //        keygen would then re-enqueue identity once
                 //        key would have been generated.
