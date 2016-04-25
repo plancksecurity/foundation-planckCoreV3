@@ -43,6 +43,8 @@ static int _same_fpr(
         } else if(toupper(fpra[ai]) == toupper(fprb[bi])) {
             ai++;
             bi++;
+        }else{
+            return 0;
         }
     }while(ai < fpras && bi < fprbs);
     
@@ -606,7 +608,7 @@ static PEP_STATUS confront_identity(
                 PEP_comm_type _candidate_comm_type = PEP_ct_unknown;
 
                 status = least_trust(session,
-                                     identity->fpr,
+                                     _keylist->value,
                                      &_candidate_comm_type);
                 
                 if (status != PEP_STATUS_OK &&
@@ -718,7 +720,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                                PEP_ct_unknown, // comm_type is read_only
                                &outstanding_changes);
         
-    assert(status != PEP_STATUS_OK);
+    assert(status == PEP_STATUS_OK);
     if (status != PEP_STATUS_OK)
         return status;
     
@@ -1123,7 +1125,7 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
             }
         }
         else if (!EMPTYSTR(identity->address) &&
-                 !EMPTYSTR(identity->fpr) &&
+                 EMPTYSTR(identity->fpr) &&
                  identity->comm_type == PEP_ct_unknown &&
                  EMPTYSTR(identity->user_id) &&
                  EMPTYSTR(identity->username))
