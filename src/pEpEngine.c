@@ -291,7 +291,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_pgp_keypair_created,
             (int)strlen(sql_get_pgp_keypair_created), &_session->get_pgp_keypair_created, NULL);
-    const char *plop = sqlite3_errmsg(_session->db);
 	assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_identity,
