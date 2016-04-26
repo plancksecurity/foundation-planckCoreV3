@@ -83,6 +83,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\blacklist.c" />
     <ClCompile Include="src\bloblist.c" />
     <ClCompile Include="src\cryptotech.c" />
     <ClCompile Include="src\email.c" />

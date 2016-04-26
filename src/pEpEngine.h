@@ -25,72 +25,72 @@ struct _pEpSession;
 typedef struct _pEpSession * PEP_SESSION;
 
 typedef enum {
-	PEP_STATUS_OK									= 0,
+    PEP_STATUS_OK                                   = 0,
 
-	PEP_INIT_CANNOT_LOAD_GPGME						= 0x0110,
-	PEP_INIT_GPGME_INIT_FAILED						= 0x0111,
-	PEP_INIT_NO_GPG_HOME							= 0x0112,
-	PEP_INIT_NETPGP_INIT_FAILED						= 0x0113,
+    PEP_INIT_CANNOT_LOAD_GPGME                      = 0x0110,
+    PEP_INIT_GPGME_INIT_FAILED                      = 0x0111,
+    PEP_INIT_NO_GPG_HOME                            = 0x0112,
+    PEP_INIT_NETPGP_INIT_FAILED                     = 0x0113,
 
-	PEP_INIT_SQLITE3_WITHOUT_MUTEX					= 0x0120,
-	PEP_INIT_CANNOT_OPEN_DB							= 0x0121,
-	PEP_INIT_CANNOT_OPEN_SYSTEM_DB					= 0x0122,
-	
-	PEP_KEY_NOT_FOUND						        = 0x0201,
-	PEP_KEY_HAS_AMBIG_NAME					        = 0x0202,
-	PEP_GET_KEY_FAILED						        = 0x0203,
-	
-	PEP_CANNOT_FIND_IDENTITY						= 0x0301,
-	PEP_CANNOT_SET_PERSON							= 0x0381,
-	PEP_CANNOT_SET_PGP_KEYPAIR						= 0x0382,
-	PEP_CANNOT_SET_IDENTITY							= 0x0383,
+    PEP_INIT_SQLITE3_WITHOUT_MUTEX                  = 0x0120,
+    PEP_INIT_CANNOT_OPEN_DB                         = 0x0121,
+    PEP_INIT_CANNOT_OPEN_SYSTEM_DB                  = 0x0122,
+    
+    PEP_KEY_NOT_FOUND                               = 0x0201,
+    PEP_KEY_HAS_AMBIG_NAME                          = 0x0202,
+    PEP_GET_KEY_FAILED                              = 0x0203,
+    
+    PEP_CANNOT_FIND_IDENTITY                        = 0x0301,
+    PEP_CANNOT_SET_PERSON                           = 0x0381,
+    PEP_CANNOT_SET_PGP_KEYPAIR                      = 0x0382,
+    PEP_CANNOT_SET_IDENTITY                         = 0x0383,
     PEP_CANNOT_SET_TRUST                            = 0x0384,
     PEP_KEY_BLACKLISTED                             = 0x0385,
-	
-	PEP_UNENCRYPTED									= 0x0400,
-	PEP_VERIFIED									= 0x0401,
-	PEP_DECRYPTED									= 0x0402,
-	PEP_DECRYPTED_AND_VERIFIED						= 0x0403,
-	PEP_DECRYPT_WRONG_FORMAT						= 0x0404,
-	PEP_DECRYPT_NO_KEY								= 0x0405,
-	PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH			= 0x0406,
+    
+    PEP_UNENCRYPTED                                 = 0x0400,
+    PEP_VERIFIED                                    = 0x0401,
+    PEP_DECRYPTED                                   = 0x0402,
+    PEP_DECRYPTED_AND_VERIFIED                      = 0x0403,
+    PEP_DECRYPT_WRONG_FORMAT                        = 0x0404,
+    PEP_DECRYPT_NO_KEY                              = 0x0405,
+    PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH            = 0x0406,
     PEP_VERIFY_NO_KEY                               = 0x0407,
     PEP_VERIFIED_AND_TRUSTED                        = 0x0408,
-	PEP_CANNOT_DECRYPT_UNKNOWN						= 0x04ff,
+    PEP_CANNOT_DECRYPT_UNKNOWN                      = 0x04ff,
 
-	PEP_TRUSTWORD_NOT_FOUND							= 0x0501,
+    PEP_TRUSTWORD_NOT_FOUND                         = 0x0501,
 
     PEP_CANNOT_CREATE_KEY                           = 0x0601,
     PEP_CANNOT_SEND_KEY                             = 0x0602,
 
     PEP_PHRASE_NOT_FOUND                            = 0x0701,
 
-	PEP_COMMIT_FAILED								= 0xff01,
+    PEP_COMMIT_FAILED                               = 0xff01,
 
     PEP_CANNOT_CREATE_TEMP_FILE                     = -5,
     PEP_ILLEGAL_VALUE                               = -4,
     PEP_BUFFER_TOO_SMALL                            = -3,
-	PEP_OUT_OF_MEMORY								= -2,
-	PEP_UNKNOWN_ERROR								= -1
+    PEP_OUT_OF_MEMORY                               = -2,
+    PEP_UNKNOWN_ERROR                               = -1
 } PEP_STATUS;
 
 
 // INIT_STATUS init() - initialize pEpEngine for a thread
 //
 //  parameters:
-//		session (out)	init() allocates session memory and returns a pointer
-//		                as a handle
+//        session (out)   init() allocates session memory and returns a pointer
+//                        as a handle
 //
 //  return value:
-//		PEP_STATUS_OK = 0					if init() succeeds
-//		PEP_INIT_SQLITE3_WITHOUT_MUTEX		if SQLite3 was compiled with
-//		                                    SQLITE_THREADSAFE 0
-//		PEP_INIT_CANNOT_LOAD_GPGME			if libgpgme.dll cannot be found
-//		PEP_INIT_GPGME_INIT_FAILED			if GPGME init fails
-//		PEP_INIT_CANNOT_OPEN_DB				if user's management db cannot be
-//		                                    opened
-//		PEP_INIT_CANNOT_OPEN_SYSTEM_DB		if system's management db cannot be
-//		                                    opened
+//        PEP_STATUS_OK = 0                 if init() succeeds
+//        PEP_INIT_SQLITE3_WITHOUT_MUTEX    if SQLite3 was compiled with
+//                                            SQLITE_THREADSAFE 0
+//        PEP_INIT_CANNOT_LOAD_GPGME        if libgpgme.dll cannot be found
+//        PEP_INIT_GPGME_INIT_FAILED        if GPGME init fails
+//        PEP_INIT_CANNOT_OPEN_DB           if user's management db cannot be
+//                                            opened
+//        PEP_INIT_CANNOT_OPEN_SYSTEM_DB    if system's management db cannot be
+//                                            opened
 //
 //  caveat:
 //      the pointer is valid only if the return value is PEP_STATUS_OK
@@ -106,11 +106,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session);
 // void release() - release thread session handle
 //
 //  parameters:
-//		session (in)	session handle to release
+//        session (in)    session handle to release
 //
-//	caveat:
-//	    the last release() can be called only when all other release() calls
-//	    are done
+//    caveat:
+//        the last release() can be called only when all other release() calls
+//        are done
 
 DYNAMIC_API void release(PEP_SESSION session);
 
@@ -135,27 +135,27 @@ DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable);
 
 // decrypt_and_verify() - decrypt and/or verify a message
 //
-//	parameters:
-//		session (in)	session handle
-//		ctext (in)		cipher text to decrypt and/or verify
-//		csize (in)		size of cipher text
-//		ptext (out)		pointer to internal buffer with plain text
-//		psize (out)		size of plain text
-//		keylist (out)	list of key ids which where used to encrypt
+//    parameters:
+//        session (in)    session handle
+//        ctext (in)      cipher text to decrypt and/or verify
+//        csize (in)      size of cipher text
+//        ptext (out)     pointer to internal buffer with plain text
+//        psize (out)     size of plain text
+//        keylist (out)   list of key ids which where used to encrypt
 //
-//	return value:
-//		PEP_UNENCRYPTED				message was unencrypted and not signed
-//		PEP_VERIFIED				message was unencrypted, signature matches
-//		PEP_DECRYPTED				message is decrypted now, no signature
-//		PEP_DECRYPTED_AND_VERIFIED	message is decrypted now and verified
-//		PEP_DECRYPT_WRONG_FORMAT	message has wrong format to handle
-//		PEP_DECRYPT_NO_KEY			key not available to decrypt and/or verify
-//		PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH	wrong signature
+//    return value:
+//        PEP_UNENCRYPTED               message was unencrypted and not signed
+//        PEP_VERIFIED                  message was unencrypted, signature matches
+//        PEP_DECRYPTED                 message is decrypted now, no signature
+//        PEP_DECRYPTED_AND_VERIFIED    message is decrypted now and verified
+//        PEP_DECRYPT_WRONG_FORMAT      message has wrong format to handle
+//        PEP_DECRYPT_NO_KEY            key not available to decrypt and/or verify
+//        PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH    wrong signature
 //
-//	caveat:
-//	    the ownerships of ptext as well as keylist are going to the caller
-//	    the caller must use free() (or an Windoze pEp_free()) and
-//	    free_stringlist() to free them
+//    caveat:
+//        the ownerships of ptext as well as keylist are going to the caller
+//        the caller must use free() (or an Windoze pEp_free()) and
+//        free_stringlist() to free them
 //
 //      if this function failes an error message may be the first element of
 //      keylist and the other elements may be the keys used for encryption
@@ -174,13 +174,13 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
 //      size (in)       size of text
 //      signature (in)  signature text
 //      sig_size (in)   size of signature
-//		keylist (out)	list of key ids which where used to encrypt or NULL on
-//		                error
+//      keylist (out)   list of key ids which where used to encrypt or NULL on
+//                        error
 //
 //  return value:
-//		PEP_VERIFIED				message was unencrypted, signature matches
-//		PEP_DECRYPT_NO_KEY			key not available to decrypt and/or verify
-//		PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH	wrong signature
+//        PEP_VERIFIED                message was unencrypted, signature matches
+//        PEP_DECRYPT_NO_KEY          key not available to decrypt and/or verify
+//        PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH    wrong signature
 
 DYNAMIC_API PEP_STATUS verify_text(
         PEP_SESSION session, const char *text, size_t size,
@@ -190,24 +190,24 @@ DYNAMIC_API PEP_STATUS verify_text(
 
 // encrypt_and_sign() - encrypt and sign a message
 //
-//	parameters:
-//		session (in)	session handle
-//		keylist (in)	list of key ids to encrypt with as C strings
-//		ptext (in)		plain text to decrypt and/or verify
-//		psize (in)		size of plain text
-//		ctext (out)		pointer to internal buffer with cipher text
-//		csize (out)		size of cipher text
+//    parameters:
+//        session (in)    session handle
+//        keylist (in)    list of key ids to encrypt with as C strings
+//        ptext (in)      plain text to decrypt and/or verify
+//        psize (in)      size of plain text
+//        ctext (out)     pointer to internal buffer with cipher text
+//        csize (out)     size of cipher text
 //
-//	return value:
-//		PEP_STATUS_OK = 0				encryption and signing succeeded
-//		PEP_KEY_NOT_FOUND	            at least one of the receipient keys
-//		                                could not be found
-//		PEP_KEY_HAS_AMBIG_NAME          at least one of the receipient keys has
-//		                                an ambiguous name
-//		PEP_GET_KEY_FAILED		        cannot retrieve key
+//    return value:
+//        PEP_STATUS_OK = 0            encryption and signing succeeded
+//        PEP_KEY_NOT_FOUND            at least one of the receipient keys
+//                                     could not be found
+//        PEP_KEY_HAS_AMBIG_NAME       at least one of the receipient keys has
+//                                     an ambiguous name
+//        PEP_GET_KEY_FAILED           cannot retrieve key
 //
-//	caveat:
-//	    the ownership of ctext is going to the caller
+//    caveat:
+//      the ownership of ctext is going to the caller
 //      the caller is responsible to free() it (on Windoze use pEp_free())
 //      the first key in keylist is being used to sign the message
 //      this implies there has to be a private key for that keypair
@@ -221,17 +221,17 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
 // log_event() - log a user defined event defined by UTF-8 encoded strings into
 // management log
 //
-//	parameters:
-//		session (in)		session handle
-//		title (in)			C string with event name
-//		entity (in)			C string with name of entity which is logging
-//		description (in)	C string with long description for event or NULL if
-//		                    omitted
-//		comment (in)		C string with user defined comment or NULL if
-//		                    omitted
+//    parameters:
+//        session (in)        session handle
+//        title (in)          C string with event name
+//        entity (in)         C string with name of entity which is logging
+//        description (in)    C string with long description for event or NULL if
+//                            omitted
+//        comment (in)        C string with user defined comment or NULL if
+//                            omitted
 //
-//	return value:
-//	    PEP_STATUS_OK       log entry created
+//    return value:
+//        PEP_STATUS_OK       log entry created
 
 DYNAMIC_API PEP_STATUS log_event(
         PEP_SESSION session,
@@ -244,21 +244,21 @@ DYNAMIC_API PEP_STATUS log_event(
 
 // trustword() - get the corresponding trustword for a 16 bit value
 //
-//	parameters:
-//		session (in)		    session handle
-//		value (in)			    value to find a trustword for
-//		lang (in)			    C string with ISO 639-1 language code
-//		word (out)			    pointer to C string with trustword UTF-8 encoded
-//							    NULL if language is not supported or trustword
-//							    wordlist is damaged or unavailable
-//		wsize (out)			    length of trustword
+//    parameters:
+//        session (in)            session handle
+//        value (in)              value to find a trustword for
+//        lang (in)               C string with ISO 639-1 language code
+//        word (out)              pointer to C string with trustword UTF-8 encoded
+//                                NULL if language is not supported or trustword
+//                                wordlist is damaged or unavailable
+//        wsize (out)             length of trustword
 //
-//	return value:
-//	    PEP_STATUS_OK           trustword retrieved
-//	    PEP_TRUSTWORD_NOT_FOUND  trustword not found
+//    return value:
+//        PEP_STATUS_OK            trustword retrieved
+//        PEP_TRUSTWORD_NOT_FOUND  trustword not found
 //
-//	caveat:
-//		the word pointer goes to the ownership of the caller
+//    caveat:
+//        the word pointer goes to the ownership of the caller
 //      the caller is responsible to free() it (on Windoze use pEp_free())
 
 DYNAMIC_API PEP_STATUS trustword(
@@ -269,25 +269,25 @@ DYNAMIC_API PEP_STATUS trustword(
 
 // trustwords() - get trustwords for a string of hex values of a fingerprint
 //
-//	parameters:
-//		session (in)		session handle
-//		fingerprint (in)	C string with hex values to find trustwords for
-//		lang (in)			C string with ISO 639-1 language code
-//		words (out)			pointer to C string with trustwords UTF-8 encoded,
-//		                    separated by a blank each
-//							NULL if language is not supported or trustword
-//							wordlist is damaged or unavailable
-//		wsize (out)			length of trustwords string
-//		max_words (in)		only generate a string with max_words;
-//							if max_words == 0 there is no such limit
+//    parameters:
+//        session (in)        session handle
+//        fingerprint (in)    C string with hex values to find trustwords for
+//        lang (in)           C string with ISO 639-1 language code
+//        words (out)         pointer to C string with trustwords UTF-8 encoded,
+//                            separated by a blank each
+//                            NULL if language is not supported or trustword
+//                            wordlist is damaged or unavailable
+//        wsize (out)         length of trustwords string
+//        max_words (in)      only generate a string with max_words;
+//                            if max_words == 0 there is no such limit
 //
-//	return value:
-//	    PEP_STATUS_OK           trustwords retrieved
-//      PEP_OUT_OF_MEMORY       out of memory
-//	    PEP_TRUSTWORD_NOT_FOUND at least one trustword not found
+//    return value:
+//        PEP_STATUS_OK            trustwords retrieved
+//        PEP_OUT_OF_MEMORY        out of memory
+//        PEP_TRUSTWORD_NOT_FOUND  at least one trustword not found
 //
-//	caveat:
-//		the word pointer goes to the ownership of the caller
+//    caveat:
+//        the word pointer goes to the ownership of the caller
 //      the caller is responsible to free() it (on Windoze use pEp_free())
 //
 //  DON'T USE THIS FUNCTION FROM HIGH LEVEL LANGUAGES!
@@ -325,7 +325,7 @@ typedef enum _PEP_comm_type {
     // range 0x10 to 0x3f: unconfirmed encryption
 
     PEP_ct_unconfirmed_encryption = 0x10,       // generic
-    PEP_ct_OpenPGP_weak_unconfirmed = 0x11,	    // RSA 1024 is weak
+    PEP_ct_OpenPGP_weak_unconfirmed = 0x11,     // RSA 1024 is weak
 
     PEP_ct_to_be_checked = 0x20,                // generic
     PEP_ct_SMIME_unconfirmed = 0x21,
@@ -346,34 +346,34 @@ typedef enum _PEP_comm_type {
     // range 0x90 to 0xbf: confirmed encryption
 
     PEP_ct_confirmed_encryption = 0x90,         // generic
-	PEP_ct_OpenPGP_weak = 0x91,                 // RSA 1024 is weak
+    PEP_ct_OpenPGP_weak = 0x91,                 // RSA 1024 is weak
 
     PEP_ct_to_be_checked_confirmed = 0xa0,      //generic
     PEP_ct_SMIME = 0xa1,
     PEP_ct_CMS = 0xa2,
 
     PEP_ct_strong_encryption = 0xb0,            // generic
-	PEP_ct_OpenPGP = 0xb8,                      // key at least 2048 bit RSA or EC
-	PEP_ct_OTR = 0xba,
+    PEP_ct_OpenPGP = 0xb8,                      // key at least 2048 bit RSA or EC
+    PEP_ct_OTR = 0xba,
 
     // range 0xc0 to 0xff: confirmed encryption and anonymization
 
     PEP_ct_confirmed_enc_anon = 0xc0,           // generic
-	PEP_ct_pEp = 0xff
+    PEP_ct_pEp = 0xff
 } PEP_comm_type;
 
 typedef struct _pEp_identity {
-	size_t struct_size;			// size of whole struct
-	char *address;		        // C string with address UTF-8 encoded
-	size_t address_size;		// size of address
-	char *fpr;			        // C string with fingerprint UTF-8 encoded
-	size_t fpr_size;			// size of fingerprint
-	char *user_id;		        // C string with user ID UTF-8 encoded
-	size_t user_id_size;		// size of user ID
-	char *username;		        // C string with user name UTF-8 encoded
-	size_t username_size;		// size of user name
-	PEP_comm_type comm_type;	// type of communication with this ID
-    char lang[3];				// language of conversation
+    size_t struct_size;         // size of whole struct
+    char *address;              // C string with address UTF-8 encoded
+    size_t address_size;        // size of address
+    char *fpr;                  // C string with fingerprint UTF-8 encoded
+    size_t fpr_size;            // size of fingerprint
+    char *user_id;              // C string with user ID UTF-8 encoded
+    size_t user_id_size;        // size of user ID
+    char *username;             // C string with user name UTF-8 encoded
+    size_t username_size;       // size of user name
+    PEP_comm_type comm_type;    // type of communication with this ID
+    char lang[3];               // language of conversation
                                 // ISO 639-1 ALPHA-2, last byte is 0
     bool me;                    // if this is the local user herself/himself
 } pEp_identity;
@@ -429,18 +429,18 @@ DYNAMIC_API void free_identity(pEp_identity *identity);
 
 // get_identity() - get identity information
 //
-//	parameters:
-//		session (in)		session handle
-//		address (in)		C string with communication address, UTF-8 encoded
-//		identity (out)		pointer to pEp_identity structure with results or
-//		                    NULL if failure
+//    parameters:
+//        session (in)        session handle
+//        address (in)        C string with communication address, UTF-8 encoded
+//        identity (out)      pointer to pEp_identity structure with results or
+//                            NULL if failure
 //
-//	caveat:
-//	    the address string is being copied; the original string remains in the
-//	    ownership of the caller
-//		the resulting pEp_identity structure goes to the ownership of the
-//		caller and has to be freed with free_identity() when not in use any
-//		more
+//    caveat:
+//        the address string is being copied; the original string remains in the
+//        ownership of the caller
+//        the resulting pEp_identity structure goes to the ownership of the
+//        caller and has to be freed with free_identity() when not in use any
+//        more
 
 DYNAMIC_API PEP_STATUS get_identity(
         PEP_SESSION session, const char *address,
@@ -450,22 +450,22 @@ DYNAMIC_API PEP_STATUS get_identity(
 
 // set_identity() - set identity information
 //
-//	parameters:
-//		session (in)		session handle
-//		identity (in)		pointer to pEp_identity structure
+//    parameters:
+//        session (in)        session handle
+//        identity (in)       pointer to pEp_identity structure
 //
-//	return value:
-//		PEP_STATUS_OK = 0			    encryption and signing succeeded
-//		PEP_CANNOT_SET_PERSON		    writing to table person failed
-//		PEP_CANNOT_SET_PGP_KEYPAIR	    writing to table pgp_keypair failed
-//		PEP_CANNOT_SET_IDENTITY		    writing to table identity failed
-//		PEP_COMMIT_FAILED			    SQL commit failed
+//    return value:
+//        PEP_STATUS_OK = 0             encryption and signing succeeded
+//        PEP_CANNOT_SET_PERSON         writing to table person failed
+//        PEP_CANNOT_SET_PGP_KEYPAIR    writing to table pgp_keypair failed
+//        PEP_CANNOT_SET_IDENTITY       writing to table identity failed
+//        PEP_COMMIT_FAILED             SQL commit failed
 //      PEP_KEY_BLACKLISTED             Key blacklisted, cannot set identity
 //
-//	caveat:
-//		in the identity structure you need to set the const char * fields to
-//		UTF-8 C strings
-//		the size fields are ignored
+//    caveat:
+//        in the identity structure you need to set the const char * fields to
+//        UTF-8 C strings
+//        the size fields are ignored
 
 DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
@@ -474,9 +474,9 @@ DYNAMIC_API PEP_STATUS set_identity(
 
 // mark_as_compromized() - mark key in trust db as compromized
 //
-//	parameters:
-//		session (in)		session handle
-//		fpr (in)            fingerprint of key to mark
+//    parameters:
+//        session (in)        session handle
+//        fpr (in)            fingerprint of key to mark
 
 DYNAMIC_API PEP_STATUS mark_as_compromized(
         PEP_SESSION session,
@@ -488,12 +488,12 @@ DYNAMIC_API PEP_STATUS mark_as_compromized(
 //
 //  parameters:
 //      session (in)            session handle
-//		identity (inout)	    pointer to pEp_identity structure
+//        identity (inout)      pointer to pEp_identity structure
 //
-//	return value:
-//		PEP_STATUS_OK = 0	    encryption and signing succeeded
-//		PEP_ILLEGAL_VALUE       illegal values for identity fields given
-//		PEP_CANNOT_CREATE_KEY   key engine is on strike
+//    return value:
+//        PEP_STATUS_OK = 0       encryption and signing succeeded
+//        PEP_ILLEGAL_VALUE       illegal values for identity fields given
+//        PEP_CANNOT_CREATE_KEY   key engine is on strike
 //
 //  caveat:
 //      address and username fields must be set to UTF-8 strings
@@ -546,7 +546,7 @@ DYNAMIC_API PEP_STATUS import_key(PEP_SESSION session, const char *key_data, siz
 //      session (in)            session handle
 //      fpr (in)                key id or fingerprint of key
 //      key_data (out)          ASCII armored OpenPGP key
-//      size (out)               amount of data to handle
+//      size (out)              amount of data to handle
 //
 //  return value:
 //      PEP_STATUS_OK = 0       key was successfully exported
@@ -581,8 +581,8 @@ DYNAMIC_API PEP_STATUS recv_key(PEP_SESSION session, const char *pattern);
 //      keylist (out)           list of fingerprints found or NULL on error
 //
 //  caveat:
-//	    the ownerships of keylist isgoing to the caller
-//	    the caller must use free_stringlist() to free it
+//        the ownerships of keylist isgoing to the caller
+//        the caller must use free_stringlist() to free it
 
 
 DYNAMIC_API PEP_STATUS find_keys(
@@ -753,7 +753,7 @@ DYNAMIC_API PEP_STATUS get_languagelist(
 //
 //  parameters:
 //      session (in)            session handle
-//		lang (in)			    C string with ISO 639-1 language code
+//      lang (in)               C string with ISO 639-1 language code
 //      phrase_id (in)          id of phrase in i18n
 //      phrase (out)            phrase as UTF-8 string
 //

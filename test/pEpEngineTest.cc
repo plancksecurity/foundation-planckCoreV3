@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <fstream>
 #include <string>
 
@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
     cout << "calling decrypt_and_verify()\n";
     PEP_STATUS decrypt_result = decrypt_and_verify(session, cipher_buffer, cipher_length, &buf_text, &buf_size, &keylist);
 
-    cout << "returning from decrypt_and_verify() with result == " << decrypt_result << "\n";
+    cout << "returning from decrypt_and_verify() with result == 0x" << std::hex << decrypt_result << "\n";
     assert(decrypt_result == PEP_DECRYPTED_AND_VERIFIED);
     assert(buf_text);
     assert(keylist);
