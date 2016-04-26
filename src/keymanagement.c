@@ -4,16 +4,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <ctype.h>
 
 #include "pEp_internal.h"
 #include "keymanagement.h"
-
 
 #ifndef EMPTYSTR
 #define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
 #endif
 
 #define KEY_EXPIRE_DELTA (60 * 60 * 24 * 365)
+
+// Space tolerant and case insensitive fingerprint string compare
+static int _same_fpr(
+        const char* fpra,
+        size_t fpras,
+        const char* fprb,
+        size_t fprbs
+    )
+{
+    size_t ai = 0;
+    size_t bi = 0;
+    
+    do {
+        if(fpra[ai] == 0 || fprb[bi] == 0) {
+            return 0;
+        } else if(fpra[ai] == ' ') {
+            ai++;
+        } else if(fprb[bi] == ' ') {
+            bi++;
+        } else if(toupper(fpra[ai]) == toupper(fprb[bi])) {
+            ai++;
+            bi++;
+        }
+    }while(ai < fpras && bi < fprbs);
+    
+    return ai == fpras && bi == fprbs;
+}
 
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
@@ -73,7 +100,10 @@ DYNAMIC_API PEP_STATUS update_identity(
             }
         }
         else /* !EMPTYSTR(identity->fpr) */ {
-            if (strncmp(identity->fpr, stored_identity->fpr, stored_identity->fpr_size) == 0) {
+            if (_same_fpr(identity->fpr,
+                          identity->fpr_size,
+                          stored_identity->fpr,
+                          stored_identity->fpr_size)) {
                 if (_comm_type_key < PEP_ct_unconfirmed_encryption) {
                     identity->comm_type = _comm_type_key;
                 }else{

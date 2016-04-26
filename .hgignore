@@ -1,11 +1,12 @@
 syntax: glob
+*.orig
 *.d
 *.o
 *~
 *.swp
 db/*.csv
 db/*.db
-*.a
+#*.a
 *.so
 test/pEpEngineTest
 *.exe
@@ -19,5 +20,6 @@ build-android/pEpEngine-android-1.zip
 build-android/third-party
 build-android/pEpEngine-android-1
 
+pEpEngine.vcxproj.user
 syntax: regexp
 .*xcuserdata/

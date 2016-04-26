@@ -134,6 +134,15 @@ DYNAMIC_API PEP_STATUS identity_color(
     );
 
 
+// get_binary_path() - retrieve path of cryptotech binary if available
+//
+//  parameters:
+//      tech (in)           cryptotech to get the binary for
+//      path (out)          path to cryptotech binary or NULL if not available
+//                          **path is owned by the library, do not change it!
+DYNAMIC_API PEP_STATUS get_binary_path(PEP_cryptotech tech, const char **path);
+
+
 #ifdef __cplusplus
 }
 #endif

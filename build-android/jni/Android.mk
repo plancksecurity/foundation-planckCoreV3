@@ -31,7 +31,8 @@ LOCAL_SRC_FILES := ../../src/bloblist.c \
                    ../../src/stringpair.c \
                    ../../src/timestamp.c \
                    ../../src/trans_auto.c \
-                   ../../src/transport.c
+                   ../../src/transport.c \
+                   ../../src/blacklist.c
 
 LOCAL_C_INCLUDES := ../../src \
                     $(GPGME_INCLUDE_PATH) \

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		430D258B1C9ED75A00B94535 /* blacklist.c in Sources */ = {isa = PBXBuildFile; fileRef = 430D258A1C9ED75A00B94535 /* blacklist.c */; };
 		6400FB861B8CA1C6005221E3 /* libnetpgp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 645922521B8BD32B00A5AF93 /* libnetpgp.a */; };
 		6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E371B8B630200FC617B /* libetpan-ios.a */; };
 		644297C51BE11CE0002BC73B /* system.db in Resources */ = {isa = PBXBuildFile; fileRef = 64951A1B1BE0FCD800B10E71 /* system.db */; };
@@ -90,12 +91,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		430D258A1C9ED75A00B94535 /* blacklist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = blacklist.c; path = ../src/blacklist.c; sourceTree = "<group>"; };
 		644297BF1BE11C65002BC73B /* pEpTrustWords.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pEpTrustWords.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		644297C11BE11C65002BC73B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		64796A3F1B455AA5004B1C24 /* libpEpEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		64951A1B1BE0FCD800B10E71 /* system.db */ = {isa = PBXFileReference; lastKnownFileType = file; name = system.db; path = ../db/system.db; sourceTree = "<group>"; };
 		649DE08A1B45C19100912F72 /* libcurl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcurl.a; sourceTree = "<group>"; };
-		649DE08C1B45D3B700912F72 /* build-libcurl-ios.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "build-libcurl-ios.sh"; sourceTree = "<group>"; };
 		64A8264C1B455D0800EECAF0 /* bloblist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bloblist.c; path = ../src/bloblist.c; sourceTree = "<group>"; };
 		64A8264D1B455D0800EECAF0 /* bloblist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bloblist.h; path = ../src/bloblist.h; sourceTree = "<group>"; };
 		64A8264E1B455D0800EECAF0 /* cryptotech.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cryptotech.c; path = ../src/cryptotech.c; sourceTree = "<group>"; };
@@ -195,7 +196,6 @@
 				64951A1B1BE0FCD800B10E71 /* system.db */,
 				64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */,
 				64DA240C1B832EA0000BEE80 /* netpgp.xcodeproj */,
-				649DE08C1B45D3B700912F72 /* build-libcurl-ios.sh */,
 				649DE08A1B45C19100912F72 /* libcurl.a */,
 				64A8264B1B455C5600EECAF0 /* srcref */,
 				644297C01BE11C65002BC73B /* pEpTrustWords */,
@@ -215,6 +215,7 @@
 		64A8264B1B455C5600EECAF0 /* srcref */ = {
 			isa = PBXGroup;
 			children = (
+				430D258A1C9ED75A00B94535 /* blacklist.c */,
 				64A8264C1B455D0800EECAF0 /* bloblist.c */,
 				64A8264D1B455D0800EECAF0 /* bloblist.h */,
 				64A8264E1B455D0800EECAF0 /* cryptotech.c */,
@@ -320,7 +321,7 @@
 		64796A371B455AA5004B1C24 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0720;
+				LastUpgradeCheck = 0730;
 				ORGANIZATIONNAME = "Edouard Tisserant";
 				TargetAttributes = {
 					644297BE1BE11C65002BC73B = {
@@ -458,6 +459,7 @@
 				64A826791B455D0800EECAF0 /* cryptotech.c in Sources */,
 				64A826781B455D0800EECAF0 /* bloblist.c in Sources */,
 				64A826881B455D0800EECAF0 /* timestamp.c in Sources */,
+				430D258B1C9ED75A00B94535 /* blacklist.c in Sources */,
 				64A826801B455D0800EECAF0 /* mime.c in Sources */,
 				64A8267F1B455D0800EECAF0 /* message.c in Sources */,
 				64A826811B455D0800EECAF0 /* pEpEngine.c in Sources */,
@@ -538,11 +540,13 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(OPENSSL_SRC)/include",
 					"$(SRCROOT)",
+					"$(SRCROOT)/../../netpgp-et/include/",
+					"$(SRCROOT)/../../netpgp-et/src/",
+					"$(SRCROOT)/../../netpgp-et/netpgp-xcode/openssl/include/",
 				);
 				MTL_ENABLE_DEBUG_INFO = YES;
-				ONLY_ACTIVE_ARCH = NO;
+				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
@@ -579,8 +583,10 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(OPENSSL_SRC)/include",
 					"$(SRCROOT)",
+					"$(SRCROOT)/../../netpgp-et/include/",
+					"$(SRCROOT)/../../netpgp-et/src/",
+					"$(SRCROOT)/../../netpgp-et/netpgp-xcode/openssl/include/",
 				);
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;

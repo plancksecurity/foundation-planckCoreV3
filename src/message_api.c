@@ -813,10 +813,15 @@ static PEP_comm_type _get_comm_type(
 
     if (max_comm_type == PEP_ct_compromized)
         return PEP_ct_compromized;
+    
+    if (max_comm_type == PEP_ct_mistrusted)
+        return PEP_ct_mistrusted;
 
     if (status == PEP_STATUS_OK) {
         if (ident->comm_type == PEP_ct_compromized)
             return PEP_ct_compromized;
+        else if (ident->comm_type == PEP_ct_mistrusted)
+            return PEP_ct_mistrusted;
         else
             return MIN(max_comm_type, ident->comm_type);
     }
@@ -955,6 +960,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     bool dest_keys_found = true;
+    PEP_comm_type max_comm_type = PEP_ct_pEp;
 
     identity_list * _il;
     for (_il = src->to; _il && _il->ident; _il = _il->next) {
@@ -968,6 +974,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             _k = stringlist_add(_k, _il->ident->fpr);
             if (_k == NULL)
                 goto enomem;
+            max_comm_type = _get_comm_type(session, max_comm_type,
+                                           _il->ident);
         }
         else {
             dest_keys_found = false;
@@ -987,14 +995,20 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             _k = stringlist_add(_k, _il->ident->fpr);
             if (_k == NULL)
                 goto enomem;
+            max_comm_type = _get_comm_type(session, max_comm_type,
+                                           _il->ident);
         }
         else {
             dest_keys_found = false;
             status = PEP_KEY_NOT_FOUND;
         }
     }
-
-    if (!dest_keys_found) {
+    
+    if (!dest_keys_found ||
+        stringlist_length(keys) == 0 ||
+        _rating(max_comm_type,
+                PEP_rating_undefined) < PEP_rating_reliable)
+    {
         free_stringlist(keys);
         if (!session->passive_mode)
             attach_own_key(session, src);
@@ -1407,6 +1421,22 @@ DYNAMIC_API PEP_STATUS identity_color(
 
     if (status == PEP_STATUS_OK)
         *color = _rating(ident->comm_type, PEP_rating_undefined);
+
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS get_binary_path(PEP_cryptotech tech, const char **path)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(path);
+    if (path == NULL)
+        return PEP_ILLEGAL_VALUE;
+
+    if (cryptotech[tech].binary_path == NULL)
+        *path = NULL;
+    else
+        status = cryptotech[tech].binary_path(path);
 
     return status;
 }
