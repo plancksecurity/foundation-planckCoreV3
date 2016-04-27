@@ -104,6 +104,7 @@
     <ClCompile Include="src\trans_auto.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\blacklist.h" />
     <ClInclude Include="src\bloblist.h" />
     <ClInclude Include="src\cryptotech.h" />
     <ClInclude Include="src\dynamic_api.h" />
