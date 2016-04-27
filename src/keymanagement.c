@@ -26,18 +26,32 @@ static int _same_fpr(
     size_t ai = 0;
     size_t bi = 0;
     
-    do {
-        if(fpra[ai] == 0 || fprb[bi] == 0) {
+    do
+    {
+        if(fpra[ai] == 0 || fprb[bi] == 0)
+        {
             return 0;
-        } else if(fpra[ai] == ' ') {
+        }
+        else if(fpra[ai] == ' ')
+        {
             ai++;
-        } else if(fprb[bi] == ' ') {
+        }
+        else if(fprb[bi] == ' ')
+        {
             bi++;
-        } else if(toupper(fpra[ai]) == toupper(fprb[bi])) {
+        }
+        else if(toupper(fpra[ai]) == toupper(fprb[bi]))
+        {
             ai++;
             bi++;
         }
-    }while(ai < fpras && bi < fprbs);
+        else
+        {
+            return 0;
+        }
+        
+    }
+    while(ai < fpras && bi < fprbs);
     
     return ai == fpras && bi == fprbs;
 }
