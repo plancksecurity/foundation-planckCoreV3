@@ -27,14 +27,14 @@ int main() {
     pEp_free(languages);
 
     char *phrase;
-    PEP_STATUS status3 = get_phrase(session, "de", 1, &phrase);
+    PEP_STATUS status3 = get_phrase(session, "de", 1000, &phrase);
     assert(status3 == PEP_STATUS_OK);
     assert(phrase);
 
     cout << "\nGerman: " << phrase << "\n";
     pEp_free(phrase);
 
-    status3 = get_phrase(session, "zz", 1, &phrase);
+    status3 = get_phrase(session, "zz", 1000, &phrase);
     assert(status3 == PEP_PHRASE_NOT_FOUND);
     assert(phrase == NULL);
 
