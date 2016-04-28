@@ -877,6 +877,9 @@ void attach_own_key(PEP_SESSION session, message *msg)
     assert(session);
     assert(msg);
 
+    if (msg->dir == PEP_dir_incoming)
+        return;
+
     assert(msg->from && msg->from->fpr);
     if (msg->from == NULL || msg->from->fpr == NULL)
         return;
@@ -929,8 +932,9 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     assert(session);
     assert(src);
     assert(dst);
+    assert(enc_format != PEP_enc_none);
 
-    if (!(session && src && dst))
+    if (!(session && src && dst && enc_format != PEP_enc_none))
         return PEP_ILLEGAL_VALUE;
 
     if (src->dir == PEP_dir_incoming)
@@ -945,13 +949,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     status = myself(session, src->from);
     if (status != PEP_STATUS_OK)
         goto pep_error;
-    
-    if (enc_format == PEP_enc_none)
-    {
-        attach_own_key(session, src);
-        return PEP_UNENCRYPTED;
-    }
-    
+
     keys = new_stringlist(src->from->fpr);
     if (keys == NULL)
         goto enomem;
