@@ -146,6 +146,9 @@
     <ClInclude Include="src\platform.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="src\blacklist.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />

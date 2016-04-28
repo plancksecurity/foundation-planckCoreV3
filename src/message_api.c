@@ -877,9 +877,6 @@ void attach_own_key(PEP_SESSION session, message *msg)
     assert(session);
     assert(msg);
 
-    if (msg->dir == PEP_dir_incoming)
-        return;
-
     assert(msg->from && msg->from->fpr);
     if (msg->from == NULL || msg->from->fpr == NULL)
         return;
@@ -932,11 +929,13 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     assert(session);
     assert(src);
     assert(dst);
-    assert(enc_format != PEP_enc_none);
 
-    if (!(session && src && dst && enc_format != PEP_enc_none))
+    if (!(session && src && dst))
         return PEP_ILLEGAL_VALUE;
 
+    if (src->dir == PEP_dir_incoming)
+        return PEP_ILLEGAL_VALUE;
+    
     determine_encryption_format(src);
     if (src->enc_format != PEP_enc_none)
         return PEP_ILLEGAL_VALUE;
@@ -946,7 +945,13 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     status = myself(session, src->from);
     if (status != PEP_STATUS_OK)
         goto pep_error;
-
+    
+    if (enc_format == PEP_enc_none)
+    {
+        attach_own_key(session, src);
+        return PEP_UNENCRYPTED;
+    }
+    
     keys = new_stringlist(src->from->fpr);
     if (keys == NULL)
         goto enomem;
@@ -963,13 +968,25 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     PEP_comm_type max_comm_type = PEP_ct_pEp;
 
     identity_list * _il;
-    for (_il = src->to; _il && _il->ident; _il = _il->next) {
+    
+    if ((_il = src->bcc) && _il->ident)
+    {
+        // BCC limited support:
+        //     - App splits mails with BCC in multiple mails.
+        //     - Each email is encrypted separately
+        
+        if(_il->next || src->to || src->cc)
+        {
+            // Only one Bcc with no other recipient allowed for now
+            return PEP_ILLEGAL_VALUE;
+        }
+        
         PEP_STATUS _status = update_identity(session, _il->ident);
         if (_status != PEP_STATUS_OK) {
             status = _status;
             goto pep_error;
         }
-
+        
         if (_il->ident->fpr && _il->ident->fpr[0]) {
             _k = stringlist_add(_k, _il->ident->fpr);
             if (_k == NULL)
@@ -980,27 +997,49 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         else {
             dest_keys_found = false;
             status = PEP_KEY_NOT_FOUND;
-        }
+        }        
     }
+    else
+    {
+        for (_il = src->to; _il && _il->ident; _il = _il->next) {
+            PEP_STATUS _status = update_identity(session, _il->ident);
+            if (_status != PEP_STATUS_OK) {
+                status = _status;
+                goto pep_error;
+            }
 
-    for (_il = src->cc; _il && _il->ident; _il = _il->next) {
-        PEP_STATUS _status = update_identity(session, _il->ident);
-        if (_status != PEP_STATUS_OK)
-        {
-            status = _status;
-            goto pep_error;
+            if (_il->ident->fpr && _il->ident->fpr[0]) {
+                _k = stringlist_add(_k, _il->ident->fpr);
+                if (_k == NULL)
+                    goto enomem;
+                max_comm_type = _get_comm_type(session, max_comm_type,
+                                               _il->ident);
+            }
+            else {
+                dest_keys_found = false;
+                status = PEP_KEY_NOT_FOUND;
+            }
         }
 
-        if (_il->ident->fpr && _il->ident->fpr[0]) {
-            _k = stringlist_add(_k, _il->ident->fpr);
-            if (_k == NULL)
-                goto enomem;
-            max_comm_type = _get_comm_type(session, max_comm_type,
-                                           _il->ident);
-        }
-        else {
-            dest_keys_found = false;
-            status = PEP_KEY_NOT_FOUND;
+        for (_il = src->cc; _il && _il->ident; _il = _il->next) {
+            PEP_STATUS _status = update_identity(session, _il->ident);
+            if (_status != PEP_STATUS_OK)
+            {
+                status = _status;
+                goto pep_error;
+            }
+
+            if (_il->ident->fpr && _il->ident->fpr[0]) {
+                _k = stringlist_add(_k, _il->ident->fpr);
+                if (_k == NULL)
+                    goto enomem;
+                max_comm_type = _get_comm_type(session, max_comm_type,
+                                               _il->ident);
+            }
+            else {
+                dest_keys_found = false;
+                status = PEP_KEY_NOT_FOUND;
+            }
         }
     }
     
@@ -1372,8 +1411,10 @@ DYNAMIC_API PEP_STATUS outgoing_message_color(
     if (status != PEP_STATUS_OK)
         return status;
 
-    for (il = msg->to; il != NULL; il = il->next) {
-        if (il->ident) {
+    for (il = msg->to; il != NULL; il = il->next)
+    {
+        if (il->ident)
+        {
             update_identity(session, il->ident);
             max_comm_type = _get_comm_type(session, max_comm_type,
                     il->ident);
@@ -1381,11 +1422,24 @@ DYNAMIC_API PEP_STATUS outgoing_message_color(
         }
     }
 
-    for (il = msg->cc; il != NULL; il = il->next) {
-        if (il->ident) {
+    for (il = msg->cc; il != NULL; il = il->next)
+    {
+        if (il->ident)
+        {
             update_identity(session, il->ident);
             max_comm_type = _get_comm_type(session, max_comm_type,
                     il->ident);
+            comm_type_determined = true;
+        }
+    }
+        
+    for (il = msg->bcc; il != NULL; il = il->next)
+    {
+        if (il->ident)
+        {
+            update_identity(session, il->ident);
+            max_comm_type = _get_comm_type(session, max_comm_type,
+                                           il->ident);
             comm_type_determined = true;
         }
     }
