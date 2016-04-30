@@ -443,10 +443,32 @@ DYNAMIC_API void free_identity(pEp_identity *identity);
 //        more
 
 DYNAMIC_API PEP_STATUS get_identity(
-        PEP_SESSION session, const char *address,
+        PEP_SESSION session,
+        const char *address,
+        const char *user_id,
         pEp_identity **identity
     );
 
+// get_best_user() - get best user_id candidate for a given address
+//
+//	parameters:
+//		session (in)		session handle
+//		address (in)		C string with communication address, UTF-8 encoded
+//		user_id (out)		pointer to user_id string
+//
+//	caveat:
+//	    the address string is being copied; the original string remains in the
+//	    ownership of the caller
+//		the resulting user_id string goes to the ownership of the
+//		caller and has to be freed with free() when not in use any
+//		more
+    
+DYNAMIC_API PEP_STATUS get_best_user(
+        PEP_SESSION session,
+        const char *address,
+        char **user_id
+    );
+    
 
 // set_identity() - set identity information
 //

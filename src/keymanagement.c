@@ -70,7 +70,43 @@ DYNAMIC_API PEP_STATUS update_identity(
     if (!(session && identity && !EMPTYSTR(identity->address)))
         return PEP_ILLEGAL_VALUE;
 
-    status = get_identity(session, identity->address, &stored_identity);
+    int _no_user_id = EMPTYSTR(identity->user_id);
+
+    if (_no_user_id)
+    {
+        free(identity->user_id);
+
+        status = get_best_user(session,
+                              identity->address,
+                              &identity->user_id);
+
+        // Default user_id, aka Virtual user_id
+        if (status == PEP_CANNOT_FIND_IDENTITY)
+        {
+            identity->user_id = calloc(1, identity->address_size + 5);
+            if (!identity->user_id)
+            {
+                return PEP_OUT_OF_MEMORY;
+            }
+            snprintf(identity->user_id, identity->address_size + 5,
+                     "TOFU_%s", identity->address);
+        }
+        else if (status != PEP_STATUS_OK)
+        {
+            return status;
+        }
+        
+        if(identity->user_id)
+        {
+            identity->user_id_size = strlen(identity->user_id);
+        }
+    }
+    
+    status = get_identity(session,
+                          identity->address,
+                          identity->user_id,
+                          &stored_identity);
+    
     assert(status != PEP_OUT_OF_MEMORY);
     if (status == PEP_OUT_OF_MEMORY)
         return PEP_OUT_OF_MEMORY;
@@ -81,15 +117,6 @@ DYNAMIC_API PEP_STATUS update_identity(
         assert(status != PEP_OUT_OF_MEMORY);
         if (status == PEP_OUT_OF_MEMORY)
             return PEP_OUT_OF_MEMORY;
-
-        if (EMPTYSTR(identity->user_id)) {
-            free(identity->user_id);
-            identity->user_id = strndup(stored_identity->user_id, stored_identity->user_id_size);
-            assert(identity->user_id);
-            if (identity->user_id == NULL)
-                return PEP_OUT_OF_MEMORY;
-            identity->user_id_size = stored_identity->user_id_size;
-        }
 
         if (EMPTYSTR(identity->username)) {
             free(identity->username);
@@ -218,10 +245,15 @@ DYNAMIC_API PEP_STATUS update_identity(
             identity->username_size = 9;
         }
 
-        status = set_identity(session, identity);
-        assert(status == PEP_STATUS_OK);
-        if (status != PEP_STATUS_OK) {
-            return status;
+        // Identity doesn't get stored if is was just about checking existing
+        // user by address (i.e. no user id but already stored)
+        if (!(_no_user_id && stored_identity))
+        {
+            status = set_identity(session, identity);
+            assert(status == PEP_STATUS_OK);
+            if (status != PEP_STATUS_OK) {
+                return status;
+            }
         }
     }
 
