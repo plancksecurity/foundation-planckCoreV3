@@ -76,26 +76,14 @@ DYNAMIC_API PEP_STATUS update_identity(
     {
         free(identity->user_id);
 
-        status = get_best_user(session,
-                              identity->address,
-                              &identity->user_id);
+        identity->user_id = calloc(1, identity->address_size + 6);
+        if (!identity->user_id)
+        {
+            return PEP_OUT_OF_MEMORY;
+        }
+        snprintf(identity->user_id, identity->address_size + 5,
+                 "TOFU_%s", identity->address);
 
-        // Default user_id, aka Virtual user_id
-        if (status == PEP_CANNOT_FIND_IDENTITY)
-        {
-            identity->user_id = calloc(1, identity->address_size + 5);
-            if (!identity->user_id)
-            {
-                return PEP_OUT_OF_MEMORY;
-            }
-            snprintf(identity->user_id, identity->address_size + 5,
-                     "TOFU_%s", identity->address);
-        }
-        else if (status != PEP_STATUS_OK)
-        {
-            return status;
-        }
-        
         if(identity->user_id)
         {
             identity->user_id_size = strlen(identity->user_id);

@@ -13,7 +13,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     static const char *sql_log;
     static const char *sql_trustword;
     static const char *sql_get_identity;
-    static const char *sql_get_best_user;
     static const char *sql_set_person;
     static const char *sql_set_pgp_keypair;
     static const char *sql_set_identity;
@@ -196,14 +195,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                             "       and pgp_keypair_fpr = identity.main_key_id"
                             "   where address = ?1 and identity.user_id = ?2;";
 
-        sql_get_best_user = "select identity.user_id"
-                            "   from identity"
-                            "   join trust on trust.user_id = identity.user_id"
-                            "       and pgp_keypair_fpr = identity.main_key_id"
-                            "   where address = ?1"
-                            "   order by comm_type DESC, identity.rowid DESC"
-                            "   limit 1;";
-
         sql_trustword = "select id, word from wordlist where lang = lower(?1) "
                        "and id = ?2 ;";
 
@@ -257,10 +248,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_identity,
             (int)strlen(sql_get_identity), &_session->get_identity, NULL);
-    assert(int_result == SQLITE_OK);
-
-    int_result = sqlite3_prepare_v2(_session->db, sql_get_best_user,
-            (int)strlen(sql_get_best_user), &_session->get_best_user, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_person,
@@ -374,8 +361,6 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->trustword);
             if (session->get_identity)
                 sqlite3_finalize(session->get_identity);
-            if (session->get_best_user)
-                sqlite3_finalize(session->get_best_user);
             if (session->set_person)
                 sqlite3_finalize(session->set_person);
             if (session->set_pgp_keypair)
@@ -740,41 +725,6 @@ DYNAMIC_API PEP_STATUS get_identity(
     }
 
     sqlite3_reset(session->get_identity);
-    return status;
-}
-
-DYNAMIC_API PEP_STATUS get_best_user(
-       PEP_SESSION session,
-       const char *address,
-       char **user_id
-    )
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-    int result;
-    
-    assert(session);
-    assert(address);
-    assert(user_id);
-    
-    *user_id = NULL;
-    
-    if (!(session && address && user_id))
-        return PEP_ILLEGAL_VALUE;
-    
-    sqlite3_reset(session->get_best_user);
-    sqlite3_bind_text(session->get_best_user, 1, address, -1, SQLITE_STATIC);
-    
-    result = sqlite3_step(session->get_best_user);
-    switch (result) {
-        case SQLITE_ROW: {
-            *user_id = strdup((const char *)sqlite3_column_text(session->get_best_user, 0));
-            break;
-        }
-        default:
-            status = PEP_CANNOT_FIND_IDENTITY;
-    }
-    
-    sqlite3_reset(session->get_best_user);
     return status;
 }
 
