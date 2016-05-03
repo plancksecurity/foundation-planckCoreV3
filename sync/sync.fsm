@@ -20,8 +20,9 @@ protocol DeviceGroup {
             on KeyGen
                 do sendBeacon;
             on CannotDecrypt
-                do sendBeacon; // cry, baby
-            on Beacon(partner)
+                do sendBeacon;  // cry, baby
+            on Beacon(partner)  // this event will not happen for already
+                                // rejected partners
                 do sendHandshakeRequest;
             on HandshakeRequest(identity partner) {
                 do sendHandshakeRequest;
