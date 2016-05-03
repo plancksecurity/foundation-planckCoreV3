@@ -22,17 +22,6 @@ extern "C" {
 typedef PEP_STATUS (*sendBeacon_t)(message beacon);
 
 
-// sendHandshakeRequest() - send a handshake request message
-//
-//  parameters:
-//      request (in)    message struct with beacon message to send
-//
-//  return value:
-//      must return PEP_STATUS_OK or any other value on error
-
-typedef PEP_STATUS (*sendHandshakeRequest_t)(message request);
-
-
 typedef enum _sync_handshake_result {
     SYNC_HANDSHAKE_CANCEL = -1,
     SYNC_HANDSHAKE_ACCEPTED = 0,
@@ -58,7 +47,6 @@ typedef sync_handshake_result (*showHandshake_t)(
 //
 //  parameters:
 //      sendBeacon (in)             callback for sending beacon
-//      sendHandshakeRequest (in)   callback for sending handshake request
 //      showHandshake (in)          callback for doing the handshake
 //
 //  return value:
@@ -69,7 +57,6 @@ typedef sync_handshake_result (*showHandshake_t)(
 
 DYNAMIC_API PEP_STATUS register_sync_callbacks(
         sendBeacon_t sendBeacon,
-        sendHandshakeRequest_t sendHandshakeRequest,
         showHandshake_t showHandshake
     );
 

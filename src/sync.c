@@ -9,12 +9,11 @@ PEP_sync_callbacks_t PEP_sync_callbacks = { NULL, NULL, NULL };
 
 DYNAMIC_API PEP_STATUS register_sync_callbacks(
         sendBeacon_t sendBeacon,
-        sendHandshakeRequest_t sendHandshakeRequest,
         showHandshake_t showHandshake
     )
 {
     PEP_sync_callbacks.sendBeacon = sendBeacon;
-    PEP_sync_callbacks.sendHandshakeRequest = sendHandshakeRequest;
+    PEP_sync_callbacks.sendHandshakeRequest = sendBeacon;
     PEP_sync_callbacks.showHandshake = showHandshake;
 
     return PEP_STATUS_OK;
