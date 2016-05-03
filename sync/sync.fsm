@@ -55,7 +55,7 @@ protocol DeviceGroup {
 
         state Grouped {
             on KeyGen
-                do sendOwnKeys;
+                do sendOwnKeys; // always send all keys
             on HandshakeRequest(identity partner) {
                 do sendHandshakeRequest;
                 do showHandshake(partner);
