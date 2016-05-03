@@ -99,6 +99,7 @@
     <ClCompile Include="src\sqlite3.c" />
     <ClCompile Include="src\stringlist.c" />
     <ClCompile Include="src\stringpair.c" />
+    <ClCompile Include="src\sync.c" />
     <ClCompile Include="src\timestamp.c" />
     <ClCompile Include="src\transport.c" />
     <ClCompile Include="src\trans_auto.c" />
@@ -125,6 +126,8 @@
     <ClInclude Include="src\sqlite3.h" />
     <ClInclude Include="src\stringlist.h" />
     <ClInclude Include="src\stringpair.h" />
+    <ClInclude Include="src\sync.h" />
+    <ClInclude Include="src\sync_internal.h" />
     <ClInclude Include="src\timestamp.h" />
     <ClInclude Include="src\transport.h" />
     <ClInclude Include="src\trans_auto.h" />

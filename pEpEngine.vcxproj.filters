@@ -72,6 +72,9 @@
     <ClCompile Include="src\blacklist.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="src\sync.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\keymanagement.h">
@@ -147,6 +150,12 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="src\blacklist.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sync.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sync_internal.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
