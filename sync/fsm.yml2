@@ -1,0 +1,13 @@
+// FSM Y language 1.0
+
+// Copyleft (c) 2016, p≡p foundation
+
+// Written by Volker Birk
+
+decl protocol @name;
+decl fsm @name;
+decl state @name;
+decl event @name, on is event;
+decl transition @target, go is transition;
+decl action @name, do is action;
+decl condition @flag, if is condition;

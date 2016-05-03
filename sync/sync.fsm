@@ -1,0 +1,73 @@
+// DeviceGroup protocol for p≡p
+
+// Copyleft (c) 2016, p≡p foundation
+
+// Written by Volker Birk
+
+include ./fsm.yml2
+
+protocol DeviceGroup {
+    // all messages have a timestamp, time out and are removed after timeout
+
+    fsm DeviceState {
+        on init {
+            if (storedGroupKeys)
+                go Grouped;
+            go Sole;
+        }
+
+        state Sole {
+            on KeyGen
+                do sendBeacon;
+            on CannotDecrypt
+                do sendBeacon; // cry, baby
+            on Beacon(partner)
+                do sendHandshakeRequest;
+            on HandshakeRequest(identity partner) {
+                do sendHandshakeRequest;
+                go HandshakingSole(partner);
+            }
+        }
+
+        state HandshakingSole(identity partner) {
+            on init
+                do showHandshake(partner);
+            on HandshakeRejected {
+                do reject(partner);
+                go Sole;
+            }
+            on HandshakeAccepted {
+                if keyElectionWon(partner) {
+                    storeOwnKeysAsGroupKeys;
+                    sendGroupKeys(partner);
+                    go Grouped;
+                }
+                go WaitForGroupKeys(partner);
+            }
+        }
+    
+        state WaitForGroupKeys(identity partner) {
+            on ReceiveGroupKeys(partner) {
+                storeGroupKeys(partner);
+                go Grouped;
+            }
+        }
+
+        state Grouped {
+            on KeyGen
+                do sendOwnKeys;
+            on HandshakeRequest(identity partner) {
+                do sendHandshakeRequest;
+                do showHandshake(partner);
+            }
+            on HandshakeRejected {
+                do reject(partner);
+                go Grouped;
+            }
+            on HandshakeAccepted {
+
+            }
+        }
+    }
+}
+
