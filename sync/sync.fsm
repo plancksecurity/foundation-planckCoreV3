@@ -33,7 +33,7 @@ protocol DeviceGroup {
         state HandshakingSole(identity partner) {
             on init
                 do showHandshake(partner);
-            on HandshakeRejected {
+            on HandshakeRejected(partner) {
                 do reject(partner);
                 go Sole;
             }
@@ -49,11 +49,15 @@ protocol DeviceGroup {
         }
     
         state WaitForGroupKeys(identity partner) {
-            on ReceiveGroupKeys(partner) {
+            on ReceiveGroupKeys(identity partner) {
                 storeGroupKeys(partner);
                 go Grouped;
             }
             on Cancel go Sole;
+            on RejectReceived(identity partner) {
+                do reject(partner);
+                go Sole;
+            }
         }
 
         state Grouped {
@@ -63,13 +67,10 @@ protocol DeviceGroup {
                 do sendHandshakeRequest;
                 do showHandshake(partner);
             }
-            on HandshakeRejected {
+            on HandshakeRejected(identity partner)
                 do reject(partner);
-                go Grouped;
-            }
-            on HandshakeAccepted {
-
-            }
+            on HandshakeAccepted(identity partner)
+                sendGroupKeys(partner);
         }
     }
 }
