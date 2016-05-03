@@ -34,7 +34,8 @@ protocol DeviceGroup {
             on init
                 do showHandshake(partner);
             on HandshakeRejected(partner) {
-                do reject(partner);
+                do reject(partner);             // sends Reject to partner and
+                                                // stores rejection of partner
                 go Sole;
             }
             on HandshakeAccepted {
@@ -54,7 +55,7 @@ protocol DeviceGroup {
                 go Grouped;
             }
             on Cancel go Sole;
-            on RejectReceived(identity partner) {
+            on Reject(identity partner) {
                 do reject(partner);
                 go Sole;
             }
@@ -70,7 +71,9 @@ protocol DeviceGroup {
             on HandshakeRejected(identity partner)
                 do reject(partner);
             on HandshakeAccepted(identity partner)
-                sendGroupKeys(partner);
+                do sendGroupKeys(partner);
+            on Reject(identity partner)
+                do reject partner;
         }
     }
 }
