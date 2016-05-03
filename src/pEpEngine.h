@@ -432,6 +432,8 @@ DYNAMIC_API void free_identity(pEp_identity *identity);
 //    parameters:
 //        session (in)        session handle
 //        address (in)        C string with communication address, UTF-8 encoded
+//        user_id (in)        unique C string to identify person that identity
+//                            is refering to
 //        identity (out)      pointer to pEp_identity structure with results or
 //                            NULL if failure
 //
@@ -443,10 +445,11 @@ DYNAMIC_API void free_identity(pEp_identity *identity);
 //        more
 
 DYNAMIC_API PEP_STATUS get_identity(
-        PEP_SESSION session, const char *address,
+        PEP_SESSION session,
+        const char *address,
+        const char *user_id,
         pEp_identity **identity
     );
-
 
 // set_identity() - set identity information
 //

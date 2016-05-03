@@ -70,7 +70,31 @@ DYNAMIC_API PEP_STATUS update_identity(
     if (!(session && identity && !EMPTYSTR(identity->address)))
         return PEP_ILLEGAL_VALUE;
 
-    status = get_identity(session, identity->address, &stored_identity);
+    int _no_user_id = EMPTYSTR(identity->user_id);
+
+    if (_no_user_id)
+    {
+        free(identity->user_id);
+
+        identity->user_id = calloc(1, identity->address_size + 6);
+        if (!identity->user_id)
+        {
+            return PEP_OUT_OF_MEMORY;
+        }
+        snprintf(identity->user_id, identity->address_size + 5,
+                 "TOFU_%s", identity->address);
+
+        if(identity->user_id)
+        {
+            identity->user_id_size = strlen(identity->user_id);
+        }
+    }
+    
+    status = get_identity(session,
+                          identity->address,
+                          identity->user_id,
+                          &stored_identity);
+    
     assert(status != PEP_OUT_OF_MEMORY);
     if (status == PEP_OUT_OF_MEMORY)
         return PEP_OUT_OF_MEMORY;
@@ -81,15 +105,6 @@ DYNAMIC_API PEP_STATUS update_identity(
         assert(status != PEP_OUT_OF_MEMORY);
         if (status == PEP_OUT_OF_MEMORY)
             return PEP_OUT_OF_MEMORY;
-
-        if (EMPTYSTR(identity->user_id)) {
-            free(identity->user_id);
-            identity->user_id = strndup(stored_identity->user_id, stored_identity->user_id_size);
-            assert(identity->user_id);
-            if (identity->user_id == NULL)
-                return PEP_OUT_OF_MEMORY;
-            identity->user_id_size = stored_identity->user_id_size;
-        }
 
         if (EMPTYSTR(identity->username)) {
             free(identity->username);
@@ -218,10 +233,15 @@ DYNAMIC_API PEP_STATUS update_identity(
             identity->username_size = 9;
         }
 
-        status = set_identity(session, identity);
-        assert(status == PEP_STATUS_OK);
-        if (status != PEP_STATUS_OK) {
-            return status;
+        // Identity doesn't get stored if is was just about checking existing
+        // user by address (i.e. no user id but already stored)
+        if (!(_no_user_id && stored_identity))
+        {
+            status = set_identity(session, identity);
+            assert(status == PEP_STATUS_OK);
+            if (status != PEP_STATUS_OK) {
+                return status;
+            }
         }
     }
 
@@ -235,6 +255,7 @@ DYNAMIC_API PEP_STATUS update_identity(
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 {
+    pEp_identity *stored_identity;
     PEP_STATUS status;
     stringlist_t *keylist = NULL;
 
@@ -253,12 +274,69 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 
     DEBUG_LOG("myself", "debug", identity->address);
 
-    status = find_keys(session, identity->address, &keylist);
+    
+    status = get_identity(session,
+                          identity->address,
+                          identity->user_id,
+                          &stored_identity);
+    
     assert(status != PEP_OUT_OF_MEMORY);
     if (status == PEP_OUT_OF_MEMORY)
         return PEP_OUT_OF_MEMORY;
-
-    if (keylist == NULL || keylist->value == NULL) {
+    
+    if (stored_identity)
+    {
+        if (EMPTYSTR(identity->fpr)) {
+            identity->fpr = strndup(stored_identity->fpr, stored_identity->fpr_size);
+            assert(identity->fpr);
+            if (identity->fpr == NULL)
+            {
+                return PEP_OUT_OF_MEMORY;
+            }
+            identity->fpr_size = stored_identity->fpr_size;
+        }
+    }
+    else
+    {
+        free(identity->fpr);
+        identity->fpr_size = 0;
+        
+        status = find_keys(session, identity->address, &keylist);
+        assert(status != PEP_OUT_OF_MEMORY);
+        if (status == PEP_OUT_OF_MEMORY)
+            return PEP_OUT_OF_MEMORY;
+        
+        if (keylist != NULL && keylist->value != NULL)
+        {
+            // BUG : Vulnerable to auto-key-import poisoning.
+            //       Attacker's key with forged userId could have been
+            //       auto imported from already received email and be used here
+            
+            // TODO : iterate over list to elect best key
+            // TODO : discard keys which aren't private
+            // TODO : discard keys which aren't either
+            //             - own generated key
+            //             - own from synchronized device group
+            //             - already fully trusted as a public key of known
+            //               identity, for that same address
+            //               (case of imported key for mailing lists)
+            
+            identity->fpr = strdup(keylist->value);
+            assert(identity->fpr);
+            if (identity->fpr == NULL)
+            {
+                return PEP_OUT_OF_MEMORY;
+            }
+            identity->fpr_size = strlen(identity->fpr);
+        }
+        
+    }
+    
+    // TODO : Check key for revoked state
+    
+    if (EMPTYSTR(identity->fpr) /* or revoked */)
+    {
+        
         DEBUG_LOG("generating key pair", "debug", identity->address);
         status = generate_keypair(session, identity);
         assert(status != PEP_OUT_OF_MEMORY);
@@ -268,20 +346,21 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
             DEBUG_LOG("generating key pair failed", "debug", buf);
             return status;
         }
-
+        
         status = find_keys(session, identity->address, &keylist);
         assert(status != PEP_OUT_OF_MEMORY);
         if (status == PEP_OUT_OF_MEMORY)
             return PEP_OUT_OF_MEMORY;
-
+        
         assert(keylist && keylist->value);
         if (keylist == NULL || keylist->value == NULL) {
             return PEP_UNKNOWN_ERROR;
         }
     }
-    else {
+    else
+    {
         bool expired;
-        status = key_expired(session, keylist->value, &expired);
+        status = key_expired(session, identity->fpr, &expired);
         assert(status == PEP_STATUS_OK);
         if (status != PEP_STATUS_OK) {
             goto free_keylist;
@@ -289,20 +368,10 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 
         if (status == PEP_STATUS_OK && expired) {
             timestamp *ts = new_timestamp(time(NULL) + KEY_EXPIRE_DELTA);
-            renew_key(session, keylist->value, ts);
+            renew_key(session, identity->fpr, ts);
             free_timestamp(ts);
         }
     }
-
-    if (identity->fpr)
-        free(identity->fpr);
-    identity->fpr = strdup(keylist->value);
-    assert(identity->fpr);
-    if (identity->fpr == NULL){
-        status = PEP_OUT_OF_MEMORY;
-        goto free_keylist;
-    }
-    identity->fpr_size = strlen(identity->fpr);
 
     status = set_identity(session, identity);
     assert(status == PEP_STATUS_OK);
