@@ -38,7 +38,8 @@ protocol DeviceGroup {
                 go Sole;
             }
             on HandshakeAccepted {
-                if keyElectionWon(partner) {
+                if keyElectionWon(partner) {    // an already existing group
+                                                // always wins
                     storeOwnKeysAsGroupKeys;
                     sendGroupKeys(partner);
                     go Grouped;
