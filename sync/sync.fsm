@@ -21,8 +21,8 @@ protocol DeviceGroup {
                 do sendBeacon;
             on CannotDecrypt
                 do sendBeacon;  // cry, baby
-            on Beacon(partner)  // this event will not happen for already
-                                // rejected partners
+            on Beacon(identity partner) // this event will not happen for already
+                                        // rejected partners
                 do sendHandshakeRequest;
             on HandshakeRequest(identity partner) {
                 do sendHandshakeRequest;
@@ -33,12 +33,12 @@ protocol DeviceGroup {
         state HandshakingSole(identity partner) {
             on init
                 do showHandshake(partner);
-            on HandshakeRejected(partner) {
+            on HandshakeRejected(identity partner) {
                 do reject(partner);             // sends Reject to partner and
                                                 // stores rejection of partner
                 go Sole;
             }
-            on HandshakeAccepted {
+            on HandshakeAccepted(partner) {
                 if keyElectionWon(partner) {    // an already existing group
                                                 // always wins
                     storeOwnKeysAsGroupKeys;
