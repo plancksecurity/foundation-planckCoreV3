@@ -8,7 +8,6 @@
 PEP_sync_callbacks_t PEP_sync_callbacks = { NULL, NULL, NULL };
 
 DYNAMIC_API PEP_STATUS register_sync_callbacks(
-        PEP_SESSION session,
         sendBeacon_t sendBeacon,
         sendHandshakeRequest_t sendHandshakeRequest,
         showHandshake_t showHandshake

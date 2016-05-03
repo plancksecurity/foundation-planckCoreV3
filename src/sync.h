@@ -57,16 +57,17 @@ typedef sync_handshake_result (*showHandshake_t)(
 // register_sync_callbacks() - register adapter's callbacks
 //
 //  parameters:
-//      session (in)                session handle
 //      sendBeacon (in)             callback for sending beacon
 //      sendHandshakeRequest (in)   callback for sending handshake request
 //      showHandshake (in)          callback for doing the handshake
 //
 //  return value:
 //      PEP_STATUS_OK or any other value on errror
+//
+//  caveat:
+//      call that BEFORE you're using any other part of the engine
 
 DYNAMIC_API PEP_STATUS register_sync_callbacks(
-        PEP_SESSION session,
         sendBeacon_t sendBeacon,
         sendHandshakeRequest_t sendHandshakeRequest,
         showHandshake_t showHandshake
@@ -74,11 +75,8 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
 
 
 // unregister_sync_callbacks() - unregister adapter's callbacks
-//
-//  parameters:
-//      session (in)                session handle
 
-DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session);
+DYNAMIC_API void unregister_sync_callbacks();
 
 
 #ifdef __cplusplus
