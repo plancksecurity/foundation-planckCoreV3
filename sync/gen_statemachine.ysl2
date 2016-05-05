@@ -1,0 +1,35 @@
+// generate state machine code
+
+// Copyleft (c) 2016, p≡p foundation
+
+// Written by Volker Birk
+
+include yslt.yml2
+
+tstylesheet {
+    template "/protocol/fsm"
+    ||
+    // state machine for «@name»
+
+    #include "pEpEngine.h"
+
+
+    void sm_«@name»(«@name»_state state)
+    {
+        switch (state) {
+            `` apply "state"
+        }
+    }
+
+    ||
+
+    template "state"
+    ||
+    case «@name»:
+        // bla
+        break;
+
+    ||
+}
+
+
