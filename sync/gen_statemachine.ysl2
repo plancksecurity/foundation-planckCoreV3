@@ -13,23 +13,56 @@ tstylesheet {
 
     #include "pEpEngine.h"
 
+    typedef enum _fsm_error {
+        invalid_state = -1,
+        invalid_event = -2
+    } fsm_error;
 
-    void sm_«@name»(«@name»_state state)
+    typedef enum _«@name»_state {
+    `` apply "state", mode=declare
+    } «@name»_state;
+
+    typedef enum _«@name»_event {
+    `` apply "state/event", mode=declare
+    } «@name»_event;
+
+    «@name»_state sm_«@name»(«@name»_state state, «@name»_event event)
     {
         switch (state) {
-            `` apply "state"
+            `` apply "state", mode=implement
+            default:
+                return invalid_state;
         }
     }
 
     ||
 
-    template "state"
+    template "state", mode=declare
+        | «@name»`if "position()!=last()" > , `
+
+    template "state", mode=implement
     ||
     case «@name»:
-        // bla
+        switch (event) {
+        `` apply "event", 2
+        default:
+            return invalid_event;
+        }
         break;
 
     ||
-}
 
+    template "event", mode=declare
+        | «@name»`if "position()!=last()" > , `
+
+    template "event"
+    ||
+    case «@name»:
+    `` apply "action|transition";
+        break;
+    ||
+
+    template "action" | «@name»();
+    template "transition" | return «@target»;
+}
 
