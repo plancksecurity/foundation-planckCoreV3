@@ -7,7 +7,7 @@ Identity ::= SEQUENCE {
     user-id     UTF8String,
     username    UTF8String,
     comm-type   INTEGER (0..255),
-    lang        PrintableString (2)
+    lang        PrintableString
 }
 
 Stringlist ::= SEQUENCE OF UTF8String
@@ -15,6 +15,12 @@ Stringlist ::= SEQUENCE OF UTF8String
 Version ::= SEQUENCE {
     major       INTEGER (0..255),
     minor       INTEGER (0..255)
+}
+
+Header ::= SEQUENCE {
+    protocol    INTEGER (0..65535),
+    version     Version,
+    message     INTEGER (0..65535)
 }
 
 END
