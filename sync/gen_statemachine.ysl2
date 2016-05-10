@@ -13,20 +13,30 @@ tstylesheet {
 
     #include "pEpEngine.h"
 
+    // error values
+
     typedef enum _fsm_error {
         invalid_state = -1,
         invalid_event = -2
     } fsm_error;
 
+    // states
+
     typedef enum _«@name»_state {
     `` for "set:distinct(state/@name)" |> «.»`if "position()!=last()" > , `
     } «@name»_state;
+
+    // events
 
     typedef enum _«@name»_event {
     `` for "set:distinct(state/event/@name)" |> «.»`if "position()!=last()" > , `
     } «@name»_event;
 
+    // actions
+
     `` for "set:distinct(state/event//action/@name)" | void «.»(pEp_identity *partner);
+
+    // state machine
 
     «@name»_state fsm_«@name»(
             «@name»_state state,
