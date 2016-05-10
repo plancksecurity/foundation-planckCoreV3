@@ -190,18 +190,14 @@ DYNAMIC_API PEP_STATUS update_identity(
                     return PEP_OUT_OF_MEMORY;
                 }
 
-                if (identity->comm_type == PEP_ct_unknown) {
-                    if (_comm_type_key != PEP_ct_compromized && _comm_type_key != PEP_ct_unknown) {
+                if (_comm_type_key != PEP_ct_compromized &&
+                    _comm_type_key != PEP_ct_unknown)
+                {
+                    if (identity->comm_type == PEP_ct_unknown ||
+                        _comm_type_key > identity->comm_type)
+                    {
                         identity->comm_type = _comm_type_key;
                         _fpr = _keylist->value;
-                    }
-                }
-                else {
-                    if (_comm_type_key != PEP_ct_compromized && _comm_type_key != PEP_ct_unknown) {
-                        if (_comm_type_key > identity->comm_type) {
-                            identity->comm_type = _comm_type_key;
-                            _fpr = _keylist->value;
-                        }
                     }
                 }
             }
@@ -257,7 +253,6 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 {
     pEp_identity *stored_identity;
     PEP_STATUS status;
-    stringlist_t *keylist = NULL;
 
     assert(session);
     assert(identity);
@@ -295,9 +290,27 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
             }
             identity->fpr_size = stored_identity->fpr_size;
         }
+
+        // Backward compatibility, not check that stored key is indeed own key
+
+    }
+    else if (!EMPTYSTR(identity->fpr))
+    {
+        // App must have a good reason to give fpr, such as explicit
+        // import of private key, or similar.
+
+        // Take given fpr as-is, and consider it as own-key.
+
+        status = own_key_add(session, identity->fpr);
+        assert(status == PEP_STATUS_OK);
+        if (status != PEP_STATUS_OK) {
+            return status;
+        }
     }
     else
     {
+        stringlist_t *keylist = NULL;
+
         free(identity->fpr);
         identity->fpr_size = 0;
         
@@ -308,34 +321,66 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
         
         if (keylist != NULL && keylist->value != NULL)
         {
-            // BUG : Vulnerable to auto-key-import poisoning.
-            //       Attacker's key with forged userId could have been
-            //       auto imported from already received email and be used here
-            
-            // TODO : iterate over list to elect best key
-            // TODO : discard keys which aren't private
-            // TODO : discard keys which aren't either
-            //             - own generated key
-            //             - own from synchronized device group
-            //             - already fully trusted as a public key of known
-            //               identity, for that same address
-            //               (case of imported key for mailing lists)
-            
-            identity->fpr = strdup(keylist->value);
-            assert(identity->fpr);
-            if (identity->fpr == NULL)
-            {
-                return PEP_OUT_OF_MEMORY;
+            char *_fpr = NULL;
+            identity->comm_type = PEP_ct_unknown;
+
+            stringlist_t *_keylist;
+            for (_keylist = keylist; _keylist && _keylist->value; _keylist = _keylist->next) {
+                bool is_own = false;
+                
+                status = own_key_is_listed(session, _keylist->value, &is_own);
+                assert(status == PEP_STATUS_OK);
+                if (status != PEP_STATUS_OK) {
+                    free_stringlist(keylist);
+                    return status;
+                }
+
+                // TODO : also accept synchronized device group keys ?
+                
+                if (is_own)
+                {
+                    PEP_comm_type _comm_type_key;
+                    
+                    status = get_key_rating(session, _keylist->value, &_comm_type_key);
+                    assert(status != PEP_OUT_OF_MEMORY);
+                    if (status == PEP_OUT_OF_MEMORY) {
+                        free_stringlist(keylist);
+                        return PEP_OUT_OF_MEMORY;
+                    }
+                    
+                    if (_comm_type_key != PEP_ct_compromized &&
+                        _comm_type_key != PEP_ct_unknown)
+                    {
+                        if (identity->comm_type == PEP_ct_unknown ||
+                            _comm_type_key > identity->comm_type)
+                        {
+                            identity->comm_type = _comm_type_key;
+                            _fpr = _keylist->value;
+                        }
+                    }
+                }
             }
-            identity->fpr_size = strlen(identity->fpr);
+            
+            if (_fpr)
+            {
+                identity->fpr = strdup(_fpr);
+                assert(identity->fpr);
+                if (identity->fpr == NULL)
+                {
+                    free_stringlist(keylist);
+                    return PEP_OUT_OF_MEMORY;
+                }
+                identity->fpr_size = strlen(identity->fpr);
+            }
+            free_stringlist(keylist);
         }
-        
     }
     
     // TODO : Check key for revoked state
     
     if (EMPTYSTR(identity->fpr) /* or revoked */)
     {
+        stringlist_t *keylist = NULL;
         
         DEBUG_LOG("generating key pair", "debug", identity->address);
         status = generate_keypair(session, identity);
@@ -353,8 +398,19 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
             return PEP_OUT_OF_MEMORY;
         
         assert(keylist && keylist->value);
-        if (keylist == NULL || keylist->value == NULL) {
+        if (keylist == NULL) {
             return PEP_UNKNOWN_ERROR;
+        }else if (keylist->value == NULL) {
+            free_stringlist(keylist);
+            return PEP_UNKNOWN_ERROR;
+        }
+        
+        // Consider generated keys as own keys.
+        status = own_key_add(session, identity->fpr);
+        assert(status == PEP_STATUS_OK);
+        if (status != PEP_STATUS_OK) {
+            free_stringlist(keylist);
+            return status;
         }
     }
     else
@@ -363,7 +419,7 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
         status = key_expired(session, identity->fpr, &expired);
         assert(status == PEP_STATUS_OK);
         if (status != PEP_STATUS_OK) {
-            goto free_keylist;
+            return status;
         }
 
         if (status == PEP_STATUS_OK && expired) {
@@ -376,14 +432,11 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     status = set_identity(session, identity);
     assert(status == PEP_STATUS_OK);
     if (status != PEP_STATUS_OK) {
-        goto free_keylist;
+        return status;
     }
 
     return PEP_STATUS_OK;
 
-free_keylist:
-    free_stringlist(keylist);
-    return status;
 }
 
 DYNAMIC_API PEP_STATUS register_examine_function(

@@ -177,7 +177,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "create table if not exists own_keys (\n"
                 "   fpr text primary key\n"
                 "       references pgp_keypair (fpr)\n"
-                "       on delete cascade,\n"
+                "       on delete cascade\n"
                 ");\n"
                 ,
             NULL,
