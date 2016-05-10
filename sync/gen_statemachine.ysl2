@@ -53,7 +53,7 @@ tstylesheet {
     ||
     case «@name»:
     `` apply "action|transition";
-        break;
+    `` if "1" |> break;
     ||
 
     template "action" | «@name»();
