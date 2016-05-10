@@ -26,13 +26,21 @@ tstylesheet {
     `` for "set:distinct(state/event/@name)" |> «.»`if "position()!=last()" > , `
     } «@name»_event;
 
-    «@name»_state fsm_«@name»(«@name»_state state, «@name»_event event)
+    `` for "set:distinct(state/event//action/@name)" | void «.»(pEp_identity *partner);
+
+    «@name»_state fsm_«@name»(
+            «@name»_state state,
+            «@name»_event event,
+            pEp_identity *partner
+        )
     {
         switch (state) {
             `` apply "state"
             default:
                 return invalid_state;
         }
+
+        return state;
     }
 
     ||
@@ -53,10 +61,19 @@ tstylesheet {
     ||
     case «@name»:
     `` apply "action|transition";
-    `` if "1" |> break;
+    `` if "name(*[position()=last()]) != 'transition'" |> break;
     ||
 
-    template "action" | «@name»();
+    template "action" {
+        indent(0);
+        > «@name»(
+        choose {
+            when "parm" > «name(parm/*)»
+            otherwise > NULL
+        }
+        > );\n
+    }
+
     template "transition" | return «@target»;
 }
 

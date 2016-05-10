@@ -10,7 +10,7 @@ protocol DeviceGroup {
     // all messages have a timestamp, time out and are removed after timeout
 
     fsm DeviceState {
-        on init {
+        on Init {
             if (storedGroupKeys)
                 go Grouped;
             go Sole;
@@ -23,15 +23,15 @@ protocol DeviceGroup {
                 do sendBeacon;  // cry, baby
             on Beacon(identity partner) // this event will not happen for already
                                         // rejected partners
-                do sendHandshakeRequest;
+                do sendHandshakeRequest(partner);
             on HandshakeRequest(identity partner) {
-                do sendHandshakeRequest;
+                do sendHandshakeRequest(partner);
                 go HandshakingSole(partner);
             }
         }
 
         state HandshakingSole(identity partner) {
-            on init
+            on Init
                 do showHandshake(partner);
             on HandshakeRejected(identity partner) {
                 do reject(partner);             // sends Reject to partner and
@@ -65,7 +65,7 @@ protocol DeviceGroup {
             on KeyGen
                 do sendOwnKeys; // always send all keys
             on HandshakeRequest(identity partner) {
-                do sendHandshakeRequest;
+                do sendHandshakeRequest(partner);
                 do showHandshake(partner);
             }
             on HandshakeRejected(identity partner)

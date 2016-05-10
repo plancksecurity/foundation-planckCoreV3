@@ -1,4 +1,4 @@
-sync_fsm.c: sync.fsm gen_statemachine.ysl2
+../src/sync_fsm.c: sync.fsm gen_statemachine.ysl2
 	yml2proc -y gen_statemachine.ysl2 $< -o $@
 
 sync.xml: sync.fsm fsm.yml2
@@ -7,4 +7,4 @@ sync.xml: sync.fsm fsm.yml2
 .PHONY: clean
 
 clean:
-	rm -f *.xml *.c
+	rm -f *.xml ../src/sync_fsm.c
