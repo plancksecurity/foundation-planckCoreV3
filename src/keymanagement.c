@@ -541,3 +541,128 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     return status;
 }
 
+DYNAMIC_API PEP_STATUS own_key_add(PEP_SESSION session, const char *fpr)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    assert(session && fpr && fpr[0]);
+    
+    if (!(session && fpr && fpr[0]))
+        return PEP_ILLEGAL_VALUE;
+    
+    sqlite3_reset(session->own_key_add);
+    sqlite3_bind_text(session->own_key_add, 1, fpr, -1, SQLITE_STATIC);
+    
+    int result;
+    
+    result = sqlite3_step(session->own_key_add);
+    switch (result) {
+        case SQLITE_DONE:
+            status = PEP_STATUS_OK;
+            break;
+            
+        default:
+            status = PEP_UNKNOWN_ERROR;
+    }
+    
+    sqlite3_reset(session->own_key_add);
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS own_key_is_listed(
+                                           PEP_SESSION session,
+                                           const char *fpr,
+                                           bool *listed
+                                           )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    int count;
+    
+    assert(session && fpr && fpr[0] && listed);
+    
+    if (!(session && fpr && fpr[0] && listed))
+        return PEP_ILLEGAL_VALUE;
+    
+    *listed = false;
+    
+    sqlite3_reset(session->own_key_is_listed);
+    sqlite3_bind_text(session->own_key_is_listed, 1, fpr, -1, SQLITE_STATIC);
+    
+    int result;
+    
+    result = sqlite3_step(session->own_key_is_listed);
+    switch (result) {
+        case SQLITE_ROW:
+            count = sqlite3_column_int(session->own_key_is_listed, 0);
+            *listed = count > 0;
+            status = PEP_STATUS_OK;
+            break;
+            
+        default:
+            status = PEP_UNKNOWN_ERROR;
+    }
+    
+    sqlite3_reset(session->own_key_is_listed);
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS own_key_retrieve(
+                                          PEP_SESSION session,
+                                          stringlist_t **own_key
+                                          )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    assert(session);
+    assert(own_key);
+    
+    if (!(session && own_key))
+        return PEP_ILLEGAL_VALUE;
+    
+    *own_key = NULL;
+    stringlist_t *_own_key = new_stringlist(NULL);
+    if (_own_key == NULL)
+        goto enomem;
+    
+    sqlite3_reset(session->own_key_retrieve);
+    
+    int result;
+    const char *fpr = NULL;
+    
+    stringlist_t *_bl = _own_key;
+    do {
+        result = sqlite3_step(session->own_key_retrieve);
+        switch (result) {
+            case SQLITE_ROW:
+                fpr = (const char *) sqlite3_column_text(session->own_key_retrieve, 0);
+                
+                _bl = stringlist_add(_bl, fpr);
+                if (_bl == NULL)
+                    goto enomem;
+                
+                break;
+                
+            case SQLITE_DONE:
+                break;
+                
+            default:
+                status = PEP_UNKNOWN_ERROR;
+                result = SQLITE_DONE;
+        }
+    } while (result != SQLITE_DONE);
+    
+    sqlite3_reset(session->own_key_retrieve);
+    if (status == PEP_STATUS_OK)
+        *own_key = _own_key;
+    else
+        free_stringlist(_own_key);
+    
+    goto the_end;
+    
+enomem:
+    free_stringlist(_own_key);
+    status = PEP_OUT_OF_MEMORY;
+    
+the_end:
+    return status;
+}

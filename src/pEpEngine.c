@@ -30,6 +30,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     static const char *sql_blacklist_is_listed;
     static const char *sql_blacklist_retrieve;
 
+    // Own keys
+    static const char *sql_own_key_add;
+    static const char *sql_own_key_is_listed;
+    static const char *sql_own_key_retrieve;
+
     bool in_first = false;
 
     assert(sqlite3_threadsafe());
@@ -168,6 +173,12 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "create table if not exists blacklist_keys (\n"
                 "   fpr text primary key\n"
                 ");\n"
+                // Own keys
+                "create table if not exists own_keys (\n"
+                "   fpr text primary key\n"
+                "       references pgp_keypair (fpr)\n"
+                "       on delete cascade,\n"
+                ");\n"
                 ,
             NULL,
             NULL,
@@ -187,7 +198,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         sql_log = "insert into log (title, entity, description, comment)"
                   "values (?1, ?2, ?3, ?4);";
 
-        sql_get_identity =    "select fpr, username, comm_type, lang"
+        sql_get_identity =  "select fpr, username, comm_type, lang"
                             "   from identity"
                             "   join person on id = identity.user_id"
                             "   join pgp_keypair on fpr = identity.main_key_id"
@@ -236,6 +247,16 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         sql_blacklist_is_listed = "select count(*) from blacklist_keys where fpr = upper(replace(?1,' ','')) ;";
 
         sql_blacklist_retrieve = "select * from blacklist_keys ;";
+        
+        // Own keys
+        
+        sql_own_key_add = "insert or replace into own_keys (fpr) "
+                          "    values (upper(replace(?1,' ',''))) ;";
+        
+        sql_own_key_is_listed = "select count(*) from own_keys where fpr = upper(replace(?1,' ','')) ;";
+
+        sql_own_key_retrieve = "select * from own_keys ;";
+        
     }
 
     int_result = sqlite3_prepare_v2(_session->db, sql_log, (int)strlen(sql_log),
@@ -308,6 +329,20 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_blacklist_retrieve), &_session->blacklist_retrieve, NULL);
     assert(int_result == SQLITE_OK);
 
+    // Own keys
+    
+    int_result = sqlite3_prepare_v2(_session->db, sql_own_key_add,
+                                    (int)strlen(sql_own_key_add), &_session->own_key_add, NULL);
+    assert(int_result == SQLITE_OK);
+    
+    int_result = sqlite3_prepare_v2(_session->db, sql_own_key_is_listed,
+                                    (int)strlen(sql_own_key_is_listed), &_session->own_key_is_listed, NULL);
+    assert(int_result == SQLITE_OK);
+    
+    int_result = sqlite3_prepare_v2(_session->db, sql_own_key_retrieve,
+                                    (int)strlen(sql_own_key_retrieve), &_session->own_key_retrieve, NULL);
+    assert(int_result == SQLITE_OK);
+    
     status = init_cryptotech(_session, in_first);
     if (status != PEP_STATUS_OK)
         goto pep_error;
@@ -807,7 +842,7 @@ DYNAMIC_API PEP_STATUS set_identity(
     sqlite3_reset(session->set_trust);
     if (result != SQLITE_DONE) {
         sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
-        return PEP_CANNOT_SET_IDENTITY;
+        return PEP_CANNOT_SET_TRUST;
     }
 
     result = sqlite3_exec(session->db, "COMMIT ;", NULL, NULL, NULL);
@@ -837,7 +872,7 @@ DYNAMIC_API PEP_STATUS mark_as_compromized(
     sqlite3_reset(session->mark_compromized);
 
     if (result != SQLITE_DONE)
-        return PEP_CANNOT_SET_IDENTITY;
+        return PEP_CANNOT_SET_TRUST;
 
     return PEP_STATUS_OK;
 }
