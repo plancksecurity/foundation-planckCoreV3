@@ -152,6 +152,43 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
         pEp_identity *ident
     );
 
+    
+// own_key_add() - add to own keys
+//
+//  parameters:
+//      session (in)        session to use
+//      fpr (in)            fingerprint of owned key
+
+DYNAMIC_API PEP_STATUS own_key_add(PEP_SESSION session, const char *fpr);
+
+
+// own_key_is_listed() - returns true id key is listed as own key
+//
+//  parameters:
+//      session (in)        session to use
+//      fpr (in)            fingerprint of key to test
+//      bool (out)          flags if key is own
+
+DYNAMIC_API PEP_STATUS own_key_is_listed(
+        PEP_SESSION session,
+        const char *fpr,
+        bool *listed
+    );
+
+
+// own_key_retrieve() - retrieve all own keys fingerprints
+//
+//  parameters:
+//      session (in)        session to use
+//      own_key (out)     copy of own_key
+//
+//  caveat:
+//      the ownership of the copy of own_key goes to the caller
+
+DYNAMIC_API PEP_STATUS own_key_retrieve(
+        PEP_SESSION session,
+        stringlist_t **own_key
+    );
 
 #ifdef __cplusplus
 }
