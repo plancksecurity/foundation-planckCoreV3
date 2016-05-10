@@ -1,0 +1,16 @@
+PEP DEFINITIONS ::=
+BEGIN
+
+Identity ::= SEQUENCE {
+    address     UTF8String,
+    fpr         UTF8String,
+    user-id     UTF8String,
+    username    UTF8String,
+    comm-type   INTEGER (0..255),
+    lang        OCTET STRING (2)
+}
+
+Stringlist ::= SEQUENCE OF UTF8String
+
+END
+
