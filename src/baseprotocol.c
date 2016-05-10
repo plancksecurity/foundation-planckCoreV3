@@ -1,5 +1,30 @@
 #include "pEp_internal.h"
 
+PEP_STATUS decorate_message(
+        message *msg,
+        char *payload,
+        size_t size
+    )
+{
+    assert(msg);
+    assert(payload);
+    assert(size);
+
+    if (!(msg && payload && size))
+        return PEP_ILLEGAL_VALUE;
+
+    bloblist_t *bl = bloblist_add(msg->attachments, payload, size,
+            "application/pEp", "auto.pEp");
+    if (bl == NULL)
+        goto enomem;
+
+    msg->attachments = bl;
+    return PEP_STATUS_OK;
+
+enomem:
+    return PEP_OUT_OF_MEMORY;
+}
+
 PEP_STATUS prepare_message(
         const pEp_identity *me,
         const pEp_identity *partner,
@@ -8,9 +33,16 @@ PEP_STATUS prepare_message(
         message **result
     )
 {
+    PEP_STATUS status = PEP_STATUS_OK;
+
     assert(me);
     assert(partner);
     assert(payload);
+    assert(size);
+    assert(result);
+
+    if (!(me && partner && payload && size && result))
+        return PEP_ILLEGAL_VALUE;
 
     *result = NULL;
 
@@ -37,12 +69,10 @@ PEP_STATUS prepare_message(
     if (!msg->longmsg)
         goto enomem;
 
-    msg->attachments = new_bloblist(payload, size, "application/pEp", "auto.pEp");
-    if (msg->attachments == NULL)
-        goto enomem;
-
-    *result = msg;
-    return PEP_STATUS_OK;
+    status = decorate_message(msg, payload, size);
+    if (status == PEP_STATUS_OK)
+        *result = msg;
+    return status;
 
 enomem:
     free_message(msg);

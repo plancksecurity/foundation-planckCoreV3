@@ -6,6 +6,28 @@
 extern "C" {
 #endif
 
+
+// decorate_message() - decorate a message with payload
+//
+//  parameters:
+//      msg (inout)     message to decorate
+//      payload (in)    payload to send
+//      size (in)       size of payload
+//
+//  returns:
+//      PEP_STATUS_OK and result on success or an error on failure
+//
+//  caveat:
+//      on success (and only then) payload goes to the ownership of the msg
+//      the ownership of the msg remains with the caller
+
+PEP_STATUS decorate_message(
+        message *msg,
+        char *payload,
+        size_t size
+    );
+
+
 // prepare_message() - prepare a sync message with payload
 //
 //  parameters:
@@ -16,11 +38,11 @@ extern "C" {
 //      result (out)    message with payload
 //
 //  returns:
-//      PEP_STATUS_OK on success or PEP_OUT_OF_MEMORY
+//      PEP_STATUS_OK and result on success or an error on failure
 //
 //  caveat:
-//      on success (and only then) payload goes to the ownership of the message
-//      created
+//      on success (and only then) payload goes to the ownership of the result
+//      the ownership of the result goes to the caller
 
 PEP_STATUS prepare_message(
         const pEp_identity *me,
@@ -29,6 +51,7 @@ PEP_STATUS prepare_message(
         size_t size,
         message **result
     );
+
 
 #ifdef __cplusplus
 }
