@@ -31,6 +31,10 @@
 		64A826891B455D0800EECAF0 /* trans_auto.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826731B455D0800EECAF0 /* trans_auto.c */; };
 		64A8268A1B455D0800EECAF0 /* transport.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826751B455D0800EECAF0 /* transport.c */; };
 		64A8268C1B455D9D00EECAF0 /* pEpEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = 64A826611B455D0800EECAF0 /* pEpEngine.h */; };
+		64D2C8411CE2241C002CD757 /* sync_fsm.c in Sources */ = {isa = PBXBuildFile; fileRef = 64D2C8401CE2241C002CD757 /* sync_fsm.c */; };
+		64D2C8491CE2245D002CD757 /* sync_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 64D2C8461CE2245D002CD757 /* sync_internal.h */; };
+		64D2C84A1CE2245D002CD757 /* sync.c in Sources */ = {isa = PBXBuildFile; fileRef = 64D2C8471CE2245D002CD757 /* sync.c */; };
+		64D2C84B1CE2245D002CD757 /* sync.h in Headers */ = {isa = PBXBuildFile; fileRef = 64D2C8481CE2245D002CD757 /* sync.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -139,6 +143,10 @@
 		64A826751B455D0800EECAF0 /* transport.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = transport.c; path = ../src/transport.c; sourceTree = "<group>"; };
 		64A826761B455D0800EECAF0 /* transport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = transport.h; path = ../src/transport.h; sourceTree = "<group>"; };
 		64A826771B455D0800EECAF0 /* wrappers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wrappers.h; path = ../src/wrappers.h; sourceTree = "<group>"; };
+		64D2C8401CE2241C002CD757 /* sync_fsm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_fsm.c; path = ../src/sync_fsm.c; sourceTree = "<group>"; };
+		64D2C8461CE2245D002CD757 /* sync_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sync_internal.h; path = ../src/sync_internal.h; sourceTree = "<group>"; };
+		64D2C8471CE2245D002CD757 /* sync.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync.c; path = ../src/sync.c; sourceTree = "<group>"; };
+		64D2C8481CE2245D002CD757 /* sync.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sync.h; path = ../src/sync.h; sourceTree = "<group>"; };
 		64DA240C1B832EA0000BEE80 /* netpgp.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = netpgp.xcodeproj; path = "../../netpgp-et/netpgp-xcode/netpgp.xcodeproj"; sourceTree = "<group>"; };
 		64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libetpan.xcodeproj; path = "../../libetpan/build-mac/libetpan.xcodeproj"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -215,6 +223,10 @@
 		64A8264B1B455C5600EECAF0 /* srcref */ = {
 			isa = PBXGroup;
 			children = (
+				64D2C8461CE2245D002CD757 /* sync_internal.h */,
+				64D2C8471CE2245D002CD757 /* sync.c */,
+				64D2C8481CE2245D002CD757 /* sync.h */,
+				64D2C8401CE2241C002CD757 /* sync_fsm.c */,
 				430D258A1C9ED75A00B94535 /* blacklist.c */,
 				64A8264C1B455D0800EECAF0 /* bloblist.c */,
 				64A8264D1B455D0800EECAF0 /* bloblist.h */,
@@ -269,6 +281,8 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				64D2C8491CE2245D002CD757 /* sync_internal.h in Headers */,
+				64D2C84B1CE2245D002CD757 /* sync.h in Headers */,
 				64A8268C1B455D9D00EECAF0 /* pEpEngine.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -445,6 +459,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				64A826871B455D0800EECAF0 /* stringpair.c in Sources */,
+				64D2C8411CE2241C002CD757 /* sync_fsm.c in Sources */,
 				64A826831B455D0800EECAF0 /* platform_unix.c in Sources */,
 				64A8267B1B455D0800EECAF0 /* etpan_mime.c in Sources */,
 				64A8267A1B455D0800EECAF0 /* email.c in Sources */,
@@ -455,6 +470,7 @@
 				64A826891B455D0800EECAF0 /* trans_auto.c in Sources */,
 				64A8267D1B455D0800EECAF0 /* keymanagement.c in Sources */,
 				64A8267C1B455D0800EECAF0 /* identity_list.c in Sources */,
+				64D2C84A1CE2245D002CD757 /* sync.c in Sources */,
 				64A8268A1B455D0800EECAF0 /* transport.c in Sources */,
 				64A826791B455D0800EECAF0 /* cryptotech.c in Sources */,
 				64A826781B455D0800EECAF0 /* bloblist.c in Sources */,
