@@ -21,41 +21,41 @@ protocol DeviceGroup {
                 do sendBeacon;
             on CannotDecrypt
                 do sendBeacon;  // cry, baby
-            on Beacon(identity partner) // this event will not happen for already
+            on Beacon(Identity partner) // this event will not happen for already
                                         // rejected partners
                 do sendHandshakeRequest(partner);
-            on HandshakeRequest(identity partner) {
+            on HandshakeRequest(Identity partner) {
                 do sendHandshakeRequest(partner);
                 go HandshakingSole(partner);
             }
         }
 
-        state HandshakingSole(identity partner) {
+        state HandshakingSole(Identity partner) {
             on Init
                 do showHandshake(partner);
-            on HandshakeRejected(identity partner) {
+            on HandshakeRejected(Identity partner) {
                 do reject(partner);             // sends Reject to partner and
                                                 // stores rejection of partner
                 go Sole;
             }
-            on HandshakeAccepted(partner) {
+            on HandshakeAccepted(Identity partner) {
                 if keyElectionWon(partner) {    // an already existing group
                                                 // always wins
                     storeOwnKeysAsGroupKeys;
                     transmitGroupKeys(partner);
                     go Grouped;
                 }
-                go WaitForGroupKeys(partner);
+                go WaitForGroupKeys(Identity partner);
             }
         }
     
-        state WaitForGroupKeys(identity partner) {
-            on ReceiveGroupKeys(identity partner) {
-                storeGroupKeys(partner);
+        state WaitForGroupKeys(Identity partner) {
+            on ReceiveGroupKeys(Identity partner, Stringlist keys) {
+                storeGroupKeys(partner, keys);
                 go Grouped;
             }
             on Cancel go Sole;
-            on Reject(identity partner) {
+            on Reject(Identity partner) {
                 do reject(partner);
                 go Sole;
             }
@@ -64,15 +64,15 @@ protocol DeviceGroup {
         state Grouped {
             on KeyGen
                 do sendOwnKeys; // always send all keys
-            on HandshakeRequest(identity partner) {
+            on HandshakeRequest(Identity partner) {
                 do sendHandshakeRequest(partner);
                 do showHandshake(partner);
             }
-            on HandshakeRejected(identity partner)
+            on HandshakeRejected(Identity partner)
                 do reject(partner);
-            on HandshakeAccepted(identity partner)
+            on HandshakeAccepted(Identity partner)
                 do transmitGroupKeys(partner);
-            on Reject(identity partner)
+            on Reject(Identity partner)
                 do reject partner;
         }
     }
