@@ -34,14 +34,14 @@ tstylesheet {
 
     // actions
 
-    `` for "set:distinct(state/event//action/@name)" | void «.»(pEp_identity *partner);
+    `` for "set:distinct(state/event//action/@name)" | void «.»(const pEp_identity *partner);
 
     // state machine
 
     «@name»_state fsm_«@name»(
             «@name»_state state,
             «@name»_event event,
-            pEp_identity *partner
+            const pEp_identity *partner
         )
     {
         switch (state) {
