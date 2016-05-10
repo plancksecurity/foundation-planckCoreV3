@@ -42,7 +42,7 @@ protocol DeviceGroup {
                 if keyElectionWon(partner) {    // an already existing group
                                                 // always wins
                     storeOwnKeysAsGroupKeys;
-                    sendGroupKeys(partner);
+                    transmitGroupKeys(partner);
                     go Grouped;
                 }
                 go WaitForGroupKeys(partner);
@@ -71,7 +71,7 @@ protocol DeviceGroup {
             on HandshakeRejected(identity partner)
                 do reject(partner);
             on HandshakeAccepted(identity partner)
-                do sendGroupKeys(partner);
+                do transmitGroupKeys(partner);
             on Reject(identity partner)
                 do reject partner;
         }
