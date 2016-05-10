@@ -363,15 +363,10 @@ typedef enum _PEP_comm_type {
 } PEP_comm_type;
 
 typedef struct _pEp_identity {
-    size_t struct_size;         // size of whole struct
     char *address;              // C string with address UTF-8 encoded
-    size_t address_size;        // size of address
     char *fpr;                  // C string with fingerprint UTF-8 encoded
-    size_t fpr_size;            // size of fingerprint
     char *user_id;              // C string with user ID UTF-8 encoded
-    size_t user_id_size;        // size of user ID
     char *username;             // C string with user name UTF-8 encoded
-    size_t username_size;       // size of user name
     PEP_comm_type comm_type;    // type of communication with this ID
     char lang[3];               // language of conversation
                                 // ISO 639-1 ALPHA-2, last byte is 0

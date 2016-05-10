@@ -643,7 +643,6 @@ pEp_identity *new_identity(
                 free(result);
                 return NULL;
             }
-            result->address_size = strlen(address);
         }
         if (fpr) {
             result->fpr = strdup(fpr);
@@ -652,7 +651,6 @@ pEp_identity *new_identity(
                 free_identity(result);
                 return NULL;
             }
-            result->fpr_size = strlen(fpr);
         }
         if (user_id) {
             result->user_id = strdup(user_id);
@@ -661,7 +659,6 @@ pEp_identity *new_identity(
                 free_identity(result);
                 return NULL;
             }
-            result->user_id_size = strlen(user_id);
         }
         if (username) {
             result->username = strdup(username);
@@ -670,9 +667,7 @@ pEp_identity *new_identity(
                 free_identity(result);
                 return NULL;
             }
-            result->username_size = strlen(username);
         }
-        result->struct_size = sizeof(pEp_identity);
     }
     return result;
 }

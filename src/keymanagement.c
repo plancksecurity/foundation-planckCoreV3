@@ -76,18 +76,13 @@ DYNAMIC_API PEP_STATUS update_identity(
     {
         free(identity->user_id);
 
-        identity->user_id = calloc(1, identity->address_size + 6);
+        identity->user_id = calloc(1, strlen(identity->address) + 6);
         if (!identity->user_id)
         {
             return PEP_OUT_OF_MEMORY;
         }
-        snprintf(identity->user_id, identity->address_size + 5,
+        snprintf(identity->user_id, strlen(identity->address) + 5,
                  "TOFU_%s", identity->address);
-
-        if(identity->user_id)
-        {
-            identity->user_id_size = strlen(identity->user_id);
-        }
     }
     
     status = get_identity(session,
@@ -108,19 +103,17 @@ DYNAMIC_API PEP_STATUS update_identity(
 
         if (EMPTYSTR(identity->username)) {
             free(identity->username);
-            identity->username = strndup(stored_identity->username, stored_identity->username_size);
+            identity->username = strdup(stored_identity->username);
             assert(identity->username);
             if (identity->username == NULL)
                 return PEP_OUT_OF_MEMORY;
-            identity->username_size = stored_identity->username_size;
         }
 
         if (EMPTYSTR(identity->fpr)) {
-            identity->fpr = strndup(stored_identity->fpr, stored_identity->fpr_size);
+            identity->fpr = strdup(stored_identity->fpr);
             assert(identity->fpr);
             if (identity->fpr == NULL)
                 return PEP_OUT_OF_MEMORY;
-            identity->fpr_size = stored_identity->fpr_size;
             if (_comm_type_key < PEP_ct_unconfirmed_encryption) {
                 identity->comm_type = _comm_type_key;
             }
@@ -130,9 +123,9 @@ DYNAMIC_API PEP_STATUS update_identity(
         }
         else /* !EMPTYSTR(identity->fpr) */ {
             if (_same_fpr(identity->fpr,
-                          identity->fpr_size,
+                          strlen(identity->fpr),
                           stored_identity->fpr,
-                          stored_identity->fpr_size)) {
+                          strlen(stored_identity->fpr))) {
                 if (_comm_type_key < PEP_ct_unconfirmed_encryption) {
                     identity->comm_type = _comm_type_key;
                 }else{
@@ -210,7 +203,6 @@ DYNAMIC_API PEP_STATUS update_identity(
                     free_stringlist(keylist);
                     return PEP_OUT_OF_MEMORY;
                 }
-                identity->fpr_size = strlen(identity->fpr);
             }
             free_stringlist(keylist);
         }
@@ -226,7 +218,6 @@ DYNAMIC_API PEP_STATUS update_identity(
             identity->username = strdup("anonymous");
             if (identity->username == NULL)
                 return PEP_OUT_OF_MEMORY;
-            identity->username_size = 9;
         }
 
         // Identity doesn't get stored if is was just about checking existing
@@ -282,13 +273,12 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     if (stored_identity)
     {
         if (EMPTYSTR(identity->fpr)) {
-            identity->fpr = strndup(stored_identity->fpr, stored_identity->fpr_size);
+            identity->fpr = strdup(stored_identity->fpr);
             assert(identity->fpr);
             if (identity->fpr == NULL)
             {
                 return PEP_OUT_OF_MEMORY;
             }
-            identity->fpr_size = stored_identity->fpr_size;
         }
 
         // Backward compatibility, not check that stored key is indeed own key
@@ -312,7 +302,6 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
         stringlist_t *keylist = NULL;
 
         free(identity->fpr);
-        identity->fpr_size = 0;
         
         status = find_keys(session, identity->address, &keylist);
         assert(status != PEP_OUT_OF_MEMORY);
@@ -370,7 +359,6 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
                     free_stringlist(keylist);
                     return PEP_OUT_OF_MEMORY;
                 }
-                identity->fpr_size = strlen(identity->fpr);
             }
             free_stringlist(keylist);
         }
