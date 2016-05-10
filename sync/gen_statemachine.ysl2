@@ -19,17 +19,17 @@ tstylesheet {
     } fsm_error;
 
     typedef enum _«@name»_state {
-    `` apply "state", mode=declare
+    `` for "set:distinct(state/@name)" |> «.»`if "position()!=last()" > , `
     } «@name»_state;
 
     typedef enum _«@name»_event {
-    `` apply "state/event", mode=declare
+    `` for "set:distinct(state/event/@name)" |> «.»`if "position()!=last()" > , `
     } «@name»_event;
 
     «@name»_state fsm_«@name»(«@name»_state state, «@name»_event event)
     {
         switch (state) {
-            `` apply "state", mode=implement
+            `` apply "state"
             default:
                 return invalid_state;
         }
@@ -37,10 +37,7 @@ tstylesheet {
 
     ||
 
-    template "state", mode=declare
-        | «@name»`if "position()!=last()" > , `
-
-    template "state", mode=implement
+    template "state"
     ||
     case «@name»:
         switch (event) {
@@ -51,9 +48,6 @@ tstylesheet {
         break;
 
     ||
-
-    template "event", mode=declare
-        | «@name»`if "position()!=last()" > , `
 
     template "event"
     ||
