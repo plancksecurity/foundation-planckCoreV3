@@ -14,12 +14,13 @@ extern "C" {
 // messageToSend() - send a beacon message
 //
 //  parameters:
+//      obj (in)        object handle (implementation defined)
 //      msg (in)        message struct with message to send
 //
 //  return value:
 //      must return PEP_STATUS_OK or any other value on error
 
-typedef PEP_STATUS (*messageToSend_t)(const message *msg);
+typedef PEP_STATUS (*messageToSend_t)(void *obj, const message *msg);
 
 
 typedef enum _sync_handshake_result {
@@ -31,6 +32,7 @@ typedef enum _sync_handshake_result {
 // showHandshake() - do a handshake and deliver the result
 //
 //  parameters:
+//      obj (in)        object handle (implementation defined)
 //      self (in)       own identity
 //      partner (in)    identity of partner
 //
@@ -38,6 +40,7 @@ typedef enum _sync_handshake_result {
 //      result of handshake
 
 typedef sync_handshake_result (*showHandshake_t)(
+        void *obj,
         const pEp_identity *self,
         const pEp_identity *partner
     );
@@ -46,7 +49,9 @@ typedef sync_handshake_result (*showHandshake_t)(
 // register_sync_callbacks() - register adapter's callbacks
 //
 //  parameters:
-//      messageToSend (in)             callback for sending beacon
+//      session (in)                session where to store obj handle
+//      obj (in)                    object handle (implementation defined)
+//      messageToSend (in)          callback for sending message
 //      showHandshake (in)          callback for doing the handshake
 //
 //  return value:
@@ -56,6 +61,8 @@ typedef sync_handshake_result (*showHandshake_t)(
 //      call that BEFORE you're using any other part of the engine
 
 DYNAMIC_API PEP_STATUS register_sync_callbacks(
+        PEP_SESSION session,
+        void *obj,
         messageToSend_t messageToSend,
         showHandshake_t showHandshake
     );
