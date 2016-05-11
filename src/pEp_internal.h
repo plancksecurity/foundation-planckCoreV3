@@ -111,9 +111,10 @@ typedef struct _pEpSession {
     sqlite3_stmt *own_key_is_listed;
     sqlite3_stmt *own_key_retrieve;
 
-    
+    // callbacks   
     examine_identity_t examine_identity;
     void *examine_management;
+    void *sync_obj;
 
     // runtime config
 
