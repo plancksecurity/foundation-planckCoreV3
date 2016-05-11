@@ -14,12 +14,12 @@ extern "C" {
 // messageToSend() - send a beacon message
 //
 //  parameters:
-//      beacon (in)     message struct with beacon message to send
+//      msg (in)        message struct with message to send
 //
 //  return value:
 //      must return PEP_STATUS_OK or any other value on error
 
-typedef PEP_STATUS (*messageToSend_t)(message beacon);
+typedef PEP_STATUS (*messageToSend_t)(const message *msg);
 
 
 typedef enum _sync_handshake_result {
@@ -38,8 +38,8 @@ typedef enum _sync_handshake_result {
 //      result of handshake
 
 typedef sync_handshake_result (*showHandshake_t)(
-        pEp_identity self,
-        pEp_identity partner
+        const pEp_identity *self,
+        const pEp_identity *partner
     );
 
 
