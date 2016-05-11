@@ -1,10 +1,9 @@
 #include "sync.h"
 
-typedef sendBeacon_t sendHandshakeRequest_t;
+typedef messageToSend_t sendHandshakeRequest_t;
 
 typedef struct _PEP_sync_callbacks_t {
-    sendBeacon_t sendBeacon;
-    sendHandshakeRequest_t sendHandshakeRequest;
+    messageToSend_t messageToSend;
     showHandshake_t showHandshake;
 } PEP_sync_callbacks_t;
 
