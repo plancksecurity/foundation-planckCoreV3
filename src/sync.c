@@ -22,6 +22,7 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
 }
 
 DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
+    session->sync_obj = NULL;
     PEP_sync_callbacks.messageToSend = NULL;
     PEP_sync_callbacks.showHandshake = NULL;
 }

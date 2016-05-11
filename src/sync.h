@@ -69,8 +69,11 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
 
 
 // unregister_sync_callbacks() - unregister adapter's callbacks
+//
+//  parameters:
+//      session (in)                session where to store obj handle
 
-DYNAMIC_API void unregister_sync_callbacks();
+DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session);
 
 
 #ifdef __cplusplus
