@@ -18,7 +18,7 @@ extern "C" {
 //      msg (in)        message struct with message to send
 //
 //  return value:
-//      must return PEP_STATUS_OK or any other value on error
+//      PEP_STATUS_OK or any other value on error
 
 typedef PEP_STATUS (*messageToSend_t)(void *obj, const message *msg);
 
@@ -35,14 +35,16 @@ typedef enum _sync_handshake_result {
 //      obj (in)        object handle (implementation defined)
 //      self (in)       own identity
 //      partner (in)    identity of partner
+//      result (out)    result of handshake
 //
 //  return value:
-//      result of handshake
+//      PEP_STATUS_OK or any other value on error
 
-typedef sync_handshake_result (*showHandshake_t)(
+typedef PEP_STATUS (*showHandshake_t)(
         void *obj,
         const pEp_identity *self,
-        const pEp_identity *partner
+        const pEp_identity *partner,
+        sync_handshake_result *result
     );
 
 

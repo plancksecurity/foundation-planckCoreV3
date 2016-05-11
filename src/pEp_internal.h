@@ -68,6 +68,7 @@
 #include "keymanagement.h"
 #include "cryptotech.h"
 #include "transport.h"
+#include "sync.h"
 
 #define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
 
@@ -115,6 +116,8 @@ typedef struct _pEpSession {
     examine_identity_t examine_identity;
     void *examine_management;
     void *sync_obj;
+    messageToSend_t messageToSend;
+    showHandshake_t showHandshake;
 
     // runtime config
 
