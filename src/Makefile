@@ -52,11 +52,14 @@ else
 	$(error Unknown OpenPGP library : $(OPENPGP))
 endif
 
-ALL_SOURCE=$(subst $(NO_SOURCE),,$(wildcard *.c))
+ALL_SOURCE=$(subst $(NO_SOURCE),,$(wildcard *.c)) sync_fsm.c
 DEPENDS=$(subst .c,.d,$(ALL_SOURCE))
 ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
 
 all: $(TARGET)
+
+sync_fsm.c: ../sync/sync.fsm
+	make -C ../sync
 
 %.d: %.c
 	@set -e; rm -f $@; \
