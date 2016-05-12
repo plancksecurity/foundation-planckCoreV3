@@ -7,6 +7,7 @@
 // types
 
 typedef pEp_identity * Identity;
+typedef stringlist_t * Stringlist;
 typedef union _param { const Identity partner; const stringlist_t *keylist; } param_t;
 
 // error values

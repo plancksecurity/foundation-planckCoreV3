@@ -14,7 +14,7 @@ tstylesheet {
         ||
         // encoders and decoders state for «@name» protocol
 
-        #include "pEpEngine.h"
+        #include "sync_fsm.h"
 
         // decoders
 
@@ -32,6 +32,9 @@ tstylesheet {
             with "pfx", "'create'";
             with "baseParms" > const char **bufp, size_t *sizep
         }
+        ||
+
+        ||
     }
 
     def "xsl:typeOfActionParam" {

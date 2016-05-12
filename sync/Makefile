@@ -1,3 +1,5 @@
+all: ../src/sync_fsm.c ../src/sync_codec.c
+
 ../src/sync_fsm.c: sync.fsm gen_statemachine.ysl2 fsm.yml2
 	yml2proc -y gen_statemachine.ysl2 $< -o $@
 

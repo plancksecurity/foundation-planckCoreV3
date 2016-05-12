@@ -1,6 +1,6 @@
 // encoders and decoders state for DeviceGroup protocol
 
-#include "pEpEngine.h"
+#include "sync_fsm.h"
 
 // decoders
 
