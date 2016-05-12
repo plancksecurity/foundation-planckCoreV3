@@ -2,7 +2,10 @@
 
 #include "pEpEngine.h"
 
-typedef union _param { const pEp_identity *partner; const stringlist_t *keylist; } param_t;
+// types
+
+typedef pEp_identity * Identity;
+typedef union _param { const Identity partner; const stringlist_t *keylist; } param_t;
 
 // error values
 
@@ -37,13 +40,13 @@ typedef enum _DeviceState_event {
 
 // actions
 
-void sendBeacon(const pEp_identity *partner);
-void sendHandshakeRequest(const pEp_identity *partner);
-void showHandshake(const pEp_identity *partner);
-void reject(const pEp_identity *partner);
-void storeGroupKeys(const pEp_identity *partner);
-void sendOwnKeys(const pEp_identity *partner);
-void transmitGroupKeys(const pEp_identity *partner);
+void sendBeacon(const Identity partner);
+void sendHandshakeRequest(const Identity partner);
+void showHandshake(const Identity partner);
+void reject(const Identity partner);
+void storeGroupKeys(const Identity partner);
+void sendOwnKeys(const Identity partner);
+void transmitGroupKeys(const Identity partner);
 
 // decoders
 
@@ -62,7 +65,7 @@ void encodeOwnKeys(void);
 DeviceState_state fsm_DeviceState(
         DeviceState_state state,
         DeviceState_event event,
-        const pEp_identity *partner
+        const Identity partner
     )
 {
     switch (state) {

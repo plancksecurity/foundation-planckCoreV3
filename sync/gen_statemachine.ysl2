@@ -17,7 +17,10 @@ tstylesheet {
 
     #include "pEpEngine.h"
 
-    typedef union _param { const pEp_identity *partner; const stringlist_t *keylist; } param_t;
+    // types
+
+    typedef pEp_identity * Identity;
+    typedef union _param { const Identity partner; const stringlist_t *keylist; } param_t;
 
     // error values
 
@@ -40,7 +43,7 @@ tstylesheet {
 
     // actions
 
-    `` for "set:distinct(state/event//action/@name)" | void «.»(const pEp_identity *partner);
+    `` for "set:distinct(state/event//action/@name)" | void «.»(const Identity partner);
 
     // decoders
 
@@ -55,7 +58,7 @@ tstylesheet {
     «@name»_state fsm_«@name»(
             «@name»_state state,
             «@name»_event event,
-            const pEp_identity *partner
+            const Identity partner
         )
     {
         switch (state) {
