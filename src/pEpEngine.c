@@ -232,7 +232,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         sql_crashdump = "select timestamp, title, entity, description, comment"
                         " from log order by timestamp desc limit ?1 ;";
 
-        sql_languagelist = "select i18n_language.lang, name, phrase from i18n_language join i18n_token using (lang);" ;
+        sql_languagelist = "select i18n_language.lang, name, phrase from i18n_language join i18n_token using (lang) where i18n_token.id = 1000;" ;
 
         sql_i18n_token = "select phrase from i18n_token where lang = lower(?1) and id = ?2 ;";
 
