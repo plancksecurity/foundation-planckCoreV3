@@ -52,7 +52,8 @@ else
 	$(error Unknown OpenPGP library : $(OPENPGP))
 endif
 
-ALL_SOURCE=$(subst $(NO_SOURCE),,$(wildcard *.c)) sync_fsm.c
+ALL_SOURCE=$(subst $(NO_SOURCE),,$(wildcard *.c))
+
 DEPENDS=$(subst .c,.d,$(ALL_SOURCE))
 ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
 

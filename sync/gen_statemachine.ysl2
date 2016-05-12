@@ -11,66 +11,77 @@ tstylesheet {
     key "ActionByNames", "/protocol/fsm/state/event//action", "@name";
     variable "UniqueActions", "/protocol/fsm/state/event//action[generate-id()=generate-id(key('ActionByNames',@name)[1])]";
 
-    template "/protocol/fsm"
-    ||
-    // state machine for «@name»
+    template "/protocol/fsm" {
+        document "../src/sync_fsm.h", "text"
+        ||
+        #pragma once
 
-    #include "pEpEngine.h"
+        // state machine for «@name»
 
-    // types
+        #include "pEpEngine.h"
 
-    typedef pEp_identity * Identity;
-    typedef union _param { const Identity partner; const stringlist_t *keylist; } param_t;
+        // types
 
-    // error values
+        typedef pEp_identity * Identity;
+        typedef union _param { const Identity partner; const stringlist_t *keylist; } param_t;
 
-    typedef enum _fsm_error {
-        invalid_state = -1,
-        invalid_event = -2
-    } fsm_error;
+        // error values
 
-    // states
+        typedef enum _fsm_error {
+            invalid_state = -1,
+            invalid_event = -2
+        } fsm_error;
 
-    typedef enum _«@name»_state {
-    `` for "set:distinct(state/@name)" |> «.»`if "position()!=last()" > , `
-    } «@name»_state;
+        // states
 
-    // events
+        typedef enum _«@name»_state {
+        `` for "set:distinct(state/@name)" |> «.»`if "position()!=last()" > , `
+        } «@name»_state;
 
-    typedef enum _«@name»_event {
-    `` for "set:distinct(state/event/@name)" |> «.»`if "position()!=last()" > , `
-    } «@name»_event;
+        // events
 
-    // actions
+        typedef enum _«@name»_event {
+        `` for "set:distinct(state/event/@name)" |> «.»`if "position()!=last()" > , `
+        } «@name»_event;
 
-    `` for "set:distinct(state/event//action/@name)" | void «.»(const Identity partner);
+        // actions
 
-    // decoders
+        `` for "set:distinct(state/event//action/@name)" | void «.»(const Identity partner);
 
-    `` apply "$UniqueActions[starts-with(@name,'send')]",0 mode="proto" with "pfx", "'decode'"
+        // driver
 
-    // encoders 
+        void fsm_«@name»_inject(PEP_SESSION session, «@name»_event event);
 
-    `` apply "$UniqueActions[starts-with(@name,'send')]",0 mode="proto" with "pfx", "'encode'"
+        // decoders
 
-    // state machine
+        `` apply "$UniqueActions[starts-with(@name,'send')]",0 mode="proto" with "pfx", "'decode'"
 
-    «@name»_state fsm_«@name»(
-            «@name»_state state,
-            «@name»_event event,
-            const Identity partner
-        )
-    {
-        switch (state) {
-            `` apply "state"
-            default:
-                return invalid_state;
+        // encoders 
+
+        `` apply "$UniqueActions[starts-with(@name,'send')]",0 mode="proto" with "pfx", "'encode'"
+        ||
+        ||
+        #include "sync_fsm.h"
+
+        // state machine for «@name»
+
+        «@name»_state fsm_«@name»(
+                «@name»_state state,
+                «@name»_event event,
+                const Identity partner
+            )
+        {
+            switch (state) {
+                `` apply "state"
+                default:
+                    return invalid_state;
+            }
+
+            return state;
         }
 
-        return state;
+        ||
     }
-
-    ||
 
     template "state"
     ||

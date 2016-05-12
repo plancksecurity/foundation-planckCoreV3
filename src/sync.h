@@ -29,13 +29,12 @@ typedef enum _sync_handshake_result {
     SYNC_HANDSHAKE_REJECTED = 1
 } sync_handshake_result;
 
-// showHandshake() - do a handshake and deliver the result
+// showHandshake() - do a handshake by showing the handshake dialog
 //
 //  parameters:
 //      obj (in)        object handle (implementation defined)
 //      self (in)       own identity
 //      partner (in)    identity of partner
-//      result (out)    result of handshake
 //
 //  return value:
 //      PEP_STATUS_OK or any other value on error
@@ -43,8 +42,19 @@ typedef enum _sync_handshake_result {
 typedef PEP_STATUS (*showHandshake_t)(
         void *obj,
         const pEp_identity *self,
-        const pEp_identity *partner,
-        sync_handshake_result *result
+        const pEp_identity *partner
+    );
+
+
+// deliverHandshakeResult() - give the result of the handshake dialog
+//
+//  parameters:
+//      session (in)    session handle
+//      result (in)     handshake result
+
+PEP_STATUS deliverHandshakeResult(
+        PEP_SESSION session,
+        sync_handshake_result result
     );
 
 
