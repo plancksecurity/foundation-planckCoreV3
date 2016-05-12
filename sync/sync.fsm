@@ -76,5 +76,13 @@ protocol DeviceGroup {
                 do reject partner;
         }
     }
+
+    interface commons {
+        Header head;
+    }
+
+    interface OwnKeys {
+        Stringlist ownKeys;
+    }
 }
 

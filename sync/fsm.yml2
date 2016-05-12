@@ -11,3 +11,4 @@ decl event @name, on is event;
 decl transition @target, go is transition;
 decl action @name, do is action;
 decl condition @flag, if is condition;
+decl interface @name;

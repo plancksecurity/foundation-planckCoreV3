@@ -1,0 +1,68 @@
+// generate encoder and decoders for protocol messages
+
+// Copyleft (c) 2016, p≡p foundation
+
+include yslt.yml2
+
+tstylesheet {
+
+    key "ActionByNames", "/protocol/fsm/state/event//action", "@name";
+    variable "UniqueActions", "/protocol/fsm/state/event//action[generate-id()=generate-id(key('ActionByNames',@name)[1])]";
+    variable "UniqueSendActions", "$UniqueActions[starts-with(@name,'send')]";
+
+    template "/protocol"
+    ||
+    // encoders and decoders state for «@name» protocol
+
+    #include "pEpEngine.h"
+
+    // decoders
+
+    `` apply "$UniqueSendActions",0 mode="proto" with "pfx", "'decode'"
+
+    // encoders 
+
+    `` apply "$UniqueSendActions",0 mode="proto" with "pfx", "'encode'"
+
+    ||
+
+    def "xsl:typeOfActionParam" {
+        param "n", "name(.)";
+        result "name(ancestor::event/child::parm[child::*[position()=2 and name(.)=$n]]/child::*[position()=1])";
+    }
+    
+    function "interfaces_params" {
+        param "ifaceName";
+        // variable "ifaceCommons", "/protocol/interface[@name = 'commons']/*";
+        variable "ifaceParams", "$UniqueActions[@name = concat('send',$ifaceName)]/parm/*";
+        variable "ifaceAdditions", "/protocol/interface[@name = $ifaceName]/*";
+
+        // if "count($ifaceCommons) != 0" > , 
+        // for "$ifaceCommons" > «name(.)» *«name(./*)»`if "position() != last()" > ,`
+
+        if "count($ifaceParams) != 0" > , 
+        for "set:distinct($ifaceParams)" {
+            > «xsl:typeOfActionParam()» «name(.)»
+            if "position() != last()" > ,
+        }
+
+        if "count($ifaceAdditions) != 0" > , 
+        for "$ifaceAdditions" > «name(.)» *«name(./*)»`if "position() != last()" > ,`
+    }
+
+    template "action", mode="func_header" {
+        param "pfx";
+        variable "ifaceName", "substring-after(@name, 'send')";
+
+        > void «$pfx»«$ifaceName»(const char **bufp, size_t *sizep
+        call("interfaces_params") with "ifaceName", "$ifaceName";
+        > )
+    }
+
+    template "action", mode="proto" {
+        param "pfx";
+        apply ".",0 mode="func_header" with "pfx", "$pfx" ;
+        | ;
+    }
+}
+
