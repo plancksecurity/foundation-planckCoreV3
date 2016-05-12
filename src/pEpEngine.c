@@ -232,7 +232,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         sql_crashdump = "select timestamp, title, entity, description, comment"
                         " from log order by timestamp desc limit ?1 ;";
 
-        sql_languagelist = "select lang, name from i18n_language order by lang ;";
+        sql_languagelist = "select i18n_language.lang, name, phrase from i18n_language join i18n_token using (lang);" ;
 
         sql_i18n_token = "select phrase from i18n_token where lang = lower(?1) and id = ?2 ;";
 
@@ -1293,6 +1293,7 @@ DYNAMIC_API PEP_STATUS get_languagelist(
 
     const char *lang = NULL;
     const char *name = NULL;
+    const char *phrase = NULL;
 
     sqlite3_reset(session->languagelist);
 
@@ -1304,12 +1305,17 @@ DYNAMIC_API PEP_STATUS get_languagelist(
         case SQLITE_ROW:
             lang = (const char *) sqlite3_column_text(session->languagelist, 0);
             name = (const char *) sqlite3_column_text(session->languagelist, 1);
+            phrase = (const char *) sqlite3_column_text(session->languagelist, 2);
 
             _languages = _concat_string(_languages, lang, ',');
             if (_languages == NULL)
                 goto enomem;
 
-            _languages = _concat_string(_languages, name, '\n');
+            _languages = _concat_string(_languages, name, ',');
+            if (_languages == NULL)
+                goto enomem;
+
+            _languages = _concat_string(_languages, phrase, '\n');
             if (_languages == NULL)
                 goto enomem;
 
