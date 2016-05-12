@@ -8,9 +8,6 @@ include yslt.yml2
 
 tstylesheet {
 
-    key "ActionByNames", "/protocol/fsm/state/event//action", "@name";
-    variable "UniqueActions", "/protocol/fsm/state/event//action[generate-id()=generate-id(key('ActionByNames',@name)[1])]";
-
     template "/protocol/fsm" {
         document "../src/sync_fsm.h", "text"
         ||
@@ -52,13 +49,6 @@ tstylesheet {
 
         void fsm_«@name»_inject(PEP_SESSION session, «@name»_event event);
 
-        // decoders
-
-        `` apply "$UniqueActions[starts-with(@name,'send')]",0 mode="proto" with "pfx", "'decode'"
-
-        // encoders 
-
-        `` apply "$UniqueActions[starts-with(@name,'send')]",0 mode="proto" with "pfx", "'encode'"
         ||
         ||
         #include "sync_fsm.h"
@@ -110,23 +100,6 @@ tstylesheet {
             otherwise > NULL
         }
         > );\n
-    }
-
-    def "xsl:typeOfActionParam" {
-        param "n", "name(.)";
-        result "name(ancestor::event/child::parm[child::*[position()=2 and name(.)=$n]]/child::*[position()=1])";
-    }
-
-    template "action", mode="proto" {
-        param "pfx";
-        > void «$pfx»«substring-after(@name, 'send')»(
-        if "count(parm/*) = 0"
-            > void
-        for "set:distinct(parm/*)" {
-            > «xsl:typeOfActionParam()» «name(.)»
-            if "position() != last()" > ,
-        }
-        | );
     }
 
     template "transition" | return «@target»;
