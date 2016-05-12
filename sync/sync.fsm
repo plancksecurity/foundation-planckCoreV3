@@ -51,7 +51,7 @@ protocol DeviceGroup {
     
         state WaitForGroupKeys(Identity partner) {
             on ReceiveGroupKeys(Identity partner, Stringlist keys) {
-                storeGroupKeys(partner, keys);
+                do storeGroupKeys(partner, keys);
                 go Grouped;
             }
             on Cancel go Sole;

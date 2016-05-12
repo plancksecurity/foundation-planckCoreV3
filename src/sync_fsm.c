@@ -2,6 +2,8 @@
 
 #include "pEpEngine.h"
 
+typedef union _param { const pEp_identity *partner; const stringlist_t *keylist; } param_t;
+
 // error values
 
 typedef enum _fsm_error {
@@ -39,8 +41,21 @@ void sendBeacon(const pEp_identity *partner);
 void sendHandshakeRequest(const pEp_identity *partner);
 void showHandshake(const pEp_identity *partner);
 void reject(const pEp_identity *partner);
+void storeGroupKeys(const pEp_identity *partner);
 void sendOwnKeys(const pEp_identity *partner);
 void transmitGroupKeys(const pEp_identity *partner);
+
+// decoders
+
+void decodeBeacon(void);
+void decodeHandshakeRequest(Identity partner);
+void decodeOwnKeys(void);
+
+// encoders 
+
+void encodeBeacon(void);
+void encodeHandshakeRequest(Identity partner);
+void encodeOwnKeys(void);
 
 // state machine
 
@@ -88,6 +103,7 @@ DeviceState_state fsm_DeviceState(
     case WaitForGroupKeys:
         switch (event) {
             case ReceiveGroupKeys:
+                storeGroupKeys(partner);
                 return Grouped;
             case Cancel:
                 return Sole;

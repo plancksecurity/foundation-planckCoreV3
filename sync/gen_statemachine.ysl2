@@ -7,11 +7,17 @@
 include yslt.yml2
 
 tstylesheet {
+
+    key "ActionByNames", "/protocol/fsm/state/event//action", "@name";
+    variable "UniqueActions", "/protocol/fsm/state/event//action[generate-id()=generate-id(key('ActionByNames',@name)[1])]";
+
     template "/protocol/fsm"
     ||
     // state machine for «@name»
 
     #include "pEpEngine.h"
+
+    typedef union _param { const pEp_identity *partner; const stringlist_t *keylist; } param_t;
 
     // error values
 
@@ -35,6 +41,14 @@ tstylesheet {
     // actions
 
     `` for "set:distinct(state/event//action/@name)" | void «.»(const pEp_identity *partner);
+
+    // decoders
+
+    `` apply "$UniqueActions[starts-with(@name,'send')]",0 mode="proto" with "pfx", "'decode'"
+
+    // encoders 
+
+    `` apply "$UniqueActions[starts-with(@name,'send')]",0 mode="proto" with "pfx", "'encode'"
 
     // state machine
 
@@ -82,6 +96,23 @@ tstylesheet {
             otherwise > NULL
         }
         > );\n
+    }
+
+    def "xsl:typeOfActionParam" {
+        param "n", "name(.)";
+        result "name(ancestor::event/child::parm[child::*[position()=2 and name(.)=$n]]/child::*[position()=1])";
+    }
+
+    template "action", mode="proto" {
+        param "pfx";
+        > void «$pfx»«substring-after(@name, 'send')»(
+        if "count(parm/*) = 0"
+            > void
+        for "set:distinct(parm/*)" {
+            > «xsl:typeOfActionParam()» «name(.)»
+            if "position() != last()" > ,
+        }
+        | );
     }
 
     template "transition" | return «@target»;
