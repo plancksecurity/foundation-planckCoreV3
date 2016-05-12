@@ -4,12 +4,12 @@
 
 // decoders
 
-void decodeBeacon(const char **bufp, size_t *sizep);
-void decodeHandshakeRequest(const char **bufp, size_t *sizep, Identity partner);
-void decodeOwnKeys(const char **bufp, size_t *sizep, Stringlist *ownKeys);
+void readBeacon(const char *buf, size_t size);
+void readHandshakeRequest(const char *buf, size_t size, Identity partner);
+void readOwnKeys(const char *buf, size_t size, Stringlist *ownKeys);
 
 // encoders 
 
-void encodeBeacon(const char **bufp, size_t *sizep);
-void encodeHandshakeRequest(const char **bufp, size_t *sizep, Identity partner);
-void encodeOwnKeys(const char **bufp, size_t *sizep, Stringlist *ownKeys);
+void createBeacon(const char **bufp, size_t *sizep);
+void createHandshakeRequest(const char **bufp, size_t *sizep, Identity partner);
+void createOwnKeys(const char **bufp, size_t *sizep, Stringlist *ownKeys);
