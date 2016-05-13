@@ -1777,7 +1777,7 @@ PEP_STATUS pgp_key_expired(
     if (status != PEP_STATUS_OK)
         return status;
 
-    if (key->subkeys)
+    if (key && key->subkeys)
     {
         *expired = key->subkeys->expired;
     }
