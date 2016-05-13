@@ -1774,13 +1774,20 @@ PEP_STATUS pgp_key_expired(
     *expired = false;
 
     status = find_single_key(session, fpr, &key);
-    assert(status != PEP_OUT_OF_MEMORY);
     if (status != PEP_STATUS_OK)
         return status;
 
-    *expired = key->subkeys->expired;
+    if (key->subkeys)
+    {
+        *expired = key->subkeys->expired;
+    }
+    else
+    {
+        status = PEP_KEY_NOT_FOUND;
+    }
+
     gpg.gpgme_key_unref(key);
-    return PEP_STATUS_OK;
+    return status;
 }
 
 PEP_STATUS pgp_binary(const char **path)
