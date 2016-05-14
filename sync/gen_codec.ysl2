@@ -39,7 +39,7 @@ tstylesheet {
 
     def "xsl:typeOfActionParam" {
         param "n", "name(.)";
-        result "name(ancestor::event/child::parm[child::*[position()=2 and name(.)=$n]]/child::*[position()=1])";
+        result "ancestor::event/child::parm[child::*[position()=2 and name(.)=$n]]/child::*[position()=1]";
     }
     
     function "interfaces_params" {
@@ -53,7 +53,7 @@ tstylesheet {
 
         if "count($ifaceParams) != 0" > , 
         for "set:distinct($ifaceParams)" {
-            > «xsl:typeOfActionParam()» «name(.)»
+            > «name(xsl:typeOfActionParam())» «name(.)»
             if "position() != last()" > ,
         }
 
