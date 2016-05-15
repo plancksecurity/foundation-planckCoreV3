@@ -1,0 +1,18 @@
+DEVICEGROUP DEFINITIONS ::=
+BEGIN
+
+Beacon ::= SEQUENCE {
+    header PEP.Header
+}
+
+HandshakeRequest ::= SEQUENCE {
+    header PEP.Header,
+    keylist PEP.Stringlist
+}
+
+OwnKeys ::= SEQUENCE {
+    header PEP.Header
+}
+
+END
+
