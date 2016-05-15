@@ -2,16 +2,21 @@ DEVICEGROUP DEFINITIONS ::=
 BEGIN
 
 Beacon ::= SEQUENCE {
-    header PEP.Header
+    header PEP.Header,
+    me UTF8String
 }
 
 HandshakeRequest ::= SEQUENCE {
     header PEP.Header,
-    keylist PEP.Stringlist
+    you UTF8String,
+    me UTF8String
 }
 
 OwnKeys ::= SEQUENCE {
-    header PEP.Header
+    header PEP.Header,
+    you UTF8String,
+    me UTF8String,
+    keylist PEP.Stringlist
 }
 
 END
