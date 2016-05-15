@@ -43,17 +43,18 @@ typedef enum _DeviceState_event {
 
 // actions
 
-PEP_STATUS sendBeacon(const Identity partner);
-PEP_STATUS sendHandshakeRequest(const Identity partner);
-PEP_STATUS showHandshake(const Identity partner);
-PEP_STATUS reject(const Identity partner);
-PEP_STATUS storeGroupKeys(const Identity partner);
-PEP_STATUS sendOwnKeys(const Identity partner);
-PEP_STATUS transmitGroupKeys(const Identity partner);
+PEP_STATUS sendBeacon(PEP_SESSION session, const Identity partner);
+PEP_STATUS sendHandshakeRequest(PEP_SESSION session, const Identity partner);
+PEP_STATUS showHandshake(PEP_SESSION session, const Identity partner);
+PEP_STATUS reject(PEP_SESSION session, const Identity partner);
+PEP_STATUS storeGroupKeys(PEP_SESSION session, const Identity partner);
+PEP_STATUS sendOwnKeys(PEP_SESSION session, const Identity partner);
+PEP_STATUS transmitGroupKeys(PEP_SESSION session, const Identity partner);
 
 // state machine
 
 DeviceState_state fsm_DeviceState(
+        PEP_SESSION session,
         DeviceState_state state,
         DeviceState_event event,
         const Identity partner

@@ -25,7 +25,7 @@ tstylesheet {
         static «@name»_state state = InitState;
         static Identity partner = NULL;
 
-        state = fsm_«@name»(state, event, partner);
+        state = fsm_«@name»(session, state, event, partner);
         return status;
     }
 
@@ -49,13 +49,14 @@ tstylesheet {
         // «$action/@name»() - 
         //
         //  params:
+        //      session (in)        session handle
         `` if "parm"        | //      partner (in)        partner in sync
         `` if "not(parm)"   | //      partner (in)        (must be NULL)
         //
         //  returns:
         //      PEP_STATUS_OK or any other value on error
 
-        PEP_STATUS «$action/@name»(const Identity partner)
+        PEP_STATUS «$action/@name»(PEP_SESSION session, const Identity partner)
         {
             PEP_STATUS status = PEP_STATUS_OK;
 

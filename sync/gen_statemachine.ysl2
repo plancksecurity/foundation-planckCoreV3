@@ -44,11 +44,12 @@ tstylesheet {
 
         // actions
 
-        `` for "func:distinctName(//action)" | PEP_STATUS «@name»(const Identity partner);
+        `` for "func:distinctName(//action)" | PEP_STATUS «@name»(PEP_SESSION session, const Identity partner);
 
         // state machine
 
         «@name»_state fsm_«@name»(
+                PEP_SESSION session,
                 «@name»_state state,
                 «@name»_event event,
                 const Identity partner
@@ -65,6 +66,7 @@ tstylesheet {
         // state machine for «@name»
 
         «@name»_state fsm_«@name»(
+                PEP_SESSION session,
                 «@name»_state state,
                 «@name»_event event,
                 const Identity partner
@@ -103,7 +105,7 @@ tstylesheet {
 
     template "action" {
         indent(0);
-        > «@name»(
+        > «@name»(session, 
         choose {
             when "parm" > «name(parm/*)»
             otherwise > NULL

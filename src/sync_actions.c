@@ -7,12 +7,13 @@
 // sendBeacon() - 
 //
 //  params:
+//      session (in)        session handle
 //      partner (in)        (must be NULL)
 //
 //  returns:
 //      PEP_STATUS_OK or any other value on error
 
-PEP_STATUS sendBeacon(const Identity partner)
+PEP_STATUS sendBeacon(PEP_SESSION session, const Identity partner)
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -29,12 +30,13 @@ PEP_STATUS sendBeacon(const Identity partner)
 // sendHandshakeRequest() - 
 //
 //  params:
+//      session (in)        session handle
 //      partner (in)        partner in sync
 //
 //  returns:
 //      PEP_STATUS_OK or any other value on error
 
-PEP_STATUS sendHandshakeRequest(const Identity partner)
+PEP_STATUS sendHandshakeRequest(PEP_SESSION session, const Identity partner)
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -51,12 +53,13 @@ PEP_STATUS sendHandshakeRequest(const Identity partner)
 // showHandshake() - 
 //
 //  params:
+//      session (in)        session handle
 //      partner (in)        partner in sync
 //
 //  returns:
 //      PEP_STATUS_OK or any other value on error
 
-PEP_STATUS showHandshake(const Identity partner)
+PEP_STATUS showHandshake(PEP_SESSION session, const Identity partner)
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -73,12 +76,13 @@ PEP_STATUS showHandshake(const Identity partner)
 // reject() - 
 //
 //  params:
+//      session (in)        session handle
 //      partner (in)        partner in sync
 //
 //  returns:
 //      PEP_STATUS_OK or any other value on error
 
-PEP_STATUS reject(const Identity partner)
+PEP_STATUS reject(PEP_SESSION session, const Identity partner)
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -95,12 +99,13 @@ PEP_STATUS reject(const Identity partner)
 // storeGroupKeys() - 
 //
 //  params:
+//      session (in)        session handle
 //      partner (in)        partner in sync
 //
 //  returns:
 //      PEP_STATUS_OK or any other value on error
 
-PEP_STATUS storeGroupKeys(const Identity partner)
+PEP_STATUS storeGroupKeys(PEP_SESSION session, const Identity partner)
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -117,12 +122,13 @@ PEP_STATUS storeGroupKeys(const Identity partner)
 // sendOwnKeys() - 
 //
 //  params:
+//      session (in)        session handle
 //      partner (in)        (must be NULL)
 //
 //  returns:
 //      PEP_STATUS_OK or any other value on error
 
-PEP_STATUS sendOwnKeys(const Identity partner)
+PEP_STATUS sendOwnKeys(PEP_SESSION session, const Identity partner)
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -139,12 +145,13 @@ PEP_STATUS sendOwnKeys(const Identity partner)
 // transmitGroupKeys() - 
 //
 //  params:
+//      session (in)        session handle
 //      partner (in)        partner in sync
 //
 //  returns:
 //      PEP_STATUS_OK or any other value on error
 
-PEP_STATUS transmitGroupKeys(const Identity partner)
+PEP_STATUS transmitGroupKeys(PEP_SESSION session, const Identity partner)
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
