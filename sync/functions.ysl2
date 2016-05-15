@@ -1,0 +1,12 @@
+// function library
+
+def "func:distinctName" {
+    param "nodes", "/..";
+    choose {
+        when "not($nodes)"
+            result "/..";
+        otherwise {
+            result "$nodes[1] | func:distinctName($nodes[position() > 1])[@name != $nodes[1]/@name]";
+        }
+    }
+}

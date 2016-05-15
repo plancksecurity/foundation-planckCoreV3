@@ -7,6 +7,7 @@
 include yslt.yml2
 
 tstylesheet {
+    include ./functions.ysl2
 
     template "/protocol/fsm" {
         document "../src/sync_fsm.h", "text"
@@ -20,7 +21,6 @@ tstylesheet {
         // types
 
         typedef pEp_identity * Identity;
-        typedef stringlist_t * Stringlist;
         typedef union _param { const Identity partner; const stringlist_t *keylist; } param_t;
 
         // error values
@@ -33,22 +33,22 @@ tstylesheet {
         // states
 
         typedef enum _«@name»_state {
-        `` for "set:distinct(state/@name)" |> «.»`if "position()!=last()" > , `
+        `` for "func:distinctName(state)" |> «@name»`if "position()!=last()" > , `
         } «@name»_state;
 
         // events
 
         typedef enum _«@name»_event {
-        `` for "set:distinct(state/event/@name)" |> «.»`if "position()!=last()" > , `
+        `` for "func:distinctName(state/event)" |> «@name»`if "position()!=last()" > , `
         } «@name»_event;
 
         // actions
 
-        `` for "set:distinct(state/event//action/@name)" | void «.»(const Identity partner);
+        `` for "func:distinctName(//action)" | PEP_STATUS «@name»(const Identity partner);
 
         // driver
 
-        void fsm_«@name»_inject(PEP_SESSION session, «@name»_event event);
+        PEP_STATUS fsm_«@name»_inject(PEP_SESSION session, «@name»_event event);
 
         ||
         ||

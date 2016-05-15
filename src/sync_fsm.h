@@ -7,7 +7,6 @@
 // types
 
 typedef pEp_identity * Identity;
-typedef stringlist_t * Stringlist;
 typedef union _param { const Identity partner; const stringlist_t *keylist; } param_t;
 
 // error values
@@ -43,15 +42,15 @@ typedef enum _DeviceState_event {
 
 // actions
 
-void sendBeacon(const Identity partner);
-void sendHandshakeRequest(const Identity partner);
-void showHandshake(const Identity partner);
-void reject(const Identity partner);
-void storeGroupKeys(const Identity partner);
-void sendOwnKeys(const Identity partner);
-void transmitGroupKeys(const Identity partner);
+PEP_STATUS sendBeacon(const Identity partner);
+PEP_STATUS sendHandshakeRequest(const Identity partner);
+PEP_STATUS showHandshake(const Identity partner);
+PEP_STATUS reject(const Identity partner);
+PEP_STATUS storeGroupKeys(const Identity partner);
+PEP_STATUS sendOwnKeys(const Identity partner);
+PEP_STATUS transmitGroupKeys(const Identity partner);
 
 // driver
 
-void fsm_DeviceState_inject(PEP_SESSION session, DeviceState_event event);
+PEP_STATUS fsm_DeviceState_inject(PEP_SESSION session, DeviceState_event event);
 

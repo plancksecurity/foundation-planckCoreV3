@@ -1,0 +1,73 @@
+// generate actions skeleton
+
+// Copyleft (c) 2016, p≡p foundation
+
+// Written by Volker Birk
+
+include yslt.yml2
+
+tstylesheet {
+    include ./functions.ysl2
+
+    template "/protocol/fsm" {
+    document "../src/fsm_driver.c", "text"
+    ||
+    // Driver for «@name» state machine
+
+    #include <assert.h>
+    #include "sync_fsm.h"
+
+
+    PEP_STATUS fsm_«@name»_inject(PEP_SESSION session, «@name»_event event)
+    {
+        PEP_STATUS status = PEP_STATUS_OK;
+
+        return status;
+    }
+    ||
+    ||
+    // Actions for «@name» state machine
+
+    #include <assert.h>
+    #include "sync_fsm.h"
+
+
+    `` for "func:distinctName(//action)" call "action" with "action", ".";
+
+    ||
+    }
+
+    function "action" {
+        param "action";
+
+        ||
+        // «$action/@name»() - 
+        //
+        //  params:
+        `` if "parm"        | //      partner (in)        partner in sync
+        `` if "not(parm)"   | //      partner (in)        (must be NULL)
+        //
+        //  returns:
+        //      PEP_STATUS_OK or any other value on error
+
+        PEP_STATUS «$action/@name»(const Identity partner)
+        {
+            PEP_STATUS status = PEP_STATUS_OK;
+
+        `` if "parm"        |> assert(partner);
+        `` if "parm"        |> if (!partner)
+        `` if "parm"        |>> return PEP_ILLEGAL_VALUE;
+        `` if "not(parm)"   |> assert(partner == NULL);
+        `` if "not(parm)"   |> if (partner)
+        `` if "not(parm)"   |>> return PEP_ILLEGAL_VALUE;
+
+            // working code
+
+
+            return status;
+        }
+
+        ||
+    }
+}
+

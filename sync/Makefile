@@ -1,15 +1,16 @@
-all: ../src/sync_fsm.c ../src/sync_codec.c
+include ../Makefile.conf
 
-../src/sync_fsm.c: sync.fsm gen_statemachine.ysl2 fsm.yml2
-	yml2proc -y gen_statemachine.ysl2 $< -o $@
+all: ../src/sync_fsm.c
 
-../src/sync_codec.c: sync.fsm gen_codec.ysl2 fsm.yml2
-	yml2proc -y gen_codec.ysl2 $< -o $@
+skeleton: ../src/sync_actions.c
 
-sync.xml: sync.fsm fsm.yml2
-	yml2proc -P sync.fsm -o sync.xml
+../src/sync_actions.c: sync.fsm gen_actions_skeleton.ysl2 fsm.yml2 functions.ysl2
+	$(YML2PROC) -y gen_actions_skeleton.ysl2 $< -o $@
+
+../src/sync_fsm.c: sync.fsm gen_statemachine.ysl2 fsm.yml2 functions.ysl2
+	$(YML2PROC) -y gen_statemachine.ysl2 $< -o $@
 
 .PHONY: clean
 
 clean:
-	rm -f *.xml ../src/sync_fsm.c
+	rm -f *.xml *.xsl ../src/sync_fsm.*
