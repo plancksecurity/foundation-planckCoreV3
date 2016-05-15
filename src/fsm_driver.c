@@ -8,5 +8,14 @@ PEP_STATUS fsm_DeviceState_inject(PEP_SESSION session, DeviceState_event event)
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    static DeviceState_state fsm_state = InitState;
+
+    // working code
+
+
     return status;
 }

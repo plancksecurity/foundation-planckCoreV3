@@ -19,6 +19,7 @@ typedef enum _fsm_error {
 // states
 
 typedef enum _DeviceState_state {
+    InitState, 
     Sole, 
     HandshakingSole, 
     WaitForGroupKeys, 
@@ -28,11 +29,11 @@ typedef enum _DeviceState_state {
 // events
 
 typedef enum _DeviceState_event {
+    Init, 
     KeyGen, 
     CannotDecrypt, 
     Beacon, 
     HandshakeRequest, 
-    Init, 
     HandshakeRejected, 
     HandshakeAccepted, 
     ReceiveGroupKeys, 

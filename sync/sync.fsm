@@ -10,10 +10,12 @@ protocol DeviceGroup {
     // all messages have a timestamp, time out and are removed after timeout
 
     fsm DeviceState {
-        on Init {
-            if (storedGroupKeys)
-                go Grouped;
-            go Sole;
+        state InitState {
+            on Init {
+                if (storedGroupKeys)
+                    go Grouped;
+                go Sole;
+            }
         }
 
         state Sole {

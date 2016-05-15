@@ -9,6 +9,15 @@ DeviceState_state fsm_DeviceState(
     )
 {
     switch (state) {
+    case InitState:
+        switch (event) {
+            case Init:
+                return Sole;
+        default:
+            return invalid_event;
+        }
+        break;
+    
     case Sole:
         switch (event) {
             case KeyGen:
