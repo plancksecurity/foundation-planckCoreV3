@@ -10,7 +10,7 @@ tstylesheet {
     include ./functions.ysl2
 
     template "/protocol/fsm" {
-    document "../src/fsm_driver.c", "text"
+    document "../src/sync_driver.c", "text"
     ||
     // Driver for «@name» state machine
 
