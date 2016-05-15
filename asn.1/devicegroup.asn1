@@ -3,19 +3,19 @@ BEGIN
 
 Beacon ::= SEQUENCE {
     header PEP.Header,
-    me UTF8String
+    me PEP.Identity
 }
 
 HandshakeRequest ::= SEQUENCE {
     header PEP.Header,
-    you UTF8String,
-    me UTF8String
+    you PEP.Identity,
+    me PEP.Identity
 }
 
 OwnKeys ::= SEQUENCE {
     header PEP.Header,
-    you UTF8String,
-    me UTF8String,
+    you PEP.Identity,
+    me PEP.Identity,
     keylist PEP.Stringlist
 }
 
