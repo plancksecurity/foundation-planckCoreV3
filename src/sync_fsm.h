@@ -51,6 +51,14 @@ PEP_STATUS storeGroupKeys(const Identity partner);
 PEP_STATUS sendOwnKeys(const Identity partner);
 PEP_STATUS transmitGroupKeys(const Identity partner);
 
+// state machine
+
+DeviceState_state fsm_DeviceState(
+        DeviceState_state state,
+        DeviceState_event event,
+        const Identity partner
+    );
+
 // driver
 
 PEP_STATUS fsm_DeviceState_inject(PEP_SESSION session, DeviceState_event event);

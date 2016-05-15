@@ -46,6 +46,14 @@ tstylesheet {
 
         `` for "func:distinctName(//action)" | PEP_STATUS «@name»(const Identity partner);
 
+        // state machine
+
+        «@name»_state fsm_«@name»(
+                «@name»_state state,
+                «@name»_event event,
+                const Identity partner
+            );
+
         // driver
 
         PEP_STATUS fsm_«@name»_inject(PEP_SESSION session, «@name»_event event);
