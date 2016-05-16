@@ -14,7 +14,7 @@ LD?=clang
 CFLAGS?=-I$(GPGME_IN)/include -I$(HOME)/include -I/opt/local/include $(OPTIMIZE) -pedantic \
 	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -DLIBGPGME=\"$(LIBGPGME)\"
 LDFLAGS?=-lc -shared -arch x86_64 \
-	-L$(HOME)/lib -L/opt/local/lib -letpan -lsqlite3
+	-L$(HOME)/lib -L/opt/local/lib -letpan -lsqlite3 -L../asn.1 -lasn1
 
 else
 $(error don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
@@ -30,7 +30,7 @@ CC=gcc -std=c99
 CFLAGS?=-I$(GPGME_IN)/include $(OPTIMIZE) -fPIC -pedantic \
 	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -DLIBGPGME=\"$(LIBGPGME)\" \
 	-DSQLITE_THREADSAFE=1 -D_GNU_SOURCE
-LDFLAGS?=-L$(GPGME_IN)/lib -shared -lc -ldl -letpan -lpthread
+LDFLAGS?=-L$(GPGME_IN)/lib -shared -lc -ldl -letpan -lpthread -L../asn.1 -lasn1
 
 else
 $(error don't know how to make for $(BUILD_FOR) on $(BUILD_ON))

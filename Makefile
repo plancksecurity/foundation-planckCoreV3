@@ -1,11 +1,13 @@
 include Makefile.conf
 
 all:
+	$(MAKE) -C asn.1 generate
+	$(MAKE) -C asn.1
 	$(MAKE) -C src all
 
 .PHONY: clean build_test test package install uninstall db
 
-install:
+install: all
 	$(MAKE) -C src install
 
 uninstall:
@@ -15,6 +17,7 @@ clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C test clean
 	$(MAKE) -C db clean
+	$(MAKE) -C asn.1 clean
 
 test: all
 	$(MAKE) -C test test
