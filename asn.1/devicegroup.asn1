@@ -1,25 +1,30 @@
-DEVICEGROUP DEFINITIONS AUTOMATIC TAGS ::=
+DEVICEGROUP
+
+DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
+
 BEGIN
 
-Beacon ::= SEQUENCE {
-    header PEP.Header,
-    me PEP.Identity
+IMPORTS Identity, KeyList, Header FROM PEP;
+
+Beacon ::= [APPLICATION 1] SEQUENCE {
+    header Header,
+    me Identity
 }
 
-HandshakeRequest ::= SEQUENCE {
-    header PEP.Header,
-    you PEP.Identity,
-    me PEP.Identity
+HandshakeRequest ::= [APPLICATION 2] SEQUENCE {
+    header Header,
+    you Identity,
+    me Identity
 }
 
-OwnKeys ::= SEQUENCE {
-    header PEP.Header,
-    you PEP.Identity,
-    me PEP.Identity,
-    keylist PEP.Stringlist
+OwnKeys ::= [APPLICATION 3] SEQUENCE {
+    header Header,
+    you Identity,
+    me Identity,
+    keylist KeyList
 }
 
-Message ::= CHOICE {
+SyncMessage ::= CHOICE {
     beacon Beacon,
     handshakeRequest HandshakeRequest,
     ownKeys OwnKeys

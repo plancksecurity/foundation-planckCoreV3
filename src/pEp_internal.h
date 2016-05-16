@@ -113,7 +113,8 @@ typedef struct _pEpSession {
     sqlite3_stmt *own_key_retrieve;
 
     // sequence value
-    sqlite3_stmt *sequence_value;
+    sqlite3_stmt *sequence_value1;
+    sqlite3_stmt *sequence_value2;
 
     // callbacks   
     examine_identity_t examine_identity;

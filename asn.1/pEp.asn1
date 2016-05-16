@@ -1,26 +1,36 @@
-PEP DEFINITIONS ::=
+PEP
+
+DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
+
 BEGIN
 
+EXPORTS Identity, KeyList, Header;
+
+major-version INTEGER ::= 1
+minor-version INTEGER ::= 0
+
+ISO936-1 ::= PrintableString(FROM ("a".."z")) (SIZE(2))
+Hex ::= PrintableString(FROM ("A".."F") | FROM ("0".."9"))
+Hash ::= Hex(SIZE(50..128)) -- SHA1 to SHA512 in hex
+
 Identity ::= SEQUENCE {
-    address     UTF8String,
-    fpr         UTF8String,
-    user-id     UTF8String,
-    username    UTF8String,
-    comm-type   INTEGER (0..255),
-    lang        PrintableString
+    address     UTF8String  (SIZE(1..1024)) OPTIONAL,
+    fpr         Hash,
+    user-id     UTF8String  (SIZE(1..1024)) OPTIONAL,
+    username    UTF8String  (SIZE(1..1024)) OPTIONAL,
+    comm-type   INTEGER     (0..255) OPTIONAL,
+    lang        ISO936-1    DEFAULT "en"
 }
 
-Stringlist ::= SEQUENCE OF UTF8String
+KeyList ::= SEQUENCE OF Hash
 
 Version ::= SEQUENCE {
-    major       INTEGER (0..255),
-    minor       INTEGER (0..255)
+    major       INTEGER (0..255) DEFAULT major-version,
+    minor       INTEGER (0..255) DEFAULT minor-version
 }
 
 Header ::= SEQUENCE {
-    protocol    INTEGER (0..65535),
     version     Version,
-    message     INTEGER (0..65535),
     sequence    INTEGER
 }
 

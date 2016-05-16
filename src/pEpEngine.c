@@ -35,7 +35,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     static const char *sql_own_key_is_listed;
     static const char *sql_own_key_retrieve;
 
-    static const char *sql_sequence_value;
+    static const char *sql_sequence_value1;
+    static const char *sql_sequence_value2;
 
     bool in_first = false;
 
@@ -264,11 +265,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
         sql_own_key_retrieve = "select * from own_keys ;";
  
-        sql_sequence_value = "insert or replace into sequences (name, value) "
-                             "values (?1, "
-                             "(select coalesce((select value + 1 from sequences "
-                             "where name = ?1), 1 ))) ; "
-                             "select value from sequences where name = ?1 ;";
+        sql_sequence_value1 = "insert or replace into sequences (name, value) "
+                              "values (?1, "
+                              "(select coalesce((select value + 1 from sequences "
+                              "where name = ?1), 1 ))) ; ";
+        sql_sequence_value2 = "select value from sequences where name = ?1 ;";
     }
 
     int_result = sqlite3_prepare_v2(_session->db, sql_log, (int)strlen(sql_log),
@@ -344,17 +345,27 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     // Own keys
     
     int_result = sqlite3_prepare_v2(_session->db, sql_own_key_add,
-                                    (int)strlen(sql_own_key_add), &_session->own_key_add, NULL);
+            (int)strlen(sql_own_key_add), &_session->own_key_add, NULL);
     assert(int_result == SQLITE_OK);
     
     int_result = sqlite3_prepare_v2(_session->db, sql_own_key_is_listed,
-                                    (int)strlen(sql_own_key_is_listed), &_session->own_key_is_listed, NULL);
+            (int)strlen(sql_own_key_is_listed), &_session->own_key_is_listed, NULL);
     assert(int_result == SQLITE_OK);
     
     int_result = sqlite3_prepare_v2(_session->db, sql_own_key_retrieve,
-                                    (int)strlen(sql_own_key_retrieve), &_session->own_key_retrieve, NULL);
+            (int)strlen(sql_own_key_retrieve), &_session->own_key_retrieve, NULL);
     assert(int_result == SQLITE_OK);
-    
+ 
+    // Sequence
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_sequence_value1,
+            (int)strlen(sql_sequence_value1), &_session->sequence_value1, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_sequence_value2,
+            (int)strlen(sql_sequence_value2), &_session->sequence_value2, NULL);
+    assert(int_result == SQLITE_OK);
+
     status = init_cryptotech(_session, in_first);
     if (status != PEP_STATUS_OK)
         goto pep_error;
@@ -1432,22 +1443,30 @@ DYNAMIC_API PEP_STATUS sequence_value(
 
     *value = 0;
 
-    sqlite3_reset(session->sequence_value);
-    sqlite3_bind_text(session->sequence_value, 1, name, -1, SQLITE_STATIC);
-
-    result = sqlite3_step(session->sequence_value);
-    switch (result) {
-        case SQLITE_ROW: {
-            int64_t _value = (int64_t)
-                    sqlite3_column_int64(session->sequence_value, 0);
-            *value = _value;
-            break;
-        }
-        default:
-            status = PEP_CANNOT_FIND_IDENTITY;
+    sqlite3_reset(session->sequence_value1);
+    sqlite3_bind_text(session->sequence_value1, 1, name, -1, SQLITE_STATIC);
+    result = sqlite3_step(session->sequence_value1);
+    assert(result == SQLITE_DONE);
+    sqlite3_reset(session->sequence_value1);
+    if (result != SQLITE_DONE) {
+        status = PEP_UNKNOWN_ERROR;
     }
-
-    sqlite3_reset(session->sequence_value);
+    else {
+        sqlite3_reset(session->sequence_value2);
+        sqlite3_bind_text(session->sequence_value2, 1, name, -1, SQLITE_STATIC);
+        result = sqlite3_step(session->sequence_value2);
+        switch (result) {
+            case SQLITE_ROW: {
+                int64_t _value = (int64_t)
+                        sqlite3_column_int64(session->sequence_value2, 0);
+                *value = _value;
+                break;
+            }
+            default:
+                status = PEP_UNKNOWN_ERROR;
+        }
+        sqlite3_reset(session->sequence_value2);
+    }
     return status;
 }
 
