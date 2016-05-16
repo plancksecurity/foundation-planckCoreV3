@@ -13,7 +13,7 @@ generate: DeviceGroup-Protocol.c
 	$(CC) $(CFLAGS) $(OPTIMIZE) -I$(ASN1C_INCLUDE) -c $< -o $@
 
 DeviceGroup-Protocol.c: devicegroup.asn1
-	$(ASN1C) -fincludes-quoted -fcompound-names -pdu=PEP.Message pEp.asn1 $<
+	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=PEP.Message pEp.asn1 $<
 
 .PHONY: clean
 
