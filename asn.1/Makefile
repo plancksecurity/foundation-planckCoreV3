@@ -1,12 +1,12 @@
 include ../Makefile.conf
 
-all: Beacon.c Beacon.h
+all: Message.c Message.h
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -I$(ASN1C_INCLUDE) -c $< -o $@
 
-Beacon.c Beacon.h: devicegroup.asn1
-	$(ASN1C) -gen-PER -fcompound-names pEp.asn1 $<
+Message.c Message.h: devicegroup.asn1
+	$(ASN1C) -fcompound-names -pdu=PEP.Message pEp.asn1 $<
 
 .PHONY: clean
 

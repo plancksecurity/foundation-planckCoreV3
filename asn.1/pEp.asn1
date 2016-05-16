@@ -20,7 +20,8 @@ Version ::= SEQUENCE {
 Header ::= SEQUENCE {
     protocol    INTEGER (0..65535),
     version     Version,
-    message     INTEGER (0..65535)
+    message     INTEGER (0..65535),
+    sequence    INTEGER
 }
 
 END

@@ -1,4 +1,4 @@
-DEVICEGROUP DEFINITIONS ::=
+DEVICEGROUP DEFINITIONS AUTOMATIC TAGS ::=
 BEGIN
 
 Beacon ::= SEQUENCE {
@@ -17,6 +17,12 @@ OwnKeys ::= SEQUENCE {
     you PEP.Identity,
     me PEP.Identity,
     keylist PEP.Stringlist
+}
+
+Message ::= CHOICE {
+    beacon Beacon,
+    handshakeRequest HandshakeRequest,
+    ownKeys OwnKeys
 }
 
 END
