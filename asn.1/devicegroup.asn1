@@ -19,7 +19,6 @@ HandshakeRequest ::= SEQUENCE {
 
 OwnKeys ::= SEQUENCE {
     header Header,
-    you Identity,
     me Identity,
     keylist KeyList
 }
