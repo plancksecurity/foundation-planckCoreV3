@@ -203,7 +203,7 @@ int main(int argc, char* argv[])
 	PEP_STATUS pep_set_result = set_identity(session, identity);
 	assert(pep_set_result == PEP_STATUS_OK);
     free_identity(identity);
-	get_identity(session, "leon.schumacher@digitalekho.com", &identity);
+	get_identity(session, "leon.schumacher@digitalekho.com", "23", &identity);
 	assert(identity);
 	cout << "set: " << identity->address << ", " << identity->fpr << ", " << identity->user_id << ", " << identity->username << "\n";
 

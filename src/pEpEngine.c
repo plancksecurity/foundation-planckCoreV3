@@ -35,6 +35,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     static const char *sql_own_key_is_listed;
     static const char *sql_own_key_retrieve;
 
+    static const char *sql_sequence_value;
+
     bool in_first = false;
 
     assert(sqlite3_threadsafe());
@@ -179,6 +181,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "       references pgp_keypair (fpr)\n"
                 "       on delete cascade\n"
                 ");\n"
+                // sequences
+                "create table if not exists sequences(\n"
+                "   name text primary key,\n"
+                "   value integer default 0\n"
+                ");\n"
                 ,
             NULL,
             NULL,
@@ -256,7 +263,12 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         sql_own_key_is_listed = "select count(*) from own_keys where fpr = upper(replace(?1,' ','')) ;";
 
         sql_own_key_retrieve = "select * from own_keys ;";
-        
+ 
+        sql_sequence_value = "insert or replace into sequences (name, value) "
+                             "values (?1, "
+                             "(select coalesce((select value + 1 from sequences "
+                             "where name = ?1), 1 ))) ; "
+                             "select value from sequences where name = ?1 ;";
     }
 
     int_result = sqlite3_prepare_v2(_session->db, sql_log, (int)strlen(sql_log),
@@ -716,9 +728,12 @@ DYNAMIC_API PEP_STATUS get_identity(
     assert(session);
     assert(address);
     assert(address[0]);
+    assert(identity);
 
-    if (!(session && address && address[0]))
+    if (!(session && address && address[0] && identity))
         return PEP_ILLEGAL_VALUE;
+
+    *identity = NULL;
 
     sqlite3_reset(session->get_identity);
     sqlite3_bind_text(session->get_identity, 1, address, -1, SQLITE_STATIC);
@@ -928,10 +943,10 @@ DYNAMIC_API PEP_STATUS least_trust(
     assert(fpr);
     assert(comm_type);
 
-    *comm_type = PEP_ct_unknown;
-
     if (!(session && fpr && comm_type))
         return PEP_ILLEGAL_VALUE;
+
+    *comm_type = PEP_ct_unknown;
 
     sqlite3_reset(session->least_trust);
     sqlite3_bind_text(session->least_trust, 1, fpr, -1, SQLITE_STATIC);
@@ -1211,6 +1226,8 @@ DYNAMIC_API PEP_STATUS get_crashdump_log(
             CRASHDUMP_MAX_LINES))
         return PEP_ILLEGAL_VALUE;
 
+    *logdata = NULL;
+
     int limit = maxlines ? maxlines : CRASHDUMP_DEFAULT_LINES;
     const char *timestamp = NULL;
     const char *title = NULL;
@@ -1291,6 +1308,8 @@ DYNAMIC_API PEP_STATUS get_languagelist(
     if (!(session && languages))
         return PEP_ILLEGAL_VALUE;
 
+    *languages = NULL;
+
     const char *lang = NULL;
     const char *name = NULL;
     const char *phrase = NULL;
@@ -1351,12 +1370,12 @@ DYNAMIC_API PEP_STATUS get_phrase(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    *phrase = NULL;
 
     assert(session && lang && lang[0] && lang[1] && lang[2] == 0 && phrase);
-
     if (!(session && lang && lang[0] && lang[1] && lang[2] == 0 && phrase))
         return PEP_ILLEGAL_VALUE;
+
+    *phrase = NULL;
 
     sqlite3_reset(session->i18n_token);
     sqlite3_bind_text(session->i18n_token, 1, lang, -1, SQLITE_STATIC);
@@ -1392,6 +1411,43 @@ enomem:
     status = PEP_OUT_OF_MEMORY;
 
 the_end:
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS sequence_value(
+        PEP_SESSION session,
+        const char *name,
+        int64_t *value
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    int result;
+
+    assert(session);
+    assert(name);
+    assert(value);
+
+    if (!(session && name && value))
+        return PEP_ILLEGAL_VALUE;
+
+    *value = 0;
+
+    sqlite3_reset(session->sequence_value);
+    sqlite3_bind_text(session->sequence_value, 1, name, -1, SQLITE_STATIC);
+
+    result = sqlite3_step(session->sequence_value);
+    switch (result) {
+        case SQLITE_ROW: {
+            int64_t _value = (int64_t)
+                    sqlite3_column_int64(session->sequence_value, 0);
+            *value = _value;
+            break;
+        }
+        default:
+            status = PEP_CANNOT_FIND_IDENTITY;
+    }
+
+    sqlite3_reset(session->sequence_value);
     return status;
 }
 

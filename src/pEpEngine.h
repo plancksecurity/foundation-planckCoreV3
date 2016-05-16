@@ -766,6 +766,20 @@ DYNAMIC_API PEP_STATUS get_phrase(
     );
 
 
+// sequence_value() - raise the value of a named sequence and retrieve it
+//
+//  parameters:
+//      session (in)            session handle
+//      name (in)               name of sequence
+//      value (out)             value of sequence
+
+DYNAMIC_API PEP_STATUS sequence_value(
+        PEP_SESSION session,
+        const char *name,
+        int64_t *value
+    );
+
+
 DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session);
 
 #ifdef __cplusplus
