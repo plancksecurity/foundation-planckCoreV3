@@ -6,28 +6,28 @@ BEGIN
 
 IMPORTS Identity, KeyList, Header FROM PEP;
 
-Beacon ::= [APPLICATION 1] SEQUENCE {
+Beacon ::= SEQUENCE {
     header Header,
     me Identity
 }
 
-HandshakeRequest ::= [APPLICATION 2] SEQUENCE {
+HandshakeRequest ::= SEQUENCE {
     header Header,
     you Identity,
     me Identity
 }
 
-OwnKeys ::= [APPLICATION 3] SEQUENCE {
+OwnKeys ::= SEQUENCE {
     header Header,
     you Identity,
     me Identity,
     keylist KeyList
 }
 
-SyncMessage ::= CHOICE {
-    beacon Beacon,
-    handshakeRequest HandshakeRequest,
-    ownKeys OwnKeys
+DeviceGroup-Protocol ::= CHOICE {
+    beacon [APPLICATION 1] Beacon,
+    handshakeRequest [APPLICATION 2] HandshakeRequest,
+    ownKeys [APPLICATION 3] OwnKeys
 }
 
 END
