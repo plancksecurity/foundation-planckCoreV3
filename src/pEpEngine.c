@@ -217,8 +217,12 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         sql_trustword = "select id, word from wordlist where lang = lower(?1) "
                        "and id = ?2 ;";
 
-        sql_set_person = "insert or replace into person (id, username, lang) "
-                         "values (?1, ?2, ?3) ;";
+        // Set person, but if already exist, only update.
+        // if main_key_id already set, don't touch.
+        sql_set_person = "insert or replace into person (id, username, lang, main_key_id)"
+                         "  values (?1, ?2, ?3,"
+                         "    (select coalesce((select main_key_id from person "
+                         "      where id = ?1), ?4 ))) ;";
 
         sql_set_pgp_keypair = "insert or replace into pgp_keypair (fpr) "
                               "values (upper(replace(?1,' ',''))) ;";
@@ -822,6 +826,8 @@ DYNAMIC_API PEP_STATUS set_identity(
                 SQLITE_STATIC);
     else
         sqlite3_bind_null(session->set_person, 3);
+    sqlite3_bind_text(session->set_person, 4, identity->fpr, -1,
+                      SQLITE_STATIC);
     result = sqlite3_step(session->set_person);
     sqlite3_reset(session->set_person);
     if (result != SQLITE_DONE) {
