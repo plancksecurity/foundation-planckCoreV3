@@ -13,8 +13,8 @@ Beacon ::= SEQUENCE {
 
 HandshakeRequest ::= SEQUENCE {
     header Header,
-    you Identity,
-    me Identity
+    me Identity,
+    you Identity
 }
 
 OwnKeys ::= SEQUENCE {

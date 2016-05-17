@@ -2,9 +2,13 @@
 
 #include <assert.h>
 #include "sync_fsm.h"
+#include "map_asn1.h"
+#include "../asn.1/Beacon.h"
+#include "../asn.1/HandshakeRequest.h"
+#include "../asn.1/OwnKeys.h"
 
 
-// sendBeacon() - 
+// sendBeacon() - send Beacon message
 //
 //  params:
 //      session (in)        session handle
@@ -17,17 +21,28 @@ PEP_STATUS sendBeacon(PEP_SESSION session, const Identity partner)
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
-    assert(partner == NULL);
-    if (partner)
+    assert(session);
+    assert(!partner);
+    if (!(session && !partner))
         return PEP_ILLEGAL_VALUE;
 
-    // working code
+    Beacon_t *msg = (Beacon_t *) calloc(1, sizeof(Beacon_t));
+    assert(msg);
+    if (!msg)
+        goto enomem;
 
+    
+    return status;
 
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+error:
+    ASN_STRUCT_FREE(asn_DEF_Beacon, msg);
     return status;
 }
 
-// sendHandshakeRequest() - 
+
+// sendHandshakeRequest() - send HandshakeRequest message
 //
 //  params:
 //      session (in)        session handle
@@ -40,17 +55,28 @@ PEP_STATUS sendHandshakeRequest(PEP_SESSION session, const Identity partner)
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
+    assert(session);
     assert(partner);
-    if (!partner)
+    if (!(session && partner))
         return PEP_ILLEGAL_VALUE;
 
-    // working code
+    HandshakeRequest_t *msg = (HandshakeRequest_t *) calloc(1, sizeof(HandshakeRequest_t));
+    assert(msg);
+    if (!msg)
+        goto enomem;
 
+    
+    return status;
 
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+error:
+    ASN_STRUCT_FREE(asn_DEF_HandshakeRequest, msg);
     return status;
 }
 
-// showHandshake() - 
+
+// showHandshake() - send
 //
 //  params:
 //      session (in)        session handle
@@ -63,17 +89,25 @@ PEP_STATUS showHandshake(PEP_SESSION session, const Identity partner)
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
+    assert(session);
     assert(partner);
-    if (!partner)
+    if (!(session && partner))
         return PEP_ILLEGAL_VALUE;
 
     // working code
 
 
     return status;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+error:
+    // free...
+    return status;
 }
 
-// reject() - 
+
+// reject() - send
 //
 //  params:
 //      session (in)        session handle
@@ -86,17 +120,25 @@ PEP_STATUS reject(PEP_SESSION session, const Identity partner)
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
+    assert(session);
     assert(partner);
-    if (!partner)
+    if (!(session && partner))
         return PEP_ILLEGAL_VALUE;
 
     // working code
 
 
     return status;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+error:
+    // free...
+    return status;
 }
 
-// storeGroupKeys() - 
+
+// storeGroupKeys() - send
 //
 //  params:
 //      session (in)        session handle
@@ -109,17 +151,25 @@ PEP_STATUS storeGroupKeys(PEP_SESSION session, const Identity partner)
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
+    assert(session);
     assert(partner);
-    if (!partner)
+    if (!(session && partner))
         return PEP_ILLEGAL_VALUE;
 
     // working code
 
 
     return status;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+error:
+    // free...
+    return status;
 }
 
-// sendOwnKeys() - 
+
+// sendOwnKeys() - send OwnKeys message
 //
 //  params:
 //      session (in)        session handle
@@ -132,17 +182,28 @@ PEP_STATUS sendOwnKeys(PEP_SESSION session, const Identity partner)
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
-    assert(partner == NULL);
-    if (partner)
+    assert(session);
+    assert(!partner);
+    if (!(session && !partner))
         return PEP_ILLEGAL_VALUE;
 
-    // working code
+    OwnKeys_t *msg = (OwnKeys_t *) calloc(1, sizeof(OwnKeys_t));
+    assert(msg);
+    if (!msg)
+        goto enomem;
 
+    
+    return status;
 
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+error:
+    ASN_STRUCT_FREE(asn_DEF_OwnKeys, msg);
     return status;
 }
 
-// transmitGroupKeys() - 
+
+// transmitGroupKeys() - send
 //
 //  params:
 //      session (in)        session handle
@@ -155,13 +216,20 @@ PEP_STATUS transmitGroupKeys(PEP_SESSION session, const Identity partner)
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
+    assert(session);
     assert(partner);
-    if (!partner)
+    if (!(session && partner))
         return PEP_ILLEGAL_VALUE;
 
     // working code
 
 
+    return status;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+error:
+    // free...
     return status;
 }
 

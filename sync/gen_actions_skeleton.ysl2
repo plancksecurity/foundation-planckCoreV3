@@ -35,7 +35,8 @@ tstylesheet {
 
     #include <assert.h>
     #include "sync_fsm.h"
-
+    #include "map_asn1.h"
+    `` for "func:distinctName(//action)" if "substring(@name, 0, 5) = 'send'" | #include "../asn.1/«substring(@name, 5, 255)».h"
 
     `` for "func:distinctName(//action)" call "action" with "action", ".";
 
@@ -44,9 +45,20 @@ tstylesheet {
 
     function "action" {
         param "action";
+        choose {
+            when "substring($action/@name, 0, 5) = 'send'"
+                call "send_action" with "action", "$action";
+            otherwise
+                call "other_action" with "action", "$action";
+        }
+    }
+
+    function "other_action" {
+        param "action";
 
         ||
-        // «$action/@name»() - 
+
+        // «$action/@name»() - send
         //
         //  params:
         //      session (in)        session handle
@@ -60,16 +72,69 @@ tstylesheet {
         {
             PEP_STATUS status = PEP_STATUS_OK;
 
+            assert(session);
         `` if "parm"        |> assert(partner);
-        `` if "parm"        |> if (!partner)
+        `` if "parm"        |> if (!(session && partner))
         `` if "parm"        |>> return PEP_ILLEGAL_VALUE;
-        `` if "not(parm)"   |> assert(partner == NULL);
-        `` if "not(parm)"   |> if (partner)
+        `` if "not(parm)"   |> assert(!partner);
+        `` if "not(parm)"   |> if (!(session && !partner))
         `` if "not(parm)"   |>> return PEP_ILLEGAL_VALUE;
 
             // working code
 
 
+            return status;
+
+        enomem:
+            status = PEP_OUT_OF_MEMORY;
+        error:
+            // free...
+            return status;
+        }
+
+        ||
+    }
+
+    function "send_action" {
+        param "action";
+        const "name", "substring($action/@name, 5, 255)";
+
+        ||
+
+        // «$action/@name»() - send «$name» message
+        //
+        //  params:
+        //      session (in)        session handle
+        `` if "parm"        | //      partner (in)        partner in sync
+        `` if "not(parm)"   | //      partner (in)        (must be NULL)
+        //
+        //  returns:
+        //      PEP_STATUS_OK or any other value on error
+
+        PEP_STATUS «$action/@name»(PEP_SESSION session, const Identity partner)
+        {
+            PEP_STATUS status = PEP_STATUS_OK;
+
+            assert(session);
+        `` if "parm"        |> assert(partner);
+        `` if "parm"        |> if (!(session && partner))
+        `` if "parm"        |>> return PEP_ILLEGAL_VALUE;
+        `` if "not(parm)"   |> assert(!partner);
+        `` if "not(parm)"   |> if (!(session && !partner))
+        `` if "not(parm)"   |>> return PEP_ILLEGAL_VALUE;
+
+            «$name»_t *msg = («$name»_t *) calloc(1, sizeof(«$name»_t));
+            assert(msg);
+            if (!msg)
+                goto enomem;
+
+            
+            return status;
+
+        enomem:
+            status = PEP_OUT_OF_MEMORY;
+        error:
+            ASN_STRUCT_FREE(asn_DEF_«$name», msg);
             return status;
         }
 
