@@ -66,9 +66,11 @@ int main() {
         assert(!_sl->next == !_sl2->next);
     }
 
-    cout << "freeing keylist...\n";
+    cout << "freeing lists...\n";
 
     free_stringlist(sl);
+    free_stringlist(sl2);
+    ASN_STRUCT_FREE(asn_DEF_KeyList, kl);
 
     return 0;
 }
