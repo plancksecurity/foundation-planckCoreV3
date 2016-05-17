@@ -12,7 +12,7 @@ LIBGPGME=libgpgme-pthread.dylib
 CC?=clang -std=c99 -pthread
 LD?=clang
 CFLAGS?=-I$(GPGME_IN)/include -I$(HOME)/include -I/opt/local/include $(OPTIMIZE) -pedantic \
-	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -DLIBGPGME=\"$(LIBGPGME)\"
+	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -DLIBGPGME=\"$(LIBGPGME)\" -I../asn.1
 LDFLAGS?=-lc -shared -arch x86_64 \
 	-L$(HOME)/lib -L/opt/local/lib -letpan -lsqlite3 -L../asn.1 -lasn1
 
@@ -29,7 +29,7 @@ LIBGPGME=libgpgme.so.11
 CC=gcc -std=c99
 CFLAGS?=-I$(GPGME_IN)/include $(OPTIMIZE) -fPIC -pedantic \
 	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -DLIBGPGME=\"$(LIBGPGME)\" \
-	-DSQLITE_THREADSAFE=1 -D_GNU_SOURCE
+	-DSQLITE_THREADSAFE=1 -D_GNU_SOURCE -I../asn.1
 LDFLAGS?=-L$(GPGME_IN)/lib -shared -lc -ldl -letpan -lpthread -L../asn.1 -lasn1
 
 else
