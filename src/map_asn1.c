@@ -3,6 +3,10 @@
 
 Identity_t *Identity_from_Struct(const pEp_identity *ident)
 {
+    assert(ident);
+    if (!ident)
+        return NULL;
+
     Identity_t *result = (Identity_t *) calloc(1, sizeof(Identity_t));
     assert(result);
     if (!result)
@@ -52,12 +56,16 @@ Identity_t *Identity_from_Struct(const pEp_identity *ident)
     return result;
 
 enomem:
-    asn_DEF_UTF8String.free_struct(&asn_DEF_UTF8String, result, 0);
+    ASN_STRUCT_FREE(asn_DEF_Identity, result);
     return NULL;
 }
 
 pEp_identity *Identity_to_Struct(Identity_t *ident)
 {
+    assert(ident);
+    if (!ident)
+        return NULL;
+    
     pEp_identity *result = new_identity(NULL, NULL, NULL, NULL);
     if (!result)
         return NULL;
@@ -74,8 +82,6 @@ pEp_identity *Identity_to_Struct(Identity_t *ident)
     assert(result->fpr);
     if (!result->fpr)
         goto enomem;
-
-    return result;
 
     if (ident->user_id) {
         result->user_id = strndup((char *) ident->user_id->buf,
@@ -105,6 +111,66 @@ pEp_identity *Identity_to_Struct(Identity_t *ident)
 
 enomem:
     free_identity(result);
+    return NULL;
+}
+
+KeyList_t *KeyList_from_stringlist(const stringlist_t *list)
+{
+    assert(list);
+    if (!list)
+        return NULL;
+
+    KeyList_t *result = (KeyList_t *) calloc(1, sizeof(KeyList_t));
+    assert(result);
+    if (!result)
+        return NULL;
+
+    for (const stringlist_t *l = list; l && l->value; l=l->next) {
+        Hash_t key;
+        memset(&key, 0, sizeof(Hash_t));
+        if (OCTET_STRING_fromBuf(&key, l->value, -1))
+            goto enomem;
+
+        int r = ASN_SEQUENCE_ADD(&result->list, &key);
+        ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_Hash, &key);
+        if (r)
+            goto enomem;
+    }
+
+    return result;
+
+enomem:
+    ASN_STRUCT_FREE(asn_DEF_KeyList, result);
+    return NULL;
+}
+
+stringlist_t *KeyList_to_stringlist(KeyList_t *list)
+{
+    assert(list);
+    if (!list)
+        return NULL;
+
+    stringlist_t *result = new_stringlist(NULL);
+    if (!result)
+        return NULL;
+
+    stringlist_t *r = result;
+    for (int i=0; i<list->list.count; i++) {
+        char *str = strndup((char *) list->list.array[i]->buf,
+                list->list.array[i]->size);
+        assert(str);
+        if (!str)
+            goto enomem;
+        r = stringlist_add(r, str);
+        free(str);
+        if (!r)
+            goto enomem;
+    }
+
+    return result;
+
+enomem:
+    free_stringlist(result);
     return NULL;
 }
 

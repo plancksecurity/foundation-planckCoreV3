@@ -4,8 +4,8 @@ CC?=g++ -std=gnu++11 -pthread
 CXX?=g++ -std=gnu++11 -pthread
 LD?=$(CXX)
 LDFLAGS?=-L$(HOME)/lib
-LDLIBS?=-letpan -lpEpEngine -lstdc++
-CXXFLAGS?=-g -O0 -I../src
+LDLIBS?=-letpan -lpEpEngine -lstdc++ -L../asn.1 -lasn1
+CXXFLAGS?=-g -O0 -I../src -I../asn.1
 # CXXFLAGS=-O3 -DNDEBUG
 
 ifeq ("$(OPENPGP)","NETPGP")
