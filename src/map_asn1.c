@@ -126,15 +126,14 @@ KeyList_t *KeyList_from_stringlist(const stringlist_t *list)
         return NULL;
 
     for (const stringlist_t *l = list; l && l->value; l=l->next) {
-        Hash_t key;
-        memset(&key, 0, sizeof(Hash_t));
-        if (OCTET_STRING_fromBuf(&key, l->value, -1))
+        Hash_t *key = OCTET_STRING_new_fromBuf(&asn_DEF_Hash, l->value, -1);
+        if (!key)
             goto enomem;
 
-        int r = ASN_SEQUENCE_ADD(&result->list, &key);
-        ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_Hash, &key);
-        if (r)
+        if (ASN_SEQUENCE_ADD(&result->list, key)) {
+            ASN_STRUCT_FREE(asn_DEF_Hash, key);
             goto enomem;
+        }
     }
 
     return result;

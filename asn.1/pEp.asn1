@@ -11,7 +11,7 @@ minor-version INTEGER ::= 0
 
 ISO936-1 ::= PrintableString(FROM ("a".."z")) (SIZE(2))
 Hex ::= PrintableString(FROM ("A".."F") | FROM ("0".."9"))
-Hash ::= Hex(SIZE(50..128)) -- SHA1 to SHA512 in hex
+Hash ::= Hex(SIZE(1..128)) -- SHA1 to SHA512 in hex
 
 Identity ::= SEQUENCE {
     address     UTF8String  (SIZE(1..1024)) OPTIONAL,
