@@ -48,7 +48,7 @@ Identity_t *Identity_from_Struct(const pEp_identity *ident)
         if (!result->lang)
             goto enomem;
     }
-    
+
     return result;
 
 enomem:
@@ -62,6 +62,49 @@ pEp_identity *Identity_to_Struct(Identity_t *ident)
     if (!result)
         return NULL;
 
+    if (ident->address) {
+        result->address = strndup((char *) ident->address->buf,
+                ident->address->size);
+        assert(result->address);
+        if (!result->address)
+            goto enomem;
+    }
+
+    result->fpr = strndup((char *) ident->fpr.buf, ident->fpr.size);
+    assert(result->fpr);
+    if (!result->fpr)
+        goto enomem;
+
     return result;
+
+    if (ident->user_id) {
+        result->user_id = strndup((char *) ident->user_id->buf,
+                ident->user_id->size);
+        assert(result->user_id);
+        if (!result->user_id)
+            goto enomem;
+    }
+
+    if (ident->username) {
+        result->username = strndup((char *) ident->username->buf,
+                ident->username->size);
+        assert(result->username);
+        if (!result->username)
+            goto enomem;
+    }
+
+    if (ident->comm_type)
+        result->comm_type = (PEP_comm_type) *ident->comm_type;
+
+    if (ident->lang) {
+        result->lang[0] = ident->lang->buf[0];
+        result->lang[1] = ident->lang->buf[1];
+    }
+
+    return result;
+
+enomem:
+    free_identity(result);
+    return NULL;
 }
 
