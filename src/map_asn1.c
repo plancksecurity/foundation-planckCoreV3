@@ -47,7 +47,7 @@ Identity_t *Identity_from_Struct(const pEp_identity *ident)
     }
 
     if (ident->lang[0]) {
-        result->lang = OCTET_STRING_new_fromBuf(&asn_DEF_ISO936_1,
+        result->lang = OCTET_STRING_new_fromBuf(&asn_DEF_ISO639_1,
                 ident->lang, 2);
         if (!result->lang)
             goto enomem;

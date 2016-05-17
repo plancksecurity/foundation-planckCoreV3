@@ -9,7 +9,7 @@ EXPORTS Identity, KeyList, Header;
 major-version INTEGER ::= 1
 minor-version INTEGER ::= 0
 
-ISO936-1 ::= PrintableString(FROM ("a".."z")) (SIZE(2))
+ISO639-1 ::= PrintableString(FROM ("a".."z")) (SIZE(2))
 Hex ::= PrintableString(FROM ("A".."F") | FROM ("0".."9"))
 Hash ::= Hex(SIZE(1..128)) -- SHA1 to SHA512 in hex
 
@@ -19,7 +19,7 @@ Identity ::= SEQUENCE {
     user-id     UTF8String  (SIZE(1..1024)) OPTIONAL,
     username    UTF8String  (SIZE(1..1024)) OPTIONAL,
     comm-type   INTEGER     (0..255) OPTIONAL,
-    lang        ISO936-1    DEFAULT "en"
+    lang        ISO639-1    DEFAULT "en"
 }
 
 KeyList ::= SEQUENCE OF Hash
