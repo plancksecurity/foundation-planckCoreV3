@@ -222,7 +222,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         sql_set_person = "insert or replace into person (id, username, lang, main_key_id)"
                          "  values (?1, ?2, ?3,"
                          "    (select coalesce((select main_key_id from person "
-                         "      where id = ?1), ?4 ))) ;";
+                         "      where id = ?1), upper(replace(?4,' ',''))))) ;";
 
         sql_set_pgp_keypair = "insert or replace into pgp_keypair (fpr) "
                               "values (upper(replace(?1,' ',''))) ;";
