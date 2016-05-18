@@ -36,7 +36,7 @@ tstylesheet {
     #include <assert.h>
     #include "sync_fsm.h"
     #include "map_asn1.h"
-    `` for "func:distinctName(//action)" if "substring(@name, 0, 5) = 'send'" | #include "../asn.1/«substring(@name, 5, 255)».h"
+    `` for "func:distinctName(//action)" if "substring(@name, 1, 4) = 'send'" | #include "../asn.1/«substring(@name, 5, 255)».h"
 
     `` for "func:distinctName(//action)" call "action" with "action", ".";
 
@@ -46,7 +46,7 @@ tstylesheet {
     function "action" {
         param "action";
         choose {
-            when "substring($action/@name, 0, 5) = 'send'"
+            when "substring($action/@name, 1, 4) = 'send'"
                 call "send_action" with "action", "$action";
             otherwise
                 call "other_action" with "action", "$action";
