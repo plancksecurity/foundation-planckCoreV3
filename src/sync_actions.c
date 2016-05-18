@@ -36,10 +36,6 @@ PEP_STATUS sendBeacon(PEP_SESSION session, const Identity partner)
     if (status != PEP_STATUS_OK)
         goto error;
 
-    INTEGER_t *sequence = (INTEGER_t *) calloc(1, sizeof(INTEGER_t));
-    assert(sequence);
-    if (!sequence)
-        goto enomem;
     msg->header.sequence = seq;
 
     return status;
@@ -80,10 +76,6 @@ PEP_STATUS sendHandshakeRequest(PEP_SESSION session, const Identity partner)
     if (status != PEP_STATUS_OK)
         goto error;
 
-    INTEGER_t *sequence = (INTEGER_t *) calloc(1, sizeof(INTEGER_t));
-    assert(sequence);
-    if (!sequence)
-        goto enomem;
     msg->header.sequence = seq;
 
     return status;
@@ -217,10 +209,6 @@ PEP_STATUS sendOwnKeys(PEP_SESSION session, const Identity partner)
     if (status != PEP_STATUS_OK)
         goto error;
 
-    INTEGER_t *sequence = (INTEGER_t *) calloc(1, sizeof(INTEGER_t));
-    assert(sequence);
-    if (!sequence)
-        goto enomem;
     msg->header.sequence = seq;
 
     return status;

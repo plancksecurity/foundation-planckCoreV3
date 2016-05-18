@@ -133,10 +133,6 @@ tstylesheet {
             if (status != PEP_STATUS_OK)
                 goto error;
 
-            INTEGER_t *sequence = (INTEGER_t *) calloc(1, sizeof(INTEGER_t));
-            assert(sequence);
-            if (!sequence)
-                goto enomem;
             msg->header.sequence = seq;
 
             return status;
