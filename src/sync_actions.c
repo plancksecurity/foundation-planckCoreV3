@@ -44,7 +44,9 @@ PEP_STATUS sendBeacon(PEP_SESSION session, const Identity partner)
     status = myself(session, me);
     if (status != PEP_STATUS_OK)
         goto error;
-    
+    if (Identity_from_Struct(me, &msg->me) == NULL)
+        goto enomem;
+
     return status;
 
 enomem:
@@ -90,7 +92,12 @@ PEP_STATUS sendHandshakeRequest(PEP_SESSION session, const Identity partner)
     status = myself(session, me);
     if (status != PEP_STATUS_OK)
         goto error;
-    
+    if (Identity_from_Struct(me, &msg->me) == NULL)
+        goto enomem;
+
+    if (Identity_from_Struct(partner, &msg->partner) == NULL)
+        goto enomem;
+
     return status;
 
 enomem:
@@ -229,7 +236,15 @@ PEP_STATUS sendOwnKeys(PEP_SESSION session, const Identity partner)
     status = myself(session, me);
     if (status != PEP_STATUS_OK)
         goto error;
-    
+    if (Identity_from_Struct(me, &msg->me) == NULL)
+        goto enomem;
+
+    stringlist_t *sl;
+    status = own_key_retrieve(session, &sl);
+    if (status != PEP_STATUS_OK)
+        goto error;
+    if (KeyList_from_stringlist(sl, &msg->keylist) == NULL)
+        goto enomem;
     return status;
 
 enomem:
