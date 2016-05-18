@@ -14,6 +14,8 @@ extern "C" {
 
 #define PEP_VERSION "1.0"
 
+#define PEP_OWN_USERID "pEp_own_userId"
+    
 // pEp Engine API
 
 //  caveat:

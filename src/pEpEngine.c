@@ -31,7 +31,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     static const char *sql_blacklist_retrieve;
 
     // Own keys
-    static const char *sql_own_key_add;
     static const char *sql_own_key_is_listed;
     static const char *sql_own_key_retrieve;
 
@@ -176,12 +175,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "create table if not exists blacklist_keys (\n"
                 "   fpr text primary key\n"
                 ");\n"
-                // Own keys
-                "create table if not exists own_keys (\n"
-                "   fpr text primary key\n"
-                "       references pgp_keypair (fpr)\n"
-                "       on delete cascade\n"
-                ");\n"
                 // sequences
                 "create table if not exists sequences(\n"
                 "   name text primary key,\n"
@@ -262,13 +255,24 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         
         // Own keys
         
-        sql_own_key_add = "insert or replace into own_keys (fpr) "
-                          "    values (upper(replace(?1,' ',''))) ;";
-        
-        sql_own_key_is_listed = "select count(*) from own_keys where fpr = upper(replace(?1,' ','')) ;";
+        sql_own_key_is_listed =
+                                "select count(*) from ("
+                                " select main_key_id from person "
+                                "   where main_key_id = upper(replace(?1,' ',''))"
+                                "    and id = '" PEP_OWN_USERID "' "
+                                " union "
+                                "  select main_key_id from identity "
+                                "   where main_key_id = upper(replace(?1,' ',''))"
+                                "    and user_id = '" PEP_OWN_USERID "' );";
 
-        sql_own_key_retrieve = "select * from own_keys ;";
- 
+        sql_own_key_retrieve = "select main_key_id from person "
+                               "  where main_key_id is not null"
+                               "   and id = '" PEP_OWN_USERID "' "
+                               "union "
+                               " select main_key_id from identity "
+                               "  where main_key_id is not null"
+                               "   and user_id = '" PEP_OWN_USERID "' ;";
+        
         sql_sequence_value1 = "insert or replace into sequences (name, value) "
                               "values (?1, "
                               "(select coalesce((select value + 1 from sequences "
@@ -347,10 +351,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     assert(int_result == SQLITE_OK);
 
     // Own keys
-    
-    int_result = sqlite3_prepare_v2(_session->db, sql_own_key_add,
-            (int)strlen(sql_own_key_add), &_session->own_key_add, NULL);
-    assert(int_result == SQLITE_OK);
     
     int_result = sqlite3_prepare_v2(_session->db, sql_own_key_is_listed,
             (int)strlen(sql_own_key_is_listed), &_session->own_key_is_listed, NULL);

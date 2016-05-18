@@ -152,15 +152,6 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
         pEp_identity *ident
     );
 
-    
-// own_key_add() - add to own keys
-//
-//  parameters:
-//      session (in)        session to use
-//      fpr (in)            fingerprint of owned key
-
-DYNAMIC_API PEP_STATUS own_key_add(PEP_SESSION session, const char *fpr);
-
 
 // own_key_is_listed() - returns true id key is listed as own key
 //

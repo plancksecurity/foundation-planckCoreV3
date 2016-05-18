@@ -249,17 +249,29 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     assert(identity);
     assert(identity->address);
     assert(identity->username);
-    assert(identity->user_id);
+    assert(EMPTYSTR(identity->user_id) ||
+           strcmp(identity->user_id, PEP_OWN_USERID) == 0);
 
     if (!(session && identity && identity->address && identity->username &&
-                identity->user_id))
+          (EMPTYSTR(identity->user_id) ||
+           strcmp(identity->user_id, PEP_OWN_USERID) == 0)))
         return PEP_ILLEGAL_VALUE;
 
     identity->comm_type = PEP_ct_pEp;
     identity->me = true;
+    
+    if(EMPTYSTR(identity->user_id))
+    {
+        free(identity->user_id);
+        identity->user_id = strdup(PEP_OWN_USERID);
+        assert(identity->user_id);
+        if (identity->user_id == NULL)
+        {
+            return PEP_OUT_OF_MEMORY;
+        }
+    }
 
     DEBUG_LOG("myself", "debug", identity->address);
-
     
     status = get_identity(session,
                           identity->address,
@@ -280,22 +292,13 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
                 return PEP_OUT_OF_MEMORY;
             }
         }
-
-        // Backward compatibility, not check that stored key is indeed own key
-
     }
     else if (!EMPTYSTR(identity->fpr))
     {
         // App must have a good reason to give fpr, such as explicit
         // import of private key, or similar.
 
-        // Take given fpr as-is, and consider it as own-key.
-
-        status = own_key_add(session, identity->fpr);
-        assert(status == PEP_STATUS_OK);
-        if (status != PEP_STATUS_OK) {
-            return status;
-        }
+        // Take given fpr as-is.
     }
     else
     {
@@ -391,14 +394,6 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
         }else if (keylist->value == NULL) {
             free_stringlist(keylist);
             return PEP_UNKNOWN_ERROR;
-        }
-        
-        // Consider generated keys as own keys.
-        status = own_key_add(session, identity->fpr);
-        assert(status == PEP_STATUS_OK);
-        if (status != PEP_STATUS_OK) {
-            free_stringlist(keylist);
-            return status;
         }
     }
     else
@@ -579,34 +574,6 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
         status = PEP_CANNOT_SET_TRUST;
     }
 
-    return status;
-}
-
-DYNAMIC_API PEP_STATUS own_key_add(PEP_SESSION session, const char *fpr)
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-    
-    assert(session && fpr && fpr[0]);
-    
-    if (!(session && fpr && fpr[0]))
-        return PEP_ILLEGAL_VALUE;
-    
-    sqlite3_reset(session->own_key_add);
-    sqlite3_bind_text(session->own_key_add, 1, fpr, -1, SQLITE_STATIC);
-    
-    int result;
-    
-    result = sqlite3_step(session->own_key_add);
-    switch (result) {
-        case SQLITE_DONE:
-            status = PEP_STATUS_OK;
-            break;
-            
-        default:
-            status = PEP_UNKNOWN_ERROR;
-    }
-    
-    sqlite3_reset(session->own_key_add);
     return status;
 }
 

@@ -108,7 +108,6 @@ typedef struct _pEpSession {
     sqlite3_stmt *blacklist_retrieve;
     
     // Own keys
-    sqlite3_stmt *own_key_add;
     sqlite3_stmt *own_key_is_listed;
     sqlite3_stmt *own_key_retrieve;
 
