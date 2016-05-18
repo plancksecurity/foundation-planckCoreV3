@@ -54,12 +54,30 @@ tstylesheet {
         }
     }
 
+    function "paramcheck" {
+        param "partner";
+        choose {
+            when "$partner"
+            ||
+            assert(partner);
+            if (!(session && partner))
+                return PEP_ILLEGAL_VALUE;
+            ||
+            otherwise
+            ||
+            assert(!partner);
+            if (!(session && !partner))
+                return PEP_ILLEGAL_VALUE;
+            ||
+        }
+    }
+
     function "other_action" {
         param "action";
 
         ||
 
-        // «$action/@name»() - send
+        // «$action/@name»() - 
         //
         //  params:
         //      session (in)        session handle
@@ -74,12 +92,7 @@ tstylesheet {
             PEP_STATUS status = PEP_STATUS_OK;
 
             assert(session);
-        `` if "parm"        |> assert(partner);
-        `` if "parm"        |> if (!(session && partner))
-        `` if "parm"        |>> return PEP_ILLEGAL_VALUE;
-        `` if "not(parm)"   |> assert(!partner);
-        `` if "not(parm)"   |> if (!(session && !partner))
-        `` if "not(parm)"   |>> return PEP_ILLEGAL_VALUE;
+            `` call "paramcheck" with "partner", "parm/partner";
 
             // working code
 
@@ -117,12 +130,7 @@ tstylesheet {
             PEP_STATUS status = PEP_STATUS_OK;
 
             assert(session);
-        `` if "parm/partner"        |> assert(partner);
-        `` if "parm/partner"        |> if (!(session && partner))
-        `` if "parm/partner"        |>> return PEP_ILLEGAL_VALUE;
-        `` if "not(parm/partner)"   |> assert(!partner);
-        `` if "not(parm/partner)"   |> if (!(session && !partner))
-        `` if "not(parm/partner)"   |>> return PEP_ILLEGAL_VALUE;
+            `` call "paramcheck" with "partner", "parm/partner";
 
             «$name»_t *msg = («$name»_t *) calloc(1, sizeof(«$name»_t));
             assert(msg);
