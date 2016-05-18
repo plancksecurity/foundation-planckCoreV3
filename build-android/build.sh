@@ -48,6 +48,10 @@ mkdir -p "$current_dir/$package_name-$build_version/include/pEp"
 cd "$current_dir/../src"
 cp *.h "$current_dir/$package_name-$build_version/include/pEp"
 
+# Generate asn.1
+cd "$current_dir/../asn.1"
+make generate
+
 # Start building.
 for arch in $archs ; do
   TARGET_ARCH_ABI=$arch
