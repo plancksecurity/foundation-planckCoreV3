@@ -1,13 +1,14 @@
 #include "pEp_internal.h"
 #include "map_asn1.h"
 
-Identity_t *Identity_from_Struct(const pEp_identity *ident)
+Identity_t *Identity_from_Struct(const pEp_identity *ident, Identity_t *result)
 {
     assert(ident);
     if (!ident)
         return NULL;
 
-    Identity_t *result = (Identity_t *) calloc(1, sizeof(Identity_t));
+    if (!result)
+        result = (Identity_t *) calloc(1, sizeof(Identity_t));
     assert(result);
     if (!result)
         return NULL;
@@ -60,13 +61,14 @@ enomem:
     return NULL;
 }
 
-pEp_identity *Identity_to_Struct(Identity_t *ident)
+pEp_identity *Identity_to_Struct(Identity_t *ident, pEp_identity *result)
 {
     assert(ident);
     if (!ident)
         return NULL;
     
-    pEp_identity *result = new_identity(NULL, NULL, NULL, NULL);
+    if (!result)
+        result = new_identity(NULL, NULL, NULL, NULL);
     if (!result)
         return NULL;
 
@@ -114,13 +116,14 @@ enomem:
     return NULL;
 }
 
-KeyList_t *KeyList_from_stringlist(const stringlist_t *list)
+KeyList_t *KeyList_from_stringlist(const stringlist_t *list, KeyList_t *result)
 {
     assert(list);
     if (!list)
         return NULL;
 
-    KeyList_t *result = (KeyList_t *) calloc(1, sizeof(KeyList_t));
+    if (!result)
+        result = (KeyList_t *) calloc(1, sizeof(KeyList_t));
     assert(result);
     if (!result)
         return NULL;
@@ -143,13 +146,14 @@ enomem:
     return NULL;
 }
 
-stringlist_t *KeyList_to_stringlist(KeyList_t *list)
+stringlist_t *KeyList_to_stringlist(KeyList_t *list, stringlist_t *result)
 {
     assert(list);
     if (!list)
         return NULL;
 
-    stringlist_t *result = new_stringlist(NULL);
+    if (!result)
+        result = new_stringlist(NULL);
     if (!result)
         return NULL;
 

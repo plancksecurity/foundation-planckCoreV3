@@ -20,12 +20,12 @@ int main() {
 
     cout << "converting identity to ASN.1...\n";
 
-    Identity_t *ident_asn1 = Identity_from_Struct(ident1);
+    Identity_t *ident_asn1 = Identity_from_Struct(ident1, NULL);
     assert(ident_asn1);
 
     cout << "converting identity from ASN.1...\n";
 
-    pEp_identity *ident2 = Identity_to_Struct(ident_asn1);
+    pEp_identity *ident2 = Identity_to_Struct(ident_asn1, NULL);
     assert(ident2);
 
     assert(strcmp(ident1->address, ident2->address) == 0);
@@ -50,12 +50,12 @@ int main() {
 
     cout << "converting stringlist to keylist...\n";
 
-    KeyList_t *kl = KeyList_from_stringlist(sl);
+    KeyList_t *kl = KeyList_from_stringlist(sl, NULL);
     assert(kl);
 
     cout << "converting keylist to stringlist...\n";
 
-    stringlist_t *sl2 = KeyList_to_stringlist(kl);
+    stringlist_t *sl2 = KeyList_to_stringlist(kl, NULL);
     assert(sl2);
 
     stringlist_t *_sl2;

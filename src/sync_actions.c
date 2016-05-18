@@ -1,6 +1,7 @@
 // Actions for DeviceState state machine
 
 #include <assert.h>
+#include "keymanagement.h"
 #include "sync_fsm.h"
 #include "map_asn1.h"
 #include "../asn.1/Beacon.h"
@@ -35,9 +36,15 @@ PEP_STATUS sendBeacon(PEP_SESSION session, const Identity partner)
     status = sequence_value(session, "DeviceGroup", &seq);
     if (status != PEP_STATUS_OK)
         goto error;
+    msg->header.sequence = (long) seq;
 
-    msg->header.sequence = seq;
-
+    pEp_identity *me = new_identity(NULL, NULL, NULL, NULL);
+    if (!me)
+        goto enomem;
+    status = myself(session, me);
+    if (status != PEP_STATUS_OK)
+        goto error;
+    
     return status;
 
 enomem:
@@ -75,9 +82,15 @@ PEP_STATUS sendHandshakeRequest(PEP_SESSION session, const Identity partner)
     status = sequence_value(session, "DeviceGroup", &seq);
     if (status != PEP_STATUS_OK)
         goto error;
+    msg->header.sequence = (long) seq;
 
-    msg->header.sequence = seq;
-
+    pEp_identity *me = new_identity(NULL, NULL, NULL, NULL);
+    if (!me)
+        goto enomem;
+    status = myself(session, me);
+    if (status != PEP_STATUS_OK)
+        goto error;
+    
     return status;
 
 enomem:
@@ -208,9 +221,15 @@ PEP_STATUS sendOwnKeys(PEP_SESSION session, const Identity partner)
     status = sequence_value(session, "DeviceGroup", &seq);
     if (status != PEP_STATUS_OK)
         goto error;
+    msg->header.sequence = (long) seq;
 
-    msg->header.sequence = seq;
-
+    pEp_identity *me = new_identity(NULL, NULL, NULL, NULL);
+    if (!me)
+        goto enomem;
+    status = myself(session, me);
+    if (status != PEP_STATUS_OK)
+        goto error;
+    
     return status;
 
 enomem:
