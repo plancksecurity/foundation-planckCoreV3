@@ -776,7 +776,7 @@ DYNAMIC_API PEP_STATUS get_phrase(
 DYNAMIC_API PEP_STATUS sequence_value(
         PEP_SESSION session,
         const char *name,
-        int64_t *value
+        int32_t *value
     );
 
 

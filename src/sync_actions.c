@@ -31,7 +31,17 @@ PEP_STATUS sendBeacon(PEP_SESSION session, const Identity partner)
     if (!msg)
         goto enomem;
 
-    
+    int32_t seq;
+    status = sequence_value(session, "DeviceGroup", &seq);
+    if (status != PEP_STATUS_OK)
+        goto error;
+
+    INTEGER_t *sequence = (INTEGER_t *) calloc(1, sizeof(INTEGER_t));
+    assert(sequence);
+    if (!sequence)
+        goto enomem;
+    msg->header.sequence = seq;
+
     return status;
 
 enomem:
@@ -65,7 +75,17 @@ PEP_STATUS sendHandshakeRequest(PEP_SESSION session, const Identity partner)
     if (!msg)
         goto enomem;
 
-    
+    int32_t seq;
+    status = sequence_value(session, "DeviceGroup", &seq);
+    if (status != PEP_STATUS_OK)
+        goto error;
+
+    INTEGER_t *sequence = (INTEGER_t *) calloc(1, sizeof(INTEGER_t));
+    assert(sequence);
+    if (!sequence)
+        goto enomem;
+    msg->header.sequence = seq;
+
     return status;
 
 enomem:
@@ -192,7 +212,17 @@ PEP_STATUS sendOwnKeys(PEP_SESSION session, const Identity partner)
     if (!msg)
         goto enomem;
 
-    
+    int32_t seq;
+    status = sequence_value(session, "DeviceGroup", &seq);
+    if (status != PEP_STATUS_OK)
+        goto error;
+
+    INTEGER_t *sequence = (INTEGER_t *) calloc(1, sizeof(INTEGER_t));
+    assert(sequence);
+    if (!sequence)
+        goto enomem;
+    msg->header.sequence = seq;
+
     return status;
 
 enomem:

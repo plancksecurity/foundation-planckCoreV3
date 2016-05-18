@@ -128,7 +128,17 @@ tstylesheet {
             if (!msg)
                 goto enomem;
 
-            
+            int32_t seq;
+            status = sequence_value(session, "DeviceGroup", &seq);
+            if (status != PEP_STATUS_OK)
+                goto error;
+
+            INTEGER_t *sequence = (INTEGER_t *) calloc(1, sizeof(INTEGER_t));
+            assert(sequence);
+            if (!sequence)
+                goto enomem;
+            msg->header.sequence = seq;
+
             return status;
 
         enomem:
