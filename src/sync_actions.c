@@ -245,6 +245,7 @@ PEP_STATUS sendOwnKeys(PEP_SESSION session, const Identity partner)
         goto error;
     if (KeyList_from_stringlist(sl, &msg->keylist) == NULL)
         goto enomem;
+
     return status;
 
 enomem:

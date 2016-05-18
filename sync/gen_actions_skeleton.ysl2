@@ -152,7 +152,7 @@ tstylesheet {
          `` if "$name='OwnKeys'"|>> goto error;
          `` if "$name='OwnKeys'"|> if (KeyList_from_stringlist(sl, &msg->keylist) == NULL)
          `` if "$name='OwnKeys'"|>> goto enomem;
-         `` if "parm" |
+         `` if "parm or $name='OwnKeys'" |
             return status;
 
         enomem:
