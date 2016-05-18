@@ -1434,7 +1434,7 @@ the_end:
 DYNAMIC_API PEP_STATUS sequence_value(
         PEP_SESSION session,
         const char *name,
-        int64_t *value
+        int32_t *value
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1463,7 +1463,7 @@ DYNAMIC_API PEP_STATUS sequence_value(
         result = sqlite3_step(session->sequence_value2);
         switch (result) {
             case SQLITE_ROW: {
-                int64_t _value = (int64_t)
+                int32_t _value = (int32_t)
                         sqlite3_column_int64(session->sequence_value2, 0);
                 *value = _value;
                 break;

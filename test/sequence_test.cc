@@ -18,13 +18,13 @@ int main() {
 
     // sequence test code
 
-    int64_t value1;
+    int32_t value1;
     PEP_STATUS status2 = sequence_value(session, "test", &value1);
     assert(status2 == PEP_STATUS_OK);
 
     cout << "test sequence: " << value1 << "\n";
 
-    int64_t value2;
+    int32_t value2;
     PEP_STATUS status3 = sequence_value(session, "test", &value2);
     assert(status3 == PEP_STATUS_OK);
 

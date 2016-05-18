@@ -17,6 +17,10 @@ tstylesheet {
         // state machine for «@name»
 
         #include "pEpEngine.h"
+        
+        #ifdef __cplusplus
+        extern "C" {
+        #endif
 
         // types
 
@@ -58,6 +62,10 @@ tstylesheet {
         // driver
 
         PEP_STATUS fsm_«@name»_inject(PEP_SESSION session, «@name»_event event);
+
+        #ifdef __cplusplus
+        }
+        #endif
 
         ||
         ||

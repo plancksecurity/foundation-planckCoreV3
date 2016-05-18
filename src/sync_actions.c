@@ -1,6 +1,7 @@
 // Actions for DeviceState state machine
 
 #include <assert.h>
+#include "keymanagement.h"
 #include "sync_fsm.h"
 #include "map_asn1.h"
 #include "../asn.1/Beacon.h"
@@ -22,16 +23,30 @@ PEP_STATUS sendBeacon(PEP_SESSION session, const Identity partner)
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-    assert(!partner);
-    if (!(session && !partner))
-        return PEP_ILLEGAL_VALUE;
+assert(!partner);
+if (!(session && !partner))
+    return PEP_ILLEGAL_VALUE;
 
     Beacon_t *msg = (Beacon_t *) calloc(1, sizeof(Beacon_t));
     assert(msg);
     if (!msg)
         goto enomem;
 
-    
+    int32_t seq;
+    status = sequence_value(session, "DeviceGroup", &seq);
+    if (status != PEP_STATUS_OK)
+        goto error;
+    msg->header.sequence = (long) seq;
+
+    pEp_identity *me = new_identity(NULL, NULL, NULL, NULL);
+    if (!me)
+        goto enomem;
+    status = myself(session, me);
+    if (status != PEP_STATUS_OK)
+        goto error;
+    if (Identity_from_Struct(me, &msg->me) == NULL)
+        goto enomem;
+
     return status;
 
 enomem:
@@ -56,16 +71,33 @@ PEP_STATUS sendHandshakeRequest(PEP_SESSION session, const Identity partner)
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-    assert(partner);
-    if (!(session && partner))
-        return PEP_ILLEGAL_VALUE;
+assert(partner);
+if (!(session && partner))
+    return PEP_ILLEGAL_VALUE;
 
     HandshakeRequest_t *msg = (HandshakeRequest_t *) calloc(1, sizeof(HandshakeRequest_t));
     assert(msg);
     if (!msg)
         goto enomem;
 
-    
+    int32_t seq;
+    status = sequence_value(session, "DeviceGroup", &seq);
+    if (status != PEP_STATUS_OK)
+        goto error;
+    msg->header.sequence = (long) seq;
+
+    pEp_identity *me = new_identity(NULL, NULL, NULL, NULL);
+    if (!me)
+        goto enomem;
+    status = myself(session, me);
+    if (status != PEP_STATUS_OK)
+        goto error;
+    if (Identity_from_Struct(me, &msg->me) == NULL)
+        goto enomem;
+
+    if (Identity_from_Struct(partner, &msg->partner) == NULL)
+        goto enomem;
+
     return status;
 
 enomem:
@@ -76,7 +108,7 @@ error:
 }
 
 
-// showHandshake() - send
+// showHandshake() - 
 //
 //  params:
 //      session (in)        session handle
@@ -90,9 +122,9 @@ PEP_STATUS showHandshake(PEP_SESSION session, const Identity partner)
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-    assert(partner);
-    if (!(session && partner))
-        return PEP_ILLEGAL_VALUE;
+assert(partner);
+if (!(session && partner))
+    return PEP_ILLEGAL_VALUE;
 
     // working code
 
@@ -107,7 +139,7 @@ error:
 }
 
 
-// reject() - send
+// reject() - 
 //
 //  params:
 //      session (in)        session handle
@@ -121,9 +153,9 @@ PEP_STATUS reject(PEP_SESSION session, const Identity partner)
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-    assert(partner);
-    if (!(session && partner))
-        return PEP_ILLEGAL_VALUE;
+assert(partner);
+if (!(session && partner))
+    return PEP_ILLEGAL_VALUE;
 
     // working code
 
@@ -138,7 +170,7 @@ error:
 }
 
 
-// storeGroupKeys() - send
+// storeGroupKeys() - 
 //
 //  params:
 //      session (in)        session handle
@@ -152,9 +184,9 @@ PEP_STATUS storeGroupKeys(PEP_SESSION session, const Identity partner)
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-    assert(partner);
-    if (!(session && partner))
-        return PEP_ILLEGAL_VALUE;
+assert(partner);
+if (!(session && partner))
+    return PEP_ILLEGAL_VALUE;
 
     // working code
 
@@ -183,16 +215,37 @@ PEP_STATUS sendOwnKeys(PEP_SESSION session, const Identity partner)
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-    assert(!partner);
-    if (!(session && !partner))
-        return PEP_ILLEGAL_VALUE;
+assert(!partner);
+if (!(session && !partner))
+    return PEP_ILLEGAL_VALUE;
 
     OwnKeys_t *msg = (OwnKeys_t *) calloc(1, sizeof(OwnKeys_t));
     assert(msg);
     if (!msg)
         goto enomem;
 
-    
+    int32_t seq;
+    status = sequence_value(session, "DeviceGroup", &seq);
+    if (status != PEP_STATUS_OK)
+        goto error;
+    msg->header.sequence = (long) seq;
+
+    pEp_identity *me = new_identity(NULL, NULL, NULL, NULL);
+    if (!me)
+        goto enomem;
+    status = myself(session, me);
+    if (status != PEP_STATUS_OK)
+        goto error;
+    if (Identity_from_Struct(me, &msg->me) == NULL)
+        goto enomem;
+
+    stringlist_t *sl;
+    status = own_key_retrieve(session, &sl);
+    if (status != PEP_STATUS_OK)
+        goto error;
+    if (KeyList_from_stringlist(sl, &msg->keylist) == NULL)
+        goto enomem;
+
     return status;
 
 enomem:
@@ -203,7 +256,7 @@ error:
 }
 
 
-// transmitGroupKeys() - send
+// transmitGroupKeys() - 
 //
 //  params:
 //      session (in)        session handle
@@ -217,9 +270,9 @@ PEP_STATUS transmitGroupKeys(PEP_SESSION session, const Identity partner)
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-    assert(partner);
-    if (!(session && partner))
-        return PEP_ILLEGAL_VALUE;
+assert(partner);
+if (!(session && partner))
+    return PEP_ILLEGAL_VALUE;
 
     // working code
 
