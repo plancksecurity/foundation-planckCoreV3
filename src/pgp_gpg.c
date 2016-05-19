@@ -1803,7 +1803,7 @@ PEP_STATUS pgp_key_revoked(
     assert(fpr);
     assert(revoked);
 
-    *expired = false;
+    *revoked = false;
 
     status = find_single_key(session, fpr, &key);
     if (status != PEP_STATUS_OK)
@@ -1811,7 +1811,7 @@ PEP_STATUS pgp_key_revoked(
 
     if (key && key->subkeys)
     {
-        *expired = key->subkeys->revoked;
+        *revoked = key->subkeys->revoked;
     }
     else
     {
