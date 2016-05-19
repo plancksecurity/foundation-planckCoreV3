@@ -1,7 +1,10 @@
 #include "pEp_internal.h"
 #include "map_asn1.h"
 
-Identity_t *Identity_from_Struct(const pEp_identity *ident, Identity_t *result)
+Identity_t *Identity_from_Struct(
+        const pEp_identity *ident,
+        Identity_t *result
+    )
 {
     assert(ident);
     if (!ident)
@@ -116,7 +119,10 @@ enomem:
     return NULL;
 }
 
-KeyList_t *KeyList_from_stringlist(const stringlist_t *list, KeyList_t *result)
+KeyList_t *KeyList_from_stringlist(
+        const stringlist_t *list,
+        KeyList_t *result
+    )
 {
     assert(list);
     if (!list)
