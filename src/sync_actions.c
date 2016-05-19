@@ -23,9 +23,9 @@ PEP_STATUS sendBeacon(PEP_SESSION session, const Identity partner)
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-assert(!partner);
-if (!(session && !partner))
-    return PEP_ILLEGAL_VALUE;
+    assert(!partner);
+    if (!(session && !partner))
+        return PEP_ILLEGAL_VALUE;
 
     Beacon_t *msg = (Beacon_t *) calloc(1, sizeof(Beacon_t));
     assert(msg);
@@ -71,9 +71,9 @@ PEP_STATUS sendHandshakeRequest(PEP_SESSION session, const Identity partner)
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-assert(partner);
-if (!(session && partner))
-    return PEP_ILLEGAL_VALUE;
+    assert(partner);
+    if (!(session && partner))
+        return PEP_ILLEGAL_VALUE;
 
     HandshakeRequest_t *msg = (HandshakeRequest_t *) calloc(1, sizeof(HandshakeRequest_t));
     assert(msg);
@@ -122,9 +122,9 @@ PEP_STATUS showHandshake(PEP_SESSION session, const Identity partner)
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-assert(partner);
-if (!(session && partner))
-    return PEP_ILLEGAL_VALUE;
+    assert(partner);
+    if (!(session && partner))
+        return PEP_ILLEGAL_VALUE;
 
     // working code
 
@@ -153,9 +153,9 @@ PEP_STATUS reject(PEP_SESSION session, const Identity partner)
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-assert(partner);
-if (!(session && partner))
-    return PEP_ILLEGAL_VALUE;
+    assert(partner);
+    if (!(session && partner))
+        return PEP_ILLEGAL_VALUE;
 
     // working code
 
@@ -184,9 +184,9 @@ PEP_STATUS storeGroupKeys(PEP_SESSION session, const Identity partner)
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-assert(partner);
-if (!(session && partner))
-    return PEP_ILLEGAL_VALUE;
+    assert(partner);
+    if (!(session && partner))
+        return PEP_ILLEGAL_VALUE;
 
     // working code
 
@@ -215,9 +215,9 @@ PEP_STATUS sendOwnKeys(PEP_SESSION session, const Identity partner)
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-assert(!partner);
-if (!(session && !partner))
-    return PEP_ILLEGAL_VALUE;
+    assert(!partner);
+    if (!(session && !partner))
+        return PEP_ILLEGAL_VALUE;
 
     OwnKeys_t *msg = (OwnKeys_t *) calloc(1, sizeof(OwnKeys_t));
     assert(msg);
@@ -270,9 +270,9 @@ PEP_STATUS transmitGroupKeys(PEP_SESSION session, const Identity partner)
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-assert(partner);
-if (!(session && partner))
-    return PEP_ILLEGAL_VALUE;
+    assert(partner);
+    if (!(session && partner))
+        return PEP_ILLEGAL_VALUE;
 
     // working code
 

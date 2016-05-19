@@ -59,15 +59,15 @@ tstylesheet {
         choose {
             when "$partner"
             ||
-            assert(partner);
-            if (!(session && partner))
-                return PEP_ILLEGAL_VALUE;
+                assert(partner);
+                if (!(session && partner))
+                    return PEP_ILLEGAL_VALUE;
             ||
             otherwise
             ||
-            assert(!partner);
-            if (!(session && !partner))
-                return PEP_ILLEGAL_VALUE;
+                assert(!partner);
+                if (!(session && !partner))
+                    return PEP_ILLEGAL_VALUE;
             ||
         }
     }
@@ -151,7 +151,7 @@ tstylesheet {
                 goto error;
             if (Identity_from_Struct(me, &msg->me) == NULL)
                 goto enomem;
-
+         `` if "parm or $name='OwnKeys'" |
          `` if "parm/partner"   |> if (Identity_from_Struct(partner, &msg->partner) == NULL)
          `` if "parm/partner"   |>> goto enomem;
          `` if "$name='OwnKeys'"|> stringlist_t *sl;
@@ -160,7 +160,7 @@ tstylesheet {
          `` if "$name='OwnKeys'"|>> goto error;
          `` if "$name='OwnKeys'"|> if (KeyList_from_stringlist(sl, &msg->keylist) == NULL)
          `` if "$name='OwnKeys'"|>> goto enomem;
-         `` if "parm or $name='OwnKeys'" |
+
             return status;
 
         enomem:
