@@ -63,6 +63,9 @@ typedef PEP_STATUS (*revoke_key_t)(PEP_SESSION session, const char *fpr,
 typedef PEP_STATUS (*key_expired_t)(PEP_SESSION session, const char *fpr,
         bool *expired);
 
+typedef PEP_STATUS (*key_revoked_t)(PEP_SESSION session, const char *fpr,
+                                    bool *revoked);
+
 typedef PEP_STATUS (*binary_path_t)(const char **path);
 
 typedef struct _PEP_cryptotech_t {
@@ -84,6 +87,7 @@ typedef struct _PEP_cryptotech_t {
     renew_key_t renew_key;
     revoke_key_t revoke_key;
     key_expired_t key_expired;
+    key_revoked_t key_revoked;
     binary_path_t binary_path;
 } PEP_cryptotech_t;
 
