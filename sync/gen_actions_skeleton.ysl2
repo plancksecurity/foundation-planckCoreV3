@@ -56,6 +56,7 @@ tstylesheet {
 
     function "paramcheck" {
         param "partner";
+        |> assert(session);
         choose {
             when "$partner"
             ||
@@ -91,7 +92,6 @@ tstylesheet {
         {
             PEP_STATUS status = PEP_STATUS_OK;
 
-            assert(session);
             `` call "paramcheck" with "partner", "parm/partner";
 
             // working code
@@ -129,7 +129,6 @@ tstylesheet {
         {
             PEP_STATUS status = PEP_STATUS_OK;
 
-            assert(session);
             `` call "paramcheck" with "partner", "parm/partner";
 
             «$name»_t *msg = («$name»_t *) calloc(1, sizeof(«$name»_t));
