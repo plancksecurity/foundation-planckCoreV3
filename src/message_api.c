@@ -841,13 +841,8 @@ void import_attached_keys(PEP_SESSION session, const message *msg)
 
         // workaround for Apple Mail bugs
         if (is_mime_type(bl, "application/x-apple-msg-attachment")) {
-            if (is_fileending(bl, ".asc")) {
-                if (strlen(bl->filename) == 14 &&
-                        bl->filename[0] == '0' && bl->filename[1] == 'x')
-                    import_key(session, bl->value, bl->size);
-                else if (strlen(bl->filename) == 12)
-                    import_key(session, bl->value, bl->size);
-            }
+            if (is_fileending(bl, ".asc"))
+                import_key(session, bl->value, bl->size);
         }
         else if (bl->mime_type == NULL ||
                     is_mime_type(bl, "application/octet-stream")) {
