@@ -18,6 +18,9 @@ extern "C" {
 //
 //  return value:
 //      pointer to updated or allocated result
+//
+//  caveat:
+//      if a new struct is allocated, the ownership goes to the caller
 
 Identity_t *Identity_from_Struct(
         const pEp_identity *ident,
@@ -33,6 +36,9 @@ Identity_t *Identity_from_Struct(
 //
 //  return value:
 //      pointer to updated or allocated result
+//
+//  caveat:
+//      if a new struct is allocated, the ownership goes to the caller
 
 pEp_identity *Identity_to_Struct(Identity_t *ident, pEp_identity *result);
 
@@ -45,6 +51,9 @@ pEp_identity *Identity_to_Struct(Identity_t *ident, pEp_identity *result);
 //
 //  return value:
 //      pointer to updated or allocated result
+//
+//  caveat:
+//      if a new struct is allocated, the ownership goes to the caller
 
 KeyList_t *KeyList_from_stringlist(
         const stringlist_t *list,
@@ -59,6 +68,9 @@ KeyList_t *KeyList_from_stringlist(
 //
 //  return value:
 //      pointer to updated or allocated result
+//
+//  caveat:
+//      if a new struct is allocated, the ownership goes to the caller
 
 stringlist_t *KeyList_to_stringlist(KeyList_t *list, stringlist_t *result);
 
