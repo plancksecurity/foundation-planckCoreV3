@@ -1,3 +1,8 @@
+syntax: regexp
+^asn\.1/.*\.(c|h)$
+^asn\.1/Makefile\.am\.sample$
+^asn\.1/libasn1\.a$
+
 syntax: glob
 *.orig
 *.d

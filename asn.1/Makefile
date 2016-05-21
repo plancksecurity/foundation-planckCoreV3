@@ -10,7 +10,7 @@ generate: DeviceGroup-Protocol.c
 	rm -f converter-sample.c
 
 %.o: %.c %.h
-	$(CC) $(CFLAGS) $(OPTIMIZE) -I$(ASN1C_INCLUDE) -c $< -o $@
+	$(CC) $(CFLAGS) $(OPTIMIZE) -I. -I$(ASN1C_INCLUDE) -c $< -o $@
 
 DeviceGroup-Protocol.c: devicegroup.asn1
 	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=PEP.Message pEp.asn1 $<
