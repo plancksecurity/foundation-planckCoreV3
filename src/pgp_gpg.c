@@ -450,6 +450,12 @@ PEP_STATUS pgp_decrypt_and_verify(
                         switch (_GPGERR(gpgme_signature->status)) {
                         case GPG_ERR_NO_ERROR:
                         {
+                            // Some versions of gpg returns signer's 
+                            // signing subkey fingerprint instead of
+                            // signer's primary key fingerprint.
+                            // This is meant to get signer's primary 
+                            // key fingerprint, using subkey's.
+
                             gpgme_key_t key;
                             memset(&key,0,sizeof(key));
 
@@ -465,22 +471,33 @@ PEP_STATUS pgp_decrypt_and_verify(
                                 return PEP_OUT_OF_MEMORY;
                             }
                             // Primary key is given as the first subkey
-                            if (key->subkeys && key->subkeys->fpr && key->subkeys->fpr[0]){
+                            if (gpgme_error == GPG_ERR_NO_ERROR &&  
+                                key && key->subkeys && key->subkeys->fpr 
+                                && key->subkeys->fpr[0])
+                            {
                                 k = stringlist_add(k, key->subkeys->fpr);
-                                if (k == NULL) {
-                                    free_stringlist(_keylist);
-                                    gpg.gpgme_data_release(plain);
-                                    gpg.gpgme_data_release(cipher);
-                                    free(_buffer);
-                                    return PEP_OUT_OF_MEMORY;
-                                }
+                                gpg.gpgme_key_unref(key);
                             }
-                            else {
+                            else if(gpgme_error == GPG_ERR_NOT_OPERATIONAL)
+                            {
+                                // With some gpgme version, gpgme_get_key fail
+                                // with GPG_ERR_NOT_OPERATIONAL, but in that
+                                // case fpr is the primary one...
+                                k = stringlist_add(k, gpgme_signature->fpr);
+                            }
+                            else 
+                            {
                                 result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
                                 break;
                             }
+                            if (k == NULL) {
+                                free_stringlist(_keylist);
+                                gpg.gpgme_data_release(plain);
+                                gpg.gpgme_data_release(cipher);
+                                free(_buffer);
+                                return PEP_OUT_OF_MEMORY;
+                            }
 
-                            gpg.gpgme_key_unref(key);
                             break;
                         }
                         case GPG_ERR_CERT_REVOKED:
@@ -491,6 +508,13 @@ PEP_STATUS pgp_decrypt_and_verify(
                         case GPG_ERR_KEY_EXPIRED:
                         case GPG_ERR_NO_PUBKEY:
                             k = stringlist_add(k, gpgme_signature->fpr);
+                            if (k == NULL) {
+                                free_stringlist(_keylist);
+                                gpg.gpgme_data_release(plain);
+                                gpg.gpgme_data_release(cipher);
+                                free(_buffer);
+                                return PEP_OUT_OF_MEMORY;
+                            }
                             if (result == PEP_DECRYPTED_AND_VERIFIED)
                                 result = PEP_DECRYPTED;
                             break;
@@ -650,18 +674,29 @@ PEP_STATUS pgp_verify_text(
                     return PEP_OUT_OF_MEMORY;
                 }
                 // Primary key is given as the first subkey
-                if (key->subkeys && key->subkeys->fpr && key->subkeys->fpr[0]){
+                if (gpgme_error == GPG_ERR_NO_ERROR &&  
+                    key && key->subkeys && key->subkeys->fpr 
+                    && key->subkeys->fpr[0])
+                {
                     k = stringlist_add(k, key->subkeys->fpr);
-                    if (k == NULL) {
-                        free_stringlist(_keylist);
-                        gpg.gpgme_data_release(d_text);
-                        gpg.gpgme_data_release(d_sig);
-                        return PEP_OUT_OF_MEMORY;
-                    }
+                    gpg.gpgme_key_unref(key);
+                }
+                else if(gpgme_error == GPG_ERR_NOT_OPERATIONAL)
+                {
+                    // With some gpgme version, gpgme_get_key fail
+                    // with GPG_ERR_NOT_OPERATIONAL, but in that
+                    // case fpr is the primary one...
+                    k = stringlist_add(k, gpgme_signature->fpr);
                 }
                 else {
                     result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
                     break;
+                }
+                if (k == NULL) {
+                    free_stringlist(_keylist);
+                    gpg.gpgme_data_release(d_text);
+                    gpg.gpgme_data_release(d_sig);
+                    return PEP_OUT_OF_MEMORY;
                 }
 
                 gpg.gpgme_key_unref(key);

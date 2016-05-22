@@ -1,5 +1,15 @@
 include ../Makefile.conf
 
+ifeq ($(BUILD_ON),Linux)
+ifeq ($(BUILD_FOR),Linux)
+
+CC=gcc
+CFLAGS?=-fPIC
+else
+$(error don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
+endif
+endif
+
 ALL_SOURCE=$(subst $(NO_SOURCE),,$(wildcard *.c))
 ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
 
