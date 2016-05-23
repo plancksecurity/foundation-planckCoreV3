@@ -4,6 +4,10 @@
 
 #include "pEpEngine.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // types
 
 typedef pEp_identity * Identity;
@@ -63,4 +67,8 @@ DeviceState_state fsm_DeviceState(
 // driver
 
 PEP_STATUS fsm_DeviceState_inject(PEP_SESSION session, DeviceState_event event);
+
+#ifdef __cplusplus
+}
+#endif
 
