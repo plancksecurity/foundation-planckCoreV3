@@ -23,7 +23,7 @@ int main() {
     // message_api test code
 
     cout << "creating message…\n";
-    pEp_identity * me2 = new_identity("outlooktest@dingens.org", NULL, "23", "Outlook Test");
+    pEp_identity * me2 = new_identity("outlooktest@dingens.org", NULL, PEP_OWN_USERID, "Outlook Test");
     me2->me = true;
     identity_list *to2 = new_identity_list(new_identity("vb@dingens.org", NULL, "42", "Volker Birk"));
     message *msg2 = new_message(PEP_dir_outgoing);
