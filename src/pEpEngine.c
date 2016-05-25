@@ -165,11 +165,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "       references pgp_keypair (fpr)\n"
                 "       on delete cascade,\n"
                 "   comm_type integer not null,\n"
-                "   comment text\n"
-                ");\n"
-                "create unique index if not exists trust_index on trust (\n"
-                "   user_id,\n"
-                "   pgp_keypair_fpr\n"
+                "   comment text,\n"
+                "   primary key (user_id, pgp_keypair_fpr)\n"
                 ");\n"
                 // blacklist
                 "create table if not exists blacklist_keys (\n"
