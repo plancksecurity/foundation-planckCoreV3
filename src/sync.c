@@ -26,7 +26,7 @@ DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
     session->showHandshake = NULL;
 }
 
-PEP_STATUS deliverHandshakeResult(
+DYNAMIC_API PEP_STATUS deliverHandshakeResult(
         PEP_SESSION session,
         sync_handshake_result result
     )

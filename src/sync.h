@@ -52,7 +52,7 @@ typedef PEP_STATUS (*showHandshake_t)(
 //      session (in)    session handle
 //      result (in)     handshake result
 
-PEP_STATUS deliverHandshakeResult(
+DYNAMIC_API PEP_STATUS deliverHandshakeResult(
         PEP_SESSION session,
         sync_handshake_result result
     );
