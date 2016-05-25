@@ -75,6 +75,18 @@
     <ClCompile Include="src\sync.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="src\sync_actions.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sync_driver.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sync_fsm.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="src\map_asn1.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\keymanagement.h">
@@ -155,7 +167,10 @@
     <ClInclude Include="src\sync.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="src\sync_internal.h">
+    <ClInclude Include="src\sync_fsm.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\map_asn1.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
