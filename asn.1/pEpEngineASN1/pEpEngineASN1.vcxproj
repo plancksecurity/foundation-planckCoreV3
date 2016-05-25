@@ -41,6 +41,10 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ExecutablePath>C:\Users\vb\bin;$(ExecutablePath)</ExecutablePath>
+    <IncludePath>C:\Users\vb\share\asn1c;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>C:\Users\vb\share\asn1c;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -83,6 +87,90 @@ del converter-sample.c
   </ItemDefinitionGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\asn_codecs_prim.c" />
+    <ClCompile Include="..\asn_SEQUENCE_OF.c" />
+    <ClCompile Include="..\asn_SET_OF.c" />
+    <ClCompile Include="..\Beacon.c" />
+    <ClCompile Include="..\ber_decoder.c" />
+    <ClCompile Include="..\ber_tlv_length.c" />
+    <ClCompile Include="..\ber_tlv_tag.c" />
+    <ClCompile Include="..\BIT_STRING.c" />
+    <ClCompile Include="..\constraints.c" />
+    <ClCompile Include="..\constr_CHOICE.c" />
+    <ClCompile Include="..\constr_SEQUENCE.c" />
+    <ClCompile Include="..\constr_SEQUENCE_OF.c" />
+    <ClCompile Include="..\constr_SET_OF.c" />
+    <ClCompile Include="..\constr_TYPE.c" />
+    <ClCompile Include="..\der_encoder.c" />
+    <ClCompile Include="..\DeviceGroup-Protocol.c" />
+    <ClCompile Include="..\HandshakeRequest.c" />
+    <ClCompile Include="..\Hash.c" />
+    <ClCompile Include="..\Header.c" />
+    <ClCompile Include="..\Hex.c" />
+    <ClCompile Include="..\Identity.c" />
+    <ClCompile Include="..\INTEGER.c" />
+    <ClCompile Include="..\ISO639-1.c" />
+    <ClCompile Include="..\KeyList.c" />
+    <ClCompile Include="..\NativeEnumerated.c" />
+    <ClCompile Include="..\NativeInteger.c" />
+    <ClCompile Include="..\OCTET_STRING.c" />
+    <ClCompile Include="..\OwnKeys.c" />
+    <ClCompile Include="..\per_decoder.c" />
+    <ClCompile Include="..\per_encoder.c" />
+    <ClCompile Include="..\per_opentype.c" />
+    <ClCompile Include="..\per_support.c" />
+    <ClCompile Include="..\PrintableString.c" />
+    <ClCompile Include="..\UTF8String.c" />
+    <ClCompile Include="..\Version.c" />
+    <ClCompile Include="..\xer_decoder.c" />
+    <ClCompile Include="..\xer_encoder.c" />
+    <ClCompile Include="..\xer_support.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\asn_application.h" />
+    <ClInclude Include="..\asn_codecs.h" />
+    <ClInclude Include="..\asn_codecs_prim.h" />
+    <ClInclude Include="..\asn_internal.h" />
+    <ClInclude Include="..\asn_SEQUENCE_OF.h" />
+    <ClInclude Include="..\asn_SET_OF.h" />
+    <ClInclude Include="..\asn_system.h" />
+    <ClInclude Include="..\Beacon.h" />
+    <ClInclude Include="..\ber_decoder.h" />
+    <ClInclude Include="..\ber_tlv_length.h" />
+    <ClInclude Include="..\ber_tlv_tag.h" />
+    <ClInclude Include="..\BIT_STRING.h" />
+    <ClInclude Include="..\constraints.h" />
+    <ClInclude Include="..\constr_CHOICE.h" />
+    <ClInclude Include="..\constr_SEQUENCE.h" />
+    <ClInclude Include="..\constr_SEQUENCE_OF.h" />
+    <ClInclude Include="..\constr_SET_OF.h" />
+    <ClInclude Include="..\constr_TYPE.h" />
+    <ClInclude Include="..\der_encoder.h" />
+    <ClInclude Include="..\DeviceGroup-Protocol.h" />
+    <ClInclude Include="..\HandshakeRequest.h" />
+    <ClInclude Include="..\Hash.h" />
+    <ClInclude Include="..\Header.h" />
+    <ClInclude Include="..\Hex.h" />
+    <ClInclude Include="..\Identity.h" />
+    <ClInclude Include="..\INTEGER.h" />
+    <ClInclude Include="..\ISO639-1.h" />
+    <ClInclude Include="..\KeyList.h" />
+    <ClInclude Include="..\NativeEnumerated.h" />
+    <ClInclude Include="..\NativeInteger.h" />
+    <ClInclude Include="..\OCTET_STRING.h" />
+    <ClInclude Include="..\OwnKeys.h" />
+    <ClInclude Include="..\per_decoder.h" />
+    <ClInclude Include="..\per_encoder.h" />
+    <ClInclude Include="..\per_opentype.h" />
+    <ClInclude Include="..\per_support.h" />
+    <ClInclude Include="..\PrintableString.h" />
+    <ClInclude Include="..\UTF8String.h" />
+    <ClInclude Include="..\Version.h" />
+    <ClInclude Include="..\xer_decoder.h" />
+    <ClInclude Include="..\xer_encoder.h" />
+    <ClInclude Include="..\xer_support.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
