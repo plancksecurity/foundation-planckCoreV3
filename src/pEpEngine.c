@@ -1211,7 +1211,6 @@ static char *_concat_string(char *str1, const char *str2, char delim)
     if (result) {
         result[len1] = '"';
         strcpy(result + len1 + 1, str2);
-        _clean_log_value(result + len1 + 1);
         result[len - 2] = '"';
         result[len - 1] = delim;
         result[len] = 0;
@@ -1284,6 +1283,7 @@ DYNAMIC_API PEP_STATUS get_crashdump_log(
             if (_logdata == NULL)
                 goto enomem;
 
+            _clean_log_value(_logdata);
             break;
 
         case SQLITE_DONE:
