@@ -16,6 +16,15 @@ endif
 LOCAL_MODULE    := pEpEngine
 LOCAL_CFLAGS    += -std=c99
 
+# from http://www.sqlite.org/android/finfo?name=jni/sqlite/Android.mk 
+#      http://www.sqlite.org/android/artifact/e8ed354b3e58c835
+
+# This is important - it causes SQLite to use memory for temp files. Since 
+# Android has no globally writable temp directory, if this is not defined the
+# application throws an exception when it tries to create a temp file.
+#
+LOCAL_CFLAGS    += -DSQLITE_TEMP_STORE=3
+
 LOCAL_C_INCLUDES := ../../src \
                     ../../asn.1 \
                     $(GPGME_INCLUDE_PATH) \
