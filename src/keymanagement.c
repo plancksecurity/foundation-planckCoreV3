@@ -304,7 +304,7 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     {
         stringlist_t *keylist = NULL;
 
-        if (identity->fpr == NULL) {
+        if (identity->fpr != NULL) {
             free(identity->fpr);
             identity->fpr = NULL;
         }
