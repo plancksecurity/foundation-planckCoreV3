@@ -1219,6 +1219,23 @@ DYNAMIC_API PEP_STATUS key_expired(
             expired);
 }
 
+DYNAMIC_API PEP_STATUS key_revoked(
+                                   PEP_SESSION session,
+                                   const char *fpr,
+                                   bool *revoked
+                                   )
+{
+    assert(session);
+    assert(fpr);
+    assert(revoked);
+    
+    if (!(session && fpr && revoked))
+        return PEP_ILLEGAL_VALUE;
+    
+    return session->cryptotech[PEP_crypt_OpenPGP].key_revoked(session, fpr,
+                                                              revoked);
+}
+
 static void _clean_log_value(char *text)
 {
     if (text) {

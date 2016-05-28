@@ -863,12 +863,32 @@ void import_attached_keys(PEP_SESSION session, const message *msg)
         update_identity(session, msg->from);
 }
 
-void attach_own_key(PEP_SESSION session, message *msg)
+
+PEP_STATUS _attach_key(PEP_SESSION session, const char* fpr, message *msg)
 {
     char *keydata;
     size_t size;
     bloblist_t *bl;
 
+    PEP_STATUS status = export_key(session, fpr, &keydata, &size);
+    assert(status == PEP_STATUS_OK);
+    if (status != PEP_STATUS_OK)
+        return status;
+    assert(size);
+    
+    bl = bloblist_add(msg->attachments, keydata, size, "application/pgp-keys",
+                      "pEpkey.asc");
+    
+    if (msg->attachments == NULL && bl)
+        msg->attachments = bl;
+
+    return PEP_STATUS_OK;
+}
+
+#define ONE_WEEK (7*24*3600)
+
+void attach_own_key(PEP_SESSION session, message *msg)
+{
     assert(session);
     assert(msg);
 
@@ -879,16 +899,24 @@ void attach_own_key(PEP_SESSION session, message *msg)
     if (msg->from == NULL || msg->from->fpr == NULL)
         return;
 
-    PEP_STATUS status = export_key(session, msg->from->fpr, &keydata, &size);
-    assert(status == PEP_STATUS_OK);
-    if (status != PEP_STATUS_OK)
+    if(_attach_key(session, msg->from->fpr, msg) != PEP_STATUS_OK)
         return;
-    assert(size);
-
-    bl = bloblist_add(msg->attachments, keydata, size, "application/pgp-keys",
-            "pEpkey.asc");
-    if (msg->attachments == NULL && bl)
-        msg->attachments = bl;
+    
+    char *revoked_fpr = NULL;
+    uint64_t revocation_date = 0;
+    
+    if(get_revoked(session, msg->from->fpr,
+                   &revoked_fpr, &revocation_date) == PEP_STATUS_OK &&
+       revoked_fpr != NULL)
+    {
+        time_t now = time(NULL);
+        
+        if (now < (time_t)revocation_date + ONE_WEEK)
+        {
+            _attach_key(session, revoked_fpr, msg);
+        }
+    }
+    free(revoked_fpr);
 }
 
 PEP_cryptotech determine_encryption_format(message *msg)

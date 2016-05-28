@@ -710,6 +710,20 @@ DYNAMIC_API PEP_STATUS key_expired(
         bool *expired
     );
 
+    
+// key_revoked() - flags if a key is already revoked
+//
+//  parameters:
+//      session (in)            session handle
+//      fpr (in)                ID of key to check as UTF-8 string
+//      revoked (out)           flag if key revoked
+
+DYNAMIC_API PEP_STATUS key_revoked(
+        PEP_SESSION session,
+        const char *fpr,
+        bool *revoked
+    );
+
 
 // get_crashdump_log() - get the last log messages out
 //
@@ -781,6 +795,15 @@ DYNAMIC_API PEP_STATUS sequence_value(
         int32_t *value
     );
 
+    
+// set_revoked() - records relation between a revoked key and its replacement
+//
+//  parameters:
+//      session (in)            session handle
+//      revoked_fpr (in)        revoked fingerprint
+//      replacement_fpr (in)    replacement key fingerprint
+//      revocation_date (in)    revocation date
+
 DYNAMIC_API PEP_STATUS set_revoked(
        PEP_SESSION session,
        const char *revoked_fpr,
@@ -788,6 +811,14 @@ DYNAMIC_API PEP_STATUS set_revoked(
        const uint64_t revocation_date
     );
 
+// get_revoked() - find revoked key that may have been replaced by given key, if any
+//
+//  parameters:
+//      session (in)            session handle
+//      fpr (in)                given fingerprint
+//      revoked_fpr (out)       revoked fingerprint
+//      revocation_date (out)   revocation date
+    
 DYNAMIC_API PEP_STATUS get_revoked(
         PEP_SESSION session,
         const char *fpr,

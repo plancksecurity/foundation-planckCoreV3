@@ -396,6 +396,9 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
             free_stringlist(keylist);
             return PEP_UNKNOWN_ERROR;
         }
+        
+        // TODO if revoked re-created , store in revoke_keys
+        
     }
     else
     {
