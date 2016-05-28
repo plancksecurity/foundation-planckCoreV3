@@ -34,9 +34,14 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     static const char *sql_own_key_is_listed;
     static const char *sql_own_key_retrieve;
 
+    // Sequence
     static const char *sql_sequence_value1;
     static const char *sql_sequence_value2;
 
+    // Revocation tracking
+    static const char *sql_set_revoked;
+    static const char *sql_get_revoked;
+    
     bool in_first = false;
 
     assert(sqlite3_threadsafe());
@@ -177,6 +182,13 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "   name text primary key,\n"
                 "   value integer default 0\n"
                 ");\n"
+                "create table if not exists revoked_keys (\n"
+                "   revoked_fpr text primary key,\n"
+                "   replacement_fpr text not null\n"
+                "       references pgp_keypair (fpr)\n"
+                "       on delete cascade,\n"
+                "   revocation_date integer\n"
+                ");\n"
                 ,
             NULL,
             NULL,
@@ -275,6 +287,15 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                               "(select coalesce((select value + 1 from sequences "
                               "where name = ?1), 1 ))) ; ";
         sql_sequence_value2 = "select value from sequences where name = ?1 ;";
+        
+        sql_set_revoked =     "insert or replace into revoked_keys ("
+                              "    revoked_fpr, replacement_fpr, revocation_date) "
+                              "values (upper(replace(?1,' ','')),"
+                              "        upper(replace(?2,' ','')),"
+                              "        ?3) ;";
+        
+        sql_get_revoked =     "select revoked_fpr, revocation_date from revoked_keys"
+                              "    where replacement_fpr = upper(replace(?1,' ','')) ;";
     }
 
     int_result = sqlite3_prepare_v2(_session->db, sql_log, (int)strlen(sql_log),
@@ -367,6 +388,16 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_sequence_value2), &_session->sequence_value2, NULL);
     assert(int_result == SQLITE_OK);
 
+    // Revocation tracking
+    
+    int_result = sqlite3_prepare_v2(_session->db, sql_set_revoked,
+                                    (int)strlen(sql_set_revoked), &_session->set_revoked, NULL);
+    assert(int_result == SQLITE_OK);
+    
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_revoked,
+                                    (int)strlen(sql_get_revoked), &_session->get_revoked, NULL);
+    assert(int_result == SQLITE_OK);
+    
     status = init_cryptotech(_session, in_first);
     if (status != PEP_STATUS_OK)
         goto pep_error;
@@ -552,7 +583,7 @@ DYNAMIC_API PEP_STATUS trustword(
         if (*word)
             *wsize = sqlite3_column_bytes(session->trustword, 1);
         else
-            status = PEP_TRUSTWORD_NOT_FOUND;
+            status = PEP_OUT_OF_MEMORY;
     } else
         status = PEP_TRUSTWORD_NOT_FOUND;
 
@@ -1470,6 +1501,95 @@ DYNAMIC_API PEP_STATUS sequence_value(
         }
         sqlite3_reset(session->sequence_value2);
     }
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS set_revoked(
+       PEP_SESSION session,
+       const char *revoked_fpr,
+       const char *replacement_fpr,
+       const uint64_t revocation_date
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    assert(session &&
+           revoked_fpr && revoked_fpr[0] &&
+           replacement_fpr && replacement_fpr[0]
+          );
+    
+    if (!(session &&
+          revoked_fpr && revoked_fpr[0] &&
+          replacement_fpr && replacement_fpr[0]
+         ))
+        return PEP_ILLEGAL_VALUE;
+    
+    sqlite3_reset(session->set_revoked);
+    sqlite3_bind_text(session->set_revoked, 1, revoked_fpr, -1, SQLITE_STATIC);
+    sqlite3_bind_text(session->set_revoked, 2, replacement_fpr, -1, SQLITE_STATIC);
+    sqlite3_bind_int64(session->set_revoked, 3, revocation_date);
+
+    int result;
+    
+    result = sqlite3_step(session->set_revoked);
+    switch (result) {
+        case SQLITE_DONE:
+            status = PEP_STATUS_OK;
+            break;
+            
+        default:
+            status = PEP_UNKNOWN_ERROR;
+    }
+    
+    sqlite3_reset(session->set_revoked);
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS get_revoked(
+        PEP_SESSION session,
+        const char *fpr,
+        char **revoked_fpr,
+        uint64_t *revocation_date
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session &&
+           revoked_fpr &&
+           fpr && fpr[0]
+          );
+    
+    if (!(session &&
+           revoked_fpr &&
+           fpr && fpr[0]
+          ))
+        return PEP_ILLEGAL_VALUE;
+
+    *revoked_fpr = NULL;
+    *revocation_date = 0;
+
+    sqlite3_reset(session->get_revoked);
+    sqlite3_bind_text(session->get_revoked, 1, fpr, -1, SQLITE_STATIC);
+
+    int result;
+    
+    result = sqlite3_step(session->get_revoked);
+    switch (result) {
+        case SQLITE_ROW: {
+            *revoked_fpr = strdup((const char *) sqlite3_column_text(session->get_revoked, 0));
+            if(*revoked_fpr)
+                *revocation_date = sqlite3_column_int64(session->get_revoked, 1);
+            else
+                status = PEP_OUT_OF_MEMORY;
+
+            break;
+        }
+        default:
+            status = PEP_CANNOT_FIND_IDENTITY;
+    }
+
+    sqlite3_reset(session->get_revoked);
+
     return status;
 }
 

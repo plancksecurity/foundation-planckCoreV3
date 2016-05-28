@@ -115,7 +115,11 @@ typedef struct _pEpSession {
     sqlite3_stmt *sequence_value1;
     sqlite3_stmt *sequence_value2;
 
-    // callbacks   
+    // sequence value
+    sqlite3_stmt *set_revoked;
+    sqlite3_stmt *get_revoked;
+
+    // callbacks
     examine_identity_t examine_identity;
     void *examine_management;
     void *sync_obj;

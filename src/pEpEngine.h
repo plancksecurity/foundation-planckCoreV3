@@ -781,6 +781,20 @@ DYNAMIC_API PEP_STATUS sequence_value(
         int32_t *value
     );
 
+DYNAMIC_API PEP_STATUS set_revoked(
+       PEP_SESSION session,
+       const char *revoked_fpr,
+       const char *replacement_fpr,
+       const uint64_t revocation_date
+    );
+
+DYNAMIC_API PEP_STATUS get_revoked(
+        PEP_SESSION session,
+        const char *fpr,
+        char **revoked_fpr,
+        uint64_t *revocation_date
+    );
+
 
 DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session);
 
