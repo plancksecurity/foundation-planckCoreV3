@@ -168,7 +168,12 @@ tstylesheet {
          `` if "$name='OwnKeys'"|> if (KeyList_from_stringlist(sl, &msg->keylist) == NULL)
          `` if "$name='OwnKeys'"|>> goto enomem;
 
-            ssize_t size = uper_encode_to_new_buffer(&asn_DEF_HandshakeRequest,
+            if (asn_check_constraints(&asn_DEF_«$name», msg, NULL, NULL)) {
+                status = PEP_CONTRAINTS_VIOLATED;
+                goto error;
+            }
+
+            ssize_t size = uper_encode_to_new_buffer(&asn_DEF_«$name»,
                     NULL, msg, (void **) &payload);
             if (size == -1) {
                 status = PEP_CANNOT_ENCODE;
