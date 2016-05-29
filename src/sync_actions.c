@@ -64,6 +64,11 @@ PEP_STATUS sendBeacon(
     if (Identity_from_Struct(me, &msg->me) == NULL)
         goto enomem;
 
+    if (asn_check_constraints(&asn_DEF_HandshakeRequest, msg, NULL, NULL)) {
+        status = PEP_CONTRAINTS_VIOLATED;
+        goto error;
+    }
+
     ssize_t size = uper_encode_to_new_buffer(&asn_DEF_HandshakeRequest,
             NULL, msg, (void **) &payload);
     if (size == -1) {

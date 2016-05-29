@@ -68,7 +68,8 @@ typedef enum {
     PEP_PHRASE_NOT_FOUND                            = 0x0701,
 
     PEP_SEND_FUNCTION_NOT_REGISTERED                = 0x0801,
-    PEP_CANNOT_ENCODE                               = 0x0802,
+    PEP_CONTRAINTS_VIOLATED                         = 0x0802,
+    PEP_CANNOT_ENCODE                               = 0x0803,
 
     PEP_COMMIT_FAILED                               = 0xff01,
 
