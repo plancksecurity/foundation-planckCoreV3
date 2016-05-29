@@ -3,8 +3,6 @@
 #include <memory.h>
 #include <assert.h>
 
-#include "sync_fsm.h"
-
 
 DYNAMIC_API PEP_STATUS register_sync_callbacks(
         PEP_SESSION session,
@@ -37,13 +35,13 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
 
     switch (result) {
         case SYNC_HANDSHAKE_CANCEL:
-            fsm_DeviceState_inject(session, Cancel);
+            fsm_DeviceState_inject(session, Cancel, NULL, 0);
             break;
         case SYNC_HANDSHAKE_ACCEPTED:
-            fsm_DeviceState_inject(session, HandshakeAccepted);
+            fsm_DeviceState_inject(session, HandshakeAccepted, NULL, 0);
             break;
         case SYNC_HANDSHAKE_REJECTED:
-            fsm_DeviceState_inject(session, HandshakeRejected);
+            fsm_DeviceState_inject(session, HandshakeRejected, NULL, 0);
             break;
         default:
             return PEP_ILLEGAL_VALUE;

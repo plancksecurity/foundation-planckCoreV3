@@ -37,18 +37,21 @@ tstylesheet {
         // states
 
         typedef enum _«@name»_state {
+            «@name»_state_NONE = 0,
         `` for "func:distinctName(state)" |> «@name»`if "position()!=last()" > , `
         } «@name»_state;
 
         // events
 
         typedef enum _«@name»_event {
+            «@name»_event_NONE = 0,
         `` for "func:distinctName(state/event)" |> «@name»`if "position()!=last()" > , `
         } «@name»_event;
 
         // actions
 
-        `` for "func:distinctName(//action)" | PEP_STATUS «@name»(PEP_SESSION session, const Identity partner);
+        `` const "name", "@name"
+        `` for "func:distinctName(//action)" | PEP_STATUS «@name»(PEP_SESSION session, «$name»_state state, const Identity partner);
 
         // state machine
 
@@ -56,16 +59,47 @@ tstylesheet {
                 PEP_SESSION session,
                 «@name»_state state,
                 «@name»_event event,
-                const Identity partner
+                const Identity partner,
+                «@name»_state state_partner
             );
 
         // driver
 
-        PEP_STATUS fsm_«@name»_inject(PEP_SESSION session, «@name»_event event);
+        PEP_STATUS fsm_«@name»_inject(
+                PEP_SESSION session,
+                «@name»_event event,
+                Identity partner,
+                «@name»_state state_partner
+            );
 
         #ifdef __cplusplus
         }
         #endif
+
+        ||
+        document "../src/sync_driver.c", "text"
+        ||
+        // Driver for «@name» state machine
+
+        #include <assert.h>
+        #include "pEp_internal.h"
+
+
+        PEP_STATUS fsm_«@name»_inject(
+                PEP_SESSION session,
+                «@name»_event event,
+                Identity partner,
+                «@name»_state state_partner
+            )
+        {
+            PEP_STATUS status = PEP_STATUS_OK;
+
+            session->sync_state = InitState;
+            session->sync_state = fsm_«@name»(session, session->sync_state,
+                    event, partner, state_partner);
+
+            return status;
+        }
 
         ||
         ||
@@ -77,7 +111,8 @@ tstylesheet {
                 PEP_SESSION session,
                 «@name»_state state,
                 «@name»_event event,
-                const Identity partner
+                const Identity partner,
+                «@name»_state state_partner
             )
         {
             switch (state) {
@@ -113,7 +148,7 @@ tstylesheet {
 
     template "action" {
         indent(0);
-        > «@name»(session, 
+        > «@name»(session, state, 
         choose {
             when "parm" > «name(parm/*)»
             otherwise > NULL

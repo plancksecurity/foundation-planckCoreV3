@@ -10,47 +10,34 @@ tstylesheet {
     include ./functions.ysl2
 
     template "/protocol/fsm" {
-    document "../src/sync_driver.c", "text"
     ||
-    // Driver for «@name» state machine
-
-    #include <assert.h>
-    #include "sync_fsm.h"
-
-
-    PEP_STATUS fsm_«@name»_inject(PEP_SESSION session, «@name»_event event)
-    {
-        PEP_STATUS status = PEP_STATUS_OK;
-
-        static «@name»_state state = InitState;
-        static Identity partner = NULL;
-
-        state = fsm_«@name»(session, state, event, partner);
-        return status;
-    }
-
-    ||
-    ||
+    `` const "name", "@name"
     // Actions for «@name» state machine
 
     #include <assert.h>
+    #include "pEp_internal.h"
     #include "keymanagement.h"
+    #include "message.h"
     #include "sync_fsm.h"
+    #include "baseprotocol.h"
     #include "map_asn1.h"
     `` for "func:distinctName(//action)" if "substring(@name, 1, 4) = 'send'" | #include "../asn.1/«substring(@name, 5, 255)».h"
 
-    `` for "func:distinctName(//action)" call "action" with "action", ".";
+    `` for "func:distinctName(//action)" call "action" with "action", ".", with "fsm", "$name";
 
     ||
     }
 
     function "action" {
         param "action";
+        param "fsm";
         choose {
             when "substring($action/@name, 1, 4) = 'send'"
-                call "send_action" with "action", "$action";
+                call "send_action" with "action", "$action",
+                     with "fsm", "$fsm";
             otherwise
-                call "other_action" with "action", "$action";
+                call "other_action" with "action", "$action",
+                     with "fsm", "$fsm";
         }
     }
 
@@ -75,6 +62,7 @@ tstylesheet {
 
     function "other_action" {
         param "action";
+        param "fsm";
 
         ||
 
@@ -82,13 +70,18 @@ tstylesheet {
         //
         //  params:
         //      session (in)        session handle
+        //      state (in)          state the state machine is in
         `` if "parm"        | //      partner (in)        partner in sync
         `` if "not(parm)"   | //      partner (in)        (must be NULL)
         //
         //  returns:
         //      PEP_STATUS_OK or any other value on error
 
-        PEP_STATUS «$action/@name»(PEP_SESSION session, const Identity partner)
+        PEP_STATUS «$action/@name»(
+                PEP_SESSION session,
+                «$fsm»_state state,
+                const Identity partner
+            )
         {
             PEP_STATUS status = PEP_STATUS_OK;
 
@@ -111,6 +104,7 @@ tstylesheet {
 
     function "send_action" {
         param "action";
+        param "fsm";
         const "name", "substring($action/@name, 5, 255)";
 
         ||
@@ -119,19 +113,31 @@ tstylesheet {
         //
         //  params:
         //      session (in)        session handle
+        //      state (in)          state the state machine is in
         `` if "parm"        | //      partner (in)        partner in sync
         `` if "not(parm)"   | //      partner (in)        (must be NULL)
         //
         //  returns:
         //      PEP_STATUS_OK or any other value on error
 
-        PEP_STATUS «$action/@name»(PEP_SESSION session, const Identity partner)
+        PEP_STATUS «$action/@name»(
+                PEP_SESSION session,
+                «$fsm»_state state,
+                const Identity partner
+            )
         {
             PEP_STATUS status = PEP_STATUS_OK;
+            «$name»_t *msg = NULL;
+            char *payload = NULL;
+            message *_message = NULL;
 
             `` call "paramcheck" with "partner", "parm/partner";
 
-            «$name»_t *msg = («$name»_t *) calloc(1, sizeof(«$name»_t));
+            assert(session->messageToSend);
+            if (!session->messageToSend)
+                return PEP_SEND_FUNCTION_NOT_REGISTERED;
+
+            msg = («$name»_t *) calloc(1, sizeof(«$name»_t));
             assert(msg);
             if (!msg)
                 goto enomem;
@@ -141,6 +147,8 @@ tstylesheet {
             if (status != PEP_STATUS_OK)
                 goto error;
             msg->header.sequence = (long) seq;
+
+            msg->state = (long) state;
 
             pEp_identity *me = new_identity(NULL, NULL, NULL, NULL);
             if (!me)
@@ -160,12 +168,31 @@ tstylesheet {
          `` if "$name='OwnKeys'"|> if (KeyList_from_stringlist(sl, &msg->keylist) == NULL)
          `` if "$name='OwnKeys'"|>> goto enomem;
 
+            ssize_t size = uper_encode_to_new_buffer(&asn_DEF_HandshakeRequest,
+                    NULL, msg, (void **) &payload);
+            if (size == -1) {
+                status = PEP_CANNOT_ENCODE;
+                goto error;
+            }
+
+            status = prepare_message(me, partner, payload, size, &_message);
+            if (status != PEP_STATUS_OK)
+                goto error;
+            payload = NULL;
+
+            status = session->messageToSend(session->sync_obj, _message);
+
+            free_message(_message);
+            ASN_STRUCT_FREE(asn_DEF_«$name», msg);
+
             return status;
 
         enomem:
             status = PEP_OUT_OF_MEMORY;
         error:
             ASN_STRUCT_FREE(asn_DEF_«$name», msg);
+            free(payload);
+            free_message(_message);
             return status;
         }
 
