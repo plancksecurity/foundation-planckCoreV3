@@ -1,6 +1,7 @@
 #pragma once
 
 #include "message.h"
+#include "sync_fsm.h"
 
 
 // this module is for being used WITHOUT the Transport API in transport.h

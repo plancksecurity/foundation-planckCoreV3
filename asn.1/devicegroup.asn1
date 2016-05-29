@@ -8,17 +8,20 @@ IMPORTS Identity, KeyList, Header FROM PEP;
 
 Beacon ::= SEQUENCE {
     header Header,
+    state INTEGER,
     me Identity
 }
 
 HandshakeRequest ::= SEQUENCE {
     header Header,
+    state INTEGER,
     me Identity,
     partner Identity
 }
 
 OwnKeys ::= SEQUENCE {
     header Header,
+    state INTEGER,
     me Identity,
     keylist KeyList
 }
