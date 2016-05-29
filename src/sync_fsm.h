@@ -23,6 +23,7 @@ typedef enum _fsm_error {
 // states
 
 typedef enum _DeviceState_state {
+    DeviceState_state_NONE = 0,
     InitState, 
     Sole, 
     HandshakingSole, 
@@ -33,6 +34,7 @@ typedef enum _DeviceState_state {
 // events
 
 typedef enum _DeviceState_event {
+    DeviceState_event_NONE = 0,
     Init, 
     KeyGen, 
     CannotDecrypt, 
@@ -47,13 +49,13 @@ typedef enum _DeviceState_event {
 
 // actions
 
-PEP_STATUS sendBeacon(PEP_SESSION session, const Identity partner);
-PEP_STATUS sendHandshakeRequest(PEP_SESSION session, const Identity partner);
-PEP_STATUS showHandshake(PEP_SESSION session, const Identity partner);
-PEP_STATUS reject(PEP_SESSION session, const Identity partner);
-PEP_STATUS storeGroupKeys(PEP_SESSION session, const Identity partner);
-PEP_STATUS sendOwnKeys(PEP_SESSION session, const Identity partner);
-PEP_STATUS transmitGroupKeys(PEP_SESSION session, const Identity partner);
+PEP_STATUS sendBeacon(PEP_SESSION session, DeviceState_state state, const Identity partner);
+PEP_STATUS sendHandshakeRequest(PEP_SESSION session, DeviceState_state state, const Identity partner);
+PEP_STATUS showHandshake(PEP_SESSION session, DeviceState_state state, const Identity partner);
+PEP_STATUS reject(PEP_SESSION session, DeviceState_state state, const Identity partner);
+PEP_STATUS storeGroupKeys(PEP_SESSION session, DeviceState_state state, const Identity partner);
+PEP_STATUS sendOwnKeys(PEP_SESSION session, DeviceState_state state, const Identity partner);
+PEP_STATUS transmitGroupKeys(PEP_SESSION session, DeviceState_state state, const Identity partner);
 
 // state machine
 
@@ -61,12 +63,18 @@ DeviceState_state fsm_DeviceState(
         PEP_SESSION session,
         DeviceState_state state,
         DeviceState_event event,
-        const Identity partner
+        const Identity partner,
+        DeviceState_state state_partner
     );
 
 // driver
 
-PEP_STATUS fsm_DeviceState_inject(PEP_SESSION session, DeviceState_event event);
+PEP_STATUS fsm_DeviceState_inject(
+        PEP_SESSION session,
+        DeviceState_event event,
+        Identity partner,
+        DeviceState_state state_partner
+    );
 
 #ifdef __cplusplus
 }

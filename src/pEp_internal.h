@@ -126,6 +126,9 @@ typedef struct _pEpSession {
     messageToSend_t messageToSend;
     showHandshake_t showHandshake;
 
+    // sync state machine
+    DeviceState_state sync_state;
+
     // runtime config
 
     bool passive_mode;
