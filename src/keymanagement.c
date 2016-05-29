@@ -383,9 +383,8 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     {        
         if(revoked)
         {
-            r_fpr = strdup(identity->fpr);
-            if(!r_fpr)
-                return PEP_OUT_OF_MEMORY;
+            r_fpr = identity->fpr;
+            identity->fpr = NULL;
         }
         
         DEBUG_LOG("generating key pair", "debug", identity->address);
@@ -515,8 +514,14 @@ DYNAMIC_API PEP_STATUS key_compromized(
         return PEP_ILLEGAL_VALUE;
 
     if (ident->me)
+    {
         revoke_key(session, ident->fpr, NULL);
-    status = mark_as_compromized(session, ident->fpr);
+        myself(session, ident);
+    }
+    else
+    {
+        status = mark_as_compromized(session, ident->fpr);
+    }
 
     return status;
 }
