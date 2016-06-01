@@ -412,7 +412,10 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     else
     {
         bool expired;
-        status = key_expired(session, identity->fpr, &expired);
+        status = key_expired(session, identity->fpr, 
+                             time(NULL) + (7*24*3600), // In a week
+                             &expired);
+
         assert(status == PEP_STATUS_OK);
         if (status != PEP_STATUS_OK) {
             return status;

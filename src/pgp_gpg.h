@@ -61,6 +61,7 @@ PEP_STATUS pgp_revoke_key(
 PEP_STATUS pgp_key_expired(
         PEP_SESSION session,
         const char *fpr,
+        const time_t when,
         bool *expired
     );
 

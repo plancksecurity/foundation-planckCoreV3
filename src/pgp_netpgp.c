@@ -1597,6 +1597,7 @@ unlock_netpgp:
 PEP_STATUS pgp_key_expired(
         PEP_SESSION session,
         const char *fprstr,
+        const time_t when,
         bool *expired
     )
 {
@@ -1610,6 +1611,7 @@ PEP_STATUS pgp_key_expired(
     if (!session || !fprstr || !expired)
         return PEP_UNKNOWN_ERROR;
 
+    // TODO : take "when" in account 
 
     *expired = false;
 

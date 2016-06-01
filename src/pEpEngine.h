@@ -706,11 +706,13 @@ DYNAMIC_API PEP_STATUS revoke_key(
 //  parameters:
 //      session (in)            session handle
 //      fpr (in)                ID of key to check as UTF-8 string
+//      when (in)               UTC time of when should expiry be considered
 //      expired (out)           flag if key expired
 
 DYNAMIC_API PEP_STATUS key_expired(
         PEP_SESSION session,
         const char *fpr,
+        const time_t when,
         bool *expired
     );
 

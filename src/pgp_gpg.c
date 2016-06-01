@@ -1783,6 +1783,7 @@ PEP_STATUS pgp_revoke_key(
 PEP_STATUS pgp_key_expired(
         PEP_SESSION session,
         const char *fpr,
+        const time_t when,
         bool *expired
     )
 {
@@ -1799,9 +1800,34 @@ PEP_STATUS pgp_key_expired(
     if (status != PEP_STATUS_OK)
         return status;
 
-    if (key && key->subkeys)
+    if ((key && key->expired) ||
+        (key && key->subkeys && key->subkeys->expired))
     {
-        *expired = key->subkeys->expired;
+        // Already marked expired
+        *expired = 1;
+    }
+    else if (key)
+    {
+        // Detect if will be expired
+        // i.e. Check that keys capabilities will
+        // not be expired at given time.
+        gpgme_subkey_t _sk;
+        bool crt_available = false;
+        bool sgn_available = false;
+        bool enc_available = false;
+        for (_sk = key->subkeys; _sk; _sk = _sk->next) {
+            if (_sk->expires > when) // not expired at that date ?
+            {
+                if (_sk->can_certify) crt_available = true;
+                if (_sk->can_sign) sgn_available = true;
+                if (_sk->can_encrypt) enc_available = true;
+                // Authenticate is not used here.
+            }
+        }
+        if(!(crt_available && sgn_available && enc_available))
+        {
+            *expired = 1;
+        }
     }
     else
     {

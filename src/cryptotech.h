@@ -61,7 +61,7 @@ typedef PEP_STATUS (*revoke_key_t)(PEP_SESSION session, const char *fpr,
         const char *reason);
 
 typedef PEP_STATUS (*key_expired_t)(PEP_SESSION session, const char *fpr,
-        bool *expired);
+        const time_t when, bool *expired);
 
 typedef PEP_STATUS (*key_revoked_t)(PEP_SESSION session, const char *fpr,
                                     bool *revoked);
