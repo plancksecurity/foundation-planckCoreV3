@@ -44,7 +44,7 @@ a different license, please contact mailto:council@pep.foundation.
 p≡p engine is depending on the following FOSS libraries:
 
 * libetpan, see https://github.com/fdik/libetpan
-       git pull https://github.com/fdik/libetpan.git
+       git clone https://github.com/fdik/libetpan
 
 * zlib, see http://zlib.net/
 
