@@ -50,6 +50,8 @@ iconv, see http://www.gnu.org/software/libiconv/
 Cyrus SASL, see http://cyrusimap.org/
 GnuPG via GPGME, see https://gnupg.org/
 NetPGP/p≡p, see https://cacert.pep.foundation/dev/repos/netpgp-et/
+Asn1c, dowload from https://lionet.info/soft/asn1c-0.9.27.tar.gz
+       (Debian's version 0.9.24 does not work)
 
 
 2. Building p≡p engine
