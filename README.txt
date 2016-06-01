@@ -58,7 +58,7 @@ p≡p engine is depending on the following FOSS libraries:
 
 * NetPGP/p≡p, see https://cacert.pep.foundation/dev/repos/netpgp-et/
 
-* Asn1c, dowload from https://lionet.info/soft/asn1c-0.9.27.tar.gz
+* Asn1c, download from https://lionet.info/soft/asn1c-0.9.27.tar.gz
        (Debian's version 0.9.24 does not work)
 
 
