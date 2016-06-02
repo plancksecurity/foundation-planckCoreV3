@@ -35,14 +35,14 @@ typedef enum _DeviceState_state {
 
 typedef enum _DeviceState_event {
     DeviceState_event_NONE = 0,
+    Beacon = 1,
+    HandshakeRequest = 2,
+    GroupKeys = 3,
     Init, 
     KeyGen, 
     CannotDecrypt, 
-    Beacon, 
-    HandshakeRequest, 
     HandshakeRejected, 
     HandshakeAccepted, 
-    ReceiveGroupKeys, 
     Cancel, 
     Reject
 } DeviceState_event;
@@ -54,8 +54,7 @@ PEP_STATUS sendHandshakeRequest(PEP_SESSION session, DeviceState_state state, co
 PEP_STATUS showHandshake(PEP_SESSION session, DeviceState_state state, const Identity partner);
 PEP_STATUS reject(PEP_SESSION session, DeviceState_state state, const Identity partner);
 PEP_STATUS storeGroupKeys(PEP_SESSION session, DeviceState_state state, const Identity partner);
-PEP_STATUS sendOwnKeys(PEP_SESSION session, DeviceState_state state, const Identity partner);
-PEP_STATUS transmitGroupKeys(PEP_SESSION session, DeviceState_state state, const Identity partner);
+PEP_STATUS sendGroupKeys(PEP_SESSION session, DeviceState_state state, const Identity partner);
 
 // state machine
 

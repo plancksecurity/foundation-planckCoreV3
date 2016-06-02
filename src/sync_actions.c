@@ -9,7 +9,7 @@
 #include "map_asn1.h"
 #include "../asn.1/Beacon.h"
 #include "../asn.1/HandshakeRequest.h"
-#include "../asn.1/OwnKeys.h"
+#include "../asn.1/GroupKeys.h"
 
 
 // sendBeacon() - send Beacon message
@@ -295,7 +295,7 @@ error:
 }
 
 
-// sendOwnKeys() - send OwnKeys message
+// sendGroupKeys() - send GroupKeys message
 //
 //  params:
 //      session (in)        session handle
@@ -305,14 +305,14 @@ error:
 //  returns:
 //      PEP_STATUS_OK or any other value on error
 
-PEP_STATUS sendOwnKeys(
+PEP_STATUS sendGroupKeys(
         PEP_SESSION session,
         DeviceState_state state,
         const Identity partner
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    OwnKeys_t *msg = NULL;
+    GroupKeys_t *msg = NULL;
     char *payload = NULL;
     message *_message = NULL;
 
@@ -325,7 +325,7 @@ PEP_STATUS sendOwnKeys(
     if (!session->messageToSend)
         return PEP_SEND_FUNCTION_NOT_REGISTERED;
 
-    msg = (OwnKeys_t *) calloc(1, sizeof(OwnKeys_t));
+    msg = (GroupKeys_t *) calloc(1, sizeof(GroupKeys_t));
     assert(msg);
     if (!msg)
         goto enomem;
@@ -347,19 +347,12 @@ PEP_STATUS sendOwnKeys(
     if (Identity_from_Struct(me, &msg->me) == NULL)
         goto enomem;
 
-    stringlist_t *sl;
-    status = own_key_retrieve(session, &sl);
-    if (status != PEP_STATUS_OK)
-        goto error;
-    if (KeyList_from_stringlist(sl, &msg->keylist) == NULL)
-        goto enomem;
-
-    if (asn_check_constraints(&asn_DEF_OwnKeys, msg, NULL, NULL)) {
+    if (asn_check_constraints(&asn_DEF_GroupKeys, msg, NULL, NULL)) {
         status = PEP_CONTRAINTS_VIOLATED;
         goto error;
     }
 
-    ssize_t size = uper_encode_to_new_buffer(&asn_DEF_OwnKeys,
+    ssize_t size = uper_encode_to_new_buffer(&asn_DEF_GroupKeys,
             NULL, msg, (void **) &payload);
     if (size == -1) {
         status = PEP_CANNOT_ENCODE;
@@ -374,52 +367,16 @@ PEP_STATUS sendOwnKeys(
     status = session->messageToSend(session->sync_obj, _message);
 
     free_message(_message);
-    ASN_STRUCT_FREE(asn_DEF_OwnKeys, msg);
+    ASN_STRUCT_FREE(asn_DEF_GroupKeys, msg);
 
     return status;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
 error:
-    ASN_STRUCT_FREE(asn_DEF_OwnKeys, msg);
+    ASN_STRUCT_FREE(asn_DEF_GroupKeys, msg);
     free(payload);
     free_message(_message);
-    return status;
-}
-
-
-// transmitGroupKeys() - 
-//
-//  params:
-//      session (in)        session handle
-//      state (in)          state the state machine is in
-//      partner (in)        partner in sync
-//
-//  returns:
-//      PEP_STATUS_OK or any other value on error
-
-PEP_STATUS transmitGroupKeys(
-        PEP_SESSION session,
-        DeviceState_state state,
-        const Identity partner
-    )
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session);
-    assert(partner);
-    if (!(session && partner))
-        return PEP_ILLEGAL_VALUE;
-
-    // working code
-
-
-    return status;
-
-enomem:
-    status = PEP_OUT_OF_MEMORY;
-error:
-    // free...
     return status;
 }
 

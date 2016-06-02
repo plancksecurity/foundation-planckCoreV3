@@ -19,17 +19,19 @@ HandshakeRequest ::= SEQUENCE {
     partner Identity
 }
 
-OwnKeys ::= SEQUENCE {
+GroupKeys ::= SEQUENCE {
     header Header,
     state INTEGER,
     me Identity,
     keylist KeyList
 }
 
+/* for the tags see end of sync.fsm */
+
 DeviceGroup-Protocol ::= CHOICE {
     beacon [APPLICATION 1] Beacon,
     handshakeRequest [APPLICATION 2] HandshakeRequest,
-    ownKeys [APPLICATION 3] OwnKeys
+    groupKeys [APPLICATION 3] GroupKeys
 }
 
 END

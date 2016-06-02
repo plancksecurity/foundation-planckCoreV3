@@ -43,8 +43,8 @@ protocol DeviceGroup {
             on HandshakeAccepted(Identity partner) {
                 if keyElectionWon(partner) {    // an already existing group
                                                 // always wins
-                    storeOwnKeysAsGroupKeys;
-                    transmitGroupKeys(partner);
+                    ownGroupKeys;
+                    sendGroupKeys(partner);
                     go Grouped;
                 }
                 go WaitForGroupKeys(Identity partner);
@@ -52,7 +52,7 @@ protocol DeviceGroup {
         }
     
         state WaitForGroupKeys(Identity partner) {
-            on ReceiveGroupKeys(Identity partner, Stringlist keys) {
+            on GroupKeys(Identity partner, Stringlist keys) {
                 do storeGroupKeys(partner, keys);
                 go Grouped;
             }
@@ -65,7 +65,7 @@ protocol DeviceGroup {
 
         state Grouped {
             on KeyGen
-                do sendOwnKeys; // always send all keys
+                do sendGroupKeys; // always send all keys
             on HandshakeRequest(Identity partner) {
                 do sendHandshakeRequest(partner);
                 do showHandshake(partner);
@@ -73,18 +73,14 @@ protocol DeviceGroup {
             on HandshakeRejected(Identity partner)
                 do reject(partner);
             on HandshakeAccepted(Identity partner)
-                do transmitGroupKeys(partner);
+                do sendGroupKeys(partner);
             on Reject(Identity partner)
                 do reject partner;
         }
-    }
 
-    interface commons {
-        Header head;
-    }
-
-    interface OwnKeys {
-        Stringlist ownKeys;
+        tag Beacon 1;
+        tag HandshakeRequest 2;
+        tag GroupKeys 3;
     }
 }
 

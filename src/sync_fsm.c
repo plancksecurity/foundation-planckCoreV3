@@ -56,7 +56,7 @@ DeviceState_state fsm_DeviceState(
     
     case WaitForGroupKeys:
         switch (event) {
-            case ReceiveGroupKeys:
+            case GroupKeys:
                 storeGroupKeys(session, state, partner);
                 return Grouped;
             case Cancel:
@@ -72,7 +72,7 @@ DeviceState_state fsm_DeviceState(
     case Grouped:
         switch (event) {
             case KeyGen:
-                sendOwnKeys(session, state, NULL);
+                sendGroupKeys(session, state, NULL);
                 break;
             case HandshakeRequest:
                 sendHandshakeRequest(session, state, partner);
@@ -82,7 +82,7 @@ DeviceState_state fsm_DeviceState(
                 reject(session, state, partner);
                 break;
             case HandshakeAccepted:
-                transmitGroupKeys(session, state, partner);
+                sendGroupKeys(session, state, partner);
                 break;
             case Reject:
                 reject(session, state, NULL);
