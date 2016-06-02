@@ -344,7 +344,7 @@ typedef enum _PEP_comm_type {
     // range 0x40 to 0x7f: unconfirmed encryption and anonymization
 
     PEP_ct_unconfirmed_enc_anon = 0x40,         // generic
-    PEP_ct_PEP_unconfirmed = 0x7f,
+    PEP_ct_pEp_unconfirmed = 0x7f,
 
     PEP_ct_confirmed = 0x80,                    // this bit decides if trust is confirmed
 
