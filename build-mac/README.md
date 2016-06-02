@@ -1,3 +1,15 @@
+# Building for OS X
+
+## Build libetpan
+
+```
+cd pEpEngine
+autoreconf -vfi
+./configure
+make
+make install
+```
+
 # Building for iOS
 
 This is done with Xcode. Simply add `pEpEngine.xcodeproj` to
