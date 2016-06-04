@@ -367,12 +367,25 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
             free_stringlist(keylist);
         }
     }
-    
-    // TODO : Check key for revoked state
-    
-    if (EMPTYSTR(identity->fpr) /* or revoked */)
+
+    bool revoked = false;
+    char *r_fpr = NULL;
+    if (!EMPTYSTR(identity->fpr))
     {
-        stringlist_t *keylist = NULL;
+        status = key_revoked(session, identity->fpr, &revoked);
+        assert(status == PEP_STATUS_OK);
+        if (status != PEP_STATUS_OK) {
+            return status;
+        }
+    }
+    
+    if (EMPTYSTR(identity->fpr) || revoked)
+    {        
+        if(revoked)
+        {
+            r_fpr = identity->fpr;
+            identity->fpr = NULL;
+        }
         
         DEBUG_LOG("generating key pair", "debug", identity->address);
         status = generate_keypair(session, identity);
@@ -381,26 +394,28 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
             char buf[11];
             snprintf(buf, 11, "%d", status);
             DEBUG_LOG("generating key pair failed", "debug", buf);
+            if(revoked && r_fpr)
+                free(r_fpr);
             return status;
         }
         
-        status = find_keys(session, identity->address, &keylist);
-        assert(status != PEP_OUT_OF_MEMORY);
-        if (status == PEP_OUT_OF_MEMORY)
-            return PEP_OUT_OF_MEMORY;
-        
-        assert(keylist && keylist->value);
-        if (keylist == NULL) {
-            return PEP_UNKNOWN_ERROR;
-        }else if (keylist->value == NULL) {
-            free_stringlist(keylist);
-            return PEP_UNKNOWN_ERROR;
+        if(revoked)
+        {
+            status = set_revoked(session, r_fpr,
+                                 identity->fpr, time(NULL));
+            free(r_fpr);
+            if (status != PEP_STATUS_OK) {
+                return status;
+            }
         }
     }
     else
     {
         bool expired;
-        status = key_expired(session, identity->fpr, &expired);
+        status = key_expired(session, identity->fpr, 
+                             time(NULL) + (7*24*3600), // In a week
+                             &expired);
+
         assert(status == PEP_STATUS_OK);
         if (status != PEP_STATUS_OK) {
             return status;
@@ -502,8 +517,14 @@ DYNAMIC_API PEP_STATUS key_compromized(
         return PEP_ILLEGAL_VALUE;
 
     if (ident->me)
+    {
         revoke_key(session, ident->fpr, NULL);
-    status = mark_as_compromized(session, ident->fpr);
+        myself(session, ident);
+    }
+    else
+    {
+        status = mark_as_compromized(session, ident->fpr);
+    }
 
     return status;
 }

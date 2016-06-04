@@ -43,13 +43,23 @@ a different license, please contact mailto:council@pep.foundation.
 
 p≡p engine is depending on the following FOSS libraries:
 
-libetpan, see https://github.com/fdik/libetpan
-zlib, see http://zlib.net/
-OpenSSL, see http://openssl.org/
-iconv, see http://www.gnu.org/software/libiconv/
-Cyrus SASL, see http://cyrusimap.org/
-GnuPG via GPGME, see https://gnupg.org/
-NetPGP/p≡p, see https://cacert.pep.foundation/dev/repos/netpgp-et/
+* libetpan, see https://github.com/fdik/libetpan
+       git clone https://github.com/fdik/libetpan
+
+* zlib, see http://zlib.net/
+
+* OpenSSL, see http://openssl.org/
+
+* iconv, see http://www.gnu.org/software/libiconv/
+
+* Cyrus SASL, see http://cyrusimap.org/
+
+* GnuPG via GPGME, see https://gnupg.org/
+
+* NetPGP/p≡p, see https://cacert.pep.foundation/dev/repos/netpgp-et/
+
+* Asn1c, download from https://lionet.info/soft/asn1c-0.9.27.tar.gz
+       (Debian's version 0.9.24 does not work)
 
 
 2. Building p≡p engine

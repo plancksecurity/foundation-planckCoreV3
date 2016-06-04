@@ -344,7 +344,7 @@ typedef enum _PEP_comm_type {
     // range 0x40 to 0x7f: unconfirmed encryption and anonymization
 
     PEP_ct_unconfirmed_enc_anon = 0x40,         // generic
-    PEP_ct_PEP_unconfirmed = 0x7f,
+    PEP_ct_pEp_unconfirmed = 0x7f,
 
     PEP_ct_confirmed = 0x80,                    // this bit decides if trust is confirmed
 
@@ -706,12 +706,28 @@ DYNAMIC_API PEP_STATUS revoke_key(
 //  parameters:
 //      session (in)            session handle
 //      fpr (in)                ID of key to check as UTF-8 string
+//      when (in)               UTC time of when should expiry be considered
 //      expired (out)           flag if key expired
 
 DYNAMIC_API PEP_STATUS key_expired(
         PEP_SESSION session,
         const char *fpr,
+        const time_t when,
         bool *expired
+    );
+
+    
+// key_revoked() - flags if a key is already revoked
+//
+//  parameters:
+//      session (in)            session handle
+//      fpr (in)                ID of key to check as UTF-8 string
+//      revoked (out)           flag if key revoked
+
+DYNAMIC_API PEP_STATUS key_revoked(
+        PEP_SESSION session,
+        const char *fpr,
+        bool *revoked
     );
 
 
@@ -783,6 +799,37 @@ DYNAMIC_API PEP_STATUS sequence_value(
         PEP_SESSION session,
         const char *name,
         int32_t *value
+    );
+
+    
+// set_revoked() - records relation between a revoked key and its replacement
+//
+//  parameters:
+//      session (in)            session handle
+//      revoked_fpr (in)        revoked fingerprint
+//      replacement_fpr (in)    replacement key fingerprint
+//      revocation_date (in)    revocation date
+
+DYNAMIC_API PEP_STATUS set_revoked(
+       PEP_SESSION session,
+       const char *revoked_fpr,
+       const char *replacement_fpr,
+       const uint64_t revocation_date
+    );
+
+// get_revoked() - find revoked key that may have been replaced by given key, if any
+//
+//  parameters:
+//      session (in)            session handle
+//      fpr (in)                given fingerprint
+//      revoked_fpr (out)       revoked fingerprint
+//      revocation_date (out)   revocation date
+    
+DYNAMIC_API PEP_STATUS get_revoked(
+        PEP_SESSION session,
+        const char *fpr,
+        char **revoked_fpr,
+        uint64_t *revocation_date
     );
 
 

@@ -16,6 +16,7 @@ TARGET=pEpEngineTest
 
 UNIT_TESTS_SOURCE=$(wildcard *_test.cc)
 UNIT_TESTS=$(subst .cc,,$(UNIT_TESTS_SOURCE))
+UNIT_TESTS_RUN=$(subst .cc,_run,$(UNIT_TESTS_SOURCE))
 
 all: $(TARGET) $(UNIT_TESTS)
 
@@ -28,10 +29,10 @@ clean:
 test: pEpEngineTest
 	LD_LIBRARY_PATH=~/lib:../src ./pEpEngineTest
 
-unit_tests: $(UNIT_TESTS)
-	for t in ./*_test ; do \
-		if LD_LIBRARY_PATH=~/lib:../src $$t ; then true; else break; fi \
-	done
+%_test_run : %_test
+	LD_LIBRARY_PATH=~/lib:../src ./$<
+
+unit_tests: $(UNIT_TESTS) $(UNIT_TESTS_RUN)
 
 install:
 	make -C .. install
