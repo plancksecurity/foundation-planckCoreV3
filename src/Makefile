@@ -29,7 +29,7 @@ LIBGPGME=libgpgme.so.11
 CC=gcc -std=c99
 CFLAGS?=-I$(GPGME_IN)/include $(OPTIMIZE) -fPIC -pedantic \
 	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -DLIBGPGME=\"$(LIBGPGME)\" \
-	-DSQLITE_THREADSAFE=1 -D_GNU_SOURCE -I../asn.1
+	-DSQLITE_THREADSAFE=1 -D_GNU_SOURCE -I../asn.1 -lsqlite3
 LDFLAGS?=-L$(GPGME_IN)/lib -shared -lc -ldl -letpan -lpthread -L../asn.1 -lasn1
 
 else
