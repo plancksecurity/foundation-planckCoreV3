@@ -99,9 +99,6 @@
     <ClCompile Include="..\OCTET_STRING.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\OwnKeys.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\per_decoder.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -130,6 +127,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\xer_support.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\GroupKeys.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -258,6 +258,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\xer_support.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\GroupKeys.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -85,6 +85,12 @@ del converter-sample.c
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <PreBuildEvent>
+      <Command>cd ..
+asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=PEP.Message pEp.asn1 devicegroup.asn1
+del converter-sample.c
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -106,6 +112,7 @@ del converter-sample.c
     <ClCompile Include="..\constr_TYPE.c" />
     <ClCompile Include="..\der_encoder.c" />
     <ClCompile Include="..\DeviceGroup-Protocol.c" />
+    <ClCompile Include="..\GroupKeys.c" />
     <ClCompile Include="..\HandshakeRequest.c" />
     <ClCompile Include="..\Hash.c" />
     <ClCompile Include="..\Header.c" />
@@ -117,7 +124,6 @@ del converter-sample.c
     <ClCompile Include="..\NativeEnumerated.c" />
     <ClCompile Include="..\NativeInteger.c" />
     <ClCompile Include="..\OCTET_STRING.c" />
-    <ClCompile Include="..\OwnKeys.c" />
     <ClCompile Include="..\per_decoder.c" />
     <ClCompile Include="..\per_encoder.c" />
     <ClCompile Include="..\per_opentype.c" />
@@ -150,6 +156,7 @@ del converter-sample.c
     <ClInclude Include="..\constr_TYPE.h" />
     <ClInclude Include="..\der_encoder.h" />
     <ClInclude Include="..\DeviceGroup-Protocol.h" />
+    <ClInclude Include="..\GroupKeys.h" />
     <ClInclude Include="..\HandshakeRequest.h" />
     <ClInclude Include="..\Hash.h" />
     <ClInclude Include="..\Header.h" />

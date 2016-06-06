@@ -64,6 +64,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>$(TargetDir)\pEpEngineASN1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -90,6 +94,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\baseprotocol.c" />
     <ClCompile Include="src\blacklist.c" />
     <ClCompile Include="src\bloblist.c" />
     <ClCompile Include="src\cryptotech.c" />
@@ -116,6 +121,7 @@
     <ClCompile Include="src\trans_auto.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\baseprotocol.h" />
     <ClInclude Include="src\blacklist.h" />
     <ClInclude Include="src\bloblist.h" />
     <ClInclude Include="src\cryptotech.h" />

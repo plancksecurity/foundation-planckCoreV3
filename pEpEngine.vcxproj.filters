@@ -87,6 +87,9 @@
     <ClCompile Include="src\map_asn1.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="src\baseprotocol.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\keymanagement.h">
@@ -171,6 +174,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="src\map_asn1.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\baseprotocol.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
