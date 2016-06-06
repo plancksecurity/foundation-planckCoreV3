@@ -2,16 +2,19 @@ syntax: regexp
 ^asn\.1/.*\.(c|h)$
 ^asn\.1/Makefile\.am\.sample$
 ^asn\.1/libasn1\.a$
+.*xcuserdata/
 
 syntax: glob
 *.orig
 *.d
+*.d.*
 *.o
 *~
 *.swp
 db/*.csv
 db/*.db
-#*.a
+*.a
+*.dylib
 *.so
 test/pEpEngineTest
 *.exe
@@ -24,7 +27,9 @@ ws
 build-android/pEpEngine-android-1.zip
 build-android/third-party
 build-android/pEpEngine-android-1
-
+*.dSYM*
+*_test
+msg4.asc
+pep_Dokument_Titel.pdf
 pEpEngine.vcxproj.user
-syntax: regexp
-.*xcuserdata/
+
