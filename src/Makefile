@@ -30,7 +30,7 @@ CC=gcc -std=c99
 CFLAGS?=-I$(GPGME_IN)/include $(OPTIMIZE) -fPIC -pedantic \
 	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -DLIBGPGME=\"$(LIBGPGME)\" \
 	-DSQLITE_THREADSAFE=1 -D_GNU_SOURCE -I../asn.1
-LDFLAGS?=-L$(GPGME_IN)/lib -shared -lc -ldl -letpan -lpthread -L../asn.1 -lasn1
+LDFLAGS?=-L$(GPGME_IN)/lib -shared -lc -ldl -letpan -lsqlite3 -lpthread -L../asn.1 -lasn1
 
 else
 $(error don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
