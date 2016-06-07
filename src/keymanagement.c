@@ -321,7 +321,7 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
             for (_keylist = keylist; _keylist && _keylist->value; _keylist = _keylist->next) {
                 bool is_own = false;
                 
-                if (_session->use_only_own_private_keys)
+                if (session->use_only_own_private_keys)
                 {
                     status = own_key_is_listed(session, _keylist->value, &is_own);
                     assert(status == PEP_STATUS_OK);
@@ -333,7 +333,7 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 
                 // TODO : also accept synchronized device group keys ?
                 
-                if (!_session->use_only_own_private_keys || is_own)
+                if (!session->use_only_own_private_keys || is_own)
                 {
                     PEP_comm_type _comm_type_key;
                     

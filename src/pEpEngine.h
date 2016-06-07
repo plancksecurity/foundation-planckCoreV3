@@ -139,6 +139,15 @@ DYNAMIC_API void config_passive_mode(PEP_SESSION session, bool enable);
 DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable);
 
 
+// config_use_only_own_private_keys() - enable passive mode
+//
+//  parameters:
+//      session (in)    session handle
+//      enable (in)     flag if enabled or disabled
+
+DYNAMIC_API void config_use_only_own_private_keys(PEP_SESSION session, bool enable);
+
+
 // decrypt_and_verify() - decrypt and/or verify a message
 //
 //    parameters:
