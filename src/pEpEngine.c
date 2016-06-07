@@ -414,6 +414,13 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     _session->passive_mode = false;
     _session->unencrypted_subject = false;
+#ifdef ANDROID
+    _session->use_only_own_private_keys = true;
+#elif TARGET_OS_IPHONE
+    _session->use_only_own_private_keys = true;
+#else
+    _session->use_only_own_private_keys = false;
+#endif
 
     *session = _session;
     return PEP_STATUS_OK;
@@ -503,6 +510,12 @@ DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable)
 {
     assert(session);
     session->unencrypted_subject = enable;
+}
+
+DYNAMIC_API void config_use_only_own_private_keys(PEP_SESSION session, bool enable)
+{
+    assert(session);
+    session->use_only_own_private_keys = enable;
 }
 
 DYNAMIC_API PEP_STATUS log_event(

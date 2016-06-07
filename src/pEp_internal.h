@@ -133,6 +133,8 @@ typedef struct _pEpSession {
 
     bool passive_mode;
     bool unencrypted_subject;
+    bool use_only_own_private_keys;
+    
 } pEpSession;
 
 PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
