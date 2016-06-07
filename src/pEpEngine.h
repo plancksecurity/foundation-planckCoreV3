@@ -436,6 +436,7 @@ DYNAMIC_API pEp_identity *identity_dup(const pEp_identity *src);
 
 DYNAMIC_API void free_identity(pEp_identity *identity);
 
+#include "identity_list.h"
 
 // get_identity() - get identity information
 //
@@ -550,7 +551,12 @@ DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr);
 //      PEP_OUT_OF_MEMORY       out of memory
 //      PEP_ILLEGAL_VALUE       there is no key data to import
 
-DYNAMIC_API PEP_STATUS import_key(PEP_SESSION session, const char *key_data, size_t size);
+DYNAMIC_API PEP_STATUS import_key(
+        PEP_SESSION session,
+        const char *key_data,
+        size_t size,
+        identity_list **private_keys
+    );
 
 
 // export_key() - export ascii armored key

@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
         size_t k_user_length = 0;
         ReadFileIntoMem(*kf, k_user_buffer, k_user_length);
         cout << "import_key(" << *kf << ")\n";
-        PEP_STATUS import_status = import_key(session, k_user_buffer, k_user_length);
+        PEP_STATUS import_status = import_key(session, k_user_buffer, k_user_length, NULL);
         assert(import_status == PEP_STATUS_OK);
         cout << "successfully imported key\n";
         delete[] k_user_buffer;
@@ -244,7 +244,7 @@ int main(int argc, char* argv[])
     assert(delete_status == PEP_STATUS_OK);
     
     cout << "import_key()\n";
-    PEP_STATUS import_status = import_key(session, key_data, size);
+    PEP_STATUS import_status = import_key(session, key_data, size, NULL);
     assert(import_status == PEP_STATUS_OK);
     cout << "successfully imported key\n";
 
