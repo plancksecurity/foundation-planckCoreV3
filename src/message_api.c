@@ -1431,9 +1431,14 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         strcmp(msg->from->user_id, PEP_OWN_USERID) == 0 &&
         // to is [own]
         msg->to->ident->user_id &&
-        strcmp(msg->to->ident->user_id, PEP_OWN_USERID) == 0 &&
-        // Contains one single private key with matching 
-        strcmp(msg->from->address, imported_private_key_address) == 0)
+        strcmp(msg->to->ident->user_id, PEP_OWN_USERID) == 0 
+        /* Disabled to allow receiving priv key from other own address */
+        /* &&
+        // Contains one single private key with matching address
+        strcmp(msg->from->address, imported_private_key_address) == 0
+        */
+        /* TODO : test that key's address is indeed an other own address */
+        )
     {
         *flags &= PEP_decrypt_flag_own_private_key;
     }
@@ -1481,7 +1486,26 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
     PEP_color color;
     PEP_decrypt_flags_t flags; 
 
+    *ident = NULL;
+
     status = decrypt_message(session, msg,  &dst, &keylist, &color, &flags);
+
+    if (status == PEP_STATUS_OK &&
+        flags & PEP_decrypt_flag_own_private_key)
+    {
+        identity_list *private_il = NULL;
+        import_attached_keys(session, msg, &private_il);
+
+        if (private_il && 
+            identity_list_length(private_il) == 1 &&
+            private_il->ident->address)
+        {
+            *ident = identity_dup(private_il->ident);
+        }
+        free_identity_list(private_il);
+    }
+
+    // TODO : compose details string
 
     return status;
 }
