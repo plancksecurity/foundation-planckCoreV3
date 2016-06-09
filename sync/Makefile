@@ -5,10 +5,10 @@ all: ../src/sync_fsm.c
 skeleton: ../src/sync_actions.c.skeleton
 
 ../src/sync_actions.c.skeleton: sync.fsm gen_actions_skeleton.ysl2 fsm.yml2 functions.ysl2
-	$(YML2PROC) -y gen_actions_skeleton.ysl2 $< -o $@
+	$(YML2PROC) -I$(YML_PATH) -y gen_actions_skeleton.ysl2 $< -o $@
 
 ../src/sync_fsm.c: sync.fsm gen_statemachine.ysl2 fsm.yml2 functions.ysl2
-	$(YML2PROC) -y gen_statemachine.ysl2 $< -o $@
+	$(YML2PROC) -I$(YML_PATH) -y gen_statemachine.ysl2 $< -o $@
 
 .PHONY: clean
 
