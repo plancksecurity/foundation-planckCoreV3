@@ -388,6 +388,11 @@ typedef struct _pEp_identity {
     bool me;                    // if this is the local user herself/himself
 } pEp_identity;
 
+typedef struct _identity_list {
+    pEp_identity *ident;
+    struct _identity_list *next;
+} identity_list;
+
 
 // new_identity() - allocate memory and set the string and size fields
 //
@@ -436,7 +441,6 @@ DYNAMIC_API pEp_identity *identity_dup(const pEp_identity *src);
 
 DYNAMIC_API void free_identity(pEp_identity *identity);
 
-#include "identity_list.h"
 
 // get_identity() - get identity information
 //
