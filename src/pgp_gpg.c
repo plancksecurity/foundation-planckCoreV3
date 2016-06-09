@@ -539,7 +539,8 @@ PEP_STATUS pgp_decrypt_and_verify(
                 break;
             }
             case GPG_ERR_BAD_PASSPHRASE:
-                NOT_IMPLEMENTED;
+                result = PEP_DECRYPT_NO_KEY;
+                break;
             case GPG_ERR_DECRYPT_FAILED:
             default:
             {
