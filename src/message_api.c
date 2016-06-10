@@ -830,37 +830,90 @@ static PEP_comm_type _get_comm_type(
     }
 }
 
-void import_attached_keys(PEP_SESSION session, const message *msg)
+static void free_bl_entry(bloblist_t *bl)
+{
+    if (bl) {
+        free(bl->value);
+        free(bl->mime_type);
+        free(bl->filename);
+        free(bl);
+    }
+}
+
+static bool is_key(const bloblist_t *bl)
+{
+    bool result = false;
+
+    // workaround for Apple Mail bugs
+    if (is_mime_type(bl, "application/x-apple-msg-attachment")) {
+        if (is_fileending(bl, ".asc")) {
+            result = true;
+        }
+    }
+    else if (bl->mime_type == NULL ||
+                is_mime_type(bl, "application/octet-stream")) {
+        if (is_fileending(bl, ".pgp") || is_fileending(bl, ".gpg") ||
+                is_fileending(bl, ".key") || is_fileending(bl, ".asc")) {
+            result = true;
+        }
+    }
+    else if (is_mime_type(bl, "application/pgp-keys")) {
+        result = true;
+    }
+    else if (is_mime_type(bl, "text/plain")) {
+        if (is_fileending(bl, ".pgp") || is_fileending(bl, ".gpg") ||
+                is_fileending(bl, ".key") || is_fileending(bl, ".asc")) {
+            result = true;
+        }
+    }
+
+    return result;
+}
+
+static void remove_attached_keys(message *msg)
+{
+    if (msg) {
+        bloblist_t *last = NULL;
+        for (bloblist_t *bl = msg->attachments; bl && bl->value; ) {
+            bloblist_t *next = bl->next;
+
+            if (is_key(bl)) {
+                if (last) {
+                    last->next = next;
+                }
+                else {
+                    msg->attachments = next;
+                }
+                free_bl_entry(bl);
+            }
+            else {
+                last = bl;
+            }
+            bl = next;
+        }
+    }
+}
+
+bool import_attached_keys(PEP_SESSION session, message *msg)
 {
     assert(session);
     assert(msg);
 
+    bool remove = false;
+
     bloblist_t *bl;
     for (bl = msg->attachments; bl && bl->value; bl = bl->next) {
         assert(bl && bl->value && bl->size);
-
-        // workaround for Apple Mail bugs
-        if (is_mime_type(bl, "application/x-apple-msg-attachment")) {
-            if (is_fileending(bl, ".asc"))
-                import_key(session, bl->value, bl->size);
-        }
-        else if (bl->mime_type == NULL ||
-                    is_mime_type(bl, "application/octet-stream")) {
-            if (is_fileending(bl, ".pgp") || is_fileending(bl, ".gpg") ||
-                    is_fileending(bl, ".key") || is_fileending(bl, ".asc"))
-                import_key(session, bl->value, bl->size);
-        }
-        else if (is_mime_type(bl, "application/pgp-keys")) {
+        if (is_key(bl)) {
             import_key(session, bl->value, bl->size);
-        }
-        else if (is_mime_type(bl, "text/plain")) {
-            if (is_fileending(bl, ".pgp") || is_fileending(bl, ".gpg") ||
-                    is_fileending(bl, ".key") || is_fileending(bl, ".asc"))
-                import_key(session, bl->value, bl->size);
+            remove = true;
         }
     }
-    if(msg->from && msg->from->user_id && msg->from->address)
+
+    if (msg->from && msg->from->user_id && msg->from->address)
         update_identity(session, msg->from);
+
+    return remove;
 }
 
 
@@ -1157,7 +1210,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     if (!(session && src && dst && keylist && color))
         return PEP_ILLEGAL_VALUE;
 
-    import_attached_keys(session, src);
+    bool imported_keys = import_attached_keys(session, src);
     PEP_cryptotech crypto = determine_encryption_format(src);
 
     *dst = NULL;
@@ -1167,6 +1220,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     switch (src->enc_format) {
         case PEP_enc_none:
             *color = PEP_rating_unencrypted;
+            if (imported_keys)
+                remove_attached_keys(src);
             return PEP_UNENCRYPTED;
 
         case PEP_enc_PGP_MIME:
@@ -1322,9 +1377,9 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                 NOT_IMPLEMENTED
         }
         
-        import_attached_keys(session, msg);
+        imported_keys = import_attached_keys(session, msg);
         
-        if(decrypt_status == PEP_DECRYPTED){
+        if (decrypt_status == PEP_DECRYPTED) {
             
             // In case message did decrypt, but no valid signature could be found
             // then retry decrypt+verify after importing key.
@@ -1339,7 +1394,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
             status = cryptotech[crypto].decrypt_and_verify(session, ctext,
                 csize, &re_ptext, &re_psize, &_keylist);
             
-            if(re_ptext)
+            if (re_ptext)
                 free(re_ptext);
             
             if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
@@ -1385,8 +1440,11 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         }
     }
 
-    if (msg)
+    if (msg) {
         decorate_message(msg, *color, _keylist);
+        if (imported_keys)
+            remove_attached_keys(msg);
+    }
 
     *dst = msg;
     *keylist = _keylist;

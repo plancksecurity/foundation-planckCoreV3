@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 
-void import_attached_keys(PEP_SESSION session, const message *msg);
+bool import_attached_keys(PEP_SESSION session, message *msg);
 void attach_own_key(PEP_SESSION session, message *msg);
 PEP_cryptotech determine_encryption_format(message *msg);
 
