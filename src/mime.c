@@ -646,14 +646,14 @@ static PEP_STATUS mime_encode_message_plain(
     struct mailmime * submime = NULL;
     int r;
     PEP_STATUS status;
-    char *subject;
+    //char *subject;
     char *plaintext;
     char *htmltext;
 
     assert(msg);
     assert(result);
 
-    subject = (msg->shortmsg) ? msg->shortmsg : "pEp";
+    //subject = (msg->shortmsg) ? msg->shortmsg : "pEp";  // not used, yet.
     plaintext = (msg->longmsg) ? msg->longmsg : "";
     htmltext = msg->longmsg_formatted;
 
@@ -739,13 +739,13 @@ static PEP_STATUS mime_encode_message_PGP_MIME(
 	struct mailmime_parameter * param;
     int r;
     PEP_STATUS status;
-    char *subject;
+    //char *subject;
     char *plaintext;
 
     assert(msg->attachments && msg->attachments->next &&
             msg->attachments->next->value);
 
-    subject = (msg->shortmsg) ? msg->shortmsg : "pEp";
+    //subject = (msg->shortmsg) ? msg->shortmsg : "pEp"; // not used, yet.
     plaintext = msg->attachments->next->value;
 
     mime = part_multiple_new("multipart/encrypted");

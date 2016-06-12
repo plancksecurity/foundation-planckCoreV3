@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 
-void import_attached_keys(
+bool import_attached_keys(
         PEP_SESSION session, 
         const message *msg,
         identity_list **private_idents

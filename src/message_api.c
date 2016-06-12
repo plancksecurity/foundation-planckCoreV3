@@ -830,7 +830,17 @@ static PEP_comm_type _get_comm_type(
     }
 }
 
-bool _is_pgp_key(bloblist_t *bl)
+static void free_bl_entry(bloblist_t *bl)
+{
+    if (bl) {
+        free(bl->value);
+        free(bl->mime_type);
+        free(bl->filename);
+        free(bl);
+    }
+}
+
+static bool is_key(const bloblist_t *bl)
 {
     return (// workaround for Apple Mail bugs
             (is_mime_type(bl, "application/x-apple-msg-attachment") &&
@@ -849,7 +859,31 @@ bool _is_pgp_key(bloblist_t *bl)
            );
 }
 
-void import_attached_keys(
+static void remove_attached_keys(message *msg)
+{
+    if (msg) {
+        bloblist_t *last = NULL;
+        for (bloblist_t *bl = msg->attachments; bl && bl->value; ) {
+            bloblist_t *next = bl->next;
+
+            if (is_key(bl)) {
+                if (last) {
+                    last->next = next;
+                }
+                else {
+                    msg->attachments = next;
+                }
+                free_bl_entry(bl);
+            }
+            else {
+                last = bl;
+            }
+            bl = next;
+        }
+    }
+}
+
+bool import_attached_keys(
         PEP_SESSION session, 
         const message *msg,
         identity_list **private_idents
@@ -858,16 +892,21 @@ void import_attached_keys(
     assert(session);
     assert(msg);
 
+    bool remove = false;
+
     bloblist_t *bl;
     for (bl = msg->attachments; bl && bl->value; bl = bl->next) {
         assert(bl && bl->value && bl->size);
 
-        if (_is_pgp_key(bl))
+        if (is_key(bl)) 
         {
             import_key(session, bl->value, bl->size, private_idents);
+            remove = true;
         }
     }
+    return remove;
 }
+
 
 PEP_STATUS _attach_key(PEP_SESSION session, const char* fpr, message *msg)
 {
@@ -1163,8 +1202,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     if (!(session && src && dst && keylist && color))
         return PEP_ILLEGAL_VALUE;
 
-    // Private key in an unencrypted mail... srsly ? -> NULL
-    import_attached_keys(session, src, NULL);
+    // Private key in unencrypted mail are ignored -> NULL
+    bool imported_keys = import_attached_keys(session, src, NULL);
 
     // Update src->from in case we just imported a key
     // we would need to check signature
@@ -1180,6 +1219,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     switch (src->enc_format) {
         case PEP_enc_none:
             *color = PEP_rating_unencrypted;
+            if (imported_keys)
+                remove_attached_keys(src);
             return PEP_UNENCRYPTED;
 
         case PEP_enc_PGP_MIME:
@@ -1337,10 +1378,9 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                 NOT_IMPLEMENTED
         }
        
-        // Only check for private key imported if
-        // in decrypted message attachement
+        // check for private key in decrypted message attachement while inporting
         identity_list *private_il = NULL;
-        import_attached_keys(session, msg, &private_il);
+        imported_keys = import_attached_keys(session, msg, &private_il);
         if (private_il && 
             identity_list_length(private_il) == 1 &&
             private_il->ident->address)
@@ -1371,7 +1411,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
             status = cryptotech[crypto].decrypt_and_verify(session, ctext,
                 csize, &re_ptext, &re_psize, &_keylist);
             
-            if(re_ptext)
+            if (re_ptext)
                 free(re_ptext);
             
             if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
@@ -1447,6 +1487,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     if (msg){
         decorate_message(msg, *color, _keylist);
+        if (imported_keys)
+            remove_attached_keys(msg);
     }
 
     *dst = msg;

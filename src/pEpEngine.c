@@ -1259,7 +1259,7 @@ static void _clean_log_value(char *text)
 {
     if (text) {
         for (char *c = text; *c; c++) {
-            if (*c < 32)
+            if (*c < 32 && *c != '\n')
                 *c = 32;
             else if (*c == '"')
                 *c = '\'';

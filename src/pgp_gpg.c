@@ -362,7 +362,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     gpgme_data_type_t dt;
 
     stringlist_t *_keylist = NULL;
-    int i_key = 0;
+    //int i_key = 0;
 
     assert(session);
     assert(ctext);
@@ -543,7 +543,8 @@ PEP_STATUS pgp_decrypt_and_verify(
                 break;
             }
             case GPG_ERR_BAD_PASSPHRASE:
-                NOT_IMPLEMENTED;
+                result = PEP_DECRYPT_NO_KEY;
+                break;
             case GPG_ERR_DECRYPT_FAILED:
             default:
             {
@@ -1677,6 +1678,8 @@ typedef struct _revoke_state {
     const char *reason_ref;
 } revoke_state;
 
+
+/*** unused?
 static bool isemptystring(const char *str)
 {
     if (str == NULL)
@@ -1689,6 +1692,8 @@ static bool isemptystring(const char *str)
 
     return true;
 }
+***/
+
 
 static gpgme_error_t revoke_fsm(
         void *_handle,

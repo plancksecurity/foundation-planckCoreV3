@@ -1,4 +1,4 @@
-#pragma one
+#pragma once
 
 #include "pEpEngine.h"
 #include "stringlist.h"
