@@ -7,7 +7,7 @@ ifeq ($(BUILD_FOR),Darwin)
 
 TARGET=libpEpEngine.dylib
 MACOSX_VERSION_MIN=10.6
-GPGME_IN=$(HOME)
+GPGME_IN=/usr/local/
 LIBGPGME=libgpgme-pthread.dylib
 CC?=clang -std=c99 -pthread
 LD?=clang
