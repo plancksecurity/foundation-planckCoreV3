@@ -108,7 +108,6 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 //  parameters:
 //      session (in)        session handle
 //      msg (in)            message to decrypt
-//      details (out)       text describing details
 //      ident (out)         identity containing uid, address and fpr of key
 //
 //  note:
@@ -122,14 +121,12 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 //
 //	caveat:
 //	    the ownership of msg remains with the caller
-//	    the ownership of details goes to the caller
 //	    the ownership of ident goes to the caller
 //	    msg MUST be encrypted so that this function can check own signature
 
 DYNAMIC_API PEP_STATUS own_message_private_key_details(
         PEP_SESSION session,
         message *msg,
-        char **details,
         pEp_identity **ident 
 );
 

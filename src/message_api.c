@@ -1510,17 +1510,15 @@ pep_error:
 DYNAMIC_API PEP_STATUS own_message_private_key_details(
         PEP_SESSION session,
         message *msg,
-        char **details,
         pEp_identity **ident 
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
     assert(session);
     assert(msg);
-    assert(details);
     assert(ident);
 
-    if (!(session && msg && details && ident))
+    if (!(session && msg && ident))
         return PEP_ILLEGAL_VALUE;
 
     message *dst; 
@@ -1546,8 +1544,6 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
         }
         free_identity_list(private_il);
     }
-
-    // TODO : compose details string
 
     return status;
 }
