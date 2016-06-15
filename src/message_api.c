@@ -1467,7 +1467,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         strcmp(msg->to->ident->user_id, PEP_OWN_USERID) == 0 
         )
     {
-        *flags &= PEP_decrypt_flag_own_private_key;
+        *flags |= PEP_decrypt_flag_own_private_key;
     }
 
     free(imported_private_key_address);
