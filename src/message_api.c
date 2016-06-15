@@ -1462,22 +1462,9 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         msg &&
         *color >= PEP_rating_green &&
         imported_private_key_address &&
-        // [from] == to
-        identity_list_length(msg->to) == 1 &&
-        msg->to->ident->address && msg->from->address &&
-        strcmp(msg->from->address, msg->to->ident->address) == 0 &&
-        // from is own
-        msg->from->user_id &&
-        strcmp(msg->from->user_id, PEP_OWN_USERID) == 0 &&
         // to is [own]
         msg->to->ident->user_id &&
         strcmp(msg->to->ident->user_id, PEP_OWN_USERID) == 0 
-        /* Disabled to allow receiving priv key from other own address */
-        /* &&
-        // Contains one single private key with matching address
-        strcmp(msg->from->address, imported_private_key_address) == 0
-        */
-        /* TODO : test that key's address is indeed an other own address */
         )
     {
         *flags &= PEP_decrypt_flag_own_private_key;
