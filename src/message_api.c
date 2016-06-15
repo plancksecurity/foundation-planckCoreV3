@@ -1198,9 +1198,12 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     assert(dst);
     assert(keylist);
     assert(color);
+    assert(flags);
 
-    if (!(session && src && dst && keylist && color))
+    if (!(session && src && dst && keylist && color && flags))
         return PEP_ILLEGAL_VALUE;
+
+    *flags = 0;
 
     // Private key in unencrypted mail are ignored -> NULL
     bool imported_keys = import_attached_keys(session, src, NULL);
