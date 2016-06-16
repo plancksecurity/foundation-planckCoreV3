@@ -1518,20 +1518,15 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
 
     *ident = NULL;
 
+    identity_list *private_il = NULL;
+    import_attached_keys(session, msg, &private_il);
+
     status = decrypt_message(session, msg,  &dst, &keylist, &color, &flags);
 
     if (status == PEP_STATUS_OK &&
         flags & PEP_decrypt_flag_own_private_key)
     {
-        identity_list *private_il = NULL;
-        import_attached_keys(session, msg, &private_il);
-
-        if (private_il && 
-            identity_list_length(private_il) == 1 &&
-            private_il->ident->address)
-        {
-            *ident = identity_dup(private_il->ident);
-        }
+        *ident = identity_dup(private_il->ident);
         free_identity_list(private_il);
     }
 
