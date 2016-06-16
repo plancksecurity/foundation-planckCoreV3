@@ -1175,13 +1175,14 @@ pep_error:
     return status;
 }
 
-DYNAMIC_API PEP_STATUS decrypt_message(
+DYNAMIC_API PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
         message **dst,
         stringlist_t **keylist,
         PEP_color *color,
-        PEP_decrypt_flags_t *flags 
+        PEP_decrypt_flags_t *flags, 
+        identity_list **private_il
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1246,7 +1247,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     decrypt_status = status;
 
-    char *imported_private_key_address = NULL; 
+    bool imported_private_key_address = false; 
 
     if (ptext) {
         switch (src->enc_format) {
@@ -1382,16 +1383,20 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         }
        
         // check for private key in decrypted message attachement while inporting
-        identity_list *private_il = NULL;
-        imported_keys = import_attached_keys(session, msg, &private_il);
-        if (private_il && 
-            identity_list_length(private_il) == 1 &&
-            private_il->ident->address)
+        identity_list *_private_il = NULL;
+        imported_keys = import_attached_keys(session, msg, &_private_il);
+        if (_private_il && 
+            identity_list_length(_private_il) == 1 &&
+            _private_il->ident->address)
         {
-            imported_private_key_address = 
-                strdup(private_il->ident->address);
+            imported_private_key_address = true;
         }
-        free_identity_list(private_il);
+
+        if(private_il && imported_private_key_address){
+            *private_il = _private_il;
+        }else{
+            free_identity_list(_private_il);
+        }
          
         if(decrypt_status == PEP_DECRYPTED){
 
@@ -1473,8 +1478,6 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         *flags |= PEP_decrypt_flag_own_private_key;
     }
 
-    free(imported_private_key_address);
-
     if (msg){
         decorate_message(msg, *color, _keylist);
         if (imported_keys)
@@ -1490,11 +1493,22 @@ enomem:
     status = PEP_OUT_OF_MEMORY;
 
 pep_error:
-    free(imported_private_key_address);
     free_message(msg);
     free_stringlist(_keylist);
 
     return status;
+}
+
+DYNAMIC_API PEP_STATUS decrypt_message(
+        PEP_SESSION session,
+        message *src,
+        message **dst,
+        stringlist_t **keylist,
+        PEP_color *color,
+        PEP_decrypt_flags_t *flags 
+    )
+{
+    return _decrypt_message( session, src, dst, keylist, color, flags, NULL );
 }
 
 DYNAMIC_API PEP_STATUS own_message_private_key_details(
@@ -1503,7 +1517,6 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
         pEp_identity **ident 
     )
 {
-    PEP_STATUS status = PEP_STATUS_OK;
     assert(session);
     assert(msg);
     assert(ident);
@@ -1519,18 +1532,19 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
     *ident = NULL;
 
     identity_list *private_il = NULL;
-    import_attached_keys(session, msg, &private_il);
-
-    status = decrypt_message(session, msg,  &dst, &keylist, &color, &flags);
+    PEP_STATUS status = _decrypt_message(session, msg,  &dst, &keylist, &color, &flags, &private_il);
 
     if (status == PEP_STATUS_OK &&
-        flags & PEP_decrypt_flag_own_private_key)
+        flags & PEP_decrypt_flag_own_private_key &&
+        private_il)
     {
         *ident = identity_dup(private_il->ident);
-        free_identity_list(private_il);
     }
 
+    free_identity_list(private_il);
+
     return status;
+
 }
 
 DYNAMIC_API PEP_STATUS outgoing_message_color(
