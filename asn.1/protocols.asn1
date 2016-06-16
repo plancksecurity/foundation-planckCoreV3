@@ -1,0 +1,14 @@
+SYNC
+
+DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
+
+BEGIN
+
+IMPORTS DeviceGroup-Protocol FROM DEVICEGROUP;
+
+Sync-Protocols ::= CHOICE {
+    deviceGroup [APPLICATION 1] DeviceGroup-Protocol
+}
+
+END
+

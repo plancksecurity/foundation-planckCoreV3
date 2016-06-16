@@ -30,21 +30,21 @@ tstylesheet {
         // error values
 
         typedef enum _fsm_error {
-            invalid_state = -1,
-            invalid_event = -2
+            invalid_state = -2,
+            invalid_event = -3
         } fsm_error;
 
         // states
 
         typedef enum _«@name»_state {
-            «@name»_state_NONE = 0,
+            «@name»_state_NONE = -1,
         `` for "func:distinctName(state)" |> «@name»`if "position()!=last()" > , `
         } «@name»_state;
 
         // events
 
         typedef enum _«@name»_event {
-            «@name»_event_NONE = 0,
+            «@name»_event_NONE = -1,
         ||
         for "func:distinctName(state/event[not(not(/protocol/fsm/tag/@name=@name))])" {
             const "name", "@name";
@@ -93,7 +93,7 @@ tstylesheet {
         #include "pEp_internal.h"
 
 
-        PEP_STATUS fsm_«@name»_inject(
+        DYNAMIC_API PEP_STATUS fsm_«@name»_inject(
                 PEP_SESSION session,
                 «@name»_event event,
                 Identity partner,
@@ -102,7 +102,6 @@ tstylesheet {
         {
             PEP_STATUS status = PEP_STATUS_OK;
 
-            session->sync_state = InitState;
             session->sync_state = fsm_«@name»(session, session->sync_state,
                     event, partner, state_partner);
 
@@ -126,7 +125,7 @@ tstylesheet {
             switch (state) {
                 `` apply "state"
                 default:
-                    return invalid_state;
+                    return («@name»_state) invalid_state;
             }
 
             return state;
@@ -141,7 +140,7 @@ tstylesheet {
         switch (event) {
         `` apply "event", 2
         default:
-            return invalid_event;
+            return («../@name»_state) invalid_event;
         }
         break;
 

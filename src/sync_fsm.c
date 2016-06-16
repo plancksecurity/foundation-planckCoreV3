@@ -16,7 +16,7 @@ DeviceState_state fsm_DeviceState(
             case Init:
                 return Sole;
         default:
-            return invalid_event;
+            return (DeviceState_state) invalid_event;
         }
         break;
     
@@ -35,7 +35,7 @@ DeviceState_state fsm_DeviceState(
                 sendHandshakeRequest(session, state, partner);
                 return HandshakingSole;
         default:
-            return invalid_event;
+            return (DeviceState_state) invalid_event;
         }
         break;
     
@@ -50,7 +50,7 @@ DeviceState_state fsm_DeviceState(
             case HandshakeAccepted:
                 return WaitForGroupKeys;
         default:
-            return invalid_event;
+            return (DeviceState_state) invalid_event;
         }
         break;
     
@@ -65,7 +65,7 @@ DeviceState_state fsm_DeviceState(
                 reject(session, state, partner);
                 return Sole;
         default:
-            return invalid_event;
+            return (DeviceState_state) invalid_event;
         }
         break;
     
@@ -88,12 +88,12 @@ DeviceState_state fsm_DeviceState(
                 reject(session, state, NULL);
                 break;
         default:
-            return invalid_event;
+            return (DeviceState_state) invalid_event;
         }
         break;
     
         default:
-            return invalid_state;
+            return (DeviceState_state) invalid_state;
     }
 
     return state;

@@ -78,6 +78,7 @@ protocol DeviceGroup {
                 do reject partner;
         }
 
+        tag InitState 0;
         tag Beacon 1;
         tag HandshakeRequest 2;
         tag GroupKeys 3;
