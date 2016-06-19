@@ -32,6 +32,9 @@ test: pEpEngineTest
 %_test_run : %_test
 	LD_LIBRARY_PATH=~/lib:../src ./$<
 
+%_test_lldb : %_test
+	LD_LIBRARY_PATH=~/lib:../src lldb ./$<
+
 unit_tests: $(UNIT_TESTS) $(UNIT_TESTS_RUN)
 
 install:

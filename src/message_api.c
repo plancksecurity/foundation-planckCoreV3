@@ -1439,6 +1439,11 @@ DYNAMIC_API PEP_STATUS decrypt_message(
             }
         }
     }
+    else
+    {
+        *color = decrypt_color(decrypt_status);
+        goto pep_error;
+    }
 
     if (msg) {
         decorate_message(msg, *color, _keylist);
