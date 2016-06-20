@@ -74,7 +74,9 @@ int main() {
     message *msg4;
     stringlist_t *keylist4;
     PEP_color color;
-    PEP_STATUS status4 = decrypt_message(session, enc_msg2, &msg4, &keylist4, &color);
+    PEP_decrypt_flags_t flags;
+    
+    PEP_STATUS status4 = decrypt_message(session, enc_msg2, &msg4, &keylist4, &color, &flags);
     assert(status4 == PEP_STATUS_OK);
     assert(msg4);
     assert(keylist4);
@@ -109,7 +111,8 @@ int main() {
     message *msg6;
     stringlist_t *keylist5;
     PEP_color color2;
-    PEP_STATUS status6 = decrypt_message(session, msg5, &msg6, &keylist5, &color2);
+    PEP_decrypt_flags_t flags2;
+    PEP_STATUS status6 = decrypt_message(session, msg5, &msg6, &keylist5, &color2, &flags2);
     assert(status6 == PEP_DECRYPT_NO_KEY);
     assert(msg6 == NULL);
     assert(keylist5 == NULL);

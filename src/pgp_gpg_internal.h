@@ -55,6 +55,7 @@ typedef gpgme_error_t(*gpgme_op_delete_t)(gpgme_ctx_t CTX,
     const gpgme_key_t KEY, int ALLOW_SECRET);
 typedef gpgme_error_t(*gpgme_op_import_t)(gpgme_ctx_t CTX,
     gpgme_data_t KEYDATA);
+typedef gpgme_import_result_t(*gpgme_op_import_result_t)(gpgme_ctx_t CTX);
 typedef gpgme_error_t(*gpgme_op_export_t)(gpgme_ctx_t CTX,
     const char *PATTERN, gpgme_export_mode_t MODE, gpgme_data_t KEYDATA);
 typedef gpgme_error_t(*gpgme_set_keylist_mode_t)(gpgme_ctx_t CTX,
@@ -106,6 +107,7 @@ struct gpg_s {
     gpgme_op_genkey_result_t gpgme_op_genkey_result;
     gpgme_op_delete_t gpgme_op_delete;
     gpgme_op_import_t gpgme_op_import;
+    gpgme_op_import_result_t gpgme_op_import_result;
     gpgme_op_export_t gpgme_op_export;
     gpgme_set_keylist_mode_t gpgme_set_keylist_mode;
     gpgme_get_keylist_mode_t gpgme_get_keylist_mode;

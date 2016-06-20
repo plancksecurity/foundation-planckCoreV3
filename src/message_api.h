@@ -10,7 +10,11 @@ extern "C" {
 #endif
 
 
-bool import_attached_keys(PEP_SESSION session, message *msg);
+bool import_attached_keys(
+        PEP_SESSION session, 
+        const message *msg,
+        identity_list **private_idents
+    );
 void attach_own_key(PEP_SESSION session, message *msg);
 PEP_cryptotech determine_encryption_format(message *msg);
 
@@ -64,6 +68,12 @@ typedef enum _PEP_color {
     PEP_rating_under_attack = -3
 } PEP_color;
 
+typedef enum _PEP_decrypt_flags {
+    PEP_decrypt_flag_own_private_key = 0x1
+} PEP_decrypt_flags; 
+
+typedef uint32_t PEP_decrypt_flags_t;
+
 // decrypt_message() - decrypt message in memory
 //
 //  parameters:
@@ -72,6 +82,7 @@ typedef enum _PEP_color {
 //      dst (out)           pointer to new decrypted message or NULL on failure
 //      keylist (out)       stringlist with keyids
 //      color (out)         color for the message
+//      flags (out)         flags to signal special message features
 //
 //  return value:
 //      error status or PEP_STATUS_OK on success
@@ -88,9 +99,36 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         message *src,
         message **dst,
         stringlist_t **keylist,
-        PEP_color *color
-    );
+        PEP_color *color,
+        PEP_decrypt_flags_t *flags 
+);
 
+// own_message_private_key_details() - details on own key in own message
+//
+//  parameters:
+//      session (in)        session handle
+//      msg (in)            message to decrypt
+//      ident (out)         identity containing uid, address and fpr of key
+//
+//  note:
+//      In order to obtain details about key to be possibly imported
+//      as a replacement of key currently used as own identity, 
+//      application passes message that have been previously flagged by 
+//      decrypt_message() as own message containing own key to this function
+//
+//  return value:
+//      error status or PEP_STATUS_OK on success
+//
+//	caveat:
+//	    the ownership of msg remains with the caller
+//	    the ownership of ident goes to the caller
+//	    msg MUST be encrypted so that this function can check own signature
+
+DYNAMIC_API PEP_STATUS own_message_private_key_details(
+        PEP_SESSION session,
+        message *msg,
+        pEp_identity **ident 
+);
 
 // outgoing_message_color() - get color for an outgoing message
 //

@@ -7,12 +7,6 @@ extern "C" {
 #endif
 
 
-typedef struct _identity_list {
-    pEp_identity *ident;
-    struct _identity_list *next;
-} identity_list;
-
-
 // new_identity_list() - allocate a new identity list
 //
 //  parameters:

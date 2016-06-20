@@ -257,6 +257,11 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
             dlsym(gpgme, "gpgme_op_import");
         assert(gpg.gpgme_op_import);
 
+        gpg.gpgme_op_import_result
+            = (gpgme_op_import_result_t) (intptr_t) dlsym(gpgme,
+            "gpgme_op_import_result");
+        assert(gpg.gpgme_op_import_result);
+
         gpg.gpgme_op_export = (gpgme_op_export_t) (intptr_t)
             dlsym(gpgme, "gpgme_op_export");
         assert(gpg.gpgme_op_export);
@@ -456,8 +461,7 @@ PEP_STATUS pgp_decrypt_and_verify(
                             // This is meant to get signer's primary 
                             // key fingerprint, using subkey's.
 
-                            gpgme_key_t key;
-                            memset(&key,0,sizeof(key));
+                            gpgme_key_t key = NULL;
 
                             gpgme_error = gpg.gpgme_get_key(session->ctx,
                                 gpgme_signature->fpr, &key, 0);
@@ -1013,13 +1017,17 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data, size_t size)
+PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
+                              size_t size, identity_list **private_idents)
 {
     gpgme_error_t gpgme_error;
     gpgme_data_t dh;
 
     assert(session);
     assert(key_data);
+   
+    if(private_idents) 
+        *private_idents = NULL;
 
     gpgme_error = gpg.gpgme_data_new_from_mem(&dh, key_data, size, 0);
     gpgme_error = _GPGERR(gpgme_error);
@@ -1037,10 +1045,67 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data, size_t 
         return PEP_UNKNOWN_ERROR;
     }
 
+    gpgme_import_result_t gpgme_import_result;
+
     gpgme_error = gpg.gpgme_op_import(session->ctx, dh);
     gpgme_error = _GPGERR(gpgme_error);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
+        if(private_idents) 
+        {
+            gpgme_import_result =
+                gpg.gpgme_op_import_result(session->ctx);
+            assert(gpgme_import_result);
+            gpgme_import_status_t import;
+            for (import = gpgme_import_result->imports; 
+                 import; 
+                 import = import->next)
+             {
+                if (import &&
+                    import->result == GPG_ERR_NO_ERROR &&
+                    import->status & GPGME_IMPORT_SECRET )
+                {
+                    gpgme_key_t key = NULL;
+
+                    gpgme_error = gpg.gpgme_get_key(session->ctx,
+                        import->fpr, &key, 0);
+                    gpgme_error = _GPGERR(gpgme_error);
+                    assert(gpgme_error != GPG_ERR_ENOMEM);
+                    if (gpgme_error == GPG_ERR_ENOMEM) {
+                        gpg.gpgme_data_release(dh);
+                        return PEP_OUT_OF_MEMORY;
+                    }
+                    
+                    if (gpgme_error == GPG_ERR_NO_ERROR &&  
+                        key && key->uids && 
+                        key->uids->email && key->uids->name)
+                    {
+                        pEp_identity *ident = new_identity(
+                             key->uids->email, import->fpr, NULL, key->uids->name);
+
+                        gpg.gpgme_key_unref(key);
+
+                        if (ident == NULL) {
+                            gpg.gpgme_data_release(dh);
+                            return PEP_OUT_OF_MEMORY;
+                        }
+
+                        *private_idents = identity_list_add(*private_idents, ident);
+
+                        if (*private_idents == NULL) {
+                            gpg.gpgme_data_release(dh);
+                            return PEP_OUT_OF_MEMORY;
+                        }
+                    }
+                    else 
+                    {
+                        gpg.gpgme_key_unref(key);
+                        gpg.gpgme_data_release(dh);
+                        return PEP_UNKNOWN_ERROR;
+                    }
+                }
+            }
+        }
         break;
     case GPG_ERR_INV_VALUE:
         assert(0);
