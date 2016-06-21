@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 #include <assert.h>
 #include <string.h>
@@ -8,35 +10,50 @@
 #include "../src/pEpEngine.h"
 #include "../src/keymanagement.h"
 
+
 using namespace std;
 
-void ReadFileIntoMem(const char *fname, char* &buffer, size_t &length){
-    buffer = NULL;
-    length = 0;
+typedef std::vector<char> Buffer;
+
+// no C++11, yet? So do our own implementation:
+namespace{
+    std::string to_string(unsigned long u)
+    {
+        char buf[32];
+        snprintf(buf,31, "%lu", u);
+        return buf;
+    }
+}
+
+
+Buffer ReadFileIntoMem(const char *fname){
     cout << "opening " << fname << " for reading\n";
     ifstream txtFile (fname, ifstream::binary);
     assert(txtFile.is_open());
-    if (txtFile) {
-        // get length of file:
-        txtFile.seekg (0, txtFile.end);
-        length = txtFile.tellg();
-        txtFile.seekg (0, txtFile.beg);
-
-        buffer = new char [length+1];
-
-        cout << "Reading " << length << " characters... ";
-        txtFile.read (buffer,length);
-        buffer[length]='\0';
-
-        if (txtFile)
-          cout << "all characters read successfully.\n";
-        else
-          cout << "error: only " << txtFile.gcount() << " could be read\n";
-        txtFile.close();
+    if (!txtFile)
+    {
+        throw std::runtime_error( "error: cannot open file \"" + std::string(fname) + "\"" );
     }
 
-    assert(buffer);
-    assert(length);
+    Buffer buffer;
+
+    // get length of file:
+    txtFile.seekg (0, txtFile.end);
+    const size_t length = txtFile.tellg();
+    txtFile.seekg (0, txtFile.beg);
+    buffer.resize(length+1);
+
+    cout << "Reading " << length << " characters... ";
+    txtFile.read (buffer.data(), length);
+    buffer.at(length)='\0';
+
+    if (!txtFile)
+    {
+        throw std::runtime_error( "error: only " + to_string(txtFile.gcount()) + " could be read from file" + fname );
+    }
+
+    cout << "all characters read successfully." << std::endl;
+    return buffer;
 }
 
 
@@ -85,29 +102,26 @@ int main(int argc, char* argv[])
 
     const char** kf = kflist;
     while(*kf){
-        char * k_user_buffer = NULL;
-        size_t k_user_length = 0;
-        ReadFileIntoMem(*kf, k_user_buffer, k_user_length);
+        const Buffer k_user_buffer =  ReadFileIntoMem(*kf);
+        const size_t k_user_length = k_user_buffer.size();
         cout << "import_key(" << *kf << ")\n";
-        PEP_STATUS import_status = import_key(session, k_user_buffer, k_user_length, NULL);
+        PEP_STATUS import_status = import_key(session, k_user_buffer.data(), k_user_length, NULL);
         assert(import_status == PEP_STATUS_OK);
         cout << "successfully imported key\n";
-        delete[] k_user_buffer;
         kf++;
     }
 
-    char * cipher_buffer = NULL;
-    size_t cipher_length = 0;
-    ReadFileIntoMem("msg.asc", cipher_buffer, cipher_length);
+    Buffer cipher_buffer = ReadFileIntoMem("msg.asc");
+    const size_t cipher_length = cipher_buffer.size();
 
-    cout << "\n" << cipher_buffer;
+    cout << "\n" << cipher_buffer.data();
 
     char *buf_text = NULL;
     size_t buf_size = 0;
     stringlist_t *keylist;
 
     cout << "calling decrypt_and_verify()\n";
-    PEP_STATUS decrypt_result = decrypt_and_verify(session, cipher_buffer, cipher_length, &buf_text, &buf_size, &keylist);
+    PEP_STATUS decrypt_result = decrypt_and_verify(session, cipher_buffer.data(), cipher_length, &buf_text, &buf_size, &keylist);
 
     cout << "returning from decrypt_and_verify() with result == 0x" << std::hex << decrypt_result << "\n";
     assert(decrypt_result == PEP_DECRYPTED_AND_VERIFIED);
@@ -125,28 +139,25 @@ int main(int argc, char* argv[])
     pEp_free(buf_text);
     cout << "\n" << plain;
 
-    char * t1_buffer = NULL;
-    size_t t1_length = 0;
-    ReadFileIntoMem("t1.txt", t1_buffer, t1_length);
+    Buffer t1_buffer = ReadFileIntoMem("t1.txt");
+    const size_t t1_length = t1_buffer.size();
 
-    char * sig_buffer = NULL;
-    size_t sig_length = 0;
-    ReadFileIntoMem("signature.asc", sig_buffer, sig_length);
+    Buffer sig_buffer = ReadFileIntoMem("signature.asc");
+    const size_t sig_length = sig_buffer.size();
 
     cout << "\ncalling verify_text()\n";
-    PEP_STATUS verify_result = verify_text(session, t1_buffer, t1_length, sig_buffer, sig_length, &keylist);
+    PEP_STATUS verify_result = verify_text(session, t1_buffer.data(), t1_length, sig_buffer.data(), sig_length, &keylist);
     cout << "returning from verify_text() with result == " << verify_result << "\n";
     assert(verify_result == PEP_VERIFIED || verify_result == PEP_VERIFIED_AND_TRUSTED);
     assert(keylist->value);
     cout << "signed with " << keylist->value << "\n";
     free_stringlist(keylist);
 
-    char * t2_buffer = NULL;
-    size_t t2_length = 0;
-    ReadFileIntoMem("t2.txt", t2_buffer, t2_length);
+    Buffer t2_buffer = ReadFileIntoMem("t2.txt");
+    size_t t2_length = t2_buffer.size();
 
     cout << "\ncalling verify_text()\n";
-    verify_result = verify_text(session, t2_buffer, t2_length, sig_buffer, sig_length, &keylist);
+    verify_result = verify_text(session, t2_buffer.data(), t2_length, sig_buffer.data(), sig_length, &keylist);
     assert(verify_result == PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
     free_stringlist(keylist);
 
@@ -168,11 +179,6 @@ int main(int argc, char* argv[])
     cout << "\n" << cipher2;
     pEp_free(buf_text);
 
-    delete[] cipher_buffer;
-    delete[] t1_buffer;
-    delete[] sig_buffer;
-    delete[] t2_buffer;
-
     cout << "\nfinding English trustword for 2342...\n";
     char * word;
     size_t wsize;
@@ -190,9 +196,7 @@ int main(int argc, char* argv[])
     cout << words << "\n";
     pEp_free(words);
 
-    pEp_identity *identity;
-
-    identity = new_identity(
+    pEp_identity* identity  = new_identity(
             "leon.schumacher@digitalekho.com",
             "8BD08954C74D830EEFFB5DEB2682A17F7C87F73D",
             "23",
