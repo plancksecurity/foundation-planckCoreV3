@@ -103,17 +103,14 @@ int main(int argc, char* argv[])
     const char** kf = kflist;
     while(*kf){
         const Buffer k_user_buffer =  ReadFileIntoMem(*kf);
-        const size_t k_user_length = k_user_buffer.size();
         cout << "import_key(" << *kf << ")\n";
-        PEP_STATUS import_status = import_key(session, k_user_buffer.data(), k_user_length, NULL);
+        PEP_STATUS import_status = import_key(session, k_user_buffer.data(), k_user_buffer.size(), NULL);
         assert(import_status == PEP_STATUS_OK);
         cout << "successfully imported key\n";
         kf++;
     }
 
-    Buffer cipher_buffer = ReadFileIntoMem("msg.asc");
-    const size_t cipher_length = cipher_buffer.size();
-
+    const Buffer cipher_buffer = ReadFileIntoMem("msg.asc");
     cout << "\n" << cipher_buffer.data();
 
     char *buf_text = NULL;
@@ -121,7 +118,7 @@ int main(int argc, char* argv[])
     stringlist_t *keylist;
 
     cout << "calling decrypt_and_verify()\n";
-    PEP_STATUS decrypt_result = decrypt_and_verify(session, cipher_buffer.data(), cipher_length, &buf_text, &buf_size, &keylist);
+    PEP_STATUS decrypt_result = decrypt_and_verify(session, cipher_buffer.data(), cipher_buffer.size(), &buf_text, &buf_size, &keylist);
 
     cout << "returning from decrypt_and_verify() with result == 0x" << std::hex << decrypt_result << "\n";
     assert(decrypt_result == PEP_DECRYPTED_AND_VERIFIED);
@@ -135,29 +132,25 @@ int main(int argc, char* argv[])
 
     free_stringlist(keylist);
     buf_text[buf_size] = 0;
-    string plain(buf_text);
+    const string plain(buf_text);
     pEp_free(buf_text);
     cout << "\n" << plain;
 
-    Buffer t1_buffer = ReadFileIntoMem("t1.txt");
-    const size_t t1_length = t1_buffer.size();
-
-    Buffer sig_buffer = ReadFileIntoMem("signature.asc");
-    const size_t sig_length = sig_buffer.size();
+    const Buffer t1_buffer = ReadFileIntoMem("t1.txt");
+    const Buffer sig_buffer = ReadFileIntoMem("signature.asc");
 
     cout << "\ncalling verify_text()\n";
-    PEP_STATUS verify_result = verify_text(session, t1_buffer.data(), t1_length, sig_buffer.data(), sig_length, &keylist);
+    PEP_STATUS verify_result = verify_text(session, t1_buffer.data(), t1_buffer.size(), sig_buffer.data(), sig_buffer.size(), &keylist);
     cout << "returning from verify_text() with result == " << verify_result << "\n";
     assert(verify_result == PEP_VERIFIED || verify_result == PEP_VERIFIED_AND_TRUSTED);
     assert(keylist->value);
     cout << "signed with " << keylist->value << "\n";
     free_stringlist(keylist);
 
-    Buffer t2_buffer = ReadFileIntoMem("t2.txt");
-    size_t t2_length = t2_buffer.size();
+    const Buffer t2_buffer = ReadFileIntoMem("t2.txt");
 
     cout << "\ncalling verify_text()\n";
-    verify_result = verify_text(session, t2_buffer.data(), t2_length, sig_buffer.data(), sig_length, &keylist);
+    verify_result = verify_text(session, t2_buffer.data(), t2_buffer.size(), sig_buffer.data(), sig_buffer.size(), &keylist);
     assert(verify_result == PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
     free_stringlist(keylist);
 
@@ -174,21 +167,21 @@ int main(int argc, char* argv[])
     assert(encrypt_result == PEP_STATUS_OK);
     free_stringlist(keylist);
 
-    buf_text[buf_size] = 0;
-    string cipher2(buf_text);
+    buf_text[buf_size] = '\0';
+    const string cipher2(buf_text);
     cout << "\n" << cipher2;
     pEp_free(buf_text);
 
     cout << "\nfinding English trustword for 2342...\n";
-    char * word;
+    char * word = NULL;
     size_t wsize;
     trustword(session, 2342, "en", &word, &wsize);
     assert(word);
     cout << "the trustword for 2342 is " << word << "\n";
     pEp_free(word);
 
-    string fingerprint = "4942 2235 FC99 585B 891C  6653 0C7B 109B FA72 61F7";
-    char * words;
+    const string fingerprint = "4942 2235 FC99 585B 891C  6653 0C7B 109B FA72 61F7";
+    char * words = NULL;
 
     cout << "\nfinding German trustwords for " << fingerprint << "...\n";
     trustwords(session, fingerprint.c_str(), "de", &words, &wsize, 5);
@@ -232,11 +225,11 @@ int main(int argc, char* argv[])
     assert(generate_status == PEP_STATUS_OK);
     cout << "generated key is " << identity->fpr << "\n";
 
-    string key(identity->fpr);
+    const string key(identity->fpr);
     free_identity(identity);
 
-    char *key_data;
-    size_t size;
+    char *key_data = NULL;
+    size_t size = 0;
 
     cout << "export_key()\n\n";
     PEP_STATUS export_status = export_key(session, key.c_str(), &key_data, &size);
@@ -255,6 +248,7 @@ int main(int argc, char* argv[])
     cout << "successfully imported key\n";
 
     pEp_free(key_data);
+    key_data=NULL;
 
     cout << "deleting key " << key.c_str() << " again\n";
     delete_status = delete_keypair(session, key.c_str());
