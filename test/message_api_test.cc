@@ -33,6 +33,7 @@ int main() {
     msg2->from = me2;
     msg2->to = to2;
     msg2->shortmsg = strdup("hello, world");
+    msg2->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
     cout << "message created.\n";
 
     char *text2;

@@ -895,10 +895,9 @@ bool import_attached_keys(
     bool remove = false;
 
     bloblist_t *bl;
-    for (bl = msg->attachments; bl && bl->value; bl = bl->next) {
-        assert(bl && bl->value && bl->size);
-
-        if (is_key(bl)) 
+    for (bl = msg->attachments; bl && bl->value; bl = bl->next) 
+    {
+        if (bl && bl->value && bl->size && is_key(bl)) 
         {
             import_key(session, bl->value, bl->size, private_idents);
             remove = true;

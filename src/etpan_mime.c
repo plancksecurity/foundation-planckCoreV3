@@ -315,9 +315,12 @@ struct mailmime * get_file_part(
     content = NULL;
     mime_fields = NULL;
 
-    r = mailmime_set_body_text(mime, data, length);
-    if (r != 0)
-        goto enomem;
+    if(length > 0)
+    {
+        r = mailmime_set_body_text(mime, data, length);
+        if (r != 0)
+            goto enomem;
+    }
 
     return mime;
 
