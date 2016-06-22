@@ -496,46 +496,53 @@ static PEP_STATUS encrypt_PGP_in_pieces(
         bloblist_t *_s = src->attachments;
         bloblist_t *_d = dst->attachments;
 
-        for (int n = 0; _s && _s->value; _s = _s->next) {
-            size_t psize = _s->size;
-            ptext = _s->value;
-            status = encrypt_and_sign(session, keys, ptext, psize, &ctext,
-                &csize);
-            if (ctext) {
-                char *filename = NULL;
-
-                if (_s->filename) {
-                    size_t len = strlen(_s->filename);
-                    filename = calloc(1, len + 5);
-                    if (filename == NULL)
-                        goto enomem;
-
-                    strcpy(filename, _s->filename);
-                    strcpy(filename + len, ".pgp");
-                }
-                else {
-                    filename = calloc(1, 20);
-                    if (filename == NULL)
-                        goto enomem;
-
-                    ++n;
-                    n &= 0xffff;
-                    snprintf(filename, 20, "Attachment%d.pgp", n);
-                }
-
-                char *_ctext = malloc(csize);
-                assert(_ctext);
-                if (_ctext == NULL)
-                    goto enomem;
-                memcpy(_ctext, ctext, csize);
-
-                _d = bloblist_add(_d, _ctext, csize, "application/octet-stream",
-                    filename);
+        for (int n = 0; _s; _s = _s->next) {
+            if (_s->value == NULL && _s->size == 0) {
+                _d = bloblist_add(_d, NULL, 0, _s->mime_type, _s->filename);
                 if (_d == NULL)
                     goto enomem;
             }
             else {
-                goto pep_error;
+                size_t psize = _s->size;
+                ptext = _s->value;
+                status = encrypt_and_sign(session, keys, ptext, psize, &ctext,
+                    &csize);
+                if (ctext) {
+                    char *filename = NULL;
+
+                    if (_s->filename) {
+                        size_t len = strlen(_s->filename);
+                        filename = calloc(1, len + 5);
+                        if (filename == NULL)
+                            goto enomem;
+
+                        strcpy(filename, _s->filename);
+                        strcpy(filename + len, ".pgp");
+                    }
+                    else {
+                        filename = calloc(1, 20);
+                        if (filename == NULL)
+                            goto enomem;
+
+                        ++n;
+                        n &= 0xffff;
+                        snprintf(filename, 20, "Attachment%d.pgp", n);
+                    }
+
+                    char *_ctext = malloc(csize);
+                    assert(_ctext);
+                    if (_ctext == NULL)
+                        goto enomem;
+                    memcpy(_ctext, ctext, csize);
+
+                    _d = bloblist_add(_d, _ctext, csize, "application/octet-stream",
+                        filename);
+                    if (_d == NULL)
+                        goto enomem;
+                }
+                else {
+                    goto pep_error;
+                }
             }
         }
     }
@@ -1273,8 +1280,14 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 }
 
                 bloblist_t *_s;
-                for (_s = src->attachments; _s && _s->value; _s = _s->next) {
-                    if (is_encrypted_attachment(_s)) {
+                for (_s = src->attachments; _s; _s = _s->next) {
+                    if (_s->value == NULL && _s->size == 0){
+                        _m = bloblist_add(_m, NULL, 0, _s->mime_type, _s->filename);
+                        if (_m == NULL)
+                            goto enomem;
+
+                    }
+                    else if (is_encrypted_attachment(_s)) {
                         stringlist_t *_keylist = NULL;
                         char *attctext;
                         size_t attcsize;
