@@ -13,7 +13,7 @@
 
 using namespace std;
 
-typedef std::vector<char> Buffer;
+typedef std::string Buffer;
 
 // no C++11, yet? So do our own implementation:
 namespace{
@@ -41,11 +41,10 @@ Buffer ReadFileIntoMem(const char *fname){
     txtFile.seekg (0, txtFile.end);
     const size_t length = txtFile.tellg();
     txtFile.seekg (0, txtFile.beg);
-    buffer.resize(length+1);
+    buffer.resize(length);
 
     cout << "Reading " << length << " characters... ";
-    txtFile.read (buffer.data(), length);
-    buffer.at(length)='\0';
+    txtFile.read (&buffer[0], length);
 
     if (!txtFile)
     {
