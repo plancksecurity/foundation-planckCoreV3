@@ -56,6 +56,56 @@ static int _same_fpr(
     return ai == fpras && bi == fprbs;
 }
 
+PEP_STATUS elect_key(
+        PEP_SESSION session, pEp_identity * identity
+    )
+{
+    PEP_STATUS status;
+    stringlist_t *keylist;
+    char *_fpr = NULL;
+    identity->comm_type = PEP_ct_unknown;
+
+    status = find_keys(session, identity->address, &keylist);
+    assert(status != PEP_OUT_OF_MEMORY);
+    if (status == PEP_OUT_OF_MEMORY)
+        return PEP_OUT_OF_MEMORY;
+
+    stringlist_t *_keylist;
+    for (_keylist = keylist; _keylist && _keylist->value; _keylist = _keylist->next) {
+        PEP_comm_type _comm_type_key;
+
+        status = get_key_rating(session, _keylist->value, &_comm_type_key);
+        assert(status != PEP_OUT_OF_MEMORY);
+        if (status == PEP_OUT_OF_MEMORY) {
+            free_stringlist(keylist);
+            return PEP_OUT_OF_MEMORY;
+        }
+
+        if (_comm_type_key != PEP_ct_compromized &&
+            _comm_type_key != PEP_ct_unknown)
+        {
+            if (identity->comm_type == PEP_ct_unknown ||
+                _comm_type_key > identity->comm_type)
+            {
+                identity->comm_type = _comm_type_key;
+                _fpr = _keylist->value;
+            }
+        }
+    }
+
+    if (_fpr) {
+        free(identity->fpr);
+
+        identity->fpr = strdup(_fpr);
+        if (identity->fpr == NULL) {
+            free_stringlist(keylist);
+            return PEP_OUT_OF_MEMORY;
+        }
+    }
+    free_stringlist(keylist);
+    return PEP_STATUS_OK;
+}
+
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
     )
@@ -115,7 +165,9 @@ DYNAMIC_API PEP_STATUS update_identity(
             if (identity->fpr == NULL)
                 return PEP_OUT_OF_MEMORY;
             if (_comm_type_key < PEP_ct_unconfirmed_encryption) {
-                identity->comm_type = _comm_type_key;
+                PEP_STATUS status = elect_key(session, identity);
+                if (status != PEP_STATUS_OK)
+                    return status;
             }
             else {
                 identity->comm_type = stored_identity->comm_type;
@@ -162,49 +214,9 @@ DYNAMIC_API PEP_STATUS update_identity(
             identity->comm_type = _comm_type_key;
         }
         else /* EMPTYSTR(identity->fpr) */ {
-            PEP_STATUS status;
-            stringlist_t *keylist;
-            char *_fpr = NULL;
-            identity->comm_type = PEP_ct_unknown;
-
-            status = find_keys(session, identity->address, &keylist);
-            assert(status != PEP_OUT_OF_MEMORY);
-            if (status == PEP_OUT_OF_MEMORY)
-                return PEP_OUT_OF_MEMORY;
-
-            stringlist_t *_keylist;
-            for (_keylist = keylist; _keylist && _keylist->value; _keylist = _keylist->next) {
-                PEP_comm_type _comm_type_key;
-
-                status = get_key_rating(session, _keylist->value, &_comm_type_key);
-                assert(status != PEP_OUT_OF_MEMORY);
-                if (status == PEP_OUT_OF_MEMORY) {
-                    free_stringlist(keylist);
-                    return PEP_OUT_OF_MEMORY;
-                }
-
-                if (_comm_type_key != PEP_ct_compromized &&
-                    _comm_type_key != PEP_ct_unknown)
-                {
-                    if (identity->comm_type == PEP_ct_unknown ||
-                        _comm_type_key > identity->comm_type)
-                    {
-                        identity->comm_type = _comm_type_key;
-                        _fpr = _keylist->value;
-                    }
-                }
-            }
-
-            if (_fpr) {
-                free(identity->fpr);
-
-                identity->fpr = strdup(_fpr);
-                if (identity->fpr == NULL) {
-                    free_stringlist(keylist);
-                    return PEP_OUT_OF_MEMORY;
-                }
-            }
-            free_stringlist(keylist);
+            PEP_STATUS status = elect_key(session, identity);
+            if (status != PEP_STATUS_OK)
+                return status;
         }
     }
 
@@ -220,8 +232,8 @@ DYNAMIC_API PEP_STATUS update_identity(
                 return PEP_OUT_OF_MEMORY;
         }
 
-        // Identity doesn't get stored if is was just about checking existing
-        // user by address (i.e. no user id but already stored)
+        // Identity doesn't get stored if call was just about checking existing
+        // user by address (i.e. no user id given but already stored)
         if (!(_no_user_id && stored_identity))
         {
             status = set_identity(session, identity);
