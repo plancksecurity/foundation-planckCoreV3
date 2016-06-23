@@ -15,7 +15,7 @@ int main() {
     PEP_SESSION session;
     
     cout << "calling init()\n";
-    PEP_STATUS status1 = init(&session);   
+    PEP_STATUS status1 = init(&session);
     assert(status1 == PEP_STATUS_OK);
     assert(session);
     cout << "init() completed.\n";
@@ -36,7 +36,7 @@ int main() {
     msg2->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
     cout << "message created.\n";
 
-    char *text2;
+    char *text2 = nullptr;
     PEP_STATUS status2 = mime_encode_message(msg2, false, &text2);
     assert(status2 == PEP_STATUS_OK);
     assert(text2);
@@ -47,9 +47,10 @@ int main() {
     free(text2);
 
     cout << "encrypting message as MIME multipart…\n";
-    message *enc_msg2;
+    message *enc_msg2 = nullptr;
     cout << "calling encrypt_message()\n";
     status2 = encrypt_message(session, msg2, NULL, &enc_msg2, PEP_enc_PGP_MIME);
+    cout << "encrypt_message() returns " << status2 << '.' << endl;
     assert(status2 == PEP_STATUS_OK);
     assert(enc_msg2);
     cout << "message encrypted.\n";
@@ -61,10 +62,10 @@ int main() {
     cout << "encrypted:\n\n";
     cout << text2 << "\n";
 
-    message *msg3;
+    message *msg3 = nullptr;
     PEP_STATUS status3 = mime_decode_message(text2, strlen(text2), &msg3);
     assert(status3 == PEP_STATUS_OK);
-    string string3 = text2;
+    const string string3 = text2;
     //free(text2);
 
     unlink("msg4.asc");
@@ -72,8 +73,8 @@ int main() {
     outFile3.write(string3.c_str(), string3.size());
     outFile3.close();
 
-    message *msg4;
-    stringlist_t *keylist4;
+    message *msg4 = nullptr;
+    stringlist_t *keylist4 = nullptr;
     PEP_color color;
     PEP_decrypt_flags_t flags;
     
@@ -84,9 +85,10 @@ int main() {
     assert(color);
 
     cout << "keys used:";
-    stringlist_t *kl4;
-    for (kl4 = keylist4; kl4 && kl4->value; kl4 = kl4->next)
+    for (stringlist_t* kl4 = keylist4; kl4 && kl4->value; kl4 = kl4->next)
+    {
         cout << " " << kl4->value;
+    }
     cout << "\n\n";
 
     free_stringlist(keylist4);
@@ -105,12 +107,12 @@ int main() {
     }
     inFile3.close();
 
-    message *msg5;
+    message *msg5 = nullptr;
     PEP_STATUS status5 = mime_decode_message(text3.c_str(), text3.length(), &msg5);
     assert(status5 == PEP_STATUS_OK);
 
-    message *msg6;
-    stringlist_t *keylist5;
+    message *msg6 = nullptr;
+    stringlist_t *keylist5 = nullptr;
     PEP_color color2;
     PEP_decrypt_flags_t flags2;
     PEP_STATUS status6 = decrypt_message(session, msg5, &msg6, &keylist5, &color2, &flags2);
@@ -134,4 +136,3 @@ int main() {
     release(session);
     return 0;
 }
-
