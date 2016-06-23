@@ -7,14 +7,14 @@ ifeq ($(BUILD_FOR),Darwin)
 
 TARGET=libpEpEngine.dylib
 MACOSX_VERSION_MIN=10.6
-GPGME_IN=$(HOME)
+GPGME_IN=$(HOME)/local
 LIBGPGME=libgpgme-pthread.dylib
 CC?=clang -std=c99 -pthread
 LD?=clang
-CFLAGS?=-I$(GPGME_IN)/include -I$(HOME)/include -I/opt/local/include $(OPTIMIZE) -pedantic \
+CFLAGS?=-I$(GPGME_IN)/include -I$(HOME)/local/include -I/opt/local/include $(OPTIMIZE) -pedantic \
 	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -DLIBGPGME=\"$(LIBGPGME)\" -I../asn.1
 LDFLAGS?=-lc -shared -arch x86_64 \
-	-L$(HOME)/lib -L/opt/local/lib -letpan -lsqlite3 -L../asn.1 -lasn1
+	-L$(HOME)/local/lib -L/opt/local/lib -letpan -lsqlite3 -L../asn.1 -lasn1
 
 else
 $(error don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
@@ -24,7 +24,7 @@ else ifeq ($(BUILD_ON),Linux)
 ifeq ($(BUILD_FOR),Linux)
 
 TARGET=libpEpEngine.so
-GPGME_IN=$(HOME)
+GPGME_IN=$(HOME)/local
 LIBGPGME=libgpgme.so.11
 CC=gcc -std=c99
 CFLAGS?=-I$(GPGME_IN)/include $(OPTIMIZE) -fPIC -pedantic \

@@ -3,7 +3,7 @@ include ../Makefile.conf
 CC?=g++ -std=gnu++11 -pthread
 CXX?=g++ -std=gnu++11 -pthread
 LD?=$(CXX)
-LDFLAGS?=-L$(HOME)/lib
+LDFLAGS?=-L$(HOME)/local/lib
 LDLIBS?=-letpan -lpEpEngine -lstdc++ -L../asn.1 -lasn1
 CXXFLAGS?=-g -O0 -I../src -I../asn.1
 # CXXFLAGS=-O3 -DNDEBUG
@@ -27,10 +27,10 @@ clean:
 	rm -Rf *.dSYM
 
 test: pEpEngineTest
-	LD_LIBRARY_PATH=~/lib:../src ./pEpEngineTest
+	LD_LIBRARY_PATH=~/local/lib:../src ./pEpEngineTest
 
 %_test_run : %_test
-	LD_LIBRARY_PATH=~/lib:../src ./$<
+	LD_LIBRARY_PATH=~/local/lib:../src ./$<
 
 %_test_lldb : %_test
 	LD_LIBRARY_PATH=~/lib:../src lldb ./$<
