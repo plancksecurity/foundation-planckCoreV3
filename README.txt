@@ -118,5 +118,5 @@ Both Python tools have a switch --help
 You have to import all the test keys into your local gpg instance:
 
 	cd test
-	cat *.asc | gpg --import
+	cat 0x*.asc *_sec.asc| gpg --import
 
