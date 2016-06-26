@@ -32,6 +32,7 @@ PEP_STATUS sendBeacon(
     Beacon_t *msg = NULL;
     char *payload = NULL;
     message *_message = NULL;
+    pEp_identity *me = NULL;
 
     assert(session);
     assert(!partner);
@@ -55,7 +56,7 @@ PEP_STATUS sendBeacon(
 
     msg->state = (long) state;
 
-    pEp_identity *me = new_identity(NULL, NULL, NULL, NULL);
+    me = new_identity(NULL, NULL, NULL, NULL);
     if (!me)
         goto enomem;
     status = myself(session, me);
@@ -81,6 +82,9 @@ PEP_STATUS sendBeacon(
         goto error;
     payload = NULL;
 
+    free_identity(me);
+    me = NULL;
+
     status = session->messageToSend(session->sync_obj, _message);
 
     free_message(_message);
@@ -94,6 +98,7 @@ error:
     ASN_STRUCT_FREE(asn_DEF_Beacon, msg);
     free(payload);
     free_message(_message);
+    free_identity(me);
     return status;
 }
 
@@ -118,6 +123,7 @@ PEP_STATUS sendHandshakeRequest(
     HandshakeRequest_t *msg = NULL;
     char *payload = NULL;
     message *_message = NULL;
+    pEp_identity *me = NULL;
 
     assert(session);
     assert(partner);
@@ -141,7 +147,7 @@ PEP_STATUS sendHandshakeRequest(
 
     msg->state = (long) state;
 
-    pEp_identity *me = new_identity(NULL, NULL, NULL, NULL);
+    me = new_identity(NULL, NULL, NULL, NULL);
     if (!me)
         goto enomem;
     status = myself(session, me);
@@ -170,6 +176,9 @@ PEP_STATUS sendHandshakeRequest(
         goto error;
     payload = NULL;
 
+    free_identity(me);
+    me = NULL;
+
     status = session->messageToSend(session->sync_obj, _message);
 
     free_message(_message);
@@ -183,6 +192,7 @@ error:
     ASN_STRUCT_FREE(asn_DEF_HandshakeRequest, msg);
     free(payload);
     free_message(_message);
+    free_identity(me);
     return status;
 }
 
@@ -315,6 +325,7 @@ PEP_STATUS sendGroupKeys(
     GroupKeys_t *msg = NULL;
     char *payload = NULL;
     message *_message = NULL;
+    pEp_identity *me = NULL;
 
     assert(session);
     assert(!partner);
@@ -338,7 +349,7 @@ PEP_STATUS sendGroupKeys(
 
     msg->state = (long) state;
 
-    pEp_identity *me = new_identity(NULL, NULL, NULL, NULL);
+    me = new_identity(NULL, NULL, NULL, NULL);
     if (!me)
         goto enomem;
     status = myself(session, me);
@@ -364,6 +375,9 @@ PEP_STATUS sendGroupKeys(
         goto error;
     payload = NULL;
 
+    free_identity(me);
+    me = NULL;
+
     status = session->messageToSend(session->sync_obj, _message);
 
     free_message(_message);
@@ -377,6 +391,7 @@ error:
     ASN_STRUCT_FREE(asn_DEF_GroupKeys, msg);
     free(payload);
     free_message(_message);
+    free_identity(me);
     return status;
 }
 

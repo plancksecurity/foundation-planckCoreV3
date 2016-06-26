@@ -5,7 +5,7 @@ CXX?=g++ -std=gnu++11 -pthread
 LD?=$(CXX)
 LDFLAGS?=-L$(HOME)/lib
 LDLIBS?=-letpan -lpEpEngine -lstdc++ -L../asn.1 -lasn1
-CXXFLAGS?=-g -O0 -I../src -I../asn.1
+CXXFLAGS?=-std=c++11 -g -O0 -I../src -I../asn.1
 # CXXFLAGS=-O3 -DNDEBUG
 
 ifeq ("$(OPENPGP)","NETPGP")
@@ -31,6 +31,9 @@ test: pEpEngineTest
 
 %_test_run : %_test
 	LD_LIBRARY_PATH=~/lib:../src ./$<
+
+%_test_lldb : %_test
+	LD_LIBRARY_PATH=~/lib:../src lldb ./$<
 
 unit_tests: $(UNIT_TESTS) $(UNIT_TESTS_RUN)
 

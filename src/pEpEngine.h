@@ -388,6 +388,11 @@ typedef struct _pEp_identity {
     bool me;                    // if this is the local user herself/himself
 } pEp_identity;
 
+typedef struct _identity_list {
+    pEp_identity *ident;
+    struct _identity_list *next;
+} identity_list;
+
 
 // new_identity() - allocate memory and set the string and size fields
 //
@@ -550,7 +555,12 @@ DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr);
 //      PEP_OUT_OF_MEMORY       out of memory
 //      PEP_ILLEGAL_VALUE       there is no key data to import
 
-DYNAMIC_API PEP_STATUS import_key(PEP_SESSION session, const char *key_data, size_t size);
+DYNAMIC_API PEP_STATUS import_key(
+        PEP_SESSION session,
+        const char *key_data,
+        size_t size,
+        identity_list **private_keys
+    );
 
 
 // export_key() - export ascii armored key

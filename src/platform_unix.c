@@ -113,6 +113,7 @@ const char *unix_local_db(void)
 
 static const char *gpg_conf_path = ".gnupg";
 static const char *gpg_conf_name = "gpg.conf";
+static const char *gpg_agent_conf_name = "gpg-agent.conf";
 static const char *gpg_conf_empty = "# Created by pEpEngine\n";
 
 static bool ensure_gpg_home(const char **conf, const char **home){
@@ -186,6 +187,51 @@ static bool ensure_gpg_home(const char **conf, const char **home){
     return true;
 }
 
+static bool ensure_gpg_agent_conf(const char **agent_conf){
+    static char agent_path[MAX_PATH];
+    static bool done = false;
+
+    if (!done) {
+        const char *dirname;
+
+        if (!ensure_gpg_home(NULL, &dirname)) /* Then dirname won't be set. */
+            return false;
+
+        char *p;
+        p = stpncpy(agent_path, dirname, MAX_PATH);
+        
+        size_t len = MAX_PATH - (p - agent_path) - 2;
+
+        if (len < strlen(gpg_agent_conf_name))
+        {
+            assert(0);
+            return false;
+        }
+
+        *p++ = '/';
+     
+        strncpy(p, gpg_agent_conf_name, len);
+
+        if(access(agent_path, F_OK)){ 
+            int fd;
+            if(access(dirname, F_OK )) { 
+                mkdir(dirname, S_IRUSR | S_IWUSR | S_IXUSR);
+            }
+
+            fd = open(agent_path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
+
+            if(fd>0) {
+                write(fd, gpg_conf_empty, strlen(gpg_conf_empty));
+                close(fd);
+            }
+        }
+        done = true;
+    }
+    if(agent_conf) *agent_conf=agent_path;
+
+    return true;
+}
+
 const char *gpg_conf(void)
 {
     const char *conf;
@@ -199,5 +245,13 @@ const char *gpg_home(void)
     const char *home;
     if(ensure_gpg_home(NULL, &home))
         return home;
+    return NULL;
+}
+
+const char *gpg_agent_conf(void)
+{
+    const char *agent_conf;
+    if(ensure_gpg_agent_conf(&agent_conf))
+        return agent_conf;
     return NULL;
 }

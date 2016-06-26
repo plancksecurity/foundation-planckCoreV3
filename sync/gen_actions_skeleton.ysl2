@@ -130,6 +130,7 @@ tstylesheet {
             «$name»_t *msg = NULL;
             char *payload = NULL;
             message *_message = NULL;
+            pEp_identity *me = NULL;
 
             `` call "paramcheck" with "partner", "parm/partner";
 
@@ -150,7 +151,7 @@ tstylesheet {
 
             msg->state = (long) state;
 
-            pEp_identity *me = new_identity(NULL, NULL, NULL, NULL);
+            me = new_identity(NULL, NULL, NULL, NULL);
             if (!me)
                 goto enomem;
             status = myself(session, me);
@@ -185,6 +186,9 @@ tstylesheet {
                 goto error;
             payload = NULL;
 
+            free_identity(me);
+            me = NULL;
+
             status = session->messageToSend(session->sync_obj, _message);
 
             free_message(_message);
@@ -198,6 +202,7 @@ tstylesheet {
             ASN_STRUCT_FREE(asn_DEF_«$name», msg);
             free(payload);
             free_message(_message);
+            free_identity(me);
             return status;
         }
 

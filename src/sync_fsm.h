@@ -16,14 +16,14 @@ typedef union _param { const Identity partner; const stringlist_t *keylist; } pa
 // error values
 
 typedef enum _fsm_error {
-    invalid_state = -1,
-    invalid_event = -2
+    invalid_state = -2,
+    invalid_event = -3
 } fsm_error;
 
 // states
 
 typedef enum _DeviceState_state {
-    DeviceState_state_NONE = 0,
+    DeviceState_state_NONE = -1,
     InitState, 
     Sole, 
     HandshakingSole, 
@@ -34,7 +34,7 @@ typedef enum _DeviceState_state {
 // events
 
 typedef enum _DeviceState_event {
-    DeviceState_event_NONE = 0,
+    DeviceState_event_NONE = -1,
     Beacon = 1,
     HandshakeRequest = 2,
     GroupKeys = 3,
@@ -68,7 +68,7 @@ DeviceState_state fsm_DeviceState(
 
 // driver
 
-PEP_STATUS fsm_DeviceState_inject(
+DYNAMIC_API PEP_STATUS fsm_DeviceState_inject(
         PEP_SESSION session,
         DeviceState_event event,
         Identity partner,

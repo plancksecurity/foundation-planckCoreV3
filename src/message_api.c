@@ -842,32 +842,21 @@ static void free_bl_entry(bloblist_t *bl)
 
 static bool is_key(const bloblist_t *bl)
 {
-    bool result = false;
-
-    // workaround for Apple Mail bugs
-    if (is_mime_type(bl, "application/x-apple-msg-attachment")) {
-        if (is_fileending(bl, ".asc")) {
-            result = true;
-        }
-    }
-    else if (bl->mime_type == NULL ||
-                is_mime_type(bl, "application/octet-stream")) {
-        if (is_fileending(bl, ".pgp") || is_fileending(bl, ".gpg") ||
-                is_fileending(bl, ".key") || is_fileending(bl, ".asc")) {
-            result = true;
-        }
-    }
-    else if (is_mime_type(bl, "application/pgp-keys")) {
-        result = true;
-    }
-    else if (is_mime_type(bl, "text/plain")) {
-        if (is_fileending(bl, ".pgp") || is_fileending(bl, ".gpg") ||
-                is_fileending(bl, ".key") || is_fileending(bl, ".asc")) {
-            result = true;
-        }
-    }
-
-    return result;
+    return (// workaround for Apple Mail bugs
+            (is_mime_type(bl, "application/x-apple-msg-attachment") &&
+             is_fileending(bl, ".asc")) ||
+            // as binary, by file name
+            ((bl->mime_type == NULL ||
+              is_mime_type(bl, "application/octet-stream")) &&
+             (is_fileending(bl, ".pgp") || is_fileending(bl, ".gpg") ||
+                    is_fileending(bl, ".key") || is_fileending(bl, ".asc"))) ||
+            // explicit mime type 
+            is_mime_type(bl, "application/pgp-keys") ||
+            // as text, by file name
+            (is_mime_type(bl, "text/plain") &&
+             (is_fileending(bl, ".pgp") || is_fileending(bl, ".gpg") ||
+                    is_fileending(bl, ".key") || is_fileending(bl, ".asc")))
+           );
 }
 
 static void remove_attached_keys(message *msg)
@@ -894,7 +883,11 @@ static void remove_attached_keys(message *msg)
     }
 }
 
-bool import_attached_keys(PEP_SESSION session, message *msg)
+bool import_attached_keys(
+        PEP_SESSION session, 
+        const message *msg,
+        identity_list **private_idents
+    )
 {
     assert(session);
     assert(msg);
@@ -902,17 +895,14 @@ bool import_attached_keys(PEP_SESSION session, message *msg)
     bool remove = false;
 
     bloblist_t *bl;
-    for (bl = msg->attachments; bl && bl->value; bl = bl->next) {
-        assert(bl && bl->value && bl->size);
-        if (is_key(bl)) {
-            import_key(session, bl->value, bl->size);
+    for (bl = msg->attachments; bl && bl->value; bl = bl->next) 
+    {
+        if (bl && bl->value && bl->size && is_key(bl)) 
+        {
+            import_key(session, bl->value, bl->size, private_idents);
             remove = true;
         }
     }
-
-    if (msg->from && msg->from->user_id && msg->from->address)
-        update_identity(session, msg->from);
-
     return remove;
 }
 
@@ -1184,12 +1174,14 @@ pep_error:
     return status;
 }
 
-DYNAMIC_API PEP_STATUS decrypt_message(
+DYNAMIC_API PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
         message **dst,
         stringlist_t **keylist,
-        PEP_color *color
+        PEP_color *color,
+        PEP_decrypt_flags_t *flags, 
+        identity_list **private_il
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1206,11 +1198,21 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     assert(dst);
     assert(keylist);
     assert(color);
+    assert(flags);
 
-    if (!(session && src && dst && keylist && color))
+    if (!(session && src && dst && keylist && color && flags))
         return PEP_ILLEGAL_VALUE;
 
-    bool imported_keys = import_attached_keys(session, src);
+    *flags = 0;
+
+    // Private key in unencrypted mail are ignored -> NULL
+    bool imported_keys = import_attached_keys(session, src, NULL);
+
+    // Update src->from in case we just imported a key
+    // we would need to check signature
+    if(src->from && src->from->user_id && src->from->address)
+        update_identity(session, src->from);
+
     PEP_cryptotech crypto = determine_encryption_format(src);
 
     *dst = NULL;
@@ -1243,6 +1245,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         goto pep_error;
 
     decrypt_status = status;
+
+    bool imported_private_key_address = false; 
 
     if (ptext) {
         switch (src->enc_format) {
@@ -1376,14 +1380,34 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                 // BUG: must implement more
                 NOT_IMPLEMENTED
         }
-        
-        imported_keys = import_attached_keys(session, msg);
-        
-        if (decrypt_status == PEP_DECRYPTED) {
+       
+        // check for private key in decrypted message attachement while inporting
+        identity_list *_private_il = NULL;
+        imported_keys = import_attached_keys(session, msg, &_private_il);
+        if (_private_il && 
+            identity_list_length(_private_il) == 1 &&
+            _private_il->ident->address)
+        {
+            imported_private_key_address = true;
+        }
+
+        if(private_il && imported_private_key_address){
+            *private_il = _private_il;
+        }else{
+            free_identity_list(_private_il);
+        }
+         
+        if(decrypt_status == PEP_DECRYPTED){
+
+            // TODO optimize if import_attached_keys didn't import any key
             
             // In case message did decrypt, but no valid signature could be found
             // then retry decrypt+verify after importing key.
-            // TODO optimize if import_attached_keys didn't import any key
+
+            // Update msg->from in case we just imported a key
+            // we would need to check signature
+            if(msg->from && msg->from->user_id && msg->from->address)
+                 update_identity(session, msg->from);
             
             char *re_ptext = NULL;
             size_t re_psize;
@@ -1439,6 +1463,24 @@ DYNAMIC_API PEP_STATUS decrypt_message(
             }
         }
     }
+    else
+    {
+        *color = decrypt_color(decrypt_status);
+        goto pep_error;
+    }
+
+    // Case of own key imported from own trusted message
+    if (// Message have been reliably decrypted 
+        msg &&
+        *color >= PEP_rating_green &&
+        imported_private_key_address &&
+        // to is [own]
+        msg->to->ident->user_id &&
+        strcmp(msg->to->ident->user_id, PEP_OWN_USERID) == 0 
+        )
+    {
+        *flags |= PEP_decrypt_flag_own_private_key;
+    }
 
     if (msg) {
         decorate_message(msg, *color, _keylist);
@@ -1459,6 +1501,54 @@ pep_error:
     free_stringlist(_keylist);
 
     return status;
+}
+
+DYNAMIC_API PEP_STATUS decrypt_message(
+        PEP_SESSION session,
+        message *src,
+        message **dst,
+        stringlist_t **keylist,
+        PEP_color *color,
+        PEP_decrypt_flags_t *flags 
+    )
+{
+    return _decrypt_message( session, src, dst, keylist, color, flags, NULL );
+}
+
+DYNAMIC_API PEP_STATUS own_message_private_key_details(
+        PEP_SESSION session,
+        message *msg,
+        pEp_identity **ident 
+    )
+{
+    assert(session);
+    assert(msg);
+    assert(ident);
+
+    if (!(session && msg && ident))
+        return PEP_ILLEGAL_VALUE;
+
+    message *dst; 
+    stringlist_t *keylist;
+    PEP_color color;
+    PEP_decrypt_flags_t flags; 
+
+    *ident = NULL;
+
+    identity_list *private_il = NULL;
+    PEP_STATUS status = _decrypt_message(session, msg,  &dst, &keylist, &color, &flags, &private_il);
+
+    if (status == PEP_STATUS_OK &&
+        flags & PEP_decrypt_flag_own_private_key &&
+        private_il)
+    {
+        *ident = identity_dup(private_il->ident);
+    }
+
+    free_identity_list(private_il);
+
+    return status;
+
 }
 
 DYNAMIC_API PEP_STATUS outgoing_message_color(

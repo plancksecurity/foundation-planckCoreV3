@@ -3,6 +3,7 @@ include Makefile.conf
 all:
 	$(MAKE) -C asn.1 generate
 	$(MAKE) -C asn.1
+	$(MAKE) -C sync
 	$(MAKE) -C src all
 
 .PHONY: clean build_test test package install uninstall db

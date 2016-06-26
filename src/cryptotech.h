@@ -48,7 +48,7 @@ typedef PEP_STATUS (*get_key_rating_t)(
     );
 
 typedef PEP_STATUS (*import_key_t)(PEP_SESSION session, const char *key_data,
-        size_t size);
+        size_t size, identity_list **private_keys);
 
 typedef PEP_STATUS (*recv_key_t)(PEP_SESSION session, const char *pattern);
 

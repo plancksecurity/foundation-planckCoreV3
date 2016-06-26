@@ -11,6 +11,7 @@ extern "C" {
 const char *unix_local_db(void);
 
 const char *gpg_conf(void);
+const char *gpg_agent_conf(void);
 const char *gpg_home(void);
 
 #ifdef ANDROID

@@ -1151,7 +1151,12 @@ DYNAMIC_API PEP_STATUS get_key_rating(
     return session->cryptotech[PEP_crypt_OpenPGP].get_key_rating(session, fpr, comm_type);
 }
 
-DYNAMIC_API PEP_STATUS import_key(PEP_SESSION session, const char *key_data, size_t size)
+DYNAMIC_API PEP_STATUS import_key(
+        PEP_SESSION session,
+        const char *key_data,
+        size_t size,
+        identity_list **private_keys
+    )
 {
     assert(session);
     assert(key_data);
@@ -1159,7 +1164,7 @@ DYNAMIC_API PEP_STATUS import_key(PEP_SESSION session, const char *key_data, siz
     if (!(session && key_data))
         return PEP_ILLEGAL_VALUE;
 
-    return session->cryptotech[PEP_crypt_OpenPGP].import_key(session, key_data, size);
+    return session->cryptotech[PEP_crypt_OpenPGP].import_key(session, key_data, size, private_keys);
 }
 
 DYNAMIC_API PEP_STATUS recv_key(PEP_SESSION session, const char *pattern)

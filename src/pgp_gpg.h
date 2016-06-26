@@ -41,7 +41,10 @@ PEP_STATUS pgp_get_key_rating(
     );
 
 PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
-        size_t size);
+                              size_t size, identity_list **private_idents);
+
+PEP_STATUS pgp_import_private_keydata(PEP_SESSION session, const char *key_data,
+                                      size_t size, identity_list **private_idents);
 
 PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern);
 PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern);
