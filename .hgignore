@@ -27,6 +27,7 @@ ws
 build-android/pEpEngine-android-1.zip
 build-android/third-party
 build-android/pEpEngine-android-1
+build-linux/*
 *.dSYM*
 *_test
 msg4.asc
