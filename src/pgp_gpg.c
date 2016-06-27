@@ -11,7 +11,7 @@
 static void *gpgme;
 static struct gpg_s gpg;
 
-static bool ensure_config_values(stringlist_t *keys, stringlist_t *values)
+static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const char* config_file_path)
 {
     static char buf[MAX_LINELENGTH];
     int r;
@@ -21,7 +21,7 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values)
     unsigned int i;
     unsigned int found = 0;
 
-    f = Fopen(gpg_conf(), "r");
+    f = Fopen(config_file_path, "r");
     if (f == NULL && errno == ENOMEM)
         return false;
 
@@ -57,10 +57,10 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values)
                 }
             }
         } while (!feof(f));
-        f = Freopen(gpg_conf(), "a", f);
+        f = Freopen(config_file_path, "a", f);
     }
     else {
-        f = Fopen(gpg_conf(), "w");
+        f = Fopen(config_file_path, "w");
     }
 
     assert(f);
@@ -80,6 +80,7 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values)
 
     return true;
 }
+
 
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
@@ -106,8 +107,8 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
         stringlist_add(conf_keys, "personal-digest-preferences");
         stringlist_add(conf_values, "SHA256 SHA512 SHA384 SHA224");
-        
-        bResult = ensure_config_values(conf_keys, conf_values);
+
+        bResult = ensure_config_values(conf_keys, conf_values, gpg_conf());
 
         free_stringlist(conf_keys);
         free_stringlist(conf_values);
@@ -118,6 +119,22 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
             goto pep_error;
         }
 
+        conf_keys = new_stringlist("default-cache-ttl");
+        conf_values = new_stringlist("300");
+
+        stringlist_add(conf_keys, "max-cache-ttl");
+        stringlist_add(conf_values, "1200");
+
+        bResult = ensure_config_values(conf_keys, conf_values, gpg_agent_conf());
+
+        free_stringlist(conf_keys);
+        free_stringlist(conf_values);
+
+        assert(bResult);
+        if(!bResult){
+            status = PEP_INIT_NO_GPG_HOME; /* FIXME: Wrong error here? */
+            goto pep_error;
+        }
 
         gpgme = dlopen(LIBGPGME, RTLD_LAZY);
         if (gpgme == NULL) {
