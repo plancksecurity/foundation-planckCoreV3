@@ -1046,7 +1046,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         //     - App splits mails with BCC in multiple mails.
         //     - Each email is encrypted separately
         
-        if(_il->next || src->to || src->cc)
+        if(_il->next || (src->to && src->to->ident) || src->cc)
         {
             // Only one Bcc with no other recipient allowed for now
             return PEP_ILLEGAL_VALUE;
