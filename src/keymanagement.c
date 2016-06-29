@@ -401,8 +401,18 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     if (!EMPTYSTR(identity->fpr))
     {
         status = key_revoked(session, identity->fpr, &revoked);
-        assert(status == PEP_STATUS_OK);
-        if (status != PEP_STATUS_OK) {
+
+        // Forces re-election if key is missing and own-key-only not forced
+        if (!session->use_only_own_private_keys && status == PEP_KEY_NOT_FOUND) 
+        {
+            status = elect_ownkey(session, identity);
+            assert(status == PEP_STATUS_OK);
+            if (status != PEP_STATUS_OK) {
+                return status;
+            }
+        } 
+        else if (status != PEP_STATUS_OK) 
+        {
             return status;
         }
     }
