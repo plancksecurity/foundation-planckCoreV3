@@ -549,11 +549,16 @@ DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr);
 //      session (in)            session handle
 //      key_data (in)           key data, i.e. ASCII armored OpenPGP key
 //      size (in)               amount of data to handle
+//      private_keys (out)      list of private keys that have been imported
 //
 //  return value:
 //      PEP_STATUS_OK = 0       key was successfully imported
 //      PEP_OUT_OF_MEMORY       out of memory
 //      PEP_ILLEGAL_VALUE       there is no key data to import
+//
+//  caveat:
+//      private_keys goes to the ownership of the caller
+//      private_keys can be left NULL, it is then ignored
 
 DYNAMIC_API PEP_STATUS import_key(
         PEP_SESSION session,

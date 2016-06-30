@@ -693,8 +693,6 @@ static PEP_STATUS mime_encode_message_plain(
 
         bloblist_t *_a;
         for (_a = msg->attachments; _a != NULL; _a = _a->next) {
-            //assert(_a->value);
-            //assert(_a->size);
 
             status = mime_attachment(_a, &submime);
             if (status != PEP_STATUS_OK)
