@@ -68,7 +68,7 @@ DeviceState_state fsm_DeviceState(
 
 // driver
 
-DYNAMIC_API PEP_STATUS fsm_DeviceState_inject(
+PEP_STATUS fsm_DeviceState_inject(
         PEP_SESSION session,
         DeviceState_event event,
         Identity partner,
