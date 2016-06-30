@@ -56,7 +56,7 @@ static int _same_fpr(
     return ai == fpras && bi == fprbs;
 }
 
-PEP_STATUS elect_key(
+PEP_STATUS elect_pubkey(
         PEP_SESSION session, pEp_identity * identity
     )
 {
@@ -165,7 +165,7 @@ DYNAMIC_API PEP_STATUS update_identity(
             if (identity->fpr == NULL)
                 return PEP_OUT_OF_MEMORY;
             if (_comm_type_key < PEP_ct_unconfirmed_encryption) {
-                PEP_STATUS status = elect_key(session, identity);
+                PEP_STATUS status = elect_pubkey(session, identity);
                 if (status != PEP_STATUS_OK)
                     return status;
             }
@@ -214,7 +214,7 @@ DYNAMIC_API PEP_STATUS update_identity(
             identity->comm_type = _comm_type_key;
         }
         else /* EMPTYSTR(identity->fpr) */ {
-            PEP_STATUS status = elect_key(session, identity);
+            PEP_STATUS status = elect_pubkey(session, identity);
             if (status != PEP_STATUS_OK)
                 return status;
         }
@@ -250,6 +250,81 @@ DYNAMIC_API PEP_STATUS update_identity(
             session->examine_identity(identity, session->examine_management);
 
     return status;
+}
+
+PEP_STATUS elect_ownkey(
+        PEP_SESSION session, pEp_identity * identity
+    )
+{
+    PEP_STATUS status;
+    stringlist_t *keylist = NULL;
+
+    free(identity->fpr);
+    identity->fpr = NULL;
+
+    status = find_keys(session, identity->address, &keylist);
+    assert(status != PEP_OUT_OF_MEMORY);
+    if (status == PEP_OUT_OF_MEMORY)
+        return PEP_OUT_OF_MEMORY;
+    
+    if (keylist != NULL && keylist->value != NULL)
+    {
+        char *_fpr = NULL;
+        identity->comm_type = PEP_ct_unknown;
+
+        stringlist_t *_keylist;
+        for (_keylist = keylist; _keylist && _keylist->value; _keylist = _keylist->next) {
+            bool is_own = false;
+            
+            if (session->use_only_own_private_keys)
+            {
+                status = own_key_is_listed(session, _keylist->value, &is_own);
+                assert(status == PEP_STATUS_OK);
+                if (status != PEP_STATUS_OK) {
+                    free_stringlist(keylist);
+                    return status;
+                }
+            }
+
+            // TODO : also accept synchronized device group keys ?
+            
+            if (!session->use_only_own_private_keys || is_own)
+            {
+                PEP_comm_type _comm_type_key;
+                
+                status = get_key_rating(session, _keylist->value, &_comm_type_key);
+                assert(status != PEP_OUT_OF_MEMORY);
+                if (status == PEP_OUT_OF_MEMORY) {
+                    free_stringlist(keylist);
+                    return PEP_OUT_OF_MEMORY;
+                }
+                
+                if (_comm_type_key != PEP_ct_compromized &&
+                    _comm_type_key != PEP_ct_unknown)
+                {
+                    if (identity->comm_type == PEP_ct_unknown ||
+                        _comm_type_key > identity->comm_type)
+                    {
+                        identity->comm_type = _comm_type_key;
+                        _fpr = _keylist->value;
+                    }
+                }
+            }
+        }
+        
+        if (_fpr)
+        {
+            identity->fpr = strdup(_fpr);
+            assert(identity->fpr);
+            if (identity->fpr == NULL)
+            {
+                free_stringlist(keylist);
+                return PEP_OUT_OF_MEMORY;
+            }
+        }
+        free_stringlist(keylist);
+    }
+    return PEP_STATUS_OK;
 }
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
@@ -314,72 +389,10 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     }
     else
     {
-        stringlist_t *keylist = NULL;
-
-        free(identity->fpr);
-        identity->fpr = NULL;
-
-        status = find_keys(session, identity->address, &keylist);
-        assert(status != PEP_OUT_OF_MEMORY);
-        if (status == PEP_OUT_OF_MEMORY)
-            return PEP_OUT_OF_MEMORY;
-        
-        if (keylist != NULL && keylist->value != NULL)
-        {
-            char *_fpr = NULL;
-            identity->comm_type = PEP_ct_unknown;
-
-            stringlist_t *_keylist;
-            for (_keylist = keylist; _keylist && _keylist->value; _keylist = _keylist->next) {
-                bool is_own = false;
-                
-                if (session->use_only_own_private_keys)
-                {
-                    status = own_key_is_listed(session, _keylist->value, &is_own);
-                    assert(status == PEP_STATUS_OK);
-                    if (status != PEP_STATUS_OK) {
-                        free_stringlist(keylist);
-                        return status;
-                    }
-                }
-
-                // TODO : also accept synchronized device group keys ?
-                
-                if (!session->use_only_own_private_keys || is_own)
-                {
-                    PEP_comm_type _comm_type_key;
-                    
-                    status = get_key_rating(session, _keylist->value, &_comm_type_key);
-                    assert(status != PEP_OUT_OF_MEMORY);
-                    if (status == PEP_OUT_OF_MEMORY) {
-                        free_stringlist(keylist);
-                        return PEP_OUT_OF_MEMORY;
-                    }
-                    
-                    if (_comm_type_key != PEP_ct_compromized &&
-                        _comm_type_key != PEP_ct_unknown)
-                    {
-                        if (identity->comm_type == PEP_ct_unknown ||
-                            _comm_type_key > identity->comm_type)
-                        {
-                            identity->comm_type = _comm_type_key;
-                            _fpr = _keylist->value;
-                        }
-                    }
-                }
-            }
-            
-            if (_fpr)
-            {
-                identity->fpr = strdup(_fpr);
-                assert(identity->fpr);
-                if (identity->fpr == NULL)
-                {
-                    free_stringlist(keylist);
-                    return PEP_OUT_OF_MEMORY;
-                }
-            }
-            free_stringlist(keylist);
+        status = elect_ownkey(session, identity);
+        assert(status == PEP_STATUS_OK);
+        if (status != PEP_STATUS_OK) {
+            return status;
         }
     }
 
@@ -388,8 +401,18 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     if (!EMPTYSTR(identity->fpr))
     {
         status = key_revoked(session, identity->fpr, &revoked);
-        assert(status == PEP_STATUS_OK);
-        if (status != PEP_STATUS_OK) {
+
+        // Forces re-election if key is missing and own-key-only not forced
+        if (!session->use_only_own_private_keys && status == PEP_KEY_NOT_FOUND) 
+        {
+            status = elect_ownkey(session, identity);
+            assert(status == PEP_STATUS_OK);
+            if (status != PEP_STATUS_OK) {
+                return status;
+            }
+        } 
+        else if (status != PEP_STATUS_OK) 
+        {
             return status;
         }
     }
