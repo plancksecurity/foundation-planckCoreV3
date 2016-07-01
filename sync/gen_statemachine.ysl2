@@ -72,7 +72,7 @@ tstylesheet {
 
         // driver
 
-        PEP_STATUS fsm_«@name»_inject(
+        DYNAMIC_API PEP_STATUS fsm_«@name»_inject(
                 PEP_SESSION session,
                 «@name»_event event,
                 Identity partner,

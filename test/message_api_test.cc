@@ -83,8 +83,14 @@ int main() {
     assert(msg4);
     assert(keylist4);
     assert(color);
+    PEP_comm_type ct = enc_msg2->from->comm_type;
+    assert(ct == PEP_ct_pEp || ct == PEP_ct_pEp_unconfirmed);
+
+    free_stringpair_list(enc_msg2->opt_fields);
+    enc_msg2->opt_fields = NULL;
 
     cout << "keys used:";
+
     for (stringlist_t* kl4 = keylist4; kl4 && kl4->value; kl4 = kl4->next)
     {
         cout << " " << kl4->value;

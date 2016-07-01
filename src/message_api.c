@@ -1181,6 +1181,35 @@ pep_error:
     return status;
 }
 
+static bool is_a_pEpmessage(const message *msg)
+{
+    for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
+        if (strcasecmp(i->value->key, "X-pEp-Version") == 0)
+            return true;
+    }
+    return false;
+}
+
+// update comm_type to pEp_ct_pEp if needed
+
+static void _update_identity_for_incoming_message(
+        PEP_SESSION session,
+        const message *src
+    )
+{
+    if (src->from && src->from->user_id && src->from->address) {
+        update_identity(session, src->from);
+        if (is_a_pEpmessage(src)
+                && src->from->comm_type >= PEP_ct_OpenPGP_unconfirmed
+                && src->from->comm_type != PEP_ct_pEp_unconfirmed
+                && src->from->comm_type != PEP_ct_pEp)
+        {
+            src->from->comm_type |= PEP_ct_pEp_unconfirmed;
+            update_identity(session, src->from);
+        }
+    }
+}
+
 DYNAMIC_API PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -1217,9 +1246,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
     // Update src->from in case we just imported a key
     // we would need to check signature
-    if(src->from && src->from->user_id && src->from->address)
-        update_identity(session, src->from);
-
+    _update_identity_for_incoming_message(session, src);
     PEP_cryptotech crypto = determine_encryption_format(src);
 
     *dst = NULL;
@@ -1419,8 +1446,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
             // Update msg->from in case we just imported a key
             // we would need to check signature
-            if(msg->from && msg->from->user_id && msg->from->address)
-                 update_identity(session, msg->from);
+
+            _update_identity_for_incoming_message(session, src);
             
             char *re_ptext = NULL;
             size_t re_psize;
