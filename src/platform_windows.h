@@ -34,7 +34,7 @@ int mkstemp(char *templ);
 #define strncasecmp(A, B, C) _strnicmp((A), (B), (C))
 #endif
 #ifndef strcasecmp
-#define strcasecmp(A, B, C) _stricmp((A), (B), (C))
+#define strcasecmp(A, B) _stricmp((A), (B))
 #endif
 #ifndef gmtime_r
 #define gmtime_r(A, B) gmtime_s((B), (A))
