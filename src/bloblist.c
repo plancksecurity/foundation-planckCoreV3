@@ -108,8 +108,6 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
             }
         }
 
-        assert((blob == NULL && size == 0) || (blob && size));
-
         bloblist->value = blob;
         bloblist->size = size;
 
