@@ -9,6 +9,7 @@
 
 #include "../src/pEpEngine.h"
 #include "../src/keymanagement.h"
+#include "../src/stringpair.h"
 
 
 using namespace std;
@@ -56,6 +57,37 @@ Buffer ReadFileIntoMem(const char *fname){
 }
 
 
+int stringlist_test()
+{
+	char stringkey[32] = {0};
+	char stringvalue[32] = {0};
+
+	for(double len=1.0; len<1E18; len=(len*3.8251)+1)
+	{
+		const unsigned ulen = unsigned(len);
+		std::cout << "Stringpairlist length=" << ulen << ": " << std::endl;
+		stringpair_list_t* sl = new_stringpair_list(nullptr);
+		for(unsigned n=0; n<ulen; ++n)
+		{
+			snprintf(stringkey,63, "%x %x %a", n, ulen, len);
+			snprintf(stringvalue,63, "%u %u %a", n, ulen, len);
+			//std::cout << "\r\t\"" << stringvalue << "\" " << std::flush;
+			auto sp = new_stringpair( stringkey, stringvalue);
+			auto ret = stringpair_list_add(sl, sp);
+			if(ret==NULL)
+			{
+				std::cout << " OUT OF MEMORY! n=" << n  << std::endl;
+				return -1;
+			}
+		}
+		std::cout << "\tfree_stringpairlist()..." << std::flush;
+		free_stringpair_list(sl);
+		std::cout << std::endl;
+	}
+	return 0;
+}
+
+
 int main(int argc, char* argv[])
 {
     PEP_SESSION session;
@@ -65,6 +97,8 @@ int main(int argc, char* argv[])
     
     cout << "returning from init() with result == " << init_result << "\n";
     assert(init_result == PEP_STATUS_OK);
+
+	stringlist_test();
 
     PEP_SESSION second_session;
     cout << "second session test\n";
