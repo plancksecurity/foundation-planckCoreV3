@@ -32,5 +32,13 @@ INSERT INTO i18n_token VALUES ('en', 1000, 'I want to display the trustwords in 
 INSERT INTO i18n_language VALUES ('de', 'Deutsch');
 INSERT INTO i18n_token VALUES ('de', 1000, 'Ich möchte die Trustwords auf Deutsch haben');
 
+INSERT INTO i18n_language VALUES ('fr', 'Français');
+INSERT INTO i18n_token VALUES ('fr', 1000, 'Je voudrais afficher les trustwords en Français');
+
+INSERT INTO i18n_language VALUES ('es', 'Español');
+INSERT INTO i18n_token VALUES ('es', 1000, 'Quiero mostrar las trustwords en español');
+
+INSERT INTO i18n_language VALUES ('ca', 'Català');
+INSERT INTO i18n_token VALUES ('ca', 1000, 'Vull mostrar les trustwords en català');
 -- add more languages here
 
