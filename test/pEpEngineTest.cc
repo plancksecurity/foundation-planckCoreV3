@@ -210,7 +210,12 @@ int main(int argc, char* argv[])
     size_t wsize;
     trustword(session, 2342, "en", &word, &wsize);
     assert(word);
-    cout << "the trustword for 2342 is " << word << "\n";
+    cout << "the English trustword for 2342 is " << word << "\n";
+    pEp_free(word);
+    cout << "\nfinding French trustword for 2342...\n";
+    trustword(session, 2342, "fr", &word, &wsize);
+    assert(word);
+    cout << "the French trustword for 2342 is " << word << "\n";
     pEp_free(word);
 
     const string fingerprint = "4942 2235 FC99 585B 891C  6653 0C7B 109B FA72 61F7";
