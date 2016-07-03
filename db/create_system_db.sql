@@ -40,5 +40,8 @@ INSERT INTO i18n_token VALUES ('es', 1000, 'Quiero mostrar las trustwords en esp
 
 INSERT INTO i18n_language VALUES ('ca', 'Català');
 INSERT INTO i18n_token VALUES ('ca', 1000, 'Vull mostrar les trustwords en català');
+
+INSERT INTO i18n_language VALUES ('tr', 'Türk');
+INSERT INTO i18n_token VALUES ('tr', 1000, 'Ben Türk dilinde trustwords görüntülemek istediğiniz');
 -- add more languages here
 
