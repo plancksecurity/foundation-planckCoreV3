@@ -366,7 +366,7 @@ static PEP_STATUS encrypt_PGP_MIME(
     if (v == NULL)
         goto enomem;
 
-    bloblist_t *_a = new_bloblist(v, 11, "application/pgp-encrypted", NULL);
+    bloblist_t *_a = new_bloblist(v, strlen(v), "application/pgp-encrypted", NULL);
     if (_a == NULL)
         goto enomem;
     dst->attachments = _a;
