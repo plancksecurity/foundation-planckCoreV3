@@ -8,16 +8,16 @@ extern "C" {
 
 
 typedef struct _stringpair_t {
-    char * key;
-    char * value;
+    char * key;   // may point to "" but must not be NULL!
+    char * value; // may point to "" but must not be NULL!
 } stringpair_t;
 
 
 // new_stringpair() - allocate new stringpair_t
 //
 //  parameters:
-//      key (in)        utf-8 string used as key
-//      value (in)      utf-8 string containing the value
+//      key (in)        utf-8 string used as key; may point to "" but must not be NULL!
+//      value (in)      utf-8 string containing the value; may point to "" but must not be NULL!
 //
 //  return value:
 //      pointer to stringpair_t or NULL on failure
@@ -91,7 +91,7 @@ DYNAMIC_API stringpair_list_t *stringpair_list_dup(
 //      pointer to last element in stringpair_list or NULL if out of memory
 //
 //  caveat:
-//      the ownership of the value goes to the stringpair_list
+//      the ownership of the value goes to the stringpair_list if add is successful
 
 DYNAMIC_API stringpair_list_t *stringpair_list_add(
         stringpair_list_t *stringpair_list,

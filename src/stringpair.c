@@ -98,6 +98,7 @@ DYNAMIC_API stringpair_list_t *stringpair_list_add(
         return stringpair_list_add(stringpair_list->next, value);
 
     if (stringpair_list->value == NULL) {
+        assert(stringpair_list->next == NULL);
         stringpair_list->value = value;
         return stringpair_list;
     }
