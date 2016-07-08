@@ -8,10 +8,12 @@ brew install asn1c
 
 # Building for OS X
 
+* TODO: which dependencies can be fetched via "brew" and which have to be compiled manually?
+
 ## Build libetpan
 
 ```
-cd pEpEngine
+cd pEpEngine   <--- huh? to build libetpan???
 autoreconf -vfi
 ./configure
 make
