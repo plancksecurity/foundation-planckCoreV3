@@ -123,9 +123,14 @@ DYNAMIC_API stringpair_list_t *stringpair_list_append(
     stringpair_list_t *_s = stringpair_list;
     stringpair_list_t *_s2;
     for (_s2 = second; _s2 != NULL; _s2 = _s2->next) {
-        _s = stringpair_list_add(_s, _s2->value);
-        if (_s == NULL)
+        stringpair_t *_sp = stringpair_dup(_s2->value);
+        if (_sp == NULL)
             return NULL;
+        _s = stringpair_list_add(_s, _sp);
+        if (_s == NULL){
+            free_stringpair(_sp);
+            return NULL;
+        }
     }
     return _s;
 }
