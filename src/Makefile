@@ -59,7 +59,7 @@ ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
 
 all: $(TARGET)
 
-sync_fsm.c: ../sync/sync.fsm
+sync_fsm.c: ../sync/devicegroup.fsm
 	make -C ../sync
 
 %.d: %.c
