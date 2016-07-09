@@ -9,21 +9,22 @@ include yslt.yml2
 tstylesheet {
     include ./functions.ysl2
 
-    template "/protocol/fsm" {
+    template "/protocol/fsm" document "../src/{@filename}_actions.c.skeleton", "text" {
+        const "name", "@name";
+        const "filename", "@filename";
     ||
-    `` const "name", "@name"
     // Actions for «@name» state machine
 
     #include <assert.h>
     #include "pEp_internal.h"
     #include "keymanagement.h"
     #include "message.h"
-    #include "sync_fsm.h"
+    #include "«@filename»_fsm.h"
     #include "baseprotocol.h"
     #include "map_asn1.h"
     `` for "func:distinctName(//action)" if "substring(@name, 1, 4) = 'send'" | #include "../asn.1/«substring(@name, 5, 255)».h"
 
-    `` for "func:distinctName(//action)" call "action" with "action", ".", with "fsm", "$name";
+    `` for "func:distinctName(//action)" call "action" with "action", ".", with "fsm", "$name", with "filename", "$filename";
 
     ||
     }
@@ -31,13 +32,14 @@ tstylesheet {
     function "action" {
         param "action";
         param "fsm";
+        param "filename", "'###'";
         choose {
             when "substring($action/@name, 1, 4) = 'send'"
                 call "send_action" with "action", "$action",
-                     with "fsm", "$fsm";
+                     with "fsm", "$fsm", with "filename", "$filename";
             otherwise
                 call "other_action" with "action", "$action",
-                     with "fsm", "$fsm";
+                     with "fsm", "$fsm", with "filename", "$filename";
         }
     }
 
@@ -63,6 +65,7 @@ tstylesheet {
     function "other_action" {
         param "action";
         param "fsm";
+        param "filename", "'###'";
 
         ||
 
@@ -71,7 +74,7 @@ tstylesheet {
         //  params:
         //      session (in)        session handle
         //      state (in)          state the state machine is in
-        `` if "parm"        | //      partner (in)        partner in sync
+        `` if "parm"        | //      partner (in)        partner to communicate with
         `` if "not(parm)"   | //      partner (in)        (must be NULL)
         //
         //  returns:
@@ -105,6 +108,7 @@ tstylesheet {
     function "send_action" {
         param "action";
         param "fsm";
+        param "filename", "'###'";
         const "name", "substring($action/@name, 5, 255)";
 
         ||
@@ -114,7 +118,7 @@ tstylesheet {
         //  params:
         //      session (in)        session handle
         //      state (in)          state the state machine is in
-        `` if "parm"        | //      partner (in)        partner in sync
+        `` if "parm"        | //      partner (in)        partner to communicate with
         `` if "not(parm)"   | //      partner (in)        (must be NULL)
         //
         //  returns:
@@ -189,7 +193,7 @@ tstylesheet {
             free_identity(me);
             me = NULL;
 
-            status = session->messageToSend(session->sync_obj, _message);
+            status = session->messageToSend(session->«$filename»_obj, _message);
 
             free_message(_message);
             ASN_STRUCT_FREE(asn_DEF_«$name», msg);

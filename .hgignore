@@ -33,4 +33,6 @@ build-linux/*
 msg4.asc
 pep_Dokument_Titel.pdf
 pEpEngine.vcxproj.user
-
+*.skeleton
+.skeletons
+.statemachines

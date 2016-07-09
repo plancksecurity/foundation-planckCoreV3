@@ -9,7 +9,7 @@ include ./fsm.yml2
 protocol DeviceGroup {
     // all messages have a timestamp, time out and are removed after timeout
 
-    fsm DeviceState {
+    fsm DeviceState filename=sync {
         state InitState {
             on Init {
                 if (storedGroupKeys)

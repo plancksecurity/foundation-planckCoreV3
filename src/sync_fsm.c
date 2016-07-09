@@ -98,3 +98,4 @@ DeviceState_state fsm_DeviceState(
 
     return state;
 }
+
