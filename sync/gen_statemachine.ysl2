@@ -10,7 +10,7 @@ tstylesheet {
     include ./functions.ysl2
 
     template "/protocol/fsm" {
-        document "../src/sync_fsm.h", "text" {
+        document "../src/{@filename}_fsm.h", "text" {
         ||
         #pragma once
 
@@ -85,7 +85,7 @@ tstylesheet {
 
         ||
         }
-        document "../src/sync_driver.c", "text"
+        document "../src/{@filename}_driver.c", "text"
         ||
         // Driver for «@name» state machine
 
@@ -102,15 +102,16 @@ tstylesheet {
         {
             PEP_STATUS status = PEP_STATUS_OK;
 
-            session->sync_state = fsm_«@name»(session, session->sync_state,
+            session->«@filename»_state = fsm_«@name»(session, session->«@filename»_state,
                     event, partner, state_partner);
 
             return status;
         }
 
         ||
+        document "../src/{@filename}_fsm.c", "text"
         ||
-        #include "sync_fsm.h"
+        #include "«@filename»_fsm.h"
 
         // state machine for «@name»
 

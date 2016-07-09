@@ -108,7 +108,7 @@ error:
 //  params:
 //      session (in)        session handle
 //      state (in)          state the state machine is in
-//      partner (in)        partner in sync
+//      partner (in)        partner to communicate with
 //
 //  returns:
 //      PEP_STATUS_OK or any other value on error
@@ -202,7 +202,7 @@ error:
 //  params:
 //      session (in)        session handle
 //      state (in)          state the state machine is in
-//      partner (in)        partner in sync
+//      partner (in)        partner to communicate with
 //
 //  returns:
 //      PEP_STATUS_OK or any other value on error
@@ -238,7 +238,7 @@ error:
 //  params:
 //      session (in)        session handle
 //      state (in)          state the state machine is in
-//      partner (in)        partner in sync
+//      partner (in)        partner to communicate with
 //
 //  returns:
 //      PEP_STATUS_OK or any other value on error
@@ -274,7 +274,7 @@ error:
 //  params:
 //      session (in)        session handle
 //      state (in)          state the state machine is in
-//      partner (in)        partner in sync
+//      partner (in)        partner to communicate with
 //
 //  returns:
 //      PEP_STATUS_OK or any other value on error
@@ -394,4 +394,5 @@ error:
     free_identity(me);
     return status;
 }
+
 
