@@ -9,7 +9,19 @@ include yslt.yml2
 tstylesheet {
     include ./functions.ysl2
 
-    template "/protocol/fsm" {
+    template "/protocol" {
+        document "../src/Makefile.protocols", "text"
+            apply "fsm", 0, mode="make";
+        apply "fsm", 0, mode=gen;
+    }
+
+    template "fsm", mode=make
+    ||
+    «@filename»_fsm.c: ../sync/devicegroup.fsm
+    \tmake -C ../«@filename»
+    ||
+
+    template "fsm", mode=gen {
         document "../src/{@filename}_fsm.h", "text" {
         ||
         #pragma once
