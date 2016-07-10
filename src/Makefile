@@ -59,8 +59,7 @@ ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
 
 all: $(TARGET)
 
-sync_fsm.c: ../sync/sync.fsm
-	make -C ../sync
+include Makefile.protocols
 
 %.d: %.c
 	@set -e; rm -f $@; \

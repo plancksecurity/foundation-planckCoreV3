@@ -18,6 +18,7 @@ clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C test clean
 	$(MAKE) -C db clean
+	$(MAKE) -C sync clean
 	$(MAKE) -C asn.1 clean
 
 test: all

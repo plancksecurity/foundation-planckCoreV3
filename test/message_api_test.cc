@@ -23,10 +23,10 @@ int main() {
     // message_api test code
 
     cout << "creating message…\n";
-    pEp_identity * me2 = new_identity("outlooktest@dingens.org", NULL, PEP_OWN_USERID, "Outlook Test");
+    pEp_identity * me2 = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, "Alice Test");
     // pEp_identity * me2 = new_identity("test@nokey.plop", NULL, PEP_OWN_USERID, "Test no key");
     me2->me = true;
-    identity_list *to2 = new_identity_list(new_identity("vb@dingens.org", NULL, "42", "Volker Birk"));
+    identity_list *to2 = new_identity_list(new_identity("pep.test.bob@pep-project.org", NULL, "42", "Bob Test"));
     // identity_list *to2 = new_identity_list(new_identity("still@nokey.blup", NULL, "42", "Still no key"));
     message *msg2 = new_message(PEP_dir_outgoing);
     assert(msg2);
@@ -84,7 +84,7 @@ int main() {
     assert(keylist4);
     assert(color);
     PEP_comm_type ct = enc_msg2->from->comm_type;
-    assert(ct == PEP_ct_pEp || ct == PEP_ct_pEp_unconfirmed);
+    assert(ct == PEP_ct_pEp || ct == PEP_ct_pEp_unconfirmed || ct == PEP_ct_OpenPGP || ct == PEP_ct_OpenPGP_unconfirmed );
 
     free_stringpair_list(enc_msg2->opt_fields);
     enc_msg2->opt_fields = NULL;

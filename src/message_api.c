@@ -64,7 +64,10 @@ static void add_opt_field(message *msg, const char *name, const char *value)
 
         stringpair_list_t *field = stringpair_list_add(msg->opt_fields, pair);
         if (field == NULL)
+        {
+            free_stringpair(pair);
             return;
+        }
 
         if (msg->opt_fields == NULL)
             msg->opt_fields = field;

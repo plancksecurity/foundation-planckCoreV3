@@ -58,6 +58,8 @@ DYNAMIC_API stringpair_list_t *new_stringpair_list(stringpair_t *value)
     if (result && value)
         result->value = value;
 
+    result->next = NULL;
+    
     return result;
 }
 
@@ -69,19 +71,24 @@ DYNAMIC_API stringpair_list_t *stringpair_list_dup(
     if (src == NULL)
         return NULL;
 
-    stringpair_list_t *dst = new_stringpair_list(src->value);
+    stringpair_t* copy_pair = stringpair_dup(src->value);
+    
+    stringpair_list_t *dst = new_stringpair_list(copy_pair);
     if (dst == NULL)
         return NULL;
 
-    if (src->next) {
-        dst->next = stringpair_list_dup(src->next);
-        if (dst->next == NULL) {
-            free_stringpair_list(dst);
-            return NULL;
-        }
+    stringpair_list_t* src_curr = src->next;
+    stringpair_list_t** dst_curr_ptr = &dst->next;
+
+    while (src_curr) {
+        copy_pair = stringpair_dup(src_curr->value);
+        *dst_curr_ptr = new_stringpair_list(copy_pair);
+        src_curr = src_curr->next;
+        dst_curr_ptr = &((*dst_curr_ptr)->next);
     }
 
     return dst;
+    
 }
 
 DYNAMIC_API stringpair_list_t *stringpair_list_add(
@@ -94,20 +101,30 @@ DYNAMIC_API stringpair_list_t *stringpair_list_add(
     if (stringpair_list == NULL)
         return new_stringpair_list(value);
 
-    if (stringpair_list->next)
-        return stringpair_list_add(stringpair_list->next, value);
-
-    if (stringpair_list->value == NULL) {
-        assert(stringpair_list->next == NULL);
-        stringpair_list->value = value;
-        return stringpair_list;
+    stringpair_list_t* list_curr = stringpair_list;
+    
+    while (list_curr->next)
+        list_curr = list_curr->next;
+ 
+    // if list end exists without value,
+    // we fill it in here instead of adding
+    // a new node.
+    if (list_curr->value == NULL) {
+        list_curr->value = value; // ownership goes to us
+        assert(list_curr->value);
+        if (list_curr->value == NULL)
+            return NULL;
+        return list_curr;
     }
+    
+    list_curr->next = new_stringpair_list(value);
 
-    stringpair_list->next = new_stringpair_list(value);
-    if (stringpair_list->next == NULL)
+    assert(list_curr->next);
+    if (list_curr->next == NULL)
         return NULL;
 
-    return stringpair_list->next;
+    return list_curr->next;
+    
 }
 
 DYNAMIC_API stringpair_list_t *stringpair_list_append(
@@ -116,6 +133,8 @@ DYNAMIC_API stringpair_list_t *stringpair_list_append(
     )
 {
     assert(stringpair_list);
+    if (stringpair_list == NULL)
+        return NULL;
 
     if (second == NULL || second->value == NULL)
         return stringpair_list;
@@ -123,9 +142,14 @@ DYNAMIC_API stringpair_list_t *stringpair_list_append(
     stringpair_list_t *_s = stringpair_list;
     stringpair_list_t *_s2;
     for (_s2 = second; _s2 != NULL; _s2 = _s2->next) {
-        _s = stringpair_list_add(_s, _s2->value);
-        if (_s == NULL)
+        stringpair_t *_sp = stringpair_dup(_s2->value);
+        if (_sp == NULL)
             return NULL;
+        _s = stringpair_list_add(_s, _sp);
+        if (_s == NULL){
+            free_stringpair(_sp);
+            return NULL;
+        }
     }
     return _s;
 }
