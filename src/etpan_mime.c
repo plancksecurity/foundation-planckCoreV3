@@ -136,6 +136,8 @@ enomem:
     if (content->ct_parameters == NULL)
         if (parameters)
             clist_free(parameters);
+    if (param)
+        mailmime_parameter_free(param);
 
 	return NULL;
 }
