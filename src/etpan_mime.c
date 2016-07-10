@@ -138,7 +138,6 @@ enomem:
             clist_free(parameters);
     if (param)
         mailmime_parameter_free(param);
-
 	return NULL;
 }
 
