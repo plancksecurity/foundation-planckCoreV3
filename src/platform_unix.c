@@ -52,7 +52,17 @@ char *stpcpy(char *dst, const char *src)
 
 long int random(void)
 {
-    static unsigned short xsubi[3] = {'p', 'E', 'p'};
+    static bool seeded = false;
+    static unsigned short xsubi[3];
+    if(!seeded)
+    {
+        const long long t = (long long)time(NULL);
+        xsubi[0] = (unsigned short)t;
+        xsubi[1] = (unsigned short)(t>>16);
+        xsubi[2] = (unsigned short)(t>>32);
+        seeded = true;
+    }
+
     return nrand48(xsubi);
 }
 

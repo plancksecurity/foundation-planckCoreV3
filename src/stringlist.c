@@ -19,8 +19,9 @@ DYNAMIC_API stringlist_t *new_stringlist(const char *value)
             free(result);
             return NULL;
         }
-        result->next = NULL; // needed for one-element lists
     }
+    
+    result->next = NULL; // needed for one-element lists
 
     return result;
 }
@@ -53,26 +54,32 @@ DYNAMIC_API stringlist_t *stringlist_add(
     )
 {  
     assert(value);
+    if (value == NULL)
+        return NULL;
 
+    // empty list (no nodes)
     if (stringlist == NULL)
         return new_stringlist(value);
 
-    stringlist_t* list_curr = stringlist;
-    
-    while (list_curr->next)
-        list_curr = list_curr->next;
- 
-    // if list end exists without value,
-    // we fill it in here instead of adding
-    // a new node.
-    if (list_curr->value == NULL) {
-        list_curr->value = strdup(value);
-        assert(list_curr->value);
-        if (list_curr->value == NULL)
+    // empty list (one node, no value)
+    if (stringlist->value == NULL) {
+        if (stringlist->next) 
+            return NULL; // invalid list
+            
+        stringlist->value = strdup(value);
+        assert(stringlist->value);
+        
+        if (stringlist->value == NULL)
             return NULL;
-        return list_curr;
+        
+        return stringlist;
     }
     
+    stringlist_t* list_curr = stringlist;
+
+    while (list_curr->next)
+        list_curr = list_curr->next;
+     
     list_curr->next = new_stringlist(value);
 
     assert(list_curr->next);
@@ -91,6 +98,7 @@ DYNAMIC_API stringlist_t *stringlist_append(
     if (stringlist == NULL)
         return NULL;
 
+    // Second list is empty
     if (second == NULL || second->value == NULL)
         return stringlist;
 
