@@ -51,28 +51,35 @@ DYNAMIC_API stringlist_t *stringlist_add(
         stringlist_t *stringlist,
         const char *value
     )
-{
+{  
     assert(value);
 
     if (stringlist == NULL)
         return new_stringlist(value);
 
-    if (stringlist->next != NULL)
-        return stringlist_add(stringlist->next, value);
-    if (stringlist->value == NULL) {
-        stringlist->value = strdup(value);
-        assert(stringlist->value);
-        if (stringlist->value == NULL)
+    stringlist_t* list_curr = stringlist;
+    
+    while (list_curr->next)
+        list_curr = list_curr->next;
+ 
+    // if list end exists without value,
+    // we fill it in here instead of adding
+    // a new node.
+    if (list_curr->value == NULL) {
+        list_curr->value = strdup(value);
+        assert(list_curr->value);
+        if (list_curr->value == NULL)
             return NULL;
-        return stringlist;
+        return list_curr;
     }
+    
+    list_curr->next = new_stringlist(value);
 
-    stringlist->next = new_stringlist(value);
-    assert(stringlist->next);
-    if (stringlist->next == NULL)
+    assert(list_curr->next);
+    if (list_curr->next == NULL)
         return NULL;
 
-    return stringlist->next;
+    return list_curr->next;
 }
 
 DYNAMIC_API stringlist_t *stringlist_append(

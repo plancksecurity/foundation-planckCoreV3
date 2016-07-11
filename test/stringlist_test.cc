@@ -11,13 +11,15 @@ using namespace std;
 
 int main() {
     cout << "\n*** data structures: stringlist_test ***\n\n";
+
+    const char* str0 = "I am your father, Luke\n";
     
     // new_stringlist test code
     cout << "creating one-element stringlist…\n";
     
-    stringlist_t* src = new_stringlist("I am your father, Luke\n");
+    stringlist_t* src = new_stringlist(str0);
     assert(src);
-    assert(strcmp(src->value,"I am your father, Luke\n") == 0);
+    assert(strcmp(src->value,str0) == 0);
     cout << "Value: " << src->value;
     assert(src->next == NULL);
     cout << "one-element stringlist created, next element is NULL\n";
@@ -70,7 +72,32 @@ int main() {
         assert((p == NULL) == (p_dst == NULL));
     }
     assert(p_dst == NULL);
-
+    
+    cout << "\nAdd to 4-element stringlist with tail with no value…\n";
+    // get tail
+    p = src;
+    while (p->next)
+        p = p->next;
+    
+    if (p->value)
+        free(p->value);
+    p->value = NULL;
+    
+    strarr[3] = str0;
+    stringlist_add(src, str0);
+    
+    cout << "checking contents\n";
+    p = src;
+    i = 0;
+    while (p) {
+        assert(p->value);
+        assert(strcmp(p->value, strarr[i++]) == 0);
+        assert(p->value != *(strarr + i)); // ensure this is a copy
+        cout << p->value;
+        p = p->next;
+    }
+    assert(p == NULL); // list ends properly
+    
     cout << "freeing stringlists…\n\n";
     free_stringlist(src);
     free_stringlist(dst);
@@ -78,15 +105,25 @@ int main() {
     dst = NULL;
 
     cout << "duplicating one-element stringlist…\n";    
-    src = new_stringlist("I am your father, Luke\n");
+    src = new_stringlist(str0);
     assert(src);
     dst = stringlist_dup(src);
-    assert(strcmp(dst->value,"I am your father, Luke\n") == 0);
+    assert(strcmp(dst->value, str0) == 0);
     cout << "Value: " << src->value;
     assert(dst->next == NULL);
     cout << "one-element stringlist duped, next element is NULL\n";
     
-    cout << "freeing stringlists…\n\n";
+    cout << "\nAdd to one-element stringlist with no value…\n";
+    if (src->value)
+        free(src->value);
+    src->value = NULL;
+    stringlist_add(src, str2);
+    assert(src->value);
+    assert(strcmp(src->value, str2) == 0);
+    assert(src->value != str2); // ensure this is a copy
+    cout << src->value;
+
+    cout << "\nfreeing stringlists…\n\n";
     free_stringlist(src);
     free_stringlist(dst);
     
