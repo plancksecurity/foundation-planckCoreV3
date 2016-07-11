@@ -58,6 +58,8 @@ DYNAMIC_API stringpair_list_t *new_stringpair_list(stringpair_t *value)
     if (result && value)
         result->value = value;
 
+    result->next = NULL;
+    
     return result;
 }
 
@@ -73,15 +75,17 @@ DYNAMIC_API stringpair_list_t *stringpair_list_dup(
     if (dst == NULL)
         return NULL;
 
-    if (src->next) {
-        dst->next = stringpair_list_dup(src->next);
-        if (dst->next == NULL) {
-            free_stringpair_list(dst);
-            return NULL;
-        }
+    stringpair_list_t* src_curr = src->next;
+    stringpair_list_t** dst_curr_ptr = &dst->next;
+
+    while (src_curr) {
+        *dst_curr_ptr = new_stringpair_list(src_curr->value);
+        src_curr = src_curr->next;
+        dst_curr_ptr = &((*dst_curr_ptr)->next);
     }
 
     return dst;
+    
 }
 
 DYNAMIC_API stringpair_list_t *stringpair_list_add(
