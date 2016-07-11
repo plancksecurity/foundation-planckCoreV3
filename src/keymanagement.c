@@ -142,21 +142,23 @@ DYNAMIC_API PEP_STATUS update_identity(
     
     assert(status != PEP_OUT_OF_MEMORY);
     if (status == PEP_OUT_OF_MEMORY)
-        return PEP_OUT_OF_MEMORY;
+        goto exit_free;
 
     if (stored_identity) {
         PEP_comm_type _comm_type_key;
         status = get_key_rating(session, stored_identity->fpr, &_comm_type_key);
         assert(status != PEP_OUT_OF_MEMORY);
         if (status == PEP_OUT_OF_MEMORY)
-            return PEP_OUT_OF_MEMORY;
+            goto exit_free;
 
         if (EMPTYSTR(identity->username)) {
             free(identity->username);
             identity->username = strdup(stored_identity->username);
             assert(identity->username);
-            if (identity->username == NULL)
-                return PEP_OUT_OF_MEMORY;
+            if (identity->username == NULL){
+                status = PEP_OUT_OF_MEMORY;
+                goto exit_free;
+            }
         }
 
         if (EMPTYSTR(identity->fpr)) {
@@ -167,7 +169,7 @@ DYNAMIC_API PEP_STATUS update_identity(
             if (_comm_type_key < PEP_ct_unconfirmed_encryption) {
                 PEP_STATUS status = elect_pubkey(session, identity);
                 if (status != PEP_STATUS_OK)
-                    return status;
+                    goto exit_free;
             }
             else {
                 identity->comm_type = stored_identity->comm_type;
@@ -190,7 +192,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                 status = get_trust(session, identity);
                 assert(status != PEP_OUT_OF_MEMORY);
                 if (status == PEP_OUT_OF_MEMORY)
-                    return PEP_OUT_OF_MEMORY;
+                    goto exit_free;
                 if (identity->comm_type < stored_identity->comm_type)
                     identity->comm_type = PEP_ct_unknown;
             }
@@ -209,14 +211,14 @@ DYNAMIC_API PEP_STATUS update_identity(
             status = get_key_rating(session, identity->fpr, &_comm_type_key);
             assert(status != PEP_OUT_OF_MEMORY);
             if (status == PEP_OUT_OF_MEMORY)
-                return PEP_OUT_OF_MEMORY;
+                goto exit_free;
 
             identity->comm_type = _comm_type_key;
         }
         else /* EMPTYSTR(identity->fpr) */ {
             PEP_STATUS status = elect_pubkey(session, identity);
             if (status != PEP_STATUS_OK)
-                return status;
+                goto exit_free;
         }
     }
 
@@ -228,8 +230,10 @@ DYNAMIC_API PEP_STATUS update_identity(
         if (EMPTYSTR(identity->username)) { // mitigate
             free(identity->username);
             identity->username = strdup("anonymous");
-            if (identity->username == NULL)
-                return PEP_OUT_OF_MEMORY;
+            if (identity->username == NULL){
+                status = PEP_OUT_OF_MEMORY;
+                goto exit_free;
+            }
         }
 
         // Identity doesn't get stored if call was just about checking existing
@@ -239,7 +243,7 @@ DYNAMIC_API PEP_STATUS update_identity(
             status = set_identity(session, identity);
             assert(status == PEP_STATUS_OK);
             if (status != PEP_STATUS_OK) {
-                return status;
+                goto exit_free;
             }
         }
     }
@@ -248,6 +252,12 @@ DYNAMIC_API PEP_STATUS update_identity(
             identity->comm_type < PEP_ct_strong_but_unconfirmed)
         if (session->examine_identity)
             session->examine_identity(identity, session->examine_management);
+
+exit_free :
+    
+    if (stored_identity){
+        free_identity(stored_identity);
+    }
 
     return status;
 }
