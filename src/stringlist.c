@@ -88,6 +88,8 @@ DYNAMIC_API stringlist_t *stringlist_append(
     )
 {
     assert(stringlist);
+    if (stringlist == NULL)
+        return NULL;
 
     if (second == NULL || second->value == NULL)
         return stringlist;
