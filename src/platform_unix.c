@@ -52,7 +52,12 @@ char *stpcpy(char *dst, const char *src)
 
 long int random(void)
 {
-    static unsigned short xsubi[3] = {'p', 'E', 'p'};
+    time_t t = time(NULL);
+    static unsigned short xsubi[3];
+    xsubi[0] = ((unsigned short *)t)[0];
+    xsubi[1] = ((unsigned short *)t)[1];
+    xsubi[2] = ((unsigned short *)t)[2];
+
     return nrand48(xsubi);
 }
 
