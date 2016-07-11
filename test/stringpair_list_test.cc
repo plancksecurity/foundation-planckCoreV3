@@ -46,16 +46,32 @@ int main() {
     stringpair_list_t* pairlist = new_stringpair_list(strpair);
     assert(pairlist->value);
     assert(test_stringpair_equals(strpair, pairlist->value));
-//    assert(strpair->key != pairlist->value->key);   // test deep copies (to be fixed in next 2 commits)
-//    assert(strpair->value != pairlist->value->value);
     assert(pairlist->next == NULL);
-    cout << "one-element stringpair_list created, next element is NULL\n";
-        
-    cout << "freeing stringpair_list...\n";
-    free_stringpair_list(pairlist);
-    // free_stringpair(strpair); // copy still shallow (to be fixed in next 2 commits);
+    cout << "one-element stringpair_list created, next element is NULL\n\n";
+    
+    cout << "duplicating one-element list...\n";
+    stringpair_list_t* duplist = stringpair_list_dup(pairlist);
+    stringpair_t* srcpair = pairlist->value;
+    stringpair_t* dstpair = duplist->value;
+    assert(dstpair);
+    assert(dstpair->value);
+    assert(test_stringpair_equals(srcpair, dstpair));
+    assert(srcpair->key != dstpair->key);   // test deep copies (to be fixed in next 2 commits)
+    assert(srcpair->value != dstpair->value);
+    assert(duplist->next == NULL);
+    cout << "one-element stringpair_list duplicated.\n\n";
+
+    
+    cout << "freeing stringpair_lists...\n";
+    free_stringpair_list(pairlist); // should free strpair
+    free_stringpair_list(duplist);
     cout << "done.\n";
 
+    
+    
+    
+    
+    
     return 0;
 }
 

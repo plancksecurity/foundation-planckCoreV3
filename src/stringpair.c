@@ -71,7 +71,9 @@ DYNAMIC_API stringpair_list_t *stringpair_list_dup(
     if (src == NULL)
         return NULL;
 
-    stringpair_list_t *dst = new_stringpair_list(src->value);
+    stringpair_t* copy_pair = stringpair_dup(src->value);
+    
+    stringpair_list_t *dst = new_stringpair_list(copy_pair);
     if (dst == NULL)
         return NULL;
 
@@ -79,7 +81,8 @@ DYNAMIC_API stringpair_list_t *stringpair_list_dup(
     stringpair_list_t** dst_curr_ptr = &dst->next;
 
     while (src_curr) {
-        *dst_curr_ptr = new_stringpair_list(src_curr->value);
+        copy_pair = stringpair_dup(src_curr->value);
+        *dst_curr_ptr = new_stringpair_list(copy_pair);
         src_curr = src_curr->next;
         dst_curr_ptr = &((*dst_curr_ptr)->next);
     }
