@@ -67,6 +67,7 @@ DYNAMIC_API stringlist_t *stringlist_add(
 //
 //  return value:
 //      pointer to last element in stringlist or NULL if out of memory
+//      or stringpair_list is NULL
 //
 //  caveat:
 //      all values are being copied before being added to the list

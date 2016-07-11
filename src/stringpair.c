@@ -125,23 +125,6 @@ DYNAMIC_API stringpair_list_t *stringpair_list_add(
 
     return list_curr->next;
     
-//     if (stringpair_list == NULL)
-//         return new_stringpair_list(value);
-// 
-//     if (stringpair_list->next)
-//         return stringpair_list_add(stringpair_list->next, value);
-// 
-//     if (stringpair_list->value == NULL) {
-//         assert(stringpair_list->next == NULL);
-//         stringpair_list->value = value;
-//         return stringpair_list;
-//     }
-// 
-//     stringpair_list->next = new_stringpair_list(value);
-//     if (stringpair_list->next == NULL)
-//         return NULL;
-// 
-//     return stringpair_list->next;
 }
 
 DYNAMIC_API stringpair_list_t *stringpair_list_append(
@@ -150,6 +133,8 @@ DYNAMIC_API stringpair_list_t *stringpair_list_append(
     )
 {
     assert(stringpair_list);
+    if (stringpair_list == NULL)
+        return NULL;
 
     if (second == NULL || second->value == NULL)
         return stringpair_list;
