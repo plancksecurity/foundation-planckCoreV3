@@ -19,6 +19,7 @@ DYNAMIC_API stringlist_t *new_stringlist(const char *value)
             free(result);
             return NULL;
         }
+        result->next = NULL; // needed for one-element lists
     }
 
     return result;
@@ -34,12 +35,13 @@ DYNAMIC_API stringlist_t *stringlist_dup(const stringlist_t *src)
     if (dst == NULL)
         return NULL;
 
-    if (src->next) {
-        dst->next = stringlist_dup(src->next);
-        if (dst->next == NULL) {
-            free_stringlist(dst);
-            return NULL;
-        }
+    stringlist_t* src_curr = src->next;
+    stringlist_t** dst_curr_ptr = &dst->next;
+    
+    while (src_curr) {
+        *dst_curr_ptr = new_stringlist(src_curr->value);
+        src_curr = src_curr->next;
+        dst_curr_ptr = &((*dst_curr_ptr)->next);
     }
 
     return dst;
