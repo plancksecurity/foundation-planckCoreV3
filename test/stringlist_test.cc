@@ -72,32 +72,7 @@ int main() {
         assert((p == NULL) == (p_dst == NULL));
     }
     assert(p_dst == NULL);
-    
-    cout << "\nAdd to 4-element stringlist with tail with no value…\n";
-    // get tail
-    p = src;
-    while (p->next)
-        p = p->next;
-    
-    if (p->value)
-        free(p->value);
-    p->value = NULL;
-    
-    strarr[3] = str0;
-    stringlist_add(src, str0);
-    
-    cout << "checking contents\n";
-    p = src;
-    i = 0;
-    while (p) {
-        assert(p->value);
-        assert(strcmp(p->value, strarr[i++]) == 0);
-        assert(p->value != *(strarr + i)); // ensure this is a copy
-        cout << p->value;
-        p = p->next;
-    }
-    assert(p == NULL); // list ends properly
-    
+        
     cout << "freeing stringlists…\n\n";
     free_stringlist(src);
     free_stringlist(dst);
@@ -113,7 +88,7 @@ int main() {
     assert(dst->next == NULL);
     cout << "one-element stringlist duped, next element is NULL\n";
     
-    cout << "\nAdd to one-element stringlist with no value…\n";
+    cout << "\nAdd to empty stringlist (node exists, but no value…)\n";
     if (src->value)
         free(src->value);
     src->value = NULL;
