@@ -36,3 +36,4 @@ pEpEngine.vcxproj.user
 *.skeleton
 .skeletons
 .statemachines
+Makefile.protocols
