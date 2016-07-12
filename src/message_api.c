@@ -36,8 +36,8 @@ static bool is_mime_type(const bloblist_t *bl, const char *mt)
 static bool is_fileending(const bloblist_t *bl, const char *fe)
 {
     assert(fe);
-
-    if (bl == NULL || bl->filename == NULL)
+    
+    if (bl == NULL || bl->filename == NULL || fe == NULL)
         return false;
 
     assert(bl && bl->filename);
@@ -80,7 +80,10 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
 
     assert(shortmsg);
     assert(strcmp(shortmsg, "pEp") != 0);
-
+    // Will crash without assert if shortmsg == NULL in strlen
+    if (shortmsg == NULL)
+        shortmsg = strdup(""); // Should this be "pEp", as above?
+        
     if (longmsg == NULL)
         longmsg = "";
 
@@ -97,7 +100,7 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     return ptext;
 }
 
-static int seperate_short_and_long(const char *src, char **shortmsg, char **longmsg)
+static int separate_short_and_long(const char *src, char **shortmsg, char **longmsg)
 {
     char *_shortmsg = NULL;
     char *_longmsg = NULL;
@@ -105,6 +108,9 @@ static int seperate_short_and_long(const char *src, char **shortmsg, char **long
     assert(src);
     assert(shortmsg);
     assert(longmsg);
+    
+    if (src == NULL || shortmsg == NULL || longmsg == NULL)
+        return -1;
 
     *shortmsg = NULL;
     *longmsg = NULL;
@@ -278,6 +284,8 @@ static message * clone_to_empty_message(const message * src)
     message * msg = NULL;
 
     assert(src);
+    if (src == NULL)
+        return NULL;
 
     msg = calloc(1, sizeof(message));
     assert(msg);
@@ -346,6 +354,9 @@ static PEP_STATUS encrypt_PGP_MIME(
     _src->enc_format = PEP_enc_none;
     status = mime_encode_message(_src, true, &mimetext);
     assert(status == PEP_STATUS_OK);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+    
     if (free_ptext){
         free(ptext);
         free_ptext=0;
@@ -688,9 +699,9 @@ static bool is_encrypted_attachment(const bloblist_t *blob)
 
     assert(blob);
 
-    if (blob->filename == NULL)
+    if (blob == NULL || blob->filename == NULL)
         return false;
-
+    
     ext = strrchr(blob->filename, '.');
     if (ext == NULL)
         return false;
@@ -712,6 +723,8 @@ static bool is_encrypted_html_attachment(const bloblist_t *blob)
 {
     assert(blob);
     assert(blob->filename);
+    if (blob == NULL || blob->filename == NULL)
+        return false;
 
     if (strncmp(blob->filename, "PGPexch.htm.", 12) == 0) {
         if (strcmp(blob->filename + 11, ".pgp") == 0 ||
@@ -727,7 +740,9 @@ static char * without_double_ending(const char *filename)
     char *ext;
 
     assert(filename);
-
+    if (filename == NULL)
+        return NULL;
+    
     ext = strrchr(filename, '.');
     if (ext == NULL)
         return NULL;
@@ -770,6 +785,9 @@ static PEP_color key_color(PEP_SESSION session, const char *fpr)
 
     assert(session);
     assert(fpr);
+    
+    if (session == NULL || fpr == NULL)
+        return PEP_rating_undefined;
 
     PEP_STATUS status = get_key_rating(session, fpr, &comm_type);
     if (status != PEP_STATUS_OK)
@@ -904,6 +922,9 @@ bool import_attached_keys(
 {
     assert(session);
     assert(msg);
+    
+    if (session == NULL || msg == NULL)
+        return false;
 
     bool remove = false;
 
@@ -947,7 +968,7 @@ void attach_own_key(PEP_SESSION session, message *msg)
 {
     assert(session);
     assert(msg);
-
+    
     if (msg->dir == PEP_dir_incoming)
         return;
 
@@ -978,7 +999,7 @@ void attach_own_key(PEP_SESSION session, message *msg)
 PEP_cryptotech determine_encryption_format(message *msg)
 {
     assert(msg);
-
+    
     if (is_PGP_message_text(msg->longmsg)) {
         msg->enc_format = PEP_enc_pieces;
         return PEP_crypt_OpenPGP;
@@ -1169,6 +1190,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     if (msg && msg->shortmsg == NULL) {
         msg->shortmsg = strdup("pEp");
         assert(msg->shortmsg);
+        if (msg->shortmsg == NULL)
+            goto enomem;
     }
 
     if (msg)
@@ -1406,7 +1429,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                     char * shortmsg;
                     char * longmsg;
 
-                    int r = seperate_short_and_long(msg->longmsg, &shortmsg,
+                    int r = separate_short_and_long(msg->longmsg, &shortmsg,
                             &longmsg);
                     if (r == -1)
                         goto enomem;
