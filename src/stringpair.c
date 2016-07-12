@@ -47,6 +47,9 @@ DYNAMIC_API void free_stringpair(stringpair_t * pair)
 DYNAMIC_API stringpair_t * stringpair_dup(const stringpair_t *src)
 {
     assert(src);
+    if (src == NULL)
+        return NULL;
+    
     return new_stringpair(src->key, src->value);
 }
 
@@ -98,25 +101,29 @@ DYNAMIC_API stringpair_list_t *stringpair_list_add(
 {
     assert(value);
 
+    // empty list (no nodes)
     if (stringpair_list == NULL)
         return new_stringpair_list(value);
 
+    // empty list (one node, no value)
+    if (stringpair_list->value == NULL) {
+        if (stringpair_list->next)
+            return NULL; // invalid list
+            
+        stringpair_list->value = value;
+        assert(stringpair_list->value);
+        
+        if (stringpair_list->value == NULL)
+            return NULL;
+        
+        return stringpair_list;
+    }
+    
     stringpair_list_t* list_curr = stringpair_list;
     
     while (list_curr->next)
         list_curr = list_curr->next;
- 
-    // if list end exists without value,
-    // we fill it in here instead of adding
-    // a new node.
-    if (list_curr->value == NULL) {
-        list_curr->value = value; // ownership goes to us
-        assert(list_curr->value);
-        if (list_curr->value == NULL)
-            return NULL;
-        return list_curr;
-    }
-    
+     
     list_curr->next = new_stringpair_list(value);
 
     assert(list_curr->next);
@@ -136,6 +143,7 @@ DYNAMIC_API stringpair_list_t *stringpair_list_append(
     if (stringpair_list == NULL)
         return NULL;
 
+    // second list is empty
     if (second == NULL || second->value == NULL)
         return stringpair_list;
 
