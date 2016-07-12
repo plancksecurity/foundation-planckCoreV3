@@ -169,6 +169,9 @@ static PEP_STATUS copy_fields(message *dst, const message *src)
     assert(dst);
     assert(src);
 
+    if(!(dst && src))
+        return PEP_ILLEGAL_VALUE;
+
     free_timestamp(dst->sent);
     dst->sent = NULL;
     if (src->sent) {
