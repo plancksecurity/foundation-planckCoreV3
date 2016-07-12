@@ -54,6 +54,8 @@ DYNAMIC_API stringlist_t *stringlist_add(
     )
 {  
     assert(value);
+    if (value == NULL)
+        return NULL;
 
     // empty list (no nodes)
     if (stringlist == NULL)
