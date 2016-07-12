@@ -1328,6 +1328,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                         attctext = _s->value;
                         attcsize = _s->size;
 
+                        free(ptext);
+                        ptext = NULL;
+
                         status = decrypt_and_verify(session, attctext, attcsize,
                                 &ptext, &psize, &_keylist);
                         free_stringlist(_keylist);
