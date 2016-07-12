@@ -33,6 +33,12 @@ static bool is_mime_type(const bloblist_t *bl, const char *mt)
     return bl && string_equality(bl->mime_type, mt);
 }
 
+//
+// This function presumes the file ending is a proper substring of the
+// filename (i.e. if bl->filename is "a.pgp" and fe is ".pgp", it will
+// return true, but if bl->filename is ".pgp" and fe is ".pgp", it will
+// return false. This is desired behaviour.
+//
 static bool is_fileending(const bloblist_t *bl, const char *fe)
 {
     assert(fe);
