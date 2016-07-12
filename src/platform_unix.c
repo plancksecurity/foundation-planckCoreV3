@@ -52,11 +52,16 @@ char *stpcpy(char *dst, const char *src)
 
 long int random(void)
 {
-    time_t t = time(NULL);
+    static bool seeded = false;
     static unsigned short xsubi[3];
-    xsubi[0] = ((unsigned short *)t)[0];
-    xsubi[1] = ((unsigned short *)t)[1];
-    xsubi[2] = ((unsigned short *)t)[2];
+    if(!seeded)
+    {
+        time_t t = time(NULL);
+        xsubi[0] = ((unsigned short *)t)[0];
+        xsubi[1] = ((unsigned short *)t)[1];
+        xsubi[2] = ((unsigned short *)t)[2];
+        seeded = true;
+    }
 
     return nrand48(xsubi);
 }
