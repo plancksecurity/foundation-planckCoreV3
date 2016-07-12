@@ -86,9 +86,9 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
 
     assert(shortmsg);
     assert(strcmp(shortmsg, "pEp") != 0);
-    // Will crash without assert if shortmsg == NULL in strlen
-    if (shortmsg == NULL)
-        shortmsg = strdup(""); // Should this be "pEp", as above?
+
+    if (!shortmsg || strcmp(shortmsg, "pEp") == 0)
+        return longmsg;
         
     if (longmsg == NULL)
         longmsg = "";
