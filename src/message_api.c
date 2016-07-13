@@ -568,6 +568,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
 
                     _d = bloblist_add(_d, _ctext, csize, "application/octet-stream",
                         filename);
+                    free(filename);
                     if (_d == NULL)
                         goto enomem;
                 }
