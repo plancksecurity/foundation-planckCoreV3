@@ -751,13 +751,11 @@ static bool is_encrypted_html_attachment(const bloblist_t *blob)
 
 static char * without_double_ending(const char *filename)
 {
-    char *ext;
-
     assert(filename);
     if (filename == NULL)
         return NULL;
     
-    ext = strrchr(filename, '.');
+    char *ext = strrchr(filename, '.');
     if (ext == NULL)
         return NULL;
 
@@ -1366,11 +1364,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                     }
                     else if (is_encrypted_attachment(_s)) {
                         stringlist_t *_keylist = NULL;
-                        char *attctext;
-                        size_t attcsize;
-
-                        attctext = _s->value;
-                        attcsize = _s->size;
+                        char *attctext  = _s->value;
+                        size_t attcsize = _s->size;
 
                         free(ptext);
                         ptext = NULL;
@@ -1387,8 +1382,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                     goto pep_error;
                             }
                             else {
-                                char * mime_type = "application/octet-stream";
-                                char * filename =
+                                static const char * const mime_type = "application/octet-stream";
+                                const char * const filename =
                                     without_double_ending(_s->filename);
                                 if (filename == NULL)
                                     goto enomem;
@@ -1401,6 +1396,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
                                 _m = bloblist_add(_m, _ptext, psize, mime_type,
                                     filename);
+                                free(filename);
                                 if (_m == NULL)
                                     goto enomem;
 
