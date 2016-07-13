@@ -1235,22 +1235,26 @@ static bool is_a_pEpmessage(const message *msg)
 
 // update comm_type to pEp_ct_pEp if needed
 
-static void _update_identity_for_incoming_message(
+static PEP_STATUS _update_identity_for_incoming_message(
         PEP_SESSION session,
         const message *src
     )
 {
-    if (src->from && src->from->user_id && src->from->address) {
-        update_identity(session, src->from);
-        if (is_a_pEpmessage(src)
+    PEP_STATUS status;
+    if (src->from && src->from->address) {
+        status = update_identity(session, src->from);
+        if (status == PEP_STATUS_OK
+                && is_a_pEpmessage(src)
                 && src->from->comm_type >= PEP_ct_OpenPGP_unconfirmed
                 && src->from->comm_type != PEP_ct_pEp_unconfirmed
                 && src->from->comm_type != PEP_ct_pEp)
         {
             src->from->comm_type |= PEP_ct_pEp_unconfirmed;
-            update_identity(session, src->from);
+            status = update_identity(session, src->from);
         }
+        return status;
     }
+    return PEP_ILLEGAL_VALUE;
 }
 
 DYNAMIC_API PEP_STATUS _decrypt_message(
@@ -1289,7 +1293,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
     // Update src->from in case we just imported a key
     // we would need to check signature
-    _update_identity_for_incoming_message(session, src);
+    status = _update_identity_for_incoming_message(session, src);
+    if(status != PEP_STATUS_OK)
+        return status;
+
     PEP_cryptotech crypto = determine_encryption_format(src);
 
     *dst = NULL;
@@ -1494,6 +1501,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             // we would need to check signature
 
             _update_identity_for_incoming_message(session, src);
+            if(status != PEP_STATUS_OK)
+                goto pep_error;
             
             char *re_ptext = NULL;
             size_t re_psize;
@@ -1637,6 +1646,29 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
 
 }
 
+static void _max_comm_type_from_identity_list(
+        identity_list *identities, 
+        PEP_SESSION session,
+        PEP_comm_type *max_comm_type,
+        bool *comm_type_determined
+    )
+{
+    identity_list * il;
+    for (il = identities; il != NULL; il = il->next)
+    {
+        if (il->ident)
+        {
+            PEP_STATUS status = update_identity(session, il->ident);
+            if (status == PEP_STATUS_OK)
+            {
+                *max_comm_type = _get_comm_type(session, *max_comm_type,
+                        il->ident);
+                *comm_type_determined = true;
+            }
+        }
+    }
+}
+
 DYNAMIC_API PEP_STATUS outgoing_message_color(
         PEP_SESSION session,
         message *msg,
@@ -1646,7 +1678,6 @@ DYNAMIC_API PEP_STATUS outgoing_message_color(
     PEP_STATUS status = PEP_STATUS_OK;
     PEP_comm_type max_comm_type = PEP_ct_pEp;
     bool comm_type_determined = false;
-    identity_list * il;
 
     assert(session);
     assert(msg);
@@ -1666,38 +1697,14 @@ DYNAMIC_API PEP_STATUS outgoing_message_color(
     if (status != PEP_STATUS_OK)
         return status;
 
-    for (il = msg->to; il != NULL; il = il->next)
-    {
-        if (il->ident)
-        {
-            update_identity(session, il->ident);
-            max_comm_type = _get_comm_type(session, max_comm_type,
-                    il->ident);
-            comm_type_determined = true;
-        }
-    }
+    _max_comm_type_from_identity_list(msg->to, session,
+                                      &max_comm_type, &comm_type_determined);
 
-    for (il = msg->cc; il != NULL; il = il->next)
-    {
-        if (il->ident)
-        {
-            update_identity(session, il->ident);
-            max_comm_type = _get_comm_type(session, max_comm_type,
-                    il->ident);
-            comm_type_determined = true;
-        }
-    }
+    _max_comm_type_from_identity_list(msg->cc, session,
+                                      &max_comm_type, &comm_type_determined);
         
-    for (il = msg->bcc; il != NULL; il = il->next)
-    {
-        if (il->ident)
-        {
-            update_identity(session, il->ident);
-            max_comm_type = _get_comm_type(session, max_comm_type,
-                                           il->ident);
-            comm_type_determined = true;
-        }
-    }
+    _max_comm_type_from_identity_list(msg->bcc, session,
+                                      &max_comm_type, &comm_type_determined);
 
     if (comm_type_determined == false)
         *color = PEP_rating_undefined;
