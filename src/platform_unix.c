@@ -52,7 +52,17 @@ char *stpcpy(char *dst, const char *src)
 
 long int random(void)
 {
-    static unsigned short xsubi[3] = {'p', 'E', 'p'};
+    static bool seeded = false;
+    static unsigned short xsubi[3];
+    if(!seeded)
+    {
+        const long long t = (long long)time(NULL);
+        xsubi[0] = (unsigned short)t;
+        xsubi[1] = (unsigned short)(t>>16);
+        xsubi[2] = (unsigned short)(t>>32);
+        seeded = true;
+    }
+
     return nrand48(xsubi);
 }
 
@@ -65,7 +75,7 @@ const char *android_system_db(void)
         char *tw_env;
         if(tw_env = getenv("TRUSTWORDS")){
             char *p = stpncpy(buffer, tw_env, MAX_PATH);
-            size_t len = MAX_PATH - (p - buffer) - 2;
+            ssize_t len = MAX_PATH - (p - buffer) - 2;
 
             if (len < strlen(SYSTEM_DB_FILENAME)) {
                 assert(0);
@@ -93,7 +103,7 @@ const char *unix_local_db(void)
         char *home_env;
         if((home_env = getenv("HOME"))){
             char *p = stpncpy(buffer, home_env, MAX_PATH);
-            size_t len = MAX_PATH - (p - buffer) - 2;
+            ssize_t len = MAX_PATH - (p - buffer) - 2;
 
             if (len < strlen(LOCAL_DB_FILENAME)) {
                 assert(0);
@@ -123,7 +133,7 @@ static bool ensure_gpg_home(const char **conf, const char **home){
 
     if (!done) {
         char *p;
-        size_t len;
+        ssize_t len;
         char *gpg_home_env = getenv("GNUPGHOME");
         char *home_env = getenv("HOME");
 
@@ -200,7 +210,7 @@ static bool ensure_gpg_agent_conf(const char **agent_conf){
         char *p;
         p = stpncpy(agent_path, dirname, MAX_PATH);
         
-        size_t len = MAX_PATH - (p - agent_path) - 2;
+        ssize_t len = MAX_PATH - (p - agent_path) - 2;
 
         if (len < strlen(gpg_agent_conf_name))
         {

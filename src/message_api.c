@@ -33,11 +33,17 @@ static bool is_mime_type(const bloblist_t *bl, const char *mt)
     return bl && string_equality(bl->mime_type, mt);
 }
 
+//
+// This function presumes the file ending is a proper substring of the
+// filename (i.e. if bl->filename is "a.pgp" and fe is ".pgp", it will
+// return true, but if bl->filename is ".pgp" and fe is ".pgp", it will
+// return false. This is desired behaviour.
+//
 static bool is_fileending(const bloblist_t *bl, const char *fe)
 {
     assert(fe);
-
-    if (bl == NULL || bl->filename == NULL)
+    
+    if (bl == NULL || bl->filename == NULL || fe == NULL)
         return false;
 
     assert(bl && bl->filename);
@@ -64,7 +70,10 @@ static void add_opt_field(message *msg, const char *name, const char *value)
 
         stringpair_list_t *field = stringpair_list_add(msg->opt_fields, pair);
         if (field == NULL)
+        {
+            free_stringpair(pair);
             return;
+        }
 
         if (msg->opt_fields == NULL)
             msg->opt_fields = field;
@@ -78,6 +87,17 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     assert(shortmsg);
     assert(strcmp(shortmsg, "pEp") != 0);
 
+    if (!shortmsg || strcmp(shortmsg, "pEp") == 0) {
+        if (!longmsg) {
+            return NULL;
+        }
+        else {
+            char *result = strdup(longmsg);
+            assert(result);
+            return result;
+        }
+    }
+        
     if (longmsg == NULL)
         longmsg = "";
 
@@ -94,7 +114,7 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     return ptext;
 }
 
-static int seperate_short_and_long(const char *src, char **shortmsg, char **longmsg)
+static int separate_short_and_long(const char *src, char **shortmsg, char **longmsg)
 {
     char *_shortmsg = NULL;
     char *_longmsg = NULL;
@@ -102,6 +122,9 @@ static int seperate_short_and_long(const char *src, char **shortmsg, char **long
     assert(src);
     assert(shortmsg);
     assert(longmsg);
+    
+    if (src == NULL || shortmsg == NULL || longmsg == NULL)
+        return -1;
 
     *shortmsg = NULL;
     *longmsg = NULL;
@@ -165,6 +188,9 @@ static PEP_STATUS copy_fields(message *dst, const message *src)
 {
     assert(dst);
     assert(src);
+
+    if(!(dst && src))
+        return PEP_ILLEGAL_VALUE;
 
     free_timestamp(dst->sent);
     dst->sent = NULL;
@@ -272,6 +298,8 @@ static message * clone_to_empty_message(const message * src)
     message * msg = NULL;
 
     assert(src);
+    if (src == NULL)
+        return NULL;
 
     msg = calloc(1, sizeof(message));
     assert(msg);
@@ -340,6 +368,9 @@ static PEP_STATUS encrypt_PGP_MIME(
     _src->enc_format = PEP_enc_none;
     status = mime_encode_message(_src, true, &mimetext);
     assert(status == PEP_STATUS_OK);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+    
     if (free_ptext){
         free(ptext);
         free_ptext=0;
@@ -682,9 +713,9 @@ static bool is_encrypted_attachment(const bloblist_t *blob)
 
     assert(blob);
 
-    if (blob->filename == NULL)
+    if (blob == NULL || blob->filename == NULL)
         return false;
-
+    
     ext = strrchr(blob->filename, '.');
     if (ext == NULL)
         return false;
@@ -706,6 +737,8 @@ static bool is_encrypted_html_attachment(const bloblist_t *blob)
 {
     assert(blob);
     assert(blob->filename);
+    if (blob == NULL || blob->filename == NULL)
+        return false;
 
     if (strncmp(blob->filename, "PGPexch.htm.", 12) == 0) {
         if (strcmp(blob->filename + 11, ".pgp") == 0 ||
@@ -721,7 +754,9 @@ static char * without_double_ending(const char *filename)
     char *ext;
 
     assert(filename);
-
+    if (filename == NULL)
+        return NULL;
+    
     ext = strrchr(filename, '.');
     if (ext == NULL)
         return NULL;
@@ -764,6 +799,9 @@ static PEP_color key_color(PEP_SESSION session, const char *fpr)
 
     assert(session);
     assert(fpr);
+    
+    if (session == NULL || fpr == NULL)
+        return PEP_rating_undefined;
 
     PEP_STATUS status = get_key_rating(session, fpr, &comm_type);
     if (status != PEP_STATUS_OK)
@@ -898,6 +936,9 @@ bool import_attached_keys(
 {
     assert(session);
     assert(msg);
+    
+    if (session == NULL || msg == NULL)
+        return false;
 
     bool remove = false;
 
@@ -941,7 +982,7 @@ void attach_own_key(PEP_SESSION session, message *msg)
 {
     assert(session);
     assert(msg);
-
+    
     if (msg->dir == PEP_dir_incoming)
         return;
 
@@ -972,7 +1013,7 @@ void attach_own_key(PEP_SESSION session, message *msg)
 PEP_cryptotech determine_encryption_format(message *msg)
 {
     assert(msg);
-
+    
     if (is_PGP_message_text(msg->longmsg)) {
         msg->enc_format = PEP_enc_pieces;
         return PEP_crypt_OpenPGP;
@@ -1163,6 +1204,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     if (msg && msg->shortmsg == NULL) {
         msg->shortmsg = strdup("pEp");
         assert(msg->shortmsg);
+        if (msg->shortmsg == NULL)
+            goto enomem;
     }
 
     if (msg)
@@ -1192,22 +1235,26 @@ static bool is_a_pEpmessage(const message *msg)
 
 // update comm_type to pEp_ct_pEp if needed
 
-static void _update_identity_for_incoming_message(
+static PEP_STATUS _update_identity_for_incoming_message(
         PEP_SESSION session,
         const message *src
     )
 {
-    if (src->from && src->from->user_id && src->from->address) {
-        update_identity(session, src->from);
-        if (is_a_pEpmessage(src)
+    PEP_STATUS status;
+    if (src->from && src->from->address) {
+        status = update_identity(session, src->from);
+        if (status == PEP_STATUS_OK
+                && is_a_pEpmessage(src)
                 && src->from->comm_type >= PEP_ct_OpenPGP_unconfirmed
                 && src->from->comm_type != PEP_ct_pEp_unconfirmed
                 && src->from->comm_type != PEP_ct_pEp)
         {
             src->from->comm_type |= PEP_ct_pEp_unconfirmed;
-            update_identity(session, src->from);
+            status = update_identity(session, src->from);
         }
+        return status;
     }
+    return PEP_ILLEGAL_VALUE;
 }
 
 DYNAMIC_API PEP_STATUS _decrypt_message(
@@ -1246,7 +1293,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
     // Update src->from in case we just imported a key
     // we would need to check signature
-    _update_identity_for_incoming_message(session, src);
+    status = _update_identity_for_incoming_message(session, src);
+    if(status != PEP_STATUS_OK)
+        return status;
+
     PEP_cryptotech crypto = determine_encryption_format(src);
 
     *dst = NULL;
@@ -1321,6 +1371,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
                         attctext = _s->value;
                         attcsize = _s->size;
+
+                        free(ptext);
+                        ptext = NULL;
 
                         status = decrypt_and_verify(session, attctext, attcsize,
                                 &ptext, &psize, &_keylist);
@@ -1397,7 +1450,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                     char * shortmsg;
                     char * longmsg;
 
-                    int r = seperate_short_and_long(msg->longmsg, &shortmsg,
+                    int r = separate_short_and_long(msg->longmsg, &shortmsg,
                             &longmsg);
                     if (r == -1)
                         goto enomem;
@@ -1448,6 +1501,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             // we would need to check signature
 
             _update_identity_for_incoming_message(session, src);
+            if(status != PEP_STATUS_OK)
+                goto pep_error;
             
             char *re_ptext = NULL;
             size_t re_psize;
@@ -1591,6 +1646,29 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
 
 }
 
+static void _max_comm_type_from_identity_list(
+        identity_list *identities, 
+        PEP_SESSION session,
+        PEP_comm_type *max_comm_type,
+        bool *comm_type_determined
+    )
+{
+    identity_list * il;
+    for (il = identities; il != NULL; il = il->next)
+    {
+        if (il->ident)
+        {
+            PEP_STATUS status = update_identity(session, il->ident);
+            if (status == PEP_STATUS_OK)
+            {
+                *max_comm_type = _get_comm_type(session, *max_comm_type,
+                        il->ident);
+                *comm_type_determined = true;
+            }
+        }
+    }
+}
+
 DYNAMIC_API PEP_STATUS outgoing_message_color(
         PEP_SESSION session,
         message *msg,
@@ -1600,7 +1678,6 @@ DYNAMIC_API PEP_STATUS outgoing_message_color(
     PEP_STATUS status = PEP_STATUS_OK;
     PEP_comm_type max_comm_type = PEP_ct_pEp;
     bool comm_type_determined = false;
-    identity_list * il;
 
     assert(session);
     assert(msg);
@@ -1620,38 +1697,14 @@ DYNAMIC_API PEP_STATUS outgoing_message_color(
     if (status != PEP_STATUS_OK)
         return status;
 
-    for (il = msg->to; il != NULL; il = il->next)
-    {
-        if (il->ident)
-        {
-            update_identity(session, il->ident);
-            max_comm_type = _get_comm_type(session, max_comm_type,
-                    il->ident);
-            comm_type_determined = true;
-        }
-    }
+    _max_comm_type_from_identity_list(msg->to, session,
+                                      &max_comm_type, &comm_type_determined);
 
-    for (il = msg->cc; il != NULL; il = il->next)
-    {
-        if (il->ident)
-        {
-            update_identity(session, il->ident);
-            max_comm_type = _get_comm_type(session, max_comm_type,
-                    il->ident);
-            comm_type_determined = true;
-        }
-    }
+    _max_comm_type_from_identity_list(msg->cc, session,
+                                      &max_comm_type, &comm_type_determined);
         
-    for (il = msg->bcc; il != NULL; il = il->next)
-    {
-        if (il->ident)
-        {
-            update_identity(session, il->ident);
-            max_comm_type = _get_comm_type(session, max_comm_type,
-                                           il->ident);
-            comm_type_determined = true;
-        }
-    }
+    _max_comm_type_from_identity_list(msg->bcc, session,
+                                      &max_comm_type, &comm_type_determined);
 
     if (comm_type_determined == false)
         *color = PEP_rating_undefined;

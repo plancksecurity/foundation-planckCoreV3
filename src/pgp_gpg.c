@@ -29,9 +29,17 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
         int length = stringlist_length(keys);
         unsigned int n = (1 << length) - 1;
 
+        // make sure we 1) have the same number of keys and values
+        // and 2) we don't have more key/value pairs than
+        // the size of the bitfield used to hold the indices
+        // of key/value pairs matching keys in the config file.
         assert(length <= sizeof(unsigned int) * CHAR_BIT);
         assert(length == stringlist_length(values));
-
+        if (!(length == stringlist_length(values) &&
+              length <= sizeof(unsigned int) * CHAR_BIT)) {
+            return false;
+        }
+        
         do {
             char * s;
 

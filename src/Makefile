@@ -14,7 +14,7 @@ LD?=clang
 CFLAGS?=-I$(GPGME_IN)/include -I$(HOME)/include -I/opt/local/include $(OPTIMIZE) -pedantic \
 	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -DLIBGPGME=\"$(LIBGPGME)\" -I../asn.1
 LDFLAGS?=-lc -shared -arch x86_64 \
-	-L$(HOME)/lib -L/opt/local/lib -letpan -lsqlite3 -L../asn.1 -lasn1
+	-L$(HOME)/lib -L/usr/lib -L/opt/local/lib -letpan -lsqlite3 -L../asn.1 -lasn1 -lz -liconv
 
 else
 $(error don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
@@ -59,8 +59,7 @@ ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
 
 all: $(TARGET)
 
-sync_fsm.c: ../sync/sync.fsm
-	make -C ../sync
+include Makefile.protocols
 
 %.d: %.c
 	@set -e; rm -f $@; \

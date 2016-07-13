@@ -9,35 +9,47 @@ include yslt.yml2
 tstylesheet {
     include ./functions.ysl2
 
-    template "/protocol/fsm" {
-    ||
-    `` const "name", "@name"
-    // Actions for «@name» state machine
+    template "/protocol/fsm" document "../src/{@filename}_actions.c.skeleton", "text" {
+        const "name", "@name";
+        const "filename", "@filename";
+        ||
+        // Actions for «@name» state machine
 
-    #include <assert.h>
-    #include "pEp_internal.h"
-    #include "keymanagement.h"
-    #include "message.h"
-    #include "sync_fsm.h"
-    #include "baseprotocol.h"
-    #include "map_asn1.h"
-    `` for "func:distinctName(//action)" if "substring(@name, 1, 4) = 'send'" | #include "../asn.1/«substring(@name, 5, 255)».h"
-
-    `` for "func:distinctName(//action)" call "action" with "action", ".", with "fsm", "$name";
-
-    ||
+        #include <assert.h>
+        #include "pEp_internal.h"
+        #include "keymanagement.h"
+        #include "message.h"
+        #include "«@filename»_fsm.h"
+        #include "baseprotocol.h"
+        #include "map_asn1.h"
+        ||
+        for "func:distinctName(//action)"
+            if "substring(@name, 1, 4) = 'send'"
+                | #include "../asn.1/«substring(@name, 5, 255)».h"
+        |
+        for "func:distinctName(//action)"
+            call "action"
+                with "action", ".",
+                with "fsm", "$name",
+                with "filename", "$filename";
+        |
     }
 
     function "action" {
         param "action";
         param "fsm";
+        param "filename", "'###'";
         choose {
             when "substring($action/@name, 1, 4) = 'send'"
-                call "send_action" with "action", "$action",
-                     with "fsm", "$fsm";
+                call "send_action"
+                    with "action", "$action",
+                    with "fsm", "$fsm",
+                    with "filename", "$filename";
             otherwise
-                call "other_action" with "action", "$action",
-                     with "fsm", "$fsm";
+                call "other_action"
+                    with "action", "$action",
+                    with "fsm", "$fsm",
+                    with "filename", "$filename";
         }
     }
 
@@ -63,6 +75,7 @@ tstylesheet {
     function "other_action" {
         param "action";
         param "fsm";
+        param "filename", "'###'";
 
         ||
 
@@ -71,7 +84,7 @@ tstylesheet {
         //  params:
         //      session (in)        session handle
         //      state (in)          state the state machine is in
-        `` if "parm"        | //      partner (in)        partner in sync
+        `` if "parm"        | //      partner (in)        partner to communicate with
         `` if "not(parm)"   | //      partner (in)        (must be NULL)
         //
         //  returns:
@@ -105,6 +118,7 @@ tstylesheet {
     function "send_action" {
         param "action";
         param "fsm";
+        param "filename", "'###'";
         const "name", "substring($action/@name, 5, 255)";
 
         ||
@@ -114,7 +128,7 @@ tstylesheet {
         //  params:
         //      session (in)        session handle
         //      state (in)          state the state machine is in
-        `` if "parm"        | //      partner (in)        partner in sync
+        `` if "parm"        | //      partner (in)        partner to communicate with
         `` if "not(parm)"   | //      partner (in)        (must be NULL)
         //
         //  returns:
@@ -159,15 +173,17 @@ tstylesheet {
                 goto error;
             if (Identity_from_Struct(me, &msg->me) == NULL)
                 goto enomem;
-         `` if "parm or $name='OwnKeys'" |
-         `` if "parm/partner"   |> if (Identity_from_Struct(partner, &msg->partner) == NULL)
-         `` if "parm/partner"   |>> goto enomem;
-         `` if "$name='OwnKeys'"|> stringlist_t *sl;
-         `` if "$name='OwnKeys'"|> status = own_key_retrieve(session, &sl);
-         `` if "$name='OwnKeys'"|> if (status != PEP_STATUS_OK)
-         `` if "$name='OwnKeys'"|>> goto error;
-         `` if "$name='OwnKeys'"|> if (KeyList_from_stringlist(sl, &msg->keylist) == NULL)
-         `` if "$name='OwnKeys'"|>> goto enomem;
+        ||
+        if "parm or $name='OwnKeys'" |
+        if "parm/partner"   |> if (Identity_from_Struct(partner, &msg->partner) == NULL)
+        if "parm/partner"   |>> goto enomem;
+        if "$name='OwnKeys'"|> stringlist_t *sl;
+        if "$name='OwnKeys'"|> status = own_key_retrieve(session, &sl);
+        if "$name='OwnKeys'"|> if (status != PEP_STATUS_OK)
+        if "$name='OwnKeys'"|>> goto error;
+        if "$name='OwnKeys'"|> if (KeyList_from_stringlist(sl, &msg->keylist) == NULL)
+        if "$name='OwnKeys'"|>> goto enomem;
+        ||
 
             if (asn_check_constraints(&asn_DEF_«$name», msg, NULL, NULL)) {
                 status = PEP_CONTRAINTS_VIOLATED;
@@ -189,7 +205,7 @@ tstylesheet {
             free_identity(me);
             me = NULL;
 
-            status = session->messageToSend(session->sync_obj, _message);
+            status = session->messageToSend(session->«$filename»_obj, _message);
 
             free_message(_message);
             ASN_STRUCT_FREE(asn_DEF_«$name», msg);
