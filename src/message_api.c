@@ -87,8 +87,16 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     assert(shortmsg);
     assert(strcmp(shortmsg, "pEp") != 0);
 
-    if (!shortmsg || strcmp(shortmsg, "pEp") == 0)
-        return longmsg;
+    if (!shortmsg || strcmp(shortmsg, "pEp") == 0) {
+        if (!longmsg) {
+            return NULL;
+        }
+        else {
+            char *result = strdup(longmsg);
+            assert(result);
+            return result;
+        }
+    }
         
     if (longmsg == NULL)
         longmsg = "";
