@@ -1500,7 +1500,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             // Update msg->from in case we just imported a key
             // we would need to check signature
 
-            _update_identity_for_incoming_message(session, src);
+            status = _update_identity_for_incoming_message(session, src);
             if(status != PEP_STATUS_OK)
                 goto pep_error;
             
