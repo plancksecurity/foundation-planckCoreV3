@@ -1383,7 +1383,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                             }
                             else {
                                 static const char * const mime_type = "application/octet-stream";
-                                const char * const filename =
+                                char * const filename =
                                     without_double_ending(_s->filename);
                                 if (filename == NULL)
                                     goto enomem;
