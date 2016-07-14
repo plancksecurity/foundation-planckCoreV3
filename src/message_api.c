@@ -562,8 +562,10 @@ static PEP_STATUS encrypt_PGP_in_pieces(
 
                     char *_ctext = malloc(csize);
                     assert(_ctext);
-                    if (_ctext == NULL)
+                    if (_ctext == NULL) {
+                        free(filename);
                         goto enomem;
+                    }
                     memcpy(_ctext, ctext, csize);
 
                     _d = bloblist_add(_d, _ctext, csize, "application/octet-stream",
