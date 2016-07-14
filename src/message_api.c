@@ -562,12 +562,15 @@ static PEP_STATUS encrypt_PGP_in_pieces(
 
                     char *_ctext = malloc(csize);
                     assert(_ctext);
-                    if (_ctext == NULL)
+                    if (_ctext == NULL) {
+                        free(filename);
                         goto enomem;
+                    }
                     memcpy(_ctext, ctext, csize);
 
                     _d = bloblist_add(_d, _ctext, csize, "application/octet-stream",
                         filename);
+                    free(filename);
                     if (_d == NULL)
                         goto enomem;
                 }
@@ -751,13 +754,11 @@ static bool is_encrypted_html_attachment(const bloblist_t *blob)
 
 static char * without_double_ending(const char *filename)
 {
-    char *ext;
-
     assert(filename);
     if (filename == NULL)
         return NULL;
     
-    ext = strrchr(filename, '.');
+    char *ext = strrchr(filename, '.');
     if (ext == NULL)
         return NULL;
 
@@ -1366,11 +1367,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                     }
                     else if (is_encrypted_attachment(_s)) {
                         stringlist_t *_keylist = NULL;
-                        char *attctext;
-                        size_t attcsize;
-
-                        attctext = _s->value;
-                        attcsize = _s->size;
+                        char *attctext  = _s->value;
+                        size_t attcsize = _s->size;
 
                         free(ptext);
                         ptext = NULL;
@@ -1387,8 +1385,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                     goto pep_error;
                             }
                             else {
-                                char * mime_type = "application/octet-stream";
-                                char * filename =
+                                static const char * const mime_type = "application/octet-stream";
+                                char * const filename =
                                     without_double_ending(_s->filename);
                                 if (filename == NULL)
                                     goto enomem;
@@ -1401,6 +1399,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
                                 _m = bloblist_add(_m, _ptext, psize, mime_type,
                                     filename);
+                                free(filename);
                                 if (_m == NULL)
                                     goto enomem;
 
@@ -1500,7 +1499,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             // Update msg->from in case we just imported a key
             // we would need to check signature
 
-            _update_identity_for_incoming_message(session, src);
+            status = _update_identity_for_incoming_message(session, src);
             if(status != PEP_STATUS_OK)
                 goto pep_error;
             
