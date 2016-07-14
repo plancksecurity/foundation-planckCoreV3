@@ -1313,8 +1313,6 @@ PEP_STATUS pgp_find_keys(
 {
     gpgme_error_t gpgme_error;
     gpgme_key_t key;
-    stringlist_t *_keylist;
-    char *fpr;
 
     assert(session);
     assert(pattern);
@@ -1335,7 +1333,7 @@ PEP_STATUS pgp_find_keys(
         return PEP_GET_KEY_FAILED;
     };
 
-    _keylist = new_stringlist(NULL);
+    stringlist_t *_keylist = new_stringlist(NULL);
     stringlist_t *_k = _keylist;
 
     do {
@@ -1348,7 +1346,7 @@ PEP_STATUS pgp_find_keys(
         case GPG_ERR_NO_ERROR:
             assert(key);
             assert(key->subkeys);
-            fpr = key->subkeys->fpr;
+            char *fpr = key->subkeys->fpr;
             assert(fpr);
             _k = stringlist_add(_k, fpr);
             assert(_k);
