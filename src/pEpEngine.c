@@ -564,7 +564,6 @@ DYNAMIC_API PEP_STATUS trustword(
         )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    int result;
 
     assert(session);
     assert(word);
@@ -589,7 +588,7 @@ DYNAMIC_API PEP_STATUS trustword(
     sqlite3_bind_text(session->trustword, 1, lang, -1, SQLITE_STATIC);
     sqlite3_bind_int(session->trustword, 2, value);
 
-    result = sqlite3_step(session->trustword);
+    const int result = sqlite3_step(session->trustword);
     if (result == SQLITE_ROW) {
         *word = strdup((const char *) sqlite3_column_text(session->trustword,
                     1));
