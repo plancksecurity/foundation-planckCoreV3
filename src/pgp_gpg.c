@@ -95,7 +95,6 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     PEP_STATUS status = PEP_STATUS_OK;
     gpgme_error_t gpgme_error;
     bool bResult;
-    char *cLocal;
     
     if (in_first) {
         stringlist_t *conf_keys   = new_stringlist("keyserver");
@@ -333,7 +332,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
         gpg.version = gpg.gpgme_check(NULL);
         
-        cLocal = setlocale(LC_ALL, NULL);
+        const char * const cLocal = setlocale(LC_ALL, NULL);
         if (!cLocal || (strcmp(cLocal, "C") == 0))
             setlocale(LC_ALL, "");
 
