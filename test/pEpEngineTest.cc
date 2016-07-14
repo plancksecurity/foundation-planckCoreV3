@@ -62,7 +62,7 @@ int stringlist_test()
 	char stringkey[32] = {0};
 	char stringvalue[32] = {0};
 
-	for(double len=1.0; len<1E18; len=(len*3.8251)+1)
+	for(double len=1.0; len<1E5; len=(len*3.8251)+1)
 	{
 		const unsigned ulen = unsigned(len);
 		std::cout << "Stringpairlist length=" << ulen << ": " << std::endl;
