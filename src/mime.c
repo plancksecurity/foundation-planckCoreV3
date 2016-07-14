@@ -888,10 +888,7 @@ pep_error:
 
 static pEp_identity *mailbox_to_identity(const struct mailimf_mailbox * mb)
 {
-    pEp_identity *ident;
     char *username = NULL;
-    size_t index;
-    int r;
 
     assert(mb);
     assert(mb->mb_addr_spec);
@@ -900,14 +897,14 @@ static pEp_identity *mailbox_to_identity(const struct mailimf_mailbox * mb)
         return NULL;
 
     if (mb->mb_display_name) {
-        index = 0;
-        r = mailmime_encoded_phrase_parse("utf-8", mb->mb_display_name,
+        size_t index = 0;
+        const int r = mailmime_encoded_phrase_parse("utf-8", mb->mb_display_name,
                 strlen(mb->mb_display_name), &index, "utf-8", &username);
         if (r)
             goto enomem;
     }
 
-    ident = new_identity(mb->mb_addr_spec, NULL, NULL, username);
+    pEp_identity *ident = new_identity(mb->mb_addr_spec, NULL, NULL, username);
     if (ident == NULL)
         goto enomem;
     free(username);
@@ -916,7 +913,6 @@ static pEp_identity *mailbox_to_identity(const struct mailimf_mailbox * mb)
 
 enomem:
     free(username);
-
     return NULL;
 }
 
@@ -930,22 +926,18 @@ static identity_list * mal_to_identity_list(
         const struct mailimf_address_list *mal
     )
 {
-    identity_list *il = NULL;
-    clist *list = mal->ad_list;
-    struct mailimf_address * addr = NULL;
-    clistiter *cur;
-
     assert(mal);
+    clist *list = mal->ad_list;
 
-    il = new_identity_list(NULL);
+    identity_list *il = new_identity_list(NULL);
     if (il == NULL)
         goto enomem;
 
     identity_list *_il = il;
-    for (cur = clist_begin(list); cur != NULL ; cur = clist_next(cur)) {
+    for (clistiter *cur = clist_begin(list); cur != NULL ; cur = clist_next(cur)) {
         pEp_identity *ident;
 
-        addr = clist_content(cur);
+        struct mailimf_address *addr = clist_content(cur);
         switch(addr->ad_type) {
             case MAILIMF_ADDRESS_MAILBOX:
                 ident = mailbox_to_identity(addr->ad_data.ad_mailbox);
@@ -958,10 +950,9 @@ static identity_list * mal_to_identity_list(
 
             case MAILIMF_ADDRESS_GROUP:
                 {
-                    clistiter *cur2;
                     struct mailimf_mailbox_list * mbl =
                             addr->ad_data.ad_group->grp_mb_list;
-                    for (cur2 = clist_begin(mbl->mb_list); cur2 != NULL;
+                    for (clistiter *cur2 = clist_begin(mbl->mb_list); cur2 != NULL;
                             cur2 = clist_next(cur2)) {
                         ident = mailbox_to_identity(clist_content(cur));
                         if (ident == NULL)
@@ -983,7 +974,6 @@ static identity_list * mal_to_identity_list(
 
 enomem:
     free_identity_list(il);
-
     return NULL;
 }
 
@@ -994,15 +984,12 @@ static stringlist_t * clist_to_stringlist(const clist *list)
     if (sl == NULL)
         return NULL;
 
-    clistiter *cur;
     stringlist_t *_sl = sl;
-    for (cur = clist_begin(list); cur != NULL; cur = clist_next(cur)) {
+    for (clistiter *cur = clist_begin(list); cur != NULL; cur = clist_next(cur)) {
         char *phrase = clist_content(cur);
-        size_t index;
-        int r;
-
-        index = 0;
-        r = mailmime_encoded_phrase_parse("utf-8", phrase, strlen(phrase),
+        size_t index = 0;
+        
+        const int r = mailmime_encoded_phrase_parse("utf-8", phrase, strlen(phrase),
                 &index, "utf-8", &text);
         if (r)
             goto enomem;
