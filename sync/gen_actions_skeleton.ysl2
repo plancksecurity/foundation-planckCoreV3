@@ -9,11 +9,16 @@ include yslt.yml2
 tstylesheet {
     include ./functions.ysl2
 
-    template "/protocol/fsm" document "../src/{@filename}_actions.c.skeleton", "text" {
+    template "/protocol" {
+        apply "fsm", mode=send, 0;
+        apply "fsm", mode=other, 0;
+    }
+
+    template "fsm", mode=send document "../src/{@filename}_send_actions.c", "text" {
         const "name", "@name";
         const "filename", "@filename";
         ||
-        // Actions for «@name» state machine
+        // Send Actions for «@name» state machine
 
         #include <assert.h>
         #include "pEp_internal.h"
@@ -28,29 +33,32 @@ tstylesheet {
                 | #include "../asn.1/«substring(@name, 5, 255)».h"
         |
         for "func:distinctName(//action)"
-            call "action"
-                with "action", ".",
-                with "fsm", "$name",
-                with "filename", "$filename";
-        |
+            if "substring(@name, 1, 4) = 'send'"
+                call "send_action"
+                    with "action", ".",
+                    with "fsm", "$name",
+                    with "filename", "$filename";
     }
 
-    function "action" {
-        param "action";
-        param "fsm";
-        param "filename", "'###'";
-        choose {
-            when "substring($action/@name, 1, 4) = 'send'"
-                call "send_action"
-                    with "action", "$action",
-                    with "fsm", "$fsm",
-                    with "filename", "$filename";
-            otherwise
+    template "fsm", mode=other document "../src/{@filename}_actions.c.skeleton", "text" {
+        const "name", "@name";
+        const "filename", "@filename";
+        ||
+        // Actions for «@name» state machine
+
+        #include <assert.h>
+        #include "pEp_internal.h"
+        #include "keymanagement.h"
+        #include "message.h"
+        #include "«@filename»_fsm.h"
+
+        ||
+        for "func:distinctName(//action)"
+            if "substring(@name, 1, 4) != 'send'"
                 call "other_action"
-                    with "action", "$action",
-                    with "fsm", "$fsm",
+                    with "action", ".",
+                    with "fsm", "$name",
                     with "filename", "$filename";
-        }
     }
 
     function "paramcheck" {

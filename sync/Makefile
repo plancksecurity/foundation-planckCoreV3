@@ -1,6 +1,6 @@
 include ../Makefile.conf
 
-all: .statemachines
+all: .statemachines .skeletons
 
 skeleton: .skeletons
 
