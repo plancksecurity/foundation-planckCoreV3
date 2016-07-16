@@ -60,14 +60,24 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>cd ..
-asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=PEP.Message pEp.asn1 devicegroup.asn1
-del converter-sample.c
-</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <PreBuildEvent>
       <Message>ASN.1 source generation</Message>
     </PreBuildEvent>
+    <CustomBuildStep>
+      <Command>cd ..
+asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=PEP.Message pEp.asn1 devicegroup.asn1
+del converter-sample.c
+</Command>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Message>compiling ASN.1 description</Message>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Outputs>$(ProjectDir)..\DeviceGroup-Protocol.c;%(Outputs)</Outputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -86,11 +96,21 @@ del converter-sample.c
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <CustomBuildStep>
       <Command>cd ..
 asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=PEP.Message pEp.asn1 devicegroup.asn1
 del converter-sample.c
 </Command>
-    </PreBuildEvent>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Message>compiling ASN.1 description</Message>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Outputs>$(ProjectDir)..\DeviceGroup-Protocol.c;%(Outputs)</Outputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
