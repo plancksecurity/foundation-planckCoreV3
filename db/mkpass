@@ -1,0 +1,13 @@
+#!/bin/sh
+
+if [ $1/ == / ] ; then
+    lang=en
+else
+    if [ $1/ == -h/ -o $2/ != / ] ; then
+        echo usage: $0 [ISO 639 language code]
+        exit 0
+    fi
+    lang=$1
+fi
+
+trustwords.py -l $lang ` hexdump -vxn 10 /dev/random | sed -E 's/^[0-9a-z]+//'`

@@ -1,5 +1,9 @@
 include Makefile.conf
 
+# add it to the environment of all executed programs:
+export YML_PATH
+
+
 all:
 	$(MAKE) -C asn.1 generate
 	$(MAKE) -C asn.1
@@ -18,6 +22,7 @@ clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C test clean
 	$(MAKE) -C db clean
+	$(MAKE) -C sync clean
 	$(MAKE) -C asn.1 clean
 
 test: all

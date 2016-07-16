@@ -1170,8 +1170,8 @@ static PEP_STATUS add_key_fpr_to_stringlist(void *arg, pgp_key_t *key)
     } else { 
 
         *keylist = stringlist_add(*keylist, newfprstr);
+        free(newfprstr);
         if (*keylist == NULL) {
-            free(newfprstr);
             return PEP_OUT_OF_MEMORY;
         }
     }
@@ -1239,18 +1239,14 @@ static PEP_STATUS send_key_cb(void *arg, pgp_key_t *key)
     result = _export_keydata(key, &buffer, &buflen);
     
     if(result == PEP_STATUS_OK){
-        char *encoded_key;
-        char *request;
-        size_t encoded_key_len;
-
-        encoded_key = curl_escape(buffer, (int)buflen);
+        char *encoded_key = curl_escape(buffer, (int)buflen);
         if(!encoded_key){
             result = PEP_OUT_OF_MEMORY;
             goto free_buffer;
         }
-        encoded_key_len = strlen(encoded_key);
+        size_t encoded_key_len = strlen(encoded_key);
 
-        request = calloc(1, HKP_REQ_PREFIX_LEN + encoded_key_len + 1);
+        char *request = calloc(1, HKP_REQ_PREFIX_LEN + encoded_key_len + 1);
         if(!request){
             result = PEP_OUT_OF_MEMORY;
             goto free_encoded_key;
@@ -1261,6 +1257,7 @@ static PEP_STATUS send_key_cb(void *arg, pgp_key_t *key)
         request[HKP_REQ_PREFIX_LEN + encoded_key_len] = '\0';
 
         if(!stringlist_add(encoded_keys, request)){
+            free(request);
             result = PEP_OUT_OF_MEMORY;
         }
 
@@ -1280,12 +1277,8 @@ PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
 {
     static const char *ks_cmd = HKP_SERVER "/pks/add";
 
-    stringlist_t *encoded_keys;
-    const stringlist_t *post;
-
     PEP_STATUS result;
-
-    CURL *curl;
+    CURL *curl = NULL;
 
     assert(session);
     assert(pattern);
@@ -1293,7 +1286,7 @@ PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
     if (!session || !pattern )
         return PEP_ILLEGAL_VALUE;
 
-    encoded_keys = new_stringlist(NULL);
+    stringlist_t *encoded_keys = new_stringlist(NULL);
     assert(encoded_keys);
     if (encoded_keys == NULL) {
         return PEP_OUT_OF_MEMORY;
@@ -1325,7 +1318,7 @@ PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
     if(result == PEP_STATUS_OK){
         CURLcode curlres;
 
-        for (post = encoded_keys; post != NULL; post = post->next) {
+        for (const stringlist_t *post = encoded_keys; post != NULL; post = post->next) {
             assert(post->value);
 
             curl_easy_setopt(curl, CURLOPT_URL, ks_cmd);
@@ -1535,8 +1528,6 @@ PEP_STATUS pgp_revoke_key(
         const char *reason
     )
 {
-    pgp_key_t *pkey;
-    pgp_key_t *skey;
     uint8_t fpr[PGP_FINGERPRINT_SIZE];
     size_t length;
     unsigned from = 0;
@@ -1559,7 +1550,7 @@ PEP_STATUS pgp_revoke_key(
         goto unlock_netpgp;
     }
     
-    pkey = pgp_getkeybyfpr(
+    pgp_key_t *pkey = pgp_getkeybyfpr(
                            netpgp.io,
                            netpgp.pubring,
                            fpr, length, &from, NULL,
@@ -1572,7 +1563,7 @@ PEP_STATUS pgp_revoke_key(
     }
     
     from = 0;
-    skey = pgp_getkeybyfpr(
+    pgp_key_t *skey = pgp_getkeybyfpr(
                            netpgp.io,
                            netpgp.secring,
                            fpr, length, &from, NULL,

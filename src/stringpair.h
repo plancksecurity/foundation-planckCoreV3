@@ -8,16 +8,16 @@ extern "C" {
 
 
 typedef struct _stringpair_t {
-    char * key;
-    char * value;
+    char * key;   // may point to "" but must not be NULL!
+    char * value; // may point to "" but must not be NULL!
 } stringpair_t;
 
 
 // new_stringpair() - allocate new stringpair_t
 //
 //  parameters:
-//      key (in)        utf-8 string used as key
-//      value (in)      utf-8 string containing the value
+//      key (in)        utf-8 string used as key; may point to "" but must not be NULL!
+//      value (in)      utf-8 string containing the value; may point to "" but must not be NULL!
 //
 //  return value:
 //      pointer to stringpair_t or NULL on failure
@@ -63,17 +63,19 @@ typedef struct _stringpair_list_t {
 //
 //  caveat:
 //      the ownership of the value goes to the stringpair_list
+//      next pointer explicitly set to NULL
 
 DYNAMIC_API stringpair_list_t *new_stringpair_list(stringpair_t *value);
 
 
-// stringpair_list_dup() - duplicate a stringpair_list
+// stringpair_list_dup() - duplicate a stringpair_list (deep copy)
 //
 //  parameters:
 //      src (in)                stringpair_list to copy
 //
 //  return value:
 //      pointer to stringpair_list_t object or NULL if out of memory
+//      stringpair value copies created by this function belong to the returned list
 
 DYNAMIC_API stringpair_list_t *stringpair_list_dup(
         const stringpair_list_t *src
@@ -91,7 +93,7 @@ DYNAMIC_API stringpair_list_t *stringpair_list_dup(
 //      pointer to last element in stringpair_list or NULL if out of memory
 //
 //  caveat:
-//      the ownership of the value goes to the stringpair_list
+//      the ownership of the value goes to the stringpair_list if add is successful
 
 DYNAMIC_API stringpair_list_t *stringpair_list_add(
         stringpair_list_t *stringpair_list,
@@ -107,6 +109,7 @@ DYNAMIC_API stringpair_list_t *stringpair_list_add(
 //
 //  return value:
 //      pointer to last element in stringpair_list or NULL if out of memory
+//      or stringpair_list is NULL
 //
 //  caveat:
 //      all values are being copied before being added to the list
