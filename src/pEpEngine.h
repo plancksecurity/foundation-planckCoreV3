@@ -71,6 +71,8 @@ typedef enum {
     PEP_CONTRAINTS_VIOLATED                         = 0x0802,
     PEP_CANNOT_ENCODE                               = 0x0803,
 
+    PEP_SYNC_NO_TRUSTWORDS_CALLBACK                 = 0x0901,
+
     PEP_COMMIT_FAILED                               = 0xff01,
 
     PEP_CANNOT_CREATE_TEMP_FILE                     = -5,

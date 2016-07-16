@@ -2,12 +2,11 @@
 
 #include <assert.h>
 #include "pEp_internal.h"
-#include "keymanagement.h"
 #include "message.h"
 #include "sync_fsm.h"
 
 
-// showHandshake() - 
+// showHandshake() - trigger the handshake dialog of the application
 //
 //  params:
 //      session (in)        session handle
@@ -24,21 +23,30 @@ PEP_STATUS showHandshake(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-
     assert(session);
     assert(partner);
+    assert(session->showHandshake);
     if (!(session && partner))
         return PEP_ILLEGAL_VALUE;
+    if (!session->showHandshake)
+        return PEP_SYNC_NO_TRUSTWORDS_CALLBACK;
 
-    // working code
+    pEp_identity *me = NULL;
+    status = get_identity(session, partner->address, PEP_OWN_USERID, &me);
+    if (status != PEP_STATUS_OK)
+        goto error;
+    
+    status = session->showHandshake(session, me, partner);
+    if (status != PEP_STATUS_OK)
+        goto error;
 
-
+    free_identity(me);
     return status;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
 error:
-    // free...
+    free_identity(me);
     return status;
 }
 
