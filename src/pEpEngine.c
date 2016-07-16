@@ -564,7 +564,6 @@ DYNAMIC_API PEP_STATUS trustword(
         )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    int result;
 
     assert(session);
     assert(word);
@@ -589,7 +588,7 @@ DYNAMIC_API PEP_STATUS trustword(
     sqlite3_bind_text(session->trustword, 1, lang, -1, SQLITE_STATIC);
     sqlite3_bind_int(session->trustword, 2, value);
 
-    result = sqlite3_step(session->trustword);
+    const int result = sqlite3_step(session->trustword);
     if (result == SQLITE_ROW) {
         *word = strdup((const char *) sqlite3_column_text(session->trustword,
                     1));
@@ -778,8 +777,6 @@ DYNAMIC_API PEP_STATUS get_identity(
 {
     PEP_STATUS status = PEP_STATUS_OK;
     static pEp_identity *_identity;
-    int result;
-    const char *_lang;
 
     assert(session);
     assert(address);
@@ -795,7 +792,7 @@ DYNAMIC_API PEP_STATUS get_identity(
     sqlite3_bind_text(session->get_identity, 1, address, -1, SQLITE_STATIC);
     sqlite3_bind_text(session->get_identity, 2, user_id, -1, SQLITE_STATIC);
 
-    result = sqlite3_step(session->get_identity);
+    const int result = sqlite3_step(session->get_identity);
     switch (result) {
     case SQLITE_ROW:
         _identity = new_identity(
@@ -809,7 +806,7 @@ DYNAMIC_API PEP_STATUS get_identity(
             return PEP_OUT_OF_MEMORY;
 
         _identity->comm_type = (PEP_comm_type) sqlite3_column_int(session->get_identity, 2);
-        _lang = (const char *) sqlite3_column_text(session->get_identity, 3);
+        const char* const _lang = (const char *) sqlite3_column_text(session->get_identity, 3);
         if (_lang && _lang[0]) {
             assert(_lang[0] >= 'a' && _lang[0] <= 'z');
             assert(_lang[1] >= 'a' && _lang[1] <= 'z');
