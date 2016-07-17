@@ -67,7 +67,7 @@ int main() {
     cout << "one-element bloblist duplicated.\n\n";
     
     cout << "freeing bloblist...\n";
-    free_bloblist(new_bl); // will free srcid
+    free_bloblist(new_bl);
     new_bl = NULL;
     
     bloblist_t* p;
@@ -115,11 +115,14 @@ int main() {
     cout << "\nfour-element bloblist successfully duplicated.\n\n";
 
     cout << "freeing bloblists...\n";
-    free_bloblist(new_bl); // will free srcid
+    free_bloblist(new_bl);
     free_bloblist(duplist);
     new_bl = NULL;
     duplist = NULL;
-    
+    free(text1);
+    free(text2);
+    free(text3);
+    free(text4);    
     cout << "done.\n";
         
     
