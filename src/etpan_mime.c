@@ -755,9 +755,10 @@ int _get_content_type(
         if (_type == NULL)
             return ENOMEM;
 
-        strcpy(_type, _main_type);
-        strcat(_type, "/");
-        strcat(_type, content->ct_subtype);
+        strncpy(_type, _main_type, len);
+        len -= strlen(_main_type);
+        strncat(_type, "/", len--);
+        strncat(_type, content->ct_subtype, len);
 
         if (content->ct_parameters) {
             clistiter *cur;
