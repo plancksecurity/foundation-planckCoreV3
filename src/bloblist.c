@@ -95,11 +95,13 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
         const char *mime_type, const char *filename)
 {
     assert(blob);
-
+    if (blob == NULL)
+        return NULL;
+    
     if (bloblist == NULL)
         return new_bloblist(blob, size, mime_type, filename);
 
-    if (bloblist->value == NULL) {
+    if (bloblist->value == NULL) { // empty list
         if (mime_type) {
             bloblist->mime_type = strdup(mime_type);
             if (bloblist->mime_type == NULL) {
@@ -122,12 +124,19 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
         return bloblist;
     }
 
-    if (bloblist->next == NULL) {
-        bloblist->next = new_bloblist(blob, size, mime_type, filename);
-        return bloblist->next;
-    }
-
-    return bloblist_add(bloblist->next, blob, size, mime_type, filename);
+    bloblist_t* list_curr = bloblist;
+    
+    while (list_curr->next)
+        list_curr = list_curr->next;
+    
+    list_curr->next = new_bloblist(blob, size, mime_type, filename);
+    
+    assert(list_curr->next);
+    if (list_curr->next == NULL)
+        return NULL;
+   
+    return list_curr->next;
+    
 }
 
 DYNAMIC_API int bloblist_length(const bloblist_t *bloblist)
