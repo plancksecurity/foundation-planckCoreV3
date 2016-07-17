@@ -41,13 +41,21 @@ DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_t
 
 DYNAMIC_API void free_bloblist(bloblist_t *bloblist)
 {
-    if (bloblist) {
-        if (bloblist->next)
-            free_bloblist(bloblist->next);
-        free(bloblist->value);
-        free(bloblist->mime_type);
-        free(bloblist->filename);
-        free(bloblist);
+    bloblist_t *curr;
+    bloblist_t *next;
+    
+    curr = bloblist;
+    
+    while (curr) {
+        next = curr->next;
+        if (curr->value)
+            free(curr->value);
+        if (curr->mime_type)
+            free(curr->mime_type);
+        if (curr->filename)
+            free(curr->filename);
+        free(curr);
+        curr = next;
     }
 }
 
