@@ -38,7 +38,18 @@ DYNAMIC_API identity_list *identity_list_dup(const identity_list *src)
     
     while (src_curr) {
         _ident = identity_dup(src_curr->ident);
+        if (_ident == NULL) {
+            free_identity_list(id_list);
+            return NULL;
+        }
+        
         *dst_curr_ptr = new_identity_list(_ident);
+        if (*dst_curr_ptr == NULL) {
+            free_identity(_ident);
+            free_identity_list(id_list);
+            return NULL;
+        }
+        
         src_curr = src_curr->next;
         dst_curr_ptr = &((*dst_curr_ptr)->next);
     }
