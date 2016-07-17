@@ -14,6 +14,7 @@ DYNAMIC_API identity_list *new_identity_list(pEp_identity *ident)
         return NULL;
 
     id_list->ident = ident;
+    id_list->next = NULL;
 
     return id_list;
 }
@@ -32,7 +33,7 @@ DYNAMIC_API identity_list *identity_list_dup(const identity_list *src)
     if (id_list == NULL)
         return NULL;
 
-    identity_list* src_curr = id_list->next;
+    identity_list* src_curr = src->next;
     identity_list** dst_curr_ptr = &id_list->next;
     
     while (src_curr) {
@@ -44,33 +45,20 @@ DYNAMIC_API identity_list *identity_list_dup(const identity_list *src)
     
     return id_list;
     
-    
-//         assert(src);
-//     if (src == NULL)
-//         return NULL;
-// 
-//     stringlist_t *dst = new_stringlist(src->value);
-//     if (dst == NULL)
-//         return NULL;
-// 
-//     stringlist_t* src_curr = src->next;
-//     stringlist_t** dst_curr_ptr = &dst->next;
-//     
-//     while (src_curr) {
-//         *dst_curr_ptr = new_stringlist(src_curr->value);
-//         src_curr = src_curr->next;
-//         dst_curr_ptr = &((*dst_curr_ptr)->next);
-//     }
-// 
-//     return dst;
 }
 
 DYNAMIC_API void free_identity_list(identity_list *id_list)
 {
-    if (id_list) {
-        free_identity_list(id_list->next);
-        free_identity(id_list->ident);
-        free(id_list);
+    identity_list *curr;
+    identity_list *next;
+    
+    curr = id_list;
+    
+    while (curr) {
+        next = curr->next;
+        free_identity(curr->ident);
+        free(curr);
+        curr = next;
     }
 }
 
