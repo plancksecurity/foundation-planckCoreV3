@@ -102,6 +102,9 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
         return new_bloblist(blob, size, mime_type, filename);
 
     if (bloblist->value == NULL) { // empty list
+        if (bloblist->next != NULL)
+            return NULL; // invalid list
+            
         if (mime_type) {
             bloblist->mime_type = strdup(mime_type);
             if (bloblist->mime_type == NULL) {
