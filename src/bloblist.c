@@ -64,7 +64,10 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src)
     bloblist_t *bloblist = NULL;
 
     assert(src);
+    if (src == NULL)
+        return NULL;
 
+    // head
     char *blob2 = malloc(src->size);
     assert(blob2);
     if (blob2 == NULL)
@@ -77,12 +80,26 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src)
         goto enomem;
     blob2 = NULL;
 
-    if (src->next) {
-        bloblist->next = bloblist_dup(src->next);
-        if (bloblist->next == NULL)
-            goto enomem;
-    }
+    bloblist_t* src_curr = src->next;
+    bloblist_t** dst_curr_ptr = &bloblist->next;
+    
+    // list
+    while (src_curr) {
+        blob2 = malloc(src_curr->size);
 
+        assert(blob2);
+        if (blob2 == NULL)
+            goto enomem;
+
+        memcpy(blob2, src_curr->value, src_curr->size);
+        *dst_curr_ptr = new_bloblist(blob2, src_curr->size, src_curr->mime_type, src_curr->filename);
+        if (*dst_curr_ptr == NULL)
+            goto enomem;
+        
+        src_curr = src_curr->next;
+        dst_curr_ptr = &((*dst_curr_ptr)->next);
+    }
+        
     return bloblist;
 
 enomem:
