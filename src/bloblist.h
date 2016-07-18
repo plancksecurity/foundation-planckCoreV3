@@ -68,11 +68,14 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src);
 //      filename (in)  file name of the blob or NULL if unknown
 //
 //  return value:
-//      pointer to the last element of bloblist or NULL if out of memory
+//      pointer to the last element of bloblist or NULL if out of memory or
+//      NULL passed in as blob value
 //
 //  caveat:
 //      the ownership of the blob goes to the bloblist; mime_type and filename
-//      are being copied, the originals remain in the ownership of the caller
+//      are being copied, the originals remain in the ownership of the caller.
+//      bloblist input parameter equal to NULL or with value == NULL is a valid
+//      empty input list.
 
 DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t size,
         const char *mime_type, const char *filename);

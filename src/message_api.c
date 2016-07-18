@@ -101,15 +101,22 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     if (longmsg == NULL)
         longmsg = "";
 
-    ptext = calloc(1, strlen(shortmsg) + strlen(longmsg) + 12);
+    size_t bufsize = strlen(shortmsg) + strlen(longmsg) + 12;
+    ptext = calloc(1, bufsize);
     assert(ptext);
     if (ptext == NULL)
         return NULL;
 
-    strcpy(ptext, "Subject: ");
-    strcat(ptext, shortmsg);
-    strcat(ptext, "\n\n");
-    strcat(ptext, longmsg);
+    strncpy(ptext, "Subject: ", bufsize);
+    bufsize -= 9;
+    
+    strncat(ptext, shortmsg, bufsize);
+    bufsize -= strlen(shortmsg);
+    
+    strncat(ptext, "\n\n", bufsize);
+    bufsize -= 2;
+    
+    strncat(ptext, longmsg, bufsize);
 
     return ptext;
 }
@@ -329,8 +336,7 @@ static PEP_STATUS encrypt_PGP_MIME(
     PEP_STATUS status = PEP_STATUS_OK;
     bool free_ptext = false;
     char *ptext = NULL;
-    char *ctext;
-    char *_ctext = NULL;
+    char *ctext = NULL;
     char *mimetext = NULL;
     size_t csize;
     assert(dst->longmsg == NULL);
@@ -402,13 +408,7 @@ static PEP_STATUS encrypt_PGP_MIME(
         goto enomem;
     dst->attachments = _a;
 
-    _ctext = malloc(csize);
-    assert(_ctext);
-    if (_ctext == NULL)
-        goto enomem;
-    memcpy(_ctext, ctext, csize);
-
-    _a = bloblist_add(_a, _ctext, csize, "application/octet-stream",
+    _a = bloblist_add(_a, ctext, csize, "application/octet-stream",
         "msg.asc");
     if (_a == NULL)
         goto enomem;
@@ -421,7 +421,7 @@ enomem:
 pep_error:
     if (free_ptext)
         free(ptext);
-    free(_ctext);
+    free(ctext);
     return status;
 }
 
@@ -433,7 +433,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    char *ctext;
+    char *ctext = NULL;
     size_t csize;
     char *ptext = NULL;
     bool free_ptext = false;
@@ -464,10 +464,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
             free(ptext);
         free_ptext = false;
         if (ctext) {
-            dst->longmsg = strndup(ctext, csize);
-            assert(dst->longmsg);
-            if (dst->longmsg == NULL)
-                goto enomem;
+            dst->longmsg = ctext;
         }
         else {
             goto pep_error;
@@ -478,10 +475,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
         status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
             &csize);
         if (ctext) {
-            dst->longmsg = strndup(ctext, csize);
-            assert(dst->longmsg);
-            if (dst->longmsg == NULL)
-                goto enomem;
+            dst->longmsg = ctext;
         }
         else {
             goto pep_error;
@@ -499,13 +493,8 @@ static PEP_STATUS encrypt_PGP_in_pieces(
         status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
             &csize);
         if (ctext) {
-            char *_ctext = malloc(csize);
-            assert(_ctext);
-            if (_ctext == NULL)
-                goto enomem;
-            memcpy(_ctext, ctext, csize);
 
-            bloblist_t *_a = bloblist_add(dst->attachments, _ctext, csize,
+            bloblist_t *_a = bloblist_add(dst->attachments, ctext, csize,
                 "application/octet-stream", "PGPexch.htm.pgp");
             if (_a == NULL)
                 goto enomem;
@@ -547,8 +536,8 @@ static PEP_STATUS encrypt_PGP_in_pieces(
                         if (filename == NULL)
                             goto enomem;
 
-                        strcpy(filename, _s->filename);
-                        strcpy(filename + len, ".pgp");
+                        strncpy(filename, _s->filename, len);
+                        strncpy(filename + len, ".pgp", 5);
                     }
                     else {
                         filename = calloc(1, 20);
@@ -560,15 +549,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
                         snprintf(filename, 20, "Attachment%d.pgp", n);
                     }
 
-                    char *_ctext = malloc(csize);
-                    assert(_ctext);
-                    if (_ctext == NULL) {
-                        free(filename);
-                        goto enomem;
-                    }
-                    memcpy(_ctext, ctext, csize);
-
-                    _d = bloblist_add(_d, _ctext, csize, "application/octet-stream",
+                    _d = bloblist_add(_d, ctext, csize, "application/octet-stream",
                         filename);
                     free(filename);
                     if (_d == NULL)
@@ -1346,10 +1327,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 if (msg == NULL)
                     goto enomem;
 
-                msg->longmsg = strdup(ptext);
-                assert(msg->longmsg);
-                if (msg->longmsg == NULL)
-                    goto enomem;
+                msg->longmsg = ptext;
+                ptext = NULL;
 
                 bloblist_t *_m = msg->attachments;
                 if (_m == NULL && src->attachments && src->attachments->value) {
@@ -1379,10 +1358,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
                         if (ptext) {
                             if (is_encrypted_html_attachment(_s)) {
-                                msg->longmsg_formatted = strdup(ptext);
-                                assert(msg->longmsg_formatted);
-                                if (msg->longmsg_formatted == NULL)
-                                    goto pep_error;
+                                msg->longmsg_formatted = ptext;
+                                ptext = NULL;
                             }
                             else {
                                 static const char * const mime_type = "application/octet-stream";
@@ -1391,17 +1368,13 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                 if (filename == NULL)
                                     goto enomem;
 
-                                char *_ptext = malloc(psize);
-                                assert(_ptext);
-                                if (_ptext == NULL)
-                                    goto enomem;
-                                memcpy(_ptext, ptext, psize);
-
-                                _m = bloblist_add(_m, _ptext, psize, mime_type,
+                                _m = bloblist_add(_m, ptext, psize, mime_type,
                                     filename);
                                 free(filename);
                                 if (_m == NULL)
                                     goto enomem;
+
+                                ptext = NULL;
 
                                 if (msg->attachments == NULL)
                                     msg->attachments = _m;
@@ -1512,8 +1485,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             status = cryptotech[crypto].decrypt_and_verify(session, ctext,
                 csize, &re_ptext, &re_psize, &_keylist);
             
-            if (re_ptext)
-                free(re_ptext);
+            free(re_ptext);
             
             if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
                 goto pep_error;
@@ -1591,6 +1563,7 @@ enomem:
     status = PEP_OUT_OF_MEMORY;
 
 pep_error:
+    free(ptext);
     free_message(msg);
     free_stringlist(_keylist);
 

@@ -115,21 +115,21 @@ DYNAMIC_API PEP_STATUS blacklist_retrieve(
     sqlite3_reset(session->blacklist_retrieve);
 
     int result;
-    const char *fpr = NULL;
 
     stringlist_t *_bl = _blacklist;
     do {
         result = sqlite3_step(session->blacklist_retrieve);
         switch (result) {
         case SQLITE_ROW:
-            fpr = (const char *) sqlite3_column_text(session->blacklist_retrieve, 0);
+        {
+            const char *fpr = (const char *) sqlite3_column_text(session->blacklist_retrieve, 0);
 
             _bl = stringlist_add(_bl, fpr);
             if (_bl == NULL)
                 goto enomem;
 
             break;
-
+        }
         case SQLITE_DONE:
             break;
 
