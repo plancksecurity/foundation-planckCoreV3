@@ -25,9 +25,9 @@ PEP_STATUS showHandshake(
     PEP_STATUS status = PEP_STATUS_OK;
     assert(session);
     assert(partner);
-    assert(session->showHandshake);
     if (!(session && partner))
         return PEP_ILLEGAL_VALUE;
+    assert(session->showHandshake);
     if (!session->showHandshake)
         return PEP_SYNC_NO_TRUSTWORDS_CALLBACK;
 
@@ -51,7 +51,7 @@ error:
 }
 
 
-// reject() - 
+// reject() - stores rejection of partner
 //
 //  params:
 //      session (in)        session handle

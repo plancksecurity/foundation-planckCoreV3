@@ -36,8 +36,7 @@ protocol DeviceGroup {
             on Init
                 do showHandshake(partner);
             on HandshakeRejected(Identity partner) {
-                do reject(partner);             // sends Reject to partner and
-                                                // stores rejection of partner
+                do reject(partner);             // stores rejection of partner
                 go Sole;
             }
             on HandshakeAccepted(Identity partner) {
