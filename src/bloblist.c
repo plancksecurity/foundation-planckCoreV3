@@ -48,12 +48,9 @@ DYNAMIC_API void free_bloblist(bloblist_t *bloblist)
     
     while (curr) {
         next = curr->next;
-        if (curr->value)
-            free(curr->value);
-        if (curr->mime_type)
-            free(curr->mime_type);
-        if (curr->filename)
-            free(curr->filename);
+        free(curr->value);
+        free(curr->mime_type);
+        free(curr->filename);
         free(curr);
         curr = next;
     }
