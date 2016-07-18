@@ -41,6 +41,10 @@ DYNAMIC_API stringlist_t *stringlist_dup(const stringlist_t *src)
     
     while (src_curr) {
         *dst_curr_ptr = new_stringlist(src_curr->value);
+        if (*dst_curr_ptr == NULL) {
+            free_stringlist(dst);
+            return NULL;
+        }
         src_curr = src_curr->next;
         dst_curr_ptr = &((*dst_curr_ptr)->next);
     }

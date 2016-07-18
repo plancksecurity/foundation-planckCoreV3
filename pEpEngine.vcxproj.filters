@@ -90,6 +90,9 @@
     <ClCompile Include="src\baseprotocol.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="src\sync_send_actions.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\keymanagement.h">

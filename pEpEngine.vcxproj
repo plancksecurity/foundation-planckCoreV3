@@ -116,6 +116,7 @@
     <ClCompile Include="src\sync_actions.c" />
     <ClCompile Include="src\sync_driver.c" />
     <ClCompile Include="src\sync_fsm.c" />
+    <ClCompile Include="src\sync_send_actions.c" />
     <ClCompile Include="src\timestamp.c" />
     <ClCompile Include="src\transport.c" />
     <ClCompile Include="src\trans_auto.c" />
