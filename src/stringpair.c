@@ -60,8 +60,6 @@ DYNAMIC_API stringpair_list_t *new_stringpair_list(stringpair_t *value)
 
     if (result && value)
         result->value = value;
-
-    result->next = NULL;
     
     return result;
 }

@@ -24,7 +24,7 @@ typedef struct _stringlist_t {
 //  caveat:
 //      the value is being copied before being added to the list
 //      the original string is still being owned by the caller
-//      the "next" pointer of the returned object is explicitly set to NULL
+//      the "next" pointer of the returned object is NULL
 
 DYNAMIC_API stringlist_t *new_stringlist(const char *value);
 

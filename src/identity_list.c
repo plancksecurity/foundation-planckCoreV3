@@ -14,7 +14,6 @@ DYNAMIC_API identity_list *new_identity_list(pEp_identity *ident)
         return NULL;
 
     id_list->ident = ident;
-    id_list->next = NULL;
 
     return id_list;
 }

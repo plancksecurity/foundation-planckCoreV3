@@ -63,7 +63,7 @@ typedef struct _stringpair_list_t {
 //
 //  caveat:
 //      the ownership of the value goes to the stringpair_list
-//      next pointer explicitly set to NULL
+//      next pointer is NULL
 
 DYNAMIC_API stringpair_list_t *new_stringpair_list(stringpair_t *value);
 

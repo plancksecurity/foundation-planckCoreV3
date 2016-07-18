@@ -20,8 +20,6 @@ DYNAMIC_API stringlist_t *new_stringlist(const char *value)
             return NULL;
         }
     }
-    
-    result->next = NULL; // needed for one-element lists
 
     return result;
 }
