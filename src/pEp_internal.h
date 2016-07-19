@@ -1,4 +1,9 @@
-#define PEP_ENGINE_VERSION "0.6.0"
+#define PEP_ENGINE_VERSION "0.7.0"
+
+// maximum attachment size to import as key 1MB, maximum of 20 attachments
+
+#define MAX_KEY_SIZE (1024 * 1024)
+#define MAX_KEYS_TO_IMPORT  20
 
 // this is 20 trustwords with 79 chars max
 #define MAX_TRUSTWORDS_SPACE (20 * 80)
