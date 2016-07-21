@@ -37,6 +37,9 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
         assert(length == stringlist_length(values));
         if (!(length == stringlist_length(values) &&
               length <= sizeof(unsigned int) * CHAR_BIT)) {
+            r = Fclose(f);
+            assert(r == 0);
+        
             return false;
         }
         
