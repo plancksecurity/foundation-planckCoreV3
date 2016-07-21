@@ -1,4 +1,6 @@
+#ifndef __APPLE__
 #define _POSIX_C_SOURCE 200809L
+#endif
 
 #include <unistd.h>
 #include <strings.h>
@@ -29,12 +31,18 @@ const char *android_system_db(void);
 
 #elif __APPLE__
 #include "TargetConditionals.h"
+#include <string.h>
 #if TARGET_OS_IPHONE
 
 extern char* SystemDB;
 #define SYSTEM_DB SystemDB
     
 #endif
+#endif
+
+#if !defined(BSD) && !defined(__APPLE__)
+size_t strlcpy(char* dst, const	char* src, size_t size);
+size_t strlcat(char* dst, const	char* src, size_t size);
 #endif
 
 #ifdef __cplusplus

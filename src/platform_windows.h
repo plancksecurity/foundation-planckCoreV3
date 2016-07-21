@@ -49,6 +49,9 @@ int mkstemp(char *templ);
 char *strndup(const char *s1, size_t n);
 char *stpcpy(char *dst, const char *src);
 
+size_t strlcpy(char* dst, const	char* src, size_t size);
+size_t strlcat(char* dst, const	char* src, size_t size);
+
 const char *windoze_local_db(void);
 const char *windoze_system_db(void);
 const char *gpg_conf(void);

@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+
 #ifndef MIN
 #define MIN(A, B) ((B) > (A) ? (A) : (B))
 #endif
@@ -101,22 +102,21 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     if (longmsg == NULL)
         longmsg = "";
 
-    size_t bufsize = strlen(shortmsg) + strlen(longmsg) + 12;
+    const char * const subject = "Subject: ";
+    const size_t SUBJ_LEN = 9;
+    const char * const newlines = "\n\n";
+    const size_t NL_LEN = 2;
+
+    size_t bufsize = SUBJ_LEN + strlen(shortmsg) + NL_LEN + strlen(longmsg) + 1;
     ptext = calloc(1, bufsize);
     assert(ptext);
     if (ptext == NULL)
         return NULL;
 
-    strncpy(ptext, "Subject: ", bufsize);
-    bufsize -= 9;
-    
-    strncat(ptext, shortmsg, bufsize);
-    bufsize -= strlen(shortmsg);
-    
-    strncat(ptext, "\n\n", bufsize);
-    bufsize -= 2;
-    
-    strncat(ptext, longmsg, bufsize);
+    strlcpy(ptext, subject, bufsize);
+    strlcat(ptext, shortmsg, bufsize);
+    strlcat(ptext, newlines, bufsize);
+    strlcat(ptext, longmsg, bufsize);
 
     return ptext;
 }
@@ -536,8 +536,8 @@ static PEP_STATUS encrypt_PGP_in_pieces(
                         if (filename == NULL)
                             goto enomem;
 
-                        strncpy(filename, _s->filename, len);
-                        strncpy(filename + len, ".pgp", 5);
+                        strlcpy(filename, _s->filename, len);
+                        strlcpy(filename + len, ".pgp", 5);
                     }
                     else {
                         filename = calloc(1, 20);
@@ -641,7 +641,7 @@ static void decorate_message(
 {
     assert(msg);
 
-    add_opt_field(msg, "X-pEp-Version", "1.0");
+    add_opt_field(msg, "X-pEp-Version", PEP_VERSION);
     
     if (color != PEP_rating_undefined)
         add_opt_field(msg, "X-EncStatus", color_to_string(color));
