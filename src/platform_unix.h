@@ -29,11 +29,19 @@ const char *android_system_db(void);
 
 #elif __APPLE__
 #include "TargetConditionals.h"
+#include <string.h>
 #if TARGET_OS_IPHONE
 
 extern char* SystemDB;
 #define SYSTEM_DB SystemDB
     
+#endif
+#endif
+
+#ifndef BSD
+#if !TARGET_OS_IPHONE
+size_t strlcpy(char* dst, const	char* src, size_t size);
+size_t strlcat(char* dst, const	char* src, size_t size);
 #endif
 #endif
 

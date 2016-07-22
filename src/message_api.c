@@ -107,16 +107,16 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     if (ptext == NULL)
         return NULL;
 
-    strncpy(ptext, "Subject: ", bufsize);
+    strlcpy(ptext, "Subject: ", bufsize);
     bufsize -= 9;
     
-    strncat(ptext, shortmsg, bufsize);
+    strlcat(ptext, shortmsg, bufsize);
     bufsize -= strlen(shortmsg);
     
-    strncat(ptext, "\n\n", bufsize);
+    strlcat(ptext, "\n\n", bufsize);
     bufsize -= 2;
     
-    strncat(ptext, longmsg, bufsize);
+    strlcat(ptext, longmsg, bufsize);
 
     return ptext;
 }
@@ -536,8 +536,8 @@ static PEP_STATUS encrypt_PGP_in_pieces(
                         if (filename == NULL)
                             goto enomem;
 
-                        strncpy(filename, _s->filename, len);
-                        strncpy(filename + len, ".pgp", 5);
+                        strlcpy(filename, _s->filename, len);
+                        strlcpy(filename + len, ".pgp", 5);
                     }
                     else {
                         filename = calloc(1, 20);
