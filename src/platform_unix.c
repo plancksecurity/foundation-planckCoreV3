@@ -94,6 +94,34 @@ const char *android_system_db(void)
 }
 #endif
 
+#ifndef BSD
+size_t strlcpy(char* dst, const	char* src, size_t size) {
+    size_t retval = strlen(src);
+    size_t size_to_copy = (retval < size ? retval : size - 1);
+    
+    // strlcpy doc says src and dst not allowed to overlap, as
+    // it's undefined. So this is acceptable:
+    memcpy((void*)dst, (void*)src, size_to_copy); // no defined error return, but strcpy doesn't either
+    dst[size_to_copy] = '\0';
+    return retval;
+}
+size_t strlcat(char* dst, const	char* src, size_t size) {
+    size_t start_len = strnlen(dst, size);
+    if (start_len == size)
+        return size; // no copy, no null termination in size bytes, according to spec
+    
+    size_t add_len = strlen(src);
+    size_t retval = start_len + add_len;
+    size_t size_to_copy = (retval < size ? add_len : (size - start_len) - 1);
+    
+    // strlcat doc says src and dst not allowed to overlap, as
+    // it's undefined. So this is acceptable:
+    memcpy((void*)(dst + start_len), (void*)src, size_to_copy); // no defined error return, but strcpy doesn't either
+    dst[start_len + size_to_copy] = '\0';
+    return retval;
+}
+#endif
+
 const char *unix_local_db(void)
 {
     static char buffer[MAX_PATH];
