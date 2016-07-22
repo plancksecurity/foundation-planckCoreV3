@@ -95,6 +95,7 @@ const char *android_system_db(void)
 #endif
 
 #ifndef BSD
+#if !TARGET_OS_IPHONE
 size_t strlcpy(char* dst, const	char* src, size_t size) {
     size_t retval = strlen(src);
     size_t size_to_copy = (retval < size ? retval : size - 1);
@@ -120,6 +121,7 @@ size_t strlcat(char* dst, const	char* src, size_t size) {
     dst[start_len + size_to_copy] = '\0';
     return retval;
 }
+#endif
 #endif
 
 const char *unix_local_db(void)
