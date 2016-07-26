@@ -52,9 +52,10 @@ PEP_STATUS sendBeacon(
     status = sequence_value(session, "DeviceGroup", &seq);
     if (status != PEP_STATUS_OK)
         goto error;
-    msg->header.sequence = (long) seq;
-
-    msg->state = (long) state;
+	asn_long2INTEGER(&(msg->header.sequence), (long)seq);
+//    msg->header.sequence = (long) seq;
+	asn_long2INTEGER(&(msg->state), (long)state);
+//    msg->state = (long) state;
 
     me = new_identity(NULL, NULL, NULL, NULL);
     if (!me)
@@ -143,10 +144,10 @@ PEP_STATUS sendHandshakeRequest(
     status = sequence_value(session, "DeviceGroup", &seq);
     if (status != PEP_STATUS_OK)
         goto error;
-    msg->header.sequence = (long) seq;
-
-    msg->state = (long) state;
-
+//    msg->header.sequence = (long) seq;
+	asn_long2INTEGER(&(msg->header.sequence), (long)seq);
+//    msg->state = (long) state;
+	asn_long2INTEGER(&(msg->state), (long)state);
     me = new_identity(NULL, NULL, NULL, NULL);
     if (!me)
         goto enomem;
@@ -237,10 +238,10 @@ PEP_STATUS sendGroupKeys(
     status = sequence_value(session, "DeviceGroup", &seq);
     if (status != PEP_STATUS_OK)
         goto error;
-    msg->header.sequence = (long) seq;
-
-    msg->state = (long) state;
-
+//    msg->header.sequence = (long) seq;
+	asn_long2INTEGER(&(msg->header.sequence), (long)seq);
+//    msg->state = (long) state;
+	asn_long2INTEGER(&(msg->state), (long)state);
     me = new_identity(NULL, NULL, NULL, NULL);
     if (!me)
         goto enomem;

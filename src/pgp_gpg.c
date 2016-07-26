@@ -25,6 +25,7 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
     if (f == NULL && errno == ENOMEM)
         return false;
 
+    /* FIXME: extract as internal function */
     if (f != NULL) {
         int length = stringlist_length(keys);
         unsigned int n = (1 << length) - 1;
