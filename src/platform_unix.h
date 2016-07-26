@@ -1,4 +1,6 @@
+#ifndef __APPLE__
 #define _POSIX_C_SOURCE 200809L
+#endif
 
 #include <unistd.h>
 #include <strings.h>
@@ -38,11 +40,9 @@ extern char* SystemDB;
 #endif
 #endif
 
-#ifndef BSD
-#if !TARGET_OS_IPHONE
+#if !defined(BSD) && !defined(__APPLE__)
 size_t strlcpy(char* dst, const	char* src, size_t size);
 size_t strlcat(char* dst, const	char* src, size_t size);
-#endif
 #endif
 
 #ifdef __cplusplus
