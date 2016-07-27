@@ -102,21 +102,20 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     if (longmsg == NULL)
         longmsg = "";
 
-    size_t bufsize = strlen(shortmsg) + strlen(longmsg) + 12;
+    const char * const subject = "Subject: ";
+    const size_t SUBJ_LEN = 9;
+    const char * const newlines = "\n\n";
+    const size_t NL_LEN = 2;
+
+    size_t bufsize = SUBJ_LEN + strlen(shortmsg) + NL_LEN + strlen(longmsg) + 1;
     ptext = calloc(1, bufsize);
     assert(ptext);
     if (ptext == NULL)
         return NULL;
 
-    strlcpy(ptext, "Subject: ", bufsize);
-    bufsize -= 9;
-    
+    strlcpy(ptext, subject, bufsize);
     strlcat(ptext, shortmsg, bufsize);
-    bufsize -= strlen(shortmsg);
-    
-    strlcat(ptext, "\n\n", bufsize);
-    bufsize -= 2;
-    
+    strlcat(ptext, newlines, bufsize);
     strlcat(ptext, longmsg, bufsize);
 
     return ptext;
