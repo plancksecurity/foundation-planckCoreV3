@@ -379,6 +379,11 @@ typedef enum _PEP_comm_type {
     PEP_ct_pEp = 0xff
 } PEP_comm_type;
 
+typedef enum _identity_flags {
+    PEP_idf_NOT_FOR_SYNC = 1,   // don't use this identity for sync
+    PEP_idf_GROUP = 2           // identity of group of persons
+} identity_flags;
+
 typedef struct _pEp_identity {
     char *address;              // C string with address UTF-8 encoded
     char *fpr;                  // C string with fingerprint UTF-8 encoded
@@ -388,6 +393,7 @@ typedef struct _pEp_identity {
     char lang[3];               // language of conversation
                                 // ISO 639-1 ALPHA-2, last byte is 0
     bool me;                    // if this is the local user herself/himself
+    unsigned int flags;         // identity_flag1 | identity_flag2 | ...
 } pEp_identity;
 
 typedef struct _identity_list {

@@ -6,6 +6,19 @@
 
 static int init_count = -1;
 
+static int user_version(void *_version, int count, char **text, char **name)
+{
+    assert(_version);
+    assert(count == 1);
+    assert(text && text[0]);
+    if (!(_version && count == 1 && text && text[0]))
+        return -1;
+
+    int *version = (int *) _version;
+    *version = atoi(text[0]);
+    return 0;
+}
+
 DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -112,15 +125,37 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     sqlite3_busy_timeout(_session->system_db, 1000);
 
+// increment this when patching DDL
+#define _DDL_USER_VERSION "1"
+
     if (in_first) {
         int_result = sqlite3_exec(
             _session->db,
-                "create table if not exists version_info (\n"
+                "create table version_info (\n"
                 "   id integer primary key,\n"
                 "   timestamp integer default (datetime('now')) ,\n"
                 "   version text,\n"
                 "   comment text\n"
-                ");\n"
+                ");\n",
+                NULL,
+                NULL,
+                NULL
+        );
+        if (int_result == SQLITE_OK) {
+            int_result = sqlite3_exec(
+                _session->db,
+                "pragma user_version = "_DDL_USER_VERSION";\n"
+                "insert or replace into version_info (id, version)"
+                    "values (1, '" PEP_ENGINE_VERSION "');",
+                NULL,
+                NULL,
+                NULL
+            );
+            assert(int_result == SQLITE_OK);
+        }
+
+        int_result = sqlite3_exec(
+            _session->db,
                 "create table if not exists log (\n"
                 "   timestamp integer default (datetime('now')) ,\n"
                 "   title text not null,\n"
@@ -160,6 +195,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "       references pgp_keypair (fpr)\n"
                 "       on delete set null,\n"
                 "   comment text,\n"
+                "   flags integer default (0),"
                 "   primary key (address, user_id)\n"
                 ");\n"
                 "create table if not exists trust (\n"
@@ -196,14 +232,40 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         );
         assert(int_result == SQLITE_OK);
 
+        int version;
         int_result = sqlite3_exec(
             _session->db,
-            "insert or replace into version_info (id, version) values (1, '1.1');",
-            NULL,
-            NULL,
+            "pragma user_version;",
+            user_version,
+            &version,
             NULL
         );
         assert(int_result == SQLITE_OK);
+
+        if (version < 1) {
+            int_result = sqlite3_exec(
+                _session->db,
+                "alter table identity\n"
+                "   add column flags integer default (0);",
+                NULL,
+                NULL,
+                NULL
+            );
+            assert(int_result == SQLITE_OK);
+        }
+
+        if (version < atoi(_DDL_USER_VERSION)) {
+            int_result = sqlite3_exec(
+                _session->db,
+                "pragma user_version = "_DDL_USER_VERSION";\n"
+                "insert or replace into version_info (id, version)"
+                    "values (1, '" PEP_ENGINE_VERSION "');",
+                NULL,
+                NULL,
+                NULL
+            );
+            assert(int_result == SQLITE_OK);
+        }
 
         sql_log = "insert into log (title, entity, description, comment)"
                   "values (?1, ?2, ?3, ?4);";

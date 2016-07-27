@@ -1,4 +1,4 @@
-#define PEP_ENGINE_VERSION "0.7.0"
+#define PEP_ENGINE_VERSION "0.8.0"
 
 // maximum attachment size to import as key 1MB, maximum of 20 attachments
 
