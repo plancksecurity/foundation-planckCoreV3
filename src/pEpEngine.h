@@ -380,8 +380,8 @@ typedef enum _PEP_comm_type {
 } PEP_comm_type;
 
 typedef enum _identity_flags {
-    PEP_idf_NOT_FOR_SYNC = 1,   // don't use this identity for sync
-    PEP_idf_GROUP = 2           // identity of group of persons
+    PEP_idf_not_for_sync = 1,   // don't use this identity for sync
+    PEP_idf_group = 2           // identity of group of persons
 } identity_flags;
 
 typedef struct _pEp_identity {
@@ -500,17 +500,20 @@ DYNAMIC_API PEP_STATUS set_identity(
 //
 //    parameters:
 //        session (in)        session handle
-//        identity (in)       pointer to pEp_identity structure
+//        identity (in,out)   pointer to pEp_identity structure
+//        flags (in)          new value for flags
 //
 //    return value:
 //        PEP_STATUS_OK = 0             encryption and signing succeeded
 //        PEP_CANNOT_SET_IDENTITY       update of identity failed
 //
 //    caveat:
-//        address and user_id must be given
+//        address and user_id must be given in identity
 
 DYNAMIC_API PEP_STATUS set_identity_flags(
-        PEP_SESSION session, const pEp_identity *identity
+        PEP_SESSION session,
+        pEp_identity *identity,
+        unsigned int flags
     );
 
 

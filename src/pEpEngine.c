@@ -994,7 +994,9 @@ DYNAMIC_API PEP_STATUS set_identity(
 }
 
 DYNAMIC_API PEP_STATUS set_identity_flags(
-        PEP_SESSION session, const pEp_identity *identity
+        PEP_SESSION session,
+        pEp_identity *identity,
+        unsigned int flags
     )
 {
     int result;
@@ -1008,7 +1010,7 @@ DYNAMIC_API PEP_STATUS set_identity_flags(
         return PEP_ILLEGAL_VALUE;
 
     sqlite3_reset(session->set_identity_flags);
-    sqlite3_bind_int(session->set_identity_flags, 1, identity->flags);
+    sqlite3_bind_int(session->set_identity_flags, 1, flags);
     sqlite3_bind_text(session->set_identity_flags, 2, identity->address, -1,
             SQLITE_STATIC);
     sqlite3_bind_text(session->set_identity_flags, 3, identity->user_id, -1,
@@ -1018,6 +1020,7 @@ DYNAMIC_API PEP_STATUS set_identity_flags(
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_IDENTITY;
 
+    identity->flags = flags;
     return PEP_STATUS_OK;
 }
 

@@ -134,7 +134,7 @@ DYNAMIC_API PEP_STATUS update_identity(
         snprintf(identity->user_id, strlen(identity->address) + 5,
                  "TOFU_%s", identity->address);
     }
-    
+ 
     status = get_identity(session,
                           identity->address,
                           identity->user_id,
@@ -207,6 +207,8 @@ DYNAMIC_API PEP_STATUS update_identity(
         identity->flags = stored_identity->flags;
     }
     else /* stored_identity == NULL */ {
+        identity->flags = 0;
+
         if (!EMPTYSTR(identity->fpr)) {
             PEP_comm_type _comm_type_key;
 
@@ -401,6 +403,8 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
         // import of private key, or similar.
 
         // Take given fpr as-is.
+
+        identity->flags = 0;
     }
     else
     {
@@ -409,6 +413,8 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
         if (status != PEP_STATUS_OK) {
             return status;
         }
+
+        identity->flags = 0;
     }
 
     bool revoked = false;
