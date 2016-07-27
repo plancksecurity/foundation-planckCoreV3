@@ -270,7 +270,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         sql_log = "insert into log (title, entity, description, comment)"
                   "values (?1, ?2, ?3, ?4);";
 
-        sql_get_identity =  "select fpr, username, comm_type, lang"
+        sql_get_identity =  "select fpr, username, comm_type, lang, flags"
                             "   from identity"
                             "   join person on id = identity.user_id"
                             "   join pgp_keypair on fpr = identity.main_key_id"
@@ -292,7 +292,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                               "values (upper(replace(?1,' ',''))) ;";
 
         sql_set_identity = "insert or replace into identity (address, main_key_id, "
-                           "user_id) values (?1, upper(replace(?2,' ','')), ?3) ;";
+                           "user_id, flags) values (?1, upper(replace(?2,' ','')),"
+                           "?3, ?4) ;";
 
         sql_set_trust = "insert or replace into trust (user_id, pgp_keypair_fpr, comm_type) "
                         "values (?1, upper(replace(?2,' ','')), ?3) ;";
@@ -877,6 +878,7 @@ DYNAMIC_API PEP_STATUS get_identity(
             _identity->lang[1] = _lang[1];
             _identity->lang[2] = 0;
         }
+        _identity->flags = (unsigned int) sqlite3_column_int(session->get_identity, 4);
         *identity = _identity;
         break;
     default:
@@ -952,6 +954,7 @@ DYNAMIC_API PEP_STATUS set_identity(
             SQLITE_STATIC);
     sqlite3_bind_text(session->set_identity, 3, identity->user_id, -1,
             SQLITE_STATIC);
+    sqlite3_bind_int(session->set_trust, 4, identity->flags);
     result = sqlite3_step(session->set_identity);
     sqlite3_reset(session->set_identity);
     if (result != SQLITE_DONE) {
