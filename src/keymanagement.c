@@ -203,6 +203,8 @@ DYNAMIC_API PEP_STATUS update_identity(
             identity->lang[1] = stored_identity->lang[1];
             identity->lang[2] = 0;
         }
+
+        identity->flags = stored_identity->flags;
     }
     else /* stored_identity == NULL */ {
         if (!EMPTYSTR(identity->fpr)) {
@@ -390,6 +392,8 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
                 return PEP_OUT_OF_MEMORY;
             }
         }
+
+        identity->flags = stored_identity->flags;
     }
     else if (!EMPTYSTR(identity->fpr))
     {

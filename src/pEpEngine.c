@@ -29,6 +29,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     static const char *sql_set_person;
     static const char *sql_set_pgp_keypair;
     static const char *sql_set_identity;
+    static const char *sql_set_identity_flags;
     static const char *sql_set_trust;
     static const char *sql_get_trust;
     static const char *sql_least_trust;
@@ -295,6 +296,9 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                            "user_id, flags) values (?1, upper(replace(?2,' ','')),"
                            "?3, ?4) ;";
 
+        sql_set_identity_flags = "update identity set flags = ?1 "
+                                 "where address = ?2 and user_id = ?3 ;";
+
         sql_set_trust = "insert or replace into trust (user_id, pgp_keypair_fpr, comm_type) "
                         "values (?1, upper(replace(?2,' ','')), ?3) ;";
 
@@ -383,6 +387,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_identity,
             (int)strlen(sql_set_identity), &_session->set_identity, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_set_identity_flags,
+            (int)strlen(sql_set_identity_flags), &_session->set_identity_flags, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_trust,
@@ -527,6 +535,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->set_pgp_keypair);
             if (session->set_identity)
                 sqlite3_finalize(session->set_identity);
+            if (session->set_identity_flags)
+                sqlite3_finalize(session->set_identity_flags);
             if (session->set_trust)
                 sqlite3_finalize(session->set_trust);
             if (session->get_trust)
@@ -955,7 +965,7 @@ DYNAMIC_API PEP_STATUS set_identity(
             SQLITE_STATIC);
     sqlite3_bind_text(session->set_identity, 3, identity->user_id, -1,
             SQLITE_STATIC);
-    sqlite3_bind_int(session->set_trust, 4, identity->flags);
+    sqlite3_bind_int(session->set_identity, 4, identity->flags);
     result = sqlite3_step(session->set_identity);
     sqlite3_reset(session->set_identity);
     if (result != SQLITE_DONE) {
@@ -981,6 +991,34 @@ DYNAMIC_API PEP_STATUS set_identity(
         return PEP_STATUS_OK;
     else
         return PEP_COMMIT_FAILED;
+}
+
+DYNAMIC_API PEP_STATUS set_identity_flags(
+        PEP_SESSION session, const pEp_identity *identity
+    )
+{
+    int result;
+
+    assert(session);
+    assert(identity);
+    assert(identity->address);
+    assert(identity->user_id);
+
+    if (!(session && identity && identity->address && identity->user_id))
+        return PEP_ILLEGAL_VALUE;
+
+    sqlite3_reset(session->set_identity_flags);
+    sqlite3_bind_int(session->set_identity_flags, 1, identity->flags);
+    sqlite3_bind_text(session->set_identity_flags, 2, identity->address, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->set_identity_flags, 3, identity->user_id, -1,
+            SQLITE_STATIC);
+    result = sqlite3_step(session->set_identity_flags);
+    sqlite3_reset(session->set_identity_flags);
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_IDENTITY;
+
+    return PEP_STATUS_OK;
 }
 
 DYNAMIC_API PEP_STATUS mark_as_compromized(

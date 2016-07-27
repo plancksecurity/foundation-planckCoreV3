@@ -411,7 +411,7 @@ typedef struct _identity_list {
 //      username (in)       UTF-8 string or NULL 
 //
 //  return value:
-//      pEp_identity struct with correct size values or NULL if out of memory
+//      pEp_identity struct or NULL if out of memory
 //
 //  caveat:
 //      the strings are copied; the original strings are still being owned by
@@ -423,13 +423,13 @@ DYNAMIC_API pEp_identity *new_identity(
     );
 
 
-// identity_dup() - allocate memory and set the string and size fields
+// identity_dup() - allocate memory and duplicate
 //
 //  parameters:
 //      src (in)            identity to duplicate
 //
 //  return value:
-//      pEp_identity struct with correct size values or NULL if out of memory
+//      pEp_identity struct or NULL if out of memory
 //
 //  caveat:
 //      the strings are copied; the original strings are still being owned by
@@ -486,14 +486,30 @@ DYNAMIC_API PEP_STATUS get_identity(
 //        PEP_CANNOT_SET_PGP_KEYPAIR    writing to table pgp_keypair failed
 //        PEP_CANNOT_SET_IDENTITY       writing to table identity failed
 //        PEP_COMMIT_FAILED             SQL commit failed
-//      PEP_KEY_BLACKLISTED             Key blacklisted, cannot set identity
+//        PEP_KEY_BLACKLISTED           Key blacklisted, cannot set identity
 //
 //    caveat:
-//        in the identity structure you need to set the const char * fields to
-//        UTF-8 C strings
-//        the size fields are ignored
+//        address, fpr, user_id and username must be given
 
 DYNAMIC_API PEP_STATUS set_identity(
+        PEP_SESSION session, const pEp_identity *identity
+    );
+
+
+// set_identity_flags() - update identity flags on existing identity
+//
+//    parameters:
+//        session (in)        session handle
+//        identity (in)       pointer to pEp_identity structure
+//
+//    return value:
+//        PEP_STATUS_OK = 0             encryption and signing succeeded
+//        PEP_CANNOT_SET_IDENTITY       update of identity failed
+//
+//    caveat:
+//        address and user_id must be given
+
+DYNAMIC_API PEP_STATUS set_identity_flags(
         PEP_SESSION session, const pEp_identity *identity
     );
 
