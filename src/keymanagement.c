@@ -230,6 +230,7 @@ DYNAMIC_API PEP_STATUS update_identity(
         if (EMPTYSTR(identity->username)) { // mitigate
             free(identity->username);
             identity->username = strdup("anonymous");
+            assert(identity->username);
             if (identity->username == NULL){
                 status = PEP_OUT_OF_MEMORY;
                 goto exit_free;
