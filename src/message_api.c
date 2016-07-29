@@ -641,7 +641,7 @@ static void decorate_message(
 {
     assert(msg);
 
-    add_opt_field(msg, "X-pEp-Version", "1.0");
+    add_opt_field(msg, "X-pEp-Version", PEP_VERSION);
     
     if (color != PEP_rating_undefined)
         add_opt_field(msg, "X-EncStatus", color_to_string(color));

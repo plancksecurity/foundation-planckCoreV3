@@ -12,7 +12,7 @@ extern "C" {
 #include "stringlist.h"
 #include "timestamp.h"
 
-#define PEP_VERSION "1.0"
+#define PEP_VERSION "1.0" // protocol version
 
 #define PEP_OWN_USERID "pEp_own_userId"
     
