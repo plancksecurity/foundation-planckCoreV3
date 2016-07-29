@@ -6,7 +6,7 @@ DeviceState_state fsm_DeviceState(
         PEP_SESSION session,
         DeviceState_state state,
         DeviceState_event event,
-        const Identity partner,
+        Identity partner,
         DeviceState_state state_partner
     )
 {
@@ -23,16 +23,16 @@ DeviceState_state fsm_DeviceState(
     case Sole:
         switch (event) {
             case KeyGen:
-                sendBeacon(session, state, NULL);
+                sendBeacon(session, state, NULL, NULL);
                 break;
             case CannotDecrypt:
-                sendBeacon(session, state, NULL);
+                sendBeacon(session, state, NULL, NULL);
                 break;
             case Beacon:
-                sendHandshakeRequest(session, state, partner);
+                sendHandshakeRequest(session, state, partner, NULL);
                 break;
             case HandshakeRequest:
-                sendHandshakeRequest(session, state, partner);
+                sendHandshakeRequest(session, state, partner, NULL);
                 return HandshakingSole;
         default:
             return (DeviceState_state) invalid_event;
@@ -42,10 +42,10 @@ DeviceState_state fsm_DeviceState(
     case HandshakingSole:
         switch (event) {
             case Init:
-                showHandshake(session, state, partner);
+                showHandshake(session, state, partner, NULL);
                 break;
             case HandshakeRejected:
-                reject(session, state, partner);
+                reject(session, state, partner, NULL);
                 return Sole;
             case HandshakeAccepted:
                 return WaitForGroupKeys;
@@ -57,12 +57,12 @@ DeviceState_state fsm_DeviceState(
     case WaitForGroupKeys:
         switch (event) {
             case GroupKeys:
-                storeGroupKeys(session, state, partner);
+                storeGroupKeys(session, state, partner, NULL);
                 return Grouped;
             case Cancel:
                 return Sole;
             case Reject:
-                reject(session, state, partner);
+                reject(session, state, partner, NULL);
                 return Sole;
         default:
             return (DeviceState_state) invalid_event;
@@ -72,20 +72,19 @@ DeviceState_state fsm_DeviceState(
     case Grouped:
         switch (event) {
             case KeyGen:
-                sendGroupKeys(session, state, NULL);
+                sendGroupKeys(session, state, NULL, NULL);
                 break;
             case HandshakeRequest:
-                sendHandshakeRequest(session, state, partner);
-                showHandshake(session, state, partner);
+                sendHandshakeRequest(session, state, partner, NULL);
+                showHandshake(session, state, partner, NULL);
                 break;
             case HandshakeRejected:
-                reject(session, state, partner);
+                reject(session, state, partner, NULL);
                 break;
-            case HandshakeAccepted:
-                sendGroupKeys(session, state, partner);
+            case Hand:
                 break;
             case Reject:
-                reject(session, state, NULL);
+                reject(session, state, NULL, NULL);
                 break;
         default:
             return (DeviceState_state) invalid_event;

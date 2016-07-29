@@ -25,7 +25,8 @@
 PEP_STATUS sendBeacon(
         PEP_SESSION session,
         DeviceState_state state,
-        const Identity partner
+        Identity partner,
+        void *extra
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -116,7 +117,8 @@ error:
 PEP_STATUS sendHandshakeRequest(
         PEP_SESSION session,
         DeviceState_state state,
-        const Identity partner
+        Identity partner,
+        void *extra
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -210,7 +212,8 @@ error:
 PEP_STATUS sendGroupKeys(
         PEP_SESSION session,
         DeviceState_state state,
-        const Identity partner
+        Identity partner,
+        void *extra
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;

@@ -71,7 +71,8 @@ protocol DeviceGroup {
             }
             on HandshakeRejected(Identity partner)
                 do reject(partner);
-            on HandshakeAccepted(Identity partner)
+            on Hand
+                hakeAccepted(Identity partner)
                 do sendGroupKeys(partner);
             on Reject(Identity partner)
                 do reject partner;

@@ -37,7 +37,8 @@ tstylesheet {
         // types
 
         typedef pEp_identity * Identity;
-        typedef union _param { const Identity partner; const stringlist_t *keylist; } param_t;
+        typedef stringlist_t * Stringlist;
+        typedef union _param { Identity partner; stringlist_t *keylist; } param_t;
 
         // error values
 
@@ -70,7 +71,7 @@ tstylesheet {
         // actions
 
         `` const "name", "@name"
-        `` for "func:distinctName(//action)" | PEP_STATUS «@name»(PEP_SESSION session, «$name»_state state, const Identity partner);
+        `` for "func:distinctName(//action)" | PEP_STATUS «@name»(PEP_SESSION session, «$name»_state state, Identity partner, void *extra);
 
         // state machine
 
@@ -78,7 +79,7 @@ tstylesheet {
                 PEP_SESSION session,
                 «@name»_state state,
                 «@name»_event event,
-                const Identity partner,
+                Identity partner,
                 «@name»_state state_partner
             );
 
@@ -131,7 +132,7 @@ tstylesheet {
                 PEP_SESSION session,
                 «@name»_state state,
                 «@name»_event event,
-                const Identity partner,
+                Identity partner,
                 «@name»_state state_partner
             )
         {
@@ -173,7 +174,7 @@ tstylesheet {
             when "parm" > «name(parm/*)»
             otherwise > NULL
         }
-        > );\n
+        > , NULL);\n
     }
 
     template "transition" | return «@target»;

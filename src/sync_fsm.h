@@ -11,7 +11,8 @@ extern "C" {
 // types
 
 typedef pEp_identity * Identity;
-typedef union _param { const Identity partner; const stringlist_t *keylist; } param_t;
+typedef stringlist_t * Stringlist;
+typedef union _param { Identity partner; stringlist_t *keylist; } param_t;
 
 // error values
 
@@ -44,17 +45,18 @@ typedef enum _DeviceState_event {
     HandshakeRejected, 
     HandshakeAccepted, 
     Cancel, 
-    Reject
+    Reject, 
+    Hand
 } DeviceState_event;
 
 // actions
 
-PEP_STATUS sendBeacon(PEP_SESSION session, DeviceState_state state, const Identity partner);
-PEP_STATUS sendHandshakeRequest(PEP_SESSION session, DeviceState_state state, const Identity partner);
-PEP_STATUS showHandshake(PEP_SESSION session, DeviceState_state state, const Identity partner);
-PEP_STATUS reject(PEP_SESSION session, DeviceState_state state, const Identity partner);
-PEP_STATUS storeGroupKeys(PEP_SESSION session, DeviceState_state state, const Identity partner);
-PEP_STATUS sendGroupKeys(PEP_SESSION session, DeviceState_state state, const Identity partner);
+PEP_STATUS sendBeacon(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS sendHandshakeRequest(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS showHandshake(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS reject(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS storeGroupKeys(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS sendGroupKeys(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 
 // state machine
 
@@ -62,7 +64,7 @@ DeviceState_state fsm_DeviceState(
         PEP_SESSION session,
         DeviceState_state state,
         DeviceState_event event,
-        const Identity partner,
+        Identity partner,
         DeviceState_state state_partner
     );
 

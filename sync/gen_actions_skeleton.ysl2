@@ -101,7 +101,8 @@ tstylesheet {
         PEP_STATUS «$action/@name»(
                 PEP_SESSION session,
                 «$fsm»_state state,
-                const Identity partner
+                Identity partner,
+                void *extra
             )
         {
             PEP_STATUS status = PEP_STATUS_OK;
@@ -145,7 +146,8 @@ tstylesheet {
         PEP_STATUS «$action/@name»(
                 PEP_SESSION session,
                 «$fsm»_state state,
-                const Identity partner
+                Identity partner,
+                void *extra
             )
         {
             PEP_STATUS status = PEP_STATUS_OK;

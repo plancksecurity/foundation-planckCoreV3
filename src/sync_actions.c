@@ -19,14 +19,19 @@
 PEP_STATUS showHandshake(
         PEP_SESSION session,
         DeviceState_state state,
-        const Identity partner
+        Identity partner,
+        void *extra
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
+
     assert(session);
     assert(partner);
+    assert(extra == NULL);
+
     if (!(session && partner))
         return PEP_ILLEGAL_VALUE;
+
     assert(session->showHandshake);
     if (!session->showHandshake)
         return PEP_SYNC_NO_TRUSTWORDS_CALLBACK;
@@ -64,18 +69,20 @@ error:
 PEP_STATUS reject(
         PEP_SESSION session,
         DeviceState_state state,
-        const Identity partner
+        Identity partner,
+        void *extra
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
     assert(partner);
+    assert(extra == NULL);
     if (!(session && partner))
         return PEP_ILLEGAL_VALUE;
 
-    // working code
-
+    status = set_identity_flags(session, partner,
+            partner->flags | PEP_idf_not_for_sync);
 
     return status;
 
@@ -93,6 +100,7 @@ error:
 //      session (in)        session handle
 //      state (in)          state the state machine is in
 //      partner (in)        partner to communicate with
+//      _group_keys (in)    group keys received from partner
 //
 //  returns:
 //      PEP_STATUS_OK or any other value on error
@@ -100,17 +108,19 @@ error:
 PEP_STATUS storeGroupKeys(
         PEP_SESSION session,
         DeviceState_state state,
-        const Identity partner
+        Identity partner,
+        void *_group_keys
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
     assert(partner);
-    if (!(session && partner))
+    assert(_group_keys);
+    if (!(session && partner && _group_keys))
         return PEP_ILLEGAL_VALUE;
 
-    // working code
+    Stringlist group_keys = (Stringlist) _group_keys;
 
 
     return status;

@@ -685,7 +685,6 @@ DYNAMIC_API PEP_STATUS trustwords(
     char *buffer;
     char *dest;
     size_t fsize;
-    PEP_STATUS _status;
 
     assert(session);
     assert(fingerprint);
@@ -718,6 +717,7 @@ DYNAMIC_API PEP_STATUS trustwords(
 
     int n_words = 0;
     while (source < fingerprint + fsize) {
+        PEP_STATUS _status;
         uint16_t value;
         char *word;
         size_t _wsize;
@@ -1140,10 +1140,11 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
     assert(psize);
     assert(keylist);
 
-    if (!(session && ctext && csize && ptext && psize && keylist && keylist))
+    if (!(session && ctext && csize && ptext && psize && keylist))
         return PEP_ILLEGAL_VALUE;
 
-    return session->cryptotech[PEP_crypt_OpenPGP].decrypt_and_verify(session, ctext, csize, ptext, psize, keylist);
+    return session->cryptotech[PEP_crypt_OpenPGP].decrypt_and_verify(
+            session, ctext, csize, ptext, psize, keylist);
 }
 
 DYNAMIC_API PEP_STATUS encrypt_and_sign(

@@ -18,6 +18,12 @@ bool import_attached_keys(
 void attach_own_key(PEP_SESSION session, message *msg);
 PEP_cryptotech determine_encryption_format(message *msg);
 
+typedef enum _PEP_encrypt_flags {
+    PEP_encrypt_flag_force_encryption = 0x1
+} PEP_encrypt_flags; 
+
+typedef unsigned int PEP_encrypt_flags_t;
+
 // encrypt_message() - encrypt message in memory
 //
 //  parameters:
@@ -26,6 +32,7 @@ PEP_cryptotech determine_encryption_format(message *msg);
 //      extra (in)          extra keys for encryption
 //      dst (out)           pointer to new encrypted message or NULL on failure
 //      enc_format (in)     encrypted format
+//      flags (in)          flags to set special encryption features
 //
 //  return value:
 //      PEP_STATUS_OK                   on success
@@ -44,7 +51,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         message *src,
         stringlist_t *extra,
         message **dst,
-        PEP_enc_format enc_format
+        PEP_enc_format enc_format,
+        PEP_encrypt_flags_t flags
     );
 
 
@@ -72,7 +80,7 @@ typedef enum _PEP_decrypt_flags {
     PEP_decrypt_flag_own_private_key = 0x1
 } PEP_decrypt_flags; 
 
-typedef uint32_t PEP_decrypt_flags_t;
+typedef unsigned int PEP_decrypt_flags_t;
 
 // decrypt_message() - decrypt message in memory
 //
@@ -82,7 +90,7 @@ typedef uint32_t PEP_decrypt_flags_t;
 //      dst (out)           pointer to new decrypted message or NULL on failure
 //      keylist (out)       stringlist with keyids
 //      color (out)         color for the message
-//      flags (out)         flags to signal special message features
+//      flags (out)         flags to signal special decryption features
 //
 //  return value:
 //      error status or PEP_STATUS_OK on success
@@ -100,7 +108,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         message **dst,
         stringlist_t **keylist,
         PEP_color *color,
-        PEP_decrypt_flags_t *flags 
+        PEP_decrypt_flags_t *flags
 );
 
 // own_message_private_key_details() - details on own key in own message
