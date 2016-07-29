@@ -49,7 +49,7 @@ int main() {
     cout << "encrypting message as MIME multipart…\n";
     message *enc_msg2 = nullptr;
     cout << "calling encrypt_message()\n";
-    status2 = encrypt_message(session, msg2, NULL, &enc_msg2, PEP_enc_PGP_MIME);
+    status2 = encrypt_message(session, msg2, NULL, &enc_msg2, PEP_enc_PGP_MIME, 0);
     cout << "encrypt_message() returns " << status2 << '.' << endl;
     assert(status2 == PEP_STATUS_OK);
     assert(enc_msg2);

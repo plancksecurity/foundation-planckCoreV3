@@ -5,7 +5,7 @@ DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
 
 BEGIN
 
-EXPORTS Identity, KeyList, Header;
+EXPORTS Identity, IdentityList, Header;
 
 major-version INTEGER ::= 1
 minor-version INTEGER ::= 0
@@ -23,7 +23,7 @@ Identity ::= SEQUENCE {
     lang        ISO639-1    DEFAULT "en"
 }
 
-KeyList ::= SEQUENCE OF Hash
+IdentityList ::= SEQUENCE OF Identity
 
 Version ::= SEQUENCE {
     major       INTEGER (0..255) DEFAULT major-version,

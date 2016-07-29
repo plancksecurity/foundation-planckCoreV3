@@ -6,7 +6,7 @@ DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
 BEGIN
 
 EXPORTS DeviceGroup-Protocol;
-IMPORTS Identity, KeyList, Header FROM PEP;
+IMPORTS Identity, IdentityList, Header FROM PEP;
 
 Beacon ::= SEQUENCE {
     header Header,
@@ -25,7 +25,7 @@ GroupKeys ::= SEQUENCE {
     header Header,
     state INTEGER,
     me Identity,
-    keylist KeyList
+    ownIdentities IdentityList
 }
 
 /* for the tags see end of sync.fsm */
