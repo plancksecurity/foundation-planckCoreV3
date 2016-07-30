@@ -309,9 +309,9 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
         sql_set_identity = "insert or replace into identity (address, main_key_id, "
                            "user_id, flags) values (?1, upper(replace(?2,' ','')),"
-                           "?3, ?4) ;";
+                           "?3, ?4 & 255) ;";
 
-        sql_set_identity_flags = "update identity set flags = ?1 "
+        sql_set_identity_flags = "update identity set flags = ?1 & 255 "
                                  "where address = ?2 and user_id = ?3 ;";
 
         sql_set_trust = "insert or replace into trust (user_id, pgp_keypair_fpr, comm_type) "
