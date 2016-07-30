@@ -3,6 +3,7 @@
 #include "cryptotech.h"
 #include "transport.h"
 #include "blacklist.h"
+#include "sync_fsm.h"
 
 static int init_count = -1;
 
@@ -127,7 +128,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     sqlite3_busy_timeout(_session->system_db, 1000);
 
 // increment this when patching DDL
-#define _DDL_USER_VERSION "1"
+#define _DDL_USER_VERSION "2"
 
     if (in_first) {
         int_result = sqlite3_exec(
@@ -173,7 +174,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "   private_id text,\n"
                 "   created integer,\n"
                 "   expires integer,\n"
-                "   comment text\n"
+                "   comment text,\n"
+                "   flags integer default (0)\n"
                 ");\n"
                 "create index if not exists pgp_keypair_expires on pgp_keypair (\n"
                 "   expires\n"
@@ -255,6 +257,18 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             assert(int_result == SQLITE_OK);
         }
 
+        if (version < 2) {
+            int_result = sqlite3_exec(
+                _session->db,
+                "alter table pgp_keypair\n"
+                "   add column flags integer default (0);",
+                NULL,
+                NULL,
+                NULL
+            );
+            assert(int_result == SQLITE_OK);
+        }
+
         if (version < atoi(_DDL_USER_VERSION)) {
             int_result = sqlite3_exec(
                 _session->db,
@@ -271,7 +285,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         sql_log = "insert into log (title, entity, description, comment)"
                   "values (?1, ?2, ?3, ?4);";
 
-        sql_get_identity =  "select fpr, username, comm_type, lang, flags"
+        sql_get_identity =  "select fpr, username, comm_type, lang, identity.flags"
                             "   from identity"
                             "   join person on id = identity.user_id"
                             "   join pgp_keypair on fpr = identity.main_key_id"
@@ -1237,7 +1251,18 @@ DYNAMIC_API PEP_STATUS generate_keypair(
         (identity->fpr == NULL || identity->fpr[0] == 0) && identity->username))
         return PEP_ILLEGAL_VALUE;
 
-    return session->cryptotech[PEP_crypt_OpenPGP].generate_keypair(session, identity);
+    PEP_STATUS status =
+        session->cryptotech[PEP_crypt_OpenPGP].generate_keypair(session,
+                identity);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    // if a state machine for keysync is in place, inject notify
+    if (session->sync_state != DeviceState_state_NONE)
+        status = fsm_DeviceState_inject(session, KeyGen, NULL,
+                DeviceState_state_NONE);
+
+    return status;
 }
 
 DYNAMIC_API PEP_STATUS get_key_rating(

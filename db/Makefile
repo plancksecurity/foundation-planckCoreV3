@@ -12,6 +12,7 @@ system.db: create_system_db.sql $(dicos)
 .PHONY: clean install
 
 install: system.db
+	mkdir -p `dirname $(SYSTEM_DB)`
 	cp system.db $(SYSTEM_DB)
 
 clean:

@@ -19,7 +19,7 @@ protocol DeviceGroup {
         }
 
         state Sole {
-            on KeyGen
+            on KeyGen // injected by generate_keypair()
                 do sendBeacon;
             on CannotDecrypt
                 do sendBeacon;  // cry, baby

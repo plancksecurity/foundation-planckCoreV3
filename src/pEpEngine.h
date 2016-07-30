@@ -384,6 +384,8 @@ typedef enum _identity_flags {
     PEP_idf_group = 2           // identity of group of persons
 } identity_flags;
 
+typedef unsigned int identity_flags_t;
+
 typedef struct _pEp_identity {
     char *address;              // C string with address UTF-8 encoded
     char *fpr;                  // C string with fingerprint UTF-8 encoded
@@ -393,7 +395,7 @@ typedef struct _pEp_identity {
     char lang[3];               // language of conversation
                                 // ISO 639-1 ALPHA-2, last byte is 0
     bool me;                    // if this is the local user herself/himself
-    unsigned int flags;         // identity_flag1 | identity_flag2 | ...
+    identity_flags_t flags;     // identity_flag1 | identity_flag2 | ...
 } pEp_identity;
 
 typedef struct _identity_list {
