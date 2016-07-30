@@ -380,8 +380,12 @@ typedef enum _PEP_comm_type {
 } PEP_comm_type;
 
 typedef enum _identity_flags {
+    // flags set by application
     PEP_idf_not_for_sync = 1,   // don't use this identity for sync
-    PEP_idf_group = 2           // identity of group of persons
+    PEP_idf_group = 2,          // identity of group of persons
+
+    // flags set by key sync implementation
+    PEP_idf_device_group = 256  // own identity member of device group
 } identity_flags;
 
 typedef unsigned int identity_flags_t;

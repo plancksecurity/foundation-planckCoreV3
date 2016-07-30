@@ -285,7 +285,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         sql_log = "insert into log (title, entity, description, comment)"
                   "values (?1, ?2, ?3, ?4);";
 
-        sql_get_identity =  "select fpr, username, comm_type, lang, identity.flags"
+        sql_get_identity =  "select fpr, username, comm_type, lang,"
+                            "   identity.flags | pgp_keypair.flags"
                             "   from identity"
                             "   join person on id = identity.user_id"
                             "   join pgp_keypair on fpr = identity.main_key_id"
