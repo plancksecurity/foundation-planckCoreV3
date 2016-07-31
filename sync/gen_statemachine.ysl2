@@ -29,6 +29,7 @@ tstylesheet {
         // state machine for «@name»
 
         #include "pEpEngine.h"
+        #include "../asn.1/«../@name»-Protocol.h"
         
         #ifdef __cplusplus
         extern "C" {
@@ -47,17 +48,21 @@ tstylesheet {
             invalid_event = -3
         } fsm_error;
 
+        // conditions
+
+        `` for "func:distinctName(condition)" | bool «@name»(PEP_SESSION session`apply "parm", 0`);
+
         // states
 
         typedef enum _«@name»_state {
-            «@name»_state_NONE = -1,
+            «@name»_state_NONE = 0,
         `` for "func:distinctName(state)" |> «@name»`if "position()!=last()" > , `
         } «@name»_state;
 
         // events
 
         typedef enum _«@name»_event {
-            «@name»_event_NONE = -1,
+            «@name»_event_NONE = 0,
         ||
         for "func:distinctName(state/event[not(not(/protocol/fsm/tag/@name=@name))])" {
             const "name", "@name";
@@ -73,6 +78,10 @@ tstylesheet {
         `` const "name", "@name"
         `` for "func:distinctName(//action)" | PEP_STATUS «@name»(PEP_SESSION session, «$name»_state state, Identity partner, void *extra);
 
+        // message receiver
+        
+        PEP_STATUS receive_«@name»_msg(PEP_SESSION session, «../@name»_Protocol_t *msg);
+
         // state machine
 
         «@name»_state fsm_«@name»(
@@ -80,7 +89,7 @@ tstylesheet {
                 «@name»_state state,
                 «@name»_event event,
                 Identity partner,
-                «@name»_state state_partner
+                void *extra
             );
 
         // driver
@@ -89,7 +98,7 @@ tstylesheet {
                 PEP_SESSION session,
                 «@name»_event event,
                 Identity partner,
-                «@name»_state state_partner
+                void *extra
             );
 
         #ifdef __cplusplus
@@ -110,15 +119,17 @@ tstylesheet {
                 PEP_SESSION session,
                 «@name»_event event,
                 Identity partner,
-                «@name»_state state_partner
+                void *extra
             )
         {
-            PEP_STATUS status = PEP_STATUS_OK;
+            assert(session);
+            if (!session)
+                return PEP_ILLEGAL_VALUE;
 
             session->«@filename»_state = fsm_«@name»(session, session->«@filename»_state,
-                    event, partner, state_partner);
+                    event, partner, extra);
 
-            return status;
+            return PEP_STATUS_OK;
         }
 
         ||
@@ -133,11 +144,11 @@ tstylesheet {
                 «@name»_state state,
                 «@name»_event event,
                 Identity partner,
-                «@name»_state state_partner
+                void *extra
             )
         {
             switch (state) {
-                `` apply "state"
+            `` apply "state", 2
                 default:
                     return («@name»_state) invalid_state;
             }
@@ -153,8 +164,8 @@ tstylesheet {
     case «@name»:
         switch (event) {
         `` apply "event", 2
-        default:
-            return («../@name»_state) invalid_event;
+            default:
+                return («../@name»_state) invalid_event;
         }
         break;
 
@@ -163,7 +174,7 @@ tstylesheet {
     template "event"
     ||
     case «@name»:
-    `` apply "action|transition";
+    `` apply "action|transition|condition";
     `` if "name(*[position()=last()]) != 'transition'" |> break;
     ||
 
@@ -175,6 +186,19 @@ tstylesheet {
             otherwise > NULL
         }
         > , NULL);\n
+    }
+
+    template "condition" {
+        | if («@name»(session`apply "parm", 0`)) {
+        apply "action|transition|condition";
+        | }
+    }
+
+    template "parm" choose {
+        when "count(*) = 1"
+            > , «name(*)»
+        otherwise
+            > , «name(*[1])» «name(*[2])»
     }
 
     template "transition" | return «@target»;

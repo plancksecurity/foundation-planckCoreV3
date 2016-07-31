@@ -3,6 +3,8 @@
 #include <memory.h>
 #include <assert.h>
 
+#include "../asn.1/DeviceGroup-Protocol.h"
+
 
 DYNAMIC_API PEP_STATUS register_sync_callbacks(
         PEP_SESSION session,

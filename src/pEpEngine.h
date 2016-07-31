@@ -72,6 +72,7 @@ typedef enum {
     PEP_CANNOT_ENCODE                               = 0x0803,
 
     PEP_SYNC_NO_TRUSTWORDS_CALLBACK                 = 0x0901,
+    PEP_SYNC_ILLEGAL_MESSAGE                        = 0x0902,
 
     PEP_COMMIT_FAILED                               = 0xff01,
 
@@ -319,6 +320,8 @@ DYNAMIC_API PEP_STATUS trustwords(
     );
 
 
+// TODO: increase versions in pEp.asn1 if rating changes
+
 typedef enum _PEP_comm_type {
     PEP_ct_unknown = 0,
 
@@ -380,12 +383,12 @@ typedef enum _PEP_comm_type {
 } PEP_comm_type;
 
 typedef enum _identity_flags {
-    // first octet is flags set by application
+    // the first octet flags are app defined settings
     PEP_idf_not_for_sync = 1,   // don't use this identity for sync
-    PEP_idf_group = 2,          // identity of group of persons
+    PEP_idf_list = 2,           // identity of list of persons
 
-    // second octet is flags set by key sync implementation
-    PEP_idf_device_group = 256  // own identity member of device group
+    // the second octet flags are calculated
+    PEP_idf_devicegroup = 256   // identity of a device group member
 } identity_flags;
 
 typedef unsigned int identity_flags_t;
@@ -467,8 +470,8 @@ DYNAMIC_API void free_identity(pEp_identity *identity);
 //                            NULL if failure
 //
 //    caveat:
-//        the address string is being copied; the original string remains in the
-//        ownership of the caller
+//        address and user_id are being copied; the original strings remains in
+//        the ownership of the caller
 //        the resulting pEp_identity structure goes to the ownership of the
 //        caller and has to be freed with free_identity() when not in use any
 //        more

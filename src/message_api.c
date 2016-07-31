@@ -9,11 +9,11 @@
 #include <stdlib.h>
 
 
-#ifndef MIN
-#define MIN(A, B) ((B) > (A) ? (A) : (B))
+#ifndef _MIN
+#define _MIN(A, B) ((B) > (A) ? (A) : (B))
 #endif
-#ifndef MAX
-#define MAX(A, B) ((B) > (A) ? (B) : (A))
+#ifndef _MAX
+#define _MAX(A, B) ((B) > (A) ? (B) : (A))
 #endif
 
 
@@ -851,7 +851,7 @@ static PEP_comm_type _get_comm_type(
         else if (ident->comm_type == PEP_ct_mistrusted)
             return PEP_ct_mistrusted;
         else
-            return MIN(max_comm_type, ident->comm_type);
+            return _MIN(max_comm_type, ident->comm_type);
     }
     else {
         return PEP_ct_unknown;
@@ -1686,7 +1686,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_color(
     if (comm_type_determined == false)
         *color = PEP_rating_undefined;
     else
-        *color = MAX(_rating(max_comm_type, PEP_rating_undefined),
+        *color = _MAX(_rating(max_comm_type, PEP_rating_undefined),
                 PEP_rating_unencrypted);
 
     return PEP_STATUS_OK;

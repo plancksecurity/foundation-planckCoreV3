@@ -111,13 +111,15 @@ tstylesheet {
 
             // working code
 
-
+            free_identity(partner);
+            // free extra
             return status;
 
         enomem:
             status = PEP_OUT_OF_MEMORY;
         error:
-            // free...
+            free_identity(partner);
+            // free extra
             return status;
         }
 
@@ -159,8 +161,10 @@ tstylesheet {
             `` call "paramcheck" with "partner", "parm/partner";
 
             assert(session->messageToSend);
-            if (!session->messageToSend)
-                return PEP_SEND_FUNCTION_NOT_REGISTERED;
+            if (!session->messageToSend) {
+                status = PEP_SEND_FUNCTION_NOT_REGISTERED;
+                goto error;
+            }
 
             msg = («$name»_t *) calloc(1, sizeof(«$name»_t));
             assert(msg);
@@ -173,7 +177,18 @@ tstylesheet {
                 goto error;
             msg->header.sequence = (long) seq;
 
-            msg->state = (long) state;
+            bool devicegroup = storedGroupKeys(session);
+            if (devicegroup) { // default is FALSE
+                BOOLEAN_t *dg = malloc(sizeof(BOOLEAN_t));
+                assert(dg);
+                if (!dg)
+                    goto enomem;
+
+                *dg = 1;
+                msg->header.devicegroup = dg;
+            }
+
+            msg->header.state = (long) state;
 
             me = new_identity(NULL, NULL, NULL, NULL);
             if (!me)
@@ -181,18 +196,18 @@ tstylesheet {
             status = myself(session, me);
             if (status != PEP_STATUS_OK)
                 goto error;
-            if (Identity_from_Struct(me, &msg->me) == NULL)
+            if (Identity_from_Struct(me, &msg->header.me) == NULL)
                 goto enomem;
         ||
-        if "parm or $name='OwnKeys'" |
-        if "parm/partner"   |> if (Identity_from_Struct(partner, &msg->partner) == NULL)
-        if "parm/partner"   |>> goto enomem;
-        if "$name='OwnKeys'"|> stringlist_t *sl;
-        if "$name='OwnKeys'"|> status = own_key_retrieve(session, &sl);
-        if "$name='OwnKeys'"|> if (status != PEP_STATUS_OK)
-        if "$name='OwnKeys'"|>> goto error;
-        if "$name='OwnKeys'"|> if (KeyList_from_stringlist(sl, &msg->keylist) == NULL)
-        if "$name='OwnKeys'"|>> goto enomem;
+        if "$name='OwnKeys'" {
+            |
+            |> identity_list *kl;
+            |> status = own_key_retrieve(session, &kl);
+            |> if (status != PEP_STATUS_OK)
+            |>> goto error;
+            |> if (KeyList_from_stringlist(kl, &msg->keylist) == NULL)
+            |>> goto enomem;
+        }
         ||
 
             if (asn_check_constraints(&asn_DEF_«$name», msg, NULL, NULL)) {
@@ -219,7 +234,8 @@ tstylesheet {
 
             free_message(_message);
             ASN_STRUCT_FREE(asn_DEF_«$name», msg);
-
+            free_identity(partner);
+            `` if "$name='OwnKeys'" |> free_identity_list(kl);
             return status;
 
         enomem:
@@ -229,6 +245,7 @@ tstylesheet {
             free(payload);
             free_message(_message);
             free_identity(me);
+            `` if "$name='OwnKeys'" |> free_identity_list(kl);
             return status;
         }
 

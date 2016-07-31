@@ -41,8 +41,10 @@ PEP_STATUS sendBeacon(
         return PEP_ILLEGAL_VALUE;
 
     assert(session->messageToSend);
-    if (!session->messageToSend)
-        return PEP_SEND_FUNCTION_NOT_REGISTERED;
+    if (!session->messageToSend) {
+        status = PEP_SEND_FUNCTION_NOT_REGISTERED;
+        goto error;
+    }
 
     msg = (Beacon_t *) calloc(1, sizeof(Beacon_t));
     assert(msg);
@@ -55,7 +57,18 @@ PEP_STATUS sendBeacon(
         goto error;
     msg->header.sequence = (long) seq;
 
-    msg->state = (long) state;
+    bool devicegroup = storedGroupKeys(session);
+    if (devicegroup) { // default is FALSE
+        BOOLEAN_t *dg = malloc(sizeof(BOOLEAN_t));
+        assert(dg);
+        if (!dg)
+            goto enomem;
+
+        *dg = 1;
+        msg->header.devicegroup = dg;
+    }
+
+    msg->header.state = (long) state;
 
     me = new_identity(NULL, NULL, NULL, NULL);
     if (!me)
@@ -63,7 +76,7 @@ PEP_STATUS sendBeacon(
     status = myself(session, me);
     if (status != PEP_STATUS_OK)
         goto error;
-    if (Identity_from_Struct(me, &msg->me) == NULL)
+    if (Identity_from_Struct(me, &msg->header.me) == NULL)
         goto enomem;
 
     if (asn_check_constraints(&asn_DEF_Beacon, msg, NULL, NULL)) {
@@ -90,7 +103,7 @@ PEP_STATUS sendBeacon(
 
     free_message(_message);
     ASN_STRUCT_FREE(asn_DEF_Beacon, msg);
-
+    free_identity(partner);
     return status;
 
 enomem:
@@ -133,8 +146,10 @@ PEP_STATUS sendHandshakeRequest(
         return PEP_ILLEGAL_VALUE;
 
     assert(session->messageToSend);
-    if (!session->messageToSend)
-        return PEP_SEND_FUNCTION_NOT_REGISTERED;
+    if (!session->messageToSend) {
+        status = PEP_SEND_FUNCTION_NOT_REGISTERED;
+        goto error;
+    }
 
     msg = (HandshakeRequest_t *) calloc(1, sizeof(HandshakeRequest_t));
     assert(msg);
@@ -147,7 +162,18 @@ PEP_STATUS sendHandshakeRequest(
         goto error;
     msg->header.sequence = (long) seq;
 
-    msg->state = (long) state;
+    bool devicegroup = storedGroupKeys(session);
+    if (devicegroup) { // default is FALSE
+        BOOLEAN_t *dg = malloc(sizeof(BOOLEAN_t));
+        assert(dg);
+        if (!dg)
+            goto enomem;
+
+        *dg = 1;
+        msg->header.devicegroup = dg;
+    }
+
+    msg->header.state = (long) state;
 
     me = new_identity(NULL, NULL, NULL, NULL);
     if (!me)
@@ -155,10 +181,7 @@ PEP_STATUS sendHandshakeRequest(
     status = myself(session, me);
     if (status != PEP_STATUS_OK)
         goto error;
-    if (Identity_from_Struct(me, &msg->me) == NULL)
-        goto enomem;
-
-    if (Identity_from_Struct(partner, &msg->partner) == NULL)
+    if (Identity_from_Struct(me, &msg->header.me) == NULL)
         goto enomem;
 
     if (asn_check_constraints(&asn_DEF_HandshakeRequest, msg, NULL, NULL)) {
@@ -185,7 +208,7 @@ PEP_STATUS sendHandshakeRequest(
 
     free_message(_message);
     ASN_STRUCT_FREE(asn_DEF_HandshakeRequest, msg);
-
+    free_identity(partner);
     return status;
 
 enomem:
@@ -228,8 +251,10 @@ PEP_STATUS sendGroupKeys(
         return PEP_ILLEGAL_VALUE;
 
     assert(session->messageToSend);
-    if (!session->messageToSend)
-        return PEP_SEND_FUNCTION_NOT_REGISTERED;
+    if (!session->messageToSend) {
+        status = PEP_SEND_FUNCTION_NOT_REGISTERED;
+        goto error;
+    }
 
     msg = (GroupKeys_t *) calloc(1, sizeof(GroupKeys_t));
     assert(msg);
@@ -242,7 +267,18 @@ PEP_STATUS sendGroupKeys(
         goto error;
     msg->header.sequence = (long) seq;
 
-    msg->state = (long) state;
+    bool devicegroup = storedGroupKeys(session);
+    if (devicegroup) { // default is FALSE
+        BOOLEAN_t *dg = malloc(sizeof(BOOLEAN_t));
+        assert(dg);
+        if (!dg)
+            goto enomem;
+
+        *dg = 1;
+        msg->header.devicegroup = dg;
+    }
+
+    msg->header.state = (long) state;
 
     me = new_identity(NULL, NULL, NULL, NULL);
     if (!me)
@@ -250,7 +286,7 @@ PEP_STATUS sendGroupKeys(
     status = myself(session, me);
     if (status != PEP_STATUS_OK)
         goto error;
-    if (Identity_from_Struct(me, &msg->me) == NULL)
+    if (Identity_from_Struct(me, &msg->header.me) == NULL)
         goto enomem;
 
     if (asn_check_constraints(&asn_DEF_GroupKeys, msg, NULL, NULL)) {
@@ -277,7 +313,7 @@ PEP_STATUS sendGroupKeys(
 
     free_message(_message);
     ASN_STRUCT_FREE(asn_DEF_GroupKeys, msg);
-
+    free_identity(partner);
     return status;
 
 enomem:
