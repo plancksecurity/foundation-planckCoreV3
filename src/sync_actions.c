@@ -260,6 +260,38 @@ PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src)
     if (!(session && src))
         return PEP_ILLEGAL_VALUE;
 
+    bool found = false;
+
+    for (bloblist_t *bl = src->attachments; bl && bl->value; bl = bl->next) {
+        if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp") == 0
+                && bl->size) {
+            struct asn_codec_ctx_s opt_codec_ctx;
+            memset(&opt_codec_ctx, 0, sizeof(opt_codec_ctx));
+            DeviceGroup_Protocol_t *msg;
+            uper_decode_complete(&opt_codec_ctx, &asn_DEF_DeviceGroup_Protocol,
+                    (void **) &msg, bl->value, bl->size);
+            if (msg) {
+                found = true;
+                PEP_STATUS status = receive_sync_msg(session, msg);
+                ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                if (status != PEP_STATUS_OK)
+                    return status;
+            }
+        }
+    }
+
+    if (found) {
+        for (stringpair_list_t *spl = src->opt_fields ; spl && spl->value ;
+                spl = spl->next) {
+            if (spl->value->key &&
+                    strcasecmp(spl->value->key, "pEp-auto-consume") == 0) {
+                if (spl->value->value &&
+                        strcasecmp(spl->value->value, "yes") == 0)
+                    return PEP_MESSAGE_CONSUMED;
+            }
+        }
+    }
+
     return PEP_STATUS_OK;
 }
 

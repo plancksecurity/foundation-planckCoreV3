@@ -1565,11 +1565,14 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         free_message(msg);
         msg = NULL;
     }
+    else if (status != PEP_STATUS_OK){
+        goto pep_error;
+    }
 
     *dst = msg;
     *keylist = _keylist;
 
-    return PEP_STATUS_OK;
+    return status;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
@@ -1616,6 +1619,8 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
 
     identity_list *private_il = NULL;
     PEP_STATUS status = _decrypt_message(session, msg,  &dst, &keylist, &color, &flags, &private_il);
+    free_message(dst);
+    free_stringlist(keylist);
 
     if (status == PEP_STATUS_OK &&
         flags & PEP_decrypt_flag_own_private_key &&
