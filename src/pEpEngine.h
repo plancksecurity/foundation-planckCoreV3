@@ -75,6 +75,7 @@ typedef enum {
     PEP_SYNC_ILLEGAL_MESSAGE                        = 0x0902,
 
     PEP_COMMIT_FAILED                               = 0xff01,
+    PEP_MESSAGE_CONSUMED                            = 0xff02,
 
     PEP_CANNOT_CREATE_TEMP_FILE                     = -5,
     PEP_ILLEGAL_VALUE                               = -4,

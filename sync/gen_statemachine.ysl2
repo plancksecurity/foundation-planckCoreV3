@@ -29,6 +29,7 @@ tstylesheet {
         // state machine for «@name»
 
         #include "pEpEngine.h"
+        #include "message.h"
         #include "../asn.1/«../@name»-Protocol.h"
         
         #ifdef __cplusplus
@@ -80,7 +81,7 @@ tstylesheet {
 
         // message receiver
         
-        PEP_STATUS receive_«@name»_msg(PEP_SESSION session, «../@name»_Protocol_t *msg);
+        PEP_STATUS receive_«@name»_msg(PEP_SESSION session, message *msg);
 
         // state machine
 

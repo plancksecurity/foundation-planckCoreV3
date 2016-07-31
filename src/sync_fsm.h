@@ -3,6 +3,7 @@
 // state machine for DeviceState
 
 #include "pEpEngine.h"
+#include "message.h"
 #include "../asn.1/DeviceGroup-Protocol.h"
 
 #ifdef __cplusplus
@@ -66,7 +67,7 @@ PEP_STATUS sendGroupKeys(PEP_SESSION session, DeviceState_state state, Identity 
 
 // message receiver
 
-PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, DeviceGroup_Protocol_t *msg);
+PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *msg);
 
 // state machine
 

@@ -17,6 +17,7 @@ bool import_attached_keys(
     );
 void attach_own_key(PEP_SESSION session, message *msg);
 PEP_cryptotech determine_encryption_format(message *msg);
+void add_opt_field(message *msg, const char *name, const char *value);
 
 typedef enum _PEP_encrypt_flags {
     PEP_encrypt_flag_force_encryption = 0x1

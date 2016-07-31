@@ -3,6 +3,7 @@
 
 #include "platform.h"
 #include "mime.h"
+#include "sync_fsm.h"
 
 #include <assert.h>
 #include <string.h>
@@ -60,9 +61,9 @@ static bool is_fileending(const bloblist_t *bl, const char *fe)
     return strcmp(bl->filename + (fn_len - fe_len), fe) == 0;
 }
 
-static void add_opt_field(message *msg, const char *name, const char *value)
+void add_opt_field(message *msg, const char *name, const char *value)
 {
-    assert(msg);
+    assert(msg && name && value);
 
     if (msg && name && value) {
         stringpair_t *pair = new_stringpair(name, value);
@@ -1557,6 +1558,12 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         decorate_message(msg, *color, _keylist);
         if (imported_keys)
             remove_attached_keys(msg);
+    }
+
+    status = receive_DeviceState_msg(session, msg);
+    if (status == PEP_MESSAGE_CONSUMED) {
+        free_message(msg);
+        msg = NULL;
     }
 
     *dst = msg;

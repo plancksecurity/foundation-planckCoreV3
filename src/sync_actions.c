@@ -208,7 +208,7 @@ error:
     return status;
 }
 
-PEP_STATUS receive_sync_msg(PEP_SESSION session, DeviceGroup_Protocol_t *msg)
+static PEP_STATUS receive_sync_msg(PEP_SESSION session, DeviceGroup_Protocol_t *msg)
 {
     assert(session && msg && msg->present != DeviceGroup_Protocol_PR_NOTHING);
     if (!(session && msg && msg->present != DeviceGroup_Protocol_PR_NOTHING))
@@ -252,5 +252,14 @@ PEP_STATUS receive_sync_msg(PEP_SESSION session, DeviceGroup_Protocol_t *msg)
     }
 
     return fsm_DeviceState_inject(session, event, partner, extra);
+}
+
+PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src)
+{
+    assert(session && src);
+    if (!(session && src))
+        return PEP_ILLEGAL_VALUE;
+
+    return PEP_STATUS_OK;
 }
 
