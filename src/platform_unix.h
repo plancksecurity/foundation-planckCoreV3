@@ -51,9 +51,10 @@ size_t strlcat(char* dst, const	char* src, size_t size);
 typedef char uuid_string_t[37];
 #endif
 #ifdef UUID
+#undef UUID
+#endif
 // on *nix, uuid_t is an array and already implements pointer semantics
 #define UUID uuid_t
-#endif
 
 #ifdef __cplusplus
 }
