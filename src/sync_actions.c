@@ -208,7 +208,10 @@ error:
     return status;
 }
 
-static PEP_STATUS receive_sync_msg(PEP_SESSION session, DeviceGroup_Protocol_t *msg)
+static PEP_STATUS receive_sync_msg(
+        PEP_SESSION session,
+        DeviceGroup_Protocol_t *msg
+    )
 {
     assert(session && msg && msg->present != DeviceGroup_Protocol_PR_NOTHING);
     if (!(session && msg && msg->present != DeviceGroup_Protocol_PR_NOTHING))
@@ -227,14 +230,16 @@ static PEP_STATUS receive_sync_msg(PEP_SESSION session, DeviceGroup_Protocol_t *
             break;
 
         case DeviceGroup_Protocol_PR_handshakeRequest:
-            partner = Identity_to_Struct(&msg->choice.handshakeRequest.header.me, NULL);
+            partner = Identity_to_Struct(
+                    &msg->choice.handshakeRequest.header.me, NULL);
             if (!partner)
                 return PEP_OUT_OF_MEMORY;
             event = HandshakeRequest;
             break;
 
         case DeviceGroup_Protocol_PR_groupKeys:
-            partner = Identity_to_Struct(&msg->choice.groupKeys.header.me, NULL);
+            partner = Identity_to_Struct(&msg->choice.groupKeys.header.me,
+                    NULL);
             if (!partner)
                 return PEP_OUT_OF_MEMORY;
             identity_list *group_keys = IdentityList_to_identity_list(
@@ -265,10 +270,8 @@ PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src)
     for (bloblist_t *bl = src->attachments; bl && bl->value; bl = bl->next) {
         if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp") == 0
                 && bl->size) {
-            struct asn_codec_ctx_s opt_codec_ctx;
-            memset(&opt_codec_ctx, 0, sizeof(opt_codec_ctx));
             DeviceGroup_Protocol_t *msg;
-            uper_decode_complete(&opt_codec_ctx, &asn_DEF_DeviceGroup_Protocol,
+            uper_decode_complete(NULL, &asn_DEF_DeviceGroup_Protocol,
                     (void **) &msg, bl->value, bl->size);
             if (msg) {
                 found = true;
