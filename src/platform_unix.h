@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <strings.h>
 #include <sys/select.h>
+#include <uuid/uuid.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,6 +44,15 @@ extern char* SystemDB;
 #if !defined(BSD) && !defined(__APPLE__)
 size_t strlcpy(char* dst, const	char* src, size_t size);
 size_t strlcat(char* dst, const	char* src, size_t size);
+#endif
+
+#ifndef _UUID_STRING_T
+#define _UUID_STRING_T
+typedef char uuid_string_t[37];
+#endif
+#ifdef UUID
+// on *nix, uuid_t is an array and already implements pointer semantics
+#define UUID uuid_t
 #endif
 
 #ifdef __cplusplus

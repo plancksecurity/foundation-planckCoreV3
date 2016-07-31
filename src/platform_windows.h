@@ -4,6 +4,7 @@
 
 #pragma warning(disable : 4996)
 
+#include <Rpc.h>
 #include <string.h>
 #include <io.h>
 #include <basetsd.h>
@@ -57,6 +58,15 @@ const char *windoze_system_db(void);
 const char *gpg_conf(void);
 
 long random(void);
+
+// on Windoze, uuid_t needs pointer semantics
+typedef UUID *uuid_t;
+#define _UUID_STRING_T
+typedef char uuid_string_t[37];
+
+void uuid_generate_random(uuid_t out);
+int uuid_parse(char *in, uuid_t uu);
+void uuid_unparse_upper(uuid_t uu, uuid_string_t out);
 
 #ifndef inline
 #define inline __inline

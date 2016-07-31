@@ -158,6 +158,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
         int_result = sqlite3_exec(
             _session->db,
+                "PRAGMA application_id = 0x23423423;\n"
                 "create table if not exists log (\n"
                 "   timestamp integer default (datetime('now')) ,\n"
                 "   title text not null,\n"
@@ -260,6 +261,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         if (version < 2) {
             int_result = sqlite3_exec(
                 _session->db,
+                "PRAGMA application_id = 0x23423423;\n"
                 "alter table pgp_keypair\n"
                 "   add column flags integer default (0);",
                 NULL,
