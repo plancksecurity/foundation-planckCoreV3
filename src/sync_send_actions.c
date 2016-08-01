@@ -113,6 +113,7 @@ error:
     free(payload);
     free_message(_message);
     free_identity(me);
+    free_identity(partner);
     return status;
 }
 
@@ -218,6 +219,7 @@ error:
     free(payload);
     free_message(_message);
     free_identity(me);
+    free_identity(partner);
     return status;
 }
 
@@ -244,6 +246,7 @@ PEP_STATUS sendGroupKeys(
     char *payload = NULL;
     message *_message = NULL;
     pEp_identity *me = NULL;
+    identity_list *kl = NULL;
 
     assert(session);
     assert(!partner);
@@ -289,6 +292,12 @@ PEP_STATUS sendGroupKeys(
     if (Identity_from_Struct(me, &msg->header.me) == NULL)
         goto enomem;
 
+    status = own_identities_retrieve(session, &kl);
+    if (status != PEP_STATUS_OK)
+        goto error;
+    if (IdentityList_from_identity_list(kl, &msg->ownIdentities) == NULL)
+        goto enomem;
+
     if (asn_check_constraints(&asn_DEF_GroupKeys, msg, NULL, NULL)) {
         status = PEP_CONTRAINTS_VIOLATED;
         goto error;
@@ -314,6 +323,7 @@ PEP_STATUS sendGroupKeys(
     free_message(_message);
     ASN_STRUCT_FREE(asn_DEF_GroupKeys, msg);
     free_identity(partner);
+    free_identity_list(kl);
     return status;
 
 enomem:
@@ -323,6 +333,8 @@ error:
     free(payload);
     free_message(_message);
     free_identity(me);
+    free_identity(partner);
+    free_identity_list(kl);
     return status;
 }
 

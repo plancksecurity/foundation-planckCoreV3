@@ -659,10 +659,10 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
 }
 
 DYNAMIC_API PEP_STATUS own_key_is_listed(
-                                           PEP_SESSION session,
-                                           const char *fpr,
-                                           bool *listed
-                                           )
+        PEP_SESSION session,
+        const char *fpr,
+        bool *listed
+    )
 {
     PEP_STATUS status = PEP_STATUS_OK;
     int count;
@@ -695,37 +695,63 @@ DYNAMIC_API PEP_STATUS own_key_is_listed(
     return status;
 }
 
-DYNAMIC_API PEP_STATUS own_key_retrieve(
-                                          PEP_SESSION session,
-                                          stringlist_t **own_key
-                                          )
+DYNAMIC_API PEP_STATUS own_identities_retrieve(
+        PEP_SESSION session,
+        identity_list **own_identities
+      )
 {
     PEP_STATUS status = PEP_STATUS_OK;
     
-    assert(session);
-    assert(own_key);
-    
-    if (!(session && own_key))
+    assert(session && own_identities);
+    if (!(session && own_identities))
         return PEP_ILLEGAL_VALUE;
     
-    *own_key = NULL;
-    stringlist_t *_own_key = new_stringlist(NULL);
-    if (_own_key == NULL)
+    *own_identities = NULL;
+    identity_list *_own_identities = new_identity_list(NULL);
+    if (_own_identities == NULL)
         goto enomem;
     
-    sqlite3_reset(session->own_key_retrieve);
+    sqlite3_reset(session->own_identities_retrieve);
     
     int result;
+    // address, fpr, username, user_id, comm_type, lang, flags
+    const char *address = NULL;
     const char *fpr = NULL;
+    const char *username = NULL;
+    const char *user_id = NULL;
+    PEP_comm_type comm_type = PEP_ct_unknown;
+    const char *lang = NULL;
+    unsigned int flags = 0;
     
-    stringlist_t *_bl = _own_key;
+    identity_list *_bl = _own_identities;
     do {
-        result = sqlite3_step(session->own_key_retrieve);
+        result = sqlite3_step(session->own_identities_retrieve);
         switch (result) {
             case SQLITE_ROW:
-                fpr = (const char *) sqlite3_column_text(session->own_key_retrieve, 0);
-                
-                _bl = stringlist_add(_bl, fpr);
+                address = (const char *)
+                    sqlite3_column_text(session->own_identities_retrieve, 0);
+                fpr = (const char *)
+                    sqlite3_column_text(session->own_identities_retrieve, 1);
+                username = (const char *)
+                    sqlite3_column_text(session->own_identities_retrieve, 2);
+                user_id = (const char *)
+                    sqlite3_column_text(session->own_identities_retrieve, 3);
+                comm_type = (PEP_comm_type)
+                    sqlite3_column_int(session->own_key_is_listed, 4);
+                lang = (const char *)
+                    sqlite3_column_text(session->own_identities_retrieve, 5);
+                flags = (unsigned int)
+                    sqlite3_column_int(session->own_key_is_listed, 6);
+
+                pEp_identity *ident = new_identity(address, fpr, username, user_id);
+                ident->comm_type = comm_type;
+                if (lang && lang[0]) {
+                    ident->lang[0] = lang[0];
+                    ident->lang[1] = lang[1];
+                }
+                ident->flags = flags;
+
+                _bl = identity_list_add(_bl, ident);
                 if (_bl == NULL)
                     goto enomem;
                 
@@ -740,18 +766,19 @@ DYNAMIC_API PEP_STATUS own_key_retrieve(
         }
     } while (result != SQLITE_DONE);
     
-    sqlite3_reset(session->own_key_retrieve);
+    sqlite3_reset(session->own_identities_retrieve);
     if (status == PEP_STATUS_OK)
-        *own_key = _own_key;
+        *own_identities = _own_identities;
     else
-        free_stringlist(_own_key);
+        free_identity_list(_own_identities);
     
     goto the_end;
     
 enomem:
-    free_stringlist(_own_key);
+    free_identity_list(_own_identities);
     status = PEP_OUT_OF_MEMORY;
     
 the_end:
     return status;
 }
+

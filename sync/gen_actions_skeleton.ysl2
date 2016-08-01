@@ -157,6 +157,7 @@ tstylesheet {
             char *payload = NULL;
             message *_message = NULL;
             pEp_identity *me = NULL;
+            `` if "$name='GroupKeys'" |> identity_list *kl = NULL;
 
             `` call "paramcheck" with "partner", "parm/partner";
 
@@ -199,13 +200,12 @@ tstylesheet {
             if (Identity_from_Struct(me, &msg->header.me) == NULL)
                 goto enomem;
         ||
-        if "$name='OwnKeys'" {
+        if "$name='GroupKeys'" {
             |
-            |> identity_list *kl;
-            |> status = own_key_retrieve(session, &kl);
+            |> status = own_identities_retrieve(session, &kl);
             |> if (status != PEP_STATUS_OK)
             |>> goto error;
-            |> if (KeyList_from_stringlist(kl, &msg->keylist) == NULL)
+            |> if (IdentityList_from_identity_list(kl, &msg->ownIdentities) == NULL)
             |>> goto enomem;
         }
         ||
@@ -235,7 +235,7 @@ tstylesheet {
             free_message(_message);
             ASN_STRUCT_FREE(asn_DEF_«$name», msg);
             free_identity(partner);
-            `` if "$name='OwnKeys'" |> free_identity_list(kl);
+            `` if "$name='GroupKeys'" |> free_identity_list(kl);
             return status;
 
         enomem:
@@ -245,7 +245,8 @@ tstylesheet {
             free(payload);
             free_message(_message);
             free_identity(me);
-            `` if "$name='OwnKeys'" |> free_identity_list(kl);
+            free_identity(partner);
+            `` if "$name='GroupKeys'" |> free_identity_list(kl);
             return status;
         }
 

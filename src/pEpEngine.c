@@ -47,7 +47,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     // Own keys
     static const char *sql_own_key_is_listed;
-    static const char *sql_own_key_retrieve;
+    static const char *sql_own_identities_retrieve;
 
     // Sequence
     static const char *sql_sequence_value1;
@@ -360,13 +360,14 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                                 "   where main_key_id = upper(replace(?1,' ',''))"
                                 "    and user_id = '" PEP_OWN_USERID "' );";
 
-        sql_own_key_retrieve = "select main_key_id from person "
-                               "  where main_key_id is not null"
-                               "   and id = '" PEP_OWN_USERID "' "
-                               "union "
-                               " select main_key_id from identity "
-                               "  where main_key_id is not null"
-                               "   and user_id = '" PEP_OWN_USERID "' ;";
+        sql_own_identities_retrieve =  "select address, fpr, username, '" PEP_OWN_USERID "',"
+                            "   comm_type, lang, identity.flags | pgp_keypair.flags"
+                            "   from identity"
+                            "   join person on id = identity.user_id"
+                            "   join pgp_keypair on fpr = identity.main_key_id"
+                            "   join trust on id = trust.user_id"
+                            "       and pgp_keypair_fpr = identity.main_key_id"
+                            "   where identity.user_id = '" PEP_OWN_USERID "';";
         
         sql_sequence_value1 = "insert or replace into sequences (name, value) "
                               "values (?1, "
@@ -471,9 +472,9 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             NULL);
     assert(int_result == SQLITE_OK);
     
-    int_result = sqlite3_prepare_v2(_session->db, sql_own_key_retrieve,
-            (int)strlen(sql_own_key_retrieve), &_session->own_key_retrieve,
-            NULL);
+    int_result = sqlite3_prepare_v2(_session->db, sql_own_identities_retrieve,
+            (int)strlen(sql_own_identities_retrieve),
+            &_session->own_identities_retrieve, NULL);
     assert(int_result == SQLITE_OK);
  
     // Sequence

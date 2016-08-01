@@ -170,18 +170,18 @@ DYNAMIC_API PEP_STATUS own_key_is_listed(
     );
 
 
-// own_key_retrieve() - retrieve all own keys fingerprints
+// own_identities_retrieve() - retrieve all own identities
 //
 //  parameters:
-//      session (in)        session to use
-//      own_key (out)     copy of own_key
+//      session (in)            session to use
+//      own_identities (out)    list of own identities
 //
 //  caveat:
 //      the ownership of the copy of own_key goes to the caller
 
-DYNAMIC_API PEP_STATUS own_key_retrieve(
+DYNAMIC_API PEP_STATUS own_identities_retrieve(
         PEP_SESSION session,
-        stringlist_t **own_key
+        identity_list **own_identities
     );
 
 #ifdef __cplusplus
