@@ -20,13 +20,15 @@ typedef union _param { Identity partner; stringlist_t *keylist; } param_t;
 
 typedef enum _fsm_error {
     invalid_state = -2,
-    invalid_event = -3
+    invalid_event = -3,
+    invalid_condition = -4,
+    invalid_action = -5
 } fsm_error;
 
 // conditions
 
-bool storedGroupKeys(PEP_SESSION session);
-bool keyElectionWon(PEP_SESSION session, Identity partner);
+int storedGroupKeys(PEP_SESSION session);
+int keyElectionWon(PEP_SESSION session, Identity partner);
 
 // states
 

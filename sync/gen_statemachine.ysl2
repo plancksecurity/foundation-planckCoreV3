@@ -46,12 +46,14 @@ tstylesheet {
 
         typedef enum _fsm_error {
             invalid_state = -2,
-            invalid_event = -3
+            invalid_event = -3,
+            invalid_condition = -4,
+            invalid_action = -5
         } fsm_error;
 
         // conditions
 
-        `` for "func:distinctName(condition)" | bool «@name»(PEP_SESSION session`apply "parm", 0`);
+        `` for "func:distinctName(condition)" | int «@name»(PEP_SESSION session`apply "parm", 0`);
 
         // states
 
@@ -148,6 +150,9 @@ tstylesheet {
                 void *extra
             )
         {
+            int cond_result = -1;
+            PEP_STATUS status = PEP_STATUS_OK;
+
             switch (state) {
             `` apply "state", 2
                 default:
@@ -181,16 +186,22 @@ tstylesheet {
 
     template "action" {
         indent(0);
-        > «@name»(session, state, 
+        > status = «@name»(session, state, 
         choose {
             when "parm" > «name(parm/*)»
             otherwise > NULL
         }
         > , NULL);\n
+        | if (status != PEP_STATUS_OK)
+        |> return invalid_action;
     }
 
     template "condition" {
-        | if («@name»(session`apply "parm", 0`)) {
+        | cond_result = «@name»(session`apply "parm", 0`);
+        | assert(cond_result == 0 || cond_result == 1);
+        | if (cond_result == -1)
+        |> return invalid_condition;
+        | if (cond_result) {
         apply "action|transition|condition";
         | }
     }

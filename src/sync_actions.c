@@ -24,11 +24,11 @@ static int _stored_group_keys(void *_gc, int count, char **text, char **name)
     return 0;
 }
 
-bool storedGroupKeys(PEP_SESSION session)
+int storedGroupKeys(PEP_SESSION session)
 {
     assert(session);
     if (!session)
-        return false;
+        return -1; // error
 
     bool gc = false;
     int int_result = sqlite3_exec(
@@ -39,34 +39,55 @@ bool storedGroupKeys(PEP_SESSION session)
         NULL
     );
     assert(int_result == SQLITE_OK);
-    return gc;
+    if (int_result != SQLITE_OK)
+        return -1; // error
+
+    if (gc)
+        return 1;
+    else
+        return 0;
 }
 
-bool keyElectionWon(PEP_SESSION session, Identity partner)
+int keyElectionWon(PEP_SESSION session, Identity partner)
 {
     assert(session);
     assert(partner);
     if (!(session && partner))
-        return false;
+        return -1; // error
 
     // an already existing group always wins
 
     if (storedGroupKeys(session)) {
         assert(!(partner->flags & PEP_idf_devicegroup));
-        return true;
+        return 1;
     }
 
     if (partner->flags & PEP_idf_devicegroup)
-        return false;
+        return 0;
 
     Identity me = NULL;
     PEP_STATUS status = get_identity(session, partner->address, PEP_OWN_USERID,
             &me);
     if (status != PEP_STATUS_OK)
-        return false;
+        return -1; // error
 
-    bool result = false;
+    int result = -1; // error state has to be overwritten
 
+    time_t own_created;
+    time_t partners_created;
+
+    status = key_created(session, me->fpr, &own_created);
+    if (status != PEP_STATUS_OK)
+        goto the_end;
+
+    status = key_created(session, partner->fpr, &partners_created);
+    if (status != PEP_STATUS_OK)
+        goto the_end;
+
+    if (own_created > partners_created)
+        result = 0;
+    else
+        result = 1;
 
 the_end:
     free_identity(me);

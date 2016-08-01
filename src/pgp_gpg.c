@@ -1978,6 +1978,8 @@ PEP_STATUS pgp_key_created(
     assert(fpr);
     assert(created);
 
+    *created = 0;
+
     status = find_single_key(session, fpr, &key);
     if (status != PEP_STATUS_OK)
         return status;
