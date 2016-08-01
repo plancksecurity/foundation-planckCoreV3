@@ -627,7 +627,7 @@ static const char * color_to_string(PEP_color color)
     case PEP_rating_b0rken:
         return "b0rken";
     case PEP_rating_under_attack:
-        return "unter_attack";
+        return "under_attack";
     default:
         return "undefined";
     }
@@ -1598,8 +1598,8 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
     if (!(session && msg && ident))
         return PEP_ILLEGAL_VALUE;
 
-    message *dst; 
-    stringlist_t *keylist;
+    message *dst = NULL; 
+    stringlist_t *keylist = NULL;
     PEP_color color;
     PEP_decrypt_flags_t flags; 
 
@@ -1616,6 +1616,8 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
     }
 
     free_identity_list(private_il);
+    free_stringlist(keylist);
+    free_message(dst);
 
     return status;
 
