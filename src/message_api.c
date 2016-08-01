@@ -627,7 +627,7 @@ static const char * color_to_string(PEP_color color)
     case PEP_rating_b0rken:
         return "b0rken";
     case PEP_rating_under_attack:
-        return "unter_attack";
+        return "under_attack";
     default:
         return "undefined";
     }
