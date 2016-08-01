@@ -1965,6 +1965,36 @@ PEP_STATUS pgp_key_revoked(
     return status;
 }
 
+PEP_STATUS pgp_key_created(
+        PEP_SESSION session,
+        const char *fpr,
+        time_t *created
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    gpgme_key_t key;
+
+    assert(session);
+    assert(fpr);
+    assert(created);
+
+    status = find_single_key(session, fpr, &key);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    if (key && key->subkeys)
+    {
+        *created = (time_t) key->subkeys->timestamp;
+    }
+    else
+    {
+        status = PEP_KEY_NOT_FOUND;
+    }
+
+    gpg.gpgme_key_unref(key);
+    return status;
+}
+
 PEP_STATUS pgp_binary(const char **path)
 {
     assert(path);

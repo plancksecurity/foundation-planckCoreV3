@@ -1800,6 +1800,20 @@ DYNAMIC_API PEP_STATUS get_revoked(
     return status;
 }
 
+PEP_STATUS key_created(
+        PEP_SESSION session,
+        const char *fpr,
+        time_t *created
+    )
+{
+    assert(session && fpr && created);
+    if (!(session && fpr && created))
+        return PEP_ILLEGAL_VALUE;
+
+    return session->cryptotech[PEP_crypt_OpenPGP].key_created(session, fpr,
+            created);
+}
+
 DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session)
 {
     assert(session);

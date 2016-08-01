@@ -878,6 +878,7 @@ DYNAMIC_API PEP_STATUS set_revoked(
        const uint64_t revocation_date
     );
 
+
 // get_revoked() - find revoked key that may have been replaced by given key, if any
 //
 //  parameters:
@@ -891,6 +892,20 @@ DYNAMIC_API PEP_STATUS get_revoked(
         const char *fpr,
         char **revoked_fpr,
         uint64_t *revocation_date
+    );
+
+
+// key_created() - get creation date of a key
+//
+//  parameters:
+//      session (in)            session handle
+//      fpr (in)                fingerprint of key
+//      created (out)           date of creation
+
+PEP_STATUS key_created(
+        PEP_SESSION session,
+        const char *fpr,
+        time_t *created
     );
 
 

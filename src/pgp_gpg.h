@@ -74,6 +74,12 @@ PEP_STATUS pgp_key_revoked(
         bool *revoked
     );
 
+PEP_STATUS pgp_key_created(
+        PEP_SESSION session,
+        const char *fpr,
+        time_t *created
+    );
+
 PEP_STATUS pgp_binary(const char **path);
 #define PGP_BINARY_PATH pgp_binary
 
