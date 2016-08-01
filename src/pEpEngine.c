@@ -566,7 +566,7 @@ DYNAMIC_API void release(PEP_SESSION session)
             if (session->sequence_value1)
                 sqlite3_finalize(session->sequence_value1);
             if (session->sequence_value2)
-                sqlite3_finalize(session->sequence_value1);
+                sqlite3_finalize(session->sequence_value2);
             if (session->set_revoked)
                 sqlite3_finalize(session->set_revoked);
             if (session->get_revoked)
