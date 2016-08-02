@@ -1644,3 +1644,57 @@ PEP_STATUS pgp_key_revoked(
     
     return PEP_STATUS_OK;
 }
+
+PEP_STATUS pgp_key_created(
+        PEP_SESSION session,
+        const char *fprstr,
+        time_t *created
+    )
+{
+    uint8_t fpr[PGP_FINGERPRINT_SIZE];
+    pgp_key_t *key;
+    size_t length;
+    unsigned from = 0;
+
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(fprstr);
+    assert(created);
+
+    if (!session || !fprstr || !created)
+        return PEP_UNKNOWN_ERROR;
+
+    *created = 0;
+
+    if(pthread_mutex_lock(&netpgp_mutex)){
+        return PEP_UNKNOWN_ERROR;
+    }
+
+    if (!str_to_fpr(fprstr, fpr, &length)) {
+        status = PEP_ILLEGAL_VALUE;
+        goto unlock_netpgp;
+    }
+        
+    key = pgp_getkeybyfpr(
+           netpgp.io,
+           netpgp.pubring,
+           fpr, length, &from, NULL,0,0);
+
+    if (key)
+    {
+        *created = (time_t) key->key.pubkey.birthtime;
+    }
+    else
+    {
+        status = PEP_KEY_NOT_FOUND;
+        goto unlock_netpgp;
+    }
+    
+
+
+unlock_netpgp:
+    pthread_mutex_unlock(&netpgp_mutex);
+
+    return status;
+}
