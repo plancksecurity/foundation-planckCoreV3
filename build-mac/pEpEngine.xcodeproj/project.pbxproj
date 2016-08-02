@@ -677,7 +677,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "mkdir -p \"$BUILT_PRODUCTS_DIR/include\"\n\ncp \"$SRCROOT/../src/\"{\\\npEpEngine.h,\\\ncryptotech.h,\\\nkeymanagement.h,\\\nmessage_api.h,\\\ndynamic_api.h,\\\nstringlist.h,\\\ntimestamp.h,\\\nidentity_list.h,\\\nbloblist.h,\\\nstringpair.h,\\\nmessage.h,\\\nmime.h} \"$BUILT_PRODUCTS_DIR/include\"\n\npushd ../asn.1\nmake generate\nmake\npopd";
+			shellScript = "mkdir -p \"$BUILT_PRODUCTS_DIR/include\"\n\ncp \"$SRCROOT/../src/\"{\\\npEpEngine.h,\\\ncryptotech.h,\\\nkeymanagement.h,\\\nmessage_api.h,\\\ndynamic_api.h,\\\nstringlist.h,\\\ntimestamp.h,\\\nidentity_list.h,\\\nbloblist.h,\\\nstringpair.h,\\\nmessage.h,\\\nmime.h} \"$BUILT_PRODUCTS_DIR/include\"\n\npushd ../asn.1\nbash -l -c \"make generate\"\nbash -l -c \"make\"\npopd";
 		};
 /* End PBXShellScriptBuildPhase section */
 
