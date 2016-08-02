@@ -45,10 +45,15 @@ tstylesheet {
         // error values
 
         typedef enum _fsm_error {
+            // these error values are corresponding to
+            // PEP_SYNC_STATEMACHINE_ERROR - value
             invalid_state = -2,
             invalid_event = -3,
             invalid_condition = -4,
-            invalid_action = -5
+            invalid_action = -5,
+
+            // out of memory condition
+            invalid_out_of_memory = -128
         } fsm_error;
 
         // conditions
@@ -129,9 +134,14 @@ tstylesheet {
             if (!session)
                 return PEP_ILLEGAL_VALUE;
 
-            session->«@filename»_state = fsm_«@name»(session, session->«@filename»_state,
-                    event, partner, extra);
+            «@name»_state state = fsm_«@name»(session,
+                    session->«@filename»_state, event, partner, extra);
+            if (state == invalid_out_of_memory)
+                return PEP_OUT_OF_MEMORY;
+            if (state < 0)
+                return PEP_SYNC_STATEMACHINE_ERROR - state;
 
+            session->«@filename»_state = state;
             return PEP_STATUS_OK;
         }
 
@@ -150,7 +160,7 @@ tstylesheet {
                 void *extra
             )
         {
-            int cond_result = -1;
+            int cond_result;
             PEP_STATUS status = PEP_STATUS_OK;
 
             switch (state) {
@@ -192,15 +202,16 @@ tstylesheet {
             otherwise > NULL
         }
         > , NULL);\n
+        | if (status == PEP_OUT_OF_MEMORY)
+        |> return invalid_out_of_memory;
         | if (status != PEP_STATUS_OK)
         |> return invalid_action;
     }
 
     template "condition" {
         | cond_result = «@name»(session`apply "parm", 0`);
-        | assert(cond_result == 0 || cond_result == 1);
-        | if (cond_result == -1)
-        |> return invalid_condition;
+        | if (cond_result < 0)
+        |> return cond_result;
         | if (cond_result) {
         apply "action|transition|condition";
         | }

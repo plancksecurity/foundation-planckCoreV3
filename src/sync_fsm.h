@@ -19,10 +19,15 @@ typedef union _param { Identity partner; stringlist_t *keylist; } param_t;
 // error values
 
 typedef enum _fsm_error {
+    // these error values are corresponding to
+    // PEP_SYNC_STATEMACHINE_ERROR - value
     invalid_state = -2,
     invalid_event = -3,
     invalid_condition = -4,
-    invalid_action = -5
+    invalid_action = -5,
+
+    // out of memory condition
+    invalid_out_of_memory = -128
 } fsm_error;
 
 // conditions

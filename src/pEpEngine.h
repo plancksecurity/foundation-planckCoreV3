@@ -74,6 +74,12 @@ typedef enum {
     PEP_SYNC_NO_TRUSTWORDS_CALLBACK                 = 0x0901,
     PEP_SYNC_ILLEGAL_MESSAGE                        = 0x0902,
 
+    PEP_SYNC_STATEMACHINE_ERROR                     = 0x0980,
+    PEP_STATEMACHINE_INVALID_STATE                  = 0x0982,
+    PEP_STATEMACHINE_INVALID_EVENT                  = 0x0983,
+    PEP_STATEMACHINE_INVALID_CONDITION              = 0x0984,
+    PEP_STATEMACHINE_INVALID_ACTION                 = 0x0985,
+
     PEP_COMMIT_FAILED                               = 0xff01,
     PEP_MESSAGE_CONSUMED                            = 0xff02,
 

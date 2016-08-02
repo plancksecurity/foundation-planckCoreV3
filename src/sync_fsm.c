@@ -10,7 +10,7 @@ DeviceState_state fsm_DeviceState(
         void *extra
     )
 {
-    int cond_result = -1;
+    int cond_result;
     PEP_STATUS status = PEP_STATUS_OK;
 
     switch (state) {
@@ -18,9 +18,8 @@ DeviceState_state fsm_DeviceState(
             switch (event) {
                 case Init:
                     cond_result = storedGroupKeys(session);
-                    assert(cond_result == 0 || cond_result == 1);
-                    if (cond_result == -1)
-                        return invalid_condition;
+                    if (cond_result < 0)
+                        return cond_result;
                     if (cond_result) {
                         return Grouped;
                     }
@@ -34,21 +33,29 @@ DeviceState_state fsm_DeviceState(
             switch (event) {
                 case KeyGen:
                     status = sendBeacon(session, state, NULL, NULL);
+                    if (status == PEP_OUT_OF_MEMORY)
+                        return invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return invalid_action;
                     break;
                 case CannotDecrypt:
                     status = sendBeacon(session, state, NULL, NULL);
+                    if (status == PEP_OUT_OF_MEMORY)
+                        return invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return invalid_action;
                     break;
                 case Beacon:
                     status = sendHandshakeRequest(session, state, partner, NULL);
+                    if (status == PEP_OUT_OF_MEMORY)
+                        return invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return invalid_action;
                     break;
                 case HandshakeRequest:
                     status = sendHandshakeRequest(session, state, partner, NULL);
+                    if (status == PEP_OUT_OF_MEMORY)
+                        return invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return invalid_action;
                     return HandshakingSole;
@@ -61,19 +68,22 @@ DeviceState_state fsm_DeviceState(
             switch (event) {
                 case Init:
                     status = showHandshake(session, state, partner, NULL);
+                    if (status == PEP_OUT_OF_MEMORY)
+                        return invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return invalid_action;
                     break;
                 case HandshakeRejected:
                     status = reject(session, state, partner, NULL);
+                    if (status == PEP_OUT_OF_MEMORY)
+                        return invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return invalid_action;
                     return Sole;
                 case HandshakeAccepted:
                     cond_result = keyElectionWon(session, partner);
-                    assert(cond_result == 0 || cond_result == 1);
-                    if (cond_result == -1)
-                        return invalid_condition;
+                    if (cond_result < 0)
+                        return cond_result;
                     if (cond_result) {
                         return Grouped;
                     }
@@ -87,6 +97,8 @@ DeviceState_state fsm_DeviceState(
             switch (event) {
                 case GroupKeys:
                     status = storeGroupKeys(session, state, partner, NULL);
+                    if (status == PEP_OUT_OF_MEMORY)
+                        return invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return invalid_action;
                     return Grouped;
@@ -94,6 +106,8 @@ DeviceState_state fsm_DeviceState(
                     return Sole;
                 case Reject:
                     status = reject(session, state, partner, NULL);
+                    if (status == PEP_OUT_OF_MEMORY)
+                        return invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return invalid_action;
                     return Sole;
@@ -106,19 +120,27 @@ DeviceState_state fsm_DeviceState(
             switch (event) {
                 case KeyGen:
                     status = sendGroupKeys(session, state, NULL, NULL);
+                    if (status == PEP_OUT_OF_MEMORY)
+                        return invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return invalid_action;
                     break;
                 case HandshakeRequest:
                     status = sendHandshakeRequest(session, state, partner, NULL);
+                    if (status == PEP_OUT_OF_MEMORY)
+                        return invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return invalid_action;
                     status = showHandshake(session, state, partner, NULL);
+                    if (status == PEP_OUT_OF_MEMORY)
+                        return invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return invalid_action;
                     break;
                 case HandshakeRejected:
                     status = reject(session, state, partner, NULL);
+                    if (status == PEP_OUT_OF_MEMORY)
+                        return invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return invalid_action;
                     break;
@@ -126,6 +148,8 @@ DeviceState_state fsm_DeviceState(
                     break;
                 case Reject:
                     status = reject(session, state, NULL, NULL);
+                    if (status == PEP_OUT_OF_MEMORY)
+                        return invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return invalid_action;
                     break;

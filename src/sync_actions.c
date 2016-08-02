@@ -28,7 +28,7 @@ int storedGroupKeys(PEP_SESSION session)
 {
     assert(session);
     if (!session)
-        return -1; // error
+        return invalid_condition; // error
 
     bool gc = false;
     int int_result = sqlite3_exec(
@@ -40,7 +40,7 @@ int storedGroupKeys(PEP_SESSION session)
     );
     assert(int_result == SQLITE_OK);
     if (int_result != SQLITE_OK)
-        return -1; // error
+        return invalid_condition; // error
 
     if (gc)
         return 1;
@@ -53,7 +53,7 @@ int keyElectionWon(PEP_SESSION session, Identity partner)
     assert(session);
     assert(partner);
     if (!(session && partner))
-        return -1; // error
+        return invalid_condition; // error
 
     // an already existing group always wins
 
@@ -68,10 +68,12 @@ int keyElectionWon(PEP_SESSION session, Identity partner)
     Identity me = NULL;
     PEP_STATUS status = get_identity(session, partner->address, PEP_OWN_USERID,
             &me);
+    if (status == PEP_OUT_OF_MEMORY)
+        return invalid_out_of_memory;
     if (status != PEP_STATUS_OK)
-        return -1; // error
+        return invalid_condition; // error
 
-    int result = -1; // error state has to be overwritten
+    int result = invalid_condition; // error state has to be overwritten
 
     time_t own_created;
     time_t partners_created;
@@ -137,8 +139,6 @@ PEP_STATUS showHandshake(
     free_identity(partner);
     return status;
 
-enomem:
-    status = PEP_OUT_OF_MEMORY;
 error:
     free_identity(me);
     free_identity(partner);
@@ -176,13 +176,6 @@ PEP_STATUS reject(
 
     free_identity(partner);
     return status;
-
-enomem:
-    status = PEP_OUT_OF_MEMORY;
-error:
-    free_identity(partner);
-    // free...
-    return status;
 }
 
 
@@ -216,14 +209,23 @@ PEP_STATUS storeGroupKeys(
     if (!group_keys)
         goto enomem;
 
+    for (identity_list *il = group_keys; il && il->ident; il = il->next) {
+        free(il->ident->user_id);
+        il->ident->user_id = strdup(PEP_OWN_USERID);
+        assert(il->ident->user_id);
+        if (!il->ident->user_id)
+            goto enomem;
+        status = set_identity(session, il->ident);
+        if (status != PEP_STATUS_OK)
+            break;
+    }
+
     free_identity(partner);
     free_identity_list(group_keys);
     return status;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
-error:
-    // free...
     free_identity(partner);
     free_identity_list(group_keys);
     return status;
