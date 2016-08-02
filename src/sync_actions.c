@@ -206,8 +206,6 @@ PEP_STATUS storeGroupKeys(
         return PEP_ILLEGAL_VALUE;
 
     identity_list *group_keys = (identity_list *) _group_keys;
-    if (!group_keys)
-        goto enomem;
 
     for (identity_list *il = group_keys; il && il->ident; il = il->next) {
         free(il->ident->user_id);
