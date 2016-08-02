@@ -102,21 +102,20 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     if (longmsg == NULL)
         longmsg = "";
 
-    size_t bufsize = strlen(shortmsg) + strlen(longmsg) + 12;
+    const char * const subject = "Subject: ";
+    const size_t SUBJ_LEN = 9;
+    const char * const newlines = "\n\n";
+    const size_t NL_LEN = 2;
+
+    size_t bufsize = SUBJ_LEN + strlen(shortmsg) + NL_LEN + strlen(longmsg) + 1;
     ptext = calloc(1, bufsize);
     assert(ptext);
     if (ptext == NULL)
         return NULL;
 
-    strlcpy(ptext, "Subject: ", bufsize);
-    bufsize -= 9;
-    
+    strlcpy(ptext, subject, bufsize);
     strlcat(ptext, shortmsg, bufsize);
-    bufsize -= strlen(shortmsg);
-    
-    strlcat(ptext, "\n\n", bufsize);
-    bufsize -= 2;
-    
+    strlcat(ptext, newlines, bufsize);
     strlcat(ptext, longmsg, bufsize);
 
     return ptext;
@@ -628,7 +627,7 @@ static const char * color_to_string(PEP_color color)
     case PEP_rating_b0rken:
         return "b0rken";
     case PEP_rating_under_attack:
-        return "unter_attack";
+        return "under_attack";
     default:
         return "undefined";
     }
@@ -642,7 +641,7 @@ static void decorate_message(
 {
     assert(msg);
 
-    add_opt_field(msg, "X-pEp-Version", "1.0");
+    add_opt_field(msg, "X-pEp-Version", PEP_VERSION);
     
     if (color != PEP_rating_undefined)
         add_opt_field(msg, "X-EncStatus", color_to_string(color));
@@ -1599,8 +1598,8 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
     if (!(session && msg && ident))
         return PEP_ILLEGAL_VALUE;
 
-    message *dst; 
-    stringlist_t *keylist;
+    message *dst = NULL; 
+    stringlist_t *keylist = NULL;
     PEP_color color;
     PEP_decrypt_flags_t flags; 
 
@@ -1617,6 +1616,8 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
     }
 
     free_identity_list(private_il);
+    free_stringlist(keylist);
+    free_message(dst);
 
     return status;
 

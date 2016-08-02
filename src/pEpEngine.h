@@ -12,7 +12,7 @@ extern "C" {
 #include "stringlist.h"
 #include "timestamp.h"
 
-#define PEP_VERSION "1.0"
+#define PEP_VERSION "1.0" // protocol version
 
 #define PEP_OWN_USERID "pEp_own_userId"
     
@@ -379,6 +379,11 @@ typedef enum _PEP_comm_type {
     PEP_ct_pEp = 0xff
 } PEP_comm_type;
 
+typedef enum _identity_flags {
+    PEP_idf_not_for_sync = 1,   // don't use this identity for sync
+    PEP_idf_group = 2           // identity of group of persons
+} identity_flags;
+
 typedef struct _pEp_identity {
     char *address;              // C string with address UTF-8 encoded
     char *fpr;                  // C string with fingerprint UTF-8 encoded
@@ -388,6 +393,7 @@ typedef struct _pEp_identity {
     char lang[3];               // language of conversation
                                 // ISO 639-1 ALPHA-2, last byte is 0
     bool me;                    // if this is the local user herself/himself
+    unsigned int flags;         // identity_flag1 | identity_flag2 | ...
 } pEp_identity;
 
 typedef struct _identity_list {
@@ -405,7 +411,7 @@ typedef struct _identity_list {
 //      username (in)       UTF-8 string or NULL 
 //
 //  return value:
-//      pEp_identity struct with correct size values or NULL if out of memory
+//      pEp_identity struct or NULL if out of memory
 //
 //  caveat:
 //      the strings are copied; the original strings are still being owned by
@@ -417,13 +423,13 @@ DYNAMIC_API pEp_identity *new_identity(
     );
 
 
-// identity_dup() - allocate memory and set the string and size fields
+// identity_dup() - allocate memory and duplicate
 //
 //  parameters:
 //      src (in)            identity to duplicate
 //
 //  return value:
-//      pEp_identity struct with correct size values or NULL if out of memory
+//      pEp_identity struct or NULL if out of memory
 //
 //  caveat:
 //      the strings are copied; the original strings are still being owned by
@@ -480,15 +486,34 @@ DYNAMIC_API PEP_STATUS get_identity(
 //        PEP_CANNOT_SET_PGP_KEYPAIR    writing to table pgp_keypair failed
 //        PEP_CANNOT_SET_IDENTITY       writing to table identity failed
 //        PEP_COMMIT_FAILED             SQL commit failed
-//      PEP_KEY_BLACKLISTED             Key blacklisted, cannot set identity
+//        PEP_KEY_BLACKLISTED           Key blacklisted, cannot set identity
 //
 //    caveat:
-//        in the identity structure you need to set the const char * fields to
-//        UTF-8 C strings
-//        the size fields are ignored
+//        address, fpr, user_id and username must be given
 
 DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
+    );
+
+
+// set_identity_flags() - update identity flags on existing identity
+//
+//    parameters:
+//        session (in)        session handle
+//        identity (in,out)   pointer to pEp_identity structure
+//        flags (in)          new value for flags
+//
+//    return value:
+//        PEP_STATUS_OK = 0             encryption and signing succeeded
+//        PEP_CANNOT_SET_IDENTITY       update of identity failed
+//
+//    caveat:
+//        address and user_id must be given in identity
+
+DYNAMIC_API PEP_STATUS set_identity_flags(
+        PEP_SESSION session,
+        pEp_identity *identity,
+        unsigned int flags
     );
 
 

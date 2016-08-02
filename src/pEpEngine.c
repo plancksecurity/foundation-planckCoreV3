@@ -6,6 +6,19 @@
 
 static int init_count = -1;
 
+static int user_version(void *_version, int count, char **text, char **name)
+{
+    assert(_version);
+    assert(count == 1);
+    assert(text && text[0]);
+    if (!(_version && count == 1 && text && text[0]))
+        return -1;
+
+    int *version = (int *) _version;
+    *version = atoi(text[0]);
+    return 0;
+}
+
 DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -16,6 +29,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     static const char *sql_set_person;
     static const char *sql_set_pgp_keypair;
     static const char *sql_set_identity;
+    static const char *sql_set_identity_flags;
     static const char *sql_set_trust;
     static const char *sql_get_trust;
     static const char *sql_least_trust;
@@ -112,15 +126,37 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     sqlite3_busy_timeout(_session->system_db, 1000);
 
+// increment this when patching DDL
+#define _DDL_USER_VERSION "1"
+
     if (in_first) {
         int_result = sqlite3_exec(
             _session->db,
-                "create table if not exists version_info (\n"
+                "create table version_info (\n"
                 "   id integer primary key,\n"
                 "   timestamp integer default (datetime('now')) ,\n"
                 "   version text,\n"
                 "   comment text\n"
-                ");\n"
+                ");\n",
+                NULL,
+                NULL,
+                NULL
+        );
+        if (int_result == SQLITE_OK) {
+            int_result = sqlite3_exec(
+                _session->db,
+                "pragma user_version = "_DDL_USER_VERSION";\n"
+                "insert or replace into version_info (id, version)"
+                    "values (1, '" PEP_ENGINE_VERSION "');",
+                NULL,
+                NULL,
+                NULL
+            );
+            assert(int_result == SQLITE_OK);
+        }
+
+        int_result = sqlite3_exec(
+            _session->db,
                 "create table if not exists log (\n"
                 "   timestamp integer default (datetime('now')) ,\n"
                 "   title text not null,\n"
@@ -160,6 +196,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "       references pgp_keypair (fpr)\n"
                 "       on delete set null,\n"
                 "   comment text,\n"
+                "   flags integer default (0),"
                 "   primary key (address, user_id)\n"
                 ");\n"
                 "create table if not exists trust (\n"
@@ -196,19 +233,45 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         );
         assert(int_result == SQLITE_OK);
 
+        int version;
         int_result = sqlite3_exec(
             _session->db,
-            "insert or replace into version_info (id, version) values (1, '1.1');",
-            NULL,
-            NULL,
+            "pragma user_version;",
+            user_version,
+            &version,
             NULL
         );
         assert(int_result == SQLITE_OK);
 
+        if (version < 1) {
+            int_result = sqlite3_exec(
+                _session->db,
+                "alter table identity\n"
+                "   add column flags integer default (0);",
+                NULL,
+                NULL,
+                NULL
+            );
+            assert(int_result == SQLITE_OK);
+        }
+
+        if (version < atoi(_DDL_USER_VERSION)) {
+            int_result = sqlite3_exec(
+                _session->db,
+                "pragma user_version = "_DDL_USER_VERSION";\n"
+                "insert or replace into version_info (id, version)"
+                    "values (1, '" PEP_ENGINE_VERSION "');",
+                NULL,
+                NULL,
+                NULL
+            );
+            assert(int_result == SQLITE_OK);
+        }
+
         sql_log = "insert into log (title, entity, description, comment)"
                   "values (?1, ?2, ?3, ?4);";
 
-        sql_get_identity =  "select fpr, username, comm_type, lang"
+        sql_get_identity =  "select fpr, username, comm_type, lang, flags"
                             "   from identity"
                             "   join person on id = identity.user_id"
                             "   join pgp_keypair on fpr = identity.main_key_id"
@@ -230,7 +293,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                               "values (upper(replace(?1,' ',''))) ;";
 
         sql_set_identity = "insert or replace into identity (address, main_key_id, "
-                           "user_id) values (?1, upper(replace(?2,' ','')), ?3) ;";
+                           "user_id, flags) values (?1, upper(replace(?2,' ','')),"
+                           "?3, ?4) ;";
+
+        sql_set_identity_flags = "update identity set flags = ?1 "
+                                 "where address = ?2 and user_id = ?3 ;";
 
         sql_set_trust = "insert or replace into trust (user_id, pgp_keypair_fpr, comm_type) "
                         "values (?1, upper(replace(?2,' ','')), ?3) ;";
@@ -320,6 +387,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_identity,
             (int)strlen(sql_set_identity), &_session->set_identity, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_set_identity_flags,
+            (int)strlen(sql_set_identity_flags), &_session->set_identity_flags, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_trust,
@@ -464,6 +535,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->set_pgp_keypair);
             if (session->set_identity)
                 sqlite3_finalize(session->set_identity);
+            if (session->set_identity_flags)
+                sqlite3_finalize(session->set_identity_flags);
             if (session->set_trust)
                 sqlite3_finalize(session->set_trust);
             if (session->get_trust)
@@ -486,6 +559,18 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->blacklist_is_listed);
             if (session->blacklist_retrieve)
                 sqlite3_finalize(session->blacklist_retrieve);
+            if (session->own_key_is_listed)
+                sqlite3_finalize(session->own_key_is_listed);
+            if (session->own_key_retrieve)
+                sqlite3_finalize(session->own_key_retrieve);
+            if (session->sequence_value1)
+                sqlite3_finalize(session->sequence_value1);
+            if (session->sequence_value2)
+                sqlite3_finalize(session->sequence_value2);
+            if (session->set_revoked)
+                sqlite3_finalize(session->set_revoked);
+            if (session->get_revoked)
+                sqlite3_finalize(session->get_revoked);
 
             if (session->db)
                 sqlite3_close_v2(session->db);
@@ -753,6 +838,7 @@ pEp_identity *identity_dup(const pEp_identity *src)
     dup->lang[1] = src->lang[1];
     dup->lang[2] = 0;
     dup->me = src->me;
+    dup->flags = src->flags;
 
     return dup;
 }
@@ -815,6 +901,7 @@ DYNAMIC_API PEP_STATUS get_identity(
             _identity->lang[1] = _lang[1];
             _identity->lang[2] = 0;
         }
+        _identity->flags = (unsigned int) sqlite3_column_int(session->get_identity, 4);
         *identity = _identity;
         break;
     default:
@@ -890,6 +977,7 @@ DYNAMIC_API PEP_STATUS set_identity(
             SQLITE_STATIC);
     sqlite3_bind_text(session->set_identity, 3, identity->user_id, -1,
             SQLITE_STATIC);
+    sqlite3_bind_int(session->set_identity, 4, identity->flags);
     result = sqlite3_step(session->set_identity);
     sqlite3_reset(session->set_identity);
     if (result != SQLITE_DONE) {
@@ -915,6 +1003,37 @@ DYNAMIC_API PEP_STATUS set_identity(
         return PEP_STATUS_OK;
     else
         return PEP_COMMIT_FAILED;
+}
+
+DYNAMIC_API PEP_STATUS set_identity_flags(
+        PEP_SESSION session,
+        pEp_identity *identity,
+        unsigned int flags
+    )
+{
+    int result;
+
+    assert(session);
+    assert(identity);
+    assert(identity->address);
+    assert(identity->user_id);
+
+    if (!(session && identity && identity->address && identity->user_id))
+        return PEP_ILLEGAL_VALUE;
+
+    sqlite3_reset(session->set_identity_flags);
+    sqlite3_bind_int(session->set_identity_flags, 1, flags);
+    sqlite3_bind_text(session->set_identity_flags, 2, identity->address, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->set_identity_flags, 3, identity->user_id, -1,
+            SQLITE_STATIC);
+    result = sqlite3_step(session->set_identity_flags);
+    sqlite3_reset(session->set_identity_flags);
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_IDENTITY;
+
+    identity->flags = flags;
+    return PEP_STATUS_OK;
 }
 
 DYNAMIC_API PEP_STATUS mark_as_compromized(

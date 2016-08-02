@@ -18,6 +18,8 @@ extern "C" {
 //      asynchronous management implementation, so retrieve_next_identity()
 //      will return this identity later
 //      at least identity->address must be a non-empty UTF-8 string as input
+//      update_identity() never writes flags; use set_identity_flags() for
+//      writing
 
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
@@ -40,6 +42,7 @@ DYNAMIC_API PEP_STATUS update_identity(
 //      it can need a decent amount of time to return
 //      if you need to do this asynchronous, you need to return an identity
 //      with retrieve_next_identity() where pEp_identity.me is true
+//      myself() never writes flags; use set_identity_flags() for writing
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity);
 
