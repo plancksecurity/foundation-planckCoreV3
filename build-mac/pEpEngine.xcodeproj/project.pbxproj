@@ -117,7 +117,7 @@
 		64A8267F1B455D0800EECAF0 /* message.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8265B1B455D0800EECAF0 /* message.c */; };
 		64A826801B455D0800EECAF0 /* mime.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8265D1B455D0800EECAF0 /* mime.c */; };
 		64A826811B455D0800EECAF0 /* pEpEngine.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826601B455D0800EECAF0 /* pEpEngine.c */; };
-		64A826821B455D0800EECAF0 /* pgp_netpgp.m in Sources */ = {isa = PBXBuildFile; fileRef = 64A826631B455D0800EECAF0 /* pgp_netpgp.m */; };
+		64A826821B455D0800EECAF0 /* pgp_netpgp.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826631B455D0800EECAF0 /* pgp_netpgp.c */; };
 		64A826831B455D0800EECAF0 /* platform_unix.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826651B455D0800EECAF0 /* platform_unix.c */; };
 		64A826851B455D0800EECAF0 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8266B1B455D0800EECAF0 /* sqlite3.c */; };
 		64A826861B455D0800EECAF0 /* stringlist.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8266D1B455D0800EECAF0 /* stringlist.c */; };
@@ -311,7 +311,7 @@
 		64A826601B455D0800EECAF0 /* pEpEngine.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEpEngine.c; path = ../src/pEpEngine.c; sourceTree = "<group>"; };
 		64A826611B455D0800EECAF0 /* pEpEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pEpEngine.h; path = ../src/pEpEngine.h; sourceTree = "<group>"; };
 		64A826621B455D0800EECAF0 /* pgp_netpgp_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pgp_netpgp_internal.h; path = ../src/pgp_netpgp_internal.h; sourceTree = "<group>"; };
-		64A826631B455D0800EECAF0 /* pgp_netpgp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = pgp_netpgp.m; path = ../src/pgp_netpgp.m; sourceTree = "<group>"; };
+		64A826631B455D0800EECAF0 /* pgp_netpgp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pgp_netpgp.c; path = ../src/pgp_netpgp.c; sourceTree = "<group>"; };
 		64A826641B455D0800EECAF0 /* pgp_netpgp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pgp_netpgp.h; path = ../src/pgp_netpgp.h; sourceTree = "<group>"; };
 		64A826651B455D0800EECAF0 /* platform_unix.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = platform_unix.c; path = ../src/platform_unix.c; sourceTree = "<group>"; };
 		64A826661B455D0800EECAF0 /* platform_unix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = platform_unix.h; path = ../src/platform_unix.h; sourceTree = "<group>"; };
@@ -534,7 +534,7 @@
 				64A826601B455D0800EECAF0 /* pEpEngine.c */,
 				64A826611B455D0800EECAF0 /* pEpEngine.h */,
 				64A826621B455D0800EECAF0 /* pgp_netpgp_internal.h */,
-				64A826631B455D0800EECAF0 /* pgp_netpgp.m */,
+				64A826631B455D0800EECAF0 /* pgp_netpgp.c */,
 				64A826641B455D0800EECAF0 /* pgp_netpgp.h */,
 				64A826651B455D0800EECAF0 /* platform_unix.c */,
 				64A826661B455D0800EECAF0 /* platform_unix.h */,
@@ -807,7 +807,7 @@
 				646C41001D510CD800C63EFF /* constr_CHOICE.c in Sources */,
 				646C41121D510CD800C63EFF /* HandshakeRequest.c in Sources */,
 				646C41471D510D2C00C63EFF /* sync_fsm.c in Sources */,
-				64A826821B455D0800EECAF0 /* pgp_netpgp.m in Sources */,
+				64A826821B455D0800EECAF0 /* pgp_netpgp.c in Sources */,
 				646C41101D510CD800C63EFF /* GroupKeys.c in Sources */,
 				646C40EF1D510CD800C63EFF /* asn_SEQUENCE_OF.c in Sources */,
 				64A826891B455D0800EECAF0 /* trans_auto.c in Sources */,
