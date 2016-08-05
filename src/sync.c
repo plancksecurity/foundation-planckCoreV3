@@ -17,7 +17,15 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
     session->messageToSend = messageToSend;
     session->showHandshake = showHandshake;
 
-    return PEP_STATUS_OK;
+    // start state machine
+    session->sync_state = InitState;
+    PEP_STATUS status = fsm_DeviceState_inject(session, Init, NULL, NULL);
+    if (status != PEP_STATUS_OK) {
+        // stop state machine
+        session->sync_state = DeviceState_state_NONE;
+    }
+
+    return status;
 }
 
 DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
