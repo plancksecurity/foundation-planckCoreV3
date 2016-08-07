@@ -532,7 +532,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
                         if (filename == NULL)
                             goto enomem;
 
-                        strlcpy(filename, _s->filename, len);
+                        strlcpy(filename, _s->filename, len + 1);
                         strlcpy(filename + len, ".pgp", 5);
                     }
                     else {
