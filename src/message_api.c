@@ -110,14 +110,8 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
         return NULL;
 
     strlcpy(ptext, "Subject: ", bufsize);
-    bufsize -= 9;
-    
     strlcat(ptext, shortmsg, bufsize);
-    bufsize -= strlen(shortmsg);
-    
     strlcat(ptext, "\n\n", bufsize);
-    bufsize -= 2;
-    
     strlcat(ptext, longmsg, bufsize);
 
     return ptext;
