@@ -286,7 +286,8 @@ static struct mailimf_mailbox * identity_to_mailbox(const pEp_identity *ident)
     char *_username = NULL;
     struct mailimf_mailbox *mb;
 
-    _username = mailmime_encode_subject_header("utf-8", ident->username, 0);
+    _username = ident->username ? mailmime_encode_subject_header("utf-8",
+            ident->username, 0) : strdup("");
     if (_username == NULL)
         goto enomem;
 
