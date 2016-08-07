@@ -739,7 +739,7 @@ static char * without_double_ending(const char *filename)
     if (ext == NULL)
         return NULL;
 
-    char *result = strndup(filename, ext - filename);
+    char *result = strndup(filename, ext - filename + 1);
     assert(result);
     return result;
 }
