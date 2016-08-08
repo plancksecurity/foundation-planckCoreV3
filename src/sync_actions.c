@@ -5,6 +5,7 @@
 #include "message.h"
 #include "sync_fsm.h"
 #include "map_asn1.h"
+#include "../asn.1/DeviceGroup-Protocol.h"
 
 // conditions
 

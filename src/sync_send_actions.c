@@ -7,6 +7,7 @@
 #include "sync_fsm.h"
 #include "baseprotocol.h"
 #include "map_asn1.h"
+#include "../asn.1/DeviceGroup-Protocol.h"
 #include "../asn.1/Beacon.h"
 #include "../asn.1/HandshakeRequest.h"
 #include "../asn.1/GroupKeys.h"

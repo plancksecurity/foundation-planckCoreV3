@@ -4,7 +4,6 @@
 
 #include "pEpEngine.h"
 #include "message.h"
-#include "../asn.1/DeviceGroup-Protocol.h"
 
 #ifdef __cplusplus
 extern "C" {

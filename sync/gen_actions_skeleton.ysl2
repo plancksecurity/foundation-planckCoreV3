@@ -27,6 +27,7 @@ tstylesheet {
         #include "«@filename»_fsm.h"
         #include "baseprotocol.h"
         #include "map_asn1.h"
+        #include "../asn.1/DeviceGroup-Protocol.h"
         ||
         for "func:distinctName(//action)"
             if "substring(@name, 1, 4) = 'send'"
@@ -51,6 +52,7 @@ tstylesheet {
         #include "keymanagement.h"
         #include "message.h"
         #include "«@filename»_fsm.h"
+        #include "../asn.1/DeviceGroup-Protocol.h"
 
         ||
         for "func:distinctName(//action)"

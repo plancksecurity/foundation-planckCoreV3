@@ -30,7 +30,6 @@ tstylesheet {
 
         #include "pEpEngine.h"
         #include "message.h"
-        #include "../asn.1/«../@name»-Protocol.h"
         
         #ifdef __cplusplus
         extern "C" {
