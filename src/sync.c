@@ -29,6 +29,10 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
 }
 
 DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
+    // stop state machine
+    session->sync_state = DeviceState_state_NONE;
+
+    // unregister
     session->sync_obj = NULL;
     session->messageToSend = NULL;
     session->showHandshake = NULL;

@@ -552,6 +552,9 @@ DYNAMIC_API void release(PEP_SESSION session)
     --init_count;
 
     if (session) {
+        if (session->sync_state != DeviceState_state_NONE)
+            unregister_sync_callbacks(session);
+
         if (session->db) {
             if (session->log)
                 sqlite3_finalize(session->log);
