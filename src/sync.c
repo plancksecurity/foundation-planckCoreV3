@@ -20,10 +20,8 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
     // start state machine
     session->sync_state = InitState;
     PEP_STATUS status = fsm_DeviceState_inject(session, Init, NULL, NULL);
-    if (status != PEP_STATUS_OK) {
-        // stop state machine
-        session->sync_state = DeviceState_state_NONE;
-    }
+    if (status != PEP_STATUS_OK)
+        unregister_sync_callbacks(session);
 
     return status;
 }
