@@ -532,12 +532,13 @@ static PEP_STATUS encrypt_PGP_in_pieces(
 
                     if (_s->filename) {
                         size_t len = strlen(_s->filename);
-                        filename = calloc(1, len + 5);
+                        size_t bufsize = len + 5; // length of .pgp extension + NUL
+                        filename = calloc(1, bufsize);
                         if (filename == NULL)
                             goto enomem;
 
-                        strlcpy(filename, _s->filename, len);
-                        strlcpy(filename + len, ".pgp", 5);
+                        strlcpy(filename, _s->filename, bufsize);
+                        strlcat(filename, ".pgp", bufsize);
                     }
                     else {
                         filename = calloc(1, 20);

@@ -131,7 +131,7 @@ DYNAMIC_API PEP_STATUS update_identity(
         {
             return PEP_OUT_OF_MEMORY;
         }
-        snprintf(identity->user_id, strlen(identity->address) + 5,
+        snprintf(identity->user_id, strlen(identity->address) + 6,
                  "TOFU_%s", identity->address);
     }
  
