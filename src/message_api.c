@@ -1239,18 +1239,6 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_identity(
 
     *dst = NULL;
 
-//     status = myself(session, src->from);
-//     if (status != PEP_STATUS_OK)
-//         goto pep_error;
-
-    char* target_fpr = target_id->fpr;
-    if (!target_fpr)
-        return PEP_KEY_NOT_FOUND; // FIXME: Error condition
-        
-    keys = new_stringlist(target_fpr); // ???
-
-    bool dest_keys_found = true;
-    PEP_comm_type max_comm_type = PEP_ct_pEp;
     
     PEP_STATUS _status = update_identity(session, target_id);
     if (_status != PEP_STATUS_OK) {
@@ -1258,14 +1246,16 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_identity(
         goto pep_error;
     }
 
-    max_comm_type = _get_comm_type(session, max_comm_type,
-                                        target_id);
+    char* target_fpr = target_id->fpr;
+    if (!target_fpr)
+        return PEP_KEY_NOT_FOUND; // FIXME: Error condition
+        
+    keys = new_stringlist(target_fpr);
 
+    
     msg = clone_to_empty_message(src);
     if (msg == NULL)
         goto enomem;
-
-//        attach_own_key(session, src);
 
     switch (enc_format) {
         case PEP_enc_PGP_MIME:
@@ -1293,15 +1283,12 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_identity(
     if (status != PEP_STATUS_OK)
         goto pep_error;
 
-//     if (msg && msg->shortmsg == NULL) {
-//         msg->shortmsg = strdup("pEp");
-//         assert(msg->shortmsg);
-//         if (msg->shortmsg == NULL)
-//             goto enomem;
-//     }
-// 
-//     if (msg)
-//         decorate_message(msg, PEP_rating_undefined, NULL);
+     if (msg && msg->shortmsg == NULL) {
+         msg->shortmsg = strdup("pEp");
+         assert(msg->shortmsg);
+         if (msg->shortmsg == NULL)
+             goto enomem;
+     }
 
     *dst = msg;
     return status;

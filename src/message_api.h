@@ -47,6 +47,39 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_enc_format enc_format
     );
 
+// encrypt_message_for_identity() - encrypt message for one particular identity in memory
+//                     (to be used, for example, to save message drafts
+//                      encrypted with owner ID)
+//
+//  parameters:
+//      session (in)        session handle
+//      target_id (in)      single identity this message should be encrypted for
+//      src (in)            message to encrypt
+//      dst (out)           pointer to new encrypted message or NULL on failure
+//      enc_format (in)     encrypted format
+//
+//  return value:       (FIXME: This may not be correct or complete)
+//      PEP_STATUS_OK                   on success
+//		PEP_KEY_NOT_FOUND	            at least one of the receipient keys
+//		                                could not be found
+//		PEP_KEY_HAS_AMBIG_NAME          at least one of the receipient keys has
+//		                                an ambiguous name
+//		PEP_GET_KEY_FAILED		        cannot retrieve key
+//
+//	caveat:
+//	    the ownership of src remains with the caller
+//      the ownership of target_id remains w/ caller            
+//	    the ownership of dst goes to the caller
+//      message is NOT encrypted for any recipients or sender identities other than
+//          whichever identity is in target_id
+
+DYNAMIC_API PEP_STATUS encrypt_message_for_identity(
+        PEP_SESSION session,
+        pEp_identity* target_id,
+        message *src,
+        message **dst,
+        PEP_enc_format enc_format
+    );
 
 typedef enum _PEP_color {
     PEP_rating_undefined = 0,
