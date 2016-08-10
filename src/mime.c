@@ -1281,6 +1281,8 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
                 }
                 free(_longmsg);
                 _longmsg = _text;
+                // FIXME: KG - This is where we have the text we want to deal with.
+                // Now we need to strip sigs and process them.
             }
         }
     }
