@@ -20,8 +20,11 @@ extern "C" {
 //
 //  return value:
 //      PEP_STATUS_OK or any other value on error
+//
+//  caveat:
+//      the ownership of msg goes to the callee
 
-typedef PEP_STATUS (*messageToSend_t)(void *obj, const message *msg);
+typedef PEP_STATUS (*messageToSend_t)(void *obj, message *msg);
 
 
 typedef enum _sync_handshake_result {
@@ -39,11 +42,14 @@ typedef enum _sync_handshake_result {
 //
 //  return value:
 //      PEP_STATUS_OK or any other value on error
+//
+//  caveat:
+//      ownership of self and partner go to the callee
 
 typedef PEP_STATUS (*showHandshake_t)(
         void *obj,
-        const pEp_identity *self,
-        const pEp_identity *partner
+        pEp_identity *self,
+        pEp_identity *partner
     );
 
 

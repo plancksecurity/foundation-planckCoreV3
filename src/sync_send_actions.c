@@ -102,7 +102,6 @@ PEP_STATUS sendBeacon(
 
     status = session->messageToSend(session->sync_obj, _message);
 
-    free_message(_message);
     ASN_STRUCT_FREE(asn_DEF_Beacon, msg);
     free_identity(partner);
     return status;
@@ -208,7 +207,6 @@ PEP_STATUS sendHandshakeRequest(
 
     status = session->messageToSend(session->sync_obj, _message);
 
-    free_message(_message);
     ASN_STRUCT_FREE(asn_DEF_HandshakeRequest, msg);
     free_identity(partner);
     return status;
@@ -321,7 +319,6 @@ PEP_STATUS sendGroupKeys(
 
     status = session->messageToSend(session->sync_obj, _message);
 
-    free_message(_message);
     ASN_STRUCT_FREE(asn_DEF_GroupKeys, msg);
     free_identity(partner);
     free_identity_list(kl);

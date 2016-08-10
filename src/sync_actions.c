@@ -136,8 +136,6 @@ PEP_STATUS showHandshake(
     if (status != PEP_STATUS_OK)
         goto error;
 
-    free_identity(me);
-    free_identity(partner);
     return status;
 
 error:

@@ -234,7 +234,6 @@ tstylesheet {
 
             status = session->messageToSend(session->«$filename»_obj, _message);
 
-            free_message(_message);
             ASN_STRUCT_FREE(asn_DEF_«$name», msg);
             free_identity(partner);
             `` if "$name='GroupKeys'" |> free_identity_list(kl);
