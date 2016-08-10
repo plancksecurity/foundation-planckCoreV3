@@ -1210,7 +1210,7 @@ pep_error:
     return status;
 }
 
-DYNAMIC_API PEP_STATUS encrypt_message_for_identity(
+DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_SESSION session,
         pEp_identity* target_id,
         message *src,
@@ -1236,6 +1236,10 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_identity(
     determine_encryption_format(src);
     if (src->enc_format != PEP_enc_none)
         return PEP_ILLEGAL_VALUE;
+
+    status = myself(session, target_id);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
 
     *dst = NULL;
 

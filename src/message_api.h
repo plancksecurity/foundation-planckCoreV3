@@ -53,7 +53,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 //
 //  parameters:
 //      session (in)        session handle
-//      target_id (in)      single identity this message should be encrypted for
+//      target_id (in)      self identity this message should be encrypted for
 //      src (in)            message to encrypt
 //      dst (out)           pointer to new encrypted message or NULL on failure
 //      enc_format (in)     encrypted format
@@ -70,10 +70,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 //	    the ownership of src remains with the caller
 //      the ownership of target_id remains w/ caller            
 //	    the ownership of dst goes to the caller
-//      message is NOT encrypted for any recipients or sender identities other than
-//          whichever identity is in target_id
+//      message is NOT encrypted for identities other than the target_id (and then,
+//          only if the target_id refers to self!)
 
-DYNAMIC_API PEP_STATUS encrypt_message_for_identity(
+DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_SESSION session,
         pEp_identity* target_id,
         message *src,
