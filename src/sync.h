@@ -37,7 +37,7 @@ typedef enum _sync_handshake_result {
 //
 //  parameters:
 //      obj (in)        object handle (implementation defined)
-//      self (in)       own identity
+//      me (in)         own identity
 //      partner (in)    identity of partner
 //
 //  return value:
@@ -48,7 +48,7 @@ typedef enum _sync_handshake_result {
 
 typedef PEP_STATUS (*showHandshake_t)(
         void *obj,
-        pEp_identity *self,
+        pEp_identity *me,
         pEp_identity *partner
     );
 
