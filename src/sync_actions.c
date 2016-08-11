@@ -10,7 +10,7 @@
 // conditions
 
 static const char *sql_stored_group_keys =
-        "select count(device_group) from person where id = "PEP_OWN_USERID";"; 
+        "select count(device_group) from person where id = '" PEP_OWN_USERID "';"; 
 
 static int _stored_group_keys(void *_gc, int count, char **text, char **name)
 {

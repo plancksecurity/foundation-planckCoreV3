@@ -90,7 +90,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_enc_format enc_format
     );
 
-typedef enum _PEP_color {
+typedef enum _PEP_rating {
     PEP_rating_undefined = 0,
     PEP_rating_cannot_decrypt,
     PEP_rating_have_no_key,
@@ -98,17 +98,23 @@ typedef enum _PEP_color {
     PEP_rating_unencrypted_for_some,
     PEP_rating_unreliable,
     PEP_rating_reliable,
-    PEP_rating_yellow = PEP_rating_reliable,
     PEP_rating_trusted,
-    PEP_rating_green = PEP_rating_trusted,
     PEP_rating_trusted_and_anonymized,
     PEP_rating_fully_anonymous,   
 
     PEP_rating_mistrust = -1,
-    PEP_rating_red = PEP_rating_mistrust,
     PEP_rating_b0rken = -2,
     PEP_rating_under_attack = -3
+} PEP_rating;
+
+typedef enum _PEP_color {
+    PEP_color_no_color = 0,
+    PEP_color_yellow,
+    PEP_color_green,
+    PEP_color_red = -1,
 } PEP_color;
+
+DYNAMIC_API PEP_color color_from_rating(PEP_rating rating);
 
 typedef enum _PEP_decrypt_flags {
     PEP_decrypt_flag_own_private_key = 0x1
@@ -141,7 +147,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         message *src,
         message **dst,
         stringlist_t **keylist,
-        PEP_color *color,
+        PEP_rating *rating,
         PEP_decrypt_flags_t *flags
 );
 
@@ -177,7 +183,7 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
 //  parameters:
 //      session (in)        session handle
 //      msg (in)            message to get the color for
-//      color (out)         color for the message
+//      rating (out)        color for the message
 //
 //  return value:
 //      error status or PEP_STATUS_OK on success
@@ -190,7 +196,7 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
 DYNAMIC_API PEP_STATUS outgoing_message_color(
         PEP_SESSION session,
         message *msg,
-        PEP_color *color
+        PEP_rating *rating
     );
 
 
@@ -210,7 +216,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_color(
 DYNAMIC_API PEP_STATUS identity_color(
         PEP_SESSION session,
         pEp_identity *ident,
-        PEP_color *color
+        PEP_rating *rating
     );
 
 

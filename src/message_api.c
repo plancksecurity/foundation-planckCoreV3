@@ -603,9 +603,9 @@ static char * keylist_to_string(const stringlist_t *keylist)
     }
 }
 
-static const char * color_to_string(PEP_color color)
+static const char * rating_to_string(PEP_rating rating)
 {
-    switch (color) {
+    switch (rating) {
     case PEP_rating_cannot_decrypt:
         return "cannot_decrypt";
     case PEP_rating_have_no_key:
@@ -637,7 +637,7 @@ static const char * color_to_string(PEP_color color)
 
 static void decorate_message(
     message *msg,
-    PEP_color color,
+    PEP_rating rating,
     stringlist_t *keylist
     )
 {
@@ -645,8 +645,8 @@ static void decorate_message(
 
     add_opt_field(msg, "X-pEp-Version", PEP_VERSION);
     
-    if (color != PEP_rating_undefined)
-        add_opt_field(msg, "X-EncStatus", color_to_string(color));
+    if (rating != PEP_rating_undefined)
+        add_opt_field(msg, "X-EncStatus", rating_to_string(rating));
 
     if (keylist) {
         char *_keylist = keylist_to_string(keylist);
@@ -655,7 +655,7 @@ static void decorate_message(
     }
 }
 
-static PEP_color _rating(PEP_comm_type ct, PEP_color color)
+static PEP_rating _rating(PEP_comm_type ct, PEP_rating rating)
 {
     if (ct == PEP_ct_unknown)
         return PEP_rating_undefined;
@@ -666,18 +666,18 @@ static PEP_color _rating(PEP_comm_type ct, PEP_color color)
     else if (ct == PEP_ct_mistrusted)
         return PEP_rating_mistrust;
     
-    if (color == PEP_rating_unencrypted_for_some)
+    if (rating == PEP_rating_unencrypted_for_some)
         return PEP_rating_unencrypted_for_some;
 
     if (ct == PEP_ct_no_encryption || ct == PEP_ct_no_encrypted_channel ||
             ct == PEP_ct_my_key_not_included) {
-        if (color > PEP_rating_unencrypted_for_some)
+        if (rating > PEP_rating_unencrypted_for_some)
             return PEP_rating_unencrypted_for_some;
         else
             return PEP_rating_unencrypted;
     }
 
-    if (color == PEP_rating_unencrypted)
+    if (rating == PEP_rating_unencrypted)
         return PEP_rating_unencrypted_for_some;
 
     if (ct >= PEP_ct_confirmed_enc_anon)
@@ -750,7 +750,7 @@ static char * without_double_ending(const char *filename)
     return result;
 }
 
-static PEP_color decrypt_color(PEP_STATUS status)
+static PEP_rating decrypt_rating(PEP_STATUS status)
 {
     switch (status) {
     case PEP_UNENCRYPTED:
@@ -777,7 +777,7 @@ static PEP_color decrypt_color(PEP_STATUS status)
     }
 }
 
-static PEP_color key_color(PEP_SESSION session, const char *fpr)
+static PEP_rating key_rating(PEP_SESSION session, const char *fpr)
 {
     PEP_comm_type comm_type = PEP_ct_unknown;
 
@@ -794,9 +794,9 @@ static PEP_color key_color(PEP_SESSION session, const char *fpr)
     return _rating(comm_type, PEP_rating_undefined);
 }
 
-static PEP_color keylist_color(PEP_SESSION session, stringlist_t *keylist)
+static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist)
 {
-    PEP_color color = PEP_rating_reliable;
+    PEP_rating rating = PEP_rating_reliable;
 
     assert(keylist && keylist->value);
     if (keylist == NULL || keylist->value == NULL)
@@ -807,29 +807,29 @@ static PEP_color keylist_color(PEP_SESSION session, stringlist_t *keylist)
         PEP_comm_type ct;
         PEP_STATUS status;
 
-        PEP_color _color = key_color(session, _kl->value);
-        if (_color <= PEP_rating_mistrust)
-            return _color;
+        PEP_rating _rating_ = key_rating(session, _kl->value);
+        if (_rating_ <= PEP_rating_mistrust)
+            return _rating_;
 
-        if (color == PEP_rating_undefined)
-            color = _color;
+        if (rating == PEP_rating_undefined)
+            rating = _rating_;
 
-        if (_color >= PEP_rating_reliable) {
+        if (_rating_ >= PEP_rating_reliable) {
             status = least_trust(session, _kl->value, &ct);
             if (status != PEP_STATUS_OK)
                 return PEP_rating_undefined;
             if (ct == PEP_ct_unknown)
-                color = PEP_rating_unencrypted_for_some;
+                rating = PEP_rating_unencrypted_for_some;
             else
-                color = _rating(ct, color);
+                rating = _rating(ct, rating);
         }
-        else if (_color == PEP_rating_unencrypted) {
-            if (color > PEP_rating_unencrypted_for_some)
-                color = PEP_rating_unencrypted_for_some;
+        else if (_rating_ == PEP_rating_unencrypted) {
+            if (rating > PEP_rating_unencrypted_for_some)
+                rating = PEP_rating_unencrypted_for_some;
         }
     }
 
-    return color;
+    return rating;
 }
 
 static PEP_comm_type _get_comm_type(
@@ -1347,7 +1347,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         message *src,
         message **dst,
         stringlist_t **keylist,
-        PEP_color *color,
+        PEP_rating *rating,
         PEP_decrypt_flags_t *flags, 
         identity_list **private_il
     )
@@ -1365,10 +1365,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     assert(src);
     assert(dst);
     assert(keylist);
-    assert(color);
+    assert(rating);
     assert(flags);
 
-    if (!(session && src && dst && keylist && color && flags))
+    if (!(session && src && dst && keylist && rating && flags))
         return PEP_ILLEGAL_VALUE;
 
     *flags = 0;
@@ -1386,11 +1386,11 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
     *dst = NULL;
     *keylist = NULL;
-    *color = PEP_rating_undefined;
+    *rating = PEP_rating_undefined;
  
     switch (src->enc_format) {
         case PEP_enc_none:
-            *color = PEP_rating_unencrypted;
+            *rating = PEP_rating_unencrypted;
             if (imported_keys)
                 remove_attached_keys(src);
             return PEP_UNENCRYPTED;
@@ -1596,25 +1596,25 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             decrypt_status = status;
         }
         
-        *color = decrypt_color(decrypt_status);
+        *rating = decrypt_rating(decrypt_status);
         
-        if (*color > PEP_rating_mistrust) {
-            PEP_color kl_color = PEP_rating_undefined;
+        if (*rating > PEP_rating_mistrust) {
+            PEP_rating kl_rating = PEP_rating_undefined;
             
             if (_keylist)
-                kl_color = keylist_color(session, _keylist);
+                kl_rating = keylist_rating(session, _keylist);
             
-            if (kl_color <= PEP_rating_mistrust) {
-                *color = kl_color;
+            if (kl_rating <= PEP_rating_mistrust) {
+                *rating = kl_rating;
             }
-            else if (*color >= PEP_rating_reliable &&
-                     kl_color < PEP_rating_reliable) {
-                *color = PEP_rating_unreliable;
+            else if (*rating >= PEP_rating_reliable &&
+                     kl_rating < PEP_rating_reliable) {
+                *rating = PEP_rating_unreliable;
             }
-            else if (*color >= PEP_rating_reliable &&
-                     kl_color >= PEP_rating_reliable) {
+            else if (*rating >= PEP_rating_reliable &&
+                     kl_rating >= PEP_rating_reliable) {
                 if (!(src->from && src->from->user_id && src->from->user_id[0])) {
-                    *color = PEP_rating_unreliable;
+                    *rating = PEP_rating_unreliable;
                 }
                 else {
                     char *fpr = _keylist->value;
@@ -1624,7 +1624,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                         goto enomem;
                     status = update_identity(session, _from);
                     if (_from->comm_type != PEP_ct_unknown)
-                        *color = _rating(_from->comm_type, PEP_rating_undefined);
+                        *rating = _rating(_from->comm_type, PEP_rating_undefined);
                     free_identity(_from);
                     if (status != PEP_STATUS_OK)
                         goto pep_error;
@@ -1634,14 +1634,14 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     }
     else
     {
-        *color = decrypt_color(decrypt_status);
+        *rating = decrypt_rating(decrypt_status);
         goto pep_error;
     }
 
     // Case of own key imported from own trusted message
     if (// Message have been reliably decrypted 
         msg &&
-        *color >= PEP_rating_green &&
+        *rating >= PEP_rating_trusted &&
         imported_private_key_address &&
         // to is [own]
         msg->to->ident->user_id &&
@@ -1652,7 +1652,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     }
 
     if (msg) {
-        decorate_message(msg, *color, _keylist);
+        decorate_message(msg, *rating, _keylist);
         if (imported_keys)
             remove_attached_keys(msg);
     }
@@ -1687,11 +1687,11 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         message *src,
         message **dst,
         stringlist_t **keylist,
-        PEP_color *color,
+        PEP_rating *rating,
         PEP_decrypt_flags_t *flags 
     )
 {
-    return _decrypt_message( session, src, dst, keylist, color, flags, NULL );
+    return _decrypt_message( session, src, dst, keylist, rating, flags, NULL );
 }
 
 DYNAMIC_API PEP_STATUS own_message_private_key_details(
@@ -1709,13 +1709,13 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
 
     message *dst = NULL; 
     stringlist_t *keylist = NULL;
-    PEP_color color;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags; 
 
     *ident = NULL;
 
     identity_list *private_il = NULL;
-    PEP_STATUS status = _decrypt_message(session, msg,  &dst, &keylist, &color, &flags, &private_il);
+    PEP_STATUS status = _decrypt_message(session, msg,  &dst, &keylist, &rating, &flags, &private_il);
     free_message(dst);
     free_stringlist(keylist);
 
@@ -1757,10 +1757,10 @@ static void _max_comm_type_from_identity_list(
     }
 }
 
-DYNAMIC_API PEP_STATUS outgoing_message_color(
+DYNAMIC_API PEP_STATUS outgoing_message_rating(
         PEP_SESSION session,
         message *msg,
-        PEP_color *color
+        PEP_rating *rating
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1771,15 +1771,15 @@ DYNAMIC_API PEP_STATUS outgoing_message_color(
     assert(msg);
     assert(msg->from);
     assert(msg->dir == PEP_dir_outgoing);
-    assert(color);
+    assert(rating);
 
-    if (!(session && msg && color))
+    if (!(session && msg && rating))
         return PEP_ILLEGAL_VALUE;
 
     if (msg->from == NULL || msg->dir != PEP_dir_outgoing)
         return PEP_ILLEGAL_VALUE;
 
-    *color = PEP_rating_undefined;
+    *rating = PEP_rating_undefined;
 
     status = myself(session, msg->from);
     if (status != PEP_STATUS_OK)
@@ -1795,27 +1795,27 @@ DYNAMIC_API PEP_STATUS outgoing_message_color(
                                       &max_comm_type, &comm_type_determined);
 
     if (comm_type_determined == false)
-        *color = PEP_rating_undefined;
+        *rating = PEP_rating_undefined;
     else
-        *color = _MAX(_rating(max_comm_type, PEP_rating_undefined),
+        *rating = _MAX(_rating(max_comm_type, PEP_rating_undefined),
                 PEP_rating_unencrypted);
 
     return PEP_STATUS_OK;
 }
 
-DYNAMIC_API PEP_STATUS identity_color(
+DYNAMIC_API PEP_STATUS identity_rating(
         PEP_SESSION session,
         pEp_identity *ident,
-        PEP_color *color
+        PEP_rating *rating
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
     assert(ident);
-    assert(color);
+    assert(rating);
 
-    if (!(session && ident && color))
+    if (!(session && ident && rating))
         return PEP_ILLEGAL_VALUE;
 
     if (ident->me)
@@ -1824,7 +1824,7 @@ DYNAMIC_API PEP_STATUS identity_color(
         status = update_identity(session, ident);
 
     if (status == PEP_STATUS_OK)
-        *color = _rating(ident->comm_type, PEP_rating_undefined);
+        *rating = _rating(ident->comm_type, PEP_rating_undefined);
 
     return status;
 }
@@ -1843,5 +1843,27 @@ DYNAMIC_API PEP_STATUS get_binary_path(PEP_cryptotech tech, const char **path)
         status = cryptotech[tech].binary_path(path);
 
     return status;
+}
+
+
+DYNAMIC_API PEP_color color_from_rating(PEP_rating rating)
+{
+    if (rating == PEP_rating_b0rken)
+        return PEP_color_no_color;
+
+    if (rating < PEP_rating_undefined)
+        return PEP_color_red;
+
+    if (rating < PEP_rating_reliable)
+        return PEP_color_no_color;
+
+    if (rating < PEP_rating_trusted)
+        return PEP_color_yellow;
+
+    if (rating >= PEP_rating_trusted)
+        return PEP_color_green;
+
+    // this should never happen
+    assert(false);
 }
 
