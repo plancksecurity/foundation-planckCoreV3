@@ -10,6 +10,7 @@ extern "C" {
 
 #include "dynamic_api.h"
 #include "stringlist.h"
+#include "stringpair.h"    
 #include "timestamp.h"
 
 #define PEP_VERSION "1.0" // protocol version
@@ -644,6 +645,21 @@ DYNAMIC_API PEP_STATUS find_keys(
         PEP_SESSION session, const char *pattern, stringlist_t **keylist
     );
 
+
+// find_keys() - find keys in keyring
+//
+//  parameters:
+//      session (in)            session handle
+//      key_email_pairs (out)   list of key id/primary email address pairs for 
+//                              each available key (whether in management database 
+//                              or not)
+//
+//  caveat: FIXME
+//        the ownerships of keylist isgoing to the caller
+//        the caller must use free_stringlist() to free it
+DYNAMIC_API PEP_STATUS list_key_email_pairs(
+        PEP_SESSION session, stringpair_list_t** key_email_pairs
+    );
 
 // send_key() - send key(s) to keyserver
 //

@@ -1225,6 +1225,90 @@ PEP_STATUS pgp_export_keydata(
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS pgp_list_key_email_pairs(PEP_SESSION session, stringpair_list_t** key_email_list) {
+    gpgme_error_t gpgme_error;
+    assert(session);
+    assert(key_email_list);
+    
+    if (!session || !key_email_list)
+        return PEP_ILLEGAL_VALUE;
+    
+    *key_email_list = NULL;
+    
+    gpgme_error = gpg.gpgme_op_keylist_start(session->ctx, NULL, 0);
+    gpgme_error = _GPGERR(gpgme_error);
+    
+    switch(gpgme_error) {
+        case GPG_ERR_NO_ERROR:
+            break;
+        case GPG_ERR_INV_VALUE:
+            assert(0);
+            return PEP_UNKNOWN_ERROR;
+        default:
+            gpg.gpgme_op_keylist_end(session->ctx);
+            return PEP_GET_KEY_FAILED;        
+    };
+    
+    gpgme_key_t key;
+    stringpair_list_t* _key_email_list = new_stringpair_list(NULL);
+    stringpair_list_t* list_curr = _key_email_list;
+    stringpair_t* key_email_pair = NULL;
+    
+    do {
+        gpgme_error = gpg.gpgme_op_keylist_next(session->ctx, &key);
+        gpgme_error = _GPGERR(gpgme_error);
+      
+        switch(gpgme_error) {
+            case GPG_ERR_EOF:
+                break;
+            case GPG_ERR_NO_ERROR:
+                assert(key);
+                assert(key->subkeys);
+                if (!key || !key->subkeys)
+                    return PEP_GET_KEY_FAILED;
+               
+                // first subkey is primary key
+                char* fpr = key->subkeys->fpr;
+                char* primary_email = key->uids->email;
+                assert(fpr);
+                assert(primary_email);
+                if (!fpr || !primary_email)
+                    return PEP_GET_KEY_FAILED;
+                
+                key_email_pair = new_stringpair(fpr, primary_email);
+                assert(key_email_pair);
+                
+                if (key_email_pair) {
+                    list_curr = stringpair_list_add(list_curr, key_email_pair);
+                    key_email_pair = NULL;
+                    
+                    assert(list_curr);
+                    if (list_curr != NULL)
+                        break;
+                    else
+                        free_stringpair(key_email_pair);
+                }
+                // else fallthrough (list_curr or key_email_pair wasn't allocateable)
+            case GPG_ERR_ENOMEM:
+                free_stringpair_list(_key_email_list);
+                gpg.gpgme_op_keylist_end(session->ctx);
+                return PEP_OUT_OF_MEMORY;
+            default:
+                gpg.gpgme_op_keylist_end(session->ctx);
+                return PEP_UNKNOWN_ERROR;
+        }
+    } while (gpgme_error != GPG_ERR_EOF);
+    
+    if (_key_email_list->value == NULL) {
+        free_stringpair_list(_key_email_list);
+        _key_email_list = NULL;
+    }
+    
+    *key_email_list = _key_email_list;
+    
+    return PEP_STATUS_OK;
+}
+
 static void _switch_mode(pEpSession *session, gpgme_keylist_mode_t remove_mode,
     gpgme_keylist_mode_t add_mode)
 {
