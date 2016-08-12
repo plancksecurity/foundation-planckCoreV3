@@ -74,14 +74,14 @@ int main() {
     message* decrypted_msg = nullptr;
     stringlist_t* keylist_used = nullptr;
 
-    PEP_color color;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags;
 
-    status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &color, &flags);
+    status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &rating, &flags);
     assert(status == PEP_STATUS_OK);
     assert(decrypted_msg);
     assert(keylist_used);
-    assert(color);
+    assert(rating);
     PEP_comm_type ct = encrypted_msg->from->comm_type;
     assert(ct == PEP_ct_pEp || ct == PEP_ct_pEp_unconfirmed || ct == PEP_ct_OpenPGP || ct == PEP_ct_OpenPGP_unconfirmed );
 

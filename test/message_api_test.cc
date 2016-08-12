@@ -75,14 +75,14 @@ int main() {
 
     message *msg4 = nullptr;
     stringlist_t *keylist4 = nullptr;
-    PEP_color color;
+    PEP_rating rating;
     PEP_decrypt_flags_t flags;
     
-    PEP_STATUS status4 = decrypt_message(session, enc_msg2, &msg4, &keylist4, &color, &flags);
+    PEP_STATUS status4 = decrypt_message(session, enc_msg2, &msg4, &keylist4, &rating, &flags);
     assert(status4 == PEP_STATUS_OK);
     assert(msg4);
     assert(keylist4);
-    assert(color);
+    assert(rating);
     PEP_comm_type ct = enc_msg2->from->comm_type;
     assert(ct == PEP_ct_pEp || ct == PEP_ct_pEp_unconfirmed || ct == PEP_ct_OpenPGP || ct == PEP_ct_OpenPGP_unconfirmed );
 
@@ -119,14 +119,14 @@ int main() {
 
     message *msg6 = nullptr;
     stringlist_t *keylist5 = nullptr;
-    PEP_color color2;
+    PEP_rating rating2;
     PEP_decrypt_flags_t flags2;
-    PEP_STATUS status6 = decrypt_message(session, msg5, &msg6, &keylist5, &color2, &flags2);
+    PEP_STATUS status6 = decrypt_message(session, msg5, &msg6, &keylist5, &rating2, &flags2);
     assert(status6 == PEP_DECRYPT_NO_KEY);
     assert(msg6 == NULL);
     assert(keylist5 == NULL);
-    assert(color2 == PEP_rating_have_no_key);
-    cout << "color :" << color2 << "\n";
+    assert(rating2 == PEP_rating_have_no_key);
+    cout << "rating :" << rating2 << "\n";
     free_stringlist(keylist5);
 
     cout << "freeing messages…\n";
