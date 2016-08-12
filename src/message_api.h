@@ -185,12 +185,12 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
         pEp_identity **ident 
 );
 
-// outgoing_message_color() - get color for an outgoing message
+// outgoing_message_rating() - get rating for an outgoing message
 //
 //  parameters:
 //      session (in)        session handle
-//      msg (in)            message to get the color for
-//      rating (out)        color for the message
+//      msg (in)            message to get the rating for
+//      rating (out)        rating for the message
 //
 //  return value:
 //      error status or PEP_STATUS_OK on success
@@ -200,19 +200,19 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
 //      msg->dir must be PEP_dir_outgoing
 //      the ownership of msg remains with the caller
 
-DYNAMIC_API PEP_STATUS outgoing_message_color(
+DYNAMIC_API PEP_STATUS outgoing_message_rating(
         PEP_SESSION session,
         message *msg,
         PEP_rating *rating
     );
 
 
-// identity_color() - get color for a single identity
+// identity_rating() - get rating for a single identity
 //
 //  parameters:
 //      session (in)        session handle
-//      ident (in)          identity to get the color for
-//      color (out)         color for the identity
+//      ident (in)          identity to get the rating for
+//      rating (out)        rating for the identity
 //
 //  return value:
 //      error status or PEP_STATUS_OK on success
@@ -220,7 +220,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_color(
 //  caveat:
 //      the ownership of ident remains with the caller
 
-DYNAMIC_API PEP_STATUS identity_color(
+DYNAMIC_API PEP_STATUS identity_rating(
         PEP_SESSION session,
         pEp_identity *ident,
         PEP_rating *rating
