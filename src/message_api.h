@@ -114,6 +114,13 @@ typedef enum _PEP_color {
     PEP_color_red = -1,
 } PEP_color;
 
+// color_from_rating - calculate color from rating
+//
+//  parameters:
+//      rating (in)         rating
+//
+//  return value:           color representing that rating
+
 DYNAMIC_API PEP_color color_from_rating(PEP_rating rating);
 
 typedef enum _PEP_decrypt_flags {
