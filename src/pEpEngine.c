@@ -133,7 +133,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     if (in_first) {
         int_result = sqlite3_exec(
             _session->db,
-                "create table version_info (\n"
+                "create table if not exists version_info (\n"
                 "   id integer primary key,\n"
                 "   timestamp integer default (datetime('now')) ,\n"
                 "   version text,\n"
