@@ -358,7 +358,7 @@ static struct mailimf_address_list * identity_list_to_mal(identity_list *il)
         goto enomem;
 
     identity_list *_il;
-    for (_il = il; _il; _il = _il->next) {
+    for (_il = il; _il && _il->ident; _il = _il->next) {
         mb = identity_to_mailbox(_il->ident);
         if (mb == NULL)
             goto enomem;
