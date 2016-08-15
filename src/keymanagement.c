@@ -124,6 +124,13 @@ DYNAMIC_API PEP_STATUS update_identity(
 
     if (_no_user_id)
     {
+        status = get_identity(session, identity->address, PEP_OWN_USERID,
+                &stored_identity);
+        if (status == PEP_STATUS_OK) {
+            free_identity(stored_identity);
+            return myself(session, identity);
+        }
+
         free(identity->user_id);
 
         identity->user_id = calloc(1, strlen(identity->address) + 6);
