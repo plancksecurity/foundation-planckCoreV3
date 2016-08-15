@@ -1644,3 +1644,75 @@ PEP_STATUS pgp_key_revoked(
     
     return PEP_STATUS_OK;
 }
+
+PEP_STATUS list_keys(
+        PEP_SESSION session, 
+        identity_list_t** id_list)
+{
+    
+    pgp_key_t *key;
+
+    PEP_STATUS result;
+
+    unsigned from = 0;
+    result = PEP_KEY_NOT_FOUND;
+    
+    // get all available keys
+    unsigned n = 0; // type from netpgp...
+    
+    pgp_keyring_t* pubkeys = (pgp_keyring_t *)netpgp.pubring; 
+    int keyring_end = pubkeys->keyc;
+    
+    if (keyring_end < 1)
+        return result;
+    
+    for (key = keyring->keys; n < keyring_end; ++n, ++key) {
+        assert(key)
+        if (!key)
+            continue;
+        char* primary_userid = (char*)pgp_key_get_primary_userid(key);
+        
+            
+    }
+        
+    
+    
+    
+    // Try find a fingerprint in pattern
+    if (str_to_fpr(pattern, fpr, &length)) {
+        unsigned from = 0;
+
+
+        // Only one fingerprint can match
+        if ((key = (pgp_key_t *)pgp_getkeybyfpr(
+                        netpgp.io,
+                        (pgp_keyring_t *)netpgp.pubring, 
+                        (const uint8_t *)fpr, length,
+                        &from,
+                        NULL, 0, 0)) == NULL) {
+
+            return PEP_KEY_NOT_FOUND;
+        }
+
+        result = cb(cb_arg, key);
+
+    } else {
+        // Search by name for pattern. Can match many.
+        unsigned from = 0;
+        result = PEP_KEY_NOT_FOUND;
+        while((key = (pgp_key_t *)pgp_getnextkeybyname(
+                        netpgp.io,
+                        (pgp_keyring_t *)netpgp.pubring, 
+			            (const char *)pattern,
+                        &from)) != NULL) {
+
+            result = cb(cb_arg, key);
+            if (result != PEP_STATUS_OK)
+                break;
+
+            from++;
+        }
+    }
+
+    return result;
+}

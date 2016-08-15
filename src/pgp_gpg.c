@@ -1225,7 +1225,7 @@ PEP_STATUS pgp_export_keydata(
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS pgp_list_key_email_pairs(PEP_SESSION session, stringpair_list_t** key_email_list) {
+PEP_STATUS pgp_list_keys(PEP_SESSION session, stringpair_list_t** key_email_list) {
     gpgme_error_t gpgme_error;
     assert(session);
     assert(key_email_list);

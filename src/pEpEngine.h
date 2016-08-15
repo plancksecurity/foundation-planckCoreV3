@@ -657,7 +657,7 @@ DYNAMIC_API PEP_STATUS find_keys(
 //  caveat: FIXME
 //        the ownerships of keylist isgoing to the caller
 //        the caller must use free_stringlist() to free it
-DYNAMIC_API PEP_STATUS list_key_email_pairs(
+DYNAMIC_API PEP_STATUS list_keys(
         PEP_SESSION session, stringpair_list_t** key_email_pairs
     );
 

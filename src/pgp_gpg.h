@@ -26,7 +26,7 @@ PEP_STATUS pgp_export_keydata(
         PEP_SESSION session, const char *fpr, char **key_data, size_t *size
     );
 
-PEP_STATUS pgp_list_key_email_pairs(
+PEP_STATUS pgp_list_keys(
     PEP_SESSION session, stringpair_list_t** key_email_list
     );
     
