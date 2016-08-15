@@ -1758,6 +1758,11 @@ DYNAMIC_API PEP_STATUS get_revoked(
     return status;
 }
 
+DYNAMIC_API const char* get_engine_version() {
+    return PEP_ENGINE_VERSION;
+}
+
+
 DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session)
 {
     assert(session);
