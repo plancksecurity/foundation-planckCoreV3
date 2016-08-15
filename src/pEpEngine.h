@@ -646,19 +646,19 @@ DYNAMIC_API PEP_STATUS find_keys(
     );
 
 
-// find_keys() - find keys in keyring
+// list_keys() - return identities for all keys in the keyring
 //
 //  parameters:
-//      session (in)            session handle
-//      key_email_pairs (out)   list of key id/primary email address pairs for 
-//                              each available key (whether in management database 
-//                              or not)
+//      session (in)          session handle
+//      id_list (out)         list of identities for each available key 
+//                            (whether in management database 
+//                             or not)
 //
 //  caveat: FIXME
-//        the ownerships of keylist isgoing to the caller
-//        the caller must use free_stringlist() to free it
+//        the ownership of the identity list goes to the caller
+//        the caller must use free_identity_list() to free it
 DYNAMIC_API PEP_STATUS list_keys(
-        PEP_SESSION session, stringpair_list_t** key_email_pairs
+        PEP_SESSION session, identity_list** id_list
     );
 
 // send_key() - send key(s) to keyserver

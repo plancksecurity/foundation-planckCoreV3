@@ -27,7 +27,7 @@ PEP_STATUS pgp_export_keydata(
     );
 
 PEP_STATUS pgp_list_keys(
-    PEP_SESSION session, stringpair_list_t** key_email_list
+    PEP_SESSION session, identity_list** id_list
     );
     
 PEP_STATUS pgp_find_keys(

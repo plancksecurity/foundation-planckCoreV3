@@ -1225,15 +1225,15 @@ PEP_STATUS pgp_export_keydata(
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS pgp_list_keys(PEP_SESSION session, stringpair_list_t** key_email_list) {
+PEP_STATUS pgp_list_keys(PEP_SESSION session, identity_list** id_list) {
     gpgme_error_t gpgme_error;
     assert(session);
-    assert(key_email_list);
+    assert(id_list);
     
-    if (!session || !key_email_list)
+    if (!session || !id_list)
         return PEP_ILLEGAL_VALUE;
     
-    *key_email_list = NULL;
+    *id_list = NULL;
     
     gpgme_error = gpg.gpgme_op_keylist_start(session->ctx, NULL, 0);
     gpgme_error = _GPGERR(gpgme_error);
@@ -1250,10 +1250,10 @@ PEP_STATUS pgp_list_keys(PEP_SESSION session, stringpair_list_t** key_email_list
     };
     
     gpgme_key_t key;
-    stringpair_list_t* _key_email_list = new_stringpair_list(NULL);
-    stringpair_list_t* list_curr = _key_email_list;
-    stringpair_t* key_email_pair = NULL;
-    
+    identity_list* _id_list = new_identity_list(NULL);
+    identity_list* list_curr = _id_list;
+    pEp_identity* new_id = NULL;
+        
     do {
         gpgme_error = gpg.gpgme_op_keylist_next(session->ctx, &key);
         gpgme_error = _GPGERR(gpgme_error);
@@ -1270,27 +1270,31 @@ PEP_STATUS pgp_list_keys(PEP_SESSION session, stringpair_list_t** key_email_list
                 // first subkey is primary key
                 char* fpr = key->subkeys->fpr;
                 char* primary_email = key->uids->email;
+                char* uname = key->uids->name;
+                char* uid = key->uids->uid;
+                
                 assert(fpr);
                 assert(primary_email);
                 if (!fpr || !primary_email)
                     return PEP_GET_KEY_FAILED;
                 
-                key_email_pair = new_stringpair(fpr, primary_email);
-                assert(key_email_pair);
+                new_id = new_identity(primary_email, fpr, uid, uname);
+
+                assert(new_id);
                 
-                if (key_email_pair) {
-                    list_curr = stringpair_list_add(list_curr, key_email_pair);
-                    key_email_pair = NULL;
+                if (new_id) {
+                    list_curr = identity_list_add(list_curr, new_id);
+                    new_id = NULL;
                     
                     assert(list_curr);
                     if (list_curr != NULL)
                         break;
                     else
-                        free_stringpair(key_email_pair);
+                        free_identity(new_id);
                 }
                 // else fallthrough (list_curr or key_email_pair wasn't allocateable)
             case GPG_ERR_ENOMEM:
-                free_stringpair_list(_key_email_list);
+                free_identity_list(_id_list);
                 gpg.gpgme_op_keylist_end(session->ctx);
                 return PEP_OUT_OF_MEMORY;
             default:
@@ -1299,12 +1303,12 @@ PEP_STATUS pgp_list_keys(PEP_SESSION session, stringpair_list_t** key_email_list
         }
     } while (gpgme_error != GPG_ERR_EOF);
     
-    if (_key_email_list->value == NULL) {
-        free_stringpair_list(_key_email_list);
-        _key_email_list = NULL;
+    if (_id_list->ident == NULL) {
+        free_identity_list(_id_list);
+        _id_list = NULL;
     }
     
-    *key_email_list = _key_email_list;
+    *id_list = _id_list;
     
     return PEP_STATUS_OK;
 }

@@ -1235,16 +1235,16 @@ DYNAMIC_API PEP_STATUS find_keys(
 }
 
 DYNAMIC_API PEP_STATUS list_keys(
-        PEP_SESSION session, stringpair_list_t **key_email_list
+        PEP_SESSION session, identity_list** id_list
     )
 {
     assert(session);
-    assert(key_email_list);
+    assert(id_list);
 
-    if (!(session && key_email_list))
+    if (!(session && id_list))
         return PEP_ILLEGAL_VALUE;
 
-    return session->cryptotech[PEP_crypt_OpenPGP].list_keys(session, key_email_list);
+    return session->cryptotech[PEP_crypt_OpenPGP].list_keys(session, id_list);
 }
 
 DYNAMIC_API PEP_STATUS generate_keypair(

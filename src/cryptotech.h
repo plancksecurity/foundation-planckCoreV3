@@ -69,7 +69,7 @@ typedef PEP_STATUS (*key_revoked_t)(PEP_SESSION session, const char *fpr,
 typedef PEP_STATUS (*binary_path_t)(const char **path);
 
 typedef PEP_STATUS (*list_keys_t)(PEP_SESSION session, 
-                                             stringpair_list_t** key_email_list);
+                                             identity_list** id_list);
 
 typedef struct _PEP_cryptotech_t {
     uint8_t id;

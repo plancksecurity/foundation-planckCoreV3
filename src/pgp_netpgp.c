@@ -1706,7 +1706,7 @@ static void parse_netpgp_uid_str(char* src, char** name, char** email) {
     }
 }
 
-PEP_STATUS list_keys(
+PEP_STATUS pgp_list_keys(
         PEP_SESSION session, 
         identity_list_t** id_list)
 {
