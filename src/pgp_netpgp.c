@@ -1645,6 +1645,67 @@ PEP_STATUS pgp_key_revoked(
     return PEP_STATUS_OK;
 }
 
+
+// Presumption, if this contains an email address at all, is that the last
+// '@' is the email address's at.
+// 
+// Our best guess is that this is structured as "REALNAME <blah@blah.blah>"
+//
+static void parse_netpgp_uid_str(char* src, char** name, char** email) {
+    *name = NULL;
+    *email = NULL;
+        
+    if (!src)
+        return;
+ 
+    size_t source_len = strlen(src);
+    char* last_char = src + source_len;
+    
+    char* at = NULL;
+
+    char* begin = src;
+    char* end = last_char; // one past the end;
+    size_t copy_len = 0;
+    
+    // Primitive email extraction
+    at = strrchr('@',src);
+        
+    if (at) {
+        // Go back until we hit a space, a '<', or the start of the string
+        for (begin = at; begin >= src && *begin != ' ' && *begin != '<'; begin--) {
+            continue;
+        }
+        if (begin != at)
+            begin++; // Ugly
+        else {
+            for (end = at; end <= last_char && *end != ' ' && *end != '>'; end++) {
+                continue;
+            }
+            // Points one char past.
+        }
+        if (begin < at && end > at) {
+            // yay, it's an email address!
+            copy_len = end - begin;
+            *email = (char*)malloc(sizeof(char) * (copy_len + 1));
+            strncpy(email, begin, copy_len);
+            *(email + copy_len) = '\0';
+            end = (*begin == '<' ? begin - 1 : begin); // if this precedes src, it is checked below
+            begin = src;
+        }
+        else {
+            // bail
+            begin = src;
+            end = last_char;
+        }
+    }
+    if (begin < end) {
+        copy_len = end - begin;
+        *name = (char*)malloc(sizeof(char) * (copy_len + 1));
+        strncpy(name, begin, copy_len);
+        *(name + copy_len) = '\0';
+    }
+}
+
 PEP_STATUS list_keys(
         PEP_SESSION session, 
         identity_list_t** id_list)
@@ -1666,53 +1727,32 @@ PEP_STATUS list_keys(
     if (keyring_end < 1)
         return result;
     
+    identity_list _retval = new_identity_list(NULL);
+    
     for (key = keyring->keys; n < keyring_end; ++n, ++key) {
         assert(key)
         if (!key)
             continue;
         char* primary_userid = (char*)pgp_key_get_primary_userid(key);
+        // FIXME: For now, we just presume it's name + email address. Let's see what it really is.
+        char* username = NULL;
+        char* usermail = NULL;
+        parse_netpgp_uid_str(primary_userid, &username, &usermail);
+     
+        char* id_fpr = NULL;
         
-            
+        fpr_to_str(&id_fpr, key->pubkeyfpr.fingerprint,
+                   key->pubkeyfpr.length);
+
+        identity_list_add(_retval, new_identity(usermail, id_fpr, primary_user_id,
+                                                username));
+        free(username);
+        free(usermail);
+        free(id_fpr);
+        status = PEP_STATUS_OK;
     }
-        
-    
-    
-    
-    // Try find a fingerprint in pattern
-    if (str_to_fpr(pattern, fpr, &length)) {
-        unsigned from = 0;
-
-
-        // Only one fingerprint can match
-        if ((key = (pgp_key_t *)pgp_getkeybyfpr(
-                        netpgp.io,
-                        (pgp_keyring_t *)netpgp.pubring, 
-                        (const uint8_t *)fpr, length,
-                        &from,
-                        NULL, 0, 0)) == NULL) {
-
-            return PEP_KEY_NOT_FOUND;
-        }
-
-        result = cb(cb_arg, key);
-
-    } else {
-        // Search by name for pattern. Can match many.
-        unsigned from = 0;
-        result = PEP_KEY_NOT_FOUND;
-        while((key = (pgp_key_t *)pgp_getnextkeybyname(
-                        netpgp.io,
-                        (pgp_keyring_t *)netpgp.pubring, 
-			            (const char *)pattern,
-                        &from)) != NULL) {
-
-            result = cb(cb_arg, key);
-            if (result != PEP_STATUS_OK)
-                break;
-
-            from++;
-        }
-    }
-
+    *id_list = _retval;
     return result;
 }
+
+
