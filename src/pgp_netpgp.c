@@ -1668,7 +1668,7 @@ static void parse_netpgp_uid_str(char* src, char** name, char** email) {
     size_t copy_len = 0;
     
     // Primitive email extraction
-    at = strrchr('@',src);
+    at = strrchr(src,'@');
         
     if (at) {
         // Go back until we hit a space, a '<', or the start of the string
@@ -1708,7 +1708,7 @@ static void parse_netpgp_uid_str(char* src, char** name, char** email) {
 
 PEP_STATUS pgp_list_keys(
         PEP_SESSION session, 
-        identity_list_t** id_list)
+        identity_list** id_list)
 {
     
     pgp_key_t *key;
@@ -1727,10 +1727,10 @@ PEP_STATUS pgp_list_keys(
     if (keyring_end < 1)
         return result;
     
-    identity_list _retval = new_identity_list(NULL);
+    identity_list* _retval = new_identity_list(NULL);
     
-    for (key = keyring->keys; n < keyring_end; ++n, ++key) {
-        assert(key)
+    for (key = pubkeys->keys; n < keyring_end; ++n, ++key) {
+        assert(key);
         if (!key)
             continue;
         char* primary_userid = (char*)pgp_key_get_primary_userid(key);
@@ -1744,12 +1744,12 @@ PEP_STATUS pgp_list_keys(
         fpr_to_str(&id_fpr, key->pubkeyfpr.fingerprint,
                    key->pubkeyfpr.length);
 
-        identity_list_add(_retval, new_identity(usermail, id_fpr, primary_user_id,
+        identity_list_add(_retval, new_identity(usermail, id_fpr, primary_userid,
                                                 username));
         free(username);
         free(usermail);
         free(id_fpr);
-        status = PEP_STATUS_OK;
+        result = PEP_STATUS_OK;
     }
     *id_list = _retval;
     return result;
