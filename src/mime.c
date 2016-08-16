@@ -253,13 +253,12 @@ static PEP_STATUS mime_attachment(
     PEP_STATUS status = PEP_STATUS_OK;
     struct mailmime * mime = NULL;
     char * mime_type;
-
     assert(blob);
     assert(result);
 
     *result = NULL;
 
-    if (blob->mime_type == NULL)
+    if (blob->mime_type == NULL || blob->mime_type[0] == 0)
         mime_type = "application/octet-stream";
     else
         mime_type = blob->mime_type;
