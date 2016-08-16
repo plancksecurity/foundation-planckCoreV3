@@ -915,6 +915,15 @@ PEP_STATUS key_created(
     );
 
 
+// get_engine_version() - returns the current version of pEpEngine (this is different
+//                        from the pEp protocol version!)
+//
+//  parameters: none
+//
+//  return_value: const char* to the engine version string constant
+//
+DYNAMIC_API const char* get_engine_version();
+
 DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session);
 
 #ifdef __cplusplus
