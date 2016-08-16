@@ -203,9 +203,15 @@ _armoured(const char *buf, size_t size, const char *pattern)
     unsigned armoured = 0;
     regex_t r;
     regcomp(&r, pattern, REG_EXTENDED|REG_NOSUB);
+#ifdef __APPLE__
     if (regnexec(&r, buf, size, 0, NULL, 0) == 0) {
         armoured = 1;
     }
+#else
+    if (regexec(&r, buf, 0, NULL, 0) == 0) {
+        armoured = 1;
+    }
+#endif
     regfree(&r);
     return armoured;
 }
@@ -1669,7 +1675,10 @@ static void parse_netpgp_uid_str(char* src, char** name, char** email) {
     
     // Primitive email extraction
     at = strrchr(src,'@');
-        
+    
+    char* name_str = NULL;
+    char* email_str = NULL;
+    
     if (at) {
         // Go back until we hit a space, a '<', or the start of the string
         for (begin = at; begin >= src && *begin != ' ' && *begin != '<'; begin--) {
@@ -1678,18 +1687,19 @@ static void parse_netpgp_uid_str(char* src, char** name, char** email) {
         if (begin != at)
             begin++; // Ugly
         else {
-            for (end = at; end <= last_char && *end != ' ' && *end != '>'; end++) {
+            for (end = at; end < last_char && *end != ' ' && *end != '>'; end++) {
                 continue;
             }
             // Points one char past.
         }
         if (begin < at && end > at) {
             // yay, it's an email address!
-            copy_len = end - begin;
-            *email = (char*)malloc(sizeof(char) * (copy_len + 1));
-            strncpy(email, begin, copy_len);
-            *(email + copy_len) = '\0';
-            end = (*begin == '<' ? begin - 1 : begin); // if this precedes src, it is checked below
+            copy_len = end - begin - 1;
+            email_str = (char*)malloc(sizeof(char) * (copy_len + 1));
+            strncpy(email_str, begin, copy_len);
+            email_str[copy_len] = '\0';
+            begin--; // put the beginning back where it was.
+            end = (*begin == '<' ? begin : begin + 1); // if this precedes src, it is checked below
             begin = src;
         }
         else {
@@ -1700,10 +1710,12 @@ static void parse_netpgp_uid_str(char* src, char** name, char** email) {
     }
     if (begin < end) {
         copy_len = end - begin;
-        *name = (char*)malloc(sizeof(char) * (copy_len + 1));
-        strncpy(name, begin, copy_len);
-        *(name + copy_len) = '\0';
+        name_str = (char*)malloc(sizeof(char) * (copy_len + 1));
+        strncpy(name_str, begin, copy_len);
+        name_str[copy_len] = '\0';
     }
+    *email = email_str;
+    *name = name_str;
 }
 
 PEP_STATUS pgp_list_keys(

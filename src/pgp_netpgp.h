@@ -30,6 +30,10 @@ PEP_STATUS pgp_find_keys(
         PEP_SESSION session, const char *pattern, stringlist_t **keylist
     );
 
+PEP_STATUS pgp_list_keys(
+    PEP_SESSION session, identity_list** id_list
+    );
+
 PEP_STATUS pgp_generate_keypair(
         PEP_SESSION session, pEp_identity *identity
     );
