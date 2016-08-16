@@ -203,15 +203,9 @@ _armoured(const char *buf, size_t size, const char *pattern)
     unsigned armoured = 0;
     regex_t r;
     regcomp(&r, pattern, REG_EXTENDED|REG_NOSUB);
-#ifdef __APPLE__
     if (regnexec(&r, buf, size, 0, NULL, 0) == 0) {
         armoured = 1;
     }
-#else
-    if (regexec(&r, buf, 0, NULL, 0) == 0) {
-        armoured = 1;
-    }
-#endif
     regfree(&r);
     return armoured;
 }
