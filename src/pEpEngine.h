@@ -646,19 +646,24 @@ DYNAMIC_API PEP_STATUS find_keys(
     );
 
 
-// list_keys() - return identities for all keys in the keyring
+// list_keys() - return identities for all keys in the database (and, optionally, keyring)
 //
 //  parameters:
 //      session (in)          session handle
+//      db_only (in)          true if only identities for the pEp management database
+//                            should be listed; false if identities should also be
+//                            shown from the keyring
+//      show_revoked (in)     true if identities with revoked primary keys should also
+//                            be listed; false if only valid keys should be shown
 //      id_list (out)         list of identities for each available key 
-//                            (whether in management database 
-//                             or not)
 //
 //  caveat: FIXME
 //        the ownership of the identity list goes to the caller
 //        the caller must use free_identity_list() to free it
+//        identity objects derived from the keyring only have the available information
+//           from the keyring; some fields may be NULL
 DYNAMIC_API PEP_STATUS list_keys(
-        PEP_SESSION session, identity_list** id_list
+        PEP_SESSION session, identity_list** id_list, bool db_only, bool show_revoked
     );
 
 // send_key() - send key(s) to keyserver

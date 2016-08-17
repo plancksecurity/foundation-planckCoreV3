@@ -1235,7 +1235,7 @@ DYNAMIC_API PEP_STATUS find_keys(
 }
 
 DYNAMIC_API PEP_STATUS list_keys(
-        PEP_SESSION session, identity_list** id_list
+        PEP_SESSION session, identity_list** id_list, bool db_only, bool show_revoked
     )
 {
     assert(session);
@@ -1244,7 +1244,24 @@ DYNAMIC_API PEP_STATUS list_keys(
     if (!(session && id_list))
         return PEP_ILLEGAL_VALUE;
 
-    return session->cryptotech[PEP_crypt_OpenPGP].list_keys(session, id_list);
+    identity_list* _id_list = new_identity_list(NULL);
+    
+    PEP_STATUS retval = PEP_KEY_NOT_FOUND;
+    
+    // FIXME: do management DB stuff here
+    
+    identity_list* _keyring_ids = NULL;
+    if (!db_only) {
+        PEP_STATUS extra_status = session->cryptotech[PEP_crypt_OpenPGP].list_keys(session, _keyring_ids);
+    }
+        
+    // FIXME: Combine lists here
+    if (_keyring_ids) {
+    }
+    
+    if (retval == PEP_STATUS_OK)
+        *id_list = _id_list;
+    return retval;
 }
 
 DYNAMIC_API PEP_STATUS generate_keypair(
