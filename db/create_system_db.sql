@@ -42,6 +42,6 @@ INSERT INTO i18n_language VALUES ('ca', 'Català');
 INSERT INTO i18n_token VALUES ('ca', 1000, 'Vull mostrar les trustwords en català');
 
 INSERT INTO i18n_language VALUES ('tr', 'Türkçe');
-INSERT INTO i18n_token VALUES ('tr', 1000, 'Güvenlik kelimelerini Türk görüntülemek istiyorum');
+INSERT INTO i18n_token VALUES ('tr', 1000, 'Güvenlik kelimelerini Türkçe görüntülemek istiyorum');
 -- add more languages here
 
