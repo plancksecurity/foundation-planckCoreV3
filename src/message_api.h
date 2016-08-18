@@ -47,10 +47,9 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_enc_format enc_format
     );
 
-// encrypt_message_for_identity() - encrypt message for one particular identity in memory
-//                     (to be used, for example, to save message drafts
-//                      encrypted with owner ID)
-//
+// encrypt_message_for_self() - encrypt message in memory for user's identity only,
+//                              ignoring recipients and other identities from
+//                              the message
 //  parameters:
 //      session (in)        session handle
 //      target_id (in)      self identity this message should be encrypted for
