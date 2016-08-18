@@ -56,9 +56,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     static const char *sql_set_revoked;
     static const char *sql_get_revoked;
     
-    // Get full list of keys in database
-    static const char *sql_get_keylist;
-    
     bool in_first = false;
 
     assert(sqlite3_threadsafe());
@@ -366,8 +363,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         
         sql_get_revoked =     "select revoked_fpr, revocation_date from revoked_keys"
                               "    where replacement_fpr = upper(replace(?1,' ','')) ;";
-        
-        sql_get_keylist =     "
     }
 
     int_result = sqlite3_prepare_v2(_session->db, sql_log, (int)strlen(sql_log),

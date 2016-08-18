@@ -1305,7 +1305,7 @@ PEP_STATUS pgp_list_keyinfo(PEP_SESSION session, const char* pattern,
         }
     } while (gpgme_error != GPG_ERR_EOF);
     
-    if (_keyinfo_list->ident == NULL) {
+    if (_keyinfo_list->value == NULL) {
         free_stringpair_list(_keyinfo_list);
         _keyinfo_list = NULL;
     }

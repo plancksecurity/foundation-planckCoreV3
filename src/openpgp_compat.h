@@ -39,7 +39,7 @@ extern "C" {
 //        identity objects derived from the keyring only have the available information
 //           from the keyring; some fields may be NULL
 DYNAMIC_API PEP_STATUS OpenPGP_list_keyinfo (
-        PEP_SESSION session, stringpair_list_t** keyinfo_list, char* search_pattern
+        PEP_SESSION session, const char* search_pattern, stringpair_list_t** keyinfo_list
     );
     
 #ifdef __cplusplus
