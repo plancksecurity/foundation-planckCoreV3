@@ -1178,6 +1178,27 @@ static PEP_STATUS add_key_fpr_to_stringlist(void *arg, pgp_key_t *key)
     return PEP_STATUS_OK;
 }
 
+static PEP_STATUS add_keyinfo_to_stringpair_list(void* arg, pgp_key_t *key) {
+    stringpair_list_t** keyinfo_list = (stringpair_list_t**)arg;
+    stringpair_t pair = NULL;
+    char* id_fpr = NULL;
+    char* primary_userid = (char*)pgp_key_get_primary_userid(key);
+     
+    fpr_to_str(&id_fpr, key->pubkeyfpr.fingerprint,
+                key->pubkeyfpr.length);
+
+    pair = new_stringpair(id_fpr, primary_userid);
+    
+    if (pair == NULL)
+        return PEP_OUT_OF_MEMORY;
+    
+    *keyinfo_list = stringpair_list_add(*keyinfo_list, pair);
+    free(id_fpr);
+    if (*keyinfo_list == NULL)
+        return PEP_OUT_OF_MEMORY;
+    return PEP_STATUS_OK;
+}
+
 PEP_STATUS pgp_find_keys(
     PEP_SESSION session, const char *pattern, stringlist_t **keylist
     )
@@ -1727,37 +1748,11 @@ PEP_STATUS pgp_list_keyinfo(
     pgp_key_t *key;
 
     PEP_STATUS result;
-
-    result = PEP_KEY_NOT_FOUND;
     
-    // get all available keys
-    unsigned n = 0;
+    result = find_keys_do(pattern, &add_keyinfo_to_stringpair_list, (void*)keyinfo_list);
     
-    pgp_keyring_t* pubkeys = (pgp_keyring_t *)netpgp.pubring; 
-    int keyring_end = pubkeys->keyc;
-    
-    if (keyring_end < 1)
-        return result;
-    
-    stringpair_list_t* _retval = new_stringpair_list(NULL);
-    
-    for (key = pubkeys->keys; n < keyring_end; ++n, ++key) {
-        assert(key);
-        if (!key)
-            continue;
-        char* primary_userid = (char*)pgp_key_get_primary_userid(key);
-//        parse_netpgp_uid_str(primary_userid, &username, &usermail);
-     
-        char* id_fpr = NULL;
-        
-        fpr_to_str(&id_fpr, key->pubkeyfpr.fingerprint,
-                   key->pubkeyfpr.length);
-
-        stringlist_add(_retval, new_stringpair(id_fpr, primary_userid));
-        free(id_fpr);
-        result = PEP_STATUS_OK;
-    }
-    *id_list = _retval;
+    if (!keyinfo_list)
+        result = PEP_KEY_NOT_FOUND;
     
 unlock_netpgp:
     pthread_mutex_unlock(&netpgp_mutex);
