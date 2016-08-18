@@ -1651,81 +1651,87 @@ PEP_STATUS pgp_key_revoked(
 // 
 // Our best guess is that this is structured as "REALNAME <blah@blah.blah>"
 //
-static void parse_netpgp_uid_str(char* src, char** name, char** email) {
-    *name = NULL;
-    *email = NULL;
-        
-    if (!src)
-        return;
- 
-    size_t source_len = strlen(src);
-    char* last_char = src + source_len;
-    
-    char* at = NULL;
+// static void parse_netpgp_uid_str(char* src, char** name, char** email) {
+//     *name = NULL;
+//     *email = NULL;
+//         
+//     if (!src)
+//         return;
+//  
+//     size_t source_len = strlen(src);
+//     char* last_char = src + source_len;
+//     
+//     char* at = NULL;
+// 
+//     char* begin = src;
+//     char* end = last_char; // one past the end;
+//     size_t copy_len = 0;
+//     
+//     // Primitive email extraction
+//     at = strrchr(src,'@');
+//     
+//     char* name_str = NULL;
+//     char* email_str = NULL;
+//     
+//     if (at) {
+//         // Go back until we hit a space, a '<', or the start of the string
+//         for (begin = at; begin >= src && *begin != ' ' && *begin != '<'; begin--) {
+//             continue;
+//         }
+//         if (begin != at)
+//             begin++; // Ugly
+//         else {
+//             for (end = at; end < last_char && *end != ' ' && *end != '>'; end++) {
+//                 continue;
+//             }
+//             // Points one char past.
+//         }
+//         if (begin < at && end > at) {
+//             // yay, it's an email address!
+//             copy_len = end - begin - 1;
+//             email_str = (char*)malloc(sizeof(char) * (copy_len + 1));
+//             strncpy(email_str, begin, copy_len);
+//             email_str[copy_len] = '\0';
+//             begin--; // put the beginning back where it was.
+//             end = (*begin == '<' ? begin : begin + 1); // if this precedes src, it is checked below
+//             begin = src;
+//         }
+//         else {
+//             // bail
+//             begin = src;
+//             end = last_char;
+//         }
+//     }
+//     if (begin < end) {
+//         copy_len = end - begin;
+//         name_str = (char*)malloc(sizeof(char) * (copy_len + 1));
+//         strncpy(name_str, begin, copy_len);
+//         name_str[copy_len] = '\0';
+//     }
+//     *email = email_str;
+//     *name = name_str;
+// }
 
-    char* begin = src;
-    char* end = last_char; // one past the end;
-    size_t copy_len = 0;
-    
-    // Primitive email extraction
-    at = strrchr(src,'@');
-    
-    char* name_str = NULL;
-    char* email_str = NULL;
-    
-    if (at) {
-        // Go back until we hit a space, a '<', or the start of the string
-        for (begin = at; begin >= src && *begin != ' ' && *begin != '<'; begin--) {
-            continue;
-        }
-        if (begin != at)
-            begin++; // Ugly
-        else {
-            for (end = at; end < last_char && *end != ' ' && *end != '>'; end++) {
-                continue;
-            }
-            // Points one char past.
-        }
-        if (begin < at && end > at) {
-            // yay, it's an email address!
-            copy_len = end - begin - 1;
-            email_str = (char*)malloc(sizeof(char) * (copy_len + 1));
-            strncpy(email_str, begin, copy_len);
-            email_str[copy_len] = '\0';
-            begin--; // put the beginning back where it was.
-            end = (*begin == '<' ? begin : begin + 1); // if this precedes src, it is checked below
-            begin = src;
-        }
-        else {
-            // bail
-            begin = src;
-            end = last_char;
-        }
-    }
-    if (begin < end) {
-        copy_len = end - begin;
-        name_str = (char*)malloc(sizeof(char) * (copy_len + 1));
-        strncpy(name_str, begin, copy_len);
-        name_str[copy_len] = '\0';
-    }
-    *email = email_str;
-    *name = name_str;
-}
-
-PEP_STATUS pgp_list_keys(
-        PEP_SESSION session, 
-        identity_list** id_list)
+PEP_STATUS pgp_list_keyinfo(
+        PEP_SESSION session, const char* pattern, stringpair_list_t** keyinfo_list)
 {
+    
+    if (!session || !keyinfo_list)
+        return PEP_UNKNOWN_ERROR;
+    
+    if (pthread_mutex_lock(&netpgp_mutex))
+    {
+        return PEP_UNKNOWN_ERROR;
+    }
     
     pgp_key_t *key;
 
     PEP_STATUS result;
 
-    unsigned from = 0;
     result = PEP_KEY_NOT_FOUND;
     
     // get all available keys
-    unsigned n = 0; // type from netpgp...
+    unsigned n = 0;
     
     pgp_keyring_t* pubkeys = (pgp_keyring_t *)netpgp.pubring; 
     int keyring_end = pubkeys->keyc;
@@ -1733,31 +1739,29 @@ PEP_STATUS pgp_list_keys(
     if (keyring_end < 1)
         return result;
     
-    identity_list* _retval = new_identity_list(NULL);
+    stringpair_list_t* _retval = new_stringpair_list(NULL);
     
     for (key = pubkeys->keys; n < keyring_end; ++n, ++key) {
         assert(key);
         if (!key)
             continue;
         char* primary_userid = (char*)pgp_key_get_primary_userid(key);
-        // FIXME: For now, we just presume it's name + email address. Let's see what it really is.
-        char* username = NULL;
-        char* usermail = NULL;
-        parse_netpgp_uid_str(primary_userid, &username, &usermail);
+//        parse_netpgp_uid_str(primary_userid, &username, &usermail);
      
         char* id_fpr = NULL;
         
         fpr_to_str(&id_fpr, key->pubkeyfpr.fingerprint,
                    key->pubkeyfpr.length);
 
-        identity_list_add(_retval, new_identity(usermail, id_fpr, primary_userid,
-                                                username));
-        free(username);
-        free(usermail);
+        stringlist_add(_retval, new_stringpair(id_fpr, primary_userid));
         free(id_fpr);
         result = PEP_STATUS_OK;
     }
     *id_list = _retval;
+    
+unlock_netpgp:
+    pthread_mutex_unlock(&netpgp_mutex);
+    
     return result;
 }
 
