@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <regex.h>
 
 #include "platform_unix.h"
 
@@ -121,6 +122,12 @@ size_t strlcat(char* dst, const	char* src, size_t size) {
     memcpy((void*)(dst + start_len), (void*)src, size_to_copy); // no defined error return, but strcpy doesn't either
     dst[start_len + size_to_copy] = '\0';
     return retval;
+}
+
+// FIXME: This may cause problems - this is a quick compatibility fix for netpgp code
+int regnexec(const regex_t* preg, const char* string,
+             size_t len, size_t nmatch, regmatch_t pmatch[], int eflags) {
+    return regexec(preg, string, nmatch, pmatch, eflags);
 }
 
 #endif

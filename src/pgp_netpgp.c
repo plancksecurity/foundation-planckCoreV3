@@ -1169,7 +1169,7 @@ static PEP_STATUS add_key_fpr_to_stringlist(void *arg, pgp_key_t *key)
         return PEP_OUT_OF_MEMORY;
     } else { 
 
-        *keylist = stringlist_add(*keylist, newfprstr);
+        stringlist_add(*keylist, newfprstr);
         free(newfprstr);
         if (*keylist == NULL) {
             return PEP_OUT_OF_MEMORY;
@@ -1180,7 +1180,7 @@ static PEP_STATUS add_key_fpr_to_stringlist(void *arg, pgp_key_t *key)
 
 static PEP_STATUS add_keyinfo_to_stringpair_list(void* arg, pgp_key_t *key) {
     stringpair_list_t** keyinfo_list = (stringpair_list_t**)arg;
-    stringpair_t pair = NULL;
+    stringpair_t* pair = NULL;
     char* id_fpr = NULL;
     char* primary_userid = (char*)pgp_key_get_primary_userid(key);
      
