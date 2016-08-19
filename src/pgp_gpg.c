@@ -1268,17 +1268,24 @@ PEP_STATUS pgp_list_keyinfo(PEP_SESSION session, const char* pattern,
                 assert(key->subkeys);
                 if (!key || !key->subkeys)
                     return PEP_GET_KEY_FAILED;
-               
+
                 // first subkey is primary key
                 char* fpr = key->subkeys->fpr;
-//                char* primary_email = key->uids->email;
-//                char* uname = key->uids->name;
                 char* uid = key->uids->uid;
                 
                 assert(fpr);
-                assert(uid);
+                assert(uid); // ??
                 if (!fpr)
                     return PEP_GET_KEY_FAILED;
+                
+                PEP_STATUS key_status = PEP_GET_KEY_FAILED;
+                
+                bool key_revoked = false;
+                
+                key_status = pgp_key_revoked(session, fpr, &key_revoked);
+                
+                if (key_revoked || key_status == PEP_GET_KEY_FAILED)
+                    continue;
                 
                 pair = new_stringpair(fpr, uid);
 
