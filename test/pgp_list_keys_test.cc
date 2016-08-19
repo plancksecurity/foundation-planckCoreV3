@@ -42,6 +42,16 @@ int main() {
     print_stringpair_list(all_the_ids);
     free_stringpair_list(all_the_ids);
 
+    cout << "**********************" << endl << endl << "Compare to find_keys for Alice, Bob and John" << endl;
+    stringlist_t* all_the_keys;
+    find_keys(session, "pEp Test", &all_the_keys);
+    stringlist_t* i;
+    for (i = all_the_keys; i->next; i = i->next) {
+        cout << i->value << endl;
+    }
+    free_stringlist(all_the_keys);
+
+    
     cout << "**********************" << endl << endl << "Checking FPR" << endl;
     all_the_ids = NULL;
     OpenPGP_list_keyinfo(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", &all_the_ids);
