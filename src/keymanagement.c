@@ -356,31 +356,37 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 
     assert(session);
     assert(identity);
-    assert(identity->address);
-    assert(identity->username);
+
     assert(EMPTYSTR(identity->user_id) ||
            strcmp(identity->user_id, PEP_OWN_USERID) == 0);
 
-    if (!(session && identity && identity->address && identity->username &&
-          (EMPTYSTR(identity->user_id) ||
-           strcmp(identity->user_id, PEP_OWN_USERID) == 0)))
+    if (!(session && identity &&
+            (EMPTYSTR(identity->user_id) ||
+            strcmp(identity->user_id, PEP_OWN_USERID) == 0)))
         return PEP_ILLEGAL_VALUE;
 
     identity->comm_type = PEP_ct_pEp;
     identity->me = true;
     
-    if(EMPTYSTR(identity->user_id))
+    if (EMPTYSTR(identity->user_id))
     {
         free(identity->user_id);
         identity->user_id = strdup(PEP_OWN_USERID);
         assert(identity->user_id);
         if (identity->user_id == NULL)
-        {
             return PEP_OUT_OF_MEMORY;
-        }
     }
 
-    DEBUG_LOG("myself", "debug", identity->address);
+    if (!identity->address)
+    {
+        identity->address = strdup("");
+        assert(identity->address);
+        if (!identity->address)
+            return PEP_OUT_OF_MEMORY;
+    }
+
+    DEBUG_LOG("myself", "debug", EMPTYSTR(identity->address) ?
+            "<default address>" : identity->address);
     
     status = get_identity(session,
                           identity->address,

@@ -17,7 +17,7 @@ DYNAMIC_API PEP_STATUS fsm_DeviceState_inject(
 
     DeviceState_state state = fsm_DeviceState(session,
             session->sync_state, event, partner, extra);
-    if (state == invalid_out_of_memory)
+    if (state == DeviceState_state_invalid_out_of_memory)
         return PEP_OUT_OF_MEMORY;
     if (state < 0)
         return PEP_SYNC_STATEMACHINE_ERROR - state;

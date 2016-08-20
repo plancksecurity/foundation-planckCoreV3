@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-// messageToSend() - send a beacon message
+// messageToSend() - send a message
 //
 //  parameters:
 //      obj (in)        object handle (implementation defined)
@@ -56,13 +56,36 @@ typedef PEP_STATUS (*showHandshake_t)(
 // deliverHandshakeResult() - give the result of the handshake dialog
 //
 //  parameters:
-//      session (in)    session handle
-//      result (in)     handshake result
+//      session (in)        session handle
+//      result (in)         handshake result
 
 DYNAMIC_API PEP_STATUS deliverHandshakeResult(
         PEP_SESSION session,
         sync_handshake_result result
     );
+
+
+// inject_sync_msg - inject sync protocol message
+//
+//  parameters:
+//      msg (in)            message to inject
+//      management (in)     application defined
+//
+//  return value:
+//      0 if msg could be stored successfully or nonzero otherwise
+
+typedef int (*inject_sync_msg_t)(void *msg, void *management);
+
+
+// retrieve_next_sync_msg - receive next sync message
+//
+//  parameters:
+//      management (in)     application defined
+//
+//  return value:
+//      next message or NULL for termination
+
+typedef void *(*retrieve_next_sync_msg_t)(void *management);
 
 
 // register_sync_callbacks() - register adapter's callbacks
@@ -72,6 +95,7 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
 //      obj (in)                    object handle (implementation defined)
 //      messageToSend (in)          callback for sending message
 //      showHandshake (in)          callback for doing the handshake
+//      retrieve_next_sync_msg (in) callback for receiving sync messages
 //
 //  return value:
 //      PEP_STATUS_OK or any other value on errror
@@ -83,7 +107,9 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
         PEP_SESSION session,
         void *obj,
         messageToSend_t messageToSend,
-        showHandshake_t showHandshake
+        showHandshake_t showHandshake,
+        inject_sync_msg_t inject_sync_msg,
+        retrieve_next_sync_msg_t retrieve_next_sync_msg
     );
 
 
@@ -93,6 +119,31 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
 //      session (in)                session where to store obj handle
 
 DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session);
+
+
+// do_sync_protocol - function to be run on an extra thread
+//
+//  parameters:
+//      session                 pEp session to use
+//      retrieve_next_sync_msg  pointer to retrieve_next_identity() callback
+//                              which returns at least a valid address field in
+//                              the identity struct
+//      management              management data to give to keymanagement
+//                              (implementation defined)
+//
+//  return value:
+//      PEP_STATUS_OK if thread has to terminate successfully or any other
+//      value on failure
+//
+//  caveat:
+//      to ensure proper working of this library, a thread has to be started
+//      with this function immediately after initialization
+//      do_keymanagement() calls retrieve_next_identity(management)
+
+DYNAMIC_API PEP_STATUS do_sync_protocol(
+        PEP_SESSION session,
+        void *management
+    );
 
 
 #ifdef __cplusplus

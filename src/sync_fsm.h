@@ -37,6 +37,13 @@ int keyElectionWon(PEP_SESSION session, Identity partner);
 // states
 
 typedef enum _DeviceState_state {
+    // error values also in this namespace
+    DeviceState_state_invalid_state = (int) invalid_state,
+    DeviceState_state_invalid_event = (int) invalid_event,
+    DeviceState_state_invalid_condition = (int) invalid_condition,
+    DeviceState_state_invalid_action = (int) invalid_action,
+    DeviceState_state_invalid_out_of_memory = (int) invalid_out_of_memory,
+
     DeviceState_state_NONE = 0,
     InitState, 
     Sole, 

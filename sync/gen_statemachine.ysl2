@@ -62,6 +62,13 @@ tstylesheet {
         // states
 
         typedef enum _«@name»_state {
+            // error values also in this namespace
+            «@name»_state_invalid_state = (int) invalid_state,
+            «@name»_state_invalid_event = (int) invalid_event,
+            «@name»_state_invalid_condition = (int) invalid_condition,
+            «@name»_state_invalid_action = (int) invalid_action,
+            «@name»_state_invalid_out_of_memory = (int) invalid_out_of_memory,
+
             «@name»_state_NONE = 0,
         `` for "func:distinctName(state)" |> «@name»`if "position()!=last()" > , `
         } «@name»_state;
@@ -135,7 +142,7 @@ tstylesheet {
 
             «@name»_state state = fsm_«@name»(session,
                     session->«@filename»_state, event, partner, extra);
-            if (state == invalid_out_of_memory)
+            if (state == «@name»_state_invalid_out_of_memory)
                 return PEP_OUT_OF_MEMORY;
             if (state < 0)
                 return PEP_SYNC_STATEMACHINE_ERROR - state;
@@ -202,9 +209,9 @@ tstylesheet {
         }
         > , NULL);\n
         | if (status == PEP_OUT_OF_MEMORY)
-        |> return invalid_out_of_memory;
+        |> return (int) invalid_out_of_memory;
         | if (status != PEP_STATUS_OK)
-        |> return invalid_action;
+        |> return (int) invalid_action;
     }
 
     template "condition" {

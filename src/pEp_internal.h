@@ -131,6 +131,8 @@ typedef struct _pEpSession {
     void *sync_obj;
     messageToSend_t messageToSend;
     showHandshake_t showHandshake;
+    inject_sync_msg_t inject_sync_msg;
+    retrieve_next_sync_msg_t retrieve_next_sync_msg;
 
     // state machines
     DeviceState_state sync_state;

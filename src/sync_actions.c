@@ -228,7 +228,7 @@ enomem:
     return status;
 }
 
-static PEP_STATUS receive_sync_msg(
+PEP_STATUS receive_sync_msg(
         PEP_SESSION session,
         DeviceGroup_Protocol_t *msg
     )
@@ -295,7 +295,7 @@ PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src)
                     (void **) &msg, bl->value, bl->size);
             if (msg) {
                 found = true;
-                PEP_STATUS status = receive_sync_msg(session, msg);
+                PEP_STATUS status = session->inject_sync_msg(msg, session->sync_obj);
                 ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
                 if (status != PEP_STATUS_OK)
                     return status;
