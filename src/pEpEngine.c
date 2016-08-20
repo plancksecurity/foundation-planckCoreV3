@@ -1751,16 +1751,19 @@ DYNAMIC_API PEP_STATUS get_own_addresses(
     stringlist_t *_a = _addresses;
     do {
         result = sqlite3_step(session->get_own_addresses);
-        char *address;
+        const char *address;
         switch (result) {
             case SQLITE_ROW:
-                sqlite3_bind_text(session->get_own_addresses, 1, address, -1,
-                        SQLITE_STATIC);
+                address = (const char *)
+                    sqlite3_column_text(session->get_own_addresses, 0);
                 _a = stringlist_add(_a, address);
                 if (!_a) {
                     free_stringlist(_addresses);
                     return PEP_OUT_OF_MEMORY;
                 }
+                break;
+
+            case SQLITE_DONE:
                 break;
 
             default:
