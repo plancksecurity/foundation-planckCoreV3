@@ -5,6 +5,7 @@
 #include "message.h"
 #include "sync_fsm.h"
 #include "map_asn1.h"
+#include "baseprotocol.h"
 #include "../asn.1/DeviceGroup-Protocol.h"
 
 // conditions
@@ -316,5 +317,58 @@ PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src)
     }
 
     return PEP_STATUS_OK;
+}
+
+PEP_STATUS broadcast_msg(PEP_SESSION session, Identity partner, char *payload,
+        size_t size)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session && partner && payload);
+    if (!(session && partner && payload))
+        return PEP_ILLEGAL_VALUE;
+
+    if (size == 0)
+        return PEP_STATUS_OK;
+
+    stringlist_t *own_addresses = NULL;
+    status = get_own_addresses(session, &own_addresses);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    Identity me = NULL;
+    message *_message = NULL;
+
+    for (stringlist_t *_a = own_addresses; _a && _a->value; _a = _a->next) {
+        me = new_identity(_a->value, NULL, PEP_OWN_USERID, NULL);
+        if (!me) {
+            status = PEP_OUT_OF_MEMORY;
+            goto the_end;
+        }
+
+        status = myself(session, me);
+        if (status == PEP_OUT_OF_MEMORY)
+            goto the_end;
+        if (status != PEP_STATUS_OK)
+            continue;
+
+        status = prepare_message(me, partner, payload, size, &_message);
+        if (status != PEP_STATUS_OK)
+            goto the_end;
+        
+        free_identity(me);
+        me = NULL;
+
+        status = session->messageToSend(session->sync_obj, _message);
+        if (status == PEP_OUT_OF_MEMORY)
+            goto the_end;
+        assert(status == PEP_STATUS_OK);
+    }
+
+the_end:
+    free_stringlist(own_addresses);
+    free_identity(me);
+    free_message(_message);
+    return status;
 }
 
