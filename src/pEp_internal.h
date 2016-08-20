@@ -106,6 +106,7 @@ typedef struct _pEpSession {
     sqlite3_stmt *crashdump;
     sqlite3_stmt *languagelist;
     sqlite3_stmt *i18n_token;
+    sqlite3_stmt *get_own_addresses;
 
     // blacklist
     sqlite3_stmt *blacklist_add;
