@@ -1,6 +1,6 @@
 include ../Makefile.conf
 
-OPENPGP?=NETPGP
+OPENPGP?=GPG
 
 ifeq ($(BUILD_ON),Darwin)
 ifeq ($(BUILD_FOR),Darwin)

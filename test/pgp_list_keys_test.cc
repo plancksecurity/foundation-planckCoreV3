@@ -46,7 +46,7 @@ int main() {
     stringlist_t* all_the_keys;
     find_keys(session, "pEp Test", &all_the_keys);
     stringlist_t* i;
-    for (i = all_the_keys; i->next; i = i->next) {
+    for (i = all_the_keys; i; i = i->next) {
         cout << i->value << endl;
     }
     free_stringlist(all_the_keys);

@@ -1281,10 +1281,8 @@ PEP_STATUS pgp_list_keyinfo(PEP_SESSION session, const char* pattern,
                 PEP_STATUS key_status = PEP_GET_KEY_FAILED;
                 
                 bool key_revoked = false;
-                
-                key_status = pgp_key_revoked(session, fpr, &key_revoked);
-                
-                if (key_revoked || key_status == PEP_GET_KEY_FAILED)
+                                
+                if (key->subkeys->revoked)
                     continue;
                 
                 pair = new_stringpair(fpr, uid);
