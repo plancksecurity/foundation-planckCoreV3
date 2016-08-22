@@ -10,6 +10,7 @@ extern "C" {
 
 #include "dynamic_api.h"
 #include "stringlist.h"
+#include "stringpair.h"    
 #include "timestamp.h"
 
 #define PEP_VERSION "1.0" // protocol version
@@ -643,7 +644,6 @@ DYNAMIC_API PEP_STATUS recv_key(PEP_SESSION session, const char *pattern);
 DYNAMIC_API PEP_STATUS find_keys(
         PEP_SESSION session, const char *pattern, stringlist_t **keylist
     );
-
 
 // send_key() - send key(s) to keyserver
 //

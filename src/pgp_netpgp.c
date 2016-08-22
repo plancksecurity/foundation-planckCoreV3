@@ -1169,12 +1169,40 @@ static PEP_STATUS add_key_fpr_to_stringlist(void *arg, pgp_key_t *key)
         return PEP_OUT_OF_MEMORY;
     } else { 
 
-        *keylist = stringlist_add(*keylist, newfprstr);
+        stringlist_add(*keylist, newfprstr);
         free(newfprstr);
         if (*keylist == NULL) {
             return PEP_OUT_OF_MEMORY;
         }
     }
+    return PEP_STATUS_OK;
+}
+
+static PEP_STATUS add_keyinfo_to_stringpair_list(void* arg, pgp_key_t *key) {
+    stringpair_list_t** keyinfo_list = (stringpair_list_t**)arg;
+    stringpair_t* pair = NULL;
+    char* id_fpr = NULL;
+    char* primary_userid = (char*)pgp_key_get_primary_userid(key);
+
+    bool key_revoked = false;
+                
+//    PEP_STATUS key_status = pgp_key_revoked(session, id_fpr, &key_revoked);
+                
+//    if (key_revoked || key_status == PEP_GET_KEY_FAILED)
+//        return PEP_STATUS_OK; // we just move on
+        
+    fpr_to_str(&id_fpr, key->pubkeyfpr.fingerprint,
+                key->pubkeyfpr.length);
+
+    pair = new_stringpair(id_fpr, primary_userid);
+    
+    if (pair == NULL)
+        return PEP_OUT_OF_MEMORY;
+    
+    *keyinfo_list = stringpair_list_add(*keyinfo_list, pair);
+    free(id_fpr);
+    if (*keyinfo_list == NULL)
+        return PEP_OUT_OF_MEMORY;
     return PEP_STATUS_OK;
 }
 
@@ -1644,3 +1672,99 @@ PEP_STATUS pgp_key_revoked(
     
     return PEP_STATUS_OK;
 }
+
+
+// Presumption, if this contains an email address at all, is that the last
+// '@' is the email address's at.
+// 
+// Our best guess is that this is structured as "REALNAME <blah@blah.blah>"
+//
+// static void parse_netpgp_uid_str(char* src, char** name, char** email) {
+//     *name = NULL;
+//     *email = NULL;
+//         
+//     if (!src)
+//         return;
+//  
+//     size_t source_len = strlen(src);
+//     char* last_char = src + source_len;
+//     
+//     char* at = NULL;
+// 
+//     char* begin = src;
+//     char* end = last_char; // one past the end;
+//     size_t copy_len = 0;
+//     
+//     // Primitive email extraction
+//     at = strrchr(src,'@');
+//     
+//     char* name_str = NULL;
+//     char* email_str = NULL;
+//     
+//     if (at) {
+//         // Go back until we hit a space, a '<', or the start of the string
+//         for (begin = at; begin >= src && *begin != ' ' && *begin != '<'; begin--) {
+//             continue;
+//         }
+//         if (begin != at)
+//             begin++; // Ugly
+//         else {
+//             for (end = at; end < last_char && *end != ' ' && *end != '>'; end++) {
+//                 continue;
+//             }
+//             // Points one char past.
+//         }
+//         if (begin < at && end > at) {
+//             // yay, it's an email address!
+//             copy_len = end - begin - 1;
+//             email_str = (char*)malloc(sizeof(char) * (copy_len + 1));
+//             strncpy(email_str, begin, copy_len);
+//             email_str[copy_len] = '\0';
+//             begin--; // put the beginning back where it was.
+//             end = (*begin == '<' ? begin : begin + 1); // if this precedes src, it is checked below
+//             begin = src;
+//         }
+//         else {
+//             // bail
+//             begin = src;
+//             end = last_char;
+//         }
+//     }
+//     if (begin < end) {
+//         copy_len = end - begin;
+//         name_str = (char*)malloc(sizeof(char) * (copy_len + 1));
+//         strncpy(name_str, begin, copy_len);
+//         name_str[copy_len] = '\0';
+//     }
+//     *email = email_str;
+//     *name = name_str;
+// }
+
+PEP_STATUS pgp_list_keyinfo(
+        PEP_SESSION session, const char* pattern, stringpair_list_t** keyinfo_list)
+{
+    
+    if (!session || !keyinfo_list)
+        return PEP_UNKNOWN_ERROR;
+    
+    if (pthread_mutex_lock(&netpgp_mutex))
+    {
+        return PEP_UNKNOWN_ERROR;
+    }
+    
+    pgp_key_t *key;
+
+    PEP_STATUS result;
+    
+    result = find_keys_do(pattern, &add_keyinfo_to_stringpair_list, (void*)keyinfo_list);
+    
+    if (!keyinfo_list)
+        result = PEP_KEY_NOT_FOUND;
+    
+unlock_netpgp:
+    pthread_mutex_unlock(&netpgp_mutex);
+    
+    return result;
+}
+
+
