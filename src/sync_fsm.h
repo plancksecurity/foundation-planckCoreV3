@@ -101,11 +101,6 @@ DYNAMIC_API PEP_STATUS fsm_DeviceState_inject(
         void *extra
     );
 
-// misc
-
-PEP_STATUS broadcast_msg(PEP_SESSION session, Identity partner, char
-        *payload, size_t size);
-
 #ifdef __cplusplus
 }
 #endif

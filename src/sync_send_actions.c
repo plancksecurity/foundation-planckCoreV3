@@ -8,6 +8,7 @@
 #include "baseprotocol.h"
 #include "map_asn1.h"
 #include "../asn.1/DeviceGroup-Protocol.h"
+#include "sync_impl.h"
 #include "../asn.1/Beacon.h"
 #include "../asn.1/HandshakeRequest.h"
 #include "../asn.1/GroupKeys.h"
@@ -34,7 +35,6 @@ PEP_STATUS sendBeacon(
     Beacon_t *msg = NULL;
     char *payload = NULL;
     message *_message = NULL;
-    pEp_identity *me = NULL;
 
     assert(session);
     assert(!partner);
@@ -71,14 +71,6 @@ PEP_STATUS sendBeacon(
 
     msg->header.state = (long) state;
 
-    me = new_identity(NULL, NULL, NULL, NULL);
-    if (!me)
-        goto enomem;
-    status = myself(session, me);
-    if (status != PEP_STATUS_OK)
-        goto error;
-    if (Identity_from_Struct(me, &msg->header.me) == NULL)
-        goto enomem;
 
     if (asn_check_constraints(&asn_DEF_Beacon, msg, NULL, NULL)) {
         status = PEP_CONTRAINTS_VIOLATED;
@@ -92,15 +84,7 @@ PEP_STATUS sendBeacon(
         goto error;
     }
 
-    status = prepare_message(me, partner, payload, size, &_message);
-    if (status != PEP_STATUS_OK)
-        goto error;
-    payload = NULL;
-
-    free_identity(me);
-    me = NULL;
-
-    status = session->messageToSend(session->sync_obj, _message);
+    status = multicast_self_msg(session, msg);
 
     ASN_STRUCT_FREE(asn_DEF_Beacon, msg);
     free_identity(partner);
@@ -112,7 +96,6 @@ error:
     ASN_STRUCT_FREE(asn_DEF_Beacon, msg);
     free(payload);
     free_message(_message);
-    free_identity(me);
     free_identity(partner);
     return status;
 }
@@ -176,7 +159,7 @@ PEP_STATUS sendHandshakeRequest(
 
     msg->header.state = (long) state;
 
-    me = new_identity(NULL, NULL, NULL, NULL);
+    me = new_identity(partner->address, NULL, PEP_OWN_USERID, NULL);
     if (!me)
         goto enomem;
     status = myself(session, me);
@@ -282,7 +265,7 @@ PEP_STATUS sendGroupKeys(
 
     msg->header.state = (long) state;
 
-    me = new_identity(NULL, NULL, NULL, NULL);
+    me = new_identity(partner->address, NULL, PEP_OWN_USERID, NULL);
     if (!me)
         goto enomem;
     status = myself(session, me);

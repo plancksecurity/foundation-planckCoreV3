@@ -869,17 +869,6 @@ DYNAMIC_API PEP_STATUS sequence_value(
     );
 
 
-// get_own_addresses() - get a list of own addresses
-//
-//  parameters:
-//      session (in)            session handle
-//      addresses (out)         stringlist with addresses
-
-DYNAMIC_API PEP_STATUS get_own_addresses(
-        PEP_SESSION session,
-        stringlist_t **addresses
-    );
-
 // set_revoked() - records relation between a revoked key and its replacement
 //
 //  parameters:

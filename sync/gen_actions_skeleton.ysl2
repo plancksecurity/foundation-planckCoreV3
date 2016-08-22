@@ -28,6 +28,7 @@ tstylesheet {
         #include "baseprotocol.h"
         #include "map_asn1.h"
         #include "../asn.1/DeviceGroup-Protocol.h"
+        #include "sync_impl.h"
         ||
         for "func:distinctName(//action)"
             if "substring(@name, 1, 4) = 'send'"
@@ -158,7 +159,7 @@ tstylesheet {
             «$name»_t *msg = NULL;
             char *payload = NULL;
             message *_message = NULL;
-            pEp_identity *me = NULL;
+            `` if "count(/protocol/broadcast/*[name()=$action/@name]) = 0" |> pEp_identity *me = NULL;
             `` if "$name='GroupKeys'" |> identity_list *kl = NULL;
 
             `` call "paramcheck" with "partner", "parm/partner";
@@ -193,7 +194,10 @@ tstylesheet {
 
             msg->header.state = (long) state;
 
-            me = new_identity(NULL, NULL, NULL, NULL);
+        ||
+        if "count(/protocol/broadcast/*[name()=$action/@name]) = 0"
+        ||
+            me = new_identity(partner->address, NULL, PEP_OWN_USERID, NULL);
             if (!me)
                 goto enomem;
             status = myself(session, me);
@@ -224,6 +228,12 @@ tstylesheet {
                 goto error;
             }
 
+        ||
+        choose {
+            when "count(/protocol/broadcast/*[name()=$action/@name]) > 0"
+                |> status = multicast_self_msg(session, msg);
+            otherwise
+        ||
             status = prepare_message(me, partner, payload, size, &_message);
             if (status != PEP_STATUS_OK)
                 goto error;
@@ -233,6 +243,9 @@ tstylesheet {
             me = NULL;
 
             status = session->messageToSend(session->«$filename»_obj, _message);
+        ||
+        }
+        ||
 
             ASN_STRUCT_FREE(asn_DEF_«$name», msg);
             free_identity(partner);
@@ -245,7 +258,10 @@ tstylesheet {
             ASN_STRUCT_FREE(asn_DEF_«$name», msg);
             free(payload);
             free_message(_message);
-            free_identity(me);
+        ||
+        if "count(/protocol/broadcast/*[name()=$action/@name]) = 0"
+            |> free_identity(me);
+        ||
             free_identity(partner);
             `` if "$name='GroupKeys'" |> free_identity_list(kl);
             return status;

@@ -38,7 +38,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     static const char *sql_crashdump;
     static const char *sql_languagelist;
     static const char *sql_i18n_token;
-    static const char *sql_get_own_addresses;
 
     // blacklist
     static const char *sql_blacklist_add;
@@ -337,8 +336,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
         sql_i18n_token = "select phrase from i18n_token where lang = lower(?1) and id = ?2 ;";
 
-        sql_get_own_addresses = "select address from identity where user_id = '" PEP_OWN_USERID "';";
-
         // blacklist
 
         sql_blacklist_add = "insert or replace into blacklist_keys (fpr) values (upper(replace(?1,' ',''))) ;"
@@ -445,11 +442,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     int_result = sqlite3_prepare_v2(_session->system_db, sql_i18n_token,
             (int)strlen(sql_i18n_token), &_session->i18n_token, NULL);
-    assert(int_result == SQLITE_OK);
-
-    int_result = sqlite3_prepare_v2(_session->db, sql_get_own_addresses,
-            (int)strlen(sql_get_own_addresses), &_session->get_own_addresses,
-            NULL);
     assert(int_result == SQLITE_OK);
 
     // blacklist
@@ -1728,52 +1720,6 @@ DYNAMIC_API PEP_STATUS sequence_value(
         }
         sqlite3_reset(session->sequence_value2);
     }
-    return status;
-}
-
-DYNAMIC_API PEP_STATUS get_own_addresses(
-        PEP_SESSION session,
-        stringlist_t **addresses
-    )
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session && addresses);
-    if (!(session && addresses))
-        return PEP_ILLEGAL_VALUE;
-
-    stringlist_t *_addresses = new_stringlist(NULL);
-    if (!_addresses)
-        return PEP_OUT_OF_MEMORY;
-
-    sqlite3_reset(session->get_own_addresses);
-    int result;
-    stringlist_t *_a = _addresses;
-    do {
-        result = sqlite3_step(session->get_own_addresses);
-        const char *address;
-        switch (result) {
-            case SQLITE_ROW:
-                address = (const char *)
-                    sqlite3_column_text(session->get_own_addresses, 0);
-                _a = stringlist_add(_a, address);
-                if (!_a) {
-                    free_stringlist(_addresses);
-                    return PEP_OUT_OF_MEMORY;
-                }
-                break;
-
-            case SQLITE_DONE:
-                break;
-
-            default:
-                status = PEP_UNKNOWN_ERROR;
-        }
-    } while (result == SQLITE_ROW);
-
-    sqlite3_reset(session->get_own_addresses);
-    if (status == PEP_STATUS_OK)
-        *addresses = _addresses;
     return status;
 }
 
