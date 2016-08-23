@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <strings.h>
 #include <sys/select.h>
+#include <regex.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,6 +44,8 @@ extern char* SystemDB;
 #if !defined(BSD) && !defined(__APPLE__)
 size_t strlcpy(char* dst, const	char* src, size_t size);
 size_t strlcat(char* dst, const	char* src, size_t size);
+int regnexec(const regex_t* preg, const char* string,
+             size_t len, size_t nmatch, regmatch_t pmatch[], int eflags);
 #endif
 
 #ifdef __cplusplus

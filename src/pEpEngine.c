@@ -1234,6 +1234,7 @@ DYNAMIC_API PEP_STATUS find_keys(
     return session->cryptotech[PEP_crypt_OpenPGP].find_keys(session, pattern, keylist);
 }
 
+
 DYNAMIC_API PEP_STATUS generate_keypair(
         PEP_SESSION session, pEp_identity *identity
     )
@@ -1744,6 +1745,11 @@ DYNAMIC_API PEP_STATUS get_revoked(
 
     return status;
 }
+
+DYNAMIC_API const char* get_engine_version() {
+    return PEP_ENGINE_VERSION;
+}
+
 
 DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session)
 {

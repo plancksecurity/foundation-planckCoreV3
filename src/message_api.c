@@ -1210,6 +1210,103 @@ pep_error:
     return status;
 }
 
+DYNAMIC_API PEP_STATUS encrypt_message_for_self(
+        PEP_SESSION session,
+        pEp_identity* target_id,
+        message *src,
+        message **dst,
+        PEP_enc_format enc_format
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    message * msg = NULL;
+    stringlist_t * keys = NULL;
+
+    assert(session);
+    assert(src);
+    assert(dst);
+    assert(enc_format != PEP_enc_none);
+
+    if (!(session && src && dst && enc_format != PEP_enc_none))
+        return PEP_ILLEGAL_VALUE;
+
+    if (src->dir == PEP_dir_incoming)
+        return PEP_ILLEGAL_VALUE;
+    
+    determine_encryption_format(src);
+    if (src->enc_format != PEP_enc_none)
+        return PEP_ILLEGAL_VALUE;
+
+    status = myself(session, target_id);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+
+    *dst = NULL;
+
+    
+    PEP_STATUS _status = update_identity(session, target_id);
+    if (_status != PEP_STATUS_OK) {
+        status = _status;
+        goto pep_error;
+    }
+
+    char* target_fpr = target_id->fpr;
+    if (!target_fpr)
+        return PEP_KEY_NOT_FOUND; // FIXME: Error condition
+        
+    keys = new_stringlist(target_fpr);
+
+    
+    msg = clone_to_empty_message(src);
+    if (msg == NULL)
+        goto enomem;
+
+    switch (enc_format) {
+        case PEP_enc_PGP_MIME:
+        case PEP_enc_PEP: // BUG: should be implemented extra
+            status = encrypt_PGP_MIME(session, src, keys, msg);
+            break;
+
+        case PEP_enc_pieces:
+            status = encrypt_PGP_in_pieces(session, src, keys, msg);
+            break;
+
+        /* case PEP_enc_PEP:
+            // TODO: implement
+            NOT_IMPLEMENTED */
+
+        default:
+            assert(0);
+            status = PEP_ILLEGAL_VALUE;
+            goto pep_error;
+    }
+        
+    if (status == PEP_OUT_OF_MEMORY)
+        goto enomem;
+    
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+
+     if (msg && msg->shortmsg == NULL) {
+         msg->shortmsg = strdup("pEp");
+         assert(msg->shortmsg);
+         if (msg->shortmsg == NULL)
+             goto enomem;
+     }
+
+    *dst = msg;
+    return status;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+pep_error:
+    free_stringlist(keys);
+    free_message(msg);
+
+    return status;
+}
+
 static bool is_a_pEpmessage(const message *msg)
 {
     for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
