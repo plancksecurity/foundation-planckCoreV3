@@ -155,7 +155,7 @@ PEP_STATUS unicast_msg(
     status = get_identity(session, partner->address, PEP_OWN_USERID, &me);
     if (status != PEP_STATUS_OK)
         goto error;
-    if (msg->header.me = Identity_from_Struct(me, NULL) == NULL)
+    if (Identity_from_Struct(me, &msg->header.me) == NULL)
         goto enomem;
 
     if (asn_check_constraints(&asn_DEF_DeviceGroup_Protocol, msg, NULL, NULL)) {
