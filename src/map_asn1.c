@@ -51,10 +51,12 @@ Identity_t *Identity_from_Struct(
     }
 
     if (ident->lang[0]) {
-        result->lang = OCTET_STRING_new_fromBuf(&asn_DEF_ISO639_1,
-                ident->lang, 2);
-        if (!result->lang)
-            goto enomem;
+        int r = OCTET_STRING_fromBuf(&result->lang, ident->lang, 2);
+        assert(r == 0);
+    }
+    else {
+        int r = OCTET_STRING_fromBuf(&result->lang, "en", 2);
+        assert(r == 0);
     }
 
     return result;
@@ -107,9 +109,10 @@ pEp_identity *Identity_to_Struct(Identity_t *ident, pEp_identity *result)
     if (ident->comm_type)
         result->comm_type = (PEP_comm_type) *ident->comm_type;
 
-    if (ident->lang) {
-        result->lang[0] = ident->lang->buf[0];
-        result->lang[1] = ident->lang->buf[1];
+    if (ident->lang.size == 2) {
+        result->lang[0] = ident->lang.buf[0];
+        result->lang[1] = ident->lang.buf[1];
+        result->lang[2] = 0;
     }
 
     return result;

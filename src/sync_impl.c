@@ -6,6 +6,9 @@
 #include "map_asn1.h"
 #include "baseprotocol.h"
 
+#define SYNC_VERSION_MAJOR 1
+#define SYNC_VERSION_MINOR 0
+
 PEP_STATUS receive_sync_msg(
         PEP_SESSION session,
         DeviceGroup_Protocol_t *msg
@@ -28,16 +31,14 @@ PEP_STATUS receive_sync_msg(
             break;
 
         case DeviceGroup_Protocol__payload_PR_handshakeRequest:
-            partner = Identity_to_Struct(
-                    &msg->header.me, NULL);
+            partner = Identity_to_Struct(&msg->header.me, NULL);
             if (!partner)
                 return PEP_OUT_OF_MEMORY;
             event = HandshakeRequest;
             break;
 
         case DeviceGroup_Protocol__payload_PR_groupKeys:
-            partner = Identity_to_Struct(&msg->header.me,
-                    NULL);
+            partner = Identity_to_Struct(&msg->header.me, NULL);
             if (!partner)
                 return PEP_OUT_OF_MEMORY;
             identity_list *group_keys = IdentityList_to_identity_list(
@@ -68,7 +69,7 @@ PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src)
     for (bloblist_t *bl = src->attachments; bl && bl->value; bl = bl->next) {
         if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp") == 0
                 && bl->size) {
-            DeviceGroup_Protocol_t *msg;
+            DeviceGroup_Protocol_t *msg = NULL;
             uper_decode_complete(NULL, &asn_DEF_DeviceGroup_Protocol,
                     (void **) &msg, bl->value, bl->size);
             if (msg) {
@@ -134,30 +135,28 @@ PEP_STATUS unicast_msg(
         goto error;
     }
 
+    msg->header.version.major = SYNC_VERSION_MAJOR;
+    msg->header.version.minor = SYNC_VERSION_MINOR;
+
     int32_t seq;
     status = sequence_value(session, "DeviceGroup", &seq);
     if (status != PEP_STATUS_OK)
         goto error;
     msg->header.sequence = (long) seq;
 
-    bool devicegroup = storedGroupKeys(session);
-    if (devicegroup) { // default is FALSE
-        BOOLEAN_t *dg = malloc(sizeof(BOOLEAN_t));
-        assert(dg);
-        if (!dg)
-            goto enomem;
-
-        *dg = 1;
-        msg->header.devicegroup = dg;
-    }
-
-    msg->header.state = (long) state;
-
     status = get_identity(session, partner->address, PEP_OWN_USERID, &me);
     if (status != PEP_STATUS_OK)
         goto error;
     if (Identity_from_Struct(me, &msg->header.me) == NULL)
         goto enomem;
+
+    msg->header.state = (long) state;
+
+    bool devicegroup = storedGroupKeys(session);
+    if (devicegroup)
+        msg->header.devicegroup = 1;
+    else
+        msg->header.devicegroup = 0;
 
     if (asn_check_constraints(&asn_DEF_DeviceGroup_Protocol, msg, NULL, NULL)) {
         status = PEP_CONTRAINTS_VIOLATED;
