@@ -183,14 +183,12 @@ PEP_STATUS unicast_msg(
 
     status = session->messageToSend(session->sync_obj, _message);
 
-    free_DeviceGroup_Protocol_msg(msg);
     free_identity(partner);
     return status;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
 error:
-    free_DeviceGroup_Protocol_msg(msg);
     free(payload);
     free_message(_message);
     free_identity(me);
@@ -234,12 +232,10 @@ PEP_STATUS multicast_self_msg(
     }
 
     free_identity_list(own_identities);
-    free_DeviceGroup_Protocol_msg(msg);
     return PEP_STATUS_OK;
 
 enomem:
     free_identity_list(own_identities);
-    free_DeviceGroup_Protocol_msg(msg);
     return PEP_OUT_OF_MEMORY;
 }
 

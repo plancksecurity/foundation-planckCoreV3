@@ -45,6 +45,7 @@ PEP_STATUS sendBeacon(
     if (status != PEP_STATUS_OK)
         goto error;
 
+    free_DeviceGroup_Protocol_msg(msg);
     return PEP_STATUS_OK;
 
 enomem:
@@ -86,6 +87,7 @@ PEP_STATUS sendHandshakeRequest(
     if (status != PEP_STATUS_OK)
         goto error;
 
+    free_DeviceGroup_Protocol_msg(msg);
     return PEP_STATUS_OK;
 
 enomem:
@@ -135,6 +137,7 @@ PEP_STATUS sendGroupKeys(
         goto error;
 
     free_identity_list(kl);
+    free_DeviceGroup_Protocol_msg(msg);
     return PEP_STATUS_OK;
 
 enomem:

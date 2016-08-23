@@ -192,6 +192,7 @@ tstylesheet {
                 goto error;
 
             `` if "$name='GroupKeys'" |> free_identity_list(kl);
+            free_DeviceGroup_Protocol_msg(msg);
             return PEP_STATUS_OK;
 
         enomem:
