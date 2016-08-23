@@ -2,6 +2,7 @@
 #include "sync_impl.h"
 #include "pEp_internal.h"
 #include "keymanagement.h"
+#include "message_api.h"
 #include "map_asn1.h"
 #include "baseprotocol.h"
 
@@ -174,13 +175,19 @@ PEP_STATUS unicast_msg(
     if (status != PEP_STATUS_OK)
         goto error;
     payload = NULL;
-
     free_identity(me);
     me = NULL;
-
-    status = session->messageToSend(session->sync_obj, _message);
-
     free_identity(partner);
+    partner = NULL;
+
+    message *_encrypted = NULL;
+    status = encrypt_message(session, _message, NULL, &_encrypted, PEP_enc_PEP, 0);
+    if (status != PEP_STATUS_OK)
+        goto error;
+    free_message(_message);
+    _message = NULL;
+
+    status = session->messageToSend(session->sync_obj, _encrypted);
     return status;
 
 enomem:
