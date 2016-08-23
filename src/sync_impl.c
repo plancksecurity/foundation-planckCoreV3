@@ -213,12 +213,6 @@ PEP_STATUS multicast_self_msg(
     for (identity_list *_i = own_identities; _i && _i->ident; _i = _i->next) {
         pEp_identity *me = _i->ident;
 
-        status = myself(session, me);
-        if (status == PEP_OUT_OF_MEMORY)
-            goto enomem;
-        if (status != PEP_STATUS_OK)
-            continue;
-     
         // FIXME: no deep copy for multicast supported yet
         DeviceGroup_Protocol_t *_msg = malloc(sizeof(DeviceGroup_Protocol_t));
         assert(_msg);
