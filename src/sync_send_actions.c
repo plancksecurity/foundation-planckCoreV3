@@ -51,6 +51,7 @@ PEP_STATUS sendBeacon(
 enomem:
     status = PEP_OUT_OF_MEMORY;
 error:
+    free(partner);
     free_DeviceGroup_Protocol_msg(msg);
     return status;
 }
@@ -93,6 +94,7 @@ PEP_STATUS sendHandshakeRequest(
 enomem:
     status = PEP_OUT_OF_MEMORY;
 error:
+    free(partner);
     free_DeviceGroup_Protocol_msg(msg);
     return status;
 }
@@ -143,6 +145,7 @@ PEP_STATUS sendGroupKeys(
 enomem:
     status = PEP_OUT_OF_MEMORY;
 error:
+    free(partner);
     free_DeviceGroup_Protocol_msg(msg);
     free_identity_list(kl);
     return status;

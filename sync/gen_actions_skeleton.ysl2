@@ -198,6 +198,7 @@ tstylesheet {
         enomem:
             status = PEP_OUT_OF_MEMORY;
         error:
+            free(partner);
             free_DeviceGroup_Protocol_msg(msg);
             `` if "$name='GroupKeys'" |> free_identity_list(kl);
             return status;

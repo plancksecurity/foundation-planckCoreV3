@@ -211,7 +211,9 @@ PEP_STATUS multicast_self_msg(
         return status;
 
     for (identity_list *_i = own_identities; _i && _i->ident; _i = _i->next) {
-        pEp_identity *me = _i->ident;
+        pEp_identity *me = identity_dup(_i->ident);
+        if (!me)
+            goto enomem;
 
         // FIXME: no deep copy for multicast supported yet
         DeviceGroup_Protocol_t *_msg = malloc(sizeof(DeviceGroup_Protocol_t));
