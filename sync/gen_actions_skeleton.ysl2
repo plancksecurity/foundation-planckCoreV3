@@ -157,6 +157,10 @@ tstylesheet {
                 void *extra
             )
         {
+            assert(session && state);
+            if (!(session && state))
+                return PEP_ILLEGAL_VALUE;
+
             PEP_STATUS status = PEP_STATUS_OK;
             `` if "$name='GroupKeys'" |> identity_list *kl = new_identity_list(NULL);
 
@@ -176,7 +180,14 @@ tstylesheet {
         }
         ||
 
-            status = unicast_msg(session, partner, state, msg);
+        ||
+        choose {
+            when "count(/protocol/broadcast/*[name()=$action/@name]) = 0"
+                |> status = unicast_msg(session, partner, state, msg);
+            otherwise
+                |> status = multicast_self_msg(session, state, msg);
+        }
+        ||
             if (status != PEP_STATUS_OK)
                 goto error;
 

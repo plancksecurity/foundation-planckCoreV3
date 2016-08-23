@@ -31,13 +31,17 @@ PEP_STATUS sendBeacon(
         void *extra
     )
 {
+    assert(session && state);
+    if (!(session && state))
+        return PEP_ILLEGAL_VALUE;
+
     PEP_STATUS status = PEP_STATUS_OK;
 
     DeviceGroup_Protocol_t *msg = new_DeviceGroup_Protocol_msg(DeviceGroup_Protocol__payload_PR_beacon);
     if (!msg)
         goto enomem;
 
-    status = unicast_msg(session, partner, state, msg);
+    status = multicast_self_msg(session, state, msg);
     if (status != PEP_STATUS_OK)
         goto error;
 
@@ -68,6 +72,10 @@ PEP_STATUS sendHandshakeRequest(
         void *extra
     )
 {
+    assert(session && state);
+    if (!(session && state))
+        return PEP_ILLEGAL_VALUE;
+
     PEP_STATUS status = PEP_STATUS_OK;
 
     DeviceGroup_Protocol_t *msg = new_DeviceGroup_Protocol_msg(DeviceGroup_Protocol__payload_PR_handshakeRequest);
@@ -105,6 +113,10 @@ PEP_STATUS sendGroupKeys(
         void *extra
     )
 {
+    assert(session && state);
+    if (!(session && state))
+        return PEP_ILLEGAL_VALUE;
+
     PEP_STATUS status = PEP_STATUS_OK;
     identity_list *kl = new_identity_list(NULL);
 
