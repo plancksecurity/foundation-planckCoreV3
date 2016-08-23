@@ -220,16 +220,26 @@ PEP_STATUS multicast_self_msg(
 
         status = myself(session, me);
         if (status == PEP_OUT_OF_MEMORY)
-            goto the_end;
+            goto enomem;
         if (status != PEP_STATUS_OK)
             continue;
      
-        status = unicast_msg(session, me, state, msg);
+        // FIXME: no deep copy for multicast supported yet
+        DeviceGroup_Protocol_t *_msg = malloc(sizeof(DeviceGroup_Protocol_t));
+        assert(_msg);
+        if (_msg == NULL)
+            goto enomem;
+        memcpy(_msg, msg, sizeof(DeviceGroup_Protocol_t));
+        status = unicast_msg(session, me, state, _msg);
     }
 
-the_end:
     free_identity_list(own_identities);
     free_DeviceGroup_Protocol_msg(msg);
     return PEP_STATUS_OK;
+
+enomem:
+    free_identity_list(own_identities);
+    free_DeviceGroup_Protocol_msg(msg);
+    return PEP_OUT_OF_MEMORY;
 }
 
