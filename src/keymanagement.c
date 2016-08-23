@@ -754,6 +754,7 @@ DYNAMIC_API PEP_STATUS own_identities_retrieve(
                     ident->lang[0] = lang[0];
                     ident->lang[1] = lang[1];
                 }
+                ident->me = true;
                 ident->flags = flags;
 
                 _bl = identity_list_add(_bl, ident);
