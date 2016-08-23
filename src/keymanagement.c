@@ -737,16 +737,14 @@ DYNAMIC_API PEP_STATUS own_identities_retrieve(
                     sqlite3_column_text(session->own_identities_retrieve, 0);
                 fpr = (const char *)
                     sqlite3_column_text(session->own_identities_retrieve, 1);
-                user_id = (const char *)
-                    sqlite3_column_text(session->own_identities_retrieve, 2);
+                user_id = PEP_OWN_USERID;
                 username = (const char *)
-                    sqlite3_column_text(session->own_identities_retrieve, 3);
-                comm_type = (PEP_comm_type)
-                    sqlite3_column_int(session->own_key_is_listed, 4);
+                    sqlite3_column_text(session->own_identities_retrieve, 2);
+                comm_type = PEP_ct_pEp;
                 lang = (const char *)
-                    sqlite3_column_text(session->own_identities_retrieve, 5);
+                    sqlite3_column_text(session->own_identities_retrieve, 3);
                 flags = (unsigned int)
-                    sqlite3_column_int(session->own_key_is_listed, 6);
+                    sqlite3_column_int(session->own_key_is_listed, 4);
 
                 pEp_identity *ident = new_identity(address, fpr, username, user_id);
                 ident->comm_type = comm_type;

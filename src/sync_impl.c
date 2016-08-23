@@ -152,10 +152,7 @@ PEP_STATUS unicast_msg(
 
     msg->header.state = (long) state;
 
-    me = new_identity(partner->address, NULL, PEP_OWN_USERID, NULL);
-    if (!me)
-        goto enomem;
-    status = myself(session, me);
+    status = get_identity(session, partner->address, PEP_OWN_USERID, &me);
     if (status != PEP_STATUS_OK)
         goto error;
     if (Identity_from_Struct(me, &msg->header.me) == NULL)
