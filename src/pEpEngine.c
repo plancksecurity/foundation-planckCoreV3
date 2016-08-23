@@ -360,7 +360,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                                 "   where main_key_id = upper(replace(?1,' ',''))"
                                 "    and user_id = '" PEP_OWN_USERID "' );";
 
-        sql_own_identities_retrieve =  "select address, fpr, username, '" PEP_OWN_USERID "',"
+        sql_own_identities_retrieve =  "select address, fpr, username, user_id,"
                             "   comm_type, lang, identity.flags | pgp_keypair.flags"
                             "   from identity"
                             "   join person on id = identity.user_id"
