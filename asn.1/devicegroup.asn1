@@ -6,7 +6,7 @@ DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
 BEGIN
 
 EXPORTS DeviceGroup-Protocol;
-IMPORTS Identity, IdentityList, Header FROM PEP;
+IMPORTS IdentityList, Header FROM PEP;
 
 Beacon ::= SEQUENCE {
 
