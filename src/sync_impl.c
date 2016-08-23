@@ -229,6 +229,7 @@ PEP_STATUS multicast_self_msg(
             goto enomem;
         memcpy(_msg, msg, sizeof(DeviceGroup_Protocol_t));
         status = unicast_msg(session, me, state, _msg);
+        free_DeviceGroup_Protocol_msg(_msg);
     }
 
     free_identity_list(own_identities);
