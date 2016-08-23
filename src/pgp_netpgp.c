@@ -1169,12 +1169,40 @@ static PEP_STATUS add_key_fpr_to_stringlist(void *arg, pgp_key_t *key)
         return PEP_OUT_OF_MEMORY;
     } else { 
 
-        *keylist = stringlist_add(*keylist, newfprstr);
+        stringlist_add(*keylist, newfprstr);
         free(newfprstr);
         if (*keylist == NULL) {
             return PEP_OUT_OF_MEMORY;
         }
     }
+    return PEP_STATUS_OK;
+}
+
+static PEP_STATUS add_keyinfo_to_stringpair_list(void* arg, pgp_key_t *key) {
+    stringpair_list_t** keyinfo_list = (stringpair_list_t**)arg;
+    stringpair_t* pair = NULL;
+    char* id_fpr = NULL;
+    char* primary_userid = (char*)pgp_key_get_primary_userid(key);
+
+    bool key_revoked = false;
+                
+//    PEP_STATUS key_status = pgp_key_revoked(session, id_fpr, &key_revoked);
+                
+//    if (key_revoked || key_status == PEP_GET_KEY_FAILED)
+//        return PEP_STATUS_OK; // we just move on
+        
+    fpr_to_str(&id_fpr, key->pubkeyfpr.fingerprint,
+                key->pubkeyfpr.length);
+
+    pair = new_stringpair(id_fpr, primary_userid);
+    
+    if (pair == NULL)
+        return PEP_OUT_OF_MEMORY;
+    
+    *keyinfo_list = stringpair_list_add(*keyinfo_list, pair);
+    free(id_fpr);
+    if (*keyinfo_list == NULL)
+        return PEP_OUT_OF_MEMORY;
     return PEP_STATUS_OK;
 }
 
@@ -1697,4 +1725,32 @@ unlock_netpgp:
     pthread_mutex_unlock(&netpgp_mutex);
 
     return status;
+}
+
+
+PEP_STATUS pgp_list_keyinfo(
+        PEP_SESSION session, const char* pattern, stringpair_list_t** keyinfo_list)
+{
+    
+    if (!session || !keyinfo_list)
+        return PEP_UNKNOWN_ERROR;
+    
+    if (pthread_mutex_lock(&netpgp_mutex))
+    {
+        return PEP_UNKNOWN_ERROR;
+    }
+    
+    pgp_key_t *key;
+
+    PEP_STATUS result;
+    
+    result = find_keys_do(pattern, &add_keyinfo_to_stringpair_list, (void*)keyinfo_list);
+    
+    if (!keyinfo_list)
+        result = PEP_KEY_NOT_FOUND;
+    
+unlock_netpgp:
+    pthread_mutex_unlock(&netpgp_mutex);
+    
+    return result;
 }

@@ -1279,6 +1279,7 @@ DYNAMIC_API PEP_STATUS find_keys(
             keylist);
 }
 
+
 DYNAMIC_API PEP_STATUS generate_keypair(
         PEP_SESSION session, pEp_identity *identity
     )
