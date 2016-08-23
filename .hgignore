@@ -37,3 +37,5 @@ pEpEngine.vcxproj.user
 .skeletons
 .statemachines
 Makefile.protocols
+test/msg_encrypt_for_self.asc
+tags
