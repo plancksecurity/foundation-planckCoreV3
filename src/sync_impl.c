@@ -98,7 +98,7 @@ PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src)
 DeviceGroup_Protocol_t *new_DeviceGroup_Protocol_msg(DeviceGroup_Protocol__payload_PR type)
 {
     DeviceGroup_Protocol_t *msg = (DeviceGroup_Protocol_t *)
-            calloc(1, sizeof(HandshakeRequest_t));
+            calloc(1, sizeof(DeviceGroup_Protocol_t));
     assert(msg);
     if (!msg)
         return NULL;
@@ -155,7 +155,7 @@ PEP_STATUS unicast_msg(
     status = get_identity(session, partner->address, PEP_OWN_USERID, &me);
     if (status != PEP_STATUS_OK)
         goto error;
-    if (Identity_from_Struct(me, &msg->header.me) == NULL)
+    if (msg->header.me = Identity_from_Struct(me, NULL) == NULL)
         goto enomem;
 
     if (asn_check_constraints(&asn_DEF_DeviceGroup_Protocol, msg, NULL, NULL)) {
