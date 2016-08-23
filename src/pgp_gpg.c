@@ -1278,10 +1278,6 @@ PEP_STATUS pgp_list_keyinfo(PEP_SESSION session, const char* pattern,
                 if (!fpr)
                     return PEP_GET_KEY_FAILED;
                 
-                PEP_STATUS key_status = PEP_GET_KEY_FAILED;
-                
-                bool key_revoked = false;
-                                
                 if (key->subkeys->revoked)
                     continue;
                 
