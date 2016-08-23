@@ -32,71 +32,21 @@ PEP_STATUS sendBeacon(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    Beacon_t *msg = NULL;
-    char *payload = NULL;
-    message *_message = NULL;
 
-    assert(session);
-    assert(!partner);
-    if (!(session && !partner))
-        return PEP_ILLEGAL_VALUE;
-
-    assert(session->messageToSend);
-    if (!session->messageToSend) {
-        status = PEP_SEND_FUNCTION_NOT_REGISTERED;
-        goto error;
-    }
-
-    msg = (Beacon_t *) calloc(1, sizeof(Beacon_t));
-    assert(msg);
+    DeviceGroup_Protocol_t *msg = new_DeviceGroup_Protocol_msg(DeviceGroup_Protocol__payload_PR_beacon);
     if (!msg)
         goto enomem;
 
-    int32_t seq;
-    status = sequence_value(session, "DeviceGroup", &seq);
+    status = unicast_msg(session, partner, state, msg);
     if (status != PEP_STATUS_OK)
         goto error;
-    msg->header.sequence = (long) seq;
 
-    bool devicegroup = storedGroupKeys(session);
-    if (devicegroup) { // default is FALSE
-        BOOLEAN_t *dg = malloc(sizeof(BOOLEAN_t));
-        assert(dg);
-        if (!dg)
-            goto enomem;
-
-        *dg = 1;
-        msg->header.devicegroup = dg;
-    }
-
-    msg->header.state = (long) state;
-
-
-    if (asn_check_constraints(&asn_DEF_Beacon, msg, NULL, NULL)) {
-        status = PEP_CONTRAINTS_VIOLATED;
-        goto error;
-    }
-
-    ssize_t size = uper_encode_to_new_buffer(&asn_DEF_Beacon,
-            NULL, msg, (void **) &payload);
-    if (size == -1) {
-        status = PEP_CANNOT_ENCODE;
-        goto error;
-    }
-
-    status = multicast_self_msg(session, msg);
-
-    ASN_STRUCT_FREE(asn_DEF_Beacon, msg);
-    free_identity(partner);
-    return status;
+    return PEP_STATUS_OK;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
 error:
-    ASN_STRUCT_FREE(asn_DEF_Beacon, msg);
-    free(payload);
-    free_message(_message);
-    free_identity(partner);
+    free_DeviceGroup_Protocol_msg(msg);
     return status;
 }
 
@@ -119,89 +69,21 @@ PEP_STATUS sendHandshakeRequest(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    HandshakeRequest_t *msg = NULL;
-    char *payload = NULL;
-    message *_message = NULL;
-    pEp_identity *me = NULL;
 
-    assert(session);
-    assert(partner);
-    if (!(session && partner))
-        return PEP_ILLEGAL_VALUE;
-
-    assert(session->messageToSend);
-    if (!session->messageToSend) {
-        status = PEP_SEND_FUNCTION_NOT_REGISTERED;
-        goto error;
-    }
-
-    msg = (HandshakeRequest_t *) calloc(1, sizeof(HandshakeRequest_t));
-    assert(msg);
+    DeviceGroup_Protocol_t *msg = new_DeviceGroup_Protocol_msg(DeviceGroup_Protocol__payload_PR_handshakeRequest);
     if (!msg)
         goto enomem;
 
-    int32_t seq;
-    status = sequence_value(session, "DeviceGroup", &seq);
+    status = unicast_msg(session, partner, state, msg);
     if (status != PEP_STATUS_OK)
         goto error;
-    msg->header.sequence = (long) seq;
 
-    bool devicegroup = storedGroupKeys(session);
-    if (devicegroup) { // default is FALSE
-        BOOLEAN_t *dg = malloc(sizeof(BOOLEAN_t));
-        assert(dg);
-        if (!dg)
-            goto enomem;
-
-        *dg = 1;
-        msg->header.devicegroup = dg;
-    }
-
-    msg->header.state = (long) state;
-
-    me = new_identity(partner->address, NULL, PEP_OWN_USERID, NULL);
-    if (!me)
-        goto enomem;
-    status = myself(session, me);
-    if (status != PEP_STATUS_OK)
-        goto error;
-    if (Identity_from_Struct(me, &msg->header.me) == NULL)
-        goto enomem;
-
-    if (asn_check_constraints(&asn_DEF_HandshakeRequest, msg, NULL, NULL)) {
-        status = PEP_CONTRAINTS_VIOLATED;
-        goto error;
-    }
-
-    ssize_t size = uper_encode_to_new_buffer(&asn_DEF_HandshakeRequest,
-            NULL, msg, (void **) &payload);
-    if (size == -1) {
-        status = PEP_CANNOT_ENCODE;
-        goto error;
-    }
-
-    status = prepare_message(me, partner, payload, size, &_message);
-    if (status != PEP_STATUS_OK)
-        goto error;
-    payload = NULL;
-
-    free_identity(me);
-    me = NULL;
-
-    status = session->messageToSend(session->sync_obj, _message);
-
-    ASN_STRUCT_FREE(asn_DEF_HandshakeRequest, msg);
-    free_identity(partner);
-    return status;
+    return PEP_STATUS_OK;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
 error:
-    ASN_STRUCT_FREE(asn_DEF_HandshakeRequest, msg);
-    free(payload);
-    free_message(_message);
-    free_identity(me);
-    free_identity(partner);
+    free_DeviceGroup_Protocol_msg(msg);
     return status;
 }
 
@@ -224,97 +106,29 @@ PEP_STATUS sendGroupKeys(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    GroupKeys_t *msg = NULL;
-    char *payload = NULL;
-    message *_message = NULL;
-    pEp_identity *me = NULL;
-    identity_list *kl = NULL;
+    identity_list *kl = new_identity_list(NULL);
 
-    assert(session);
-    assert(!partner);
-    if (!(session && !partner))
-        return PEP_ILLEGAL_VALUE;
-
-    assert(session->messageToSend);
-    if (!session->messageToSend) {
-        status = PEP_SEND_FUNCTION_NOT_REGISTERED;
-        goto error;
-    }
-
-    msg = (GroupKeys_t *) calloc(1, sizeof(GroupKeys_t));
-    assert(msg);
+    DeviceGroup_Protocol_t *msg = new_DeviceGroup_Protocol_msg(DeviceGroup_Protocol__payload_PR_groupKeys);
     if (!msg)
-        goto enomem;
-
-    int32_t seq;
-    status = sequence_value(session, "DeviceGroup", &seq);
-    if (status != PEP_STATUS_OK)
-        goto error;
-    msg->header.sequence = (long) seq;
-
-    bool devicegroup = storedGroupKeys(session);
-    if (devicegroup) { // default is FALSE
-        BOOLEAN_t *dg = malloc(sizeof(BOOLEAN_t));
-        assert(dg);
-        if (!dg)
-            goto enomem;
-
-        *dg = 1;
-        msg->header.devicegroup = dg;
-    }
-
-    msg->header.state = (long) state;
-
-    me = new_identity(partner->address, NULL, PEP_OWN_USERID, NULL);
-    if (!me)
-        goto enomem;
-    status = myself(session, me);
-    if (status != PEP_STATUS_OK)
-        goto error;
-    if (Identity_from_Struct(me, &msg->header.me) == NULL)
         goto enomem;
 
     status = own_identities_retrieve(session, &kl);
     if (status != PEP_STATUS_OK)
         goto error;
-    if (IdentityList_from_identity_list(kl, &msg->ownIdentities) == NULL)
+    if (IdentityList_from_identity_list(kl, &msg->payload.choice.groupKeys.ownIdentities) == NULL)
         goto enomem;
 
-    if (asn_check_constraints(&asn_DEF_GroupKeys, msg, NULL, NULL)) {
-        status = PEP_CONTRAINTS_VIOLATED;
-        goto error;
-    }
-
-    ssize_t size = uper_encode_to_new_buffer(&asn_DEF_GroupKeys,
-            NULL, msg, (void **) &payload);
-    if (size == -1) {
-        status = PEP_CANNOT_ENCODE;
-        goto error;
-    }
-
-    status = prepare_message(me, partner, payload, size, &_message);
+    status = unicast_msg(session, partner, state, msg);
     if (status != PEP_STATUS_OK)
         goto error;
-    payload = NULL;
 
-    free_identity(me);
-    me = NULL;
-
-    status = session->messageToSend(session->sync_obj, _message);
-
-    ASN_STRUCT_FREE(asn_DEF_GroupKeys, msg);
-    free_identity(partner);
     free_identity_list(kl);
-    return status;
+    return PEP_STATUS_OK;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
 error:
-    ASN_STRUCT_FREE(asn_DEF_GroupKeys, msg);
-    free(payload);
-    free_message(_message);
-    free_identity(me);
-    free_identity(partner);
+    free_DeviceGroup_Protocol_msg(msg);
     free_identity_list(kl);
     return status;
 }

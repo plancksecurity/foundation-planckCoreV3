@@ -9,24 +9,26 @@ EXPORTS DeviceGroup-Protocol;
 IMPORTS Identity, IdentityList, Header FROM PEP;
 
 Beacon ::= SEQUENCE {
-    header Header
+
 }
 
 HandshakeRequest ::= SEQUENCE {
-    header Header
+
 }
 
 GroupKeys ::= SEQUENCE {
-    header Header,
     ownIdentities IdentityList
 }
 
 /* for the tags see end of sync.fsm */
 
-DeviceGroup-Protocol ::= CHOICE {
-    beacon [APPLICATION 2] Beacon,
-    handshakeRequest [APPLICATION 3] HandshakeRequest,
-    groupKeys [APPLICATION 4] GroupKeys
+DeviceGroup-Protocol ::= SEQUENCE {
+    header Header,
+    payload CHOICE {
+        beacon [APPLICATION 2] Beacon,
+        handshakeRequest [APPLICATION 3] HandshakeRequest,
+        groupKeys [APPLICATION 4] GroupKeys
+    }
 }
 
 END
