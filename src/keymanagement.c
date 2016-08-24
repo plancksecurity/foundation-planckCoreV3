@@ -752,6 +752,8 @@ DYNAMIC_API PEP_STATUS own_identities_retrieve(
                     sqlite3_column_int(session->own_key_is_listed, 4);
 
                 pEp_identity *ident = new_identity(address, fpr, user_id, username);
+                if (!ident)
+                    goto enomem;
                 ident->comm_type = comm_type;
                 if (lang && lang[0]) {
                     ident->lang[0] = lang[0];
