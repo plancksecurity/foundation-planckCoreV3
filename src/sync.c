@@ -80,7 +80,7 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
         void *management
     )
 {
-    DeviceGroup_Protocol_t *msg;
+    DeviceGroup_Protocol_t *msg = NULL;
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session && session->retrieve_next_sync_msg);

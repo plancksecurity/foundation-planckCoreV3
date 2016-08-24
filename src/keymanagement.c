@@ -120,6 +120,11 @@ DYNAMIC_API PEP_STATUS update_identity(
     if (!(session && identity && !EMPTYSTR(identity->address)))
         return PEP_ILLEGAL_VALUE;
 
+    if (identity->me || (identity->user_id && strcmp(identity->user_id, PEP_OWN_USERID) == 0)) {
+        identity->me = true;
+        return myself(session, identity);
+    }
+
     int _no_user_id = EMPTYSTR(identity->user_id);
 
     if (_no_user_id)
@@ -746,11 +751,12 @@ DYNAMIC_API PEP_STATUS own_identities_retrieve(
                 flags = (unsigned int)
                     sqlite3_column_int(session->own_key_is_listed, 4);
 
-                pEp_identity *ident = new_identity(address, fpr, username, user_id);
+                pEp_identity *ident = new_identity(address, fpr, user_id, username);
                 ident->comm_type = comm_type;
                 if (lang && lang[0]) {
                     ident->lang[0] = lang[0];
                     ident->lang[1] = lang[1];
+                    ident->lang[2] = 0;
                 }
                 ident->me = true;
                 ident->flags = flags;
