@@ -991,7 +991,7 @@ DYNAMIC_API PEP_STATUS set_identity(
     sqlite3_bind_text(session->set_person, 2, identity->username, -1,
             SQLITE_STATIC);
     if (identity->lang[0])
-        sqlite3_bind_text(session->set_person, 3, identity->lang, 1,
+        sqlite3_bind_text(session->set_person, 3, identity->lang, 2,
                 SQLITE_STATIC);
     else
         sqlite3_bind_null(session->set_person, 3);
