@@ -764,8 +764,10 @@ DYNAMIC_API PEP_STATUS own_identities_retrieve(
                 ident->flags = flags;
 
                 _bl = identity_list_add(_bl, ident);
-                if (_bl == NULL)
+                if (_bl == NULL) {
+                    free_identity(ident);
                     goto enomem;
+                }
                 
                 break;
                 
