@@ -40,9 +40,7 @@ Install into your home directory:
 
 ```
 pushd ~
-curl -LO http://fdik.org/yml2.tar.bz2
-tar xf yml2.tar.bz2
-rm yml2.tar.bz2*
+hg clone https://cacert.pep.foundation/dev/repos/yml2/
 popd
 ```
 
