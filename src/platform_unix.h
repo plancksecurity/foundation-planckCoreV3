@@ -6,7 +6,13 @@
 #include <strings.h>
 #include <sys/select.h>
 #include <regex.h>
+
+#ifndef ANDROID
 #include <uuid/uuid.h>
+#else
+#include <linux/uuid.h>
+#endif
+
 
 #ifdef __cplusplus
 extern "C" {
