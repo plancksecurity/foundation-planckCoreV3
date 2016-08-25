@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		430D258B1C9ED75A00B94535 /* blacklist.c in Sources */ = {isa = PBXBuildFile; fileRef = 430D258A1C9ED75A00B94535 /* blacklist.c */; };
+		4354FF651D6EDF300033069C /* sync_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = 4354FF641D6EDF300033069C /* sync_impl.c */; };
+		4354FF691D6EE1A70033069C /* NULL.c in Sources */ = {isa = PBXBuildFile; fileRef = 4354FF681D6EE1A70033069C /* NULL.c */; };
 		6400FB861B8CA1C6005221E3 /* libnetpgp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 645922521B8BD32B00A5AF93 /* libnetpgp.a */; };
 		6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E371B8B630200FC617B /* libetpan-ios.a */; };
 		644297C51BE11CE0002BC73B /* system.db in Resources */ = {isa = PBXBuildFile; fileRef = 64951A1B1BE0FCD800B10E71 /* system.db */; };
@@ -57,8 +59,6 @@
 		646C41131D510CD800C63EFF /* HandshakeRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 646C40BE1D510CD700C63EFF /* HandshakeRequest.h */; };
 		646C41141D510CD800C63EFF /* Hash.c in Sources */ = {isa = PBXBuildFile; fileRef = 646C40BF1D510CD700C63EFF /* Hash.c */; };
 		646C41151D510CD800C63EFF /* Hash.h in Headers */ = {isa = PBXBuildFile; fileRef = 646C40C01D510CD700C63EFF /* Hash.h */; };
-		646C41161D510CD800C63EFF /* Header.c in Sources */ = {isa = PBXBuildFile; fileRef = 646C40C11D510CD700C63EFF /* Header.c */; };
-		646C41171D510CD800C63EFF /* Header.h in Headers */ = {isa = PBXBuildFile; fileRef = 646C40C21D510CD700C63EFF /* Header.h */; };
 		646C41181D510CD800C63EFF /* Hex.c in Sources */ = {isa = PBXBuildFile; fileRef = 646C40C31D510CD700C63EFF /* Hex.c */; };
 		646C41191D510CD800C63EFF /* Hex.h in Headers */ = {isa = PBXBuildFile; fileRef = 646C40C41D510CD700C63EFF /* Hex.h */; };
 		646C411A1D510CD800C63EFF /* Identity.c in Sources */ = {isa = PBXBuildFile; fileRef = 646C40C51D510CD700C63EFF /* Identity.c */; };
@@ -187,6 +187,8 @@
 
 /* Begin PBXFileReference section */
 		430D258A1C9ED75A00B94535 /* blacklist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = blacklist.c; path = ../src/blacklist.c; sourceTree = "<group>"; };
+		4354FF641D6EDF300033069C /* sync_impl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_impl.c; path = ../src/sync_impl.c; sourceTree = "<group>"; };
+		4354FF681D6EE1A70033069C /* NULL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NULL.c; path = ../asn.1/NULL.c; sourceTree = "<group>"; };
 		644297BF1BE11C65002BC73B /* pEpTrustWords.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pEpTrustWords.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		644297C11BE11C65002BC73B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		646788871CEB3D120001F54C /* map_asn1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = map_asn1.c; path = ../src/map_asn1.c; sourceTree = "<group>"; };
@@ -235,8 +237,6 @@
 		646C40BE1D510CD700C63EFF /* HandshakeRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HandshakeRequest.h; path = ../asn.1/HandshakeRequest.h; sourceTree = "<group>"; };
 		646C40BF1D510CD700C63EFF /* Hash.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Hash.c; path = ../asn.1/Hash.c; sourceTree = "<group>"; };
 		646C40C01D510CD700C63EFF /* Hash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Hash.h; path = ../asn.1/Hash.h; sourceTree = "<group>"; };
-		646C40C11D510CD700C63EFF /* Header.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Header.c; path = ../asn.1/Header.c; sourceTree = "<group>"; };
-		646C40C21D510CD700C63EFF /* Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Header.h; path = ../asn.1/Header.h; sourceTree = "<group>"; };
 		646C40C31D510CD700C63EFF /* Hex.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Hex.c; path = ../asn.1/Hex.c; sourceTree = "<group>"; };
 		646C40C41D510CD700C63EFF /* Hex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Hex.h; path = ../asn.1/Hex.h; sourceTree = "<group>"; };
 		646C40C51D510CD700C63EFF /* Identity.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Identity.c; path = ../asn.1/Identity.c; sourceTree = "<group>"; };
@@ -358,6 +358,7 @@
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
 			isa = PBXGroup;
 			children = (
+				4354FF681D6EE1A70033069C /* NULL.c */,
 				646C40951D510CD700C63EFF /* asn_application.h */,
 				646C40961D510CD700C63EFF /* asn_codecs_prim.c */,
 				646C40971D510CD700C63EFF /* asn_codecs_prim.h */,
@@ -402,8 +403,6 @@
 				646C40BE1D510CD700C63EFF /* HandshakeRequest.h */,
 				646C40BF1D510CD700C63EFF /* Hash.c */,
 				646C40C01D510CD700C63EFF /* Hash.h */,
-				646C40C11D510CD700C63EFF /* Header.c */,
-				646C40C21D510CD700C63EFF /* Header.h */,
 				646C40C31D510CD700C63EFF /* Hex.c */,
 				646C40C41D510CD700C63EFF /* Hex.h */,
 				646C40C51D510CD700C63EFF /* Identity.c */,
@@ -499,6 +498,7 @@
 		64A8264B1B455C5600EECAF0 /* srcref */ = {
 			isa = PBXGroup;
 			children = (
+				4354FF641D6EDF300033069C /* sync_impl.c */,
 				646C414C1D510D8800C63EFF /* baseprotocol.c */,
 				646C414D1D510D8800C63EFF /* baseprotocol.h */,
 				646C413E1D510D2C00C63EFF /* sync_actions.c */,
@@ -606,7 +606,6 @@
 				646C41091D510CD800C63EFF /* constr_TYPE.h in Headers */,
 				646C410D1D510CD800C63EFF /* der_encoder.h in Headers */,
 				646C41231D510CD800C63EFF /* NativeEnumerated.h in Headers */,
-				646C41171D510CD800C63EFF /* Header.h in Headers */,
 				646C41071D510CD800C63EFF /* constr_SET_OF.h in Headers */,
 				646C414B1D510D2C00C63EFF /* sync.h in Headers */,
 				646C411B1D510CD800C63EFF /* Identity.h in Headers */,
@@ -799,6 +798,7 @@
 				646C41141D510CD800C63EFF /* Hash.c in Sources */,
 				646C410E1D510CD800C63EFF /* DeviceGroup-Protocol.c in Sources */,
 				64A826861B455D0800EECAF0 /* stringlist.c in Sources */,
+				4354FF651D6EDF300033069C /* sync_impl.c in Sources */,
 				64A8267E1B455D0800EECAF0 /* message_api.c in Sources */,
 				64A826851B455D0800EECAF0 /* sqlite3.c in Sources */,
 				646C41361D510CD800C63EFF /* Version.c in Sources */,
@@ -819,13 +819,13 @@
 				646C41451D510D2C00C63EFF /* sync_actions.c in Sources */,
 				646C40F61D510CD800C63EFF /* ber_decoder.c in Sources */,
 				646C40F11D510CD800C63EFF /* asn_SET_OF.c in Sources */,
+				4354FF691D6EE1A70033069C /* NULL.c in Sources */,
 				646C413A1D510CD800C63EFF /* xer_encoder.c in Sources */,
 				646C41021D510CD800C63EFF /* constr_SEQUENCE_OF.c in Sources */,
 				646C410A1D510CD800C63EFF /* constraints.c in Sources */,
 				646C41461D510D2C00C63EFF /* sync_driver.c in Sources */,
 				64A8267C1B455D0800EECAF0 /* identity_list.c in Sources */,
 				646C40FC1D510CD800C63EFF /* BIT_STRING.c in Sources */,
-				646C41161D510CD800C63EFF /* Header.c in Sources */,
 				646C40F41D510CD800C63EFF /* Beacon.c in Sources */,
 				646C411E1D510CD800C63EFF /* INTEGER.c in Sources */,
 				646C413C1D510CD800C63EFF /* xer_support.c in Sources */,
