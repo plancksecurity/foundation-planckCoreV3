@@ -51,6 +51,12 @@ int main() {
     assert(status6 == PEP_OWN_SEQUENCE);
     cout << "UUID created: " << name2 << "\n";
 
+    cout << "set sequence value\n";
+    int32_t value6 = value2 + 10;
+    PEP_STATUS status7 = sequence_value(session, name1, &value6);
+    assert(status7 == PEP_STATUS_OK);
+    cout << "value set to " << value6 << "\n";
+
     cout << "calling release()\n";
     release(session);
     return 0;

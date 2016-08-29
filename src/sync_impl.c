@@ -74,10 +74,17 @@ PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src)
                     (void **) &msg, bl->value, bl->size);
             if (msg) {
                 found = true;
-                PEP_STATUS status = session->inject_sync_msg(msg, session->sync_obj);
-                ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
-                if (status != PEP_STATUS_OK)
-                    return status;
+
+                int32_t value = (int32_t) msg->header.sequence;
+                PEP_STATUS status = sequence_value(session, (char *)
+                        msg->header.me.user_id, &value);
+
+                if (status == PEP_STATUS_OK) {
+                    status = session->inject_sync_msg(msg, session->sync_obj);
+                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                    if (status != PEP_STATUS_OK)
+                        return status;
+                }
             }
         }
     }
@@ -124,6 +131,7 @@ PEP_STATUS unicast_msg(
     char *payload = NULL;
     message *_message = NULL;
     pEp_identity *me = NULL;
+    pEp_identity *_me = NULL;
 
     assert(session && partner && state && msg);
     if (!(session && partner && state && msg))
@@ -138,17 +146,33 @@ PEP_STATUS unicast_msg(
     msg->header.version.major = SYNC_VERSION_MAJOR;
     msg->header.version.minor = SYNC_VERSION_MINOR;
 
-    int32_t seq = 0;
-    status = sequence_value(session, "DeviceGroup", &seq);
-    if (status != PEP_STATUS_OK)
-        goto error;
-    msg->header.sequence = (long) seq;
-
     status = get_identity(session, partner->address, PEP_OWN_USERID, &me);
     if (status != PEP_STATUS_OK)
         goto error;
-    if (Identity_from_Struct(me, &msg->header.me) == NULL)
+    
+    int32_t seq = 0;
+
+    status = sequence_value(session, session->sync_uuid, &seq);
+    if (status != PEP_OWN_SEQUENCE && status != PEP_STATUS_OK)
+        goto error;
+
+    msg->header.sequence = (long) seq;
+
+    _me = identity_dup(me);
+    if (!_me)
         goto enomem;
+
+    free(_me->user_id);
+    _me->user_id = strndup(session->sync_uuid, 37);
+    assert(_me->user_id);
+    if (!_me->user_id)
+        goto enomem;
+
+    if (Identity_from_Struct(_me, &msg->header.me) == NULL)
+        goto enomem;
+
+    free_identity(_me);
+    _me = NULL;
 
     msg->header.state = (long) state;
 
@@ -192,6 +216,7 @@ PEP_STATUS unicast_msg(
 enomem:
     status = PEP_OUT_OF_MEMORY;
 error:
+    free_identity(_me);
     free(payload);
     free_message(_message);
     free_identity(me);

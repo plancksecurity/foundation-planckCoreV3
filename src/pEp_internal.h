@@ -137,7 +137,7 @@ typedef struct _pEpSession {
 
     // state machines
     DeviceState_state sync_state;
-    char *sync_uuid;
+    char sync_uuid[37];
 
     // runtime config
 
