@@ -21,6 +21,10 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
         retrieve_next_sync_msg_t retrieve_next_sync_msg
     )
 {
+    unsigned char uuid[16];
+    uuid_generate_random(uuid);
+    uuid_unparse_upper(uuid, sync_uuid);
+
     session->sync_obj = obj;
     session->messageToSend = messageToSend;
     session->showHandshake = showHandshake;

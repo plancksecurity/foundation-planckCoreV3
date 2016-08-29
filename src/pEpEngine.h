@@ -89,6 +89,7 @@ typedef enum {
     PEP_COMMIT_FAILED                               = 0xff01,
     PEP_MESSAGE_CONSUMED                            = 0xff02,
 
+    PEP_RECORD_NOT_FOUND                            = -6,
     PEP_CANNOT_CREATE_TEMP_FILE                     = -5,
     PEP_ILLEGAL_VALUE                               = -4,
     PEP_BUFFER_TOO_SMALL                            = -3,

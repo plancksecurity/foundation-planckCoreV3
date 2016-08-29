@@ -70,14 +70,22 @@ PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src)
         if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp") == 0
                 && bl->size) {
             DeviceGroup_Protocol_t *msg = NULL;
-            uper_decode_complete(NULL, &asn_DEF_DeviceGroup_Protocol,
-                    (void **) &msg, bl->value, bl->size);
+            uper_decode_complete(NULL, &asn_DEF_DeviceGroup_Protocol, (void **)
+                    &msg, bl->value, bl->size);
             if (msg) {
                 found = true;
 
                 int32_t value = (int32_t) msg->header.sequence;
-                PEP_STATUS status = sequence_value(session, (char *)
-                        msg->header.me.user_id, &value);
+                char *user_id = strndup((char *) msg->header.me.user_id->buf,
+                        msg->header.me.user_id->size);
+                assert(user_id);
+                if (!user_id) {
+                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                    return PEP_OUT_OF_MEMORY;
+                }
+
+                PEP_STATUS status = sequence_value(session, (char *) user_id,
+                        &value);
 
                 if (status == PEP_STATUS_OK) {
                     status = session->inject_sync_msg(msg, session->sync_obj);
@@ -122,7 +130,7 @@ void free_DeviceGroup_Protocol_msg(DeviceGroup_Protocol_t *msg)
 
 PEP_STATUS unicast_msg(
         PEP_SESSION session,
-        Identity partner,
+        const Identity partner,
         DeviceState_state state,
         DeviceGroup_Protocol_t *msg
     )
@@ -152,7 +160,7 @@ PEP_STATUS unicast_msg(
     
     int32_t seq = 0;
 
-    status = sequence_value(session, session->sync_uuid, &seq);
+    status = sequence_value(session, sync_uuid, &seq);
     if (status != PEP_OWN_SEQUENCE && status != PEP_STATUS_OK)
         goto error;
 
@@ -163,7 +171,7 @@ PEP_STATUS unicast_msg(
         goto enomem;
 
     free(_me->user_id);
-    _me->user_id = strndup(session->sync_uuid, 37);
+    _me->user_id = strndup(sync_uuid, 36);
     assert(_me->user_id);
     if (!_me->user_id)
         goto enomem;
@@ -200,8 +208,6 @@ PEP_STATUS unicast_msg(
     payload = NULL;
     free_identity(me);
     me = NULL;
-    free_identity(partner);
-    partner = NULL;
 
     message *_encrypted = NULL;
     status = encrypt_message(session, _message, NULL, &_encrypted, PEP_enc_PEP, 0);
@@ -220,7 +226,6 @@ error:
     free(payload);
     free_message(_message);
     free_identity(me);
-    free_identity(partner);
     return status;
 }
 
@@ -242,9 +247,7 @@ PEP_STATUS multicast_self_msg(
         return status;
 
     for (identity_list *_i = own_identities; _i && _i->ident; _i = _i->next) {
-        pEp_identity *me = identity_dup(_i->ident);
-        if (!me)
-            goto enomem;
+        pEp_identity *me = _i->ident;
 
         // FIXME: no deep copy for multicast supported yet
         DeviceGroup_Protocol_t *_msg = malloc(sizeof(DeviceGroup_Protocol_t));

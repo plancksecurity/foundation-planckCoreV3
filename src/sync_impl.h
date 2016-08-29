@@ -19,7 +19,7 @@ void free_DeviceGroup_Protocol_msg(DeviceGroup_Protocol_t *msg);
 
 PEP_STATUS unicast_msg(
         PEP_SESSION session,
-        Identity partner,
+        const Identity partner,
         DeviceState_state state,
         DeviceGroup_Protocol_t *msg
     );

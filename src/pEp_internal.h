@@ -77,6 +77,8 @@
 
 #define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
 
+extern char sync_uuid[37];
+
 typedef struct _pEpSession {
     const char *version;
 #ifdef USE_GPG
@@ -137,7 +139,6 @@ typedef struct _pEpSession {
 
     // state machines
     DeviceState_state sync_state;
-    char sync_uuid[37];
 
     // runtime config
 

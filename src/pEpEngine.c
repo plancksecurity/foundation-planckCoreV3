@@ -6,6 +6,7 @@
 #include "sync_fsm.h"
 
 static int init_count = -1;
+char sync_uuid[37];
 
 static int user_version(void *_version, int count, char **text, char **name)
 {
@@ -132,6 +133,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 #define _DDL_USER_VERSION "3"
 
     if (in_first) {
+        memset(sync_uuid, 0, 37);
+
         int_result = sqlite3_exec(
             _session->db,
                 "create table if not exists version_info (\n"
@@ -385,7 +388,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                               "(select coalesce((select value + 1 from sequences "
                               "where name = ?1), 1 )), ?2) ; ";
         sql_sequence_value2 = "select value, own from sequences where name = ?1 ;";
-        sql_sequence_value3 = "update sequences set value = ?2 where name = ?1 ;";
+        sql_sequence_value3 = "update sequences set value = ?2, own = ?3 where name = ?1 ;";
         
         sql_set_revoked =     "insert or replace into revoked_keys ("
                               "    revoked_fpr, replacement_fpr, revocation_date) "
@@ -1727,6 +1730,9 @@ static PEP_STATUS _get_sequence_value(PEP_SESSION session, const char *name,
                 status = PEP_OWN_SEQUENCE;
             break;
         }
+        case SQLITE_DONE:
+            status = PEP_RECORD_NOT_FOUND;
+            break;
         default:
             status = PEP_UNKNOWN_ERROR;
     }
@@ -1755,7 +1761,7 @@ static PEP_STATUS _increment_sequence_value(PEP_SESSION session,
 }
 
 static PEP_STATUS _set_sequence_value(PEP_SESSION session,
-        const char *name, int32_t value)
+        const char *name, int32_t value, int own)
 {
     assert(session && name && value > 0);
     if (!(session && name && value > 0))
@@ -1764,6 +1770,7 @@ static PEP_STATUS _set_sequence_value(PEP_SESSION session,
     sqlite3_reset(session->sequence_value3);
     sqlite3_bind_text(session->sequence_value3, 1, name, -1, SQLITE_STATIC);
     sqlite3_bind_int(session->sequence_value3, 2, value);
+    sqlite3_bind_int(session->sequence_value3, 3, own);
     int result = sqlite3_step(session->sequence_value3);
     assert(result == SQLITE_DONE);
     sqlite3_reset(session->sequence_value3);
@@ -1794,18 +1801,22 @@ DYNAMIC_API PEP_STATUS sequence_value(
         uuid_unparse_upper(uuid, name);
         own = 1;
     }
+    else {
+        if (name == sync_uuid || strcmp(name, sync_uuid) == 0)
+            own = 1;
+    }
 
     if (*value) {
         int32_t old_value = 0;
         status = _get_sequence_value(session, name, &old_value);
-        if (status != PEP_STATUS_OK)
+        if (status != PEP_STATUS_OK && status != PEP_RECORD_NOT_FOUND)
             return status;
 
         if (old_value >= *value) {
             return PEP_SEQUENCE_VIOLATED;
         }
         else {
-            status = _set_sequence_value(session, name, *value);
+            status = _set_sequence_value(session, name, *value, own);
             return status;
         }
     }
