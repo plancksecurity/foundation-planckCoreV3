@@ -245,7 +245,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 NULL,
                 NULL
             );
-            assert(int_result == SQLITE_OK);
         }
 
         if (version < 2) {
@@ -259,7 +258,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 NULL,
                 NULL
             );
-            assert(int_result == SQLITE_OK);
         }
 
         if (version < 3) {
@@ -271,7 +269,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 NULL,
                 NULL
             );
-            assert(int_result == SQLITE_OK);
         }
 
         if (version < atoi(_DDL_USER_VERSION)) {
