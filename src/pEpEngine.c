@@ -52,6 +52,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     // Sequence
     static const char *sql_sequence_value1;
     static const char *sql_sequence_value2;
+    static const char *sql_sequence_value3;
 
     // Revocation tracking
     static const char *sql_set_revoked;
@@ -128,14 +129,14 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     sqlite3_busy_timeout(_session->system_db, 1000);
 
 // increment this when patching DDL
-#define _DDL_USER_VERSION "2"
+#define _DDL_USER_VERSION "3"
 
     if (in_first) {
         int_result = sqlite3_exec(
             _session->db,
                 "create table if not exists version_info (\n"
                 "   id integer primary key,\n"
-                "   timestamp integer default (datetime('now')) ,\n"
+                "   timestamp integer default (datetime('now')),\n"
                 "   version text,\n"
                 "   comment text\n"
                 ");\n",
@@ -143,24 +144,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 NULL,
                 NULL
         );
-        if (int_result == SQLITE_OK) {
-            int_result = sqlite3_exec(
-                _session->db,
-                "pragma user_version = "_DDL_USER_VERSION";\n"
-                "insert or replace into version_info (id, version)"
-                    "values (1, '" PEP_ENGINE_VERSION "');",
-                NULL,
-                NULL,
-                NULL
-            );
-            assert(int_result == SQLITE_OK);
-        }
-
         int_result = sqlite3_exec(
             _session->db,
                 "PRAGMA application_id = 0x23423423;\n"
                 "create table if not exists log (\n"
-                "   timestamp integer default (datetime('now')) ,\n"
+                "   timestamp integer default (datetime('now')),\n"
                 "   title text not null,\n"
                 "   entity text not null,\n"
                 "   description text,\n"
@@ -176,7 +164,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "   created integer,\n"
                 "   expires integer,\n"
                 "   comment text,\n"
-                "   flags integer default (0)\n"
+                "   flags integer default 0\n"
                 ");\n"
                 "create index if not exists pgp_keypair_expires on pgp_keypair (\n"
                 "   expires\n"
@@ -200,7 +188,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "       references pgp_keypair (fpr)\n"
                 "       on delete set null,\n"
                 "   comment text,\n"
-                "   flags integer default (0),"
+                "   flags integer default 0,"
                 "   primary key (address, user_id)\n"
                 ");\n"
                 "create table if not exists trust (\n"
@@ -221,7 +209,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 // sequences
                 "create table if not exists sequences(\n"
                 "   name text primary key,\n"
-                "   value integer default 0\n"
+                "   value integer default 0,\n"
+                "   own integer default 0\n"
                 ");\n"
                 "create table if not exists revoked_keys (\n"
                 "   revoked_fpr text primary key,\n"
@@ -251,7 +240,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             int_result = sqlite3_exec(
                 _session->db,
                 "alter table identity\n"
-                "   add column flags integer default (0);\n",
+                "   add column flags integer default 0;\n",
                 NULL,
                 NULL,
                 NULL
@@ -263,7 +252,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             int_result = sqlite3_exec(
                 _session->db,
                 "alter table pgp_keypair\n"
-                "   add column flags integer default (0);\n"
+                "   add column flags integer default 0;\n"
                 "alter table person\n"
                 "   add column device_group text;\n",
                 NULL,
@@ -273,7 +262,32 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             assert(int_result == SQLITE_OK);
         }
 
+        if (version < 3) {
+            int_result = sqlite3_exec(
+                _session->db,
+                "alter table sequences\n"
+                "   add column own integer default 0;\n",
+                NULL,
+                NULL,
+                NULL
+            );
+            assert(int_result == SQLITE_OK);
+        }
+
         if (version < atoi(_DDL_USER_VERSION)) {
+            int_result = sqlite3_exec(
+                _session->db,
+                "pragma user_version = "_DDL_USER_VERSION";\n"
+                "insert or replace into version_info (id, version)"
+                    "values (1, '" PEP_ENGINE_VERSION "');",
+                NULL,
+                NULL,
+                NULL
+            );
+            assert(int_result == SQLITE_OK);
+        }
+
+        if (version <= atoi(_DDL_USER_VERSION)) {
             int_result = sqlite3_exec(
                 _session->db,
                 "pragma user_version = "_DDL_USER_VERSION";\n"
@@ -374,6 +388,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                               "(select coalesce((select value + 1 from sequences "
                               "where name = ?1), 1 ))) ; ";
         sql_sequence_value2 = "select value from sequences where name = ?1 ;";
+        sql_sequence_value3 = "update sequences set value = ?1 where name = ?2 ;";
         
         sql_set_revoked =     "insert or replace into revoked_keys ("
                               "    revoked_fpr, replacement_fpr, revocation_date) "
@@ -489,6 +504,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_sequence_value3,
+            (int)strlen(sql_sequence_value3), &_session->sequence_value3,
+            NULL);
+    assert(int_result == SQLITE_OK);
+
     // Revocation tracking
     
     int_result = sqlite3_prepare_v2(_session->db, sql_set_revoked,
@@ -600,6 +620,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->sequence_value1);
             if (session->sequence_value2)
                 sqlite3_finalize(session->sequence_value2);
+            if (session->sequence_value3)
+                sqlite3_finalize(session->sequence_value3);
             if (session->set_revoked)
                 sqlite3_finalize(session->set_revoked);
             if (session->get_revoked)
@@ -1684,49 +1706,79 @@ the_end:
     return status;
 }
 
+static PEP_STATUS _get_sequence_value(PEP_SESSION session, const char *name,
+        int32_t *value)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    sqlite3_reset(session->sequence_value2);
+    sqlite3_bind_text(session->sequence_value2, 1, name, -1,
+            SQLITE_STATIC);
+    int result = sqlite3_step(session->sequence_value2);
+    switch (result) {
+        case SQLITE_ROW: {
+            int32_t _value = (int32_t)
+                    sqlite3_column_int64(session->sequence_value2, 0);
+            *value = _value;
+            break;
+        }
+        default:
+            status = PEP_UNKNOWN_ERROR;
+    }
+    sqlite3_reset(session->sequence_value2);
+
+    return status;
+}
+
+static PEP_STATUS _increment_sequence_value(PEP_SESSION session, const char *name)
+{
+    sqlite3_reset(session->sequence_value1);
+    sqlite3_bind_text(session->sequence_value1, 1, name, -1, SQLITE_STATIC);
+    int result = sqlite3_step(session->sequence_value1);
+    assert(result == SQLITE_DONE);
+    sqlite3_reset(session->sequence_value1);
+    if (result == SQLITE_DONE)
+        return PEP_STATUS_OK;
+    else
+        return PEP_CANNOT_INCREASE_SEQUENCE;
+}
+
 DYNAMIC_API PEP_STATUS sequence_value(
         PEP_SESSION session,
-        const char *name,
+        char *name,
         int32_t *value
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    int result;
 
     assert(session);
-    assert(name);
-    assert(value);
+    assert(name && value && *value >= 0);
 
-    if (!(session && name && value))
+    if (!(session && name && value && *value >= 0))
         return PEP_ILLEGAL_VALUE;
 
-    *value = 0;
+    if (!name[0]) {
+        unsigned char uuid[16];
+        uuid_generate_random(uuid);
+        uuid_unparse_upper(uuid, name);
+    }
 
-    sqlite3_reset(session->sequence_value1);
-    sqlite3_bind_text(session->sequence_value1, 1, name, -1, SQLITE_STATIC);
-    result = sqlite3_step(session->sequence_value1);
-    assert(result == SQLITE_DONE);
-    sqlite3_reset(session->sequence_value1);
-    if (result != SQLITE_DONE) {
-        status = PEP_UNKNOWN_ERROR;
+    if (*value) {
+        int32_t old_value = 0;
+        status = _get_sequence_value(session, name, &old_value);
+        if (status != PEP_STATUS_OK)
+            return status;
+
+        if (old_value >= *value)
+            return PEP_SEQUENCE_VIOLATED;
+        else
+            return PEP_STATUS_OK;
     }
-    else {
-        sqlite3_reset(session->sequence_value2);
-        sqlite3_bind_text(session->sequence_value2, 1, name, -1,
-                SQLITE_STATIC);
-        result = sqlite3_step(session->sequence_value2);
-        switch (result) {
-            case SQLITE_ROW: {
-                int32_t _value = (int32_t)
-                        sqlite3_column_int64(session->sequence_value2, 0);
-                *value = _value;
-                break;
-            }
-            default:
-                status = PEP_UNKNOWN_ERROR;
-        }
-        sqlite3_reset(session->sequence_value2);
-    }
+
+    assert(*value == 0);
+    status = _increment_sequence_value(session, name);
+    if (status == PEP_STATUS_OK)
+        status = _get_sequence_value(session, name, value);
     return status;
 }
 

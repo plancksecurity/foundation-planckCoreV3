@@ -30,6 +30,8 @@ PEP_STATUS multicast_self_msg(
         DeviceGroup_Protocol_t *msg
     );
 
+bool is_double(DeviceGroup_Protocol_t *msg);
+
 #ifdef __cplusplus
 }
 #endif

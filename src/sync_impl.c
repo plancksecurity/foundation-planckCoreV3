@@ -138,7 +138,7 @@ PEP_STATUS unicast_msg(
     msg->header.version.major = SYNC_VERSION_MAJOR;
     msg->header.version.minor = SYNC_VERSION_MINOR;
 
-    int32_t seq;
+    int32_t seq = 0;
     status = sequence_value(session, "DeviceGroup", &seq);
     if (status != PEP_STATUS_OK)
         goto error;

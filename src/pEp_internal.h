@@ -120,6 +120,7 @@ typedef struct _pEpSession {
     // sequence value
     sqlite3_stmt *sequence_value1;
     sqlite3_stmt *sequence_value2;
+    sqlite3_stmt *sequence_value3;
 
     // sequence value
     sqlite3_stmt *set_revoked;
