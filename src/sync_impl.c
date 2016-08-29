@@ -65,7 +65,8 @@ PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src)
         return PEP_ILLEGAL_VALUE;
 
     bool found = false;
-
+    
+    bloblist_t *last = NULL;
     for (bloblist_t *bl = src->attachments; bl && bl->value; bl = bl->next) {
         if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp") == 0
                 && bl->size) {
@@ -94,6 +95,18 @@ PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src)
                         return status;
                 }
             }
+
+            bloblist_t *blob = bl;
+            if (last)
+                last->next = bl->next;
+            else
+                src->attachments = bl->next;
+
+            blob->next = NULL;
+            free_bloblist(blob);
+        }
+        else {
+            last = bl;
         }
     }
 

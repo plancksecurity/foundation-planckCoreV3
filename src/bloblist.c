@@ -165,3 +165,4 @@ DYNAMIC_API int bloblist_length(const bloblist_t *bloblist)
 
     return len;
 }
+

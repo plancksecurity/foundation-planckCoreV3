@@ -297,6 +297,14 @@ static PEP_STATUS copy_fields(message *dst, const message *src)
             return PEP_OUT_OF_MEMORY;
     }
 
+    free_stringpair_list(dst->opt_fields);
+    dst->opt_fields = NULL;
+    if (src->opt_fields) {
+        dst->opt_fields = stringpair_list_dup(src->opt_fields);
+        if (dst->opt_fields == NULL)
+            return PEP_OUT_OF_MEMORY;
+    }
+
     return PEP_STATUS_OK;
 }
 
