@@ -388,7 +388,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                               "(select coalesce((select value + 1 from sequences "
                               "where name = ?1), 1 )), ?2) ; ";
         sql_sequence_value2 = "select value, own from sequences where name = ?1 ;";
-        sql_sequence_value3 = "update sequences set value = ?1 where name = ?2 ;";
+        sql_sequence_value3 = "update sequences set value = ?2 where name = ?1 ;";
         
         sql_set_revoked =     "insert or replace into revoked_keys ("
                               "    revoked_fpr, replacement_fpr, revocation_date) "
@@ -1757,6 +1757,25 @@ static PEP_STATUS _increment_sequence_value(PEP_SESSION session,
         return PEP_CANNOT_INCREASE_SEQUENCE;
 }
 
+static PEP_STATUS _set_sequence_value(PEP_SESSION session,
+        const char *name, int32_t value)
+{
+    assert(session && name && value > 0);
+    if (!(session && name && value > 0))
+        return PEP_ILLEGAL_VALUE;
+
+    sqlite3_reset(session->sequence_value3);
+    sqlite3_bind_text(session->sequence_value3, 1, name, -1, SQLITE_STATIC);
+    sqlite3_bind_int(session->sequence_value3, 2, value);
+    int result = sqlite3_step(session->sequence_value3);
+    assert(result == SQLITE_DONE);
+    sqlite3_reset(session->sequence_value3);
+    if (result == SQLITE_DONE)
+        return PEP_STATUS_OK;
+    else
+        return PEP_CANNOT_SET_SEQUENCE_VALUE;
+}
+
 DYNAMIC_API PEP_STATUS sequence_value(
         PEP_SESSION session,
         char *name,
@@ -1785,10 +1804,13 @@ DYNAMIC_API PEP_STATUS sequence_value(
         if (status != PEP_STATUS_OK)
             return status;
 
-        if (old_value >= *value)
+        if (old_value >= *value) {
             return PEP_SEQUENCE_VIOLATED;
-        else
-            return PEP_STATUS_OK;
+        }
+        else {
+            status = _set_sequence_value(session, name, *value);
+            return status;
+        }
     }
 
     assert(*value == 0);

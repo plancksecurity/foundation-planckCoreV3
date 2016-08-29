@@ -77,7 +77,8 @@ typedef enum {
 
     PEP_SEQUENCE_VIOLATED                           = 0x0970,
     PEP_CANNOT_INCREASE_SEQUENCE                    = 0x0971,
-    PEP_OWN_SEQUENCE                                = 0x0972,
+    PEP_CANNOT_SET_SEQUENCE_VALUE                   = 0x0972,
+    PEP_OWN_SEQUENCE                                = 0x097f,
 
     PEP_SYNC_STATEMACHINE_ERROR                     = 0x0980,
     PEP_STATEMACHINE_INVALID_STATE                  = 0x0982,
