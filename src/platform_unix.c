@@ -11,7 +11,9 @@
 #include "platform_unix.h"
 
 #define MAX_PATH 1024
+#ifndef LOCAL_DB_FILENAME
 #define LOCAL_DB_FILENAME ".pEp_management.db"
+#endif
 #define SYSTEM_DB_FILENAME "system.db"
 
 #ifndef bool
