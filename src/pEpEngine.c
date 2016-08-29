@@ -383,11 +383,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                             "       and pgp_keypair_fpr = identity.main_key_id"
                             "   where identity.user_id = '" PEP_OWN_USERID "';";
         
-        sql_sequence_value1 = "insert or replace into sequences (name, value) "
+        sql_sequence_value1 = "insert or replace into sequences (name, value, own) "
                               "values (?1, "
                               "(select coalesce((select value + 1 from sequences "
-                              "where name = ?1), 1 ))) ; ";
-        sql_sequence_value2 = "select value from sequences where name = ?1 ;";
+                              "where name = ?1), 1 )), ?2) ; ";
+        sql_sequence_value2 = "select value, own from sequences where name = ?1 ;";
         sql_sequence_value3 = "update sequences set value = ?1 where name = ?2 ;";
         
         sql_set_revoked =     "insert or replace into revoked_keys ("
@@ -1709,6 +1709,10 @@ the_end:
 static PEP_STATUS _get_sequence_value(PEP_SESSION session, const char *name,
         int32_t *value)
 {
+    assert(session && name && value);
+    if (!(session && name && value))
+        return PEP_ILLEGAL_VALUE;
+
     PEP_STATUS status = PEP_STATUS_OK;
 
     sqlite3_reset(session->sequence_value2);
@@ -1718,8 +1722,12 @@ static PEP_STATUS _get_sequence_value(PEP_SESSION session, const char *name,
     switch (result) {
         case SQLITE_ROW: {
             int32_t _value = (int32_t)
-                    sqlite3_column_int64(session->sequence_value2, 0);
+                    sqlite3_column_int(session->sequence_value2, 0);
+            int _own = (int)
+                    sqlite3_column_int(session->sequence_value2, 1);
             *value = _value;
+            if (_own)
+                status = PEP_OWN_SEQUENCE;
             break;
         }
         default:
@@ -1730,10 +1738,16 @@ static PEP_STATUS _get_sequence_value(PEP_SESSION session, const char *name,
     return status;
 }
 
-static PEP_STATUS _increment_sequence_value(PEP_SESSION session, const char *name)
+static PEP_STATUS _increment_sequence_value(PEP_SESSION session,
+        const char *name, int own)
 {
+    assert(session && name);
+    if (!(session && name))
+        return PEP_ILLEGAL_VALUE;
+
     sqlite3_reset(session->sequence_value1);
     sqlite3_bind_text(session->sequence_value1, 1, name, -1, SQLITE_STATIC);
+    sqlite3_bind_int(session->sequence_value1, 2, own);
     int result = sqlite3_step(session->sequence_value1);
     assert(result == SQLITE_DONE);
     sqlite3_reset(session->sequence_value1);
@@ -1757,10 +1771,12 @@ DYNAMIC_API PEP_STATUS sequence_value(
     if (!(session && name && value && *value >= 0))
         return PEP_ILLEGAL_VALUE;
 
+    int own = 0;
     if (!name[0]) {
         unsigned char uuid[16];
         uuid_generate_random(uuid);
         uuid_unparse_upper(uuid, name);
+        own = 1;
     }
 
     if (*value) {
@@ -1776,9 +1792,13 @@ DYNAMIC_API PEP_STATUS sequence_value(
     }
 
     assert(*value == 0);
-    status = _increment_sequence_value(session, name);
-    if (status == PEP_STATUS_OK)
+    status = _increment_sequence_value(session, name, own);
+    if (status == PEP_STATUS_OK) {
         status = _get_sequence_value(session, name, value);
+        assert(*value < INT32_MAX);
+        if (*value == INT32_MAX)
+            return PEP_CANNOT_INCREASE_SEQUENCE;
+    }
     return status;
 }
 
