@@ -44,8 +44,15 @@ extern char* SystemDB;
 #if !defined(BSD) && !defined(__APPLE__)
 size_t strlcpy(char* dst, const	char* src, size_t size);
 size_t strlcat(char* dst, const	char* src, size_t size);
+
+// N.B. This is ifdef'd out because NDK users sometimes have trouble finding regex functions in
+//      the library in spite of the inclusion of regex.h - this is a FIXME, but since iOS is
+//      *currently* the only netpgp user, we will ifdef this so that we don't block Android.
+#ifdef USE_NETPGP
 int regnexec(const regex_t* preg, const char* string,
              size_t len, size_t nmatch, regmatch_t pmatch[], int eflags);
+#endif
+
 #endif
 
 #ifdef __cplusplus

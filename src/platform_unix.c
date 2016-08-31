@@ -124,11 +124,13 @@ size_t strlcat(char* dst, const	char* src, size_t size) {
     return retval;
 }
 
+#ifdef USE_NETPGP
 // FIXME: This may cause problems - this is a quick compatibility fix for netpgp code
 int regnexec(const regex_t* preg, const char* string,
              size_t len, size_t nmatch, regmatch_t pmatch[], int eflags) {
     return regexec(preg, string, nmatch, pmatch, eflags);
 }
+#endif
 
 #endif
 
