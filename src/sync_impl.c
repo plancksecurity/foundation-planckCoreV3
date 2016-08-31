@@ -251,7 +251,18 @@ PEP_STATUS unicast_msg(
                 status = PEP_SYNC_NO_TRUST;
                 goto error;
             }
-            // FIXME: actually add secret keys here
+            
+            IdentityList_t *list = &msg->payload.choice.groupKeys.ownIdentities;
+            for (int i=0; i<list->list.count; i++) {
+                Identity_t *ident = list->list.array[i];
+                bloblist_t *bl = bloblist_add(_message->attachments,
+                        (char *) ident->fpr.buf, ident->fpr.size,
+                        "application/pgp-keys", "");
+                if (!bl)
+                    goto enomem;
+                if (!_message->attachments)
+                    _message->attachments = bl;
+            }
         }
 
         message *_encrypted = NULL;
