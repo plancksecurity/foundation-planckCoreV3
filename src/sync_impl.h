@@ -21,13 +21,15 @@ PEP_STATUS unicast_msg(
         PEP_SESSION session,
         const Identity partner,
         DeviceState_state state,
-        DeviceGroup_Protocol_t *msg
+        DeviceGroup_Protocol_t *msg,
+        bool encrypted
     );
 
 PEP_STATUS multicast_self_msg(
         PEP_SESSION session,
         DeviceState_state state,
-        DeviceGroup_Protocol_t *msg
+        DeviceGroup_Protocol_t *msg,
+        bool encrypted
     );
 
 bool is_double(DeviceGroup_Protocol_t *msg);

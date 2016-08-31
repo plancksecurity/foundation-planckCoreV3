@@ -10,6 +10,7 @@ protocol DeviceGroup {
     // all messages have a timestamp, time out and are removed after timeout
 
     broadcast sendBeacon;
+    unencrypted sendBeacon;
 
     fsm DeviceState filename=sync {
         condition storedGroupKeys();
@@ -25,7 +26,7 @@ protocol DeviceGroup {
 
         state Sole {
             on KeyGen // injected by generate_keypair()
-                do sendBeacon broadcast=1;
+                do sendBeacon;
             on CannotDecrypt
                 do sendBeacon;  // cry, baby
             on Beacon(Identity partner) // this event will not happen for already

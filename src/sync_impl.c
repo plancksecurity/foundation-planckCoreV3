@@ -145,7 +145,8 @@ PEP_STATUS unicast_msg(
         PEP_SESSION session,
         const Identity partner,
         DeviceState_state state,
-        DeviceGroup_Protocol_t *msg
+        DeviceGroup_Protocol_t *msg,
+        bool encrypted
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -222,14 +223,16 @@ PEP_STATUS unicast_msg(
     free_identity(me);
     me = NULL;
 
-    message *_encrypted = NULL;
-    status = encrypt_message(session, _message, NULL, &_encrypted, PEP_enc_PEP, 0);
-    if (status != PEP_STATUS_OK)
-        goto error;
-    free_message(_message);
-    _message = NULL;
+    if (encrypted) {
+        message *_encrypted = NULL;
+        status = encrypt_message(session, _message, NULL, &_encrypted, PEP_enc_PEP, 0);
+        if (status != PEP_STATUS_OK)
+            goto error;
+        free_message(_message);
+        _message = _encrypted;
+    }
 
-    status = session->messageToSend(session->sync_obj, _encrypted);
+    status = session->messageToSend(session->sync_obj, _message);
     return status;
 
 enomem:
@@ -245,7 +248,8 @@ error:
 PEP_STATUS multicast_self_msg(
         PEP_SESSION session,
         DeviceState_state state,
-        DeviceGroup_Protocol_t *msg
+        DeviceGroup_Protocol_t *msg,
+        bool encrypted
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -268,7 +272,7 @@ PEP_STATUS multicast_self_msg(
         if (_msg == NULL)
             goto enomem;
         memcpy(_msg, msg, sizeof(DeviceGroup_Protocol_t));
-        status = unicast_msg(session, me, state, _msg);
+        status = unicast_msg(session, me, state, _msg, encrypted);
         free_DeviceGroup_Protocol_msg(_msg);
     }
 

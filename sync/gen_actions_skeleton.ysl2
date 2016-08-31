@@ -182,10 +182,16 @@ tstylesheet {
 
         ||
         choose {
-            when "count(/protocol/broadcast/*[name()=$action/@name]) = 0"
-                |> status = unicast_msg(session, partner, state, msg);
+            when "count(/protocol/unencrypted/*[name()=$action/@name]) = 0"
+                |> bool encrypted = false;
             otherwise
-                |> status = multicast_self_msg(session, state, msg);
+                |> bool encrypted = true;
+        }
+        choose {
+            when "count(/protocol/broadcast/*[name()=$action/@name]) = 0"
+                |> status = unicast_msg(session, partner, state, msg, encrypted);
+            otherwise
+                |> status = multicast_self_msg(session, state, msg, encrypted);
         }
         ||
             if (status != PEP_STATUS_OK)

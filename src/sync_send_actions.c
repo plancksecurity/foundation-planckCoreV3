@@ -41,7 +41,8 @@ PEP_STATUS sendBeacon(
     if (!msg)
         goto enomem;
 
-    status = multicast_self_msg(session, state, msg);
+    bool encrypted = true;
+    status = multicast_self_msg(session, state, msg, encrypted);
     if (status != PEP_STATUS_OK)
         goto error;
 
@@ -85,7 +86,8 @@ PEP_STATUS sendHandshakeRequest(
     if (!msg)
         goto enomem;
 
-    status = unicast_msg(session, partner, state, msg);
+    bool encrypted = false;
+    status = unicast_msg(session, partner, state, msg, encrypted);
     if (status != PEP_STATUS_OK)
         goto error;
 
@@ -136,7 +138,8 @@ PEP_STATUS sendGroupKeys(
     if (IdentityList_from_identity_list(kl, &msg->payload.choice.groupKeys.ownIdentities) == NULL)
         goto enomem;
 
-    status = unicast_msg(session, partner, state, msg);
+    bool encrypted = false;
+    status = unicast_msg(session, partner, state, msg, encrypted);
     if (status != PEP_STATUS_OK)
         goto error;
 
