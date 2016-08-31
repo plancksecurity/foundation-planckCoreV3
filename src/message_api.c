@@ -1401,7 +1401,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             *rating = PEP_rating_unencrypted;
             if (imported_keys)
                 remove_attached_keys(src);
-            status = receive_DeviceState_msg(session, msg, false);
+            status = receive_DeviceState_msg(session, src, false);
             if (status == PEP_MESSAGE_CONSUMED) {
                 free_message(msg);
                 msg = NULL;
