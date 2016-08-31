@@ -1152,7 +1152,8 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
 }
 
 PEP_STATUS pgp_export_keydata(
-    PEP_SESSION session, const char *fpr, char **key_data, size_t *size
+        PEP_SESSION session, const char *fpr, char **key_data, size_t *size,
+        bool secret
     )
 {
     gpgme_error_t gpgme_error;
@@ -1182,8 +1183,12 @@ PEP_STATUS pgp_export_keydata(
         return PEP_UNKNOWN_ERROR;
     }
 
-    gpgme_error = gpg.gpgme_op_export(session->ctx, fpr,
-        GPGME_EXPORT_MODE_MINIMAL, dh);
+    if (secret)
+        gpgme_error = gpg.gpgme_op_export(session->ctx, fpr,
+            GPGME_EXPORT_MODE_EXTERN, dh);
+    else
+        gpgme_error = gpg.gpgme_op_export(session->ctx, fpr,
+            GPGME_EXPORT_MODE_MINIMAL, dh);
     gpgme_error = _GPGERR(gpgme_error);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:

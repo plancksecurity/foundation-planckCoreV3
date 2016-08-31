@@ -1289,7 +1289,27 @@ DYNAMIC_API PEP_STATUS export_key(
         return PEP_ILLEGAL_VALUE;
 
     return session->cryptotech[PEP_crypt_OpenPGP].export_key(session, fpr,
-            key_data, size);
+            key_data, size, false);
+}
+
+DYNAMIC_API PEP_STATUS export_secret_key(
+        PEP_SESSION session, const char *fpr, char **key_data, size_t *size
+    )
+{
+    assert(session);
+    assert(fpr);
+    assert(key_data);
+    assert(size);
+
+    if (!(session && fpr && key_data && size))
+        return PEP_ILLEGAL_VALUE;
+
+    // don't accept key IDs but full fingerprints only
+    if (strlen(fpr) < 16)
+        return PEP_ILLEGAL_VALUE;
+
+    return session->cryptotech[PEP_crypt_OpenPGP].export_key(session, fpr,
+            key_data, size, true);
 }
 
 DYNAMIC_API PEP_STATUS find_keys(

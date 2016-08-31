@@ -30,7 +30,8 @@ typedef PEP_STATUS (*encrypt_and_sign_t)(
 typedef PEP_STATUS (*delete_keypair_t)(PEP_SESSION session, const char *fpr);
 
 typedef PEP_STATUS (*export_key_t)(
-        PEP_SESSION session, const char *fpr, char **key_data, size_t *size
+        PEP_SESSION session, const char *fpr, char **key_data, size_t *size,
+        bool secret
     );
 
 typedef PEP_STATUS (*find_keys_t)(

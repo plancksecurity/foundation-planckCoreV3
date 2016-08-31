@@ -42,6 +42,7 @@ typedef enum {
     PEP_KEY_NOT_FOUND                               = 0x0201,
     PEP_KEY_HAS_AMBIG_NAME                          = 0x0202,
     PEP_GET_KEY_FAILED                              = 0x0203,
+    PEP_CANNOT_EXPORT_KEY                           = 0x0204,
     
     PEP_CANNOT_FIND_IDENTITY                        = 0x0301,
     PEP_CANNOT_SET_PERSON                           = 0x0381,
@@ -637,6 +638,30 @@ DYNAMIC_API PEP_STATUS import_key(
 //      the caller is responsible to free() it (on Windoze use pEp_free())
 
 DYNAMIC_API PEP_STATUS export_key(
+        PEP_SESSION session, const char *fpr, char **key_data, size_t *size
+    );
+
+
+// export_secret_key() - export secret key ascii armored
+//
+//  parameters:
+//      session (in)            session handle
+//      fpr (in)                fingerprint of key, at least 16 hex digits
+//      key_data (out)          ASCII armored OpenPGP secret key
+//      size (out)              amount of data to handle
+//
+//  return value:
+//      PEP_STATUS_OK = 0       key was successfully exported
+//      PEP_OUT_OF_MEMORY       out of memory
+//      PEP_KEY_NOT_FOUND       key not found
+//      PEP_CANNOT_EXPORT_KEY   cannot export secret key (i.e. it's on an HKS)
+//
+//  caveat:
+//      the key_data goes to the ownership of the caller
+//      the caller is responsible to free() it (on Windoze use pEp_free())
+//      beware of leaking secret key data - overwrite it in memory after use
+
+DYNAMIC_API PEP_STATUS export_secrect_key(
         PEP_SESSION session, const char *fpr, char **key_data, size_t *size
     );
 
