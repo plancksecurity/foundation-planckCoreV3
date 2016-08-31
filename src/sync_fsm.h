@@ -2,8 +2,7 @@
 
 // state machine for DeviceState
 
-#include "pEpEngine.h"
-#include "message.h"
+#include "message_api.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -80,7 +79,7 @@ PEP_STATUS sendGroupKeys(PEP_SESSION session, DeviceState_state state, Identity 
 
 // message receiver
 
-PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *msg);
+PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *msg, PEP_rating rating);
 
 // state machine
 

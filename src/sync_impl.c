@@ -58,7 +58,7 @@ PEP_STATUS receive_sync_msg(
     return fsm_DeviceState_inject(session, event, partner, extra);
 }
 
-PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src)
+PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src, PEP_rating rating)
 {
     assert(session && src);
     if (!(session && src))
@@ -74,6 +74,23 @@ PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src)
             uper_decode_complete(NULL, &asn_DEF_DeviceGroup_Protocol, (void **)
                     &msg, bl->value, bl->size);
             if (msg) {
+                switch (msg->payload.present) {
+                    // HandshakeRequest needs encryption
+                    case DeviceGroup_Protocol__payload_PR_handshakeRequest:
+                        if (rating < PEP_rating_reliable) {
+                            ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                            goto skip;
+                        }
+                    // accepting GroupKeys needs trust
+                    case DeviceGroup_Protocol__payload_PR_groupKeys:
+                        if (rating < PEP_rating_trusted) {
+                            ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                            goto skip;
+                        }
+                    default:
+                        break;
+                }
+
                 found = true;
 
                 int32_t value = (int32_t) msg->header.sequence;
@@ -106,6 +123,7 @@ PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src)
             free_bloblist(blob);
         }
         else {
+skip:
             last = bl;
         }
     }

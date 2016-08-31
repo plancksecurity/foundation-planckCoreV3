@@ -1401,6 +1401,14 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             *rating = PEP_rating_unencrypted;
             if (imported_keys)
                 remove_attached_keys(src);
+            status = receive_DeviceState_msg(session, msg, false);
+            if (status == PEP_MESSAGE_CONSUMED) {
+                free_message(msg);
+                msg = NULL;
+            }
+            else if (status != PEP_STATUS_OK){
+                return status;
+            }
             return PEP_UNENCRYPTED;
 
         case PEP_enc_PGP_MIME:
@@ -1663,15 +1671,16 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         decorate_message(msg, *rating, _keylist);
         if (imported_keys)
             remove_attached_keys(msg);
-    }
-
-    status = receive_DeviceState_msg(session, msg);
-    if (status == PEP_MESSAGE_CONSUMED) {
-        free_message(msg);
-        msg = NULL;
-    }
-    else if (status != PEP_STATUS_OK){
-        goto pep_error;
+        if (*rating >= PEP_rating_reliable) {
+            status = receive_DeviceState_msg(session, msg, true);
+            if (status == PEP_MESSAGE_CONSUMED) {
+                free_message(msg);
+                msg = NULL;
+            }
+            else if (status != PEP_STATUS_OK){
+                goto pep_error;
+            }
+        }
     }
 
     *dst = msg;

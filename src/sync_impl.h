@@ -12,7 +12,8 @@ PEP_STATUS receive_sync_msg(
         DeviceGroup_Protocol_t *msg
     );
 
-PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src);
+PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src,
+        PEP_rating rating);
 
 DeviceGroup_Protocol_t *new_DeviceGroup_Protocol_msg(DeviceGroup_Protocol__payload_PR type);
 void free_DeviceGroup_Protocol_msg(DeviceGroup_Protocol_t *msg);

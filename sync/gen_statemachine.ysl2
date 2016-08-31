@@ -28,8 +28,7 @@ tstylesheet {
 
         // state machine for «@name»
 
-        #include "pEpEngine.h"
-        #include "message.h"
+        #include "message_api.h"
         
         #ifdef __cplusplus
         extern "C" {
@@ -94,7 +93,7 @@ tstylesheet {
 
         // message receiver
         
-        PEP_STATUS receive_«@name»_msg(PEP_SESSION session, message *msg);
+        PEP_STATUS receive_«@name»_msg(PEP_SESSION session, message *msg, PEP_rating rating);
 
         // state machine
 
