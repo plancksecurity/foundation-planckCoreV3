@@ -251,6 +251,7 @@ PEP_STATUS unicast_msg(
                 status = PEP_SYNC_NO_TRUST;
                 goto error;
             }
+            // FIXME: actually add secret keys here
         }
 
         message *_encrypted = NULL;
