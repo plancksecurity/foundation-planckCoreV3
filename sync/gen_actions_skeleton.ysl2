@@ -183,9 +183,9 @@ tstylesheet {
         ||
         choose {
             when "count(/protocol/unencrypted/*[name()=$action/@name]) = 0"
-                |> bool encrypted = false;
-            otherwise
                 |> bool encrypted = true;
+            otherwise
+                |> bool encrypted = false;
         }
         choose {
             when "count(/protocol/broadcast/*[name()=$action/@name]) = 0"
