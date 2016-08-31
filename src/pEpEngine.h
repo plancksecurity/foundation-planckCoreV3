@@ -10,6 +10,7 @@ extern "C" {
 
 #include "dynamic_api.h"
 #include "stringlist.h"
+#include "stringpair.h"    
 #include "timestamp.h"
 
 #define PEP_VERSION "1.0" // protocol version
@@ -644,7 +645,6 @@ DYNAMIC_API PEP_STATUS find_keys(
         PEP_SESSION session, const char *pattern, stringlist_t **keylist
     );
 
-
 // send_key() - send key(s) to keyserver
 //
 //  parameters:
@@ -883,6 +883,15 @@ DYNAMIC_API PEP_STATUS get_revoked(
         uint64_t *revocation_date
     );
 
+
+// get_engine_version() - returns the current version of pEpEngine (this is different
+//                        from the pEp protocol version!)
+//
+//  parameters: none
+//
+//  return_value: const char* to the engine version string constant
+//
+DYNAMIC_API const char* get_engine_version();
 
 DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session);
 

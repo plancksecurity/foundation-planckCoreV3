@@ -25,9 +25,9 @@ int mkstemp(char *templ);
 #define strdup(A) _strdup((A))
 #endif
 #ifndef snprintf
-	#if _MSC_VER<1900 // Includes undefined case. This is a check for VS 2015, which throws an error.
-	#define snprintf(...) _snprintf(__VA_ARGS__)
-	#endif
+#if _MSC_VER<1900 // Includes undefined case. This is a check for VS 2015, which throws an error.
+#define snprintf(...) _snprintf(__VA_ARGS__)
+#endif
 #endif
 #ifndef strtok_r
 #define strtok_r(A, B, C) strtok_s((A), (B), (C))

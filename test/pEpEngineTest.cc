@@ -285,6 +285,8 @@ int main(int argc, char* argv[])
     assert(tcomm_type == PEP_ct_OpenPGP_unconfirmed);
     
     cout << "\ncalling release()\n";
+    cout << endl << "End of pEpEngineTest for engine version " << get_engine_version() << endl;
+
     release(session);
     return 0;
 }
