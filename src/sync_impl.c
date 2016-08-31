@@ -242,6 +242,17 @@ PEP_STATUS unicast_msg(
     me = NULL;
 
     if (encrypted) {
+        if (msg->payload.present == DeviceGroup_Protocol__payload_PR_groupKeys) {
+            PEP_rating rating = PEP_rating_undefined;
+            status = outgoing_message_rating(session, _message, &rating);
+            if (status != PEP_STATUS_OK)
+                goto error;
+            if (rating < PEP_rating_trusted) {
+                status = PEP_SYNC_NO_TRUST;
+                goto error;
+            }
+        }
+
         message *_encrypted = NULL;
         status = encrypt_message(session, _message, NULL, &_encrypted, PEP_enc_PEP, 0);
         if (status != PEP_STATUS_OK)
