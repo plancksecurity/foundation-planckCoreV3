@@ -64,6 +64,10 @@ PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src, PEP_rating
     if (!(session && src))
         return PEP_ILLEGAL_VALUE;
 
+    assert(session->inject_sync_msg);
+    if (!session->inject_sync_msg)
+        return PEP_SYNC_NO_INJECT_CALLBACK;
+
     bool found = false;
     
     bloblist_t *last = NULL;
