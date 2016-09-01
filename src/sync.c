@@ -3,6 +3,7 @@
 #include <memory.h>
 #include <assert.h>
 
+#include "asn1_helper.h"
 #include "../asn.1/DeviceGroup-Protocol.h"
 
 // receive_sync_msg is defined in the sync_actions
@@ -108,5 +109,47 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
     log_event(session, "sync_protocol thread shutdown", "pEp sync protocol", NULL, NULL);
 
     return PEP_STATUS_OK;
+}
+
+DYNAMIC_API PEP_STATUS decode_sync_msg(
+        const char *data,
+        size_t size,
+        char **text
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(data && text);
+    if (!(data && text))
+        return PEP_ILLEGAL_VALUE;
+
+    *text = NULL;
+
+    DeviceGroup_Protocol_t *msg = NULL;
+    uper_decode_complete(NULL, &asn_DEF_DeviceGroup_Protocol, (void **) &msg,
+            data, size);
+    if (!msg)
+        return PEP_SYNC_ILLEGAL_MESSAGE;
+
+    growing_buf_t *dst = new_growing_buf();
+    if (!dst) {
+        status = PEP_OUT_OF_MEMORY;
+        goto the_end;
+    }
+
+    asn_enc_rval_t er = xer_encode(&asn_DEF_DeviceGroup_Protocol, msg,
+            XER_F_BASIC, (asn_app_consume_bytes_f *) consume_bytes, (void *) &dst);
+    if (er.encoded == -1) {
+        status = PEP_SYNC_ILLEGAL_MESSAGE;
+        goto the_end;
+    }
+
+    *text = dst->data;
+    dst->data = NULL;
+
+the_end:
+    free_growing_buf(dst);
+    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+    return status;
 }
 
