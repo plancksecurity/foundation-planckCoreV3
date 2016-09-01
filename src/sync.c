@@ -138,7 +138,7 @@ DYNAMIC_API PEP_STATUS decode_sync_msg(
     }
 
     asn_enc_rval_t er = xer_encode(&asn_DEF_DeviceGroup_Protocol, msg,
-            XER_F_BASIC, (asn_app_consume_bytes_f *) consume_bytes, (void *) &dst);
+            XER_F_BASIC, (asn_app_consume_bytes_f *) consume_bytes, (void *) dst);
     if (er.encoded == -1) {
         status = PEP_SYNC_ILLEGAL_MESSAGE;
         goto the_end;
