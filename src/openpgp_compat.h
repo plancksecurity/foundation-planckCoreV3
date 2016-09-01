@@ -24,14 +24,14 @@ extern "C" {
 #endif
 #endif    
     
-//  OpenPGP_list_keyinfo() - get a key/UID list for pattern matches in keyring (NULL
-//                           to return entire keyring)
+//  OpenPGP_list_keyinfo() - get a key/UID list for pattern matches in keyring (NULL or ""
+//                           to return entire keyring), filtering out revoked keys in the results
 //
 //  parameters:
 //      session (in)          session handle
-//      show_revoked (in)     true if identities with revoked primary keys should also
-//                            be listed; false if only valid keys should be shown
-//      keyinfo_list (out)    list of identities for each available key 
+//      search_pattern (in)   search pattern - either an fpr, or something within the UID, or NULL / "" for
+//                            all keys
+//      keyinfo_list (out)    a key/value pair list for each key / UID combination
 //
 //  caveat:
 //      keyinfo_list must be freed by the caller.
