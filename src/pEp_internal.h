@@ -145,7 +145,7 @@ typedef struct _pEpSession {
     bool passive_mode;
     bool unencrypted_subject;
     bool use_only_own_private_keys;
-    bool dont_remove_sync_msg;
+    bool keep_sync_msg;
     
 } pEpSession;
 

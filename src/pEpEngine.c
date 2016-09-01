@@ -657,10 +657,10 @@ DYNAMIC_API void config_use_only_own_private_keys(PEP_SESSION session,
     session->use_only_own_private_keys = enable;
 }
 
-DYNAMIC_API void config_dont_remove_sync_msg(PEP_SESSION session, bool enable)
+DYNAMIC_API void config_keep_sync_msg(PEP_SESSION session, bool enable)
 {
     assert(session);
-    session->dont_remove_sync_msg = enable;
+    session->keep_sync_msg = enable;
 }
 
 DYNAMIC_API PEP_STATUS log_event(
