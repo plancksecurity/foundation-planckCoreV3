@@ -137,7 +137,7 @@ skip:
         }
     }
 
-    if (found && !keep_sync_msg) {
+    if (found && !session->keep_sync_msg) {
         for (stringpair_list_t *spl = src->opt_fields ; spl && spl->value ;
                 spl = spl->next) {
             if (spl->value->key &&
