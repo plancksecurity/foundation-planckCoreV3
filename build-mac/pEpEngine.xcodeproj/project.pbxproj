@@ -935,7 +935,6 @@
 					"$(SRCROOT)/../../netpgp-et/src/",
 					"$(SRCROOT)/../../netpgp-et/netpgp-xcode/openssl/include/",
 					"$(SRCROOT)/../asn.1/",
-					"$(SRCROOT)/../../netpgp-et/netpgp-xcode/include/",
 				);
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -980,7 +979,6 @@
 					"$(SRCROOT)/../../netpgp-et/src/",
 					"$(SRCROOT)/../../netpgp-et/netpgp-xcode/openssl/include/",
 					"$(SRCROOT)/../asn.1/",
-					"$(SRCROOT)/../../netpgp-et/netpgp-xcode/include/",
 				);
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
