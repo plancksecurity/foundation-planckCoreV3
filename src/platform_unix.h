@@ -9,8 +9,6 @@
 
 #ifndef ANDROID
 #include <uuid/uuid.h>
-#else
-#include <linux/uuid.h>
 #endif
 
 
@@ -71,6 +69,12 @@ typedef char uuid_string_t[37];
 #endif
 // on *nix, uuid_t is an array and already implements pointer semantics
 #define UUID uuid_t
+
+#ifdef ANDROID
+typedef char uuid__t[16];
+void uuid_generate_random(uuid__t out);
+void uuid_unparse_upper(uuid__t uu, uuid_string_t out);
+#endif
 
 #ifdef __cplusplus
 }

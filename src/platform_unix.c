@@ -23,6 +23,7 @@
 #endif
 
 #ifdef ANDROID
+#include <uuid.h>
 char *stpncpy(char *dst, const char *src, size_t n)
 {
     if (n != 0) {
@@ -95,6 +96,17 @@ const char *android_system_db(void)
     }
     return buffer;
 }
+
+void uuid_generate_random(uuid__t out)
+{
+    // TODO
+}
+
+void uuid_unparse_upper(uuid__t uu, uuid_string_t out)
+{
+    // TODO
+}
+
 #endif
 
 #if !defined(BSD) && !defined(__APPLE__)
