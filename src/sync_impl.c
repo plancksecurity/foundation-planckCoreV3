@@ -117,14 +117,19 @@ PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src, PEP_rating
                 }
             }
 
-            bloblist_t *blob = bl;
-            if (last)
-                last->next = bl->next;
-            else
-                src->attachments = bl->next;
+            if (!session->keep_sync_msg) {
+                bloblist_t *blob = bl;
+                if (last)
+                    last->next = bl->next;
+                else
+                    src->attachments = bl->next;
 
-            blob->next = NULL;
-            free_bloblist(blob);
+                blob->next = NULL;
+                free_bloblist(blob);
+            }
+            else {
+                last = bl;
+            }
         }
         else {
 skip:
@@ -132,7 +137,7 @@ skip:
         }
     }
 
-    if (found) {
+    if (found && !session->keep_sync_msg) {
         for (stringpair_list_t *spl = src->opt_fields ; spl && spl->value ;
                 spl = spl->next) {
             if (spl->value->key &&

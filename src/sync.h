@@ -121,7 +121,7 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
 DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session);
 
 
-// do_sync_protocol - function to be run on an extra thread
+// do_sync_protocol() - function to be run on an extra thread
 //
 //  parameters:
 //      session                 pEp session to use
@@ -143,6 +143,20 @@ DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session);
 DYNAMIC_API PEP_STATUS do_sync_protocol(
         PEP_SESSION session,
         void *management
+    );
+
+
+// decode_sync_msg() - decode sync message from PER into XER
+//
+//  parameters:
+//      data (in)               PER encoded data
+//      size (in)               size of PER encoded data
+//      text (out)              XER text of the same sync message
+
+DYNAMIC_API PEP_STATUS decode_sync_msg(
+        const char *data,
+        size_t size,
+        char **text
     );
 
 

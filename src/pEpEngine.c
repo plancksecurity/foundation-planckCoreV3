@@ -533,8 +533,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     // runtime config
 
-    _session->passive_mode = false;
-    _session->unencrypted_subject = false;
 #ifdef ANDROID
     _session->use_only_own_private_keys = true;
 #elif TARGET_OS_IPHONE
@@ -657,6 +655,12 @@ DYNAMIC_API void config_use_only_own_private_keys(PEP_SESSION session,
 {
     assert(session);
     session->use_only_own_private_keys = enable;
+}
+
+DYNAMIC_API void config_keep_sync_msg(PEP_SESSION session, bool enable)
+{
+    assert(session);
+    session->keep_sync_msg = enable;
 }
 
 DYNAMIC_API PEP_STATUS log_event(
