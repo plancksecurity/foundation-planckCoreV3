@@ -533,8 +533,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     // runtime config
 
-    _session->passive_mode = false;
-    _session->unencrypted_subject = false;
 #ifdef ANDROID
     _session->use_only_own_private_keys = true;
 #elif TARGET_OS_IPHONE
