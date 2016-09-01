@@ -1234,6 +1234,7 @@ DYNAMIC_API PEP_STATUS find_keys(
     return session->cryptotech[PEP_crypt_OpenPGP].find_keys(session, pattern, keylist);
 }
 
+
 DYNAMIC_API PEP_STATUS generate_keypair(
         PEP_SESSION session, pEp_identity *identity
     )

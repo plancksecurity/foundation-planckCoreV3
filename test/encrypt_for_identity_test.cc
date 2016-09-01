@@ -90,7 +90,7 @@ int main() {
     for (stringlist_t* kl4 = keylist_used; kl4 && kl4->value; kl4 = kl4->next)
     {
         cout << "\t " << kl4->value << endl;
-        assert(strcmp("4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", kl4->value) == 0);
+        assert(strcasecmp("4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", kl4->value) == 0);
         cout << "Encrypted for Alice! Yay! It worked!" << endl;
     }
     cout << "Encrypted ONLY for Alice! Test passed. Move along. These are not the bugs you are looking for." << endl;
