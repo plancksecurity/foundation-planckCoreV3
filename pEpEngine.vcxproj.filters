@@ -93,6 +93,9 @@
     <ClCompile Include="src\sync_send_actions.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="src\openpgp_compat.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\keymanagement.h">
@@ -180,6 +183,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="src\baseprotocol.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\openpgp_compat.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
