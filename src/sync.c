@@ -165,6 +165,9 @@ DYNAMIC_API PEP_STATUS encode_sync_msg(
     if (!(text && data && size))
         return PEP_ILLEGAL_VALUE;
 
+    *data = NULL;
+    *size = 0;
+
     DeviceGroup_Protocol_t *msg = NULL;
     asn_dec_rval_t dr = xer_decode(NULL, &asn_DEF_DeviceGroup_Protocol,
             (void **) &msg, (const void *) text, strlen(text));
