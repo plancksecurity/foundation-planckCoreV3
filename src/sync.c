@@ -140,7 +140,7 @@ DYNAMIC_API PEP_STATUS decode_sync_msg(
     asn_enc_rval_t er = xer_encode(&asn_DEF_DeviceGroup_Protocol, msg,
             XER_F_BASIC, (asn_app_consume_bytes_f *) consume_bytes, (void *) dst);
     if (er.encoded == -1) {
-        status = PEP_SYNC_ILLEGAL_MESSAGE;
+        status = PEP_CANNOT_ENCODE;
         goto the_end;
     }
 
@@ -149,6 +149,42 @@ DYNAMIC_API PEP_STATUS decode_sync_msg(
 
 the_end:
     free_growing_buf(dst);
+    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS encode_sync_msg(
+        const char *text,
+        char **data,
+        size_t *size
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(text && data && size);
+    if (!(text && data && size))
+        return PEP_ILLEGAL_VALUE;
+
+    DeviceGroup_Protocol_t *msg = NULL;
+    asn_dec_rval_t dr = xer_decode(NULL, &asn_DEF_DeviceGroup_Protocol,
+            (void **) &msg, (const void *) text, strlen(text));
+    if (dr.code != RC_OK) {
+        status = PEP_SYNC_ILLEGAL_MESSAGE;
+        goto the_end;
+    }
+
+    char *payload = NULL;
+    ssize_t _size = uper_encode_to_new_buffer(&asn_DEF_DeviceGroup_Protocol,
+            NULL, msg, (void **) &payload);
+    if (_size == -1) {
+        status = PEP_CANNOT_ENCODE;
+        goto the_end;
+    }
+
+    *data = payload;
+    *size = (size_t) _size;
+
+the_end:
     ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
     return status;
 }

@@ -160,6 +160,20 @@ DYNAMIC_API PEP_STATUS decode_sync_msg(
     );
 
 
+// encode_sync_msg() - encode sync message from XER into PER
+//
+//  parameters:
+//      text (in)               string with XER text of the sync message
+//      data (out)              PER encoded data
+//      size (out)              size of PER encoded data
+
+DYNAMIC_API PEP_STATUS encode_sync_msg(
+        const char *text,
+        char **data,
+        size_t *size
+    );
+
+
 #ifdef __cplusplus
 }
 #endif
