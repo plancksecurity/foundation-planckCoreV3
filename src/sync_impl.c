@@ -264,9 +264,22 @@ PEP_STATUS unicast_msg(
             IdentityList_t *list = &msg->payload.choice.groupKeys.ownIdentities;
             for (int i=0; i<list->list.count; i++) {
                 Identity_t *ident = list->list.array[i];
+                char *fpr = strndup((const char *)ident->fpr.buf, ident->fpr.size);
+                assert(fpr);
+                if (!fpr)
+                    goto enomem;
+                static char filename[MAX_LINELENGTH];
+                int result = snprintf(filename, MAX_LINELENGTH, "%s-sec.asc", fpr);
+                if (result < 0)
+                    goto enomem;
+                char *key = NULL;
+                size_t size = 0;
+                status = export_secrect_key(session, fpr, &key, &size);
+                free(fpr);
+                if (status != PEP_STATUS_OK)
+                    goto error;
                 bloblist_t *bl = bloblist_add(_message->attachments,
-                        (char *) ident->fpr.buf, ident->fpr.size,
-                        "application/pgp-keys", "");
+                        (char *) key, size, "application/pgp-keys", filename);
                 if (!bl)
                     goto enomem;
                 if (!_message->attachments)

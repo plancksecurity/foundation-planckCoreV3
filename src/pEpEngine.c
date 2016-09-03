@@ -1296,7 +1296,7 @@ DYNAMIC_API PEP_STATUS export_key(
             key_data, size, false);
 }
 
-DYNAMIC_API PEP_STATUS export_secret_key(
+DYNAMIC_API PEP_STATUS export_secrect_key(
         PEP_SESSION session, const char *fpr, char **key_data, size_t *size
     )
 {

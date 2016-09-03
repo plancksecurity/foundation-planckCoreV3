@@ -177,7 +177,7 @@ DYNAMIC_API PEP_STATUS own_key_is_listed(
 //      own_identities (out)    list of own identities
 //
 //  caveat:
-//      the ownership of the copy of own_key goes to the caller
+//      the ownership of the copy of own_identities goes to the caller
 
 DYNAMIC_API PEP_STATUS own_identities_retrieve(
         PEP_SESSION session,
