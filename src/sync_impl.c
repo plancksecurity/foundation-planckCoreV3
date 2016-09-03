@@ -281,6 +281,9 @@ PEP_STATUS unicast_msg(
         free_message(_message);
         _message = _encrypted;
     }
+    else {
+        attach_own_key(session, _message);
+    }
 
     status = session->messageToSend(session->sync_obj, _message);
     return status;
