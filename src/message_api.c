@@ -1402,7 +1402,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             if (imported_keys)
                 remove_attached_keys(src);
             if (session->retrieve_next_sync_msg) {
-                status = receive_DeviceState_msg(session, src, false);
+                status = receive_DeviceState_msg(session, src, *rating);
                 if (status == PEP_MESSAGE_CONSUMED) {
                     free_message(msg);
                     msg = NULL;
