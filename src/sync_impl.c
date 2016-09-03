@@ -72,7 +72,7 @@ PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src, PEP_rating
     
     bloblist_t *last = NULL;
     for (bloblist_t *bl = src->attachments; bl && bl->value; bl = bl->next) {
-        if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp") == 0
+        if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp.sync") == 0
                 && bl->size) {
             DeviceGroup_Protocol_t *msg = NULL;
             uper_decode_complete(NULL, &asn_DEF_DeviceGroup_Protocol, (void **)

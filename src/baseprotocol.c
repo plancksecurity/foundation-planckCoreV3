@@ -15,7 +15,7 @@ PEP_STATUS decorate_message(
         return PEP_ILLEGAL_VALUE;
 
     bloblist_t *bl = bloblist_add(msg->attachments, payload, size,
-            "application/pEp", "ignore_this_attachment.pEp");
+            "application/pEp.sync", "ignore_this_attachment.pEp");
     if (bl == NULL)
         goto enomem;
 
@@ -51,7 +51,7 @@ PEP_STATUS prepare_message(
     if (!msg)
         goto enomem;
 
-    add_opt_field(msg, "X-pEp-auto-consume", "yes");
+    add_opt_field(msg, "pEp-auto-consume", "yes");
 
     msg->from = identity_dup(me);
     if (!msg->from)
