@@ -24,6 +24,7 @@ int consume_bytes(const void *src, size_t size, growing_buf_t *dst)
         return -1;
 
     char *new_data = realloc(dst->data, dst->size + size + 1);
+    assert(new_data);
     if (!new_data)
         return -1;
     dst->data = new_data;
