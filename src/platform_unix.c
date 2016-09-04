@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 
+#include <time.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -99,12 +100,42 @@ const char *android_system_db(void)
 
 void uuid_generate_random(uuid__t out)
 {
-    // TODO
+    uuid_t *uuid;
+    uuid_rc_t rc_create;
+
+    if ((rc_create = uuid_create(&uuid)) != UUID_RC_OK ||
+        uuid_make(uuid, UUID_MAKE_V1) != UUID_RC_OK ||
+        uuid_export(uuid, UUID_FMT_BIN, out, NULL) != UUID_RC_OK)
+    {
+        memset(out, 0, sizeof(uuid__t));
+    }
+
+    if (rc_create == UUID_RC_OK)
+    {
+        uuid_destroy(uuid);
+    }
 }
 
 void uuid_unparse_upper(uuid__t uu, uuid_string_t out)
 {
-    // TODO
+    uuid_t *uuid;
+    uuid_rc_t rc_create;
+
+    if ((rc_create = uuid_create(&uuid)) != UUID_RC_OK ||
+        uuid_import(uuid, UUID_FMT_BIN, uu, sizeof(uuid__t)) != UUID_RC_OK ||
+        uuid_export(uuid, UUID_FMT_STR, out, NULL) != UUID_RC_OK)
+    {
+        memset(out, 0, sizeof(uuid_string_t));
+    }
+    else 
+    {
+        out[sizeof(uuid_string_t) - 1] = 0;
+    }
+
+    if (rc_create == UUID_RC_OK)
+    {
+        uuid_destroy(uuid);
+    }
 }
 
 #endif
