@@ -282,7 +282,7 @@ int main(int argc, char* argv[])
     assert(send_key_status == PEP_STATUS_OK);
 
     PEP_comm_type tcomm_type;
-    PEP_STATUS tstatus = get_key_rating(session, "59BFF488C9C2EE39", &tcomm_type);
+    PEP_STATUS tstatus = get_key_rating(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", &tcomm_type);
     cout << "get_key_rating() exits with " << tstatus << "\n";
     assert(tstatus == PEP_STATUS_OK);
     assert(tcomm_type == PEP_ct_OpenPGP_unconfirmed);
