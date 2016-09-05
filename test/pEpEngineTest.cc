@@ -76,21 +76,24 @@ int main(int argc, char* argv[])
     release(second_session);
 
     cout << "logging test\n";
-    log_event(session, "log test", "pEp Enginge Test", "This is a logging test sample.", "please ignore this line");
+    log_event(session, "log test", "pEp Engine Test", "This is a logging test sample.", "please ignore this line");
 
     // Our test user :
     // pEp Test Alice (test key don't use) <pep.test.alice@pep-project.org>
-    //         6FF00E97
-    // A9411D176FF00E97
+    //                                 6FF00E97 -- won't work as search term with NetPGP
+    //                         A9411D176FF00E97 -- won't work as search term with NetPGP
+    // 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97 -- full key fingerprint
     // 
     // Other peers :
     // pEp Test Bob (test key, don't use) <pep.test.bob@pep-project.org> 
-    //         C9C2EE39
-    // 59BFF488C9C2EE39
+    //                                 C9C2EE39 -- won't work as search term with NetPGP
+    //                         59BFF488C9C2EE39 -- won't work as search term with NetPGP
+    // BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39 -- full key fingerprint
     // 
     // pEp Test John (test key, don't use) <pep.test.john@pep-project.org>
-    //         70DCF575
-    // 135CD6D170DCF575
+    //                                 70DCF575 -- won't work as search term with NetPGP
+    //                         135CD6D170DCF575 -- won't work as search term with NetPGP
+    // AA2E4BEB93E5FE33DEFD8BE1135CD6D170DCF575 -- full key fingerprint
 
     const char *kflist[] = {
         "0x6FF00E97.asc",
@@ -153,9 +156,9 @@ int main(int argc, char* argv[])
     assert(verify_result == PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
     free_stringlist(keylist);
 
-    keylist = new_stringlist("A9411D176FF00E97");
-    stringlist_add(keylist, "59BFF488C9C2EE39");
-    stringlist_add(keylist, "135CD6D170DCF575");
+    keylist = new_stringlist("4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
+    stringlist_add(keylist, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39");
+    stringlist_add(keylist, "AA2E4BEB93E5FE33DEFD8BE1135CD6D170DCF575");
 
     buf_text = NULL;
     buf_size = 0;
