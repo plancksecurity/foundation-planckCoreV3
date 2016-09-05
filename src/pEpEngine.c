@@ -1353,10 +1353,6 @@ DYNAMIC_API PEP_STATUS generate_keypair(
     if (status != PEP_STATUS_OK)
         return status;
 
-    // if a state machine for keysync is in place, inject notify
-    if (session->sync_state != DeviceState_state_NONE)
-        status = fsm_DeviceState_inject(session, KeyGen, NULL, NULL);
-
     return status;
 }
 
