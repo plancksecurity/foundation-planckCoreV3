@@ -507,11 +507,14 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
         return status;
     }
 
-    // if a state machine for keysync is in place, inject notify
-    if (session->sync_state != DeviceState_state_NONE)
-        status = fsm_DeviceState_inject(session, KeyGen, NULL, NULL);
-    if (status != PEP_STATUS_OK)
-        return status;
+    if(new_key_generated)
+    {
+        // if a state machine for keysync is in place, inject notify
+        if (session->sync_state != DeviceState_state_NONE)
+            status = fsm_DeviceState_inject(session, KeyGen, NULL, NULL);
+        if (status != PEP_STATUS_OK)
+            return status;
+    }
 
     return PEP_STATUS_OK;
 
