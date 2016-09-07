@@ -1406,6 +1406,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 if (status == PEP_MESSAGE_CONSUMED) {
                     free_message(msg);
                     msg = NULL;
+                    return PEP_MESSAGE_CONSUMED;
                 }
                 else if (status != PEP_STATUS_OK) {
                     return status;
