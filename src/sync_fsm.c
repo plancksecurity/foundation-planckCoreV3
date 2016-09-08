@@ -31,6 +31,7 @@ DeviceState_state fsm_DeviceState(
         
         case Sole:
             switch (event) {
+                case Init: break;
                 case KeyGen:
                     status = sendBeacon(session, state, NULL, NULL);
                     if (status == PEP_OUT_OF_MEMORY)
@@ -95,6 +96,7 @@ DeviceState_state fsm_DeviceState(
         
         case WaitForGroupKeys:
             switch (event) {
+                case Init: break;
                 case GroupKeys:
                     status = storeGroupKeys(session, state, partner, NULL);
                     if (status == PEP_OUT_OF_MEMORY)
@@ -118,6 +120,7 @@ DeviceState_state fsm_DeviceState(
         
         case Grouped:
             switch (event) {
+                case Init: break;
                 case KeyGen:
                     status = sendGroupKeys(session, state, NULL, NULL);
                     if (status == PEP_OUT_OF_MEMORY)
