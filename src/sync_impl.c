@@ -85,12 +85,14 @@ PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src, PEP_rating
                             ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
                             goto skip;
                         }
+                        break;
                     // accepting GroupKeys needs trust
                     case DeviceGroup_Protocol__payload_PR_groupKeys:
                         if (rating < PEP_rating_trusted) {
                             ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
                             goto skip;
                         }
+                        break;
                     default:
                         break;
                 }
