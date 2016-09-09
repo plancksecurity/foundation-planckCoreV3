@@ -81,7 +81,7 @@ PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src, PEP_rating
                 switch (msg->payload.present) {
                     // HandshakeRequest needs encryption
                     case DeviceGroup_Protocol__payload_PR_handshakeRequest:
-                        if (rating < PEP_rating_unreliable) {
+                        if (rating < PEP_rating_reliable) {
                             ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
                             goto skip;
                         }
