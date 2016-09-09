@@ -827,7 +827,8 @@ static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist)
             if (status != PEP_STATUS_OK)
                 return PEP_rating_undefined;
             if (ct == PEP_ct_unknown)
-                rating = PEP_rating_unencrypted_for_some;
+                if (rating >= PEP_rating_reliable)
+                    rating = PEP_rating_reliable;
             else
                 rating = _rating(ct, rating);
         }
