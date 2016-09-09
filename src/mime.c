@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include "etpan_mime.h"
 #include "wrappers.h"
@@ -1111,10 +1112,33 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
                     char *_value;
 
                     index = 0;
+
                     r = mailmime_encoded_phrase_parse("utf-8", value,
                             strlen(value), &index, "utf-8", &_value);
-                    if (r)
-                        goto enomem;
+                    
+                    
+                    // Check result, and if there was no parsing error (or
+                    // there was one, but because of an empty string), move
+                    // on.
+                    bool non_space = false;
+                    char* currchar = value;
+                            
+                    switch (r) {
+                        case MAILIMF_NO_ERROR:
+                            break;
+                        case MAILIMF_ERROR_PARSE:
+                            while (*currchar) {
+                                if (isspace(*(currchar++)))
+                                    continue;
+                                non_space = true;
+                                break;
+                            }
+                            if (!non_space)
+                                break;
+                        default:
+                            goto enomem;
+
+                    }
 
                     stringpair_t *pair = new_stringpair(name, _value);
                     if (pair == NULL)
