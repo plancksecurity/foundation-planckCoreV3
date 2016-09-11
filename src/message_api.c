@@ -826,11 +826,14 @@ static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist)
             status = least_trust(session, _kl->value, &ct);
             if (status != PEP_STATUS_OK)
                 return PEP_rating_undefined;
-            if (ct == PEP_ct_unknown)
-                if (rating >= PEP_rating_reliable)
+            if (ct == PEP_ct_unknown){
+                if (rating >= PEP_rating_reliable){
                     rating = PEP_rating_reliable;
-            else
+                }
+            }
+            else{
                 rating = _rating(ct, rating);
+            }
         }
         else if (_rating_ == PEP_rating_unencrypted) {
             if (rating > PEP_rating_unencrypted_for_some)
@@ -1642,10 +1645,12 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                                        src->from->user_id, src->from->username);
                     if (_from == NULL)
                         goto enomem;
-                    status = update_identity(session, _from);
+                    status = get_trust(session, _from);
                     if (_from->comm_type != PEP_ct_unknown)
                         *rating = _rating(_from->comm_type, PEP_rating_undefined);
                     free_identity(_from);
+                    if (status == PEP_CANNOT_FIND_IDENTITY)
+                       status = PEP_STATUS_OK;
                     if (status != PEP_STATUS_OK)
                         goto pep_error;
                 }
