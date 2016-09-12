@@ -17,18 +17,22 @@ DYNAMIC_API PEP_STATUS fsm_DeviceState_inject(
 
     while(true)
     {
+        Identity _partner = partner ? identity_dup(partner) : NULL;
+
         DeviceState_state new_state = fsm_DeviceState(session,
-            session->sync_state, event, partner, extra);
+            session->sync_state, event, _partner, extra);
+
         if (new_state == DeviceState_state_invalid_out_of_memory)
             return PEP_OUT_OF_MEMORY;
+
         if (new_state < 0)
             return PEP_SYNC_STATEMACHINE_ERROR - new_state;
         
         if (new_state == session->sync_state)
             break;
-        else
-            event = Init;
 
+        event = Init;
+        extra = NULL;
         session->sync_state = new_state;
     } 
 

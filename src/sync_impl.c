@@ -55,11 +55,11 @@ PEP_STATUS receive_sync_msg(
             return PEP_SYNC_ILLEGAL_MESSAGE;
     }
 
-    PEP_STATUS result = fsm_DeviceState_inject(session, event, partner, extra);
+    PEP_STATUS status = fsm_DeviceState_inject(session, event, partner, extra);
 
     free_identity(partner);
 
-    return result;
+    return status;
 }
 
 PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src, PEP_rating rating)
