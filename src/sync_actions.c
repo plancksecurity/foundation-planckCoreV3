@@ -132,7 +132,7 @@ PEP_STATUS showHandshake(
     if (status != PEP_STATUS_OK)
         goto error;
     
-    status = session->showHandshake(session, me, partner);
+    status = session->showHandshake(session->sync_obj, me, partner);
     if (status != PEP_STATUS_OK)
         goto error;
 
