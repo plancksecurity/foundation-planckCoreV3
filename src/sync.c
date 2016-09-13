@@ -54,6 +54,7 @@ DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
 
 DYNAMIC_API PEP_STATUS deliverHandshakeResult(
         PEP_SESSION session,
+        Identity partner,
         sync_handshake_result result
     )
 {
@@ -68,10 +69,10 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
             status = fsm_DeviceState_inject(session, Cancel, NULL, 0);
             break;
         case SYNC_HANDSHAKE_ACCEPTED:
-            status = fsm_DeviceState_inject(session, HandshakeAccepted, NULL, 0);
+            status = fsm_DeviceState_inject(session, HandshakeAccepted, partner, 0);
             break;
         case SYNC_HANDSHAKE_REJECTED:
-            status = fsm_DeviceState_inject(session, HandshakeRejected, NULL, 0);
+            status = fsm_DeviceState_inject(session, HandshakeRejected, partner, 0);
             break;
         default:
             return PEP_ILLEGAL_VALUE;

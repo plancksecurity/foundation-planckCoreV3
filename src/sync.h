@@ -61,6 +61,7 @@ typedef PEP_STATUS (*showHandshake_t)(
 
 DYNAMIC_API PEP_STATUS deliverHandshakeResult(
         PEP_SESSION session,
+        Identity partner,
         sync_handshake_result result
     );
 
