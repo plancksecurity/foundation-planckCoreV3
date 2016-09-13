@@ -109,7 +109,7 @@ error:
 //  params:
 //      session (in)        session handle
 //      state (in)          state the state machine is in
-//      partner (in)        (must be NULL)
+//      partner (in)        partner to communicate with
 //
 //  returns:
 //      PEP_STATUS_OK or any other value on error

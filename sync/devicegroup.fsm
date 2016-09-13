@@ -42,14 +42,14 @@ protocol DeviceGroup {
             on Init
                 do showHandshake(partner);
             on HandshakeRejected(Identity partner) {
-                do reject(partner);             // stores rejection of partner
+                do rejectHandshake(partner);             // stores rejection of partner
                 go Sole;
             }
             on HandshakeAccepted(Identity partner) {
+                do acceptHandshake(partner); 
                 if keyElectionWon(partner) {    // an already existing group
                                                 // always wins
-                    ownGroupKeys;
-                    sendGroupKeys(partner);
+                    do sendGroupKeys(partner);
                     go Grouped;
                 }
                 go WaitForGroupKeys(Identity partner);
@@ -63,7 +63,7 @@ protocol DeviceGroup {
             }
             on Cancel go Sole;
             on Reject(Identity partner) {
-                do reject(partner);
+                do rejectHandshake(partner);
                 go Sole;
             }
         }
@@ -76,12 +76,13 @@ protocol DeviceGroup {
                 do showHandshake(partner);
             }
             on HandshakeRejected(Identity partner)
-                do reject(partner);
-            on Hand
-                hakeAccepted(Identity partner)
+                do rejectHandshake(partner);
+            on HandshakeAccepted(Identity partner){
+                do acceptHandshake(partner); 
                 do sendGroupKeys(partner);
+            }
             on Reject(Identity partner)
-                do reject partner;
+                do rejectHandshake partner;
         }
 
         tag Init 1;

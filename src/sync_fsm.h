@@ -64,8 +64,7 @@ typedef enum _DeviceState_event {
     HandshakeRejected, 
     HandshakeAccepted, 
     Cancel, 
-    Reject, 
-    Hand
+    Reject
 } DeviceState_event;
 
 // actions
@@ -73,9 +72,10 @@ typedef enum _DeviceState_event {
 PEP_STATUS sendBeacon(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS sendHandshakeRequest(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS showHandshake(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
-PEP_STATUS reject(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
-PEP_STATUS storeGroupKeys(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS rejectHandshake(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS acceptHandshake(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS sendGroupKeys(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS storeGroupKeys(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 
 // message receiver
 

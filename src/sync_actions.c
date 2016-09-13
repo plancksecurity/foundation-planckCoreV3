@@ -145,7 +145,7 @@ error:
 }
 
 
-// reject() - stores rejection of partner
+// acceptHandshake() - stores acception of partner
 //
 //  params:
 //      session (in)        session handle
@@ -155,7 +155,39 @@ error:
 //  returns:
 //      PEP_STATUS_OK or any other value on error
 
-PEP_STATUS reject(
+PEP_STATUS acceptHandshake(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(partner);
+    assert(extra == NULL);
+    if (!(session && partner))
+        return PEP_ILLEGAL_VALUE;
+
+    status = trust_personal_key(session, partner);
+
+    free_identity(partner);
+    return status;
+}
+
+
+// rejectHandshake() - stores rejection of partner
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        partner to communicate with
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS rejectHandshake(
         PEP_SESSION session,
         DeviceState_state state,
         Identity partner,
