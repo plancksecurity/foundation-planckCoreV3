@@ -1185,7 +1185,7 @@ PEP_STATUS pgp_export_keydata(
 
     if (secret)
         gpgme_error = gpg.gpgme_op_export(session->ctx, fpr,
-            GPGME_EXPORT_MODE_EXTERN, dh);
+            GPGME_EXPORT_MODE_SECRET, dh);
     else
         gpgme_error = gpg.gpgme_op_export(session->ctx, fpr,
             GPGME_EXPORT_MODE_MINIMAL, dh);
