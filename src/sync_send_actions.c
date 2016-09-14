@@ -19,7 +19,7 @@
 //  params:
 //      session (in)        session handle
 //      state (in)          state the state machine is in
-//      partner (in)        (must be NULL)
+//      partner (in)        partner to communicate with
 //
 //  returns:
 //      PEP_STATUS_OK or any other value on error
@@ -47,13 +47,11 @@ PEP_STATUS sendBeacon(
         goto error;
 
     free_DeviceGroup_Protocol_msg(msg);
-    free_identity(partner);
     return PEP_STATUS_OK;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
 error:
-    free_identity(partner);
     free_DeviceGroup_Protocol_msg(msg);
     return status;
 }
@@ -92,13 +90,11 @@ PEP_STATUS sendHandshakeRequest(
         goto error;
 
     free_DeviceGroup_Protocol_msg(msg);
-    free_identity(partner);
     return PEP_STATUS_OK;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
 error:
-    free_identity(partner);
     free_DeviceGroup_Protocol_msg(msg);
     return status;
 }
@@ -145,13 +141,11 @@ PEP_STATUS sendGroupKeys(
 
     free_identity_list(kl);
     free_DeviceGroup_Protocol_msg(msg);
-    free_identity(partner);
     return PEP_STATUS_OK;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
 error:
-    free_identity(partner);
     free_DeviceGroup_Protocol_msg(msg);
     free_identity_list(kl);
     return status;

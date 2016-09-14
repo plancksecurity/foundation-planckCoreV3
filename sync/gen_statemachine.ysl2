@@ -141,10 +141,8 @@ tstylesheet {
 
             while(true)
             {
-                Identity _partner = partner ? identity_dup(partner) : NULL;
-
                 «@name»_state new_state = fsm_«@name»(session,
-                    session->«@filename»_state, event, _partner, extra);
+                    session->«@filename»_state, event, partner, extra);
 
                 if (new_state == «@name»_state_invalid_out_of_memory)
                     return PEP_OUT_OF_MEMORY;

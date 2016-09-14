@@ -75,17 +75,27 @@ DeviceState_state fsm_DeviceState(
                         return (int) invalid_action;
                     break;
                 case HandshakeRejected:
-                    status = reject(session, state, partner, NULL);
+                    status = rejectHandshake(session, state, partner, NULL);
                     if (status == PEP_OUT_OF_MEMORY)
                         return (int) invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return (int) invalid_action;
                     return Sole;
                 case HandshakeAccepted:
+                    status = acceptHandshake(session, state, partner, NULL);
+                    if (status == PEP_OUT_OF_MEMORY)
+                        return (int) invalid_out_of_memory;
+                    if (status != PEP_STATUS_OK)
+                        return (int) invalid_action;
                     cond_result = keyElectionWon(session, partner);
                     if (cond_result < 0)
                         return cond_result;
                     if (cond_result) {
+                        status = sendGroupKeys(session, state, partner, NULL);
+                        if (status == PEP_OUT_OF_MEMORY)
+                            return (int) invalid_out_of_memory;
+                        if (status != PEP_STATUS_OK)
+                            return (int) invalid_action;
                         return Grouped;
                     }
                     return WaitForGroupKeys;
@@ -107,7 +117,7 @@ DeviceState_state fsm_DeviceState(
                 case Cancel:
                     return Sole;
                 case Reject:
-                    status = reject(session, state, partner, NULL);
+                    status = rejectHandshake(session, state, partner, NULL);
                     if (status == PEP_OUT_OF_MEMORY)
                         return (int) invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
@@ -141,16 +151,26 @@ DeviceState_state fsm_DeviceState(
                         return (int) invalid_action;
                     break;
                 case HandshakeRejected:
-                    status = reject(session, state, partner, NULL);
+                    status = rejectHandshake(session, state, partner, NULL);
                     if (status == PEP_OUT_OF_MEMORY)
                         return (int) invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return (int) invalid_action;
                     break;
-                case Hand:
+                case HandshakeAccepted:
+                    status = acceptHandshake(session, state, partner, NULL);
+                    if (status == PEP_OUT_OF_MEMORY)
+                        return (int) invalid_out_of_memory;
+                    if (status != PEP_STATUS_OK)
+                        return (int) invalid_action;
+                    status = sendGroupKeys(session, state, partner, NULL);
+                    if (status == PEP_OUT_OF_MEMORY)
+                        return (int) invalid_out_of_memory;
+                    if (status != PEP_STATUS_OK)
+                        return (int) invalid_action;
                     break;
                 case Reject:
-                    status = reject(session, state, NULL, NULL);
+                    status = rejectHandshake(session, state, NULL, NULL);
                     if (status == PEP_OUT_OF_MEMORY)
                         return (int) invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)

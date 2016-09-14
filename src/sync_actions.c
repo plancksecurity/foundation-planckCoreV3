@@ -127,12 +127,20 @@ PEP_STATUS showHandshake(
     if (!session->showHandshake)
         return PEP_SYNC_NO_TRUSTWORDS_CALLBACK;
 
+    // showHandshake take ownership of given identities
     pEp_identity *me = NULL;
     status = get_identity(session, partner->address, PEP_OWN_USERID, &me);
     if (status != PEP_STATUS_OK)
         goto error;
     
-    status = session->showHandshake(session->sync_obj, me, partner);
+    pEp_identity *_partner = NULL;
+    _partner = identity_dup(partner);
+    if (_partner == NULL){
+        status = PEP_OUT_OF_MEMORY;
+        goto error;
+    }
+
+    status = session->showHandshake(session->sync_obj, me, _partner);
     if (status != PEP_STATUS_OK)
         goto error;
 
@@ -140,7 +148,6 @@ PEP_STATUS showHandshake(
 
 error:
     free_identity(me);
-    free_identity(partner);
     return status;
 }
 
@@ -172,7 +179,6 @@ PEP_STATUS acceptHandshake(
 
     status = trust_personal_key(session, partner);
 
-    free_identity(partner);
     return status;
 }
 
@@ -205,7 +211,6 @@ PEP_STATUS rejectHandshake(
     status = set_identity_flags(session, partner,
             partner->flags | PEP_idf_not_for_sync);
 
-    free_identity(partner);
     return status;
 }
 
@@ -249,13 +254,11 @@ PEP_STATUS storeGroupKeys(
             break;
     }
 
-    free_identity(partner);
     free_identity_list(group_keys);
     return status;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
-    free_identity(partner);
     free_identity_list(group_keys);
     return status;
 }
