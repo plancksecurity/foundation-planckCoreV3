@@ -1,4 +1,4 @@
-Mail            <-      ( Header )+ NEWLINE ( Body )? EOF
+Mail            <-      ( Header )+ CRLF ( Body )? EOF
 Header          <-      HeaderKey COLON HeaderValue
 HeaderKey       <-      ( Alpha / Digit / OrdinarySymbol )+
 HeaderValue     <-      HeaderLine ( HeaderCont )*
@@ -12,7 +12,7 @@ Digit           <-      [0-9]
 Symbol          <-      OrdinarySymbol / COLON
 Whitespace      <-      Space+
 Space           <-      [' ' '\t']
-OrdinarySymbol  <-      ["!" "#" "$" "%" "&" "'" "*" "+" "\-" "/" "\" "=" "?" "^" "_" "`" "{" "|" "}" "~" "\[" "\]" "@" ";" "." "<" ">" "\"" "(" ")" ","]
+OrdinarySymbol  <-      ["!" "#" "$" "%" "&" "'" "*" "+" "\-" "/" "\" "=" "?" "^" "_" "`" "{" "|" "}" "~" "\[" "\]" "@" ";" "." "<" ">" "\"" "(" ")" "," "\\"]
 COLON           <-      ':'
 NEWLINE         <-      '\n'
 CR              <-      '\r'
