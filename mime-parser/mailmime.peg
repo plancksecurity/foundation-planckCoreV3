@@ -1,20 +1,85 @@
-Mail            <-      ( Header )+ CRLF ( Body )? EOF
-Header          <-      HeaderKey COLON HeaderValue
-HeaderKey       <-      ( Alpha / Digit / OrdinarySymbol )+
-HeaderValue     <-      HeaderLine ( HeaderCont )*
-HeaderLine      <-      Text* CRLF
-HeaderCont      <-      Whitespace HeaderLine
-Body            <-      PlainBody
-PlainBody       <-      .* EOF
-Text            <-      ( Alpha / Digit / Symbol / Space )+
-Alpha           <-      [a-zA-Z]
-Digit           <-      [0-9]
-Symbol          <-      OrdinarySymbol / COLON
-Whitespace      <-      Space+
-Space           <-      [' ' '\t']
-OrdinarySymbol  <-      ["!" "#" "$" "%" "&" "'" "*" "+" "\-" "/" "\" "=" "?" "^" "_" "`" "{" "|" "}" "~" "\[" "\]" "@" ";" "." "<" ">" "\"" "(" ")" "," "\\"]
-COLON           <-      ':'
-NEWLINE         <-      '\n'
-CR              <-      '\r'
-CRLF            <-      CR CR? NEWLINE 
-EOF             <-      !.
+Mail                    <-      ( Header )+ CRLF ( Body )? EOF
+
+# As pretty as it would be to make the header parse elegant, 
+# the parse semantics work better this way
+Header                  <-      MIMEHeader / MessageHeader / GenericHeader
+
+MIMEHeader              <-      MIMEVersionHeader /
+                                MIMEContentTypeHeader /
+                                MIMEContentDispoHeader /
+                                MIMETransfEncodeHeader
+MIMEVersionHeader       <-      MIMEVersionKey COLON VersionString
+MIMEContentTypeHeader   <-      MIMEContentTypeKey COLON ContentTypeString
+MIMEContentDispoHeader  <-      MIMEContentDispoKey COLON ContentDispoString
+MIMETransfEncodeHeader  <-      MIMETransfEncodeKey COLON TransfEncodeString
+
+VersionString           <-      HeaderText
+ContentTypeString       <-      HeaderText
+ContentDispoString      <-      HeaderText
+TransfEncodeString      <-      HeaderText
+
+MessageHeader           <-      MessageIDHeader /
+                                MessageToHeader /
+                                MessageFromHeader /
+                                MessageCCHeader /
+                                MessageBCCHeader /
+                                MessageSubjHeader /
+                                MessageReplyToHeader /
+                                MessageInReplyToHeader /
+                                MessageRefsHeader                            
+
+MessageIDHeader         <-      MessageIDKey COLON IDString
+MessageToHeader         <-      MessageToKey COLON ToString
+MessageFromHeader       <-      MessageFromKey COLON FromString
+MessageCCHeader         <-      MessageCCKey COLON CCString
+MessageBCCHeader        <-      MessageBCCKey COLON BCCString
+MessageSubjHeader       <-      MessageSubjKey COLON SubjString
+MessageReplyToHeader    <-      MessageReplyToKey COLON ReplyToString
+MessageInReplyToHeader  <-      MessageInReplyToKey COLON InReplyToString
+MessageRefsHeader       <-      MessageRefsKey COLON RefsString
+
+IDString                <-      HeaderText
+ToString                <-      HeaderText
+FromString              <-      HeaderText
+CCString                <-      HeaderText
+BCCString               <-      HeaderText
+SubjString              <-      HeaderText
+ReplyToString           <-      HeaderText
+InReplyToString         <-      HeaderText
+RefsString              <-      HeaderText
+
+
+MIMEVersionKey          <-      'MIME-Version'
+MIMEContentTypeKey      <-      'Content-Type'
+MIMEContentDispoKey     <-      'Content-Disposition'
+MIMETransfEncodeKey     <-      'Content-Transfer-Encoding'
+MessageIDKey            <-      'Message-ID'
+MessageToKey            <-      'To'
+MessageFromKey          <-      'From'
+MessageCCKey            <-      'Cc'
+MessageBCCKey           <-      'Bcc'
+MessageSubjKey          <-      'Subject'
+MessageReplyToKey       <-      'Reply-To'
+MessageInReplyToKey     <-      'In-Reply-To'
+MessageRefsKey          <-      'References'  
+                            
+GenericHeader       <-      HeaderKey COLON HeaderText
+HeaderKey           <-      ( Alpha / Digit / OrdinarySymbol )+
+HeaderText          <-      HeaderLine ( HeaderCont )*
+HeaderCont          <-      Whitespace HeaderLine
+HeaderLine          <-      Text* CRLF
+
+Body                <-      PlainBody
+PlainBody           <-      .* EOF
+Text                <-      ( Alpha / Digit / Symbol / Space )+
+Alpha               <-      [a-zA-Z]
+Digit               <-      [0-9]
+Symbol              <-      OrdinarySymbol / COLON
+Whitespace          <-      Space+
+Space               <-      [' ' '\t']
+OrdinarySymbol      <-      ["!" "#" "$" "%" "&" "'" "*" "+" "\-" "/" "\" "=" "?" "^" "_" "`" "{" "|" "}" "~" "\[" "\]" "@" ";" "." "<" ">" "\"" "(" ")" "," "\\"]
+COLON               <-      ':'
+NEWLINE             <-      '\n'
+CR                  <-      '\r'
+CRLF                <-      CR CR? NEWLINE 
+EOF                 <-      !.
