@@ -223,7 +223,11 @@ tstylesheet {
             when "parm" > «name(parm/*)»
             otherwise > NULL
         }
-        > , NULL);\n
+        choose {
+            when "parm[2]" > , extra /*«name(parm[2]/*)»*/
+            otherwise > , NULL
+        }
+        > );\n
         | if (status == PEP_OUT_OF_MEMORY)
         |> return (int) invalid_out_of_memory;
         | if (status != PEP_STATUS_OK)

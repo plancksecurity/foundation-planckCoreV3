@@ -108,7 +108,7 @@ DeviceState_state fsm_DeviceState(
             switch (event) {
                 case Init: break;
                 case GroupKeys:
-                    status = storeGroupKeys(session, state, partner, NULL);
+                    status = storeGroupKeys(session, state, partner, extra /*keys*/);
                     if (status == PEP_OUT_OF_MEMORY)
                         return (int) invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
