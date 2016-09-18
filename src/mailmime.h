@@ -71,4 +71,7 @@ typedef struct _pEpMailMime {
     pEp_mailmime* first_child;
 } pEp_mailmime;
 
+PEP_STATUS parse_mailmessage(const char *mimetext,
+                             message **msg);
+
 #endif
