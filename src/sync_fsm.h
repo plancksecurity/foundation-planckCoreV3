@@ -79,7 +79,12 @@ PEP_STATUS storeGroupKeys(PEP_SESSION session, DeviceState_state state, Identity
 
 // message receiver
 
-PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *msg, PEP_rating rating);
+PEP_STATUS receive_DeviceState_msg(
+        PEP_SESSION session, 
+        message *src, 
+        PEP_rating rating, 
+        stringlist_t *keylist
+    );
 
 // state machine
 

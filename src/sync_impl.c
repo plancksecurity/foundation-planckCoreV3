@@ -62,7 +62,11 @@ PEP_STATUS receive_sync_msg(
     return status;
 }
 
-PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src, PEP_rating rating)
+PEP_STATUS receive_DeviceState_msg(
+    PEP_SESSION session, 
+    message *src, 
+    PEP_rating rating, 
+    stringlist_t *keylist)
 {
     assert(session && src);
     if (!(session && src))
@@ -82,26 +86,6 @@ PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src, PEP_rating
             uper_decode_complete(NULL, &asn_DEF_DeviceGroup_Protocol, (void **)
                     &msg, bl->value, bl->size);
             if (msg) {
-                switch (msg->payload.present) {
-                    // HandshakeRequest needs encryption
-                    case DeviceGroup_Protocol__payload_PR_handshakeRequest:
-                        if (rating < PEP_rating_reliable) {
-                            ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
-                            goto skip;
-                        }
-                        break;
-                    // accepting GroupKeys needs trust
-                    case DeviceGroup_Protocol__payload_PR_groupKeys:
-                        if (rating < PEP_rating_trusted) {
-                            ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
-                            goto skip;
-                        }
-                        break;
-                    default:
-                        break;
-                }
-
-                found = true;
 
                 int32_t value = (int32_t) msg->header.sequence;
                 char *user_id = strndup((char *) msg->header.me.user_id->buf,
@@ -112,14 +96,61 @@ PEP_STATUS receive_DeviceState_msg(PEP_SESSION session, message *src, PEP_rating
                     return PEP_OUT_OF_MEMORY;
                 }
 
+                switch (msg->payload.present) {
+                    // HandshakeRequest needs encryption
+                    case DeviceGroup_Protocol__payload_PR_handshakeRequest:
+                        if (rating < PEP_rating_reliable) {
+                            ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                            free(user_id);
+                            goto skip;
+                        }
+                        break;
+                    // accepting GroupKeys needs encryption and trust
+                    case DeviceGroup_Protocol__payload_PR_groupKeys:
+                        if (!keylist || rating < PEP_rating_reliable) {
+                            ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                            free(user_id);
+                            goto skip;
+                        }
+
+                        // check trust of identity with the right user_id
+                        pEp_identity *_from = new_identity(src->from->address, 
+                                                           keylist->value,
+                                                           user_id,
+                                                           src->from->username);
+                        if (_from == NULL){
+                            free(user_id);
+                            ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                            return PEP_OUT_OF_MEMORY;
+                        }
+                        PEP_rating this_user_id_rating = PEP_rating_undefined;
+                        identity_rating(session, _from, &this_user_id_rating);
+                        free_identity(_from);
+
+                        if (this_user_id_rating < PEP_rating_trusted ) {
+                            ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                            free(user_id);
+                            goto skip;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+
+
                 PEP_STATUS status = sequence_value(session, (char *) user_id,
                         &value);
 
                 if (status == PEP_STATUS_OK) {
+                    found = true;
                     status = session->inject_sync_msg(msg, session->sync_obj);
                     ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
-                    if (status != PEP_STATUS_OK)
+                    if (status != PEP_STATUS_OK){
                         return status;
+                    }
+                }
+                else if (status == PEP_OWN_SEQUENCE) {
+                    goto skip;
                 }
             }
 
