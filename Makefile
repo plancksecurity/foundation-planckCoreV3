@@ -8,6 +8,7 @@ all:
 	$(MAKE) -C asn.1 generate
 	$(MAKE) -C asn.1
 	$(MAKE) -C sync
+	$(MAKE) -C mime-parser
 	$(MAKE) -C src all
 
 .PHONY: clean build_test test package install uninstall db
@@ -23,6 +24,7 @@ clean:
 	$(MAKE) -C test clean
 	$(MAKE) -C db clean
 	$(MAKE) -C sync clean
+	$(MAKE) -C mime-parser clean
 	$(MAKE) -C asn.1 clean
 
 test: all
