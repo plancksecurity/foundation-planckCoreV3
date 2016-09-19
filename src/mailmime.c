@@ -5,7 +5,7 @@
 #include "mailmime.peg.c.src"
 #include "pEpEngine.h"
 
-PEP_STATUS parse_mailmessage(const char *mimetext,
+DYNAMIC_API PEP_STATUS parse_mailmessage(const char *mimetext,
                          message **msg) {
     PEP_STATUS status = PEP_STATUS_OK;
     message *_msg = NULL;
@@ -21,7 +21,8 @@ PEP_STATUS parse_mailmessage(const char *mimetext,
     yycontext ctx;
     memset(&ctx, 0, sizeof(yycontext));
     ctx.input_str = mimetext;
-    while (yyparse(&ctx));
+    ctx.index_consumed = 0;
+    yyparse(&ctx);
 
     return PEP_STATUS_OK;
 }

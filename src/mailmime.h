@@ -1,3 +1,9 @@
+#pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef MAILMIME_H
 #define MAILMIME_H
 
@@ -6,13 +12,15 @@
 
 #define YY_DEBUG
 #define YY_CTX_LOCAL
-#define YY_CTX_MEMBERS char*   input_str;
+#define YY_CTX_MEMBERS const char*   input_str; size_t index_consumed; 
 
-#define YY_INPUT(yycontext, buf, result, max_size)         \
-{                                               \
-    int yyc = *(yycontext->input_str)++;         \
-    result= (!yyc) ? 0 : (*(buf)= yyc, 1);      \
-    yyprintf((stderr, "<%c>", yyc));			\
+#define YY_INPUT(yycontext, buf, result, max_size)                        \
+{                                                                         \
+    const char* ref = yycontext->input_str + yycontext->index_consumed;   \
+    int yyc = *(ref);                                                     \
+    result= (!yyc) ? 0 : (*(buf)= yyc, 1);                                \
+    yyprintf((stderr, "<%c>", yyc));			                          \
+    yycontext->index_consumed += 1;                                       \
 }
 
 struct _pEpMailMime;
@@ -71,7 +79,11 @@ typedef struct _pEpMailMime {
     pEp_mailmime* first_child;
 } pEp_mailmime;
 
-PEP_STATUS parse_mailmessage(const char *mimetext,
+DYNAMIC_API PEP_STATUS parse_mailmessage(const char *mimetext,
                              message **msg);
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif
