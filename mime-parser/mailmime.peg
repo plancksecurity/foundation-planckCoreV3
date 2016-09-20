@@ -61,11 +61,11 @@ MIMEExtensionKey        <-      'Content-'HeaderKey
 #VersionString           <-     Text* Digit Text* "." Text* Digit Text* 
 VersionString           <-      HeaderText
 ContentTypeString       <-      ContentType "/" ContentSubtype (";" Parameter)*
-ContentDispoString      <-      HeaderText
+ContentDispoString      <-      ContentDisposition
 TransfEncodeString      <-      "7bit" / "8bit" / "binary" /
                                 "quoted-printable" / "base64" /
-                                IETFToken / XToken
-ContentIDString         <-      HeaderText
+                                XToken / IETFToken
+ContentIDString         <-      MsgID
 ContentDescString       <-      HeaderText
 ExtensionString         <-      HeaderText
 
@@ -77,16 +77,18 @@ DiscreteContentType     <-      "text" / "image" / "audio" /
 CompositeContentType    <-      "message" / "multipart" / 
                                 ExtensionToken
 ExtensionToken          <-      XToken / IETFToken
-XToken                  <-      "X-" Text
-IETFToken               <-      Text
-ContentSubtype          <-      ExtensionToken / IANAToken
-IANAToken               <-      Text
+XToken                  <-      "X-" Token
+IETFToken               <-      Token
+ContentSubtype          <-      "mixed" / "digest" / "rfc822" / "alternative" / "related" /
+                                "signed" / "encrypted" / "pgp-encrypted" / "pgp-keys" / "pgp-signature" 
+                                / ExtensionToken / IANAToken
+IANAToken               <-      Token
 
 Parameter               <-      RegularParameter / ExtendedParameter
 RegularParameter        <-      RegularParameterName "=" Value
 RegularParameterName    <-      Attribute Section?
 Value                   <-      Token / QuotedString
-Token                   <-      SymbolNoTSpecials+
+Token                   <-      (![TSpecials ASCII_CTL Space] ASCII_CHAR)?
 Attribute               <-      AttributeChar+
 AttributeChar           <-      (![NonAttributeChar] ASCII_Printable)
 NonAttributeChar        <-      Space / "*" / "'" / "%" / TSpecials
@@ -102,7 +104,14 @@ ExtendedOtherValues     <-      (ExtOctet / AttributeChar)*
 ExtOctet                <-      "%" HexDigit HexDigit
 
 
-
+ContentDisposition      <-      DispositionType *( ";" DispositionParm )
+DispositionType         <-      "inline" / "attachment" / DispExtType
+DispExtType             <-      Token
+DispositionParm         <-      FilenameParm / DispositionExtParm
+FilenameParm            <-      "filename" "=" Value / "filename*" "=" ExtValue
+DispositionExtParm      <-      Token "=" Value / ExtToken "=" ExtValue
+ExtToken                <-      Token "*"
+ExtValue                <-      Value
 
 # Message-related headers (per RFC2822)
 MessageHeader           <-     ( MessageIDHeader /
@@ -116,7 +125,7 @@ MessageHeader           <-     ( MessageIDHeader /
                                 MessageRefsHeader ) CRLF      
                                 
 MessageIDHeader         <-      MessageIDKey COLON IDString
-MessageToHeader         <-      MessageToKey COLON < ToString >     {printf("To: %s\n", yytext, stderr);}
+MessageToHeader         <-      MessageToKey COLON < ToString >     { printf("YO!!!\n"); printf("To: %s\n", yytext); }
 MessageFromHeader       <-      MessageFromKey COLON FromString
 MessageCCHeader         <-      MessageCCKey COLON CCString
 MessageBCCHeader        <-      MessageBCCKey COLON BCCString
@@ -134,11 +143,11 @@ MessageReplyToKey       <-      'Reply-To'
 MessageInReplyToKey     <-      'In-Reply-To'
 MessageRefsKey          <-      'References'  
 IDString                <-      MsgID CRLF
-ToString                <-      AddressList
+ToString                <-      AddressList { printf("YO1!!!\n"); }
 FromString              <-      MailboxList
 CCString                <-      AddressList
 BCCString               <-      AddressList
-SubjString              <-      HeaderText
+SubjString              <-      < HeaderText > { printf("*** Subject: %s\n", yytext); }
 ReplyToString           <-      AddressList
 InReplyToString         <-      MsgID+
 RefsString              <-      MsgID+
@@ -146,11 +155,11 @@ RefsString              <-      MsgID+
 
 # RFC2822 Address Specification
 Address                 <-      Mailbox / Group
-Mailbox                 <-      NameAddr / AddrSpec
+Mailbox                 <-      (NameAddr / AddrSpec) { printf("YO2!!!\n"); }
 NameAddr                <-      DisplayName? AngleAddr
 AngleAddr               <-      CFWS? "<" AddrSpec ">" CFWS? / ObsAngleAddr
 Group                   <-      DisplayName ":" (MailboxList / CFWS)? ";" CFWS?
-DisplayName             <-      Phrase
+DisplayName             <-      Phrase 
 MailboxList             <-      (Mailbox ("," Mailbox)*) / ObsMBoxList
 AddressList             <-      (Address ("," Address)*) / ObsAddrList
 
@@ -212,7 +221,7 @@ QText               <-      !["\"" "\\" CR]
 QuotedPair          <-      "\\". / "\\" Text
 
 Text                <-      ( Word / Space )+
-Word                <-      ( AlphaNum / Symbol )
+Word                <-      ( AlphaNum / Symbol )+
 AlphaNum            <-      Alpha / Digit
 Alpha               <-      [a-zA-Z]
 Digit               <-      [0-9]
@@ -221,7 +230,6 @@ Whitespace          <-      Space+
 Space               <-      [' ' '\t']
 
 OrdinarySymbol      <-      ["!" "#" "$" "%" "&" "'" "*" "+" "\-" "/" "=" "?" "^" "_" "`" "{" "|" "}" "~" "\[" "\]" "@" ";" "." "<" ">" "\"" "(" ")" "," "\\"]
-SymbolNoTSpecials   <-      ["!" "#" "$" "%" "&" "'" "*" "+" "-" "." "^" "_" "`" "{" "|" "}" "~"]
 CommentSymbols      <-      [\041-\047] / [\52-57] / [\072-\100] / [\133] / [\135-\140] / [\173-177]
 
 TSpecials           <-      !["."] (Specials / ["/" "?" "="])
@@ -295,7 +303,7 @@ UTF8_4              <-      [\360] [\220-\277] UTF8Tail UTF8Tail / [\361-\363] U
 UTF8Tail            <-      [\200-\277]
 
 RFCWord             <-      Atom / QuotedString
-Phrase           <-      RFCWord+ / ObsPhrase
+Phrase              <-      RFCWord+ / ObsPhrase
 ObsPhrase           <-      RFCWord (RFCWord / "." / CFWS)*
 
 
