@@ -1407,10 +1407,11 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 remove_attached_keys(src);
             if (session->retrieve_next_sync_msg) {
                 status = receive_DeviceState_msg(session, src, *rating, *keylist);
-                if (status == PEP_MESSAGE_CONSUMED) {
+                if (status == PEP_MESSAGE_CONSUMED || 
+                    status == PEP_MESSAGE_DISCARDED) {
                     free_message(msg);
                     msg = NULL;
-                    return PEP_MESSAGE_CONSUMED;
+                    return status;
                 }
                 else if (status != PEP_STATUS_OK) {
                     return status;
@@ -1682,7 +1683,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             remove_attached_keys(msg);
         if (*rating >= PEP_rating_reliable && session->retrieve_next_sync_msg) {
             status = receive_DeviceState_msg(session, msg, *rating, _keylist);
-            if (status == PEP_MESSAGE_CONSUMED) {
+            if (status == PEP_MESSAGE_CONSUMED || 
+                status == PEP_MESSAGE_DISCARDED) {
                 free_message(msg);
                 msg = NULL;
             }

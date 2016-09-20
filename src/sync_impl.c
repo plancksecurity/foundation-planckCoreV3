@@ -149,7 +149,8 @@ PEP_STATUS receive_DeviceState_msg(
                     }
                 }
                 else if (status == PEP_OWN_SEQUENCE) {
-                    goto skip;
+                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                    return PEP_MESSAGE_DISCARDED;
                 }
             }
 
