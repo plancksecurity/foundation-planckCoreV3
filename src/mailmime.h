@@ -12,7 +12,10 @@ extern "C" {
 
 #define YY_DEBUG
 #define YY_CTX_LOCAL
-#define YY_CTX_MEMBERS const char*   input_str; size_t index_consumed; 
+#define YY_CTX_MEMBERS const char* input_str;    \
+                       size_t index_consumed;    \
+                       message* parsed_msg;     \
+                       pEp_mailmime* msg_root;   
 
 #define YY_INPUT(yycontext, buf, result, max_size)                        \
 {                                                                         \

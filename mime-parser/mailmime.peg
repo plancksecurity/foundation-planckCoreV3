@@ -1,19 +1,15 @@
 Mail                    <-      ( Header )+ CRLF ( Body )? EOF
 
-# As pretty as it would be to make the header parse elegant, 
-# the parse semantics work better this way.
-# Marginally, a header is HeaderKey COLON HeaderValue (with some
-# lines possible afterwards), but we have some specific headers that
-# have meaning, so they are explicit here.
-Header                  <-      < MIMEHeader > { printf("MIMEHeader! %s\n", yytext); } / 
+Header                  <-     ( < MIMEHeader > { printf("MIMEHeader! %s\n", yytext); } / 
                                 < MessageHeader > { printf("MessageHeader!%s\n", yytext); } / 
-                                < GenericHeader > { printf("GenericHeader!%s\n", yytext); }
+                                < GenericHeader > { printf("GenericHeader!%s\n", yytext); } )
 
 GenericHeader           <-      HeaderKey COLON HeaderText
 HeaderKey               <-      ( Alpha / Digit / OrdinarySymbol )+
+HeaderPhrase            <-      EncodedWord / Word
 HeaderText              <-      HeaderLine ( HeaderCont )*
 HeaderCont              <-      Whitespace HeaderLine
-HeaderLine              <-      Text* CRLF
+HeaderLine              <-      HeaderPhrase* CRLF
 
 #MIME Header Blocks
 
@@ -62,7 +58,7 @@ MIMEContentIDKey        <-      'Content-ID'
 MIMEContentDescKey      <-      'Content-Description'
 MIMEExtensionKey        <-      'Content-'HeaderKey
 
-#VersionString           <-      Text* Digit Text* "." Text* Digit Text* 
+#VersionString           <-     Text* Digit Text* "." Text* Digit Text* 
 VersionString           <-      HeaderText
 ContentTypeString       <-      ContentType "/" ContentSubtype (";" Parameter)*
 ContentDispoString      <-      HeaderText
@@ -85,15 +81,31 @@ XToken                  <-      "X-" Text
 IETFToken               <-      Text
 ContentSubtype          <-      ExtensionToken / IANAToken
 IANAToken               <-      Text
-Parameter               <-      Attribute "=" Value #attribute matching always case insensitive
-Attribute               <-      Token
+
+Parameter               <-      RegularParameter / ExtendedParameter
+RegularParameter        <-      RegularParameterName "=" Value
+RegularParameterName    <-      Attribute Section?
 Value                   <-      Token / QuotedString
 Token                   <-      SymbolNoTSpecials+
+Attribute               <-      AttributeChar+
+AttributeChar           <-      (![NonAttributeChar] ASCII_Printable)
+NonAttributeChar        <-      Space / "*" / "'" / "%" / TSpecials
+Section                 <-      InitialSection / OtherSections
+InitialSection          <-      "*0"
+OtherSections           <-      "*" ("1" / "2" / "3" / "4" / "5" / "6" / "7" / "8" / "9") Digit*
+ExtendedParameter       <-      (ExtendedInitialName "=" ExtendedInitialValue) /
+                                (ExtendedOtherNames "="ExtendedOtherValues)
+ExtendedInitialName     <-      Attribute InitialSection? "*"
+ExtendedOtherNames      <-      Attribute OtherSections "*"
+ExtendedInitialValue    <-      [Charset] "'" [Language] "'" ExtendedOtherValues
+ExtendedOtherValues     <-      (ExtOctet / AttributeChar)*
+ExtOctet                <-      "%" HexDigit HexDigit
+
 
 
 
 # Message-related headers (per RFC2822)
-MessageHeader           <-      MessageIDHeader /
+MessageHeader           <-     ( MessageIDHeader /
                                 MessageToHeader /
                                 MessageFromHeader /
                                 MessageCCHeader /
@@ -101,14 +113,14 @@ MessageHeader           <-      MessageIDHeader /
                                 MessageSubjHeader /
                                 MessageReplyToHeader /
                                 MessageInReplyToHeader /
-                                MessageRefsHeader      
+                                MessageRefsHeader ) CRLF      
                                 
 MessageIDHeader         <-      MessageIDKey COLON IDString
 MessageToHeader         <-      MessageToKey COLON < ToString >     {printf("To: %s\n", yytext, stderr);}
 MessageFromHeader       <-      MessageFromKey COLON FromString
 MessageCCHeader         <-      MessageCCKey COLON CCString
 MessageBCCHeader        <-      MessageBCCKey COLON BCCString
-MessageSubjHeader       <-      MessageSubjKey COLON SubjString
+MessageSubjHeader       <-      MessageSubjKey COLON Whitespace* SubjString
 MessageReplyToHeader    <-      MessageReplyToKey COLON ReplyToString
 MessageInReplyToHeader  <-      MessageInReplyToKey COLON InReplyToString
 MessageRefsHeader       <-      MessageRefsKey COLON RefsString
@@ -121,20 +133,57 @@ MessageSubjKey          <-      'Subject'
 MessageReplyToKey       <-      'Reply-To'
 MessageInReplyToKey     <-      'In-Reply-To'
 MessageRefsKey          <-      'References'  
-IDString                <-      HeaderText
-ToString                <-      HeaderText
-FromString              <-      HeaderText
-CCString                <-      HeaderText
-BCCString               <-      HeaderText
+IDString                <-      MsgID CRLF
+ToString                <-      AddressList
+FromString              <-      MailboxList
+CCString                <-      AddressList
+BCCString               <-      AddressList
 SubjString              <-      HeaderText
-ReplyToString           <-      HeaderText
-InReplyToString         <-      HeaderText
-RefsString              <-      HeaderText
+ReplyToString           <-      AddressList
+InReplyToString         <-      MsgID+
+RefsString              <-      MsgID+
 
 
-                        
-Body                <-      PlainBody
-PlainBody           <-      .* EOF
+# RFC2822 Address Specification
+Address                 <-      Mailbox / Group
+Mailbox                 <-      NameAddr / AddrSpec
+NameAddr                <-      DisplayName? AngleAddr
+AngleAddr               <-      CFWS? "<" AddrSpec ">" CFWS? / ObsAngleAddr
+Group                   <-      DisplayName ":" (MailboxList / CFWS)? ";" CFWS?
+DisplayName             <-      Phrase
+MailboxList             <-      (Mailbox ("," Mailbox)*) / ObsMBoxList
+AddressList             <-      (Address ("," Address)*) / ObsAddrList
+
+AddrSpec                <-      LocalPart "@" Domain
+LocalPart               <-      DotAtom / QuotedString / ObsLocalPart
+Domain                  <-      DotAtom / DomainLiteral / ObsDomain
+DomainLiteral           <-      CFWS? "[" (FoldingWhiteSpace? DContent)* FoldingWhiteSpace? "]" CFWS?
+DContent                <-      DText / QuotedPair
+DText                   <-      NoWSCtl /
+                                [\041-\132] /
+                                [\136-\176]
+
+# Supported Obsolete Addressing
+ObsAngleAddr            <-      CFWS? "<" ObsRoute? AddrSpec ">" CFWS?
+ObsRoute                <-      CFWS? ObsDomainList ":" CFWS?
+ObsDomainList           <-      "@" Domain ((CFWS / "," )* CFWS? "@" Domain)*
+ObsLocalPart            <-      RFCWord ("." RFCWord)*
+ObsDomain               <-      Atom ("." Atom)*
+ObsMBoxList             <-      (Mailbox? CFWS? "," CFWS?)+ Mailbox?
+ObsAddrList             <-      (Address? CFWS? "," CFWS?)+ Address?
+                      
+                      
+# RFC2822 Message ID
+MsgID                   <-       CFWS? "<" IDLeft "@" IDRight ">" CFWS?
+IDLeft                  <-       DotAtomText / NoFoldQuote / ObsIDLeft
+IDRight                 <-       DotAtomText / NoFoldLiteral / ObsIDRight
+NoFoldQuote             <-       "\"" *(QText / QuotedPair) "\""
+NoFoldLiteral           <-       "[" *(DText / QuotedPair) "]"
+ObsIDLeft               <-      LocalPart
+ObsIDRight              <-      Domain
+                      
+Body                    <-      PlainBody
+PlainBody               <-      .* EOF
 
 Encapsulation       <-      Delimiter BodyPart CRLF
 CloseDelimiter      <-      Delimiter "--"
@@ -162,7 +211,9 @@ QuotedContent       <-      QText / QuotedPair
 QText               <-      !["\"" "\\" CR]
 QuotedPair          <-      "\\". / "\\" Text
 
-Text                <-      ( Alpha / Digit / Symbol / Space )+
+Text                <-      ( Word / Space )+
+Word                <-      ( AlphaNum / Symbol )
+AlphaNum            <-      Alpha / Digit
 Alpha               <-      [a-zA-Z]
 Digit               <-      [0-9]
 Symbol              <-      OrdinarySymbol / COLON
@@ -173,6 +224,16 @@ OrdinarySymbol      <-      ["!" "#" "$" "%" "&" "'" "*" "+" "\-" "/" "=" "?" "^
 SymbolNoTSpecials   <-      ["!" "#" "$" "%" "&" "'" "*" "+" "-" "." "^" "_" "`" "{" "|" "}" "~"]
 CommentSymbols      <-      [\041-\047] / [\52-57] / [\072-\100] / [\133] / [\135-\140] / [\173-177]
 
+TSpecials           <-      !["."] (Specials / ["/" "?" "="])
+Specials            <-      ["(" ")" "<" ">" "@" "," ";" ":" "\\" "\"" "." "\[" "\]"]
+
+ASCII_CHAR          <-      [\000-\127]
+ASCII_Printable     <-      [\041-\176]
+ASCII_CTL           <-      [\000-\031] / [\127]
+LWS                 <-      CRLF? Space+
+
+
+
 OCTET               <-      '\\' (([0-1] [0-9] [0-9]) / ("2" (([0-4] [0-9]) / ("5" [0-5])))) 
 COLON               <-      ':'
 NEWLINE             <-      '\n'
@@ -180,3 +241,76 @@ CR                  <-      '\r'
 CRLF                <-      CR CR? NEWLINE 
 EOF                 <-      !.
 NoWSCtl             <-      [\001-\010] / [\013-\014] / [\016-\037] / [\177]
+
+
+HexDigit                <-      (Digit / "A" / "B" / "C" / "D" / "E" / "F")
+
+EncodedWord             <-      <"=?" Charset ("*" Language)? "?" EncodedText "?="> { printf("V1%s\n", yytext); } /
+                                <"=?" Charset "?" Encoding "?" EncodedText "?="> { printf("V2%s\n", yytext); }
+                                
+Encoding                <-      [Q q] / [B b]
+
+Charset                 <-      "utf-8" /
+                                "US-ASCII" /
+                                "Big5" /
+                                "EUC-JP" /
+                                "EUC-KR" /
+                                "GB2312" /
+                                "ISO-2022-JP" /
+                                "ISO-2022-JP-2" /
+                                "ISO-2022-KR" /
+                                "ISO-8859-1" /
+                                "ISO-8859-10" /
+                                "ISO-8859-2" /
+                                "ISO-8859-3" /
+                                "ISO-8859-4" /
+                                "ISO-8859-5" /
+                                "ISO-8859-6" /
+                                "ISO-8859-6-E" /
+                                "ISO-8859-6-I" /
+                                "ISO-8859-7" /
+                                "ISO-8859-8" /
+                                "ISO-8859-8-E" /
+                                "ISO-8859-8-I" /
+                                "ISO-8859-9" /
+                                "KOI8-R" /
+                                "Shift_JIS"
+
+Language                <-      PrimarySubtag ("-" Subtag)*
+EncodedText             <-      (!["?"] ( Alpha / Digit / Symbol ))+
+PrimarySubtag           <-      Alpha Alpha? Alpha? Alpha? Alpha? Alpha? Alpha? Alpha?
+Subtag                  <-      AlphaNum AlphaNum? AlphaNum? AlphaNum? AlphaNum? AlphaNum? AlphaNum? AlphaNum?
+                            
+# May need to be updated - this is ancient
+UTF8Octets          <-      UTF8Char*
+UTF8Char            <-      UTF8_1 / UTF8_2 / UTF8_3 / UTF8_4
+UTF8_1              <-      [\000-\177]
+UTF8_2              <-      [\302-\337] UTF8Tail
+UTF8_3              <-      [\340] [\240-\277] UTF8Tail / 
+                            [\341-\354] UTF8Tail UTF8Tail /
+                            [\355] [\200-\237] UTF8Tail / 
+                            [\356-\357] UTF8Tail UTF8Tail
+UTF8_4              <-      [\360] [\220-\277] UTF8Tail UTF8Tail / [\361-\363] UTF8Tail UTF8Tail UTF8Tail /
+                            [\364] [\200-\217] UTF8Tail UTF8Tail
+UTF8Tail            <-      [\200-\277]
+
+RFCWord             <-      Atom / QuotedString
+Phrase           <-      RFCWord+ / ObsPhrase
+ObsPhrase           <-      RFCWord (RFCWord / "." / CFWS)*
+
+
+# Atom (2822 - mostly for supported obsolete stuff)
+AText               <-      Alpha / Digit / 
+                            "!" / "#" /   
+                            "$" / "%" /   
+                            "&" / "'" /
+                            "*" / "+" /
+                            "-" / "/" /
+                            "=" / "?" /
+                            "^" / "_" /
+                            "`" / "{" /
+                            "|" / "}" /
+                            "~"
+Atom                <-       CFWS? AText+ CFWS?
+DotAtom             <-       CFWS? DotAtomText CFWS?
+DotAtomText         <-       AText+ ("." AText+)*
