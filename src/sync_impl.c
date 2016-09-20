@@ -62,6 +62,9 @@ PEP_STATUS receive_sync_msg(
     return status;
 }
 
+// from sync.c
+int call_inject_sync_msg(PEP_SESSION session, void *msg);
+
 PEP_STATUS receive_DeviceState_msg(
     PEP_SESSION session, 
     message *src, 
@@ -71,10 +74,6 @@ PEP_STATUS receive_DeviceState_msg(
     assert(session && src);
     if (!(session && src))
         return PEP_ILLEGAL_VALUE;
-
-    assert(session->inject_sync_msg);
-    if (!session->inject_sync_msg)
-        return PEP_SYNC_NO_INJECT_CALLBACK;
 
     bool found = false;
     
@@ -143,7 +142,7 @@ PEP_STATUS receive_DeviceState_msg(
 
                 if (status == PEP_STATUS_OK) {
                     found = true;
-                    status = session->inject_sync_msg(msg, session->sync_obj);
+                    status = call_inject_sync_msg(session, msg);
                     ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
                     if (status != PEP_STATUS_OK){
                         return status;

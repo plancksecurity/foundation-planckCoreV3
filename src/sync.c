@@ -6,6 +6,9 @@
 #include "asn1_helper.h"
 #include "../asn.1/DeviceGroup-Protocol.h"
 
+static void *static_sync_obj = NULL;
+static inject_sync_msg_t static_inject_sync_msg = NULL;
+
 // receive_sync_msg is defined in the sync_actions
 
 PEP_STATUS receive_sync_msg(
@@ -32,6 +35,9 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
     session->inject_sync_msg = inject_sync_msg;
     session->retrieve_next_sync_msg = retrieve_next_sync_msg;
 
+    static_sync_obj = obj;
+    static_inject_sync_msg = inject_sync_msg;
+
     // start state machine
     session->sync_state = InitState;
     PEP_STATUS status = fsm_DeviceState_inject(session, Init, NULL, NULL);
@@ -41,14 +47,29 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
     return status;
 }
 
+int call_inject_sync_msg(PEP_SESSION session, void *msg)
+{
+    if(session->inject_sync_msg && session->sync_obj)
+        return session->inject_sync_msg(msg, session->sync_obj);
+    else if(static_inject_sync_msg && static_sync_obj)
+        return static_inject_sync_msg(msg, static_sync_obj);
+    else
+       return PEP_SYNC_NO_INJECT_CALLBACK;
+}
+
+
 DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
     // stop state machine
     session->sync_state = DeviceState_state_NONE;
+
+    static_sync_obj = NULL;
+    static_inject_sync_msg = NULL;
 
     // unregister
     session->sync_obj = NULL;
     session->messageToSend = NULL;
     session->showHandshake = NULL;
+    session->inject_sync_msg = NULL;
     session->retrieve_next_sync_msg = NULL;
 }
 
