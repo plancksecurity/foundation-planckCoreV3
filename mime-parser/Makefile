@@ -1,12 +1,12 @@
 include ../Makefile.conf
 
 all: generate
-	cp mailmime.peg.c.src ../src/.
+	cp mailmime.leg.c.src ../src/.
 
 generate: 
-	peg mailmime.peg -o mailmime.peg.c.src
+	leg mailmime.leg -o mailmime.leg.c.src
 
 .PHONY: clean
 
 clean:
-	rm -f mailmime.peg.c
+	rm -f mailmime.leg.c

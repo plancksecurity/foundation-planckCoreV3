@@ -15,7 +15,11 @@ extern "C" {
 #define YY_CTX_MEMBERS const char* input_str;    \
                        size_t index_consumed;    \
                        message* parsed_msg;     \
-                       pEp_mailmime* msg_root;   
+                       identity_list* curr_address_list; \
+                       stringlist_t* curr_msg_id_list; \
+                       pEp_mailmime* msg_root;      \
+                       char* tmp_key;           \
+                       char* tmp_value;
 
 #define YY_INPUT(yycontext, buf, result, max_size)                        \
 {                                                                         \
@@ -84,6 +88,15 @@ typedef struct _pEpMailMime {
 
 DYNAMIC_API PEP_STATUS parse_mailmessage(const char *mimetext,
                              message **msg);
+
+typedef struct _dual_string_index {
+    char* start_0;
+    unsigned int end_0;
+    char* start_1;
+    unsigned int end_1;
+} dual_string_index;
+
+void two_string_clear(dual_string_index* ds);
 
 #endif
 
