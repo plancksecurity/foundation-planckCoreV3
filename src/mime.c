@@ -40,112 +40,40 @@ DYNAMIC_API bool is_PGP_message_text(const char *text)
 #define PATH_SEP '/'
 #endif
 
+// This function was rewritten to use in-memory buffers instead of
+// temporary files when the pgp/mime support was implemented for
+// outlook, as the existing code did not work well on windows.
+
 static PEP_STATUS render_mime(struct mailmime *mime, char **mimetext)
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    int fd = -1;
-    FILE *file = NULL;
-    size_t size;
-    char *buf = NULL;
     int col;
     int r;
+	size_t len;
+	char* buf = NULL;
 
-    char *template = NULL;
-    char *env_tmp = getenv("TEMP");
+	MMAPString* buffer;
 
-    if(env_tmp){
-        unsigned long tmp_l = strlen(env_tmp);
-        if(tmp_l == 0 ) {
-            goto err_file;
-        } else {
-            int need_sep = (env_tmp[tmp_l-1] != PATH_SEP);
-            template = calloc(1, tmp_l + 
-                                 (need_sep ? 1 : 0) +
-                                 sizeof(TMP_TEMPLATE));
-            if (template == NULL)
-                goto enomem;
+	buffer = mmap_string_new(NULL);
+	if (buffer == NULL)
+		goto enomem;
+	
+	col = 0;
+	r = mailmime_write_mem(buffer, &col, mime);
+	assert(r == MAILIMF_NO_ERROR);
+	if (r == MAILIMF_ERROR_MEMORY)
+		goto enomem;
+	else if (r != MAILIMF_NO_ERROR)
+		goto err_file;
 
-            memcpy(template, env_tmp, tmp_l);
-            if(need_sep)
-                template[tmp_l] = PATH_SEP;
-            memcpy(template + tmp_l + (need_sep ? 1 : 0), TMP_TEMPLATE, sizeof(TMP_TEMPLATE));
-        }
-    }else{
-        template = strdup("/tmp/" TMP_TEMPLATE);
-        if (template == NULL)
-            goto enomem;
-    }
-    assert(template);
+	// we overallocate by 1 byte, so we have a terminating 0.
+	len = buffer->len;
+	buf = calloc(len + 1, 1);
+	if (buf == NULL)
+		goto enomem;
 
-    *mimetext = NULL;
-
-    fd = Mkstemp(template);
-    assert(fd != -1);
-    if (fd == -1)
-        goto err_file;
-
-    r = unlink(template);
-    assert(r == 0);
-    if (r)
-        goto err_file;
-
-    free(template);
-    template = NULL;
-
-    file = Fdopen(fd, "w+");
-    assert(file);
-    if (file == NULL) {
-        switch (errno) {
-            case ENOMEM:
-                goto enomem;
-            default:
-                goto err_file;
-        }
-    }
-
-    fd = -1;
-
-    col = 0;
-    r = mailmime_write_file(file, &col, mime);
-    assert(r == MAILIMF_NO_ERROR);
-    if (r == MAILIMF_ERROR_MEMORY)
-        goto enomem;
-    else if (r != MAILIMF_NO_ERROR)
-        goto err_file;
-
-    off_t len = ftello(file);
-    assert(len != -1);
-    if (len == -1 && errno == EOVERFLOW)
-        goto err_file;
-
-    if (len + 1 > SIZE_MAX)
-        goto err_buffer;
-
-    size = (size_t) len;
-
-    errno = 0;
-    rewind(file);
-    assert(errno == 0);
-    switch (errno) {
-        case 0:
-            break;
-        case ENOMEM:
-            goto enomem;
-        default:
-            goto err_file;
-    }
-
-    buf = calloc(1, size + 1);
-    assert(buf);
-    if (buf == NULL)
-        goto enomem;
- 
-    size_t _read;
-    _read = Fread(buf, size, 1, file);
-    assert(_read == size);
-
-    r = Fclose(file);
-    assert(r == 0);
+	memcpy(buf, buffer->str, len);
+	mmap_string_free(buffer);
 
     *mimetext = buf;
     return PEP_STATUS_OK;
@@ -162,18 +90,10 @@ enomem:
     status = PEP_OUT_OF_MEMORY;
 
 pep_error:
-    free(buf);
-    free(template);
-
-    if (file) {
-        r = Fclose(file);
-        assert(r == 0);
-    }
-    else if (fd != -1) {
-        r = Close(fd);
-        assert(r == 0);
-    }
-
+	if (buffer)
+		mmap_string_free(buffer);
+	if (buf)
+		free(buf);
     return status;
 }
 
@@ -258,7 +178,11 @@ static PEP_STATUS mime_attachment(
 
     *result = NULL;
 
-    if (blob->mime_type == NULL || blob->mime_type[0] == 0)
+// TODO: It seems the pep com server adapter sends an empty string here,
+// which leads to a crash later. Thus, we workaround here by treating an
+// empty string as NULL. We need to check whether the bug really is here,
+// or the pep com server adapter needs to be changed.
+    if (blob->mime_type == NULL || blob->mime_type[0] == '\0')
         mime_type = "application/octet-stream";
     else
         mime_type = blob->mime_type;
