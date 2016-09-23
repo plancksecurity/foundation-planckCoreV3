@@ -11,11 +11,12 @@
 
 Mail                    =      ( Header )+ CRLF ( Body )? EOF
 
-Header                  =     ( < MIMEHeader >  | 
-                                < MessageHeader >  | 
-                                < GenericHeader > )
+Header                  =     ( MIMEHeader  | 
+                                MessageHeader  | 
+                                GenericHeader )
 
-GenericHeader           =      HeaderKey COLON_PLUS_WS < HeaderText > 
+#FIXME: Do we need to strip the last CRLF from the headertext?
+GenericHeader           =      HeaderKey COLON_PLUS_WS <HeaderText> 
                                     {
                                         stringpair_list_add(yy->parsed_msg->opt_fields, new_stringpair(yy->tmp_key, yytext));
                                         free(yy->tmp_key);
@@ -31,10 +32,11 @@ HeaderKey               =      < ( Alpha | Digit | OrdinarySymbol )+ >
                                     {
                                         yy->tmp_key = strdup(yytext);
                                     }                        
-HeaderPhrase            =      EncodedWord | Word
+
 HeaderText              =      HeaderLine ( HeaderCont )* 
 HeaderCont              =      Whitespace HeaderLine
-HeaderLine              =      HeaderPhrase* CRLF
+HeaderPhrase            =      EncodedWord | Word
+HeaderLine              =      (HeaderPhrase | Whitespace)* CRLF
 
 #MIME Header Blocks
 
@@ -125,22 +127,22 @@ ExtToken                =      Token "*"
 ExtValue                =      Value
 
 # Message-related headers (per RFC2822)
-MessageHeader           =     ( MessageIDHeader |
+MessageHeader           =     (( MessageIDHeader |
                                 MessageToHeader |
                                 MessageFromHeader |
                                 MessageCCHeader |
                                 MessageBCCHeader |
-                                MessageSubjHeader |
                                 MessageReplyToHeader |
                                 MessageInReplyToHeader |
-                                MessageRefsHeader ) CRLF      
+                                MessageRefsHeader ) CRLF) 
+                                | MessageSubjHeader
                                 
 MessageIDHeader         =      MessageIDKey COLON_PLUS_WS IDString
-MessageToHeader         =      MessageToKey COLON_PLUS_WS < ToString >  
+MessageToHeader         =      MessageToKey COLON_PLUS_WS ToString  
 MessageFromHeader       =      MessageFromKey COLON_PLUS_WS FromString
 MessageCCHeader         =      MessageCCKey COLON_PLUS_WS CCString
 MessageBCCHeader        =      MessageBCCKey COLON_PLUS_WS BCCString
-MessageSubjHeader       =      MessageSubjKey COLON_PLUS_WS Whitespace* SubjString
+MessageSubjHeader       =      MessageSubjKey COLON_PLUS_WS SubjString
 MessageReplyToHeader    =      MessageReplyToKey COLON_PLUS_WS ReplyToString
 MessageInReplyToHeader  =      MessageInReplyToKey COLON_PLUS_WS InReplyToString
 MessageRefsHeader       =      MessageRefsKey COLON_PLUS_WS RefsString
@@ -153,9 +155,10 @@ MessageSubjKey          =      'Subject'
 MessageReplyToKey       =      'Reply-To'
 MessageInReplyToKey     =      'In-Reply-To'
 MessageRefsKey          =      'References'  
-IDString                =      < MsgID > 
+IDString                =       MsgID 
                                     {
-                                        yy->parsed_msg->id = strdup(yytext);
+                                        yy->parsed_msg->id = strdup(yy->curr_msg_id_list->value);
+                                        free(yy->curr_msg_id_list);
                                     }
 ToString                =      AddressList 
                                     {
@@ -250,7 +253,16 @@ NameAddr                =      <a:AngleAddr>
                                     } 
                                 | <d:DisplayName a:AngleAddr> 
                                     { 
-                                        $$ = (void*)new_identity(a, NULL, strdup(yytext), d); 
+                                        int a_size = strlen(a);
+                                        int d_size = strlen(d);
+                                        int userid_len = a_size + d_size + 4;
+                                        char* userid = (char*)malloc(sizeof(char) * (userid_len + 1));
+                                        strcpy(userid, d);
+                                        strncat(userid, " <", userid_len - d_size);
+                                        strncat(userid, a, userid_len - (d_size + 2));
+                                        strncat(userid, ">", 1);
+                                        userid[userid_len] = '\0';
+                                        $$ = (void*)new_identity(a, NULL, userid, d); 
                                     }
 AngleAddr               =      CFWS? "<" <AddrSpec> ">" CFWS? 
                                     {
@@ -262,7 +274,23 @@ AngleAddr               =      CFWS? "<" <AddrSpec> ">" CFWS?
                                     }
 # FIXME: Process group
 Group                   =      DisplayName ":" (MailboxList | CFWS)? ";" CFWS?
-DisplayName             =      < Phrase > {$$ = strdup(yytext);}
+DisplayName             =      < Phrase > 
+                                    {
+                                        /* Unfortunately, the trailing CFWS sticks with the Phrase */
+                                        size_t final_length = yyleng;
+                                        char check_curr;
+                                        for (check_curr = yytext[final_length - 1];
+                                             (check_curr == ' ' || check_curr == '\t') && final_length >= 0;
+                                             check_curr = yytext[--final_length - 1]);
+                                            
+                                        char* retval = (char*)malloc(sizeof(char) * (final_length + 1));
+                                        strncpy(retval, yytext, final_length);
+                                        retval[final_length] = '\0';
+
+                                        $$ = retval;
+                                        
+                                        
+                                    }
 MailboxList             =      (Mailbox ("," Mailbox)*) | ObsMBoxList
 AddressList             =      (Address ("," Address)*) | ObsAddrList 
 
@@ -285,7 +313,7 @@ ObsMBoxList             =      (Mailbox? CFWS? "," CFWS?)+ Mailbox?
 ObsAddrList             =      (Address? CFWS? "," CFWS?)+ Address?
                       
                       
-# RFC2822 Message ID - FIXME - what should this look like?
+# RFC2822 Message ID
 MsgID                   =       CFWS? "<" < IDLeft "@" IDRight > ">" CFWS? 
                                     { 
                                         if (!yy->curr_msg_id_list)
@@ -300,15 +328,16 @@ NoFoldLiteral           =       "[" *(DText | QuotedPair) "]"
 ObsIDLeft               =      LocalPart
 ObsIDRight              =      Domain
                       
-Body                    =      PlainBody
+Body                    =      MIMEBody | PlainBody
 PlainBody               =      .* EOF
 
+MIMEBody            =      
 Encapsulation       =      Delimiter BodyPart CRLF
 CloseDelimiter      =      Delimiter "--"
 Delimiter           =      CRLF DashBoundary
 BodyPart            =      MIMEHeader+ (CRLF OCTET*)?
 DashBoundary        =      "--" Boundary
-Boundary            =      < BChars* BCharsNoSpace >
+Boundary            =      BChars* BCharsNoSpace
 BCharsNoSpace       =      BChars | Space
 BChars              =      Digit | Alpha | "'" | "(" | ")" |
                             "+" | "_" | "," | "-" | "." |
@@ -334,7 +363,7 @@ Word                =      ( AlphaNum | Symbol )+
 AlphaNum            =      Alpha | Digit
 Alpha               =      [a-zA-Z]
 Digit               =      [0-9]
-Symbol              =      OrdinarySymbol | COLON_PLUS_WS
+Symbol              =      OrdinarySymbol | COLON
 Whitespace          =      Space+
 Space               =      [' ' '\t']
 
@@ -362,8 +391,8 @@ NoWSCtl             =      [\001-\010] | [\013-\014] | [\016-\037] | [\177]
 
 HexDigit                =      (Digit | "A" | "B" | "C" | "D" | "E" | "F")
 
-EncodedWord             =      <"=?" Charset ("*" Language)? "?" EncodedText "?="> |
-                                <"=?" Charset "?" Encoding "?" EncodedText "?=">
+EncodedWord             =      "=?" Charset ("*" Language)? "?" EncodedText "?=" |
+                                "=?" Charset "?" Encoding "?" EncodedText "?="
                                 
 Encoding                =      [Q q] | [B b]
 

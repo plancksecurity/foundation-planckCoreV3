@@ -25,6 +25,7 @@ DYNAMIC_API PEP_STATUS parse_mailmessage(const char *mimetext,
     ctx.input_str = mimetext;
     ctx.index_consumed = 0;
     ctx.parsed_msg = new_message(PEP_dir_incoming);
+    ctx.parsed_msg->opt_fields = new_stringpair_list(NULL);
     ctx.curr_address_list = NULL;
     ctx.curr_msg_id_list = NULL;
     ctx.tmp_key = NULL;
