@@ -13,7 +13,7 @@ static inject_sync_msg_t static_inject_sync_msg = NULL;
 
 PEP_STATUS receive_sync_msg(
         PEP_SESSION session,
-        DeviceGroup_Protocol_t *msg
+        sync_msg_t *sync_msg
     );
 
 DYNAMIC_API PEP_STATUS register_sync_callbacks(
