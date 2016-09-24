@@ -9,61 +9,132 @@
 #define SYNC_VERSION_MAJOR 1
 #define SYNC_VERSION_MINOR 0
 
+struct _sync_msg_t {
+    bool is_a_message;
+    union {
+        DeviceGroup_Protocol_t *message;
+        struct {
+            DeviceState_event event;
+            Identity partner;
+            void *extra;
+        } event;
+    } u;
+};
+
 PEP_STATUS receive_sync_msg(
         PEP_SESSION session,
-        DeviceGroup_Protocol_t *msg
+        sync_msg_t *sync_msg
     )
 {
-    assert(session && msg && msg->payload.present != DeviceGroup_Protocol__payload_PR_NOTHING);
-    if (!(session && msg && msg->payload.present != DeviceGroup_Protocol__payload_PR_NOTHING))
-        return PEP_ILLEGAL_VALUE;
-
+    PEP_STATUS status;
     void *extra = NULL;
     Identity partner = NULL;
     DeviceState_event event = DeviceState_event_NONE;
+    assert(session && sync_msg);
+    if (!(session && sync_msg))
+        return PEP_ILLEGAL_VALUE;
 
-    switch (msg->payload.present) {
-        case DeviceGroup_Protocol__payload_PR_beacon:
-            partner = Identity_to_Struct(&msg->header.me, NULL);
-            if (!partner)
-                return PEP_OUT_OF_MEMORY;
-            event = Beacon;
-            break;
+    if(sync_msg->is_a_message){
+        DeviceGroup_Protocol_t *msg = sync_msg->u.message;
+        assert(msg && msg->payload.present != DeviceGroup_Protocol__payload_PR_NOTHING);
+        if (!(msg && msg->payload.present != DeviceGroup_Protocol__payload_PR_NOTHING)){
+            status = PEP_OUT_OF_MEMORY;
+            goto error;
+        }
 
-        case DeviceGroup_Protocol__payload_PR_handshakeRequest:
-            partner = Identity_to_Struct(&msg->header.me, NULL);
-            if (!partner)
-                return PEP_OUT_OF_MEMORY;
-            event = HandshakeRequest;
-            break;
+        switch (msg->payload.present) {
+            case DeviceGroup_Protocol__payload_PR_beacon:
+                partner = Identity_to_Struct(&msg->header.me, NULL);
+                if (!partner){
+                    status = PEP_OUT_OF_MEMORY;
+                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                    goto error;
+                }
+                event = Beacon;
+                break;
 
-        case DeviceGroup_Protocol__payload_PR_groupKeys:
-            partner = Identity_to_Struct(&msg->header.me, NULL);
-            if (!partner)
-                return PEP_OUT_OF_MEMORY;
-            identity_list *group_keys = IdentityList_to_identity_list(
-                    &msg->payload.choice.groupKeys.ownIdentities, NULL);
-            if (!group_keys) {
-                free_identity(partner);
-                return PEP_OUT_OF_MEMORY;
-            }
-            extra = (void *) group_keys;
-            event = GroupKeys;
-            break;
+            case DeviceGroup_Protocol__payload_PR_handshakeRequest:
+                partner = Identity_to_Struct(&msg->header.me, NULL);
+                if (!partner){
+                    status = PEP_OUT_OF_MEMORY;
+                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                    goto error;
+                }
+                event = HandshakeRequest;
+                break;
 
-        default:
-            return PEP_SYNC_ILLEGAL_MESSAGE;
+            case DeviceGroup_Protocol__payload_PR_groupKeys:
+                partner = Identity_to_Struct(&msg->header.me, NULL);
+                if (!partner){
+                    status = PEP_OUT_OF_MEMORY;
+                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                    goto error;
+                }
+                identity_list *group_keys = IdentityList_to_identity_list(
+                        &msg->payload.choice.groupKeys.ownIdentities, NULL);
+                if (!group_keys) {
+                    free_identity(partner);
+                    status = PEP_OUT_OF_MEMORY;
+                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                    goto error;
+                }
+                extra = (void *) group_keys;
+                event = GroupKeys;
+                break;
+
+            default:
+                status = PEP_SYNC_ILLEGAL_MESSAGE;
+                ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                goto error;
+        }
+    }
+    else{
+        partner = sync_msg->u.event.partner;
+        extra = sync_msg->u.event.extra;
+        event = sync_msg->u.event.event;
     }
 
-    PEP_STATUS status = fsm_DeviceState_inject(session, event, partner, extra);
+    status = fsm_DeviceState_inject(session, event, partner, extra);
 
     free_identity(partner);
+
+error:
+    free(sync_msg);
 
     return status;
 }
 
 // from sync.c
 int call_inject_sync_msg(PEP_SESSION session, void *msg);
+
+PEP_STATUS inject_DeviceState_event(
+    PEP_SESSION session, 
+    DeviceState_event event,
+    Identity partner,
+    void *extra)
+{
+    PEP_STATUS status;
+
+    assert(session);
+    if (!(session))
+        return PEP_ILLEGAL_VALUE;
+
+    sync_msg_t *sync_msg = malloc(sizeof(sync_msg_t));
+    if(sync_msg == NULL)
+        return PEP_OUT_OF_MEMORY;
+
+    sync_msg->is_a_message = false;
+    sync_msg->u.event.partner = partner;
+    sync_msg->u.event.extra = extra;
+    sync_msg->u.event.event = event;
+
+    status = call_inject_sync_msg(session, sync_msg);
+    if (status == PEP_SYNC_NO_INJECT_CALLBACK){
+        free(sync_msg);
+    }
+
+    return status;
+}
 
 PEP_STATUS receive_DeviceState_msg(
     PEP_SESSION session, 
@@ -142,9 +213,19 @@ PEP_STATUS receive_DeviceState_msg(
 
                 if (status == PEP_STATUS_OK) {
                     found = true;
-                    status = call_inject_sync_msg(session, msg);
-                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                    sync_msg_t *sync_msg = malloc(sizeof(sync_msg_t));
+                    if(sync_msg == NULL){
+                        ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                        return PEP_OUT_OF_MEMORY;
+                    }
+                    sync_msg->is_a_message = true;
+                    sync_msg->u.message = msg;
+                    status = call_inject_sync_msg(session, sync_msg);
                     if (status != PEP_STATUS_OK){
+                        ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                        if (status == PEP_SYNC_NO_INJECT_CALLBACK){
+                            free(sync_msg);
+                        }
                         return status;
                     }
                 }

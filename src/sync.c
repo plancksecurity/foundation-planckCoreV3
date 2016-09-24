@@ -107,7 +107,7 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
         void *management
     )
 {
-    DeviceGroup_Protocol_t *msg = NULL;
+    sync_msg_t *msg = NULL;
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session && session->retrieve_next_sync_msg);
@@ -118,7 +118,7 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
 
     log_event(session, "sync_protocol thread started", "pEp sync protocol", NULL, NULL);
 
-    while ((msg = (DeviceGroup_Protocol_t *) session->retrieve_next_sync_msg(management))) 
+    while ((msg = (sync_msg_t *) session->retrieve_next_sync_msg(management))) 
     {
         if ((status = receive_sync_msg(session, msg) != PEP_STATUS_OK)) {
             char buffer[MAX_LINELENGTH];

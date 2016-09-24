@@ -65,6 +65,8 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
         sync_handshake_result result
     );
 
+// sync_msg_t - items queued for serialized handling by protocol engine
+typedef struct _sync_msg_t sync_msg_t;
 
 // inject_sync_msg - inject sync protocol message
 //

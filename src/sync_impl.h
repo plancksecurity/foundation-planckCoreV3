@@ -1,6 +1,7 @@
 #pragma once
 
 #include "message.h"
+#include "sync.h"
 #include "sync_fsm.h"
 
 #ifdef __cplusplus
@@ -9,7 +10,7 @@ extern "C" {
 
 PEP_STATUS receive_sync_msg(
         PEP_SESSION session,
-        DeviceGroup_Protocol_t *msg
+        sync_msg_t *sync_msg
     );
 
 PEP_STATUS receive_DeviceState_msg(
