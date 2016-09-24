@@ -1326,7 +1326,7 @@ static PEP_STATUS _update_identity_for_incoming_message(
     PEP_STATUS status;
     if (src->from && src->from->address) {
         status = update_identity(session, src->from);
-        if (status == PEP_STATUS_OK
+        if ((status == PEP_STATUS_OK || status == PEP_KEY_BLACKLISTED)
                 && is_a_pEpmessage(src)
                 && src->from->comm_type >= PEP_ct_OpenPGP_unconfirmed
                 && src->from->comm_type != PEP_ct_pEp_unconfirmed
@@ -1335,6 +1335,8 @@ static PEP_STATUS _update_identity_for_incoming_message(
             src->from->comm_type |= PEP_ct_pEp_unconfirmed;
             status = update_identity(session, src->from);
         }
+        if (status == PEP_KEY_BLACKLISTED)
+            status = PEP_STATUS_OK;
         return status;
     }
     return PEP_ILLEGAL_VALUE;
