@@ -145,6 +145,13 @@ DYNAMIC_API PEP_STATUS update_identity(
     if (status == PEP_OUT_OF_MEMORY)
         goto exit_free;
 
+    /* ALWAYS elect pubkey */
+    status = elect_pubkey(session, identity);
+    if (status != PEP_STATUS_OK)
+        goto exit_free;
+    
+    _did_elect_new_key = 1; /*???*/
+    
     if (stored_identity) {
         PEP_comm_type _comm_type_key;
         status = get_key_rating(session, stored_identity->fpr, &_comm_type_key);
