@@ -278,7 +278,7 @@ exit_free :
 }
 
 PEP_STATUS elect_ownkey(
-        PiEP_SESSION session, pEp_identity * identity
+        PEP_SESSION session, pEp_identity * identity
     )
 {
     PEP_STATUS status;
