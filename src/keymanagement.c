@@ -146,6 +146,8 @@ DYNAMIC_API PEP_STATUS update_identity(
         goto exit_free;
 
     /* We elect a pubkey first in case there's no acceptable stored fpr */
+    free(identity->fpr);
+    identity->fpr = strdup("");
     status = elect_pubkey(session, identity);
     if (status != PEP_STATUS_OK)
         goto exit_free;
@@ -165,6 +167,7 @@ DYNAMIC_API PEP_STATUS update_identity(
             status = blacklist_is_listed(session, identity->fpr, &dont_use_fpr);
             if (dont_use_fpr) {
                 free(identity->fpr);
+                identity->fpr = strdup("");
             }
             else {
                 _did_elect_new_key = 1;
@@ -221,14 +224,26 @@ DYNAMIC_API PEP_STATUS update_identity(
 
         /* Work with the elected key from above */
         if (!EMPTYSTR(identity->fpr)) {
-            PEP_comm_type _comm_type_key;
+            
+            bool dont_use_fpr = true;
+            status = blacklist_is_listed(session, identity->fpr, &dont_use_fpr);
+            if (status != PEP_STATUS_OK)
+                dont_use_fpr = true; 
 
-            status = get_key_rating(session, identity->fpr, &_comm_type_key);
-            assert(status != PEP_OUT_OF_MEMORY);
-            if (status == PEP_OUT_OF_MEMORY)
-                goto exit_free;
+            if (!dont_use_fpr) {
+                PEP_comm_type _comm_type_key;
 
-            identity->comm_type = _comm_type_key;
+                status = get_key_rating(session, identity->fpr, &_comm_type_key);
+                assert(status != PEP_OUT_OF_MEMORY);
+                if (status == PEP_OUT_OF_MEMORY)
+                    goto exit_free;
+
+                identity->comm_type = _comm_type_key;
+            }
+            else {
+                free(identity->fpr);
+                identity->fpr = strdup("");
+            }
         }
     }
 
