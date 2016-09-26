@@ -13,6 +13,12 @@ PEP_STATUS receive_sync_msg(
         sync_msg_t *sync_msg
     );
 
+PEP_STATUS inject_DeviceState_event(
+    PEP_SESSION session, 
+    DeviceState_event event,
+    Identity partner,
+    void *extra);
+
 PEP_STATUS receive_DeviceState_msg(
     PEP_SESSION session, 
     message *src, 

@@ -86,6 +86,14 @@ PEP_STATUS receive_DeviceState_msg(
         stringlist_t *keylist
     );
 
+// event injector
+
+PEP_STATUS inject_DeviceState_event(
+    PEP_SESSION session, 
+    DeviceState_event event,
+    Identity partner,
+    void *extra);
+
 // state machine
 
 DeviceState_state fsm_DeviceState(
