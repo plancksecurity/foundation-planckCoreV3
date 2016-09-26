@@ -165,7 +165,6 @@ DYNAMIC_API PEP_STATUS update_identity(
             status = blacklist_is_listed(session, identity->fpr, &dont_use_fpr);
             if (dont_use_fpr) {
                 free(identity->fpr);
-                identity->fpr = NULL;
             }
             else {
                 _did_elect_new_key = 1;
@@ -176,7 +175,7 @@ DYNAMIC_API PEP_STATUS update_identity(
             assert(identity->fpr);
             if (identity->fpr == NULL)
                 return PEP_OUT_OF_MEMORY;
-            
+                
         }
         
         /* Ok, at this point, we either have a non-blacklisted fpr we can work */
@@ -233,6 +232,10 @@ DYNAMIC_API PEP_STATUS update_identity(
         }
     }
 
+    if (identity->fpr == NULL)
+        identity->fpr = strdup("");
+    
+    
     status = PEP_STATUS_OK;
 
     if (identity->comm_type != PEP_ct_unknown && !EMPTYSTR(identity->user_id)) {
@@ -275,7 +278,7 @@ exit_free :
 }
 
 PEP_STATUS elect_ownkey(
-        PEP_SESSION session, pEp_identity * identity
+        PiEP_SESSION session, pEp_identity * identity
     )
 {
     PEP_STATUS status;
