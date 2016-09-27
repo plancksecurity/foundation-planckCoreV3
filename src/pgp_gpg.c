@@ -1276,8 +1276,10 @@ PEP_STATUS pgp_list_keyinfo(PEP_SESSION session, const char* pattern,
 
                 // first subkey is primary key
                 char* fpr = key->subkeys->fpr;
+                char* uid = key->uids->uid;
 
                 assert(fpr);
+                assert(uid);
                 if (!fpr)
                     return PEP_GET_KEY_FAILED;
                 
