@@ -121,6 +121,7 @@ DYNAMIC_API PEP_STATUS update_identity(
         return PEP_ILLEGAL_VALUE;
 
     int _no_user_id = EMPTYSTR(identity->user_id);
+    int _did_elect_new_key = 0;
 
     if (_no_user_id)
     {
@@ -170,6 +171,8 @@ DYNAMIC_API PEP_STATUS update_identity(
                 PEP_STATUS status = elect_pubkey(session, identity);
                 if (status != PEP_STATUS_OK)
                     goto exit_free;
+
+                _did_elect_new_key = 1;
             }
             else {
                 identity->comm_type = stored_identity->comm_type;
@@ -243,7 +246,7 @@ DYNAMIC_API PEP_STATUS update_identity(
 
         // Identity doesn't get stored if call was just about checking existing
         // user by address (i.e. no user id given but already stored)
-        if (!(_no_user_id && stored_identity))
+        if (!(_no_user_id && stored_identity) || _did_elect_new_key)
         {
             status = set_identity(session, identity);
             assert(status == PEP_STATUS_OK);

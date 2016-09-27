@@ -1256,7 +1256,7 @@ PEP_STATUS pgp_list_keyinfo(PEP_SESSION session, const char* pattern,
     stringpair_list_t* list_curr = _keyinfo_list;
     stringpair_t* pair = NULL;
         
-    do {
+    do { 
         gpgme_error = gpg.gpgme_op_keylist_next(session->ctx, &key);
         gpgme_error = _GPGERR(gpgme_error);
       
@@ -1271,12 +1271,20 @@ PEP_STATUS pgp_list_keyinfo(PEP_SESSION session, const char* pattern,
 
                 // first subkey is primary key
                 char* fpr = key->subkeys->fpr;
-                char* uid = key->uids->uid;
-                
+
                 assert(fpr);
-                assert(uid); // ??
                 if (!fpr)
                     return PEP_GET_KEY_FAILED;
+                
+                bool own_key = false;
+                PEP_STATUS own_key_status = own_key_is_listed(session, fpr, &own_key);
+                
+                if (own_key || own_key_status != PEP_STATUS_OK) // Hrm... is this second part ok?
+                    continue;
+
+                char* uid = key->uids->uid;
+                assert(uid); // ??                
+                
                 
                 PEP_STATUS key_status = PEP_GET_KEY_FAILED;
                 
