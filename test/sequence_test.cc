@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <cstring> // for std::strdup()
 #include <assert.h>
 #include "pEpEngine.h"
 
