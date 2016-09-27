@@ -115,14 +115,12 @@ tstylesheet {
 
             // working code
 
-            free_identity(partner);
             // free extra
             return status;
 
         enomem:
             status = PEP_OUT_OF_MEMORY;
         error:
-            free_identity(partner);
             // free extra
             return status;
         }
@@ -199,13 +197,11 @@ tstylesheet {
 
             `` if "$name='GroupKeys'" |> free_identity_list(kl);
             free_DeviceGroup_Protocol_msg(msg);
-            free_identity(partner);
             return PEP_STATUS_OK;
 
         enomem:
             status = PEP_OUT_OF_MEMORY;
         error:
-            free_identity(partner);
             free_DeviceGroup_Protocol_msg(msg);
             `` if "$name='GroupKeys'" |> free_identity_list(kl);
             return status;
