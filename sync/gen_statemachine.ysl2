@@ -91,6 +91,14 @@ tstylesheet {
         `` const "name", "@name"
         `` for "func:distinctName(//action)" | PEP_STATUS «@name»(PEP_SESSION session, «$name»_state state, Identity partner, void *extra);
 
+        // event injector
+
+        PEP_STATUS inject_DeviceState_event(
+            PEP_SESSION session, 
+            DeviceState_event event,
+            Identity partner,
+            void *extra);
+
         // message receiver
         
         PEP_STATUS receive_DeviceState_msg(

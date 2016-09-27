@@ -77,6 +77,14 @@ PEP_STATUS acceptHandshake(PEP_SESSION session, DeviceState_state state, Identit
 PEP_STATUS sendGroupKeys(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS storeGroupKeys(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 
+// event injector
+
+PEP_STATUS inject_DeviceState_event(
+    PEP_SESSION session, 
+    DeviceState_event event,
+    Identity partner,
+    void *extra);
+
 // message receiver
 
 PEP_STATUS receive_DeviceState_msg(
