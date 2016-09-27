@@ -104,6 +104,32 @@ error:
     return status;
 }
 
+DYNAMIC_API void free_sync_msg(sync_msg_t *sync_msg)
+{
+    assert(sync_msg);
+    if (!(sync_msg))
+        return;
+
+    if(sync_msg->is_a_message){
+        DeviceGroup_Protocol_t *msg = sync_msg->u.message;
+        assert(msg);
+        if (!(msg))
+            return;
+
+        ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+    }
+    else{
+        Identity partner = NULL;
+        partner = sync_msg->u.event.partner;
+        if(partner != NULL)
+            free_identity(partner);
+    }
+
+    free(sync_msg);
+
+    return;
+}
+
 // from sync.c
 int call_inject_sync_msg(PEP_SESSION session, void *msg);
 

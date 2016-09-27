@@ -148,6 +148,12 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
         void *management
     );
 
+// free_sync_msg() - free sync_msg_t struct when not passed to do_sync_protocol  
+//
+//  parameters:
+//      sync_msg (in)            pointer to sync_msg_t struct to free
+
+DYNAMIC_API void free_sync_msg(sync_msg_t *sync_msg);
 
 // decode_sync_msg() - decode sync message from PER into XER
 //
