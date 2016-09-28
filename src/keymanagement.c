@@ -588,7 +588,7 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
     return PEP_STATUS_OK;
 }
 
-DYNAMIC_API PEP_STATUS key_compromized(
+DYNAMIC_API PEP_STATUS key_mistrusted(
         PEP_SESSION session,
         pEp_identity *ident
     )

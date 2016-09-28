@@ -801,7 +801,7 @@ DYNAMIC_API PEP_STATUS renew_key(
 //  caveat:
 //      reason text must not include empty lines
 //      this function is meant for internal use only; better use
-//      key_compromized() of keymanagement API
+//      key_mistrusted() of keymanagement API
 
 DYNAMIC_API PEP_STATUS revoke_key(
         PEP_SESSION session,
