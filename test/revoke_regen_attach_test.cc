@@ -39,7 +39,7 @@ int main() {
     
     cout << "revoke \n";
     
-    key_compromized(session, me);
+    key_mistrusted(session, me);
 
     cout << "re-generated fingerprint \n";
     cout << me->fpr << "\n";

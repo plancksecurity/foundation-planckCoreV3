@@ -116,13 +116,13 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
     );
 
 
-// key_compromized() - mark key as being compromized
+// key_mistrusted() - mark key as being compromized
 //
 //  parameters:
 //      session (in)        session to use
 //      ident (in)          person and key which was compromized
 
-DYNAMIC_API PEP_STATUS key_compromized(
+DYNAMIC_API PEP_STATUS key_mistrusted(
         PEP_SESSION session,
         pEp_identity *ident
     );
@@ -143,7 +143,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     );
 
 
-// key_reset_trust() - undo trust_personal_key and key_compromized() for keys
+// key_reset_trust() - undo trust_personal_key and key_mistrusted() for keys
 //                     we don't own
 //
 //  parameters:
