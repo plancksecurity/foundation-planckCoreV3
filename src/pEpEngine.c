@@ -1004,22 +1004,24 @@ DYNAMIC_API PEP_STATUS set_identity(
     assert(session);
     assert(identity);
     assert(identity->address);
-    assert(identity->fpr);
     assert(identity->user_id);
     assert(identity->username);
 
-    if (!(session && identity && identity->address && identity->fpr &&
+    if (!(session && identity && identity->address &&
                 identity->user_id && identity->username))
         return PEP_ILLEGAL_VALUE;
 
     bool listed;
-    PEP_STATUS status = blacklist_is_listed(session, identity->fpr, &listed);
-    assert(status == PEP_STATUS_OK);
-    if (status != PEP_STATUS_OK)
-        return status;
+    
+    if (identity->fpr && identity->fpr[0] != '\0') {
+        PEP_STATUS status = blacklist_is_listed(session, identity->fpr, &listed);
+        assert(status == PEP_STATUS_OK);
+        if (status != PEP_STATUS_OK)
+            return status;
 
-    if (listed)
-        return PEP_KEY_BLACKLISTED;
+        if (listed)
+            return PEP_KEY_BLACKLISTED;
+    }
 
     sqlite3_exec(session->db, "BEGIN ;", NULL, NULL, NULL);
 
