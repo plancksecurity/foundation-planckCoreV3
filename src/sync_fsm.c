@@ -138,13 +138,6 @@ DeviceState_state fsm_DeviceState(
                     if (status != PEP_STATUS_OK)
                         return (int) invalid_action;
                     break;
-                case Beacon:
-                    status = sendHandshakeRequest(session, state, partner, NULL);
-                    if (status == PEP_OUT_OF_MEMORY)
-                        return (int) invalid_out_of_memory;
-                    if (status != PEP_STATUS_OK)
-                        return (int) invalid_action;
-                    break;
                 case HandshakeRequest:
                     status = sendHandshakeRequest(session, state, partner, NULL);
                     if (status == PEP_OUT_OF_MEMORY)
