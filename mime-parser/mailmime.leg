@@ -63,6 +63,13 @@ MIMEContentDescHeader   =      MIMEContentDescKey COLON_PLUS_WS ContentDescStrin
 MIMEContentDispoHeader  =      MIMEContentDispoKey COLON_PLUS_WS ContentDispoString
 MIMEGenericExtHeader    =      MIMEExtensionKey COLON_PLUS_WS ExtensionString
 
+MIMEContentRelevField   =      MIMEContentTypeHeader 
+                                | MIMEContentIDHeader 
+                                | MIMETransfEncodeHeader 
+                                | MIMEContentDescHeader 
+                                | MIMEContentDispoHeader 
+                                | MIMEGenericExtHeader 
+
 MIMEVersionKey          =      'MIME-Version'
 MIMEContentTypeKey      =      'Content-Type'
 MIMEContentDispoKey     =      'Content-Disposition'
@@ -331,7 +338,36 @@ ObsIDRight              =      Domain
 Body                    =      MIMEBody | PlainBody
 PlainBody               =      .* EOF
 
-MIMEBody            =      
+MIMEBody                =      
+
+# MIMEContentTypeHeader   =      MIMEContentTypeKey COLON_PLUS_WS ContentTypeString
+# MIMEContentIDHeader     =      MIMEContentIDKey COLON_PLUS_WS ContentIDString
+# MIMETransfEncodeHeader  =      MIMETransfEncodeKey COLON_PLUS_WS TransfEncodeString
+# MIMEContentDescHeader   =      MIMEContentDescKey COLON_PLUS_WS ContentDescString
+# 
+# MIMEContentDispoHeader  =      MIMEContentDispoKey COLON_PLUS_WS ContentDispoString
+# MIMEGenericExtHeader    =      MIMEExtensionKey COLON_PLUS_WS ExtensionString
+
+#RFC 2045                 MAKE MORE SENSE TO CARE ABOUT THESE DURING GENERATION. HERE,
+#                         WE CHOOSE TO PROCESS WHATEVER HEADERS WE FIND AND CAN BACK OUT
+#                         IF WE DON'T HAVE WHAT WE NEED?
+EntityHeaders           =       (MIMEContentTypeHeader CRLF)?
+                                 (MIMETransfEncodeHeader CRLF)?
+                                 (MessageIDHeader CRLF)?
+                                 (MIMEContentDescHeader CRLF)?
+                                 (MIMEGenericExtHeader CRLF)*
+
+MIMEMessageHeaders      =       (EntityHeaders MessageHeader MIMEVersionHeader) |
+                                 (Fields MIMEVersionHeader EntityHeaders) |
+                                 (MIMEVersionHeader EntityHeaders Fields) |
+                                 (EntityHeaders MIMEVersionHeader Fields) |
+                                 (Fields EntityHeaders MIMEVersionHeader) |
+                                 (MIMEVersionHeader Fields EntityHeaders) 
+ 
+# We ignore any headers which are NOT EntityHeaders or Content headers here 
+# This... what???
+MIMEPartHeaders         =       (MIMEContentRelevField | MessageHeader)* EntityHeaders (MIMEContentRelevField | MessageHeader)*
+
 Encapsulation       =      Delimiter BodyPart CRLF
 CloseDelimiter      =      Delimiter "--"
 Delimiter           =      CRLF DashBoundary
