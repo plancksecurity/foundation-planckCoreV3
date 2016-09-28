@@ -47,8 +47,9 @@ typedef enum _DeviceState_state {
     InitState, 
     Sole, 
     HandshakingSole, 
-    WaitForGroupKeys, 
-    Grouped
+    WaitForGroupKeysSole, 
+    Grouped, 
+    HandshakingGrouped
 } DeviceState_state;
 
 // events

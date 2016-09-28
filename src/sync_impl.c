@@ -195,18 +195,24 @@ PEP_STATUS receive_DeviceState_msg(
                 switch (msg->payload.present) {
                     // HandshakeRequest needs encryption
                     case DeviceGroup_Protocol__payload_PR_handshakeRequest:
-                        if (rating < PEP_rating_reliable) {
+                        if (rating < PEP_rating_reliable ||
+                            strncmp(sync_uuid,
+                                    (const char *)msg->payload.choice.handshakeRequest.partner.user_id->buf,
+                                    msg->payload.choice.handshakeRequest.partner.user_id->size) != 0){
                             ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
                             free(user_id);
-                            goto skip;
+                            return PEP_MESSAGE_DISCARDED;
                         }
                         break;
                     // accepting GroupKeys needs encryption and trust
                     case DeviceGroup_Protocol__payload_PR_groupKeys:
-                        if (!keylist || rating < PEP_rating_reliable) {
+                        if (!keylist || rating < PEP_rating_reliable ||
+                            strncmp(sync_uuid,
+                                    (const char *)msg->payload.choice.groupKeys.partner.user_id->buf,
+                                    msg->payload.choice.groupKeys.partner.user_id->size) != 0){
                             ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
                             free(user_id);
-                            goto skip;
+                            return PEP_MESSAGE_DISCARDED;
                         }
 
                         // check trust of identity with the right user_id
@@ -226,7 +232,7 @@ PEP_STATUS receive_DeviceState_msg(
                         if (this_user_id_rating < PEP_rating_trusted ) {
                             ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
                             free(user_id);
-                            goto skip;
+                            return PEP_MESSAGE_DISCARDED;
                         }
                         break;
                     default:
@@ -276,7 +282,6 @@ PEP_STATUS receive_DeviceState_msg(
             }
         }
         else {
-skip:
             last = bl;
         }
     }

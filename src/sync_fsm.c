@@ -98,13 +98,13 @@ DeviceState_state fsm_DeviceState(
                             return (int) invalid_action;
                         return Grouped;
                     }
-                    return WaitForGroupKeys;
+                    return WaitForGroupKeysSole;
                 default:
                     return (DeviceState_state) invalid_event;
             }
             break;
         
-        case WaitForGroupKeys:
+        case WaitForGroupKeysSole:
             switch (event) {
                 case Init: break;
                 case GroupKeys:
@@ -151,6 +151,15 @@ DeviceState_state fsm_DeviceState(
                         return (int) invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return (int) invalid_action;
+                    return HandshakingGrouped;
+                default:
+                    return (DeviceState_state) invalid_event;
+            }
+            break;
+        
+        case HandshakingGrouped:
+            switch (event) {
+                case Init:
                     status = showHandshake(session, state, partner, NULL);
                     if (status == PEP_OUT_OF_MEMORY)
                         return (int) invalid_out_of_memory;
@@ -163,7 +172,7 @@ DeviceState_state fsm_DeviceState(
                         return (int) invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return (int) invalid_action;
-                    break;
+                    return Grouped;
                 case HandshakeAccepted:
                     status = acceptHandshake(session, state, partner, NULL);
                     if (status == PEP_OUT_OF_MEMORY)
@@ -175,14 +184,7 @@ DeviceState_state fsm_DeviceState(
                         return (int) invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return (int) invalid_action;
-                    break;
-                case Reject:
-                    status = rejectHandshake(session, state, NULL, NULL);
-                    if (status == PEP_OUT_OF_MEMORY)
-                        return (int) invalid_out_of_memory;
-                    if (status != PEP_STATUS_OK)
-                        return (int) invalid_action;
-                    break;
+                    return Grouped;
                 default:
                     return (DeviceState_state) invalid_event;
             }

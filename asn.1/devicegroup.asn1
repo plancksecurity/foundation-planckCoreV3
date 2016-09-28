@@ -10,9 +10,12 @@ IMPORTS Version, Identity, IdentityList FROM PEP;
 
 Beacon ::= NULL
 
-HandshakeRequest ::= NULL
+HandshakeRequest ::= SEQUENCE {
+    partner Identity /* identity of the receiver */
+}
 
 GroupKeys ::= SEQUENCE {
+    partner Identity, /* identity of the receiver */
     ownIdentities IdentityList
 }
 
