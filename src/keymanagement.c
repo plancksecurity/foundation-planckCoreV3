@@ -111,6 +111,7 @@ DYNAMIC_API PEP_STATUS update_identity(
     )
 {
     pEp_identity *stored_identity;
+    pEp_identity* temp_id = NULL;
     PEP_STATUS status;
 
     assert(session);
@@ -146,7 +147,7 @@ DYNAMIC_API PEP_STATUS update_identity(
         goto exit_free;
 
     /* We elect a pubkey first in case there's no acceptable stored fpr */
-    pEp_identity* temp_id = identity_dup(identity);
+    temp_id = identity_dup(identity);
     
     status = elect_pubkey(session, temp_id);
     if (status != PEP_STATUS_OK)
