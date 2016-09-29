@@ -279,7 +279,7 @@ DYNAMIC_API PEP_STATUS update_identity(
 
         // Identity doesn't get stored if call was just about checking existing
         // user by address (i.e. no user id given but already stored)
-        if (!(_no_user_id && stored_identity) || _did_elect_new_key)
+        if (!(_no_user_id && stored_identity) || _did_elect_new_key || EMPTYSTR(temp_id->fpr))
         {
             status = set_identity(session, temp_id);
             assert(status == PEP_STATUS_OK);

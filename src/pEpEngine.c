@@ -931,6 +931,7 @@ DYNAMIC_API PEP_STATUS set_identity(
         return PEP_ILLEGAL_VALUE;
 
     bool listed;
+    
     PEP_STATUS status = blacklist_is_listed(session, identity->fpr, &listed);
     assert(status == PEP_STATUS_OK);
     if (status != PEP_STATUS_OK)
