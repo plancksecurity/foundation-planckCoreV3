@@ -146,9 +146,9 @@ DYNAMIC_API PEP_STATUS update_identity(
         goto exit_free;
 
     /* We elect a pubkey first in case there's no acceptable stored fpr */
-    free(identity->fpr);
-    identity->fpr = strdup("");
-    status = elect_pubkey(session, identity);
+    pEp_identity* temp_id = identity_dup(identity);
+    
+    status = elect_pubkey(session, temp_id);
     if (status != PEP_STATUS_OK)
         goto exit_free;
         
@@ -156,111 +156,122 @@ DYNAMIC_API PEP_STATUS update_identity(
         PEP_comm_type _comm_type_key;
         
         bool dont_use_fpr = true;
-        status = blacklist_is_listed(session, stored_identity->fpr, &dont_use_fpr);
-        if (status != PEP_STATUS_OK)
-            dont_use_fpr = true; 
-            
-        if (dont_use_fpr && !(EMPTYSTR(identity->fpr))) {
-            /* elected pubkey */
+
+        /* if we have a stored_identity fpr */
+        if (!EMPTYSTR(stored_identity->fpr)) {
+            status = blacklist_is_listed(session, stored_identity->fpr, &dont_use_fpr);
             if (status != PEP_STATUS_OK)
+                dont_use_fpr = true; 
+        }
+            
+
+        if (!dont_use_fpr) {
+            free(temp_id->fpr);
+            temp_id->fpr = strdup(stored_identity->fpr);
+            assert(temp_id->fpr);
+            if (temp_id->fpr == NULL) {
+                status = PEP_OUT_OF_MEMORY;
                 goto exit_free;
-            status = blacklist_is_listed(session, identity->fpr, &dont_use_fpr);
+            }
+        }
+        else if (!EMPTYSTR(temp_id->fpr)) {
+            status = blacklist_is_listed(session, temp_id->fpr, &dont_use_fpr);
             if (dont_use_fpr) {
-                free(identity->fpr);
-                identity->fpr = strdup("");
+                free(temp_id->fpr);
+                temp_id->fpr = strdup("");
             }
             else {
                 _did_elect_new_key = 1;
             }
         }
         else {
-            identity->fpr = strdup(stored_identity->fpr);
-            assert(identity->fpr);
-            if (identity->fpr == NULL)
-                return PEP_OUT_OF_MEMORY;
-                
+            if (temp_id->fpr == NULL)
+                temp_id->fpr = strdup("");
         }
         
-        /* Ok, at this point, we either have a non-blacklisted fpr we can work */
-        /* with, or we've got nada.                                            */        
-        if (!EMPTYSTR(identity->fpr)) {
-            status = get_key_rating(session, identity->fpr, &_comm_type_key);
+        /* ok, from here on out, use temp_id */
+        
+        
+        /* At this point, we either have a non-blacklisted fpr we can work */
+        /* with, or we've got nada.                                        */        
+        if (!EMPTYSTR(temp_id->fpr)) {
+            status = get_key_rating(session, temp_id->fpr, &_comm_type_key);
             assert(status != PEP_OUT_OF_MEMORY);
             if (status == PEP_OUT_OF_MEMORY)
                 goto exit_free;
-            status = get_trust(session, identity);
+            status = get_trust(session, temp_id);
             if (status == PEP_OUT_OF_MEMORY)
                 goto exit_free;
             if (_comm_type_key < PEP_ct_unconfirmed_encryption) {
-                identity->comm_type = _comm_type_key;
+                temp_id->comm_type = _comm_type_key;
             } else{
-                identity->comm_type = stored_identity->comm_type;
-                if (identity->comm_type == PEP_ct_unknown) {
-                    identity->comm_type = _comm_type_key;
+                temp_id->comm_type = stored_identity->comm_type;
+                if (temp_id->comm_type == PEP_ct_unknown) {
+                    temp_id->comm_type = _comm_type_key;
                 }
             }
         }
             
-        if (EMPTYSTR(identity->username)) {
-            free(identity->username);
-            identity->username = strdup(stored_identity->username);
-            assert(identity->username);
-            if (identity->username == NULL){
+        if (EMPTYSTR(temp_id->username)) {
+            free(temp_id->username);
+            temp_id->username = strdup(stored_identity->username);
+            assert(temp_id->username);
+            if (temp_id->username == NULL){
                 status = PEP_OUT_OF_MEMORY;
                 goto exit_free;
             }
         }
 
-        if (identity->lang[0] == 0) {
-            identity->lang[0] = stored_identity->lang[0];
-            identity->lang[1] = stored_identity->lang[1];
-            identity->lang[2] = 0;
+        if (temp_id->lang[0] == 0) {
+            temp_id->lang[0] = stored_identity->lang[0];
+            temp_id->lang[1] = stored_identity->lang[1];
+            temp_id->lang[2] = 0;
         }
 
-        identity->flags = stored_identity->flags;
+        temp_id->flags = stored_identity->flags;
     }
     else /* stored_identity == NULL */ {
-        identity->flags = 0;
+        temp_id->flags = 0;
 
         /* Work with the elected key from above */
-        if (!EMPTYSTR(identity->fpr)) {
+        if (!EMPTYSTR(temp_id->fpr)) {
             
             bool dont_use_fpr = true;
-            status = blacklist_is_listed(session, identity->fpr, &dont_use_fpr);
+            status = blacklist_is_listed(session, temp_id->fpr, &dont_use_fpr);
             if (status != PEP_STATUS_OK)
                 dont_use_fpr = true; 
 
             if (!dont_use_fpr) {
                 PEP_comm_type _comm_type_key;
 
-                status = get_key_rating(session, identity->fpr, &_comm_type_key);
+                status = get_key_rating(session, temp_id->fpr, &_comm_type_key);
                 assert(status != PEP_OUT_OF_MEMORY);
                 if (status == PEP_OUT_OF_MEMORY)
                     goto exit_free;
 
-                identity->comm_type = _comm_type_key;
+                temp_id->comm_type = _comm_type_key;
             }
             else {
-                free(identity->fpr);
-                identity->fpr = strdup("");
+                free(temp_id->fpr);
+                temp_id->fpr = strdup("");
             }
         }
     }
 
-    if (identity->fpr == NULL)
-        identity->fpr = strdup("");
+    if (temp_id->fpr == NULL)
+        temp_id->fpr = strdup("");
     
     
     status = PEP_STATUS_OK;
 
-    if (identity->comm_type != PEP_ct_unknown && !EMPTYSTR(identity->user_id)) {
-        assert(!EMPTYSTR(identity->username)); // this should not happen
+    if (temp_id->comm_type != PEP_ct_unknown && !EMPTYSTR(temp_id->user_id)) {
+        assert(!EMPTYSTR(temp_id->username)); // this should not happen
 
-        if (EMPTYSTR(identity->username)) { // mitigate
-            free(identity->username);
-            identity->username = strdup("anonymous");
-            assert(identity->username);
-            if (identity->username == NULL){
+        if (EMPTYSTR(temp_id->username)) { // mitigate
+            free(temp_id->username);
+            temp_id->username = strdup("anonymous");
+            assert(temp_id->username);
+            if (temp_id->username == NULL){
                 status = PEP_OUT_OF_MEMORY;
                 goto exit_free;
             }
@@ -270,7 +281,7 @@ DYNAMIC_API PEP_STATUS update_identity(
         // user by address (i.e. no user id given but already stored)
         if (!(_no_user_id && stored_identity) || _did_elect_new_key)
         {
-            status = set_identity(session, identity);
+            status = set_identity(session, temp_id);
             assert(status == PEP_STATUS_OK);
             if (status != PEP_STATUS_OK) {
                 goto exit_free;
@@ -278,10 +289,26 @@ DYNAMIC_API PEP_STATUS update_identity(
         }
     }
 
-    if (identity->comm_type != PEP_ct_compromized &&
-            identity->comm_type < PEP_ct_strong_but_unconfirmed)
+    if (temp_id->comm_type != PEP_ct_compromized &&
+            temp_id->comm_type < PEP_ct_strong_but_unconfirmed)
         if (session->examine_identity)
-            session->examine_identity(identity, session->examine_management);
+            session->examine_identity(temp_id, session->examine_management);
+    
+    /* ok, we got to the end. So we can assign the output identity */
+    free(identity->address);
+    identity->address = strdup(temp_id->address);
+    free(identity->fpr);
+    identity->fpr = strdup(temp_id->fpr);
+    free(identity->user_id);
+    identity->user_id = strdup(temp_id->user_id);
+    free(identity->username);
+    identity->username = strdup(temp_id->username);
+    identity->comm_type = temp_id->comm_type;
+    identity->lang[0] = temp_id->lang[0];
+    identity->lang[1] = temp_id->lang[1];
+    identity->lang[2] = 0;
+    identity->me = temp_id->me;
+    identity->flags = temp_id->flags;
 
 exit_free :
     
@@ -289,6 +316,9 @@ exit_free :
         free_identity(stored_identity);
     }
 
+    if (temp_id)
+        free_identity(temp_id);
+    
     return status;
 }
 
