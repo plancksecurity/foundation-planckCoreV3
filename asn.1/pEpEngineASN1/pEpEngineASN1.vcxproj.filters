@@ -72,9 +72,6 @@
     <ClCompile Include="..\Hash.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Header.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\Hex.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -85,9 +82,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\ISO639-1.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\KeyList.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\NativeEnumerated.c">
@@ -130,6 +124,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\GroupKeys.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\BOOLEAN.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\IdentityList.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NULL.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Sync-Protocols.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -200,9 +206,6 @@
     <ClInclude Include="..\Hash.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\Header.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\Hex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -215,9 +218,6 @@
     <ClInclude Include="..\ISO639-1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\KeyList.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\NativeEnumerated.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -225,9 +225,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\OCTET_STRING.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\OwnKeys.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\per_decoder.h">
@@ -261,6 +258,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\GroupKeys.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\BOOLEAN.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\IdentityList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NULL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Sync-Protocols.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

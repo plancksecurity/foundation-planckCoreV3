@@ -54,7 +54,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-	  <CompileAs>Default</CompileAs>
+      <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -100,6 +100,8 @@ del converter-sample.c
     </Link>
     <PreBuildEvent>
       <Command>cd ..
+del *.c
+del *.h
 asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=PEP.Message pEp.asn1 devicegroup.asn1
 del converter-sample.c
 </Command>
@@ -130,6 +132,7 @@ del converter-sample.c
     <ClCompile Include="..\ber_tlv_length.c" />
     <ClCompile Include="..\ber_tlv_tag.c" />
     <ClCompile Include="..\BIT_STRING.c" />
+    <ClCompile Include="..\BOOLEAN.c" />
     <ClCompile Include="..\constraints.c" />
     <ClCompile Include="..\constr_CHOICE.c" />
     <ClCompile Include="..\constr_SEQUENCE.c" />
@@ -141,20 +144,21 @@ del converter-sample.c
     <ClCompile Include="..\GroupKeys.c" />
     <ClCompile Include="..\HandshakeRequest.c" />
     <ClCompile Include="..\Hash.c" />
-    <ClCompile Include="..\Header.c" />
     <ClCompile Include="..\Hex.c" />
     <ClCompile Include="..\Identity.c" />
+    <ClCompile Include="..\IdentityList.c" />
     <ClCompile Include="..\INTEGER.c" />
     <ClCompile Include="..\ISO639-1.c" />
-    <ClCompile Include="..\KeyList.c" />
     <ClCompile Include="..\NativeEnumerated.c" />
     <ClCompile Include="..\NativeInteger.c" />
+    <ClCompile Include="..\NULL.c" />
     <ClCompile Include="..\OCTET_STRING.c" />
     <ClCompile Include="..\per_decoder.c" />
     <ClCompile Include="..\per_encoder.c" />
     <ClCompile Include="..\per_opentype.c" />
     <ClCompile Include="..\per_support.c" />
     <ClCompile Include="..\PrintableString.c" />
+    <ClCompile Include="..\Sync-Protocols.c" />
     <ClCompile Include="..\UTF8String.c" />
     <ClCompile Include="..\Version.c" />
     <ClCompile Include="..\xer_decoder.c" />
@@ -174,6 +178,7 @@ del converter-sample.c
     <ClInclude Include="..\ber_tlv_length.h" />
     <ClInclude Include="..\ber_tlv_tag.h" />
     <ClInclude Include="..\BIT_STRING.h" />
+    <ClInclude Include="..\BOOLEAN.h" />
     <ClInclude Include="..\constraints.h" />
     <ClInclude Include="..\constr_CHOICE.h" />
     <ClInclude Include="..\constr_SEQUENCE.h" />
@@ -185,21 +190,21 @@ del converter-sample.c
     <ClInclude Include="..\GroupKeys.h" />
     <ClInclude Include="..\HandshakeRequest.h" />
     <ClInclude Include="..\Hash.h" />
-    <ClInclude Include="..\Header.h" />
     <ClInclude Include="..\Hex.h" />
     <ClInclude Include="..\Identity.h" />
+    <ClInclude Include="..\IdentityList.h" />
     <ClInclude Include="..\INTEGER.h" />
     <ClInclude Include="..\ISO639-1.h" />
-    <ClInclude Include="..\KeyList.h" />
     <ClInclude Include="..\NativeEnumerated.h" />
     <ClInclude Include="..\NativeInteger.h" />
+    <ClInclude Include="..\NULL.h" />
     <ClInclude Include="..\OCTET_STRING.h" />
-    <ClInclude Include="..\OwnKeys.h" />
     <ClInclude Include="..\per_decoder.h" />
     <ClInclude Include="..\per_encoder.h" />
     <ClInclude Include="..\per_opentype.h" />
     <ClInclude Include="..\per_support.h" />
     <ClInclude Include="..\PrintableString.h" />
+    <ClInclude Include="..\Sync-Protocols.h" />
     <ClInclude Include="..\UTF8String.h" />
     <ClInclude Include="..\Version.h" />
     <ClInclude Include="..\xer_decoder.h" />
