@@ -176,6 +176,14 @@ tstylesheet {
                 |>> goto enomem;
             }
         }
+        choose {
+            when "$name='GroupKeys' or $name='HandshakeRequest'" {
+                |
+                |> if (Identity_from_Struct(partner,
+                |>                          &msg->payload.choice.«$lname».partner) == NULL)
+                |>> goto enomem;
+            }
+        }
         ||
 
         ||
