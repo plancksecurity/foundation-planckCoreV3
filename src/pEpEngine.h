@@ -530,6 +530,20 @@ DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
     );
 
+// set_device_group() - update own person's device group
+//
+//    parameters:
+//        session (in)        session handle
+//        group_name (in)     new group name
+//
+//    return value:
+//        PEP_STATUS_OK = 0             encryption and signing succeeded
+//        PEP_CANNOT_SET_PERSON         update failed
+
+DYNAMIC_API PEP_STATUS set_device_group(
+        PEP_SESSION session,
+        const char *group_name
+    );
 
 // set_identity_flags() - update identity flags on existing identity
 //
