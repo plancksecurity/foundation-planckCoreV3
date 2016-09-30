@@ -104,7 +104,9 @@ error:
     return status;
 }
 
-DYNAMIC_API void free_sync_msg(sync_msg_t *sync_msg)
+// TODO: DYNAMIC_API was here, but broke the windows build. 
+// We need to check whether it belongs here or it's a bug.
+/* DYNAMIC_API */ void free_sync_msg(sync_msg_t *sync_msg)
 {
     assert(sync_msg);
     if (!(sync_msg))
