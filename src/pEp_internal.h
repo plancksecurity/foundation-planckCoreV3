@@ -98,6 +98,7 @@ typedef struct _pEpSession {
     sqlite3_stmt *get_identity;
     sqlite3_stmt *set_person;
     sqlite3_stmt *set_device_group;
+    sqlite3_stmt *get_device_group;
     sqlite3_stmt *set_pgp_keypair;
     sqlite3_stmt *set_identity;
     sqlite3_stmt *set_identity_flags;

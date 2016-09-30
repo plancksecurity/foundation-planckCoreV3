@@ -537,12 +537,30 @@ DYNAMIC_API PEP_STATUS set_identity(
 //        group_name (in)     new group name
 //
 //    return value:
-//        PEP_STATUS_OK = 0             encryption and signing succeeded
+//        PEP_STATUS_OK = 0             device group was updated
 //        PEP_CANNOT_SET_PERSON         update failed
 
 DYNAMIC_API PEP_STATUS set_device_group(
         PEP_SESSION session,
         const char *group_name
+    );
+
+// get_device_group() - get own person's device group
+//
+//    parameters:
+//        session (in)        session handle
+//        group_name (in)     new group name
+//
+//    return value:
+//        PEP_STATUS_OK = 0             couldn't get device group
+//        PEP_RECORD_NOT_FOUND          update failed
+//
+//    caveat:
+//        the ownerships of group_name is going to the caller
+
+DYNAMIC_API PEP_STATUS get_device_group(
+        PEP_SESSION session, 
+        char **group_name
     );
 
 // set_identity_flags() - update identity flags on existing identity
