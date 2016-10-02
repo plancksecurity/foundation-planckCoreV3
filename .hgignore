@@ -39,3 +39,4 @@ pEpEngine.vcxproj.user
 Makefile.protocols
 test/msg_encrypt_for_self.asc
 tags
+asn.1/pEpEngineASN1/pEpEngineASN1.vcxproj.user
