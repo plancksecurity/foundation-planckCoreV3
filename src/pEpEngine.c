@@ -323,10 +323,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                          "      where id = ?1), upper(replace(?4,' ',''))))) ;";
 
         sql_set_device_group = "update person set device_group = ?1 "
-                               "where user_id = '" PEP_OWN_USERID "';";
+                               "where id = '" PEP_OWN_USERID "';";
 
         sql_get_device_group = "select device_group from person "
-                               "where user_id = '" PEP_OWN_USERID "';";
+                               "where id = '" PEP_OWN_USERID "';";
 
         sql_set_pgp_keypair = "insert or replace into pgp_keypair (fpr) "
                               "values (upper(replace(?1,' ',''))) ;";
