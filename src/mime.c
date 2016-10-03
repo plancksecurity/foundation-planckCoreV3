@@ -581,7 +581,7 @@ static PEP_STATUS mime_encode_message_plain(
     plaintext = (msg->longmsg) ? msg->longmsg : "";
     htmltext = msg->longmsg_formatted;
 
-    if (htmltext) {
+    if (htmltext && (htmltext[0] != '\0')) {
         status = mime_html_text(plaintext, htmltext, &mime);
         if (status != PEP_STATUS_OK)
             goto pep_error;

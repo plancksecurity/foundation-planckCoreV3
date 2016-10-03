@@ -135,7 +135,7 @@ typedef unsigned int PEP_decrypt_flags_t;
 //      src (in)            message to decrypt
 //      dst (out)           pointer to new decrypted message or NULL on failure
 //      keylist (out)       stringlist with keyids
-//      color (out)         color for the message
+//      rating (out)        rating for the message
 //      flags (out)         flags to signal special decryption features
 //
 //  return value:
