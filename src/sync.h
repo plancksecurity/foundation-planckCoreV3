@@ -115,14 +115,37 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
         retrieve_next_sync_msg_t retrieve_next_sync_msg
     );
 
+// attach_sync_session() - attach session to a session running keysync state machine 
+//
+//  parameters:
+//      session (in)                session to attach
+//      sync_session (in)           session running keysync
+//
+//  return value:
+//      PEP_STATUS_OK or any other value on errror
+//
+//  caveat:
+//      register_sync_callbacks must have been called on sync_session
+//      call that BEFORE you're using that session in any other part of the engine
+
+DYNAMIC_API PEP_STATUS attach_sync_session(
+        PEP_SESSION session,
+        PEP_SESSION sync_session
+    );
+
+// detach_sync_session() - detach previously attached sync session
+//
+//  parameters:
+//      session (in)                session to detach 
+
+DYNAMIC_API PEP_STATUS detach_sync_session(PEP_SESSION session);
 
 // unregister_sync_callbacks() - unregister adapter's callbacks
 //
 //  parameters:
-//      session (in)                session where to store obj handle
+//      session (in)                session to unregister
 
 DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session);
-
 
 // do_sync_protocol() - function to be run on an extra thread
 //

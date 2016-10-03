@@ -6,7 +6,6 @@
 #include "sync_fsm.h"
 
 static int init_count = -1;
-char sync_uuid[37];
 
 static int user_version(void *_version, int count, char **text, char **name)
 {
@@ -135,7 +134,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 #define _DDL_USER_VERSION "3"
 
     if (in_first) {
-        memset(sync_uuid, 0, 37);
 
         int_result = sqlite3_exec(
             _session->db,
@@ -1897,7 +1895,7 @@ DYNAMIC_API PEP_STATUS sequence_value(
         own = 1;
     }
     else {
-        if (name == sync_uuid || strcmp(name, sync_uuid) == 0)
+        if (name == session->sync_uuid || strcmp(name, session->sync_uuid) == 0)
             own = 1;
     }
 
