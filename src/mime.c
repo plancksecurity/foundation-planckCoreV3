@@ -1300,7 +1300,14 @@ static PEP_STATUS interpret_MIME(
             }
         }
         else {
-            if (_is_text_part(content, NULL) && msg->longmsg == NULL) {
+            if (_is_text_part(content, "html") &&
+                msg->longmsg_formatted == NULL) {
+                status = interpret_body(mime, &msg->longmsg_formatted,
+                                        NULL);
+                if (status)
+                    return status;
+            }
+            else if (_is_text_part(content, NULL) && msg->longmsg == NULL) {
                 status = interpret_body(mime, &msg->longmsg, NULL);
                 if (status)
                     return status;
