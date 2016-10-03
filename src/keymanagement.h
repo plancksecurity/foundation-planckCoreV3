@@ -11,7 +11,7 @@ extern "C" {
 //  parameters:
 //      session (in)        session to use
 //      identity (inout)    identity information of communication partner
-//
+//                          (identity->fpr is OUT ONLY)
 //  caveat:
 //      if this function returns PEP_ct_unknown or PEP_ct_key_expired in
 //      identity->comm_type, the caller must insert the identity into the
@@ -20,6 +20,7 @@ extern "C" {
 //      at least identity->address must be a non-empty UTF-8 string as input
 //      update_identity() never writes flags; use set_identity_flags() for
 //      writing
+//      this function NEVER reads the incoming fpr, only writes to it.
 
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
