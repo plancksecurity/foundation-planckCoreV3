@@ -33,7 +33,7 @@ int main() {
 
     cout << "test sequence: " << value2 << "\n";
     assert(value2 == value1 + 1);
-    free(name1);
+//    free(name1);
 
     cout << "testing sequence violation\n";
     int32_t value3 = value2 - 1;
