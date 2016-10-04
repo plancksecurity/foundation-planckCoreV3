@@ -152,6 +152,13 @@ DeviceState_state fsm_DeviceState(
                     if (status != PEP_STATUS_OK)
                         return (int) invalid_action;
                     return HandshakingGrouped;
+                case GroupKeys:
+                    status = storeGroupKeys(session, state, partner, extra /*keys*/);
+                    if (status == PEP_OUT_OF_MEMORY)
+                        return (int) invalid_out_of_memory;
+                    if (status != PEP_STATUS_OK)
+                        return (int) invalid_action;
+                    return Grouped;
                 default:
                     return (DeviceState_state) invalid_event;
             }

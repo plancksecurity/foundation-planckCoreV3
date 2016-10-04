@@ -198,7 +198,7 @@ PEP_STATUS receive_DeviceState_msg(
                     // HandshakeRequest needs encryption
                     case DeviceGroup_Protocol__payload_PR_handshakeRequest:
                         if (rating < PEP_rating_reliable ||
-                            strncmp(sync_uuid,
+                            strncmp(session->sync_uuid,
                                     (const char *)msg->payload.choice.handshakeRequest.partner.user_id->buf,
                                     msg->payload.choice.handshakeRequest.partner.user_id->size) != 0){
                             ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
@@ -209,7 +209,7 @@ PEP_STATUS receive_DeviceState_msg(
                     // accepting GroupKeys needs encryption and trust
                     case DeviceGroup_Protocol__payload_PR_groupKeys:
                         if (!keylist || rating < PEP_rating_reliable ||
-                            strncmp(sync_uuid,
+                            strncmp(session->sync_uuid,
                                     (const char *)msg->payload.choice.groupKeys.partner.user_id->buf,
                                     msg->payload.choice.groupKeys.partner.user_id->size) != 0){
                             ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
@@ -352,7 +352,7 @@ PEP_STATUS unicast_msg(
     
     int32_t seq = 0;
 
-    status = sequence_value(session, sync_uuid, &seq);
+    status = sequence_value(session, session->sync_uuid, &seq);
     if (status != PEP_OWN_SEQUENCE && status != PEP_STATUS_OK)
         goto error;
 
@@ -363,7 +363,7 @@ PEP_STATUS unicast_msg(
         goto enomem;
 
     free(_me->user_id);
-    _me->user_id = strndup(sync_uuid, 36);
+    _me->user_id = strndup(session->sync_uuid, 36);
     assert(_me->user_id);
     if (!_me->user_id)
         goto enomem;
@@ -480,6 +480,7 @@ PEP_STATUS multicast_self_msg(
     if (status != PEP_STATUS_OK)
         return status;
 
+    // FIXME: exclude previously rejected identities
     for (identity_list *_i = own_identities; _i && _i->ident; _i = _i->next) {
         pEp_identity *me = _i->ident;
 

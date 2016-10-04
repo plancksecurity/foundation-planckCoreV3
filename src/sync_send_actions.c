@@ -135,11 +135,11 @@ PEP_STATUS sendGroupKeys(
     status = own_identities_retrieve(session, &kl);
     if (status != PEP_STATUS_OK)
         goto error;
-    if (Identity_from_Struct(partner,
-                             &msg->payload.choice.groupKeys.partner) == NULL)
+    if (IdentityList_from_identity_list(kl, &msg->payload.choice.groupKeys.ownIdentities) == NULL)
         goto enomem;
 
-    if (IdentityList_from_identity_list(kl, &msg->payload.choice.groupKeys.ownIdentities) == NULL)
+    if (Identity_from_Struct(partner,
+                             &msg->payload.choice.groupKeys.partner) == NULL)
         goto enomem;
 
     bool encrypted = true;

@@ -78,6 +78,11 @@ protocol DeviceGroup {
                 do sendHandshakeRequest(partner);
                 go HandshakingGrouped(partner);
             }
+            on GroupKeys(Identity partner, Stringlist keys) {
+                do storeGroupKeys(partner, keys);
+                // TODO : add a callback to signal finished waiting for group keys
+                go Grouped;
+            }
         }
 
         state HandshakingGrouped(Identity partner) {

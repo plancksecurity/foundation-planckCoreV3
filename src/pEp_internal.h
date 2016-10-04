@@ -77,8 +77,6 @@
 
 #define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
 
-extern char sync_uuid[37];
-
 typedef struct _pEpSession {
     const char *version;
 #ifdef USE_GPG
@@ -97,6 +95,8 @@ typedef struct _pEpSession {
     sqlite3_stmt *trustword;
     sqlite3_stmt *get_identity;
     sqlite3_stmt *set_person;
+    sqlite3_stmt *set_device_group;
+    sqlite3_stmt *get_device_group;
     sqlite3_stmt *set_pgp_keypair;
     sqlite3_stmt *set_identity;
     sqlite3_stmt *set_identity_flags;
@@ -124,7 +124,7 @@ typedef struct _pEpSession {
     sqlite3_stmt *sequence_value2;
     sqlite3_stmt *sequence_value3;
 
-    // sequence value
+    // revoked keys
     sqlite3_stmt *set_revoked;
     sqlite3_stmt *get_revoked;
 
@@ -137,8 +137,9 @@ typedef struct _pEpSession {
     inject_sync_msg_t inject_sync_msg;
     retrieve_next_sync_msg_t retrieve_next_sync_msg;
 
-    // state machines
+    // key sync
     DeviceState_state sync_state;
+    char sync_uuid[37];
 
     // runtime config
 

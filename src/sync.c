@@ -6,9 +6,6 @@
 #include "asn1_helper.h"
 #include "../asn.1/DeviceGroup-Protocol.h"
 
-static void *static_sync_obj = NULL;
-static inject_sync_msg_t static_inject_sync_msg = NULL;
-
 // receive_sync_msg is defined in the sync_actions
 
 PEP_STATUS receive_sync_msg(
@@ -25,18 +22,19 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
         retrieve_next_sync_msg_t retrieve_next_sync_msg
     )
 {
+    assert(session && obj && messageToSend && showHandshake && inject_sync_msg && retrieve_next_sync_msg);
+    if (!(session && obj && messageToSend && showHandshake && inject_sync_msg && retrieve_next_sync_msg))
+        return PEP_ILLEGAL_VALUE;
+
     unsigned char uuid[16];
     uuid_generate_random(uuid);
-    uuid_unparse_upper(uuid, sync_uuid);
+    uuid_unparse_upper(uuid, session->sync_uuid);
 
     session->sync_obj = obj;
     session->messageToSend = messageToSend;
     session->showHandshake = showHandshake;
     session->inject_sync_msg = inject_sync_msg;
     session->retrieve_next_sync_msg = retrieve_next_sync_msg;
-
-    static_sync_obj = obj;
-    static_inject_sync_msg = inject_sync_msg;
 
     // start state machine
     session->sync_state = InitState;
@@ -47,23 +45,48 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
     return status;
 }
 
+DYNAMIC_API PEP_STATUS attach_sync_session(
+        PEP_SESSION session,
+        PEP_SESSION sync_session
+    )
+{
+    assert(session && sync_session && sync_session->sync_obj && sync_session->inject_sync_msg );
+    if (!(session && sync_session && sync_session->sync_obj && sync_session->inject_sync_msg ))
+        return PEP_ILLEGAL_VALUE;
+
+    memcpy(session->sync_uuid, sync_session->sync_uuid, 37);
+
+    session->sync_obj = sync_session->sync_obj;
+    session->inject_sync_msg = sync_session->inject_sync_msg;
+
+    return PEP_STATUS_OK;
+}
+
+DYNAMIC_API PEP_STATUS detach_sync_session(PEP_SESSION session)
+{
+    assert(session && session->sync_obj && session->inject_sync_msg );
+    if (!(session && session->sync_obj && session->inject_sync_msg ))
+        return PEP_ILLEGAL_VALUE;
+
+    memset(session->sync_uuid, 0, 37);
+
+    session->sync_obj = NULL;
+    session->inject_sync_msg = NULL;
+
+    return PEP_STATUS_OK;
+}
+
 int call_inject_sync_msg(PEP_SESSION session, void *msg)
 {
     if(session->inject_sync_msg && session->sync_obj)
         return session->inject_sync_msg(msg, session->sync_obj);
-    else if(static_inject_sync_msg && static_sync_obj)
-        return static_inject_sync_msg(msg, static_sync_obj);
     else
        return PEP_SYNC_NO_INJECT_CALLBACK;
 }
 
-
 DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
     // stop state machine
     session->sync_state = DeviceState_state_NONE;
-
-    static_sync_obj = NULL;
-    static_inject_sync_msg = NULL;
 
     // unregister
     session->sync_obj = NULL;
