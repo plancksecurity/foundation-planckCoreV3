@@ -667,7 +667,10 @@ static PEP_rating _rating(PEP_comm_type ct, PEP_rating rating)
 {
     if (ct == PEP_ct_unknown)
         return PEP_rating_undefined;
-
+    
+    else if (ct == PEP_ct_key_not_found)
+        return PEP_rating_have_no_key;
+        
     else if (ct == PEP_ct_compromized)
         return PEP_rating_under_attack;
 
@@ -1878,7 +1881,7 @@ DYNAMIC_API PEP_STATUS get_binary_path(PEP_cryptotech tech, const char **path)
 
 DYNAMIC_API PEP_color color_from_rating(PEP_rating rating)
 {
-    if (rating == PEP_rating_b0rken)
+    if (rating == PEP_rating_b0rken || rating == PEP_rating_have_no_key)
         return PEP_color_no_color;
 
     if (rating < PEP_rating_undefined)

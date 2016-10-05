@@ -226,7 +226,11 @@ DYNAMIC_API PEP_STATUS update_identity(
                 }
             }
         }
-            
+        else {
+            /* Set comm_type accordingly */
+            temp_id->comm_type = PEP_ct_key_not_found;
+        }
+        
         if (EMPTYSTR(temp_id->username)) {
             free(temp_id->username);
             temp_id->username = strdup(stored_identity->username);
