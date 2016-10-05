@@ -4,6 +4,7 @@
 #include "identity_list.h"
 #include "../asn.1/Identity.h"
 #include "../asn.1/IdentityList.h"
+#include "../asn.1/GeneralizedTime.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -74,6 +75,44 @@ IdentityList_t *IdentityList_from_identity_list(
 
 identity_list *IdentityList_to_identity_list(IdentityList_t *list, identity_list *result);
 
+// GeneralizedTime_to_timestamp() - convert ASN.1 GeneralizedTime to timestamp
+//
+//  params:
+//      asntime (in)        ASN.1 GeneralizedTime to convert
+//      result (inout)      timestamp to update or NULL to alloc a new one
+//
+//  return value:
+//      pointer to allocated timestamp
+//
+//  caveat:
+//      if a new timestamp is allocated, the ownership goes to the caller
+
+timestamp *GeneralizedTime_to_timestamp(GeneralizedTime_t * asntime, timestamp *result);
+
+// GeneralizedTime_to_time_t() - convert ASN.1 GeneralizedTime to time_t
+//
+//  params:
+//      asntime (in)        ASN.1 GeneralizedTime to convert
+//
+//  return value:
+//      resulting time_t
+//
+
+time_t GeneralizedTime_to_time_t(GeneralizedTime_t * asntime);
+
+// timestamp_GeneralizedTime_to() - convert ASN.1 timestamp to GeneralizedTime
+//
+//  params:
+//      ts (in)             timestam to convert
+//      result (inout)      GeneralizedTime_t to update or NULL to alloc a new one
+//
+//  return value:
+//      pointer to allocated ASN.1 GeneralizedTime
+//
+//  caveat:
+//      if a new GeneralizedTime is allocated, the ownership goes to the caller
+
+GeneralizedTime_t *timestamp_to_GeneralizedTime(timestamp * ts, GeneralizedTime_t *result);
 
 #ifdef __cplusplus
 }
