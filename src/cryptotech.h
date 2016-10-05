@@ -30,7 +30,8 @@ typedef PEP_STATUS (*encrypt_and_sign_t)(
 typedef PEP_STATUS (*delete_keypair_t)(PEP_SESSION session, const char *fpr);
 
 typedef PEP_STATUS (*export_key_t)(
-        PEP_SESSION session, const char *fpr, char **key_data, size_t *size
+        PEP_SESSION session, const char *fpr, char **key_data, size_t *size,
+        bool secret
     );
 
 typedef PEP_STATUS (*find_keys_t)(
@@ -64,7 +65,10 @@ typedef PEP_STATUS (*key_expired_t)(PEP_SESSION session, const char *fpr,
         const time_t when, bool *expired);
 
 typedef PEP_STATUS (*key_revoked_t)(PEP_SESSION session, const char *fpr,
-                                    bool *revoked);
+        bool *revoked);
+
+typedef PEP_STATUS (*key_created_t)(PEP_SESSION session, const char *fpr,
+        time_t *created);
 
 typedef PEP_STATUS (*binary_path_t)(const char **path);
 
@@ -88,6 +92,7 @@ typedef struct _PEP_cryptotech_t {
     revoke_key_t revoke_key;
     key_expired_t key_expired;
     key_revoked_t key_revoked;
+    key_created_t key_created;
     binary_path_t binary_path;
 } PEP_cryptotech_t;
 

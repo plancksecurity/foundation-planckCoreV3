@@ -39,7 +39,7 @@ int main() {
     
     cout << "revoke \n";
     
-    key_compromized(session, me);
+    key_mistrusted(session, me);
 
     cout << "re-generated fingerprint \n";
     cout << me->fpr << "\n";
@@ -57,7 +57,7 @@ int main() {
     cout << "encrypting message as MIME multipart…\n";
     message *enc_msg;
     cout << "calling encrypt_message()\n";
-    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME);
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     cout << status;
     assert(status == PEP_STATUS_OK);
     assert(enc_msg);

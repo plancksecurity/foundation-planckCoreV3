@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-// messageToSend() - send a beacon message
+// messageToSend() - send a message
 //
 //  parameters:
 //      obj (in)        object handle (implementation defined)
@@ -20,8 +20,11 @@ extern "C" {
 //
 //  return value:
 //      PEP_STATUS_OK or any other value on error
+//
+//  caveat:
+//      the ownership of msg goes to the callee
 
-typedef PEP_STATUS (*messageToSend_t)(void *obj, const message *msg);
+typedef PEP_STATUS (*messageToSend_t)(void *obj, message *msg);
 
 
 typedef enum _sync_handshake_result {
@@ -34,29 +37,58 @@ typedef enum _sync_handshake_result {
 //
 //  parameters:
 //      obj (in)        object handle (implementation defined)
-//      self (in)       own identity
+//      me (in)         own identity
 //      partner (in)    identity of partner
 //
 //  return value:
 //      PEP_STATUS_OK or any other value on error
+//
+//  caveat:
+//      ownership of self and partner go to the callee
 
 typedef PEP_STATUS (*showHandshake_t)(
         void *obj,
-        const pEp_identity *self,
-        const pEp_identity *partner
+        pEp_identity *me,
+        pEp_identity *partner
     );
 
 
 // deliverHandshakeResult() - give the result of the handshake dialog
 //
 //  parameters:
-//      session (in)    session handle
-//      result (in)     handshake result
+//      session (in)        session handle
+//      result (in)         handshake result
 
 DYNAMIC_API PEP_STATUS deliverHandshakeResult(
         PEP_SESSION session,
+        Identity partner,
         sync_handshake_result result
     );
+
+// sync_msg_t - items queued for serialized handling by protocol engine
+typedef struct _sync_msg_t sync_msg_t;
+
+// inject_sync_msg - inject sync protocol message
+//
+//  parameters:
+//      msg (in)            message to inject
+//      management (in)     application defined
+//
+//  return value:
+//      0 if msg could be stored successfully or nonzero otherwise
+
+typedef int (*inject_sync_msg_t)(void *msg, void *management);
+
+
+// retrieve_next_sync_msg - receive next sync message
+//
+//  parameters:
+//      management (in)     application defined
+//
+//  return value:
+//      next message or NULL for termination
+
+typedef void *(*retrieve_next_sync_msg_t)(void *management);
 
 
 // register_sync_callbacks() - register adapter's callbacks
@@ -66,6 +98,7 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
 //      obj (in)                    object handle (implementation defined)
 //      messageToSend (in)          callback for sending message
 //      showHandshake (in)          callback for doing the handshake
+//      retrieve_next_sync_msg (in) callback for receiving sync messages
 //
 //  return value:
 //      PEP_STATUS_OK or any other value on errror
@@ -77,16 +110,100 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
         PEP_SESSION session,
         void *obj,
         messageToSend_t messageToSend,
-        showHandshake_t showHandshake
+        showHandshake_t showHandshake,
+        inject_sync_msg_t inject_sync_msg,
+        retrieve_next_sync_msg_t retrieve_next_sync_msg
     );
 
+// attach_sync_session() - attach session to a session running keysync state machine 
+//
+//  parameters:
+//      session (in)                session to attach
+//      sync_session (in)           session running keysync
+//
+//  return value:
+//      PEP_STATUS_OK or any other value on errror
+//
+//  caveat:
+//      register_sync_callbacks must have been called on sync_session
+//      call that BEFORE you're using that session in any other part of the engine
+
+DYNAMIC_API PEP_STATUS attach_sync_session(
+        PEP_SESSION session,
+        PEP_SESSION sync_session
+    );
+
+// detach_sync_session() - detach previously attached sync session
+//
+//  parameters:
+//      session (in)                session to detach 
+
+DYNAMIC_API PEP_STATUS detach_sync_session(PEP_SESSION session);
 
 // unregister_sync_callbacks() - unregister adapter's callbacks
 //
 //  parameters:
-//      session (in)                session where to store obj handle
+//      session (in)                session to unregister
 
 DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session);
+
+// do_sync_protocol() - function to be run on an extra thread
+//
+//  parameters:
+//      session                 pEp session to use
+//      retrieve_next_sync_msg  pointer to retrieve_next_identity() callback
+//                              which returns at least a valid address field in
+//                              the identity struct
+//      management              management data to give to keymanagement
+//                              (implementation defined)
+//
+//  return value:
+//      PEP_STATUS_OK if thread has to terminate successfully or any other
+//      value on failure
+//
+//  caveat:
+//      to ensure proper working of this library, a thread has to be started
+//      with this function immediately after initialization
+//      do_keymanagement() calls retrieve_next_identity(management)
+
+DYNAMIC_API PEP_STATUS do_sync_protocol(
+        PEP_SESSION session,
+        void *management
+    );
+
+// free_sync_msg() - free sync_msg_t struct when not passed to do_sync_protocol  
+//
+//  parameters:
+//      sync_msg (in)            pointer to sync_msg_t struct to free
+
+DYNAMIC_API void free_sync_msg(sync_msg_t *sync_msg);
+
+// decode_sync_msg() - decode sync message from PER into XER
+//
+//  parameters:
+//      data (in)               PER encoded data
+//      size (in)               size of PER encoded data
+//      text (out)              XER text of the same sync message
+
+DYNAMIC_API PEP_STATUS decode_sync_msg(
+        const char *data,
+        size_t size,
+        char **text
+    );
+
+
+// encode_sync_msg() - encode sync message from XER into PER
+//
+//  parameters:
+//      text (in)               string with XER text of the sync message
+//      data (out)              PER encoded data
+//      size (out)              size of PER encoded data
+
+DYNAMIC_API PEP_STATUS encode_sync_msg(
+        const char *text,
+        char **data,
+        size_t *size
+    );
 
 
 #ifdef __cplusplus

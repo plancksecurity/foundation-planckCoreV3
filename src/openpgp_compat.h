@@ -42,3 +42,4 @@ DYNAMIC_API PEP_STATUS OpenPGP_list_keyinfo (
 #ifdef __cplusplus
 }
 #endif
+

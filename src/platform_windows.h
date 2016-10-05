@@ -4,6 +4,15 @@
 
 #pragma warning(disable : 4996)
 
+// We need to make sure winsock2 is included before windows.h, or we will get redefinitions of symbols
+// as windows.h includes winsock1.h, so we will have duplicate symbols if windows.h is included first.
+// It seems some of our code includes sync.h before including winsock.h, leading to the failure.
+// Including winsock2.h here fixes the problem for now...
+#ifdef WIN32 
+#include <winsock2.h>
+#endif // WIN32 
+
+#include <Rpc.h>
 #include <string.h>
 #include <io.h>
 #include <basetsd.h>
@@ -59,6 +68,15 @@ const char *windoze_system_db(void);
 const char *gpg_conf(void);
 
 long random(void);
+
+// on Windoze, uuid_t needs pointer semantics
+typedef UUID pEpUUID[1];
+#define _UUID_STRING_T
+typedef char uuid_string_t[37];
+
+void uuid_generate_random(pEpUUID out);
+int uuid_parse(char *in, pEpUUID uu);
+void uuid_unparse_upper(pEpUUID uu, uuid_string_t out);
 
 #ifndef inline
 #define inline __inline

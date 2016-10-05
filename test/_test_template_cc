@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <assert.h>
+#include "pEpEngine_test.h"
 #include "MODULE.h"
 
 using namespace std;
@@ -12,7 +13,7 @@ int main() {
     
     cout << "calling init()\n";
     PEP_STATUS status1 = init(&session);   
-    assert(status1 == PEP_STATUS_OK);
+    ASSERT_STATUS(status1);
     assert(session);
     cout << "init() completed.\n";
 

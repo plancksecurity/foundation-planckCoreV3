@@ -74,3 +74,10 @@ PEP_STATUS pgp_key_revoked(
         const char *fpr,
         bool *revoked
     );
+
+PEP_STATUS pgp_key_created(
+        PEP_SESSION session,
+        const char *fprstr,
+        time_t *created
+    );
+

@@ -6,34 +6,36 @@ DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
 BEGIN
 
 EXPORTS DeviceGroup-Protocol;
-IMPORTS Identity, KeyList, Header FROM PEP;
+IMPORTS Version, Identity, IdentityList FROM PEP;
 
-Beacon ::= SEQUENCE {
-    header Header,
-    state INTEGER,
-    me Identity
-}
+Beacon ::= NULL
 
 HandshakeRequest ::= SEQUENCE {
-    header Header,
-    state INTEGER,
-    me Identity,
-    partner Identity
+    partner Identity /* identity of the receiver */
 }
 
 GroupKeys ::= SEQUENCE {
-    header Header,
-    state INTEGER,
-    me Identity,
-    keylist KeyList
+    partner Identity, /* identity of the receiver */
+    ownIdentities IdentityList
 }
 
 /* for the tags see end of sync.fsm */
 
-DeviceGroup-Protocol ::= CHOICE {
-    beacon [APPLICATION 1] Beacon,
-    handshakeRequest [APPLICATION 2] HandshakeRequest,
-    groupKeys [APPLICATION 3] GroupKeys
+DeviceGroup-Protocol ::= SEQUENCE {
+    header SEQUENCE {
+        version     Version,
+        sequence    INTEGER,  /* always increases */
+        me          Identity, /* identity of the sender */
+        state       INTEGER,  /* state the sender is in */
+        devicegroup BOOLEAN
+            /* signals if this message is coming from a device group member */
+    },
+
+    payload CHOICE {
+        beacon [APPLICATION 2] Beacon,
+        handshakeRequest [APPLICATION 3] HandshakeRequest,
+        groupKeys [APPLICATION 4] GroupKeys
+    }
 }
 
 END

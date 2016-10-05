@@ -28,7 +28,7 @@ tstylesheet {
 
         // state machine for «@name»
 
-        #include "pEpEngine.h"
+        #include "message_api.h"
         
         #ifdef __cplusplus
         extern "C" {
@@ -37,26 +37,45 @@ tstylesheet {
         // types
 
         typedef pEp_identity * Identity;
-        typedef union _param { const Identity partner; const stringlist_t *keylist; } param_t;
+        typedef stringlist_t * Stringlist;
+        typedef union _param { Identity partner; stringlist_t *keylist; } param_t;
 
         // error values
 
         typedef enum _fsm_error {
+            // these error values are corresponding to
+            // PEP_SYNC_STATEMACHINE_ERROR - value
             invalid_state = -2,
-            invalid_event = -3
+            invalid_event = -3,
+            invalid_condition = -4,
+            invalid_action = -5,
+
+            // out of memory condition
+            invalid_out_of_memory = -128
         } fsm_error;
+
+        // conditions
+
+        `` for "func:distinctName(condition)" | int «@name»(PEP_SESSION session`apply "parm", 0`);
 
         // states
 
         typedef enum _«@name»_state {
-            «@name»_state_NONE = -1,
+            // error values also in this namespace
+            «@name»_state_invalid_state = (int) invalid_state,
+            «@name»_state_invalid_event = (int) invalid_event,
+            «@name»_state_invalid_condition = (int) invalid_condition,
+            «@name»_state_invalid_action = (int) invalid_action,
+            «@name»_state_invalid_out_of_memory = (int) invalid_out_of_memory,
+
+            «@name»_state_NONE = 0,
         `` for "func:distinctName(state)" |> «@name»`if "position()!=last()" > , `
         } «@name»_state;
 
         // events
 
         typedef enum _«@name»_event {
-            «@name»_event_NONE = -1,
+            «@name»_event_NONE = 0,
         ||
         for "func:distinctName(state/event[not(not(/protocol/fsm/tag/@name=@name))])" {
             const "name", "@name";
@@ -70,7 +89,24 @@ tstylesheet {
         // actions
 
         `` const "name", "@name"
-        `` for "func:distinctName(//action)" | PEP_STATUS «@name»(PEP_SESSION session, «$name»_state state, const Identity partner);
+        `` for "func:distinctName(//action)" | PEP_STATUS «@name»(PEP_SESSION session, «$name»_state state, Identity partner, void *extra);
+
+        // event injector
+
+        PEP_STATUS inject_DeviceState_event(
+            PEP_SESSION session, 
+            DeviceState_event event,
+            Identity partner,
+            void *extra);
+
+        // message receiver
+        
+        PEP_STATUS receive_DeviceState_msg(
+                PEP_SESSION session, 
+                message *src, 
+                PEP_rating rating, 
+                stringlist_t *keylist
+            );
 
         // state machine
 
@@ -78,8 +114,8 @@ tstylesheet {
                 PEP_SESSION session,
                 «@name»_state state,
                 «@name»_event event,
-                const Identity partner,
-                «@name»_state state_partner
+                Identity partner,
+                void *extra
             );
 
         // driver
@@ -88,7 +124,7 @@ tstylesheet {
                 PEP_SESSION session,
                 «@name»_event event,
                 Identity partner,
-                «@name»_state state_partner
+                void *extra
             );
 
         #ifdef __cplusplus
@@ -109,15 +145,33 @@ tstylesheet {
                 PEP_SESSION session,
                 «@name»_event event,
                 Identity partner,
-                «@name»_state state_partner
+                void *extra
             )
         {
-            PEP_STATUS status = PEP_STATUS_OK;
+            assert(session);
+            if (!session)
+                return PEP_ILLEGAL_VALUE;
 
-            session->«@filename»_state = fsm_«@name»(session, session->«@filename»_state,
-                    event, partner, state_partner);
+            while(true)
+            {
+                «@name»_state new_state = fsm_«@name»(session,
+                    session->«@filename»_state, event, partner, extra);
 
-            return status;
+                if (new_state == «@name»_state_invalid_out_of_memory)
+                    return PEP_OUT_OF_MEMORY;
+
+                if (new_state < 0)
+                    return PEP_SYNC_STATEMACHINE_ERROR - new_state;
+                
+                if (new_state == session->«@filename»_state)
+                    break;
+
+                event = Init;
+                extra = NULL;
+                session->«@filename»_state = new_state;
+            } 
+
+            return PEP_STATUS_OK;
         }
 
         ||
@@ -131,12 +185,15 @@ tstylesheet {
                 PEP_SESSION session,
                 «@name»_state state,
                 «@name»_event event,
-                const Identity partner,
-                «@name»_state state_partner
+                Identity partner,
+                void *extra
             )
         {
+            int cond_result;
+            PEP_STATUS status = PEP_STATUS_OK;
+
             switch (state) {
-                `` apply "state"
+            `` apply "state", 2
                 default:
                     return («@name»_state) invalid_state;
             }
@@ -151,9 +208,10 @@ tstylesheet {
     ||
     case «@name»:
         switch (event) {
+        `` if "not(event[@name='Init'])" |>> case Init: break;
         `` apply "event", 2
-        default:
-            return («../@name»_state) invalid_event;
+            default:
+                return («../@name»_state) invalid_event;
         }
         break;
 
@@ -162,18 +220,42 @@ tstylesheet {
     template "event"
     ||
     case «@name»:
-    `` apply "action|transition";
+    `` apply "action|transition|condition";
     `` if "name(*[position()=last()]) != 'transition'" |> break;
     ||
 
     template "action" {
         indent(0);
-        > «@name»(session, state, 
+        > status = «@name»(session, state, 
         choose {
             when "parm" > «name(parm/*)»
             otherwise > NULL
         }
+        choose {
+            when "parm[2]" > , extra /*«name(parm[2]/*)»*/
+            otherwise > , NULL
+        }
         > );\n
+        | if (status == PEP_OUT_OF_MEMORY)
+        |> return (int) invalid_out_of_memory;
+        | if (status != PEP_STATUS_OK)
+        |> return (int) invalid_action;
+    }
+
+    template "condition" {
+        | cond_result = «@name»(session`apply "parm", 0`);
+        | if (cond_result < 0)
+        |> return cond_result;
+        | if (cond_result) {
+        apply "action|transition|condition";
+        | }
+    }
+
+    template "parm" choose {
+        when "count(*) = 1"
+            > , «name(*)»
+        otherwise
+            > , «name(*[1])» «name(*[2])»
     }
 
     template "transition" | return «@target»;

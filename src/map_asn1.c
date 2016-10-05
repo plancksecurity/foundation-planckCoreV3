@@ -51,10 +51,12 @@ Identity_t *Identity_from_Struct(
     }
 
     if (ident->lang[0]) {
-        result->lang = OCTET_STRING_new_fromBuf(&asn_DEF_ISO639_1,
-                ident->lang, 2);
-        if (!result->lang)
-            goto enomem;
+        int r = OCTET_STRING_fromBuf(&result->lang, ident->lang, 2);
+        assert(r == 0);
+    }
+    else {
+        int r = OCTET_STRING_fromBuf(&result->lang, "en", 2);
+        assert(r == 0);
     }
 
     return result;
@@ -107,9 +109,10 @@ pEp_identity *Identity_to_Struct(Identity_t *ident, pEp_identity *result)
     if (ident->comm_type)
         result->comm_type = (PEP_comm_type) *ident->comm_type;
 
-    if (ident->lang) {
-        result->lang[0] = ident->lang->buf[0];
-        result->lang[1] = ident->lang->buf[1];
+    if (ident->lang.size == 2) {
+        result->lang[0] = ident->lang.buf[0];
+        result->lang[1] = ident->lang.buf[1];
+        result->lang[2] = 0;
     }
 
     return result;
@@ -119,9 +122,9 @@ enomem:
     return NULL;
 }
 
-KeyList_t *KeyList_from_stringlist(
-        const stringlist_t *list,
-        KeyList_t *result
+IdentityList_t *IdentityList_from_identity_list(
+        const identity_list *list,
+        IdentityList_t *result
     )
 {
     assert(list);
@@ -129,18 +132,15 @@ KeyList_t *KeyList_from_stringlist(
         return NULL;
 
     if (!result)
-        result = (KeyList_t *) calloc(1, sizeof(KeyList_t));
+        result = (IdentityList_t *) calloc(1, sizeof(IdentityList_t));
     assert(result);
     if (!result)
         return NULL;
 
-    for (const stringlist_t *l = list; l && l->value; l=l->next) {
-        Hash_t *key = OCTET_STRING_new_fromBuf(&asn_DEF_Hash, l->value, -1);
-        if (!key)
-            goto enomem;
-
-        if (ASN_SEQUENCE_ADD(&result->list, key)) {
-            ASN_STRUCT_FREE(asn_DEF_Hash, key);
+    for (const identity_list *l = list; l && l->ident; l=l->next) {
+        Identity_t *ident = Identity_from_Struct(l->ident, NULL);
+        if (ASN_SEQUENCE_ADD(&result->list, ident)) {
+            ASN_STRUCT_FREE(asn_DEF_Identity, ident);
             goto enomem;
         }
     }
@@ -148,30 +148,25 @@ KeyList_t *KeyList_from_stringlist(
     return result;
 
 enomem:
-    ASN_STRUCT_FREE(asn_DEF_KeyList, result);
+    ASN_STRUCT_FREE(asn_DEF_IdentityList, result);
     return NULL;
 }
 
-stringlist_t *KeyList_to_stringlist(KeyList_t *list, stringlist_t *result)
+identity_list *IdentityList_to_identity_list(IdentityList_t *list, identity_list *result)
 {
     assert(list);
     if (!list)
         return NULL;
 
     if (!result)
-        result = new_stringlist(NULL);
+        result = new_identity_list(NULL);
     if (!result)
         return NULL;
 
-    stringlist_t *r = result;
+    identity_list *r = result;
     for (int i=0; i<list->list.count; i++) {
-        char *str = strndup((char *) list->list.array[i]->buf,
-                list->list.array[i]->size);
-        assert(str);
-        if (!str)
-            goto enomem;
-        r = stringlist_add(r, str);
-        free(str);
+        pEp_identity *ident = Identity_to_Struct(list->list.array[i], NULL);
+        r = identity_list_add(r, ident);
         if (!r)
             goto enomem;
     }
@@ -179,7 +174,7 @@ stringlist_t *KeyList_to_stringlist(KeyList_t *list, stringlist_t *result)
     return result;
 
 enomem:
-    free_stringlist(result);
+    free_identity_list(result);
     return NULL;
 }
 

@@ -1,4 +1,5 @@
 #include "pEp_internal.h"
+#include "message_api.h"
 
 PEP_STATUS decorate_message(
         message *msg,
@@ -14,7 +15,7 @@ PEP_STATUS decorate_message(
         return PEP_ILLEGAL_VALUE;
 
     bloblist_t *bl = bloblist_add(msg->attachments, payload, size,
-            "application/pEp", "auto.pEp");
+            "application/pEp.sync", "ignore_this_attachment.pEp");
     if (bl == NULL)
         goto enomem;
 
@@ -50,6 +51,8 @@ PEP_STATUS prepare_message(
     if (!msg)
         goto enomem;
 
+    add_opt_field(msg, "pEp-auto-consume", "yes");
+
     msg->from = identity_dup(me);
     if (!msg->from)
         goto enomem;
@@ -58,7 +61,7 @@ PEP_STATUS prepare_message(
     if (!msg->to)
         goto enomem;
 
-    msg->shortmsg = strdup("pEp");
+    msg->shortmsg = strdup("p≡p synchronization message - please ignore");
     assert(msg->shortmsg);
     if (!msg->shortmsg)
         goto enomem;

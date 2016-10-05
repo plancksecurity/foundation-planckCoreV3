@@ -1,9 +1,9 @@
 #pragma once
 
 #include "pEpEngine.h"
-#include "stringlist.h"
+#include "identity_list.h"
 #include "../asn.1/Identity.h"
-#include "../asn.1/KeyList.h"
+#include "../asn.1/IdentityList.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,11 +43,11 @@ Identity_t *Identity_from_Struct(
 pEp_identity *Identity_to_Struct(Identity_t *ident, pEp_identity *result);
 
 
-// KeyList_from_stringlist() - convert stringlist_t into ASN.1 KeyList_t
+// IdentityList_from_identity_list() - convert identity_list_t into ASN.1 IdentityList_t
 //
 //  params:
-//      list (in)           stringlist_t to convert
-//      result (inout)      KeyList_t to update or NULL to alloc a new one
+//      list (in)           identity_list to convert
+//      result (inout)      IdentityList_t to update or NULL to alloc a new one
 //
 //  return value:
 //      pointer to updated or allocated result
@@ -55,16 +55,16 @@ pEp_identity *Identity_to_Struct(Identity_t *ident, pEp_identity *result);
 //  caveat:
 //      if a new struct is allocated, the ownership goes to the caller
 
-KeyList_t *KeyList_from_stringlist(
-        const stringlist_t *list,
-        KeyList_t *result
+IdentityList_t *IdentityList_from_identity_list(
+        const identity_list *list,
+        IdentityList_t *result
     );
 
-// KeyList_to_stringlist() - convert ASN.1 KeyList_t to stringlist_t
+// IdentityList_to_identity_list() - convert ASN.1 IdentityList_t to identity_list_t
 //
 //  params:
-//      list (in)           ASN.1 KeyList_t to convert
-//      result (inout)      stringlist_t to update or NULL to alloc a new one
+//      list (in)           ASN.1 IdentityList_t to convert
+//      result (inout)      identity_list_t to update or NULL to alloc a new one
 //
 //  return value:
 //      pointer to updated or allocated result
@@ -72,7 +72,7 @@ KeyList_t *KeyList_from_stringlist(
 //  caveat:
 //      if a new struct is allocated, the ownership goes to the caller
 
-stringlist_t *KeyList_to_stringlist(KeyList_t *list, stringlist_t *result);
+identity_list *IdentityList_to_identity_list(IdentityList_t *list, identity_list *result);
 
 
 #ifdef __cplusplus

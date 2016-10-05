@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 
+#include <time.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -11,7 +12,9 @@
 #include "platform_unix.h"
 
 #define MAX_PATH 1024
+#ifndef LOCAL_DB_FILENAME
 #define LOCAL_DB_FILENAME ".pEp_management.db"
+#endif
 #define SYSTEM_DB_FILENAME "system.db"
 
 #ifndef bool
@@ -21,6 +24,7 @@
 #endif
 
 #ifdef ANDROID
+#include <uuid.h>
 char *stpncpy(char *dst, const char *src, size_t n)
 {
     if (n != 0) {
@@ -93,6 +97,49 @@ const char *android_system_db(void)
     }
     return buffer;
 }
+
+// TODO: Check and possibly fix this function if necessary
+void uuid_generate_random(pEpUUID out)
+{
+    uuid_t *uuid;
+    uuid_rc_t rc_create;
+
+    if ((rc_create = uuid_create(&uuid)) != UUID_RC_OK ||
+        uuid_make(uuid, UUID_MAKE_V1) != UUID_RC_OK ||
+        uuid_export(uuid, UUID_FMT_BIN, out, NULL) != UUID_RC_OK)
+    {
+        memset(out, 0, sizeof(pEpUUID));
+    }
+
+    if (rc_create == UUID_RC_OK)
+    {
+        uuid_destroy(uuid);
+    }
+}
+
+// TODO: Check and possibly fix this function if necessary
+void uuid_unparse_upper(pEpUUID uu, uuid_string_t out)
+{
+    uuid_t *uuid;
+    uuid_rc_t rc_create;
+
+    if ((rc_create = uuid_create(&uuid)) != UUID_RC_OK ||
+        uuid_import(uuid, UUID_FMT_BIN, uu, sizeof(uuid__t)) != UUID_RC_OK ||
+        uuid_export(uuid, UUID_FMT_STR, out, NULL) != UUID_RC_OK)
+    {
+        memset(out, 0, sizeof(uuid_string_t));
+    }
+    else 
+    {
+        out[sizeof(uuid_string_t) - 1] = 0;
+    }
+
+    if (rc_create == UUID_RC_OK)
+    {
+        uuid_destroy(uuid);
+    }
+}
+
 #endif
 
 #if !defined(BSD) && !defined(__APPLE__)

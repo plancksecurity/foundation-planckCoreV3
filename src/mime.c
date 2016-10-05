@@ -173,7 +173,6 @@ static PEP_STATUS mime_attachment(
     PEP_STATUS status = PEP_STATUS_OK;
     struct mailmime * mime = NULL;
     char * mime_type;
-
     assert(blob);
     assert(result);
 
@@ -210,7 +209,8 @@ static struct mailimf_mailbox * identity_to_mailbox(const pEp_identity *ident)
     char *_username = NULL;
     struct mailimf_mailbox *mb;
 
-    _username = mailmime_encode_subject_header("utf-8", ident->username, 0);
+    _username = ident->username ? mailmime_encode_subject_header("utf-8",
+            ident->username, 0) : strdup("");
     if (_username == NULL)
         goto enomem;
 
@@ -281,7 +281,7 @@ static struct mailimf_address_list * identity_list_to_mal(identity_list *il)
         goto enomem;
 
     identity_list *_il;
-    for (_il = il; _il; _il = _il->next) {
+    for (_il = il; _il && _il->ident; _il = _il->next) {
         mb = identity_to_mailbox(_il->ident);
         if (mb == NULL)
             goto enomem;
