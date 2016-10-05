@@ -65,7 +65,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(TargetDir)\pEpEngineASN1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(TargetDir)\pEpEngineASN1.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>
@@ -84,13 +84,15 @@
       <TreatWarningAsError>false</TreatWarningAsError>
       <AdditionalIncludeDirectories>C:\Users\vb\share\asn1c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>$(TargetDir)\pEpEngineASN1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(TargetDir)\pEpEngineASN1.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>
@@ -98,6 +100,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\asn1_helper.c" />
     <ClCompile Include="src\baseprotocol.c" />
     <ClCompile Include="src\blacklist.c" />
     <ClCompile Include="src\bloblist.c" />
@@ -121,12 +124,14 @@
     <ClCompile Include="src\sync_actions.c" />
     <ClCompile Include="src\sync_driver.c" />
     <ClCompile Include="src\sync_fsm.c" />
+    <ClCompile Include="src\sync_impl.c" />
     <ClCompile Include="src\sync_send_actions.c" />
     <ClCompile Include="src\timestamp.c" />
     <ClCompile Include="src\transport.c" />
     <ClCompile Include="src\trans_auto.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\asn1_helper.h" />
     <ClInclude Include="src\baseprotocol.h" />
     <ClInclude Include="src\blacklist.h" />
     <ClInclude Include="src\bloblist.h" />
@@ -153,6 +158,7 @@
     <ClInclude Include="src\stringpair.h" />
     <ClInclude Include="src\sync.h" />
     <ClInclude Include="src\sync_fsm.h" />
+    <ClInclude Include="src\sync_impl.h" />
     <ClInclude Include="src\timestamp.h" />
     <ClInclude Include="src\transport.h" />
     <ClInclude Include="src\trans_auto.h" />
