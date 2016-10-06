@@ -10,6 +10,7 @@
 #include "keymanagement.h"
 
 #include "sync_fsm.h"
+#include "blacklist.h"
 
 #ifndef EMPTYSTR
 #define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
