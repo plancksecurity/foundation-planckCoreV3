@@ -96,6 +96,12 @@
     <ClCompile Include="src\openpgp_compat.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="src\asn1_helper.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sync_impl.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\keymanagement.h">
@@ -186,6 +192,12 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="src\openpgp_compat.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\asn1_helper.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sync_impl.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

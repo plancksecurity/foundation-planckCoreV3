@@ -71,9 +71,11 @@ typedef char uuid_string_t[37];
 #define UUID uuid_t
 
 #ifdef ANDROID
-typedef char uuid__t[16];
-void uuid_generate_random(uuid__t out);
-void uuid_unparse_upper(uuid__t uu, uuid_string_t out);
+typedef char pEpUUID[16];
+void uuid_generate_random(pEpUUID out);
+void uuid_unparse_upper(pEpUUID uu, uuid_string_t out);
+#else
+typedef uuid_t pEpUUID;
 #endif
 
 #ifdef __cplusplus

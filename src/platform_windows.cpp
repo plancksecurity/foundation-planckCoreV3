@@ -267,32 +267,32 @@ int mkstemp(char *templ)
     return _open(pathname, _O_RDWR | _O_CREAT | _O_EXCL, _S_IREAD | _S_IWRITE);
 }
 
-void uuid_generate_random(uuid_t out)
+void uuid_generate_random(pEpUUID out)
 {
     RPC_STATUS rpc_status = UuidCreate(out);
     assert(rpc_status == RPC_S_OK);
 }
 
-int uuid_parse(char *in, uuid_t uu)
+int uuid_parse(char *in, pEpUUID uu)
 {
     unsigned char *_in = (unsigned char *) in;
-    RPC_STATUS rpc_status = UuidFromString(_in, &uu);
+    RPC_STATUS rpc_status = UuidFromStringA(_in, uu);
     assert(rpc_status == RPC_S_OK);
     if (rpc_status == RPC_S_INVALID_STRING_UUID)
         return -1;
     return 0;
 }
 
-void uuid_unparse_upper(uuid_t uu, uuid_string_t out)
+void uuid_unparse_upper(pEpUUID uu, uuid_string_t out)
 {
-    unsigned char *_out = out;
+    unsigned char *_out = (unsigned char*)out;
     RPC_CSTR str;
-    RPC_STATUS rpc_status = UuidToString(uu, &str);
+    RPC_STATUS rpc_status = UuidToStringA(uu, &str);
     assert(rpc_status == RPC_S_OK);
     if (rpc_status == RPC_S_OK) {
         memcpy(out, str, 36);
         out[36] = 0;
-        RpcStringFree(str);
+        RpcStringFreeA(&str);
     }
     else { // if (rpc_status == RPC_S_OUT_OF_MEMORY)
         memset(out, 0, 37);
