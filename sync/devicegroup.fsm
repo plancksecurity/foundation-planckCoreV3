@@ -9,17 +9,23 @@ include ./fsm.yml2
 protocol DeviceGroup {
     // all messages have a timestamp, time out and are removed after timeout
 
+    broadcast sendBeacon;
+    unencrypted sendBeacon;
+
     fsm DeviceState filename=sync {
+        condition storedGroupKeys();
+        condition keyElectionWon(Identity partner);
+
         state InitState {
             on Init {
-                if (storedGroupKeys)
+                if storedGroupKeys()
                     go Grouped;
                 go Sole;
             }
         }
 
         state Sole {
-            on KeyGen
+            on KeyGen // injected by generate_keypair()
                 do sendBeacon;
             on CannotDecrypt
                 do sendBeacon;  // cry, baby
@@ -36,28 +42,29 @@ protocol DeviceGroup {
             on Init
                 do showHandshake(partner);
             on HandshakeRejected(Identity partner) {
-                do reject(partner);             // stores rejection of partner
+                do rejectHandshake(partner);             // stores rejection of partner
                 go Sole;
             }
             on HandshakeAccepted(Identity partner) {
+                do acceptHandshake(partner); 
                 if keyElectionWon(partner) {    // an already existing group
                                                 // always wins
-                    ownGroupKeys;
-                    sendGroupKeys(partner);
+                    do sendGroupKeys(partner);
                     go Grouped;
                 }
-                go WaitForGroupKeys(Identity partner);
+                go WaitForGroupKeysSole(Identity partner);
             }
         }
     
-        state WaitForGroupKeys(Identity partner) {
+        state WaitForGroupKeysSole(Identity partner) {
             on GroupKeys(Identity partner, Stringlist keys) {
                 do storeGroupKeys(partner, keys);
+                // TODO : add a callback to signal finished waiting for group keys
                 go Grouped;
             }
             on Cancel go Sole;
             on Reject(Identity partner) {
-                do reject(partner);
+                do rejectHandshake(partner);
                 go Sole;
             }
         }
@@ -65,22 +72,40 @@ protocol DeviceGroup {
         state Grouped {
             on KeyGen
                 do sendGroupKeys; // always send all keys
+            on Beacon(Identity partner)
+                do sendHandshakeRequest(partner);
             on HandshakeRequest(Identity partner) {
                 do sendHandshakeRequest(partner);
-                do showHandshake(partner);
+                go HandshakingGrouped(partner);
             }
-            on HandshakeRejected(Identity partner)
-                do reject(partner);
-            on HandshakeAccepted(Identity partner)
-                do sendGroupKeys(partner);
-            on Reject(Identity partner)
-                do reject partner;
+            on GroupKeys(Identity partner, Stringlist keys) {
+                do storeGroupKeys(partner, keys);
+                // TODO : add a callback to signal finished waiting for group keys
+                go Grouped;
+            }
         }
 
-        tag InitState 0;
-        tag Beacon 1;
-        tag HandshakeRequest 2;
-        tag GroupKeys 3;
+        state HandshakingGrouped(Identity partner) {
+            on Init
+                do showHandshake(partner);
+            on HandshakeRejected(Identity partner) {
+                do rejectHandshake(partner);             // stores rejection of partner
+                go Grouped;
+            }
+            on HandshakeAccepted(Identity partner) {
+                do acceptHandshake(partner); 
+
+                // an already existing group always wins
+                do sendGroupKeys(partner);
+                go Grouped;
+            }
+        }
+    
+
+        tag Init 1;
+        tag Beacon 2;
+        tag HandshakeRequest 3;
+        tag GroupKeys 4;
     }
 }
 

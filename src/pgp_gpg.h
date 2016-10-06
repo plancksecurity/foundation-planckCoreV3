@@ -23,7 +23,8 @@ PEP_STATUS pgp_verify_text(
 PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr);
 
 PEP_STATUS pgp_export_keydata(
-        PEP_SESSION session, const char *fpr, char **key_data, size_t *size
+        PEP_SESSION session, const char *fpr, char **key_data, size_t *size,
+        bool secret
     );
 
 PEP_STATUS pgp_find_keys(
@@ -76,6 +77,12 @@ PEP_STATUS pgp_key_revoked(
         PEP_SESSION session,
         const char *fpr,
         bool *revoked
+    );
+
+PEP_STATUS pgp_key_created(
+        PEP_SESSION session,
+        const char *fpr,
+        time_t *created
     );
 
 PEP_STATUS pgp_binary(const char **path);

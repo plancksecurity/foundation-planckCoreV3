@@ -7,6 +7,7 @@
 include yslt.yml2
 
 tstylesheet {
+    include standardlib.ysl2
     include ./functions.ysl2
 
     template "/protocol" {
@@ -27,6 +28,8 @@ tstylesheet {
         #include "«@filename»_fsm.h"
         #include "baseprotocol.h"
         #include "map_asn1.h"
+        #include "../asn.1/DeviceGroup-Protocol.h"
+        #include "sync_impl.h"
         ||
         for "func:distinctName(//action)"
             if "substring(@name, 1, 4) = 'send'"
@@ -51,6 +54,7 @@ tstylesheet {
         #include "keymanagement.h"
         #include "message.h"
         #include "«@filename»_fsm.h"
+        #include "../asn.1/DeviceGroup-Protocol.h"
 
         ||
         for "func:distinctName(//action)"
@@ -101,7 +105,8 @@ tstylesheet {
         PEP_STATUS «$action/@name»(
                 PEP_SESSION session,
                 «$fsm»_state state,
-                const Identity partner
+                Identity partner,
+                void *extra
             )
         {
             PEP_STATUS status = PEP_STATUS_OK;
@@ -110,13 +115,13 @@ tstylesheet {
 
             // working code
 
-
+            // free extra
             return status;
 
         enomem:
             status = PEP_OUT_OF_MEMORY;
         error:
-            // free...
+            // free extra
             return status;
         }
 
@@ -128,6 +133,7 @@ tstylesheet {
         param "fsm";
         param "filename", "'###'";
         const "name", "substring($action/@name, 5, 255)";
+        const "lname", "concat(yml:lcase(substring($name, 1, 1)), substring($name, 2))";
 
         ||
 
@@ -145,88 +151,67 @@ tstylesheet {
         PEP_STATUS «$action/@name»(
                 PEP_SESSION session,
                 «$fsm»_state state,
-                const Identity partner
+                Identity partner,
+                void *extra
             )
         {
+            assert(session && state);
+            if (!(session && state))
+                return PEP_ILLEGAL_VALUE;
+
             PEP_STATUS status = PEP_STATUS_OK;
-            «$name»_t *msg = NULL;
-            char *payload = NULL;
-            message *_message = NULL;
-            pEp_identity *me = NULL;
+            `` if "$name='GroupKeys'" |> identity_list *kl = new_identity_list(NULL);
 
-            `` call "paramcheck" with "partner", "parm/partner";
-
-            assert(session->messageToSend);
-            if (!session->messageToSend)
-                return PEP_SEND_FUNCTION_NOT_REGISTERED;
-
-            msg = («$name»_t *) calloc(1, sizeof(«$name»_t));
-            assert(msg);
+            DeviceGroup_Protocol_t *msg = new_DeviceGroup_Protocol_msg(DeviceGroup_Protocol__payload_PR_«$lname»);
             if (!msg)
                 goto enomem;
-
-            int32_t seq;
-            status = sequence_value(session, "DeviceGroup", &seq);
-            if (status != PEP_STATUS_OK)
-                goto error;
-            msg->header.sequence = (long) seq;
-
-            msg->state = (long) state;
-
-            me = new_identity(NULL, NULL, NULL, NULL);
-            if (!me)
-                goto enomem;
-            status = myself(session, me);
-            if (status != PEP_STATUS_OK)
-                goto error;
-            if (Identity_from_Struct(me, &msg->me) == NULL)
-                goto enomem;
         ||
-        if "parm or $name='OwnKeys'" |
-        if "parm/partner"   |> if (Identity_from_Struct(partner, &msg->partner) == NULL)
-        if "parm/partner"   |>> goto enomem;
-        if "$name='OwnKeys'"|> stringlist_t *sl;
-        if "$name='OwnKeys'"|> status = own_key_retrieve(session, &sl);
-        if "$name='OwnKeys'"|> if (status != PEP_STATUS_OK)
-        if "$name='OwnKeys'"|>> goto error;
-        if "$name='OwnKeys'"|> if (KeyList_from_stringlist(sl, &msg->keylist) == NULL)
-        if "$name='OwnKeys'"|>> goto enomem;
+        choose {
+            when "$name='GroupKeys'" {
+                |
+                |> status = own_identities_retrieve(session, &kl);
+                |> if (status != PEP_STATUS_OK)
+                |>> goto error;
+                |> if (IdentityList_from_identity_list(kl, &msg->payload.choice.groupKeys.ownIdentities) == NULL)
+                |>> goto enomem;
+            }
+        }
+        choose {
+            when "$name='GroupKeys' or $name='HandshakeRequest'" {
+                |
+                |> if (Identity_from_Struct(partner,
+                |>                          &msg->payload.choice.«$lname».partner) == NULL)
+                |>> goto enomem;
+            }
+        }
         ||
 
-            if (asn_check_constraints(&asn_DEF_«$name», msg, NULL, NULL)) {
-                status = PEP_CONTRAINTS_VIOLATED;
-                goto error;
-            }
-
-            ssize_t size = uper_encode_to_new_buffer(&asn_DEF_«$name»,
-                    NULL, msg, (void **) &payload);
-            if (size == -1) {
-                status = PEP_CANNOT_ENCODE;
-                goto error;
-            }
-
-            status = prepare_message(me, partner, payload, size, &_message);
+        ||
+        choose {
+            when "count(/protocol/unencrypted/*[name()=$action/@name]) = 0"
+                |> bool encrypted = true;
+            otherwise
+                |> bool encrypted = false;
+        }
+        choose {
+            when "count(/protocol/broadcast/*[name()=$action/@name]) = 0"
+                |> status = unicast_msg(session, partner, state, msg, encrypted);
+            otherwise
+                |> status = multicast_self_msg(session, state, msg, encrypted);
+        }
+        ||
             if (status != PEP_STATUS_OK)
                 goto error;
-            payload = NULL;
 
-            free_identity(me);
-            me = NULL;
-
-            status = session->messageToSend(session->«$filename»_obj, _message);
-
-            free_message(_message);
-            ASN_STRUCT_FREE(asn_DEF_«$name», msg);
-
-            return status;
+            `` if "$name='GroupKeys'" |> free_identity_list(kl);
+            free_DeviceGroup_Protocol_msg(msg);
+            return PEP_STATUS_OK;
 
         enomem:
             status = PEP_OUT_OF_MEMORY;
         error:
-            ASN_STRUCT_FREE(asn_DEF_«$name», msg);
-            free(payload);
-            free_message(_message);
-            free_identity(me);
+            free_DeviceGroup_Protocol_msg(msg);
+            `` if "$name='GroupKeys'" |> free_identity_list(kl);
             return status;
         }
 

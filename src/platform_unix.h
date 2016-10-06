@@ -7,6 +7,11 @@
 #include <sys/select.h>
 #include <regex.h>
 
+#ifndef ANDROID
+#include <uuid/uuid.h>
+#endif
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -53,6 +58,24 @@ int regnexec(const regex_t* preg, const char* string,
              size_t len, size_t nmatch, regmatch_t pmatch[], int eflags);
 #endif
 
+#endif
+
+#ifndef _UUID_STRING_T
+#define _UUID_STRING_T
+typedef char uuid_string_t[37];
+#endif
+#ifdef UUID
+#undef UUID
+#endif
+// on *nix, uuid_t is an array and already implements pointer semantics
+#define UUID uuid_t
+
+#ifdef ANDROID
+typedef char pEpUUID[16];
+void uuid_generate_random(pEpUUID out);
+void uuid_unparse_upper(pEpUUID uu, uuid_string_t out);
+#else
+typedef uuid_t pEpUUID;
 #endif
 
 #ifdef __cplusplus

@@ -11,7 +11,7 @@ extern "C" {
 //  parameters:
 //      session (in)        session to use
 //      identity (inout)    identity information of communication partner
-//
+//                          (identity->fpr is OUT ONLY)
 //  caveat:
 //      if this function returns PEP_ct_unknown or PEP_ct_key_expired in
 //      identity->comm_type, the caller must insert the identity into the
@@ -20,6 +20,7 @@ extern "C" {
 //      at least identity->address must be a non-empty UTF-8 string as input
 //      update_identity() never writes flags; use set_identity_flags() for
 //      writing
+//      this function NEVER reads the incoming fpr, only writes to it.
 
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
@@ -116,13 +117,13 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
     );
 
 
-// key_compromized() - mark key as being compromized
+// key_mistrusted() - mark key as being compromized
 //
 //  parameters:
 //      session (in)        session to use
 //      ident (in)          person and key which was compromized
 
-DYNAMIC_API PEP_STATUS key_compromized(
+DYNAMIC_API PEP_STATUS key_mistrusted(
         PEP_SESSION session,
         pEp_identity *ident
     );
@@ -143,7 +144,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     );
 
 
-// key_reset_trust() - undo trust_personal_key and key_compromized() for keys
+// key_reset_trust() - undo trust_personal_key and key_mistrusted() for keys
 //                     we don't own
 //
 //  parameters:
@@ -170,18 +171,18 @@ DYNAMIC_API PEP_STATUS own_key_is_listed(
     );
 
 
-// own_key_retrieve() - retrieve all own keys fingerprints
+// own_identities_retrieve() - retrieve all own identities
 //
 //  parameters:
-//      session (in)        session to use
-//      own_key (out)     copy of own_key
+//      session (in)            session to use
+//      own_identities (out)    list of own identities
 //
 //  caveat:
-//      the ownership of the copy of own_key goes to the caller
+//      the ownership of the copy of own_identities goes to the caller
 
-DYNAMIC_API PEP_STATUS own_key_retrieve(
+DYNAMIC_API PEP_STATUS own_identities_retrieve(
         PEP_SESSION session,
-        stringlist_t **own_key
+        identity_list **own_identities
     );
 
 #ifdef __cplusplus

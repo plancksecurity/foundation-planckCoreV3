@@ -42,6 +42,7 @@ typedef enum {
     PEP_KEY_NOT_FOUND                               = 0x0201,
     PEP_KEY_HAS_AMBIG_NAME                          = 0x0202,
     PEP_GET_KEY_FAILED                              = 0x0203,
+    PEP_CANNOT_EXPORT_KEY                           = 0x0204,
     
     PEP_CANNOT_FIND_IDENTITY                        = 0x0301,
     PEP_CANNOT_SET_PERSON                           = 0x0381,
@@ -73,9 +74,26 @@ typedef enum {
     PEP_CANNOT_ENCODE                               = 0x0803,
 
     PEP_SYNC_NO_TRUSTWORDS_CALLBACK                 = 0x0901,
+    PEP_SYNC_ILLEGAL_MESSAGE                        = 0x0902,
+    PEP_SYNC_NO_INJECT_CALLBACK                     = 0x0903,
+
+    PEP_SEQUENCE_VIOLATED                           = 0x0970,
+    PEP_CANNOT_INCREASE_SEQUENCE                    = 0x0971,
+    PEP_CANNOT_SET_SEQUENCE_VALUE                   = 0x0972,
+    PEP_OWN_SEQUENCE                                = 0x097f,
+
+    PEP_SYNC_STATEMACHINE_ERROR                     = 0x0980,
+    PEP_SYNC_NO_TRUST                               = 0x0981,
+    PEP_STATEMACHINE_INVALID_STATE                  = 0x0982,
+    PEP_STATEMACHINE_INVALID_EVENT                  = 0x0983,
+    PEP_STATEMACHINE_INVALID_CONDITION              = 0x0984,
+    PEP_STATEMACHINE_INVALID_ACTION                 = 0x0985,
 
     PEP_COMMIT_FAILED                               = 0xff01,
+    PEP_MESSAGE_CONSUMED                            = 0xff02,
+    PEP_MESSAGE_DISCARDED                           = 0xff03,
 
+    PEP_RECORD_NOT_FOUND                            = -6,
     PEP_CANNOT_CREATE_TEMP_FILE                     = -5,
     PEP_ILLEGAL_VALUE                               = -4,
     PEP_BUFFER_TOO_SMALL                            = -3,
@@ -149,6 +167,14 @@ DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable);
 //      enable (in)     flag if enabled or disabled
 
 DYNAMIC_API void config_use_only_own_private_keys(PEP_SESSION session, bool enable);
+
+
+// config_keep_sync_msg() - do not remove sync messages (for debugging purposes)
+//
+//      session (in)    session handle
+//      enable (in)     flag if enabled or disabled
+
+DYNAMIC_API void config_keep_sync_msg(PEP_SESSION session, bool enable);
 
 
 // decrypt_and_verify() - decrypt and/or verify a message
@@ -320,6 +346,8 @@ DYNAMIC_API PEP_STATUS trustwords(
     );
 
 
+// TODO: increase versions in pEp.asn1 if rating changes
+
 typedef enum _PEP_comm_type {
     PEP_ct_unknown = 0,
 
@@ -381,9 +409,15 @@ typedef enum _PEP_comm_type {
 } PEP_comm_type;
 
 typedef enum _identity_flags {
+    // the first octet flags are app defined settings
     PEP_idf_not_for_sync = 1,   // don't use this identity for sync
-    PEP_idf_group = 2           // identity of group of persons
+    PEP_idf_list = 2,           // identity of list of persons
+
+    // the second octet flags are calculated
+    PEP_idf_devicegroup = 256   // identity of a device group member
 } identity_flags;
+
+typedef unsigned int identity_flags_t;
 
 typedef struct _pEp_identity {
     char *address;              // C string with address UTF-8 encoded
@@ -394,7 +428,7 @@ typedef struct _pEp_identity {
     char lang[3];               // language of conversation
                                 // ISO 639-1 ALPHA-2, last byte is 0
     bool me;                    // if this is the local user herself/himself
-    unsigned int flags;         // identity_flag1 | identity_flag2 | ...
+    identity_flags_t flags;     // identity_flag1 | identity_flag2 | ...
 } pEp_identity;
 
 typedef struct _identity_list {
@@ -462,8 +496,8 @@ DYNAMIC_API void free_identity(pEp_identity *identity);
 //                            NULL if failure
 //
 //    caveat:
-//        the address string is being copied; the original string remains in the
-//        ownership of the caller
+//        address and user_id are being copied; the original strings remains in
+//        the ownership of the caller
 //        the resulting pEp_identity structure goes to the ownership of the
 //        caller and has to be freed with free_identity() when not in use any
 //        more
@@ -496,6 +530,38 @@ DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
     );
 
+// set_device_group() - update own person's device group
+//
+//    parameters:
+//        session (in)        session handle
+//        group_name (in)     new group name
+//
+//    return value:
+//        PEP_STATUS_OK = 0             device group was updated
+//        PEP_CANNOT_SET_PERSON         update failed
+
+DYNAMIC_API PEP_STATUS set_device_group(
+        PEP_SESSION session,
+        const char *group_name
+    );
+
+// get_device_group() - get own person's device group
+//
+//    parameters:
+//        session (in)        session handle
+//        group_name (in)     new group name
+//
+//    return value:
+//        PEP_STATUS_OK = 0             couldn't get device group
+//        PEP_RECORD_NOT_FOUND          update failed
+//
+//    caveat:
+//        the ownerships of group_name is going to the caller
+
+DYNAMIC_API PEP_STATUS get_device_group(
+        PEP_SESSION session, 
+        char **group_name
+    );
 
 // set_identity_flags() - update identity flags on existing identity
 //
@@ -614,6 +680,30 @@ DYNAMIC_API PEP_STATUS import_key(
 //      the caller is responsible to free() it (on Windoze use pEp_free())
 
 DYNAMIC_API PEP_STATUS export_key(
+        PEP_SESSION session, const char *fpr, char **key_data, size_t *size
+    );
+
+
+// export_secret_key() - export secret key ascii armored
+//
+//  parameters:
+//      session (in)            session handle
+//      fpr (in)                fingerprint of key, at least 16 hex digits
+//      key_data (out)          ASCII armored OpenPGP secret key
+//      size (out)              amount of data to handle
+//
+//  return value:
+//      PEP_STATUS_OK = 0       key was successfully exported
+//      PEP_OUT_OF_MEMORY       out of memory
+//      PEP_KEY_NOT_FOUND       key not found
+//      PEP_CANNOT_EXPORT_KEY   cannot export secret key (i.e. it's on an HKS)
+//
+//  caveat:
+//      the key_data goes to the ownership of the caller
+//      the caller is responsible to free() it (on Windoze use pEp_free())
+//      beware of leaking secret key data - overwrite it in memory after use
+
+DYNAMIC_API PEP_STATUS export_secrect_key(
         PEP_SESSION session, const char *fpr, char **key_data, size_t *size
     );
 
@@ -743,7 +833,7 @@ DYNAMIC_API PEP_STATUS renew_key(
 //  caveat:
 //      reason text must not include empty lines
 //      this function is meant for internal use only; better use
-//      key_compromized() of keymanagement API
+//      key_mistrusted() of keymanagement API
 
 DYNAMIC_API PEP_STATUS revoke_key(
         PEP_SESSION session,
@@ -843,16 +933,24 @@ DYNAMIC_API PEP_STATUS get_phrase(
 //
 //  parameters:
 //      session (in)            session handle
-//      name (in)               name of sequence
-//      value (out)             value of sequence
+//      name (inout)            name of sequence or char[37] set to {0, }
+//                              for new own sequence named as UUID
+//      value (inout)           value of sequence value to test or 0 for
+//                              getting next value
+//
+//  returns:
+//      PEP_STATUS_OK                   no error, not own sequence
+//      PEP_SEQUENCE_VIOLATED           if sequence violated
+//      PEP_CANNOT_INCREASE_SEQUENCE    if sequence cannot be increased
+//      PEP_OWN_SEQUENCE                if own sequence
 
 DYNAMIC_API PEP_STATUS sequence_value(
         PEP_SESSION session,
-        const char *name,
+        char *name,
         int32_t *value
     );
 
-    
+
 // set_revoked() - records relation between a revoked key and its replacement
 //
 //  parameters:
@@ -868,6 +966,7 @@ DYNAMIC_API PEP_STATUS set_revoked(
        const uint64_t revocation_date
     );
 
+
 // get_revoked() - find revoked key that may have been replaced by given key, if any
 //
 //  parameters:
@@ -881,6 +980,20 @@ DYNAMIC_API PEP_STATUS get_revoked(
         const char *fpr,
         char **revoked_fpr,
         uint64_t *revocation_date
+    );
+
+
+// key_created() - get creation date of a key
+//
+//  parameters:
+//      session (in)            session handle
+//      fpr (in)                fingerprint of key
+//      created (out)           date of creation
+
+PEP_STATUS key_created(
+        PEP_SESSION session,
+        const char *fpr,
+        time_t *created
     );
 
 

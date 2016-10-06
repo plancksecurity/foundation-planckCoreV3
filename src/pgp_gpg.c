@@ -1152,7 +1152,8 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
 }
 
 PEP_STATUS pgp_export_keydata(
-    PEP_SESSION session, const char *fpr, char **key_data, size_t *size
+        PEP_SESSION session, const char *fpr, char **key_data, size_t *size,
+        bool secret
     )
 {
     gpgme_error_t gpgme_error;
@@ -1182,8 +1183,12 @@ PEP_STATUS pgp_export_keydata(
         return PEP_UNKNOWN_ERROR;
     }
 
-    gpgme_error = gpg.gpgme_op_export(session->ctx, fpr,
-        GPGME_EXPORT_MODE_MINIMAL, dh);
+    if (secret)
+        gpgme_error = gpg.gpgme_op_export(session->ctx, fpr,
+            GPGME_EXPORT_MODE_SECRET, dh);
+    else
+        gpgme_error = gpg.gpgme_op_export(session->ctx, fpr,
+            GPGME_EXPORT_MODE_MINIMAL, dh);
     gpgme_error = _GPGERR(gpgme_error);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
@@ -1271,25 +1276,13 @@ PEP_STATUS pgp_list_keyinfo(PEP_SESSION session, const char* pattern,
 
                 // first subkey is primary key
                 char* fpr = key->subkeys->fpr;
+                char* uid = key->uids->uid;
 
                 assert(fpr);
+                assert(uid);
                 if (!fpr)
                     return PEP_GET_KEY_FAILED;
                 
-                bool own_key = false;
-                PEP_STATUS own_key_status = own_key_is_listed(session, fpr, &own_key);
-                
-                if (own_key || own_key_status != PEP_STATUS_OK) // Hrm... is this second part ok?
-                    continue;
-
-                char* uid = key->uids->uid;
-                assert(uid); // ??                
-                
-                
-                PEP_STATUS key_status = PEP_GET_KEY_FAILED;
-                
-                bool key_revoked = false;
-                                
                 if (key->subkeys->revoked)
                     continue;
                 
@@ -2058,6 +2051,38 @@ PEP_STATUS pgp_key_revoked(
     if (key && key->subkeys)
     {
         *revoked = key->subkeys->revoked;
+    }
+    else
+    {
+        status = PEP_KEY_NOT_FOUND;
+    }
+
+    gpg.gpgme_key_unref(key);
+    return status;
+}
+
+PEP_STATUS pgp_key_created(
+        PEP_SESSION session,
+        const char *fpr,
+        time_t *created
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    gpgme_key_t key;
+
+    assert(session);
+    assert(fpr);
+    assert(created);
+
+    *created = 0;
+
+    status = find_single_key(session, fpr, &key);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    if (key && key->subkeys)
+    {
+        *created = (time_t) key->subkeys->timestamp;
     }
     else
     {

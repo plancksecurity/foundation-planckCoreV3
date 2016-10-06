@@ -173,7 +173,6 @@ static PEP_STATUS mime_attachment(
     PEP_STATUS status = PEP_STATUS_OK;
     struct mailmime * mime = NULL;
     char * mime_type;
-
     assert(blob);
     assert(result);
 
@@ -210,7 +209,8 @@ static struct mailimf_mailbox * identity_to_mailbox(const pEp_identity *ident)
     char *_username = NULL;
     struct mailimf_mailbox *mb;
 
-    _username = mailmime_encode_subject_header("utf-8", ident->username, 0);
+    _username = ident->username ? mailmime_encode_subject_header("utf-8",
+            ident->username, 0) : strdup("");
     if (_username == NULL)
         goto enomem;
 
@@ -281,7 +281,7 @@ static struct mailimf_address_list * identity_list_to_mal(identity_list *il)
         goto enomem;
 
     identity_list *_il;
-    for (_il = il; _il; _il = _il->next) {
+    for (_il = il; _il && _il->ident; _il = _il->next) {
         mb = identity_to_mailbox(_il->ident);
         if (mb == NULL)
             goto enomem;
@@ -581,7 +581,7 @@ static PEP_STATUS mime_encode_message_plain(
     plaintext = (msg->longmsg) ? msg->longmsg : "";
     htmltext = msg->longmsg_formatted;
 
-    if (htmltext) {
+    if (htmltext && (htmltext[0] != '\0')) {
         status = mime_html_text(plaintext, htmltext, &mime);
         if (status != PEP_STATUS_OK)
             goto pep_error;
@@ -1300,7 +1300,14 @@ static PEP_STATUS interpret_MIME(
             }
         }
         else {
-            if (_is_text_part(content, NULL) && msg->longmsg == NULL) {
+            if (_is_text_part(content, "html") &&
+                msg->longmsg_formatted == NULL) {
+                status = interpret_body(mime, &msg->longmsg_formatted,
+                                        NULL);
+                if (status)
+                    return status;
+            }
+            else if (_is_text_part(content, NULL) && msg->longmsg == NULL) {
                 status = interpret_body(mime, &msg->longmsg, NULL);
                 if (status)
                     return status;

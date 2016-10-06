@@ -41,36 +41,6 @@ int main() {
     free_identity(ident1);
     free_identity(ident2);
 
-    cout << "creating new stringlist...\n";
-
-    stringlist_t *sl = new_stringlist("23");
-    assert(sl);
-    stringlist_t *_sl = stringlist_add(sl, "42");
-    assert(_sl);
-
-    cout << "converting stringlist to keylist...\n";
-
-    KeyList_t *kl = KeyList_from_stringlist(sl, NULL);
-    assert(kl);
-
-    cout << "converting keylist to stringlist...\n";
-
-    stringlist_t *sl2 = KeyList_to_stringlist(kl, NULL);
-    assert(sl2);
-
-    stringlist_t *_sl2;
-    for (_sl = sl, _sl2 = sl2; _sl && _sl->value; _sl = _sl->next, _sl2 = _sl2->next) {
-        assert(_sl2);
-        assert(_sl2->value);
-        assert(strcmp(_sl->value, _sl2->value) == 0);
-        assert(!_sl->next == !_sl2->next);
-    }
-
-    cout << "freeing lists...\n";
-
-    free_stringlist(sl);
-    free_stringlist(sl2);
-    ASN_STRUCT_FREE(asn_DEF_KeyList, kl);
 
     return 0;
 }

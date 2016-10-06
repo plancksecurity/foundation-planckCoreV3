@@ -17,6 +17,13 @@ bool import_attached_keys(
     );
 void attach_own_key(PEP_SESSION session, message *msg);
 PEP_cryptotech determine_encryption_format(message *msg);
+void add_opt_field(message *msg, const char *name, const char *value);
+
+typedef enum _PEP_encrypt_flags {
+    PEP_encrypt_flag_force_encryption = 0x1
+} PEP_encrypt_flags; 
+
+typedef unsigned int PEP_encrypt_flags_t;
 
 // encrypt_message() - encrypt message in memory
 //
@@ -26,6 +33,7 @@ PEP_cryptotech determine_encryption_format(message *msg);
 //      extra (in)          extra keys for encryption
 //      dst (out)           pointer to new encrypted message or NULL on failure
 //      enc_format (in)     encrypted format
+//      flags (in)          flags to set special encryption features
 //
 //  return value:
 //      PEP_STATUS_OK                   on success
@@ -44,7 +52,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         message *src,
         stringlist_t *extra,
         message **dst,
-        PEP_enc_format enc_format
+        PEP_enc_format enc_format,
+        PEP_encrypt_flags_t flags
     );
 
 // encrypt_message_for_self() - encrypt message in memory for user's identity only,
@@ -80,7 +89,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_enc_format enc_format
     );
 
-typedef enum _PEP_color {
+typedef enum _PEP_rating {
     PEP_rating_undefined = 0,
     PEP_rating_cannot_decrypt,
     PEP_rating_have_no_key,
@@ -88,23 +97,36 @@ typedef enum _PEP_color {
     PEP_rating_unencrypted_for_some,
     PEP_rating_unreliable,
     PEP_rating_reliable,
-    PEP_rating_yellow = PEP_rating_reliable,
     PEP_rating_trusted,
-    PEP_rating_green = PEP_rating_trusted,
     PEP_rating_trusted_and_anonymized,
     PEP_rating_fully_anonymous,   
 
     PEP_rating_mistrust = -1,
-    PEP_rating_red = PEP_rating_mistrust,
     PEP_rating_b0rken = -2,
     PEP_rating_under_attack = -3
+} PEP_rating;
+
+typedef enum _PEP_color {
+    PEP_color_no_color = 0,
+    PEP_color_yellow,
+    PEP_color_green,
+    PEP_color_red = -1,
 } PEP_color;
+
+// color_from_rating - calculate color from rating
+//
+//  parameters:
+//      rating (in)         rating
+//
+//  return value:           color representing that rating
+
+DYNAMIC_API PEP_color color_from_rating(PEP_rating rating);
 
 typedef enum _PEP_decrypt_flags {
     PEP_decrypt_flag_own_private_key = 0x1
 } PEP_decrypt_flags; 
 
-typedef uint32_t PEP_decrypt_flags_t;
+typedef unsigned int PEP_decrypt_flags_t;
 
 // decrypt_message() - decrypt message in memory
 //
@@ -113,8 +135,8 @@ typedef uint32_t PEP_decrypt_flags_t;
 //      src (in)            message to decrypt
 //      dst (out)           pointer to new decrypted message or NULL on failure
 //      keylist (out)       stringlist with keyids
-//      color (out)         color for the message
-//      flags (out)         flags to signal special message features
+//      rating (out)        rating for the message
+//      flags (out)         flags to signal special decryption features
 //
 //  return value:
 //      error status or PEP_STATUS_OK on success
@@ -131,8 +153,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         message *src,
         message **dst,
         stringlist_t **keylist,
-        PEP_color *color,
-        PEP_decrypt_flags_t *flags 
+        PEP_rating *rating,
+        PEP_decrypt_flags_t *flags
 );
 
 // own_message_private_key_details() - details on own key in own message
@@ -162,12 +184,12 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
         pEp_identity **ident 
 );
 
-// outgoing_message_color() - get color for an outgoing message
+// outgoing_message_rating() - get rating for an outgoing message
 //
 //  parameters:
 //      session (in)        session handle
-//      msg (in)            message to get the color for
-//      color (out)         color for the message
+//      msg (in)            message to get the rating for
+//      rating (out)        rating for the message
 //
 //  return value:
 //      error status or PEP_STATUS_OK on success
@@ -177,19 +199,19 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
 //      msg->dir must be PEP_dir_outgoing
 //      the ownership of msg remains with the caller
 
-DYNAMIC_API PEP_STATUS outgoing_message_color(
+DYNAMIC_API PEP_STATUS outgoing_message_rating(
         PEP_SESSION session,
         message *msg,
-        PEP_color *color
+        PEP_rating *rating
     );
 
 
-// identity_color() - get color for a single identity
+// identity_rating() - get rating for a single identity
 //
 //  parameters:
 //      session (in)        session handle
-//      ident (in)          identity to get the color for
-//      color (out)         color for the identity
+//      ident (in)          identity to get the rating for
+//      rating (out)        rating for the identity
 //
 //  return value:
 //      error status or PEP_STATUS_OK on success
@@ -197,10 +219,10 @@ DYNAMIC_API PEP_STATUS outgoing_message_color(
 //  caveat:
 //      the ownership of ident remains with the caller
 
-DYNAMIC_API PEP_STATUS identity_color(
+DYNAMIC_API PEP_STATUS identity_rating(
         PEP_SESSION session,
         pEp_identity *ident,
-        PEP_color *color
+        PEP_rating *rating
     );
 
 
