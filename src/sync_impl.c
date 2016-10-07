@@ -60,6 +60,7 @@ PEP_STATUS receive_sync_msg(
                     ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
                     goto error;
                 }
+
                 event = HandshakeRequest;
                 break;
 
@@ -92,6 +93,45 @@ PEP_STATUS receive_sync_msg(
         partner = sync_msg->u.event.partner;
         extra = sync_msg->u.event.extra;
         event = sync_msg->u.event.event;
+    }
+
+    // partner identity must be explicitely added DB to later
+    // be able to communicate securely with it.
+    if(partner){
+        // prevent attacks spoofing virtual user IDs 
+        if((strncmp("TOFU_", partner->user_id, 6) == 0 &&
+           strlen(partner->user_id) == strlen(partner->address) + 6 &&
+           strcmp(partner->user_id + 6, partner->address)) ||
+        // prevent attacks spoofing own IDs 
+           (strcmp(PEP_OWN_USERID, partner->user_id) == 0)){
+            status = PEP_SYNC_ILLEGAL_MESSAGE;
+            goto error;
+        }
+
+        // partner ID are UUID bound to session lifespan
+        // and therefore partner identities are not supposed
+        // to mutate over time, but just disapear.
+        // it is then safe to accept given identity if not 
+        // already pre-existing
+        pEp_identity *stored_identity = NULL;
+        status = get_identity(session,
+                              partner->address,
+                              partner->user_id,
+                              &stored_identity);
+
+        if (!stored_identity) {
+            // add partner to DB
+            status = set_identity(session, partner);
+            assert(status == PEP_STATUS_OK);
+            if (status != PEP_STATUS_OK) {
+                goto error;
+            }
+        }
+        else if (status == PEP_STATUS_OK) {
+            free_identity(stored_identity);
+        } 
+        else
+            goto error;
     }
 
     status = fsm_DeviceState_inject(session, event, partner, extra);
@@ -202,7 +242,7 @@ PEP_STATUS receive_DeviceState_msg(
                 time_t now = time(NULL);
                 if(expiry != 0 && now != 0 && expiry < now){
                     expired = true;
-                    goto flush;
+                    goto free_all;
                 }
 
                 int32_t value = (int32_t) msg->header.sequence;
@@ -218,7 +258,7 @@ PEP_STATUS receive_DeviceState_msg(
                                         (const char *)msg->payload.choice.handshakeRequest.partner.user_id->buf,
                                         msg->payload.choice.handshakeRequest.partner.user_id->size) != 0){
                                 discarded = true;
-                                goto flush;
+                                goto free_all;
                             }
                             break;
                         // accepting GroupKeys needs encryption and trust
@@ -233,7 +273,7 @@ PEP_STATUS receive_DeviceState_msg(
                                         (const char *)msg->payload.choice.groupKeys.partner.user_id->buf,
                                         msg->payload.choice.groupKeys.partner.user_id->size) != 0)){
                                 discarded = true;
-                                goto flush;
+                                goto free_all;
                             }
 
                             // otherwise, when group keys are sent from a 
@@ -251,7 +291,7 @@ PEP_STATUS receive_DeviceState_msg(
                                                                src->from->username);
                             if (_from == NULL){
                                 status = PEP_OUT_OF_MEMORY;
-                                goto flush;
+                                goto free_all;
                             }
                             PEP_rating this_user_id_rating = PEP_rating_undefined;
                             identity_rating(session, _from, &this_user_id_rating);
@@ -259,7 +299,7 @@ PEP_STATUS receive_DeviceState_msg(
 
                             if (this_user_id_rating < PEP_rating_trusted ) {
                                 discarded = true;
-                                goto flush;
+                                goto free_all;
                             }
                             break;
                         default:
@@ -271,7 +311,7 @@ PEP_STATUS receive_DeviceState_msg(
                     sync_msg_t *sync_msg = malloc(sizeof(sync_msg_t));
                     if(sync_msg == NULL){
                         status = PEP_OUT_OF_MEMORY;
-                        goto flush;
+                        goto free_all;
                     }
                     sync_msg->is_a_message = true;
                     sync_msg->u.message = msg;
@@ -280,17 +320,20 @@ PEP_STATUS receive_DeviceState_msg(
                         if (status == PEP_SYNC_NO_INJECT_CALLBACK){
                             free(sync_msg);
                         }
-                        goto flush;
+                        goto free_all;
                     }
+                    // don't message now that it is in the queue
+                    goto free_userid;
                 }
                 else if (status == PEP_OWN_SEQUENCE) {
                     status = PEP_STATUS_OK;
                     discarded = true;
-                    goto flush;
+                    goto free_all;
                 }
 
-            flush:
+            free_all:
                 ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+            free_userid:
                 free(user_id);
 
                 if (status != PEP_STATUS_OK)
