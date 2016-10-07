@@ -16,6 +16,7 @@
 #include <string.h>
 #include <io.h>
 #include <basetsd.h>
+#include <time.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,6 +30,8 @@ void *dlopen(const char *filename, int flag);
 int dlclose(void *handle);
 void *dlsym(void *handle, const char *symbol);
 int mkstemp(char *templ);
+
+time_t timegm(struct tm* tm);
 
 #ifndef strdup
 #define strdup(A) _strdup((A))
@@ -66,6 +69,7 @@ size_t strlcat(char* dst, const	char* src, size_t size);
 const char *windoze_local_db(void);
 const char *windoze_system_db(void);
 const char *gpg_conf(void);
+const char *gpg_agent_conf(void);
 
 long random(void);
 

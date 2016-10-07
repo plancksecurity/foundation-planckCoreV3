@@ -299,4 +299,8 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out)
     }
 }
 
+time_t timegm(struct tm* tm) {
+    return _mkgmtime(tm);
+}
+
 } // "C"

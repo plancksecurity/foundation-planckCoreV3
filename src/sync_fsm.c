@@ -1,4 +1,5 @@
 #include "sync_fsm.h"
+#include <stdio.h>
 
 // state machine for DeviceState
 
