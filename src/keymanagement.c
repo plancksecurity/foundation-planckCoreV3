@@ -171,7 +171,7 @@ DYNAMIC_API PEP_STATUS update_identity(
     if (stored_identity) {
         PEP_comm_type _comm_type_key;
         
-        bool dont_use_fpr = false;
+        bool dont_use_fpr = true;
 
         /* if we have a stored_identity fpr */
         if (!EMPTYSTR(stored_identity->fpr)) {
