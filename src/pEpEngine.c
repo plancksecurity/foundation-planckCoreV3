@@ -1891,7 +1891,7 @@ DYNAMIC_API PEP_STATUS sequence_value(
 
     int own = 0;
     if (!name[0]) {
-        unsigned char uuid[16];
+        pEpUUID uuid;
         uuid_generate_random(uuid);
         uuid_unparse_upper(uuid, name);
         own = 1;

@@ -1,6 +1,9 @@
+// it seems pEp_internal.h needs to be the first file due to the 
+// #define for the dllimport / dllexport DYNAMIC_API stuff.
+#include "pEp_internal.h"
+
 #include "../asn.1/DeviceGroup-Protocol.h"
 #include "sync_impl.h"
-#include "pEp_internal.h"
 #include "keymanagement.h"
 #include "message_api.h"
 #include "map_asn1.h"

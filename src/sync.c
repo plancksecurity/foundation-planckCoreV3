@@ -26,7 +26,7 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
     if (!(session && obj && messageToSend && showHandshake && inject_sync_msg && retrieve_next_sync_msg))
         return PEP_ILLEGAL_VALUE;
 
-    unsigned char uuid[16];
+    pEpUUID uuid;
     uuid_generate_random(uuid);
     uuid_unparse_upper(uuid, session->sync_uuid);
 

@@ -78,10 +78,6 @@ static PEP_STATUS render_mime(struct mailmime *mime, char **mimetext)
     *mimetext = buf;
     return PEP_STATUS_OK;
 
-err_buffer:
-    status = PEP_BUFFER_TOO_SMALL;
-    goto pep_error;
-
 err_file:
     status = PEP_CANNOT_CREATE_TEMP_FILE;
     goto pep_error;
