@@ -27,9 +27,8 @@ DeviceGroup-Protocol ::= SEQUENCE {
         sequence    INTEGER,  /* always increases */
         me          Identity, /* identity of the sender */
         state       INTEGER,  /* state the sender is in */
-        devicegroup BOOLEAN,
+        devicegroup BOOLEAN
             /* signals if this message is coming from a device group member */
-        expiry      GeneralizedTime
     },
 
     payload CHOICE {

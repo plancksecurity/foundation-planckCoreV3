@@ -204,6 +204,9 @@ PEP_STATUS inject_DeviceState_event(
     return status;
 }
 
+// Ten minutes
+#define SYNC_MSG_EXPIRE_DELTA (60 * 10)
+
 PEP_STATUS receive_DeviceState_msg(
     PEP_SESSION session, 
     message *src, 
@@ -228,6 +231,7 @@ PEP_STATUS receive_DeviceState_msg(
                     &msg, bl->value, bl->size);
 
             if (msg) {
+                PEP_STATUS status = PEP_STATUS_OK;
 
                 char *user_id = strndup((char *) msg->header.me.user_id->buf,
                         msg->header.me.user_id->size);
@@ -238,15 +242,17 @@ PEP_STATUS receive_DeviceState_msg(
                 }
 
                 // check message expiry 
-                time_t expiry = GeneralizedTime_to_time_t(&msg->header.expiry);
-                time_t now = time(NULL);
-                if(expiry != 0 && now != 0 && expiry < now){
-                    expired = true;
-                    goto free_all;
+                if(src->recv) {
+                    time_t expiry = timegm(src->recv) + SYNC_MSG_EXPIRE_DELTA;
+                    time_t now = time(NULL);
+                    if(expiry != 0 && now != 0 && expiry < now){
+                        expired = true;
+                        goto free_all;
+                    }
                 }
 
                 int32_t value = (int32_t) msg->header.sequence;
-                PEP_STATUS status = sequence_value(session, (char *) user_id,
+                status = sequence_value(session, (char *) user_id,
                         &value);
 
                 if (status == PEP_STATUS_OK) {
@@ -399,9 +405,6 @@ void free_DeviceGroup_Protocol_msg(DeviceGroup_Protocol_t *msg)
     ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
 }
 
-// Ten minutes
-#define SYNC_MSG_EXPIRE_DELTA (60 * 10)
-
 PEP_STATUS unicast_msg(
         PEP_SESSION session,
         const Identity partner,
@@ -464,13 +467,6 @@ PEP_STATUS unicast_msg(
         msg->header.devicegroup = 1;
     else
         msg->header.devicegroup = 0;
-
-    timestamp *expiry = new_timestamp(time(NULL) + SYNC_MSG_EXPIRE_DELTA);
-    if(timestamp_to_GeneralizedTime(expiry, &msg->header.expiry) == NULL){
-        free_timestamp(expiry);
-        goto enomem;
-    }
-    free_timestamp(expiry);
 
     if (asn_check_constraints(&asn_DEF_DeviceGroup_Protocol, msg, NULL, NULL)) {
         status = PEP_CONTRAINTS_VIOLATED;

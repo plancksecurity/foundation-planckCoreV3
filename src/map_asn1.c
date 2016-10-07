@@ -178,35 +178,3 @@ enomem:
     return NULL;
 }
 
-timestamp *GeneralizedTime_to_timestamp(GeneralizedTime_t * asntime, timestamp *result)
-{
-    assert(asntime);
-    if (!asntime)
-        return NULL;
-
-    time_t smpltime = asn_GT2time(asntime, NULL, 0);
-
-    if (!result){
-        result = new_timestamp(smpltime);
-    }
-    else
-        gmtime_r(&smpltime, result);
-
-
-    return result;
-}
-
-time_t GeneralizedTime_to_time_t(GeneralizedTime_t * asntime)
-{
-    return asn_GT2time(asntime, NULL, 0);
-}
-
-GeneralizedTime_t *timestamp_to_GeneralizedTime(timestamp * ts, GeneralizedTime_t *result)
-{
-    assert(ts);
-    if (!ts)
-        return NULL;
-
-    GeneralizedTime_t *asntime = asn_time2GT(result, ts, 0);
-    return asntime;
-}
