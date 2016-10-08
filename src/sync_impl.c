@@ -1,4 +1,6 @@
-// it seems pEp_internal.h needs to be the first file due to the 
+#include <time.h>
+
+// it seems pEp_internal.h needs to be the first pEp include due to the 
 // #define for the dllimport / dllexport DYNAMIC_API stuff.
 #include "pEp_internal.h"
 
@@ -101,20 +103,20 @@ PEP_STATUS receive_sync_msg(
     // partner identity must be explicitely added DB to later
     // be able to communicate securely with it.
     if(partner){
-        // prevent attacks spoofing virtual user IDs 
+        // protect virtual user IDs 
         if((strncmp("TOFU_", partner->user_id, 6) == 0 &&
            strlen(partner->user_id) == strlen(partner->address) + 6 &&
            strcmp(partner->user_id + 6, partner->address)) ||
-        // prevent attacks spoofing own IDs 
+        // protect own ID 
            (strcmp(PEP_OWN_USERID, partner->user_id) == 0)){
             status = PEP_SYNC_ILLEGAL_MESSAGE;
             goto error;
         }
 
-        // partner ID are UUID bound to session lifespan
+        // partner IDs are UUIDs bound to session lifespan
         // and therefore partner identities are not supposed
-        // to mutate over time, but just disapear.
-        // it is then safe to accept given identity if not 
+        // to mutate over time, but just not be used anymore.
+        // It should then be safe to accept given identity if not 
         // already pre-existing
         pEp_identity *stored_identity = NULL;
         status = get_identity(session,
@@ -123,8 +125,19 @@ PEP_STATUS receive_sync_msg(
                               &stored_identity);
 
         if (!stored_identity) {
-            // add partner to DB
-            status = set_identity(session, partner);
+            // make a safe copy of partner, with no flags or comm_type
+            pEp_identity *tmpident = new_identity(partner->address,
+                                                  partner->fpr,
+                                                  partner->user_id,
+                                                  partner->username);
+            if (tmpident == NULL){
+                status = PEP_OUT_OF_MEMORY;
+                goto error;
+            }
+
+            // finaly add partner to DB
+            status = set_identity(session, tmpident);
+            free_identity(tmpident);
             assert(status == PEP_STATUS_OK);
             if (status != PEP_STATUS_OK) {
                 goto error;
