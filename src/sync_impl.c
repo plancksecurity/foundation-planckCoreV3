@@ -1,4 +1,4 @@
-#include <time.h>
+#include "platform.h"
 
 // it seems pEp_internal.h needs to be the first pEp include due to the 
 // #define for the dllimport / dllexport DYNAMIC_API stuff.

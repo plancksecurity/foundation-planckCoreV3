@@ -2,6 +2,7 @@
 #define _POSIX_C_SOURCE 200809L
 #endif
 
+#include <time.h>
 #include <unistd.h>
 #include <strings.h>
 #include <sys/select.h>
