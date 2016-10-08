@@ -124,7 +124,7 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out)
     uuid_rc_t rc_create;
 
     if ((rc_create = uuid_create(&uuid)) != UUID_RC_OK ||
-        uuid_import(uuid, UUID_FMT_BIN, uu, sizeof(uuid__t)) != UUID_RC_OK ||
+        uuid_import(uuid, UUID_FMT_BIN, uu, sizeof(pEpUUID)) != UUID_RC_OK ||
         uuid_export(uuid, UUID_FMT_STR, out, NULL) != UUID_RC_OK)
     {
         memset(out, 0, sizeof(uuid_string_t));
