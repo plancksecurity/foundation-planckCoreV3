@@ -1,5 +1,11 @@
 #define _POSIX_C_SOURCE 200809L
 
+#ifdef ANDROID
+#ifndef __LP64__ 
+#include <time64.h>
+#endif
+#endif
+
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
@@ -25,6 +31,19 @@
 
 #ifdef ANDROID
 #include <uuid.h>
+
+/* FIXME : timegm will miss when linking for x86_64 on android, when supported */
+#ifndef __LP64__ 
+time_t timegm(struct tm* const t) {
+    static const time_t kTimeMax = ~(1L << (sizeof(time_t) * CHAR_BIT - 1));
+    static const time_t kTimeMin = (1L << (sizeof(time_t) * CHAR_BIT - 1));
+    time64_t result = timegm64(t);
+    if (result < kTimeMin || result > kTimeMax)
+        return -1;
+    return result;
+}
+#endif
+
 char *stpncpy(char *dst, const char *src, size_t n)
 {
     if (n != 0) {

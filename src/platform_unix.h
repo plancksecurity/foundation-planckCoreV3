@@ -25,6 +25,8 @@ const char *gpg_home(void);
 
 #ifdef ANDROID
 
+time_t timegm(struct tm* const t);
+
 char *stpncpy(char *, const char *, size_t);
 char *stpcpy(char *, const char *);
 
