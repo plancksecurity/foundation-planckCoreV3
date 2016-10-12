@@ -659,12 +659,14 @@ static PEP_STATUS mime_encode_message_PGP_MIME(
     PEP_STATUS status;
     //char *subject;
     char *plaintext;
+    size_t plaintext_size;
 
     assert(msg->attachments && msg->attachments->next &&
             msg->attachments->next->value);
 
     //subject = (msg->shortmsg) ? msg->shortmsg : "pEp"; // not used, yet.
     plaintext = msg->attachments->next->value;
+    plaintext_size = msg->attachments->next->size;
 
     mime = part_multiple_new("multipart/encrypted");
     assert(mime);
@@ -690,7 +692,7 @@ static PEP_STATUS mime_encode_message_PGP_MIME(
     }
 
     submime = get_text_part("msg.asc", "application/octet-stream", plaintext,
-            strlen(plaintext), MAILMIME_MECHANISM_7BIT);
+            plaintext_size, MAILMIME_MECHANISM_7BIT);
     assert(submime);
     if (submime == NULL)
         goto enomem;
