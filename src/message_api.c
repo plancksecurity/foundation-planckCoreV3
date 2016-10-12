@@ -1438,8 +1438,11 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     status = cryptotech[crypto].decrypt_and_verify(session, ctext,
                                                    csize, &ptext, &psize, &_keylist);
     if (status > PEP_CANNOT_DECRYPT_UNKNOWN){
-        status = inject_DeviceState_event(session, CannotDecrypt, NULL, NULL);
         goto pep_error;
+    }
+
+    if (status == PEP_DECRYPT_NO_KEY){
+        status = inject_DeviceState_event(session, CannotDecrypt, NULL, NULL);
     }
 
     decrypt_status = status;
