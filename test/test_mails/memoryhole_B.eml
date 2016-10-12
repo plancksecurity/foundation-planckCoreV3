@@ -1,0 +1,52 @@
+Subject: alternative text/html message with embedded header, unsigned
+Message-ID: B@memoryhole.example
+Date: Thu, 16 Jul 2015 11:44:44 +0200
+To: Julia 
+From: Winston 
+Content-Type: multipart/mixed; boundary="bbbbbbbbbbbb"
+
+--bbbbbbbbbbbb
+Content-Type: text/rfc822-headers
+Content-Disposition: attachment
+
+Date: Thu, 16 Jul 2015 11:44:44 +0200
+Subject: alternative text/html message with embedded header, unsigned
+From: Winston 
+To: Julia 
+Message-ID: B@memoryhole.example
+
+--bbbbbbbbbbbb
+Content-Type: multipart/alternative; boundary="aaaaaaaaaaaa"
+
+--aaaaaaaaaaaa
+Content-Type: text/plain
+
+This is a test
+message on multiple lines
+
+with a silly bit more.
+-- 
+and a .sig here.
+
+--aaaaaaaaaaaa
+Content-Type: text/html
+
+
+
+
+
+
+This is a test
+message on multiple lines
+
+with a silly bit more.
+
+
+and a .sig here.
+
+
+
+
+--aaaaaaaaaaaa
+
+--bbbbbbbbbbbb

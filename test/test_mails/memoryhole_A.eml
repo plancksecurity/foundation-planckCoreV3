@@ -1,0 +1,73 @@
+Subject: alternative text/html message with embedded header, signed
+Message-ID: A@memoryhole.example
+Date: Thu, 16 Jul 2015 11:44:44 +0200
+To: Julia 
+From: Winston 
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg="pgp-sha256";
+ protocol="application/pgp-signature"; boundary="cccccccccccc"
+
+--cccccccccccc
+Content-Type: multipart/mixed; boundary="bbbbbbbbbbbb"
+
+--bbbbbbbbbbbb
+Content-Type: text/rfc822-headers
+Content-Disposition: attachment
+
+Date: Thu, 16 Jul 2015 11:44:44 +0200
+Subject: alternative text/html message with embedded header, signed
+From: Winston 
+To: Julia 
+Message-ID: A@memoryhole.example
+
+--bbbbbbbbbbbb
+Content-Type: multipart/alternative; boundary="aaaaaaaaaaaa"
+
+--aaaaaaaaaaaa
+Content-Type: text/plain
+
+This is a test
+message on multiple lines
+
+with a silly bit more.
+-- 
+and a .sig here.
+
+--aaaaaaaaaaaa
+Content-Type: text/html
+
+
+
+
+
+
+This is a test
+message on multiple lines
+
+with a silly bit more.
+
+
+and a .sig here.
+
+
+
+
+--aaaaaaaaaaaa
+
+--bbbbbbbbbbbb
+
+--cccccccccccc
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEcBAABCAAGBQJVv1AkAAoJEBX7TryOLWy3G2UH/jj8HCYfzjf7g/+Xzl7pcTtW
+fLh0wbdfeoxg8+hKa7AA+IhYXupQ9tNWVws9ECKunKMy8MGIPnTRjfDv9qiz4Gmz
+XI/U3K51NP4vTyv2oAf9gig27Y4glsw/krKvDCshSaf9N3Lk04JQ6vVUBRZ2kIrN
+RKfToHcUfxaZiZvbEy0MsT5CNmvMLdGEmukWUoFmOmOxQqBp5+omxNcugnwFpGyK
+SlyJxaH0fniMDiIv983cLpXsp2WVmbYddDxZDAqr4HpTIXbQ/dPNEOp1QTi+86Dd
+SO7nYkDUNIR2JrcexOUCZnV0FryG2dsGRAgL9Wp6T6CPP3Q8uSnOI22P2mtaD/M=
+=3Bmv
+-----END PGP SIGNATURE-----
+
+--cccccccccccc

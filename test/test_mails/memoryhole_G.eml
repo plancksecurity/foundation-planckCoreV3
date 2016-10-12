@@ -1,0 +1,58 @@
+Subject: headers in top-level MIME object: signed multipart email
+Message-ID: G@memoryhole.example
+Date: Wed, 29 Jul 2015 09:31:44 +0100
+To: Julia 
+From: Winston 
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg="pgp-sha256";
+ protocol="application/pgp-signature"; boundary="bbbbbbbbbbbb"
+
+--bbbbbbbbbbbb
+Content-Type: multipart/alternative; boundary="aaaaaaaaaaaa"
+Subject: headers in top-level MIME object: signed multipart email
+From: Winston 
+
+--aaaaaaaaaaaa
+Content-Type: text/plain
+
+This message demonstrates including the memoryhole headers inside the
+top-level MIME object. The signed Subject and From are headers of the
+multipart/alternative part, rather than having their own
+rfc822-headers part.
+
+--aaaaaaaaaaaa
+Content-Type: text/html
+
+
+
+
+
+
+This is a test
+message on multiple lines
+
+with a silly bit more.
+
+
+and a .sig here.
+
+
+
+
+--aaaaaaaaaaaa
+
+--bbbbbbbbbbbb
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEcBAABCAAGBQJVv1AlAAoJEBX7TryOLWy3uIMIAINYRcblN4PXmoLmO8JZfXzB
+afKGkrxAkyFgRb2hs65OJgRb2UZrDqWtiiGxIcW6/JO/g/A3so3dlQFx0lSTxWMe
+YCcFqoPtWphdTuenKZIE3KqQmKgVq7sJz9cNpr6JAMvG0g8S/OdO+mFjPe+UUJJd
+i4z0kJkatnzfzY9R88R+PONxLNLv4gAP1omPFmLAwaZ9gP6x6nCKm4VXGQp3PYQL
+FlDrBnaIotjp4Fr55gZcT1wSxWO1/jh+yNm8uGEQABSnXezXX6c98YO372QGgVlQ
+7iqjEO7YAPqQEoAupeHZgFl2Ddh4eQtuiw+BEItphtC+uRNPniS/BeBB+dppUd0=
+=IFof
+-----END PGP SIGNATURE-----
+
+--bbbbbbbbbbbb

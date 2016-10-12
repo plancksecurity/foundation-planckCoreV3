@@ -1,0 +1,115 @@
+The memoryhole mails here correspond to the memoryhole corpus at http://modernpgp.org/memoryhole/corpus/ and should be used for checking memoryhole compliance. (Also, they're a way to reverse engineer empty parts of the spec). These are part of the examples specification guidance and are included for the repository for testing purposes only. The actual emails have been extracted and are in memoryhole_[A-H].eml in this directory.
+
+Some of these will have to be changed by us to have keys we can actually use to decrypt the contents for testing, but the descriptions below of those emails tell us what they should contain:
+
+Contents
+
+    A: alternative text/html message with embedded header, signed
+    B: alternative text/html message with embedded header, unsigned
+    C: alternative text/html message with embedded header, signed, with Subject tampered
+    D: alternative text/html message with embedded header, encrypted+unsigned
+    E: alternative text/html message with embedded header, encrypted+signed
+    F: headers in top-level MIME object: signed plaintext email
+    G: headers in top-level MIME object: signed multipart email
+    H: headers in top-level MIME: tampered subject and from
+
+Email A:
+
+alternative text/html message with embedded header, signed
+
+└┬╴multipart/signed 1711 bytes (Subject: alternative text/html message with embedded header, signed)
+ ├┬╴multipart/mixed 827 bytes
+ │├─╴text/rfc822-headers attachment 205 bytes
+ │└┬╴multipart/alternative 450 bytes
+ │ ├─╴text/plain 86 bytes
+ │ └─╴text/html 202 bytes
+ └─╴application/pgp-signature 455 bytes
+
+
+Email B:
+
+alternative text/html message with embedded header, unsigned
+
+└┬╴multipart/mixed 1036 bytes (Subject: alternative text/html message with embedded header, unsigned)
+ ├─╴text/rfc822-headers attachment 207 bytes
+ └┬╴multipart/alternative 450 bytes
+  ├─╴text/plain 86 bytes
+  └─╴text/html 202 bytes
+
+
+Email C:
+
+alternative text/html message with embedded header, signed, with Subject tampered
+
+└┬╴multipart/signed 1706 bytes (Subject: the subject has been tampered!)
+ ├┬╴multipart/mixed 850 bytes
+ │├─╴text/rfc822-headers attachment 228 bytes
+ │└┬╴multipart/alternative 450 bytes
+ │ ├─╴text/plain 86 bytes
+ │ └─╴text/html 202 bytes
+ └─╴application/pgp-signature 455 bytes
+
+
+Email D:
+
+alternative text/html message with embedded header, encrypted+unsigned
+
+└┬╴multipart/encrypted 2496 bytes (Subject: Memory Hole Encrypted Message)
+ ├─╴application/pgp-encrypted 10 bytes
+ └─╴application/octet-stream 2064 bytes
+
+
+Email E:
+
+alternative text/html message with embedded header, encrypted+signed
+
+└┬╴multipart/encrypted 2903 bytes (Subject: Memory Hole Encrypted Message)
+ ├─╴application/pgp-encrypted 10 bytes
+ └─╴application/octet-stream 2471 bytes
+
+
+Email F:
+
+headers in top-level MIME object: signed plaintext email
+
+This message demonstrates including the memoryhole headers inside the
+top-level MIME object. The signed Subject and From are headers of the
+text/plain part, rather than having their own rfc822-headers part.
+
+└┬╴multipart/signed 1242 bytes (Subject: headers in top-level MIME object: signed plaintext email)
+ ├─╴text/plain 207 bytes (Subject: headers in top-level MIME object: signed plaintext email)
+ └─╴application/pgp-signature 455 bytes
+
+
+Email G:
+
+headers in top-level MIME object: signed multipart email
+
+This message demonstrates including the memoryhole headers inside the
+top-level MIME object. The signed Subject and From are headers of the
+multipart/alternative part, rather than having their own
+rfc822-headers part.
+
+└┬╴multipart/signed 1566 bytes (Subject: headers in top-level MIME object: signed multipart email)
+ ├┬╴multipart/alternative 684 bytes (Subject: headers in top-level MIME object: signed multipart email)
+ │├─╴text/plain 218 bytes
+ │└─╴text/html 202 bytes
+ └─╴application/pgp-signature 455 bytes
+
+
+Email H:
+
+headers in top-level MIME: tampered subject and from
+
+This email demonstrates including the memoryhole headers inside the
+top-level MIME object. The signed Subject and From are headers of the
+text/plain part, rather than having their own rfc822-headers part.
+
+This email has been tampered with. It was originally sent by Winston,
+who signed the body (including the memoryhole headers). Eve has
+fiddled with the From and Subject headers in-flight.
+
+└┬╴multipart/signed 1416 bytes (Subject: headers in top-level MIME: tampered subject and from)
+ ├─╴text/plain 393 bytes (Subject: headers in top-level MIME: subject restored to original)
+ └─╴application/pgp-signature 455 bytes
+
