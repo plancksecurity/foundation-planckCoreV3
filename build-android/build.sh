@@ -52,6 +52,10 @@ cp *.h "$current_dir/$package_name-$build_version/include/pEp"
 cd "$current_dir/../asn.1"
 make generate
 
+# Generate asn.1
+cd "$current_dir/../sync"
+make
+
 # Start building.
 for arch in $archs ; do
   TARGET_ARCH_ABI=$arch
