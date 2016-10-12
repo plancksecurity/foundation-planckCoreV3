@@ -1441,11 +1441,13 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         goto pep_error;
     }
 
+    decrypt_status = status;
+
     if (status == PEP_DECRYPT_NO_KEY){
         status = inject_DeviceState_event(session, CannotDecrypt, NULL, NULL);
+        if (status != PEP_STATUS_OK)
+            goto pep_error;
     }
-
-    decrypt_status = status;
 
     bool imported_private_key_address = false; 
 
