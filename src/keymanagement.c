@@ -18,47 +18,6 @@
 
 #define KEY_EXPIRE_DELTA (60 * 60 * 24 * 365)
 
-// Space tolerant and case insensitive fingerprint string compare
-static int _same_fpr(
-        const char* fpra,
-        size_t fpras,
-        const char* fprb,
-        size_t fprbs
-    )
-{
-    size_t ai = 0;
-    size_t bi = 0;
-    
-    do
-    {
-        if(fpra[ai] == 0 || fprb[bi] == 0)
-        {
-            return 0;
-        }
-        else if(fpra[ai] == ' ')
-        {
-            ai++;
-        }
-        else if(fprb[bi] == ' ')
-        {
-            bi++;
-        }
-        else if(toupper(fpra[ai]) == toupper(fprb[bi]))
-        {
-            ai++;
-            bi++;
-        }
-        else
-        {
-            return 0;
-        }
-        
-    }
-    while(ai < fpras && bi < fprbs);
-    
-    return ai == fpras && bi == fprbs;
-}
-
 PEP_STATUS elect_pubkey(
         PEP_SESSION session, pEp_identity * identity
     )
