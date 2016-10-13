@@ -32,6 +32,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     static const char *sql_get_device_group;
     static const char *sql_set_pgp_keypair;
     static const char *sql_set_identity;
+    static const char *sql_exists_empty_fpr_entry;
+    static const char *sql_update_fprless_identity;
     static const char *sql_set_identity_flags;
     static const char *sql_set_trust;
     static const char *sql_get_trust;
@@ -46,7 +48,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     static const char *sql_blacklist_delete;
     static const char *sql_blacklist_is_listed;
     static const char *sql_blacklist_retrieve;
-
+    
     // Own keys
     static const char *sql_own_key_is_listed;
     static const char *sql_own_identities_retrieve;
@@ -334,6 +336,13 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         sql_set_identity = "insert or replace into identity (address, main_key_id, "
                            "user_id, flags) values (?1, upper(replace(?2,' ','')),"
                            "?3, ?4 & 255) ;";
+        
+        sql_exists_empty_fpr_entry = "select count(*) from identity where address = ?1 and user_id = ?2 "
+                                        "and (main_key_id is null or main_key_id = '');";
+                
+        sql_update_fprless_identity = "update identity set main_key_id = upper(replace(?2,' ','')), "
+                                         "flags = ?4 & 255 where address = ?1 and user_id = ?3 and "
+                                         "(main_key_id is null or main_key_id = '');";
 
         sql_set_identity_flags = "update identity set flags = ?1 & 255 "
                                  "where address = ?2 and user_id = ?3 ;";
@@ -367,7 +376,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         sql_blacklist_is_listed = "select count(*) from blacklist_keys where fpr = upper(replace(?1,' ','')) ;";
 
         sql_blacklist_retrieve = "select * from blacklist_keys ;";
-        
+                
         // Own keys
         
         sql_own_key_is_listed =
@@ -439,6 +448,16 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_set_identity), &_session->set_identity, NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_exists_empty_fpr_entry,
+                                    (int)strlen(sql_exists_empty_fpr_entry), &_session->exists_empty_fpr_entry,
+                                    NULL);
+    assert(int_result == SQLITE_OK);
+    
+    int_result = sqlite3_prepare_v2(_session->db, sql_update_fprless_identity,
+                                    (int)strlen(sql_update_fprless_identity), &_session->update_fprless_identity,
+                                    NULL);
+    assert(int_result == SQLITE_OK);
+    
     int_result = sqlite3_prepare_v2(_session->db, sql_set_identity_flags,
             (int)strlen(sql_set_identity_flags), &_session->set_identity_flags,
             NULL);
@@ -493,7 +512,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_blacklist_retrieve), &_session->blacklist_retrieve,
             NULL);
     assert(int_result == SQLITE_OK);
-
+    
     // Own keys
     
     int_result = sqlite3_prepare_v2(_session->db, sql_own_key_is_listed,
@@ -995,6 +1014,47 @@ DYNAMIC_API PEP_STATUS get_identity(
     return status;
 }
 
+
+static PEP_STATUS exists_empty_fpr_entry (
+    PEP_SESSION session,
+    const char* address,
+    const char* user_id,
+    bool *exists_empty_fpr
+)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    int count;
+    
+    assert(session && address && user_id && exists_empty_fpr);
+    
+    if (!(session && address && user_id && exists_empty_fpr))
+        return PEP_ILLEGAL_VALUE;
+    
+    *exists_empty_fpr = false;
+    
+    sqlite3_reset(session->exists_empty_fpr_entry);
+    sqlite3_bind_text(session->exists_empty_fpr_entry, 1, address, -1, SQLITE_STATIC);
+    sqlite3_bind_text(session->exists_empty_fpr_entry, 2, user_id, -1, SQLITE_STATIC);
+    
+    int result;
+    
+    result = sqlite3_step(session->exists_empty_fpr_entry);
+    switch (result) {
+        case SQLITE_ROW:
+            count = sqlite3_column_int(session->exists_empty_fpr_entry, 0);
+            *exists_empty_fpr = count > 0;
+            status = PEP_STATUS_OK;
+            break;
+            
+        default:
+            status = PEP_UNKNOWN_ERROR;
+    }
+    
+    sqlite3_reset(session->exists_empty_fpr_entry);
+    return status;
+}
+
+
 DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
     )
@@ -1012,8 +1072,11 @@ DYNAMIC_API PEP_STATUS set_identity(
         return PEP_ILLEGAL_VALUE;
 
     bool listed;
+    bool exists_empty_fpr;
     
     if (identity->fpr && identity->fpr[0] != '\0') {
+        
+        // blacklist check
         PEP_STATUS status = blacklist_is_listed(session, identity->fpr, &listed);
         assert(status == PEP_STATUS_OK);
         if (status != PEP_STATUS_OK)
@@ -1021,6 +1084,13 @@ DYNAMIC_API PEP_STATUS set_identity(
 
         if (listed)
             return PEP_KEY_BLACKLISTED;
+        
+        // empty fpr already in DB
+        status = exists_empty_fpr_entry(session, identity->address,
+                                           identity->user_id, &exists_empty_fpr);
+        if (status != PEP_STATUS_OK)
+            return status;
+        
     }
 
     sqlite3_exec(session->db, "BEGIN ;", NULL, NULL, NULL);
@@ -1060,16 +1130,19 @@ DYNAMIC_API PEP_STATUS set_identity(
         return PEP_CANNOT_SET_PGP_KEYPAIR;
     }
 
-    sqlite3_reset(session->set_identity);
-    sqlite3_bind_text(session->set_identity, 1, identity->address, -1,
+    sqlite3_stmt *update_or_set_identity = 
+        (exists_empty_fpr ? session->update_fprless_identity : session->set_identity);
+    
+    sqlite3_reset(update_or_set_identity);
+    sqlite3_bind_text(update_or_set_identity, 1, identity->address, -1,
             SQLITE_STATIC);
-    sqlite3_bind_text(session->set_identity, 2, identity->fpr, -1,
+    sqlite3_bind_text(update_or_set_identity, 2, identity->fpr, -1,
             SQLITE_STATIC);
-    sqlite3_bind_text(session->set_identity, 3, identity->user_id, -1,
+    sqlite3_bind_text(update_or_set_identity, 3, identity->user_id, -1,
             SQLITE_STATIC);
-    sqlite3_bind_int(session->set_identity, 4, identity->flags);
-    result = sqlite3_step(session->set_identity);
-    sqlite3_reset(session->set_identity);
+    sqlite3_bind_int(update_or_set_identity, 4, identity->flags);
+    result = sqlite3_step(update_or_set_identity);
+    sqlite3_reset(update_or_set_identity);
     if (result != SQLITE_DONE) {
         sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
         return PEP_CANNOT_SET_IDENTITY;

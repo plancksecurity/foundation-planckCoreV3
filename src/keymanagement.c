@@ -49,8 +49,12 @@ PEP_STATUS elect_pubkey(
             if (identity->comm_type == PEP_ct_unknown ||
                 _comm_type_key > identity->comm_type)
             {
-                identity->comm_type = _comm_type_key;
-                _fpr = _keylist->value;
+                bool blacklisted;
+                status = blacklist_is_listed(session, _keylist->value, &blacklisted);
+                if (status == PEP_STATUS_OK && !blacklisted) {
+                    identity->comm_type = _comm_type_key;
+                    _fpr = _keylist->value;
+                }
             }
         }
     }
