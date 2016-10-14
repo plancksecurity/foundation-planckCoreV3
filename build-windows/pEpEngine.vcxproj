@@ -98,8 +98,11 @@ cd "$(ProjectDir)..\asn.1" &amp;&amp; del converter-sample.c
       <AdditionalDependencies>$(TargetDir)\pEpEngineASN1.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_statemachine.ysl2 devicegroup.fsm -o .statemachines
+cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -ygen_actions_skeleton.ysl2 devicegroup.fsm -o .skeletons
+cd "$(ProjectDir)..\asn.1" &amp;&amp; "%ASN1C%\bin\asn1c" -S "%ASN1C%\share\asn1c" -gen-PER -fincludes-quoted -fcompound-names -pdu=PEP.Message pEp.asn1 devicegroup.asn1 protocols.asn1
+cd "$(ProjectDir)..\asn.1" &amp;&amp; del converter-sample.c
+</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
