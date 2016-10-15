@@ -10,6 +10,7 @@ protocol DeviceGroup {
     // all messages have a timestamp, time out and are removed after timeout
 
     broadcast sendBeacon;
+    broadcast sendGroupUpdate;
     unencrypted sendBeacon;
 
     fsm DeviceState filename=sync {
@@ -59,7 +60,6 @@ protocol DeviceGroup {
         state WaitForGroupKeysSole(Identity partner) {
             on GroupKeys(Identity partner, Stringlist keys) {
                 do storeGroupKeys(partner, keys);
-                // TODO : add a callback to signal finished waiting for group keys
                 go Grouped;
             }
             on Cancel go Sole;
@@ -71,18 +71,15 @@ protocol DeviceGroup {
 
         state Grouped {
             on KeyGen
-                do sendGroupKeys; // always send all keys
+                do sendGroupUpdate;
             on Beacon(Identity partner)
                 do sendHandshakeRequest(partner);
             on HandshakeRequest(Identity partner) {
                 do sendHandshakeRequest(partner);
                 go HandshakingGrouped(partner);
             }
-            on GroupKeys(Identity partner, Stringlist keys) {
+            on GroupUpdate(Identity partner, Stringlist keys)
                 do storeGroupKeys(partner, keys);
-                // TODO : add a callback to signal finished waiting for group keys
-                go Grouped;
-            }
         }
 
         state HandshakingGrouped(Identity partner) {

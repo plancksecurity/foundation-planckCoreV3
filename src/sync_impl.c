@@ -70,6 +70,7 @@ PEP_STATUS receive_sync_msg(
                 break;
 
             case DeviceGroup_Protocol__payload_PR_groupKeys:
+            case DeviceGroup_Protocol__payload_PR_groupUpdate:
                 partner = Identity_to_Struct(&msg->header.me, NULL);
                 if (!partner){
                     status = PEP_OUT_OF_MEMORY;
@@ -77,7 +78,11 @@ PEP_STATUS receive_sync_msg(
                     goto error;
                 }
                 identity_list *group_keys = IdentityList_to_identity_list(
-                        &msg->payload.choice.groupKeys.ownIdentities, NULL);
+                        msg->payload.present == 
+                          DeviceGroup_Protocol__payload_PR_groupKeys ?
+                        &msg->payload.choice.groupKeys.ownIdentities :
+                        &msg->payload.choice.groupUpdate.ownIdentities,
+                        NULL);
                 if (!group_keys) {
                     free_identity(partner);
                     status = PEP_OUT_OF_MEMORY;
@@ -85,7 +90,9 @@ PEP_STATUS receive_sync_msg(
                     goto error;
                 }
                 extra = (void *) group_keys;
-                event = GroupKeys;
+                event = msg->payload.present == 
+                          DeviceGroup_Protocol__payload_PR_groupKeys ?
+                          GroupKeys : GroupUpdate;
                 break;
 
             default:
@@ -283,14 +290,15 @@ PEP_STATUS receive_DeviceState_msg(
                                 goto free_all;
                             }
                             break;
-                        // accepting GroupKeys needs encryption and trust
+                        // accepting GroupKeys and GroupUpdate needs encryption and trust
                         case DeviceGroup_Protocol__payload_PR_groupKeys:
+                        case DeviceGroup_Protocol__payload_PR_groupUpdate:
                             if (!keylist || rating < PEP_rating_reliable ||
-                                // if header.state is HandshakingSole, then
-                                // group is just forming in between 2 devices
+                                // if group is just forming in between 2 devices
                                 // message must be addressed to that instance
                                 // to be consumed
-                                (msg->header.state == HandshakingSole && 
+                                (msg->payload.present == 
+                                  DeviceGroup_Protocol__payload_PR_groupKeys && 
                                  strncmp(session->sync_uuid,
                                         (const char *)msg->payload.choice.groupKeys.partner.user_id->buf,
                                         msg->payload.choice.groupKeys.partner.user_id->size) != 0)){
@@ -302,7 +310,8 @@ PEP_STATUS receive_DeviceState_msg(
                             // pre-existing group, inject message but flag is 
                             // as discarded to prevent app to delete it, so 
                             // that other group members can also be updated
-                            if(msg->header.state != HandshakingSole){
+                            if (msg->payload.present == 
+                                  DeviceGroup_Protocol__payload_PR_groupUpdate){
                                 force_keep_msg = true;
                             }
 
@@ -504,7 +513,8 @@ PEP_STATUS unicast_msg(
     me = NULL;
 
     if (encrypted) {
-        if (msg->payload.present == DeviceGroup_Protocol__payload_PR_groupKeys) {
+        if (msg->payload.present == DeviceGroup_Protocol__payload_PR_groupKeys || 
+            msg->payload.present == DeviceGroup_Protocol__payload_PR_groupUpdate) {
             PEP_rating rating = PEP_rating_undefined;
             status = outgoing_message_rating(session, _message, &rating);
             if (status != PEP_STATUS_OK)
@@ -514,7 +524,12 @@ PEP_STATUS unicast_msg(
                 goto error;
             }
             
-            IdentityList_t *list = &msg->payload.choice.groupKeys.ownIdentities;
+            IdentityList_t *list = 
+                msg->payload.present == 
+                  DeviceGroup_Protocol__payload_PR_groupKeys ?
+                  &msg->payload.choice.groupKeys.ownIdentities :
+                  &msg->payload.choice.groupUpdate.ownIdentities;
+
             for (int i=0; i<list->list.count; i++) {
                 Identity_t *ident = list->list.array[i];
                 char *fpr = strndup((const char *)ident->fpr.buf, ident->fpr.size);
@@ -582,25 +597,31 @@ PEP_STATUS multicast_self_msg(
     if (status != PEP_STATUS_OK)
         return status;
 
+    printf("BROADCAST \n");
+
     // FIXME: exclude previously rejected identities
     for (identity_list *_i = own_identities; _i && _i->ident; _i = _i->next) {
         pEp_identity *me = _i->ident;
 
+        printf("BROADCAST looop \n");
         // FIXME: no deep copy for multicast supported yet
-        DeviceGroup_Protocol_t *_msg = malloc(sizeof(DeviceGroup_Protocol_t));
-        assert(_msg);
-        if (_msg == NULL)
-            goto enomem;
-        memcpy(_msg, msg, sizeof(DeviceGroup_Protocol_t));
-        status = unicast_msg(session, me, state, _msg, encrypted);
-        free_DeviceGroup_Protocol_msg(_msg);
+        // DeviceGroup_Protocol_t *_msg = malloc(sizeof(DeviceGroup_Protocol_t));
+        // assert(_msg);
+        // if (_msg == NULL){
+        //     status = PEP_OUT_OF_MEMORY;
+        //     goto error;
+        // }
+        // memcpy(_msg, msg, sizeof(DeviceGroup_Protocol_t));
+        status = unicast_msg(session, me, state, msg, encrypted);
+        //status = unicast_msg(session, me, state, _msg, encrypted);
+        //free_DeviceGroup_Protocol_msg(_msg);
     }
 
     free_identity_list(own_identities);
     return PEP_STATUS_OK;
 
-enomem:
-    free_identity_list(own_identities);
-    return PEP_OUT_OF_MEMORY;
+// error:
+//     free_identity_list(own_identities);
+//     return status;
 }
 
