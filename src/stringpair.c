@@ -13,24 +13,24 @@ DYNAMIC_API stringpair_t * new_stringpair(const char *key, const char *value)
     assert(key);
     assert(value);
 
-    if (!key || !value) {
-        return NULL;
-    }
-    
     pair = calloc(1, sizeof(stringpair_t));
     assert(pair);
     if (pair == NULL)
         goto enomem;
 
-    pair->key = strdup(key);
-    assert(pair->key);
-    if (pair->key == NULL)
-        goto enomem;
+    if (key) {
+        pair->key = strdup(key);
+        assert(pair->key);
+        if (pair->key == NULL)
+            goto enomem;
+    }
 
-    pair->value = strdup(value);
-    assert(pair->value);
-    if (pair->value == NULL)
-        goto enomem;
+    if (value) {
+        pair->value = strdup(value);
+        assert(pair->value);
+        if (pair->value == NULL)
+            goto enomem;
+    }
 
     return pair;
 
