@@ -40,12 +40,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ExecutablePath>C:\Users\vb\bin;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>C:\Users\vb\share\asn1c;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\;$(IncludePath)</IncludePath>
+    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>C:\Users\vb\share\asn1c;$(IncludePath)</IncludePath>
-    <ExecutablePath>C:\Users\vb\bin;$(ExecutablePath)</ExecutablePath>
+    <IncludePath>$(ProjectDir)..\;$(IncludePath)</IncludePath>
+    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
