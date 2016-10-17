@@ -178,9 +178,6 @@ DYNAMIC_API PEP_STATUS update_identity(
             assert(status != PEP_OUT_OF_MEMORY);
             if (status == PEP_OUT_OF_MEMORY)
                 goto exit_free;
-            status = get_trust(session, temp_id);
-            if (status == PEP_OUT_OF_MEMORY)
-                goto exit_free;
             if (_comm_type_key < PEP_ct_unconfirmed_encryption) {
                 temp_id->comm_type = _comm_type_key;
             } else{
