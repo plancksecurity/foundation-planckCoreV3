@@ -20,19 +20,15 @@ DYNAMIC_API stringpair_t * new_stringpair(const char *key, const char *value)
     if (pair == NULL)
         goto enomem;
 
-    if (key) {
-        pair->key = strdup(key);
-        assert(pair->key);
-        if (pair->key == NULL)
-            goto enomem;
-    }
+    pair->key = key ? strdup(key) : strdup("");
+    assert(pair->key);
+    if (pair->key == NULL)
+        goto enomem;
 
-    if (value) {
-        pair->value = strdup(value);
-        assert(pair->value);
-        if (pair->value == NULL)
-            goto enomem;
-    }
+    pair->value = value ? strdup(value) : strdup("");
+    assert(pair->value);
+    if (pair->value == NULL)
+        goto enomem;
 
     return pair;
 
