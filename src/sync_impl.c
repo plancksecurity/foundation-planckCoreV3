@@ -80,8 +80,8 @@ PEP_STATUS receive_sync_msg(
                 identity_list *group_keys = IdentityList_to_identity_list(
                         msg->payload.present == 
                           DeviceGroup_Protocol__payload_PR_groupKeys ?
-                        &msg->payload.choice.groupKeys.ownIdentities :
-                        &msg->payload.choice.groupUpdate.ownIdentities,
+                            &msg->payload.choice.groupKeys.ownIdentities :
+                            &msg->payload.choice.groupUpdate.ownIdentities,
                         NULL);
                 if (!group_keys) {
                     free_identity(partner);
@@ -92,7 +92,7 @@ PEP_STATUS receive_sync_msg(
                 extra = (void *) group_keys;
                 event = msg->payload.present == 
                           DeviceGroup_Protocol__payload_PR_groupKeys ?
-                          GroupKeys : GroupUpdate;
+                            GroupKeys : GroupUpdate;
                 break;
 
             default:
@@ -290,49 +290,70 @@ PEP_STATUS receive_DeviceState_msg(
                                 goto free_all;
                             }
                             break;
-                        // accepting GroupKeys and GroupUpdate needs encryption and trust
+                        // accepting GroupKeys needs encryption and trust of peer device
                         case DeviceGroup_Protocol__payload_PR_groupKeys:
-                        case DeviceGroup_Protocol__payload_PR_groupUpdate:
+                        {
                             if (!keylist || rating < PEP_rating_reliable ||
-                                // if group is just forming in between 2 devices
-                                // message must be addressed to that instance
-                                // to be consumed
-                                (msg->payload.present == 
-                                  DeviceGroup_Protocol__payload_PR_groupKeys && 
-                                 strncmp(session->sync_uuid,
+                                // message is only consumed by instance it is addressed to
+                                (strncmp(session->sync_uuid,
                                         (const char *)msg->payload.choice.groupKeys.partner.user_id->buf,
                                         msg->payload.choice.groupKeys.partner.user_id->size) != 0)){
                                 discarded = true;
                                 goto free_all;
                             }
 
-                            // otherwise, when group keys are sent from a 
-                            // pre-existing group, inject message but flag is 
-                            // as discarded to prevent app to delete it, so 
-                            // that other group members can also be updated
-                            if (msg->payload.present == 
-                                  DeviceGroup_Protocol__payload_PR_groupUpdate){
-                                force_keep_msg = true;
-                            }
-
-                            // check trust of identity with the right user_id
-                            pEp_identity *_from = new_identity(src->from->address, 
+                            // check trust of identity using user_id given in payload
+                            // to exacly match identity of device, the one trusted in
+                            // case of accepted handshake
+                            pEp_identity *_from = new_identity(NULL, 
                                                                keylist->value,
                                                                user_id,
-                                                               src->from->username);
+                                                               NULL);
                             if (_from == NULL){
                                 status = PEP_OUT_OF_MEMORY;
                                 goto free_all;
                             }
-                            PEP_rating this_user_id_rating = PEP_rating_undefined;
-                            identity_rating(session, _from, &this_user_id_rating);
-                            free_identity(_from);
-
-                            if (this_user_id_rating < PEP_rating_trusted ) {
+                            status = get_trust(session, _from);
+                            if (_from->comm_type < PEP_ct_strong_encryption) {
+                                free_identity(_from);
                                 discarded = true;
                                 goto free_all;
                             }
+                            free_identity(_from);
                             break;
+                        }
+                        case DeviceGroup_Protocol__payload_PR_groupUpdate:
+                            // inject message but don't consume it, so 
+                            // that other group members can also be updated
+                            force_keep_msg = true;
+                            
+                            // no break
+
+                        case DeviceGroup_Protocol__payload_PR_updateRequest:
+                        {
+                            if (!keylist || rating < PEP_rating_reliable){
+                                discarded = true;
+                                goto free_all;
+                            }
+                            // GroupUpdate and UpdateRequests come from group.
+                            // check trust relation in between signer key and 
+                            // own id to be sure.
+                            pEp_identity *_from = new_identity(NULL, 
+                                                               keylist->value,
+                                                               PEP_OWN_USERID,
+                                                               NULL);
+                            if (_from == NULL){
+                                status = PEP_OUT_OF_MEMORY;
+                                goto free_all;
+                            }
+                            status = get_trust(session, _from);
+                            if (_from->comm_type < PEP_ct_pEp) {
+                                free_identity(_from);
+                                discarded = true;
+                                goto free_all;
+                            }
+                            free_identity(_from);
+                        }
                         default:
                             break;
                     }
@@ -597,13 +618,10 @@ PEP_STATUS multicast_self_msg(
     if (status != PEP_STATUS_OK)
         return status;
 
-    printf("BROADCAST \n");
-
     // FIXME: exclude previously rejected identities
     for (identity_list *_i = own_identities; _i && _i->ident; _i = _i->next) {
         pEp_identity *me = _i->ident;
 
-        printf("BROADCAST looop \n");
         // FIXME: no deep copy for multicast supported yet
         // DeviceGroup_Protocol_t *_msg = malloc(sizeof(DeviceGroup_Protocol_t));
         // assert(_msg);

@@ -11,6 +11,7 @@ protocol DeviceGroup {
 
     broadcast sendBeacon;
     broadcast sendGroupUpdate;
+    broadcast sendUpdateRequest;
     unencrypted sendBeacon;
 
     fsm DeviceState filename=sync {
@@ -70,7 +71,13 @@ protocol DeviceGroup {
         }
 
         state Grouped {
+            on Init 
+                do enterGroup;
             on KeyGen
+                do sendGroupUpdate;
+            on CannotDecrypt
+                do sendUpdateRequest; // TODO: narrow request to missing key
+            on UpdateRequest
                 do sendGroupUpdate;
             on Beacon(Identity partner)
                 do sendHandshakeRequest(partner);

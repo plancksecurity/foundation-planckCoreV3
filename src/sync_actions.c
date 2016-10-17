@@ -255,6 +255,7 @@ PEP_STATUS storeGroupKeys(
     }
 
     free_identity_list(group_keys);
+    
     return status;
 
 enomem:
@@ -263,3 +264,30 @@ enomem:
     return status;
 }
 
+// enterGroup() - 
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        ignored
+//      extra (in)          ignored
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS enterGroup(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+
+    // groups have no uuid for now
+    status = set_device_group(session, "1");
+    
+    return status;
+}
