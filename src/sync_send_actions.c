@@ -12,6 +12,7 @@
 #include "../asn.1/Beacon.h"
 #include "../asn.1/HandshakeRequest.h"
 #include "../asn.1/GroupKeys.h"
+#include "../asn.1/GroupUpdate.h"
 
 
 // sendBeacon() - send Beacon message
@@ -156,6 +157,57 @@ enomem:
 error:
     free_DeviceGroup_Protocol_msg(msg);
     free_identity_list(kl);
+    return status;
+}
+
+
+// sendGroupUpdate() - send GroupUpdate message
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        (must be NULL)
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS sendGroupUpdate(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    assert(session && state);
+    if (!(session && state))
+        return PEP_ILLEGAL_VALUE;
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    identity_list *kl = new_identity_list(NULL);
+
+    DeviceGroup_Protocol_t *msg = new_DeviceGroup_Protocol_msg(DeviceGroup_Protocol__payload_PR_groupUpdate);
+    if (!msg)
+        goto enomem;
+
+    status = own_identities_retrieve(session, &kl);
+    if (status != PEP_STATUS_OK)
+        goto error;
+    if (IdentityList_from_identity_list(kl, &msg->payload.choice.groupUpdate.ownIdentities) == NULL)
+        goto enomem;
+
+    bool encrypted = true;
+    status = multicast_self_msg(session, state, msg, encrypted);
+    if (status != PEP_STATUS_OK)
+        goto error;
+
+    free_identity_list(kl);
+    free_DeviceGroup_Protocol_msg(msg);
+    return PEP_STATUS_OK;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+error:
+    free_DeviceGroup_Protocol_msg(msg);
     return status;
 }
 
