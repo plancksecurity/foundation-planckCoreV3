@@ -877,6 +877,56 @@ DYNAMIC_API PEP_STATUS trustwords(
     return PEP_STATUS_OK;
 }
 
+DYNAMIC_API PEP_STATUS trustwords_for_id_pair(
+    PEP_SESSION session, pEp_identity* id1, pEp_identity* id2,
+    char* lang, char **words, size_t *wsize, int max_words_per_id
+)
+{
+    assert(session);
+    assert(id1);
+    assert(id2);
+    assert(id1->fpr);
+    assert(id2->fpr);
+    assert(words);
+    assert(wsize);
+    assert(max_words_per_id >= 0);
+    
+    if (!(session && id1 && id2 && words && wsize && max_words_per_id >= 0) ||
+        !(id1->fpr) || (!id2->fpr))
+        return PEP_ILLEGAL_VALUE;
+    
+    const char *source1 = id1->fpr;
+    const char *source2 = id2->fpr;
+    
+    *words = NULL;
+    *wsize = 0;
+
+    char* first_set = NULL;
+    char* second_set = NULL;
+    size_t first_wsize = 0;
+    size_t second_wsize = 0;
+    PEP_STATUS status;
+    
+    if (source1 > source2) {
+        status = trustwords(session, source2, lang, &first_set, &first_wsize, max_words_per_id);
+        if (status != PEP_STATUS_OK)
+            return status;
+        status = trustwords(session, source1, lang, &second_set, &second_wsize, max_words_per_id); 
+        if (status != PEP_STATUS_OK)
+            return status;
+    }
+    else {
+        status = trustwords(session, source1, lang, &first_set, &first_wsize, max_words_per_id);
+        if (status != PEP_STATUS_OK)
+            return status;
+        status = trustwords(session, source2, lang, &second_set, &second_wsize, max_words_per_id); 
+        if (status != PEP_STATUS_OK)
+            return status;
+    }
+    
+}
+
+
 pEp_identity *new_identity(
         const char *address, const char *fpr, const char *user_id,
         const char *username
