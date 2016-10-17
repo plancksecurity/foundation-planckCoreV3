@@ -11,8 +11,12 @@ DYNAMIC_API stringpair_t * new_stringpair(const char *key, const char *value)
     stringpair_t *pair = NULL;
 
     assert(key);
-    assert(value),
+    assert(value);
 
+    if (!key || !value) {
+        return NULL;
+    }
+    
     pair = calloc(1, sizeof(stringpair_t));
     assert(pair);
     if (pair == NULL)
