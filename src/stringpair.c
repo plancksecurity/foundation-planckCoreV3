@@ -10,20 +10,22 @@ DYNAMIC_API stringpair_t * new_stringpair(const char *key, const char *value)
 {
     stringpair_t *pair = NULL;
 
+    // key and value should not be NULL, that's bad style (while legal)
+
     assert(key);
-    assert(value),
+    assert(value);
 
     pair = calloc(1, sizeof(stringpair_t));
     assert(pair);
     if (pair == NULL)
         goto enomem;
 
-    pair->key = strdup(key);
+    pair->key = key ? strdup(key) : strdup("");
     assert(pair->key);
     if (pair->key == NULL)
         goto enomem;
 
-    pair->value = strdup(value);
+    pair->value = value ? strdup(value) : strdup("");
     assert(pair->value);
     if (pair->value == NULL)
         goto enomem;

@@ -16,8 +16,8 @@ typedef struct _stringpair_t {
 // new_stringpair() - allocate new stringpair_t
 //
 //  parameters:
-//      key (in)        utf-8 string used as key; may point to "" but must not be NULL!
-//      value (in)      utf-8 string containing the value; may point to "" but must not be NULL!
+//      key (in)        utf-8 string used as key, should not be NULL
+//      value (in)      utf-8 string containing the value, should not be NULL
 //
 //  return value:
 //      pointer to stringpair_t or NULL on failure
