@@ -10,6 +10,8 @@ DYNAMIC_API stringpair_t * new_stringpair(const char *key, const char *value)
 {
     stringpair_t *pair = NULL;
 
+    // key and value should not be NULL, that's bad style (while legal)
+
     assert(key);
     assert(value);
 
