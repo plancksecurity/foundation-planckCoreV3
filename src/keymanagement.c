@@ -534,8 +534,9 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     {
         // if a state machine for keysync is in place, inject notify
         status = inject_DeviceState_event(session, KeyGen, NULL, NULL);
-        if (status != PEP_STATUS_OK)
-            return status;
+        if (status == PEP_OUT_OF_MEMORY){
+            return PEP_OUT_OF_MEMORY;
+        }
     }
 
     return PEP_STATUS_OK;

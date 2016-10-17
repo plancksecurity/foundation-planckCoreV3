@@ -1444,9 +1444,11 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     decrypt_status = status;
 
     if (status == PEP_DECRYPT_NO_KEY){
-        status = inject_DeviceState_event(session, CannotDecrypt, NULL, NULL);
-        if (status != PEP_STATUS_OK)
+        PEP_STATUS sync_status = inject_DeviceState_event(session, CannotDecrypt, NULL, NULL);
+        if (sync_status == PEP_OUT_OF_MEMORY){
+            status = PEP_OUT_OF_MEMORY;
             goto pep_error;
+        }
     }
 
     bool imported_private_key_address = false; 
