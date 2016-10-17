@@ -530,6 +530,44 @@ DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
     );
 
+// trustwords_for_id_pair() - get full trustwords string for a *pair* of identities
+//
+//    parameters:
+//        session (in)        session handle
+//        id1 (in)            identity of first party in communication - fpr can't be NULL  
+//        id2 (in)            identity of second party in communication - fpr can't be NULL
+//        lang (in)           C string with ISO 639-1 language code
+//        words (out)         pointer to C string with all trustwords UTF-8 encoded,
+//                            separated by a blank each
+//                            NULL if language is not supported or trustword
+//                            wordlist is damaged or unavailable
+//        wsize (out)         length of full trustwords string
+//        max_words_per_id (in) generate at most max_words_per_id *per input identity* (output
+//                              string can have 2 times this value)
+//                              if max_words_per_id == 0 there is no such limit
+//
+//    return value:
+//        PEP_STATUS_OK            trustwords retrieved
+//        PEP_OUT_OF_MEMORY        out of memory
+//        PEP_TRUSTWORD_NOT_FOUND  at least one trustword not found
+//
+//    caveat:
+//        the word pointer goes to the ownership of the caller
+//        the caller is responsible to free() it (on Windoze use pEp_free())
+//
+//  Warning from trustwords(), as this function uses trustwords() as an underlying function:
+//  DON'T USE THIS FUNCTION FROM HIGH LEVEL LANGUAGES!
+//
+//  Better implement a simple one in the adapter yourself using trustword(), and
+//  return a list of trustwords.
+//  This function is provided for being used by C and C++ programs only.
+
+DYNAMIC_API PEP_STATUS trustwords_for_id_pair(
+    PEP_SESSION session, pEp_identity* id1, pEp_identity* id2,
+    const char* lang, char **words, size_t *wsize, int max_words_per_id
+);
+
+
 // set_device_group() - update own person's device group
 //
 //    parameters:
