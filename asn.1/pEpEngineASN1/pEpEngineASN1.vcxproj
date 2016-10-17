@@ -138,6 +138,7 @@ cd "$(ProjectDir).." &amp;&amp; del converter-sample.c
     <ClCompile Include="..\der_encoder.c" />
     <ClCompile Include="..\DeviceGroup-Protocol.c" />
     <ClCompile Include="..\GroupKeys.c" />
+    <ClCompile Include="..\GroupUpdate.c" />
     <ClCompile Include="..\HandshakeRequest.c" />
     <ClCompile Include="..\Hash.c" />
     <ClCompile Include="..\Hex.c" />
@@ -184,6 +185,7 @@ cd "$(ProjectDir).." &amp;&amp; del converter-sample.c
     <ClInclude Include="..\der_encoder.h" />
     <ClInclude Include="..\DeviceGroup-Protocol.h" />
     <ClInclude Include="..\GroupKeys.h" />
+    <ClInclude Include="..\GroupUpdate.h" />
     <ClInclude Include="..\HandshakeRequest.h" />
     <ClInclude Include="..\Hash.h" />
     <ClInclude Include="..\Hex.h" />
