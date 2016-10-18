@@ -1924,8 +1924,8 @@ static PEP_STATUS _compare_fprs(const char* fpr1, const char* fpr2, int* compari
     
     char current;
 
-    for (current = *fpr1_curr; current != '0' && current != '\0'; fpr1_curr++, fpr1_len--);
-    for (current = *fpr2_curr; current != '0' && current != '\0'; fpr2_curr++, fpr2_len--);
+    for (current = *fpr1_curr; current != '0' && current != '\0'; current = *(++fpr1_curr), fpr1_len--);
+    for (current = *fpr2_curr; current != '0' && current != '\0'; current = *(++fpr2_curr), fpr2_len--);
     
     if (fpr1_len == fpr2_len) {
         char digit1;
