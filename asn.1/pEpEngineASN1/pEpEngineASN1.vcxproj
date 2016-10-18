@@ -156,6 +156,7 @@ cd "$(ProjectDir).." &amp;&amp; del converter-sample.c
     <ClCompile Include="..\per_support.c" />
     <ClCompile Include="..\PrintableString.c" />
     <ClCompile Include="..\Sync-Protocols.c" />
+    <ClCompile Include="..\UpdateRequest.c" />
     <ClCompile Include="..\UTF8String.c" />
     <ClCompile Include="..\Version.c" />
     <ClCompile Include="..\xer_decoder.c" />
@@ -203,6 +204,7 @@ cd "$(ProjectDir).." &amp;&amp; del converter-sample.c
     <ClInclude Include="..\per_support.h" />
     <ClInclude Include="..\PrintableString.h" />
     <ClInclude Include="..\Sync-Protocols.h" />
+    <ClInclude Include="..\UpdateRequest.h" />
     <ClInclude Include="..\UTF8String.h" />
     <ClInclude Include="..\Version.h" />
     <ClInclude Include="..\xer_decoder.h" />
