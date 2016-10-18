@@ -530,7 +530,7 @@ DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
     );
 
-// trustwords_for_id_pair() - get full trustwords string for a *pair* of identities
+// get_trustwords() - get full trustwords string for a *pair* of identities
 //
 //    parameters:
 //        session (in)        session handle
@@ -562,7 +562,7 @@ DYNAMIC_API PEP_STATUS set_identity(
 //  return a list of trustwords.
 //  This function is provided for being used by C and C++ programs only.
 
-DYNAMIC_API PEP_STATUS trustwords_for_id_pair(
+DYNAMIC_API PEP_STATUS get_trustwords(
     PEP_SESSION session, pEp_identity* id1, pEp_identity* id2,
     const char* lang, char **words, size_t *wsize, int max_words_per_id
 );

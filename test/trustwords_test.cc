@@ -6,7 +6,7 @@
 using namespace std;
 
 int main() {
-    cout << "\n*** trustwords_for_id_pair test ***\n\n";
+    cout << "\n*** get_trustwords test ***\n\n";
 
     PEP_SESSION session;
     
@@ -48,7 +48,7 @@ int main() {
     cout << words2 << "\n";
 
     cout << "\nfinding German trustwords for " << identity1->address << " and " << identity2->address << "...\n";
-    trustwords_for_id_pair(session, identity1, identity2, "de", &full_wordlist, &wsize_full, 5);
+    get_trustwords(session, identity1, identity2, "de", &full_wordlist, &wsize_full, 5);
     assert(full_wordlist);
     cout << full_wordlist << "\n";
     

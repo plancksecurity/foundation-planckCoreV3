@@ -877,7 +877,7 @@ DYNAMIC_API PEP_STATUS trustwords(
     return PEP_STATUS_OK;
 }
 
-DYNAMIC_API PEP_STATUS trustwords_for_id_pair(
+DYNAMIC_API PEP_STATUS get_trustwords(
     PEP_SESSION session, pEp_identity* id1, pEp_identity* id2,
     const char* lang, char **words, size_t *wsize, int max_words_per_id
 )
@@ -905,7 +905,9 @@ DYNAMIC_API PEP_STATUS trustwords_for_id_pair(
     char* second_set = NULL;
     size_t first_wsize = 0;
     size_t second_wsize = 0;
-    PEP_STATUS status;
+    PEP_STATUS status = PEP_UNKNOWN_ERROR;
+
+    char* _retstr = NULL;
     
     if (source1 > source2) {
         status = trustwords(session, source2, lang, &first_set, &first_wsize, max_words_per_id);
@@ -925,7 +927,7 @@ DYNAMIC_API PEP_STATUS trustwords_for_id_pair(
     }
     size_t _wsize = first_wsize + second_wsize;
     
-    char* _retstr = calloc(1, _wsize + 1);
+    _retstr = calloc(1, _wsize + 1);
 
     size_t len = strlcpy(_retstr, first_set, _wsize);
     if (len >= _wsize) {
