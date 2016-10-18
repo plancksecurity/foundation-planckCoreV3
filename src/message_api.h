@@ -234,6 +234,36 @@ DYNAMIC_API PEP_STATUS identity_rating(
 //                          **path is owned by the library, do not change it!
 DYNAMIC_API PEP_STATUS get_binary_path(PEP_cryptotech tech, const char **path);
 
+// get_trustwords() - get full trustwords string for a *pair* of identities
+//
+//    parameters:
+//        session (in)        session handle
+//        id1 (in)            identity of first party in communication - fpr can't be NULL  
+//        id2 (in)            identity of second party in communication - fpr can't be NULL
+//        lang (in)           C string with ISO 639-1 language code
+//        words (out)         pointer to C string with all trustwords UTF-8 encoded,
+//                            separated by a blank each
+//                            NULL if language is not supported or trustword
+//                            wordlist is damaged or unavailable
+//        wsize (out)         length of full trustwords string
+//        full (in)           if true, generate ALL trustwords for these identities.
+//                            else, generate a fixed-size subset. (TODO: fixed-minimum-entropy
+//                            subset in next version)
+//
+//    return value:
+//        PEP_STATUS_OK            trustwords retrieved
+//        PEP_OUT_OF_MEMORY        out of memory
+//        PEP_TRUSTWORD_NOT_FOUND  at least one trustword not found
+//
+//    caveat:
+//        the word pointer goes to the ownership of the caller
+//        the caller is responsible to free() it (on Windoze use pEp_free())
+//
+
+DYNAMIC_API PEP_STATUS get_trustwords(
+    PEP_SESSION session, pEp_identity* id1, pEp_identity* id2,
+    const char* lang, char **words, size_t *wsize, bool full
+);
 
 #ifdef __cplusplus
 }

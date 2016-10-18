@@ -1907,3 +1907,85 @@ DYNAMIC_API PEP_color color_from_rating(PEP_rating rating)
     assert(false);
 }
 
+DYNAMIC_API PEP_STATUS get_trustwords(
+    PEP_SESSION session, pEp_identity* id1, pEp_identity* id2,
+    const char* lang, char **words, size_t *wsize, bool full
+)
+{
+    assert(session);
+    assert(id1);
+    assert(id2);
+    assert(id1->fpr);
+    assert(id2->fpr);
+    assert(words);
+    assert(wsize);
+    
+    if (!(session && id1 && id2 && words && wsize) ||
+        !(id1->fpr) || (!id2->fpr))
+        return PEP_ILLEGAL_VALUE;
+    
+    const char *source1 = id1->fpr;
+    const char *source2 = id2->fpr;
+    
+    *words = NULL;
+    *wsize = 0;
+
+    const size_t SHORT_NUM_TWORDS = 5;
+    
+    // N.B. THIS will have to be changed once we start checking trustword entropy.
+    // For now, full is ALL, and otherwise it's 5-per-id.
+    size_t max_words_per_id = (full ? 0 : SHORT_NUM_TWORDS);
+    
+    char* first_set = NULL;
+    char* second_set = NULL;
+    size_t first_wsize = 0;
+    size_t second_wsize = 0;
+    PEP_STATUS status = PEP_UNKNOWN_ERROR;
+    
+    char* _retstr = NULL;
+    
+    if (source1 > source2) {
+        status = trustwords(session, source2, lang, &first_set, &first_wsize, max_words_per_id);
+        if (status != PEP_STATUS_OK)
+            goto error_release;
+        status = trustwords(session, source1, lang, &second_set, &second_wsize, max_words_per_id); 
+        if (status != PEP_STATUS_OK)
+            goto error_release;
+    }
+    else {
+        status = trustwords(session, source1, lang, &first_set, &first_wsize, max_words_per_id);
+        if (status != PEP_STATUS_OK)
+            goto error_release;
+        status = trustwords(session, source2, lang, &second_set, &second_wsize, max_words_per_id); 
+        if (status != PEP_STATUS_OK)
+            goto error_release;
+    }
+    size_t _wsize = first_wsize + second_wsize;
+    
+    _retstr = calloc(1, _wsize + 1);
+    
+    size_t len = strlcpy(_retstr, first_set, _wsize);
+    if (len >= _wsize) {
+        status = PEP_UNKNOWN_ERROR;
+        goto error_release;
+    }
+    strlcat(_retstr, second_set, _wsize);
+    if (len >= _wsize){
+        status = PEP_UNKNOWN_ERROR;
+        goto error_release;
+    }
+    
+    *words = _retstr;
+    *wsize = _wsize;
+    status = PEP_STATUS_OK;
+    
+    goto the_end;
+    
+    error_release:
+    free(_retstr);
+    
+    the_end:
+    free(first_set);
+    free(second_set);
+    return status;
+}
