@@ -1907,6 +1907,25 @@ DYNAMIC_API PEP_color color_from_rating(PEP_rating rating)
     assert(false);
 }
 
+static bool _is_valid_hex(const char* hexstr) {
+    if (!hexstr)
+        return false;
+    
+    const char* curr = hexstr;
+    char currchar;
+    
+    for (currchar = *curr; currchar != '\0'; currchar = *(++curr)) {
+        if ((currchar >= '0' && currchar <= '9') ||
+            (currchar >= 'a' && currchar <= 'f') ||
+            (currchar >= 'A' && currchar <= 'F')) 
+        {
+            continue;
+        }
+        return false;
+    }
+    return true;        
+}
+
 // Returns, in comparison: 1 if fpr1 > fpr2, 0 if equal, -1 if fpr1 < fpr2
 static PEP_STATUS _compare_fprs(const char* fpr1, const char* fpr2, int* comparison) {
     
@@ -1919,11 +1938,15 @@ static PEP_STATUS _compare_fprs(const char* fpr1, const char* fpr2, int* compari
     if (fpr1_len != _FULL_FINGERPRINT_LENGTH || fpr2_len != _FULL_FINGERPRINT_LENGTH)
         return PEP_TRUSTWORDS_FPR_WRONG_LENGTH;
     
+    if (!_is_valid_hex(fpr1) || !_is_valid_hex(fpr2))
+        return PEP_ILLEGAL_VALUE;
+    
     const char* fpr1_curr = fpr1;
     const char* fpr2_curr = fpr2;
     
     char current;
 
+    // Advance past leading zeros.
     for (current = *fpr1_curr; current != '0' && current != '\0'; current = *(++fpr1_curr), fpr1_len--);
     for (current = *fpr2_curr; current != '0' && current != '\0'; current = *(++fpr2_curr), fpr2_len--);
     
@@ -1931,7 +1954,7 @@ static PEP_STATUS _compare_fprs(const char* fpr1, const char* fpr2, int* compari
         char digit1;
         char digit2;
 
-        while (fpr1_curr) {
+        while (fpr1_curr && *fpr1_curr != '\0') {
             digit1 = *fpr1_curr++;
             digit2 = *fpr2_curr++;
 
@@ -1940,16 +1963,7 @@ static PEP_STATUS _compare_fprs(const char* fpr1, const char* fpr2, int* compari
                 digit1 -= _ASCII_LOWERCASE_OFFSET;
             if (digit2 >= 'a' && digit2 <= 'f')
                 digit2 -= _ASCII_LOWERCASE_OFFSET;
-            
-            if (!((digit1 >= '0' && digit1 <= '9') ||
-                  (digit1 >= 'a' && digit1 <= 'f'))
-                || 
-                !((digit2 >= '0' && digit2 <= '9') ||
-                     (digit2 >= 'a' && digit2 <= 'f'))) {
-                return PEP_ILLEGAL_VALUE;
-            }
-            
-            // Otherwise...
+                        
             // We take advantage of the fact that 'a'-'f' are larger
             // integer values in the ASCII table than '0'-'9'.
             // This allows us to compare digits directly.
@@ -2033,11 +2047,17 @@ DYNAMIC_API PEP_STATUS get_trustwords(
             status = trustwords(session, source2, lang, &second_set, &second_wsize, max_words_per_id); 
             if (status != PEP_STATUS_OK)
                 goto error_release;
+            break;
         default:
             return PEP_UNKNOWN_ERROR; // shouldn't be possible
     }
     
     size_t _wsize = first_wsize + second_wsize;
+    
+    bool needs_space = (first_set[first_wsize - 1] != ' ');
+    
+    if (needs_space)
+        _wsize++;
     
     _retstr = calloc(1, _wsize + 1);
     
@@ -2045,6 +2065,13 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     if (len >= _wsize) {
         status = PEP_UNKNOWN_ERROR;
         goto error_release;
+    }
+    if (needs_space) {
+        strlcat(_retstr, " ", _wsize);
+        if (len >= _wsize) {
+            status = PEP_UNKNOWN_ERROR;
+            goto error_release;
+        }
     }
     strlcat(_retstr, second_set, _wsize);
     if (len >= _wsize){
