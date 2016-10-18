@@ -1083,6 +1083,11 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
             gpgme_import_result =
                 gpg.gpgme_op_import_result(session->ctx);
             assert(gpgme_import_result);
+            if (!gpgme_import_result) {
+                gpg.gpgme_data_release(dh);
+                return PEP_UNKNOWN_ERROR;
+            }
+
             gpgme_import_status_t import;
             for (import = gpgme_import_result->imports; 
                  import; 
