@@ -2066,3 +2066,4 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     free(second_set);
     return status;
 }
+
