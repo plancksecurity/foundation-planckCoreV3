@@ -27,7 +27,7 @@ If you don't use that environment, please make sure you've set up all search pat
 sudo port install mercurial
 sudo port install py27-lxml
 sudo port install gpgme
-sudo port install autoconf
+sudo port install automake
 sudo port install asn1c
 sudo port install zlib
 ```
