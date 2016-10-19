@@ -63,6 +63,7 @@ typedef enum {
     PEP_CANNOT_DECRYPT_UNKNOWN                      = 0x04ff,
 
     PEP_TRUSTWORD_NOT_FOUND                         = 0x0501,
+    PEP_TRUSTWORDS_FPR_WRONG_LENGTH                 = 0x0502,
 
     PEP_CANNOT_CREATE_KEY                           = 0x0601,
     PEP_CANNOT_SEND_KEY                             = 0x0602,
@@ -88,6 +89,7 @@ typedef enum {
     PEP_STATEMACHINE_INVALID_EVENT                  = 0x0983,
     PEP_STATEMACHINE_INVALID_CONDITION              = 0x0984,
     PEP_STATEMACHINE_INVALID_ACTION                 = 0x0985,
+    PEP_STATEMACHINE_INHIBITED_EVENT                = 0x0986,
 
     PEP_COMMIT_FAILED                               = 0xff01,
     PEP_MESSAGE_CONSUMED                            = 0xff02,

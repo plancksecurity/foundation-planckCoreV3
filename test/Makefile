@@ -6,7 +6,7 @@ LD?=$(CXX)
 LDFLAGS?=-L$(HOME)/lib
 LDLIBS?=-letpan -lpEpEngine -lstdc++ -L../asn.1 -lasn1
 ifeq ($(BUILD_FOR),Linux)
-LDLIBS=$(LDLIBS) -luuid
+	LDLIBS+= -luuid
 endif
 CXXFLAGS?=-std=c++11 -g -O0 -I../src -I../asn.1
 # CXXFLAGS=-O3 -DNDEBUG

@@ -14,6 +14,9 @@
 #define SYNC_VERSION_MAJOR 1
 #define SYNC_VERSION_MINOR 0
 
+#define SYNC_INHIBIT_TIME (60*10)
+#define SYNC_MSG_EXPIRE_TIME (60 * 10)
+
 struct _sync_msg_t {
     bool is_a_message;
     union {
@@ -49,34 +52,20 @@ PEP_STATUS receive_sync_msg(
 
         switch (msg->payload.present) {
             case DeviceGroup_Protocol__payload_PR_beacon:
-                partner = Identity_to_Struct(&msg->header.me, NULL);
-                if (!partner){
-                    status = PEP_OUT_OF_MEMORY;
-                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
-                    goto error;
-                }
                 event = Beacon;
                 break;
 
             case DeviceGroup_Protocol__payload_PR_handshakeRequest:
-                partner = Identity_to_Struct(&msg->header.me, NULL);
-                if (!partner){
-                    status = PEP_OUT_OF_MEMORY;
-                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
-                    goto error;
-                }
-
                 event = HandshakeRequest;
+                break;
+
+            case DeviceGroup_Protocol__payload_PR_updateRequest:
+                event = UpdateRequest;
                 break;
 
             case DeviceGroup_Protocol__payload_PR_groupKeys:
             case DeviceGroup_Protocol__payload_PR_groupUpdate:
-                partner = Identity_to_Struct(&msg->header.me, NULL);
-                if (!partner){
-                    status = PEP_OUT_OF_MEMORY;
-                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
-                    goto error;
-                }
+            {
                 identity_list *group_keys = IdentityList_to_identity_list(
                         msg->payload.present == 
                           DeviceGroup_Protocol__payload_PR_groupKeys ?
@@ -84,7 +73,6 @@ PEP_STATUS receive_sync_msg(
                             &msg->payload.choice.groupUpdate.ownIdentities,
                         NULL);
                 if (!group_keys) {
-                    free_identity(partner);
                     status = PEP_OUT_OF_MEMORY;
                     ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
                     goto error;
@@ -94,17 +82,49 @@ PEP_STATUS receive_sync_msg(
                           DeviceGroup_Protocol__payload_PR_groupKeys ?
                             GroupKeys : GroupUpdate;
                 break;
+            }
 
             default:
                 status = PEP_SYNC_ILLEGAL_MESSAGE;
                 ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
                 goto error;
         }
+
+        partner = Identity_to_Struct(&msg->header.me, NULL);
+        if (!partner){
+            status = PEP_OUT_OF_MEMORY;
+            ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+            goto error;
+        }
     }
     else{
         partner = sync_msg->u.event.partner;
         extra = sync_msg->u.event.extra;
         event = sync_msg->u.event.event;
+    }
+
+    // Event inhibition, to limit mailbox and prevent cycles
+    time_t *last = NULL;
+    switch(event){
+        case CannotDecrypt:
+            last = &session->LastCannotDecrypt;
+            break;
+
+        case UpdateRequest:
+            last = &session->LastUpdateRequest;
+            break;
+
+        default:
+            break;
+    }
+    time_t now = time(NULL);
+    if(last != NULL){
+        if(*last != 0 && (*last + SYNC_INHIBIT_TIME) > now ){
+            free_identity(partner);
+            status = PEP_STATEMACHINE_INHIBITED_EVENT;
+            goto error;
+        }
+        *last = now;
     }
 
     // partner identity must be explicitely added DB to later
@@ -227,9 +247,6 @@ PEP_STATUS inject_DeviceState_event(
     return status;
 }
 
-// Ten minutes
-#define SYNC_MSG_EXPIRE_DELTA (60 * 10)
-
 PEP_STATUS receive_DeviceState_msg(
     PEP_SESSION session, 
     message *src, 
@@ -266,7 +283,7 @@ PEP_STATUS receive_DeviceState_msg(
 
                 // check message expiry 
                 if(src->recv) {
-                    time_t expiry = timegm(src->recv) + SYNC_MSG_EXPIRE_DELTA;
+                    time_t expiry = timegm(src->recv) + SYNC_MSG_EXPIRE_TIME;
                     time_t now = time(NULL);
                     if(expiry != 0 && now != 0 && expiry < now){
                         expired = true;
@@ -323,14 +340,12 @@ PEP_STATUS receive_DeviceState_msg(
                             break;
                         }
                         case DeviceGroup_Protocol__payload_PR_groupUpdate:
+                        case DeviceGroup_Protocol__payload_PR_updateRequest:
+                        {
                             // inject message but don't consume it, so 
                             // that other group members can also be updated
                             force_keep_msg = true;
                             
-                            // no break
-
-                        case DeviceGroup_Protocol__payload_PR_updateRequest:
-                        {
                             if (!keylist || rating < PEP_rating_reliable){
                                 discarded = true;
                                 goto free_all;
