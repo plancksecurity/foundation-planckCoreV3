@@ -89,6 +89,40 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_enc_format enc_format
     );
 
+// MIME_encrypt_message() - encrypt a MIME message, with MIME output
+//
+//  parameters:
+//      session (in)            session handle
+//      mimetext (in)           MIME encoded text to encrypt
+//      size (in)               size of text to encrypt
+//      extra (in)              extra keys for encryption
+//      mime_ciphertext (out)   encrypted, encoded message
+//      enc_format (in)         encrypted format
+//      flags (in)              flags to set special encryption features
+//
+//  return value:
+//      PEP_STATUS_OK           if everything worked
+//      PEP_BUFFER_TOO_SMALL    if encoded message size is too big to handle
+//      PEP_CANNOT_CREATE_TEMP_FILE
+//                              if there are issues with temp files; in
+//                              this case errno will contain the underlying
+//                              error
+//      PEP_OUT_OF_MEMORY       if not enough memory could be allocated
+//
+//  caveat:
+//      the encrypted, encoded mime text will go to the ownership of the caller; mimetext
+//      will remain in the ownership of the caller
+
+DYNAMIC_API PEP_STATUS MIME_encrypt_message(
+    PEP_SESSION session,
+    const char *mimetext,
+    size_t size,
+    stringlist_t* extra,
+    char** mime_ciphertext,
+    PEP_enc_format enc_format,
+    PEP_encrypt_flags_t flags
+);
+
 typedef enum _PEP_rating {
     PEP_rating_undefined = 0,
     PEP_rating_cannot_decrypt,
@@ -156,6 +190,41 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_rating *rating,
         PEP_decrypt_flags_t *flags
 );
+
+// MIME_decrypt_message() - decrypt a MIME message, with MIME output
+//
+//  parameters:
+//      session (in)            session handle
+//      mimetext (in)           MIME encoded text to decrypt
+//      size (in)               size of text to decrypt
+//      mime_plaintext (out)    decrypted, encoded message
+//      keylist (out)           stringlist with keyids
+//      rating (out)            rating for the message
+//      flags (out)             flags to signal special decryption features
+//
+//  return value:
+//      PEP_STATUS_OK           if everything worked
+//      PEP_BUFFER_TOO_SMALL    if encoded message size is too big to handle
+//      PEP_CANNOT_CREATE_TEMP_FILE
+//                              if there are issues with temp files; in
+//                              this case errno will contain the underlying
+//                              error
+//      PEP_OUT_OF_MEMORY       if not enough memory could be allocated
+//
+//  caveat:
+//      the decrypted, encoded mime text will go to the ownership of the caller; mimetext
+//      will remain in the ownership of the caller
+
+DYNAMIC_API PEP_STATUS MIME_decrypt_message(
+    PEP_SESSION session,
+    const char *mimetext,
+    size_t size,
+    char** mime_plaintext,
+    stringlist_t **keylist,
+    PEP_rating *rating,
+    PEP_decrypt_flags_t *flags
+);
+
 
 // own_message_private_key_details() - details on own key in own message
 //

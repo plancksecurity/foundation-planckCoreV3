@@ -129,6 +129,31 @@ int main() {
     cout << "rating :" << rating2 << "\n";
     free_stringlist(keylist5);
 
+    cout << "\nTesting MIME_encrypt_message / MIME_decrypt_message...\n\n";
+
+    cout << "opening alice_bob_encrypt_test_plaintext_mime.eml for reading\n";
+    ifstream inFile4 ("test_mails/alice_bob_encrypt_test_plaintext_mime.eml");
+    assert(inFile4.is_open());
+    
+    string text4;
+    
+    cout << "reading alice_bob_encrypt_test_plaintext_mime.eml sample\n";
+    while (!inFile4.eof()) {
+        static string line;
+        getline(inFile4, line);
+        text4 += line + "\r\n";
+    }
+    inFile4.close();
+    
+    const char* out_msg_plain = text4.c_str();
+    char* enc_msg = NULL;
+    char* dec_msg = NULL;
+
+    PEP_STATUS status7 = MIME_encrypt_message(session, text4.c_str(), text4.length(), NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    assert(status7 == PEP_STATUS_OK);
+    
+    cout << enc_msg << endl;
+    
     cout << "freeing messages…\n";
     free_message(msg4);
     free_message(msg3);

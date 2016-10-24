@@ -2094,3 +2094,80 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     return status;
 }
 
+
+DYNAMIC_API PEP_STATUS MIME_decrypt_message(
+    PEP_SESSION session,
+    const char *mimetext,
+    size_t size,
+    char** mime_plaintext,
+    stringlist_t **keylist,
+    PEP_rating *rating,
+    PEP_decrypt_flags_t *flags
+) 
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    message* tmp_msg = NULL;
+    message* dec_msg = NULL;
+    
+    status = mime_decode_message(mimetext, size, &tmp_msg);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+    
+    status = decrypt_message(session,
+                             tmp_msg,
+                             &dec_msg,
+                             keylist,
+                             rating,
+                             flags);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+    
+    status = mime_encode_message(dec_msg, false, mime_plaintext);
+    
+pep_error:
+    free_message(tmp_msg);
+    free_message(dec_msg);
+    
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS MIME_encrypt_message(
+    PEP_SESSION session,
+    const char *mimetext,
+    size_t size,
+    stringlist_t* extra,
+    char** mime_ciphertext,
+    PEP_enc_format enc_format,
+    PEP_encrypt_flags_t flags
+) 
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    message* tmp_msg = NULL;
+    message* enc_msg = NULL;
+    
+    status = mime_decode_message(mimetext, size, &tmp_msg);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+    
+    // This isn't incoming, though... so we need to reverse the direction
+    tmp_msg->dir = PEP_dir_outgoing;
+    status = encrypt_message(session,
+                             tmp_msg,
+                             extra,
+                             &enc_msg,
+                             enc_format,
+                             flags);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+        
+    status = mime_encode_message(enc_msg, false, mime_ciphertext);
+    
+pep_error:
+    free_message(tmp_msg);
+    free_message(enc_msg);
+
+    return status;
+
+}
+
+
