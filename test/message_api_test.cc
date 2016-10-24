@@ -153,6 +153,17 @@ int main() {
     assert(status7 == PEP_STATUS_OK);
     
     cout << enc_msg << endl;
+
+    string text5 = enc_msg;
+    
+    PEP_decrypt_flags_t dec_flags;
+    stringlist_t* keys_used;
+    
+    PEP_STATUS status8 = MIME_decrypt_message(session, text5.c_str(), text5.length(), &dec_msg, &keys_used, &rating, &dec_flags);
+    assert(status8 == PEP_STATUS_OK);
+    
+    cout << dec_msg << endl;
+    
     
     cout << "freeing messages…\n";
     free_message(msg4);
@@ -163,6 +174,8 @@ int main() {
     free_message(msg5);
     cout << "done.\n";
 
+    free(enc_msg);
+    free(dec_msg);
     cout << "calling release()\n";
     release(session);
     return 0;
