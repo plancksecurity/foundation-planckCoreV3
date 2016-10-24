@@ -1693,7 +1693,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         decorate_message(msg, *rating, _keylist);
         if (imported_keys)
             remove_attached_keys(msg);
-        if (*rating >= PEP_rating_reliable && session->retrieve_next_sync_msg) {
+        if (*rating >= PEP_rating_reliable && session->inject_sync_msg) {
             status = receive_DeviceState_msg(session, msg, *rating, _keylist);
             if (status == PEP_MESSAGE_CONSUMED || 
                 status == PEP_MESSAGE_DISCARDED) {
