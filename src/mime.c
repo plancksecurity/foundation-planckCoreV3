@@ -1215,6 +1215,23 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
     return PEP_STATUS_OK;
 }
 
+/* memoryhole */
+static PEP_STATUS replace_select_headers(
+        struct mailmime *part,
+        message *msg
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    assert(part);
+    assert(msg);
+
+    if (!part || !msg) 
+        return PEP_UNKNOWN_ERROR;
+    
+    return status;
+}
+
 static PEP_STATUS interpret_MIME(
         struct mailmime *mime,
         message *msg
@@ -1256,6 +1273,39 @@ static PEP_STATUS interpret_MIME(
                         return status;
                 }
                 else /* add as attachment */ {
+                    status = interpret_MIME(part, msg);
+                    if (status)
+                        return status;
+                }
+            }
+        }
+        else if (_is_multipart(content, "mixed")) {
+            clist *partlist = mime->mm_data.mm_multipart.mm_mp_list;
+            if (partlist == NULL)
+                return PEP_ILLEGAL_VALUE;
+            
+            clistiter *cur;
+            for (cur = clist_begin(partlist); cur; cur = clist_next(cur)) {
+                struct mailmime *part = clist_content(cur);
+                if (part == NULL)
+                    return PEP_ILLEGAL_VALUE;
+                
+                content = part->mm_content_type;
+                assert(content);
+                if (content == NULL)
+                    return PEP_ILLEGAL_VALUE;
+//                 Content-Type: text/rfc822-headers
+//                 Content-Disposition: attachment
+//                 
+//                 Date: Thu, 16 Jul 2015 11:44:44 +0200
+//                 Subject: alternative text/html message with embedded header, unsigned
+//                 From: Winston 
+//                 To: Julia 
+//                 Message-ID: B@memoryhole.example
+                if (_is_text_part(content, "rfc822-headers")) {
+                    replace_select_headers(part, msg);
+                }
+                else {
                     status = interpret_MIME(part, msg);
                     if (status)
                         return status;
