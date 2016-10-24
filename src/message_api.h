@@ -94,7 +94,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
 //  parameters:
 //      session (in)            session handle
 //      mimetext (in)           MIME encoded text to encrypt
-//      size (in)               size of text to encrypt
+//      size (in)               size of input mime text
 //      extra (in)              extra keys for encryption
 //      mime_ciphertext (out)   encrypted, encoded message
 //      enc_format (in)         encrypted format
@@ -196,7 +196,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 //  parameters:
 //      session (in)            session handle
 //      mimetext (in)           MIME encoded text to decrypt
-//      size (in)               size of text to decrypt
+//      size (in)               size of mime text to decode (in order to decrypt)
 //      mime_plaintext (out)    decrypted, encoded message
 //      keylist (out)           stringlist with keyids
 //      rating (out)            rating for the message
