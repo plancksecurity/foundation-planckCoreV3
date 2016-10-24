@@ -2012,7 +2012,8 @@ PEP_STATUS pgp_key_expired(
         bool sgn_available = false;
         bool enc_available = false;
         for (_sk = key->subkeys; _sk; _sk = _sk->next) {
-            if (_sk->expires > when) // not expired at that date ?
+            if (_sk->expires > when || _sk->expires == 0) // not expired at that date ?
+                                                          // Also, zero means "does not expire"
             {
                 if (_sk->can_certify) crt_available = true;
                 if (_sk->can_sign) sgn_available = true;
