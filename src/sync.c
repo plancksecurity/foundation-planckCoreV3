@@ -108,19 +108,36 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
 
     PEP_STATUS status = PEP_STATUS_OK;
 
+    DeviceState_event event;
+    bool need_partner = false;
+
     switch (result) {
         case SYNC_HANDSHAKE_CANCEL:
-            status = fsm_DeviceState_inject(session, Cancel, NULL, 0);
+            event = Cancel;
             break;
         case SYNC_HANDSHAKE_ACCEPTED:
-            status = fsm_DeviceState_inject(session, HandshakeAccepted, partner, 0);
+        {
+            event = HandshakeAccepted;
+            need_partner = true;
             break;
+        }
         case SYNC_HANDSHAKE_REJECTED:
-            status = fsm_DeviceState_inject(session, HandshakeRejected, partner, 0);
+        {
+            event = HandshakeRejected;
+            need_partner = true;
             break;
+        }
         default:
             return PEP_ILLEGAL_VALUE;
     }
+
+    pEp_identity *_partner = NULL;
+    if(need_partner){
+        _partner = identity_dup(partner);
+        if (_partner == NULL)
+            return PEP_OUT_OF_MEMORY;
+    }
+    status = inject_DeviceState_event(session, event, _partner, NULL);
 
     return status;
 }
