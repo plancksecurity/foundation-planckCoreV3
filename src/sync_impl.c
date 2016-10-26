@@ -261,8 +261,7 @@ PEP_STATUS receive_DeviceState_msg(
     bool expired = false;
     bool discarded = false;
     bool force_keep_msg = false;
-    
-    bloblist_t *last = NULL;
+
     for (bloblist_t *bl = src->attachments; bl && bl->value; bl = bl->next) {
         if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp.sync") == 0
                 && bl->size) {
@@ -405,25 +404,7 @@ PEP_STATUS receive_DeviceState_msg(
 
                 if (status != PEP_STATUS_OK)
                     return status;
-
             }
-
-            if (!session->keep_sync_msg) {
-                bloblist_t *blob = bl;
-                if (last)
-                    last->next = bl->next;
-                else
-                    src->attachments = bl->next;
-
-                blob->next = NULL;
-                free_bloblist(blob);
-            }
-            else {
-                last = bl;
-            }
-        }
-        else {
-            last = bl;
         }
     }
 
@@ -444,8 +425,30 @@ PEP_STATUS receive_DeviceState_msg(
         return PEP_MESSAGE_DISCARDED;
     }
 
-    if(discarded)
+    if (discarded)
         return PEP_MESSAGE_DISCARDED;
+
+    if (!session->keep_sync_msg) {
+        bloblist_t *last = NULL;
+        for (bloblist_t *bl = src->attachments; bl && bl->value; ) {
+            if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp.sync") == 0) {
+                bloblist_t *b = bl;
+                bl = bl->next;
+                if (!last)
+                    src->attachments = bl;
+                else
+                    last->next = bl;
+                free(b->mime_type);
+                free(b->filename);
+                free(b->value);
+                free(b);
+            }
+            else {
+                last = bl;
+                bl = bl->next;
+            }
+        }
+    }
 
     return PEP_STATUS_OK;
 }
