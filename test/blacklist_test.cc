@@ -113,6 +113,9 @@ int main() {
     PEP_STATUS status13 = update_identity(session, blacklisted_identity);
     
     /* FIXME: remove both keys again from everywhere and clean up identities */
+    free_identity(blacklisted_identity);
+    free_identity(blacklisted_identity2);
+    
     
     cout << "calling release()\n";
     release(session);
