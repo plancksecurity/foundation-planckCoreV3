@@ -24,7 +24,7 @@ PEP_STATUS elect_pubkey(
 {
     PEP_STATUS status;
     stringlist_t *keylist;
-    char *_fpr = NULL;
+    char *_fpr = "";
     identity->comm_type = PEP_ct_unknown;
 
     status = find_keys(session, identity->address, &keylist);
@@ -59,15 +59,16 @@ PEP_STATUS elect_pubkey(
         }
     }
 
-    if (_fpr) {
-        free(identity->fpr);
+    
+//    if (_fpr) {
+    free(identity->fpr);
 
-        identity->fpr = strdup(_fpr);
-        if (identity->fpr == NULL) {
-            free_stringlist(keylist);
-            return PEP_OUT_OF_MEMORY;
-        }
+    identity->fpr = strdup(_fpr);
+    if (identity->fpr == NULL) {
+        free_stringlist(keylist);
+        return PEP_OUT_OF_MEMORY;
     }
+//    }
     free_stringlist(keylist);
     return PEP_STATUS_OK;
 }
@@ -137,7 +138,7 @@ DYNAMIC_API PEP_STATUS update_identity(
         bool dont_use_fpr = true;
 
         /* if we have a stored_identity fpr */
-        if (!EMPTYSTR(stored_identity->fpr)) {
+        if (!EMPTYSTR(stored_identity->fpr) && !EMPTYSTR(temp_id->fpr)) {
             status = blacklist_is_listed(session, stored_identity->fpr, &dont_use_fpr);
             if (status != PEP_STATUS_OK)
                 dont_use_fpr = true; 
