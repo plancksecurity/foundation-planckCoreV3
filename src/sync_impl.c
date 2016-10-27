@@ -42,6 +42,7 @@ PEP_STATUS receive_sync_msg(
     if (!(session && sync_msg))
         return PEP_ILLEGAL_VALUE;
 
+    bool msgIsFromGroup = false;
     if(sync_msg->is_a_message){
         DeviceGroup_Protocol_t *msg = sync_msg->u.message;
         assert(msg && msg->payload.present != DeviceGroup_Protocol__payload_PR_NOTHING);
@@ -49,6 +50,8 @@ PEP_STATUS receive_sync_msg(
             status = PEP_OUT_OF_MEMORY;
             goto error;
         }
+
+        msgIsFromGroup = msg->header.devicegroup;
 
         switch (msg->payload.present) {
             case DeviceGroup_Protocol__payload_PR_beacon:
@@ -164,6 +167,9 @@ PEP_STATUS receive_sync_msg(
 
             // finaly add partner to DB
             status = set_identity(session, tmpident);
+            assert(status == PEP_STATUS_OK);
+            if(status == PEP_STATUS_OK && msgIsFromGroup)
+                status = set_identity_flags(session, tmpident, PEP_idf_devicegroup);
             free_identity(tmpident);
             assert(status == PEP_STATUS_OK);
             if (status != PEP_STATUS_OK) {
