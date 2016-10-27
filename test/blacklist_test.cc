@@ -111,11 +111,14 @@ int main() {
     PEP_STATUS status15 = update_identity(session, blacklisted_identity2);
     PEP_STATUS status12 = blacklist_delete(session, bl_fpr_1);
     PEP_STATUS status13 = update_identity(session, blacklisted_identity);
-    
-    /* FIXME: remove both keys again from everywhere and clean up identities */
+            
+    PEP_STATUS status16 = delete_keypair(session, bl_fpr_1);
+    update_identity(session, blacklisted_identity);
+    PEP_STATUS status17 = delete_keypair(session, bl_fpr_2);
+    update_identity(session, blacklisted_identity2);
+        
     free_identity(blacklisted_identity);
     free_identity(blacklisted_identity2);
-    
     
     cout << "calling release()\n";
     release(session);
