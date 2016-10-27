@@ -257,9 +257,8 @@ PEP_STATUS receive_DeviceState_msg(
     if (!(session && src))
         return PEP_ILLEGAL_VALUE;
 
-    bool found = false;
-    bool expired = false;
-    bool discarded = false;
+    bool consume = false;
+    bool discard = false;
     bool force_keep_msg = false;
 
     for (bloblist_t *bl = src->attachments; bl && bl->value; bl = bl->next) {
@@ -285,7 +284,7 @@ PEP_STATUS receive_DeviceState_msg(
                     time_t expiry = timegm(src->recv) + SYNC_MSG_EXPIRE_TIME;
                     time_t now = time(NULL);
                     if(expiry != 0 && now != 0 && expiry < now){
-                        expired = true;
+                        consume = true;
                         goto free_all;
                     }
                 }
@@ -302,9 +301,17 @@ PEP_STATUS receive_DeviceState_msg(
                                 strncmp(session->sync_uuid,
                                         (const char *)msg->payload.choice.handshakeRequest.partner.user_id->buf,
                                         msg->payload.choice.handshakeRequest.partner.user_id->size) != 0){
-                                discarded = true;
+                                discard = true;
                                 goto free_all;
                             }
+                            
+                            // Ignore and consume handshakes with devices
+                            // already using trusted own key to encrypt
+                            if (rating >= PEP_rating_trusted){
+                                consume = true;
+                                goto free_all;
+                            }
+
                             break;
                         // accepting GroupKeys needs encryption and trust of peer device
                         case DeviceGroup_Protocol__payload_PR_groupKeys:
@@ -314,7 +321,7 @@ PEP_STATUS receive_DeviceState_msg(
                                 (strncmp(session->sync_uuid,
                                         (const char *)msg->payload.choice.groupKeys.partner.user_id->buf,
                                         msg->payload.choice.groupKeys.partner.user_id->size) != 0)){
-                                discarded = true;
+                                discard = true;
                                 goto free_all;
                             }
 
@@ -332,7 +339,7 @@ PEP_STATUS receive_DeviceState_msg(
                             status = get_trust(session, _from);
                             if (_from->comm_type < PEP_ct_strong_encryption) {
                                 free_identity(_from);
-                                discarded = true;
+                                discard = true;
                                 goto free_all;
                             }
                             free_identity(_from);
@@ -346,7 +353,7 @@ PEP_STATUS receive_DeviceState_msg(
                             force_keep_msg = true;
                             
                             if (!keylist || rating < PEP_rating_reliable){
-                                discarded = true;
+                                discard = true;
                                 goto free_all;
                             }
                             // GroupUpdate and UpdateRequests come from group.
@@ -363,7 +370,7 @@ PEP_STATUS receive_DeviceState_msg(
                             status = get_trust(session, _from);
                             if (_from->comm_type < PEP_ct_pEp) {
                                 free_identity(_from);
-                                discarded = true;
+                                discard = true;
                                 goto free_all;
                             }
                             free_identity(_from);
@@ -373,7 +380,7 @@ PEP_STATUS receive_DeviceState_msg(
                     }
 
 
-                    found = true;
+                    consume = true;
                     sync_msg_t *sync_msg = malloc(sizeof(sync_msg_t));
                     if(sync_msg == NULL){
                         status = PEP_OUT_OF_MEMORY;
@@ -388,12 +395,12 @@ PEP_STATUS receive_DeviceState_msg(
                         }
                         goto free_all;
                     }
-                    // don't message now that it is in the queue
+                    // don't free message now that it is in the queue
                     goto free_userid;
                 }
                 else if (status == PEP_OWN_SEQUENCE) {
                     status = PEP_STATUS_OK;
-                    discarded = true;
+                    discard = true;
                     goto free_all;
                 }
 
@@ -412,7 +419,7 @@ PEP_STATUS receive_DeviceState_msg(
         return PEP_MESSAGE_DISCARDED;
     }
 
-    if ((expired || found) && !session->keep_sync_msg) {
+    if (consume && !session->keep_sync_msg) {
         for (stringpair_list_t *spl = src->opt_fields ; spl && spl->value ;
                 spl = spl->next) {
             if (spl->value->key &&
@@ -425,7 +432,7 @@ PEP_STATUS receive_DeviceState_msg(
         return PEP_MESSAGE_DISCARDED;
     }
 
-    if (discarded)
+    if(discard)
         return PEP_MESSAGE_DISCARDED;
 
     if (!session->keep_sync_msg) {
