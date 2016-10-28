@@ -117,15 +117,17 @@ const char *android_system_db(void)
     return buffer;
 }
 
-// TODO: Check and possibly fix this function if necessary
+
 void uuid_generate_random(pEpUUID out)
 {
     uuid_t *uuid;
     uuid_rc_t rc_create;
-
+    size_t size = sizeof(uuid_string_t);
+    void *_out = out;
+	
     if ((rc_create = uuid_create(&uuid)) != UUID_RC_OK ||
         uuid_make(uuid, UUID_MAKE_V1) != UUID_RC_OK ||
-        uuid_export(uuid, UUID_FMT_BIN, out, NULL) != UUID_RC_OK)
+        uuid_export(uuid, UUID_FMT_BIN, &_out, &size) != UUID_RC_OK)
     {
         memset(out, 0, sizeof(pEpUUID));
     }
@@ -136,15 +138,17 @@ void uuid_generate_random(pEpUUID out)
     }
 }
 
-// TODO: Check and possibly fix this function if necessary
+
 void uuid_unparse_upper(pEpUUID uu, uuid_string_t out)
 {
     uuid_t *uuid;
     uuid_rc_t rc_create;
+    size_t size = sizeof(uuid_string_t);
+    void *_out = out;
 
     if ((rc_create = uuid_create(&uuid)) != UUID_RC_OK ||
         uuid_import(uuid, UUID_FMT_BIN, uu, sizeof(pEpUUID)) != UUID_RC_OK ||
-        uuid_export(uuid, UUID_FMT_STR, out, NULL) != UUID_RC_OK)
+        uuid_export(uuid, UUID_FMT_STR, &_out, &size) != UUID_RC_OK)
     {
         memset(out, 0, sizeof(uuid_string_t));
     }

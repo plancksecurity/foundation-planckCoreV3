@@ -1408,7 +1408,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             *rating = PEP_rating_unencrypted;
             if (imported_keys)
                 remove_attached_keys(src);
-            if (session->retrieve_next_sync_msg) {
+            if(session->inject_sync_msg){
                 status = receive_DeviceState_msg(session, src, *rating, *keylist);
                 if (status == PEP_MESSAGE_CONSUMED || 
                     status == PEP_MESSAGE_DISCARDED) {
@@ -1693,7 +1693,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         decorate_message(msg, *rating, _keylist);
         if (imported_keys)
             remove_attached_keys(msg);
-        if (*rating >= PEP_rating_reliable && session->retrieve_next_sync_msg) {
+        if (*rating >= PEP_rating_reliable && session->inject_sync_msg) {
             status = receive_DeviceState_msg(session, msg, *rating, _keylist);
             if (status == PEP_MESSAGE_CONSUMED || 
                 status == PEP_MESSAGE_DISCARDED) {
@@ -2093,4 +2093,81 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     free(second_set);
     return status;
 }
+
+
+DYNAMIC_API PEP_STATUS MIME_decrypt_message(
+    PEP_SESSION session,
+    const char *mimetext,
+    size_t size,
+    char** mime_plaintext,
+    stringlist_t **keylist,
+    PEP_rating *rating,
+    PEP_decrypt_flags_t *flags
+) 
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    message* tmp_msg = NULL;
+    message* dec_msg = NULL;
+    
+    status = mime_decode_message(mimetext, size, &tmp_msg);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+    
+    status = decrypt_message(session,
+                             tmp_msg,
+                             &dec_msg,
+                             keylist,
+                             rating,
+                             flags);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+    
+    status = mime_encode_message(dec_msg, false, mime_plaintext);
+    
+pep_error:
+    free_message(tmp_msg);
+    free_message(dec_msg);
+    
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS MIME_encrypt_message(
+    PEP_SESSION session,
+    const char *mimetext,
+    size_t size,
+    stringlist_t* extra,
+    char** mime_ciphertext,
+    PEP_enc_format enc_format,
+    PEP_encrypt_flags_t flags
+) 
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    message* tmp_msg = NULL;
+    message* enc_msg = NULL;
+    
+    status = mime_decode_message(mimetext, size, &tmp_msg);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+    
+    // This isn't incoming, though... so we need to reverse the direction
+    tmp_msg->dir = PEP_dir_outgoing;
+    status = encrypt_message(session,
+                             tmp_msg,
+                             extra,
+                             &enc_msg,
+                             enc_format,
+                             flags);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+        
+    status = mime_encode_message(enc_msg, false, mime_ciphertext);
+    
+pep_error:
+    free_message(tmp_msg);
+    free_message(enc_msg);
+
+    return status;
+
+}
+
 

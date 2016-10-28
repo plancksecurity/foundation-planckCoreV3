@@ -319,10 +319,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
         // Set person, but if already exist, only update.
         // if main_key_id already set, don't touch.
-        sql_set_person = "insert or replace into person (id, username, lang, main_key_id)"
+        sql_set_person = "insert or replace into person (id, username, lang, main_key_id, device_group)"
                          "  values (?1, ?2, ?3,"
                          "    (select coalesce((select main_key_id from person "
-                         "      where id = ?1), upper(replace(?4,' ',''))))) ;";
+                         "      where id = ?1), upper(replace(?4,' ','')))),"
+                         "    (select device_group from person where id = ?1)) ;";
 
         sql_set_device_group = "update person set device_group = ?1 "
                                "where id = '" PEP_OWN_USERID "';";
