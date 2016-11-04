@@ -1229,6 +1229,21 @@ static PEP_STATUS replace_select_headers(
     if (!part || !msg) 
         return PEP_UNKNOWN_ERROR;
     
+    if (part->mm_imf_fields) {
+        clist* fieldlist = part->mm_imf_fields->fld_list;
+    
+        if (fieldlist) {
+            clistiter *cur;
+            for (cur = clist_begin(fieldlist); cur; cur = clist_next(cur)) {
+                struct mailimf_field *field = clist_content(cur);
+                if (strcmp(field->fld_data.fld_optional_field->fld_name, "Subject") == 0 
+                    && field->fld_data.fld_optional_field->fld_value) {
+                    free(msg->shortmsg);
+                    msg->shortmsg = strdup(field->fld_data.fld_optional_field->fld_value);
+                }
+            }
+        }
+    }
     return status;
 }
 
@@ -1283,7 +1298,9 @@ static PEP_STATUS interpret_MIME(
             clist *partlist = mime->mm_data.mm_multipart.mm_mp_list;
             if (partlist == NULL)
                 return PEP_ILLEGAL_VALUE;
-            
+
+            replace_select_headers(mime,msg);
+
             clistiter *cur;
             for (cur = clist_begin(partlist); cur; cur = clist_next(cur)) {
                 struct mailmime *part = clist_content(cur);
@@ -1302,14 +1319,14 @@ static PEP_STATUS interpret_MIME(
 //                 From: Winston 
 //                 To: Julia 
 //                 Message-ID: B@memoryhole.example
-                if (_is_text_part(content, "rfc822-headers")) {
-                    replace_select_headers(part, msg);
-                }
-                else {
+//                 if (_is_text_part(content, "rfc822-headers")) {
+//                     replace_select_headers(part, msg);
+//                 }
+//                else {
                     status = interpret_MIME(part, msg);
                     if (status)
                         return status;
-                }
+//                }
             }
         }
         else if (_is_multipart(content, "encrypted")) {
