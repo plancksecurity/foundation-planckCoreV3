@@ -47,6 +47,7 @@ PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first)
         cryptotech[PEP_crypt_OpenPGP].key_expired = pgp_key_expired;
         cryptotech[PEP_crypt_OpenPGP].key_revoked = pgp_key_revoked;
         cryptotech[PEP_crypt_OpenPGP].key_created = pgp_key_created;
+        cryptotech[PEP_crypt_OpenPGP].pair_has_private = pgp_pair_has_private;
 #ifdef PGP_BINARY_PATH
         cryptotech[PEP_crypt_OpenPGP].binary_path = PGP_BINARY_PATH;
 #endif

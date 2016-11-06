@@ -2118,3 +2118,30 @@ PEP_STATUS pgp_binary(const char **path)
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS pgp_pair_has_private(PEP_SESSION session, const char *fpr,
+        bool *has_private) {
+    status = PEP_STATUS_OK;
+    gpg_key_t output_key;
+    gpgme_error_t gpgerr = gpgme_get_key(session->ctx, fpr, &output_key, true);
+    *has_private = false;
+    switch (gpgerr) {
+        case GPG_ERR_EOF:
+        case GPG_ERR_INV_VALUE:
+            status = PEP_KEY_NOT_FOUND;
+            break;
+        case GPG_ERR_AMBIGUOUS_NAME:
+            status = PEP_KEY_HAS_AMBIG_NAME;
+            break;
+        case GPG_ERR_NO_ERROR:
+            *has_private = true;
+            gpgme_key_release(output_key);
+            break;
+        case GPG_ERR_ENOMEM:
+            status = PEP_OUT_OF_MEMORY;
+            break;
+        default:
+            status = PEP_UNKNOWN_ERROR;
+            break;
+    }
+    return status;
+}

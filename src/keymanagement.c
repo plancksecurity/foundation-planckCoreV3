@@ -421,6 +421,17 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     if (stored_identity)
     {
         if (EMPTYSTR(identity->fpr)) {
+            
+            // First check to see if it's blacklisted?
+            char* stored_fpr = stored_identity->fpr;
+            
+            bool dont_use_fpr = false;
+            
+            status = blacklist_is_listed(session, stored_fpr, &dont_use_fpr);
+            if (!dont_use_fpr) {
+                // Make sure there is a *private* key associated with this fpr
+            }
+            
             identity->fpr = strdup(stored_identity->fpr);
             assert(identity->fpr);
             if (identity->fpr == NULL)

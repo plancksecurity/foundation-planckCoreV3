@@ -72,6 +72,9 @@ typedef PEP_STATUS (*key_created_t)(PEP_SESSION session, const char *fpr,
 
 typedef PEP_STATUS (*binary_path_t)(const char **path);
 
+typedef PEP_STATUS (*pair_has_private_t)(PEP_SESSION session, const char *fpr,
+        bool *has_private);
+
 typedef struct _PEP_cryptotech_t {
     uint8_t id;
     // the following are default values; comm_type may vary with key length or b0rken crypto
@@ -94,6 +97,7 @@ typedef struct _PEP_cryptotech_t {
     key_revoked_t key_revoked;
     key_created_t key_created;
     binary_path_t binary_path;
+    pair_has_private_t pair_has_private;
 } PEP_cryptotech_t;
 
 extern PEP_cryptotech_t cryptotech[PEP_crypt__count];
