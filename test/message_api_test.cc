@@ -145,14 +145,11 @@ int main() {
     }
     inFile4.close();
     
-//    const char* out_msg_plain = text4.c_str();
-    
-    const char* out_msg_plain = "From: krista@kgrothoff.org\nTo: Volker <vb@pep-project.org>\nSubject: Test\nContent-Type: text/plain; charset=utf-8\nContent-Language: en-US\nContent-Transfer-Encoding:quoted-printable\n\ngaga\n\n";
+    const char* out_msg_plain = text4.c_str();
     char* enc_msg = NULL;
     char* dec_msg = NULL;
 
-//    PEP_STATUS status7 = MIME_encrypt_message(session, text4.c_str(), text4.length(), NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    PEP_STATUS status7 = MIME_encrypt_message(session, out_msg_plain, strlen(out_msg_plain), NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    PEP_STATUS status7 = MIME_encrypt_message(session, text4.c_str(), text4.length(), NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     assert(status7 == PEP_STATUS_OK);
     
     cout << enc_msg << endl;
