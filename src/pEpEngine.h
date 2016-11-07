@@ -999,6 +999,20 @@ PEP_STATUS key_created(
     );
 
 
+// find_keys() - find keys in keyring
+//
+//  parameters:
+//      session (in)            session handle
+//      pattern (in)            key id, user id or address to search for as
+//                              UTF-8 string
+//      keylist (out)           list of fingerprints found or NULL on error
+//
+//  caveat:
+//        the ownerships of keylist isgoing to the caller
+//        the caller must use free_stringlist() to free it
+PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
+                             stringlist_t **keylist);
+
 // get_engine_version() - returns the current version of pEpEngine (this is different
 //                        from the pEp protocol version!)
 //

@@ -185,6 +185,9 @@ DYNAMIC_API PEP_STATUS own_identities_retrieve(
         identity_list **own_identities
     );
 
+PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
+                             bool *has_private);
+
 #ifdef __cplusplus
 }
 #endif

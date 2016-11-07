@@ -72,8 +72,12 @@ typedef PEP_STATUS (*key_created_t)(PEP_SESSION session, const char *fpr,
 
 typedef PEP_STATUS (*binary_path_t)(const char **path);
 
-typedef PEP_STATUS (*pair_has_private_t)(PEP_SESSION session, const char *fpr,
+typedef PEP_STATUS (*contains_priv_key_t)(PEP_SESSION session, const char *fpr,
         bool *has_private);
+
+typedef PEP_STATUS (*find_private_keys_t)(
+    PEP_SESSION session, const char *pattern, stringlist_t **keylist
+);
 
 typedef struct _PEP_cryptotech_t {
     uint8_t id;
@@ -97,7 +101,8 @@ typedef struct _PEP_cryptotech_t {
     key_revoked_t key_revoked;
     key_created_t key_created;
     binary_path_t binary_path;
-    pair_has_private_t pair_has_private;
+    contains_priv_key_t contains_priv_key;
+    find_private_keys_t find_private_keys;
 } PEP_cryptotech_t;
 
 extern PEP_cryptotech_t cryptotech[PEP_crypt__count];

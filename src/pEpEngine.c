@@ -2107,6 +2107,16 @@ PEP_STATUS key_created(
             created);
 }
 
+PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
+                             stringlist_t **keylist) {
+    assert(session && pattern && keylist);
+    if (!(session && pattern && keylist))
+        return PEP_ILLEGAL_VALUE;
+    
+    return session->cryptotech[PEP_crypt_OpenPGP].find_private_keys(session, pattern,
+                                                                    keylist);
+}
+
 DYNAMIC_API const char* get_engine_version() {
     return PEP_ENGINE_VERSION;
 }
