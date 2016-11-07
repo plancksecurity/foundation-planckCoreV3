@@ -207,8 +207,9 @@ tstylesheet {
     template "state"
     ||
     case «@name»:
+        printf("State : «@name»\\\\n");
         switch (event) {
-        `` if "not(event[@name='Init'])" |>> case Init: break;
+        `` if "not(event[@name='Init'])" |>> case Init: printf("Event : Init\\\\n"); break;
         `` apply "event", 2
             default:
                 return («../@name»_state) invalid_event;
@@ -220,6 +221,7 @@ tstylesheet {
     template "event"
     ||
     case «@name»:
+    printf("Event : «@name»\\\\n");
     `` apply "action|transition|condition";
     `` if "name(*[position()=last()]) != 'transition'" |> break;
     ||
