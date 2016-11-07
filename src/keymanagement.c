@@ -439,7 +439,7 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 
     bool dont_use_stored_fpr = true;
     bool dont_use_input_fpr = true;
-    
+        
     if (stored_identity)
     {
         if (EMPTYSTR(identity->fpr)) {
@@ -489,20 +489,26 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
         if (status != PEP_STATUS_OK) {
             return status;
         }
-        
-        // Check to see if it's blacklisted or private part is missing
+
         bool has_private = false;
-        
-        status = _has_usable_priv_key(session, identity->fpr, &has_private); 
+        if (identity->fpr) {
+            // ok, we elected something.
+            // elect_ownkey only returns private keys, so we don't check again.
+            // Check to see if it's blacklisted
+            bool listed;
+            status = blacklist_is_listed(session, identity->fpr, &listed); 
+            // TODO: check status
+            has_private = !listed;
+        }
         
         if (has_private) {
             identity->flags = 0;
             dont_use_input_fpr = false;
         }
         else { // OK, we've tried everything. Time to generate new keys.
-            
+            free(identity->fpr); // It can stay in this state (unallocated) because we'll generate a new key 
+            identity->fpr = NULL;
         }
-        
     }
 
     bool revoked = false;
