@@ -579,6 +579,9 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
         }
     }
 
+    if (!identity->username)
+        identity->username = strdup("");
+    
     status = set_identity(session, identity);
     assert(status == PEP_STATUS_OK);
     if (status != PEP_STATUS_OK) {

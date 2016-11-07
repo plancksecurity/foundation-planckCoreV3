@@ -1414,7 +1414,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                     status == PEP_MESSAGE_DISCARDED) {
                     free_message(msg);
                     msg = NULL;
-                    return status;
+                    *flags |= (status == PEP_MESSAGE_DISCARDED) ?
+                                PEP_decrypt_flag_discarded :
+                                PEP_decrypt_flag_consumed;
                 }
                 else if (status != PEP_STATUS_OK) {
                     return status;
@@ -1699,6 +1701,11 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 status == PEP_MESSAGE_DISCARDED) {
                 free_message(msg);
                 msg = NULL;
+                *flags |= (status == PEP_MESSAGE_DISCARDED) ?
+                            PEP_decrypt_flag_discarded :
+                            PEP_decrypt_flag_consumed;
+
+                status = decrypt_status;
             }
             else if (status != PEP_STATUS_OK){
                 goto pep_error;
