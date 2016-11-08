@@ -1779,7 +1779,7 @@ unlock_netpgp:
 }
 
 /* copied from find_keys, but we need to use a callback that filters. */
-PEP_STATUS pgp_find_secret_keys(
+PEP_STATUS pgp_find_private_keys(
     PEP_SESSION session, const char *pattern, stringlist_t **keylist)
 {
     stringlist_t *_keylist, *_k;
@@ -1830,7 +1830,7 @@ PEP_STATUS pgp_contains_priv_key(
     const char *fpr,
     bool *has_private) {
     stringlist_t* keylist = NULL;
-    PEP_STATUS status = pgp_find_secret_keys(session, fpr, &keylist);
+    PEP_STATUS status = pgp_find_private_keys(session, fpr, &keylist);
     if (status == PEP_STATUS_OK && keylist) {
         free_stringlist(keylist);
         *has_private = true;
