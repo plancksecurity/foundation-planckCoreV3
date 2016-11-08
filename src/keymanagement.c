@@ -384,12 +384,13 @@ PEP_STATUS _has_usable_priv_key(PEP_SESSION session, char* fpr,
     bool dont_use_fpr = true;
     
     PEP_STATUS status = blacklist_is_listed(session, fpr, &dont_use_fpr);
-    if (!dont_use_fpr) {
+    if (status == PEP_STATUS_OK && !dont_use_fpr) {
         // Make sure there is a *private* key associated with this fpr
         bool has_private = false;
         status = contains_priv_key(session, fpr, &has_private);
-        // TODO: check status
-        dont_use_fpr = !has_private;
+
+        if (status == PEP_STATUS_OK)
+            dont_use_fpr = !has_private;
     }
     
     *is_usable = !dont_use_fpr;
@@ -448,6 +449,7 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
             
             status = _has_usable_priv_key(session, stored_identity->fpr, &has_private); 
             
+            // N.B. has_private is never true if the returned status is not PEP_STATUS_OK
             if (has_private) {
                 identity->fpr = strdup(stored_identity->fpr);
                 assert(identity->fpr);
@@ -475,6 +477,7 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
         
         status = _has_usable_priv_key(session, identity->fpr, &has_private); 
         
+        // N.B. has_private is never true if the returned status is not PEP_STATUS_OK
         if (has_private) {
             identity->flags = 0;
             dont_use_input_fpr = false;
@@ -497,8 +500,9 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
             // Check to see if it's blacklisted
             bool listed;
             status = blacklist_is_listed(session, identity->fpr, &listed); 
-            // TODO: check status
-            has_private = !listed;
+
+            if (status == PEP_STATUS_OK)
+                has_private = !listed;
         }
         
         if (has_private) {
