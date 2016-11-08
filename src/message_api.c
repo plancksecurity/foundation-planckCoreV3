@@ -1793,7 +1793,7 @@ static void _max_comm_type_from_identity_list(
     {
         if (il->ident)
         {
-            PEP_STATUS status = update_identity(session, il->ident);
+            PEP_STATUS status = _update_identity(session, il->ident, false);
             if (status == PEP_STATUS_OK)
             {
                 *max_comm_type = _get_comm_type(session, *max_comm_type,
@@ -1810,27 +1810,21 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
         PEP_rating *rating
     )
 {
-    PEP_STATUS status = PEP_STATUS_OK;
     PEP_comm_type max_comm_type = PEP_ct_pEp;
     bool comm_type_determined = false;
 
     assert(session);
     assert(msg);
-    assert(msg->from);
     assert(msg->dir == PEP_dir_outgoing);
     assert(rating);
 
     if (!(session && msg && rating))
         return PEP_ILLEGAL_VALUE;
 
-    if (msg->from == NULL || msg->dir != PEP_dir_outgoing)
+    if (msg->dir != PEP_dir_outgoing)
         return PEP_ILLEGAL_VALUE;
 
     *rating = PEP_rating_undefined;
-
-    status = myself(session, msg->from);
-    if (status != PEP_STATUS_OK)
-        return status;
 
     _max_comm_type_from_identity_list(msg->to, session,
                                       &max_comm_type, &comm_type_determined);
