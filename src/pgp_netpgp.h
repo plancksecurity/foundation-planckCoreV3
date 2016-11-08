@@ -81,3 +81,12 @@ PEP_STATUS pgp_key_created(
         time_t *created
     );
 
+PEP_STATUS pgp_contains_priv_key(
+    PEP_SESSION session, 
+    const char *fpr,
+    bool *has_private);
+
+PEP_STATUS pgp_find_private_keys(
+    PEP_SESSION session, const char *pattern, stringlist_t **keylist
+);
+

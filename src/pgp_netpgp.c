@@ -1178,6 +1178,29 @@ static PEP_STATUS add_key_fpr_to_stringlist(void *arg, pgp_key_t *key)
     return PEP_STATUS_OK;
 }
 
+static PEP_STATUS add_secret_key_fpr_to_stringlist(void *arg, pgp_key_t *key)
+{
+    if (pgp_is_key_secret(key)) {
+        stringlist_t **keylist = arg;
+        char *newfprstr = NULL;
+        
+        fpr_to_str(&newfprstr,
+                key->pubkeyfpr.fingerprint,
+                key->pubkeyfpr.length);
+        
+        if (newfprstr == NULL) {
+            return PEP_OUT_OF_MEMORY;
+        } else { 
+            stringlist_add(*keylist, newfprstr);
+            free(newfprstr);
+            if (*keylist == NULL) {
+                return PEP_OUT_OF_MEMORY;
+            }
+        }
+    }
+    return PEP_STATUS_OK;
+}
+
 static PEP_STATUS add_keyinfo_to_stringpair_list(void* arg, pgp_key_t *key) {
     stringpair_list_t** keyinfo_list = (stringpair_list_t**)arg;
     stringpair_t* pair = NULL;
@@ -1753,4 +1776,67 @@ unlock_netpgp:
     pthread_mutex_unlock(&netpgp_mutex);
     
     return result;
+}
+
+/* copied from find_keys, but we need to use a callback that filters. */
+PEP_STATUS pgp_find_secret_keys(
+    PEP_SESSION session, const char *pattern, stringlist_t **keylist)
+{
+    stringlist_t *_keylist, *_k;
+    
+    PEP_STATUS result;
+    
+    assert(session);
+    assert(pattern);
+    assert(keylist);
+    
+    if (!session || !pattern || !keylist )
+    {
+        return PEP_ILLEGAL_VALUE;
+    }
+    
+    if (pthread_mutex_lock(&netpgp_mutex))
+    {
+        return PEP_UNKNOWN_ERROR;
+    }
+    
+    *keylist = NULL;
+    _keylist = new_stringlist(NULL);
+    if (_keylist == NULL) {
+        result = PEP_OUT_OF_MEMORY;
+        goto unlock_netpgp;
+    }
+    _k = _keylist;
+    
+    result = find_keys_do(pattern, &add_secret_key_fpr_to_stringlist, &_k);
+    
+    if (result == PEP_STATUS_OK) {
+        *keylist = _keylist;
+        // Transfer ownership, no free
+        goto unlock_netpgp;
+    }
+    
+free_keylist:
+    free_stringlist(_keylist);
+    
+unlock_netpgp:
+    pthread_mutex_unlock(&netpgp_mutex);
+    
+    return result;    
+}
+
+PEP_STATUS pgp_contains_priv_key(
+    PEP_SESSION session, 
+    const char *fpr,
+    bool *has_private) {
+    stringlist_t* keylist = NULL;
+    PEP_STATUS status = pgp_find_secret_keys(session, fpr, &keylist);
+    if (status == PEP_STATUS_OK && keylist) {
+        free_stringlist(keylist);
+        *has_private = true;
+    }
+    else {
+        has_private = false;
+    }
+    return status;
 }
