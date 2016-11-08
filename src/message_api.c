@@ -1774,8 +1774,6 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
     }
 
     free_identity_list(private_il);
-    free_stringlist(keylist);
-    free_message(dst);
 
     return status;
 
