@@ -576,18 +576,13 @@ PEP_STATUS unicast_msg(
                 goto error;
             }
             
-            IdentityList_t *list = 
-                msg->payload.present == 
-                  DeviceGroup_Protocol__payload_PR_groupKeys ?
-                  &msg->payload.choice.groupKeys.ownIdentities :
-                  &msg->payload.choice.groupUpdate.ownIdentities;
+            stringlist_t *keylist = NULL;
+            status = keys_retrieve_by_flag(session, PEP_kpf_own_key, &keylist);
+            if (status != PEP_STATUS_OK)
+                goto error;
 
-            for (int i=0; i<list->list.count; i++) {
-                Identity_t *ident = list->list.array[i];
-                char *fpr = strndup((const char *)ident->fpr.buf, ident->fpr.size);
-                assert(fpr);
-                if (!fpr)
-                    goto enomem;
+            for (stringlist_t *_keylist=keylist; _keylist!=NULL; _keylist=_keylist->next) {
+                char *fpr = _keylist->value;
                 static char filename[MAX_LINELENGTH];
                 int result = snprintf(filename, MAX_LINELENGTH, "%s-sec.asc", fpr);
                 if (result < 0)
@@ -595,7 +590,6 @@ PEP_STATUS unicast_msg(
                 char *key = NULL;
                 size_t size = 0;
                 status = export_secrect_key(session, fpr, &key, &size);
-                free(fpr);
                 if (status != PEP_STATUS_OK)
                     goto error;
                 bloblist_t *bl = bloblist_add(_message->attachments,

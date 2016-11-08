@@ -421,6 +421,15 @@ typedef enum _identity_flags {
 
 typedef unsigned int identity_flags_t;
 
+typedef enum _keypair_flags {
+    // the first octet flags are app defined settings
+
+    // the second octet flags are calculated
+    PEP_kpf_own_key = 512   // key (was) used for own identity
+} keypair_flags;
+
+typedef unsigned int keypair_flags_t;
+
 typedef struct _pEp_identity {
     char *address;              // C string with address UTF-8 encoded
     char *fpr;                  // C string with fingerprint UTF-8 encoded
