@@ -120,7 +120,6 @@ typedef struct _pEpSession {
     // Own keys
     sqlite3_stmt *own_key_is_listed;
     sqlite3_stmt *own_identities_retrieve;
-    sqlite3_stmt *keys_retrieve_by_flag;
 
     // sequence value
     sqlite3_stmt *sequence_value1;
