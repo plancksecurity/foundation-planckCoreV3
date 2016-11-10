@@ -343,7 +343,8 @@ PEP_STATUS receive_DeviceState_msg(
                                 goto free_all;
                             }
                             status = get_trust(session, _from);
-                            if (_from->comm_type < PEP_ct_strong_encryption) {
+                            if (status != PEP_STATUS_OK || _from->comm_type < PEP_ct_strong_encryption) {
+                                status = PEP_STATUS_OK;
                                 free_identity(_from);
                                 discard = true;
                                 goto free_all;
@@ -374,7 +375,8 @@ PEP_STATUS receive_DeviceState_msg(
                                 goto free_all;
                             }
                             status = get_trust(session, _from);
-                            if (_from->comm_type < PEP_ct_pEp) {
+                            if (status != PEP_STATUS_OK || _from->comm_type < PEP_ct_pEp) {
+                                status = PEP_STATUS_OK;
                                 free_identity(_from);
                                 discard = true;
                                 goto free_all;
