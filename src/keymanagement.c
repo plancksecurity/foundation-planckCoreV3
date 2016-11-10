@@ -442,6 +442,8 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
         }
 
         identity->flags = stored_identity->flags;
+
+        free_identity(stored_identity);
     }
     else if (!EMPTYSTR(identity->fpr))
     {
