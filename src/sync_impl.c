@@ -565,8 +565,8 @@ PEP_STATUS unicast_msg(
     me = NULL;
 
     if (encrypted) {
-        if (msg->payload.present == DeviceGroup_Protocol__payload_PR_groupKeys || 
-            msg->payload.present == DeviceGroup_Protocol__payload_PR_groupUpdate) {
+        bool attach_own_private_keys = false;
+        if (msg->payload.present == DeviceGroup_Protocol__payload_PR_groupKeys) {
             PEP_rating rating = PEP_rating_undefined;
             status = outgoing_message_rating(session, _message, &rating);
             if (status != PEP_STATUS_OK)
@@ -575,7 +575,45 @@ PEP_STATUS unicast_msg(
                 status = PEP_SYNC_NO_TRUST;
                 goto error;
             }
-            
+            attach_own_private_keys = true;
+        }
+
+        // outgoing_message_rating doesn't work for msg->to being own identity 
+        // we check that from and to are the same, and with good comm_type
+        if (msg->payload.present == DeviceGroup_Protocol__payload_PR_groupUpdate) {
+            if(_message->to != NULL && _message->to->ident != NULL && 
+               _message->to->next == NULL && _message->from != NULL &&
+               strcmp(_message->to->ident->address, _message->from->address) == 0 && 
+               strcmp(_message->to->ident->user_id, PEP_OWN_USERID) == 0 && 
+               strcmp(_message->from->user_id, PEP_OWN_USERID) == 0) 
+            {
+                pEp_identity *_identity = NULL;
+                status = get_identity(session,
+                                      _message->to->ident->address,
+                                      _message->to->ident->user_id,
+                                      &_identity);
+                
+                if (status != PEP_STATUS_OK)
+                    goto error;
+
+                PEP_comm_type _comm_type = _identity->comm_type;
+                free_identity(_identity);
+
+                if(_comm_type != PEP_ct_pEp)
+                {
+                    status = PEP_SYNC_NO_TRUST;
+                    goto error;
+                }
+            }
+            else 
+            {
+                status = PEP_ILLEGAL_VALUE;
+                goto error;
+            }
+            attach_own_private_keys = true;
+        }
+
+        if(attach_own_private_keys){
             stringlist_t *keylist = NULL;
             status = keys_retrieve_by_flag(session, PEP_kpf_own_key, &keylist);
             if (status != PEP_STATUS_OK)
