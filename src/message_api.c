@@ -1410,13 +1410,13 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 remove_attached_keys(src);
             if(session->inject_sync_msg){
                 status = receive_DeviceState_msg(session, src, *rating, *keylist);
-                if (status == PEP_MESSAGE_CONSUMED || 
-                    status == PEP_MESSAGE_DISCARDED) {
+                if (status == PEP_MESSAGE_CONSUME || 
+                    status == PEP_MESSAGE_IGNORE) {
                     free_message(msg);
                     msg = NULL;
-                    *flags |= (status == PEP_MESSAGE_DISCARDED) ?
-                                PEP_decrypt_flag_discarded :
-                                PEP_decrypt_flag_consumed;
+                    *flags |= (status == PEP_MESSAGE_IGNORE) ?
+                                PEP_decrypt_flag_ignore :
+                                PEP_decrypt_flag_consume;
                 }
                 else if (status != PEP_STATUS_OK) {
                     return status;
@@ -1697,13 +1697,13 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             remove_attached_keys(msg);
         if (*rating >= PEP_rating_reliable && session->inject_sync_msg) {
             status = receive_DeviceState_msg(session, msg, *rating, _keylist);
-            if (status == PEP_MESSAGE_CONSUMED || 
-                status == PEP_MESSAGE_DISCARDED) {
+            if (status == PEP_MESSAGE_CONSUME || 
+                status == PEP_MESSAGE_IGNORE) {
                 free_message(msg);
                 msg = NULL;
-                *flags |= (status == PEP_MESSAGE_DISCARDED) ?
-                            PEP_decrypt_flag_discarded :
-                            PEP_decrypt_flag_consumed;
+                *flags |= (status == PEP_MESSAGE_IGNORE) ?
+                            PEP_decrypt_flag_ignore :
+                            PEP_decrypt_flag_consume;
 
                 status = decrypt_status;
             }

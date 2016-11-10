@@ -424,7 +424,7 @@ PEP_STATUS receive_DeviceState_msg(
     }
 
     if (force_keep_msg) {
-        return PEP_MESSAGE_DISCARDED;
+        return PEP_MESSAGE_IGNORE;
     }
 
     if (consume && !session->keep_sync_msg) {
@@ -434,14 +434,14 @@ PEP_STATUS receive_DeviceState_msg(
                     strcasecmp(spl->value->key, "pEp-auto-consume") == 0) {
                 if (spl->value->value &&
                         strcasecmp(spl->value->value, "yes") == 0)
-                    return PEP_MESSAGE_CONSUMED;
+                    return PEP_MESSAGE_CONSUME;
             }
         }
-        return PEP_MESSAGE_DISCARDED;
+        return PEP_MESSAGE_IGNORE;
     }
 
     if(discard)
-        return PEP_MESSAGE_DISCARDED;
+        return PEP_MESSAGE_IGNORE;
 
     if (!session->keep_sync_msg) {
         bloblist_t *last = NULL;

@@ -92,8 +92,8 @@ typedef enum {
     PEP_STATEMACHINE_INHIBITED_EVENT                = 0x0986,
 
     PEP_COMMIT_FAILED                               = 0xff01,
-    PEP_MESSAGE_CONSUMED                            = 0xff02,
-    PEP_MESSAGE_DISCARDED                           = 0xff03,
+    PEP_MESSAGE_CONSUME                            = 0xff02,
+    PEP_MESSAGE_IGNORE                           = 0xff03,
 
     PEP_RECORD_NOT_FOUND                            = -6,
     PEP_CANNOT_CREATE_TEMP_FILE                     = -5,
