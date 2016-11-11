@@ -999,7 +999,7 @@ PEP_STATUS key_created(
     );
 
 
-// find_keys() - find keys in keyring
+// find_private_keys() - find keys in keyring
 //
 //  parameters:
 //      session (in)            session handle
