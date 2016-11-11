@@ -92,8 +92,8 @@ typedef enum {
     PEP_STATEMACHINE_INHIBITED_EVENT                = 0x0986,
 
     PEP_COMMIT_FAILED                               = 0xff01,
-    PEP_MESSAGE_CONSUMED                            = 0xff02,
-    PEP_MESSAGE_DISCARDED                           = 0xff03,
+    PEP_MESSAGE_CONSUME                            = 0xff02,
+    PEP_MESSAGE_IGNORE                           = 0xff03,
 
     PEP_RECORD_NOT_FOUND                            = -6,
     PEP_CANNOT_CREATE_TEMP_FILE                     = -5,
@@ -420,6 +420,15 @@ typedef enum _identity_flags {
 } identity_flags;
 
 typedef unsigned int identity_flags_t;
+
+typedef enum _keypair_flags {
+    // the first octet flags are app defined settings
+
+    // the second octet flags are calculated
+    PEP_kpf_own_key = 512   // key (was) used for own identity
+} keypair_flags;
+
+typedef unsigned int keypair_flags_t;
 
 typedef struct _pEp_identity {
     char *address;              // C string with address UTF-8 encoded

@@ -192,6 +192,21 @@ DYNAMIC_API PEP_STATUS own_identities_retrieve(
 PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
                              bool *has_private);
 
+// keys_retrieve_by_flag() - retrieve all flagged keypair fingerprints 
+//
+//  parameters:
+//      session (in)            session to use
+//      flags                   flags to compare pgp keypair's flags to
+//      keylist (out)           list of fingerprints
+//
+//  caveat:
+//      the ownership of the list goes to the caller
+DYNAMIC_API PEP_STATUS keys_retrieve_by_flag(
+        PEP_SESSION session,
+        keypair_flags_t flags,
+        stringlist_t **keylist
+      );
+
 #ifdef __cplusplus
 }
 #endif

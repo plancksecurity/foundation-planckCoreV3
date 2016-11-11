@@ -474,6 +474,8 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
         }
         
         identity->flags = stored_identity->flags;
+
+        free_identity(stored_identity);
     }
     
     if (dont_use_stored_fpr && !EMPTYSTR(identity->fpr))
@@ -906,6 +908,71 @@ DYNAMIC_API PEP_STATUS own_identities_retrieve(
     
 enomem:
     free_identity_list(_own_identities);
+    status = PEP_OUT_OF_MEMORY;
+    
+the_end:
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS keys_retrieve_by_flag(
+        PEP_SESSION session,
+        keypair_flags_t flags,
+        stringlist_t **keylist
+      )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    assert(session && keylist);
+    if (!(session && keylist))
+        return PEP_ILLEGAL_VALUE;
+    
+    *keylist = NULL;
+    stringlist_t *_keylist = NULL;
+    
+    sqlite3_reset(session->keys_retrieve_by_flag);
+    sqlite3_bind_int(session->keys_retrieve_by_flag, 1, flags);
+    
+    int result;
+    char *fpr = NULL;
+    
+    stringlist_t *_bl = _keylist;
+    do {
+        result = sqlite3_step(session->keys_retrieve_by_flag);
+        switch (result) {
+            case SQLITE_ROW:
+                fpr = strdup((const char *) sqlite3_column_text(session->keys_retrieve_by_flag, 0));
+                if(fpr == NULL)
+                    goto enomem;
+
+                _bl = stringlist_add(_bl, fpr);
+                if (_bl == NULL) {
+                    free(fpr);
+                    goto enomem;
+                }
+                if (_keylist == NULL)
+                    _keylist = _bl;
+                
+                break;
+                
+            case SQLITE_DONE:
+                break;
+                
+            default:
+                status = PEP_UNKNOWN_ERROR;
+                result = SQLITE_DONE;
+        }
+    } while (result != SQLITE_DONE);
+    
+    sqlite3_reset(session->keys_retrieve_by_flag);
+    if (status == PEP_STATUS_OK)
+        *keylist = _keylist;
+    else
+        free_stringlist(_keylist);
+    
+    goto the_end;
+    
+enomem:
+    free_stringlist(_keylist);
     status = PEP_OUT_OF_MEMORY;
     
 the_end:

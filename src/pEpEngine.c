@@ -52,6 +52,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     // Own keys
     static const char *sql_own_key_is_listed;
     static const char *sql_own_identities_retrieve;
+    static const char *sql_keys_retrieve_by_flag;
 
     // Sequence
     static const char *sql_sequence_value1;
@@ -331,8 +332,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         sql_get_device_group = "select device_group from person "
                                "where id = '" PEP_OWN_USERID "';";
 
-        sql_set_pgp_keypair = "insert or replace into pgp_keypair (fpr) "
-                              "values (upper(replace(?1,' ',''))) ;";
+        sql_set_pgp_keypair = "insert or replace into pgp_keypair (fpr, flags) "
+                              "values (upper(replace(?1,' ','')), ?2) ;";
 
         sql_set_identity = "insert or replace into identity (address, main_key_id, "
                            "user_id, flags) values (?1, upper(replace(?2,' ','')),"
@@ -380,8 +381,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 
         // Own keys
         
-        sql_own_key_is_listed =
-                                "select count(*) from ("
+        sql_own_key_is_listed = "select count(*) from ("
                                 " select main_key_id from person "
                                 "   where main_key_id = upper(replace(?1,' ',''))"
                                 "    and id = '" PEP_OWN_USERID "' "
@@ -390,7 +390,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                                 "   where main_key_id = upper(replace(?1,' ',''))"
                                 "    and user_id = '" PEP_OWN_USERID "' );";
 
-        sql_own_identities_retrieve =  "select address, fpr, username, "
+        sql_own_identities_retrieve =  
+                            "select address, fpr, username, "
                             "   lang, identity.flags | pgp_keypair.flags"
                             "   from identity"
                             "   join person on id = identity.user_id"
@@ -399,6 +400,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                             "       and pgp_keypair_fpr = identity.main_key_id"
                             "   where identity.user_id = '" PEP_OWN_USERID "';";
         
+        sql_keys_retrieve_by_flag =  
+                            "select fpr from pgp_keypair"
+                            "  where (flags & ?1) = ?1;";
+
         sql_sequence_value1 = "insert or replace into sequences (name, value, own) "
                               "values (?1, "
                               "(select coalesce((select value + 1 from sequences "
@@ -524,6 +529,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     int_result = sqlite3_prepare_v2(_session->db, sql_own_identities_retrieve,
             (int)strlen(sql_own_identities_retrieve),
             &_session->own_identities_retrieve, NULL);
+    assert(int_result == SQLITE_OK);
+ 
+    int_result = sqlite3_prepare_v2(_session->db, sql_keys_retrieve_by_flag,
+            (int)strlen(sql_keys_retrieve_by_flag),
+            &_session->keys_retrieve_by_flag, NULL);
     assert(int_result == SQLITE_OK);
  
     // Sequence
@@ -652,6 +662,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->own_key_is_listed);
             if (session->own_identities_retrieve)
                 sqlite3_finalize(session->own_identities_retrieve);
+            if (session->keys_retrieve_by_flag)
+                sqlite3_finalize(session->keys_retrieve_by_flag);
             if (session->sequence_value1)
                 sqlite3_finalize(session->sequence_value1);
             if (session->sequence_value2)
@@ -1124,6 +1136,9 @@ DYNAMIC_API PEP_STATUS set_identity(
     sqlite3_reset(session->set_pgp_keypair);
     sqlite3_bind_text(session->set_pgp_keypair, 1, identity->fpr, -1,
             SQLITE_STATIC);
+    sqlite3_bind_int(session->set_pgp_keypair, 2, 
+                     strcmp(identity->user_id, PEP_OWN_USERID) == 0 ?
+                        PEP_kpf_own_key : 0);
     result = sqlite3_step(session->set_pgp_keypair);
     sqlite3_reset(session->set_pgp_keypair);
     if (result != SQLITE_DONE) {
