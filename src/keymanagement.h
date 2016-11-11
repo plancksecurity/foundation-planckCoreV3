@@ -6,10 +6,6 @@
 extern "C" {
 #endif
 
-PEP_STATUS _update_identity(
-        PEP_SESSION session, pEp_identity * identity, bool with_myself
-    );
-
 // update_identity() - update identity information
 //
 //  parameters:
@@ -26,7 +22,7 @@ PEP_STATUS _update_identity(
 //      writing
 //      this function NEVER reads the incoming fpr, only writes to it.
 
-DYNAMIC_API PEP_STATUS update_identity(
+PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
     );
 
@@ -50,6 +46,8 @@ DYNAMIC_API PEP_STATUS update_identity(
 //      myself() never writes flags; use set_identity_flags() for writing
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity);
+
+PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen);
 
 
 // retrieve_next_identity() - callback being called by do_keymanagement()

@@ -1791,7 +1791,7 @@ static void _max_comm_type_from_identity_list(
     {
         if (il->ident)
         {
-            PEP_STATUS status = _update_identity(session, il->ident, true);
+            PEP_STATUS status = update_identity(session, il->ident);
             if (status == PEP_STATUS_OK)
             {
                 *max_comm_type = _get_comm_type(session, *max_comm_type,
@@ -1858,7 +1858,7 @@ DYNAMIC_API PEP_STATUS identity_rating(
         return PEP_ILLEGAL_VALUE;
 
     if (ident->me)
-        status = myself(session, ident);
+        status = _myself(session, ident, false);
     else
         status = update_identity(session, ident);
 

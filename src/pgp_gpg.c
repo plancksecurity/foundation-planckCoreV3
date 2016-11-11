@@ -2159,3 +2159,4 @@ PEP_STATUS pgp_contains_priv_key(PEP_SESSION session, const char *fpr,
     }
     return status;
 }
+

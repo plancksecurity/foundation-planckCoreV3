@@ -73,8 +73,10 @@ PEP_STATUS elect_pubkey(
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS _update_identity(
-        PEP_SESSION session, pEp_identity * identity, bool with_myself
+PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen);
+
+DYNAMIC_API PEP_STATUS update_identity(
+        PEP_SESSION session, pEp_identity * identity
     )
 {
     pEp_identity *stored_identity;
@@ -89,13 +91,8 @@ PEP_STATUS _update_identity(
         return PEP_ILLEGAL_VALUE;
 
     if (identity->me || (identity->user_id && strcmp(identity->user_id, PEP_OWN_USERID) == 0)) {
-        if (with_myself) {
-            identity->me = true;
-            return myself(session, identity);
-        }
-        else {
-            return PEP_ILLEGAL_VALUE;
-        }
+        identity->me = true;
+        return _myself(session, identity, false);
     }
 
     int _no_user_id = EMPTYSTR(identity->user_id);
@@ -107,7 +104,7 @@ PEP_STATUS _update_identity(
                 &stored_identity);
         if (status == PEP_STATUS_OK) {
             free_identity(stored_identity);
-            return myself(session, identity);
+            return _myself(session, identity, false);
         }
 
         free(identity->user_id);
@@ -308,13 +305,6 @@ exit_free :
     return status;
 }
 
-DYNAMIC_API PEP_STATUS update_identity(
-        PEP_SESSION session, pEp_identity * identity
-    )
-{
-    return _update_identity(session, identity, true);
-}
-
 PEP_STATUS elect_ownkey(
         PEP_SESSION session, pEp_identity * identity
     )
@@ -410,7 +400,7 @@ PEP_STATUS _has_usable_priv_key(PEP_SESSION session, char* fpr,
     return status;
 }
 
-DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
+PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen)
 {
     pEp_identity *stored_identity;
     PEP_STATUS status;
@@ -554,6 +544,10 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 
     if (EMPTYSTR(identity->fpr) || revoked)
     {        
+        if(!do_keygen){
+            return PEP_GET_KEY_FAILED;
+        }
+
         if(revoked)
         {
             r_fpr = identity->fpr;
@@ -623,6 +617,11 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 
     return PEP_STATUS_OK;
 
+}
+
+DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
+{
+    return _myself(session, identity, true);
 }
 
 DYNAMIC_API PEP_STATUS register_examine_function(
