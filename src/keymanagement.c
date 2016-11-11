@@ -325,7 +325,7 @@ PEP_STATUS elect_ownkey(
     free(identity->fpr);
     identity->fpr = NULL;
 
-    status = find_keys(session, identity->address, &keylist);
+    status = find_private_keys(session, identity->address, &keylist);
     assert(status != PEP_OUT_OF_MEMORY);
     if (status == PEP_OUT_OF_MEMORY)
         return PEP_OUT_OF_MEMORY;
@@ -390,6 +390,26 @@ PEP_STATUS elect_ownkey(
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS _has_usable_priv_key(PEP_SESSION session, char* fpr,
+                                bool* is_usable) {
+    
+    bool dont_use_fpr = true;
+    
+    PEP_STATUS status = blacklist_is_listed(session, fpr, &dont_use_fpr);
+    if (status == PEP_STATUS_OK && !dont_use_fpr) {
+        // Make sure there is a *private* key associated with this fpr
+        bool has_private = false;
+        status = contains_priv_key(session, fpr, &has_private);
+
+        if (status == PEP_STATUS_OK)
+            dont_use_fpr = !has_private;
+    }
+    
+    *is_usable = !dont_use_fpr;
+    
+    return status;
+}
+
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 {
     pEp_identity *stored_identity;
@@ -429,30 +449,55 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     assert(status != PEP_OUT_OF_MEMORY);
     if (status == PEP_OUT_OF_MEMORY)
         return PEP_OUT_OF_MEMORY;
-    
+
+    bool dont_use_stored_fpr = true;
+    bool dont_use_input_fpr = true;
+        
     if (stored_identity)
     {
         if (EMPTYSTR(identity->fpr)) {
-            identity->fpr = strdup(stored_identity->fpr);
-            assert(identity->fpr);
-            if (identity->fpr == NULL)
-            {
-                return PEP_OUT_OF_MEMORY;
+            
+            bool has_private = false;
+            
+            status = _has_usable_priv_key(session, stored_identity->fpr, &has_private); 
+            
+            // N.B. has_private is never true if the returned status is not PEP_STATUS_OK
+            if (has_private) {
+                identity->fpr = strdup(stored_identity->fpr);
+                assert(identity->fpr);
+                if (identity->fpr == NULL)
+                {
+                    return PEP_OUT_OF_MEMORY;
+                }
+                dont_use_stored_fpr = false;
             }
         }
-
+        
         identity->flags = stored_identity->flags;
     }
-    else if (!EMPTYSTR(identity->fpr))
+    
+    if (dont_use_stored_fpr && !EMPTYSTR(identity->fpr))
     {
         // App must have a good reason to give fpr, such as explicit
         // import of private key, or similar.
 
         // Take given fpr as-is.
 
-        identity->flags = 0;
+        // BUT:
+        // First check to see if it's blacklisted or private part is missing?
+        bool has_private = false;
+        
+        status = _has_usable_priv_key(session, identity->fpr, &has_private); 
+        
+        // N.B. has_private is never true if the returned status is not PEP_STATUS_OK
+        if (has_private) {
+            identity->flags = 0;
+            dont_use_input_fpr = false;
+        }
     }
-    else
+    
+    // Ok, we failed to get keys either way, so let's elect one.
+    if (dont_use_input_fpr && dont_use_stored_fpr)
     {
         status = elect_ownkey(session, identity);
         assert(status == PEP_STATUS_OK);
@@ -460,7 +505,26 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
             return status;
         }
 
-        identity->flags = 0;
+        bool has_private = false;
+        if (identity->fpr) {
+            // ok, we elected something.
+            // elect_ownkey only returns private keys, so we don't check again.
+            // Check to see if it's blacklisted
+            bool listed;
+            status = blacklist_is_listed(session, identity->fpr, &listed); 
+
+            if (status == PEP_STATUS_OK)
+                has_private = !listed;
+        }
+        
+        if (has_private) {
+            identity->flags = 0;
+            dont_use_input_fpr = false;
+        }
+        else { // OK, we've tried everything. Time to generate new keys.
+            free(identity->fpr); // It can stay in this state (unallocated) because we'll generate a new key 
+            identity->fpr = NULL;
+        }
     }
 
     bool revoked = false;
@@ -848,3 +912,16 @@ the_end:
     return status;
 }
 
+
+PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
+                             bool *has_private) {
+
+    assert(session);
+    assert(fpr);
+    assert(has_private);
+    
+    if (!(session && fpr && has_private))
+        return PEP_ILLEGAL_VALUE;
+
+    return session->cryptotech[PEP_crypt_OpenPGP].contains_priv_key(session, fpr, has_private);
+}
