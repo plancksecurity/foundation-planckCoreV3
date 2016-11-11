@@ -6,6 +6,10 @@
 extern "C" {
 #endif
 
+PEP_STATUS _update_identity(
+        PEP_SESSION session, pEp_identity * identity, bool with_myself
+    );
+
 // update_identity() - update identity information
 //
 //  parameters:

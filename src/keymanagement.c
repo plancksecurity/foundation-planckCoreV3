@@ -73,8 +73,8 @@ PEP_STATUS elect_pubkey(
     return PEP_STATUS_OK;
 }
 
-DYNAMIC_API PEP_STATUS update_identity(
-        PEP_SESSION session, pEp_identity * identity
+PEP_STATUS _update_identity(
+        PEP_SESSION session, pEp_identity * identity, bool with_myself
     )
 {
     pEp_identity *stored_identity;
@@ -89,8 +89,13 @@ DYNAMIC_API PEP_STATUS update_identity(
         return PEP_ILLEGAL_VALUE;
 
     if (identity->me || (identity->user_id && strcmp(identity->user_id, PEP_OWN_USERID) == 0)) {
-        identity->me = true;
-        return myself(session, identity);
+        if (with_myself) {
+            identity->me = true;
+            return myself(session, identity);
+        }
+        else {
+            return PEP_ILLEGAL_VALUE;
+        }
     }
 
     int _no_user_id = EMPTYSTR(identity->user_id);
@@ -301,6 +306,13 @@ exit_free :
         free_identity(temp_id);
     
     return status;
+}
+
+DYNAMIC_API PEP_STATUS update_identity(
+        PEP_SESSION session, pEp_identity * identity
+    )
+{
+    return _update_identity(session, identity, true);
 }
 
 PEP_STATUS elect_ownkey(
