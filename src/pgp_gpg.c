@@ -325,6 +325,10 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
             dlsym(gpgme, "gpgme_key_unref");
         assert(gpg.gpgme_key_unref);
 
+		gpg.gpgme_key_release = (gpgme_key_release_t)(intptr_t)
+			dlsym(gpgme, "gpgme_key_release");
+		assert(gpg.gpgme_key_release);
+
         gpg.gpgme_op_edit = (gpgme_op_edit_t) (intptr_t)
             dlsym(gpgme, "gpgme_op_edit");
         assert(gpg.gpgme_op_edit);
@@ -2148,7 +2152,7 @@ PEP_STATUS pgp_contains_priv_key(PEP_SESSION session, const char *fpr,
             break;
         case GPG_ERR_NO_ERROR:
             *has_private = true;
-            gpgme_key_release(output_key);
+            gpg.gpgme_key_release(output_key);
             break;
         case GPG_ERR_ENOMEM:
             status = PEP_OUT_OF_MEMORY;

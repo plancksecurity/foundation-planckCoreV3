@@ -22,7 +22,7 @@ extern "C" {
 //      writing
 //      this function NEVER reads the incoming fpr, only writes to it.
 
-PEP_STATUS update_identity(
+DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
     );
 
