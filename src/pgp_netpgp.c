@@ -1206,8 +1206,9 @@ static PEP_STATUS add_keyinfo_to_stringpair_list(void* arg, pgp_key_t *key) {
     stringpair_t* pair = NULL;
     char* id_fpr = NULL;
     char* primary_userid = (char*)pgp_key_get_primary_userid(key);
-
-    bool key_revoked = false;
+    
+//    Unsued:
+//    bool key_revoked = false;
                 
 //    PEP_STATUS key_status = pgp_key_revoked(session, id_fpr, &key_revoked);
                 
@@ -1763,7 +1764,8 @@ PEP_STATUS pgp_list_keyinfo(
         return PEP_UNKNOWN_ERROR;
     }
     
-    pgp_key_t *key;
+    // Unsued:
+    // pgp_key_t *key;
 
     PEP_STATUS result;
     
