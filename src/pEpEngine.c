@@ -134,7 +134,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     sqlite3_busy_timeout(_session->system_db, 1000);
 
 // increment this when patching DDL
-#define _DDL_USER_VERSION "3"
+#define _DDL_USER_VERSION "4"
 
     if (in_first) {
 
