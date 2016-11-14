@@ -165,8 +165,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 ");\n"
                 "create table if not exists pgp_keypair (\n"
                 "   fpr text primary key,\n"
-                "   public_id text unique,\n"
-                "   private_id text,\n"
                 "   created integer,\n"
                 "   expires integer,\n"
                 "   comment text,\n"
