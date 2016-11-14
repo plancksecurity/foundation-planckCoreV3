@@ -1397,6 +1397,32 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     if(status != PEP_STATUS_OK)
         return status;
 
+    // Check for encryption stuck in the first 2 attachments instead of the body
+    // (This is currently based on AppleMail and a couple of other things
+    //  which are broken for us - we may find a more general case to deal with)
+    if (!src->longmsg && !src->longmsg_formatted) {
+        bloblist_t* attached_head = src->attachments;
+        if (attached_head && strcasecmp(attached_head->mime_type, "application/pgp-encrypted")) {
+            bloblist_t* enc_att_txt = attached_head->next;
+            if (enc_att_txt && strcasecmp(enc_att_txt->mime_type, "application/octet-stream")) {
+                size_t enc_att_len = enc_att_txt->size;
+                char* newlongmsg = calloc(1, enc_att_len + 1);
+                if (newlongmsg == NULL)
+                    goto enomem;
+                
+                memcpy(newlongmsg, enc_att_txt, enc_att_len);
+                newlongmsg[enc_att_len] = '\0';
+                
+                src->longmsg = newlongmsg;
+                
+                // TODO: delete attachments here
+                src->attachments = enc_att_txt->next;
+                consume_bloblist_head(attached_head);
+                consume_bloblist_head(attached_head);
+            }
+        }
+    }
+    
     PEP_cryptotech crypto = determine_encryption_format(src);
 
     *dst = NULL;

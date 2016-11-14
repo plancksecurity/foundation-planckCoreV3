@@ -91,6 +91,17 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
 
 DYNAMIC_API int bloblist_length(const bloblist_t *bloblist);
 
+// consume_bloblist_head() - internal function to delete head of the bloblist
+//
+//  parameters:
+//      bloblist (in)   bloblist to delete head from
+//
+//  return value:
+//      new head of the bloblist 
+//
+
+bloblist_t* consume_bloblist_head(bloblist_t *bloblist_head);
+
 
 #ifdef __cplusplus
 }
