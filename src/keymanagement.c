@@ -913,9 +913,8 @@ the_end:
     return status;
 }
 
-DYNAMIC_API PEP_STATUS keys_retrieve_by_flag(
+DYNAMIC_API PEP_STATUS own_keys_retrieve(
         PEP_SESSION session,
-        keypair_flags_t flags,
         stringlist_t **keylist
       )
 {
@@ -928,18 +927,17 @@ DYNAMIC_API PEP_STATUS keys_retrieve_by_flag(
     *keylist = NULL;
     stringlist_t *_keylist = NULL;
     
-    sqlite3_reset(session->keys_retrieve_by_flag);
-    sqlite3_bind_int(session->keys_retrieve_by_flag, 1, flags);
+    sqlite3_reset(session->own_keys_retrieve);
     
     int result;
     char *fpr = NULL;
     
     stringlist_t *_bl = _keylist;
     do {
-        result = sqlite3_step(session->keys_retrieve_by_flag);
+        result = sqlite3_step(session->own_keys_retrieve);
         switch (result) {
             case SQLITE_ROW:
-                fpr = strdup((const char *) sqlite3_column_text(session->keys_retrieve_by_flag, 0));
+                fpr = strdup((const char *) sqlite3_column_text(session->own_keys_retrieve, 0));
                 if(fpr == NULL)
                     goto enomem;
 
@@ -962,7 +960,7 @@ DYNAMIC_API PEP_STATUS keys_retrieve_by_flag(
         }
     } while (result != SQLITE_DONE);
     
-    sqlite3_reset(session->keys_retrieve_by_flag);
+    sqlite3_reset(session->own_keys_retrieve);
     if (status == PEP_STATUS_OK)
         *keylist = _keylist;
     else
@@ -978,6 +976,45 @@ the_end:
     return status;
 }
 
+// TODO: Unused for now, but should be used when sync receive old keys (ENGINE-145)
+DYNAMIC_API PEP_STATUS set_own_key(
+       PEP_SESSION session,
+       const char *address,
+       const char *fpr
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    assert(session &&
+           address && address[0] &&
+           fpr && fpr[0]
+          );
+    
+    if (!(session &&
+          address && address[0] &&
+          fpr && fpr[0]
+         ))
+        return PEP_ILLEGAL_VALUE;
+    
+    sqlite3_reset(session->set_own_key);
+    sqlite3_bind_text(session->set_own_key, 1, address, -1, SQLITE_STATIC);
+    sqlite3_bind_text(session->set_own_key, 2, fpr, -1, SQLITE_STATIC);
+
+    int result;
+    
+    result = sqlite3_step(session->set_own_key);
+    switch (result) {
+        case SQLITE_DONE:
+            status = PEP_STATUS_OK;
+            break;
+            
+        default:
+            status = PEP_UNKNOWN_ERROR;
+    }
+    
+    sqlite3_reset(session->set_own_key);
+    return status;
+}
 
 PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
                              bool *has_private) {

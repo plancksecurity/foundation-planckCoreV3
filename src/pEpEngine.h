@@ -412,21 +412,17 @@ typedef enum _PEP_comm_type {
 
 typedef enum _identity_flags {
     // the first octet flags are app defined settings
-    PEP_idf_not_for_sync = 1,   // don't use this identity for sync
-    PEP_idf_list = 2,           // identity of list of persons
+    PEP_idf_not_for_sync = 0x0001,   // don't use this identity for sync
+    PEP_idf_list = 0x0002,           // identity of list of persons
 
     // the second octet flags are calculated
-    PEP_idf_devicegroup = 256   // identity of a device group member
+    PEP_idf_devicegroup = 0x0100     // identity of a device group member
 } identity_flags;
 
 typedef unsigned int identity_flags_t;
 
-typedef enum _keypair_flags {
-    // the first octet flags are app defined settings
-
-    // the second octet flags are calculated
-    PEP_kpf_own_key = 512   // key (was) used for own identity
-} keypair_flags;
+// typedef enum _keypair_flags {
+// } keypair_flags;
 
 typedef unsigned int keypair_flags_t;
 
