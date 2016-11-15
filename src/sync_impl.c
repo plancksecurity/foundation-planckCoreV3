@@ -579,7 +579,7 @@ PEP_STATUS unicast_msg(
             }
             
             stringlist_t *keylist = NULL;
-            status = keys_retrieve_by_flag(session, PEP_kpf_own_key, &keylist);
+            status = own_keys_retrieve(session, &keylist);
             if (status != PEP_STATUS_OK)
                 goto error;
 
