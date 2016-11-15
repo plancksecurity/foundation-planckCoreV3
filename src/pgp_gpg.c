@@ -465,10 +465,10 @@ PEP_STATUS pgp_decrypt_and_verify(
                 reading = gpg.gpgme_data_read(plain, _buffer, length);
                 assert(length == reading);
 
-//                 if (detached_sig) {  // Is this safe to do?
+//                 if (dsigtext) {  // Is this safe to do?
 //                     gpgme_data_t sigdata;
-//                     gpg.gpgme_data_new_from_mem(&sigdata, detached_sig->value,
-//                                                 detached_sig->size, 0);
+//                     gpg.gpgme_data_new_from_mem(&sigdata, dsigtext,
+//                                                 dsigsize, 0);
 //                     gpgme_op_verify(session->ctx, sigdata, plain, NULL);
 //                 }
                 
