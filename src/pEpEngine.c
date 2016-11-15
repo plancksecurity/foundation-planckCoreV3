@@ -226,7 +226,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "create table if not exists own_keys (\n"
                 "   address text,\n"
                 "   user_id text,\n"
-                "   pgp_keypair_fpr text not null\n"
+                "   fpr text not null\n"
                 "       references pgp_keypair (fpr)\n"
                 "       on delete cascade,\n"
                 "   foreign key (address, user_id)\n"
@@ -354,7 +354,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
         sql_unset_identity_flags = 
                                  "update identity set flags = "
-                                 "    (((?1 & 255) ^ 65535) & (select flags from identity"
+                                 "    ( ~(?1 & 255) & (select flags from identity"
                                  "                   where address = ?2 and user_id = ?3)) "
                                  "where address = ?2 and user_id = ?3 ;";
 
