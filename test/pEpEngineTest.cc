@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
     stringlist_t *keylist;
 
     cout << "calling decrypt_and_verify()\n";
-    PEP_STATUS decrypt_result = decrypt_and_verify(session, cipher_buffer.data(), cipher_buffer.size(), &buf_text, &buf_size, &keylist);
+    PEP_STATUS decrypt_result = decrypt_and_verify(session, cipher_buffer.data(), cipher_buffer.size(), NULL, 0, &buf_text, &buf_size, &keylist);
 
     cout << "returning from decrypt_and_verify() with result == 0x" << std::hex << decrypt_result << "\n";
     assert(decrypt_result == PEP_DECRYPTED_AND_VERIFIED);

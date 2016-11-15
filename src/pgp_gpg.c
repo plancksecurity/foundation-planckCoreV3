@@ -384,6 +384,7 @@ void pgp_release(PEP_SESSION session, bool out_last)
 
 PEP_STATUS pgp_decrypt_and_verify(
     PEP_SESSION session, const char *ctext, size_t csize,
+    const char *dsigtext, size_t dsigsize,
     char **ptext, size_t *psize, stringlist_t **keylist
     )
 {
@@ -464,11 +465,29 @@ PEP_STATUS pgp_decrypt_and_verify(
                 reading = gpg.gpgme_data_read(plain, _buffer, length);
                 assert(length == reading);
 
+//                 if (detached_sig) {  // Is this safe to do?
+//                     gpgme_data_t sigdata;
+//                     gpg.gpgme_data_new_from_mem(&sigdata, detached_sig->value,
+//                                                 detached_sig->size, 0);
+//                     gpgme_op_verify(session->ctx, sigdata, plain, NULL);
+//                 }
+                
                 gpgme_verify_result =
                     gpg.gpgme_op_verify_result(session->ctx);
                 assert(gpgme_verify_result);
                 gpgme_signature = gpgme_verify_result->signatures;
 
+                if (!gpgme_signature && dsigtext) {
+                    gpgme_data_t sigdata;
+                    gpg.gpgme_data_new_from_mem(&sigdata, dsigtext,
+                                                dsigsize, 0);
+                    gpgme_op_verify(session->ctx, sigdata, plain, NULL);
+                    gpgme_verify_result =
+                        gpg.gpgme_op_verify_result(session->ctx);
+                    assert(gpgme_verify_result);
+                    gpgme_signature = gpgme_verify_result->signatures;
+                }
+                
                 if (gpgme_signature) {
                     stringlist_t *k;
                     _keylist = new_stringlist(NULL);

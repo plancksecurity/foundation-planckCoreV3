@@ -176,4 +176,6 @@ bloblist_t* consume_bloblist_head(bloblist_t *bloblist_head) {
     free(bloblist_head->mime_type);
     free(bloblist_head->filename);
     free(bloblist_head);
+    
+    return next;
 }

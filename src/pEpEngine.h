@@ -185,6 +185,10 @@ DYNAMIC_API void config_keep_sync_msg(PEP_SESSION session, bool enable);
 //        session (in)    session handle
 //        ctext (in)      cipher text to decrypt and/or verify
 //        csize (in)      size of cipher text
+//        dsigtext (in)   if extant, *detached* signature text for this
+//                        message (or NULL if not)
+//        dsize (in)      size of *detached* signature text for this
+//                        message (0, if no detached sig exists)
 //        ptext (out)     pointer to internal buffer with plain text
 //        psize (out)     size of plain text
 //        keylist (out)   list of key ids which where used to encrypt
@@ -208,6 +212,7 @@ DYNAMIC_API void config_keep_sync_msg(PEP_SESSION session, bool enable);
 
 DYNAMIC_API PEP_STATUS decrypt_and_verify(
         PEP_SESSION session, const char *ctext, size_t csize,
+        const char *dsigtext, size_t dsigsize,
         char **ptext, size_t *psize, stringlist_t **keylist
     );
 

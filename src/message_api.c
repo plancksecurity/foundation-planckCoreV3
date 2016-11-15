@@ -1357,6 +1357,24 @@ static PEP_STATUS _update_identity_for_incoming_message(
     return PEP_ILLEGAL_VALUE;
 }
 
+
+PEP_STATUS _get_detached_signature(message* msg, bloblist_t** signature_blob) {
+    bloblist_t* attach_curr = msg->attachments;
+    
+    while (attach_curr) {
+        if (strcasecmp(attach_curr->mime_type, "application/pgp-signature")) {
+            // TODO: deal with filenames. Is that sending-client-specific?
+            // In any event, presume the first one signs the plaintext. Hopefully
+            // that's sufficient?
+            *signature_blob = attach_curr;
+            break;
+        }
+        attach_curr = attach_curr->next;
+    }
+    
+    return PEP_STATUS_OK;
+}
+
 DYNAMIC_API PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -1397,9 +1415,11 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     if(status != PEP_STATUS_OK)
         return status;
 
+    // IF longmsg and longmsg_formatted are empty, we MAY have an encrypted body
+    // that's an attachment instead.
     // Check for encryption stuck in the first 2 attachments instead of the body
     // (This is currently based on AppleMail and a couple of other things
-    //  which are broken for us - we may find a more general case to deal with)
+    //  which were broken for us - we may find a more general case to deal with)
     if (!src->longmsg && !src->longmsg_formatted) {
         bloblist_t* attached_head = src->attachments;
         if (attached_head && strcasecmp(attached_head->mime_type, "application/pgp-encrypted")) {
@@ -1415,12 +1435,22 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 
                 src->longmsg = newlongmsg;
                 
-                // TODO: delete attachments here
+                // delete attachments here
                 src->attachments = enc_att_txt->next;
                 consume_bloblist_head(attached_head);
                 consume_bloblist_head(attached_head);
             }
         }
+    }
+    
+    // Get detached signature, if any
+    bloblist_t* detached_sig = NULL;
+    char* dsig_text = NULL;
+    size_t dsig_size = 0;
+    status = _get_detached_signature(src, &detached_sig);
+    if (detached_sig) {
+        dsig_text = detached_sig->value;
+        dsig_size = detached_sig->size;
     }
     
     PEP_cryptotech crypto = determine_encryption_format(src);
@@ -1464,7 +1494,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             NOT_IMPLEMENTED
     }
     status = cryptotech[crypto].decrypt_and_verify(session, ctext,
-                                                   csize, &ptext, &psize, &_keylist);
+                                                   csize, dsig_text, dsig_size, 
+                                                   &ptext, &psize, &_keylist);
     if (status > PEP_CANNOT_DECRYPT_UNKNOWN){
         goto pep_error;
     }
@@ -1519,8 +1550,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                         free(ptext);
                         ptext = NULL;
 
+                        // FIXME: What about attachments with separate sigs???
                         status = decrypt_and_verify(session, attctext, attcsize,
-                                &ptext, &psize, &_keylist);
+                                                    NULL, 0,
+                                                    &ptext, &psize, &_keylist);
                         free_stringlist(_keylist);
 
                         if (ptext) {
@@ -1650,7 +1683,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             _keylist = NULL;
 
             status = cryptotech[crypto].decrypt_and_verify(session, ctext,
-                csize, &re_ptext, &re_psize, &_keylist);
+                csize, dsig_text, dsig_size, &re_ptext, &re_psize, &_keylist);
             
             free(re_ptext);
             
