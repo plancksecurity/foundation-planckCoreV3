@@ -233,6 +233,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "       references identity\n"
                 "       on delete cascade,\n"
                 "   check (user_id = '" PEP_OWN_USERID "')\n"
+                "   primary key (address, fpr)\n"
                 ");\n" 
                 ,
             NULL,
