@@ -339,13 +339,15 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                            " ?1,"
                            " upper(replace(?2,' ','')),"
                            " ?3,"
-                           " (select"
-                           "   coalesce("
-                           "    (select flags from identity"
-                           "     where address = ?1 and"
-                           "           user_id = ?3),"
-                           "    0)"
-                           " ) | (?4 & 255)"
+                           // " (select"
+                           // "   coalesce("
+                           // "    (select flags from identity"
+                           // "     where address = ?1 and"
+                           // "           user_id = ?3),"
+                           // "    0)"
+                           // " ) | (?4 & 255)"
+                           /* set_identity ignores previous flags, and doesn't filter machine flags */
+                           " ?4"
                            ");";
         
         sql_set_identity_flags = "update identity set flags = "
@@ -1246,7 +1248,7 @@ DYNAMIC_API PEP_STATUS set_identity_flags(
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_IDENTITY;
 
-    identity->flags = flags;
+    identity->flags |= flags;
     return PEP_STATUS_OK;
 }
 
@@ -1277,7 +1279,7 @@ DYNAMIC_API PEP_STATUS unset_identity_flags(
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_IDENTITY;
 
-    identity->flags = flags;
+    identity->flags &= ~flags;
     return PEP_STATUS_OK;
 }
 
