@@ -410,12 +410,13 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                             "   join pgp_keypair on fpr = identity.main_key_id"
                             "   join trust on id = trust.user_id"
                             "       and pgp_keypair_fpr = identity.main_key_id"
-                            "   where identity.user_id = '" PEP_OWN_USERID "';";
+                            "   where identity.user_id = '" PEP_OWN_USERID "'"
+                            "       and (identity.flags & 1) = 0;";
         
         sql_own_keys_retrieve =  
                             "select fpr from own_keys"
                             "   join identity"
-                            "   where identity.flags & 1 = 0;"; // PEP_idf_not_for_sync
+                            "   where (identity.flags & 1) = 0;"; // PEP_idf_not_for_sync
 
         sql_set_own_key = "insert or replace into own_keys (address, user_id, fpr)"
                           " values (?1, '" PEP_OWN_USERID "', upper(replace(?2,' ','')));";
