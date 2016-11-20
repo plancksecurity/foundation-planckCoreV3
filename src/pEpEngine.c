@@ -415,7 +415,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         
         sql_own_keys_retrieve =  
                             "select fpr from own_keys"
-                            "   join identity"
+                            "   natural join identity"
                             "   where (identity.flags & 1) = 0;"; // PEP_idf_not_for_sync
 
         sql_set_own_key = "insert or replace into own_keys (address, user_id, fpr)"
