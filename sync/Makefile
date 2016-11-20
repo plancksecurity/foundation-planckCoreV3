@@ -13,4 +13,13 @@ skeleton: .skeletons
 .PHONY: clean
 
 clean:
-	rm -f *.xml *.xsl ../src/sync_fsm.* ../src/*.skeleton .statemachines .skeletons
+	rm -f *.xml *.xsl ../src/sync_fsm.* ../src/*.skeleton .statemachines .skeletons *.dot *.svg
+
+%.xml: %.fsm
+	yml2c $< -o $@
+
+%.dot: devicegroup.fsm gen_dot.ysl2
+	yml2proc -y gen_dot.ysl2 $<
+
+%.svg: %.dot
+	dot -Tsvg -o $@ $<
