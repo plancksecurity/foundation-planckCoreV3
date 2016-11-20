@@ -43,12 +43,10 @@ DYNAMIC_API PEP_STATUS update_identity(
 //      it can need a decent amount of time to return
 //      if you need to do this asynchronous, you need to return an identity
 //      with retrieve_next_identity() where pEp_identity.me is true
-//      myself() never writes flags; use set_identity_flags() for writing
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity);
 
-PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen);
-
+PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags);
 
 // retrieve_next_identity() - callback being called by do_keymanagement()
 //
