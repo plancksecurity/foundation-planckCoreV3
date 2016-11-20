@@ -73,7 +73,7 @@ PEP_STATUS elect_pubkey(
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen);
+PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags);
 
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
@@ -92,7 +92,7 @@ DYNAMIC_API PEP_STATUS update_identity(
 
     if (identity->me || (identity->user_id && strcmp(identity->user_id, PEP_OWN_USERID) == 0)) {
         identity->me = true;
-        return _myself(session, identity, false);
+        return _myself(session, identity, false, true);
     }
 
     int _no_user_id = EMPTYSTR(identity->user_id);
@@ -104,7 +104,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                 &stored_identity);
         if (status == PEP_STATUS_OK) {
             free_identity(stored_identity);
-            return _myself(session, identity, false);
+            return _myself(session, identity, false, true);
         }
 
         free(identity->user_id);
@@ -400,7 +400,7 @@ PEP_STATUS _has_usable_priv_key(PEP_SESSION session, char* fpr,
     return status;
 }
 
-PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen)
+PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags)
 {
     pEp_identity *stored_identity;
     PEP_STATUS status;
@@ -419,6 +419,8 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen)
 
     identity->comm_type = PEP_ct_pEp;
     identity->me = true;
+    if(ignore_flags)
+        identity->flags = 0;
     
     if (EMPTYSTR(identity->user_id))
     {
@@ -463,7 +465,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen)
             }
         }
         
-        identity->flags = stored_identity->flags;
+        identity->flags = (identity->flags & 255) | stored_identity->flags;
 
         free_identity(stored_identity);
     }
@@ -483,7 +485,6 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen)
         
         // N.B. has_private is never true if the returned status is not PEP_STATUS_OK
         if (has_private) {
-            identity->flags = 0;
             dont_use_input_fpr = false;
         }
     }
@@ -510,7 +511,6 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen)
         }
         
         if (has_private) {
-            identity->flags = 0;
             dont_use_input_fpr = false;
         }
         else { // OK, we've tried everything. Time to generate new keys.
@@ -621,7 +621,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen)
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 {
-    return _myself(session, identity, true);
+    return _myself(session, identity, true, false);
 }
 
 DYNAMIC_API PEP_STATUS register_examine_function(
