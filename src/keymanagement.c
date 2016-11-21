@@ -822,9 +822,10 @@ DYNAMIC_API PEP_STATUS own_key_is_listed(
     return status;
 }
 
-DYNAMIC_API PEP_STATUS own_identities_retrieve(
+PEP_STATUS _own_identities_retrieve(
         PEP_SESSION session,
-        identity_list **own_identities
+        identity_list **own_identities,
+        identity_flags_t excluded_flags
       )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -852,6 +853,7 @@ DYNAMIC_API PEP_STATUS own_identities_retrieve(
     
     identity_list *_bl = _own_identities;
     do {
+        sqlite3_bind_int(session->own_identities_retrieve, 1, excluded_flags);
         result = sqlite3_step(session->own_identities_retrieve);
         switch (result) {
             case SQLITE_ROW:
@@ -913,9 +915,18 @@ the_end:
     return status;
 }
 
-DYNAMIC_API PEP_STATUS own_keys_retrieve(
+DYNAMIC_API PEP_STATUS own_identities_retrieve(
         PEP_SESSION session,
-        stringlist_t **keylist
+        identity_list **own_identities
+      )
+{
+    return _own_identities_retrieve(session, own_identities, 0);
+}
+
+PEP_STATUS _own_keys_retrieve(
+        PEP_SESSION session,
+        stringlist_t **keylist,
+        identity_flags_t excluded_flags
       )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -934,6 +945,7 @@ DYNAMIC_API PEP_STATUS own_keys_retrieve(
     
     stringlist_t *_bl = _keylist;
     do {
+        sqlite3_bind_int(session->own_keys_retrieve, 1, excluded_flags);
         result = sqlite3_step(session->own_keys_retrieve);
         switch (result) {
             case SQLITE_ROW:
@@ -974,6 +986,11 @@ enomem:
     
 the_end:
     return status;
+}
+
+DYNAMIC_API PEP_STATUS own_keys_retrieve(PEP_SESSION session, stringlist_t **keylist)
+{
+    return _own_keys_retrieve(session, keylist, 0);
 }
 
 // TODO: Unused for now, but should be used when sync receive old keys (ENGINE-145)

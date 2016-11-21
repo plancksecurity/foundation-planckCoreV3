@@ -171,6 +171,22 @@ DYNAMIC_API PEP_STATUS own_key_is_listed(
     );
 
 
+// _own_identities_retrieve() - retrieve all own identities
+//
+//  parameters:
+//      session (in)            session to use
+//      own_identities (out)    list of own identities
+//      excluded_flags (int)    flags to exclude from results
+//
+//  caveat:
+//      the ownership of the copy of own_identities goes to the caller
+
+DYNAMIC_API PEP_STATUS _own_identities_retrieve(
+        PEP_SESSION session,
+        identity_list **own_identities,
+        identity_flags_t excluded_flags
+    );
+
 // own_identities_retrieve() - retrieve all own identities
 //
 //  parameters:
@@ -187,6 +203,21 @@ DYNAMIC_API PEP_STATUS own_identities_retrieve(
 
 PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
                              bool *has_private);
+
+// _own_keys_retrieve() - retrieve all flagged keypair fingerprints 
+//
+//  parameters:
+//      session (in)            session to use
+//      keylist (out)           list of fingerprints
+//      excluded_flags (int)    flags to exclude from results
+//
+//  caveat:
+//      the ownership of the list goes to the caller
+DYNAMIC_API PEP_STATUS _own_keys_retrieve(
+        PEP_SESSION session,
+        stringlist_t **keylist,
+        identity_flags_t excluded_flags
+      );
 
 // own_keys_retrieve() - retrieve all flagged keypair fingerprints 
 //
