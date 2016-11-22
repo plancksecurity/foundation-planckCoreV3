@@ -2,6 +2,10 @@
 
 See also README.txt for general information.
 
+## Environment
+
+`export LANG=en_US.UTF-8` is recommended on OS X.
+
 ## Dependencies
 
 ### MacPorts
