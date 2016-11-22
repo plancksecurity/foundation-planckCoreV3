@@ -429,6 +429,7 @@ PEP_STATUS pgp_decrypt_and_verify(
 
     dt = gpg.gpgme_data_identify(cipher);
     switch (dt) {
+    case GPGME_DATA_TYPE_PGP_ENCRYPTED:
     case GPGME_DATA_TYPE_PGP_SIGNED:
     case GPGME_DATA_TYPE_PGP_OTHER:
         gpgme_error = gpg.gpgme_op_decrypt_verify(session->ctx, cipher,
