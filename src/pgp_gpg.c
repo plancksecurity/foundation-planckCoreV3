@@ -433,7 +433,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     switch (dt) {
     case GPGME_DATA_TYPE_PGP_SIGNED:
     case GPGME_DATA_TYPE_PGP_OTHER:
- //   case GPGME_DATA_TYPE_PGP_ENCRYPTED:
+    case GPGME_DATA_TYPE_PGP_ENCRYPTED:
         if (dsigtext) {
             gpgme_error = gpg.gpgme_op_decrypt(session->ctx, cipher, plain);
         }
@@ -448,12 +448,6 @@ PEP_STATUS pgp_decrypt_and_verify(
         switch (gpgme_error) {
             case GPG_ERR_NO_ERROR:
             {
-                if (dsigtext) {
-                    gpgme_data_t sigdata;
-                    gpg.gpgme_data_new_from_mem(&sigdata, dsigtext,
-                                                dsigsize, 0);
-                    gpgme_op_verify(session->ctx, sigdata, plain, NULL);
-                }
                 gpgme_verify_result_t gpgme_verify_result;
                 char *_buffer = NULL;
                 size_t reading;
@@ -478,28 +472,29 @@ PEP_STATUS pgp_decrypt_and_verify(
                 reading = gpg.gpgme_data_read(plain, _buffer, length);
                 assert(length == reading);
 
-//                 if (dsigtext) {  // Is this safe to do?
-//                     gpgme_data_t sigdata;
-//                     gpg.gpgme_data_new_from_mem(&sigdata, dsigtext,
-//                                                 dsigsize, 0);
-//                     gpgme_op_verify(session->ctx, sigdata, plain, NULL);
-//                 }
+                if (dsigtext) {  // Is this safe to do?
+                    gpgme_data_t sigdata;
+                    // FIXME: replace with verify_text?
+                    gpg.gpgme_data_new_from_mem(&sigdata, dsigtext,
+                                                dsigsize, 0);
+                    gpgme_op_verify(session->ctx, sigdata, plain, NULL);
+                }
 
                 gpgme_verify_result =
                     gpg.gpgme_op_verify_result(session->ctx);
                 assert(gpgme_verify_result);
                 gpgme_signature = gpgme_verify_result->signatures;
 
-//                 if (!gpgme_signature && dsigtext) {
-//                     gpgme_data_t sigdata;
-//                     gpg.gpgme_data_new_from_mem(&sigdata, dsigtext,
-//                                                 dsigsize, 0);
-//                     gpgme_op_verify(session->ctx, sigdata, plain, NULL);
-//                     gpgme_verify_result =
-//                         gpg.gpgme_op_verify_result(session->ctx);
-//                     assert(gpgme_verify_result);
-//                     gpgme_signature = gpgme_verify_result->signatures;
-//                 }
+                // if (!gpgme_signature && dsigtext) {
+                //     gpgme_data_t sigdata;
+                //     gpg.gpgme_data_new_from_mem(&sigdata, dsigtext,
+                //                                 dsigsize, 0);
+                //     gpgme_op_verify(session->ctx, sigdata, plain, NULL);
+                //     gpgme_verify_result_t result2 =
+                //         gpg.gpgme_op_verify_result(session->ctx);
+                //     assert(result2);
+                //     gpgme_signature = result2->signatures;
+                // }
 
                 if (gpgme_signature) {
                     stringlist_t *k;
@@ -514,6 +509,7 @@ PEP_STATUS pgp_decrypt_and_verify(
                     k = _keylist;
 
                     result = PEP_DECRYPTED_AND_VERIFIED;
+                    gpg.gpgme_check(NULL);
                     do {
                         switch (_GPGERR(gpgme_signature->status)) {
                         case GPG_ERR_NO_ERROR:
