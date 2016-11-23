@@ -46,7 +46,7 @@ int main() {
     
     assert(strcmp(me->fpr, prev_fpr));
 
-    identity_list *to = new_identity_list(new_identity("vb@dingens.org", NULL, "42", "Volker Birk"));
+    identity_list *to = new_identity_list(new_identity("pep.test.alice@pep-project.org", NULL, "42", "pEp Test Alice (test key don't use)"));
     message *msg = new_message(PEP_dir_outgoing);
     assert(msg);
     msg->from = me;
