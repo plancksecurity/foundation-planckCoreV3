@@ -7,6 +7,7 @@ void pgp_release(PEP_SESSION session, bool out_last);
 
 PEP_STATUS pgp_decrypt_and_verify(
         PEP_SESSION session, const char *ctext, size_t csize,
+        const char *dsigtext, size_t dsigsize,
         char **ptext, size_t *psize, stringlist_t **keylist
     );
 
@@ -82,11 +83,10 @@ PEP_STATUS pgp_key_created(
     );
 
 PEP_STATUS pgp_contains_priv_key(
-    PEP_SESSION session, 
+    PEP_SESSION session,
     const char *fpr,
     bool *has_private);
 
 PEP_STATUS pgp_find_private_keys(
     PEP_SESSION session, const char *pattern, stringlist_t **keylist
 );
-
