@@ -6,6 +6,9 @@ See also README.txt for general information.
 
 `export LANG=en_US.UTF-8` is recommended on OS X.
 
+`export DYLD_FALLBACK_LIBRARY_PATH=$HOME/lib:/opt/local/lib` will help if you
+build in your home and with MacPorts.
+
 ## Dependencies
 
 ### MacPorts

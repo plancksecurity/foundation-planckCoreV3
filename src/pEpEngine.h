@@ -587,7 +587,7 @@ DYNAMIC_API PEP_STATUS get_device_group(
 DYNAMIC_API PEP_STATUS set_identity_flags(
         PEP_SESSION session,
         pEp_identity *identity,
-        unsigned int flags
+        identity_flags_t flags
     );
 
 // unset_identity_flags() - update identity flags on existing identity
@@ -607,7 +607,7 @@ DYNAMIC_API PEP_STATUS set_identity_flags(
 DYNAMIC_API PEP_STATUS unset_identity_flags(
         PEP_SESSION session,
         pEp_identity *identity,
-        unsigned int flags
+        identity_flags_t flags
     );
 
 // mark_as_compromized() - mark key in trust db as compromized
