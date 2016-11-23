@@ -1392,6 +1392,7 @@ DYNAMIC_API PEP_STATUS least_trust(
 
 DYNAMIC_API PEP_STATUS decrypt_and_verify(
     PEP_SESSION session, const char *ctext, size_t csize,
+    const char *dsigtext, size_t dsigsize,
     char **ptext, size_t *psize, stringlist_t **keylist
     )
 {
@@ -1406,7 +1407,7 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
         return PEP_ILLEGAL_VALUE;
 
     return session->cryptotech[PEP_crypt_OpenPGP].decrypt_and_verify(
-            session, ctext, csize, ptext, psize, keylist);
+            session, ctext, csize, dsigtext, dsigsize, ptext, psize, keylist);
 }
 
 DYNAMIC_API PEP_STATUS encrypt_and_sign(

@@ -7,6 +7,7 @@ void pgp_release(PEP_SESSION session, bool out_last);
 
 PEP_STATUS pgp_decrypt_and_verify(
         PEP_SESSION session, const char *ctext, size_t csize,
+        const char *dsigtext, size_t dsigsize,
         char **ptext, size_t *psize, stringlist_t **keylist
     );
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pEpEngine.h"
+#include "bloblist.h"
 
 typedef enum _PEP_cryptotech {
     PEP_crypt_none = 0,
@@ -14,6 +15,7 @@ typedef enum _PEP_cryptotech {
 
 typedef PEP_STATUS (*decrypt_and_verify_t)(
         PEP_SESSION session, const char *ctext, size_t csize,
+        const char *dsigtext, size_t dsigsize,
         char **ptext, size_t *psize, stringlist_t **keylist
     );
 
