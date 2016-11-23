@@ -44,3 +44,10 @@ src/sync_fsm.c
 *.xml
 *.dot
 *.svg
+.imported
+gpg-agent.conf
+gpg.conf
+pubring.gpg
+random_seed
+secring.gpg
+trustdb.gpg
