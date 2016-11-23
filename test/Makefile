@@ -1,5 +1,7 @@
 include ../Makefile.conf
 
+export GNUPGHOME=.
+
 CC?=g++ -std=gnu++11 -pthread
 CXX?=g++ -std=gnu++11 -pthread
 LD?=$(CXX)
@@ -27,9 +29,13 @@ all: $(TARGET) $(UNIT_TESTS)
 
 clean:
 	rm -f *.o $(TARGET) *.a *~ $(UNIT_TESTS) pep_Dokument_Titel.pdf msg4.asc
-	rm -Rf *.dSYM
+	rm -Rf *.dSYM .imported pubring.gpg secring.gpg random_seed *.conf trustdb.gpg
 
-test: pEpEngineTest
+.imported:
+	-cat 0x*.asc *_sec.asc | gpg2 --import
+	touch .imported
+
+test: pEpEngineTest .imported
 	LD_LIBRARY_PATH=~/lib:../src ./pEpEngineTest
 
 %_test_run : %_test

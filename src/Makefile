@@ -43,7 +43,7 @@ endif
 ifeq ("$(OPENPGP)","GPG")
 	NO_SOURCE=pgp_netpgp.c
 	CFLAGS+= -DUSE_GPG
-	LDFLAGS+= -lgpgme-pthread 
+	LDFLAGS+= -lgpgme
 else ifeq ("$(OPENPGP)","NETPGP")
 	NO_SOURCE=pgp_gpg.c
 	CFLAGS+= -DUSE_NETPGP
