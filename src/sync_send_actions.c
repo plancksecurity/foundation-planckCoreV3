@@ -134,7 +134,7 @@ PEP_STATUS sendGroupKeys(
     if (!msg)
         goto enomem;
 
-    status = own_identities_retrieve(session, &kl);
+    status = _own_identities_retrieve(session, &kl, PEP_idf_not_for_sync);
     if (status != PEP_STATUS_OK)
         goto error;
     if (IdentityList_from_identity_list(kl, &msg->payload.choice.groupKeys.ownIdentities) == NULL)
@@ -190,7 +190,7 @@ PEP_STATUS sendGroupUpdate(
     if (!msg)
         goto enomem;
 
-    status = own_identities_retrieve(session, &kl);
+    status = _own_identities_retrieve(session, &kl, PEP_idf_not_for_sync);
     if (status != PEP_STATUS_OK)
         goto error;
     if (IdentityList_from_identity_list(kl, &msg->payload.choice.groupUpdate.ownIdentities) == NULL)

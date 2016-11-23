@@ -431,9 +431,11 @@ PEP_STATUS pgp_decrypt_and_verify(
 
     dt = gpg.gpgme_data_identify(cipher);
     switch (dt) {
+#if GPGME_VERSION_NUMBER > 0x010600
+    case GPGME_DATA_TYPE_PGP_ENCRYPTED:
+#endif
     case GPGME_DATA_TYPE_PGP_SIGNED:
     case GPGME_DATA_TYPE_PGP_OTHER:
-    case GPGME_DATA_TYPE_PGP_ENCRYPTED:
         if (dsigtext) {
             gpgme_error = gpg.gpgme_op_decrypt(session->ctx, cipher, plain);
         }

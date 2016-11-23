@@ -8,7 +8,7 @@ ifeq ($(BUILD_FOR),Darwin)
 TARGET?=libpEpEngine.dylib
 MACOSX_VERSION_MIN=10.6
 GPGME_IN=$(HOME)
-LIBGPGME=libgpgme-pthread.dylib
+LIBGPGME?=libgpgme-pthread.dylib
 CC?=clang -std=c99 -pthread
 LD?=clang
 CFLAGS?=-I$(GPGME_IN)/include -I$(HOME)/include -I/opt/local/include $(OPTIMIZE) -pedantic \
@@ -43,7 +43,7 @@ endif
 ifeq ("$(OPENPGP)","GPG")
 	NO_SOURCE=pgp_netpgp.c
 	CFLAGS+= -DUSE_GPG
-	LDFLAGS+= -lgpgme-pthread 
+	LDFLAGS+= -lgpgme
 else ifeq ("$(OPENPGP)","NETPGP")
 	NO_SOURCE=pgp_gpg.c
 	CFLAGS+= -DUSE_NETPGP

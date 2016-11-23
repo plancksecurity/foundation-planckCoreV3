@@ -1994,7 +1994,7 @@ DYNAMIC_API PEP_STATUS identity_rating(
         return PEP_ILLEGAL_VALUE;
 
     if (ident->me)
-        status = _myself(session, ident, false);
+        status = _myself(session, ident, false, true);
     else
         status = update_identity(session, ident);
 

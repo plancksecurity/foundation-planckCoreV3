@@ -73,7 +73,7 @@ PEP_STATUS elect_pubkey(
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen);
+PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags);
 
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
@@ -92,7 +92,7 @@ DYNAMIC_API PEP_STATUS update_identity(
 
     if (identity->me || (identity->user_id && strcmp(identity->user_id, PEP_OWN_USERID) == 0)) {
         identity->me = true;
-        return _myself(session, identity, false);
+        return _myself(session, identity, false, true);
     }
 
     int _no_user_id = EMPTYSTR(identity->user_id);
@@ -104,7 +104,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                 &stored_identity);
         if (status == PEP_STATUS_OK) {
             free_identity(stored_identity);
-            return _myself(session, identity, false);
+            return _myself(session, identity, false, true);
         }
 
         free(identity->user_id);
@@ -400,7 +400,7 @@ PEP_STATUS _has_usable_priv_key(PEP_SESSION session, char* fpr,
     return status;
 }
 
-PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen)
+PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags)
 {
     pEp_identity *stored_identity;
     PEP_STATUS status;
@@ -419,6 +419,8 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen)
 
     identity->comm_type = PEP_ct_pEp;
     identity->me = true;
+    if(ignore_flags)
+        identity->flags = 0;
     
     if (EMPTYSTR(identity->user_id))
     {
@@ -463,7 +465,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen)
             }
         }
         
-        identity->flags = stored_identity->flags;
+        identity->flags = (identity->flags & 255) | stored_identity->flags;
 
         free_identity(stored_identity);
     }
@@ -483,7 +485,6 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen)
         
         // N.B. has_private is never true if the returned status is not PEP_STATUS_OK
         if (has_private) {
-            identity->flags = 0;
             dont_use_input_fpr = false;
         }
     }
@@ -510,7 +511,6 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen)
         }
         
         if (has_private) {
-            identity->flags = 0;
             dont_use_input_fpr = false;
         }
         else { // OK, we've tried everything. Time to generate new keys.
@@ -621,7 +621,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen)
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 {
-    return _myself(session, identity, true);
+    return _myself(session, identity, true, false);
 }
 
 DYNAMIC_API PEP_STATUS register_examine_function(
@@ -822,9 +822,10 @@ DYNAMIC_API PEP_STATUS own_key_is_listed(
     return status;
 }
 
-DYNAMIC_API PEP_STATUS own_identities_retrieve(
+PEP_STATUS _own_identities_retrieve(
         PEP_SESSION session,
-        identity_list **own_identities
+        identity_list **own_identities,
+        identity_flags_t excluded_flags
       )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -852,6 +853,7 @@ DYNAMIC_API PEP_STATUS own_identities_retrieve(
     
     identity_list *_bl = _own_identities;
     do {
+        sqlite3_bind_int(session->own_identities_retrieve, 1, excluded_flags);
         result = sqlite3_step(session->own_identities_retrieve);
         switch (result) {
             case SQLITE_ROW:
@@ -913,10 +915,18 @@ the_end:
     return status;
 }
 
-DYNAMIC_API PEP_STATUS keys_retrieve_by_flag(
+DYNAMIC_API PEP_STATUS own_identities_retrieve(
         PEP_SESSION session,
-        keypair_flags_t flags,
-        stringlist_t **keylist
+        identity_list **own_identities
+      )
+{
+    return _own_identities_retrieve(session, own_identities, 0);
+}
+
+PEP_STATUS _own_keys_retrieve(
+        PEP_SESSION session,
+        stringlist_t **keylist,
+        identity_flags_t excluded_flags
       )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -928,18 +938,18 @@ DYNAMIC_API PEP_STATUS keys_retrieve_by_flag(
     *keylist = NULL;
     stringlist_t *_keylist = NULL;
     
-    sqlite3_reset(session->keys_retrieve_by_flag);
-    sqlite3_bind_int(session->keys_retrieve_by_flag, 1, flags);
+    sqlite3_reset(session->own_keys_retrieve);
     
     int result;
     char *fpr = NULL;
     
     stringlist_t *_bl = _keylist;
     do {
-        result = sqlite3_step(session->keys_retrieve_by_flag);
+        sqlite3_bind_int(session->own_keys_retrieve, 1, excluded_flags);
+        result = sqlite3_step(session->own_keys_retrieve);
         switch (result) {
             case SQLITE_ROW:
-                fpr = strdup((const char *) sqlite3_column_text(session->keys_retrieve_by_flag, 0));
+                fpr = strdup((const char *) sqlite3_column_text(session->own_keys_retrieve, 0));
                 if(fpr == NULL)
                     goto enomem;
 
@@ -962,7 +972,7 @@ DYNAMIC_API PEP_STATUS keys_retrieve_by_flag(
         }
     } while (result != SQLITE_DONE);
     
-    sqlite3_reset(session->keys_retrieve_by_flag);
+    sqlite3_reset(session->own_keys_retrieve);
     if (status == PEP_STATUS_OK)
         *keylist = _keylist;
     else
@@ -978,6 +988,50 @@ the_end:
     return status;
 }
 
+DYNAMIC_API PEP_STATUS own_keys_retrieve(PEP_SESSION session, stringlist_t **keylist)
+{
+    return _own_keys_retrieve(session, keylist, 0);
+}
+
+// TODO: Unused for now, but should be used when sync receive old keys (ENGINE-145)
+DYNAMIC_API PEP_STATUS set_own_key(
+       PEP_SESSION session,
+       const char *address,
+       const char *fpr
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    assert(session &&
+           address && address[0] &&
+           fpr && fpr[0]
+          );
+    
+    if (!(session &&
+          address && address[0] &&
+          fpr && fpr[0]
+         ))
+        return PEP_ILLEGAL_VALUE;
+    
+    sqlite3_reset(session->set_own_key);
+    sqlite3_bind_text(session->set_own_key, 1, address, -1, SQLITE_STATIC);
+    sqlite3_bind_text(session->set_own_key, 2, fpr, -1, SQLITE_STATIC);
+
+    int result;
+    
+    result = sqlite3_step(session->set_own_key);
+    switch (result) {
+        case SQLITE_DONE:
+            status = PEP_STATUS_OK;
+            break;
+            
+        default:
+            status = PEP_UNKNOWN_ERROR;
+    }
+    
+    sqlite3_reset(session->set_own_key);
+    return status;
+}
 
 PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
                              bool *has_private) {

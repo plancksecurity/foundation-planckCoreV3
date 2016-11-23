@@ -579,7 +579,7 @@ PEP_STATUS unicast_msg(
             }
             
             stringlist_t *keylist = NULL;
-            status = keys_retrieve_by_flag(session, PEP_kpf_own_key, &keylist);
+            status = _own_keys_retrieve(session, &keylist, PEP_idf_not_for_sync);
             if (status != PEP_STATUS_OK)
                 goto error;
 
@@ -641,7 +641,7 @@ PEP_STATUS multicast_self_msg(
         return PEP_ILLEGAL_VALUE;
 
     identity_list *own_identities = NULL;
-    status = own_identities_retrieve(session, &own_identities);
+    status = _own_identities_retrieve(session, &own_identities, PEP_idf_not_for_sync);
     if (status != PEP_STATUS_OK)
         return status;
 
