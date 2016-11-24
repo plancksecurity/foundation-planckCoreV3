@@ -1479,9 +1479,11 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     //
     if (!src->longmsg && !src->longmsg_formatted) {
         bloblist_t* attached_head = src->attachments;
-        if (attached_head && strcasecmp(attached_head->mime_type, "application/pgp-encrypted")) {
+        if (attached_head && 
+            strcasecmp(attached_head->mime_type, "application/pgp-encrypted") == 0) {
             bloblist_t* enc_att_txt = attached_head->next;
-            if (enc_att_txt && strcasecmp(enc_att_txt->mime_type, "application/octet-stream")) {
+            if (enc_att_txt && 
+                strcasecmp(enc_att_txt->mime_type, "application/octet-stream") == 0) {
                 size_t enc_att_len = enc_att_txt->size;
                 char* newlongmsg = calloc(1, enc_att_len + 1);
                 if (newlongmsg == NULL)
