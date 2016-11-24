@@ -166,3 +166,16 @@ DYNAMIC_API int bloblist_length(const bloblist_t *bloblist)
     return len;
 }
 
+bloblist_t* consume_bloblist_head(bloblist_t *bloblist_head) {
+    if (!bloblist_head)
+        return NULL;
+    
+    bloblist_t* next = bloblist_head->next;
+        
+    free(bloblist_head->value);
+    free(bloblist_head->mime_type);
+    free(bloblist_head->filename);
+    free(bloblist_head);
+    
+    return next;
+}

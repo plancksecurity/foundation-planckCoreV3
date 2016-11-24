@@ -92,8 +92,8 @@ typedef enum {
     PEP_STATEMACHINE_INHIBITED_EVENT                = 0x0986,
 
     PEP_COMMIT_FAILED                               = 0xff01,
-    PEP_MESSAGE_CONSUMED                            = 0xff02,
-    PEP_MESSAGE_DISCARDED                           = 0xff03,
+    PEP_MESSAGE_CONSUME                             = 0xff02,
+    PEP_MESSAGE_IGNORE                              = 0xff03,
 
     PEP_RECORD_NOT_FOUND                            = -6,
     PEP_CANNOT_CREATE_TEMP_FILE                     = -5,
@@ -185,6 +185,10 @@ DYNAMIC_API void config_keep_sync_msg(PEP_SESSION session, bool enable);
 //        session (in)    session handle
 //        ctext (in)      cipher text to decrypt and/or verify
 //        csize (in)      size of cipher text
+//        dsigtext (in)   if extant, *detached* signature text for this
+//                        message (or NULL if not)
+//        dsize (in)      size of *detached* signature text for this
+//                        message (0, if no detached sig exists)
 //        ptext (out)     pointer to internal buffer with plain text
 //        psize (out)     size of plain text
 //        keylist (out)   list of key ids which where used to encrypt
@@ -208,6 +212,7 @@ DYNAMIC_API void config_keep_sync_msg(PEP_SESSION session, bool enable);
 
 DYNAMIC_API PEP_STATUS decrypt_and_verify(
         PEP_SESSION session, const char *ctext, size_t csize,
+        const char *dsigtext, size_t dsigsize,
         char **ptext, size_t *psize, stringlist_t **keylist
     );
 
@@ -412,14 +417,19 @@ typedef enum _PEP_comm_type {
 
 typedef enum _identity_flags {
     // the first octet flags are app defined settings
-    PEP_idf_not_for_sync = 1,   // don't use this identity for sync
-    PEP_idf_list = 2,           // identity of list of persons
+    PEP_idf_not_for_sync = 0x0001,   // don't use this identity for sync
+    PEP_idf_list = 0x0002,           // identity of list of persons
 
     // the second octet flags are calculated
-    PEP_idf_devicegroup = 256   // identity of a device group member
+    PEP_idf_devicegroup = 0x0100     // identity of a device group member
 } identity_flags;
 
 typedef unsigned int identity_flags_t;
+
+// typedef enum _keypair_flags {
+// } keypair_flags;
+
+typedef unsigned int keypair_flags_t;
 
 typedef struct _pEp_identity {
     char *address;              // C string with address UTF-8 encoded
@@ -582,9 +592,28 @@ DYNAMIC_API PEP_STATUS get_device_group(
 DYNAMIC_API PEP_STATUS set_identity_flags(
         PEP_SESSION session,
         pEp_identity *identity,
-        unsigned int flags
+        identity_flags_t flags
     );
 
+// unset_identity_flags() - update identity flags on existing identity
+//
+//    parameters:
+//        session (in)        session handle
+//        identity (in,out)   pointer to pEp_identity structure
+//        flags (in)          new value for flags
+//
+//    return value:
+//        PEP_STATUS_OK = 0             encryption and signing succeeded
+//        PEP_CANNOT_SET_IDENTITY       update of identity failed
+//
+//    caveat:
+//        address and user_id must be given in identity
+
+DYNAMIC_API PEP_STATUS unset_identity_flags(
+        PEP_SESSION session,
+        pEp_identity *identity,
+        identity_flags_t flags
+    );
 
 // mark_as_compromized() - mark key in trust db as compromized
 //
@@ -998,6 +1027,20 @@ PEP_STATUS key_created(
         time_t *created
     );
 
+
+// find_private_keys() - find keys in keyring
+//
+//  parameters:
+//      session (in)            session handle
+//      pattern (in)            key id, user id or address to search for as
+//                              UTF-8 string
+//      keylist (out)           list of fingerprints found or NULL on error
+//
+//  caveat:
+//        the ownerships of keylist isgoing to the caller
+//        the caller must use free_stringlist() to free it
+PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
+                             stringlist_t **keylist);
 
 // get_engine_version() - returns the current version of pEpEngine (this is different
 //                        from the pEp protocol version!)

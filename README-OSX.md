@@ -2,6 +2,13 @@
 
 See also README.txt for general information.
 
+## Environment
+
+`export LANG=en_US.UTF-8` is recommended on OS X.
+
+`export DYLD_FALLBACK_LIBRARY_PATH=$HOME/lib:/opt/local/lib` will help if you
+build in your home and with MacPorts.
+
 ## Dependencies
 
 ### MacPorts
@@ -12,15 +19,6 @@ Install [MacPorts](https://www.macports.org/) for your
 Note that you need [Xcode installed](https://www.macports.org/install.php)
 for MacPorts, and for building the engine. You also need to accept Xcode's EULA.
 
-*Note*: Use the script `macports_env.sh` (or a similar one) to set up a clean build environment
-before building the engine:
-
-```
-. macports_env.sh
-```
-
-If you don't use that environment, please make sure you've set up all search paths correctly.
-
 #### MacPorts dependencies
 
 ```
@@ -30,6 +28,14 @@ sudo port install gpgme
 sudo port install automake
 sudo port install asn1c
 sudo port install zlib
+```
+
+There are others, please refer to the engine README.txt.
+
+Make sure that `python` is a version 2 one:
+
+```
+sudo port select python python27
 ```
 
 ### Other dependecies
@@ -55,19 +61,6 @@ cd libetpan-osx/
 ./autogen.sh
 make
 cp ./src/.libs/libetpan.a ~/lib/
-```
-
-##### libetpan with xcodebuild
-
-The build with autoconf (see previous section) is preferred. This is just for completeness.
-*Don't actually build libetpan with xcodebuild.*
-
-```
-git clone https://github.com/fdik/libetpan libetpan-osx
-cd libetpan-osx/build-mac
-xcodebuild -project libetpan.xcodeproj/ -target "static libetpan"
-mkdir ~/lib
-cp build/Release/libetpan.a ~/lib/
 ```
 
 ### Configuration
@@ -102,13 +95,8 @@ Since the `system.db` rarely changes, `make -C db install` is not needed for eve
 
 ### Run tests
 
-Make sure that you add `/opt/local/lib` to each definition of `LD_LIBRARY_PATH`
-in `test/Makefile`. This ensures that libgpgme will be found:
-
-```
-test: pEpEngineTest
-        LD_LIBRARY_PATH=/opt/local/lib:~/lib:../src ./pEpEngineTest
-```
+If you installed the test keys in your keyring (README.txt),
+this should just work:
 
 ```
 make test

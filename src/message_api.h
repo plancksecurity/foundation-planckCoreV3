@@ -157,7 +157,9 @@ typedef enum _PEP_color {
 DYNAMIC_API PEP_color color_from_rating(PEP_rating rating);
 
 typedef enum _PEP_decrypt_flags {
-    PEP_decrypt_flag_own_private_key = 0x1
+    PEP_decrypt_flag_own_private_key = 0x1,
+    PEP_decrypt_flag_consume = 0x2,
+    PEP_decrypt_flag_ignore = 0x4
 } PEP_decrypt_flags; 
 
 typedef unsigned int PEP_decrypt_flags_t;

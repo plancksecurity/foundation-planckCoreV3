@@ -41,3 +41,13 @@ test/msg_encrypt_for_self.asc
 tags
 asn.1/pEpEngineASN1/pEpEngineASN1.vcxproj.user
 src/sync_fsm.c
+*.xml
+*.dot
+*.svg
+.imported
+gpg-agent.conf
+gpg.conf
+pubring.gpg
+random_seed
+secring.gpg
+trustdb.gpg

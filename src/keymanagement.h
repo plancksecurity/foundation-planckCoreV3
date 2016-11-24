@@ -43,10 +43,10 @@ DYNAMIC_API PEP_STATUS update_identity(
 //      it can need a decent amount of time to return
 //      if you need to do this asynchronous, you need to return an identity
 //      with retrieve_next_identity() where pEp_identity.me is true
-//      myself() never writes flags; use set_identity_flags() for writing
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity);
 
+PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags);
 
 // retrieve_next_identity() - callback being called by do_keymanagement()
 //
@@ -171,6 +171,22 @@ DYNAMIC_API PEP_STATUS own_key_is_listed(
     );
 
 
+// _own_identities_retrieve() - retrieve all own identities
+//
+//  parameters:
+//      session (in)            session to use
+//      own_identities (out)    list of own identities
+//      excluded_flags (int)    flags to exclude from results
+//
+//  caveat:
+//      the ownership of the copy of own_identities goes to the caller
+
+DYNAMIC_API PEP_STATUS _own_identities_retrieve(
+        PEP_SESSION session,
+        identity_list **own_identities,
+        identity_flags_t excluded_flags
+    );
+
 // own_identities_retrieve() - retrieve all own identities
 //
 //  parameters:
@@ -184,6 +200,37 @@ DYNAMIC_API PEP_STATUS own_identities_retrieve(
         PEP_SESSION session,
         identity_list **own_identities
     );
+
+PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
+                             bool *has_private);
+
+// _own_keys_retrieve() - retrieve all flagged keypair fingerprints 
+//
+//  parameters:
+//      session (in)            session to use
+//      keylist (out)           list of fingerprints
+//      excluded_flags (int)    flags to exclude from results
+//
+//  caveat:
+//      the ownership of the list goes to the caller
+DYNAMIC_API PEP_STATUS _own_keys_retrieve(
+        PEP_SESSION session,
+        stringlist_t **keylist,
+        identity_flags_t excluded_flags
+      );
+
+// own_keys_retrieve() - retrieve all flagged keypair fingerprints 
+//
+//  parameters:
+//      session (in)            session to use
+//      keylist (out)           list of fingerprints
+//
+//  caveat:
+//      the ownership of the list goes to the caller
+DYNAMIC_API PEP_STATUS own_keys_retrieve(
+        PEP_SESSION session,
+        stringlist_t **keylist
+      );
 
 #ifdef __cplusplus
 }

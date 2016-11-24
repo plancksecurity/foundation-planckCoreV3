@@ -26,7 +26,7 @@ protocol DeviceGroup {
             }
         }
 
-        state Sole {
+        state Sole end=1 {
             on KeyGen // injected by generate_keypair()
                 do sendBeacon;
             on CannotDecrypt
@@ -70,7 +70,7 @@ protocol DeviceGroup {
             }
         }
 
-        state Grouped {
+        state Grouped end=1 {
             on Init 
                 do enterGroup;
             on KeyGen

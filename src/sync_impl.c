@@ -343,7 +343,8 @@ PEP_STATUS receive_DeviceState_msg(
                                 goto free_all;
                             }
                             status = get_trust(session, _from);
-                            if (_from->comm_type < PEP_ct_strong_encryption) {
+                            if (status != PEP_STATUS_OK || _from->comm_type < PEP_ct_strong_encryption) {
+                                status = PEP_STATUS_OK;
                                 free_identity(_from);
                                 discard = true;
                                 goto free_all;
@@ -374,7 +375,8 @@ PEP_STATUS receive_DeviceState_msg(
                                 goto free_all;
                             }
                             status = get_trust(session, _from);
-                            if (_from->comm_type < PEP_ct_pEp) {
+                            if (status != PEP_STATUS_OK || _from->comm_type < PEP_ct_pEp) {
+                                status = PEP_STATUS_OK;
                                 free_identity(_from);
                                 discard = true;
                                 goto free_all;
@@ -422,7 +424,7 @@ PEP_STATUS receive_DeviceState_msg(
     }
 
     if (force_keep_msg) {
-        return PEP_MESSAGE_DISCARDED;
+        return PEP_MESSAGE_IGNORE;
     }
 
     if (consume && !session->keep_sync_msg) {
@@ -432,14 +434,14 @@ PEP_STATUS receive_DeviceState_msg(
                     strcasecmp(spl->value->key, "pEp-auto-consume") == 0) {
                 if (spl->value->value &&
                         strcasecmp(spl->value->value, "yes") == 0)
-                    return PEP_MESSAGE_CONSUMED;
+                    return PEP_MESSAGE_CONSUME;
             }
         }
-        return PEP_MESSAGE_DISCARDED;
+        return PEP_MESSAGE_IGNORE;
     }
 
     if(discard)
-        return PEP_MESSAGE_DISCARDED;
+        return PEP_MESSAGE_IGNORE;
 
     if (!session->keep_sync_msg) {
         bloblist_t *last = NULL;
@@ -576,18 +578,13 @@ PEP_STATUS unicast_msg(
                 goto error;
             }
             
-            IdentityList_t *list = 
-                msg->payload.present == 
-                  DeviceGroup_Protocol__payload_PR_groupKeys ?
-                  &msg->payload.choice.groupKeys.ownIdentities :
-                  &msg->payload.choice.groupUpdate.ownIdentities;
+            stringlist_t *keylist = NULL;
+            status = _own_keys_retrieve(session, &keylist, PEP_idf_not_for_sync);
+            if (status != PEP_STATUS_OK)
+                goto error;
 
-            for (int i=0; i<list->list.count; i++) {
-                Identity_t *ident = list->list.array[i];
-                char *fpr = strndup((const char *)ident->fpr.buf, ident->fpr.size);
-                assert(fpr);
-                if (!fpr)
-                    goto enomem;
+            for (stringlist_t *_keylist=keylist; _keylist!=NULL; _keylist=_keylist->next) {
+                char *fpr = _keylist->value;
                 static char filename[MAX_LINELENGTH];
                 int result = snprintf(filename, MAX_LINELENGTH, "%s-sec.asc", fpr);
                 if (result < 0)
@@ -595,7 +592,6 @@ PEP_STATUS unicast_msg(
                 char *key = NULL;
                 size_t size = 0;
                 status = export_secrect_key(session, fpr, &key, &size);
-                free(fpr);
                 if (status != PEP_STATUS_OK)
                     goto error;
                 bloblist_t *bl = bloblist_add(_message->attachments,
@@ -645,7 +641,7 @@ PEP_STATUS multicast_self_msg(
         return PEP_ILLEGAL_VALUE;
 
     identity_list *own_identities = NULL;
-    status = own_identities_retrieve(session, &own_identities);
+    status = _own_identities_retrieve(session, &own_identities, PEP_idf_not_for_sync);
     if (status != PEP_STATUS_OK)
         return status;
 
