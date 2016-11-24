@@ -479,7 +479,7 @@ PEP_STATUS pgp_decrypt_and_verify(
                     // FIXME: replace with verify_text?
                     gpg.gpgme_data_new_from_mem(&sigdata, dsigtext,
                                                 dsigsize, 0);
-                    gpgme_op_verify(session->ctx, sigdata, plain, NULL);
+                    gpg.gpgme_op_verify(session->ctx, sigdata, plain, NULL);
                     gpg.gpgme_data_release(sigdata);
                 }
 
