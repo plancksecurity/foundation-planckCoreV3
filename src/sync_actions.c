@@ -244,6 +244,19 @@ PEP_STATUS storeGroupKeys(
     identity_list *group_keys = (identity_list *) _group_keys;
 
     for (identity_list *il = group_keys; il && il->ident; il = il->next) {
+
+        // Check that identity isn't excluded from sync.
+        pEp_identity *stored_identity;
+        status = get_identity(session, il->ident->address, PEP_OWN_USERID,
+                &stored_identity);
+        if (status == PEP_STATUS_OK) {
+            if(stored_identity->flags & PEP_idf_not_for_sync){
+                free_identity(stored_identity);
+                continue;
+            }
+            free_identity(stored_identity);
+        }
+
         free(il->ident->user_id);
         il->ident->user_id = strdup(PEP_OWN_USERID);
         assert(il->ident->user_id);
@@ -255,6 +268,7 @@ PEP_STATUS storeGroupKeys(
     }
 
     free_identity_list(group_keys);
+    
     return status;
 
 enomem:
@@ -263,3 +277,30 @@ enomem:
     return status;
 }
 
+// enterGroup() - 
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        ignored
+//      extra (in)          ignored
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS enterGroup(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+
+    // groups have no uuid for now
+    status = set_device_group(session, "1");
+    
+    return status;
+}

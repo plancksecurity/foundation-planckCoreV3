@@ -1,10 +1,15 @@
 include ../Makefile.conf
 
+export GNUPGHOME=.
+
 CC?=g++ -std=gnu++11 -pthread
 CXX?=g++ -std=gnu++11 -pthread
 LD?=$(CXX)
 LDFLAGS?=-L$(HOME)/lib
-LDLIBS?=-letpan -lpEpEngine -lstdc++ -L../asn.1 -lasn1 -luuid
+LDLIBS?=-letpan -lpEpEngine -lstdc++ -L../asn.1 -lasn1
+ifeq ($(BUILD_FOR),Linux)
+	LDLIBS+= -luuid
+endif
 CXXFLAGS?=-std=c++11 -g -O0 -I../src -I../asn.1
 # CXXFLAGS=-O3 -DNDEBUG
 
@@ -24,9 +29,13 @@ all: $(TARGET) $(UNIT_TESTS)
 
 clean:
 	rm -f *.o $(TARGET) *.a *~ $(UNIT_TESTS) pep_Dokument_Titel.pdf msg4.asc
-	rm -Rf *.dSYM
+	rm -Rf *.dSYM .imported pubring.gpg secring.gpg random_seed *.conf trustdb.gpg
 
-test: pEpEngineTest
+.imported:
+	-cat 0x*.asc *_sec.asc | gpg2 --import
+	touch .imported
+
+test: pEpEngineTest .imported
 	LD_LIBRARY_PATH=~/lib:../src ./pEpEngineTest
 
 %_test_run : %_test

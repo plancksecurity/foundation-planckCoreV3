@@ -138,6 +138,12 @@
     <ClCompile Include="..\Sync-Protocols.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\GroupUpdate.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\UpdateRequest.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\DeviceGroup-Protocol.h">
@@ -270,6 +276,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Sync-Protocols.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\GroupUpdate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\UpdateRequest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

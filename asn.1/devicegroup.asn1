@@ -19,6 +19,13 @@ GroupKeys ::= SEQUENCE {
     ownIdentities IdentityList
 }
 
+GroupUpdate ::= SEQUENCE {
+    ownIdentities IdentityList
+}
+
+/* TODO: narrow request to single key */
+UpdateRequest ::= NULL 
+
 /* for the tags see end of sync.fsm */
 
 DeviceGroup-Protocol ::= SEQUENCE {
@@ -34,7 +41,9 @@ DeviceGroup-Protocol ::= SEQUENCE {
     payload CHOICE {
         beacon [APPLICATION 2] Beacon,
         handshakeRequest [APPLICATION 3] HandshakeRequest,
-        groupKeys [APPLICATION 4] GroupKeys
+        groupKeys [APPLICATION 4] GroupKeys,
+        groupUpdate [APPLICATION 5] GroupUpdate,
+        updateRequest [APPLICATION 6] UpdateRequest
     }
 }
 

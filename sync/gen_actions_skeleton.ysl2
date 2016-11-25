@@ -160,19 +160,19 @@ tstylesheet {
                 return PEP_ILLEGAL_VALUE;
 
             PEP_STATUS status = PEP_STATUS_OK;
-            `` if "$name='GroupKeys'" |> identity_list *kl = new_identity_list(NULL);
+            `` if "$name='GroupKeys' or $name='GroupUpdate'" |> identity_list *kl = new_identity_list(NULL);
 
             DeviceGroup_Protocol_t *msg = new_DeviceGroup_Protocol_msg(DeviceGroup_Protocol__payload_PR_«$lname»);
             if (!msg)
                 goto enomem;
         ||
         choose {
-            when "$name='GroupKeys'" {
+            when "$name='GroupKeys' or $name='GroupUpdate'" {
                 |
-                |> status = own_identities_retrieve(session, &kl);
+                |> status = _own_identities_retrieve(session, &kl, PEP_idf_not_for_sync);
                 |> if (status != PEP_STATUS_OK)
                 |>> goto error;
-                |> if (IdentityList_from_identity_list(kl, &msg->payload.choice.groupKeys.ownIdentities) == NULL)
+                |> if (IdentityList_from_identity_list(kl, &msg->payload.choice.«$lname».ownIdentities) == NULL)
                 |>> goto enomem;
             }
         }
@@ -203,7 +203,7 @@ tstylesheet {
             if (status != PEP_STATUS_OK)
                 goto error;
 
-            `` if "$name='GroupKeys'" |> free_identity_list(kl);
+            `` if "$name='GroupKeys' or $name='GroupUpdate'" |> free_identity_list(kl);
             free_DeviceGroup_Protocol_msg(msg);
             return PEP_STATUS_OK;
 

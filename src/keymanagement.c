@@ -24,7 +24,7 @@ PEP_STATUS elect_pubkey(
 {
     PEP_STATUS status;
     stringlist_t *keylist;
-    char *_fpr = NULL;
+    char *_fpr = "";
     identity->comm_type = PEP_ct_unknown;
 
     status = find_keys(session, identity->address, &keylist);
@@ -59,18 +59,21 @@ PEP_STATUS elect_pubkey(
         }
     }
 
-    if (_fpr) {
-        free(identity->fpr);
+    
+//    if (_fpr) {
+    free(identity->fpr);
 
-        identity->fpr = strdup(_fpr);
-        if (identity->fpr == NULL) {
-            free_stringlist(keylist);
-            return PEP_OUT_OF_MEMORY;
-        }
+    identity->fpr = strdup(_fpr);
+    if (identity->fpr == NULL) {
+        free_stringlist(keylist);
+        return PEP_OUT_OF_MEMORY;
     }
+//    }
     free_stringlist(keylist);
     return PEP_STATUS_OK;
 }
+
+PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags);
 
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
@@ -89,7 +92,7 @@ DYNAMIC_API PEP_STATUS update_identity(
 
     if (identity->me || (identity->user_id && strcmp(identity->user_id, PEP_OWN_USERID) == 0)) {
         identity->me = true;
-        return myself(session, identity);
+        return _myself(session, identity, false, true);
     }
 
     int _no_user_id = EMPTYSTR(identity->user_id);
@@ -101,7 +104,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                 &stored_identity);
         if (status == PEP_STATUS_OK) {
             free_identity(stored_identity);
-            return myself(session, identity);
+            return _myself(session, identity, false, true);
         }
 
         free(identity->user_id);
@@ -137,7 +140,7 @@ DYNAMIC_API PEP_STATUS update_identity(
         bool dont_use_fpr = true;
 
         /* if we have a stored_identity fpr */
-        if (!EMPTYSTR(stored_identity->fpr)) {
+        if (!EMPTYSTR(stored_identity->fpr) && !EMPTYSTR(temp_id->fpr)) {
             status = blacklist_is_listed(session, stored_identity->fpr, &dont_use_fpr);
             if (status != PEP_STATUS_OK)
                 dont_use_fpr = true; 
@@ -176,9 +179,6 @@ DYNAMIC_API PEP_STATUS update_identity(
         if (!EMPTYSTR(temp_id->fpr)) {
             status = get_key_rating(session, temp_id->fpr, &_comm_type_key);
             assert(status != PEP_OUT_OF_MEMORY);
-            if (status == PEP_OUT_OF_MEMORY)
-                goto exit_free;
-            status = get_trust(session, temp_id);
             if (status == PEP_OUT_OF_MEMORY)
                 goto exit_free;
             if (_comm_type_key < PEP_ct_unconfirmed_encryption) {
@@ -315,7 +315,7 @@ PEP_STATUS elect_ownkey(
     free(identity->fpr);
     identity->fpr = NULL;
 
-    status = find_keys(session, identity->address, &keylist);
+    status = find_private_keys(session, identity->address, &keylist);
     assert(status != PEP_OUT_OF_MEMORY);
     if (status == PEP_OUT_OF_MEMORY)
         return PEP_OUT_OF_MEMORY;
@@ -380,7 +380,27 @@ PEP_STATUS elect_ownkey(
     return PEP_STATUS_OK;
 }
 
-DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
+PEP_STATUS _has_usable_priv_key(PEP_SESSION session, char* fpr,
+                                bool* is_usable) {
+    
+    bool dont_use_fpr = true;
+    
+    PEP_STATUS status = blacklist_is_listed(session, fpr, &dont_use_fpr);
+    if (status == PEP_STATUS_OK && !dont_use_fpr) {
+        // Make sure there is a *private* key associated with this fpr
+        bool has_private = false;
+        status = contains_priv_key(session, fpr, &has_private);
+
+        if (status == PEP_STATUS_OK)
+            dont_use_fpr = !has_private;
+    }
+    
+    *is_usable = !dont_use_fpr;
+    
+    return status;
+}
+
+PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags)
 {
     pEp_identity *stored_identity;
     PEP_STATUS status;
@@ -399,6 +419,8 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 
     identity->comm_type = PEP_ct_pEp;
     identity->me = true;
+    if(ignore_flags)
+        identity->flags = 0;
     
     if (EMPTYSTR(identity->user_id))
     {
@@ -419,30 +441,56 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     assert(status != PEP_OUT_OF_MEMORY);
     if (status == PEP_OUT_OF_MEMORY)
         return PEP_OUT_OF_MEMORY;
-    
+
+    bool dont_use_stored_fpr = true;
+    bool dont_use_input_fpr = true;
+        
     if (stored_identity)
     {
         if (EMPTYSTR(identity->fpr)) {
-            identity->fpr = strdup(stored_identity->fpr);
-            assert(identity->fpr);
-            if (identity->fpr == NULL)
-            {
-                return PEP_OUT_OF_MEMORY;
+            
+            bool has_private = false;
+            
+            status = _has_usable_priv_key(session, stored_identity->fpr, &has_private); 
+            
+            // N.B. has_private is never true if the returned status is not PEP_STATUS_OK
+            if (has_private) {
+                identity->fpr = strdup(stored_identity->fpr);
+                assert(identity->fpr);
+                if (identity->fpr == NULL)
+                {
+                    return PEP_OUT_OF_MEMORY;
+                }
+                dont_use_stored_fpr = false;
             }
         }
+        
+        identity->flags = (identity->flags & 255) | stored_identity->flags;
 
-        identity->flags = stored_identity->flags;
+        free_identity(stored_identity);
     }
-    else if (!EMPTYSTR(identity->fpr))
+    
+    if (dont_use_stored_fpr && !EMPTYSTR(identity->fpr))
     {
         // App must have a good reason to give fpr, such as explicit
         // import of private key, or similar.
 
         // Take given fpr as-is.
 
-        identity->flags = 0;
+        // BUT:
+        // First check to see if it's blacklisted or private part is missing?
+        bool has_private = false;
+        
+        status = _has_usable_priv_key(session, identity->fpr, &has_private); 
+        
+        // N.B. has_private is never true if the returned status is not PEP_STATUS_OK
+        if (has_private) {
+            dont_use_input_fpr = false;
+        }
     }
-    else
+    
+    // Ok, we failed to get keys either way, so let's elect one.
+    if (dont_use_input_fpr && dont_use_stored_fpr)
     {
         status = elect_ownkey(session, identity);
         assert(status == PEP_STATUS_OK);
@@ -450,7 +498,25 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
             return status;
         }
 
-        identity->flags = 0;
+        bool has_private = false;
+        if (identity->fpr) {
+            // ok, we elected something.
+            // elect_ownkey only returns private keys, so we don't check again.
+            // Check to see if it's blacklisted
+            bool listed;
+            status = blacklist_is_listed(session, identity->fpr, &listed); 
+
+            if (status == PEP_STATUS_OK)
+                has_private = !listed;
+        }
+        
+        if (has_private) {
+            dont_use_input_fpr = false;
+        }
+        else { // OK, we've tried everything. Time to generate new keys.
+            free(identity->fpr); // It can stay in this state (unallocated) because we'll generate a new key 
+            identity->fpr = NULL;
+        }
     }
 
     bool revoked = false;
@@ -478,6 +544,10 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 
     if (EMPTYSTR(identity->fpr) || revoked)
     {        
+        if(!do_keygen){
+            return PEP_GET_KEY_FAILED;
+        }
+
         if(revoked)
         {
             r_fpr = identity->fpr;
@@ -527,6 +597,9 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
         }
     }
 
+    if (!identity->username)
+        identity->username = strdup("");
+    
     status = set_identity(session, identity);
     assert(status == PEP_STATUS_OK);
     if (status != PEP_STATUS_OK) {
@@ -537,12 +610,18 @@ DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
     {
         // if a state machine for keysync is in place, inject notify
         status = inject_DeviceState_event(session, KeyGen, NULL, NULL);
-        if (status != PEP_STATUS_OK)
-            return status;
+        if (status == PEP_OUT_OF_MEMORY){
+            return PEP_OUT_OF_MEMORY;
+        }
     }
 
     return PEP_STATUS_OK;
 
+}
+
+DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
+{
+    return _myself(session, identity, true, false);
 }
 
 DYNAMIC_API PEP_STATUS register_examine_function(
@@ -743,9 +822,10 @@ DYNAMIC_API PEP_STATUS own_key_is_listed(
     return status;
 }
 
-DYNAMIC_API PEP_STATUS own_identities_retrieve(
+PEP_STATUS _own_identities_retrieve(
         PEP_SESSION session,
-        identity_list **own_identities
+        identity_list **own_identities,
+        identity_flags_t excluded_flags
       )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -773,6 +853,7 @@ DYNAMIC_API PEP_STATUS own_identities_retrieve(
     
     identity_list *_bl = _own_identities;
     do {
+        sqlite3_bind_int(session->own_identities_retrieve, 1, excluded_flags);
         result = sqlite3_step(session->own_identities_retrieve);
         switch (result) {
             case SQLITE_ROW:
@@ -834,3 +915,133 @@ the_end:
     return status;
 }
 
+DYNAMIC_API PEP_STATUS own_identities_retrieve(
+        PEP_SESSION session,
+        identity_list **own_identities
+      )
+{
+    return _own_identities_retrieve(session, own_identities, 0);
+}
+
+PEP_STATUS _own_keys_retrieve(
+        PEP_SESSION session,
+        stringlist_t **keylist,
+        identity_flags_t excluded_flags
+      )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    assert(session && keylist);
+    if (!(session && keylist))
+        return PEP_ILLEGAL_VALUE;
+    
+    *keylist = NULL;
+    stringlist_t *_keylist = NULL;
+    
+    sqlite3_reset(session->own_keys_retrieve);
+    
+    int result;
+    char *fpr = NULL;
+    
+    stringlist_t *_bl = _keylist;
+    do {
+        sqlite3_bind_int(session->own_keys_retrieve, 1, excluded_flags);
+        result = sqlite3_step(session->own_keys_retrieve);
+        switch (result) {
+            case SQLITE_ROW:
+                fpr = strdup((const char *) sqlite3_column_text(session->own_keys_retrieve, 0));
+                if(fpr == NULL)
+                    goto enomem;
+
+                _bl = stringlist_add(_bl, fpr);
+                if (_bl == NULL) {
+                    free(fpr);
+                    goto enomem;
+                }
+                if (_keylist == NULL)
+                    _keylist = _bl;
+                
+                break;
+                
+            case SQLITE_DONE:
+                break;
+                
+            default:
+                status = PEP_UNKNOWN_ERROR;
+                result = SQLITE_DONE;
+        }
+    } while (result != SQLITE_DONE);
+    
+    sqlite3_reset(session->own_keys_retrieve);
+    if (status == PEP_STATUS_OK)
+        *keylist = _keylist;
+    else
+        free_stringlist(_keylist);
+    
+    goto the_end;
+    
+enomem:
+    free_stringlist(_keylist);
+    status = PEP_OUT_OF_MEMORY;
+    
+the_end:
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS own_keys_retrieve(PEP_SESSION session, stringlist_t **keylist)
+{
+    return _own_keys_retrieve(session, keylist, 0);
+}
+
+// TODO: Unused for now, but should be used when sync receive old keys (ENGINE-145)
+DYNAMIC_API PEP_STATUS set_own_key(
+       PEP_SESSION session,
+       const char *address,
+       const char *fpr
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    assert(session &&
+           address && address[0] &&
+           fpr && fpr[0]
+          );
+    
+    if (!(session &&
+          address && address[0] &&
+          fpr && fpr[0]
+         ))
+        return PEP_ILLEGAL_VALUE;
+    
+    sqlite3_reset(session->set_own_key);
+    sqlite3_bind_text(session->set_own_key, 1, address, -1, SQLITE_STATIC);
+    sqlite3_bind_text(session->set_own_key, 2, fpr, -1, SQLITE_STATIC);
+
+    int result;
+    
+    result = sqlite3_step(session->set_own_key);
+    switch (result) {
+        case SQLITE_DONE:
+            status = PEP_STATUS_OK;
+            break;
+            
+        default:
+            status = PEP_UNKNOWN_ERROR;
+    }
+    
+    sqlite3_reset(session->set_own_key);
+    return status;
+}
+
+PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
+                             bool *has_private) {
+
+    assert(session);
+    assert(fpr);
+    assert(has_private);
+    
+    if (!(session && fpr && has_private))
+        return PEP_ILLEGAL_VALUE;
+
+    return session->cryptotech[PEP_crypt_OpenPGP].contains_priv_key(session, fpr, has_private);
+}

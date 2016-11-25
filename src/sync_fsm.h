@@ -65,7 +65,9 @@ typedef enum _DeviceState_event {
     HandshakeRejected, 
     HandshakeAccepted, 
     Cancel, 
-    Reject
+    Reject, 
+    UpdateRequest, 
+    GroupUpdate
 } DeviceState_event;
 
 // actions
@@ -77,6 +79,9 @@ PEP_STATUS rejectHandshake(PEP_SESSION session, DeviceState_state state, Identit
 PEP_STATUS acceptHandshake(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS sendGroupKeys(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS storeGroupKeys(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS enterGroup(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS sendGroupUpdate(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS sendUpdateRequest(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 
 // event injector
 

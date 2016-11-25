@@ -21,8 +21,8 @@ p.add_argument('--lang', '-l', type=str, default="en_US",
     help='use dictionary for language LANG (default: en_US)')
 p.add_argument('--encoding', '-e', type=str, default="utf-8",
     help='file encoding (default: utf-8)')
-p.add_argument('--full', '-f', action='store_true',
-    help="full list - don't reduce to 65536 words")
+p.add_argument('--cut', '-c', action='store_true',
+    help="cut list - reduce to 65536 words")
 
 args = p.parse_args()
 
@@ -50,12 +50,12 @@ _words = [w for w in _all if len(w) > 2 and not unwanted.match(w)]
 _words.sort()
 _words = [w for w, g in itertools.groupby(_words)]
 
-if not args.full:
+if args.cut:
     while len(_words) > 65536 * 2:
         _words = _words[::2]
 
 if len(_words) > 65536:
-    if not args.full:
+    if args.cut:
         _words = _words[:65536]
 elif len(_words) < 65536:
     sys.stderr.write(
@@ -67,7 +67,7 @@ elif len(_words) < 65536:
         )
     _words.extend(_words[:65536-len(_words)])
 
-if not args.full:
+if args.cut:
     assert len(_words) == 65536, "lenght is {}".format(len(_words))
 
 for i, w in enumerate(_words):

@@ -70,6 +70,7 @@ typedef gpgme_error_t(*gpgme_op_import_keys_t)(gpgme_ctx_t CTX,
     gpgme_key_t *KEYS);
 typedef void(*gpgme_key_ref_t)(gpgme_key_t KEY);
 typedef void(*gpgme_key_unref_t)(gpgme_key_t KEY);
+typedef void(*gpgme_key_release_t)(gpgme_key_t KEY);
 typedef gpgme_error_t (*gpgme_op_edit_t)(gpgme_ctx_t CTX, gpgme_key_t KEY,
         gpgme_edit_cb_t FNC, void *HANDLE, gpgme_data_t OUT);
 typedef gpgme_ssize_t (*gpgme_io_write_t)(int fd, const void *buffer,
@@ -117,6 +118,7 @@ struct gpg_s {
     gpgme_op_import_keys_t gpgme_op_import_keys;
     gpgme_key_ref_t gpgme_key_ref;
     gpgme_key_unref_t gpgme_key_unref;
+	gpgme_key_release_t gpgme_key_release;
     gpgme_op_edit_t gpgme_op_edit;
     gpgme_io_write_t gpgme_io_write;
 };

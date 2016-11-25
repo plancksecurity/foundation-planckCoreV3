@@ -129,6 +129,45 @@ int main() {
     cout << "rating :" << rating2 << "\n";
     free_stringlist(keylist5);
 
+    cout << "\nTesting MIME_encrypt_message / MIME_decrypt_message...\n\n";
+
+    cout << "opening alice_bob_encrypt_test_plaintext_mime.eml for reading\n";
+    ifstream inFile4 ("test_mails/alice_bob_encrypt_test_plaintext_mime.eml");
+    assert(inFile4.is_open());
+    
+    string text4;
+    
+    cout << "reading alice_bob_encrypt_test_plaintext_mime.eml sample\n";
+    while (!inFile4.eof()) {
+        static string line;
+        getline(inFile4, line);
+        text4 += line + "\r\n";
+    }
+    inFile4.close();
+    
+    const char* out_msg_plain = text4.c_str();
+    
+//    const char* out_msg_plain = "From: krista@kgrothoff.org\nTo: Volker <vb@pep-project.org>\nSubject: Test\nContent-Type: text/plain; charset=utf-8\nContent-Language: en-US\nContent-Transfer-Encoding:quoted-printable\n\ngaga\n\n";
+    char* enc_msg = NULL;
+    char* dec_msg = NULL;
+
+    PEP_STATUS status7 = MIME_encrypt_message(session, text4.c_str(), text4.length(), NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+//    PEP_STATUS status7 = MIME_encrypt_message(session, out_msg_plain, strlen(out_msg_plain), NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    assert(status7 == PEP_STATUS_OK);
+    
+    cout << enc_msg << endl;
+
+    string text5 = enc_msg;
+    
+    PEP_decrypt_flags_t dec_flags;
+    stringlist_t* keys_used;
+    
+    PEP_STATUS status8 = MIME_decrypt_message(session, text5.c_str(), text5.length(), &dec_msg, &keys_used, &rating, &dec_flags);
+    assert(status8 == PEP_STATUS_OK);
+    
+    cout << dec_msg << endl;
+    
+    
     cout << "freeing messages…\n";
     free_message(msg4);
     free_message(msg3);
@@ -138,6 +177,8 @@ int main() {
     free_message(msg5);
     cout << "done.\n";
 
+    free(enc_msg);
+    free(dec_msg);
     cout << "calling release()\n";
     release(session);
     return 0;

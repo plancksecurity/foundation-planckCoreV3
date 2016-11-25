@@ -42,13 +42,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)\..\..\libetpan\build-windows\include;C:\Program Files %28x86%29\GNU\GnuPG\include;$(IncludePath)</IncludePath>
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <IncludePath>$(ProjectDir)\..\..\libetpan\build-windows\include;C:\Program Files %28x86%29\GNU\GnuPG\include;$(IncludePath);$(ProjectDir)\asn.1;%ASN1C%\share\asn1c</IncludePath>
     <LibraryPath>$(ProjectDir)\..\..\libetpan\build-windows\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)\..\..\libetpan\build-windows\include;C:\Program Files %28x86%29\GNU\GnuPG\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\..\..\libetpan\build-windows\include;C:\Program Files %28x86%29\GNU\GnuPG\include;$(IncludePath);$(ProjectDir)\asn.1;%ASN1C%\share\asn1c</IncludePath>
     <LibraryPath>$(ProjectDir)\..\..\libetpan\build-windows\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -59,7 +59,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PEPENGINE_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <EnablePREfast>false</EnablePREfast>
-      <AdditionalIncludeDirectories>C:\Users\vb\share\asn1c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%ASN1C%\share\asn1c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
@@ -68,8 +68,9 @@
       <AdditionalDependencies>$(TargetDir)\pEpEngineASN1.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_statemachine.ysl2 devicegroup.fsm -o .statemachines
+cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -ygen_actions_skeleton.ysl2 devicegroup.fsm -o .skeletons
+</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -82,7 +83,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PEPENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>C:\Users\vb\share\asn1c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%ASN1C%\share\asn1c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ControlFlowGuard>Guard</ControlFlowGuard>
@@ -95,8 +96,9 @@
       <AdditionalDependencies>$(TargetDir)\pEpEngineASN1.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_statemachine.ysl2 devicegroup.fsm -o .statemachines
+cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -ygen_actions_skeleton.ysl2 devicegroup.fsm -o .skeletons
+</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

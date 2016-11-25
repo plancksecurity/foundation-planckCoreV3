@@ -1,0 +1,61 @@
+To: blacklist_test@kgrothoff.org
+From: Blacklist Keypair <blacklistedkeys@kgrothoff.org>
+Subject: pEp
+Message-ID: <678e7fac-ee4c-fc84-e7c4-db80fe6c61c4@kgrothoff.org>
+Date: Tue, 25 Oct 2016 15:03:07 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
+ Thunderbird/45.3.0
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------B2D895B5601B3457CFF35EA4"
+
+This is a multi-part message in MIME format.
+--------------B2D895B5601B3457CFF35EA4
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+Subject: Fixing blacklisted keys
+
+This email should have a key attached and should import properly. Let's
+use it to fix blacklisting, shall we?
+
+--------------B2D895B5601B3457CFF35EA4
+Content-Type: application/pgp-keys;
+ name="0x7E62701B.asc"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="0x7E62701B.asc"
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+mQENBFf+0HIBCADU5QsLhLIsSxdpKfvkfui5UuWWEWo5jRfySSSADQuMdLpPgxpG
+kCz2cQRFA7kYHrdTINE4gvDqNxfAkNNGWVOeG6agBwLieg0KYzxMy3qNaLuye6xw
+pX7NKgkCuVV9agcwfoWVHq+fkGIcwo9GTksPNEFB4cySaUqyjzq/fbYOtEjHRL0F
+WpQu7rb1xdEtm7ce7JtRpAek45NLzsUN+NOEMc5nIz9r7jLSqmv0JIvQmrfgInft
+tswRBSjxOC1Age1goODcOd6ezdRvH2pTjBhVzyNLjBIb9HcYEAK8hS5ZOtnpvMo4
+aEAcWJI2r/nSCfHLMfh2oguZCMKg3sGyb0zlABEBAAG0X0JsYWNrbGlzdGVkIEtl
+eXBhaXIgKFNFQ09ORCBLRVlQQUlSIC0gT05MWSBGT1IgQkxBQ0tMSVNUIFRFU1RT
+KSA8YmxhY2tsaXN0ZWRrZXlzQGtncm90aG9mZi5vcmc+iQE4BBMBCAAiBQJX/tBy
+AhsDBgsJCAcDAgYVCAIJCgsEFgIDAQIeAQIXgAAKCRDEruu+fmJwG2vqCACAdcKd
+EG6AH99ag1h/9jHIa0HLq/ngTZBjIsps56FWFFhDNiui+9G3iyzCGeip1ASyU1Vm
+0Wa5hd7hXuEA40zrpe6BnzEOQlB3lfBuUtt+VodpbsKOtU+7zNYJHRgzJlwcyIgv
+y16Lk3gglVR0WdhKLBgzQvxKcHdCzfpn1s6z00fa4Ec7ryOacWr3LEcOgFP1bIOD
+Qb5S28Rojnr8XIOMZmrTVCgNv7UtcBaICw+EnunS+TA4XkU3PrEXCgNg3jyu8IL1
+BlOvhXSJNZ6QEA/sZtxNquQRoE4rPjP1ir2XtXlmBcOQN1BP0J0yslGH/OhJT2hK
+ZWCJvU1vzkWV/OoiuQENBFf+0HIBCACxbXWwI4Bc9nCEBUR8k4nZkQz1G6A1sOB8
+YXd8yMZw62EoJ0zD4WZ7z+Jm5qMWrOic9RFS0AWEuhta2MDJdK2l57iVT9mkto69
+nC1UeBWIlcY8FJ42OxiWjWNz1Ftq9qYF3Pc93s+8oHDhjX6iWm/vN3a9lBCIdNM4
+fEI55/fpMBMAO1YNr9Z6Sulhhqg3cJ57zlbwe9OGcTPBkBHewagpImwGT3CrjcyE
+tteQM2jZnktVR6a72UXqbWwUQJoQuzs9Xi+/zjk5QrxO1///ZL/dDywD9FYSxz7v
+sHKwn+r8iqogHqR3jmhpdWgkFNW2plV3lXCHNKwswIHJatl4BFAFABEBAAGJAR8E
+GAEIAAkFAlf+0HICGwwACgkQxK7rvn5icBv7FQgAr1nXfZdTeZHTLt6UR3xgBkSk
+5beeQDl/97fM1GD6OAn9BUUae840kuzAf9Pav4ADPtiqCeCeyeRW5K0N33dDmvAF
+EqPLHuRfj7yViAhlFICqu2ckYqyb7BBf/LOlG2GEtZFzwruYKz/rmiBLRq0UnQMv
+4fZZVs6FrnUEOVZsM0ALZPGzwT0LyU6OxVIRTkEGMBmdvcAIcos/S0XD6BjhP8b0
+6+Y9Ld4nxVutjyZg/34PStHd3vtpN62VZzGQozWYBtseJ/APcoA7fnxGB8E+Q3TZ
+QzxVfC3VMqFkMU1Xy+6bBP//zsnYaGM3VFlKi40hrBsJmxbOODoG7Yxsn9wGRg==
+=sTND
+-----END PGP PUBLIC KEY BLOCK-----
+
+--------------B2D895B5601B3457CFF35EA4--
+

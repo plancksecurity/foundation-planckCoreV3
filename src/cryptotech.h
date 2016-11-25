@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pEpEngine.h"
+#include "bloblist.h"
 
 typedef enum _PEP_cryptotech {
     PEP_crypt_none = 0,
@@ -14,6 +15,7 @@ typedef enum _PEP_cryptotech {
 
 typedef PEP_STATUS (*decrypt_and_verify_t)(
         PEP_SESSION session, const char *ctext, size_t csize,
+        const char *dsigtext, size_t dsigsize,
         char **ptext, size_t *psize, stringlist_t **keylist
     );
 
@@ -72,6 +74,13 @@ typedef PEP_STATUS (*key_created_t)(PEP_SESSION session, const char *fpr,
 
 typedef PEP_STATUS (*binary_path_t)(const char **path);
 
+typedef PEP_STATUS (*contains_priv_key_t)(PEP_SESSION session, const char *fpr,
+        bool *has_private);
+
+typedef PEP_STATUS (*find_private_keys_t)(
+    PEP_SESSION session, const char *pattern, stringlist_t **keylist
+);
+
 typedef struct _PEP_cryptotech_t {
     uint8_t id;
     // the following are default values; comm_type may vary with key length or b0rken crypto
@@ -94,6 +103,8 @@ typedef struct _PEP_cryptotech_t {
     key_revoked_t key_revoked;
     key_created_t key_created;
     binary_path_t binary_path;
+    contains_priv_key_t contains_priv_key;
+    find_private_keys_t find_private_keys;
 } PEP_cryptotech_t;
 
 extern PEP_cryptotech_t cryptotech[PEP_crypt__count];

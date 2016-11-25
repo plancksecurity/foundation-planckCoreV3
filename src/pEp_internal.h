@@ -99,9 +99,8 @@ typedef struct _pEpSession {
     sqlite3_stmt *get_device_group;
     sqlite3_stmt *set_pgp_keypair;
     sqlite3_stmt *set_identity;
-    sqlite3_stmt *exists_empty_fpr_entry;
-    sqlite3_stmt *update_fprless_identity;
     sqlite3_stmt *set_identity_flags;
+    sqlite3_stmt *unset_identity_flags;
     sqlite3_stmt *set_trust;
     sqlite3_stmt *get_trust;
     sqlite3_stmt *least_trust;
@@ -120,6 +119,8 @@ typedef struct _pEpSession {
     // Own keys
     sqlite3_stmt *own_key_is_listed;
     sqlite3_stmt *own_identities_retrieve;
+    sqlite3_stmt *own_keys_retrieve;
+    sqlite3_stmt *set_own_key;
 
     // sequence value
     sqlite3_stmt *sequence_value1;
@@ -142,6 +143,8 @@ typedef struct _pEpSession {
     // key sync
     DeviceState_state sync_state;
     char sync_uuid[37];
+    time_t LastCannotDecrypt;
+    time_t LastUpdateRequest;
 
     // runtime config
 

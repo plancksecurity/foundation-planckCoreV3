@@ -89,6 +89,40 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_enc_format enc_format
     );
 
+// MIME_encrypt_message() - encrypt a MIME message, with MIME output
+//
+//  parameters:
+//      session (in)            session handle
+//      mimetext (in)           MIME encoded text to encrypt
+//      size (in)               size of input mime text
+//      extra (in)              extra keys for encryption
+//      mime_ciphertext (out)   encrypted, encoded message
+//      enc_format (in)         encrypted format
+//      flags (in)              flags to set special encryption features
+//
+//  return value:
+//      PEP_STATUS_OK           if everything worked
+//      PEP_BUFFER_TOO_SMALL    if encoded message size is too big to handle
+//      PEP_CANNOT_CREATE_TEMP_FILE
+//                              if there are issues with temp files; in
+//                              this case errno will contain the underlying
+//                              error
+//      PEP_OUT_OF_MEMORY       if not enough memory could be allocated
+//
+//  caveat:
+//      the encrypted, encoded mime text will go to the ownership of the caller; mimetext
+//      will remain in the ownership of the caller
+
+DYNAMIC_API PEP_STATUS MIME_encrypt_message(
+    PEP_SESSION session,
+    const char *mimetext,
+    size_t size,
+    stringlist_t* extra,
+    char** mime_ciphertext,
+    PEP_enc_format enc_format,
+    PEP_encrypt_flags_t flags
+);
+
 typedef enum _PEP_rating {
     PEP_rating_undefined = 0,
     PEP_rating_cannot_decrypt,
@@ -123,7 +157,9 @@ typedef enum _PEP_color {
 DYNAMIC_API PEP_color color_from_rating(PEP_rating rating);
 
 typedef enum _PEP_decrypt_flags {
-    PEP_decrypt_flag_own_private_key = 0x1
+    PEP_decrypt_flag_own_private_key = 0x1,
+    PEP_decrypt_flag_consume = 0x2,
+    PEP_decrypt_flag_ignore = 0x4
 } PEP_decrypt_flags; 
 
 typedef unsigned int PEP_decrypt_flags_t;
@@ -156,6 +192,41 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_rating *rating,
         PEP_decrypt_flags_t *flags
 );
+
+// MIME_decrypt_message() - decrypt a MIME message, with MIME output
+//
+//  parameters:
+//      session (in)            session handle
+//      mimetext (in)           MIME encoded text to decrypt
+//      size (in)               size of mime text to decode (in order to decrypt)
+//      mime_plaintext (out)    decrypted, encoded message
+//      keylist (out)           stringlist with keyids
+//      rating (out)            rating for the message
+//      flags (out)             flags to signal special decryption features
+//
+//  return value:
+//      PEP_STATUS_OK           if everything worked
+//      PEP_BUFFER_TOO_SMALL    if encoded message size is too big to handle
+//      PEP_CANNOT_CREATE_TEMP_FILE
+//                              if there are issues with temp files; in
+//                              this case errno will contain the underlying
+//                              error
+//      PEP_OUT_OF_MEMORY       if not enough memory could be allocated
+//
+//  caveat:
+//      the decrypted, encoded mime text will go to the ownership of the caller; mimetext
+//      will remain in the ownership of the caller
+
+DYNAMIC_API PEP_STATUS MIME_decrypt_message(
+    PEP_SESSION session,
+    const char *mimetext,
+    size_t size,
+    char** mime_plaintext,
+    stringlist_t **keylist,
+    PEP_rating *rating,
+    PEP_decrypt_flags_t *flags
+);
+
 
 // own_message_private_key_details() - details on own key in own message
 //
@@ -234,6 +305,36 @@ DYNAMIC_API PEP_STATUS identity_rating(
 //                          **path is owned by the library, do not change it!
 DYNAMIC_API PEP_STATUS get_binary_path(PEP_cryptotech tech, const char **path);
 
+// get_trustwords() - get full trustwords string for a *pair* of identities
+//
+//    parameters:
+//        session (in)        session handle
+//        id1 (in)            identity of first party in communication - fpr can't be NULL  
+//        id2 (in)            identity of second party in communication - fpr can't be NULL
+//        lang (in)           C string with ISO 639-1 language code
+//        words (out)         pointer to C string with all trustwords UTF-8 encoded,
+//                            separated by a blank each
+//                            NULL if language is not supported or trustword
+//                            wordlist is damaged or unavailable
+//        wsize (out)         length of full trustwords string
+//        full (in)           if true, generate ALL trustwords for these identities.
+//                            else, generate a fixed-size subset. (TODO: fixed-minimum-entropy
+//                            subset in next version)
+//
+//    return value:
+//        PEP_STATUS_OK            trustwords retrieved
+//        PEP_OUT_OF_MEMORY        out of memory
+//        PEP_TRUSTWORD_NOT_FOUND  at least one trustword not found
+//
+//    caveat:
+//        the word pointer goes to the ownership of the caller
+//        the caller is responsible to free() it (on Windoze use pEp_free())
+//
+
+DYNAMIC_API PEP_STATUS get_trustwords(
+    PEP_SESSION session, pEp_identity* id1, pEp_identity* id2,
+    const char* lang, char **words, size_t *wsize, bool full
+);
 
 #ifdef __cplusplus
 }

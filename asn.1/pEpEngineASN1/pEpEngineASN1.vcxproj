@@ -40,12 +40,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ExecutablePath>C:\Users\vb\bin;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>C:\Users\vb\share\asn1c;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\;$(IncludePath)</IncludePath>
+    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>C:\Users\vb\share\asn1c;$(IncludePath)</IncludePath>
-    <ExecutablePath>C:\Users\vb\bin;$(ExecutablePath)</ExecutablePath>
+    <IncludePath>$(ProjectDir)..\;$(IncludePath)</IncludePath>
+    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -61,9 +61,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>cd ..
-asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=PEP.Message pEp.asn1 devicegroup.asn1
-del converter-sample.c
+      <Command>cd "$(ProjectDir).." &amp;&amp; "%ASN1C%\bin\asn1c" -S "%ASN1C%\share\asn1c" -gen-PER -fincludes-quoted -fcompound-names -pdu=PEP.Message pEp.asn1 devicegroup.asn1 protocols.asn1
+cd "$(ProjectDir).." &amp;&amp; del converter-sample.c
 </Command>
     </PreBuildEvent>
     <PreBuildEvent>
@@ -99,11 +98,8 @@ del converter-sample.c
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PreBuildEvent>
-      <Command>cd ..
-del *.c
-del *.h
-asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=PEP.Message pEp.asn1 devicegroup.asn1
-del converter-sample.c
+      <Command>cd "$(ProjectDir).." &amp;&amp; "%ASN1C%\bin\asn1c" -S "%ASN1C%\share\asn1c" -gen-PER -fincludes-quoted -fcompound-names -pdu=PEP.Message pEp.asn1 devicegroup.asn1 protocols.asn1
+cd "$(ProjectDir).." &amp;&amp; del converter-sample.c
 </Command>
       <Message>compiling ASN.1 description</Message>
     </PreBuildEvent>
@@ -142,6 +138,7 @@ del converter-sample.c
     <ClCompile Include="..\der_encoder.c" />
     <ClCompile Include="..\DeviceGroup-Protocol.c" />
     <ClCompile Include="..\GroupKeys.c" />
+    <ClCompile Include="..\GroupUpdate.c" />
     <ClCompile Include="..\HandshakeRequest.c" />
     <ClCompile Include="..\Hash.c" />
     <ClCompile Include="..\Hex.c" />
@@ -159,6 +156,7 @@ del converter-sample.c
     <ClCompile Include="..\per_support.c" />
     <ClCompile Include="..\PrintableString.c" />
     <ClCompile Include="..\Sync-Protocols.c" />
+    <ClCompile Include="..\UpdateRequest.c" />
     <ClCompile Include="..\UTF8String.c" />
     <ClCompile Include="..\Version.c" />
     <ClCompile Include="..\xer_decoder.c" />
@@ -188,6 +186,7 @@ del converter-sample.c
     <ClInclude Include="..\der_encoder.h" />
     <ClInclude Include="..\DeviceGroup-Protocol.h" />
     <ClInclude Include="..\GroupKeys.h" />
+    <ClInclude Include="..\GroupUpdate.h" />
     <ClInclude Include="..\HandshakeRequest.h" />
     <ClInclude Include="..\Hash.h" />
     <ClInclude Include="..\Hex.h" />
@@ -205,6 +204,7 @@ del converter-sample.c
     <ClInclude Include="..\per_support.h" />
     <ClInclude Include="..\PrintableString.h" />
     <ClInclude Include="..\Sync-Protocols.h" />
+    <ClInclude Include="..\UpdateRequest.h" />
     <ClInclude Include="..\UTF8String.h" />
     <ClInclude Include="..\Version.h" />
     <ClInclude Include="..\xer_decoder.h" />
