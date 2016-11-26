@@ -65,7 +65,7 @@ typedef enum _DeviceState_event {
     HandshakeRejected, 
     HandshakeAccepted, 
     Cancel, 
-    Reject, 
+    Timeout, 
     UpdateRequest, 
     GroupUpdate
 } DeviceState_event;
@@ -107,7 +107,8 @@ DeviceState_state fsm_DeviceState(
         DeviceState_state state,
         DeviceState_event event,
         Identity partner,
-        void *extra
+        void *extra,
+        time_t *timeout
     );
 
 // driver
@@ -116,7 +117,8 @@ DYNAMIC_API PEP_STATUS fsm_DeviceState_inject(
         PEP_SESSION session,
         DeviceState_event event,
         Identity partner,
-        void *extra
+        void *extra,
+        time_t *timeout
     );
 
 #ifdef __cplusplus

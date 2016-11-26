@@ -31,7 +31,8 @@ struct _sync_msg_t {
 
 PEP_STATUS receive_sync_msg(
         PEP_SESSION session,
-        sync_msg_t *sync_msg
+        sync_msg_t *sync_msg,
+        time_t *timeout
     )
 {
     PEP_STATUS status;
@@ -183,7 +184,7 @@ PEP_STATUS receive_sync_msg(
             goto error;
     }
 
-    status = fsm_DeviceState_inject(session, event, partner, extra);
+    status = fsm_DeviceState_inject(session, event, partner, extra, timeout);
 
     free_identity(partner);
 

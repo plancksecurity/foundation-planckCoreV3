@@ -8,7 +8,8 @@ DYNAMIC_API PEP_STATUS fsm_DeviceState_inject(
         PEP_SESSION session,
         DeviceState_event event,
         Identity partner,
-        void *extra
+        void *extra,
+        time_t *timeout
     )
 {
     assert(session);
@@ -18,7 +19,7 @@ DYNAMIC_API PEP_STATUS fsm_DeviceState_inject(
     while(true)
     {
         DeviceState_state new_state = fsm_DeviceState(session,
-            session->sync_state, event, partner, extra);
+            session->sync_state, event, partner, extra, timeout);
 
         if (new_state == DeviceState_state_invalid_out_of_memory)
             return PEP_OUT_OF_MEMORY;

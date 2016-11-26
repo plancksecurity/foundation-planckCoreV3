@@ -84,11 +84,14 @@ typedef int (*inject_sync_msg_t)(void *msg, void *management);
 //
 //  parameters:
 //      management (in)     application defined
+//      timeout (in,out)    do not wait longer than timeout for message
 //
 //  return value:
-//      next message or NULL for termination
+//      next message or :
+//      NULL + timeout == 0 for termination
+//      NULL + timeout != 0 for timeout occurence
 
-typedef void *(*retrieve_next_sync_msg_t)(void *management);
+typedef void *(*retrieve_next_sync_msg_t)(void *management, time_t *timeout);
 
 
 // register_sync_callbacks() - register adapter's callbacks

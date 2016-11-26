@@ -40,7 +40,7 @@ protocol DeviceGroup {
             }
         }
 
-        state HandshakingSole(Identity partner) {
+        state HandshakingSole timeout=10 (Identity partner) {
             on Init
                 do showHandshake(partner);
             on HandshakeRejected(Identity partner) {
@@ -56,16 +56,24 @@ protocol DeviceGroup {
                 }
                 go WaitForGroupKeysSole(Identity partner);
             }
+            on Cancel go Sole;
+            on Timeout {
+                // TODO signal group failure to app
+                // do dismissHandshake(partner);
+                go Sole;
+            }
         }
     
-        state WaitForGroupKeysSole(Identity partner) {
+        state WaitForGroupKeysSole timeout=10 (Identity partner) {
             on GroupKeys(Identity partner, Stringlist keys) {
                 do storeGroupKeys(partner, keys);
+                // TODO signal group success to app
+                // do groupSuccess(partner);
                 go Grouped;
             }
-            on Cancel go Sole;
-            on Reject(Identity partner) {
-                do rejectHandshake(partner);
+            on Timeout {
+                // TODO signal group failure to app
+                // do groupTimeout(partner);
                 go Sole;
             }
         }
@@ -89,7 +97,7 @@ protocol DeviceGroup {
                 do storeGroupKeys(partner, keys);
         }
 
-        state HandshakingGrouped(Identity partner) {
+        state HandshakingGrouped timeout=10 (Identity partner) {
             on Init
                 do showHandshake(partner);
             on HandshakeRejected(Identity partner) {
@@ -101,6 +109,15 @@ protocol DeviceGroup {
 
                 // an already existing group always wins
                 do sendGroupKeys(partner);
+
+                // TODO signal group success to app
+                // do groupSuccess(partner);
+
+                go Grouped;
+            }
+            on Timeout {
+                // TODO kill Handshake dialog in app
+                // do dismissHandshake();
                 go Grouped;
             }
         }

@@ -10,7 +10,8 @@
 
 PEP_STATUS receive_sync_msg(
         PEP_SESSION session,
-        sync_msg_t *sync_msg
+        sync_msg_t *sync_msg,
+        time_t *timeout
     );
 
 DYNAMIC_API PEP_STATUS register_sync_callbacks(
@@ -38,7 +39,8 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
 
     // start state machine
     session->sync_state = InitState;
-    PEP_STATUS status = fsm_DeviceState_inject(session, Init, NULL, NULL);
+    time_t unused = 0;
+    PEP_STATUS status = fsm_DeviceState_inject(session, Init, NULL, NULL, &unused);
     if (status != PEP_STATUS_OK)
         unregister_sync_callbacks(session);
 
@@ -149,6 +151,7 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
 {
     sync_msg_t *msg = NULL;
     PEP_STATUS status = PEP_STATUS_OK;
+    time_t timeout = 0;
 
     assert(session && session->retrieve_next_sync_msg);
     assert(management);
@@ -158,9 +161,9 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
 
     log_event(session, "sync_protocol thread started", "pEp sync protocol", NULL, NULL);
 
-    while ((msg = (sync_msg_t *) session->retrieve_next_sync_msg(management))) 
+    while ((msg = (sync_msg_t *) session->retrieve_next_sync_msg(management, &timeout))) 
     {
-        if ((status = receive_sync_msg(session, msg) != PEP_STATUS_OK)) {
+        if ((status = receive_sync_msg(session, msg, &timeout) != PEP_STATUS_OK)) {
             char buffer[MAX_LINELENGTH];
             memset(buffer, 0, MAX_LINELENGTH);
             snprintf(buffer, MAX_LINELENGTH, "problem with msg received: %d\n", (int) status);

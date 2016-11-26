@@ -6,7 +6,7 @@
 
 decl protocol @name;
 decl fsm @name;
-decl state @name;
+decl state @name (timeout=0);
 decl event @name, on is event;
 decl transition @target, go is transition;
 decl action @name, do is action;
