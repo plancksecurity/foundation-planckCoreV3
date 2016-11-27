@@ -161,9 +161,14 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
 
     log_event(session, "sync_protocol thread started", "pEp sync protocol", NULL, NULL);
 
-    while ((msg = (sync_msg_t *) session->retrieve_next_sync_msg(management, &timeout))) 
+    while (true) 
     {
-        if ((status = receive_sync_msg(session, msg, &timeout) != PEP_STATUS_OK)) {
+        msg = (sync_msg_t *) session->retrieve_next_sync_msg(management, &timeout);
+        if(msg == NULL && timeout == 0)
+            break;
+        else if(msg == NULL && timeout != 0)
+            continue;
+        else if ((status = receive_sync_msg(session, msg, &timeout) != PEP_STATUS_OK)) {
             char buffer[MAX_LINELENGTH];
             memset(buffer, 0, MAX_LINELENGTH);
             snprintf(buffer, MAX_LINELENGTH, "problem with msg received: %d\n", (int) status);
