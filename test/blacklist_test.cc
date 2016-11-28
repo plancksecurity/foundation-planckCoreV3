@@ -86,11 +86,27 @@ int main() {
                                                       bl_fpr_1,
                                                       NULL,
                                                       "Blacklist Keypair");
+
     PEP_STATUS status8 = update_identity(session, blacklisted_identity);
+    
+    blacklisted_identity->comm_type = PEP_ct_pEp;
+
+    PEP_STATUS status99 = set_identity(session, blacklisted_identity);
+        
+    trust_personal_key(session, blacklisted_identity);
+
+    PEP_STATUS status999 = update_identity(session, blacklisted_identity);
+
+    assert(blacklisted_identity->comm_type == PEP_ct_pEp);
 
     PEP_STATUS status9 = blacklist_add(session, bl_fpr_1);
     PEP_STATUS status10 = blacklist_is_listed(session, bl_fpr_1, &is_blacklisted);
     PEP_STATUS status11 = update_identity(session, blacklisted_identity);
+
+    if (strcmp(blacklisted_identity->fpr, ""))
+        cout << "blacklisted_identity-> fpr should be empty, but is " << blacklisted_identity->fpr << endl;
+    else
+        cout << "blacklisted identity's fpr successfully wiped by update_identity" << endl;
 
     /* read the key into memory */
     ifstream infile2("blacklisted_pub2.asc");
@@ -111,7 +127,22 @@ int main() {
     PEP_STATUS status15 = update_identity(session, blacklisted_identity2);
     PEP_STATUS status12 = blacklist_delete(session, bl_fpr_1);
     PEP_STATUS status13 = update_identity(session, blacklisted_identity);
+
+    if (strcmp(blacklisted_identity->fpr, bl_fpr_2))
+        cout << "blacklisted identity's fpr successfully replaced by the unblacklisted one" << endl;
+    else
+        cout << "blacklisted_identity->fpr should be " << bl_fpr_2 << " but is " << blacklisted_identity->fpr << endl;
             
+    pEp_identity* stored_identity = new_identity("blacklistedkeys@kgrothoff.org",
+                                                  NULL,
+                                                  blacklisted_identity->user_id,
+                                                  "Blacklist Keypair");
+     
+    PEP_STATUS status00 = update_identity(session, stored_identity);
+    
+    // Following should be true because bl_fpr_1's trust is set higher
+    assert(stored_identity->comm_type == PEP_ct_pEp && (strcmp(stored_identity->fpr, bl_fpr_1) == 0));    
+    
     PEP_STATUS status16 = delete_keypair(session, bl_fpr_1);
     update_identity(session, blacklisted_identity);
     PEP_STATUS status17 = delete_keypair(session, bl_fpr_2);
@@ -124,4 +155,3 @@ int main() {
     release(session);
     return 0;
 }
-

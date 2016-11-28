@@ -226,13 +226,20 @@ DYNAMIC_API PEP_STATUS update_identity(
 
             if (!dont_use_fpr) {
                 PEP_comm_type _comm_type_key;
+                
+                // We don't want to lose a previous trust entry!!!
+                status = get_trust(session, temp_id);
 
+                bool has_trust_status = (status == PEP_STATUS_OK);
+                
                 status = get_key_rating(session, temp_id->fpr, &_comm_type_key);
+            
                 assert(status != PEP_OUT_OF_MEMORY);
                 if (status == PEP_OUT_OF_MEMORY)
                     goto exit_free;
 
-                temp_id->comm_type = _comm_type_key;
+                if (!has_trust_status || _comm_type_key > temp_id->comm_type)
+                    temp_id->comm_type = _comm_type_key;
             }
             else {
                 free(temp_id->fpr);
