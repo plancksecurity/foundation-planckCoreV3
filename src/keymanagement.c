@@ -875,7 +875,7 @@ PEP_STATUS _own_identities_retrieve(
                 lang = (const char *)
                     sqlite3_column_text(session->own_identities_retrieve, 3);
                 flags = (unsigned int)
-                    sqlite3_column_int(session->own_key_is_listed, 4);
+                    sqlite3_column_int(session->own_identities_retrieve, 4);
 
                 pEp_identity *ident = new_identity(address, fpr, user_id, username);
                 if (!ident)
