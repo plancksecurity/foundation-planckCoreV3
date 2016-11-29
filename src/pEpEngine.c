@@ -1065,9 +1065,10 @@ DYNAMIC_API PEP_STATUS set_identity(
         return PEP_ILLEGAL_VALUE;
 
     bool listed;
+
+    bool has_fpr = (identity->fpr && identity->fpr[0] != '\0');
     
-    if (identity->fpr && identity->fpr[0] != '\0') {
-        
+    if (has_fpr) {    
         // blacklist check
         PEP_STATUS status = blacklist_is_listed(session, identity->fpr, &listed);
         assert(status == PEP_STATUS_OK);
@@ -1076,7 +1077,6 @@ DYNAMIC_API PEP_STATUS set_identity(
 
         if (listed)
             return PEP_KEY_BLACKLISTED;
-        
     }
 
     sqlite3_exec(session->db, "BEGIN ;", NULL, NULL, NULL);
@@ -1106,16 +1106,17 @@ DYNAMIC_API PEP_STATUS set_identity(
         return PEP_CANNOT_SET_PERSON;
     }
 
-    sqlite3_reset(session->set_pgp_keypair);
-    sqlite3_bind_text(session->set_pgp_keypair, 1, identity->fpr, -1,
-            SQLITE_STATIC);
-    result = sqlite3_step(session->set_pgp_keypair);
-    sqlite3_reset(session->set_pgp_keypair);
-    if (result != SQLITE_DONE) {
-        sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
-        return PEP_CANNOT_SET_PGP_KEYPAIR;
+    if (has_fpr) {
+        sqlite3_reset(session->set_pgp_keypair);
+        sqlite3_bind_text(session->set_pgp_keypair, 1, identity->fpr, -1,
+                SQLITE_STATIC);
+        result = sqlite3_step(session->set_pgp_keypair);
+        sqlite3_reset(session->set_pgp_keypair);
+        if (result != SQLITE_DONE) {
+            sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
+            return PEP_CANNOT_SET_PGP_KEYPAIR;
+        }
     }
-
 
     sqlite3_reset(session->set_identity);
     sqlite3_bind_text(session->set_identity, 1, identity->address, -1,
@@ -1132,34 +1133,35 @@ DYNAMIC_API PEP_STATUS set_identity(
         return PEP_CANNOT_SET_IDENTITY;
     }
 
-    if(strcmp(identity->user_id, PEP_OWN_USERID) == 0 &&
-       identity->fpr && identity->fpr[0] != '\0') {
-        sqlite3_reset(session->set_own_key);
-        sqlite3_bind_text(session->set_own_key, 1, identity->address, -1,
-            SQLITE_STATIC);
-        sqlite3_bind_text(session->set_own_key, 2, identity->fpr, -1,
-            SQLITE_STATIC);
-        result = sqlite3_step(session->set_own_key);
-        sqlite3_reset(session->set_own_key);
+    if (has_fpr) {
+        if(strcmp(identity->user_id, PEP_OWN_USERID) == 0) {
+            sqlite3_reset(session->set_own_key);
+            sqlite3_bind_text(session->set_own_key, 1, identity->address, -1,
+                SQLITE_STATIC);
+            sqlite3_bind_text(session->set_own_key, 2, identity->fpr, -1,
+                SQLITE_STATIC);
+            result = sqlite3_step(session->set_own_key);
+            sqlite3_reset(session->set_own_key);
+            if (result != SQLITE_DONE) {
+                sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
+                return PEP_CANNOT_SET_PGP_KEYPAIR;
+            }
+        }
+
+        sqlite3_reset(session->set_trust);
+        sqlite3_bind_text(session->set_trust, 1, identity->user_id, -1,
+                SQLITE_STATIC);
+        sqlite3_bind_text(session->set_trust, 2, identity->fpr, -1,
+                SQLITE_STATIC);
+        sqlite3_bind_int(session->set_trust, 3, identity->comm_type);
+        result = sqlite3_step(session->set_trust);
+        sqlite3_reset(session->set_trust);
         if (result != SQLITE_DONE) {
             sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
-            return PEP_CANNOT_SET_PGP_KEYPAIR;
+            return PEP_CANNOT_SET_TRUST;
         }
     }
-
-    sqlite3_reset(session->set_trust);
-    sqlite3_bind_text(session->set_trust, 1, identity->user_id, -1,
-            SQLITE_STATIC);
-    sqlite3_bind_text(session->set_trust, 2, identity->fpr, -1,
-            SQLITE_STATIC);
-    sqlite3_bind_int(session->set_trust, 3, identity->comm_type);
-    result = sqlite3_step(session->set_trust);
-    sqlite3_reset(session->set_trust);
-    if (result != SQLITE_DONE) {
-        sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
-        return PEP_CANNOT_SET_TRUST;
-    }
-
+    
     result = sqlite3_exec(session->db, "COMMIT ;", NULL, NULL, NULL);
     if (result == SQLITE_OK)
         return PEP_STATUS_OK;
@@ -2170,4 +2172,3 @@ DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session)
 
     return PEP_STATUS_OK;
 }
-
