@@ -134,7 +134,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     sqlite3_busy_timeout(_session->system_db, 1000);
 
 // increment this when patching DDL
-#define _DDL_USER_VERSION "4"
+#define _DDL_USER_VERSION "5"
 
     if (in_first) {
 
@@ -281,6 +281,23 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 _session->db,
                 "alter table sequences\n"
                 "   add column own integer default 0;\n",
+                NULL,
+                NULL,
+                NULL
+            );
+        }
+
+        if (version < 5) {
+            int_result = sqlite3_exec(
+                _session->db,
+                "delete from pgp_keypair where fpr = '';",
+                NULL,
+                NULL,
+                NULL
+            );
+            int_result = sqlite3_exec(
+                _session->db,
+                "delete from trust where pgp_keypair_fpr = '';",
                 NULL,
                 NULL,
                 NULL
