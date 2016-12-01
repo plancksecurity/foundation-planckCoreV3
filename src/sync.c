@@ -18,13 +18,13 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
         PEP_SESSION session,
         void *obj,
         messageToSend_t messageToSend,
-        showHandshake_t showHandshake,
+        notifyHandshake_t notifyHandshake,
         inject_sync_msg_t inject_sync_msg,
         retrieve_next_sync_msg_t retrieve_next_sync_msg
     )
 {
-    assert(session && obj && messageToSend && showHandshake && inject_sync_msg && retrieve_next_sync_msg);
-    if (!(session && obj && messageToSend && showHandshake && inject_sync_msg && retrieve_next_sync_msg))
+    assert(session && obj && messageToSend && notifyHandshake && inject_sync_msg && retrieve_next_sync_msg);
+    if (!(session && obj && messageToSend && notifyHandshake && inject_sync_msg && retrieve_next_sync_msg))
         return PEP_ILLEGAL_VALUE;
 
     pEpUUID uuid;
@@ -33,7 +33,7 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
 
     session->sync_obj = obj;
     session->messageToSend = messageToSend;
-    session->showHandshake = showHandshake;
+    session->notifyHandshake = notifyHandshake;
     session->inject_sync_msg = inject_sync_msg;
     session->retrieve_next_sync_msg = retrieve_next_sync_msg;
 
@@ -93,7 +93,7 @@ DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
     // unregister
     session->sync_obj = NULL;
     session->messageToSend = NULL;
-    session->showHandshake = NULL;
+    session->notifyHandshake = NULL;
     session->inject_sync_msg = NULL;
     session->retrieve_next_sync_msg = NULL;
 }

@@ -26,19 +26,22 @@ extern "C" {
 
 typedef PEP_STATUS (*messageToSend_t)(void *obj, message *msg);
 
+typedef enum _sync_handshake_signal {
+    SYNC_HANDSHAKE_DISMISS_DIALOG = 0,
+    SYNC_HANDSHAKE_SHOW_DIALOG = 1,
+    SYNC_HANDSHAKE_SUCCESS = 2,
+    SYNC_HANDSHAKE_FAILURE = 3,
+    SYNC_DEVICE_ADDED = 4,
+    SYNC_GROUP_CREATED = 5
+} sync_handshake_signal;
 
-typedef enum _sync_handshake_result {
-    SYNC_HANDSHAKE_CANCEL = -1,
-    SYNC_HANDSHAKE_ACCEPTED = 0,
-    SYNC_HANDSHAKE_REJECTED = 1
-} sync_handshake_result;
-
-// showHandshake() - do a handshake by showing the handshake dialog
+// notifyHandshake() - notify UI about sync handshaking process
 //
 //  parameters:
 //      obj (in)        object handle (implementation defined)
 //      me (in)         own identity
 //      partner (in)    identity of partner
+//      signal (in)     reason of the notification
 //
 //  return value:
 //      PEP_STATUS_OK or any other value on error
@@ -46,12 +49,18 @@ typedef enum _sync_handshake_result {
 //  caveat:
 //      ownership of self and partner go to the callee
 
-typedef PEP_STATUS (*showHandshake_t)(
+typedef PEP_STATUS (*notifyHandshake_t)(
         void *obj,
         pEp_identity *me,
-        pEp_identity *partner
+        pEp_identity *partner,
+        sync_handshake_signal signal
     );
 
+typedef enum _sync_handshake_result {
+    SYNC_HANDSHAKE_CANCEL = -1,
+    SYNC_HANDSHAKE_ACCEPTED = 0,
+    SYNC_HANDSHAKE_REJECTED = 1
+} sync_handshake_result;
 
 // deliverHandshakeResult() - give the result of the handshake dialog
 //
@@ -100,7 +109,7 @@ typedef void *(*retrieve_next_sync_msg_t)(void *management, time_t *timeout);
 //      session (in)                session where to store obj handle
 //      obj (in)                    object handle (implementation defined)
 //      messageToSend (in)          callback for sending message
-//      showHandshake (in)          callback for doing the handshake
+//      notifyHandshake (in)          callback for doing the handshake
 //      retrieve_next_sync_msg (in) callback for receiving sync messages
 //
 //  return value:
@@ -113,7 +122,7 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
         PEP_SESSION session,
         void *obj,
         messageToSend_t messageToSend,
-        showHandshake_t showHandshake,
+        notifyHandshake_t notifyHandshake,
         inject_sync_msg_t inject_sync_msg,
         retrieve_next_sync_msg_t retrieve_next_sync_msg
     );

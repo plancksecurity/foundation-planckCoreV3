@@ -136,7 +136,7 @@ typedef struct _pEpSession {
     void *examine_management;
     void *sync_obj;
     messageToSend_t messageToSend;
-    showHandshake_t showHandshake;
+    notifyHandshake_t notifyHandshake;
     inject_sync_msg_t inject_sync_msg;
     retrieve_next_sync_msg_t retrieve_next_sync_msg;
 
