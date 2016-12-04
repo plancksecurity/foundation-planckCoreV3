@@ -40,7 +40,7 @@ protocol DeviceGroup {
             }
         }
 
-        state HandshakingSole timeout=10 (Identity partner) {
+        state HandshakingSole timeout=600 (Identity expected) {
             on Init
                 do showHandshake(partner);
             on HandshakeRejected(Identity partner) {
@@ -55,23 +55,24 @@ protocol DeviceGroup {
                     do handshakeGroupCreated(partner);
                     go Grouped;
                 }
-                go WaitForGroupKeysSole(Identity partner);
+                go WaitForGroupKeysSole(partner);
             }
             on Cancel go Sole;
             on Timeout {
-                do dismissHandshake(partner);
+                do dismissHandshake(expected);
                 go Sole;
             }
         }
     
-        state WaitForGroupKeysSole timeout=10 (Identity partner) {
+        state WaitForGroupKeysSole timeout=600 (Identity expected) {
             on GroupKeys(Identity partner, Stringlist keys) {
+                // TODO ensure partner == expected
                 do storeGroupKeys(partner, keys);
                 do handshakeSuccess(partner);
                 go Grouped;
             }
             on Timeout {
-                do handshakeFailure(partner);
+                do handshakeFailure(expected);
                 go Sole;
             }
         }
@@ -95,7 +96,7 @@ protocol DeviceGroup {
                 do storeGroupKeys(partner, keys);
         }
 
-        state HandshakingGrouped timeout=10 (Identity partner) {
+        state HandshakingGrouped timeout=600 (Identity expected) {
             on Init
                 do showHandshake(partner);
             on HandshakeRejected(Identity partner) {
@@ -113,11 +114,10 @@ protocol DeviceGroup {
                 go Grouped;
             }
             on Timeout {
-                do handshakeFailure(partner);
+                do handshakeFailure(expected);
                 go Grouped;
             }
         }
-    
 
         tag Init 1;
         tag Beacon 2;

@@ -142,6 +142,7 @@ typedef struct _pEpSession {
 
     // key sync
     DeviceState_state sync_state;
+    void* sync_state_payload;
     char sync_uuid[37];
     time_t LastCannotDecrypt;
     time_t LastUpdateRequest;

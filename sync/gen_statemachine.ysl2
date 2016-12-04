@@ -7,6 +7,7 @@
 include yslt.yml2
 
 tstylesheet {
+    include standardlib.ysl2
     include ./functions.ysl2
 
     template "/protocol" {
@@ -181,6 +182,7 @@ tstylesheet {
         document "../src/{@filename}_fsm.c", "text"
         ||
         #include "«@filename»_fsm.h"
+        #include "pEp_internal.h"
 
         // state machine for «@name»
 
@@ -211,6 +213,9 @@ tstylesheet {
     template "state"
     ||
     case «@name»:
+    {
+        `` if "count(parm) > 1" error | # TODO composite state payload 
+        `` apply "parm", 1 mode="stateParm"
         *timeout = «@timeout»;
         switch (event) {
         `` if "not(event[@name='Init'])" |>> case Init: break;
@@ -219,14 +224,21 @@ tstylesheet {
                 return («../@name»_state) invalid_event;
         }
         break;
-
+    }
     ||
+
+    template "parm" mode="stateParm" 
+    {
+        | «name(*[1])» «name(*[2])» = («name(*[1])»)session->sync_state_payload;
+    }
 
     template "event"
     ||
     case «@name»:
+    {
     `` apply "action|transition|condition";
     `` if "name(*[position()=last()]) != 'transition'" |> break;
+    }
     ||
 
     template "action" {
@@ -263,6 +275,20 @@ tstylesheet {
             > , «name(*[1])» «name(*[2])»
     }
 
-    template "transition" | return «@target»;
+    template "transition"{
+        const "stateparm", "ancestor::state/child::parm";
+        if "$stateparm" {
+            | if(session->sync_state_payload){
+            |     free_«yml:lcase(name($stateparm[1]/*))»((«name($stateparm[1]/*)»)session->sync_state_payload);
+            |     session->sync_state_payload = NULL;
+            | }
+        }
+        if "parm" {
+            const "nextstatename", "@target";
+            const "nextstateparm", "ancestor::fsm/child::state[@name = $nextstatename]/child::parm";
+            | session->sync_state_payload = «yml:lcase(name($nextstateparm/*))»_dup(«name(parm/*)»);
+        }
+        | return «@target»;
+    }
 }
 

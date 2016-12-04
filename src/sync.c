@@ -6,7 +6,7 @@
 #include "asn1_helper.h"
 #include "../asn.1/DeviceGroup-Protocol.h"
 
-// receive_sync_msg is defined in the sync_actions
+// receive_sync_msg is defined in the sync_impl
 
 PEP_STATUS receive_sync_msg(
         PEP_SESSION session,
