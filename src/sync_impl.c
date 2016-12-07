@@ -31,7 +31,8 @@ struct _sync_msg_t {
 
 PEP_STATUS receive_sync_msg(
         PEP_SESSION session,
-        sync_msg_t *sync_msg
+        sync_msg_t *sync_msg,
+        time_t *timeout
     )
 {
     PEP_STATUS status;
@@ -183,7 +184,7 @@ PEP_STATUS receive_sync_msg(
             goto error;
     }
 
-    status = fsm_DeviceState_inject(session, event, partner, extra);
+    status = fsm_DeviceState_inject(session, event, partner, extra, timeout);
 
     free_identity(partner);
 
@@ -645,7 +646,6 @@ PEP_STATUS multicast_self_msg(
     if (status != PEP_STATUS_OK)
         return status;
 
-    // FIXME: exclude previously rejected identities
     for (identity_list *_i = own_identities; _i && _i->ident; _i = _i->next) {
         pEp_identity *me = _i->ident;
 
