@@ -11,7 +11,7 @@ tstylesheet {
     include ./functions.ysl2
 
     template "/protocol" {
-        document "../src/Makefile.protocols", "text"
+        document "generated/Makefile.protocols", "text"
             apply "fsm", 0, mode="make";
         apply "fsm", 0, mode=gen;
     }
@@ -23,7 +23,7 @@ tstylesheet {
     ||
 
     template "fsm", mode=gen {
-        document "../src/{@filename}_fsm.h", "text" {
+        document "generated/{@filename}_fsm.h", "text" {
         ||
         #pragma once
 
@@ -136,7 +136,7 @@ tstylesheet {
 
         ||
         }
-        document "../src/{@filename}_driver.c", "text"
+        document "generated/{@filename}_driver.c", "text"
         ||
         // Driver for «@name» state machine
 
@@ -179,7 +179,7 @@ tstylesheet {
         }
 
         ||
-        document "../src/{@filename}_fsm.c", "text"
+        document "generated/{@filename}_fsm.c", "text"
         ||
         #include "«@filename»_fsm.h"
         #include "pEp_internal.h"

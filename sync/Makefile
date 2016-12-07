@@ -1,11 +1,15 @@
 include ../Makefile.conf
 
-all: .statemachines .skeletons
+all: .codegen
 
-skeleton: .skeletons
+skeleton: .actions
 
-.skeletons: devicegroup.fsm gen_actions_skeleton.ysl2 fsm.yml2 functions.ysl2
-	$(YML2PROC) -y gen_actions_skeleton.ysl2 $< -o $@
+.codegen: .statemachines .actions
+	cp -f generated/*.* ../src
+	touch .codegen
+
+.actions: devicegroup.fsm gen_actions.ysl2 fsm.yml2 functions.ysl2
+	$(YML2PROC) -y gen_actions.ysl2 $< -o $@
 
 .statemachines: devicegroup.fsm gen_statemachine.ysl2 fsm.yml2 functions.ysl2
 	$(YML2PROC) -y gen_statemachine.ysl2 $< -o $@
@@ -13,7 +17,9 @@ skeleton: .skeletons
 .PHONY: clean
 
 clean:
-	rm -f *.xml *.xsl ../src/sync_fsm.* ../src/*.skeleton .statemachines .skeletons *.dot *.svg
+	rm -f *.xml *.xsl \
+    $(pathsub generated/%, ../src/% $(wildcard generated/*.*)) \
+    ../generated/* ../skeletons/* .statemachines .actions *.dot *.svg
 
 %.xml: %.fsm
 	yml2c $< -o $@

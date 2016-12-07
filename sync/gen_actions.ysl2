@@ -15,7 +15,7 @@ tstylesheet {
         apply "fsm", mode=other, 0;
     }
 
-    template "fsm", mode=send document "../src/{@filename}_send_actions.c", "text" {
+    template "fsm", mode=send document "generated/{@filename}_send_actions.c", "text" {
         const "name", "@name";
         const "filename", "@filename";
         ||
@@ -43,7 +43,7 @@ tstylesheet {
                     with "filename", "$filename";
     }
 
-    template "fsm", mode=other document "../src/{@filename}_actions.c.skeleton", "text" {
+    template "fsm", mode=other document "skeletons/{@filename}_actions.c", "text" {
         const "name", "@name";
         const "filename", "@filename";
         ||
