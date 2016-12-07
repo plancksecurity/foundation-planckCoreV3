@@ -6,39 +6,41 @@
 #include "asn1_helper.h"
 #include "../asn.1/DeviceGroup-Protocol.h"
 
-// receive_sync_msg is defined in the sync_actions
+// receive_sync_msg is defined in the sync_impl
 
 PEP_STATUS receive_sync_msg(
         PEP_SESSION session,
-        sync_msg_t *sync_msg
+        sync_msg_t *sync_msg,
+        time_t *timeout
     );
 
 DYNAMIC_API PEP_STATUS register_sync_callbacks(
         PEP_SESSION session,
-        void *obj,
+        void *management,
         messageToSend_t messageToSend,
-        showHandshake_t showHandshake,
+        notifyHandshake_t notifyHandshake,
         inject_sync_msg_t inject_sync_msg,
         retrieve_next_sync_msg_t retrieve_next_sync_msg
     )
 {
-    assert(session && obj && messageToSend && showHandshake && inject_sync_msg && retrieve_next_sync_msg);
-    if (!(session && obj && messageToSend && showHandshake && inject_sync_msg && retrieve_next_sync_msg))
+    assert(session && management && messageToSend && notifyHandshake && inject_sync_msg && retrieve_next_sync_msg);
+    if (!(session && management && messageToSend && notifyHandshake && inject_sync_msg && retrieve_next_sync_msg))
         return PEP_ILLEGAL_VALUE;
 
     pEpUUID uuid;
     uuid_generate_random(uuid);
     uuid_unparse_upper(uuid, session->sync_uuid);
 
-    session->sync_obj = obj;
+    session->sync_management = management;
     session->messageToSend = messageToSend;
-    session->showHandshake = showHandshake;
+    session->notifyHandshake = notifyHandshake;
     session->inject_sync_msg = inject_sync_msg;
     session->retrieve_next_sync_msg = retrieve_next_sync_msg;
 
     // start state machine
     session->sync_state = InitState;
-    PEP_STATUS status = fsm_DeviceState_inject(session, Init, NULL, NULL);
+    time_t unused = 0;
+    PEP_STATUS status = fsm_DeviceState_inject(session, Init, NULL, NULL, &unused);
     if (status != PEP_STATUS_OK)
         unregister_sync_callbacks(session);
 
@@ -50,13 +52,13 @@ DYNAMIC_API PEP_STATUS attach_sync_session(
         PEP_SESSION sync_session
     )
 {
-    assert(session && sync_session && sync_session->sync_obj && sync_session->inject_sync_msg );
-    if (!(session && sync_session && sync_session->sync_obj && sync_session->inject_sync_msg ))
+    assert(session && sync_session && sync_session->sync_management && sync_session->inject_sync_msg );
+    if (!(session && sync_session && sync_session->sync_management && sync_session->inject_sync_msg ))
         return PEP_ILLEGAL_VALUE;
 
     memcpy(session->sync_uuid, sync_session->sync_uuid, 37);
 
-    session->sync_obj = sync_session->sync_obj;
+    session->sync_management = sync_session->sync_management;
     session->inject_sync_msg = sync_session->inject_sync_msg;
 
     return PEP_STATUS_OK;
@@ -64,13 +66,13 @@ DYNAMIC_API PEP_STATUS attach_sync_session(
 
 DYNAMIC_API PEP_STATUS detach_sync_session(PEP_SESSION session)
 {
-    assert(session && session->sync_obj && session->inject_sync_msg );
-    if (!(session && session->sync_obj && session->inject_sync_msg ))
+    assert(session && session->sync_management && session->inject_sync_msg );
+    if (!(session && session->sync_management && session->inject_sync_msg ))
         return PEP_ILLEGAL_VALUE;
 
     memset(session->sync_uuid, 0, 37);
 
-    session->sync_obj = NULL;
+    session->sync_management = NULL;
     session->inject_sync_msg = NULL;
 
     return PEP_STATUS_OK;
@@ -78,8 +80,8 @@ DYNAMIC_API PEP_STATUS detach_sync_session(PEP_SESSION session)
 
 int call_inject_sync_msg(PEP_SESSION session, void *msg)
 {
-    if(session->inject_sync_msg && session->sync_obj)
-        return session->inject_sync_msg(msg, session->sync_obj);
+    if(session->inject_sync_msg && session->sync_management)
+        return session->inject_sync_msg(msg, session->sync_management);
     else
        return PEP_SYNC_NO_INJECT_CALLBACK;
 }
@@ -89,9 +91,9 @@ DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
     session->sync_state = DeviceState_state_NONE;
 
     // unregister
-    session->sync_obj = NULL;
+    session->sync_management = NULL;
     session->messageToSend = NULL;
-    session->showHandshake = NULL;
+    session->notifyHandshake = NULL;
     session->inject_sync_msg = NULL;
     session->retrieve_next_sync_msg = NULL;
 }
@@ -144,23 +146,37 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
 
 DYNAMIC_API PEP_STATUS do_sync_protocol(
         PEP_SESSION session,
-        void *management
+        void *obj
     )
 {
     sync_msg_t *msg = NULL;
     PEP_STATUS status = PEP_STATUS_OK;
+    time_t timeout = 0;
 
     assert(session && session->retrieve_next_sync_msg);
-    assert(management);
+    assert(obj);
 
-    if (!(session && session->retrieve_next_sync_msg) || !management)
+    if (!(session && session->retrieve_next_sync_msg) || !obj)
         return PEP_ILLEGAL_VALUE;
 
     log_event(session, "sync_protocol thread started", "pEp sync protocol", NULL, NULL);
 
-    while ((msg = (sync_msg_t *) session->retrieve_next_sync_msg(management))) 
+    session->sync_obj = obj;
+
+    while (true) 
     {
-        if ((status = receive_sync_msg(session, msg) != PEP_STATUS_OK)) {
+        msg = (sync_msg_t *) session->retrieve_next_sync_msg(session->sync_management, &timeout);
+        if(msg == NULL && timeout == 0)
+            break;
+        else if(msg == NULL && timeout != 0){
+            status = fsm_DeviceState_inject(session, Timeout, NULL, NULL, &timeout);
+            char buffer[MAX_LINELENGTH];
+            memset(buffer, 0, MAX_LINELENGTH);
+            snprintf(buffer, MAX_LINELENGTH, "problem with timeout event : %d\n", (int) status);
+            log_event(session, buffer, "pEp sync protocol", NULL, NULL);
+            continue;
+        }
+        else if ((status = receive_sync_msg(session, msg, &timeout) != PEP_STATUS_OK)) {
             char buffer[MAX_LINELENGTH];
             memset(buffer, 0, MAX_LINELENGTH);
             snprintf(buffer, MAX_LINELENGTH, "problem with msg received: %d\n", (int) status);
@@ -169,6 +185,8 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
     }
 
     log_event(session, "sync_protocol thread shutdown", "pEp sync protocol", NULL, NULL);
+
+    session->sync_obj = NULL;
 
     return PEP_STATUS_OK;
 }

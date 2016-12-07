@@ -26,19 +26,22 @@ extern "C" {
 
 typedef PEP_STATUS (*messageToSend_t)(void *obj, message *msg);
 
+typedef enum _sync_handshake_signal {
+    SYNC_HANDSHAKE_DISMISS_DIALOG = 0,
+    SYNC_HANDSHAKE_SHOW_DIALOG = 1,
+    SYNC_HANDSHAKE_SUCCESS = 2,
+    SYNC_HANDSHAKE_FAILURE = 3,
+    SYNC_DEVICE_ADDED = 4,
+    SYNC_GROUP_CREATED = 5
+} sync_handshake_signal;
 
-typedef enum _sync_handshake_result {
-    SYNC_HANDSHAKE_CANCEL = -1,
-    SYNC_HANDSHAKE_ACCEPTED = 0,
-    SYNC_HANDSHAKE_REJECTED = 1
-} sync_handshake_result;
-
-// showHandshake() - do a handshake by showing the handshake dialog
+// notifyHandshake() - notify UI about sync handshaking process
 //
 //  parameters:
 //      obj (in)        object handle (implementation defined)
 //      me (in)         own identity
 //      partner (in)    identity of partner
+//      signal (in)     reason of the notification
 //
 //  return value:
 //      PEP_STATUS_OK or any other value on error
@@ -46,12 +49,18 @@ typedef enum _sync_handshake_result {
 //  caveat:
 //      ownership of self and partner go to the callee
 
-typedef PEP_STATUS (*showHandshake_t)(
+typedef PEP_STATUS (*notifyHandshake_t)(
         void *obj,
         pEp_identity *me,
-        pEp_identity *partner
+        pEp_identity *partner,
+        sync_handshake_signal signal
     );
 
+typedef enum _sync_handshake_result {
+    SYNC_HANDSHAKE_CANCEL = -1,
+    SYNC_HANDSHAKE_ACCEPTED = 0,
+    SYNC_HANDSHAKE_REJECTED = 1
+} sync_handshake_result;
 
 // deliverHandshakeResult() - give the result of the handshake dialog
 //
@@ -84,20 +93,23 @@ typedef int (*inject_sync_msg_t)(void *msg, void *management);
 //
 //  parameters:
 //      management (in)     application defined
+//      timeout (in,out)    do not wait longer than timeout for message
 //
 //  return value:
-//      next message or NULL for termination
+//      next message or :
+//      NULL + timeout == 0 for termination
+//      NULL + timeout != 0 for timeout occurence
 
-typedef void *(*retrieve_next_sync_msg_t)(void *management);
+typedef void *(*retrieve_next_sync_msg_t)(void *management, time_t *timeout);
 
 
 // register_sync_callbacks() - register adapter's callbacks
 //
 //  parameters:
 //      session (in)                session where to store obj handle
-//      obj (in)                    object handle (implementation defined)
+//      management (in)             application defined
 //      messageToSend (in)          callback for sending message
-//      showHandshake (in)          callback for doing the handshake
+//      notifyHandshake (in)        callback for doing the handshake
 //      retrieve_next_sync_msg (in) callback for receiving sync messages
 //
 //  return value:
@@ -108,9 +120,9 @@ typedef void *(*retrieve_next_sync_msg_t)(void *management);
 
 DYNAMIC_API PEP_STATUS register_sync_callbacks(
         PEP_SESSION session,
-        void *obj,
+        void *management,
         messageToSend_t messageToSend,
-        showHandshake_t showHandshake,
+        notifyHandshake_t notifyHandshake,
         inject_sync_msg_t inject_sync_msg,
         retrieve_next_sync_msg_t retrieve_next_sync_msg
     );
@@ -154,8 +166,7 @@ DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session);
 //      retrieve_next_sync_msg  pointer to retrieve_next_identity() callback
 //                              which returns at least a valid address field in
 //                              the identity struct
-//      management              management data to give to keymanagement
-//                              (implementation defined)
+//      obj                     application defined sync object
 //
 //  return value:
 //      PEP_STATUS_OK if thread has to terminate successfully or any other
@@ -164,11 +175,10 @@ DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session);
 //  caveat:
 //      to ensure proper working of this library, a thread has to be started
 //      with this function immediately after initialization
-//      do_keymanagement() calls retrieve_next_identity(management)
 
 DYNAMIC_API PEP_STATUS do_sync_protocol(
         PEP_SESSION session,
-        void *management
+        void *obj
     );
 
 // free_sync_msg() - free sync_msg_t struct when not passed to do_sync_protocol  

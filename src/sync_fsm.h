@@ -65,7 +65,7 @@ typedef enum _DeviceState_event {
     HandshakeRejected, 
     HandshakeAccepted, 
     Cancel, 
-    Reject, 
+    Timeout, 
     UpdateRequest, 
     GroupUpdate
 } DeviceState_event;
@@ -78,10 +78,15 @@ PEP_STATUS showHandshake(PEP_SESSION session, DeviceState_state state, Identity 
 PEP_STATUS rejectHandshake(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS acceptHandshake(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS sendGroupKeys(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS handshakeGroupCreated(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS dismissHandshake(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS storeGroupKeys(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS handshakeSuccess(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS handshakeFailure(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS enterGroup(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS sendGroupUpdate(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS sendUpdateRequest(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS handshakeDeviceAdded(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 
 // event injector
 
@@ -107,7 +112,8 @@ DeviceState_state fsm_DeviceState(
         DeviceState_state state,
         DeviceState_event event,
         Identity partner,
-        void *extra
+        void *extra,
+        time_t *timeout
     );
 
 // driver
@@ -116,7 +122,8 @@ DYNAMIC_API PEP_STATUS fsm_DeviceState_inject(
         PEP_SESSION session,
         DeviceState_event event,
         Identity partner,
-        void *extra
+        void *extra,
+        time_t *timeout
     );
 
 #ifdef __cplusplus
