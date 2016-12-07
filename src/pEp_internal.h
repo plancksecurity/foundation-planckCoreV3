@@ -134,6 +134,7 @@ typedef struct _pEpSession {
     // callbacks
     examine_identity_t examine_identity;
     void *examine_management;
+    void *sync_management;
     void *sync_obj;
     messageToSend_t messageToSend;
     notifyHandshake_t notifyHandshake;

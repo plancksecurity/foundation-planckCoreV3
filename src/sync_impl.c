@@ -646,7 +646,6 @@ PEP_STATUS multicast_self_msg(
     if (status != PEP_STATUS_OK)
         return status;
 
-    // FIXME: exclude previously rejected identities
     for (identity_list *_i = own_identities; _i && _i->ident; _i = _i->next) {
         pEp_identity *me = _i->ident;
 

@@ -107,9 +107,9 @@ typedef void *(*retrieve_next_sync_msg_t)(void *management, time_t *timeout);
 //
 //  parameters:
 //      session (in)                session where to store obj handle
-//      obj (in)                    object handle (implementation defined)
+//      management (in)             application defined
 //      messageToSend (in)          callback for sending message
-//      notifyHandshake (in)          callback for doing the handshake
+//      notifyHandshake (in)        callback for doing the handshake
 //      retrieve_next_sync_msg (in) callback for receiving sync messages
 //
 //  return value:
@@ -120,7 +120,7 @@ typedef void *(*retrieve_next_sync_msg_t)(void *management, time_t *timeout);
 
 DYNAMIC_API PEP_STATUS register_sync_callbacks(
         PEP_SESSION session,
-        void *obj,
+        void *management,
         messageToSend_t messageToSend,
         notifyHandshake_t notifyHandshake,
         inject_sync_msg_t inject_sync_msg,
@@ -166,8 +166,7 @@ DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session);
 //      retrieve_next_sync_msg  pointer to retrieve_next_identity() callback
 //                              which returns at least a valid address field in
 //                              the identity struct
-//      management              management data to give to keymanagement
-//                              (implementation defined)
+//      obj                     application defined sync object
 //
 //  return value:
 //      PEP_STATUS_OK if thread has to terminate successfully or any other
@@ -176,11 +175,10 @@ DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session);
 //  caveat:
 //      to ensure proper working of this library, a thread has to be started
 //      with this function immediately after initialization
-//      do_keymanagement() calls retrieve_next_identity(management)
 
 DYNAMIC_API PEP_STATUS do_sync_protocol(
         PEP_SESSION session,
-        void *management
+        void *obj
     );
 
 // free_sync_msg() - free sync_msg_t struct when not passed to do_sync_protocol  
