@@ -2042,6 +2042,7 @@ DYNAMIC_API PEP_color color_from_rating(PEP_rating rating)
 
     // this should never happen
     assert(false);
+	return PEP_rating_undefined;
 }
 
 static bool _is_valid_hex(const char* hexstr) {
