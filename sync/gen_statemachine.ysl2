@@ -181,8 +181,8 @@ tstylesheet {
         ||
         document "generated/{@filename}_fsm.c", "text"
         ||
-        #include "«@filename»_fsm.h"
         #include "pEp_internal.h"
+        #include "«@filename»_fsm.h"
 
         // state machine for «@name»
 

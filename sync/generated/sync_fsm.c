@@ -1,5 +1,5 @@
-#include "sync_fsm.h"
 #include "pEp_internal.h"
+#include "sync_fsm.h"
 
 // state machine for DeviceState
 
