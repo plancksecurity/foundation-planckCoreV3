@@ -1,59 +1,12 @@
-/*
-====================================
-Engine/adapter/app KeySync interface 
-====================================
-
-In the engine, KeySync is implemented through a state machine [1]. KeySync
-state machine is driven [2] by events, triggering actions [3] and transitions
-to new states. Events happens on decryption of email messages, on key
-generation, on user interaction through the app and in case of timeout when
-staying too long in some particular states.
-
-To use KeySync, the adapter has to create a session dedicated to handle the
-protocol, register some callbacks [4] to the engine, and then call protocol's
-event consumer loop [5] in a dedicated thread. KeySync actions are executed
-as callback invoked from that loop : send pEp messages through app's transport
-and display KeySync status and handshake to the user.
-
-When a session is attached [6] to a KeySync session, decryption of pEp (email)
-messages in that session may trigger operations in attached KeySync session. In
-case of an adapter capable to serve multiple apps, each app is associated to a
-different KeySync session, and sessions created for use in that app are
-attached to that session.
-
-KeySync messages [7], not to be confused with pEp (email) messages, are either
-directly events to be processed by the state machine or KeySync payloads
-collected from decrypted messages. They are jobs to be processed by the state
-machine.
-
-KeySync messages can be emitted by multiple session, and could naturally come
-from different threads. They must be serialized in a locked queue. Attached
-sessions inject [8] KeySync messages in the queue. Protocol loop retrieves [9]
-them from the queue. KeySync message is received [10] by the state machine,
-where event eventually deduced from payload.
-
-A state timeout event is a particular case. It doesn't traverse the queue, and
-isn't emitted by a session. It is triggered by a timeout on the retrieve
-operation. Value of the timeout is determined when entering a new state, and is
-passed as a parameter of the call to the blocking queue retrieve operation on 
-next protocol loop iteraton.
-
-[1] sync/device_group.fsm , src/sync_fsm.c (generated)
-[2] src/sync_driver.c (generated)
-[3] src/sync_actions.c , src/sync_send_actions.c (generated)
-[4] register_sync_callbacks()
-[5] do_sync_protocol()
-[6] attach_sync_session()
-[7] type sync_msg_t
-[8] callback inject_sync_msg
-[9] callback retrieve_next_sync_msg
-[10] receive_sync_msg() (src/sync_impl.c)
-
-*/
 #pragma once
 
 #include "message.h"
 #include "sync_fsm.h"
+
+
+// this module is for being used WITHOUT the Transport API in transport.h
+// DO NOT USE IT WHEN USING Transport API!
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -74,12 +27,22 @@ extern "C" {
 typedef PEP_STATUS (*messageToSend_t)(void *obj, message *msg);
 
 typedef enum _sync_handshake_signal {
-    SYNC_HANDSHAKE_DISMISS_DIALOG = 0,
-    SYNC_HANDSHAKE_SHOW_DIALOG = 1,
-    SYNC_HANDSHAKE_SUCCESS = 2,
-    SYNC_HANDSHAKE_FAILURE = 3,
-    SYNC_DEVICE_ADDED = 4,
-    SYNC_GROUP_CREATED = 5
+    SYNC_HANDSHAKE_UNDEFINED = 0,
+
+    // request show handshake dialog
+    SYNC_HANDSHAKE_INIT_ADD_OUR_DEVICE,
+    SYNC_HANDSHAKE_INIT_ADD_OTHER_DEVICE,
+    SYNC_HANDSHAKE_INIT_FORM_GROUP,
+
+    // handshake process was cancelled
+    SYNC_HANDSHAKE_CANCELED,
+
+    // handshake accepted by user
+    SYNC_HANDSHAKE_ACCEPTED_DEVICE_ADDED,
+    SYNC_HANDSHAKE_ACCEPTED_GROUP_CREATED,
+
+    // handshake was rejected by user
+    SYNC_HANDSHAKE_REJECTED
 } sync_handshake_signal;
 
 // notifyHandshake() - notify UI about sync handshaking process
@@ -136,16 +99,16 @@ typedef struct _sync_msg_t sync_msg_t;
 typedef int (*inject_sync_msg_t)(void *msg, void *management);
 
 
-// retrieve_next_sync_msg - retrieve next sync message
+// retrieve_next_sync_msg - receive next sync message
 //
 //  parameters:
 //      management (in)     application defined
-//      timeout (in,out)    do not wait longer than timeout for message (seconds)
+//      timeout (in,out)    do not wait longer than timeout for message
 //
 //  return value:
 //      next message or :
-//      NULL and timeout == 0 for termination
-//      NULL and timeout != 0 for timeout occurence
+//      NULL + timeout == 0 for termination
+//      NULL + timeout != 0 for timeout occurence
 
 typedef void *(*retrieve_next_sync_msg_t)(void *management, time_t *timeout);
 
