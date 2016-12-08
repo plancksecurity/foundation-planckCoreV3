@@ -263,7 +263,7 @@ PEP_STATUS handshakeFailure(
     )
 {
    assert(extra == NULL);
-   return _notifyHandshake(session, partner, SYNC_NOTIFY_REJECTED);
+   return _notifyHandshake(session, partner, SYNC_NOTIFY_TIMEOUT);
 }
 
 // acceptHandshake() - stores acception of partner

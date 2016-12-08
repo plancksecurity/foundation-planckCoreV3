@@ -90,6 +90,7 @@ typedef enum _sync_handshake_signal {
     // handshake process is done or was cancelled
     SYNC_NOTIFY_DISMISSED,
     SYNC_NOTIFY_CANCELED,
+    SYNC_NOTIFY_TIMEOUT,
 
     // handshake accepted by user
     SYNC_NOTIFY_ACCEPTED_DEVICE_ADDED,
