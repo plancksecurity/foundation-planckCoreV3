@@ -157,7 +157,7 @@ PEP_STATUS showHandshake(
     )
 {
    assert(extra == NULL);
-   return _notifyHandshake(session, partner, SYNC_HANDSHAKE_SHOW_DIALOG);
+   return _notifyHandshake(session, partner, SYNC_NOTIFY_INIT_ADD_OUR_DEVICE);
 }
 
 // dismissHandshake() - kill the handshake dialog of the application
@@ -178,7 +178,7 @@ PEP_STATUS dismissHandshake(
     )
 {
    assert(extra == NULL);
-   return _notifyHandshake(session, partner, SYNC_HANDSHAKE_DISMISS_DIALOG);
+   return _notifyHandshake(session, partner, SYNC_NOTIFY_DISMISSED);
 }
 
 // handshakeSuccess() - notify the application that handshake succeeded
@@ -199,7 +199,7 @@ PEP_STATUS handshakeSuccess(
     )
 {
    assert(extra == NULL);
-   return _notifyHandshake(session, partner, SYNC_HANDSHAKE_SUCCESS);
+   return _notifyHandshake(session, partner, SYNC_NOTIFY_ACCEPTED_DEVICE_ADDED);
 }
 
 // handshakeGroupCreated() - notify the application that initial group was created
@@ -221,7 +221,7 @@ PEP_STATUS handshakeGroupCreated(
     )
 {
    assert(extra == NULL);
-   return _notifyHandshake(session, partner, SYNC_GROUP_CREATED);
+   return _notifyHandshake(session, partner, SYNC_NOTIFY_ACCEPTED_GROUP_CREATED);
 }
 
 // handshakeDeviceAdded() - notify the application that partner's device was added to group
@@ -242,7 +242,7 @@ PEP_STATUS handshakeDeviceAdded(
     )
 {
    assert(extra == NULL);
-   return _notifyHandshake(session, partner, SYNC_DEVICE_ADDED);
+   return _notifyHandshake(session, partner, SYNC_NOTIFY_ACCEPTED_DEVICE_ADDED);
 }
 
 // handshakeFailure() - notify the application that handshake failed
@@ -263,7 +263,7 @@ PEP_STATUS handshakeFailure(
     )
 {
    assert(extra == NULL);
-   return _notifyHandshake(session, partner, SYNC_HANDSHAKE_FAILURE);
+   return _notifyHandshake(session, partner, SYNC_NOTIFY_REJECTED);
 }
 
 // acceptHandshake() - stores acception of partner

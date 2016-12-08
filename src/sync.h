@@ -87,7 +87,8 @@ typedef enum _sync_handshake_signal {
     SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE,
     SYNC_NOTIFY_INIT_FORM_GROUP,
 
-    // handshake process was cancelled
+    // handshake process is done or was cancelled
+    SYNC_NOTIFY_DISMISSED,
     SYNC_NOTIFY_CANCELED,
 
     // handshake accepted by user
