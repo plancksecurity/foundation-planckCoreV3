@@ -27,22 +27,12 @@ extern "C" {
 typedef PEP_STATUS (*messageToSend_t)(void *obj, message *msg);
 
 typedef enum _sync_handshake_signal {
-    SYNC_HANDSHAKE_UNDEFINED = 0,
-
-    // request show handshake dialog
-    SYNC_HANDSHAKE_INIT_ADD_OUR_DEVICE,
-    SYNC_HANDSHAKE_INIT_ADD_OTHER_DEVICE,
-    SYNC_HANDSHAKE_INIT_FORM_GROUP,
-
-    // handshake process was cancelled
-    SYNC_HANDSHAKE_CANCELED,
-
-    // handshake accepted by user
-    SYNC_HANDSHAKE_ACCEPTED_DEVICE_ADDED,
-    SYNC_HANDSHAKE_ACCEPTED_GROUP_CREATED,
-
-    // handshake was rejected by user
-    SYNC_HANDSHAKE_REJECTED
+    SYNC_HANDSHAKE_DISMISS_DIALOG = 0,
+    SYNC_HANDSHAKE_SHOW_DIALOG = 1,
+    SYNC_HANDSHAKE_SUCCESS = 2,
+    SYNC_HANDSHAKE_FAILURE = 3,
+    SYNC_DEVICE_ADDED = 4,
+    SYNC_GROUP_CREATED = 5
 } sync_handshake_signal;
 
 // notifyHandshake() - notify UI about sync handshaking process
