@@ -30,7 +30,7 @@ _all = (
         if not space.match(line)
 )
 
-_some = line for line in _all if len(line[2]) < args.length
+_some = (line for line in _all if len(line[2]) < args.length)
 
-for i, w in enumerate(_all):
+for i, w in enumerate(_some):
     print("{l},{i},{w},0".format(l=w[0], i=i, w=w[2]))
