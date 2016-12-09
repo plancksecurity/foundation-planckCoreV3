@@ -74,19 +74,18 @@ typedef enum _DeviceState_event {
 
 PEP_STATUS sendBeacon(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS sendHandshakeRequest(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
-PEP_STATUS showHandshake(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS notifyInitFormGroup(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS notifyInitAddOurDevice(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS rejectHandshake(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS acceptHandshake(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS sendGroupKeys(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
-PEP_STATUS handshakeGroupCreated(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
-PEP_STATUS dismissHandshake(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS notifyAcceptedGroupCreated(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS notifyTimeout(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS storeGroupKeys(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
-PEP_STATUS handshakeSuccess(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
-PEP_STATUS handshakeFailure(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS notifyAcceptedDeviceAdded(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS enterGroup(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS sendGroupUpdate(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS sendUpdateRequest(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
-PEP_STATUS handshakeDeviceAdded(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 
 // event injector
 

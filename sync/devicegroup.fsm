@@ -41,8 +41,14 @@ protocol DeviceGroup {
         }
 
         state HandshakingSole timeout=600 (Identity expected) {
-            on Init
-                do showHandshake(partner);
+            on Init{
+                if keyElectionWon(partner) {    // an already existing group
+                    do notifyInitFormGroup(partner);
+                } else {
+                    do notifyInitAddOurDevice(partner);
+                }
+            }
+
             on HandshakeRejected(Identity partner) {
                 do rejectHandshake(partner);             // stores rejection of partner
                 go Sole;
@@ -52,14 +58,14 @@ protocol DeviceGroup {
                 if keyElectionWon(partner) {    // an already existing group
                                                 // always wins
                     do sendGroupKeys(partner);
-                    do handshakeGroupCreated(partner);
+                    do notifyAcceptedGroupCreated(partner);
                     go Grouped;
                 }
                 go WaitForGroupKeysSole(partner);
             }
             on Cancel go Sole;
             on Timeout {
-                do dismissHandshake(expected);
+                do notifyTimeout(expected);
                 go Sole;
             }
         }
@@ -68,11 +74,11 @@ protocol DeviceGroup {
             on GroupKeys(Identity partner, Stringlist keys) {
                 // TODO ensure partner == expected
                 do storeGroupKeys(partner, keys);
-                do handshakeSuccess(partner);
+                do notifyAcceptedDeviceAdded(partner);
                 go Grouped;
             }
             on Timeout {
-                do handshakeFailure(expected);
+                do notifyTimeout(expected);
                 go Sole;
             }
         }
@@ -98,7 +104,7 @@ protocol DeviceGroup {
 
         state HandshakingGrouped timeout=600 (Identity expected) {
             on Init
-                do showHandshake(partner);
+                do notifyInitAddOurDevice(partner);
             on HandshakeRejected(Identity partner) {
                 do rejectHandshake(partner);             // stores rejection of partner
                 go Grouped;
@@ -109,12 +115,10 @@ protocol DeviceGroup {
                 // an already existing group always wins
                 do sendGroupKeys(partner);
 
-                do handshakeDeviceAdded(partner);
-
                 go Grouped;
             }
             on Timeout {
-                do handshakeFailure(expected);
+                do notifyTimeout(expected);
                 go Grouped;
             }
         }

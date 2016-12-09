@@ -266,6 +266,12 @@ tstylesheet {
         | if (cond_result) {
         apply "action|transition|condition";
         | }
+        const "else", "./following-sibling::*[position()=1][name(.)='else']";
+        if "$else" {
+        | else {
+        apply "$else/action|transition|condition";
+        | }
+        }
     }
 
     template "parm" choose {

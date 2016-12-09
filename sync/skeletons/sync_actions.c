@@ -8,7 +8,7 @@
 #include "../asn.1/DeviceGroup-Protocol.h"
 
 
-// showHandshake() - 
+// notifyInitFormGroup() - 
 //
 //  params:
 //      session (in)        session handle
@@ -18,7 +18,44 @@
 //  returns:
 //      PEP_STATUS_OK or any other value on error
 
-PEP_STATUS showHandshake(
+PEP_STATUS notifyInitFormGroup(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(partner);
+    if (!(session && partner))
+        return PEP_ILLEGAL_VALUE;
+
+    // working code
+
+    // free extra
+    return status;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+error:
+    // free extra
+    return status;
+}
+
+
+// notifyInitAddOurDevice() - 
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        partner to communicate with
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS notifyInitAddOurDevice(
         PEP_SESSION session,
         DeviceState_state state,
         Identity partner,
@@ -119,7 +156,7 @@ error:
 }
 
 
-// handshakeGroupCreated() - 
+// notifyAcceptedGroupCreated() - 
 //
 //  params:
 //      session (in)        session handle
@@ -129,7 +166,7 @@ error:
 //  returns:
 //      PEP_STATUS_OK or any other value on error
 
-PEP_STATUS handshakeGroupCreated(
+PEP_STATUS notifyAcceptedGroupCreated(
         PEP_SESSION session,
         DeviceState_state state,
         Identity partner,
@@ -156,7 +193,7 @@ error:
 }
 
 
-// dismissHandshake() - 
+// notifyTimeout() - 
 //
 //  params:
 //      session (in)        session handle
@@ -166,7 +203,7 @@ error:
 //  returns:
 //      PEP_STATUS_OK or any other value on error
 
-PEP_STATUS dismissHandshake(
+PEP_STATUS notifyTimeout(
         PEP_SESSION session,
         DeviceState_state state,
         Identity partner,
@@ -230,7 +267,7 @@ error:
 }
 
 
-// handshakeSuccess() - 
+// notifyAcceptedDeviceAdded() - 
 //
 //  params:
 //      session (in)        session handle
@@ -240,7 +277,7 @@ error:
 //  returns:
 //      PEP_STATUS_OK or any other value on error
 
-PEP_STATUS handshakeSuccess(
+PEP_STATUS notifyAcceptedDeviceAdded(
         PEP_SESSION session,
         DeviceState_state state,
         Identity partner,
@@ -252,43 +289,6 @@ PEP_STATUS handshakeSuccess(
     assert(session);
     assert(partner);
     if (!(session && partner))
-        return PEP_ILLEGAL_VALUE;
-
-    // working code
-
-    // free extra
-    return status;
-
-enomem:
-    status = PEP_OUT_OF_MEMORY;
-error:
-    // free extra
-    return status;
-}
-
-
-// handshakeFailure() - 
-//
-//  params:
-//      session (in)        session handle
-//      state (in)          state the state machine is in
-//      partner (in)        partner to communicate with
-//
-//  returns:
-//      PEP_STATUS_OK or any other value on error
-
-PEP_STATUS handshakeFailure(
-        PEP_SESSION session,
-        DeviceState_state state,
-        Identity partner,
-        void *extra
-    )
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session);
-    assert(!partner);
-    if (!(session && !partner))
         return PEP_ILLEGAL_VALUE;
 
     // working code
@@ -326,43 +326,6 @@ PEP_STATUS enterGroup(
     assert(session);
     assert(!partner);
     if (!(session && !partner))
-        return PEP_ILLEGAL_VALUE;
-
-    // working code
-
-    // free extra
-    return status;
-
-enomem:
-    status = PEP_OUT_OF_MEMORY;
-error:
-    // free extra
-    return status;
-}
-
-
-// handshakeDeviceAdded() - 
-//
-//  params:
-//      session (in)        session handle
-//      state (in)          state the state machine is in
-//      partner (in)        partner to communicate with
-//
-//  returns:
-//      PEP_STATUS_OK or any other value on error
-
-PEP_STATUS handshakeDeviceAdded(
-        PEP_SESSION session,
-        DeviceState_state state,
-        Identity partner,
-        void *extra
-    )
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session);
-    assert(partner);
-    if (!(session && partner))
         return PEP_ILLEGAL_VALUE;
 
     // working code

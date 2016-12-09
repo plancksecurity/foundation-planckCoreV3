@@ -97,7 +97,7 @@ the_end:
     return result;
 }
 
-static PEP_STATUS _notifyHandshake(
+PEP_STATUS _notifyHandshake(
         PEP_SESSION session,
         Identity partner,
         sync_handshake_signal signal
@@ -137,133 +137,6 @@ static PEP_STATUS _notifyHandshake(
 error:
     free_identity(me);
     return status;
-}
-
-// showHandshake() - trigger the handshake dialog of the application
-//
-//  params:
-//      session (in)        session handle
-//      state (in)          state the state machine is in
-//      partner (in)        partner to communicate with
-//
-//  returns:
-//      PEP_STATUS_OK or any other value on error
-
-PEP_STATUS showHandshake(
-        PEP_SESSION session,
-        DeviceState_state state,
-        Identity partner,
-        void *extra
-    )
-{
-   assert(extra == NULL);
-   return _notifyHandshake(session, partner, SYNC_NOTIFY_INIT_ADD_OUR_DEVICE);
-}
-
-// dismissHandshake() - kill the handshake dialog of the application
-//
-//  params:
-//      session (in)        session handle
-//      state (in)          state the state machine is in
-//      partner (in)        partner to communicate with
-//
-//  returns:
-//      PEP_STATUS_OK or any other value on error
-
-PEP_STATUS dismissHandshake(
-        PEP_SESSION session,
-        DeviceState_state state,
-        Identity partner,
-        void *extra
-    )
-{
-   assert(extra == NULL);
-   return _notifyHandshake(session, partner, SYNC_NOTIFY_DISMISSED);
-}
-
-// handshakeSuccess() - notify the application that handshake succeeded
-//
-//  params:
-//      session (in)        session handle
-//      state (in)          state the state machine is in
-//      partner (in)        partner to communicate with
-//
-//  returns:
-//      PEP_STATUS_OK or any other value on error
-
-PEP_STATUS handshakeSuccess(
-        PEP_SESSION session,
-        DeviceState_state state,
-        Identity partner,
-        void *extra
-    )
-{
-   assert(extra == NULL);
-   return _notifyHandshake(session, partner, SYNC_NOTIFY_ACCEPTED_DEVICE_ADDED);
-}
-
-// handshakeGroupCreated() - notify the application that initial group was created
-//                           and partner's device was included in group
-//
-//  params:
-//      session (in)        session handle
-//      state (in)          state the state machine is in
-//      partner (in)        partner to communicate with
-//
-//  returns:
-//      PEP_STATUS_OK or any other value on error
-
-PEP_STATUS handshakeGroupCreated(
-        PEP_SESSION session,
-        DeviceState_state state,
-        Identity partner,
-        void *extra
-    )
-{
-   assert(extra == NULL);
-   return _notifyHandshake(session, partner, SYNC_NOTIFY_ACCEPTED_GROUP_CREATED);
-}
-
-// handshakeDeviceAdded() - notify the application that partner's device was added to group
-//
-//  params:
-//      session (in)        session handle
-//      state (in)          state the state machine is in
-//      partner (in)        partner to communicate with
-//
-//  returns:
-//      PEP_STATUS_OK or any other value on error
-
-PEP_STATUS handshakeDeviceAdded(
-        PEP_SESSION session,
-        DeviceState_state state,
-        Identity partner,
-        void *extra
-    )
-{
-   assert(extra == NULL);
-   return _notifyHandshake(session, partner, SYNC_NOTIFY_ACCEPTED_DEVICE_ADDED);
-}
-
-// handshakeFailure() - notify the application that handshake failed
-//
-//  params:
-//      session (in)        session handle
-//      state (in)          state the state machine is in
-//      partner (in)        partner to communicate with
-//
-//  returns:
-//      PEP_STATUS_OK or any other value on error
-
-PEP_STATUS handshakeFailure(
-        PEP_SESSION session,
-        DeviceState_state state,
-        Identity partner,
-        void *extra
-    )
-{
-   assert(extra == NULL);
-   return _notifyHandshake(session, partner, SYNC_NOTIFY_TIMEOUT);
 }
 
 // acceptHandshake() - stores acception of partner

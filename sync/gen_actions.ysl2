@@ -41,6 +41,22 @@ tstylesheet {
                     with "action", ".",
                     with "fsm", "$name",
                     with "filename", "$filename";
+
+        ||
+
+        PEP_STATUS _notifyHandshake(
+                PEP_SESSION session,
+                Identity partner,
+                sync_handshake_signal signal
+            );
+        ||
+
+        for "func:distinctName(//action)"
+            if "substring(@name, 1, 6) = 'notify'"
+                call "notify_action"
+                    with "action", ".",
+                    with "fsm", "$name",
+                    with "filename", "$filename";
     }
 
     template "fsm", mode=other document "skeletons/{@filename}_actions.c", "text" {
@@ -213,6 +229,54 @@ tstylesheet {
             free_DeviceGroup_Protocol_msg(msg);
             `` if "$name='GroupKeys'" |> free_identity_list(kl);
             return status;
+        }
+
+        ||
+    }
+
+    function "UnCamelUp" {
+        param "text";
+        const "tokens", "str:tokenize($text, '')";
+
+        for "$tokens" {
+            choose {
+                when "contains('ABCDEFGHIJKLMNOPQRSTUVWXYZ',.)" > _«.»
+                otherwise value "yml:ucase(.)";
+            }
+        }
+    }
+
+    function "notify_action" {
+        param "action";
+        param "fsm";
+        param "filename", "'###'";
+        const "name", "substring($action/@name, 7, 255)";
+        const "uname" call "UnCamelUp" with "text", "$name";
+        ||
+
+        // «$action/@name»() - notify «$name» to app
+        //
+        //  params:
+        //      session (in)        session handle
+        //      state (in)          state the state machine is in
+        //      partner (in)        partner to communicate with
+        //
+        //  returns:
+        //      PEP_STATUS_OK or any other value on error
+
+        PEP_STATUS «$action/@name»(
+                PEP_SESSION session,
+                «$fsm»_state state,
+                Identity partner,
+                void *extra
+            )
+        {
+            assert(session && state);
+            assert(extra == NULL);
+            if (!(session && state && extra == NULL))
+                return PEP_ILLEGAL_VALUE;
+
+            return _notifyHandshake(session, partner, SYNC_NOTIFY«$uname»);
         }
 
         ||

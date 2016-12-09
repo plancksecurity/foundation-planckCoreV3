@@ -89,11 +89,23 @@ DeviceState_state fsm_DeviceState(
             switch (event) {
                 case Init:
                 {
-                    status = showHandshake(session, state, partner, NULL);
-                    if (status == PEP_OUT_OF_MEMORY)
-                        return (int) invalid_out_of_memory;
-                    if (status != PEP_STATUS_OK)
-                        return (int) invalid_action;
+                    cond_result = keyElectionWon(session, partner);
+                    if (cond_result < 0)
+                        return cond_result;
+                    if (cond_result) {
+                        status = notifyInitFormGroup(session, state, partner, NULL);
+                        if (status == PEP_OUT_OF_MEMORY)
+                            return (int) invalid_out_of_memory;
+                        if (status != PEP_STATUS_OK)
+                            return (int) invalid_action;
+                    }
+                    else {
+                        status = notifyInitAddOurDevice(session, state, partner, NULL);
+                        if (status == PEP_OUT_OF_MEMORY)
+                            return (int) invalid_out_of_memory;
+                        if (status != PEP_STATUS_OK)
+                            return (int) invalid_action;
+                    }
                     break;
                 }
                 case HandshakeRejected:
@@ -125,7 +137,7 @@ DeviceState_state fsm_DeviceState(
                             return (int) invalid_out_of_memory;
                         if (status != PEP_STATUS_OK)
                             return (int) invalid_action;
-                        status = handshakeGroupCreated(session, state, partner, NULL);
+                        status = notifyAcceptedGroupCreated(session, state, partner, NULL);
                         if (status == PEP_OUT_OF_MEMORY)
                             return (int) invalid_out_of_memory;
                         if (status != PEP_STATUS_OK)
@@ -153,7 +165,7 @@ DeviceState_state fsm_DeviceState(
                 }
                 case Timeout:
                 {
-                    status = dismissHandshake(session, state, expected, NULL);
+                    status = notifyTimeout(session, state, expected, NULL);
                     if (status == PEP_OUT_OF_MEMORY)
                         return (int) invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
@@ -182,7 +194,7 @@ DeviceState_state fsm_DeviceState(
                         return (int) invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return (int) invalid_action;
-                    status = handshakeSuccess(session, state, partner, NULL);
+                    status = notifyAcceptedDeviceAdded(session, state, partner, NULL);
                     if (status == PEP_OUT_OF_MEMORY)
                         return (int) invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
@@ -195,7 +207,7 @@ DeviceState_state fsm_DeviceState(
                 }
                 case Timeout:
                 {
-                    status = handshakeFailure(session, state, expected, NULL);
+                    status = notifyTimeout(session, state, expected, NULL);
                     if (status == PEP_OUT_OF_MEMORY)
                         return (int) invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
@@ -291,7 +303,7 @@ DeviceState_state fsm_DeviceState(
             switch (event) {
                 case Init:
                 {
-                    status = showHandshake(session, state, partner, NULL);
+                    status = notifyInitAddOurDevice(session, state, partner, NULL);
                     if (status == PEP_OUT_OF_MEMORY)
                         return (int) invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
@@ -323,11 +335,6 @@ DeviceState_state fsm_DeviceState(
                         return (int) invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return (int) invalid_action;
-                    status = handshakeDeviceAdded(session, state, partner, NULL);
-                    if (status == PEP_OUT_OF_MEMORY)
-                        return (int) invalid_out_of_memory;
-                    if (status != PEP_STATUS_OK)
-                        return (int) invalid_action;
                     if(session->sync_state_payload){
                         free_identity((Identity)session->sync_state_payload);
                         session->sync_state_payload = NULL;
@@ -336,7 +343,7 @@ DeviceState_state fsm_DeviceState(
                 }
                 case Timeout:
                 {
-                    status = handshakeFailure(session, state, expected, NULL);
+                    status = notifyTimeout(session, state, expected, NULL);
                     if (status == PEP_OUT_OF_MEMORY)
                         return (int) invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
