@@ -62,7 +62,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>cd "$(ProjectDir).." &amp;&amp; "%ASN1C%\bin\asn1c" -S "%ASN1C%\share\asn1c" -gen-PER -fincludes-quoted -fcompound-names -pdu=PEP.Message pEp.asn1 devicegroup.asn1 protocols.asn1
+      <Command>cd "$(ProjectDir).." &amp;&amp; "$(SolutionDir)Tools\asn1c\bin\asn1c" -S "$(SolutionDir)Tools\asn1c\share\asn1c" -gen-PER -fincludes-quoted -fcompound-names -pdu=PEP.Message pEp.asn1 devicegroup.asn1 protocols.asn1
 cd "$(ProjectDir).." &amp;&amp; del converter-sample.c
 </Command>
     </PreBuildEvent>
@@ -99,7 +99,7 @@ cd "$(ProjectDir).." &amp;&amp; del converter-sample.c
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PreBuildEvent>
-      <Command>cd "$(ProjectDir).." &amp;&amp; "%ASN1C%\bin\asn1c" -S "%ASN1C%\share\asn1c" -gen-PER -fincludes-quoted -fcompound-names -pdu=PEP.Message pEp.asn1 devicegroup.asn1 protocols.asn1
+      <Command>cd "$(ProjectDir).." &amp;&amp; "$(SolutionDir)Tools\asn1c\bin\asn1c" -S "$(SolutionDir)Tools\asn1c\share\asn1c" -gen-PER -fincludes-quoted -fcompound-names -pdu=PEP.Message pEp.asn1 devicegroup.asn1 protocols.asn1
 cd "$(ProjectDir).." &amp;&amp; del converter-sample.c
 </Command>
       <Message>compiling ASN.1 description</Message>

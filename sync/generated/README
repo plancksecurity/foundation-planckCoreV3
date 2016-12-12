@@ -1,0 +1,11 @@
+Code is generated here before beeing copied to /src during build process.
+
+This code is intended to be commited and reviewed, while the original files 
+in src/ aren't tracked in mercurial (.hgignore). 
+
+Generated code must be generated out of source code systematically at build,
+since generation could be influenced by build environment and parameters.
+
+Depending on build host, version control tool or unharchiving tool, generated
+files timestamp may prevent re-generation. They must then be excluded from repo.
+

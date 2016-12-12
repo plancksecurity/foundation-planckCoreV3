@@ -10,7 +10,8 @@ extern "C" {
 
 PEP_STATUS receive_sync_msg(
         PEP_SESSION session,
-        sync_msg_t *sync_msg
+        sync_msg_t *sync_msg,
+        time_t *timeout
     );
 
 PEP_STATUS inject_DeviceState_event(

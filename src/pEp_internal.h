@@ -134,14 +134,16 @@ typedef struct _pEpSession {
     // callbacks
     examine_identity_t examine_identity;
     void *examine_management;
+    void *sync_management;
     void *sync_obj;
     messageToSend_t messageToSend;
-    showHandshake_t showHandshake;
+    notifyHandshake_t notifyHandshake;
     inject_sync_msg_t inject_sync_msg;
     retrieve_next_sync_msg_t retrieve_next_sync_msg;
 
     // key sync
     DeviceState_state sync_state;
+    void* sync_state_payload;
     char sync_uuid[37];
     time_t LastCannotDecrypt;
     time_t LastUpdateRequest;

@@ -255,3 +255,139 @@ error:
     return status;
 }
 
+
+PEP_STATUS _notifyHandshake(
+        PEP_SESSION session,
+        Identity partner,
+        sync_handshake_signal signal
+    );
+
+// notifyInitFormGroup() - notify InitFormGroup to app
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        partner to communicate with
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS notifyInitFormGroup(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    assert(session && state);
+    assert(extra == NULL);
+    if (!(session && state && extra == NULL))
+        return PEP_ILLEGAL_VALUE;
+
+    return _notifyHandshake(session, partner, SYNC_NOTIFY_INIT_FORM_GROUP);
+}
+
+
+// notifyInitAddOurDevice() - notify InitAddOurDevice to app
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        partner to communicate with
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS notifyInitAddOurDevice(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    assert(session && state);
+    assert(extra == NULL);
+    if (!(session && state && extra == NULL))
+        return PEP_ILLEGAL_VALUE;
+
+    return _notifyHandshake(session, partner, SYNC_NOTIFY_INIT_ADD_OUR_DEVICE);
+}
+
+
+// notifyAcceptedGroupCreated() - notify AcceptedGroupCreated to app
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        partner to communicate with
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS notifyAcceptedGroupCreated(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    assert(session && state);
+    assert(extra == NULL);
+    if (!(session && state && extra == NULL))
+        return PEP_ILLEGAL_VALUE;
+
+    return _notifyHandshake(session, partner, SYNC_NOTIFY_ACCEPTED_GROUP_CREATED);
+}
+
+
+// notifyTimeout() - notify Timeout to app
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        partner to communicate with
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS notifyTimeout(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    assert(session && state);
+    assert(extra == NULL);
+    if (!(session && state && extra == NULL))
+        return PEP_ILLEGAL_VALUE;
+
+    return _notifyHandshake(session, partner, SYNC_NOTIFY_TIMEOUT);
+}
+
+
+// notifyAcceptedDeviceAdded() - notify AcceptedDeviceAdded to app
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        partner to communicate with
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS notifyAcceptedDeviceAdded(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    assert(session && state);
+    assert(extra == NULL);
+    if (!(session && state && extra == NULL))
+        return PEP_ILLEGAL_VALUE;
+
+    return _notifyHandshake(session, partner, SYNC_NOTIFY_ACCEPTED_DEVICE_ADDED);
+}
+

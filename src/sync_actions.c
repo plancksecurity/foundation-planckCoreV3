@@ -97,37 +97,25 @@ the_end:
     return result;
 }
 
-// showHandshake() - trigger the handshake dialog of the application
-//
-//  params:
-//      session (in)        session handle
-//      state (in)          state the state machine is in
-//      partner (in)        partner to communicate with
-//
-//  returns:
-//      PEP_STATUS_OK or any other value on error
-
-PEP_STATUS showHandshake(
+PEP_STATUS _notifyHandshake(
         PEP_SESSION session,
-        DeviceState_state state,
         Identity partner,
-        void *extra
+        sync_handshake_signal signal
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
     assert(partner);
-    assert(extra == NULL);
 
     if (!(session && partner))
         return PEP_ILLEGAL_VALUE;
 
-    assert(session->showHandshake);
-    if (!session->showHandshake)
-        return PEP_SYNC_NO_TRUSTWORDS_CALLBACK;
+    assert(session->notifyHandshake);
+    if (!session->notifyHandshake)
+        return PEP_SYNC_NO_NOTIFY_CALLBACK;
 
-    // showHandshake take ownership of given identities
+    // notifyHandshake take ownership of given identities
     pEp_identity *me = NULL;
     status = get_identity(session, partner->address, PEP_OWN_USERID, &me);
     if (status != PEP_STATUS_OK)
@@ -140,7 +128,7 @@ PEP_STATUS showHandshake(
         goto error;
     }
 
-    status = session->showHandshake(session->sync_obj, me, _partner);
+    status = session->notifyHandshake(session->sync_obj, me, _partner, signal);
     if (status != PEP_STATUS_OK)
         goto error;
 
@@ -150,7 +138,6 @@ error:
     free_identity(me);
     return status;
 }
-
 
 // acceptHandshake() - stores acception of partner
 //

@@ -59,7 +59,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PEPENGINE_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <EnablePREfast>false</EnablePREfast>
-      <AdditionalIncludeDirectories>%ASN1C%\share\asn1c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Tools\asn1c\share\asn1c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
@@ -69,7 +69,9 @@
     </Link>
     <PreBuildEvent>
       <Command>cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_statemachine.ysl2 devicegroup.fsm -o .statemachines
-cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -ygen_actions_skeleton.ysl2 devicegroup.fsm -o .skeletons
+cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -ygen_actions.ysl2 devicegroup.fsm -o .skeletons
+cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.c ..\src\ /y
+cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.h ..\src\ /y
 </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -83,7 +85,7 @@ cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -ygen
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PEPENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>%ASN1C%\share\asn1c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Tools\asn1c\share\asn1c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ControlFlowGuard>Guard</ControlFlowGuard>
@@ -97,7 +99,9 @@ cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -ygen
     </Link>
     <PreBuildEvent>
       <Command>cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_statemachine.ysl2 devicegroup.fsm -o .statemachines
-cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -ygen_actions_skeleton.ysl2 devicegroup.fsm -o .skeletons
+cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -ygen_actions.ysl2 devicegroup.fsm -o .skeletons
+cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.c ..\src\ /y
+cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.h ..\src\ /y
 </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
