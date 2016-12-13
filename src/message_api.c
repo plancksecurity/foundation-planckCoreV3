@@ -1534,36 +1534,6 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     if(status != PEP_STATUS_OK)
         return status;
 
-    // IF longmsg and longmsg_formatted are empty, we MAY have an encrypted body
-    // that's an attachment instead.
-    // Check for encryption stuck in the first 2 attachments instead of the body
-    // (RFC3156)
-    //
-    // if (!src->longmsg && !src->longmsg_formatted) {
-    //     bloblist_t* attached_head = src->attachments;
-    //     if (attached_head && 
-    //         strcasecmp(attached_head->mime_type, "application/pgp-encrypted") == 0) {
-    //         bloblist_t* enc_att_txt = attached_head->next;
-    //         if (enc_att_txt && 
-    //             strcasecmp(enc_att_txt->mime_type, "application/octet-stream") == 0) {
-    //             size_t enc_att_len = enc_att_txt->size;
-    //             char* newlongmsg = calloc(1, enc_att_len + 1);
-    //             if (newlongmsg == NULL)
-    //                 goto enomem;
-    // 
-    //             memcpy(newlongmsg, enc_att_txt, enc_att_len);
-    //             newlongmsg[enc_att_len] = '\0';
-    // 
-    //             src->longmsg = newlongmsg;
-    // 
-    //             // delete attachments here
-    //             src->attachments = enc_att_txt->next;
-    //             consume_bloblist_head(attached_head);
-    //             consume_bloblist_head(attached_head);
-    //         }
-    //     }
-    // }
-
     // Get detached signature, if any
     bloblist_t* detached_sig = NULL;
     char* dsig_text = NULL;
