@@ -198,8 +198,7 @@ error:
 // We need to check whether it belongs here or it's a bug.
 /* DYNAMIC_API */ void free_sync_msg(sync_msg_t *sync_msg)
 {
-    assert(sync_msg);
-    if (!(sync_msg))
+    if (!sync_msg)
         return;
 
     if(sync_msg->is_a_message){
