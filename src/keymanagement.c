@@ -438,6 +438,15 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
             return PEP_OUT_OF_MEMORY;
     }
 
+    if (EMPTYSTR(identity->username))
+    {
+        free(identity->username);
+        identity->username = strdup("anonymous");
+        assert(identity->username);
+        if (identity->username == NULL)
+            return PEP_OUT_OF_MEMORY;
+    }
+
     DEBUG_LOG("myself", "debug", identity->address);
  
     status = get_identity(session,
