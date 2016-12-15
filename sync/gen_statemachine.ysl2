@@ -217,8 +217,9 @@ tstylesheet {
         `` if "count(parm) > 1" error | # TODO composite state payload 
         `` apply "parm", 1 mode="stateParm"
         *timeout = «@timeout»;
+        DEBUG_LOG("Entering FSM state", "«../@filename»_fsm.c", "state=«@name»")
         switch (event) {
-        `` if "not(event[@name='Init'])" |>> case Init: break;
+        `` if "not(event[@name='Init'])" |>> case Init: DEBUG_LOG("FSM event", "«../@filename»_fsm.c, state=«@name»", "event=Init") break;
         `` apply "event", 2
             default:
                 return («../@name»_state) invalid_event;
@@ -236,12 +237,14 @@ tstylesheet {
     ||
     case «@name»:
     {
+        DEBUG_LOG("FSM event", "«../../@filename»_fsm.c, state=«../@name»", "event=«@name»")
     `` apply "action|transition|condition";
     `` if "name(*[position()=last()]) != 'transition'" |> break;
     }
     ||
 
     template "action" {
+        | DEBUG_LOG("FSM action", "«ancestor::fsm/@filename»_fsm.c, state=«ancestor::state/@name», event=«ancestor::event/@name»", "action=«@name»")
         indent(0);
         > status = «@name»(session, state, 
         choose {
@@ -261,6 +264,11 @@ tstylesheet {
 
     template "condition" {
         | cond_result = «@name»(session`apply "parm", 0`);
+        | #ifndef NDEBUG
+        | char resstr[11] = {0,};
+        | snprintf(resstr,10,"result=%d",cond_result);
+        | #endif
+        | DEBUG_LOG("FSM condition", "«ancestor::fsm/@filename»_fsm.c, state=«ancestor::state/@name», event=«ancestor::event/@name», condition=«@name»", resstr)
         | if (cond_result < 0)
         |> return cond_result;
         | if (cond_result) {
@@ -294,6 +302,7 @@ tstylesheet {
             const "nextstateparm", "ancestor::fsm/child::state[@name = $nextstatename]/child::parm";
             | session->sync_state_payload = «yml:lcase(name($nextstateparm/*))»_dup(«name(parm/*)»);
         }
+        | DEBUG_LOG("FSM transition", "«ancestor::fsm/@filename»_fsm.c, state=«ancestor::state/@name», event=«ancestor::event/@name»", "target=«@target»")
         | return «@target»;
     }
 }
