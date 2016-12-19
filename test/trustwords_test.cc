@@ -1,22 +1,23 @@
 #include <iostream>
 #include <string>
-#include <assert.h>
+#include <cassert>
 #include "pEpEngine.h"
 #include "message_api.h"
 
 using namespace std;
 
+
 int main() {
     cout << "\n*** get_trustwords test ***\n\n";
 
-    PEP_SESSION session;
+    PEP_SESSION session = nullptr;
     
     cout << "calling init()\n";
-    PEP_STATUS status1 = init(&session);   
+    PEP_STATUS status1 = init(&session);
     assert(status1 == PEP_STATUS_OK);
     assert(session);
     cout << "init() completed.\n";
-        
+    
     pEp_identity* identity1  = new_identity(
         "leon.schumacher@digitalekho.com",
         "8BD08954C74D830EEFFB5DEB2682A17F7C87F73D",
@@ -31,12 +32,12 @@ int main() {
     
     string fingerprint1 = identity1->fpr;
     string fingerprint2 = identity2->fpr;
-    char* words1;
-    char* words2;
-    char* full_wordlist;
-    size_t wsize1;
-    size_t wsize2;
-    size_t wsize_full;
+    char* words1 = nullptr;
+    char* words2 = nullptr;
+    char* full_wordlist = nullptr;
+    size_t wsize1 = 0;
+    size_t wsize2 = 0;
+    size_t wsize_full = 0;
     
     cout << "\nTest 1: fpr1 > fpr2, short" << endl;
     
@@ -57,8 +58,11 @@ int main() {
     
     
     pEp_free(words1);
+    words1 = nullptr;
     pEp_free(words2);
+    words2 = nullptr;
     pEp_free(full_wordlist);
+    full_wordlist = nullptr;
 
     cout << "\nTest 2: fpr1 == fpr1, short" << endl;
     
@@ -73,7 +77,9 @@ int main() {
     cout << full_wordlist << "\n";
 
     pEp_free(words1);
+    words1 = nullptr;
     pEp_free(full_wordlist);
+    full_wordlist = nullptr;
 
     cout << "\nTest 3: fpr1 < fpr2, long" << endl;
     
@@ -93,9 +99,11 @@ int main() {
     cout << full_wordlist << "\n";
     
     pEp_free(words1);
+    words1 = nullptr;
     pEp_free(words2);
+    words2 = nullptr;
     pEp_free(full_wordlist);
-    
+    full_wordlist = nullptr;
     
     cout << "\nTest 4: fpr1 < fpr2, leading zeros (fpr1 has more), long" << endl;
     
@@ -137,8 +145,11 @@ int main() {
     cout << full_wordlist << "\n";
 
     pEp_free(words1);
+    words1 = nullptr;
     pEp_free(words2);
+    words2 = nullptr;
     pEp_free(full_wordlist);
+    full_wordlist = nullptr;
 
     cout << "\nTest 5: fpr1 > fpr2, leading zeros (same number), interior digit difference, short" << endl;
     
@@ -158,8 +169,11 @@ int main() {
     cout << full_wordlist << "\n";
     
     pEp_free(words1);
+    words1 = nullptr;
     pEp_free(words2);
+    words2 = nullptr;
     pEp_free(full_wordlist);
+    full_wordlist = nullptr;
 
     cout << "\nTest 6: fpr2 is too short" << endl;
     
@@ -188,13 +202,13 @@ int main() {
     cout << "Illegal digit value correctly recognised." << "\n";
     
     
-    free(identity1);
-    free(identity2);
-    free(identity3);
-    free(identity4);
-    free(identity5);
-    free(identity6);
-    free(identity7);
+    free_identity(identity1);
+    free_identity(identity2);
+    free_identity(identity3);
+    free_identity(identity4);
+    free_identity(identity5);
+    free_identity(identity6);
+    free_identity(identity7);
     
     cout << "calling release()\n";
     release(session);

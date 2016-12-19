@@ -484,6 +484,21 @@ void free_DeviceGroup_Protocol_msg(DeviceGroup_Protocol_t *msg)
     ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
 }
 
+
+#ifndef NDEBUG
+static int _append(const void *buffer, size_t size, void *appkey)
+{
+    char **dest_ptr = (char **)appkey;
+    size_t osize = strlen(*dest_ptr);
+    size_t nsize = size + osize;
+    *dest_ptr = realloc(*dest_ptr, nsize + 1);
+    if(*dest_ptr == NULL) return -1;
+    memcpy(*dest_ptr + osize, buffer, size);
+    (*dest_ptr)[nsize] = '\0';
+    return 0;
+}
+#endif
+
 PEP_STATUS unicast_msg(
         PEP_SESSION session,
         const Identity partner,
@@ -565,6 +580,14 @@ PEP_STATUS unicast_msg(
     payload = NULL;
     free_identity(me);
     me = NULL;
+
+#ifndef NDEBUG
+    asn_enc_rval_t er;
+    er = xer_encode(&asn_DEF_DeviceGroup_Protocol, msg, 
+                    XER_F_BASIC, _append, &_message->longmsg);
+    if(er.encoded == -1)
+        goto error;
+#endif
 
     if (encrypted) {
         if (msg->payload.present == DeviceGroup_Protocol__payload_PR_groupKeys || 
