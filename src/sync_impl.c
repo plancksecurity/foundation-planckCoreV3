@@ -484,7 +484,9 @@ void free_DeviceGroup_Protocol_msg(DeviceGroup_Protocol_t *msg)
     ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
 }
 
-int _append(const void *buffer, size_t size, void *appkey)
+
+#ifndef NDEBUG
+static int _append(const void *buffer, size_t size, void *appkey)
 {
     char **dest_ptr = (char **)appkey;
     size_t osize = strlen(*dest_ptr);
@@ -495,6 +497,7 @@ int _append(const void *buffer, size_t size, void *appkey)
     (*dest_ptr)[nsize] = '\0';
     return 0;
 }
+#endif
 
 PEP_STATUS unicast_msg(
         PEP_SESSION session,
