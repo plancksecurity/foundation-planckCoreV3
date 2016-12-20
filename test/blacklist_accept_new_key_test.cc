@@ -89,9 +89,9 @@ int main() {
     PEP_STATUS status13 = blacklist_delete(session, bl_fpr_1);
     PEP_STATUS status14 = update_identity(session, blacklisted_identity);
 
-    status = delete_keypair(session, bl_fpr_1);
-    update_identity(session, blacklisted_identity);
     status = delete_keypair(session, new_key);
+    update_identity(session, blacklisted_identity);
+    status = delete_keypair(session, bl_fpr_1);
     update_identity(session, blacklisted_identity);
     
     free_message(msg_ptr);
