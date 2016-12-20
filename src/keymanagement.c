@@ -148,37 +148,48 @@ DYNAMIC_API PEP_STATUS update_identity(
             
 
         if (!dont_use_stored_fpr) {
-            temp_id->fpr = strdup(stored_identity->fpr);
-            assert(temp_id->fpr);
-            if (temp_id->fpr == NULL) {
-                status = PEP_OUT_OF_MEMORY;
-                goto exit_free;
-            }
-
             /* Check stored comm_type */
             PEP_comm_type _comm_type_key;
-            status = get_key_rating(session, temp_id->fpr, &_comm_type_key);
+            status = get_key_rating(session, stored_identity->fpr, &_comm_type_key);
             assert(status != PEP_OUT_OF_MEMORY);
-            if (status == PEP_OUT_OF_MEMORY)
+            if (status == PEP_OUT_OF_MEMORY) {
                 goto exit_free;
-            if (_comm_type_key < PEP_ct_unconfirmed_encryption) {
-                /* if key not good anymore, 
-                   downgrade eventually trusted comm_type */
-                temp_id->comm_type = _comm_type_key;
+            }
+            if (status == PEP_KEY_NOT_FOUND){
+                /* stored key was deleted from keyring. any other candidate ?*/
+                status = elect_pubkey(session, temp_id);
+                if (status != PEP_STATUS_OK) {
+                    goto exit_free;
+                } else {
+                    _did_elect_new_key = 1;
+                }
             } else {
-                /* otherwise take stored comm_type as-is */
-                temp_id->comm_type = stored_identity->comm_type;
-                if (temp_id->comm_type == PEP_ct_unknown) {
-                    /* except if unknown */
+                temp_id->fpr = strdup(stored_identity->fpr);
+                assert(temp_id->fpr);
+                if (temp_id->fpr == NULL) {
+                    status = PEP_OUT_OF_MEMORY;
+                    goto exit_free;
+                }
+
+                if (_comm_type_key < PEP_ct_unconfirmed_encryption) {
+                    /* if key not good anymore, 
+                       downgrade eventually trusted comm_type */
                     temp_id->comm_type = _comm_type_key;
+                } else {
+                    /* otherwise take stored comm_type as-is */
+                    temp_id->comm_type = stored_identity->comm_type;
+                    if (temp_id->comm_type == PEP_ct_unknown) {
+                        /* except if unknown */
+                        temp_id->comm_type = _comm_type_key;
+                    }
                 }
             }
         }
         else {
             status = elect_pubkey(session, temp_id);
-            if (status != PEP_STATUS_OK)
+            if (status != PEP_STATUS_OK){
                 goto exit_free;
-            else {
+            } else {
                 _did_elect_new_key = 1;
             }
         }
