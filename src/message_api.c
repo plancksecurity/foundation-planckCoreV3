@@ -1432,6 +1432,68 @@ PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS combine_keylists(PEP_SESSION session, stringlist_t** verify_in, 
+                            stringlist_t** keylist_in_out, 
+                            pEp_identity* from) {
+    
+    if (!verify_in || !(*verify_in)) // this isn't really a problem.
+        return PEP_STATUS_OK;
+    
+    stringlist_t* orig_verify = *verify_in;
+    
+    stringlist_t* verify_curr;
+    stringlist_t* from_keys;
+    
+    /* FIXME: what to do if head needs to be null */
+    PEP_STATUS status = find_keys(session, from->address, &from_keys);
+    
+    stringlist_t* from_fpr_node = NULL;
+    stringlist_t* from_curr;
+    
+    for (from_curr = from_keys; from_curr; from_curr = from_curr->next) {
+        for (verify_curr = orig_verify; verify_curr; verify_curr = verify_curr->next) {
+            if (from_curr->value && verify_curr->value &&
+                strcasecmp(from_curr->value, verify_curr->value) == 0) {
+                from_fpr_node = from_curr;
+                break;
+            }
+        }
+    }
+    
+    if (!from_fpr_node) {
+        status = PEP_KEY_NOT_FOUND;
+        goto free;
+    }
+
+    verify_curr = orig_verify;
+    
+    /* put "from" signer at the beginning of the list */
+    if (strcasecmp(orig_verify->value, from_fpr_node->value) != 0) {
+        orig_verify = stringlist_delete(orig_verify, from_fpr_node->value);
+        verify_curr = new_stringlist(from_fpr_node->value);
+        verify_curr->next = orig_verify;
+    }
+
+    /* append keylist to signers */
+    if (keylist_in_out && *keylist_in_out && (*keylist_in_out)->value) {
+        stringlist_t** tail_pp = &verify_curr->next;
+        
+        while (*tail_pp) {
+            tail_pp = &((*tail_pp)->next);
+        }
+        *tail_pp = *keylist_in_out;
+    }
+    
+    *keylist_in_out = verify_curr;
+    
+    status = PEP_STATUS_OK;
+    
+free:
+    free_stringlist(from_keys);
+    return status;    
+}
+
+
 DYNAMIC_API PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -1472,36 +1534,6 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     if(status != PEP_STATUS_OK)
         return status;
 
-    // IF longmsg and longmsg_formatted are empty, we MAY have an encrypted body
-    // that's an attachment instead.
-    // Check for encryption stuck in the first 2 attachments instead of the body
-    // (RFC3156)
-    //
-    // if (!src->longmsg && !src->longmsg_formatted) {
-    //     bloblist_t* attached_head = src->attachments;
-    //     if (attached_head && 
-    //         strcasecmp(attached_head->mime_type, "application/pgp-encrypted") == 0) {
-    //         bloblist_t* enc_att_txt = attached_head->next;
-    //         if (enc_att_txt && 
-    //             strcasecmp(enc_att_txt->mime_type, "application/octet-stream") == 0) {
-    //             size_t enc_att_len = enc_att_txt->size;
-    //             char* newlongmsg = calloc(1, enc_att_len + 1);
-    //             if (newlongmsg == NULL)
-    //                 goto enomem;
-    // 
-    //             memcpy(newlongmsg, enc_att_txt, enc_att_len);
-    //             newlongmsg[enc_att_len] = '\0';
-    // 
-    //             src->longmsg = newlongmsg;
-    // 
-    //             // delete attachments here
-    //             src->attachments = enc_att_txt->next;
-    //             consume_bloblist_head(attached_head);
-    //             consume_bloblist_head(attached_head);
-    //         }
-    //     }
-    // }
-
     // Get detached signature, if any
     bloblist_t* detached_sig = NULL;
     char* dsig_text = NULL;
@@ -1537,6 +1569,36 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                     return status;
                 }
             }
+            
+            char* slong = src->longmsg;
+            char* sform = src->longmsg_formatted;
+            bloblist_t* satt = src->attachments;
+                                    
+            if ((!slong || slong[0] == '\0')
+                 && (!sform || sform[0] == '\0')) {
+                if (satt) {
+                    const char* inner_mime_type = satt->mime_type;
+                    if (strcasecmp(inner_mime_type, "text/plain") == 0) {
+                        free(slong); /* in case of "" */
+                        src->longmsg = strdup(satt->value);
+                    
+                        bloblist_t* next_node = satt->next;
+                        if (next_node) {
+                            inner_mime_type = next_node->mime_type;
+                            if (strcasecmp(inner_mime_type, "text/html") == 0) {
+                                free(sform);
+                                src->longmsg_formatted = strdup(next_node->value);
+                            }
+                        }
+                    }
+                    else if (strcasecmp(inner_mime_type, "text/html") == 0) {
+                        free(sform);
+                        src->longmsg_formatted = strdup(satt->value);
+                    }                    
+                }
+            }       
+
+            
             return PEP_UNENCRYPTED;
 
         case PEP_enc_PGP_MIME:
@@ -1576,27 +1638,63 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             case PEP_enc_PGP_MIME:
                 status = mime_decode_message(ptext, psize, &msg);
                 if (status != PEP_STATUS_OK)
-                    goto pep_error;
-                status = _get_detached_signature(msg, &detached_sig);
-                if (decrypt_status == PEP_DECRYPTED && detached_sig) {
-                    dsig_text = detached_sig->value;
-                    dsig_size = detached_sig->size;
-                    size_t ssize = 0;
-                    char* stext = NULL;
+                    goto pep_error;                
+                
+                char* mlong = msg->longmsg;
+                char* mform = msg->longmsg_formatted;
+                bloblist_t* matt = msg->attachments;
+                                        
+                if ((!mlong || mlong[0] == '\0')
+                     && (!mform || mform[0] == '\0')) {
+                    if (matt) {
+                        const char* inner_mime_type = matt->mime_type;
+                        if (strcasecmp(inner_mime_type, "text/plain") == 0) {
+                            free(mlong); /* in case of "" */
+                            msg->longmsg = strdup(matt->value);
+                        
+                            bloblist_t* next_node = matt->next;
+                            if (next_node) {
+                                inner_mime_type = next_node->mime_type;
+                                if (strcasecmp(inner_mime_type, "text/html") == 0) {
+                                    free(mform);
+                                    msg->longmsg_formatted = strdup(next_node->value);
+                                }
+                            }
+                        }
+                        else if (strcasecmp(inner_mime_type, "text/html") == 0) {
+                            free(mform);
+                            msg->longmsg_formatted = strdup(matt->value);
+                        }                    
+                    }
+                    if (msg->shortmsg) {
+                        free(src->shortmsg);
+                        src->shortmsg = strdup(msg->shortmsg);
+                    }
+                }    
 
-                    status = _get_signed_text(ptext, psize, &stext, &ssize);
-                    stringlist_t *_verify_keylist = NULL;
+                if (decrypt_status != PEP_DECRYPTED_AND_VERIFIED) {
+                    status = _get_detached_signature(msg, &detached_sig);
+                    if (decrypt_status == PEP_DECRYPTED && detached_sig) {
+                        dsig_text = detached_sig->value;
+                        dsig_size = detached_sig->size;
+                        size_t ssize = 0;
+                        char* stext = NULL;
 
-                    if (ssize > 0 && stext) {
-                        status = cryptotech[crypto].verify_text(session, stext,
-                                                                ssize, dsig_text, dsig_size,
-                                                                &_verify_keylist);
+                        status = _get_signed_text(ptext, psize, &stext, &ssize);
+                        stringlist_t *_verify_keylist = NULL;
 
-                        if (status == PEP_VERIFIED || status == PEP_VERIFIED_AND_TRUSTED)
-                            decrypt_status = PEP_DECRYPTED_AND_VERIFIED;
+                        if (ssize > 0 && stext) {
+                            status = cryptotech[crypto].verify_text(session, stext,
+                                                                    ssize, dsig_text, dsig_size,
+                                                                    &_verify_keylist);
+
+                            if (status == PEP_VERIFIED || status == PEP_VERIFIED_AND_TRUSTED)
+                                decrypt_status = PEP_DECRYPTED_AND_VERIFIED;
+                            
+                                status = combine_keylists(session, &_verify_keylist, &_keylist, src->from);
+                        }
                     }
                 }
-
                 break;
 
             case PEP_enc_pieces:
@@ -1633,7 +1731,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                         status = decrypt_and_verify(session, attctext, attcsize,
                                                     NULL, 0,
                                                     &ptext, &psize, &_keylist);
-                        free_stringlist(_keylist);
+                        free_stringlist(_keylist); // FIXME: Why do we do this?
 
                         if (ptext) {
                             if (is_encrypted_html_attachment(_s)) {
@@ -1719,10 +1817,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                         goto enomem;
                 }
                 break;
-
             default:
-                // BUG: must implement more
-                NOT_IMPLEMENTED
+                    // BUG: must implement more
+                    NOT_IMPLEMENTED
         }
 
         // check for private key in decrypted message attachement while inporting
