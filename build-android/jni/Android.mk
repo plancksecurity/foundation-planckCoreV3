@@ -16,6 +16,10 @@ endif
 LOCAL_MODULE    := pEpEngine
 LOCAL_CFLAGS    += -std=c99
 
+ifneq ($(NDEBUG),)
+LOCAL_CFLAGS    += -DNDEBUG=1
+endif
+
 # from http://www.sqlite.org/android/finfo?name=jni/sqlite/Android.mk 
 #      http://www.sqlite.org/android/artifact/e8ed354b3e58c835
 

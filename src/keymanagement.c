@@ -292,7 +292,7 @@ DYNAMIC_API PEP_STATUS update_identity(
     free(identity->user_id);
     identity->user_id = strdup(temp_id->user_id);
     free(identity->username);
-    identity->username = strdup(temp_id->username);
+    identity->username = strdup(temp_id->username ? temp_id->username : "anonymous");
     identity->comm_type = temp_id->comm_type;
     identity->lang[0] = temp_id->lang[0];
     identity->lang[1] = temp_id->lang[1];
@@ -435,6 +435,15 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
         identity->user_id = strdup(PEP_OWN_USERID);
         assert(identity->user_id);
         if (identity->user_id == NULL)
+            return PEP_OUT_OF_MEMORY;
+    }
+
+    if (EMPTYSTR(identity->username))
+    {
+        free(identity->username);
+        identity->username = strdup("anonymous");
+        assert(identity->username);
+        if (identity->username == NULL)
             return PEP_OUT_OF_MEMORY;
     }
 

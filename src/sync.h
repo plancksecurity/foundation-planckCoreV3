@@ -5,7 +5,7 @@ Engine/adapter/app KeySync interface
 
 In the engine, KeySync is implemented through a state machine [1]. KeySync
 state machine is driven [2] by events, triggering actions [3] and transitions
-to new states. Events happens on decryption of email messages, on key
+to new states. Events happen on decryption of email messages, on key
 generation, on user interaction through the app and in case of timeout when
 staying too long in some particular states.
 
@@ -26,7 +26,7 @@ directly events to be processed by the state machine or KeySync payloads
 collected from decrypted messages. They are jobs to be processed by the state
 machine.
 
-KeySync messages can be emitted by multiple session, and could naturally come
+KeySync messages can be emitted by multiple sessions, and could naturally come
 from different threads. They must be serialized in a locked queue. Attached
 sessions inject [8] KeySync messages in the queue. Protocol loop retrieves [9]
 them from the queue. KeySync message is received [10] by the state machine,
@@ -38,7 +38,7 @@ operation. Value of the timeout is determined when entering a new state, and is
 passed as a parameter of the call to the blocking queue retrieve operation on 
 next protocol loop iteraton.
 
-[1] sync/device_group.fsm , src/sync_fsm.c (generated)
+[1] sync/devicegroup.fsm , src/sync_fsm.c (generated)
 [2] src/sync_driver.c (generated)
 [3] src/sync_actions.c , src/sync_send_actions.c (generated)
 [4] register_sync_callbacks()

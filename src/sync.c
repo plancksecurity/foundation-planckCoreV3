@@ -170,17 +170,21 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
             break;
         else if(msg == NULL && timeout != 0){
             status = fsm_DeviceState_inject(session, Timeout, NULL, NULL, &timeout);
+#ifndef NDEBUG
             char buffer[MAX_LINELENGTH];
             memset(buffer, 0, MAX_LINELENGTH);
             snprintf(buffer, MAX_LINELENGTH, "problem with timeout event : %d\n", (int) status);
             log_event(session, buffer, "pEp sync protocol", NULL, NULL);
             continue;
+#endif
         }
         else if ((status = receive_sync_msg(session, msg, &timeout) != PEP_STATUS_OK)) {
+#ifndef NDEBUG
             char buffer[MAX_LINELENGTH];
             memset(buffer, 0, MAX_LINELENGTH);
             snprintf(buffer, MAX_LINELENGTH, "problem with msg received: %d\n", (int) status);
             log_event(session, buffer, "pEp sync protocol", NULL, NULL);
+#endif
         }
     }
 
