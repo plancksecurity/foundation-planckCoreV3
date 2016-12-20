@@ -118,7 +118,7 @@ int main() {
     }
     infile2.close(); 
     
-    PEP_STATUS status14 = import_key(session, keytext.c_str(), keytext.length(), NULL);
+    PEP_STATUS status14 = import_key(session, keytext2.c_str(), keytext2.length(), NULL);
     
     pEp_identity* blacklisted_identity2 = new_identity("blacklistedkeys@kgrothoff.org",
                                                        bl_fpr_2,
@@ -126,7 +126,7 @@ int main() {
                                                        "Blacklist Keypair");
     PEP_STATUS status15 = update_identity(session, blacklisted_identity2);
 
-    if (strcmp(blacklisted_identity->fpr, bl_fpr_2))
+    if (strcmp(blacklisted_identity->fpr, bl_fpr_2) == 0)
         cout << "blacklisted identity's fpr successfully replaced by the unblacklisted one" << endl;
     else
         cout << "blacklisted_identity->fpr should be " << bl_fpr_2 << " but is " << blacklisted_identity->fpr << endl;
@@ -141,8 +141,7 @@ int main() {
      
     PEP_STATUS status00 = update_identity(session, stored_identity);
     
-    // Following should be true because bl_fpr_1's trust is set higher
-    assert(stored_identity->comm_type == PEP_ct_pEp && (strcmp(stored_identity->fpr, bl_fpr_1) == 0));    
+    assert(stored_identity->comm_type == PEP_ct_pEp);    
     
     PEP_STATUS status16 = delete_keypair(session, bl_fpr_1);
     update_identity(session, blacklisted_identity);
