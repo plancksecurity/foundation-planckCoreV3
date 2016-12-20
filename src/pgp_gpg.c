@@ -383,6 +383,52 @@ void pgp_release(PEP_SESSION session, bool out_last)
             dlclose(gpgme);
 }
 
+/* Note: this could really screw the pooch if the next key isn't the */
+/* appropriate type, but it's better than the current failure */
+PEP_STATUS _first_viable_subkey_fpr(PEP_SESSION session,
+                                    gpgme_key_t key,
+                                    char** ret_fpr) {
+    *ref_fpr = NULL;
+    
+    if (key && key->subkeys) {
+        gpgme_subkey_t subkey = key->subkeys;
+
+        switch (subkeys->protocol) {
+            case GPGME_PROTOCOL_OpenPGP:
+            case GPGME_PROTOCOL_DEFAULT:
+            case GPGME_PROTOCOL_CMS:
+                break;
+            default:
+                return PEP_UNKNOWN_ERROR;
+        }
+        
+        while (subkey) {
+            if (!(subkey->revoked || subkey->expired ||
+                subkey->disabled || subkey->invalid)) {
+
+                if (gpgme_check_version("2.1.0")) {
+                    switch (subkey->pubkey_algo) {
+                        case PUBKEY_ALGO_ECDH:
+                        case PUBKEY_ALGO_ECDSA:
+                        case PUBKEY_ALGO_EDDSA:
+                            subkey = subkey->next;
+                            continue;
+                        default:
+                            break;
+                    }
+                }    
+                break;
+            }
+            subkey = subkey->next;
+        }
+        if (subkey) {
+            *ret_fpr = subkey->fpr;
+            return PEP_STATUS_OK;
+        }
+    }
+    return PEP_KEY_NOT_FOUND;         
+}
+
 PEP_STATUS pgp_decrypt_and_verify(
     PEP_SESSION session, const char *ctext, size_t csize,
     const char *dsigtext, size_t dsigsize,
