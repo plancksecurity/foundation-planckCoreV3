@@ -125,14 +125,15 @@ int main() {
                                                         NULL,
                                                        "Blacklist Keypair");
     PEP_STATUS status15 = update_identity(session, blacklisted_identity2);
-    PEP_STATUS status12 = blacklist_delete(session, bl_fpr_1);
-    PEP_STATUS status13 = update_identity(session, blacklisted_identity);
 
     if (strcmp(blacklisted_identity->fpr, bl_fpr_2))
         cout << "blacklisted identity's fpr successfully replaced by the unblacklisted one" << endl;
     else
         cout << "blacklisted_identity->fpr should be " << bl_fpr_2 << " but is " << blacklisted_identity->fpr << endl;
-            
+    
+    PEP_STATUS status12 = blacklist_delete(session, bl_fpr_1);
+    PEP_STATUS status13 = update_identity(session, blacklisted_identity);
+        
     pEp_identity* stored_identity = new_identity("blacklistedkeys@kgrothoff.org",
                                                   NULL,
                                                   blacklisted_identity->user_id,
