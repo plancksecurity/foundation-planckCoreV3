@@ -178,12 +178,6 @@ DYNAMIC_API PEP_STATUS update_identity(
             status = elect_pubkey(session, temp_id);
             if (status != PEP_STATUS_OK)
                 goto exit_free;
-            bool dont_use_elected_fpr = true;
-            status = blacklist_is_listed(session, temp_id->fpr, &dont_use_elected_fpr);
-            if (dont_use_elected_fpr) {
-                free(temp_id->fpr);
-                temp_id->fpr = NULL;
-            }
             else {
                 _did_elect_new_key = 1;
             }
@@ -229,28 +223,17 @@ DYNAMIC_API PEP_STATUS update_identity(
         /* Work with the elected key */
         if (!EMPTYSTR(temp_id->fpr)) {
             
-            bool dont_use_elected_fpr = true;
-            status = blacklist_is_listed(session, temp_id->fpr, &dont_use_elected_fpr);
-            if (status != PEP_STATUS_OK)
-                dont_use_elected_fpr = true; 
+            PEP_comm_type _comm_type_key = temp_id->comm_type;
+            
+            _did_elect_new_key = 1;
 
-            if (!dont_use_elected_fpr) {
-                PEP_comm_type _comm_type_key = temp_id->comm_type;
-                
-                _did_elect_new_key = 1;
+            // We don't want to lose a previous trust entry!!!
+            status = get_trust(session, temp_id);
 
-                // We don't want to lose a previous trust entry!!!
-                status = get_trust(session, temp_id);
+            bool has_trust_status = (status == PEP_STATUS_OK);
 
-                bool has_trust_status = (status == PEP_STATUS_OK);
-
-                if (!has_trust_status)
-                    temp_id->comm_type = _comm_type_key;
-            }
-            else {
-                free(temp_id->fpr);
-                temp_id->fpr = NULL;
-            }
+            if (!has_trust_status)
+                temp_id->comm_type = _comm_type_key;
         }
     }
 
