@@ -46,6 +46,20 @@ PEP_STATUS elect_pubkey(
         if (_comm_type_key != PEP_ct_compromized &&
             _comm_type_key != PEP_ct_unknown)
         {
+            pEp_identity *temp_id = new_identity(NULL, _keylist->value, identity->user_id, NULL);
+            
+            status = get_trust(session, temp_id);
+            assert(status != PEP_OUT_OF_MEMORY);
+            if (status == PEP_OUT_OF_MEMORY) {
+                free_identity(temp_id);
+                return PEP_OUT_OF_MEMORY;
+            }
+
+            if (status == PEP_STATUS_OK && temp_id->comm_type > _comm_type_key)
+                _comm_type_key = temp_id->comm_type;
+
+            free_identity(temp_id);
+
             if (identity->comm_type == PEP_ct_unknown ||
                 _comm_type_key > identity->comm_type)
             {
@@ -58,9 +72,7 @@ PEP_STATUS elect_pubkey(
             }
         }
     }
-
     
-//    if (_fpr) {
     free(identity->fpr);
 
     identity->fpr = strdup(_fpr);
@@ -68,7 +80,33 @@ PEP_STATUS elect_pubkey(
         free_stringlist(keylist);
         return PEP_OUT_OF_MEMORY;
     }
-//    }
+    free_stringlist(keylist);
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS identity_key_questionable(
+        PEP_SESSION session, 
+        pEp_identity * identity,
+        bool *questionable
+    )
+{
+    PEP_STATUS status;
+    stringlist_t *keylist;
+
+    status = greater_trust_keys(session, 
+                                identity->user_id,
+                                identity->comm_type,
+                                &keylist);
+
+    assert(status != PEP_OUT_OF_MEMORY);
+    if (status == PEP_OUT_OF_MEMORY)
+        return PEP_OUT_OF_MEMORY;
+
+    if(keylist && keylist->value) {
+        *questionable = true;
+    }
+    
     free_stringlist(keylist);
     return PEP_STATUS_OK;
 }
@@ -183,6 +221,24 @@ DYNAMIC_API PEP_STATUS update_identity(
                         temp_id->comm_type = _comm_type_key;
                     }
                 }
+
+                bool questionable_fpr;
+                status = identity_key_questionable(session, 
+                                                   temp_id, 
+                                                   &questionable_fpr);
+                assert(status != PEP_OUT_OF_MEMORY);
+                if (status == PEP_OUT_OF_MEMORY) {
+                    goto exit_free;
+                }
+                if (questionable_fpr){
+                    /* there may be key available with higher trust rating */
+                    status = elect_pubkey(session, temp_id);
+                    if (status != PEP_STATUS_OK) {
+                        goto exit_free;
+                    } else {
+                        _did_elect_new_key = 1;
+                    }
+                }
             }
         }
         else {
@@ -228,23 +284,10 @@ DYNAMIC_API PEP_STATUS update_identity(
 
         /* We elect a pubkey */
         status = elect_pubkey(session, temp_id);
-        if (status != PEP_STATUS_OK)
+        if (status != PEP_STATUS_OK){
             goto exit_free;
-        
-        /* Work with the elected key */
-        if (!EMPTYSTR(temp_id->fpr)) {
-            
-            PEP_comm_type _comm_type_key = temp_id->comm_type;
-            
+        } else {
             _did_elect_new_key = 1;
-
-            // We don't want to lose a previous trust entry!!!
-            status = get_trust(session, temp_id);
-
-            bool has_trust_status = (status == PEP_STATUS_OK);
-
-            if (!has_trust_status)
-                temp_id->comm_type = _comm_type_key;
         }
     }
 

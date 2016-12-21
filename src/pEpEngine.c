@@ -386,8 +386,12 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                         "and pgp_keypair_fpr = upper(replace(?2,' ','')) ;";
 
         sql_greater_trust_keys = "select pgp_keypair_fpr from trust"
-                                 "    where user_id = ?1"
-                                 "      and comm_type > ?2;";
+                                 "  where user_id = ?1"
+                                 "    and comm_type > ?2"
+                                 "    and (select count(*) from identity"
+                                 "           where user_id = identity.user_id"
+                                 "             and pgp_keypair_fpr = identity.main_key_id"
+                                 "        ) = 0;";
 
         sql_least_trust = "select min(comm_type) from trust where pgp_keypair_fpr = upper(replace(?1,' ','')) ;";
 
