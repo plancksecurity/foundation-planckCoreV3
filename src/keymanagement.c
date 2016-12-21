@@ -127,48 +127,71 @@ DYNAMIC_API PEP_STATUS update_identity(
     if (status == PEP_OUT_OF_MEMORY)
         goto exit_free;
 
-    /* We elect a pubkey first in case there's no acceptable stored fpr */
     temp_id = identity_dup(identity);
     
-    status = elect_pubkey(session, temp_id);
-    if (status != PEP_STATUS_OK)
-        goto exit_free;
-        
+    /* We don't take given fpr. 
+       In case there's no acceptable stored fpr, it will be elected. */
+    free(temp_id->fpr);
+    temp_id->fpr = NULL;
+    temp_id->comm_type = PEP_ct_unknown;
+            
     if (stored_identity) {
-        PEP_comm_type _comm_type_key;
         
-        bool dont_use_fpr = true;
+        bool dont_use_stored_fpr = true;
 
         /* if we have a stored_identity fpr */
-        if (!EMPTYSTR(stored_identity->fpr) && !EMPTYSTR(temp_id->fpr)) {
-            status = blacklist_is_listed(session, stored_identity->fpr, &dont_use_fpr);
+        if (!EMPTYSTR(stored_identity->fpr)) {
+            status = blacklist_is_listed(session, stored_identity->fpr, &dont_use_stored_fpr);
             if (status != PEP_STATUS_OK)
-                dont_use_fpr = true; 
+                dont_use_stored_fpr = true; 
         }
             
 
-        if (!dont_use_fpr) {
-            free(temp_id->fpr);
-            temp_id->fpr = strdup(stored_identity->fpr);
-            assert(temp_id->fpr);
-            if (temp_id->fpr == NULL) {
-                status = PEP_OUT_OF_MEMORY;
+        if (!dont_use_stored_fpr) {
+            /* Check stored comm_type */
+            PEP_comm_type _comm_type_key;
+            status = get_key_rating(session, stored_identity->fpr, &_comm_type_key);
+            assert(status != PEP_OUT_OF_MEMORY);
+            if (status == PEP_OUT_OF_MEMORY) {
                 goto exit_free;
             }
-        }
-        else if (!EMPTYSTR(temp_id->fpr)) {
-            status = blacklist_is_listed(session, temp_id->fpr, &dont_use_fpr);
-            if (dont_use_fpr) {
-                free(temp_id->fpr);
-                temp_id->fpr = strdup("");
-            }
-            else {
-                _did_elect_new_key = 1;
+            if (status == PEP_KEY_NOT_FOUND){
+                /* stored key was deleted from keyring. any other candidate ?*/
+                status = elect_pubkey(session, temp_id);
+                if (status != PEP_STATUS_OK) {
+                    goto exit_free;
+                } else {
+                    _did_elect_new_key = 1;
+                }
+            } else {
+                temp_id->fpr = strdup(stored_identity->fpr);
+                assert(temp_id->fpr);
+                if (temp_id->fpr == NULL) {
+                    status = PEP_OUT_OF_MEMORY;
+                    goto exit_free;
+                }
+
+                if (_comm_type_key < PEP_ct_unconfirmed_encryption) {
+                    /* if key not good anymore, 
+                       downgrade eventually trusted comm_type */
+                    temp_id->comm_type = _comm_type_key;
+                } else {
+                    /* otherwise take stored comm_type as-is */
+                    temp_id->comm_type = stored_identity->comm_type;
+                    if (temp_id->comm_type == PEP_ct_unknown) {
+                        /* except if unknown */
+                        temp_id->comm_type = _comm_type_key;
+                    }
+                }
             }
         }
         else {
-            if (temp_id->fpr == NULL)
-                temp_id->fpr = strdup("");
+            status = elect_pubkey(session, temp_id);
+            if (status != PEP_STATUS_OK){
+                goto exit_free;
+            } else {
+                _did_elect_new_key = 1;
+            }
         }
         
         /* ok, from here on out, use temp_id */
@@ -176,22 +199,9 @@ DYNAMIC_API PEP_STATUS update_identity(
         
         /* At this point, we either have a non-blacklisted fpr we can work */
         /* with, or we've got nada.                                        */        
-        if (!EMPTYSTR(temp_id->fpr)) {
-            status = get_key_rating(session, temp_id->fpr, &_comm_type_key);
-            assert(status != PEP_OUT_OF_MEMORY);
-            if (status == PEP_OUT_OF_MEMORY)
-                goto exit_free;
-            if (_comm_type_key < PEP_ct_unconfirmed_encryption) {
-                temp_id->comm_type = _comm_type_key;
-            } else{
-                temp_id->comm_type = stored_identity->comm_type;
-                if (temp_id->comm_type == PEP_ct_unknown) {
-                    temp_id->comm_type = _comm_type_key;
-                }
-            }
-        }
-        else {
-            /* Set comm_type accordingly */
+
+        if (EMPTYSTR(temp_id->fpr)) {
+            /* nada : set comm_type accordingly */
             temp_id->comm_type = PEP_ct_key_not_found;
         }
         
@@ -216,40 +226,35 @@ DYNAMIC_API PEP_STATUS update_identity(
     else /* stored_identity == NULL */ {
         temp_id->flags = 0;
 
-        /* Work with the elected key from above */
+        /* We elect a pubkey */
+        status = elect_pubkey(session, temp_id);
+        if (status != PEP_STATUS_OK)
+            goto exit_free;
+        
+        /* Work with the elected key */
         if (!EMPTYSTR(temp_id->fpr)) {
             
-            bool dont_use_fpr = true;
-            status = blacklist_is_listed(session, temp_id->fpr, &dont_use_fpr);
-            if (status != PEP_STATUS_OK)
-                dont_use_fpr = true; 
-
-            if (!dont_use_fpr) {
-                PEP_comm_type _comm_type_key;
-                
-                // We don't want to lose a previous trust entry!!!
-                status = get_trust(session, temp_id);
-
-                bool has_trust_status = (status == PEP_STATUS_OK);
-                
-                status = get_key_rating(session, temp_id->fpr, &_comm_type_key);
+            PEP_comm_type _comm_type_key = temp_id->comm_type;
             
-                assert(status != PEP_OUT_OF_MEMORY);
-                if (status == PEP_OUT_OF_MEMORY)
-                    goto exit_free;
+            _did_elect_new_key = 1;
 
-                if (!has_trust_status || _comm_type_key > temp_id->comm_type)
-                    temp_id->comm_type = _comm_type_key;
-            }
-            else {
-                free(temp_id->fpr);
-                temp_id->fpr = strdup("");
-            }
+            // We don't want to lose a previous trust entry!!!
+            status = get_trust(session, temp_id);
+
+            bool has_trust_status = (status == PEP_STATUS_OK);
+
+            if (!has_trust_status)
+                temp_id->comm_type = _comm_type_key;
         }
     }
 
-    if (temp_id->fpr == NULL)
+    if (temp_id->fpr == NULL) {
         temp_id->fpr = strdup("");
+        if (temp_id->fpr == NULL) {
+            status = PEP_OUT_OF_MEMORY;
+            goto exit_free;
+        }
+    }
     
     
     status = PEP_STATUS_OK;
