@@ -2225,7 +2225,7 @@ static PEP_STATUS _compare_fprs(const char* fpr1, const char* fpr2, int* compari
 }
 
 DYNAMIC_API PEP_STATUS get_trustwords(
-    PEP_SESSION session, pEp_identity* id1, pEp_identity* id2,
+    PEP_SESSION session, const pEp_identity* id1, const pEp_identity* id2,
     const char* lang, char **words, size_t *wsize, bool full
 )
 {
