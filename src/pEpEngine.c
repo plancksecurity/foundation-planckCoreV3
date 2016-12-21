@@ -36,6 +36,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     static const char *sql_unset_identity_flags;
     static const char *sql_set_trust;
     static const char *sql_get_trust;
+    static const char *sql_greater_trust_keys;
     static const char *sql_least_trust;
     static const char *sql_mark_as_compromized;
     static const char *sql_crashdump;
@@ -384,6 +385,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         sql_get_trust = "select comm_type from trust where user_id = ?1 "
                         "and pgp_keypair_fpr = upper(replace(?2,' ','')) ;";
 
+        sql_greater_trust_keys = "select pgp_keypair_fpr from trust"
+                                 "    where user_id = ?1"
+                                 "      and comm_type > ?2;";
+
         sql_least_trust = "select min(comm_type) from trust where pgp_keypair_fpr = upper(replace(?1,' ','')) ;";
 
         sql_mark_as_compromized = "update trust not indexed set comm_type = 15"
@@ -506,6 +511,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_get_trust), &_session->get_trust, NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_greater_trust_keys,
+            (int)strlen(sql_greater_trust_keys), &_session->greater_trust_keys,
+            NULL);
+    assert(int_result == SQLITE_OK);
+    
     int_result = sqlite3_prepare_v2(_session->db, sql_least_trust,
             (int)strlen(sql_least_trust), &_session->least_trust, NULL);
     assert(int_result == SQLITE_OK);
@@ -676,6 +686,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->set_trust);
             if (session->get_trust)
                 sqlite3_finalize(session->get_trust);
+            if (session->greater_trust_keys)
+                sqlite3_finalize(session->greater_trust_keys);
             if (session->least_trust)
                 sqlite3_finalize(session->least_trust);
             if (session->mark_compromized)
@@ -1370,6 +1382,71 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
     }
 
     sqlite3_reset(session->get_trust);
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS greater_trust_keys(
+        PEP_SESSION session,
+        const char *user_id,
+        PEP_comm_type min_comm_type,
+        stringlist_t **keylist
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(keylist);
+
+    if (!(session && keylist))
+        return PEP_ILLEGAL_VALUE;
+
+    *keylist = NULL;
+    stringlist_t *_keylist = new_stringlist(NULL);
+    if (_keylist == NULL)
+        goto enomem;
+
+    sqlite3_reset(session->greater_trust_keys);
+
+    sqlite3_bind_text(session->greater_trust_keys, 1, user_id, -1, SQLITE_STATIC);
+    sqlite3_bind_int(session->greater_trust_keys, 2, min_comm_type);
+    int result;
+
+    stringlist_t *_bl = _keylist;
+    do {
+        result = sqlite3_step(session->greater_trust_keys);
+        switch (result) {
+        case SQLITE_ROW:
+        {
+            const char *fpr = (const char *) sqlite3_column_text(session->greater_trust_keys, 0);
+
+            _bl = stringlist_add(_bl, fpr);
+            if (_bl == NULL)
+                goto enomem;
+
+            break;
+        }
+        case SQLITE_DONE:
+            break;
+
+        default:
+            status = PEP_UNKNOWN_ERROR;
+            result = SQLITE_DONE;
+        }
+    } while (result != SQLITE_DONE);
+
+    sqlite3_reset(session->greater_trust_keys);
+    if (status == PEP_STATUS_OK)
+        *keylist = _keylist;
+    else
+        free_stringlist(_keylist);
+
+    goto the_end;
+
+enomem:
+    free_stringlist(_keylist);
+    status = PEP_OUT_OF_MEMORY;
+
+the_end:
     return status;
 }
 

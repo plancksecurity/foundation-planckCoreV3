@@ -103,6 +103,7 @@ typedef struct _pEpSession {
     sqlite3_stmt *unset_identity_flags;
     sqlite3_stmt *set_trust;
     sqlite3_stmt *get_trust;
+    sqlite3_stmt *greater_trust_keys;
     sqlite3_stmt *least_trust;
     sqlite3_stmt *mark_compromized;
     sqlite3_stmt *reset_trust;

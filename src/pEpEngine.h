@@ -805,6 +805,26 @@ DYNAMIC_API void pEp_free(void *p);
 DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity);
 
 
+// greater_trust_keys() - user_id's keys with trust greater than given trust 
+//
+//  parameters:
+//      session (in)            session handle
+//      user_id (in)            UTF-8 string or NULL 
+//      min_comm_type (in       key id, user id or address to search for as
+//                              UTF-8 string
+//      keylist (out)           list of fingerprints found or NULL on error
+//
+//  caveat:
+//        the ownerships of keylist isgoing to the caller
+//        the caller must use free_stringlist() to free it
+
+DYNAMIC_API PEP_STATUS greater_trust_keys(
+        PEP_SESSION session,
+        const char *user_id,
+        PEP_comm_type min_comm_type,
+        stringlist_t **keylist
+    );
+
 // least_trust() - get the least known trust level for a key in the database
 //
 //  parameters:
