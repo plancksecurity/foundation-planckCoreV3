@@ -1,3 +1,6 @@
+-- This file is under GNU General Public License 3.0
+-- See LICENSE.txt
+
 -- DDL
 
 CREATE TABLE i18n_language (

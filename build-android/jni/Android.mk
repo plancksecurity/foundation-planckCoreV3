@@ -1,5 +1,8 @@
-# Copyright (C) 2015 pEp
+# Copyleft 2015 pEp foundation
 #
+# This file is under GNU General Public License 3.0
+# see LICENSE.txt
+
 LOCAL_PATH := $(call my-dir)
 $(warning $(LOCAL_PATH))
 

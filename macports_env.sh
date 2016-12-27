@@ -1,3 +1,5 @@
+# this file is in the Public Domain
+
 # Typical pure MacPorts environment
 
 # Restrict to MacPorts

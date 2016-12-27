@@ -1,3 +1,6 @@
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
 // openpgp_compat.h
 //
 // These functions are the exposure of non-generic PGP-specific functionality (largely related to PGP

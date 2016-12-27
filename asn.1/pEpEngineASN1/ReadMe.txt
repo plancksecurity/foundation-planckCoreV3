@@ -1,3 +1,7 @@
+# This file is in the Public Domain
+# All other files in this directory are under GNU General Public License 3.0
+# see LICENSE.txt
+
 ========================================================================
     STATIC LIBRARY : pEpEngineASN1 Project Overview
 ========================================================================

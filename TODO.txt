@@ -1,3 +1,5 @@
+# this file is in the Public Domain
+
 - add required Debian packages to build pEp (or where to find non-debian-packaged software, like "libetpan/mailmime_encode.h"
 - add build instructions and required "brew" packages for Mac OS X.
 - describe, how to configure pEpEngine to use self-compiled libetpan (in $HOME/local/ or the like)

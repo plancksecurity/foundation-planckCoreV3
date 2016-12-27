@@ -1,4 +1,7 @@
-// Windows platform specifica
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
+// Windows platform specification
 
 #define WIN32_LEAN_AND_MEAN
 #ifndef UNICODE
