@@ -1,3 +1,4 @@
+@rem this file is in the Public Domain
 @echo off
 
 if exist system.db del /f system.db

@@ -1,3 +1,6 @@
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
 #ifndef __APPLE__
 #define _POSIX_C_SOURCE 200809L
 #endif

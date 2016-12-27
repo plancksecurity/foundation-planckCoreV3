@@ -1,3 +1,6 @@
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
 #include "platform.h"
 
 // it seems pEp_internal.h needs to be the first pEp include due to the 

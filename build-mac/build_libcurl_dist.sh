@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# This file is under GNU General Public License 3.0
+# see LICENSE.txt
+
 export DEVROOT=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain
 DFT_DIST_DIR=../libcurl-ios-dist
 DIST_DIR=${DIST_DIR:-$DFT_DIST_DIR}

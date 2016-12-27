@@ -1,3 +1,6 @@
+# This file is under GNU General Public License 3.0
+# see LICENSE.txt
+
 #------------------------------------------------------------------------------#
 # Makefile to build libEtpan GPGME, GnuPG and deps for use with pEpEngine 
 #  based on pEpJNIAdapter/android/external/Makefile

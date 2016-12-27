@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# This file is under GNU General Public License 3.0
+# see LICENSE.txt
+
 #
 # Invoke with `sh build.sh`
 #
