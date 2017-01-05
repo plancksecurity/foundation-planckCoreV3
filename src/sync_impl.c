@@ -288,6 +288,47 @@ PEP_STATUS receive_DeviceState_msg(
                     return PEP_OUT_OF_MEMORY;
                 }
 
+                // detect and mitigate address spoofing
+                Identity check_me = NULL;
+                const char* null_terminated_address = 
+                    strndup((char *) msg->header.me.address->buf,
+                            msg->header.me.address->size);
+
+                status = get_identity(session, 
+                                      null_terminated_address, 
+                                      PEP_OWN_USERID, 
+                                      &check_me);
+
+                if (status == PEP_OUT_OF_MEMORY)
+                    goto free_all;
+
+                free_identity(check_me);
+
+                bool not_own_address = status != PEP_STATUS_OK;
+                status = PEP_STATUS_OK;
+
+                if (not_own_address || 
+                    strncmp(src->from->address,
+                            (char *) msg->header.me.address->buf,
+                            msg->header.me.address->size) != 0 ||
+                    strncmp(src->to->ident->address,
+                            (char *) msg->header.me.address->buf,
+                            msg->header.me.address->size) != 0) {
+                    consume = true;
+                    goto free_all;
+                }
+
+                // if encrypted, ensure that header.me.fpr match signer's fpr
+                if (rating >= PEP_rating_reliable && (
+                        !keylist ||
+                        !_same_fpr((char *) msg->header.me.fpr.buf,
+                                   msg->header.me.fpr.size,
+                                   keylist->value,
+                                   strlen(keylist->value)))) {
+                    consume = true;
+                    goto free_all;
+                }
+
                 // check message expiry 
                 if(src->recv) {
                     time_t expiry = timegm(src->recv) + SYNC_MSG_EXPIRE_TIME;

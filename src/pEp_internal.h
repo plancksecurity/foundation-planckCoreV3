@@ -54,6 +54,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
+#include <ctype.h>
 
 #include "sqlite3.h"
 
@@ -170,3 +171,43 @@ void release_transport_system(PEP_SESSION session, bool out_last);
     log_event(session, (TITLE), (ENTITY), (DESC), "debug");
 #endif
 
+// Space tolerant and case insensitive fingerprint string compare
+static inline int _same_fpr(
+        const char* fpra,
+        size_t fpras,
+        const char* fprb,
+        size_t fprbs
+    )
+{
+    size_t ai = 0;
+    size_t bi = 0;
+    
+    do
+    {
+        if(fpra[ai] == 0 || fprb[bi] == 0)
+        {
+            return 0;
+        }
+        else if(fpra[ai] == ' ')
+        {
+            ai++;
+        }
+        else if(fprb[bi] == ' ')
+        {
+            bi++;
+        }
+        else if(toupper(fpra[ai]) == toupper(fprb[bi]))
+        {
+            ai++;
+            bi++;
+        }
+        else
+        {
+            return 0;
+        }
+        
+    }
+    while(ai < fpras && bi < fprbs);
+    
+    return ai == fpras && bi == fprbs;
+}
