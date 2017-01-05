@@ -32,6 +32,7 @@ typedef enum _fsm_error {
 
 int storedGroupKeys(PEP_SESSION session);
 int keyElectionWon(PEP_SESSION session, Identity partner);
+int sameIdentities(PEP_SESSION session, Identity a, Identity b);
 
 // states
 
@@ -46,9 +47,11 @@ typedef enum _DeviceState_state {
     DeviceState_state_NONE = 0,
     InitState, 
     Sole, 
+    SoleBeaconed, 
     HandshakingSole, 
     WaitForGroupKeysSole, 
     Grouped, 
+    GroupedBeaconed, 
     HandshakingGrouped
 } DeviceState_state;
 
@@ -62,10 +65,10 @@ typedef enum _DeviceState_event {
     GroupKeys = 4,
     KeyGen, 
     CannotDecrypt, 
+    Timeout, 
     HandshakeRejected, 
     HandshakeAccepted, 
     Cancel, 
-    Timeout, 
     UpdateRequest, 
     GroupUpdate
 } DeviceState_event;

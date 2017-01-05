@@ -355,13 +355,6 @@ PEP_STATUS receive_DeviceState_msg(
                                 goto free_all;
                             }
                             
-                            // Ignore and consume handshakes with devices
-                            // already using trusted own key to encrypt
-                            if (rating >= PEP_rating_trusted){
-                                consume = true;
-                                goto free_all;
-                            }
-
                             break;
                         // accepting GroupKeys needs encryption and trust of peer device
                         case DeviceGroup_Protocol__payload_PR_groupKeys:
@@ -375,7 +368,7 @@ PEP_STATUS receive_DeviceState_msg(
                                 goto free_all;
                             }
 
-                            // check trust of identity using user_id given in payload
+                            // check trust of identity using user_id given in msg.header.me
                             // to exacly match identity of device, the one trusted in
                             // case of accepted handshake
                             pEp_identity *_from = new_identity(NULL, 

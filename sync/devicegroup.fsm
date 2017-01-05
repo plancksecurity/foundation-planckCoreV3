@@ -20,6 +20,7 @@ protocol DeviceGroup {
     fsm DeviceState filename=sync {
         condition storedGroupKeys();
         condition keyElectionWon(Identity partner);
+        condition sameIdentities(Identity a, Identity b);
 
         state InitState {
             on Init {
@@ -30,22 +31,47 @@ protocol DeviceGroup {
         }
 
         state Sole end=1 {
-            on KeyGen // injected by generate_keypair()
+            on KeyGen
                 do sendBeacon;
             on CannotDecrypt
-                do sendBeacon;  // cry, baby
-            on Beacon(Identity partner) // this event will not happen for already
-                                        // rejected partners
+                do sendBeacon;
+            on Beacon(Identity partner){
                 do sendHandshakeRequest(partner);
+                go SoleBeaconed(partner);
+            }
             on HandshakeRequest(Identity partner) {
                 do sendHandshakeRequest(partner);
                 go HandshakingSole(partner);
             }
         }
 
+        state SoleBeaconed timeout=600 (Identity expected) {
+            on KeyGen{
+                do sendBeacon;
+                go Sole;
+            }
+            on CannotDecrypt{
+                do sendBeacon;
+                go Sole;
+            }
+            on Beacon(Identity partner) {
+                do sendHandshakeRequest(partner);
+                go SoleBeaconed(partner);
+            }
+            on HandshakeRequest(Identity partner) {
+                if sameIdentities(partner, expected) {
+                    // do nothing, to avoid sending handshake request twice 
+                } else {
+                    do sendHandshakeRequest(partner);
+                }
+                go HandshakingSole(partner);
+            }
+            on Timeout go Sole;
+        }
+
         state HandshakingSole timeout=600 (Identity expected) {
             on Init{
-                if keyElectionWon(partner) {    // an already existing group
+                if keyElectionWon(partner) {
                     do notifyInitFormGroup(partner);
                 } else {
                     do notifyInitAddOurDevice(partner);
@@ -53,13 +79,12 @@ protocol DeviceGroup {
             }
 
             on HandshakeRejected(Identity partner) {
-                do rejectHandshake(partner);             // stores rejection of partner
+                do rejectHandshake(partner);
                 go Sole;
             }
             on HandshakeAccepted(Identity partner) {
                 do acceptHandshake(partner); 
-                if keyElectionWon(partner) {    // an already existing group
-                                                // always wins
+                if keyElectionWon(partner) {
                     do sendGroupKeys(partner);
                     do notifyAcceptedGroupCreated(partner);
                     go Grouped;
@@ -75,10 +100,11 @@ protocol DeviceGroup {
     
         state WaitForGroupKeysSole timeout=600 (Identity expected) {
             on GroupKeys(Identity partner, Stringlist keys) {
-                // TODO ensure partner == expected
-                do storeGroupKeys(partner, keys);
-                do notifyAcceptedDeviceAdded(partner);
-                go Grouped;
+                if sameIdentities(partner, expected) {
+                    do storeGroupKeys(partner, keys);
+                    do notifyAcceptedDeviceAdded(partner);
+                    go Grouped;
+                }
             }
             on Timeout {
                 do notifyTimeout(expected);
@@ -92,17 +118,43 @@ protocol DeviceGroup {
             on KeyGen
                 do sendGroupUpdate;
             on CannotDecrypt
-                do sendUpdateRequest; // TODO: narrow request to missing key
+                do sendUpdateRequest;
             on UpdateRequest
                 do sendGroupUpdate;
-            on Beacon(Identity partner)
+            on Beacon(Identity partner){
                 do sendHandshakeRequest(partner);
+                go GroupedBeaconed(partner);
+            }
             on HandshakeRequest(Identity partner) {
                 do sendHandshakeRequest(partner);
                 go HandshakingGrouped(partner);
             }
             on GroupUpdate(Identity partner, Stringlist keys)
                 do storeGroupKeys(partner, keys);
+        }
+
+        state GroupedBeaconed timeout=600 (Identity expected){
+            on KeyGen
+                do sendGroupUpdate;
+            on CannotDecrypt
+                do sendUpdateRequest;
+            on UpdateRequest
+                do sendGroupUpdate;
+            on Beacon(Identity partner){
+                do sendHandshakeRequest(partner);
+                go GroupedBeaconed(partner);
+            }
+            on HandshakeRequest(Identity partner) {
+                if sameIdentities(partner, expected) {
+                    // do nothing, to avoid sending handshake request twice 
+                } else {
+                    do sendHandshakeRequest(partner);
+                }
+                go HandshakingGrouped(partner);
+            }
+            on GroupUpdate(Identity partner, Stringlist keys)
+                do storeGroupKeys(partner, keys);
+            on Timeout go Grouped;
         }
 
         state HandshakingGrouped timeout=600 (Identity expected) {
