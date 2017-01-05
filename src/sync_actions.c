@@ -111,11 +111,11 @@ int sameIdentities(PEP_SESSION session, Identity a, Identity b)
     if (!(session && a && b))
         return invalid_condition; // error
 
-    if ((a->fpr != NULL && b->fpr != NULL) ||
+    if (a->fpr == NULL || b->fpr == NULL ||
         (!_same_fpr(a->fpr, strlen(a->fpr), b->fpr, strlen(b->fpr))) ||
-        (a->address != NULL && b->address != NULL) ||
+        a->address == NULL || b->address == NULL ||
         strcmp(a->address, b->address) != 0 ||
-        (a->user_id != NULL && b->user_id != NULL) ||
+        a->user_id == NULL || b->user_id == NULL ||
         strcmp(a->user_id, b->user_id) != 0)
             return 0;
     return 1;
