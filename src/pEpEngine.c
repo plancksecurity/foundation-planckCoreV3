@@ -42,6 +42,8 @@ static const char *sql_set_device_group =
     "update person set device_group = ?1 "
     "where id = '" PEP_OWN_USERID "';";
 
+// TODO leave group
+
 static const char *sql_get_device_group = 
     "select device_group from person "
     "where id = '" PEP_OWN_USERID "';";
