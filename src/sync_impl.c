@@ -290,14 +290,19 @@ PEP_STATUS receive_DeviceState_msg(
 
                 // detect and mitigate address spoofing
                 Identity check_me = NULL;
-                const char* null_terminated_address = 
+                char* null_terminated_address = 
                     strndup((char *) msg->header.me.address->buf,
                             msg->header.me.address->size);
 
-                status = get_identity(session, 
-                                      null_terminated_address, 
-                                      PEP_OWN_USERID, 
-                                      &check_me);
+                if(null_terminated_address){
+                    status = get_identity(session, 
+                                          null_terminated_address, 
+                                          PEP_OWN_USERID, 
+                                          &check_me);
+                    free(null_terminated_address);
+                } 
+                else
+                    status = PEP_OUT_OF_MEMORY;
 
                 if (status == PEP_OUT_OF_MEMORY)
                     goto free_all;
