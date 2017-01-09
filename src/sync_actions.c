@@ -1,3 +1,6 @@
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
 // Actions for DeviceState state machine
 
 #include <assert.h>
@@ -9,9 +12,11 @@
 
 // conditions
 
+// TODO : move that SQL statement with other prepared SQL statements in pEpEngine.c
 static const char *sql_stored_group_keys =
         "select count(device_group) from person where id = '" PEP_OWN_USERID "';"; 
 
+// TODO  is that necessary ?
 static int _stored_group_keys(void *_gc, int count, char **text, char **name)
 {
     assert(_gc);
@@ -96,6 +101,27 @@ the_end:
     free_identity(me);
     return result;
 }
+
+int sameIdentities(PEP_SESSION session, Identity a, Identity b)
+{
+    assert(session);
+    assert(a);
+    assert(b);
+
+    if (!(session && a && b))
+        return invalid_condition; // error
+
+    if (a->fpr == NULL || b->fpr == NULL ||
+        (!_same_fpr(a->fpr, strlen(a->fpr), b->fpr, strlen(b->fpr))) ||
+        a->address == NULL || b->address == NULL ||
+        strcmp(a->address, b->address) != 0 ||
+        a->user_id == NULL || b->user_id == NULL ||
+        strcmp(a->user_id, b->user_id) != 0)
+            return 0;
+    return 1;
+}
+
+// actions
 
 PEP_STATUS _notifyHandshake(
         PEP_SESSION session,

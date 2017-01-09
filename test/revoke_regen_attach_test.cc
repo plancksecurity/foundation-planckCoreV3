@@ -1,3 +1,6 @@
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>

@@ -1,3 +1,6 @@
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
 #pragma once
 
 #include "pEpEngine.h"
@@ -332,7 +335,7 @@ DYNAMIC_API PEP_STATUS get_binary_path(PEP_cryptotech tech, const char **path);
 //
 
 DYNAMIC_API PEP_STATUS get_trustwords(
-    PEP_SESSION session, pEp_identity* id1, pEp_identity* id2,
+    PEP_SESSION session, const pEp_identity* id1, const pEp_identity* id2,
     const char* lang, char **words, size_t *wsize, bool full
 );
 

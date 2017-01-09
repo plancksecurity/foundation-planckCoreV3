@@ -1,5 +1,9 @@
 #! /usr/bin/env python3
 
+# This file is under GNU General Public License 3.0
+# see LICENSE.txt
+
+
 from argparse import ArgumentParser
 from fileinput import FileInput, hook_encoded
 import re, itertools, sys

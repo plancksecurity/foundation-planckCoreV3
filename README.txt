@@ -1,3 +1,5 @@
+# this file is under Creative Commons License 3.0 cc-by-sa
+
 p≡p Engine
 ==========
 

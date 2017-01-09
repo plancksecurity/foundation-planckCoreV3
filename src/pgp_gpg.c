@@ -1,3 +1,6 @@
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
 #include "platform.h"
 #include "pEp_internal.h"
 #include "pgp_gpg.h"
@@ -1531,12 +1534,27 @@ static PEP_STATUS _pgp_search_keys(PEP_SESSION session, const char* pattern,
             case GPG_ERR_NO_ERROR:
                 assert(key);
                 assert(key->subkeys);
-                char *fpr = key->subkeys->fpr;
-                assert(fpr);
-                _k = stringlist_add(_k, fpr);
-                assert(_k);
-                if (_k != NULL)
+                if(!key->subkeys)
                     break;
+                assert(key->uids);
+                gpgme_user_id_t kuid = key->uids;
+                // check that at least one uid's email matches pattern exactly
+                while(kuid) {
+                    if(kuid->email && strcmp(kuid->email, pattern) == 0){
+                        char *fpr = key->subkeys->fpr;
+                        assert(fpr);
+                        _k = stringlist_add(_k, fpr);
+                        assert(_k);
+                        if (_k == NULL){
+                            free_stringlist(_keylist);
+                            gpg.gpgme_op_keylist_end(session->ctx);
+                            return PEP_OUT_OF_MEMORY;
+                        }
+                        break;
+                    }
+                    kuid = kuid->next;
+                }
+                break;
             case GPG_ERR_ENOMEM:
                 free_stringlist(_keylist);
                 gpg.gpgme_op_keylist_end(session->ctx);

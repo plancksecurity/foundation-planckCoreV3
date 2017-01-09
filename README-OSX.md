@@ -1,3 +1,5 @@
+# this file is under Creative Commons License 3.0 cc-by-sa
+
 # Building for OS X/macOS
 
 See also README.txt for general information.

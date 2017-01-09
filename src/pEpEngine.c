@@ -1,3 +1,6 @@
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
 #include "pEp_internal.h"
 #include "dynamic_api.h"
 #include "cryptotech.h"
@@ -6,6 +9,179 @@
 #include "sync_fsm.h"
 
 static int init_count = -1;
+
+// sql manipulation statements
+static const char *sql_log = 
+    "insert into log (title, entity, description, comment)"
+     "values (?1, ?2, ?3, ?4);";
+
+static const char *sql_trustword = 
+    "select id, word from wordlist where lang = lower(?1) "
+    "and id = ?2 ;";
+
+static const char *sql_get_identity =  
+    "select fpr, username, comm_type, lang,"
+    "   identity.flags | pgp_keypair.flags"
+    "   from identity"
+    "   join person on id = identity.user_id"
+    "   join pgp_keypair on fpr = identity.main_key_id"
+    "   join trust on id = trust.user_id"
+    "       and pgp_keypair_fpr = identity.main_key_id"
+    "   where address = ?1 and identity.user_id = ?2;";
+
+// Set person, but if already exist, only update.
+// if main_key_id already set, don't touch.
+static const char *sql_set_person = 
+    "insert or replace into person (id, username, lang, main_key_id, device_group)"
+    "  values (?1, ?2, ?3,"
+    "    (select coalesce((select main_key_id from person "
+    "      where id = ?1), upper(replace(?4,' ','')))),"
+    "    (select device_group from person where id = ?1)) ;";
+
+static const char *sql_set_device_group = 
+    "update person set device_group = ?1 "
+    "where id = '" PEP_OWN_USERID "';";
+
+// TODO leave group
+
+static const char *sql_get_device_group = 
+    "select device_group from person "
+    "where id = '" PEP_OWN_USERID "';";
+
+static const char *sql_set_pgp_keypair = 
+    "insert or replace into pgp_keypair (fpr) "
+    "values (upper(replace(?1,' ',''))) ;";
+
+static const char *sql_set_identity = 
+    "insert or replace into identity ("
+    " address, main_key_id, "
+    " user_id, flags"
+    ") values ("
+    " ?1,"
+    " upper(replace(?2,' ','')),"
+    " ?3,"
+    // " (select"
+    // "   coalesce("
+    // "    (select flags from identity"
+    // "     where address = ?1 and"
+    // "           user_id = ?3),"
+    // "    0)"
+    // " ) | (?4 & 255)"
+    /* set_identity ignores previous flags, and doesn't filter machine flags */
+    " ?4"
+    ");";
+        
+static const char *sql_set_identity_flags = 
+    "update identity set flags = "
+    "    ((?1 & 255) | (select flags from identity"
+    "                   where address = ?2 and user_id = ?3)) "
+    "where address = ?2 and user_id = ?3 ;";
+
+static const char *sql_unset_identity_flags = 
+    "update identity set flags = "
+    "    ( ~(?1 & 255) & (select flags from identity"
+    "                   where address = ?2 and user_id = ?3)) "
+    "where address = ?2 and user_id = ?3 ;";
+
+static const char *sql_set_trust =
+    "insert or replace into trust (user_id, pgp_keypair_fpr, comm_type) "
+    "values (?1, upper(replace(?2,' ','')), ?3) ;";
+
+static const char *sql_get_trust = 
+    "select comm_type from trust where user_id = ?1 "
+    "and pgp_keypair_fpr = upper(replace(?2,' ','')) ;";
+
+static const char *sql_least_trust = 
+    "select min(comm_type) from trust where pgp_keypair_fpr = upper(replace(?1,' ','')) ;";
+
+static const char *sql_mark_as_compromized = 
+    "update trust not indexed set comm_type = 15"
+    " where pgp_keypair_fpr = upper(replace(?1,' ','')) ;";
+
+static const char *sql_crashdump = 
+    "select timestamp, title, entity, description, comment"
+    " from log order by timestamp desc limit ?1 ;";
+
+static const char *sql_languagelist = 
+    "select i18n_language.lang, name, phrase" 
+    " from i18n_language join i18n_token using (lang) where i18n_token.id = 1000;" ;
+
+static const char *sql_i18n_token = 
+    "select phrase from i18n_token where lang = lower(?1) and id = ?2 ;";
+
+
+// blacklist
+static const char *sql_blacklist_add = 
+    "insert or replace into blacklist_keys (fpr) values (upper(replace(?1,' ',''))) ;"
+    "delete from identity where main_key_id = upper(replace(?1,' ','')) ;"
+    "delete from pgp_keypair where fpr = upper(replace(?1,' ','')) ;";
+
+static const char *sql_blacklist_delete =
+    "delete from blacklist_keys where fpr = upper(replace(?1,' ','')) ;";
+
+static const char *sql_blacklist_is_listed = 
+    "select count(*) from blacklist_keys where fpr = upper(replace(?1,' ','')) ;";
+
+static const char *sql_blacklist_retrieve = 
+    "select * from blacklist_keys ;";
+                
+
+// Own keys
+static const char *sql_own_key_is_listed = 
+    "select count(*) from ("
+    " select main_key_id from person "
+    "   where main_key_id = upper(replace(?1,' ',''))"
+    "    and id = '" PEP_OWN_USERID "' "
+    " union "
+    "  select main_key_id from identity "
+    "   where main_key_id = upper(replace(?1,' ',''))"
+    "    and user_id = '" PEP_OWN_USERID "' );";
+
+static const char *sql_own_identities_retrieve =  
+    "select address, fpr, username, "
+    "   lang, identity.flags | pgp_keypair.flags"
+    "   from identity"
+    "   join person on id = identity.user_id"
+    "   join pgp_keypair on fpr = identity.main_key_id"
+    "   join trust on id = trust.user_id"
+    "       and pgp_keypair_fpr = identity.main_key_id"
+    "   where identity.user_id = '" PEP_OWN_USERID "'"
+    "       and (identity.flags & ?1) = 0;";
+        
+static const char *sql_own_keys_retrieve =  
+    "select fpr from own_keys"
+    "   natural join identity"
+    "   where (identity.flags & ?1) = 0;";
+
+static const char *sql_set_own_key = 
+    "insert or replace into own_keys (address, user_id, fpr)"
+    " values (?1, '" PEP_OWN_USERID "', upper(replace(?2,' ','')));";
+
+
+// Sequence
+static const char *sql_sequence_value1 = 
+    "insert or replace into sequences (name, value, own) "
+    "values (?1, "
+    "(select coalesce((select value + 1 from sequences "
+    "where name = ?1), 1 )), ?2) ; ";
+
+static const char *sql_sequence_value2 = 
+    "select value, own from sequences where name = ?1 ;";
+
+static const char *sql_sequence_value3 = 
+    "update sequences set value = ?2, own = ?3 where name = ?1 ;";
+        
+// Revocation tracking
+static const char *sql_set_revoked =
+    "insert or replace into revoked_keys ("
+    "    revoked_fpr, replacement_fpr, revocation_date) "
+    "values (upper(replace(?1,' ','')),"
+    "        upper(replace(?2,' ','')),"
+    "        ?3) ;";
+        
+static const char *sql_get_revoked = 
+    "select revoked_fpr, revocation_date from revoked_keys"
+    "    where replacement_fpr = upper(replace(?1,' ','')) ;";
 
 static int user_version(void *_version, int count, char **text, char **name)
 {
@@ -24,44 +200,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 {
     PEP_STATUS status = PEP_STATUS_OK;
     int int_result;
-    static const char *sql_log;
-    static const char *sql_trustword;
-    static const char *sql_get_identity;
-    static const char *sql_set_person;
-    static const char *sql_set_device_group;
-    static const char *sql_get_device_group;
-    static const char *sql_set_pgp_keypair;
-    static const char *sql_set_identity;
-    static const char *sql_set_identity_flags;
-    static const char *sql_unset_identity_flags;
-    static const char *sql_set_trust;
-    static const char *sql_get_trust;
-    static const char *sql_least_trust;
-    static const char *sql_mark_as_compromized;
-    static const char *sql_crashdump;
-    static const char *sql_languagelist;
-    static const char *sql_i18n_token;
-
-    // blacklist
-    static const char *sql_blacklist_add;
-    static const char *sql_blacklist_delete;
-    static const char *sql_blacklist_is_listed;
-    static const char *sql_blacklist_retrieve;
-    
-    // Own keys
-    static const char *sql_own_key_is_listed;
-    static const char *sql_own_identities_retrieve;
-    static const char *sql_own_keys_retrieve;
-    static const char *sql_set_own_key;
-
-    // Sequence
-    static const char *sql_sequence_value1;
-    static const char *sql_sequence_value2;
-    static const char *sql_sequence_value3;
-
-    // Revocation tracking
-    static const char *sql_set_revoked;
-    static const char *sql_get_revoked;
     
     bool in_first = false;
 
@@ -317,142 +455,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             assert(int_result == SQLITE_OK);
         }
 
-        sql_log = "insert into log (title, entity, description, comment)"
-                  "values (?1, ?2, ?3, ?4);";
-
-        sql_get_identity =  "select fpr, username, comm_type, lang,"
-                            "   identity.flags | pgp_keypair.flags"
-                            "   from identity"
-                            "   join person on id = identity.user_id"
-                            "   join pgp_keypair on fpr = identity.main_key_id"
-                            "   join trust on id = trust.user_id"
-                            "       and pgp_keypair_fpr = identity.main_key_id"
-                            "   where address = ?1 and identity.user_id = ?2;";
-
-        sql_trustword = "select id, word from wordlist where lang = lower(?1) "
-                       "and id = ?2 ;";
-
-        // Set person, but if already exist, only update.
-        // if main_key_id already set, don't touch.
-        sql_set_person = "insert or replace into person (id, username, lang, main_key_id, device_group)"
-                         "  values (?1, ?2, ?3,"
-                         "    (select coalesce((select main_key_id from person "
-                         "      where id = ?1), upper(replace(?4,' ','')))),"
-                         "    (select device_group from person where id = ?1)) ;";
-
-        sql_set_device_group = "update person set device_group = ?1 "
-                               "where id = '" PEP_OWN_USERID "';";
-
-        sql_get_device_group = "select device_group from person "
-                               "where id = '" PEP_OWN_USERID "';";
-
-        sql_set_pgp_keypair = "insert or replace into pgp_keypair (fpr) "
-                              "values (upper(replace(?1,' ',''))) ;";
-
-        sql_set_identity = "insert or replace into identity ("
-                           " address, main_key_id, "
-                           " user_id, flags"
-                           ") values ("
-                           " ?1,"
-                           " upper(replace(?2,' ','')),"
-                           " ?3,"
-                           // " (select"
-                           // "   coalesce("
-                           // "    (select flags from identity"
-                           // "     where address = ?1 and"
-                           // "           user_id = ?3),"
-                           // "    0)"
-                           // " ) | (?4 & 255)"
-                           /* set_identity ignores previous flags, and doesn't filter machine flags */
-                           " ?4"
-                           ");";
-        
-        sql_set_identity_flags = "update identity set flags = "
-                                 "    ((?1 & 255) | (select flags from identity"
-                                 "                   where address = ?2 and user_id = ?3)) "
-                                 "where address = ?2 and user_id = ?3 ;";
-
-        sql_unset_identity_flags = 
-                                 "update identity set flags = "
-                                 "    ( ~(?1 & 255) & (select flags from identity"
-                                 "                   where address = ?2 and user_id = ?3)) "
-                                 "where address = ?2 and user_id = ?3 ;";
-
-        sql_set_trust = "insert or replace into trust (user_id, pgp_keypair_fpr, comm_type) "
-                        "values (?1, upper(replace(?2,' ','')), ?3) ;";
-
-        sql_get_trust = "select comm_type from trust where user_id = ?1 "
-                        "and pgp_keypair_fpr = upper(replace(?2,' ','')) ;";
-
-        sql_least_trust = "select min(comm_type) from trust where pgp_keypair_fpr = upper(replace(?1,' ','')) ;";
-
-        sql_mark_as_compromized = "update trust not indexed set comm_type = 15"
-                                  " where pgp_keypair_fpr = upper(replace(?1,' ','')) ;";
-
-        sql_crashdump = "select timestamp, title, entity, description, comment"
-                        " from log order by timestamp desc limit ?1 ;";
-
-        sql_languagelist = "select i18n_language.lang, name, phrase from i18n_language join i18n_token using (lang) where i18n_token.id = 1000;" ;
-
-        sql_i18n_token = "select phrase from i18n_token where lang = lower(?1) and id = ?2 ;";
-
-        // blacklist
-
-        sql_blacklist_add = "insert or replace into blacklist_keys (fpr) values (upper(replace(?1,' ',''))) ;"
-                            "delete from identity where main_key_id = upper(replace(?1,' ','')) ;"
-                            "delete from pgp_keypair where fpr = upper(replace(?1,' ','')) ;";
-
-        sql_blacklist_delete = "delete from blacklist_keys where fpr = upper(replace(?1,' ','')) ;";
-
-        sql_blacklist_is_listed = "select count(*) from blacklist_keys where fpr = upper(replace(?1,' ','')) ;";
-
-        sql_blacklist_retrieve = "select * from blacklist_keys ;";
-                
-        // Own keys
-        
-        sql_own_key_is_listed = "select count(*) from ("
-                                " select main_key_id from person "
-                                "   where main_key_id = upper(replace(?1,' ',''))"
-                                "    and id = '" PEP_OWN_USERID "' "
-                                " union "
-                                "  select main_key_id from identity "
-                                "   where main_key_id = upper(replace(?1,' ',''))"
-                                "    and user_id = '" PEP_OWN_USERID "' );";
-
-        sql_own_identities_retrieve =  
-                            "select address, fpr, username, "
-                            "   lang, identity.flags | pgp_keypair.flags"
-                            "   from identity"
-                            "   join person on id = identity.user_id"
-                            "   join pgp_keypair on fpr = identity.main_key_id"
-                            "   join trust on id = trust.user_id"
-                            "       and pgp_keypair_fpr = identity.main_key_id"
-                            "   where identity.user_id = '" PEP_OWN_USERID "'"
-                            "       and (identity.flags & ?1) = 0;";
-        
-        sql_own_keys_retrieve =  
-                            "select fpr from own_keys"
-                            "   natural join identity"
-                            "   where (identity.flags & ?1) = 0;";
-
-        sql_set_own_key = "insert or replace into own_keys (address, user_id, fpr)"
-                          " values (?1, '" PEP_OWN_USERID "', upper(replace(?2,' ','')));";
-
-        sql_sequence_value1 = "insert or replace into sequences (name, value, own) "
-                              "values (?1, "
-                              "(select coalesce((select value + 1 from sequences "
-                              "where name = ?1), 1 )), ?2) ; ";
-        sql_sequence_value2 = "select value, own from sequences where name = ?1 ;";
-        sql_sequence_value3 = "update sequences set value = ?2, own = ?3 where name = ?1 ;";
-        
-        sql_set_revoked =     "insert or replace into revoked_keys ("
-                              "    revoked_fpr, replacement_fpr, revocation_date) "
-                              "values (upper(replace(?1,' ','')),"
-                              "        upper(replace(?2,' ','')),"
-                              "        ?3) ;";
-        
-        sql_get_revoked =     "select revoked_fpr, revocation_date from revoked_keys"
-                              "    where replacement_fpr = upper(replace(?1,' ','')) ;";
     }
 
     int_result = sqlite3_prepare_v2(_session->db, sql_log,

@@ -1,3 +1,6 @@
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
 #include "etpan_mime.h"
 #ifndef mailmime_param_new_with_data
 #include <libetpan/mailprivacy_tools.h>

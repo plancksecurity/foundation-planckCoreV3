@@ -1,3 +1,6 @@
+# this file is under GNU General Public License v3.0
+# see LICENSE.txt
+
 include Makefile.conf
 
 # add it to the environment of all executed programs:

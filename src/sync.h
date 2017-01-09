@@ -1,3 +1,6 @@
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
 /*
 ====================================
 Engine/adapter/app KeySync interface 
