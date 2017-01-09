@@ -391,12 +391,12 @@ void pgp_release(PEP_SESSION session, bool out_last)
 PEP_STATUS _first_viable_subkey_fpr(PEP_SESSION session,
                                     gpgme_key_t key,
                                     char** ret_fpr) {
-    *ref_fpr = NULL;
+    *ret_fpr = NULL;
     
     if (key && key->subkeys) {
         gpgme_subkey_t subkey = key->subkeys;
 
-        switch (subkeys->protocol) {
+        switch (key->protocol) {
             case GPGME_PROTOCOL_OpenPGP:
             case GPGME_PROTOCOL_DEFAULT:
             case GPGME_PROTOCOL_CMS:
@@ -408,7 +408,7 @@ PEP_STATUS _first_viable_subkey_fpr(PEP_SESSION session,
         while (subkey) {
             if (!(subkey->revoked || subkey->expired ||
                 subkey->disabled || subkey->invalid)) {
-
+#if GPGME_VERSION_NUMBER >= 0x020100
                 if (gpgme_check_version("2.1.0")) {
                     switch (subkey->pubkey_algo) {
                         case PUBKEY_ALGO_ECDH:
@@ -420,6 +420,7 @@ PEP_STATUS _first_viable_subkey_fpr(PEP_SESSION session,
                             break;
                     }
                 }    
+#endif
                 break;
             }
             subkey = subkey->next;
