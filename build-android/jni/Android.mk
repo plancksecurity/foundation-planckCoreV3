@@ -2,9 +2,10 @@
 #
 # This file is under GNU General Public License 3.0
 # see LICENSE.txt
-
 LOCAL_PATH := $(call my-dir)
-$(warning $(LOCAL_PATH))
+
+LIBETPAN_PATH:=  $(LOCAL_PATH)/../../../pEpJNIAdapter/android/external/libetpan/build-android
+GPGME_INCLUDE_PATH:=  $(LOCAL_PATH)/../../../pEpJNIAdapter/android/external/data/data/pep.android.k9/app_opt/include
 
 include $(CLEAR_VARS)
 
@@ -19,10 +20,6 @@ endif
 LOCAL_MODULE    := pEpEngine
 LOCAL_CFLAGS    += -std=c99
 
-ifneq ($(NDEBUG),)
-LOCAL_CFLAGS    += -DNDEBUG=1
-endif
-
 # from http://www.sqlite.org/android/finfo?name=jni/sqlite/Android.mk 
 #      http://www.sqlite.org/android/artifact/e8ed354b3e58c835
 
@@ -32,13 +29,14 @@ endif
 #
 LOCAL_CFLAGS    += -DSQLITE_TEMP_STORE=3
 
-LOCAL_C_INCLUDES := ../../src \
-                    ../../asn.1 \
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../src \
+                    $(LOCAL_PATH)/../../asn.1 \
                     $(GPGME_INCLUDE_PATH) \
                     $(LIBETPAN_PATH)/include
-ENGINE_SRC_FILES := $(shell find ../../src/ ! -name "*netpgp*" -name "*.c")
+LOCAL_C_INCLUDES += $(GPGBUILD)/include
+
+ENGINE_SRC_FILES := $(shell find $(LOCAL_PATH)/../../src/ ! -name "*netpgp*" -name "*.c")
 #ENGINE_SRC_FILES := $(wildcard $(LOCAL_PATH)/../../src/*.c)
-$(warning $(ENGINE_SRC_FILES))
 ASN1_SRC_FILES := $(wildcard $(LOCAL_PATH)/../../asn.1/*.c)
 LOCAL_SRC_FILES := $(ENGINE_SRC_FILES:%=%)  $(ASN1_SRC_FILES:$(LOCAL_PATH)/%=%)
 
