@@ -35,6 +35,8 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../src \
                     $(LIBETPAN_PATH)/include
 LOCAL_C_INCLUDES += $(GPGBUILD)/include
 
+LOCAL_EXPORT_C_INCLUDES += $(LOCAL_PATH)/../../src
+
 ENGINE_SRC_FILES := $(shell find $(LOCAL_PATH)/../../src/ ! -name "*netpgp*" -name "*.c")
 #ENGINE_SRC_FILES := $(wildcard $(LOCAL_PATH)/../../src/*.c)
 ASN1_SRC_FILES := $(wildcard $(LOCAL_PATH)/../../asn.1/*.c)
