@@ -479,7 +479,6 @@ PEP_STATUS pgp_decrypt_and_verify(
 
                 if (dsigtext) {  // Is this safe to do?
                     gpgme_data_t sigdata;
-                    // FIXME: replace with verify_text?
                     gpg.gpgme_data_new_from_mem(&sigdata, dsigtext,
                                                 dsigsize, 0);
                     gpg.gpgme_op_verify(session->ctx, sigdata, plain, NULL);
@@ -491,16 +490,14 @@ PEP_STATUS pgp_decrypt_and_verify(
                 assert(gpgme_verify_result);
                 gpgme_signature = gpgme_verify_result->signatures;
 
-                // if (!gpgme_signature && dsigtext) {
-                //     gpgme_data_t sigdata;
-                //     gpg.gpgme_data_new_from_mem(&sigdata, dsigtext,
-                //                                 dsigsize, 0);
-                //     gpgme_op_verify(session->ctx, sigdata, plain, NULL);
-                //     gpgme_verify_result_t result2 =
-                //         gpg.gpgme_op_verify_result(session->ctx);
-                //     assert(result2);
-                //     gpgme_signature = result2->signatures;
-                // }
+                if (!gpgme_signature) {
+                    // try cleartext sig verification
+                    gpg.gpgme_op_verify(session->ctx, plain, NULL, plain);
+                    gpgme_verify_result =
+                        gpg.gpgme_op_verify_result(session->ctx);
+                    assert(gpgme_verify_result);
+                    gpgme_signature = gpgme_verify_result->signatures;                    
+                }
 
                 if (gpgme_signature) {
                     stringlist_t *k;
