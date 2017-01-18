@@ -13,6 +13,7 @@ using namespace std;
 
 int main(int argc, char** argv) {
     
+
     const char* mailfile = "test_mails/apple_mail_TC_signed_encrypted.eml";
     
     PEP_SESSION session;
@@ -23,6 +24,26 @@ int main(int argc, char** argv) {
     assert(session);
     cout << "init() completed.\n";
 
+    ifstream infilekey1("test_keys/pub/pep-test-apple-0x1CCBC7D7_pub.asc");
+    string keytextkey1;
+    while (!infilekey1.eof()) {
+        static string line;
+        getline(infilekey1, line);
+        keytextkey1 += line + "\n";
+    }
+    infilekey1.close(); 
+    
+    ifstream infilekey2("test_keys/priv/pep-test-recip-0x08DB0AEE_priv.asc");
+    string keytextkey2;
+    while (!infilekey2.eof()) {
+        static string line;
+        getline(infilekey2, line);
+        keytextkey2 += line + "\n";
+    }
+    infilekey2.close(); 
+
+    PEP_STATUS statuskey1 = import_key(session, keytextkey1.c_str(), keytextkey1.length(), NULL);
+    PEP_STATUS statuskey2 = import_key(session, keytextkey2.c_str(), keytextkey2.length(), NULL);
         
     ifstream infile(mailfile);
     string mailtext;
@@ -105,7 +126,12 @@ int main(int argc, char** argv) {
     free_message(msg_ptr);
     free_stringlist(keylist);
 
-    
+    msg_ptr = nullptr;
+    dest_msg = nullptr;
+    final_ptr = nullptr;
+    keylist = nullptr;
+    rating = PEP_rating_unreliable;
+        
     cout << "calling release()\n";
     release(session);
     return 0;
