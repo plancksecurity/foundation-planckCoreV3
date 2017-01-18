@@ -1214,8 +1214,15 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             goto enomem;
     }
 
-    if (msg)
+    if (msg) {
         decorate_message(msg, PEP_rating_undefined, NULL);
+        if (src->id) {
+            msg->id = strdup(src->id);
+            assert(msg->id);
+            if (msg->id == NULL)
+                goto enomem;
+        }
+    }
 
     *dst = msg;
     return status;
@@ -1312,6 +1319,15 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
          assert(msg->shortmsg);
          if (msg->shortmsg == NULL)
              goto enomem;
+     }
+
+     if (msg) {
+         if (src->id) {
+             msg->id = strdup(src->id);
+             assert(msg->id);
+             if (msg->id == NULL)
+                 goto enomem;
+         }
      }
 
     *dst = msg;
@@ -1948,6 +1964,12 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             else if (status != PEP_STATUS_OK){
                 goto pep_error;
             }
+        }
+        if (src->id) {
+            msg->id = strdup(src->id);
+            assert(msg->id);
+            if (msg->id == NULL)
+                goto enomem;
         }
     }
 

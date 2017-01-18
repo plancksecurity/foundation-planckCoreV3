@@ -26,25 +26,25 @@ Engine/adapter/app KeySync interface
    |                    |                      ,---,  |
    '-----------------------inject_sync_msg---->|   |  |
  . . . . . . . . . . . .|. . . . . . . . . . . |---| .|. . . . Sync session .  
- °  °  °  °  °  °  °  °  °  °  °  °  °  °  °  °|   |° | 
+ *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *|   |* | 
                         |                      |---|  | 
- °   ,------------------retrieve_next_sync_msg-|   |° | 
+ *   ,------------------retrieve_next_sync_msg-|   |* | 
    ,-v--------,         |                      '---'  | 
- ° | Driver   |         |                           ° |
+ * | Driver   |         |                           * |
    '----------'         |                             |
- °  ||'-event-----,     |                           ° |
+ *  ||'-event-----,     |                           * |
     |'--partner--,|     |                             |
- °  '---extra---,||     |           SYNC THREAD     °<-------------- Start Sync
+ *  '---extra---,||     |           SYNC THREAD     *<-------------- Start Sync
             ,---vvv---, |                             |
- °     ,----|   FSM   | |                           ° |
+ *     ,----|   FSM   | |                           * |
        |    '---------' |                             |
- °     |  ,-------,     |                           ° |
+ *     |  ,-------,     |                           * |
        '->|actions|---------messageToSend-------------------> Send mail to self
- °        '-------'     |                           ° |
+ *        '-------'     |                           * |
               '-------------notifyHandshake-----------------> Ask for handshake
- °                      |                           ° |    display group status
+ *                      |                           * |    display group status
                         |                             |
- °  °  °  °  °  °  °  ° |°  °  °  °  °  °  °  °  °  ° |
+ *  *  *  *  *  *  *  * |*  *  *  *  *  *  *  *  *  * |
                         |                             |
 
 Emails to self
