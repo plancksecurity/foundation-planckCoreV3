@@ -263,7 +263,6 @@ DYNAMIC_API PEP_STATUS update_identity(
     status = PEP_STATUS_OK;
 
     if (temp_id->comm_type != PEP_ct_unknown && !EMPTYSTR(temp_id->user_id)) {
-        assert(!EMPTYSTR(temp_id->username)); // this should not happen
 
         if (EMPTYSTR(temp_id->username)) { // mitigate
             free(temp_id->username);

@@ -1,0 +1,136 @@
+Return-Path: <pep.test.apple@pep-project.org>
+X-Original-To: krista@gnunet.org
+Delivered-To: krista@gnunet.org
+Received: from vmmailrelay1.informatik.tu-muenchen.de (mailrelay1.informatik.tu-muenchen.de [131.159.254.14])
+	by sam.net.in.tum.de (Postfix) with ESMTP id 99A681C0087
+	for <krista@gnunet.org>; Sun, 15 Jan 2017 21:17:04 +0100 (CET)
+Received: from vmmailrelay1.informatik.tu-muenchen.de (localhost [127.0.0.1])
+	by vmmailrelay1.informatik.tu-muenchen.de (Postfix) with ESMTP id C2EDE1C0379
+	for <krista@gnunet.org>; Sun, 15 Jan 2017 21:17:04 +0100 (CET)
+Received: from vmmaildmz2.informatik.tu-muenchen.de (vmmaildmz2.informatik.tu-muenchen.de [131.159.0.88])
+	by vmmailrelay1.informatik.tu-muenchen.de (Postfix) with ESMTP id B638D1C0376
+	for <krista@gnunet.org>; Sun, 15 Jan 2017 21:17:04 +0100 (CET)
+Received: by vmmaildmz2.informatik.tu-muenchen.de (Postfix, from userid 109)
+	id B3A011C2ADC; Sun, 15 Jan 2017 21:17:04 +0100 (CET)
+X-Spam-Checker-Version: SpamAssassin 3.4.0-tuminfo_1 (2014-02-07) on
+	vmmaildmz2.informatik.tu-muenchen.de
+X-Spam-Level: 
+X-Spam-Status: No, score=-3.6 required=7.0 tests=BAYES_00,ENCRYPTED_MESSAGE,
+	RCVD_IN_DNSWL_LOW,RCVD_IN_MSPIKE_H3,RCVD_IN_MSPIKE_WL,TVD_RCVD_SPACE_BRACKET,
+	UNPARSEABLE_RELAY autolearn=no autolearn_force=no version=3.4.0-tuminfo_1
+Received: from vmmaildmz2.informatik.tu-muenchen.de (localhost [127.0.0.1])
+	by vmmaildmz2.informatik.tu-muenchen.de (Postfix) with ESMTP id 3F7601C2ADB
+	for <krista@gnunet.org>; Sun, 15 Jan 2017 21:17:03 +0100 (CET)
+Received: from mi4-p00-ob.smtp.rzone.de (mi4-p00-ob.smtp.rzone.de [81.169.146.147])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by vmmaildmz2.informatik.tu-muenchen.de (Postfix) with ESMTPS id 2F4641C2AD9
+	for <krista@gnunet.org>; Sun, 15 Jan 2017 21:17:03 +0100 (CET)
+X-RZG-FWD-BY: pep.test.recip@kgrothoff.org
+Received: from mailin.rzone.de ([unix socket])
+	by mailin.rzone.de (RZmta 39.11) with LMTPA;
+	Sun, 15 Jan 2017 21:16:39 +0100 (CET)
+Authentication-Results: strato.com 1;
+	spf=none
+		smtp.mailfrom="pep.test.apple@pep-project.org";
+	dkim=none;
+	domainkeys=none;
+	dkim-adsp=none
+		header.from="pep.test.apple@pep-project.org"
+X-Strato-MessageType: email
+X-RZG-CLASS-ID: mi00
+Received-SPF: none
+	client-ip=94.231.81.244;
+	helo="dragon.pibit.ch";
+	envelope-from="pep.test.apple@pep-project.org";
+	receiver=smtpin.rzone.de;
+	identity=mailfrom;
+Received: from dragon.pibit.ch ([94.231.81.244])
+	by smtpin.rzone.de (RZmta 39.11 OK)
+	with ESMTPS id T03200t0FKGb4U5
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (curve secp521r1 with 521 ECDH bits, eq. 15360 bits RSA))
+	(Client did not present a certificate)
+	for <pep.test.recip@kgrothoff.org>;
+	Sun, 15 Jan 2017 21:16:37 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+	by dragon.pibit.ch (Postfix) with ESMTP id DFD49171C05B
+	for <pep.test.recip@kgrothoff.org>; Sun, 15 Jan 2017 21:16:36 +0100 (CET)
+Received: from dragon.pibit.ch ([127.0.0.1])
+	by localhost (dragon.pibit.ch [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id wed9f1DQX-4P for <pep.test.recip@kgrothoff.org>;
+	Sun, 15 Jan 2017 21:16:35 +0100 (CET)
+Received: from kristas-mac-mini.fritz.box (ip5f5840e9.dynamic.kabel-deutschland.de [95.88.64.233])
+	by dragon.pibit.ch (Postfix) with ESMTPSA id 01B28171C050
+	for <pep.test.recip@kgrothoff.org>; Sun, 15 Jan 2017 21:16:34 +0100 (CET)
+From: pEp Apple Test <pep.test.apple@pep-project.org>
+Content-Type: multipart/encrypted; boundary="Apple-Mail=_E24E0E59-8B7E-4E16-A60C-41ED0F78EE59"; protocol="application/pgp-encrypted";
+Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
+Subject: Test Case Mail - Signed and Encrypted
+Date: Sun, 15 Jan 2017 21:16:34 +0100
+Message-Id: <7DF91E6B-7BB2-498C-968D-DE2BFDC5D86C@pep-project.org>
+Content-Description: OpenPGP encrypted message
+To: pep.test.recip@kgrothoff.org
+X-Mailer: Apple Mail (2.3124)
+
+This is an OpenPGP/MIME encrypted message (RFC 2440 and 3156)
+--Apple-Mail=_E24E0E59-8B7E-4E16-A60C-41ED0F78EE59
+Content-Transfer-Encoding: 7bit
+Content-Type: application/pgp-encrypted
+Content-Description: PGP/MIME Versions Identification
+
+Version: 1
+
+--Apple-Mail=_E24E0E59-8B7E-4E16-A60C-41ED0F78EE59
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+	filename=encrypted.asc
+Content-Type: application/octet-stream;
+	name=encrypted.asc
+Content-Description: OpenPGP encrypted message
+
+-----BEGIN PGP MESSAGE-----
+
+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
+DM1uL7vKO5ItcbrPLA==
+=tLZ0
+-----END PGP MESSAGE-----
+
+--Apple-Mail=_E24E0E59-8B7E-4E16-A60C-41ED0F78EE59--
