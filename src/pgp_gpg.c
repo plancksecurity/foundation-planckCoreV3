@@ -489,7 +489,7 @@ PEP_STATUS pgp_decrypt_and_verify(
                     gpg.gpgme_op_verify_result(session->ctx);
                 assert(gpgme_verify_result);
                 gpgme_signature = gpgme_verify_result->signatures;
-
+/*
                 if (!gpgme_signature) {
                     // try cleartext sig verification
                     gpg.gpgme_op_verify(session->ctx, plain, NULL, plain);
@@ -498,6 +498,7 @@ PEP_STATUS pgp_decrypt_and_verify(
                     assert(gpgme_verify_result);
                     gpgme_signature = gpgme_verify_result->signatures;                    
                 }
+*/
 
                 if (gpgme_signature) {
                     stringlist_t *k;
