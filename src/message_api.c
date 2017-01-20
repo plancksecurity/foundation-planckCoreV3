@@ -1922,15 +1922,6 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                        status = PEP_STATUS_OK;
                     if (status != PEP_STATUS_OK)
                         goto pep_error;
-
-                    // insert signer's in sender identity so that that new
-                    // fpr has a chance to be used for trustwords computation
-                    // when hanshaking after receiving message  
-                    free(msg->from->fpr);
-                    msg->from->fpr = strdup(fpr);
-                    assert(msg->from->fpr);
-                    if (msg->from->fpr == NULL)
-                        goto enomem;
                 }
             }
         }
