@@ -339,6 +339,41 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     const char* lang, char **words, size_t *wsize, bool full
 );
 
+// get_message_trustwords() - get full trustwords string for message sender and reciever identities 
+//
+//    parameters:
+//        session (in)        session handle
+//        msg (in)            message to get sender identity from
+//        keylist (in)        NULL if message to be decrypted,
+//                            keylist returned by decrypt_message() otherwise
+//        received_by (in)    identity for account receiving message can't be NULL
+//        lang (in)           C string with ISO 639-1 language code
+//        words (out)         pointer to C string with all trustwords UTF-8 encoded,
+//                            separated by a blank each
+//                            NULL if language is not supported or trustword
+//                            wordlist is damaged or unavailable
+//        full (in)           if true, generate ALL trustwords for these identities.
+//                            else, generate a fixed-size subset. (TODO: fixed-minimum-entropy
+//                            subset in next version)
+//
+//    return value:
+//        PEP_STATUS_OK            trustwords retrieved
+//        PEP_OUT_OF_MEMORY        out of memory
+//        PEP_TRUSTWORD_NOT_FOUND  at least one trustword not found
+//        error status of decrypt_message() if decryption fails.
+//
+//    caveat:
+//        the word pointer goes to the ownership of the caller
+//        the caller is responsible to free() it (on Windoze use pEp_free())
+//
+DYNAMIC_API PEP_STATUS get_message_trustwords(
+    PEP_SESSION session, 
+    message *msg,
+    stringlist_t *keylist,
+    pEp_identity* received_by,
+    const char* lang, char **words, bool full
+);
+
 #ifdef __cplusplus
 }
 #endif

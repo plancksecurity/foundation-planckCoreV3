@@ -2354,6 +2354,113 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     return status;
 }
 
+DYNAMIC_API PEP_STATUS get_message_trustwords(
+    PEP_SESSION session, 
+    message *msg,
+    stringlist_t *keylist,
+    pEp_identity* received_by,
+    const char* lang, char **words, bool full
+)
+{
+    assert(session);
+    assert(msg);
+    assert(received_by);
+    assert(received_by->address);
+    assert(lang);
+    assert(words);
+
+    if (!(session && 
+          msg &&
+          received_by && 
+          received_by->address && 
+          lang && 
+          words))
+        return PEP_ILLEGAL_VALUE;
+    
+    pEp_identity* partner;
+     
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    *words = NULL;
+
+    // We want fingerprint of key that did sign the message
+
+    if (keylist == NULL) {
+
+        // Message is to be decrypted
+        message *dst;
+        stringlist_t *_keylist = keylist;
+        PEP_rating rating;
+        PEP_decrypt_flags_t flags;
+        status = decrypt_message( session, msg, &dst, &_keylist, &rating, &flags);
+
+        if (status != PEP_STATUS_OK) {
+            free_message(dst);
+            free_stringlist(_keylist);
+            return status;
+        }
+
+        if (dst && dst->from && _keylist) {
+            partner = identity_dup(dst->from); 
+            if(partner){
+                free(partner->fpr);
+                partner->fpr = strdup(_keylist->value);
+                if (partner->fpr == NULL)
+                    status = PEP_OUT_OF_MEMORY;
+            } else {
+                status = PEP_OUT_OF_MEMORY;
+            }
+        } else {
+            status = PEP_UNKNOWN_ERROR;
+        }
+
+        free_message(dst);
+        free_stringlist(_keylist);
+
+    } else {
+
+        // Message already decrypted
+        if (keylist->value) {
+            partner = identity_dup(msg->from); 
+            if(partner){
+                free(partner->fpr);
+                partner->fpr = strdup(keylist->value);
+                if (partner->fpr == NULL)
+                    status = PEP_OUT_OF_MEMORY;
+            } else {
+                status = PEP_OUT_OF_MEMORY;
+            }
+        } else {
+            status = PEP_ILLEGAL_VALUE;
+        }
+    }
+
+    if (status != PEP_STATUS_OK) {
+        free_identity(partner);
+        return status;
+    }
+   
+    // Find own identity corresponding to given account address.
+    // In that case we want default key attached to own identity
+    pEp_identity *stored_identity = NULL;
+    status = get_identity(session,
+                          received_by->address,
+                          PEP_OWN_USERID,
+                          &stored_identity);
+
+    if (status != PEP_STATUS_OK) {
+        free_identity(stored_identity);
+        return status;
+    }
+
+    // get the trustwords
+    size_t wsize;
+    status = get_trustwords(session, 
+                            partner, received_by, 
+                            lang, words, &wsize, full);
+
+    return status;
+}
 
 DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     PEP_SESSION session,
