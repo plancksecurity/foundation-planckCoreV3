@@ -2388,7 +2388,7 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
     if (keylist == NULL) {
 
         // Message is to be decrypted
-        message *dst;
+        message *dst = NULL;
         stringlist_t *_keylist = keylist;
         PEP_rating rating;
         PEP_decrypt_flags_t flags;
