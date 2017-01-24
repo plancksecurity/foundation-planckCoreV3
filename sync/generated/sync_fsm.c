@@ -318,6 +318,12 @@ DeviceState_state fsm_DeviceState(
                         return (int) invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
                         return (int) invalid_action;
+                    DEBUG_LOG("FSM action", "sync_fsm.c, state=HandshakingSole, event=Timeout", "action=sendBeacon")
+                    status = sendBeacon(session, state, NULL, NULL);
+                    if (status == PEP_OUT_OF_MEMORY)
+                        return (int) invalid_out_of_memory;
+                    if (status != PEP_STATUS_OK)
+                        return (int) invalid_action;
                     if(session->sync_state_payload){
                         free_identity((Identity)session->sync_state_payload);
                         session->sync_state_payload = NULL;

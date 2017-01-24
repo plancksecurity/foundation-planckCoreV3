@@ -94,6 +94,7 @@ protocol DeviceGroup {
             on Cancel go Sole;
             on Timeout {
                 do notifyTimeout(expected);
+                do sendBeacon;
                 go Sole;
             }
         }
