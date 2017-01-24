@@ -77,6 +77,7 @@ char *stpcpy(char *dst, const char *src)
     return dst;
 }
 
+/*
 long int random(void)
 {
     static bool seeded = false;
@@ -91,7 +92,7 @@ long int random(void)
     }
 
     return nrand48(xsubi);
-}
+} */
 
 const char *android_system_db(void)
 {

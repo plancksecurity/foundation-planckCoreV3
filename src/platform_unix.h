@@ -35,7 +35,7 @@ char *stpcpy(char *, const char *);
 
 // Beware: predictable pseudo random with static seed!
 // Only the lowest 31 bits are filled randomly.
-long int random(void);
+//long int random(void);
 
 const char *android_system_db(void);
 #define SYSTEM_DB android_system_db()
