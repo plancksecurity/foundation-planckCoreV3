@@ -291,16 +291,16 @@ static PEP_STATUS _validation_results(
     }
     if (vresult->validc && vresult->valid_sigs &&
         !vresult->invalidc && !vresult->unknownc ) {
-        unsigned    n;
-        stringlist_t *k;
+        
         // caller responsible to free
         *_keylist = new_stringlist(NULL);
         assert(*_keylist);
         if (*_keylist == NULL) {
             return PEP_OUT_OF_MEMORY;
         }
-        k = *_keylist;
-        for (n = 0; n < vresult->validc; ++n) {
+        
+        stringlist_t *k = *_keylist;
+        for (unsigned n = 0; n < vresult->validc; ++n) {
             unsigned from = 0;
             const pgp_key_t	 *signer;
             char *fprstr = NULL;
@@ -353,10 +353,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     char **ptext, size_t *psize, stringlist_t **keylist
     )
 {
-    pgp_memory_t *mem;
-    pgp_validation_t *vresult;
     char *_ptext = NULL;
-    size_t _psize = 0;
 
     PEP_STATUS result;
     stringlist_t *_keylist = NULL;
@@ -379,10 +376,10 @@ PEP_STATUS pgp_decrypt_and_verify(
     *psize = 0;
     *keylist = NULL;
 
-    vresult = malloc(sizeof(pgp_validation_t));
+    pgp_validation_t *vresult = malloc(sizeof(pgp_validation_t));
     memset(vresult, 0x0, sizeof(pgp_validation_t));
 
-    mem = pgp_decrypt_and_validate_buf(netpgp.io, vresult, ctext, csize,
+    pgp_memory_t *mem = pgp_decrypt_and_validate_buf(netpgp.io, vresult, ctext, csize,
                 netpgp.secring, netpgp.pubring,
                 _armoured(ctext, csize, ARMOR_HEAD),
                 0 /* sshkeys */,
@@ -392,7 +389,7 @@ PEP_STATUS pgp_decrypt_and_verify(
         goto unlock_netpgp;
     }
 
-    _psize = pgp_mem_len(mem);
+    const size_t _psize = pgp_mem_len(mem);
     if (_psize){
         if ((_ptext = malloc(_psize + 1)) == NULL) {
             result = PEP_OUT_OF_MEMORY;

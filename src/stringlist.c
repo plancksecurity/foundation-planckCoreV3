@@ -163,13 +163,10 @@ DYNAMIC_API stringlist_t *stringlist_delete(
 
 DYNAMIC_API void free_stringlist(stringlist_t *stringlist)
 {
-    stringlist_t *curr;
-    stringlist_t *next;
-    
-    curr = stringlist;
+    stringlist_t *curr = stringlist;;
     
     while (curr) {
-        next = curr->next;
+        stringlist_t *next = curr->next;
         free(curr->value);
         free(curr);
         curr = next;

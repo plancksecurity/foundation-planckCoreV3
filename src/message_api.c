@@ -87,8 +87,6 @@ void add_opt_field(message *msg, const char *name, const char *value)
 
 static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
 {
-    char * ptext;
-
     assert(shortmsg);
     assert(strcmp(shortmsg, "pEp") != 0);
 
@@ -111,8 +109,8 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     const char * const newlines = "\n\n";
     const size_t NL_LEN = 2;
 
-    size_t bufsize = SUBJ_LEN + strlen(shortmsg) + NL_LEN + strlen(longmsg) + 1;
-    ptext = calloc(1, bufsize);
+    const size_t bufsize = SUBJ_LEN + strlen(shortmsg) + NL_LEN + strlen(longmsg) + 1;
+    char * ptext = calloc(1, bufsize);
     assert(ptext);
     if (ptext == NULL)
         return NULL;
@@ -709,14 +707,12 @@ static PEP_rating _rating(PEP_comm_type ct, PEP_rating rating)
 
 static bool is_encrypted_attachment(const bloblist_t *blob)
 {
-    char *ext;
-
     assert(blob);
 
     if (blob == NULL || blob->filename == NULL)
         return false;
 
-    ext = strrchr(blob->filename, '.');
+    char *ext = strrchr(blob->filename, '.');
     if (ext == NULL)
         return false;
 
@@ -944,9 +940,8 @@ bool import_attached_keys(
 
     bool remove = false;
 
-    bloblist_t *bl;
     int i = 0;
-    for (bl = msg->attachments; i < MAX_KEYS_TO_IMPORT && bl && bl->value;
+    for (bloblist_t *bl = msg->attachments; i < MAX_KEYS_TO_IMPORT && bl && bl->value;
             bl = bl->next, i++)
     {
         if (bl && bl->value && bl->size && bl->size < MAX_KEY_SIZE
@@ -962,9 +957,8 @@ bool import_attached_keys(
 
 PEP_STATUS _attach_key(PEP_SESSION session, const char* fpr, message *msg)
 {
-    char *keydata;
+    char *keydata = NULL;
     size_t size;
-    bloblist_t *bl;
 
     PEP_STATUS status = export_key(session, fpr, &keydata, &size);
     assert(status == PEP_STATUS_OK);
@@ -972,7 +966,7 @@ PEP_STATUS _attach_key(PEP_SESSION session, const char* fpr, message *msg)
         return status;
     assert(size);
 
-    bl = bloblist_add(msg->attachments, keydata, size, "application/pgp-keys",
+     bloblist_t *bl = bloblist_add(msg->attachments, keydata, size, "application/pgp-keys",
                       "pEpkey.asc");
 
     if (msg->attachments == NULL && bl)
@@ -1467,8 +1461,8 @@ PEP_STATUS combine_keylists(PEP_SESSION session, stringlist_t** verify_in,
     
     stringlist_t* orig_verify = *verify_in;
     
-    stringlist_t* verify_curr;
-    stringlist_t* from_keys;
+    stringlist_t* verify_curr = NULL;
+    stringlist_t* from_keys = NULL;
     
     /* FIXME: what to do if head needs to be null */
     PEP_STATUS status = find_keys(session, from->address, &from_keys);
@@ -1516,7 +1510,7 @@ PEP_STATUS combine_keylists(PEP_SESSION session, stringlist_t** verify_in,
     
 free:
     free_stringlist(from_keys);
-    return status;    
+    return status;
 }
 
 

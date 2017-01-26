@@ -26,7 +26,7 @@ PEP_STATUS elect_pubkey(
     )
 {
     PEP_STATUS status;
-    stringlist_t *keylist;
+    stringlist_t *keylist = NULL;
     char *_fpr = "";
     identity->comm_type = PEP_ct_unknown;
 
@@ -82,8 +82,8 @@ DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
     )
 {
-    pEp_identity *stored_identity;
-    pEp_identity* temp_id = NULL;
+    pEp_identity *stored_identity = NULL;
+    pEp_identity *temp_id = NULL;
     PEP_STATUS status;
 
     assert(session);
@@ -201,7 +201,7 @@ DYNAMIC_API PEP_STATUS update_identity(
         
         
         /* At this point, we either have a non-blacklisted fpr we can work */
-        /* with, or we've got nada.                                        */        
+        /* with, or we've got nada.                                        */
 
         if (EMPTYSTR(temp_id->fpr)) {
             /* nada : set comm_type accordingly */
@@ -308,13 +308,8 @@ DYNAMIC_API PEP_STATUS update_identity(
     identity->flags = temp_id->flags;
 
 exit_free :
-    
-    if (stored_identity){
-        free_identity(stored_identity);
-    }
-
-    if (temp_id)
-        free_identity(temp_id);
+    free_identity(stored_identity);
+    free_identity(temp_id);
     
     return status;
 }
@@ -416,7 +411,7 @@ PEP_STATUS _has_usable_priv_key(PEP_SESSION session, char* fpr,
 
 PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags)
 {
-    pEp_identity *stored_identity;
+    pEp_identity *stored_identity = NULL;
     PEP_STATUS status;
 
     assert(session);
@@ -489,7 +484,6 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
         }
         
         identity->flags = (identity->flags & 255) | stored_identity->flags;
-
         free_identity(stored_identity);
     }
     
@@ -639,7 +633,6 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     }
 
     return PEP_STATUS_OK;
-
 }
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)

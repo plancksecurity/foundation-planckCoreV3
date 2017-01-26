@@ -44,13 +44,10 @@ DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_t
 
 DYNAMIC_API void free_bloblist(bloblist_t *bloblist)
 {
-    bloblist_t *curr;
-    bloblist_t *next;
-
-    curr = bloblist;
+    bloblist_t *curr = bloblist;
 
     while (curr) {
-        next = curr->next;
+        bloblist_t *next = curr->next;
         free(curr->value);
         free(curr->mime_type);
         free(curr->filename);
@@ -61,8 +58,6 @@ DYNAMIC_API void free_bloblist(bloblist_t *bloblist)
 
 DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src)
 {
-    bloblist_t *bloblist = NULL;
-
     assert(src);
     if (src == NULL)
         return NULL;
@@ -75,7 +70,7 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src)
 
     memcpy(blob2, src->value, src->size);
 
-    bloblist = new_bloblist(blob2, src->size, src->mime_type, src->filename);
+    bloblist_t *bloblist = new_bloblist(blob2, src->size, src->mime_type, src->filename);
     if (bloblist == NULL)
         goto enomem;
     blob2 = NULL;

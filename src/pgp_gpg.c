@@ -18,13 +18,12 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
 {
     static char buf[MAX_LINELENGTH];
     int r;
-    FILE *f;
     stringlist_t *_k;
     stringlist_t *_v;
     unsigned int i;
     unsigned int found = 0;
 
-    f = Fopen(config_file_path, "r");
+    FILE *f = Fopen(config_file_path, "r");
     if (f == NULL && errno == ENOMEM)
         return false;
 
@@ -47,9 +46,7 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
         }
 
         do {
-            char * s;
-
-            s = Fgets(buf, MAX_LINELENGTH, f);
+            char * s = Fgets(buf, MAX_LINELENGTH, f);
             if (!feof(f)) {
                 assert(s);
                 if (s == NULL)

@@ -844,9 +844,6 @@ DYNAMIC_API PEP_STATUS trustwords(
     )
 {
     const char *source = fingerprint;
-    char *buffer;
-    char *dest;
-    size_t fsize;
 
     assert(session);
     assert(fingerprint);
@@ -860,13 +857,13 @@ DYNAMIC_API PEP_STATUS trustwords(
     *words = NULL;
     *wsize = 0;
 
-    buffer = calloc(1, MAX_TRUSTWORDS_SPACE);
+    char *buffer = calloc(1, MAX_TRUSTWORDS_SPACE);
     assert(buffer);
     if (buffer == NULL)
         return PEP_OUT_OF_MEMORY;
-    dest = buffer;
+    char *dest = buffer;
 
-    fsize = strlen(fingerprint);
+    const size_t fsize = strlen(fingerprint);
 
     if (!lang || !lang[0])
         lang = "en";
@@ -881,8 +878,8 @@ DYNAMIC_API PEP_STATUS trustwords(
     while (source < fingerprint + fsize) {
         PEP_STATUS _status;
         uint16_t value;
-        char *word;
-        size_t _wsize;
+        char *word = NULL;
+        size_t _wsize = 0;
         int j;
 
         for (value=0, j=0; j < 4 && source < fingerprint + fsize; ) {

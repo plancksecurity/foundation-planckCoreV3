@@ -64,13 +64,10 @@ DYNAMIC_API identity_list *identity_list_dup(const identity_list *src)
 
 DYNAMIC_API void free_identity_list(identity_list *id_list)
 {
-    identity_list *curr;
-    identity_list *next;
-    
-    curr = id_list;
+    identity_list *curr = id_list;
     
     while (curr) {
-        next = curr->next;
+        identity_list *next = curr->next;
         free_identity(curr->ident);
         free(curr);
         curr = next;

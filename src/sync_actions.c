@@ -259,7 +259,7 @@ PEP_STATUS storeGroupKeys(
     for (identity_list *il = group_keys; il && il->ident; il = il->next) {
 
         // Check that identity isn't excluded from sync.
-        pEp_identity *stored_identity;
+        pEp_identity *stored_identity = NULL;
         status = get_identity(session, il->ident->address, PEP_OWN_USERID,
                 &stored_identity);
         if (status == PEP_STATUS_OK) {

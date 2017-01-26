@@ -321,8 +321,7 @@ static bool ensure_gpg_agent_conf(const char **agent_conf){
         if (!ensure_gpg_home(NULL, &dirname)) /* Then dirname won't be set. */
             return false;
 
-        char *p;
-        p = stpncpy(agent_path, dirname, MAX_PATH);
+        char *p = stpncpy(agent_path, dirname, MAX_PATH);
         
         ssize_t len = MAX_PATH - (p - agent_path) - 2;
 

@@ -160,8 +160,7 @@ DYNAMIC_API stringpair_list_t *stringpair_list_append(
         return stringpair_list;
 
     stringpair_list_t *_s = stringpair_list;
-    stringpair_list_t *_s2;
-    for (_s2 = second; _s2 != NULL; _s2 = _s2->next) {
+    for (stringpair_list_t *_s2 = second; _s2 != NULL; _s2 = _s2->next) {
         stringpair_t *_sp = stringpair_dup(_s2->value);
         if (_sp == NULL)
             return NULL;
@@ -180,8 +179,7 @@ DYNAMIC_API int stringpair_list_length(
 {
     int len = 0;
 
-    const stringpair_list_t *_sl;
-    for (_sl = stringpair_list; _sl && _sl->value; _sl = _sl->next)
+    for (const stringpair_list_t *_sl = stringpair_list; _sl && _sl->value; _sl = _sl->next)
         len++;
 
     return len;
@@ -203,8 +201,7 @@ DYNAMIC_API stringpair_list_t *stringpair_list_find(
 {
     assert(key);
 
-    stringpair_list_t *_l;
-    for (_l = stringpair_list; _l; _l = _l->next) {
+    for (stringpair_list_t *_l = stringpair_list; _l; _l = _l->next) {
         if (strcoll(key, _l->value->key) == 0)
             return _l;
     }
