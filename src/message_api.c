@@ -1979,6 +1979,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 goto pep_error;
             }
         }
+    }
+    if (msg) {
         if (src->id) {
             msg->id = strdup(src->id);
             assert(msg->id);
