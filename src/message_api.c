@@ -1030,6 +1030,13 @@ PEP_cryptotech determine_encryption_format(message *msg)
         msg->enc_format = PEP_enc_PGP_MIME;
         return PEP_crypt_OpenPGP;
     }
+    else if (msg->attachments && msg->attachments->next &&
+            is_mime_type(msg->attachments->next, "application/pgp-encrypted") &&
+            is_PGP_message_text(msg->attachments->value)
+        ) {
+        msg->enc_format = PEP_enc_PGP_MIME_Outlook1;
+        return PEP_crypt_OpenPGP;
+    }
     else {
         msg->enc_format = PEP_enc_none;
         return PEP_crypt_none;
@@ -1625,6 +1632,11 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             csize = src->attachments->next->size;
             break;
 
+        case PEP_enc_PGP_MIME_Outlook1:
+            ctext = src->attachments->value;
+            csize = src->attachments->size;
+            break;
+
         case PEP_enc_pieces:
             ctext = src->longmsg;
             csize = strlen(ctext);
@@ -1655,6 +1667,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     if (ptext) {
         switch (src->enc_format) {
             case PEP_enc_PGP_MIME:
+            case PEP_enc_PGP_MIME_Outlook1:
                 status = mime_decode_message(ptext, psize, &msg);
                 if (status != PEP_STATUS_OK)
                     goto pep_error;                
@@ -1809,6 +1822,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         switch (src->enc_format) {
             case PEP_enc_PGP_MIME:
             case PEP_enc_pieces:
+            case PEP_enc_PGP_MIME_Outlook1:
                 status = copy_fields(msg, src);
                 if (status != PEP_STATUS_OK)
                     goto pep_error;
@@ -2377,7 +2391,7 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
           words))
         return PEP_ILLEGAL_VALUE;
     
-    pEp_identity* partner;
+    pEp_identity* partner = NULL;
      
     PEP_STATUS status = PEP_STATUS_OK;
     

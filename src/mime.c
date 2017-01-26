@@ -764,6 +764,9 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
 
         case PEP_enc_PEP:
             NOT_IMPLEMENTED
+
+        default:
+            NOT_IMPLEMENTED
     }
 
     if (status != PEP_STATUS_OK)
