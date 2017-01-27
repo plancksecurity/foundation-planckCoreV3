@@ -61,6 +61,8 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src)
     assert(src);
     if (src == NULL)
         return NULL;
+    
+    bloblist_t *bloblist = NULL;
 
     // head
     char *blob2 = malloc(src->size);
@@ -70,7 +72,7 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src)
 
     memcpy(blob2, src->value, src->size);
 
-    bloblist_t *bloblist = new_bloblist(blob2, src->size, src->mime_type, src->filename);
+    bloblist = new_bloblist(blob2, src->size, src->mime_type, src->filename);
     if (bloblist == NULL)
         goto enomem;
     blob2 = NULL;
