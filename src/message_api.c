@@ -1593,31 +1593,30 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             char* slong = src->longmsg;
             char* sform = src->longmsg_formatted;
             bloblist_t* satt = src->attachments;
-                                    
+            
             if ((!slong || slong[0] == '\0')
                  && (!sform || sform[0] == '\0')) {
                 if (satt) {
                     const char* inner_mime_type = satt->mime_type;
                     if (strcasecmp(inner_mime_type, "text/plain") == 0) {
                         free(slong); /* in case of "" */
-                        src->longmsg = strdup(satt->value);
-                    
+                        src->longmsg = strndup(satt->value, satt->size); // N.B.: longmsg might be shorter, if attachment contains NUL bytes which are not allowed in text/plain!
+                        
                         bloblist_t* next_node = satt->next;
                         if (next_node) {
                             inner_mime_type = next_node->mime_type;
                             if (strcasecmp(inner_mime_type, "text/html") == 0) {
                                 free(sform);
-                                src->longmsg_formatted = strdup(next_node->value);
+                                src->longmsg_formatted = strndup(next_node->value, next_node->size);  // N.B.: longmsg might be shorter, if attachment contains NUL bytes which are not allowed in text/plain!
                             }
                         }
                     }
                     else if (strcasecmp(inner_mime_type, "text/html") == 0) {
                         free(sform);
-                        src->longmsg_formatted = strdup(satt->value);
-                    }                    
+                        src->longmsg_formatted = strndup(satt->value, satt->size);  // N.B.: longmsg might be shorter, if attachment contains NUL bytes which are not allowed in text/plain!
+                    }
                 }
-            }       
-
+            }
             
             return PEP_UNENCRYPTED;
 
@@ -1664,39 +1663,39 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             case PEP_enc_PGP_MIME_Outlook1:
                 status = mime_decode_message(ptext, psize, &msg);
                 if (status != PEP_STATUS_OK)
-                    goto pep_error;                
+                    goto pep_error;
                 
                 char* mlong = msg->longmsg;
                 char* mform = msg->longmsg_formatted;
                 bloblist_t* matt = msg->attachments;
-                                        
+                
                 if ((!mlong || mlong[0] == '\0')
                      && (!mform || mform[0] == '\0')) {
                     if (matt) {
                         const char* inner_mime_type = matt->mime_type;
                         if (strcasecmp(inner_mime_type, "text/plain") == 0) {
                             free(mlong); /* in case of "" */
-                            msg->longmsg = strdup(matt->value);
-                        
+                            msg->longmsg = strndup(matt->value, matt->size);
+                            
                             bloblist_t* next_node = matt->next;
                             if (next_node) {
                                 inner_mime_type = next_node->mime_type;
                                 if (strcasecmp(inner_mime_type, "text/html") == 0) {
                                     free(mform);
-                                    msg->longmsg_formatted = strdup(next_node->value);
+                                    msg->longmsg_formatted = strndup(next_node->value, next_node->size);
                                 }
                             }
                         }
                         else if (strcasecmp(inner_mime_type, "text/html") == 0) {
                             free(mform);
-                            msg->longmsg_formatted = strdup(matt->value);
-                        }                    
+                            msg->longmsg_formatted = strndup(matt->value, matt->size);
+                        }
                     }
                     if (msg->shortmsg) {
                         free(src->shortmsg);
                         src->shortmsg = strdup(msg->shortmsg);
                     }
-                }    
+                }
 
                 if (decrypt_status != PEP_DECRYPTED_AND_VERIFIED) {
                     status = _get_detached_signature(msg, &detached_sig);
