@@ -272,6 +272,12 @@ DeviceState_state fsm_DeviceState(
                     if (cond_result < 0)
                         return cond_result;
                     if (cond_result) {
+                        DEBUG_LOG("FSM action", "sync_fsm.c, state=HandshakingSole, event=HandshakeAccepted", "action=enterGroup")
+                        status = enterGroup(session, state, NULL, NULL);
+                        if (status == PEP_OUT_OF_MEMORY)
+                            return (int) invalid_out_of_memory;
+                        if (status != PEP_STATUS_OK)
+                            return (int) invalid_action;
                         DEBUG_LOG("FSM action", "sync_fsm.c, state=HandshakingSole, event=HandshakeAccepted", "action=sendGroupKeys")
                         status = sendGroupKeys(session, state, partner, NULL);
                         if (status == PEP_OUT_OF_MEMORY)
@@ -361,6 +367,18 @@ DeviceState_state fsm_DeviceState(
                             return (int) invalid_out_of_memory;
                         if (status != PEP_STATUS_OK)
                             return (int) invalid_action;
+                        DEBUG_LOG("FSM action", "sync_fsm.c, state=WaitForGroupKeysSole, event=GroupKeys", "action=enterGroup")
+                        status = enterGroup(session, state, NULL, NULL);
+                        if (status == PEP_OUT_OF_MEMORY)
+                            return (int) invalid_out_of_memory;
+                        if (status != PEP_STATUS_OK)
+                            return (int) invalid_action;
+                        DEBUG_LOG("FSM action", "sync_fsm.c, state=WaitForGroupKeysSole, event=GroupKeys", "action=sendGroupUpdate")
+                        status = sendGroupUpdate(session, state, NULL, NULL);
+                        if (status == PEP_OUT_OF_MEMORY)
+                            return (int) invalid_out_of_memory;
+                        if (status != PEP_STATUS_OK)
+                            return (int) invalid_action;
                         DEBUG_LOG("FSM action", "sync_fsm.c, state=WaitForGroupKeysSole, event=GroupKeys", "action=notifyAcceptedDeviceAdded")
                         status = notifyAcceptedDeviceAdded(session, state, partner, NULL);
                         if (status == PEP_OUT_OF_MEMORY)
@@ -402,17 +420,7 @@ DeviceState_state fsm_DeviceState(
             *timeout = 0;
             DEBUG_LOG("Entering FSM state", "sync_fsm.c", "state=Grouped")
             switch (event) {
-                case Init:
-                {
-                    DEBUG_LOG("FSM event", "sync_fsm.c, state=Grouped", "event=Init")
-                    DEBUG_LOG("FSM action", "sync_fsm.c, state=Grouped, event=Init", "action=enterGroup")
-                    status = enterGroup(session, state, NULL, NULL);
-                    if (status == PEP_OUT_OF_MEMORY)
-                        return (int) invalid_out_of_memory;
-                    if (status != PEP_STATUS_OK)
-                        return (int) invalid_action;
-                    break;
-                }
+                case Init: DEBUG_LOG("FSM event", "sync_fsm.c, state=Grouped", "event=Init") break;
                 case KeyGen:
                 {
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=Grouped", "event=KeyGen")

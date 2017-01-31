@@ -85,6 +85,7 @@ protocol DeviceGroup {
             on HandshakeAccepted(Identity partner) {
                 do acceptHandshake(partner); 
                 if keyElectionWon(partner) {
+                    do enterGroup;
                     do sendGroupKeys(partner);
                     do notifyAcceptedGroupCreated(partner);
                     go Grouped;
@@ -103,6 +104,8 @@ protocol DeviceGroup {
             on GroupKeys(Identity partner, Stringlist keys) {
                 if sameIdentities(partner, expected) {
                     do storeGroupKeys(partner, keys);
+                    do enterGroup;
+                    do sendGroupUpdate;
                     do notifyAcceptedDeviceAdded(partner);
                     go Grouped;
                 }
@@ -114,8 +117,6 @@ protocol DeviceGroup {
         }
 
         state Grouped end=1 {
-            on Init 
-                do enterGroup;
             on KeyGen
                 do sendGroupUpdate;
             on CannotDecrypt

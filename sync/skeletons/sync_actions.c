@@ -156,6 +156,43 @@ error:
 }
 
 
+// enterGroup() - 
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        (must be NULL)
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS enterGroup(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(!partner);
+    if (!(session && !partner))
+        return PEP_ILLEGAL_VALUE;
+
+    // working code
+
+    // free extra
+    return status;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+error:
+    // free extra
+    return status;
+}
+
+
 // notifyAcceptedGroupCreated() - 
 //
 //  params:
@@ -289,43 +326,6 @@ PEP_STATUS notifyAcceptedDeviceAdded(
     assert(session);
     assert(partner);
     if (!(session && partner))
-        return PEP_ILLEGAL_VALUE;
-
-    // working code
-
-    // free extra
-    return status;
-
-enomem:
-    status = PEP_OUT_OF_MEMORY;
-error:
-    // free extra
-    return status;
-}
-
-
-// enterGroup() - 
-//
-//  params:
-//      session (in)        session handle
-//      state (in)          state the state machine is in
-//      partner (in)        (must be NULL)
-//
-//  returns:
-//      PEP_STATUS_OK or any other value on error
-
-PEP_STATUS enterGroup(
-        PEP_SESSION session,
-        DeviceState_state state,
-        Identity partner,
-        void *extra
-    )
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session);
-    assert(!partner);
-    if (!(session && !partner))
         return PEP_ILLEGAL_VALUE;
 
     // working code
