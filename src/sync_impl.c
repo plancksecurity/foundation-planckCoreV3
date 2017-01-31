@@ -124,8 +124,9 @@ PEP_STATUS receive_sync_msg(
         default:
             break;
     }
-    time_t now = time(NULL);
+
     if(last != NULL){
+        time_t now = time(NULL);
         if(*last != 0 && (*last + SYNC_INHIBIT_TIME) > now ){
             free_identity(partner);
             status = PEP_STATEMACHINE_INHIBITED_EVENT;
