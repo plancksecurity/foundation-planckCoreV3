@@ -346,8 +346,12 @@ PEP_STATUS receive_DeviceState_msg(
                 }
 
                 int32_t value = (int32_t) msg->header.sequence;
-                status = sequence_value(session, (char *) user_id,
-                        &value);
+                if (value < 1) {
+                    status = PEP_SEQUENCE_VIOLATED;
+                } else {
+                    status = sequence_value(session, (char *) user_id,
+                            &value);
+                }
 
                 if (status == PEP_STATUS_OK) {
                     switch (msg->payload.present) {

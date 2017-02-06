@@ -2004,6 +2004,7 @@ DYNAMIC_API PEP_STATUS sequence_value(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
+    int result;
 
     assert(session);
     assert(name && value && *value >= 0);
@@ -2024,27 +2025,52 @@ DYNAMIC_API PEP_STATUS sequence_value(
     }
 
     if (*value) {
+        sqlite3_exec(session->db, "BEGIN ;", NULL, NULL, NULL);
         int32_t old_value = 0;
         status = _get_sequence_value(session, name, &old_value);
         if (status != PEP_STATUS_OK && status != PEP_RECORD_NOT_FOUND)
+        {
+            sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
             return status;
+        }
 
         if (old_value >= *value) {
+            sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
             return PEP_SEQUENCE_VIOLATED;
         }
         else {
             status = _set_sequence_value(session, name, *value, own);
-            return status;
+            if (status == PEP_STATUS_OK) {
+                result = sqlite3_exec(session->db, "COMMIT ;", NULL, NULL, NULL);
+                if (result == SQLITE_OK)
+                    return PEP_STATUS_OK;
+                else
+                    return PEP_COMMIT_FAILED;
+            } else {
+                sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
+                return status;
+            }
         }
     }
 
     assert(*value == 0);
+    sqlite3_exec(session->db, "BEGIN ;", NULL, NULL, NULL);
     status = _increment_sequence_value(session, name, own);
     if (status == PEP_STATUS_OK) {
         status = _get_sequence_value(session, name, value);
-        assert(*value < INT32_MAX);
-        if (*value == INT32_MAX)
-            return PEP_CANNOT_INCREASE_SEQUENCE;
+        result = sqlite3_exec(session->db, "COMMIT ;", NULL, NULL, NULL);
+        if (result == SQLITE_OK){
+            assert(*value < INT32_MAX);
+            if (*value == INT32_MAX){
+                return PEP_CANNOT_INCREASE_SEQUENCE;
+            }
+            return PEP_STATUS_OK;
+        } else {
+            return PEP_COMMIT_FAILED;
+        }
+    } else {
+        sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
+        return status;
     }
     return status;
 }
