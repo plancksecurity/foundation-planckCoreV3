@@ -118,6 +118,9 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         stringlist_add(conf_keys, "personal-digest-preferences");
         stringlist_add(conf_values, "SHA256 SHA512 SHA384 SHA224");
 
+        stringlist_add(conf_keys, "ignore-time-conflict");
+        stringlist_add(conf_values, "");
+
         bResult = ensure_config_values(conf_keys, conf_values, gpg_conf());
 
         free_stringlist(conf_keys);
