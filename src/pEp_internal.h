@@ -166,9 +166,16 @@ void release_transport_system(PEP_SESSION session, bool out_last);
 
 #ifdef NDEBUG
 #define DEBUG_LOG(TITLE, ENTITY, DESC)
+#define  LOGD(...)
 #else
 #define DEBUG_LOG(TITLE, ENTITY, DESC) \
     log_event(session, (TITLE), (ENTITY), (DESC), "debug");
+#ifdef ANDROID
+#include <android/log.h>
+#define  LOG_TAG    "pEpEngine"
+#define  LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#endif
+
 #endif
 
 // Space tolerant and case insensitive fingerprint string compare
