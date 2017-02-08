@@ -1473,7 +1473,8 @@ PEP_STATUS combine_keylists(PEP_SESSION session, stringlist_t** verify_in,
     for (from_curr = from_keys; from_curr; from_curr = from_curr->next) {
         for (verify_curr = orig_verify; verify_curr; verify_curr = verify_curr->next) {
             if (from_curr->value && verify_curr->value &&
-                strcasecmp(from_curr->value, verify_curr->value) == 0) {
+                _same_fpr(from_curr->value, strlen(from_curr->value),
+                          verify_curr->value, strlen(verify_curr->value))) {
                 from_fpr_node = from_curr;
                 break;
             }
@@ -1488,7 +1489,8 @@ PEP_STATUS combine_keylists(PEP_SESSION session, stringlist_t** verify_in,
     verify_curr = orig_verify;
     
     /* put "from" signer at the beginning of the list */
-    if (strcasecmp(orig_verify->value, from_fpr_node->value) != 0) {
+    if (!_same_fpr(orig_verify->value, strlen(orig_verify->value),
+                   from_fpr_node->value, strlen(from_fpr_node->value))) {
         orig_verify = stringlist_delete(orig_verify, from_fpr_node->value);
         verify_curr = new_stringlist(from_fpr_node->value);
         verify_curr->next = orig_verify;
