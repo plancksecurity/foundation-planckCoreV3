@@ -2064,13 +2064,15 @@ DYNAMIC_API PEP_STATUS sequence_value(
     status = _increment_sequence_value(session, name, own);
     if (status == PEP_STATUS_OK) {
         status = _get_sequence_value(session, name, value);
+    }
+    if (status == PEP_STATUS_OK || status == PEP_OWN_SEQUENCE) {
         result = sqlite3_exec(session->db, "COMMIT ;", NULL, NULL, NULL);
         if (result == SQLITE_OK){
             assert(*value < INT32_MAX);
             if (*value == INT32_MAX){
                 return PEP_CANNOT_INCREASE_SEQUENCE;
             }
-            return PEP_STATUS_OK;
+            return status;
         } else {
             return PEP_COMMIT_FAILED;
         }
