@@ -42,8 +42,6 @@ static const char *sql_set_device_group =
     "update person set device_group = ?1 "
     "where id = '" PEP_OWN_USERID "';";
 
-// TODO leave group
-
 static const char *sql_get_device_group = 
     "select device_group from person "
     "where id = '" PEP_OWN_USERID "';";
@@ -1199,14 +1197,18 @@ DYNAMIC_API PEP_STATUS set_device_group(
     int result;
 
     assert(session);
-    assert(group_name);
 
     if (!(session && group_name))
         return PEP_ILLEGAL_VALUE;
 
     sqlite3_reset(session->set_device_group);
-    sqlite3_bind_text(session->set_device_group, 1, group_name, -1,
-            SQLITE_STATIC);
+    if(group_name){
+        sqlite3_bind_text(session->set_device_group, 1, group_name, -1,
+                SQLITE_STATIC);
+    } else {
+        sqlite3_bind_null(session->set_device_group, 1);
+    }
+
     result = sqlite3_step(session->set_device_group);
     sqlite3_reset(session->set_device_group);
     if (result != SQLITE_DONE)
@@ -1231,10 +1233,12 @@ DYNAMIC_API PEP_STATUS get_device_group(PEP_SESSION session, char **group_name)
     result = sqlite3_step(session->get_device_group);
     switch (result) {
     case SQLITE_ROW: {
-        *group_name = strdup(
-            (const char *) sqlite3_column_text(session->get_device_group, 0));
-            if(*group_name == NULL)
-                status = PEP_OUT_OF_MEMORY;
+        const char *_group_name = (const char *)sqlite3_column_text(session->get_device_group, 0);
+        if(_group_name){
+            *group_name = strdup(_group_name);
+                if(*group_name == NULL)
+                    status = PEP_OUT_OF_MEMORY;
+        }
         break;
     }
  

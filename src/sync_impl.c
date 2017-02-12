@@ -603,7 +603,7 @@ PEP_STATUS unicast_msg(
 
     msg->header.state = (long) state;
 
-    bool devicegroup = storedGroupKeys(session);
+    bool devicegroup = deviceGrouped(session);
     if (devicegroup)
         msg->header.devicegroup = 1;
     else

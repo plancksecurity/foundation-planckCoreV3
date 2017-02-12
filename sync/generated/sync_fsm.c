@@ -24,12 +24,12 @@ DeviceState_state fsm_DeviceState(
                 case Init:
                 {
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=InitState", "event=Init")
-                    cond_result = storedGroupKeys(session);
+                    cond_result = deviceGrouped(session);
                     #ifndef NDEBUG
                     char resstr[11] = {0,};
                     snprintf(resstr,10,"result=%d",cond_result);
                     #endif
-                    DEBUG_LOG("FSM condition", "sync_fsm.c, state=InitState, event=Init, condition=storedGroupKeys", resstr)
+                    DEBUG_LOG("FSM condition", "sync_fsm.c, state=InitState, event=Init, condition=deviceGrouped", resstr)
                     if (cond_result < 0)
                         return cond_result;
                     if (cond_result) {
@@ -661,6 +661,16 @@ DeviceState_state fsm_DeviceState(
                         session->sync_state_payload = NULL;
                     }
                     DEBUG_LOG("FSM transition", "sync_fsm.c, state=HandshakingGrouped, event=HandshakeAccepted", "target=Grouped")
+                    return Grouped;
+                }
+                case Cancel:
+                {
+                    DEBUG_LOG("FSM event", "sync_fsm.c, state=HandshakingGrouped", "event=Cancel")
+                    if(session->sync_state_payload){
+                        free_identity((Identity)session->sync_state_payload);
+                        session->sync_state_payload = NULL;
+                    }
+                    DEBUG_LOG("FSM transition", "sync_fsm.c, state=HandshakingGrouped, event=Cancel", "target=Grouped")
                     return Grouped;
                 }
                 case Timeout:
