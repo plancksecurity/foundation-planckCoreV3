@@ -292,6 +292,13 @@ PEP_STATUS enterGroup(
 
     // groups have no uuid for now
     status = set_device_group(session, "1");
+
+    // change sync_uuid when entering group 
+    // thus ignoring unprocessed handshakes
+    // addressed to previous self (sole) once in.
+    pEpUUID uuid;
+    uuid_generate_random(uuid);
+    uuid_unparse_upper(uuid, session->sync_uuid);
     
     return status;
 }

@@ -63,6 +63,13 @@ PEP_STATUS receive_sync_msg(
                 break;
 
             case DeviceGroup_Protocol__payload_PR_handshakeRequest:
+                // re-check uuid in case sync_uuid changed while in the queue
+                if (strncmp(session->sync_uuid,
+                            (const char *)msg->payload.choice.handshakeRequest.partner.user_id->buf,
+                            msg->payload.choice.handshakeRequest.partner.user_id->size) != 0){
+                    status = PEP_SYNC_ILLEGAL_MESSAGE;
+                    goto error;
+                }
                 event = HandshakeRequest;
                 break;
 
@@ -71,6 +78,14 @@ PEP_STATUS receive_sync_msg(
                 break;
 
             case DeviceGroup_Protocol__payload_PR_groupKeys:
+                // re-check uuid in case sync_uuid changed while in the queue
+                if (strncmp(session->sync_uuid,
+                            (const char *)msg->payload.choice.groupKeys.partner.user_id->buf,
+                            msg->payload.choice.groupKeys.partner.user_id->size) != 0){
+                    status = PEP_SYNC_ILLEGAL_MESSAGE;
+                    goto error;
+                }
+                // no break
             case DeviceGroup_Protocol__payload_PR_groupUpdate:
             {
                 identity_list *group_keys = IdentityList_to_identity_list(
