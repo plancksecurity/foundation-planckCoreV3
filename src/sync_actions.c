@@ -12,46 +12,24 @@
 
 // conditions
 
-// TODO : move that SQL statement with other prepared SQL statements in pEpEngine.c
-static const char *sql_stored_group_keys =
-        "select count(device_group) from person where id = '" PEP_OWN_USERID "';"; 
-
-// TODO  is that necessary ?
-static int _stored_group_keys(void *_gc, int count, char **text, char **name)
-{
-    assert(_gc);
-    assert(count == 1);
-    assert(text && text[0]);
-    if (!(_gc && count == 1 && text && text[0]))
-        return -1;
-
-    bool *gc = (bool *) _gc;
-    *gc = atoi(text[0]) != 0;
-    return 0;
-}
-
-int storedGroupKeys(PEP_SESSION session)
+int deviceGrouped(PEP_SESSION session)
 {
     assert(session);
     if (!session)
         return invalid_condition; // error
 
-    bool gc = false;
-    int int_result = sqlite3_exec(
-        session->db,
-        sql_stored_group_keys,
-        _stored_group_keys,
-        &gc,
-        NULL
-    );
-    assert(int_result == SQLITE_OK);
-    if (int_result != SQLITE_OK)
-        return invalid_condition; // error
+    char *devgrp = NULL;
+    int res = 0;
+    PEP_STATUS status;
 
-    if (gc)
-        return 1;
-    else
-        return 0;
+    status = get_device_group(session, &devgrp);
+
+    if (status == PEP_STATUS_OK && devgrp && devgrp[0])
+        res = 1;
+
+    free(devgrp);
+
+    return res;
 }
 
 int keyElectionWon(PEP_SESSION session, Identity partner)
@@ -63,7 +41,7 @@ int keyElectionWon(PEP_SESSION session, Identity partner)
 
     // an already existing group always wins
 
-    if (storedGroupKeys(session)) {
+    if (deviceGrouped(session)) {
         assert(!(partner->flags & PEP_idf_devicegroup));
         return 1;
     }
@@ -314,6 +292,40 @@ PEP_STATUS enterGroup(
 
     // groups have no uuid for now
     status = set_device_group(session, "1");
+
+    // change sync_uuid when entering group 
+    // thus ignoring unprocessed handshakes
+    // addressed to previous self (sole) once in.
+    pEpUUID uuid;
+    uuid_generate_random(uuid);
+    uuid_unparse_upper(uuid, session->sync_uuid);
+    
+    return status;
+}
+
+// leaveGroup() - 
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        ignored
+//      extra (in)          ignored
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS leaveGroup(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+
+    status = set_device_group(session, NULL);
     
     return status;
 }

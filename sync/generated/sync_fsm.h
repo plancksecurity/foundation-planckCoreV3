@@ -30,7 +30,7 @@ typedef enum _fsm_error {
 
 // conditions
 
-int storedGroupKeys(PEP_SESSION session);
+int deviceGrouped(PEP_SESSION session);
 int keyElectionWon(PEP_SESSION session, Identity partner);
 int sameIdentities(PEP_SESSION session, Identity a, Identity b);
 

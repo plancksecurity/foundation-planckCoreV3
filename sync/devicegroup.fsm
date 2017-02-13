@@ -18,13 +18,13 @@ protocol DeviceGroup {
     unencrypted sendBeacon;
 
     fsm DeviceState filename=sync {
-        condition storedGroupKeys();
+        condition deviceGrouped();
         condition keyElectionWon(Identity partner);
         condition sameIdentities(Identity a, Identity b);
 
         state InitState {
             on Init {
-                if storedGroupKeys()
+                if deviceGrouped()
                     go Grouped;
                 go Sole;
             }
@@ -77,7 +77,6 @@ protocol DeviceGroup {
                     do notifyInitAddOurDevice(partner);
                 }
             }
-
             on HandshakeRejected(Identity partner) {
                 do rejectHandshake(partner);
                 go Sole;
@@ -174,6 +173,7 @@ protocol DeviceGroup {
 
                 go Grouped;
             }
+            on Cancel go Grouped;
             on Timeout {
                 do notifyTimeout(expected);
                 go Grouped;
