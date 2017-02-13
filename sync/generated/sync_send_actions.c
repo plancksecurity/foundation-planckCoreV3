@@ -86,9 +86,11 @@ PEP_STATUS sendHandshakeRequest(
     if (!msg)
         goto enomem;
 
-    if (Identity_from_Struct(partner,
-                             &msg->payload.choice.handshakeRequest.partner) == NULL)
-        goto enomem;
+    msg->payload.choice.handshakeRequest.partner_id = 
+        OCTET_STRING_new_fromBuf(&asn_DEF_UTF8String,
+                                 partner->user_id, -1);
+    if (partner->user_id && !msg->payload.choice.handshakeRequest.partner_id)
+       goto enomem;
 
     bool encrypted = true;
     status = unicast_msg(session, partner, state, msg, encrypted);
@@ -140,9 +142,11 @@ PEP_STATUS sendGroupKeys(
     if (IdentityList_from_identity_list(kl, &msg->payload.choice.groupKeys.ownIdentities) == NULL)
         goto enomem;
 
-    if (Identity_from_Struct(partner,
-                             &msg->payload.choice.groupKeys.partner) == NULL)
-        goto enomem;
+    msg->payload.choice.groupKeys.partner_id = 
+        OCTET_STRING_new_fromBuf(&asn_DEF_UTF8String,
+                                 partner->user_id, -1);
+    if (partner->user_id && !msg->payload.choice.groupKeys.partner_id)
+       goto enomem;
 
     bool encrypted = true;
     status = unicast_msg(session, partner, state, msg, encrypted);

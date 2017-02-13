@@ -14,11 +14,12 @@ IMPORTS Version, Identity, IdentityList FROM PEP;
 Beacon ::= NULL
 
 HandshakeRequest ::= SEQUENCE {
-    partner Identity /* identity of the receiver */
+    partner-id     UTF8String  (SIZE(1..1024)) OPTIONAL,
+    group-id       UTF8String  (SIZE(1..1024)) OPTIONAL
 }
 
 GroupKeys ::= SEQUENCE {
-    partner Identity, /* identity of the receiver */
+    partner-id     UTF8String  (SIZE(1..1024)) OPTIONAL,
     ownIdentities IdentityList
 }
 

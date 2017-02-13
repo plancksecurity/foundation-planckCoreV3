@@ -198,9 +198,11 @@ tstylesheet {
         choose {
             when "$name='GroupKeys' or $name='HandshakeRequest'" {
                 |
-                |> if (Identity_from_Struct(partner,
-                |>                          &msg->payload.choice.«$lname».partner) == NULL)
-                |>> goto enomem;
+                |> msg->payload.choice.«$lname».partner_id = 
+                |>     OCTET_STRING_new_fromBuf(&asn_DEF_UTF8String,
+                |>                              partner->user_id, -1);
+                |> if (partner->user_id && !msg->payload.choice.«$lname».partner_id)
+                |>    goto enomem;
             }
         }
         ||

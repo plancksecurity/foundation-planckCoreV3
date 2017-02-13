@@ -65,8 +65,8 @@ PEP_STATUS receive_sync_msg(
             case DeviceGroup_Protocol__payload_PR_handshakeRequest:
                 // re-check uuid in case sync_uuid changed while in the queue
                 if (strncmp(session->sync_uuid,
-                            (const char *)msg->payload.choice.handshakeRequest.partner.user_id->buf,
-                            msg->payload.choice.handshakeRequest.partner.user_id->size) != 0){
+                            (const char *)msg->payload.choice.handshakeRequest.partner_id->buf,
+                            msg->payload.choice.handshakeRequest.partner_id->size) != 0){
                     status = PEP_SYNC_ILLEGAL_MESSAGE;
                     goto error;
                 }
@@ -80,8 +80,8 @@ PEP_STATUS receive_sync_msg(
             case DeviceGroup_Protocol__payload_PR_groupKeys:
                 // re-check uuid in case sync_uuid changed while in the queue
                 if (strncmp(session->sync_uuid,
-                            (const char *)msg->payload.choice.groupKeys.partner.user_id->buf,
-                            msg->payload.choice.groupKeys.partner.user_id->size) != 0){
+                            (const char *)msg->payload.choice.groupKeys.partner_id->buf,
+                            msg->payload.choice.groupKeys.partner_id->size) != 0){
                     status = PEP_SYNC_ILLEGAL_MESSAGE;
                     goto error;
                 }
@@ -374,8 +374,8 @@ PEP_STATUS receive_DeviceState_msg(
                         case DeviceGroup_Protocol__payload_PR_handshakeRequest:
                             if (rating < PEP_rating_reliable ||
                                 strncmp(session->sync_uuid,
-                                        (const char *)msg->payload.choice.handshakeRequest.partner.user_id->buf,
-                                        msg->payload.choice.handshakeRequest.partner.user_id->size) != 0){
+                                        (const char *)msg->payload.choice.handshakeRequest.partner_id->buf,
+                                        msg->payload.choice.handshakeRequest.partner_id->size) != 0){
                                 discard = true;
                                 goto free_all;
                             }
@@ -387,8 +387,8 @@ PEP_STATUS receive_DeviceState_msg(
                             if (!keylist || rating < PEP_rating_reliable ||
                                 // message is only consumed by instance it is addressed to
                                 (strncmp(session->sync_uuid,
-                                        (const char *)msg->payload.choice.groupKeys.partner.user_id->buf,
-                                        msg->payload.choice.groupKeys.partner.user_id->size) != 0)){
+                                        (const char *)msg->payload.choice.groupKeys.partner_id->buf,
+                                        msg->payload.choice.groupKeys.partner_id->size) != 0)){
                                 discard = true;
                                 goto free_all;
                             }
