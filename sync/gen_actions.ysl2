@@ -203,6 +203,16 @@ tstylesheet {
                 |>                              partner->user_id, -1);
                 |> if (partner->user_id && !msg->payload.choice.«$lname».partner_id)
                 |>    goto enomem;
+                |
+                |> char *devgrp = NULL;
+                |> status = get_device_group(session, &devgrp);
+                |> if (status == PEP_STATUS_OK && devgrp && devgrp[0])
+                |> msg->payload.choice.«$lname».group_id = 
+                |>     OCTET_STRING_new_fromBuf(&asn_DEF_UTF8String,
+                |>                              devgrp, -1);
+                |> free(devgrp);
+                |> if (devgrp && !msg->payload.choice.«$lname».partner_id)
+                |>    goto enomem;
             }
         }
         ||

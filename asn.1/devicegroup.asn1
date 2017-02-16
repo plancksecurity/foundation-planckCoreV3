@@ -20,6 +20,7 @@ HandshakeRequest ::= SEQUENCE {
 
 GroupKeys ::= SEQUENCE {
     partner-id     UTF8String  (SIZE(1..1024)) OPTIONAL,
+    group-id       UTF8String  (SIZE(1..1024)) OPTIONAL,
     ownIdentities IdentityList
 }
 

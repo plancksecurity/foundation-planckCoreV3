@@ -92,6 +92,16 @@ PEP_STATUS sendHandshakeRequest(
     if (partner->user_id && !msg->payload.choice.handshakeRequest.partner_id)
        goto enomem;
 
+    char *devgrp = NULL;
+    status = get_device_group(session, &devgrp);
+    if (status == PEP_STATUS_OK && devgrp && devgrp[0])
+    msg->payload.choice.handshakeRequest.group_id = 
+        OCTET_STRING_new_fromBuf(&asn_DEF_UTF8String,
+                                 devgrp, -1);
+    free(devgrp);
+    if (devgrp && !msg->payload.choice.handshakeRequest.partner_id)
+       goto enomem;
+
     bool encrypted = true;
     status = unicast_msg(session, partner, state, msg, encrypted);
     if (status != PEP_STATUS_OK)
@@ -146,6 +156,16 @@ PEP_STATUS sendGroupKeys(
         OCTET_STRING_new_fromBuf(&asn_DEF_UTF8String,
                                  partner->user_id, -1);
     if (partner->user_id && !msg->payload.choice.groupKeys.partner_id)
+       goto enomem;
+
+    char *devgrp = NULL;
+    status = get_device_group(session, &devgrp);
+    if (status == PEP_STATUS_OK && devgrp && devgrp[0])
+    msg->payload.choice.groupKeys.group_id = 
+        OCTET_STRING_new_fromBuf(&asn_DEF_UTF8String,
+                                 devgrp, -1);
+    free(devgrp);
+    if (devgrp && !msg->payload.choice.groupKeys.partner_id)
        goto enomem;
 
     bool encrypted = true;
@@ -393,5 +413,83 @@ PEP_STATUS notifyAcceptedDeviceAdded(
         return PEP_ILLEGAL_VALUE;
 
     return _notifyHandshake(session, partner, SYNC_NOTIFY_ACCEPTED_DEVICE_ADDED);
+}
+
+
+// notifyInitAddOtherDevice() - notify InitAddOtherDevice to app
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        partner to communicate with
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS notifyInitAddOtherDevice(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    assert(session && state);
+    assert(extra == NULL);
+    if (!(session && state && extra == NULL))
+        return PEP_ILLEGAL_VALUE;
+
+    return _notifyHandshake(session, partner, SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE);
+}
+
+
+// notifyInitMoveOurDevice() - notify InitMoveOurDevice to app
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        partner to communicate with
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS notifyInitMoveOurDevice(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    assert(session && state);
+    assert(extra == NULL);
+    if (!(session && state && extra == NULL))
+        return PEP_ILLEGAL_VALUE;
+
+    return _notifyHandshake(session, partner, SYNC_NOTIFY_INIT_MOVE_OUR_DEVICE);
+}
+
+
+// notifyAcceptedDeviceMoved() - notify AcceptedDeviceMoved to app
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        partner to communicate with
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS notifyAcceptedDeviceMoved(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    assert(session && state);
+    assert(extra == NULL);
+    if (!(session && state && extra == NULL))
+        return PEP_ILLEGAL_VALUE;
+
+    return _notifyHandshake(session, partner, SYNC_NOTIFY_ACCEPTED_DEVICE_MOVED);
 }
 

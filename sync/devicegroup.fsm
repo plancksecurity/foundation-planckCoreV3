@@ -84,7 +84,7 @@ protocol DeviceGroup {
             on HandshakeAccepted(Identity partner) {
                 do acceptHandshake(partner); 
                 if keyElectionWon(partner) {
-                    do enterGroup;
+                    do makeGroup;
                     do sendGroupKeys(partner);
                     do notifyAcceptedGroupCreated(partner);
                     go Grouped;
@@ -103,7 +103,6 @@ protocol DeviceGroup {
             on GroupKeys(Identity partner, Stringlist keys) {
                 if sameIdentities(partner, expected) {
                     do storeGroupKeys(partner, keys);
-                    do enterGroup;
                     do sendGroupUpdate;
                     do notifyAcceptedDeviceAdded(partner);
                     go Grouped;
@@ -118,8 +117,10 @@ protocol DeviceGroup {
         state Grouped end=1 {
             on KeyGen
                 do sendGroupUpdate;
-            on CannotDecrypt
+            on CannotDecrypt {
                 do sendUpdateRequest;
+                do sendBeacon;
+            }
             on UpdateRequest
                 do sendGroupUpdate;
             on Beacon(Identity partner){
@@ -131,14 +132,16 @@ protocol DeviceGroup {
                 go HandshakingGrouped(partner);
             }
             on GroupUpdate(Identity partner, Stringlist keys)
-                do storeGroupKeys(partner, keys);
+                do storeGroupUpdate(partner, keys);
         }
 
         state GroupedBeaconed timeout=600 (Identity expected){
             on KeyGen
                 do sendGroupUpdate;
-            on CannotDecrypt
+            on CannotDecrypt {
                 do sendUpdateRequest;
+                do sendBeacon;
+            }
             on UpdateRequest
                 do sendGroupUpdate;
             on Beacon(Identity partner){
@@ -159,21 +162,43 @@ protocol DeviceGroup {
         }
 
         state HandshakingGrouped timeout=600 (Identity expected) {
-            on Init
-                do notifyInitAddOurDevice(partner);
+            // HandshakeRequest from same group are filtered in receive_sync_msg
+            on Init{
+                if keyElectionWon(partner) {
+                    do notifyInitAddOtherDevice(partner);
+                } else {
+                    do notifyInitMoveOurDevice(partner);
+                }
+            }
             on HandshakeRejected(Identity partner) {
                 do rejectHandshake(partner);             // stores rejection of partner
                 go Grouped;
             }
             on HandshakeAccepted(Identity partner) {
                 do acceptHandshake(partner); 
-
-                // an already existing group always wins
-                do sendGroupKeys(partner);
-
-                go Grouped;
+                if keyElectionWon(partner) {
+                    do sendGroupKeys(partner);
+                    do notifyAcceptedDeviceAdded(partner);
+                    go Grouped;
+                }
+                go WaitForGroupKeysGrouped(partner);
             }
             on Cancel go Grouped;
+            on Timeout {
+                do notifyTimeout(expected);
+                go Grouped;
+            }
+        }
+
+        state WaitForGroupKeysGrouped timeout=600 (Identity expected) {
+            on GroupKeys(Identity partner, Stringlist keys) {
+                if sameIdentities(partner, expected) {
+                    do storeGroupKeys(partner, keys);
+                    do sendGroupUpdate;
+                    do notifyAcceptedDeviceMoved(partner);
+                    go Grouped;
+                }
+            }
             on Timeout {
                 do notifyTimeout(expected);
                 go Grouped;

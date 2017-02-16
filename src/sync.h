@@ -160,6 +160,13 @@ Some Keysync actions require the application to act, through callbacks :
         App displays trustwords, and requests user accept or reject
         App calls deliverHandshakeResult with user's answer
 
+    SYNC_NOTIFY_INIT_MOVE_OUR_DEVICE
+        Device (me) is grouped and will leave current group to join another
+        device's (partner) group.
+        App displays trustwords, and requests user accept or reject
+        App calls deliverHandshakeResult with user's answer
+
+
     SYNC_NOTIFY_TIMEOUT :
         KeySync operation timed out.
         Identities are set reflecting peers involved in aborted operation.
@@ -171,6 +178,10 @@ Some Keysync actions require the application to act, through callbacks :
 
     SYNC_NOTIFY_ACCEPTED_GROUP_CREATED
         New group created.
+        App displays message. No feedback to engine.
+
+    SYNC_NOTIFY_ACCEPTED_DEVICE_MOVED
+        New device was moved from one group to another.
         App displays message. No feedback to engine.
 
    To deliver handshake result back to engine once user reacted,
@@ -224,13 +235,15 @@ typedef enum _sync_handshake_signal {
     SYNC_NOTIFY_INIT_ADD_OUR_DEVICE,
     SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE,
     SYNC_NOTIFY_INIT_FORM_GROUP,
+    SYNC_NOTIFY_INIT_MOVE_OUR_DEVICE,
 
     // handshake process timed out
     SYNC_NOTIFY_TIMEOUT,
 
     // handshake accepted by user
     SYNC_NOTIFY_ACCEPTED_DEVICE_ADDED,
-    SYNC_NOTIFY_ACCEPTED_GROUP_CREATED
+    SYNC_NOTIFY_ACCEPTED_GROUP_CREATED,
+    SYNC_NOTIFY_ACCEPTED_DEVICE_MOVED
 
 } sync_handshake_signal;
 

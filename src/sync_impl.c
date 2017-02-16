@@ -7,7 +7,6 @@
 // #define for the dllimport / dllexport DYNAMIC_API stuff.
 #include "pEp_internal.h"
 
-#include "../asn.1/DeviceGroup-Protocol.h"
 #include "sync_impl.h"
 #include "keymanagement.h"
 #include "message_api.h"
@@ -70,6 +69,23 @@ PEP_STATUS receive_sync_msg(
                     status = PEP_SYNC_ILLEGAL_MESSAGE;
                     goto error;
                 }
+
+                if(msgIsFromGroup) {
+                    char *devgrp = NULL;
+                    status = get_device_group(session, &devgrp);
+
+                    // if handshake request comes from same group ignore, ignore it
+                    if (status == PEP_STATUS_OK && devgrp && devgrp[0] &&
+                        strncmp(devgrp,
+                                (const char *)msg->payload.choice.handshakeRequest.group_id->buf,
+                                msg->payload.choice.handshakeRequest.group_id->size) != 0){
+                        status = PEP_SYNC_ILLEGAL_MESSAGE;
+                        goto error;
+                    }
+                    free(devgrp);
+                    // if it comes from another group, then this is groupmerge
+                }
+
                 event = HandshakeRequest;
                 break;
 
@@ -78,6 +94,7 @@ PEP_STATUS receive_sync_msg(
                 break;
 
             case DeviceGroup_Protocol__payload_PR_groupKeys:
+            {
                 // re-check uuid in case sync_uuid changed while in the queue
                 if (strncmp(session->sync_uuid,
                             (const char *)msg->payload.choice.groupKeys.partner_id->buf,
@@ -85,9 +102,26 @@ PEP_STATUS receive_sync_msg(
                     status = PEP_SYNC_ILLEGAL_MESSAGE;
                     goto error;
                 }
-                // no break
-            case DeviceGroup_Protocol__payload_PR_groupUpdate:
-            {
+                group_keys_extra_t *group_keys_extra;
+                group_keys_extra = malloc(sizeof(group_keys_extra_t));
+                if(group_keys_extra == NULL){
+                    status = PEP_OUT_OF_MEMORY;
+                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                    goto error;
+                }
+
+                char *group_id = strndup(
+                        (char*)msg->payload.choice.groupKeys.group_id->buf,
+                        msg->payload.choice.groupKeys.group_id->size);
+
+                if (msg->payload.choice.groupKeys.group_id && !group_id){
+                    status = PEP_OUT_OF_MEMORY;
+                    free(group_keys_extra);
+                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                    goto error;
+                }
+                group_keys_extra->group_id = group_id;
+
                 identity_list *group_keys = IdentityList_to_identity_list(
                         msg->payload.present == 
                           DeviceGroup_Protocol__payload_PR_groupKeys ?
@@ -96,13 +130,28 @@ PEP_STATUS receive_sync_msg(
                         NULL);
                 if (!group_keys) {
                     status = PEP_OUT_OF_MEMORY;
+                    free(group_id);
+                    free(group_keys_extra);
+                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                    goto error;
+                }
+                group_keys_extra->group_keys = group_keys;
+
+                extra = (void *) group_keys_extra;
+
+                break;
+            }
+            case DeviceGroup_Protocol__payload_PR_groupUpdate:
+            {
+                identity_list *group_keys = IdentityList_to_identity_list(
+                        &msg->payload.choice.groupUpdate.ownIdentities, NULL);
+                if (!group_keys) {
+                    status = PEP_OUT_OF_MEMORY;
                     ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
                     goto error;
                 }
                 extra = (void *) group_keys;
-                event = msg->payload.present == 
-                          DeviceGroup_Protocol__payload_PR_groupKeys ?
-                            GroupKeys : GroupUpdate;
+                event = GroupUpdate;
                 break;
             }
 
