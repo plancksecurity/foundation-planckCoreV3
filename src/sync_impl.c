@@ -123,10 +123,7 @@ PEP_STATUS receive_sync_msg(
                 group_keys_extra->group_id = group_id;
 
                 identity_list *group_keys = IdentityList_to_identity_list(
-                        msg->payload.present == 
-                          DeviceGroup_Protocol__payload_PR_groupKeys ?
-                            &msg->payload.choice.groupKeys.ownIdentities :
-                            &msg->payload.choice.groupUpdate.ownIdentities,
+                        &msg->payload.choice.groupKeys.ownIdentities,
                         NULL);
                 if (!group_keys) {
                     status = PEP_OUT_OF_MEMORY;
@@ -138,6 +135,7 @@ PEP_STATUS receive_sync_msg(
                 group_keys_extra->group_keys = group_keys;
 
                 extra = (void *) group_keys_extra;
+                event = GroupKeys;
 
                 break;
             }
@@ -192,7 +190,6 @@ PEP_STATUS receive_sync_msg(
     if(last != NULL){
         time_t now = time(NULL);
         if(*last != 0 && (*last + SYNC_INHIBIT_TIME) > now ){
-            free_identity(partner);
             status = PEP_STATEMACHINE_INHIBITED_EVENT;
             goto error;
         }
@@ -254,9 +251,32 @@ PEP_STATUS receive_sync_msg(
 
     status = fsm_DeviceState_inject(session, event, partner, extra, timeout);
 
+error:
+
     free_identity(partner);
 
-error:
+    switch(event){
+        case GroupKeys:
+        {
+            group_keys_extra_t *group_keys_extra = (group_keys_extra_t*) extra;
+            identity_list *group_keys = group_keys_extra->group_keys;
+            char *group_id = group_keys_extra->group_id;
+            free_identity_list(group_keys);
+            free(group_id);
+            free(group_keys_extra);
+            break;
+        }
+        case GroupUpdate:
+        {
+            identity_list *group_keys = (identity_list*) extra;
+            free_identity_list(group_keys);
+            break;
+        }
+        default:
+            assert(extra==NULL);
+            break;
+    }
+
     free(sync_msg);
 
     return status;

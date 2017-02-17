@@ -220,6 +220,10 @@ PEP_STATUS _storeGroupKeys(
 
     for (identity_list *il = group_keys; il && il->ident; il = il->next) {
 
+        if (strcmp(il->ident->user_id, PEP_OWN_USERID)!=0) {
+            assert(0);
+            continue;
+        }
         // Check that identity isn't excluded from sync.
         pEp_identity *stored_identity = NULL;
         status = get_identity(session, il->ident->address, PEP_OWN_USERID,
@@ -232,19 +236,11 @@ PEP_STATUS _storeGroupKeys(
             free_identity(stored_identity);
         }
 
-        free(il->ident->user_id);
-        il->ident->user_id = strdup(PEP_OWN_USERID);
-        assert(il->ident->user_id);
-        if (!il->ident->user_id){
-            status = PEP_OUT_OF_MEMORY;
-            break;
-        }
         status = set_identity(session, il->ident);
         if (status != PEP_STATUS_OK)
             break;
     }
 
-    free_identity_list(group_keys);
     return status;
 }
     
@@ -282,12 +278,12 @@ PEP_STATUS storeGroupKeys(
 
     status = _storeGroupKeys(session, group_keys);
     if (status != PEP_STATUS_OK)
-        goto exitfree;
+        return status;
 
     // set group id according to given group-id
     status = set_device_group(session, group_id);
     if (status != PEP_STATUS_OK)
-        goto exitfree;
+        return status;
     
     // change sync_uuid when entering group 
     // thus ignoring unprocessed handshakes
@@ -295,11 +291,6 @@ PEP_STATUS storeGroupKeys(
     pEpUUID uuid;
     uuid_generate_random(uuid);
     uuid_unparse_upper(uuid, session->sync_uuid);
-
-exitfree:
-    free_identity_list(group_keys);
-    free(group_id);
-    free(group_keys_extra);
 
     return status;
 }
@@ -333,12 +324,8 @@ PEP_STATUS storeGroupUpdate(
     identity_list *group_keys = (identity_list*) group_keys_;
 
     status = _storeGroupKeys(session, group_keys);
-    if (status != PEP_STATUS_OK)
-        goto exitfree;
 
-exitfree:
 
-    free_identity_list(group_keys);
     return status;
 }
 // makeGroup() - 

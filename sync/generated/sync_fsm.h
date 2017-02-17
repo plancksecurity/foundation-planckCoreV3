@@ -12,7 +12,6 @@ extern "C" {
 
 typedef pEp_identity * Identity;
 typedef stringlist_t * Stringlist;
-typedef union _param { Identity partner; stringlist_t *keylist; } param_t;
 
 // error values
 
