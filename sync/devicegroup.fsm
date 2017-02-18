@@ -82,14 +82,17 @@ protocol DeviceGroup {
                 go Sole;
             }
             on HandshakeAccepted(Identity partner) {
-                do acceptHandshake(partner); 
-                if keyElectionWon(partner) {
-                    do makeGroup;
-                    do sendGroupKeys(partner);
-                    do notifyAcceptedGroupCreated(partner);
-                    go Grouped;
+                if sameIdentities(partner, expected) {
+                    do acceptHandshake(partner); 
+                    if keyElectionWon(partner) {
+                        do makeGroup;
+                        do sendGroupKeys(partner);
+                        do notifyAcceptedGroupCreated(partner);
+                        go Grouped;
+                    }
+                    go WaitForGroupKeysSole(partner);
                 }
-                go WaitForGroupKeysSole(partner);
+                go Sole;
             }
             on Cancel go Sole;
             on Timeout {
@@ -100,7 +103,7 @@ protocol DeviceGroup {
         }
     
         state WaitForGroupKeysSole timeout=600 (Identity expected) {
-            on GroupKeys(Identity partner, Stringlist keys) {
+            on GroupKeys(Identity partner, identity_list keys) {
                 if sameIdentities(partner, expected) {
                     do storeGroupKeys(partner, keys);
                     do sendGroupUpdate;
@@ -131,7 +134,7 @@ protocol DeviceGroup {
                 do sendHandshakeRequest(partner);
                 go HandshakingGrouped(partner);
             }
-            on GroupUpdate(Identity partner, Stringlist keys)
+            on GroupUpdate(Identity partner, identity_list keys)
                 do storeGroupUpdate(partner, keys);
         }
 
@@ -156,8 +159,8 @@ protocol DeviceGroup {
                 }
                 go HandshakingGrouped(partner);
             }
-            on GroupUpdate(Identity partner, Stringlist keys)
-                do storeGroupKeys(partner, keys);
+            on GroupUpdate(Identity partner, identity_list keys)
+                do storeGroupUpdate(partner, keys);
             on Timeout go Grouped;
         }
 
@@ -191,7 +194,7 @@ protocol DeviceGroup {
         }
 
         state WaitForGroupKeysGrouped timeout=600 (Identity expected) {
-            on GroupKeys(Identity partner, Stringlist keys) {
+            on GroupKeys(Identity partner, identity_list keys) {
                 if sameIdentities(partner, expected) {
                     do storeGroupKeys(partner, keys);
                     do sendGroupUpdate;
