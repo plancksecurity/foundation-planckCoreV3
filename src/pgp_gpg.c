@@ -456,7 +456,56 @@ PEP_STATUS pgp_decrypt_and_verify(
             case GPG_ERR_NO_ERROR:
             {
                 gpgme_decrypt_result = gpg.gpgme_op_decrypt_result(session->ctx);
-                
+                /* NOW is when we have to process the decrypt_result, period.
+                   it is only valid until the next call on the context. */
+                   
+                gpgme_key_t key;
+                memset(&key,0,sizeof(key));
+                stringlist_t* recipient_keylist = new_stringlist(NULL);
+                if (!recipient_keylist) {
+                    gpg.gpgme_data_release(plain);
+                    gpg.gpgme_data_release(cipher);
+                    if (recipient_keylist)
+                        free_stringlist(recipient_keylist);
+                    return PEP_OUT_OF_MEMORY;
+                }
+               
+                if (gpgme_decrypt_result != NULL) {
+                    stringlist_t* _keylist = recipient_keylist;
+                    for (gpgme_recipient_t r = gpgme_decrypt_result->recipients; r != NULL; r = r->next) {
+                        // GPGME may give subkey's fpr instead of primary key's fpr.
+                        // Therefore we ask for the primary fingerprint instead
+                        // we assume that gpgme_get_key can find key by subkey's fpr
+                        gpgme_error = gpg.gpgme_get_key(session->ctx,
+                            r->keyid, &key, 0);
+                        gpgme_error = _GPGERR(gpgme_error);
+                        assert(gpgme_error != GPG_ERR_ENOMEM);
+                        if (gpgme_error == GPG_ERR_ENOMEM) {
+                            free_stringlist(_keylist);
+                            result = PEP_OUT_OF_MEMORY;
+                        }
+                        // Primary key is given as the first subkey
+                        if (gpgme_error == GPG_ERR_NO_ERROR &&
+                            key && key->subkeys && key->subkeys->fpr
+                            && key->subkeys->fpr[0]) {
+                            _keylist = stringlist_add(_keylist, key->subkeys->fpr);
+ 
+                            gpg.gpgme_key_unref(key);
+ 
+                        }
+                    }
+                    assert(_keylist);
+                    if (_keylist == NULL) {
+                        free_stringlist(recipient_keylist);
+                        if (*keylist)
+                            free_stringlist(*keylist);
+                        *keylist = NULL;
+                        result = PEP_OUT_OF_MEMORY;
+                    }
+                } /* Ok, so now we have any recipients it was encrypted for
+                     in recipient_keylist */
+            
+                   
                 gpgme_verify_result_t gpgme_verify_result;
                 char *_buffer = NULL;
                 size_t reading;
@@ -475,6 +524,8 @@ PEP_STATUS pgp_decrypt_and_verify(
                 if (_buffer == NULL) {
                     gpg.gpgme_data_release(plain);
                     gpg.gpgme_data_release(cipher);
+                    if (recipient_keylist)
+                        free_stringlist(recipient_keylist);
                     return PEP_OUT_OF_MEMORY;
                 }
 
@@ -494,6 +545,15 @@ PEP_STATUS pgp_decrypt_and_verify(
                 assert(gpgme_verify_result);
                 gpgme_signature = gpgme_verify_result->signatures;
 
+                if (!gpgme_signature) {
+                    // try cleartext sig verification
+                    gpg.gpgme_op_verify(session->ctx, plain, NULL, plain);
+                    gpgme_verify_result =
+                        gpg.gpgme_op_verify_result(session->ctx);
+                            assert(gpgme_verify_result);
+                    gpgme_signature = gpgme_verify_result->signatures;                    
+                }
+
                 if (gpgme_signature) {
                     stringlist_t *k;
                     _keylist = new_stringlist(NULL);
@@ -508,7 +568,8 @@ PEP_STATUS pgp_decrypt_and_verify(
 
                     result = PEP_DECRYPTED_AND_VERIFIED;
                     gpg.gpgme_check(NULL);
-                    do {
+                    do { /* get all signers and put them at the front off
+                            the keylist (likely only one) */
                         switch (_GPGERR(gpgme_signature->status)) {
                         case GPG_ERR_NO_ERROR:
                         {
@@ -542,6 +603,8 @@ PEP_STATUS pgp_decrypt_and_verify(
 
                                 if (k == NULL) {
                                     free_stringlist(_keylist);
+                                    if (recipient_keylist)
+                                        free (recipient_keylist);
                                     gpg.gpgme_data_release(plain);
                                     gpg.gpgme_data_release(cipher);
                                     free(_buffer);
@@ -565,6 +628,8 @@ PEP_STATUS pgp_decrypt_and_verify(
                             k = stringlist_add(k, gpgme_signature->fpr);
                             if (k == NULL) {
                                 free_stringlist(_keylist);
+                                if (recipient_keylist)
+                                    free_stringlist(recipient_keylist);
                                 gpg.gpgme_data_release(plain);
                                 gpg.gpgme_data_release(cipher);
                                 free(_buffer);
@@ -592,9 +657,24 @@ PEP_STATUS pgp_decrypt_and_verify(
                     *psize = reading;
                     (*ptext)[*psize] = 0; // safeguard for naive users
                     *keylist = _keylist;
+                    if (recipient_keylist)
+                        if (!_keylist)
+                            *keylist = new_stringlist(""); // no sig 
+                        if (!(*keylist)) {
+                            free_stringlist(_keylist);
+                            if (recipient_keylist)
+                                free_stringlist(recipient_keylist);
+                            gpg.gpgme_data_release(plain);
+                            gpg.gpgme_data_release(cipher);
+                            free(_buffer);
+                            return PEP_OUT_OF_MEMORY;
+                        }    
+                        stringlist_append(*keylist, recipient_keylist);
                 }
                 else {
                     free_stringlist(_keylist);
+                    if (recipient_keylist)
+                        free_stringlist(recipient_keylist);
                     free(_buffer);
                 }
                 break;
@@ -625,45 +705,6 @@ PEP_STATUS pgp_decrypt_and_verify(
 
     default:
         result = PEP_DECRYPT_WRONG_FORMAT;
-    }
-
-    if (result != PEP_DECRYPT_WRONG_FORMAT && result != PEP_OUT_OF_MEMORY) {
-        gpgme_key_t key;
-        memset(&key,0,sizeof(key));
-        
-        if (gpgme_decrypt_result != NULL) {
-            if (!(*keylist))
-                *keylist = new_stringlist(""); // no sig
-            stringlist_t* _keylist = *keylist;
-            for (gpgme_recipient_t r = gpgme_decrypt_result->recipients; r != NULL; r = r->next) {
-                // GPGME may give subkey's fpr instead of primary key's fpr.
-                // Therefore we ask for the primary fingerprint instead
-                // we assume that gpgme_get_key can find key by subkey's fpr
-                gpgme_error = gpg.gpgme_get_key(session->ctx,
-                    r->keyid, &key, 0);
-                gpgme_error = _GPGERR(gpgme_error);
-                assert(gpgme_error != GPG_ERR_ENOMEM);
-                if (gpgme_error == GPG_ERR_ENOMEM) {
-                    free_stringlist(_keylist);
-                    result = PEP_OUT_OF_MEMORY;
-                }
-                // Primary key is given as the first subkey
-                if (gpgme_error == GPG_ERR_NO_ERROR &&
-                    key && key->subkeys && key->subkeys->fpr
-                    && key->subkeys->fpr[0]) {
-                    _keylist = stringlist_add(_keylist, key->subkeys->fpr);
-
-                    gpg.gpgme_key_unref(key);
-
-                }
-            }
-            assert(_keylist);
-            if (_keylist == NULL) {
-                free_stringlist(*keylist);
-                *keylist = NULL;
-                result = PEP_OUT_OF_MEMORY;
-            }
-        }
     }
 
     gpg.gpgme_data_release(plain);
