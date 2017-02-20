@@ -804,6 +804,10 @@ static PEP_rating key_rating(PEP_SESSION session, const char *fpr)
     return _rating(comm_type, PEP_rating_undefined);
 }
 
+static PEP_rating worst_rating(PEP_rating rating1, PEP_rating rating2) {
+    return ((rating1 < rating2) ? rating1 : rating2);
+}
+
 static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist)
 {
     PEP_rating rating = PEP_rating_reliable;
@@ -818,11 +822,12 @@ static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist)
         PEP_STATUS status;
 
         PEP_rating _rating_ = key_rating(session, _kl->value);
+         
         if (_rating_ <= PEP_rating_mistrust)
             return _rating_;
 
         if (rating == PEP_rating_undefined)
-            rating = _rating_;
+            rating = worst_rating(rating, _rating_);
 
         if (_rating_ >= PEP_rating_reliable) {
             status = least_trust(session, _kl->value, &ct);
@@ -830,16 +835,16 @@ static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist)
                 return PEP_rating_undefined;
             if (ct == PEP_ct_unknown){
                 if (rating >= PEP_rating_reliable){
-                    rating = PEP_rating_reliable;
+                    rating = worst_rating(rating, PEP_rating_reliable);
                 }
             }
             else{
-                rating = _rating(ct, rating);
+                rating = worst_rating(rating, _rating(ct, rating));
             }
         }
         else if (_rating_ == PEP_rating_unencrypted) {
             if (rating > PEP_rating_unencrypted_for_some)
-                rating = PEP_rating_unencrypted_for_some;
+                rating = worst_rating(rating, PEP_rating_unencrypted_for_some);
         }
     }
 
