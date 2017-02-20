@@ -258,12 +258,7 @@ error:
     switch(event){
         case GroupKeys:
         {
-            group_keys_extra_t *group_keys_extra = (group_keys_extra_t*) extra;
-            identity_list *group_keys = group_keys_extra->group_keys;
-            char *group_id = group_keys_extra->group_id;
-            free_identity_list(group_keys);
-            free(group_id);
-            free(group_keys_extra);
+            free_group_keys_extra((group_keys_extra_t*)extra);
             break;
         }
         case GroupUpdate:
@@ -821,5 +816,41 @@ PEP_STATUS multicast_self_msg(
 // error:
 //     free_identity_list(own_identities);
 //     return status;
+}
+
+void free_group_keys_extra(group_keys_extra_t* group_keys_extra)
+{
+    identity_list *group_keys = group_keys_extra->group_keys;
+    char *group_id = group_keys_extra->group_id;
+    free_identity_list(group_keys);
+    free(group_id);
+    free(group_keys_extra);
+}
+
+group_keys_extra_t* group_keys_extra_dup(group_keys_extra_t* groupkeys)
+{
+    group_keys_extra_t *group_keys_extra;
+    group_keys_extra = malloc(sizeof(group_keys_extra_t));
+    if(group_keys_extra == NULL){
+        return NULL;
+    }
+
+    char *group_id = strdup(group_keys_extra->group_id);
+
+    if (group_keys_extra->group_id && !group_id){
+        free(group_keys_extra);
+        return NULL;
+    }
+    group_keys_extra->group_id = group_id;
+
+    identity_list *group_keys = identity_list_dup(group_keys_extra->group_keys);;
+    if (!group_keys) {
+        free(group_id);
+        free(group_keys_extra);
+        return NULL;
+    }
+    group_keys_extra->group_keys = group_keys;
+
+    return group_keys_extra;
 }
 

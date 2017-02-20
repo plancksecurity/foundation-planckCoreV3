@@ -49,10 +49,12 @@ typedef enum _DeviceState_state {
     SoleBeaconed, 
     HandshakingSole, 
     WaitForGroupKeysSole, 
+    WaitForAcceptSole, 
     Grouped, 
     GroupedBeaconed, 
     HandshakingGrouped, 
-    WaitForGroupKeysGrouped
+    WaitForGroupKeysGrouped, 
+    WaitForAcceptGrouped
 } DeviceState_state;
 
 // events
