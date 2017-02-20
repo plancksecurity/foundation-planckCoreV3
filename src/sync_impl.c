@@ -7,7 +7,6 @@
 // #define for the dllimport / dllexport DYNAMIC_API stuff.
 #include "pEp_internal.h"
 
-#include "../asn.1/DeviceGroup-Protocol.h"
 #include "sync_impl.h"
 #include "keymanagement.h"
 #include "message_api.h"
@@ -65,11 +64,28 @@ PEP_STATUS receive_sync_msg(
             case DeviceGroup_Protocol__payload_PR_handshakeRequest:
                 // re-check uuid in case sync_uuid changed while in the queue
                 if (strncmp(session->sync_uuid,
-                            (const char *)msg->payload.choice.handshakeRequest.partner.user_id->buf,
-                            msg->payload.choice.handshakeRequest.partner.user_id->size) != 0){
+                            (const char *)msg->payload.choice.handshakeRequest.partner_id->buf,
+                            msg->payload.choice.handshakeRequest.partner_id->size) != 0){
                     status = PEP_SYNC_ILLEGAL_MESSAGE;
                     goto error;
                 }
+
+                if(msgIsFromGroup) {
+                    char *devgrp = NULL;
+                    status = get_device_group(session, &devgrp);
+
+                    // if handshake request comes from same group ignore, ignore it
+                    if (status == PEP_STATUS_OK && devgrp && devgrp[0] &&
+                        strncmp(devgrp,
+                                (const char *)msg->payload.choice.handshakeRequest.group_id->buf,
+                                msg->payload.choice.handshakeRequest.group_id->size) != 0){
+                        status = PEP_SYNC_ILLEGAL_MESSAGE;
+                        goto error;
+                    }
+                    free(devgrp);
+                    // if it comes from another group, then this is groupmerge
+                }
+
                 event = HandshakeRequest;
                 break;
 
@@ -78,31 +94,62 @@ PEP_STATUS receive_sync_msg(
                 break;
 
             case DeviceGroup_Protocol__payload_PR_groupKeys:
+            {
                 // re-check uuid in case sync_uuid changed while in the queue
                 if (strncmp(session->sync_uuid,
-                            (const char *)msg->payload.choice.groupKeys.partner.user_id->buf,
-                            msg->payload.choice.groupKeys.partner.user_id->size) != 0){
+                            (const char *)msg->payload.choice.groupKeys.partner_id->buf,
+                            msg->payload.choice.groupKeys.partner_id->size) != 0){
                     status = PEP_SYNC_ILLEGAL_MESSAGE;
                     goto error;
                 }
-                // no break
+                group_keys_extra_t *group_keys_extra;
+                group_keys_extra = malloc(sizeof(group_keys_extra_t));
+                if(group_keys_extra == NULL){
+                    status = PEP_OUT_OF_MEMORY;
+                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                    goto error;
+                }
+
+                char *group_id = strndup(
+                        (char*)msg->payload.choice.groupKeys.group_id->buf,
+                        msg->payload.choice.groupKeys.group_id->size);
+
+                if (msg->payload.choice.groupKeys.group_id && !group_id){
+                    status = PEP_OUT_OF_MEMORY;
+                    free(group_keys_extra);
+                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                    goto error;
+                }
+                group_keys_extra->group_id = group_id;
+
+                identity_list *group_keys = IdentityList_to_identity_list(
+                        &msg->payload.choice.groupKeys.ownIdentities,
+                        NULL);
+                if (!group_keys) {
+                    status = PEP_OUT_OF_MEMORY;
+                    free(group_id);
+                    free(group_keys_extra);
+                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                    goto error;
+                }
+                group_keys_extra->group_keys = group_keys;
+
+                extra = (void *) group_keys_extra;
+                event = GroupKeys;
+
+                break;
+            }
             case DeviceGroup_Protocol__payload_PR_groupUpdate:
             {
                 identity_list *group_keys = IdentityList_to_identity_list(
-                        msg->payload.present == 
-                          DeviceGroup_Protocol__payload_PR_groupKeys ?
-                            &msg->payload.choice.groupKeys.ownIdentities :
-                            &msg->payload.choice.groupUpdate.ownIdentities,
-                        NULL);
+                        &msg->payload.choice.groupUpdate.ownIdentities, NULL);
                 if (!group_keys) {
                     status = PEP_OUT_OF_MEMORY;
                     ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
                     goto error;
                 }
                 extra = (void *) group_keys;
-                event = msg->payload.present == 
-                          DeviceGroup_Protocol__payload_PR_groupKeys ?
-                            GroupKeys : GroupUpdate;
+                event = GroupUpdate;
                 break;
             }
 
@@ -143,7 +190,6 @@ PEP_STATUS receive_sync_msg(
     if(last != NULL){
         time_t now = time(NULL);
         if(*last != 0 && (*last + SYNC_INHIBIT_TIME) > now ){
-            free_identity(partner);
             status = PEP_STATEMACHINE_INHIBITED_EVENT;
             goto error;
         }
@@ -205,9 +251,32 @@ PEP_STATUS receive_sync_msg(
 
     status = fsm_DeviceState_inject(session, event, partner, extra, timeout);
 
+error:
+
     free_identity(partner);
 
-error:
+    switch(event){
+        case GroupKeys:
+        {
+            group_keys_extra_t *group_keys_extra = (group_keys_extra_t*) extra;
+            identity_list *group_keys = group_keys_extra->group_keys;
+            char *group_id = group_keys_extra->group_id;
+            free_identity_list(group_keys);
+            free(group_id);
+            free(group_keys_extra);
+            break;
+        }
+        case GroupUpdate:
+        {
+            identity_list *group_keys = (identity_list*) extra;
+            free_identity_list(group_keys);
+            break;
+        }
+        default:
+            assert(extra==NULL);
+            break;
+    }
+
     free(sync_msg);
 
     return status;
@@ -374,8 +443,8 @@ PEP_STATUS receive_DeviceState_msg(
                         case DeviceGroup_Protocol__payload_PR_handshakeRequest:
                             if (rating < PEP_rating_reliable ||
                                 strncmp(session->sync_uuid,
-                                        (const char *)msg->payload.choice.handshakeRequest.partner.user_id->buf,
-                                        msg->payload.choice.handshakeRequest.partner.user_id->size) != 0){
+                                        (const char *)msg->payload.choice.handshakeRequest.partner_id->buf,
+                                        msg->payload.choice.handshakeRequest.partner_id->size) != 0){
                                 discard = true;
                                 goto free_all;
                             }
@@ -387,8 +456,8 @@ PEP_STATUS receive_DeviceState_msg(
                             if (!keylist || rating < PEP_rating_reliable ||
                                 // message is only consumed by instance it is addressed to
                                 (strncmp(session->sync_uuid,
-                                        (const char *)msg->payload.choice.groupKeys.partner.user_id->buf,
-                                        msg->payload.choice.groupKeys.partner.user_id->size) != 0)){
+                                        (const char *)msg->payload.choice.groupKeys.partner_id->buf,
+                                        msg->payload.choice.groupKeys.partner_id->size) != 0)){
                                 discard = true;
                                 goto free_all;
                             }
