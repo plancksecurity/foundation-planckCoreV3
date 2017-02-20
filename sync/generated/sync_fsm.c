@@ -1,5 +1,6 @@
 #include "pEp_internal.h"
 #include "sync_fsm.h"
+#include "sync_impl.h"
 
 // local definitions for DeviceState's state machine 
 
@@ -17,7 +18,7 @@ typedef struct _WaitForGroupKeysSole_state_payload {
 
 typedef struct _WaitForAcceptSole_state_payload {
     Identity expected;
-    identity_list* keys;
+    group_keys_extra_t* groupkeys;
 } WaitForAcceptSole_state_payload_t;
 
 typedef struct _GroupedBeaconed_state_payload {
@@ -34,7 +35,7 @@ typedef struct _WaitForGroupKeysGrouped_state_payload {
 
 typedef struct _WaitForAcceptGrouped_state_payload {
     Identity expected;
-    identity_list* keys;
+    group_keys_extra_t* groupkeys;
 } WaitForAcceptGrouped_state_payload_t;
 
 
@@ -409,7 +410,7 @@ DeviceState_state fsm_DeviceState(
                 case GroupKeys:
                 {
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=HandshakingSole", "event=GroupKeys")
-                    identity_list* keys = (identity_list*)extra;
+                    group_keys_extra_t* groupkeys = (group_keys_extra_t*)extra;
                     cond_result = sameIdentities(session, partner, expected);
                     #ifndef NDEBUG
                     char resstr[11] = {0,};
@@ -429,8 +430,8 @@ DeviceState_state fsm_DeviceState(
                         if(!session->sync_state_payload) return (DeviceState_state) invalid_out_of_memory;
                         ((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->expected =
                             identity_dup(partner);
-                        ((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->keys =
-                            identity_list_dup(keys);
+                        ((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->groupkeys =
+                            group_keys_extra_dup(groupkeys);
                         DEBUG_LOG("FSM transition", "sync_fsm.c, state=HandshakingSole, event=GroupKeys", "target=WaitForAcceptSole")
                         return WaitForAcceptSole;
                     }
@@ -478,7 +479,7 @@ DeviceState_state fsm_DeviceState(
                 case GroupKeys:
                 {
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=WaitForGroupKeysSole", "event=GroupKeys")
-                    identity_list* keys = (identity_list*)extra;
+                    group_keys_extra_t* groupkeys = (group_keys_extra_t*)extra;
                     cond_result = sameIdentities(session, partner, expected);
                     #ifndef NDEBUG
                     char resstr[11] = {0,};
@@ -489,7 +490,7 @@ DeviceState_state fsm_DeviceState(
                         return cond_result;
                     if (cond_result) {
                         DEBUG_LOG("FSM action", "sync_fsm.c, state=WaitForGroupKeysSole, event=GroupKeys", "action=storeGroupKeys")
-                        status = storeGroupKeys(session, state, partner, keys);
+                        status = storeGroupKeys(session, state, partner, groupkeys);
                         if (status == PEP_OUT_OF_MEMORY)
                             return (int) invalid_out_of_memory;
                         if (status != PEP_STATUS_OK)
@@ -544,7 +545,7 @@ DeviceState_state fsm_DeviceState(
             assert(session->sync_state_payload);
             if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
             Identity expected = ((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->expected;
-            identity_list* keys = ((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->keys;
+            group_keys_extra_t* groupkeys = ((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->groupkeys;
             *timeout = 600;
             switch (event) {
                 case Init: 
@@ -562,7 +563,7 @@ DeviceState_state fsm_DeviceState(
                     assert(session->sync_state_payload);
                     if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
                     free_identity(((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->expected);
-                    free_identity_list(((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->keys);
+                    free_group_keys_extra(((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->groupkeys);
                     free(session->sync_state_payload);
                     session->sync_state_payload = NULL;
                     DEBUG_LOG("FSM transition", "sync_fsm.c, state=WaitForAcceptSole, event=HandshakeRejected", "target=Sole")
@@ -587,7 +588,7 @@ DeviceState_state fsm_DeviceState(
                         if (status != PEP_STATUS_OK)
                             return (int) invalid_action;
                         DEBUG_LOG("FSM action", "sync_fsm.c, state=WaitForAcceptSole, event=HandshakeAccepted", "action=storeGroupKeys")
-                        status = storeGroupKeys(session, state, partner, keys);
+                        status = storeGroupKeys(session, state, partner, groupkeys);
                         if (status == PEP_OUT_OF_MEMORY)
                             return (int) invalid_out_of_memory;
                         if (status != PEP_STATUS_OK)
@@ -607,7 +608,7 @@ DeviceState_state fsm_DeviceState(
                         assert(session->sync_state_payload);
                         if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
                         free_identity(((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->expected);
-                        free_identity_list(((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->keys);
+                        free_group_keys_extra(((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->groupkeys);
                         free(session->sync_state_payload);
                         session->sync_state_payload = NULL;
                         DEBUG_LOG("FSM transition", "sync_fsm.c, state=WaitForAcceptSole, event=HandshakeAccepted", "target=Grouped")
@@ -616,7 +617,7 @@ DeviceState_state fsm_DeviceState(
                     assert(session->sync_state_payload);
                     if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
                     free_identity(((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->expected);
-                    free_identity_list(((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->keys);
+                    free_group_keys_extra(((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->groupkeys);
                     free(session->sync_state_payload);
                     session->sync_state_payload = NULL;
                     DEBUG_LOG("FSM transition", "sync_fsm.c, state=WaitForAcceptSole, event=HandshakeAccepted", "target=Sole")
@@ -628,7 +629,7 @@ DeviceState_state fsm_DeviceState(
                     assert(session->sync_state_payload);
                     if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
                     free_identity(((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->expected);
-                    free_identity_list(((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->keys);
+                    free_group_keys_extra(((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->groupkeys);
                     free(session->sync_state_payload);
                     session->sync_state_payload = NULL;
                     DEBUG_LOG("FSM transition", "sync_fsm.c, state=WaitForAcceptSole, event=Cancel", "target=Sole")
@@ -646,7 +647,7 @@ DeviceState_state fsm_DeviceState(
                     assert(session->sync_state_payload);
                     if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
                     free_identity(((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->expected);
-                    free_identity_list(((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->keys);
+                    free_group_keys_extra(((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->groupkeys);
                     free(session->sync_state_payload);
                     session->sync_state_payload = NULL;
                     DEBUG_LOG("FSM transition", "sync_fsm.c, state=WaitForAcceptSole, event=Timeout", "target=Sole")
@@ -1008,7 +1009,7 @@ DeviceState_state fsm_DeviceState(
                 case GroupKeys:
                 {
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=HandshakingGrouped", "event=GroupKeys")
-                    identity_list* keys = (identity_list*)extra;
+                    group_keys_extra_t* groupkeys = (group_keys_extra_t*)extra;
                     cond_result = sameIdentities(session, partner, expected);
                     #ifndef NDEBUG
                     char resstr[11] = {0,};
@@ -1028,8 +1029,8 @@ DeviceState_state fsm_DeviceState(
                         if(!session->sync_state_payload) return (DeviceState_state) invalid_out_of_memory;
                         ((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->expected =
                             identity_dup(partner);
-                        ((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->keys =
-                            identity_list_dup(keys);
+                        ((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->groupkeys =
+                            group_keys_extra_dup(groupkeys);
                         DEBUG_LOG("FSM transition", "sync_fsm.c, state=HandshakingGrouped, event=GroupKeys", "target=WaitForAcceptGrouped")
                         return WaitForAcceptGrouped;
                     }
@@ -1071,7 +1072,7 @@ DeviceState_state fsm_DeviceState(
                 case GroupKeys:
                 {
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=WaitForGroupKeysGrouped", "event=GroupKeys")
-                    identity_list* keys = (identity_list*)extra;
+                    group_keys_extra_t* groupkeys = (group_keys_extra_t*)extra;
                     cond_result = sameIdentities(session, partner, expected);
                     #ifndef NDEBUG
                     char resstr[11] = {0,};
@@ -1082,7 +1083,7 @@ DeviceState_state fsm_DeviceState(
                         return cond_result;
                     if (cond_result) {
                         DEBUG_LOG("FSM action", "sync_fsm.c, state=WaitForGroupKeysGrouped, event=GroupKeys", "action=storeGroupKeys")
-                        status = storeGroupKeys(session, state, partner, keys);
+                        status = storeGroupKeys(session, state, partner, groupkeys);
                         if (status == PEP_OUT_OF_MEMORY)
                             return (int) invalid_out_of_memory;
                         if (status != PEP_STATUS_OK)
@@ -1137,7 +1138,7 @@ DeviceState_state fsm_DeviceState(
             assert(session->sync_state_payload);
             if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
             Identity expected = ((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->expected;
-            identity_list* keys = ((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->keys;
+            group_keys_extra_t* groupkeys = ((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->groupkeys;
             *timeout = 600;
             switch (event) {
                 case Init: 
@@ -1155,7 +1156,7 @@ DeviceState_state fsm_DeviceState(
                     assert(session->sync_state_payload);
                     if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
                     free_identity(((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->expected);
-                    free_identity_list(((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->keys);
+                    free_group_keys_extra(((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->groupkeys);
                     free(session->sync_state_payload);
                     session->sync_state_payload = NULL;
                     DEBUG_LOG("FSM transition", "sync_fsm.c, state=WaitForAcceptGrouped, event=HandshakeRejected", "target=Grouped")
@@ -1171,7 +1172,7 @@ DeviceState_state fsm_DeviceState(
                     if (status != PEP_STATUS_OK)
                         return (int) invalid_action;
                     DEBUG_LOG("FSM action", "sync_fsm.c, state=WaitForAcceptGrouped, event=HandshakeAccepted", "action=storeGroupKeys")
-                    status = storeGroupKeys(session, state, partner, keys);
+                    status = storeGroupKeys(session, state, partner, groupkeys);
                     if (status == PEP_OUT_OF_MEMORY)
                         return (int) invalid_out_of_memory;
                     if (status != PEP_STATUS_OK)
@@ -1191,7 +1192,7 @@ DeviceState_state fsm_DeviceState(
                     assert(session->sync_state_payload);
                     if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
                     free_identity(((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->expected);
-                    free_identity_list(((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->keys);
+                    free_group_keys_extra(((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->groupkeys);
                     free(session->sync_state_payload);
                     session->sync_state_payload = NULL;
                     DEBUG_LOG("FSM transition", "sync_fsm.c, state=WaitForAcceptGrouped, event=HandshakeAccepted", "target=Grouped")
@@ -1203,7 +1204,7 @@ DeviceState_state fsm_DeviceState(
                     assert(session->sync_state_payload);
                     if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
                     free_identity(((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->expected);
-                    free_identity_list(((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->keys);
+                    free_group_keys_extra(((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->groupkeys);
                     free(session->sync_state_payload);
                     session->sync_state_payload = NULL;
                     DEBUG_LOG("FSM transition", "sync_fsm.c, state=WaitForAcceptGrouped, event=Cancel", "target=Grouped")
@@ -1221,7 +1222,7 @@ DeviceState_state fsm_DeviceState(
                     assert(session->sync_state_payload);
                     if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
                     free_identity(((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->expected);
-                    free_identity_list(((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->keys);
+                    free_group_keys_extra(((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->groupkeys);
                     free(session->sync_state_payload);
                     session->sync_state_payload = NULL;
                     DEBUG_LOG("FSM transition", "sync_fsm.c, state=WaitForAcceptGrouped, event=Timeout", "target=Grouped")

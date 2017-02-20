@@ -17,6 +17,9 @@ typedef struct _group_keys_extra {
     char *group_id;
 } group_keys_extra_t;
 
+void free_group_keys_extra(group_keys_extra_t* groupkeys);
+group_keys_extra_t* group_keys_extra_dup(group_keys_extra_t* groupkeys);
+
 PEP_STATUS receive_sync_msg(
         PEP_SESSION session,
         sync_msg_t *sync_msg,

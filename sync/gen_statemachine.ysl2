@@ -185,6 +185,7 @@ tstylesheet {
         ||
         #include "pEp_internal.h"
         #include "«@filename»_fsm.h"
+        #include "«@filename»_impl.h"
 
         // local definitions for «@name»'s state machine 
 
@@ -259,6 +260,7 @@ tstylesheet {
         choose {
             when "$type = 'Identity'" > Identity
             when "$type = 'IdentityList'" > identity_list*
+            when "$type = 'GroupKeys'" > group_keys_extra_t*
             otherwise value "$type";
         }
     }
@@ -269,6 +271,7 @@ tstylesheet {
         choose {
             when "$type = 'Identity'" > identity
             when "$type = 'IdentityList'" > identity_list
+            when "$type = 'GroupKeys'" > group_keys_extra
             otherwise call "pEp_type" with "type", "$type";
         }
     }
