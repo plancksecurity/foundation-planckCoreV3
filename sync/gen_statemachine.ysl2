@@ -188,7 +188,7 @@ tstylesheet {
 
         // local definitions for «@name»'s state machine 
 
-        `` apply "state", 2 mode="declStatePayload"
+        `` apply "state", 0 mode="declStatePayload"
 
         // state machine for «@name»
 
@@ -253,10 +253,31 @@ tstylesheet {
         ||
     }
 
+    function "pEp_type" {
+        param "type";
+
+        choose {
+            when "$type = 'Identity'" > Identity
+            when "$type = 'IdentityList'" > identity_list*
+            otherwise value "$type";
+        }
+    }
+
+    function "pEp_type_op_radix" {
+        param "type";
+
+        choose {
+            when "$type = 'Identity'" > identity
+            when "$type = 'IdentityList'" > identity_list
+            otherwise call "pEp_type" with "type", "$type";
+        }
+    }
+
     template "parm" mode="unpackStatePayloadParm" 
     {
         param "stateName";
-        | «name(*[1])» «name(*[2])» = ((«$stateName»_state_payload_t*)session->sync_state_payload)->«name(*[2])»;
+        const "pEpType" call "pEp_type" with "type","name(*[1])"; 
+        | «$pEpType» «name(*[2])» = ((«$stateName»_state_payload_t*)session->sync_state_payload)->«name(*[2])»;
     }
 
     template "state" mode="declStatePayload" if "count(parm) > 0"
@@ -267,18 +288,29 @@ tstylesheet {
 
     ||
 
-    template "parm" mode="declStatePayloadParm" 
-    | «name(*[1])» «name(*[2])»;
-
-    template "event"
-    ||
-    case «@name»:
-    {
-        DEBUG_LOG("FSM event", "«../../@filename»_fsm.c, state=«../@name»", "event=«@name»")
-    `` apply "action|transition|condition";
-    `` if "name(*[position()=last()]) != 'transition'" |> break;
+    template "parm" mode="declStatePayloadParm" {
+        const "pEpType" call "pEp_type" with "type","name(*[1])"; 
+        | «$pEpType» «name(*[2])»;
     }
-    ||
+
+    template "event" {
+        ||
+        case «@name»:
+        {
+            DEBUG_LOG("FSM event", "«../../@filename»_fsm.c, state=«../@name»", "event=«@name»")
+        ||
+        if "count(parm) > 1" {
+            // TODO get ride of void *extra, pass per-event struct incl all params.
+            const "extrapEpType" call "pEp_type" with "type","name(parm[2]/*[1])"; 
+            const "extraArgName","name(parm[2]/*[2])"; 
+            |> «$extrapEpType» «$extraArgName» = («$extrapEpType»)extra;
+        }
+        ||
+        `` apply "action|transition|condition";
+        `` if "name(*[position()=last()]) != 'transition'" |> break;
+        }
+        ||
+    }
 
     template "action" {
         | DEBUG_LOG("FSM action", "«ancestor::fsm/@filename»_fsm.c, state=«ancestor::state/@name», event=«ancestor::event/@name»", "action=«@name»")
@@ -289,7 +321,7 @@ tstylesheet {
             otherwise > NULL
         }
         choose {
-            when "parm[2]" > , extra /*«name(parm[2]/*)»*/
+            when "count(parm) > 1" > , «name(parm[2]/*)»
             otherwise > , NULL
         }
         > );\n
@@ -359,15 +391,18 @@ tstylesheet {
     template "parm" mode="freeStatePayloadParm" 
     {
         param "stateName";
-        | free_«yml:lcase(name(*[1]))»(((«$stateName»_state_payload_t*)session->sync_state_payload)->«name(*[2])»);
+        const "pEpTypeOpRadix" call "pEp_type_op_radix" with "type","name(*[1])"; 
+        | free_«$pEpTypeOpRadix»(((«$stateName»_state_payload_t*)session->sync_state_payload)->«name(*[2])»);
     }
 
     template "parm" mode="dupStatePayloadParm" 
     {
         param "stateName";
         param "transitionParms";
+        const "pEpTypeOpRadix" call "pEp_type_op_radix" with "type","name(*[1])"; 
+        const "pos", "position()";
         | ((«$stateName»_state_payload_t*)session->sync_state_payload)->«name(*[2])» =
-        |     «yml:lcase(name(*[1]))»_dup(«name($transitionParms[position()]/*)»);
+        |     «$pEpTypeOpRadix»_dup(«name($transitionParms[$pos]/*)»);
     }
 }
 
