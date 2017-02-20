@@ -95,11 +95,11 @@ protocol DeviceGroup {
                 go Sole;
             }
             on Cancel go Sole;
-//            on GroupKeys(Identity partner, identity_list keys) {
-//                if sameIdentities(partner, expected) {
-//                    go WaitForAcceptSole(partner, keys);
-//                }
-//            }
+            on GroupKeys(Identity partner, IdentityList keys) {
+                if sameIdentities(partner, expected) {
+                    go WaitForAcceptSole(partner, keys);
+                }
+            }
             on Timeout {
                 do notifyTimeout(expected);
                 do sendBeacon;
@@ -108,7 +108,7 @@ protocol DeviceGroup {
         }
     
         state WaitForGroupKeysSole timeout=600 (Identity expected) {
-            on GroupKeys(Identity partner, identity_list keys) {
+            on GroupKeys(Identity partner, IdentityList keys) {
                 if sameIdentities(partner, expected) {
                     do storeGroupKeys(partner, keys);
                     do sendGroupUpdate;
@@ -122,28 +122,28 @@ protocol DeviceGroup {
             }
         }
 
-//        state WaitForAcceptSole timeout=600 (Identity expected, identity_list keys) {
-//            on HandshakeRejected(Identity partner) {
-//                do rejectHandshake(partner);
-//                go Sole;
-//            }
-//            on HandshakeAccepted(Identity partner) {
-//                if sameIdentities(partner, expected) {
-//                    do acceptHandshake(partner); 
-//                    do storeGroupKeys(partner, keys);
-//                    do sendGroupUpdate;
-//                    do notifyAcceptedDeviceAdded(partner);
-//                    go Grouped;
-//                }
-//                go Sole;
-//            }
-//            on Cancel go Sole;
-//            on Timeout {
-//                do notifyTimeout(expected);
-//                go Sole;
-//            }
-//        }
-//
+        state WaitForAcceptSole timeout=600 (Identity expected, IdentityList keys) {
+            on HandshakeRejected(Identity partner) {
+                do rejectHandshake(partner);
+                go Sole;
+            }
+            on HandshakeAccepted(Identity partner) {
+                if sameIdentities(partner, expected) {
+                    do acceptHandshake(partner); 
+                    do storeGroupKeys(partner, keys);
+                    do sendGroupUpdate;
+                    do notifyAcceptedDeviceAdded(partner);
+                    go Grouped;
+                }
+                go Sole;
+            }
+            on Cancel go Sole;
+            on Timeout {
+                do notifyTimeout(expected);
+                go Sole;
+            }
+        }
+
         state Grouped end=1 {
             on KeyGen
                 do sendGroupUpdate;
@@ -161,7 +161,7 @@ protocol DeviceGroup {
                 do sendHandshakeRequest(partner);
                 go HandshakingGrouped(partner);
             }
-            on GroupUpdate(Identity partner, identity_list keys)
+            on GroupUpdate(Identity partner, IdentityList keys)
                 do storeGroupUpdate(partner, keys);
         }
 
@@ -186,7 +186,7 @@ protocol DeviceGroup {
                 }
                 go HandshakingGrouped(partner);
             }
-            on GroupUpdate(Identity partner, identity_list keys)
+            on GroupUpdate(Identity partner, IdentityList keys)
                 do storeGroupUpdate(partner, keys);
             on Timeout go Grouped;
         }
@@ -214,11 +214,11 @@ protocol DeviceGroup {
                 go WaitForGroupKeysGrouped(partner);
             }
             on Cancel go Grouped;
-//            on GroupKeys(Identity partner, identity_list keys) {
-//                if sameIdentities(partner, expected) {
-//                    go WaitForAcceptGrouped(partner, keys);
-//                }
-//            }
+            on GroupKeys(Identity partner, IdentityList keys) {
+                if sameIdentities(partner, expected) {
+                    go WaitForAcceptGrouped(partner, keys);
+                }
+            }
             on Timeout {
                 do notifyTimeout(expected);
                 go Grouped;
@@ -226,7 +226,7 @@ protocol DeviceGroup {
         }
 
         state WaitForGroupKeysGrouped timeout=600 (Identity expected) {
-            on GroupKeys(Identity partner, identity_list keys) {
+            on GroupKeys(Identity partner, IdentityList keys) {
                 if sameIdentities(partner, expected) {
                     do storeGroupKeys(partner, keys);
                     do sendGroupUpdate;
@@ -240,25 +240,25 @@ protocol DeviceGroup {
             }
         }
 
-//        state WaitForAcceptGrouped timeout=600 (Identity expected, identity_list keys) {
-//            on HandshakeRejected(Identity partner) {
-//                do rejectHandshake(partner);
-//                go Grouped;
-//            }
-//            on HandshakeAccepted(Identity partner) {
-//                do acceptHandshake(partner); 
-//                do storeGroupKeys(partner, keys);
-//                do sendGroupUpdate;
-//                do notifyAcceptedDeviceMoved(partner);
-//                go Grouped;
-//            }
-//            on Cancel go Grouped;
-//            on Timeout {
-//                do notifyTimeout(expected);
-//                go Grouped;
-//            }
-//        }
-//
+        state WaitForAcceptGrouped timeout=600 (Identity expected, IdentityList keys) {
+            on HandshakeRejected(Identity partner) {
+                do rejectHandshake(partner);
+                go Grouped;
+            }
+            on HandshakeAccepted(Identity partner) {
+                do acceptHandshake(partner); 
+                do storeGroupKeys(partner, keys);
+                do sendGroupUpdate;
+                do notifyAcceptedDeviceMoved(partner);
+                go Grouped;
+            }
+            on Cancel go Grouped;
+            on Timeout {
+                do notifyTimeout(expected);
+                go Grouped;
+            }
+        }
+
         tag Init 1;
         tag Beacon 2;
         tag HandshakeRequest 3;
