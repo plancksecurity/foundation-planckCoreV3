@@ -285,13 +285,6 @@ PEP_STATUS storeGroupKeys(
     if (status != PEP_STATUS_OK)
         return status;
     
-    // change sync_uuid when entering group 
-    // thus ignoring unprocessed handshakes
-    // addressed to previous self (sole) once in.
-    pEpUUID uuid;
-    uuid_generate_random(uuid);
-    uuid_unparse_upper(uuid, session->sync_uuid);
-
     return status;
 }
 
@@ -328,6 +321,7 @@ PEP_STATUS storeGroupUpdate(
 
     return status;
 }
+
 // makeGroup() - 
 //
 //  params:
@@ -349,6 +343,34 @@ PEP_STATUS makeGroup(
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
+    
+    // take that new uuid as group-id
+    status = set_device_group(session, session->sync_uuid);
+
+    return status;
+}
+
+// renewUUID() - 
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        ignored
+//      extra (in)          ignored
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS renewUUID(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
 
     // change sync_uuid when entering group 
     // thus ignoring unprocessed handshakes
@@ -357,9 +379,6 @@ PEP_STATUS makeGroup(
     uuid_generate_random(uuid);
     uuid_unparse_upper(uuid, session->sync_uuid);
     
-    // take that new uuid as group-id
-    status = set_device_group(session, session->sync_uuid);
-
     return status;
 }
 

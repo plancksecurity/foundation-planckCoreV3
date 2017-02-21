@@ -87,6 +87,7 @@ protocol DeviceGroup {
                     if keyElectionWon(partner) {
                         do makeGroup;
                         do sendGroupKeys(partner);
+                        do renewUUID;
                         do notifyAcceptedGroupCreated(partner);
                         go Grouped;
                     }
@@ -96,8 +97,12 @@ protocol DeviceGroup {
             }
             on Cancel go Sole;
             on GroupKeys(Identity partner, GroupKeys groupkeys) {
-                if sameIdentities(partner, expected) {
-                    go WaitForAcceptSole(partner, groupkeys);
+                if keyElectionWon(partner) {
+                    // not suppose to receive groupkeys - ignore
+                } else {
+                    if sameIdentities(partner, expected) {
+                        go WaitForAcceptSole(partner, groupkeys);
+                    }
                 }
             }
             on Timeout {
@@ -112,6 +117,7 @@ protocol DeviceGroup {
                 if sameIdentities(partner, expected) {
                     do storeGroupKeys(partner, groupkeys);
                     do sendGroupUpdate;
+                    do renewUUID;
                     do notifyAcceptedDeviceAdded(partner);
                     go Grouped;
                 }
@@ -132,10 +138,10 @@ protocol DeviceGroup {
                     do acceptHandshake(partner); 
                     do storeGroupKeys(partner, groupkeys);
                     do sendGroupUpdate;
+                    do renewUUID;
                     do notifyAcceptedDeviceAdded(partner);
                     go Grouped;
                 }
-                go Sole;
             }
             on Cancel go Sole;
             on Timeout {
@@ -230,6 +236,7 @@ protocol DeviceGroup {
                 if sameIdentities(partner, expected) {
                     do storeGroupKeys(partner, groupkeys);
                     do sendGroupUpdate;
+                    do renewUUID;
                     do notifyAcceptedDeviceMoved(partner);
                     go Grouped;
                 }
@@ -249,6 +256,7 @@ protocol DeviceGroup {
                 do acceptHandshake(partner); 
                 do storeGroupKeys(partner, groupkeys);
                 do sendGroupUpdate;
+                do renewUUID;
                 do notifyAcceptedDeviceMoved(partner);
                 go Grouped;
             }

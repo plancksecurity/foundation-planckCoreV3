@@ -85,6 +85,7 @@ PEP_STATUS rejectHandshake(PEP_SESSION session, DeviceState_state state, Identit
 PEP_STATUS acceptHandshake(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS makeGroup(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS sendGroupKeys(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS renewUUID(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS notifyAcceptedGroupCreated(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS notifyTimeout(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS storeGroupKeys(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
