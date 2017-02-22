@@ -63,7 +63,7 @@ PEP_STATUS receive_sync_msg(
 
             case DeviceGroup_Protocol__payload_PR_handshakeRequest:
                 // re-check uuid in case sync_uuid changed while in the queue
-                if (strncmp(session->sync_uuid,
+                if (strncmp(session->sync_session->sync_uuid,
                             (const char *)msg->payload.choice.handshakeRequest.partner_id->buf,
                             msg->payload.choice.handshakeRequest.partner_id->size) != 0){
                     status = PEP_SYNC_ILLEGAL_MESSAGE;
@@ -96,7 +96,7 @@ PEP_STATUS receive_sync_msg(
             case DeviceGroup_Protocol__payload_PR_groupKeys:
             {
                 // re-check uuid in case sync_uuid changed while in the queue
-                if (strncmp(session->sync_uuid,
+                if (strncmp(session->sync_session->sync_uuid,
                             (const char *)msg->payload.choice.groupKeys.partner_id->buf,
                             msg->payload.choice.groupKeys.partner_id->size) != 0){
                     status = PEP_SYNC_ILLEGAL_MESSAGE;
@@ -437,7 +437,7 @@ PEP_STATUS receive_DeviceState_msg(
                         // HandshakeRequest needs encryption
                         case DeviceGroup_Protocol__payload_PR_handshakeRequest:
                             if (rating < PEP_rating_reliable ||
-                                strncmp(session->sync_uuid,
+                                strncmp(session->sync_session->sync_uuid,
                                         (const char *)msg->payload.choice.handshakeRequest.partner_id->buf,
                                         msg->payload.choice.handshakeRequest.partner_id->size) != 0){
                                 discard = true;
@@ -450,7 +450,7 @@ PEP_STATUS receive_DeviceState_msg(
                         {
                             if (!keylist || rating < PEP_rating_reliable ||
                                 // message is only consumed by instance it is addressed to
-                                (strncmp(session->sync_uuid,
+                                (strncmp(session->sync_session->sync_uuid,
                                         (const char *)msg->payload.choice.groupKeys.partner_id->buf,
                                         msg->payload.choice.groupKeys.partner_id->size) != 0)){
                                 discard = true;
@@ -658,7 +658,7 @@ PEP_STATUS unicast_msg(
     
     int32_t seq = 0;
 
-    status = sequence_value(session, session->sync_uuid, &seq);
+    status = sequence_value(session, session->sync_session->sync_uuid, &seq);
     if (status != PEP_OWN_SEQUENCE && status != PEP_STATUS_OK)
         goto error;
 
@@ -669,7 +669,7 @@ PEP_STATUS unicast_msg(
         goto enomem;
 
     free(_me->user_id);
-    _me->user_id = strndup(session->sync_uuid, 36);
+    _me->user_id = strndup(session->sync_session->sync_uuid, 36);
     assert(_me->user_id);
     if (!_me->user_id)
         goto enomem;

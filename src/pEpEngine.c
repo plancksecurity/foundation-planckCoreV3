@@ -621,6 +621,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     _session->use_only_own_private_keys = false;
 #endif
 
+    // sync_session set to own session by default
+    // sync_session is then never null on a valid session
+    _session->sync_session = _session;
+
     *session = _session;
     return PEP_STATUS_OK;
 
@@ -2032,7 +2036,8 @@ DYNAMIC_API PEP_STATUS sequence_value(
         own = 1;
     }
     else {
-        if (name == session->sync_uuid || strcmp(name, session->sync_uuid) == 0)
+        if (name == session->sync_session->sync_uuid || 
+            strcmp(name, session->sync_session->sync_uuid) == 0)
             own = 1;
     }
 

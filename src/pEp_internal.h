@@ -81,7 +81,9 @@
 
 #define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
 
-typedef struct _pEpSession {
+struct _pEpSession;
+typedef struct _pEpSession pEpSession;
+struct _pEpSession {
     const char *version;
 #ifdef USE_GPG
     gpgme_ctx_t ctx;
@@ -146,6 +148,7 @@ typedef struct _pEpSession {
     retrieve_next_sync_msg_t retrieve_next_sync_msg;
 
     // key sync
+    pEpSession* sync_session;
     DeviceState_state sync_state;
     void* sync_state_payload;
     char sync_uuid[37];
@@ -159,7 +162,7 @@ typedef struct _pEpSession {
     bool use_only_own_private_keys;
     bool keep_sync_msg;
     
-} pEpSession;
+};
 
 PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
 void release_transport_system(PEP_SESSION session, bool out_last);
