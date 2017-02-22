@@ -160,14 +160,16 @@ static const char *sql_set_own_key =
 static const char *sql_sequence_value1 = 
     "insert or replace into sequences (name, value, own) "
     "values (?1, "
-    "(select coalesce((select value + 1 from sequences "
-    "where name = ?1), 1 )), ?2) ; ";
+    "       (select coalesce((select value + 1 from sequences "
+    "           where name = ?1), 1 )), "
+    "       (select coalesce((select own or ?2 from sequences "
+    "           where name = ?1), ?2))) ; ";
 
 static const char *sql_sequence_value2 = 
     "select value, own from sequences where name = ?1 ;";
 
 static const char *sql_sequence_value3 = 
-    "update sequences set value = ?2, own = ?3 where name = ?1 ;";
+    "update sequences set value = ?2, own = (select own or ?3 from sequences where name = ?1) where name = ?1 ;";
         
 // Revocation tracking
 static const char *sql_set_revoked =
