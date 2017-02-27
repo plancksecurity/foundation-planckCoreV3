@@ -39,7 +39,7 @@ int main() {
 //    free(name1);
 
     cout << "testing sequence violation\n";
-    int32_t value3 = value2 - 1;
+    int32_t value3 = value2;
     PEP_STATUS status4 = sequence_value(session, name1, &value3);
     assert(status4 == PEP_SEQUENCE_VIOLATED);
 

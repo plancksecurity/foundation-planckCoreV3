@@ -160,14 +160,16 @@ static const char *sql_set_own_key =
 static const char *sql_sequence_value1 = 
     "insert or replace into sequences (name, value, own) "
     "values (?1, "
-    "(select coalesce((select value + 1 from sequences "
-    "where name = ?1), 1 )), ?2) ; ";
+    "       (select coalesce((select value + 1 from sequences "
+    "           where name = ?1), 1 )), "
+    "       (select coalesce((select own or ?2 from sequences "
+    "           where name = ?1), ?2))) ; ";
 
 static const char *sql_sequence_value2 = 
     "select value, own from sequences where name = ?1 ;";
 
 static const char *sql_sequence_value3 = 
-    "update sequences set value = ?2, own = ?3 where name = ?1 ;";
+    "update sequences set value = ?2, own = (select own or ?3 from sequences where name = ?1) where name = ?1 ;";
         
 // Revocation tracking
 static const char *sql_set_revoked =
@@ -388,56 +390,70 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         );
         assert(int_result == SQLITE_OK);
 
-        if (version < 1) {
-            int_result = sqlite3_exec(
-                _session->db,
-                "alter table identity\n"
-                "   add column flags integer default 0;\n",
-                NULL,
-                NULL,
-                NULL
-            );
-        }
+        if(version != 0) { 
+            // Version has been already set
 
-        if (version < 2) {
-            int_result = sqlite3_exec(
-                _session->db,
-                "alter table pgp_keypair\n"
-                "   add column flags integer default 0;\n"
-                "alter table person\n"
-                "   add column device_group text;\n",
-                NULL,
-                NULL,
-                NULL
-            );
-        }
+            // Early mistake : version 0 shouldn't have existed.
+            // Numbering should have started at 1 to detect newly created DB.
+            // Version 0 DBs are not anymore compatible.
 
-        if (version < 3) {
-            int_result = sqlite3_exec(
-                _session->db,
-                "alter table sequences\n"
-                "   add column own integer default 0;\n",
-                NULL,
-                NULL,
-                NULL
-            );
-        }
+            // // Was version 0 compat code.
+            // if (version < 1) {
+            //     int_result = sqlite3_exec(
+            //         _session->db,
+            //         "alter table identity\n"
+            //         "   add column flags integer default 0;\n",
+            //         NULL,
+            //         NULL,
+            //         NULL
+            //     );
+            //     assert(int_result == SQLITE_OK);
+            // }
 
-        if (version < 5) {
-            int_result = sqlite3_exec(
-                _session->db,
-                "delete from pgp_keypair where fpr = '';",
-                NULL,
-                NULL,
-                NULL
-            );
-            int_result = sqlite3_exec(
-                _session->db,
-                "delete from trust where pgp_keypair_fpr = '';",
-                NULL,
-                NULL,
-                NULL
-            );
+            if (version < 2) {
+                int_result = sqlite3_exec(
+                    _session->db,
+                    "alter table pgp_keypair\n"
+                    "   add column flags integer default 0;\n"
+                    "alter table person\n"
+                    "   add column device_group text;\n",
+                    NULL,
+                    NULL,
+                    NULL
+                );
+                assert(int_result == SQLITE_OK);
+            }
+
+            if (version < 3) {
+                int_result = sqlite3_exec(
+                    _session->db,
+                    "alter table sequences\n"
+                    "   add column own integer default 0;\n",
+                    NULL,
+                    NULL,
+                    NULL
+                );
+                assert(int_result == SQLITE_OK);
+            }
+
+            if (version < 5) {
+                int_result = sqlite3_exec(
+                    _session->db,
+                    "delete from pgp_keypair where fpr = '';",
+                    NULL,
+                    NULL,
+                    NULL
+                );
+                assert(int_result == SQLITE_OK);
+                int_result = sqlite3_exec(
+                    _session->db,
+                    "delete from trust where pgp_keypair_fpr = '';",
+                    NULL,
+                    NULL,
+                    NULL
+                );
+                assert(int_result == SQLITE_OK);
+            }
         }
 
         if (version < atoi(_DDL_USER_VERSION)) {
@@ -618,6 +634,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 #else
     _session->use_only_own_private_keys = false;
 #endif
+
+    // sync_session set to own session by default
+    // sync_session is then never null on a valid session
+    _session->sync_session = _session;
 
     *session = _session;
     return PEP_STATUS_OK;
@@ -2030,7 +2050,8 @@ DYNAMIC_API PEP_STATUS sequence_value(
         own = 1;
     }
     else {
-        if (name == session->sync_uuid || strcmp(name, session->sync_uuid) == 0)
+        if (name == session->sync_session->sync_uuid || 
+            strcmp(name, session->sync_session->sync_uuid) == 0)
             own = 1;
     }
 

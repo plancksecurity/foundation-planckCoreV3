@@ -1582,7 +1582,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             *rating = PEP_rating_unencrypted;
             if (imported_keys)
                 remove_attached_keys(src);
-            if(session->inject_sync_msg){
+            if(session->sync_session->inject_sync_msg){
                 status = receive_DeviceState_msg(session, src, *rating, *keylist);
                 if (status == PEP_MESSAGE_CONSUME ||
                     status == PEP_MESSAGE_IGNORE) {
@@ -1963,7 +1963,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         decorate_message(msg, *rating, _keylist);
         if (imported_keys)
             remove_attached_keys(msg);
-        if (*rating >= PEP_rating_reliable && session->inject_sync_msg) {
+        if (*rating >= PEP_rating_reliable &&
+            session->sync_session->inject_sync_msg) {
             status = receive_DeviceState_msg(session, msg, *rating, _keylist);
             if (status == PEP_MESSAGE_CONSUME ||
                 status == PEP_MESSAGE_IGNORE) {

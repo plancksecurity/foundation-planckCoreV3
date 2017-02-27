@@ -42,7 +42,6 @@ tstylesheet {
 
         typedef pEp_identity * Identity;
         typedef stringlist_t * Stringlist;
-        typedef union _param { Identity partner; stringlist_t *keylist; } param_t;
 
         // error values
 
@@ -186,6 +185,11 @@ tstylesheet {
         ||
         #include "pEp_internal.h"
         #include "«@filename»_fsm.h"
+        #include "«@filename»_impl.h"
+
+        // local definitions for «@name»'s state machine 
+
+        `` apply "state", 0 mode="declStatePayload"
 
         // state machine for «@name»
 
@@ -198,7 +202,6 @@ tstylesheet {
                 time_t *timeout
             )
         {
-            int cond_result;
             PEP_STATUS status = PEP_STATUS_OK;
 
             switch (state) {
@@ -213,38 +216,103 @@ tstylesheet {
         ||
     }
 
-    template "state"
-    ||
-    case «@name»:
-    {
-        `` if "count(parm) > 1" error | # TODO composite state payload 
-        `` apply "parm", 1 mode="stateParm"
-        *timeout = «@timeout»;
-        DEBUG_LOG("Entering FSM state", "«../@filename»_fsm.c", "state=«@name»")
-        switch (event) {
-        `` if "not(event[@name='Init'])" |>> case Init: DEBUG_LOG("FSM event", "«../@filename»_fsm.c, state=«@name»", "event=Init") break;
-        `` apply "event", 2
-            default:
-                return («../@name»_state) invalid_event;
+    template "state" {
+        ||
+        case «@name»:
+        {
+            DEBUG_LOG("Entering FSM state", "«../@filename»_fsm.c", "state=«@name»")
+        ||
+
+        if "count(parm) > 0" 
+        || 
+            assert(session->sync_state_payload);
+            if(!session->sync_state_payload) return («../@name»_state) invalid_state;
+            `` apply "parm", 1 mode="unpackStatePayloadParm" with "stateName", "@name"
+        ||
+
+        ||
+            *timeout = «@timeout»;
+            switch (event) {
+        ||
+
+        if "not(event[@name='Init'])" 
+        ||
+                case Init: 
+                    DEBUG_LOG("FSM event", "«../@filename»_fsm.c, state=«@name»", "event=Init") 
+                    break;
+        ||
+
+        apply "event", 2;
+
+        ||
+                default:
+                    return («../@name»_state) invalid_event;
+            }
+            break;
         }
-        break;
-    }
-    ||
-
-    template "parm" mode="stateParm" 
-    {
-        | «name(*[1])» «name(*[2])» = («name(*[1])»)session->sync_state_payload;
+        ||
     }
 
-    template "event"
-    ||
-    case «@name»:
-    {
-        DEBUG_LOG("FSM event", "«../../@filename»_fsm.c, state=«../@name»", "event=«@name»")
-    `` apply "action|transition|condition";
-    `` if "name(*[position()=last()]) != 'transition'" |> break;
+    function "pEp_type" {
+        param "type";
+
+        choose {
+            when "$type = 'Identity'" > Identity
+            when "$type = 'IdentityList'" > identity_list*
+            when "$type = 'GroupKeys'" > group_keys_extra_t*
+            otherwise value "$type";
+        }
     }
+
+    function "pEp_type_op_radix" {
+        param "type";
+
+        choose {
+            when "$type = 'Identity'" > identity
+            when "$type = 'IdentityList'" > identity_list
+            when "$type = 'GroupKeys'" > group_keys_extra
+            otherwise call "pEp_type" with "type", "$type";
+        }
+    }
+
+    template "parm" mode="unpackStatePayloadParm" 
+    {
+        param "stateName";
+        const "pEpType" call "pEp_type" with "type","name(*[1])"; 
+        | «$pEpType» «name(*[2])» = ((«$stateName»_state_payload_t*)session->sync_state_payload)->«name(*[2])»;
+    }
+
+    template "state" mode="declStatePayload" if "count(parm) > 0"
     ||
+    typedef struct _«@name»_state_payload {
+        `` apply "parm", 1 mode="declStatePayloadParm"
+    } «@name»_state_payload_t;
+
+    ||
+
+    template "parm" mode="declStatePayloadParm" {
+        const "pEpType" call "pEp_type" with "type","name(*[1])"; 
+        | «$pEpType» «name(*[2])»;
+    }
+
+    template "event" {
+        ||
+        case «@name»:
+        {
+            DEBUG_LOG("FSM event", "«../../@filename»_fsm.c, state=«../@name»", "event=«@name»")
+        ||
+        if "count(parm) > 1" {
+            // TODO get ride of void *extra, pass per-event struct incl all params.
+            const "extrapEpType" call "pEp_type" with "type","name(parm[2]/*[1])"; 
+            const "extraArgName","name(parm[2]/*[2])"; 
+            |> «$extrapEpType» «$extraArgName» = («$extrapEpType»)extra;
+        }
+        ||
+        `` apply "action|transition|condition";
+        `` if "name(*[position()=last()]) != 'transition'" |> break;
+        }
+        ||
+    }
 
     template "action" {
         | DEBUG_LOG("FSM action", "«ancestor::fsm/@filename»_fsm.c, state=«ancestor::state/@name», event=«ancestor::event/@name»", "action=«@name»")
@@ -255,7 +323,7 @@ tstylesheet {
             otherwise > NULL
         }
         choose {
-            when "parm[2]" > , extra /*«name(parm[2]/*)»*/
+            when "count(parm) > 1" > , «name(parm[2]/*)»
             otherwise > , NULL
         }
         > );\n
@@ -266,23 +334,25 @@ tstylesheet {
     }
 
     template "condition" {
-        | cond_result = «@name»(session`apply "parm", 0`);
-        | #ifndef NDEBUG
-        | char resstr[11] = {0,};
-        | snprintf(resstr,10,"result=%d",cond_result);
-        | #endif
-        | DEBUG_LOG("FSM condition", "«ancestor::fsm/@filename»_fsm.c, state=«ancestor::state/@name», event=«ancestor::event/@name», condition=«@name»", resstr)
-        | if (cond_result < 0)
-        |> return cond_result;
-        | if (cond_result) {
+        | {
+        |> int cond_result = «@name»(session`apply "parm", 0`);
+        |> #ifndef NDEBUG
+        |> char resstr[11] = {0,};
+        |> snprintf(resstr,10,"result=%d",cond_result);
+        |> #endif
+        |> DEBUG_LOG("FSM condition", "«ancestor::fsm/@filename»_fsm.c, state=«ancestor::state/@name», event=«ancestor::event/@name», condition=«@name»", resstr)
+        |> if (cond_result < 0)
+        |>> return cond_result;
+        |> if (cond_result) {
         apply "action|transition|condition";
-        | }
+        |> }
         const "else", "./following-sibling::*[position()=1][name(.)='else']";
         if "$else" {
-        | else {
-        apply "$else/action|transition|condition";
-        | }
+        |> else {
+        apply "$else/action|$else/transition|$else/condition";
+        |> }
         }
+        | }
     }
 
     template "parm" choose {
@@ -294,19 +364,49 @@ tstylesheet {
 
     template "transition"{
         const "stateparm", "ancestor::state/child::parm";
-        if "$stateparm" {
-            | if(session->sync_state_payload){
-            |     free_«yml:lcase(name($stateparm[1]/*))»((«name($stateparm[1]/*)»)session->sync_state_payload);
-            |     session->sync_state_payload = NULL;
-            | }
+        if "count($stateparm) > 0" {
+            ||
+            assert(session->sync_state_payload);
+            if(!session->sync_state_payload) return («ancestor::fsm/@name»_state) invalid_state;
+            `` apply "$stateparm", 0 mode="freeStatePayloadParm" with "stateName", "ancestor::state/@name"
+            free(session->sync_state_payload);
+            session->sync_state_payload = NULL;
+            ||
         }
-        if "parm" {
+        if "count(parm) > 0" {
             const "nextstatename", "@target";
             const "nextstateparm", "ancestor::fsm/child::state[@name = $nextstatename]/child::parm";
-            | session->sync_state_payload = «yml:lcase(name($nextstateparm/*))»_dup(«name(parm/*)»);
+            if "count(parm) != count($nextstateparm)" 
+                error > different state parameters and transition parameters count state=«ancestor::state/@name», event=«ancestor::event/@name» target=«@target»
+            ||
+            session->sync_state_payload = malloc(sizeof(«$nextstatename»_state_payload_t));
+            assert(session->sync_state_payload);
+            if(!session->sync_state_payload) return («ancestor::fsm/@name»_state) invalid_out_of_memory;
+            ||
+            apply "$nextstateparm", 0 mode="dupStatePayloadParm" {
+                with "stateName", "$nextstatename";
+                with "transitionParms", "parm";
+            }
         }
         | DEBUG_LOG("FSM transition", "«ancestor::fsm/@filename»_fsm.c, state=«ancestor::state/@name», event=«ancestor::event/@name»", "target=«@target»")
         | return «@target»;
+    }
+
+    template "parm" mode="freeStatePayloadParm" 
+    {
+        param "stateName";
+        const "pEpTypeOpRadix" call "pEp_type_op_radix" with "type","name(*[1])"; 
+        | free_«$pEpTypeOpRadix»(((«$stateName»_state_payload_t*)session->sync_state_payload)->«name(*[2])»);
+    }
+
+    template "parm" mode="dupStatePayloadParm" 
+    {
+        param "stateName";
+        param "transitionParms";
+        const "pEpTypeOpRadix" call "pEp_type_op_radix" with "type","name(*[1])"; 
+        const "pos", "position()";
+        | ((«$stateName»_state_payload_t*)session->sync_state_payload)->«name(*[2])» =
+        |     «$pEpTypeOpRadix»_dup(«name($transitionParms[$pos]/*)»);
     }
 }
 

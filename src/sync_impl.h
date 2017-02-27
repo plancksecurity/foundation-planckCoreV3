@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "../asn.1/DeviceGroup-Protocol.h"
 #include "message.h"
 #include "sync.h"
 #include "sync_fsm.h"
@@ -10,6 +11,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct _group_keys_extra {
+    identity_list *group_keys;
+    char *group_id;
+} group_keys_extra_t;
+
+void free_group_keys_extra(group_keys_extra_t* groupkeys);
+group_keys_extra_t* group_keys_extra_dup(group_keys_extra_t* groupkeys);
 
 PEP_STATUS receive_sync_msg(
         PEP_SESSION session,
