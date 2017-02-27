@@ -810,13 +810,14 @@ static PEP_rating worst_rating(PEP_rating rating1, PEP_rating rating2) {
 
 static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist)
 {
-    PEP_rating rating = PEP_rating_reliable;
+    PEP_rating rating = PEP_rating_undefined;
 
     assert(keylist && keylist->value);
     if (keylist == NULL || keylist->value == NULL)
         return PEP_rating_undefined;
 
     stringlist_t *_kl;
+    bool first = true;
     for (_kl = keylist; _kl && _kl->value; _kl = _kl->next) {
         PEP_comm_type ct;
         PEP_STATUS status;
@@ -825,8 +826,12 @@ static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist)
          
         if (_rating_ <= PEP_rating_mistrust)
             return _rating_;
-
-        if (rating == PEP_rating_undefined)
+            
+        if (first) {
+            rating = _rating_;
+            first = false;
+        }
+        else if (rating == PEP_rating_undefined)
             rating = worst_rating(rating, _rating_);
 
         if (_rating_ >= PEP_rating_reliable) {
@@ -835,7 +840,8 @@ static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist)
                 return PEP_rating_undefined;
             if (ct == PEP_ct_unknown){
                 if (rating >= PEP_rating_reliable){
-                    rating = worst_rating(rating, PEP_rating_reliable);
+                    //rating = worst_rating(rating, PEP_rating_reliable);
+                    rating = PEP_rating_reliable; /*KG - really???*/
                 }
             }
             else{
@@ -1930,7 +1936,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                         goto enomem;
                     status = get_trust(session, _from);
                     if (_from->comm_type != PEP_ct_unknown)
-                        *rating = _rating(_from->comm_type, PEP_rating_undefined);
+                        *rating = worst_rating(*rating, _rating(_from->comm_type, PEP_rating_undefined));
                     free_identity(_from);
                     if (status == PEP_CANNOT_FIND_IDENTITY)
                        status = PEP_STATUS_OK;
