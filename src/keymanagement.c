@@ -779,10 +779,10 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     assert(!EMPTYSTR(ident->address));
     assert(!EMPTYSTR(ident->user_id));
     assert(!EMPTYSTR(ident->fpr));
-    assert(!ident->me);
+//    assert(!ident->me);
 
     if (!ident || EMPTYSTR(ident->address) || EMPTYSTR(ident->user_id) ||
-            EMPTYSTR(ident->fpr) || ident->me)
+            EMPTYSTR(ident->fpr)) // || ident->me)
         return PEP_ILLEGAL_VALUE;
 
     status = update_identity(session, ident);
