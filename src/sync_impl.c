@@ -31,6 +31,25 @@ struct _sync_msg_t {
     } u;
 };
 
+static bool _is_own_uuid( PEP_SESSION session, UTF8String_t *uuid)
+{
+    return strncmp(session->sync_session->sync_uuid,
+                   (const char*)uuid->buf, uuid->size) != 0;
+}
+
+static bool _is_own_group_uuid( PEP_SESSION session, UTF8String_t *uuid)
+{
+    PEP_STATUS status;
+    char *devgrp = NULL;
+
+    status = get_device_group(session, &devgrp);
+
+    bool res = (status == PEP_STATUS_OK && devgrp && devgrp[0] &&
+        strncmp(devgrp,(const char*)uuid->buf, uuid->size) == 0);
+    free(devgrp);
+    return res;
+}
+
 PEP_STATUS receive_sync_msg(
         PEP_SESSION session,
         sync_msg_t *sync_msg,
@@ -54,6 +73,13 @@ PEP_STATUS receive_sync_msg(
             goto error;
         }
 
+        partner = Identity_to_Struct(&msg->header.me, NULL);
+        if (!partner){
+            status = PEP_OUT_OF_MEMORY;
+            ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+            goto error;
+        }
+
         msgIsFromGroup = msg->header.devicegroup;
 
         switch (msg->payload.present) {
@@ -63,6 +89,9 @@ PEP_STATUS receive_sync_msg(
 
             case DeviceGroup_Protocol__payload_PR_handshakeRequest:
                 // re-check uuid in case sync_uuid changed while in the queue
+
+// TODO check matching group-ID as well
+
                 if (strncmp(session->sync_session->sync_uuid,
                             (const char *)msg->payload.choice.handshakeRequest.partner_id->buf,
                             msg->payload.choice.handshakeRequest.partner_id->size) != 0){
@@ -74,16 +103,19 @@ PEP_STATUS receive_sync_msg(
                     char *devgrp = NULL;
                     status = get_device_group(session, &devgrp);
 
-                    // if handshake request comes from same group ignore, ignore it
+                    // if handshake request comes from same group, ignore it
                     if (status == PEP_STATUS_OK && devgrp && devgrp[0] &&
                         strncmp(devgrp,
                                 (const char *)msg->payload.choice.handshakeRequest.group_id->buf,
-                                msg->payload.choice.handshakeRequest.group_id->size) != 0){
+                                msg->payload.choice.handshakeRequest.group_id->size) == 0){
                         status = PEP_SYNC_ILLEGAL_MESSAGE;
                         goto error;
                     }
                     free(devgrp);
                     // if it comes from another group, then this is groupmerge
+                    
+// TODO insert handshake request's group id into partner's id
+
                 }
 
                 event = HandshakeRequest;
@@ -159,12 +191,6 @@ PEP_STATUS receive_sync_msg(
                 goto error;
         }
 
-        partner = Identity_to_Struct(&msg->header.me, NULL);
-        if (!partner){
-            status = PEP_OUT_OF_MEMORY;
-            ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
-            goto error;
-        }
     }
     else{
         partner = sync_msg->u.event.partner;
@@ -437,6 +463,9 @@ PEP_STATUS receive_DeviceState_msg(
                         // HandshakeRequest needs encryption
                         case DeviceGroup_Protocol__payload_PR_handshakeRequest:
                             if (rating < PEP_rating_reliable ||
+
+// TODO check matching group-ID as well
+
                                 strncmp(session->sync_session->sync_uuid,
                                         (const char *)msg->payload.choice.handshakeRequest.partner_id->buf,
                                         msg->payload.choice.handshakeRequest.partner_id->size) != 0){
