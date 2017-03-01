@@ -453,18 +453,22 @@ PEP_STATUS receive_DeviceState_msg(
                     switch (msg->payload.present) {
                         // HandshakeRequest needs encryption
                         case DeviceGroup_Protocol__payload_PR_handshakeRequest:
+                        {
+                            bool is_for_me = _is_own_uuid(session, 
+                                msg->payload.choice.handshakeRequest.partner_id);
+                            bool is_for_group = !is_for_me && _is_own_group_uuid(session, 
+                                msg->payload.choice.handshakeRequest.partner_id);
                             if (rating < PEP_rating_reliable ||
-                                !_is_own_uuid(session, 
-                                    msg->payload.choice.handshakeRequest.partner_id)){
-
-// TODO check matching group-ID as well
-// TODO if handshake request is for group then dont consume
-
+                                !(is_for_me || is_for_group)){
                                 discard = true;
                                 goto free_all;
                             }
-                            
+                            if(is_for_group){ 
+                                // if handshake request is for group then dont consume
+                                force_keep_msg = true;
+                            }
                             break;
+                        }
                         // accepting GroupKeys needs encryption and trust of peer device
                         case DeviceGroup_Protocol__payload_PR_groupKeys:
                         {
