@@ -34,7 +34,7 @@ struct _sync_msg_t {
 static bool _is_own_uuid( PEP_SESSION session, UTF8String_t *uuid)
 {
     return strncmp(session->sync_session->sync_uuid,
-                   (const char*)uuid->buf, uuid->size) != 0;
+                   (const char*)uuid->buf, uuid->size) == 0;
 }
 
 static bool _is_own_group_uuid( PEP_SESSION session, UTF8String_t *uuid)
@@ -92,26 +92,18 @@ PEP_STATUS receive_sync_msg(
 
 // TODO check matching group-ID as well
 
-                if (strncmp(session->sync_session->sync_uuid,
-                            (const char *)msg->payload.choice.handshakeRequest.partner_id->buf,
-                            msg->payload.choice.handshakeRequest.partner_id->size) != 0){
+                if (!_is_own_uuid(session, 
+                        msg->payload.choice.handshakeRequest.partner_id)){
                     status = PEP_SYNC_ILLEGAL_MESSAGE;
                     goto error;
                 }
 
                 if(msgIsFromGroup) {
-                    char *devgrp = NULL;
-                    status = get_device_group(session, &devgrp);
-
-                    // if handshake request comes from same group, ignore it
-                    if (status == PEP_STATUS_OK && devgrp && devgrp[0] &&
-                        strncmp(devgrp,
-                                (const char *)msg->payload.choice.handshakeRequest.group_id->buf,
-                                msg->payload.choice.handshakeRequest.group_id->size) == 0){
+                    if(_is_own_group_uuid(session, 
+                           msg->payload.choice.handshakeRequest.group_id)) {
                         status = PEP_SYNC_ILLEGAL_MESSAGE;
                         goto error;
                     }
-                    free(devgrp);
                     // if it comes from another group, then this is groupmerge
                     
 // TODO insert handshake request's group id into partner's id
@@ -128,9 +120,8 @@ PEP_STATUS receive_sync_msg(
             case DeviceGroup_Protocol__payload_PR_groupKeys:
             {
                 // re-check uuid in case sync_uuid changed while in the queue
-                if (strncmp(session->sync_session->sync_uuid,
-                            (const char *)msg->payload.choice.groupKeys.partner_id->buf,
-                            msg->payload.choice.groupKeys.partner_id->size) != 0){
+                if (!_is_own_uuid(session, 
+                        msg->payload.choice.groupKeys.partner_id)){
                     status = PEP_SYNC_ILLEGAL_MESSAGE;
                     goto error;
                 }
@@ -463,12 +454,12 @@ PEP_STATUS receive_DeviceState_msg(
                         // HandshakeRequest needs encryption
                         case DeviceGroup_Protocol__payload_PR_handshakeRequest:
                             if (rating < PEP_rating_reliable ||
+                                !_is_own_uuid(session, 
+                                    msg->payload.choice.handshakeRequest.partner_id)){
 
 // TODO check matching group-ID as well
+// TODO if handshake request is for group then dont consume
 
-                                strncmp(session->sync_session->sync_uuid,
-                                        (const char *)msg->payload.choice.handshakeRequest.partner_id->buf,
-                                        msg->payload.choice.handshakeRequest.partner_id->size) != 0){
                                 discard = true;
                                 goto free_all;
                             }
@@ -479,9 +470,8 @@ PEP_STATUS receive_DeviceState_msg(
                         {
                             if (!keylist || rating < PEP_rating_reliable ||
                                 // message is only consumed by instance it is addressed to
-                                (strncmp(session->sync_session->sync_uuid,
-                                        (const char *)msg->payload.choice.groupKeys.partner_id->buf,
-                                        msg->payload.choice.groupKeys.partner_id->size) != 0)){
+                                !_is_own_uuid(session, 
+                                    msg->payload.choice.groupKeys.partner_id)){
                                 discard = true;
                                 goto free_all;
                             }
