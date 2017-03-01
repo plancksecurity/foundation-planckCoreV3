@@ -88,19 +88,21 @@ PEP_STATUS receive_sync_msg(
                 break;
 
             case DeviceGroup_Protocol__payload_PR_handshakeRequest:
-                // re-check uuid in case sync_uuid changed while in the queue
-
-// TODO check matching group-ID as well
-
-                if (!_is_own_uuid(session, 
-                        msg->payload.choice.handshakeRequest.partner_id)){
+            {
+                // re-check uuid in case sync_uuid or group changed while in the queue
+                bool is_for_me = _is_own_uuid(session, 
+                    msg->payload.choice.handshakeRequest.partner_id);
+                bool is_for_group = !is_for_me && _is_own_group_uuid(session, 
+                    msg->payload.choice.handshakeRequest.partner_id);
+                if (!(is_for_me || is_for_group)){
                     status = PEP_SYNC_ILLEGAL_MESSAGE;
                     goto error;
                 }
 
                 if(msgIsFromGroup) {
-                    if(_is_own_group_uuid(session, 
-                           msg->payload.choice.handshakeRequest.group_id)) {
+                    bool is_from_group = _is_own_group_uuid(session, 
+                        msg->payload.choice.handshakeRequest.group_id);
+                    if(is_from_group) {
                         status = PEP_SYNC_ILLEGAL_MESSAGE;
                         goto error;
                     }
@@ -113,6 +115,7 @@ PEP_STATUS receive_sync_msg(
                 event = HandshakeRequest;
                 break;
 
+            }
             case DeviceGroup_Protocol__payload_PR_updateRequest:
                 event = UpdateRequest;
                 break;
@@ -458,13 +461,15 @@ PEP_STATUS receive_DeviceState_msg(
                                 msg->payload.choice.handshakeRequest.partner_id);
                             bool is_for_group = !is_for_me && _is_own_group_uuid(session, 
                                 msg->payload.choice.handshakeRequest.partner_id);
+                            // Reject handshake requests not addressed to us
                             if (rating < PEP_rating_reliable ||
                                 !(is_for_me || is_for_group)){
                                 discard = true;
                                 goto free_all;
                             }
+
+                            // do not consume handshake request for group
                             if(is_for_group){ 
-                                // if handshake request is for group then dont consume
                                 force_keep_msg = true;
                             }
                             break;
