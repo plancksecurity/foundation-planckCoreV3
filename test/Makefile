@@ -25,7 +25,7 @@ TARGET=pEpEngineTest
 
 UNIT_TESTS_SOURCE=$(wildcard *_test.cc)
 UNIT_TESTS=$(subst .cc,,$(UNIT_TESTS_SOURCE))
-UNIT_TESTS_RUN=$(subst .cc,_gdb,$(UNIT_TESTS_SOURCE))
+UNIT_TESTS_RUN=$(subst .cc,_run,$(UNIT_TESTS_SOURCE))
 
 all: $(TARGET) $(UNIT_TESTS)
 
