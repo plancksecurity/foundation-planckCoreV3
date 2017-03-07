@@ -786,12 +786,6 @@ DYNAMIC_API PEP_STATUS log_event(
     assert(title);
     assert(entity);
 
-    #ifndef NDEBUG
-    #ifdef ANDROID
-    LOGD(" %s :: %s :: %s ", title, entity, description);
-    #endif
-    #endif
-
     if (!(session && title && entity))
         return PEP_ILLEGAL_VALUE;
 
