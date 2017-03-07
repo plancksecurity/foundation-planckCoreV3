@@ -208,10 +208,12 @@ protocol DeviceGroup {
             }
             on HandshakeRejected(Identity partner) {
                 do rejectHandshake(partner);             // stores rejection of partner
+                do sendGroupUpdate;
                 go Grouped;
             }
             on HandshakeAccepted(Identity partner) {
                 do acceptHandshake(partner); 
+                do sendGroupUpdate;
                 if keyElectionWon(partner) {
                     do sendGroupKeys(partner);
                     do notifyAcceptedDeviceAdded(partner);
@@ -224,6 +226,11 @@ protocol DeviceGroup {
                 if sameIdentities(partner, expected) {
                     go WaitForAcceptGrouped(partner, groupkeys);
                 }
+            }
+            on GroupUpdate(Identity partner, IdentityList keys) {
+                do notifyOvertaken(partner);
+                do storeGroupUpdate(partner, keys);
+                go Grouped;
             }
             on Timeout {
                 do notifyTimeout(expected);
@@ -241,6 +248,11 @@ protocol DeviceGroup {
                     go Grouped;
                 }
             }
+            on GroupUpdate(Identity partner, IdentityList keys) {
+                do notifyOvertaken(partner);
+                do storeGroupUpdate(partner, keys);
+                go Grouped;
+            }
             on Timeout {
                 do notifyTimeout(expected);
                 go Grouped;
@@ -250,6 +262,7 @@ protocol DeviceGroup {
         state WaitForAcceptGrouped timeout=600 (Identity expected, GroupKeys groupkeys) {
             on HandshakeRejected(Identity partner) {
                 do rejectHandshake(partner);
+                do sendGroupUpdate;
                 go Grouped;
             }
             on HandshakeAccepted(Identity partner) {
@@ -261,6 +274,11 @@ protocol DeviceGroup {
                 go Grouped;
             }
             on Cancel go Grouped;
+            on GroupUpdate(Identity partner, IdentityList keys) {
+                do notifyOvertaken(partner);
+                do storeGroupUpdate(partner, keys);
+                go Grouped;
+            }
             on Timeout {
                 do notifyTimeout(expected);
                 go Grouped;
