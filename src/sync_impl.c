@@ -37,16 +37,24 @@ static bool _is_own_uuid( PEP_SESSION session, UTF8String_t *uuid)
                    (const char*)uuid->buf, uuid->size) == 0;
 }
 
-static bool _is_own_group_uuid( PEP_SESSION session, UTF8String_t *uuid)
+static bool _is_own_group_uuid( PEP_SESSION session, UTF8String_t *uuid, char** our_group)
 {
-    PEP_STATUS status;
+    PEP_STATUS status = PEP_STATUS_OK;
     char *devgrp = NULL;
 
-    status = get_device_group(session, &devgrp);
+    if(our_group == NULL || *our_group == NULL)
+        status = get_device_group(session, &devgrp);
+    else
+        devgrp = *our_group;
 
     bool res = (status == PEP_STATUS_OK && devgrp && devgrp[0] &&
         strncmp(devgrp,(const char*)uuid->buf, uuid->size) == 0);
-    free(devgrp);
+
+    if(our_group == NULL)
+        free(devgrp);
+    else if(*our_group == NULL)
+        *our_group = devgrp;
+
     return res;
 }
 
@@ -90,26 +98,41 @@ PEP_STATUS receive_sync_msg(
             case DeviceGroup_Protocol__payload_PR_handshakeRequest:
             {
                 // re-check uuid in case sync_uuid or group changed while in the queue
+                char *own_group_id = NULL;
                 bool is_for_me = _is_own_uuid(session, 
                     msg->payload.choice.handshakeRequest.partner_id);
                 bool is_for_group = !is_for_me && _is_own_group_uuid(session, 
-                    msg->payload.choice.handshakeRequest.partner_id);
+                    msg->payload.choice.handshakeRequest.partner_id, &own_group_id);
                 if (!(is_for_me || is_for_group)){
-                    status = PEP_SYNC_ILLEGAL_MESSAGE;
+                    status = PEP_MESSAGE_IGNORE;
                     goto error;
                 }
 
-                if(msgIsFromGroup) {
-                    bool is_from_group = _is_own_group_uuid(session, 
-                        msg->payload.choice.handshakeRequest.group_id);
-                    if(is_from_group) {
-                        status = PEP_SYNC_ILLEGAL_MESSAGE;
+                UTF8String_t *guuid = msg->payload.choice.handshakeRequest.group_id;
+                if(msgIsFromGroup && guuid && guuid->buf && guuid->size) {
+                    bool is_from_own_group = _is_own_group_uuid(session, 
+                                                                guuid, &own_group_id);
+
+                    // Filter handshake requests from own group
+                    if(is_from_own_group) {
+                        status = PEP_MESSAGE_IGNORE;
                         goto error;
                     }
-                    // if it comes from another group, then this is groupmerge
-                    
-// TODO insert handshake request's group id into partner's id
 
+                    // if it comes from another group, 
+                    // we want to communicate with that group
+                    // insert group_id given in handshake request 
+                    // into partner's id
+
+                    free(partner->user_id);
+                    partner->user_id = strndup((const char*)guuid->buf, guuid->size);
+                    if(partner->user_id == NULL){
+                        status = PEP_OUT_OF_MEMORY;
+                        goto error;
+                    }
+
+                    // if it comes from another group, and we are grouped,
+                    // then this is groupmerge
                 }
 
                 event = HandshakeRequest;
@@ -122,12 +145,47 @@ PEP_STATUS receive_sync_msg(
 
             case DeviceGroup_Protocol__payload_PR_groupKeys:
             {
-                // re-check uuid in case sync_uuid changed while in the queue
-                if (!_is_own_uuid(session, 
-                        msg->payload.choice.groupKeys.partner_id)){
+                // re-check uuid in case sync_uuid or group_uuid changed while in the queue
+                char *own_group_id = NULL;
+                UTF8String_t *puuid = msg->payload.choice.groupKeys.partner_id;
+                bool is_for_me = _is_own_uuid(session, puuid);
+                bool is_for_group = !is_for_me &&
+                                    _is_own_group_uuid(session, 
+                                        puuid, &own_group_id);
+                if (!(is_for_me || is_for_group)){
+                    status = PEP_MESSAGE_IGNORE;
+                    goto error;
+                }
+
+                UTF8String_t *guuid = msg->payload.choice.groupKeys.group_id;
+
+                // GroupKeys come from groups, no choice
+                if(!(msgIsFromGroup && guuid && guuid->buf && guuid->size)) {
                     status = PEP_SYNC_ILLEGAL_MESSAGE;
                     goto error;
                 }
+
+                // Filter groupKeys from own group
+                bool is_from_own_group = _is_own_group_uuid(session, 
+                                                            guuid, 
+                                                            &own_group_id);
+                if(is_from_own_group) {
+                    // FixMe : protocol shouldn't allow this
+                    status = PEP_SYNC_ILLEGAL_MESSAGE;
+                    goto error;
+                }
+
+                // insert group_id given in groupKeys into partner's id
+                free(partner->user_id);
+                partner->user_id = strndup((const char*)guuid->buf, guuid->size);
+                if(partner->user_id == NULL){
+                    status = PEP_OUT_OF_MEMORY;
+                    goto error;
+                }
+
+                // if it comes from another group, and we are grouped,
+                // then this is groupmerge's groupKeys
+
                 group_keys_extra_t *group_keys_extra;
                 group_keys_extra = malloc(sizeof(group_keys_extra_t));
                 if(group_keys_extra == NULL){
@@ -136,11 +194,9 @@ PEP_STATUS receive_sync_msg(
                     goto error;
                 }
 
-                char *group_id = strndup(
-                        (char*)msg->payload.choice.groupKeys.group_id->buf,
-                        msg->payload.choice.groupKeys.group_id->size);
+                char *group_id = strndup((char*)guuid->buf, guuid->size);
 
-                if (msg->payload.choice.groupKeys.group_id && !group_id){
+                if (!group_id){
                     status = PEP_OUT_OF_MEMORY;
                     free(group_keys_extra);
                     ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
@@ -457,10 +513,13 @@ PEP_STATUS receive_DeviceState_msg(
                         // HandshakeRequest needs encryption
                         case DeviceGroup_Protocol__payload_PR_handshakeRequest:
                         {
-                            bool is_for_me = _is_own_uuid(session, 
-                                msg->payload.choice.handshakeRequest.partner_id);
-                            bool is_for_group = !is_for_me && _is_own_group_uuid(session, 
-                                msg->payload.choice.handshakeRequest.partner_id);
+                            UTF8String_t *puuid = 
+                              msg->payload.choice.handshakeRequest.partner_id;
+                            bool is_for_me = _is_own_uuid(session, puuid);
+                            bool is_for_group = !is_for_me && 
+                                                _is_own_group_uuid(
+                                                    session, puuid, NULL);
+
                             // Reject handshake requests not addressed to us
                             if (rating < PEP_rating_reliable ||
                                 !(is_for_me || is_for_group)){
@@ -477,17 +536,27 @@ PEP_STATUS receive_DeviceState_msg(
                         // accepting GroupKeys needs encryption and trust of peer device
                         case DeviceGroup_Protocol__payload_PR_groupKeys:
                         {
+                            UTF8String_t *puuid = msg->payload.choice.groupKeys.partner_id;
+                            bool is_for_me = _is_own_uuid(session, puuid);
+                            bool is_for_group = !is_for_me &&
+                                                _is_own_group_uuid(session, 
+                                                    puuid, NULL);
                             if (!keylist || rating < PEP_rating_reliable ||
                                 // message is only consumed by instance it is addressed to
-                                !_is_own_uuid(session, 
-                                    msg->payload.choice.groupKeys.partner_id)){
+                                !(is_for_me || is_for_group)){
                                 discard = true;
                                 goto free_all;
                             }
 
+                            // do not consume handshake groupKeys for group
+                            if(is_for_group){ 
+                                // This happens in case case of groupmerge
+                                force_keep_msg = true;
+                            }
+
                             // check trust of identity using user_id given in msg.header.me
                             // to exacly match identity of device, the one trusted in
-                            // case of accepted handshake
+                            // case of accepted handshake from a sole device
                             pEp_identity *_from = new_identity(NULL, 
                                                                keylist->value,
                                                                user_id,
@@ -498,10 +567,24 @@ PEP_STATUS receive_DeviceState_msg(
                             }
                             status = get_trust(session, _from);
                             if (status != PEP_STATUS_OK || _from->comm_type < PEP_ct_strong_encryption) {
-                                status = PEP_STATUS_OK;
-                                free_identity(_from);
-                                discard = true;
-                                goto free_all;
+
+                                // re-try with group_id instead, in case of handshake with pre-existing group
+                                UTF8String_t *guuid = msg->payload.choice.groupKeys.group_id;
+                                free(_from->user_id);
+                                if ((_from->user_id = strndup((const char*)guuid->buf, guuid->size)) == NULL){
+                                    free_identity(_from);
+                                    status = PEP_OUT_OF_MEMORY;
+                                    goto free_all;
+                                }
+                                _from->comm_type = PEP_ct_unknown;
+
+                                status = get_trust(session, _from);
+                                if (status != PEP_STATUS_OK || _from->comm_type < PEP_ct_strong_encryption) {
+                                    status = PEP_STATUS_OK;
+                                    free_identity(_from);
+                                    discard = true;
+                                    goto free_all;
+                                }
                             }
                             free_identity(_from);
                             break;
