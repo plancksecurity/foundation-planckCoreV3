@@ -468,6 +468,32 @@ PEP_STATUS notifyInitMoveOurDevice(
 }
 
 
+// notifyOvertaken() - notify Overtaken to app
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        partner to communicate with
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS notifyOvertaken(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    assert(session && state);
+    assert(extra == NULL);
+    if (!(session && state && extra == NULL))
+        return PEP_ILLEGAL_VALUE;
+
+    return _notifyHandshake(session, partner, SYNC_NOTIFY_OVERTAKEN);
+}
+
+
 // notifyAcceptedDeviceMoved() - notify AcceptedDeviceMoved to app
 //
 //  params:

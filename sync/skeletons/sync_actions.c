@@ -489,6 +489,43 @@ error:
 }
 
 
+// notifyOvertaken() - 
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        partner to communicate with
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS notifyOvertaken(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(partner);
+    if (!(session && partner))
+        return PEP_ILLEGAL_VALUE;
+
+    // working code
+
+    // free extra
+    return status;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+error:
+    // free extra
+    return status;
+}
+
+
 // notifyAcceptedDeviceMoved() - 
 //
 //  params:
