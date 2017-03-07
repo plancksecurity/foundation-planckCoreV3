@@ -57,7 +57,9 @@ int main(int argc, char** argv) {
     pEp_identity * me = new_identity("pep.test.recip@kgrothoff.org", NULL, PEP_OWN_USERID, "pEp Test Recipient");    
     me->me = true;    
     PEP_STATUS status = update_identity(session, me);
-
+    trust_personal_key(session, me);    
+    status = update_identity(session, me);
+    
     pEp_identity * you = new_identity("pep.test.apple@pep-project.org", NULL, "TOFU_pep.test.apple@pep-project.org", "pEp Test Recipient");    
     you->me = false;    
     status = update_identity(session, you);

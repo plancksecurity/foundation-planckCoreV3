@@ -789,7 +789,7 @@ static PEP_rating decrypt_rating(PEP_STATUS status)
 
 static PEP_rating key_rating(PEP_SESSION session, const char *fpr)
 {
-    PEP_comm_type comm_type = PEP_ct_unknown;
+    PEP_comm_type bare_comm_type = PEP_ct_unknown;
 
     assert(session);
     assert(fpr);
@@ -797,11 +797,20 @@ static PEP_rating key_rating(PEP_SESSION session, const char *fpr)
     if (session == NULL || fpr == NULL)
         return PEP_rating_undefined;
 
-    PEP_STATUS status = get_key_rating(session, fpr, &comm_type);
+    PEP_STATUS status = get_key_rating(session, fpr, &bare_comm_type);
     if (status != PEP_STATUS_OK)
         return PEP_rating_undefined;
 
-    return _rating(comm_type, PEP_rating_undefined);
+    /* FIXME: All this tells us is that the bare key is ok. It's
+       fine to check - if there's something wrong with the key in
+       the keyring we should probably do something about it -
+       but it doesn't deal with overall trust. We also need 
+       trust in here. */
+    
+    PEP_comm_type least_trust_type = PEP_ct_unknown;
+    status = least_trust(session, fpr, &least_trust_type);
+
+    return _rating(least_trust_type, PEP_rating_undefined);
 }
 
 static PEP_rating worst_rating(PEP_rating rating1, PEP_rating rating2) {
@@ -810,13 +819,14 @@ static PEP_rating worst_rating(PEP_rating rating1, PEP_rating rating2) {
 
 static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist)
 {
-    PEP_rating rating = PEP_rating_reliable;
+    PEP_rating rating = PEP_rating_undefined;
 
     assert(keylist && keylist->value);
     if (keylist == NULL || keylist->value == NULL)
         return PEP_rating_undefined;
 
     stringlist_t *_kl;
+    bool first = true;
     for (_kl = keylist; _kl && _kl->value; _kl = _kl->next) {
         PEP_comm_type ct;
         PEP_STATUS status;
@@ -825,8 +835,12 @@ static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist)
          
         if (_rating_ <= PEP_rating_mistrust)
             return _rating_;
-
-        if (rating == PEP_rating_undefined)
+            
+        if (first) {
+            rating = _rating_;
+            first = false;
+        }
+        else if (rating == PEP_rating_undefined)
             rating = worst_rating(rating, _rating_);
 
         if (_rating_ >= PEP_rating_reliable) {
@@ -834,8 +848,10 @@ static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist)
             if (status != PEP_STATUS_OK)
                 return PEP_rating_undefined;
             if (ct == PEP_ct_unknown){
+                /* per edouard, we reduce reliable+ ratings to reliable because
+                   ct unknown */
                 if (rating >= PEP_rating_reliable){
-                    rating = worst_rating(rating, PEP_rating_reliable);
+                    rating = PEP_rating_reliable; 
                 }
             }
             else{
@@ -1508,6 +1524,20 @@ PEP_STATUS combine_keylists(PEP_SESSION session, stringlist_t** verify_in,
         while (*tail_pp) {
             tail_pp = &((*tail_pp)->next);
         }
+        stringlist_t* second_list = *keylist_in_out;
+        if (second_list) {
+            char* listhead_val = second_list->value;
+            if (!listhead_val || listhead_val[0] == '\0') {
+                /* remove head, basically. This can happen when,
+                   for example, the signature is detached and
+                   verification is not seen directly after
+                   decryption, so no signer is presumed in
+                   the first construction of the keylist */
+                *keylist_in_out = (*keylist_in_out)->next;
+                second_list->next = NULL;
+                free_stringlist(second_list);
+            }
+        }
         *tail_pp = *keylist_in_out;
     }
     
@@ -1929,8 +1959,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                     if (_from == NULL)
                         goto enomem;
                     status = get_trust(session, _from);
-                    if (_from->comm_type != PEP_ct_unknown)
-                        *rating = _rating(_from->comm_type, PEP_rating_undefined);
+                    if (_from->comm_type != PEP_ct_unknown) {
+                        *rating = worst_rating(_rating(_from->comm_type, PEP_rating_undefined),
+                                  kl_rating);
+                    }
                     free_identity(_from);
                     if (status == PEP_CANNOT_FIND_IDENTITY)
                        status = PEP_STATUS_OK;
