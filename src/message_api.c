@@ -789,7 +789,6 @@ static PEP_rating decrypt_rating(PEP_STATUS status)
 
 static PEP_rating key_rating(PEP_SESSION session, const char *fpr)
 {
-    PEP_comm_type bare_comm_type = PEP_ct_unknown;
 
     assert(session);
     assert(fpr);
@@ -797,20 +796,20 @@ static PEP_rating key_rating(PEP_SESSION session, const char *fpr)
     if (session == NULL || fpr == NULL)
         return PEP_rating_undefined;
 
+
+    PEP_comm_type bare_comm_type = PEP_ct_unknown;
     PEP_STATUS status = get_key_rating(session, fpr, &bare_comm_type);
     if (status != PEP_STATUS_OK)
         return PEP_rating_undefined;
 
-    /* FIXME: All this tells us is that the bare key is ok. It's
-       fine to check - if there's something wrong with the key in
-       the keyring we should probably do something about it -
-       but it doesn't deal with overall trust. We also need 
-       trust in here. */
-    
     PEP_comm_type least_trust_type = PEP_ct_unknown;
-    status = least_trust(session, fpr, &least_trust_type);
+    least_trust(session, fpr, &least_trust_type);
 
-    return _rating(least_trust_type, PEP_rating_undefined);
+    if (least_trust_type == PEP_ct_unknown) {
+        return _rating(bare_comm_type, PEP_rating_undefined);
+    } else {
+        return _rating(least_trust_type, PEP_rating_undefined);
+    }
 }
 
 static PEP_rating worst_rating(PEP_rating rating1, PEP_rating rating2) {

@@ -90,7 +90,10 @@ static const char *sql_get_trust =
     "and pgp_keypair_fpr = upper(replace(?2,' ','')) ;";
 
 static const char *sql_least_trust = 
-    "select min(comm_type) from trust where pgp_keypair_fpr = upper(replace(?1,' ','')) ;";
+    "select min(comm_type) from trust where"
+    " pgp_keypair_fpr = upper(replace(?1,' ',''))"
+    " and comm_type != 0;"; // ignores PEP_ct_unknown
+    // returns PEP_ct_unknown only when no known trust is recorded
 
 static const char *sql_mark_as_compromized = 
     "update trust not indexed set comm_type = 15"
@@ -1425,6 +1428,7 @@ DYNAMIC_API PEP_STATUS least_trust(
             break;
         }
         default:
+            // never reached because of sql min()
             status = PEP_CANNOT_FIND_IDENTITY;
     }
 
