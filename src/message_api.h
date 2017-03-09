@@ -72,6 +72,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 //      src (in)            message to encrypt
 //      dst (out)           pointer to new encrypted message or NULL on failure
 //      enc_format (in)     encrypted format
+//      flags (in)          flags to set special encryption features
 //
 //  return value:       (FIXME: This may not be correct or complete)
 //      PEP_STATUS_OK                   on success
