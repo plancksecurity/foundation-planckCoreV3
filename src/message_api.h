@@ -23,7 +23,11 @@ PEP_cryptotech determine_encryption_format(message *msg);
 void add_opt_field(message *msg, const char *name, const char *value);
 
 typedef enum _PEP_encrypt_flags {
-    PEP_encrypt_flag_force_encryption = 0x1
+    PEP_encrypt_flag_force_encryption = 0x1,
+
+    // This flag is for special use cases and should not be used
+    // by normal pEp clients!
+    PEP_encrypt_flag_force_unsigned = 0x2
 } PEP_encrypt_flags; 
 
 typedef unsigned int PEP_encrypt_flags_t;
@@ -89,7 +93,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         pEp_identity* target_id,
         message *src,
         message **dst,
-        PEP_enc_format enc_format
+        PEP_enc_format enc_format,
+        PEP_encrypt_flags_t flags
     );
 
 // MIME_encrypt_message() - encrypt a MIME message, with MIME output

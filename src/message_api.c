@@ -1248,7 +1248,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         pEp_identity* target_id,
         message *src,
         message **dst,
-        PEP_enc_format enc_format
+        PEP_enc_format enc_format,
+        PEP_encrypt_flags_t flags
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
