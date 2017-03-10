@@ -1192,12 +1192,12 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     if (!dest_keys_found ||
-        stringlist_length(keys) == 0 ||
+        stringlist_length(keys)  == 0 ||
         _rating(max_comm_type,
                 PEP_rating_undefined) < PEP_rating_reliable)
     {
         free_stringlist(keys);
-        if (!session->passive_mode)
+        if (!session->passive_mode && !(flags & PEP_encrypt_flag_force_no_attached_key))
             attach_own_key(session, src);
         return PEP_UNENCRYPTED;
     }
@@ -1206,7 +1206,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         if (msg == NULL)
             goto enomem;
 
-        attach_own_key(session, src);
+        if (!(flags & PEP_encrypt_flag_force_no_attached_key))
+            attach_own_key(session, src);
 
         switch (enc_format) {
         case PEP_enc_PGP_MIME:
@@ -1314,6 +1315,9 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
 
     keys = new_stringlist(target_fpr);
 
+    /* KG: did we ever do this??? */
+    if (!(flags & PEP_encrypt_flag_force_no_attached_key))
+        attach_own_key(session, src);
 
     msg = clone_to_empty_message(src);
     if (msg == NULL)

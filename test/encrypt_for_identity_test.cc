@@ -51,7 +51,7 @@ int main() {
     cout << "encrypting message as MIME multipart…\n";
     message* encrypted_msg = nullptr;
     cout << "calling encrypt_message_for_identity()\n";
-    status = encrypt_message_for_self(session, alice, outgoing_message, &encrypted_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_default);
+    status = encrypt_message_for_self(session, alice, outgoing_message, &encrypted_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);
     cout << "encrypt_message() returns " << std::hex << status << '.' << endl;
     assert(status == PEP_STATUS_OK);
     assert(encrypted_msg);
@@ -81,7 +81,7 @@ int main() {
     PEP_decrypt_flags_t flags;
 
     status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &rating, &flags);
-    assert(status == PEP_STATUS_OK);
+    assert(status == PEP_DECRYPTED && rating == PEP_rating_unreliable);
     assert(decrypted_msg);
     assert(keylist_used);
     assert(rating);
@@ -90,11 +90,18 @@ int main() {
 
     cout << "keys used:\n";
 
-    for (stringlist_t* kl4 = keylist_used; kl4 && kl4->value; kl4 = kl4->next)
+    int i = 0;
+
+    for (stringlist_t* kl4 = keylist_used; kl4 && kl4->value; kl4 = kl4->next, i++)
     {
-        cout << "\t " << kl4->value << endl;
-        assert(strcasecmp("4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", kl4->value) == 0);
-        cout << "Encrypted for Alice! Yay! It worked!" << endl;
+        if (i == 0)
+            assert(strcasecmp("",kl4->value) == 0);
+        else {
+            cout << "\t " << kl4->value << endl;
+            assert(strcasecmp("4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", kl4->value) == 0);
+            cout << "Encrypted for Alice! Yay! It worked!" << endl;
+        }
+        assert(i < 2);
     }
     cout << "Encrypted ONLY for Alice! Test passed. Move along. These are not the bugs you are looking for." << endl;
  
