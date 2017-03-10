@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
     PEP_STATUS status = update_identity(session, me);
     trust_personal_key(session, me);    
     status = update_identity(session, me);
-
+    
     pEp_identity * you = new_identity("pep.test.apple@pep-project.org", NULL, "TOFU_pep.test.apple@pep-project.org", "pEp Test Recipient");    
     you->me = false;    
     status = update_identity(session, you);
