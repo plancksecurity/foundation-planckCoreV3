@@ -167,6 +167,12 @@ struct _pEpSession {
 PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
 void release_transport_system(PEP_SESSION session, bool out_last);
 
+/* NOT to be exposed to the outside!!! */
+PEP_STATUS encrypt_only(
+        PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+        size_t psize, char **ctext, size_t *csize
+);
+
 #ifdef NDEBUG
 #define DEBUG_LOG(TITLE, ENTITY, DESC)
 #define  LOGD(...)

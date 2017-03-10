@@ -340,7 +340,8 @@ static PEP_STATUS encrypt_PGP_MIME(
     PEP_SESSION session,
     const message *src,
     stringlist_t *keys,
-    message *dst
+    message *dst,
+    PEP_encrypt_flags_t flags
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -396,8 +397,12 @@ static PEP_STATUS encrypt_PGP_MIME(
     if (mimetext == NULL)
         goto pep_error;
 
-    status = encrypt_and_sign(session, keys, mimetext, strlen(mimetext),
-        &ctext, &csize);
+    if (flags & PEP_encrypt_flag_force_unsigned)
+        status = encrypt_only(session, keys, mimetext, strlen(mimetext),
+            &ctext, &csize);
+    else
+        status = encrypt_and_sign(session, keys, mimetext, strlen(mimetext),
+            &ctext, &csize);
     free(mimetext);
     if (ctext == NULL)
         goto pep_error;
@@ -439,7 +444,8 @@ static PEP_STATUS encrypt_PGP_in_pieces(
     PEP_SESSION session,
     const message *src,
     stringlist_t *keys,
-    message *dst
+    message *dst,
+    PEP_encrypt_flags_t flags
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -452,6 +458,8 @@ static PEP_STATUS encrypt_PGP_in_pieces(
     assert(dst->attachments == NULL);
 
     dst->enc_format = PEP_enc_pieces;
+
+    bool nosign = (flags & PEP_encrypt_flag_force_unsigned);
 
     if (src->shortmsg && src->shortmsg[0] && strcmp(src->shortmsg, "pEp") != 0) {
         if (session->unencrypted_subject) {
@@ -468,8 +476,12 @@ static PEP_STATUS encrypt_PGP_in_pieces(
             free_ptext = true;
         }
 
-        status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
-            &csize);
+        if (nosign)
+            status = encrypt_only(session, keys, ptext, strlen(ptext), &ctext,
+                &csize);
+        else 
+            status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
+                &csize);
         if (free_ptext)
             free(ptext);
         free_ptext = false;
@@ -482,8 +494,12 @@ static PEP_STATUS encrypt_PGP_in_pieces(
     }
     else if (src->longmsg && src->longmsg[0]) {
         ptext = src->longmsg;
-        status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
-            &csize);
+        if (nosign)
+            status = encrypt_only(session, keys, ptext, strlen(ptext), &ctext,
+                &csize);
+        else 
+            status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
+                &csize);
         if (ctext) {
             dst->longmsg = ctext;
         }
@@ -500,8 +516,12 @@ static PEP_STATUS encrypt_PGP_in_pieces(
 
     if (src->longmsg_formatted && src->longmsg_formatted[0]) {
         ptext = src->longmsg_formatted;
-        status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
-            &csize);
+        if (nosign)
+            status = encrypt_only(session, keys, ptext, strlen(ptext), &ctext,
+                &csize);
+        else 
+            status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
+                &csize);
         if (ctext) {
 
             bloblist_t *_a = bloblist_add(dst->attachments, ctext, csize,
@@ -535,8 +555,12 @@ static PEP_STATUS encrypt_PGP_in_pieces(
             else {
                 size_t psize = _s->size;
                 ptext = _s->value;
-                status = encrypt_and_sign(session, keys, ptext, psize, &ctext,
-                    &csize);
+                if (nosign)
+                    status = encrypt_only(session, keys, ptext, psize, &ctext,
+                        &csize);
+                else 
+                    status = encrypt_and_sign(session, keys, ptext, psize, &ctext,
+                        &csize);
                 if (ctext) {
                     char *filename = NULL;
 
@@ -1187,11 +1211,11 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         switch (enc_format) {
         case PEP_enc_PGP_MIME:
         case PEP_enc_PEP: // BUG: should be implemented extra
-            status = encrypt_PGP_MIME(session, src, keys, msg);
+            status = encrypt_PGP_MIME(session, src, keys, msg, flags);
             break;
 
         case PEP_enc_pieces:
-            status = encrypt_PGP_in_pieces(session, src, keys, msg);
+            status = encrypt_PGP_in_pieces(session, src, keys, msg, flags);
             break;
 
         /* case PEP_enc_PEP:
@@ -1298,11 +1322,11 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     switch (enc_format) {
         case PEP_enc_PGP_MIME:
         case PEP_enc_PEP: // BUG: should be implemented extra
-            status = encrypt_PGP_MIME(session, src, keys, msg);
+            status = encrypt_PGP_MIME(session, src, keys, msg, flags);
             break;
 
         case PEP_enc_pieces:
-            status = encrypt_PGP_in_pieces(session, src, keys, msg);
+            status = encrypt_PGP_in_pieces(session, src, keys, msg, flags);
             break;
 
         /* case PEP_enc_PEP:

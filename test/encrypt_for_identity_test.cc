@@ -51,7 +51,7 @@ int main() {
     cout << "encrypting message as MIME multipart…\n";
     message* encrypted_msg = nullptr;
     cout << "calling encrypt_message_for_identity()\n";
-    status = encrypt_message_for_self(session, alice, outgoing_message, &encrypted_msg, PEP_enc_PGP_MIME);
+    status = encrypt_message_for_self(session, alice, outgoing_message, &encrypted_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_default);
     cout << "encrypt_message() returns " << std::hex << status << '.' << endl;
     assert(status == PEP_STATUS_OK);
     assert(encrypted_msg);

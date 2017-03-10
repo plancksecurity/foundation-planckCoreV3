@@ -23,6 +23,8 @@ PEP_cryptotech determine_encryption_format(message *msg);
 void add_opt_field(message *msg, const char *name, const char *value);
 
 typedef enum _PEP_encrypt_flags {
+    // "default" means whatever the default behaviour for the function is.
+    PEP_encrypt_flag_default = 0x0,
     PEP_encrypt_flag_force_encryption = 0x1,
 
     // This flag is for special use cases and should not be used
@@ -383,4 +385,3 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
 #ifdef __cplusplus
 }
 #endif
-
