@@ -172,7 +172,11 @@ static const char *sql_sequence_value2 =
     "select value, own from sequences where name = ?1 ;";
 
 static const char *sql_sequence_value3 = 
-    "update sequences set value = ?2, own = (select own or ?3 from sequences where name = ?1) where name = ?1 ;";
+    "insert or replace into sequences (name, value, own) "
+    "values (?1, "
+    "        ?2, "
+    "       (select coalesce((select own or ?3 from sequences "
+    "           where name = ?1), ?3))) ; ";
         
 // Revocation tracking
 static const char *sql_set_revoked =

@@ -643,7 +643,7 @@ PEP_STATUS receive_DeviceState_msg(
                     // don't free message now that it is in the queue
                     goto free_userid;
                 }
-                else if (status == PEP_OWN_SEQUENCE) {
+                else if (status == PEP_OWN_SEQUENCE || status == PEP_SEQUENCE_VIOLATED) {
                     status = PEP_STATUS_OK;
                     discard = true;
                     goto free_all;
