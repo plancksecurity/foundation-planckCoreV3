@@ -250,6 +250,11 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
             "gpgme_op_encrypt_sign");
         assert(gpg.gpgme_op_encrypt_sign);
 
+        gpg.gpgme_op_encrypt
+            = (gpgme_op_encrypt_t) (intptr_t) dlsym(gpgme,
+            "gpgme_op_encrypt");
+        assert(gpg.gpgme_op_encrypt);
+
         gpg.gpgme_op_verify_result
             = (gpgme_op_verify_result_t) (intptr_t) dlsym(gpgme,
             "gpgme_op_verify_result");
@@ -873,11 +878,12 @@ PEP_STATUS pgp_verify_text(
     return result;
 }
 
-PEP_STATUS pgp_encrypt_and_sign(
+
+static PEP_STATUS pgp_encrypt_sign_optional(    
     PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
-    size_t psize, char **ctext, size_t *csize
-    )
-{
+    size_t psize, char **ctext, size_t *csize, bool sign
+)
+{    
     PEP_STATUS result;
     gpgme_error_t gpgme_error;
     gpgme_data_t plain, cipher;
@@ -943,7 +949,7 @@ PEP_STATUS pgp_encrypt_and_sign(
             gpg.gpgme_data_release(cipher);
             return PEP_OUT_OF_MEMORY;
         case GPG_ERR_NO_ERROR:
-            if (i == 0) {
+            if (i == 0 && sign) {
                 gpgme_error_t _gpgme_error = gpg.gpgme_signers_add(session->ctx, rcpt[0]);
                 _gpgme_error = _GPGERR(_gpgme_error);
                 assert(_gpgme_error == GPG_ERR_NO_ERROR);
@@ -976,9 +982,16 @@ PEP_STATUS pgp_encrypt_and_sign(
 
     // TODO: remove that and replace with proper key management
     flags = GPGME_ENCRYPT_ALWAYS_TRUST;
-
-    gpgme_error = gpg.gpgme_op_encrypt_sign(session->ctx, rcpt, flags,
-        plain, cipher);
+    
+    if (sign) {
+        gpgme_error = gpg.gpgme_op_encrypt_sign(session->ctx, rcpt, flags,
+            plain, cipher);
+    }
+    else {
+        gpgme_error = gpg.gpgme_op_encrypt(session->ctx, rcpt, flags,
+            plain, cipher);
+    }
+    
     gpgme_error = _GPGERR(gpgme_error);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
@@ -1022,6 +1035,24 @@ PEP_STATUS pgp_encrypt_and_sign(
     gpg.gpgme_data_release(plain);
     gpg.gpgme_data_release(cipher);
     return result;
+}
+
+PEP_STATUS pgp_encrypt_only(
+    PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+    size_t psize, char **ctext, size_t *csize
+    )
+{
+    return pgp_encrypt_sign_optional(session, keylist, ptext,
+        psize, ctext, csize, false);
+}
+
+PEP_STATUS pgp_encrypt_and_sign(
+    PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+    size_t psize, char **ctext, size_t *csize
+    )
+{
+    return pgp_encrypt_sign_optional(session, keylist, ptext,
+        psize, ctext, csize, true);
 }
 
 PEP_STATUS pgp_generate_keypair(

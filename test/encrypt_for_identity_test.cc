@@ -35,6 +35,7 @@ int main() {
     outgoing_message->from = alice;
     outgoing_message->to = to_list;
     outgoing_message->shortmsg = strdup("Greetings, humans!");
+    outgoing_message->longmsg = strdup("This is a test of the emergency message system. This is only a test. BEEP.");
     outgoing_message->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
     cout << "message created.\n";
 
@@ -51,7 +52,7 @@ int main() {
     cout << "encrypting message as MIME multipart…\n";
     message* encrypted_msg = nullptr;
     cout << "calling encrypt_message_for_identity()\n";
-    status = encrypt_message_for_self(session, alice, outgoing_message, &encrypted_msg, PEP_enc_PGP_MIME);
+    status = encrypt_message_for_self(session, alice, outgoing_message, &encrypted_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);
     cout << "encrypt_message() returns " << std::hex << status << '.' << endl;
     assert(status == PEP_STATUS_OK);
     assert(encrypted_msg);
@@ -81,20 +82,27 @@ int main() {
     PEP_decrypt_flags_t flags;
 
     status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &rating, &flags);
-    assert(status == PEP_STATUS_OK);
     assert(decrypted_msg);
     assert(keylist_used);
     assert(rating);
+    assert(status == PEP_DECRYPTED && rating == PEP_rating_unreliable);
     PEP_comm_type ct = encrypted_msg->from->comm_type;
     assert(ct == PEP_ct_pEp || ct == PEP_ct_pEp_unconfirmed || ct == PEP_ct_OpenPGP || ct == PEP_ct_OpenPGP_unconfirmed );
 
     cout << "keys used:\n";
 
-    for (stringlist_t* kl4 = keylist_used; kl4 && kl4->value; kl4 = kl4->next)
+    int i = 0;
+
+    for (stringlist_t* kl4 = keylist_used; kl4 && kl4->value; kl4 = kl4->next, i++)
     {
-        cout << "\t " << kl4->value << endl;
-        assert(strcasecmp("4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", kl4->value) == 0);
-        cout << "Encrypted for Alice! Yay! It worked!" << endl;
+        if (i == 0)
+            assert(strcasecmp("",kl4->value) == 0);
+        else {
+            cout << "\t " << kl4->value << endl;
+            assert(strcasecmp("4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", kl4->value) == 0);
+            cout << "Encrypted for Alice! Yay! It worked!" << endl;
+        }
+        assert(i < 2);
     }
     cout << "Encrypted ONLY for Alice! Test passed. Move along. These are not the bugs you are looking for." << endl;
  
@@ -104,6 +112,82 @@ int main() {
     free_message(outgoing_message);
     cout << "done.\n";
 
+    cout << "*** Now testing MIME_encrypt_for_self ***" << endl;
+
+    alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, "Alice Test");
+    bob = new_identity("pep.test.bob@pep-project.org", NULL, "42", "Bob Test");
+
+    cout << "Reading in alice_bob_encrypt_test_plaintext_mime.eml..." << endl;
+    
+    ifstream inFile("test_mails/alice_bob_encrypt_test_plaintext_mime.eml");
+    assert(inFile.is_open());
+
+    string mimetext;
+
+    cout << "reading mime mail\n";
+    while (!inFile.eof()) {
+        static string line;
+        getline(inFile, line);
+        mimetext += line + "\n";
+    }
+    inFile.close();
+
+    cout << "Text read:" << endl;
+    cout << mimetext.c_str() << endl;
+    char* encrypted_mimetext = nullptr;
+    
+    cout << "Calling MIME_encrypt_message_for_self" << endl;
+    status = MIME_encrypt_message_for_self(session, alice, mimetext.c_str(),
+                                           mimetext.size(), 
+                                           &encrypted_mimetext, 
+                                           PEP_enc_PGP_MIME, 
+                                           PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);
+    
+    cout << "Encrypted message:" << endl;
+    cout << encrypted_mimetext << endl;
+
+    cout << "Calling MIME_decrypt_message" << endl;
+    
+    char* decrypted_mimetext = nullptr;
+    free_stringlist(keylist_used);
+    keylist_used = nullptr;
+    PEP_decrypt_flags_t mimeflags;
+    PEP_rating mimerating;
+
+    status = MIME_decrypt_message(session,
+                                  encrypted_mimetext,
+                                  strlen(encrypted_mimetext),
+                                  &decrypted_mimetext,
+                                  &keylist_used,
+                                  &mimerating,
+                                  &mimeflags);
+
+    assert(decrypted_msg);
+    assert(keylist_used);
+    assert(mimerating);
+                             
+    assert(status == PEP_DECRYPTED && mimerating == PEP_rating_unreliable);
+
+    cout << "Decrypted message:" << endl;
+    cout << decrypted_mimetext << endl;
+
+    cout << "keys used:\n";
+
+    i = 0;
+
+    for (stringlist_t* kl4 = keylist_used; kl4 && kl4->value; kl4 = kl4->next, i++)
+    {
+        if (i == 0)
+            assert(strcasecmp("",kl4->value) == 0);
+        else {
+            cout << "\t " << kl4->value << endl;
+            assert(strcasecmp("4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", kl4->value) == 0);
+            cout << "Encrypted for Alice! Yay! It worked!" << endl;
+        }
+        assert(i < 2);
+    }
+    cout << "Encrypted ONLY for Alice! Test passed. Move along. These are not the bugs you are looking for." << endl;
+    
     cout << "calling release()\n";
     release(session);
     return 0;
