@@ -1334,8 +1334,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
             break;
 
         /* case PEP_enc_PEP:
-            // TODO: implement
             NOT_IMPLEMENTED */
+            // TODO: implement
 
         default:
             assert(0);
@@ -2544,6 +2544,7 @@ pep_error:
     return status;
 }
 
+
 DYNAMIC_API PEP_STATUS MIME_encrypt_message(
     PEP_SESSION session,
     const char *mimetext,
@@ -2581,4 +2582,43 @@ pep_error:
 
     return status;
 
+}
+
+DYNAMIC_API PEP_STATUS MIME_encrypt_message_for_self(
+    PEP_SESSION session,
+    pEp_identity* target_id,
+    const char *mimetext,
+    size_t size,
+    stringlist_t* extra,
+    char** mime_ciphertext,
+    PEP_enc_format enc_format,
+    PEP_encrypt_flags_t flags
+)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    message* tmp_msg = NULL;
+    message* enc_msg = NULL;
+
+    status = mime_decode_message(mimetext, size, &tmp_msg);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+
+    // This isn't incoming, though... so we need to reverse the direction
+    tmp_msg->dir = PEP_dir_outgoing;
+    status = encrypt_message_for_self(session,
+                                      target_id,
+                                      tmp_msg,
+                                      &enc_msg,
+                                      enc_format,
+                                      flags);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+
+    status = mime_encode_message(enc_msg, false, mime_ciphertext);
+
+pep_error:
+    free_message(tmp_msg);
+    free_message(enc_msg);
+
+    return status;
 }
