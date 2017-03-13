@@ -1,7 +1,6 @@
 #include <iostream>
 #include <iostream>
-#include <fstream>
-#include <string>
+#include <vector>
 #include <cstring> // for strcmp()
 #include <assert.h>
 #include "blacklist.h"
@@ -17,15 +16,14 @@ int main(int argc, char** argv) {
     
     const char* mailfile = "test_mails/color_test.eml";
     
-    const char* keynames[] = {"test_keys/priv/pep.color.test.P-0x3EBE215C_priv.asc",
+    const std::vector<const char*> keynames = {
+                              "test_keys/priv/pep.color.test.P-0x3EBE215C_priv.asc",
                               "test_keys/pub/pep.color.test.H-0xD17E598E_pub.asc",
                               "test_keys/pub/pep.color.test.L-0xE9CDB4CE_pub.asc",
                               "test_keys/pub/pep.color.test.P-0x3EBE215C_pub.asc",
                               "test_keys/pub/pep.color.test.V-0x71FC6D28_pub.asc"
                           };
     
-    const int num_keyfiles = 5;
-        
     PEP_SESSION session;
     
     cout << "calling init()\n";
@@ -34,11 +32,9 @@ int main(int argc, char** argv) {
     assert(session);
     cout << "init() completed.\n";
     
-    int i = 0;
-    
-    for ( ; i < num_keyfiles; i++) {
-        cout << "\t read keyfile #" << i << ": \"" << keynames[i] << "\"..." << std::endl;
-        const string keytextkey = slurp(keynames[i]);
+    for (auto name : keynames) {
+        cout << "\t read keyfile \"" << name << "\"..." << std::endl;
+        const string keytextkey = slurp(name);
         PEP_STATUS statuskey = import_key(session, keytextkey.c_str(), keytextkey.length(), NULL);
         assert(statuskey == PEP_STATUS_OK);
     }
@@ -82,10 +78,11 @@ int main(int argc, char** argv) {
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
     cout << "rating: " << rating << endl << endl;
     cout << "keys used: " << endl;
-    i = 0;
+    
+    int i = 0;
     for (stringlist_t* k = keylist; k; k = k->next) {
         if (i == 0)
-       	    cout << "\t Signer (key 0):\t" << k->value << endl;
+            cout << "\t Signer (key 0):\t" << k->value << endl;
         else
             cout << "\t #" << i << ":\t" << k->value << endl;
         i++;
