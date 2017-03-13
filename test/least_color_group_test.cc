@@ -36,6 +36,7 @@ int main(int argc, char** argv) {
     int i = 0;
     
     for ( ; i < num_keyfiles; i++) {
+        cout << "\t read keyfile #" << i << ": \"" << keynames[i] << "\"..." << std::endl;
         ifstream infilekey(keynames[i]);
         string keytextkey;
         while (!infilekey.eof()) {
@@ -46,8 +47,9 @@ int main(int argc, char** argv) {
         infilekey.close(); 
         PEP_STATUS statuskey = import_key(session, keytextkey.c_str(), keytextkey.length(), NULL);
         assert(statuskey == PEP_STATUS_OK);
-    }        
-        
+    }
+    
+    cout << "\t read keyfile mailfile \"" << mailfile << "\"..." << std::endl;
     ifstream infile(mailfile);
     string mailtext;
     while (!infile.eof()) {
@@ -56,18 +58,19 @@ int main(int argc, char** argv) {
         mailtext += line + "\n";
     }
     infile.close(); 
+    cout << "\t All files read successfully." << std::endl;
 
     pEp_identity * me1 = new_identity("pep.color.test.P@kgrothoff.org", NULL, 
-                                      PEP_OWN_USERID, "Pep Color Test P (recip)");    
+                                      PEP_OWN_USERID, "Pep Color Test P (recip)");
     me1->me = true;    
     PEP_STATUS status = update_identity(session, me1);
     trust_personal_key(session, me1);
-    status = update_identity(session, me1);        
+    status = update_identity(session, me1);
     
     pEp_identity * sender1 = new_identity("pep.color.test.V@kgrothoff.org",
                                           NULL, "TOFU_pep.color.test.V@kgrothoff.org",
                                           "Pep Color Test V (sender)");
-                                          
+    
     sender1->me = false;
     status = update_identity(session, sender1);
     trust_personal_key(session, sender1);
