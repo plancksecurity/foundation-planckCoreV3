@@ -8,6 +8,7 @@
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"
+#include "test_util.h"
 
 using namespace std;
 
@@ -37,32 +38,18 @@ int main(int argc, char** argv) {
     
     for ( ; i < num_keyfiles; i++) {
         cout << "\t read keyfile #" << i << ": \"" << keynames[i] << "\"..." << std::endl;
-        ifstream infilekey(keynames[i]);
-        string keytextkey;
-        while (!infilekey.eof()) {
-            static string line;
-            getline(infilekey, line);
-            keytextkey += line + "\n";
-        }
-        infilekey.close(); 
+        const string keytextkey = slurp(keynames[i]);
         PEP_STATUS statuskey = import_key(session, keytextkey.c_str(), keytextkey.length(), NULL);
         assert(statuskey == PEP_STATUS_OK);
     }
     
     cout << "\t read keyfile mailfile \"" << mailfile << "\"..." << std::endl;
-    ifstream infile(mailfile);
-    string mailtext;
-    while (!infile.eof()) {
-        static string line;
-        getline(infile, line);
-        mailtext += line + "\n";
-    }
-    infile.close(); 
+    const string mailtext = slurp(mailfile);
     cout << "\t All files read successfully." << std::endl;
 
     pEp_identity * me1 = new_identity("pep.color.test.P@kgrothoff.org", NULL, 
                                       PEP_OWN_USERID, "Pep Color Test P (recip)");
-    me1->me = true;    
+    me1->me = true;
     PEP_STATUS status = update_identity(session, me1);
     trust_personal_key(session, me1);
     status = update_identity(session, me1);
@@ -74,7 +61,7 @@ int main(int argc, char** argv) {
     sender1->me = false;
     status = update_identity(session, sender1);
     trust_personal_key(session, sender1);
-    status = update_identity(session, sender1);    
+    status = update_identity(session, sender1);
     
     message* msg_ptr = nullptr;
     message* dest_msg = nullptr;
