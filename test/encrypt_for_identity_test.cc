@@ -9,6 +9,7 @@
 #include <assert.h>
 #include "mime.h"
 #include "message_api.h"
+#include "test_util.h"
 
 using namespace std;
 
@@ -119,18 +120,7 @@ int main() {
 
     cout << "Reading in alice_bob_encrypt_test_plaintext_mime.eml..." << endl;
     
-    ifstream inFile("test_mails/alice_bob_encrypt_test_plaintext_mime.eml");
-    assert(inFile.is_open());
-
-    string mimetext;
-
-    cout << "reading mime mail\n";
-    while (!inFile.eof()) {
-        static string line;
-        getline(inFile, line);
-        mimetext += line + "\n";
-    }
-    inFile.close();
+    const string mimetext = slurp("test_mails/alice_bob_encrypt_test_plaintext_mime.eml");
 
     cout << "Text read:" << endl;
     cout << mimetext.c_str() << endl;
