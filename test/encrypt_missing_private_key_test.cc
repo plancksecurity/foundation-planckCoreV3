@@ -11,6 +11,7 @@
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"
+#include "test_util.h"
 
 using namespace std;
 
@@ -31,15 +32,7 @@ int main() {
     
     // B252066DE0513BECA2954F30E8E18177B28D9B9D - this is the blacklisted key in blacklisted_self.asc
 
-    /* read the key into memory */
-    ifstream infile("test_keys/priv/blacklist_self.asc");
-    string keytext;
-    while (!infile.eof()) {
-        static string line;
-        getline(infile, line);
-        keytext += line + "\n";
-    }
-    infile.close(); 
+    const string keytext = slurp("test_keys/priv/blacklist_self.asc");
     
     /* import it into pep */
     PEP_STATUS status7 = import_key(session, keytext.c_str(), keytext.length(), NULL);
@@ -59,23 +52,15 @@ int main() {
 
     /* identity is blacklisted. Now let's try to encrypt a message. */
     
-    const char* new_key = NULL;    
+    const char* new_key = NULL;
     
-    ifstream infile2("test_mails/blacklist_no_key.eml");
-    string mailtext;
-    while (!infile2.eof()) {
-        static string line;
-        getline(infile2, line);
-        mailtext += line + "\n";
-    }     infile2.close(); 
-
+    const string mailtext = slurp("test_mails/blacklist_no_key.eml");
     
     message* tmp_msg = NULL;
     message* enc_msg = NULL;
     
     PEP_STATUS status = mime_decode_message(mailtext.c_str(), mailtext.length(), &tmp_msg);
     assert(status == PEP_STATUS_OK);
-    
     
     
     // This isn't incoming, though... so we need to reverse the direction
@@ -87,7 +72,6 @@ int main() {
                              PEP_enc_PGP_MIME,
                              0);
     assert(status == PEP_STATUS_OK);
-    
     
 //    PEP_STATUS status69 = MIME_encrypt_message(session, mailtext.c_str(), mailtext.length(), NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
 //    pEp_identity * me1 = new_identity("blacklist_test@kgrothoff.org", NULL, PEP_OWN_USERID, "Blacklisted Key Message Recipient");    
@@ -121,4 +105,3 @@ int main() {
     release(session);
     return 0;
 }
-

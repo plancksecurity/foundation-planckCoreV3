@@ -8,6 +8,7 @@
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"
+#include "test_util.h"
 
 using namespace std;
 
@@ -24,42 +25,10 @@ int main(int argc, char** argv) {
     cout << "init() completed.\n";
     
     // import keys
-
-    ifstream infilekey1("test_keys/pub/banmeonce-0x07B29090_pub.asc");
-    string keytextkey1;
-    while (!infilekey1.eof()) {
-        static string line;
-        getline(infilekey1, line);
-        keytextkey1 += line + "\n";
-    }
-    infilekey1.close(); 
-    
-    ifstream infilekey2("test_keys/pub/banmetwice-0x4080C3E7_pub.asc");
-    string keytextkey2;
-    while (!infilekey2.eof()) {
-        static string line;
-        getline(infilekey2, line);
-        keytextkey2 += line + "\n";
-    }
-    infilekey2.close(); 
-
-    ifstream infilekey3("test_keys/pub/pep.never.me.test-0x79C11D1D_pub.asc");
-    string keytextkey3;
-    while (!infilekey3.eof()) {
-        static string line;
-        getline(infilekey3, line);
-        keytextkey3 += line + "\n";
-    }
-    infilekey3.close(); 
-    
-    ifstream infilekey4("test_keys/priv/pep.never.me.test-0x79C11D1D_priv.asc");
-    string keytextkey4;
-    while (!infilekey4.eof()) {
-        static string line;
-        getline(infilekey4, line);
-        keytextkey4 += line + "\n";
-    }
-    infilekey4.close(); 
+    const string keytextkey1 = slurp("test_keys/pub/banmeonce-0x07B29090_pub.asc");
+    const string keytextkey2 = slurp("test_keys/pub/banmetwice-0x4080C3E7_pub.asc");
+    const string keytextkey3 = slurp("test_keys/pub/pep.never.me.test-0x79C11D1D_pub.asc");
+    const string keytextkey4 = slurp("test_keys/priv/pep.never.me.test-0x79C11D1D_priv.asc");
 
     PEP_STATUS statuskey1 = import_key(session, keytextkey1.c_str(), keytextkey1.length(), NULL);
     PEP_STATUS statuskey2 = import_key(session, keytextkey2.c_str(), keytextkey2.length(), NULL);
@@ -81,14 +50,7 @@ int main(int argc, char** argv) {
     status = update_identity(session, recip2);
     key_reset_trust(session, recip2);
         
-    ifstream infile(mailfile);
-    string mailtext;
-    while (!infile.eof()) {
-        static string line;
-        getline(infile, line);
-        mailtext += line + "\n";
-    }
-    infile.close(); 
+    const string mailtext = slurp(mailfile);
 
     // trust_personal_key(session, you);
     // 
@@ -153,7 +115,7 @@ int main(int argc, char** argv) {
     final_ptr = nullptr;
     keylist = nullptr;
     rating = PEP_rating_unreliable;
-        
+    
     cout << "calling release()\n";
     release(session);
     return 0;

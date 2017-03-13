@@ -9,6 +9,7 @@
 #include <assert.h>
 #include "blacklist.h"
 #include "keymanagement.h"
+#include "test_util.h"
 
 using namespace std;
 
@@ -66,15 +67,7 @@ int main() {
     
     // 2797 65A2 FEB5 B7C7 31B8  61D9 3E4C EFD9 F7AF 4684 - this is the blacklisted key in blacklisted_pub.asc
 
-    /* read the key into memory */
-    ifstream infile("blacklisted_pub.asc");
-    string keytext;
-    while (!infile.eof()) {
-        static string line;
-        getline(infile, line);
-        keytext += line + "\n";
-    }
-    infile.close(); 
+    const string keytext = slurp("blacklisted_pub.asc");
     
     /* FIXME: put in automated test stuff (N.B. only gdb mem examination to this point to get
      *        fix in */
@@ -95,7 +88,7 @@ int main() {
     blacklisted_identity->comm_type = PEP_ct_pEp;
 
     PEP_STATUS status99 = set_identity(session, blacklisted_identity);
-        
+    
     trust_personal_key(session, blacklisted_identity);
 
     PEP_STATUS status999 = update_identity(session, blacklisted_identity);
@@ -111,16 +104,7 @@ int main() {
     else
         cout << "blacklisted identity's fpr successfully wiped by update_identity" << endl;
 
-    /* read the key into memory */
-    ifstream infile2("blacklisted_pub2.asc");
-    string keytext2;
-    while (!infile2.eof()) {
-        static string line2;
-        getline(infile2, line2);
-        keytext2 += line2 + "\n";
-    }
-    infile2.close(); 
-    
+    const string keytext2 = slurp("blacklisted_pub2.asc");
     PEP_STATUS status14 = import_key(session, keytext2.c_str(), keytext2.length(), NULL);
     
     pEp_identity* blacklisted_identity2 = new_identity("blacklistedkeys@kgrothoff.org",

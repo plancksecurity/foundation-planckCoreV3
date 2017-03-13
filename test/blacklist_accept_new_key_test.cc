@@ -11,6 +11,7 @@
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"
+#include "test_util.h"
 
 using namespace std;
 
@@ -32,14 +33,7 @@ int main() {
     // 2797 65A2 FEB5 B7C7 31B8  61D9 3E4C EFD9 F7AF 4684 - this is the blacklisted key in blacklisted_pub.asc
 
     /* read the key into memory */
-    ifstream infile("blacklisted_pub.asc");
-    string keytext;
-    while (!infile.eof()) {
-        static string line;
-        getline(infile, line);
-        keytext += line + "\n";
-    }
-    infile.close(); 
+    const string keytext = slurp("blacklisted_pub.asc");
     
     /* import it into pep */
     PEP_STATUS status7 = import_key(session, keytext.c_str(), keytext.length(), NULL);
@@ -58,17 +52,8 @@ int main() {
 
     /* identity is blacklisted. Now let's read in a message which contains a new key for that ID. */
     
-    const char* new_key = "634FAC4417E9B2A5DC2BD4AAC4AEEBBE7E62701B";    
-    
-    ifstream infile2("test_mails/blacklist_new_key_attached.eml");
-    string mailtext;
-    while (!infile2.eof()) {
-        static string line;
-        getline(infile2, line);
-        mailtext += line + "\n";
-    }
-    infile2.close(); 
-
+    const char* new_key = "634FAC4417E9B2A5DC2BD4AAC4AEEBBE7E62701B";
+    const string mailtext = slurp("test_mails/blacklist_new_key_attached.eml");
     pEp_identity * me1 = new_identity("blacklist_test@kgrothoff.org", NULL, PEP_OWN_USERID, "Blacklisted Key Message Recipient");    
 
     PEP_STATUS status = update_identity(session, me1);
@@ -102,4 +87,3 @@ int main() {
     release(session);
     return 0;
 }
-
