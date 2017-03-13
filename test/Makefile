@@ -42,8 +42,12 @@ clean:
 test: pEpEngineTest .imported
 	LD_LIBRARY_PATH=~/lib:../src ./pEpEngineTest
 
+%_test : %_test.o test_util.o
+	 $(LD) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+
 %_test_run : %_test
 	LD_LIBRARY_PATH=~/lib:../src ./$<
+
 
 %_test_lldb : %_test
 	LD_LIBRARY_PATH=~/lib:../src lldb ./$<
