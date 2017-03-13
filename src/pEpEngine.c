@@ -1477,6 +1477,26 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
             keylist, ptext, psize, ctext, csize);
 }
 
+PEP_STATUS encrypt_only(
+    PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+    size_t psize, char **ctext, size_t *csize
+    )
+{
+    assert(session);
+    assert(keylist);
+    assert(ptext);
+    assert(psize);
+    assert(ctext);
+    assert(csize);
+
+    if (!(session && keylist && ptext && psize && ctext && csize))
+        return PEP_ILLEGAL_VALUE;
+
+    return session->cryptotech[PEP_crypt_OpenPGP].encrypt_only(session,
+            keylist, ptext, psize, ctext, csize);
+}
+
+
 DYNAMIC_API PEP_STATUS verify_text(
     PEP_SESSION session, const char *text, size_t size,
     const char *signature, size_t sig_size, stringlist_t **keylist

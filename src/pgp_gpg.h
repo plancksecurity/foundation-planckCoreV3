@@ -19,6 +19,12 @@ PEP_STATUS pgp_encrypt_and_sign(
         size_t psize, char **ctext, size_t *csize
     );
 
+PEP_STATUS pgp_encrypt_only(
+        PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+        size_t psize, char **ctext, size_t *csize
+    );
+
+
 PEP_STATUS pgp_verify_text(
         PEP_SESSION session, const char *text, size_t size,
         const char *signature, size_t sig_size, stringlist_t **keylist
@@ -100,4 +106,3 @@ PEP_STATUS pgp_find_private_keys(
 
 PEP_STATUS pgp_binary(const char **path);
 #define PGP_BINARY_PATH pgp_binary
-
