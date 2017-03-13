@@ -2526,17 +2526,18 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     if (status != PEP_STATUS_OK)
         goto pep_error;
 
-    status = decrypt_message(session,
-                             tmp_msg,
-                             &dec_msg,
-                             keylist,
-                             rating,
-                             flags);
-    if (status != PEP_STATUS_OK)
-        goto pep_error;
-
+    PEP_STATUS decrypt_status = decrypt_message(session,
+                                                tmp_msg,
+                                                &dec_msg,
+                                                keylist,
+                                                rating,
+                                                flags);
+                                                
     status = mime_encode_message(dec_msg, false, mime_plaintext);
 
+    if (status == PEP_STATUS_OK)
+        return decrypt_status;
+        
 pep_error:
     free_message(tmp_msg);
     free_message(dec_msg);
@@ -2589,7 +2590,6 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message_for_self(
     pEp_identity* target_id,
     const char *mimetext,
     size_t size,
-    stringlist_t* extra,
     char** mime_ciphertext,
     PEP_enc_format enc_format,
     PEP_encrypt_flags_t flags

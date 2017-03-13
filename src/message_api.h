@@ -140,9 +140,9 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
 //                              the message, with MIME output
 //  parameters:
 //      session (in)            session handle
+//      target_id (in)      self identity this message should be encrypted for
 //      mimetext (in)           MIME encoded text to encrypt
 //      size (in)               size of input mime text
-//      extra (in)              extra keys for encryption
 //      mime_ciphertext (out)   encrypted, encoded message
 //      enc_format (in)         encrypted format
 //      flags (in)              flags to set special encryption features
@@ -165,7 +165,6 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message_for_self(
     pEp_identity* target_id,
     const char *mimetext,
     size_t size,
-    stringlist_t* extra,
     char** mime_ciphertext,
     PEP_enc_format enc_format,
     PEP_encrypt_flags_t flags
@@ -255,7 +254,9 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 //      flags (out)             flags to signal special decryption features
 //
 //  return value:
-//      PEP_STATUS_OK           if everything worked
+//      decrypt status          if everything worked with MIME encode/decode, 
+//                              the status of the decryption is returned 
+//                              (PEP_STATUS_OK or decryption error status)
 //      PEP_BUFFER_TOO_SMALL    if encoded message size is too big to handle
 //      PEP_CANNOT_CREATE_TEMP_FILE
 //                              if there are issues with temp files; in
