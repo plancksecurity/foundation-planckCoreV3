@@ -31,6 +31,9 @@ all: $(TARGET) $(UNIT_TESTS)
 
 .PHONY: clean
 
+# don't delete .o files!
+.PRECIOUS: %.o
+
 clean:
 	rm -f *.o $(TARGET) *.a *~ $(UNIT_TESTS) pep_Dokument_Titel.pdf msg4.asc
 	rm -Rf *.dSYM .imported pubring.gpg secring.gpg random_seed *.conf trustdb.gpg
