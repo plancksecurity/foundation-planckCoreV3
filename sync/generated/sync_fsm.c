@@ -661,7 +661,14 @@ DeviceState_state fsm_DeviceState(
                         return Grouped;
                         }
                     }
-                    break;
+                    assert(session->sync_state_payload);
+                    if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
+                    free_identity(((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->expected);
+                    free_group_keys_extra(((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->groupkeys);
+                    free(session->sync_state_payload);
+                    session->sync_state_payload = NULL;
+                    DEBUG_LOG("FSM transition", "sync_fsm.c, state=WaitForAcceptSole, event=HandshakeAccepted", "target=Sole")
+                    return Sole;
                 }
                 case Cancel:
                 {
@@ -1287,36 +1294,48 @@ DeviceState_state fsm_DeviceState(
                 case HandshakeAccepted:
                 {
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=WaitForAcceptGrouped", "event=HandshakeAccepted")
-                    DEBUG_LOG("FSM action", "sync_fsm.c, state=WaitForAcceptGrouped, event=HandshakeAccepted", "action=acceptHandshake")
-                    status = acceptHandshake(session, state, partner, NULL);
-                    if (status == PEP_OUT_OF_MEMORY)
-                        return (int) invalid_out_of_memory;
-                    if (status != PEP_STATUS_OK)
-                        return (int) invalid_action;
-                    DEBUG_LOG("FSM action", "sync_fsm.c, state=WaitForAcceptGrouped, event=HandshakeAccepted", "action=storeGroupKeys")
-                    status = storeGroupKeys(session, state, partner, groupkeys);
-                    if (status == PEP_OUT_OF_MEMORY)
-                        return (int) invalid_out_of_memory;
-                    if (status != PEP_STATUS_OK)
-                        return (int) invalid_action;
-                    DEBUG_LOG("FSM action", "sync_fsm.c, state=WaitForAcceptGrouped, event=HandshakeAccepted", "action=sendGroupUpdate")
-                    status = sendGroupUpdate(session, state, NULL, NULL);
-                    if (status == PEP_OUT_OF_MEMORY)
-                        return (int) invalid_out_of_memory;
-                    if (status != PEP_STATUS_OK)
-                        return (int) invalid_action;
-                    DEBUG_LOG("FSM action", "sync_fsm.c, state=WaitForAcceptGrouped, event=HandshakeAccepted", "action=renewUUID")
-                    status = renewUUID(session, state, NULL, NULL);
-                    if (status == PEP_OUT_OF_MEMORY)
-                        return (int) invalid_out_of_memory;
-                    if (status != PEP_STATUS_OK)
-                        return (int) invalid_action;
-                    DEBUG_LOG("FSM action", "sync_fsm.c, state=WaitForAcceptGrouped, event=HandshakeAccepted", "action=notifyAcceptedDeviceMoved")
-                    status = notifyAcceptedDeviceMoved(session, state, partner, NULL);
-                    if (status == PEP_OUT_OF_MEMORY)
-                        return (int) invalid_out_of_memory;
-                    if (status != PEP_STATUS_OK)
-                        return (int) invalid_action;
+                    {
+                        int cond_result = sameIdentities(session, partner, expected);
+                        #ifndef NDEBUG
+                        char resstr[11] = {0,};
+                        snprintf(resstr,10,"result=%d",cond_result);
+                        #endif
+                        DEBUG_LOG("FSM condition", "sync_fsm.c, state=WaitForAcceptGrouped, event=HandshakeAccepted, condition=sameIdentities", resstr)
+                        if (cond_result < 0)
+                            return cond_result;
+                        if (cond_result) {
+                        DEBUG_LOG("FSM action", "sync_fsm.c, state=WaitForAcceptGrouped, event=HandshakeAccepted", "action=acceptHandshake")
+                        status = acceptHandshake(session, state, partner, NULL);
+                        if (status == PEP_OUT_OF_MEMORY)
+                            return (int) invalid_out_of_memory;
+                        if (status != PEP_STATUS_OK)
+                            return (int) invalid_action;
+                        DEBUG_LOG("FSM action", "sync_fsm.c, state=WaitForAcceptGrouped, event=HandshakeAccepted", "action=storeGroupKeys")
+                        status = storeGroupKeys(session, state, partner, groupkeys);
+                        if (status == PEP_OUT_OF_MEMORY)
+                            return (int) invalid_out_of_memory;
+                        if (status != PEP_STATUS_OK)
+                            return (int) invalid_action;
+                        DEBUG_LOG("FSM action", "sync_fsm.c, state=WaitForAcceptGrouped, event=HandshakeAccepted", "action=sendGroupUpdate")
+                        status = sendGroupUpdate(session, state, NULL, NULL);
+                        if (status == PEP_OUT_OF_MEMORY)
+                            return (int) invalid_out_of_memory;
+                        if (status != PEP_STATUS_OK)
+                            return (int) invalid_action;
+                        DEBUG_LOG("FSM action", "sync_fsm.c, state=WaitForAcceptGrouped, event=HandshakeAccepted", "action=renewUUID")
+                        status = renewUUID(session, state, NULL, NULL);
+                        if (status == PEP_OUT_OF_MEMORY)
+                            return (int) invalid_out_of_memory;
+                        if (status != PEP_STATUS_OK)
+                            return (int) invalid_action;
+                        DEBUG_LOG("FSM action", "sync_fsm.c, state=WaitForAcceptGrouped, event=HandshakeAccepted", "action=notifyAcceptedDeviceMoved")
+                        status = notifyAcceptedDeviceMoved(session, state, partner, NULL);
+                        if (status == PEP_OUT_OF_MEMORY)
+                            return (int) invalid_out_of_memory;
+                        if (status != PEP_STATUS_OK)
+                            return (int) invalid_action;
+                        }
+                    }
                     assert(session->sync_state_payload);
                     if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
                     free_identity(((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->expected);

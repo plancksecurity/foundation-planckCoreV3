@@ -142,6 +142,7 @@ protocol DeviceGroup {
                     do notifyAcceptedDeviceAdded(partner);
                     go Grouped;
                 }
+                go Sole;
             }
             on Cancel go Sole;
             on Timeout {
@@ -266,11 +267,13 @@ protocol DeviceGroup {
                 go Grouped;
             }
             on HandshakeAccepted(Identity partner) {
-                do acceptHandshake(partner); 
-                do storeGroupKeys(partner, groupkeys);
-                do sendGroupUpdate;
-                do renewUUID;
-                do notifyAcceptedDeviceMoved(partner);
+                if sameIdentities(partner, expected) {
+                    do acceptHandshake(partner); 
+                    do storeGroupKeys(partner, groupkeys);
+                    do sendGroupUpdate;
+                    do renewUUID;
+                    do notifyAcceptedDeviceMoved(partner);
+                }
                 go Grouped;
             }
             on Cancel go Grouped;

@@ -548,45 +548,50 @@ PEP_STATUS receive_DeviceState_msg(
                                 goto free_all;
                             }
 
-                            // do not consume handshake groupKeys for group
+                            // do not consume groupKeys for group
                             if(is_for_group){ 
                                 // This happens in case case of groupmerge
                                 force_keep_msg = true;
                             }
 
-                            // check trust of identity using user_id given in msg.header.me
-                            // to exacly match identity of device, the one trusted in
-                            // case of accepted handshake from a sole device
-                            pEp_identity *_from = new_identity(NULL, 
-                                                               keylist->value,
-                                                               user_id,
-                                                               NULL);
-                            if (_from == NULL){
-                                status = PEP_OUT_OF_MEMORY;
-                                goto free_all;
-                            }
-                            status = get_trust(session, _from);
-                            if (status != PEP_STATUS_OK || _from->comm_type < PEP_ct_strong_encryption) {
+                            // Trust check disabled here but it still it should be safe.
+                            // SameIdentity checks in state machine ensures that we only
+                            // store groupkeys signed by device or group that have been 
+                            // previously accepted in handshake.
+                            //
+                            // // check trust of identity using user_id given in msg.header.me
+                            // // to exacly match identity of device, the one trusted in
+                            // // case of accepted handshake from a sole device
+                            // pEp_identity *_from = new_identity(NULL, 
+                            //                                    keylist->value,
+                            //                                    user_id,
+                            //                                    NULL);
+                            // if (_from == NULL){
+                            //     status = PEP_OUT_OF_MEMORY;
+                            //     goto free_all;
+                            // }
+                            // status = get_trust(session, _from);
+                            // if (status != PEP_STATUS_OK || _from->comm_type < PEP_ct_strong_encryption) {
 
-                                // re-try with group_id instead, in case of handshake with pre-existing group
-                                UTF8String_t *guuid = msg->payload.choice.groupKeys.group_id;
-                                free(_from->user_id);
-                                if ((_from->user_id = strndup((const char*)guuid->buf, guuid->size)) == NULL){
-                                    free_identity(_from);
-                                    status = PEP_OUT_OF_MEMORY;
-                                    goto free_all;
-                                }
-                                _from->comm_type = PEP_ct_unknown;
+                            //     // re-try with group_id instead, in case of handshake with pre-existing group
+                            //     UTF8String_t *guuid = msg->payload.choice.groupKeys.group_id;
+                            //     free(_from->user_id);
+                            //     if ((_from->user_id = strndup((const char*)guuid->buf, guuid->size)) == NULL){
+                            //         free_identity(_from);
+                            //         status = PEP_OUT_OF_MEMORY;
+                            //         goto free_all;
+                            //     }
+                            //     _from->comm_type = PEP_ct_unknown;
 
-                                status = get_trust(session, _from);
-                                if (status != PEP_STATUS_OK || _from->comm_type < PEP_ct_strong_encryption) {
-                                    status = PEP_STATUS_OK;
-                                    free_identity(_from);
-                                    discard = true;
-                                    goto free_all;
-                                }
-                            }
-                            free_identity(_from);
+                            //     status = get_trust(session, _from);
+                            //     if (status != PEP_STATUS_OK || _from->comm_type < PEP_ct_strong_encryption) {
+                            //         status = PEP_STATUS_OK;
+                            //         free_identity(_from);
+                            //         discard = true;
+                            //         goto free_all;
+                            //     }
+                            // }
+                            // free_identity(_from);
                             break;
                         }
                         case DeviceGroup_Protocol__payload_PR_groupUpdate:
@@ -938,30 +943,30 @@ void free_group_keys_extra(group_keys_extra_t* group_keys_extra)
     free(group_keys_extra);
 }
 
-group_keys_extra_t* group_keys_extra_dup(group_keys_extra_t* groupkeys)
+group_keys_extra_t* group_keys_extra_dup(group_keys_extra_t* group_key_extra_src)
 {
-    group_keys_extra_t *group_keys_extra;
-    group_keys_extra = malloc(sizeof(group_keys_extra_t));
-    if(group_keys_extra == NULL){
+    group_keys_extra_t *group_key_extra_dst;
+    group_key_extra_dst = calloc(1,sizeof(group_keys_extra_t));
+    if(group_key_extra_dst == NULL){
         return NULL;
     }
 
-    char *group_id = strdup(group_keys_extra->group_id);
+    char *group_id = strdup(group_key_extra_src->group_id);
 
-    if (group_keys_extra->group_id && !group_id){
-        free(group_keys_extra);
+    if (group_key_extra_dst->group_id && !group_id){
+        free(group_key_extra_dst);
         return NULL;
     }
-    group_keys_extra->group_id = group_id;
+    group_key_extra_dst->group_id = group_id;
 
-    identity_list *group_keys = identity_list_dup(group_keys_extra->group_keys);;
+    identity_list *group_keys = identity_list_dup(group_key_extra_src->group_keys);;
     if (!group_keys) {
         free(group_id);
-        free(group_keys_extra);
+        free(group_key_extra_dst);
         return NULL;
     }
-    group_keys_extra->group_keys = group_keys;
+    group_key_extra_dst->group_keys = group_keys;
 
-    return group_keys_extra;
+    return group_key_extra_dst;
 }
 
