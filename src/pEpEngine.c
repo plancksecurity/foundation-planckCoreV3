@@ -90,7 +90,10 @@ static const char *sql_get_trust =
     "and pgp_keypair_fpr = upper(replace(?2,' ','')) ;";
 
 static const char *sql_least_trust = 
-    "select min(comm_type) from trust where pgp_keypair_fpr = upper(replace(?1,' ','')) ;";
+    "select min(comm_type) from trust where"
+    " pgp_keypair_fpr = upper(replace(?1,' ',''))"
+    " and comm_type != 0;"; // ignores PEP_ct_unknown
+    // returns PEP_ct_unknown only when no known trust is recorded
 
 static const char *sql_mark_as_compromized = 
     "update trust not indexed set comm_type = 15"
@@ -169,7 +172,11 @@ static const char *sql_sequence_value2 =
     "select value, own from sequences where name = ?1 ;";
 
 static const char *sql_sequence_value3 = 
-    "update sequences set value = ?2, own = (select own or ?3 from sequences where name = ?1) where name = ?1 ;";
+    "insert or replace into sequences (name, value, own) "
+    "values (?1, "
+    "        ?2, "
+    "       (select coalesce((select own or ?3 from sequences "
+    "           where name = ?1), ?3))) ; ";
         
 // Revocation tracking
 static const char *sql_set_revoked =
@@ -785,12 +792,6 @@ DYNAMIC_API PEP_STATUS log_event(
     assert(session);
     assert(title);
     assert(entity);
-
-    #ifndef NDEBUG
-    #ifdef ANDROID
-    LOGD(" %s :: %s :: %s ", title, entity, description);
-    #endif
-    #endif
 
     if (!(session && title && entity))
         return PEP_ILLEGAL_VALUE;
@@ -1431,6 +1432,7 @@ DYNAMIC_API PEP_STATUS least_trust(
             break;
         }
         default:
+            // never reached because of sql min()
             status = PEP_CANNOT_FIND_IDENTITY;
     }
 

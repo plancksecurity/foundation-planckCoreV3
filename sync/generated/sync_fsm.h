@@ -95,6 +95,7 @@ PEP_STATUS sendUpdateRequest(PEP_SESSION session, DeviceState_state state, Ident
 PEP_STATUS storeGroupUpdate(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS notifyInitAddOtherDevice(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS notifyInitMoveOurDevice(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
+PEP_STATUS notifyOvertaken(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 PEP_STATUS notifyAcceptedDeviceMoved(PEP_SESSION session, DeviceState_state state, Identity partner, void *extra);
 
 // event injector

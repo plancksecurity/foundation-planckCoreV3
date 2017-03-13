@@ -205,6 +205,7 @@ PEP_STATUS rejectHandshake(
     if (!(session && partner))
         return PEP_ILLEGAL_VALUE;
 
+    // TODO : disable sync globally if not in a group
     status = set_identity_flags(session, partner,
             partner->flags | PEP_idf_not_for_sync);
 
@@ -343,9 +344,15 @@ PEP_STATUS makeGroup(
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-    
+   
+    // make a new uuid 
+    char new_uuid[37];
+    pEpUUID uuid;
+    uuid_generate_random(uuid);
+    uuid_unparse_upper(uuid, new_uuid);
+
     // take that new uuid as group-id
-    status = set_device_group(session, session->sync_uuid);
+    status = set_device_group(session, new_uuid);
 
     return status;
 }

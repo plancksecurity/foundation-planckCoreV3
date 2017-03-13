@@ -185,13 +185,16 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
             continue;
 #endif
         }
-        else if ((status = receive_sync_msg(session, msg, &timeout) != PEP_STATUS_OK)) {
+        else {
+            status = receive_sync_msg(session, msg, &timeout);
+            if (status != PEP_STATUS_OK && status != PEP_MESSAGE_IGNORE) {
 #ifndef NDEBUG
-            char buffer[MAX_LINELENGTH];
-            memset(buffer, 0, MAX_LINELENGTH);
-            snprintf(buffer, MAX_LINELENGTH, "problem with msg received: %d\n", (int) status);
-            log_event(session, buffer, "pEp sync protocol", NULL, NULL);
+                char buffer[MAX_LINELENGTH];
+                memset(buffer, 0, MAX_LINELENGTH);
+                snprintf(buffer, MAX_LINELENGTH, "problem with msg received: %d\n", (int) status);
+                log_event(session, buffer, "pEp sync protocol", NULL, NULL);
 #endif
+            }
         }
     }
 

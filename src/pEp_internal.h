@@ -175,16 +175,18 @@ PEP_STATUS encrypt_only(
 
 #ifdef NDEBUG
 #define DEBUG_LOG(TITLE, ENTITY, DESC)
-#define  LOGD(...)
 #else
-#define DEBUG_LOG(TITLE, ENTITY, DESC) \
-    log_event(session, (TITLE), (ENTITY), (DESC), "debug");
 #ifdef ANDROID
 #include <android/log.h>
-#define  LOG_TAG    "pEpEngine"
-#define  LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#define  LOG_MORE(...)  __android_log_print(ANDROID_LOG_DEBUG, "pEpEngine", " %s :: %s :: %s ", __VA_ARGS__);
+#else
+#include <stdio.h>
+#define  LOG_MORE(...)  printf("pEpEngine DEBUG_LOG('%s','%s','%s')\n", __VA_ARGS__);
 #endif
-
+#define DEBUG_LOG(TITLE, ENTITY, DESC) {\
+    log_event(session, (TITLE), (ENTITY), (DESC), "debug");\
+    LOG_MORE((TITLE), (ENTITY), (DESC))\
+}
 #endif
 
 // Space tolerant and case insensitive fingerprint string compare

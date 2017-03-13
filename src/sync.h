@@ -243,8 +243,10 @@ typedef enum _sync_handshake_signal {
     // handshake accepted by user
     SYNC_NOTIFY_ACCEPTED_DEVICE_ADDED,
     SYNC_NOTIFY_ACCEPTED_GROUP_CREATED,
-    SYNC_NOTIFY_ACCEPTED_DEVICE_MOVED
+    SYNC_NOTIFY_ACCEPTED_DEVICE_MOVED,
 
+    // handshake dialog must be closed
+    SYNC_NOTIFY_OVERTAKEN
 } sync_handshake_signal;
 
 // notifyHandshake() - notify UI about sync handshaking process
