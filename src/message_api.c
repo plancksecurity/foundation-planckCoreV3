@@ -1081,6 +1081,7 @@ PEP_cryptotech determine_encryption_format(message *msg)
     }
 }
 
+
 PEP_STATUS sign_message(PEP_SESSION session,
                         message *src,
                         message **dst
@@ -1090,6 +1091,119 @@ PEP_STATUS sign_message(PEP_SESSION session,
         return PEP_ILLEGAL_VALUE;
         
     PEP_STATUS status = PEP_KEY_NOT_FOUND;                         
+
+    assert(session);
+    assert(src);
+    assert(dst);
+
+    if (!(session && src && dst))
+        return PEP_ILLEGAL_VALUE;
+
+    if (src->dir == PEP_dir_incoming || !(src->from))
+        return PEP_ILLEGAL_VALUE;
+
+    message * msg = NULL;
+    stringlist_t * keys = NULL;
+
+    determine_encryption_format(src);
+    if (src->enc_format != PEP_enc_none)
+        return PEP_ILLEGAL_VALUE;
+
+    *dst = NULL;
+
+    status = myself(session, src->from);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+
+    if (!src->from->fpr)
+        return PEP_KEY_NOT_FOUND;
+        
+    keys = new_stringlist(src->from->fpr);
+    if (keys == NULL)
+        goto enomem;
+
+    msg = clone_to_empty_message(src);
+    if (msg == NULL)
+        goto enomem;
+
+    attach_own_key(session, src);
+
+    char *ptext = NULL;
+    char *ctext = NULL;
+    char *mimetext = NULL;
+    size_t csize;
+    assert(dst->longmsg == NULL);
+    msg->enc_format = PEP_enc_none;
+
+    msg->shortmsg = strdup(src->shortmsg);
+    assert(msg->shortmsg);
+    if (msg->shortmsg == NULL)
+        goto enomem;
+    ptext = src->longmsg;
+
+    message *_src = calloc(1, sizeof(message));
+    assert(_src);
+    if (_src == NULL)
+        goto enomem;
+    _src->longmsg = ptext;
+    _src->longmsg_formatted = src->longmsg_formatted;
+    _src->attachments = src->attachments; // key will get attached here
+    _src->enc_format = PEP_enc_none;
+    status = mime_encode_message(_src, true, &mimetext);
+    assert(status == PEP_STATUS_OK);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+
+    free(_src);
+    assert(mimetext);
+    if (mimetext == NULL)
+        goto pep_error;
+
+    status = sign_text(session, keys, mimetext, strlen(mimetext),
+                       &ctext, &csize);
+                       
+    free(mimetext);
+                       
+    if (status == PEP_OUT_OF_MEMORY)
+        goto enomem;
+
+    if (status != PEP_STATUS_OK || ctext == NULL)
+       goto pep_error;
+
+    msg->longmsg = strndup(ctext, csize);
+    assert(msg->longmsg);
+    if (msg->longmsg == NULL)
+        goto enomem;
+
+    free_stringlist(keys);
+
+    if (msg && msg->shortmsg == NULL) {
+        msg->shortmsg = strdup(src->shortmsg);
+        assert(msg->shortmsg);
+        if (msg->shortmsg == NULL)
+            goto enomem;
+    }
+
+    if (msg) {
+        decorate_message(msg, PEP_rating_undefined, NULL);
+        if (src->id) {
+            msg->id = strdup(src->id);
+            assert(msg->id);
+            if (msg->id == NULL)
+                goto enomem;
+        }
+    }
+
+    *dst = msg;
+    return status;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+pep_error:
+    free_stringlist(keys);
+    free_message(msg);
+
     return status;
 }
 
@@ -1102,7 +1216,7 @@ PEP_STATUS check_signed_message(PEP_SESSION session,
         return PEP_ILLEGAL_VALUE;
  
     PEP_STATUS status = PEP_VERIFY_NO_KEY;
-    signing_key_ptr = NULL:
+    signing_key_ptr = NULL;
     return status;                              
 }
 
