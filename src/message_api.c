@@ -1081,6 +1081,32 @@ PEP_cryptotech determine_encryption_format(message *msg)
     }
 }
 
+PEP_STATUS sign_message(PEP_SESSION session,
+                        message *src,
+                        message **dst
+                    ) 
+{   
+    if (!dst)
+        return PEP_ILLEGAL_VALUE;
+        
+    PEP_STATUS status = PEP_KEY_NOT_FOUND;                         
+    return status;
+}
+
+PEP_STATUS check_signed_message(PEP_SESSION session,
+                                message *src,
+                                char** signing_key_ptr
+                            )
+{                          
+    if (!signing_key_ptr)
+        return PEP_ILLEGAL_VALUE;
+ 
+    PEP_STATUS status = PEP_VERIFY_NO_KEY;
+    signing_key_ptr = NULL:
+    return status;                              
+}
+
+
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
         message *src,

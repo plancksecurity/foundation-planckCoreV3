@@ -19,6 +19,14 @@ bool import_attached_keys(
         identity_list **private_idents
     );
 void attach_own_key(PEP_SESSION session, message *msg);
+PEP_STATUS sign_message(PEP_SESSION session,
+                        message *src,
+                        message **dst);
+
+PEP_STATUS check_signed_message(PEP_SESSION session,
+                                message *src,
+                                char* signing_key);
+
 PEP_cryptotech determine_encryption_format(message *msg);
 void add_opt_field(message *msg, const char *name, const char *value);
 
