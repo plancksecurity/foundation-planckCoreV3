@@ -2267,5 +2267,8 @@ DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session)
     );
     assert(int_result == SQLITE_OK);
 
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_ERROR;
+
     return PEP_STATUS_OK;
 }
