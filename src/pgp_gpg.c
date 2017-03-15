@@ -1128,9 +1128,9 @@ PEP_STATUS pgp_sign_text(
             gpg.gpgme_data_release(signeddata);
             return PEP_OUT_OF_MEMORY;
         case GPG_ERR_NO_ERROR:
-            gpgme_error_t _gpgme_error = gpg.gpgme_signers_add(session->ctx, rcpt[0]);
-            _gpgme_error = _GPGERR(_gpgme_error);
-            assert(_gpgme_error == GPG_ERR_NO_ERROR);
+            gpgme_error = gpg.gpgme_signers_add(session->ctx, rcpt[0]);
+            gpgme_error = _GPGERR(gpgme_error);
+            assert(gpgme_error == GPG_ERR_NO_ERROR);
             break;
         case GPG_ERR_EOF:
             gpg.gpgme_key_unref(rcpt[0]);
@@ -1151,7 +1151,6 @@ PEP_STATUS pgp_sign_text(
             gpg.gpgme_data_release(plain);
             gpg.gpgme_data_release(signeddata);
             return PEP_GET_KEY_FAILED;
-        }
     }
 
     sig_mode = GPGME_SIG_MODE_NORMAL;
