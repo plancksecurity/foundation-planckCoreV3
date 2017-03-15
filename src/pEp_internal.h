@@ -173,6 +173,13 @@ PEP_STATUS encrypt_only(
         size_t psize, char **ctext, size_t *csize
 );
 
+/* NOT to be exposed to the outside!!! */
+PEP_STATUS sign_text(
+        PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+        size_t psize, char **stext, size_t *ssize
+);
+
+
 #ifdef NDEBUG
 #define DEBUG_LOG(TITLE, ENTITY, DESC)
 #else

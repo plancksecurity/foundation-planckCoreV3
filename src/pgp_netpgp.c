@@ -687,6 +687,14 @@ unlock_netpgp:
     return result;
 }
 
+PEP_STATUS pgp_sign_text(
+    PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+    size_t psize, char **stext, size_t *ssize
+    )
+{
+    return PEP_UNKNOWN_ERROR; // We need a PEP_UNIMPLEMENTED, really.
+}
+
 PEP_STATUS pgp_generate_keypair(
     PEP_SESSION session, pEp_identity *identity
     )

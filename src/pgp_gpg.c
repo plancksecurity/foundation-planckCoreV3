@@ -1055,6 +1055,153 @@ PEP_STATUS pgp_encrypt_and_sign(
         psize, ctext, csize, true);
 }
 
+PEP_STATUS pgp_sign_text(
+    PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+    size_t psize, char **stext, size_t *ssize
+    )
+{
+    PEP_STATUS result;
+    gpgme_error_t gpgme_error;
+    gpgme_data_t plain, signeddata;
+    gpgme_key_t *rcpt;
+    gpgme_sig_mode_t sig_mode;
+    const stringlist_t *_keylist;
+    int i, j;
+
+    assert(session);
+    assert(keylist);
+    assert(ptext);
+    assert(psize);
+    assert(stext);
+    assert(ssize);
+
+    *stext = NULL;
+    *ssize = 0;
+
+    gpgme_error = gpg.gpgme_data_new_from_mem(&plain, ptext, psize, 0);
+    gpgme_error = _GPGERR(gpgme_error);
+    assert(gpgme_error == GPG_ERR_NO_ERROR);
+    if (gpgme_error != GPG_ERR_NO_ERROR) {
+        if (gpgme_error == GPG_ERR_ENOMEM)
+            return PEP_OUT_OF_MEMORY;
+        else
+            return PEP_UNKNOWN_ERROR;
+    }
+
+    gpgme_error = gpg.gpgme_data_new(&signeddata);
+    gpgme_error = _GPGERR(gpgme_error);
+    assert(gpgme_error == GPG_ERR_NO_ERROR);
+    if (gpgme_error != GPG_ERR_NO_ERROR) {
+        gpg.gpgme_data_release(plain);
+        if (gpgme_error == GPG_ERR_ENOMEM)
+            return PEP_OUT_OF_MEMORY;
+        else
+            return PEP_UNKNOWN_ERROR;
+    }
+
+    /* FIXME: Why +1? */
+    rcpt = calloc(2, sizeof(gpgme_key_t));
+    assert(rcpt);
+    if (rcpt == NULL) {
+        gpg.gpgme_data_release(plain);
+        gpg.gpgme_data_release(signeddata);
+        return PEP_OUT_OF_MEMORY;
+    }
+
+    gpg.gpgme_signers_clear(session->ctx);
+
+    assert(keylist->value);
+    if (!keylist->value)
+        return PEP_KEY_NOT_FOUND;
+        
+    gpgme_error = gpg.gpgme_get_key(session->ctx, _keylist->value,
+        &rcpt[0], 0);
+        
+    gpgme_error = _GPGERR(gpgme_error);
+    assert(gpgme_error != GPG_ERR_ENOMEM);
+
+    switch (gpgme_error) {
+        case GPG_ERR_ENOMEM:
+            gpg.gpgme_key_unref(rcpt[0]);
+            free(rcpt);
+            gpg.gpgme_data_release(plain);
+            gpg.gpgme_data_release(signeddata);
+            return PEP_OUT_OF_MEMORY;
+        case GPG_ERR_NO_ERROR:
+            gpgme_error_t _gpgme_error = gpg.gpgme_signers_add(session->ctx, rcpt[0]);
+            _gpgme_error = _GPGERR(_gpgme_error);
+            assert(_gpgme_error == GPG_ERR_NO_ERROR);
+            break;
+        case GPG_ERR_EOF:
+            gpg.gpgme_key_unref(rcpt[0]);
+            free(rcpt);
+            gpg.gpgme_data_release(plain);
+            gpg.gpgme_data_release(signeddata);
+            return PEP_KEY_NOT_FOUND;
+        case GPG_ERR_AMBIGUOUS_NAME:
+            gpg.gpgme_key_unref(rcpt[0]);
+            free(rcpt);
+            gpg.gpgme_data_release(plain);
+            gpg.gpgme_data_release(signeddata);
+            return PEP_KEY_HAS_AMBIG_NAME;
+        default: // GPG_ERR_INV_VALUE if CTX or R_KEY is not a valid pointer or
+            // FPR is not a fingerprint or key ID
+            gpg.gpgme_key_unref(rcpt[0]);
+            free(rcpt);
+            gpg.gpgme_data_release(plain);
+            gpg.gpgme_data_release(signeddata);
+            return PEP_GET_KEY_FAILED;
+        }
+    }
+
+    sig_mode = GPGME_SIG_MODE_NORMAL;
+    
+    gpgme_error = gpg.gpgme_op_sign(session->ctx, plain, signeddata, sig_mode);
+    
+    gpgme_error = _GPGERR(gpgme_error);
+    switch (gpgme_error) {
+    case GPG_ERR_NO_ERROR:
+    {
+        char *_buffer = NULL;
+        size_t reading;
+        size_t length = gpg.gpgme_data_seek(signeddata, 0, SEEK_END);
+        assert(length != -1);
+        gpg.gpgme_data_seek(signeddata, 0, SEEK_SET);
+
+        // TODO: make things less memory consuming
+        // the following algorithm allocates a buffer for the complete text
+
+        _buffer = malloc(length + 1);
+        assert(_buffer);
+        if (_buffer == NULL) {
+            for (j = 0; j<stringlist_length(keylist); j++)
+                gpg.gpgme_key_unref(rcpt[j]);
+            free(rcpt);
+            gpg.gpgme_data_release(plain);
+            gpg.gpgme_data_release(signeddata);
+            return PEP_OUT_OF_MEMORY;
+        }
+
+        reading = gpg.gpgme_data_read(signeddata, _buffer, length);
+        assert(length == reading);
+
+        *stext = _buffer;
+        *ssize = reading;
+        (*stext)[*ssize] = 0; // safeguard for naive users
+        result = PEP_STATUS_OK;
+        break;
+    }
+    default:
+        result = PEP_UNKNOWN_ERROR;
+    }
+
+    gpg.gpgme_key_unref(rcpt[0]);
+    free(rcpt);
+    gpg.gpgme_data_release(plain);
+    gpg.gpgme_data_release(signeddata);
+    return result;
+}
+
 PEP_STATUS pgp_generate_keypair(
     PEP_SESSION session, pEp_identity *identity
     )
