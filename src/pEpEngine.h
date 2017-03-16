@@ -63,6 +63,8 @@ typedef enum {
     PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH            = 0x0406,
     PEP_VERIFY_NO_KEY                               = 0x0407,
     PEP_VERIFIED_AND_TRUSTED                        = 0x0408,
+    PEP_VERIFY_NO_SIGNATURE                         = 0x0409,
+    PEP_VERIFY_SIGNATURE_DOES_NOT_MATCH             = 0x040a,
     PEP_CANNOT_DECRYPT_UNKNOWN                      = 0x04ff,
 
     PEP_TRUSTWORD_NOT_FOUND                         = 0x0501,
@@ -98,6 +100,7 @@ typedef enum {
     PEP_MESSAGE_CONSUME                             = 0xff02,
     PEP_MESSAGE_IGNORE                              = 0xff03,
 
+    PEP_UNIMPLEMENTED                               = -7,
     PEP_RECORD_NOT_FOUND                            = -6,
     PEP_CANNOT_CREATE_TEMP_FILE                     = -5,
     PEP_ILLEGAL_VALUE                               = -4,

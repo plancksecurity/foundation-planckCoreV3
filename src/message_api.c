@@ -1207,19 +1207,6 @@ pep_error:
     return status;
 }
 
-PEP_STATUS check_signed_message(PEP_SESSION session,
-                                message *src,
-                                char** signing_key_ptr
-                            )
-{                          
-    if (!signing_key_ptr)
-        return PEP_ILLEGAL_VALUE;
- 
-    PEP_STATUS status = PEP_VERIFY_NO_KEY;
-    signing_key_ptr = NULL;
-    return status;                              
-}
-
 
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
@@ -1718,6 +1705,117 @@ free:
     return status;
 }
 
+PEP_STATUS check_signed_message(PEP_SESSION session,
+                                message *src,
+                                char** signing_key_ptr
+                            )
+{                          
+    if (!signing_key_ptr || !src || !session || !src->from ||
+        !src->from->address)
+        return PEP_ILLEGAL_VALUE;
+ 
+    PEP_STATUS status = PEP_VERIFY_NO_KEY;
+    signing_key_ptr = NULL;
+    
+    determine_encryption_format(src);
+    if (src->enc_format != PEP_enc_none)
+        return PEP_ILLEGAL_VALUE;
+
+    /* Ok, input checked, let's go */
+    bool imported_keys = import_attached_keys(session, src, NULL);
+
+    // Update src->from in case we just imported a key
+    // we would need to check signature
+    status = _update_identity_for_incoming_message(session, src);
+    if(status != PEP_STATUS_OK)
+        return status;
+    
+    // Get detached signature, if any
+    bloblist_t* detached_sig = NULL;
+    char* dsig_text = NULL;
+    size_t dsig_size = 0;
+    status = _get_detached_signature(src, &detached_sig);
+    if (detached_sig) {
+        dsig_text = detached_sig->value;
+        dsig_size = detached_sig->size;
+    }
+    else {
+        // Per Volker, we don't deal with clearsigned texts here. Period.
+        // This means that we have to implement clearsign-splitting
+        // in parsing.
+        return PEP_VERIFY_NO_SIGNATURE;
+    }
+
+    /* Pull bodies stuck in the attachments up. */
+    /* FIXME: Actually, this is also something  */
+    /* that should be fixed at a higher level   */
+    char* slong = src->longmsg;
+    char* sform = src->longmsg_formatted;
+    bloblist_t* satt = src->attachments;
+    
+    if ((!slong || slong[0] == '\0')
+         && (!sform || sform[0] == '\0')) {
+        if (satt) {
+            const char* inner_mime_type = satt->mime_type;
+            if (strcasecmp(inner_mime_type, "text/plain") == 0) {
+                free(slong); /* in case of "" */
+                src->longmsg = strndup(satt->value, satt->size); // N.B.: longmsg might be shorter, if attachment contains NUL bytes which are not allowed in text/plain!
+                
+                bloblist_t* next_node = satt->next;
+                if (next_node) {
+                    inner_mime_type = next_node->mime_type;
+                    if (strcasecmp(inner_mime_type, "text/html") == 0) {
+                        free(sform);
+                        src->longmsg_formatted = strndup(next_node->value, next_node->size);  // N.B.: longmsg might be shorter, if attachment contains NUL bytes which are not allowed in text/plain!
+                    }
+                }
+            }
+            else if (strcasecmp(inner_mime_type, "text/html") == 0) {
+                free(sform);
+                src->longmsg_formatted = strndup(satt->value, satt->size);  // N.B.: longmsg might be shorter, if attachment contains NUL bytes which are not allowed in text/plain!
+            }
+        }
+    }
+
+    if (detached_sig) {
+        dsig_text = detached_sig->value;
+        dsig_size = detached_sig->size;
+        size_t ssize = 0;
+        char* stext = NULL;
+
+        // FIXME
+        status = _get_signed_text(ptext, psize, &stext, &ssize);
+        stringlist_t *_verify_keylist = NULL;
+
+        if (ssize > 0 && stext) {
+            status = cryptotech[crypto].verify_text(session, stext,
+                                                    ssize, dsig_text, dsig_size,
+                                                    &_verify_keylist);
+
+        }
+    }
+    if (status != PEP_VERIFIED && status != PEP_VERIFIED_AND_TRUSTED) {
+        status = cryptotech[crypto].verify_text(session, stext,
+                                                ssize, NULL, NULL,
+                                                &_verify_keylist);        
+    }
+    
+    if (status == PEP_VERIFIED || status == PEP_VERIFIED_AND_TRUSTED) {
+        // FIXME: free stext et al ??
+        if (!_verify_keylist) // These should NEVER happen... bug if so!
+            return PEP_UNKNOWN_ERROR;
+        char* retfpr = _verify_keylist->value;
+        if (!retfpr || retfpr[0] == '\0') {
+            free_stringlist(_verify_keylist);
+            return PEP_UNKNOWN_ERROR; // Still would be a bug...
+        }
+        // FIXME - check stringlist_t ownership
+        signing_key_ptr == strdup(retfpr);
+    }
+
+    return status;                              
+}
+
 
 DYNAMIC_API PEP_STATUS _decrypt_message(
         PEP_SESSION session,
@@ -2053,7 +2151,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                     NOT_IMPLEMENTED
         }
 
-        // check for private key in decrypted message attachement while inporting
+        // check for private key in decrypted message attachement while importing
         identity_list *_private_il = NULL;
         imported_keys = import_attached_keys(session, msg, &_private_il);
         if (_private_il &&

@@ -23,9 +23,15 @@ PEP_STATUS sign_message(PEP_SESSION session,
                         message *src,
                         message **dst);
 
+/* checks if a message is correctly signend
+with a key that has a UID with the email address of message.from. If
+result is PEP_VERIFIED, it additionally delivers fpr of the signature
+key. The function has to import attached keys first before doing the
+check.  It must not handle encrypted messages but give an error value
+for them. */
 PEP_STATUS check_signed_message(PEP_SESSION session,
                                 message *src,
-                                char** signing_key);
+                                char** signing_key_ptr);
 
 PEP_cryptotech determine_encryption_format(message *msg);
 void add_opt_field(message *msg, const char *name, const char *value);
