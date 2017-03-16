@@ -1,20 +1,19 @@
 include ../Makefile.conf
 
-OPENPGP?=GPG
+ETPAN_IN?=$(HOME)
 
 ifeq ($(BUILD_ON),Darwin)
 ifeq ($(BUILD_FOR),Darwin)
 
 TARGET?=libpEpEngine.dylib
 MACOSX_VERSION_MIN=10.6
-GPGME_IN=$(HOME)
 LIBGPGME?=libgpgme.dylib
 CC?=clang -std=c99 -pthread
 LD?=clang
-CFLAGS?=-I$(GPGME_IN)/include -I$(HOME)/include -I/opt/local/include $(OPTIMIZE) -pedantic \
-	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -DLIBGPGME=\"$(LIBGPGME)\" -DNDEBUG -I../asn.1 $(EXTRAMACROS)
-LDFLAGS?=-lc -shared -arch x86_64 \
-	-L$(HOME)/lib -L/usr/lib -L/opt/local/lib -letpan -lsqlite3 -L../asn.1 -lasn1 -lz -liconv
+CFLAGS?= -I$(ETPAN_IN)/include -I/opt/local/include $(OPTIMIZE) -pedantic \
+	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -I../asn.1 $(EXTRAMACROS)
+LDFLAGS?= -lc -shared -arch x86_64 \
+	-L$(ETPAN_IN)/lib -L/usr/lib -L/opt/local/lib -letpan -lsqlite3 -L../asn.1 -lasn1 -lz -liconv
 
 else
 $(error don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
@@ -24,13 +23,11 @@ else ifeq ($(BUILD_ON),Linux)
 ifeq ($(BUILD_FOR),Linux)
 
 TARGET=libpEpEngine.so
-GPGME_IN=$(HOME)
-LIBGPGME=libgpgme.so.11
+LIBGPGME?=libgpgme.so.11
 CC=gcc -std=c99
-CFLAGS?=-I$(GPGME_IN)/include $(OPTIMIZE) -fPIC -pedantic \
-	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -DLIBGPGME=\"$(LIBGPGME)\" \
-	-DSQLITE_THREADSAFE=1 -D_GNU_SOURCE -DNDEBUG -I../asn.1 $(EXTRAMACROS)
-LDFLAGS?=-L$(GPGME_IN)/lib -shared -lc -ldl -letpan -lpthread -L../asn.1 -lasn1 -luuid
+CFLAGS?= $(OPTIMIZE) -fPIC -pedantic -DSYSTEM_DB=\"$(SYSTEM_DB)\" \
+	-DSQLITE_THREADSAFE=1 -D_GNU_SOURCE -I../asn.1 $(EXTRAMACROS)
+LDFLAGS?= -L$(ETPAN_IN)/lib -shared -lc -ldl -letpan -lpthread -L../asn.1 -lasn1 -luuid
 
 else
 $(error don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
@@ -40,14 +37,22 @@ else
 $(error don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
 endif
 
+DEBUG?=NO
+ifeq ("$(DEBUG)","NO")
+    CFLAGS+= -DNDEBUG
+endif
+
+OPENPGP?=GPG
 ifeq ("$(OPENPGP)","GPG")
-	NO_SOURCE=pgp_netpgp.c
-	CFLAGS+= -DUSE_GPG
-	LDFLAGS+= -lgpgme
+    NO_SOURCE=pgp_netpgp.c
+    GPGME_IN?=$(HOME)
+    CFLAGS+= -DUSE_GPG -I$(GPGME_IN)/include -DLIBGPGME=\"$(LIBGPGME)\"
+    #LDFLAGS+= -L$(GPGME_IN)/lib -lgpgme
 else ifeq ("$(OPENPGP)","NETPGP")
-	NO_SOURCE=pgp_gpg.c
-	CFLAGS+= -DUSE_NETPGP
-	LDFLAGS+= -lnetpgp -lcurl
+    NO_SOURCE=pgp_gpg.c
+    NETPGP_IN?=$(HOME)
+    CFLAGS+= -DUSE_NETPGP -I$(NETPGP_IN)/include
+    LDFLAGS+= -L$(NETPGP_IN)/lib -lnetpgp -lcurl
 else
 	$(error Unknown OpenPGP library : $(OPENPGP))
 endif
