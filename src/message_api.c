@@ -1081,6 +1081,36 @@ PEP_cryptotech determine_encryption_format(message *msg)
     }
 }
 
+// FIXME; We unfortunately will have to do something like this.
+// PEP_cryptotech determine_signing_format(message *msg)
+// {
+//     assert(msg);
+// 
+//     if (is_PGP_message_text(msg->longmsg)) {
+//         msg->enc_format = PEP_enc_pieces;
+//         return PEP_crypt_OpenPGP;
+//     }
+//     else if (msg->attachments && msg->attachments->next &&
+//             is_mime_type(msg->attachments, "application/pgp-encrypted") &&
+//             is_PGP_message_text(msg->attachments->next->value)
+//         ) {
+//         msg->enc_format = PEP_enc_PGP_MIME;
+//         return PEP_crypt_OpenPGP;
+//     }
+//     else if (msg->attachments && msg->attachments->next &&
+//             is_mime_type(msg->attachments->next, "application/pgp-encrypted") &&
+//             is_PGP_message_text(msg->attachments->value)
+//         ) {
+//         msg->enc_format = PEP_enc_PGP_MIME_Outlook1;
+//         return PEP_crypt_OpenPGP;
+//     }
+//     else {
+//         msg->enc_format = PEP_enc_none;
+//         return PEP_crypt_none;
+//     }
+// }
+// 
+
 
 PEP_STATUS sign_message(PEP_SESSION session,
                         message *src,
@@ -1777,28 +1807,35 @@ PEP_STATUS check_signed_message(PEP_SESSION session,
         }
     }
 
-    if (detached_sig) {
-        dsig_text = detached_sig->value;
-        dsig_size = detached_sig->size;
-        size_t ssize = 0;
-        char* stext = NULL;
+    dsig_text = detached_sig->value;
+    dsig_size = detached_sig->size;
+    //FIXME: what if it's empty text? This is wrong. Find a better fix.
+    bool use_longmsg_formatted = ((!src->longmsg || src->longmsg[0] == '\0') &&
+                                  src->longmsg_formatted &&
+                                  src->longmsg_formatted[0] != '\0'); 
+    char* stext = (use_longmsg_formatted ? src->longmsg_formatted : src->longmsg);
+    size_t ssize = strlen(stext);
 
-        // FIXME
-        status = _get_signed_text(ptext, psize, &stext, &ssize);
-        stringlist_t *_verify_keylist = NULL;
+    // FIXME
+    //const char* plaintext = (src->longmsg ? src->longmsg : src->longmsg_formatted); // OK?
+    //status = _get_signed_text(plaintext, strlen(plaintext), &stext, &ssize);
+    //FIXME: this is again about MIME. We need to make sure MIME/mail issues are sanitised out
+    // before we get this far
+    stringlist_t *_verify_keylist = NULL;
 
-        if (ssize > 0 && stext) {
-            status = cryptotech[crypto].verify_text(session, stext,
-                                                    ssize, dsig_text, dsig_size,
-                                                    &_verify_keylist);
+    if (ssize > 0 && stext) {
+        // FIXME!!!!!!!!!!!!!!!!!!!!!
+        status = cryptotech[PEP_crypt_OpenPGP].verify_text(session, stext,
+                                                ssize, dsig_text, dsig_size,
+                                                &_verify_keylist);
 
-        }
     }
-    if (status != PEP_VERIFIED && status != PEP_VERIFIED_AND_TRUSTED) {
-        status = cryptotech[crypto].verify_text(session, stext,
-                                                ssize, NULL, NULL,
-                                                &_verify_keylist);        
-    }
+
+    // if (status != PEP_VERIFIED && status != PEP_VERIFIED_AND_TRUSTED) {
+    //     status = cryptotech[crypto].verify_text(session, stext,
+    //                                             ssize, NULL, NULL,
+    //                                             &_verify_keylist);        
+    // }
     
     if (status == PEP_VERIFIED || status == PEP_VERIFIED_AND_TRUSTED) {
         // FIXME: free stext et al ??
@@ -1810,7 +1847,7 @@ PEP_STATUS check_signed_message(PEP_SESSION session,
             return PEP_UNKNOWN_ERROR; // Still would be a bug...
         }
         // FIXME - check stringlist_t ownership
-        signing_key_ptr == strdup(retfpr);
+        signing_key_ptr = strdup(retfpr);
     }
 
     return status;                              
