@@ -429,7 +429,6 @@ PEP_STATUS pgp_decrypt_and_verify(
         goto free_pgp;
     }
 
-free_keylist:
     free_stringlist(_keylist);
 
 free_ptext:
@@ -521,7 +520,6 @@ PEP_STATUS pgp_verify_text(
         goto free_pgp;
     }
 
-free_keylist:
     free_stringlist(_keylist);
 
 free_pgp:
@@ -873,7 +871,8 @@ unlock_netpgp:
 PEP_STATUS pgp_import_keydata(
         PEP_SESSION session,
         const char *key_data,
-        size_t size
+        size_t size,
+        identity_list **private_idents
     )
 {
     pgp_memory_t *mem;
@@ -882,6 +881,11 @@ PEP_STATUS pgp_import_keydata(
 
     assert(session);
     assert(key_data);
+
+    // reporting imported private keys not supported
+    // stub code to be reomoved
+    if(private_idents)
+        *private_idents = NULL;
 
     if(!session || !key_data)
         return PEP_ILLEGAL_VALUE;
@@ -963,7 +967,8 @@ free_mem :
 }
 
 PEP_STATUS pgp_export_keydata(
-    PEP_SESSION session, const char *fprstr, char **key_data, size_t *size
+    PEP_SESSION session, const char *fprstr, char **key_data, size_t *size,
+    bool secret
     )
 {
     pgp_key_t *key;
@@ -978,6 +983,12 @@ PEP_STATUS pgp_export_keydata(
     assert(fprstr);
     assert(key_data);
     assert(size);
+
+    // TODO : support export secret key
+    // crashing stub until export secret supported
+    assert(!secret);
+    if (secret)
+        return PEP_ILLEGAL_VALUE;
 
     if (!session || !fprstr || !key_data || !size)
         return PEP_ILLEGAL_VALUE;
@@ -1107,9 +1118,9 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
 
     result = pgp_import_keydata(session,
                                 answer.memory,
-                                answer.size);
+                                answer.size,
+                                NULL);
 
-free_answer:
     free(answer.memory);
 free_request:
     free(request);
@@ -1285,7 +1296,6 @@ PEP_STATUS pgp_find_keys(
         goto unlock_netpgp;
     }
 
-free_keylist:
     free_stringlist(_keylist);
 
 unlock_netpgp:
@@ -1791,7 +1801,6 @@ PEP_STATUS pgp_list_keyinfo(
     if (!keyinfo_list)
         result = PEP_KEY_NOT_FOUND;
 
-unlock_netpgp:
     pthread_mutex_unlock(&netpgp_mutex);
 
     return result;
@@ -1835,7 +1844,6 @@ PEP_STATUS pgp_find_private_keys(
         goto unlock_netpgp;
     }
 
-free_keylist:
     free_stringlist(_keylist);
 
 unlock_netpgp:
