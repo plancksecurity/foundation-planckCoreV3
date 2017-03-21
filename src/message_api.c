@@ -1781,30 +1781,10 @@ PEP_STATUS check_signed_message(PEP_SESSION session,
     /* that should be fixed at a higher level   */
     char* slong = src->longmsg;
     char* sform = src->longmsg_formatted;
-    bloblist_t* satt = src->attachments;
     
     if ((!slong || slong[0] == '\0')
          && (!sform || sform[0] == '\0')) {
-        if (satt) {
-            const char* inner_mime_type = satt->mime_type;
-            if (strcasecmp(inner_mime_type, "text/plain") == 0) {
-                free(slong); /* in case of "" */
-                src->longmsg = strndup(satt->value, satt->size); // N.B.: longmsg might be shorter, if attachment contains NUL bytes which are not allowed in text/plain!
-                
-                bloblist_t* next_node = satt->next;
-                if (next_node) {
-                    inner_mime_type = next_node->mime_type;
-                    if (strcasecmp(inner_mime_type, "text/html") == 0) {
-                        free(sform);
-                        src->longmsg_formatted = strndup(next_node->value, next_node->size);  // N.B.: longmsg might be shorter, if attachment contains NUL bytes which are not allowed in text/plain!
-                    }
-                }
-            }
-            else if (strcasecmp(inner_mime_type, "text/html") == 0) {
-                free(sform);
-                src->longmsg_formatted = strndup(satt->value, satt->size);  // N.B.: longmsg might be shorter, if attachment contains NUL bytes which are not allowed in text/plain!
-            }
-        }
+        status = raise_body(src);
     }
 
     dsig_text = detached_sig->value;
@@ -1816,11 +1796,7 @@ PEP_STATUS check_signed_message(PEP_SESSION session,
     char* stext = (use_longmsg_formatted ? src->longmsg_formatted : src->longmsg);
     size_t ssize = strlen(stext);
 
-    // FIXME
-    //const char* plaintext = (src->longmsg ? src->longmsg : src->longmsg_formatted); // OK?
-    //status = _get_signed_text(plaintext, strlen(plaintext), &stext, &ssize);
-    //FIXME: this is again about MIME. We need to make sure MIME/mail issues are sanitised out
-    // before we get this far
+    status = _get_signed_text(plaintext, strlen(plaintext), &stext, &ssize);
     stringlist_t *_verify_keylist = NULL;
 
     if (ssize > 0 && stext) {
@@ -1932,30 +1908,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             
             char* slong = src->longmsg;
             char* sform = src->longmsg_formatted;
-            bloblist_t* satt = src->attachments;
             
             if ((!slong || slong[0] == '\0')
                  && (!sform || sform[0] == '\0')) {
-                if (satt) {
-                    const char* inner_mime_type = satt->mime_type;
-                    if (strcasecmp(inner_mime_type, "text/plain") == 0) {
-                        free(slong); /* in case of "" */
-                        src->longmsg = strndup(satt->value, satt->size); // N.B.: longmsg might be shorter, if attachment contains NUL bytes which are not allowed in text/plain!
-                        
-                        bloblist_t* next_node = satt->next;
-                        if (next_node) {
-                            inner_mime_type = next_node->mime_type;
-                            if (strcasecmp(inner_mime_type, "text/html") == 0) {
-                                free(sform);
-                                src->longmsg_formatted = strndup(next_node->value, next_node->size);  // N.B.: longmsg might be shorter, if attachment contains NUL bytes which are not allowed in text/plain!
-                            }
-                        }
-                    }
-                    else if (strcasecmp(inner_mime_type, "text/html") == 0) {
-                        free(sform);
-                        src->longmsg_formatted = strndup(satt->value, satt->size);  // N.B.: longmsg might be shorter, if attachment contains NUL bytes which are not allowed in text/plain!
-                    }
-                }
+                raise_body(src);
             }
             
             return PEP_UNENCRYPTED;
@@ -2007,30 +1963,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 
                 char* mlong = msg->longmsg;
                 char* mform = msg->longmsg_formatted;
-                bloblist_t* matt = msg->attachments;
                 
                 if ((!mlong || mlong[0] == '\0')
                      && (!mform || mform[0] == '\0')) {
-                    if (matt) {
-                        const char* inner_mime_type = matt->mime_type;
-                        if (strcasecmp(inner_mime_type, "text/plain") == 0) {
-                            free(mlong); /* in case of "" */
-                            msg->longmsg = strndup(matt->value, matt->size);
-                            
-                            bloblist_t* next_node = matt->next;
-                            if (next_node) {
-                                inner_mime_type = next_node->mime_type;
-                                if (strcasecmp(inner_mime_type, "text/html") == 0) {
-                                    free(mform);
-                                    msg->longmsg_formatted = strndup(next_node->value, next_node->size);
-                                }
-                            }
-                        }
-                        else if (strcasecmp(inner_mime_type, "text/html") == 0) {
-                            free(mform);
-                            msg->longmsg_formatted = strndup(matt->value, matt->size);
-                        }
-                    }
+                    status = raise_body(msg);
                     if (msg->shortmsg) {
                         free(src->shortmsg);
                         src->shortmsg = strdup(msg->shortmsg);

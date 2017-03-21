@@ -26,6 +26,36 @@ static bool is_whitespace(char c)
     }
 }
 
+PEP_STATUS raise_body(message* msg) {
+    char* mlong = msg->longmsg;
+    char* mform = msg->longmsg_formatted;
+    bloblist_t* matt = msg->attachments;
+
+    if (matt) {
+        const char* inner_mime_type = matt->mime_type;
+        if (strcasecmp(inner_mime_type, "text/plain") == 0) {
+            free(mlong); /* in case of "" */
+            msg->longmsg = strndup(matt->value, matt->size);
+            
+            bloblist_t* next_node = matt->next;
+            if (next_node) {
+                inner_mime_type = next_node->mime_type;
+                if (strcasecmp(inner_mime_type, "text/html") == 0) {
+                    free(mform);
+                    msg->longmsg_formatted = strndup(next_node->value, next_node->size);
+                }
+            }
+        }
+        else if (strcasecmp(inner_mime_type, "text/html") == 0) {
+            free(mform);
+            msg->longmsg_formatted = strndup(matt->value, matt->size);
+        }
+    }
+    // FIXME: question remains of whether or not we should remove the associated attachment
+    return PEP_STATUS_OK; // FIXME: real error checking
+}
+
+
 DYNAMIC_API bool is_PGP_message_text(const char *text)
 {
     if (text == NULL)
