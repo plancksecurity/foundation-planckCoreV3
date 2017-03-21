@@ -1327,12 +1327,12 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     char* target_fpr = target_id->fpr;
     if (!target_fpr)
         return PEP_KEY_NOT_FOUND; // FIXME: Error condition
-
+ 
     keys = new_stringlist(target_fpr);
-
+    
     /* KG: did we ever do this??? */
     if (!(flags & PEP_encrypt_flag_force_no_attached_key))
-        attach_own_key(session, src);
+        _attach_key(session, target_fpr, src);
 
     msg = clone_to_empty_message(src);
     if (msg == NULL)
