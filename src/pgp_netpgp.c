@@ -534,14 +534,14 @@ unlock_netpgp:
     return result;
 }
 
-PEP_STATUS pgp_encrypt_and_sign(
+static PEP_STATUS _encrypt_and_sign(
     PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
-    size_t psize, char **ctext, size_t *csize
+    size_t psize, char **ctext, size_t *csize, bool do_sign
     )
 {
     pgp_key_t *signer = NULL;
     pgp_seckey_t *seckey = NULL;
-    pgp_memory_t *signedmem;
+    pgp_memory_t *signedmem = NULL;
     pgp_memory_t *cmem;
     const char *hashalg;
     pgp_keyring_t *rcpts;
@@ -629,25 +629,38 @@ PEP_STATUS pgp_encrypt_and_sign(
 
     hashalg = netpgp_getvar(&netpgp, "hash");
 
-    // Sign data
-    signedmem = pgp_sign_buf(netpgp.io, ptext, psize, seckey,
-                time(NULL), /* birthtime */
-                0 /* duration */,
-                hashalg,
-                0 /* armored */,
-                0 /* cleartext */);
+    const char *stext;
+    size_t ssize;
+    unsigned encrypt_raw_packet;
+   
+    if (do_sign) {  
+        // Sign data
+        signedmem = pgp_sign_buf(netpgp.io, ptext, psize, seckey,
+                    time(NULL), /* birthtime */
+                    0 /* duration */,
+                    hashalg,
+                    0 /* armored */,
+                    0 /* cleartext */);
 
-    if (!signedmem) {
-        result = PEP_UNENCRYPTED;
-        goto free_rcpts;
+        if (!signedmem) {
+            result = PEP_UNENCRYPTED;
+            goto free_rcpts;
+        }
+        stext = (char*) pgp_mem_data(signedmem);
+        ssize = pgp_mem_len(signedmem);
+        encrypt_raw_packet = 1 /* takes raw OpenPGP message */;
+    } else {
+        stext = ptext;
+        ssize = psize;
+        encrypt_raw_packet = 0 /* not a raw OpenPGP message */;
     }
 
-    // Encrypt signed data
+    // Encrypt (maybe) signed data
 
-    cmem = pgp_encrypt_buf(netpgp.io, pgp_mem_data(signedmem),
-            pgp_mem_len(signedmem), rcpts, 1 /* armored */,
+    cmem = pgp_encrypt_buf(netpgp.io, stext,
+            ssize, rcpts, 1 /* armored */,
             netpgp_getvar(&netpgp, "cipher"),
-            1 /* takes raw OpenPGP message */);
+            encrypt_raw_packet);
 
     if (cmem == NULL) {
         result = PEP_OUT_OF_MEMORY;
@@ -676,7 +689,9 @@ PEP_STATUS pgp_encrypt_and_sign(
 free_cmem :
     pgp_memory_free(cmem);
 free_signedmem :
-    pgp_memory_free(signedmem);
+    if (do_sign) {
+        pgp_memory_free(signedmem);
+    }
 free_rcpts :
     pgp_keyring_free(rcpts);
 unlock_netpgp:
@@ -685,12 +700,26 @@ unlock_netpgp:
     return result;
 }
 
+PEP_STATUS pgp_encrypt_and_sign(
+    PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+    size_t psize, char **ctext, size_t *csize
+    )
+{
+    PEP_STATUS result;
+    result = _encrypt_and_sign(session, keylist, ptext, psize, ctext, csize,
+                               true);
+    return result;
+}
+
 PEP_STATUS pgp_encrypt_only(
         PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
         size_t psize, char **ctext, size_t *csize
     )
 {
-    return PEP_UNKNOWN_ERROR; // FIXME: Unimplemented!
+    PEP_STATUS result;
+    result = _encrypt_and_sign(session, keylist, ptext, psize, ctext, csize,
+                               false);
+    return result;
 }
 
 
