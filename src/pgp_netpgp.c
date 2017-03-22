@@ -688,6 +688,7 @@ unlock_netpgp:
 PEP_STATUS pgp_encrypt_only(
         PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
         size_t psize, char **ctext, size_t *csize
+    )
 {
     return PEP_UNKNOWN_ERROR; // FIXME: Unimplemented!
 }

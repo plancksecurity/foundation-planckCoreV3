@@ -42,7 +42,7 @@ ifeq ("$(DEBUG)","NO")
     CFLAGS+= -DNDEBUG
 endif
 
-OPENPGP?=NETPGP
+OPENPGP?=GPG
 ifeq ("$(OPENPGP)","GPG")
     NO_SOURCE=pgp_netpgp.c
     GPGME_IN?=$(HOME)

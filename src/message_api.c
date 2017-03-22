@@ -1484,12 +1484,12 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     char* target_fpr = target_id->fpr;
     if (!target_fpr)
         return PEP_KEY_NOT_FOUND; // FIXME: Error condition
-
+ 
     keys = new_stringlist(target_fpr);
-
+    
     /* KG: did we ever do this??? */
     if (!(flags & PEP_encrypt_flag_force_no_attached_key))
-        attach_own_key(session, src);
+        _attach_key(session, target_fpr, src);
 
     msg = clone_to_empty_message(src);
     if (msg == NULL)
@@ -1793,10 +1793,12 @@ PEP_STATUS check_signed_message(PEP_SESSION session,
     bool use_longmsg_formatted = ((!src->longmsg || src->longmsg[0] == '\0') &&
                                   src->longmsg_formatted &&
                                   src->longmsg_formatted[0] != '\0'); 
-    char* stext = (use_longmsg_formatted ? src->longmsg_formatted : src->longmsg);
-    size_t ssize = strlen(stext);
+    const char* bodytext = (use_longmsg_formatted ? src->longmsg_formatted : src->longmsg);
+    size_t bodysize = strlen(bodytext);
+    char* stext = NULL;
+    size_t ssize = 0;
 
-    status = _get_signed_text(plaintext, strlen(plaintext), &stext, &ssize);
+    status = _get_signed_text(bodytext, bodysize, &stext, &ssize);
     stringlist_t *_verify_keylist = NULL;
 
     if (ssize > 0 && stext) {

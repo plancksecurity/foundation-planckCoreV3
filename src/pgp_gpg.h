@@ -26,7 +26,7 @@ PEP_STATUS pgp_encrypt_only(
 
 PEP_STATUS pgp_sign_text(
         PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
-        size_t psize, char **ctext, size_t *csize
+        size_t psize, char **stext, size_t *ssize
     );
 
 
