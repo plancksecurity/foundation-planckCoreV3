@@ -1110,8 +1110,172 @@ PEP_cryptotech determine_encryption_format(message *msg)
 //     }
 // }
 // 
+PEP_STATUS prepare_beacon_message(PEP_SESSION session,
+                                  char* beacon_blob,
+                                  size_t beacon_size,
+                                  message* beacon_msg
+                              ) 
+{
+    if (!beacon_msg || !session || !beacon_blob)
+        return PEP_ILLEGAL_VALUE;
+    
+    char* sig_text = NULL;
+    size_t sig_size = 0;
+        
+       
+    bloblist_t* blob = bloblist_add(beacon_msg->attachments,
+                                      beacon_blob, 
+                                      beacon_size,
+                                      "application/pEp.sync",
+                                      NULL); // FIXME: null?
+    
+    if (!blob)
+        return PEP_OUT_OF_MEMORY;
+    
+    if (beacon_msg->attachments == NULL && blob)
+        beacon_msg->attachments = blob;
+
+    PEP_STATUS status = sign_blob(session,
+                                  beacon_msg->src->from,
+                                  blob,
+                                  &sig_text,
+                                  &sig_size);
+                                  
+    if (status != PEP_STATUS_OK) {
+        free_bloblist(blob);
+        return status;
+    }
+    
+    bloblist_t* sig = bloblist_add(blob,
+                                  sig_size,
+                                  "application/pEp.sync.sig",
+                                  NULL);
+    
+    if (!sig)
+        return PEP_OUT_OF_MEMORY;
+                
+    return PEP_STATUS_OK;                  
+}
+
+static bool is_beacon_message(message* msg) {
+    bloblist_t* curr = msg->attachments;
+    bool sig_found = false;
+    bool beacon_found = false;
+    
+    while (curr && !(sig_found && beacon_found)) {
+        char* mime_type = curr->mime_type;
+        if (mime_type) {
+            if (strcmp(mime_type, "application/pEp.sync"))
+                beacon_found = true;
+            else if (strcmp(mime_type, "application/pEp.sync.sig"))
+                sig_found = true;
+        }
+        curr = curr->next;
+    }
+    
+    return sig_found && beacon_found;
+}
+
+PEP_STATUS verify_beacon_message(PEP_SESSION session,
+                                 message* beacon_msg,
+                                 char** signer_fpr)
+                              ) 
+{
+    if (!session || !beacon_msg || !signer_fpr ||
+        !(is_beacon_message(beacon_msg)))
+        return PEP_ILLEGAL_VALUE;
+        
+    *signer_fpr = NULL;
+    bloblist_t* beacon = NULL;
+    bloblist_t* sig = NULL;
+    
+    bloblist_t* curr_ptr = beacon_msg->attachments;
+    
+    for ( ; curr_ptr && (!beacon || !sig); curr_ptr = curr_ptr->next) {
+        char* mime_type = curr_ptr->mime_type;
+        if (mime_type) {
+            if (strcmp(mime_type, "application/pEp.sync") == 0)
+                beacon = curr_ptr;
+            else if (strcmp(mime_type, "application/pEp.sync.sig") == 0)
+                sig = curr_ptr;
+        }             
+    }
+    
+    if (!beacon || !beacon->value)
+        return PEP_ILLEGAL_VALUE;
+        
+    if (!sig || !sig->value)
+        return PEP_VERIFY_NO_SIGNATURE;
+        
+    stringlist_t* _verify_keylist = NULL;
+
+    status = verify_text(session, beacon->value,
+                         beacon_size, sig->value, 
+                         sig->size, &_verify_keylist);
+
+    if (status != PEP_VERIFIED && status != PEP_VERIFIED_AND_TRUSTED)
+        return status;
+        
+    if (!_verify_keylist || !_verify_keylist->value || _verify_keylist->value[0] == '\0')
+        return PEP_VERIFY_NO_KEY;
+
+    *signer_fpr = strdup(_verify_keylist->value);
+    free_stringlist(_verify_keylist);
+    
+    if (!(*signer_fpr))
+        return PEP_OUT_OF_MEMORY;
+    
+    return status;
+}
 
 
+PEP_STATUS sign_blob(PEP_SESSION session,
+                     pEp_identity signer_id,
+                     bloblist_t blob,
+                     char** signature,
+                     size_t* sig_size
+                 ) 
+{
+    if (!session || !blob || !signature || !sig_size)
+        return PEP_ILLEGAL_VALUE;
+        
+    PEP_STATUS = PEP_KEY_NOT_FOUND:
+    
+    status = myself(session, signer_id);
+    if (status != PEP_STATUS_OK)
+        goto pep_error;
+
+    if (!signer_id->fpr)
+        return PEP_KEY_NOT_FOUND;
+        
+    stringlist_t * keys = new_stringlist(signer_id->fpr);
+    if (keys == NULL)
+        goto enomem;
+    
+    status = sign_text(session, keys, blob->value, blob->size,
+                       signature, sig_size);
+            
+    if (status == PEP_OUT_OF_MEMORY)
+       goto enomem;
+
+    if (status != PEP_STATUS_OK || ctext == NULL)
+      goto pep_error;
+      
+    free_stringlist(keys);
+
+    return status;
+
+    enomem:
+        status = PEP_OUT_OF_MEMORY;
+
+    pep_error:
+        free_stringlist(keys);
+
+    return status;
+
+}
+
+// N.B. never tested.
 PEP_STATUS sign_message(PEP_SESSION session,
                         message *src,
                         message **dst
@@ -1606,11 +1770,14 @@ PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
     char* signed_boundary = NULL;
     char* signpost = strstr(ptext, "Content-Type: multipart/signed");
 
+    if (!signpost) {
+        *stext = strdup(ptext);
+        *ssize = psize;
+        return PEP_STATUS_OK;
+    }
+
     *ssize = 0;
     *stext = NULL;
-
-    if (!signpost)
-        return PEP_UNKNOWN_ERROR;
 
     char* curr_line = signpost;
 //    const char* end_text = ptext + psize;

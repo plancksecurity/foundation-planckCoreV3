@@ -818,7 +818,7 @@ PEP_STATUS pgp_verify_text(
                     }
                 }
                 else {
-                    result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
+                    result = PEP_VERIFY_SIGNATURE_DOES_NOT_MATCH;
                     break;
                 }
 
@@ -827,10 +827,10 @@ PEP_STATUS pgp_verify_text(
                         || gpgme_signature->summary & GPGME_SIGSUM_SIG_EXPIRED) {
                         if (result == PEP_VERIFIED
                             || result == PEP_VERIFIED_AND_TRUSTED)
-                            result = PEP_UNENCRYPTED;
+                            result = PEP_UNENCRYPTED; // ?? What should this be changed to?
                     }
                     else {
-                        result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
+                        result = PEP_VERIFY_SIGNATURE_DOES_NOT_MATCH;
                         break;
                     }
                 }
@@ -1062,9 +1062,9 @@ PEP_STATUS pgp_sign_text(
 {
     PEP_STATUS result;
     gpgme_error_t gpgme_error;
-    gpgme_data_t plain, signeddata;
+    gpgme_data_t plain, detached_sig;
     gpgme_key_t *rcpt;
-    gpgme_sig_mode_t sig_mode;
+    gpgme_sig_mode_t GPGME_SIG_MODE_DETACH;
     const stringlist_t *_keylist;
     int i, j;
 
@@ -1088,7 +1088,7 @@ PEP_STATUS pgp_sign_text(
             return PEP_UNKNOWN_ERROR;
     }
 
-    gpgme_error = gpg.gpgme_data_new(&signeddata);
+    gpgme_error = gpg.gpgme_data_new(&detached_sig);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
     if (gpgme_error != GPG_ERR_NO_ERROR) {
@@ -1104,7 +1104,7 @@ PEP_STATUS pgp_sign_text(
     assert(rcpt);
     if (rcpt == NULL) {
         gpg.gpgme_data_release(plain);
-        gpg.gpgme_data_release(signeddata);
+        gpg.gpgme_data_release(detached_sig);
         return PEP_OUT_OF_MEMORY;
     }
 
@@ -1125,7 +1125,7 @@ PEP_STATUS pgp_sign_text(
             gpg.gpgme_key_unref(rcpt[0]);
             free(rcpt);
             gpg.gpgme_data_release(plain);
-            gpg.gpgme_data_release(signeddata);
+            gpg.gpgme_data_release(detached_sig);
             return PEP_OUT_OF_MEMORY;
         case GPG_ERR_NO_ERROR:
             gpgme_error = gpg.gpgme_signers_add(session->ctx, rcpt[0]);
@@ -1136,26 +1136,26 @@ PEP_STATUS pgp_sign_text(
             gpg.gpgme_key_unref(rcpt[0]);
             free(rcpt);
             gpg.gpgme_data_release(plain);
-            gpg.gpgme_data_release(signeddata);
+            gpg.gpgme_data_release(detached_sig);
             return PEP_KEY_NOT_FOUND;
         case GPG_ERR_AMBIGUOUS_NAME:
             gpg.gpgme_key_unref(rcpt[0]);
             free(rcpt);
             gpg.gpgme_data_release(plain);
-            gpg.gpgme_data_release(signeddata);
+            gpg.gpgme_data_release(detached_sig);
             return PEP_KEY_HAS_AMBIG_NAME;
         default: // GPG_ERR_INV_VALUE if CTX or R_KEY is not a valid pointer or
             // FPR is not a fingerprint or key ID
             gpg.gpgme_key_unref(rcpt[0]);
             free(rcpt);
             gpg.gpgme_data_release(plain);
-            gpg.gpgme_data_release(signeddata);
+            gpg.gpgme_data_release(detached_sig);
             return PEP_GET_KEY_FAILED;
     }
 
     sig_mode = GPGME_SIG_MODE_NORMAL;
     
-    gpgme_error = gpg.gpgme_op_sign(session->ctx, plain, signeddata, sig_mode);
+    gpgme_error = gpg.gpgme_op_sign(session->ctx, plain, detached_sig, sig_mode);
     
     gpgme_error = _GPGERR(gpgme_error);
     switch (gpgme_error) {
@@ -1163,9 +1163,9 @@ PEP_STATUS pgp_sign_text(
     {
         char *_buffer = NULL;
         size_t reading;
-        size_t length = gpg.gpgme_data_seek(signeddata, 0, SEEK_END);
+        size_t length = gpg.gpgme_data_seek(detached_sig, 0, SEEK_END);
         assert(length != -1);
-        gpg.gpgme_data_seek(signeddata, 0, SEEK_SET);
+        gpg.gpgme_data_seek(detached_sig, 0, SEEK_SET);
 
         // TODO: make things less memory consuming
         // the following algorithm allocates a buffer for the complete text
@@ -1177,11 +1177,11 @@ PEP_STATUS pgp_sign_text(
                 gpg.gpgme_key_unref(rcpt[j]);
             free(rcpt);
             gpg.gpgme_data_release(plain);
-            gpg.gpgme_data_release(signeddata);
+            gpg.gpgme_data_release(detached_sig);
             return PEP_OUT_OF_MEMORY;
         }
 
-        reading = gpg.gpgme_data_read(signeddata, _buffer, length);
+        reading = gpg.gpgme_data_read(detached_sig, _buffer, length);
         assert(length == reading);
 
         *stext = _buffer;
@@ -1197,7 +1197,7 @@ PEP_STATUS pgp_sign_text(
     gpg.gpgme_key_unref(rcpt[0]);
     free(rcpt);
     gpg.gpgme_data_release(plain);
-    gpg.gpgme_data_release(signeddata);
+    gpg.gpgme_data_release(detached_sig);
     return result;
 }
 
