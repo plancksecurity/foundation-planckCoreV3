@@ -227,7 +227,7 @@ fpr_to_str (char **str, const uint8_t *fpr, size_t length)
         return 0;
 
     for (n = 0, i = 0 ; i < length; i += 2) {
-        n += snprintf(&((*str)[n]), 5, "%02x%02x", fpr[i], fpr[i+1]);
+        n += snprintf(&((*str)[n]), 5, "%02X%02X", fpr[i], fpr[i+1]);
     }
 
     return 1;
@@ -425,9 +425,9 @@ PEP_STATUS pgp_decrypt_and_verify(
         result = _validation_results(&netpgp, vresult, &_keylist);
         if (result == PEP_DECRYPTED ||
             result == PEP_VERIFY_NO_KEY) {
-            if(stringlist_add(_keylist, "") == NULL) {
+            if((_keylist = new_stringlist("")) == NULL) {
                 result = PEP_OUT_OF_MEMORY;
-                goto free_keylist;
+                goto free_ptext;
             }
             result = PEP_DECRYPTED;
         }else if (result != PEP_STATUS_OK) {
@@ -458,8 +458,8 @@ PEP_STATUS pgp_decrypt_and_verify(
                        sizeof(key_id_t));
 
         if (fprstr == NULL){
-            free_stringlist(_keylist);
-            return PEP_OUT_OF_MEMORY;
+            result = PEP_OUT_OF_MEMORY;
+            goto free_keylist;
         }
 
         k = stringlist_add_unique(k, fprstr);
@@ -467,8 +467,8 @@ PEP_STATUS pgp_decrypt_and_verify(
         free(fprstr);
 
         if(!k){
-            free_stringlist(_keylist);
-            return PEP_OUT_OF_MEMORY;
+            result = PEP_OUT_OF_MEMORY;
+            goto free_keylist;
         }
     }
 
@@ -477,9 +477,7 @@ PEP_STATUS pgp_decrypt_and_verify(
         *ptext = _ptext;
         *psize = _psize;
         (*ptext)[*psize] = 0; // safeguard for naive users
-        if (result == PEP_DECRYPTED_AND_VERIFIED) {
-            *keylist = _keylist;
-        }
+        *keylist = _keylist;
 
         /* _ptext and _keylist ownership transfer, don't free */
         goto free_pgp;
