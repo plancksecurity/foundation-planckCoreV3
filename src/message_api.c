@@ -1127,7 +1127,7 @@ PEP_STATUS prepare_beacon_message(PEP_SESSION session,
                                       beacon_blob, 
                                       beacon_size,
                                       "application/pEp.sync",
-                                      NULL); // FIXME: null?
+                                      "pEp.sync");
     
     if (!blob)
         return PEP_OUT_OF_MEMORY;
@@ -1150,7 +1150,7 @@ PEP_STATUS prepare_beacon_message(PEP_SESSION session,
                                    sig_text,
                                    sig_size,
                                    "application/pEp.sync.sig",
-                                   NULL);
+                                   "pEp.sync.sig");
     
     if (!sig)
         return PEP_OUT_OF_MEMORY;
