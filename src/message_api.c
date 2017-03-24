@@ -1136,7 +1136,7 @@ PEP_STATUS prepare_beacon_message(PEP_SESSION session,
         beacon_msg->attachments = blob;
 
     PEP_STATUS status = sign_blob(session,
-                                  beacon_msg->src->from,
+                                  beacon_msg->from,
                                   blob,
                                   &sig_text,
                                   &sig_size);
@@ -1147,9 +1147,10 @@ PEP_STATUS prepare_beacon_message(PEP_SESSION session,
     }
     
     bloblist_t* sig = bloblist_add(blob,
-                                  sig_size,
-                                  "application/pEp.sync.sig",
-                                  NULL);
+                                   sig_text,
+                                   sig_size,
+                                   "application/pEp.sync.sig",
+                                   NULL);
     
     if (!sig)
         return PEP_OUT_OF_MEMORY;
@@ -1179,7 +1180,6 @@ static bool is_beacon_message(message* msg) {
 PEP_STATUS verify_beacon_message(PEP_SESSION session,
                                  message* beacon_msg,
                                  char** signer_fpr)
-                              ) 
 {
     if (!session || !beacon_msg || !signer_fpr ||
         !(is_beacon_message(beacon_msg)))
@@ -1209,8 +1209,8 @@ PEP_STATUS verify_beacon_message(PEP_SESSION session,
         
     stringlist_t* _verify_keylist = NULL;
 
-    status = verify_text(session, beacon->value,
-                         beacon_size, sig->value, 
+    PEP_STATUS status = verify_text(session, beacon->value,
+                         beacon->size, sig->value, 
                          sig->size, &_verify_keylist);
 
     if (status != PEP_VERIFIED && status != PEP_VERIFIED_AND_TRUSTED)
@@ -1230,8 +1230,8 @@ PEP_STATUS verify_beacon_message(PEP_SESSION session,
 
 
 PEP_STATUS sign_blob(PEP_SESSION session,
-                     pEp_identity signer_id,
-                     bloblist_t blob,
+                     pEp_identity* signer_id,
+                     bloblist_t* blob,
                      char** signature,
                      size_t* sig_size
                  ) 
@@ -1239,7 +1239,7 @@ PEP_STATUS sign_blob(PEP_SESSION session,
     if (!session || !blob || !signature || !sig_size)
         return PEP_ILLEGAL_VALUE;
         
-    PEP_STATUS = PEP_KEY_NOT_FOUND:
+    PEP_STATUS status = PEP_KEY_NOT_FOUND;
     
     status = myself(session, signer_id);
     if (status != PEP_STATUS_OK)
@@ -1258,7 +1258,7 @@ PEP_STATUS sign_blob(PEP_SESSION session,
     if (status == PEP_OUT_OF_MEMORY)
        goto enomem;
 
-    if (status != PEP_STATUS_OK || ctext == NULL)
+    if (status != PEP_STATUS_OK || *signature == NULL)
       goto pep_error;
       
     free_stringlist(keys);
@@ -1276,6 +1276,9 @@ PEP_STATUS sign_blob(PEP_SESSION session,
 }
 
 // N.B. never tested.
+// FIXME: this only signs the plaintext, which isn't
+//        compatible with detached sigs and rfc3156. We
+//        need to decide if we want this in at all.
 PEP_STATUS sign_message(PEP_SESSION session,
                         message *src,
                         message **dst

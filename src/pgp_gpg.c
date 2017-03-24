@@ -1064,7 +1064,7 @@ PEP_STATUS pgp_sign_text(
     gpgme_error_t gpgme_error;
     gpgme_data_t plain, detached_sig;
     gpgme_key_t *rcpt;
-    gpgme_sig_mode_t GPGME_SIG_MODE_DETACH;
+    gpgme_sig_mode_t sig_mode = GPGME_SIG_MODE_DETACH;
     const stringlist_t *_keylist;
     int i, j;
 

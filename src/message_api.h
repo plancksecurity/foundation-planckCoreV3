@@ -21,8 +21,8 @@ bool import_attached_keys(
 void attach_own_key(PEP_SESSION session, message *msg);
 
 PEP_STATUS sign_blob(PEP_SESSION session,
-                     void* blob,
-                     size_t blob_size,
+                     pEp_identity* signer_id,
+                     bloblist_t* blob,
                      char** signature,
                      size_t* sig_size);
 
@@ -34,7 +34,16 @@ PEP_STATUS verify_blob(PEP_STATUS status,
 PEP_STATUS sign_message(PEP_SESSION session,
                         message *src,
                         message **dst);
-                                            
+
+PEP_STATUS verify_beacon_message(PEP_SESSION session,
+                                 message* beacon_msg,
+                                 char** signer_fpr);
+
+PEP_STATUS prepare_beacon_message(PEP_SESSION session,
+                                  char* beacon_blob,
+                                  size_t beacon_size,
+                                  message* beacon_msg); 
+            
 /* checks if a message is correctly signend
 with a key that has a UID with the email address of message.from. If
 result is PEP_VERIFIED, it additionally delivers fpr of the signature
