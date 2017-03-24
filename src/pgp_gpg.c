@@ -255,6 +255,12 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
             "gpgme_op_encrypt");
         assert(gpg.gpgme_op_encrypt);
 
+        gpg.gpgme_op_sign
+            = (gpgme_op_verify_t) (intptr_t) dlsym(gpgme,
+            "gpgme_op_sign");
+        assert(gpg.gpgme_op_sign);
+
+
         gpg.gpgme_op_verify_result
             = (gpgme_op_verify_result_t) (intptr_t) dlsym(gpgme,
             "gpgme_op_verify_result");
@@ -1065,8 +1071,7 @@ PEP_STATUS pgp_sign_text(
     gpgme_data_t plain, detached_sig;
     gpgme_key_t *rcpt;
     gpgme_sig_mode_t sig_mode = GPGME_SIG_MODE_DETACH;
-    const stringlist_t *_keylist;
-    int i, j;
+    int j;
 
     assert(session);
     assert(keylist);
@@ -1114,7 +1119,7 @@ PEP_STATUS pgp_sign_text(
     if (!keylist->value)
         return PEP_KEY_NOT_FOUND;
         
-    gpgme_error = gpg.gpgme_get_key(session->ctx, _keylist->value,
+    gpgme_error = gpg.gpgme_get_key(session->ctx, keylist->value,
         &rcpt[0], 0);
         
     gpgme_error = _GPGERR(gpgme_error);
@@ -1152,8 +1157,6 @@ PEP_STATUS pgp_sign_text(
             gpg.gpgme_data_release(detached_sig);
             return PEP_GET_KEY_FAILED;
     }
-
-    sig_mode = GPGME_SIG_MODE_NORMAL;
     
     gpgme_error = gpg.gpgme_op_sign(session->ctx, plain, detached_sig, sig_mode);
     
