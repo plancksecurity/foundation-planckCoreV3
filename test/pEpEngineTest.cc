@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
 
     cout << "\ncalling verify_text()\n";
     verify_result = verify_text(session, t2_buffer.data(), t2_buffer.size(), sig_buffer.data(), sig_buffer.size(), &keylist);
-    assert(verify_result == PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
+    assert(verify_result == PEP_VERIFY_SIGNATURE_DOES_NOT_MATCH);
     free_stringlist(keylist);
 
     keylist = new_stringlist("4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
