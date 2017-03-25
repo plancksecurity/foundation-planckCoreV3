@@ -13,6 +13,8 @@ extern "C" {
 #endif
 
 
+/* BEGIN INTERNAL FUNCTIONS - NOT FOR EXPORT */
+
 bool import_attached_keys(
         PEP_SESSION session, 
         const message *msg,
@@ -20,6 +22,8 @@ bool import_attached_keys(
     );
 void attach_own_key(PEP_SESSION session, message *msg);
 
+// detached sig text is returned in signature, along
+// with its size in sig_size
 PEP_STATUS sign_blob(PEP_SESSION session,
                      pEp_identity* signer_id,
                      bloblist_t* blob,
@@ -31,31 +35,43 @@ PEP_STATUS verify_blob(PEP_STATUS status,
                        char* signature,
                        size_t sig_size);
 
-PEP_STATUS sign_message(PEP_SESSION session,
-                        message *src,
-                        message **dst);
-
+// *signer_fpr is the signing key fpr, if verified
 PEP_STATUS verify_beacon_message(PEP_SESSION session,
                                  message* beacon_msg,
                                  char** signer_fpr);
 
+// beacon_msg is an in-out param - it must at least
+// have beacon_msg->from filled in so we can grab the key
+// with which to sign it.
 PEP_STATUS prepare_beacon_message(PEP_SESSION session,
                                   char* beacon_blob,
                                   size_t beacon_size,
                                   message* beacon_msg); 
-            
-/* checks if a message is correctly signend
-with a key that has a UID with the email address of message.from. If
-result is PEP_VERIFIED, it additionally delivers fpr of the signature
-key. The function has to import attached keys first before doing the
-check.  It must not handle encrypted messages but give an error value
-for them. */
-PEP_STATUS check_signed_message(PEP_SESSION session,
-                                message *src,
-                                char** signing_key_ptr);
+
+// Left in for commit, but these don't work the way we
+// would intend, and the 2nd is useless because the parse
+// has already removed necessary information for signed,
+// not encrypted texts. If we want it, we have to
+// do some significant reworking. -- KB
+//
+// PEP_STATUS sign_message(PEP_SESSION session,
+//                       message *src,
+//                       message **dst);
+//             
+// /* checks if a message is correctly signend
+// with a key that has a UID with the email address of message.from. If
+// result is PEP_VERIFIED, it additionally delivers fpr of the signature
+// key. The function has to import attached keys first before doing the
+// check.  It must not handle encrypted messages but give an error value
+// for them. */
+// PEP_STATUS check_signed_message(PEP_SESSION session,
+//                                 message *src,
+//                                 char** signing_key_ptr);
 
 PEP_cryptotech determine_encryption_format(message *msg);
 void add_opt_field(message *msg, const char *name, const char *value);
+
+/* END INTERNAL FUNCTIONS - NOT FOR EXPORT */
 
 typedef enum _PEP_encrypt_flags {
     // "default" means whatever the default behaviour for the function is.
