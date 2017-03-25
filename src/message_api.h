@@ -48,26 +48,6 @@ PEP_STATUS prepare_beacon_message(PEP_SESSION session,
                                   size_t beacon_size,
                                   message* beacon_msg); 
 
-// Left in for commit, but these don't work the way we
-// would intend, and the 2nd is useless because the parse
-// has already removed necessary information for signed,
-// not encrypted texts. If we want it, we have to
-// do some significant reworking. -- KB
-//
-// PEP_STATUS sign_message(PEP_SESSION session,
-//                       message *src,
-//                       message **dst);
-//             
-// /* checks if a message is correctly signend
-// with a key that has a UID with the email address of message.from. If
-// result is PEP_VERIFIED, it additionally delivers fpr of the signature
-// key. The function has to import attached keys first before doing the
-// check.  It must not handle encrypted messages but give an error value
-// for them. */
-// PEP_STATUS check_signed_message(PEP_SESSION session,
-//                                 message *src,
-//                                 char** signing_key_ptr);
-
 PEP_cryptotech determine_encryption_format(message *msg);
 void add_opt_field(message *msg, const char *name, const char *value);
 
