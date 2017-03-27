@@ -17,6 +17,8 @@ typedef struct _bloblist_t {
                                     // NULL if unknown
     char *filename;                // UTF-8 string of file name of blob or
                                     // NULL if unknown
+    char *content_id;              // UTF-8 string of content id or NULL if
+                                   // unknown
     struct _bloblist_t *next;
 } bloblist_t;
 
@@ -24,10 +26,11 @@ typedef struct _bloblist_t {
 // new_bloblist() - allocate a new bloblist
 //
 //  parameters:
-//      blob (in)       blob to add to the list
-//      size (in)       size of the blob
-//      mime_type (in)  MIME type of the blob data or NULL if unknown
-//      filename (in)  file name of origin of blob data or NULL if unknown
+//      blob (in)           blob to add to the list
+//      size (in)           size of the blob
+//      mime_type (in)      MIME type of the blob data or NULL if unknown
+//      filename (in)       file name of origin of blob data or NULL if unknown
+//      content_id (in)     content_id of attachment blob or NULL if known
 //
 //  return value:
 //      pointer to new bloblist_t or NULL if out of memory
@@ -37,7 +40,7 @@ typedef struct _bloblist_t {
 //      are being copied, the originals remain in the ownership of the caller
 
 DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_type,
-        const char *filename);
+        const char *filename, const char *content_id);
 
 
 // free_bloblist() - free bloblist
@@ -64,11 +67,12 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src);
 // bloblist_add() - add reference to a blob to bloblist
 //
 //  parameters:
-//      bloblist (in)   bloblist to add to
-//      blob (in)       blob
-//      size (in)       size of the blob
-//      mime_type (in)  MIME type of the blob or NULL if unknown
-//      filename (in)  file name of the blob or NULL if unknown
+//      bloblist (in)       bloblist to add to
+//      blob (in)           blob
+//      size (in)           size of the blob
+//      mime_type (in)      MIME type of the blob or NULL if unknown
+//      filename (in)       file name of the blob or NULL if unknown
+//      content_id (in)     content_id of attachment blob or NULL if known
 //
 //  return value:
 //      pointer to the last element of bloblist or NULL if out of memory or
@@ -81,7 +85,7 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src);
 //      empty input list.
 
 DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t size,
-        const char *mime_type, const char *filename);
+        const char *mime_type, const char *filename, const char *content_id);
 
 
 // bloblist_length() - get length of bloblist
@@ -97,4 +101,3 @@ DYNAMIC_API int bloblist_length(const bloblist_t *bloblist);
 #ifdef __cplusplus
 }
 #endif
-
