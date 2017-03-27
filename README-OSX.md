@@ -124,6 +124,7 @@ Since the `system.db` rarely changes, the last step is not needed for every buil
 If you installed the test keys in your keyring (see: README.txt), this should just work:
 
 ```
+cd test
 make test
 ```
 
