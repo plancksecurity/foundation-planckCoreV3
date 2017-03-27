@@ -697,6 +697,7 @@ PEP_STATUS receive_DeviceState_msg(
                     last->next = bl;
                 free(b->mime_type);
                 free(b->filename);
+                free(b->content_id);
                 free(b->value);
                 free(b);
             }
@@ -860,7 +861,7 @@ PEP_STATUS unicast_msg(
                 if (status != PEP_STATUS_OK)
                     goto error;
                 bloblist_t *bl = bloblist_add(_message->attachments,
-                        (char *) key, size, "application/pgp-keys", filename);
+                        (char *) key, size, "application/pgp-keys", filename, NULL);
                 if (!bl)
                     goto enomem;
                 if (!_message->attachments)

@@ -45,7 +45,7 @@ int main() {
     outgoing_message->to = to_list;
     outgoing_message->shortmsg = strdup("Greetings, humans!");
     outgoing_message->longmsg = strdup("This is a test of the emergency message system. This is only a test. BEEP.");
-    outgoing_message->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
+    outgoing_message->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL, NULL);
     cout << "message created.\n";
 
     char* encoded_text = nullptr;

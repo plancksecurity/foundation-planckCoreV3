@@ -49,10 +49,10 @@ int main() {
     char* text2 = strdup("More text.");
     char* text3 = strdup("Unpleasant news and witty one-liners.");
     char* text4 = strdup("I AM URDNOT WREX AND THIS IS MY PLANET!");
-    bloblist_t* bl1 = new_bloblist(text1, strlen(text1) + 1, "text/plain", NULL);
-    bloblist_t* bl2 = new_bloblist(text2, strlen(text2) + 1, "text/richtext", "bob.rtf");
-    bloblist_t* bl3 = new_bloblist(text3, strlen(text3) + 1, NULL, "dummy.bin");
-    bloblist_t* bl4 = new_bloblist(text4, strlen(text4) + 1, NULL, NULL);
+    bloblist_t* bl1 = new_bloblist(text1, strlen(text1) + 1, "text/plain", NULL, "<julio12345@iglesias.com>");
+    bloblist_t* bl2 = new_bloblist(text2, strlen(text2) + 1, "text/richtext", "bob.rtf",NULL);
+    bloblist_t* bl3 = new_bloblist(text3, strlen(text3) + 1, NULL, "dummy.bin",NULL);
+    bloblist_t* bl4 = new_bloblist(text4, strlen(text4) + 1, NULL, NULL,NULL);
     
     bloblist_t* bl_arr[4] = {bl1, bl2, bl3, bl4};
         
@@ -67,6 +67,7 @@ int main() {
     assert(bl1->value != new_bl->value);
     assert(bl1->mime_type != new_bl->mime_type || !(bl1->mime_type || new_bl->mime_type));
     assert(bl1->filename != new_bl->filename || !(bl1->filename || new_bl->filename));
+    assert(bl1->content_id != new_bl->content_id || !(bl1->content_id || new_bl->content_id));
     cout << "one-element bloblist duplicated.\n\n";
     
     cout << "freeing bloblist...\n";
@@ -76,10 +77,10 @@ int main() {
     bloblist_t* p;
     cout << "\ncreating four-element list...\n";
     bloblist_t* to_copy = bl_arr[0];
-    new_bl = bloblist_add(new_bl, strdup(to_copy->value), to_copy->size, to_copy->mime_type, to_copy->filename);
+    new_bl = bloblist_add(new_bl, strdup(to_copy->value), to_copy->size, to_copy->mime_type, to_copy->filename, to_copy->content_id);
     for (i = 1; i < 4; i++) {
         to_copy = bl_arr[i];
-        p = bloblist_add(new_bl, strdup(to_copy->value), to_copy->size, to_copy->mime_type, to_copy->filename);
+        p = bloblist_add(new_bl, strdup(to_copy->value), to_copy->size, to_copy->mime_type, to_copy->filename, to_copy->content_id);
 
         assert(p);
     }
@@ -93,6 +94,7 @@ int main() {
         assert(p->value != bl_arr[i]->value);
         assert(p->mime_type != bl_arr[i]->mime_type || !(p->mime_type || bl_arr[i]->mime_type));
         assert(p->filename != bl_arr[i]->filename || !(p->filename || bl_arr[i]->filename));
+        assert(p->content_id != bl_arr[i]->content_id || !(p->content_id || bl_arr[i]->content_id));
         
         p = p->next;
     }
@@ -110,6 +112,7 @@ int main() {
         assert(p->value != dup_p->value);
         assert(p->mime_type != dup_p->mime_type || !(p->mime_type || dup_p->mime_type));
         assert(p->filename != dup_p->filename || !(p->filename || dup_p->filename));
+        assert(p->content_id != bl_arr[i]->content_id || !(p->content_id || bl_arr[i]->content_id));
 
         dup_p = dup_p->next;
         p = p->next;

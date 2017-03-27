@@ -80,4 +80,3 @@ int _get_content_type(
         char **type,
         char **charset
     );
-
