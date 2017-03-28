@@ -1213,7 +1213,7 @@ unlock_curl:
 
 typedef PEP_STATUS (*find_key_cb_t)(void*, pgp_key_t *);
 
-static PEP_STATUS find_keys_do(
+static PEP_STATUS find_keys_do(pgp_keyring_t* keyring,
         const char *pattern, find_key_cb_t cb, void* cb_arg)
 {
     uint8_t fpr[PGP_FINGERPRINT_SIZE];
@@ -1230,7 +1230,7 @@ static PEP_STATUS find_keys_do(
         // Only one fingerprint can match
         if ((key = (pgp_key_t *)pgp_getkeybyfpr(
                         netpgp.io,
-                        (pgp_keyring_t *)netpgp.pubring,
+                        keyring,
                         (const uint8_t *)fpr, length,
                         &from,
                         NULL, 0, 0)) == NULL) {
@@ -1246,7 +1246,7 @@ static PEP_STATUS find_keys_do(
         result = PEP_KEY_NOT_FOUND;
         while((key = (pgp_key_t *)pgp_getnextkeybyname(
                         netpgp.io,
-                        (pgp_keyring_t *)netpgp.pubring,
+                        keyring,
 			            (const char *)pattern,
                         &from)) != NULL) {
 
@@ -1365,7 +1365,8 @@ PEP_STATUS pgp_find_keys(
     }
     _k = _keylist;
 
-    result = find_keys_do(pattern, &add_key_fpr_to_stringlist, &_k);
+    result = find_keys_do((pgp_keyring_t *)netpgp.pubring,
+                          pattern, &add_key_fpr_to_stringlist, &_k);
 
     if (result == PEP_STATUS_OK) {
         *keylist = _keylist;
@@ -1453,7 +1454,8 @@ PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
         goto free_encoded_keys;
     }
 
-    result = find_keys_do(pattern, &send_key_cb, (void*)encoded_keys);
+    result = find_keys_do((pgp_keyring_t *)netpgp.pubring,
+                          pattern, &send_key_cb, (void*)encoded_keys);
 
     pthread_mutex_unlock(&netpgp_mutex);
 
@@ -1873,7 +1875,8 @@ PEP_STATUS pgp_list_keyinfo(
 
     PEP_STATUS result;
 
-    result = find_keys_do(pattern, &add_keyinfo_to_stringpair_list, (void*)keyinfo_list);
+    result = find_keys_do((pgp_keyring_t *)netpgp.pubring,
+                          pattern, &add_keyinfo_to_stringpair_list, (void*)keyinfo_list);
 
     if (!keyinfo_list)
         result = PEP_KEY_NOT_FOUND;
@@ -1913,7 +1916,8 @@ PEP_STATUS pgp_find_private_keys(
     }
     _k = _keylist;
 
-    result = find_keys_do(pattern, &add_secret_key_fpr_to_stringlist, &_k);
+    result = find_keys_do((pgp_keyring_t *)netpgp.secring,
+                          pattern, &add_secret_key_fpr_to_stringlist, &_k);
 
     if (result == PEP_STATUS_OK) {
         *keylist = _keylist;
