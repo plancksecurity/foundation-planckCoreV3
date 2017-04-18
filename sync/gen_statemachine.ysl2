@@ -346,10 +346,10 @@ tstylesheet {
         |> if (cond_result) {
         apply "action|transition|condition";
         |> }
-        const "else", "./following-sibling::*[position()=1][name(.)='else']";
-        if "$else" {
+        const "alternative", "./following-sibling::*[position()=1][name(.)='alternative']";
+        if "$alternative" {
         |> else {
-        apply "$else/action|$else/transition|$else/condition";
+        apply "$alternative/action|$alternative/transition|$alternative/condition";
         |> }
         }
         | }

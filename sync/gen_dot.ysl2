@@ -21,9 +21,10 @@ tstylesheet {
 
     template "event" {
         param "state";
+        const "transitions", "transition|descendant::condition/transition|descendant::alternative/transition";
         choose {
-            when "count(transition) > 0"
-                apply "transition|condition/transition", 0
+            when "count($transitions) > 0"
+                apply "$transitions", 0
                     with "state", "$state", with "event", "@name";
             otherwise
                 if "@name != 'Init'"
