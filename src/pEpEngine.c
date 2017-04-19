@@ -234,6 +234,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     _session->version = PEP_ENGINE_VERSION;
 
+#ifdef DEBUG_ERRORSTACK
+    _session->errorstack = new_stringlist(NULL);
+#endif
+
     assert(LOCAL_DB);
     if (LOCAL_DB == NULL) {
         status = PEP_INIT_CANNOT_OPEN_DB;
@@ -749,6 +753,9 @@ DYNAMIC_API void release(PEP_SESSION session)
         release_transport_system(session, out_last);
         release_cryptotech(session, out_last);
 
+#ifdef DEBUG_ERRORSTACK
+        free_stringlist(session->errorstack);
+#endif
         free(session);
     }
 }
@@ -2272,3 +2279,39 @@ DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session)
 
     return PEP_STATUS_OK;
 }
+
+#ifdef DEBUG_ERRORSTACK
+PEP_STATUS session_add_error(PEP_SESSION session, const char* file, unsigned line, PEP_STATUS status)
+{
+    char logline[48];
+    if(status>0)
+    {
+        snprintf(logline,47, "%24s:%u status=%u (0x%x)", file, line, status, status);
+    }else{
+        snprintf(logline,47, "%24s:%u status=%i.", file, line, status);
+    }
+    stringlist_add(session->errorstack, logline); // logline is copied! :-)
+    return status;
+}
+
+DYNAMIC_API const stringlist_t* get_errorstack(PEP_SESSION session)
+{
+    return session->errorstack;
+}
+
+#else
+
+static stringlist_t* dummy_errorstack = NULL;
+
+DYNAMIC_API const stringlist_t* get_errorstack(PEP_SESSION session)
+{
+	if(dummy_errorstack == NULL)
+	{
+		dummy_errorstack = new_stringlist("( Please recompile pEpEngine with -DDEBUG_ERRORSTACK )");
+	}
+	
+    return dummy_errorstack;
+}
+
+#endif
+

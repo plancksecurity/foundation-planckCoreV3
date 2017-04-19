@@ -162,7 +162,11 @@ struct _pEpSession {
     bool use_only_own_private_keys;
     bool keep_sync_msg;
     
+#ifdef DEBUG_ERRORSTACK
+    stringlist_t* errorstack;
+#endif
 };
+
 
 PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
 void release_transport_system(PEP_SESSION session, bool out_last);
@@ -229,3 +233,11 @@ static inline int _same_fpr(
     
     return ai == fpras && bi == fprbs;
 }
+
+
+#ifdef DEBUG_ERRORSTACK
+    PEP_STATUS session_add_error(PEP_SESSION session, const char* file, unsigned line, PEP_STATUS status);
+    #define ERROR(status)   session_add_error(session, __FILE__, __LINE__, (status))
+#else
+    #define ERROR(status)   (status)
+#endif
