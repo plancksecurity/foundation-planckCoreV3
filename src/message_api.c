@@ -2563,7 +2563,7 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
                                                 keylist,
                                                 rating,
                                                 flags);
-    if (decrypt_status != PEP_STATUS_OK)
+    if (decrypt_status > PEP_CANNOT_DECRYPT_UNKNOWN)
     {
         status = decrypt_status;
         goto pep_error;
