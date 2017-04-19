@@ -71,10 +71,10 @@ protocol DeviceGroup {
 
         state HandshakingSole timeout=600 (Identity expected) {
             on Init{
-                if keyElectionWon(partner) { // TODO : should be "expected"
-                    do notifyInitFormGroup(partner);
+                if keyElectionWon(expected) {
+                    do notifyInitFormGroup(expected);
                 } else {
-                    do notifyInitAddOurDevice(partner);
+                    do notifyInitAddOurDevice(expected);
                 }
             }
             on HandshakeRejected(Identity partner) {
@@ -97,8 +97,8 @@ protocol DeviceGroup {
             }
             on Cancel go Sole;
             on GroupKeys(Identity partner, GroupKeys groupkeys) {
-                if keyElectionWon(partner) { // TODO : use "expected"
-                    // not suppose to receive groupkeys - ignore
+                if keyElectionWon(expected) {
+                    // not supposed to receive groupkeys - ignore
                 } else {
                     // UUID changes in between, so we can only check for same address and fpr
                     if sameKeyAndAddress(partner, expected) {
@@ -204,7 +204,7 @@ protocol DeviceGroup {
         state HandshakingGrouped timeout=600 (Identity expected) {
             // HandshakeRequest from same group are filtered in receive_sync_msg
             on Init{
-                if keyElectionWon(partner) { // TODO : should be "expected"
+                if keyElectionWon(expected) {
                     do notifyInitAddOtherDevice(partner);
                 } else {
                     do notifyInitMoveOurDevice(partner);
@@ -227,9 +227,13 @@ protocol DeviceGroup {
             }
             on Cancel go Grouped;
             on GroupKeys(Identity partner, GroupKeys groupkeys) {
-                // TODO : check election  lost, check same address & fpr
-                if sameIdentities(partner, expected) {
-                    go WaitForAcceptGrouped(partner, groupkeys);
+                if keyElectionWon(expected) {
+                    // not supposed to receive groupkeys - ignore
+                } else {
+                    // UUID changes in between, so we can only check for same address and fpr
+                    if sameKeyAndAddress(partner, expected) {
+                        go WaitForAcceptGrouped(partner, groupkeys);
+                    }
                 }
             }
             on GroupUpdate(Identity partner, IdentityList keys) {

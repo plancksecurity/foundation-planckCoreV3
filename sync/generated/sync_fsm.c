@@ -283,7 +283,7 @@ DeviceState_state fsm_DeviceState(
                 {
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=HandshakingSole", "event=Init")
                     {
-                        int cond_result = keyElectionWon(session, partner);
+                        int cond_result = keyElectionWon(session, expected);
                         #ifndef NDEBUG
                         char resstr[11] = {0,};
                         snprintf(resstr,10,"result=%d",cond_result);
@@ -293,7 +293,7 @@ DeviceState_state fsm_DeviceState(
                             return cond_result;
                         if (cond_result) {
                         DEBUG_LOG("FSM action", "sync_fsm.c, state=HandshakingSole, event=Init", "action=notifyInitFormGroup")
-                        status = notifyInitFormGroup(session, state, partner, NULL);
+                        status = notifyInitFormGroup(session, state, expected, NULL);
                         if (status == PEP_OUT_OF_MEMORY)
                             return (int) invalid_out_of_memory;
                         if (status != PEP_STATUS_OK)
@@ -301,7 +301,7 @@ DeviceState_state fsm_DeviceState(
                         }
                         else {
                         DEBUG_LOG("FSM action", "sync_fsm.c, state=HandshakingSole, event=Init", "action=notifyInitAddOurDevice")
-                        status = notifyInitAddOurDevice(session, state, partner, NULL);
+                        status = notifyInitAddOurDevice(session, state, expected, NULL);
                         if (status == PEP_OUT_OF_MEMORY)
                             return (int) invalid_out_of_memory;
                         if (status != PEP_STATUS_OK)
@@ -427,7 +427,7 @@ DeviceState_state fsm_DeviceState(
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=HandshakingSole", "event=GroupKeys")
                     group_keys_extra_t* groupkeys = (group_keys_extra_t*)extra;
                     {
-                        int cond_result = keyElectionWon(session, partner);
+                        int cond_result = keyElectionWon(session, expected);
                         #ifndef NDEBUG
                         char resstr[11] = {0,};
                         snprintf(resstr,10,"result=%d",cond_result);
@@ -951,7 +951,7 @@ DeviceState_state fsm_DeviceState(
                 {
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=HandshakingGrouped", "event=Init")
                     {
-                        int cond_result = keyElectionWon(session, partner);
+                        int cond_result = keyElectionWon(session, expected);
                         #ifndef NDEBUG
                         char resstr[11] = {0,};
                         snprintf(resstr,10,"result=%d",cond_result);
@@ -1076,29 +1076,43 @@ DeviceState_state fsm_DeviceState(
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=HandshakingGrouped", "event=GroupKeys")
                     group_keys_extra_t* groupkeys = (group_keys_extra_t*)extra;
                     {
-                        int cond_result = sameIdentities(session, partner, expected);
+                        int cond_result = keyElectionWon(session, expected);
                         #ifndef NDEBUG
                         char resstr[11] = {0,};
                         snprintf(resstr,10,"result=%d",cond_result);
                         #endif
-                        DEBUG_LOG("FSM condition", "sync_fsm.c, state=HandshakingGrouped, event=GroupKeys, condition=sameIdentities", resstr)
+                        DEBUG_LOG("FSM condition", "sync_fsm.c, state=HandshakingGrouped, event=GroupKeys, condition=keyElectionWon", resstr)
                         if (cond_result < 0)
                             return cond_result;
                         if (cond_result) {
-                        assert(session->sync_state_payload);
-                        if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
-                        free_identity(((HandshakingGrouped_state_payload_t*)session->sync_state_payload)->expected);
-                        free(session->sync_state_payload);
-                        session->sync_state_payload = NULL;
-                        session->sync_state_payload = malloc(sizeof(WaitForAcceptGrouped_state_payload_t));
-                        assert(session->sync_state_payload);
-                        if(!session->sync_state_payload) return (DeviceState_state) invalid_out_of_memory;
-                        ((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->expected =
-                            identity_dup(partner);
-                        ((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->groupkeys =
-                            group_keys_extra_dup(groupkeys);
-                        DEBUG_LOG("FSM transition", "sync_fsm.c, state=HandshakingGrouped, event=GroupKeys", "target=WaitForAcceptGrouped")
-                        return WaitForAcceptGrouped;
+                        }
+                        else {
+                        {
+                            int cond_result = sameKeyAndAddress(session, partner, expected);
+                            #ifndef NDEBUG
+                            char resstr[11] = {0,};
+                            snprintf(resstr,10,"result=%d",cond_result);
+                            #endif
+                            DEBUG_LOG("FSM condition", "sync_fsm.c, state=HandshakingGrouped, event=GroupKeys, condition=sameKeyAndAddress", resstr)
+                            if (cond_result < 0)
+                                return cond_result;
+                            if (cond_result) {
+                            assert(session->sync_state_payload);
+                            if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
+                            free_identity(((HandshakingGrouped_state_payload_t*)session->sync_state_payload)->expected);
+                            free(session->sync_state_payload);
+                            session->sync_state_payload = NULL;
+                            session->sync_state_payload = malloc(sizeof(WaitForAcceptGrouped_state_payload_t));
+                            assert(session->sync_state_payload);
+                            if(!session->sync_state_payload) return (DeviceState_state) invalid_out_of_memory;
+                            ((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->expected =
+                                identity_dup(partner);
+                            ((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->groupkeys =
+                                group_keys_extra_dup(groupkeys);
+                            DEBUG_LOG("FSM transition", "sync_fsm.c, state=HandshakingGrouped, event=GroupKeys", "target=WaitForAcceptGrouped")
+                            return WaitForAcceptGrouped;
+                            }
+                        }
                         }
                     }
                     break;
