@@ -2563,12 +2563,20 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
                                                 keylist,
                                                 rating,
                                                 flags);
-                                                
+    if (decrypt_status > PEP_CANNOT_DECRYPT_UNKNOWN)
+    {
+        status = decrypt_status;
+        goto pep_error;
+    }
+
     status = mime_encode_message(dec_msg, false, mime_plaintext);
 
     if (status == PEP_STATUS_OK)
+    {
+        free(tmp_msg);
         return decrypt_status;
-        
+    }
+    
 pep_error:
     free_message(tmp_msg);
     free_message(dec_msg);
