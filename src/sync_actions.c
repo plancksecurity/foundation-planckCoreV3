@@ -105,6 +105,23 @@ int sameIdentities(PEP_SESSION session, Identity a, Identity b)
     return 1;
 }
 
+int sameKeyAndAddress(PEP_SESSION session, Identity a, Identity b)
+{
+    assert(session);
+    assert(a);
+    assert(b);
+
+    if (!(session && a && b))
+        return invalid_condition; // error
+
+    if (a->fpr == NULL || b->fpr == NULL ||
+        (!_same_fpr(a->fpr, strlen(a->fpr), b->fpr, strlen(b->fpr))) ||
+        a->address == NULL || b->address == NULL ||
+        strcmp(a->address, b->address) != 0)
+            return 0;
+    return 1;
+}
+
 // actions
 
 PEP_STATUS _notifyHandshake(

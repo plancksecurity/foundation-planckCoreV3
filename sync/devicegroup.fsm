@@ -71,7 +71,7 @@ protocol DeviceGroup {
 
         state HandshakingSole timeout=600 (Identity expected) {
             on Init{
-                if keyElectionWon(partner) {
+                if keyElectionWon(partner) { // TODO : should be "expected"
                     do notifyInitFormGroup(partner);
                 } else {
                     do notifyInitAddOurDevice(partner);
@@ -97,10 +97,11 @@ protocol DeviceGroup {
             }
             on Cancel go Sole;
             on GroupKeys(Identity partner, GroupKeys groupkeys) {
-                if keyElectionWon(partner) {
+                if keyElectionWon(partner) { // TODO : use "expected"
                     // not suppose to receive groupkeys - ignore
                 } else {
-                    if sameIdentities(partner, expected) {
+                    // UUID changes in between, so we can only check for same address and fpr
+                    if sameKeyAndAddress(partner, expected) {
                         go WaitForAcceptSole(partner, groupkeys);
                     }
                 }
@@ -114,7 +115,8 @@ protocol DeviceGroup {
     
         state WaitForGroupKeysSole timeout=600 (Identity expected) {
             on GroupKeys(Identity partner, GroupKeys groupkeys) {
-                if sameIdentities(partner, expected) {
+                // UUID changes in between, so we can only check for same address and fpr
+                if sameKeyAndAddress(partner, expected) {
                     do storeGroupKeys(partner, groupkeys);
                     do sendGroupUpdate;
                     do renewUUID;
@@ -134,7 +136,8 @@ protocol DeviceGroup {
                 go Sole;
             }
             on HandshakeAccepted(Identity partner) {
-                if sameIdentities(partner, expected) {
+                // UUID changes in between, so we can only check for same address and fpr
+                if sameKeyAndAddress(partner, expected) {
                     do acceptHandshake(partner); 
                     do storeGroupKeys(partner, groupkeys);
                     do sendGroupUpdate;
@@ -201,7 +204,7 @@ protocol DeviceGroup {
         state HandshakingGrouped timeout=600 (Identity expected) {
             // HandshakeRequest from same group are filtered in receive_sync_msg
             on Init{
-                if keyElectionWon(partner) {
+                if keyElectionWon(partner) { // TODO : should be "expected"
                     do notifyInitAddOtherDevice(partner);
                 } else {
                     do notifyInitMoveOurDevice(partner);
@@ -224,6 +227,7 @@ protocol DeviceGroup {
             }
             on Cancel go Grouped;
             on GroupKeys(Identity partner, GroupKeys groupkeys) {
+                // TODO : check election  lost, check same address & fpr
                 if sameIdentities(partner, expected) {
                     go WaitForAcceptGrouped(partner, groupkeys);
                 }
