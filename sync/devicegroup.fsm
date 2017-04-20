@@ -21,6 +21,7 @@ protocol DeviceGroup {
         condition deviceGrouped();
         condition keyElectionWon(Identity partner);
         condition sameIdentities(Identity a, Identity b);
+        condition sameKeyAndAddress(Identity a, Identity b);
 
         state InitState {
             on Init {
