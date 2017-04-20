@@ -1606,7 +1606,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     assert(flags);
 
     if (!(session && src && dst && keylist && rating && flags))
-        return PEP_ILLEGAL_VALUE;
+        return ERROR(PEP_ILLEGAL_VALUE);
 
     *flags = 0;
 
@@ -1617,7 +1617,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     // we would need to check signature
     status = _update_identity_for_incoming_message(session, src);
     if(status != PEP_STATUS_OK)
-        return status;
+        return ERROR(status);
 
     // Get detached signature, if any
     bloblist_t* detached_sig = NULL;
@@ -1651,7 +1651,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                 PEP_decrypt_flag_consume;
                 }
                 else if (status != PEP_STATUS_OK) {
-                    return status;
+                    return ERROR(status);
                 }
             }
             
@@ -1683,7 +1683,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 }
             }
             
-            return PEP_UNENCRYPTED;
+            return ERROR(PEP_UNENCRYPTED);
 
         case PEP_enc_PGP_MIME:
             ctext = src->attachments->next->value;
@@ -1707,7 +1707,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                                    csize, dsig_text, dsig_size,
                                                    &ptext, &psize, &_keylist);
     if (status > PEP_CANNOT_DECRYPT_UNKNOWN){
-        goto pep_error;
+        GOTO(pep_error);
     }
 
     decrypt_status = status;
@@ -1883,7 +1883,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             case PEP_enc_PGP_MIME_Outlook1:
                 status = copy_fields(msg, src);
                 if (status != PEP_STATUS_OK)
-                    goto pep_error;
+                {
+                    GOTO(pep_error);
+                }
 
                 if (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0)
                 {
@@ -1941,7 +1943,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
             status = _update_identity_for_incoming_message(session, src);
             if(status != PEP_STATUS_OK)
-                goto pep_error;
+            {
+                GOTO(pep_error);
+            }
 
             char *re_ptext = NULL;
             size_t re_psize;
@@ -1955,7 +1959,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             free(re_ptext);
 
             if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
-                goto pep_error;
+            {
+                GOTO(pep_error);
+            }
 
             decrypt_status = status;
         }
@@ -1995,7 +2001,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                     if (status == PEP_CANNOT_FIND_IDENTITY)
                        status = PEP_STATUS_OK;
                     if (status != PEP_STATUS_OK)
-                        goto pep_error;
+                    {
+                        GOTO(pep_error);
+                    }
                 }
             }
         }
@@ -2053,7 +2061,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     *dst = msg;
     *keylist = _keylist;
 
-    return status;
+    return ERROR(status);
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
@@ -2063,7 +2071,7 @@ pep_error:
     free_message(msg);
     free_stringlist(_keylist);
 
-    return status;
+    return ERROR(status);
 }
 
 DYNAMIC_API PEP_STATUS decrypt_message(
@@ -2112,8 +2120,7 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
 
     free_identity_list(private_il);
 
-    return status;
-
+    return ERROR(status);
 }
 
 static void _max_comm_type_from_identity_list(
@@ -2154,10 +2161,10 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
     assert(rating);
 
     if (!(session && msg && rating))
-        return PEP_ILLEGAL_VALUE;
+        return ERROR(PEP_ILLEGAL_VALUE);
 
     if (msg->dir != PEP_dir_outgoing)
-        return PEP_ILLEGAL_VALUE;
+        return ERROR(PEP_ILLEGAL_VALUE);
 
     *rating = PEP_rating_undefined;
 
@@ -2241,7 +2248,7 @@ DYNAMIC_API PEP_color color_from_rating(PEP_rating rating)
 
     // this should never happen
     assert(false);
-	return PEP_color_no_color;
+    return PEP_color_no_color;
 }
 
 static bool _is_valid_hex(const char* hexstr) {
@@ -2386,7 +2393,7 @@ DYNAMIC_API PEP_STATUS get_trustwords(
                 goto error_release;
             break;
         default:
-            return PEP_UNKNOWN_ERROR; // shouldn't be possible
+            return ERROR(PEP_UNKNOWN_ERROR); // shouldn't be possible
     }
 
     size_t _wsize = first_wsize + second_wsize;
@@ -2428,7 +2435,7 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     the_end:
     free(first_set);
     free(second_set);
-    return status;
+    return ERROR(status);
 }
 
 DYNAMIC_API PEP_STATUS get_message_trustwords(
@@ -2514,7 +2521,7 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
 
     if (status != PEP_STATUS_OK) {
         free_identity(partner);
-        return status;
+        return ERROR(status);
     }
    
     // Find own identity corresponding to given account address.
@@ -2527,7 +2534,7 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
 
     if (status != PEP_STATUS_OK) {
         free_identity(stored_identity);
-        return status;
+        return ERROR(status);
     }
 
     // get the trustwords
@@ -2536,7 +2543,7 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
                             partner, received_by, 
                             lang, words, &wsize, full);
 
-    return status;
+    return ERROR(status);
 }
 
 DYNAMIC_API PEP_STATUS MIME_decrypt_message(
@@ -2574,14 +2581,14 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     if (status == PEP_STATUS_OK)
     {
         free(tmp_msg);
-        return decrypt_status;
+        return ERROR(decrypt_status);
     }
     
 pep_error:
     free_message(tmp_msg);
     free_message(dec_msg);
 
-    return status;
+    return ERROR(status);
 }
 
 
@@ -2620,7 +2627,7 @@ pep_error:
     free_message(tmp_msg);
     free_message(enc_msg);
 
-    return status;
+    return ERROR(status);
 
 }
 
@@ -2659,5 +2666,5 @@ pep_error:
     free_message(tmp_msg);
     free_message(enc_msg);
 
-    return status;
+    return ERROR(status);
 }
