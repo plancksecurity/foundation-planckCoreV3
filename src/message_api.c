@@ -1100,20 +1100,20 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     assert(enc_format != PEP_enc_none);
 
     if (!(session && src && dst && enc_format != PEP_enc_none))
-        return PEP_ILLEGAL_VALUE;
+        return ERROR(PEP_ILLEGAL_VALUE);
 
     if (src->dir == PEP_dir_incoming)
-        return PEP_ILLEGAL_VALUE;
+        return ERROR(PEP_ILLEGAL_VALUE);
 
     determine_encryption_format(src);
     if (src->enc_format != PEP_enc_none)
-        return PEP_ILLEGAL_VALUE;
+        return ERROR(PEP_ILLEGAL_VALUE);
 
     *dst = NULL;
 
     status = myself(session, src->from);
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        GOTO(pep_error);
 
     keys = new_stringlist(src->from->fpr);
     if (keys == NULL)
@@ -1147,7 +1147,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_STATUS _status = update_identity(session, _il->ident);
         if (_status != PEP_STATUS_OK) {
             status = _status;
-            goto pep_error;
+            GOTO(pep_error);
         }
 
         if (_il->ident->fpr && _il->ident->fpr[0]) {
@@ -1168,7 +1168,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             PEP_STATUS _status = update_identity(session, _il->ident);
             if (_status != PEP_STATUS_OK) {
                 status = _status;
-                goto pep_error;
+                GOTO(pep_error);
             }
 
             if (_il->ident->fpr && _il->ident->fpr[0]) {
@@ -1189,7 +1189,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             if (_status != PEP_STATUS_OK)
             {
                 status = _status;
-                goto pep_error;
+                GOTO(pep_error);
             }
 
             if (_il->ident->fpr && _il->ident->fpr[0]) {
@@ -1214,7 +1214,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         free_stringlist(keys);
         if (!session->passive_mode && !(flags & PEP_encrypt_flag_force_no_attached_key))
             attach_own_key(session, src);
-        return PEP_UNENCRYPTED;
+        return ERROR(PEP_UNENCRYPTED);
     }
     else {
         msg = clone_to_empty_message(src);
@@ -1241,14 +1241,14 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         default:
             assert(0);
             status = PEP_ILLEGAL_VALUE;
-            goto pep_error;
+            GOTO(pep_error);
         }
 
         if (status == PEP_OUT_OF_MEMORY)
             goto enomem;
 
         if (status != PEP_STATUS_OK)
-            goto pep_error;
+            GOTO(pep_error);
     }
 
     free_stringlist(keys);
@@ -1271,7 +1271,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     *dst = msg;
-    return status;
+    return ERROR(status);
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
@@ -1280,7 +1280,7 @@ pep_error:
     free_stringlist(keys);
     free_message(msg);
 
-    return status;
+    return ERROR(status);
 }
 
 DYNAMIC_API PEP_STATUS encrypt_message_for_self(
@@ -1302,18 +1302,18 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     assert(enc_format != PEP_enc_none);
 
     if (!(session && src && dst && enc_format != PEP_enc_none))
-        return PEP_ILLEGAL_VALUE;
+        return ERROR(PEP_ILLEGAL_VALUE);
 
     if (src->dir == PEP_dir_incoming)
-        return PEP_ILLEGAL_VALUE;
+        return ERROR(PEP_ILLEGAL_VALUE);
 
     determine_encryption_format(src);
     if (src->enc_format != PEP_enc_none)
-        return PEP_ILLEGAL_VALUE;
+        return ERROR(PEP_ILLEGAL_VALUE);
 
     status = myself(session, target_id);
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        GOTO(pep_error);
 
     *dst = NULL;
 
@@ -1390,7 +1390,7 @@ pep_error:
     free_stringlist(keys);
     free_message(msg);
 
-    return status;
+    return ERROR(status);
 }
 
 static bool is_a_pEpmessage(const message *msg)
@@ -2608,7 +2608,7 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
 
     status = mime_decode_message(mimetext, size, &tmp_msg);
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        GOTO(pep_error);
 
     // This isn't incoming, though... so we need to reverse the direction
     tmp_msg->dir = PEP_dir_outgoing;
@@ -2619,7 +2619,7 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
                              enc_format,
                              flags);
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        GOTO(pep_error);
 
     status = mime_encode_message(enc_msg, false, mime_ciphertext);
 

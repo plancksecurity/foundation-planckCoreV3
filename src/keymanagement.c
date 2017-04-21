@@ -91,7 +91,7 @@ DYNAMIC_API PEP_STATUS update_identity(
     assert(!EMPTYSTR(identity->address));
 
     if (!(session && identity && !EMPTYSTR(identity->address)))
-        return PEP_ILLEGAL_VALUE;
+        return ERROR(PEP_ILLEGAL_VALUE);
 
     if (identity->me || (identity->user_id && strcmp(identity->user_id, PEP_OWN_USERID) == 0)) {
         identity->me = true;
@@ -311,7 +311,7 @@ exit_free :
     free_identity(stored_identity);
     free_identity(temp_id);
     
-    return status;
+    return ERROR(status);
 }
 
 PEP_STATUS elect_ownkey(
@@ -406,7 +406,7 @@ PEP_STATUS _has_usable_priv_key(PEP_SESSION session, char* fpr,
     
     *is_usable = !dont_use_fpr;
     
-    return status;
+    return ERROR(status);
 }
 
 PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags)
@@ -424,7 +424,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     if (!(session && identity && !EMPTYSTR(identity->address) &&
             (EMPTYSTR(identity->user_id) ||
             strcmp(identity->user_id, PEP_OWN_USERID) == 0)))
-        return PEP_ILLEGAL_VALUE;
+        return ERROR(PEP_ILLEGAL_VALUE);
 
     identity->comm_type = PEP_ct_pEp;
     identity->me = true;
@@ -512,7 +512,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
         status = elect_ownkey(session, identity);
         assert(status == PEP_STATUS_OK);
         if (status != PEP_STATUS_OK) {
-            return status;
+            return ERROR(status);
         }
 
         bool has_private = false;
@@ -548,21 +548,21 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
             status = elect_ownkey(session, identity);
             assert(status == PEP_STATUS_OK);
             if (status != PEP_STATUS_OK) {
-                return status;
+                return ERROR(status);
             }
         } 
         else if (status != PEP_STATUS_OK) 
         {
-            return status;
+            return ERROR(status);
         }
     }
    
     bool new_key_generated = false;
 
     if (EMPTYSTR(identity->fpr) || revoked)
-    {        
+    {
         if(!do_keygen){
-            return PEP_GET_KEY_FAILED;
+            return ERROR(PEP_GET_KEY_FAILED);
         }
 
         if(revoked)
@@ -580,7 +580,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
             DEBUG_LOG("generating key pair failed", "debug", buf);
             if(revoked && r_fpr)
                 free(r_fpr);
-            return status;
+            return ERROR(status);
         }
 
         new_key_generated = true;
@@ -591,7 +591,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
                                  identity->fpr, time(NULL));
             free(r_fpr);
             if (status != PEP_STATUS_OK) {
-                return status;
+                return ERROR(status);
             }
         }
     }
@@ -604,7 +604,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
 
         assert(status == PEP_STATUS_OK);
         if (status != PEP_STATUS_OK) {
-            return status;
+            return ERROR(status);
         }
 
         if (status == PEP_STATUS_OK && expired) {
@@ -632,12 +632,12 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
         }
     }
 
-    return PEP_STATUS_OK;
+    return ERROR(PEP_STATUS_OK);
 }
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 {
-    return _myself(session, identity, true, false);
+    return ERROR(_myself(session, identity, true, false));
 }
 
 DYNAMIC_API PEP_STATUS register_examine_function(

@@ -2286,9 +2286,9 @@ PEP_STATUS session_add_error(PEP_SESSION session, const char* file, unsigned lin
     char logline[48];
     if(status>0)
     {
-        snprintf(logline,47, "%24s:%u status=%u (0x%x)", file, line, status, status);
+        snprintf(logline,47, "%.24s:%u status=%u (0x%x)", file, line, status, status);
     }else{
-        snprintf(logline,47, "%24s:%u status=%i.", file, line, status);
+        snprintf(logline,47, "%.24s:%u status=%i.", file, line, status);
     }
     stringlist_add(session->errorstack, logline); // logline is copied! :-)
     return status;
