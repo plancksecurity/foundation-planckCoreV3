@@ -56,11 +56,11 @@ DeviceState_state fsm_DeviceState(
         case InitState:
         {
             DEBUG_LOG("Entering FSM state", "sync_fsm.c", "state=InitState")
-            *timeout = 0;
             switch (event) {
                 case Init:
                 {
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=InitState", "event=Init")
+                    *timeout = 0;
                     {
                         int cond_result = deviceGrouped(session);
                         #ifndef NDEBUG
@@ -86,10 +86,10 @@ DeviceState_state fsm_DeviceState(
         case Sole:
         {
             DEBUG_LOG("Entering FSM state", "sync_fsm.c", "state=Sole")
-            *timeout = 0;
             switch (event) {
                 case Init: 
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=Sole", "event=Init") 
+                    *timeout = 0;
                     break;
                 case KeyGen:
                 {
@@ -158,10 +158,10 @@ DeviceState_state fsm_DeviceState(
             assert(session->sync_state_payload);
             if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
             Identity expected = ((SoleBeaconed_state_payload_t*)session->sync_state_payload)->expected;
-            *timeout = 600;
             switch (event) {
                 case Init: 
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=SoleBeaconed", "event=Init") 
+                    *timeout = 600;
                     break;
                 case KeyGen:
                 {
@@ -277,11 +277,11 @@ DeviceState_state fsm_DeviceState(
             assert(session->sync_state_payload);
             if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
             Identity expected = ((HandshakingSole_state_payload_t*)session->sync_state_payload)->expected;
-            *timeout = 600;
             switch (event) {
                 case Init:
                 {
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=HandshakingSole", "event=Init")
+                    *timeout = 600;
                     {
                         int cond_result = keyElectionWon(session, expected);
                         #ifndef NDEBUG
@@ -502,10 +502,10 @@ DeviceState_state fsm_DeviceState(
             assert(session->sync_state_payload);
             if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
             Identity expected = ((WaitForGroupKeysSole_state_payload_t*)session->sync_state_payload)->expected;
-            *timeout = 600;
             switch (event) {
                 case Init: 
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=WaitForGroupKeysSole", "event=Init") 
+                    *timeout = 600;
                     break;
                 case GroupKeys:
                 {
@@ -585,10 +585,10 @@ DeviceState_state fsm_DeviceState(
             if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
             Identity expected = ((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->expected;
             group_keys_extra_t* groupkeys = ((WaitForAcceptSole_state_payload_t*)session->sync_state_payload)->groupkeys;
-            *timeout = 600;
             switch (event) {
                 case Init: 
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=WaitForAcceptSole", "event=Init") 
+                    *timeout = 600;
                     break;
                 case HandshakeRejected:
                 {
@@ -708,10 +708,10 @@ DeviceState_state fsm_DeviceState(
         case Grouped:
         {
             DEBUG_LOG("Entering FSM state", "sync_fsm.c", "state=Grouped")
-            *timeout = 0;
             switch (event) {
                 case Init: 
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=Grouped", "event=Init") 
+                    *timeout = 0;
                     break;
                 case KeyGen:
                 {
@@ -809,10 +809,10 @@ DeviceState_state fsm_DeviceState(
             assert(session->sync_state_payload);
             if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
             Identity expected = ((GroupedBeaconed_state_payload_t*)session->sync_state_payload)->expected;
-            *timeout = 600;
             switch (event) {
                 case Init: 
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=GroupedBeaconed", "event=Init") 
+                    *timeout = 600;
                     break;
                 case KeyGen:
                 {
@@ -945,11 +945,11 @@ DeviceState_state fsm_DeviceState(
             assert(session->sync_state_payload);
             if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
             Identity expected = ((HandshakingGrouped_state_payload_t*)session->sync_state_payload)->expected;
-            *timeout = 600;
             switch (event) {
                 case Init:
                 {
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=HandshakingGrouped", "event=Init")
+                    *timeout = 600;
                     {
                         int cond_result = keyElectionWon(session, expected);
                         #ifndef NDEBUG
@@ -1169,10 +1169,10 @@ DeviceState_state fsm_DeviceState(
             assert(session->sync_state_payload);
             if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
             Identity expected = ((WaitForGroupKeysGrouped_state_payload_t*)session->sync_state_payload)->expected;
-            *timeout = 600;
             switch (event) {
                 case Init: 
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=WaitForGroupKeysGrouped", "event=Init") 
+                    *timeout = 600;
                     break;
                 case GroupKeys:
                 {
@@ -1276,10 +1276,10 @@ DeviceState_state fsm_DeviceState(
             if(!session->sync_state_payload) return (DeviceState_state) invalid_state;
             Identity expected = ((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->expected;
             group_keys_extra_t* groupkeys = ((WaitForAcceptGrouped_state_payload_t*)session->sync_state_payload)->groupkeys;
-            *timeout = 600;
             switch (event) {
                 case Init: 
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=WaitForAcceptGrouped", "event=Init") 
+                    *timeout = 600;
                     break;
                 case HandshakeRejected:
                 {
