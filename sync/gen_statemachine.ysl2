@@ -231,7 +231,6 @@ tstylesheet {
         ||
 
         ||
-            *timeout = «@timeout»;
             switch (event) {
         ||
 
@@ -239,6 +238,7 @@ tstylesheet {
         ||
                 case Init: 
                     DEBUG_LOG("FSM event", "«../@filename»_fsm.c, state=«@name»", "event=Init") 
+                    *timeout = «@timeout»;
                     break;
         ||
 
@@ -300,13 +300,16 @@ tstylesheet {
         case «@name»:
         {
             DEBUG_LOG("FSM event", "«../../@filename»_fsm.c, state=«../@name»", "event=«@name»")
+        `` if "@name='Init'" |> *timeout = «../@timeout»;
         ||
+
         if "count(parm) > 1" {
             // TODO get ride of void *extra, pass per-event struct incl all params.
             const "extrapEpType" call "pEp_type" with "type","name(parm[2]/*[1])"; 
             const "extraArgName","name(parm[2]/*[2])"; 
             |> «$extrapEpType» «$extraArgName» = («$extrapEpType»)extra;
         }
+
         ||
         `` apply "action|transition|condition";
         `` if "name(*[position()=last()]) != 'transition'" |> break;
