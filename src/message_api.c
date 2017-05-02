@@ -2569,6 +2569,11 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
                                                 keylist,
                                                 rating,
                                                 flags);
+                                                
+    if (!dec_msg && (decrypt_status == PEP_UNENCRYPTED || decrypt_status == PEP_VERIFIED)) {
+        dec_msg = message_dup(tmp_msg);
+    }
+        
     if (decrypt_status > PEP_CANNOT_DECRYPT_UNKNOWN)
     {
         status = decrypt_status;
@@ -2582,6 +2587,7 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     if (status == PEP_STATUS_OK)
     {
         free(tmp_msg);
+        free(dec_msg);
         return decrypt_status;
     }
     
