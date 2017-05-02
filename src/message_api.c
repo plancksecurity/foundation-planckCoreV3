@@ -2549,6 +2549,12 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     PEP_decrypt_flags_t *flags
 )
 {
+    assert(mimetext);
+    assert(mime_plaintext);
+    assert(keylist);
+    assert(rating);
+    assert(flags);
+
     PEP_STATUS status = PEP_STATUS_OK;
     message* tmp_msg = NULL;
     message* dec_msg = NULL;
@@ -2569,6 +2575,8 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
         goto pep_error;
     }
 
+    assert(dec_msg);
+    
     status = mime_encode_message(dec_msg, false, mime_plaintext);
 
     if (status == PEP_STATUS_OK)
