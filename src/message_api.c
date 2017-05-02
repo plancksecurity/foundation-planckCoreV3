@@ -2549,6 +2549,12 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     PEP_decrypt_flags_t *flags
 )
 {
+    assert(mimetext);
+    assert(mime_plaintext);
+    assert(keylist);
+    assert(rating);
+    assert(flags);
+
     PEP_STATUS status = PEP_STATUS_OK;
     message* tmp_msg = NULL;
     message* dec_msg = NULL;
@@ -2563,12 +2569,19 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
                                                 keylist,
                                                 rating,
                                                 flags);
+                                                
+    if (!dec_msg && (decrypt_status == PEP_UNENCRYPTED || decrypt_status == PEP_VERIFIED)) {
+        dec_msg = message_dup(tmp_msg);
+    }
+        
     if (decrypt_status > PEP_CANNOT_DECRYPT_UNKNOWN)
     {
         status = decrypt_status;
         goto pep_error;
     }
 
+    assert(dec_msg);
+    
     if (!dec_msg) {
         status = PEP_UNKNOWN_ERROR;
         goto pep_error;
@@ -2579,6 +2592,7 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     if (status == PEP_STATUS_OK)
     {
         free(tmp_msg);
+        free(dec_msg);
         return decrypt_status;
     }
     
