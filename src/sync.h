@@ -309,11 +309,12 @@ typedef int (*inject_sync_msg_t)(void *msg, void *management);
 //  parameters:
 //      management (in)     application defined
 //      timeout (in,out)    do not wait longer than timeout for message
+//                          timeout == NULL or *timeout == 0 is blocking
 //
 //  return value:
-//      next message or :
-//      NULL and timeout == 0 for termination
-//      NULL and timeout != 0 for timeout occurence
+//      next message, then timeout[out] == remaining time
+//      NULL and timeout[out] != 0 for timeout occurence
+//      NULL and timeout[out] == 0 for termination
 
 typedef void *(*retrieve_next_sync_msg_t)(void *management, time_t *timeout);
 

@@ -21,6 +21,7 @@ protocol DeviceGroup {
         condition deviceGrouped();
         condition keyElectionWon(Identity partner);
         condition sameIdentities(Identity a, Identity b);
+        condition sameKeyAndAddress(Identity a, Identity b);
 
         state InitState {
             on Init {
@@ -31,10 +32,14 @@ protocol DeviceGroup {
         }
 
         state Sole end=1 {
-            on KeyGen
+            on KeyGen {
                 do sendBeacon;
-            on CannotDecrypt
+                go SoleWaiting;
+            }
+            on CannotDecrypt {
                 do sendBeacon;
+                go SoleWaiting;
+            }
             on Beacon(Identity partner){
                 do sendHandshakeRequest(partner);
                 go SoleBeaconed(partner);
@@ -43,6 +48,26 @@ protocol DeviceGroup {
                 do sendHandshakeRequest(partner);
                 go HandshakingSole(partner);
             }
+        }
+
+        // copy of sole state with a timeout to enable fast polling for a second
+        // TODO use more YSLT power here (substates ?) 
+        state SoleWaiting timeout=60 {
+            on KeyGen {
+                do sendBeacon;
+            }
+            on CannotDecrypt {
+                do sendBeacon;
+            }
+            on Beacon(Identity partner){
+                do sendHandshakeRequest(partner);
+                go SoleBeaconed(partner);
+            }
+            on HandshakeRequest(Identity partner) {
+                do sendHandshakeRequest(partner);
+                go HandshakingSole(partner);
+            }
+            on Timeout go Sole;
         }
 
         state SoleBeaconed timeout=600 (Identity expected) {
@@ -71,10 +96,10 @@ protocol DeviceGroup {
 
         state HandshakingSole timeout=600 (Identity expected) {
             on Init{
-                if keyElectionWon(partner) {
-                    do notifyInitFormGroup(partner);
+                if keyElectionWon(expected) {
+                    do notifyInitFormGroup(expected);
                 } else {
-                    do notifyInitAddOurDevice(partner);
+                    do notifyInitAddOurDevice(expected);
                 }
             }
             on HandshakeRejected(Identity partner) {
@@ -97,10 +122,11 @@ protocol DeviceGroup {
             }
             on Cancel go Sole;
             on GroupKeys(Identity partner, GroupKeys groupkeys) {
-                if keyElectionWon(partner) {
-                    // not suppose to receive groupkeys - ignore
+                if keyElectionWon(expected) {
+                    // not supposed to receive groupkeys - ignore
                 } else {
-                    if sameIdentities(partner, expected) {
+                    // UUID changes in between, so we can only check for same address and fpr
+                    if sameKeyAndAddress(partner, expected) {
                         go WaitForAcceptSole(partner, groupkeys);
                     }
                 }
@@ -114,7 +140,8 @@ protocol DeviceGroup {
     
         state WaitForGroupKeysSole timeout=600 (Identity expected) {
             on GroupKeys(Identity partner, GroupKeys groupkeys) {
-                if sameIdentities(partner, expected) {
+                // UUID changes in between, so we can only check for same address and fpr
+                if sameKeyAndAddress(partner, expected) {
                     do storeGroupKeys(partner, groupkeys);
                     do sendGroupUpdate;
                     do renewUUID;
@@ -134,7 +161,8 @@ protocol DeviceGroup {
                 go Sole;
             }
             on HandshakeAccepted(Identity partner) {
-                if sameIdentities(partner, expected) {
+                // UUID changes in between, so we can only check for same address and fpr
+                if sameKeyAndAddress(partner, expected) {
                     do acceptHandshake(partner); 
                     do storeGroupKeys(partner, groupkeys);
                     do sendGroupUpdate;
@@ -157,6 +185,7 @@ protocol DeviceGroup {
             on CannotDecrypt {
                 do sendUpdateRequest;
                 do sendBeacon;
+                go GroupWaiting;
             }
             on UpdateRequest
                 do sendGroupUpdate;
@@ -170,6 +199,29 @@ protocol DeviceGroup {
             }
             on GroupUpdate(Identity partner, IdentityList keys)
                 do storeGroupUpdate(partner, keys);
+        }
+
+        // copy of grouped state, with a timeout to enable fast poling for a minut
+        state GroupWaiting timeout=60 {
+            on KeyGen
+                do sendGroupUpdate;
+            on CannotDecrypt {
+                do sendUpdateRequest;
+                do sendBeacon;
+            }
+            on UpdateRequest
+                do sendGroupUpdate;
+            on Beacon(Identity partner){
+                do sendHandshakeRequest(partner);
+                go GroupedBeaconed(partner);
+            }
+            on HandshakeRequest(Identity partner) {
+                do sendHandshakeRequest(partner);
+                go HandshakingGrouped(partner);
+            }
+            on GroupUpdate(Identity partner, IdentityList keys)
+                do storeGroupUpdate(partner, keys);
+            on Timeout go Grouped;
         }
 
         state GroupedBeaconed timeout=600 (Identity expected){
@@ -201,7 +253,7 @@ protocol DeviceGroup {
         state HandshakingGrouped timeout=600 (Identity expected) {
             // HandshakeRequest from same group are filtered in receive_sync_msg
             on Init{
-                if keyElectionWon(partner) {
+                if keyElectionWon(expected) {
                     do notifyInitAddOtherDevice(partner);
                 } else {
                     do notifyInitMoveOurDevice(partner);
@@ -224,8 +276,13 @@ protocol DeviceGroup {
             }
             on Cancel go Grouped;
             on GroupKeys(Identity partner, GroupKeys groupkeys) {
-                if sameIdentities(partner, expected) {
-                    go WaitForAcceptGrouped(partner, groupkeys);
+                if keyElectionWon(expected) {
+                    // not supposed to receive groupkeys - ignore
+                } else {
+                    // UUID changes in between, so we can only check for same address and fpr
+                    if sameKeyAndAddress(partner, expected) {
+                        go WaitForAcceptGrouped(partner, groupkeys);
+                    }
                 }
             }
             on GroupUpdate(Identity partner, IdentityList keys) {
