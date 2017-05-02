@@ -2569,6 +2569,11 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
         goto pep_error;
     }
 
+    if (!dec_msg) {
+        status = PEP_UNKNOWN_ERROR;
+        goto pep_error;
+    }
+
     status = mime_encode_message(dec_msg, false, mime_plaintext);
 
     if (status == PEP_STATUS_OK)
@@ -2614,6 +2619,12 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
     if (status != PEP_STATUS_OK)
         goto pep_error;
 
+
+    if (!enc_msg) {
+        status = PEP_UNKNOWN_ERROR;
+        goto pep_error;
+    }
+
     status = mime_encode_message(enc_msg, false, mime_ciphertext);
 
 pep_error:
@@ -2652,6 +2663,11 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message_for_self(
                                       flags);
     if (status != PEP_STATUS_OK)
         goto pep_error;
+ 
+    if (!enc_msg) {
+        status = PEP_UNKNOWN_ERROR;
+        goto pep_error;
+    }
 
     status = mime_encode_message(enc_msg, false, mime_ciphertext);
 
