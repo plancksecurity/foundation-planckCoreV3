@@ -189,7 +189,109 @@ PEP_STATUS encrypt_only(
 }
 #endif
 
+typedef enum _normalize_hex_rest_t {
+    accept_hex,
+    ignore_hex,
+    reject_hex
+} normalize_hex_res_t;
+
+static inline normalize_hex_res_t _normalize_hex(char *hex) 
+{
+    if (*hex >= '0' && *hex <= '9')
+        return accept_hex;
+
+    if (*hex >= 'A' && *hex <= 'F') {
+        *hex += 'a' - 'A';
+        return accept_hex;
+    }
+
+    if (*hex >= 'a' && *hex <= 'f') 
+        return accept_hex;
+
+    if (*hex == ' ') 
+        return ignore_hex;
+
+    return reject_hex;
+}
+
 // Space tolerant and case insensitive fingerprint string compare
+static inline PEP_STATUS _compare_fprs(
+        const char* fpra,
+        size_t fpras,
+        const char* fprb,
+        size_t fprbs,
+        int* comparison)
+{
+
+    size_t ai = 0;
+    size_t bi = 0;
+    size_t significant = 0;
+    int _comparison = 0;
+    const int _FULL_FINGERPRINT_LENGTH = 40;
+   
+    // First compare every non-ignored chars until an end is reached
+    while(ai < fpras && bi < fprbs)
+    {
+        char fprac = fpra[ai];
+        char fprbc = fprb[bi];
+        normalize_hex_res_t fprah = _normalize_hex(&fprac);
+        normalize_hex_res_t fprbh = _normalize_hex(&fprbc);
+
+        if(fprah == reject_hex || fprbh == reject_hex)
+            return PEP_ILLEGAL_VALUE;
+
+        if ( fprah == ignore_hex )
+        {
+            ai++;
+        }
+        else if ( fprbh == ignore_hex )
+        {
+            bi++;
+        }
+        else
+        {
+            if(fprac != fprbc && _comparison == 0 )
+            {
+                _comparison = fprac > fprbc ? 1 : -1;
+            }
+
+            significant++;
+            ai++;
+            bi++;
+
+        } 
+    }
+
+    // Bail out if we didn't got enough significnt chars
+    if (significant != _FULL_FINGERPRINT_LENGTH )
+        return PEP_TRUSTWORDS_FPR_WRONG_LENGTH;
+
+    // Then purge remaining chars, all must be ignored chars
+    while ( ai < fpras )
+    {
+        char fprac = fpra[ai];
+        normalize_hex_res_t fprah = _normalize_hex(&fprac);
+        if( fprah == reject_hex )
+            return PEP_ILLEGAL_VALUE;
+        if ( fprah != ignore_hex )
+            return PEP_TRUSTWORDS_FPR_WRONG_LENGTH;
+        ai++;
+    }
+    while ( bi < fprbs )
+    {
+        char fprbc = fprb[bi];
+        normalize_hex_res_t fprbh = _normalize_hex(&fprbc);
+        if( fprbh == reject_hex )
+            return PEP_ILLEGAL_VALUE;
+        if ( fprbh != ignore_hex )
+            return PEP_TRUSTWORDS_FPR_WRONG_LENGTH;
+        bi++;
+    }
+
+    *comparison = _comparison;
+    return PEP_STATUS_OK;
+}
+
 static inline int _same_fpr(
         const char* fpra,
         size_t fpras,
@@ -197,35 +299,10 @@ static inline int _same_fpr(
         size_t fprbs
     )
 {
-    size_t ai = 0;
-    size_t bi = 0;
-    
-    do
-    {
-        if(fpra[ai] == 0 || fprb[bi] == 0)
-        {
-            return 0;
-        }
-        else if(fpra[ai] == ' ')
-        {
-            ai++;
-        }
-        else if(fprb[bi] == ' ')
-        {
-            bi++;
-        }
-        else if(toupper(fpra[ai]) == toupper(fprb[bi]))
-        {
-            ai++;
-            bi++;
-        }
-        else
-        {
-            return 0;
-        }
-        
-    }
-    while(ai < fpras && bi < fprbs);
-    
-    return ai == fpras && bi == fprbs;
+    // illegal values are ignored, and considered not same.
+    int comparison = 1;
+
+    _compare_fprs(fpra, fpras, fprb, fprbs, &comparison);
+
+    return comparison == 0;
 }
