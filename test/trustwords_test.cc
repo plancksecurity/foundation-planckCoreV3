@@ -65,8 +65,8 @@ int main() {
     assert(full_wordlist);
     cout << full_wordlist << "\n";
 
-    cout << "\nfinding German trustwords for " << identity1->address << " and " << identity2->address << "...\n";
-    get_trustwords(session, identity1, identity2_with_spaces, "de", &full_wordlist, &wsize_full, false);
+    cout << "\nfinding Englis trustwords for " << identity1->address << " and " << identity2->address << "... with spaces\n";
+    get_trustwords(session, identity1, identity2_with_spaces, "en", &full_wordlist, &wsize_full, false);
     assert(full_wordlist);
     cout << full_wordlist << "\n";
     
@@ -90,8 +90,8 @@ int main() {
     assert(full_wordlist);
     cout << full_wordlist << "\n";
 
-    cout << "\nfinding French trustwords for " << identity2->address << " and " << identity2->address << "...\n";
-    get_trustwords(session, identity2, identity2_with_spaces, "fr", &full_wordlist, &wsize_full, false);
+    cout << "\nfinding English trustwords for " << identity2->address << " and " << identity2->address << "... with spaces\n";
+    get_trustwords(session, identity2, identity2_with_spaces, "en", &full_wordlist, &wsize_full, false);
     assert(full_wordlist);
     cout << full_wordlist << "\n";
 
@@ -117,8 +117,8 @@ int main() {
     assert(full_wordlist);
     cout << full_wordlist << "\n";
     
-    cout << "\nfinding English trustwords for " << identity2->address << " and " << identity2->address << "...\n";
-    get_trustwords(session, identity2_with_spaces, identity1, "en", &full_wordlist, &wsize_full, true);
+    cout << "\nfinding English trustwords for " << identity2->address << " and " << identity2->address << "... with spaces\n";
+    get_trustwords(session, identity2_with_spaces, identity1, "en", &full_wordlist, &wsize_full, false);
     assert(full_wordlist);
     cout << full_wordlist << "\n";
     
