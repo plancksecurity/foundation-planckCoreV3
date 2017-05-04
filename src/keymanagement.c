@@ -179,10 +179,11 @@ DYNAMIC_API PEP_STATUS update_identity(
                        downgrade eventually trusted comm_type */
                     temp_id->comm_type = _comm_type_key;
                 } else {
-                    /* otherwise take stored comm_type as-is */
+                    /* otherwise take stored comm_type as-is except if 
+                       is unknown or is expired (but key not expired anymore) */
                     temp_id->comm_type = stored_identity->comm_type;
-                    if (temp_id->comm_type == PEP_ct_unknown) {
-                        /* except if unknown */
+                    if (temp_id->comm_type == PEP_ct_unknown ||
+                        temp_id->comm_type == PEP_ct_key_expired) {
                         temp_id->comm_type = _comm_type_key;
                     }
                 }
@@ -430,6 +431,19 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     identity->me = true;
     if(ignore_flags)
         identity->flags = 0;
+    else {
+        // test_diphoton : dirty hack to prevent more than one sync enabled account
+        identity_list *own_identities = NULL;
+        if (_own_identities_retrieve(session, &own_identities, PEP_idf_not_for_sync) == PEP_STATUS_OK)
+            // if at least one _other_ own address is sync enabled, set exclusion flag
+            for (identity_list *_i = own_identities; _i && _i->ident; _i = _i->next) {
+                pEp_identity *me = _i->ident;
+                if(me->address && strcmp(me->address, identity->address) != 0)
+                identity->flags |= PEP_idf_not_for_sync;
+                break;
+            }
+        free_identity_list(own_identities);
+    }
     
     if (EMPTYSTR(identity->user_id))
     {

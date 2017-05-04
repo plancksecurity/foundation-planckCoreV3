@@ -28,8 +28,8 @@ PEP_STATUS notifyInitFormGroup(
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-    assert(partner);
-    if (!(session && partner))
+    assert(!partner);
+    if (!(session && !partner))
         return PEP_ILLEGAL_VALUE;
 
     // working code
@@ -65,8 +65,8 @@ PEP_STATUS notifyInitAddOurDevice(
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-    assert(partner);
-    if (!(session && partner))
+    assert(!partner);
+    if (!(session && !partner))
         return PEP_ILLEGAL_VALUE;
 
     // working code

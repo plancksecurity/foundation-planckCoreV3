@@ -61,6 +61,24 @@ DYNAMIC_API stringlist_t *stringlist_add(
         const char *value
     );
 
+// stringlist_add_unique() - add string to stringlist, if not already there
+//
+//  parameters:
+//      stringlist (in)     stringlist struct or NULL to create a new one
+//      value (in)          value as C string
+//
+//  return value:
+//      pointer to last element in stringlist or NULL if out of memory
+//
+//  caveat:
+//      the value is being copied before being added to the list
+//      the original string is still being owned by the caller
+
+DYNAMIC_API stringlist_t *stringlist_add_unique(
+        stringlist_t *stringlist,
+        const char *value
+    );
+
 
 // stringlist_append() - append stringlist to stringlist
 //

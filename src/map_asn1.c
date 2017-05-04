@@ -9,12 +9,15 @@ Identity_t *Identity_from_Struct(
         Identity_t *result
     )
 {
+    bool allocated = !result;
+
     assert(ident);
     if (!ident)
         return NULL;
 
-    if (!result)
+    if (allocated){
         result = (Identity_t *) calloc(1, sizeof(Identity_t));
+    }
     assert(result);
     if (!result)
         return NULL;
@@ -56,26 +59,34 @@ Identity_t *Identity_from_Struct(
     if (ident->lang[0]) {
         int r = OCTET_STRING_fromBuf(&result->lang, ident->lang, 2);
         assert(r == 0);
+        if(r != 0)
+            goto enomem;
     }
     else {
         int r = OCTET_STRING_fromBuf(&result->lang, "en", 2);
         assert(r == 0);
+        if(r != 0)
+            goto enomem;
     }
 
     return result;
 
 enomem:
-    ASN_STRUCT_FREE(asn_DEF_Identity, result);
+    if (allocated){
+        ASN_STRUCT_FREE(asn_DEF_Identity, result);
+    }
     return NULL;
 }
 
 pEp_identity *Identity_to_Struct(Identity_t *ident, pEp_identity *result)
 {
+    bool allocated = !result;
+
     assert(ident);
     if (!ident)
         return NULL;
     
-    if (!result)
+    if (allocated)
         result = new_identity(NULL, NULL, NULL, NULL);
     if (!result)
         return NULL;
@@ -121,7 +132,8 @@ pEp_identity *Identity_to_Struct(Identity_t *ident, pEp_identity *result)
     return result;
 
 enomem:
-    free_identity(result);
+    if (allocated)
+        free_identity(result);
     return NULL;
 }
 
@@ -130,11 +142,13 @@ IdentityList_t *IdentityList_from_identity_list(
         IdentityList_t *result
     )
 {
+    bool allocated = !result;
+
     assert(list);
     if (!list)
         return NULL;
 
-    if (!result)
+    if (allocated)
         result = (IdentityList_t *) calloc(1, sizeof(IdentityList_t));
     assert(result);
     if (!result)
@@ -151,17 +165,20 @@ IdentityList_t *IdentityList_from_identity_list(
     return result;
 
 enomem:
-    ASN_STRUCT_FREE(asn_DEF_IdentityList, result);
+    if (allocated)
+        ASN_STRUCT_FREE(asn_DEF_IdentityList, result);
     return NULL;
 }
 
 identity_list *IdentityList_to_identity_list(IdentityList_t *list, identity_list *result)
 {
+    bool allocated = !result;
+
     assert(list);
     if (!list)
         return NULL;
 
-    if (!result)
+    if (allocated)
         result = new_identity_list(NULL);
     if (!result)
         return NULL;
@@ -177,7 +194,8 @@ identity_list *IdentityList_to_identity_list(IdentityList_t *list, identity_list
     return result;
 
 enomem:
-    free_identity_list(result);
+    if (allocated)
+        free_identity_list(result);
     return NULL;
 }
 

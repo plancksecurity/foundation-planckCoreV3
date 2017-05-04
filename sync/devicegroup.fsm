@@ -21,6 +21,7 @@ protocol DeviceGroup {
         condition deviceGrouped();
         condition keyElectionWon(Identity partner);
         condition sameIdentities(Identity a, Identity b);
+        condition sameKeyAndAddress(Identity a, Identity b);
 
         state InitState {
             on Init {
@@ -31,10 +32,14 @@ protocol DeviceGroup {
         }
 
         state Sole end=1 {
-            on KeyGen
+            on KeyGen {
                 do sendBeacon;
-            on CannotDecrypt
+                go SoleWaiting;
+            }
+            on CannotDecrypt {
                 do sendBeacon;
+                go SoleWaiting;
+            }
             on Beacon(Identity partner){
                 do sendHandshakeRequest(partner);
                 go SoleBeaconed(partner);
@@ -43,6 +48,26 @@ protocol DeviceGroup {
                 do sendHandshakeRequest(partner);
                 go HandshakingSole(partner);
             }
+        }
+
+        // copy of sole state with a timeout to enable fast polling for a second
+        // TODO use more YSLT power here (substates ?) 
+        state SoleWaiting timeout=60 {
+            on KeyGen {
+                do sendBeacon;
+            }
+            on CannotDecrypt {
+                do sendBeacon;
+            }
+            on Beacon(Identity partner){
+                do sendHandshakeRequest(partner);
+                go SoleBeaconed(partner);
+            }
+            on HandshakeRequest(Identity partner) {
+                do sendHandshakeRequest(partner);
+                go HandshakingSole(partner);
+            }
+            on Timeout go Sole;
         }
 
         state SoleBeaconed timeout=600 (Identity expected) {
@@ -71,10 +96,10 @@ protocol DeviceGroup {
 
         state HandshakingSole timeout=600 (Identity expected) {
             on Init{
-                if keyElectionWon(partner) {
-                    do notifyInitFormGroup(partner);
+                if keyElectionWon(expected) {
+                    do notifyInitFormGroup(expected);
                 } else {
-                    do notifyInitAddOurDevice(partner);
+                    do notifyInitAddOurDevice(expected);
                 }
             }
             on HandshakeRejected(Identity partner) {
@@ -97,10 +122,11 @@ protocol DeviceGroup {
             }
             on Cancel go Sole;
             on GroupKeys(Identity partner, GroupKeys groupkeys) {
-                if keyElectionWon(partner) {
-                    // not suppose to receive groupkeys - ignore
+                if keyElectionWon(expected) {
+                    // not supposed to receive groupkeys - ignore
                 } else {
-                    if sameIdentities(partner, expected) {
+                    // UUID changes in between, so we can only check for same address and fpr
+                    if sameKeyAndAddress(partner, expected) {
                         go WaitForAcceptSole(partner, groupkeys);
                     }
                 }
@@ -114,7 +140,8 @@ protocol DeviceGroup {
     
         state WaitForGroupKeysSole timeout=600 (Identity expected) {
             on GroupKeys(Identity partner, GroupKeys groupkeys) {
-                if sameIdentities(partner, expected) {
+                // UUID changes in between, so we can only check for same address and fpr
+                if sameKeyAndAddress(partner, expected) {
                     do storeGroupKeys(partner, groupkeys);
                     do sendGroupUpdate;
                     do renewUUID;
@@ -134,7 +161,8 @@ protocol DeviceGroup {
                 go Sole;
             }
             on HandshakeAccepted(Identity partner) {
-                if sameIdentities(partner, expected) {
+                // UUID changes in between, so we can only check for same address and fpr
+                if sameKeyAndAddress(partner, expected) {
                     do acceptHandshake(partner); 
                     do storeGroupKeys(partner, groupkeys);
                     do sendGroupUpdate;
@@ -156,12 +184,181 @@ protocol DeviceGroup {
                 do sendGroupUpdate;
             on CannotDecrypt {
                 do sendUpdateRequest;
+
+                ///// de-activate 3+ de group in test_diphoton
+                // do sendBeacon;
+
+                go GroupWaiting;
             }
             on UpdateRequest
                 do sendGroupUpdate;
+
+            ///// de-activate 3+ de group in test_diphoton
+            // on Beacon(Identity partner){
+            //     do sendHandshakeRequest(partner);
+            //     go GroupedBeaconed(partner);
+            // }
+            // on HandshakeRequest(Identity partner) {
+            //     do sendHandshakeRequest(partner);
+            //     go HandshakingGrouped(partner);
+            // }
+
             on GroupUpdate(Identity partner, IdentityList keys)
                 do storeGroupUpdate(partner, keys);
         }
+
+        // copy of grouped state, with a timeout to enable fast poling for a minut
+        state GroupWaiting timeout=60 {
+            on KeyGen
+                do sendGroupUpdate;
+            on CannotDecrypt {
+                do sendUpdateRequest;
+
+                ///// de-activate 3+ de group in test_diphoton
+                // do sendBeacon;
+            }
+            on UpdateRequest
+                do sendGroupUpdate;
+
+            ///// de-activate 3+ de group in test_diphoton
+            // on Beacon(Identity partner){
+            //     do sendHandshakeRequest(partner);
+            //     go GroupedBeaconed(partner);
+            // }
+            // on HandshakeRequest(Identity partner) {
+            //     do sendHandshakeRequest(partner);
+            //     go HandshakingGrouped(partner);
+            // }
+
+            on GroupUpdate(Identity partner, IdentityList keys)
+                do storeGroupUpdate(partner, keys);
+            on Timeout go Grouped;
+        }
+
+        ///// de-activate 3+ de group in test_diphoton
+        // state GroupedBeaconed timeout=600 (Identity expected){
+        //     on KeyGen
+        //         do sendGroupUpdate;
+        //     on CannotDecrypt {
+        //         do sendUpdateRequest;
+        //         do sendBeacon;
+        //     }
+        //     on UpdateRequest
+        //         do sendGroupUpdate;
+        //     on Beacon(Identity partner){
+        //         do sendHandshakeRequest(partner);
+        //         go GroupedBeaconed(partner);
+        //     }
+        //     on HandshakeRequest(Identity partner) {
+        //         if sameIdentities(partner, expected) {
+        //             // do nothing, to avoid sending handshake request twice 
+        //         } else {
+        //             do sendHandshakeRequest(partner);
+        //         }
+        //         go HandshakingGrouped(partner);
+        //     }
+        //     on GroupUpdate(Identity partner, IdentityList keys)
+        //         do storeGroupUpdate(partner, keys);
+        //     on Timeout go Grouped;
+        // }
+
+        ///// de-activate 3+ de group in test_diphoton
+        // state HandshakingGrouped timeout=600 (Identity expected) {
+        //     // HandshakeRequest from same group are filtered in receive_sync_msg
+        //     on Init{
+        //         if keyElectionWon(expected) {
+        //             do notifyInitAddOtherDevice(partner);
+        //         } else {
+        //             do notifyInitMoveOurDevice(partner);
+        //         }
+        //     }
+        //     on HandshakeRejected(Identity partner) {
+        //         do rejectHandshake(partner);             // stores rejection of partner
+        //         do sendGroupUpdate;
+        //         go Grouped;
+        //     }
+        //     on HandshakeAccepted(Identity partner) {
+        //         do acceptHandshake(partner); 
+        //         do sendGroupUpdate;
+        //         if keyElectionWon(partner) {
+        //             do sendGroupKeys(partner);
+        //             do notifyAcceptedDeviceAdded(partner);
+        //             go Grouped;
+        //         }
+        //         go WaitForGroupKeysGrouped(partner);
+        //     }
+        //     on Cancel go Grouped;
+        //     on GroupKeys(Identity partner, GroupKeys groupkeys) {
+        //         if keyElectionWon(expected) {
+        //             // not supposed to receive groupkeys - ignore
+        //         } else {
+        //             // UUID changes in between, so we can only check for same address and fpr
+        //             if sameKeyAndAddress(partner, expected) {
+        //                 go WaitForAcceptGrouped(partner, groupkeys);
+        //             }
+        //         }
+        //     }
+        //     on GroupUpdate(Identity partner, IdentityList keys) {
+        //         do notifyOvertaken(partner);
+        //         do storeGroupUpdate(partner, keys);
+        //         go Grouped;
+        //     }
+        //     on Timeout {
+        //         do notifyTimeout(expected);
+        //         go Grouped;
+        //     }
+        // }
+
+        ///// de-activate 3+ de group in test_diphoton
+        // state WaitForGroupKeysGrouped timeout=600 (Identity expected) {
+        //     on GroupKeys(Identity partner, GroupKeys groupkeys) {
+        //         if sameIdentities(partner, expected) {
+        //             do storeGroupKeys(partner, groupkeys);
+        //             do sendGroupUpdate;
+        //             do renewUUID;
+        //             do notifyAcceptedDeviceMoved(partner);
+        //             go Grouped;
+        //         }
+        //     }
+        //     on GroupUpdate(Identity partner, IdentityList keys) {
+        //         do notifyOvertaken(partner);
+        //         do storeGroupUpdate(partner, keys);
+        //         go Grouped;
+        //     }
+        //     on Timeout {
+        //         do notifyTimeout(expected);
+        //         go Grouped;
+        //     }
+        // }
+
+        ///// de-activate 3+ de group in test_diphoton
+        // state WaitForAcceptGrouped timeout=600 (Identity expected, GroupKeys groupkeys) {
+        //     on HandshakeRejected(Identity partner) {
+        //         do rejectHandshake(partner);
+        //         do sendGroupUpdate;
+        //         go Grouped;
+        //     }
+        //     on HandshakeAccepted(Identity partner) {
+        //         if sameIdentities(partner, expected) {
+        //             do acceptHandshake(partner); 
+        //             do storeGroupKeys(partner, groupkeys);
+        //             do sendGroupUpdate;
+        //             do renewUUID;
+        //             do notifyAcceptedDeviceMoved(partner);
+        //         }
+        //         go Grouped;
+        //     }
+        //     on Cancel go Grouped;
+        //     on GroupUpdate(Identity partner, IdentityList keys) {
+        //         do notifyOvertaken(partner);
+        //         do storeGroupUpdate(partner, keys);
+        //         go Grouped;
+        //     }
+        //     on Timeout {
+        //         do notifyTimeout(expected);
+        //         go Grouped;
+        //     }
+        // }
 
         tag Init 1;
         tag Beacon 2;

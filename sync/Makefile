@@ -13,10 +13,10 @@ skeleton: .actions
 	touch .codegen
 
 .actions: devicegroup.fsm gen_actions.ysl2 fsm.yml2 functions.ysl2
-	$(YML2PROC) -y gen_actions.ysl2 $< -o $@
+	$(YML2PROC) $(YML_OPTS) -y gen_actions.ysl2 $< -o $@
 
 .statemachines: devicegroup.fsm gen_statemachine.ysl2 fsm.yml2 functions.ysl2
-	$(YML2PROC) -y gen_statemachine.ysl2 $< -o $@
+	$(YML2PROC) $(YML_OPTS) -y gen_statemachine.ysl2 $< -o $@
 
 .PHONY: clean
 
@@ -29,7 +29,7 @@ clean:
 	yml2c $< -o $@
 
 %.dot: devicegroup.fsm gen_dot.ysl2
-	yml2proc -y gen_dot.ysl2 $<
+	$(YML2PROC) $(YML_OPTS) -y gen_dot.ysl2 $<
 
 %.svg: %.dot
 	dot -Tsvg -o $@ $<

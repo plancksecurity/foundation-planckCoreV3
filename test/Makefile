@@ -48,14 +48,17 @@ test: pEpEngineTest .imported
 %_test : %_test.o test_util.o
 	 $(LD) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
-%_test_run : %_test
+%_run : %
 	LD_LIBRARY_PATH=~/lib:../src ./$<
 
 
-%_test_lldb : %_test
+%_lldb : %
 	LD_LIBRARY_PATH=~/lib:../src lldb ./$<
 
-%_test_gdb : %_test
+%_valgrind : %
+	LD_LIBRARY_PATH=~/lib:../src valgrind --leak-check=yes ./$<
+
+%_gdb : %
 	LD_LIBRARY_PATH=~/lib:../src gdb ./$<
 
 unit_tests: $(UNIT_TESTS) $(UNIT_TESTS_RUN)

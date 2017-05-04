@@ -56,7 +56,7 @@ p≡p engine is depending on the following FOSS libraries:
 
 * Cyrus SASL, see http://cyrusimap.org/
 
-* GnuPG via GPGME, see https://gnupg.org/
+* GnuPG via GPGME, version 1.6.0 or newer, see https://gnupg.org/
 
 * NetPGP/p≡p, see https://cacert.pep.foundation/dev/repos/netpgp-et/
 

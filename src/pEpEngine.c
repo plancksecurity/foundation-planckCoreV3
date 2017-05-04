@@ -1318,6 +1318,20 @@ DYNAMIC_API PEP_STATUS unset_identity_flags(
     if (!(session && identity && identity->address && identity->user_id))
         return PEP_ILLEGAL_VALUE;
 
+    // test_diphoton : dirty hack to prevent more than one sync enabled account
+    if (flags & PEP_idf_not_for_sync){
+        identity_list *own_identities = NULL;
+        if (_own_identities_retrieve(session, &own_identities, PEP_idf_not_for_sync) == PEP_STATUS_OK)
+            // if at least one _other_ own address is sync enabled, prevent unseting exclusion
+            for (identity_list *_i = own_identities; _i && _i->ident; _i = _i->next) {
+                pEp_identity *me = _i->ident;
+                if(me->address && strcmp(me->address, identity->address) != 0)
+                flags &= ~PEP_idf_not_for_sync;
+                break;
+            }
+        free_identity_list(own_identities);
+    }
+
     sqlite3_reset(session->unset_identity_flags);
     sqlite3_bind_int(session->unset_identity_flags, 1, flags);
     sqlite3_bind_text(session->unset_identity_flags, 2, identity->address, -1,
@@ -2266,6 +2280,9 @@ DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session)
         NULL
     );
     assert(int_result == SQLITE_OK);
+
+    if (int_result != SQLITE_OK)
+        return PEP_UNKNOWN_ERROR;
 
     return PEP_STATUS_OK;
 }
