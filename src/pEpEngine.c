@@ -136,7 +136,11 @@ static const char *sql_own_key_is_listed =
     " union "
     "  select main_key_id from identity "
     "   where main_key_id = upper(replace(?1,' ',''))"
-    "    and user_id = '" PEP_OWN_USERID "' );";
+    "    and user_id = '" PEP_OWN_USERID "' "
+    " union "
+    "  select fpr from own_key "
+    "   where fpr = upper(replace(?1,' ',''))"
+    " );";
 
 static const char *sql_own_identities_retrieve =  
     "select address, fpr, username, "
@@ -209,6 +213,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     int int_result;
     
     bool in_first = false;
+    bool very_first = false;
 
     assert(sqlite3_threadsafe());
     if (!sqlite3_threadsafe())
@@ -462,6 +467,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 assert(int_result == SQLITE_OK);
             }
         }
+        else { 
+            // Version from DB was 0, it means this is initial setup.
+            // DB has just been created, and all tables are empty.
+            very_first = true;
+        }
 
         if (version < atoi(_DDL_USER_VERSION)) {
             int_result = sqlite3_exec(
@@ -475,7 +485,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             );
             assert(int_result == SQLITE_OK);
         }
-
     }
 
     int_result = sqlite3_prepare_v2(_session->db, sql_log,
@@ -635,11 +644,44 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     // runtime config
 
 #ifdef ANDROID
-    _session->use_only_own_private_keys = true;
 #elif TARGET_OS_IPHONE
-    _session->use_only_own_private_keys = true;
-#else
-    _session->use_only_own_private_keys = false;
+#else /* Desktop */
+    if (very_first)
+    {
+        // On first run, all private keys already present in PGP keyring 
+        // are taken as own in order to seamlessly integrate with
+        // pre-existing GPG setup.
+
+        ////////////////////////////// WARNING: ///////////////////////////
+        // Considering all PGP priv keys as own is dangerous in case of 
+        // re-initialization of pEp DB, while keeping PGP keyring as-is!
+        //
+        // Indeed, if pEpEngine did import spoofed private keys in previous
+        // install, then those keys become automatically trusted in case 
+        // pEp_management.db is deleted.
+        //
+        // A solution to distinguish bare GPG keyring from pEp keyring is
+        // needed here. Then keys managed by pEpEngine wouldn't be
+        // confused with GPG keys managed by the user through GPA.
+        ///////////////////////////////////////////////////////////////////
+        
+        stringlist_t *keylist = NULL;
+
+        status = find_private_keys(_session, "", &keylist);
+        assert(status != PEP_OUT_OF_MEMORY);
+        if (status == PEP_OUT_OF_MEMORY)
+            return PEP_OUT_OF_MEMORY;
+        
+        if (keylist != NULL && keylist->value != NULL)
+        {
+            stringlist_t *_keylist;
+            for (_keylist = keylist; _keylist && _keylist->value; _keylist = _keylist->next) {
+                status = set_own_key(_session, 
+                                     "" /* address is unused in own_keys */,
+                                     _keylist->value);
+            }
+        }
+    }
 #endif
 
     // sync_session set to own session by default
@@ -763,13 +805,6 @@ DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable)
 {
     assert(session);
     session->unencrypted_subject = enable;
-}
-
-DYNAMIC_API void config_use_only_own_private_keys(PEP_SESSION session,
-        bool enable)
-{
-    assert(session);
-    session->use_only_own_private_keys = enable;
 }
 
 DYNAMIC_API void config_keep_sync_msg(PEP_SESSION session, bool enable)
