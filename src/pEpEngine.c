@@ -138,7 +138,7 @@ static const char *sql_own_key_is_listed =
     "   where main_key_id = upper(replace(?1,' ',''))"
     "    and user_id = '" PEP_OWN_USERID "' "
     " union "
-    "  select fpr from own_key "
+    "  select fpr from own_keys "
     "   where fpr = upper(replace(?1,' ',''))"
     " );";
 
