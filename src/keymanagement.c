@@ -996,7 +996,7 @@ DYNAMIC_API PEP_STATUS own_keys_retrieve(PEP_SESSION session, stringlist_t **key
     return _own_keys_retrieve(session, keylist, 0);
 }
 
-// TODO: Unused for now, but should be used when sync receive old keys (ENGINE-145)
+// FIXME: should it be be used when sync receive old keys ? (ENGINE-145)
 DYNAMIC_API PEP_STATUS set_own_key(
        PEP_SESSION session,
        const char *address,
@@ -1006,12 +1006,12 @@ DYNAMIC_API PEP_STATUS set_own_key(
     PEP_STATUS status = PEP_STATUS_OK;
     
     assert(session &&
-           address && address[0] &&
+           address &&
            fpr && fpr[0]
           );
     
     if (!(session &&
-          address && address[0] &&
+          address &&
           fpr && fpr[0]
          ))
         return PEP_ILLEGAL_VALUE;

@@ -667,7 +667,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         
         stringlist_t *keylist = NULL;
 
-        status = find_private_keys(_session, "", &keylist);
+        status = find_private_keys(_session, NULL, &keylist);
         assert(status != PEP_OUT_OF_MEMORY);
         if (status == PEP_OUT_OF_MEMORY)
             return PEP_OUT_OF_MEMORY;
@@ -2273,8 +2273,8 @@ PEP_STATUS key_created(
 
 PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
                              stringlist_t **keylist) {
-    assert(session && pattern && keylist);
-    if (!(session && pattern && keylist))
+    assert(session && keylist);
+    if (!(session && keylist))
         return PEP_ILLEGAL_VALUE;
     
     return session->cryptotech[PEP_crypt_OpenPGP].find_private_keys(session, pattern,
