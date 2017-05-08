@@ -1491,8 +1491,11 @@ PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
 
     start_boundary += boundary_strlen;
 
-    // we have an issue with \r I'll bet here..
-    while (*start_boundary == '\n')
+    if (*start_boundary == '\r') {
+        if (*(start_boundary + 1) == '\n')
+            start_boundary += 2;
+    }
+    else if (*start_boundary == '\n')
         start_boundary++;
 
     end_boundary = strstr(start_boundary + boundary_strlen, signed_boundary);
@@ -1500,7 +1503,7 @@ PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
     if (!end_boundary)
         return PEP_UNKNOWN_ERROR;
 
-    end_boundary--; // See RFC3156 section 5...
+    end_boundary--; // See RFC3156 section 5... FIXME: could be 2? CRLF?
 
     *ssize = end_boundary - start_boundary;
     *stext = start_boundary;
