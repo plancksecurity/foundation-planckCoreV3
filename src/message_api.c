@@ -1503,7 +1503,9 @@ PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
     if (!end_boundary)
         return PEP_UNKNOWN_ERROR;
 
-    end_boundary--; // See RFC3156 section 5... FIXME: could be 2? CRLF?
+    end_boundary--; // See RFC3156 section 5...
+	if (*(end_boundary - 1) == '\r')
+		end_boundary--;
 
     *ssize = end_boundary - start_boundary;
     *stext = start_boundary;
