@@ -1458,8 +1458,8 @@ PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
 
     char* curr_line = signpost;
 //    const char* end_text = ptext + psize;
-    const char* boundary_key = "boundary=\"";
-    const size_t BOUNDARY_KEY_SIZE = 10;
+    const char* boundary_key = "boundary=";
+    const size_t BOUNDARY_KEY_SIZE = 9;
 
     char* start_boundary = strstr(curr_line, boundary_key);
     if (!start_boundary)
@@ -1467,11 +1467,17 @@ PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
 
     start_boundary += BOUNDARY_KEY_SIZE;
 
-    char* end_boundary = strstr(start_boundary, "\"");
+    bool quoted = (*start_boundary == '"');
+
+    if (quoted)
+        start_boundary++;
+        
+    char* end_boundary = (quoted ? strstr(start_boundary, "\"") : strstr(start_boundary, ";")); // FIXME: third possiblity is CRLF, or?
 
     if (!end_boundary)
         return PEP_UNKNOWN_ERROR;
 
+    // Add space for the "--"
     size_t boundary_strlen = (end_boundary - start_boundary) + 2;
 
     signed_boundary = calloc(1, boundary_strlen + 1);
@@ -1485,6 +1491,7 @@ PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
 
     start_boundary += boundary_strlen;
 
+    // we have an issue with \r I'll bet here..
     while (*start_boundary == '\n')
         start_boundary++;
 
