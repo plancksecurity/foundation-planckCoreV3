@@ -794,6 +794,7 @@ static PEP_rating decrypt_rating(PEP_STATUS status)
         return PEP_rating_unencrypted;
 
     case PEP_DECRYPTED:
+    case PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH:
         return PEP_rating_unreliable;
 
     case PEP_DECRYPTED_AND_VERIFIED:
@@ -2251,88 +2252,6 @@ DYNAMIC_API PEP_color color_from_rating(PEP_rating rating)
     return PEP_color_no_color;
 }
 
-static bool _is_valid_hex(const char* hexstr) {
-    if (!hexstr)
-        return false;
-
-    const char* curr = hexstr;
-    char currchar;
-
-    for (currchar = *curr; currchar != '\0'; currchar = *(++curr)) {
-        if ((currchar >= '0' && currchar <= '9') ||
-            (currchar >= 'a' && currchar <= 'f') ||
-            (currchar >= 'A' && currchar <= 'F'))
-        {
-            continue;
-        }
-        return false;
-    }
-    return true;
-}
-
-// Returns, in comparison: 1 if fpr1 > fpr2, 0 if equal, -1 if fpr1 < fpr2
-static PEP_STATUS _compare_fprs(const char* fpr1, const char* fpr2, int* comparison) {
-
-    const int _FULL_FINGERPRINT_LENGTH = 40;
-    const int _ASCII_LOWERCASE_OFFSET = 32;
-
-    size_t fpr1_len = strlen(fpr1);
-    size_t fpr2_len = strlen(fpr2);
-
-    if (fpr1_len != _FULL_FINGERPRINT_LENGTH || fpr2_len != _FULL_FINGERPRINT_LENGTH)
-        return PEP_TRUSTWORDS_FPR_WRONG_LENGTH;
-
-    if (!_is_valid_hex(fpr1) || !_is_valid_hex(fpr2))
-        return PEP_ILLEGAL_VALUE;
-
-    const char* fpr1_curr = fpr1;
-    const char* fpr2_curr = fpr2;
-
-    char current;
-
-    // Advance past leading zeros.
-    for (current = *fpr1_curr; current != '0' && current != '\0'; current = *(++fpr1_curr), fpr1_len--);
-    for (current = *fpr2_curr; current != '0' && current != '\0'; current = *(++fpr2_curr), fpr2_len--);
-
-    if (fpr1_len == fpr2_len) {
-        char digit1;
-        char digit2;
-
-        while (fpr1_curr && *fpr1_curr != '\0') {
-            digit1 = *fpr1_curr++;
-            digit2 = *fpr2_curr++;
-
-            // Adjust for case-insensitive compare
-            if (digit1 >= 'a' && digit1 <= 'f')
-                digit1 -= _ASCII_LOWERCASE_OFFSET;
-            if (digit2 >= 'a' && digit2 <= 'f')
-                digit2 -= _ASCII_LOWERCASE_OFFSET;
-
-            // We take advantage of the fact that 'a'-'f' are larger
-            // integer values in the ASCII table than '0'-'9'.
-            // This allows us to compare digits directly.
-            if (digit1 > digit2) {
-                *comparison = 1;
-                return PEP_STATUS_OK;
-            } else if (digit1 < digit2) {
-                *comparison = -1;
-                return PEP_STATUS_OK;
-            }
-
-            // pointers already advanced above. Keep going.
-        }
-        *comparison = 0;
-        return PEP_STATUS_OK;
-    }
-    else if (fpr1_len > fpr2_len) {
-        *comparison = 1;
-        return PEP_STATUS_OK;
-    }
-    // Otherwise, fpr1_len < fpr2_len
-    *comparison = -1;
-    return PEP_STATUS_OK;
-}
-
 DYNAMIC_API PEP_STATUS get_trustwords(
     PEP_SESSION session, const pEp_identity* id1, const pEp_identity* id2,
     const char* lang, char **words, size_t *wsize, bool full
@@ -2368,7 +2287,7 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     size_t second_wsize = 0;
 
     int fpr_comparison = -255;
-    PEP_STATUS status = _compare_fprs(source1, source2, &fpr_comparison);
+    PEP_STATUS status = _compare_fprs(source1, strlen(source1), source2, strlen(source2), &fpr_comparison);
     if (status != PEP_STATUS_OK)
         return status;
 
@@ -2556,6 +2475,12 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     PEP_decrypt_flags_t *flags
 )
 {
+    assert(mimetext);
+    assert(mime_plaintext);
+    assert(keylist);
+    assert(rating);
+    assert(flags);
+
     PEP_STATUS status = PEP_STATUS_OK;
     message* tmp_msg = NULL;
     message* dec_msg = NULL;
@@ -2570,9 +2495,21 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
                                                 keylist,
                                                 rating,
                                                 flags);
+                                                
+    if (!dec_msg && (decrypt_status == PEP_UNENCRYPTED || decrypt_status == PEP_VERIFIED)) {
+        dec_msg = message_dup(tmp_msg);
+    }
+        
     if (decrypt_status > PEP_CANNOT_DECRYPT_UNKNOWN)
     {
         status = decrypt_status;
+        goto pep_error;
+    }
+
+    assert(dec_msg);
+    
+    if (!dec_msg) {
+        status = PEP_UNKNOWN_ERROR;
         goto pep_error;
     }
 
@@ -2621,6 +2558,12 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
     if (status != PEP_STATUS_OK)
         GOTO(pep_error);
 
+
+    if (!enc_msg) {
+        status = PEP_UNKNOWN_ERROR;
+        goto pep_error;
+    }
+
     status = mime_encode_message(enc_msg, false, mime_ciphertext);
 
 pep_error:
@@ -2659,6 +2602,11 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message_for_self(
                                       flags);
     if (status != PEP_STATUS_OK)
         goto pep_error;
+ 
+    if (!enc_msg) {
+        status = PEP_UNKNOWN_ERROR;
+        goto pep_error;
+    }
 
     status = mime_encode_message(enc_msg, false, mime_ciphertext);
 

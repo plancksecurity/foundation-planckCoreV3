@@ -292,7 +292,7 @@
 		646C414C1D510D8800C63EFF /* baseprotocol.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = baseprotocol.c; path = ../src/baseprotocol.c; sourceTree = "<group>"; };
 		646C414D1D510D8800C63EFF /* baseprotocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = baseprotocol.h; path = ../src/baseprotocol.h; sourceTree = "<group>"; };
 		64796A3F1B455AA5004B1C24 /* libpEpEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		64951A1B1BE0FCD800B10E71 /* system.db */ = {isa = PBXFileReference; lastKnownFileType = file; name = system.db; path = ../db/system.db; sourceTree = "<group>"; };
+		64951A1B1BE0FCD800B10E71 /* system.db */ = {isa = PBXFileReference; lastKnownFileType = text; name = system.db; path = ../db/system.db; sourceTree = "<group>"; };
 		649DE08A1B45C19100912F72 /* libcurl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcurl.a; sourceTree = "<group>"; };
 		64A8264C1B455D0800EECAF0 /* bloblist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bloblist.c; path = ../src/bloblist.c; sourceTree = "<group>"; };
 		64A8264D1B455D0800EECAF0 /* bloblist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bloblist.h; path = ../src/bloblist.h; sourceTree = "<group>"; };
@@ -947,7 +947,7 @@
 					"$(SRCROOT)",
 					"$(SRCROOT)/../../netpgp-et/include/",
 					"$(SRCROOT)/../../netpgp-et/src/",
-					"$(SRCROOT)/../../netpgp-et/netpgp-xcode/openssl/include/",
+					"$(SRCROOT)/../../OpenSSL-for-iPhone/include",
 					"$(SRCROOT)/../asn.1/",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
@@ -994,7 +994,7 @@
 					"$(SRCROOT)",
 					"$(SRCROOT)/../../netpgp-et/include/",
 					"$(SRCROOT)/../../netpgp-et/src/",
-					"$(SRCROOT)/../../netpgp-et/netpgp-xcode/openssl/include/",
+					"$(SRCROOT)/../../OpenSSL-for-iPhone/include",
 					"$(SRCROOT)/../asn.1/",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;

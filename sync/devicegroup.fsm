@@ -32,10 +32,14 @@ protocol DeviceGroup {
         }
 
         state Sole end=1 {
-            on KeyGen
+            on KeyGen {
                 do sendBeacon;
-            on CannotDecrypt
+                go SoleWaiting;
+            }
+            on CannotDecrypt {
                 do sendBeacon;
+                go SoleWaiting;
+            }
             on Beacon(Identity partner){
                 do sendHandshakeRequest(partner);
                 go SoleBeaconed(partner);
@@ -44,6 +48,26 @@ protocol DeviceGroup {
                 do sendHandshakeRequest(partner);
                 go HandshakingSole(partner);
             }
+        }
+
+        // copy of sole state with a timeout to enable fast polling for a second
+        // TODO use more YSLT power here (substates ?) 
+        state SoleWaiting timeout=60 {
+            on KeyGen {
+                do sendBeacon;
+            }
+            on CannotDecrypt {
+                do sendBeacon;
+            }
+            on Beacon(Identity partner){
+                do sendHandshakeRequest(partner);
+                go SoleBeaconed(partner);
+            }
+            on HandshakeRequest(Identity partner) {
+                do sendHandshakeRequest(partner);
+                go HandshakingSole(partner);
+            }
+            on Timeout go Sole;
         }
 
         state SoleBeaconed timeout=600 (Identity expected) {
@@ -161,6 +185,7 @@ protocol DeviceGroup {
             on CannotDecrypt {
                 do sendUpdateRequest;
                 do sendBeacon;
+                go GroupWaiting;
             }
             on UpdateRequest
                 do sendGroupUpdate;
@@ -174,6 +199,29 @@ protocol DeviceGroup {
             }
             on GroupUpdate(Identity partner, IdentityList keys)
                 do storeGroupUpdate(partner, keys);
+        }
+
+        // copy of grouped state, with a timeout to enable fast poling for a minut
+        state GroupWaiting timeout=60 {
+            on KeyGen
+                do sendGroupUpdate;
+            on CannotDecrypt {
+                do sendUpdateRequest;
+                do sendBeacon;
+            }
+            on UpdateRequest
+                do sendGroupUpdate;
+            on Beacon(Identity partner){
+                do sendHandshakeRequest(partner);
+                go GroupedBeaconed(partner);
+            }
+            on HandshakeRequest(Identity partner) {
+                do sendHandshakeRequest(partner);
+                go HandshakingGrouped(partner);
+            }
+            on GroupUpdate(Identity partner, IdentityList keys)
+                do storeGroupUpdate(partner, keys);
+            on Timeout go Grouped;
         }
 
         state GroupedBeaconed timeout=600 (Identity expected){

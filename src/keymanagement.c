@@ -179,10 +179,11 @@ DYNAMIC_API PEP_STATUS update_identity(
                        downgrade eventually trusted comm_type */
                     temp_id->comm_type = _comm_type_key;
                 } else {
-                    /* otherwise take stored comm_type as-is */
+                    /* otherwise take stored comm_type as-is except if 
+                       is unknown or is expired (but key not expired anymore) */
                     temp_id->comm_type = stored_identity->comm_type;
-                    if (temp_id->comm_type == PEP_ct_unknown) {
-                        /* except if unknown */
+                    if (temp_id->comm_type == PEP_ct_unknown ||
+                        temp_id->comm_type == PEP_ct_key_expired) {
                         temp_id->comm_type = _comm_type_key;
                     }
                 }
