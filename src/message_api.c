@@ -2487,7 +2487,7 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
 
     status = mime_decode_message(mimetext, size, &tmp_msg);
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        GOTO(pep_error);
 
     PEP_STATUS decrypt_status = decrypt_message(session,
                                                 tmp_msg,
@@ -2503,14 +2503,14 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     if (decrypt_status > PEP_CANNOT_DECRYPT_UNKNOWN)
     {
         status = decrypt_status;
-        goto pep_error;
+        GOTO(pep_error);
     }
 
     assert(dec_msg);
     
     if (!dec_msg) {
         status = PEP_UNKNOWN_ERROR;
-        goto pep_error;
+        GOTO(pep_error);
     }
 
     status = mime_encode_message(dec_msg, false, mime_plaintext);
@@ -2561,7 +2561,7 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
 
     if (!enc_msg) {
         status = PEP_UNKNOWN_ERROR;
-        goto pep_error;
+        GOTO(pep_error);
     }
 
     status = mime_encode_message(enc_msg, false, mime_ciphertext);
