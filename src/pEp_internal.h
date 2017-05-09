@@ -161,7 +161,11 @@ struct _pEpSession {
     bool unencrypted_subject;
     bool keep_sync_msg;
     
+#ifdef DEBUG_ERRORSTACK
+    stringlist_t* errorstack;
+#endif
 };
+
 
 PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
 void release_transport_system(PEP_SESSION session, bool out_last);
@@ -305,3 +309,13 @@ static inline int _same_fpr(
 
     return comparison == 0;
 }
+
+
+#ifdef DEBUG_ERRORSTACK
+    PEP_STATUS session_add_error(PEP_SESSION session, const char* file, unsigned line, PEP_STATUS status);
+    #define ERROR(status)   session_add_error(session, __FILE__, __LINE__, (status))
+    #define GOTO(label)     do{ (void)session_add_error(session, __FILE__, __LINE__, status); goto label; }while(0)
+#else
+    #define ERROR(status)   (status)
+    #define GOTO(label)     goto label
+#endif
