@@ -235,6 +235,12 @@ DYNAMIC_API PEP_STATUS own_keys_retrieve(
         stringlist_t **keylist
       );
 
+DYNAMIC_API PEP_STATUS set_own_key(
+       PEP_SESSION session,
+       const char *address,
+       const char *fpr
+    );
+
 #ifdef __cplusplus
 }
 #endif

@@ -1547,7 +1547,6 @@ static PEP_STATUS _pgp_search_keys(PEP_SESSION session, const char* pattern,
     gpgme_key_t key;
 
     assert(session);
-    assert(pattern);
     assert(keylist);
 
     *keylist = NULL;
@@ -1584,7 +1583,9 @@ static PEP_STATUS _pgp_search_keys(PEP_SESSION session, const char* pattern,
                 gpgme_user_id_t kuid = key->uids;
                 // check that at least one uid's email matches pattern exactly
                 while(kuid) {
-                    if(kuid->email && strcmp(kuid->email, pattern) == 0){
+                    if((pattern && kuid->email && strcmp(kuid->email, pattern) == 0) ||
+                       pattern == NULL /* match all */ )
+                    { 
                         char *fpr = key->subkeys->fpr;
                         assert(fpr);
                         _k = stringlist_add(_k, fpr);
