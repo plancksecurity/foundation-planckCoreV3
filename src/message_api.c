@@ -2494,6 +2494,7 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     PEP_STATUS status = PEP_STATUS_OK;
     message* tmp_msg = NULL;
     message* dec_msg = NULL;
+    bool dec_empty = true;
 
     status = mime_decode_message(mimetext, size, &tmp_msg);
     if (status != PEP_STATUS_OK)
@@ -2506,7 +2507,8 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
                                                 rating,
                                                 flags);
                                                 
-    bool dec_empty = (dec_msg == NULL);
+
+    dec_empty = (dec_msg == NULL);
 
     if (dec_empty) {
         dec_msg = tmp_msg;
