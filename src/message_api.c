@@ -2494,7 +2494,6 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     PEP_STATUS status = PEP_STATUS_OK;
     message* tmp_msg = NULL;
     message* dec_msg = NULL;
-    bool dec_empty = true;
 
     status = mime_decode_message(mimetext, size, &tmp_msg);
     if (status != PEP_STATUS_OK)
@@ -2507,11 +2506,8 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
                                                 rating,
                                                 flags);
                                                 
-
-    dec_empty = (dec_msg == NULL);
-
-    if (dec_empty) {
-        dec_msg = tmp_msg;
+    if (!dec_msg && (decrypt_status == PEP_UNENCRYPTED || decrypt_status == PEP_VERIFIED)) {
+        dec_msg = message_dup(tmp_msg);
     }
         
     // This is for when errors are seriously fatal, not just decryption probs
@@ -2522,8 +2518,6 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
         GOTO(pep_error);
     }
 
-    assert(dec_msg);
-    
     if (!dec_msg) {
         status = PEP_UNKNOWN_ERROR;
         GOTO(pep_error);
@@ -2534,15 +2528,13 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     if (status == PEP_STATUS_OK)
     {
         free(tmp_msg);
-        if (!dec_empty)
-            free(dec_msg);
+        free(dec_msg);
         return ERROR(decrypt_status);
     }
     
 pep_error:
     free_message(tmp_msg);
-    if (!dec_empty)
-        free_message(dec_msg);
+    free_message(dec_msg);
 
     return ERROR(status);
 }
