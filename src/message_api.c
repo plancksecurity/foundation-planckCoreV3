@@ -2528,6 +2528,7 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     if (status == PEP_STATUS_OK)
     {
         free(tmp_msg);
+        free(dec_msg);
         return ERROR(decrypt_status);
     }
     

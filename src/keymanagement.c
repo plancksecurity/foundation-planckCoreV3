@@ -540,14 +540,6 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
 
         if (status != PEP_STATUS_OK) 
         {
-            status = elect_ownkey(session, identity);
-            assert(status == PEP_STATUS_OK);
-            if (status != PEP_STATUS_OK) {
-                return ERROR(status);
-            }
-        } 
-        else if (status != PEP_STATUS_OK) 
-        {
             return ERROR(status);
         }
     }
