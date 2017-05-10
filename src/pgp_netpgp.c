@@ -241,6 +241,9 @@ str_to_fpr (const char *str, uint8_t *fpr, size_t *length)
     unsigned i,j;
 
     *length = 0;
+    
+    if (str == NULL)
+        return 0;
 
     while(*str && *length < PGP_FINGERPRINT_SIZE){
         while (*str == ' ') str++;
@@ -1895,10 +1898,9 @@ PEP_STATUS pgp_find_private_keys(
     PEP_STATUS result;
 
     assert(session);
-    assert(pattern);
     assert(keylist);
 
-    if (!session || !pattern || !keylist )
+    if (!session || !keylist )
     {
         return PEP_ILLEGAL_VALUE;
     }
