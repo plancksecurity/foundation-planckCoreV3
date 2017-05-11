@@ -1058,18 +1058,18 @@ PEP_STATUS pgp_export_keydata(
     PEP_STATUS result;
     char *buffer;
     size_t buflen;
+    const pgp_keyring_t *srcring;
 
     assert(session);
     assert(fprstr);
     assert(key_data);
     assert(size);
 
-    // TODO : support export secret key
-    // crashing stub until export secret supported
-    assert(!secret);
     if (secret)
-        return PEP_ILLEGAL_VALUE;
-
+        srcring = netpgp.secring;
+    else
+        srcring = netpgp.pubring;
+    
     if (!session || !fprstr || !key_data || !size)
         return PEP_ILLEGAL_VALUE;
 
@@ -1080,7 +1080,7 @@ PEP_STATUS pgp_export_keydata(
     if (str_to_fpr(fprstr, fpr, &fprlen)) {
         unsigned from = 0;
 
-        if ((key = (pgp_key_t *)pgp_getkeybyfpr(netpgp.io, netpgp.pubring,
+        if ((key = (pgp_key_t *)pgp_getkeybyfpr(netpgp.io, srcring,
                                                 fpr, fprlen, &from,
                                                 NULL,0,0)) == NULL) {
             result = PEP_KEY_NOT_FOUND;
