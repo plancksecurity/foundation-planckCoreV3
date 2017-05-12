@@ -727,7 +727,7 @@ void free_DeviceGroup_Protocol_msg(DeviceGroup_Protocol_t *msg)
 }
 
 
-#ifdef DEBUG_SYNC_XER_IN_MESSAGE_BODY
+#ifndef NDEBUG
 static int _append(const void *buffer, size_t size, void *appkey)
 {
     char **dest_ptr = (char **)appkey;
@@ -823,7 +823,7 @@ PEP_STATUS unicast_msg(
     free_identity(me);
     me = NULL;
 
-#ifdef DEBUG_SYNC_XER_IN_MESSAGE_BODY
+#ifndef NDEBUG
     asn_enc_rval_t er;
     er = xer_encode(&asn_DEF_DeviceGroup_Protocol, msg, 
                     XER_F_BASIC, _append, &_message->longmsg);
