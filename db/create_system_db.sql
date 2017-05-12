@@ -48,6 +48,6 @@ INSERT INTO i18n_language VALUES ('tr', 'Türkçe');
 INSERT INTO i18n_token VALUES ('tr', 1000, 'Güvenlik kelimelerini Türkçe görüntülemek istiyorum');
 
 INSERT INTO i18n_language VALUES ('nl', 'Nederlands');
-INSERT INTO i18n_token VALUES ('nl', 1000, 'Ik wil de woorden in de nederlandse taal laten zien');
+INSERT INTO i18n_token VALUES ('nl', 1000, 'Ik wil de trustwords in de nederlandse taal laten zien');
 -- add more languages here
 
