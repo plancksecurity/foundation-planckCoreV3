@@ -157,6 +157,13 @@ DYNAMIC_API void release(PEP_SESSION session);
 //        The error stack belongs to the session. Do no not change it!
 DYNAMIC_API const stringlist_t* get_errorstack(PEP_SESSION session);
 
+// void clear_errorstack(PEP_SESSION) - clear the error stack for that session, if any
+//
+//  parameters:
+//        session (in)    session handle
+//
+DYNAMIC_API void clear_errorstack(PEP_SESSION session);
+
 
 // config_passive_mode() - enable passive mode
 //

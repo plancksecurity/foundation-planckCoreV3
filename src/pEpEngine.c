@@ -2334,18 +2334,29 @@ DYNAMIC_API const stringlist_t* get_errorstack(PEP_SESSION session)
     return session->errorstack;
 }
 
+DYNAMIC_API void clear_errorstack(PEP_SESSION session)
+{
+    free_stringlist(session->errorstack);
+    session->errorstack = new_stringlist(NULL);
+}
+
 #else
 
 static stringlist_t* dummy_errorstack = NULL;
 
 DYNAMIC_API const stringlist_t* get_errorstack(PEP_SESSION session)
 {
-	if(dummy_errorstack == NULL)
-	{
-		dummy_errorstack = new_stringlist("( Please recompile pEpEngine with -DDEBUG_ERRORSTACK )");
-	}
-	
+    if(dummy_errorstack == NULL)
+    {
+        dummy_errorstack = new_stringlist("( Please recompile pEpEngine with -DDEBUG_ERRORSTACK )");
+    }
+
     return dummy_errorstack;
+}
+
+DYNAMIC_API void clear_errorstack(PEP_SESSION session)
+{
+    // nothing to do here
 }
 
 #endif
