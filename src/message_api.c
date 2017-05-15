@@ -2511,16 +2511,9 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
         dec_msg = message_dup(tmp_msg);
     }
         
-    // This is for when errors are seriously fatal, not just decryption probs
-    // Unlikely to happen.
-    if (decrypt_status > PEP_CANNOT_DECRYPT_UNKNOWN)
+    if (decrypt_status > PEP_CANNOT_DECRYPT_UNKNOWN || !dec_msg)
     {
         status = decrypt_status;
-        GOTO(pep_error);
-    }
-
-    if (!dec_msg) {
-        status = PEP_UNKNOWN_ERROR;
         GOTO(pep_error);
     }
 
