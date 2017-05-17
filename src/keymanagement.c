@@ -144,6 +144,19 @@ DYNAMIC_API PEP_STATUS update_identity(
 
         /* if we have a stored_identity fpr */
         if (!EMPTYSTR(stored_identity->fpr)) {
+            bool revoked = false;
+            status = key_revoked(session, stored_identity->fpr, &revoked);
+            
+            if (status != PEP_STATUS_OK || revoked)
+                dont_use_stored_fpr = true;
+                
+            if (revoked) {
+                // Do stuff
+                status = change_key_comm_type(session, fpr, PEP_ct_key_revoked);
+                // What to do on failure? FIXME
+                status = remove_key_as_id_default(session, fpr);
+            }
+                
             status = blacklist_is_listed(session, stored_identity->fpr, &dont_use_stored_fpr);
             if (status != PEP_STATUS_OK)
                 dont_use_stored_fpr = true; 
@@ -1047,4 +1060,61 @@ PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
         return PEP_ILLEGAL_VALUE;
 
     return session->cryptotech[PEP_crypt_OpenPGP].contains_priv_key(session, fpr, has_private);
+}
+
+static PEP_STATUS change_key_comm_type(PEP_SESSION session, 
+                                       const char* fpr,
+                                       PEP_comm_type comm_type) {
+                                           
+    // get all user ids associated with this key
+    stringlist_t* user_id_list = NULL;
+    
+    PEP_STATUS status = get_key_userids(session, fpr, &user_id_list);
+    
+    if (status != PEP_STATUS_OK) {
+        free_stringlist(user_id_list);
+        return status;
+    }
+        
+    if (!user_id_list || !user_id_list->value())
+        return PEP_KEY_NOT_FOUND;
+        
+    stringlist_t* curr_id = user_id_list;
+    
+    while (curr_id) {
+        status = set_trust(session, curr_id->value, fpr, comm_type);
+        if (status != PEP_STATUS_OK) {
+            free_stringlist(user_id_list);
+            return status;
+        }
+        curr_id = curr_id->next;
+    }
+    
+    return PEP_STATUS_OK;
+}
+
+static PEP_STATUS remove_key_as_id_default(PEP_SESSIONS session, 
+                                           const char* fpr)
+{
+    identity_list* affected_ids = NULL;
+    
+    PEP_STATUS status get_identities_by_fpr(session, fpr, &identity_list);
+    
+    if (status != PEP_STATUS_OK) {
+        free_identity_list(affected_ids);
+        return status;
+    }
+    if (!affected_ids)
+        return PEP_STATUS_OK; // it's fine if none are found;
+        
+    identity_list* curr_identity = affected_ids;
+    
+    while (curr_identity) {
+        free(curr_identity->fpr);
+        curr_identity->fpr = (char*)calloc(1, sizeof(char)); // ""
+        set_identity(session, curr_identity);
+        curr_identity = curr_identity->next;
+    }
+    
+    
 }

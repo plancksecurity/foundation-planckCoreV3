@@ -159,7 +159,6 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
         pEp_identity *ident
     );
 
-
 // own_key_is_listed() - returns true id key is listed as own key
 //
 //  parameters:
@@ -241,7 +240,21 @@ DYNAMIC_API PEP_STATUS set_own_key(
        const char *fpr
     );
 
+// change_key_comm_type() - change comm_type for a key already in the trust table
+//                          this impacts any user id associated with this fpr    
+//  parameters:
+//      session(in)         session to use
+//      fpr(in)             fpr for which to change comm_type
+static PEP_STATUS change_key_comm_type(
+        PEP_SESSION session,
+        const char* fpr
+    );
+    
+static PEP_STATUS remove_key_as_id_default(
+        PEP_SESSIONS session, 
+        const char* fpr
+    );
+
 #ifdef __cplusplus
 }
 #endif
-

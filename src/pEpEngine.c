@@ -89,6 +89,10 @@ static const char *sql_get_trust =
     "select comm_type from trust where user_id = ?1 "
     "and pgp_keypair_fpr = upper(replace(?2,' ','')) ;";
 
+static const char *sql_get_key_userids = 
+    "select user_id from trust where "
+    "pgp_keypair_fpr = upper(replace(?1,' ','')) ;";
+
 static const char *sql_least_trust = 
     "select min(comm_type) from trust where"
     " pgp_keypair_fpr = upper(replace(?1,' ',''))"
@@ -542,6 +546,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_get_trust), &_session->get_trust, NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_key_userids,
+            (int)strlen(sql_get_key_userids), &_session->get_key_userids, NULL);
+    assert(int_result == SQLITE_OK);
+
     int_result = sqlite3_prepare_v2(_session->db, sql_least_trust,
             (int)strlen(sql_least_trust), &_session->least_trust, NULL);
     assert(int_result == SQLITE_OK);
@@ -749,6 +757,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->set_trust);
             if (session->get_trust)
                 sqlite3_finalize(session->get_trust);
+            if (session->get_key_userids)
+                sqlite3_finalize(session->get_key_userids);    
             if (session->least_trust)
                 sqlite3_finalize(session->least_trust);
             if (session->mark_compromized)
@@ -1147,13 +1157,15 @@ DYNAMIC_API PEP_STATUS set_identity(
                 identity->user_id && identity->username))
         return PEP_ILLEGAL_VALUE;
 
+    PEP_STATUS status = PEP_STATUS_OK;
+    
     bool listed;
 
     bool has_fpr = (identity->fpr && identity->fpr[0] != '\0');
     
     if (has_fpr) {    
         // blacklist check
-        PEP_STATUS status = blacklist_is_listed(session, identity->fpr, &listed);
+        status = blacklist_is_listed(session, identity->fpr, &listed);
         assert(status == PEP_STATUS_OK);
         if (status != PEP_STATUS_OK)
             return status;
@@ -1231,6 +1243,8 @@ DYNAMIC_API PEP_STATUS set_identity(
             }
         }
 
+        status = set_trust(session, identity->user_id, identity->fpr,
+                           identity->comm_type)
         sqlite3_reset(session->set_trust);
         sqlite3_bind_text(session->set_trust, 1, identity->user_id, -1,
                 SQLITE_STATIC);
@@ -1250,6 +1264,29 @@ DYNAMIC_API PEP_STATUS set_identity(
         return PEP_STATUS_OK;
     else
         return PEP_COMMIT_FAILED;
+}
+
+static PEP_STATUS set_trust(PEP_SESSION session, 
+                            const char* user_id,
+                            const char* fpr, 
+                            PEP_comm_type comm_type)
+{
+    if (!user_id || !fpr)
+        return PEP_ILLEGAL_VALUE;
+        
+    sqlite3_reset(session->set_trust);
+    sqlite3_bind_text(session->set_trust, 1, user_id, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->set_trust, 2, fpr, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_int(session->set_trust, 3, comm_type);
+    result = sqlite3_step(session->set_trust);
+    sqlite3_reset(session->set_trust);
+    if (result != SQLITE_DONE) {
+        return PEP_CANNOT_SET_TRUST;
+    }
+    
+    return PEP_STATUS_OK;
 }
 
 DYNAMIC_API PEP_STATUS set_device_group(
@@ -1965,6 +2002,74 @@ the_end:
     return status;
 }
 
+static PEP_STATUS get_key_userids(
+        PEP_SESSION session,
+        const char* fpr,
+        stringlist_t** keylist
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    assert(fpr);
+    assert(keylist);
+    
+    if (!keylist || !fpr)
+        return PEP_ILLEGAL_VALUE;
+        
+    *keylist = NULL;
+
+    stringlist_t* userid_list = NULL;
+    
+    sqlite3_reset(session->get_key_userids);
+
+    int result;
+
+    char* userid;
+    
+    do {
+        userid = NULL;
+        
+        result = sqlite3_step(session->get_key_userids);
+        switch (result) {
+        case SQLITE_ROW:
+            userid = (const char *) sqlite3_column_text(session->get_key_userids,
+                    0);
+    
+            if (!userid)
+                return PEP_UNKNOWN_ERROR;
+
+            if (!userid_list) {
+                userid_list = new_stringlist(userid);
+                if (!userid_list)
+                    goto enomem;
+            }
+            else {
+                stringlist_add(userid_list, userid);
+            }
+            
+            break;
+
+        case SQLITE_DONE:
+            break;
+
+        default:
+            status = PEP_UNKNOWN_ERROR;
+            result = SQLITE_DONE;
+        }
+    } while (result != SQLITE_DONE);
+
+    sqlite3_reset(session->get_key_userids);
+    if (status == PEP_STATUS_OK)
+        *keylist = userid_list;
+
+    goto the_end;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+the_end:
+    return status;
+}
+
 DYNAMIC_API PEP_STATUS get_phrase(
         PEP_SESSION session,
         const char *lang,
@@ -2360,4 +2465,3 @@ DYNAMIC_API void clear_errorstack(PEP_SESSION session)
 }
 
 #endif
-

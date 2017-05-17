@@ -109,6 +109,7 @@ struct _pEpSession {
     sqlite3_stmt *unset_identity_flags;
     sqlite3_stmt *set_trust;
     sqlite3_stmt *get_trust;
+    sqlite3_stmt *get_key_userids;
     sqlite3_stmt *least_trust;
     sqlite3_stmt *mark_compromized;
     sqlite3_stmt *reset_trust;
@@ -310,6 +311,10 @@ static inline int _same_fpr(
     return comparison == 0;
 }
 
+static PEP_STATUS set_trust(PEP_SESSION session, 
+                            const char* user_id,
+                            const char* fpr, 
+                            PEP_comm_type comm_type);
 
 #ifdef DEBUG_ERRORSTACK
     PEP_STATUS session_add_error(PEP_SESSION session, const char* file, unsigned line, PEP_STATUS status);
