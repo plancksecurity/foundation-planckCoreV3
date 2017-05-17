@@ -29,6 +29,16 @@ static const char *sql_get_identity =
     "       and pgp_keypair_fpr = identity.main_key_id"
     "   where address = ?1 and identity.user_id = ?2;";
 
+static const char *sql_get_identities_by_fpr =  
+    "select fpr, username, comm_type, lang,"
+    "   identity.flags | pgp_keypair.flags"
+    "   from identity"
+    "   join person on id = identity.user_id"
+    "   join pgp_keypair on fpr = identity.main_key_id"
+    "   join trust on id = trust.user_id"
+    "       and pgp_keypair_fpr = identity.main_key_id"
+    "   where identity.main_key_id = ?1;";
+
 // Set person, but if already exist, only update.
 // if main_key_id already set, don't touch.
 static const char *sql_set_person = 
@@ -507,6 +517,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_get_identity), &_session->get_identity, NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_identities_by_fpr,
+            (int)strlen(sql_get_identities_by_fpr), 
+            &_session->get_identities_by_fpr, NULL);
+    assert(int_result == SQLITE_OK);
+
     int_result = sqlite3_prepare_v2(_session->db, sql_set_person,
             (int)strlen(sql_set_person), &_session->set_person, NULL);
     assert(int_result == SQLITE_OK);
@@ -739,6 +754,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->trustword);
             if (session->get_identity)
                 sqlite3_finalize(session->get_identity);
+            if (session->get_identities_by_fpr)
+                sqlite3_finalize(session->get_identities_by_fpr);        
             if (session->set_person)
                 sqlite3_finalize(session->set_person);
             if (session->set_device_group)
@@ -1265,6 +1282,16 @@ DYNAMIC_API PEP_STATUS set_identity(
     else
         return PEP_COMMIT_FAILED;
 }
+
+PEP_STATUS get_identities_by_fpr(PEP_SESSION session, 
+                                 char* fpr, 
+                                 identity_list** id_list) 
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    return status;
+}
+
 
 static PEP_STATUS set_trust(PEP_SESSION session, 
                             const char* user_id,

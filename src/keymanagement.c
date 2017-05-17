@@ -1109,12 +1109,19 @@ static PEP_STATUS remove_key_as_id_default(PEP_SESSIONS session,
         
     identity_list* curr_identity = affected_ids;
     
+    status = PEP_STATUS_OK;
+    
     while (curr_identity) {
         free(curr_identity->fpr);
         curr_identity->fpr = (char*)calloc(1, sizeof(char)); // ""
-        set_identity(session, curr_identity);
+        status = set_identity(session, curr_identity);
+        if (status != PEP_STATUS_OK)
+            goto the_end;
         curr_identity = curr_identity->next;
     }
     
     
+the_end:    
+    free_identity_list(affected_ids);
+    return status;
 }
