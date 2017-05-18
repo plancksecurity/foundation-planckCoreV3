@@ -1289,7 +1289,83 @@ PEP_STATUS get_identities_by_fpr(PEP_SESSION session,
 {
     PEP_STATUS status = PEP_STATUS_OK;
     
+    assert(fpr);
+    assert(id_list);
+    
+    if (!fpr || !id_list)
+        return PEP_ILLEGAL_VALUE;
+        
+    *id_list = NULL;
+
+    stringlist_t* ids = NULL;
+    
+    sqlite3_reset(session->get_identities_by_fpr);
+    sqlite3_bind_text(session->get_identities_by_fpr, 1, fpr, -1,
+                      SQLITE_STATIC);
+
+    int result;
+
+    pEp_identity* ident;
+    
+    do {
+        ident = NULL;
+        
+        result = sqlite3_step(session->get_identities_by_fpr);
+        switch (result) {
+        case SQLITE_ROW:            
+            ident = new_identity(
+                    address,
+                    (const char *) sqlite3_column_text(session->get_identities_by_fpr, 0),
+                    user_id,
+                    (const char *) sqlite3_column_text(session->get_identities_by_fpr, 1)
+                    );
+            assert(_identity);
+            if (ident == NULL)
+                return PEP_OUT_OF_MEMORY;
+
+            ident->comm_type = (PEP_comm_type)
+                sqlite3_column_int(session->get_identities_by_fpr, 2);
+            const char* const _lang = (const char *)
+                sqlite3_column_text(session->get_identities_by_fpr, 3);
+            if (_lang && _lang[0]) {
+                assert(_lang[0] >= 'a' && _lang[0] <= 'z');
+                assert(_lang[1] >= 'a' && _lang[1] <= 'z');
+                assert(_lang[2] == 0);
+                ident->lang[0] = _lang[0];
+                ident->lang[1] = _lang[1];
+                ident->lang[2] = 0;
+            }
+            ident->flags = (unsigned int)
+                sqlite3_column_int(session->get_identities_by_fpr, 4);
+            
+            if (!ids)
+                ids = new_identity_list(ident, ids);
+            else
+                identity_list_add(ident, ids);
+            
+            break;
+
+        case SQLITE_DONE:
+            break;
+
+        default:
+            status = PEP_UNKNOWN_ERROR;
+            result = SQLITE_DONE;
+        }
+    } while (result != SQLITE_DONE);
+
+    sqlite3_reset(session->get_identities_by_fpr);
+    if (status == PEP_STATUS_OK)
+        *id_list = ids;
+
+    goto the_end;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+the_end:
     return status;
+
 }
 
 
