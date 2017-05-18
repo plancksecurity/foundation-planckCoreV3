@@ -100,6 +100,7 @@ struct _pEpSession {
     sqlite3_stmt *log;
     sqlite3_stmt *trustword;
     sqlite3_stmt *get_identity;
+    sqlite3_stmt *get_identities_by_fpr;
     sqlite3_stmt *set_person;
     sqlite3_stmt *set_device_group;
     sqlite3_stmt *get_device_group;
@@ -311,10 +312,6 @@ static inline int _same_fpr(
     return comparison == 0;
 }
 
-static PEP_STATUS set_trust(PEP_SESSION session, 
-                            const char* user_id,
-                            const char* fpr, 
-                            PEP_comm_type comm_type);
 
 #ifdef DEBUG_ERRORSTACK
     PEP_STATUS session_add_error(PEP_SESSION session, const char* file, unsigned line, PEP_STATUS status);

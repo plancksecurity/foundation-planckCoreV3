@@ -1260,8 +1260,8 @@ DYNAMIC_API PEP_STATUS set_identity(
             }
         }
 
-        status = set_trust(session, identity->user_id, identity->fpr,
-                           identity->comm_type)
+        // status = set_trust(session, identity->user_id, identity->fpr,
+        //                    identity->comm_type)
         sqlite3_reset(session->set_trust);
         sqlite3_bind_text(session->set_trust, 1, identity->user_id, -1,
                 SQLITE_STATIC);
@@ -1284,7 +1284,7 @@ DYNAMIC_API PEP_STATUS set_identity(
 }
 
 PEP_STATUS get_identities_by_fpr(PEP_SESSION session, 
-                                 char* fpr, 
+                                 const char* fpr, 
                                  identity_list** id_list) 
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1293,7 +1293,7 @@ PEP_STATUS get_identities_by_fpr(PEP_SESSION session,
 }
 
 
-static PEP_STATUS set_trust(PEP_SESSION session, 
+PEP_STATUS set_trust(PEP_SESSION session, 
                             const char* user_id,
                             const char* fpr, 
                             PEP_comm_type comm_type)
@@ -1307,7 +1307,7 @@ static PEP_STATUS set_trust(PEP_SESSION session,
     sqlite3_bind_text(session->set_trust, 2, fpr, -1,
             SQLITE_STATIC);
     sqlite3_bind_int(session->set_trust, 3, comm_type);
-    result = sqlite3_step(session->set_trust);
+    int result = sqlite3_step(session->set_trust);
     sqlite3_reset(session->set_trust);
     if (result != SQLITE_DONE) {
         return PEP_CANNOT_SET_TRUST;
@@ -2029,7 +2029,7 @@ the_end:
     return status;
 }
 
-static PEP_STATUS get_key_userids(
+PEP_STATUS get_key_userids(
         PEP_SESSION session,
         const char* fpr,
         stringlist_t** keylist
@@ -2058,8 +2058,7 @@ static PEP_STATUS get_key_userids(
         result = sqlite3_step(session->get_key_userids);
         switch (result) {
         case SQLITE_ROW:
-            userid = (const char *) sqlite3_column_text(session->get_key_userids,
-                    0);
+            userid = (char *) sqlite3_column_text(session->get_key_userids, 0);
     
             if (!userid)
                 return PEP_UNKNOWN_ERROR;

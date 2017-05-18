@@ -543,6 +543,11 @@ DYNAMIC_API PEP_STATUS get_identity(
         pEp_identity **identity
     );
 
+PEP_STATUS get_identities_by_fpr(PEP_SESSION session, 
+                                 const char* fpr, 
+                                 identity_list** id_list); 
+
+
 // set_identity() - set identity information
 //
 //    parameters:
@@ -826,6 +831,10 @@ DYNAMIC_API void pEp_free(void *p);
 
 DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity);
 
+PEP_STATUS set_trust(PEP_SESSION session, 
+                            const char* user_id,
+                            const char* fpr, 
+                            PEP_comm_type comm_type);
 
 // least_trust() - get the least known trust level for a key in the database
 //
@@ -922,6 +931,12 @@ DYNAMIC_API PEP_STATUS key_revoked(
         PEP_SESSION session,
         const char *fpr,
         bool *revoked
+    );
+
+PEP_STATUS get_key_userids(
+        PEP_SESSION session,
+        const char* fpr,
+        stringlist_t** keylist
     );
 
 
