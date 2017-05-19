@@ -543,9 +543,9 @@ DYNAMIC_API PEP_STATUS get_identity(
         pEp_identity **identity
     );
 
-PEP_STATUS get_identities_by_fpr(PEP_SESSION session, 
-                                 const char* fpr, 
-                                 identity_list** id_list); 
+PEP_STATUS replace_identities_fpr(PEP_SESSION session, 
+                                 const char* old_fpr, 
+                                 const char* new_fpr); 
 
 
 // set_identity() - set identity information

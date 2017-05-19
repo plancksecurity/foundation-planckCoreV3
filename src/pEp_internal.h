@@ -100,7 +100,7 @@ struct _pEpSession {
     sqlite3_stmt *log;
     sqlite3_stmt *trustword;
     sqlite3_stmt *get_identity;
-    sqlite3_stmt *get_identities_by_fpr;
+    sqlite3_stmt *replace_identities_fpr;
     sqlite3_stmt *set_person;
     sqlite3_stmt *set_device_group;
     sqlite3_stmt *get_device_group;
@@ -109,8 +109,8 @@ struct _pEpSession {
     sqlite3_stmt *set_identity_flags;
     sqlite3_stmt *unset_identity_flags;
     sqlite3_stmt *set_trust;
+    sqlite3_stmt *update_trust_for_fpr;
     sqlite3_stmt *get_trust;
-    sqlite3_stmt *get_key_userids;
     sqlite3_stmt *least_trust;
     sqlite3_stmt *mark_compromized;
     sqlite3_stmt *reset_trust;

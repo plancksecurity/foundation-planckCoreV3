@@ -240,24 +240,6 @@ DYNAMIC_API PEP_STATUS set_own_key(
        const char *fpr
     );
 
-// change_key_comm_type() - change comm_type for a key already in the trust table
-//                          this impacts any user id associated with this fpr    
-//  parameters:
-//      session(in)         session to use
-//      fpr(in)             fpr for which to change comm_type
-//      comm_type(in)       comm_type to change to
-//
-PEP_STATUS change_key_comm_type(
-        PEP_SESSION session,
-        const char* fpr,
-        PEP_comm_type comm_type
-    );
-    
-PEP_STATUS remove_key_as_id_default(
-        PEP_SESSION session, 
-        const char* fpr
-    );
-
 #ifdef __cplusplus
 }
 #endif
