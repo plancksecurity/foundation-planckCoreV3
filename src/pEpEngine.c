@@ -1315,8 +1315,7 @@ PEP_STATUS update_trust_for_fpr(PEP_SESSION session,
         return PEP_ILLEGAL_VALUE;
         
     sqlite3_reset(session->update_trust_for_fpr);
-    sqlite3_bind_int(session->update_trust_for_fpr, 1, comm_type, -1,
-            SQLITE_STATIC);
+    sqlite3_bind_int(session->update_trust_for_fpr, 1, comm_type);
     sqlite3_bind_text(session->update_trust_for_fpr, 2, fpr, -1,
             SQLITE_STATIC);
     int result = sqlite3_step(session->update_trust_for_fpr);

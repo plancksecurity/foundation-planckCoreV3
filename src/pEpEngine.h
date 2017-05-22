@@ -835,6 +835,10 @@ PEP_STATUS set_trust(PEP_SESSION session,
                             const char* user_id,
                             const char* fpr, 
                             PEP_comm_type comm_type);
+                            
+PEP_STATUS update_trust_for_fpr(PEP_SESSION session, 
+                                const char* fpr, 
+                                PEP_comm_type comm_type);
 
 // least_trust() - get the least known trust level for a key in the database
 //
