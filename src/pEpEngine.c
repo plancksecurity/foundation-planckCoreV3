@@ -250,7 +250,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     _session->version = PEP_ENGINE_VERSION;
 
 #ifdef DEBUG_ERRORSTACK
-    _session->errorstack = new_stringlist(NULL);
+    _session->errorstack = new_stringlist("init()");
 #endif
 
     assert(LOCAL_DB);
@@ -2411,8 +2411,11 @@ DYNAMIC_API const stringlist_t* get_errorstack(PEP_SESSION session)
 
 DYNAMIC_API void clear_errorstack(PEP_SESSION session)
 {
+    const int old_len = stringlist_length(session->errorstack);
+    char buf[48];
     free_stringlist(session->errorstack);
-    session->errorstack = new_stringlist(NULL);
+    snprintf(buf, 47, "(%i elements cleared)", old_len);
+    session->errorstack = new_stringlist(buf);
 }
 
 #else
