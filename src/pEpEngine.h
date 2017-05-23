@@ -46,6 +46,7 @@ typedef enum {
     PEP_KEY_HAS_AMBIG_NAME                          = 0x0202,
     PEP_GET_KEY_FAILED                              = 0x0203,
     PEP_CANNOT_EXPORT_KEY                           = 0x0204,
+    PEP_CANNOT_EDIT_KEY                             = 0x0205,
     
     PEP_CANNOT_FIND_IDENTITY                        = 0x0301,
     PEP_CANNOT_SET_PERSON                           = 0x0381,

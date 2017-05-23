@@ -1940,11 +1940,14 @@ PEP_STATUS pgp_renew_key(
     gpgme_error = gpg.gpgme_op_edit(session->ctx, key, renew_fsm, &handle,
             output);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
+    if(gpgme_error != GPG_ERR_NO_ERROR) {
+        status = PEP_CANNOT_EDIT_KEY;
+    }
 
     gpg.gpgme_data_release(output);
     gpg.gpgme_key_unref(key);
 
-    return PEP_STATUS_OK;
+    return status;
 }
 
 typedef struct _revoke_state {
@@ -2127,11 +2130,14 @@ PEP_STATUS pgp_revoke_key(
     gpgme_error = gpg.gpgme_op_edit(session->ctx, key, revoke_fsm, &handle,
             output);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
+    if(gpgme_error != GPG_ERR_NO_ERROR) {
+        status = PEP_CANNOT_EDIT_KEY;
+    }
 
     gpg.gpgme_data_release(output);
     gpg.gpgme_key_unref(key);
 
-    return PEP_STATUS_OK;
+    return status;
 }
 
 PEP_STATUS pgp_key_expired(
