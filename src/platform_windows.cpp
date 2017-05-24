@@ -139,9 +139,15 @@ void *dlopen(const char *filename, int flag) {
     assert(filename);
 	assert(flag == RTLD_LAZY); // only lazy binding is implemented
 
-    bool result = readRegistryString(HKEY_LOCAL_MACHINE,
-            TEXT("SOFTWARE\\GNU\\GnuPG"), TEXT("Install Directory"), path,
-            PATH_BUF_SIZE, NULL);
+	// Look up GnuPG installation in current user scope
+	bool result = readRegistryString(HKEY_CURRENT_USER,
+		TEXT("SOFTWARE\\GNU\\GnuPG"), TEXT("Install Directory"), path,
+		PATH_BUF_SIZE, NULL);
+	// If not found in current user, look up in local machine
+	if (!result)
+		result = readRegistryString(HKEY_LOCAL_MACHINE,
+			TEXT("SOFTWARE\\GNU\\GnuPG"), TEXT("Install Directory"), path,
+			PATH_BUF_SIZE, NULL);
 	assert(result);
 	if (!result)
 		return NULL;
