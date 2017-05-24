@@ -26,9 +26,13 @@ int main(int argc, char** argv) {
 
     const string keytextkey1 = slurp("test_keys/pub/pep-test-apple-0x1CCBC7D7_pub.asc");
     const string keytextkey2 = slurp("test_keys/priv/pep-test-recip-0x08DB0AEE_priv.asc");
+    const string keytextkey3 = slurp("test_keys/priv/pep-test-apple-0x1CCBC7D7_priv.asc");
+    const string keytextkey4 = slurp("test_keys/pub/pep-test-recip-0x08DB0AEE_pub.asc");
 
     PEP_STATUS statuskey1 = import_key(session, keytextkey1.c_str(), keytextkey1.length(), NULL);
     PEP_STATUS statuskey2 = import_key(session, keytextkey2.c_str(), keytextkey2.length(), NULL);
+    PEP_STATUS statuskey3 = import_key(session, keytextkey3.c_str(), keytextkey3.length(), NULL);
+    PEP_STATUS statuskey4 = import_key(session, keytextkey4.c_str(), keytextkey4.length(), NULL);
         
     const string mailtext = slurp(mailfile);
     pEp_identity * me = new_identity("pep.test.recip@kgrothoff.org", NULL, PEP_OWN_USERID, "pEp Test Recipient");    
