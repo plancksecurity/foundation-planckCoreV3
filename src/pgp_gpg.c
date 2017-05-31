@@ -39,8 +39,7 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
         assert(length == stringlist_length(values));
         if (!(length == stringlist_length(values) &&
               length <= sizeof(unsigned int) * CHAR_BIT)) {
-            r = Fclose(f);
-            assert(r == 0);
+            Fclose(f);
 
             return false;
         }
@@ -62,6 +61,8 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
 
                         if (i == n) {
                             r = Fclose(f);
+                            if (r != 0)
+                                return false;
                             return true;
                         }
                     }
@@ -83,11 +84,15 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
         if ((found & i) == 0) {
             r = Fprintf(f, "%s %s\n", _k->value, _v->value);
             assert(r >= 0);
+            if(r<0)
+                return false;
         }
     }
 
     r = Fclose(f);
     assert(r == 0);
+    if (r != 0)
+        return false;
 
     return true;
 }
@@ -1352,6 +1357,8 @@ PEP_STATUS pgp_export_keydata(
 
     reading = gpg.gpgme_data_read(dh, buffer, _size);
     assert(_size == reading);
+    if(_size != reading)
+        return PEP_CANNOT_EXPORT_KEY;
 
     // safeguard for the naive user
     buffer[_size] = 0;
@@ -1940,11 +1947,14 @@ PEP_STATUS pgp_renew_key(
     gpgme_error = gpg.gpgme_op_edit(session->ctx, key, renew_fsm, &handle,
             output);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
+    if(gpgme_error != GPG_ERR_NO_ERROR) {
+        status = PEP_CANNOT_EDIT_KEY;
+    }
 
     gpg.gpgme_data_release(output);
     gpg.gpgme_key_unref(key);
 
-    return PEP_STATUS_OK;
+    return status;
 }
 
 typedef struct _revoke_state {
@@ -2127,11 +2137,14 @@ PEP_STATUS pgp_revoke_key(
     gpgme_error = gpg.gpgme_op_edit(session->ctx, key, revoke_fsm, &handle,
             output);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
+    if(gpgme_error != GPG_ERR_NO_ERROR) {
+        status = PEP_CANNOT_EDIT_KEY;
+    }
 
     gpg.gpgme_data_release(output);
     gpg.gpgme_key_unref(key);
 
-    return PEP_STATUS_OK;
+    return status;
 }
 
 PEP_STATUS pgp_key_expired(
