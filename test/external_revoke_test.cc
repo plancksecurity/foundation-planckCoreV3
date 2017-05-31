@@ -79,12 +79,12 @@ int main() {
 
     // check comm_type
     cout << "comm_type: " << encrypted_outgoing_msg->to->ident->comm_type << endl;
-
     assert(encrypted_outgoing_msg->to->ident->comm_type == PEP_ct_OpenPGP);
+    
     status = get_trust(session, recip1);
     
     cout << "Recip's trust DB comm_type = " << hex << recip1->comm_type << endl;
-    assert(recip1->comm_type == PEP_ct_OpenPGP);
+    assert(recip1->comm_type == PEP_ct_OpenPGP); // FIXME: PEP_ct_pEp???
 
     // decrypt message
     free_message(outgoing_message);
@@ -96,15 +96,17 @@ int main() {
 
     status = decrypt_message(session, encrypted_outgoing_msg, &outgoing_message, &keylist, &rating, &flags);
     assert(status == PEP_STATUS_OK);
-    assert(rating >= PEP_rating_trusted);
+    assert(rating == PEP_rating_trusted);
 
     // check rating
     cout << "Rating of decrypted message to trusted recip: " << rating << endl;
-
+    assert(rating == PEP_rating_trusted); // FIXME: trusted and anonymised?
+    
     // check comm_type
     status = get_trust(session, recip1);
-    
+
     cout << "Recip's trust DB comm_type = " << recip1->comm_type << endl;
+    assert(recip1->comm_type == PEP_ct_OpenPGP); // FIXME: PEP_ct_pEp???
 
     // externally revoke key
     // (note - as of 23.5.17, revoke_key() doesn't touch the trust db, just the keyring, so we can do this)
@@ -112,7 +114,6 @@ int main() {
     status = get_identity(session, uniqname, r1_userid, &recip1);
     
     status = revoke_key(session, recip1->fpr, "encrypt_for_identity_test");
-
     
     // free messages
     free_message(outgoing_message);
@@ -137,34 +138,37 @@ int main() {
 
     status = encrypt_message(session, outgoing_message, NULL, &encrypted_outgoing_msg, PEP_enc_PGP_MIME, 0);
 
+    PEP_comm_type ct = (encrypted_outgoing_msg ? encrypted_outgoing_msg->to->ident->comm_type : outgoing_message->to->ident->comm_type);
+
     // check comm_type
-    if (encrypted_outgoing_msg)
-        cout << "comm_type: " << encrypted_outgoing_msg->to->ident->comm_type << endl;
-    else
-        cout << "comm_type: " << outgoing_message->to->ident->comm_type << endl;
-        
+    cout << "comm_type: " << ct << endl;
+    assert(ct == PEP_ct_key_revoked);
+    
     status = get_trust(session, recip1);
 
     cout << "Recip's trust DB comm_type = " << hex << recip1->comm_type << endl;
+    assert(recip1->comm_type == PEP_ct_key_revoked);
 
     // decrypt message
 //    free_message(outgoing_message);
 //    outgoing_message = NULL;
 
     status = decrypt_message(session, outgoing_message, &decrypted_msg, &keylist, &rating, &flags);
+    assert(status == PEP_UNENCRYPTED);
 
     // check rating
     cout << "Rating of decrypted message to trusted recip: " << rating << endl;
+    assert(rating == PEP_rating_unencrypted);
 
-    // check comm_type
-    if (decrypted_msg)
-        cout << "comm_type: " << decrypted_msg->to->ident->comm_type << endl;
-    else
-        cout << "comm_type: " << outgoing_message->to->ident->comm_type << endl;
+    ct = (decrypted_msg ? decrypted_msg->to->ident->comm_type : outgoing_message->to->ident->comm_type);
+
+    cout << "comm_type: " << ct << endl;
+    assert(ct == PEP_ct_key_revoked);
     
     status = get_trust(session, recip1);
     
     cout << "Recip's trust DB comm_type = " << hex << recip1->comm_type << endl;
+    assert(recip1->comm_type == PEP_ct_key_revoked);
 
     // generate new key
     status = generate_keypair(session, recip1);
