@@ -144,9 +144,23 @@ DYNAMIC_API PEP_STATUS update_identity(
 
         /* if we have a stored_identity fpr */
         if (!EMPTYSTR(stored_identity->fpr)) {
-            status = blacklist_is_listed(session, stored_identity->fpr, &dont_use_stored_fpr);
-            if (status != PEP_STATUS_OK)
-                dont_use_stored_fpr = true; 
+            bool revoked = false;
+            status = key_revoked(session, stored_identity->fpr, &revoked);
+            
+            if (status != PEP_STATUS_OK || revoked)
+                dont_use_stored_fpr = true;
+                
+            if (revoked) {
+                // Do stuff
+                status = update_trust_for_fpr(session, stored_identity->fpr, PEP_ct_key_revoked);
+                // What to do on failure? FIXME
+                status = replace_identities_fpr(session, stored_identity->fpr, "");
+            }
+            else {    
+                status = blacklist_is_listed(session, stored_identity->fpr, &dont_use_stored_fpr);
+                if (status != PEP_STATUS_OK)
+                    dont_use_stored_fpr = true; 
+            }
         }
             
 
