@@ -422,6 +422,35 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
     const char* lang, char **words, bool full
 );
 
+// re_evaluate_message_rating() - re-evaluate already decrypted message rating
+//
+//  parameters:
+//      session (in)            session handle
+//      msg (in)                message to get the rating for
+//      x_keylist (in)          decrypted message recipients keys fpr
+//      x_enc_status (in)       original rating for the decrypted message
+//      rating (out)            rating for the message
+//
+//  return value:
+//      PEP_ILLEGAL_VALUE       if decrypted message doesn't contain 
+//                              X-EncStatus optional field and x_enc_status is 
+//                              pEp_rating_udefined
+//                              or if decrypted message doesn't contain 
+//                              X-Keylist optional field and x_keylist is NULL
+//      PEP_OUT_OF_MEMORY       if not enough memory could be allocated
+//
+//  caveat:
+//      msg->from must point to a valid pEp_identity
+//      the ownership of msg remains with the caller
+//	    the ownership of x_keylist remains with to the caller
+
+DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
+    PEP_SESSION session,
+    message *msg,
+    stringlist_t *x_keylist,
+    PEP_rating x_enc_status,
+    PEP_rating *rating
+);
 #ifdef __cplusplus
 }
 #endif
