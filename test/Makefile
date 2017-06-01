@@ -4,8 +4,7 @@
 
 include ../Makefile.conf
 
-export GNUPGHOME=/home/krista/.gnupg/.
-#export GNUPGHOME=.
+export GNUPGHOME=.
 
 CC?=g++ -std=gnu++11 -pthread
 CXX?=g++ -std=gnu++11 -pthread
