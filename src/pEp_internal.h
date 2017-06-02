@@ -173,9 +173,9 @@ PEP_STATUS encrypt_only(
         size_t psize, char **ctext, size_t *csize
 );
 
-#ifdef NDEBUG
-#define DEBUG_LOG(TITLE, ENTITY, DESC)
-#else
+// #ifdef NDEBUG
+// #define DEBUG_LOG(TITLE, ENTITY, DESC)
+// #else
 #ifdef ANDROID
 #include <android/log.h>
 #define  LOG_MORE(...)  __android_log_print(ANDROID_LOG_DEBUG, "pEpEngine", " %s :: %s :: %s ", __VA_ARGS__);
@@ -187,7 +187,7 @@ PEP_STATUS encrypt_only(
     log_event(session, (TITLE), (ENTITY), (DESC), "debug");\
     LOG_MORE((TITLE), (ENTITY), (DESC))\
 }
-#endif
+// #endif
 
 typedef enum _normalize_hex_rest_t {
     accept_hex,

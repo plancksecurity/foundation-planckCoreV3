@@ -339,10 +339,10 @@ tstylesheet {
     template "condition" {
         | {
         |> int cond_result = «@name»(session`apply "parm", 0`);
-        |> #ifndef NDEBUG
+        |> // #ifndef NDEBUG
         |> char resstr[11] = {0,};
         |> snprintf(resstr,10,"result=%d",cond_result);
-        |> #endif
+        |> // #endif
         |> DEBUG_LOG("FSM condition", "«ancestor::fsm/@filename»_fsm.c, state=«ancestor::state/@name», event=«ancestor::event/@name», condition=«@name»", resstr)
         |> if (cond_result < 0)
         |>> return cond_result;

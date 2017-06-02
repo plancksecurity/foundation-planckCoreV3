@@ -46,10 +46,10 @@ DeviceState_state fsm_DeviceState(
                     *timeout = 0;
                     {
                         int cond_result = deviceGrouped(session);
-                        #ifndef NDEBUG
+                        // #ifndef NDEBUG
                         char resstr[11] = {0,};
                         snprintf(resstr,10,"result=%d",cond_result);
-                        #endif
+                        // #endif
                         DEBUG_LOG("FSM condition", "sync_fsm.c, state=InitState, event=Init, condition=deviceGrouped", resstr)
                         if (cond_result < 0)
                             return cond_result;
@@ -284,10 +284,10 @@ DeviceState_state fsm_DeviceState(
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=SoleBeaconed", "event=HandshakeRequest")
                     {
                         int cond_result = sameIdentities(session, partner, expected);
-                        #ifndef NDEBUG
+                        // #ifndef NDEBUG
                         char resstr[11] = {0,};
                         snprintf(resstr,10,"result=%d",cond_result);
-                        #endif
+                        // #endif
                         DEBUG_LOG("FSM condition", "sync_fsm.c, state=SoleBeaconed, event=HandshakeRequest, condition=sameIdentities", resstr)
                         if (cond_result < 0)
                             return cond_result;
@@ -344,10 +344,10 @@ DeviceState_state fsm_DeviceState(
                     *timeout = 600;
                     {
                         int cond_result = keyElectionWon(session, expected);
-                        #ifndef NDEBUG
+                        // #ifndef NDEBUG
                         char resstr[11] = {0,};
                         snprintf(resstr,10,"result=%d",cond_result);
-                        #endif
+                        // #endif
                         DEBUG_LOG("FSM condition", "sync_fsm.c, state=HandshakingSole, event=Init, condition=keyElectionWon", resstr)
                         if (cond_result < 0)
                             return cond_result;
@@ -392,10 +392,10 @@ DeviceState_state fsm_DeviceState(
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=HandshakingSole", "event=HandshakeAccepted")
                     {
                         int cond_result = sameIdentities(session, partner, expected);
-                        #ifndef NDEBUG
+                        // #ifndef NDEBUG
                         char resstr[11] = {0,};
                         snprintf(resstr,10,"result=%d",cond_result);
-                        #endif
+                        // #endif
                         DEBUG_LOG("FSM condition", "sync_fsm.c, state=HandshakingSole, event=HandshakeAccepted, condition=sameIdentities", resstr)
                         if (cond_result < 0)
                             return cond_result;
@@ -408,10 +408,10 @@ DeviceState_state fsm_DeviceState(
                             return (int) invalid_action;
                         {
                             int cond_result = keyElectionWon(session, partner);
-                            #ifndef NDEBUG
+                            // #ifndef NDEBUG
                             char resstr[11] = {0,};
                             snprintf(resstr,10,"result=%d",cond_result);
-                            #endif
+                            // #endif
                             DEBUG_LOG("FSM condition", "sync_fsm.c, state=HandshakingSole, event=HandshakeAccepted, condition=keyElectionWon", resstr)
                             if (cond_result < 0)
                                 return cond_result;
@@ -488,10 +488,10 @@ DeviceState_state fsm_DeviceState(
                     group_keys_extra_t* groupkeys = (group_keys_extra_t*)extra;
                     {
                         int cond_result = keyElectionWon(session, expected);
-                        #ifndef NDEBUG
+                        // #ifndef NDEBUG
                         char resstr[11] = {0,};
                         snprintf(resstr,10,"result=%d",cond_result);
-                        #endif
+                        // #endif
                         DEBUG_LOG("FSM condition", "sync_fsm.c, state=HandshakingSole, event=GroupKeys, condition=keyElectionWon", resstr)
                         if (cond_result < 0)
                             return cond_result;
@@ -500,10 +500,10 @@ DeviceState_state fsm_DeviceState(
                         else {
                         {
                             int cond_result = sameKeyAndAddress(session, partner, expected);
-                            #ifndef NDEBUG
+                            // #ifndef NDEBUG
                             char resstr[11] = {0,};
                             snprintf(resstr,10,"result=%d",cond_result);
-                            #endif
+                            // #endif
                             DEBUG_LOG("FSM condition", "sync_fsm.c, state=HandshakingSole, event=GroupKeys, condition=sameKeyAndAddress", resstr)
                             if (cond_result < 0)
                                 return cond_result;
@@ -573,10 +573,10 @@ DeviceState_state fsm_DeviceState(
                     group_keys_extra_t* groupkeys = (group_keys_extra_t*)extra;
                     {
                         int cond_result = sameKeyAndAddress(session, partner, expected);
-                        #ifndef NDEBUG
+                        // #ifndef NDEBUG
                         char resstr[11] = {0,};
                         snprintf(resstr,10,"result=%d",cond_result);
-                        #endif
+                        // #endif
                         DEBUG_LOG("FSM condition", "sync_fsm.c, state=WaitForGroupKeysSole, event=GroupKeys, condition=sameKeyAndAddress", resstr)
                         if (cond_result < 0)
                             return cond_result;
@@ -673,10 +673,10 @@ DeviceState_state fsm_DeviceState(
                     DEBUG_LOG("FSM event", "sync_fsm.c, state=WaitForAcceptSole", "event=HandshakeAccepted")
                     {
                         int cond_result = sameKeyAndAddress(session, partner, expected);
-                        #ifndef NDEBUG
+                        // #ifndef NDEBUG
                         char resstr[11] = {0,};
                         snprintf(resstr,10,"result=%d",cond_result);
-                        #endif
+                        // #endif
                         DEBUG_LOG("FSM condition", "sync_fsm.c, state=WaitForAcceptSole, event=HandshakeAccepted, condition=sameKeyAndAddress", resstr)
                         if (cond_result < 0)
                             return cond_result;
