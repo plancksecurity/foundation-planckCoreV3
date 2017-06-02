@@ -27,10 +27,18 @@ int main() {
 
 #ifndef NETPGP
     char* fprs[2];
-    
+
+    const string alice_pub_key = slurp("test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
+    const string alice_priv_key = slurp("test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc");
+
+    PEP_STATUS statuspub = import_key(session, alice_pub_key.c_str(), alice_pub_key.length(), NULL);
+    PEP_STATUS statuspriv = import_key(session, alice_priv_key.c_str(), alice_priv_key.length(), NULL);
+    assert(statuspub == PEP_STATUS_OK);
+    assert(statuspriv == PEP_STATUS_OK);
+
     // Create sender ID
     
-    pEp_identity * me = new_identity("pep.test.apple@pep-project.org", NULL, PEP_OWN_USERID, "Alice Cooper");
+    pEp_identity * me = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, "Alice Cooper");
     status = update_identity(session, me);
     status = trust_personal_key(session, me);
     status = update_identity(session, me);
