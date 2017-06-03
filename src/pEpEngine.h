@@ -202,6 +202,14 @@ DYNAMIC_API void config_use_only_own_private_keys(PEP_SESSION session, bool enab
 DYNAMIC_API void config_keep_sync_msg(PEP_SESSION session, bool enable);
 
 
+// config_service_log() - log more for service purposes
+//
+//      session (in)    session handle
+//      enable (in)     flag if enabled or disabled
+
+DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable);
+
+
 // decrypt_and_verify() - decrypt and/or verify a message
 //
 //    parameters:
@@ -314,6 +322,17 @@ DYNAMIC_API PEP_STATUS log_event(
         const char *description,
         const char *comment
     );
+
+
+DYNAMIC_API PEP_STATUS log_service(PEP_SESSION session, const char *title,
+        const char *entity, const char *description, const char *comment);
+
+#define _STR_(x) #x
+#define _D_STR_(x) _STR_(x)
+#define S_LINE _D_STR_(__LINE__)
+
+#define SERVICE_LOG(session, title, entity, desc) \
+    log_service((session), (title), (entity), (desc), "service " __FILE__ ":" S_LINE)
 
 
 // trustword() - get the corresponding trustword for a 16 bit value
