@@ -58,7 +58,6 @@ int main(int argc, char** argv) {
     
     message* msg_ptr = nullptr;
     message* dest_msg = nullptr;
-    message* final_ptr = nullptr;
     stringlist_t* keylist = nullptr;
     PEP_rating rating;
     PEP_decrypt_flags_t flags;
@@ -66,53 +65,69 @@ int main(int argc, char** argv) {
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     assert(status == PEP_STATUS_OK);
     assert(msg_ptr);
-    final_ptr = msg_ptr;
-    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
-    final_ptr = dest_msg ? dest_msg : msg_ptr;
-  
-    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
-    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
+    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    assert(status == PEP_STATUS_OK);
+    assert(dest_msg);
     /* message is signed and no recip is mistrusted... */
     assert(color_from_rating(rating) == PEP_color_yellow);
 
-    if (final_ptr == dest_msg)
-    	free_message(dest_msg);
-    free_message(msg_ptr);
-    free_stringlist(keylist);
+    cout << "shortmsg: " << dest_msg->shortmsg << endl << endl;
+    cout << "longmsg: " << dest_msg->longmsg << endl << endl;
+    cout << "longmsg_formatted: " << (dest_msg->longmsg_formatted ? dest_msg->longmsg_formatted : "(empty)") << endl << endl;
+
+    PEP_rating decrypt_rating = rating;
+    
+    /* re-evaluate rating, counting on optional fields */
+    status = re_evaluate_message_rating(session, dest_msg, NULL, PEP_rating_undefined, &rating);
+    assert(status == PEP_STATUS_OK);
+    assert(color_from_rating(rating) == PEP_color_yellow);
+
+    /* re-evaluate rating, without optional fields */
+    status = re_evaluate_message_rating(session, dest_msg, keylist, decrypt_rating, &rating);
+    assert(status == PEP_STATUS_OK);
+    assert(color_from_rating(rating) == PEP_color_yellow);
 
     /* Ok, now mistrust one recip */
     key_mistrusted(session, recip2);
+
+    /* re-evaluate rating, counting on optional fields */
+    status = re_evaluate_message_rating(session, dest_msg, NULL, PEP_rating_undefined, &rating);
+    assert(status == PEP_STATUS_OK);
+    assert(color_from_rating(rating) == PEP_color_red);
+
+    /* re-evaluate rating, without optional fields */
+    status = re_evaluate_message_rating(session, dest_msg, keylist, decrypt_rating, &rating);
+    assert(status == PEP_STATUS_OK);
+    assert(color_from_rating(rating) == PEP_color_red);
+
+    free_message(dest_msg);
+    free_message(msg_ptr);
+    free_stringlist(keylist);
     
     msg_ptr = nullptr;
     dest_msg = nullptr;
-    final_ptr = nullptr;
     keylist = nullptr;
     rating = PEP_rating_unreliable;
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     assert(status == PEP_STATUS_OK);
     assert(msg_ptr);
-    final_ptr = msg_ptr;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
-    final_ptr = dest_msg ? dest_msg : msg_ptr;
   
-    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
-    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+    cout << "shortmsg: " << dest_msg->shortmsg << endl << endl;
+    cout << "longmsg: " << dest_msg->longmsg << endl << endl;
+    cout << "longmsg_formatted: " << (dest_msg->longmsg_formatted ? dest_msg->longmsg_formatted : "(empty)") << endl << endl;
 
     /* message is signed and no recip is mistrusted... */
     assert(color_from_rating(rating) == PEP_color_red);
 
-    if (final_ptr == dest_msg)
-    	free_message(dest_msg);
+    free_message(dest_msg);
     free_message(msg_ptr);
     free_stringlist(keylist);
 
     msg_ptr = nullptr;
     dest_msg = nullptr;
-    final_ptr = nullptr;
     keylist = nullptr;
     rating = PEP_rating_unreliable;
     

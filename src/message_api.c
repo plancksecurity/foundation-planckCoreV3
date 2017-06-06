@@ -2730,6 +2730,8 @@ DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
     if (!(session && msg && rating))
         return ERROR(PEP_ILLEGAL_VALUE);
 
+    *rating = PEP_rating_undefined;
+
     if (x_enc_status == PEP_rating_undefined){
         for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
             if (strcasecmp(i->value->key, "X-EncStatus") == 0){
@@ -2741,25 +2743,29 @@ DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
     if (x_enc_status == PEP_rating_undefined)
         return ERROR(PEP_ILLEGAL_VALUE);
 
-    PEP_rating _rating = x_enc_status;
 
-    if (x_keylist == NULL){
+    if (_keylist == NULL){
         for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
             if (strcasecmp(i->value->key, "X-KeyList") == 0){
                 status = string_to_keylist(i->value->value, &_keylist);
                 if (status != PEP_STATUS_OK)
                     GOTO(pep_error);
+                must_free_keylist = true;
+                break;
             }
         }
     }
-    if (x_keylist == NULL)
+    if (_keylist == NULL)
         return ERROR(PEP_ILLEGAL_VALUE);
 
+    PEP_rating _rating = x_enc_status;
 
     status = amend_rating_according_to_sender_and_recipients(session,
                                                              &_rating,
                                                              msg->from,
                                                              _keylist);
+    if (status == PEP_STATUS_OK)
+        *rating = _rating;
     
     return ERROR(status);
 
