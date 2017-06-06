@@ -1420,7 +1420,7 @@ static PEP_STATUS _update_identity_for_incoming_message(
                 && src->from->comm_type != PEP_ct_pEp)
         {
             src->from->comm_type |= PEP_ct_pEp_unconfirmed;
-            status = update_identity(session, src->from);
+            status = set_identity(session, src->from);
         }
         return status;
     }
