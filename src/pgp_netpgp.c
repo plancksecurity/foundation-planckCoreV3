@@ -241,6 +241,9 @@ str_to_fpr (const char *str, uint8_t *fpr, size_t *length)
     unsigned i,j;
 
     *length = 0;
+    
+    if (str == NULL)
+        return 0;
 
     while(*str && *length < PGP_FINGERPRINT_SIZE){
         while (*str == ' ') str++;
@@ -1055,18 +1058,18 @@ PEP_STATUS pgp_export_keydata(
     PEP_STATUS result;
     char *buffer;
     size_t buflen;
+    const pgp_keyring_t *srcring;
 
     assert(session);
     assert(fprstr);
     assert(key_data);
     assert(size);
 
-    // TODO : support export secret key
-    // crashing stub until export secret supported
-    assert(!secret);
     if (secret)
-        return PEP_ILLEGAL_VALUE;
-
+        srcring = netpgp.secring;
+    else
+        srcring = netpgp.pubring;
+    
     if (!session || !fprstr || !key_data || !size)
         return PEP_ILLEGAL_VALUE;
 
@@ -1077,7 +1080,7 @@ PEP_STATUS pgp_export_keydata(
     if (str_to_fpr(fprstr, fpr, &fprlen)) {
         unsigned from = 0;
 
-        if ((key = (pgp_key_t *)pgp_getkeybyfpr(netpgp.io, netpgp.pubring,
+        if ((key = (pgp_key_t *)pgp_getkeybyfpr(netpgp.io, srcring,
                                                 fpr, fprlen, &from,
                                                 NULL,0,0)) == NULL) {
             result = PEP_KEY_NOT_FOUND;
@@ -1213,7 +1216,7 @@ unlock_curl:
 
 typedef PEP_STATUS (*find_key_cb_t)(void*, pgp_key_t *);
 
-static PEP_STATUS find_keys_do(
+static PEP_STATUS find_keys_do(pgp_keyring_t* keyring,
         const char *pattern, find_key_cb_t cb, void* cb_arg)
 {
     uint8_t fpr[PGP_FINGERPRINT_SIZE];
@@ -1230,7 +1233,7 @@ static PEP_STATUS find_keys_do(
         // Only one fingerprint can match
         if ((key = (pgp_key_t *)pgp_getkeybyfpr(
                         netpgp.io,
-                        (pgp_keyring_t *)netpgp.pubring,
+                        keyring,
                         (const uint8_t *)fpr, length,
                         &from,
                         NULL, 0, 0)) == NULL) {
@@ -1246,7 +1249,7 @@ static PEP_STATUS find_keys_do(
         result = PEP_KEY_NOT_FOUND;
         while((key = (pgp_key_t *)pgp_getnextkeybyname(
                         netpgp.io,
-                        (pgp_keyring_t *)netpgp.pubring,
+                        keyring,
 			            (const char *)pattern,
                         &from)) != NULL) {
 
@@ -1365,7 +1368,8 @@ PEP_STATUS pgp_find_keys(
     }
     _k = _keylist;
 
-    result = find_keys_do(pattern, &add_key_fpr_to_stringlist, &_k);
+    result = find_keys_do((pgp_keyring_t *)netpgp.pubring,
+                          pattern, &add_key_fpr_to_stringlist, &_k);
 
     if (result == PEP_STATUS_OK) {
         *keylist = _keylist;
@@ -1453,7 +1457,8 @@ PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
         goto free_encoded_keys;
     }
 
-    result = find_keys_do(pattern, &send_key_cb, (void*)encoded_keys);
+    result = find_keys_do((pgp_keyring_t *)netpgp.pubring,
+                          pattern, &send_key_cb, (void*)encoded_keys);
 
     pthread_mutex_unlock(&netpgp_mutex);
 
@@ -1873,7 +1878,8 @@ PEP_STATUS pgp_list_keyinfo(
 
     PEP_STATUS result;
 
-    result = find_keys_do(pattern, &add_keyinfo_to_stringpair_list, (void*)keyinfo_list);
+    result = find_keys_do((pgp_keyring_t *)netpgp.pubring,
+                          pattern, &add_keyinfo_to_stringpair_list, (void*)keyinfo_list);
 
     if (!keyinfo_list)
         result = PEP_KEY_NOT_FOUND;
@@ -1892,10 +1898,9 @@ PEP_STATUS pgp_find_private_keys(
     PEP_STATUS result;
 
     assert(session);
-    assert(pattern);
     assert(keylist);
 
-    if (!session || !pattern || !keylist )
+    if (!session || !keylist )
     {
         return PEP_ILLEGAL_VALUE;
     }
@@ -1913,7 +1918,8 @@ PEP_STATUS pgp_find_private_keys(
     }
     _k = _keylist;
 
-    result = find_keys_do(pattern, &add_secret_key_fpr_to_stringlist, &_k);
+    result = find_keys_do((pgp_keyring_t *)netpgp.secring,
+                          pattern, &add_secret_key_fpr_to_stringlist, &_k);
 
     if (result == PEP_STATUS_OK) {
         *keylist = _keylist;

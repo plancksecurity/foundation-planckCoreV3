@@ -100,6 +100,7 @@ struct _pEpSession {
     sqlite3_stmt *log;
     sqlite3_stmt *trustword;
     sqlite3_stmt *get_identity;
+    sqlite3_stmt *replace_identities_fpr;
     sqlite3_stmt *set_person;
     sqlite3_stmt *set_device_group;
     sqlite3_stmt *get_device_group;
@@ -108,6 +109,7 @@ struct _pEpSession {
     sqlite3_stmt *set_identity_flags;
     sqlite3_stmt *unset_identity_flags;
     sqlite3_stmt *set_trust;
+    sqlite3_stmt *update_trust_for_fpr;
     sqlite3_stmt *get_trust;
     sqlite3_stmt *least_trust;
     sqlite3_stmt *mark_compromized;
@@ -159,10 +161,14 @@ struct _pEpSession {
 
     bool passive_mode;
     bool unencrypted_subject;
-    bool use_only_own_private_keys;
     bool keep_sync_msg;
+    bool service_log;
     
+#ifdef DEBUG_ERRORSTACK
+    stringlist_t* errorstack;
+#endif
 };
+
 
 PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
 void release_transport_system(PEP_SESSION session, bool out_last);
@@ -178,18 +184,120 @@ PEP_STATUS encrypt_only(
 #else
 #ifdef ANDROID
 #include <android/log.h>
-#define  LOG_MORE(...)  __android_log_print(ANDROID_LOG_DEBUG, "pEpEngine", " %s :: %s :: %s ", __VA_ARGS__);
+#define  LOG_MORE(...)  __android_log_print(ANDROID_LOG_DEBUG, "pEpEngine", " %s :: %s :: %s :: %s ", __VA_ARGS__);
 #else
 #include <stdio.h>
-#define  LOG_MORE(...)  printf("pEpEngine DEBUG_LOG('%s','%s','%s')\n", __VA_ARGS__);
+#define  LOG_MORE(...)  fprintf(stderr, "pEpEngine DEBUG_LOG('%s','%s','%s','%s')\n", __VA_ARGS__);
 #endif
 #define DEBUG_LOG(TITLE, ENTITY, DESC) {\
-    log_event(session, (TITLE), (ENTITY), (DESC), "debug");\
-    LOG_MORE((TITLE), (ENTITY), (DESC))\
+    log_event(session, (TITLE), (ENTITY), (DESC), "debug " __FILE__ ":" S_LINE);\
+    LOG_MORE((TITLE), (ENTITY), (DESC), __FILE__ ":" S_LINE)\
 }
 #endif
 
+typedef enum _normalize_hex_rest_t {
+    accept_hex,
+    ignore_hex,
+    reject_hex
+} normalize_hex_res_t;
+
+static inline normalize_hex_res_t _normalize_hex(char *hex) 
+{
+    if (*hex >= '0' && *hex <= '9')
+        return accept_hex;
+
+    if (*hex >= 'A' && *hex <= 'F') {
+        *hex += 'a' - 'A';
+        return accept_hex;
+    }
+
+    if (*hex >= 'a' && *hex <= 'f') 
+        return accept_hex;
+
+    if (*hex == ' ') 
+        return ignore_hex;
+
+    return reject_hex;
+}
+
 // Space tolerant and case insensitive fingerprint string compare
+static inline PEP_STATUS _compare_fprs(
+        const char* fpra,
+        size_t fpras,
+        const char* fprb,
+        size_t fprbs,
+        int* comparison)
+{
+
+    size_t ai = 0;
+    size_t bi = 0;
+    size_t significant = 0;
+    int _comparison = 0;
+    const int _FULL_FINGERPRINT_LENGTH = 40;
+   
+    // First compare every non-ignored chars until an end is reached
+    while(ai < fpras && bi < fprbs)
+    {
+        char fprac = fpra[ai];
+        char fprbc = fprb[bi];
+        normalize_hex_res_t fprah = _normalize_hex(&fprac);
+        normalize_hex_res_t fprbh = _normalize_hex(&fprbc);
+
+        if(fprah == reject_hex || fprbh == reject_hex)
+            return PEP_ILLEGAL_VALUE;
+
+        if ( fprah == ignore_hex )
+        {
+            ai++;
+        }
+        else if ( fprbh == ignore_hex )
+        {
+            bi++;
+        }
+        else
+        {
+            if(fprac != fprbc && _comparison == 0 )
+            {
+                _comparison = fprac > fprbc ? 1 : -1;
+            }
+
+            significant++;
+            ai++;
+            bi++;
+
+        } 
+    }
+
+    // Bail out if we didn't got enough significnt chars
+    if (significant != _FULL_FINGERPRINT_LENGTH )
+        return PEP_TRUSTWORDS_FPR_WRONG_LENGTH;
+
+    // Then purge remaining chars, all must be ignored chars
+    while ( ai < fpras )
+    {
+        char fprac = fpra[ai];
+        normalize_hex_res_t fprah = _normalize_hex(&fprac);
+        if( fprah == reject_hex )
+            return PEP_ILLEGAL_VALUE;
+        if ( fprah != ignore_hex )
+            return PEP_TRUSTWORDS_FPR_WRONG_LENGTH;
+        ai++;
+    }
+    while ( bi < fprbs )
+    {
+        char fprbc = fprb[bi];
+        normalize_hex_res_t fprbh = _normalize_hex(&fprbc);
+        if( fprbh == reject_hex )
+            return PEP_ILLEGAL_VALUE;
+        if ( fprbh != ignore_hex )
+            return PEP_TRUSTWORDS_FPR_WRONG_LENGTH;
+        bi++;
+    }
+
+    *comparison = _comparison;
+    return PEP_STATUS_OK;
+}
+
 static inline int _same_fpr(
         const char* fpra,
         size_t fpras,
@@ -197,35 +305,20 @@ static inline int _same_fpr(
         size_t fprbs
     )
 {
-    size_t ai = 0;
-    size_t bi = 0;
-    
-    do
-    {
-        if(fpra[ai] == 0 || fprb[bi] == 0)
-        {
-            return 0;
-        }
-        else if(fpra[ai] == ' ')
-        {
-            ai++;
-        }
-        else if(fprb[bi] == ' ')
-        {
-            bi++;
-        }
-        else if(toupper(fpra[ai]) == toupper(fprb[bi]))
-        {
-            ai++;
-            bi++;
-        }
-        else
-        {
-            return 0;
-        }
-        
-    }
-    while(ai < fpras && bi < fprbs);
-    
-    return ai == fpras && bi == fprbs;
+    // illegal values are ignored, and considered not same.
+    int comparison = 1;
+
+    _compare_fprs(fpra, fpras, fprb, fprbs, &comparison);
+
+    return comparison == 0;
 }
+
+
+#ifdef DEBUG_ERRORSTACK
+    PEP_STATUS session_add_error(PEP_SESSION session, const char* file, unsigned line, PEP_STATUS status);
+    #define ERROR(status)   session_add_error(session, __FILE__, __LINE__, (status))
+    #define GOTO(label)     do{ (void)session_add_error(session, __FILE__, __LINE__, status); goto label; }while(0)
+#else
+    #define ERROR(status)   (status)
+    #define GOTO(label)     goto label
+#endif

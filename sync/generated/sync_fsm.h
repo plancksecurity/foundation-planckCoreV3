@@ -32,6 +32,7 @@ typedef enum _fsm_error {
 int deviceGrouped(PEP_SESSION session);
 int keyElectionWon(PEP_SESSION session, Identity partner);
 int sameIdentities(PEP_SESSION session, Identity a, Identity b);
+int sameKeyAndAddress(PEP_SESSION session, Identity a, Identity b);
 
 // states
 
@@ -46,11 +47,13 @@ typedef enum _DeviceState_state {
     DeviceState_state_NONE = 0,
     InitState, 
     Sole, 
+    SoleWaiting, 
     SoleBeaconed, 
     HandshakingSole, 
     WaitForGroupKeysSole, 
     WaitForAcceptSole, 
     Grouped, 
+    GroupWaiting, 
     GroupedBeaconed, 
     HandshakingGrouped, 
     WaitForGroupKeysGrouped, 

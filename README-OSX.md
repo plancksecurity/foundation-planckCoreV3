@@ -23,7 +23,7 @@ export PATH="/opt/local/bin:/opt/local/sbin:$PATH"
 Install dependencies packaged with MacPorts as follows.
 
 ```
-sudo port install mercurial py27-lxml gpgme automake asn1c zlib openssl libiconv cyrus-sasl2
+sudo port install mercurial py27-lxml gpgme autoconf automake libtool asn1c zlib openssl libiconv cyrus-sasl2
 ```
 
 Make sure that `python` is a version 2 one:
@@ -124,6 +124,7 @@ Since the `system.db` rarely changes, the last step is not needed for every buil
 If you installed the test keys in your keyring (see: README.txt), this should just work:
 
 ```
+cd test
 make test
 ```
 

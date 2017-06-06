@@ -159,7 +159,6 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
         pEp_identity *ident
     );
 
-
 // own_key_is_listed() - returns true id key is listed as own key
 //
 //  parameters:
@@ -235,7 +234,12 @@ DYNAMIC_API PEP_STATUS own_keys_retrieve(
         stringlist_t **keylist
       );
 
+DYNAMIC_API PEP_STATUS set_own_key(
+       PEP_SESSION session,
+       const char *address,
+       const char *fpr
+    );
+
 #ifdef __cplusplus
 }
 #endif
-

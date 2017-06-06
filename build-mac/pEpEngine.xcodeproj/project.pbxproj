@@ -190,6 +190,7 @@
 
 /* Begin PBXFileReference section */
 		430D258A1C9ED75A00B94535 /* blacklist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = blacklist.c; path = ../src/blacklist.c; sourceTree = "<group>"; };
+		4346F86A1ECB38E700381CBE /* sync_app.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = sync_app.h; path = ../src/sync_app.h; sourceTree = "<group>"; };
 		4354FF641D6EDF300033069C /* sync_impl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_impl.c; path = ../src/sync_impl.c; sourceTree = "<group>"; };
 		4354FF681D6EE1A70033069C /* NULL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NULL.c; path = ../asn.1/NULL.c; sourceTree = "<group>"; };
 		43BA0F451D7964750059172F /* asn1_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = asn1_helper.c; path = ../src/asn1_helper.c; sourceTree = "<group>"; };
@@ -292,7 +293,7 @@
 		646C414C1D510D8800C63EFF /* baseprotocol.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = baseprotocol.c; path = ../src/baseprotocol.c; sourceTree = "<group>"; };
 		646C414D1D510D8800C63EFF /* baseprotocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = baseprotocol.h; path = ../src/baseprotocol.h; sourceTree = "<group>"; };
 		64796A3F1B455AA5004B1C24 /* libpEpEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		64951A1B1BE0FCD800B10E71 /* system.db */ = {isa = PBXFileReference; lastKnownFileType = file; name = system.db; path = ../db/system.db; sourceTree = "<group>"; };
+		64951A1B1BE0FCD800B10E71 /* system.db */ = {isa = PBXFileReference; lastKnownFileType = text; name = system.db; path = ../db/system.db; sourceTree = "<group>"; };
 		649DE08A1B45C19100912F72 /* libcurl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcurl.a; sourceTree = "<group>"; };
 		64A8264C1B455D0800EECAF0 /* bloblist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bloblist.c; path = ../src/bloblist.c; sourceTree = "<group>"; };
 		64A8264D1B455D0800EECAF0 /* bloblist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bloblist.h; path = ../src/bloblist.h; sourceTree = "<group>"; };
@@ -517,6 +518,7 @@
 				646C41421D510D2C00C63EFF /* sync_send_actions.c */,
 				646C41431D510D2C00C63EFF /* sync.c */,
 				646C41441D510D2C00C63EFF /* sync.h */,
+				4346F86A1ECB38E700381CBE /* sync_app.h */,
 				646788871CEB3D120001F54C /* map_asn1.c */,
 				646788881CEB3D120001F54C /* map_asn1.h */,
 				430D258A1C9ED75A00B94535 /* blacklist.c */,
@@ -779,7 +781,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "mkdir -p \"$BUILT_PRODUCTS_DIR/include\"\n\ncp \"$SRCROOT/../src/\"{\\\npEpEngine.h,\\\ncryptotech.h,\\\nkeymanagement.h,\\\nmessage_api.h,\\\ndynamic_api.h,\\\nstringlist.h,\\\ntimestamp.h,\\\nidentity_list.h,\\\nbloblist.h,\\\nstringpair.h,\\\nmessage.h,\\\nmime.h} \"$BUILT_PRODUCTS_DIR/include\"\n\nbash -l -c \"make -C ../asn.1 generate\"\nbash -l -c \"make -C ../asn.1\"\nbash -l -c \"LC_ALL=en_US.UTF-8 YML_PATH=$HOME/yml2 make -C ../sync\"\n";
+			shellScript = "mkdir -p \"$BUILT_PRODUCTS_DIR/include\"\n\ncp \"$SRCROOT/../src/\"{\\\npEpEngine.h,\\\ncryptotech.h,\\\nkeymanagement.h,\\\nmessage_api.h,\\\ndynamic_api.h,\\\nstringlist.h,\\\ntimestamp.h,\\\nidentity_list.h,\\\nbloblist.h,\\\nstringpair.h,\\\nmessage.h,\\\nmime.h,\\\nsync_fsm.h,\\\nsync.h,\\\nsync_app.h} \"$BUILT_PRODUCTS_DIR/include\"\n\nbash -l -c \"make -C ../asn.1 generate\"\nbash -l -c \"make -C ../asn.1\"\nbash -l -c \"LC_ALL=en_US.UTF-8 YML_PATH=$HOME/yml2 make -C ../sync\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -947,7 +949,7 @@
 					"$(SRCROOT)",
 					"$(SRCROOT)/../../netpgp-et/include/",
 					"$(SRCROOT)/../../netpgp-et/src/",
-					"$(SRCROOT)/../../netpgp-et/netpgp-xcode/openssl/include/",
+					"$(SRCROOT)/../../OpenSSL-for-iPhone/include",
 					"$(SRCROOT)/../asn.1/",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
@@ -994,7 +996,7 @@
 					"$(SRCROOT)",
 					"$(SRCROOT)/../../netpgp-et/include/",
 					"$(SRCROOT)/../../netpgp-et/src/",
-					"$(SRCROOT)/../../netpgp-et/netpgp-xcode/openssl/include/",
+					"$(SRCROOT)/../../OpenSSL-for-iPhone/include",
 					"$(SRCROOT)/../asn.1/",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
