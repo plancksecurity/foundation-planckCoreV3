@@ -843,6 +843,12 @@ DYNAMIC_API void config_keep_sync_msg(PEP_SESSION session, bool enable)
     session->keep_sync_msg = enable;
 }
 
+DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable)
+{
+    assert(session);
+    session->service_log = enable;
+}
+
 DYNAMIC_API PEP_STATUS log_event(
         PEP_SESSION session,
         const char *title,
@@ -881,6 +887,24 @@ DYNAMIC_API PEP_STATUS log_event(
     sqlite3_reset(session->log);
 
     return ERROR(status);
+}
+
+DYNAMIC_API PEP_STATUS log_service(
+        PEP_SESSION session,
+        const char *title,
+        const char *entity,
+        const char *description,
+        const char *comment
+    )
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    if (session->service_log)
+        return log_event(session, title, entity, description, comment);
+    else
+        return PEP_STATUS_OK;
 }
 
 DYNAMIC_API PEP_STATUS trustword(
@@ -1283,8 +1307,6 @@ PEP_STATUS replace_identities_fpr(PEP_SESSION session,
                                  const char* old_fpr, 
                                  const char* new_fpr) 
 {
-    PEP_STATUS status = PEP_STATUS_OK;
-    
     assert(old_fpr);
     assert(new_fpr);
     
