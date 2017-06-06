@@ -2767,11 +2767,6 @@ DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
     if (status == PEP_STATUS_OK)
         *rating = _rating;
     
-    return ERROR(status);
-
-enomem:
-    status = PEP_OUT_OF_MEMORY;
-
 pep_error:
     if (must_free_keylist)
         free_stringlist(_keylist);
