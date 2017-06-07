@@ -1360,7 +1360,7 @@ static PEP_STATUS interpret_MIME(
                 if (content_id) {
                     size_t index = 0;
                     r = mailmime_encoded_phrase_parse("utf-8", content_id,
-                            strlen(filename), &index, "utf-8", &_content_id);
+                            strlen(content_id), &index, "utf-8", &_content_id);
                     if (r)
                         goto enomem;                    
                 }
