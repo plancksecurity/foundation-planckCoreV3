@@ -150,7 +150,7 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
         if (content_id) {
             bloblist->content_id = strdup(content_id);
             if (bloblist->content_id == NULL) {
-                free(bloblist->content_id)
+                free(bloblist->content_id);
                 free(bloblist->mime_type);
                 free(bloblist);
                 return NULL;

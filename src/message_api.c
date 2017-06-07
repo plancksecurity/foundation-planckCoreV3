@@ -1820,7 +1820,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 bloblist_t *_s;
                 for (_s = src->attachments; _s; _s = _s->next) {
                     if (_s->value == NULL && _s->size == 0){
-                        _m = bloblist_add(_m, NULL, 0, _s->mime_type, _s->filename
+                        _m = bloblist_add(_m, NULL, 0, _s->mime_type, _s->filename,
                                           _s->content_id);
                         if (_m == NULL)
                             goto enomem;

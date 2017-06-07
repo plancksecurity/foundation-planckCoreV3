@@ -112,7 +112,7 @@ int main() {
         assert(p->value != dup_p->value);
         assert(p->mime_type != dup_p->mime_type || !(p->mime_type || dup_p->mime_type));
         assert(p->filename != dup_p->filename || !(p->filename || dup_p->filename));
-        assert(p->content_id != bl_arr[i]->content_id || !(p->content_id || bl_arr[i]->content_id));
+        assert(p->content_id != dup_p->content_id || !(p->content_id || dup_p->content_id));
 
         dup_p = dup_p->next;
         p = p->next;
@@ -134,4 +134,3 @@ int main() {
     
     return 0;
 }
-

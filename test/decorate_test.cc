@@ -36,7 +36,7 @@ int main() {
     outgoing_message->from = alice;
     outgoing_message->to = to_list;
     outgoing_message->shortmsg = strdup("Greetings, humans!");
-    outgoing_message->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
+    outgoing_message->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL, NULL);
     outgoing_message->longmsg = strdup("This is a dumb message.\nBut it's done.\n");
     assert(outgoing_message->longmsg);
     cout << "message created.\n";
