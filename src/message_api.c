@@ -1594,6 +1594,52 @@ free:
     return status;
 }
 
+PEP_STATUS amend_rating_according_to_sender_and_recipients(
+    PEP_SESSION session,
+    PEP_rating *rating,
+    pEp_identity *sender,
+    stringlist_t *recipients) {
+    
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    if (*rating > PEP_rating_mistrust) {
+        PEP_rating kl_rating = PEP_rating_undefined;
+
+        if (recipients)
+            kl_rating = keylist_rating(session, recipients);
+
+        if (kl_rating <= PEP_rating_mistrust) {
+            *rating = kl_rating;
+        }
+        else if (*rating >= PEP_rating_reliable &&
+                 kl_rating < PEP_rating_reliable) {
+            *rating = PEP_rating_unreliable;
+        }
+        else if (*rating >= PEP_rating_reliable &&
+                 kl_rating >= PEP_rating_reliable) {
+            if (!(sender && sender->user_id && sender->user_id[0])) {
+                *rating = PEP_rating_unreliable;
+            }
+            else {
+                char *fpr = recipients->value;
+                pEp_identity *_sender = new_identity(sender->address, fpr,
+                                                   sender->user_id, sender->username);
+                if (_sender == NULL)
+                    return PEP_OUT_OF_MEMORY;
+                status = get_trust(session, _sender);
+                if (_sender->comm_type != PEP_ct_unknown) {
+                    *rating = worst_rating(_rating(_sender->comm_type, PEP_rating_undefined),
+                              kl_rating);
+                }
+                free_identity(_sender);
+                if (status == PEP_CANNOT_FIND_IDENTITY)
+                   status = PEP_STATUS_OK;
+            }
+        }
+    }
+    return status;
+}
+
 
 DYNAMIC_API PEP_STATUS _decrypt_message(
         PEP_SESSION session,
@@ -1987,45 +2033,13 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
         *rating = decrypt_rating(decrypt_status);
 
-        if (*rating > PEP_rating_mistrust) {
-            PEP_rating kl_rating = PEP_rating_undefined;
+        status = amend_rating_according_to_sender_and_recipients(session,
+                                                                 rating,
+                                                                 src->from,
+                                                                 _keylist);
 
-            if (_keylist)
-                kl_rating = keylist_rating(session, _keylist);
-
-            if (kl_rating <= PEP_rating_mistrust) {
-                *rating = kl_rating;
-            }
-            else if (*rating >= PEP_rating_reliable &&
-                     kl_rating < PEP_rating_reliable) {
-                *rating = PEP_rating_unreliable;
-            }
-            else if (*rating >= PEP_rating_reliable &&
-                     kl_rating >= PEP_rating_reliable) {
-                if (!(src->from && src->from->user_id && src->from->user_id[0])) {
-                    *rating = PEP_rating_unreliable;
-                }
-                else {
-                    char *fpr = _keylist->value;
-                    pEp_identity *_from = new_identity(src->from->address, fpr,
-                                                       src->from->user_id, src->from->username);
-                    if (_from == NULL)
-                        goto enomem;
-                    status = get_trust(session, _from);
-                    if (_from->comm_type != PEP_ct_unknown) {
-                        *rating = worst_rating(_rating(_from->comm_type, PEP_rating_undefined),
-                                  kl_rating);
-                    }
-                    free_identity(_from);
-                    if (status == PEP_CANNOT_FIND_IDENTITY)
-                       status = PEP_STATUS_OK;
-                    if (status != PEP_STATUS_OK)
-                    {
-                        GOTO(pep_error);
-                    }
-                }
-            }
-        }
+        if (status != PEP_STATUS_OK)
+            GOTO(pep_error);
     }
     else
     {
@@ -2626,6 +2640,141 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message_for_self(
 pep_error:
     free_message(tmp_msg);
     free_message(enc_msg);
+
+    return ERROR(status);
+}
+
+static PEP_rating string_to_rating(const char * rating)
+{
+    if (rating == NULL)
+        return PEP_rating_undefined;
+    if (strcmp(rating, "cannot_decrypt") == 0)
+        return PEP_rating_cannot_decrypt;
+    if (strcmp(rating, "have_no_key") == 0)
+        return PEP_rating_have_no_key;
+    if (strcmp(rating, "unencrypted") == 0)
+        return PEP_rating_unencrypted;
+    if (strcmp(rating, "unencrypted_for_some") == 0)
+        return PEP_rating_unencrypted_for_some;
+    if (strcmp(rating, "unreliable") == 0)
+        return PEP_rating_unreliable;
+    if (strcmp(rating, "reliable") == 0)
+        return PEP_rating_reliable;
+    if (strcmp(rating, "trusted") == 0)
+        return PEP_rating_trusted;
+    if (strcmp(rating, "trusted_and_anonymized") == 0)
+        return PEP_rating_trusted_and_anonymized;
+    if (strcmp(rating, "fully_anonymous") == 0)
+        return PEP_rating_fully_anonymous;
+    if (strcmp(rating, "mistrust") == 0)
+        return PEP_rating_mistrust;
+    if (strcmp(rating, "b0rken") == 0)
+        return PEP_rating_b0rken;
+    if (strcmp(rating, "under_attack") == 0)
+        return PEP_rating_under_attack;
+    return PEP_rating_undefined;
+}
+
+static PEP_STATUS string_to_keylist(const char * skeylist, stringlist_t **keylist)
+{
+    if (skeylist == NULL || keylist == NULL)
+        return PEP_ILLEGAL_VALUE;
+
+    stringlist_t *rkeylist = NULL;
+    stringlist_t *_kcurr = NULL;
+    const char * fpr_begin = skeylist;
+    const char * fpr_end = NULL;
+
+    do {
+        fpr_end = strstr(fpr_begin, ",");
+        
+        char * fpr = strndup(
+            fpr_begin,
+            (fpr_end == NULL) ? strlen(fpr_begin) : fpr_end - fpr_begin);
+        
+        if (fpr == NULL)
+            goto enomem;
+        
+        _kcurr = stringlist_add(_kcurr, fpr);
+        if (_kcurr == NULL) {
+            free(fpr);
+            goto enomem;
+        }
+        
+        if (rkeylist == NULL)
+            rkeylist = _kcurr;
+        
+        fpr_begin = fpr_end ? fpr_end + 1 : NULL;
+        
+    } while (fpr_begin);
+    
+    *keylist = rkeylist;
+    return PEP_STATUS_OK;
+    
+enomem:
+    free_stringlist(rkeylist);
+    return PEP_OUT_OF_MEMORY;
+}
+
+DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
+    PEP_SESSION session,
+    message *msg,
+    stringlist_t *x_keylist,
+    PEP_rating x_enc_status,
+    PEP_rating *rating
+)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    stringlist_t *_keylist = x_keylist;
+    bool must_free_keylist = false;
+
+    assert(session);
+    assert(msg);
+    assert(rating);
+
+    if (!(session && msg && rating))
+        return ERROR(PEP_ILLEGAL_VALUE);
+
+    *rating = PEP_rating_undefined;
+
+    if (x_enc_status == PEP_rating_undefined){
+        for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
+            if (strcasecmp(i->value->key, "X-EncStatus") == 0){
+                x_enc_status = string_to_rating(i->value->value);
+                break;
+            }
+        }
+    }
+    if (x_enc_status == PEP_rating_undefined)
+        return ERROR(PEP_ILLEGAL_VALUE);
+
+
+    if (_keylist == NULL){
+        for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
+            if (strcasecmp(i->value->key, "X-KeyList") == 0){
+                status = string_to_keylist(i->value->value, &_keylist);
+                if (status != PEP_STATUS_OK)
+                    GOTO(pep_error);
+                must_free_keylist = true;
+                break;
+            }
+        }
+    }
+    if (_keylist == NULL)
+        return ERROR(PEP_ILLEGAL_VALUE);
+
+    PEP_rating _rating = x_enc_status;
+
+    status = amend_rating_according_to_sender_and_recipients(session,
+                                                             &_rating,
+                                                             msg->from,
+                                                             _keylist);
+    if (status == PEP_STATUS_OK)
+        *rating = _rating;
+    
+pep_error:
+    if (must_free_keylist)
+        free_stringlist(_keylist);
 
     return ERROR(status);
 }
