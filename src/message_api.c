@@ -2761,6 +2761,10 @@ got_rating:
     }
 got_keylist:
 
+    status = update_identity(session, msg->from);
+    if (status != PEP_STATUS_OK)
+        GOTO(pep_error);
+
     status = amend_rating_according_to_sender_and_recipients(session,
                                                              &_rating,
                                                              msg->from,
