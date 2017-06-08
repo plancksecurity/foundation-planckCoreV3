@@ -2094,7 +2094,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     *dst = msg;
     *keylist = _keylist;
 
-    return ERROR(status);
+    return PEP_STATUS_OK;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
@@ -2727,6 +2727,7 @@ DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
     PEP_STATUS status = PEP_STATUS_OK;
     stringlist_t *_keylist = x_keylist;
     bool must_free_keylist = false;
+    PEP_rating _rating;
 
     assert(session);
     assert(msg);
@@ -2741,13 +2742,15 @@ DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
         for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
             if (strcasecmp(i->value->key, "X-EncStatus") == 0){
                 x_enc_status = string_to_rating(i->value->value);
-                break;
+                goto got_rating;
             }
         }
-    }
-    if (x_enc_status == PEP_rating_undefined)
         return ERROR(PEP_ILLEGAL_VALUE);
+    }
 
+got_rating:
+
+    _rating = x_enc_status;
 
     if (_keylist == NULL){
         for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
@@ -2756,14 +2759,12 @@ DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
                 if (status != PEP_STATUS_OK)
                     GOTO(pep_error);
                 must_free_keylist = true;
-                break;
+                goto got_keylist;
             }
         }
-    }
-    if (_keylist == NULL)
         return ERROR(PEP_ILLEGAL_VALUE);
-
-    PEP_rating _rating = x_enc_status;
+    }
+got_keylist:
 
     status = amend_rating_according_to_sender_and_recipients(session,
                                                              &_rating,
