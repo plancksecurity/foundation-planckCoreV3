@@ -43,7 +43,8 @@ int main(int argc, char** argv) {
     const string mailtext = slurp(mailfile);
     cout << "\t All files read successfully." << std::endl;
 
-    pEp_identity * me1 = new_identity("pep.color.test.P@kgrothoff.org", NULL, 
+    pEp_identity * me1 = new_identity("pep.color.test.P@kgrothoff.org", 
+                                      "7EE6C60C68851954E1797F81EA59715E3EBE215C", 
                                       PEP_OWN_USERID, "Pep Color Test P (recip)");
     me1->me = true;
     PEP_STATUS status = update_identity(session, me1);
