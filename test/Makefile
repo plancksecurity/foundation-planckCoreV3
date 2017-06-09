@@ -50,7 +50,6 @@ TEST_CMD_PFX = $(LIBPATH)=$(HOME)/lib:../src HOME=$(TEST_HOME)
 test_home_skel:
 	mkdir -p test_home_skel
 	-cat 0x*.asc *_sec.asc | gpg2 --import --homedir $(TEST_GNUPGHOME_SKEL)
-	$(TEST_CMD_CLEAN)
 
 test_home_: test_home_skel
 	rm -rf test_home
