@@ -33,11 +33,9 @@ int main(int argc, char** argv) {
     PEP_STATUS statuskey3 = import_key(session, keytextkey3.c_str(), keytextkey3.length(), NULL);
         
     const string mailtext = slurp(mailfile);
-    pEp_identity * me = new_identity("pep.test.recip@kgrothoff.org", NULL, PEP_OWN_USERID, "pEp Test Recipient");    
+    pEp_identity * me = new_identity("pep.test.recip@kgrothoff.org", "93D19F24AD6F4C4BA9134AAF84D9217908DB0AEE", PEP_OWN_USERID, "pEp Test Recipient");    
     me->me = true;    
-    PEP_STATUS status = update_identity(session, me);
-    trust_personal_key(session, me);    
-    status = update_identity(session, me);
+    PEP_STATUS status = myself(session, me);
     
     pEp_identity * you = new_identity("pep.test.apple@pep-project.org", NULL, "TOFU_pep.test.apple@pep-project.org", "pEp Test Recipient");    
     you->me = false;    
