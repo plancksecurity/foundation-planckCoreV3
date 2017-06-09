@@ -2,9 +2,9 @@
 # This file is under GNU General Public License 3.0
 # see LICENSE.txt
 
-include ../Makefile.conf
+HERE := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
-export GNUPGHOME=.
+include ../Makefile.conf
 
 CC?=g++ -std=gnu++11 -pthread
 CXX?=g++ -std=gnu++11 -pthread
@@ -34,32 +34,49 @@ all: $(TARGET) $(UNIT_TESTS)
 # don't delete .o files!
 .PRECIOUS: %.o
 
+unexport GNUPGHOME;
+TEST_HOME=$(HERE)/test_home
+TEST_HOME_SKEL=$(TEST_HOME)_skel
+TEST_GNUPGHOME_SKEL=$(TEST_HOME)_skel/.gnupg
+
+ifeq ($(shell uname), Darwin)
+    LIBPATH = DYLD_LIBRARY_PATH
+else
+    LIBPATH = LD_LIBRARY_PATH
+endif
+
+TEST_CMD_PFX = $(LIBPATH)=$(HOME)/lib:../src HOME=$(TEST_HOME)
+
+test_home_skel:
+	mkdir -p test_home_skel
+	-cat 0x*.asc *_sec.asc | gpg2 --import --homedir $(TEST_GNUPGHOME_SKEL)
+	$(TEST_CMD_CLEAN)
+
+test_home_: test_home_skel
+	rm -rf test_home
+	cp -a test_home_skel test_home
+
 clean:
 	rm -f *.o $(TARGET) *.a *~ $(UNIT_TESTS) pep_Dokument_Titel.pdf msg4.asc
-	rm -Rf *.dSYM .imported pubring.gpg secring.gpg random_seed *.conf trustdb.gpg
+	rm -Rf *.dSYM test_home test_home_skel pubring.gpg secring.gpg random_seed *.conf trustdb.gpg
 
-.imported:
-	-cat 0x*.asc *_sec.asc | gpg2 --import
-	touch .imported
-
-test: pEpEngineTest .imported
-	LD_LIBRARY_PATH=~/lib:../src ./pEpEngineTest
+test: pEpEngineTest test_home_
+	$(TEST_CMD_PFX) ./pEpEngineTest
 
 %_test : %_test.o test_util.o
 	 $(LD) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
-%_run : %
-	LD_LIBRARY_PATH=~/lib:../src ./$<
+%_run : % test_home_
+	$(TEST_CMD_PFX) ./$<
 
+%_lldb : % test_home_
+	$(TEST_CMD_PFX) lldb ./$<
 
-%_lldb : %
-	LD_LIBRARY_PATH=~/lib:../src lldb ./$<
+%_valgrind : % test_home_
+	$(TEST_CMD_PFX) valgrind --leak-check=yes ./$<
 
-%_valgrind : %
-	LD_LIBRARY_PATH=~/lib:../src valgrind --leak-check=yes ./$<
-
-%_gdb : %
-	LD_LIBRARY_PATH=~/lib:../src gdb ./$<
+%_gdb : % test_home_
+	$(TEST_CMD_PFX) gdb ./$<
 
 unit_tests: $(UNIT_TESTS) $(UNIT_TESTS_RUN)
 
