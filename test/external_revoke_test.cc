@@ -41,10 +41,8 @@ int main() {
 
     // Create sender ID
     
-    pEp_identity * me = new_identity("pep.test.fenris@thisstilldoesntwork.lu", NULL, PEP_OWN_USERID, "Fenris Hawke");
-    status = update_identity(session, me);
-    status = trust_personal_key(session, me);
-    status = update_identity(session, me);
+    pEp_identity * me = new_identity("pep.test.fenris@thisstilldoesntwork.lu", "0969FA229DF21C832A64A04711B1B9804F3D2900", PEP_OWN_USERID, "Fenris Hawke");
+    status = myself(session, me);
     
     // Create key
 
