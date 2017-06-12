@@ -41,8 +41,10 @@ TEST_GNUPGHOME_SKEL=$(TEST_HOME)_skel/.gnupg
 
 ifeq ($(shell uname), Darwin)
     LIBPATH = DYLD_LIBRARY_PATH
+    LLDB_BIN = /Applications/Xcode.app/Contents/Developer/usr/bin/lldb
 else
     LIBPATH = LD_LIBRARY_PATH
+    LLDB_BIN = lldb
 endif
 
 TEST_CMD_PFX = $(LIBPATH)=$(HOME)/lib:../src HOME=$(TEST_HOME)
@@ -69,7 +71,7 @@ test: pEpEngineTest test_home_
 	$(TEST_CMD_PFX) ./$<
 
 %_lldb : % test_home_
-	$(TEST_CMD_PFX) lldb ./$<
+	$(TEST_CMD_PFX) $(LLDB_BIN) ./$<
 
 %_valgrind : % test_home_
 	$(TEST_CMD_PFX) valgrind --leak-check=yes ./$<
