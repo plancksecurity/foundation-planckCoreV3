@@ -15,6 +15,11 @@ extern "C" {
 //      session (in)        session to use
 //      identity (inout)    identity information of communication partner
 //                          (identity->fpr is OUT ONLY)
+//  return value:
+//      PEP_STATUS_OK if identity could be updated,
+//      PEP_GET_KEY_FAILED for own identity that must be completed (myself())
+//      any other value on error
+//
 //  caveat:
 //      if this function returns PEP_ct_unknown or PEP_ct_key_expired in
 //      identity->comm_type, the caller must insert the identity into the
