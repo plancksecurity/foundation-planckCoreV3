@@ -1,0 +1,75 @@
+Return-Path: <pep.test.alice@pep-project.org>
+X-Original-To: krista@gnunet.org
+Delivered-To: krista@gnunet.org
+Received: from vmmailrelay1.informatik.tu-muenchen.de (mailrelay1.informatik.tu-muenchen.de [131.159.254.14])
+	by sam.net.in.tum.de (Postfix) with ESMTP id 140C01C00BC
+	for <krista@gnunet.org>; Mon, 12 Jun 2017 15:27:21 +0200 (CEST)
+Received: by vmmailrelay1.informatik.tu-muenchen.de (Postfix, from userid 109)
+	id DAE901C0390; Mon, 12 Jun 2017 15:27:21 +0200 (CEST)
+Received: from vmmailrelay1.informatik.tu-muenchen.de (localhost [127.0.0.1])
+	by vmmailrelay1.informatik.tu-muenchen.de (Postfix) with ESMTP id B86091C0383
+	for <krista@gnunet.org>; Mon, 12 Jun 2017 15:27:21 +0200 (CEST)
+Received: from vmmaildmz1.informatik.tu-muenchen.de (vmmaildmz1.informatik.tu-muenchen.de [131.159.0.87])
+	by vmmailrelay1.informatik.tu-muenchen.de (Postfix) with ESMTP id AE13F1C037A
+	for <krista@gnunet.org>; Mon, 12 Jun 2017 15:27:21 +0200 (CEST)
+Received: by vmmaildmz1.informatik.tu-muenchen.de (Postfix, from userid 109)
+	id AC51F1C2D9F; Mon, 12 Jun 2017 15:27:21 +0200 (CEST)
+X-Spam-Checker-Version: SpamAssassin 3.4.0-tuminfo_1 (2014-02-07) on
+	vmmaildmz1.informatik.tu-muenchen.de
+X-Spam-Level: 
+X-Spam-Status: No, score=-3.1 required=7.0 tests=AWL,BAYES_00,
+	RCVD_IN_DNSWL_LOW,RCVD_IN_MSPIKE_H3,RCVD_IN_MSPIKE_WL,TVD_RCVD_SPACE_BRACKET,
+	UNPARSEABLE_RELAY autolearn=no autolearn_force=no version=3.4.0-tuminfo_1
+Received: from vmmaildmz1.informatik.tu-muenchen.de (localhost [127.0.0.1])
+	by vmmaildmz1.informatik.tu-muenchen.de (Postfix) with ESMTP id 3B30C1C2D9E
+	for <krista@gnunet.org>; Mon, 12 Jun 2017 15:27:20 +0200 (CEST)
+Received: from mi4-p00-ob.smtp.rzone.de (mi4-p00-ob.smtp.rzone.de [81.169.146.148])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by vmmaildmz1.informatik.tu-muenchen.de (Postfix) with ESMTPS id 2AEF61C2D9B
+	for <krista@gnunet.org>; Mon, 12 Jun 2017 15:27:20 +0200 (CEST)
+X-RZG-FWD-BY: pep.test.recip@kgrothoff.org
+Received: from mailin.rzone.de ([unix socket])
+	by mailin.rzone.de (RZmta 40.9) with LMTPA;
+	Mon, 12 Jun 2017 15:27:00 +0200 (CEST)
+Authentication-Results: strato.com 1;
+	spf=none
+		smtp.mailfrom="pep.test.alice@pep-project.org";
+	dkim=none;
+	domainkeys=none;
+	dkim-adsp=none
+		header.from="pep.test.alice@pep-project.org"
+X-Strato-MessageType: email
+X-RZG-CLASS-ID: mi00
+Received-SPF: none
+	client-ip=131.159.0.8;
+	helo="mail-out1.informatik.tu-muenchen.de";
+	envelope-from="pep.test.alice@pep-project.org";
+	receiver=smtpin.rzone.de;
+	identity=mailfrom;
+Received: from mail-out1.informatik.tu-muenchen.de ([131.159.0.8])
+	by smtpin.rzone.de (RZmta 40.9 OK)
+	with ESMTPS id T01d0bt5CDR0XKI
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (curve secp521r1 with 521 ECDH bits, eq. 15360 bits RSA))
+	(Client did not present a certificate)
+	for <pep.test.recip@kgrothoff.org>;
+	Mon, 12 Jun 2017 15:27:00 +0200 (CEST)
+Received: from [192.168.178.22] (ip5f584089.dynamic.kabel-deutschland.de [95.88.64.137])
+	by services.sec.in.tum.de (Postfix) with ESMTPSA id 1DF211013AE47
+	for <pep.test.recip@kgrothoff.org>; Mon, 12 Jun 2017 15:26:55 +0200 (CEST)
+Reply-To: krista@pep-project.org
+To: pep.test.recip@kgrothoff.org
+From: pEp Test Alice <pep.test.alice@pep-project.org>
+Subject: pEp
+Organization: pEp
+Message-ID: <6205efbe-684d-9f21-8a2e-887d46a145e6@pep-project.org>
+Date: Mon, 12 Jun 2017 15:26:54 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
+ Thunderbird/45.8.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+Subject: Unencrypted try...
+
+La la la...

@@ -169,19 +169,22 @@ static int separate_short_and_long(const char *src, char **shortmsg, char **long
                     goto enomem;
             }
         }
+        *shortmsg = _shortmsg;
     }
     else {
-        _shortmsg = strdup("");
-        assert(_shortmsg);
-        if (_shortmsg == NULL)
-            goto enomem;
+        // If there's no "Subject: " and the shortmsg is
+        // pEp (or anything else), then we shouldn't be replacing it.
+        // Chances are that the message wasn't encrypted
+        // using pEp and that the actually subject IS pEp. In any event,
+        // erasing the subject line when we don't have one in the plaintext
+        // isn't the right behaviour.
+        // _shortmsg = strdup("");
         _longmsg = strdup(src);
         assert(_longmsg);
         if (_longmsg == NULL)
             goto enomem;
     }
-
-    *shortmsg = _shortmsg;
+    
     *longmsg = _longmsg;
 
     return 0;
@@ -1954,8 +1957,23 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
                     int r = separate_short_and_long(msg->longmsg, &shortmsg,
                             &longmsg);
+                    
                     if (r == -1)
                         goto enomem;
+
+                    if (shortmsg == NULL) {
+                        if (src->shortmsg == NULL)
+                            shortmsg = strdup("");
+                        else {
+                            // FIXME: is msg->shortmsg always a copy of
+                            // src->shortmsg already?
+                            // if so, we need to change the logic so
+                            // that in this case, we don't free msg->shortmsg
+                            // and do this strdup, etc.
+                            shortmsg = strdup(src->shortmsg);
+                        }
+                    }
+
 
                     free(msg->shortmsg);
                     free(msg->longmsg);
