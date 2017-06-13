@@ -53,6 +53,39 @@ DYNAMIC_API stringlist_t *stringlist_dup(const stringlist_t *src)
     return dst;
 }
 
+static bool _stringlist_add_first(
+        stringlist_t *stringlist,
+        stringlist_t **result,
+        const char *value
+    )
+{  
+    // empty list (no nodes)
+    if (stringlist == NULL) {
+        *result = new_stringlist(value);
+        return true;
+    }
+
+    // empty list (one node, no value)
+    if (stringlist->value == NULL) {
+        if (stringlist->next) {
+            *result = NULL; // invalid list
+            return true;
+        } 
+            
+        stringlist->value = strdup(value);
+        assert(stringlist->value);
+        
+        if (stringlist->value == NULL) {
+            *result = NULL;
+            return true;
+        }
+        
+        *result = stringlist;
+        return true;
+    }
+    return false;
+}
+
 DYNAMIC_API stringlist_t *stringlist_add(
         stringlist_t *stringlist,
         const char *value
@@ -62,23 +95,9 @@ DYNAMIC_API stringlist_t *stringlist_add(
     if (value == NULL)
         return NULL;
 
-    // empty list (no nodes)
-    if (stringlist == NULL)
-        return new_stringlist(value);
-
-    // empty list (one node, no value)
-    if (stringlist->value == NULL) {
-        if (stringlist->next) 
-            return NULL; // invalid list
-            
-        stringlist->value = strdup(value);
-        assert(stringlist->value);
-        
-        if (stringlist->value == NULL)
-            return NULL;
-        
-        return stringlist;
-    }
+    stringlist_t *result = NULL;
+    if(_stringlist_add_first(stringlist, &result, value))
+        return result;
     
     stringlist_t* list_curr = stringlist;
 
@@ -93,6 +112,42 @@ DYNAMIC_API stringlist_t *stringlist_add(
 
     return list_curr->next;
 }
+
+DYNAMIC_API stringlist_t *stringlist_add_unique(
+        stringlist_t *stringlist,
+        const char *value
+    )
+{  
+    assert(value);
+    if (value == NULL)
+        return NULL;
+
+    stringlist_t *result = NULL;
+    if(_stringlist_add_first(stringlist, &result, value))
+        return result;
+    
+    stringlist_t* list_curr = stringlist;
+
+    bool found = false;
+    while (list_curr->next) {
+        if(strcmp(list_curr->value,value)==0)
+            found = true;
+        list_curr = list_curr->next;
+    }
+     
+    if (!found) {
+        list_curr->next = new_stringlist(value);
+
+        assert(list_curr->next);
+        if (list_curr->next == NULL)
+            return NULL;
+
+        return list_curr->next;
+    } else {
+        return list_curr;
+    }
+}
+
 
 DYNAMIC_API stringlist_t *stringlist_append(
         stringlist_t *stringlist,
@@ -163,13 +218,13 @@ DYNAMIC_API stringlist_t *stringlist_delete(
 
 DYNAMIC_API void free_stringlist(stringlist_t *stringlist)
 {
-    stringlist_t *curr = stringlist;;
+    stringlist_t *curr = stringlist;
     
     while (curr) {
         stringlist_t *next = curr->next;
         free(curr->value);
+        curr->value = NULL;
         free(curr);
         curr = next;
     }
 }
-

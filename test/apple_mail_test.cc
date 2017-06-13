@@ -8,11 +8,11 @@
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"
+#include "test_util.h" // for slurp()
 
 using namespace std;
 
 int main(int argc, char** argv) {
-    
 
     const char* mailfile = "test_mails/apple_mail_TC_signed_encrypted.eml";
     
@@ -24,40 +24,19 @@ int main(int argc, char** argv) {
     assert(session);
     cout << "init() completed.\n";
 
-    ifstream infilekey1("test_keys/pub/pep-test-apple-0x1CCBC7D7_pub.asc");
-    string keytextkey1;
-    while (!infilekey1.eof()) {
-        static string line;
-        getline(infilekey1, line);
-        keytextkey1 += line + "\n";
-    }
-    infilekey1.close(); 
-    
-    ifstream infilekey2("test_keys/priv/pep-test-recip-0x08DB0AEE_priv.asc");
-    string keytextkey2;
-    while (!infilekey2.eof()) {
-        static string line;
-        getline(infilekey2, line);
-        keytextkey2 += line + "\n";
-    }
-    infilekey2.close(); 
+    const string keytextkey1 = slurp("test_keys/pub/pep-test-apple-0x1CCBC7D7_pub.asc");
+    const string keytextkey2 = slurp("test_keys/priv/pep-test-recip-0x08DB0AEE_priv.asc");
+    const string keytextkey3 = slurp("test_keys/pub/pep-test-recip-0x08DB0AEE_pub.asc");
 
     PEP_STATUS statuskey1 = import_key(session, keytextkey1.c_str(), keytextkey1.length(), NULL);
     PEP_STATUS statuskey2 = import_key(session, keytextkey2.c_str(), keytextkey2.length(), NULL);
+    PEP_STATUS statuskey3 = import_key(session, keytextkey3.c_str(), keytextkey3.length(), NULL);
         
-    ifstream infile(mailfile);
-    string mailtext;
-    while (!infile.eof()) {
-        static string line;
-        getline(infile, line);
-        mailtext += line + "\n";
-    }
-    infile.close(); 
-
-    pEp_identity * me = new_identity("pep.test.recip@kgrothoff.org", NULL, PEP_OWN_USERID, "pEp Test Recipient");    
+    const string mailtext = slurp(mailfile);
+    pEp_identity * me = new_identity("pep.test.recip@kgrothoff.org", "93D19F24AD6F4C4BA9134AAF84D9217908DB0AEE", PEP_OWN_USERID, "pEp Test Recipient");    
     me->me = true;    
-    PEP_STATUS status = update_identity(session, me);
-
+    PEP_STATUS status = myself(session, me);
+    
     pEp_identity * you = new_identity("pep.test.apple@pep-project.org", NULL, "TOFU_pep.test.apple@pep-project.org", "pEp Test Recipient");    
     you->me = false;    
     status = update_identity(session, you);
@@ -98,15 +77,7 @@ int main(int argc, char** argv) {
     rating = PEP_rating_unreliable;
     
     const char* mailfile2 = "test_mails/apple_mail_TC_html_signed_encrypted.eml";
-    
-    ifstream infile2(mailfile2);
-    string mailtext2;
-    while (!infile2.eof()) {
-        static string line;
-        getline(infile2, line);
-        mailtext2 += line + "\n";
-    }
-    infile2.close(); 
+    const string mailtext2 = slurp(mailfile2);
     
     status = mime_decode_message(mailtext2.c_str(), mailtext2.length(), &msg_ptr);
     assert(status == PEP_STATUS_OK);

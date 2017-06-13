@@ -160,6 +160,13 @@ Some Keysync actions require the application to act, through callbacks :
         App displays trustwords, and requests user accept or reject
         App calls deliverHandshakeResult with user's answer
 
+    SYNC_NOTIFY_INIT_MOVE_OUR_DEVICE
+        Device (me) is grouped and will leave current group to join another
+        device's (partner) group.
+        App displays trustwords, and requests user accept or reject
+        App calls deliverHandshakeResult with user's answer
+
+
     SYNC_NOTIFY_TIMEOUT :
         KeySync operation timed out.
         Identities are set reflecting peers involved in aborted operation.
@@ -171,6 +178,10 @@ Some Keysync actions require the application to act, through callbacks :
 
     SYNC_NOTIFY_ACCEPTED_GROUP_CREATED
         New group created.
+        App displays message. No feedback to engine.
+
+    SYNC_NOTIFY_ACCEPTED_DEVICE_MOVED
+        New device was moved from one group to another.
         App displays message. No feedback to engine.
 
    To deliver handshake result back to engine once user reacted,
@@ -192,7 +203,7 @@ Some Keysync actions require the application to act, through callbacks :
 
 #include "message.h"
 #include "sync_fsm.h"
-
+#include "sync_app.h"
 
 // this module is for being used WITHOUT the Transport API in transport.h
 // DO NOT USE IT WHEN USING Transport API!
@@ -215,24 +226,6 @@ extern "C" {
 //      the ownership of msg goes to the callee
 
 typedef PEP_STATUS (*messageToSend_t)(void *obj, message *msg);
-
-// TODO add this to generated code.
-typedef enum _sync_handshake_signal {
-    SYNC_NOTIFY_UNDEFINED = 0,
-
-    // request show handshake dialog
-    SYNC_NOTIFY_INIT_ADD_OUR_DEVICE,
-    SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE,
-    SYNC_NOTIFY_INIT_FORM_GROUP,
-
-    // handshake process timed out
-    SYNC_NOTIFY_TIMEOUT,
-
-    // handshake accepted by user
-    SYNC_NOTIFY_ACCEPTED_DEVICE_ADDED,
-    SYNC_NOTIFY_ACCEPTED_GROUP_CREATED
-
-} sync_handshake_signal;
 
 // notifyHandshake() - notify UI about sync handshaking process
 //
@@ -294,11 +287,12 @@ typedef int (*inject_sync_msg_t)(void *msg, void *management);
 //  parameters:
 //      management (in)     application defined
 //      timeout (in,out)    do not wait longer than timeout for message
+//                          timeout == NULL or *timeout == 0 is blocking
 //
 //  return value:
-//      next message or :
-//      NULL and timeout == 0 for termination
-//      NULL and timeout != 0 for timeout occurence
+//      next message, then timeout[out] == remaining time
+//      NULL and timeout[out] != 0 for timeout occurence
+//      NULL and timeout[out] == 0 for termination
 
 typedef void *(*retrieve_next_sync_msg_t)(void *management, time_t *timeout);
 

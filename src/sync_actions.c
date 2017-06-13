@@ -7,51 +7,30 @@
 #include "pEp_internal.h"
 #include "message.h"
 #include "sync_fsm.h"
+#include "sync_impl.h"
 #include "map_asn1.h"
 #include "baseprotocol.h"
 
 // conditions
 
-// TODO : move that SQL statement with other prepared SQL statements in pEpEngine.c
-static const char *sql_stored_group_keys =
-        "select count(device_group) from person where id = '" PEP_OWN_USERID "';"; 
-
-// TODO  is that necessary ?
-static int _stored_group_keys(void *_gc, int count, char **text, char **name)
-{
-    assert(_gc);
-    assert(count == 1);
-    assert(text && text[0]);
-    if (!(_gc && count == 1 && text && text[0]))
-        return -1;
-
-    bool *gc = (bool *) _gc;
-    *gc = atoi(text[0]) != 0;
-    return 0;
-}
-
-int storedGroupKeys(PEP_SESSION session)
+int deviceGrouped(PEP_SESSION session)
 {
     assert(session);
     if (!session)
         return invalid_condition; // error
 
-    bool gc = false;
-    int int_result = sqlite3_exec(
-        session->db,
-        sql_stored_group_keys,
-        _stored_group_keys,
-        &gc,
-        NULL
-    );
-    assert(int_result == SQLITE_OK);
-    if (int_result != SQLITE_OK)
-        return invalid_condition; // error
+    char *devgrp = NULL;
+    int res = 0;
+    PEP_STATUS status;
 
-    if (gc)
-        return 1;
-    else
-        return 0;
+    status = get_device_group(session, &devgrp);
+
+    if (status == PEP_STATUS_OK && devgrp && devgrp[0])
+        res = 1;
+
+    free(devgrp);
+
+    return res;
 }
 
 int keyElectionWon(PEP_SESSION session, Identity partner)
@@ -61,15 +40,20 @@ int keyElectionWon(PEP_SESSION session, Identity partner)
     if (!(session && partner))
         return invalid_condition; // error
 
-    // an already existing group always wins
+    int partner_is_group = partner->flags & PEP_idf_devicegroup;
 
-    if (storedGroupKeys(session)) {
-        assert(!(partner->flags & PEP_idf_devicegroup));
-        return 1;
+    if (deviceGrouped(session)){
+        // existing group always wins against sole device
+        if(!partner_is_group)
+            return 1;
+    } else {
+        // sole device always loses against group
+        if(partner_is_group)
+            return 0;
     }
 
-    if (partner->flags & PEP_idf_devicegroup)
-        return 0;
+    // two groups or two sole are elected based on key age
+    // key created first wins
 
     Identity me = NULL;
     PEP_STATUS status = get_identity(session, partner->address, PEP_OWN_USERID,
@@ -117,6 +101,23 @@ int sameIdentities(PEP_SESSION session, Identity a, Identity b)
         strcmp(a->address, b->address) != 0 ||
         a->user_id == NULL || b->user_id == NULL ||
         strcmp(a->user_id, b->user_id) != 0)
+            return 0;
+    return 1;
+}
+
+int sameKeyAndAddress(PEP_SESSION session, Identity a, Identity b)
+{
+    assert(session);
+    assert(a);
+    assert(b);
+
+    if (!(session && a && b))
+        return invalid_condition; // error
+
+    if (a->fpr == NULL || b->fpr == NULL ||
+        (!_same_fpr(a->fpr, strlen(a->fpr), b->fpr, strlen(b->fpr))) ||
+        a->address == NULL || b->address == NULL ||
+        strcmp(a->address, b->address) != 0)
             return 0;
     return 1;
 }
@@ -221,12 +222,46 @@ PEP_STATUS rejectHandshake(
     if (!(session && partner))
         return PEP_ILLEGAL_VALUE;
 
+    // TODO : disable sync globally if not in a group
     status = set_identity_flags(session, partner,
             partner->flags | PEP_idf_not_for_sync);
 
     return status;
 }
 
+PEP_STATUS _storeGroupKeys(
+        PEP_SESSION session,
+        identity_list *group_keys
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    for (identity_list *il = group_keys; il && il->ident; il = il->next) {
+
+        if (strcmp(il->ident->user_id, PEP_OWN_USERID)!=0) {
+            assert(0);
+            continue;
+        }
+        // Check that identity isn't excluded from sync.
+        pEp_identity *stored_identity = NULL;
+        status = get_identity(session, il->ident->address, PEP_OWN_USERID,
+                &stored_identity);
+        if (status == PEP_STATUS_OK) {
+            if(stored_identity->flags & PEP_idf_not_for_sync){
+                free_identity(stored_identity);
+                continue;
+            }
+            free_identity(stored_identity);
+        }
+
+        status = set_identity(session, il->ident);
+        if (status != PEP_STATUS_OK)
+            break;
+    }
+
+    return status;
+}
+    
 
 // storeGroupKeys() - 
 //
@@ -243,54 +278,69 @@ PEP_STATUS storeGroupKeys(
         PEP_SESSION session,
         DeviceState_state state,
         Identity partner,
-        void *_group_keys
+        void *group_keys_extra_
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
     assert(partner);
-    assert(_group_keys);
-    if (!(session && partner && _group_keys))
+    assert(group_keys_extra_);
+    if (!(session && partner && group_keys_extra_))
         return PEP_ILLEGAL_VALUE;
 
-    identity_list *group_keys = (identity_list *) _group_keys;
+    group_keys_extra_t *group_keys_extra = 
+        (group_keys_extra_t*) group_keys_extra_;
+    identity_list *group_keys = group_keys_extra->group_keys;
+    char *group_id = group_keys_extra->group_id;
 
-    for (identity_list *il = group_keys; il && il->ident; il = il->next) {
+    status = _storeGroupKeys(session, group_keys);
+    if (status != PEP_STATUS_OK)
+        return status;
 
-        // Check that identity isn't excluded from sync.
-        pEp_identity *stored_identity = NULL;
-        status = get_identity(session, il->ident->address, PEP_OWN_USERID,
-                &stored_identity);
-        if (status == PEP_STATUS_OK) {
-            if(stored_identity->flags & PEP_idf_not_for_sync){
-                free_identity(stored_identity);
-                continue;
-            }
-            free_identity(stored_identity);
-        }
-
-        free(il->ident->user_id);
-        il->ident->user_id = strdup(PEP_OWN_USERID);
-        assert(il->ident->user_id);
-        if (!il->ident->user_id)
-            goto enomem;
-        status = set_identity(session, il->ident);
-        if (status != PEP_STATUS_OK)
-            break;
-    }
-
-    free_identity_list(group_keys);
+    // set group id according to given group-id
+    status = set_device_group(session, group_id);
+    if (status != PEP_STATUS_OK)
+        return status;
     
-    return status;
-
-enomem:
-    status = PEP_OUT_OF_MEMORY;
-    free_identity_list(group_keys);
     return status;
 }
 
-// enterGroup() - 
+// storeGroupUpdate() - 
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        partner to communicate with
+//      _group_keys (in)    group keys received from partner
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS storeGroupUpdate(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *group_keys_
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(partner);
+    assert(group_keys_);
+    if (!(session && partner && group_keys_))
+        return PEP_ILLEGAL_VALUE;
+
+    identity_list *group_keys = (identity_list*) group_keys_;
+
+    status = _storeGroupKeys(session, group_keys);
+
+
+    return status;
+}
+
+// makeGroup() - 
 //
 //  params:
 //      session (in)        session handle
@@ -301,7 +351,41 @@ enomem:
 //  returns:
 //      PEP_STATUS_OK or any other value on error
 
-PEP_STATUS enterGroup(
+PEP_STATUS makeGroup(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+   
+    // make a new uuid 
+    char new_uuid[37];
+    pEpUUID uuid;
+    uuid_generate_random(uuid);
+    uuid_unparse_upper(uuid, new_uuid);
+
+    // take that new uuid as group-id
+    status = set_device_group(session, new_uuid);
+
+    return status;
+}
+
+// renewUUID() - 
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        ignored
+//      extra (in)          ignored
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS renewUUID(
         PEP_SESSION session,
         DeviceState_state state,
         Identity partner,
@@ -312,8 +396,39 @@ PEP_STATUS enterGroup(
 
     assert(session);
 
-    // groups have no uuid for now
-    status = set_device_group(session, "1");
+    // change sync_uuid when entering group 
+    // thus ignoring unprocessed handshakes
+    // addressed to previous self (sole) once in.
+    pEpUUID uuid;
+    uuid_generate_random(uuid);
+    uuid_unparse_upper(uuid, session->sync_uuid);
+    
+    return status;
+}
+
+// leaveGroup() - 
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        ignored
+//      extra (in)          ignored
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS leaveGroup(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+
+    status = set_device_group(session, NULL);
     
     return status;
 }

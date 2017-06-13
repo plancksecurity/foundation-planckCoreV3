@@ -1,5 +1,4 @@
 // This file is under GNU General Public License 3.0
-// see LICENSE.txt
 
 #pragma once
 
@@ -19,6 +18,13 @@ PEP_STATUS pgp_encrypt_and_sign(
         size_t psize, char **ctext, size_t *csize
     );
 
+
+PEP_STATUS pgp_encrypt_only(
+        PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+        size_t psize, char **ctext, size_t *csize
+    );
+
+
 PEP_STATUS pgp_verify_text(
         PEP_SESSION session, const char *text, size_t size,
         const char *signature, size_t sig_size, stringlist_t **keylist
@@ -27,7 +33,8 @@ PEP_STATUS pgp_verify_text(
 PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr);
 
 PEP_STATUS pgp_export_keydata(
-        PEP_SESSION session, const char *fpr, char **key_data, size_t *size
+        PEP_SESSION session, const char *fpr, char **key_data, size_t *size,
+        bool secret
     );
 
 PEP_STATUS pgp_find_keys(
@@ -49,7 +56,7 @@ PEP_STATUS pgp_get_key_rating(
     );
 
 PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
-        size_t size);
+        size_t size, identity_list **private_idents);
 
 PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern);
 PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern);

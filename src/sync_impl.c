@@ -7,7 +7,6 @@
 // #define for the dllimport / dllexport DYNAMIC_API stuff.
 #include "pEp_internal.h"
 
-#include "../asn.1/DeviceGroup-Protocol.h"
 #include "sync_impl.h"
 #include "keymanagement.h"
 #include "message_api.h"
@@ -32,6 +31,33 @@ struct _sync_msg_t {
     } u;
 };
 
+static bool _is_own_uuid( PEP_SESSION session, UTF8String_t *uuid)
+{
+    return strncmp(session->sync_session->sync_uuid,
+                   (const char*)uuid->buf, uuid->size) == 0;
+}
+
+static bool _is_own_group_uuid( PEP_SESSION session, UTF8String_t *uuid, char** our_group)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    char *devgrp = NULL;
+
+    if(our_group == NULL || *our_group == NULL)
+        status = get_device_group(session, &devgrp);
+    else
+        devgrp = *our_group;
+
+    bool res = (status == PEP_STATUS_OK && devgrp && devgrp[0] &&
+        strncmp(devgrp,(const char*)uuid->buf, uuid->size) == 0);
+
+    if(our_group == NULL)
+        free(devgrp);
+    else if(*our_group == NULL)
+        *our_group = devgrp;
+
+    return res;
+}
+
 PEP_STATUS receive_sync_msg(
         PEP_SESSION session,
         sync_msg_t *sync_msg,
@@ -55,6 +81,13 @@ PEP_STATUS receive_sync_msg(
             goto error;
         }
 
+        partner = Identity_to_Struct(&msg->header.me, NULL);
+        if (!partner){
+            status = PEP_OUT_OF_MEMORY;
+            ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+            goto error;
+        }
+
         msgIsFromGroup = msg->header.devicegroup;
 
         switch (msg->payload.present) {
@@ -63,31 +96,142 @@ PEP_STATUS receive_sync_msg(
                 break;
 
             case DeviceGroup_Protocol__payload_PR_handshakeRequest:
+            {
+                // re-check uuid in case sync_uuid or group changed while in the queue
+                char *own_group_id = NULL;
+                bool is_for_me = _is_own_uuid(session, 
+                    msg->payload.choice.handshakeRequest.partner_id);
+                bool is_for_group = !is_for_me && _is_own_group_uuid(session, 
+                    msg->payload.choice.handshakeRequest.partner_id, &own_group_id);
+                if (!(is_for_me || is_for_group)){
+                    status = PEP_MESSAGE_IGNORE;
+                    goto error;
+                }
+
+                UTF8String_t *guuid = msg->payload.choice.handshakeRequest.group_id;
+                if(msgIsFromGroup && guuid && guuid->buf && guuid->size) {
+                    bool is_from_own_group = _is_own_group_uuid(session, 
+                                                                guuid, &own_group_id);
+
+                    // Filter handshake requests from own group
+                    if(is_from_own_group) {
+                        status = PEP_MESSAGE_IGNORE;
+                        goto error;
+                    }
+
+                    // if it comes from another group, 
+                    // we want to communicate with that group
+                    // insert group_id given in handshake request 
+                    // into partner's id
+
+                    free(partner->user_id);
+                    partner->user_id = strndup((const char*)guuid->buf, guuid->size);
+                    if(partner->user_id == NULL){
+                        status = PEP_OUT_OF_MEMORY;
+                        goto error;
+                    }
+
+                    // if it comes from another group, and we are grouped,
+                    // then this is groupmerge
+                }
+
                 event = HandshakeRequest;
                 break;
 
+            }
             case DeviceGroup_Protocol__payload_PR_updateRequest:
                 event = UpdateRequest;
                 break;
 
             case DeviceGroup_Protocol__payload_PR_groupKeys:
+            {
+                // re-check uuid in case sync_uuid or group_uuid changed while in the queue
+                char *own_group_id = NULL;
+                UTF8String_t *puuid = msg->payload.choice.groupKeys.partner_id;
+                bool is_for_me = _is_own_uuid(session, puuid);
+                bool is_for_group = !is_for_me &&
+                                    _is_own_group_uuid(session, 
+                                        puuid, &own_group_id);
+                if (!(is_for_me || is_for_group)){
+                    status = PEP_MESSAGE_IGNORE;
+                    goto error;
+                }
+
+                UTF8String_t *guuid = msg->payload.choice.groupKeys.group_id;
+
+                // GroupKeys come from groups, no choice
+                if(!(msgIsFromGroup && guuid && guuid->buf && guuid->size)) {
+                    status = PEP_SYNC_ILLEGAL_MESSAGE;
+                    goto error;
+                }
+
+                // Filter groupKeys from own group
+                bool is_from_own_group = _is_own_group_uuid(session, 
+                                                            guuid, 
+                                                            &own_group_id);
+                if(is_from_own_group) {
+                    // FixMe : protocol shouldn't allow this
+                    status = PEP_SYNC_ILLEGAL_MESSAGE;
+                    goto error;
+                }
+
+                // insert group_id given in groupKeys into partner's id
+                free(partner->user_id);
+                partner->user_id = strndup((const char*)guuid->buf, guuid->size);
+                if(partner->user_id == NULL){
+                    status = PEP_OUT_OF_MEMORY;
+                    goto error;
+                }
+
+                // if it comes from another group, and we are grouped,
+                // then this is groupmerge's groupKeys
+
+                group_keys_extra_t *group_keys_extra;
+                group_keys_extra = malloc(sizeof(group_keys_extra_t));
+                if(group_keys_extra == NULL){
+                    status = PEP_OUT_OF_MEMORY;
+                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                    goto error;
+                }
+
+                char *group_id = strndup((char*)guuid->buf, guuid->size);
+
+                if (!group_id){
+                    status = PEP_OUT_OF_MEMORY;
+                    free(group_keys_extra);
+                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                    goto error;
+                }
+                group_keys_extra->group_id = group_id;
+
+                identity_list *group_keys = IdentityList_to_identity_list(
+                        &msg->payload.choice.groupKeys.ownIdentities,
+                        NULL);
+                if (!group_keys) {
+                    status = PEP_OUT_OF_MEMORY;
+                    free(group_id);
+                    free(group_keys_extra);
+                    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+                    goto error;
+                }
+                group_keys_extra->group_keys = group_keys;
+
+                extra = (void *) group_keys_extra;
+                event = GroupKeys;
+
+                break;
+            }
             case DeviceGroup_Protocol__payload_PR_groupUpdate:
             {
                 identity_list *group_keys = IdentityList_to_identity_list(
-                        msg->payload.present == 
-                          DeviceGroup_Protocol__payload_PR_groupKeys ?
-                            &msg->payload.choice.groupKeys.ownIdentities :
-                            &msg->payload.choice.groupUpdate.ownIdentities,
-                        NULL);
+                        &msg->payload.choice.groupUpdate.ownIdentities, NULL);
                 if (!group_keys) {
                     status = PEP_OUT_OF_MEMORY;
                     ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
                     goto error;
                 }
                 extra = (void *) group_keys;
-                event = msg->payload.present == 
-                          DeviceGroup_Protocol__payload_PR_groupKeys ?
-                            GroupKeys : GroupUpdate;
+                event = GroupUpdate;
                 break;
             }
 
@@ -97,12 +241,6 @@ PEP_STATUS receive_sync_msg(
                 goto error;
         }
 
-        partner = Identity_to_Struct(&msg->header.me, NULL);
-        if (!partner){
-            status = PEP_OUT_OF_MEMORY;
-            ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
-            goto error;
-        }
     }
     else{
         partner = sync_msg->u.event.partner;
@@ -124,10 +262,10 @@ PEP_STATUS receive_sync_msg(
         default:
             break;
     }
-    time_t now = time(NULL);
+
     if(last != NULL){
+        time_t now = time(NULL);
         if(*last != 0 && (*last + SYNC_INHIBIT_TIME) > now ){
-            free_identity(partner);
             status = PEP_STATEMACHINE_INHIBITED_EVENT;
             goto error;
         }
@@ -189,9 +327,27 @@ PEP_STATUS receive_sync_msg(
 
     status = fsm_DeviceState_inject(session, event, partner, extra, timeout);
 
+error:
+
     free_identity(partner);
 
-error:
+    switch(event){
+        case GroupKeys:
+        {
+            free_group_keys_extra((group_keys_extra_t*)extra);
+            break;
+        }
+        case GroupUpdate:
+        {
+            identity_list *group_keys = (identity_list*) extra;
+            free_identity_list(group_keys);
+            break;
+        }
+        default:
+            assert(extra==NULL);
+            break;
+    }
+
     free(sync_msg);
 
     return status;
@@ -345,53 +501,97 @@ PEP_STATUS receive_DeviceState_msg(
                 }
 
                 int32_t value = (int32_t) msg->header.sequence;
-                status = sequence_value(session, (char *) user_id,
-                        &value);
+                if (value < 1) {
+                    status = PEP_SEQUENCE_VIOLATED;
+                } else {
+                    status = sequence_value(session, (char *) user_id,
+                            &value);
+                }
 
                 if (status == PEP_STATUS_OK) {
                     switch (msg->payload.present) {
                         // HandshakeRequest needs encryption
                         case DeviceGroup_Protocol__payload_PR_handshakeRequest:
-                            if (rating < PEP_rating_reliable ||
-                                strncmp(session->sync_uuid,
-                                        (const char *)msg->payload.choice.handshakeRequest.partner.user_id->buf,
-                                        msg->payload.choice.handshakeRequest.partner.user_id->size) != 0){
-                                discard = true;
-                                goto free_all;
-                            }
-                            
-                            break;
-                        // accepting GroupKeys needs encryption and trust of peer device
-                        case DeviceGroup_Protocol__payload_PR_groupKeys:
                         {
-                            if (!keylist || rating < PEP_rating_reliable ||
-                                // message is only consumed by instance it is addressed to
-                                (strncmp(session->sync_uuid,
-                                        (const char *)msg->payload.choice.groupKeys.partner.user_id->buf,
-                                        msg->payload.choice.groupKeys.partner.user_id->size) != 0)){
+                            UTF8String_t *puuid = 
+                              msg->payload.choice.handshakeRequest.partner_id;
+                            bool is_for_me = _is_own_uuid(session, puuid);
+                            bool is_for_group = !is_for_me && 
+                                                _is_own_group_uuid(
+                                                    session, puuid, NULL);
+
+                            // Reject handshake requests not addressed to us
+                            if (rating < PEP_rating_reliable ||
+                                !(is_for_me || is_for_group)){
                                 discard = true;
                                 goto free_all;
                             }
 
-                            // check trust of identity using user_id given in msg.header.me
-                            // to exacly match identity of device, the one trusted in
-                            // case of accepted handshake
-                            pEp_identity *_from = new_identity(NULL, 
-                                                               keylist->value,
-                                                               user_id,
-                                                               NULL);
-                            if (_from == NULL){
-                                status = PEP_OUT_OF_MEMORY;
-                                goto free_all;
+                            // do not consume handshake request for group
+                            if(is_for_group){ 
+                                force_keep_msg = true;
                             }
-                            status = get_trust(session, _from);
-                            if (status != PEP_STATUS_OK || _from->comm_type < PEP_ct_strong_encryption) {
-                                status = PEP_STATUS_OK;
-                                free_identity(_from);
+                            break;
+                        }
+                        // accepting GroupKeys needs encryption and trust of peer device
+                        case DeviceGroup_Protocol__payload_PR_groupKeys:
+                        {
+                            UTF8String_t *puuid = msg->payload.choice.groupKeys.partner_id;
+                            bool is_for_me = _is_own_uuid(session, puuid);
+                            bool is_for_group = !is_for_me &&
+                                                _is_own_group_uuid(session, 
+                                                    puuid, NULL);
+                            if (!keylist || rating < PEP_rating_reliable ||
+                                // message is only consumed by instance it is addressed to
+                                !(is_for_me || is_for_group)){
                                 discard = true;
                                 goto free_all;
                             }
-                            free_identity(_from);
+
+                            // do not consume groupKeys for group
+                            if(is_for_group){ 
+                                // This happens in case case of groupmerge
+                                force_keep_msg = true;
+                            }
+
+                            // Trust check disabled here but it still it should be safe.
+                            // SameIdentity checks in state machine ensures that we only
+                            // store groupkeys signed by device or group that have been 
+                            // previously accepted in handshake.
+                            //
+                            // // check trust of identity using user_id given in msg.header.me
+                            // // to exacly match identity of device, the one trusted in
+                            // // case of accepted handshake from a sole device
+                            // pEp_identity *_from = new_identity(NULL, 
+                            //                                    keylist->value,
+                            //                                    user_id,
+                            //                                    NULL);
+                            // if (_from == NULL){
+                            //     status = PEP_OUT_OF_MEMORY;
+                            //     goto free_all;
+                            // }
+                            // status = get_trust(session, _from);
+                            // if (status != PEP_STATUS_OK || _from->comm_type < PEP_ct_strong_encryption) {
+
+                            //     // re-try with group_id instead, in case of handshake with pre-existing group
+                            //     UTF8String_t *guuid = msg->payload.choice.groupKeys.group_id;
+                            //     free(_from->user_id);
+                            //     if ((_from->user_id = strndup((const char*)guuid->buf, guuid->size)) == NULL){
+                            //         free_identity(_from);
+                            //         status = PEP_OUT_OF_MEMORY;
+                            //         goto free_all;
+                            //     }
+                            //     _from->comm_type = PEP_ct_unknown;
+
+                            //     status = get_trust(session, _from);
+                            //     if (status != PEP_STATUS_OK || _from->comm_type < PEP_ct_strong_encryption) {
+                            //         status = PEP_STATUS_OK;
+                            //         free_identity(_from);
+                            //         discard = true;
+                            //         goto free_all;
+                            //     }
+                            // }
+                            // free_identity(_from);
                             break;
                         }
                         case DeviceGroup_Protocol__payload_PR_groupUpdate:
@@ -448,7 +648,7 @@ PEP_STATUS receive_DeviceState_msg(
                     // don't free message now that it is in the queue
                     goto free_userid;
                 }
-                else if (status == PEP_OWN_SEQUENCE) {
+                else if (status == PEP_OWN_SEQUENCE || status == PEP_SEQUENCE_VIOLATED) {
                     status = PEP_STATUS_OK;
                     discard = true;
                     goto free_all;
@@ -574,7 +774,7 @@ PEP_STATUS unicast_msg(
     
     int32_t seq = 0;
 
-    status = sequence_value(session, session->sync_uuid, &seq);
+    status = sequence_value(session, session->sync_session->sync_uuid, &seq);
     if (status != PEP_OWN_SEQUENCE && status != PEP_STATUS_OK)
         goto error;
 
@@ -585,7 +785,7 @@ PEP_STATUS unicast_msg(
         goto enomem;
 
     free(_me->user_id);
-    _me->user_id = strndup(session->sync_uuid, 36);
+    _me->user_id = strndup(session->sync_session->sync_uuid, 36);
     assert(_me->user_id);
     if (!_me->user_id)
         goto enomem;
@@ -598,7 +798,7 @@ PEP_STATUS unicast_msg(
 
     msg->header.state = (long) state;
 
-    bool devicegroup = storedGroupKeys(session);
+    bool devicegroup = deviceGrouped(session);
     if (devicegroup)
         msg->header.devicegroup = 1;
     else
@@ -732,5 +932,41 @@ PEP_STATUS multicast_self_msg(
 // error:
 //     free_identity_list(own_identities);
 //     return status;
+}
+
+void free_group_keys_extra(group_keys_extra_t* group_keys_extra)
+{
+    identity_list *group_keys = group_keys_extra->group_keys;
+    char *group_id = group_keys_extra->group_id;
+    free_identity_list(group_keys);
+    free(group_id);
+    free(group_keys_extra);
+}
+
+group_keys_extra_t* group_keys_extra_dup(group_keys_extra_t* group_key_extra_src)
+{
+    group_keys_extra_t *group_key_extra_dst;
+    group_key_extra_dst = calloc(1,sizeof(group_keys_extra_t));
+    if(group_key_extra_dst == NULL){
+        return NULL;
+    }
+
+    char *group_id = strdup(group_key_extra_src->group_id);
+
+    if (group_key_extra_dst->group_id && !group_id){
+        free(group_key_extra_dst);
+        return NULL;
+    }
+    group_key_extra_dst->group_id = group_id;
+
+    identity_list *group_keys = identity_list_dup(group_key_extra_src->group_keys);;
+    if (!group_keys) {
+        free(group_id);
+        free(group_key_extra_dst);
+        return NULL;
+    }
+    group_key_extra_dst->group_keys = group_keys;
+
+    return group_key_extra_dst;
 }
 

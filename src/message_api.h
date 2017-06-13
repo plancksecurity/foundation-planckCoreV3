@@ -23,7 +23,14 @@ PEP_cryptotech determine_encryption_format(message *msg);
 void add_opt_field(message *msg, const char *name, const char *value);
 
 typedef enum _PEP_encrypt_flags {
-    PEP_encrypt_flag_force_encryption = 0x1
+    // "default" means whatever the default behaviour for the function is.
+    PEP_encrypt_flag_default = 0x0,
+    PEP_encrypt_flag_force_encryption = 0x1,
+
+    // This flag is for special use cases and should not be used
+    // by normal pEp clients!
+    PEP_encrypt_flag_force_unsigned = 0x2,
+    PEP_encrypt_flag_force_no_attached_key = 0x4
 } PEP_encrypt_flags; 
 
 typedef unsigned int PEP_encrypt_flags_t;
@@ -68,6 +75,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 //      src (in)            message to encrypt
 //      dst (out)           pointer to new encrypted message or NULL on failure
 //      enc_format (in)     encrypted format
+//      flags (in)          flags to set special encryption features
 //
 //  return value:       (FIXME: This may not be correct or complete)
 //      PEP_STATUS_OK                   on success
@@ -89,7 +97,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         pEp_identity* target_id,
         message *src,
         message **dst,
-        PEP_enc_format enc_format
+        PEP_enc_format enc_format,
+        PEP_encrypt_flags_t flags
     );
 
 // MIME_encrypt_message() - encrypt a MIME message, with MIME output
@@ -125,6 +134,43 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
     PEP_enc_format enc_format,
     PEP_encrypt_flags_t flags
 );
+
+// MIME_encrypt_message_for_self() - encrypt MIME message for user's identity only,
+//                              ignoring recipients and other identities from
+//                              the message, with MIME output
+//  parameters:
+//      session (in)            session handle
+//      target_id (in)      self identity this message should be encrypted for
+//      mimetext (in)           MIME encoded text to encrypt
+//      size (in)               size of input mime text
+//      mime_ciphertext (out)   encrypted, encoded message
+//      enc_format (in)         encrypted format
+//      flags (in)              flags to set special encryption features
+//
+//  return value:
+//      PEP_STATUS_OK           if everything worked
+//      PEP_BUFFER_TOO_SMALL    if encoded message size is too big to handle
+//      PEP_CANNOT_CREATE_TEMP_FILE
+//                              if there are issues with temp files; in
+//                              this case errno will contain the underlying
+//                              error
+//      PEP_OUT_OF_MEMORY       if not enough memory could be allocated
+//
+//  caveat:
+//      the encrypted, encoded mime text will go to the ownership of the caller; mimetext
+//      will remain in the ownership of the caller
+
+DYNAMIC_API PEP_STATUS MIME_encrypt_message_for_self(
+    PEP_SESSION session,
+    pEp_identity* target_id,
+    const char *mimetext,
+    size_t size,
+    char** mime_ciphertext,
+    PEP_enc_format enc_format,
+    PEP_encrypt_flags_t flags
+);
+
+
 
 typedef enum _PEP_rating {
     PEP_rating_undefined = 0,
@@ -208,7 +254,9 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 //      flags (out)             flags to signal special decryption features
 //
 //  return value:
-//      PEP_STATUS_OK           if everything worked
+//      decrypt status          if everything worked with MIME encode/decode, 
+//                              the status of the decryption is returned 
+//                              (PEP_STATUS_OK or decryption error status)
 //      PEP_BUFFER_TOO_SMALL    if encoded message size is too big to handle
 //      PEP_CANNOT_CREATE_TEMP_FILE
 //                              if there are issues with temp files; in
@@ -374,7 +422,35 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
     const char* lang, char **words, bool full
 );
 
+// re_evaluate_message_rating() - re-evaluate already decrypted message rating
+//
+//  parameters:
+//      session (in)            session handle
+//      msg (in)                message to get the rating for
+//      x_keylist (in)          decrypted message recipients keys fpr
+//      x_enc_status (in)       original rating for the decrypted message
+//      rating (out)            rating for the message
+//
+//  return value:
+//      PEP_ILLEGAL_VALUE       if decrypted message doesn't contain 
+//                              X-EncStatus optional field and x_enc_status is 
+//                              pEp_rating_udefined
+//                              or if decrypted message doesn't contain 
+//                              X-Keylist optional field and x_keylist is NULL
+//      PEP_OUT_OF_MEMORY       if not enough memory could be allocated
+//
+//  caveat:
+//      msg->from must point to a valid pEp_identity
+//      the ownership of msg remains with the caller
+//	    the ownership of x_keylist remains with to the caller
+
+DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
+    PEP_SESSION session,
+    message *msg,
+    stringlist_t *x_keylist,
+    PEP_rating x_enc_status,
+    PEP_rating *rating
+);
 #ifdef __cplusplus
 }
 #endif
-

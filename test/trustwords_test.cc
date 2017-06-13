@@ -33,6 +33,12 @@ int main() {
         "blargh",
         "Krista Grothoff");
     
+    pEp_identity* identity2_with_spaces = new_identity(
+        "krista@kgrothoff.org",
+        " 62D4932086185C159 17B72D30571A FBCA    5493553   ",
+        "blargh",
+        "Krista Grothoff");
+    
     string fingerprint1 = identity1->fpr;
     string fingerprint2 = identity2->fpr;
     char* words1 = nullptr;
@@ -58,6 +64,11 @@ int main() {
     get_trustwords(session, identity1, identity2, "de", &full_wordlist, &wsize_full, false);
     assert(full_wordlist);
     cout << full_wordlist << "\n";
+
+    cout << "\nfinding Englis trustwords for " << identity1->address << " and " << identity2->address << "... with spaces\n";
+    get_trustwords(session, identity1, identity2_with_spaces, "en", &full_wordlist, &wsize_full, false);
+    assert(full_wordlist);
+    cout << full_wordlist << "\n";
     
     
     pEp_free(words1);
@@ -76,6 +87,11 @@ int main() {
         
     cout << "\nfinding French trustwords for " << identity2->address << " and " << identity2->address << "...\n";
     get_trustwords(session, identity2, identity2, "fr", &full_wordlist, &wsize_full, false);
+    assert(full_wordlist);
+    cout << full_wordlist << "\n";
+
+    cout << "\nfinding English trustwords for " << identity2->address << " and " << identity2->address << "... with spaces\n";
+    get_trustwords(session, identity2, identity2_with_spaces, "en", &full_wordlist, &wsize_full, false);
     assert(full_wordlist);
     cout << full_wordlist << "\n";
 
@@ -98,6 +114,11 @@ int main() {
     
     cout << "\nfinding English trustwords for " << identity2->address << " and " << identity2->address << "...\n";
     get_trustwords(session, identity2, identity1, "en", &full_wordlist, &wsize_full, true);
+    assert(full_wordlist);
+    cout << full_wordlist << "\n";
+    
+    cout << "\nfinding English trustwords for " << identity2->address << " and " << identity2->address << "... with spaces\n";
+    get_trustwords(session, identity2_with_spaces, identity1, "en", &full_wordlist, &wsize_full, false);
     assert(full_wordlist);
     cout << full_wordlist << "\n";
     

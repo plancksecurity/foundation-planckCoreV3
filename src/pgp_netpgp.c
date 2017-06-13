@@ -227,7 +227,7 @@ fpr_to_str (char **str, const uint8_t *fpr, size_t length)
         return 0;
 
     for (n = 0, i = 0 ; i < length; i += 2) {
-        n += snprintf(&((*str)[n]), 5, "%02x%02x", fpr[i], fpr[i+1]);
+        n += snprintf(&((*str)[n]), 5, "%02X%02X", fpr[i], fpr[i+1]);
     }
 
     return 1;
@@ -241,6 +241,9 @@ str_to_fpr (const char *str, uint8_t *fpr, size_t *length)
     unsigned i,j;
 
     *length = 0;
+    
+    if (str == NULL)
+        return 0;
 
     while(*str && *length < PGP_FINGERPRINT_SIZE){
         while (*str == ' ') str++;
@@ -273,11 +276,13 @@ str_to_fpr (const char *str, uint8_t *fpr, size_t *length)
 static PEP_STATUS _validation_results(
         netpgp_t *netpgp,
         pgp_validation_t *vresult,
-        stringlist_t **_keylist
+        stringlist_t **keylist
     )
 {
     time_t    now;
     time_t    t;
+
+    *keylist = NULL;
 
     now = time(NULL);
     if (now < vresult->birthtime) {
@@ -292,14 +297,17 @@ static PEP_STATUS _validation_results(
     if (vresult->validc && vresult->valid_sigs &&
         !vresult->invalidc && !vresult->unknownc ) {
         
+        stringlist_t *_keylist;
+
         // caller responsible to free
-        *_keylist = new_stringlist(NULL);
-        assert(*_keylist);
-        if (*_keylist == NULL) {
+        _keylist = new_stringlist(NULL);
+        assert(_keylist);
+        if (_keylist == NULL) {
             return PEP_OUT_OF_MEMORY;
         }
         
-        stringlist_t *k = *_keylist;
+        stringlist_t *k = _keylist;
+        unsigned c = 0;
         for (unsigned n = 0; n < vresult->validc; ++n) {
             unsigned from = 0;
             const pgp_key_t	 *signer;
@@ -315,21 +323,31 @@ static PEP_STATUS _validation_results(
                            signer->pubkeyfpr.fingerprint,
                            signer->pubkeyfpr.length);
             else
-                return PEP_VERIFY_NO_KEY;
+                continue;
 
-            if (fprstr == NULL)
+            if (fprstr == NULL){
+                free_stringlist(_keylist);
                 return PEP_OUT_OF_MEMORY;
+            }
 
             k = stringlist_add(k, fprstr);
 
             free(fprstr);
 
             if(!k){
-                free_stringlist(*_keylist);
+                free_stringlist(_keylist);
                 return PEP_OUT_OF_MEMORY;
             }
+
+            c++;
         }
-        return PEP_STATUS_OK;
+        if(c > 0) {
+            *keylist = _keylist;
+            return PEP_STATUS_OK;
+        }
+
+        free_stringlist(_keylist);
+        return PEP_VERIFY_NO_KEY;
     }
     if (vresult->validc + vresult->invalidc + vresult->unknownc == 0) {
         // No signatures found - is this memory signed?
@@ -379,11 +397,14 @@ PEP_STATUS pgp_decrypt_and_verify(
     pgp_validation_t *vresult = malloc(sizeof(pgp_validation_t));
     memset(vresult, 0x0, sizeof(pgp_validation_t));
 
+    key_id_t *recipients_key_ids = NULL;
+    unsigned recipients_count = 0;
+
     pgp_memory_t *mem = pgp_decrypt_and_validate_buf(netpgp.io, vresult, ctext, csize,
                 netpgp.secring, netpgp.pubring,
                 _armoured(ctext, csize, ARMOR_HEAD),
-                0 /* sshkeys */,
-                NULL, -1, NULL  /* pass fp,attempts,cb */);
+                 &recipients_key_ids, &recipients_count);
+
     if (mem == NULL) {
         result = PEP_OUT_OF_MEMORY;
         goto unlock_netpgp;
@@ -405,9 +426,12 @@ PEP_STATUS pgp_decrypt_and_verify(
 
     if (result == PEP_DECRYPTED) {
         result = _validation_results(&netpgp, vresult, &_keylist);
-        if (result == PEP_DECRYPTED) {
-            //no change
-        } else if (result == PEP_VERIFY_NO_KEY) {
+        if (result == PEP_DECRYPTED ||
+            result == PEP_VERIFY_NO_KEY) {
+            if((_keylist = new_stringlist("")) == NULL) {
+                result = PEP_OUT_OF_MEMORY;
+                goto free_ptext;
+            }
             result = PEP_DECRYPTED;
         }else if (result != PEP_STATUS_OK) {
             goto free_ptext;
@@ -416,14 +440,47 @@ PEP_STATUS pgp_decrypt_and_verify(
         }
     }
 
+    stringlist_t *k = _keylist;
+    for (unsigned n = 0; n < recipients_count; ++n) {
+        unsigned from = 0;
+        const pgp_key_t	 *rcpt;
+        char *fprstr = NULL;
+        key_id_t *keyid = &recipients_key_ids[n];
+
+        rcpt = pgp_getkeybyid(netpgp.io, netpgp.pubring,
+                                *keyid, &from, NULL, NULL,
+                                0, 0); /* check neither revocation nor expiry*/
+        if(rcpt)
+            fpr_to_str(&fprstr,
+                       rcpt->pubkeyfpr.fingerprint,
+                       rcpt->pubkeyfpr.length);
+        else
+            // if no key found put ID instead of fpr
+            fpr_to_str(&fprstr,
+                       *keyid,
+                       sizeof(key_id_t));
+
+        if (fprstr == NULL){
+            result = PEP_OUT_OF_MEMORY;
+            goto free_keylist;
+        }
+
+        k = stringlist_add_unique(k, fprstr);
+
+        free(fprstr);
+
+        if(!k){
+            result = PEP_OUT_OF_MEMORY;
+            goto free_keylist;
+        }
+    }
+
     if (result == PEP_DECRYPTED_AND_VERIFIED
         || result == PEP_DECRYPTED) {
         *ptext = _ptext;
         *psize = _psize;
         (*ptext)[*psize] = 0; // safeguard for naive users
-        if (result == PEP_DECRYPTED_AND_VERIFIED) {
-            *keylist = _keylist;
-        }
+        *keylist = _keylist;
 
         /* _ptext and _keylist ownership transfer, don't free */
         goto free_pgp;
@@ -521,7 +578,6 @@ PEP_STATUS pgp_verify_text(
         goto free_pgp;
     }
 
-free_keylist:
     free_stringlist(_keylist);
 
 free_pgp:
@@ -536,14 +592,14 @@ unlock_netpgp:
     return result;
 }
 
-PEP_STATUS pgp_encrypt_and_sign(
+static PEP_STATUS _encrypt_and_sign(
     PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
-    size_t psize, char **ctext, size_t *csize
+    size_t psize, char **ctext, size_t *csize, bool do_sign
     )
 {
     pgp_key_t *signer = NULL;
     pgp_seckey_t *seckey = NULL;
-    pgp_memory_t *signedmem;
+    pgp_memory_t *signedmem = NULL;
     pgp_memory_t *cmem;
     const char *hashalg;
     pgp_keyring_t *rcpts;
@@ -631,25 +687,38 @@ PEP_STATUS pgp_encrypt_and_sign(
 
     hashalg = netpgp_getvar(&netpgp, "hash");
 
-    // Sign data
-    signedmem = pgp_sign_buf(netpgp.io, ptext, psize, seckey,
-                time(NULL), /* birthtime */
-                0 /* duration */,
-                hashalg,
-                0 /* armored */,
-                0 /* cleartext */);
+    const char *stext;
+    size_t ssize;
+    unsigned encrypt_raw_packet;
+   
+    if (do_sign) {  
+        // Sign data
+        signedmem = pgp_sign_buf(netpgp.io, ptext, psize, seckey,
+                    time(NULL), /* birthtime */
+                    0 /* duration */,
+                    hashalg,
+                    0 /* armored */,
+                    0 /* cleartext */);
 
-    if (!signedmem) {
-        result = PEP_UNENCRYPTED;
-        goto free_rcpts;
+        if (!signedmem) {
+            result = PEP_UNENCRYPTED;
+            goto free_rcpts;
+        }
+        stext = (char*) pgp_mem_data(signedmem);
+        ssize = pgp_mem_len(signedmem);
+        encrypt_raw_packet = 1 /* takes raw OpenPGP message */;
+    } else {
+        stext = ptext;
+        ssize = psize;
+        encrypt_raw_packet = 0 /* not a raw OpenPGP message */;
     }
 
-    // Encrypt signed data
+    // Encrypt (maybe) signed data
 
-    cmem = pgp_encrypt_buf(netpgp.io, pgp_mem_data(signedmem),
-            pgp_mem_len(signedmem), rcpts, 1 /* armored */,
+    cmem = pgp_encrypt_buf(netpgp.io, stext,
+            ssize, rcpts, 1 /* armored */,
             netpgp_getvar(&netpgp, "cipher"),
-            1 /* takes raw OpenPGP message */);
+            encrypt_raw_packet);
 
     if (cmem == NULL) {
         result = PEP_OUT_OF_MEMORY;
@@ -678,7 +747,9 @@ PEP_STATUS pgp_encrypt_and_sign(
 free_cmem :
     pgp_memory_free(cmem);
 free_signedmem :
-    pgp_memory_free(signedmem);
+    if (do_sign) {
+        pgp_memory_free(signedmem);
+    }
 free_rcpts :
     pgp_keyring_free(rcpts);
 unlock_netpgp:
@@ -686,6 +757,29 @@ unlock_netpgp:
 
     return result;
 }
+
+PEP_STATUS pgp_encrypt_and_sign(
+    PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+    size_t psize, char **ctext, size_t *csize
+    )
+{
+    PEP_STATUS result;
+    result = _encrypt_and_sign(session, keylist, ptext, psize, ctext, csize,
+                               true);
+    return result;
+}
+
+PEP_STATUS pgp_encrypt_only(
+        PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+        size_t psize, char **ctext, size_t *csize
+    )
+{
+    PEP_STATUS result;
+    result = _encrypt_and_sign(session, keylist, ptext, psize, ctext, csize,
+                               false);
+    return result;
+}
+
 
 PEP_STATUS pgp_generate_keypair(
     PEP_SESSION session, pEp_identity *identity
@@ -857,7 +951,8 @@ unlock_netpgp:
 PEP_STATUS pgp_import_keydata(
         PEP_SESSION session,
         const char *key_data,
-        size_t size
+        size_t size,
+        identity_list **private_idents
     )
 {
     pgp_memory_t *mem;
@@ -866,6 +961,11 @@ PEP_STATUS pgp_import_keydata(
 
     assert(session);
     assert(key_data);
+
+    // reporting imported private keys not supported
+    // stub code to be reomoved
+    if(private_idents)
+        *private_idents = NULL;
 
     if(!session || !key_data)
         return PEP_ILLEGAL_VALUE;
@@ -947,7 +1047,8 @@ free_mem :
 }
 
 PEP_STATUS pgp_export_keydata(
-    PEP_SESSION session, const char *fprstr, char **key_data, size_t *size
+    PEP_SESSION session, const char *fprstr, char **key_data, size_t *size,
+    bool secret
     )
 {
     pgp_key_t *key;
@@ -957,12 +1058,18 @@ PEP_STATUS pgp_export_keydata(
     PEP_STATUS result;
     char *buffer;
     size_t buflen;
+    const pgp_keyring_t *srcring;
 
     assert(session);
     assert(fprstr);
     assert(key_data);
     assert(size);
 
+    if (secret)
+        srcring = netpgp.secring;
+    else
+        srcring = netpgp.pubring;
+    
     if (!session || !fprstr || !key_data || !size)
         return PEP_ILLEGAL_VALUE;
 
@@ -973,7 +1080,7 @@ PEP_STATUS pgp_export_keydata(
     if (str_to_fpr(fprstr, fpr, &fprlen)) {
         unsigned from = 0;
 
-        if ((key = (pgp_key_t *)pgp_getkeybyfpr(netpgp.io, netpgp.pubring,
+        if ((key = (pgp_key_t *)pgp_getkeybyfpr(netpgp.io, srcring,
                                                 fpr, fprlen, &from,
                                                 NULL,0,0)) == NULL) {
             result = PEP_KEY_NOT_FOUND;
@@ -1091,9 +1198,9 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
 
     result = pgp_import_keydata(session,
                                 answer.memory,
-                                answer.size);
+                                answer.size,
+                                NULL);
 
-free_answer:
     free(answer.memory);
 free_request:
     free(request);
@@ -1109,7 +1216,7 @@ unlock_curl:
 
 typedef PEP_STATUS (*find_key_cb_t)(void*, pgp_key_t *);
 
-static PEP_STATUS find_keys_do(
+static PEP_STATUS find_keys_do(pgp_keyring_t* keyring,
         const char *pattern, find_key_cb_t cb, void* cb_arg)
 {
     uint8_t fpr[PGP_FINGERPRINT_SIZE];
@@ -1126,7 +1233,7 @@ static PEP_STATUS find_keys_do(
         // Only one fingerprint can match
         if ((key = (pgp_key_t *)pgp_getkeybyfpr(
                         netpgp.io,
-                        (pgp_keyring_t *)netpgp.pubring,
+                        keyring,
                         (const uint8_t *)fpr, length,
                         &from,
                         NULL, 0, 0)) == NULL) {
@@ -1142,7 +1249,7 @@ static PEP_STATUS find_keys_do(
         result = PEP_KEY_NOT_FOUND;
         while((key = (pgp_key_t *)pgp_getnextkeybyname(
                         netpgp.io,
-                        (pgp_keyring_t *)netpgp.pubring,
+                        keyring,
 			            (const char *)pattern,
                         &from)) != NULL) {
 
@@ -1261,7 +1368,8 @@ PEP_STATUS pgp_find_keys(
     }
     _k = _keylist;
 
-    result = find_keys_do(pattern, &add_key_fpr_to_stringlist, &_k);
+    result = find_keys_do((pgp_keyring_t *)netpgp.pubring,
+                          pattern, &add_key_fpr_to_stringlist, &_k);
 
     if (result == PEP_STATUS_OK) {
         *keylist = _keylist;
@@ -1269,7 +1377,6 @@ PEP_STATUS pgp_find_keys(
         goto unlock_netpgp;
     }
 
-free_keylist:
     free_stringlist(_keylist);
 
 unlock_netpgp:
@@ -1350,7 +1457,8 @@ PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
         goto free_encoded_keys;
     }
 
-    result = find_keys_do(pattern, &send_key_cb, (void*)encoded_keys);
+    result = find_keys_do((pgp_keyring_t *)netpgp.pubring,
+                          pattern, &send_key_cb, (void*)encoded_keys);
 
     pthread_mutex_unlock(&netpgp_mutex);
 
@@ -1770,12 +1878,12 @@ PEP_STATUS pgp_list_keyinfo(
 
     PEP_STATUS result;
 
-    result = find_keys_do(pattern, &add_keyinfo_to_stringpair_list, (void*)keyinfo_list);
+    result = find_keys_do((pgp_keyring_t *)netpgp.pubring,
+                          pattern, &add_keyinfo_to_stringpair_list, (void*)keyinfo_list);
 
     if (!keyinfo_list)
         result = PEP_KEY_NOT_FOUND;
 
-unlock_netpgp:
     pthread_mutex_unlock(&netpgp_mutex);
 
     return result;
@@ -1790,10 +1898,9 @@ PEP_STATUS pgp_find_private_keys(
     PEP_STATUS result;
 
     assert(session);
-    assert(pattern);
     assert(keylist);
 
-    if (!session || !pattern || !keylist )
+    if (!session || !keylist )
     {
         return PEP_ILLEGAL_VALUE;
     }
@@ -1811,7 +1918,8 @@ PEP_STATUS pgp_find_private_keys(
     }
     _k = _keylist;
 
-    result = find_keys_do(pattern, &add_secret_key_fpr_to_stringlist, &_k);
+    result = find_keys_do((pgp_keyring_t *)netpgp.secring,
+                          pattern, &add_secret_key_fpr_to_stringlist, &_k);
 
     if (result == PEP_STATUS_OK) {
         *keylist = _keylist;
@@ -1819,7 +1927,6 @@ PEP_STATUS pgp_find_private_keys(
         goto unlock_netpgp;
     }
 
-free_keylist:
     free_stringlist(_keylist);
 
 unlock_netpgp:

@@ -26,7 +26,25 @@ namespace{
         snprintf(buf,31, "%lu", u);
         return buf;
     }
-}
+    
+    std::string status(PEP_STATUS status)
+    {
+        char buf[32] = {0};
+        if(status==0)
+        {
+            return "PEP_STATUS_OK";
+        }else{
+            if(status>0)
+            {
+                snprintf(buf,31, "%u (0x%x)", status, status);
+            }else{
+                snprintf(buf,31, "%d", status);
+            }
+        }
+        return buf;
+    }
+
+} // end of anonymous namespace
 
 
 Buffer ReadFileIntoMem(const char *fname){
@@ -66,13 +84,13 @@ int main(int argc, char* argv[])
     cout << "calling init()\n";
     PEP_STATUS init_result = init(&session);
     
-    cout << "returning from init() with result == " << init_result << "\n";
+    cout << "returning from init() with result == " << status(init_result) << endl;
     assert(init_result == PEP_STATUS_OK);
 
     PEP_SESSION second_session;
     cout << "second session test\n";
     PEP_STATUS second_init_result = init(&second_session);
-    cout << "returning from second init() with result == " << second_init_result << "\n";
+    cout << "returning from second init() with result == " << status(second_init_result) << endl;
     assert(second_init_result == PEP_STATUS_OK);
     assert(second_session);
     cout << "dropping second session\n";
@@ -125,14 +143,14 @@ int main(int argc, char* argv[])
     cout << "calling decrypt_and_verify()\n";
     PEP_STATUS decrypt_result = decrypt_and_verify(session, cipher_buffer.data(), cipher_buffer.size(), NULL, 0, &buf_text, &buf_size, &keylist);
 
-    cout << "returning from decrypt_and_verify() with result == 0x" << std::hex << decrypt_result << "\n";
+    cout << "returning from decrypt_and_verify() with result == " << status(decrypt_result) << endl;
     assert(decrypt_result == PEP_DECRYPTED_AND_VERIFIED);
     assert(buf_text);
     assert(keylist);
 
     for (stringlist_t *_keylist=keylist; _keylist!=NULL; _keylist=_keylist->next) {
         assert(_keylist->value);
-        cout << "signed with " << _keylist->value << "\n";
+        cout << "signed with " << _keylist->value << endl;
     }
 
     free_stringlist(keylist);
@@ -146,10 +164,10 @@ int main(int argc, char* argv[])
 
     cout << "\ncalling verify_text()\n";
     PEP_STATUS verify_result = verify_text(session, t1_buffer.data(), t1_buffer.size(), sig_buffer.data(), sig_buffer.size(), &keylist);
-    cout << "returning from verify_text() with result == " << verify_result << "\n";
+    cout << "returning from verify_text() with result == " << status(verify_result) << endl;
     assert(verify_result == PEP_VERIFIED || verify_result == PEP_VERIFIED_AND_TRUSTED);
     assert(keylist->value);
-    cout << "signed with " << keylist->value << "\n";
+    cout << "signed with " << keylist->value << endl;
     free_stringlist(keylist);
 
     const Buffer t2_buffer = ReadFileIntoMem("t2.txt");
@@ -168,7 +186,7 @@ int main(int argc, char* argv[])
 
     cout << "\ncalling encrypt_and_sign()\n";
     PEP_STATUS encrypt_result = encrypt_and_sign(session, keylist, plain.c_str(), plain.length(), &buf_text, &buf_size);
-    cout << "returning from encrypt_and_sign() with result == " << encrypt_result << "\n";
+    cout << "returning from encrypt_and_sign() with result == " << status(encrypt_result) << endl;
     assert(encrypt_result == PEP_STATUS_OK);
     free_stringlist(keylist);
 
@@ -182,12 +200,12 @@ int main(int argc, char* argv[])
     size_t wsize;
     trustword(session, 2342, "en", &word, &wsize);
     assert(word);
-    cout << "the English trustword for 2342 is " << word << "\n";
+    cout << "the English trustword for 2342 is " << word << endl;
     pEp_free(word);
     cout << "\nfinding French trustword for 2342...\n";
     trustword(session, 2342, "fr", &word, &wsize);
     assert(word);
-    cout << "the French trustword for 2342 is " << word << "\n";
+    cout << "the French trustword for 2342 is " << word << endl;
     pEp_free(word);
 
     const string fingerprint = "4942 2235 FC99 585B 891C  6653 0C7B 109B FA72 61F7";
@@ -196,7 +214,7 @@ int main(int argc, char* argv[])
     cout << "\nfinding German trustwords for " << fingerprint << "...\n";
     trustwords(session, fingerprint.c_str(), "de", &words, &wsize, 5);
     assert(words);
-    cout << words << "\n";
+    cout << words << endl;
     pEp_free(words);
 
     pEp_identity* identity  = new_identity(
@@ -213,11 +231,11 @@ int main(int argc, char* argv[])
     free_identity(identity);
     get_identity(session, "leon.schumacher@digitalekho.com", "23", &identity);
     assert(identity);
-    cout << "set: " << identity->address << ", " << identity->fpr << ", " << identity->user_id << ", " << identity->username << "\n";
+    cout << "set: " << identity->address << ", " << identity->fpr << ", " << identity->user_id << ", " << identity->username << endl;
 
     PEP_STATUS get_trust_result = get_trust(session, identity);
     assert(get_trust_result == PEP_STATUS_OK);
-    cout << "trust of " << identity->user_id << " is " << identity->comm_type << "\n";
+    cout << "trust of " << identity->user_id << " is " << identity->comm_type << endl;
 
     free_identity(identity);
 
@@ -231,9 +249,9 @@ int main(int argc, char* argv[])
 
     assert(identity);
     PEP_STATUS generate_status = generate_keypair(session, identity);
-    cout << "generate_keypair() exits with " << generate_status << "\n";
+    cout << "generate_keypair() exits with " << status(generate_status) << endl;
     assert(generate_status == PEP_STATUS_OK);
-    cout << "generated key is " << identity->fpr << "\n";
+    cout << "generated key is " << identity->fpr << endl;
 
     const string key(identity->fpr);
     free_identity(identity);
@@ -243,13 +261,13 @@ int main(int argc, char* argv[])
 
     cout << "export_key()\n\n";
     PEP_STATUS export_status = export_key(session, key.c_str(), &key_data, &size);
-    cout << "export_key() exits with " << export_status << "\n";
+    cout << "export_key() exits with " << status(export_status) << endl;
     assert(export_status == PEP_STATUS_OK);
     cout << key_data << "\n\n";
 
-    cout << "deleting key pair " << key.c_str() << "\n";
+    cout << "deleting key pair " << key.c_str() << endl;
     PEP_STATUS delete_status = delete_keypair(session, key.c_str());
-    cout << "delete_keypair() exits with " << delete_status << "\n";
+    cout << "delete_keypair() exits with " << status(delete_status) << endl;
     assert(delete_status == PEP_STATUS_OK);
     
     cout << "import_key()\n";
@@ -262,31 +280,31 @@ int main(int argc, char* argv[])
 
     cout << "deleting key " << key.c_str() << " again\n";
     delete_status = delete_keypair(session, key.c_str());
-    cout << "delete_keypair() exits with " << delete_status << "\n";
+    cout << "delete_keypair() exits with " << status(delete_status) << endl;
     assert(delete_status == PEP_STATUS_OK);
 
     cout << "finding key for pep.test.john@pep-project.org\n";
     PEP_STATUS find_keys_status = find_keys(session, "pep.test.john@pep-project.org", &keylist);
-    cout << "find_keys() exits with " << find_keys_status << "\n";
+    cout << "find_keys() exits with " << status(find_keys_status) << endl;
     assert(find_keys_status == PEP_STATUS_OK);
     assert(keylist);
-    cout << "found: " << keylist->value << "\n";
+    cout << "found: " << keylist->value << endl;
     assert(keylist->next == NULL);
     free_stringlist(keylist);
 
     cout << "searching for vb@ulm.ccc.de on keyserver\n";
     PEP_STATUS recv_key_status = recv_key(session, "vb@ulm.ccc.de");
-    cout << "recv_key() exits with " << recv_key_status << "\n";
+    cout << "recv_key() exits with " << status(recv_key_status) << endl;
     assert(recv_key_status == PEP_STATUS_OK);
 
     cout << "sending vb@ulm.ccc.de to keyserver\n";
     PEP_STATUS send_key_status = send_key(session, "vb@ulm.ccc.de");
-    cout << "send_key() exits with " << send_key_status << "\n";
+    cout << "send_key() exits with " << status(send_key_status) << endl;
     assert(send_key_status == PEP_STATUS_OK);
 
     PEP_comm_type tcomm_type;
     PEP_STATUS tstatus = get_key_rating(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", &tcomm_type);
-    cout << "get_key_rating() exits with " << tstatus << "\n";
+    cout << "get_key_rating() exits with " << status(tstatus) << endl;
     assert(tstatus == PEP_STATUS_OK);
     assert(tcomm_type == PEP_ct_OpenPGP_unconfirmed);
     

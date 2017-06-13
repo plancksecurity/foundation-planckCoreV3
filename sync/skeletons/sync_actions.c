@@ -28,8 +28,8 @@ PEP_STATUS notifyInitFormGroup(
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-    assert(partner);
-    if (!(session && partner))
+    assert(!partner);
+    if (!(session && !partner))
         return PEP_ILLEGAL_VALUE;
 
     // working code
@@ -65,8 +65,8 @@ PEP_STATUS notifyInitAddOurDevice(
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-    assert(partner);
-    if (!(session && partner))
+    assert(!partner);
+    if (!(session && !partner))
         return PEP_ILLEGAL_VALUE;
 
     // working code
@@ -141,6 +141,80 @@ PEP_STATUS acceptHandshake(
     assert(session);
     assert(partner);
     if (!(session && partner))
+        return PEP_ILLEGAL_VALUE;
+
+    // working code
+
+    // free extra
+    return status;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+error:
+    // free extra
+    return status;
+}
+
+
+// makeGroup() - 
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        (must be NULL)
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS makeGroup(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(!partner);
+    if (!(session && !partner))
+        return PEP_ILLEGAL_VALUE;
+
+    // working code
+
+    // free extra
+    return status;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+error:
+    // free extra
+    return status;
+}
+
+
+// renewUUID() - 
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        (must be NULL)
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS renewUUID(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(!partner);
+    if (!(session && !partner))
         return PEP_ILLEGAL_VALUE;
 
     // working code
@@ -304,17 +378,17 @@ error:
 }
 
 
-// enterGroup() - 
+// storeGroupUpdate() - 
 //
 //  params:
 //      session (in)        session handle
 //      state (in)          state the state machine is in
-//      partner (in)        (must be NULL)
+//      partner (in)        partner to communicate with
 //
 //  returns:
 //      PEP_STATUS_OK or any other value on error
 
-PEP_STATUS enterGroup(
+PEP_STATUS storeGroupUpdate(
         PEP_SESSION session,
         DeviceState_state state,
         Identity partner,
@@ -324,8 +398,156 @@ PEP_STATUS enterGroup(
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session);
-    assert(!partner);
-    if (!(session && !partner))
+    assert(partner);
+    if (!(session && partner))
+        return PEP_ILLEGAL_VALUE;
+
+    // working code
+
+    // free extra
+    return status;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+error:
+    // free extra
+    return status;
+}
+
+
+// notifyInitAddOtherDevice() - 
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        partner to communicate with
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS notifyInitAddOtherDevice(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(partner);
+    if (!(session && partner))
+        return PEP_ILLEGAL_VALUE;
+
+    // working code
+
+    // free extra
+    return status;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+error:
+    // free extra
+    return status;
+}
+
+
+// notifyInitMoveOurDevice() - 
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        partner to communicate with
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS notifyInitMoveOurDevice(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(partner);
+    if (!(session && partner))
+        return PEP_ILLEGAL_VALUE;
+
+    // working code
+
+    // free extra
+    return status;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+error:
+    // free extra
+    return status;
+}
+
+
+// notifyOvertaken() - 
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        partner to communicate with
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS notifyOvertaken(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(partner);
+    if (!(session && partner))
+        return PEP_ILLEGAL_VALUE;
+
+    // working code
+
+    // free extra
+    return status;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+error:
+    // free extra
+    return status;
+}
+
+
+// notifyAcceptedDeviceMoved() - 
+//
+//  params:
+//      session (in)        session handle
+//      state (in)          state the state machine is in
+//      partner (in)        partner to communicate with
+//
+//  returns:
+//      PEP_STATUS_OK or any other value on error
+
+PEP_STATUS notifyAcceptedDeviceMoved(
+        PEP_SESSION session,
+        DeviceState_state state,
+        Identity partner,
+        void *extra
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(partner);
+    if (!(session && partner))
         return PEP_ILLEGAL_VALUE;
 
     // working code

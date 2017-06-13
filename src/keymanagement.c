@@ -91,7 +91,7 @@ DYNAMIC_API PEP_STATUS update_identity(
     assert(!EMPTYSTR(identity->address));
 
     if (!(session && identity && !EMPTYSTR(identity->address)))
-        return PEP_ILLEGAL_VALUE;
+        return ERROR(PEP_ILLEGAL_VALUE);
 
     if (identity->me || (identity->user_id && strcmp(identity->user_id, PEP_OWN_USERID) == 0)) {
         identity->me = true;
@@ -144,9 +144,23 @@ DYNAMIC_API PEP_STATUS update_identity(
 
         /* if we have a stored_identity fpr */
         if (!EMPTYSTR(stored_identity->fpr)) {
-            status = blacklist_is_listed(session, stored_identity->fpr, &dont_use_stored_fpr);
-            if (status != PEP_STATUS_OK)
-                dont_use_stored_fpr = true; 
+            bool revoked = false;
+            status = key_revoked(session, stored_identity->fpr, &revoked);
+            
+            if (status != PEP_STATUS_OK || revoked)
+                dont_use_stored_fpr = true;
+                
+            if (revoked) {
+                // Do stuff
+                status = update_trust_for_fpr(session, stored_identity->fpr, PEP_ct_key_revoked);
+                // What to do on failure? FIXME
+                status = replace_identities_fpr(session, stored_identity->fpr, "");
+            }
+            else {    
+                status = blacklist_is_listed(session, stored_identity->fpr, &dont_use_stored_fpr);
+                if (status != PEP_STATUS_OK)
+                    dont_use_stored_fpr = true; 
+            }
         }
             
 
@@ -179,10 +193,11 @@ DYNAMIC_API PEP_STATUS update_identity(
                        downgrade eventually trusted comm_type */
                     temp_id->comm_type = _comm_type_key;
                 } else {
-                    /* otherwise take stored comm_type as-is */
+                    /* otherwise take stored comm_type as-is except if 
+                       is unknown or is expired (but key not expired anymore) */
                     temp_id->comm_type = stored_identity->comm_type;
-                    if (temp_id->comm_type == PEP_ct_unknown) {
-                        /* except if unknown */
+                    if (temp_id->comm_type == PEP_ct_unknown ||
+                        temp_id->comm_type == PEP_ct_key_expired) {
                         temp_id->comm_type = _comm_type_key;
                     }
                 }
@@ -311,7 +326,7 @@ exit_free :
     free_identity(stored_identity);
     free_identity(temp_id);
     
-    return status;
+    return ERROR(status);
 }
 
 PEP_STATUS elect_ownkey(
@@ -338,19 +353,14 @@ PEP_STATUS elect_ownkey(
         for (_keylist = keylist; _keylist && _keylist->value; _keylist = _keylist->next) {
             bool is_own = false;
             
-            if (session->use_only_own_private_keys)
-            {
-                status = own_key_is_listed(session, _keylist->value, &is_own);
-                assert(status == PEP_STATUS_OK);
-                if (status != PEP_STATUS_OK) {
-                    free_stringlist(keylist);
-                    return status;
-                }
+            status = own_key_is_listed(session, _keylist->value, &is_own);
+            assert(status == PEP_STATUS_OK);
+            if (status != PEP_STATUS_OK) {
+                free_stringlist(keylist);
+                return status;
             }
-
-            // TODO : also accept synchronized device group keys ?
             
-            if (!session->use_only_own_private_keys || is_own)
+            if (is_own)
             {
                 PEP_comm_type _comm_type_key;
                 
@@ -406,7 +416,7 @@ PEP_STATUS _has_usable_priv_key(PEP_SESSION session, char* fpr,
     
     *is_usable = !dont_use_fpr;
     
-    return status;
+    return ERROR(status);
 }
 
 PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags)
@@ -424,7 +434,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     if (!(session && identity && !EMPTYSTR(identity->address) &&
             (EMPTYSTR(identity->user_id) ||
             strcmp(identity->user_id, PEP_OWN_USERID) == 0)))
-        return PEP_ILLEGAL_VALUE;
+        return ERROR(PEP_ILLEGAL_VALUE);
 
     identity->comm_type = PEP_ct_pEp;
     identity->me = true;
@@ -512,7 +522,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
         status = elect_ownkey(session, identity);
         assert(status == PEP_STATUS_OK);
         if (status != PEP_STATUS_OK) {
-            return status;
+            return ERROR(status);
         }
 
         bool has_private = false;
@@ -542,27 +552,18 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     {
         status = key_revoked(session, identity->fpr, &revoked);
 
-        // Forces re-election if key is missing and own-key-only not forced
-        if (!session->use_only_own_private_keys && status == PEP_KEY_NOT_FOUND) 
+        if (status != PEP_STATUS_OK) 
         {
-            status = elect_ownkey(session, identity);
-            assert(status == PEP_STATUS_OK);
-            if (status != PEP_STATUS_OK) {
-                return status;
-            }
-        } 
-        else if (status != PEP_STATUS_OK) 
-        {
-            return status;
+            return ERROR(status);
         }
     }
    
     bool new_key_generated = false;
 
     if (EMPTYSTR(identity->fpr) || revoked)
-    {        
+    {
         if(!do_keygen){
-            return PEP_GET_KEY_FAILED;
+            return ERROR(PEP_GET_KEY_FAILED);
         }
 
         if(revoked)
@@ -580,7 +581,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
             DEBUG_LOG("generating key pair failed", "debug", buf);
             if(revoked && r_fpr)
                 free(r_fpr);
-            return status;
+            return ERROR(status);
         }
 
         new_key_generated = true;
@@ -591,7 +592,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
                                  identity->fpr, time(NULL));
             free(r_fpr);
             if (status != PEP_STATUS_OK) {
-                return status;
+                return ERROR(status);
             }
         }
     }
@@ -604,7 +605,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
 
         assert(status == PEP_STATUS_OK);
         if (status != PEP_STATUS_OK) {
-            return status;
+            return ERROR(status);
         }
 
         if (status == PEP_STATUS_OK && expired) {
@@ -632,12 +633,12 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
         }
     }
 
-    return PEP_STATUS_OK;
+    return ERROR(PEP_STATUS_OK);
 }
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 {
-    return _myself(session, identity, true, false);
+    return ERROR(_myself(session, identity, true, false));
 }
 
 DYNAMIC_API PEP_STATUS register_examine_function(
@@ -779,10 +780,10 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     assert(!EMPTYSTR(ident->address));
     assert(!EMPTYSTR(ident->user_id));
     assert(!EMPTYSTR(ident->fpr));
-    assert(!ident->me);
+//    assert(!ident->me);
 
     if (!ident || EMPTYSTR(ident->address) || EMPTYSTR(ident->user_id) ||
-            EMPTYSTR(ident->fpr) || ident->me)
+            EMPTYSTR(ident->fpr)) // || ident->me)
         return PEP_ILLEGAL_VALUE;
 
     status = update_identity(session, ident);
@@ -1009,7 +1010,7 @@ DYNAMIC_API PEP_STATUS own_keys_retrieve(PEP_SESSION session, stringlist_t **key
     return _own_keys_retrieve(session, keylist, 0);
 }
 
-// TODO: Unused for now, but should be used when sync receive old keys (ENGINE-145)
+// FIXME: should it be be used when sync receive old keys ? (ENGINE-145)
 DYNAMIC_API PEP_STATUS set_own_key(
        PEP_SESSION session,
        const char *address,
@@ -1019,12 +1020,12 @@ DYNAMIC_API PEP_STATUS set_own_key(
     PEP_STATUS status = PEP_STATUS_OK;
     
     assert(session &&
-           address && address[0] &&
+           address &&
            fpr && fpr[0]
           );
     
     if (!(session &&
-          address && address[0] &&
+          address &&
           fpr && fpr[0]
          ))
         return PEP_ILLEGAL_VALUE;
