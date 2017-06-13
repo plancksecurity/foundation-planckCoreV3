@@ -886,7 +886,7 @@ DYNAMIC_API PEP_STATUS log_event(
     } while (result == SQLITE_BUSY);
     sqlite3_reset(session->log);
 
-    return ERROR(status);
+    return ADD_TO_LOG(status);
 }
 
 DYNAMIC_API PEP_STATUS log_service(
@@ -1988,7 +1988,7 @@ enomem:
     status = PEP_OUT_OF_MEMORY;
 
 the_end:
-    return ERROR(status);
+    return ADD_TO_LOG(status);
 }
 
 DYNAMIC_API PEP_STATUS get_languagelist(

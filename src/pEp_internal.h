@@ -316,9 +316,9 @@ static inline int _same_fpr(
 
 #ifdef DEBUG_ERRORSTACK
     PEP_STATUS session_add_error(PEP_SESSION session, const char* file, unsigned line, PEP_STATUS status);
-    #define ERROR(status)   session_add_error(session, __FILE__, __LINE__, (status))
-    #define GOTO(label)     do{ (void)session_add_error(session, __FILE__, __LINE__, status); goto label; }while(0)
+    #define ADD_TO_LOG(status)   session_add_error(session, __FILE__, __LINE__, (status))
+    #define GOTO(label)          do{ (void)session_add_error(session, __FILE__, __LINE__, status); goto label; }while(0)
 #else
-    #define ERROR(status)   (status)
-    #define GOTO(label)     goto label
+    #define ADD_TO_LOG(status)   (status)
+    #define GOTO(label)          goto label
 #endif
