@@ -2297,6 +2297,37 @@ DYNAMIC_API PEP_color color_from_rating(PEP_rating rating)
     return PEP_color_no_color;
 }
 
+/* [0-9]: 0x30 - 0x39; [A-F] = 0x41 - 0x46; [a-f] = 0x61 - 0x66 */
+static short asciihex_to_num(char a) {
+    short conv_num = -1;
+    if (a >= 0x30 && a <= 0x39)
+        conv_num = a - 0x30;
+    else {
+        // convert case, subtract offset, get number
+        conv_num = ((a | 0x20) - 0x61) + 10;
+        if (conv_num < 0xa || conv_num > 0xf)
+            conv_num = -1;
+    }
+    return conv_num;
+}
+
+static char num_to_asciihex(short h) {
+    if (h < 0 || h > 16)
+        return '\0';
+    if (h < 10)
+        return (char)(h + 0x30);
+    return (char)((h - 10) + 0x41); // for readability
+}
+
+static char xor_hex_chars(char a, char b) {
+    short a_num = asciihex_to_num(a);
+    short b_num = asciihex_to_num(b);
+    if (a_num < 0 || b_num < 0)
+        return '\0';
+    short xor_num = a_num^b_num;
+    return num_to_asciihex(xor_num);
+}
+
 DYNAMIC_API PEP_STATUS get_trustwords(
     PEP_SESSION session, const pEp_identity* id1, const pEp_identity* id2,
     const char* lang, char **words, size_t *wsize, bool full
@@ -2310,95 +2341,66 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     assert(words);
     assert(wsize);
 
+    int SHORT_NUM_TWORDS = 5; 
+    
     if (!(session && id1 && id2 && words && wsize) ||
         !(id1->fpr) || (!id2->fpr))
         return PEP_ILLEGAL_VALUE;
 
-    const char *source1 = id1->fpr;
-    const char *source2 = id2->fpr;
+    char *source1 = id1->fpr;
+    char *source2 = id2->fpr;
 
-    *words = NULL;
+    // in principle this should be the same, but maybe with other protocols it won't 
+    int source1_len = strlen(source1);
+    int source2_len = strlen(source2);
+    int joint_len;
+    int max_len;
+        
+    *words = NULL;    
     *wsize = 0;
 
-    const size_t SHORT_NUM_TWORDS = 5;
-
-    // N.B. THIS will have to be changed once we start checking trustword entropy.
-    // For now, full is ALL, and otherwise it's 5-per-id.
-    size_t max_words_per_id = (full ? 0 : SHORT_NUM_TWORDS);
-
-    char* first_set = NULL;
-    char* second_set = NULL;
-    size_t first_wsize = 0;
-    size_t second_wsize = 0;
-
-    int fpr_comparison = -255;
-    PEP_STATUS status = _compare_fprs(source1, strlen(source1), source2, strlen(source2), &fpr_comparison);
-    if (status != PEP_STATUS_OK)
-        return status;
-
-    char* _retstr = NULL;
-
-    switch (fpr_comparison) {
-        case 1: // source1 > source2
-            status = trustwords(session, source2, lang, &first_set, &first_wsize, max_words_per_id);
-            if (status != PEP_STATUS_OK)
-                goto error_release;
-            status = trustwords(session, source1, lang, &second_set, &second_wsize, max_words_per_id);
-            if (status != PEP_STATUS_OK)
-                goto error_release;
-            break;
-        case 0:
-        case -1: // source1 <= source2
-            status = trustwords(session, source1, lang, &first_set, &first_wsize, max_words_per_id);
-            if (status != PEP_STATUS_OK)
-                goto error_release;
-            status = trustwords(session, source2, lang, &second_set, &second_wsize, max_words_per_id);
-            if (status != PEP_STATUS_OK)
-                goto error_release;
-            break;
-        default:
-            return ERROR(PEP_UNKNOWN_ERROR); // shouldn't be possible
+    max_len = (source1_len > source2_len ? source1_len : source2_len);
+    joint_len = (source1_len > source2_len ? source2_len : source1_len);
+    
+    char* XORed_fpr = (char*)(calloc(max_len + 1, 1));
+    
+    int i = 0;
+    
+    while (i < joint_len) {
+        XORed_fpr[i] = xor_hex_chars(*source1, *source2);
+        i++; source1++; source2++;
     }
-
-    size_t _wsize = first_wsize + second_wsize;
-
-    bool needs_space = (first_set[first_wsize - 1] != ' ');
-
-    if (needs_space)
-        _wsize++;
-
-    _retstr = calloc(1, _wsize + 1);
-
-    size_t len = strlcpy(_retstr, first_set, _wsize);
-    if (len >= _wsize) {
-        status = PEP_UNKNOWN_ERROR;
-        goto error_release;
-    }
-    if (needs_space) {
-        strlcat(_retstr, " ", _wsize);
-        if (len >= _wsize) {
-            status = PEP_UNKNOWN_ERROR;
-            goto error_release;
+    
+    if (joint_len != max_len) {
+        char* remainder_char = (source1_len > source2_len ? source1 : source2);        
+        while (i < max_len) {
+            XORed_fpr[i] = *remainder_char;
+            i++; remainder_char++;
         }
     }
-    strlcat(_retstr, second_set, _wsize);
-    if (len >= _wsize){
-        status = PEP_UNKNOWN_ERROR;
-        goto error_release;
-    }
+    
+    XORed_fpr[max_len] = '\0';
+    
+    size_t max_words_per_id = (full ? 0 : SHORT_NUM_TWORDS);
 
-    *words = _retstr;
-    *wsize = _wsize;
+    char* the_words = NULL;
+    size_t the_size = 0;
+
+    PEP_STATUS status = trustwords(session, XORed_fpr, lang, &the_words, &the_size, max_words_per_id);
+    if (status != PEP_STATUS_OK)
+        goto error_release;
+
+    *words = the_words;
+    *wsize = the_size;
+    
     status = PEP_STATUS_OK;
 
     goto the_end;
 
     error_release:
-    free(_retstr);
-
+        free (XORed_fpr);
+        
     the_end:
-    free(first_set);
-    free(second_set);
     return ERROR(status);
 }
 
