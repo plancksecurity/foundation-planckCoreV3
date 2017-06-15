@@ -2053,8 +2053,6 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
         if (status != PEP_STATUS_OK)
             GOTO(pep_error);
-
-        status = decrypt_status;
     }
     else
     {
@@ -2090,7 +2088,6 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                             PEP_decrypt_flag_ignore :
                             PEP_decrypt_flag_consume;
 
-                status = decrypt_status;
             }
             else if (status != PEP_STATUS_OK){
                 goto pep_error;
@@ -2109,7 +2106,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     *dst = msg;
     *keylist = _keylist;
 
-    return ADD_TO_LOG(status);
+    if(decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
+        return ADD_TO_LOG(PEP_STATUS_OK);
+    else
+        return ADD_TO_LOG(decrypt_status);
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
