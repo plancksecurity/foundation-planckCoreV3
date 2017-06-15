@@ -9,6 +9,7 @@
 #include <assert.h>
 #include "mime.h"
 #include "message_api.h"
+#include "keymanagement.h"
 #include "test_util.h"
 
 using namespace std;
@@ -35,9 +36,13 @@ int main() {
     assert(statuspriv == PEP_STATUS_OK);
 
     cout << "creating message…\n";
-    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, "Alice Test");
+    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", PEP_OWN_USERID, "Alice Test");
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, "42", "Bob Test");
     alice->me = true;
+
+    PEP_STATUS mystatus = myself(session, alice);
+    assert(mystatus == PEP_STATUS_OK);
+
     identity_list* to_list = new_identity_list(bob); // to bob
     message* outgoing_message = new_message(PEP_dir_outgoing);
     assert(outgoing_message);

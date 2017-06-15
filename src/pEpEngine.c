@@ -29,6 +29,11 @@ static const char *sql_get_identity =
     "       and pgp_keypair_fpr = identity.main_key_id"
     "   where address = ?1 and identity.user_id = ?2;";
 
+static const char *sql_replace_identities_fpr =  
+    "update identity"
+    "   set main_key_id = ?1 "
+    "   where main_key_id = ?2 ;";
+
 // Set person, but if already exist, only update.
 // if main_key_id already set, don't touch.
 static const char *sql_set_person = 
@@ -85,6 +90,11 @@ static const char *sql_set_trust =
     "insert or replace into trust (user_id, pgp_keypair_fpr, comm_type) "
     "values (?1, upper(replace(?2,' ','')), ?3) ;";
 
+static const char *sql_update_trust_for_fpr =
+    "update trust "
+    "set comm_type = ?1 "
+    "where pgp_keypair_fpr = upper(replace(?2,' ','')) ;";
+
 static const char *sql_get_trust = 
     "select comm_type from trust where user_id = ?1 "
     "and pgp_keypair_fpr = upper(replace(?2,' ','')) ;";
@@ -136,7 +146,11 @@ static const char *sql_own_key_is_listed =
     " union "
     "  select main_key_id from identity "
     "   where main_key_id = upper(replace(?1,' ',''))"
-    "    and user_id = '" PEP_OWN_USERID "' );";
+    "    and user_id = '" PEP_OWN_USERID "' "
+    " union "
+    "  select fpr from own_keys "
+    "   where fpr = upper(replace(?1,' ',''))"
+    " );";
 
 static const char *sql_own_identities_retrieve =  
     "select address, fpr, username, "
@@ -209,6 +223,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     int int_result;
     
     bool in_first = false;
+    bool very_first = false;
 
     assert(sqlite3_threadsafe());
     if (!sqlite3_threadsafe())
@@ -233,6 +248,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         goto enomem;
 
     _session->version = PEP_ENGINE_VERSION;
+
+#ifdef DEBUG_ERRORSTACK
+    _session->errorstack = new_stringlist("init()");
+#endif
 
     assert(LOCAL_DB);
     if (LOCAL_DB == NULL) {
@@ -462,6 +481,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 assert(int_result == SQLITE_OK);
             }
         }
+        else { 
+            // Version from DB was 0, it means this is initial setup.
+            // DB has just been created, and all tables are empty.
+            very_first = true;
+        }
 
         if (version < atoi(_DDL_USER_VERSION)) {
             int_result = sqlite3_exec(
@@ -475,7 +499,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             );
             assert(int_result == SQLITE_OK);
         }
-
     }
 
     int_result = sqlite3_prepare_v2(_session->db, sql_log,
@@ -488,6 +511,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_identity,
             (int)strlen(sql_get_identity), &_session->get_identity, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_replace_identities_fpr,
+            (int)strlen(sql_replace_identities_fpr), 
+            &_session->replace_identities_fpr, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_person,
@@ -523,6 +551,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_trust,
             (int)strlen(sql_set_trust), &_session->set_trust, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_update_trust_for_fpr,
+            (int)strlen(sql_update_trust_for_fpr), &_session->update_trust_for_fpr, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_trust,
@@ -635,11 +667,44 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     // runtime config
 
 #ifdef ANDROID
-    _session->use_only_own_private_keys = true;
 #elif TARGET_OS_IPHONE
-    _session->use_only_own_private_keys = true;
-#else
-    _session->use_only_own_private_keys = false;
+#else /* Desktop */
+    if (very_first)
+    {
+        // On first run, all private keys already present in PGP keyring 
+        // are taken as own in order to seamlessly integrate with
+        // pre-existing GPG setup.
+
+        ////////////////////////////// WARNING: ///////////////////////////
+        // Considering all PGP priv keys as own is dangerous in case of 
+        // re-initialization of pEp DB, while keeping PGP keyring as-is!
+        //
+        // Indeed, if pEpEngine did import spoofed private keys in previous
+        // install, then those keys become automatically trusted in case 
+        // pEp_management.db is deleted.
+        //
+        // A solution to distinguish bare GPG keyring from pEp keyring is
+        // needed here. Then keys managed by pEpEngine wouldn't be
+        // confused with GPG keys managed by the user through GPA.
+        ///////////////////////////////////////////////////////////////////
+        
+        stringlist_t *keylist = NULL;
+
+        status = find_private_keys(_session, NULL, &keylist);
+        assert(status != PEP_OUT_OF_MEMORY);
+        if (status == PEP_OUT_OF_MEMORY)
+            return PEP_OUT_OF_MEMORY;
+        
+        if (keylist != NULL && keylist->value != NULL)
+        {
+            stringlist_t *_keylist;
+            for (_keylist = keylist; _keylist && _keylist->value; _keylist = _keylist->next) {
+                status = set_own_key(_session, 
+                                     "" /* address is unused in own_keys */,
+                                     _keylist->value);
+            }
+        }
+    }
 #endif
 
     // sync_session set to own session by default
@@ -685,6 +750,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->trustword);
             if (session->get_identity)
                 sqlite3_finalize(session->get_identity);
+            if (session->replace_identities_fpr)
+                sqlite3_finalize(session->replace_identities_fpr);        
             if (session->set_person)
                 sqlite3_finalize(session->set_person);
             if (session->set_device_group)
@@ -701,6 +768,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->unset_identity_flags);
             if (session->set_trust)
                 sqlite3_finalize(session->set_trust);
+            if (session->update_trust_for_fpr)
+                sqlite3_finalize(session->update_trust_for_fpr);
             if (session->get_trust)
                 sqlite3_finalize(session->get_trust);
             if (session->least_trust)
@@ -749,6 +818,9 @@ DYNAMIC_API void release(PEP_SESSION session)
         release_transport_system(session, out_last);
         release_cryptotech(session, out_last);
 
+#ifdef DEBUG_ERRORSTACK
+        free_stringlist(session->errorstack);
+#endif
         free(session);
     }
 }
@@ -765,17 +837,16 @@ DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable)
     session->unencrypted_subject = enable;
 }
 
-DYNAMIC_API void config_use_only_own_private_keys(PEP_SESSION session,
-        bool enable)
-{
-    assert(session);
-    session->use_only_own_private_keys = enable;
-}
-
 DYNAMIC_API void config_keep_sync_msg(PEP_SESSION session, bool enable)
 {
     assert(session);
     session->keep_sync_msg = enable;
+}
+
+DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable)
+{
+    assert(session);
+    session->service_log = enable;
 }
 
 DYNAMIC_API PEP_STATUS log_event(
@@ -815,7 +886,25 @@ DYNAMIC_API PEP_STATUS log_event(
     } while (result == SQLITE_BUSY);
     sqlite3_reset(session->log);
 
-    return status;
+    return ADD_TO_LOG(status);
+}
+
+DYNAMIC_API PEP_STATUS log_service(
+        PEP_SESSION session,
+        const char *title,
+        const char *entity,
+        const char *description,
+        const char *comment
+    )
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    if (session->service_log)
+        return log_event(session, title, entity, description, comment);
+    else
+        return PEP_STATUS_OK;
 }
 
 DYNAMIC_API PEP_STATUS trustword(
@@ -1105,13 +1194,15 @@ DYNAMIC_API PEP_STATUS set_identity(
                 identity->user_id && identity->username))
         return PEP_ILLEGAL_VALUE;
 
+    PEP_STATUS status = PEP_STATUS_OK;
+    
     bool listed;
 
     bool has_fpr = (identity->fpr && identity->fpr[0] != '\0');
     
     if (has_fpr) {    
         // blacklist check
-        PEP_STATUS status = blacklist_is_listed(session, identity->fpr, &listed);
+        status = blacklist_is_listed(session, identity->fpr, &listed);
         assert(status == PEP_STATUS_OK);
         if (status != PEP_STATUS_OK)
             return status;
@@ -1189,6 +1280,8 @@ DYNAMIC_API PEP_STATUS set_identity(
             }
         }
 
+        // status = set_trust(session, identity->user_id, identity->fpr,
+        //                    identity->comm_type)
         sqlite3_reset(session->set_trust);
         sqlite3_bind_text(session->set_trust, 1, identity->user_id, -1,
                 SQLITE_STATIC);
@@ -1208,6 +1301,52 @@ DYNAMIC_API PEP_STATUS set_identity(
         return PEP_STATUS_OK;
     else
         return PEP_COMMIT_FAILED;
+}
+
+PEP_STATUS replace_identities_fpr(PEP_SESSION session, 
+                                 const char* old_fpr, 
+                                 const char* new_fpr) 
+{
+    assert(old_fpr);
+    assert(new_fpr);
+    
+    if (!old_fpr || !new_fpr)
+        return PEP_ILLEGAL_VALUE;
+            
+    sqlite3_reset(session->replace_identities_fpr);
+    sqlite3_bind_text(session->replace_identities_fpr, 1, new_fpr, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->replace_identities_fpr, 2, old_fpr, -1,
+                      SQLITE_STATIC);
+
+    int result = sqlite3_step(session->replace_identities_fpr);
+    sqlite3_reset(session->replace_identities_fpr);
+    
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_IDENTITY;
+
+    return PEP_STATUS_OK;
+}
+
+
+PEP_STATUS update_trust_for_fpr(PEP_SESSION session, 
+                                const char* fpr, 
+                                PEP_comm_type comm_type)
+{
+    if (!fpr)
+        return PEP_ILLEGAL_VALUE;
+        
+    sqlite3_reset(session->update_trust_for_fpr);
+    sqlite3_bind_int(session->update_trust_for_fpr, 1, comm_type);
+    sqlite3_bind_text(session->update_trust_for_fpr, 2, fpr, -1,
+            SQLITE_STATIC);
+    int result = sqlite3_step(session->update_trust_for_fpr);
+    sqlite3_reset(session->update_trust_for_fpr);
+    if (result != SQLITE_DONE) {
+        return PEP_CANNOT_SET_TRUST;
+    }
+    
+    return PEP_STATUS_OK;
 }
 
 DYNAMIC_API PEP_STATUS set_device_group(
@@ -1863,7 +2002,7 @@ enomem:
     status = PEP_OUT_OF_MEMORY;
 
 the_end:
-    return status;
+    return ADD_TO_LOG(status);
 }
 
 DYNAMIC_API PEP_STATUS get_languagelist(
@@ -2252,8 +2391,8 @@ PEP_STATUS key_created(
 
 PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
                              stringlist_t **keylist) {
-    assert(session && pattern && keylist);
-    if (!(session && pattern && keylist))
+    assert(session && keylist);
+    if (!(session && keylist))
         return PEP_ILLEGAL_VALUE;
     
     return session->cryptotech[PEP_crypt_OpenPGP].find_private_keys(session, pattern,
@@ -2286,3 +2425,52 @@ DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session)
 
     return PEP_STATUS_OK;
 }
+
+#ifdef DEBUG_ERRORSTACK
+PEP_STATUS session_add_error(PEP_SESSION session, const char* file, unsigned line, PEP_STATUS status)
+{
+    char logline[48];
+    if(status>0)
+    {
+        snprintf(logline,47, "%.24s:%u status=%u (0x%x)", file, line, status, status);
+    }else{
+        snprintf(logline,47, "%.24s:%u status=%i.", file, line, status);
+    }
+    stringlist_add(session->errorstack, logline); // logline is copied! :-)
+    return status;
+}
+
+DYNAMIC_API const stringlist_t* get_errorstack(PEP_SESSION session)
+{
+    return session->errorstack;
+}
+
+DYNAMIC_API void clear_errorstack(PEP_SESSION session)
+{
+    const int old_len = stringlist_length(session->errorstack);
+    char buf[48];
+    free_stringlist(session->errorstack);
+    snprintf(buf, 47, "(%i elements cleared)", old_len);
+    session->errorstack = new_stringlist(buf);
+}
+
+#else
+
+static stringlist_t* dummy_errorstack = NULL;
+
+DYNAMIC_API const stringlist_t* get_errorstack(PEP_SESSION session)
+{
+    if(dummy_errorstack == NULL)
+    {
+        dummy_errorstack = new_stringlist("( Please recompile pEpEngine with -DDEBUG_ERRORSTACK )");
+    }
+
+    return dummy_errorstack;
+}
+
+DYNAMIC_API void clear_errorstack(PEP_SESSION session)
+{
+    // nothing to do here
+}
+
+#endif
