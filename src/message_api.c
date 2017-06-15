@@ -998,7 +998,7 @@ bool import_attached_keys(
             identity_list *local_private_idents = NULL;
             import_key(session, bl->value, bl->size, &local_private_idents);
             remove = true;
-            if (*private_idents == NULL && local_private_idents != NULL)
+            if (private_idents && *private_idents == NULL && local_private_idents != NULL)
                 *private_idents = local_private_idents;
             else
                 free_identity_list(local_private_idents);
