@@ -2328,6 +2328,43 @@ static char xor_hex_chars(char a, char b) {
     return num_to_asciihex(xor_num);
 }
 
+static char* skip_separators(char* current, char* begin) {
+    while (current >= begin) {
+        /* .:,;-_ ' ' - [2c-2e] [3a-3b] [20] [5f] */
+        char check_char = *current;
+        switch (check_char) {
+            case '.':
+            case ':':
+            case ',':
+            case ';':
+            case '-':
+            case '_':
+            case ' ':
+                current--;
+                continue;
+            default:
+                break;
+        }
+        break;
+    }
+    return current;
+}
+
+PEP_STATUS check_for_zero_fpr(char* fpr) {
+    PEP_STATUS status = PEP_TRUSTWORDS_DUPLICATE_FPR;
+    
+    while (*fpr) {
+        if (*fpr != '0') {
+            status = PEP_STATUS_OK;
+            break;
+        }
+        fpr++;    
+    }
+    
+    return status;
+    
+}
+
 DYNAMIC_API PEP_STATUS get_trustwords(
     PEP_SESSION session, const pEp_identity* id1, const pEp_identity* id2,
     const char* lang, char **words, size_t *wsize, bool full
@@ -2343,6 +2380,8 @@ DYNAMIC_API PEP_STATUS get_trustwords(
 
     int SHORT_NUM_TWORDS = 5; 
     
+    PEP_STATUS status = PEP_STATUS_OK;
+    
     if (!(session && id1 && id2 && words && wsize) ||
         !(id1->fpr) || (!id2->fpr))
         return PEP_ILLEGAL_VALUE;
@@ -2350,43 +2389,88 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     char *source1 = id1->fpr;
     char *source2 = id2->fpr;
 
-    // in principle this should be the same, but maybe with other protocols it won't 
     int source1_len = strlen(source1);
     int source2_len = strlen(source2);
-    int joint_len;
     int max_len;
         
     *words = NULL;    
     *wsize = 0;
 
     max_len = (source1_len > source2_len ? source1_len : source2_len);
-    joint_len = (source1_len > source2_len ? source2_len : source1_len);
     
-    char* XORed_fpr = (char*)(calloc(max_len + 1, 1));
-    
-    int i = 0;
-    
-    while (i < joint_len) {
-        XORed_fpr[i] = xor_hex_chars(*source1, *source2);
-        i++; source1++; source2++;
+    char* XORed_fpr = (char*)(calloc(1,max_len + 1));
+    *(XORed_fpr + max_len) = '\0';
+    char* result_curr = XORed_fpr + max_len - 1;
+    char* source1_curr = source1 + source1_len - 1;
+    char* source2_curr = source2 + source2_len - 1;
+
+    while (source1 <= source1_curr && source2 <= source2_curr) {
+        source1_curr = skip_separators(source1_curr, source1);
+        source2_curr = skip_separators(source2_curr, source2);
+        
+        if (source1_curr < source1 || source2_curr < source2)
+            break;
+            
+        char xor_hex = xor_hex_chars(*source1_curr, *source2_curr);
+        if (xor_hex == '\0') {
+            status = PEP_ILLEGAL_VALUE;
+            goto error_release;
+        }
+        
+        *result_curr = xor_hex;
+        result_curr--; source1_curr--; source2_curr--;
     }
+
+    char* remainder_start = NULL;
+    char* remainder_curr = NULL;
     
-    if (joint_len != max_len) {
-        char* remainder_char = (source1_len > source2_len ? source1 : source2);        
-        while (i < max_len) {
-            XORed_fpr[i] = *remainder_char;
-            i++; remainder_char++;
+    if (source1 <= source1_curr) {
+        remainder_start = source1;
+        remainder_curr = source1_curr;
+    }
+    else if (source2 <= source2_curr) {
+        remainder_start = source2;
+        remainder_curr = source2_curr;
+    }
+    if (remainder_curr) {
+        while (remainder_start <= remainder_curr) {
+            remainder_curr = skip_separators(remainder_curr, remainder_start);
+            
+            if (remainder_curr < remainder_start)
+                break;
+            
+            char the_char = *remainder_curr;
+            
+            if (asciihex_to_num(the_char) < 0) {
+                status = PEP_ILLEGAL_VALUE;
+                goto error_release;
+            }
+            
+            *result_curr = the_char;                
+            result_curr--;
+            remainder_curr--;
         }
     }
     
-    XORed_fpr[max_len] = '\0';
+    result_curr++;
+
+    if (result_curr > XORed_fpr) {
+        char* tempstr = strdup(result_curr);
+        free(XORed_fpr);
+        XORed_fpr = tempstr;
+    }
+    
+    status = check_for_zero_fpr(XORed_fpr);
+    
+    if (status != PEP_STATUS_OK)
+        goto error_release;
     
     size_t max_words_per_id = (full ? 0 : SHORT_NUM_TWORDS);
 
     char* the_words = NULL;
     size_t the_size = 0;
 
-    PEP_STATUS status = trustwords(session, XORed_fpr, lang, &the_words, &the_size, max_words_per_id);
+    status = trustwords(session, XORed_fpr, lang, &the_words, &the_size, max_words_per_id);
     if (status != PEP_STATUS_OK)
         goto error_release;
 
