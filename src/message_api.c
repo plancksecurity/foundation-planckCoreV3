@@ -2304,6 +2304,74 @@ DYNAMIC_API PEP_color color_from_rating(PEP_rating rating)
     return PEP_color_no_color;
 }
 
+/* [0-9]: 0x30 - 0x39; [A-F] = 0x41 - 0x46; [a-f] = 0x61 - 0x66 */
+static short asciihex_to_num(char a) {
+    short conv_num = -1;
+    if (a >= 0x30 && a <= 0x39)
+        conv_num = a - 0x30;
+    else {
+        // convert case, subtract offset, get number
+        conv_num = ((a | 0x20) - 0x61) + 10;
+        if (conv_num < 0xa || conv_num > 0xf)
+            conv_num = -1;
+    }
+    return conv_num;
+}
+
+static char num_to_asciihex(short h) {
+    if (h < 0 || h > 16)
+        return '\0';
+    if (h < 10)
+        return (char)(h + 0x30);
+    return (char)((h - 10) + 0x41); // for readability
+}
+
+static char xor_hex_chars(char a, char b) {
+    short a_num = asciihex_to_num(a);
+    short b_num = asciihex_to_num(b);
+    if (a_num < 0 || b_num < 0)
+        return '\0';
+    short xor_num = a_num^b_num;
+    return num_to_asciihex(xor_num);
+}
+
+static char* skip_separators(char* current, char* begin) {
+    while (current >= begin) {
+        /* .:,;-_ ' ' - [2c-2e] [3a-3b] [20] [5f] */
+        char check_char = *current;
+        switch (check_char) {
+            case '.':
+            case ':':
+            case ',':
+            case ';':
+            case '-':
+            case '_':
+            case ' ':
+                current--;
+                continue;
+            default:
+                break;
+        }
+        break;
+    }
+    return current;
+}
+
+PEP_STATUS check_for_zero_fpr(char* fpr) {
+    PEP_STATUS status = PEP_TRUSTWORDS_DUPLICATE_FPR;
+    
+    while (*fpr) {
+        if (*fpr != '0') {
+            status = PEP_STATUS_OK;
+            break;
+        }
+        fpr++;    
+    }
+    
+    return status;
+    
+}
+
 DYNAMIC_API PEP_STATUS get_trustwords(
     PEP_SESSION session, const pEp_identity* id1, const pEp_identity* id2,
     const char* lang, char **words, size_t *wsize, bool full
@@ -2317,95 +2385,113 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     assert(words);
     assert(wsize);
 
+    int SHORT_NUM_TWORDS = 5; 
+    
+    PEP_STATUS status = PEP_STATUS_OK;
+    
     if (!(session && id1 && id2 && words && wsize) ||
         !(id1->fpr) || (!id2->fpr))
         return PEP_ILLEGAL_VALUE;
 
-    const char *source1 = id1->fpr;
-    const char *source2 = id2->fpr;
+    char *source1 = id1->fpr;
+    char *source2 = id2->fpr;
 
-    *words = NULL;
+    int source1_len = strlen(source1);
+    int source2_len = strlen(source2);
+    int max_len;
+        
+    *words = NULL;    
     *wsize = 0;
 
-    const size_t SHORT_NUM_TWORDS = 5;
+    max_len = (source1_len > source2_len ? source1_len : source2_len);
+    
+    char* XORed_fpr = (char*)(calloc(1,max_len + 1));
+    *(XORed_fpr + max_len) = '\0';
+    char* result_curr = XORed_fpr + max_len - 1;
+    char* source1_curr = source1 + source1_len - 1;
+    char* source2_curr = source2 + source2_len - 1;
 
-    // N.B. THIS will have to be changed once we start checking trustword entropy.
-    // For now, full is ALL, and otherwise it's 5-per-id.
-    size_t max_words_per_id = (full ? 0 : SHORT_NUM_TWORDS);
-
-    char* first_set = NULL;
-    char* second_set = NULL;
-    size_t first_wsize = 0;
-    size_t second_wsize = 0;
-
-    int fpr_comparison = -255;
-    PEP_STATUS status = _compare_fprs(source1, strlen(source1), source2, strlen(source2), &fpr_comparison);
-    if (status != PEP_STATUS_OK)
-        return status;
-
-    char* _retstr = NULL;
-
-    switch (fpr_comparison) {
-        case 1: // source1 > source2
-            status = trustwords(session, source2, lang, &first_set, &first_wsize, max_words_per_id);
-            if (status != PEP_STATUS_OK)
-                goto error_release;
-            status = trustwords(session, source1, lang, &second_set, &second_wsize, max_words_per_id);
-            if (status != PEP_STATUS_OK)
-                goto error_release;
+    while (source1 <= source1_curr && source2 <= source2_curr) {
+        source1_curr = skip_separators(source1_curr, source1);
+        source2_curr = skip_separators(source2_curr, source2);
+        
+        if (source1_curr < source1 || source2_curr < source2)
             break;
-        case 0:
-        case -1: // source1 <= source2
-            status = trustwords(session, source1, lang, &first_set, &first_wsize, max_words_per_id);
-            if (status != PEP_STATUS_OK)
-                goto error_release;
-            status = trustwords(session, source2, lang, &second_set, &second_wsize, max_words_per_id);
-            if (status != PEP_STATUS_OK)
-                goto error_release;
-            break;
-        default:
-            return ADD_TO_LOG(PEP_UNKNOWN_ERROR); // shouldn't be possible
-    }
-
-    size_t _wsize = first_wsize + second_wsize;
-
-    bool needs_space = (first_set[first_wsize - 1] != ' ');
-
-    if (needs_space)
-        _wsize++;
-
-    _retstr = calloc(1, _wsize + 1);
-
-    size_t len = strlcpy(_retstr, first_set, _wsize);
-    if (len >= _wsize) {
-        status = PEP_UNKNOWN_ERROR;
-        goto error_release;
-    }
-    if (needs_space) {
-        strlcat(_retstr, " ", _wsize);
-        if (len >= _wsize) {
-            status = PEP_UNKNOWN_ERROR;
+            
+        char xor_hex = xor_hex_chars(*source1_curr, *source2_curr);
+        if (xor_hex == '\0') {
+            status = PEP_ILLEGAL_VALUE;
             goto error_release;
         }
-    }
-    strlcat(_retstr, second_set, _wsize);
-    if (len >= _wsize){
-        status = PEP_UNKNOWN_ERROR;
-        goto error_release;
+        
+        *result_curr = xor_hex;
+        result_curr--; source1_curr--; source2_curr--;
     }
 
-    *words = _retstr;
-    *wsize = _wsize;
+    char* remainder_start = NULL;
+    char* remainder_curr = NULL;
+    
+    if (source1 <= source1_curr) {
+        remainder_start = source1;
+        remainder_curr = source1_curr;
+    }
+    else if (source2 <= source2_curr) {
+        remainder_start = source2;
+        remainder_curr = source2_curr;
+    }
+    if (remainder_curr) {
+        while (remainder_start <= remainder_curr) {
+            remainder_curr = skip_separators(remainder_curr, remainder_start);
+            
+            if (remainder_curr < remainder_start)
+                break;
+            
+            char the_char = *remainder_curr;
+            
+            if (asciihex_to_num(the_char) < 0) {
+                status = PEP_ILLEGAL_VALUE;
+                goto error_release;
+            }
+            
+            *result_curr = the_char;                
+            result_curr--;
+            remainder_curr--;
+        }
+    }
+    
+    result_curr++;
+
+    if (result_curr > XORed_fpr) {
+        char* tempstr = strdup(result_curr);
+        free(XORed_fpr);
+        XORed_fpr = tempstr;
+    }
+    
+    status = check_for_zero_fpr(XORed_fpr);
+    
+    if (status != PEP_STATUS_OK)
+        goto error_release;
+    
+    size_t max_words_per_id = (full ? 0 : SHORT_NUM_TWORDS);
+
+    char* the_words = NULL;
+    size_t the_size = 0;
+
+    status = trustwords(session, XORed_fpr, lang, &the_words, &the_size, max_words_per_id);
+    if (status != PEP_STATUS_OK)
+        goto error_release;
+
+    *words = the_words;
+    *wsize = the_size;
+    
     status = PEP_STATUS_OK;
 
     goto the_end;
 
     error_release:
-    free(_retstr);
-
+        free (XORed_fpr);
+        
     the_end:
-    free(first_set);
-    free(second_set);
     return ADD_TO_LOG(status);
 }
 
