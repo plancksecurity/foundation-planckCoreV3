@@ -995,8 +995,13 @@ bool import_attached_keys(
         if (bl && bl->value && bl->size && bl->size < MAX_KEY_SIZE
                 && is_key(bl))
         {
-            import_key(session, bl->value, bl->size, private_idents);
+            identity_list *local_private_idents = NULL;
+            import_key(session, bl->value, bl->size, &local_private_idents);
             remove = true;
+            if (private_idents && *private_idents == NULL && local_private_idents != NULL)
+                *private_idents = local_private_idents;
+            else
+                free_identity_list(local_private_idents);
         }
     }
     return remove;
@@ -2088,7 +2093,6 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                             PEP_decrypt_flag_ignore :
                             PEP_decrypt_flag_consume;
 
-                status = decrypt_status;
             }
             else if (status != PEP_STATUS_OK){
                 goto pep_error;
@@ -2107,7 +2111,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     *dst = msg;
     *keylist = _keylist;
 
-    return PEP_STATUS_OK;
+    if(decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
+        return ADD_TO_LOG(PEP_STATUS_OK);
+    else
+        return ADD_TO_LOG(decrypt_status);
 
 enomem:
     status = PEP_OUT_OF_MEMORY;

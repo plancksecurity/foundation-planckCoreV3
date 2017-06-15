@@ -227,7 +227,9 @@ typedef unsigned int PEP_decrypt_flags_t;
 //      flags (out)         flags to signal special decryption features
 //
 //  return value:
-//      error status or PEP_STATUS_OK on success
+//      error status 
+//      or PEP_DECRYPTED if message decrypted but not verified
+//      or PEP_STATUS_OK on success
 //
 //	caveat:
 //	    the ownership of src remains with the caller

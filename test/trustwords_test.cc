@@ -208,7 +208,7 @@ int main() {
     
     pEp_identity* identity6 = new_identity(
         "nobody4@kgrothoff.org",
-        "F1F932086185C15917B72D30571AFBCA5493553",
+        "F1F932086185c15917B72D30571AFBCA5493553",
         "blargh",
         "Krista Grothoff");
     
