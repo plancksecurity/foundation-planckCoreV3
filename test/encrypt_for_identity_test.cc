@@ -99,7 +99,7 @@ int main() {
     assert(decrypted_msg);
     assert(keylist_used);
     assert(rating);
-    assert(status == PEP_STATUS_OK && rating == PEP_rating_unreliable);
+    assert(status == PEP_DECRYPTED && rating == PEP_rating_unreliable);
     PEP_comm_type ct = encrypted_msg->from->comm_type;
     assert(ct == PEP_ct_pEp || ct == PEP_ct_pEp_unconfirmed || ct == PEP_ct_OpenPGP || ct == PEP_ct_OpenPGP_unconfirmed );
 
@@ -169,7 +169,7 @@ int main() {
     assert(keylist_used);
     assert(mimerating);
                              
-    assert(status == PEP_STATUS_OK && mimerating == PEP_rating_unreliable);
+    assert(status == PEP_DECRYPTED && mimerating == PEP_rating_unreliable);
 
     cout << "Decrypted message:" << endl;
     cout << decrypted_mimetext << endl;

@@ -47,11 +47,14 @@ typedef unsigned int PEP_encrypt_flags_t;
 //
 //  return value:
 //      PEP_STATUS_OK                   on success
-//		PEP_KEY_NOT_FOUND	            at least one of the receipient keys
-//		                                could not be found
-//		PEP_KEY_HAS_AMBIG_NAME          at least one of the receipient keys has
-//		                                an ambiguous name
-//		PEP_GET_KEY_FAILED		        cannot retrieve key
+//      PEP_KEY_NOT_FOUND	            at least one of the receipient keys
+//                                      could not be found
+//      PEP_KEY_HAS_AMBIG_NAME          at least one of the receipient keys has
+//                                      an ambiguous name
+//      PEP_GET_KEY_FAILED		        cannot retrieve key
+//      PEP_UNENCRYPTED                 no recipients with usable key, 
+//                                      message is left unencrypted,
+//                                      and key is attached to it
 //
 //	caveat:
 //	    the ownershop of src remains with the caller
@@ -224,7 +227,9 @@ typedef unsigned int PEP_decrypt_flags_t;
 //      flags (out)         flags to signal special decryption features
 //
 //  return value:
-//      error status or PEP_STATUS_OK on success
+//      error status 
+//      or PEP_DECRYPTED if message decrypted but not verified
+//      or PEP_STATUS_OK on success
 //
 //	caveat:
 //	    the ownership of src remains with the caller
