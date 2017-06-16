@@ -27,7 +27,10 @@ static const char *sql_get_identity =
     "   join pgp_keypair on fpr = identity.main_key_id"
     "   join trust on id = trust.user_id"
     "       and pgp_keypair_fpr = identity.main_key_id"
-    "   where address = ?1 and identity.user_id = ?2;";
+    "   where (address = ?1" 
+    "              or (address = ?1 collate nocase)"
+    "              or (replace(address,'.','') = replace(?1,'.','')))"
+    "   and identity.user_id = ?2;";
 
 static const char *sql_replace_identities_fpr =  
     "update identity"
