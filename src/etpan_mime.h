@@ -70,7 +70,7 @@ int _append_optional_field(
 
 clist * _get_fields(struct mailmime * mime);
 struct mailmime_content * _get_content(struct mailmime * mime);
-char * _get_filename(struct mailmime *mime);
+char * _get_filename_or_cid(struct mailmime *mime);
 bool _is_multipart(struct mailmime_content *content, const char *subtype);
 bool _is_PGP_MIME(struct mailmime_content *content);
 bool _is_text_part(struct mailmime_content *content, const char *subtype);
@@ -80,4 +80,3 @@ int _get_content_type(
         char **type,
         char **charset
     );
-

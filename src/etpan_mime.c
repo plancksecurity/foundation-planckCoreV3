@@ -596,7 +596,25 @@ struct mailmime_content * _get_content(struct mailmime * mime)
     return content;
 }
 
-char * _get_filename(struct mailmime *mime)
+char* _get_uri(char* uri_prefix, char* resource) {
+    if (!uri_prefix || !resource)
+        return NULL;
+    const char* delim = "://";
+    const int delim_len = 3;
+    int prefix_len = strlen(uri_prefix);
+    int resource_len = strlen(resource);
+    int retval_len = prefix_len + delim_len + resource_len;
+
+    char* retval = calloc(1, retval_len + 1);
+    strlcpy(retval, uri_prefix, retval_len);
+    strlcat(retval, delim, retval_len);
+    strlcat(retval, resource, retval_len);
+    
+    return retval;
+}
+
+
+char * _get_filename_or_cid(struct mailmime *mime)
 {
     clist * _fieldlist = NULL;
 
@@ -621,10 +639,12 @@ char * _get_filename(struct mailmime *mime)
                     struct mailmime_disposition_parm * param =
                             clist_content(cur2);
                     if (param->pa_type == MAILMIME_DISPOSITION_PARM_FILENAME)
-                        return param->pa_data.pa_filename;
+                        return _get_uri("file", param->pa_data.pa_filename);
                 }
             }
         }
+        else if (_field && _field->fld_type == MAILMIME_FIELD_ID) 
+            return _get_uri("cid", _field->fld_data.fld_id); 
     }
 
     return NULL;
@@ -784,4 +804,3 @@ int _get_content_type(
 
     return EINVAL;
 }
-

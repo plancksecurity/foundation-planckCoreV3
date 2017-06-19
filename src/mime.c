@@ -1343,14 +1343,16 @@ static PEP_STATUS interpret_MIME(
                 if (status)
                     return status;
 
-                filename = _get_filename(mime);
+                filename = _get_filename_or_cid(mime);
                 char *_filename = NULL;
                 if (filename) {
                     size_t index = 0;
                     r = mailmime_encoded_phrase_parse("utf-8", filename,
                             strlen(filename), &index, "utf-8", &_filename);
-                    if (r)
+                    free(filename); /* new - _get_filename returns malloc'd str */
+                    if (r) {
                         goto enomem;
+                    }
                 }
 
                 bloblist_t *_a = bloblist_add(msg->attachments, data, size,
