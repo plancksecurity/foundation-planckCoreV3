@@ -630,29 +630,6 @@ char * _get_filename(struct mailmime *mime)
     return NULL;
 }
 
-// FIXME: We should combine this with _get_filename, IMHO
-char * _get_content_id(struct mailmime *mime) {
-    clist * _fieldlist = NULL;
-
-    assert(mime);
-
-    if (mime->mm_mime_fields && mime->mm_mime_fields->fld_list)
-        _fieldlist = mime->mm_mime_fields->fld_list;
-    else
-        return NULL;
-
-    clistiter *cur;
-    for (cur = clist_begin(_fieldlist); cur; cur = clist_next(cur)) {
-        struct mailmime_field * _field = clist_content(cur);
-        if (_field && _field->fld_type == MAILMIME_FIELD_ID) {
-            return _field->fld_data.fld_id; // returns NULL if it's not there, so...
-        }
-    }
-
-    return NULL;
-}
-
-
 static bool parameter_has_value(
         struct mailmime_content *content,       
         const char *name,
@@ -807,3 +784,4 @@ int _get_content_type(
 
     return EINVAL;
 }
+

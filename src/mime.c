@@ -1323,7 +1323,6 @@ static PEP_STATUS interpret_MIME(
                 char * mime_type;
                 char * charset;
                 char * filename;
-                char * content_id;
                 int r;
 
                 r = _get_content_type(content, &mime_type, &charset);
@@ -1345,7 +1344,6 @@ static PEP_STATUS interpret_MIME(
                     return status;
 
                 filename = _get_filename(mime);
-                
                 char *_filename = NULL;
                 if (filename) {
                     size_t index = 0;
@@ -1355,18 +1353,8 @@ static PEP_STATUS interpret_MIME(
                         goto enomem;
                 }
 
-                content_id = _get_content_id(mime);
-                char *_content_id = NULL;
-                if (content_id) {
-                    size_t index = 0;
-                    r = mailmime_encoded_phrase_parse("utf-8", content_id,
-                            strlen(content_id), &index, "utf-8", &_content_id);
-                    if (r)
-                        goto enomem;                    
-                }
-                
                 bloblist_t *_a = bloblist_add(msg->attachments, data, size,
-                        mime_type, _filename, _content_id);
+                        mime_type, _filename);
                 free(_filename);
                 if (_a == NULL)
                     return PEP_OUT_OF_MEMORY;

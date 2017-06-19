@@ -10,7 +10,7 @@
 #include "bloblist.h"
 
 DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_type,
-        const char *filename, const char *content_id)
+        const char *filename)
 {
     bloblist_t * bloblist = calloc(1, sizeof(bloblist_t));
     assert(bloblist);
@@ -34,16 +34,6 @@ DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_t
         }
     }
 
-    if (content_id) {
-        bloblist->content_id = strdup(content_id);
-        if (bloblist->content_id == NULL) {
-            free(bloblist->filename);
-            free(bloblist->mime_type);
-            free(bloblist);
-            return NULL;
-        }
-    }
-
     if (blob) {
         bloblist->value = blob;
         bloblist->size = size;
@@ -61,7 +51,6 @@ DYNAMIC_API void free_bloblist(bloblist_t *bloblist)
         free(curr->value);
         free(curr->mime_type);
         free(curr->filename);
-        free(curr->content_id);
         free(curr);
         curr = next;
     }
@@ -83,8 +72,7 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src)
 
     memcpy(blob2, src->value, src->size);
 
-    bloblist = new_bloblist(blob2, src->size, src->mime_type, src->filename,
-                            src->content_id);
+    bloblist = new_bloblist(blob2, src->size, src->mime_type, src->filename);
     if (bloblist == NULL)
         goto enomem;
     blob2 = NULL;
@@ -101,8 +89,7 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src)
             goto enomem;
 
         memcpy(blob2, src_curr->value, src_curr->size);
-        *dst_curr_ptr = new_bloblist(blob2, src_curr->size, src_curr->mime_type, 
-                                     src_curr->filename, src_curr->content_id);
+        *dst_curr_ptr = new_bloblist(blob2, src_curr->size, src_curr->mime_type, src_curr->filename);
         if (*dst_curr_ptr == NULL)
             goto enomem;
 
@@ -119,14 +106,14 @@ enomem:
 }
 
 DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t size,
-        const char *mime_type, const char *filename, const char *content_id)
+        const char *mime_type, const char *filename)
 {
     assert(blob);
     if (blob == NULL)
         return NULL;
 
     if (bloblist == NULL)
-        return new_bloblist(blob, size, mime_type, filename, content_id);
+        return new_bloblist(blob, size, mime_type, filename);
 
     if (bloblist->value == NULL) { // empty list
         if (bloblist->next != NULL)
@@ -147,15 +134,6 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
                 return NULL;
             }
         }
-        if (content_id) {
-            bloblist->content_id = strdup(content_id);
-            if (bloblist->content_id == NULL) {
-                free(bloblist->content_id);
-                free(bloblist->mime_type);
-                free(bloblist);
-                return NULL;
-            }
-        }
 
         bloblist->value = blob;
         bloblist->size = size;
@@ -168,8 +146,7 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
     while (list_curr->next)
         list_curr = list_curr->next;
 
-    list_curr->next = new_bloblist(blob, size, mime_type, 
-                                   filename, content_id);
+    list_curr->next = new_bloblist(blob, size, mime_type, filename);
 
     assert(list_curr->next);
     if (list_curr->next == NULL)

@@ -421,14 +421,13 @@ static PEP_STATUS encrypt_PGP_MIME(
     if (v == NULL)
         goto enomem;
 
-    bloblist_t *_a = new_bloblist(v, strlen(v), "application/pgp-encrypted", NULL,
-                                  NULL);
+    bloblist_t *_a = new_bloblist(v, strlen(v), "application/pgp-encrypted", NULL);
     if (_a == NULL)
         goto enomem;
     dst->attachments = _a;
 
     _a = bloblist_add(_a, ctext, csize, "application/octet-stream",
-        "msg.asc", NULL);
+        "msg.asc");
     if (_a == NULL)
         goto enomem;
 
@@ -529,7 +528,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
         if (ctext) {
 
             bloblist_t *_a = bloblist_add(dst->attachments, ctext, csize,
-                "application/octet-stream", "PGPexch.htm.pgp", NULL);
+                "application/octet-stream", "PGPexch.htm.pgp");
             if (_a == NULL)
                 goto enomem;
             if (dst->attachments == NULL)
@@ -542,7 +541,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
 
     if (src->attachments) {
         if (dst->attachments == NULL) {
-            dst->attachments = new_bloblist(NULL, 0, NULL, NULL, NULL);
+            dst->attachments = new_bloblist(NULL, 0, NULL, NULL);
             if (dst->attachments == NULL)
                 goto enomem;
         }
@@ -552,8 +551,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
 
         for (int n = 0; _s; _s = _s->next) {
             if (_s->value == NULL && _s->size == 0) {
-                _d = bloblist_add(_d, NULL, 0, _s->mime_type, _s->filename,
-                                  _s->content_id);
+                _d = bloblist_add(_d, NULL, 0, _s->mime_type, _s->filename);
                 if (_d == NULL)
                     goto enomem;
             }
@@ -590,7 +588,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
                     }
 
                     _d = bloblist_add(_d, ctext, csize, "application/octet-stream",
-                        filename, NULL);
+                        filename);
                     free(filename);
                     if (_d == NULL)
                         goto enomem;
@@ -1022,7 +1020,7 @@ PEP_STATUS _attach_key(PEP_SESSION session, const char* fpr, message *msg)
     assert(size);
 
      bloblist_t *bl = bloblist_add(msg->attachments, keydata, size, "application/pgp-keys",
-                      "pEpkey.asc", NULL);
+                      "pEpkey.asc");
 
     if (msg->attachments == NULL && bl)
         msg->attachments = bl;
@@ -1867,15 +1865,14 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
                 bloblist_t *_m = msg->attachments;
                 if (_m == NULL && src->attachments && src->attachments->value) {
-                    msg->attachments = new_bloblist(NULL, 0, NULL, NULL, NULL);
+                    msg->attachments = new_bloblist(NULL, 0, NULL, NULL);
                     _m = msg->attachments;
                 }
 
                 bloblist_t *_s;
                 for (_s = src->attachments; _s; _s = _s->next) {
                     if (_s->value == NULL && _s->size == 0){
-                        _m = bloblist_add(_m, NULL, 0, _s->mime_type, _s->filename,
-                                          _s->content_id);
+                        _m = bloblist_add(_m, NULL, 0, _s->mime_type, _s->filename);
                         if (_m == NULL)
                             goto enomem;
 
@@ -1907,7 +1904,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                     goto enomem;
 
                                 _m = bloblist_add(_m, ptext, psize, mime_type,
-                                    filename, NULL);
+                                    filename);
                                 free(filename);
                                 if (_m == NULL)
                                     goto enomem;
@@ -1924,8 +1921,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                             if (copy == NULL)
                                 goto enomem;
                             memcpy(copy, _s->value, _s->size);
-                            _m = bloblist_add(_m, copy, _s->size, _s->mime_type, 
-                                              _s->filename, _s->content_id);
+                            _m = bloblist_add(_m, copy, _s->size, _s->mime_type, _s->filename);
                             if (_m == NULL)
                                 goto enomem;
                         }
@@ -1936,8 +1932,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                         if (copy == NULL)
                             goto enomem;
                         memcpy(copy, _s->value, _s->size);
-                        _m = bloblist_add(_m, copy, _s->size, _s->mime_type, 
-                                          _s->filename, _s->content_id);
+                        _m = bloblist_add(_m, copy, _s->size, _s->mime_type, _s->filename);
                         if (_m == NULL)
                             goto enomem;
                     }

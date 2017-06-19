@@ -18,7 +18,7 @@ PEP_STATUS decorate_message(
         return PEP_ILLEGAL_VALUE;
 
     bloblist_t *bl = bloblist_add(msg->attachments, payload, size,
-            "application/pEp.sync", "ignore_this_attachment.pEp", NULL);
+            "application/pEp.sync", "ignore_this_attachment.pEp");
     if (bl == NULL)
         goto enomem;
 
@@ -84,3 +84,4 @@ enomem:
     free_message(msg);
     return PEP_OUT_OF_MEMORY;
 }
+

@@ -92,7 +92,7 @@ int main() {
     outgoing_msg->to = to_list;
     outgoing_msg->shortmsg = strdup("Greetings, humans!");
     outgoing_msg->longmsg = strdup("This is a test of the emergency message system. This is only a test. BEEP.");
-    outgoing_msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL, NULL);
+    outgoing_msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
     cout << "Message created.\n";
 
     message* encrypted_outgoing_msg = NULL;
@@ -168,7 +168,7 @@ int main() {
     outgoing_msg->to = to_list;
     outgoing_msg->shortmsg = strdup("Greetings, humans!");
     outgoing_msg->longmsg = strdup("This is a test of the emergency message system. This is only a test. BEEP.");
-    outgoing_msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL, NULL);
+    outgoing_msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
     cout << "message created.\n";
 
     encrypted_outgoing_msg = NULL;
@@ -255,7 +255,7 @@ int main() {
     outgoing_msg->to = to_list;
     outgoing_msg->shortmsg = strdup("Greetings, humans!");
     outgoing_msg->longmsg = strdup("This is a test of the emergency message system. This is only a test. BEEP.");
-    outgoing_msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL, NULL);
+    outgoing_msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
     cout << "Message created.\n";
 
     status = encrypt_message(session, outgoing_msg, NULL, &encrypted_outgoing_msg, PEP_enc_PGP_MIME, 0);
