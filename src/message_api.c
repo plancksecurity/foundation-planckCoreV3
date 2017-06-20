@@ -826,68 +826,60 @@ static PEP_rating key_rating(PEP_SESSION session, const char *fpr)
 
 
     PEP_comm_type bare_comm_type = PEP_ct_unknown;
+    PEP_comm_type resulting_comm_type = PEP_ct_unknown;
     PEP_STATUS status = get_key_rating(session, fpr, &bare_comm_type);
     if (status != PEP_STATUS_OK)
         return PEP_rating_undefined;
 
-    PEP_comm_type least_trust_type = PEP_ct_unknown;
-    least_trust(session, fpr, &least_trust_type);
+    PEP_comm_type least_comm_type = PEP_ct_unknown;
+    least_trust(session, fpr, &least_comm_type);
 
-    if (least_trust_type == PEP_ct_unknown) {
-        return _rating(bare_comm_type, PEP_rating_undefined);
+    if (least_comm_type == PEP_ct_unknown) {
+        resulting_comm_type = bare_comm_type;
+    } else if (least_comm_type < PEP_ct_strong_but_unconfirmed ||
+               bare_comm_type < PEP_ct_strong_but_unconfirmed) {
+        // take minimum if anything bad
+        resulting_comm_type = least_comm_type < bare_comm_type ? 
+                              least_comm_type : 
+                              bare_comm_type;
     } else {
-        return _rating(least_trust_type, PEP_rating_undefined);
+        resulting_comm_type = least_comm_type;
     }
+    return _rating(resulting_comm_type, PEP_rating_undefined);
 }
 
 static PEP_rating worst_rating(PEP_rating rating1, PEP_rating rating2) {
     return ((rating1 < rating2) ? rating1 : rating2);
 }
 
-static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist)
+static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist, char* sender_fpr, PEP_rating sender_rating)
 {
-    PEP_rating rating = PEP_rating_undefined;
+    PEP_rating rating = sender_rating;
 
     assert(keylist && keylist->value);
     if (keylist == NULL || keylist->value == NULL)
         return PEP_rating_undefined;
 
     stringlist_t *_kl;
-    bool first = true;
     for (_kl = keylist; _kl && _kl->value; _kl = _kl->next) {
-        PEP_comm_type ct;
-        PEP_STATUS status;
+
+        // Ignore own fpr
+        if(_same_fpr(sender_fpr, strlen(sender_fpr), _kl->value, strlen(_kl->value)))
+            continue;
 
         PEP_rating _rating_ = key_rating(session, _kl->value);
          
         if (_rating_ <= PEP_rating_mistrust)
             return _rating_;
             
-        if (first) {
-            rating = _rating_;
-            first = false;
-        }
-        else if (rating == PEP_rating_undefined)
-            rating = worst_rating(rating, _rating_);
-
-        if (_rating_ >= PEP_rating_reliable) {
-            status = least_trust(session, _kl->value, &ct);
-            if (status != PEP_STATUS_OK)
-                return PEP_rating_undefined;
-            if (ct == PEP_ct_unknown){
-                /* per edouard, we reduce reliable+ ratings to reliable because
-                   ct unknown */
-                if (rating >= PEP_rating_reliable){
-                    rating = PEP_rating_reliable; 
-                }
-            }
-            else{
-                rating = worst_rating(rating, _rating(ct, rating));
-            }
-        }
-        else if (_rating_ == PEP_rating_unencrypted) {
+        if (_rating_ == PEP_rating_unencrypted)
+        {
             if (rating > PEP_rating_unencrypted_for_some)
                 rating = worst_rating(rating, PEP_rating_unencrypted_for_some);
+        }
+        else
+        {
+            rating = worst_rating(rating, _rating_);
         }
     }
 
@@ -1609,38 +1601,32 @@ PEP_STATUS amend_rating_according_to_sender_and_recipients(
     PEP_STATUS status = PEP_STATUS_OK;
 
     if (*rating > PEP_rating_mistrust) {
-        PEP_rating kl_rating = PEP_rating_undefined;
 
-        if (recipients)
-            kl_rating = keylist_rating(session, recipients);
-
-        if (kl_rating <= PEP_rating_mistrust) {
-            *rating = kl_rating;
+        if (recipients == NULL) {
+            *rating = PEP_rating_undefined;
+            return PEP_STATUS_OK;
         }
-        else if (*rating >= PEP_rating_reliable &&
-                 kl_rating < PEP_rating_reliable) {
+
+        char *fpr = recipients->value;
+
+        if (!(sender && sender->user_id && sender->user_id[0] && fpr && fpr[0])) {
             *rating = PEP_rating_unreliable;
         }
-        else if (*rating >= PEP_rating_reliable &&
-                 kl_rating >= PEP_rating_reliable) {
-            if (!(sender && sender->user_id && sender->user_id[0])) {
-                *rating = PEP_rating_unreliable;
+        else {
+            pEp_identity *_sender = new_identity(sender->address, fpr,
+                                               sender->user_id, sender->username);
+            if (_sender == NULL)
+                return PEP_OUT_OF_MEMORY;
+
+            status = get_trust(session, _sender);
+            if (_sender->comm_type != PEP_ct_unknown) {
+                *rating = keylist_rating(session, recipients, 
+                            fpr, _rating(_sender->comm_type, 
+                                          PEP_rating_undefined));
             }
-            else {
-                char *fpr = recipients->value;
-                pEp_identity *_sender = new_identity(sender->address, fpr,
-                                                   sender->user_id, sender->username);
-                if (_sender == NULL)
-                    return PEP_OUT_OF_MEMORY;
-                status = get_trust(session, _sender);
-                if (_sender->comm_type != PEP_ct_unknown) {
-                    *rating = worst_rating(_rating(_sender->comm_type, PEP_rating_undefined),
-                              kl_rating);
-                }
-                free_identity(_sender);
-                if (status == PEP_CANNOT_FIND_IDENTITY)
-                   status = PEP_STATUS_OK;
-            }
+            free_identity(_sender);
+            if (status == PEP_CANNOT_FIND_IDENTITY)
+               status = PEP_STATUS_OK;
         }
     }
     return status;
