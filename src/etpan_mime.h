@@ -7,6 +7,20 @@
 #include <libetpan/mailmime.h>
 #include <libetpan/mailmime_encode.h>
 
+/* structs to contain info about parsed resource ids (filenames, uids) */
+typedef enum _resource_id_type {
+    PEP_RID_FILENAME,
+    PEP_RID_CID
+} pEp_resource_id_type;
+
+typedef struct pEp_rid_list_t pEp_rid_list_t;
+
+struct pEp_rid_list_t {
+    pEp_resource_id_type rid_type;
+    char* rid;
+    pEp_rid_list_t* next;    
+};
+
 struct mailmime * part_new_empty(
         struct mailmime_content * content,
         struct mailmime_fields * mime_fields,
@@ -71,6 +85,8 @@ int _append_optional_field(
 clist * _get_fields(struct mailmime * mime);
 struct mailmime_content * _get_content(struct mailmime * mime);
 char * _get_filename_or_cid(struct mailmime *mime);
+pEp_rid_list_t* _get_resource_id_list(struct mailmime *mime);
+char* _build_uri(char* uri_prefix, char* resource);
 bool _is_multipart(struct mailmime_content *content, const char *subtype);
 bool _is_PGP_MIME(struct mailmime_content *content);
 bool _is_text_part(struct mailmime_content *content, const char *subtype);

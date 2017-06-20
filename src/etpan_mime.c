@@ -596,7 +596,7 @@ struct mailmime_content * _get_content(struct mailmime * mime)
     return content;
 }
 
-char* _get_uri(char* uri_prefix, char* resource) {
+char* _build_uri(char* uri_prefix, char* resource) {
     if (!uri_prefix || !resource)
         return NULL;
     const char* delim = "://";
@@ -613,7 +613,61 @@ char* _get_uri(char* uri_prefix, char* resource) {
     return retval;
 }
 
+/* Return a list of identifier_type and resource id (filename, cid, etc) */
+pEp_rid_list_t* _get_resource_id_list(struct mailmime *mime)
+{
+    clist * _fieldlist = NULL;
 
+    assert(mime);
+
+    if (mime->mm_mime_fields && mime->mm_mime_fields->fld_list)
+        _fieldlist = mime->mm_mime_fields->fld_list;
+    else
+        return NULL;
+
+    clistiter *cur;
+
+    pEp_rid_list_t* rid_list = NULL; 
+    pEp_rid_list_t** rid_list_curr_p = &rid_list; 
+        
+    for (cur = clist_begin(_fieldlist); cur; cur = clist_next(cur)) {
+        struct mailmime_field * _field = clist_content(cur);
+        /* content_id */
+        if (_field && _field->fld_type == MAILMIME_FIELD_ID) {
+            pEp_rid_list_t* new_rid = (pEp_rid_list_t*)calloc(1, sizeof(pEp_rid_list_t*));
+            new_rid->rid_type = PEP_RID_CID;
+            new_rid->rid = _field->fld_data.fld_id;
+            *rid_list_curr_p = new_rid;
+            rid_list_curr_p = &new_rid->next;
+        }
+        else if (_field && _field->fld_type == MAILMIME_FIELD_DISPOSITION) {
+            /* filename */
+            if (_field->fld_data.fld_disposition &&
+                    _field->fld_data.fld_disposition->dsp_parms) {
+                clist * _parmlist =
+                        _field->fld_data.fld_disposition->dsp_parms;
+                clistiter *cur2;
+                for (cur2 = clist_begin(_parmlist); cur2; cur2 =
+                        clist_next(cur2)) {
+                    struct mailmime_disposition_parm * param =
+                            clist_content(cur2);
+                    if (param->pa_type == MAILMIME_DISPOSITION_PARM_FILENAME) {
+                        pEp_rid_list_t* new_rid = (pEp_rid_list_t*)calloc(1, sizeof(pEp_rid_list_t*));
+                        new_rid->rid_type = PEP_RID_FILENAME;
+                        new_rid->rid = param->pa_data.pa_filename;
+                        *rid_list_curr_p = new_rid;
+                        rid_list_curr_p = &new_rid->next;
+                    }                
+                }
+            }
+        }
+    }
+    /* Will almost certainly usually be a singleton, but we need to be able to decide */
+    return rid_list;
+}
+
+
+/* FIXME: about to be obsoleted? */
 char * _get_filename_or_cid(struct mailmime *mime)
 {
     clist * _fieldlist = NULL;
@@ -626,11 +680,20 @@ char * _get_filename_or_cid(struct mailmime *mime)
         return NULL;
 
     clistiter *cur;
+    
+    char* _temp_filename_ptr = NULL;
+    
     for (cur = clist_begin(_fieldlist); cur; cur = clist_next(cur)) {
         struct mailmime_field * _field = clist_content(cur);
-        if (_field && _field->fld_type == MAILMIME_FIELD_DISPOSITION) {
+        if (_field && _field->fld_type == MAILMIME_FIELD_ID) {
+            /* We prefer CIDs to filenames when both are present */
+            free(_temp_filename_ptr); /* can be null, it's ok */
+            return _build_uri("cid", _field->fld_data.fld_id); 
+        }
+        else if (_field && _field->fld_type == MAILMIME_FIELD_DISPOSITION) {
             if (_field->fld_data.fld_disposition &&
-                    _field->fld_data.fld_disposition->dsp_parms) {
+                    _field->fld_data.fld_disposition->dsp_parms &&
+                    !_temp_filename_ptr) {
                 clist * _parmlist =
                         _field->fld_data.fld_disposition->dsp_parms;
                 clistiter *cur2;
@@ -638,16 +701,16 @@ char * _get_filename_or_cid(struct mailmime *mime)
                         clist_next(cur2)) {
                     struct mailmime_disposition_parm * param =
                             clist_content(cur2);
-                    if (param->pa_type == MAILMIME_DISPOSITION_PARM_FILENAME)
-                        return _get_uri("file", param->pa_data.pa_filename);
+                    if (param->pa_type == MAILMIME_DISPOSITION_PARM_FILENAME) {
+                        _temp_filename_ptr = _build_uri("file", param->pa_data.pa_filename);
+                        break;
+                    }                
                 }
             }
         }
-        else if (_field && _field->fld_type == MAILMIME_FIELD_ID) 
-            return _get_uri("cid", _field->fld_data.fld_id); 
     }
-
-    return NULL;
+    /* Ok, it wasn't a CID */
+    return _temp_filename_ptr;
 }
 
 static bool parameter_has_value(
