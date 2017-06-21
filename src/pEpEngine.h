@@ -68,6 +68,7 @@ typedef enum {
 
     PEP_TRUSTWORD_NOT_FOUND                         = 0x0501,
     PEP_TRUSTWORDS_FPR_WRONG_LENGTH                 = 0x0502,
+    PEP_TRUSTWORDS_DUPLICATE_FPR                    = 0x0503,
 
     PEP_CANNOT_CREATE_KEY                           = 0x0601,
     PEP_CANNOT_SEND_KEY                             = 0x0602,
