@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <errno.h>
 
+#include "resource_id.h"
 #include "etpan_mime.h"
 #include "wrappers.h"
 
@@ -118,8 +119,13 @@ static PEP_STATUS mime_html_text(
     if (mime == NULL)
         goto enomem;
 
-    submime = get_text_part("msg.txt", "text/plain", plaintext, strlen(plaintext),
+    pEp_rid_list_t* resource = new_rid_node(PEP_RID_FILENAME, "msg.txt");
+    
+    submime = get_text_part(resource, "text/plain", plaintext, strlen(plaintext),
             MAILMIME_MECHANISM_QUOTED_PRINTABLE);
+    free_rid_list(resource);
+    resource = NULL;
+    
     assert(submime);
     if (submime == NULL)
         goto enomem;
@@ -134,8 +140,12 @@ static PEP_STATUS mime_html_text(
         submime = NULL;
     }
 
-    submime = get_text_part("msg.html", "text/html", htmltext, strlen(htmltext),
+    resource = new_rid_node(PEP_RID_FILENAME, "msg.html");
+    submime = get_text_part(resource, "text/html", htmltext, strlen(htmltext),
             MAILMIME_MECHANISM_QUOTED_PRINTABLE);
+    free_rid_list(resource);
+    resource = NULL;
+    
     assert(submime);
     if (submime == NULL)
         goto enomem;
@@ -186,7 +196,10 @@ static PEP_STATUS mime_attachment(
     else
         mime_type = blob->mime_type;
 
-    mime = get_file_part(blob->filename, mime_type, blob->value, blob->size);
+    pEp_rid_list_t* resource = parse_uri(blob->filename);
+    mime = get_file_part(resource, mime_type, blob->value, blob->size);
+    free_rid_list(resource);
+    
     assert(mime);
     if (mime == NULL)
         goto enomem;
@@ -619,12 +632,19 @@ static PEP_STATUS mime_encode_message_plain(
             goto pep_error;
     }
     else {
-        if (is_PGP_message_text(plaintext))
-            mime = get_text_part("msg.asc", "application/octet-stream", plaintext,
+        pEp_rid_list_t* resource = NULL;
+        if (is_PGP_message_text(plaintext)) {
+            resource = new_rid_node(PEP_RID_FILENAME, "msg.asc");
+            mime = get_text_part(resource, "application/octet-stream", plaintext,
                     strlen(plaintext), MAILMIME_MECHANISM_7BIT);
-        else
-            mime = get_text_part("msg.txt", "text/plain", plaintext, strlen(plaintext),
+        }
+        else {
+            resource = new_rid_node(PEP_RID_FILENAME, "msg.txt");
+            mime = get_text_part(resource, "text/plain", plaintext, strlen(plaintext),
                     MAILMIME_MECHANISM_QUOTED_PRINTABLE);
+        }
+        free_rid_list(resource);
+        
         assert(mime);
         if (mime == NULL)
             goto enomem;
@@ -727,8 +747,12 @@ static PEP_STATUS mime_encode_message_PGP_MIME(
         submime = NULL;
     }
 
-    submime = get_text_part("msg.asc", "application/octet-stream", plaintext,
+    pEp_rid_list_t* resource = new_rid_node(PEP_RID_FILENAME, "msg.asc");
+    submime = get_text_part(resource, "application/octet-stream", plaintext,
             plaintext_size, MAILMIME_MECHANISM_7BIT);
+            
+    free_rid_list(resource);
+    
     assert(submime);
     if (submime == NULL)
         goto enomem;

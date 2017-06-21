@@ -7,19 +7,7 @@
 #include <libetpan/mailmime.h>
 #include <libetpan/mailmime_encode.h>
 
-/* structs to contain info about parsed resource ids (filenames, uids) */
-typedef enum _resource_id_type {
-    PEP_RID_FILENAME,
-    PEP_RID_CID
-} pEp_resource_id_type;
-
-typedef struct pEp_rid_list_t pEp_rid_list_t;
-
-struct pEp_rid_list_t {
-    pEp_resource_id_type rid_type;
-    char* rid;
-    pEp_rid_list_t* next;    
-};
+#include "resource_id.h"
 
 struct mailmime * part_new_empty(
         struct mailmime_content * content,
@@ -30,7 +18,7 @@ struct mailmime * part_new_empty(
 struct mailmime * get_pgp_encrypted_part(void);
 
 struct mailmime * get_text_part(
-        const char * filename,
+        pEp_rid_list_t* resource,
         const char * mime_type,
         const char * text,
         size_t length,
@@ -38,7 +26,7 @@ struct mailmime * get_text_part(
     );
 
 struct mailmime * get_file_part(
-        const char * filename,
+        pEp_rid_list_t* resource,
         const char * mime_type,
         char * data,
         size_t length
