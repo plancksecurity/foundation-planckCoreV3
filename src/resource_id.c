@@ -62,9 +62,9 @@ char* build_uri(const char* uri_prefix, const char* resource) {
     int retval_len = prefix_len + delim_len + resource_len;
 
     char* retval = calloc(1, retval_len + 1);
-    strlcpy(retval, uri_prefix, retval_len);
-    strlcat(retval, delim, retval_len);
-    strlcat(retval, resource, retval_len);
+    strlcpy(retval, uri_prefix, retval_len + 1);
+    strlcat(retval, delim, retval_len + 1);
+    strlcat(retval, resource, retval_len + 1);
     
     return retval;
 }

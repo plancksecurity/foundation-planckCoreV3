@@ -586,7 +586,7 @@ static bool has_exceptional_extension(char* filename) {
 }
 
 static pEp_rid_list_t* choose_resource_id(pEp_rid_list_t* rid_list) {
-    pEp_rid_list_t* retval = NULL;
+    pEp_rid_list_t* retval = rid_list;
     
     /* multiple elements - least common case */
     if (rid_list && rid_list->next) {
