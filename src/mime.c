@@ -1433,7 +1433,7 @@ static PEP_STATUS interpret_MIME(
 
                     
                     if (file_prefix) {
-                        filename = _build_uri(file_prefix, _filename);
+                        filename = build_uri(file_prefix, _filename);
                         free(_filename);
                         _filename = filename;
                     }

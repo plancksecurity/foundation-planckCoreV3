@@ -51,3 +51,20 @@ pEp_rid_list_t* parse_uri(const char* uri) {
     const char* resource = get_resource_ptr_noown(uri);
     return new_rid_node(type, resource);
 }
+
+char* build_uri(const char* uri_prefix, const char* resource) {
+    if (!uri_prefix || !resource)
+        return NULL;
+    const char* delim = "://";
+    const int delim_len = 3;
+    int prefix_len = strlen(uri_prefix);
+    int resource_len = strlen(resource);
+    int retval_len = prefix_len + delim_len + resource_len;
+
+    char* retval = calloc(1, retval_len + 1);
+    strlcpy(retval, uri_prefix, retval_len);
+    strlcat(retval, delim, retval_len);
+    strlcat(retval, resource, retval_len);
+    
+    return retval;
+}

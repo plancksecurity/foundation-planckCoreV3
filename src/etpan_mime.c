@@ -620,22 +620,6 @@ struct mailmime_content * _get_content(struct mailmime * mime)
     return content;
 }
 
-char* _build_uri(char* uri_prefix, char* resource) {
-    if (!uri_prefix || !resource)
-        return NULL;
-    const char* delim = "://";
-    const int delim_len = 3;
-    int prefix_len = strlen(uri_prefix);
-    int resource_len = strlen(resource);
-    int retval_len = prefix_len + delim_len + resource_len;
-
-    char* retval = calloc(1, retval_len + 1);
-    strlcpy(retval, uri_prefix, retval_len);
-    strlcat(retval, delim, retval_len);
-    strlcat(retval, resource, retval_len);
-    
-    return retval;
-}
 
 /* Return a list of identifier_type and resource id (filename, cid, etc) */
 pEp_rid_list_t* _get_resource_id_list(struct mailmime *mime)
@@ -712,7 +696,7 @@ char * _get_filename_or_cid(struct mailmime *mime)
         if (_field && _field->fld_type == MAILMIME_FIELD_ID) {
             /* We prefer CIDs to filenames when both are present */
             free(_temp_filename_ptr); /* can be null, it's ok */
-            return _build_uri("cid", _field->fld_data.fld_id); 
+            return build_uri("cid", _field->fld_data.fld_id); 
         }
         else if (_field && _field->fld_type == MAILMIME_FIELD_DISPOSITION) {
             if (_field->fld_data.fld_disposition &&
@@ -726,7 +710,7 @@ char * _get_filename_or_cid(struct mailmime *mime)
                     struct mailmime_disposition_parm * param =
                             clist_content(cur2);
                     if (param->pa_type == MAILMIME_DISPOSITION_PARM_FILENAME) {
-                        _temp_filename_ptr = _build_uri("file", param->pa_data.pa_filename);
+                        _temp_filename_ptr = build_uri("file", param->pa_data.pa_filename);
                         break;
                     }                
                 }

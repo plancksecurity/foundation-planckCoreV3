@@ -23,6 +23,8 @@ void free_rid_list(pEp_rid_list_t* list);
 
 pEp_rid_list_t* parse_uri(const char* uri);
 
+char* build_uri(const char* uri_prefix, const char* resource);
+
 const char* get_resource_ptr_noown(const char* uri);
 
 char* get_resource(char* uri);
