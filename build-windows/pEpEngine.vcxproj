@@ -123,6 +123,7 @@ cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.h ..\src\ /y
     <ClCompile Include="..\src\pEpEngine.c" />
     <ClCompile Include="..\src\pgp_gpg.c" />
     <ClCompile Include="..\src\platform_windows.cpp" />
+    <ClCompile Include="..\src\resource_id.c" />
     <ClCompile Include="..\src\sqlite3.c" />
     <ClCompile Include="..\src\stringlist.c" />
     <ClCompile Include="..\src\stringpair.c" />
@@ -159,6 +160,7 @@ cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.h ..\src\ /y
     <ClInclude Include="..\src\platform.h" />
     <ClInclude Include="..\src\platform_windows.h" />
     <ClInclude Include="..\src\resource.h" />
+    <ClInclude Include="..\src\resource_id.h" />
     <ClInclude Include="..\src\sqlite3.h" />
     <ClInclude Include="..\src\stringlist.h" />
     <ClInclude Include="..\src\stringpair.h" />
