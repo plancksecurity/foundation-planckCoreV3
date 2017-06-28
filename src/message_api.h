@@ -18,8 +18,11 @@ bool import_attached_keys(
         const message *msg,
         identity_list **private_idents
     );
+
 void attach_own_key(PEP_SESSION session, message *msg);
+
 PEP_cryptotech determine_encryption_format(message *msg);
+
 void add_opt_field(message *msg, const char *name, const char *value);
 
 typedef enum _PEP_encrypt_flags {
@@ -35,6 +38,7 @@ typedef enum _PEP_encrypt_flags {
 
 typedef unsigned int PEP_encrypt_flags_t;
 
+
 // encrypt_message() - encrypt message in memory
 //
 //  parameters:
@@ -47,16 +51,18 @@ typedef unsigned int PEP_encrypt_flags_t;
 //
 //  return value:
 //      PEP_STATUS_OK                   on success
-//		PEP_KEY_NOT_FOUND	            at least one of the receipient keys
-//		                                could not be found
-//		PEP_KEY_HAS_AMBIG_NAME          at least one of the receipient keys has
-//		                                an ambiguous name
-//		PEP_GET_KEY_FAILED		        cannot retrieve key
+//      PEP_KEY_NOT_FOUND               at least one of the receipient keys
+//                                      could not be found
+//      PEP_KEY_HAS_AMBIG_NAME          at least one of the receipient keys has
+//                                      an ambiguous name
+//      PEP_GET_KEY_FAILED              cannot retrieve key
+//      PEP_UNENCRYPTED                 no recipients with usable key, 
+//                                      message is left unencrypted,
+//                                      and key is attached to it
 //
-//	caveat:
-//	    the ownershop of src remains with the caller
-//	    the ownership of dst goes to the caller
-
+//  caveat:
+//      the ownershop of src remains with the caller
+//      the ownership of dst goes to the caller
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
         message *src,
@@ -65,6 +71,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_enc_format enc_format,
         PEP_encrypt_flags_t flags
     );
+
 
 // encrypt_message_for_self() - encrypt message in memory for user's identity only,
 //                              ignoring recipients and other identities from
@@ -78,20 +85,19 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 //      flags (in)          flags to set special encryption features
 //
 //  return value:       (FIXME: This may not be correct or complete)
-//      PEP_STATUS_OK                   on success
-//		PEP_KEY_NOT_FOUND	            at least one of the receipient keys
-//		                                could not be found
-//		PEP_KEY_HAS_AMBIG_NAME          at least one of the receipient keys has
-//		                                an ambiguous name
-//		PEP_GET_KEY_FAILED		        cannot retrieve key
+//      PEP_STATUS_OK            on success
+//      PEP_KEY_NOT_FOUND        at least one of the receipient keys
+//                               could not be found
+//      PEP_KEY_HAS_AMBIG_NAME   at least one of the receipient keys has
+//                               an ambiguous name
+//      PEP_GET_KEY_FAILED       cannot retrieve key
 //
-//	caveat:
-//	    the ownership of src remains with the caller
+//  caveat:
+//      the ownership of src remains with the caller
 //      the ownership of target_id remains w/ caller            
-//	    the ownership of dst goes to the caller
+//      the ownership of dst goes to the caller
 //      message is NOT encrypted for identities other than the target_id (and then,
-//          only if the target_id refers to self!)
-
+//      only if the target_id refers to self!)
 DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_SESSION session,
         pEp_identity* target_id,
@@ -100,6 +106,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_enc_format enc_format,
         PEP_encrypt_flags_t flags
     );
+
 
 // MIME_encrypt_message() - encrypt a MIME message, with MIME output
 //
@@ -124,7 +131,6 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
 //  caveat:
 //      the encrypted, encoded mime text will go to the ownership of the caller; mimetext
 //      will remain in the ownership of the caller
-
 DYNAMIC_API PEP_STATUS MIME_encrypt_message(
     PEP_SESSION session,
     const char *mimetext,
@@ -135,12 +141,13 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
     PEP_encrypt_flags_t flags
 );
 
+
 // MIME_encrypt_message_for_self() - encrypt MIME message for user's identity only,
 //                              ignoring recipients and other identities from
 //                              the message, with MIME output
 //  parameters:
 //      session (in)            session handle
-//      target_id (in)      self identity this message should be encrypted for
+//      target_id (in)          self identity this message should be encrypted for
 //      mimetext (in)           MIME encoded text to encrypt
 //      size (in)               size of input mime text
 //      mime_ciphertext (out)   encrypted, encoded message
@@ -159,7 +166,6 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
 //  caveat:
 //      the encrypted, encoded mime text will go to the ownership of the caller; mimetext
 //      will remain in the ownership of the caller
-
 DYNAMIC_API PEP_STATUS MIME_encrypt_message_for_self(
     PEP_SESSION session,
     pEp_identity* target_id,
@@ -169,7 +175,6 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message_for_self(
     PEP_enc_format enc_format,
     PEP_encrypt_flags_t flags
 );
-
 
 
 typedef enum _PEP_rating {
@@ -196,13 +201,13 @@ typedef enum _PEP_color {
     PEP_color_red = -1,
 } PEP_color;
 
+
 // color_from_rating - calculate color from rating
 //
 //  parameters:
 //      rating (in)         rating
 //
 //  return value:           color representing that rating
-
 DYNAMIC_API PEP_color color_from_rating(PEP_rating rating);
 
 typedef enum _PEP_decrypt_flags {
@@ -212,6 +217,7 @@ typedef enum _PEP_decrypt_flags {
 } PEP_decrypt_flags; 
 
 typedef unsigned int PEP_decrypt_flags_t;
+
 
 // decrypt_message() - decrypt message in memory
 //
@@ -224,15 +230,16 @@ typedef unsigned int PEP_decrypt_flags_t;
 //      flags (out)         flags to signal special decryption features
 //
 //  return value:
-//      error status or PEP_STATUS_OK on success
+//      error status 
+//      or PEP_DECRYPTED if message decrypted but not verified
+//      or PEP_STATUS_OK on success
 //
-//	caveat:
-//	    the ownership of src remains with the caller
-//	    the ownership of dst goes to the caller
-//	    the ownership of keylist goes to the caller
-//	    if src is unencrypted this function returns PEP_UNENCRYPTED and sets
-//	    dst to NULL
-
+// caveat:
+//      the ownership of src remains with the caller
+//      the ownership of dst goes to the caller
+//      the ownership of keylist goes to the caller
+//      if src is unencrypted this function returns PEP_UNENCRYPTED and sets
+//      dst to NULL
 DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -241,6 +248,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_rating *rating,
         PEP_decrypt_flags_t *flags
 );
+
 
 // MIME_decrypt_message() - decrypt a MIME message, with MIME output
 //
@@ -267,7 +275,6 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 //  caveat:
 //      the decrypted, encoded mime text will go to the ownership of the caller; mimetext
 //      will remain in the ownership of the caller
-
 DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     PEP_SESSION session,
     const char *mimetext,
@@ -295,16 +302,16 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
 //  return value:
 //      error status or PEP_STATUS_OK on success
 //
-//	caveat:
-//	    the ownership of msg remains with the caller
-//	    the ownership of ident goes to the caller
-//	    msg MUST be encrypted so that this function can check own signature
-
+//  caveat:
+//      the ownership of msg remains with the caller
+//      the ownership of ident goes to the caller
+//      msg MUST be encrypted so that this function can check own signature
 DYNAMIC_API PEP_STATUS own_message_private_key_details(
         PEP_SESSION session,
         message *msg,
         pEp_identity **ident 
 );
+
 
 // outgoing_message_rating() - get rating for an outgoing message
 //
@@ -320,7 +327,6 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
 //      msg->from must point to a valid pEp_identity
 //      msg->dir must be PEP_dir_outgoing
 //      the ownership of msg remains with the caller
-
 DYNAMIC_API PEP_STATUS outgoing_message_rating(
         PEP_SESSION session,
         message *msg,
@@ -340,7 +346,6 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
 //
 //  caveat:
 //      the ownership of ident remains with the caller
-
 DYNAMIC_API PEP_STATUS identity_rating(
         PEP_SESSION session,
         pEp_identity *ident,
@@ -355,6 +360,7 @@ DYNAMIC_API PEP_STATUS identity_rating(
 //      path (out)          path to cryptotech binary or NULL if not available
 //                          **path is owned by the library, do not change it!
 DYNAMIC_API PEP_STATUS get_binary_path(PEP_cryptotech tech, const char **path);
+
 
 // get_trustwords() - get full trustwords string for a *pair* of identities
 //
@@ -381,11 +387,11 @@ DYNAMIC_API PEP_STATUS get_binary_path(PEP_cryptotech tech, const char **path);
 //        the word pointer goes to the ownership of the caller
 //        the caller is responsible to free() it (on Windoze use pEp_free())
 //
-
 DYNAMIC_API PEP_STATUS get_trustwords(
     PEP_SESSION session, const pEp_identity* id1, const pEp_identity* id2,
     const char* lang, char **words, size_t *wsize, bool full
 );
+
 
 // get_message_trustwords() - get full trustwords string for message sender and reciever identities 
 //

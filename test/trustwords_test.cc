@@ -14,6 +14,7 @@ int main() {
     cout << "\n*** get_trustwords test ***\n\n";
 
     PEP_SESSION session = nullptr;
+    PEP_STATUS status;
     
     cout << "calling init()\n";
     PEP_STATUS status1 = init(&session);
@@ -55,29 +56,33 @@ int main() {
     assert(words1);
     cout << words1 << "\n";
 
+    free(words1);
+    words1 = nullptr;
+    
     cout << "\nfinding German trustwords for " << fingerprint2 << "...\n";
     trustwords(session, fingerprint2.c_str(), "de", &words2, &wsize2, 5);
     assert(words2);
     cout << words2 << "\n";
+
+    free(words2);
+    words1 = nullptr;
 
     cout << "\nfinding German trustwords for " << identity1->address << " and " << identity2->address << "...\n";
     get_trustwords(session, identity1, identity2, "de", &full_wordlist, &wsize_full, false);
     assert(full_wordlist);
     cout << full_wordlist << "\n";
 
-    cout << "\nfinding Englis trustwords for " << identity1->address << " and " << identity2->address << "... with spaces\n";
+    free(full_wordlist);
+    full_wordlist = nullptr;
+
+    cout << "\nfinding English trustwords for " << identity1->address << " and " << identity2->address << "... with spaces\n";
     get_trustwords(session, identity1, identity2_with_spaces, "en", &full_wordlist, &wsize_full, false);
     assert(full_wordlist);
     cout << full_wordlist << "\n";
-    
-    
-    pEp_free(words1);
-    words1 = nullptr;
-    pEp_free(words2);
-    words2 = nullptr;
-    pEp_free(full_wordlist);
-    full_wordlist = nullptr;
 
+    free(full_wordlist);
+    full_wordlist = nullptr;
+    
     cout << "\nTest 2: fpr1 == fpr1, short" << endl;
     
     cout << "\nfinding French trustwords for " << fingerprint2 << "...\n";
@@ -86,14 +91,14 @@ int main() {
     cout << words1 << "\n";
         
     cout << "\nfinding French trustwords for " << identity2->address << " and " << identity2->address << "...\n";
-    get_trustwords(session, identity2, identity2, "fr", &full_wordlist, &wsize_full, false);
-    assert(full_wordlist);
-    cout << full_wordlist << "\n";
+    status = get_trustwords(session, identity2, identity2, "fr", &full_wordlist, &wsize_full, false);
+    assert(status == PEP_TRUSTWORDS_DUPLICATE_FPR);
+    cout << "Discovered duplicate fprs as desired" << endl;
 
     cout << "\nfinding English trustwords for " << identity2->address << " and " << identity2->address << "... with spaces\n";
     get_trustwords(session, identity2, identity2_with_spaces, "en", &full_wordlist, &wsize_full, false);
-    assert(full_wordlist);
-    cout << full_wordlist << "\n";
+    assert(status == PEP_TRUSTWORDS_DUPLICATE_FPR);
+    cout << "Discovered duplicate fprs as desired" << endl;
 
     pEp_free(words1);
     words1 = nullptr;
@@ -112,13 +117,13 @@ int main() {
     assert(words2);
     cout << words2 << "\n";
     
-    cout << "\nfinding English trustwords for " << identity2->address << " and " << identity2->address << "...\n";
+    cout << "\nfinding English trustwords for " << identity2->address << " and " << identity1->address << "...\n";
     get_trustwords(session, identity2, identity1, "en", &full_wordlist, &wsize_full, true);
     assert(full_wordlist);
     cout << full_wordlist << "\n";
     
-    cout << "\nfinding English trustwords for " << identity2->address << " and " << identity2->address << "... with spaces\n";
-    get_trustwords(session, identity2_with_spaces, identity1, "en", &full_wordlist, &wsize_full, false);
+    cout << "\nfinding English trustwords for " << identity2->address << " and " << identity1->address << "... with spaces\n";
+    get_trustwords(session, identity2_with_spaces, identity1, "en", &full_wordlist, &wsize_full, true);
     assert(full_wordlist);
     cout << full_wordlist << "\n";
     
@@ -199,18 +204,18 @@ int main() {
     pEp_free(full_wordlist);
     full_wordlist = nullptr;
 
-    cout << "\nTest 6: fpr2 is too short" << endl;
+    cout << "\nTest 6: fpr2 is shorter" << endl;
     
     pEp_identity* identity6 = new_identity(
         "nobody4@kgrothoff.org",
-        "01F932086185C15917B72D30571AFBCA5493553",
+        "F1F932086185c15917B72D30571AFBCA5493553",
         "blargh",
         "Krista Grothoff");
     
     cout << "\nfinding Turkish trustwords for " << identity5->address << " and " << identity6->address << "...\n";
     PEP_STATUS status6 = get_trustwords(session, identity5, identity6, "tr", &full_wordlist, &wsize_full, false);
-    assert(status6 == PEP_TRUSTWORDS_FPR_WRONG_LENGTH);
-    cout << "Bad fpr length correctly recognised." << "\n";
+    assert(status6 == PEP_STATUS_OK);
+    cout << full_wordlist << endl;
     
     pEp_identity* identity7 = new_identity(
         "nobody5@kgrothoff.org",
@@ -238,4 +243,3 @@ int main() {
     release(session);
     return 0;
 }
-
