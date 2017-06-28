@@ -45,7 +45,6 @@ static const char *sql_trustword =
     "select id, word from wordlist where lang = lower(?1) "
     "and id = ?2 ;";
 
-    //    where (case when address = "JOEGtestuser@testdomain.org" then (1) else 0 end) = 1
 
 static const char *sql_get_identity =  
     "select fpr, username, comm_type, lang,"
