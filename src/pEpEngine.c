@@ -10,6 +10,32 @@
 
 static int init_count = -1;
 
+// sql overloaded functions - modified from sqlite3.c
+static void _sql_lower(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
+    char *z1;
+    const char *z2;
+    int i, n;
+    z2 = (char*)sqlite3_value_text(argv[0]);
+    n = sqlite3_value_bytes(argv[0]);
+    /* Verify that the call to _bytes() does not invalidate the _text() pointer */
+    assert( z2==(char*)sqlite3_value_text(argv[0]) );
+    if( z2 ){
+        z1 = (char*)sqlite3_malloc(n+1);
+        if( z1 ){
+            for(i=0; i<n; i++){
+                char c = z2[i];
+                char c_mod = c | 0x20;
+                if (c_mod < 0x61 || c_mod > 0x7a)
+                    c_mod = c;
+                z1[i] = c_mod;
+            }
+            z1[n] = '\0';
+            sqlite3_result_text(ctx, z1, n, sqlite3_free);
+        }
+    }
+}
+
+
 // sql manipulation statements
 static const char *sql_log = 
     "insert into log (title, entity, description, comment)"
@@ -19,6 +45,7 @@ static const char *sql_trustword =
     "select id, word from wordlist where lang = lower(?1) "
     "and id = ?2 ;";
 
+
 static const char *sql_get_identity =  
     "select fpr, username, comm_type, lang,"
     "   identity.flags | pgp_keypair.flags"
@@ -26,8 +53,13 @@ static const char *sql_get_identity =
     "   join person on id = identity.user_id"
     "   join pgp_keypair on fpr = identity.main_key_id"
     "   join trust on id = trust.user_id"
-    "       and pgp_keypair_fpr = identity.main_key_id"
-    "   where address = ?1 and identity.user_id = ?2;";
+    "       and pgp_keypair_fpr = identity.main_key_id"    
+    "   where (case when (address = ?1) then (1)"
+    "               when (lower(address) = lower(?1)) then (1)"
+    "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1)"
+    "               else 0"
+    "          end) = 1"
+    "   and identity.user_id = ?2;";
 
 static const char *sql_replace_identities_fpr =  
     "update identity"
@@ -414,6 +446,21 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             &version,
             NULL
         );
+
+        assert(int_result == SQLITE_OK);
+        
+        void (*xFunc_lower)(sqlite3_context*,int,sqlite3_value**) = &_sql_lower;
+        
+        int_result = sqlite3_create_function_v2(
+            _session->db,
+            "lower",
+            1,
+            SQLITE_UTF8 | SQLITE_DETERMINISTIC,
+            NULL,
+            xFunc_lower,
+            NULL,
+            NULL,
+            NULL);
         assert(int_result == SQLITE_OK);
 
         if(version != 0) { 
