@@ -674,53 +674,6 @@ pEp_rid_list_t* _get_resource_id_list(struct mailmime *mime)
     return rid_list;
 }
 
-
-/* FIXME: about to be obsoleted? */
-char * _get_filename_or_cid(struct mailmime *mime)
-{
-    clist * _fieldlist = NULL;
-
-    assert(mime);
-
-    if (mime->mm_mime_fields && mime->mm_mime_fields->fld_list)
-        _fieldlist = mime->mm_mime_fields->fld_list;
-    else
-        return NULL;
-
-    clistiter *cur;
-    
-    char* _temp_filename_ptr = NULL;
-    
-    for (cur = clist_begin(_fieldlist); cur; cur = clist_next(cur)) {
-        struct mailmime_field * _field = clist_content(cur);
-        if (_field && _field->fld_type == MAILMIME_FIELD_ID) {
-            /* We prefer CIDs to filenames when both are present */
-            free(_temp_filename_ptr); /* can be null, it's ok */
-            return build_uri("cid", _field->fld_data.fld_id); 
-        }
-        else if (_field && _field->fld_type == MAILMIME_FIELD_DISPOSITION) {
-            if (_field->fld_data.fld_disposition &&
-                    _field->fld_data.fld_disposition->dsp_parms &&
-                    !_temp_filename_ptr) {
-                clist * _parmlist =
-                        _field->fld_data.fld_disposition->dsp_parms;
-                clistiter *cur2;
-                for (cur2 = clist_begin(_parmlist); cur2; cur2 =
-                        clist_next(cur2)) {
-                    struct mailmime_disposition_parm * param =
-                            clist_content(cur2);
-                    if (param->pa_type == MAILMIME_DISPOSITION_PARM_FILENAME) {
-                        _temp_filename_ptr = build_uri("file", param->pa_data.pa_filename);
-                        break;
-                    }                
-                }
-            }
-        }
-    }
-    /* Ok, it wasn't a CID */
-    return _temp_filename_ptr;
-}
-
 static bool parameter_has_value(
         struct mailmime_content *content,       
         const char *name,

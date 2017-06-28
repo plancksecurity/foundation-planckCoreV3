@@ -72,9 +72,7 @@ int _append_optional_field(
 
 clist * _get_fields(struct mailmime * mime);
 struct mailmime_content * _get_content(struct mailmime * mime);
-char * _get_filename_or_cid(struct mailmime *mime);
 pEp_rid_list_t* _get_resource_id_list(struct mailmime *mime);
-char* _build_uri(char* uri_prefix, char* resource);
 bool _is_multipart(struct mailmime_content *content, const char *subtype);
 bool _is_PGP_MIME(struct mailmime_content *content);
 bool _is_text_part(struct mailmime_content *content, const char *subtype);

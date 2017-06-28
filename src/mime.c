@@ -1403,7 +1403,6 @@ static PEP_STATUS interpret_MIME(
                 pEp_rid_list_t* resource_id_list = _get_resource_id_list(mime);
                 pEp_rid_list_t* chosen_resource_id = choose_resource_id(resource_id_list);
                 
-                //filename = _get_filename_or_cid(mime);
                 char *_filename = NULL;
                 
                 if (chosen_resource_id) {
