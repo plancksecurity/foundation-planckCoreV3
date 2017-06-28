@@ -100,6 +100,7 @@ struct _pEpSession {
     sqlite3_stmt *log;
     sqlite3_stmt *trustword;
     sqlite3_stmt *get_identity;
+    sqlite3_stmt *replace_identities_fpr;
     sqlite3_stmt *set_person;
     sqlite3_stmt *set_device_group;
     sqlite3_stmt *get_device_group;
@@ -108,6 +109,7 @@ struct _pEpSession {
     sqlite3_stmt *set_identity_flags;
     sqlite3_stmt *unset_identity_flags;
     sqlite3_stmt *set_trust;
+    sqlite3_stmt *update_trust_for_fpr;
     sqlite3_stmt *get_trust;
     sqlite3_stmt *least_trust;
     sqlite3_stmt *mark_compromized;
@@ -159,10 +161,14 @@ struct _pEpSession {
 
     bool passive_mode;
     bool unencrypted_subject;
-    bool use_only_own_private_keys;
     bool keep_sync_msg;
+    bool service_log;
     
+#ifdef DEBUG_ERRORSTACK
+    stringlist_t* errorstack;
+#endif
 };
+
 
 PEP_STATUS init_transport_system(PEP_SESSION session, bool in_first);
 void release_transport_system(PEP_SESSION session, bool out_last);
@@ -178,14 +184,14 @@ PEP_STATUS encrypt_only(
 #else
 #ifdef ANDROID
 #include <android/log.h>
-#define  LOG_MORE(...)  __android_log_print(ANDROID_LOG_DEBUG, "pEpEngine", " %s :: %s :: %s ", __VA_ARGS__);
+#define  LOG_MORE(...)  __android_log_print(ANDROID_LOG_DEBUG, "pEpEngine", " %s :: %s :: %s :: %s ", __VA_ARGS__);
 #else
 #include <stdio.h>
-#define  LOG_MORE(...)  printf("pEpEngine DEBUG_LOG('%s','%s','%s')\n", __VA_ARGS__);
+#define  LOG_MORE(...)  fprintf(stderr, "pEpEngine DEBUG_LOG('%s','%s','%s','%s')\n", __VA_ARGS__);
 #endif
 #define DEBUG_LOG(TITLE, ENTITY, DESC) {\
-    log_event(session, (TITLE), (ENTITY), (DESC), "debug");\
-    LOG_MORE((TITLE), (ENTITY), (DESC))\
+    log_event(session, (TITLE), (ENTITY), (DESC), "debug " __FILE__ ":" S_LINE);\
+    LOG_MORE((TITLE), (ENTITY), (DESC), __FILE__ ":" S_LINE)\
 }
 #endif
 
@@ -306,3 +312,13 @@ static inline int _same_fpr(
 
     return comparison == 0;
 }
+
+
+#ifdef DEBUG_ERRORSTACK
+    PEP_STATUS session_add_error(PEP_SESSION session, const char* file, unsigned line, PEP_STATUS status);
+    #define ADD_TO_LOG(status)   session_add_error(session, __FILE__, __LINE__, (status))
+    #define GOTO(label)          do{ (void)session_add_error(session, __FILE__, __LINE__, status); goto label; }while(0)
+#else
+    #define ADD_TO_LOG(status)   (status)
+    #define GOTO(label)          goto label
+#endif

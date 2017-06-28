@@ -46,6 +46,7 @@ typedef enum {
     PEP_KEY_HAS_AMBIG_NAME                          = 0x0202,
     PEP_GET_KEY_FAILED                              = 0x0203,
     PEP_CANNOT_EXPORT_KEY                           = 0x0204,
+    PEP_CANNOT_EDIT_KEY                             = 0x0205,
     
     PEP_CANNOT_FIND_IDENTITY                        = 0x0301,
     PEP_CANNOT_SET_PERSON                           = 0x0381,
@@ -67,6 +68,7 @@ typedef enum {
 
     PEP_TRUSTWORD_NOT_FOUND                         = 0x0501,
     PEP_TRUSTWORDS_FPR_WRONG_LENGTH                 = 0x0502,
+    PEP_TRUSTWORDS_DUPLICATE_FPR                    = 0x0503,
 
     PEP_CANNOT_CREATE_KEY                           = 0x0601,
     PEP_CANNOT_SEND_KEY                             = 0x0602,
@@ -147,6 +149,25 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session);
 DYNAMIC_API void release(PEP_SESSION session);
 
 
+// const stringlist_t* get_errorstack(PEP_SESSION) - get the error stack for that session, if any
+//
+//  parameters:
+//        session (in)    session handle
+//
+//    caveat:
+//        To get a useful error stack you have to compile with -DDEBUG_ERRORSTACK
+//        The error stack belongs to the session. Do no not change it!
+DYNAMIC_API const stringlist_t* get_errorstack(PEP_SESSION session);
+
+
+// void clear_errorstack(PEP_SESSION) - clear the error stack for that session, if any
+//
+//  parameters:
+//        session (in)    session handle
+//
+DYNAMIC_API void clear_errorstack(PEP_SESSION session);
+
+
 // config_passive_mode() - enable passive mode
 //
 //  parameters:
@@ -180,6 +201,14 @@ DYNAMIC_API void config_use_only_own_private_keys(PEP_SESSION session, bool enab
 //      enable (in)     flag if enabled or disabled
 
 DYNAMIC_API void config_keep_sync_msg(PEP_SESSION session, bool enable);
+
+
+// config_service_log() - log more for service purposes
+//
+//      session (in)    session handle
+//      enable (in)     flag if enabled or disabled
+
+DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable);
 
 
 // decrypt_and_verify() - decrypt and/or verify a message
@@ -294,6 +323,17 @@ DYNAMIC_API PEP_STATUS log_event(
         const char *description,
         const char *comment
     );
+
+
+DYNAMIC_API PEP_STATUS log_service(PEP_SESSION session, const char *title,
+        const char *entity, const char *description, const char *comment);
+
+#define _STR_(x) #x
+#define _D_STR_(x) _STR_(x)
+#define S_LINE _D_STR_(__LINE__)
+
+#define SERVICE_LOG(session, title, entity, desc) \
+    log_service((session), (title), (entity), (desc), "service " __FILE__ ":" S_LINE)
 
 
 // trustword() - get the corresponding trustword for a 16 bit value
@@ -523,6 +563,11 @@ DYNAMIC_API PEP_STATUS get_identity(
         const char *user_id,
         pEp_identity **identity
     );
+
+PEP_STATUS replace_identities_fpr(PEP_SESSION session, 
+                                 const char* old_fpr, 
+                                 const char* new_fpr); 
+
 
 // set_identity() - set identity information
 //
@@ -807,6 +852,14 @@ DYNAMIC_API void pEp_free(void *p);
 
 DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity);
 
+PEP_STATUS set_trust(PEP_SESSION session, 
+                            const char* user_id,
+                            const char* fpr, 
+                            PEP_comm_type comm_type);
+                            
+PEP_STATUS update_trust_for_fpr(PEP_SESSION session, 
+                                const char* fpr, 
+                                PEP_comm_type comm_type);
 
 // least_trust() - get the least known trust level for a key in the database
 //
@@ -903,6 +956,12 @@ DYNAMIC_API PEP_STATUS key_revoked(
         PEP_SESSION session,
         const char *fpr,
         bool *revoked
+    );
+
+PEP_STATUS get_key_userids(
+        PEP_SESSION session,
+        const char* fpr,
+        stringlist_t** keylist
     );
 
 

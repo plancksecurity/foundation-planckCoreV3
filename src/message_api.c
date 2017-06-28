@@ -169,19 +169,22 @@ static int separate_short_and_long(const char *src, char **shortmsg, char **long
                     goto enomem;
             }
         }
+        *shortmsg = _shortmsg;
     }
     else {
-        _shortmsg = strdup("");
-        assert(_shortmsg);
-        if (_shortmsg == NULL)
-            goto enomem;
+        // If there's no "Subject: " and the shortmsg is
+        // pEp (or anything else), then we shouldn't be replacing it.
+        // Chances are that the message wasn't encrypted
+        // using pEp and that the actually subject IS pEp. In any event,
+        // erasing the subject line when we don't have one in the plaintext
+        // isn't the right behaviour.
+        // _shortmsg = strdup("");
         _longmsg = strdup(src);
         assert(_longmsg);
         if (_longmsg == NULL)
             goto enomem;
     }
-
-    *shortmsg = _shortmsg;
+    
     *longmsg = _longmsg;
 
     return 0;
@@ -823,68 +826,60 @@ static PEP_rating key_rating(PEP_SESSION session, const char *fpr)
 
 
     PEP_comm_type bare_comm_type = PEP_ct_unknown;
+    PEP_comm_type resulting_comm_type = PEP_ct_unknown;
     PEP_STATUS status = get_key_rating(session, fpr, &bare_comm_type);
     if (status != PEP_STATUS_OK)
         return PEP_rating_undefined;
 
-    PEP_comm_type least_trust_type = PEP_ct_unknown;
-    least_trust(session, fpr, &least_trust_type);
+    PEP_comm_type least_comm_type = PEP_ct_unknown;
+    least_trust(session, fpr, &least_comm_type);
 
-    if (least_trust_type == PEP_ct_unknown) {
-        return _rating(bare_comm_type, PEP_rating_undefined);
+    if (least_comm_type == PEP_ct_unknown) {
+        resulting_comm_type = bare_comm_type;
+    } else if (least_comm_type < PEP_ct_strong_but_unconfirmed ||
+               bare_comm_type < PEP_ct_strong_but_unconfirmed) {
+        // take minimum if anything bad
+        resulting_comm_type = least_comm_type < bare_comm_type ? 
+                              least_comm_type : 
+                              bare_comm_type;
     } else {
-        return _rating(least_trust_type, PEP_rating_undefined);
+        resulting_comm_type = least_comm_type;
     }
+    return _rating(resulting_comm_type, PEP_rating_undefined);
 }
 
 static PEP_rating worst_rating(PEP_rating rating1, PEP_rating rating2) {
     return ((rating1 < rating2) ? rating1 : rating2);
 }
 
-static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist)
+static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist, char* sender_fpr, PEP_rating sender_rating)
 {
-    PEP_rating rating = PEP_rating_undefined;
+    PEP_rating rating = sender_rating;
 
     assert(keylist && keylist->value);
     if (keylist == NULL || keylist->value == NULL)
         return PEP_rating_undefined;
 
     stringlist_t *_kl;
-    bool first = true;
     for (_kl = keylist; _kl && _kl->value; _kl = _kl->next) {
-        PEP_comm_type ct;
-        PEP_STATUS status;
+
+        // Ignore own fpr
+        if(_same_fpr(sender_fpr, strlen(sender_fpr), _kl->value, strlen(_kl->value)))
+            continue;
 
         PEP_rating _rating_ = key_rating(session, _kl->value);
          
         if (_rating_ <= PEP_rating_mistrust)
             return _rating_;
             
-        if (first) {
-            rating = _rating_;
-            first = false;
-        }
-        else if (rating == PEP_rating_undefined)
-            rating = worst_rating(rating, _rating_);
-
-        if (_rating_ >= PEP_rating_reliable) {
-            status = least_trust(session, _kl->value, &ct);
-            if (status != PEP_STATUS_OK)
-                return PEP_rating_undefined;
-            if (ct == PEP_ct_unknown){
-                /* per edouard, we reduce reliable+ ratings to reliable because
-                   ct unknown */
-                if (rating >= PEP_rating_reliable){
-                    rating = PEP_rating_reliable; 
-                }
-            }
-            else{
-                rating = worst_rating(rating, _rating(ct, rating));
-            }
-        }
-        else if (_rating_ == PEP_rating_unencrypted) {
+        if (_rating_ == PEP_rating_unencrypted)
+        {
             if (rating > PEP_rating_unencrypted_for_some)
                 rating = worst_rating(rating, PEP_rating_unencrypted_for_some);
+        }
+        else
+        {
+            rating = worst_rating(rating, _rating_);
         }
     }
 
@@ -992,8 +987,13 @@ bool import_attached_keys(
         if (bl && bl->value && bl->size && bl->size < MAX_KEY_SIZE
                 && is_key(bl))
         {
-            import_key(session, bl->value, bl->size, private_idents);
+            identity_list *local_private_idents = NULL;
+            import_key(session, bl->value, bl->size, &local_private_idents);
             remove = true;
+            if (private_idents && *private_idents == NULL && local_private_idents != NULL)
+                *private_idents = local_private_idents;
+            else
+                free_identity_list(local_private_idents);
         }
     }
     return remove;
@@ -1101,20 +1101,20 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     assert(enc_format != PEP_enc_none);
 
     if (!(session && src && dst && enc_format != PEP_enc_none))
-        return PEP_ILLEGAL_VALUE;
+        return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     if (src->dir == PEP_dir_incoming)
-        return PEP_ILLEGAL_VALUE;
+        return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     determine_encryption_format(src);
     if (src->enc_format != PEP_enc_none)
-        return PEP_ILLEGAL_VALUE;
+        return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     *dst = NULL;
 
     status = myself(session, src->from);
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        GOTO(pep_error);
 
     keys = new_stringlist(src->from->fpr);
     if (keys == NULL)
@@ -1148,7 +1148,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_STATUS _status = update_identity(session, _il->ident);
         if (_status != PEP_STATUS_OK) {
             status = _status;
-            goto pep_error;
+            GOTO(pep_error);
         }
 
         if (_il->ident->fpr && _il->ident->fpr[0]) {
@@ -1169,7 +1169,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             PEP_STATUS _status = update_identity(session, _il->ident);
             if (_status != PEP_STATUS_OK) {
                 status = _status;
-                goto pep_error;
+                GOTO(pep_error);
             }
 
             if (_il->ident->fpr && _il->ident->fpr[0]) {
@@ -1190,7 +1190,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             if (_status != PEP_STATUS_OK)
             {
                 status = _status;
-                goto pep_error;
+                GOTO(pep_error);
             }
 
             if (_il->ident->fpr && _il->ident->fpr[0]) {
@@ -1215,7 +1215,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         free_stringlist(keys);
         if (!session->passive_mode && !(flags & PEP_encrypt_flag_force_no_attached_key))
             attach_own_key(session, src);
-        return PEP_UNENCRYPTED;
+        return ADD_TO_LOG(PEP_UNENCRYPTED);
     }
     else {
         msg = clone_to_empty_message(src);
@@ -1242,14 +1242,14 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         default:
             assert(0);
             status = PEP_ILLEGAL_VALUE;
-            goto pep_error;
+            GOTO(pep_error);
         }
 
         if (status == PEP_OUT_OF_MEMORY)
             goto enomem;
 
         if (status != PEP_STATUS_OK)
-            goto pep_error;
+            GOTO(pep_error);
     }
 
     free_stringlist(keys);
@@ -1272,7 +1272,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     *dst = msg;
-    return status;
+    return ADD_TO_LOG(status);
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
@@ -1281,7 +1281,7 @@ pep_error:
     free_stringlist(keys);
     free_message(msg);
 
-    return status;
+    return ADD_TO_LOG(status);
 }
 
 DYNAMIC_API PEP_STATUS encrypt_message_for_self(
@@ -1303,18 +1303,18 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     assert(enc_format != PEP_enc_none);
 
     if (!(session && src && dst && enc_format != PEP_enc_none))
-        return PEP_ILLEGAL_VALUE;
+        return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     if (src->dir == PEP_dir_incoming)
-        return PEP_ILLEGAL_VALUE;
+        return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     determine_encryption_format(src);
     if (src->enc_format != PEP_enc_none)
-        return PEP_ILLEGAL_VALUE;
+        return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     status = myself(session, target_id);
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        GOTO(pep_error);
 
     *dst = NULL;
 
@@ -1391,7 +1391,7 @@ pep_error:
     free_stringlist(keys);
     free_message(msg);
 
-    return status;
+    return ADD_TO_LOG(status);
 }
 
 static bool is_a_pEpmessage(const message *msg)
@@ -1420,7 +1420,7 @@ static PEP_STATUS _update_identity_for_incoming_message(
                 && src->from->comm_type != PEP_ct_pEp)
         {
             src->from->comm_type |= PEP_ct_pEp_unconfirmed;
-            status = update_identity(session, src->from);
+            status = set_identity(session, src->from);
         }
         return status;
     }
@@ -1503,9 +1503,10 @@ PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
     if (!end_boundary)
         return PEP_UNKNOWN_ERROR;
 
-    end_boundary--; // See RFC3156 section 5...
-	if (*(end_boundary - 1) == '\r')
-		end_boundary--;
+    // See RFC3156 section 5...
+    end_boundary--; 
+    if (*(end_boundary - 1) == '\r')
+        end_boundary--; 
 
     *ssize = end_boundary - start_boundary;
     *stext = start_boundary;
@@ -1591,6 +1592,46 @@ free:
     return status;
 }
 
+PEP_STATUS amend_rating_according_to_sender_and_recipients(
+    PEP_SESSION session,
+    PEP_rating *rating,
+    pEp_identity *sender,
+    stringlist_t *recipients) {
+    
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    if (*rating > PEP_rating_mistrust) {
+
+        if (recipients == NULL) {
+            *rating = PEP_rating_undefined;
+            return PEP_STATUS_OK;
+        }
+
+        char *fpr = recipients->value;
+
+        if (!(sender && sender->user_id && sender->user_id[0] && fpr && fpr[0])) {
+            *rating = PEP_rating_unreliable;
+        }
+        else {
+            pEp_identity *_sender = new_identity(sender->address, fpr,
+                                               sender->user_id, sender->username);
+            if (_sender == NULL)
+                return PEP_OUT_OF_MEMORY;
+
+            status = get_trust(session, _sender);
+            if (_sender->comm_type != PEP_ct_unknown) {
+                *rating = keylist_rating(session, recipients, 
+                            fpr, _rating(_sender->comm_type, 
+                                          PEP_rating_undefined));
+            }
+            free_identity(_sender);
+            if (status == PEP_CANNOT_FIND_IDENTITY)
+               status = PEP_STATUS_OK;
+        }
+    }
+    return status;
+}
+
 
 DYNAMIC_API PEP_STATUS _decrypt_message(
         PEP_SESSION session,
@@ -1619,7 +1660,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     assert(flags);
 
     if (!(session && src && dst && keylist && rating && flags))
-        return PEP_ILLEGAL_VALUE;
+        return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     *flags = 0;
 
@@ -1630,7 +1671,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     // we would need to check signature
     status = _update_identity_for_incoming_message(session, src);
     if(status != PEP_STATUS_OK)
-        return status;
+        return ADD_TO_LOG(status);
 
     // Get detached signature, if any
     bloblist_t* detached_sig = NULL;
@@ -1664,7 +1705,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                 PEP_decrypt_flag_consume;
                 }
                 else if (status != PEP_STATUS_OK) {
-                    return status;
+                    return ADD_TO_LOG(status);
                 }
             }
             
@@ -1696,7 +1737,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 }
             }
             
-            return PEP_UNENCRYPTED;
+            return ADD_TO_LOG(PEP_UNENCRYPTED);
 
         case PEP_enc_PGP_MIME:
             ctext = src->attachments->next->value;
@@ -1720,7 +1761,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                                    csize, dsig_text, dsig_size,
                                                    &ptext, &psize, &_keylist);
     if (status > PEP_CANNOT_DECRYPT_UNKNOWN){
-        goto pep_error;
+        GOTO(pep_error);
     }
 
     decrypt_status = status;
@@ -1896,7 +1937,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             case PEP_enc_PGP_MIME_Outlook1:
                 status = copy_fields(msg, src);
                 if (status != PEP_STATUS_OK)
-                    goto pep_error;
+                {
+                    GOTO(pep_error);
+                }
 
                 if (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0)
                 {
@@ -1905,8 +1948,23 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
                     int r = separate_short_and_long(msg->longmsg, &shortmsg,
                             &longmsg);
+                    
                     if (r == -1)
                         goto enomem;
+
+                    if (shortmsg == NULL) {
+                        if (src->shortmsg == NULL)
+                            shortmsg = strdup("");
+                        else {
+                            // FIXME: is msg->shortmsg always a copy of
+                            // src->shortmsg already?
+                            // if so, we need to change the logic so
+                            // that in this case, we don't free msg->shortmsg
+                            // and do this strdup, etc.
+                            shortmsg = strdup(src->shortmsg);
+                        }
+                    }
+
 
                     free(msg->shortmsg);
                     free(msg->longmsg);
@@ -1954,7 +2012,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
             status = _update_identity_for_incoming_message(session, src);
             if(status != PEP_STATUS_OK)
-                goto pep_error;
+            {
+                GOTO(pep_error);
+            }
 
             char *re_ptext = NULL;
             size_t re_psize;
@@ -1968,50 +2028,22 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             free(re_ptext);
 
             if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
-                goto pep_error;
+            {
+                GOTO(pep_error);
+            }
 
             decrypt_status = status;
         }
 
         *rating = decrypt_rating(decrypt_status);
 
-        if (*rating > PEP_rating_mistrust) {
-            PEP_rating kl_rating = PEP_rating_undefined;
+        status = amend_rating_according_to_sender_and_recipients(session,
+                                                                 rating,
+                                                                 src->from,
+                                                                 _keylist);
 
-            if (_keylist)
-                kl_rating = keylist_rating(session, _keylist);
-
-            if (kl_rating <= PEP_rating_mistrust) {
-                *rating = kl_rating;
-            }
-            else if (*rating >= PEP_rating_reliable &&
-                     kl_rating < PEP_rating_reliable) {
-                *rating = PEP_rating_unreliable;
-            }
-            else if (*rating >= PEP_rating_reliable &&
-                     kl_rating >= PEP_rating_reliable) {
-                if (!(src->from && src->from->user_id && src->from->user_id[0])) {
-                    *rating = PEP_rating_unreliable;
-                }
-                else {
-                    char *fpr = _keylist->value;
-                    pEp_identity *_from = new_identity(src->from->address, fpr,
-                                                       src->from->user_id, src->from->username);
-                    if (_from == NULL)
-                        goto enomem;
-                    status = get_trust(session, _from);
-                    if (_from->comm_type != PEP_ct_unknown) {
-                        *rating = worst_rating(_rating(_from->comm_type, PEP_rating_undefined),
-                                  kl_rating);
-                    }
-                    free_identity(_from);
-                    if (status == PEP_CANNOT_FIND_IDENTITY)
-                       status = PEP_STATUS_OK;
-                    if (status != PEP_STATUS_OK)
-                        goto pep_error;
-                }
-            }
-        }
+        if (status != PEP_STATUS_OK)
+            GOTO(pep_error);
     }
     else
     {
@@ -2047,7 +2079,6 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                             PEP_decrypt_flag_ignore :
                             PEP_decrypt_flag_consume;
 
-                status = decrypt_status;
             }
             else if (status != PEP_STATUS_OK){
                 goto pep_error;
@@ -2066,7 +2097,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     *dst = msg;
     *keylist = _keylist;
 
-    return status;
+    if(decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
+        return ADD_TO_LOG(PEP_STATUS_OK);
+    else
+        return ADD_TO_LOG(decrypt_status);
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
@@ -2076,7 +2110,7 @@ pep_error:
     free_message(msg);
     free_stringlist(_keylist);
 
-    return status;
+    return ADD_TO_LOG(status);
 }
 
 DYNAMIC_API PEP_STATUS decrypt_message(
@@ -2125,8 +2159,7 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
 
     free_identity_list(private_il);
 
-    return status;
-
+    return ADD_TO_LOG(status);
 }
 
 static void _max_comm_type_from_identity_list(
@@ -2167,10 +2200,10 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
     assert(rating);
 
     if (!(session && msg && rating))
-        return PEP_ILLEGAL_VALUE;
+        return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     if (msg->dir != PEP_dir_outgoing)
-        return PEP_ILLEGAL_VALUE;
+        return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     *rating = PEP_rating_undefined;
 
@@ -2254,7 +2287,75 @@ DYNAMIC_API PEP_color color_from_rating(PEP_rating rating)
 
     // this should never happen
     assert(false);
-	return PEP_color_no_color;
+    return PEP_color_no_color;
+}
+
+/* [0-9]: 0x30 - 0x39; [A-F] = 0x41 - 0x46; [a-f] = 0x61 - 0x66 */
+static short asciihex_to_num(char a) {
+    short conv_num = -1;
+    if (a >= 0x30 && a <= 0x39)
+        conv_num = a - 0x30;
+    else {
+        // convert case, subtract offset, get number
+        conv_num = ((a | 0x20) - 0x61) + 10;
+        if (conv_num < 0xa || conv_num > 0xf)
+            conv_num = -1;
+    }
+    return conv_num;
+}
+
+static char num_to_asciihex(short h) {
+    if (h < 0 || h > 16)
+        return '\0';
+    if (h < 10)
+        return (char)(h + 0x30);
+    return (char)((h - 10) + 0x41); // for readability
+}
+
+static char xor_hex_chars(char a, char b) {
+    short a_num = asciihex_to_num(a);
+    short b_num = asciihex_to_num(b);
+    if (a_num < 0 || b_num < 0)
+        return '\0';
+    short xor_num = a_num^b_num;
+    return num_to_asciihex(xor_num);
+}
+
+static char* skip_separators(char* current, char* begin) {
+    while (current >= begin) {
+        /* .:,;-_ ' ' - [2c-2e] [3a-3b] [20] [5f] */
+        char check_char = *current;
+        switch (check_char) {
+            case '.':
+            case ':':
+            case ',':
+            case ';':
+            case '-':
+            case '_':
+            case ' ':
+                current--;
+                continue;
+            default:
+                break;
+        }
+        break;
+    }
+    return current;
+}
+
+PEP_STATUS check_for_zero_fpr(char* fpr) {
+    PEP_STATUS status = PEP_TRUSTWORDS_DUPLICATE_FPR;
+    
+    while (*fpr) {
+        if (*fpr != '0') {
+            status = PEP_STATUS_OK;
+            break;
+        }
+        fpr++;    
+    }
+    
+    return status;
+    
 }
 
 DYNAMIC_API PEP_STATUS get_trustwords(
@@ -2270,96 +2371,114 @@ DYNAMIC_API PEP_STATUS get_trustwords(
     assert(words);
     assert(wsize);
 
+    int SHORT_NUM_TWORDS = 5; 
+    
+    PEP_STATUS status = PEP_STATUS_OK;
+    
     if (!(session && id1 && id2 && words && wsize) ||
         !(id1->fpr) || (!id2->fpr))
         return PEP_ILLEGAL_VALUE;
 
-    const char *source1 = id1->fpr;
-    const char *source2 = id2->fpr;
+    char *source1 = id1->fpr;
+    char *source2 = id2->fpr;
 
-    *words = NULL;
+    int source1_len = strlen(source1);
+    int source2_len = strlen(source2);
+    int max_len;
+        
+    *words = NULL;    
     *wsize = 0;
 
-    const size_t SHORT_NUM_TWORDS = 5;
+    max_len = (source1_len > source2_len ? source1_len : source2_len);
+    
+    char* XORed_fpr = (char*)(calloc(1,max_len + 1));
+    *(XORed_fpr + max_len) = '\0';
+    char* result_curr = XORed_fpr + max_len - 1;
+    char* source1_curr = source1 + source1_len - 1;
+    char* source2_curr = source2 + source2_len - 1;
 
-    // N.B. THIS will have to be changed once we start checking trustword entropy.
-    // For now, full is ALL, and otherwise it's 5-per-id.
-    size_t max_words_per_id = (full ? 0 : SHORT_NUM_TWORDS);
-
-    char* first_set = NULL;
-    char* second_set = NULL;
-    size_t first_wsize = 0;
-    size_t second_wsize = 0;
-
-    int fpr_comparison = -255;
-    PEP_STATUS status = _compare_fprs(source1, strlen(source1), source2, strlen(source2), &fpr_comparison);
-    if (status != PEP_STATUS_OK)
-        return status;
-
-    char* _retstr = NULL;
-
-    switch (fpr_comparison) {
-        case 1: // source1 > source2
-            status = trustwords(session, source2, lang, &first_set, &first_wsize, max_words_per_id);
-            if (status != PEP_STATUS_OK)
-                goto error_release;
-            status = trustwords(session, source1, lang, &second_set, &second_wsize, max_words_per_id);
-            if (status != PEP_STATUS_OK)
-                goto error_release;
+    while (source1 <= source1_curr && source2 <= source2_curr) {
+        source1_curr = skip_separators(source1_curr, source1);
+        source2_curr = skip_separators(source2_curr, source2);
+        
+        if (source1_curr < source1 || source2_curr < source2)
             break;
-        case 0:
-        case -1: // source1 <= source2
-            status = trustwords(session, source1, lang, &first_set, &first_wsize, max_words_per_id);
-            if (status != PEP_STATUS_OK)
-                goto error_release;
-            status = trustwords(session, source2, lang, &second_set, &second_wsize, max_words_per_id);
-            if (status != PEP_STATUS_OK)
-                goto error_release;
-            break;
-        default:
-            return PEP_UNKNOWN_ERROR; // shouldn't be possible
-    }
-
-    size_t _wsize = first_wsize + second_wsize;
-
-    bool needs_space = (first_set[first_wsize - 1] != ' ');
-
-    if (needs_space)
-        _wsize++;
-
-    _retstr = calloc(1, _wsize + 1);
-
-    size_t len = strlcpy(_retstr, first_set, _wsize);
-    if (len >= _wsize) {
-        status = PEP_UNKNOWN_ERROR;
-        goto error_release;
-    }
-    if (needs_space) {
-        strlcat(_retstr, " ", _wsize);
-        if (len >= _wsize) {
-            status = PEP_UNKNOWN_ERROR;
+            
+        char xor_hex = xor_hex_chars(*source1_curr, *source2_curr);
+        if (xor_hex == '\0') {
+            status = PEP_ILLEGAL_VALUE;
             goto error_release;
         }
-    }
-    strlcat(_retstr, second_set, _wsize);
-    if (len >= _wsize){
-        status = PEP_UNKNOWN_ERROR;
-        goto error_release;
+        
+        *result_curr = xor_hex;
+        result_curr--; source1_curr--; source2_curr--;
     }
 
-    *words = _retstr;
-    *wsize = _wsize;
+    char* remainder_start = NULL;
+    char* remainder_curr = NULL;
+    
+    if (source1 <= source1_curr) {
+        remainder_start = source1;
+        remainder_curr = source1_curr;
+    }
+    else if (source2 <= source2_curr) {
+        remainder_start = source2;
+        remainder_curr = source2_curr;
+    }
+    if (remainder_curr) {
+        while (remainder_start <= remainder_curr) {
+            remainder_curr = skip_separators(remainder_curr, remainder_start);
+            
+            if (remainder_curr < remainder_start)
+                break;
+            
+            char the_char = *remainder_curr;
+            
+            if (asciihex_to_num(the_char) < 0) {
+                status = PEP_ILLEGAL_VALUE;
+                goto error_release;
+            }
+            
+            *result_curr = the_char;                
+            result_curr--;
+            remainder_curr--;
+        }
+    }
+    
+    result_curr++;
+
+    if (result_curr > XORed_fpr) {
+        char* tempstr = strdup(result_curr);
+        free(XORed_fpr);
+        XORed_fpr = tempstr;
+    }
+    
+    status = check_for_zero_fpr(XORed_fpr);
+    
+    if (status != PEP_STATUS_OK)
+        goto error_release;
+    
+    size_t max_words_per_id = (full ? 0 : SHORT_NUM_TWORDS);
+
+    char* the_words = NULL;
+    size_t the_size = 0;
+
+    status = trustwords(session, XORed_fpr, lang, &the_words, &the_size, max_words_per_id);
+    if (status != PEP_STATUS_OK)
+        goto error_release;
+
+    *words = the_words;
+    *wsize = the_size;
+    
     status = PEP_STATUS_OK;
 
     goto the_end;
 
     error_release:
-    free(_retstr);
-
+        free (XORed_fpr);
+        
     the_end:
-    free(first_set);
-    free(second_set);
-    return status;
+    return ADD_TO_LOG(status);
 }
 
 DYNAMIC_API PEP_STATUS get_message_trustwords(
@@ -2445,7 +2564,7 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
 
     if (status != PEP_STATUS_OK) {
         free_identity(partner);
-        return status;
+        return ADD_TO_LOG(status);
     }
    
     // Find own identity corresponding to given account address.
@@ -2458,7 +2577,7 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
 
     if (status != PEP_STATUS_OK) {
         free_identity(stored_identity);
-        return status;
+        return ADD_TO_LOG(status);
     }
 
     // get the trustwords
@@ -2467,7 +2586,7 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
                             partner, received_by, 
                             lang, words, &wsize, full);
 
-    return status;
+    return ADD_TO_LOG(status);
 }
 
 DYNAMIC_API PEP_STATUS MIME_decrypt_message(
@@ -2489,10 +2608,11 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     PEP_STATUS status = PEP_STATUS_OK;
     message* tmp_msg = NULL;
     message* dec_msg = NULL;
+    *mime_plaintext = NULL;
 
     status = mime_decode_message(mimetext, size, &tmp_msg);
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        GOTO(pep_error);
 
     PEP_STATUS decrypt_status = decrypt_message(session,
                                                 tmp_msg,
@@ -2505,17 +2625,10 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
         dec_msg = message_dup(tmp_msg);
     }
         
-    if (decrypt_status > PEP_CANNOT_DECRYPT_UNKNOWN)
+    if (decrypt_status > PEP_CANNOT_DECRYPT_UNKNOWN || !dec_msg)
     {
         status = decrypt_status;
-        goto pep_error;
-    }
-
-    assert(dec_msg);
-    
-    if (!dec_msg) {
-        status = PEP_UNKNOWN_ERROR;
-        goto pep_error;
+        GOTO(pep_error);
     }
 
     status = mime_encode_message(dec_msg, false, mime_plaintext);
@@ -2524,14 +2637,14 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     {
         free(tmp_msg);
         free(dec_msg);
-        return decrypt_status;
+        return ADD_TO_LOG(decrypt_status);
     }
     
 pep_error:
     free_message(tmp_msg);
     free_message(dec_msg);
 
-    return status;
+    return ADD_TO_LOG(status);
 }
 
 
@@ -2551,7 +2664,7 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
 
     status = mime_decode_message(mimetext, size, &tmp_msg);
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        GOTO(pep_error);
 
     // This isn't incoming, though... so we need to reverse the direction
     tmp_msg->dir = PEP_dir_outgoing;
@@ -2562,12 +2675,12 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
                              enc_format,
                              flags);
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        GOTO(pep_error);
 
 
     if (!enc_msg) {
         status = PEP_UNKNOWN_ERROR;
-        goto pep_error;
+        GOTO(pep_error);
     }
 
     status = mime_encode_message(enc_msg, false, mime_ciphertext);
@@ -2576,7 +2689,7 @@ pep_error:
     free_message(tmp_msg);
     free_message(enc_msg);
 
-    return status;
+    return ADD_TO_LOG(status);
 
 }
 
@@ -2620,5 +2733,145 @@ pep_error:
     free_message(tmp_msg);
     free_message(enc_msg);
 
-    return status;
+    return ADD_TO_LOG(status);
+}
+
+static PEP_rating string_to_rating(const char * rating)
+{
+    if (rating == NULL)
+        return PEP_rating_undefined;
+    if (strcmp(rating, "cannot_decrypt") == 0)
+        return PEP_rating_cannot_decrypt;
+    if (strcmp(rating, "have_no_key") == 0)
+        return PEP_rating_have_no_key;
+    if (strcmp(rating, "unencrypted") == 0)
+        return PEP_rating_unencrypted;
+    if (strcmp(rating, "unencrypted_for_some") == 0)
+        return PEP_rating_unencrypted_for_some;
+    if (strcmp(rating, "unreliable") == 0)
+        return PEP_rating_unreliable;
+    if (strcmp(rating, "reliable") == 0)
+        return PEP_rating_reliable;
+    if (strcmp(rating, "trusted") == 0)
+        return PEP_rating_trusted;
+    if (strcmp(rating, "trusted_and_anonymized") == 0)
+        return PEP_rating_trusted_and_anonymized;
+    if (strcmp(rating, "fully_anonymous") == 0)
+        return PEP_rating_fully_anonymous;
+    if (strcmp(rating, "mistrust") == 0)
+        return PEP_rating_mistrust;
+    if (strcmp(rating, "b0rken") == 0)
+        return PEP_rating_b0rken;
+    if (strcmp(rating, "under_attack") == 0)
+        return PEP_rating_under_attack;
+    return PEP_rating_undefined;
+}
+
+static PEP_STATUS string_to_keylist(const char * skeylist, stringlist_t **keylist)
+{
+    if (skeylist == NULL || keylist == NULL)
+        return PEP_ILLEGAL_VALUE;
+
+    stringlist_t *rkeylist = NULL;
+    stringlist_t *_kcurr = NULL;
+    const char * fpr_begin = skeylist;
+    const char * fpr_end = NULL;
+
+    do {
+        fpr_end = strstr(fpr_begin, ",");
+        
+        char * fpr = strndup(
+            fpr_begin,
+            (fpr_end == NULL) ? strlen(fpr_begin) : fpr_end - fpr_begin);
+        
+        if (fpr == NULL)
+            goto enomem;
+        
+        _kcurr = stringlist_add(_kcurr, fpr);
+        if (_kcurr == NULL) {
+            free(fpr);
+            goto enomem;
+        }
+        
+        if (rkeylist == NULL)
+            rkeylist = _kcurr;
+        
+        fpr_begin = fpr_end ? fpr_end + 1 : NULL;
+        
+    } while (fpr_begin);
+    
+    *keylist = rkeylist;
+    return PEP_STATUS_OK;
+    
+enomem:
+    free_stringlist(rkeylist);
+    return PEP_OUT_OF_MEMORY;
+}
+
+DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
+    PEP_SESSION session,
+    message *msg,
+    stringlist_t *x_keylist,
+    PEP_rating x_enc_status,
+    PEP_rating *rating
+)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    stringlist_t *_keylist = x_keylist;
+    bool must_free_keylist = false;
+    PEP_rating _rating;
+
+    assert(session);
+    assert(msg);
+    assert(rating);
+
+    if (!(session && msg && rating))
+        return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
+
+    *rating = PEP_rating_undefined;
+
+    if (x_enc_status == PEP_rating_undefined){
+        for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
+            if (strcasecmp(i->value->key, "X-EncStatus") == 0){
+                x_enc_status = string_to_rating(i->value->value);
+                goto got_rating;
+            }
+        }
+        return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
+    }
+
+got_rating:
+
+    _rating = x_enc_status;
+
+    if (_keylist == NULL){
+        for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
+            if (strcasecmp(i->value->key, "X-KeyList") == 0){
+                status = string_to_keylist(i->value->value, &_keylist);
+                if (status != PEP_STATUS_OK)
+                    GOTO(pep_error);
+                must_free_keylist = true;
+                goto got_keylist;
+            }
+        }
+        return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
+    }
+got_keylist:
+
+    status = update_identity(session, msg->from);
+    if (status != PEP_STATUS_OK)
+        GOTO(pep_error);
+
+    status = amend_rating_according_to_sender_and_recipients(session,
+                                                             &_rating,
+                                                             msg->from,
+                                                             _keylist);
+    if (status == PEP_STATUS_OK)
+        *rating = _rating;
+    
+pep_error:
+    if (must_free_keylist)
+        free_stringlist(_keylist);
+
+    return ADD_TO_LOG(status);
 }
