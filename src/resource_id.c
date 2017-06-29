@@ -25,7 +25,7 @@ const char* get_resource_ptr_noown(const char* uri) {
     if (!uri_delim)
         return uri;
     else
-        return uri + 3;
+        return uri_delim + 3;
 }
 
 char* get_resource(char* uri) {
