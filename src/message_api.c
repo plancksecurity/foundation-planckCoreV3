@@ -1213,8 +1213,11 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 PEP_rating_undefined) < PEP_rating_reliable)
     {
         free_stringlist(keys);
-        if (!session->passive_mode && !(flags & PEP_encrypt_flag_force_no_attached_key))
+        if (!session->passive_mode && 
+            !(flags & PEP_encrypt_flag_force_no_attached_key)) {
             attach_own_key(session, src);
+            decorate_message(src, PEP_rating_undefined, NULL);
+        }
         return ADD_TO_LOG(PEP_UNENCRYPTED);
     }
     else {
