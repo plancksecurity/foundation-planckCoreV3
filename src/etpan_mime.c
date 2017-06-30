@@ -642,9 +642,9 @@ pEp_rid_list_t* _get_resource_id_list(struct mailmime *mime)
         struct mailmime_field * _field = clist_content(cur);
         /* content_id */
         if (_field && _field->fld_type == MAILMIME_FIELD_ID) {
-            pEp_rid_list_t* new_rid = (pEp_rid_list_t*)calloc(1, sizeof(pEp_rid_list_t*));
+            pEp_rid_list_t* new_rid = (pEp_rid_list_t*)calloc(1, sizeof(pEp_rid_list_t));
             new_rid->rid_type = PEP_RID_CID;
-            new_rid->rid = _field->fld_data.fld_id;
+            new_rid->rid = strdup(_field->fld_data.fld_id);
             *rid_list_curr_p = new_rid;
             rid_list_curr_p = &new_rid->next;
         }
@@ -660,9 +660,9 @@ pEp_rid_list_t* _get_resource_id_list(struct mailmime *mime)
                     struct mailmime_disposition_parm * param =
                             clist_content(cur2);
                     if (param->pa_type == MAILMIME_DISPOSITION_PARM_FILENAME) {
-                        pEp_rid_list_t* new_rid = (pEp_rid_list_t*)calloc(1, sizeof(pEp_rid_list_t*));
+                        pEp_rid_list_t* new_rid = (pEp_rid_list_t*)calloc(1, sizeof(pEp_rid_list_t));
                         new_rid->rid_type = PEP_RID_FILENAME;
-                        new_rid->rid = param->pa_data.pa_filename;
+                        new_rid->rid = strdup(param->pa_data.pa_filename);
                         *rid_list_curr_p = new_rid;
                         rid_list_curr_p = &new_rid->next;
                     }                
