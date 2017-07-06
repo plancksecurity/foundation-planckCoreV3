@@ -312,6 +312,84 @@ static PEP_STATUS copy_fields(message *dst, const message *src)
     return PEP_STATUS_OK;
 }
 
+
+static message* extract_minimal_envelope(const message* src, 
+                                         PEP_msg_direction direct) {
+    
+    message* envelope = new_message(direct);
+    if (!envelope)
+        return NULL;
+        
+    envelope->shortmsg = strdup("pEp");
+    if (!envelope->shortmsg)
+        return NULL;
+
+    if (src->from) {
+        envelope->from = identity_dup(src->from);
+        if (!envelope->from)
+            return NULL;
+    }
+
+    if (src->to) {
+        envelope->to = identity_list_dup(src->to);
+        if (!envelope->to)
+            return NULL;
+    }
+
+    if (src->cc) {
+        envelope->cc = identity_list_dup(src->cc);
+        if (!envelope->cc)
+            return NULL;
+    }
+
+    if (src->bcc) {
+        envelope->bcc = identity_list_dup(src->bcc);
+        if (!envelope->bcc)
+            return NULL;
+    }
+
+    /* DO WE WANT TO EXPOSE THIS??? */
+    if (src->reply_to) {
+        envelope->reply_to = identity_list_dup(src->reply_to);
+        if (!envelope->reply_to)
+            return NULL;
+    }
+
+    envelope->enc_format = src->enc_format;        
+    
+    return envelope;
+}
+
+static message* wrap_message_as_attachment(message* envelope, 
+    const message* attachment) {
+    
+    message* _envelope = NULL;
+    
+    if (!envelope) {
+        _envelope = extract_minimal_envelope(attachment, PEP_dir_outgoing);
+        envelope = _envelope;
+    }
+    
+    char* message_text = NULL;
+    /* Turn message into a MIME-blob */
+    PEP_STATUS status = mime_encode_message(attachment, false, &message_text);
+    
+    if (status != PEP_STATUS_OK) {
+        free(_envelope);
+        return NULL;
+    }
+    
+    size_t message_len = strlen(message_text);
+    
+    bloblist_t* message_blob = new_bloblist(message_text, message_len,
+                                            "message/rfc822", NULL);
+    
+    envelope->attachments = message_blob;
+    envelope->pep_message_version = "2.0"; // FIXME - macro, elsewhere
+    
+    return envelope;
+}
+
 static message * clone_to_empty_message(const message * src)
 {
     PEP_STATUS status;
@@ -1094,6 +1172,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     PEP_STATUS status = PEP_STATUS_OK;
     message * msg = NULL;
     stringlist_t * keys = NULL;
+    message* wrapped_src = NULL;
 
     assert(session);
     assert(src);
@@ -1221,21 +1300,22 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         return ADD_TO_LOG(PEP_UNENCRYPTED);
     }
     else {
-        msg = clone_to_empty_message(src);
+        wrapped_src = wrap_message_as_attachment(NULL, src);
+        msg = clone_to_empty_message(wrapped_src);
         if (msg == NULL)
             goto enomem;
 
         if (!(flags & PEP_encrypt_flag_force_no_attached_key))
-            attach_own_key(session, src);
+            attach_own_key(session, wrapped_src);
 
         switch (enc_format) {
         case PEP_enc_PGP_MIME:
         case PEP_enc_PEP: // BUG: should be implemented extra
-            status = encrypt_PGP_MIME(session, src, keys, msg, flags);
+            status = encrypt_PGP_MIME(session, wrapped_src, keys, msg, flags);
             break;
 
         case PEP_enc_pieces:
-            status = encrypt_PGP_in_pieces(session, src, keys, msg, flags);
+            status = encrypt_PGP_in_pieces(session, wrapped_src, keys, msg, flags);
             break;
 
         /* case PEP_enc_PEP:
@@ -1257,16 +1337,19 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
     free_stringlist(keys);
 
+    // Taken care of in wrap_message
+    /*
     if (msg && msg->shortmsg == NULL) {
         msg->shortmsg = strdup("pEp");
         assert(msg->shortmsg);
         if (msg->shortmsg == NULL)
             goto enomem;
     }
+    */
 
     if (msg) {
         decorate_message(msg, PEP_rating_undefined, NULL);
-        if (src->id) {
+        if (wrapped_src->id) {
             msg->id = strdup(src->id);
             assert(msg->id);
             if (msg->id == NULL)
@@ -1275,6 +1358,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     *dst = msg;
+//    free_message(wrapped_msg);
     return ADD_TO_LOG(status);
 
 enomem:
@@ -1283,7 +1367,7 @@ enomem:
 pep_error:
     free_stringlist(keys);
     free_message(msg);
-
+    free_message(wrapped_src);
     return ADD_TO_LOG(status);
 }
 
