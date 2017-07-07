@@ -49,11 +49,19 @@ endif
 
 TEST_CMD_PFX = $(LIBPATH)=$(HOME)/lib:../src HOME=$(TEST_HOME)
 
+define killgpg =
+	gpgconf --kill gpg-agent
+	HOME=$(TEST_HOME) gpgconf --kill gpg-agent
+	HOME=$(TEST_HOME_SKEL) gpgconf --kill gpg-agent
+endef
+
 test_home_skel:
+	$(killgpg)
 	mkdir -p test_home_skel
 	-cat 0x*.asc *_sec.asc | gpg2 --import --homedir $(TEST_GNUPGHOME_SKEL)
 
 test_home_: test_home_skel
+	$(killgpg)
 	rm -rf test_home
 	cp -a test_home_skel test_home
 
