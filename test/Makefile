@@ -50,9 +50,6 @@ endif
 TEST_CMD_PFX = $(LIBPATH)=$(HOME)/lib:../src HOME=$(TEST_HOME)
 
 define killgpg =
-	gpgconf --kill gpg-agent
-	HOME=$(TEST_HOME) gpgconf --kill gpg-agent
-	HOME=$(TEST_HOME_SKEL) gpgconf --kill gpg-agent
 endef
 ifeq ("$(OPENPGP)","NETPGP")
     killgpg_if_using_it =
