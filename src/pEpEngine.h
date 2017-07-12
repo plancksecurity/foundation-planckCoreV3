@@ -105,7 +105,9 @@ typedef enum {
     PEP_ILLEGAL_VALUE                               = -4,
     PEP_BUFFER_TOO_SMALL                            = -3,
     PEP_OUT_OF_MEMORY                               = -2,
-    PEP_UNKNOWN_ERROR                               = -1
+    PEP_UNKNOWN_ERROR                               = -1,
+    
+    PEP_VERSION_MISMATCH                            = -7,
 } PEP_STATUS;
 
 

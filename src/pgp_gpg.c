@@ -1060,62 +1060,102 @@ PEP_STATUS pgp_encrypt_and_sign(
         psize, ctext, csize, true);
 }
 
+static PEP_STATUS _pgp_createkey(PEP_SESSION session, pEp_identity *identity) {
+    PEP_STATUS status = PEP_VERSION_MISMATCH;
+
+    if (identity && identity->address) {
+    
+#ifdef GPGME_VERSION_NUMBER 
+#if (GPGME_VERSION_NUMBER >= 0x010700)
+    gpgme_error_t gpgme_error;
+    gpgme_error = gpg.gpgme_op_createkey(session->ctx, identity->address, "RSA", 
+                                         0, 31536000, NULL, GPGME_CREATE_NOPASSWD);
+    gpgme_error = _GPGERR(gpgme_error);
+    if (gpgme_error != GPG_ERR_NOT_SUPPORTED) {
+        switch (gpgme_error) {
+        case GPG_ERR_NO_ERROR:
+            break;
+        case GPG_ERR_INV_VALUE:
+            return PEP_ILLEGAL_VALUE;
+        case GPG_ERR_GENERAL:
+            return PEP_CANNOT_CREATE_KEY;
+        default:
+            assert(0);
+            return PEP_UNKNOWN_ERROR;
+        }        
+    }
+#endif
+#endif
+
+    }
+    
+    return status;
+}
+
 PEP_STATUS pgp_generate_keypair(
     PEP_SESSION session, pEp_identity *identity
     )
 {
-    gpgme_error_t gpgme_error;
-    char *parms;
-    const char *template =
-        "<GnupgKeyParms format=\"internal\">\n"
-        "Key-Type: RSA\n"
-        "Key-Length: 4096\n"
-        "Subkey-Type: RSA\n"
-        "Subkey-Length: 4096\n"
-        "Name-Real: %s\n"
-        "Name-Email: %s\n"
-        /* "Passphrase: %s\n" */
-        "Expire-Date: 1y\n"
-        "</GnupgKeyParms>\n";
-    int result;
-    gpgme_genkey_result_t gpgme_genkey_result;
-
     assert(session);
     assert(identity);
     assert(identity->address);
     assert(identity->fpr == NULL || identity->fpr[0] == 0);
     assert(identity->username);
 
-    parms = calloc(1, PARMS_MAX);
-    assert(parms);
-    if (parms == NULL)
-        return PEP_OUT_OF_MEMORY;
+    PEP_STATUS status = _pgp_createkey(session, identity);
+    
+    if (status != PEP_STATUS_OK || 
+        status != PEP_VERSION_MISMATCH)
+        return status;
 
-    result = snprintf(parms, PARMS_MAX, template, identity->username,
-        identity->address); // , session->passphrase);
-    assert(result < PARMS_MAX);
-    if (result >= PARMS_MAX) {
+    if (status == PEP_VERSION_MISMATCH) {
+        gpgme_error_t gpgme_error;
+        char *parms;
+        const char *template =
+            "<GnupgKeyParms format=\"internal\">\n"
+            "Key-Type: RSA\n"
+            "Key-Length: 4096\n"
+            "Subkey-Type: RSA\n"
+            "Subkey-Length: 4096\n"
+            "Name-Real: %s\n"
+            "Name-Email: %s\n"
+            /* "Passphrase: %s\n" */
+            "Expire-Date: 1y\n"
+            "</GnupgKeyParms>\n";
+        int result;
+    
+        parms = calloc(1, PARMS_MAX);
+        assert(parms);
+        if (parms == NULL)
+            return PEP_OUT_OF_MEMORY;
+
+        result = snprintf(parms, PARMS_MAX, template, identity->username,
+            identity->address); // , session->passphrase);
+        assert(result < PARMS_MAX);
+        if (result >= PARMS_MAX) {
+            free(parms);
+            return PEP_BUFFER_TOO_SMALL;
+        }
+
+        gpgme_error = gpg.gpgme_op_genkey(session->ctx, parms, NULL, NULL);
+        gpgme_error = _GPGERR(gpgme_error);
         free(parms);
-        return PEP_BUFFER_TOO_SMALL;
+
+        switch (gpgme_error) {
+        case GPG_ERR_NO_ERROR:
+            break;
+        case GPG_ERR_INV_VALUE:
+            return PEP_ILLEGAL_VALUE;
+        case GPG_ERR_GENERAL:
+            return PEP_CANNOT_CREATE_KEY;
+        default:
+            assert(0);
+            return PEP_UNKNOWN_ERROR;
+        }
     }
 
-    gpgme_error = gpg.gpgme_op_genkey(session->ctx, parms, NULL, NULL);
-    gpgme_error = _GPGERR(gpgme_error);
-    free(parms);
-
-    switch (gpgme_error) {
-    case GPG_ERR_NO_ERROR:
-        break;
-    case GPG_ERR_INV_VALUE:
-        return PEP_ILLEGAL_VALUE;
-    case GPG_ERR_GENERAL:
-        return PEP_CANNOT_CREATE_KEY;
-    default:
-        assert(0);
-        return PEP_UNKNOWN_ERROR;
-    }
-
-    gpgme_genkey_result = gpg.gpgme_op_genkey_result(session->ctx);
+    /* This is the same regardless of whether we got it from genkey or createkey */
+    gpgme_genkey_result_t gpgme_genkey_result = gpg.gpgme_op_genkey_result(session->ctx);
     assert(gpgme_genkey_result);
     assert(gpgme_genkey_result->fpr);
 

@@ -82,6 +82,15 @@ typedef gpgme_error_t (*gpgme_op_edit_t)(gpgme_ctx_t CTX, gpgme_key_t KEY,
 typedef gpgme_ssize_t (*gpgme_io_write_t)(int fd, const void *buffer,
         size_t count);
 
+#ifdef GPGME_VERSION_NUMBER 
+#if (GPGME_VERSION_NUMBER >= 0x010700)
+typedef gpgme_error_t(*gpgme_op_createkey_t)(gpgme_ctx_t CTX, 
+    const char *USERID, const char *ALGO, unsigned long RESERVED, 
+    unsigned long EXPIRES, gpgme_key_t EXTRAKEY, unsigned int FLAGS);
+#endif
+#endif
+
+
 struct gpg_s {
     const char * version;
     gpgme_check_version_t gpgme_check;
@@ -113,6 +122,11 @@ struct gpg_s {
     gpgme_get_key_t gpgme_get_key;
     gpgme_op_genkey_t gpgme_op_genkey;
     gpgme_op_genkey_result_t gpgme_op_genkey_result;
+#ifdef GPGME_VERSION_NUMBER 
+#if (GPGME_VERSION_NUMBER >= 0x010700)    
+    gpgme_op_createkey_t gpgme_op_createkey;
+#endif
+#endif    
     gpgme_op_delete_t gpgme_op_delete;
     gpgme_op_import_t gpgme_op_import;
     gpgme_op_import_result_t gpgme_op_import_result;
