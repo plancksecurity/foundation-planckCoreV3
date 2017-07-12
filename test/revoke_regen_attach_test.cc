@@ -68,8 +68,8 @@ int main() {
 
     cout << msg->attachments->filename;
     assert(bloblist_length(msg->attachments) == 2);
-    assert(strcmp(msg->attachments->filename, "pEpkey.asc") == 0);
-    assert(strcmp(msg->attachments->next->filename, "pEpkey.asc") == 0);
+    assert(strcmp(msg->attachments->filename, "file://pEpkey.asc") == 0);
+    assert(strcmp(msg->attachments->next->filename, "file://pEpkey.asc") == 0);
 
     cout << "message contains 2 key attachements.\n";
 
@@ -82,4 +82,3 @@ int main() {
 
     return 0;
 }
-

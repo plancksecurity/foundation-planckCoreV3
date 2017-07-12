@@ -278,7 +278,15 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         gpg.gpgme_get_key
             = (gpgme_get_key_t) (intptr_t) dlsym(gpgme, "gpgme_get_key");
         assert(gpg.gpgme_get_key);
-
+        
+#ifdef GPGME_VERSION_NUMBER 
+#if (GPGME_VERSION_NUMBER >= 0x010700)
+        gpg.gpgme_op_createkey
+            = (gpgme_op_createkey_t) (intptr_t) dlsym(gpgme,
+            "gpgme_op_createkey");
+        assert(gpg.gpgme_op_createkey);        
+#endif
+#endif
         gpg.gpgme_op_genkey
             = (gpgme_op_genkey_t) (intptr_t) dlsym(gpgme,
             "gpgme_op_genkey");
@@ -1063,30 +1071,28 @@ PEP_STATUS pgp_encrypt_and_sign(
 static PEP_STATUS _pgp_createkey(PEP_SESSION session, pEp_identity *identity) {
     PEP_STATUS status = PEP_VERSION_MISMATCH;
 
-    if (identity && identity->address) {
-    
+    if (identity && identity->address) {    
 #ifdef GPGME_VERSION_NUMBER 
 #if (GPGME_VERSION_NUMBER >= 0x010700)
-    gpgme_error_t gpgme_error;
-    gpgme_error = gpg.gpgme_op_createkey(session->ctx, identity->address, "RSA", 
-                                         0, 31536000, NULL, GPGME_CREATE_NOPASSWD);
-    gpgme_error = _GPGERR(gpgme_error);
-    if (gpgme_error != GPG_ERR_NOT_SUPPORTED) {
-        switch (gpgme_error) {
-        case GPG_ERR_NO_ERROR:
-            break;
-        case GPG_ERR_INV_VALUE:
-            return PEP_ILLEGAL_VALUE;
-        case GPG_ERR_GENERAL:
-            return PEP_CANNOT_CREATE_KEY;
-        default:
-            assert(0);
-            return PEP_UNKNOWN_ERROR;
-        }        
-    }
+        gpgme_error_t gpgme_error;
+        gpgme_error = gpg.gpgme_op_createkey(session->ctx, identity->address, "RSA", 
+                                             0, 31536000, NULL, GPGME_CREATE_NOPASSWD);
+        gpgme_error = _GPGERR(gpgme_error);
+        if (gpgme_error != GPG_ERR_NOT_SUPPORTED) {
+            switch (gpgme_error) {
+            case GPG_ERR_NO_ERROR:
+                return PEP_STATUS_OK;
+            case GPG_ERR_INV_VALUE:
+                return PEP_ILLEGAL_VALUE;
+            case GPG_ERR_GENERAL:
+                return PEP_CANNOT_CREATE_KEY;
+            default:
+                assert(0);
+                return PEP_UNKNOWN_ERROR;
+            }        
+        }
 #endif
 #endif
-
     }
     
     return status;
@@ -1104,7 +1110,7 @@ PEP_STATUS pgp_generate_keypair(
 
     PEP_STATUS status = _pgp_createkey(session, identity);
     
-    if (status != PEP_STATUS_OK || 
+    if (status != PEP_STATUS_OK && 
         status != PEP_VERSION_MISMATCH)
         return status;
 

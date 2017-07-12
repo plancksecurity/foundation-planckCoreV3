@@ -183,7 +183,7 @@ enomem:
 }
 
 struct mailmime * get_text_part(
-        const char * filename,
+        pEp_rid_list_t* resource,
         const char * mime_type,
         const char * text,
         size_t length,
@@ -197,33 +197,45 @@ struct mailmime * get_text_part(
 	struct mailmime_parameter * param = NULL;
 	struct mailmime_disposition * disposition = NULL;
 	struct mailmime_mechanism * encoding = NULL;
+    char* content_id = NULL;
     int r;
-    
-    if (filename != NULL) {
-        disposition_name = strdup(filename);
-        if (disposition_name == NULL)
-            goto enomem;
-    }
+                
+    if (resource != NULL && resource->rid != NULL) {
+        switch (resource->rid_type) {
+            case PEP_RID_CID:
+                content_id = strdup(resource->rid);
+                break;
+            case PEP_RID_FILENAME:
+            default:
+                disposition_name = strdup(resource->rid);
+                if (disposition_name == NULL)
+                    goto enomem;
+                    
+                disposition =
+                        mailmime_disposition_new_with_data(MAILMIME_DISPOSITION_TYPE_INLINE,
+                                disposition_name, NULL, NULL, NULL, (size_t) -1);
 
+                if (disposition == NULL)
+                    goto enomem;
+
+                disposition_name = NULL;                
+                break;
+        }    
+    }
+    
     if (encoding_type) {
         encoding = mailmime_mechanism_new(encoding_type, NULL);
         if (encoding == NULL)
             goto enomem;
     }
 
-    disposition =
-            mailmime_disposition_new_with_data(MAILMIME_DISPOSITION_TYPE_INLINE,
-                    disposition_name, NULL, NULL, NULL, (size_t) -1);
-    if (disposition == NULL)
-        goto enomem;
-    disposition_name = NULL;
-
-    mime_fields = mailmime_fields_new_with_data(encoding, NULL, NULL,
+    mime_fields = mailmime_fields_new_with_data(encoding, content_id, NULL,
             disposition, NULL);
     if (mime_fields == NULL)
         goto enomem;
     encoding = NULL;
     disposition = NULL;
+    content_id = NULL;
 
 	content = mailmime_content_new_with_str(mime_type);
     if (content == NULL)
@@ -269,7 +281,7 @@ enomem:
 }
 
 struct mailmime * get_file_part(
-        const char * filename,
+        pEp_rid_list_t* resource,
         const char * mime_type,
         char * data,
         size_t length
@@ -282,20 +294,32 @@ struct mailmime * get_file_part(
     struct mailmime_content * content = NULL;
     struct mailmime * mime = NULL;
     struct mailmime_fields * mime_fields = NULL;
+    char* content_id = NULL;
     int r;
-
-    if (filename != NULL) {
-        disposition_name = strdup(filename);
-        if (disposition_name == NULL)
-            goto enomem;
+                
+    if (resource != NULL && resource->rid != NULL) {
+        switch (resource->rid_type) {
+            case PEP_RID_CID:
+                content_id = strdup(resource->rid);
+                break;
+            case PEP_RID_FILENAME:
+            default:
+                disposition_name = strdup(resource->rid);
+                if (disposition_name == NULL)
+                    goto enomem;
+                    
+                disposition =
+                        mailmime_disposition_new_with_data(MAILMIME_DISPOSITION_TYPE_ATTACHMENT,
+                                disposition_name, NULL, NULL, NULL, (size_t) -1);
+                                
+                if (disposition == NULL)
+                    goto enomem;
+                disposition_name = NULL;
+                
+                break;
+        }    
     }
-
-    disposition =
-            mailmime_disposition_new_with_data(MAILMIME_DISPOSITION_TYPE_ATTACHMENT,
-                    disposition_name, NULL, NULL, NULL, (size_t) -1);
-    if (disposition == NULL)
-        goto enomem;
-    disposition_name = NULL;
+    
 
     content = mailmime_content_new_with_str(mime_type);
     if (content == NULL)
@@ -306,7 +330,7 @@ struct mailmime * get_file_part(
     if (encoding == NULL)
         goto enomem;
 
-    mime_fields = mailmime_fields_new_with_data(encoding, NULL, NULL,
+    mime_fields = mailmime_fields_new_with_data(encoding, content_id, NULL,
             disposition, NULL);
     if (mime_fields == NULL)
         goto enomem;
@@ -340,7 +364,7 @@ enomem:
         mailmime_fields_free(mime_fields);
     if (mime)
         mailmime_free(mime);
-
+    
     return NULL;
 }
 
@@ -596,7 +620,9 @@ struct mailmime_content * _get_content(struct mailmime * mime)
     return content;
 }
 
-char * _get_filename(struct mailmime *mime)
+
+/* Return a list of identifier_type and resource id (filename, cid, etc) */
+pEp_rid_list_t* _get_resource_id_list(struct mailmime *mime)
 {
     clist * _fieldlist = NULL;
 
@@ -608,9 +634,22 @@ char * _get_filename(struct mailmime *mime)
         return NULL;
 
     clistiter *cur;
+
+    pEp_rid_list_t* rid_list = NULL; 
+    pEp_rid_list_t** rid_list_curr_p = &rid_list; 
+        
     for (cur = clist_begin(_fieldlist); cur; cur = clist_next(cur)) {
         struct mailmime_field * _field = clist_content(cur);
-        if (_field && _field->fld_type == MAILMIME_FIELD_DISPOSITION) {
+        /* content_id */
+        if (_field && _field->fld_type == MAILMIME_FIELD_ID) {
+            pEp_rid_list_t* new_rid = (pEp_rid_list_t*)calloc(1, sizeof(pEp_rid_list_t));
+            new_rid->rid_type = PEP_RID_CID;
+            new_rid->rid = strdup(_field->fld_data.fld_id);
+            *rid_list_curr_p = new_rid;
+            rid_list_curr_p = &new_rid->next;
+        }
+        else if (_field && _field->fld_type == MAILMIME_FIELD_DISPOSITION) {
+            /* filename */
             if (_field->fld_data.fld_disposition &&
                     _field->fld_data.fld_disposition->dsp_parms) {
                 clist * _parmlist =
@@ -620,14 +659,66 @@ char * _get_filename(struct mailmime *mime)
                         clist_next(cur2)) {
                     struct mailmime_disposition_parm * param =
                             clist_content(cur2);
-                    if (param->pa_type == MAILMIME_DISPOSITION_PARM_FILENAME)
-                        return param->pa_data.pa_filename;
+                    if (param->pa_type == MAILMIME_DISPOSITION_PARM_FILENAME) {
+                        pEp_rid_list_t* new_rid = (pEp_rid_list_t*)calloc(1, sizeof(pEp_rid_list_t));
+                        new_rid->rid_type = PEP_RID_FILENAME;
+                        new_rid->rid = strdup(param->pa_data.pa_filename);
+                        *rid_list_curr_p = new_rid;
+                        rid_list_curr_p = &new_rid->next;
+                    }                
                 }
             }
         }
     }
+    /* Will almost certainly usually be a singleton, but we need to be able to decide */
+    return rid_list;
+}
 
-    return NULL;
+
+/* FIXME: about to be obsoleted? */
+char * _get_filename_or_cid(struct mailmime *mime)
+{
+    clist * _fieldlist = NULL;
+
+    assert(mime);
+
+    if (mime->mm_mime_fields && mime->mm_mime_fields->fld_list)
+        _fieldlist = mime->mm_mime_fields->fld_list;
+    else
+        return NULL;
+
+    clistiter *cur;
+    
+    char* _temp_filename_ptr = NULL;
+    
+    for (cur = clist_begin(_fieldlist); cur; cur = clist_next(cur)) {
+        struct mailmime_field * _field = clist_content(cur);
+        if (_field && _field->fld_type == MAILMIME_FIELD_ID) {
+            /* We prefer CIDs to filenames when both are present */
+            free(_temp_filename_ptr); /* can be null, it's ok */
+            return build_uri("cid", _field->fld_data.fld_id); 
+        }
+        else if (_field && _field->fld_type == MAILMIME_FIELD_DISPOSITION) {
+            if (_field->fld_data.fld_disposition &&
+                    _field->fld_data.fld_disposition->dsp_parms &&
+                    !_temp_filename_ptr) {
+                clist * _parmlist =
+                        _field->fld_data.fld_disposition->dsp_parms;
+                clistiter *cur2;
+                for (cur2 = clist_begin(_parmlist); cur2; cur2 =
+                        clist_next(cur2)) {
+                    struct mailmime_disposition_parm * param =
+                            clist_content(cur2);
+                    if (param->pa_type == MAILMIME_DISPOSITION_PARM_FILENAME) {
+                        _temp_filename_ptr = build_uri("file", param->pa_data.pa_filename);
+                        break;
+                    }                
+                }
+            }
+        }
+    }
+    /* Ok, it wasn't a CID */
+    return _temp_filename_ptr;
 }
 
 static bool parameter_has_value(
@@ -784,4 +875,3 @@ int _get_content_type(
 
     return EINVAL;
 }
-
