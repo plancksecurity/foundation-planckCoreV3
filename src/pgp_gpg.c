@@ -1095,7 +1095,7 @@ static PEP_STATUS _pgp_createkey(PEP_SESSION session, pEp_identity *identity) {
         if (gpgme_error != GPG_ERR_NOT_SUPPORTED) {
             switch (gpgme_error) {
             case GPG_ERR_NO_ERROR:
-                break;
+                return PEP_STATUS_OK;		    
             case GPG_ERR_INV_VALUE:
                 return PEP_ILLEGAL_VALUE;
             case GPG_ERR_GENERAL:
