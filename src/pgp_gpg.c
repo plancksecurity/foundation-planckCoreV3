@@ -279,14 +279,15 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
             = (gpgme_get_key_t) (intptr_t) dlsym(gpgme, "gpgme_get_key");
         assert(gpg.gpgme_get_key);
         
-#ifdef GPGME_VERSION_NUMBER 
-#if (GPGME_VERSION_NUMBER >= 0x010700)
-        gpg.gpgme_op_createkey
-            = (gpgme_op_createkey_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_createkey");
-        assert(gpg.gpgme_op_createkey);        
-#endif
-#endif
+        #ifdef GPGME_VERSION_NUMBER 
+        #if (GPGME_VERSION_NUMBER >= 0x010700)
+                gpg.gpgme_op_createkey
+                    = (gpgme_op_createkey_t) (intptr_t) dlsym(gpgme,
+                    "gpgme_op_createkey");
+                assert(gpg.gpgme_op_createkey);
+        #endif
+        #endif
+        
         gpg.gpgme_op_genkey
             = (gpgme_op_genkey_t) (intptr_t) dlsym(gpgme,
             "gpgme_op_genkey");
@@ -1075,13 +1076,26 @@ static PEP_STATUS _pgp_createkey(PEP_SESSION session, pEp_identity *identity) {
 #ifdef GPGME_VERSION_NUMBER 
 #if (GPGME_VERSION_NUMBER >= 0x010700)
         gpgme_error_t gpgme_error;
-        gpgme_error = gpg.gpgme_op_createkey(session->ctx, identity->address, "RSA", 
+        /* "name <address>" adds 3 chars + NUL */
+        int userid_size = strlen(identity->username) + strlen(identity->address) + 4;
+        char* userid = (char*)(calloc(1, userid_size));
+        if (!userid)
+            return PEP_OUT_OF_MEMORY;
+        /* sprintf... so tempting... */    
+        strlcpy(userid, identity->username, userid_size);
+        strlcat(userid, " <", userid_size);
+        strlcat(userid, identity->address, userid_size);
+        strlcat(userid, ">", userid_size);
+        gpgme_error = gpg.gpgme_op_createkey(session->ctx, userid, "RSA", 
                                              0, 31536000, NULL, GPGME_CREATE_NOPASSWD);
         gpgme_error = _GPGERR(gpgme_error);
+
+        free(userid);
+
         if (gpgme_error != GPG_ERR_NOT_SUPPORTED) {
             switch (gpgme_error) {
             case GPG_ERR_NO_ERROR:
-                return PEP_STATUS_OK;
+                break;
             case GPG_ERR_INV_VALUE:
                 return PEP_ILLEGAL_VALUE;
             case GPG_ERR_GENERAL:
