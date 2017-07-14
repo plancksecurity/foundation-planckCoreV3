@@ -285,6 +285,12 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                     = (gpgme_op_createkey_t) (intptr_t) dlsym(gpgme,
                     "gpgme_op_createkey");
                 assert(gpg.gpgme_op_createkey);
+                
+                gpg.gpgme_op_createsubkey
+                    = (gpgme_op_createsubkey_t) (intptr_t) dlsym(gpgme,
+                    "gpgme_op_createsubkey");
+                assert(gpg.gpgme_op_createsubkey);
+
         #endif
         #endif
         
@@ -1069,6 +1075,39 @@ PEP_STATUS pgp_encrypt_and_sign(
         psize, ctext, csize, true);
 }
 
+
+static PEP_STATUS find_single_key(
+        PEP_SESSION session,
+        const char *fpr,
+        gpgme_key_t *key
+    )
+{
+    gpgme_error_t gpgme_error;
+
+    *key = NULL;
+
+    gpgme_error = gpg.gpgme_op_keylist_start(session->ctx, fpr, 0);
+    gpgme_error = _GPGERR(gpgme_error);
+    switch (gpgme_error) {
+    case GPG_ERR_NO_ERROR:
+        break;
+    case GPG_ERR_INV_VALUE:
+        assert(0);
+        return PEP_UNKNOWN_ERROR;
+    default:
+        return PEP_GET_KEY_FAILED;
+    };
+
+    gpgme_error = gpg.gpgme_op_keylist_next(session->ctx, key);
+    gpgme_error = _GPGERR(gpgme_error);
+    assert(gpgme_error != GPG_ERR_INV_VALUE);
+
+    gpg.gpgme_op_keylist_end(session->ctx);
+
+    return PEP_STATUS_OK;
+}
+
+
 static PEP_STATUS _pgp_createkey(PEP_SESSION session, pEp_identity *identity) {
     PEP_STATUS status = PEP_VERSION_MISMATCH;
 
@@ -1090,9 +1129,7 @@ static PEP_STATUS _pgp_createkey(PEP_SESSION session, pEp_identity *identity) {
                                              0, 31536000, NULL, 
                                              GPGME_CREATE_NOPASSWD | 
                                              GPGME_CREATE_SIGN |
-                                             GPGME_CREATE_ENCR |
                                              GPGME_CREATE_CERT |
-                                             GPGME_CREATE_AUTH |
                                              GPGME_CREATE_FORCE);
         gpgme_error = _GPGERR(gpgme_error);
 
@@ -1116,11 +1153,36 @@ static PEP_STATUS _pgp_createkey(PEP_SESSION session, pEp_identity *identity) {
             assert(gpgme_genkey_result);
             assert(gpgme_genkey_result->fpr);
 
+            char* fpr = gpgme_genkey_result->fpr;
+            gpgme_key_t key;
+            PEP_STATUS key_status = find_single_key(session, fpr, &key);
+            if (!key || key_status != PEP_STATUS_OK)
+                return PEP_CANNOT_CREATE_KEY;
+                                
+            gpgme_error = gpg.gpgme_op_createsubkey(session->ctx, key, 
+                                                    "RSA", 0, 
+                                                    31536000, GPGME_CREATE_NOPASSWD 
+                                                    | GPGME_CREATE_ENCR);
+
+            switch (gpgme_error) {
+                case GPG_ERR_NO_ERROR:
+                    break;		    
+                case GPG_ERR_INV_VALUE:
+                    return PEP_ILLEGAL_VALUE;
+                case GPG_ERR_GENERAL:
+                    return PEP_CANNOT_CREATE_KEY;
+                default:
+                    assert(0);
+                    return PEP_UNKNOWN_ERROR;
+            }        
+            
             free(identity->fpr);
-            identity->fpr = strdup(gpgme_genkey_result->fpr);
+            identity->fpr = strdup(fpr);
             if (identity->fpr == NULL)
                 return PEP_OUT_OF_MEMORY;
 
+            gpg.gpgme_key_unref(key);
+            
             status = pgp_replace_only_uid(session, identity->fpr,
                         identity->username, identity->address);                        
         }
@@ -1830,36 +1892,6 @@ PEP_STATUS pgp_get_key_rating(
     return status;
 }
 
-static PEP_STATUS find_single_key(
-        PEP_SESSION session,
-        const char *fpr,
-        gpgme_key_t *key
-    )
-{
-    gpgme_error_t gpgme_error;
-
-    *key = NULL;
-
-    gpgme_error = gpg.gpgme_op_keylist_start(session->ctx, fpr, 0);
-    gpgme_error = _GPGERR(gpgme_error);
-    switch (gpgme_error) {
-    case GPG_ERR_NO_ERROR:
-        break;
-    case GPG_ERR_INV_VALUE:
-        assert(0);
-        return PEP_UNKNOWN_ERROR;
-    default:
-        return PEP_GET_KEY_FAILED;
-    };
-
-    gpgme_error = gpg.gpgme_op_keylist_next(session->ctx, key);
-    gpgme_error = _GPGERR(gpgme_error);
-    assert(gpgme_error != GPG_ERR_INV_VALUE);
-
-    gpg.gpgme_op_keylist_end(session->ctx);
-
-    return PEP_STATUS_OK;
-}
 
 static ssize_t _nullwriter(
         void *_handle,

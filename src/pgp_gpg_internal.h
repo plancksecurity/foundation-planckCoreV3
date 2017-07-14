@@ -87,6 +87,9 @@ typedef gpgme_ssize_t (*gpgme_io_write_t)(int fd, const void *buffer,
 typedef gpgme_error_t(*gpgme_op_createkey_t)(gpgme_ctx_t CTX, 
     const char *USERID, const char *ALGO, unsigned long RESERVED, 
     unsigned long EXPIRES, gpgme_key_t EXTRAKEY, unsigned int FLAGS);
+typedef gpgme_error_t(*gpgme_op_createsubkey_t)(gpgme_ctx_t ctx, 
+    gpgme_key_t key, const char *algo, unsigned long reserved, 
+    unsigned long expires, unsigned int flags);    
 #endif
 #endif
 
@@ -125,6 +128,7 @@ struct gpg_s {
 #ifdef GPGME_VERSION_NUMBER 
 #if (GPGME_VERSION_NUMBER >= 0x010700)    
     gpgme_op_createkey_t gpgme_op_createkey;
+    gpgme_op_createsubkey_t gpgme_op_createsubkey;
 #endif
 #endif    
     gpgme_op_delete_t gpgme_op_delete;
