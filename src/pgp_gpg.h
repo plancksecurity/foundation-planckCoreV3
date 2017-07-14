@@ -105,4 +105,14 @@ PEP_STATUS pgp_find_private_keys(
 );
 
 PEP_STATUS pgp_binary(const char **path);
+
+/* Really only internal. */
+PEP_STATUS pgp_replace_only_uid(
+        PEP_SESSION session,
+        const char* fpr,
+        const char* realname,
+        const char* email
+    );
+
+
 #define PGP_BINARY_PATH pgp_binary

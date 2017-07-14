@@ -1087,23 +1087,42 @@ static PEP_STATUS _pgp_createkey(PEP_SESSION session, pEp_identity *identity) {
         strlcat(userid, identity->address, userid_size);
         strlcat(userid, ">", userid_size);
         gpgme_error = gpg.gpgme_op_createkey(session->ctx, userid, "RSA", 
-                                             0, 31536000, NULL, GPGME_CREATE_NOPASSWD);
+                                             0, 31536000, NULL, 
+                                             GPGME_CREATE_NOPASSWD | 
+                                             GPGME_CREATE_SIGN |
+                                             GPGME_CREATE_ENCR |
+                                             GPGME_CREATE_CERT |
+                                             GPGME_CREATE_AUTH |
+                                             GPGME_CREATE_FORCE);
         gpgme_error = _GPGERR(gpgme_error);
 
         free(userid);
 
         if (gpgme_error != GPG_ERR_NOT_SUPPORTED) {
             switch (gpgme_error) {
-            case GPG_ERR_NO_ERROR:
-                return PEP_STATUS_OK;		    
-            case GPG_ERR_INV_VALUE:
-                return PEP_ILLEGAL_VALUE;
-            case GPG_ERR_GENERAL:
-                return PEP_CANNOT_CREATE_KEY;
-            default:
-                assert(0);
-                return PEP_UNKNOWN_ERROR;
+                case GPG_ERR_NO_ERROR:
+                    break;		    
+                case GPG_ERR_INV_VALUE:
+                    return PEP_ILLEGAL_VALUE;
+                case GPG_ERR_GENERAL:
+                    return PEP_CANNOT_CREATE_KEY;
+                default:
+                    assert(0);
+                    return PEP_UNKNOWN_ERROR;
             }        
+
+            /* This is the same regardless of whether we got it from genkey or createkey */
+            gpgme_genkey_result_t gpgme_genkey_result = gpg.gpgme_op_genkey_result(session->ctx);
+            assert(gpgme_genkey_result);
+            assert(gpgme_genkey_result->fpr);
+
+            free(identity->fpr);
+            identity->fpr = strdup(gpgme_genkey_result->fpr);
+            if (identity->fpr == NULL)
+                return PEP_OUT_OF_MEMORY;
+
+            status = pgp_replace_only_uid(session, identity->fpr,
+                        identity->username, identity->address);                        
         }
 #endif
 #endif
@@ -1124,57 +1143,53 @@ PEP_STATUS pgp_generate_keypair(
 
     PEP_STATUS status = _pgp_createkey(session, identity);
     
-    if (status != PEP_STATUS_OK && 
-        status != PEP_VERSION_MISMATCH)
+    if (status != PEP_VERSION_MISMATCH)
         return status;
+        
+    gpgme_error_t gpgme_error;
+    char *parms;
+    const char *template =
+        "<GnupgKeyParms format=\"internal\">\n"
+        "Key-Type: RSA\n"
+        "Key-Length: 4096\n"
+        "Subkey-Type: RSA\n"
+        "Subkey-Length: 4096\n"
+        "Name-Real: %s\n"
+        "Name-Email: %s\n"
+        /* "Passphrase: %s\n" */
+        "Expire-Date: 1y\n"
+        "</GnupgKeyParms>\n";
+    int result;
 
-    if (status == PEP_VERSION_MISMATCH) {
-        gpgme_error_t gpgme_error;
-        char *parms;
-        const char *template =
-            "<GnupgKeyParms format=\"internal\">\n"
-            "Key-Type: RSA\n"
-            "Key-Length: 4096\n"
-            "Subkey-Type: RSA\n"
-            "Subkey-Length: 4096\n"
-            "Name-Real: %s\n"
-            "Name-Email: %s\n"
-            /* "Passphrase: %s\n" */
-            "Expire-Date: 1y\n"
-            "</GnupgKeyParms>\n";
-        int result;
-    
-        parms = calloc(1, PARMS_MAX);
-        assert(parms);
-        if (parms == NULL)
-            return PEP_OUT_OF_MEMORY;
+    parms = calloc(1, PARMS_MAX);
+    assert(parms);
+    if (parms == NULL)
+        return PEP_OUT_OF_MEMORY;
 
-        result = snprintf(parms, PARMS_MAX, template, identity->username,
-            identity->address); // , session->passphrase);
-        assert(result < PARMS_MAX);
-        if (result >= PARMS_MAX) {
-            free(parms);
-            return PEP_BUFFER_TOO_SMALL;
-        }
-
-        gpgme_error = gpg.gpgme_op_genkey(session->ctx, parms, NULL, NULL);
-        gpgme_error = _GPGERR(gpgme_error);
+    result = snprintf(parms, PARMS_MAX, template, identity->username,
+        identity->address); // , session->passphrase);
+    assert(result < PARMS_MAX);
+    if (result >= PARMS_MAX) {
         free(parms);
-
-        switch (gpgme_error) {
-        case GPG_ERR_NO_ERROR:
-            break;
-        case GPG_ERR_INV_VALUE:
-            return PEP_ILLEGAL_VALUE;
-        case GPG_ERR_GENERAL:
-            return PEP_CANNOT_CREATE_KEY;
-        default:
-            assert(0);
-            return PEP_UNKNOWN_ERROR;
-        }
+        return PEP_BUFFER_TOO_SMALL;
     }
 
-    /* This is the same regardless of whether we got it from genkey or createkey */
+    gpgme_error = gpg.gpgme_op_genkey(session->ctx, parms, NULL, NULL);
+    gpgme_error = _GPGERR(gpgme_error);
+    free(parms);
+
+    switch (gpgme_error) {
+    case GPG_ERR_NO_ERROR:
+        break;
+    case GPG_ERR_INV_VALUE:
+        return PEP_ILLEGAL_VALUE;
+    case GPG_ERR_GENERAL:
+        return PEP_CANNOT_CREATE_KEY;
+    default:
+        assert(0);
+        return PEP_UNKNOWN_ERROR;
+    }
+
     gpgme_genkey_result_t gpgme_genkey_result = gpg.gpgme_op_genkey_result(session->ctx);
     assert(gpgme_genkey_result);
     assert(gpgme_genkey_result->fpr);
@@ -1846,6 +1861,290 @@ static PEP_STATUS find_single_key(
     return PEP_STATUS_OK;
 }
 
+static ssize_t _nullwriter(
+        void *_handle,
+        const void *buffer,
+        size_t size
+    )
+{
+    return size;
+}
+
+typedef struct _replace_only_uid_state {
+    enum {
+        replace_uid_command = 0,
+        replace_uid_realname,
+        replace_uid_email,
+        replace_uid_adduid_ok,
+        replace_uid_select_for_delete,
+        replace_uid_delete,
+        replace_uid_delete_confirm,
+        replace_uid_select_for_trust,
+        replace_uid_trust,
+        replace_uid_trust_ultimate,
+        replace_uid_trust_ultimate_confirm,
+        replace_uid_quit,
+        replace_uid_save_okay,
+        replace_uid_exit,
+        replace_uid_error = -1
+    } state;
+const char *realname;
+const char *email;
+} replace_only_uid_state;
+
+static gpgme_error_t replace_only_uid_fsm(
+    void *_handle,
+    gpgme_status_code_t statuscode,
+    const char *args,
+    int fd
+)
+{
+    replace_only_uid_state *handle = _handle;
+        
+    switch (handle->state) {
+        case replace_uid_command:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "keyedit.prompt") == 0);
+                if (strcmp(args, "keyedit.prompt")) {
+                    handle->state = replace_uid_error;
+                    return GPG_ERR_GENERAL;
+                }
+                gpg.gpgme_io_write(fd, "adduid\n", 7);
+                handle->state = replace_uid_realname;
+            }
+            break;
+            
+        case replace_uid_realname:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "keygen.name") == 0);
+                assert(handle->realname);
+                if (strcmp(args, "keygen.name") || !handle->realname) {
+                    handle->state = replace_uid_error;
+                    return GPG_ERR_GENERAL;
+                }
+                size_t realname_strlen = strlen(handle->realname);
+                char* realname = (char*)calloc(1, realname_strlen + 2); // \n + \0
+                if (!realname) {
+                    handle->state = replace_uid_error;
+                    return GPG_ERR_ENOMEM;
+                }
+                strlcpy(realname, handle->realname, realname_strlen);
+                realname[realname_strlen] = '\n'; 
+                gpg.gpgme_io_write(fd, realname, realname_strlen + 1);
+                handle->state = replace_uid_email;
+                free(realname);
+            }
+            break;
+            
+        case replace_uid_email:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "keygen.email") == 0);
+                assert(handle->email);
+                if (strcmp(args, "keygen.email") || !handle->email) {
+                    handle->state = replace_uid_error;
+                    return GPG_ERR_GENERAL;
+                }
+                size_t email_strlen = strlen(handle->email);
+                char* email = (char*)calloc(1, email_strlen + 2); // \n + \0
+                if (!email) {
+                    handle->state = replace_uid_error;
+                    return GPG_ERR_ENOMEM;
+                }
+                strlcpy(email, handle->email, email_strlen);
+                email[email_strlen] = '\n'; 
+                gpg.gpgme_io_write(fd, email, email_strlen + 1);
+                handle->state = replace_uid_adduid_ok;
+                free(email);
+            }
+            break;
+
+        case replace_uid_adduid_ok:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "keygen.userid.cmd") == 0);
+                assert(handle->email);
+                if (strcmp(args, "keygen.userid.cmd")) {
+                    handle->state = replace_uid_error;
+                    return GPG_ERR_GENERAL;
+                }
+                gpg.gpgme_io_write(fd, "O\n", 2);
+                handle->state = replace_uid_select_for_delete;
+            }
+            break;
+
+        case replace_uid_select_for_delete:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "keyedit.prompt") == 0);
+                assert(handle->email);
+                if (strcmp(args, "keyedit.prompt")) {
+                    handle->state = replace_uid_error;
+                    return GPG_ERR_GENERAL;
+                }
+                gpg.gpgme_io_write(fd, "uid 1\n", 6);
+                handle->state = replace_uid_delete;
+            }
+            break;
+
+        case replace_uid_delete:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "keyedit.prompt") == 0);
+                assert(handle->email);
+                if (strcmp(args, "keyedit.prompt")) {
+                    handle->state = replace_uid_error;
+                    return GPG_ERR_GENERAL;
+                }
+                gpg.gpgme_io_write(fd, "deluid\n", 7);
+                handle->state = replace_uid_delete_confirm;
+            }
+            break;
+
+        case replace_uid_delete_confirm:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "keyedit.remove.uid.okay") == 0);
+                assert(handle->email);
+                if (strcmp(args, "keyedit.remove.uid.okay")) {
+                    handle->state = replace_uid_error;
+                    return GPG_ERR_GENERAL;
+                }
+                gpg.gpgme_io_write(fd, "Y\n", 2);
+                handle->state = replace_uid_select_for_trust;
+            }
+            break;
+
+        case replace_uid_select_for_trust:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "keyedit.prompt") == 0);
+                assert(handle->email);
+                if (strcmp(args, "keyedit.prompt")) {
+                    handle->state = replace_uid_error;
+                    return GPG_ERR_GENERAL;
+                }
+                gpg.gpgme_io_write(fd, "uid 1\n", 5);
+                handle->state = replace_uid_trust;
+            }
+            break;
+
+        case replace_uid_trust:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "keyedit.prompt") == 0);
+                assert(handle->email);
+                if (strcmp(args, "keyedit.prompt")) {
+                    handle->state = replace_uid_error;
+                    return GPG_ERR_GENERAL;
+                }
+                gpg.gpgme_io_write(fd, "trust\n", 5);
+                handle->state = replace_uid_trust_ultimate;
+            }
+            break;
+
+        case replace_uid_trust_ultimate:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "edit_ownertrust.value") == 0);
+                assert(handle->email);
+                if (strcmp(args, "edit_ownertrust.value")) {
+                    handle->state = replace_uid_error;
+                    return GPG_ERR_GENERAL;
+                }
+                gpg.gpgme_io_write(fd, "5\n", 2);
+                handle->state = replace_uid_trust_ultimate_confirm;
+            }
+            break;
+
+        case replace_uid_trust_ultimate_confirm:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "edit_ownertrust.set_ultimate.okay") == 0);
+                assert(handle->email);
+                if (strcmp(args, "edit_ownertrust.set_ultimate.okay")) {
+                    handle->state = replace_uid_error;
+                    return GPG_ERR_GENERAL;
+                }
+                gpg.gpgme_io_write(fd, "Y\n", 2);
+                handle->state = replace_uid_quit;
+            }
+            break;
+
+        case replace_uid_quit:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "keyedit.prompt") == 0);
+                assert(handle->email);
+                if (strcmp(args, "keyedit.prompt")) {
+                    handle->state = replace_uid_error;
+                    return GPG_ERR_GENERAL;
+                }
+                gpg.gpgme_io_write(fd, "quit\n", 5);
+                handle->state = replace_uid_save_okay;
+            }
+            break;
+
+        case replace_uid_save_okay:
+            if (statuscode == GPGME_STATUS_GET_LINE) {
+                assert(strcmp(args, "keyedit.save.okay") == 0);
+                assert(handle->email);
+                if (strcmp(args, "keyedit.save.okay")) {
+                    handle->state = replace_uid_error;
+                    return GPG_ERR_GENERAL;
+                }
+                gpg.gpgme_io_write(fd, "Y\n", 2);
+                handle->state = replace_uid_exit;
+            }
+            break;
+
+        case replace_uid_exit:
+            break;
+
+        case replace_uid_error:
+            return GPG_ERR_GENERAL;
+            
+        default:
+            break;                
+    }
+    return GPG_ERR_NO_ERROR;
+}
+
+PEP_STATUS pgp_replace_only_uid(
+        PEP_SESSION session,
+        const char* fpr,
+        const char* realname,
+        const char* email
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    gpgme_error_t gpgme_error;
+    gpgme_key_t key;
+    gpgme_data_t output;
+    replace_only_uid_state handle;
+
+    assert(session);
+    assert(fpr);
+    assert(realname);
+    assert(email);
+    
+    memset(&handle, 0, sizeof(replace_only_uid_state));
+    handle.realname = realname;
+    handle.email = email;
+
+    status = find_single_key(session, fpr, &key);
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    struct gpgme_data_cbs data_cbs;
+    memset(&data_cbs, 0, sizeof(struct gpgme_data_cbs));
+    data_cbs.write = _nullwriter;
+    gpg.gpgme_data_new_from_cbs(&output, &data_cbs, &handle);
+
+    gpgme_error = gpg.gpgme_op_edit(session->ctx, key, replace_only_uid_fsm, &handle,
+            output);
+    assert(gpgme_error == GPG_ERR_NO_ERROR);
+    if(gpgme_error != GPG_ERR_NO_ERROR) {
+        status = PEP_CANNOT_EDIT_KEY;
+    }
+
+    gpg.gpgme_data_release(output);
+    gpg.gpgme_key_unref(key);
+
+    return status;
+}
+
+
 typedef struct _renew_state {
     enum {
         renew_command = 0,
@@ -1965,14 +2264,6 @@ static gpgme_error_t renew_fsm(
     return GPG_ERR_NO_ERROR;
 }
 
-static ssize_t _nullwriter(
-        void *_handle,
-        const void *buffer,
-        size_t size
-    )
-{
-    return size;
-}
 
 PEP_STATUS pgp_renew_key(
         PEP_SESSION session,
