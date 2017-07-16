@@ -1123,21 +1123,14 @@ static PEP_STATUS _pgp_createkey(PEP_SESSION session, pEp_identity *identity) {
 #ifdef GPGME_VERSION_NUMBER 
 #if (GPGME_VERSION_NUMBER >= 0x010700)
         gpgme_error_t gpgme_error;
-        /* "name <address>" adds 3 chars + NUL */
         int userid_size = strlen(identity->address) + 1;
-        /* int userid_size = strlen(identity->username) + strlen(identity->address) + 4; */
         char* userid = (char*)(calloc(1, userid_size));
         if (!userid)
             return PEP_OUT_OF_MEMORY;
-        /* sprintf... so tempting... */    
-//        strlcpy(userid, identity->username, userid_size);
-//        strlcat(userid, " <", userid_size);
         strlcpy(userid, identity->address, userid_size);
-//        strlcat(userid, identity->address, userid_size);
-//        strlcat(userid, ">", userid_size);
         gpgme_error = gpg.gpgme_op_createkey(session->ctx, userid, "RSA", 
                                              0, 31536000, NULL, 
-                                             GPGME_CREATE_NOPASSWD);
+                                             GPGME_CREATE_NOPASSWD | GPGME_CREATE_FORCE);
         gpgme_error = _GPGERR(gpgme_error);
 
         free(userid);
@@ -1200,13 +1193,6 @@ static PEP_STATUS _pgp_createkey(PEP_SESSION session, pEp_identity *identity) {
     return status;
 }
 
-static gpgme_error_t bypass_passphrase(void *hook, 
-	const char *uid_hint, const char *passphrase_info, 
-	int prev_was_bad, int fd) {
-    gpg.gpgme_io_write(fd, "\n", 1);
-    return GPG_ERR_NO_ERROR;
-}
-
 PEP_STATUS pgp_generate_keypair(
     PEP_SESSION session, pEp_identity *identity
     )
@@ -1250,9 +1236,6 @@ PEP_STATUS pgp_generate_keypair(
         return PEP_BUFFER_TOO_SMALL;
     }
 
-    /* if this is not implemented, we ignore the error and deal with the passphrase dialog */
-    gpgme_error = gpg.gpgme_set_passphrase_cb(session->ctx, bypass_passphrase, NULL);
-
     gpgme_error = gpg.gpgme_op_genkey(session->ctx, parms, NULL, NULL);
     gpgme_error = _GPGERR(gpgme_error);
     free(parms);
@@ -1272,8 +1255,6 @@ PEP_STATUS pgp_generate_keypair(
     gpgme_genkey_result_t gpgme_genkey_result = gpg.gpgme_op_genkey_result(session->ctx);
     assert(gpgme_genkey_result);
     assert(gpgme_genkey_result->fpr);
-
-    gpgme_error = gpg.gpgme_set_passphrase_cb(session->ctx, NULL, NULL);
 
     free(identity->fpr);
     identity->fpr = strdup(gpgme_genkey_result->fpr);
