@@ -39,6 +39,12 @@ TEST_HOME=$(HERE)/test_home
 TEST_HOME_SKEL=$(TEST_HOME)_skel
 TEST_GNUPGHOME_SKEL=$(TEST_HOME)_skel/.gnupg
 
+ifeq ($(shell which gpg2), )
+    GPG_CMD = gpg
+else
+    GPG_CMD = gpg2
+endif
+
 ifeq ($(shell uname), Darwin)
     LIBPATH = DYLD_LIBRARY_PATH
     LLDB_BIN = /Applications/Xcode.app/Contents/Developer/usr/bin/lldb
@@ -52,7 +58,7 @@ TEST_CMD_PFX = $(LIBPATH)=$(HOME)/lib:../src HOME=$(TEST_HOME)
 test_home_skel:
 	mkdir -p test_home_skel
 	mkdir -p $(TEST_GNUPGHOME_SKEL)/private-keys-v1.d
-	gpg2 --import --batch --homedir $(TEST_GNUPGHOME_SKEL) 0x*.asc *_sec.asc
+	$(GPG_CMD) --import --batch --homedir $(TEST_GNUPGHOME_SKEL) 0x*.asc *_sec.asc
 
 test_home_: test_home_skel
 	rm -rf test_home
