@@ -49,11 +49,22 @@ endif
 
 TEST_CMD_PFX = $(LIBPATH)=$(HOME)/lib:../src HOME=$(TEST_HOME)
 
+define killgpg =
+endef
+ifeq ("$(OPENPGP)","NETPGP")
+    killgpg_if_using_it =
+else
+    killgpg_if_using_it = $(killgpg)
+endif
+
 test_home_skel:
+	$(killgpg)
 	mkdir -p test_home_skel
 	-cat 0x*.asc *_sec.asc | gpg2 --import --homedir $(TEST_GNUPGHOME_SKEL)
+	$(killgpg)
 
 test_home_: test_home_skel
+	$(killgpg_if_using_it)
 	rm -rf test_home
 	cp -a test_home_skel test_home
 

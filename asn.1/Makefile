@@ -32,3 +32,6 @@ Sync-Protocols.c: protocols.asn1 devicegroup.asn1 pEp.asn1
 
 clean:
 	rm -f *.a *.o *.c *.h *.sample
+
+install: libasn1.a
+	cp $< $(PREFIX)/lib/

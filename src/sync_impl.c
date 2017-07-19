@@ -851,7 +851,7 @@ PEP_STATUS unicast_msg(
             for (stringlist_t *_keylist=keylist; _keylist!=NULL; _keylist=_keylist->next) {
                 char *fpr = _keylist->value;
                 static char filename[MAX_LINELENGTH];
-                int result = snprintf(filename, MAX_LINELENGTH, "%s-sec.asc", fpr);
+                int result = snprintf(filename, MAX_LINELENGTH, "file://%s-sec.asc", fpr);
                 if (result < 0)
                     goto enomem;
                 char *key = NULL;
@@ -969,4 +969,3 @@ group_keys_extra_t* group_keys_extra_dup(group_keys_extra_t* group_key_extra_src
 
     return group_key_extra_dst;
 }
-
