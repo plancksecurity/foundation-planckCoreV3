@@ -97,6 +97,8 @@ typedef gpgme_error_t(*gpgme_op_createsubkey_t)(gpgme_ctx_t ctx,
 typedef gpgme_error_t(*gpgme_set_passphrase_cb_t)(gpgme_ctx_t ctx, 
 		gpgme_passphrase_cb_t passfunc, void *hook_value);
 
+typedef gpgme_error_t(*gpgme_set_pinentry_mode_t)(gpgme_ctx_t ctx,
+		gpgme_pinentry_mode_t mode);
 
 struct gpg_s {
     const char * version;
@@ -152,4 +154,5 @@ struct gpg_s {
     gpgme_io_write_t gpgme_io_write;
 
     gpgme_set_passphrase_cb_t gpgme_set_passphrase_cb;
+    gpgme_set_pinentry_mode_t gpgme_set_pinentry_mode;
 };

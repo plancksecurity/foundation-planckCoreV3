@@ -97,6 +97,16 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
     return true;
 }
 
+gpgme_error_t passphrase_stub(
+		void *hook, 
+		const char *uid_hint, 
+		const char *passphrase_info, 
+		int prev_was_bad, 
+		int fd)
+{
+    printf("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
+    return GPG_ERR_NO_ERROR;
+}
 
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
@@ -280,6 +290,11 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
             "gpgme_set_passphrase_cb");
         assert(gpg.gpgme_set_passphrase_cb);
 
+        gpg.gpgme_set_pinentry_mode
+            = (gpgme_set_pinentry_mode_t) (intptr_t) dlsym(gpgme,
+            "gpgme_set_pinentry_mode");
+        assert(gpg.gpgme_set_pinentry_mode);
+
         gpg.gpgme_get_key
             = (gpgme_get_key_t) (intptr_t) dlsym(gpgme, "gpgme_get_key");
         assert(gpg.gpgme_get_key);
@@ -392,6 +407,14 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     assert(session->ctx);
 
     gpgme_error = gpg.gpgme_set_protocol(session->ctx, GPGME_PROTOCOL_OpenPGP);
+    gpgme_error = _GPGERR(gpgme_error);
+    assert(gpgme_error == GPG_ERR_NO_ERROR);
+
+    gpgme_error = gpg.gpgme_set_pinentry_mode(session->ctx, GPGME_PINENTRY_MODE_LOOPBACK);
+    gpgme_error = _GPGERR(gpgme_error);
+    assert(gpgme_error == GPG_ERR_NO_ERROR);
+
+    gpgme_error = gpg.gpgme_set_passphrase_cb(session->ctx, &passphrase_stub, NULL);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
 
