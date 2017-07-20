@@ -55,12 +55,26 @@ endif
 
 TEST_CMD_PFX = $(LIBPATH)=$(HOME)/lib:../src HOME=$(TEST_HOME)
 
+define killgpg =
+	gpgconf --kill gpg-agent
+	HOME=$(TEST_HOME) gpgconf --kill gpg-agent
+	HOME=$(TEST_HOME_SKEL) gpgconf --kill gpg-agent
+endef
+ifeq ("$(OPENPGP)","NETPGP")
+    killgpg_if_using_it =
+else
+    killgpg_if_using_it = $(killgpg)
+endif
+
 test_home_skel:
+	$(killgpg)
 	mkdir -p test_home_skel
 	mkdir -p $(TEST_GNUPGHOME_SKEL)/private-keys-v1.d
 	$(GPG_CMD) --import --batch --homedir $(TEST_GNUPGHOME_SKEL) 0x*.asc *_sec.asc
+	$(killgpg)
 
 test_home_: test_home_skel
+	$(killgpg_if_using_it)
 	rm -rf test_home
 	cp -a test_home_skel test_home
 
