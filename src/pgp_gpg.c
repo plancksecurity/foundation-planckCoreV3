@@ -687,7 +687,7 @@ PEP_STATUS pgp_decrypt_and_verify(
                     *psize = reading;
                     (*ptext)[*psize] = 0; // safeguard for naive users
                     *keylist = _keylist;
-                    if (recipient_keylist)
+                    if (recipient_keylist) {
                         if (!_keylist)
                             *keylist = new_stringlist(""); // no sig 
                         if (!(*keylist)) {
@@ -700,6 +700,7 @@ PEP_STATUS pgp_decrypt_and_verify(
                             return PEP_OUT_OF_MEMORY;
                         }    
                         stringlist_append(*keylist, recipient_keylist);
+                    }
                 }
                 else {
                     free_stringlist(_keylist);
