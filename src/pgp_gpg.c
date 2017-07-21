@@ -97,7 +97,7 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
     return true;
 }
 
-gpgme_error_t passphrase_stub(
+gpgme_error_t passphrase_cb(
 		void *hook, 
 		const char *uid_hint, 
 		const char *passphrase_info, 
@@ -105,7 +105,33 @@ gpgme_error_t passphrase_stub(
 		int fd)
 {
     printf("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
-    return GPG_ERR_NO_ERROR;
+
+	gpgme_error_t error = GPG_ERR_NO_ERROR; 
+	//char *secret = "blah";
+  
+	// to cancel :  
+ 	// return gpg_error(GPG_ERR_CANCELED);
+    
+	// TODO : use hook to retrieve client session
+	// TODO : call adapter's client passphrase callback
+
+    // size_t len = strlen(secret);
+    // size_t cursor = 0;
+    // do {
+	// 	ssize_t wres = gpg.gpgme_io_write(fd, secret + cursor, len - cursor);
+	// 	if (wres < 0) {
+	// 		error = gpg.gpgme_error_from_errno(errno);
+	// 		goto exit_free;
+	// 		break;
+	// 	}
+	// 	cursor += wres;
+    // } while ( cursor < len );
+
+	gpg.gpgme_io_write( fd, "\n", 1 );
+
+//exit_free:
+	//free(secret);
+	return error;
 }
 
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
@@ -239,6 +265,11 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
             = (gpgme_data_read_t) (intptr_t) dlsym(gpgme,
             "gpgme_data_read");
         assert(gpg.gpgme_data_read);
+
+        gpg.gpgme_error_from_errno
+            = (gpgme_error_from_errno_t) (intptr_t) dlsym(gpgme,
+            "gpgme_error_from_errno");
+        assert(gpg.gpgme_error_from_errno);
 
         gpg.gpgme_op_decrypt
             = (gpgme_op_decrypt_t) (intptr_t) dlsym(gpgme,
@@ -406,7 +437,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     }
     assert(session->ctx);
 
-    gpgme_error = gpg.gpgme_set_protocol(session->ctx, GPGME_PROTOCOL_OpenPGP);
+    gpgme_error = gpg.gpgme_set_passphrase_cb(session->ctx, passphrase_cb, NULL);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
 
@@ -414,7 +445,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
 
-    gpgme_error = gpg.gpgme_set_passphrase_cb(session->ctx, &passphrase_stub, NULL);
+    gpgme_error = gpg.gpgme_set_protocol(session->ctx, GPGME_PROTOCOL_OpenPGP);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
 

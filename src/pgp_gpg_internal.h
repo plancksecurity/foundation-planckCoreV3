@@ -31,6 +31,12 @@ typedef size_t(*gpgme_data_seek_t)(gpgme_data_t DH, size_t OFFSET,
 typedef size_t(*gpgme_data_read_t)(gpgme_data_t DH, void *BUFFER,
     size_t LENGTH);
 
+// error handling
+
+typedef gpgme_error_t (*gpgme_error_from_errno_t)(int err);
+
+
+
 // encrypt and decrypt
 
 typedef gpgme_error_t(*gpgme_op_decrypt_t)(gpgme_ctx_t CTX,
@@ -93,6 +99,7 @@ typedef gpgme_error_t(*gpgme_op_createsubkey_t)(gpgme_ctx_t ctx,
 #endif
 #endif
 
+// passphrase & pinentry
 
 typedef gpgme_error_t(*gpgme_set_passphrase_cb_t)(gpgme_ctx_t ctx, 
 		gpgme_passphrase_cb_t passfunc, void *hook_value);
@@ -117,6 +124,7 @@ struct gpg_s {
     gpgme_data_identify_t gpgme_data_identify;
     gpgme_data_seek_t gpgme_data_seek;
     gpgme_data_read_t gpgme_data_read;
+    gpgme_error_from_errno_t gpgme_error_from_errno;
 
     gpgme_op_decrypt_t gpgme_op_decrypt;
     gpgme_op_verify_t gpgme_op_verify;
