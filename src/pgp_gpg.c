@@ -437,17 +437,31 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     }
     assert(session->ctx);
 
-    gpgme_error = gpg.gpgme_set_passphrase_cb(session->ctx, passphrase_cb, NULL);
-    gpgme_error = _GPGERR(gpgme_error);
-    assert(gpgme_error == GPG_ERR_NO_ERROR);
+    gpgme_engine_info_t info;
+    int err = gpg.gpgme_get_engine_info(&info);
+    assert(err == GPG_ERR_NO_ERROR);
+    if (err != GPG_ERR_NO_ERROR) {
+        status = PEP_OUT_OF_MEMORY;
+        goto pep_error;
+    }
 
-    gpgme_error = gpg.gpgme_set_pinentry_mode(session->ctx, GPGME_PINENTRY_MODE_LOOPBACK);
-    gpgme_error = _GPGERR(gpgme_error);
-    assert(gpgme_error == GPG_ERR_NO_ERROR);
+    DEBUG_LOG("GPGME init", "gpg version", info->version);
 
     gpgme_error = gpg.gpgme_set_protocol(session->ctx, GPGME_PROTOCOL_OpenPGP);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error == GPG_ERR_NO_ERROR);
+
+    gpgme_error = gpg.gpgme_set_passphrase_cb(session->ctx, passphrase_cb, NULL);
+    gpgme_error = _GPGERR(gpgme_error);
+    assert(gpgme_error == GPG_ERR_NO_ERROR);
+
+    // Enabling Loopback Mode Pinentry crashes gpg 2.0.30 at op_decrypt*
+    // while it works with 2.1.17. Arbitrarily disable it for <=2.0
+    if(strncmp(info->version, "2.0", 3) > 0) {
+        gpgme_error = gpg.gpgme_set_pinentry_mode(session->ctx, GPGME_PINENTRY_MODE_LOOPBACK);
+        gpgme_error = _GPGERR(gpgme_error);
+        assert(gpgme_error == GPG_ERR_NO_ERROR);
+    }
 
     gpg.gpgme_set_armor(session->ctx, 1);
 
@@ -1290,6 +1304,11 @@ PEP_STATUS pgp_generate_keypair(
         free(parms);
         return PEP_BUFFER_TOO_SMALL;
     }
+   
+    // Versions not supporting create_keys also mess'up with callback on op_genkey 
+    gpgme_error = gpg.gpgme_set_passphrase_cb(session->ctx, NULL, NULL);
+    gpgme_error = _GPGERR(gpgme_error);
+    assert(gpgme_error == GPG_ERR_NO_ERROR);
 
     gpgme_error = gpg.gpgme_op_genkey(session->ctx, parms, NULL, NULL);
     gpgme_error = _GPGERR(gpgme_error);
@@ -1310,6 +1329,11 @@ PEP_STATUS pgp_generate_keypair(
     gpgme_genkey_result_t gpgme_genkey_result = gpg.gpgme_op_genkey_result(session->ctx);
     assert(gpgme_genkey_result);
     assert(gpgme_genkey_result->fpr);
+
+    // restore callback
+    gpgme_error = gpg.gpgme_set_passphrase_cb(session->ctx, passphrase_cb, NULL);
+    gpgme_error = _GPGERR(gpgme_error);
+    assert(gpgme_error == GPG_ERR_NO_ERROR);
 
     free(identity->fpr);
     identity->fpr = strdup(gpgme_genkey_result->fpr);
