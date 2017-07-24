@@ -107,7 +107,7 @@ gpgme_error_t passphrase_cb(
     printf("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
 
 	gpgme_error_t error = GPG_ERR_NO_ERROR; 
-	//char *secret = "blah";
+	char *secret = "passphrase";
   
 	// to cancel :  
  	// return gpg_error(GPG_ERR_CANCELED);
@@ -115,21 +115,21 @@ gpgme_error_t passphrase_cb(
 	// TODO : use hook to retrieve client session
 	// TODO : call adapter's client passphrase callback
 
-    // size_t len = strlen(secret);
-    // size_t cursor = 0;
-    // do {
-	// 	ssize_t wres = gpg.gpgme_io_write(fd, secret + cursor, len - cursor);
-	// 	if (wres < 0) {
-	// 		error = gpg.gpgme_error_from_errno(errno);
-	// 		goto exit_free;
-	// 		break;
-	// 	}
-	// 	cursor += wres;
-    // } while ( cursor < len );
+        size_t len = strlen(secret);
+        size_t cursor = 0;
+        do {
+        	ssize_t wres = gpg.gpgme_io_write(fd, secret + cursor, len - cursor);
+        	if (wres < 0) {
+        		error = gpg.gpgme_error_from_errno(errno);
+        		goto exit_free;
+        		break;
+        	}
+        	cursor += wres;
+        } while ( cursor < len );
 
 	gpg.gpgme_io_write( fd, "\n", 1 );
 
-//exit_free:
+exit_free:
 	//free(secret);
 	return error;
 }
