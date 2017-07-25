@@ -54,17 +54,13 @@ endif
 
 TEST_CMD_PFX = $(LIBPATH)=$(HOME)/lib:../src HOME=$(TEST_HOME)
 
-define killgpg =
-	gpgconf --kill gpg-agent
-	HOME=$(TEST_HOME) gpgconf --kill gpg-agent
-endef
-
 test_home_: 
-	$(killgpg)
+	-gpgconf --kill gpg-agent
+	-HOME=$(TEST_HOME) gpgconf --kill gpg-agent
+	-killall gpg-agent
 	rm -rf $(TEST_HOME)
 	mkdir -p $(TEST_GNUPGHOME)/private-keys-v1.d
 	$(GPG_CMD) --import --batch --homedir $(TEST_GNUPGHOME) 0x*.asc *_sec.asc
-	$(killgpg)
 
 clean:
 	rm -f *.o $(TARGET) *.a *~ $(UNIT_TESTS) pep_Dokument_Titel.pdf msg4.asc
