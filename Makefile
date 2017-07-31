@@ -17,6 +17,7 @@ all:
 
 install: all
 	$(MAKE) -C src install
+	$(MAKE) -C asn.1 install
 
 uninstall:
 	$(MAKE) -C src uninstall

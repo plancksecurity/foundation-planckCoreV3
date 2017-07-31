@@ -45,10 +45,14 @@ int main() {
                                                       PEP_OWN_USERID,
                                                       "Blacklist Self");
     blacklisted_identity->me = true;
-    PEP_STATUS status8 = update_identity(session, blacklisted_identity);
+    PEP_STATUS status8 = myself(session, blacklisted_identity);
+    assert (status8 == PEP_STATUS_OK);
     PEP_STATUS status9 = blacklist_add(session, bl_fpr_1);
+    assert (status9 == PEP_STATUS_OK);
     PEP_STATUS status10 = blacklist_is_listed(session, bl_fpr_1, &is_blacklisted);
-    PEP_STATUS status11 = update_identity(session, blacklisted_identity);
+    assert (status10 == PEP_STATUS_OK);
+    PEP_STATUS status11 = myself(session, blacklisted_identity);
+    assert (status11 == PEP_STATUS_OK);
 
     /* identity is blacklisted. Now let's try to encrypt a message. */
     

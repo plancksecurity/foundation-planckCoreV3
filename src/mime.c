@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <errno.h>
 
+#include "resource_id.h"
 #include "etpan_mime.h"
 #include "wrappers.h"
 
@@ -118,8 +119,13 @@ static PEP_STATUS mime_html_text(
     if (mime == NULL)
         goto enomem;
 
-    submime = get_text_part("msg.txt", "text/plain", plaintext, strlen(plaintext),
+    pEp_rid_list_t* resource = new_rid_node(PEP_RID_FILENAME, "msg.txt");
+    
+    submime = get_text_part(resource, "text/plain", plaintext, strlen(plaintext),
             MAILMIME_MECHANISM_QUOTED_PRINTABLE);
+    free_rid_list(resource);
+    resource = NULL;
+    
     assert(submime);
     if (submime == NULL)
         goto enomem;
@@ -134,8 +140,12 @@ static PEP_STATUS mime_html_text(
         submime = NULL;
     }
 
-    submime = get_text_part("msg.html", "text/html", htmltext, strlen(htmltext),
+    resource = new_rid_node(PEP_RID_FILENAME, "msg.html");
+    submime = get_text_part(resource, "text/html", htmltext, strlen(htmltext),
             MAILMIME_MECHANISM_QUOTED_PRINTABLE);
+    free_rid_list(resource);
+    resource = NULL;
+    
     assert(submime);
     if (submime == NULL)
         goto enomem;
@@ -186,7 +196,10 @@ static PEP_STATUS mime_attachment(
     else
         mime_type = blob->mime_type;
 
-    mime = get_file_part(blob->filename, mime_type, blob->value, blob->size);
+    pEp_rid_list_t* resource = parse_uri(blob->filename);
+    mime = get_file_part(resource, mime_type, blob->value, blob->size);
+    free_rid_list(resource);
+    
     assert(mime);
     if (mime == NULL)
         goto enomem;
@@ -559,6 +572,39 @@ enomem:
     return status;
 }
 
+static bool has_exceptional_extension(char* filename) {
+    if (!filename)
+        return false;
+    int len = strlen(filename);
+    if (len < 4)
+        return false;
+    char* ext_start = filename + (len - 4);
+    if (strcmp(ext_start, ".pgp") == 0 || strcmp(ext_start, ".gpg") == 0 ||
+        strcmp(ext_start, ".asc") == 0 || strcmp(ext_start, ".pEp") == 0)
+        return true;
+    return false;
+}
+
+static pEp_rid_list_t* choose_resource_id(pEp_rid_list_t* rid_list) {
+    pEp_rid_list_t* retval = rid_list;
+    
+    /* multiple elements - least common case */
+    if (rid_list && rid_list->next) {
+        pEp_rid_list_t* rid_list_curr = rid_list;
+        retval = rid_list; 
+        
+        while (rid_list_curr) {
+            pEp_resource_id_type rid_type = rid_list_curr->rid_type;
+            if (rid_type == PEP_RID_CID)
+                retval = rid_list_curr;
+            else if (rid_type == PEP_RID_FILENAME && has_exceptional_extension(rid_list_curr->rid))
+                return rid_list_curr;
+            rid_list_curr = rid_list_curr->next;
+        }
+    } 
+    return retval;
+}
+
 static PEP_STATUS mime_encode_message_plain(
         const message *msg,
         bool omit_fields,
@@ -586,12 +632,19 @@ static PEP_STATUS mime_encode_message_plain(
             goto pep_error;
     }
     else {
-        if (is_PGP_message_text(plaintext))
-            mime = get_text_part("msg.asc", "application/octet-stream", plaintext,
+        pEp_rid_list_t* resource = NULL;
+        if (is_PGP_message_text(plaintext)) {
+            resource = new_rid_node(PEP_RID_FILENAME, "msg.asc");
+            mime = get_text_part(resource, "application/octet-stream", plaintext,
                     strlen(plaintext), MAILMIME_MECHANISM_7BIT);
-        else
-            mime = get_text_part("msg.txt", "text/plain", plaintext, strlen(plaintext),
+        }
+        else {
+            resource = new_rid_node(PEP_RID_FILENAME, "msg.txt");
+            mime = get_text_part(resource, "text/plain", plaintext, strlen(plaintext),
                     MAILMIME_MECHANISM_QUOTED_PRINTABLE);
+        }
+        free_rid_list(resource);
+        
         assert(mime);
         if (mime == NULL)
             goto enomem;
@@ -694,8 +747,12 @@ static PEP_STATUS mime_encode_message_PGP_MIME(
         submime = NULL;
     }
 
-    submime = get_text_part("msg.asc", "application/octet-stream", plaintext,
+    pEp_rid_list_t* resource = new_rid_node(PEP_RID_FILENAME, "msg.asc");
+    submime = get_text_part(resource, "application/octet-stream", plaintext,
             plaintext_size, MAILMIME_MECHANISM_7BIT);
+            
+    free_rid_list(resource);
+    
     assert(submime);
     if (submime == NULL)
         goto enomem;
@@ -1343,19 +1400,50 @@ static PEP_STATUS interpret_MIME(
                 if (status)
                     return status;
 
-                filename = _get_filename(mime);
+                pEp_rid_list_t* resource_id_list = _get_resource_id_list(mime);
+                pEp_rid_list_t* chosen_resource_id = choose_resource_id(resource_id_list);
+                
+                //filename = _get_filename_or_cid(mime);
                 char *_filename = NULL;
-                if (filename) {
+                
+                if (chosen_resource_id) {
+                    filename = chosen_resource_id->rid;
                     size_t index = 0;
+                    /* NOTA BENE */
+                    /* The prefix we just added shouldn't be a problem - this is about decoding %XX (RFC 2392) */
+                    /* If it becomes one, we have some MESSY fixing to do. :(                                  */
                     r = mailmime_encoded_phrase_parse("utf-8", filename,
                             strlen(filename), &index, "utf-8", &_filename);
-                    if (r)
+                    if (r) {
                         goto enomem;
+                    }
+                    char* file_prefix = NULL;
+                    
+                    /* in case there are others later */
+                    switch (chosen_resource_id->rid_type) {
+                        case PEP_RID_CID:
+                            file_prefix = "cid";
+                            break;
+                        case PEP_RID_FILENAME:
+                            file_prefix = "file";
+                            break;
+                        default:
+                            break;
+                    }
+
+                    
+                    if (file_prefix) {
+                        filename = build_uri(file_prefix, _filename);
+                        free(_filename);
+                        _filename = filename;
+                    }
                 }
 
                 bloblist_t *_a = bloblist_add(msg->attachments, data, size,
                         mime_type, _filename);
                 free(_filename);
+                free_rid_list(resource_id_list);
+                resource_id_list = NULL;
                 if (_a == NULL)
                     return PEP_OUT_OF_MEMORY;
                 if (msg->attachments == NULL)

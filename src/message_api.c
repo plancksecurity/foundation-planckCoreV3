@@ -20,6 +20,21 @@
 #define _MAX(A, B) ((B) > (A) ? (B) : (A))
 #endif
 
+static char* _get_resource_ptr_noown(char* uri) {
+    char* uri_delim = strstr(uri, "://");
+    if (!uri_delim)
+        return uri;
+    else
+        return uri + 3;
+}
+
+static bool is_file_uri(char* str) {
+    return(strncmp(str, "file://", 7) == 0);
+}
+
+static bool is_cid_uri(const char* str) {
+    return(strncmp(str, "cid://", 6) == 0);
+}
 
 static bool string_equality(const char *s1, const char *s2)
 {
@@ -48,7 +63,7 @@ static bool is_fileending(const bloblist_t *bl, const char *fe)
 {
     assert(fe);
 
-    if (bl == NULL || bl->filename == NULL || fe == NULL)
+    if (bl == NULL || bl->filename == NULL || fe == NULL || is_cid_uri(bl->filename))
         return false;
 
     assert(bl && bl->filename);
@@ -505,7 +520,7 @@ static PEP_STATUS encrypt_PGP_MIME(
     dst->attachments = _a;
 
     _a = bloblist_add(_a, ctext, csize, "application/octet-stream",
-        "msg.asc");
+        "file://msg.asc");
     if (_a == NULL)
         goto enomem;
 
@@ -606,7 +621,7 @@ static PEP_STATUS encrypt_PGP_in_pieces(
         if (ctext) {
 
             bloblist_t *_a = bloblist_add(dst->attachments, ctext, csize,
-                "application/octet-stream", "PGPexch.htm.pgp");
+                "application/octet-stream", "file://PGPexch.htm.pgp");
             if (_a == NULL)
                 goto enomem;
             if (dst->attachments == NULL)
@@ -645,24 +660,34 @@ static PEP_STATUS encrypt_PGP_in_pieces(
                 if (ctext) {
                     char *filename = NULL;
 
-                    if (_s->filename) {
+                    char *attach_fn = _s->filename;
+                    if (attach_fn && !is_cid_uri(attach_fn)) {
                         size_t len = strlen(_s->filename);
                         size_t bufsize = len + 5; // length of .pgp extension + NUL
+                        bool already_uri = false;
+                        if (is_file_uri(attach_fn))
+                            already_uri = true;
+                        else
+                            bufsize += 7; // length of file://
+                            
                         filename = calloc(1, bufsize);
                         if (filename == NULL)
                             goto enomem;
 
-                        strlcpy(filename, _s->filename, bufsize);
+                        if (!already_uri)
+                            strlcpy(filename, "file://", bufsize);
+                        // First char is NUL, so we're ok, even if not copying above. (calloc)
+                        strlcat(filename, _s->filename, bufsize);
                         strlcat(filename, ".pgp", bufsize);
                     }
                     else {
-                        filename = calloc(1, 20);
+                        filename = calloc(1, 27);
                         if (filename == NULL)
                             goto enomem;
 
                         ++n;
                         n &= 0xffff;
-                        snprintf(filename, 20, "Attachment%d.pgp", n);
+                        snprintf(filename, 20, "file://Attachment%d.pgp", n);
                     }
 
                     _d = bloblist_add(_d, ctext, csize, "application/octet-stream",
@@ -814,7 +839,7 @@ static bool is_encrypted_attachment(const bloblist_t *blob)
 {
     assert(blob);
 
-    if (blob == NULL || blob->filename == NULL)
+    if (blob == NULL || blob->filename == NULL || is_cid_uri(blob->filename))
         return false;
 
     char *ext = strrchr(blob->filename, '.');
@@ -838,12 +863,13 @@ static bool is_encrypted_html_attachment(const bloblist_t *blob)
 {
     assert(blob);
     assert(blob->filename);
-    if (blob == NULL || blob->filename == NULL)
+    if (blob == NULL || blob->filename == NULL || is_cid_uri(blob->filename))
         return false;
 
-    if (strncmp(blob->filename, "PGPexch.htm.", 12) == 0) {
-        if (strcmp(blob->filename + 11, ".pgp") == 0 ||
-            strcmp(blob->filename + 11, ".asc") == 0)
+    const char* bare_filename_ptr = _get_resource_ptr_noown(blob->filename);
+    if (strncmp(bare_filename_ptr, "PGPexch.htm.", 12) == 0) {
+        if (strcmp(bare_filename_ptr + 11, ".pgp") == 0 ||
+            strcmp(bare_filename_ptr + 11, ".asc") == 0)
             return true;
     }
 
@@ -853,7 +879,7 @@ static bool is_encrypted_html_attachment(const bloblist_t *blob)
 static char * without_double_ending(const char *filename)
 {
     assert(filename);
-    if (filename == NULL)
+    if (filename == NULL || is_cid_uri(filename))
         return NULL;
 
     char *ext = strrchr(filename, '.');
@@ -1090,7 +1116,7 @@ PEP_STATUS _attach_key(PEP_SESSION session, const char* fpr, message *msg)
     assert(size);
 
      bloblist_t *bl = bloblist_add(msg->attachments, keydata, size, "application/pgp-keys",
-                      "pEpkey.asc");
+                      "file://pEpkey.asc");
 
     if (msg->attachments == NULL && bl)
         msg->attachments = bl;

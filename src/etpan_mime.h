@@ -7,6 +7,8 @@
 #include <libetpan/mailmime.h>
 #include <libetpan/mailmime_encode.h>
 
+#include "resource_id.h"
+
 struct mailmime * part_new_empty(
         struct mailmime_content * content,
         struct mailmime_fields * mime_fields,
@@ -16,7 +18,7 @@ struct mailmime * part_new_empty(
 struct mailmime * get_pgp_encrypted_part(void);
 
 struct mailmime * get_text_part(
-        const char * filename,
+        pEp_rid_list_t* resource,
         const char * mime_type,
         const char * text,
         size_t length,
@@ -24,7 +26,7 @@ struct mailmime * get_text_part(
     );
 
 struct mailmime * get_file_part(
-        const char * filename,
+        pEp_rid_list_t* resource,
         const char * mime_type,
         char * data,
         size_t length
@@ -70,7 +72,9 @@ int _append_optional_field(
 
 clist * _get_fields(struct mailmime * mime);
 struct mailmime_content * _get_content(struct mailmime * mime);
-char * _get_filename(struct mailmime *mime);
+char * _get_filename_or_cid(struct mailmime *mime);
+pEp_rid_list_t* _get_resource_id_list(struct mailmime *mime);
+char* _build_uri(char* uri_prefix, char* resource);
 bool _is_multipart(struct mailmime_content *content, const char *subtype);
 bool _is_PGP_MIME(struct mailmime_content *content);
 bool _is_text_part(struct mailmime_content *content, const char *subtype);
@@ -80,4 +84,3 @@ int _get_content_type(
         char **type,
         char **charset
     );
-
