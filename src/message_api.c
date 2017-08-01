@@ -1946,44 +1946,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
         case PEP_enc_PGP_MIME:
         
-            int msg_major_version = pEpmessage_major_version(src);
-        
-            if (msg_major_version > 1) {
-                
-                // needed to decrypt :(
-                message* inner_message = clone_to_empty_msg(src);
-                // We don't want to keep the message version value at this point;
-                bloblist_t* att = src->attachments;
-                if (att) {
-                    char* att_type = att->mime_type;
-                    if (att_type && strcmp(att->mime_type, "application/pgp-encrypted") == 0) {
-                        bloblist_t* enc_att = src->attachments->next;
-                        if (enc_att) {
-                            att_type = enc_att->mime_type;
-                            if (att_type && strcmp(att->mime_type, "application/octet-stream") == 0) {
-                                // Hoorah, it at least has the right form!
-                                // pull message up
-                                inner_message->longmsg = (char*)(calloc(1, enc_att->size + 1));
-                                memcpy(inner_message->longmsg, enc_att->size);
-                                remove_msg_version_field(message* msg);
-                                
-                                status = decrypt_message(session,
-                                                         inner_message,
-                                                         dst, keylist,
-                                                         rating, flags,
-                                                         private_il);
-                                                         
-                                free_message(inner_message);
-                                return status;
-                            }
-                        }
-                    }
-                }
-            }
-            else {        
-                ctext = src->attachments->next->value;
-                csize = src->attachments->next->size;
-            }
+            ctext = src->attachments->next->value;
+            csize = src->attachments->next->size;
             break;
 
         case PEP_enc_PGP_MIME_Outlook1:
