@@ -211,6 +211,32 @@ enomem:
     return -1;
 }
 
+static void remove_msg_version_field(message* msg) {
+    assert(msg);
+
+    stringpair_list_t* msg_opt_flds_curr = msg->opt_fields;
+    stringpair_list_t** msg_opt_flds_prev_p = NULL;
+    
+    while (msg_opt_flds_curr) {
+        char* fld_key = msg_opt_flds_curr->key;
+        if (fld_key) {
+            if (strcmp(fld_key, "X-pEp-Message-Version") == 0) {
+                if (!msg_opt_flds_prev_p) {
+                    msg->opt_fields = msg_opt_flds_curr->next;
+                }
+                else {
+                    (*msg_opt_fields_prev_p)->next = msg_opt_flds_curr->next;
+                }
+                msg_opt_flds_curr->next = NULL;
+                free_stringpair_list(msg_opt_flds_curr);
+                break;
+            }
+            *msg_opt_fields_prev_p = msg_opt_flds_curr;
+            msg_opt_flds_curr = msg_opt_flds_curr->next;
+        }
+    }
+}
+
 static PEP_STATUS copy_fields(message *dst, const message *src)
 {
     assert(dst);
@@ -375,6 +401,23 @@ static message* extract_minimal_envelope(const message* src,
     return envelope;
 }
 
+static void add_message_version(
+    message* msg,
+    int major_version,
+    int minor_version
+)
+{
+    assert(msg);
+    
+    char buf[8]; // xxx.xxx\0
+    if (major_version < 1000 && minor_version < 1000) {
+        int chars_set = sprintf(buf, "%d.%d", major_version, minor_version);
+        if (chars_set >= 3)
+            add_opt_field(msg, "X-pEp-Message-Version", buf);
+    }
+}
+
+
 static message* wrap_message_as_attachment(message* envelope, 
     const message* attachment) {
     
@@ -400,7 +443,7 @@ static message* wrap_message_as_attachment(message* envelope,
                                             "message/rfc822", NULL);
     
     envelope->attachments = message_blob;
-    envelope->pep_message_version = "2.0"; // FIXME - macro, elsewhere
+    add_message_version(envelope, 2, 0);
     
     return envelope;
 }
@@ -536,6 +579,8 @@ pep_error:
     return status;
 }
 
+// N.B. TO BE MOVED TO READ-ONLY
+// FIXME: Does this happen concurrent w/ message 2.0 merge?
 static PEP_STATUS encrypt_PGP_in_pieces(
     PEP_SESSION session,
     const message *src,
@@ -1340,6 +1385,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             status = encrypt_PGP_MIME(session, wrapped_src, keys, msg, flags);
             break;
 
+        // This actually doesn't really make sense for message 2.0... See function comment below
         case PEP_enc_pieces:
             status = encrypt_PGP_in_pieces(session, wrapped_src, keys, msg, flags);
             break;
@@ -1514,6 +1560,51 @@ static bool is_a_pEpmessage(const message *msg)
             return true;
     }
     return false;
+}
+
+static const char* pEpmessage_version_str(const message *msg)
+{
+    char* retval = NULL;
+    for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
+        if (strcasecmp(i->value->key, "X-pEp-Message-Version") == 0) {
+            retval = i->value->value;
+            break;
+        }
+    }
+    return retval;
+}
+
+static int pEpmessage_major_version(const message *msg) {
+    const char* version_string = pEpmessage_version_str(msg);
+    if (!version_string)
+        return -1;
+    
+    int ver_strlen = strlen(version_string);
+    if (ver_strlen < 3)
+        return -1;
+        
+    const short MAX_MAJ_VERSION_DIGITS = 4; // I certainly hope...    
+    char version_buf[MAX_MAJ_VERSION_DIGITS + 1];
+
+    int i = 0;    
+    
+    for ( ; i < MAX_MAJ_VERSION_DIGITS && i < ver_strlen; i++ ) {
+        if (version_string[i] == '.') {
+            version_buf[i] = '\0';
+            break;
+        }
+        version_buf[i] = version_string[i];
+    }
+    
+    if (version_string[i] != '.')
+        return -1;
+    
+    // ok, this is some chars + \0, but not necessarily numeric.
+    int retval = atoi(version_buf);
+    if (retval == 0 && version_buf[0] != 0)
+        return -1;
+    
+    return retval;
 }
 
 // update comm_type to pEp_ct_pEp if needed
@@ -1745,6 +1836,29 @@ PEP_STATUS amend_rating_according_to_sender_and_recipients(
     return status;
 }
 
+static void pull_up_longmsg_attachment(message* msg) {
+    bloblist_t* matt = msg->attachments;
+    if (matt) {
+        const char* inner_mime_type = matt->mime_type;
+        if (strcasecmp(inner_mime_type, "text/plain") == 0) {
+            free(msg->longmsg); /* in case of "" */
+            msg->longmsg = strndup(matt->value, matt->size);
+            
+            bloblist_t* next_node = matt->next;
+            if (next_node) {
+                inner_mime_type = next_node->mime_type;
+                if (strcasecmp(inner_mime_type, "text/html") == 0) {
+                    free(msg->longmsg_formatted);
+                    msg->longmsg_formatted = strndup(next_node->value, next_node->size);
+                }
+            }
+        }
+        else if (strcasecmp(inner_mime_type, "text/html") == 0) {
+            free(msg->longmsg_formatted);
+            msg->longmsg_formatted = strndup(matt->value, matt->size);
+        }
+    }
+}
 
 DYNAMIC_API PEP_STATUS _decrypt_message(
         PEP_SESSION session,
@@ -1824,37 +1938,52 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             
             char* slong = src->longmsg;
             char* sform = src->longmsg_formatted;
-            bloblist_t* satt = src->attachments;
             
-            if ((!slong || slong[0] == '\0')
-                 && (!sform || sform[0] == '\0')) {
-                if (satt) {
-                    const char* inner_mime_type = satt->mime_type;
-                    if (strcasecmp(inner_mime_type, "text/plain") == 0) {
-                        free(slong); /* in case of "" */
-                        src->longmsg = strndup(satt->value, satt->size); // N.B.: longmsg might be shorter, if attachment contains NUL bytes which are not allowed in text/plain!
-                        
-                        bloblist_t* next_node = satt->next;
-                        if (next_node) {
-                            inner_mime_type = next_node->mime_type;
-                            if (strcasecmp(inner_mime_type, "text/html") == 0) {
-                                free(sform);
-                                src->longmsg_formatted = strndup(next_node->value, next_node->size);  // N.B.: longmsg might be shorter, if attachment contains NUL bytes which are not allowed in text/plain!
-                            }
-                        }
-                    }
-                    else if (strcasecmp(inner_mime_type, "text/html") == 0) {
-                        free(sform);
-                        src->longmsg_formatted = strndup(satt->value, satt->size);  // N.B.: longmsg might be shorter, if attachment contains NUL bytes which are not allowed in text/plain!
-                    }
-                }
-            }
+            if ((!slong || slong[0] == '\0') && (!sform || sform[0] == '\0'))                
+                pull_up_longmsg_attachment(src);
             
             return ADD_TO_LOG(PEP_UNENCRYPTED);
 
         case PEP_enc_PGP_MIME:
-            ctext = src->attachments->next->value;
-            csize = src->attachments->next->size;
+        
+            int msg_major_version = pEpmessage_major_version(src);
+        
+            if (msg_major_version > 1) {
+                
+                // needed to decrypt :(
+                message* inner_message = clone_to_empty_msg(src);
+                // We don't want to keep the message version value at this point;
+                bloblist_t* att = src->attachments;
+                if (att) {
+                    char* att_type = att->mime_type;
+                    if (att_type && strcmp(att->mime_type, "application/pgp-encrypted") == 0) {
+                        bloblist_t* enc_att = src->attachments->next;
+                        if (enc_att) {
+                            att_type = enc_att->mime_type;
+                            if (att_type && strcmp(att->mime_type, "application/octet-stream") == 0) {
+                                // Hoorah, it at least has the right form!
+                                // pull message up
+                                inner_message->longmsg = (char*)(calloc(1, enc_att->size + 1));
+                                memcpy(inner_message->longmsg, enc_att->size);
+                                remove_msg_version_field(message* msg);
+                                
+                                status = decrypt_message(session,
+                                                         inner_message,
+                                                         dst, keylist,
+                                                         rating, flags,
+                                                         private_il);
+                                                         
+                                free_message(inner_message);
+                                return status;
+                            }
+                        }
+                    }
+                }
+            }
+            else {        
+                ctext = src->attachments->next->value;
+                csize = src->attachments->next->size;
+            }
             break;
 
         case PEP_enc_PGP_MIME_Outlook1:
@@ -1896,33 +2025,14 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 status = mime_decode_message(ptext, psize, &msg);
                 if (status != PEP_STATUS_OK)
                     goto pep_error;
-                
+                                    
                 char* mlong = msg->longmsg;
                 char* mform = msg->longmsg_formatted;
-                bloblist_t* matt = msg->attachments;
                 
-                if ((!mlong || mlong[0] == '\0')
-                     && (!mform || mform[0] == '\0')) {
-                    if (matt) {
-                        const char* inner_mime_type = matt->mime_type;
-                        if (strcasecmp(inner_mime_type, "text/plain") == 0) {
-                            free(mlong); /* in case of "" */
-                            msg->longmsg = strndup(matt->value, matt->size);
-                            
-                            bloblist_t* next_node = matt->next;
-                            if (next_node) {
-                                inner_mime_type = next_node->mime_type;
-                                if (strcasecmp(inner_mime_type, "text/html") == 0) {
-                                    free(mform);
-                                    msg->longmsg_formatted = strndup(next_node->value, next_node->size);
-                                }
-                            }
-                        }
-                        else if (strcasecmp(inner_mime_type, "text/html") == 0) {
-                            free(mform);
-                            msg->longmsg_formatted = strndup(matt->value, matt->size);
-                        }
-                    }
+                if ((!mlong || mlong[0] == '\0') && (!mform || mform[0] == '\0')) {
+                         
+                    pull_up_longmsg_attachment(msg);
+                    
                     if (msg->shortmsg) {
                         free(src->shortmsg);
                         src->shortmsg = strdup(msg->shortmsg);

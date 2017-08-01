@@ -41,7 +41,6 @@ struct _message_ref_list;
 
 typedef struct _message {
     PEP_msg_direction dir;
-    char *pep_message_version;              // UTF-8 string indicating msg format version
     char *id;                               // UTF-8 string of message ID
     char *shortmsg;                         // UTF-8 string of short message
     char *longmsg;                          // UTF-8 string of long message
