@@ -218,20 +218,20 @@ static void remove_msg_version_field(message* msg) {
     stringpair_list_t** msg_opt_flds_prev_p = NULL;
     
     while (msg_opt_flds_curr) {
-        char* fld_key = msg_opt_flds_curr->key;
+        char* fld_key = msg_opt_flds_curr->value->key;
         if (fld_key) {
             if (strcmp(fld_key, "X-pEp-Message-Version") == 0) {
                 if (!msg_opt_flds_prev_p) {
                     msg->opt_fields = msg_opt_flds_curr->next;
                 }
                 else {
-                    (*msg_opt_fields_prev_p)->next = msg_opt_flds_curr->next;
+                    (*msg_opt_flds_prev_p)->next = msg_opt_flds_curr->next;
                 }
                 msg_opt_flds_curr->next = NULL;
                 free_stringpair_list(msg_opt_flds_curr);
                 break;
             }
-            *msg_opt_fields_prev_p = msg_opt_flds_curr;
+            *msg_opt_flds_prev_p = msg_opt_flds_curr;
             msg_opt_flds_curr = msg_opt_flds_curr->next;
         }
     }
@@ -1945,7 +1945,6 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             return ADD_TO_LOG(PEP_UNENCRYPTED);
 
         case PEP_enc_PGP_MIME:
-        
             ctext = src->attachments->next->value;
             csize = src->attachments->next->size;
             break;
@@ -1989,12 +1988,21 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 status = mime_decode_message(ptext, psize, &msg);
                 if (status != PEP_STATUS_OK)
                     goto pep_error;
+                
+                int msg_major_version = pEpmessage_major_version(src);
+                
+                if (msg_major_version > 1) {
+                    message* inner_message = NULL; 
+                    status = mime_decode_message(msg->attachments->value, 
+                                                 msg->attachments->size,
+                                                 &inner_message);
+                    
+                }
                                     
                 char* mlong = msg->longmsg;
                 char* mform = msg->longmsg_formatted;
                 
-                if ((!mlong || mlong[0] == '\0') && (!mform || mform[0] == '\0')) {
-                         
+                if ((!mlong || mlong[0] == '\0') && (!mform || mform[0] == '\0')) {             
                     pull_up_longmsg_attachment(msg);
                     
                     if (msg->shortmsg) {
