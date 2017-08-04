@@ -417,7 +417,6 @@ static void add_message_version(
     }
 }
 
-
 static message* wrap_message_as_attachment(message* envelope, 
     const message* attachment) {
     
@@ -1243,7 +1242,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     PEP_STATUS status = PEP_STATUS_OK;
     message * msg = NULL;
     stringlist_t * keys = NULL;
-    message* wrapped_src = NULL;
+    message* _src = NULL;
+    bool no_wrap_message = (flags & PEP_encrypt_flag_dont_raise_headers);
 
     assert(session);
     assert(src);
@@ -1371,23 +1371,29 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         return ADD_TO_LOG(PEP_UNENCRYPTED);
     }
     else {
-        wrapped_src = wrap_message_as_attachment(NULL, src);
-        msg = clone_to_empty_message(wrapped_src);
+        if (no_wrap_message) {
+            msg = clone_to_empty_message(src);
+            _src = src;
+        }
+        else {
+            _src = wrap_message_as_attachment(NULL, src);
+            msg = clone_to_empty_message(_src);
+        }
         if (msg == NULL)
             goto enomem;
 
         if (!(flags & PEP_encrypt_flag_force_no_attached_key))
-            attach_own_key(session, wrapped_src);
+            attach_own_key(session, _src);
 
         switch (enc_format) {
         case PEP_enc_PGP_MIME:
         case PEP_enc_PEP: // BUG: should be implemented extra
-            status = encrypt_PGP_MIME(session, wrapped_src, keys, msg, flags);
+            status = encrypt_PGP_MIME(session, _src, keys, msg, flags);
             break;
 
         // This actually doesn't really make sense for message 2.0... See function comment below
         case PEP_enc_pieces:
-            status = encrypt_PGP_in_pieces(session, wrapped_src, keys, msg, flags);
+            status = encrypt_PGP_in_pieces(session, _src, keys, msg, flags);
             break;
 
         /* case PEP_enc_PEP:
@@ -1409,20 +1415,17 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
     free_stringlist(keys);
 
-    // Taken care of in wrap_message
-    /*
     if (msg && msg->shortmsg == NULL) {
         msg->shortmsg = strdup("pEp");
         assert(msg->shortmsg);
         if (msg->shortmsg == NULL)
             goto enomem;
     }
-    */
 
     if (msg) {
         decorate_message(msg, PEP_rating_undefined, NULL);
-        if (wrapped_src->id) {
-            msg->id = strdup(src->id);
+        if (_src->id) {
+            msg->id = strdup(_src->id);
             assert(msg->id);
             if (msg->id == NULL)
                 goto enomem;
@@ -1439,7 +1442,8 @@ enomem:
 pep_error:
     free_stringlist(keys);
     free_message(msg);
-    free_message(wrapped_src);
+    if (!no_wrap_message)
+        free_message(_src);
     return ADD_TO_LOG(status);
 }
 
@@ -1607,8 +1611,15 @@ static int pEpmessage_major_version(const message *msg) {
     return retval;
 }
 
-// update comm_type to pEp_ct_pEp if needed
+static bool verify_explicit_message_version(const char* desired_version, 
+    const message* msg) {
+    if (!desired_version || !msg)
+        return false;
+    const char* msg_version_str = pEpmessage_version_str(msg);
+    return (msg_version_str && (strcmp(desired_version, msg_version_str) == 0));
+}
 
+// update comm_type to pEp_ct_pEp if needed
 static PEP_STATUS _update_identity_for_incoming_message(
         PEP_SESSION session,
         const message *src
@@ -1996,7 +2007,11 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                     status = mime_decode_message(msg->attachments->value, 
                                                  msg->attachments->size,
                                                  &inner_message);
+                    if (status != PEP_STATUS_OK)
+                        goto pep_error;
                     
+                    free_message(msg);
+                    msg = inner_message;
                 }
                                     
                 char* mlong = msg->longmsg;
