@@ -2883,6 +2883,13 @@ got_rating:
                 goto got_keylist;
             }
         }
+
+        // there was no rcpt fpr, it could be an unencrypted mail
+        if(_rating == PEP_rating_unencrypted) {
+            *rating = _rating;
+            return ADD_TO_LOG(PEP_STATUS_OK);
+        }
+
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
     }
 got_keylist:
