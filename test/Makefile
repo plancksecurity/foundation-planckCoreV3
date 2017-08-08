@@ -36,8 +36,13 @@ all: $(TARGET) $(UNIT_TESTS)
 
 unexport GNUPGHOME;
 TEST_HOME=$(HERE)/test_home
-TEST_HOME_SKEL=$(TEST_HOME)_skel
-TEST_GNUPGHOME_SKEL=$(TEST_HOME)_skel/.gnupg
+TEST_GNUPGHOME=$(TEST_HOME)/.gnupg
+
+ifeq ($(shell which gpg2), )
+    GPG_CMD = gpg
+else
+    GPG_CMD = gpg2
+endif
 
 ifeq ($(shell uname), Darwin)
     LIBPATH = DYLD_LIBRARY_PATH
@@ -49,28 +54,17 @@ endif
 
 TEST_CMD_PFX = $(LIBPATH)=$(HOME)/lib:../src HOME=$(TEST_HOME)
 
-define killgpg =
-endef
-ifeq ("$(OPENPGP)","NETPGP")
-    killgpg_if_using_it =
-else
-    killgpg_if_using_it = $(killgpg)
-endif
-
-test_home_skel:
-	$(killgpg)
-	mkdir -p test_home_skel
-	-cat 0x*.asc *_sec.asc | gpg2 --import --homedir $(TEST_GNUPGHOME_SKEL)
-	$(killgpg)
-
-test_home_: test_home_skel
-	$(killgpg_if_using_it)
-	rm -rf test_home
-	cp -a test_home_skel test_home
+test_home_: 
+	-gpgconf --kill gpg-agent
+	-HOME=$(TEST_HOME) gpgconf --kill gpg-agent
+	-killall gpg-agent
+	rm -rf $(TEST_HOME)
+	mkdir -p $(TEST_GNUPGHOME)/private-keys-v1.d
+	$(GPG_CMD) --import --batch --homedir $(TEST_GNUPGHOME) 0x*.asc *_sec.asc
 
 clean:
 	rm -f *.o $(TARGET) *.a *~ $(UNIT_TESTS) pep_Dokument_Titel.pdf msg4.asc
-	rm -Rf *.dSYM test_home test_home_skel pubring.gpg secring.gpg random_seed *.conf trustdb.gpg
+	rm -Rf *.dSYM $(TEST_HOME) pubring.gpg secring.gpg random_seed *.conf trustdb.gpg
 
 test: pEpEngineTest test_home_
 	$(TEST_CMD_PFX) ./pEpEngineTest

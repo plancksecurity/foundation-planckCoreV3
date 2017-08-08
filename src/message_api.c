@@ -28,14 +28,6 @@ static char* _get_resource_ptr_noown(char* uri) {
         return uri + 3;
 }
 
-static char* get_resource(char* uri) {
-    const char* resource_ptr = _get_resource_ptr_noown(uri);
-    char* resource_str = NULL;
-    if (resource_ptr)
-        resource_str = strdup(resource_ptr);
-    return resource_str;
-}
-
 static bool is_file_uri(char* str) {
     return(strncmp(str, "file://", 7) == 0);
 }
@@ -2891,6 +2883,13 @@ got_rating:
                 goto got_keylist;
             }
         }
+
+        // there was no rcpt fpr, it could be an unencrypted mail
+        if(_rating == PEP_rating_unencrypted) {
+            *rating = _rating;
+            return ADD_TO_LOG(PEP_STATUS_OK);
+        }
+
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
     }
 got_keylist:
