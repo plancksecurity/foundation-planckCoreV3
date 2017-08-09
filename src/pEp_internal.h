@@ -313,6 +313,12 @@ static inline int _same_fpr(
     return comparison == 0;
 }
 
+static inline bool _identity_me(
+        pEp_identity * identity
+    )
+{
+    return identity->user_id && strcmp(identity->user_id, PEP_OWN_USERID) == 0;
+}
 
 #ifdef DEBUG_ERRORSTACK
     PEP_STATUS session_add_error(PEP_SESSION session, const char* file, unsigned line, PEP_STATUS status);

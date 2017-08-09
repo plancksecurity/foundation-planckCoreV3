@@ -484,7 +484,6 @@ typedef struct _pEp_identity {
     PEP_comm_type comm_type;    // type of communication with this ID
     char lang[3];               // language of conversation
                                 // ISO 639-1 ALPHA-2, last byte is 0
-    bool me;                    // if this is the local user herself/himself
     identity_flags_t flags;     // identity_flag1 | identity_flag2 | ...
 } pEp_identity;
 

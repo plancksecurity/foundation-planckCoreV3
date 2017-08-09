@@ -93,8 +93,7 @@ DYNAMIC_API PEP_STATUS update_identity(
     if (!(session && identity && !EMPTYSTR(identity->address)))
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
-    if (identity->me || (identity->user_id && strcmp(identity->user_id, PEP_OWN_USERID) == 0)) {
-        identity->me = true;
+    if (_identity_me(identity)) {
         return _myself(session, identity, false, true);
     }
 
@@ -319,7 +318,6 @@ DYNAMIC_API PEP_STATUS update_identity(
     identity->lang[0] = temp_id->lang[0];
     identity->lang[1] = temp_id->lang[1];
     identity->lang[2] = 0;
-    identity->me = temp_id->me;
     identity->flags = temp_id->flags;
 
 exit_free :
@@ -437,7 +435,6 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     identity->comm_type = PEP_ct_pEp;
-    identity->me = true;
     if(ignore_flags)
         identity->flags = 0;
     
@@ -686,7 +683,7 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
         {
             DEBUG_LOG("do_keymanagement", "retrieve_next_identity", identity->address);
 
-            if (identity->me) {
+            if (_identity_me(identity)) {
                 status = myself(session, identity);
             } else {
                 status = recv_key(session, identity->address);
@@ -719,7 +716,7 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
     if (!(session && ident && ident->fpr))
         return PEP_ILLEGAL_VALUE;
 
-    if (ident->me)
+    if (_identity_me(ident))
     {
         revoke_key(session, ident->fpr, NULL);
         myself(session, ident);
@@ -741,12 +738,12 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
 
     assert(session);
     assert(ident);
-    assert(!ident->me);
+    assert(!_identity_me(ident));
     assert(!EMPTYSTR(ident->fpr));
     assert(!EMPTYSTR(ident->address));
     assert(!EMPTYSTR(ident->user_id));
 
-    if (!(session && ident && !ident->me && ident->fpr && ident->address &&
+    if (!(session && ident && !_identity_me(ident) && ident->fpr && ident->address &&
             ident->user_id))
         return PEP_ILLEGAL_VALUE;
 
@@ -780,10 +777,9 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     assert(!EMPTYSTR(ident->address));
     assert(!EMPTYSTR(ident->user_id));
     assert(!EMPTYSTR(ident->fpr));
-//    assert(!ident->me);
 
     if (!ident || EMPTYSTR(ident->address) || EMPTYSTR(ident->user_id) ||
-            EMPTYSTR(ident->fpr)) // || ident->me)
+            EMPTYSTR(ident->fpr))
         return PEP_ILLEGAL_VALUE;
 
     status = update_identity(session, ident);
@@ -896,7 +892,6 @@ PEP_STATUS _own_identities_retrieve(
                     ident->lang[1] = lang[1];
                     ident->lang[2] = 0;
                 }
-                ident->me = true;
                 ident->flags = flags;
 
                 _bl = identity_list_add(_bl, ident);
