@@ -35,3 +35,7 @@ clean:
 
 install: libasn1.a
 	cp $< $(PREFIX)/lib/
+
+.PHONY: uninstall
+uninstall:
+	-rm -f $(PREFIX)/lib/libasn1.a

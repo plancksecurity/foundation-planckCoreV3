@@ -23,6 +23,7 @@ install: all
 .PHONY: uninstall
 uninstall:
 	$(MAKE) -C src uninstall
+	$(MAKE) -C asn.1 uninstall
 
 .PHONY: clean
 clean:
