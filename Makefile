@@ -3,8 +3,7 @@
 
 include Makefile.conf
 
-# add YML_PATH to the environment of all executed programs
-export YML_PATH
+export YML2_PATH
 
 HERE_REL := $(notdir $(CURDIR))
 

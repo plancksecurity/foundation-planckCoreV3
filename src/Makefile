@@ -1,5 +1,7 @@
 include ../Makefile.conf
 
+LD?=$(CC)
+
 ETPAN_IN?=$(HOME)
 
 ifeq ($(BUILD_ON),Darwin)
@@ -9,8 +11,7 @@ TARGET?=libpEpEngine.dylib
 MACOSX_VERSION_MIN=10.6
 LIBGPGME?=libgpgme.dylib
 CC?=clang -std=c99 -pthread
-LD?=clang
-CFLAGS?= -I$(ETPAN_IN)/include -I/opt/local/include $(OPTIMIZE) -pedantic \
+CFLAGS?= -I$(ETPAN_IN)/include -I/opt/local/include -pedantic \
 	-DSYSTEM_DB=\"$(SYSTEM_DB)\" -I../asn.1 $(EXTRAMACROS)
 LDFLAGS?= -lc -shared -arch x86_64 \
 	-L$(ETPAN_IN)/lib -L/usr/lib -L/opt/local/lib -letpan -lsqlite3 -L../asn.1 -lasn1 -lz -liconv
@@ -25,7 +26,7 @@ ifeq ($(BUILD_FOR),Linux)
 TARGET=libpEpEngine.so
 LIBGPGME?=libgpgme.so.11
 CC=gcc -std=c99
-CFLAGS?= -I$(ETPAN_IN)/include $(OPTIMIZE) -fPIC -pedantic -DSYSTEM_DB=\"$(SYSTEM_DB)\" \
+CFLAGS?= -I$(ETPAN_IN)/include -fPIC -pedantic -DSYSTEM_DB=\"$(SYSTEM_DB)\" \
 	-DSQLITE_THREADSAFE=1 -D_GNU_SOURCE -I../asn.1 $(EXTRAMACROS)
 LDFLAGS?= -L$(ETPAN_IN)/lib -shared -lc -ldl -letpan -lpthread -L../asn.1 -lasn1 -luuid
 

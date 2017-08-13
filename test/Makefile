@@ -3,12 +3,12 @@
 # see LICENSE.txt
 
 HERE := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+LD?=$(CXX)
 
 include ../Makefile.conf
 
 CC?=g++ -std=gnu++11 -pthread
 CXX?=g++ -std=gnu++11 -pthread
-LD?=$(CXX)
 LDFLAGS?=-L$(HOME)/lib
 LDLIBS?=-letpan -lpEpEngine -lstdc++ -L../asn.1 -lasn1
 ifeq ($(BUILD_FOR),Linux)

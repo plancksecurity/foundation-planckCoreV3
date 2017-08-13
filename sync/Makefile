@@ -14,10 +14,10 @@ skeleton: .actions
 	touch $@
 
 .actions: devicegroup.fsm gen_actions.ysl2 fsm.yml2 functions.ysl2
-	$(YML2PROC) $(YML_OPTS) -y gen_actions.ysl2 $< -o $@
+	$(YML2_PROC) $(YML2_OPTS) -y gen_actions.ysl2 $< -o $@
 
 .statemachines: devicegroup.fsm gen_statemachine.ysl2 fsm.yml2 functions.ysl2
-	$(YML2PROC) $(YML_OPTS) -y gen_statemachine.ysl2 $< -o $@
+	$(YML2_PROC) $(YML2_OPTS) -y gen_statemachine.ysl2 $< -o $@
 
 .PHONY: clean
 clean:
@@ -26,10 +26,10 @@ clean:
 	../generated/* ../skeletons/* .statemachines .actions .codegen
 
 %.xml: %.fsm
-	$(YML_PATH)/yml2c $< -o $@
+	$(YML2_PATH)/yml2c $< -o $@
 
 %.dot: gen_dot.ysl2 devicegroup.fsm
-	$(YML2PROC) $(YML_OPTS) -y $^
+	$(YML2_PROC) $(YML2_OPTS) -y $^
 
 %.svg: %.dot
 	dot -Tsvg -o $@ $<
