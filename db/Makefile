@@ -1,4 +1,6 @@
-# This file is under GNU General Public License 3.0
+# Copyright 2017, pEp Security SA
+# This file is part of pEpEngine
+# This file may be used under the terms of the GNU General Public License version 3
 # see LICENSE.txt
 
 include ../Makefile.conf
@@ -21,4 +23,4 @@ install: system.db
 
 .PHONY: clean
 clean:
-	-rm -f system.db system.db~
+	rm -f system.db system.db~

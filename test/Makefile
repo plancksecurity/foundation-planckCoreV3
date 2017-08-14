@@ -1,21 +1,18 @@
-
-# This file is under GNU General Public License 3.0
+# Copyright 2017, pEp Security SA
+# This file is part of pEpEngine
+# This file may be used under the terms of the GNU General Public License version 3
 # see LICENSE.txt
 
-HERE := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-LD?=$(CXX)
+HERE:=$(CURDIR)
 
 include ../Makefile.conf
 
-CC?=g++ -std=gnu++11 -pthread
-CXX?=g++ -std=gnu++11 -pthread
-LDFLAGS?=-L$(HOME)/lib
-LDLIBS?=-letpan -lpEpEngine -lstdc++ -L../asn.1 -lasn1
+LD=$(CXX)
+LDFLAGS+= $(ETPAN_LIB) -L../asn.1
+LDLIBS?=-letpan -lpEpEngine -lstdc++ -lasn1
 ifeq ($(BUILD_FOR),Linux)
 	LDLIBS+= -luuid
 endif
-CXXFLAGS?=-std=c++11 -g -O0 -I../src -I../asn.1
-# CXXFLAGS=-O3 -DNDEBUG
 
 ifeq ("$(OPENPGP)","NETPGP")
 	LDLIBS+= -lnetpgp

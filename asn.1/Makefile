@@ -16,7 +16,7 @@ generate: Sync-Protocols.c
 	rm -f converter-sample.c
 
 %.o: %.c %.h
-	$(CC) $(CFLAGS) -I. -I$(ASN1C_INCLUDE) -c $< -o $@
+	$(CC) $(CFLAGS) -I. $(ASN1C_INC) -c $< -o $@
 
 Sync-Protocols.c: pEp.asn1 devicegroup.asn1 protocols.asn1
 	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=PEP.Message $^

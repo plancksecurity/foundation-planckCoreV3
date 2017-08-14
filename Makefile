@@ -1,4 +1,6 @@
-# this file is under GNU General Public License v3.0
+# Copyright 2017, pEp Security SA
+# This file is part of pEpEngine
+# This file may be used under the terms of the GNU General Public License version 3
 # see LICENSE.txt
 
 include Makefile.conf
