@@ -25,7 +25,7 @@ ifeq ($(BUILD_FOR),Linux)
 TARGET=libpEpEngine.so
 LIBGPGME?=libgpgme.so.11
 CC=gcc -std=c99
-CFLAGS?= $(OPTIMIZE) -fPIC -pedantic -DSYSTEM_DB=\"$(SYSTEM_DB)\" \
+CFLAGS?= -I$(ETPAN_IN)/include $(OPTIMIZE) -fPIC -pedantic -DSYSTEM_DB=\"$(SYSTEM_DB)\" \
 	-DSQLITE_THREADSAFE=1 -D_GNU_SOURCE -I../asn.1 $(EXTRAMACROS)
 LDFLAGS?= -L$(ETPAN_IN)/lib -shared -lc -ldl -letpan -lpthread -L../asn.1 -lasn1 -luuid
 

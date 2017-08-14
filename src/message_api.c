@@ -2450,7 +2450,7 @@ DYNAMIC_API PEP_STATUS identity_rating(
     if (!(session && ident && rating))
         return PEP_ILLEGAL_VALUE;
 
-    if (ident->me)
+    if (_identity_me(ident))
         status = _myself(session, ident, false, true);
     else
         status = update_identity(session, ident);
@@ -3064,6 +3064,13 @@ got_rating:
                 goto got_keylist;
             }
         }
+
+        // there was no rcpt fpr, it could be an unencrypted mail
+        if(_rating == PEP_rating_unencrypted) {
+            *rating = _rating;
+            return ADD_TO_LOG(PEP_STATUS_OK);
+        }
+
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
     }
 got_keylist:
