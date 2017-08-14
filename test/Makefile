@@ -7,7 +7,6 @@ HERE:=$(CURDIR)
 
 include ../Makefile.conf
 
-LD=$(CXX)
 LDFLAGS+= $(ETPAN_LIB) -L../asn.1
 LDLIBS?=-letpan -lpEpEngine -lstdc++ -lasn1
 ifeq ($(BUILD_FOR),Linux)
@@ -67,7 +66,7 @@ test: pEpEngineTest test_home_
 	$(TEST_CMD_PFX) ./pEpEngineTest
 
 %_test : %_test.o test_util.o
-	 $(LD) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+	 $(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 %_run : % test_home_
 	$(TEST_CMD_PFX) ./$<

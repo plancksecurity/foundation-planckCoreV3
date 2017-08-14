@@ -15,7 +15,7 @@ ifeq ($(BUILD_ON),Darwin)
         #LDFLAGS+= -L/opt/local/lib
         LDLIBS+= -lsqlite3 -lz -liconv
     else
-        $(error don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
+        $(error I don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
     endif
 else ifeq ($(BUILD_ON),Linux)
     ifeq ($(BUILD_FOR),Linux)
@@ -23,12 +23,11 @@ else ifeq ($(BUILD_ON),Linux)
         CFLAGS+= -DSQLITE_THREADSAFE=1 -D_GNU_SOURCE
         LDLIBS+= -ldl -luuid
     else
-        $(error don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
+        $(error I don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
     endif
 else
-    $(error don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
+    $(error I don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
 endif
-
 
 ifeq ($(OPENPGP),GPG)
     NO_SOURCE=pgp_netpgp.c
@@ -63,9 +62,9 @@ include Makefile.protocols
 -include $(DEPENDS)
 
 $(TARGET): libpEpEngine.a
-	$(LD) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
+	$(CC) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
 
-.PHONY: object
+.PHONY: objects
 objects: $(ALL_OBJECTS)
 
 libpEpEngine.a: $(ALL_OBJECTS)
@@ -85,4 +84,3 @@ install: $(TARGET)
 uninstall:
 	rm -f $(PREFIX)/lib/$(TARGET)
 	rm -rf $(PREFIX)/include/pEp
-
