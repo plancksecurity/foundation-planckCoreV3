@@ -3,6 +3,7 @@
 # This file may be used under the terms of the GNU General Public License version 3
 # see LICENSE.txt
 
+export BUILD_CONFIG:=$(CURDIR)/build-config
 include Makefile.conf
 
 export YML2_PATH

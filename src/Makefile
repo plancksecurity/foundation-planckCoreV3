@@ -50,8 +50,7 @@ ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
 .PHONY: all
 all: $(TARGET)
 
-# FIXME What is this?
-include Makefile.protocols
+-include Makefile.protocols
 
 %.d: %.c
 	@set -e; rm -f $@; \
