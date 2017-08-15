@@ -3,12 +3,12 @@
 # This file may be used under the terms of the GNU General Public License version 3
 # see LICENSE.txt
 
+HERE_REL := $(notdir $(CURDIR))
+
 export BUILD_CONFIG:=$(CURDIR)/build-config
 include Makefile.conf
 
-export YML2_PATH
-
-HERE_REL := $(notdir $(CURDIR))
+export YML_PATH=$(YML2_PATH)
 
 .PHONY: all
 all:
