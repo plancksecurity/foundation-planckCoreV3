@@ -24,7 +24,7 @@ skeleton: .actions
 .PHONY: clean
 clean:
 	rm -f *.xml *.xsl *.dot *.svg \
-	$(pathsub generated/%, ../src/% $(wildcard generated/*.*)) \
+	$(patsubst generated/%,../src/%,$(wildcard generated/*.*)) \
 	../generated/* ../skeletons/* .statemachines .actions .codegen
 
 %.xml: %.fsm

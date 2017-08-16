@@ -5,7 +5,6 @@
 
 HERE_REL := $(notdir $(CURDIR))
 
-export BUILD_CONFIG:=$(CURDIR)/build-config
 include Makefile.conf
 
 export YML_PATH=$(YML2_PATH)
