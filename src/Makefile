@@ -58,7 +58,12 @@ all: $(TARGET)
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
--include $(DEPENDS)
+# If only the goal 'clean' is given, do not include the generated 'X.d' files.
+ifneq ($(MAKECMDGOALS),clean)
+    -include $(DEPENDS)
+endif
+
+
 
 $(TARGET): libpEpEngine.a
 	$(CC) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
