@@ -10,8 +10,8 @@ db: system.db
 
 DICOS = $(wildcard *.csv)
 
+# The 'mv' keeps a backup db around
 system.db: create_system_db.sql $(DICOS)
-	# Keep a backup db around
 	-mv -f $@ $@~ 
 	sqlite3 -batch $@ < $<
 	for c in $(DICOS) ; do echo "$$c" ; echo .import "$$c" wordlist | sqlite3 -batch -csv $@ ; done
