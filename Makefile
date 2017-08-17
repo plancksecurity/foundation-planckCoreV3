@@ -7,6 +7,7 @@ HERE_REL := $(notdir $(CURDIR))
 
 include Makefile.conf
 
+# YML_PATH is needed in the environment of every call to a program of the YML2 distribution
 export YML_PATH=$(YML2_PATH)
 
 .PHONY: all

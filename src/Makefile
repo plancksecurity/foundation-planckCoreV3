@@ -32,8 +32,8 @@ endif
 ifeq ($(OPENPGP),GPG)
     NO_SOURCE=pgp_netpgp.c
     CFLAGS+= -DUSE_GPG $(GPGME_INC) -DLIBGPGME=\"$(LIBGPGME)\"
-    # FIXME Why was -lgpgme commented out?
     LDFLAGS+= $(GPGME_LIB)
+    # No extra LDLIBS are needed here, because GPGME is dynamically loaded
 else ifeq ($(OPENPGP),NETPGP)
     NO_SOURCE=pgp_gpg.c
     CFLAGS+= -DUSE_NETPGP $(NETGPG_INC)
@@ -58,12 +58,10 @@ all: $(TARGET)
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
-# If only the goal 'clean' is given, do not include the generated 'X.d' files.
+# If only the goal 'clean' is given, do not generate and include the '%.d' files.
 ifneq ($(MAKECMDGOALS),clean)
     -include $(DEPENDS)
 endif
-
-
 
 $(TARGET): libpEpEngine.a
 	$(CC) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
