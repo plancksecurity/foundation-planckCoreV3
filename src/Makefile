@@ -11,7 +11,7 @@ LDLIBS+= -lc -lasn1 -letpan
 
 ifeq ($(BUILD_ON),Darwin)
     ifeq ($(BUILD_FOR),Darwin)
-        #CFLAGS+= -I/opt/local/include
+        CFLAGS+= -DSQLITE_THREADSAFE=1
         #LDFLAGS+= -L/opt/local/lib
         LDLIBS+= -lsqlite3 -lz -liconv
     else
@@ -19,7 +19,6 @@ ifeq ($(BUILD_ON),Darwin)
     endif
 else ifeq ($(BUILD_ON),Linux)
     ifeq ($(BUILD_FOR),Linux)
-        # FIXME Find out if SQLITE_THREADSAFE is needed for both platform.
         CFLAGS+= -DSQLITE_THREADSAFE=1 -D_GNU_SOURCE
         LDLIBS+= -ldl -luuid
     else
