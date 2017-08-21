@@ -25,7 +25,8 @@ skeleton: .actions
 clean:
 	rm -f *.xml *.xsl *.dot *.svg \
 	$(patsubst generated/%,../src/%,$(wildcard generated/*.*)) \
-	../generated/* ../skeletons/* .statemachines .actions .codegen
+	../generated/* ../skeletons/* .statemachines .actions .codegen \
+	generated/Makefile.protocols
 
 %.xml: %.fsm
 	$(YML2_PATH)/yml2c $< -o $@
