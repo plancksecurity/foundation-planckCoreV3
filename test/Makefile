@@ -20,7 +20,7 @@ ifeq ($(BUILD_FOR),Linux)
     LDLIBS+= -luuid
 endif
 
-ifeq ("$(OPENPGP)","NETPGP")
+ifeq ($(OPENPGP),NETPGP)
     LDLIBS+= -lnetpgp
 endif
 
@@ -32,7 +32,7 @@ else
     LLDB_BIN=lldb
 endif
 
-# Create a list of the extra library paths for the loader. We do not assume that the engine and its dependencies are not installed for testing.
+# Create a list of the extra library paths for the loader. I do not assume that the engine (and its dependencies) are installed for testing.
 # Note that += can not be used here, as it changes the amount of whitespace
 EXTRA_LIB_PATHS=../src:
 ifdef ETPAN_LIB
