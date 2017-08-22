@@ -165,3 +165,13 @@ DYNAMIC_API int bloblist_length(const bloblist_t *bloblist)
 
     return len;
 }
+
+DYNAMIC_API void set_blob_content_disposition(bloblist_t* blob, 
+                                              content_disposition_type disposition,
+                                              char* extension_typename,
+                                              stringpair_list_t* dispo_params) {
+
+    blob->disposition_extention_type = extension_typename;
+    blob->disposition = disposition;
+    blob->disposition_parms = dispo_params;
+}

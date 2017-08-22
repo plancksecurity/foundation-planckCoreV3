@@ -1530,13 +1530,3 @@ pep_error:
 
     return status;
 }
-
-DYNAMIC_API void set_blob_content_disposition(bloblist_t* blob, 
-                                              content_disposition_type disposition,
-                                              char* extension_typename,
-                                              stringpair_list_t dispo_params) {
-
-    blob->disposition_extention_type = extension_typename;
-    blob->content_disposition_type = disposition;
-    blob->disposition_parms = dispo_params;
-}

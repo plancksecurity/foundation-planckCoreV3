@@ -4,12 +4,18 @@
 #pragma once
 
 #include "dynamic_api.h"
-#include "mime.h"
+#include "stringpair.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+typedef enum {
+    PEP_CONTENT_DISP_ATTACHMENT = 0,
+    PEP_CONTENT_DISP_INLINE = 1,
+    PEP_CONTENT_DISP_EXTENSION = 2,
+    PEP_CONTENT_DISP_NONE = -1      // must be affirmatively set
+} content_disposition_type;
 
 typedef struct _bloblist_t {
     char *value;                    // blob
@@ -100,6 +106,27 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
 //      length of bloblist in number of elements
 
 DYNAMIC_API int bloblist_length(const bloblist_t *bloblist);
+
+// set_blob_content_disposition() - set blob content disposition and parameters
+//                                  when necessary
+//
+//  parameters:
+//      blob (in)               bloblist struct to change disposition for
+//      disposition (in)        disposition type (see enum)
+//      extension_typename      if disposition type is an extension type,
+//                              the name for the type goes here, NULL otherwise
+//                              OWNERSHIP GOES TO BLOBLIST
+//      dispo_params(in)        type/value pairs for disposition parameters,
+//                              if any exist, otherwise NULL.
+//                              OWNERSHIP GOES TO BLOBLIST
+
+DYNAMIC_API void set_blob_content_disposition(bloblist_t* blob, 
+                                              content_disposition_type disposition,
+                                              char* extension_typename,
+                                              stringpair_list_t* dispo_params);
+
+
+
 
 #ifdef __cplusplus
 }
