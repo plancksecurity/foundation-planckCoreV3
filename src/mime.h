@@ -9,6 +9,18 @@
 extern "C" {
 #endif
 
+typedef enum {
+    PEP_CONTENT_DISP_ATTACHMENT = 0,
+    PEP_CONTENT_DISP_INLINE = 1,
+    PEP_CONTENT_DISP_EXTENSION = 2,
+    PEP_CONTENT_DISP_NONE = -1      // must be affirmatively set
+} content_disposition_type;
+
+DYNAMIC_API void set_blob_content_disposition(bloblist_t* blob, 
+                                              content_disposition_type disposition,
+                                              const char* extension_typename,
+                                              stringpair_list_t dispo_params);
+
 
 // is_PGP_message_text() - determine if text encodes a PGP message
 //
@@ -78,4 +90,3 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
 #ifdef __cplusplus
 }
 #endif
-

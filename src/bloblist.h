@@ -4,6 +4,7 @@
 #pragma once
 
 #include "dynamic_api.h"
+#include "mime.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,6 +18,12 @@ typedef struct _bloblist_t {
                                     // NULL if unknown
     char *filename;                // UTF-8 string of file name of blob or
                                     // NULL if unknown
+    content_disposition_type disposition; // default is attachment when allocated
+                                          // (see mime.h and RFC2183)
+    char* disposition_extention_type;     // NULL unless the disposition type is
+                                          // PEP_CONTENT_DISP_EXTENSION - then this
+                                          // is the type name
+    stringpair_list_t* disposition_parms;  // default: NULL (see RFC2183))
     struct _bloblist_t *next;
 } bloblist_t;
 
@@ -97,4 +104,3 @@ DYNAMIC_API int bloblist_length(const bloblist_t *bloblist);
 #ifdef __cplusplus
 }
 #endif
-
