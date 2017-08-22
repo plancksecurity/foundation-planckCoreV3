@@ -7,7 +7,7 @@ include ../Makefile.conf
 
 CFLAGS+= $(ETPAN_INC) -I../asn.1 -DSYSTEM_DB=\"$(SYSTEM_DB)\" $(EXTRA_MACROS)
 LDFLAGS+= $(ETPAN_LIB) -L../asn.1 -shared
-LDLIBS+= -lc -lasn1 -letpan 
+LDLIBS+= -lc -letpan -lasn1
 
 ifeq ($(BUILD_ON),Darwin)
     ifeq ($(BUILD_FOR),Darwin)
