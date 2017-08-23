@@ -11,7 +11,7 @@ include Makefile.conf
 export YML_PATH=$(YML2_PATH)
 
 .PHONY: all
-all:
+all: _platform_override_info
 	$(MAKE) -C asn.1 generate
 	$(MAKE) -C asn.1
 	$(MAKE) -C sync
@@ -51,3 +51,13 @@ package: clean
 .PHONY: db
 db:
 	$(MAKE) -C db db
+
+.PHONY: _platform_override
+ifdef PLATFORM_OVERRIDE
+_platform_override_info:
+	@echo "================================================"
+	@echo "PLATFORM_OVERRIDE is set to '$(PLATFORM_OVERRIDE)'."
+	@echo "================================================"
+else
+_platform_override_info:
+endif
