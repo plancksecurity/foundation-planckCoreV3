@@ -78,7 +78,7 @@ test: $(TARGET) test_home_
 	$(TEST_CMD_PFX) ./$<
 
 %_test : %_test.o test_util.o
-	 $(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 %_run : % test_home_
 	$(TEST_CMD_PFX) ./$<
@@ -94,6 +94,9 @@ test: $(TARGET) test_home_
 
 .PHONY: unit_tests
 unit_tests: $(UNIT_TESTS) $(UNIT_TESTS_RUN)
+
+.PHONY: compile
+compile: $(UNIT_TESTS) $(TARGET)
 
 # Installs the engine, not the test binaries
 .PHONY: install
