@@ -56,7 +56,11 @@
 #include <stdio.h>
 #include <ctype.h>
 
+#ifdef SQLITE3_FROM_OS
+#include <sqlite3.h>
+#else
 #include "sqlite3.h"
+#endif
 
 #define _EXPORT_PEP_ENGINE_DLL
 #include "pEpEngine.h"
