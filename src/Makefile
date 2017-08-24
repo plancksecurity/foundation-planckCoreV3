@@ -8,6 +8,7 @@ include ../Makefile.conf
 CFLAGS+= $(ETPAN_INC) -I../asn.1 -DSYSTEM_DB=\"$(SYSTEM_DB)\" $(EXTRA_MACROS)
 LDFLAGS+= $(ETPAN_LIB) -L../asn.1 -shared
 LDLIBS+= -lc -letpan -lasn1
+NO_SOURCE=
 
 ifeq ($(BUILD_ON),Darwin)
     ifeq ($(BUILD_FOR),Darwin)
@@ -28,13 +29,18 @@ else
     $(error I don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
 endif
 
+ifdef SQLITE3_FROM_OS
+    NO_SOURCE+= sqlite3.c
+    CFLAGS+= -DSQLITE3_FROM_OS
+endif
+
 ifeq ($(OPENPGP),GPG)
-    NO_SOURCE=pgp_netpgp.c
+    NO_SOURCE+= pgp_netpgp.c
     CFLAGS+= -DUSE_GPG $(GPGME_INC) -DLIBGPGME=\"$(LIBGPGME)\"
     LDFLAGS+= $(GPGME_LIB)
     # No extra LDLIBS are needed here, because GPGME is dynamically loaded
 else ifeq ($(OPENPGP),NETPGP)
-    NO_SOURCE=pgp_gpg.c
+    NO_SOURCE+= pgp_gpg.c
     CFLAGS+= -DUSE_NETPGP $(NETGPG_INC)
     LDFLAGS+= $(NETGPG_LIB)
     LDLIBS+= -lnetpgp -lcurl
@@ -42,7 +48,7 @@ else
     $(error Unknown OpenPGP library: $(OPENPGP))
 endif
 
-ALL_SOURCE=$(subst $(NO_SOURCE),,$(wildcard *.c))
+ALL_SOURCE=$(filter-out $(NO_SOURCE),$(wildcard *.c))
 DEPENDS=$(subst .c,.d,$(ALL_SOURCE))
 ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
 
