@@ -13,8 +13,7 @@ extern "C" {
 typedef enum {
     PEP_CONTENT_DISP_ATTACHMENT = 0,
     PEP_CONTENT_DISP_INLINE = 1,
-    PEP_CONTENT_DISP_EXTENSION = 2,
-    PEP_CONTENT_DISP_NONE = -1      // must be affirmatively set
+    PEP_CONTENT_DISP_OTHER = -1      // must be affirmatively set
 } content_disposition_type;
 
 typedef struct _bloblist_t {
