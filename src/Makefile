@@ -14,6 +14,7 @@ ifeq ($(BUILD_ON),Darwin)
     ifeq ($(BUILD_FOR),Darwin)
         CFLAGS+= -DSQLITE_THREADSAFE=1
         #LDFLAGS+= -L/opt/local/lib
+        # FIXME Probably -lsqlite3 should not be here, if SQLITE3_FROM_OS is empty
         LDLIBS+= -lsqlite3 -lz -liconv
     else
         $(error I don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
