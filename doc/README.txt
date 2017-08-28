@@ -1,68 +1,46 @@
 # this file is under Creative Commons License 3.0 cc-by-sa
 
-p≡p Engine
-==========
-
-0. What it is
--------------
-
-The p≡p engine is a Free Software library encapsulating implementations of:
-
-- Key Management
-
-  Key Management in p≡p engine is based on GnuPG key chains (NetPGP on iOS).
-  Keys are stored in an OpenPGP compatbile format and can be used for different
-  crypto implementations.
-
-- Trust Rating
-
-  p≡p engine is sporting a two phase trust rating system. In phase one there is
-  a rating based on channel, crypto and key security named “comm_types”. In
-  phase 2 these are mapped to user representable values which have attached
-  colors to present them in traffic light semantics.
-
-- Abstract Crypto API
-
-  The Abstract Crypto API is providing functions to encrypt and decrypt data or
-  full messages without requiring an application programmer to understand the
-  different formats and standards.
-
-- Message Transports
-
-  p≡p engine will sport a growing list of Message Transports to support any
-  widespread text messaging system including E-Mail, SMS, XMPP and many more.
-
-p≡p engine is written in C99. It is not meant to be used in application code
-directly. Instead, p≡p engine is coming together with a list of software
-adapters for a variety of programming languages and development environments.
-
-p≡p engine is under Gnu General Public License v3. If you want to use it under
-a different license, please contact mailto:council@pep.foundation.
-
-
 1. Dependencies
 ---------------
 
 p≡p engine is depending on the following FOSS libraries:
 
-* libetpan, see https://github.com/fdik/libetpan
+* a fork of libetpan, see https://github.com/fdik/libetpan
        git clone https://github.com/fdik/libetpan
 
 * zlib, see http://zlib.net/
+Oh yeah? Where?
 
 * OpenSSL, see http://openssl.org/
+Oh yeah? Where?
 
 * iconv, see http://www.gnu.org/software/libiconv/
 
 * Cyrus SASL, see http://cyrusimap.org/
+Oh yeah? Where?
 
-* GnuPG via GPGME, version 1.6.0 or newer, see https://gnupg.org/
+* One of the following OpenPGP implementations:
+  * GnuPG via GPGME, version 1.6.0 or newer, see https://gnupg.org/
+  * NetPGP/p≡p, see https://cacert.pep.foundation/dev/repos/netpgp-et/
 
-* NetPGP/p≡p, see https://cacert.pep.foundation/dev/repos/netpgp-et/
+* libcurl
+Maybe on iOS?
+
+SQlite3
+
+
+
+
+compile-time dependencies:
 
 * Asn1c, download from https://lionet.info/soft/asn1c-0.9.27.tar.gz . Debian 8's v0.9.24 does not work. Debian 9's v0.9.27 generates non-POSIX code, that will cause issues when the engine is compiled with '-std=c99'. Thus, use v0.9.28 for best results.
 
 * yml2, which needs lxml (where to get?)
+
+* One of the following build systems
+  * GNU make
+  * Visual Studio 2015
+
 
 2. Building p≡p engine
 ----------------------
