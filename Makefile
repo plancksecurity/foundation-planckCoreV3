@@ -1,27 +1,33 @@
-# this file is under GNU General Public License v3.0
+# Copyright 2017, pEp Foundation
+# This file is part of pEpEngine
+# This file may be used under the terms of the GNU General Public License version 3
 # see LICENSE.txt
+
+HERE_REL := $(notdir $(CURDIR))
 
 include Makefile.conf
 
-# add it to the environment of all executed programs:
-export YML_PATH
+# YML_PATH is needed in the environment of every call to a program of the YML2 distribution
+export YML_PATH=$(YML2_PATH)
 
-
-all:
+.PHONY: all
+all: _platform_override_info
 	$(MAKE) -C asn.1 generate
 	$(MAKE) -C asn.1
 	$(MAKE) -C sync
 	$(MAKE) -C src all
 
-.PHONY: clean build_test test package install uninstall db
-
+.PHONY: install
 install: all
 	$(MAKE) -C src install
 	$(MAKE) -C asn.1 install
 
+.PHONY: uninstall
 uninstall:
 	$(MAKE) -C src uninstall
+	$(MAKE) -C asn.1 uninstall
 
+.PHONY: clean
 clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C test clean
@@ -29,26 +35,29 @@ clean:
 	$(MAKE) -C sync clean
 	$(MAKE) -C asn.1 clean
 
+.PHONY: test
 test: all
 	$(MAKE) -C test test
 	$(MAKE) -C test unit_tests
 
+.PHONY: unit_tests
 unit_tests: all
 	$(MAKE) -C test unit_tests
 
+.PHONY: package
 package: clean
-	cd .. ; COPYFILE_DISABLE=true tar cjf pEpEngine.tar.bz2 pEpEngine
+	cd .. ; COPYFILE_DISABLE=true tar cjf pEpEngine.tar.bz2 "$(HERE_REL)"
 
+.PHONY: db
 db:
 	$(MAKE) -C db db
 
-windist:
-ifneq ($(BUILD_FOR),Windoze)
-	@echo use BUILD_FOR=Windoze \(did you forget -e ?\)
+.PHONY: _platform_override
+ifdef PLATFORM_OVERRIDE
+_platform_override_info:
+	@echo "================================================"
+	@echo "PLATFORM_OVERRIDE is set to '$(PLATFORM_OVERRIDE)'."
+	@echo "================================================"
 else
-	make clean
-	$(MAKE) all
-	$(MAKE) -C test all
-	zip -j pEpEngine-dist.zip src/pEpEngine.h src/keymanagement.h src/pEpEngine.dll src/pEpEngine.def test/pEpEngineTest.exe test/*.asc test/*.key db/*.db test/*.txt test/*.asc src/*.sql
+_platform_override_info:
 endif
-

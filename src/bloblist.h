@@ -25,10 +25,6 @@ typedef struct _bloblist_t {
                                     // NULL if unknown
     content_disposition_type disposition; // default is attachment when allocated
                                           // (see mime.h and RFC2183)
-    char* disposition_extention_type;     // NULL unless the disposition type is
-                                          // PEP_CONTENT_DISP_EXTENSION - then this
-                                          // is the type name
-    stringpair_list_t* disposition_parms;  // default: NULL (see RFC2183))
     struct _bloblist_t *next;
 } bloblist_t;
 
@@ -112,17 +108,9 @@ DYNAMIC_API int bloblist_length(const bloblist_t *bloblist);
 //  parameters:
 //      blob (in)               bloblist struct to change disposition for
 //      disposition (in)        disposition type (see enum)
-//      extension_typename      if disposition type is an extension type,
-//                              the name for the type goes here, NULL otherwise
-//                              OWNERSHIP GOES TO BLOBLIST
-//      dispo_params(in)        type/value pairs for disposition parameters,
-//                              if any exist, otherwise NULL.
-//                              OWNERSHIP GOES TO BLOBLIST
 
-DYNAMIC_API void set_blob_content_disposition(bloblist_t* blob, 
-                                              content_disposition_type disposition,
-                                              char* extension_typename,
-                                              stringpair_list_t* dispo_params);
+DYNAMIC_API void set_blob_disposition(bloblist_t* blob, 
+                                              content_disposition_type disposition);
 
 
 

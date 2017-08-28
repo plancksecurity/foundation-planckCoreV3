@@ -60,8 +60,7 @@ p≡p engine is depending on the following FOSS libraries:
 
 * NetPGP/p≡p, see https://cacert.pep.foundation/dev/repos/netpgp-et/
 
-* Asn1c, download from https://lionet.info/soft/asn1c-0.9.27.tar.gz
-       (Debian's version 0.9.24 does not work)
+* Asn1c, download from https://lionet.info/soft/asn1c-0.9.27.tar.gz . Debian 8's v0.9.24 does not work. Debian 9's v0.9.27 generates non-POSIX code, that will cause issues when the engine is compiled with '-std=c99'. Thus, use v0.9.28 for best results.
 
 * yml2, which needs lxml (where to get?)
 
