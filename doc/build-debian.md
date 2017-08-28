@@ -95,7 +95,7 @@ make all
 make db
 ~~~
 
-The unit tests can be run without the engine library being installed, however the `system.db` must be installed:
+The unit tests can be run without the engine library being installed, however `system.db` must be installed:
 
 ~~~
 make -C db install

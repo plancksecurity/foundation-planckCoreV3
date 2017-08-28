@@ -32,10 +32,15 @@ The p≡p Engine depends on the following projects:
 
 # The pEp Engine's databases
 The p≡p Engine uses two databases:
-`~/.pEp_management` (on *NIX) or `%LOCALAPPDATA%\pEp\management.db` on Windows, and `/usr/local/share/system.db` (on *NIX) or `%ALLUSERSPROFILE%\pEp\system.db`.
-The latter contains the Trustwords databases.
 
-The management db is created by the first call of init() of p≡p Engine.
+- the management database
+  - `~/.pEp_management` on \*NIX
+  - `%LOCALAPPDATA%\pEp\management.db` on Windows
+- the Trustword database
+  - `/usr/local/share/system.db` on \*NIX
+  - `%ALLUSERSPROFILE%\pEp\system.db` on Windows
+
+The management db is created by the first call of `init()` of p≡p Engine.
 It does not need to be created manually.
 `system.db` is created by using the DDL in `db/create_system_db.sql`; the database content is created by `db/dic2csv.py` out of hunspell's dictionary packages (or something similar) and then imported using `sqlite3`'s `.import` command.
 Dictionary files for different languages are part of the p≡p Engine source distribution.

@@ -26,7 +26,8 @@ sudo port install asn1c
 sudo port install gpgme
 ~~~
 
-FIXME Are `zlib openssl cyrus-sasl2` needed? They were in an older revision of the instructions
+FIXME Are `zlib openssl cyrus-sasl2` needed?
+They were present in an older revision of the build instructions.
 
 Ensure that `python` is Python 2.7:
 
@@ -109,7 +110,7 @@ make all
 make db
 ~~~
 
-The unit tests can be run without the engine library being installed, however the `system.db` must be installed:
+The unit tests can be run without the engine library being installed, however `system.db` must be installed:
 
 ~~~
 make -C db install
