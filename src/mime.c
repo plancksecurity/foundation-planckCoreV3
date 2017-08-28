@@ -166,7 +166,7 @@ static PEP_STATUS mime_html_text(
 
     pEp_rid_list_t* resource = new_rid_node(PEP_RID_FILENAME, "msg.txt");
     
-    submime = get_text_part(resource, "text/plain", plaintext, strlen(plaintext),
+    submime = get_text_part(NULL, "text/plain", plaintext, strlen(plaintext),
             MAILMIME_MECHANISM_QUOTED_PRINTABLE);
     free_rid_list(resource);
     resource = NULL;
@@ -209,8 +209,8 @@ static PEP_STATUS mime_html_text(
         top_level_html_mime = mime;
     }
 
-    resource = new_rid_node(PEP_RID_FILENAME, "msg.html");
-    submime = get_text_part(resource, "text/html", htmltext, strlen(htmltext),
+//    resource = new_rid_node(PEP_RID_FILENAME, "msg.html");
+    submime = get_text_part(NULL, "text/html", htmltext, strlen(htmltext),
             MAILMIME_MECHANISM_QUOTED_PRINTABLE);
     free_rid_list(resource);
     resource = NULL;
