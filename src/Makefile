@@ -13,8 +13,7 @@ NO_SOURCE=
 ifeq ($(BUILD_ON),Darwin)
     ifeq ($(BUILD_FOR),Darwin)
         CFLAGS+= -DSQLITE_THREADSAFE=1
-        #LDFLAGS+= -L/opt/local/lib
-        LDLIBS+= -lsqlite3 -lz -liconv
+        LDLIBS+= -lz -liconv
     else
         $(error I don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
     endif
@@ -32,6 +31,7 @@ endif
 ifdef SQLITE3_FROM_OS
     NO_SOURCE+= sqlite3.c
     CFLAGS+= -DSQLITE3_FROM_OS
+    LDLIBS+= -lsqlite3
 endif
 
 ifeq ($(OPENPGP),GPG)

@@ -24,6 +24,10 @@ ifeq ($(OPENPGP),NETPGP)
     LDLIBS+= -lnetpgp
 endif
 
+ifdef SQLITE3_FROM_OS
+    LDLIBS+= -lsqlite3
+endif
+
 ifeq ($(shell uname),Darwin)
     LIBPATH=DYLD_LIBRARY_PATH
     LLDB_BIN=/Applications/Xcode.app/Contents/Developer/usr/bin/lldb
