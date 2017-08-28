@@ -14,7 +14,7 @@ TEST_HOME=$(HERE)/test_home
 TEST_GNUPGHOME=$(TEST_HOME)/.gnupg
 
 LDFLAGS+= $(ETPAN_LIB) -L../asn.1 -L../src
-LDLIBS+= -letpan -lpEpEngine -lstdc++ -lasn1 -lsqlite3
+LDLIBS+= -letpan -lpEpEngine -lstdc++ -lasn1
 
 ifeq ($(BUILD_FOR),Linux)
     LDLIBS+= -luuid
@@ -22,6 +22,10 @@ endif
 
 ifeq ($(OPENPGP),NETPGP)
     LDLIBS+= -lnetpgp
+endif
+
+ifdef SQLITE3_FROM_OS
+    LDLIBS+= -lsqlite3
 endif
 
 ifeq ($(shell uname),Darwin)
