@@ -1,0 +1,111 @@
+<!-- Copyright 2015-2017, pEp foundation, Switzerland
+This file is part of the pEp Engine
+This file may be used under the terms of the Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) License
+See CC_BY-SA.txt -->
+
+# Build instructions for Debian 9
+
+# Installing packaged dependencies
+
+~~~
+# general
+apt install -y ca-cacert mercurial
+# YML2
+apt install -y python-lxml
+# libetpan
+apt install -y git build-essential automake libtool
+# asn1c
+apt install -y git build-essential automake libtool
+# engine
+apt install -y uuid-dev libgpgme11-dev libsqlite3-dev sqlite3
+~~~
+
+# Installing unpackaged dependencies
+## YML2
+
+~~~
+mkdir -p ~/code/yml2
+hg clone https://cacert.pep.foundation/dev/repos/yml2/ ~/code/yml2
+~~~
+
+## libetpan
+pEp Engine requires libetpan with a set of patches that have not been upstreamed yet.
+
+~~~
+mkdir -p ~/code/libetpan
+git clone https://github.com/fdik/libetpan ~/code/libetpan
+cd ~/code/libetpan
+mkdir ~/code/libetpan/build
+./autogen.sh --prefix="$HOME/code/libetpan/build"
+make
+make install
+~~~
+
+## asn1c
+
+~~~
+mkdir -p ~/code/asn1c
+git clone git://github.com/vlm/asn1c.git ~/code/asn1c
+cd ~/code/asn1c
+git checkout tags/v0.9.28 -b pep-engine
+autoreconf -iv
+mkdir ~/code/asn1c/build
+./configure --prefix="$HOME/code/asn1c/build"
+make
+make install
+~~~
+
+# pEp Engine
+
+~~~
+mkdir -p ~/code/pep-engine
+hg clone https://cacert.pep.foundation/dev/repos/pEpEngine/ ~/code/pep-engine
+cd ~/code/pep-engine
+mkdir ~/code/pep-engine/build
+~~~
+
+For an explanation of the mechanics of `PLATFORM_OVERRIDE`, see the inline comments in `Makefile.conf`.
+In this guide, the platform-specific configuration will be called `local`.
+The installation directory will be a subdirectory of the repository.
+This is useful for testing only.
+
+~~~
+export PLATFORM_OVERRIDE=local
+~~~
+
+`./build-config/local.conf`:
+
+~~~
+PREFIX=$(HOME)/code/pep-engine/build
+SYSTEM_DB=$(PREFIX)/share/pEp/system.db
+
+YML2_PATH=$(HOME)/code/yml2
+
+ETPAN_LIB=-L$(HOME)/code/libetpan/build/lib
+ETPAN_INC=-I$(HOME)/code/libetpan/build/include
+
+ASN1C=$(HOME)/code/asn1c/build/bin/asn1c
+ASN1C_INC=-I$(HOME)/code/asn1c/build/share
+~~~
+
+The engine is built as follows:
+
+~~~
+make all
+make db
+~~~
+
+The unit tests can be run without the engine library being installed, however `system.db` must be installed:
+
+~~~
+make -C db install
+~~~
+
+Since `system.db` rarely changes, its installation is not needed for every build.
+
+Tests can be compiled and executed with the following commands:
+
+~~~
+make -C test compile
+make test
+~~~
