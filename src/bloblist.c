@@ -137,6 +137,10 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
                 free(bloblist);
                 return NULL;
             }
+            /* Default behaviour, can be overwritten post-allocation with
+               set_blob_content_disposition */
+            if (strstr(filename, "cid://") == filename)
+                bloblist->disposition = PEP_CONTENT_DISP_INLINE;
         }
 
         bloblist->value = blob;
