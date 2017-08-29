@@ -26,9 +26,6 @@ sudo port install asn1c
 sudo port install gpgme
 ~~~
 
-FIXME Are `zlib openssl cyrus-sasl2` needed?
-They were present in an older revision of the build instructions.
-
 Ensure that `python` is Python 2.7:
 
 ~~~
@@ -109,6 +106,18 @@ The engine is built as follows:
 make all
 make db
 ~~~
+
+If your build fails with an error message similar to the following:
+
+~~~
+  File "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/locale.py", line 477, in _parse_localename
+    raise ValueError, 'unknown locale: %s' % localename
+ValueError: unknown locale: UTF-8
+~~~
+
+or any other locale-related Python error, make sure Python does not have any locale-related environment variables set.
+Usually, `unset LC_CTYPE` is sufficient to take care of the problem, but it depends on your macOS's regional and language settings and which terminal emulator you use.
+This is a bug in Python, see [https://bugs.python.org/issue18378#msg215215](https://bugs.python.org/issue18378#msg215215).
 
 The unit tests can be run without the engine library being installed, however `system.db` must be installed:
 
