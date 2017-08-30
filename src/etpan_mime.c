@@ -301,6 +301,11 @@ struct mailmime * get_file_part(
         switch (resource->rid_type) {
             case PEP_RID_CID:
                 content_id = strdup(resource->rid);
+                disposition =
+                    mailmime_disposition_new_with_data(MAILMIME_DISPOSITION_TYPE_INLINE,
+                                                       NULL, NULL, NULL, NULL, (size_t) -1);
+                    if (disposition == NULL)
+                        goto enomem;
                 break;
             case PEP_RID_FILENAME:
             default:
