@@ -9,6 +9,40 @@
 
 #include "bloblist.h"
 
+static bool set_blob_data(bloblist_t* bloblist, char* blob, size_t size, const char* mime_type,
+                          const char* filename) {
+    
+    if (!bloblist)
+        return false;
+        
+    if (mime_type) {
+       bloblist->mime_type = strdup(mime_type);
+       if (bloblist->mime_type == NULL) {
+           return false;
+       }
+    }
+    
+    if (filename) {
+       bloblist->filename = strdup(filename);
+       if (bloblist->filename == NULL) {
+           free(bloblist->mime_type);
+           return false;
+       }
+       /* Default behaviour, can be overwritten post-allocation with
+          set_blob_content_disposition */
+       if (strstr(filename, "cid://") == filename)
+           bloblist->disposition = PEP_CONTENT_DISP_INLINE;
+                        
+    }               
+    
+    if (blob) {
+        bloblist->value = blob;
+        bloblist->size = size;
+    }
+    
+    return true;
+}
+
 DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_type,
         const char *filename)
 {
@@ -17,26 +51,9 @@ DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_t
     if (bloblist == NULL)
         return NULL;
 
-    if (mime_type) {
-        bloblist->mime_type = strdup(mime_type);
-        if (bloblist->mime_type == NULL) {
-            free(bloblist);
-            return NULL;
-        }
-    }
-
-    if (filename) {
-        bloblist->filename = strdup(filename);
-        if (bloblist->filename == NULL) {
-            free(bloblist->mime_type);
-            free(bloblist);
-            return NULL;
-        }
-    }
-
-    if (blob) {
-        bloblist->value = blob;
-        bloblist->size = size;
+    if (!set_blob_data(bloblist, blob, size, mime_type, filename)) {
+        free(bloblist);
+        bloblist = NULL;
     }
 
     return bloblist;
@@ -118,25 +135,11 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
     if (bloblist->value == NULL) { // empty list
         if (bloblist->next != NULL)
             return NULL; // invalid list
-
-        if (mime_type) {
-            bloblist->mime_type = strdup(mime_type);
-            if (bloblist->mime_type == NULL) {
-                free(bloblist);
-                return NULL;
-            }
+            
+        if (!set_blob_data(bloblist, blob, size, mime_type, filename)) {
+            free(bloblist);
+            bloblist = NULL;
         }
-        if (filename) {
-            bloblist->filename = strdup(filename);
-            if (bloblist->filename == NULL) {
-                free(bloblist->mime_type);
-                free(bloblist);
-                return NULL;
-            }
-        }
-
-        bloblist->value = blob;
-        bloblist->size = size;
 
         return bloblist;
     }
@@ -164,4 +167,10 @@ DYNAMIC_API int bloblist_length(const bloblist_t *bloblist)
         len++;
 
     return len;
+}
+
+DYNAMIC_API void set_blob_disposition(bloblist_t* blob, 
+                                      content_disposition_type disposition) {
+    if (blob)                                    
+        blob->disposition = disposition;
 }

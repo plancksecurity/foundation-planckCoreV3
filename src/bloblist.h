@@ -4,11 +4,17 @@
 #pragma once
 
 #include "dynamic_api.h"
+#include "stringpair.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+typedef enum {
+    PEP_CONTENT_DISP_ATTACHMENT = 0,
+    PEP_CONTENT_DISP_INLINE = 1,
+    PEP_CONTENT_DISP_OTHER = -1      // must be affirmatively set
+} content_disposition_type;
 
 typedef struct _bloblist_t {
     char *value;                    // blob
@@ -17,6 +23,8 @@ typedef struct _bloblist_t {
                                     // NULL if unknown
     char *filename;                // UTF-8 string of file name of blob or
                                     // NULL if unknown
+    content_disposition_type disposition; // default is attachment when allocated
+                                          // (see mime.h and RFC2183)
     struct _bloblist_t *next;
 } bloblist_t;
 
@@ -94,7 +102,19 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
 
 DYNAMIC_API int bloblist_length(const bloblist_t *bloblist);
 
+// set_blob_content_disposition() - set blob content disposition and parameters
+//                                  when necessary
+//
+//  parameters:
+//      blob (in)               bloblist struct to change disposition for
+//      disposition (in)        disposition type (see enum)
+
+DYNAMIC_API void set_blob_disposition(bloblist_t* blob, 
+                                              content_disposition_type disposition);
+
+
+
+
 #ifdef __cplusplus
 }
 #endif
-

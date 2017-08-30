@@ -9,7 +9,6 @@
 extern "C" {
 #endif
 
-
 // is_PGP_message_text() - determine if text encodes a PGP message
 //
 //  parameters:
@@ -78,4 +77,3 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
 #ifdef __cplusplus
 }
 #endif
-
