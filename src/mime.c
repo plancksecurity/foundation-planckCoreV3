@@ -707,12 +707,18 @@ static PEP_STATUS mime_encode_message_plain(
         bloblist_t* inlined_attachments = NULL;
         /* Noooooo... dirk, why do you do this to me? */
         message* duped_msg = message_dup(msg);
+        
+        if (!duped_msg) {
+            status = PEP_OUT_OF_MEMORY;
+            goto pep_error;
+        }
+        
         split_inlined_and_attached(&inlined_attachments, &duped_msg->attachments);
 
-        status = mime_html_text(plaintext, htmltext, inlined_attachments, &mime);
-        
         free_message(duped_msg);
-        
+
+        status = mime_html_text(plaintext, htmltext, inlined_attachments, &mime);
+                
         if (status != PEP_STATUS_OK)
             goto pep_error;
     }
