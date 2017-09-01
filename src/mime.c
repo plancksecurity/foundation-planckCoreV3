@@ -696,6 +696,13 @@ static PEP_STATUS mime_encode_message_plain(
     assert(msg);
     assert(result);
 
+    message* duped_msg = message_dup(msg);
+
+    if (!duped_msg) {
+        status = PEP_OUT_OF_MEMORY;
+        goto pep_error;
+    }
+
     //subject = (msg->shortmsg) ? msg->shortmsg : "pEp";  // not used, yet.
     plaintext = (msg->longmsg) ? msg->longmsg : "";
     htmltext = msg->longmsg_formatted;
@@ -706,10 +713,11 @@ static PEP_STATUS mime_encode_message_plain(
         
         bloblist_t* inlined_attachments = NULL;
         /* Noooooo... dirk, why do you do this to me? */
-        split_inlined_and_attached(&inlined_attachments, &msg->attachments);
+                
+        split_inlined_and_attached(&inlined_attachments, &duped_msg->attachments);
 
-        
         status = mime_html_text(plaintext, htmltext, inlined_attachments, &mime);
+                
         if (status != PEP_STATUS_OK)
             goto pep_error;
     }
@@ -732,7 +740,7 @@ static PEP_STATUS mime_encode_message_plain(
             goto enomem;
     }
 
-    if (msg->attachments) {
+    if (duped_msg->attachments) {
         submime = mime;
         mime = part_multiple_new("multipart/mixed");
         assert(mime);
@@ -750,7 +758,7 @@ static PEP_STATUS mime_encode_message_plain(
         }
 
         bloblist_t *_a;
-        for (_a = msg->attachments; _a != NULL; _a = _a->next) {
+        for (_a = duped_msg->attachments; _a != NULL; _a = _a->next) {
 
             status = mime_attachment(_a, &submime);
             if (status != PEP_STATUS_OK)
@@ -768,6 +776,10 @@ static PEP_STATUS mime_encode_message_plain(
         }
     }
 
+
+
+    if (duped_msg)
+        free_message(duped_msg);
     *result = mime;
     return PEP_STATUS_OK;
 
@@ -780,6 +792,9 @@ pep_error:
 
     if (submime)
         mailmime_free(submime);
+
+    if (duped_msg)
+        free_message(duped_msg);
 
     return status;
 }

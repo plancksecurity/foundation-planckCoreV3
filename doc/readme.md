@@ -13,10 +13,8 @@ The p≡p Engine depends on the following projects:
     - GnuPG (version 2.0.30 or 2.1.16 or newer) by way of GPGME (version 1.6.0 or newer) [https://gnupg.org/](https://gnupg.org/)
     - a fork of NetPGP, [https://cacert.pep.foundation/dev/repos/netpgp-et/](https://cacert.pep.foundation/dev/repos/netpgp-et/)
   - a fork of libetpan, [https://github.com/fdik/libetpan](https://github.com/fdik/libetpan)
-  - zlib (Oh yeah, where?), [http://zlib.net/](http://zlib.net/)
-  - OpenSSL (Oh yeah, where?), [https://www.openssl.org](https://www.openssl.org)
-  - Cyrus SASL (Oh yeah, where?), [https://www.cyrusimap.org](https://www.cyrusimap.org)
-  - libcurl (Oh yeah, where?), [https://curl.haxx.se/libcurl/](https://curl.haxx.se/libcurl/)
+  - zlib, [http://zlib.net/](http://zlib.net/)
+  - libcurl (Only with NetPGP), [https://curl.haxx.se/libcurl/](https://curl.haxx.se/libcurl/)
   - libuuid, [https://www.kernel.org/pub/linux/utils/util-linux/](https://www.kernel.org/pub/linux/utils/util-linux/)
   - SQLite, [https://sqlite.org](https://sqlite.org)
 - compile-time dependencies
