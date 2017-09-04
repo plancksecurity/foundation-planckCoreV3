@@ -211,31 +211,31 @@ enomem:
     return -1;
 }
 
-static void remove_msg_version_field(message* msg) {
-    assert(msg);
-
-    stringpair_list_t* msg_opt_flds_curr = msg->opt_fields;
-    stringpair_list_t** msg_opt_flds_prev_p = NULL;
-    
-    while (msg_opt_flds_curr) {
-        char* fld_key = msg_opt_flds_curr->value->key;
-        if (fld_key) {
-            if (strcmp(fld_key, "X-pEp-Message-Version") == 0) {
-                if (!msg_opt_flds_prev_p) {
-                    msg->opt_fields = msg_opt_flds_curr->next;
-                }
-                else {
-                    (*msg_opt_flds_prev_p)->next = msg_opt_flds_curr->next;
-                }
-                msg_opt_flds_curr->next = NULL;
-                free_stringpair_list(msg_opt_flds_curr);
-                break;
-            }
-            *msg_opt_flds_prev_p = msg_opt_flds_curr;
-            msg_opt_flds_curr = msg_opt_flds_curr->next;
-        }
-    }
-}
+// static void remove_msg_version_field(message* msg) {
+//     assert(msg);
+// 
+//     stringpair_list_t* msg_opt_flds_curr = msg->opt_fields;
+//     stringpair_list_t** msg_opt_flds_prev_p = NULL;
+//     
+//     while (msg_opt_flds_curr) {
+//         char* fld_key = msg_opt_flds_curr->value->key;
+//         if (fld_key) {
+//             if (strcmp(fld_key, "X-pEp-Message-Version") == 0) {
+//                 if (!msg_opt_flds_prev_p) {
+//                     msg->opt_fields = msg_opt_flds_curr->next;
+//                 }
+//                 else {
+//                     (*msg_opt_flds_prev_p)->next = msg_opt_flds_curr->next;
+//                 }
+//                 msg_opt_flds_curr->next = NULL;
+//                 free_stringpair_list(msg_opt_flds_curr);
+//                 break;
+//             }
+//             *msg_opt_flds_prev_p = msg_opt_flds_curr;
+//             msg_opt_flds_curr = msg_opt_flds_curr->next;
+//         }
+//     }
+// }
 
 static PEP_STATUS copy_fields(message *dst, const message *src)
 {
@@ -1505,7 +1505,11 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     switch (enc_format) {
         case PEP_enc_PGP_MIME:
         case PEP_enc_PEP: // BUG: should be implemented extra
-            status = encrypt_PGP_MIME(session, src, keys, msg, flags);
+            // N.B. Don't raise headers, as we want to send a 1.0 message back.
+            // If this is a draft, obviously that will change when it's reencrypted
+            // for everybody else.
+            status = encrypt_PGP_MIME(session, src, keys, msg, 
+                                      flags | PEP_encrypt_flag_dont_raise_headers);
             break;
 
         case PEP_enc_pieces:
@@ -1611,13 +1615,13 @@ static int pEpmessage_major_version(const message *msg) {
     return retval;
 }
 
-static bool verify_explicit_message_version(const char* desired_version, 
-    const message* msg) {
-    if (!desired_version || !msg)
-        return false;
-    const char* msg_version_str = pEpmessage_version_str(msg);
-    return (msg_version_str && (strcmp(desired_version, msg_version_str) == 0));
-}
+// static bool verify_explicit_message_version(const char* desired_version, 
+//     const message* msg) {
+//     if (!desired_version || !msg)
+//         return false;
+//     const char* msg_version_str = pEpmessage_version_str(msg);
+//     return (msg_version_str && (strcmp(desired_version, msg_version_str) == 0));
+// }
 
 // update comm_type to pEp_ct_pEp if needed
 static PEP_STATUS _update_identity_for_incoming_message(
@@ -1889,6 +1893,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     char *ptext = NULL;
     size_t psize;
     stringlist_t *_keylist = NULL;
+    message *inner_message = NULL; // For version 2.0+ messages
 
     assert(session);
     assert(src);
@@ -2003,21 +2008,39 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 int msg_major_version = pEpmessage_major_version(src);
                 
                 if (msg_major_version > 1) {
-                    message* inner_message = NULL; 
                     status = mime_decode_message(msg->attachments->value, 
                                                  msg->attachments->size,
                                                  &inner_message);
                     if (status != PEP_STATUS_OK)
                         goto pep_error;
                     
-                    free_message(msg);
-                    msg = inner_message;
+                    int inner_message_version = pEpmessage_major_version(inner_message);
+                    
+                    /* recurse one level if need be */
+                    if (inner_message_version < 2) {
+                        status = _decrypt_message(session, inner_message,
+                                                  dst, keylist, rating, 
+                                                  flags, private_il);
+                        
+                        free_message(inner_message);
+                        return status;
+                    }
+                    /* 
+                       otherwise, we're just going to verify the outer
+                       message's keylist etc, and then pull up at the end.
+                    */
                 }
                                     
                 char* mlong = msg->longmsg;
                 char* mform = msg->longmsg_formatted;
                 
-                if ((!mlong || mlong[0] == '\0') && (!mform || mform[0] == '\0')) {             
+                /* Note: we don't do this for Version 2.0+ inner messages, as we want to
+                   return the whole message, not just the attachment, in that case.
+                   (N.B. Version 2.0+ inner messages are themselves compound messages,
+                   and the inner message is probably one that needs to be routed
+                   elsewhere by the transport) 
+                */
+                if (!inner_message && (!mlong || mlong[0] == '\0') && (!mform || mform[0] == '\0')) {             
                     pull_up_longmsg_attachment(msg);
                     
                     if (msg->shortmsg) {
@@ -2150,43 +2173,45 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 {
                     GOTO(pep_error);
                 }
+                
+                if (!inner_message) {
+                    if (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0)
+                    {
+                        char * shortmsg;
+                        char * longmsg;
 
-                if (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0)
-                {
-                    char * shortmsg;
-                    char * longmsg;
+                        int r = separate_short_and_long(msg->longmsg, &shortmsg,
+                                &longmsg);
+                        
+                        if (r == -1)
+                            goto enomem;
 
-                    int r = separate_short_and_long(msg->longmsg, &shortmsg,
-                            &longmsg);
-                    
-                    if (r == -1)
-                        goto enomem;
-
-                    if (shortmsg == NULL) {
-                        if (src->shortmsg == NULL)
-                            shortmsg = strdup("");
-                        else {
-                            // FIXME: is msg->shortmsg always a copy of
-                            // src->shortmsg already?
-                            // if so, we need to change the logic so
-                            // that in this case, we don't free msg->shortmsg
-                            // and do this strdup, etc.
-                            shortmsg = strdup(src->shortmsg);
+                        if (shortmsg == NULL) {
+                            if (src->shortmsg == NULL)
+                                shortmsg = strdup("");
+                            else {
+                                // FIXME: is msg->shortmsg always a copy of
+                                // src->shortmsg already?
+                                // if so, we need to change the logic so
+                                // that in this case, we don't free msg->shortmsg
+                                // and do this strdup, etc.
+                                shortmsg = strdup(src->shortmsg);
+                            }
                         }
+
+
+                        free(msg->shortmsg);
+                        free(msg->longmsg);
+
+                        msg->shortmsg = shortmsg;
+                        msg->longmsg = longmsg;
                     }
-
-
-                    free(msg->shortmsg);
-                    free(msg->longmsg);
-
-                    msg->shortmsg = shortmsg;
-                    msg->longmsg = longmsg;
-                }
-                else {
-                    msg->shortmsg = strdup(src->shortmsg);
-                    assert(msg->shortmsg);
-                    if (msg->shortmsg == NULL)
-                        goto enomem;
+                    else {
+                        msg->shortmsg = strdup(src->shortmsg);
+                        assert(msg->shortmsg);
+                        if (msg->shortmsg == NULL)
+                            goto enomem;
+                    }
                 }
                 break;
             default:
@@ -2274,6 +2299,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         *flags |= PEP_decrypt_flag_own_private_key;
     }
 
+    // FIXME: To here, we're ok with the separate messages. We need to
+    //        specify what clients expect when this is a 2.0 message.
+    //        IMHO, we don't need the keylist at that point, just 
+    //        the rating and move on.
     if (msg) {
         decorate_message(msg, *rating, _keylist);
         if (imported_keys)
@@ -2304,7 +2333,12 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         }
     }
 
-    *dst = msg;
+    if (inner_message)
+        *dst = inner_message;
+    else
+        *dst = msg;
+        
+    // I think we keep it this way for 2.0 inner messages.
     *keylist = _keylist;
 
     if(decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
@@ -2317,6 +2351,8 @@ enomem:
 
 pep_error:
     free(ptext);
+    if (inner_message) // necessary? FIXME: check
+        free_message(inner_message);
     free_message(msg);
     free_stringlist(_keylist);
 
