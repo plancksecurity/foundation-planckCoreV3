@@ -424,6 +424,8 @@ static message* wrap_message_as_attachment(message* envelope,
     
     if (!envelope) {
         _envelope = extract_minimal_envelope(attachment, PEP_dir_outgoing);
+        if (!_envelope)
+            return PEP_UNKNOWN_ERROR;
         envelope = _envelope;
     }
     
@@ -1376,7 +1378,15 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             _src = src;
         }
         else {
-            _src = wrap_message_as_attachment(NULL, src);
+            // encrypt inner message
+            message* inner_message = NULL;
+            status = encrypt_message(session, src, extra, &inner_message,
+                                     enc_format, flags | PEP_encrypt_flag_dont_raise_headers);                         
+            _src = wrap_message_as_attachment(NULL, inner_message);
+            if (_src == NULL) {
+                status = PEP_UNKNOWN_ERROR;
+                goto pep_error;
+            }
             msg = clone_to_empty_message(_src);
         }
         if (msg == NULL)
