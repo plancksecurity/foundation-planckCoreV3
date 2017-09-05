@@ -433,7 +433,7 @@ static message* wrap_message_as_attachment(message* envelope,
     /* Turn message into a MIME-blob */
     PEP_STATUS status = mime_encode_message(attachment, false, &message_text);
     
-    if (status != PEP_STATUS_OK) {
+    if (status != PEP_STATUS_OK || !message_text) {
         free(_envelope);
         return NULL;
     }
