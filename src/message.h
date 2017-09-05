@@ -163,3 +163,4 @@ DYNAMIC_API message_ref_list *message_ref_list_add(message_ref_list *msg_list,
 #ifdef __cplusplus
 }
 #endif
+

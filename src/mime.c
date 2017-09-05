@@ -696,13 +696,17 @@ static PEP_STATUS mime_encode_message_plain(
     assert(msg);
     assert(result);
 
-    message* duped_msg = message_dup(msg);
+    bloblist_t* inlined_attachments = NULL;
+    bloblist_t* normal_attachments = NULL;
 
-    if (!duped_msg) {
-        status = PEP_OUT_OF_MEMORY;
-        goto pep_error;
+    if (msg->attachments) {
+        normal_attachments = bloblist_dup(msg->attachments);
+        if (!normal_attachments) {
+            status = PEP_OUT_OF_MEMORY;
+            goto pep_error;
+        }
     }
-
+    
     //subject = (msg->shortmsg) ? msg->shortmsg : "pEp";  // not used, yet.
     plaintext = (msg->longmsg) ? msg->longmsg : "";
     htmltext = msg->longmsg_formatted;
@@ -711,10 +715,8 @@ static PEP_STATUS mime_encode_message_plain(
         /* first, we need to strip out the inlined attachments to ensure this
            gets set up correctly */
         
-        bloblist_t* inlined_attachments = NULL;
-        /* Noooooo... dirk, why do you do this to me? */
-                
-        split_inlined_and_attached(&inlined_attachments, &duped_msg->attachments);
+        /* Noooooo... dirk, why do you do this to me? */                
+        split_inlined_and_attached(&inlined_attachments, &normal_attachments);
 
         status = mime_html_text(plaintext, htmltext, inlined_attachments, &mime);
                 
@@ -740,7 +742,7 @@ static PEP_STATUS mime_encode_message_plain(
             goto enomem;
     }
 
-    if (duped_msg->attachments) {
+    if (normal_attachments) {
         submime = mime;
         mime = part_multiple_new("multipart/mixed");
         assert(mime);
@@ -758,8 +760,13 @@ static PEP_STATUS mime_encode_message_plain(
         }
 
         bloblist_t *_a;
-        for (_a = duped_msg->attachments; _a != NULL; _a = _a->next) {
+        for (_a = normal_attachments; _a != NULL; _a = _a->next) {
 
+            // FIXME: As far as I can tell, mime_attachment takes ownership of
+            // _a->value, so the shell of this bloblist_t is now lost memory.
+            // not a problem if we can free the whole message later, but
+            // this solution is bad. Need to make a more fundamental message
+            // change somewhere, I guess.
             status = mime_attachment(_a, &submime);
             if (status != PEP_STATUS_OK)
                 goto pep_error;
@@ -776,10 +783,6 @@ static PEP_STATUS mime_encode_message_plain(
         }
     }
 
-
-
-    if (duped_msg)
-        free_message(duped_msg);
     *result = mime;
     return PEP_STATUS_OK;
 
@@ -793,8 +796,11 @@ pep_error:
     if (submime)
         mailmime_free(submime);
 
-    if (duped_msg)
-        free_message(duped_msg);
+    if (inlined_attachments)
+        free_bloblist(inlined_attachments);
+
+    if (normal_attachments)
+        free_bloblist(normal_attachments);
 
     return status;
 }
