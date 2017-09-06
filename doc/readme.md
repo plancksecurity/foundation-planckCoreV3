@@ -18,6 +18,7 @@ The p≡p Engine depends on the following projects:
   - libcurl (Only with NetPGP), [https://curl.haxx.se/libcurl/](https://curl.haxx.se/libcurl/)
   - libuuid, [https://www.kernel.org/pub/linux/utils/util-linux/](https://www.kernel.org/pub/linux/utils/util-linux/)
   - SQLite, [https://sqlite.org](https://sqlite.org)
+  - OpenSSL (Only with NetPGP), [https://www.openssl.org](https://www.openssl.org)
 - compile-time dependencies
   - asn1c (version v0.9.28), [http://lionet.info/asn1c/blog/](http://lionet.info/asn1c/blog/)
   - yml2, [https://fdik.org/yml//toolchain](https://fdik.org/yml//toolchain)
@@ -28,6 +29,7 @@ The p≡p Engine depends on the following projects:
     - GNU GCC (on Linux)
     - Apple "clang" LLVM (on MacOS)
     - Microsoft MSVC/MSVC++ distributed with Microsoft Visual Studio 2015 (on Windows)
+  - A script for compiling OpenSSL for iOS, [https://github.com/sinofool/build-openssl-ios/](https://github.com/sinofool/build-openssl-ios/)
 
 # The pEp Engine's databases
 The p≡p Engine uses two databases:
