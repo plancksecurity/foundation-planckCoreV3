@@ -143,7 +143,7 @@ enomem:
 static PEP_STATUS mime_html_text(
         const char *plaintext,
         const char *htmltext,
-        bloblist_t *inlined_attachments,
+        bloblist_t *attachments,
         struct mailmime **result
     )
 {
@@ -185,6 +185,17 @@ static PEP_STATUS mime_html_text(
         submime = NULL;
     }
 
+    bool inlined_attachments = false;
+    
+    bloblist_t* traversal_ptr = attachments;
+    
+    while (traversal_ptr) {
+        if (traversal_ptr->disposition == PEP_CONTENT_DISP_INLINE) {
+            inlined_attachments = true;
+            break;
+        }
+        traversal_ptr = traversal_ptr->next;
+    }
 
     if (inlined_attachments) {
         /* Noooooo... dirk, why do you do this to me? */
@@ -229,8 +240,9 @@ static PEP_STATUS mime_html_text(
     }
 
     bloblist_t *_a;
-    for (_a = inlined_attachments; _a != NULL; _a = _a->next) {
-
+    for (_a = attachments; _a != NULL; _a = _a->next) {
+        if (_a->disposition != PEP_CONTENT_DISP_INLINE)
+            continue;
         status = mime_attachment(_a, &submime);
         if (status != PEP_STATUS_OK)
             return PEP_UNKNOWN_ERROR; // FIXME
@@ -650,33 +662,33 @@ static pEp_rid_list_t* choose_resource_id(pEp_rid_list_t* rid_list) {
     return retval;
 }
 
-static void split_inlined_and_attached(bloblist_t** inlined, bloblist_t** attached) {
-    bloblist_t** curr_pp = attached;
-    bloblist_t* curr = *curr_pp;
-    
-    bloblist_t* inline_ret = NULL;
-    bloblist_t** inline_curr_pp = &inline_ret;
-    
-    bloblist_t* att_ret = NULL;
-    bloblist_t** att_curr_pp = &att_ret;
-    
-    while (curr) {
-        if (curr->disposition == PEP_CONTENT_DISP_INLINE) {
-            *inline_curr_pp = curr;
-            inline_curr_pp = &(curr->next);
-        }
-        else {
-            *att_curr_pp = curr;
-            att_curr_pp = &(curr->next);            
-        }
-        *curr_pp = curr->next;
-        curr->next = NULL;
-        curr = *curr_pp;
-    }
-    
-    *inlined = inline_ret;
-    *attached = att_ret;
-}
+// static void split_inlined_and_attached(bloblist_t** inlined, bloblist_t** attached) {
+//     bloblist_t** curr_pp = attached;
+//     bloblist_t* curr = *curr_pp;
+//     
+//     bloblist_t* inline_ret = NULL;
+//     bloblist_t** inline_curr_pp = &inline_ret;
+//     
+//     bloblist_t* att_ret = NULL;
+//     bloblist_t** att_curr_pp = &att_ret;
+//     
+//     while (curr) {
+//         if (curr->disposition == PEP_CONTENT_DISP_INLINE) {
+//             *inline_curr_pp = curr;
+//             inline_curr_pp = &(curr->next);
+//         }
+//         else {
+//             *att_curr_pp = curr;
+//             att_curr_pp = &(curr->next);            
+//         }
+//         *curr_pp = curr->next;
+//         curr->next = NULL;
+//         curr = *curr_pp;
+//     }
+//     
+//     *inlined = inline_ret;
+//     *attached = att_ret;
+// }
 
 
 static PEP_STATUS mime_encode_message_plain(
@@ -695,14 +707,7 @@ static PEP_STATUS mime_encode_message_plain(
 
     assert(msg);
     assert(result);
-
-    message* duped_msg = message_dup(msg);
-
-    if (!duped_msg) {
-        status = PEP_OUT_OF_MEMORY;
-        goto pep_error;
-    }
-
+    
     //subject = (msg->shortmsg) ? msg->shortmsg : "pEp";  // not used, yet.
     plaintext = (msg->longmsg) ? msg->longmsg : "";
     htmltext = msg->longmsg_formatted;
@@ -710,13 +715,8 @@ static PEP_STATUS mime_encode_message_plain(
     if (htmltext && (htmltext[0] != '\0')) {
         /* first, we need to strip out the inlined attachments to ensure this
            gets set up correctly */
-        
-        bloblist_t* inlined_attachments = NULL;
-        /* Noooooo... dirk, why do you do this to me? */
-                
-        split_inlined_and_attached(&inlined_attachments, &duped_msg->attachments);
-
-        status = mime_html_text(plaintext, htmltext, inlined_attachments, &mime);
+           
+        status = mime_html_text(plaintext, htmltext, msg->attachments, &mime);
                 
         if (status != PEP_STATUS_OK)
             goto pep_error;
@@ -740,7 +740,19 @@ static PEP_STATUS mime_encode_message_plain(
             goto enomem;
     }
 
-    if (duped_msg->attachments) {
+    bool normal_attachments = false;
+    
+    bloblist_t* traversal_ptr = msg->attachments;
+    
+    while (traversal_ptr) {
+        if (traversal_ptr->disposition != PEP_CONTENT_DISP_INLINE) {
+            normal_attachments = true;
+            break;
+        }
+        traversal_ptr = traversal_ptr->next;
+    }
+
+    if (normal_attachments) {
         submime = mime;
         mime = part_multiple_new("multipart/mixed");
         assert(mime);
@@ -758,7 +770,10 @@ static PEP_STATUS mime_encode_message_plain(
         }
 
         bloblist_t *_a;
-        for (_a = duped_msg->attachments; _a != NULL; _a = _a->next) {
+        for (_a = msg->attachments; _a != NULL; _a = _a->next) {
+
+            if (_a->disposition == PEP_CONTENT_DISP_INLINE)
+                continue;
 
             status = mime_attachment(_a, &submime);
             if (status != PEP_STATUS_OK)
@@ -776,10 +791,6 @@ static PEP_STATUS mime_encode_message_plain(
         }
     }
 
-
-
-    if (duped_msg)
-        free_message(duped_msg);
     *result = mime;
     return PEP_STATUS_OK;
 
@@ -792,9 +803,6 @@ pep_error:
 
     if (submime)
         mailmime_free(submime);
-
-    if (duped_msg)
-        free_message(duped_msg);
 
     return status;
 }
