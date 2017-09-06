@@ -1,7 +1,15 @@
 # Using NetPGP instead of GnuPG
 ## Prepare
 
-Get OpenSSL and build/install it as shared library.
+Get OpenSSL:
+curl -O https://www.openssl.org/source/openssl-1.1.0f.tar.gz
+
+Build it using the openssl-for-ios build script:
+git clone https://github.com/sinofool/build-openssl-ios/ .
+
+
+
+ and build/install it as shared library.
 
 ```
 wget https://www.openssl.org/source/old/1.0.1/openssl-1.0.1u.tar.gz
