@@ -103,9 +103,12 @@ void add_opt_field(message *msg, const char *name, const char *value)
 static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
 {
     assert(shortmsg);
-    assert(strcmp(shortmsg, "pEp") != 0);
-
-    if (!shortmsg || strcmp(shortmsg, "pEp") == 0) {
+    
+    unsigned char pepstr[] = PEP_SUBJ_STRING;
+    assert(strcmp(shortmsg, "pEp") != 0 && _unsigned_signed_strcmp(pepstr, shortmsg, PEP_SUBJ_BYTELEN) != 0); 
+    
+    if (!shortmsg || strcmp(shortmsg, "pEp") == 0 || 
+                     _unsigned_signed_strcmp(pepstr, shortmsg, PEP_SUBJ_BYTELEN) == 0) {
         if (!longmsg) {
             return NULL;
         }
@@ -370,8 +373,10 @@ static PEP_STATUS encrypt_PGP_MIME(
     size_t csize;
     assert(dst->longmsg == NULL);
     dst->enc_format = PEP_enc_PGP_MIME;
+    unsigned char pepstr[] = PEP_SUBJ_STRING;
 
-    if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0) {
+    if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0 
+                      && _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) != 0) {
         if (session->unencrypted_subject) {
             dst->shortmsg = strdup(src->shortmsg);
             assert(dst->shortmsg);
@@ -390,7 +395,7 @@ static PEP_STATUS encrypt_PGP_MIME(
         ptext = src->longmsg;
     }
     else {
-        ptext = "pEp";
+        ptext = (char*)pepstr;
     }
 
     message *_src = calloc(1, sizeof(message));
@@ -471,7 +476,8 @@ static PEP_STATUS encrypt_PGP_in_pieces(
     size_t csize;
     char *ptext = NULL;
     bool free_ptext = false;
-
+    unsigned char pepstr[] = PEP_SUBJ_STRING;
+    
     assert(dst->longmsg == NULL);
     assert(dst->attachments == NULL);
 
@@ -479,7 +485,8 @@ static PEP_STATUS encrypt_PGP_in_pieces(
 
     bool nosign = (flags & PEP_encrypt_flag_force_unsigned);
 
-    if (src->shortmsg && src->shortmsg[0] && strcmp(src->shortmsg, "pEp") != 0) {
+    if (src->shortmsg && src->shortmsg[0] && strcmp(src->shortmsg, "pEp") != 0 && 
+        _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) != 0) {
         if (session->unencrypted_subject) {
             dst->shortmsg = strdup(src->shortmsg);
             assert(dst->shortmsg);
@@ -1284,7 +1291,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     free_stringlist(keys);
 
     if (msg && msg->shortmsg == NULL) {
-        msg->shortmsg = strdup("pEp");
+        msg->shortmsg = _pep_subj_copy();
         assert(msg->shortmsg);
         if (msg->shortmsg == NULL)
             goto enomem;
@@ -1395,7 +1402,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         goto pep_error;
 
      if (msg && msg->shortmsg == NULL) {
-         msg->shortmsg = strdup("pEp");
+         msg->shortmsg = _pep_subj_copy();
          assert(msg->shortmsg);
          if (msg->shortmsg == NULL)
              goto enomem;
@@ -1680,6 +1687,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     char *ptext = NULL;
     size_t psize;
     stringlist_t *_keylist = NULL;
+    unsigned char pepstr[] = PEP_SUBJ_STRING;
 
     assert(session);
     assert(src);
@@ -1970,7 +1978,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                     GOTO(pep_error);
                 }
 
-                if (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0)
+                if (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0 ||
+                    _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) == 0)
                 {
                     char * shortmsg;
                     char * longmsg;

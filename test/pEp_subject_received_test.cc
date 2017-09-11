@@ -14,7 +14,7 @@ using namespace std;
 
 int main(int argc, char** argv) {
 
-    cout << "\n*** check that pEp subject is handled properly in received mails ***\n\n";
+    cout << "\n*** check that p≡p subject is handled properly in received mails ***\n\n";
 
     PEP_SESSION session;
     
@@ -119,6 +119,7 @@ int main(int argc, char** argv) {
     
     cout << "-----------------------------------------------------------------------" << endl;
     cout << "Test 3: Encrypted mail, pEp as actual subject, no subject in body text." << endl;
+    cout << "FIXME: need tp make new encrypted mail for this." << endl;
     cout << "-----------------------------------------------------------------------" << endl;
 
     msg_ptr = nullptr;
@@ -151,6 +152,7 @@ int main(int argc, char** argv) {
 
     cout << "-----------------------------------------------------------------------" << endl;
     cout << "Test 4: Encrypted mail, pEp as actual subject, pEp subject in body text." << endl;
+    cout << "FIXME: need tp make new encrypted mail for this." << endl;
     cout << "-----------------------------------------------------------------------" << endl;
 
     msg_ptr = nullptr;
@@ -183,6 +185,7 @@ int main(int argc, char** argv) {
 
     cout << "-------------------------------------------------------------------------" << endl;
     cout << "Test 5: Unencrypted variant where pEp in the subject line is the subject." << endl;
+    cout << "FIXME: need tp make new mail for this." << endl;
     cout << "-------------------------------------------------------------------------" << endl;
 
     msg_ptr = nullptr;
