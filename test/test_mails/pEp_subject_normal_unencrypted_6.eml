@@ -60,7 +60,7 @@ Received: from [192.168.178.22] (ip5f584089.dynamic.kabel-deutschland.de [95.88.
 Reply-To: krista@pep-project.org
 To: pep.test.recip@kgrothoff.org
 From: pEp Test Alice <pep.test.alice@pep-project.org>
-Subject: pEp
+Subject: This is just a normal subject, really
 Organization: pEp
 Message-ID: <6205efbe-684d-9f21-8a2e-887d46a145e6@pep-project.org>
 Date: Mon, 12 Jun 2017 15:26:54 +0200
