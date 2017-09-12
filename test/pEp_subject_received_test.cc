@@ -43,20 +43,26 @@ int main(int argc, char** argv) {
     status = update_identity(session, you);
 
 
-    
-    const char* mailfiles[] = {"test_mails/pEp_encrypted_subject_IS_pEp.eml",
-                                "test_mails/pEp_subject_normal.eml",
+    const char* mailfiles[] = {"test_mails/pEp_subject_normal.eml",
+                                "test_mails/pEp_subject_normal2.eml",
                                 "test_mails/pEp_subject_normal_signed.eml",
+                                "test_mails/pEp_subject_normal_signed2.eml",
+                                "test_mails/pEp_encrypted_subject_IS_pEp.eml",
+                                "test_mails/pEp_encrypted_subject_IS_pEp2.eml",
                                 "test_mails/pEp_subject_normal_unencrypted.eml",
                                 "test_mails/pEp_subject_pEp.eml",
-                                "test_mails/pEp_unencrypted_pEp_subject.eml"};
+                                "test_mails/pEp_subject_pEp2.eml",
+                                "test_mails/pEp_subject_pEp3.eml",
+                                "test_mails/pEp_subject_pEp4.eml",
+                                "test_mails/pEp_unencrypted_pEp_subject.eml",
+                                "test_mails/pEp_unencrypted_pEp_subject2.eml"};
                                 
 
     cout << "------------------------------------------------------------------------------------------" << endl;
-    cout << "Test 1: Normal encrypted mail, pEp as substitute subject, regular subject in crypto text." << endl;
+    cout << "Test 1a: Normal encrypted mail, pEp as substitute subject, regular subject in crypto text." << endl;
     cout << "------------------------------------------------------------------------------------------" << endl;
         
-    string mailtext = slurp(mailfiles[1]);
+    string mailtext = slurp(mailfiles[0]);
     
     message* msg_ptr = nullptr;
     message* dest_msg = nullptr;
@@ -78,7 +84,39 @@ int main(int argc, char** argv) {
 
     assert(strcmp("This is the usual pEp subject that should replace the above.", final_ptr->shortmsg) == 0);
 
-    cout << "Test 1: Subject replaced as expected." << endl << endl;
+    cout << "Test 1a: Subject replaced as expected." << endl << endl;
+
+    if (final_ptr == dest_msg)
+    	free_message(dest_msg);
+    free_message(msg_ptr);
+    free_stringlist(keylist);
+
+    cout << "------------------------------------------------------------------------------------------" << endl;
+    cout << "Test 1b: Normal encrypted mail, p≡p as substitute subject, regular subject in crypto text." << endl;
+    cout << "------------------------------------------------------------------------------------------" << endl;
+        
+    mailtext = slurp(mailfiles[1]);
+    
+    msg_ptr = nullptr;
+    dest_msg = nullptr;
+    final_ptr = nullptr;
+    keylist = nullptr;
+    rating = PEP_rating_unreliable;
+    
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
+    assert(status == PEP_STATUS_OK);
+    assert(msg_ptr);
+    final_ptr = msg_ptr;
+    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    final_ptr = dest_msg ? dest_msg : msg_ptr;
+  
+    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
+    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+
+    assert(strcmp("This is the usual pEp subject that should replace the above.", final_ptr->shortmsg) == 0);
+
+    cout << "Test 1b: Subject replaced as expected." << endl << endl;
 
     if (final_ptr == dest_msg)
     	free_message(dest_msg);
@@ -86,7 +124,7 @@ int main(int argc, char** argv) {
     free_stringlist(keylist);
 
     cout << "-------------------------------------------------------------------------------------------------" << endl;
-    cout << "Test 2: Normal encrypted/signed mail, pEp as substitute subject, regular subject in crypto text." << endl;
+    cout << "Test 2a: Normal encrypted/signed mail, pEp as substitute subject, regular subject in crypto text." << endl;
     cout << "-------------------------------------------------------------------------------------------------" << endl;
 
     msg_ptr = nullptr;
@@ -110,17 +148,16 @@ int main(int argc, char** argv) {
 
     assert(strcmp("Now signed!", final_ptr->shortmsg) == 0);
 
-    cout << "Test 2: Subject replaced as expected." << endl << endl;
+    cout << "Test 2a: Subject replaced as expected." << endl << endl;
 
     if (final_ptr == dest_msg)
         free_message(dest_msg);
     free_message(msg_ptr);
     free_stringlist(keylist);
-    
-    cout << "-----------------------------------------------------------------------" << endl;
-    cout << "Test 3: Encrypted mail, pEp as actual subject, no subject in body text." << endl;
-    cout << "FIXME: need tp make new encrypted mail for this." << endl;
-    cout << "-----------------------------------------------------------------------" << endl;
+
+    cout << "-------------------------------------------------------------------------------------------------" << endl;
+    cout << "Test 2b: Normal encrypted/signed mail, p≡p as substitute subject, regular subject in crypto text." << endl;
+    cout << "-------------------------------------------------------------------------------------------------" << endl;
 
     msg_ptr = nullptr;
     dest_msg = nullptr;
@@ -128,7 +165,7 @@ int main(int argc, char** argv) {
     keylist = nullptr;
     rating = PEP_rating_unreliable;
     
-    mailtext = slurp(mailfiles[0]);
+    mailtext = slurp(mailfiles[3]);
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     assert(status == PEP_STATUS_OK);
@@ -141,19 +178,19 @@ int main(int argc, char** argv) {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    assert(strcmp("pEp", final_ptr->shortmsg) == 0);
+    assert(strcmp("Now signed!", final_ptr->shortmsg) == 0);
 
-    cout << "Test 3: Subject remains intact as desired." << endl << endl;
+    cout << "Test 2b: Subject replaced as expected." << endl << endl;
 
     if (final_ptr == dest_msg)
         free_message(dest_msg);
     free_message(msg_ptr);
     free_stringlist(keylist);
 
-    cout << "-----------------------------------------------------------------------" << endl;
-    cout << "Test 4: Encrypted mail, pEp as actual subject, pEp subject in body text." << endl;
-    cout << "FIXME: need tp make new encrypted mail for this." << endl;
-    cout << "-----------------------------------------------------------------------" << endl;
+    
+    cout << "---------------------------------------------------------------------------" << endl;
+    cout << "Test 3a: Encrypted mail, pEp as displayed subject, no subject in body text." << endl;
+    cout << "---------------------------------------------------------------------------" << endl;
 
     msg_ptr = nullptr;
     dest_msg = nullptr;
@@ -176,17 +213,16 @@ int main(int argc, char** argv) {
 
     assert(strcmp("pEp", final_ptr->shortmsg) == 0);
 
-    cout << "Test 4: Subject correct, in any event." << endl << endl;
+    cout << "Test 3a: Subject remains intact as desired." << endl << endl;
 
     if (final_ptr == dest_msg)
         free_message(dest_msg);
     free_message(msg_ptr);
     free_stringlist(keylist);
 
-    cout << "-------------------------------------------------------------------------" << endl;
-    cout << "Test 5: Unencrypted variant where pEp in the subject line is the subject." << endl;
-    cout << "FIXME: need tp make new mail for this." << endl;
-    cout << "-------------------------------------------------------------------------" << endl;
+    cout << "---------------------------------------------------------------------------" << endl;
+    cout << "Test 3b: Encrypted mail, p≡p as displayed subject, no subject in body text." << endl;
+    cout << "---------------------------------------------------------------------------" << endl;
 
     msg_ptr = nullptr;
     dest_msg = nullptr;
@@ -207,15 +243,209 @@ int main(int argc, char** argv) {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    assert(strcmp("pEp", final_ptr->shortmsg) == 0);
+    assert(strcmp("p≡p", final_ptr->shortmsg) == 0);
 
-    cout << "Test 5: Subject remains intact." << endl << endl;
+    cout << "Test 3: Subject remains intact as desired." << endl << endl;
 
     if (final_ptr == dest_msg)
         free_message(dest_msg);
     free_message(msg_ptr);
     free_stringlist(keylist);
 
+
+    cout << "----------------------------------------------------------------------------" << endl;
+    cout << "Test 4a: Encrypted mail, pEp as displayed subject, pEp subject in body text." << endl;
+    cout << "----------------------------------------------------------------------------" << endl;
+
+    msg_ptr = nullptr;
+    dest_msg = nullptr;
+    final_ptr = nullptr;
+    keylist = nullptr;
+    rating = PEP_rating_unreliable;
+    
+    mailtext = slurp(mailfiles[6]);
+    
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
+    assert(status == PEP_STATUS_OK);
+    assert(msg_ptr);
+    final_ptr = msg_ptr;
+    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    final_ptr = dest_msg ? dest_msg : msg_ptr;
+  
+    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
+    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+
+    assert(strcmp("pEp", final_ptr->shortmsg) == 0);
+
+    cout << "Test 4a: Subject correct." << endl << endl;
+
+    if (final_ptr == dest_msg)
+        free_message(dest_msg);
+    free_message(msg_ptr);
+    free_stringlist(keylist);
+
+    cout << "----------------------------------------------------------------------------" << endl;
+    cout << "Test 4b: Encrypted mail, p≡p as displayed subject, pEp subject in body text." << endl;
+    cout << "----------------------------------------------------------------------------" << endl;
+
+    msg_ptr = nullptr;
+    dest_msg = nullptr;
+    final_ptr = nullptr;
+    keylist = nullptr;
+    rating = PEP_rating_unreliable;
+    
+    mailtext = slurp(mailfiles[7]);
+    
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
+    assert(status == PEP_STATUS_OK);
+    assert(msg_ptr);
+    final_ptr = msg_ptr;
+    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    final_ptr = dest_msg ? dest_msg : msg_ptr;
+  
+    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
+    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+
+    assert(strcmp("pEp", final_ptr->shortmsg) == 0);
+
+    cout << "Test 4b: Subject correct." << endl << endl;
+
+    if (final_ptr == dest_msg)
+        free_message(dest_msg);
+    free_message(msg_ptr);
+    free_stringlist(keylist);
+
+    cout << "----------------------------------------------------------------------------" << endl;
+    cout << "Test 4c: Encrypted mail, pEp as displayed subject, p≡p subject in body text." << endl;
+    cout << "----------------------------------------------------------------------------" << endl;
+
+    msg_ptr = nullptr;
+    dest_msg = nullptr;
+    final_ptr = nullptr;
+    keylist = nullptr;
+    rating = PEP_rating_unreliable;
+    
+    mailtext = slurp(mailfiles[8]);
+    
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
+    assert(status == PEP_STATUS_OK);
+    assert(msg_ptr);
+    final_ptr = msg_ptr;
+    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    final_ptr = dest_msg ? dest_msg : msg_ptr;
+  
+    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
+    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+
+    assert(strcmp("p≡p", final_ptr->shortmsg) == 0);
+
+    cout << "Test 4c: Subject correct." << endl << endl;
+
+    if (final_ptr == dest_msg)
+        free_message(dest_msg);
+    free_message(msg_ptr);
+    free_stringlist(keylist);
+
+    cout << "----------------------------------------------------------------------------" << endl;
+    cout << "Test 4d: Encrypted mail, p≡p as displayed subject, p≡p subject in body text." << endl;
+    cout << "----------------------------------------------------------------------------" << endl;
+
+    msg_ptr = nullptr;
+    dest_msg = nullptr;
+    final_ptr = nullptr;
+    keylist = nullptr;
+    rating = PEP_rating_unreliable;
+    
+    mailtext = slurp(mailfiles[9]);
+    
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
+    assert(status == PEP_STATUS_OK);
+    assert(msg_ptr);
+    final_ptr = msg_ptr;
+    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    final_ptr = dest_msg ? dest_msg : msg_ptr;
+  
+    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
+    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+
+    assert(strcmp("p≡p", final_ptr->shortmsg) == 0);
+
+    cout << "Test 4d: Subject correct, in any event." << endl << endl;
+
+    if (final_ptr == dest_msg)
+        free_message(dest_msg);
+    free_message(msg_ptr);
+    free_stringlist(keylist);
+
+
+    cout << "-------------------------------------------------------------------------" << endl;
+    cout << "Test 5a: Unencrypted variant where pEp in the subject line is the subject." << endl;
+    cout << "-------------------------------------------------------------------------" << endl;
+
+    msg_ptr = nullptr;
+    dest_msg = nullptr;
+    final_ptr = nullptr;
+    keylist = nullptr;
+    rating = PEP_rating_unreliable;
+    
+    mailtext = slurp(mailfiles[10]);
+    
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
+    assert(status == PEP_STATUS_OK);
+    assert(msg_ptr);
+    final_ptr = msg_ptr;
+    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    final_ptr = dest_msg ? dest_msg : msg_ptr;
+  
+    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
+    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+
+    assert(strcmp("pEp", final_ptr->shortmsg) == 0);
+
+    cout << "Test 5a: Subject remains intact." << endl << endl;
+
+    if (final_ptr == dest_msg)
+        free_message(dest_msg);
+    free_message(msg_ptr);
+    free_stringlist(keylist);
+
+
+    cout << "--------------------------------------------------------------------------" << endl;
+    cout << "Test 5b: Unencrypted variant where p≡p in the subject line is the subject." << endl;
+    cout << "--------------------------------------------------------------------------" << endl;
+
+    msg_ptr = nullptr;
+    dest_msg = nullptr;
+    final_ptr = nullptr;
+    keylist = nullptr;
+    rating = PEP_rating_unreliable;
+    
+    mailtext = slurp(mailfiles[11]);
+    
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
+    assert(status == PEP_STATUS_OK);
+    assert(msg_ptr);
+    final_ptr = msg_ptr;
+    status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
+    final_ptr = dest_msg ? dest_msg : msg_ptr;
+  
+    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
+    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+
+    assert(strcmp("p≡p", final_ptr->shortmsg) == 0);
+
+    cout << "Test 5b: Subject remains intact." << endl << endl;
+
+    if (final_ptr == dest_msg)
+        free_message(dest_msg);
+    free_message(msg_ptr);
+    free_stringlist(keylist);
         
     cout << "calling release()\n";
     release(session);
