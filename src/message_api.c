@@ -1870,9 +1870,11 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                                                     &_verify_keylist);
 
                             if (status == PEP_VERIFIED || status == PEP_VERIFIED_AND_TRUSTED)
+                            {
                                 decrypt_status = PEP_DECRYPTED_AND_VERIFIED;
                             
                                 status = combine_keylists(session, &_verify_keylist, &_keylist, src->from);
+                            }
                         }
                     }
                 }

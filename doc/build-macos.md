@@ -65,7 +65,7 @@ mkdir -p ~/code/gpgme/build/lib
 cp -r /opt/local/lib/libgpg* ~/code/gpgme/build/lib
 ~~~
 
-It's of course possible to skip MacPort's version, and use a self-compiled GPGME/GPG.
+It's of course possible to skip MacPort's version, and use a self-compiled GPGME/GPG. The default build configuration assumes this case, and assumes you have installed your GPGME with `$(HOME)` as your prefix.
 
 # pEp Engine
 
