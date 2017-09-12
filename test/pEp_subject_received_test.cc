@@ -49,13 +49,13 @@ int main(int argc, char** argv) {
                                 "test_mails/pEp_subject_normal_signed2.eml",
                                 "test_mails/pEp_encrypted_subject_IS_pEp.eml",
                                 "test_mails/pEp_encrypted_subject_IS_pEp2.eml",
-                                "test_mails/pEp_subject_normal_unencrypted.eml",
                                 "test_mails/pEp_subject_pEp.eml",
                                 "test_mails/pEp_subject_pEp2.eml",
                                 "test_mails/pEp_subject_pEp3.eml",
                                 "test_mails/pEp_subject_pEp4.eml",
                                 "test_mails/pEp_unencrypted_pEp_subject.eml",
-                                "test_mails/pEp_unencrypted_pEp_subject2.eml"};
+                                "test_mails/pEp_unencrypted_pEp_subject2.eml",
+                                "test_mails/pEp_subject_normal_unencrypted.eml"};
                                 
 
     cout << "------------------------------------------------------------------------------------------" << endl;
