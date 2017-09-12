@@ -183,7 +183,7 @@ PEP_STATUS encrypt_only(
         size_t psize, char **ctext, size_t *csize
 );
 
-#ifdef NDEBUG
+#if defined(NDEBUG) || defined(NOLOG)
 #define DEBUG_LOG(TITLE, ENTITY, DESC)
 #else
 #ifdef ANDROID
