@@ -1,0 +1,114 @@
+Return-Path: <SRS0=ne/EAk=AN=pep-project.org=pep.test.alice@srs.smtpin.rzone.de>
+X-Original-To: krista@gnunet.org
+Delivered-To: krista@gnunet.org
+Received: from vmmailrelay1.informatik.tu-muenchen.de (mailrelay1.informatik.tu-muenchen.de [131.159.254.14])
+	by sam.net.in.tum.de (Postfix) with ESMTP id 524FF1C00BC
+	for <krista@gnunet.org>; Tue, 12 Sep 2017 17:06:56 +0200 (CEST)
+Received: by vmmailrelay1.informatik.tu-muenchen.de (Postfix, from userid 109)
+	id 68C381C0503; Tue, 12 Sep 2017 17:06:56 +0200 (CEST)
+Received: from vmmailrelay1.informatik.tu-muenchen.de (localhost [127.0.0.1])
+	by vmmailrelay1.informatik.tu-muenchen.de (Postfix) with ESMTP id 45A4A1C04FD
+	for <krista@gnunet.org>; Tue, 12 Sep 2017 17:06:56 +0200 (CEST)
+Received: from vmmaildmz1.informatik.tu-muenchen.de (vmmaildmz1.informatik.tu-muenchen.de [131.159.0.87])
+	by vmmailrelay1.informatik.tu-muenchen.de (Postfix) with ESMTP id 3162A1C04FC
+	for <krista@gnunet.org>; Tue, 12 Sep 2017 17:06:56 +0200 (CEST)
+Received: by vmmaildmz1.informatik.tu-muenchen.de (Postfix, from userid 109)
+	id 2FBF61C2D66; Tue, 12 Sep 2017 17:06:56 +0200 (CEST)
+X-Spam-Checker-Version: SpamAssassin 3.4.0-tuminfo_1 (2014-02-07) on
+	vmmaildmz1.informatik.tu-muenchen.de
+X-Spam-Level: 
+X-Spam-Status: No, score=-1.7 required=7.0 tests=AWL,BAYES_00,BODY_EMPTY,
+	ENCRYPTED_MESSAGE,RCVD_IN_DNSWL_NONE,RCVD_IN_MSPIKE_H3,RCVD_IN_MSPIKE_WL,
+	SPF_HELO_PASS,TVD_RCVD_SPACE_BRACKET,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0-tuminfo_1
+Received: from vmmaildmz1.informatik.tu-muenchen.de (localhost [127.0.0.1])
+	by vmmaildmz1.informatik.tu-muenchen.de (Postfix) with ESMTP id 2B7FA1C2D5F
+	for <krista@gnunet.org>; Tue, 12 Sep 2017 17:06:52 +0200 (CEST)
+Received: from mi4-p00-ob.smtp.rzone.de (mi4-p00-ob.smtp.rzone.de [81.169.146.146])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by vmmaildmz1.informatik.tu-muenchen.de (Postfix) with ESMTPS id 1AEE31C2D48
+	for <krista@gnunet.org>; Tue, 12 Sep 2017 17:06:52 +0200 (CEST)
+X-RZG-FWD-BY: pep.test.recip@kgrothoff.org
+Received: from mailin.rzone.de ([unix socket])
+	by mailin.rzone.de (RZmta 41.4) with LMTPA;
+	Tue, 12 Sep 2017 17:06:42 +0200 (CEST)
+Authentication-Results: strato.com 1;
+	spf=none
+		smtp.mailfrom="pep.test.alice@pep-project.org";
+	dkim=none;
+	domainkeys=none;
+	dkim-adsp=none
+		header.from="pep.test.alice@pep-project.org"
+X-Strato-MessageType: email
+X-RZG-CLASS-ID: mi00
+Received-SPF: none
+	client-ip=131.159.0.8;
+	helo="mail-out1.informatik.tu-muenchen.de";
+	envelope-from="pep.test.alice@pep-project.org";
+	receiver=smtpin.rzone.de;
+	identity=mailfrom;
+Received: from mail-out1.informatik.tu-muenchen.de ([131.159.0.8])
+	by smtpin.rzone.de (RZmta 41.4 OK)
+	with ESMTPS id f0bb72t8CF6f5Wa
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (curve secp521r1 with 521 ECDH bits, eq. 15360 bits RSA))
+	(Client did not present a certificate)
+	for <pep.test.recip@kgrothoff.org>;
+	Tue, 12 Sep 2017 17:06:41 +0200 (CEST)
+Received: from [192.168.178.22] (ip5f584089.dynamic.kabel-deutschland.de [95.88.64.137])
+	by services.sec.in.tum.de (Postfix) with ESMTPSA id B7EF810C74F82
+	for <pep.test.recip@kgrothoff.org>; Tue, 12 Sep 2017 17:06:33 +0200 (CEST)
+Reply-To: krista@pep-project.org
+To: pep.test.recip@kgrothoff.org
+From: pEp Test Alice <pep.test.alice@pep-project.org>
+Subject: =?UTF-8?B?cOKJoXA=?=
+Organization: pEp
+Message-ID: <75dd44fb-5c4a-8678-c51b-836fd1f32af1@pep-project.org>
+Date: Tue, 12 Sep 2017 17:06:32 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
+ Thunderbird/45.8.0
+MIME-Version: 1.0
+Content-Type: multipart/encrypted;
+ protocol="application/pgp-encrypted";
+ boundary="IS7QjataASN5CVBdEDLOfqfNX2N4tkoTu"
+
+This is an OpenPGP/MIME encrypted message (RFC 4880 and 3156)
+--IS7QjataASN5CVBdEDLOfqfNX2N4tkoTu
+Content-Type: application/pgp-encrypted
+Content-Description: PGP/MIME version identification
+
+Version: 1
+
+--IS7QjataASN5CVBdEDLOfqfNX2N4tkoTu
+Content-Type: application/octet-stream; name="encrypted.asc"
+Content-Description: OpenPGP encrypted message
+Content-Disposition: inline; filename="encrypted.asc"
+
+-----BEGIN PGP MESSAGE-----
+
+hQEMA4FHqvEumyRHAQf8D4hbDivbAhpgIzOrD42OU5UEPax5wdpSub5vZDbGF++U
+pt/MLGoTA5CTLCoJLV5iZiMFjy2LbbJPQaotZixHb619QzVOa3DVwWV8XuHTxmmt
+EedLl+Ryq/EupLcjrqajUuxV6wCqS2sBfhHV+ykjZkQfGi+R4cGYRtrRERrfzpGY
+QM4Nh6Bp9kLMSYVnIVdhpSUiky1VCxQl5MUqrlgkRY3ZDEdF4r53BNdiFx994I8K
+OF8DqvWO/Zqx0GAuljKH7PZOU7CQVn/Xuen04L4olZgCeFxNdLBJv8wNNDX4cyUR
+WnRU061CKTER27xVCi9AUlDnq3SghbRJvN3PUJSFkYUBDANaAgXZcwg/TQEH/3kn
++qxj3GuvyYOcg74oBcN8RN+E12HYopVEG1CvjqkpekYj3RVcs3Y9MFINTOZpDW4w
+eHpNM7/bz3kzp48saoi3dB8i82FpvxG/XoNyphfPkFtz7tSECCMAKUWCeoi5VyS3
+N3wwqa6LwpBpn5wkWUwWVQxgby1eJgYe0ZvBK9Nkv/FhTlD+hm3cn+6LRLC1dBp1
+WpXP03YwrspCocfpWHFG+/4uHtLOE0GREqjPwGtNRdf59T2jwpyJykUrsARdkyJs
+SqCce8739VjbxK3Ma4LGNyytp8g2z/G7C4JbZ/evmCKI7cxlhpLbSLZRzvIoNt/P
+71gfkrzXUaUyHrkaheXSwSsB5p+Bu/msz4ByaAtEPJsQoGL6BBOjyKVm7K++xB90
+yEQcJKxIMNeNGH5uvuZF2jkaF5HEHzK0V4+tS05pwS2ZFjyVUlowycAtwqQp3sfW
+3zeUUUUW3tykR+uF2lBWhyEF2P5wTTV8eZZ53hy0vcUUwBfNoLpUZPvqoNZowEOf
+Vw594AxRav4bokdJ1loWTEh1HtZAZuoMAAhdbQUDGkdlBogn98p+ClSCOSMHAlcl
+Ip1AYAl3Os5UK2lr2p3bUBIgrqgbbY17MWfOva+LJ7TvLf6p1VyXKv3KeWoaCxy4
+tlKb/D86Sjwo59oRayJvcOKhovd4hBechRxak6twovbGvCs5zE0jGapkY0QBYYky
+eom5pYn2pGQpOnUrY7G+9pAjjqBywwLe1/bPh1KvTd38t86rfryLTOt2/gCJqHfN
+f/kQCSyhR7HGz5LE0tUIq6hag8sClzh1ELht2Avpjt3YuKEVm/IVdfcGk5NkZqIf
+5ghwOnC/1KZTEXWWvqywQKWgFkkRp7j9bgKweRvGSqawG0LtDHGgHmn3DjxlMOR8
+hR+IBQg2y536xoSIrAQS3Qw8UcY6clnEx2Ga809wX32I7fiVsgx9rXm9+CBFvLQj
+1IKzn2lRvqbquAsYClEmxzWXFETqIoISWPIEzw==
+=5ntC
+-----END PGP MESSAGE-----
+
+--IS7QjataASN5CVBdEDLOfqfNX2N4tkoTu--

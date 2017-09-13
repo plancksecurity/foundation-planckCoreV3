@@ -418,7 +418,8 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     struct mailimf_fields * fields = NULL;
     int r;
     clist * fields_list = NULL;
-    char *subject = msg->shortmsg ? msg->shortmsg : "pEp";
+    unsigned char pepstr[] = PEP_SUBJ_STRING; // unsigned due to UTF-8 byte fun
+    char *subject = msg->shortmsg ? msg->shortmsg : (char*)pepstr;
 
     assert(msg);
     assert(msg->from);

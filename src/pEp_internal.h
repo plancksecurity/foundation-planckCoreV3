@@ -31,6 +31,12 @@
 #endif
 #define CRASHDUMP_MAX_LINES 32767
 
+// p≡p full string, NUL-terminated
+#ifndef PEP_SUBJ_STRING
+#define PEP_SUBJ_STRING {0x70,0xE2,0x89,0xA1,0x70,0x00}
+#define PEP_SUBJ_BYTELEN 5
+#endif
+
 #include "platform.h"
 
 #ifdef WIN32
@@ -183,7 +189,7 @@ PEP_STATUS encrypt_only(
         size_t psize, char **ctext, size_t *csize
 );
 
-#ifdef NDEBUG
+#if defined(NDEBUG) || defined(NOLOG)
 #define DEBUG_LOG(TITLE, ENTITY, DESC)
 #else
 #ifdef ANDROID
@@ -322,6 +328,24 @@ static inline bool _identity_me(
     )
 {
     return identity->user_id && strcmp(identity->user_id, PEP_OWN_USERID) == 0;
+}
+
+// size is the length of the bytestr that's coming in. This is really only intended
+// for comparing two full strings. If charstr's length is different from bytestr_size,
+// we'll return a non-zero value.
+static inline int _unsigned_signed_strcmp(const unsigned char* bytestr, const char* charstr, int bytestr_size) {
+    int charstr_len = strlen(charstr);
+    if (charstr_len != bytestr_size)
+        return -1; // we don't actually care except that it's non-zero
+    return memcmp(bytestr, charstr, bytestr_size);
+}
+
+// This is just a horrible example of C type madness. UTF-8 made me do it.
+static inline char* _pep_subj_copy() {
+    unsigned char pepstr[] = PEP_SUBJ_STRING;
+    void* retval = calloc(1, sizeof(unsigned char)*PEP_SUBJ_BYTELEN + 1);
+    memcpy(retval, pepstr, PEP_SUBJ_BYTELEN);
+    return (char*)retval;
 }
 
 #ifdef DEBUG_ERRORSTACK

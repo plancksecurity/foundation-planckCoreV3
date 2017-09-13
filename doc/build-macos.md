@@ -3,7 +3,7 @@ This file is part of the pEp Engine
 This file may be used under the terms of the Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) License
 See CC_BY-SA.txt -->
 
-# Build instructions for macOS Sierra and iOS
+# Build instructions for macOS Sierra
 
 # Installing packaged dependencies
 
@@ -65,7 +65,7 @@ mkdir -p ~/code/gpgme/build/lib
 cp -r /opt/local/lib/libgpg* ~/code/gpgme/build/lib
 ~~~
 
-It's of course possible to skip MacPort's version, and use a self-compiled GPGME/GPG.
+It's of course possible to skip MacPort's version, and use a self-compiled GPGME/GPG. The default build configuration assumes this case, and assumes you have installed your GPGME with `$(HOME)` as your prefix.
 
 # pEp Engine
 
