@@ -284,7 +284,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
             = (gpgme_get_key_t) (intptr_t) dlsym(gpgme, "gpgme_get_key");
         assert(gpg.gpgme_get_key);
         
-        #ifdef GPGME_VERSION_NUMBER 
+        #ifdef GPGME_VERSION_NUMBER
         #if (GPGME_VERSION_NUMBER >= 0x010700)
                 gpg.gpgme_op_createkey
                     = (gpgme_op_createkey_t) (intptr_t) dlsym(gpgme,
@@ -581,7 +581,7 @@ PEP_STATUS pgp_decrypt_and_verify(
                     gpgme_verify_result =
                         gpg.gpgme_op_verify_result(session->ctx);
                             assert(gpgme_verify_result);
-                    gpgme_signature = gpgme_verify_result->signatures;                    
+                    gpgme_signature = gpgme_verify_result->signatures;
                 }
 
                 if (gpgme_signature) {
@@ -689,7 +689,7 @@ PEP_STATUS pgp_decrypt_and_verify(
                     *keylist = _keylist;
                     if (recipient_keylist) {
                         if (!_keylist)
-                            *keylist = new_stringlist(""); // no sig 
+                            *keylist = new_stringlist(""); // no sig
                         if (!(*keylist)) {
                             free_stringlist(_keylist);
                             if (recipient_keylist)
@@ -698,7 +698,7 @@ PEP_STATUS pgp_decrypt_and_verify(
                             gpg.gpgme_data_release(cipher);
                             free(_buffer);
                             return PEP_OUT_OF_MEMORY;
-                        }    
+                        }
                         stringlist_append(*keylist, recipient_keylist);
                     }
                 }
@@ -909,7 +909,7 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
     size_t psize, char **ctext, size_t *csize, bool sign
 )
-{    
+{
     PEP_STATUS result;
     gpgme_error_t gpgme_error;
     gpgme_data_t plain, cipher;
@@ -1120,7 +1120,7 @@ static PEP_STATUS find_single_key(
 static PEP_STATUS _pgp_createkey(PEP_SESSION session, pEp_identity *identity) {
     PEP_STATUS status = PEP_VERSION_MISMATCH;
 
-    if (identity && identity->address) {    
+    if (identity && identity->address) {
 #ifdef GPGME_VERSION_NUMBER 
 #if (GPGME_VERSION_NUMBER >= 0x010700)
         gpgme_error_t gpgme_error;
@@ -1139,7 +1139,7 @@ static PEP_STATUS _pgp_createkey(PEP_SESSION session, pEp_identity *identity) {
         if (gpgme_error != GPG_ERR_NOT_SUPPORTED) {
             switch (gpgme_error) {
                 case GPG_ERR_NO_ERROR:
-                    break;		    
+                    break;
                 case GPG_ERR_INV_VALUE:
                     return PEP_ILLEGAL_VALUE;
                 case GPG_ERR_GENERAL:
@@ -1147,7 +1147,7 @@ static PEP_STATUS _pgp_createkey(PEP_SESSION session, pEp_identity *identity) {
                 default:
                     assert(0);
                     return PEP_UNKNOWN_ERROR;
-            }        
+            }
 
             /* This is the same regardless of whether we got it from genkey or createkey */
             gpgme_genkey_result_t gpgme_genkey_result = gpg.gpgme_op_genkey_result(session->ctx);
@@ -1159,7 +1159,7 @@ static PEP_STATUS _pgp_createkey(PEP_SESSION session, pEp_identity *identity) {
             PEP_STATUS key_status = find_single_key(session, fpr, &key);
             if (!key || key_status != PEP_STATUS_OK)
                 return PEP_CANNOT_CREATE_KEY;
-                                
+            
             gpgme_error = gpg.gpgme_op_createsubkey(session->ctx, key, 
                                                     "RSA", 0, 
                                                     31536000, GPGME_CREATE_NOPASSWD 
@@ -1167,7 +1167,7 @@ static PEP_STATUS _pgp_createkey(PEP_SESSION session, pEp_identity *identity) {
 
             switch (gpgme_error) {
                 case GPG_ERR_NO_ERROR:
-                    break;		    
+                    break;
                 case GPG_ERR_INV_VALUE:
                     return PEP_ILLEGAL_VALUE;
                 case GPG_ERR_GENERAL:
@@ -1175,7 +1175,7 @@ static PEP_STATUS _pgp_createkey(PEP_SESSION session, pEp_identity *identity) {
                 default:
                     assert(0);
                     return PEP_UNKNOWN_ERROR;
-            }        
+            }
             
             free(identity->fpr);
             identity->fpr = fpr;
@@ -1185,7 +1185,7 @@ static PEP_STATUS _pgp_createkey(PEP_SESSION session, pEp_identity *identity) {
 //            gpg.gpgme_key_unref(key);
             
             status = pgp_replace_only_uid(session, fpr,
-                        identity->username, identity->address);                       
+                        identity->username, identity->address);
         }
 #endif
 #endif
@@ -1964,7 +1964,7 @@ static gpgme_error_t replace_only_uid_fsm(
                     return GPG_ERR_ENOMEM;
                 }
                 strlcpy(realname, handle->realname, realname_strlen + 1);
-                realname[realname_strlen] = '\n'; 
+                realname[realname_strlen] = '\n';
                 gpg.gpgme_io_write(fd, realname, realname_strlen + 1);
                 handle->state = replace_uid_email;
                 free(realname);
@@ -1986,7 +1986,7 @@ static gpgme_error_t replace_only_uid_fsm(
                     return GPG_ERR_ENOMEM;
                 }
                 strlcpy(email, handle->email, email_strlen + 1);
-                email[email_strlen] = '\n'; 
+                email[email_strlen] = '\n';
                 gpg.gpgme_io_write(fd, email, email_strlen + 1);
                 handle->state = replace_uid_comment;
                 free(email);
@@ -2134,7 +2134,7 @@ static gpgme_error_t replace_only_uid_fsm(
             return GPG_ERR_GENERAL;
             
         default:
-            break;                
+            break;
     }
     return GPG_ERR_NO_ERROR;
 }
