@@ -97,6 +97,82 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
     return true;
 }
 
+char* _undot_address(const char* address) {
+    if (!address)
+        return NULL;
+    
+    int addr_len = strlen(address);
+    const char* at = strstr(address, "@");
+    
+    if (!at)
+        at = address + addr_len;
+        
+    char* retval = calloc(1, sizeof(char)*(addr_len + 1));
+
+    const char* addr_curr = address;
+    char* retval_curr = retval;
+    
+    while (addr_curr < at) {
+        if (*addr_curr == '.') {
+            addr_curr++;
+            continue;
+        }
+        *retval_curr = *addr_curr;
+        retval_curr++;
+        addr_curr++;
+    }
+    if (*addr_curr == '@')
+        strcat(retval_curr, addr_curr);
+    
+    return retval;
+}
+
+static bool _email_heuristic_match(const char* str1, const char* str2) {
+    if (!str1 || !str2)
+        return false;
+        
+    if (strcasecmp(str1, str2) == 0)
+        return true;
+    
+    int len1 = strlen(str1);
+    int len2 = strlen(str2);
+    
+    // otherwise, we work against dotted usernames
+    const char* at1 = strstr(str1, "@");
+    const char* at2 = strstr(str2, "@");
+    
+    if (!at1)
+        at1 = str1 + len1;
+    
+    if (!at2)
+        at2 = str2 + len2;
+        
+    // This sucks. And is expensive. Here we go.
+    const char* str1_curr = str1;
+    const char* str2_curr = str2;
+    
+    while (str1_curr > at1 && str2_curr > at2) {
+        if (*str1_curr == '.') {
+            str1_curr++;
+            continue;
+        }
+
+        if (*str2_curr == '.') {
+            str2_curr++;
+            continue;
+        }
+        
+        if (tolower(*str1_curr) != tolower(*str2_curr))
+            return false;
+        
+        str1_curr++;
+        str2_curr++;
+    }
+    if (str1_curr == at1 && str2_curr == at2)
+        return true;
+    
+    return false;
+}
 
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
@@ -1726,9 +1802,10 @@ static PEP_STATUS _pgp_search_keys(PEP_SESSION session, const char* pattern,
                     break;
                 assert(key->uids);
                 gpgme_user_id_t kuid = key->uids;
-                // check that at least one uid's email matches pattern exactly
+                // check that at least one uid's email matches pattern exactly,
+                // modulo the email-diff heuristic
                 while(kuid) {
-                    if((pattern && kuid->email && strcmp(kuid->email, pattern) == 0) ||
+                    if((pattern && kuid->email && _email_heuristic_match(kuid->email, pattern)) ||
                        pattern == NULL /* match all */ )
                     { 
                         char *fpr = key->subkeys->fpr;
@@ -1759,7 +1836,23 @@ static PEP_STATUS _pgp_search_keys(PEP_SESSION session, const char* pattern,
     if (_keylist->value == NULL) {
         free_stringlist(_keylist);
         _keylist = NULL;
-    }
+        
+        // If match failed, check to see if we've got a dotted address in the pattern.
+        // (last chance of the heuristic, really)
+        // If so, try again without any dots.
+        const char* dotpos = strstr(pattern, ".");
+        const char* atpos = strstr(pattern, "@");
+        if (dotpos && atpos && (dotpos < atpos)) {
+            char* undotted = _undot_address(pattern);
+            if (undotted) {
+                PEP_STATUS status = _pgp_search_keys(session, undotted,
+                                                     keylist, private_only);
+                free(undotted);
+                return status;
+            }
+        }
+    }    
+    
     *keylist = _keylist;
     return PEP_STATUS_OK;
 }
