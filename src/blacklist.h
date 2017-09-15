@@ -22,12 +22,12 @@ DYNAMIC_API PEP_STATUS blacklist_add(PEP_SESSION session, const char *fpr);
 //
 //  parameters:
 //      session (in)        session to use
-//      fpr (in)            fingerprint of key to blacklist
+//      fpr (in)            fingerprint of key to be removed from blacklist
 
 DYNAMIC_API PEP_STATUS blacklist_delete(PEP_SESSION session, const char *fpr);
 
 
-// blacklist_is_listed() - is_listed from blacklist
+// blacklist_is_listed() - is_listed in blacklist
 //
 //  parameters:
 //      session (in)        session to use
