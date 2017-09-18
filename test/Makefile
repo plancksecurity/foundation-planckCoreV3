@@ -57,6 +57,12 @@ UNIT_TESTS_SOURCE=$(wildcard *_test.cc)
 UNIT_TESTS=$(subst .cc,,$(UNIT_TESTS_SOURCE))
 UNIT_TESTS_RUN=$(subst .cc,_run,$(UNIT_TESTS_SOURCE))
 
+ifneq ($(MAKECMDGOALS),clean)
+    ifneq (,$(findstring -DNDEBUG,$(CFLAGS)))
+        $(error The macro NDEBUG must not be defined for test compilation.)
+    endif
+endif
+
 .PHONY: all
 all: $(TARGET) $(UNIT_TESTS)
 
