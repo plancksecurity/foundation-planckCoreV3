@@ -57,7 +57,7 @@ UNIT_TESTS_SOURCE=$(wildcard *_test.cc)
 UNIT_TESTS=$(subst .cc,,$(UNIT_TESTS_SOURCE))
 UNIT_TESTS_RUN=$(subst .cc,_run,$(UNIT_TESTS_SOURCE))
 
-CFLAGS=$(filter-out -DNDEBUG,$(CFLAGS))
+CFLAGS:=$(filter-out -DNDEBUG,$(CFLAGS))
 
 ifneq ($(MAKECMDGOALS),clean)
     ifneq (,$(findstring -DNDEBUG,$(CFLAGS)))
