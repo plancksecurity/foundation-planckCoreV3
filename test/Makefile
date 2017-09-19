@@ -58,9 +58,15 @@ UNIT_TESTS=$(subst .cc,,$(UNIT_TESTS_SOURCE))
 UNIT_TESTS_RUN=$(subst .cc,_run,$(UNIT_TESTS_SOURCE))
 
 CFLAGS:=$(filter-out -DNDEBUG,$(CFLAGS))
-
 ifneq ($(MAKECMDGOALS),clean)
     ifneq (,$(findstring -DNDEBUG,$(CFLAGS)))
+        $(error The macro NDEBUG must not be defined for test compilation.)
+    endif
+endif
+
+CXXFLAGS:=$(filter-out -DNDEBUG,$(CXXFLAGS))
+ifneq ($(MAKECMDGOALS),clean)
+    ifneq (,$(findstring -DNDEBUG,$(CXXFLAGS)))
         $(error The macro NDEBUG must not be defined for test compilation.)
     endif
 endif
