@@ -100,6 +100,41 @@ void add_opt_field(message *msg, const char *name, const char *value)
     }
 }
 
+static char * encapsulate_message_version(const char *msg_version, const char *longmsg)
+{
+    assert(msg_version);
+    
+    if (!msg_version) {
+        if (!longmsg)
+            return NULL;
+        else {
+            char *result = strdup(longmsg);
+            assert(result);
+            return result;            
+        }    
+    }
+    
+    if (longmsg == NULL)
+        longmsg = "";
+        
+    const char * const newlines = "\n\n";
+    const size_t NL_LEN = 2;
+        
+    const size_t bufsize = PEP_MSG_VERSION_KEY_LEN + strlen(msg_version) + NL_LEN + strlen(longmsg) + 1;
+    char * ptext = calloc(1, bufsize);
+    assert(ptext);
+    if (ptext == NULL)
+        return NULL;
+
+    strlcpy(ptext, PEP_MSG_VERSION_KEY, bufsize);
+    strlcat(ptext, msg_version, bufsize);
+    strlcat(ptext, newlines, bufsize);
+    strlcat(ptext, longmsg, bufsize);
+
+    return ptext;
+}
+
+
 static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
 {
     assert(shortmsg);
@@ -122,18 +157,16 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     if (longmsg == NULL)
         longmsg = "";
 
-    const char * const subject = "Subject: ";
-    const size_t SUBJ_LEN = 9;
     const char * const newlines = "\n\n";
     const size_t NL_LEN = 2;
 
-    const size_t bufsize = SUBJ_LEN + strlen(shortmsg) + NL_LEN + strlen(longmsg) + 1;
+    const size_t bufsize = PEP_SUBJ_KEY_LEN + strlen(shortmsg) + NL_LEN + strlen(longmsg) + 1;
     char * ptext = calloc(1, bufsize);
     assert(ptext);
     if (ptext == NULL)
         return NULL;
 
-    strlcpy(ptext, subject, bufsize);
+    strlcpy(ptext, PEP_SUBJ_KEY, bufsize);
     strlcat(ptext, shortmsg, bufsize);
     strlcat(ptext, newlines, bufsize);
     strlcat(ptext, longmsg, bufsize);
@@ -141,62 +174,106 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     return ptext;
 }
 
-static int separate_short_and_long(const char *src, char **shortmsg, char **longmsg)
+/* 
+   WARNING: For the moment, this only works for the first line of decrypted
+   plaintext because we don't need more. IF WE DO, THIS MUST BE EXPANDED, or
+   we need a delineated section to parse separately
+   
+   Does case-insensitive compare of keys, so sending in a lower-cased
+   string constant saves a bit of computation
+ */
+static PEP_STATUS get_data_from_encapsulated_line(const char* plaintext, const char* key, 
+                                                  const size_t keylen, char** data, 
+                                                  char** modified_msg) {
+    char* _data = NULL;
+    char* _modified = NULL;
+    
+    if (strncasecmp(plaintext, key, keylen) == 0) {
+        const char *line_end = strchr(plaintext, '\n');
+
+        if (line_end == NULL) {
+            _data = strdup(plaintext + keylen);
+            assert(_data);
+            if (_data == NULL)
+                return PEP_OUT_OF_MEMORY;
+        }
+        else {
+            size_t n = line_end - plaintext;
+
+            if (*(line_end - 1) == '\r')
+                _data = strndup(plaintext + keylen, n - (keylen + 1));
+            else
+                _data = strndup(plaintext + keylen, n - keylen);
+            assert(_data);
+            if (_data == NULL)
+                return PEP_OUT_OF_MEMORY;
+
+            while (*(plaintext + n) && (*(plaintext + n) == '\n' || *(plaintext + n) == '\r'))
+                ++n;
+
+            if (*(plaintext + n)) {
+                _modified = strdup(plaintext + n);
+                assert(_modified);
+                if (_modified == NULL)
+                    return PEP_OUT_OF_MEMORY;
+            }
+        }
+    }
+    *data = _data;
+    *modified_msg = _modified;
+    return PEP_STATUS_OK;
+}
+
+
+static int separate_short_and_long(const char *src, char **shortmsg, char** msg_version, char **longmsg)
 {
     char *_shortmsg = NULL;
+    char *_msg_version = NULL;
     char *_longmsg = NULL;
 
     assert(src);
     assert(shortmsg);
+    assert(msg_version);
     assert(longmsg);
 
-    if (src == NULL || shortmsg == NULL || longmsg == NULL)
+    if (src == NULL || shortmsg == NULL || msg_version == NULL || longmsg == NULL)
         return -1;
 
     *shortmsg = NULL;
     *longmsg = NULL;
+    *msg_version = NULL;
 
-    if (strncasecmp(src, "subject: ", 9) == 0) {
-        char *line_end = strchr(src, '\n');
-
-        if (line_end == NULL) {
-            _shortmsg = strdup(src + 9);
-            assert(_shortmsg);
-            if (_shortmsg == NULL)
-                goto enomem;
-            // _longmsg = NULL;
-        }
-        else {
-            size_t n = line_end - src;
-
-            if (*(line_end - 1) == '\r')
-                _shortmsg = strndup(src + 9, n - 10);
-            else
-                _shortmsg = strndup(src + 9, n - 9);
-            assert(_shortmsg);
-            if (_shortmsg == NULL)
-                goto enomem;
-
-            while (*(src + n) && (*(src + n) == '\n' || *(src + n) == '\r'))
-                ++n;
-
-            if (*(src + n)) {
-                _longmsg = strdup(src + n);
-                assert(_longmsg);
-                if (_longmsg == NULL)
-                    goto enomem;
-            }
-        }
-        *shortmsg = _shortmsg;
+    // We generated the input here. If we ever need more than one header value to be
+    // encapsulated and hidden in the encrypted text, we will have to modify this.
+    // As is, we're either doing this with a version 1.0 client, in which case
+    // the only encapsulated header value is subject, or 2.0+, in which the
+    // message version is the only encapsulated header value. If we need this
+    // to be more complex, we're going to have to do something more elegant
+    // and efficient.    
+    PEP_STATUS status = get_data_from_encapsulated_line(src, PEP_SUBJ_KEY_LC, 
+                                                        PEP_SUBJ_KEY_LEN, 
+                                                        &_shortmsg, &_longmsg);
+                                                        
+    if (_shortmsg) {
+        if (status == PEP_STATUS_OK)
+            *shortmsg = _shortmsg;
+        else
+            goto enomem;
     }
     else {
-        // If there's no "Subject: " and the shortmsg is
-        // pEp (or anything else), then we shouldn't be replacing it.
-        // Chances are that the message wasn't encrypted
-        // using pEp and that the actually subject IS pEp. In any event,
-        // erasing the subject line when we don't have one in the plaintext
-        // isn't the right behaviour.
-        // _shortmsg = strdup("");
+        status = get_data_from_encapsulated_line(src, PEP_MSG_VERSION_KEY_LC, 
+                                                 PEP_MSG_VERSION_KEY_LEN, 
+                                                 &_msg_version, &_longmsg);
+        if (_msg_version) {
+            if (status == PEP_STATUS_OK)
+                *msg_version = _msg_version;
+            else
+                goto enomem;
+        }
+    }
+    
+    // If there was no secret data hiding in the first line...
+    if (!_shortmsg && !_msg_version) {
         _longmsg = strdup(src);
         assert(_longmsg);
         if (_longmsg == NULL)
@@ -209,6 +286,7 @@ static int separate_short_and_long(const char *src, char **shortmsg, char **long
 
 enomem:
     free(_shortmsg);
+    free(_msg_version);
     free(_longmsg);
 
     return -1;
@@ -1985,8 +2063,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 {
                     char * shortmsg;
                     char * longmsg;
-
-                    int r = separate_short_and_long(msg->longmsg, &shortmsg,
+                    char * msg_version; // This is incorrect, but just here to get things compiling for the moment
+                    int r = separate_short_and_long(msg->longmsg, &shortmsg, &msg_version,
                             &longmsg);
                     
                     if (r == -1)

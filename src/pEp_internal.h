@@ -37,6 +37,19 @@
 #define PEP_SUBJ_BYTELEN 5
 #endif
 
+#ifndef PEP_SUBJ_KEY
+#define PEP_SUBJ_KEY "Subject: "
+#define PEP_SUBJ_KEY_LC "subject: "
+#define PEP_SUBJ_KEY_LEN 9
+#endif
+
+#ifndef PEP_MSG_VERSION_KEY
+#define PEP_MSG_VERSION_KEY "pEp-Message-Version: "
+#define PEP_MSG_VERSION_KEY_LC "pep-message-version: "
+#define PEP_MSG_VERSION_KEY_LEN 21
+#endif
+
+
 #include "platform.h"
 
 #ifdef WIN32
