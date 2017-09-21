@@ -11,7 +11,7 @@ include Makefile.conf
 export YML_PATH=$(YML2_PATH)
 
 .PHONY: all
-all: _platform_override_info
+all: _override_info
 	$(MAKE) -C asn.1 generate
 	$(MAKE) -C asn.1
 	$(MAKE) -C sync
@@ -23,12 +23,12 @@ install: all
 	$(MAKE) -C asn.1 install
 
 .PHONY: uninstall
-uninstall:
+uninstall: _override_info
 	$(MAKE) -C src uninstall
 	$(MAKE) -C asn.1 uninstall
 
 .PHONY: clean
-clean:
+clean: _override_info
 	$(MAKE) -C src clean
 	$(MAKE) -C test clean
 	$(MAKE) -C db clean
@@ -49,15 +49,24 @@ package: clean
 	cd .. ; COPYFILE_DISABLE=true tar cjf pEpEngine.tar.bz2 "$(HERE_REL)"
 
 .PHONY: db
-db:
+db: _override_info
 	$(MAKE) -C db db
 
-.PHONY: _platform_override
-ifdef PLATFORM_OVERRIDE
-_platform_override_info:
+.PHONY: _override_info
+_override_info: _local_conf_info _build_config_info
+
+.PHONY: _local_conf_info
+_local_conf_info:
+ifneq ($(wildcard local.conf),)
 	@echo "================================================"
-	@echo "PLATFORM_OVERRIDE is set to '$(PLATFORM_OVERRIDE)'."
+	@echo "Overrides in `local.conf` are used."
 	@echo "================================================"
-else
-_platform_override_info:
+endif
+
+.PHONY: _build_config_info
+_build_config_info:
+ifdef BUILD_CONFIG
+	@echo "================================================"
+	@echo "Overrides in '$(BUILD_CONFIG)' are used."
+	@echo "================================================"
 endif
