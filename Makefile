@@ -59,7 +59,7 @@ _override_info: _local_conf_info _build_config_info
 _local_conf_info:
 ifneq ($(wildcard local.conf),)
 	@echo "================================================"
-	@echo "Overrides in `local.conf` are used."
+	@echo "Overrides in \`local.conf\` are used."
 	@echo "================================================"
 endif
 
@@ -67,6 +67,6 @@ endif
 _build_config_info:
 ifdef BUILD_CONFIG
 	@echo "================================================"
-	@echo "Overrides in '$(BUILD_CONFIG)' are used."
+	@echo "Overrides in \`$(BUILD_CONFIG)\` are used."
 	@echo "================================================"
 endif
