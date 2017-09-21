@@ -169,7 +169,7 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
 //  parameters:
 //      session (in)        session to use
 //      fpr (in)            fingerprint of key to test
-//      bool (out)          flags if key is own
+//      listed (out)        flags if key is own
 
 DYNAMIC_API PEP_STATUS own_key_is_listed(
         PEP_SESSION session,

@@ -97,82 +97,6 @@ pep_error:
     return status;
 }
 
-static PEP_STATUS mime_html_text(
-        const char *plaintext,
-        const char *htmltext,
-        struct mailmime **result
-    )
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-    struct mailmime * mime = NULL;
-    struct mailmime * submime = NULL;
-    int r;
-
-    assert(plaintext);
-    assert(htmltext);
-    assert(result);
-
-    *result = NULL;
-
-    mime = part_multiple_new("multipart/alternative");
-    assert(mime);
-    if (mime == NULL)
-        goto enomem;
-
-    pEp_rid_list_t* resource = new_rid_node(PEP_RID_FILENAME, "msg.txt");
-    
-    submime = get_text_part(resource, "text/plain", plaintext, strlen(plaintext),
-            MAILMIME_MECHANISM_QUOTED_PRINTABLE);
-    free_rid_list(resource);
-    resource = NULL;
-    
-    assert(submime);
-    if (submime == NULL)
-        goto enomem;
-
-    r = mailmime_smart_add_part(mime, submime);
-    assert(r == MAILIMF_NO_ERROR);
-    if (r == MAILIMF_ERROR_MEMORY) {
-        goto enomem;
-    }
-    else {
-        // mailmime_smart_add_part() takes ownership of submime
-        submime = NULL;
-    }
-
-    resource = new_rid_node(PEP_RID_FILENAME, "msg.html");
-    submime = get_text_part(resource, "text/html", htmltext, strlen(htmltext),
-            MAILMIME_MECHANISM_QUOTED_PRINTABLE);
-    free_rid_list(resource);
-    resource = NULL;
-    
-    assert(submime);
-    if (submime == NULL)
-        goto enomem;
-
-    r = mailmime_smart_add_part(mime, submime);
-    assert(r == MAILIMF_NO_ERROR);
-    if (r == MAILIMF_ERROR_MEMORY)
-        goto enomem;
-    else {
-        // mailmime_smart_add_part() takes ownership of submime
-        submime = NULL;
-    }
-
-    *result = mime;
-    return PEP_STATUS_OK;
-
-enomem:
-    status = PEP_OUT_OF_MEMORY;
-
-    if (mime)
-        mailmime_free(mime);
-
-    if (submime)
-        mailmime_free(submime);
-
-    return status;
-}
 
 static PEP_STATUS mime_attachment(
         bloblist_t *blob,
@@ -212,6 +136,139 @@ enomem:
 
     if (mime)
         mailmime_free(mime);
+
+    return status;
+}
+
+static PEP_STATUS mime_html_text(
+        const char *plaintext,
+        const char *htmltext,
+        bloblist_t *attachments,
+        struct mailmime **result
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    struct mailmime * top_level_html_mime = NULL;
+    struct mailmime * mime = NULL;
+    struct mailmime * submime = NULL;
+    int r;
+
+    assert(plaintext);
+    assert(htmltext);
+    assert(result);
+
+    *result = NULL;
+
+    mime = part_multiple_new("multipart/alternative");
+    assert(mime);
+    if (mime == NULL)
+        goto enomem;
+
+    pEp_rid_list_t* resource = new_rid_node(PEP_RID_FILENAME, "msg.txt");
+    
+    submime = get_text_part(NULL, "text/plain", plaintext, strlen(plaintext),
+            MAILMIME_MECHANISM_QUOTED_PRINTABLE);
+    free_rid_list(resource);
+    resource = NULL;
+    
+    assert(submime);
+    if (submime == NULL)
+        goto enomem;
+
+    r = mailmime_smart_add_part(mime, submime);
+    assert(r == MAILIMF_NO_ERROR);
+    if (r == MAILIMF_ERROR_MEMORY) {
+        goto enomem;
+    }
+    else {
+        // mailmime_smart_add_part() takes ownership of submime
+        submime = NULL;
+    }
+
+    bool inlined_attachments = false;
+    
+    bloblist_t* traversal_ptr = attachments;
+    
+    while (traversal_ptr) {
+        if (traversal_ptr->disposition == PEP_CONTENT_DISP_INLINE) {
+            inlined_attachments = true;
+            break;
+        }
+        traversal_ptr = traversal_ptr->next;
+    }
+
+    if (inlined_attachments) {
+        /* Noooooo... dirk, why do you do this to me? */
+        submime = part_multiple_new("multipart/related");
+        assert(submime);
+        if (submime == NULL)
+            goto enomem;
+
+        top_level_html_mime = submime;
+        
+        r = mailmime_smart_add_part(mime, top_level_html_mime);
+        assert(r == MAILIMF_NO_ERROR);
+        if (r == MAILIMF_ERROR_MEMORY) {
+            goto enomem;
+        }
+        else {
+            // mailmime_smart_add_part() takes ownership of submime
+            submime = NULL;
+        }
+    }
+    else {
+        top_level_html_mime = mime;
+    }
+
+//    resource = new_rid_node(PEP_RID_FILENAME, "msg.html");
+    submime = get_text_part(NULL, "text/html", htmltext, strlen(htmltext),
+            MAILMIME_MECHANISM_QUOTED_PRINTABLE);
+    free_rid_list(resource);
+    resource = NULL;
+    
+    assert(submime);
+    if (submime == NULL)
+        goto enomem;
+
+    r = mailmime_smart_add_part(top_level_html_mime, submime);
+    assert(r == MAILIMF_NO_ERROR);
+    if (r == MAILIMF_ERROR_MEMORY)
+        goto enomem;
+    else {
+        // mailmime_smart_add_part() takes ownership of submime
+        submime = NULL;
+    }
+
+    bloblist_t *_a;
+    for (_a = attachments; _a != NULL; _a = _a->next) {
+        if (_a->disposition != PEP_CONTENT_DISP_INLINE)
+            continue;
+        status = mime_attachment(_a, &submime);
+        if (status != PEP_STATUS_OK)
+            return PEP_UNKNOWN_ERROR; // FIXME
+
+        r = mailmime_smart_add_part(top_level_html_mime, submime);
+        assert(r == MAILIMF_NO_ERROR);
+        if (r == MAILIMF_ERROR_MEMORY) {
+            goto enomem;
+        }
+        else {
+            // mailmime_smart_add_part() takes ownership of submime
+            submime = NULL;
+        }
+    }
+
+    *result = mime;
+    return PEP_STATUS_OK;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+    if (mime)
+        mailmime_free(mime);
+
+    if (submime)
+        mailmime_free(submime);
 
     return status;
 }
@@ -361,7 +418,8 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     struct mailimf_fields * fields = NULL;
     int r;
     clist * fields_list = NULL;
-    char *subject = msg->shortmsg ? msg->shortmsg : "pEp";
+    unsigned char pepstr[] = PEP_SUBJ_STRING; // unsigned due to UTF-8 byte fun
+    char *subject = msg->shortmsg ? msg->shortmsg : (char*)pepstr;
 
     assert(msg);
     assert(msg->from);
@@ -605,6 +663,35 @@ static pEp_rid_list_t* choose_resource_id(pEp_rid_list_t* rid_list) {
     return retval;
 }
 
+// static void split_inlined_and_attached(bloblist_t** inlined, bloblist_t** attached) {
+//     bloblist_t** curr_pp = attached;
+//     bloblist_t* curr = *curr_pp;
+//     
+//     bloblist_t* inline_ret = NULL;
+//     bloblist_t** inline_curr_pp = &inline_ret;
+//     
+//     bloblist_t* att_ret = NULL;
+//     bloblist_t** att_curr_pp = &att_ret;
+//     
+//     while (curr) {
+//         if (curr->disposition == PEP_CONTENT_DISP_INLINE) {
+//             *inline_curr_pp = curr;
+//             inline_curr_pp = &(curr->next);
+//         }
+//         else {
+//             *att_curr_pp = curr;
+//             att_curr_pp = &(curr->next);            
+//         }
+//         *curr_pp = curr->next;
+//         curr->next = NULL;
+//         curr = *curr_pp;
+//     }
+//     
+//     *inlined = inline_ret;
+//     *attached = att_ret;
+// }
+
+
 static PEP_STATUS mime_encode_message_plain(
         const message *msg,
         bool omit_fields,
@@ -621,13 +708,17 @@ static PEP_STATUS mime_encode_message_plain(
 
     assert(msg);
     assert(result);
-
+    
     //subject = (msg->shortmsg) ? msg->shortmsg : "pEp";  // not used, yet.
     plaintext = (msg->longmsg) ? msg->longmsg : "";
     htmltext = msg->longmsg_formatted;
 
     if (htmltext && (htmltext[0] != '\0')) {
-        status = mime_html_text(plaintext, htmltext, &mime);
+        /* first, we need to strip out the inlined attachments to ensure this
+           gets set up correctly */
+           
+        status = mime_html_text(plaintext, htmltext, msg->attachments, &mime);
+                
         if (status != PEP_STATUS_OK)
             goto pep_error;
     }
@@ -650,7 +741,19 @@ static PEP_STATUS mime_encode_message_plain(
             goto enomem;
     }
 
-    if (msg->attachments) {
+    bool normal_attachments = false;
+    
+    bloblist_t* traversal_ptr = msg->attachments;
+    
+    while (traversal_ptr) {
+        if (traversal_ptr->disposition != PEP_CONTENT_DISP_INLINE) {
+            normal_attachments = true;
+            break;
+        }
+        traversal_ptr = traversal_ptr->next;
+    }
+
+    if (normal_attachments) {
         submime = mime;
         mime = part_multiple_new("multipart/mixed");
         assert(mime);
@@ -669,6 +772,9 @@ static PEP_STATUS mime_encode_message_plain(
 
         bloblist_t *_a;
         for (_a = msg->attachments; _a != NULL; _a = _a->next) {
+
+            if (_a->disposition == PEP_CONTENT_DISP_INLINE)
+                continue;
 
             status = mime_attachment(_a, &submime);
             if (status != PEP_STATUS_OK)

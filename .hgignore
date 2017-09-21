@@ -3,6 +3,8 @@ syntax: regexp
 ^asn\.1/Makefile\.am\.sample$
 ^asn\.1/libasn1\.a$
 .*xcuserdata/
+^build/
+^local.conf
 
 syntax: glob
 *.orig

@@ -20,7 +20,6 @@ using namespace std;
     PEP_comm_type comm_type;    // type of communication with this ID
     char lang[3];               // language of conversation
                                 // ISO 639-1 ALPHA-2, last byte is 0
-    bool me;                    // if this is the local user herself/himself
     */
 
 int test_identity_equals(pEp_identity* val1, pEp_identity* val2) {
@@ -35,7 +34,7 @@ int test_identity_equals(pEp_identity* val1, pEp_identity* val2) {
     return((strcmp(val1->address, val2->address) == 0) && (strcmp(val1->fpr, val2->fpr) == 0)
         && (strcmp(val1->username, val2->username) == 0) && (val1->comm_type == val2->comm_type)
         && (val1->lang[0] == val2->lang[0]) && (val1->lang[1] == val2->lang[1])
-        && (val1->lang[2] == val2->lang[2]) && (val1->me == val2->me));
+        && (val1->lang[2] == val2->lang[2]));
 }
 
 int main() {
