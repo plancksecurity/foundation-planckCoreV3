@@ -1833,7 +1833,7 @@ static PEP_STATUS _pgp_search_keys(PEP_SESSION session, const char* pattern,
     } while (gpgme_error != GPG_ERR_EOF);
 
     gpg.gpgme_op_keylist_end(session->ctx);
-    if (_keylist->value == NULL) {
+    if (_keylist->value == NULL && pattern != NULL) {
         free_stringlist(_keylist);
         _keylist = NULL;
         
