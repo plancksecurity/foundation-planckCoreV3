@@ -1814,7 +1814,8 @@ static bool pull_up_attached_main_msg(message* src) {
 }
 
 PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg) {
-        
+    unsigned char pepstr[] = PEP_SUBJ_STRING;
+    
     switch (src->enc_format) {
         case PEP_enc_PGP_MIME:
         case PEP_enc_pieces:
@@ -1995,6 +1996,29 @@ static PEP_STATUS _decrypt_in_pieces(message* src, message** msg_ptr, char* ptex
     return status;
 }
 
+static void get_crypto_text(message* src, char** crypto_text, size_t* text_size) {
+                                
+    switch (src->enc_format) {
+        case PEP_enc_PGP_MIME:
+            *crypto_text = src->attachments->next->value;
+            *text_size = src->attachments->next->size;
+            break;
+
+        case PEP_enc_PGP_MIME_Outlook1:
+            *crypto_text = src->attachments->value;
+            *text_size = src->attachments->size;
+            break;
+
+        case PEP_enc_pieces:
+            *crypto_text = src->longmsg;
+            *text_size = strlen(ctext);
+            break;
+
+        default:
+            NOT_IMPLEMENTED
+    }
+}
+
 DYNAMIC_API PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -2006,17 +2030,6 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     )
 {
     
-    /*** Begin init ***/
-    PEP_STATUS status = PEP_STATUS_OK;
-    PEP_STATUS decrypt_status = PEP_CANNOT_DECRYPT_UNKNOWN;
-    message *msg = NULL;
-    char *ctext;
-    size_t csize;
-    char *ptext = NULL;
-    size_t psize;
-    stringlist_t *_keylist = NULL;
-    unsigned char pepstr[] = PEP_SUBJ_STRING;
-
     assert(session);
     assert(src);
     assert(dst);
@@ -2027,10 +2040,25 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     if (!(session && src && dst && keylist && rating && flags))
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
+    /*** Begin init ***/
+    PEP_STATUS status = PEP_STATUS_OK;
+    PEP_STATUS decrypt_status = PEP_CANNOT_DECRYPT_UNKNOWN;
+    message *msg = NULL;
+    char *ctext;
+    size_t csize;
+    char *ptext = NULL;
+    size_t psize;
+    stringlist_t *_keylist = NULL;
+
+    *dst = NULL;
+    *keylist = NULL;
+    *rating = PEP_rating_undefined;
+
     *flags = 0;
     /*** End init ***/
 
     /*** Begin Import any attached public keys and update identities accordingly ***/
+
     // Private key in unencrypted mail are ignored -> NULL
     bool imported_keys = import_attached_keys(session, src, NULL);
 
@@ -2039,9 +2067,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     status = _update_identity_for_incoming_message(session, src);
     if(status != PEP_STATUS_OK)
         return ADD_TO_LOG(status);
+
     /*** End Import any attached public keys and update identities accordingly ***/
     
-    /*** Begin Get detached signatures that are attached to the encrypted message ***/
+    /*** Begin get detached signatures that are attached to the encrypted message ***/
     // Get detached signature, if any
     bloblist_t* detached_sig = NULL;
     char* dsig_text = NULL;
@@ -2051,51 +2080,30 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         dsig_text = detached_sig->value;
         dsig_size = detached_sig->size;
     }
-    /*** End Get detached signatures that are attached to the encrypted message ***/
+    /*** End get detached signatures that are attached to the encrypted message ***/
 
     /*** Determine encryption format ***/
     PEP_cryptotech crypto = determine_encryption_format(src);
 
-    *dst = NULL;
-    *keylist = NULL;
-    *rating = PEP_rating_undefined;
+    // Check for and deal with unencrypted messages
+    if (src->enc_format == PEP_enc_none) {
 
-    switch (src->enc_format) {
-        /*** BEGIN UNENCRYPTED MESSAGE HANDLING ***/
-        case PEP_enc_none:
-            *rating = PEP_rating_unencrypted;
+        *rating = PEP_rating_unencrypted;
 
-            if (imported_keys)
-                remove_attached_keys(src);
+        if (imported_keys)
+            remove_attached_keys(src);
 
-            status = check_for_sync_msg(session, src, rating, keylist);
-            
-            if (status != PEP_STATUS_OK)
-                return ADD_TO_LOG(status);
-                                        
-            pull_up_attached_main_msg(src);
-            
-            return ADD_TO_LOG(PEP_UNENCRYPTED);
-        /*** END UNENCRYPTED MESSAGE HANDLING ***/
-
-        case PEP_enc_PGP_MIME:
-            ctext = src->attachments->next->value;
-            csize = src->attachments->next->size;
-            break;
-
-        case PEP_enc_PGP_MIME_Outlook1:
-            ctext = src->attachments->value;
-            csize = src->attachments->size;
-            break;
-
-        case PEP_enc_pieces:
-            ctext = src->longmsg;
-            csize = strlen(ctext);
-            break;
-
-        default:
-            NOT_IMPLEMENTED
+        status = check_for_sync_msg(session, src, rating, keylist);
+        
+        if (status != PEP_STATUS_OK)
+            return ADD_TO_LOG(status);
+                                    
+        pull_up_attached_main_msg(src);
+        
+        return ADD_TO_LOG(PEP_UNENCRYPTED);
     }
+
+    get_crypto_text(src, &ctext, &csize);
     
     /** Ok, we should be ready to decrypt. Try decrypt and verify first! **/
     status = cryptotech[crypto].decrypt_and_verify(session, ctext,
@@ -2112,8 +2120,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
     bool imported_private_key_address = false;
 
-    if (ptext) {
-        switch (src->enc_format) {
+    if (ptext) { /* Begin: if we got a plaintext from decryption */
+         switch (src->enc_format) {
             
             case PEP_enc_PGP_MIME:
             case PEP_enc_PGP_MIME_Outlook1:
@@ -2175,7 +2183,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             free_identity_list(_private_il);
         }
 
-        if(decrypt_status == PEP_DECRYPTED){
+        if (decrypt_status == PEP_DECRYPTED){
 
             // TODO optimize if import_attached_keys didn't import any key
 
@@ -2187,9 +2195,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
             status = _update_identity_for_incoming_message(session, src);
             if(status != PEP_STATUS_OK)
-            {
                 GOTO(pep_error);
-            }
 
             char *re_ptext = NULL;
             size_t re_psize;
@@ -2203,15 +2209,16 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             free(re_ptext);
 
             if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
-            {
                 GOTO(pep_error);
-            }
 
             decrypt_status = status;
         }
 
         *rating = decrypt_rating(decrypt_status);
 
+        /* Ok, now we have a keylist used for decryption/verification.
+           now we need to update the message rating with the 
+           sender and recipients in mind */
         status = amend_rating_according_to_sender_and_recipients(session,
                                                                  rating,
                                                                  src->from,
@@ -2219,55 +2226,53 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
         if (status != PEP_STATUS_OK)
             GOTO(pep_error);
-    }
-    else
-    {
+    } /* End: if we got a plaintext from decryption */
+    else {
+        // We did not get a plaintext out of the decryption process.
+        // Abort and return error.
         *rating = decrypt_rating(decrypt_status);
         goto pep_error;
     }
 
-    // Case of own key imported from own trusted message
-    if (// Message have been reliably decrypted
-        msg &&
-        *rating >= PEP_rating_trusted &&
-        imported_private_key_address &&
-        // to is [own]
+    /* 
+       Ok, at this point, we know we have a reliably decrypted message.
+       Prepare the output message for return.
+    */
+    
+    // 1. Check to see if this message is to us and contains an own key imported 
+    // from own trusted message 
+    if (msg && *rating >= PEP_rating_trusted && imported_private_key_address &&
         msg->to->ident->user_id &&
-        strcmp(msg->to->ident->user_id, PEP_OWN_USERID) == 0
-        )
-    {
+        strcmp(msg->to->ident->user_id, PEP_OWN_USERID) == 0) {
+
+        // flag it as such
         *flags |= PEP_decrypt_flag_own_private_key;
     }
 
+    // 2. Clean up message and prepare for return 
     if (msg) {
+        
+        /* add pEp-related status flags to header */
         decorate_message(msg, *rating, _keylist);
+        
         if (imported_keys)
             remove_attached_keys(msg);
-        if (*rating >= PEP_rating_reliable &&
-            session->sync_session->inject_sync_msg) {
-            status = receive_DeviceState_msg(session, msg, *rating, _keylist);
-            if (status == PEP_MESSAGE_CONSUME ||
-                status == PEP_MESSAGE_IGNORE) {
-                free_message(msg);
-                msg = NULL;
-                *flags |= (status == PEP_MESSAGE_IGNORE) ?
-                            PEP_decrypt_flag_ignore :
-                            PEP_decrypt_flag_consume;
-
-            }
-            else if (status != PEP_STATUS_OK){
+            
+        if (*rating >= PEP_rating_reliable) { 
+            status = check_for_sync_msg(session, src, rating, _keylist);
+        
+            if (status != PEP_STATUS_OK)
                 goto pep_error;
-            }
         }
-    }
-    if (msg) {
+        
+        // copy message id to output message        
         if (src->id) {
             msg->id = strdup(src->id);
             assert(msg->id);
             if (msg->id == NULL)
                 goto enomem;
         }
-    }
+    } // End prepare output message for return
 
     *dst = msg;
     *keylist = _keylist;
