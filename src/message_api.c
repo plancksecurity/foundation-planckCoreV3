@@ -1875,8 +1875,10 @@ PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg) {
 }
 
 PEP_STATUS attempt_to_verify_decrypted(PEP_SESSION session,
-                                       message* msg, pEp_identity* sender,
-                                       char* plaintext, size_t plaintext_size,
+                                       message* msg, 
+                                       pEp_identity* sender,
+                                       char* plaintext, 
+                                       size_t plaintext_size,
                                        stringlist_t** keylist,
                                        PEP_STATUS* decrypt_status,
                                        PEP_cryptotech crypto) {
@@ -1901,7 +1903,7 @@ PEP_STATUS attempt_to_verify_decrypted(PEP_SESSION session,
             {
                 *decrypt_status = PEP_DECRYPTED_AND_VERIFIED;
             
-                status = combine_keylists(session, &verify_keylist, keylist, msg->from);
+                status = combine_keylists(session, &verify_keylist, keylist, sender);
             }
         }
     }
