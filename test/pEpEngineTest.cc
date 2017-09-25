@@ -9,14 +9,28 @@
 
 #include <assert.h>
 #include <string.h>
+#include <sstream>
+
 
 #include "../src/pEpEngine.h"
 #include "../src/keymanagement.h"
 
-
 using namespace std;
 
 typedef std::string Buffer;
+
+std::string slurp(const std::string& filename)
+{
+        std::ifstream input(filename.c_str());
+        if(!input)
+        {
+                throw std::runtime_error("Cannot read file \"" + filename + "\"! ");
+        }
+
+        std::stringstream sstr;
+        sstr << input.rdbuf();
+        return sstr.str();
+}
 
 // no C++11, yet? So do our own implementation:
 namespace{
@@ -95,6 +109,35 @@ int main(int argc, char* argv[])
     assert(second_session);
     cout << "dropping second session\n";
     release(second_session);
+
+    cout << "Importing keys...";
+    string pub_key = slurp("test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
+    string priv_key = slurp("test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc");
+
+    PEP_STATUS statuspub = import_key(session, pub_key.c_str(), pub_key.length(), NULL);
+    PEP_STATUS statuspriv = import_key(session, priv_key.c_str(), priv_key.length(), NULL);
+    assert(statuspub == PEP_STATUS_OK);
+    assert(statuspriv == PEP_STATUS_OK);
+
+    pub_key = slurp("test_keys/pub/pep-test-john-0x70DCF575_pub.asc");
+    priv_key = slurp("test_keys/priv/pep-test-john-0x70DCF575_priv.asc");
+
+    statuspub = import_key(session, pub_key.c_str(), pub_key.length(), NULL);
+    statuspriv = import_key(session, priv_key.c_str(), priv_key.length(), NULL);
+    assert(statuspub == PEP_STATUS_OK);
+    assert(statuspriv == PEP_STATUS_OK);
+
+    pub_key = slurp("test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
+
+    statuspub = import_key(session, pub_key.c_str(), pub_key.length(), NULL);
+    assert(statuspub == PEP_STATUS_OK);
+    assert(statuspriv == PEP_STATUS_OK);
+
+
+    cout << "creating message…\n";
+    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", PEP_OWN_USERID, "Alice Test");
+    pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, "42", "Bob Test");
+
 
     cout << "logging test\n";
     log_event(session, "log test", "pEp Engine Test", "This is a logging test sample.", "please ignore this line");
