@@ -1542,7 +1542,8 @@ static PEP_STATUS _update_identity_for_incoming_message(
 }
 
 
-PEP_STATUS _get_detached_signature(message* msg, bloblist_t** signature_blob) {
+static PEP_STATUS _get_detached_signature(message* msg, 
+                                          bloblist_t** signature_blob) {
     bloblist_t* attach_curr = msg->attachments;
 
     *signature_blob = NULL;
@@ -1558,8 +1559,8 @@ PEP_STATUS _get_detached_signature(message* msg, bloblist_t** signature_blob) {
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
-                            char** stext, size_t* ssize) {
+static PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
+                                   char** stext, size_t* ssize) {
 
     char* signed_boundary = NULL;
     char* signpost = strstr(ptext, "Content-Type: multipart/signed");
@@ -1629,9 +1630,9 @@ PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS combine_keylists(PEP_SESSION session, stringlist_t** verify_in, 
-                            stringlist_t** keylist_in_out, 
-                            pEp_identity* from) {
+static PEP_STATUS combine_keylists(PEP_SESSION session, stringlist_t** verify_in, 
+                                   stringlist_t** keylist_in_out, 
+                                   pEp_identity* from) {
     
     if (!verify_in || !(*verify_in)) // this isn't really a problem.
         return PEP_STATUS_OK;
@@ -1706,11 +1707,11 @@ free:
     return status;
 }
 
-PEP_STATUS amend_rating_according_to_sender_and_recipients(
-    PEP_SESSION session,
-    PEP_rating *rating,
-    pEp_identity *sender,
-    stringlist_t *recipients) {
+static PEP_STATUS amend_rating_according_to_sender_and_recipients(
+       PEP_SESSION session,
+       PEP_rating *rating,
+       pEp_identity *sender,
+       stringlist_t *recipients) {
     
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -1814,7 +1815,7 @@ static bool pull_up_attached_main_msg(message* src) {
     return false;
 }
 
-PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg) {
+static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg) {
     unsigned char pepstr[] = PEP_SUBJ_STRING;
     PEP_STATUS status = PEP_STATUS_OK;
     
@@ -1874,14 +1875,14 @@ PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg) {
 
 }
 
-PEP_STATUS attempt_to_verify_decrypted(PEP_SESSION session,
-                                       message* msg, 
-                                       pEp_identity* sender,
-                                       char* plaintext, 
-                                       size_t plaintext_size,
-                                       stringlist_t** keylist,
-                                       PEP_STATUS* decrypt_status,
-                                       PEP_cryptotech crypto) {
+static PEP_STATUS verify_decrypted(PEP_SESSION session,
+                                   message* msg, 
+                                   pEp_identity* sender,
+                                   char* plaintext, 
+                                   size_t plaintext_size,
+                                   stringlist_t** keylist,
+                                   PEP_STATUS* decrypt_status,
+                                   PEP_cryptotech crypto) {
     bloblist_t* detached_sig = NULL;
     PEP_STATUS status = _get_detached_signature(msg, &detached_sig);
     
@@ -2165,8 +2166,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
     bool imported_private_key_address = false;
 
-    if (ptext) { /* Begin: if we got a plaintext from decryption */
-         switch (src->enc_format) {
+    if (ptext) { 
+        /* we got a plaintext from decryption */
+        switch (src->enc_format) {
             
             case PEP_enc_PGP_MIME:
             case PEP_enc_PGP_MIME_Outlook1:
@@ -2193,12 +2195,12 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                     if (status != PEP_STATUS_OK)
                         GOTO(pep_error);            
                                                                  
-                    status = attempt_to_verify_decrypted(session,
-                                                         msg, src->from,
-                                                         ptext, psize,
-                                                         &_keylist,
-                                                         &decrypt_status,
-                                                         crypto);
+                    status = verify_decrypted(session,
+                                              msg, src->from,
+                                              ptext, psize,
+                                              &_keylist,
+                                              &decrypt_status,
+                                              crypto);
                 }
                 break;
 
@@ -2235,7 +2237,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
         if (status != PEP_STATUS_OK)
             GOTO(pep_error);
-    } /* End: if we got a plaintext from decryption */
+            
+    } 
     else {
         // We did not get a plaintext out of the decryption process.
         // Abort and return error.
