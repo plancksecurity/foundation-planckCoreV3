@@ -2019,6 +2019,33 @@ static void get_crypto_text(message* src, char** crypto_text, size_t* text_size)
     }
 }
 
+status PEP_STATUS import_priv_keys_from_decrypted_msg(PEP_SESSION session,
+                                                      message* src, 
+                                                      message* msg,
+                                                      bool* imported_private,
+                                                      identity_list** private_il) {
+                                                          
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    // check for private key in decrypted message attachment while importing
+    identity_list *_private_il = NULL;
+    imported_keys = import_attached_keys(session, msg, &_private_il);
+    
+    if (_private_il && identity_list_length(_private_il) == 1 &&
+        _private_il->ident->address)
+        *imported_private = true;
+
+    if (private_il && imported_private)
+        *private_il = _private_il;
+    else
+        free_identity_list(_private_il);
+
+    if (imported_keys)
+        status = _update_identity_for_incoming_message(session, src);
+        
+    return status;
+}
+
 DYNAMIC_API PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -2114,6 +2141,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         GOTO(pep_error);
 
     decrypt_status = status;
+    
     /* inject appropriate sync message if we couldn't decrypt due to no key */
     if (sync_if_no_key(decrypt_status, session) == PEP_OUT_OF_MEMORY)
         goto pep_error;
@@ -2139,6 +2167,14 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
                 /* if decrypted, but not verified... */
                 if (decrypt_status == PEP_DECRYPTED) {
+                    
+                    // check for private key in decrypted message attachment while importing
+                    status = import_priv_keys_from_decrypted_msg(session, src, msg,
+                                                                 &imported_private_key_address,
+                                                                 private_il);
+                    if (status != PEP_STATUS_OK)
+                        GOTO(pep_error);            
+                                                                 
                     status = attempt_to_verify_decrypted(msg, src->from,
                                                          ptext, psize,
                                                          &decrypt_status,
@@ -2166,53 +2202,6 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             
         if (status != PEP_STATUS_OK)
             goto pep_error;
-            
-        // check for private key in decrypted message attachment while importing
-        identity_list *_private_il = NULL;
-        imported_keys = import_attached_keys(session, msg, &_private_il);
-        if (_private_il &&
-            identity_list_length(_private_il) == 1 &&
-            _private_il->ident->address)
-        {
-            imported_private_key_address = true;
-        }
-
-        if(private_il && imported_private_key_address){
-            *private_il = _private_il;
-        }else{
-            free_identity_list(_private_il);
-        }
-
-        if (decrypt_status == PEP_DECRYPTED){
-
-            // TODO optimize if import_attached_keys didn't import any key
-
-            // In case message did decrypt, but no valid signature could be found
-            // then retry decrypt+verify after importing key.
-
-            // Update msg->from in case we just imported a key
-            // we would need to check signature
-
-            status = _update_identity_for_incoming_message(session, src);
-            if(status != PEP_STATUS_OK)
-                GOTO(pep_error);
-
-            char *re_ptext = NULL;
-            size_t re_psize;
-
-            free_stringlist(_keylist);
-            _keylist = NULL;
-
-            status = cryptotech[crypto].decrypt_and_verify(session, ctext,
-                csize, dsig_text, dsig_size, &re_ptext, &re_psize, &_keylist);
-
-            free(re_ptext);
-
-            if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
-                GOTO(pep_error);
-
-            decrypt_status = status;
-        }
 
         *rating = decrypt_rating(decrypt_status);
 
