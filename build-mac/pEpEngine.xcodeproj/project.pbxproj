@@ -123,7 +123,7 @@
 		64A826811B455D0800EECAF0 /* pEpEngine.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826601B455D0800EECAF0 /* pEpEngine.c */; };
 		64A826821B455D0800EECAF0 /* pgp_netpgp.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826631B455D0800EECAF0 /* pgp_netpgp.c */; };
 		64A826831B455D0800EECAF0 /* platform_unix.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826651B455D0800EECAF0 /* platform_unix.c */; };
-		64A826851B455D0800EECAF0 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8266B1B455D0800EECAF0 /* sqlite3.c */; };
+		64A826851B455D0800EECAF0 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8266B1B455D0800EECAF0 /* sqlite3.c */; settings = {COMPILER_FLAGS = "-DSQLITE_THREADSAFE=1 -DSQLITE_TEMP_STORE=3"; }; };
 		64A826861B455D0800EECAF0 /* stringlist.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8266D1B455D0800EECAF0 /* stringlist.c */; };
 		64A826871B455D0800EECAF0 /* stringpair.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8266F1B455D0800EECAF0 /* stringpair.c */; };
 		64A826881B455D0800EECAF0 /* timestamp.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826711B455D0800EECAF0 /* timestamp.c */; };
