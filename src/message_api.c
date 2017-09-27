@@ -100,11 +100,11 @@ void add_opt_field(message *msg, const char *name, const char *value)
     }
 }
 
-static char * encapsulate_message_version(const char *msg_version, const char *longmsg)
+static char * encapsulate_message_wrap_info(const char *msg_wrap_info, const char *longmsg)
 {
-    assert(msg_version);
+    assert(msg_wrap_info);
     
-    if (!msg_version) {
+    if (!msg_wrap_info) {
         if (!longmsg)
             return NULL;
         else {
@@ -120,14 +120,14 @@ static char * encapsulate_message_version(const char *msg_version, const char *l
     const char * const newlines = "\n\n";
     const size_t NL_LEN = 2;
         
-    const size_t bufsize = PEP_MSG_VERSION_KEY_LEN + strlen(msg_version) + NL_LEN + strlen(longmsg) + 1;
+    const size_t bufsize = PEP_MSG_WRAP_KEY_LEN + strlen(msg_wrap_info) + NL_LEN + strlen(longmsg) + 1;
     char * ptext = calloc(1, bufsize);
     assert(ptext);
     if (ptext == NULL)
         return NULL;
 
-    strlcpy(ptext, PEP_MSG_VERSION_KEY, bufsize);
-    strlcat(ptext, msg_version, bufsize);
+    strlcpy(ptext, PEP_MSG_WRAP_KEY, bufsize);
+    strlcat(ptext, msg_wrap_info, bufsize);
     strlcat(ptext, newlines, bufsize);
     strlcat(ptext, longmsg, bufsize);
 
@@ -225,29 +225,29 @@ static PEP_STATUS get_data_from_encapsulated_line(const char* plaintext, const c
 }
 
 
-static int separate_short_and_long(const char *src, char **shortmsg, char** msg_version, char **longmsg)
+static int separate_short_and_long(const char *src, char **shortmsg, char** msg_wrap_info, char **longmsg)
 {
     char *_shortmsg = NULL;
-    char *_msg_version = NULL;
+    char *_msg_wrap_info = NULL;
     char *_longmsg = NULL;
 
     assert(src);
     assert(shortmsg);
-    assert(msg_version);
+    assert(msg_wrap_info);
     assert(longmsg);
 
-    if (src == NULL || shortmsg == NULL || msg_version == NULL || longmsg == NULL)
+    if (src == NULL || shortmsg == NULL || msg_wrap_info == NULL || longmsg == NULL)
         return -1;
 
     *shortmsg = NULL;
     *longmsg = NULL;
-    *msg_version = NULL;
+    *msg_wrap_info = NULL;
 
     // We generated the input here. If we ever need more than one header value to be
     // encapsulated and hidden in the encrypted text, we will have to modify this.
     // As is, we're either doing this with a version 1.0 client, in which case
     // the only encapsulated header value is subject, or 2.0+, in which the
-    // message version is the only encapsulated header value. If we need this
+    // message wrap info is the only encapsulated header value. If we need this
     // to be more complex, we're going to have to do something more elegant
     // and efficient.    
     PEP_STATUS status = get_data_from_encapsulated_line(src, PEP_SUBJ_KEY_LC, 
@@ -261,19 +261,19 @@ static int separate_short_and_long(const char *src, char **shortmsg, char** msg_
             goto enomem;
     }
     else {
-        status = get_data_from_encapsulated_line(src, PEP_MSG_VERSION_KEY_LC, 
-                                                 PEP_MSG_VERSION_KEY_LEN, 
-                                                 &_msg_version, &_longmsg);
-        if (_msg_version) {
+        status = get_data_from_encapsulated_line(src, PEP_MSG_WRAP_KEY_LC, 
+                                                 PEP_MSG_WRAP_KEY_LEN, 
+                                                 &_msg_wrap_info, &_longmsg);
+        if (_msg_wrap_info) {
             if (status == PEP_STATUS_OK)
-                *msg_version = _msg_version;
+                *msg_wrap_info = _msg_wrap_info;
             else
                 goto enomem;
         }
     }
     
     // If there was no secret data hiding in the first line...
-    if (!_shortmsg && !_msg_version) {
+    if (!_shortmsg && !_msg_wrap_info) {
         _longmsg = strdup(src);
         assert(_longmsg);
         if (_longmsg == NULL)
@@ -286,7 +286,7 @@ static int separate_short_and_long(const char *src, char **shortmsg, char** msg_
 
 enomem:
     free(_shortmsg);
-    free(_msg_version);
+    free(_msg_wrap_info);
     free(_longmsg);
 
     return -1;
@@ -453,29 +453,16 @@ static PEP_STATUS encrypt_PGP_MIME(
     dst->enc_format = PEP_enc_PGP_MIME;
     unsigned char pepstr[] = PEP_SUBJ_STRING;
 
-    if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0 
-                      && _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) != 0) {
-        if (session->unencrypted_subject) {
-            dst->shortmsg = strdup(src->shortmsg);
-            assert(dst->shortmsg);
-            if (dst->shortmsg == NULL)
-                goto enomem;
-            ptext = src->longmsg;
-        }
-        else {
-            ptext = combine_short_and_long(src->shortmsg, src->longmsg);
-            if (ptext == NULL)
-                goto enomem;
-            free_ptext = true;
-        }
-    }
-    else if (src->longmsg) {
-        ptext = src->longmsg;
-    }
-    else {
-        ptext = (char*)pepstr;
-    }
+    if (src->shortmsg)
+        dst->shortmsg = strdup(src->shortmsg);
 
+    // Right now, we only encrypt inner messages or outer messages. There
+    // is no in-between. All messages are to be wrapped or are a wrapper.
+    const char* msg_wrap_info = (flags & PEP_encrypt_flag_wrap_message ? 
+                                 "INNER" : "OUTER");
+    
+    ptext = encapsulate_message_wrap_info(const char *msg_wrap_info, src->longmsg);
+        
     message *_src = calloc(1, sizeof(message));
     assert(_src);
     if (_src == NULL)
@@ -1833,8 +1820,8 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg) {
             {
                 char * shortmsg;
                 char * longmsg;
-                char * msg_version; // This is incorrect, but just here to get things compiling for the moment
-                int r = separate_short_and_long(msg->longmsg, &shortmsg, &msg_version,
+                char * msg_wrap_info; // This is incorrect, but just here to get things compiling for the moment
+                int r = separate_short_and_long(msg->longmsg, &shortmsg, &msg_wrap_info,
                         &longmsg);
                 
                 if (r == -1)

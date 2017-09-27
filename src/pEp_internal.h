@@ -43,10 +43,10 @@
 #define PEP_SUBJ_KEY_LEN 9
 #endif
 
-#ifndef PEP_MSG_VERSION_KEY
-#define PEP_MSG_VERSION_KEY "pEp-Message-Version: "
-#define PEP_MSG_VERSION_KEY_LC "pep-message-version: "
-#define PEP_MSG_VERSION_KEY_LEN 21
+#ifndef PEP_MSG_WRAP_KEY
+#define PEP_MSG_WRAP_KEY "pEp-Wrapped-Message-Info: "
+#define PEP_MSG_WRAP_KEY_LC "pep-wrapped-message-info: "
+#define PEP_MSG_WRAP_KEY_LEN 26
 #endif
 
 
