@@ -3,7 +3,7 @@
 # This file may be used under the terms of the GNU General Public License version 3
 # see LICENSE.txt
 
-HERE := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+HERE:=$(CURDIR)
 
 include ../Makefile.conf
 
