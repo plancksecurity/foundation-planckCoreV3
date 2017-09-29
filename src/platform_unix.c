@@ -297,9 +297,14 @@ static bool ensure_gpg_home(const char **conf, const char **home){
             fd = open(path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
 
             if(fd>0) {
-                ssize_t ignore;
-                ignore = write(fd, gpg_conf_empty, strlen(gpg_conf_empty));
+                ssize_t res;
+                len = strlen(gpg_conf_empty);
+                res = write(fd, gpg_conf_empty, len);
                 close(fd);
+                if(res < len) {
+                    assert(0);
+                    return false;
+                }
             }
         }
 
@@ -345,9 +350,14 @@ static bool ensure_gpg_agent_conf(const char **agent_conf){
             fd = open(agent_path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
 
             if(fd>0) {
-                ssize_t ignore;
-                ignore = write(fd, gpg_conf_empty, strlen(gpg_conf_empty));
+                ssize_t res;
+                len = strlen(gpg_conf_empty);
+                res = write(fd, gpg_conf_empty, len);
                 close(fd);
+                if(res < len) {
+                    assert(0);
+                    return false;
+                }
             }
         }
         done = true;
