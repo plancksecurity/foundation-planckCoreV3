@@ -89,6 +89,10 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out);
 #define inline __inline
 #endif
 
+#define platform_atomic_integer LONG volatile 
+#define platform_atomic_increment(var) InterlockedIncrement(&var)
+#define platform_atomic_decrement(var) InterlockedDecrement(&var)
+
 #ifdef __cplusplus
 }
 #endif

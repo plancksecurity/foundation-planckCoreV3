@@ -9,7 +9,7 @@
 #include "sync_fsm.h"
 
 // This is C 2011
-static _Atomic volatile int init_count = -1;
+static platform_atomic_integer init_count = -1;
 
 // sql overloaded functions - modified from sqlite3.c
 static void _sql_lower(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
@@ -267,7 +267,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     // This increment is made atomic by using "_Atomic volatile" qualifier thus
     // ensuring consistent counting provided that init/release calls are balanced
-    int _count = ++init_count;
+    int _count = platform_atomic_increment(init_count);
     if (_count == 0)
         in_first = true;
     
@@ -785,7 +785,7 @@ pep_error:
 DYNAMIC_API void release(PEP_SESSION session)
 {
     bool out_last = false;
-    int _count = --init_count;
+    int _count = platform_atomic_decrement(init_count);
     
     assert(_count >= -1);
     assert(session);

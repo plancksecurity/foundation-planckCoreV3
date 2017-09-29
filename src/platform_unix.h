@@ -84,6 +84,10 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out);
 typedef uuid_t pEpUUID;
 #endif
 
+#define platform_atomic_integer _Atomic volatile int
+#define platform_atomic_increment(var) ++var
+#define platform_atomic_decrement(var) --var
+
 #ifdef __cplusplus
 }
 #endif
