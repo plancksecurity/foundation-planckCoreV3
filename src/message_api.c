@@ -1894,7 +1894,8 @@ static bool pull_up_attached_main_msg(message* src) {
     return false;
 }
 
-static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg) {
+static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg
+                                              char** msg_wrap_info) {
     unsigned char pepstr[] = PEP_SUBJ_STRING;
     PEP_STATUS status = PEP_STATUS_OK;
     
@@ -1907,32 +1908,43 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg) {
             if (status != PEP_STATUS_OK)
                 return status;
 
-            if (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0 ||
-                _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) == 0)
+            // if (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0 ||
+            //     _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) == 0)
+            if (is_a_pEpmessage(src))
             {
                 char * shortmsg;
                 char * longmsg;
-                char * msg_wrap_info; // This is incorrect, but just here to get things compiling for the moment
-                int r = separate_short_and_long(msg->longmsg, &shortmsg, &msg_wrap_info,
-                        &longmsg);
+                int r = separate_short_and_long(msg->longmsg, 
+                                                &shortmsg, 
+                                                *msg_wrap_info,
+                                                &longmsg);
                 
                 if (r == -1)
                     return PEP_OUT_OF_MEMORY;
 
-                if (shortmsg == NULL) {
-                    if (src->shortmsg == NULL)
-                        shortmsg = strdup("");
-                    else {
-                        // FIXME: is msg->shortmsg always a copy of
-                        // src->shortmsg already?
-                        // if so, we need to change the logic so
-                        // that in this case, we don't free msg->shortmsg
-                        // and do this strdup, etc.
-                        shortmsg = strdup(src->shortmsg);
+                // We only use the shortmsg in version 1.0 messages; if it occurs where we
+                // didn't replace the subject, we ignore this all
+                if (!(*msg_wrap_info)) {
+                    if (!shortmsg || 
+                        (src->shortmsg != NULL && strcmp(src->shortmsg, "pEp") != 0 &&
+                         _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) != 0)) {
+                             
+                        if (shortmsg != NULL)
+                            free(shortmsg);                        
+                        if (src->shortmsg == NULL) {
+                            shortmsg = strdup("");
+                        }
+                        else {
+                            // FIXME: is msg->shortmsg always a copy of
+                            // src->shortmsg already?
+                            // if so, we need to change the logic so
+                            // that in this case, we don't free msg->shortmsg
+                            // and do this strdup, etc.
+                            shortmsg = strdup(src->shortmsg); 
+                        }        
                     }
                 }
-
-
+                
                 free(msg->shortmsg);
                 free(msg->longmsg);
 
@@ -2296,7 +2308,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 NOT_IMPLEMENTED
         }
 
-        status = unencapsulate_hidden_fields(src, msg);
+        char* wrap_info = NULL:
+        status = unencapsulate_hidden_fields(src, msg, &wrap_info);
         
         if (status == PEP_OUT_OF_MEMORY)
             goto enomem;
