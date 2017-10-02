@@ -8,8 +8,7 @@
 #include "blacklist.h"
 #include "sync_fsm.h"
 
-// This is C 2011
-static platform_atomic_integer init_count = -1;
+static volatile int init_count = -1;
 
 // sql overloaded functions - modified from sqlite3.c
 static void _sql_lower(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
@@ -265,16 +264,20 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     // a little race condition - but still a race condition
     // mitigated by calling caveat (see documentation)
 
-    // This increment is made atomic by using "_Atomic volatile" qualifier thus
-    // ensuring consistent counting provided that init/release calls are balanced
-    int _count = platform_atomic_increment(init_count);
+    // this increment is made atomic IN THE ADAPTERS by
+    // guarding the call to init with the appropriate mutex.
+    int _count = ++init_count;
     if (_count == 0)
         in_first = true;
     
     // Race contition mitigated by calling caveat starts here :
     // If another call to init() preempts right now, then preemptive call
     // will have in_first false, will not create SQL tables, and following
-    // calls relying on those tables will fail. Therefore, first session
+    // calls relying on those tables will fail.
+    //
+    // Therefore, as above, adapters MUST guard init() with a mutex.
+    // 
+    // Therefore, first session
     // is to be created and last session to be deleted alone, and not
     // concurently to other sessions creation or deletion.
     // We expect adapters to enforce this either by implicitely creating a
@@ -785,7 +788,7 @@ pep_error:
 DYNAMIC_API void release(PEP_SESSION session)
 {
     bool out_last = false;
-    int _count = platform_atomic_decrement(init_count);
+    int _count = --init_count;
     
     assert(_count >= -1);
     assert(session);
@@ -795,7 +798,7 @@ DYNAMIC_API void release(PEP_SESSION session)
 
     // a small race condition but still a race condition
     // mitigated by calling caveat (see documentation)
-
+    // (release() is to be guarded by a mutex by the caller)
     if (_count == -1)
         out_last = true;
 
