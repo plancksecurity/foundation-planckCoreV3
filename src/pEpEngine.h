@@ -862,6 +862,7 @@ DYNAMIC_API void pEp_free(void *p);
 
 DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity);
 
+
 PEP_STATUS set_trust(PEP_SESSION session, 
                             const char* user_id,
                             const char* fpr, 
