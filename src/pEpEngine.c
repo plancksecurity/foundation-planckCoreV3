@@ -8,7 +8,7 @@
 #include "blacklist.h"
 #include "sync_fsm.h"
 
-static int init_count = -1;
+static volatile int init_count = -1;
 
 // sql overloaded functions - modified from sqlite3.c
 static void _sql_lower(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
@@ -264,9 +264,25 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     // a little race condition - but still a race condition
     // mitigated by calling caveat (see documentation)
 
-    ++init_count;
-    if (init_count == 0)
+    // this increment is made atomic IN THE ADAPTERS by
+    // guarding the call to init with the appropriate mutex.
+    int _count = ++init_count;
+    if (_count == 0)
         in_first = true;
+    
+    // Race contition mitigated by calling caveat starts here :
+    // If another call to init() preempts right now, then preemptive call
+    // will have in_first false, will not create SQL tables, and following
+    // calls relying on those tables will fail.
+    //
+    // Therefore, as above, adapters MUST guard init() with a mutex.
+    // 
+    // Therefore, first session
+    // is to be created and last session to be deleted alone, and not
+    // concurently to other sessions creation or deletion.
+    // We expect adapters to enforce this either by implicitely creating a
+    // client session, or by using synchronization primitive to protect
+    // creation/deletion of first/last session from the app.
 
     assert(session);
     if (session == NULL)
@@ -772,19 +788,19 @@ pep_error:
 DYNAMIC_API void release(PEP_SESSION session)
 {
     bool out_last = false;
-
-    assert(init_count >= 0);
+    int _count = --init_count;
+    
+    assert(_count >= -1);
     assert(session);
 
-    if (!((init_count >= 0) && session))
+    if (!((_count >= -1) && session))
         return;
 
     // a small race condition but still a race condition
     // mitigated by calling caveat (see documentation)
-
-    if (init_count == 0)
+    // (release() is to be guarded by a mutex by the caller)
+    if (_count == -1)
         out_last = true;
-    --init_count;
 
     if (session) {
         if (session->sync_state != DeviceState_state_NONE)
