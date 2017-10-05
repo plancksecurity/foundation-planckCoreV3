@@ -532,7 +532,7 @@ static PEP_STATUS encrypt_PGP_MIME(
     const char* msg_wrap_info = (flags & PEP_encrypt_flag_no_wrap_message ? 
                                  "OUTER" : "INNER");
     
-    ptext = encapsulate_message_wrap_info(const char *msg_wrap_info, src->longmsg);
+    ptext = encapsulate_message_wrap_info(msg_wrap_info, src->longmsg);
         
     message *_src = calloc(1, sizeof(message));
     assert(_src);
@@ -1894,7 +1894,7 @@ static bool pull_up_attached_main_msg(message* src) {
     return false;
 }
 
-static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg
+static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
                                               char** msg_wrap_info) {
     unsigned char pepstr[] = PEP_SUBJ_STRING;
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1912,15 +1912,18 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg
             //     _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) == 0)
             if (is_a_pEpmessage(src))
             {
-                char * shortmsg;
-                char * longmsg;
-                int r = separate_short_and_long(msg->longmsg, 
-                                                &shortmsg, 
-                                                *msg_wrap_info,
-                                                &longmsg);
+                char * shortmsg = NULL;
+                char * longmsg = NULL;
                 
-                if (r == -1)
-                    return PEP_OUT_OF_MEMORY;
+                if (msg->longmsg) {
+                    int r = separate_short_and_long(msg->longmsg, 
+                                                    &shortmsg, 
+                                                    msg_wrap_info,
+                                                    &longmsg);
+                
+                    if (r == -1)
+                        return PEP_OUT_OF_MEMORY;
+                }
 
                 // We only use the shortmsg in version 1.0 messages; if it occurs where we
                 // didn't replace the subject, we ignore this all
@@ -2308,15 +2311,65 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 NOT_IMPLEMENTED
         }
 
-        char* wrap_info = NULL:
-        status = unencapsulate_hidden_fields(src, msg, &wrap_info);
-        
         if (status == PEP_OUT_OF_MEMORY)
             goto enomem;
             
         if (status != PEP_STATUS_OK)
             goto pep_error;
 
+        if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
+            char* wrap_info = NULL;
+            status = unencapsulate_hidden_fields(src, msg, &wrap_info);
+            
+            // FIXME: replace with enums, check status
+            if (wrap_info) {
+                if (strcmp(wrap_info, "OUTER") == 0) {
+                    // this only occurs in with a direct outer wrapper
+                    // where the actual content is in the inner wrapper
+                    
+                    bloblist_t* actual_message = msg->attachments;
+                    
+                    while (actual_message) {
+                        char* mime_type = actual_message->mime_type;
+                        if (mime_type) {
+                            if (strcmp("message/rfc822", mime_type) == 0)
+                                break;
+                        }
+                        actual_message = actual_message->next;
+                    }
+                    
+                    if (actual_message) {
+                        message* inner_message = NULL;
+                        status = mime_decode_message(actual_message->value, 
+                                                     actual_message->size, 
+                                                     &inner_message);
+                        if (status != PEP_STATUS_OK)
+                            GOTO(pep_error);
+                            
+                        free_stringlist(*keylist);
+                        *keylist == NULL;
+                        
+                        free_message(*dst);
+                        
+                        *dst = NULL;
+                        *rating = PEP_rating_undefined;
+                        *flags = 0;
+
+                        message* inner_dec_msg = NULL;
+                        
+                        PEP_STATUS decrypt_status = decrypt_message(session,
+                                                                    inner_message,
+                                                                    &inner_dec_msg,
+                                                                    keylist,
+                                                                    rating,
+                                                                    flags);
+                        *dst = inner_dec_msg;
+                        return decrypt_status;
+                    }
+                }
+            }
+        }
+        
         *rating = decrypt_rating(decrypt_status);
 
         /* Ok, now we have a keylist used for decryption/verification.
