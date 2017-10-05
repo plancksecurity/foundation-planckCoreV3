@@ -1398,7 +1398,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         if (!(flags & PEP_encrypt_flag_no_wrap_message)) {
             PEP_STATUS status = encrypt_message(session, src, extra, &inner_message,
                                                 enc_format,
-                                                flags & PEP_encrypt_flag_no_wrap_message);
+                                                flags | PEP_encrypt_flag_no_wrap_message);
             _src = wrap_message_as_attachment(NULL, inner_message);
         } else {
             if (!(flags & PEP_encrypt_flag_force_no_attached_key))
