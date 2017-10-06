@@ -19,7 +19,6 @@ skeleton: .actions
 	$(YML2_PROC) $(YML2_OPTS) -y gen_actions.ysl2 $< -o $@
 
 .statemachines: devicegroup.fsm gen_statemachine.ysl2 fsm.yml2 functions.ysl2
-	echo $(YML2_PATH) "1" $(YML_PATH) $(YML2_OPTS) $(YML2_PROC)
 	$(YML2_PROC) $(YML2_OPTS) -y gen_statemachine.ysl2 $< -o $@
 
 .PHONY: clean
