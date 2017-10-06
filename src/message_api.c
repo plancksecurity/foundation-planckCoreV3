@@ -529,8 +529,9 @@ static PEP_STATUS encrypt_PGP_MIME(
 
     // Right now, we only encrypt inner messages or outer messages. There
     // is no in-between. All messages are to be wrapped or are a wrapper.
+    // FIXME: rename this flag!!!
     const char* msg_wrap_info = (flags & PEP_encrypt_flag_no_wrap_message ? 
-                                 "OUTER" : "INNER");
+                                 "INNER" : "OUTER");
     
     ptext = encapsulate_message_wrap_info(msg_wrap_info, src->longmsg);
         
@@ -2332,7 +2333,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                     while (actual_message) {
                         char* mime_type = actual_message->mime_type;
                         if (mime_type) {
-                            if (strcmp("message/rfc822", mime_type) == 0)
+                            // libetpan appears to change the mime_type on this one.
+                            // *growl*
+                            if (strcmp("message/rfc822", mime_type) == 0 ||
+                                strcmp("text/rfc822", mime_type) == 0)
                                 break;
                         }
                         actual_message = actual_message->next;
