@@ -1980,17 +1980,21 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                     GOTO(pep_error);
                 }
 
+                // added p=p because outlook is on crack.
                 if (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0 ||
+                    strcmp(src->shortmsg, "p=p") == 0 ||
                     _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) == 0)
                 {
-                    char * shortmsg;
-                    char * longmsg;
+                    char * shortmsg = NULL;
+                    char * longmsg = NULL;
 
-                    int r = separate_short_and_long(msg->longmsg, &shortmsg,
-                            &longmsg);
+                    if (msg->longmsg) {
+                        int r = separate_short_and_long(msg->longmsg, &shortmsg,
+                                &longmsg);
                     
-                    if (r == -1)
-                        goto enomem;
+                        if (r == -1)
+                            goto enomem;
+                    }
 
                     if (shortmsg == NULL) {
                         if (src->shortmsg == NULL)
