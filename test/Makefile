@@ -11,7 +11,7 @@ TARGET=pEpEngineTest
 
 unexport GNUPGHOME
 TEST_HOME=$(HERE)/test_home
-TEST_GNUPGHOME=$(TEST_HOME)/.gnupg
+TEST_GNUPGHOME=$(TEST_HOME)/gnupg
 
 LDFLAGS+= $(ETPAN_LIB) -L../asn.1 -L../src
 LDLIBS+= -letpan -lpEpEngine -lstdc++ -lasn1
@@ -51,7 +51,7 @@ endif
 # Remove trailing ':'
 EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS::=)
 
-TEST_CMD_PFX=$(LIBPATH)=$(EXTRA_LIB_PATHS) HOME=$(TEST_HOME)
+TEST_CMD_PFX=$(LIBPATH)=$(EXTRA_LIB_PATHS) HOME=$(TEST_HOME) GNUPGHOME=$(TEST_GNUPGHOME)
 
 UNIT_TESTS_SOURCE=$(wildcard *_test.cc)
 UNIT_TESTS=$(subst .cc,,$(UNIT_TESTS_SOURCE))
@@ -79,9 +79,7 @@ all: $(TARGET) $(UNIT_TESTS)
 
 .PHONY: test_home_
 test_home_: 
-	-gpgconf --kill gpg-agent
-	-HOME=$(TEST_HOME) gpgconf --kill gpg-agent
-	-killall gpg-agent
+	-GNUPGHOME=$(TEST_GNUPGHOME) gpgconf --kill gpg-agent
 	rm -rf $(TEST_HOME)
 	mkdir -p $(TEST_GNUPGHOME)/private-keys-v1.d
 	$(GPG_CMD) --import --batch --homedir $(TEST_GNUPGHOME) 0x*.asc *_sec.asc
