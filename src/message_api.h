@@ -37,7 +37,7 @@ typedef enum _PEP_encrypt_flags {
     
     // This is used for outer messages (used to wrap the real message)
     // This is only used internally and (eventually) by transport functions
-    PEP_encrypt_flag_no_wrap_message = 0x8
+    PEP_encrypt_flag_inner_message = 0x8
 } PEP_encrypt_flags; 
 
 typedef unsigned int PEP_encrypt_flags_t;

@@ -530,7 +530,7 @@ static PEP_STATUS encrypt_PGP_MIME(
     // Right now, we only encrypt inner messages or outer messages. There
     // is no in-between. All messages are to be wrapped or are a wrapper.
     // FIXME: rename this flag!!!
-    const char* msg_wrap_info = (flags & PEP_encrypt_flag_no_wrap_message ? 
+    const char* msg_wrap_info = (flags & PEP_encrypt_flag_inner_message ? 
                                  "INNER" : "OUTER");
     
     ptext = encapsulate_message_wrap_info(msg_wrap_info, src->longmsg);
@@ -1396,10 +1396,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         
         // FIXME - this logic may need to change if we allow
         // wrappers to attach keys (e.g w/ transport)        
-        if (!(flags & PEP_encrypt_flag_no_wrap_message)) {
+        if (!(flags & PEP_encrypt_flag_inner_message)) {
             PEP_STATUS status = encrypt_message(session, src, extra, &inner_message,
                                                 enc_format,
-                                                flags | PEP_encrypt_flag_no_wrap_message);
+                                                flags | PEP_encrypt_flag_inner_message);
             _src = wrap_message_as_attachment(NULL, inner_message);
         } else {
             if (!(flags & PEP_encrypt_flag_force_no_attached_key))
@@ -2361,12 +2361,13 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
                         message* inner_dec_msg = NULL;
                         
-                        PEP_STATUS decrypt_status = decrypt_message(session,
-                                                                    inner_message,
-                                                                    &inner_dec_msg,
-                                                                    keylist,
-                                                                    rating,
-                                                                    flags);
+                        decrypt_status = decrypt_message(session,
+                                                         inner_message,
+                                                         &inner_dec_msg,
+                                                         keylist,
+                                                         rating,
+                                                         flags);
+                                                         
                         *dst = inner_dec_msg;
                         return decrypt_status;
                     }
