@@ -37,6 +37,19 @@
 #define PEP_SUBJ_BYTELEN 5
 #endif
 
+#ifndef PEP_SUBJ_KEY
+#define PEP_SUBJ_KEY "Subject: "
+#define PEP_SUBJ_KEY_LC "subject: "
+#define PEP_SUBJ_KEY_LEN 9
+#endif
+
+#ifndef PEP_MSG_WRAP_KEY
+#define PEP_MSG_WRAP_KEY "pEp-Wrapped-Message-Info: "
+#define PEP_MSG_WRAP_KEY_LC "pep-wrapped-message-info: "
+#define PEP_MSG_WRAP_KEY_LEN 26
+#endif
+
+
 #include "platform.h"
 
 #ifdef WIN32

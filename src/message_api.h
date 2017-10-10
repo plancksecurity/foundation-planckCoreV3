@@ -33,7 +33,11 @@ typedef enum _PEP_encrypt_flags {
     // This flag is for special use cases and should not be used
     // by normal pEp clients!
     PEP_encrypt_flag_force_unsigned = 0x2,
-    PEP_encrypt_flag_force_no_attached_key = 0x4
+    PEP_encrypt_flag_force_no_attached_key = 0x4,
+    
+    // This is used for outer messages (used to wrap the real message)
+    // This is only used internally and (eventually) by transport functions
+    PEP_encrypt_flag_inner_message = 0x8
 } PEP_encrypt_flags; 
 
 typedef unsigned int PEP_encrypt_flags_t;

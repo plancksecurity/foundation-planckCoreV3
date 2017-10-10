@@ -100,6 +100,41 @@ void add_opt_field(message *msg, const char *name, const char *value)
     }
 }
 
+static char * encapsulate_message_wrap_info(const char *msg_wrap_info, const char *longmsg)
+{
+    assert(msg_wrap_info);
+    
+    if (!msg_wrap_info) {
+        if (!longmsg)
+            return NULL;
+        else {
+            char *result = strdup(longmsg);
+            assert(result);
+            return result;            
+        }    
+    }
+    
+    if (longmsg == NULL)
+        longmsg = "";
+        
+    const char * const newlines = "\n\n";
+    const size_t NL_LEN = 2;
+        
+    const size_t bufsize = PEP_MSG_WRAP_KEY_LEN + strlen(msg_wrap_info) + NL_LEN + strlen(longmsg) + 1;
+    char * ptext = calloc(1, bufsize);
+    assert(ptext);
+    if (ptext == NULL)
+        return NULL;
+
+    strlcpy(ptext, PEP_MSG_WRAP_KEY, bufsize);
+    strlcat(ptext, msg_wrap_info, bufsize);
+    strlcat(ptext, newlines, bufsize);
+    strlcat(ptext, longmsg, bufsize);
+
+    return ptext;
+}
+
+
 static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
 {
     assert(shortmsg);
@@ -122,18 +157,16 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     if (longmsg == NULL)
         longmsg = "";
 
-    const char * const subject = "Subject: ";
-    const size_t SUBJ_LEN = 9;
     const char * const newlines = "\n\n";
     const size_t NL_LEN = 2;
 
-    const size_t bufsize = SUBJ_LEN + strlen(shortmsg) + NL_LEN + strlen(longmsg) + 1;
+    const size_t bufsize = PEP_SUBJ_KEY_LEN + strlen(shortmsg) + NL_LEN + strlen(longmsg) + 1;
     char * ptext = calloc(1, bufsize);
     assert(ptext);
     if (ptext == NULL)
         return NULL;
 
-    strlcpy(ptext, subject, bufsize);
+    strlcpy(ptext, PEP_SUBJ_KEY, bufsize);
     strlcat(ptext, shortmsg, bufsize);
     strlcat(ptext, newlines, bufsize);
     strlcat(ptext, longmsg, bufsize);
@@ -141,62 +174,106 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     return ptext;
 }
 
-static int separate_short_and_long(const char *src, char **shortmsg, char **longmsg)
+/* 
+   WARNING: For the moment, this only works for the first line of decrypted
+   plaintext because we don't need more. IF WE DO, THIS MUST BE EXPANDED, or
+   we need a delineated section to parse separately
+   
+   Does case-insensitive compare of keys, so sending in a lower-cased
+   string constant saves a bit of computation
+ */
+static PEP_STATUS get_data_from_encapsulated_line(const char* plaintext, const char* key, 
+                                                  const size_t keylen, char** data, 
+                                                  char** modified_msg) {
+    char* _data = NULL;
+    char* _modified = NULL;
+    
+    if (strncasecmp(plaintext, key, keylen) == 0) {
+        const char *line_end = strchr(plaintext, '\n');
+
+        if (line_end == NULL) {
+            _data = strdup(plaintext + keylen);
+            assert(_data);
+            if (_data == NULL)
+                return PEP_OUT_OF_MEMORY;
+        }
+        else {
+            size_t n = line_end - plaintext;
+
+            if (*(line_end - 1) == '\r')
+                _data = strndup(plaintext + keylen, n - (keylen + 1));
+            else
+                _data = strndup(plaintext + keylen, n - keylen);
+            assert(_data);
+            if (_data == NULL)
+                return PEP_OUT_OF_MEMORY;
+
+            while (*(plaintext + n) && (*(plaintext + n) == '\n' || *(plaintext + n) == '\r'))
+                ++n;
+
+            if (*(plaintext + n)) {
+                _modified = strdup(plaintext + n);
+                assert(_modified);
+                if (_modified == NULL)
+                    return PEP_OUT_OF_MEMORY;
+            }
+        }
+    }
+    *data = _data;
+    *modified_msg = _modified;
+    return PEP_STATUS_OK;
+}
+
+
+static int separate_short_and_long(const char *src, char **shortmsg, char** msg_wrap_info, char **longmsg)
 {
     char *_shortmsg = NULL;
+    char *_msg_wrap_info = NULL;
     char *_longmsg = NULL;
 
     assert(src);
     assert(shortmsg);
+    assert(msg_wrap_info);
     assert(longmsg);
 
-    if (src == NULL || shortmsg == NULL || longmsg == NULL)
+    if (src == NULL || shortmsg == NULL || msg_wrap_info == NULL || longmsg == NULL)
         return -1;
 
     *shortmsg = NULL;
     *longmsg = NULL;
+    *msg_wrap_info = NULL;
 
-    if (strncasecmp(src, "subject: ", 9) == 0) {
-        char *line_end = strchr(src, '\n');
-
-        if (line_end == NULL) {
-            _shortmsg = strdup(src + 9);
-            assert(_shortmsg);
-            if (_shortmsg == NULL)
-                goto enomem;
-            // _longmsg = NULL;
-        }
-        else {
-            size_t n = line_end - src;
-
-            if (*(line_end - 1) == '\r')
-                _shortmsg = strndup(src + 9, n - 10);
-            else
-                _shortmsg = strndup(src + 9, n - 9);
-            assert(_shortmsg);
-            if (_shortmsg == NULL)
-                goto enomem;
-
-            while (*(src + n) && (*(src + n) == '\n' || *(src + n) == '\r'))
-                ++n;
-
-            if (*(src + n)) {
-                _longmsg = strdup(src + n);
-                assert(_longmsg);
-                if (_longmsg == NULL)
-                    goto enomem;
-            }
-        }
-        *shortmsg = _shortmsg;
+    // We generated the input here. If we ever need more than one header value to be
+    // encapsulated and hidden in the encrypted text, we will have to modify this.
+    // As is, we're either doing this with a version 1.0 client, in which case
+    // the only encapsulated header value is subject, or 2.0+, in which the
+    // message wrap info is the only encapsulated header value. If we need this
+    // to be more complex, we're going to have to do something more elegant
+    // and efficient.    
+    PEP_STATUS status = get_data_from_encapsulated_line(src, PEP_SUBJ_KEY_LC, 
+                                                        PEP_SUBJ_KEY_LEN, 
+                                                        &_shortmsg, &_longmsg);
+                                                        
+    if (_shortmsg) {
+        if (status == PEP_STATUS_OK)
+            *shortmsg = _shortmsg;
+        else
+            goto enomem;
     }
     else {
-        // If there's no "Subject: " and the shortmsg is
-        // pEp (or anything else), then we shouldn't be replacing it.
-        // Chances are that the message wasn't encrypted
-        // using pEp and that the actually subject IS pEp. In any event,
-        // erasing the subject line when we don't have one in the plaintext
-        // isn't the right behaviour.
-        // _shortmsg = strdup("");
+        status = get_data_from_encapsulated_line(src, PEP_MSG_WRAP_KEY_LC, 
+                                                 PEP_MSG_WRAP_KEY_LEN, 
+                                                 &_msg_wrap_info, &_longmsg);
+        if (_msg_wrap_info) {
+            if (status == PEP_STATUS_OK)
+                *msg_wrap_info = _msg_wrap_info;
+            else
+                goto enomem;
+        }
+    }
+    
+    // If there was no secret data hiding in the first line...
+    if (!_shortmsg && !_msg_wrap_info) {
         _longmsg = strdup(src);
         assert(_longmsg);
         if (_longmsg == NULL)
@@ -209,6 +286,7 @@ static int separate_short_and_long(const char *src, char **shortmsg, char **long
 
 enomem:
     free(_shortmsg);
+    free(_msg_wrap_info);
     free(_longmsg);
 
     return -1;
@@ -330,6 +408,49 @@ static PEP_STATUS copy_fields(message *dst, const message *src)
     return PEP_STATUS_OK;
 }
 
+
+static message* extract_minimal_envelope(const message* src, 
+                                         PEP_msg_direction direct) {
+                                             
+    unsigned char pepstr[] = PEP_SUBJ_STRING;
+    
+    message* envelope = new_message(direct);
+    if (!envelope)
+        return NULL;
+        
+    envelope->shortmsg = _pep_subj_copy();
+    if (!envelope->shortmsg)
+        return NULL;
+
+    if (src->from) {
+        envelope->from = identity_dup(src->from);
+        if (!envelope->from)
+            return NULL;
+    }
+
+    if (src->to) {
+        envelope->to = identity_list_dup(src->to);
+        if (!envelope->to)
+            return NULL;
+    }
+
+    if (src->cc) {
+        envelope->cc = identity_list_dup(src->cc);
+        if (!envelope->cc)
+            return NULL;
+    }
+
+    if (src->bcc) {
+        envelope->bcc = identity_list_dup(src->bcc);
+        if (!envelope->bcc)
+            return NULL;
+    }
+
+    envelope->enc_format = src->enc_format;        
+    
+    return envelope;
+}
+
 static message * clone_to_empty_message(const message * src)
 {
     PEP_STATUS status;
@@ -357,6 +478,35 @@ enomem:
     return NULL;
 }
 
+static message* wrap_message_as_attachment(message* envelope, 
+    const message* attachment) {
+    
+    message* _envelope = NULL;
+    
+    if (!envelope) {
+        _envelope = extract_minimal_envelope(attachment, PEP_dir_outgoing);
+        envelope = _envelope;
+    }
+    
+    char* message_text = NULL;
+    /* Turn message into a MIME-blob */
+    PEP_STATUS status = mime_encode_message(attachment, false, &message_text);
+    
+    if (status != PEP_STATUS_OK) {
+        free(_envelope);
+        return NULL;
+    }
+    
+    size_t message_len = strlen(message_text);
+    
+    bloblist_t* message_blob = new_bloblist(message_text, message_len,
+                                            "message/rfc822", NULL);
+    
+    envelope->attachments = message_blob;
+    
+    return envelope;
+}
+
 static PEP_STATUS encrypt_PGP_MIME(
     PEP_SESSION session,
     const message *src,
@@ -373,31 +523,18 @@ static PEP_STATUS encrypt_PGP_MIME(
     size_t csize;
     assert(dst->longmsg == NULL);
     dst->enc_format = PEP_enc_PGP_MIME;
-    unsigned char pepstr[] = PEP_SUBJ_STRING;
 
-    if (src->shortmsg && strcmp(src->shortmsg, "pEp") != 0 
-                      && _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) != 0) {
-        if (session->unencrypted_subject) {
-            dst->shortmsg = strdup(src->shortmsg);
-            assert(dst->shortmsg);
-            if (dst->shortmsg == NULL)
-                goto enomem;
-            ptext = src->longmsg;
-        }
-        else {
-            ptext = combine_short_and_long(src->shortmsg, src->longmsg);
-            if (ptext == NULL)
-                goto enomem;
-            free_ptext = true;
-        }
-    }
-    else if (src->longmsg) {
-        ptext = src->longmsg;
-    }
-    else {
-        ptext = (char*)pepstr;
-    }
+    if (src->shortmsg)
+        dst->shortmsg = strdup(src->shortmsg);
 
+    // Right now, we only encrypt inner messages or outer messages. There
+    // is no in-between. All messages are to be wrapped or are a wrapper.
+    // FIXME: rename this flag!!!
+    const char* msg_wrap_info = (flags & PEP_encrypt_flag_inner_message ? 
+                                 "INNER" : "OUTER");
+    
+    ptext = encapsulate_message_wrap_info(msg_wrap_info, src->longmsg);
+        
     message *_src = calloc(1, sizeof(message));
     assert(_src);
     if (_src == NULL)
@@ -463,185 +600,185 @@ pep_error:
     return status;
 }
 
-static PEP_STATUS encrypt_PGP_in_pieces(
-    PEP_SESSION session,
-    const message *src,
-    stringlist_t *keys,
-    message *dst,
-    PEP_encrypt_flags_t flags
-    )
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-    char *ctext = NULL;
-    size_t csize;
-    char *ptext = NULL;
-    bool free_ptext = false;
-    unsigned char pepstr[] = PEP_SUBJ_STRING;
-    
-    assert(dst->longmsg == NULL);
-    assert(dst->attachments == NULL);
-
-    dst->enc_format = PEP_enc_pieces;
-
-    bool nosign = (flags & PEP_encrypt_flag_force_unsigned);
-
-    if (src->shortmsg && src->shortmsg[0] && strcmp(src->shortmsg, "pEp") != 0 && 
-        _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) != 0) {
-        if (session->unencrypted_subject) {
-            dst->shortmsg = strdup(src->shortmsg);
-            assert(dst->shortmsg);
-            if (dst->shortmsg == NULL)
-                goto enomem;
-            ptext = src->longmsg;
-        }
-        else {
-            ptext = combine_short_and_long(src->shortmsg, src->longmsg);
-            if (ptext == NULL)
-                goto enomem;
-            free_ptext = true;
-        }
-
-        if (nosign)
-            status = encrypt_only(session, keys, ptext, strlen(ptext), &ctext,
-                &csize);
-        else 
-            status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
-                &csize);
-        if (free_ptext)
-            free(ptext);
-        free_ptext = false;
-        if (ctext) {
-            dst->longmsg = ctext;
-        }
-        else {
-            goto pep_error;
-        }
-    }
-    else if (src->longmsg && src->longmsg[0]) {
-        ptext = src->longmsg;
-        if (nosign)
-            status = encrypt_only(session, keys, ptext, strlen(ptext), &ctext,
-                &csize);
-        else 
-            status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
-                &csize);
-        if (ctext) {
-            dst->longmsg = ctext;
-        }
-        else {
-            goto pep_error;
-        }
-    }
-    else {
-        dst->longmsg = strdup("");
-        assert(dst->longmsg);
-        if (dst->longmsg == NULL)
-            goto enomem;
-    }
-
-    if (src->longmsg_formatted && src->longmsg_formatted[0]) {
-        ptext = src->longmsg_formatted;
-        if (nosign)
-            status = encrypt_only(session, keys, ptext, strlen(ptext), &ctext,
-                &csize);
-        else 
-            status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
-                &csize);
-        if (ctext) {
-
-            bloblist_t *_a = bloblist_add(dst->attachments, ctext, csize,
-                "application/octet-stream", "file://PGPexch.htm.pgp");
-            if (_a == NULL)
-                goto enomem;
-            if (dst->attachments == NULL)
-                dst->attachments = _a;
-        }
-        else {
-            goto pep_error;
-        }
-    }
-
-    if (src->attachments) {
-        if (dst->attachments == NULL) {
-            dst->attachments = new_bloblist(NULL, 0, NULL, NULL);
-            if (dst->attachments == NULL)
-                goto enomem;
-        }
-
-        bloblist_t *_s = src->attachments;
-        bloblist_t *_d = dst->attachments;
-
-        for (int n = 0; _s; _s = _s->next) {
-            if (_s->value == NULL && _s->size == 0) {
-                _d = bloblist_add(_d, NULL, 0, _s->mime_type, _s->filename);
-                if (_d == NULL)
-                    goto enomem;
-            }
-            else {
-                size_t psize = _s->size;
-                ptext = _s->value;
-                if (nosign)
-                    status = encrypt_only(session, keys, ptext, psize, &ctext,
-                        &csize);
-                else 
-                    status = encrypt_and_sign(session, keys, ptext, psize, &ctext,
-                        &csize);
-                if (ctext) {
-                    char *filename = NULL;
-
-                    char *attach_fn = _s->filename;
-                    if (attach_fn && !is_cid_uri(attach_fn)) {
-                        size_t len = strlen(_s->filename);
-                        size_t bufsize = len + 5; // length of .pgp extension + NUL
-                        bool already_uri = false;
-                        if (is_file_uri(attach_fn))
-                            already_uri = true;
-                        else
-                            bufsize += 7; // length of file://
-                            
-                        filename = calloc(1, bufsize);
-                        if (filename == NULL)
-                            goto enomem;
-
-                        if (!already_uri)
-                            strlcpy(filename, "file://", bufsize);
-                        // First char is NUL, so we're ok, even if not copying above. (calloc)
-                        strlcat(filename, _s->filename, bufsize);
-                        strlcat(filename, ".pgp", bufsize);
-                    }
-                    else {
-                        filename = calloc(1, 27);
-                        if (filename == NULL)
-                            goto enomem;
-
-                        ++n;
-                        n &= 0xffff;
-                        snprintf(filename, 20, "file://Attachment%d.pgp", n);
-                    }
-
-                    _d = bloblist_add(_d, ctext, csize, "application/octet-stream",
-                        filename);
-                    free(filename);
-                    if (_d == NULL)
-                        goto enomem;
-                }
-                else {
-                    goto pep_error;
-                }
-            }
-        }
-    }
-
-    return PEP_STATUS_OK;
-
-enomem:
-    status = PEP_OUT_OF_MEMORY;
-
-pep_error:
-    if (free_ptext)
-        free(ptext);
-    return status;
-}
+// static PEP_STATUS encrypt_PGP_in_pieces(
+//     PEP_SESSION session,
+//     const message *src,
+//     stringlist_t *keys,
+//     message *dst,
+//     PEP_encrypt_flags_t flags
+//     )
+// {
+//     PEP_STATUS status = PEP_STATUS_OK;
+//     char *ctext = NULL;
+//     size_t csize;
+//     char *ptext = NULL;
+//     bool free_ptext = false;
+//     unsigned char pepstr[] = PEP_SUBJ_STRING;
+//     
+//     assert(dst->longmsg == NULL);
+//     assert(dst->attachments == NULL);
+// 
+//     dst->enc_format = PEP_enc_pieces;
+// 
+//     bool nosign = (flags & PEP_encrypt_flag_force_unsigned);
+// 
+//     if (src->shortmsg && src->shortmsg[0] && strcmp(src->shortmsg, "pEp") != 0 && 
+//         _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) != 0) {
+//         if (session->unencrypted_subject) {
+//             dst->shortmsg = strdup(src->shortmsg);
+//             assert(dst->shortmsg);
+//             if (dst->shortmsg == NULL)
+//                 goto enomem;
+//             ptext = src->longmsg;
+//         }
+//         else {
+//             ptext = combine_short_and_long(src->shortmsg, src->longmsg);
+//             if (ptext == NULL)
+//                 goto enomem;
+//             free_ptext = true;
+//         }
+// 
+//         if (nosign)
+//             status = encrypt_only(session, keys, ptext, strlen(ptext), &ctext,
+//                 &csize);
+//         else 
+//             status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
+//                 &csize);
+//         if (free_ptext)
+//             free(ptext);
+//         free_ptext = false;
+//         if (ctext) {
+//             dst->longmsg = ctext;
+//         }
+//         else {
+//             goto pep_error;
+//         }
+//     }
+//     else if (src->longmsg && src->longmsg[0]) {
+//         ptext = src->longmsg;
+//         if (nosign)
+//             status = encrypt_only(session, keys, ptext, strlen(ptext), &ctext,
+//                 &csize);
+//         else 
+//             status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
+//                 &csize);
+//         if (ctext) {
+//             dst->longmsg = ctext;
+//         }
+//         else {
+//             goto pep_error;
+//         }
+//     }
+//     else {
+//         dst->longmsg = strdup("");
+//         assert(dst->longmsg);
+//         if (dst->longmsg == NULL)
+//             goto enomem;
+//     }
+// 
+//     if (src->longmsg_formatted && src->longmsg_formatted[0]) {
+//         ptext = src->longmsg_formatted;
+//         if (nosign)
+//             status = encrypt_only(session, keys, ptext, strlen(ptext), &ctext,
+//                 &csize);
+//         else 
+//             status = encrypt_and_sign(session, keys, ptext, strlen(ptext), &ctext,
+//                 &csize);
+//         if (ctext) {
+// 
+//             bloblist_t *_a = bloblist_add(dst->attachments, ctext, csize,
+//                 "application/octet-stream", "file://PGPexch.htm.pgp");
+//             if (_a == NULL)
+//                 goto enomem;
+//             if (dst->attachments == NULL)
+//                 dst->attachments = _a;
+//         }
+//         else {
+//             goto pep_error;
+//         }
+//     }
+// 
+//     if (src->attachments) {
+//         if (dst->attachments == NULL) {
+//             dst->attachments = new_bloblist(NULL, 0, NULL, NULL);
+//             if (dst->attachments == NULL)
+//                 goto enomem;
+//         }
+// 
+//         bloblist_t *_s = src->attachments;
+//         bloblist_t *_d = dst->attachments;
+// 
+//         for (int n = 0; _s; _s = _s->next) {
+//             if (_s->value == NULL && _s->size == 0) {
+//                 _d = bloblist_add(_d, NULL, 0, _s->mime_type, _s->filename);
+//                 if (_d == NULL)
+//                     goto enomem;
+//             }
+//             else {
+//                 size_t psize = _s->size;
+//                 ptext = _s->value;
+//                 if (nosign)
+//                     status = encrypt_only(session, keys, ptext, psize, &ctext,
+//                         &csize);
+//                 else 
+//                     status = encrypt_and_sign(session, keys, ptext, psize, &ctext,
+//                         &csize);
+//                 if (ctext) {
+//                     char *filename = NULL;
+// 
+//                     char *attach_fn = _s->filename;
+//                     if (attach_fn && !is_cid_uri(attach_fn)) {
+//                         size_t len = strlen(_s->filename);
+//                         size_t bufsize = len + 5; // length of .pgp extension + NUL
+//                         bool already_uri = false;
+//                         if (is_file_uri(attach_fn))
+//                             already_uri = true;
+//                         else
+//                             bufsize += 7; // length of file://
+//                             
+//                         filename = calloc(1, bufsize);
+//                         if (filename == NULL)
+//                             goto enomem;
+// 
+//                         if (!already_uri)
+//                             strlcpy(filename, "file://", bufsize);
+//                         // First char is NUL, so we're ok, even if not copying above. (calloc)
+//                         strlcat(filename, _s->filename, bufsize);
+//                         strlcat(filename, ".pgp", bufsize);
+//                     }
+//                     else {
+//                         filename = calloc(1, 27);
+//                         if (filename == NULL)
+//                             goto enomem;
+// 
+//                         ++n;
+//                         n &= 0xffff;
+//                         snprintf(filename, 20, "file://Attachment%d.pgp", n);
+//                     }
+// 
+//                     _d = bloblist_add(_d, ctext, csize, "application/octet-stream",
+//                         filename);
+//                     free(filename);
+//                     if (_d == NULL)
+//                         goto enomem;
+//                 }
+//                 else {
+//                     goto pep_error;
+//                 }
+//             }
+//         }
+//     }
+// 
+//     return PEP_STATUS_OK;
+// 
+// enomem:
+//     status = PEP_OUT_OF_MEMORY;
+// 
+// pep_error:
+//     if (free_ptext)
+//         free(ptext);
+//     return status;
+// }
 
 static char * keylist_to_string(const stringlist_t *keylist)
 {
@@ -1127,7 +1264,9 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     PEP_STATUS status = PEP_STATUS_OK;
     message * msg = NULL;
     stringlist_t * keys = NULL;
-
+    message* inner_message = NULL;
+    message* _src = src;
+    
     assert(session);
     assert(src);
     assert(dst);
@@ -1254,31 +1393,40 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         return ADD_TO_LOG(PEP_UNENCRYPTED);
     }
     else {
-        msg = clone_to_empty_message(src);
+        
+        // FIXME - this logic may need to change if we allow
+        // wrappers to attach keys (e.g w/ transport)        
+        if (!(flags & PEP_encrypt_flag_inner_message)) {
+            PEP_STATUS status = encrypt_message(session, src, extra, &inner_message,
+                                                enc_format,
+                                                flags | PEP_encrypt_flag_inner_message);
+            _src = wrap_message_as_attachment(NULL, inner_message);
+        } else {
+            if (!(flags & PEP_encrypt_flag_force_no_attached_key))
+                attach_own_key(session, _src);
+        }
+        msg = clone_to_empty_message(_src);
         if (msg == NULL)
             goto enomem;
 
-        if (!(flags & PEP_encrypt_flag_force_no_attached_key))
-            attach_own_key(session, src);
-
         switch (enc_format) {
-        case PEP_enc_PGP_MIME:
-        case PEP_enc_PEP: // BUG: should be implemented extra
-            status = encrypt_PGP_MIME(session, src, keys, msg, flags);
-            break;
+            case PEP_enc_PGP_MIME:
+            case PEP_enc_PEP: // BUG: should be implemented extra
+                status = encrypt_PGP_MIME(session, _src, keys, msg, flags);
+                break;
 
-        case PEP_enc_pieces:
-            status = encrypt_PGP_in_pieces(session, src, keys, msg, flags);
-            break;
+            // case PEP_enc_pieces:
+            //     status = encrypt_PGP_in_pieces(session, src, keys, msg, flags);
+            //     break;
 
-        /* case PEP_enc_PEP:
-            // TODO: implement
-            NOT_IMPLEMENTED */
+            /* case PEP_enc_PEP:
+                // TODO: implement
+                NOT_IMPLEMENTED */
 
-        default:
-            assert(0);
-            status = PEP_ILLEGAL_VALUE;
-            GOTO(pep_error);
+            default:
+                assert(0);
+                status = PEP_ILLEGAL_VALUE;
+                GOTO(pep_error);
         }
 
         if (status == PEP_OUT_OF_MEMORY)
@@ -1291,7 +1439,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     free_stringlist(keys);
 
     if (msg && msg->shortmsg == NULL) {
-        msg->shortmsg = _pep_subj_copy();
+        msg->shortmsg = strdup("");
         assert(msg->shortmsg);
         if (msg->shortmsg == NULL)
             goto enomem;
@@ -1308,6 +1456,12 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     *dst = msg;
+    
+    // ??? FIXME: Check to be sure we don't have references btw _src and msg. 
+    // I don't think we do.
+    if (_src && _src != src)
+        free_message(_src);
+        
     return ADD_TO_LOG(status);
 
 enomem:
@@ -1316,10 +1470,14 @@ enomem:
 pep_error:
     free_stringlist(keys);
     free_message(msg);
+    if (_src && _src != src)
+        free_message(_src);
 
     return ADD_TO_LOG(status);
 }
 
+
+// FIXME: Update if needed for the wrapped fun bits
 DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_SESSION session,
         pEp_identity* target_id,
@@ -1381,9 +1539,9 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
             status = encrypt_PGP_MIME(session, src, keys, msg, flags);
             break;
 
-        case PEP_enc_pieces:
-            status = encrypt_PGP_in_pieces(session, src, keys, msg, flags);
-            break;
+        // case PEP_enc_pieces:
+        //     status = encrypt_PGP_in_pieces(session, src, keys, msg, flags);
+        //     break;
 
         /* case PEP_enc_PEP:
             NOT_IMPLEMENTED */
@@ -1464,7 +1622,8 @@ static PEP_STATUS _update_identity_for_incoming_message(
 }
 
 
-PEP_STATUS _get_detached_signature(message* msg, bloblist_t** signature_blob) {
+static PEP_STATUS _get_detached_signature(message* msg, 
+                                          bloblist_t** signature_blob) {
     bloblist_t* attach_curr = msg->attachments;
 
     *signature_blob = NULL;
@@ -1480,8 +1639,8 @@ PEP_STATUS _get_detached_signature(message* msg, bloblist_t** signature_blob) {
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
-                            char** stext, size_t* ssize) {
+static PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
+                                   char** stext, size_t* ssize) {
 
     char* signed_boundary = NULL;
     char* signpost = strstr(ptext, "Content-Type: multipart/signed");
@@ -1551,9 +1710,9 @@ PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS combine_keylists(PEP_SESSION session, stringlist_t** verify_in, 
-                            stringlist_t** keylist_in_out, 
-                            pEp_identity* from) {
+static PEP_STATUS combine_keylists(PEP_SESSION session, stringlist_t** verify_in, 
+                                   stringlist_t** keylist_in_out, 
+                                   pEp_identity* from) {
     
     if (!verify_in || !(*verify_in)) // this isn't really a problem.
         return PEP_STATUS_OK;
@@ -1628,11 +1787,11 @@ free:
     return status;
 }
 
-PEP_STATUS amend_rating_according_to_sender_and_recipients(
-    PEP_SESSION session,
-    PEP_rating *rating,
-    pEp_identity *sender,
-    stringlist_t *recipients) {
+static PEP_STATUS amend_rating_according_to_sender_and_recipients(
+       PEP_SESSION session,
+       PEP_rating *rating,
+       pEp_identity *sender,
+       stringlist_t *recipients) {
     
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -1668,6 +1827,335 @@ PEP_STATUS amend_rating_according_to_sender_and_recipients(
     return status;
 }
 
+static PEP_STATUS check_for_sync_msg(PEP_SESSION session, 
+                                     message* src,
+                                     PEP_rating* rating, 
+                                     PEP_decrypt_flags_t* flags,
+                                     stringlist_t** keylist) {
+    assert(session);
+    assert(src);
+    assert(rating);
+    assert(keylist);
+    
+    if (session->sync_session->inject_sync_msg){
+        PEP_STATUS status = receive_DeviceState_msg(session, src, *rating, *keylist);
+        if (status == PEP_MESSAGE_CONSUME ||
+            status == PEP_MESSAGE_IGNORE) {
+            *flags |= (status == PEP_MESSAGE_IGNORE) ?
+                        PEP_decrypt_flag_ignore :
+                        PEP_decrypt_flag_consume;
+        }
+        else if (status != PEP_STATUS_OK) {
+            return ADD_TO_LOG(status);
+        }
+    }
+    return PEP_STATUS_OK;
+}
+
+static PEP_STATUS sync_if_no_key(PEP_STATUS decrypt_status, PEP_SESSION session) {
+    if (decrypt_status == PEP_DECRYPT_NO_KEY) {
+        PEP_STATUS sync_status = inject_DeviceState_event(session, CannotDecrypt, NULL, NULL);
+        if (sync_status == PEP_OUT_OF_MEMORY){
+            return PEP_OUT_OF_MEMORY;
+        }
+    }
+    return PEP_STATUS_OK;
+}
+
+// FIXME: Do we need to remove the attachment? I think we do...
+static bool pull_up_attached_main_msg(message* src) {
+    char* slong = src->longmsg;
+    char* sform = src->longmsg_formatted;
+    bloblist_t* satt = src->attachments;
+    
+    if ((!slong || slong[0] == '\0')
+         && (!sform || sform[0] == '\0')) {
+        if (satt) {
+            const char* inner_mime_type = satt->mime_type;
+            if (strcasecmp(inner_mime_type, "text/plain") == 0) {
+                free(slong); /* in case of "" */
+                src->longmsg = strndup(satt->value, satt->size); 
+                
+                bloblist_t* next_node = satt->next;
+                if (next_node) {
+                    inner_mime_type = next_node->mime_type;
+                    if (strcasecmp(inner_mime_type, "text/html") == 0) {
+                        free(sform);
+                        src->longmsg_formatted = strndup(next_node->value, next_node->size);
+                    }
+                }
+            }
+            else if (strcasecmp(inner_mime_type, "text/html") == 0) {
+                free(sform);
+                src->longmsg_formatted = strndup(satt->value, satt->size);
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
+static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
+                                              char** msg_wrap_info) {
+    unsigned char pepstr[] = PEP_SUBJ_STRING;
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    switch (src->enc_format) {
+        case PEP_enc_PGP_MIME:
+        case PEP_enc_pieces:
+        case PEP_enc_PGP_MIME_Outlook1:
+        
+            status = copy_fields(msg, src);
+            if (status != PEP_STATUS_OK)
+                return status;
+
+            // FIXME: This is a mess. Talk with VB about how far we go to identify
+            if (is_a_pEpmessage(src) || (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0 ||
+                _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) == 0))
+            {
+                char * shortmsg = NULL;
+                char * longmsg = NULL;
+                
+                if (msg->longmsg) {
+                    int r = separate_short_and_long(msg->longmsg, 
+                                                    &shortmsg, 
+                                                    msg_wrap_info,
+                                                    &longmsg);
+                
+                    if (r == -1)
+                        return PEP_OUT_OF_MEMORY;
+                }
+
+                // We only use the shortmsg in version 1.0 messages; if it occurs where we
+                // didn't replace the subject, we ignore this all
+                if (!(*msg_wrap_info)) {
+                    if (!shortmsg || 
+                        (src->shortmsg != NULL && strcmp(src->shortmsg, "pEp") != 0 &&
+                         _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) != 0)) {
+                             
+                        if (shortmsg != NULL)
+                            free(shortmsg);                        
+                        if (src->shortmsg == NULL) {
+                            shortmsg = strdup("");
+                        }
+                        else {
+                            // FIXME: is msg->shortmsg always a copy of
+                            // src->shortmsg already?
+                            // if so, we need to change the logic so
+                            // that in this case, we don't free msg->shortmsg
+                            // and do this strdup, etc.
+                            shortmsg = strdup(src->shortmsg); 
+                        }        
+                    }
+                }
+                
+                free(msg->shortmsg);
+                free(msg->longmsg);
+
+                msg->shortmsg = shortmsg;
+                msg->longmsg = longmsg;
+            }
+            else {
+                msg->shortmsg = strdup(src->shortmsg);
+                assert(msg->shortmsg);
+                if (msg->shortmsg == NULL)
+                    return PEP_OUT_OF_MEMORY;
+            }
+            break;
+        default:
+                // BUG: must implement more
+                NOT_IMPLEMENTED
+    }
+    return PEP_STATUS_OK;
+
+}
+
+static PEP_STATUS verify_decrypted(PEP_SESSION session,
+                                   message* msg, 
+                                   pEp_identity* sender,
+                                   char* plaintext, 
+                                   size_t plaintext_size,
+                                   stringlist_t** keylist,
+                                   PEP_STATUS* decrypt_status,
+                                   PEP_cryptotech crypto) {
+    bloblist_t* detached_sig = NULL;
+    PEP_STATUS status = _get_detached_signature(msg, &detached_sig);
+    
+    if (detached_sig) {
+        char* dsig_text = detached_sig->value;
+        size_t dsig_size = detached_sig->size;
+        size_t ssize = 0;
+        char* stext = NULL;
+
+        status = _get_signed_text(plaintext, plaintext_size, &stext, &ssize);
+        stringlist_t *verify_keylist = NULL;
+
+        if (ssize > 0 && stext) {
+            status = cryptotech[crypto].verify_text(session, stext,
+                                                    ssize, dsig_text, dsig_size,
+                                                    &verify_keylist);
+
+            if (status == PEP_VERIFIED || status == PEP_VERIFIED_AND_TRUSTED)
+            {
+                *decrypt_status = PEP_DECRYPTED_AND_VERIFIED;
+            
+                status = combine_keylists(session, &verify_keylist, keylist, sender);
+            }
+        }
+    }
+    return status;
+}
+
+static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session, 
+                                     message* src, 
+                                     message** msg_ptr, 
+                                     char* ptext,
+                                     size_t psize) {
+                            
+    PEP_STATUS status = PEP_UNKNOWN_ERROR;
+    
+    *msg_ptr = clone_to_empty_message(src);
+
+    if (*msg_ptr == NULL)
+        return PEP_OUT_OF_MEMORY;
+
+    message* msg = *msg_ptr;
+
+    msg->longmsg = ptext;
+    ptext = NULL;
+
+    bloblist_t *_m = msg->attachments;
+    if (_m == NULL && src->attachments && src->attachments->value) {
+        msg->attachments = new_bloblist(NULL, 0, NULL, NULL);
+        _m = msg->attachments;
+    }
+
+    bloblist_t *_s;
+    for (_s = src->attachments; _s; _s = _s->next) {
+        if (_s->value == NULL && _s->size == 0){
+            _m = bloblist_add(_m, NULL, 0, _s->mime_type, _s->filename);
+            if (_m == NULL)
+                return PEP_OUT_OF_MEMORY;
+
+        }
+        else if (is_encrypted_attachment(_s)) {
+            stringlist_t *_keylist = NULL;
+            char *attctext  = _s->value;
+            size_t attcsize = _s->size;
+
+            free(ptext);
+            ptext = NULL;
+
+            // FIXME: What about attachments with separate sigs???
+            status = decrypt_and_verify(session, attctext, attcsize,
+                                        NULL, 0,
+                                        &ptext, &psize, &_keylist);
+            free_stringlist(_keylist); // FIXME: Why do we do this?
+
+            if (ptext) {
+                if (is_encrypted_html_attachment(_s)) {
+                    msg->longmsg_formatted = ptext;
+                    ptext = NULL;
+                }
+                else {
+                    static const char * const mime_type = "application/octet-stream";
+                    char * const filename =
+                        without_double_ending(_s->filename);
+                    if (filename == NULL)
+                        return PEP_OUT_OF_MEMORY;
+
+                    _m = bloblist_add(_m, ptext, psize, mime_type,
+                        filename);
+                    free(filename);
+                    if (_m == NULL)
+                        return PEP_OUT_OF_MEMORY;
+
+                    ptext = NULL;
+
+                    if (msg->attachments == NULL)
+                        msg->attachments = _m;
+                }
+            }
+            else {
+                char *copy = malloc(_s->size);
+                assert(copy);
+                if (copy == NULL)
+                    return PEP_OUT_OF_MEMORY;
+                memcpy(copy, _s->value, _s->size);
+                _m = bloblist_add(_m, copy, _s->size, _s->mime_type, _s->filename);
+                if (_m == NULL)
+                    return PEP_OUT_OF_MEMORY;
+            }
+        }
+        else {
+            char *copy = malloc(_s->size);
+            assert(copy);
+            if (copy == NULL)
+                return PEP_OUT_OF_MEMORY;
+            memcpy(copy, _s->value, _s->size);
+            _m = bloblist_add(_m, copy, _s->size, _s->mime_type, _s->filename);
+            if (_m == NULL)
+                return PEP_OUT_OF_MEMORY;
+        }
+    }
+    return status;
+}
+
+static PEP_STATUS get_crypto_text(message* src, char** crypto_text, size_t* text_size) {
+                
+    // this is only here because of how NOT_IMPLEMENTED works            
+    PEP_STATUS status = PEP_STATUS_OK;
+                    
+    switch (src->enc_format) {
+        case PEP_enc_PGP_MIME:
+            *crypto_text = src->attachments->next->value;
+            *text_size = src->attachments->next->size;
+            break;
+
+        case PEP_enc_PGP_MIME_Outlook1:
+            *crypto_text = src->attachments->value;
+            *text_size = src->attachments->size;
+            break;
+
+        case PEP_enc_pieces:
+            *crypto_text = src->longmsg;
+            *text_size = strlen(*crypto_text);
+            break;
+
+        default:
+            NOT_IMPLEMENTED
+    }
+    
+    return status;
+}
+
+static PEP_STATUS import_priv_keys_from_decrypted_msg(PEP_SESSION session,
+                                                      message* src, 
+                                                      message* msg,
+                                                      bool* imported_keys,
+                                                      bool* imported_private,
+                                                      identity_list** private_il) {
+                                                          
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    // check for private key in decrypted message attachment while importing
+    identity_list *_private_il = NULL;
+    *imported_keys = import_attached_keys(session, msg, &_private_il);
+    
+    if (_private_il && identity_list_length(_private_il) == 1 &&
+        _private_il->ident->address)
+        *imported_private = true;
+
+    if (private_il && imported_private)
+        *private_il = _private_il;
+    else
+        free_identity_list(_private_il);
+
+    if (imported_keys)
+        status = _update_identity_for_incoming_message(session, src);
+        
+    return status;
+}
 
 DYNAMIC_API PEP_STATUS _decrypt_message(
         PEP_SESSION session,
@@ -1679,16 +2167,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         identity_list **private_il
     )
 {
-    PEP_STATUS status = PEP_STATUS_OK;
-    PEP_STATUS decrypt_status = PEP_CANNOT_DECRYPT_UNKNOWN;
-    message *msg = NULL;
-    char *ctext;
-    size_t csize;
-    char *ptext = NULL;
-    size_t psize;
-    stringlist_t *_keylist = NULL;
-    unsigned char pepstr[] = PEP_SUBJ_STRING;
-
+    
     assert(session);
     assert(src);
     assert(dst);
@@ -1699,7 +2178,24 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     if (!(session && src && dst && keylist && rating && flags))
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
+    /*** Begin init ***/
+    PEP_STATUS status = PEP_STATUS_OK;
+    PEP_STATUS decrypt_status = PEP_CANNOT_DECRYPT_UNKNOWN;
+    message *msg = NULL;
+    char *ctext;
+    size_t csize;
+    char *ptext = NULL;
+    size_t psize;
+    stringlist_t *_keylist = NULL;
+
+    *dst = NULL;
+    *keylist = NULL;
+    *rating = PEP_rating_undefined;
+
     *flags = 0;
+    /*** End init ***/
+
+    /*** Begin Import any attached public keys and update identities accordingly ***/
 
     // Private key in unencrypted mail are ignored -> NULL
     bool imported_keys = import_attached_keys(session, src, NULL);
@@ -1710,6 +2206,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     if(status != PEP_STATUS_OK)
         return ADD_TO_LOG(status);
 
+    /*** End Import any attached public keys and update identities accordingly ***/
+    
+    /*** Begin get detached signatures that are attached to the encrypted message ***/
     // Get detached signature, if any
     bloblist_t* detached_sig = NULL;
     char* dsig_text = NULL;
@@ -1719,249 +2218,92 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         dsig_text = detached_sig->value;
         dsig_size = detached_sig->size;
     }
+    /*** End get detached signatures that are attached to the encrypted message ***/
 
+    /*** Determine encryption format ***/
     PEP_cryptotech crypto = determine_encryption_format(src);
 
-    *dst = NULL;
-    *keylist = NULL;
-    *rating = PEP_rating_undefined;
+    // Check for and deal with unencrypted messages
+    if (src->enc_format == PEP_enc_none) {
 
-    switch (src->enc_format) {
-        case PEP_enc_none:
-            *rating = PEP_rating_unencrypted;
-            if (imported_keys)
-                remove_attached_keys(src);
-            if(session->sync_session->inject_sync_msg){
-                status = receive_DeviceState_msg(session, src, *rating, *keylist);
-                if (status == PEP_MESSAGE_CONSUME ||
-                    status == PEP_MESSAGE_IGNORE) {
-                    free_message(msg);
-                    msg = NULL;
-                    *flags |= (status == PEP_MESSAGE_IGNORE) ?
-                                PEP_decrypt_flag_ignore :
-                                PEP_decrypt_flag_consume;
-                }
-                else if (status != PEP_STATUS_OK) {
-                    return ADD_TO_LOG(status);
-                }
-            }
-            
-            char* slong = src->longmsg;
-            char* sform = src->longmsg_formatted;
-            bloblist_t* satt = src->attachments;
-            
-            if ((!slong || slong[0] == '\0')
-                 && (!sform || sform[0] == '\0')) {
-                if (satt) {
-                    const char* inner_mime_type = satt->mime_type;
-                    if (strcasecmp(inner_mime_type, "text/plain") == 0) {
-                        free(slong); /* in case of "" */
-                        src->longmsg = strndup(satt->value, satt->size); // N.B.: longmsg might be shorter, if attachment contains NUL bytes which are not allowed in text/plain!
-                        
-                        bloblist_t* next_node = satt->next;
-                        if (next_node) {
-                            inner_mime_type = next_node->mime_type;
-                            if (strcasecmp(inner_mime_type, "text/html") == 0) {
-                                free(sform);
-                                src->longmsg_formatted = strndup(next_node->value, next_node->size);  // N.B.: longmsg might be shorter, if attachment contains NUL bytes which are not allowed in text/plain!
-                            }
-                        }
-                    }
-                    else if (strcasecmp(inner_mime_type, "text/html") == 0) {
-                        free(sform);
-                        src->longmsg_formatted = strndup(satt->value, satt->size);  // N.B.: longmsg might be shorter, if attachment contains NUL bytes which are not allowed in text/plain!
-                    }
-                }
-            }
-            
-            return ADD_TO_LOG(PEP_UNENCRYPTED);
+        *rating = PEP_rating_unencrypted;
 
-        case PEP_enc_PGP_MIME:
-            ctext = src->attachments->next->value;
-            csize = src->attachments->next->size;
-            break;
+        if (imported_keys)
+            remove_attached_keys(src);
 
-        case PEP_enc_PGP_MIME_Outlook1:
-            ctext = src->attachments->value;
-            csize = src->attachments->size;
-            break;
-
-        case PEP_enc_pieces:
-            ctext = src->longmsg;
-            csize = strlen(ctext);
-            break;
-
-        default:
-            NOT_IMPLEMENTED
+        status = check_for_sync_msg(session, src, rating, flags, keylist);
+        
+        if (status != PEP_STATUS_OK)
+            return ADD_TO_LOG(status);
+                                    
+        pull_up_attached_main_msg(src);
+        
+        return ADD_TO_LOG(PEP_UNENCRYPTED);
     }
+
+    status = get_crypto_text(src, &ctext, &csize);
+    if (status != PEP_STATUS_OK)
+        return status;
+    
+    /** Ok, we should be ready to decrypt. Try decrypt and verify first! **/
     status = cryptotech[crypto].decrypt_and_verify(session, ctext,
                                                    csize, dsig_text, dsig_size,
                                                    &ptext, &psize, &_keylist);
-    if (status > PEP_CANNOT_DECRYPT_UNKNOWN){
+
+    if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
         GOTO(pep_error);
-    }
 
     decrypt_status = status;
-
-    if (status == PEP_DECRYPT_NO_KEY){
-        PEP_STATUS sync_status = inject_DeviceState_event(session, CannotDecrypt, NULL, NULL);
-        if (sync_status == PEP_OUT_OF_MEMORY){
-            status = PEP_OUT_OF_MEMORY;
-            goto pep_error;
-        }
-    }
+    
+    /* inject appropriate sync message if we couldn't decrypt due to no key */
+    if (sync_if_no_key(decrypt_status, session) == PEP_OUT_OF_MEMORY)
+        goto pep_error;
 
     bool imported_private_key_address = false;
 
-    if (ptext) {
+    if (ptext) { 
+        /* we got a plaintext from decryption */
         switch (src->enc_format) {
+            
             case PEP_enc_PGP_MIME:
             case PEP_enc_PGP_MIME_Outlook1:
+            
                 status = mime_decode_message(ptext, psize, &msg);
                 if (status != PEP_STATUS_OK)
                     goto pep_error;
                 
-                char* mlong = msg->longmsg;
-                char* mform = msg->longmsg_formatted;
-                bloblist_t* matt = msg->attachments;
-                
-                if ((!mlong || mlong[0] == '\0')
-                     && (!mform || mform[0] == '\0')) {
-                    if (matt) {
-                        const char* inner_mime_type = matt->mime_type;
-                        if (strcasecmp(inner_mime_type, "text/plain") == 0) {
-                            free(mlong); /* in case of "" */
-                            msg->longmsg = strndup(matt->value, matt->size);
-                            
-                            bloblist_t* next_node = matt->next;
-                            if (next_node) {
-                                inner_mime_type = next_node->mime_type;
-                                if (strcasecmp(inner_mime_type, "text/html") == 0) {
-                                    free(mform);
-                                    msg->longmsg_formatted = strndup(next_node->value, next_node->size);
-                                }
-                            }
-                        }
-                        else if (strcasecmp(inner_mime_type, "text/html") == 0) {
-                            free(mform);
-                            msg->longmsg_formatted = strndup(matt->value, matt->size);
-                        }
-                    }
-                    if (msg->shortmsg) {
-                        free(src->shortmsg);
-                        src->shortmsg = strdup(msg->shortmsg);
-                    }
+                /* Ensure messages whose maintext is in the attachments
+                   move main text into message struct longmsg et al */
+                if (pull_up_attached_main_msg(msg) && msg->shortmsg) {
+                    free(src->shortmsg);
+                    src->shortmsg = strdup(msg->shortmsg);
                 }
 
-                if (decrypt_status != PEP_DECRYPTED_AND_VERIFIED) {
-                    status = _get_detached_signature(msg, &detached_sig);
-                    if (decrypt_status == PEP_DECRYPTED && detached_sig) {
-                        dsig_text = detached_sig->value;
-                        dsig_size = detached_sig->size;
-                        size_t ssize = 0;
-                        char* stext = NULL;
-
-                        status = _get_signed_text(ptext, psize, &stext, &ssize);
-                        stringlist_t *_verify_keylist = NULL;
-
-                        if (ssize > 0 && stext) {
-                            status = cryptotech[crypto].verify_text(session, stext,
-                                                                    ssize, dsig_text, dsig_size,
-                                                                    &_verify_keylist);
-
-                            if (status == PEP_VERIFIED || status == PEP_VERIFIED_AND_TRUSTED)
-                            {
-                                decrypt_status = PEP_DECRYPTED_AND_VERIFIED;
-                            
-                                status = combine_keylists(session, &_verify_keylist, &_keylist, src->from);
-                            }
-                        }
-                    }
+                /* if decrypted, but not verified... */
+                if (decrypt_status == PEP_DECRYPTED) {
+                    
+                    // check for private key in decrypted message attachment while importing
+                    status = import_priv_keys_from_decrypted_msg(session, src, msg,
+                                                                 &imported_keys,
+                                                                 &imported_private_key_address,
+                                                                 private_il);
+                    if (status != PEP_STATUS_OK)
+                        GOTO(pep_error);            
+                                                                 
+                    status = verify_decrypted(session,
+                                              msg, src->from,
+                                              ptext, psize,
+                                              &_keylist,
+                                              &decrypt_status,
+                                              crypto);
                 }
                 break;
 
             case PEP_enc_pieces:
-                msg = clone_to_empty_message(src);
-                if (msg == NULL)
+                status = _decrypt_in_pieces(session, src, &msg, ptext, psize);
+            
+                if (status == PEP_OUT_OF_MEMORY)
                     goto enomem;
-
-                msg->longmsg = ptext;
-                ptext = NULL;
-
-                bloblist_t *_m = msg->attachments;
-                if (_m == NULL && src->attachments && src->attachments->value) {
-                    msg->attachments = new_bloblist(NULL, 0, NULL, NULL);
-                    _m = msg->attachments;
-                }
-
-                bloblist_t *_s;
-                for (_s = src->attachments; _s; _s = _s->next) {
-                    if (_s->value == NULL && _s->size == 0){
-                        _m = bloblist_add(_m, NULL, 0, _s->mime_type, _s->filename);
-                        if (_m == NULL)
-                            goto enomem;
-
-                    }
-                    else if (is_encrypted_attachment(_s)) {
-                        stringlist_t *_keylist = NULL;
-                        char *attctext  = _s->value;
-                        size_t attcsize = _s->size;
-
-                        free(ptext);
-                        ptext = NULL;
-
-                        // FIXME: What about attachments with separate sigs???
-                        status = decrypt_and_verify(session, attctext, attcsize,
-                                                    NULL, 0,
-                                                    &ptext, &psize, &_keylist);
-                        free_stringlist(_keylist); // FIXME: Why do we do this?
-
-                        if (ptext) {
-                            if (is_encrypted_html_attachment(_s)) {
-                                msg->longmsg_formatted = ptext;
-                                ptext = NULL;
-                            }
-                            else {
-                                static const char * const mime_type = "application/octet-stream";
-                                char * const filename =
-                                    without_double_ending(_s->filename);
-                                if (filename == NULL)
-                                    goto enomem;
-
-                                _m = bloblist_add(_m, ptext, psize, mime_type,
-                                    filename);
-                                free(filename);
-                                if (_m == NULL)
-                                    goto enomem;
-
-                                ptext = NULL;
-
-                                if (msg->attachments == NULL)
-                                    msg->attachments = _m;
-                            }
-                        }
-                        else {
-                            char *copy = malloc(_s->size);
-                            assert(copy);
-                            if (copy == NULL)
-                                goto enomem;
-                            memcpy(copy, _s->value, _s->size);
-                            _m = bloblist_add(_m, copy, _s->size, _s->mime_type, _s->filename);
-                            if (_m == NULL)
-                                goto enomem;
-                        }
-                    }
-                    else {
-                        char *copy = malloc(_s->size);
-                        assert(copy);
-                        if (copy == NULL)
-                            goto enomem;
-                        memcpy(copy, _s->value, _s->size);
-                        _m = bloblist_add(_m, copy, _s->size, _s->mime_type, _s->filename);
-                        if (_m == NULL)
-                            goto enomem;
-                    }
-                }
 
                 break;
 
@@ -1970,117 +2312,74 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 NOT_IMPLEMENTED
         }
 
-        switch (src->enc_format) {
-            case PEP_enc_PGP_MIME:
-            case PEP_enc_pieces:
-            case PEP_enc_PGP_MIME_Outlook1:
-                status = copy_fields(msg, src);
-                if (status != PEP_STATUS_OK)
-                {
-                    GOTO(pep_error);
-                }
+        if (status == PEP_OUT_OF_MEMORY)
+            goto enomem;
+            
+        if (status != PEP_STATUS_OK)
+            goto pep_error;
 
-                // added p=p because outlook is on crack.
-                if (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0 ||
-                    strcmp(src->shortmsg, "p=p") == 0 ||
-                    _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) == 0)
-                {
-                    char * shortmsg = NULL;
-                    char * longmsg = NULL;
-
-                    if (msg->longmsg) {
-                        int r = separate_short_and_long(msg->longmsg, &shortmsg,
-                                &longmsg);
+        if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
+            char* wrap_info = NULL;
+            status = unencapsulate_hidden_fields(src, msg, &wrap_info);
+            
+            // FIXME: replace with enums, check status
+            if (wrap_info) {
+                if (strcmp(wrap_info, "OUTER") == 0) {
+                    // this only occurs in with a direct outer wrapper
+                    // where the actual content is in the inner wrapper
                     
-                        if (r == -1)
-                            goto enomem;
-                    }
-
-                    if (shortmsg == NULL) {
-                        if (src->shortmsg == NULL)
-                            shortmsg = strdup("");
-                        else {
-                            // FIXME: is msg->shortmsg always a copy of
-                            // src->shortmsg already?
-                            // if so, we need to change the logic so
-                            // that in this case, we don't free msg->shortmsg
-                            // and do this strdup, etc.
-                            shortmsg = strdup(src->shortmsg);
+                    bloblist_t* actual_message = msg->attachments;
+                    
+                    while (actual_message) {
+                        char* mime_type = actual_message->mime_type;
+                        if (mime_type) {
+                            // libetpan appears to change the mime_type on this one.
+                            // *growl*
+                            if (strcmp("message/rfc822", mime_type) == 0 ||
+                                strcmp("text/rfc822", mime_type) == 0)
+                                break;
                         }
+                        actual_message = actual_message->next;
                     }
+                    
+                    if (actual_message) {
+                        message* inner_message = NULL;
+                        status = mime_decode_message(actual_message->value, 
+                                                     actual_message->size, 
+                                                     &inner_message);
+                        if (status != PEP_STATUS_OK)
+                            GOTO(pep_error);
+                            
+                        free_stringlist(*keylist);
+                        *keylist == NULL;
+                        
+                        free_message(*dst);
+                        
+                        *dst = NULL;
+                        *rating = PEP_rating_undefined;
+                        *flags = 0;
 
-
-                    free(msg->shortmsg);
-                    free(msg->longmsg);
-
-                    msg->shortmsg = shortmsg;
-                    msg->longmsg = longmsg;
+                        message* inner_dec_msg = NULL;
+                        
+                        decrypt_status = decrypt_message(session,
+                                                         inner_message,
+                                                         &inner_dec_msg,
+                                                         keylist,
+                                                         rating,
+                                                         flags);
+                                                         
+                        *dst = inner_dec_msg;
+                        return decrypt_status;
+                    }
                 }
-                else {
-                    msg->shortmsg = strdup(src->shortmsg);
-                    assert(msg->shortmsg);
-                    if (msg->shortmsg == NULL)
-                        goto enomem;
-                }
-                break;
-            default:
-                    // BUG: must implement more
-                    NOT_IMPLEMENTED
-        }
-
-        // check for private key in decrypted message attachement while inporting
-        identity_list *_private_il = NULL;
-        imported_keys = import_attached_keys(session, msg, &_private_il);
-        if (_private_il &&
-            identity_list_length(_private_il) == 1 &&
-            _private_il->ident->address)
-        {
-            imported_private_key_address = true;
-        }
-
-        if(private_il && imported_private_key_address){
-            *private_il = _private_il;
-        }else{
-            free_identity_list(_private_il);
-        }
-
-        if(decrypt_status == PEP_DECRYPTED){
-
-            // TODO optimize if import_attached_keys didn't import any key
-
-            // In case message did decrypt, but no valid signature could be found
-            // then retry decrypt+verify after importing key.
-
-            // Update msg->from in case we just imported a key
-            // we would need to check signature
-
-            status = _update_identity_for_incoming_message(session, src);
-            if(status != PEP_STATUS_OK)
-            {
-                GOTO(pep_error);
             }
-
-            char *re_ptext = NULL;
-            size_t re_psize;
-
-            free_stringlist(_keylist);
-            _keylist = NULL;
-
-            status = cryptotech[crypto].decrypt_and_verify(session, ctext,
-                csize, dsig_text, dsig_size, &re_ptext, &re_psize, &_keylist);
-
-            free(re_ptext);
-
-            if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
-            {
-                GOTO(pep_error);
-            }
-
-            decrypt_status = status;
         }
-
+        
         *rating = decrypt_rating(decrypt_status);
 
+        /* Ok, now we have a keylist used for decryption/verification.
+           now we need to update the message rating with the 
+           sender and recipients in mind */
         status = amend_rating_according_to_sender_and_recipients(session,
                                                                  rating,
                                                                  src->from,
@@ -2088,55 +2387,54 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
         if (status != PEP_STATUS_OK)
             GOTO(pep_error);
-    }
-    else
-    {
+            
+    } 
+    else {
+        // We did not get a plaintext out of the decryption process.
+        // Abort and return error.
         *rating = decrypt_rating(decrypt_status);
         goto pep_error;
     }
 
-    // Case of own key imported from own trusted message
-    if (// Message have been reliably decrypted
-        msg &&
-        *rating >= PEP_rating_trusted &&
-        imported_private_key_address &&
-        // to is [own]
+    /* 
+       Ok, at this point, we know we have a reliably decrypted message.
+       Prepare the output message for return.
+    */
+    
+    // 1. Check to see if this message is to us and contains an own key imported 
+    // from own trusted message 
+    if (msg && *rating >= PEP_rating_trusted && imported_private_key_address &&
         msg->to->ident->user_id &&
-        strcmp(msg->to->ident->user_id, PEP_OWN_USERID) == 0
-        )
-    {
+        strcmp(msg->to->ident->user_id, PEP_OWN_USERID) == 0) {
+
+        // flag it as such
         *flags |= PEP_decrypt_flag_own_private_key;
     }
 
+    // 2. Clean up message and prepare for return 
     if (msg) {
+        
+        /* add pEp-related status flags to header */
         decorate_message(msg, *rating, _keylist);
+        
         if (imported_keys)
             remove_attached_keys(msg);
-        if (*rating >= PEP_rating_reliable &&
-            session->sync_session->inject_sync_msg) {
-            status = receive_DeviceState_msg(session, msg, *rating, _keylist);
-            if (status == PEP_MESSAGE_CONSUME ||
-                status == PEP_MESSAGE_IGNORE) {
-                free_message(msg);
-                msg = NULL;
-                *flags |= (status == PEP_MESSAGE_IGNORE) ?
-                            PEP_decrypt_flag_ignore :
-                            PEP_decrypt_flag_consume;
-
-            }
-            else if (status != PEP_STATUS_OK){
+            
+        if (*rating >= PEP_rating_reliable) { 
+            status = check_for_sync_msg(session, src, rating, flags, &_keylist);
+        
+            if (status != PEP_STATUS_OK)
                 goto pep_error;
-            }
         }
-    }
-    if (msg) {
+        
+        // copy message id to output message        
         if (src->id) {
             msg->id = strdup(src->id);
             assert(msg->id);
             if (msg->id == NULL)
                 goto enomem;
         }
-    }
+    } // End prepare output message for return
 
     *dst = msg;
     *keylist = _keylist;
