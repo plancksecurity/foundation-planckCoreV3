@@ -2803,6 +2803,9 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
         GOTO(pep_error);
     }
 
+    // Clear the encryption status, or mime_encode will ignore
+    // the plaintext and do all sorts of other stupid things
+    enc_msg->enc_format = PEP_enc_none;
     status = mime_encode_message(enc_msg, false, mime_ciphertext);
 
 pep_error:
