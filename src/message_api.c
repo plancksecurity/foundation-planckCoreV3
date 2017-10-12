@@ -20,6 +20,108 @@
 #define _MAX(A, B) ((B) > (A) ? (B) : (A))
 #endif
 
+// static const char* search_opt_fields(message* src, char* key) {
+//     assert(src);
+//     assert(key);
+//     if (src && key) {
+//         stringpair_list_t opt_fields = src->opt_fields;
+//         while (opt_fields) {
+//             char* currkey = opt_fields->value->key;
+//             if (strcmp(currkey, key) == 0) {
+//                 return opt_fields->value->value;
+//             }
+//             opt_fields = opt_fields->next;
+//         }
+//     }
+//     return NULL;
+// }
+// 
+// static const char* get_message_version_string(message* src) {
+//     const char* version_key = "X-pEp-Version";
+//     return(search_opt_fields(src, version_key));
+// }
+
+
+static char * keylist_to_string(const stringlist_t *keylist)
+{
+    if (keylist) {
+        size_t size = stringlist_length(keylist);
+
+        const stringlist_t *_kl;
+        for (_kl = keylist; _kl && _kl->value; _kl = _kl->next) {
+            size += strlen(_kl->value);
+        }
+
+        char *result = calloc(1, size);
+        if (result == NULL)
+            return NULL;
+
+        char *_r = result;
+        for (_kl = keylist; _kl && _kl->value; _kl = _kl->next) {
+            _r = stpcpy(_r, _kl->value);
+            if (_kl->next && _kl->next->value)
+                _r = stpcpy(_r, ",");
+        }
+
+        return result;
+    }
+    else {
+        return NULL;
+    }
+}
+
+static const char * rating_to_string(PEP_rating rating)
+{
+    switch (rating) {
+    case PEP_rating_cannot_decrypt:
+        return "cannot_decrypt";
+    case PEP_rating_have_no_key:
+        return "have_no_key";
+    case PEP_rating_unencrypted:
+        return "unencrypted";
+    case PEP_rating_unencrypted_for_some:
+        return "unencrypted_for_some";
+    case PEP_rating_unreliable:
+        return "unreliable";
+    case PEP_rating_reliable:
+        return "reliable";
+    case PEP_rating_trusted:
+        return "trusted";
+    case PEP_rating_trusted_and_anonymized:
+        return "trusted_and_anonymized";
+    case PEP_rating_fully_anonymous:
+        return "fully_anonymous";
+    case PEP_rating_mistrust:
+        return "mistrust";
+    case PEP_rating_b0rken:
+        return "b0rken";
+    case PEP_rating_under_attack:
+        return "under_attack";
+    default:
+        return "undefined";
+    }
+}
+
+static void decorate_message(
+    message *msg,
+    PEP_rating rating,
+    stringlist_t *keylist
+    )
+{
+    assert(msg);
+
+    add_opt_field(msg, "X-pEp-Version", PEP_VERSION);
+
+    if (rating != PEP_rating_undefined)
+        add_opt_field(msg, "X-EncStatus", rating_to_string(rating));
+
+    if (keylist) {
+        char *_keylist = keylist_to_string(keylist);
+        add_opt_field(msg, "X-KeyList", _keylist);
+        free(_keylist);
+    }
+}
+
 static char* _get_resource_ptr_noown(char* uri) {
     char* uri_delim = strstr(uri, "://");
     if (!uri_delim)
@@ -440,7 +542,9 @@ static message* wrap_message_as_attachment(message* envelope,
     message* attachment) {
     
     message* _envelope = envelope;
-    
+
+    add_opt_field(attachment, "X-pEp-Version", PEP_VERSION);
+
     if (!_envelope) {
         _envelope = extract_minimal_envelope(attachment, PEP_dir_outgoing);
         attachment->longmsg = encapsulate_message_wrap_info("INNER", attachment->longmsg);
@@ -451,6 +555,7 @@ static message* wrap_message_as_attachment(message* envelope,
     }
     char* message_text = NULL;
     /* Turn message into a MIME-blob */
+    //attachment->enc_format = PEP_enc_none;
     PEP_STATUS status = mime_encode_message(attachment, false, &message_text);
     
     if (status != PEP_STATUS_OK) {
@@ -492,7 +597,8 @@ static PEP_STATUS encrypt_PGP_MIME(
     assert(_src);
     if (_src == NULL)
         goto enomem;
-    _src->longmsg = ptext;
+//    _src->longmsg = ptext;
+    _src->longmsg = src->longmsg;
     _src->longmsg_formatted = src->longmsg_formatted;
     _src->attachments = src->attachments;
     _src->enc_format = PEP_enc_none;
@@ -553,85 +659,6 @@ pep_error:
     return status;
 }
 
-static char * keylist_to_string(const stringlist_t *keylist)
-{
-    if (keylist) {
-        size_t size = stringlist_length(keylist);
-
-        const stringlist_t *_kl;
-        for (_kl = keylist; _kl && _kl->value; _kl = _kl->next) {
-            size += strlen(_kl->value);
-        }
-
-        char *result = calloc(1, size);
-        if (result == NULL)
-            return NULL;
-
-        char *_r = result;
-        for (_kl = keylist; _kl && _kl->value; _kl = _kl->next) {
-            _r = stpcpy(_r, _kl->value);
-            if (_kl->next && _kl->next->value)
-                _r = stpcpy(_r, ",");
-        }
-
-        return result;
-    }
-    else {
-        return NULL;
-    }
-}
-
-static const char * rating_to_string(PEP_rating rating)
-{
-    switch (rating) {
-    case PEP_rating_cannot_decrypt:
-        return "cannot_decrypt";
-    case PEP_rating_have_no_key:
-        return "have_no_key";
-    case PEP_rating_unencrypted:
-        return "unencrypted";
-    case PEP_rating_unencrypted_for_some:
-        return "unencrypted_for_some";
-    case PEP_rating_unreliable:
-        return "unreliable";
-    case PEP_rating_reliable:
-        return "reliable";
-    case PEP_rating_trusted:
-        return "trusted";
-    case PEP_rating_trusted_and_anonymized:
-        return "trusted_and_anonymized";
-    case PEP_rating_fully_anonymous:
-        return "fully_anonymous";
-    case PEP_rating_mistrust:
-        return "mistrust";
-    case PEP_rating_b0rken:
-        return "b0rken";
-    case PEP_rating_under_attack:
-        return "under_attack";
-    default:
-        return "undefined";
-    }
-}
-
-static void decorate_message(
-    message *msg,
-    PEP_rating rating,
-    stringlist_t *keylist
-    )
-{
-    assert(msg);
-
-    add_opt_field(msg, "X-pEp-Version", PEP_VERSION);
-
-    if (rating != PEP_rating_undefined)
-        add_opt_field(msg, "X-EncStatus", rating_to_string(rating));
-
-    if (keylist) {
-        char *_keylist = keylist_to_string(keylist);
-        add_opt_field(msg, "X-KeyList", _keylist);
-        free(_keylist);
-    }
-}
 
 static PEP_rating _rating(PEP_comm_type ct, PEP_rating rating)
 {
@@ -1664,25 +1691,37 @@ static bool pull_up_attached_main_msg(message* src) {
 
 static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
                                               char** msg_wrap_info) {
+    if (!src)
+        return PEP_ILLEGAL_VALUE;
     unsigned char pepstr[] = PEP_SUBJ_STRING;
     PEP_STATUS status = PEP_STATUS_OK;
+
+    bool change_source_in_place = (msg ? false : true);
+    
+    if (change_source_in_place)
+        msg = src;
+        
+//    const char* version_string = get_message_version_string(src);
     
     switch (src->enc_format) {
         case PEP_enc_PGP_MIME:
         case PEP_enc_pieces:
         case PEP_enc_PGP_MIME_Outlook1:
-        
-            status = copy_fields(msg, src);
+//        case PEP_enc_none: // FIXME - this is wrong
+
+            if (!change_source_in_place)
+                status = copy_fields(msg, src);
+                
             if (status != PEP_STATUS_OK)
                 return status;
-
+                
             // FIXME: This is a mess. Talk with VB about how far we go to identify
             if (is_a_pEpmessage(src) || (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0 ||
                 _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) == 0))
             {
                 char * shortmsg = NULL;
                 char * longmsg = NULL;
-                
+        
                 if (msg->longmsg) {
                     int r = separate_short_and_long(msg->longmsg, 
                                                     &shortmsg, 
@@ -1695,13 +1734,14 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
 
                 // We only use the shortmsg in version 1.0 messages; if it occurs where we
                 // didn't replace the subject, we ignore this all
-                if (!(*msg_wrap_info)) {
+                if (!(*msg_wrap_info || change_source_in_place)) {
                     if (!shortmsg || 
                         (src->shortmsg != NULL && strcmp(src->shortmsg, "pEp") != 0 &&
                          _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) != 0)) {
                              
                         if (shortmsg != NULL)
                             free(shortmsg);                        
+                            
                         if (src->shortmsg == NULL) {
                             shortmsg = strdup("");
                         }
@@ -1710,23 +1750,25 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
                             // src->shortmsg already?
                             // if so, we need to change the logic so
                             // that in this case, we don't free msg->shortmsg
-                            // and do this strdup, etc.
-                            shortmsg = strdup(src->shortmsg); 
+                            // and do this strdup, etc
+                            shortmsg = strdup(src->shortmsg);
                         }        
                     }
+                    free(msg->shortmsg);
+                    msg->shortmsg = shortmsg;
                 }
                 
-                free(msg->shortmsg);
                 free(msg->longmsg);
 
-                msg->shortmsg = shortmsg;
                 msg->longmsg = longmsg;
             }
             else {
-                msg->shortmsg = strdup(src->shortmsg);
-                assert(msg->shortmsg);
-                if (msg->shortmsg == NULL)
-                    return PEP_OUT_OF_MEMORY;
+                if (!change_source_in_place) {
+                    msg->shortmsg = strdup(src->shortmsg);
+                    assert(msg->shortmsg);
+                    if (msg->shortmsg == NULL)
+                        return PEP_OUT_OF_MEMORY;
+                }
             }
             break;
         default:
@@ -2121,8 +2163,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                     // and those are the only ones with such info.
                                     // Since we capture the information, this is ok.
                                     wrap_info = NULL;
+                                    inner_message->enc_format = PEP_enc_PGP_MIME;
                                     // FIXME
-                                    status = unencapsulate_hidden_fields(src, msg, &wrap_info);
+                                    status = unencapsulate_hidden_fields(inner_message, NULL, &wrap_info);
                                     if (wrap_info) {
                                         // useless check, but just in case we screw up?
                                         if (strcmp(wrap_info, "INNER") == 0) {
@@ -2136,6 +2179,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                             GOTO(pep_error);
                                         }
                                     }
+                                    inner_message->enc_format = PEP_enc_none;
                                 }
                                 else { // forwarded message, leave it alone
                                     free_message(inner_message);
@@ -2751,6 +2795,7 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
         GOTO(pep_error);
     }
 
+    dec_msg->enc_format = PEP_enc_none; // is this the right thing to do? FIXME
     status = mime_encode_message(dec_msg, false, mime_plaintext);
 
     if (status == PEP_STATUS_OK)

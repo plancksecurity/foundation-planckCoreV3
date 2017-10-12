@@ -819,12 +819,14 @@ static PEP_STATUS mime_encode_message_PGP_MIME(
 	struct mailmime_parameter * param;
     int r;
     PEP_STATUS status;
+    //char *subject;
     char *plaintext;
     size_t plaintext_size;
 
     assert(msg->attachments && msg->attachments->next &&
             msg->attachments->next->value);
 
+    //subject = (msg->shortmsg) ? msg->shortmsg : "pEp"; // not used, yet.
     plaintext = msg->attachments->next->value;
     plaintext_size = msg->attachments->next->size;
 
