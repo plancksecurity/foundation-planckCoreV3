@@ -102,4 +102,3 @@ int main() {
     release(session);
     return 0;
 }
-
