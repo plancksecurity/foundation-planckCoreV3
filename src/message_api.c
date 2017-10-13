@@ -266,6 +266,65 @@ static char * encapsulate_message_wrap_info(const char *msg_wrap_info, const cha
     return ptext;
 }
 
+static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
+{
+    assert(shortmsg);
+    
+    unsigned char pepstr[] = PEP_SUBJ_STRING;
+    assert(strcmp(shortmsg, "pEp") != 0 && _unsigned_signed_strcmp(pepstr, shortmsg, PEP_SUBJ_BYTELEN) != 0); 
+    
+    if (!shortmsg || strcmp(shortmsg, "pEp") == 0 || 
+                     _unsigned_signed_strcmp(pepstr, shortmsg, PEP_SUBJ_BYTELEN) == 0) {
+        if (!longmsg) {
+            return NULL;
+        }
+        else {
+            char *result = strdup(longmsg);
+            assert(result);
+            return result;
+        }
+    }
+
+    if (longmsg == NULL)
+        longmsg = "";
+
+    const char * const newlines = "\n\n";
+    const size_t NL_LEN = 2;
+
+    const size_t bufsize = PEP_SUBJ_KEY_LEN + strlen(shortmsg) + NL_LEN + strlen(longmsg) + 1;
+    char * ptext = calloc(1, bufsize);
+    assert(ptext);
+    if (ptext == NULL)
+        return NULL;
+
+    strlcpy(ptext, PEP_SUBJ_KEY, bufsize);
+    strlcat(ptext, shortmsg, bufsize);
+    strlcat(ptext, newlines, bufsize);
+    strlcat(ptext, longmsg, bufsize);
+
+    return ptext;
+}
+
+static PEP_STATUS replace_subject(message* msg) {
+    unsigned char pepstr[] = PEP_SUBJ_STRING;
+    if (msg->shortmsg && *(msg->shortmsg) != '\0') {
+        char* longmsg = combine_short_and_long(msg->shortmsg, msg->longmsg);
+        if (!longmsg)
+            return PEP_OUT_OF_MEMORY;
+        else {
+            free(msg->longmsg);
+            msg->longmsg = longmsg;
+        }
+    }
+    free(msg->shortmsg);
+    msg->shortmsg = strdup((char*)pepstr);
+    
+    if (!msg->shortmsg)
+        return PEP_OUT_OF_MEMORY;
+    
+    return PEP_STATUS_OK;
+}
+
 /* 
    WARNING: For the moment, this only works for the first line of decrypted
    plaintext because we don't need more. IF WE DO, THIS MUST BE EXPANDED, or
@@ -1225,6 +1284,12 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         // FIXME - we need to deal with transport types (via flag)
         if ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp) {
             _src = wrap_message_as_attachment(NULL, src);
+        }
+        else {
+            // hide subject
+            status = replace_subject(_src);
+            if (status == PEP_OUT_OF_MEMORY)
+                goto enomem;
         }
         if (!(flags & PEP_encrypt_flag_force_no_attached_key))
             attach_own_key(session, _src);
