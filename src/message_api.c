@@ -102,6 +102,56 @@ static const char * rating_to_string(PEP_rating rating)
     }
 }
 
+void add_opt_field(message *msg, const char *name, const char *value)
+{
+    assert(msg && name && value);
+
+    if (msg && name && value) {
+        stringpair_t *pair = new_stringpair(name, value);
+        if (pair == NULL)
+            return;
+
+        stringpair_list_t *field = stringpair_list_add(msg->opt_fields, pair);
+        if (field == NULL)
+        {
+            free_stringpair(pair);
+            return;
+        }
+
+        if (msg->opt_fields == NULL)
+            msg->opt_fields = field;
+    }
+}
+
+void replace_opt_field(message *msg, const char *name, const char *value)
+{
+    assert(msg && name && value);
+    
+    if (msg && name && value) {
+        stringpair_list_t* opt_fields = msg->opt_fields;
+        stringpair_t* pair = NULL;
+        if (opt_fields) {
+            while (opt_fields) {
+                pair = opt_fields->value;
+                if (pair && (strcmp(name, pair->key) == 0))
+                    break;
+                    
+                pair = NULL;
+                opt_fields = opt_fields->next;
+            }
+        }
+        
+        if (pair) {
+            free(pair->value);
+            pair->value = strdup(value);
+        }
+        else {
+            add_opt_field(msg, name, value);
+        }
+    }
+}
+
+
 static void decorate_message(
     message *msg,
     PEP_rating rating,
@@ -110,14 +160,14 @@ static void decorate_message(
 {
     assert(msg);
 
-    add_opt_field(msg, "X-pEp-Version", PEP_VERSION);
+    replace_opt_field(msg, "X-pEp-Version", PEP_VERSION);
 
     if (rating != PEP_rating_undefined)
-        add_opt_field(msg, "X-EncStatus", rating_to_string(rating));
+        replace_opt_field(msg, "X-EncStatus", rating_to_string(rating));
 
     if (keylist) {
         char *_keylist = keylist_to_string(keylist);
-        add_opt_field(msg, "X-KeyList", _keylist);
+        replace_opt_field(msg, "X-KeyList", _keylist);
         free(_keylist);
     }
 }
@@ -181,26 +231,6 @@ static bool is_fileending(const bloblist_t *bl, const char *fe)
     return strcmp(bl->filename + (fn_len - fe_len), fe) == 0;
 }
 
-void add_opt_field(message *msg, const char *name, const char *value)
-{
-    assert(msg && name && value);
-
-    if (msg && name && value) {
-        stringpair_t *pair = new_stringpair(name, value);
-        if (pair == NULL)
-            return;
-
-        stringpair_list_t *field = stringpair_list_add(msg->opt_fields, pair);
-        if (field == NULL)
-        {
-            free_stringpair(pair);
-            return;
-        }
-
-        if (msg->opt_fields == NULL)
-            msg->opt_fields = field;
-    }
-}
 
 static char * encapsulate_message_wrap_info(const char *msg_wrap_info, const char *longmsg)
 {
@@ -543,7 +573,7 @@ static message* wrap_message_as_attachment(message* envelope,
     
     message* _envelope = envelope;
 
-    add_opt_field(attachment, "X-pEp-Version", PEP_VERSION);
+    replace_opt_field(attachment, "X-pEp-Version", PEP_VERSION);
 
     if (!_envelope) {
         _envelope = extract_minimal_envelope(attachment, PEP_dir_outgoing);
@@ -2163,14 +2193,18 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                     // and those are the only ones with such info.
                                     // Since we capture the information, this is ok.
                                     wrap_info = NULL;
-                                    inner_message->enc_format = PEP_enc_PGP_MIME;
+                                    inner_message->enc_format = src->enc_format;
                                     // FIXME
                                     status = unencapsulate_hidden_fields(inner_message, NULL, &wrap_info);
                                     if (wrap_info) {
                                         // useless check, but just in case we screw up?
                                         if (strcmp(wrap_info, "INNER") == 0) {
                                             // THIS is our message
+                                            // FIXME: free msg, but check references
                                             src = msg = inner_message;
+                                            
+                                            if (src->from)
+                                                update_identity(session, src->from);
                                             break;        
                                         }
                                         else { // should never happen
