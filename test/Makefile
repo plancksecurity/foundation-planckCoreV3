@@ -86,7 +86,7 @@ test_home_:
 
 .PHONY: clean
 clean:
-	rm -f *.o $(TARGET) *.a *~ $(UNIT_TESTS) pep_Dokument_Titel.pdf msg4.asc
+	rm -f *.o $(TARGET) *.a *~ $(UNIT_TESTS) pep_Dokument_Titel.pdf msg4.asc msg_encrypt_for_self.asc
 	rm -Rf *.dSYM $(TEST_HOME) pubring.gpg secring.gpg random_seed *.conf trustdb.gpg
 
 .PHONY: test
