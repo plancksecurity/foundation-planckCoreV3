@@ -20,28 +20,6 @@
 #define _MAX(A, B) ((B) > (A) ? (B) : (A))
 #endif
 
-// static const char* search_opt_fields(message* src, char* key) {
-//     assert(src);
-//     assert(key);
-//     if (src && key) {
-//         stringpair_list_t opt_fields = src->opt_fields;
-//         while (opt_fields) {
-//             char* currkey = opt_fields->value->key;
-//             if (strcmp(currkey, key) == 0) {
-//                 return opt_fields->value->value;
-//             }
-//             opt_fields = opt_fields->next;
-//         }
-//     }
-//     return NULL;
-// }
-// 
-// static const char* get_message_version_string(message* src) {
-//     const char* version_key = "X-pEp-Version";
-//     return(search_opt_fields(src, version_key));
-// }
-
-
 static char * keylist_to_string(const stringlist_t *keylist)
 {
     if (keylist) {
@@ -180,9 +158,9 @@ static char* _get_resource_ptr_noown(char* uri) {
         return uri + 3;
 }
 
-static bool is_file_uri(char* str) {
-    return(strncmp(str, "file://", 7) == 0);
-}
+// static bool is_file_uri(char* str) {
+//     return(strncmp(str, "file://", 7) == 0);
+// }
 
 static bool is_cid_uri(const char* str) {
     return(strncmp(str, "cid://", 6) == 0);
@@ -628,7 +606,7 @@ enomem:
 }
 
 static message* wrap_message_as_attachment(message* envelope, 
-    message* attachment) {
+    message* attachment, bool keep_orig_subject) {
     
     message* _envelope = envelope;
 
@@ -658,7 +636,8 @@ static message* wrap_message_as_attachment(message* envelope,
                                             "message/rfc822", NULL);
     
     _envelope->attachments = message_blob;
-    
+    if (keep_orig_subject && attachment->shortmsg)
+        _envelope->shortmsg = strdup(attachment->shortmsg);
     return _envelope;
 }
 
@@ -1283,13 +1262,15 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     else {
         // FIXME - we need to deal with transport types (via flag)
         if ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp) {
-            _src = wrap_message_as_attachment(NULL, src);
+            _src = wrap_message_as_attachment(NULL, src, session->unencrypted_subject);
         }
         else {
             // hide subject
-            status = replace_subject(_src);
-            if (status == PEP_OUT_OF_MEMORY)
-                goto enomem;
+            if (!session->unencrypted_subject) {
+                status = replace_subject(_src);
+                if (status == PEP_OUT_OF_MEMORY)
+                    goto enomem;
+            }
         }
         if (!(flags & PEP_encrypt_flag_force_no_attached_key))
             attach_own_key(session, _src);
@@ -2226,7 +2207,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             char* wrap_info = NULL;
             status = unencapsulate_hidden_fields(src, msg, &wrap_info);
 
-            bool is_transport_wrapper = false;
+//            bool is_transport_wrapper = false;
             
             // FIXME: replace with enums, check status
             if (wrap_info) {
