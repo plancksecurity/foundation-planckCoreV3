@@ -40,6 +40,10 @@ DYNAMIC_API bool is_PGP_message_text(const char *text);
 //      the resulttext will go to the ownership of the caller
 //      the message will remain in the ownership of the caller
 //      omit_fields is true for payload of PGP/MIME messages
+//
+//      also: note that the encryption type will be used to determine what
+//      gets encoded from the message struct, so if using this on an 
+//      already-encrypted message, set the enc_format of the msg to PEP_enc_none.
 
 DYNAMIC_API PEP_STATUS mime_encode_message(
         const message * msg,

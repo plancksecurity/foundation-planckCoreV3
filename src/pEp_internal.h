@@ -1,7 +1,7 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#define PEP_ENGINE_VERSION "0.8.0"
+#define PEP_ENGINE_VERSION "0.9.0"
 
 // maximum attachment size to import as key 1MB, maximum of 20 attachments
 
@@ -36,6 +36,19 @@
 #define PEP_SUBJ_STRING {0x70,0xE2,0x89,0xA1,0x70,0x00}
 #define PEP_SUBJ_BYTELEN 5
 #endif
+
+#ifndef PEP_SUBJ_KEY
+#define PEP_SUBJ_KEY "Subject: "
+#define PEP_SUBJ_KEY_LC "subject: "
+#define PEP_SUBJ_KEY_LEN 9
+#endif
+
+#ifndef PEP_MSG_WRAP_KEY
+#define PEP_MSG_WRAP_KEY "pEp-Wrapped-Message-Info: "
+#define PEP_MSG_WRAP_KEY_LC "pep-wrapped-message-info: "
+#define PEP_MSG_WRAP_KEY_LEN 26
+#endif
+
 
 #include "platform.h"
 
@@ -173,6 +186,9 @@ struct _pEpSession {
     bool unencrypted_subject;
     bool keep_sync_msg;
     bool service_log;
+
+    // mistrust undo cache
+    pEp_identity* cached_mistrusted;
     
 #ifdef DEBUG_ERRORSTACK
     stringlist_t* errorstack;

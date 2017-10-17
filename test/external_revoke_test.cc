@@ -247,6 +247,9 @@ int main() {
     
     // encrypt something to the key
     cout << "Creating message…\n";
+    
+    // cout << "First, update identity though!\n";
+    // status = update_identity(session, recip1);
     to_list = new_identity_list(identity_dup(recip1)); // to bob
     outgoing_msg = new_message(PEP_dir_outgoing);
     assert(outgoing_msg);
@@ -258,8 +261,8 @@ int main() {
     cout << "Message created.\n";
 
     status = encrypt_message(session, outgoing_msg, NULL, &encrypted_outgoing_msg, PEP_enc_PGP_MIME, 0);
-
     ct = (encrypted_outgoing_msg ? encrypted_outgoing_msg->to->ident->comm_type : outgoing_msg->to->ident->comm_type);
+    
 
     // CHECK STATUS???
     cout << "Encryption returns with status " << tl_status_string(status) << endl;
@@ -285,11 +288,13 @@ int main() {
     status = decrypt_message(session, encrypted_outgoing_msg, &decrypted_msg, &keylist, &rating, &flags);
     cout << "Decryption returns with status " << tl_status_string(status) << endl;
     assert(status == PEP_STATUS_OK);
-
+    assert(decrypted_msg);
+    
     // check rating
     cout << "Rating of decrypted message to trusted recip: " << tl_rating_string(rating) << endl;
     assert(rating == PEP_rating_reliable);
 
+    status = update_identity(session, decrypted_msg->to->ident);
     ct = (decrypted_msg ? decrypted_msg->to->ident->comm_type : outgoing_msg->to->ident->comm_type);
 
     cout << "comm_type: " << tl_ct_string(ct) << endl;

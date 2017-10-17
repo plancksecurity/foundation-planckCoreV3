@@ -123,7 +123,6 @@
 		64A826811B455D0800EECAF0 /* pEpEngine.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826601B455D0800EECAF0 /* pEpEngine.c */; };
 		64A826821B455D0800EECAF0 /* pgp_netpgp.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826631B455D0800EECAF0 /* pgp_netpgp.c */; };
 		64A826831B455D0800EECAF0 /* platform_unix.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826651B455D0800EECAF0 /* platform_unix.c */; };
-		64A826851B455D0800EECAF0 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8266B1B455D0800EECAF0 /* sqlite3.c */; };
 		64A826861B455D0800EECAF0 /* stringlist.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8266D1B455D0800EECAF0 /* stringlist.c */; };
 		64A826871B455D0800EECAF0 /* stringpair.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8266F1B455D0800EECAF0 /* stringpair.c */; };
 		64A826881B455D0800EECAF0 /* timestamp.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826711B455D0800EECAF0 /* timestamp.c */; };
@@ -815,7 +814,6 @@
 				64A826861B455D0800EECAF0 /* stringlist.c in Sources */,
 				4354FF651D6EDF300033069C /* sync_impl.c in Sources */,
 				64A8267E1B455D0800EECAF0 /* message_api.c in Sources */,
-				64A826851B455D0800EECAF0 /* sqlite3.c in Sources */,
 				43E9BC7F1DB6720E00AD2352 /* UpdateRequest.c in Sources */,
 				646C41361D510CD800C63EFF /* Version.c in Sources */,
 				646C41081D510CD800C63EFF /* constr_TYPE.c in Sources */,
@@ -959,6 +957,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = "-DSQLITE3_FROM_OS";
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
@@ -1006,6 +1005,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
+				OTHER_CFLAGS = "-DSQLITE3_FROM_OS";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
 			};
