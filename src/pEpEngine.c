@@ -322,6 +322,15 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         goto pep_error;
     }
 
+    int_result = sqlite3_exec(
+            _session->db,
+            "PRAGMA journal_mode=WAL;\n",
+            NULL,
+            NULL,
+            NULL
+        );
+
+
     sqlite3_busy_timeout(_session->db, BUSY_WAIT_TIME);
 
     assert(SYSTEM_DB);
