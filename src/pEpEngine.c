@@ -308,6 +308,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     int_result = sqlite3_exec(
             _session->db,
+            "PRAGMA locking_mode=NORMAL;\n"
             "PRAGMA journal_mode=WAL;\n",
             NULL,
             NULL,
