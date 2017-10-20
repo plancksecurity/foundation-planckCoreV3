@@ -35,6 +35,58 @@ static void _sql_lower(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
     }
 }
 
+static char* get_my_pthread_id_as_string() {
+    pthread_t my_tid = pthread_self();
+    size_t pthread_t_size = sizeof(pthread_t);
+
+    int MAX_BYTES = (pthread_t_size > 25 ? 25 : pthread_t_size);
+    
+    int i = 0;
+    
+    char* retval = calloc((2*MAX_BYTES) + 1);
+    char* my_tid_bytes = (char*)(&my_tid);
+    
+    for (; i < MAX_BYTES; i++) {
+        sprintf(retval + i, "%02x", my_tid_bytes[i]);
+    }
+
+    return retval;
+}
+
+/* KG: from https://github.com/jterrace/craq/blob/master/db-5.0.21/sql/examples/c/ex_sql_multi_thread.c
+ *     for testing
+ * Busy callback handler for all operations. If the busy callback handler is 
+ * NULL, then SQLITE_BUSY or SQLITE_IOERR_BLOCKED is returned immediately upon 
+ * encountering the lock. If the busy callback is not NULL, then the callback 
+ * might be invoked.
+ *
+ * This callback will be registered by SQLite's API:
+ *    int sqlite3_busy_handler(sqlite3*, int(*)(void*,int), void*);
+ * That's very useful to deal with SQLITE_BUSY event automatically. Otherwise,
+ * you have to check the return code, reset statement and do retry manually.
+ */
+static int
+busy_handler(void *data, int retry)
+{
+	const int max_retries = 10;
+
+    char* my_thread_id = get_my_pthread_id_as_string();
+        
+	if (retry < max_retries) {
+		/* Sleep a while and retry again. */
+		printf("Thread %s hits SQLITE_BUSY %d times, retry again.\n",
+			my_thread_id, retry);
+		sqlite3_sleep(attr->sleep_ms);
+		/* Return non-zero to let caller retry again. */
+		return 1;
+	}
+	/* Return zero to let caller return SQLITE_BUSY immediately. */
+	printf("Error: Thread %d had retried %d times, exit.\n",
+		my_thread_id, retry);
+	return 0;
+}
+
+
 
 // sql manipulation statements
 static const char *sql_log = 
