@@ -10,7 +10,7 @@ include ../Makefile.conf
 TARGET=pEpEngineTest
 
 unexport GNUPGHOME
-TEST_HOME=$(HERE)/test_home
+TEST_HOME=$(HERE)test_home
 TEST_GNUPGHOME=$(TEST_HOME)/gnupg
 
 LDFLAGS+= $(ETPAN_LIB) -L../asn.1 -L../src

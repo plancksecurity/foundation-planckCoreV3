@@ -74,6 +74,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <math.h>
 
 #ifdef SQLITE3_FROM_OS
 #include <sqlite3.h>
@@ -362,6 +363,17 @@ static inline char* _pep_subj_copy() {
     void* retval = calloc(1, sizeof(unsigned char)*PEP_SUBJ_BYTELEN + 1);
     memcpy(retval, pepstr, PEP_SUBJ_BYTELEN);
     return (char*)retval;
+}
+
+// These are globals used in generating message IDs and should only be
+// computed once, as they're either really constants or OS-dependent
+
+int _pEp_rand_max_bits;
+double _pEp_log2_36;
+
+static inline void _init_globals() {
+    _pEp_rand_max_bits = ceil(log2(RAND_MAX));
+    _pEp_log2_36 = log2(36);
 }
 
 #ifdef DEBUG_ERRORSTACK

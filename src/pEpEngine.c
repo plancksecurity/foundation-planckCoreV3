@@ -8,6 +8,9 @@
 #include "blacklist.h"
 #include "sync_fsm.h"
 
+#include <time.h>
+#include <stdlib.h>
+
 static volatile int init_count = -1;
 
 // sql overloaded functions - modified from sqlite3.c
@@ -270,7 +273,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     if (_count == 0)
         in_first = true;
     
-    // Race contition mitigated by calling caveat starts here :
+    // Race condition mitigated by calling caveat starts here :
     // If another call to init() preempts right now, then preemptive call
     // will have in_first false, will not create SQL tables, and following
     // calls relying on those tables will fail.
@@ -324,6 +327,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     int_result = sqlite3_exec(
             _session->db,
+            "PRAGMA locking_mode=NORMAL;\n"
             "PRAGMA journal_mode=WAL;\n",
             NULL,
             NULL,
@@ -377,8 +381,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "create table if not exists log (\n"
                 "   timestamp integer default (datetime('now')),\n"
                 "   title text not null,\n"
-                "   entity text not null,\n"
                 "   description text,\n"
+                "   entity text not null,\n"
                 "   comment text\n"
                 ");\n"
                 "create index if not exists log_timestamp on log (\n"
@@ -571,6 +575,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             );
             assert(int_result == SQLITE_OK);
         }
+        
+        // We need to init a few globals for message id that we'd rather not
+        // calculate more than once.
+        _init_globals();
     }
 
     int_result = sqlite3_prepare_v2(_session->db, sql_log,
@@ -784,6 +792,12 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     _session->sync_session = _session;
 
     *session = _session;
+    
+    // Note: Following statement is NOT for any cryptographic/secure functionality; it is
+    //       ONLY used for some randomness in generated outer message ID, which are
+    //       required by the RFC to be globally unique!
+    srand(time(NULL));
+    
     return PEP_STATUS_OK;
 
 enomem:
