@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 
 #ifndef _MIN
@@ -30,7 +31,7 @@ static char * keylist_to_string(const stringlist_t *keylist)
             size += strlen(_kl->value);
         }
 
-        char *result = calloc(1, size);
+        char *result = calloc(size, 1);
         if (result == NULL)
             return NULL;
 
@@ -231,7 +232,7 @@ static char * encapsulate_message_wrap_info(const char *msg_wrap_info, const cha
     const size_t NL_LEN = 2;
         
     const size_t bufsize = PEP_MSG_WRAP_KEY_LEN + strlen(msg_wrap_info) + NL_LEN + strlen(longmsg) + 1;
-    char * ptext = calloc(1, bufsize);
+    char * ptext = calloc(bufsize, 1);
     assert(ptext);
     if (ptext == NULL)
         return NULL;
@@ -270,7 +271,7 @@ static char * combine_short_and_long(const char *shortmsg, const char *longmsg)
     const size_t NL_LEN = 2;
 
     const size_t bufsize = PEP_SUBJ_KEY_LEN + strlen(shortmsg) + NL_LEN + strlen(longmsg) + 1;
-    char * ptext = calloc(1, bufsize);
+    char * ptext = calloc(bufsize, 1);
     assert(ptext);
     if (ptext == NULL)
         return NULL;
@@ -301,6 +302,159 @@ static PEP_STATUS replace_subject(message* msg) {
         return PEP_OUT_OF_MEMORY;
     
     return PEP_STATUS_OK;
+}
+
+unsigned long long get_bitmask(int num_bits) {
+    if (num_bits <= 0)
+        return 0;
+        
+    unsigned long long bitmask = 0;
+    int i;
+    for (i = 1; i < num_bits; i++) {
+        bitmask = bitmask << 1;
+        bitmask |= 1;
+    }
+    return bitmask;
+}
+
+static char* get_base_36_rep(unsigned long long value, int num_sig_bits) {
+        
+    int bufsize = ceil(num_sig_bits / _pEp_log2_36) + 1;
+    
+    // based on
+    // https://en.wikipedia.org/wiki/Base36#C_implementation
+    // ok, we supposedly have a 64-bit kinda sorta random blob
+    const char base_36_symbols[36] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    char* retbuf = calloc(bufsize, 1); 
+
+    int i = bufsize - 1; // (end index)
+
+    while (i > 0) {
+        retbuf[--i] = base_36_symbols[value % 36];
+        value /= 36;
+    }
+
+    return retbuf;
+}
+
+
+static char* message_id_prand_part(void) {
+    // RAND modulus
+    int num_bits = _pEp_rand_max_bits;
+
+    if (num_bits < 0)
+        return NULL;
+        
+    const int DESIRED_BITS = 64;
+
+    num_bits = _MIN(num_bits, DESIRED_BITS);
+    
+    int i;
+    
+    // at least 64 bits
+    unsigned long long bitmask = get_bitmask(num_bits);
+    
+    unsigned long long output_value = 0;
+    
+    i = DESIRED_BITS;
+    
+    int bitshift = 0;
+    
+    while (i > 0) {
+        int randval = rand();
+        unsigned long long temp_val = randval & bitmask;
+
+        output_value |= temp_val;
+
+        i -= num_bits; 
+        
+        bitshift = _MIN(num_bits, i);
+        output_value <<= bitshift;        
+        bitmask = get_bitmask(bitshift);
+    }
+
+    return get_base_36_rep(output_value, DESIRED_BITS);
+}
+
+static PEP_STATUS generate_message_id(message* msg) {
+
+    if (!msg || !msg->from || !msg->from->address)
+        return PEP_ILLEGAL_VALUE;
+
+    char* time_prefix = NULL;
+    char* random_id = NULL;
+    char* retval = NULL;
+    
+    size_t buf_len = 2; // NUL + @
+    
+    char* from_addr = msg->from->address;
+    char* domain_ptr = strstr(from_addr, "@");
+    if (!domain_ptr || *(domain_ptr + 1) == '\0')
+        domain_ptr = "localhost";
+    else
+        domain_ptr++;
+
+    buf_len += strlen(domain_ptr);
+    
+    if (msg->id)
+        free(msg->id);
+
+    msg->id = NULL;
+    
+    time_t curr_time = time(NULL);
+    
+    time_prefix = get_base_36_rep(curr_time, ceil(log2(curr_time)));
+
+    if (!time_prefix)
+        goto enomem;
+    
+    buf_len += strlen(time_prefix);
+
+    random_id = message_id_prand_part();
+
+    if (!random_id)
+        goto enomem;
+    
+        
+    buf_len += strlen(random_id);
+    
+    // make a new uuid - depending on rand() impl, time precision, etc,
+    // we may still not be unique. We'd better make sure. So. 
+    char new_uuid[37];
+    pEpUUID uuid;
+    uuid_generate_random(uuid);
+    uuid_unparse_upper(uuid, new_uuid);
+
+    buf_len += strlen(new_uuid);
+
+    buf_len += 6; // "pEp" and 3 '.' chars
+
+    retval = calloc(buf_len, 1);
+    
+    if (!retval)
+        goto enomem;
+    
+    strlcpy(retval, "pEp.", buf_len);
+    strlcat(retval, time_prefix, buf_len);
+    strlcat(retval, ".", buf_len);
+    strlcat(retval, random_id, buf_len);
+    strlcat(retval, ".", buf_len);
+    strlcat(retval, new_uuid, buf_len);        
+    strlcat(retval, "@", buf_len);    
+    strlcat(retval, domain_ptr, buf_len);    
+
+    msg->id = retval;
+    
+    free(time_prefix);
+    free(random_id);
+    
+    return PEP_STATUS_OK;
+        
+enomem:
+    free(time_prefix);
+    free(random_id);
+    return PEP_OUT_OF_MEMORY;
 }
 
 /* 
@@ -608,12 +762,24 @@ enomem:
 static message* wrap_message_as_attachment(message* envelope, 
     message* attachment, bool keep_orig_subject) {
     
+    if (!attachment)
+        return NULL;
+    
     message* _envelope = envelope;
+
+    PEP_STATUS status = PEP_STATUS_OK;
 
     replace_opt_field(attachment, "X-pEp-Version", PEP_VERSION);
 
     if (!_envelope) {
         _envelope = extract_minimal_envelope(attachment, PEP_dir_outgoing);
+        status = generate_message_id(_envelope);
+        
+        if (status != PEP_STATUS_OK) {
+            free(_envelope);
+            return NULL;
+        }
+        
         attachment->longmsg = encapsulate_message_wrap_info("INNER", attachment->longmsg);
         _envelope->longmsg = encapsulate_message_wrap_info("OUTER", _envelope->longmsg);
     }
@@ -622,8 +788,7 @@ static message* wrap_message_as_attachment(message* envelope,
     }
     char* message_text = NULL;
     /* Turn message into a MIME-blob */
-    //attachment->enc_format = PEP_enc_none;
-    PEP_STATUS status = mime_encode_message(attachment, false, &message_text);
+    status = mime_encode_message(attachment, false, &message_text);
     
     if (status != PEP_STATUS_OK) {
         free(_envelope);
@@ -1263,6 +1428,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         // FIXME - we need to deal with transport types (via flag)
         if ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp) {
             _src = wrap_message_as_attachment(NULL, src, session->unencrypted_subject);
+            if (!_src)
+                goto pep_error;
         }
         else {
             // hide subject
@@ -1317,8 +1484,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
     if (msg) {
         decorate_message(msg, PEP_rating_undefined, NULL);
-        if (src->id) {
-            msg->id = strdup(src->id);
+        if (_src->id) {
+            msg->id = strdup(_src->id);
             assert(msg->id);
             if (msg->id == NULL)
                 goto enomem;
@@ -1545,7 +1712,7 @@ static PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
     // Add space for the "--"
     size_t boundary_strlen = (end_boundary - start_boundary) + 2;
 
-    signed_boundary = calloc(1, boundary_strlen + 1);
+    signed_boundary = calloc(boundary_strlen + 1, 1);
     strlcpy(signed_boundary, "--", boundary_strlen + 1);
     strlcat(signed_boundary, start_boundary, boundary_strlen + 1);
 
@@ -2329,7 +2496,6 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 goto pep_error;
         }
         
-        // copy message id to output message        
         if (src->id && src != msg) {
             msg->id = strdup(src->id);
             assert(msg->id);
@@ -2635,7 +2801,7 @@ DYNAMIC_API PEP_STATUS get_trustwords(
 
     max_len = (source1_len > source2_len ? source1_len : source2_len);
     
-    char* XORed_fpr = (char*)(calloc(1,max_len + 1));
+    char* XORed_fpr = (char*)(calloc(max_len + 1, 1));
     *(XORed_fpr + max_len) = '\0';
     char* result_curr = XORed_fpr + max_len - 1;
     char* source1_curr = source1 + source1_len - 1;
