@@ -770,7 +770,7 @@ static message* wrap_message_as_attachment(message* envelope,
     PEP_STATUS status = PEP_STATUS_OK;
 
     replace_opt_field(attachment, "X-pEp-Version", PEP_VERSION);
-
+        
     if (!_envelope) {
         _envelope = extract_minimal_envelope(attachment, PEP_dir_outgoing);
         status = generate_message_id(_envelope);
@@ -787,13 +787,20 @@ static message* wrap_message_as_attachment(message* envelope,
         _envelope->longmsg = encapsulate_message_wrap_info("TRANSPORT", _envelope->longmsg);
     }
     char* message_text = NULL;
+    
+    if (!attachment->shortmsg) {
+        attachment->shortmsg = strdup("");
+        if (!attachment->shortmsg)
+            goto enomem;
+    }
+    
+    /* prevent introduction of pEp in inner message */
+        
     /* Turn message into a MIME-blob */
     status = mime_encode_message(attachment, false, &message_text);
-    
-    if (status != PEP_STATUS_OK) {
-        free(_envelope);
-        return NULL;
-    }
+        
+    if (status != PEP_STATUS_OK)
+        goto enomem;
     
     size_t message_len = strlen(message_text);
     
@@ -804,6 +811,12 @@ static message* wrap_message_as_attachment(message* envelope,
     if (keep_orig_subject && attachment->shortmsg)
         _envelope->shortmsg = strdup(attachment->shortmsg);
     return _envelope;
+    
+enomem:
+    if (!envelope) {
+        free(_envelope);
+        return NULL;
+    }
 }
 
 static PEP_STATUS encrypt_PGP_MIME(
