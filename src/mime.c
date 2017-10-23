@@ -1093,7 +1093,7 @@ static stringlist_t * clist_to_stringlist(const clist *list)
         text = NULL;
     }
 
-    return _sl;
+    return sl;
 
 enomem:
     free_stringlist(sl);
