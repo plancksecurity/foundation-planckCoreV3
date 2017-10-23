@@ -1513,8 +1513,6 @@ pep_error:
     return ADD_TO_LOG(status);
 }
 
-
-// FIXME: Update if needed for the wrapped fun bits
 DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_SESSION session,
         pEp_identity* target_id,
@@ -1527,6 +1525,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     PEP_STATUS status = PEP_STATUS_OK;
     message * msg = NULL;
     stringlist_t * keys = NULL;
+    message* _src = src;
 
     assert(session);
     assert(src);
@@ -1566,23 +1565,19 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     if (!(flags & PEP_encrypt_flag_force_no_attached_key))
         _attach_key(session, target_fpr, src);
 
-    msg = clone_to_empty_message(src);
+    _src = wrap_message_as_attachment(NULL, src, session->unencrypted_subject);
+    if (!_src)
+        goto pep_error;
+
+    msg = clone_to_empty_message(_src);
     if (msg == NULL)
         goto enomem;
 
     switch (enc_format) {
         case PEP_enc_PGP_MIME:
         case PEP_enc_PEP: // BUG: should be implemented extra
-            status = encrypt_PGP_MIME(session, src, keys, msg, flags);
+            status = encrypt_PGP_MIME(session, _src, keys, msg, flags);
             break;
-
-        // case PEP_enc_pieces:
-        //     status = encrypt_PGP_in_pieces(session, src, keys, msg, flags);
-        //     break;
-
-        /* case PEP_enc_PEP:
-            NOT_IMPLEMENTED */
-            // TODO: implement
 
         default:
             assert(0);
@@ -1604,8 +1599,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
      }
 
      if (msg) {
-         if (src->id) {
-             msg->id = strdup(src->id);
+         if (_src->id) {
+             msg->id = strdup(_src->id);
              assert(msg->id);
              if (msg->id == NULL)
                  goto enomem;
@@ -1613,6 +1608,10 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
      }
 
     *dst = msg;
+    
+    if (src != _src)
+        free_message(_src);
+
     return status;
 
 enomem:
@@ -1621,6 +1620,8 @@ enomem:
 pep_error:
     free_stringlist(keys);
     free_message(msg);
+    if (src != _src)
+        free_message(_src);
 
     return ADD_TO_LOG(status);
 }
