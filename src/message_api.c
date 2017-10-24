@@ -770,7 +770,7 @@ static message* wrap_message_as_attachment(message* envelope,
     PEP_STATUS status = PEP_STATUS_OK;
 
     replace_opt_field(attachment, "X-pEp-Version", PEP_VERSION);
-
+        
     if (!_envelope) {
         _envelope = extract_minimal_envelope(attachment, PEP_dir_outgoing);
         status = generate_message_id(_envelope);
@@ -787,13 +787,20 @@ static message* wrap_message_as_attachment(message* envelope,
         _envelope->longmsg = encapsulate_message_wrap_info("TRANSPORT", _envelope->longmsg);
     }
     char* message_text = NULL;
+
+    /* prevent introduction of pEp in inner message */
+
+    if (!attachment->shortmsg) {
+        attachment->shortmsg = strdup("");
+        if (!attachment->shortmsg)
+            goto enomem;
+    }
+            
     /* Turn message into a MIME-blob */
     status = mime_encode_message(attachment, false, &message_text);
-    
-    if (status != PEP_STATUS_OK) {
-        free(_envelope);
-        return NULL;
-    }
+        
+    if (status != PEP_STATUS_OK)
+        goto enomem;
     
     size_t message_len = strlen(message_text);
     
@@ -804,6 +811,12 @@ static message* wrap_message_as_attachment(message* envelope,
     if (keep_orig_subject && attachment->shortmsg)
         _envelope->shortmsg = strdup(attachment->shortmsg);
     return _envelope;
+    
+enomem:
+    if (!envelope) {
+        free(_envelope);
+    }
+    return NULL;    
 }
 
 static PEP_STATUS encrypt_PGP_MIME(
@@ -1513,8 +1526,6 @@ pep_error:
     return ADD_TO_LOG(status);
 }
 
-
-// FIXME: Update if needed for the wrapped fun bits
 DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_SESSION session,
         pEp_identity* target_id,
@@ -1527,6 +1538,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     PEP_STATUS status = PEP_STATUS_OK;
     message * msg = NULL;
     stringlist_t * keys = NULL;
+    message* _src = src;
 
     assert(session);
     assert(src);
@@ -1566,23 +1578,19 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     if (!(flags & PEP_encrypt_flag_force_no_attached_key))
         _attach_key(session, target_fpr, src);
 
-    msg = clone_to_empty_message(src);
+    _src = wrap_message_as_attachment(NULL, src, session->unencrypted_subject);
+    if (!_src)
+        goto pep_error;
+
+    msg = clone_to_empty_message(_src);
     if (msg == NULL)
         goto enomem;
 
     switch (enc_format) {
         case PEP_enc_PGP_MIME:
         case PEP_enc_PEP: // BUG: should be implemented extra
-            status = encrypt_PGP_MIME(session, src, keys, msg, flags);
+            status = encrypt_PGP_MIME(session, _src, keys, msg, flags);
             break;
-
-        // case PEP_enc_pieces:
-        //     status = encrypt_PGP_in_pieces(session, src, keys, msg, flags);
-        //     break;
-
-        /* case PEP_enc_PEP:
-            NOT_IMPLEMENTED */
-            // TODO: implement
 
         default:
             assert(0);
@@ -1604,8 +1612,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
      }
 
      if (msg) {
-         if (src->id) {
-             msg->id = strdup(src->id);
+         if (_src->id) {
+             msg->id = strdup(_src->id);
              assert(msg->id);
              if (msg->id == NULL)
                  goto enomem;
@@ -1613,6 +1621,10 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
      }
 
     *dst = msg;
+    
+    if (src != _src)
+        free_message(_src);
+
     return status;
 
 enomem:
@@ -1621,6 +1633,8 @@ enomem:
 pep_error:
     free_stringlist(keys);
     free_message(msg);
+    if (src != _src)
+        free_message(_src);
 
     return ADD_TO_LOG(status);
 }
