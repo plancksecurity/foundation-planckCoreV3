@@ -815,8 +815,8 @@ static message* wrap_message_as_attachment(message* envelope,
 enomem:
     if (!envelope) {
         free(_envelope);
-        return NULL;
     }
+    return NULL;    
 }
 
 static PEP_STATUS encrypt_PGP_MIME(
