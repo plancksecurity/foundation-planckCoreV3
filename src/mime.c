@@ -391,6 +391,9 @@ static clist * stringlist_to_clist(stringlist_t *sl)
     if (cl == NULL)
         return NULL;
 
+    if (!sl || ((!sl->value || sl->value[0] == '\0') && sl->next == NULL))
+        return cl;
+        
     stringlist_t *_sl;
     for (_sl = sl; _sl; _sl = _sl->next) {
         int r;
