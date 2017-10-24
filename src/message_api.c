@@ -787,15 +787,15 @@ static message* wrap_message_as_attachment(message* envelope,
         _envelope->longmsg = encapsulate_message_wrap_info("TRANSPORT", _envelope->longmsg);
     }
     char* message_text = NULL;
-    
+
+    /* prevent introduction of pEp in inner message */
+
     if (!attachment->shortmsg) {
         attachment->shortmsg = strdup("");
         if (!attachment->shortmsg)
             goto enomem;
     }
-    
-    /* prevent introduction of pEp in inner message */
-        
+            
     /* Turn message into a MIME-blob */
     status = mime_encode_message(attachment, false, &message_text);
         
