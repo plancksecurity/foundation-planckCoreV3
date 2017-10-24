@@ -43,12 +43,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-	<IncludePath>$(ProjectDir)\..\..\libetpan\build-windows\include;C:\Program Files %28x86%29\Gpg4win\include;$(IncludePath);$(ProjectDir)\asn.1;%ASN1C%\share\asn1c</IncludePath>
+	<IncludePath>$(ProjectDir)\..\..\libetpan\build-windows\include;C:\Program Files %28x86%29\GnuPG\include;$(IncludePath);$(ProjectDir)\asn.1;%ASN1C%\share\asn1c</IncludePath>
     <LibraryPath>$(ProjectDir)\..\..\libetpan\build-windows\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-	<IncludePath>$(ProjectDir)\..\..\libetpan\build-windows\include;C:\Program Files %28x86%29\Gpg4win\include;$(IncludePath);$(ProjectDir)\asn.1;%ASN1C%\share\asn1c</IncludePath>
+	<IncludePath>$(ProjectDir)\..\..\libetpan\build-windows\include;C:\Program Files %28x86%29\GnuPG\include;$(IncludePath);$(ProjectDir)\asn.1;%ASN1C%\share\asn1c</IncludePath>
     <LibraryPath>$(ProjectDir)\..\..\libetpan\build-windows\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
