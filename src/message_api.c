@@ -775,10 +775,8 @@ static message* wrap_message_as_attachment(message* envelope,
         _envelope = extract_minimal_envelope(attachment, PEP_dir_outgoing);
         status = generate_message_id(_envelope);
         
-        if (status != PEP_STATUS_OK) {
-            free(_envelope);
-            return NULL;
-        }
+        if (status != PEP_STATUS_OK)
+            goto enomem;
         
         attachment->longmsg = encapsulate_message_wrap_info("INNER", attachment->longmsg);
         _envelope->longmsg = encapsulate_message_wrap_info("OUTER", _envelope->longmsg);
@@ -786,6 +784,19 @@ static message* wrap_message_as_attachment(message* envelope,
     else {
         _envelope->longmsg = encapsulate_message_wrap_info("TRANSPORT", _envelope->longmsg);
     }
+    
+    if (!attachment->id || attachment->id[0] == "\0") {
+        free(attachment->id);
+        if (!_envelope->id) {
+            status = generate_message_id(_envelope);
+        
+            if (status != PEP_STATUS_OK)
+                goto enomem;
+        }
+            
+        attachment->id = strdup(_envelope->id);
+    }
+    
     char* message_text = NULL;
 
     /* prevent introduction of pEp in inner message */
@@ -814,7 +825,7 @@ static message* wrap_message_as_attachment(message* envelope,
     
 enomem:
     if (!envelope) {
-        free(_envelope);
+        free_message(_envelope);
     }
     return NULL;    
 }
