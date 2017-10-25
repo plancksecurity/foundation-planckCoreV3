@@ -284,7 +284,8 @@ struct mailmime * get_file_part(
         pEp_rid_list_t* resource,
         const char * mime_type,
         char * data,
-        size_t length
+        size_t length,
+        bool transport_encode
     )
 {
     char * disposition_name = NULL;
@@ -330,10 +331,14 @@ struct mailmime * get_file_part(
     if (content == NULL)
         goto enomem;
 
-    encoding_type = MAILMIME_MECHANISM_BASE64;
-    encoding = mailmime_mechanism_new(encoding_type, NULL);
-    if (encoding == NULL)
-        goto enomem;
+    encoding = NULL;
+
+    if (transport_encode) {
+        encoding_type = MAILMIME_MECHANISM_BASE64;
+        encoding = mailmime_mechanism_new(encoding_type, NULL);
+        if (encoding == NULL)
+            goto enomem;
+    }
 
     mime_fields = mailmime_fields_new_with_data(encoding, content_id, NULL,
             disposition, NULL);

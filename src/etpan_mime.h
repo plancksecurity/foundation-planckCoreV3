@@ -29,7 +29,8 @@ struct mailmime * get_file_part(
         pEp_rid_list_t* resource,
         const char * mime_type,
         char * data,
-        size_t length
+        size_t length,
+        bool transport_encode
     );
 
 struct mailmime * part_multiple_new(const char *type);

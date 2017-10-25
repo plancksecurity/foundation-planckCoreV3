@@ -797,7 +797,7 @@ static message* wrap_message_as_attachment(message* envelope,
     }
             
     /* Turn message into a MIME-blob */
-    status = mime_encode_message(attachment, false, &message_text);
+    status = _mime_encode_message_internal(attachment, false, &message_text, false);
         
     if (status != PEP_STATUS_OK)
         goto enomem;
@@ -848,7 +848,7 @@ static PEP_STATUS encrypt_PGP_MIME(
     _src->longmsg_formatted = src->longmsg_formatted;
     _src->attachments = src->attachments;
     _src->enc_format = PEP_enc_none;
-    status = mime_encode_message(_src, true, &mimetext);
+    status = _mime_encode_message_internal(_src, true, &mimetext, false);
     assert(status == PEP_STATUS_OK);
     if (status != PEP_STATUS_OK)
         goto pep_error;
@@ -3056,7 +3056,7 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     }
 
     dec_msg->enc_format = PEP_enc_none; // is this the right thing to do? FIXME
-    status = mime_encode_message(dec_msg, false, mime_plaintext);
+    status = _mime_encode_message_internal(dec_msg, false, mime_plaintext, false);
 
     if (status == PEP_STATUS_OK)
     {
