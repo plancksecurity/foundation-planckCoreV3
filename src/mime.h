@@ -78,6 +78,15 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
         message **msg
     );
 
+/* sometimes we don't want to transport encode */
+PEP_STATUS _mime_encode_message_internal(
+        const message * msg,
+        bool omit_fields,
+        char **mimetext,
+        bool transport_encode
+    );
+
+
 #ifdef __cplusplus
 }
 #endif
