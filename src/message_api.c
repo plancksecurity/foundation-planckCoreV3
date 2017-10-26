@@ -785,7 +785,7 @@ static message* wrap_message_as_attachment(message* envelope,
         _envelope->longmsg = encapsulate_message_wrap_info("TRANSPORT", _envelope->longmsg);
     }
     
-    if (!attachment->id || attachment->id[0] == "\0") {
+    if (!attachment->id || attachment->id[0] == '\0') {
         free(attachment->id);
         if (!_envelope->id) {
             status = generate_message_id(_envelope);
