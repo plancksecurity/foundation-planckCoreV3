@@ -5,7 +5,7 @@
 
 HERE_REL := $(notdir $(CURDIR))
 
-include Makefile.conf
+include default.conf
 
 .PHONY: all
 all: _override_info

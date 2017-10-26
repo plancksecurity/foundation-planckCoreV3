@@ -3,7 +3,7 @@
 # This file may be used under the terms of the GNU General Public License version 3
 # see LICENSE.txt
 
-include ../Makefile.conf
+include ../default.conf
 
 CFLAGS+= $(ETPAN_INC) -I../asn.1 -DSYSTEM_DB=\"$(SYSTEM_DB)\" $(EXTRA_MACROS)
 LDFLAGS+= $(ETPAN_LIB) -L../asn.1 -shared
