@@ -61,7 +61,6 @@ int main() {
     message *enc_msg;
     cout << "calling encrypt_message()\n";
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    cout << status;
     assert(status == PEP_STATUS_OK);
     assert(enc_msg);
     cout << "message encrypted.\n";
@@ -71,7 +70,7 @@ int main() {
     assert(strcmp(msg->attachments->filename, "file://pEpkey.asc") == 0);
     assert(strcmp(msg->attachments->next->filename, "file://pEpkey.asc") == 0);
 
-    cout << "message contains 2 key attachements.\n";
+    cout << "message contains 2 key attachments.\n";
 
     free_message(msg);
     free_message(enc_msg);

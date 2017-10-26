@@ -723,8 +723,34 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
     }
     else
     {
+        // for undo
+        if (session->cached_mistrusted)
+            free(session->cached_mistrusted);
+        session->cached_mistrusted = identity_dup(ident);
         status = mark_as_compromized(session, ident->fpr);
     }
+
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS undo_last_mistrust(PEP_SESSION session) {
+    assert(session);
+    
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+    
+    PEP_STATUS status = PEP_STATUS_OK;
+        
+    pEp_identity* cached_ident = session->cached_mistrusted;
+    
+    if (!cached_ident)
+        status = PEP_CANNOT_FIND_IDENTITY;
+    else {
+        status = set_identity(session, cached_ident);            
+        free_identity(session->cached_mistrusted);
+    }
+    
+    session->cached_mistrusted = NULL;
 
     return status;
 }

@@ -16,7 +16,7 @@ extern "C" {
 #include "stringpair.h"    
 #include "timestamp.h"
 
-#define PEP_VERSION "1.0" // protocol version
+#define PEP_VERSION "2.0" // protocol version
 
 #define PEP_OWN_USERID "pEp_own_userId"
     
@@ -129,6 +129,9 @@ typedef enum {
 //                                            opened
 //
 //  caveat:
+//      THE CALLER MUST GUARD THIS CALL EXTERNALLY WITH A MUTEX. release() should
+//      be similarly guarded.
+//
 //      the pointer is valid only if the return value is PEP_STATUS_OK
 //      in other case a NULL pointer will be returned; a valid handle must
 //      be released using release() when it's no longer needed
@@ -145,6 +148,9 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session);
 //        session (in)    session handle to release
 //
 //    caveat:
+//        THE CALLER MUST GUARD THIS CALL EXTERNALLY WITH A MUTEX. init() should
+//        be similarly guarded.
+//       
 //        the last release() can be called only when all other release() calls
 //        are done
 
@@ -855,6 +861,7 @@ DYNAMIC_API void pEp_free(void *p);
 //  to PEP_ct_unknown
 
 DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity);
+
 
 PEP_STATUS set_trust(PEP_SESSION session, 
                             const char* user_id,

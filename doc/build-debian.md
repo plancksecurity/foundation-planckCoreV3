@@ -17,7 +17,7 @@ apt install -y git build-essential automake libtool
 # asn1c
 apt install -y git build-essential automake libtool
 # engine
-apt install -y uuid-dev libgpgme11-dev libsqlite3-dev sqlite3
+apt install -y uuid-dev libgpgme-dev libsqlite3-dev sqlite3
 ~~~
 
 # Installing unpackaged dependencies

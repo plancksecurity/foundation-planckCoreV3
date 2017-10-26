@@ -1,7 +1,7 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#define PEP_ENGINE_VERSION "0.8.0"
+#define PEP_ENGINE_VERSION "0.9.0"
 
 // maximum attachment size to import as key 1MB, maximum of 20 attachments
 
@@ -37,6 +37,19 @@
 #define PEP_SUBJ_BYTELEN 5
 #endif
 
+#ifndef PEP_SUBJ_KEY
+#define PEP_SUBJ_KEY "Subject: "
+#define PEP_SUBJ_KEY_LC "subject: "
+#define PEP_SUBJ_KEY_LEN 9
+#endif
+
+#ifndef PEP_MSG_WRAP_KEY
+#define PEP_MSG_WRAP_KEY "pEp-Wrapped-Message-Info: "
+#define PEP_MSG_WRAP_KEY_LC "pep-wrapped-message-info: "
+#define PEP_MSG_WRAP_KEY_LEN 26
+#endif
+
+
 #include "platform.h"
 
 #ifdef WIN32
@@ -61,6 +74,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <math.h>
 
 #ifdef SQLITE3_FROM_OS
 #include <sqlite3.h>
@@ -173,6 +187,9 @@ struct _pEpSession {
     bool unencrypted_subject;
     bool keep_sync_msg;
     bool service_log;
+
+    // mistrust undo cache
+    pEp_identity* cached_mistrusted;
     
 #ifdef DEBUG_ERRORSTACK
     stringlist_t* errorstack;
@@ -346,6 +363,17 @@ static inline char* _pep_subj_copy() {
     void* retval = calloc(1, sizeof(unsigned char)*PEP_SUBJ_BYTELEN + 1);
     memcpy(retval, pepstr, PEP_SUBJ_BYTELEN);
     return (char*)retval;
+}
+
+// These are globals used in generating message IDs and should only be
+// computed once, as they're either really constants or OS-dependent
+
+int _pEp_rand_max_bits;
+double _pEp_log2_36;
+
+static inline void _init_globals() {
+    _pEp_rand_max_bits = ceil(log2(RAND_MAX));
+    _pEp_log2_36 = log2(36);
 }
 
 #ifdef DEBUG_ERRORSTACK

@@ -100,7 +100,8 @@ pep_error:
 
 static PEP_STATUS mime_attachment(
         bloblist_t *blob,
-        struct mailmime **result
+        struct mailmime **result,
+        bool transport_encode
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -121,7 +122,7 @@ static PEP_STATUS mime_attachment(
         mime_type = blob->mime_type;
 
     pEp_rid_list_t* resource = parse_uri(blob->filename);
-    mime = get_file_part(resource, mime_type, blob->value, blob->size);
+    mime = get_file_part(resource, mime_type, blob->value, blob->size, transport_encode);
     free_rid_list(resource);
     
     assert(mime);
@@ -144,7 +145,8 @@ static PEP_STATUS mime_html_text(
         const char *plaintext,
         const char *htmltext,
         bloblist_t *attachments,
-        struct mailmime **result
+        struct mailmime **result,
+        bool transport_encode
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -166,8 +168,9 @@ static PEP_STATUS mime_html_text(
 
     pEp_rid_list_t* resource = new_rid_node(PEP_RID_FILENAME, "msg.txt");
     
+    int encoding_type = (transport_encode ? MAILMIME_MECHANISM_QUOTED_PRINTABLE : 0);
     submime = get_text_part(NULL, "text/plain", plaintext, strlen(plaintext),
-            MAILMIME_MECHANISM_QUOTED_PRINTABLE);
+            encoding_type);
     free_rid_list(resource);
     resource = NULL;
     
@@ -222,7 +225,7 @@ static PEP_STATUS mime_html_text(
 
 //    resource = new_rid_node(PEP_RID_FILENAME, "msg.html");
     submime = get_text_part(NULL, "text/html", htmltext, strlen(htmltext),
-            MAILMIME_MECHANISM_QUOTED_PRINTABLE);
+            encoding_type);
     free_rid_list(resource);
     resource = NULL;
     
@@ -243,7 +246,7 @@ static PEP_STATUS mime_html_text(
     for (_a = attachments; _a != NULL; _a = _a->next) {
         if (_a->disposition != PEP_CONTENT_DISP_INLINE)
             continue;
-        status = mime_attachment(_a, &submime);
+        status = mime_attachment(_a, &submime, transport_encode);
         if (status != PEP_STATUS_OK)
             return PEP_UNKNOWN_ERROR; // FIXME
 
@@ -273,6 +276,8 @@ enomem:
     return status;
 }
 
+
+// FIXME: maybe need to add transport_encode field here
 static struct mailimf_mailbox * identity_to_mailbox(const pEp_identity *ident)
 {
     char *_username = NULL;
@@ -384,17 +389,22 @@ enomem:
     return NULL;
 }
 
-static clist * stringlist_to_clist(stringlist_t *sl)
+static clist * stringlist_to_clist(stringlist_t *sl, bool transport_encode)
 {
     clist * cl = clist_new();
     assert(cl);
     if (cl == NULL)
         return NULL;
 
+    if (!sl || ((!sl->value || sl->value[0] == '\0') && sl->next == NULL))
+        return cl;
+        
     stringlist_t *_sl;
     for (_sl = sl; _sl; _sl = _sl->next) {
         int r;
-        char * value = mailmime_encode_subject_header("utf-8", _sl->value, 0);
+        char * value = (transport_encode ?
+                        mailmime_encode_subject_header("utf-8", _sl->value, 0) :
+                        strdup(_sl->value));
         assert(value);
         if (value == NULL) {
             clist_free(cl);
@@ -412,7 +422,8 @@ static clist * stringlist_to_clist(stringlist_t *sl)
     return cl;
 }
 
-static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **result)
+static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **result,
+                               bool transport_encode)
 {
     PEP_STATUS status = PEP_STATUS_OK;
     struct mailimf_fields * fields = NULL;
@@ -487,7 +498,9 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
 
     /* if (subject) */ {
-        char *_subject = mailmime_encode_subject_header("utf-8", subject, 1);
+        char *_subject = (transport_encode ? 
+                          mailmime_encode_subject_header("utf-8", subject, 1) :
+                          strdup(subject));
         if (_subject == NULL)
             goto enomem;
 
@@ -539,7 +552,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
 
     if (msg->in_reply_to) {
-        clist *in_reply_to = stringlist_to_clist(msg->in_reply_to);
+        clist *in_reply_to = stringlist_to_clist(msg->in_reply_to, transport_encode);
         if (in_reply_to == NULL)
             goto enomem;
 
@@ -552,7 +565,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
 
     if (msg->references) {
-        clist *references = stringlist_to_clist(msg->references);
+        clist *references = stringlist_to_clist(msg->references, transport_encode);
         if (references == NULL)
             goto enomem;
 
@@ -565,7 +578,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
 
     if (msg->keywords) {
-        clist *keywords = stringlist_to_clist(msg->keywords);
+        clist *keywords = stringlist_to_clist(msg->keywords, transport_encode);
         if (keywords == NULL)
             goto enomem;
 
@@ -578,8 +591,9 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
 
     if (msg->comments) {
-        char *comments = mailmime_encode_subject_header("utf-8", msg->comments,
-                0);
+        char *comments = (transport_encode ?
+                          mailmime_encode_subject_header("utf-8", msg->comments, 0) :
+                          strdup(msg->comments));
         if (comments == NULL)
             goto enomem;
 
@@ -597,7 +611,9 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
             char *key = _l->value->key;
             char *value = _l->value->value;
             if (key && value) {
-                char *_value = mailmime_encode_subject_header("utf-8", value, 0);
+                char *_value = (transport_encode ?
+                                mailmime_encode_subject_header("utf-8", value, 0) :
+                                strdup(value));
                 if (_value == NULL)
                     goto enomem;
 
@@ -695,7 +711,8 @@ static pEp_rid_list_t* choose_resource_id(pEp_rid_list_t* rid_list) {
 static PEP_STATUS mime_encode_message_plain(
         const message *msg,
         bool omit_fields,
-        struct mailmime **result
+        struct mailmime **result,
+        bool transport_encode
     )
 {
     struct mailmime * mime = NULL;
@@ -717,7 +734,8 @@ static PEP_STATUS mime_encode_message_plain(
         /* first, we need to strip out the inlined attachments to ensure this
            gets set up correctly */
            
-        status = mime_html_text(plaintext, htmltext, msg->attachments, &mime);
+        status = mime_html_text(plaintext, htmltext, msg->attachments, &mime,
+                                transport_encode);
                 
         if (status != PEP_STATUS_OK)
             goto pep_error;
@@ -726,13 +744,15 @@ static PEP_STATUS mime_encode_message_plain(
         pEp_rid_list_t* resource = NULL;
         if (is_PGP_message_text(plaintext)) {
             resource = new_rid_node(PEP_RID_FILENAME, "msg.asc");
+            int encoding_type = (transport_encode ? MAILMIME_MECHANISM_7BIT : 0);
             mime = get_text_part(resource, "application/octet-stream", plaintext,
-                    strlen(plaintext), MAILMIME_MECHANISM_7BIT);
+                    strlen(plaintext), encoding_type);
         }
         else {
             resource = new_rid_node(PEP_RID_FILENAME, "msg.txt");
+            int encoding_type = (transport_encode ? MAILMIME_MECHANISM_QUOTED_PRINTABLE : 0);
             mime = get_text_part(resource, "text/plain", plaintext, strlen(plaintext),
-                    MAILMIME_MECHANISM_QUOTED_PRINTABLE);
+                    encoding_type);
         }
         free_rid_list(resource);
         
@@ -776,7 +796,7 @@ static PEP_STATUS mime_encode_message_plain(
             if (_a->disposition == PEP_CONTENT_DISP_INLINE)
                 continue;
 
-            status = mime_attachment(_a, &submime);
+            status = mime_attachment(_a, &submime, transport_encode);
             if (status != PEP_STATUS_OK)
                 goto pep_error;
 
@@ -819,14 +839,12 @@ static PEP_STATUS mime_encode_message_PGP_MIME(
 	struct mailmime_parameter * param;
     int r;
     PEP_STATUS status;
-    //char *subject;
     char *plaintext;
     size_t plaintext_size;
 
     assert(msg->attachments && msg->attachments->next &&
             msg->attachments->next->value);
 
-    //subject = (msg->shortmsg) ? msg->shortmsg : "pEp"; // not used, yet.
     plaintext = msg->attachments->next->value;
     plaintext_size = msg->attachments->next->size;
 
@@ -894,6 +912,16 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
         char **mimetext
     )
 {
+    return _mime_encode_message_internal(msg, omit_fields, mimetext, true);
+}
+
+PEP_STATUS _mime_encode_message_internal(
+        const message * msg,
+        bool omit_fields,
+        char **mimetext,
+        bool transport_encode
+    )
+{
     PEP_STATUS status = PEP_STATUS_OK;
     struct mailmime * msg_mime = NULL;
     struct mailmime * mime = NULL;
@@ -911,11 +939,11 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
 
     switch (msg->enc_format) {
         case PEP_enc_none:
-            status = mime_encode_message_plain(msg, omit_fields, &mime);
+            status = mime_encode_message_plain(msg, omit_fields, &mime, transport_encode);
             break;
 
         case PEP_enc_pieces:
-            status = mime_encode_message_plain(msg, omit_fields, &mime);
+            status = mime_encode_message_plain(msg, omit_fields, &mime, transport_encode);
             break;
 
         case PEP_enc_S_MIME:
@@ -948,7 +976,7 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
     mime = NULL;
 
     if (!omit_fields) {
-        status = build_fields(msg, &fields);
+        status = build_fields(msg, &fields, transport_encode);
         if (status != PEP_STATUS_OK)
             goto pep_error;
 
@@ -1093,7 +1121,7 @@ static stringlist_t * clist_to_stringlist(const clist *list)
         text = NULL;
     }
 
-    return _sl;
+    return sl;
 
 enomem:
     free_stringlist(sl);

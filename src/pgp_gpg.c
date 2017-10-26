@@ -1837,18 +1837,20 @@ static PEP_STATUS _pgp_search_keys(PEP_SESSION session, const char* pattern,
         free_stringlist(_keylist);
         _keylist = NULL;
         
-        // If match failed, check to see if we've got a dotted address in the pattern.
-        // (last chance of the heuristic, really)
-        // If so, try again without any dots.
-        const char* dotpos = strstr(pattern, ".");
-        const char* atpos = strstr(pattern, "@");
-        if (dotpos && atpos && (dotpos < atpos)) {
-            char* undotted = _undot_address(pattern);
-            if (undotted) {
-                PEP_STATUS status = _pgp_search_keys(session, undotted,
-                                                     keylist, private_only);
-                free(undotted);
-                return status;
+        if (pattern != NULL) {
+            // If match failed, check to see if we've got a dotted address in the pattern.
+            // (last chance of the heuristic, really)
+            // If so, try again without any dots.
+            const char* dotpos = strstr(pattern, ".");
+            const char* atpos = strstr(pattern, "@");
+            if (dotpos && atpos && (dotpos < atpos)) {
+                char* undotted = _undot_address(pattern);
+                if (undotted) {
+                    PEP_STATUS status = _pgp_search_keys(session, undotted,
+                                                         keylist, private_only);
+                    free(undotted);
+                    return status;
+                }
             }
         }
     }    
