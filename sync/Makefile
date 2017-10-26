@@ -3,7 +3,7 @@
 # This file may be used under the terms of the GNU General Public License version 3
 # see LICENSE.txt
 
-include ../Makefile.conf
+include ../default.conf
 
 .PHONY: all
 all: .codegen

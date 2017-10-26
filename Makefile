@@ -5,10 +5,22 @@
 
 HERE_REL := $(notdir $(CURDIR))
 
-include Makefile.conf
+include default.conf
+
+ifneq ($(wildcard local.conf),)
+    $(info ================================================)
+    $(info Overrides in \`local.conf\` are used.)
+    $(info ================================================)
+endif
+
+ifdef BUILD_CONFIG
+    $(info ================================================)
+    $(info Overrides in \`$(BUILD_CONFIG)\` are used.)
+    $(info ================================================)
+endif
 
 .PHONY: all
-all: _override_info
+all:
 	$(MAKE) -C asn.1 generate
 	$(MAKE) -C asn.1
 	$(MAKE) -C sync
@@ -20,12 +32,12 @@ install: all
 	$(MAKE) -C asn.1 install
 
 .PHONY: uninstall
-uninstall: _override_info
+uninstall:
 	$(MAKE) -C src uninstall
 	$(MAKE) -C asn.1 uninstall
 
 .PHONY: clean
-clean: _override_info
+clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C test clean
 	$(MAKE) -C db clean
@@ -46,24 +58,5 @@ package: clean
 	cd .. ; COPYFILE_DISABLE=true tar cjf pEpEngine.tar.bz2 "$(HERE_REL)"
 
 .PHONY: db
-db: _override_info
+db:
 	$(MAKE) -C db db
-
-.PHONY: _override_info
-_override_info: _local_conf_info _build_config_info
-
-.PHONY: _local_conf_info
-_local_conf_info:
-ifneq ($(wildcard local.conf),)
-	@echo "================================================"
-	@echo "Overrides in \`local.conf\` are used."
-	@echo "================================================"
-endif
-
-.PHONY: _build_config_info
-_build_config_info:
-ifdef BUILD_CONFIG
-	@echo "================================================"
-	@echo "Overrides in \`$(BUILD_CONFIG)\` are used."
-	@echo "================================================"
-endif
