@@ -43,6 +43,7 @@ clean:
 	$(MAKE) -C db clean
 	$(MAKE) -C sync clean
 	$(MAKE) -C asn.1 clean
+	rm -rf test_home
 
 .PHONY: test
 test: all
