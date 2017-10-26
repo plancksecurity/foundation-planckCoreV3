@@ -5,7 +5,7 @@
 
 HERE:=$(CURDIR)
 
-include ../Makefile.conf
+include ../default.conf
 
 TARGET=pEpEngineTest
 

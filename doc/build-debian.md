@@ -66,6 +66,8 @@ mkdir ~/code/pep-engine/build
 
 Note: Everything PLATFORM_OVERRIDE-related is currenty outdated. Do not rely on the documentation here!
 
+Note: Everything Makefile.conf-related is currenty outdated. Do not rely on the documentation here!
+
 For an explanation of the mechanics of `PLATFORM_OVERRIDE`, see the inline comments in `Makefile.conf`.
 In this guide, the platform-specific configuration will be called `local`.
 The installation directory will be a subdirectory of the repository.
