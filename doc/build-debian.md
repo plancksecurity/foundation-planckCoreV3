@@ -64,32 +64,25 @@ cd ~/code/pep-engine
 mkdir ~/code/pep-engine/build
 ~~~
 
-Note: Everything PLATFORM_OVERRIDE-related is currenty outdated. Do not rely on the documentation here!
+Edit the build configuration to your needs in `Makefile.conf`, or create a `local.conf` that sets any of the make variables documented in `Makefile.conf`. All the default values for the build configuration variables on each platform are documented in `default.conf`.
 
-Note: Everything Makefile.conf-related is currenty outdated. Do not rely on the documentation here!
+If a dependency is not found in your system's default include or library paths, you will have to specify the according paths in a make variable. Typically, this has to be done at least for YML2, libetpan and asn1c.
 
-For an explanation of the mechanics of `PLATFORM_OVERRIDE`, see the inline comments in `Makefile.conf`.
-In this guide, the platform-specific configuration will be called `local`.
-The installation directory will be a subdirectory of the repository.
-This is useful for testing only.
+For a more detailed explanation of the mechanics of these build configuration files, and overriding defaults, see the comments in `default.conf`.
 
-~~~
-export PLATFORM_OVERRIDE=local
-~~~
-
-`./build-config/local.conf`:
+Below is a sample `./local.conf` file, for orientation.
 
 ~~~
-PREFIX=$(HOME)/code/pep-engine/build
+PREFIX=$(HOME)/engine/build
 SYSTEM_DB=$(PREFIX)/share/pEp/system.db
 
-YML2_PATH=$(HOME)/code/yml2
+YML2_PATH=$(HOME)/yml2
 
-ETPAN_LIB=-L$(HOME)/code/libetpan/build/lib
-ETPAN_INC=-I$(HOME)/code/libetpan/build/include
+ETPAN_LIB=-L$(HOME)/libetpan/build/lib
+ETPAN_INC=-I$(HOME)/libetpan/build/include
 
-ASN1C=$(HOME)/code/asn1c/build/bin/asn1c
-ASN1C_INC=-I$(HOME)/code/asn1c/build/share
+ASN1C=$(HOME)/asn1c/build/bin/asn1c
+ASN1C_INC=-I$(HOME)/asn1c/build/share/asn1c
 ~~~
 
 The engine is built as follows:
