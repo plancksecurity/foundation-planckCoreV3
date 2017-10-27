@@ -344,7 +344,8 @@ static inline bool _identity_me(
         pEp_identity * identity
     )
 {
-    return identity->user_id && strcmp(identity->user_id, PEP_OWN_USERID) == 0;
+    return identity->flags & PEP_idf_me || identity->me || 
+           (identity->user_id && strcmp(identity->user_id, PEP_OWN_USERID) == 0);
 }
 
 // size is the length of the bytestr that's coming in. This is really only intended

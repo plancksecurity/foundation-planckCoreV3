@@ -93,10 +93,14 @@ DYNAMIC_API PEP_STATUS update_identity(
     if (!(session && identity && !EMPTYSTR(identity->address)))
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
+    /* Ok, if I'm trying to indicate this is me in the identity struct, then
+       call _myself */
     if (_identity_me(identity)) {
         return _myself(session, identity, false, true);
     }
 
+    /* Otherwise, unless get_identity indicates that this is me, it's
+       someone else as far as this syscall is concerned. */
     int _no_user_id = EMPTYSTR(identity->user_id);
     int _did_elect_new_key = 0;
 
@@ -426,18 +430,23 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     assert(identity);
     assert(!EMPTYSTR(identity->address));
 
-    assert(EMPTYSTR(identity->user_id) ||
-           strcmp(identity->user_id, PEP_OWN_USERID) == 0);
+    // assert(EMPTYSTR(identity->user_id) ||
+    //        strcmp(identity->user_id, PEP_OWN_USERID) == 0);
 
-    if (!(session && identity && !EMPTYSTR(identity->address) &&
-            (EMPTYSTR(identity->user_id) ||
-            strcmp(identity->user_id, PEP_OWN_USERID) == 0)))
+    // if (!(session && identity && !EMPTYSTR(identity->address) &&
+    //         (EMPTYSTR(identity->user_id) ||
+    //         strcmp(identity->user_id, PEP_OWN_USERID) == 0)))
+    //     return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
+
+    if (!(session && identity && !EMPTYSTR(identity->address)))
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     identity->comm_type = PEP_ct_pEp;
     if(ignore_flags)
         identity->flags = 0;
     
+    // FIXME: do we replace DB user_id and username if they WERE defaults?
+
     if (EMPTYSTR(identity->user_id))
     {
         free(identity->user_id);
@@ -450,7 +459,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     if (EMPTYSTR(identity->username))
     {
         free(identity->username);
-        identity->username = strdup("anonymous");
+        identity->username = strdup("Anonymous");
         assert(identity->username);
         if (identity->username == NULL)
             return PEP_OUT_OF_MEMORY;

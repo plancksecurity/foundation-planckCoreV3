@@ -470,7 +470,7 @@ typedef enum _identity_flags {
     // the first octet flags are app defined settings
     PEP_idf_not_for_sync = 0x0001,   // don't use this identity for sync
     PEP_idf_list = 0x0002,           // identity of list of persons
-
+    PEP_idf_me = 0x0004,             // This identity is connected to own user_id
     // the second octet flags are calculated
     PEP_idf_devicegroup = 0x0100     // identity of a device group member
 } identity_flags;
