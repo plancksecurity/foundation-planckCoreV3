@@ -21,6 +21,21 @@
 #define _MAX(A, B) ((B) > (A) ? (B) : (A))
 #endif
 
+static const stringpair_t* search_optfields(message* msg, const char* key) {
+    stringpair_list_t* opt_fields = msg->opt_fields;
+    
+    const stringpair_list_t* curr;
+    
+    for (curr = opt_fields; curr && curr->value; curr = curr->next) {
+        if (curr->value->key) {
+            if (strcasecmp(curr->value->key, key) == 0)
+                return curr->value;
+        }
+    } 
+    
+    return NULL;
+}
+
 static char * keylist_to_string(const stringlist_t *keylist)
 {
     if (keylist) {
@@ -1889,6 +1904,19 @@ static PEP_STATUS amend_rating_according_to_sender_and_recipients(
     return status;
 }
 
+static PEP_STATUS transfer_autoconsume(message* src, message* msg) {
+    const stringpair_t* autoconsume = search_optfields(src, "pEp-auto-consume");
+    
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    if (autoconsume) {
+        stringpair_t* cpy = stringpair_dup(autoconsume);
+        if (!cpy || !(stringpair_list_add(msg->opt_fields, cpy)))
+            status = PEP_OUT_OF_MEMORY;
+    }
+    return status;
+}
+
 static PEP_STATUS check_for_sync_msg(PEP_SESSION session, 
                                      message* src,
                                      PEP_rating* rating, 
@@ -2437,6 +2465,13 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                     if (wrap_info) {
                                         // useless check, but just in case we screw up?
                                         if (strcmp(wrap_info, "INNER") == 0) {
+                                            // transfer autoconsume 
+                                            status = transfer_autoconsume(src, inner_message);
+                                            if (status != PEP_STATUS_OK) {
+                                                free_message(inner_message);
+                                                GOTO(pep_error);
+                                            }
+                                                
                                             // THIS is our message
                                             // FIXME: free msg, but check references
                                             src = msg = inner_message;
