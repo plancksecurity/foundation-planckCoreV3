@@ -5,6 +5,7 @@ syntax: regexp
 .*xcuserdata/
 ^build/
 ^local.conf
+^test_home/
 
 syntax: glob
 *.orig
