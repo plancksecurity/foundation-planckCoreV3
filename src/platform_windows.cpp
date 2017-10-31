@@ -159,6 +159,26 @@ void *dlopen(const char *filename, int flag) {
         return NULL;
 
 	HMODULE module = LoadLibrary(utf16_string(filename).c_str());
+
+    if (module == NULL) {
+        SetDllDirectory(NULL);
+        
+        int chars_remaining = PATH_BUF_SIZE - strlen(path) - 1;
+        int add_len = strlen(TEXT("\\bin");
+        if (add_len > chars_remaining)
+            return NULL;
+            
+        strncat(path, TEXT("\\bin"), add_len);
+        
+        SetDllDirectory(TEXT(""));
+        _result = SetDllDirectory(path);
+        assert(_result != 0);
+        if (_result == 0)
+            return NULL;
+
+    	module = LoadLibrary(utf16_string(filename).c_str());
+    }
+    
     SetDllDirectory(NULL);
 	if (module == NULL)
 		return NULL;
