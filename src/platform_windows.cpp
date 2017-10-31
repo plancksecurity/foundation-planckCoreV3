@@ -18,6 +18,7 @@
 #include <stdexcept>
 #include "platform_windows.h"
 #include <fcntl.h>
+#include <tchar.h>
 #include <sys\stat.h>
 
 #ifndef WC_ERR_INVALID_CHARS
@@ -159,6 +160,21 @@ void *dlopen(const char *filename, int flag) {
         return NULL;
 
 	HMODULE module = LoadLibrary(utf16_string(filename).c_str());
+
+    if (module == NULL) {
+        SetDllDirectory(NULL);
+                    
+		_tcscat_s(path, TEXT("\\bin"));
+        
+        SetDllDirectory(TEXT(""));
+        _result = SetDllDirectory(path);
+        assert(_result != 0);
+        if (_result == 0)
+            return NULL;
+
+    	module = LoadLibrary(utf16_string(filename).c_str());
+    }
+    
     SetDllDirectory(NULL);
 	if (module == NULL)
 		return NULL;
