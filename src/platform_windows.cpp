@@ -18,6 +18,7 @@
 #include <stdexcept>
 #include "platform_windows.h"
 #include <fcntl.h>
+#include <tchar.h>
 #include <sys\stat.h>
 
 #ifndef WC_ERR_INVALID_CHARS
@@ -162,13 +163,8 @@ void *dlopen(const char *filename, int flag) {
 
     if (module == NULL) {
         SetDllDirectory(NULL);
-        
-        int chars_remaining = PATH_BUF_SIZE - strlen(path) - 1;
-        int add_len = strlen(TEXT("\\bin");
-        if (add_len > chars_remaining)
-            return NULL;
-            
-        strncat(path, TEXT("\\bin"), add_len);
+                    
+		_tcscat_s(path, TEXT("\\bin"));
         
         SetDllDirectory(TEXT(""));
         _result = SetDllDirectory(path);
