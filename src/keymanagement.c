@@ -837,7 +837,6 @@ DYNAMIC_API PEP_STATUS own_key_is_listed(
         case SQLITE_ROW:
             count = sqlite3_column_int(session->own_key_is_listed, 0);
             *listed = count > 0;
-            status = PEP_STATUS_OK;
             break;
             
         default:
