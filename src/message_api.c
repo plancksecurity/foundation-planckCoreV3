@@ -2188,7 +2188,6 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                     return PEP_OUT_OF_MEMORY;
                 memcpy(copy, _s->value, _s->size);
                 _m = bloblist_add(_m, copy, _s->size, _s->mime_type, _s->filename);
-                free(copy);
                 if (_m == NULL)
                     return PEP_OUT_OF_MEMORY;
             }
@@ -2200,7 +2199,6 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                 return PEP_OUT_OF_MEMORY;
             memcpy(copy, _s->value, _s->size);
             _m = bloblist_add(_m, copy, _s->size, _s->mime_type, _s->filename);
-            free(copy);
             if (_m == NULL)
                 return PEP_OUT_OF_MEMORY;
         }
