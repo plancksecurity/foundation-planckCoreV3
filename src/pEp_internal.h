@@ -101,7 +101,6 @@
 #include "keymanagement.h"
 #include "cryptotech.h"
 #include "transport.h"
-#include "sync.h"
 
 #define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
 
@@ -168,14 +167,9 @@ struct _pEpSession {
     void *examine_management;
     void *sync_management;
     void *sync_obj;
-    messageToSend_t messageToSend;
-    notifyHandshake_t notifyHandshake;
-    inject_sync_msg_t inject_sync_msg;
-    retrieve_next_sync_msg_t retrieve_next_sync_msg;
 
     // key sync
     pEpSession* sync_session;
-    DeviceState_state sync_state;
     void* sync_state_payload;
     char sync_uuid[37];
     time_t LastCannotDecrypt;
