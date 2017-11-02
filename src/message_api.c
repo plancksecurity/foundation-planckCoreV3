@@ -2550,7 +2550,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             remove_attached_keys(msg);
             
         if (*rating >= PEP_rating_reliable) { 
-            status = check_for_sync_msg(session, src, rating, flags, &_keylist);
+            status = check_for_sync_msg(session, msg, rating, flags, &_keylist);
         
             if (status != PEP_STATUS_OK)
                 goto pep_error;
