@@ -6,7 +6,6 @@
 
 #include "platform.h"
 #include "mime.h"
-#include "sync_fsm.h"
 
 #include <assert.h>
 #include <string.h>
@@ -1906,54 +1905,6 @@ static PEP_STATUS amend_rating_according_to_sender_and_recipients(
     return status;
 }
 
-static PEP_STATUS transfer_autoconsume(message* src, message* msg) {
-    const stringpair_t* autoconsume = search_optfields(src, "pEp-auto-consume");
-    
-    PEP_STATUS status = PEP_STATUS_OK;
-    
-    if (autoconsume) {
-        stringpair_t* cpy = stringpair_dup(autoconsume);
-        if (!cpy || !(stringpair_list_add(msg->opt_fields, cpy)))
-            status = PEP_OUT_OF_MEMORY;
-    }
-    return status;
-}
-
-static PEP_STATUS check_for_sync_msg(PEP_SESSION session, 
-                                     message* src,
-                                     PEP_rating* rating, 
-                                     PEP_decrypt_flags_t* flags,
-                                     stringlist_t** keylist) {
-    assert(session);
-    assert(src);
-    assert(rating);
-    assert(keylist);
-    
-    if (session->sync_session->inject_sync_msg){
-        PEP_STATUS status = receive_DeviceState_msg(session, src, *rating, *keylist);
-        if (status == PEP_MESSAGE_CONSUME ||
-            status == PEP_MESSAGE_IGNORE) {
-            *flags |= (status == PEP_MESSAGE_IGNORE) ?
-                        PEP_decrypt_flag_ignore :
-                        PEP_decrypt_flag_consume;
-        }
-        else if (status != PEP_STATUS_OK) {
-            return ADD_TO_LOG(status);
-        }
-    }
-    return PEP_STATUS_OK;
-}
-
-static PEP_STATUS sync_if_no_key(PEP_STATUS decrypt_status, PEP_SESSION session) {
-    if (decrypt_status == PEP_DECRYPT_NO_KEY) {
-        PEP_STATUS sync_status = inject_DeviceState_event(session, CannotDecrypt, NULL, NULL);
-        if (sync_status == PEP_OUT_OF_MEMORY){
-            return PEP_OUT_OF_MEMORY;
-        }
-    }
-    return PEP_STATUS_OK;
-}
-
 // FIXME: Do we need to remove the attachment? I think we do...
 static bool pull_up_attached_main_msg(message* src) {
     char* slong = src->longmsg;
@@ -1999,7 +1950,6 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
     if (change_source_in_place)
         msg = src;
         
-//    const char* version_string = get_message_version_string(src);
     
     switch (src->enc_format) {
         case PEP_enc_PGP_MIME:
@@ -2337,11 +2287,6 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
         if (imported_keys)
             remove_attached_keys(src);
-
-        status = check_for_sync_msg(session, src, rating, flags, keylist);
-        
-        if (status != PEP_STATUS_OK)
-            return ADD_TO_LOG(status);
                                     
         pull_up_attached_main_msg(src);
         
@@ -2362,10 +2307,6 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
     decrypt_status = status;
     
-    /* inject appropriate sync message if we couldn't decrypt due to no key */
-    if (sync_if_no_key(decrypt_status, session) == PEP_OUT_OF_MEMORY)
-        goto pep_error;
-
     bool imported_private_key_address = false;
 
     if (ptext) { 
@@ -2467,8 +2408,6 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                     if (wrap_info) {
                                         // useless check, but just in case we screw up?
                                         if (strcmp(wrap_info, "INNER") == 0) {
-                                            // transfer autoconsume 
-                                            status = transfer_autoconsume(src, inner_message);
                                             if (status != PEP_STATUS_OK) {
                                                 free_message(inner_message);
                                                 GOTO(pep_error);
@@ -2550,14 +2489,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         
         if (imported_keys)
             remove_attached_keys(msg);
-            
-        if (*rating >= PEP_rating_reliable) { 
-            status = check_for_sync_msg(session, src, rating, flags, &_keylist);
-        
-            if (status != PEP_STATUS_OK)
-                goto pep_error;
-        }
-        
+                    
         if (src->id && src != msg) {
             msg->id = strdup(src->id);
             assert(msg->id);
