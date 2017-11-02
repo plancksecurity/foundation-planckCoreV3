@@ -884,6 +884,7 @@ static PEP_STATUS encrypt_PGP_MIME(
         free_ptext=0;
     }
     free(_src);
+    _src = NULL;
     assert(mimetext);
     if (mimetext == NULL)
         goto pep_error;
@@ -927,6 +928,7 @@ enomem:
 pep_error:
     if (free_ptext)
         free(ptext);
+    free(_src);
     free(ctext);
     return status;
 }
