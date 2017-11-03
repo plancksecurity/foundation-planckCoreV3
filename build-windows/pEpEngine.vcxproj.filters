@@ -72,34 +72,16 @@
     <ClCompile Include="..\src\blacklist.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\sync.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\sync_actions.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\sync_driver.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\sync_fsm.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\map_asn1.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="..\src\baseprotocol.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\sync_send_actions.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\openpgp_compat.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="..\src\asn1_helper.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\sync_impl.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="..\src\resource_id.c">
