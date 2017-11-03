@@ -100,10 +100,6 @@
 		646C413B1D510CD800C63EFF /* xer_encoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 646C40E71D510CD800C63EFF /* xer_encoder.h */; };
 		646C413C1D510CD800C63EFF /* xer_support.c in Sources */ = {isa = PBXBuildFile; fileRef = 646C40E81D510CD800C63EFF /* xer_support.c */; };
 		646C413D1D510CD800C63EFF /* xer_support.h in Headers */ = {isa = PBXBuildFile; fileRef = 646C40E91D510CD800C63EFF /* xer_support.h */; };
-		646C41461D510D2C00C63EFF /* sync_driver.c in Sources */ = {isa = PBXBuildFile; fileRef = 646C413F1D510D2C00C63EFF /* sync_driver.c */; };
-		646C41471D510D2C00C63EFF /* sync_fsm.c in Sources */ = {isa = PBXBuildFile; fileRef = 646C41401D510D2C00C63EFF /* sync_fsm.c */; };
-		646C41481D510D2C00C63EFF /* sync_fsm.h in Headers */ = {isa = PBXBuildFile; fileRef = 646C41411D510D2C00C63EFF /* sync_fsm.h */; };
-		646C41491D510D2C00C63EFF /* sync_send_actions.c in Sources */ = {isa = PBXBuildFile; fileRef = 646C41421D510D2C00C63EFF /* sync_send_actions.c */; };
 		646C414E1D510D8800C63EFF /* baseprotocol.c in Sources */ = {isa = PBXBuildFile; fileRef = 646C414C1D510D8800C63EFF /* baseprotocol.c */; };
 		646C414F1D510D8800C63EFF /* baseprotocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 646C414D1D510D8800C63EFF /* baseprotocol.h */; };
 		649DE08B1B45C19100912F72 /* libcurl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 649DE08A1B45C19100912F72 /* libcurl.a */; };
@@ -278,10 +274,6 @@
 		646C40E71D510CD800C63EFF /* xer_encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xer_encoder.h; path = ../asn.1/xer_encoder.h; sourceTree = "<group>"; };
 		646C40E81D510CD800C63EFF /* xer_support.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xer_support.c; path = ../asn.1/xer_support.c; sourceTree = "<group>"; };
 		646C40E91D510CD800C63EFF /* xer_support.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xer_support.h; path = ../asn.1/xer_support.h; sourceTree = "<group>"; };
-		646C413F1D510D2C00C63EFF /* sync_driver.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_driver.c; path = ../src/sync_driver.c; sourceTree = "<group>"; };
-		646C41401D510D2C00C63EFF /* sync_fsm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_fsm.c; path = ../src/sync_fsm.c; sourceTree = "<group>"; };
-		646C41411D510D2C00C63EFF /* sync_fsm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sync_fsm.h; path = ../src/sync_fsm.h; sourceTree = "<group>"; };
-		646C41421D510D2C00C63EFF /* sync_send_actions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_send_actions.c; path = ../src/sync_send_actions.c; sourceTree = "<group>"; };
 		646C414C1D510D8800C63EFF /* baseprotocol.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = baseprotocol.c; path = ../src/baseprotocol.c; sourceTree = "<group>"; };
 		646C414D1D510D8800C63EFF /* baseprotocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = baseprotocol.h; path = ../src/baseprotocol.h; sourceTree = "<group>"; };
 		64796A3F1B455AA5004B1C24 /* libpEpEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -503,10 +495,6 @@
 				43BA0F451D7964750059172F /* asn1_helper.c */,
 				646C414C1D510D8800C63EFF /* baseprotocol.c */,
 				646C414D1D510D8800C63EFF /* baseprotocol.h */,
-				646C413F1D510D2C00C63EFF /* sync_driver.c */,
-				646C41401D510D2C00C63EFF /* sync_fsm.c */,
-				646C41411D510D2C00C63EFF /* sync_fsm.h */,
-				646C41421D510D2C00C63EFF /* sync_send_actions.c */,
 				646788871CEB3D120001F54C /* map_asn1.c */,
 				646788881CEB3D120001F54C /* map_asn1.h */,
 				430D258A1C9ED75A00B94535 /* blacklist.c */,
@@ -600,7 +588,6 @@
 				646C41151D510CD800C63EFF /* Hash.h in Headers */,
 				646C410F1D510CD800C63EFF /* DeviceGroup-Protocol.h in Headers */,
 				646C40FF1D510CD800C63EFF /* BOOLEAN.h in Headers */,
-				646C41481D510D2C00C63EFF /* sync_fsm.h in Headers */,
 				64A8268C1B455D9D00EECAF0 /* pEpEngine.h in Headers */,
 				646C41091D510CD800C63EFF /* constr_TYPE.h in Headers */,
 				646C410D1D510CD800C63EFF /* der_encoder.h in Headers */,
@@ -804,7 +791,6 @@
 				646C40FE1D510CD800C63EFF /* BOOLEAN.c in Sources */,
 				646C41001D510CD800C63EFF /* constr_CHOICE.c in Sources */,
 				646C41121D510CD800C63EFF /* HandshakeRequest.c in Sources */,
-				646C41471D510D2C00C63EFF /* sync_fsm.c in Sources */,
 				64A826821B455D0800EECAF0 /* pgp_netpgp.c in Sources */,
 				646C41101D510CD800C63EFF /* GroupKeys.c in Sources */,
 				646C40EF1D510CD800C63EFF /* asn_SEQUENCE_OF.c in Sources */,
@@ -820,14 +806,12 @@
 				646C413A1D510CD800C63EFF /* xer_encoder.c in Sources */,
 				646C41021D510CD800C63EFF /* constr_SEQUENCE_OF.c in Sources */,
 				646C410A1D510CD800C63EFF /* constraints.c in Sources */,
-				646C41461D510D2C00C63EFF /* sync_driver.c in Sources */,
 				64A8267C1B455D0800EECAF0 /* identity_list.c in Sources */,
 				646C40FC1D510CD800C63EFF /* BIT_STRING.c in Sources */,
 				646C40F41D510CD800C63EFF /* Beacon.c in Sources */,
 				646C411E1D510CD800C63EFF /* INTEGER.c in Sources */,
 				646C413C1D510CD800C63EFF /* xer_support.c in Sources */,
 				64A8268A1B455D0800EECAF0 /* transport.c in Sources */,
-				646C41491D510D2C00C63EFF /* sync_send_actions.c in Sources */,
 				646C41201D510CD800C63EFF /* ISO639-1.c in Sources */,
 				64A826791B455D0800EECAF0 /* cryptotech.c in Sources */,
 				43BA0F461D7964750059172F /* asn1_helper.c in Sources */,
