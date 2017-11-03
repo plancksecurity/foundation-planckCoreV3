@@ -1965,7 +1965,8 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
                 
             // FIXME: This is a mess. Talk with VB about how far we go to identify
             if (is_a_pEpmessage(src) || (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0 ||
-                _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) == 0))
+                _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) == 0) ||
+                strcmp(src->shortmsg, "p=p"))
             {
                 char * shortmsg = NULL;
                 char * longmsg = NULL;
