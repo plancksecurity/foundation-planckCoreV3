@@ -23,6 +23,7 @@ endif
 all:
 	$(MAKE) -C asn.1 generate
 	$(MAKE) -C asn.1
+	$(MAKE) -C sync
 	$(MAKE) -C src all
 
 .PHONY: install
@@ -40,6 +41,7 @@ clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C test clean
 	$(MAKE) -C db clean
+	$(MAKE) -C sync clean
 	$(MAKE) -C asn.1 clean
 	rm -rf test_home
 

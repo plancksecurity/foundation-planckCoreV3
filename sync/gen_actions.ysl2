@@ -1,0 +1,300 @@
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
+// generate actions skeleton
+
+// Copyleft (c) 2016, p≡p foundation
+
+// Written by Volker Birk
+
+include yslt.yml2
+
+tstylesheet {
+    include standardlib.ysl2
+    include ./functions.ysl2
+
+    template "/protocol" {
+        apply "fsm", mode=send, 0;
+        apply "fsm", mode=other, 0;
+    }
+
+    template "fsm", mode=send document "generated/{@filename}_send_actions.c", "text" {
+        const "name", "@name";
+        const "filename", "@filename";
+        ||
+        // Send Actions for «@name» state machine
+
+        #include <assert.h>
+        #include "pEp_internal.h"
+        #include "keymanagement.h"
+        #include "message.h"
+        #include "«@filename»_fsm.h"
+        #include "baseprotocol.h"
+        #include "map_asn1.h"
+        #include "../asn.1/DeviceGroup-Protocol.h"
+        #include "sync_impl.h"
+        ||
+        for "func:distinctName(//action)"
+            if "substring(@name, 1, 4) = 'send'"
+                | #include "../asn.1/«substring(@name, 5, 255)».h"
+        |
+        for "func:distinctName(//action)"
+            if "substring(@name, 1, 4) = 'send'"
+                call "send_action"
+                    with "action", ".",
+                    with "fsm", "$name",
+                    with "filename", "$filename";
+
+        ||
+
+        PEP_STATUS _notifyHandshake(
+                PEP_SESSION session,
+                Identity partner,
+                sync_handshake_signal signal
+            );
+        ||
+
+        for "func:distinctName(//action)"
+            if "substring(@name, 1, 6) = 'notify'"
+                call "notify_action"
+                    with "action", ".",
+                    with "fsm", "$name",
+                    with "filename", "$filename";
+    }
+
+    template "fsm", mode=other document "skeletons/{@filename}_actions.c", "text" {
+        const "name", "@name";
+        const "filename", "@filename";
+        ||
+        // Actions for «@name» state machine
+
+        #include <assert.h>
+        #include "pEp_internal.h"
+        #include "keymanagement.h"
+        #include "message.h"
+        #include "«@filename»_fsm.h"
+        #include "../asn.1/DeviceGroup-Protocol.h"
+
+        ||
+        for "func:distinctName(//action)"
+            if "substring(@name, 1, 4) != 'send'"
+                call "other_action"
+                    with "action", ".",
+                    with "fsm", "$name",
+                    with "filename", "$filename";
+    }
+
+    function "paramcheck" {
+        param "partner";
+        |> assert(session);
+        choose {
+            when "$partner"
+            ||
+                assert(partner);
+                if (!(session && partner))
+                    return PEP_ILLEGAL_VALUE;
+            ||
+            otherwise
+            ||
+                assert(!partner);
+                if (!(session && !partner))
+                    return PEP_ILLEGAL_VALUE;
+            ||
+        }
+    }
+
+    function "other_action" {
+        param "action";
+        param "fsm";
+        param "filename", "'###'";
+
+        ||
+
+        // «$action/@name»() - 
+        //
+        //  params:
+        //      session (in)        session handle
+        //      state (in)          state the state machine is in
+        `` if "parm"        | //      partner (in)        partner to communicate with
+        `` if "not(parm)"   | //      partner (in)        (must be NULL)
+        //
+        //  returns:
+        //      PEP_STATUS_OK or any other value on error
+
+        PEP_STATUS «$action/@name»(
+                PEP_SESSION session,
+                «$fsm»_state state,
+                Identity partner,
+                void *extra
+            )
+        {
+            PEP_STATUS status = PEP_STATUS_OK;
+
+            `` call "paramcheck" with "partner", "parm/partner";
+
+            // working code
+
+            // free extra
+            return status;
+
+        enomem:
+            status = PEP_OUT_OF_MEMORY;
+        error:
+            // free extra
+            return status;
+        }
+
+        ||
+    }
+
+    function "send_action" {
+        param "action";
+        param "fsm";
+        param "filename", "'###'";
+        const "name", "substring($action/@name, 5, 255)";
+        const "lname", "concat(yml:lcase(substring($name, 1, 1)), substring($name, 2))";
+
+        ||
+
+        // «$action/@name»() - send «$name» message
+        //
+        //  params:
+        //      session (in)        session handle
+        //      state (in)          state the state machine is in
+        `` if "parm"        | //      partner (in)        partner to communicate with
+        `` if "not(parm)"   | //      partner (in)        (must be NULL)
+        //
+        //  returns:
+        //      PEP_STATUS_OK or any other value on error
+
+        PEP_STATUS «$action/@name»(
+                PEP_SESSION session,
+                «$fsm»_state state,
+                Identity partner,
+                void *extra
+            )
+        {
+            assert(session && state);
+            if (!(session && state))
+                return PEP_ILLEGAL_VALUE;
+
+            PEP_STATUS status = PEP_STATUS_OK;
+            `` if "$name='GroupKeys' or $name='GroupUpdate'" |> identity_list *kl = new_identity_list(NULL);
+
+            DeviceGroup_Protocol_t *msg = new_DeviceGroup_Protocol_msg(DeviceGroup_Protocol__payload_PR_«$lname»);
+            if (!msg)
+                goto enomem;
+        ||
+        choose {
+            when "$name='GroupKeys' or $name='GroupUpdate'" {
+                |
+                |> status = _own_identities_retrieve(session, &kl, PEP_idf_not_for_sync);
+                |> if (status != PEP_STATUS_OK)
+                |>> goto error;
+                |> if (IdentityList_from_identity_list(kl, &msg->payload.choice.«$lname».ownIdentities) == NULL)
+                |>> goto enomem;
+            }
+        }
+        choose {
+            when "$name='GroupKeys' or $name='HandshakeRequest'" {
+                |
+                |> msg->payload.choice.«$lname».partner_id = 
+                |>     OCTET_STRING_new_fromBuf(&asn_DEF_UTF8String,
+                |>                              partner->user_id, -1);
+                |> if (partner->user_id && !msg->payload.choice.«$lname».partner_id)
+                |>    goto enomem;
+                |
+                |> char *devgrp = NULL;
+                |> status = get_device_group(session, &devgrp);
+                |> if (status == PEP_STATUS_OK && devgrp && devgrp[0])
+                |> msg->payload.choice.«$lname».group_id = 
+                |>     OCTET_STRING_new_fromBuf(&asn_DEF_UTF8String,
+                |>                              devgrp, -1);
+                |> free(devgrp);
+                |> if (devgrp && !msg->payload.choice.«$lname».partner_id)
+                |>    goto enomem;
+            }
+        }
+        ||
+
+        ||
+        choose {
+            when "count(/protocol/unencrypted/*[name()=$action/@name]) = 0"
+                |> bool encrypted = true;
+            otherwise
+                |> bool encrypted = false;
+        }
+        choose {
+            when "count(/protocol/broadcast/*[name()=$action/@name]) = 0"
+                |> status = unicast_msg(session, partner, state, msg, encrypted);
+            otherwise
+                |> status = multicast_self_msg(session, state, msg, encrypted);
+        }
+        ||
+            if (status != PEP_STATUS_OK)
+                goto error;
+
+            `` if "$name='GroupKeys' or $name='GroupUpdate'" |> free_identity_list(kl);
+            free_DeviceGroup_Protocol_msg(msg);
+            return PEP_STATUS_OK;
+
+        enomem:
+            status = PEP_OUT_OF_MEMORY;
+        error:
+            free_DeviceGroup_Protocol_msg(msg);
+            `` if "$name='GroupKeys'" |> free_identity_list(kl);
+            return status;
+        }
+
+        ||
+    }
+
+    function "UnCamelUp" {
+        param "text";
+        const "tokens", "str:tokenize($text, '')";
+
+        for "$tokens" {
+            choose {
+                when "contains('ABCDEFGHIJKLMNOPQRSTUVWXYZ',.)" > _«.»
+                otherwise value "yml:ucase(.)";
+            }
+        }
+    }
+
+    function "notify_action" {
+        param "action";
+        param "fsm";
+        param "filename", "'###'";
+        const "name", "substring($action/@name, 7, 255)";
+        const "uname" call "UnCamelUp" with "text", "$name";
+        ||
+
+        // «$action/@name»() - notify «$name» to app
+        //
+        //  params:
+        //      session (in)        session handle
+        //      state (in)          state the state machine is in
+        //      partner (in)        partner to communicate with
+        //
+        //  returns:
+        //      PEP_STATUS_OK or any other value on error
+
+        PEP_STATUS «$action/@name»(
+                PEP_SESSION session,
+                «$fsm»_state state,
+                Identity partner,
+                void *extra
+            )
+        {
+            assert(session && state);
+            assert(extra == NULL);
+            if (!(session && state && extra == NULL))
+                return PEP_ILLEGAL_VALUE;
+
+            return _notifyHandshake(session, partner, SYNC_NOTIFY«$uname»);
+        }
+
+        ||
+    }
+}
+

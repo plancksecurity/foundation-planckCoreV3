@@ -1,0 +1,64 @@
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
+#pragma once
+
+#include "../asn.1/DeviceGroup-Protocol.h"
+#include "message.h"
+#include "sync.h"
+#include "sync_fsm.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct _group_keys_extra {
+    identity_list *group_keys;
+    char *group_id;
+} group_keys_extra_t;
+
+void free_group_keys_extra(group_keys_extra_t* groupkeys);
+group_keys_extra_t* group_keys_extra_dup(group_keys_extra_t* groupkeys);
+
+PEP_STATUS receive_sync_msg(
+        PEP_SESSION session,
+        sync_msg_t *sync_msg,
+        time_t *timeout
+    );
+
+PEP_STATUS inject_DeviceState_event(
+    PEP_SESSION session, 
+    DeviceState_event event,
+    Identity partner,
+    void *extra);
+
+PEP_STATUS receive_DeviceState_msg(
+    PEP_SESSION session, 
+    message *src, 
+    PEP_rating rating, 
+    stringlist_t *keylist);
+
+DeviceGroup_Protocol_t *new_DeviceGroup_Protocol_msg(DeviceGroup_Protocol__payload_PR type);
+void free_DeviceGroup_Protocol_msg(DeviceGroup_Protocol_t *msg);
+
+PEP_STATUS unicast_msg(
+        PEP_SESSION session,
+        const Identity partner,
+        DeviceState_state state,
+        DeviceGroup_Protocol_t *msg,
+        bool encrypted
+    );
+
+PEP_STATUS multicast_self_msg(
+        PEP_SESSION session,
+        DeviceState_state state,
+        DeviceGroup_Protocol_t *msg,
+        bool encrypted
+    );
+
+bool is_double(DeviceGroup_Protocol_t *msg);
+
+#ifdef __cplusplus
+}
+#endif
+

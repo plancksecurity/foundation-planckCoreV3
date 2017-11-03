@@ -1,0 +1,42 @@
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
+include yslt.yml2
+
+tstylesheet {
+    template "protocol/fsm" document "{@filename}.dot", "text"
+    ||
+    digraph finite_state_machine {
+        rankdir=LR;
+        node [shape = doublecircle];
+        `apply "state[@end='1']" mode=end`;
+        node [shape = circle];
+
+        `` apply "state" mode=do
+    }
+    ||
+
+    template "state", mode=end > «@name» 
+    template "state", mode=do apply "event", 0 with "state", "@name";
+
+    template "event" {
+        param "state";
+        const "transitions", "transition|descendant::condition/transition|descendant::alternative/transition";
+        choose {
+            when "count($transitions) > 0"
+                apply "$transitions", 0
+                    with "state", "$state", with "event", "@name";
+            otherwise
+                if "@name != 'Init'"
+                    | «$state» -> «$state» [ label="«@name»" ];
+        }
+    }
+
+    template "transition" {
+        param "state";
+        param "event";
+
+        | «$state» -> «@target» [ label ="«$event»" ];
+    }
+}
+
