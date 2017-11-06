@@ -310,7 +310,11 @@ static PEP_STATUS replace_subject(message* msg) {
         }
     }
     free(msg->shortmsg);
+#ifdef WIN32
+    msg->shortmsg = strdup("pEp");
+#else
     msg->shortmsg = strdup((char*)pepstr);
+#endif    
     
     if (!msg->shortmsg)
         return PEP_OUT_OF_MEMORY;
@@ -1986,7 +1990,8 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
                 if (!(*msg_wrap_info || change_source_in_place)) {
                     if (!shortmsg || 
                         (src->shortmsg != NULL && strcmp(src->shortmsg, "pEp") != 0 &&
-                         _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) != 0)) {
+                         _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) != 0 &&
+                        strcmp(src->shortmsg, "p=p") != 0)) {
                              
                         if (shortmsg != NULL)
                             free(shortmsg);                        
