@@ -2463,7 +2463,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
         if (status != PEP_STATUS_OK)
             GOTO(pep_error);
-            
+        
+        /* We decrypted ok, hallelujah. */
+        msg->enc_format = PEP_enc_none;    
     } 
     else {
         // We did not get a plaintext out of the decryption process.
