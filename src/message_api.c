@@ -826,7 +826,7 @@ static message* wrap_message_as_attachment(message* envelope,
     }
             
     /* Turn message into a MIME-blob */
-    status = _mime_encode_message_internal(attachment, false, &message_text, false);
+    status = _mime_encode_message_internal(attachment, false, &message_text, true);
         
     if (status != PEP_STATUS_OK)
         goto enomem;
@@ -3043,7 +3043,6 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
         GOTO(pep_error);
     }
 
-    dec_msg->enc_format = PEP_enc_none; // is this the right thing to do? FIXME
     status = _mime_encode_message_internal(dec_msg, false, mime_plaintext, false);
 
     if (status == PEP_STATUS_OK)
