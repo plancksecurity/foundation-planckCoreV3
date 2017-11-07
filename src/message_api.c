@@ -20,6 +20,50 @@
 #define _MAX(A, B) ((B) > (A) ? (B) : (A))
 #endif
 
+static bool is_a_pEpmessage(const message *msg)
+{
+    for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
+        if (strcasecmp(i->value->key, "X-pEp-Version") == 0)
+            return true;
+    }
+    return false;
+}
+
+// update comm_type to pEp_ct_pEp if needed
+
+static bool is_wrapper(message* src) {
+    bool retval = false;
+    
+    if (src) {
+        unsigned char pepstr[] = PEP_SUBJ_STRING;
+        if (is_a_pEpmessage(src) || (src->shortmsg == NULL || strcmp(src->shortmsg, "pEp") == 0 ||
+            _unsigned_signed_strcmp(pepstr, src->shortmsg, PEP_SUBJ_BYTELEN) == 0) ||
+            (strcmp(src->shortmsg, "p=p") == 0)) {
+            char* plaintext = src->longmsg;
+            if (plaintext) {
+                const char *line_end = strchr(plaintext, '\n');
+
+                if (line_end != NULL) {
+                    size_t n = line_end - plaintext;
+                    
+                    char* copycat = calloc(n + 1, 1);
+                    
+                    if (copycat) {
+                        strlcpy(copycat, plaintext, n+1);
+                        
+                        if (strstr(copycat, PEP_MSG_WRAP_KEY) && strstr(copycat, "OUTER"))
+                            retval = true;
+                        
+                        free(copycat);
+                    }
+                }
+            }
+        }
+    }
+    return retval;
+}
+
+
 static const stringpair_t* search_optfields(message* msg, const char* key) {
     stringpair_list_t* opt_fields = msg->opt_fields;
     
@@ -877,7 +921,8 @@ static PEP_STATUS encrypt_PGP_MIME(
     _src->longmsg_formatted = src->longmsg_formatted;
     _src->attachments = src->attachments;
     _src->enc_format = PEP_enc_none;
-    status = _mime_encode_message_internal(_src, true, &mimetext, false);
+    bool mime_encode = !is_wrapper(_src);
+    status = _mime_encode_message_internal(_src, true, &mimetext, mime_encode);
     assert(status == PEP_STATUS_OK);
     if (status != PEP_STATUS_OK)
         goto pep_error;
@@ -1670,17 +1715,6 @@ pep_error:
     return ADD_TO_LOG(status);
 }
 
-static bool is_a_pEpmessage(const message *msg)
-{
-    for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
-        if (strcasecmp(i->value->key, "X-pEp-Version") == 0)
-            return true;
-    }
-    return false;
-}
-
-// update comm_type to pEp_ct_pEp if needed
-
 static PEP_STATUS _update_identity_for_incoming_message(
         PEP_SESSION session,
         const message *src
@@ -1941,6 +1975,8 @@ static bool pull_up_attached_main_msg(message* src) {
     }
     return false;
 }
+
+
 
 static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
                                               char** msg_wrap_info) {
