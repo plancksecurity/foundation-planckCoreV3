@@ -788,24 +788,24 @@ static message* extract_minimal_envelope(const message* src,
     }
 
     // For Outlook Force-Encryption
-    const char* pull_keys[] = {"pEp-auto-consume",
-                               "pEp-force-protection",
-                               "X-pEp-Never-Unsecure"};
-    int pull_keys_len = 3; // UPDATE WHEN MORE ADDED ABOVE
-    
-    int i = 0;
-    stringpair_t* opt_add = NULL;    
-    for( ; i < pull_keys_len; i++) {        
-        opt_add = search_optfields(src, pull_keys[i]);
-        stringpair_list_t* add_ptr = NULL;
-        if (opt_add) {
-            add_ptr = stringpair_list_add(src->opt_fields, stringpair_dup(opt_add));
-            if (!add_ptr)
-                goto enomem;
-        }
-        opt_add = NULL;
-        add_ptr = NULL;
-    }
+    // const char* pull_keys[] = {"pEp-auto-consume",
+    //                            "pEp-force-protection",
+    //                            "X-pEp-Never-Unsecure"};
+    // int pull_keys_len = 3; // UPDATE WHEN MORE ADDED ABOVE
+    // 
+    // int i = 0;
+    // stringpair_t* opt_add = NULL;    
+    // for( ; i < pull_keys_len; i++) {        
+    //     opt_add = search_optfields(src, pull_keys[i]);
+    //     stringpair_list_t* add_ptr = NULL;
+    //     if (opt_add) {
+    //         add_ptr = stringpair_list_add(src->opt_fields, stringpair_dup(opt_add));
+    //         if (!add_ptr)
+    //             goto enomem;
+    //     }
+    //     opt_add = NULL;
+    //     add_ptr = NULL;
+    // }
         
     envelope->enc_format = src->enc_format;        
     
