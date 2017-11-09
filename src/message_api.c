@@ -29,8 +29,6 @@ static bool is_a_pEpmessage(const message *msg)
     return false;
 }
 
-// update comm_type to pEp_ct_pEp if needed
-
 static bool is_wrapper(message* src) {
     bool retval = false;
     
@@ -2093,16 +2091,49 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
 
 }
 
+static PEP_STATUS get_crypto_text(message* src, char** crypto_text, size_t* text_size) {
+                
+    // this is only here because of how NOT_IMPLEMENTED works            
+    PEP_STATUS status = PEP_STATUS_OK;
+                    
+    switch (src->enc_format) {
+        case PEP_enc_PGP_MIME:
+            *crypto_text = src->attachments->next->value;
+            *text_size = src->attachments->next->size;
+            break;
+
+        case PEP_enc_PGP_MIME_Outlook1:
+            *crypto_text = src->attachments->value;
+            *text_size = src->attachments->size;
+            break;
+
+        case PEP_enc_pieces:
+            *crypto_text = src->longmsg;
+            *text_size = strlen(*crypto_text);
+            break;
+
+        default:
+            NOT_IMPLEMENTED
+    }
+    
+    return status;
+}
+
+
 static PEP_STATUS verify_decrypted(PEP_SESSION session,
+                                   message* src,
                                    message* msg, 
-                                   pEp_identity* sender,
                                    char* plaintext, 
                                    size_t plaintext_size,
                                    stringlist_t** keylist,
                                    PEP_STATUS* decrypt_status,
                                    PEP_cryptotech crypto) {
+                                       
+    pEp_identity* sender = src->from;
+
     bloblist_t* detached_sig = NULL;
     PEP_STATUS status = _get_detached_signature(msg, &detached_sig);
+    stringlist_t *verify_keylist = NULL;
     
     if (detached_sig) {
         char* dsig_text = detached_sig->value;
@@ -2111,21 +2142,36 @@ static PEP_STATUS verify_decrypted(PEP_SESSION session,
         char* stext = NULL;
 
         status = _get_signed_text(plaintext, plaintext_size, &stext, &ssize);
-        stringlist_t *verify_keylist = NULL;
 
         if (ssize > 0 && stext) {
             status = cryptotech[crypto].verify_text(session, stext,
                                                     ssize, dsig_text, dsig_size,
                                                     &verify_keylist);
-
-            if (status == PEP_VERIFIED || status == PEP_VERIFIED_AND_TRUSTED)
-            {
-                *decrypt_status = PEP_DECRYPTED_AND_VERIFIED;
-            
-                status = combine_keylists(session, &verify_keylist, keylist, sender);
-            }
+        }
+        
+        if (status == PEP_VERIFIED || status == PEP_VERIFIED_AND_TRUSTED)
+        {
+            *decrypt_status = PEP_DECRYPTED_AND_VERIFIED;
+        
+            status = combine_keylists(session, &verify_keylist, keylist, sender);
         }
     }
+    else {
+        size_t csize, psize;
+        char* ctext;
+        char* ptext;
+        get_crypto_text(src, &ctext, &csize);
+        // reverify - we may have imported a key in the meantime
+        // status = cryptotech[crypto].verify_text(session, ctext,
+        //                                         csize, NULL, 0,
+        //                                         &verify_keylist);
+        free_stringlist(*keylist);
+        *decrypt_status = decrypt_and_verify(session, ctext, csize,
+                                            NULL, 0,
+                                            &ptext, &psize, keylist);
+        return PEP_STATUS_OK;
+    }
+
     return status;
 }
 
@@ -2221,34 +2267,6 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                 return PEP_OUT_OF_MEMORY;
         }
     }
-    return status;
-}
-
-static PEP_STATUS get_crypto_text(message* src, char** crypto_text, size_t* text_size) {
-                
-    // this is only here because of how NOT_IMPLEMENTED works            
-    PEP_STATUS status = PEP_STATUS_OK;
-                    
-    switch (src->enc_format) {
-        case PEP_enc_PGP_MIME:
-            *crypto_text = src->attachments->next->value;
-            *text_size = src->attachments->next->size;
-            break;
-
-        case PEP_enc_PGP_MIME_Outlook1:
-            *crypto_text = src->attachments->value;
-            *text_size = src->attachments->size;
-            break;
-
-        case PEP_enc_pieces:
-            *crypto_text = src->longmsg;
-            *text_size = strlen(*crypto_text);
-            break;
-
-        default:
-            NOT_IMPLEMENTED
-    }
-    
     return status;
 }
 
@@ -2405,7 +2423,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                         GOTO(pep_error);            
                                                                  
                     status = verify_decrypted(session,
-                                              msg, src->from,
+                                              src, msg,
                                               ptext, psize,
                                               &_keylist,
                                               &decrypt_status,
@@ -3103,7 +3121,8 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
         GOTO(pep_error);
     }
 
-    status = _mime_encode_message_internal(dec_msg, false, mime_plaintext, true);
+    // FIXME: test with att
+    status = _mime_encode_message_internal(dec_msg, false, mime_plaintext, false);
 
     if (status == PEP_STATUS_OK)
     {
