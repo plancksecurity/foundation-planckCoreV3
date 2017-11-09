@@ -190,12 +190,14 @@ void replace_opt_field(message *msg, const char *name, const char *value)
 static void decorate_message(
     message *msg,
     PEP_rating rating,
-    stringlist_t *keylist
+    stringlist_t *keylist,
+    bool add_version
     )
 {
     assert(msg);
 
-    replace_opt_field(msg, "X-pEp-Version", PEP_VERSION);
+    if (add_version)
+        replace_opt_field(msg, "X-pEp-Version", PEP_VERSION);
 
     if (rating != PEP_rating_undefined)
         replace_opt_field(msg, "X-EncStatus", rating_to_string(rating));
@@ -1531,7 +1533,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         if (!session->passive_mode && 
             !(flags & PEP_encrypt_flag_force_no_attached_key)) {
             attach_own_key(session, src);
-            decorate_message(src, PEP_rating_undefined, NULL);
+            decorate_message(src, PEP_rating_undefined, NULL, true);
         }
         return ADD_TO_LOG(PEP_UNENCRYPTED);
     }
@@ -1594,7 +1596,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     if (msg) {
-        decorate_message(msg, PEP_rating_undefined, NULL);
+        decorate_message(msg, PEP_rating_undefined, NULL, true);
         if (_src->id) {
             msg->id = strdup(_src->id);
             assert(msg->id);
@@ -2452,6 +2454,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
         if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
             char* wrap_info = NULL;
+            
             status = unencapsulate_hidden_fields(src, msg, &wrap_info);
 
 //            bool is_transport_wrapper = false;
@@ -2571,7 +2574,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     if (msg) {
         
         /* add pEp-related status flags to header */
-        decorate_message(msg, *rating, _keylist);
+        decorate_message(msg, *rating, _keylist, false);
         
         if (imported_keys)
             remove_attached_keys(msg);
