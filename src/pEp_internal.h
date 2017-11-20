@@ -359,10 +359,14 @@ static inline int _unsigned_signed_strcmp(const unsigned char* bytestr, const ch
 
 // This is just a horrible example of C type madness. UTF-8 made me do it.
 static inline char* _pep_subj_copy() {
+#ifndef WIN32
     unsigned char pepstr[] = PEP_SUBJ_STRING;
     void* retval = calloc(1, sizeof(unsigned char)*PEP_SUBJ_BYTELEN + 1);
     memcpy(retval, pepstr, PEP_SUBJ_BYTELEN);
     return (char*)retval;
+#else
+    return strdup("pEp");
+#endif
 }
 
 // These are globals used in generating message IDs and should only be
