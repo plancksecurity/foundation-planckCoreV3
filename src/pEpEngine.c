@@ -1183,7 +1183,8 @@ pEp_identity *identity_dup(const pEp_identity *src)
     dup->lang[1] = src->lang[1];
     dup->lang[2] = 0;
     dup->flags = src->flags;
-
+    dup->me = src->me;
+    
     return dup;
 }
 

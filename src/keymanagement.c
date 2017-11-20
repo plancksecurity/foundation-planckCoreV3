@@ -12,6 +12,7 @@
 #include "pEp_internal.h"
 #include "keymanagement.h"
 
+#include "sync_fsm.h"
 #include "blacklist.h"
 
 #ifndef EMPTYSTR
@@ -92,7 +93,9 @@ DYNAMIC_API PEP_STATUS update_identity(
     if (!(session && identity && !EMPTYSTR(identity->address)))
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
+    // dunno if we should keep this function shortcut.
     if (_identity_me(identity)) {
+        identity->me = true;
         return _myself(session, identity, false, true);
     }
 
@@ -279,7 +282,7 @@ DYNAMIC_API PEP_STATUS update_identity(
 
         if (EMPTYSTR(temp_id->username)) { // mitigate
             free(temp_id->username);
-            temp_id->username = strdup("anonymous");
+            temp_id->username = strdup("Anonymous");
             assert(temp_id->username);
             if (temp_id->username == NULL){
                 status = PEP_OUT_OF_MEMORY;
@@ -312,11 +315,12 @@ DYNAMIC_API PEP_STATUS update_identity(
     free(identity->user_id);
     identity->user_id = strdup(temp_id->user_id);
     free(identity->username);
-    identity->username = strdup(temp_id->username ? temp_id->username : "anonymous");
+    identity->username = strdup(temp_id->username ? temp_id->username : "Anonymous");
     identity->comm_type = temp_id->comm_type;
     identity->lang[0] = temp_id->lang[0];
     identity->lang[1] = temp_id->lang[1];
     identity->lang[2] = 0;
+    identity->me = temp_id->me;
     identity->flags = temp_id->flags;
 
 exit_free :
@@ -434,6 +438,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     identity->comm_type = PEP_ct_pEp;
+    identity->me = true;
     if(ignore_flags)
         identity->flags = 0;
     
@@ -837,6 +842,7 @@ DYNAMIC_API PEP_STATUS own_key_is_listed(
         case SQLITE_ROW:
             count = sqlite3_column_int(session->own_key_is_listed, 0);
             *listed = count > 0;
+            status = PEP_STATUS_OK;
             break;
             
         default:
@@ -904,6 +910,7 @@ PEP_STATUS _own_identities_retrieve(
                     ident->lang[1] = lang[1];
                     ident->lang[2] = 0;
                 }
+                ident->me = true;
                 ident->flags = flags;
 
                 _bl = identity_list_add(_bl, ident);

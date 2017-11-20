@@ -44,6 +44,7 @@ int main() {
                                                       bl_fpr_1,
                                                       PEP_OWN_USERID,
                                                       "Blacklist Self");
+    blacklisted_identity->me = true;
     PEP_STATUS status8 = myself(session, blacklisted_identity);
     assert (status8 == PEP_STATUS_OK);
     PEP_STATUS status9 = blacklist_add(session, bl_fpr_1);
