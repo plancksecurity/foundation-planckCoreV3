@@ -12,7 +12,6 @@
 #include "pEp_internal.h"
 #include "keymanagement.h"
 
-#include "sync_fsm.h"
 #include "blacklist.h"
 
 #ifndef EMPTYSTR
@@ -555,8 +554,6 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
         }
     }
    
-    bool new_key_generated = false;
-
     if (EMPTYSTR(identity->fpr) || revoked)
     {
         if(!do_keygen){
@@ -581,7 +578,6 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
             return ADD_TO_LOG(status);
         }
 
-        new_key_generated = true;
         
         if(revoked)
         {
@@ -619,15 +615,6 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     assert(status == PEP_STATUS_OK);
     if (status != PEP_STATUS_OK) {
         return status;
-    }
-
-    if(new_key_generated)
-    {
-        // if a state machine for keysync is in place, inject notify
-        status = inject_DeviceState_event(session, KeyGen, NULL, NULL);
-        if (status == PEP_OUT_OF_MEMORY){
-            return PEP_OUT_OF_MEMORY;
-        }
     }
 
     return ADD_TO_LOG(PEP_STATUS_OK);
@@ -850,7 +837,6 @@ DYNAMIC_API PEP_STATUS own_key_is_listed(
         case SQLITE_ROW:
             count = sqlite3_column_int(session->own_key_is_listed, 0);
             *listed = count > 0;
-            status = PEP_STATUS_OK;
             break;
             
         default:

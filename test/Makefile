@@ -5,7 +5,7 @@
 
 HERE:=$(CURDIR)
 
-include ../Makefile.conf
+include ../default.conf
 
 TARGET=pEpEngineTest
 
@@ -94,7 +94,7 @@ test: $(TARGET) test_home_
 	$(TEST_CMD_PFX) ./$<
 
 %_test : %_test.o test_util.o
-	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+	$(CXX) $^ $(LDFLAGS) $(LDLIBS) -o $@
 
 %_run : % test_home_
 	$(TEST_CMD_PFX) ./$<

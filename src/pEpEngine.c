@@ -6,7 +6,6 @@
 #include "cryptotech.h"
 #include "transport.h"
 #include "blacklist.h"
-#include "sync_fsm.h"
 
 #include <time.h>
 #include <stdlib.h>
@@ -826,8 +825,6 @@ DYNAMIC_API void release(PEP_SESSION session)
         out_last = true;
 
     if (session) {
-        if (session->sync_state != DeviceState_state_NONE)
-            unregister_sync_callbacks(session);
 
         if (session->db) {
             if (session->log)

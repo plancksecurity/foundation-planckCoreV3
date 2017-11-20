@@ -18,6 +18,7 @@
 #include <stdexcept>
 #include "platform_windows.h"
 #include <fcntl.h>
+#include <tchar.h>
 #include <sys\stat.h>
 
 #ifndef WC_ERR_INVALID_CHARS
@@ -141,12 +142,12 @@ void *dlopen(const char *filename, int flag) {
 
 	// Look up GnuPG installation in current user scope
 	bool result = readRegistryString(HKEY_CURRENT_USER,
-		TEXT("SOFTWARE\\GNU\\GnuPG"), TEXT("Install Directory"), path,
+		TEXT("SOFTWARE\\GnuPG"), TEXT("Install Directory"), path,
 		PATH_BUF_SIZE, NULL);
 	// If not found in current user, look up in local machine
 	if (!result)
 		result = readRegistryString(HKEY_LOCAL_MACHINE,
-			TEXT("SOFTWARE\\GNU\\GnuPG"), TEXT("Install Directory"), path,
+			TEXT("SOFTWARE\\GnuPG"), TEXT("Install Directory"), path,
 			PATH_BUF_SIZE, NULL);
 	assert(result);
 	if (!result)
@@ -159,6 +160,21 @@ void *dlopen(const char *filename, int flag) {
         return NULL;
 
 	HMODULE module = LoadLibrary(utf16_string(filename).c_str());
+
+    if (module == NULL) {
+        SetDllDirectory(NULL);
+                    
+		_tcscat_s(path, TEXT("\\bin"));
+        
+        SetDllDirectory(TEXT(""));
+        _result = SetDllDirectory(path);
+        assert(_result != 0);
+        if (_result == 0)
+            return NULL;
+
+    	module = LoadLibrary(utf16_string(filename).c_str());
+    }
+    
     SetDllDirectory(NULL);
 	if (module == NULL)
 		return NULL;
