@@ -417,6 +417,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "       on delete set null,\n"
                 "   comment text,\n"
                 "   flags integer default 0,"
+                "   is_own integer default 0,"
                 "   primary key (address, user_id)\n"
                 ");\n"
                 "create table if not exists trust (\n"
@@ -456,7 +457,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "   foreign key (address, user_id)\n"
                 "       references identity\n"
                 "       on delete cascade,\n"
-                "   check (user_id = '" PEP_OWN_USERID "')\n"
+//                "   check (user_id = '" PEP_OWN_USERID "')\n"
                 "   primary key (address, fpr)\n"
                 ");\n" 
                 ,
@@ -554,6 +555,17 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                     NULL
                 );
                 assert(int_result == SQLITE_OK);
+            }
+            
+            if (version < 6) {
+                int_result = sqlite3_exec(
+                    _session->db,
+                    "alter table identity\n"
+                    "   add column is_own integer default 0;\n",
+                    NULL,
+                    NULL,
+                    NULL
+                );                
             }
         }
         else { 
