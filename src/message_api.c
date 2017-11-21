@@ -2413,17 +2413,20 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                     src->shortmsg = strdup(msg->shortmsg);
                 }
 
+                // check for private key in decrypted message attachment while importing
+                // N.B. Apparently, we always import private keys into the keyring; however,
+                // we do NOT always allow those to be used for encryption. THAT is controlled
+                // by setting it as an own identity associated with the key in the DB.
+                status = import_priv_keys_from_decrypted_msg(session, src, msg,
+                                                             &imported_keys,
+                                                             &imported_private_key_address,
+                                                             private_il);
+                if (status != PEP_STATUS_OK)
+                    GOTO(pep_error);            
+
                 /* if decrypted, but not verified... */
                 if (decrypt_status == PEP_DECRYPTED) {
-                    
-                    // check for private key in decrypted message attachment while importing
-                    status = import_priv_keys_from_decrypted_msg(session, src, msg,
-                                                                 &imported_keys,
-                                                                 &imported_private_key_address,
-                                                                 private_il);
-                    if (status != PEP_STATUS_OK)
-                        GOTO(pep_error);            
-                                                                 
+                                                                                     
                     status = verify_decrypted(session,
                                               src, msg,
                                               ptext, psize,
