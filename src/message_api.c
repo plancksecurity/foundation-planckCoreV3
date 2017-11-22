@@ -2130,12 +2130,20 @@ static PEP_STATUS verify_decrypted(PEP_SESSION session,
                                    stringlist_t** keylist,
                                    PEP_STATUS* decrypt_status,
                                    PEP_cryptotech crypto) {
-                                       
+
+    assert(src && src->from);
+    
+    if (!src && !src->from)
+        return PEP_ILLEGAL_VALUE;
+
+    PEP_STATUS _cached_decrypt_status = *decrypt_status;
+        
     pEp_identity* sender = src->from;
 
     bloblist_t* detached_sig = NULL;
     PEP_STATUS status = _get_detached_signature(msg, &detached_sig);
     stringlist_t *verify_keylist = NULL;
+    
     
     if (detached_sig) {
         char* dsig_text = detached_sig->value;
@@ -2171,10 +2179,13 @@ static PEP_STATUS verify_decrypted(PEP_SESSION session,
         *decrypt_status = decrypt_and_verify(session, ctext, csize,
                                             NULL, 0,
                                             &ptext, &psize, keylist);
-        return PEP_STATUS_OK;
+        
     }
 
-    return status;
+    if (*decrypt_status != PEP_DECRYPTED_AND_VERIFIED)
+        *decrypt_status = _cached_decrypt_status;                                
+
+    return PEP_STATUS_OK;
 }
 
 static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session, 
