@@ -2566,8 +2566,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     // 1. Check to see if this message is to us and contains an own key imported 
     // from own trusted message 
     if (msg && *rating >= PEP_rating_trusted && imported_private_key_address &&
-        msg->to->ident->user_id &&
-        strcmp(msg->to->ident->user_id, PEP_OWN_USERID) == 0) {
+        msg->to && _identity_me(msg->to) {
 
         // flag it as such
         *flags |= PEP_decrypt_flag_own_private_key;

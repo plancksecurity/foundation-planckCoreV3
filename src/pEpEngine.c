@@ -77,10 +77,12 @@ static const char *sql_set_person =
     "      where id = ?1), upper(replace(?4,' ','')))),"
     "    (select device_group from person where id = ?1)) ;";
 
+// FIXME: PEP_OWN_USERID
 static const char *sql_set_device_group = 
     "update person set device_group = ?1 "
     "where id = '" PEP_OWN_USERID "';";
 
+// FIXME: PEP_OWN_USERID
 static const char *sql_get_device_group = 
     "select device_group from person "
     "where id = '" PEP_OWN_USERID "';";
@@ -172,6 +174,7 @@ static const char *sql_blacklist_retrieve =
                 
 
 // Own keys
+// FIXME: PEP_OWN_USERID
 static const char *sql_own_key_is_listed = 
     "select count(*) from ("
     " select main_key_id from person "
@@ -194,14 +197,16 @@ static const char *sql_own_identities_retrieve =
     "   join pgp_keypair on fpr = identity.main_key_id"
     "   join trust on id = trust.user_id"
     "       and pgp_keypair_fpr = identity.main_key_id"
-    "   where identity.user_id = '" PEP_OWN_USERID "'"
+    "   where identity.is_own = 1"
     "       and (identity.flags & ?1) = 0;";
-        
+
+// FIXME: PEP_OWN_USERID        
 static const char *sql_own_keys_retrieve =  
     "select fpr from own_keys"
     "   natural join identity"
     "   where (identity.flags & ?1) = 0;";
 
+// FIXME: PEP_OWN_USERID
 static const char *sql_set_own_key = 
     "insert or replace into own_keys (address, user_id, fpr)"
     " values (?1, '" PEP_OWN_USERID "', upper(replace(?2,' ','')));";
@@ -456,7 +461,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "       on delete cascade,\n"
                 "   foreign key (address, user_id)\n"
                 "       references identity\n"
-                "       on delete cascade,\n"
+                "       on delete cascade\n"
 //                "   check (user_id = '" PEP_OWN_USERID "')\n"
                 "   primary key (address, fpr)\n"
                 ");\n" 
@@ -1361,7 +1366,7 @@ DYNAMIC_API PEP_STATUS set_identity(
     }
 
     if (has_fpr) {
-        if(strcmp(identity->user_id, PEP_OWN_USERID) == 0) {
+        if(_identity_me(identity)) {
             sqlite3_reset(session->set_own_key);
             sqlite3_bind_text(session->set_own_key, 1, identity->address, -1,
                 SQLITE_STATIC);
