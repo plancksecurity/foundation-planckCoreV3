@@ -6,7 +6,6 @@
 #include "cryptotech.h"
 #include "transport.h"
 #include "blacklist.h"
-#include "sync_fsm.h"
 
 #include <time.h>
 #include <stdlib.h>
@@ -78,10 +77,12 @@ static const char *sql_set_person =
     "      where id = ?1), upper(replace(?4,' ','')))),"
     "    (select device_group from person where id = ?1)) ;";
 
+// FIXME: PEP_OWN_USERID
 static const char *sql_set_device_group = 
     "update person set device_group = ?1 "
     "where id = '" PEP_OWN_USERID "';";
 
+// FIXME: PEP_OWN_USERID
 static const char *sql_get_device_group = 
     "select device_group from person "
     "where id = '" PEP_OWN_USERID "';";
@@ -173,40 +174,35 @@ static const char *sql_blacklist_retrieve =
                 
 
 // Own keys
+// We only care if it's 0 or non-zero
 static const char *sql_own_key_is_listed = 
     "select count(*) from ("
-    " select main_key_id from person "
-    "   where main_key_id = upper(replace(?1,' ',''))"
-    "    and id = '" PEP_OWN_USERID "' "
-    " union "
-    "  select main_key_id from identity "
-    "   where main_key_id = upper(replace(?1,' ',''))"
-    "    and user_id = '" PEP_OWN_USERID "' "
-    " union "
-    "  select fpr from own_keys "
-    "   where fpr = upper(replace(?1,' ',''))"
-    " );";
+    "   select fpr from trust"
+    "      join identity on id = identity.user_id"
+    "      where fpr = upper(replace(?1,' ',''))"
+    "           and identity.is_own = 1;"
+    ");";
 
 static const char *sql_own_identities_retrieve =  
-    "select address, fpr, username, "
+    "select address, fpr, username, user_id, "
     "   lang, identity.flags | pgp_keypair.flags"
     "   from identity"
     "   join person on id = identity.user_id"
     "   join pgp_keypair on fpr = identity.main_key_id"
     "   join trust on id = trust.user_id"
     "       and pgp_keypair_fpr = identity.main_key_id"
-    "   where identity.user_id = '" PEP_OWN_USERID "'"
+    "   where identity.is_own = 1"
     "       and (identity.flags & ?1) = 0;";
-        
-static const char *sql_own_keys_retrieve =  
-    "select fpr from own_keys"
-    "   natural join identity"
-    "   where (identity.flags & ?1) = 0;";
 
+static const char *sql_own_keys_retrieve =  
+    "select fpr from trust"
+    "   join identity on id = identity.user_id"
+    "   where identity.is_own = 1"
+
+// FIXME: PEP_OWN_USERID
 static const char *sql_set_own_key = 
     "insert or replace into own_keys (address, user_id, fpr)"
     " values (?1, '" PEP_OWN_USERID "', upper(replace(?2,' ','')));";
-
 
 // Sequence
 static const char *sql_sequence_value1 = 
@@ -418,6 +414,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "       on delete set null,\n"
                 "   comment text,\n"
                 "   flags integer default 0,"
+                "   is_own integer default 0,"
                 "   primary key (address, user_id)\n"
                 ");\n"
                 "create table if not exists trust (\n"
@@ -456,8 +453,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "       on delete cascade,\n"
                 "   foreign key (address, user_id)\n"
                 "       references identity\n"
-                "       on delete cascade,\n"
-                "   check (user_id = '" PEP_OWN_USERID "')\n"
+                "       on delete cascade\n"
+//                "   check (user_id = '" PEP_OWN_USERID "')\n"
                 "   primary key (address, fpr)\n"
                 ");\n" 
                 ,
@@ -555,6 +552,17 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                     NULL
                 );
                 assert(int_result == SQLITE_OK);
+            }
+            
+            if (version < 6) {
+                int_result = sqlite3_exec(
+                    _session->db,
+                    "alter table identity\n"
+                    "   add column is_own integer default 0;\n",
+                    NULL,
+                    NULL,
+                    NULL
+                );                
             }
         }
         else { 
@@ -826,8 +834,6 @@ DYNAMIC_API void release(PEP_SESSION session)
         out_last = true;
 
     if (session) {
-        if (session->sync_state != DeviceState_state_NONE)
-            unregister_sync_callbacks(session);
 
         if (session->db) {
             if (session->log)
@@ -1186,7 +1192,8 @@ pEp_identity *identity_dup(const pEp_identity *src)
     dup->lang[1] = src->lang[1];
     dup->lang[2] = 0;
     dup->flags = src->flags;
-
+    dup->me = src->me;
+    
     return dup;
 }
 
@@ -1351,7 +1358,7 @@ DYNAMIC_API PEP_STATUS set_identity(
     }
 
     if (has_fpr) {
-        if(strcmp(identity->user_id, PEP_OWN_USERID) == 0) {
+        if(_identity_me(identity)) {
             sqlite3_reset(session->set_own_key);
             sqlite3_bind_text(session->set_own_key, 1, identity->address, -1,
                 SQLITE_STATIC);

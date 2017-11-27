@@ -151,6 +151,7 @@ struct _pEpSession {
     // Own keys
     sqlite3_stmt *own_key_is_listed;
     sqlite3_stmt *own_identities_retrieve;
+    sqlite3_stmt *own_userid_by_address;
     sqlite3_stmt *own_keys_retrieve;
     sqlite3_stmt *set_own_key;
 
@@ -344,8 +345,7 @@ static inline bool _identity_me(
         pEp_identity * identity
     )
 {
-    return identity->flags & PEP_idf_me || identity->me || 
-           (identity->user_id && strcmp(identity->user_id, PEP_OWN_USERID) == 0);
+    return identity->me || (identity->user_id && strcmp(identity->user_id, PEP_OWN_USERID) == 0);
 }
 
 // size is the length of the bytestr that's coming in. This is really only intended
@@ -360,10 +360,14 @@ static inline int _unsigned_signed_strcmp(const unsigned char* bytestr, const ch
 
 // This is just a horrible example of C type madness. UTF-8 made me do it.
 static inline char* _pep_subj_copy() {
+#ifndef WIN32
     unsigned char pepstr[] = PEP_SUBJ_STRING;
     void* retval = calloc(1, sizeof(unsigned char)*PEP_SUBJ_BYTELEN + 1);
     memcpy(retval, pepstr, PEP_SUBJ_BYTELEN);
     return (char*)retval;
+#else
+    return strdup("pEp");
+#endif
 }
 
 // These are globals used in generating message IDs and should only be

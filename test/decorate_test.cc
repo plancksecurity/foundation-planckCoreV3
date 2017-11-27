@@ -29,6 +29,7 @@ int main() {
     cout << "creating message…\n";
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, "Alice Test");
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, "42", "Bob Test");
+    alice->me = true;
     identity_list* to_list = new_identity_list(bob); // to bob
     message* outgoing_message = new_message(PEP_dir_outgoing);
     assert(outgoing_message);

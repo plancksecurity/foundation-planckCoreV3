@@ -18,6 +18,19 @@ std::string slurp(const std::string& filename)
 	return sstr.str();
 }
 
+void dump_out(const char* filename, const char* outdata)
+{
+	std::ofstream outfile(filename);
+	if(!outfile)
+	{
+		throw std::runtime_error("Cannot open output file!");
+	}
+	
+	outfile << outdata;
+    outfile.close();
+}
+
+
 const char* tl_status_string(PEP_STATUS status) {
     switch (status) {
         case PEP_STATUS_OK:

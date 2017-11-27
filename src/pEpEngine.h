@@ -470,7 +470,6 @@ typedef enum _identity_flags {
     // the first octet flags are app defined settings
     PEP_idf_not_for_sync = 0x0001,   // don't use this identity for sync
     PEP_idf_list = 0x0002,           // identity of list of persons
-    PEP_idf_me = 0x0004,             // This identity is connected to own user_id
     // the second octet flags are calculated
     PEP_idf_devicegroup = 0x0100     // identity of a device group member
 } identity_flags;
@@ -486,13 +485,15 @@ typedef struct _pEp_identity {
     char *address;              // C string with address UTF-8 encoded
     char *fpr;                  // C string with fingerprint UTF-8 encoded
     char *user_id;              // C string with user ID UTF-8 encoded
-                                // user_id must be set to "pEp_own_userId"
+                                // user_id MIGHT be set to "pEp_own_userId"
                                 // (use PEP_OWN_USERID preprocessor define)
                                 // if this is own user's identity.
+                                // But it is not REQUIRED to be.
     char *username;             // C string with user name UTF-8 encoded
     PEP_comm_type comm_type;    // type of communication with this ID
     char lang[3];               // language of conversation
                                 // ISO 639-1 ALPHA-2, last byte is 0
+    bool me;                    // if this is the local user herself/himself
     identity_flags_t flags;     // identity_flag1 | identity_flag2 | ...
 } pEp_identity;
 

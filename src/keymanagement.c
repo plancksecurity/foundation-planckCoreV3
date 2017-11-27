@@ -93,14 +93,12 @@ DYNAMIC_API PEP_STATUS update_identity(
     if (!(session && identity && !EMPTYSTR(identity->address)))
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
-    /* Ok, if I'm trying to indicate this is me in the identity struct, then
-       call _myself */
+    // dunno if we should keep this function shortcut.
     if (_identity_me(identity)) {
+        identity->me = true;
         return _myself(session, identity, false, true);
     }
 
-    /* Otherwise, unless get_identity indicates that this is me, it's
-       someone else as far as this syscall is concerned. */
     int _no_user_id = EMPTYSTR(identity->user_id);
     int _did_elect_new_key = 0;
 
@@ -284,7 +282,7 @@ DYNAMIC_API PEP_STATUS update_identity(
 
         if (EMPTYSTR(temp_id->username)) { // mitigate
             free(temp_id->username);
-            temp_id->username = strdup("anonymous");
+            temp_id->username = strdup("Anonymous");
             assert(temp_id->username);
             if (temp_id->username == NULL){
                 status = PEP_OUT_OF_MEMORY;
@@ -317,11 +315,12 @@ DYNAMIC_API PEP_STATUS update_identity(
     free(identity->user_id);
     identity->user_id = strdup(temp_id->user_id);
     free(identity->username);
-    identity->username = strdup(temp_id->username ? temp_id->username : "anonymous");
+    identity->username = strdup(temp_id->username ? temp_id->username : "Anonymous");
     identity->comm_type = temp_id->comm_type;
     identity->lang[0] = temp_id->lang[0];
     identity->lang[1] = temp_id->lang[1];
     identity->lang[2] = 0;
+    identity->me = temp_id->me;
     identity->flags = temp_id->flags;
 
 exit_free :
@@ -430,23 +429,19 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     assert(identity);
     assert(!EMPTYSTR(identity->address));
 
-    // assert(EMPTYSTR(identity->user_id) ||
-    //        strcmp(identity->user_id, PEP_OWN_USERID) == 0);
+    assert(EMPTYSTR(identity->user_id) ||
+           strcmp(identity->user_id, PEP_OWN_USERID) == 0);
 
-    // if (!(session && identity && !EMPTYSTR(identity->address) &&
-    //         (EMPTYSTR(identity->user_id) ||
-    //         strcmp(identity->user_id, PEP_OWN_USERID) == 0)))
-    //     return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
-
-    if (!(session && identity && !EMPTYSTR(identity->address)))
+    if (!(session && identity && !EMPTYSTR(identity->address) &&
+            (EMPTYSTR(identity->user_id) ||
+            strcmp(identity->user_id, PEP_OWN_USERID) == 0)))
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     identity->comm_type = PEP_ct_pEp;
+    identity->me = true;
     if(ignore_flags)
         identity->flags = 0;
     
-    // FIXME: do we replace DB user_id and username if they WERE defaults?
-
     if (EMPTYSTR(identity->user_id))
     {
         free(identity->user_id);
@@ -564,8 +559,6 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
         }
     }
    
-    bool new_key_generated = false;
-
     if (EMPTYSTR(identity->fpr) || revoked)
     {
         if(!do_keygen){
@@ -590,7 +583,6 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
             return ADD_TO_LOG(status);
         }
 
-        new_key_generated = true;
         
         if(revoked)
         {
@@ -628,15 +620,6 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     assert(status == PEP_STATUS_OK);
     if (status != PEP_STATUS_OK) {
         return status;
-    }
-
-    if(new_key_generated)
-    {
-        // if a state machine for keysync is in place, inject notify
-        status = inject_DeviceState_event(session, KeyGen, NULL, NULL);
-        if (status == PEP_OUT_OF_MEMORY){
-            return PEP_OUT_OF_MEMORY;
-        }
     }
 
     return ADD_TO_LOG(PEP_STATUS_OK);
@@ -909,14 +892,15 @@ PEP_STATUS _own_identities_retrieve(
                     sqlite3_column_text(session->own_identities_retrieve, 0);
                 fpr = (const char *)
                     sqlite3_column_text(session->own_identities_retrieve, 1);
-                user_id = PEP_OWN_USERID;
-                username = (const char *)
+                user_id = (const char *)
                     sqlite3_column_text(session->own_identities_retrieve, 2);
+                username = (const char *)
+                    sqlite3_column_text(session->own_identities_retrieve, 3);
                 comm_type = PEP_ct_pEp;
                 lang = (const char *)
-                    sqlite3_column_text(session->own_identities_retrieve, 3);
+                    sqlite3_column_text(session->own_identities_retrieve, 4);
                 flags = (unsigned int)
-                    sqlite3_column_int(session->own_identities_retrieve, 4);
+                    sqlite3_column_int(session->own_identities_retrieve, 5);
 
                 pEp_identity *ident = new_identity(address, fpr, user_id, username);
                 if (!ident)
@@ -927,6 +911,7 @@ PEP_STATUS _own_identities_retrieve(
                     ident->lang[1] = lang[1];
                     ident->lang[2] = 0;
                 }
+                ident->me = true;
                 ident->flags = flags;
 
                 _bl = identity_list_add(_bl, ident);
@@ -1059,24 +1044,70 @@ DYNAMIC_API PEP_STATUS set_own_key(
           fpr && fpr[0]
          ))
         return PEP_ILLEGAL_VALUE;
-    
-    sqlite3_reset(session->set_own_key);
-    sqlite3_bind_text(session->set_own_key, 1, address, -1, SQLITE_STATIC);
-    sqlite3_bind_text(session->set_own_key, 2, fpr, -1, SQLITE_STATIC);
-
-    int result;
-    
-    result = sqlite3_step(session->set_own_key);
-    switch (result) {
-        case SQLITE_DONE:
-            status = PEP_STATUS_OK;
-            break;
             
-        default:
-            status = PEP_UNKNOWN_ERROR;
-    }
+            
+    // First see if we have it in own identities already, AND we retrieve
+    // our own user_id
+    pEp_identity* my_id = NULL;
+    identity_list* my_identities = NULL;
+    char* my_user_id = NULL;
+    status = own_identities_retrieve(session, &my_identities);
     
-    sqlite3_reset(session->set_own_key);
+    if (status == PEP_STATUS_OK) {
+        if (my_identities) {
+            if (!(my_identities->ident && my_identities->ident->user_id))
+                return PEP_ILLEGAL_VALUE;
+
+            my_user_id = strdup(my_identities->ident->user_id);
+
+            if (!my_user_id) 
+                return PEP_OUT_OF_MEMORY;
+            
+            // Probably cheaper than all the strcmps if there are many,
+            // plus this avoids the capitalisation and . problems:
+            
+            status = get_identity(session, my_user_id, address, &my_id);
+            
+            if (status == PEP_STATUS_OK && my_id) {
+                if (my_id->fpr && strcasecmp(my_id->fpr, fpr) == 0)) {
+                    // We're done. It was already here.
+                    // FIXME: Do we check trust/revocation/?
+                    goto pep_free;
+                }            
+            }
+            
+            // Otherwise, we see if there's a binding for this user_id/key
+            // in the trust DB
+            
+            // If there's an id w/ user_id + address
+            if (my_id) {
+                free(my_id->fpr);
+                my_id->fpr = my_user_id;
+                my_user_id->comm_type = PEP_ct_pEp;
+            }
+            else { // Else, we need a new identity
+                status = new_identity(session, address, fpr, my_user_id, NULL, &my_id); 
+                if (status != PEP_STATUS_OK)
+                    goto pep_free; 
+                my_user_id->me = true;
+                my_user_id->comm_type = PEP_ct_pEp;
+            }
+        }
+        else {
+            // I think the prerequisite should be that at least one own identity
+            // already in the DB, so REALLY look at this.
+            // status = new_identity(session, address, fpr, "PEP_OWN_USERID", NULL); 
+            // my_user_id->me = true;
+            // my_user_id->comm_type = PEP_ct_pEp;
+            return PEP_CANNOT_FIND_IDENTITY;
+        }
+        
+        status = set_identity(session, my_id);
+    }  
+    
+pep_free:
+    free(my_id);
+    free(my_user_id);
     return status;
 }
 

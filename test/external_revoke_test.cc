@@ -71,6 +71,7 @@ int main() {
     cout << "---------------------------------------------------------" << endl << endl;
 
     cout << "Trusting personal key for " << uniqname << endl;
+    recip1->me = false;
     // Trust it
     status = update_identity(session, recip1);
     status = trust_personal_key(session, recip1);
