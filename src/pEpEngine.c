@@ -174,23 +174,17 @@ static const char *sql_blacklist_retrieve =
                 
 
 // Own keys
-// FIXME: PEP_OWN_USERID
+// We only care if it's 0 or non-zero
 static const char *sql_own_key_is_listed = 
     "select count(*) from ("
-    " select main_key_id from person "
-    "   where main_key_id = upper(replace(?1,' ',''))"
-    "    and id = '" PEP_OWN_USERID "' "
-    " union "
-    "  select main_key_id from identity "
-    "   where main_key_id = upper(replace(?1,' ',''))"
-    "    and user_id = '" PEP_OWN_USERID "' "
-    " union "
-    "  select fpr from own_keys "
-    "   where fpr = upper(replace(?1,' ',''))"
-    " );";
+    "   select fpr from trust"
+    "      join identity on id = identity.user_id"
+    "      where fpr = upper(replace(?1,' ',''))"
+    "           and identity.is_own = 1;"
+    ");";
 
 static const char *sql_own_identities_retrieve =  
-    "select address, fpr, username, "
+    "select address, fpr, username, user_id, "
     "   lang, identity.flags | pgp_keypair.flags"
     "   from identity"
     "   join person on id = identity.user_id"
@@ -200,17 +194,15 @@ static const char *sql_own_identities_retrieve =
     "   where identity.is_own = 1"
     "       and (identity.flags & ?1) = 0;";
 
-// FIXME: PEP_OWN_USERID        
 static const char *sql_own_keys_retrieve =  
-    "select fpr from own_keys"
-    "   natural join identity"
-    "   where (identity.flags & ?1) = 0;";
+    "select fpr from trust"
+    "   join identity on id = identity.user_id"
+    "   where identity.is_own = 1"
 
 // FIXME: PEP_OWN_USERID
 static const char *sql_set_own_key = 
     "insert or replace into own_keys (address, user_id, fpr)"
     " values (?1, '" PEP_OWN_USERID "', upper(replace(?2,' ','')));";
-
 
 // Sequence
 static const char *sql_sequence_value1 = 
