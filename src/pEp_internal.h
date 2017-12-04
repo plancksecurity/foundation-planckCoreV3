@@ -153,7 +153,7 @@ struct _pEpSession {
     sqlite3_stmt *own_identities_retrieve;
     sqlite3_stmt *own_userid_by_address;
     sqlite3_stmt *own_keys_retrieve;
-    sqlite3_stmt *set_own_key;
+//    sqlite3_stmt *set_own_key;
 
     // sequence value
     sqlite3_stmt *sequence_value1;

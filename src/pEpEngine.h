@@ -601,6 +601,27 @@ DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
     );
 
+// get_own_userid() - get the user_id of the own user
+//
+//    parameters:
+//        session (in)        session handle
+//        userid  (out)       own user id (if it exists)
+//
+//    return value:
+//        PEP_STATUS_OK = 0             userid was found
+//        PEP_CANNOT_FIND_IDENTITY      no own_user found in the DB
+//        PEP_UNKNOWN_ERROR             results were returned, but no ID
+//                                      found (no reason this should ever occur)
+//    caveat:
+//        userid will be NULL if not found; otherwise, returned string
+//        belongs to the caller.
+
+DYNAMIC_API PEP_STATUS get_own_userid(
+        PEP_SESSION session, 
+        char** userid
+    );
+
+
 // set_device_group() - update own person's device group
 //
 //    parameters:

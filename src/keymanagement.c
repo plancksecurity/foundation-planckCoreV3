@@ -104,13 +104,18 @@ DYNAMIC_API PEP_STATUS update_identity(
 
     if (_no_user_id)
     {
-        status = get_identity(session, identity->address, PEP_OWN_USERID,
-                &stored_identity);
-        if (status == PEP_STATUS_OK) {
-            free_identity(stored_identity);
-            return _myself(session, identity, false, true);
+        char* own_id = NULL;
+        status = get_own_userid(session, &own_id);
+        if (status == PEP_STATUS_OK && own_id) {
+            status = get_identity(session, identity->address, own_id,
+                    &stored_identity);
+            if (status == PEP_STATUS_OK) {
+                free_identity(stored_identity);
+                identity->user_id = own_id;
+                return _myself(session, identity, false, true);
+            }
         }
-
+        
         free(identity->user_id);
 
         identity->user_id = calloc(1, strlen(identity->address) + 6);
@@ -120,6 +125,7 @@ DYNAMIC_API PEP_STATUS update_identity(
         }
         snprintf(identity->user_id, strlen(identity->address) + 6,
                  "TOFU_%s", identity->address);
+        }
     }
  
     status = get_identity(session,
@@ -429,12 +435,15 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     assert(identity);
     assert(!EMPTYSTR(identity->address));
 
+    char* own_id = NULL;
+    status = get_own_userid(session, &own_id);
+
     assert(EMPTYSTR(identity->user_id) ||
-           strcmp(identity->user_id, PEP_OWN_USERID) == 0);
+           (own_id && strcmp(identity->user_id, own_id) == 0));
 
     if (!(session && identity && !EMPTYSTR(identity->address) &&
             (EMPTYSTR(identity->user_id) ||
-            strcmp(identity->user_id, PEP_OWN_USERID) == 0)))
+            (own_id && strcmp(identity->user_id, own_id) == 0)))
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     identity->comm_type = PEP_ct_pEp;
@@ -445,7 +454,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     if (EMPTYSTR(identity->user_id))
     {
         free(identity->user_id);
-        identity->user_id = strdup(PEP_OWN_USERID);
+        identity->user_id = (own_id ? own_id : strdup(PEP_OWN_USERID));
         assert(identity->user_id);
         if (identity->user_id == NULL)
             return PEP_OUT_OF_MEMORY;
