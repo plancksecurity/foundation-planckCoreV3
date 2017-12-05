@@ -1230,9 +1230,11 @@ DYNAMIC_API PEP_STATUS get_own_userid(
     sqlite3_reset(session->get_own_userid);
 
     const int result = sqlite3_step(session->get_own_userid);
+    const char* id;
+    
     switch (result) {
         case SQLITE_ROW:
-            const char* id = (const char *) sqlite3_column_text(session->get_own_userid, 0);
+            id = (const char *) sqlite3_column_text(session->get_own_userid, 0);
             if (!id) {
                 // Shouldn't happen.
                 status = PEP_UNKNOWN_ERROR;
@@ -1246,7 +1248,7 @@ DYNAMIC_API PEP_STATUS get_own_userid(
         default:
             // Technically true, given how we find it, but FIXME we need a more descriptive error
             status = PEP_CANNOT_FIND_IDENTITY;
-            *identity = NULL;
+            *userid = NULL;
     }
 
     *userid = retval;
@@ -1533,7 +1535,7 @@ DYNAMIC_API PEP_STATUS get_device_group(PEP_SESSION session, char **group_name)
 
     // 1. Get own user_id
     char* user_id = NULL;
-    PEP_STATUS status = get_own_userid(session, &user_id);
+    status = get_own_userid(session, &user_id);
     
     // No user_id is returned in this case, no need to free;
     if (status != PEP_STATUS_OK)

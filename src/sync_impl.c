@@ -631,11 +631,13 @@ PEP_STATUS receive_DeviceState_msg(
                             if (status != PEP_STATUS_OK)
                                 goto free_all;
                             
+                            pEp_identity* _from = NULL;
+                            
                             if (own_id) {    
-                                pEp_identity *_from = new_identity(NULL, 
-                                                                   keylist->value,
-                                                                   own_id,
-                                                                   NULL);
+                                _from = new_identity(NULL, 
+                                                     keylist->value,
+                                                     own_id,
+                                                     NULL);
                             }
                             else {
                                 status = own_id_status;

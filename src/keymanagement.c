@@ -125,7 +125,6 @@ DYNAMIC_API PEP_STATUS update_identity(
         }
         snprintf(identity->user_id, strlen(identity->address) + 6,
                  "TOFU_%s", identity->address);
-        }
     }
  
     status = get_identity(session,
@@ -443,7 +442,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
 
     if (!(session && identity && !EMPTYSTR(identity->address) &&
             (EMPTYSTR(identity->user_id) ||
-            (own_id && strcmp(identity->user_id, own_id) == 0)))
+            (own_id && strcmp(identity->user_id, own_id) == 0))))
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     identity->comm_type = PEP_ct_pEp;
@@ -1078,7 +1077,7 @@ DYNAMIC_API PEP_STATUS set_own_key(
             status = get_identity(session, my_user_id, address, &my_id);
             
             if (status == PEP_STATUS_OK && my_id) {
-                if (my_id->fpr && strcasecmp(my_id->fpr, fpr) == 0)) {
+                if (my_id->fpr && strcasecmp(my_id->fpr, fpr) == 0) {
                     // We're done. It was already here.
                     // FIXME: Do we check trust/revocation/?
                     goto pep_free;
@@ -1092,22 +1091,20 @@ DYNAMIC_API PEP_STATUS set_own_key(
             if (my_id) {
                 free(my_id->fpr);
                 my_id->fpr = my_user_id;
-                my_user_id->comm_type = PEP_ct_pEp;
+                my_id->comm_type = PEP_ct_pEp;
+                my_id->me = true; // just in case? 
             }
             else { // Else, we need a new identity
-                status = new_identity(session, address, fpr, my_user_id, NULL, &my_id); 
+                my_id = new_identity(address, fpr, my_user_id, NULL); 
                 if (status != PEP_STATUS_OK)
                     goto pep_free; 
-                my_user_id->me = true;
-                my_user_id->comm_type = PEP_ct_pEp;
+                my_id->me = true;
+                my_id->comm_type = PEP_ct_pEp;
             }
         }
         else {
             // I think the prerequisite should be that at least one own identity
             // already in the DB, so REALLY look at this.
-            // status = new_identity(session, address, fpr, "PEP_OWN_USERID", NULL); 
-            // my_user_id->me = true;
-            // my_user_id->comm_type = PEP_ct_pEp;
             return PEP_CANNOT_FIND_IDENTITY;
         }
         

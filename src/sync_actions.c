@@ -58,10 +58,10 @@ int keyElectionWon(PEP_SESSION session, Identity partner)
     Identity me = NULL;
     
     char* own_id = NULL;
-    status = get_own_userid(session, &own_id);
+    PEP_STATUS status = get_own_userid(session, &own_id);
     if (own_id) {
-        PEP_STATUS status = get_identity(session, partner->address, own_id,
-                &me);
+        status = get_identity(session, partner->address, own_id,
+                              &me);
         free(own_id);
     }
     if (status == PEP_OUT_OF_MEMORY)
@@ -277,7 +277,8 @@ PEP_STATUS _storeGroupKeys(
         if (status != PEP_STATUS_OK)
             break;
     }
-
+    
+    free(own_id);
     return status;
 }
     
