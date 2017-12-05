@@ -177,14 +177,14 @@ static const char *sql_blacklist_retrieve =
 // We only care if it's 0 or non-zero
 static const char *sql_own_key_is_listed = 
     "select count(*) from ("
-    "   select fpr from trust"
-    "      join identity on id = identity.user_id"
-    "      where fpr = upper(replace(?1,' ',''))"
-    "           and identity.is_own = 1;"
+    "   select pgp_keypair_fpr from trust"
+    "      join identity on trust.user_id = identity.user_id"
+    "      where pgp_keypair_fpr = upper(replace(?1,' ',''))"
+    "           and identity.is_own = 1"
     ");";
 
 static const char *sql_own_identities_retrieve =  
-    "select address, fpr, username, user_id, "
+    "select address, fpr, username, identity.user_id, "
     "   lang, identity.flags | pgp_keypair.flags"
     "   from identity"
     "   join person on id = identity.user_id"
@@ -194,13 +194,13 @@ static const char *sql_own_identities_retrieve =
     "   where identity.is_own = 1"
     "       and (identity.flags & ?1) = 0;";
 
-static const char *sql_own_keys_retrieve =  
-    "select fpr from trust"
-    "   join identity on id = identity.user_id"
+static const char *sql_own_keys_retrieve = 
+    "select pgp_keypair_fpr from trust"
+    "   join identity on trust.user_id = identity.user_id"
     "   where identity.is_own = 1";
 
 static const char* sql_get_own_userid =
-    "select user_id from person"
+    "select id from person"
     "   join identity on id = identity.user_id"
     "   where identity.is_own = 1";
 
@@ -413,8 +413,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "       references pgp_keypair (fpr)\n"
                 "       on delete set null,\n"
                 "   comment text,\n"
-                "   flags integer default 0,"
-                "   is_own integer default 0,"
+                "   flags integer default 0,\n"
+                "   is_own integer default 0,\n"
                 "   primary key (address, user_id)\n"
                 ");\n"
                 "create table if not exists trust (\n"

@@ -438,11 +438,13 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     status = get_own_userid(session, &own_id);
 
     assert(EMPTYSTR(identity->user_id) ||
-           (own_id && strcmp(identity->user_id, own_id) == 0));
+           (own_id && strcmp(identity->user_id, own_id) == 0) ||
+           !own_id);
 
     if (!(session && identity && !EMPTYSTR(identity->address) &&
             (EMPTYSTR(identity->user_id) ||
-            (own_id && strcmp(identity->user_id, own_id) == 0))))
+            (own_id && strcmp(identity->user_id, own_id) == 0) ||
+             !own_id)))
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     identity->comm_type = PEP_ct_pEp;
