@@ -6,10 +6,9 @@ See CC_BY-SA.txt -->
 # Build instructions for macOS Sierra
 
 # Installing packaged dependencies
+You will find instructions for using either Macports or Homebrew below to install the compile-time dependencies.
 
 ## MacPorts
-
-MacPorts is needed to install some compile-time dependencies.
 Install MacPorts according to the instructions found [here](https://www.macports.org/install.php).
 Ensure that Macports' binary paths (`/opt/local/bin` and `/opt/local/sbin`) are in your `PATH` environment variable.
 
@@ -32,8 +31,38 @@ Ensure that `python` is Python 2.7:
 sudo port select python python27
 ~~~
 
+## Homebrew
+Install Homebrew according to the instructions found [here](https://docs.brew.sh/Installation.html).
+Ensure that Homebrew's binary path (`/usr/local/bin`) is in your `PATH` environment variable.
+
+~~~
+# general
+brew install mercurial
+# YML2
+# If you don't have pip with your Python 2 distribution, you can install it with brew
+brew install python
+pip2 install --user lxml
+# libetpan
+brew install git autoconf automake libtool
+# asn1c
+brew install asn1c
+# engine
+brew install gpgme
+~~~
+
 # Installing unpackaged dependencies
 ## YML2
+To check if lxml is properly installed, you can use this lxml "hello world" command:
+
+~~~
+python2 -c 'from lxml import etree; root = etree.Element("root"); print(root.tag)'
+~~~
+
+It should generate the following output:
+
+~~~
+root
+~~~
 
 ~~~
 mkdir -p ~/code/yml2
