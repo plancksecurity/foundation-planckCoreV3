@@ -248,6 +248,56 @@ static int user_version(void *_version, int count, char **text, char **name)
     return 0;
 }
 
+static int table_contains_column(PEP_SESSION session, const char* table_name,
+                                                      const char* col_name) {
+
+
+    if (!session || !table_name || !col_name)
+        return -1;
+        
+    // Table names can't be SQL parameters, so we do it this way.
+    
+    // these two must be the same number.
+    char sql_buf[500];
+    const size_t max_q_len = 500;
+    
+    size_t t_size, c_size, q_size;
+    
+    const char* q1 = "SELECT "; // 7
+    const char* q2 = " from "; // 6
+    const char* q3 = ";";       // 1
+    
+    q_size = 14;
+    t_size = strlen(table_name);
+    c_size = strlen(col_name);
+    
+    size_t query_len = q_size + c_size + t_size + 1;
+    
+    if (query_len > max_q_len)
+        return -1;
+
+    strlcpy(sql_buf, q1, max_q_len);
+    strlcat(sql_buf, col_name, max_q_len);
+    strlcat(sql_buf, q2, max_q_len);
+    strlcat(sql_buf, table_name, max_q_len);
+    strlcat(sql_buf, q3, max_q_len);
+
+    sqlite3_stmt *stmt; 
+
+    sqlite3_prepare_v2(session->db, sql_buf, -1, &stmt, NULL);
+
+    int retval = 0;
+
+    int rc = sqlite3_step(stmt);  
+    if (rc == SQLITE_DONE || rc == SQLITE_OK || rc == SQLITE_ROW) {
+        retval = 1;
+    }
+
+    sqlite3_finalize(stmt);      
+        
+    return retval;
+}
+
 DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -476,6 +526,48 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             NULL,
             NULL);
         assert(int_result == SQLITE_OK);
+        
+        // Sometimes the user_version wasn't set correctly. Check to see if this
+        // is really necessary...
+        if (version == 1) {
+            bool version_changed = true;
+            
+            if (table_contains_column(_session, "identity", "is_own") > 0) {
+                version = 6;
+            }
+            else if (table_contains_column(_session, "sequences", "own") > 0) {
+                version = 3;
+            }
+            else if (table_contains_column(_session, "pgp_keypair", "flags") > 0) {
+                version = 2;
+            }
+            else {
+                version_changed = false;
+            }
+            
+            if (version_changed) {
+                // set it in the DB, finally. Yeesh.
+                char verbuf[21]; // enough digits for a max-sized 64 bit int, cmon. 
+                sprintf(verbuf,"%d",version);
+                
+                size_t query_size = strlen(verbuf) + 25;
+                char* query = calloc(query_size, 1);
+                
+                strlcpy(query, "pragma user_version = ", query_size);
+                strlcat(query, verbuf, query_size);
+                strlcat(query, ";", query_size);
+                
+                int_result = sqlite3_exec(
+                    _session->db,
+                    query,
+                    user_version,
+                    &version,
+                    NULL
+                );
+                free(query);
+            }
+        }
+
 
         if(version != 0) { 
             // Version has been already set
@@ -496,7 +588,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             //     );
             //     assert(int_result == SQLITE_OK);
             // }
-
+            
             if (version < 2) {
                 int_result = sqlite3_exec(
                     _session->db,
@@ -551,7 +643,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                     NULL,
                     NULL
                 );
-                assert(int_result = SQLITE_OK);                
+                assert(int_result == SQLITE_OK);                
                 int_result = sqlite3_exec(
                     _session->db,
                     "update identity\n"
@@ -561,7 +653,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                     NULL,
                     NULL
                 );
-                assert(int_result = SQLITE_OK);                
+                assert(int_result == SQLITE_OK);                
             }
         }
         else { 
