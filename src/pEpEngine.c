@@ -47,7 +47,6 @@ static const char *sql_trustword =
     "select id, word from wordlist where lang = lower(?1) "
     "and id = ?2 ;";
 
-
 static const char *sql_get_identity =  
     "select fpr, username, comm_type, lang,"
     "   identity.flags | pgp_keypair.flags,"
@@ -57,6 +56,18 @@ static const char *sql_get_identity =
     "   join pgp_keypair on fpr = identity.main_key_id"
     "   join trust on id = trust.user_id"
     "       and pgp_keypair_fpr = identity.main_key_id"    
+    "   where (case when (address = ?1) then (1)"
+    "               when (lower(address) = lower(?1)) then (1)"
+    "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1)"
+    "               else 0"
+    "          end) = 1"
+    "   and identity.user_id = ?2;";
+
+static const char *sql_get_identity_without_fpr =  
+    "select main_key_id, username, comm_type, lang,"
+    "   identity.flags, is_own"
+    "   from identity"
+    "   join person on id = identity.user_id"
     "   where (case when (address = ?1) then (1)"
     "               when (lower(address) = lower(?1)) then (1)"
     "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1)"
@@ -692,6 +703,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_get_identity), &_session->get_identity, NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_identity_without_fpr,
+            (int)strlen(sql_get_identity_without_fpr), 
+            &_session->get_identity_without_fpr, NULL);
+    assert(int_result == SQLITE_OK);
+
     int_result = sqlite3_prepare_v2(_session->db, sql_get_own_userid,
             (int)strlen(sql_get_own_userid), &_session->get_own_userid, NULL);
     assert(int_result == SQLITE_OK);
@@ -937,6 +953,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->trustword);
             if (session->get_identity)
                 sqlite3_finalize(session->get_identity);
+            if (session->get_identity_without_fpr)
+                sqlite3_finalize(session->get_identity_without_fpr);    
             if (session->get_own_userid)
                 sqlite3_finalize(session->get_own_userid);
             if (session->replace_identities_fpr)
@@ -1350,11 +1368,13 @@ DYNAMIC_API PEP_STATUS get_own_userid(
     return status;
 }
 
-DYNAMIC_API PEP_STATUS get_identity(
+
+static PEP_STATUS _get_identity_internal(
         PEP_SESSION session,
         const char *address,
         const char *user_id,
-        pEp_identity **identity
+        pEp_identity **identity,
+        sqlite3_stmt* get_id_stmt
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1370,27 +1390,27 @@ DYNAMIC_API PEP_STATUS get_identity(
 
     *identity = NULL;
 
-    sqlite3_reset(session->get_identity);
-    sqlite3_bind_text(session->get_identity, 1, address, -1, SQLITE_STATIC);
-    sqlite3_bind_text(session->get_identity, 2, user_id, -1, SQLITE_STATIC);
+    sqlite3_reset(get_id_stmt);
+    sqlite3_bind_text(get_id_stmt, 1, address, -1, SQLITE_STATIC);
+    sqlite3_bind_text(get_id_stmt, 2, user_id, -1, SQLITE_STATIC);
 
-    const int result = sqlite3_step(session->get_identity);
+    const int result = sqlite3_step(get_id_stmt);
     switch (result) {
     case SQLITE_ROW:
         _identity = new_identity(
                 address,
-                (const char *) sqlite3_column_text(session->get_identity, 0),
+                (const char *) sqlite3_column_text(get_id_stmt, 0),
                 user_id,
-                (const char *) sqlite3_column_text(session->get_identity, 1)
+                (const char *) sqlite3_column_text(get_id_stmt, 1)
                 );
         assert(_identity);
         if (_identity == NULL)
             return PEP_OUT_OF_MEMORY;
 
         _identity->comm_type = (PEP_comm_type)
-            sqlite3_column_int(session->get_identity, 2);
+            sqlite3_column_int(get_id_stmt, 2);
         const char* const _lang = (const char *)
-            sqlite3_column_text(session->get_identity, 3);
+            sqlite3_column_text(get_id_stmt, 3);
         if (_lang && _lang[0]) {
             assert(_lang[0] >= 'a' && _lang[0] <= 'z');
             assert(_lang[1] >= 'a' && _lang[1] <= 'z');
@@ -1400,9 +1420,9 @@ DYNAMIC_API PEP_STATUS get_identity(
             _identity->lang[2] = 0;
         }
         _identity->flags = (unsigned int)
-            sqlite3_column_int(session->get_identity, 4);
+            sqlite3_column_int(get_id_stmt, 4);
         _identity->me = (unsigned int)
-            sqlite3_column_int(session->get_identity, 5);
+            sqlite3_column_int(get_id_stmt, 5);
     
         *identity = _identity;
         break;
@@ -1411,9 +1431,32 @@ DYNAMIC_API PEP_STATUS get_identity(
         *identity = NULL;
     }
 
-    sqlite3_reset(session->get_identity);
+    sqlite3_reset(get_id_stmt);
     return status;
 }
+
+DYNAMIC_API PEP_STATUS get_identity(
+        PEP_SESSION session,
+        const char *address,
+        const char *user_id,
+        pEp_identity **identity
+    )
+{
+    return _get_identity_internal(session, address, user_id, identity,
+                                  session->get_identity);
+}
+
+PEP_STATUS get_identity_without_fpr(
+        PEP_SESSION session,
+        const char *address,
+        const char *user_id,
+        pEp_identity **identity
+    )
+{
+    return _get_identity_internal(session, address, user_id, identity,
+                                  session->get_identity_without_fpr);
+}
+
 
 DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity

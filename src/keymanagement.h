@@ -34,6 +34,8 @@ DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
     );
 
+DYNAMIC_API PEP_STATUS initialise_own_identities(PEP_SESSION session,
+                                                 identity_list* my_idents);
 
 // myself() - ensures that an own identity is complete
 //

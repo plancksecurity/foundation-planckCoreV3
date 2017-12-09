@@ -1149,6 +1149,16 @@ DYNAMIC_API const char* get_engine_version();
 
 DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session);
 
+// This is used internally when there is a temporary identity to be retrieved
+// that may not yet have an FPR attached. See get_identity() for functionality,
+// params and caveats.
+PEP_STATUS get_identity_without_fpr(
+        PEP_SESSION session,
+        const char *address,
+        const char *user_id,
+        pEp_identity **identity
+    );
+    
 #ifdef __cplusplus
 }
 #endif

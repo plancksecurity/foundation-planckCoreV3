@@ -437,6 +437,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     char* own_id = NULL;
     status = get_own_userid(session, &own_id);
 
+
     assert(EMPTYSTR(identity->user_id) ||
            (own_id && strcmp(identity->user_id, own_id) == 0) ||
            !own_id);
@@ -447,6 +448,11 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
              !own_id)))
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
+    if (!own_id) {
+        // check to see if we have ANY identity for this address... could have
+        // happened due to race condition
+    }
+    
     identity->comm_type = PEP_ct_pEp;
     identity->me = true;
     if(ignore_flags)
@@ -633,6 +639,45 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     }
 
     return ADD_TO_LOG(PEP_STATUS_OK);
+}
+
+DYNAMIC_API PEP_STATUS initialise_own_identities(PEP_SESSION session,
+                                                 identity_list* my_idents) {
+    PEP_STATUS status = PEP_STATUS_OK;
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+        
+    char* stored_own_userid = NULL;
+    get_own_userid(session, &stored_own_userid);
+    
+    identity_list* ident_curr = my_idents;
+    while (ident_curr) {
+        pEp_identity* ident = ident_curr->ident;
+        if (!ident)
+            return PEP_ILLEGAL_VALUE;
+            
+        if (stored_own_userid) {
+            if (!ident->user_id) 
+                ident->user_id = strdup(stored_own_userid);
+            else if (strcmp(stored_own_userid, ident->user_id) != 0)
+                return PEP_ILLEGAL_VALUE;
+        }
+        else if (!ident->user_id) {
+            stored_own_userid = PEP_OWN_USERID;
+            ident->user_id = strdup(PEP_OWN_USERID);
+        }
+        
+        ident->me = true; // Just in case.
+        
+        // Ok, do it...
+        status = set_identity(session, ident);
+        if (status != PEP_STATUS_OK)
+            return status;
+        
+        ident_curr = ident_curr->next;
+    }
+    
+    return status;
 }
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
