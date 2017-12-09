@@ -470,7 +470,6 @@ typedef enum _identity_flags {
     // the first octet flags are app defined settings
     PEP_idf_not_for_sync = 0x0001,   // don't use this identity for sync
     PEP_idf_list = 0x0002,           // identity of list of persons
-
     // the second octet flags are calculated
     PEP_idf_devicegroup = 0x0100     // identity of a device group member
 } identity_flags;
@@ -601,6 +600,27 @@ PEP_STATUS replace_identities_fpr(PEP_SESSION session,
 DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
     );
+
+// get_own_userid() - get the user_id of the own user
+//
+//    parameters:
+//        session (in)        session handle
+//        userid  (out)       own user id (if it exists)
+//
+//    return value:
+//        PEP_STATUS_OK = 0             userid was found
+//        PEP_CANNOT_FIND_IDENTITY      no own_user found in the DB
+//        PEP_UNKNOWN_ERROR             results were returned, but no ID
+//                                      found (no reason this should ever occur)
+//    caveat:
+//        userid will be NULL if not found; otherwise, returned string
+//        belongs to the caller.
+
+DYNAMIC_API PEP_STATUS get_own_userid(
+        PEP_SESSION session, 
+        char** userid
+    );
+
 
 // set_device_group() - update own person's device group
 //
@@ -1129,6 +1149,16 @@ DYNAMIC_API const char* get_engine_version();
 
 DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session);
 
+// This is used internally when there is a temporary identity to be retrieved
+// that may not yet have an FPR attached. See get_identity() for functionality,
+// params and caveats.
+PEP_STATUS get_identity_without_fpr(
+        PEP_SESSION session,
+        const char *address,
+        const char *user_id,
+        pEp_identity **identity
+    );
+    
 #ifdef __cplusplus
 }
 #endif

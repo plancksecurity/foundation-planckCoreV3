@@ -275,16 +275,25 @@ PEP_STATUS receive_sync_msg(
     // partner identity must be explicitely added DB to later
     // be able to communicate securely with it.
     if(partner){
+        
+        char* own_id = NULL;
+        status = get_own_userid(session, &own_id);
+        
+        if (!own_id)
+            own_id = strdup(PEP_OWN_USERID);
+            
         // protect virtual user IDs 
         if((strncmp("TOFU_", partner->user_id, 6) == 0 &&
            strlen(partner->user_id) == strlen(partner->address) + 6 &&
            strcmp(partner->user_id + 6, partner->address)) ||
         // protect own ID 
-           (strcmp(PEP_OWN_USERID, partner->user_id) == 0)){
+           (strcmp(own_id, partner->user_id) == 0)){
             status = PEP_SYNC_ILLEGAL_MESSAGE;
+            free(own_id);
             goto error;
         }
 
+        free(own_id);
         // partner IDs are UUIDs bound to session lifespan
         // and therefore partner identities are not supposed
         // to mutate over time, but just not be used anymore.
@@ -426,6 +435,9 @@ PEP_STATUS receive_DeviceState_msg(
     bool discard = false;
     bool force_keep_msg = false;
 
+    char* own_id = NULL;
+    PEP_STATUS own_id_status = get_own_userid(session, &own_id);
+
     for (bloblist_t *bl = src->attachments; bl && bl->value; bl = bl->next) {
         if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp.sync") == 0
                 && bl->size) {
@@ -451,11 +463,18 @@ PEP_STATUS receive_DeviceState_msg(
                             msg->header.me.address->size);
 
                 if(null_terminated_address){
-                    status = get_identity(session, 
-                                          null_terminated_address, 
-                                          PEP_OWN_USERID, 
-                                          &check_me);
-                    free(null_terminated_address);
+                    
+                    if (own_id) {                        
+                        status = get_identity(session, 
+                                              null_terminated_address, 
+                                              own_id, 
+                                              &check_me);
+                        free(null_terminated_address);
+
+                    }
+                    else {
+                        status = own_id_status;
+                    }
                 } 
                 else
                     status = PEP_OUT_OF_MEMORY;
@@ -608,10 +627,23 @@ PEP_STATUS receive_DeviceState_msg(
                             // GroupUpdate and UpdateRequests come from group.
                             // check trust relation in between signer key and 
                             // own id to be sure.
-                            pEp_identity *_from = new_identity(NULL, 
-                                                               keylist->value,
-                                                               PEP_OWN_USERID,
-                                                               NULL);
+                            
+                            if (status != PEP_STATUS_OK)
+                                goto free_all;
+                            
+                            pEp_identity* _from = NULL;
+                            
+                            if (own_id) {    
+                                _from = new_identity(NULL, 
+                                                     keylist->value,
+                                                     own_id,
+                                                     NULL);
+                            }
+                            else {
+                                status = own_id_status;
+                                goto free_all;
+                            }
+                            
                             if (_from == NULL){
                                 status = PEP_OUT_OF_MEMORY;
                                 goto free_all;
@@ -658,7 +690,7 @@ PEP_STATUS receive_DeviceState_msg(
                 ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
             free_userid:
                 free(user_id);
-
+                free(own_id);
                 if (status != PEP_STATUS_OK)
                     return status;
             }
@@ -765,10 +797,15 @@ PEP_STATUS unicast_msg(
         goto error;
     }
 
+    char* own_id = NULL;
+    status = get_own_userid(session, &own_id);
+    if (status != PEP_STATUS_OK)
+        goto error;
+
     msg->header.version.major = SYNC_VERSION_MAJOR;
     msg->header.version.minor = SYNC_VERSION_MINOR;
 
-    status = get_identity(session, partner->address, PEP_OWN_USERID, &me);
+    status = get_identity(session, partner->address, own_id, &me);
     if (status != PEP_STATUS_OK)
         goto error;
     
@@ -889,6 +926,7 @@ error:
     free(payload);
     free_message(_message);
     free_identity(me);
+    free(own_id);
     return status;
 }
 

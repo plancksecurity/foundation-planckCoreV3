@@ -34,13 +34,19 @@ DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
     );
 
+DYNAMIC_API PEP_STATUS initialise_own_identities(PEP_SESSION session,
+                                                 identity_list* my_idents);
 
-// myself() - ensures that the own identity is being complete
+// myself() - ensures that an own identity is complete
 //
 //  parameters:
 //      session (in)        session to use
 //      identity (inout)    identity of local user
-//                          at least .address, .username, .user_id must be set
+//                          at least .address must be set.
+//                          if no .user_id is set, AND the DB doesn't contain
+//                          a user_id, PEP_OWN_USERID will be used.
+//                          if no .username is set and none is in the DB,
+//                          username will be set to "Anonymous"
 //
 //  return value:
 //      PEP_STATUS_OK if identity could be completed or was already complete,

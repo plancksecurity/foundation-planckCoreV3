@@ -124,6 +124,7 @@ struct _pEpSession {
     sqlite3_stmt *log;
     sqlite3_stmt *trustword;
     sqlite3_stmt *get_identity;
+    sqlite3_stmt *get_identity_without_fpr;    
     sqlite3_stmt *replace_identities_fpr;
     sqlite3_stmt *set_person;
     sqlite3_stmt *set_device_group;
@@ -151,9 +152,10 @@ struct _pEpSession {
     // Own keys
     sqlite3_stmt *own_key_is_listed;
     sqlite3_stmt *own_identities_retrieve;
-    sqlite3_stmt *own_userid_by_address;
     sqlite3_stmt *own_keys_retrieve;
-    sqlite3_stmt *set_own_key;
+    sqlite3_stmt *get_own_userid;
+
+//    sqlite3_stmt *set_own_key;
 
     // sequence value
     sqlite3_stmt *sequence_value1;

@@ -56,8 +56,14 @@ int keyElectionWon(PEP_SESSION session, Identity partner)
     // key created first wins
 
     Identity me = NULL;
-    PEP_STATUS status = get_identity(session, partner->address, PEP_OWN_USERID,
-            &me);
+    
+    char* own_id = NULL;
+    PEP_STATUS status = get_own_userid(session, &own_id);
+    if (own_id) {
+        status = get_identity(session, partner->address, own_id,
+                              &me);
+        free(own_id);
+    }
     if (status == PEP_OUT_OF_MEMORY)
         return invalid_out_of_memory;
     if (status != PEP_STATUS_OK)
@@ -142,9 +148,15 @@ PEP_STATUS _notifyHandshake(
     if (!session->notifyHandshake)
         return PEP_SYNC_NO_NOTIFY_CALLBACK;
 
+    char* own_id = NULL;
+    status = get_own_userid(session, &own_id);
+        
     // notifyHandshake take ownership of given identities
     pEp_identity *me = NULL;
-    status = get_identity(session, partner->address, PEP_OWN_USERID, &me);
+    if (own_id) {
+        status = get_identity(session, partner->address, own_id, &me);
+        free(own_id);
+    }
     if (status != PEP_STATUS_OK)
         goto error;
     
@@ -235,16 +247,23 @@ PEP_STATUS _storeGroupKeys(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-
+    
+    char* own_id = NULL;
+    status = get_own_userid(session, &own_id);
+    
+    // FIXME: Is this where and what we wanna do with this?
+    if (status != PEP_STATUS_OK)
+        return status;
+        
     for (identity_list *il = group_keys; il && il->ident; il = il->next) {
 
-        if (strcmp(il->ident->user_id, PEP_OWN_USERID)!=0) {
+        if (strcmp(il->ident->user_id, own_id)!=0) {
             assert(0);
             continue;
         }
         // Check that identity isn't excluded from sync.
         pEp_identity *stored_identity = NULL;
-        status = get_identity(session, il->ident->address, PEP_OWN_USERID,
+        status = get_identity(session, il->ident->address, own_id,
                 &stored_identity);
         if (status == PEP_STATUS_OK) {
             if(stored_identity->flags & PEP_idf_not_for_sync){
@@ -258,7 +277,8 @@ PEP_STATUS _storeGroupKeys(
         if (status != PEP_STATUS_OK)
             break;
     }
-
+    
+    free(own_id);
     return status;
 }
     
