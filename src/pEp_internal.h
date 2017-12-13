@@ -124,7 +124,6 @@ struct _pEpSession {
     sqlite3_stmt *log;
     sqlite3_stmt *trustword;
     sqlite3_stmt *get_identity;
-    sqlite3_stmt *get_identity_without_fpr;    
     sqlite3_stmt *replace_identities_fpr;
     sqlite3_stmt *set_person;
     sqlite3_stmt *set_device_group;
@@ -153,6 +152,8 @@ struct _pEpSession {
     sqlite3_stmt *own_key_is_listed;
     sqlite3_stmt *own_identities_retrieve;
     sqlite3_stmt *own_keys_retrieve;
+    sqlite3_stmt *get_user_default_key;
+        
     sqlite3_stmt *get_own_userid;
 
 //    sqlite3_stmt *set_own_key;
@@ -341,13 +342,6 @@ static inline int _same_fpr(
     _compare_fprs(fpra, fpras, fprb, fprbs, &comparison);
 
     return comparison == 0;
-}
-
-static inline bool _identity_me(
-        pEp_identity * identity
-    )
-{
-    return identity->me || (identity->user_id && strcmp(identity->user_id, PEP_OWN_USERID) == 0);
 }
 
 // size is the length of the bytestr that's coming in. This is really only intended

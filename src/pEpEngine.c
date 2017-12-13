@@ -210,6 +210,10 @@ static const char *sql_own_keys_retrieve =
     "   join identity on trust.user_id = identity.user_id"
     "   where identity.is_own = 1";
 
+static const char* sql_get_user_default_key =
+    "select main_key_id from person" 
+    "   where id = ?1;";
+
 static const char* sql_get_own_userid =
     "select id from person"
     "   join identity on id = identity.user_id"
@@ -708,6 +712,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             &_session->get_identity_without_fpr, NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_user_default_key,
+            (int)strlen(sql_get_user_default_key), &_session->get_user_default_key, NULL);
+    assert(int_result == SQLITE_OK);
+
     int_result = sqlite3_prepare_v2(_session->db, sql_get_own_userid,
             (int)strlen(sql_get_own_userid), &_session->get_own_userid, NULL);
     assert(int_result == SQLITE_OK);
@@ -955,6 +963,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->get_identity);
             if (session->get_identity_without_fpr)
                 sqlite3_finalize(session->get_identity_without_fpr);    
+            if (session->get_user_default_key)
+                sqlite3_finalize(session->get_user_default_key);    
             if (session->get_own_userid)
                 sqlite3_finalize(session->get_own_userid);
             if (session->replace_identities_fpr)
