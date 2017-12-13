@@ -29,13 +29,13 @@ LOCAL_CFLAGS    += -std=c99
 #
 LOCAL_CFLAGS    += -DSQLITE_TEMP_STORE=3
 
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../src \
-                    $(LOCAL_PATH)/../../asn.1 \
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../asn.1 \
                     $(GPGME_INCLUDE_PATH) \
                     $(LIBETPAN_PATH)/include
 LOCAL_C_INCLUDES += $(GPGBUILD)/include
 
-LOCAL_EXPORT_C_INCLUDES += $(LOCAL_PATH)/../../src
+$(shell sh $(LOCAL_PATH)/../takeOutHeaderFiles.sh $(LOCAL_PATH)../../)
+LOCAL_EXPORT_C_INCLUDES += $(LOCAL_PATH)../include
 
 ENGINE_SRC_FILES := $(shell find $(LOCAL_PATH)/../../src/ ! -name "*netpgp*" -name "*.c")
 #ENGINE_SRC_FILES := $(wildcard $(LOCAL_PATH)/../../src/*.c)
