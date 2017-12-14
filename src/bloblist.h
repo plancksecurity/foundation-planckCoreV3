@@ -17,7 +17,8 @@ typedef enum {
 } content_disposition_type;
 
 typedef struct _bloblist_t {
-    char *value_ref;                // blob
+    char *value_ref;                // read-only reference to blob
+    char *value;                    // blob (IF owned by engine)
     size_t size;                    // size of blob
     char *mime_type;                // UTF-8 string of MIME type of blob or
                                     // NULL if unknown
@@ -41,8 +42,12 @@ typedef struct _bloblist_t {
 //      pointer to new bloblist_t or NULL if out of memory
 //
 //  caveat:
-//      the ownership of the blob goes to the bloblist; mime_type and filename
+//      the ownership of the blob STAYS WITH THE CALLER; mime_type and filename
 //      are being copied, the originals remain in the ownership of the caller
+//      If the engine needs to create a bloblist, it needs to call
+//      new_own_bloblist (which is also how bloblist_dup works) so that it
+//      can ensure references to memory IT allocates are still available for
+//      deallocation
 
 DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_type,
         const char *filename);
@@ -52,6 +57,8 @@ DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_t
 //
 //  parameters:
 //      bloblist (in)   bloblist to free
+//
+// caveat: does not free any blob which the engine did not allocate
 
 DYNAMIC_API void free_bloblist(bloblist_t *bloblist);
 
@@ -113,6 +120,10 @@ DYNAMIC_API void set_blob_disposition(bloblist_t* blob,
                                               content_disposition_type disposition);
 
 
+// INTERNAL - only used for bloblist_t objects whose memory the engine OWNS.
+bloblist_t *new_own_bloblist(char *blob, size_t size, 
+                                const char *mime_type,
+                                const char *filename);
 
 
 #ifdef __cplusplus

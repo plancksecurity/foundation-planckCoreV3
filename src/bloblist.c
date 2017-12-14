@@ -43,6 +43,7 @@ static bool set_blob_data(bloblist_t* bloblist, char* blob, size_t size, const c
     return true;
 }
 
+// Internally, we call new_own_bloblist if we are responsible for blob.
 DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_type,
         const char *filename)
 {
@@ -56,8 +57,19 @@ DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_t
         bloblist = NULL;
     }
 
+    bloblist->value = NULL;
     return bloblist;
 }
+
+bloblist_t *new_own_bloblist(char *blob, size_t size, const char *mime_type,
+        const char *filename)
+{
+    bloblist_t * bloblist = new_bloblist(blob, size, mime_type, filename);
+    if (bloblist)
+        bloblist->value = blob;
+    return bloblist;
+}
+
 
 DYNAMIC_API void free_bloblist(bloblist_t *bloblist)
 {
@@ -65,7 +77,10 @@ DYNAMIC_API void free_bloblist(bloblist_t *bloblist)
 
     while (curr) {
         bloblist_t *next = curr->next;
-        free(curr->value_ref);
+        // value_ref never gets touched. If value exists, it gets
+        // cleaned up here. If it doesn't, the mem is owned by the
+        // caller. Period.
+        free(curr->value);
         free(curr->mime_type);
         free(curr->filename);
         free(curr);
@@ -89,7 +104,7 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src)
 
     memcpy(blob2, src->value_ref, src->size);
 
-    bloblist = new_bloblist(blob2, src->size, src->mime_type, src->filename);
+    bloblist = new_own_bloblist(blob2, src->size, src->mime_type, src->filename);
     if (bloblist == NULL)
         goto enomem;
     blob2 = NULL;
@@ -106,7 +121,7 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src)
             goto enomem;
 
         memcpy(blob2, src_curr->value_ref, src_curr->size);
-        *dst_curr_ptr = new_bloblist(blob2, src_curr->size, src_curr->mime_type, src_curr->filename);
+        *dst_curr_ptr = new_own_bloblist(blob2, src_curr->size, src_curr->mime_type, src_curr->filename);
         if (*dst_curr_ptr == NULL)
             goto enomem;
 
@@ -130,7 +145,7 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
         return NULL;
 
     if (bloblist == NULL)
-        return new_bloblist(blob, size, mime_type, filename);
+        return new_own_bloblist(blob, size, mime_type, filename);
 
     if (bloblist->value_ref == NULL) { // empty list
         if (bloblist->next != NULL)
@@ -149,7 +164,7 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
     while (list_curr->next)
         list_curr = list_curr->next;
 
-    list_curr->next = new_bloblist(blob, size, mime_type, filename);
+    list_curr->next = new_own_bloblist(blob, size, mime_type, filename);
 
     assert(list_curr->next);
     if (list_curr->next == NULL)

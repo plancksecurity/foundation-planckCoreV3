@@ -38,7 +38,7 @@ bool test_bloblist_node_equals(bloblist_t* val1, bloblist_t* val2) {
     assert(val1);
     assert(val2);
     assert(val1->size == val2->size);
-    assert(test_blob_equals(val1->size, val1->value, val2->size, val2->value));
+    assert(test_blob_equals(val1->size, val1->value_ref, val2->size, val2->value_ref));
     return( ((!val1->mime_type && !val2->mime_type) || (strcmp(val1->mime_type, val2->mime_type) == 0))
         && ((!val1->filename && !val2->filename) || (strcmp(val1->filename, val2->filename) == 0)));
 }
@@ -49,10 +49,10 @@ int main() {
     char* text2 = strdup("More text.");
     char* text3 = strdup("Unpleasant news and witty one-liners.");
     char* text4 = strdup("I AM URDNOT WREX AND THIS IS MY PLANET!");
-    bloblist_t* bl1 = new_bloblist(text1, strlen(text1) + 1, "text/plain", NULL);
-    bloblist_t* bl2 = new_bloblist(text2, strlen(text2) + 1, "text/richtext", "bob.rtf");
-    bloblist_t* bl3 = new_bloblist(text3, strlen(text3) + 1, NULL, "dummy.bin");
-    bloblist_t* bl4 = new_bloblist(text4, strlen(text4) + 1, NULL, NULL);
+    bloblist_t* bl1 = new_own_bloblist(text1, strlen(text1) + 1, "text/plain", NULL);
+    bloblist_t* bl2 = new_own_bloblist(text2, strlen(text2) + 1, "text/richtext", "bob.rtf");
+    bloblist_t* bl3 = new_own_bloblist(text3, strlen(text3) + 1, NULL, "dummy.bin");
+    bloblist_t* bl4 = new_own_bloblist(text4, strlen(text4) + 1, NULL, NULL);
     
     bloblist_t* bl_arr[4] = {bl1, bl2, bl3, bl4};
         
@@ -64,7 +64,7 @@ int main() {
     assert(new_bl);
     assert(test_bloblist_node_equals(bl1, new_bl));
     assert(new_bl->next == NULL);
-    assert(bl1->value != new_bl->value);
+    assert(bl1->value_ref != new_bl->value_ref);
     assert(bl1->mime_type != new_bl->mime_type || !(bl1->mime_type || new_bl->mime_type));
     assert(bl1->filename != new_bl->filename || !(bl1->filename || new_bl->filename));
     cout << "one-element bloblist duplicated.\n\n";
@@ -76,10 +76,10 @@ int main() {
     bloblist_t* p;
     cout << "\ncreating four-element list...\n";
     bloblist_t* to_copy = bl_arr[0];
-    new_bl = bloblist_add(new_bl, strdup(to_copy->value), to_copy->size, to_copy->mime_type, to_copy->filename);
+    new_bl = bloblist_add(new_bl, strdup(to_copy->value_ref), to_copy->size, to_copy->mime_type, to_copy->filename);
     for (i = 1; i < 4; i++) {
         to_copy = bl_arr[i];
-        p = bloblist_add(new_bl, strdup(to_copy->value), to_copy->size, to_copy->mime_type, to_copy->filename);
+        p = bloblist_add(new_bl, strdup(to_copy->value_ref), to_copy->size, to_copy->mime_type, to_copy->filename);
 
         assert(p);
     }
@@ -90,7 +90,7 @@ int main() {
         assert(p);
         
         assert(test_bloblist_node_equals(p, bl_arr[i]));
-        assert(p->value != bl_arr[i]->value);
+        assert(p->value_ref != bl_arr[i]->value_ref);
         assert(p->mime_type != bl_arr[i]->mime_type || !(p->mime_type || bl_arr[i]->mime_type));
         assert(p->filename != bl_arr[i]->filename || !(p->filename || bl_arr[i]->filename));
         
@@ -107,7 +107,7 @@ int main() {
     while (dup_p) {
         assert(test_bloblist_node_equals(p, dup_p));
         assert(p != dup_p);
-        assert(p->value != dup_p->value);
+        assert(p->value_ref != dup_p->value_ref);
         assert(p->mime_type != dup_p->mime_type || !(p->mime_type || dup_p->mime_type));
         assert(p->filename != dup_p->filename || !(p->filename || dup_p->filename));
 
@@ -131,4 +131,3 @@ int main() {
     
     return 0;
 }
-

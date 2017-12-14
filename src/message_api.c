@@ -901,8 +901,8 @@ static message* wrap_message_as_attachment(message* envelope,
     
     size_t message_len = strlen(message_text);
     
-    bloblist_t* message_blob = new_bloblist(message_text, message_len,
-                                            "message/rfc822", NULL);
+    bloblist_t* message_blob = new_own_bloblist(message_text, message_len,
+                                                "message/rfc822", NULL);
     
     _envelope->attachments = message_blob;
     if (keep_orig_subject && attachment->shortmsg)
@@ -982,7 +982,7 @@ static PEP_STATUS encrypt_PGP_MIME(
     if (v == NULL)
         goto enomem;
 
-    bloblist_t *_a = new_bloblist(v, strlen(v), "application/pgp-encrypted", NULL);
+    bloblist_t *_a = new_own_bloblist(v, strlen(v), "application/pgp-encrypted", NULL);
     if (_a == NULL)
         goto enomem;
     dst->attachments = _a;
@@ -1232,7 +1232,7 @@ static PEP_comm_type _get_comm_type(
 static void free_bl_entry(bloblist_t *bl)
 {
     if (bl) {
-        free(bl->value_ref);
+        free(bl->value);
         free(bl->mime_type);
         free(bl->filename);
         free(bl);
@@ -2208,7 +2208,7 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
 
     bloblist_t *_m = msg->attachments;
     if (_m == NULL && src->attachments && src->attachments->value_ref) {
-        msg->attachments = new_bloblist(NULL, 0, NULL, NULL);
+        msg->attachments = new_own_bloblist(NULL, 0, NULL, NULL);
         _m = msg->attachments;
     }
 
