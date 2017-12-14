@@ -1232,7 +1232,7 @@ static PEP_comm_type _get_comm_type(
 static void free_bl_entry(bloblist_t *bl)
 {
     if (bl) {
-        free(bl->value);
+        free(bl->value_ref);
         free(bl->mime_type);
         free(bl->filename);
         free(bl);
@@ -1262,7 +1262,7 @@ static void remove_attached_keys(message *msg)
 {
     if (msg) {
         bloblist_t *last = NULL;
-        for (bloblist_t *bl = msg->attachments; bl && bl->value; ) {
+        for (bloblist_t *bl = msg->attachments; bl && bl->value_ref; ) {
             bloblist_t *next = bl->next;
 
             if (is_key(bl)) {
@@ -1297,14 +1297,14 @@ bool import_attached_keys(
     bool remove = false;
 
     int i = 0;
-    for (bloblist_t *bl = msg->attachments; i < MAX_KEYS_TO_IMPORT && bl && bl->value;
+    for (bloblist_t *bl = msg->attachments; i < MAX_KEYS_TO_IMPORT && bl && bl->value_ref;
             bl = bl->next, i++)
     {
-        if (bl && bl->value && bl->size && bl->size < MAX_KEY_SIZE
+        if (bl && bl->value_ref && bl->size && bl->size < MAX_KEY_SIZE
                 && is_key(bl))
         {
             identity_list *local_private_idents = NULL;
-            import_key(session, bl->value, bl->size, &local_private_idents);
+            import_key(session, bl->value_ref, bl->size, &local_private_idents);
             remove = true;
             if (private_idents && *private_idents == NULL && local_private_idents != NULL)
                 *private_idents = local_private_idents;
@@ -1380,14 +1380,14 @@ PEP_cryptotech determine_encryption_format(message *msg)
     }
     else if (msg->attachments && msg->attachments->next &&
             is_mime_type(msg->attachments, "application/pgp-encrypted") &&
-            is_PGP_message_text(msg->attachments->next->value)
+            is_PGP_message_text(msg->attachments->next->value_ref)
         ) {
         msg->enc_format = PEP_enc_PGP_MIME;
         return PEP_crypt_OpenPGP;
     }
     else if (msg->attachments && msg->attachments->next &&
             is_mime_type(msg->attachments->next, "application/pgp-encrypted") &&
-            is_PGP_message_text(msg->attachments->value)
+            is_PGP_message_text(msg->attachments->value_ref)
         ) {
         msg->enc_format = PEP_enc_PGP_MIME_Outlook1;
         return PEP_crypt_OpenPGP;
@@ -1979,20 +1979,20 @@ static bool pull_up_attached_main_msg(message* src) {
             const char* inner_mime_type = satt->mime_type;
             if (strcasecmp(inner_mime_type, "text/plain") == 0) {
                 free(slong); /* in case of "" */
-                src->longmsg = strndup(satt->value, satt->size); 
+                src->longmsg = strndup(satt->value_ref, satt->size); 
                 
                 bloblist_t* next_node = satt->next;
                 if (next_node) {
                     inner_mime_type = next_node->mime_type;
                     if (strcasecmp(inner_mime_type, "text/html") == 0) {
                         free(sform);
-                        src->longmsg_formatted = strndup(next_node->value, next_node->size);
+                        src->longmsg_formatted = strndup(next_node->value_ref, next_node->size);
                     }
                 }
             }
             else if (strcasecmp(inner_mime_type, "text/html") == 0) {
                 free(sform);
-                src->longmsg_formatted = strndup(satt->value, satt->size);
+                src->longmsg_formatted = strndup(satt->value_ref, satt->size);
             }
         }
         return true;
@@ -2100,12 +2100,12 @@ static PEP_STATUS get_crypto_text(message* src, char** crypto_text, size_t* text
                     
     switch (src->enc_format) {
         case PEP_enc_PGP_MIME:
-            *crypto_text = src->attachments->next->value;
+            *crypto_text = src->attachments->next->value_ref;
             *text_size = src->attachments->next->size;
             break;
 
         case PEP_enc_PGP_MIME_Outlook1:
-            *crypto_text = src->attachments->value;
+            *crypto_text = src->attachments->value_ref;
             *text_size = src->attachments->size;
             break;
 
@@ -2146,7 +2146,7 @@ static PEP_STATUS verify_decrypted(PEP_SESSION session,
     
     
     if (detached_sig) {
-        char* dsig_text = detached_sig->value;
+        char* dsig_text = detached_sig->value_ref;
         size_t dsig_size = detached_sig->size;
         size_t ssize = 0;
         char* stext = NULL;
@@ -2207,14 +2207,14 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
     ptext = NULL;
 
     bloblist_t *_m = msg->attachments;
-    if (_m == NULL && src->attachments && src->attachments->value) {
+    if (_m == NULL && src->attachments && src->attachments->value_ref) {
         msg->attachments = new_bloblist(NULL, 0, NULL, NULL);
         _m = msg->attachments;
     }
 
     bloblist_t *_s;
     for (_s = src->attachments; _s; _s = _s->next) {
-        if (_s->value == NULL && _s->size == 0){
+        if (_s->value_ref == NULL && _s->size == 0){
             _m = bloblist_add(_m, NULL, 0, _s->mime_type, _s->filename);
             if (_m == NULL)
                 return PEP_OUT_OF_MEMORY;
@@ -2222,7 +2222,7 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
         }
         else if (is_encrypted_attachment(_s)) {
             stringlist_t *_keylist = NULL;
-            char *attctext  = _s->value;
+            char *attctext  = _s->value_ref;
             size_t attcsize = _s->size;
 
             free(ptext);
@@ -2263,7 +2263,7 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                 assert(copy);
                 if (copy == NULL)
                     return PEP_OUT_OF_MEMORY;
-                memcpy(copy, _s->value, _s->size);
+                memcpy(copy, _s->value_ref, _s->size);
                 _m = bloblist_add(_m, copy, _s->size, _s->mime_type, _s->filename);
                 if (_m == NULL)
                     return PEP_OUT_OF_MEMORY;
@@ -2274,7 +2274,7 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
             assert(copy);
             if (copy == NULL)
                 return PEP_OUT_OF_MEMORY;
-            memcpy(copy, _s->value, _s->size);
+            memcpy(copy, _s->value_ref, _s->size);
             _m = bloblist_add(_m, copy, _s->size, _s->mime_type, _s->filename);
             if (_m == NULL)
                 return PEP_OUT_OF_MEMORY;
@@ -2369,7 +2369,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     size_t dsig_size = 0;
     status = _get_detached_signature(src, &detached_sig);
     if (detached_sig) {
-        dsig_text = detached_sig->value;
+        dsig_text = detached_sig->value_ref;
         dsig_size = detached_sig->size;
     }
     /*** End get detached signatures that are attached to the encrypted message ***/
@@ -2490,7 +2490,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                             if (strcmp("message/rfc822", mime_type) == 0 ||
                                 strcmp("text/rfc822", mime_type) == 0) {
                                     
-                                status = mime_decode_message(actual_message->value, 
+                                status = mime_decode_message(actual_message->value_ref, 
                                                              actual_message->size, 
                                                              &inner_message);
                                 if (status != PEP_STATUS_OK)

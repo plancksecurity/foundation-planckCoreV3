@@ -426,12 +426,12 @@ PEP_STATUS receive_DeviceState_msg(
     bool discard = false;
     bool force_keep_msg = false;
 
-    for (bloblist_t *bl = src->attachments; bl && bl->value; bl = bl->next) {
+    for (bloblist_t *bl = src->attachments; bl && bl->value_ref; bl = bl->next) {
         if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp.sync") == 0
                 && bl->size) {
             DeviceGroup_Protocol_t *msg = NULL;
             uper_decode_complete(NULL, &asn_DEF_DeviceGroup_Protocol, (void **)
-                    &msg, bl->value, bl->size);
+                    &msg, bl->value_ref, bl->size);
 
             if (msg) {
                 PEP_STATUS status = PEP_STATUS_OK;
@@ -687,7 +687,7 @@ PEP_STATUS receive_DeviceState_msg(
 
     if (!session->keep_sync_msg) {
         bloblist_t *last = NULL;
-        for (bloblist_t *bl = src->attachments; bl && bl->value; ) {
+        for (bloblist_t *bl = src->attachments; bl && bl->value_ref; ) {
             if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp.sync") == 0) {
                 bloblist_t *b = bl;
                 bl = bl->next;
@@ -697,7 +697,7 @@ PEP_STATUS receive_DeviceState_msg(
                     last->next = bl;
                 free(b->mime_type);
                 free(b->filename);
-                free(b->value);
+                free(b->value_ref);
                 free(b);
             }
             else {

@@ -36,7 +36,7 @@ static bool set_blob_data(bloblist_t* bloblist, char* blob, size_t size, const c
     }               
     
     if (blob) {
-        bloblist->value = blob;
+        bloblist->value_ref = blob;
         bloblist->size = size;
     }
     
@@ -65,7 +65,7 @@ DYNAMIC_API void free_bloblist(bloblist_t *bloblist)
 
     while (curr) {
         bloblist_t *next = curr->next;
-        free(curr->value);
+        free(curr->value_ref);
         free(curr->mime_type);
         free(curr->filename);
         free(curr);
@@ -87,7 +87,7 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src)
     if (blob2 == NULL)
         goto enomem;
 
-    memcpy(blob2, src->value, src->size);
+    memcpy(blob2, src->value_ref, src->size);
 
     bloblist = new_bloblist(blob2, src->size, src->mime_type, src->filename);
     if (bloblist == NULL)
@@ -105,7 +105,7 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src)
         if (blob2 == NULL)
             goto enomem;
 
-        memcpy(blob2, src_curr->value, src_curr->size);
+        memcpy(blob2, src_curr->value_ref, src_curr->size);
         *dst_curr_ptr = new_bloblist(blob2, src_curr->size, src_curr->mime_type, src_curr->filename);
         if (*dst_curr_ptr == NULL)
             goto enomem;
@@ -132,7 +132,7 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
     if (bloblist == NULL)
         return new_bloblist(blob, size, mime_type, filename);
 
-    if (bloblist->value == NULL) { // empty list
+    if (bloblist->value_ref == NULL) { // empty list
         if (bloblist->next != NULL)
             return NULL; // invalid list
             
@@ -163,7 +163,7 @@ DYNAMIC_API int bloblist_length(const bloblist_t *bloblist)
 {
     int len = 0;
 
-    for (const bloblist_t *_bl = bloblist; _bl && _bl->value; _bl = _bl->next)
+    for (const bloblist_t *_bl = bloblist; _bl && _bl->value_ref; _bl = _bl->next)
         len++;
 
     return len;

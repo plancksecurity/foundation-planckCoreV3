@@ -122,7 +122,7 @@ static PEP_STATUS mime_attachment(
         mime_type = blob->mime_type;
 
     pEp_rid_list_t* resource = parse_uri(blob->filename);
-    mime = get_file_part(resource, mime_type, blob->value, blob->size, transport_encode);
+    mime = get_file_part(resource, mime_type, blob->value_ref, blob->size, transport_encode);
     free_rid_list(resource);
     
     assert(mime);
@@ -848,9 +848,9 @@ static PEP_STATUS mime_encode_message_PGP_MIME(
     size_t plaintext_size;
 
     assert(msg->attachments && msg->attachments->next &&
-            msg->attachments->next->value);
+            msg->attachments->next->value_ref);
 
-    plaintext = msg->attachments->next->value;
+    plaintext = msg->attachments->next->value_ref;
     plaintext_size = msg->attachments->next->size;
 
     mime = part_multiple_new("multipart/encrypted");

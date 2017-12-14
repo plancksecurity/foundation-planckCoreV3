@@ -17,7 +17,7 @@ typedef enum {
 } content_disposition_type;
 
 typedef struct _bloblist_t {
-    char *value;                    // blob
+    char *value_ref;                // blob
     size_t size;                    // size of blob
     char *mime_type;                // UTF-8 string of MIME type of blob or
                                     // NULL if unknown
