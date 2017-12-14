@@ -169,6 +169,17 @@ DYNAMIC_API int bloblist_length(const bloblist_t *bloblist)
     return len;
 }
 
+
+DYNAMIC_API bloblist_t* bloblist_iterate(bloblist_t *bloblist, bool(*func)(bloblist_t* element))
+{
+    while(bloblist && !func(bloblist))
+    {
+        bloblist = bloblist->next;
+    }
+    return bloblist;
+}
+
+
 DYNAMIC_API void set_blob_disposition(bloblist_t* blob, 
                                       content_disposition_type disposition) {
     if (blob)                                    

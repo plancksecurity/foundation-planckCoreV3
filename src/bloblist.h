@@ -102,6 +102,26 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
 
 DYNAMIC_API int bloblist_length(const bloblist_t *bloblist);
 
+
+// bloblist_iterate() - iterate over the bloblist until given function returns true.
+//                      It is inspired by C++'s std::find_if() function.
+//
+//  parameters:
+//      bloblist (in)   bloblist struct to determine length of
+//      func(in)        function that is invoked for each bloblist element.
+//                      Iteration stops when func() returns "true".
+//
+//  return value:
+//      pointer to the first element where func() returns true.
+//      NULL if there is no such element.
+//
+//  caveat:
+//      The function shall not change the bloblist itself, but is allowed to modify
+//      the members of each element.
+//
+DYNAMIC_API bloblist_t* bloblist_iterate(bloblist_t *bloblist, bool(*func)(bloblist_t* element));
+
+
 // set_blob_content_disposition() - set blob content disposition and parameters
 //                                  when necessary
 //
