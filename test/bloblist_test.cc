@@ -43,6 +43,20 @@ bool test_bloblist_node_equals(bloblist_t* val1, bloblist_t* val2) {
         && ((!val1->filename && !val2->filename) || (strcmp(val1->filename, val2->filename) == 0)));
 }
 
+
+void iteration_test(bloblist_t* bl)
+{
+	// no element fulfil predicate -> return NULL
+	assert( bloblist_iterate( bl, [](bloblist_t* b) { return b->size == 10000; }) == NULL );
+	
+	// find one element
+	bloblist_t* richtext = bloblist_iterate( bl, [](bloblist_t* b) { return b->mime_type == std::string("text/richtext"); }); 
+	assert( richtext );
+	assert( richtext->mime_type == std::string("text/richtext"));
+	assert( richtext->filename  == std::string("bob.rtf"));
+}
+
+
 int main() {
     cout << "\n*** data structures: bloblist_test ***\n\n";
     char* text1 = strdup("This is just some text.");
@@ -97,6 +111,9 @@ int main() {
         p = p->next;
     }
     assert(p == NULL);
+    
+    cout << "\nIteration test\n";
+    iteration_test(new_bl);
     
     cout << "\nduplicating four-element list...\n\n";
     bloblist_t* duplist = bloblist_dup(new_bl);
