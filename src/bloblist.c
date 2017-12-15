@@ -61,6 +61,27 @@ DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_t
     return bloblist;
 }
 
+
+DYNAMIC_API bloblist_t *new_bloblist_with_allocate(size_t size, const char *mime_type,
+        const char *filename)
+{
+    char* blob_data = calloc(size, 1);
+    assert(blob_data);
+    if (blob_data == NULL)
+        return NULL;
+
+
+    bloblist_t* bloblist = new_own_bloblist(blob_data, size, mime_type, filename);
+    if(!bloblist)
+    {
+        free(blob_data);
+        return NULL;
+    }
+
+    return bloblist;
+}
+
+
 bloblist_t *new_own_bloblist(char *blob, size_t size, const char *mime_type,
         const char *filename)
 {

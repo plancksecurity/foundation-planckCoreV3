@@ -53,6 +53,24 @@ DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_t
         const char *filename);
 
 
+// new_bloblist_with_allocate() - allocate a new bloblist with Engine-allocated blob value
+//
+//  parameters:
+//      size (in)       size of the blob
+//      mime_type (in)  MIME type of the blob data or NULL if unknown
+//      filename (in)  file name of origin of blob data or NULL if unknown
+//
+//  return value:
+//      pointer to new bloblist_t or NULL if out of memory
+//
+//  caveat:
+//      the ownership of the blob data is owned by the Engine. mime_type and filename
+//      are being copied, the originals remain in the ownership of the caller
+//
+DYNAMIC_API bloblist_t *new_bloblist_with_allocate(size_t size, const char *mime_type,
+        const char *filename);
+
+
 // free_bloblist() - free bloblist
 //
 //  parameters:
