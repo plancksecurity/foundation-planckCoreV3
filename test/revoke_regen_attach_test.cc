@@ -65,7 +65,7 @@ int main() {
     assert(enc_msg);
     cout << "message encrypted.\n";
 
-    cout << msg->attachments->filename;
+    cout << msg->attachments->filename << endl;
     assert(bloblist_length(msg->attachments) == 2);
     assert(strcmp(msg->attachments->filename, "file://pEpkey.asc") == 0);
     assert(strcmp(msg->attachments->next->filename, "file://pEpkey.asc") == 0);
