@@ -124,6 +124,8 @@ struct _pEpSession {
     sqlite3_stmt *log;
     sqlite3_stmt *trustword;
     sqlite3_stmt *get_identity;
+    sqlite3_stmt *get_identity_without_fpr;
+    sqlite3_stmt *get_identities_by_address;
     sqlite3_stmt *replace_identities_fpr;
     sqlite3_stmt *set_person;
     sqlite3_stmt *set_device_group;
@@ -141,6 +143,7 @@ struct _pEpSession {
     sqlite3_stmt *crashdump;
     sqlite3_stmt *languagelist;
     sqlite3_stmt *i18n_token;
+    sqlite3_stmt *replace_userid;
 
     // blacklist
     sqlite3_stmt *blacklist_add;

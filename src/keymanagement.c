@@ -224,8 +224,48 @@ DYNAMIC_API PEP_STATUS update_identity(
     if (identity->user_id) {            
         // (we're gonna update the trust/fpr anyway, so we user the no-fpr variant)
         //      * do get_identity() to retrieve stored identity information
-        status = get_identity_without_fpr(session, &stored_ident);
+        status = get_identity_without_fpr(session, identity->address, identity->user_id, &stored_ident);
+
+        // Before we start - if there was no stored identity, we should check to make sure we don't
+        // have a stored identity with a temporary user_id that differs from the input user_id. This
+        // happens in multithreaded environments sometimes.
+        if (!stored_ident) {
+            identity_list* id_list = NULL;
+            status = get_identities_by_address(session, identity->address, &id_list);
+
+            if (id_list) {
+                identity_list* id_curr = id_list;
+                while (id_curr) {
+                    pEp_identity* this_id = id_curr->ident;
+                    if (this_id) {
+                        char* this_uid = this_id->user_id;
+                        if (this_uid && (strstr(this_uid, "TOFU_") == this_uid)) {
+                            // FIXME: should we also be fixing pEp_own_userId in this
+                            // function here?
+                            
+                            // Ok, we have a temp ID. We have to replace this
+                            // with the real ID.
+                            status = replace_userid(this_uid, identity->user_id);
+                            if (status != PEP_STATUS_OK) {
+                                free_identity_list(id_list);
+                                return status;
+                            }
+                                
+                            free(this_uid);
+                            
+                            // Reflect the change we just made to the DB
+                            this_id->user_id = strdup(identity->user_id);
+                            stored_ident = this_id;
+                            // FIXME: free list.
+                            break;
+                        } 
+                    }
+                    id_curr = id_curr->next;
+                }
+            }
+        } 
         
+        // Ok, now we start the real algorithm:
         if (identity->username) {
             /*
              * Retrieving information of an identity with username supplied
@@ -236,13 +276,30 @@ DYNAMIC_API PEP_STATUS update_identity(
                 //      * patch it with username
                 //          (note: this will happen when 
                 //           setting automatically below...)
-                //      * elect valid key for identity (see below)
-                //    * if valid key exists
-                //        * set identity comm_type from trust db (user_id, FPR)
+                //      * elect valid key for identity
+                //    * if valid key existS
                 //        * set return value's fpr
+                status = get_valid_pubkey(session, stored_ident);
+                if (status == PEP_STATUS_OK && stored_ident->fpr) {
+                //        * set identity comm_type from trust db (user_id, FPR)
+                    status = get_trust(session, stored_ident);
+                    if (status != PEP_STATUS_OK)
+                        return status; // FIXME - free mem
+                    if (identity->fpr && 
+                             strcasecmp(stored_ident->fpr, identity->fpr) != 0) {
+                        free(identity->fpr);
+                        strdup(identity->fpr, stored_ident->fpr);
+                        identity->comm_type = stored_ident->comm_type;
+                    }
+                }
+                else {
+                    return status; // Couldn't find a key.
+                }
                 //    * call set_identity() to store
                 status = set_identity(identity);
+            }
             //  * else (identity unavailable)
+            else {
             //      * create identity with user_id, address, username
             //    * search for a temporary identity for address and username
             //    * if temporary identity available
@@ -251,6 +308,7 @@ DYNAMIC_API PEP_STATUS update_identity(
             //    * call set_identity() to store
             //  * Return: modified or created identity
              // 
+            }
         }
         else {
             /*

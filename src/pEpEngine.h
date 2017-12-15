@@ -1158,6 +1158,9 @@ PEP_STATUS get_identity_without_fpr(
         const char *user_id,
         pEp_identity **identity
     );
+
+PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
+                              const char* new_uid);
     
 #ifdef __cplusplus
 }
