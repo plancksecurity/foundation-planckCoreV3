@@ -64,8 +64,9 @@ DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_t
 //      pointer to new bloblist_t or NULL if out of memory
 //
 //  caveat:
-//      the ownership of the blob data is owned by the Engine. mime_type and filename
-//      are being copied, the originals remain in the ownership of the caller
+//      the blob data is allocated (and zero-filled) and owned by the
+//      Engine, but can be filled by the client.  mime_type and filename are
+//      being copied, the originals remain in the ownership of the caller
 //
 DYNAMIC_API bloblist_t *new_bloblist_with_allocate(size_t size, const char *mime_type,
         const char *filename);

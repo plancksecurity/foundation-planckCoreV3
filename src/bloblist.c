@@ -70,7 +70,6 @@ DYNAMIC_API bloblist_t *new_bloblist_with_allocate(size_t size, const char *mime
     if (blob_data == NULL)
         return NULL;
 
-
     bloblist_t* bloblist = new_own_bloblist(blob_data, size, mime_type, filename);
     if(!bloblist)
     {
