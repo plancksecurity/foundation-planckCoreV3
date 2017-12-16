@@ -86,19 +86,28 @@ static PEP_STATUS validate_fpr(PEP_SESSION session, pEp_identity* ident) {
     status = key_revoked(session, fpr, &revoked);    
     
     assert(status == PEP_STATUS_OK);
+    // switch (status) {
+    //     case PEP_STATUS_OK:
+    //         break;
+    //     case PEP_KEY_NOT_FOUND:
+    //         // Key not found in keyring
+    //     case PEP_GET_KEY_FAILED:
+    //         // other GPG error
+    //     default:
+    //         return status;
+    // }
+    
     if (status != PEP_STATUS_OK) {
-         // only happens when there was a problem
-         // retrieving key.
-         ADD_TO_LOG(status);
+         return ADD_TO_LOG(status);
      }
     
-    status = key_expired(session, identity->fpr, 
-                         time(NULL) + (7*24*3600), // In a week
+    status = key_expired(session, fpr, 
+                         time(NULL), // NOW. For _myself, this is different.
                          &expired);
 
     assert(status == PEP_STATUS_OK);
     if (status != PEP_STATUS_OK)
-         ADD_TO_LOG(status);
+         return ADD_TO_LOG(status);
     
     char* retval = fpr;
     
@@ -113,6 +122,8 @@ static PEP_STATUS validate_fpr(PEP_SESSION session, pEp_identity* ident) {
             // if key is valid (second check because pEp key might be extended above)
             //      Return fpr        
             status = key_expired(session, fpr, &expired);            
+            if (status != PEP_STATUS_OK)
+                 return ADD_TO_LOG(status);
             // communicate key(?)
             done = true;
         }        
@@ -128,6 +139,7 @@ static PEP_STATUS validate_fpr(PEP_SESSION session, pEp_identity* ident) {
         case PEP_ct_key_revoked
         case PEP_ct_key_b0rken:
             // delete key from being default key for all users/identities
+            status = remove_fpr_as_default(session, fpr);
             ident->fpr = NULL;
         default:
             break;
