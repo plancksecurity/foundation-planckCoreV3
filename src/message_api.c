@@ -3193,7 +3193,7 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
     // Clear the encryption status, or mime_encode will ignore
     // the plaintext and do all sorts of other stupid things
     enc_msg->enc_format = PEP_enc_none;
-    status = mime_encode_message(enc_msg, false, mime_ciphertext);
+    status = _mime_encode_message_internal(enc_msg, false, mime_ciphertext, false);
 
 pep_error:
     free_message(tmp_msg);
