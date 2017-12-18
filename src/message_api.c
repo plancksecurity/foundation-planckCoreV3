@@ -2577,7 +2577,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     // 1. Check to see if this message is to us and contains an own key imported 
     // from own trusted message 
     if (msg && *rating >= PEP_rating_trusted && imported_private_key_address &&
-        msg->to && msg->to->ident && _identity_me(msg->to->ident)) {
+        msg->to && msg->to->ident && msg->to->ident->me) {
 
         // flag it as such
         *flags |= PEP_decrypt_flag_own_private_key;
@@ -2746,7 +2746,7 @@ DYNAMIC_API PEP_STATUS identity_rating(
     if (!(session && ident && rating))
         return PEP_ILLEGAL_VALUE;
 
-    if (_identity_me(ident))
+    if (ident->me)
         status = _myself(session, ident, false, true);
     else
         status = update_identity(session, ident);

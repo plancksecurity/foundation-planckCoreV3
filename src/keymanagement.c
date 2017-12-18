@@ -262,7 +262,7 @@ static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
     }
 
     new_ident->flags = stored_ident->flags;
-                                              
+    new_ident->me = new_ident->me || stored_ident->me;
 }
 
 static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
@@ -424,10 +424,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                 }
             }
         } 
-        
-        if (stored_ident && stored_ident->fpr)
-            identity_default_fpr = strdup(stored_ident->fpr);
-        
+                
         if (status == PEP_STATUS_OK && stored_ident) { 
             //  * if identity available
             //      * patch it with username
@@ -959,7 +956,7 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
         {
             DEBUG_LOG("do_keymanagement", "retrieve_next_identity", identity->address);
 
-            if (_identity_me(identity)) {
+            if (identity->me) {
                 status = myself(session, identity);
             } else {
                 status = recv_key(session, identity->address);
@@ -992,7 +989,7 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
     if (!(session && ident && ident->fpr))
         return PEP_ILLEGAL_VALUE;
 
-    if (_identity_me(ident))
+    if (ident->me)
     {
         revoke_key(session, ident->fpr, NULL);
         myself(session, ident);
@@ -1040,12 +1037,12 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
 
     assert(session);
     assert(ident);
-    assert(!_identity_me(ident));
+    assert(!ident->me);
     assert(!EMPTYSTR(ident->fpr));
     assert(!EMPTYSTR(ident->address));
     assert(!EMPTYSTR(ident->user_id));
 
-    if (!(session && ident && !_identity_me(ident) && ident->fpr && ident->address &&
+    if (!(session && ident && !ident->me && ident->fpr && ident->address &&
             ident->user_id))
         return PEP_ILLEGAL_VALUE;
 
