@@ -63,7 +63,7 @@ static const char *sql_get_identity =
     "          end) = 1"
     "   and identity.user_id = ?2;";
 
-static const char *sql_get_identity_without_fpr =  
+static const char *sql_get_identity_without_trust_check =  
     "select main_key_id, username, comm_type, lang,"
     "   identity.flags, is_own"
     "   from identity"
@@ -768,9 +768,9 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_get_identity), &_session->get_identity, NULL);
     assert(int_result == SQLITE_OK);
 
-    int_result = sqlite3_prepare_v2(_session->db, sql_get_identity_without_fpr,
-            (int)strlen(sql_get_identity_without_fpr), 
-            &_session->get_identity_without_fpr, NULL);
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_identity_without_trust_check,
+            (int)strlen(sql_get_identity_without_trust_check), 
+            &_session->get_identity_without_trust_check, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_identities_by_address,
@@ -1031,8 +1031,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->trustword);
             if (session->get_identity)
                 sqlite3_finalize(session->get_identity);
-            if (session->get_identity_without_fpr)
-                sqlite3_finalize(session->get_identity_without_fpr);
+            if (session->get_identity_without_trust_check)
+                sqlite3_finalize(session->get_identity_without_trust_check);
             if (session->get_identities_by_address)
                 sqlite3_finalize(session->get_identities_by_address);            
             if (session->get_user_default_key)
@@ -1529,7 +1529,7 @@ DYNAMIC_API PEP_STATUS get_identity(
                                   session->get_identity);
 }
 
-PEP_STATUS get_identity_without_fpr(
+PEP_STATUS get_identity_without_trust_check(
         PEP_SESSION session,
         const char *address,
         const char *user_id,
@@ -1537,7 +1537,7 @@ PEP_STATUS get_identity_without_fpr(
     )
 {
     return _get_identity_internal(session, address, user_id, identity,
-                                  session->get_identity_without_fpr);
+                                  session->get_identity_without_trust_check);
 }
 
 PEP_STATUS get_identities_by_address(

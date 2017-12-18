@@ -22,6 +22,29 @@
 #define KEY_EXPIRE_DELTA (60 * 60 * 24 * 365)
 
 
+static bool key_matches_address(PEP_SESSION session, const char* address,
+                                const char* fpr) {
+    if (!session || !address || !fpr)
+        return false;
+    
+    bool retval = false;
+    stringlist_t *keylist = NULL;
+    PEP_STATUS status = find_keys(session, address, &keylist);
+    if (status == PEP_STATUS_OK && keylist) {
+        stringlist_t* curr = keylist;
+        if (curr->value) {
+            if (strcasecmp(curr->value, fpr)) {
+                retval = true;
+                break;
+            }
+        }
+        curr = curr->next;
+    }
+    
+    free_stringlist(keylist);
+    return retval;                             
+}
+
 PEP_STATUS elect_pubkey(
         PEP_SESSION session, pEp_identity * identity
     )
@@ -78,8 +101,15 @@ PEP_STATUS elect_pubkey(
 
 static PEP_STATUS validate_fpr(PEP_SESSION session, pEp_identity* ident) {
     
+    if (!session || !ident || !ident->fpr)
+        return PEP_ILLEGAL_VALUE;    
+        
     char* fpr = ident->fpr;
-    PEP_comm_type ct = ident->comm_type;
+    
+    PEP_STATUS status = get_trust(session, ident);
+    if (status != PEP_STATUS_OK)
+        return ADD_TO_LOG(status);
+    
     bool done = false;
     
     bool revoked, expired;
@@ -156,49 +186,60 @@ static PEP_STATUS validate_fpr(PEP_SESSION session, pEp_identity* ident) {
 // without an fpr, there wasn't one in the trust DB for this
 // identity.
 PEP_STATUS get_valid_pubkey(PEP_STATUS session,
-                            PEP_STATUS stored_identity) {
+                            PEP_STATUS stored_identity,
+                            bool* is_identity_default,
+                            bool* is_user_default,
+                            bool* is_address_default) {
     
     PEP_STATUS status = PEP_STATUS_OK;
 
-    if (!stored_identity || !stored_identity->user_id)
+    if (!stored_identity || !stored_identity->user_id
+        || !is_identity_default || !is_user_default || !is_address_default)
         return PEP_ILLEGAL_VALUE;
         
+    *is_identity_default = *is_user_default = *is_address_default = false;
+    
     char* stored_fpr = stored_identity->fpr;
     // Input: stored identity retrieved from database
     // if stored identity contains a default key
     if (stored_fpr) {
         status = validate_fpr(session, stored_identity);    
-        if (status == PEP_STATUS_OK && stored_identity->fpr)
+        if (status == PEP_STATUS_OK && stored_identity->fpr) {
+            *is_identity_default = *is_address_default = true;
             return status;
+        }
     }
     // if no valid default stored identity key found
+    free(stored_identity->fpr);
+    stored_identity->fpr = NULL;
+    
     // try to get default key for user_data
     sqlite3_reset(session->get_user_default_key);
     sqlite3_bind_text(session->get_user_default_key, 1, stored_identity->user_id, 
                       -1, SQLITE_STATIC);
     
     const int result = sqlite3_step(session->get_user_default_key);
-    const char* user_fpr;
-    bool found = false;
+    const char* user_fpr = NULL;
     if (result == SQLITE_ROW) {
         user_fpr = 
             (const char *) sqlite3_column_text(session->get_user_default_key, 0);
-        if (user_fpr)
-            found = true;
     }
-    if (!found)
-        return NULL;
-         
-    // There exists a default key for user, so validate
-    // FIXME: we have to be able to validate comm_type too.
-    retval = validate_fpr(session, user_fpr, WTF,
-                          stored_identity->me);
+    sqlite3_reset(session->get_user_default_key);
     
-    if (!retval) {
-        
+    if (user_fpr) {             
+        // There exists a default key for user, so validate
+        stored_identity->fpr = user_fpr;
+        status = validate_fpr(session, stored_identity);
+        if (status == PEP_STATUS_OK && stored_identity->fpr) {
+            *is_user_default = true;
+            *is_address_default = key_matches_address(session, 
+                                                      stored_identity->address,
+                                                      stored_identity->fpr);
+            return status;
+        }        
     }
-                          
-    return retval;
+    
+    return elect_pubkey(session, stored_identity);
 }
 
 PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags);
@@ -233,10 +274,14 @@ DYNAMIC_API PEP_STATUS update_identity(
     // We have, at least, an address.
     // Retrieve stored identity information!    
     pEp_identity* stored_ident = NULL;
+    char* identity_default_fpr = NULL;
+    char* user_default_fpr = NULL;
+    char* passed_in_fpr = identity->fpr;
+
     if (identity->user_id) {            
-        // (we're gonna update the trust/fpr anyway, so we user the no-fpr variant)
+        // (we're gonna update the trust/fpr anyway, so we user the no-fpr-from-trust-db variant)
         //      * do get_identity() to retrieve stored identity information
-        status = get_identity_without_fpr(session, identity->address, identity->user_id, &stored_ident);
+        status = get_identity_without_trust_check(session, identity->address, identity->user_id, &stored_ident);
 
         // Before we start - if there was no stored identity, we should check to make sure we don't
         // have a stored identity with a temporary user_id that differs from the input user_id. This
@@ -255,21 +300,30 @@ DYNAMIC_API PEP_STATUS update_identity(
                             // FIXME: should we also be fixing pEp_own_userId in this
                             // function here?
                             
-                            // Ok, we have a temp ID. We have to replace this
-                            // with the real ID.
-                            status = replace_userid(this_uid, identity->user_id);
-                            if (status != PEP_STATUS_OK) {
-                                free_identity_list(id_list);
-                                return status;
-                            }
+                            // if usernames match, we replace the userid. Or if the temp username
+                            // is anonymous.
+                            if (!this_id->username ||
+                                strcasecmp(this_id->username, "anonymous") == 0 ||
+                                (identity->username && 
+                                 strcasecmp(identity->username, 
+                                            this_id->username) == 0)) {
                                 
-                            free(this_uid);
-                            
-                            // Reflect the change we just made to the DB
-                            this_id->user_id = strdup(identity->user_id);
-                            stored_ident = this_id;
-                            // FIXME: free list.
-                            break;
+                                // Ok, we have a temp ID. We have to replace this
+                                // with the real ID.
+                                status = replace_userid(this_uid, identity->user_id);
+                                if (status != PEP_STATUS_OK) {
+                                    free_identity_list(id_list);
+                                    return status;
+                                }
+                                    
+                                free(this_uid);
+                                
+                                // Reflect the change we just made to the DB
+                                this_id->user_id = strdup(identity->user_id);
+                                stored_ident = this_id;
+                                // FIXME: free list.
+                                break;                                
+                            }                            
                         } 
                     }
                     id_curr = id_curr->next;
@@ -277,88 +331,148 @@ DYNAMIC_API PEP_STATUS update_identity(
             }
         } 
         
+        if (stored_ident && stored_ident->fpr)
+            identity_default_fpr = strdup(stored_ident->fpr);
+        
         // Ok, now we start the real algorithm:
-        if (identity->username) {
-            /*
-             * Retrieving information of an identity with username supplied
-             *      Input: user_id, address, username
-             */
-            if (status == PEP_STATUS_OK && stored_ident) { 
-                //  * if identity available
-                //      * patch it with username
-                //          (note: this will happen when 
-                //           setting automatically below...)
-                //      * elect valid key for identity
-                //    * if valid key existS
-                //        * set return value's fpr
-                status = get_valid_pubkey(session, stored_ident);
-                if (status == PEP_STATUS_OK && stored_ident->fpr) {
-                //        * set identity comm_type from trust db (user_id, FPR)
-                    status = get_trust(session, stored_ident);
-                    if (status != PEP_STATUS_OK)
-                        return status; // FIXME - free mem
-                    if (identity->fpr && 
-                             strcasecmp(stored_ident->fpr, identity->fpr) != 0) {
-                        free(identity->fpr);
-                        strdup(identity->fpr, stored_ident->fpr);
-                        identity->comm_type = stored_ident->comm_type;
-                    }
-                }
-                else {
-                    return status; // Couldn't find a key.
-                }
-                //    * call set_identity() to store
-                status = set_identity(identity);
-            }
-            //  * else (identity unavailable)
-            else {
-            //      * create identity with user_id, address, username
-            //    * search for a temporary identity for address and username
-            //    * if temporary identity available
-            //      * modify identity with username
-            //    * else
-            //    * call set_identity() to store
-            //  * Return: modified or created identity
-             // 
-            }
-        }
-        else {
-            /*
-             * Retrieving information of an identity without username supplied
-             *      Input: user_id, address
-             */
-            //    * doing get_identity() to retrieve stored identity information
-            //    * if identity not available
-            //      * return error status (identity not found)
-            //    * else
-            //      * elect valid key for identity (see below)
-            //      * if valid key exists
-            //        * set identity comm_type from trust db (user_id, FPR)
+        if (status == PEP_STATUS_OK && stored_ident) { 
+            //  * if identity available
+            //      * patch it with username
+            //          (note: this will happen when 
+            //           setting automatically below...)
+            //      * elect valid key for identity
+            //    * if valid key exists
             //        * set return value's fpr
-            //        * ...? (do we also set the stored fpr?)
-            //      * Return: identity if available
-
-            
+            bool fpr_changed = false;
+            bool is_identity_default, is_user_default, is_address_default;
+            status = get_valid_pubkey(session, stored_ident,
+                                        &is_identity_default,
+                                        &is_user_default,
+                                        &is_address_default);
+                                        
+            if (status == PEP_STATUS_OK && stored_ident->fpr) {
+            //        * set identity comm_type from trust db (user_id, FPR)
+                status = get_trust(session, stored_ident);
+                if (status != PEP_STATUS_OK)
+                    return status; // FIXME - free mem
+                if (identity->fpr &&
+                         strcasecmp(stored_ident->fpr, identity->fpr) != 0) {
+                    free(identity->fpr);
+                    strdup(identity->fpr, stored_ident->fpr);
+                    
+                    // We have to call this because we didn't get it during
+                    // get identity above
+                    status = get_trust(session, stored_ident);
+                    identity->comm_type = stored_ident->comm_type;
+                }
+            }
+            else {
+                return status; // Couldn't find a key.
+            }
+                        
+            // We patch the DB with the input username, but if we didn't have
+            // one, we pull it out of storage if available.
+            // (also, if the input username is "anonymous" and there exists
+            //  a DB username, we replace)
+            if (stored_ident->username) {
+                if (identity->username && 
+                    (strcasecmp(identity->username, "anonymous") == 0)) {
+                    free(identity->username);
+                    identity->username = NULL;
+                }
+                if (!identity->username)
+                    identity->username = strdup(stored_ident->username);
+            }
+                
+            // Call set_identity() to store
+            if ((is_identity_default || is_user_default) &&
+                 is_address_default) {                 
+                 // if we got an fpr which is default for either user
+                 // or identity AND is valid for this address, set in DB
+                 // as default
+                 status = set_identity(identity);
+            }
+            else {
+                // Store without default fpr/ct, but return the fpr and ct 
+                // for current use
+                char* save_fpr = identity->fpr;
+                PEP_comm_type save_ct = identity->comm_type;
+                identity->fpr = NULL;
+                identity->comm_type = PEP_ct_unknown;
+                status = set_identity(identity);
+                identity->fpr = save_fpr;
+                identity->comm_type = save_ct;
+            }
         }
+        //  * else (identity unavailable)
+        else {
+            //  if we only have user_id and address and identity not available
+            //      * return error status (identity not found)
+            if (!identity->username)
+                status PEP_CANNOT_FIND_IDENTITY;
+            
+            // Otherwise, if we had user_id, address, and username:
+            //    * create identity with user_id, address, username
+            //      (this is the input id without the fpr + comm type!)
+            free(identity->fpr);
+            identity->fpr = NULL;
+            identity->comm_type = PEP_ct_unknown;
+            
+            //    * We've already checked and retrieved
+            //      any applicable temporary identities above. If we're 
+            //      here, none of them fit.
+            //    * call set_identity() to store
+            if (status == PEP_STATUS_OK) {
+                status = set_identity(session, identity);
+            }
+            //  * Return: created identity
+        }        
     }
     else if (identity->username) {
         /*
          * Temporary identity information with username supplied
             * Input: address, username (no others)
          */
-         
+        identity_list* id_list = NULL;
+        status = get_identities_by_address(session, identity->address, &id_list);
+
         //  * Search for an identity with non-temporary user_id with that mapping
-        //  * if one found
-        //    * find valid key for identity (see below)
-        //    * if valid key exists
-        //      * set identity comm_type from trust db (user_id, FPR)
-        //      * set return value's fpr
-        //      * ...? (do we also set the stored fpr?)
-        //    * Return this identity
-        //  * if many found
-        //    * Return the one with newest modification date (yes, this is a heuristics)
-        //  * else
-        //    * create temporary identity, store it, and Return this
+        if (id_list) {
+            identity_list* id_curr = id_list;
+            while (id_curr) {
+                pEp_identity* this_id = id_curr->ident;
+                if (this_id) {
+                    char* this_uid = this_id->user_id;
+                    if (this_uid && (strstr(this_uid, "TOFU_") == NULL)) {
+                        // FIXME: should we also be fixing pEp_own_userId in this
+                        // function here?
+                        
+                        // if usernames match, we replace the userid.
+                        if (identity->username && 
+                            strcasecmp(identity->username, 
+                                       this_id->username) == 0) {
+                            
+                            // Ok, we have a real ID. Copy it!
+                            identity->user_id = strdup(this_uid);
+                            
+                            if (!identity->user_id)
+                                status = PEP_OUT_OF_MEMORY;
+                            stored_ident = this_id;
+                            
+                            break;                                
+                        }                            
+                    } 
+                }
+                id_curr = id_curr->next;
+            }
+        }
+
+        if (stored_ident) {
+            
+        }
+        else {
+            //    * create temporary identity, store it, and Return this            
+        }
     }
     else {
         /*
