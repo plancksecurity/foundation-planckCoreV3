@@ -100,7 +100,7 @@ pep_error:
 static bool known_ascii_type(const char* mime_type) {
     const char* text_types[] = {"application/pgp-keys",
                                 "application/pgp-encrypted"};
-    const int TEXT_TYPE_ARRAY_SIZE = 3;
+    const int TEXT_TYPE_ARRAY_SIZE = sizeof(text_types)/sizeof(text_types[0]);
     
     int i;
     
