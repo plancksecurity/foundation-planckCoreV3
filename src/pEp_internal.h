@@ -127,6 +127,7 @@ struct _pEpSession {
     sqlite3_stmt *get_identity_without_trust_check;
     sqlite3_stmt *get_identities_by_address;
     sqlite3_stmt *replace_identities_fpr;
+    sqlite3_stmt *remove_fpr_as_default;
     sqlite3_stmt *set_person;
     sqlite3_stmt *set_device_group;
     sqlite3_stmt *get_device_group;

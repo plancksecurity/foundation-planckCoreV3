@@ -1153,15 +1153,25 @@ DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session);
 // This is used internally when there is a temporary identity to be retrieved
 // that may not yet have an FPR attached. See get_identity() for functionality,
 // params and caveats.
-PEP_STATUS get_identity_without_fpr(
+PEP_STATUS get_identity_without_trust_check(
         PEP_SESSION session,
         const char *address,
         const char *user_id,
         pEp_identity **identity
     );
-
+    
+PEP_STATUS get_identities_by_address(
+        PEP_SESSION session,
+        const char *address,
+        identity_list** id_list
+    );
+        
 PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
                               const char* new_uid);
+                              
+PEP_STATUS remove_fpr_as_default(PEP_SESSION session, 
+                                    const char* fpr);
+                              
     
 #ifdef __cplusplus
 }

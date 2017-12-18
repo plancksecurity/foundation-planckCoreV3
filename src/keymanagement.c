@@ -32,13 +32,15 @@ static bool key_matches_address(PEP_SESSION session, const char* address,
     PEP_STATUS status = find_keys(session, address, &keylist);
     if (status == PEP_STATUS_OK && keylist) {
         stringlist_t* curr = keylist;
-        if (curr->value) {
-            if (strcasecmp(curr->value, fpr)) {
-                retval = true;
-                break;
+        while (curr) {
+            if (curr->value) {
+                if (strcasecmp(curr->value, fpr)) {
+                    retval = true;
+                    break;
+                }
             }
+            curr = curr->next;
         }
-        curr = curr->next;
     }
     
     free_stringlist(keylist);
@@ -99,7 +101,8 @@ PEP_STATUS elect_pubkey(
     return PEP_STATUS_OK;
 }
 
-static PEP_STATUS validate_fpr(PEP_SESSION session, pEp_identity* ident) {
+static PEP_STATUS validate_fpr(PEP_SESSION session, 
+                               pEp_identity* ident) {
     
     if (!session || !ident || !ident->fpr)
         return PEP_ILLEGAL_VALUE;    
@@ -109,9 +112,11 @@ static PEP_STATUS validate_fpr(PEP_SESSION session, pEp_identity* ident) {
     PEP_STATUS status = get_trust(session, ident);
     if (status != PEP_STATUS_OK)
         return ADD_TO_LOG(status);
-        
+    
+    PEP_comm_type ct = ident->comm_type;
+    
     bool revoked, expired;
-    bool blacklisted;
+    bool blacklisted = false;
     
     status = key_revoked(session, fpr, &revoked);    
     
@@ -129,16 +134,15 @@ static PEP_STATUS validate_fpr(PEP_SESSION session, pEp_identity* ident) {
     if (status != PEP_STATUS_OK)
         return ADD_TO_LOG(status);
     
-    status = blacklist_is_listed(session, 
-                                 stored_identity->fpr, 
-                                 &blacklisted);
-                                 
-    if (status != PEP_STATUS_OK)
-        return ADD_TO_LOG(status);
+    if ((ct | PEP_ct_confirmed) == PEP_ct_OpenPGP) {
+        status = blacklist_is_listed(session, 
+                                     fpr, 
+                                     &blacklisted);
+                                     
+        if (status != PEP_STATUS_OK)
+            return ADD_TO_LOG(status);
+    }
         
-    char* retval = fpr;
-    
-    // FIXME: bits for pEp FIXME: blacklisted?
     if (ident->me && (ct == PEP_ct_pEp) && !revoked && expired) {
         // extend key
         timestamp *ts = new_timestamp(time(NULL) + KEY_EXPIRE_DELTA);
@@ -148,7 +152,7 @@ static PEP_STATUS validate_fpr(PEP_SESSION session, pEp_identity* ident) {
         if (status == PEP_STATUS_OK) {
             // if key is valid (second check because pEp key might be extended above)
             //      Return fpr        
-            status = key_expired(session, fpr, &expired);            
+            status = key_expired(session, fpr, time(NULL), &expired);            
             if (status != PEP_STATUS_OK)
                  return ADD_TO_LOG(status);
             // communicate key(?)
@@ -156,30 +160,29 @@ static PEP_STATUS validate_fpr(PEP_SESSION session, pEp_identity* ident) {
     }
     
     if (revoked)
-        ct = PEP_ct_revoked;
+        ct = PEP_ct_key_revoked;
     else if (expired)
-        ct = PEP_ct_expired;        
-    else if (blacklisted && 
-            ((ct | PEP_ct_confirmed) == PEP_ct_OpenPGP_confirmed)) {
-        ident->ct = ct = PEP_ct_key_not_found;
+        ct = PEP_ct_key_expired;        
+    else if (blacklisted) {
+        ident->comm_type = ct = PEP_ct_key_not_found;
         free(ident->fpr);
             ident->fpr = strdup("");
-        }
         status = PEP_KEY_UNSUITABLE;
     }
     
     switch (ct) {
         case PEP_ct_key_expired:
-        case PEP_ct_key_revoked
+        case PEP_ct_key_revoked:
         case PEP_ct_key_b0rken:
             // delete key from being default key for all users/identities
             status = remove_fpr_as_default(session, fpr);
+            status = update_trust_for_fpr(session, 
+                                          fpr, 
+                                          ct);
             free(ident->fpr);
             ident->fpr = strdup("");
+            ident->comm_type = PEP_ct_key_not_found;            
             status = PEP_KEY_UNSUITABLE;
-            status = update_trust_for_fpr(session, 
-                                          stored_identity->fpr, 
-                                          ct);
         default:
             break;
     }            
@@ -191,8 +194,8 @@ static PEP_STATUS validate_fpr(PEP_SESSION session, pEp_identity* ident) {
 // Also, we presume that if the stored_identity was sent in
 // without an fpr, there wasn't one in the trust DB for this
 // identity.
-PEP_STATUS get_valid_pubkey(PEP_STATUS session,
-                            PEP_STATUS stored_identity,
+PEP_STATUS get_valid_pubkey(PEP_SESSION session,
+                            pEp_identity* stored_identity,
                             bool* is_identity_default,
                             bool* is_user_default,
                             bool* is_address_default) {
@@ -227,14 +230,14 @@ PEP_STATUS get_valid_pubkey(PEP_STATUS session,
     const int result = sqlite3_step(session->get_user_default_key);
     const char* user_fpr = NULL;
     if (result == SQLITE_ROW) {
-        user_fpr = 
-            (const char *) sqlite3_column_text(session->get_user_default_key, 0);
+        user_fpr =
+            (char *) sqlite3_column_text(session->get_user_default_key, 0);
     }
     sqlite3_reset(session->get_user_default_key);
     
     if (user_fpr) {             
         // There exists a default key for user, so validate
-        stored_identity->fpr = user_fpr;
+        stored_identity->fpr = strdup(user_fpr);
         status = validate_fpr(session, stored_identity);
         if (status == PEP_STATUS_OK && stored_identity->fpr) {
             *is_user_default = true;
@@ -269,7 +272,9 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     
     if (!session || !input_id || !stored_ident)
         return PEP_ILLEGAL_VALUE;
-        
+    
+    PEP_STATUS status;
+    
     bool is_identity_default, is_user_default, is_address_default;
     status = get_valid_pubkey(session, stored_ident,
                                 &is_identity_default,
@@ -284,10 +289,10 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
         if (input_id->fpr &&
                  strcasecmp(stored_ident->fpr, input_id->fpr) != 0) {
             free(input_id->fpr);
-            strdup(input_id->fpr, stored_ident->fpr);
             
-            // We have to call this because we didn't get it during
-            // get identity above
+            // Copy in the result from get_valid_pubkey
+            input_id->fpr = strdup(stored_ident->fpr);
+            
             status = get_trust(session, stored_ident);
             input_id->comm_type = stored_ident->comm_type;
         }
@@ -316,7 +321,7 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
          // if we got an fpr which is default for either user
          // or identity AND is valid for this address, set in DB
          // as default
-         status = set_identity(input_id);
+         status = set_identity(session, input_id);
     }
     else {
         // Store without default fpr/ct, but return the fpr and ct 
@@ -325,7 +330,7 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
         PEP_comm_type save_ct = input_id->comm_type;
         input_id->fpr = NULL;
         input_id->comm_type = PEP_ct_unknown;
-        status = set_identity(input_id);
+        status = set_identity(session, input_id);
         input_id->fpr = save_fpr;
         input_id->comm_type = save_ct;
     }
@@ -340,8 +345,6 @@ DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
     )
 {
-    pEp_identity *stored_identity = NULL;
-    pEp_identity *temp_id = NULL;
     PEP_STATUS status;
 
     assert(session);
@@ -366,9 +369,6 @@ DYNAMIC_API PEP_STATUS update_identity(
     // We have, at least, an address.
     // Retrieve stored identity information!    
     pEp_identity* stored_ident = NULL;
-    char* identity_default_fpr = NULL;
-    char* user_default_fpr = NULL;
-    char* passed_in_fpr = identity->fpr;
 
     if (identity->user_id) {            
         // (we're gonna update the trust/fpr anyway, so we user the no-fpr-from-trust-db variant)
@@ -402,7 +402,9 @@ DYNAMIC_API PEP_STATUS update_identity(
                                 
                                 // Ok, we have a temp ID. We have to replace this
                                 // with the real ID.
-                                status = replace_userid(this_uid, identity->user_id);
+                                status = replace_userid(session, 
+                                                        this_uid, 
+                                                        identity->user_id);
                                 if (status != PEP_STATUS_OK) {
                                     free_identity_list(id_list);
                                     return status;
@@ -443,7 +445,7 @@ DYNAMIC_API PEP_STATUS update_identity(
             //  if we only have user_id and address and identity not available
             //      * return error status (identity not found)
             if (!identity->username)
-                status PEP_CANNOT_FIND_IDENTITY;
+                status = PEP_CANNOT_FIND_IDENTITY;
             
             // Otherwise, if we had user_id, address, and username:
             //    * create identity with user_id, address, username
@@ -540,9 +542,9 @@ DYNAMIC_API PEP_STATUS update_identity(
             //    * If exactly one found
             //      * elect valid key for identity (see below)
             //      * Return this identity
-            stored_ident = id_curr->ident;
+            stored_ident = id_list->ident;
             
-            if (this_id)
+            if (stored_ident)
                 status = prepare_updated_identity(session, identity,
                                                   stored_ident, false);
             else
@@ -551,7 +553,14 @@ DYNAMIC_API PEP_STATUS update_identity(
         else // too little info
             status = PEP_CANNOT_FIND_IDENTITY; 
     }
-                        
+    
+    // FIXME: This is legacy. I presume it's a notification for the caller...
+    // Revisit once I can talk to Volker
+    if (identity->comm_type != PEP_ct_compromized &&
+        identity->comm_type < PEP_ct_strong_but_unconfirmed)
+    if (session->examine_identity)
+        session->examine_identity(identity, session->examine_management);
+
     return ADD_TO_LOG(status);
 }
 
