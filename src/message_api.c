@@ -63,17 +63,18 @@ static bool is_wrapper(message* src) {
 
 
 static stringpair_t* search_optfields(const message* msg, const char* key) {
-    stringpair_list_t* opt_fields = msg->opt_fields;
-    
-    const stringpair_list_t* curr;
-    
-    for (curr = opt_fields; curr && curr->value; curr = curr->next) {
-        if (curr->value->key) {
-            if (strcasecmp(curr->value->key, key) == 0)
-                return curr->value;
-        }
-    } 
-    
+    if (msg && key) {
+        stringpair_list_t* opt_fields = msg->opt_fields;
+        
+        const stringpair_list_t* curr;
+        
+        for (curr = opt_fields; curr && curr->value; curr = curr->next) {
+            if (curr->value->key) {
+                if (strcasecmp(curr->value->key, key) == 0)
+                    return curr->value;
+            }
+        } 
+    }
     return NULL;
 }
 
@@ -3191,9 +3192,6 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
         GOTO(pep_error);
     }
 
-    // Clear the encryption status, or mime_encode will ignore
-    // the plaintext and do all sorts of other stupid things
-    enc_msg->enc_format = PEP_enc_none;
     status = _mime_encode_message_internal(enc_msg, false, mime_ciphertext, false);
 
 pep_error:
