@@ -108,6 +108,11 @@ static const char *sql_set_device_group =
     "update person set device_group = ?1 "
     "where id = ?2;";
 
+// This will cascade to identity and trust
+static const char* sql_replace_userid =
+    "update person set id = ?1" 
+    "where id = ?2;";
+
 static const char *sql_get_device_group = 
     "select device_group from person "
     "where id = ?1;";
@@ -181,10 +186,6 @@ static const char *sql_languagelist =
 
 static const char *sql_i18n_token = 
     "select phrase from i18n_token where lang = lower(?1) and id = ?2 ;";
-
-// This will cascade to identity and trust
-static const char* sql_replace_userid =
-    "update person set id = ?1 where id = ?2 ;";
 
 // blacklist
 static const char *sql_blacklist_add = 
