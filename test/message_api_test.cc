@@ -12,8 +12,89 @@
 
 using namespace std;
 
+void test_MIME_decrypt_message()
+{
+	const std::string mimetext =
+		"Return-Path: <roker@pep-project.org>\r\n"
+		"X-Original-To: roker@pep-project.org\r\n"
+		"Delivered-To: roker@pep-project.org\r\n"
+		"Received: from localhost (localhost [127.0.0.1])\r\n"
+		"	by dragon.pibit.ch (Postfix) with ESMTP id C4FF8171C055\r\n"
+		"	for <roker@pep-project.org>; Tue, 26 Dec 2017 17:14:42 +0100 (CET)\r\n"
+		"Received: from dragon.pibit.ch ([127.0.0.1])\r\n"
+		"	by localhost (dragon.pibit.ch [127.0.0.1]) (amavisd-new, port 10024)\r\n"
+		"	with ESMTP id GojZqayOfeAq for <roker@pep-project.org>;\r\n"
+		"	Tue, 26 Dec 2017 17:14:39 +0100 (CET)\r\n"
+		"To: Lars Rohwedder <roker@pep-project.org>\r\n"
+		"From: Lars Rohwedder <roker@pep-project.org>\r\n"
+		"Subject: Test mail PGP/INLINE\r\n"
+		"Message-ID: <8fff4ca8-a8aa-f016-a7fd-39c98a9a4f43@pep-project.org>\r\n"
+		"Date: Tue, 26 Dec 2017 17:14:38 +0100\r\n"
+		"User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:52.0)\r\n"
+		" Gecko/20100101 Thunderbird/52.5.0\r\n"
+		"MIME-Version: 1.0\r\n"
+		"Content-Type: text/plain; charset=utf-8\r\n"
+		"Content-Language: en-US\r\n"
+		"Content-Transfer-Encoding: 8bit\r\n"
+		"\r\n"
+		"-----BEGIN PGP MESSAGE-----\r\n"
+		"Charset: utf-8\r\n"
+		"\r\n"
+		"hQIMA+NkSS2yiGkeARAAgtW5xzq/ksfUIRxPZIDwGIANH0iLKhbnFbg/GssuyQOE\r\n"
+		"+7rdevKX9UcxwBcRGJYs/aSMvY9zQE4tJy3ohf6+jnRzh3RH055A6+bsUWS/cex3\r\n"
+		"fL7PtmQUT2PRXcXfrrk+oiCPXdJPVyRJXKGkKzwmpy7+U8mSSPoR3SIciFy/9CKs\r\n"
+		"zhiTuQm8momz5gP/FpNyIU6E0xOdvyv9G90Y0qLzQyWFCY9fo3uRvKtvQmp2A0vj\r\n"
+		"nI0rMBBnblLWLkLhTgEhsBSxi5/Emu2kzYXdhezb+IxuMrl7LhrZkFCSNnPWozJ7\r\n"
+		"gyEcxK9tPOyK/SCYY+s9vg6D3F8mdJIT8Vi/87v1hQjvehc+xtiY/nNadaSDPWOh\r\n"
+		"eWZ8FWVNRU3xowT5gyC75F8K+5IkhxsdmFGNznMzX9m+09fI515oVbDPe493JPNq\r\n"
+		"TjKOVq406EFGIJ5+DGd1IDStUZuZBl4Z79bz9uF/vKCnvFzskTW69NypoDOe3+XL\r\n"
+		"mP86vm3dUB3kWStHyWvH2RFbHnrbyHjZhQihsu8NdGBa3ZYatwlPhwVGaucSkrYM\r\n"
+		"vSEgKyN+7XqQQIQSv6ncxzoNlZ7Cgoyh0BeaTIjDVH/0H6oUrljGO8UwcNhEOxGH\r\n"
+		"WRBRI/emArMa8ro/tJ08jbFkRB1qiLSdfh0bufD0hWGGG16gXvvND4UgnVZ3VnzS\r\n"
+		"6QGNwgYIqTQqXgsj/9PkKVaoZp3OyldpS/tq93Y4cES9DjSAcxN9MVgPIdvkGvaa\r\n"
+		"MrKhpGu+prYEQJm1KfB4yTB+SuQOjngFiDXtsbN7jC7nCRpgQIjbCG3QKl8QUdrU\r\n"
+		"Uy3OHuaGJUgKwy330Hi9cfCKD3lCBHr7XhSbZ/spuZudB5/bv6doQlrR9W2ccMAF\r\n"
+		"RWsZAg7BXXzLvROgHCpcnNG/yHllQKpZ2REsUlbdNc2Sbw+tcjS1j18jGUwkSGhD\r\n"
+		"j0hVQSYVJ1DN17QYPHV9w7WvHHw9QgDK0eDIkcykVAQqB25U+H61wg3HrQ73CFj2\r\n"
+		"v0fyFYcSsCAj7LZnODLw6Mq+JzEIJUS1KPkJ4tiABXNCetwSUyJjaUlCfYHVE3Xi\r\n"
+		"OjgNm1QLqjt2adK1Yi0gj7Go4CIFS4UE03WZfQkEh6y16ZSivAEQ9Wzy8E+Uy5VX\r\n"
+		"diJQNPZ0VJozckp4wR+2Ao3yeBgQG9/zUbhihYBBGEPH6FmxscXcajssYrsbUh0D\r\n"
+		"3IyncNEwrneiP430RhkkF9yQb+xwNxvYE0B+11PhuvtBBukDQjLSKN21mR8vBYBS\r\n"
+		"kl1D/Z2Z388ObjPPXXGBpfWhhQyHKhPMJ0HMGUkCOf4IlmkH+vJt9a7Ex10URs1a\r\n"
+		"KuFTB5EeNGsI6lQaze+mai7On1hI/wEC51ul5n46c75iuLRLzSTxJ/gjwg0gdHHZ\r\n"
+		"5PLVTYfc58OXhiSDWhTvX+M+lWm49LQu+dCL3/pfLuR4D6Ytz/FDSFrSwNUQ7vOx\r\n"
+		"3MBVK7dshY5IbTF3jbLr0fkdX6wmXapgjMF7KYS8FqxNUC/IEC1mCgSiHZDCA8TT\r\n"
+		"WLXnnsGmB7eRAlYBpO2TAhhAhhg0aT+GhrvkZwROW4Keka+VGSt4R0+nKhrCuYkQ\r\n"
+		"Vo5t3qUtVAo2ic/ktisa4rNPND0XQAcCi58=\r\n"
+		"=vf0v\r\n"
+		"-----END PGP MESSAGE-----\r\n"
+		"\r\n";
+	
+	PEP_SESSION session;
+	PEP_STATUS status1 = init(&session);
+	assert(status1 == PEP_STATUS_OK);
+	assert(session);
+
+	char* plaintext = nullptr;
+	stringlist_t* keys_used = nullptr;
+	PEP_rating rating;
+	PEP_decrypt_flags_t dec_flags;
+	
+	PEP_STATUS status2 = MIME_decrypt_message(session, mimetext.c_str(), mimetext.length(),
+		&plaintext, &keys_used, &rating, &dec_flags);
+	
+	std::cout << "MIME_decrypt_message returned " << status2 << std::hex << " (0x" << status2 << ")" << endl;
+	
+	assert(status2 == PEP_STATUS_OK);
+	assert(plaintext);
+	
+	pEp_free(plaintext);
+}
+
+
 int main() {
     cout << "\n*** message_api_test ***\n\n";
+    test_MIME_decrypt_message();
 
     PEP_SESSION session;
     
