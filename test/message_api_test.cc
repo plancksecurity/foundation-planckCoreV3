@@ -14,67 +14,129 @@ using namespace std;
 
 void test_MIME_decrypt_message()
 {
-	const std::string mimetext =
-		"Return-Path: <roker@pep-project.org>\r\n"
-		"X-Original-To: roker@pep-project.org\r\n"
-		"Delivered-To: roker@pep-project.org\r\n"
-		"Received: from localhost (localhost [127.0.0.1])\r\n"
-		"	by dragon.pibit.ch (Postfix) with ESMTP id C4FF8171C055\r\n"
-		"	for <roker@pep-project.org>; Tue, 26 Dec 2017 17:14:42 +0100 (CET)\r\n"
-		"Received: from dragon.pibit.ch ([127.0.0.1])\r\n"
-		"	by localhost (dragon.pibit.ch [127.0.0.1]) (amavisd-new, port 10024)\r\n"
-		"	with ESMTP id GojZqayOfeAq for <roker@pep-project.org>;\r\n"
-		"	Tue, 26 Dec 2017 17:14:39 +0100 (CET)\r\n"
-		"To: Lars Rohwedder <roker@pep-project.org>\r\n"
-		"From: Lars Rohwedder <roker@pep-project.org>\r\n"
-		"Subject: Test mail PGP/INLINE\r\n"
-		"Message-ID: <8fff4ca8-a8aa-f016-a7fd-39c98a9a4f43@pep-project.org>\r\n"
-		"Date: Tue, 26 Dec 2017 17:14:38 +0100\r\n"
-		"User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:52.0)\r\n"
-		" Gecko/20100101 Thunderbird/52.5.0\r\n"
-		"MIME-Version: 1.0\r\n"
-		"Content-Type: text/plain; charset=utf-8\r\n"
-		"Content-Language: en-US\r\n"
-		"Content-Transfer-Encoding: 8bit\r\n"
-		"\r\n"
-		"-----BEGIN PGP MESSAGE-----\r\n"
-		"Charset: utf-8\r\n"
-		"\r\n"
-		"hQIMA+NkSS2yiGkeARAAgtW5xzq/ksfUIRxPZIDwGIANH0iLKhbnFbg/GssuyQOE\r\n"
-		"+7rdevKX9UcxwBcRGJYs/aSMvY9zQE4tJy3ohf6+jnRzh3RH055A6+bsUWS/cex3\r\n"
-		"fL7PtmQUT2PRXcXfrrk+oiCPXdJPVyRJXKGkKzwmpy7+U8mSSPoR3SIciFy/9CKs\r\n"
-		"zhiTuQm8momz5gP/FpNyIU6E0xOdvyv9G90Y0qLzQyWFCY9fo3uRvKtvQmp2A0vj\r\n"
-		"nI0rMBBnblLWLkLhTgEhsBSxi5/Emu2kzYXdhezb+IxuMrl7LhrZkFCSNnPWozJ7\r\n"
-		"gyEcxK9tPOyK/SCYY+s9vg6D3F8mdJIT8Vi/87v1hQjvehc+xtiY/nNadaSDPWOh\r\n"
-		"eWZ8FWVNRU3xowT5gyC75F8K+5IkhxsdmFGNznMzX9m+09fI515oVbDPe493JPNq\r\n"
-		"TjKOVq406EFGIJ5+DGd1IDStUZuZBl4Z79bz9uF/vKCnvFzskTW69NypoDOe3+XL\r\n"
-		"mP86vm3dUB3kWStHyWvH2RFbHnrbyHjZhQihsu8NdGBa3ZYatwlPhwVGaucSkrYM\r\n"
-		"vSEgKyN+7XqQQIQSv6ncxzoNlZ7Cgoyh0BeaTIjDVH/0H6oUrljGO8UwcNhEOxGH\r\n"
-		"WRBRI/emArMa8ro/tJ08jbFkRB1qiLSdfh0bufD0hWGGG16gXvvND4UgnVZ3VnzS\r\n"
-		"6QGNwgYIqTQqXgsj/9PkKVaoZp3OyldpS/tq93Y4cES9DjSAcxN9MVgPIdvkGvaa\r\n"
-		"MrKhpGu+prYEQJm1KfB4yTB+SuQOjngFiDXtsbN7jC7nCRpgQIjbCG3QKl8QUdrU\r\n"
-		"Uy3OHuaGJUgKwy330Hi9cfCKD3lCBHr7XhSbZ/spuZudB5/bv6doQlrR9W2ccMAF\r\n"
-		"RWsZAg7BXXzLvROgHCpcnNG/yHllQKpZ2REsUlbdNc2Sbw+tcjS1j18jGUwkSGhD\r\n"
-		"j0hVQSYVJ1DN17QYPHV9w7WvHHw9QgDK0eDIkcykVAQqB25U+H61wg3HrQ73CFj2\r\n"
-		"v0fyFYcSsCAj7LZnODLw6Mq+JzEIJUS1KPkJ4tiABXNCetwSUyJjaUlCfYHVE3Xi\r\n"
-		"OjgNm1QLqjt2adK1Yi0gj7Go4CIFS4UE03WZfQkEh6y16ZSivAEQ9Wzy8E+Uy5VX\r\n"
-		"diJQNPZ0VJozckp4wR+2Ao3yeBgQG9/zUbhihYBBGEPH6FmxscXcajssYrsbUh0D\r\n"
-		"3IyncNEwrneiP430RhkkF9yQb+xwNxvYE0B+11PhuvtBBukDQjLSKN21mR8vBYBS\r\n"
-		"kl1D/Z2Z388ObjPPXXGBpfWhhQyHKhPMJ0HMGUkCOf4IlmkH+vJt9a7Ex10URs1a\r\n"
-		"KuFTB5EeNGsI6lQaze+mai7On1hI/wEC51ul5n46c75iuLRLzSTxJ/gjwg0gdHHZ\r\n"
-		"5PLVTYfc58OXhiSDWhTvX+M+lWm49LQu+dCL3/pfLuR4D6Ytz/FDSFrSwNUQ7vOx\r\n"
-		"3MBVK7dshY5IbTF3jbLr0fkdX6wmXapgjMF7KYS8FqxNUC/IEC1mCgSiHZDCA8TT\r\n"
-		"WLXnnsGmB7eRAlYBpO2TAhhAhhg0aT+GhrvkZwROW4Keka+VGSt4R0+nKhrCuYkQ\r\n"
-		"Vo5t3qUtVAo2ic/ktisa4rNPND0XQAcCi58=\r\n"
-		"=vf0v\r\n"
-		"-----END PGP MESSAGE-----\r\n"
-		"\r\n";
-	
+	static const std::string private_key =
+        "-----BEGIN PGP PRIVATE KEY BLOCK-----\n"
+        "\n"
+        "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\n"
+        "okyt7GheXlwKEtVQSAcH/NalK9Q+ckaQttA=\n"
+        "=KACn\n"
+        "-----END PGP PRIVATE KEY BLOCK-----\n"
+        "\n";
+
+    static const std::string mimetext =
+        "To: denden@peptest.ch\r\n"
+        "From: Lars Rohwedder <roker@pep-project.org>\r\n"
+        "Subject: Test for ENGINE-322\r\n"
+        "Message-ID: <4b2d328c-b284-e359-1c2c-fe136358b8a6@pep-project.org>\r\n"
+        "Date: Thu, 28 Dec 2017 22:00:47 +0100\r\n"
+        "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:52.0)\r\n"
+        " Gecko/20100101 Thunderbird/52.5.0\r\n"
+        "MIME-Version: 1.0\r\n"
+        "Content-Type: text/plain; charset=utf-8\r\n"
+        "Content-Language: en-US\r\n"
+        "Content-Transfer-Encoding: 8bit\r\n"
+        "\r\n"
+        "-----BEGIN PGP MESSAGE-----\r\n"
+        "Charset: utf-8\r\n"
+        "\r\n"
+        "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\r\n"
+        "=1lFj\r\n"
+        "-----END PGP MESSAGE-----\r\n"
+        "\r\n";
+
 	PEP_SESSION session;
 	PEP_STATUS status1 = init(&session);
 	assert(status1 == PEP_STATUS_OK);
 	assert(session);
 
+	// import secret key
+	identity_list* pk = NULL; 
+	status1 = import_key( session, private_key.c_str(), private_key.size(), &pk );
+	assert(status1 == PEP_STATUS_OK);
+	std::cout << "Imported " << identity_list_length(pk) << " private key(s)." << endl;
+	
 	char* plaintext = nullptr;
 	stringlist_t* keys_used = nullptr;
 	PEP_rating rating;
@@ -89,6 +151,15 @@ void test_MIME_decrypt_message()
 	assert(plaintext);
 	
 	pEp_free(plaintext);
+	
+	identity_list* il = pk;
+	while(il)
+	{
+		std::cout << "Delete test key \"" << il->ident->fpr << "\"" << endl;
+		delete_keypair( session, il->ident->fpr );
+		il = il->next;
+	}
+	free_identity_list(pk);
 }
 
 
