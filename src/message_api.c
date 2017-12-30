@@ -1454,7 +1454,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
     identity_list * _il;
 
-    if ((_il = src->bcc) && _il->ident)
+    if (enc_format != PEP_enc_none && (_il = src->bcc) && _il->ident)
     {
         // BCC limited support:
         //     - App splits mails with BCC in multiple mails.
