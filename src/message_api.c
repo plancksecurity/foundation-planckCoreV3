@@ -2195,7 +2195,7 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                                      char* ptext,
                                      size_t psize) {
                             
-    PEP_STATUS status = PEP_UNKNOWN_ERROR;
+    PEP_STATUS status = PEP_STATUS_OK;
     
     *msg_ptr = clone_to_empty_message(src);
 
