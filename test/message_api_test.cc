@@ -145,7 +145,7 @@ void test_MIME_decrypt_message()
 	PEP_STATUS status2 = MIME_decrypt_message(session, mimetext.c_str(), mimetext.length(),
 		&plaintext, &keys_used, &rating, &dec_flags);
 	
-	std::cout << "MIME_decrypt_message returned " << status2 << std::hex << " (0x" << status2 << ")" << endl;
+	std::cout << "MIME_decrypt_message returned " << std::dec << status2 << std::hex << " (0x" << status2 << ")" << std::dec << endl;
 	
 	assert(status2 == PEP_DECRYPTED);
 	assert(plaintext);
@@ -321,14 +321,35 @@ int main() {
     
     cout << dec_msg << endl;
     
+    cout << "\nTesting encrypt_message() with enc_format = PEP_enc_none\n\n";
+
+    message *msg7 = new_message(PEP_dir_outgoing);
+    pEp_identity * me7 = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, "Alice Test");
+    identity_list *to7 = new_identity_list(new_identity("pep.test.bob@pep-project.org", NULL, "42", "Bob Test"));
+    msg7->from = me7;
+    msg7->to = to7;
+    msg7->shortmsg = strdup("My Subject");
+    msg7->longmsg = strdup("This is some text.\n");
+
+    message *enc7 = nullptr;
+    PEP_STATUS status9 = encrypt_message(session, msg7, NULL, &enc7, PEP_enc_none, 0);
+	std::cout << "encrypt_message returned " << std::dec << status9 << std::hex << " (0x" << status9 << ")" << std::dec << endl;
+    assert(status9 == PEP_UNENCRYPTED);
+    assert(enc7 == nullptr);
+    assert(msg7->shortmsg && msg7->longmsg);
+    cout << msg7->shortmsg << "\n";
+    cout << msg7->longmsg << "\n";
+    assert(strcmp(msg7->shortmsg, "My Subject") == 0);
+    assert(strcmp(msg7->longmsg, "This is some text.\n") == 0);
     
-    cout << "freeing messages…\n";
+    cout << "\nfreeing messages…\n";
+    free_message(msg7);
+    free_message(msg6);
+    free_message(msg5);
     free_message(msg4);
     free_message(msg3);
     free_message(msg2);
     free_message(enc_msg2);
-    free_message(msg6);
-    free_message(msg5);
     cout << "done.\n";
 
     free(enc_msg);

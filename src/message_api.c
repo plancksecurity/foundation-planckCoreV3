@@ -1528,7 +1528,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         }
     }
 
-    if (!dest_keys_found ||
+    if (enc_format == PEP_enc_none || !dest_keys_found ||
         stringlist_length(keys)  == 0 ||
         _rating(max_comm_type,
                 PEP_rating_undefined) < PEP_rating_reliable)
@@ -1576,10 +1576,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             /* case PEP_enc_PEP:
                 // TODO: implement
                 NOT_IMPLEMENTED */
-
-            case PEP_enc_none:
-                status = PEP_UNENCRYPTED;
-                break;
 
             default:
                 assert(0);
