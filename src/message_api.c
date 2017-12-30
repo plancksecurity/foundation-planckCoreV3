@@ -1420,13 +1420,14 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     assert(src);
     assert(dst);
 
-    if (!(session && src && dst && enc_format != PEP_enc_none))
+    if (!(session && src && dst))
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     if (src->dir == PEP_dir_incoming)
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     determine_encryption_format(src);
+    // TODO: change this for multi-encryption in message format 2.0
     if (src->enc_format != PEP_enc_none)
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
@@ -1575,6 +1576,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             /* case PEP_enc_PEP:
                 // TODO: implement
                 NOT_IMPLEMENTED */
+
+            case PEP_enc_none:
+                status = PEP_UNENCRYPTED;
+                break;
 
             default:
                 assert(0);
