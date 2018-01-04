@@ -20,9 +20,9 @@ import shutil
 from multiprocessing import Process
 
 
-
 realhome = os.path.expanduser("~")
 mydir = os.path.abspath(os.path.curdir)
+files_to_copy = ("transport.py",)
 
 
 def link_if_exists(dirname, arthome):
@@ -38,9 +38,12 @@ def create_home(mydir, arthome):
     "create an artificial home directory for testing"
 
     os.chdir(mydir)
-
     os.makedirs(arthome, exist_ok=True)
+
     os.chdir(arthome)
+    for filename in files_to_copy:
+        src = os.path.join(os.pardir, filename)
+        shutil.copyfile(src, filename)
 
     link_if_exists("bin", arthome)
     link_if_exists("include", arthome)
