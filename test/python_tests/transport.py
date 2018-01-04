@@ -46,3 +46,17 @@ def recv_message():
 
     return msg
 
+
+def wait_for_message():
+    "wait until a message arrives and return the message"
+
+    while True:
+        try:
+            msg = recv_message()
+        except IndexError:
+            time.sleep(1)
+        else:
+            break
+
+    return msg
+
