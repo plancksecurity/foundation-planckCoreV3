@@ -22,7 +22,7 @@ from multiprocessing import Process
 
 realhome = os.path.expanduser("~")
 mydir = os.path.abspath(os.path.curdir)
-files_to_copy = ("transport.py",)
+files_to_link = ("transport.py",)
 
 
 def link_if_exists(dirname, arthome):
@@ -49,6 +49,14 @@ def create_own_identities(mydir, arthome, username):
     print(repr(me))
 
 
+def link_file(filename):
+    "sym-link file to version in parent directory"
+
+    src = os.path.join(os.pardir, filename)
+    if not os.path.exists(filename):
+        os.symlink(src, filename, False)
+
+
 def create_home(mydir, arthome, username):
     "create an artificial home directory for testing"
 
@@ -56,9 +64,8 @@ def create_home(mydir, arthome, username):
     os.makedirs(arthome, exist_ok=True)
 
     os.chdir(arthome)
-    for filename in files_to_copy:
-        src = os.path.join(os.pardir, filename)
-        shutil.copyfile(src, filename)
+    for filename in files_to_link:
+        link_file(filename)
 
     link_if_exists("bin", arthome)
     link_if_exists("include", arthome)
