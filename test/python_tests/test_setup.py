@@ -70,13 +70,15 @@ def create_homes():
 
     create_home(mydir, "test1")
 
-    p1 = Process(target=create_own_identities, args=(mydir, 'test1', 'Alice One'))
+    p1 = Process(target=create_own_identities, args=(mydir, 'test1',
+            'Alice One'))
     p1.start()
     p1.join()
 
     create_home(mydir, "test2")
 
-    p2 = Process(target=create_own_identities, args=(mydir, 'test2', 'Bob Two'))
+    p2 = Process(target=create_own_identities, args=(mydir, 'test2',
+            'Bob Two'))
     p2.start()
     p2.join()
 
