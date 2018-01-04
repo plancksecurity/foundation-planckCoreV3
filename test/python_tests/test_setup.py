@@ -17,6 +17,8 @@ The directories are created in the current directory.
 
 import os
 import shutil
+from multiprocessing import Process
+
 
 
 realhome = os.path.expanduser("~")
@@ -32,7 +34,7 @@ def link_if_exists(dirname, arthome):
             os.symlink(orig, dirname, True)
 
 
-def create_home(arthome):
+def create_home(mydir, arthome):
     "create an artificial home directory for testing"
 
     os.chdir(mydir)
@@ -48,12 +50,35 @@ def create_home(arthome):
     link_if_exists("Library", arthome) # this may exist on macOS
 
 
+def create_own_identities(mydir, arthome, username):
+    "create own identities as part of the test setup"
+
+    os.environ["HOME"] = os.path.join(mydir, arthome)
+    os.environ["GNUPGHOME"] = os.path.join(mydir, arthome, '.gnupg')
+
+    import pEp
+    me = pEp.Identity()
+    me.address = arthome + "@peptest.ch"
+    me.username = username
+
+    pEp.myself(me)
+    print(repr(me))
+
+
 def create_homes():
     "create two artificial home directories for the two parties"
 
-    create_home("home1")
-    create_home("home2")
-    os.chdir(mydir)
+    create_home(mydir, "test1")
+
+    p1 = Process(target=create_own_identities, args=(mydir, 'test1', 'Alice One'))
+    p1.start()
+    p1.join()
+
+    create_home(mydir, "test2")
+
+    p2 = Process(target=create_own_identities, args=(mydir, 'test2', 'Bob Two'))
+    p2.start()
+    p2.join()
 
 
 def remove_homes():
@@ -61,8 +86,8 @@ def remove_homes():
     contents"""
 
     os.chdir(mydir)
-    shutil.rmtree("home1", ignore_errors=True)
-    shutil.rmtree("home2", ignore_errors=True)
+    shutil.rmtree("test1", ignore_errors=True)
+    shutil.rmtree("test2", ignore_errors=True)
 
 
 if __name__ == "__main__":
