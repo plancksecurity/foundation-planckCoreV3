@@ -34,7 +34,22 @@ def link_if_exists(dirname, arthome):
             os.symlink(orig, dirname, True)
 
 
-def create_home(mydir, arthome):
+def create_own_identities(mydir, arthome, username):
+    "create own identities as part of the test setup"
+
+    os.environ["HOME"] = os.path.join(mydir, arthome)
+    os.environ["GNUPGHOME"] = os.path.join(mydir, arthome, '.gnupg')
+
+    import pEp
+    me = pEp.Identity()
+    me.address = arthome + "@peptest.ch"
+    me.username = username
+
+    pEp.myself(me)
+    print(repr(me))
+
+
+def create_home(mydir, arthome, username):
     "create an artificial home directory for testing"
 
     os.chdir(mydir)
@@ -52,38 +67,16 @@ def create_home(mydir, arthome):
     link_if_exists(".local", arthome)
     link_if_exists("Library", arthome) # this may exist on macOS
 
-
-def create_own_identities(mydir, arthome, username):
-    "create own identities as part of the test setup"
-
-    os.environ["HOME"] = os.path.join(mydir, arthome)
-    os.environ["GNUPGHOME"] = os.path.join(mydir, arthome, '.gnupg')
-
-    import pEp
-    me = pEp.Identity()
-    me.address = arthome + "@peptest.ch"
-    me.username = username
-
-    pEp.myself(me)
-    print(repr(me))
+    p = Process(target=create_own_identities, args=(mydir, arthome, username))
+    p.start()
+    p.join()
 
 
 def create_homes():
     "create two artificial home directories for the two parties"
 
-    create_home(mydir, "test1")
-
-    p1 = Process(target=create_own_identities, args=(mydir, 'test1',
-            'Alice One'))
-    p1.start()
-    p1.join()
-
-    create_home(mydir, "test2")
-
-    p2 = Process(target=create_own_identities, args=(mydir, 'test2',
-            'Bob Two'))
-    p2.start()
-    p2.join()
+    create_home(mydir, "test1", "Alice One")
+    create_home(mydir, "test2", "Bob Two")
 
 
 def remove_homes():
