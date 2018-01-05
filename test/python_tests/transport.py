@@ -15,6 +15,9 @@ import time
 from glob import glob
 
 
+timeout = 5
+
+
 def send_message(to, msg):
     "send message by creating a file in recipient's artificial home"
 
@@ -30,11 +33,14 @@ def send_message(to, msg):
     os.rename(dotpath, path)
 
 
-def recv_message():
+def recv_message(inbox=None):
     """receive message by returning the first .eml files content in artificial
     home"""
 
-    filename = glob("*.eml")[0]
+    if inbox:
+        filename = glob(os.path.join(os.pardir, inbox, "*.eml"))[0]
+    else:
+        filename = glob("*.eml")[0]
 
     with open(filename, "r") as file:
         msg = file.read()
@@ -47,13 +53,18 @@ def recv_message():
 def wait_for_message():
     "wait until a message arrives and return the message"
 
-    while True:
+    found = False
+    for i in range(timeout):
         try:
             msg = recv_message()
         except IndexError:
             time.sleep(1)
         else:
+            found = True
             break
+
+    if not found:
+        raise RuntimeError("timeout")
 
     return msg
 
