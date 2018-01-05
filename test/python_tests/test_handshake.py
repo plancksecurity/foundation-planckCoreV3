@@ -46,10 +46,10 @@ class Test1:
         pEp.update_identity(i)
         return i
 
-    def test_send_and_recv_message(self):
+    def test_handshake(self):
         setup_gnupg() ; import pEp
 
-        msg = pEp.Message()
+        msg = pEp.Message(1)
         msg.from_ = self.me
         msg.to = [self.you]
         msg.shortmsg = "Subject line"
@@ -64,6 +64,14 @@ class Test1:
         inc, keys, rating, consumed, flags = enc.decrypt()
         assert rating == 6
 
+        msg = pEp.Message(1)
+        msg.from_ = self.me
+        msg.to = [self.you]
+        msg.shortmsg = "Subject line complete"
+        msg.longmsg = "Message Text complete\n"
+
+        enc = msg.encrypt()
+        send_message("test2", str(enc))
 
 class Test2:
 
@@ -97,7 +105,7 @@ class Test2:
         pEp.update_identity(i)
         return i
 
-    def test_recv_and_send_message(self):
+    def test_handshake(self):
         setup_gnupg() ; import pEp
 
         txt = wait_for_message()
@@ -113,4 +121,9 @@ class Test2:
 
         enc = out.encrypt()
         send_message("test1", str(enc))
+
+        txt = wait_for_message()
+        msg = pEp.Message(txt)
+        msg.decrypt()
+        assert msg.from_.address == self.you.address
 
