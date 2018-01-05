@@ -57,3 +57,4 @@ random_seed
 secring.gpg
 trustdb.gpg
 .pEp_management.db
+.cache
