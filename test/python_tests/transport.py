@@ -7,9 +7,6 @@
 """
 This module is implementing a basic message transport. Messages are written
 into the artificial home of the receiver and deleted when read.
-
-This module will be copied into the artificial home directories and used from
-inside.
 """
 
 

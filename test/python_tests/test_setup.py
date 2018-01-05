@@ -22,7 +22,6 @@ from multiprocessing import Process
 
 realhome = os.path.expanduser("~")
 mydir = os.path.abspath(os.path.curdir)
-files_to_link = ("transport.py",)
 
 
 def link_if_exists(dirname, arthome):
@@ -64,8 +63,6 @@ def create_home(mydir, arthome, username):
     os.makedirs(arthome, exist_ok=True)
 
     os.chdir(arthome)
-    for filename in files_to_link:
-        link_file(filename)
 
     link_if_exists("bin", arthome)
     link_if_exists("include", arthome)
