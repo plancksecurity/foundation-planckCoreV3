@@ -18,6 +18,7 @@ The directories are created in the current directory.
 import os
 import shutil
 from multiprocessing import Process
+from time import sleep
 
 
 realhome = os.path.expanduser("~")
@@ -75,12 +76,25 @@ def create_home(mydir, arthome, username):
     p.start()
     p.join()
 
+    with open(".ready", "w"): pass
+
 
 def create_homes():
     "create two artificial home directories for the two parties"
 
-    create_home(mydir, "test1", "Alice One")
-    create_home(mydir, "test2", "Bob Two")
+    try:
+        os.stat("test1")
+    except:
+        create_home(mydir, "test1", "Alice One")
+        create_home(mydir, "test2", "Bob Two")
+    else:
+        while True:
+            try:
+                os.stat("test2/.ready")
+            except:
+                sleep(1)
+            else:
+                break
 
 
 def remove_homes():

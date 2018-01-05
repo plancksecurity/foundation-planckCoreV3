@@ -90,15 +90,11 @@ class Test2:
         pEp.update_identity(i)
         return i
 
-    def test_send_message(self):
+    def test_receive_message(self):
         setup_gnupg() ; import pEp
 
-        msg = pEp.Message()
-        msg.from_ = self.me
-        msg.to = [self.you]
-        msg.shortmsg = "Subject line"
-        msg.longmsg = "Message Text\n"
-
-        enc = msg.encrypt()
-        send_message("test1", str(enc))
+        txt = wait_for_message()
+        msg = pEp.Message(txt)
+        msg.decrypt()
+        assert msg.from_.address == self.you.address
 
