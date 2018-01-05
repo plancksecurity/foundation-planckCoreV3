@@ -58,3 +58,5 @@ secring.gpg
 trustdb.gpg
 .pEp_management.db
 .cache
+__pycache__
+*.pyc
