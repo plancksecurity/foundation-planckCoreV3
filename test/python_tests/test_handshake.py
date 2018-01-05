@@ -85,9 +85,7 @@ class Test2:
 
     @property
     def me(self):
-        # because of flaws of py.test these two statements are necessary
-        setup_gnupg()   # work around a bug with initializing os.environ
-        import pEp      # after that import pEp module, not before
+        setup_gnupg() ; import pEp
 
         i = pEp.Identity()
         i.address = "test2@peptest.ch"
