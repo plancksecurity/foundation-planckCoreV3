@@ -90,6 +90,7 @@ def remove_homes():
     os.chdir(mydir)
     shutil.rmtree("test1", ignore_errors=True)
     shutil.rmtree("test2", ignore_errors=True)
+    shutil.rmtree("__pycache__", ignore_errors=True)
 
 
 if __name__ == "__main__":
