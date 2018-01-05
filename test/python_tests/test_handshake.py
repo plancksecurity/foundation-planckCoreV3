@@ -46,7 +46,7 @@ class Test1:
         pEp.update_identity(i)
         return i
 
-    def test_send_message(self):
+    def test_send_and_recv_message(self):
         setup_gnupg() ; import pEp
 
         msg = pEp.Message()
@@ -57,6 +57,13 @@ class Test1:
 
         enc = msg.encrypt()
         send_message("test2", str(enc))
+
+        txt = wait_for_message()
+        enc = pEp.Message(txt)
+        assert enc.from_.address == "test2@peptest.ch"
+        inc, keys, rating, consumed, flags = enc.decrypt()
+        assert rating == 6
+
 
 class Test2:
 
@@ -90,11 +97,20 @@ class Test2:
         pEp.update_identity(i)
         return i
 
-    def test_receive_message(self):
+    def test_recv_and_send_message(self):
         setup_gnupg() ; import pEp
 
         txt = wait_for_message()
         msg = pEp.Message(txt)
         msg.decrypt()
         assert msg.from_.address == self.you.address
+
+        out = pEp.Message(1)
+        out.from_ = self.me
+        out.to = [self.you]
+        out.shortmsg = "Subject Back"
+        out.longmsg = "Text Back\n"
+
+        enc = out.encrypt()
+        send_message("test1", str(enc))
 
