@@ -60,3 +60,4 @@ trustdb.gpg
 .cache
 __pycache__
 *.pyc
+test/python_tests/test?
