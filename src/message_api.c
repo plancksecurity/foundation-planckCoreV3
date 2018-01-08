@@ -29,7 +29,8 @@ static bool is_a_pEpmessage(const message *msg)
     return false;
 }
 
-static bool is_wrapper(message* src) {
+static bool is_wrapper(message* src)
+{
     bool retval = false;
     
     if (src) {
@@ -62,20 +63,23 @@ static bool is_wrapper(message* src) {
 }
 
 
-static stringpair_t* search_optfields(const message* msg, const char* key) {
-    stringpair_list_t* opt_fields = msg->opt_fields;
-    
-    const stringpair_list_t* curr;
-    
-    for (curr = opt_fields; curr && curr->value; curr = curr->next) {
-        if (curr->value->key) {
-            if (strcasecmp(curr->value->key, key) == 0)
-                return curr->value;
-        }
-    } 
-    
-    return NULL;
-}
+/*
+ * static stringpair_t* search_optfields(const message* msg, const char* key) {
+ *     if (msg && key) {
+ *         stringpair_list_t* opt_fields = msg->opt_fields;
+ *         
+ *         const stringpair_list_t* curr;
+ *         
+ *         for (curr = opt_fields; curr && curr->value; curr = curr->next) {
+ *             if (curr->value->key) {
+ *                 if (strcasecmp(curr->value->key, key) == 0)
+ *                     return curr->value;
+ *             }
+ *         } 
+ *     }
+ *     return NULL;
+ * }
+ */
 
 static char * keylist_to_string(const stringlist_t *keylist)
 {
@@ -1415,15 +1419,15 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     assert(session);
     assert(src);
     assert(dst);
-    assert(enc_format != PEP_enc_none);
 
-    if (!(session && src && dst && enc_format != PEP_enc_none))
+    if (!(session && src && dst))
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     if (src->dir == PEP_dir_incoming)
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
     determine_encryption_format(src);
+    // TODO: change this for multi-encryption in message format 2.0
     if (src->enc_format != PEP_enc_none)
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
@@ -1450,7 +1454,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
     identity_list * _il;
 
-    if ((_il = src->bcc) && _il->ident)
+    if (enc_format != PEP_enc_none && (_il = src->bcc) && _il->ident)
     {
         // BCC limited support:
         //     - App splits mails with BCC in multiple mails.
@@ -1524,7 +1528,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         }
     }
 
-    if (!dest_keys_found ||
+    if (enc_format == PEP_enc_none || !dest_keys_found ||
         stringlist_length(keys)  == 0 ||
         _rating(max_comm_type,
                 PEP_rating_undefined) < PEP_rating_reliable)
@@ -2194,7 +2198,7 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                                      char* ptext,
                                      size_t psize) {
                             
-    PEP_STATUS status = PEP_UNKNOWN_ERROR;
+    PEP_STATUS status = PEP_STATUS_OK;
     
     *msg_ptr = clone_to_empty_message(src);
 
@@ -2552,9 +2556,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
            now we need to update the message rating with the 
            sender and recipients in mind */
         status = amend_rating_according_to_sender_and_recipients(session,
-                                                                 rating,
-                                                                 src->from,
-                                                                 _keylist);
+                rating, src->from, _keylist);
 
         if (status != PEP_STATUS_OK)
             GOTO(pep_error);
@@ -3190,9 +3192,6 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
         GOTO(pep_error);
     }
 
-    // Clear the encryption status, or mime_encode will ignore
-    // the plaintext and do all sorts of other stupid things
-    enc_msg->enc_format = PEP_enc_none;
     status = _mime_encode_message_internal(enc_msg, false, mime_ciphertext, false);
 
 pep_error:
@@ -3379,10 +3378,8 @@ got_keylist:
     if (status != PEP_STATUS_OK)
         GOTO(pep_error);
 
-    status = amend_rating_according_to_sender_and_recipients(session,
-                                                             &_rating,
-                                                             msg->from,
-                                                             _keylist);
+    status = amend_rating_according_to_sender_and_recipients(session, &_rating,
+            msg->from, _keylist);
     if (status == PEP_STATUS_OK)
         *rating = _rating;
     

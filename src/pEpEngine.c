@@ -110,7 +110,7 @@ static const char *sql_set_device_group =
 
 // This will cascade to identity and trust
 static const char* sql_replace_userid =
-    "update person set id = ?1" 
+    "update person set id = ?1 " 
     "where id = ?2;";
 
 static const char *sql_get_device_group = 
@@ -791,6 +791,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_get_own_userid), &_session->get_own_userid, NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_replace_userid,
+            (int)strlen(sql_replace_userid), &_session->replace_userid, NULL);
+    assert(int_result == SQLITE_OK);
+
     int_result = sqlite3_prepare_v2(_session->db, sql_replace_identities_fpr,
             (int)strlen(sql_replace_identities_fpr), 
             &_session->replace_identities_fpr, NULL);
@@ -865,10 +869,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_i18n_token), &_session->i18n_token, NULL);
     assert(int_result == SQLITE_OK);
     
-    int_result = sqlite3_prepare_v2(_session->system_db, sql_replace_userid,
-            (int)strlen(sql_replace_userid), &_session->replace_userid, NULL);
-    assert(int_result == SQLITE_OK);
-
     // blacklist
 
     int_result = sqlite3_prepare_v2(_session->db, sql_blacklist_add,
