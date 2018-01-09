@@ -123,26 +123,28 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
     assert(status == PEP_STATUS_OK);
     
     if (status != PEP_STATUS_OK) {
-         return ADD_TO_LOG(status);
-     }
-    
-    status = key_expired(session, fpr, 
-                         time(NULL), // NOW. For _myself, this is different.
-                         &expired);
-
-    assert(status == PEP_STATUS_OK);
-    if (status != PEP_STATUS_OK)
         return ADD_TO_LOG(status);
+    }
     
-    if ((ct | PEP_ct_confirmed) == PEP_ct_OpenPGP) {
-        status = blacklist_is_listed(session, 
-                                     fpr, 
-                                     &blacklisted);
-                                     
+    if (!revoked) {
+        status = key_expired(session, fpr, 
+                             time(NULL), // NOW. For _myself, this is different.
+                             &expired);
+    
+        assert(status == PEP_STATUS_OK);
         if (status != PEP_STATUS_OK)
             return ADD_TO_LOG(status);
+
+        if ((ct | PEP_ct_confirmed) == PEP_ct_OpenPGP) {
+            status = blacklist_is_listed(session, 
+                                         fpr, 
+                                         &blacklisted);
+                                         
+            if (status != PEP_STATUS_OK)
+                return ADD_TO_LOG(status);
+        }
     }
-        
+            
     if (ident->me && (ct == PEP_ct_pEp) && !revoked && expired) {
         // extend key
         timestamp *ts = new_timestamp(time(NULL) + KEY_EXPIRE_DELTA);
@@ -248,7 +250,27 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
         }        
     }
     
-    return elect_pubkey(session, stored_identity);
+    status = elect_pubkey(session, stored_identity);
+    
+    if (status == PEP_STATUS_OK) {
+        switch (stored_identity->comm_type) {
+            case PEP_ct_key_revoked:
+            case PEP_ct_key_b0rken:
+            case PEP_ct_key_expired:
+            case PEP_ct_compromized:
+            case PEP_ct_mistrusted:
+                // this only happens when it's all there is
+                status = PEP_KEY_NOT_FOUND;
+                free(stored_identity->fpr);
+                stored_identity->fpr = NULL;
+                stored_identity->comm_type = PEP_ct_unknown;
+                break;
+            default:
+                // FIXME: blacklisting?
+                break;
+        }
+    }
+    return status;
 }
 
 PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags);
@@ -266,11 +288,11 @@ static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
 }
 
 static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
-                                                 pEp_identity* input_id,
+                                                 pEp_identity* return_id,
                                                  pEp_identity* stored_ident,
                                                  bool store) {
     
-    if (!session || !input_id || !stored_ident)
+    if (!session || !return_id || !stored_ident)
         return PEP_ILLEGAL_VALUE;
     
     PEP_STATUS status;
@@ -281,20 +303,28 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
                                 &is_user_default,
                                 &is_address_default);
                                 
-    if (status == PEP_STATUS_OK && stored_ident->fpr) {
-    //        * set identity comm_type from trust db (user_id, FPR)
+    if (status == PEP_STATUS_OK && stored_ident->fpr && *(stored_ident->fpr) != '\0') {
+    // set identity comm_type from trust db (user_id, FPR)
         status = get_trust(session, stored_ident);
-        if (status != PEP_STATUS_OK)
+        if (status == PEP_CANNOT_FIND_IDENTITY) {
+            // This is OK - there is no trust DB entry, but we
+            // found a key. We won't store this, but we'll
+            // use it.
+            PEP_comm_type ct = PEP_ct_unknown;
+            status = get_key_rating(session, stored_ident->fpr, &ct);
+            stored_ident->comm_type = ct;
+        }
+        if (status != PEP_STATUS_OK) {
             return status; // FIXME - free mem
-        if (input_id->fpr &&
-                 strcasecmp(stored_ident->fpr, input_id->fpr) != 0) {
-            free(input_id->fpr);
-            
-            // Copy in the result from get_valid_pubkey
-            input_id->fpr = strdup(stored_ident->fpr);
-            
-            status = get_trust(session, stored_ident);
-            input_id->comm_type = stored_ident->comm_type;
+        }
+        if (return_id->fpr) {
+            if (strcasecmp(stored_ident->fpr, return_id->fpr) != 0) {
+                free(return_id->fpr);
+                
+                // Copy in the result from get_valid_pubkey
+                return_id->fpr = strdup(stored_ident->fpr);
+            }
+            return_id->comm_type = stored_ident->comm_type;            
         }
     }
     else {
@@ -306,13 +336,13 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     // (also, if the input username is "anonymous" and there exists
     //  a DB username, we replace)
     if (stored_ident->username) {
-        if (input_id->username && 
-            (strcasecmp(input_id->username, "anonymous") == 0)) {
-            free(input_id->username);
-            input_id->username = NULL;
+        if (return_id->username && 
+            (strcasecmp(return_id->username, "anonymous") == 0)) {
+            free(return_id->username);
+            return_id->username = NULL;
         }
-        if (!input_id->username)
-            input_id->username = strdup(stored_ident->username);
+        if (!return_id->username)
+            return_id->username = strdup(stored_ident->username);
     }
         
     // Call set_identity() to store
@@ -321,21 +351,21 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
          // if we got an fpr which is default for either user
          // or identity AND is valid for this address, set in DB
          // as default
-         status = set_identity(session, input_id);
+         status = set_identity(session, return_id);
     }
     else {
         // Store without default fpr/ct, but return the fpr and ct 
         // for current use
-        char* save_fpr = input_id->fpr;
-        PEP_comm_type save_ct = input_id->comm_type;
-        input_id->fpr = NULL;
-        input_id->comm_type = PEP_ct_unknown;
-        status = set_identity(session, input_id);
-        input_id->fpr = save_fpr;
-        input_id->comm_type = save_ct;
+        char* save_fpr = return_id->fpr;
+        PEP_comm_type save_ct = return_id->comm_type;
+        return_id->fpr = NULL;
+        return_id->comm_type = PEP_ct_unknown;
+        status = set_identity(session, return_id);
+        return_id->fpr = save_fpr;
+        return_id->comm_type = save_ct;
     }
     
-    transfer_ident_lang_and_flags(input_id, stored_ident);
+    transfer_ident_lang_and_flags(return_id, stored_ident);
     
     return status;
 }
@@ -457,6 +487,9 @@ DYNAMIC_API PEP_STATUS update_identity(
             //    * call set_identity() to store
             if (status == PEP_STATUS_OK) {
                 status = set_identity(session, identity);
+                if (status == PEP_STATUS_OK) {
+                    elect_pubkey(session, identity);
+                }
             }
             //  * Return: created identity
         }        
@@ -524,6 +557,9 @@ DYNAMIC_API PEP_STATUS update_identity(
             //      here, none of them fit.
             //    * call set_identity() to store
             status = set_identity(session, identity);
+            if (status == PEP_STATUS_OK) {
+                elect_pubkey(session, identity);
+            }
         }
     }
     else {

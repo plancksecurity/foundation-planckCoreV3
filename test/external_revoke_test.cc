@@ -180,53 +180,23 @@ int main() {
 
     status = encrypt_message(session, outgoing_msg, NULL, &encrypted_outgoing_msg, PEP_enc_PGP_MIME, 0);
     cout << "Encryption returns with status " << tl_status_string(status) << endl;
+    assert (status == PEP_KEY_NOT_FOUND);
+    assert (encrypted_outgoing_msg == NULL);
 
-    PEP_comm_type ct = (encrypted_outgoing_msg ? encrypted_outgoing_msg->to->ident->comm_type : outgoing_msg->to->ident->comm_type);
 
     cout << endl << "---------------------------------------------------------" << endl;
     cout << "2c. Check trust of recip, whose only key has been revoked, once an encryption attempt has been made." << endl;
     cout << "---------------------------------------------------------" << endl << endl;
 
-    // check comm_type
-    cout << "comm_type: " << tl_ct_string(ct) << endl;
-    assert(ct == PEP_ct_key_revoked);
-    
     status = get_trust(session, recip1);
 
     cout << "Recip's trust DB comm_type = " << hex << tl_ct_string(recip1->comm_type) << endl;
     assert(recip1->comm_type == PEP_ct_key_revoked);
 
-    cout << endl << "---------------------------------------------------------" << endl;
-    cout << "2d. Try to decrypt message that was encrypted for revoked key guy." << endl;
-    cout << "---------------------------------------------------------" << endl << endl;
-    // decrypt message
-//    free_message(outgoing_msg);
-//    outgoing_msg = NULL;
-    // FIXME: Make this make more sense
-    status = decrypt_message(session, outgoing_msg, &decrypted_msg, &keylist, &rating, &flags);
-    cout << "Decryption returns with status " << tl_status_string(status) << endl;
-    assert(status == PEP_UNENCRYPTED);
-    
-    // check rating
-    cout << "Rating of decrypted message to trusted recip: " << tl_rating_string(rating) << endl;
-    assert(rating == PEP_rating_unencrypted);
-
-    ct = (decrypted_msg ? decrypted_msg->to->ident->comm_type : outgoing_msg->to->ident->comm_type);
-
-    cout << "comm_type: " << tl_ct_string(ct) << endl;
-    assert(ct == PEP_ct_key_revoked);
-    
-    status = get_trust(session, recip1);
-    
-    cout << "Recip's trust DB comm_type = " << hex << tl_ct_string(recip1->comm_type) << endl;
-    assert(recip1->comm_type == PEP_ct_key_revoked);
-
-    free_message(encrypted_outgoing_msg);
     free_message(decrypted_msg);
     free_message(outgoing_msg);
     outgoing_msg = NULL;
     decrypted_msg = NULL;
-    encrypted_outgoing_msg = NULL;
 
     cout << endl << "---------------------------------------------------------" << endl;
     cout << "3a. Generate new key, but don't explicitly trust it." << endl;
@@ -262,7 +232,7 @@ int main() {
     cout << "Message created.\n";
 
     status = encrypt_message(session, outgoing_msg, NULL, &encrypted_outgoing_msg, PEP_enc_PGP_MIME, 0);
-    ct = (encrypted_outgoing_msg ? encrypted_outgoing_msg->to->ident->comm_type : outgoing_msg->to->ident->comm_type);
+    PEP_comm_type ct = (encrypted_outgoing_msg ? encrypted_outgoing_msg->to->ident->comm_type : outgoing_msg->to->ident->comm_type);
     
 
     // CHECK STATUS???
@@ -274,8 +244,8 @@ int main() {
     
     status = get_trust(session, recip1);
 
-    cout << "Recip's trust DB comm_type = " << hex << tl_ct_string(recip1->comm_type) << endl;
-    assert(recip1->comm_type == PEP_ct_OpenPGP_unconfirmed);
+    cout << "Recip's trust DB comm_type (should be unknown, as we're using a keyring-only key, not in DB) = " << hex << tl_ct_string(recip1->comm_type) << endl;
+    assert(recip1->comm_type != PEP_ct_OpenPGP_unconfirmed);
 
     // decrypt message
 //    free_message(outgoing_msg);
@@ -303,8 +273,8 @@ int main() {
     
     status = get_trust(session, recip1);
     
-    cout << "Recip's trust DB comm_type = " << hex << tl_ct_string(recip1->comm_type) << endl;
-    assert(recip1->comm_type == PEP_ct_OpenPGP_unconfirmed);
+    cout << "Recip's trust DB comm_type (should be unknown - there's nothing in the DB) = " << hex << tl_ct_string(recip1->comm_type) << endl;
+    assert(recip1->comm_type == PEP_ct_unknown);
 
     free_message(encrypted_outgoing_msg);
     free_message(decrypted_msg);
