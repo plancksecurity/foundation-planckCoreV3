@@ -8,5 +8,7 @@ from setup_test import create_homes
 
 
 def pytest_runtest_setup(item):
-    create_homes()
-
+    try:
+        create_homes()
+    except FileExistsError: # if concurrent process is already creating things
+        pass

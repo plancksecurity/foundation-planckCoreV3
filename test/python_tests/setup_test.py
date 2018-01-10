@@ -84,9 +84,11 @@ def create_homes():
 
     try:
         os.stat("test1")
-    except:
+    except FileNotFoundError:
         create_home(mydir, "test1", "Alice One")
         create_home(mydir, "test2", "Bob Two")
+        os.chdir(mydir);
+        os.makedirs("common", exist_ok=True) # common inbox for Sync tests
     else:
         while True:
             try:
@@ -104,6 +106,7 @@ def remove_homes():
     os.chdir(mydir)
     shutil.rmtree("test1", ignore_errors=True)
     shutil.rmtree("test2", ignore_errors=True)
+    shutil.rmtree("common", ignore_errors=True)
     shutil.rmtree("__pycache__", ignore_errors=True)
 
 
