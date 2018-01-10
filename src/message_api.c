@@ -1958,11 +1958,16 @@ static PEP_STATUS amend_rating_according_to_sender_and_recipients(
                 return PEP_OUT_OF_MEMORY;
 
             status = get_trust(session, _sender);
+            if (_sender->comm_type == PEP_ct_unknown) {
+                get_key_rating(session, fpr, &_sender->comm_type);
+                
+            }
             if (_sender->comm_type != PEP_ct_unknown) {
                 *rating = keylist_rating(session, recipients, 
                             fpr, _rating(_sender->comm_type, 
                                           PEP_rating_undefined));
             }
+            
             free_identity(_sender);
             if (status == PEP_CANNOT_FIND_IDENTITY)
                status = PEP_STATUS_OK;

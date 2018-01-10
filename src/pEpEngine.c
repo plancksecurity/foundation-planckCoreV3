@@ -2053,12 +2053,14 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
     PEP_STATUS status = PEP_STATUS_OK;
     int result;
 
-    assert(session);
-    assert(identity);
-    assert(identity->user_id);
-    assert(identity->user_id[0]);
-    assert(identity->fpr);
-    assert(identity->fpr[0]);
+    // We need to be able to test that we break correctly without shutting
+    // asserts off everywhere.
+    // assert(session);
+    // assert(identity);
+    // assert(identity->user_id);
+    // assert(identity->user_id[0]);
+    // assert(identity->fpr);
+    // assert(identity->fpr[0]);
 
     if (!(session && identity && identity->user_id && identity->user_id[0] &&
                 identity->fpr && identity->fpr[0]))

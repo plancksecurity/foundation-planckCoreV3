@@ -114,14 +114,18 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
         return ADD_TO_LOG(status);
     
     PEP_comm_type ct = ident->comm_type;
+
+    if (ct == PEP_ct_unknown) {
+        // If status is bad, it's ok, we get the rating
+        // we should use then (PEP_ct_unknown)
+        get_key_rating(session, fpr, &ct);
+    }
     
     bool revoked, expired;
     bool blacklisted = false;
     
     status = key_revoked(session, fpr, &revoked);    
-    
-    assert(status == PEP_STATUS_OK);
-    
+        
     if (status != PEP_STATUS_OK) {
         return ADD_TO_LOG(status);
     }
@@ -230,16 +234,18 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
                       -1, SQLITE_STATIC);
     
     const int result = sqlite3_step(session->get_user_default_key);
-    const char* user_fpr = NULL;
+    char* user_fpr = NULL;
     if (result == SQLITE_ROW) {
-        user_fpr =
+        const char* u_fpr =
             (char *) sqlite3_column_text(session->get_user_default_key, 0);
+        if (u_fpr)
+            user_fpr = strdup(u_fpr);
     }
     sqlite3_reset(session->get_user_default_key);
     
     if (user_fpr) {             
         // There exists a default key for user, so validate
-        stored_identity->fpr = strdup(user_fpr);
+        stored_identity->fpr = user_fpr;
         status = validate_fpr(session, stored_identity);
         if (status == PEP_STATUS_OK && stored_identity->fpr) {
             *is_user_default = true;
@@ -251,24 +257,24 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
     }
     
     status = elect_pubkey(session, stored_identity);
+    if (status == PEP_STATUS_OK)
+        validate_fpr(session, stored_identity);    
     
-    if (status == PEP_STATUS_OK) {
-        switch (stored_identity->comm_type) {
-            case PEP_ct_key_revoked:
-            case PEP_ct_key_b0rken:
-            case PEP_ct_key_expired:
-            case PEP_ct_compromized:
-            case PEP_ct_mistrusted:
-                // this only happens when it's all there is
-                status = PEP_KEY_NOT_FOUND;
-                free(stored_identity->fpr);
-                stored_identity->fpr = NULL;
-                stored_identity->comm_type = PEP_ct_unknown;
-                break;
-            default:
-                // FIXME: blacklisting?
-                break;
-        }
+    switch (stored_identity->comm_type) {
+        case PEP_ct_key_revoked:
+        case PEP_ct_key_b0rken:
+        case PEP_ct_key_expired:
+        case PEP_ct_compromized:
+        case PEP_ct_mistrusted:
+            // this only happens when it's all there is
+            status = PEP_KEY_NOT_FOUND;
+            free(stored_identity->fpr);
+            stored_identity->fpr = NULL;
+            stored_identity->comm_type = PEP_ct_unknown;
+            break;
+        default:
+            // FIXME: blacklisting?
+            break;
     }
     return status;
 }
@@ -322,6 +328,9 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
         return_id->comm_type = stored_ident->comm_type;            
     }
     else {
+        free(return_id->fpr);
+        return_id->fpr = NULL;
+        return_id->comm_type = PEP_ct_key_not_found;
         return status; // Couldn't find a key.
     }
                 
