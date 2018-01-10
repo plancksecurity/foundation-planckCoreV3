@@ -33,7 +33,7 @@ class Test1:
         i = pEp.Identity()
         i.address = "test1@peptest.ch"
         i.username = "Alice One"
-        pEp.myself(i)
+        i.myself()
         return i
 
     @property
@@ -90,7 +90,7 @@ class Test2:
         i = pEp.Identity()
         i.address = "test2@peptest.ch"
         i.username = "Bob Two"
-        pEp.myself(i)
+        i.myself()
         return i
 
     @property
