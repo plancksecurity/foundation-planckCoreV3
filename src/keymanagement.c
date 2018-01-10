@@ -469,9 +469,11 @@ DYNAMIC_API PEP_STATUS update_identity(
         }
         //  * else (identity unavailable)
         else {
+            status = PEP_STATUS_OK;
+            
             //  if we only have user_id and address and identity not available
             //      * return error status (identity not found)
-            if (!identity->username)
+            if (!(identity->username))
                 status = PEP_CANNOT_FIND_IDENTITY;
             
             // Otherwise, if we had user_id, address, and username:
@@ -710,11 +712,9 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
              !own_id)))
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
-    if (!own_id) {
-        // check to see if we have ANY identity for this address... could have
-        // happened due to race condition
-    }
-    
+    // IF WE DON'T HAVE AN OWN_ID, WE IGNORE REFERENCES TO THIS ADDRESS IN THE
+    // DB, AS IT IS NOT AN OWN_IDENTITY AND HAS NO INFORMATION WE NEED OR WHAT TO
+    // SET FOR MYSELF
     identity->comm_type = PEP_ct_pEp;
     identity->me = true;
     if(ignore_flags)
@@ -727,6 +727,20 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
         assert(identity->user_id);
         if (identity->user_id == NULL)
             return PEP_OUT_OF_MEMORY;
+    }
+    else if (own_id) {
+        if (strcmp(identity->user_id, own_id) != 0) {
+            if (strcmp(own_id, PEP_OWN_USERID) == 0) {
+                // replace own_id in DB
+                status = replace_userid(session, PEP_OWN_USERID,
+                                        identity->user_id);
+                if (status != PEP_STATUS_OK)
+                    return status;
+            }
+            else {
+                return PEP_CANNOT_SET_IDENTITY; // FIXME: Better error
+            }
+        }
     }
 
     if (EMPTYSTR(identity->username))
@@ -891,7 +905,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
         }
     }
 
-    if (!identity->username)
+    if (!(identity->username))
         identity->username = strdup("");
     
     status = set_identity(session, identity);

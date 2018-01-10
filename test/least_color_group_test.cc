@@ -48,14 +48,11 @@ int main(int argc, char** argv) {
                                       PEP_OWN_USERID, "Pep Color Test P (recip)");
     me1->me = true;
     PEP_STATUS status = update_identity(session, me1);
-    trust_personal_key(session, me1);
-    status = update_identity(session, me1);
     
     pEp_identity * sender1 = new_identity("pep.color.test.V@kgrothoff.org",
                                           NULL, "TOFU_pep.color.test.V@kgrothoff.org",
                                           "Pep Color Test V (sender)");
     
-    sender1->me = false;
     status = update_identity(session, sender1);
     trust_personal_key(session, sender1);
     status = update_identity(session, sender1);
