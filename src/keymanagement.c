@@ -317,15 +317,9 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
         if (status != PEP_STATUS_OK) {
             return status; // FIXME - free mem
         }
-        if (return_id->fpr) {
-            if (strcasecmp(stored_ident->fpr, return_id->fpr) != 0) {
-                free(return_id->fpr);
-                
-                // Copy in the result from get_valid_pubkey
-                return_id->fpr = strdup(stored_ident->fpr);
-            }
-            return_id->comm_type = stored_ident->comm_type;            
-        }
+        free (return_id->fpr);
+        return_id->fpr = strdup(stored_ident->fpr);
+        return_id->comm_type = stored_ident->comm_type;            
     }
     else {
         return status; // Couldn't find a key.

@@ -40,8 +40,12 @@ int main() {
     assert(status == PEP_STATUS_OK);
     assert(strcmp(recip1->fpr, "BACC7A60A88A39A25D99B4A545D7542F39E5DAB5") == 0);
     
+    // First, we need the fpr to be in the DB system.
+    status = set_identity(session,recip1);
+    // Then we update the trust.
     // This is not an external function. We use it to expedite the test since we don't do a sync exchange here.
     status = update_trust_for_fpr(session, recip1->fpr, PEP_ct_pEp);
+    // Then we retrieve the new trust.
     status = update_identity(session,recip1);
     assert(status == PEP_STATUS_OK);
     assert(recip1->comm_type == PEP_ct_pEp);

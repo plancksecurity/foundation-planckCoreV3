@@ -1820,7 +1820,6 @@ PEP_STATUS replace_identities_fpr(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
-
 PEP_STATUS update_trust_for_fpr(PEP_SESSION session, 
                                 const char* fpr, 
                                 PEP_comm_type comm_type)

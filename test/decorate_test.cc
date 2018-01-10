@@ -10,6 +10,7 @@
 #include <sstream>
 #include "mime.h"
 #include "message_api.h"
+#include "test_util.h"
 
 using namespace std;
 
@@ -24,7 +25,15 @@ int main() {
     assert(session);
     cout << "init() completed.\n";
 
-    // message_api test code
+    const string alice_pub_key = slurp("test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
+    const string alice_priv_key = slurp("test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc");
+    const string bob_pub_key = slurp("test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
+    PEP_STATUS statuspub = import_key(session, alice_pub_key.c_str(), alice_pub_key.length(), NULL);
+    PEP_STATUS statuspriv = import_key(session, alice_priv_key.c_str(), alice_priv_key.length(), NULL);
+    PEP_STATUS statusbob = import_key(session, bob_pub_key.c_str(), bob_pub_key.length(), NULL);
+    assert(statuspub == PEP_STATUS_OK);
+    assert(statuspriv == PEP_STATUS_OK);
+    assert(statusbob == PEP_STATUS_OK);
 
     cout << "creating message…\n";
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, "Alice Test");
@@ -46,7 +55,7 @@ int main() {
     message* encrypted_msg = nullptr;
     cout << "calling encrypt_message\n";
     PEP_STATUS status = encrypt_message (session, outgoing_message, NULL, &encrypted_msg, PEP_enc_PGP_MIME, 0);
-    cout << "encrypt_message() returns " << std::hex << status << '.' << endl;
+    cout << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
     assert(status == PEP_STATUS_OK);
     assert(encrypted_msg);
     cout << "message encrypted.\n";
