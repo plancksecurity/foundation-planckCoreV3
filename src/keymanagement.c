@@ -390,13 +390,11 @@ DYNAMIC_API PEP_STATUS update_identity(
     char* own_id = NULL;
     status = get_own_userid(session, &own_id);    
 
-    // Is this me, temporary or not? If so, _myself() is the right call.
+    // Is this me, temporary or not? If so, BAIL.
     if (identity->me || 
        (own_id && identity->user_id && (strcmp(own_id, identity->user_id) == 0))) 
     {
-        status = _myself(session, identity, false, true);
-        free(own_id);
-        return status;
+        return PEP_ILLEGAL_VALUE;
     }
 
     // We have, at least, an address.
@@ -404,7 +402,7 @@ DYNAMIC_API PEP_STATUS update_identity(
     pEp_identity* stored_ident = NULL;
 
     if (identity->user_id) {            
-        // (we're gonna update the trust/fpr anyway, so we user the no-fpr-from-trust-db variant)
+        // (we're gonna update the trust/fpr anyway, so we use the no-fpr-from-trust-db variant)
         //      * do get_identity() to retrieve stored identity information
         status = get_identity_without_trust_check(session, identity->address, identity->user_id, &stored_ident);
 
@@ -701,23 +699,31 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     assert(identity);
     assert(!EMPTYSTR(identity->address));
 
+    if (!session || !identity || EMPTYSTR(identity->address))
+        return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
+        
     char* own_id = NULL;
     status = get_own_userid(session, &own_id);
 
+    // Deal with user_id mismatches - if the own_id in the DB and the
+    // input ID both exist and don't match, this is only allowed when
+    // a temporary PEP_OWN_USERID has been put into the DB; the user_id
+    // here will then replace it. (Database cascades changes)
+    if (own_id && !EMPTYSTR(identity->user_id)) {
+        if (strcmp(own_id, identity->user_id) != 0)) {
+            if (strcmp(own_id, PEP_OWN_USERID) != 0) {
+                free(own_id);
+                return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
+            }
+        }
+    }
 
-    assert(EMPTYSTR(identity->user_id) ||
-           (own_id && strcmp(identity->user_id, own_id) == 0) ||
-           !own_id);
-
-    if (!(session && identity && !EMPTYSTR(identity->address) &&
-            (EMPTYSTR(identity->user_id) ||
-            (own_id && strcmp(identity->user_id, own_id) == 0) ||
-             !own_id)))
-        return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
-
-    // IF WE DON'T HAVE AN OWN_ID, WE IGNORE REFERENCES TO THIS ADDRESS IN THE
-    // DB, AS IT IS NOT AN OWN_IDENTITY AND HAS NO INFORMATION WE NEED OR WHAT TO
+    // NOTE: IF WE DON'T YET HAVE AN OWN_ID, WE IGNORE REFERENCES TO THIS ADDRESS IN THE
+    // DB (WHICH MAY HAVE BEEN SET BEFORE MYSELF WAS CALLED BY RECEIVING AN EMAIL FROM
+    // THIS ADDRESS), AS IT IS NOT AN OWN_IDENTITY AND HAS NO INFORMATION WE NEED OR WHAT TO
     // SET FOR MYSELF
+    
+    // Ok, so now, set up the own_identity:
     identity->comm_type = PEP_ct_pEp;
     identity->me = true;
     if(ignore_flags)
@@ -726,6 +732,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     if (EMPTYSTR(identity->user_id))
     {
         free(identity->user_id);
+        // If we have have no information, we use as temp PEP_OWN_USERID
         identity->user_id = (own_id ? own_id : strdup(PEP_OWN_USERID));
         assert(identity->user_id);
         if (identity->user_id == NULL)
@@ -733,38 +740,45 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     }
     else if (own_id) {
         if (strcmp(identity->user_id, own_id) != 0) {
-            if (strcmp(own_id, PEP_OWN_USERID) == 0) {
-                // replace own_id in DB
-                status = replace_userid(session, PEP_OWN_USERID,
-                                        identity->user_id);
-                if (status != PEP_STATUS_OK)
-                    return status;
-            }
-            else {
-                return PEP_CANNOT_SET_IDENTITY; // FIXME: Better error
-            }
+            // This will ONLY occur, due to the above check,
+            // when own_id is PEP_OWN_USERID
+            status = replace_userid(session, PEP_OWN_USERID,
+                                    identity->user_id);
+            if (status != PEP_STATUS_OK)
+                return status;
         }
     }
 
-    if (EMPTYSTR(identity->username))
-    {
-        free(identity->username);
-        identity->username = strdup("Anonymous");
-        assert(identity->username);
-        if (identity->username == NULL)
-            return PEP_OUT_OF_MEMORY;
-    }
-
+    // Ok, so now we are guaranteed to have a user_id.
+    // Let's see if we have an identity record in the DB for 
+    // this user_id + address
     DEBUG_LOG("myself", "debug", identity->address);
  
     status = get_identity(session,
                           identity->address,
                           identity->user_id,
                           &stored_identity);
-    
+
     assert(status != PEP_OUT_OF_MEMORY);
     if (status == PEP_OUT_OF_MEMORY)
         return PEP_OUT_OF_MEMORY;
+    
+    if (!stored_identity) {
+        // We don't allow user_id mismatches for own identities except in cases
+        // where there was a PEP_OWN_USERID, which we have already replaced
+        // in the database, so if there is no match in the DB, we are making
+        // a new identity for this user ID.
+        if (EMPTYSTR(identity->username))
+        {
+            free(identity->username);
+            identity->username = strdup("Anonymous");
+            assert(identity->username);
+            if (identity->username == NULL)
+                return PEP_OUT_OF_MEMORY;
+        }           
+    }                      
+
+    // First we try to find an identity with the 
 
     bool dont_use_stored_fpr = true;
     bool dont_use_input_fpr = true;
@@ -1378,64 +1392,46 @@ DYNAMIC_API PEP_STATUS set_own_key(
           fpr && fpr[0]
          ))
         return PEP_ILLEGAL_VALUE;
-            
-            
+                        
     // First see if we have it in own identities already, AND we retrieve
     // our own user_id
-    pEp_identity* my_id = NULL;
-    identity_list* my_identities = NULL;
     char* my_user_id = NULL;
-    status = own_identities_retrieve(session, &my_identities);
-    
-    if (status == PEP_STATUS_OK) {
-        if (my_identities) {
-            if (!(my_identities->ident && my_identities->ident->user_id))
-                return PEP_ILLEGAL_VALUE;
-
-            my_user_id = strdup(my_identities->ident->user_id);
-
-            if (!my_user_id) 
-                return PEP_OUT_OF_MEMORY;
-            
-            // Probably cheaper than all the strcmps if there are many,
-            // plus this avoids the capitalisation and . problems:
-            
-            status = get_identity(session, my_user_id, address, &my_id);
-            
-            if (status == PEP_STATUS_OK && my_id) {
-                if (my_id->fpr && strcasecmp(my_id->fpr, fpr) == 0) {
-                    // We're done. It was already here.
-                    // FIXME: Do we check trust/revocation/?
-                    goto pep_free;
-                }            
-            }
-            
-            // Otherwise, we see if there's a binding for this user_id/key
-            // in the trust DB
-            
-            // If there's an id w/ user_id + address
-            if (my_id) {
-                free(my_id->fpr);
-                my_id->fpr = my_user_id;
-                my_id->comm_type = PEP_ct_pEp;
-                my_id->me = true; // just in case? 
-            }
-            else { // Else, we need a new identity
-                my_id = new_identity(address, fpr, my_user_id, NULL); 
-                if (status != PEP_STATUS_OK)
-                    goto pep_free; 
-                my_id->me = true;
-                my_id->comm_type = PEP_ct_pEp;
-            }
-        }
-        else {
-            // I think the prerequisite should be that at least one own identity
-            // already in the DB, so REALLY look at this.
-            return PEP_CANNOT_FIND_IDENTITY;
-        }
+    status = get_own_userid(session, &my_user_id);
+    if (status != PEP_STATUS_OK)
+        return status;
         
-        status = set_identity(session, my_id);
-    }  
+    if (!my_user_id) {
+        // We have no own user_id. So we cannot set it for an identity.
+        return PEP_CANNOT_FIND_IDENTITY;
+    }
+    
+    pEp_identity* my_id = NULL;
+    
+    status = get_identity(session, my_user_id, address, &my_id);
+
+    if (status == PEP_STATUS_OK && my_id) {
+        if (my_id->fpr && strcasecmp(my_id->fpr, fpr) == 0) {
+            // We're done. It was already here.
+            goto pep_free;
+        }           
+    }
+                
+    // If there's an id w/ user_id + address
+    if (my_id) {
+        free(my_id->fpr);
+        my_id->fpr = my_user_id;
+        my_id->comm_type = PEP_ct_pEp;
+        my_id->me = true;
+    }
+    else { // Else, we need a new identity
+        my_id = new_identity(address, fpr, my_user_id, NULL); 
+        if (status != PEP_STATUS_OK)
+            goto pep_free; 
+        my_id->me = true;
+        my_id->comm_type = PEP_ct_pEp;
+    }
+        
+    status = set_identity(session, my_id);
     
 pep_free:
     free(my_id);
