@@ -29,7 +29,7 @@ DYNAMIC_API char * new_string(const char *src, size_t len);
 // free_string() - free memory occupied by string
 //
 //  parameters:
-//      ts (in)         pointer to string to free
+//      s (in)          pointer to string to free
 
 DYNAMIC_API void free_string(char *s);
 
