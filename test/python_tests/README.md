@@ -11,3 +11,6 @@ failing.
 
 To remove all generated files run setup_test.py -r
 
+# License
+
+All documentation is under CC BY-SA 3.0.
