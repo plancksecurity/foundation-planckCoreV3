@@ -46,6 +46,10 @@ typedef struct _bloblist_t {
 //  caveat:
 //      the ownership of the blob goes to the bloblist; mime_type and filename
 //      are being copied, the originals remain in the ownership of the caller
+//
+//      if blob is on a different heap then after the call release_value has to
+//      be set by the adapter; this is relevant on operating systems with
+//      multiple heaps like Microsoft Windows
 
 DYNAMIC_API bloblist_t *new_bloblist(char *blob, size_t size, const char *mime_type,
         const char *filename);
@@ -72,6 +76,7 @@ DYNAMIC_API void free_bloblist(bloblist_t *bloblist);
 
 DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src);
 
+
 // bloblist_add() - add reference to a blob to bloblist
 //
 //  parameters:
@@ -90,6 +95,9 @@ DYNAMIC_API bloblist_t *bloblist_dup(const bloblist_t *src);
 //      are being copied, the originals remain in the ownership of the caller.
 //      bloblist input parameter equal to NULL or with value == NULL is a valid
 //      empty input list.
+//
+//      If there is release_value set in bloblist it is copied to the added
+//      leaf
 
 DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t size,
         const char *mime_type, const char *filename);
@@ -105,6 +113,7 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
 
 DYNAMIC_API int bloblist_length(const bloblist_t *bloblist);
 
+
 // set_blob_content_disposition() - set blob content disposition and parameters
 //                                  when necessary
 //
@@ -113,9 +122,7 @@ DYNAMIC_API int bloblist_length(const bloblist_t *bloblist);
 //      disposition (in)        disposition type (see enum)
 
 DYNAMIC_API void set_blob_disposition(bloblist_t* blob, 
-                                              content_disposition_type disposition);
-
-
+        content_disposition_type disposition);
 
 
 #ifdef __cplusplus
