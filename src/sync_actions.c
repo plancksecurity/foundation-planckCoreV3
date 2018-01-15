@@ -58,7 +58,7 @@ int keyElectionWon(PEP_SESSION session, Identity partner)
     Identity me = NULL;
     
     char* own_id = NULL;
-    PEP_STATUS status = get_own_userid(session, &own_id);
+    PEP_STATUS status = get_default_own_userid(session, &own_id);
     if (own_id) {
         status = get_identity(session, partner->address, own_id,
                               &me);
@@ -149,7 +149,7 @@ PEP_STATUS _notifyHandshake(
         return PEP_SYNC_NO_NOTIFY_CALLBACK;
 
     char* own_id = NULL;
-    status = get_own_userid(session, &own_id);
+    status = get_default_own_userid(session, &own_id);
         
     // notifyHandshake take ownership of given identities
     pEp_identity *me = NULL;
@@ -249,7 +249,7 @@ PEP_STATUS _storeGroupKeys(
     PEP_STATUS status = PEP_STATUS_OK;
     
     char* own_id = NULL;
-    status = get_own_userid(session, &own_id);
+    status = get_default_own_userid(session, &own_id);
     
     // FIXME: Is this where and what we wanna do with this?
     if (status != PEP_STATUS_OK)

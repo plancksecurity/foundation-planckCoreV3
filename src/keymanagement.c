@@ -104,21 +104,32 @@ PEP_STATUS elect_pubkey(
 static PEP_STATUS validate_fpr(PEP_SESSION session, 
                                pEp_identity* ident) {
     
+    PEP_STATUS status = PEP_STATUS_OK;
+    
     if (!session || !ident || !ident->fpr)
         return PEP_ILLEGAL_VALUE;    
         
     char* fpr = ident->fpr;
     
-    PEP_STATUS status = get_trust(session, ident);
-    if (status != PEP_STATUS_OK)
-        return ADD_TO_LOG(status);
+    bool has_private = false;
     
+    if (ident->me) {
+        status = contains_priv_key(session, fpr, &has_private);
+        if (status != PEP_STATUS_OK || !has_private)
+            return PEP_KEY_UNSUITABLE;
+    }
+    
+    status = get_trust(session, ident);
+    if (status != PEP_STATUS_OK)
+        ident->comm_type = PEP_ct_unknown;
+            
     PEP_comm_type ct = ident->comm_type;
 
     if (ct == PEP_ct_unknown) {
         // If status is bad, it's ok, we get the rating
         // we should use then (PEP_ct_unknown)
         get_key_rating(session, fpr, &ct);
+        ident->comm_type = ct;
     }
     
     bool revoked, expired;
@@ -131,15 +142,19 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
     }
     
     if (!revoked) {
+        time_t exp_time = (ident->me ? 
+                           time(NULL) + (7*24*3600) : time(NULL));
+                           
         status = key_expired(session, fpr, 
-                             time(NULL), // NOW. For _myself, this is different.
+                             exp_time,
                              &expired);
-    
+                             
         assert(status == PEP_STATUS_OK);
         if (status != PEP_STATUS_OK)
             return ADD_TO_LOG(status);
 
-        if ((ct | PEP_ct_confirmed) == PEP_ct_OpenPGP) {
+        if ((ct | PEP_ct_confirmed) == PEP_ct_OpenPGP &&
+            !ident->me) {
             status = blacklist_is_listed(session, 
                                          fpr, 
                                          &blacklisted);
@@ -149,7 +164,7 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
         }
     }
             
-    if (ident->me && (ct == PEP_ct_pEp) && !revoked && expired) {
+    if (ident->me && (ct >= PEP_ct_strong_but_unconfirmed) && !revoked && expired) {
         // extend key
         timestamp *ts = new_timestamp(time(NULL) + KEY_EXPIRE_DELTA);
         status = renew_key(session, fpr, ts);
@@ -159,21 +174,23 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
             // if key is valid (second check because pEp key might be extended above)
             //      Return fpr        
             status = key_expired(session, fpr, time(NULL), &expired);            
-            if (status != PEP_STATUS_OK)
+            if (status != PEP_STATUS_OK) {
+                 ident->comm_type = PEP_ct_key_expired;
                  return ADD_TO_LOG(status);
+             }
             // communicate key(?)
         }        
     }
-    
-    if (revoked)
+     
+    if (revoked) 
         ct = PEP_ct_key_revoked;
     else if (expired)
         ct = PEP_ct_key_expired;        
-    else if (blacklisted) {
+    else if (blacklisted) { // never true for .me
         ident->comm_type = ct = PEP_ct_key_not_found;
         free(ident->fpr);
             ident->fpr = strdup("");
-        status = PEP_KEY_UNSUITABLE;
+        status = PEP_KEY_BLACKLISTED;
     }
     
     switch (ct) {
@@ -187,7 +204,7 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
                                           ct);
             free(ident->fpr);
             ident->fpr = strdup("");
-            ident->comm_type = PEP_ct_key_not_found;            
+            ident->comm_type = ct;            
             status = PEP_KEY_UNSUITABLE;
         default:
             break;
@@ -196,15 +213,47 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
     return status;
 }
 
+PEP_STATUS get_user_default_key(PEP_SESSION session, const char* user_id,
+                                char** default_key) {
+    assert(session);
+    assert(user_id);
+    
+    if (!session || !user_id)
+        return PEP_ILLEGAL_VALUE;
+
+    PEP_STATUS status = PEP_STATUS_OK;
+            
+    // try to get default key for user_data
+    sqlite3_reset(session->get_user_default_key);
+    sqlite3_bind_text(session->get_user_default_key, 1, user_id, 
+                      -1, SQLITE_STATIC);
+    
+    const int result = sqlite3_step(session->get_user_default_key);
+    char* user_fpr = NULL;
+    if (result == SQLITE_ROW) {
+        const char* u_fpr =
+            (char *) sqlite3_column_text(session->get_user_default_key, 0);
+        if (u_fpr)
+            user_fpr = strdup(u_fpr);
+    }
+    else
+        status = PEP_GET_KEY_FAILED;
+        
+    sqlite3_reset(session->get_user_default_key);
+    
+    *default_key = user_fpr;
+    return status;     
+}
+
 // Only call on retrieval of previously stored identity!
 // Also, we presume that if the stored_identity was sent in
 // without an fpr, there wasn't one in the trust DB for this
 // identity.
 PEP_STATUS get_valid_pubkey(PEP_SESSION session,
-                            pEp_identity* stored_identity,
-                            bool* is_identity_default,
-                            bool* is_user_default,
-                            bool* is_address_default) {
+                         pEp_identity* stored_identity,
+                         bool* is_identity_default,
+                         bool* is_user_default,
+                         bool* is_address_default) {
     
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -213,7 +262,7 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
         return PEP_ILLEGAL_VALUE;
         
     *is_identity_default = *is_user_default = *is_address_default = false;
-    
+
     char* stored_fpr = stored_identity->fpr;
     // Input: stored identity retrieved from database
     // if stored identity contains a default key
@@ -228,20 +277,8 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
     free(stored_identity->fpr);
     stored_identity->fpr = NULL;
     
-    // try to get default key for user_data
-    sqlite3_reset(session->get_user_default_key);
-    sqlite3_bind_text(session->get_user_default_key, 1, stored_identity->user_id, 
-                      -1, SQLITE_STATIC);
-    
-    const int result = sqlite3_step(session->get_user_default_key);
     char* user_fpr = NULL;
-    if (result == SQLITE_ROW) {
-        const char* u_fpr =
-            (char *) sqlite3_column_text(session->get_user_default_key, 0);
-        if (u_fpr)
-            user_fpr = strdup(u_fpr);
-    }
-    sqlite3_reset(session->get_user_default_key);
+    status = get_user_default_key(session, stored_identity->user_id, &user_fpr);
     
     if (user_fpr) {             
         // There exists a default key for user, so validate
@@ -271,15 +308,12 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
             free(stored_identity->fpr);
             stored_identity->fpr = NULL;
             stored_identity->comm_type = PEP_ct_unknown;
-            break;
+            break;    
         default:
-            // FIXME: blacklisting?
             break;
     }
     return status;
 }
-
-PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags);
 
 static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
                                           pEp_identity* stored_ident) {
@@ -387,12 +421,12 @@ DYNAMIC_API PEP_STATUS update_identity(
     if (!(session && identity && !EMPTYSTR(identity->address)))
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
-    char* own_id = NULL;
-    status = get_own_userid(session, &own_id);    
+    char* default_own_id = NULL;
+    status = get_default_own_userid(session, &default_own_id);    
 
     // Is this me, temporary or not? If so, BAIL.
     if (identity->me || 
-       (own_id && identity->user_id && (strcmp(own_id, identity->user_id) == 0))) 
+       (default_own_id && identity->user_id && (strcmp(default_own_id, identity->user_id) == 0))) 
     {
         return PEP_ILLEGAL_VALUE;
     }
@@ -692,29 +726,33 @@ PEP_STATUS _has_usable_priv_key(PEP_SESSION session, char* fpr,
 
 PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags)
 {
-    pEp_identity *stored_identity = NULL;
+
     PEP_STATUS status;
 
     assert(session);
     assert(identity);
     assert(!EMPTYSTR(identity->address));
+    assert(!EMPTYSTR(identity->user_id));
 
-    if (!session || !identity || EMPTYSTR(identity->address))
+    if (!session || !identity || EMPTYSTR(identity->address) ||
+        EMPTYSTR(identity->user_id))
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
-        
-    char* own_id = NULL;
-    status = get_own_userid(session, &own_id);
 
-    // Deal with user_id mismatches - if the own_id in the DB and the
-    // input ID both exist and don't match, this is only allowed when
-    // a temporary PEP_OWN_USERID has been put into the DB; the user_id
-    // here will then replace it. (Database cascades changes)
-    if (own_id && !EMPTYSTR(identity->user_id)) {
-        if (strcmp(own_id, identity->user_id) != 0)) {
-            if (strcmp(own_id, PEP_OWN_USERID) != 0) {
-                free(own_id);
-                return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
-            }
+    pEp_identity *stored_identity = NULL;
+    char* revoked_fpr = NULL; 
+        
+    char* default_own_id = NULL;
+    status = get_default_own_userid(session, &default_own_id);
+
+    // Deal with non-default user_ids.
+    if (default_own_id && strcmp(default_own_id, identity->user_id) != 0) {
+//        status = add_alternate_own_userid(session, 
+//                                          identity->user_id);
+        free(identity->user_id);
+        identity->user_id = strdup(default_own_id);
+        if (identity->user_id == NULL) {
+            status = PEP_OUT_OF_MEMORY;
+            goto pep_free;
         }
     }
 
@@ -729,27 +767,6 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     if(ignore_flags)
         identity->flags = 0;
     
-    if (EMPTYSTR(identity->user_id))
-    {
-        free(identity->user_id);
-        // If we have have no information, we use as temp PEP_OWN_USERID
-        identity->user_id = (own_id ? own_id : strdup(PEP_OWN_USERID));
-        assert(identity->user_id);
-        if (identity->user_id == NULL)
-            return PEP_OUT_OF_MEMORY;
-    }
-    else if (own_id) {
-        if (strcmp(identity->user_id, own_id) != 0) {
-            // This will ONLY occur, due to the above check,
-            // when own_id is PEP_OWN_USERID
-            status = replace_userid(session, PEP_OWN_USERID,
-                                    identity->user_id);
-            if (status != PEP_STATUS_OK)
-                return status;
-        }
-    }
-
-    // Ok, so now we are guaranteed to have a user_id.
     // Let's see if we have an identity record in the DB for 
     // this user_id + address
     DEBUG_LOG("myself", "debug", identity->address);
@@ -762,176 +779,103 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     assert(status != PEP_OUT_OF_MEMORY);
     if (status == PEP_OUT_OF_MEMORY)
         return PEP_OUT_OF_MEMORY;
-    
-    if (!stored_identity) {
-        // We don't allow user_id mismatches for own identities except in cases
-        // where there was a PEP_OWN_USERID, which we have already replaced
-        // in the database, so if there is no match in the DB, we are making
-        // a new identity for this user ID.
-        if (EMPTYSTR(identity->username))
-        {
-            free(identity->username);
-            identity->username = strdup("Anonymous");
-            assert(identity->username);
-            if (identity->username == NULL)
-                return PEP_OUT_OF_MEMORY;
-        }           
-    }                      
 
-    // First we try to find an identity with the 
-
-    bool dont_use_stored_fpr = true;
-    bool dont_use_input_fpr = true;
-        
-    if (stored_identity)
-    {
-        if (EMPTYSTR(identity->fpr)) {
-            
-            bool has_private = false;
-            
-            status = _has_usable_priv_key(session, stored_identity->fpr, &has_private); 
-            
-            // N.B. has_private is never true if the returned status is not PEP_STATUS_OK
-            if (has_private) {
-                identity->fpr = strdup(stored_identity->fpr);
-                assert(identity->fpr);
-                if (identity->fpr == NULL)
-                {
-                    return PEP_OUT_OF_MEMORY;
-                }
-                dont_use_stored_fpr = false;
-            }
-        }
-        
-        identity->flags = (identity->flags & 255) | stored_identity->flags;
-        free_identity(stored_identity);
+    // Set usernames - priority is input username > stored name > "Anonymous"
+    // If there's an input username, we always patch the username with that
+    // input.
+    if (EMPTYSTR(identity->username)) {
+        bool stored_uname = (stored_identity && stored_identity->username);
+        char* uname = (stored_uname ? "Anonymous" : stored_identity->username);
+        free(identity->username);
+        identity->username = strdup(uname);
+        if (identity->username == NULL)
+            return PEP_OUT_OF_MEMORY;
     }
+
+    bool valid_key_found = false;
     
-    if (dont_use_stored_fpr && !EMPTYSTR(identity->fpr))
-    {
-        // App must have a good reason to give fpr, such as explicit
-        // import of private key, or similar.
-
-        // Take given fpr as-is.
-
-        // BUT:
-        // First check to see if it's blacklisted or private part is missing?
-        bool has_private = false;
+    // Now deal with keys.
+    // Different from update_identity(), the input fpr here
+    // MATTERS. 
+    // If the input fpr is invalid, we return, giving the reason why.
+    if (identity->fpr) {
+        status = validate_fpr(session, identity);
+    
+        if (status != PEP_STATUS_OK || 
+            identity->comm_type < PEP_ct_strong_but_unconfirmed) {
+            if (identity->comm_type != PEP_ct_key_expired)
+                goto pep_free;
+            // Otherwise, it was expired and key renewal failed
+            // and we take the stored one or do keygen. 
+        } 
+        else
+            valid_key_found = true;
+    }    
+    
+    // Ok, if there wasn't a valid input fpr, check stored identity
+    if (!valid_key_found && stored_identity && 
+        (!identity->fpr || strcmp(stored_identity->fpr, identity->fpr) != 0)) {
         
-        status = _has_usable_priv_key(session, identity->fpr, &has_private); 
-        
-        // N.B. has_private is never true if the returned status is not PEP_STATUS_OK
-        if (has_private) {
-            dont_use_input_fpr = false;
+        // Fall back / retrieve
+        status = validate_fpr(session, stored_identity);
+        if (status == PEP_STATUS_OK && 
+            stored_identity->comm_type >= PEP_ct_strong_but_unconfirmed) {
+          
+            free(identity->fpr);
+            identity->fpr = strdup(stored_identity->fpr);            
+        }
+        else {
+            bool revoked = false;
+            if (!EMPTYSTR(stored_identity->fpr)) {
+                status = key_revoked(session, stored_identity->fpr, &revoked);
+                if (revoked)
+                    revoked_fpr = strdup(stored_identity->fpr);
+            }        
         }
     }
     
-    // Ok, we failed to get keys either way, so let's elect one.
-    if (dont_use_input_fpr && dont_use_stored_fpr)
-    {
-        status = elect_ownkey(session, identity);
-        assert(status == PEP_STATUS_OK);
-        if (status != PEP_STATUS_OK) {
-            return ADD_TO_LOG(status);
-        }
+    // Nothing left to do but generate a key
+    if (!valid_key_found) {
+        if (!do_keygen)
+            status = PEP_GET_KEY_FAILED;
+        else {
+            DEBUG_LOG("Generating key pair", "debug", identity->address);
 
-        bool has_private = false;
-        if (identity->fpr) {
-            // ok, we elected something.
-            // elect_ownkey only returns private keys, so we don't check again.
-            // Check to see if it's blacklisted
-            bool listed;
-            status = blacklist_is_listed(session, identity->fpr, &listed); 
+            status = generate_keypair(session, identity);
+            assert(status != PEP_OUT_OF_MEMORY);
 
-            if (status == PEP_STATUS_OK)
-                has_private = !listed;
-        }
-        
-        if (has_private) {
-            dont_use_input_fpr = false;
-        }
-        else { // OK, we've tried everything. Time to generate new keys.
-            free(identity->fpr); // It can stay in this state (unallocated) because we'll generate a new key 
-            identity->fpr = NULL;
-        }
-    }
-
-    bool revoked = false;
-    char *r_fpr = NULL;
-    if (!EMPTYSTR(identity->fpr))
-    {
-        status = key_revoked(session, identity->fpr, &revoked);
-
-        if (status != PEP_STATUS_OK) 
-        {
-            return ADD_TO_LOG(status);
-        }
-    }
-   
-    if (EMPTYSTR(identity->fpr) || revoked)
-    {
-        if(!do_keygen){
-            return ADD_TO_LOG(PEP_GET_KEY_FAILED);
-        }
-
-        if(revoked)
-        {
-            r_fpr = identity->fpr;
-            identity->fpr = NULL;
-        }
-        
-        DEBUG_LOG("generating key pair", "debug", identity->address);
-        status = generate_keypair(session, identity);
-        assert(status != PEP_OUT_OF_MEMORY);
-        if (status != PEP_STATUS_OK) {
-            char buf[11];
-            snprintf(buf, 11, "%d", status);
-            DEBUG_LOG("generating key pair failed", "debug", buf);
-            if(revoked && r_fpr)
-                free(r_fpr);
-            return ADD_TO_LOG(status);
-        }
-
-        
-        if(revoked)
-        {
-            status = set_revoked(session, r_fpr,
-                                 identity->fpr, time(NULL));
-            free(r_fpr);
             if (status != PEP_STATUS_OK) {
-                return ADD_TO_LOG(status);
+                char buf[11];
+                snprintf(buf, 11, "%d", status); // uh, this is kludgey. FIXME
+                DEBUG_LOG("Generating key pair failed", "debug", buf);
+            }        
+            else {
+                valid_key_found = true;
+                if (revoked_fpr) {
+                    status = set_revoked(session, revoked_fpr,
+                                         stored_identity->fpr, time(NULL));
+                }
             }
         }
     }
-    else
-    {
-        bool expired;
-        status = key_expired(session, identity->fpr, 
-                             time(NULL) + (7*24*3600), // In a week
-                             &expired);
 
-        assert(status == PEP_STATUS_OK);
-        if (status != PEP_STATUS_OK) {
-            return ADD_TO_LOG(status);
-        }
-
-        if (status == PEP_STATUS_OK && expired) {
-            timestamp *ts = new_timestamp(time(NULL) + KEY_EXPIRE_DELTA);
-            renew_key(session, identity->fpr, ts);
-            free_timestamp(ts);
-        }
+    if (valid_key_found) {
+        identity->comm_type = PEP_ct_pEp;
+        status = PEP_STATUS_OK;
     }
-
-    if (!(identity->username))
-        identity->username = strdup("");
+    else {
+        free(identity->fpr);
+        identity->fpr = NULL;
+        identity->comm_type = PEP_ct_unknown;
+    }
     
     status = set_identity(session, identity);
-    assert(status == PEP_STATUS_OK);
-    if (status != PEP_STATUS_OK) {
-        return status;
-    }
 
-    return ADD_TO_LOG(PEP_STATUS_OK);
+pep_free:    
+    free(default_own_id);
+    free(revoked_fpr);                     
+    free_identity(stored_identity);
+    return ADD_TO_LOG(status);
 }
 
 DYNAMIC_API PEP_STATUS initialise_own_identities(PEP_SESSION session,
@@ -941,7 +885,7 @@ DYNAMIC_API PEP_STATUS initialise_own_identities(PEP_SESSION session,
         return PEP_ILLEGAL_VALUE;
         
     char* stored_own_userid = NULL;
-    get_own_userid(session, &stored_own_userid);
+    get_default_own_userid(session, &stored_own_userid);
     
     identity_list* ident_curr = my_idents;
     while (ident_curr) {
@@ -1396,7 +1340,7 @@ DYNAMIC_API PEP_STATUS set_own_key(
     // First see if we have it in own identities already, AND we retrieve
     // our own user_id
     char* my_user_id = NULL;
-    status = get_own_userid(session, &my_user_id);
+    status = get_default_own_userid(session, &my_user_id);
     if (status != PEP_STATUS_OK)
         return status;
         

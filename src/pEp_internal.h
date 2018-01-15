@@ -158,7 +158,7 @@ struct _pEpSession {
     sqlite3_stmt *own_keys_retrieve;
     sqlite3_stmt *get_user_default_key;
         
-    sqlite3_stmt *get_own_userid;
+    sqlite3_stmt *get_default_own_userid;
 
 //    sqlite3_stmt *set_own_key;
 
@@ -368,6 +368,20 @@ static inline char* _pep_subj_copy() {
 #else
     return strdup("pEp");
 #endif
+}
+
+static inline bool is_me(PEP_SESSION session, pEp_identity* test_ident) {
+    bool retval = false;
+    if (test_ident && test_ident->user_id) {
+        char* def_id = NULL;
+        get_default_own_userid(session, &def_id);
+        if (test_ident->me || 
+            (def_id && strcmp(def_id, test_ident->user_id) == 0)) {
+            retval = true;
+        }
+        free(def_id);
+    }
+    return retval;
 }
 
 // These are globals used in generating message IDs and should only be

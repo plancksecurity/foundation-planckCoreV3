@@ -1749,6 +1749,7 @@ static PEP_STATUS _update_identity_for_incoming_message(
     )
 {
     PEP_STATUS status;
+
     if (src->from && src->from->address) {
         status = update_identity(session, src->from);
         if (status == PEP_STATUS_OK
@@ -2309,14 +2310,37 @@ static PEP_STATUS import_priv_keys_from_decrypted_msg(PEP_SESSION session,
         _private_il->ident->address)
         *imported_private = true;
 
-    if (private_il && imported_private)
+    if (private_il && imported_private) {
+        // the private identity list should NOT be subject to myself() or
+        // update_identity() at this point.
+        // If the receiving app wants them to be in the trust DB, it
+        // should call myself() on them upon return.
+        // We do, however, prepare these so the app can use them
+        // directly in a myself() call by putting the own_id on it.
+        char* own_id = NULL;
+        status = get_default_own_userid(session, &own_id);
+        
+        if (status != PEP_STATUS_OK) {
+            free(own_id);
+            own_id = NULL;
+        }
+        
+        identity_list* il = _private_il;
+        for ( ; il; il = il->next) {
+            if (own_id) {
+                free(il->ident->user_id);
+                il->ident->user_id = strdup(own_id);
+            }
+            il->ident->me = true;
+        }
         *private_il = _private_il;
+        
+        free(own_id);
+    }
     else
         free_identity_list(_private_il);
-
-    if (imported_keys)
-        status = _update_identity_for_incoming_message(session, src);
-        
+ 
+    
     return status;
 }
 
@@ -2366,7 +2390,18 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     // Update src->from in case we just imported a key
     // we would need to check signature
     status = _update_identity_for_incoming_message(session, src);
-    if(status != PEP_STATUS_OK)
+    
+    if (status == PEP_ILLEGAL_VALUE && src->from && is_me(session, src->from)) {
+        // the above function should fail if it's us.
+        // We don't need to update, as any revocations or expirations
+        // of our own key imported above, which are all that we 
+        // would care about for anything imported,
+        // SHOULD get caught when they matter later.
+        // (Private keys imported above are not stored in the trust DB)
+        status = PEP_STATUS_OK;
+    }
+        
+    if (status != PEP_STATUS_OK)
         return ADD_TO_LOG(status);
 
     /*** End Import any attached public keys and update identities accordingly ***/

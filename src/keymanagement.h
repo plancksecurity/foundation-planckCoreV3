@@ -269,6 +269,8 @@ DYNAMIC_API PEP_STATUS set_own_key(
        const char *fpr
     );
 
+PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags);
+
 #ifdef __cplusplus
 }
 #endif

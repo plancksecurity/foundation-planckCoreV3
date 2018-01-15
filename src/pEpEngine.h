@@ -602,7 +602,7 @@ DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
     );
 
-// get_own_userid() - get the user_id of the own user
+// get_default own_userid() - get the user_id of the own user
 //
 //    parameters:
 //        session (in)        session handle
@@ -617,7 +617,7 @@ DYNAMIC_API PEP_STATUS set_identity(
 //        userid will be NULL if not found; otherwise, returned string
 //        belongs to the caller.
 
-DYNAMIC_API PEP_STATUS get_own_userid(
+DYNAMIC_API PEP_STATUS get_default_own_userid(
         PEP_SESSION session, 
         char** userid
     );

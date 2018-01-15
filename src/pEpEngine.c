@@ -233,7 +233,7 @@ static const char* sql_get_user_default_key =
     "select main_key_id from person" 
     "   where id = ?1;";
 
-static const char* sql_get_own_userid =
+static const char* sql_get_default_own_userid =
     "select id from person"
     "   join identity on id = identity.user_id"
     "   where identity.is_own = 1";
@@ -787,8 +787,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_get_user_default_key), &_session->get_user_default_key, NULL);
     assert(int_result == SQLITE_OK);
 
-    int_result = sqlite3_prepare_v2(_session->db, sql_get_own_userid,
-            (int)strlen(sql_get_own_userid), &_session->get_own_userid, NULL);
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_default_own_userid,
+            (int)strlen(sql_get_default_own_userid), &_session->get_default_own_userid, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_replace_userid,
@@ -1047,8 +1047,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->get_identities_by_address);            
             if (session->get_user_default_key)
                 sqlite3_finalize(session->get_user_default_key);    
-            if (session->get_own_userid)
-                sqlite3_finalize(session->get_own_userid);
+            if (session->get_default_own_userid)
+                sqlite3_finalize(session->get_default_own_userid);
             if (session->replace_identities_fpr)
                 sqlite3_finalize(session->replace_identities_fpr);        
             if (session->remove_fpr_as_default)
@@ -1419,7 +1419,7 @@ void free_identity(pEp_identity *identity)
     }
 }
 
-DYNAMIC_API PEP_STATUS get_own_userid(
+DYNAMIC_API PEP_STATUS get_default_own_userid(
         PEP_SESSION session, 
         char** userid
     )
@@ -1433,14 +1433,14 @@ DYNAMIC_API PEP_STATUS get_own_userid(
     PEP_STATUS status = PEP_STATUS_OK;
     char* retval = NULL;
     
-    sqlite3_reset(session->get_own_userid);
+    sqlite3_reset(session->get_default_own_userid);
 
-    const int result = sqlite3_step(session->get_own_userid);
+    const int result = sqlite3_step(session->get_default_own_userid);
     const char* id;
     
     switch (result) {
         case SQLITE_ROW:
-            id = (const char *) sqlite3_column_text(session->get_own_userid, 0);
+            id = (const char *) sqlite3_column_text(session->get_default_own_userid, 0);
             if (!id) {
                 // Shouldn't happen.
                 status = PEP_UNKNOWN_ERROR;
@@ -1459,7 +1459,7 @@ DYNAMIC_API PEP_STATUS get_own_userid(
 
     *userid = retval;
 
-    sqlite3_reset(session->get_own_userid);
+    sqlite3_reset(session->get_default_own_userid);
     
     return status;
 }
@@ -1854,7 +1854,7 @@ DYNAMIC_API PEP_STATUS set_device_group(
 
     // 1. Get own user_id
     char* user_id = NULL;
-    PEP_STATUS status = get_own_userid(session, &user_id);
+    PEP_STATUS status = get_default_own_userid(session, &user_id);
     
     // No user_id is returned in this case, no need to free;
     if (status != PEP_STATUS_OK)
@@ -1896,7 +1896,7 @@ DYNAMIC_API PEP_STATUS get_device_group(PEP_SESSION session, char **group_name)
 
     // 1. Get own user_id
     char* user_id = NULL;
-    status = get_own_userid(session, &user_id);
+    status = get_default_own_userid(session, &user_id);
     
     // No user_id is returned in this case, no need to free;
     if (status != PEP_STATUS_OK)

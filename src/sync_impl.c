@@ -277,7 +277,7 @@ PEP_STATUS receive_sync_msg(
     if(partner){
         
         char* own_id = NULL;
-        status = get_own_userid(session, &own_id);
+        status = get_default_own_userid(session, &own_id);
         
         if (!own_id)
             own_id = strdup(PEP_OWN_USERID);
@@ -436,7 +436,7 @@ PEP_STATUS receive_DeviceState_msg(
     bool force_keep_msg = false;
 
     char* own_id = NULL;
-    PEP_STATUS own_id_status = get_own_userid(session, &own_id);
+    PEP_STATUS own_id_status = get_default_own_userid(session, &own_id);
 
     for (bloblist_t *bl = src->attachments; bl && bl->value; bl = bl->next) {
         if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp.sync") == 0
@@ -798,7 +798,7 @@ PEP_STATUS unicast_msg(
     }
 
     char* own_id = NULL;
-    status = get_own_userid(session, &own_id);
+    status = get_default_own_userid(session, &own_id);
     if (status != PEP_STATUS_OK)
         goto error;
 
