@@ -80,6 +80,7 @@ libpEpEngine.a: $(ALL_OBJECTS)
 .PHONY: clean
 clean:
 	rm -f *.d *.o *.a $(TARGET) *.dll *.so *.zip *.d.* *.def *~
+	rm -Rf $(TARGET).dSYM
 
 .PHONY: install
 install: $(TARGET)
