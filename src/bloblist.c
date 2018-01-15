@@ -9,8 +9,8 @@
 #include "bloblist.h"
 
 static bool set_blob_data(bloblist_t* bloblist, char* blob, size_t size, const char* mime_type,
-                          const char* filename) {
-    
+        const char* filename)
+{
     if (!bloblist)
         return false;
         
@@ -29,9 +29,8 @@ static bool set_blob_data(bloblist_t* bloblist, char* blob, size_t size, const c
        }
        /* Default behaviour, can be overwritten post-allocation with
           set_blob_content_disposition */
-       if (strstr(filename, "cid://") == filename)
+       if (strncmp(filename, "cid://", 6) == 0)
            bloblist->disposition = PEP_CONTENT_DISP_INLINE;
-                        
     }               
     
     if (blob) {
@@ -175,7 +174,8 @@ DYNAMIC_API int bloblist_length(const bloblist_t *bloblist)
 }
 
 DYNAMIC_API void set_blob_disposition(bloblist_t* blob, 
-                                      content_disposition_type disposition) {
+        content_disposition_type disposition)
+{
     if (blob)                                    
         blob->disposition = disposition;
 }
