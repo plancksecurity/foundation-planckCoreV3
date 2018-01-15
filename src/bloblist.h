@@ -17,15 +17,18 @@ typedef enum {
 } content_disposition_type;
 
 typedef struct _bloblist_t {
-    char *value;                    // blob
-    size_t size;                    // size of blob
-    char *mime_type;                // UTF-8 string of MIME type of blob or
-                                    // NULL if unknown
-    char *filename;                // UTF-8 string of file name of blob or
-                                    // NULL if unknown
-    content_disposition_type disposition; // default is attachment when allocated
-                                          // (see mime.h and RFC2183)
-    struct _bloblist_t *next;
+    char *value;                        // blob
+    size_t size;                        // size of blob
+    char *mime_type;                    // UTF-8 string of MIME type of blob or
+                                        // NULL if unknown
+    char *filename;                     // UTF-8 string of file name of blob or
+                                        // NULL if unknown
+    content_disposition_type disposition;
+                                        // default is attachment when allocated
+                                        // (see mime.h and RFC2183)
+    struct _bloblist_t *next;           // this is a single linked list
+    void (*release_value)(char *);      // pointer to release function;
+                                        // pEp_free() if not set
 } bloblist_t;
 
 

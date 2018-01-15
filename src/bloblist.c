@@ -1,8 +1,7 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#include "pEp_internal.h"
-
+#include <stdbool.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
@@ -65,7 +64,10 @@ DYNAMIC_API void free_bloblist(bloblist_t *bloblist)
 
     while (curr) {
         bloblist_t *next = curr->next;
-        free(curr->value);
+        if (curr->release_value)
+            curr->release_value(curr->value);
+        else
+            free(curr->value);
         free(curr->mime_type);
         free(curr->filename);
         free(curr);
