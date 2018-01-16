@@ -60,35 +60,37 @@ PEP_STATUS elect_pubkey(
     assert(status != PEP_OUT_OF_MEMORY);
     if (status == PEP_OUT_OF_MEMORY)
         return PEP_OUT_OF_MEMORY;
+    
+    if (!keylist || !keylist->value)
+        identity->comm_type = PEP_ct_key_not_found;    
+    else {
+        stringlist_t *_keylist;
+        for (_keylist = keylist; _keylist && _keylist->value; _keylist = _keylist->next) {
+            PEP_comm_type _comm_type_key;
 
-    stringlist_t *_keylist;
-    for (_keylist = keylist; _keylist && _keylist->value; _keylist = _keylist->next) {
-        PEP_comm_type _comm_type_key;
+            status = get_key_rating(session, _keylist->value, &_comm_type_key);
+            assert(status != PEP_OUT_OF_MEMORY);
+            if (status == PEP_OUT_OF_MEMORY) {
+                free_stringlist(keylist);
+                return PEP_OUT_OF_MEMORY;
+            }
 
-        status = get_key_rating(session, _keylist->value, &_comm_type_key);
-        assert(status != PEP_OUT_OF_MEMORY);
-        if (status == PEP_OUT_OF_MEMORY) {
-            free_stringlist(keylist);
-            return PEP_OUT_OF_MEMORY;
-        }
-
-        if (_comm_type_key != PEP_ct_compromized &&
-            _comm_type_key != PEP_ct_unknown)
-        {
-            if (identity->comm_type == PEP_ct_unknown ||
-                _comm_type_key > identity->comm_type)
+            if (_comm_type_key != PEP_ct_compromized &&
+                _comm_type_key != PEP_ct_unknown)
             {
-                bool blacklisted;
-                status = blacklist_is_listed(session, _keylist->value, &blacklisted);
-                if (status == PEP_STATUS_OK && !blacklisted) {
-                    identity->comm_type = _comm_type_key;
-                    _fpr = _keylist->value;
+                if (identity->comm_type == PEP_ct_unknown ||
+                    _comm_type_key > identity->comm_type)
+                {
+                    bool blacklisted;
+                    status = blacklist_is_listed(session, _keylist->value, &blacklisted);
+                    if (status == PEP_STATUS_OK && !blacklisted) {
+                        identity->comm_type = _comm_type_key;
+                        _fpr = _keylist->value;
+                    }
                 }
             }
         }
     }
-    
-//    if (_fpr) {
     free(identity->fpr);
 
     identity->fpr = strdup(_fpr);
@@ -96,7 +98,7 @@ PEP_STATUS elect_pubkey(
         free_stringlist(keylist);
         return PEP_OUT_OF_MEMORY;
     }
-//    }
+    
     free_stringlist(keylist);
     return PEP_STATUS_OK;
 }
@@ -106,7 +108,7 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
     
     PEP_STATUS status = PEP_STATUS_OK;
     
-    if (!session || !ident || !ident->fpr)
+    if (!session || !ident || !ident->fpr || !ident->fpr[0])
         return PEP_ILLEGAL_VALUE;    
         
     char* fpr = ident->fpr;
@@ -294,8 +296,10 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
     }
     
     status = elect_pubkey(session, stored_identity);
-    if (status == PEP_STATUS_OK)
-        validate_fpr(session, stored_identity);    
+    if (status == PEP_STATUS_OK) {
+        if (stored_identity->fpr)
+            validate_fpr(session, stored_identity);
+    }    
     
     switch (stored_identity->comm_type) {
         case PEP_ct_key_revoked:
@@ -357,7 +361,8 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
         if (status != PEP_STATUS_OK) {
             return status; // FIXME - free mem
         }
-        free (return_id->fpr);
+        free(return_id->fpr);
+        return_id->fpr = NULL;
         return_id->fpr = strdup(stored_ident->fpr);
         return_id->comm_type = stored_ident->comm_type;            
     }
@@ -381,6 +386,12 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
         if (!return_id->username)
             return_id->username = strdup(stored_ident->username);
     }
+    
+    return_id->me = stored_ident->me;
+    
+    // FIXME: Do we ALWAYS do this? We probably should...
+    if (!return_id->user_id)
+        return_id->user_id = strdup(stored_ident->user_id);
         
     // Call set_identity() to store
     if ((is_identity_default || is_user_default) &&
@@ -476,6 +487,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                                 }
                                     
                                 free(this_uid);
+                                this_uid = NULL;
                                 
                                 // Reflect the change we just made to the DB
                                 this_id->user_id = strdup(identity->user_id);
@@ -841,6 +853,8 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
         else {
             DEBUG_LOG("Generating key pair", "debug", identity->address);
 
+            free(identity->fpr);
+            identity->fpr = NULL;
             status = generate_keypair(session, identity);
             assert(status != PEP_OUT_OF_MEMORY);
 

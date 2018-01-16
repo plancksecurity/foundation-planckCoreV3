@@ -42,7 +42,6 @@ struct _message_ref_list;
 typedef struct _message {
     PEP_msg_direction dir;
     char *id;                               // UTF-8 string of message ID
-    bool me;                                // true if own identity
     char *shortmsg;                         // UTF-8 string of short message
     char *longmsg;                          // UTF-8 string of long message
                                             // (plain)

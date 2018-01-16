@@ -147,7 +147,7 @@ void test_MIME_decrypt_message()
 	
 	std::cout << "MIME_decrypt_message returned " << std::dec << status2 << std::hex << " (0x" << status2 << ")" << std::dec << endl;
 	
-	assert(status2 == PEP_DECRYPTED);
+	assert(status2 == PEP_STATUS_OK);
 	assert(plaintext);
 	
 	pEp_free(plaintext);

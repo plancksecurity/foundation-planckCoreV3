@@ -920,6 +920,30 @@ enomem:
     return NULL;    
 }
 
+static PEP_STATUS update_identity_recip_list(PEP_SESSION session,
+                                             identity_list* list) {
+
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    if (!session)
+        return PEP_UNKNOWN_ERROR;
+    
+    identity_list* id_list_ptr = NULL;
+        
+    for (id_list_ptr = list; id_list_ptr; id_list_ptr = id_list_ptr->next) {
+        pEp_identity* curr_identity = id_list_ptr->ident;
+        if (curr_identity) {
+            status = update_identity(session, curr_identity);
+        if (status == PEP_ILLEGAL_VALUE || status == PEP_OUT_OF_MEMORY)
+            return status;
+        }
+        else
+            break;
+    }
+    
+    return PEP_STATUS_OK;                                  
+}
+
 static PEP_STATUS encrypt_PGP_MIME(
     PEP_SESSION session,
     const message *src,
@@ -3162,6 +3186,28 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     if (status != PEP_STATUS_OK)
         GOTO(pep_error);
 
+    // MIME decode message delivers only addresses. We need more.
+    if (tmp_msg->from) {
+        status = update_identity(session, tmp_msg->from);
+        if (status == PEP_ILLEGAL_VALUE || status == PEP_OUT_OF_MEMORY)
+            GOTO(pep_error);
+    }
+
+    // Own identities can be retrieved here where they would otherwise
+    // fail because we lack all other information. This is ok and even
+    // desired. FIXME: IS it?
+    status = update_identity_recip_list(session, tmp_msg->to);
+    if (status != PEP_STATUS_OK)
+        GOTO(pep_error);
+
+    status = update_identity_recip_list(session, tmp_msg->cc);
+    if (status != PEP_STATUS_OK)
+        GOTO(pep_error);
+
+    status = update_identity_recip_list(session, tmp_msg->bcc);
+    if (status != PEP_STATUS_OK)
+        GOTO(pep_error);
+
     PEP_STATUS decrypt_status = decrypt_message(session,
                                                 tmp_msg,
                                                 &dec_msg,
@@ -3215,6 +3261,38 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
     if (status != PEP_STATUS_OK)
         GOTO(pep_error);
 
+    // MIME decode message delivers only addresses. We need more.
+    if (tmp_msg->from) {
+        char* own_id = NULL;
+        status = get_default_own_userid(session, &own_id);
+        
+        if (status != PEP_STATUS_OK || !own_id) {
+            tmp_msg->from->user_id = strdup(PEP_OWN_USERID);
+        }
+        else {
+            tmp_msg->from->user_id = own_id; // ownership transfer
+        }
+            
+        status = myself(session, tmp_msg->from);
+        if (status != PEP_STATUS_OK)
+            GOTO(pep_error);
+    }
+
+    // Own identities can be retrieved here where they would otherwise
+    // fail because we lack all other information. This is ok and even
+    // desired. FIXME: IS it?
+    status = update_identity_recip_list(session, tmp_msg->to);
+    if (status != PEP_STATUS_OK)
+        GOTO(pep_error);
+
+    status = update_identity_recip_list(session, tmp_msg->cc);
+    if (status != PEP_STATUS_OK)
+        GOTO(pep_error);
+
+    status = update_identity_recip_list(session, tmp_msg->bcc);
+    if (status != PEP_STATUS_OK)
+        GOTO(pep_error);
+    
     // This isn't incoming, though... so we need to reverse the direction
     tmp_msg->dir = PEP_dir_outgoing;
     status = encrypt_message(session,

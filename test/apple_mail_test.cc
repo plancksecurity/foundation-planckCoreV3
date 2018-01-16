@@ -55,7 +55,12 @@ int main(int argc, char** argv) {
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     assert(status == PEP_STATUS_OK);
     assert(msg_ptr);
+    
+    update_identity(session, msg_ptr->from);
+    update_identity(session, msg_ptr->to->ident);
+    
     final_ptr = msg_ptr;
+    
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
   
