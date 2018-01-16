@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <string.h>
 
+#include "platform.h"
 #include "bloblist.h"
 
 static bool set_blob_data(bloblist_t* bloblist, char* blob, size_t size, const char* mime_type,
@@ -160,7 +161,6 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
         return NULL;
 
     return list_curr->next;
-
 }
 
 DYNAMIC_API int bloblist_length(const bloblist_t *bloblist)
