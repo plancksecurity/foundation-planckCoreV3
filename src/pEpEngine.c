@@ -529,6 +529,12 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "       on delete cascade,\n"
                 "   revocation_date integer\n"
                 ");\n"
+                // user id aliases
+                "create table if not exists alternate_user_id (\n"
+                "    default_id text references person (id)\n"
+                "       on delete cascade on update cascade,\n"
+                "    alternate_id text primary key\n"
+                ");\n"
                 ,
             NULL,
             NULL,
@@ -729,7 +735,13 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                     "DROP TABLE _trust_old;\n"
                     "COMMIT;\n"
                     "\n"
-                    "PRAGMA foreign_keys=on;\n",
+                    "PRAGMA foreign_keys=on;\n"
+                    "create table if not exists alternate_user_id (\n"
+                    "    default_id text references person (id)\n"
+                    "       on delete cascade on update cascade,\n"
+                    "    alternate_id text primary key\n"
+                    ");\n"
+                    ,
                     NULL,
                     NULL,
                     NULL
