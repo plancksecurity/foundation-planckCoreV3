@@ -834,7 +834,8 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
             stored_identity->comm_type >= PEP_ct_strong_but_unconfirmed) {
           
             free(identity->fpr);
-            identity->fpr = strdup(stored_identity->fpr);            
+            identity->fpr = strdup(stored_identity->fpr);
+            valid_key_found = true;            
         }
         else {
             bool revoked = false;

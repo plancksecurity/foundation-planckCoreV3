@@ -147,7 +147,8 @@ void test_MIME_decrypt_message()
 	
 	std::cout << "MIME_decrypt_message returned " << std::dec << status2 << std::hex << " (0x" << status2 << ")" << std::dec << endl;
 	
-	assert(status2 == PEP_STATUS_OK);
+    // We have no public key, so we cannot, in fact, VERIFY the message. SO cannot be PEP_STATUS_OK.
+	assert(status2 == PEP_DECRYPTED);
 	assert(plaintext);
 	
 	pEp_free(plaintext);
@@ -161,7 +162,6 @@ void test_MIME_decrypt_message()
 	}
 	free_identity_list(pk);
 }
-
 
 int main() {
     cout << "\n*** message_api_test ***\n\n";

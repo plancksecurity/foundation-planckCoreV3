@@ -1457,6 +1457,15 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
     *dst = NULL;
 
+    if (src->from && (!src->from->user_id || src->from->user_id[0] == '\0')) {
+        char* own_id = NULL;
+        status = get_default_own_userid(session, &own_id);
+        if (own_id) {
+            free(src->from->user_id);
+            src->from->user_id = own_id; // ownership transfer
+        }
+    }
+    
     status = myself(session, src->from);
     if (status != PEP_STATUS_OK)
         GOTO(pep_error);
@@ -1683,18 +1692,26 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     if (src->enc_format != PEP_enc_none)
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
+    if (target_id && (!target_id->user_id || target_id->user_id[0] == '\0')) {
+        char* own_id = NULL;
+        status = get_default_own_userid(session, &own_id);
+        if (own_id) {
+            free(target_id->user_id);
+            target_id->user_id = own_id; // ownership transfer
+        }
+    }
+
     status = myself(session, target_id);
     if (status != PEP_STATUS_OK)
         GOTO(pep_error);
 
     *dst = NULL;
 
-
-    PEP_STATUS _status = update_identity(session, target_id);
-    if (_status != PEP_STATUS_OK) {
-        status = _status;
-        goto pep_error;
-    }
+    // PEP_STATUS _status = update_identity(session, target_id);
+    // if (_status != PEP_STATUS_OK) {
+    //     status = _status;
+    //     goto pep_error;
+    // }
 
     char* target_fpr = target_id->fpr;
     if (!target_fpr)
