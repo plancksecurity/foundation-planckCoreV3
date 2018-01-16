@@ -128,15 +128,15 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
         const char *mime_type, const char *filename)
 {
     assert(blob);
-    if (blob == NULL)
+    if (!blob)
         return NULL;
 
-    if (bloblist == NULL)
+    if (!bloblist)
         return new_bloblist(blob, size, mime_type, filename);
 
-    if (bloblist->value == NULL) { // empty list
-        assert(bloblist->next);
-        if (bloblist->next != NULL)
+    if (!bloblist->value) { // empty list
+        assert(!bloblist->next);
+        if (bloblist->next)
             return NULL; // invalid list
             
         if (!set_blob_data(bloblist, blob, size, mime_type, filename)) {
@@ -157,7 +157,7 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
     list_curr->release_value = release_value;
 
     assert(list_curr->next);
-    if (list_curr->next == NULL)
+    if (!list_curr->next)
         return NULL;
 
     return list_curr->next;
