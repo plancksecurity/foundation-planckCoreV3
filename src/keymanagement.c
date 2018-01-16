@@ -548,40 +548,52 @@ DYNAMIC_API PEP_STATUS update_identity(
          * Temporary identity information with username supplied
             * Input: address, username (no others)
          */
-        identity_list* id_list = NULL;
-        status = get_identities_by_address(session, identity->address, &id_list);
+         
+        //  * See if there is an own identity that uses this address. If so, we'll
+        //    prefer that
+        stored_ident = NULL;
+        
+        if (default_own_id) {
+            status = get_identity(session, 
+                                  default_own_id, 
+                                  identity->address, 
+                                  &stored_ident);
+        }
+        // If there isn't an own identity, search for a non-temp stored ident
+        // with this address.                      
+        if (status == PEP_CANNOT_FIND_IDENTITY || !stored_ident) { 
+ 
+            identity_list* id_list = NULL;
+            status = get_identities_by_address(session, identity->address, &id_list);
 
-        //  * Search for an identity with non-temporary user_id with that mapping
-        if (id_list) {
-            identity_list* id_curr = id_list;
-            while (id_curr) {
-                pEp_identity* this_id = id_curr->ident;
-                if (this_id) {
-                    char* this_uid = this_id->user_id;
-                    if (this_uid && (strstr(this_uid, "TOFU_") != this_uid)) {
-                        // FIXME: should we also be fixing pEp_own_userId in this
-                        // function here?
-                        
-                        // if usernames match, we replace the userid.
-                        if (identity->username && 
-                            strcasecmp(identity->username, 
-                                       this_id->username) == 0) {
-                            
-                            // Ok, we have a real ID. Copy it!
-                            identity->user_id = strdup(this_uid);
-                            
-                            if (!identity->user_id)
-                                status = PEP_OUT_OF_MEMORY;
-                            stored_ident = this_id;
-                            
-                            break;                                
-                        }                            
-                    } 
+            if (id_list) {
+                identity_list* id_curr = id_list;
+                while (id_curr) {
+                    pEp_identity* this_id = id_curr->ident;
+                    if (this_id) {
+                        char* this_uid = this_id->user_id;
+                        if (this_uid && (strstr(this_uid, "TOFU_") != this_uid)) {
+                            // if usernames match, we replace the userid.
+                            if (identity->username && 
+                                strcasecmp(identity->username, 
+                                           this_id->username) == 0) {
+                                
+                                // Ok, we have a real ID. Copy it!
+                                identity->user_id = strdup(this_uid);
+                                
+                                if (!identity->user_id)
+                                    status = PEP_OUT_OF_MEMORY;
+                                stored_ident = this_id;
+                                
+                                break;                                
+                            }                            
+                        } 
+                    }
+                    id_curr = id_curr->next;
                 }
-                id_curr = id_curr->next;
             }
         }
-
+        
         if (stored_ident) {
             status = prepare_updated_identity(session,
                                               identity,
@@ -616,22 +628,35 @@ DYNAMIC_API PEP_STATUS update_identity(
          * Temporary identity information without username suplied
             * Input: address (no others)
          */
-        identity_list* id_list = NULL;
-        status = get_identities_by_address(session, identity->address, &id_list);
-
-        //    * Search for identity with this address
-        if (id_list && !(id_list->next)) { // exactly one            
-            //    * If exactly one found
-            //      * elect valid key for identity (see below)
-            //      * Return this identity
-            stored_ident = id_list->ident;
-            
-            if (stored_ident)
-                status = prepare_updated_identity(session, identity,
-                                                  stored_ident, false);
-            else
-                status = PEP_CANNOT_FIND_IDENTITY;
+         
+        //  * Again, see if there is an own identity that uses this address. If so, we'll
+        //    prefer that
+        stored_ident = NULL;
+         
+        if (default_own_id) {
+            status = get_identity(session, 
+                                  default_own_id, 
+                                  identity->address, 
+                                  &stored_ident);
         }
+        // If there isn't an own identity, search for a non-temp stored ident
+        // with this address.                      
+        if (status == PEP_CANNOT_FIND_IDENTITY || !stored_ident) { 
+ 
+            identity_list* id_list = NULL;
+            status = get_identities_by_address(session, identity->address, &id_list);
+
+            //    * Search for identity with this address
+            if (id_list && !(id_list->next)) { // exactly one            
+                //    * If exactly one found
+                //      * elect valid key for identity (see below)
+                //      * Return this identity
+                stored_ident = id_list->ident;
+            }
+        }
+        if (stored_ident)
+            status = prepare_updated_identity(session, identity,
+                                              stored_ident, false);
         else // too little info
             status = PEP_CANNOT_FIND_IDENTITY; 
     }

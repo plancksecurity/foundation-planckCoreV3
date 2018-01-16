@@ -3282,6 +3282,7 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
     if (tmp_msg->from) {
         char* own_id = NULL;
         status = get_default_own_userid(session, &own_id);
+        free(tmp_msg->from->user_id);
         
         if (status != PEP_STATUS_OK || !own_id) {
             tmp_msg->from->user_id = strdup(PEP_OWN_USERID);
