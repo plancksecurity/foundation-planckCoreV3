@@ -82,7 +82,6 @@
 #include "sqlite3.h"
 #endif
 
-#define _EXPORT_PEP_ENGINE_DLL
 #include "pEpEngine.h"
 
 // If not specified, build for GPG

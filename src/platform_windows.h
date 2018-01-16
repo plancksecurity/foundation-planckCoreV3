@@ -5,6 +5,7 @@
 
 // Windows platform specifica
 
+#define _EXPORT_PEP_ENGINE_DLL
 #pragma warning(disable : 4996)
 
 // We need to make sure winsock2 is included before windows.h, or we will get redefinitions of symbols
