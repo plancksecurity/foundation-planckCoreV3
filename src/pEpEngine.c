@@ -269,6 +269,14 @@ static const char *sql_get_revoked =
     "select revoked_fpr, revocation_date from revoked_keys"
     "    where replacement_fpr = upper(replace(?1,' ','')) ;";
 
+static const char *sql_get_userid_alias_default =
+    "select default_id from alternate_user_id "
+    "   where alternate_id = ?1 ; ";
+
+static const char *sql_add_userid_alias =
+    "insert or replace into alternate_user_id (default_id, alternate_id) "
+    "values (?1, ?2) ;";
+    
 static int user_version(void *_version, int count, char **text, char **name)
 {
     assert(_version);
@@ -802,6 +810,14 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     int_result = sqlite3_prepare_v2(_session->db, sql_get_default_own_userid,
             (int)strlen(sql_get_default_own_userid), &_session->get_default_own_userid, NULL);
     assert(int_result == SQLITE_OK);
+    
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_userid_alias_default,
+            (int)strlen(sql_get_userid_alias_default), &_session->get_userid_alias_default, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_add_userid_alias,
+            (int)strlen(sql_add_userid_alias), &_session->add_userid_alias, NULL);
+    assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_replace_userid,
             (int)strlen(sql_replace_userid), &_session->replace_userid, NULL);
@@ -1061,6 +1077,10 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->get_user_default_key);    
             if (session->get_default_own_userid)
                 sqlite3_finalize(session->get_default_own_userid);
+            if (session->get_userid_alias_default)
+                sqlite3_finalize(session->get_userid_alias_default);
+            if (session->add_userid_alias)
+                sqlite3_finalize(session->add_userid_alias);
             if (session->replace_identities_fpr)
                 sqlite3_finalize(session->replace_identities_fpr);        
             if (session->remove_fpr_as_default)
