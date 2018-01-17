@@ -350,7 +350,7 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     if (status == PEP_STATUS_OK && stored_ident->fpr && *(stored_ident->fpr) != '\0') {
     // set identity comm_type from trust db (user_id, FPR)
         status = get_trust(session, stored_ident);
-        if (status == PEP_CANNOT_FIND_IDENTITY) {
+        if (status == PEP_CANNOT_FIND_IDENTITY || stored_ident->comm_type == PEP_ct_unknown) {
             // This is OK - there is no trust DB entry, but we
             // found a key. We won't store this, but we'll
             // use it.
@@ -826,7 +826,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     // input.
     if (EMPTYSTR(identity->username)) {
         bool stored_uname = (stored_identity && stored_identity->username);
-        char* uname = (stored_uname ? "Anonymous" : stored_identity->username);
+        char* uname = (stored_uname ? stored_identity->username : "Anonymous");
         free(identity->username);
         identity->username = strdup(uname);
         if (identity->username == NULL)
@@ -930,42 +930,21 @@ DYNAMIC_API PEP_STATUS initialise_own_identities(PEP_SESSION session,
         
     if (!my_idents)
         return PEP_STATUS_OK;
-        
-    char* default_own_userid = NULL;
-    get_default_own_userid(session, &default_own_userid);
-    
+            
     identity_list* ident_curr = my_idents;
     while (ident_curr) {
         pEp_identity* ident = ident_curr->ident;
-        if (!ident)
-            return PEP_ILLEGAL_VALUE;
-            
-        if (default_own_userid) {
-            if (ident->user_id && strcmp(default_own_userid, ident->user_id) != 0) {
-                status = set_userid_alias(session, default_own_userid, ident->user_id);
-                if (status != PEP_STATUS_OK)
-                    goto pep_free;
-                free(ident->user_id);
-            }
-            ident->user_id = strdup(default_own_userid);        
+        if (!ident || !ident->address) {
+            status = PEP_ILLEGAL_VALUE;
+            goto pep_error;
         }
-        else if (!ident->user_id) {
-            default_own_userid = PEP_OWN_USERID;
-            ident->user_id = strdup(PEP_OWN_USERID);
-        }
-        
-        ident->me = true;
-        
-        // Ok, do it...
-        status = set_identity(session, ident);
-        if (status != PEP_STATUS_OK)
-            goto pep_free;
+
+        status = _myself(session, ident, false, false);
         
         ident_curr = ident_curr->next;
     }
     
-pep_free:
-    free(default_own_userid);
+pep_error:
     return status;
 }
 

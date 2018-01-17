@@ -45,7 +45,6 @@ int main() {
     status = myself(session, me);
     
     // Create key
-
     cout << "Creating new id for : ";
     char *uniqname = strdup("AAAAtestuser@testdomain.org");
     srandom(time(NULL));

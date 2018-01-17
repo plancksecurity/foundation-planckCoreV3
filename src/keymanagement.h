@@ -34,6 +34,27 @@ DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
     );
 
+// initialise_own_identities () - ensures that an own identity is complete
+//
+//  parameters:
+//      session (in)        session to use
+//      my_idents (inout)   identities of local user to quick-set
+//                          For these, at least .address must be set.
+//                          if no .user_id is set, AND the DB doesn't contain
+//                          a default user_id, PEP_OWN_USERID will be used and
+//                          become the perennial default for the DB.
+//
+//  return value:
+//      PEP_STATUS_OK if identity could be set,
+//      any other value on error
+//
+//  caveat:
+//      this function does NOT generate keypairs. It is intended to
+//      precede running of the engine on actual messages. It effectively
+//      behaves like myself(), but when there would normally be key generation
+//      (when there is no valid key, for example),
+//      it instead stores an identity without keys.
+//
 DYNAMIC_API PEP_STATUS initialise_own_identities(PEP_SESSION session,
                                                  identity_list* my_idents);
 

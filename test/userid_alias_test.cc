@@ -15,7 +15,7 @@
 using namespace std;
 
 int main() {
-    cout << "\n*** test user_id aliases ***\n\n";
+    cout << "\n*** userid_alias_test ***\n\n";
 
     PEP_SESSION session;
     
@@ -38,11 +38,16 @@ int main() {
     const char* alias1 = "TheBigCheese";
     const char* alias2 = "PEBKAC";
 
+    char* own_id = NULL;
+    status = get_default_own_userid(session, &own_id);
+    if (!own_id)
+        own_id = strdup(PEP_OWN_USERID);
+    
     cout << "First, set up an identity with PEP_OWN_USERID as user_id." << endl;
     status = myself(session, alice);
     assert(status == PEP_STATUS_OK);
     cout << "After myself, user_id is " << alice->user_id << endl;
-    assert(strcmp(alice->user_id, PEP_OWN_USERID) == 0);
+    assert(strcmp(alice->user_id, own_id) == 0);
     
     cout << "Now set up an identity with " << alias1 << " as user_id." << endl;
     free(alice->user_id);
@@ -51,7 +56,7 @@ int main() {
     status = myself(session, alice);
     assert(status == PEP_STATUS_OK);
     cout << "After myself, user_id is " << alice->user_id << endl;
-    assert(strcmp(alice->user_id, PEP_OWN_USERID) == 0);
+    assert(strcmp(alice->user_id, own_id) == 0);
 
     cout << "Now set up an identity with " << alias2 << " as user_id." << endl;
     free(alice->user_id);
@@ -60,20 +65,20 @@ int main() {
     status = myself(session, alice);
     assert(status == PEP_STATUS_OK);
     cout << "After myself, user_id is " << alice->user_id << endl;
-    assert(strcmp(alice->user_id, PEP_OWN_USERID) == 0);    
+    assert(strcmp(alice->user_id, own_id) == 0);    
 
     char* default_id = NULL;
     status = get_userid_alias_default(session, alias1, &default_id);
     assert(status == PEP_STATUS_OK);
     cout << "Default user_id for " << alias1 << " is " << default_id << endl;
-    assert(strcmp(default_id, PEP_OWN_USERID) == 0);
+    assert(strcmp(default_id, own_id) == 0);
     
     free(default_id);
     default_id = NULL;
     status = get_userid_alias_default(session, alias2, &default_id);
     assert(status == PEP_STATUS_OK);
     cout << "Default user_id for " << alias2 << " is " << default_id << endl;
-    assert(strcmp(default_id, PEP_OWN_USERID) == 0);
+    assert(strcmp(default_id, own_id) == 0);
     
     
     return 0;
