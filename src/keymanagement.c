@@ -665,8 +665,8 @@ DYNAMIC_API PEP_STATUS update_identity(
     // Revisit once I can talk to Volker
     if (identity->comm_type != PEP_ct_compromized &&
         identity->comm_type < PEP_ct_strong_but_unconfirmed)
-    if (session->examine_identity)
-        session->examine_identity(identity, session->examine_management);
+        if (session->examine_identity)
+            session->examine_identity(identity, session->examine_management);
 
     return ADD_TO_LOG(status);
 }

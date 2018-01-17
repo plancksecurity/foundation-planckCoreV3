@@ -646,7 +646,7 @@ DYNAMIC_API PEP_STATUS get_default_own_userid(
 
 DYNAMIC_API PEP_STATUS get_userid_alias_default(
         PEP_SESSION session, 
-        char* alias_id,
+        const char* alias_id,
         char** default_id);
 
 // set_userid_alias() - set an alias to correspond to a default id
@@ -662,8 +662,8 @@ DYNAMIC_API PEP_STATUS get_userid_alias_default(
 
 DYNAMIC_API PEP_STATUS set_userid_alias (
         PEP_SESSION session, 
-        char* default_id,
-        char* alias_id);
+        const char* default_id,
+        const char* alias_id);
 
 // set_device_group() - update own person's device group
 //
