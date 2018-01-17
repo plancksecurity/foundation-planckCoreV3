@@ -444,8 +444,41 @@ int main() {
     cout << "****************************************************************************************" << endl << endl;
 
     cout << "****************************************************************************************" << endl;
-    cout << "* III: key election:  " << endl;
+    cout << "* III: key election: get identity for user with expired key" << endl;
     cout << "****************************************************************************************" << endl << endl;
+
+    // 1. create identity
+    const char* bernd_address = "bernd.das.brot@darthmama.org";
+    const char* bernd_fpr = "F8CE0F7E24EB190A2FCBFD38D4B088A7CAFAA422";
+    const char* bernd_userid = "BERND_ID"; // simulate temp ID
+    const char* bernd_username = "Bernd das Brot der Ultimative Testkandidat";
+    const string bernd_pub_key = slurp("test_keys/pub/bernd.das.brot-0xCAFAA422_pub.asc");
+    
+    statuspub = import_key(session, bernd_pub_key.c_str(), bernd_pub_key.length(), NULL);
+    assert(statuspub == PEP_STATUS_OK);
+
+    pEp_identity* bernd = new_identity(bernd_address, bernd_fpr, bernd_userid, bernd_username);
+    
+    // 2. set identity
+    status = set_identity(session, bernd);
+    assert(status == PEP_STATUS_OK);
+    free_identity(bernd);
+                
+    bernd = new_identity(bernd_address, NULL, bernd_userid, bernd_username); 
+    status = update_identity(session, bernd);
+    assert(status != PEP_STATUS_OK);
+    assert(!bernd->fpr || bernd->fpr[0] == '\0');
+    assert(bernd->username);
+    assert(strcmp(bernd->username, bernd_username) == 0);
+    assert(bernd->user_id);
+    assert(strcmp(bernd->user_id, bernd_userid) == 0); // ???
+    assert(!bernd->me); 
+//    assert(bernd->comm_type == PEP_ct_OpenPGP_unconfirmed);
+    assert(strcmp(bernd->address, bernd_address) == 0);
+
+    cout << "PASS: update_identity() correctly rejected expired key" << endl << endl;
+    free_identity(bernd);
+
 
     cout << "****************************************************************************************" << endl;
     cout << "* III: key election:  " << endl;

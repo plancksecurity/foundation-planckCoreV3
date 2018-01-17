@@ -265,6 +265,9 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
         
     *is_identity_default = *is_user_default = *is_address_default = false;
 
+    PEP_comm_type first_reject_comm_type = PEP_ct_key_not_found;
+    PEP_STATUS first_reject_status = PEP_KEY_NOT_FOUND;
+    
     char* stored_fpr = stored_identity->fpr;
     // Input: stored identity retrieved from database
     // if stored identity contains a default key
@@ -273,6 +276,10 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
         if (status == PEP_STATUS_OK && stored_identity->fpr) {
             *is_identity_default = *is_address_default = true;
             return status;
+        }
+        else if (status != PEP_KEY_NOT_FOUND) {
+            first_reject_status = status;
+            first_reject_comm_type = stored_identity->comm_type;
         }
     }
     // if no valid default stored identity key found
@@ -293,6 +300,10 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
                                                       stored_identity->fpr);
             return status;
         }        
+        else if (status != PEP_KEY_NOT_FOUND && first_reject_status != PEP_KEY_NOT_FOUND) {
+            first_reject_status = status;
+            first_reject_comm_type = stored_identity->comm_type;
+        }
     }
     
     status = elect_pubkey(session, stored_identity);
@@ -300,6 +311,10 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
         if (stored_identity->fpr)
             validate_fpr(session, stored_identity);
     }    
+    else if (status != PEP_KEY_NOT_FOUND && first_reject_status != PEP_KEY_NOT_FOUND) {
+        first_reject_status = status;
+        first_reject_comm_type = stored_identity->comm_type;
+    }
     
     switch (stored_identity->comm_type) {
         case PEP_ct_key_revoked:
@@ -308,10 +323,10 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
         case PEP_ct_compromized:
         case PEP_ct_mistrusted:
             // this only happens when it's all there is
-            status = PEP_KEY_NOT_FOUND;
+            status = first_reject_status;
             free(stored_identity->fpr);
             stored_identity->fpr = NULL;
-            stored_identity->comm_type = PEP_ct_unknown;
+            stored_identity->comm_type = first_reject_comm_type;
             break;    
         default:
             break;
@@ -369,7 +384,7 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     else {
         free(return_id->fpr);
         return_id->fpr = NULL;
-        return_id->comm_type = PEP_ct_key_not_found;
+        return_id->comm_type = stored_ident->comm_type;
         return status; // Couldn't find a key.
     }
                 

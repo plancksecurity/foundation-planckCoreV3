@@ -179,10 +179,10 @@ int main() {
 
     status = encrypt_message(session, outgoing_msg, NULL, &encrypted_outgoing_msg, PEP_enc_PGP_MIME, 0);
     cout << "Encryption returns with status " << tl_status_string(status) << endl;
-    assert (status == PEP_KEY_NOT_FOUND);
+    assert (status == PEP_KEY_UNSUITABLE);
     assert (encrypted_outgoing_msg == NULL);
     status = update_identity(session, recip1);
-    assert (recip1->comm_type = PEP_ct_key_not_found);
+    assert (recip1->comm_type = PEP_ct_key_revoked);
 
     cout << endl << "---------------------------------------------------------" << endl;
     cout << "2c. Check trust of recip, whose only key has been revoked, once an encryption attempt has been made." << endl;
