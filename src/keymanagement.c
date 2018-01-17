@@ -928,8 +928,11 @@ DYNAMIC_API PEP_STATUS initialise_own_identities(PEP_SESSION session,
     if (!session)
         return PEP_ILLEGAL_VALUE;
         
-    char* stored_own_userid = NULL;
-    get_default_own_userid(session, &stored_own_userid);
+    if (!my_idents)
+        return PEP_STATUS_OK;
+        
+    char* default_own_userid = NULL;
+    get_default_own_userid(session, &default_own_userid);
     
     identity_list* ident_curr = my_idents;
     while (ident_curr) {
@@ -937,27 +940,32 @@ DYNAMIC_API PEP_STATUS initialise_own_identities(PEP_SESSION session,
         if (!ident)
             return PEP_ILLEGAL_VALUE;
             
-        if (stored_own_userid) {
-            if (!ident->user_id) 
-                ident->user_id = strdup(stored_own_userid);
-            else if (strcmp(stored_own_userid, ident->user_id) != 0)
-                return PEP_ILLEGAL_VALUE;
+        if (default_own_userid) {
+            if (ident->user_id && strcmp(default_own_userid, ident->user_id) != 0) {
+                status = set_userid_alias(session, default_own_userid, ident->user_id);
+                if (status != PEP_STATUS_OK)
+                    goto pep_free;
+                free(ident->user_id);
+            }
+            ident->user_id = strdup(default_own_userid);        
         }
         else if (!ident->user_id) {
-            stored_own_userid = PEP_OWN_USERID;
+            default_own_userid = PEP_OWN_USERID;
             ident->user_id = strdup(PEP_OWN_USERID);
         }
         
-        ident->me = true; // Just in case.
+        ident->me = true;
         
         // Ok, do it...
         status = set_identity(session, ident);
         if (status != PEP_STATUS_OK)
-            return status;
+            goto pep_free;
         
         ident_curr = ident_curr->next;
     }
     
+pep_free:
+    free(default_own_userid);
     return status;
 }
 
