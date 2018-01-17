@@ -46,9 +46,8 @@ int main(int argc, char** argv) {
     pEp_identity * me1 = new_identity("pep.color.test.P@kgrothoff.org", 
                                       "7EE6C60C68851954E1797F81EA59715E3EBE215C", 
                                       PEP_OWN_USERID, "Pep Color Test P (recip)");
+    me1->me = true;
     PEP_STATUS status = update_identity(session, me1);
-    trust_personal_key(session, me1);
-    status = update_identity(session, me1);
     
     pEp_identity * sender1 = new_identity("pep.color.test.V@kgrothoff.org",
                                           NULL, "TOFU_pep.color.test.V@kgrothoff.org",

@@ -123,7 +123,10 @@ struct _pEpSession {
     sqlite3_stmt *log;
     sqlite3_stmt *trustword;
     sqlite3_stmt *get_identity;
+    sqlite3_stmt *get_identity_without_trust_check;
+    sqlite3_stmt *get_identities_by_address;
     sqlite3_stmt *replace_identities_fpr;
+    sqlite3_stmt *remove_fpr_as_default;
     sqlite3_stmt *set_person;
     sqlite3_stmt *set_device_group;
     sqlite3_stmt *get_device_group;
@@ -140,6 +143,7 @@ struct _pEpSession {
     sqlite3_stmt *crashdump;
     sqlite3_stmt *languagelist;
     sqlite3_stmt *i18n_token;
+    sqlite3_stmt *replace_userid;
 
     // blacklist
     sqlite3_stmt *blacklist_add;
@@ -151,7 +155,11 @@ struct _pEpSession {
     sqlite3_stmt *own_key_is_listed;
     sqlite3_stmt *own_identities_retrieve;
     sqlite3_stmt *own_keys_retrieve;
-    sqlite3_stmt *set_own_key;
+    sqlite3_stmt *get_user_default_key;
+        
+    sqlite3_stmt *get_default_own_userid;
+
+//    sqlite3_stmt *set_own_key;
 
     // sequence value
     sqlite3_stmt *sequence_value1;
@@ -161,6 +169,10 @@ struct _pEpSession {
     // revoked keys
     sqlite3_stmt *set_revoked;
     sqlite3_stmt *get_revoked;
+
+    // aliases
+    sqlite3_stmt *get_userid_alias_default;
+    sqlite3_stmt *add_userid_alias;
 
     // callbacks
     examine_identity_t examine_identity;
@@ -339,13 +351,6 @@ static inline int _same_fpr(
     return comparison == 0;
 }
 
-static inline bool _identity_me(
-        pEp_identity * identity
-    )
-{
-    return identity->user_id && strcmp(identity->user_id, PEP_OWN_USERID) == 0;
-}
-
 // size is the length of the bytestr that's coming in. This is really only intended
 // for comparing two full strings. If charstr's length is different from bytestr_size,
 // we'll return a non-zero value.
@@ -366,6 +371,20 @@ static inline char* _pep_subj_copy() {
 #else
     return strdup("pEp");
 #endif
+}
+
+static inline bool is_me(PEP_SESSION session, pEp_identity* test_ident) {
+    bool retval = false;
+    if (test_ident && test_ident->user_id) {
+        char* def_id = NULL;
+        get_default_own_userid(session, &def_id);
+        if (test_ident->me || 
+            (def_id && strcmp(def_id, test_ident->user_id) == 0)) {
+            retval = true;
+        }
+        free(def_id);
+    }
+    return retval;
 }
 
 // These are globals used in generating message IDs and should only be

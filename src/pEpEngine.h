@@ -47,6 +47,7 @@ typedef enum {
     PEP_GET_KEY_FAILED                              = 0x0203,
     PEP_CANNOT_EXPORT_KEY                           = 0x0204,
     PEP_CANNOT_EDIT_KEY                             = 0x0205,
+    PEP_KEY_UNSUITABLE                              = 0x0206,
     
     PEP_CANNOT_FIND_IDENTITY                        = 0x0301,
     PEP_CANNOT_SET_PERSON                           = 0x0381,
@@ -54,6 +55,9 @@ typedef enum {
     PEP_CANNOT_SET_IDENTITY                         = 0x0383,
     PEP_CANNOT_SET_TRUST                            = 0x0384,
     PEP_KEY_BLACKLISTED                             = 0x0385,
+    
+    PEP_CANNOT_FIND_ALIAS                           = 0x0391,
+    PEP_CANNOT_SET_ALIAS                            = 0x0392,
     
     PEP_UNENCRYPTED                                 = 0x0400,
     PEP_VERIFIED                                    = 0x0401,
@@ -470,7 +474,6 @@ typedef enum _identity_flags {
     // the first octet flags are app defined settings
     PEP_idf_not_for_sync = 0x0001,   // don't use this identity for sync
     PEP_idf_list = 0x0002,           // identity of list of persons
-
     // the second octet flags are calculated
     PEP_idf_devicegroup = 0x0100     // identity of a device group member
 } identity_flags;
@@ -486,13 +489,15 @@ typedef struct _pEp_identity {
     char *address;              // C string with address UTF-8 encoded
     char *fpr;                  // C string with fingerprint UTF-8 encoded
     char *user_id;              // C string with user ID UTF-8 encoded
-                                // user_id must be set to "pEp_own_userId"
+                                // user_id MIGHT be set to "pEp_own_userId"
                                 // (use PEP_OWN_USERID preprocessor define)
                                 // if this is own user's identity.
+                                // But it is not REQUIRED to be.
     char *username;             // C string with user name UTF-8 encoded
     PEP_comm_type comm_type;    // type of communication with this ID
     char lang[3];               // language of conversation
                                 // ISO 639-1 ALPHA-2, last byte is 0
+    bool me;                    // if this is the local user herself/himself
     identity_flags_t flags;     // identity_flag1 | identity_flag2 | ...
 } pEp_identity;
 
@@ -599,6 +604,66 @@ PEP_STATUS replace_identities_fpr(PEP_SESSION session,
 DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
     );
+
+// get_default own_userid() - get the user_id of the own user
+//
+//    parameters:
+//        session (in)        session handle
+//        userid  (out)       own user id (if it exists)
+//
+//    return value:
+//        PEP_STATUS_OK = 0             userid was found
+//        PEP_CANNOT_FIND_IDENTITY      no own_user found in the DB
+//        PEP_UNKNOWN_ERROR             results were returned, but no ID
+//                                      found (no reason this should ever occur)
+//    caveat:
+//        userid will be NULL if not found; otherwise, returned string
+//        belongs to the caller.
+
+DYNAMIC_API PEP_STATUS get_default_own_userid(
+        PEP_SESSION session, 
+        char** userid
+    );
+
+// get_userid_alias_default() - get the default user_id which corresponds
+//                              to an alias
+//    parameters:
+//        session (in)        session handle
+//        alias_id (in)       the user_id which may be an alias for a default id
+//        default_id (out)    the default id for this alias, if the alias
+//                            is in the DB as an alias, else NULL
+//    return value:
+//        PEP_STATUS_OK = 0             userid was found
+//        PEP_CANNOT_FIND_ALIAS         this userid is not listed as an 
+//                                      alias in the DB
+//        PEP_UNKNOWN_ERROR             results were returned, but no ID
+//                                      found (no reason this should ever occur)
+//    caveat:
+//        default_id will be NULL if not found; otherwise, returned string
+//        belongs to the caller.
+//        also, current implementation does NOT check to see if this userid
+//        IS a default.
+
+DYNAMIC_API PEP_STATUS get_userid_alias_default(
+        PEP_SESSION session, 
+        const char* alias_id,
+        char** default_id);
+
+// set_userid_alias() - set an alias to correspond to a default id
+//    parameters:
+//        session (in)        session handle
+//        default_id (in)     the default id for this alias. This must
+//                            correspond to the default user_id for an
+//                            entry in the person (user) table.
+//        alias_id (in)       the alias to be set for this default id
+//    return value:
+//        PEP_STATUS_OK = 0             userid was found
+//        PEP_CANNOT_SET_ALIAS          there was an error setting this
+
+DYNAMIC_API PEP_STATUS set_userid_alias (
+        PEP_SESSION session, 
+        const char* default_id,
+        const char* alias_id);
 
 // set_device_group() - update own person's device group
 //
@@ -853,7 +918,7 @@ DYNAMIC_API void pEp_free(void *p);
 //  parameters:
 //      session (in)            session handle
 //      identity (inout)        user_id and fpr to check as UTF-8 strings (in)
-//                              user_id and comm_type as result (out)
+//                              comm_type as result (out)
 //
 //  this function modifies the given identity struct; the struct remains in
 //  the ownership of the caller
@@ -1127,6 +1192,29 @@ DYNAMIC_API const char* get_engine_version();
 
 DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session);
 
+// This is used internally when there is a temporary identity to be retrieved
+// that may not yet have an FPR attached. See get_identity() for functionality,
+// params and caveats.
+PEP_STATUS get_identity_without_trust_check(
+        PEP_SESSION session,
+        const char *address,
+        const char *user_id,
+        pEp_identity **identity
+    );
+    
+PEP_STATUS get_identities_by_address(
+        PEP_SESSION session,
+        const char *address,
+        identity_list** id_list
+    );
+        
+PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
+                              const char* new_uid);
+                              
+PEP_STATUS remove_fpr_as_default(PEP_SESSION session, 
+                                    const char* fpr);
+                              
+    
 #ifdef __cplusplus
 }
 #endif

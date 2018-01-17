@@ -38,6 +38,7 @@ int main() {
     cout << "creating message…\n";
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", PEP_OWN_USERID, "Alice Test");
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, "42", "Bob Test");
+    alice->me = true;
 
     PEP_STATUS mystatus = myself(session, alice);
     assert(mystatus == PEP_STATUS_OK);

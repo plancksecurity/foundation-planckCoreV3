@@ -39,36 +39,42 @@ int main() {
     assert(statuspub == PEP_STATUS_OK);
     assert(statuspriv == PEP_STATUS_OK);
 
-    pEp_identity * alice_id = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, "Alice Test");
-    status = update_identity(session, alice_id);
-    assert(alice_id->fpr);
-    assert(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
+    pEp_identity * alice_id = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", PEP_OWN_USERID, "Alice Test");
+    identity_list* own_id = new_identity_list(alice_id);
+    status = initialise_own_identities(session, own_id);
+    status = trust_personal_key(session, alice_id);
+    pEp_identity * new_alice_id = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", PEP_OWN_USERID, "Alice Test");
+    status = update_identity(session, new_alice_id);
+    assert(new_alice_id->fpr);
+    assert(strcmp(new_alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
+    free_identity(new_alice_id);
     free_identity(alice_id);
     alice_id = NULL;
+    new_alice_id = NULL;
 
     alice_id = new_identity(alice_email_case, NULL, PEP_OWN_USERID, "Alice Test");
-    status = update_identity(session, alice_id);
+    status = myself(session, alice_id);
     assert(alice_id->fpr);
     assert(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
     free_identity(alice_id);
     alice_id = NULL;
 
     alice_id = new_identity(alice_email_dot, NULL, PEP_OWN_USERID, "Alice Test");
-    status = update_identity(session, alice_id);
+    status = myself(session, alice_id);
     assert(alice_id->fpr);
     assert(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
     free_identity(alice_id);
     alice_id = NULL;
 
     alice_id = new_identity(alice_email_dotless, NULL, PEP_OWN_USERID, "Alice Test");
-    status = update_identity(session, alice_id);
+    status = myself(session, alice_id);
     assert(alice_id->fpr);
     assert(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
     free_identity(alice_id);
     alice_id = NULL;
 
     alice_id = new_identity(alice_email_case_and_dot, NULL, PEP_OWN_USERID, "Alice Test");
-    status = update_identity(session, alice_id);
+    status = myself(session, alice_id);
     assert(alice_id->fpr);
     assert(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
     free_identity(alice_id);

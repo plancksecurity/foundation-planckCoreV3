@@ -36,14 +36,17 @@ int main(int argc, char** argv) {
     PEP_STATUS statuskey4 = import_key(session, keytextkey4.c_str(), keytextkey4.length(), NULL);
 
     pEp_identity * sender = new_identity("pep.never.me.test@kgrothoff.org", NULL, "TOFU_pep.never.me.test@kgrothoff.org", "pEp Never Me Test");    
+    sender->me = false;    
     PEP_STATUS status = update_identity(session, sender);
         
     // reset the trust on both keys before we start
     pEp_identity * recip1 = new_identity("banmeonce@kgrothoff.org", NULL, "TOFU_banemeonce@kgrothoff.org", "Ban Me Once");    
+    recip1->me = false;    
     status = update_identity(session, recip1);
     key_reset_trust(session, recip1);
     
     pEp_identity * recip2 = new_identity("banmetwice@kgrothoff.org", NULL, "TOFU_banemetwice@kgrothoff.org", "Ban Me Twice");    
+    recip2->me = false;    
     status = update_identity(session, recip2);
     key_reset_trust(session, recip2);
         
