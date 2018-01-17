@@ -56,6 +56,9 @@ typedef enum {
     PEP_CANNOT_SET_TRUST                            = 0x0384,
     PEP_KEY_BLACKLISTED                             = 0x0385,
     
+    PEP_CANNOT_FIND_ALIAS                           = 0x0391,
+    PEP_CANNOT_SET_ALIAS                            = 0x0392,
+    
     PEP_UNENCRYPTED                                 = 0x0400,
     PEP_VERIFIED                                    = 0x0401,
     PEP_DECRYPTED                                   = 0x0402,
@@ -622,6 +625,45 @@ DYNAMIC_API PEP_STATUS get_default_own_userid(
         char** userid
     );
 
+// get_userid_alias_default() - get the default user_id which corresponds
+//                              to an alias
+//    parameters:
+//        session (in)        session handle
+//        alias_id (in)       the user_id which may be an alias for a default id
+//        default_id (out)    the default id for this alias, if the alias
+//                            is in the DB as an alias, else NULL
+//    return value:
+//        PEP_STATUS_OK = 0             userid was found
+//        PEP_CANNOT_FIND_ALIAS         this userid is not listed as an 
+//                                      alias in the DB
+//        PEP_UNKNOWN_ERROR             results were returned, but no ID
+//                                      found (no reason this should ever occur)
+//    caveat:
+//        default_id will be NULL if not found; otherwise, returned string
+//        belongs to the caller.
+//        also, current implementation does NOT check to see if this userid
+//        IS a default.
+
+DYNAMIC_API PEP_STATUS get_userid_alias_default(
+        PEP_SESSION session, 
+        char* alias_id,
+        char** default_id);
+
+// set_userid_alias() - set an alias to correspond to a default id
+//    parameters:
+//        session (in)        session handle
+//        default_id (in)     the default id for this alias. This must
+//                            correspond to the default user_id for an
+//                            entry in the person (user) table.
+//        alias_id (in)       the alias to be set for this default id
+//    return value:
+//        PEP_STATUS_OK = 0             userid was found
+//        PEP_CANNOT_SET_ALIAS          there was an error setting this
+
+DYNAMIC_API PEP_STATUS set_userid_alias (
+        PEP_SESSION session, 
+        char* default_id,
+        char* alias_id);
 
 // set_device_group() - update own person's device group
 //

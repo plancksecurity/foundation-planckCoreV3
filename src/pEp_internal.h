@@ -174,7 +174,6 @@ struct _pEpSession {
     sqlite3_stmt *get_userid_alias_default;
     sqlite3_stmt *add_userid_alias;
 
-
     // callbacks
     examine_identity_t examine_identity;
     void *examine_management;

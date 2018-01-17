@@ -1496,6 +1496,79 @@ DYNAMIC_API PEP_STATUS get_default_own_userid(
     return status;
 }
 
+DYNAMIC_API PEP_STATUS get_userid_alias_default(
+        PEP_SESSION session, 
+        char* alias_id,
+        char** default_id) {
+            
+    assert(session);
+    assert(alias_id);
+    assert(alias_id[0]);
+    assert(default_id);
+
+    if (!(session && alias_id && alias_id[0] && default_id))
+        return PEP_ILLEGAL_VALUE;
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    char* retval = NULL;
+
+    sqlite3_reset(session->get_userid_alias_default);
+    sqlite3_bind_text(session->get_userid_alias_default, 1, alias_id, -1, SQLITE_STATIC);
+
+    const char* tempid;
+    
+    const int result = sqlite3_step(session->get_userid_alias_default);
+    switch (result) {
+    case SQLITE_ROW:
+        tempid = (const char *) sqlite3_column_text(session->get_userid_alias_default, 0);
+        if (tempid) {
+            retval = strdup(tempid);
+            assert(retval);
+            if (retval == NULL)
+                return PEP_OUT_OF_MEMORY;
+        }
+    
+        *default_id = retval;
+        break;
+    default:
+        status = PEP_CANNOT_FIND_ALIAS;
+        *default_id = NULL;
+    }
+
+    sqlite3_reset(session->get_userid_alias_default);
+    return status;            
+}
+
+DYNAMIC_API PEP_STATUS set_userid_alias (
+        PEP_SESSION session, 
+        char* default_id,
+        char* alias_id) {
+            
+    int result;
+
+    assert(session);
+    assert(default_id);
+    assert(alias_id);
+
+    if (!(session && default_id && alias_id && 
+          default_id[0] != '\0' && alias_id[0] != '\0'))
+        return PEP_ILLEGAL_VALUE;
+
+    sqlite3_reset(session->add_userid_alias);
+    sqlite3_bind_text(session->add_userid_alias, 1, default_id, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->add_userid_alias, 2, alias_id, -1,
+            SQLITE_STATIC);
+        
+    result = sqlite3_step(session->add_userid_alias);
+
+    sqlite3_reset(session->add_userid_alias);
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_ALIAS;
+    
+    return PEP_STATUS_OK;
+}
+
 DYNAMIC_API PEP_STATUS get_identity(
         PEP_SESSION session,
         const char *address,
