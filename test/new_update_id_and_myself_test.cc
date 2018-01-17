@@ -473,16 +473,37 @@ int main() {
     assert(bernd->user_id);
     assert(strcmp(bernd->user_id, bernd_userid) == 0); // ???
     assert(!bernd->me); 
-//    assert(bernd->comm_type == PEP_ct_OpenPGP_unconfirmed);
+    assert(bernd->comm_type == PEP_ct_key_expired);
     assert(strcmp(bernd->address, bernd_address) == 0);
 
-    cout << "PASS: update_identity() correctly rejected expired key" << endl << endl;
+    cout << "PASS: update_identity() correctly rejected expired key with PEP_KEY_UNSUITABLE and PEP_ct_key_expired" << endl << endl;
     free_identity(bernd);
 
 
     cout << "****************************************************************************************" << endl;
     cout << "* III: key election:  " << endl;
     cout << "****************************************************************************************" << endl << endl;
+    
+    status = revoke_key(session, new_fpr, "Because it's more fun to revoke ALL of someone's keys");
+    assert (status == PEP_STATUS_OK);
+    
+    new_me = new_identity(uniqname, NULL, NULL, NULL);
+    
+    status = update_identity(session, new_me);
+    assert(status != PEP_STATUS_OK);
+    assert(!new_me->fpr);
+    assert(new_me->username);
+    assert(strcmp(new_me->username, start_username) == 0);
+    assert(new_me->user_id);
+    assert(strcmp(new_me->user_id, default_own_id) == 0);
+    assert(new_me->me);
+    assert(new_me->comm_type == PEP_ct_key_revoked);
+    
+    cout << "PASS: update_identity() correctly rejected two revoked keys with PEP_KEY_UNSUITABLE and PEP_ct_key_revoked";
+    cout << endl << endl;
+
+    free_identity(new_me);
+        
     cout << "****************************************************************************************" << endl;
     cout << "* III: key election:  " << endl;
     cout << "****************************************************************************************" << endl << endl;

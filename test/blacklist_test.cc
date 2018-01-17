@@ -118,7 +118,7 @@ int main() {
     else
         cout << "Not OK. blacklisted_identity->fpr is " << blacklisted_identity->fpr << "." << endl
              << "Expected it to be empty or (possibly) " << bl_fpr_2 << endl;
-    assert(!(blacklisted_identity->fpr) || (strcmp(blacklisted_identity->fpr, bl_fpr_2) == 0));
+    assert(!(blacklisted_identity->fpr) || blacklisted_identity->fpr[0] == '\0'|| (strcmp(blacklisted_identity->fpr, bl_fpr_2) == 0));
 
 
     const string keytext2 = slurp("blacklisted_pub2.asc");

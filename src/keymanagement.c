@@ -373,20 +373,13 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
             status = get_key_rating(session, stored_ident->fpr, &ct);
             stored_ident->comm_type = ct;
         }
-        if (status != PEP_STATUS_OK) {
-            return status; // FIXME - free mem
-        }
-        free(return_id->fpr);
-        return_id->fpr = NULL;
+    }
+    free(return_id->fpr);
+    return_id->fpr = NULL;
+    if (status == PEP_STATUS_OK && stored_ident->fpr)
         return_id->fpr = strdup(stored_ident->fpr);
-        return_id->comm_type = stored_ident->comm_type;            
-    }
-    else {
-        free(return_id->fpr);
-        return_id->fpr = NULL;
-        return_id->comm_type = stored_ident->comm_type;
-        return status; // Couldn't find a key.
-    }
+        
+    return_id->comm_type = stored_ident->comm_type;
                 
     // We patch the DB with the input username, but if we didn't have
     // one, we pull it out of storage if available.
@@ -423,7 +416,10 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
         PEP_comm_type save_ct = return_id->comm_type;
         return_id->fpr = NULL;
         return_id->comm_type = PEP_ct_unknown;
+        PEP_STATUS save_status = status;
         status = set_identity(session, return_id);
+        if (save_status != PEP_STATUS_OK)
+            status = save_status;
         return_id->fpr = save_fpr;
         return_id->comm_type = save_ct;
     }
