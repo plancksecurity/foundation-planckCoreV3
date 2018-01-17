@@ -783,8 +783,12 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
 
     // Deal with non-default user_ids.
     if (default_own_id && strcmp(default_own_id, identity->user_id) != 0) {
-//        status = add_alternate_own_userid(session, 
-//                                          identity->user_id);
+        
+        status = set_userid_alias(session, default_own_id, identity->user_id);
+        // Do we want this to be fatal? For now, we'll do it...
+        if (status != PEP_STATUS_OK)
+            goto pep_free;
+            
         free(identity->user_id);
         identity->user_id = strdup(default_own_id);
         if (identity->user_id == NULL) {
