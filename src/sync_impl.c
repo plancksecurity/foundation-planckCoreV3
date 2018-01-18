@@ -71,6 +71,7 @@ PEP_STATUS receive_sync_msg(
     assert(session && sync_msg);
     if (!(session && sync_msg))
         return PEP_ILLEGAL_VALUE;
+    char* own_id = NULL;
 
     bool msgIsFromGroup = false;
     if(sync_msg->is_a_message){
@@ -276,7 +277,6 @@ PEP_STATUS receive_sync_msg(
     // be able to communicate securely with it.
     if(partner){
         
-        char* own_id = NULL;
         status = get_default_own_userid(session, &own_id);
         
         if (!own_id)
@@ -358,7 +358,8 @@ error:
     }
 
     free(sync_msg);
-
+    free(own_id);
+    
     return status;
 }
 
@@ -786,6 +787,7 @@ PEP_STATUS unicast_msg(
     message *_message = NULL;
     pEp_identity *me = NULL;
     pEp_identity *_me = NULL;
+    char* own_id = NULL;
 
     assert(session && partner && state && msg);
     if (!(session && partner && state && msg))
@@ -797,7 +799,6 @@ PEP_STATUS unicast_msg(
         goto error;
     }
 
-    char* own_id = NULL;
     status = get_default_own_userid(session, &own_id);
     if (status != PEP_STATUS_OK)
         goto error;
