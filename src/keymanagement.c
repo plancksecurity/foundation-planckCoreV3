@@ -205,7 +205,7 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
                                           fpr, 
                                           ct);
             free(ident->fpr);
-            ident->fpr = strdup("");
+            ident->fpr = NULL;
             ident->comm_type = ct;            
             status = PEP_KEY_UNSUITABLE;
         default:
@@ -259,7 +259,7 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
     
     PEP_STATUS status = PEP_STATUS_OK;
 
-    if (!stored_identity || !stored_identity->user_id
+    if (!stored_identity || EMPTYSTR(stored_identity->user_id)
         || !is_identity_default || !is_user_default || !is_address_default)
         return PEP_ILLEGAL_VALUE;
         
@@ -271,9 +271,9 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
     char* stored_fpr = stored_identity->fpr;
     // Input: stored identity retrieved from database
     // if stored identity contains a default key
-    if (stored_fpr) {
+    if (!EMPTYSTR(stored_fpr)) {
         status = validate_fpr(session, stored_identity);    
-        if (status == PEP_STATUS_OK && stored_identity->fpr) {
+        if (status == PEP_STATUS_OK && !EMPTYSTR(stored_identity->fpr)) {
             *is_identity_default = *is_address_default = true;
             return status;
         }
@@ -289,7 +289,7 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
     char* user_fpr = NULL;
     status = get_user_default_key(session, stored_identity->user_id, &user_fpr);
     
-    if (user_fpr) {             
+    if (!EMPTYSTR(user_fpr)) {             
         // There exists a default key for user, so validate
         stored_identity->fpr = user_fpr;
         status = validate_fpr(session, stored_identity);
@@ -308,7 +308,7 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
     
     status = elect_pubkey(session, stored_identity);
     if (status == PEP_STATUS_OK) {
-        if (stored_identity->fpr)
+        if (!EMPTYSTR(stored_identity->fpr))
             validate_fpr(session, stored_identity);
     }    
     else if (status != PEP_KEY_NOT_FOUND && first_reject_status != PEP_KEY_NOT_FOUND) {
@@ -376,7 +376,7 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     }
     free(return_id->fpr);
     return_id->fpr = NULL;
-    if (status == PEP_STATUS_OK && stored_ident->fpr)
+    if (status == PEP_STATUS_OK && !EMPTYSTR(stored_ident->fpr))
         return_id->fpr = strdup(stored_ident->fpr);
         
     return_id->comm_type = stored_ident->comm_type;
@@ -385,22 +385,25 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     // one, we pull it out of storage if available.
     // (also, if the input username is "anonymous" and there exists
     //  a DB username, we replace)
-    if (stored_ident->username) {
-        if (return_id->username && 
+    if (!EMPTYSTR(stored_ident->username)) {
+        if (!EMPTYSTR(return_id->username) && 
             (strcasecmp(return_id->username, "anonymous") == 0)) {
             free(return_id->username);
             return_id->username = NULL;
         }
-        if (!return_id->username)
+        if (EMPTYSTR(return_id->username)) {
+            free(return_id->username);
             return_id->username = strdup(stored_ident->username);
+        }
     }
     
     return_id->me = stored_ident->me;
     
     // FIXME: Do we ALWAYS do this? We probably should...
-    if (!return_id->user_id)
+    if (EMPTYSTR(return_id->user_id)) {
+        free(return_id->user_id);
         return_id->user_id = strdup(stored_ident->user_id);
-        
+    }    
     // Call set_identity() to store
     if ((is_identity_default || is_user_default) &&
          is_address_default) {                 
@@ -457,7 +460,7 @@ DYNAMIC_API PEP_STATUS update_identity(
     // Retrieve stored identity information!    
     pEp_identity* stored_ident = NULL;
 
-    if (identity->user_id) {            
+    if (!EMPTYSTR(identity->user_id)) {            
         // (we're gonna update the trust/fpr anyway, so we use the no-fpr-from-trust-db variant)
         //      * do get_identity() to retrieve stored identity information
         status = get_identity_without_trust_check(session, identity->address, identity->user_id, &stored_ident);
@@ -481,7 +484,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                             
                             // if usernames match, we replace the userid. Or if the temp username
                             // is anonymous.
-                            if (!this_id->username ||
+                            if (EMPTYSTR(this_id->username) ||
                                 strcasecmp(this_id->username, "anonymous") == 0 ||
                                 (identity->username && 
                                  strcasecmp(identity->username, 
@@ -531,7 +534,7 @@ DYNAMIC_API PEP_STATUS update_identity(
             
             //  if we only have user_id and address and identity not available
             //      * return error status (identity not found)
-            if (!(identity->username))
+            if (EMPTYSTR(identity->username))
                 status = PEP_CANNOT_FIND_IDENTITY;
             
             // Otherwise, if we had user_id, address, and username:
@@ -554,7 +557,7 @@ DYNAMIC_API PEP_STATUS update_identity(
             //  * Return: created identity
         }        
     }
-    else if (identity->username) {
+    else if (!EMPTYSTR(identity->username)) {
         /*
          * Temporary identity information with username supplied
             * Input: address, username (no others)

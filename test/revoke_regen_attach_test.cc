@@ -45,9 +45,13 @@ int main() {
     key_mistrusted(session, me);
 
     cout << "re-generated fingerprint \n";
+    free(me->fpr);
+    status = myself(session, me);
+    assert(status == PEP_STATUS_OK);
     cout << me->fpr << "\n";
     
-    assert(strcmp(me->fpr, prev_fpr));
+    assert(me->fpr);
+    assert(strcmp(me->fpr, prev_fpr) != 0);
     cout << "New fpr is: " << me->fpr;
     
     me->fpr = NULL;
