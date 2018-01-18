@@ -850,7 +850,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     // Different from update_identity(), the input fpr here
     // MATTERS. 
     // If the input fpr is invalid, we return, giving the reason why.
-    if (identity->fpr) {
+    if (!EMPTYSTR(identity->fpr)) {
         status = validate_fpr(session, identity);
     
         if (status != PEP_STATUS_OK || 
@@ -866,7 +866,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     
     // Ok, if there wasn't a valid input fpr, check stored identity
     if (!valid_key_found && stored_identity && 
-        (!identity->fpr || strcmp(stored_identity->fpr, identity->fpr) != 0)) {
+        (EMPTYSTR(identity->fpr) || strcmp(stored_identity->fpr, identity->fpr) != 0)) {
         
         // Fall back / retrieve
         status = validate_fpr(session, stored_identity);
