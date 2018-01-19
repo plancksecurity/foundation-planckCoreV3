@@ -2762,8 +2762,12 @@ static void _max_comm_type_from_identity_list(
     for (il = identities; il != NULL; il = il->next)
     {
         if (il->ident)
-        {
-            PEP_STATUS status = update_identity(session, il->ident);
+        {   
+            PEP_STATUS status = PEP_STATUS_OK;
+            if (is_me(session, il->ident))
+                status = update_identity(session, il->ident);
+            else
+                status = myself(session, il->ident);
             if (status == PEP_STATUS_OK)
             {
                 *max_comm_type = _get_comm_type(session, *max_comm_type,
