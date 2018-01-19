@@ -14,6 +14,13 @@ extern "C" {
 //  parameters:
 //      session (in)        session to use
 //      fpr (in)            fingerprint of key to blacklist
+//
+//  caveat:
+//      there is no point in blacklisting an own key; for any own
+//      identity, this will be ignored. The correct function to use
+//      for own keys in this event is "key_reset_trust".
+//      Also, this is only effective for OpenPGP-level trust. If
+//      this key is for a pEp user, the blacklist is ignored.
 
 DYNAMIC_API PEP_STATUS blacklist_add(PEP_SESSION session, const char *fpr);
 

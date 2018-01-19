@@ -14,21 +14,41 @@ extern "C" {
 //  parameters:
 //      session (in)        session to use
 //      identity (inout)    identity information of communication partner
-//                          (identity->fpr is OUT ONLY)
+//                          (identity->fpr is OUT ONLY), and at least
+//                          .address must be set. 
+//                          If .username is set, it will be used to set or patch
+//                          the username record for this identity.                         
 //  return value:
 //      PEP_STATUS_OK if identity could be updated,
-//      PEP_GET_KEY_FAILED for own identity that must be completed (myself())
+//      PEP_ILLEGAL_VALUE if called with illegal inputs, including an identity
+//                        with .me set or with an own user_id specified in the
+//                        *input* (see caveats) 
+//      PEP_KEY_UNSUITABLE if a default key was found for this identity, no
+//                         other acceptable keys were found; if this is returned,
+//                         the reason for rejecting the first default key found
+//                         may be found in the comm_type
 //      any other value on error
 //
 //  caveat:
-//      if this function returns PEP_ct_unknown or PEP_ct_key_expired in
-//      identity->comm_type, the caller must insert the identity into the
-//      asynchronous management implementation, so retrieve_next_identity()
-//      will return this identity later
 //      at least identity->address must be a non-empty UTF-8 string as input
 //      update_identity() never writes flags; use set_identity_flags() for
 //      writing
 //      this function NEVER reads the incoming fpr, only writes to it.
+//      this function will fail if called on an identity which, with its input
+//      values, *explicitly* indicates it is an own identity (i.e. .me is set
+//      to true on input, or a user_id is given AND it is a known own user_id).
+//      however, it can RETURN an own identity if this is not indicated a
+//      priori, and in fact will do so with prejudice when not faced with a
+//      matching default (i.e. it is forced to search by address only).
+//      if the identity is known to be an own identity (or the caller wishes
+//      to make it one), call myself() on the identity instead.
+//
+//      FIXME: is this next point accurate?
+//      if this function returns PEP_ct_unknown or PEP_ct_key_expired in
+//      identity->comm_type, the caller must insert the identity into the
+//      asynchronous management implementation, so retrieve_next_identity()
+//      will return this identity later
+//      END FIXME
 
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
@@ -55,6 +75,9 @@ DYNAMIC_API PEP_STATUS update_identity(
 //      (when there is no valid key, for example),
 //      it instead stores an identity without keys.
 //
+//      N.B. to adapter devs - this function is likely unnecessary, so please
+//      do not put work into exposing it yet. Tickets will be filed if need be.
+
 DYNAMIC_API PEP_STATUS initialise_own_identities(PEP_SESSION session,
                                                  identity_list* my_idents);
 
@@ -63,17 +86,26 @@ DYNAMIC_API PEP_STATUS initialise_own_identities(PEP_SESSION session,
 //  parameters:
 //      session (in)        session to use
 //      identity (inout)    identity of local user
-//                          at least .address must be set.
-//                          if no .user_id is set, AND the DB doesn't contain
-//                          a user_id, PEP_OWN_USERID will be used.
-//                          if no .username is set and none is in the DB,
-//                          username will be set to "Anonymous"
+//                          both .address and .user_id must be set.
+//                          if .fpr is set, an attempt will be made to make
+//                          that the default key for this identity after key
+//                          validation
+//                          if .fpr is not set, key retrieval is performed
+//                          If .username is set, it will be used to set or patch
+//                          the username record for this identity.                         
 //
 //  return value:
 //      PEP_STATUS_OK if identity could be completed or was already complete,
 //      any other value on error
-//
 //  caveat:
+//      If an fpr was entered and is not a valid key, the reason for failure
+//      is immediately returned in the status and, possibly, identity->comm_type
+//      If a default own user_id exists in the database, an alias will 
+//      be created for the default for the input user_id. The ENGINE'S default
+//      user_id is always returned in the .user_id field
+//      myself() NEVER elects keys from the keyring; it will only choose keys
+//      which have been set up explicitly via myself(), or which were imported
+//      during a first time DB setup from an OpenPGP keyring (compatibility only) 
 //      this function generates a keypair on demand; because it's synchronous
 //      it can need a decent amount of time to return
 //      if you need to do this asynchronous, you need to return an identity
