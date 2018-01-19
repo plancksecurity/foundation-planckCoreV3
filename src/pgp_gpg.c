@@ -257,7 +257,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         free_stringlist(conf_values);
 
         assert(bResult);
-        if(!bResult){
+        if (!bResult) {
             status = PEP_INIT_NO_GPG_HOME;
             goto pep_error;
         }
