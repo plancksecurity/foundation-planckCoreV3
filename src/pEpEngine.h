@@ -37,8 +37,9 @@ typedef enum {
     PEP_INIT_GPGME_INIT_FAILED                      = 0x0111,
     PEP_INIT_NO_GPG_HOME                            = 0x0112,
     PEP_INIT_NETPGP_INIT_FAILED                     = 0x0113,
-    PEP_CANNOT_DETERMINE_GPG_VERSION                = 0x0114,
-    PEP_UNSUPPORTED_GPG_VERSION                     = 0x0115,
+    PEP_INIT_CANNOT_DETERMINE_GPG_VERSION           = 0x0114,
+    PEP_INIT_UNSUPPORTED_GPG_VERSION                = 0x0115,
+    PEP_INIT_CANNOT_CONFIG_GPG_AGENT                = 0x0116,
 
     PEP_INIT_SQLITE3_WITHOUT_MUTEX                  = 0x0120,
     PEP_INIT_CANNOT_OPEN_DB                         = 0x0121,

@@ -220,7 +220,7 @@ static PEP_STATUS _version_test(const char *s)
 
 unsupported:
     free(_s);
-    return PEP_UNSUPPORTED_GPG_VERSION;
+    return PEP_INIT_UNSUPPORTED_GPG_VERSION;
 }
 
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
@@ -274,8 +274,8 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         free_stringlist(conf_values);
 
         assert(bResult);
-        if(!bResult){
-            status = PEP_INIT_NO_GPG_HOME; /* FIXME: Wrong error here? */
+        if (!bResult) {
+            status = PEP_INIT_CANNOT_CONFIG_GPG_AGENT;
             goto pep_error;
         }
 
@@ -299,7 +299,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
             return PEP_OUT_OF_MEMORY;
 
         if (!info->version)
-            return PEP_CANNOT_DETERMINE_GPG_VERSION;
+            return PEP_INIT_CANNOT_DETERMINE_GPG_VERSION;
 
         status = _version_test(info->version);
         if (status != PEP_STATUS_OK)
