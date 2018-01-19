@@ -298,6 +298,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         if (err != GPG_ERR_NO_ERROR)
             return PEP_OUT_OF_MEMORY;
 
+        assert(info->version);
         if (!info->version)
             return PEP_INIT_CANNOT_DETERMINE_GPG_VERSION;
 
