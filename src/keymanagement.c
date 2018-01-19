@@ -1098,11 +1098,18 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
     assert(!EMPTYSTR(ident->address));
     assert(!EMPTYSTR(ident->user_id));
 
-    if (!(session && ident && !ident->me && ident->fpr && ident->address &&
+    // Nope. We should be able to reset trust on an own key.
+    if (!(session && ident && ident->fpr && ident->fpr[0] != '\0' && ident->address &&
             ident->user_id))
         return PEP_ILLEGAL_VALUE;
+        
+    bool me = is_me(session, ident); 
 
-    status = update_identity(session, ident);
+    if (me)
+        status = myself(session, ident);
+    else     
+        status = update_identity(session, ident);
+        
     if (status != PEP_STATUS_OK)
         return status;
 
@@ -1112,11 +1119,16 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
         ident->comm_type &= ~PEP_ct_confirmed;
 
     status = set_identity(session, ident);
+    
+    // FIXME: remove key as default for user_id
+    
     if (status != PEP_STATUS_OK)
         return status;
 
-    if (ident->comm_type == PEP_ct_unknown)
+    // FIXME: What is this point of this here??
+    if (ident->comm_type == PEP_ct_unknown && !me) {
         status = update_identity(session, ident);
+    }
     return status;
 }
 
@@ -1137,7 +1149,28 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
             EMPTYSTR(ident->fpr))
         return PEP_ILLEGAL_VALUE;
 
-    status = update_identity(session, ident);
+    bool me = is_me(session, ident);
+
+    if (me)
+        status = myself(session, ident);
+    else {
+        char* saved_fpr = ident->fpr;
+        ident->fpr = NULL;
+        
+        status = update_identity(session, ident);
+        
+        if (EMPTYSTR(ident->fpr) || strcmp(ident->fpr, saved_fpr) != 0) {
+            ident->fpr = saved_fpr;
+            ident->comm_type = PEP_ct_unknown;
+            status = set_identity(session, ident);
+            if (status == PEP_STATUS_OK)
+                status = update_identity(session, ident);
+        }
+        // either saved_fpr got copied in update_identity and we're done
+        // with it, or it's not referenced anymore because we didn't call
+        // it.
+        free(saved_fpr);            
+    } 
     if (status != PEP_STATUS_OK)
         return status;
 
