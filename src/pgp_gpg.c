@@ -174,6 +174,55 @@ static bool _email_heuristic_match(const char* str1, const char* str2) {
     return false;
 }
 
+static PEP_STATUS _version_test(const char *s)
+{
+    char *_s = strdup(s);
+    if (!_s)
+        return PEP_OUT_OF_MEMORY;
+
+    int major;
+    int minor;
+    int revision;
+
+    char *lasts = NULL;
+    char *p = strtok_r(_s, ".", &lasts);
+    if (!p)
+        goto unsupported;
+    else
+        major = atoi(p);
+
+    p = strtok_r(NULL, ".", &lasts);
+    if (!p)
+        goto unsupported;
+    else
+        minor = atoi(p);
+
+    p = strtok_r(NULL, ".", &lasts);
+    if (!p)
+        goto unsupported;
+    else
+        revision = atoi(p);
+
+    free(_s);
+    _s = NULL;
+
+    if (major > 2)
+        return PEP_STATUS_OK;
+
+    if (major == 2 && minor > 1)
+        return PEP_STATUS_OK;
+
+    if (major == 2 && minor == 0 && revision == 30)
+        return PEP_STATUS_OK;
+
+    if (major == 2 && minor == 1 && revision >= 17)
+        return PEP_STATUS_OK;
+
+unsupported:
+    free(_s);
+    return PEP_UNSUPPORTED_GPG_VERSION;
+}
+
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -238,6 +287,24 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
         memset(&gpg, 0, sizeof(struct gpg_s));
 
+        gpg.gpgme_get_engine_info
+            = (gpgme_get_engine_info_t) (intptr_t) dlsym(gpgme,
+            "gpgme_get_engine_info");
+        assert(gpg.gpgme_get_engine_info);
+
+        gpgme_engine_info_t info;
+        int err = gpg.gpgme_get_engine_info(&info);
+        assert(err == GPG_ERR_NO_ERROR);
+        if (err != GPG_ERR_NO_ERROR)
+            return PEP_OUT_OF_MEMORY;
+
+        if (!info->version)
+            return PEP_CANNOT_DETERMINE_GPG_VERSION;
+
+        status = _version_test(info->version);
+        if (status != PEP_STATUS_OK)
+            return status;
+
         gpg.gpgme_set_locale
             = (gpgme_set_locale_t) (intptr_t) dlsym(gpgme,
             "gpgme_set_locale");
@@ -255,11 +322,6 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         gpg.gpgme_release
             = (gpgme_release_t) (intptr_t) dlsym(gpgme, "gpgme_release");
         assert(gpg.gpgme_release);
-
-        gpg.gpgme_get_engine_info
-            = (gpgme_get_engine_info_t) (intptr_t) dlsym(gpgme,
-            "gpgme_get_engine_info");
-        assert(gpg.gpgme_get_engine_info);
 
         gpg.gpgme_set_protocol
             = (gpgme_set_protocol_t) (intptr_t) dlsym(gpgme,
@@ -472,15 +534,6 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     assert(gpgme_error == GPG_ERR_NO_ERROR);
 
     gpg.gpgme_set_armor(session->ctx, 1);
-
-    gpgme_engine_info_t info;
-    int err = gpg.gpgme_get_engine_info(&info);
-    assert(err == GPG_ERR_NO_ERROR);
-    if (err != GPG_ERR_NO_ERROR)
-        return PEP_OUT_OF_MEMORY;
-
-    if (!info->version)
-        return PEP_CANNOT_DETERMINE_GPG_VERSION;
 
     return PEP_STATUS_OK;
 
