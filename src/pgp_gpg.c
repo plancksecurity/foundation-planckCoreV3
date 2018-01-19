@@ -1916,6 +1916,8 @@ PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session) {
             if (key && gpgme_error == GPG_ERR_NO_ERROR) {
                 if (key->revoked || key->disabled)
                     first_fail = (has_already_failed ? first_fail : PEP_KEY_UNSUITABLE);
+                
+                    
             }
             
             // a. ensure keypair
