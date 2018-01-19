@@ -181,15 +181,6 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     bool bResult;
 
     if (in_first) {
-        gpgme_engine_info_t info;
-        int err = gpg.gpgme_get_engine_info(&info);
-        assert(err == GPG_ERR_NO_ERROR);
-        if (err != GPG_ERR_NO_ERROR)
-            return PEP_OUT_OF_MEMORY;
-
-        if (!info->version)
-            return PEP_CANNOT_DETERMINE_GPG_VERSION;
-
         stringlist_t *conf_keys   = new_stringlist("keyserver");
         stringlist_t *conf_values = new_stringlist("hkp://keys.gnupg.net");
 
@@ -481,6 +472,15 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     assert(gpgme_error == GPG_ERR_NO_ERROR);
 
     gpg.gpgme_set_armor(session->ctx, 1);
+
+    gpgme_engine_info_t info;
+    int err = gpg.gpgme_get_engine_info(&info);
+    assert(err == GPG_ERR_NO_ERROR);
+    if (err != GPG_ERR_NO_ERROR)
+        return PEP_OUT_OF_MEMORY;
+
+    if (!info->version)
+        return PEP_CANNOT_DETERMINE_GPG_VERSION;
 
     return PEP_STATUS_OK;
 
