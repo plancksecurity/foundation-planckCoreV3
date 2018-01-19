@@ -42,7 +42,8 @@ DYNAMIC_API PEP_STATUS OpenPGP_list_keyinfo (
         PEP_SESSION session, const char* search_pattern, stringpair_list_t** keyinfo_list
     );
     
+PEP_STATUS import_ultimately_trusted_keypairs (PEP_SESSION session);
+
 #ifdef __cplusplus
 }
 #endif
-
