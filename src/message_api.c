@@ -2764,7 +2764,7 @@ static void _max_comm_type_from_identity_list(
         if (il->ident)
         {   
             PEP_STATUS status = PEP_STATUS_OK;
-            if (is_me(session, il->ident))
+            if (!is_me(session, il->ident))
                 status = update_identity(session, il->ident);
             else
                 status = myself(session, il->ident);
