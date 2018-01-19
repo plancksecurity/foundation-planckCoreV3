@@ -933,7 +933,10 @@ static PEP_STATUS update_identity_recip_list(PEP_SESSION session,
     for (id_list_ptr = list; id_list_ptr; id_list_ptr = id_list_ptr->next) {
         pEp_identity* curr_identity = id_list_ptr->ident;
         if (curr_identity) {
-            status = update_identity(session, curr_identity);
+            if (!is_me(session, curr_identity))
+                status = update_identity(session, curr_identity);
+            else
+                status = myself(session, curr_identity);
         if (status == PEP_ILLEGAL_VALUE || status == PEP_OUT_OF_MEMORY)
             return status;
         }
@@ -1230,19 +1233,28 @@ static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist, cha
     return rating;
 }
 
+// Internal function WARNING:
+// Only call this on an ident that might have its FPR set from retrieval!
+// (or on one without an fpr)
+// We do not want myself() setting the fpr here.
 static PEP_comm_type _get_comm_type(
     PEP_SESSION session,
     PEP_comm_type max_comm_type,
     pEp_identity *ident
     )
 {
-    PEP_STATUS status = update_identity(session, ident);
+    PEP_STATUS status = PEP_STATUS_OK;
 
     if (max_comm_type == PEP_ct_compromized)
         return PEP_ct_compromized;
 
     if (max_comm_type == PEP_ct_mistrusted)
         return PEP_ct_mistrusted;
+
+    if (!is_me(session, ident))
+        status = update_identity(session, ident);
+    else
+        status = myself(session, ident);
 
     if (status == PEP_STATUS_OK) {
         if (ident->comm_type == PEP_ct_compromized)
@@ -1499,7 +1511,11 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             return PEP_ILLEGAL_VALUE;
         }
 
-        PEP_STATUS _status = update_identity(session, _il->ident);
+        PEP_STATUS _status = PEP_STATUS_OK;
+        if (!is_me(session, _il->ident))
+            _status = update_identity(session, _il->ident);
+        else
+            _status = myself(session, _il->ident);
         if (_status != PEP_STATUS_OK) {
             status = _status;
             GOTO(pep_error);
@@ -1520,7 +1536,11 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     else
     {
         for (_il = src->to; _il && _il->ident; _il = _il->next) {
-            PEP_STATUS _status = update_identity(session, _il->ident);
+            PEP_STATUS _status = PEP_STATUS_OK;
+            if (!is_me(session, _il->ident))
+                _status = update_identity(session, _il->ident);
+            else
+                _status = myself(session, _il->ident);
             if (_status != PEP_STATUS_OK) {
                 status = _status;
                 GOTO(pep_error);
@@ -1540,7 +1560,11 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         }
 
         for (_il = src->cc; _il && _il->ident; _il = _il->next) {
-            PEP_STATUS _status = update_identity(session, _il->ident);
+            PEP_STATUS _status = PEP_STATUS_OK;
+            if (!is_me(session, _il->ident))
+                _status = update_identity(session, _il->ident);
+            else
+                _status = myself(session, _il->ident);
             if (_status != PEP_STATUS_OK)
             {
                 status = _status;
@@ -1792,7 +1816,10 @@ static PEP_STATUS _update_identity_for_incoming_message(
     PEP_STATUS status;
 
     if (src->from && src->from->address) {
-        status = update_identity(session, src->from);
+        if (!is_me(session, src->from))
+            status = update_identity(session, src->from);
+        else
+            status = myself(session, src->from);
         if (status == PEP_STATUS_OK
                 && is_a_pEpmessage(src)
                 && src->from->comm_type >= PEP_ct_OpenPGP_unconfirmed
@@ -2603,8 +2630,12 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                             // FIXME: free msg, but check references
                                             src = msg = inner_message;
                                             
-                                            if (src->from)
-                                                update_identity(session, src->from);
+                                            if (src->from) {
+                                                if (!is_me(session, src->from))
+                                                    update_identity(session, (src->from));
+                                                else
+                                                    myself(session, src->from);
+                                            }
                                             break;        
                                         }
                                         else { // should never happen
@@ -3209,14 +3240,15 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
 
     // MIME decode message delivers only addresses. We need more.
     if (tmp_msg->from) {
-        status = update_identity(session, tmp_msg->from);
+        if (!is_me(session, tmp_msg->from))
+            status = update_identity(session, (tmp_msg->from));
+        else
+            status = myself(session, tmp_msg->from);
+
         if (status == PEP_ILLEGAL_VALUE || status == PEP_OUT_OF_MEMORY)
             GOTO(pep_error);
     }
 
-    // Own identities can be retrieved here where they would otherwise
-    // fail because we lack all other information. This is ok and even
-    // desired. FIXME: IS it?
     status = update_identity_recip_list(session, tmp_msg->to);
     if (status != PEP_STATUS_OK)
         GOTO(pep_error);
@@ -3514,7 +3546,11 @@ got_rating:
     }
 got_keylist:
 
-    status = update_identity(session, msg->from);
+    if (!is_me(session, msg->from))
+        status = update_identity(session, msg->from);
+    else
+        status = myself(session, msg->from);
+
     if (status != PEP_STATUS_OK)
         GOTO(pep_error);
 
