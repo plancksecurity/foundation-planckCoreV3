@@ -58,6 +58,7 @@ typedef enum {
     PEP_CANNOT_SET_IDENTITY                         = 0x0383,
     PEP_CANNOT_SET_TRUST                            = 0x0384,
     PEP_KEY_BLACKLISTED                             = 0x0385,
+    PEP_CANNOT_FIND_PERSON                          = 0x0386,
     
     PEP_CANNOT_FIND_ALIAS                           = 0x0391,
     PEP_CANNOT_SET_ALIAS                            = 0x0392,
@@ -668,6 +669,7 @@ DYNAMIC_API PEP_STATUS set_userid_alias (
         const char* default_id,
         const char* alias_id);
 
+
 // set_device_group() - update own person's device group
 //
 //    parameters:
@@ -1217,6 +1219,13 @@ PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
 PEP_STATUS remove_fpr_as_default(PEP_SESSION session, 
                                     const char* fpr);
                               
+                                    
+PEP_STATUS get_main_user_fpr(PEP_SESSION session, 
+                             const char* user_id,
+                             char** main_fpr);
+
+PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
+                              const char* new_fpr);
     
 #ifdef __cplusplus
 }
