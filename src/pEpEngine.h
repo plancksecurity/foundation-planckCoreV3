@@ -1227,6 +1227,8 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
 PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
                               const char* new_fpr);
     
+PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id);
+
 #ifdef __cplusplus
 }
 #endif

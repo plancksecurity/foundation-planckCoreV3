@@ -1063,7 +1063,7 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
         if (session->cached_mistrusted)
             free(session->cached_mistrusted);
         session->cached_mistrusted = identity_dup(ident);
-        status = mark_as_compromized(session, ident->fpr);
+        status = set_trust(session, ident->user_id, ident->fpr, PEP_ct_mistrusted);
     }
 
     return status;
@@ -1109,33 +1109,58 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
     if (!(session && ident && ident->fpr && ident->fpr[0] != '\0' && ident->address &&
             ident->user_id))
         return PEP_ILLEGAL_VALUE;
-        
-    bool me = is_me(session, ident); 
-
-    if (me)
-        status = myself(session, ident);
-    else     
-        status = update_identity(session, ident);
-        
-    if (status != PEP_STATUS_OK)
-        return status;
-
-    if (ident->comm_type == PEP_ct_mistrusted)
-        ident->comm_type = PEP_ct_unknown;
-    else
-        ident->comm_type &= ~PEP_ct_confirmed;
-
-    status = set_identity(session, ident);
     
-    // FIXME: remove key as default for user_id
+    pEp_identity* tmp_ident = NULL;
+    
+    status = get_trust(session, ident);
     
     if (status != PEP_STATUS_OK)
         return status;
+        
+    PEP_comm_type new_trust = PEP_ct_unknown;
 
-    // FIXME: What is this point of this here??
-    if (ident->comm_type == PEP_ct_unknown && !me) {
-        status = update_identity(session, ident);
+    if (ident->comm_type != PEP_ct_mistrusted)
+        new_trust = ident->comm_type & ~PEP_ct_confirmed;
+
+    status = set_trust(session, ident->user_id, ident->fpr, new_trust);
+    
+    if (status != PEP_STATUS_OK)
+        return status;
+        
+    ident->comm_type = new_trust;
+        
+    tmp_ident = new_identity(ident->address, NULL, ident->user_id, NULL);
+
+    if (!tmp_ident)
+        return PEP_OUT_OF_MEMORY;
+    
+    status = update_identity(session, tmp_ident);
+    
+    if (status != PEP_STATUS_OK)
+        goto pep_free;
+    
+    // remove as default if necessary
+    if (strcmp(tmp_ident->fpr, ident->fpr) == 0) {
+        free(tmp_ident->fpr);
+        tmp_ident->fpr = NULL;
+        tmp_ident->comm_type = PEP_ct_unknown;
+        status = set_identity(session, tmp_ident);
+        if (status != PEP_STATUS_OK)
+            goto pep_free;
     }
+    
+    char* user_default = NULL;
+    status = get_main_user_fpr(session, tmp_ident->user_id, &user_default);
+    
+    if (!EMPTYSTR(user_default)) {
+        if (strcmp(user_default, ident->fpr) == 0)
+            status = refresh_userid_default_key(session, ident->user_id);
+        if (status != PEP_STATUS_OK)
+            goto pep_free;    
+    }
+            
+pep_free:
+    free_identity(tmp_ident);
     return status;
 }
 
@@ -1221,9 +1246,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
                 // Ok, there wasn't a trusted default, so we replaced. Thus, we also
                 // make sure there's a trusted default on the user_id. If there
                 // is not, we make this the default.
-
                 char* user_default = NULL;
-            
                 status = get_main_user_fpr(session, ident->user_id, &user_default);
             
                 if (status == PEP_STATUS_OK && user_default) {
@@ -1248,7 +1271,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
             }
         }
         free(ident_default_fpr);
-        free(cached_fpr); // we took ownership upon successful update_identity call above
+        free(cached_fpr);
         free_identity(tmp_id);
     }    
 

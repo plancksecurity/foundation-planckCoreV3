@@ -229,9 +229,8 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     );
 
 
-// key_reset_trust() - undo trust_personal_key and key_mistrusted() for keys
-//                     we don't own
-//
+// key_reset_trust() - reset trust bit or explicitly mistrusted status for an identity and
+//                     its accompanying key/user_id pair.
 //  parameters:
 //      session (in)        session to use
 //      ident (in)          person and key which was compromized
