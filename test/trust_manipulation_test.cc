@@ -89,6 +89,18 @@ int main() {
     assert(user->comm_type == PEP_ct_OpenPGP_unconfirmed);
     cout << "Yup, got key 1, and the trust status is PEP_ct_OpenPGP_unconfirmed." << endl;
     
+    cout << "Let's mistrust key 1 too. It's been acting shifty lately." << endl;
+    status = key_mistrusted(session, user);
+    status = get_trust(session, user);
+    assert(strcmp(user->fpr, keypair1) == 0);
+    assert(user->comm_type == PEP_ct_mistrusted);
+    cout << "Hoorah, we now do not trust key 1. (TRUST NO ONE)" << endl;
+    cout << "Now we call update_identity to see what gifts it gives us (should be an empty key and a key not found comm_type.)" << endl;    
+    status = update_identity(session, user);
+    assert(user->fpr == NULL);
+    assert(user->comm_type == PEP_ct_key_not_found);
+    cout << "Yup, we trust no keys from " << uniqname << endl;
+    
     cout << "Passed all of our exciting messing with the trust DB. Moving on..." << endl;
  
     free(user_id);
