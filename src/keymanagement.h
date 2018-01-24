@@ -233,7 +233,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
 //                     its accompanying key/user_id pair.
 //  parameters:
 //      session (in)        session to use
-//      ident (in)          person and key which was compromized
+//      ident (in)          identity for person and key whose trust status is to be reset
 
 DYNAMIC_API PEP_STATUS key_reset_trust(
         PEP_SESSION session,

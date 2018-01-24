@@ -1097,34 +1097,36 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
 
     assert(session);
     assert(ident);
-    assert(!ident->me);
     assert(!EMPTYSTR(ident->fpr));
     assert(!EMPTYSTR(ident->address));
     assert(!EMPTYSTR(ident->user_id));
 
-    // Nope. We should be able to reset trust on an own key.
     if (!(session && ident && ident->fpr && ident->fpr[0] != '\0' && ident->address &&
             ident->user_id))
         return PEP_ILLEGAL_VALUE;
+
+    // we do not change the input struct at ALL.
+    pEp_identity* input_copy = identity_dup(ident);
     
     pEp_identity* tmp_ident = NULL;
     
-    status = get_trust(session, ident);
+    status = get_trust(session, input_copy);
     
     if (status != PEP_STATUS_OK)
-        return status;
+        goto pep_free;
         
     PEP_comm_type new_trust = PEP_ct_unknown;
 
-    if (ident->comm_type != PEP_ct_mistrusted)
-        new_trust = ident->comm_type & ~PEP_ct_confirmed;
+    if (input_copy->comm_type != PEP_ct_mistrusted)
+        new_trust = input_copy->comm_type & ~PEP_ct_confirmed;
 
     status = set_trust(session, ident->user_id, ident->fpr, new_trust);
     
     if (status != PEP_STATUS_OK)
-        return status;
+        goto pep_free;
+
         
-    ident->comm_type = new_trust;
+    input_copy->comm_type = new_trust;
         
     tmp_ident = new_identity(ident->address, NULL, ident->user_id, NULL);
 
@@ -1158,6 +1160,7 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
             
 pep_free:
     free_identity(tmp_ident);
+    free_identity(input_copy);
     return status;
 }
 
@@ -1178,7 +1181,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
             EMPTYSTR(ident->fpr))
         return PEP_ILLEGAL_VALUE;
 
-    bool ident_has_trusted_default = false;
+    //bool ident_has_trusted_default = false;
     char* ident_default_fpr = NULL;
 
     // Before we do anything, be sure the input fpr is even eligible to be trusted
@@ -1239,7 +1242,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
                 status = set_identity(session, ident);
                 trusted_default = true;
             }
-            if (status == PEP_STATUS_OK) {
+            if (status == PEP_STATUS_OK && !trusted_default) {
                 // Ok, there wasn't a trusted default, so we replaced. Thus, we also
                 // make sure there's a trusted default on the user_id. If there
                 // is not, we make this the default.
