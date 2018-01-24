@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		430BCC482015EE800077E998 /* pEp_string.h in Headers */ = {isa = PBXBuildFile; fileRef = 430BCC462015EE800077E998 /* pEp_string.h */; };
+		430BCC492015EE800077E998 /* pEp_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 430BCC472015EE800077E998 /* pEp_string.c */; };
 		430D258B1C9ED75A00B94535 /* blacklist.c in Sources */ = {isa = PBXBuildFile; fileRef = 430D258A1C9ED75A00B94535 /* blacklist.c */; };
 		4354FF651D6EDF300033069C /* sync_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = 4354FF641D6EDF300033069C /* sync_impl.c */; };
 		4354FF691D6EE1A70033069C /* NULL.c in Sources */ = {isa = PBXBuildFile; fileRef = 4354FF681D6EE1A70033069C /* NULL.c */; };
@@ -189,6 +191,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		430BCC462015EE800077E998 /* pEp_string.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pEp_string.h; path = ../src/pEp_string.h; sourceTree = "<group>"; };
+		430BCC472015EE800077E998 /* pEp_string.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEp_string.c; path = ../src/pEp_string.c; sourceTree = "<group>"; };
 		430D258A1C9ED75A00B94535 /* blacklist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = blacklist.c; path = ../src/blacklist.c; sourceTree = "<group>"; };
 		4346F86A1ECB38E700381CBE /* sync_app.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = sync_app.h; path = ../src/sync_app.h; sourceTree = "<group>"; };
 		4354FF641D6EDF300033069C /* sync_impl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_impl.c; path = ../src/sync_impl.c; sourceTree = "<group>"; };
@@ -508,6 +512,8 @@
 		64A8264B1B455C5600EECAF0 /* srcref */ = {
 			isa = PBXGroup;
 			children = (
+				430BCC472015EE800077E998 /* pEp_string.c */,
+				430BCC462015EE800077E998 /* pEp_string.h */,
 				43F6921C1F164A47009418F5 /* resource_id.c */,
 				43BA0F451D7964750059172F /* asn1_helper.c */,
 				4354FF641D6EDF300033069C /* sync_impl.c */,
@@ -617,6 +623,7 @@
 				646C41481D510D2C00C63EFF /* sync_fsm.h in Headers */,
 				64A8268C1B455D9D00EECAF0 /* pEpEngine.h in Headers */,
 				646C41091D510CD800C63EFF /* constr_TYPE.h in Headers */,
+				430BCC482015EE800077E998 /* pEp_string.h in Headers */,
 				646C410D1D510CD800C63EFF /* der_encoder.h in Headers */,
 				646C41231D510CD800C63EFF /* NativeEnumerated.h in Headers */,
 				646C41071D510CD800C63EFF /* constr_SET_OF.h in Headers */,
@@ -852,6 +859,7 @@
 				646C412A1D510CD800C63EFF /* per_encoder.c in Sources */,
 				646C412E1D510CD800C63EFF /* per_support.c in Sources */,
 				64A826781B455D0800EECAF0 /* bloblist.c in Sources */,
+				430BCC492015EE800077E998 /* pEp_string.c in Sources */,
 				646C41041D510CD800C63EFF /* constr_SEQUENCE.c in Sources */,
 				64A826881B455D0800EECAF0 /* timestamp.c in Sources */,
 				646C41221D510CD800C63EFF /* NativeEnumerated.c in Sources */,

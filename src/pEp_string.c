@@ -21,7 +21,7 @@ DYNAMIC_API char * new_string(const char *src, size_t len)
         assert(s);
     }
     else {
-        s = calloc(1, len);
+        s = calloc(1, len + 1);
         assert(s);
     }
 
