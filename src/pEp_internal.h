@@ -142,6 +142,7 @@ struct _pEpSession {
     sqlite3_stmt *get_trust;
     sqlite3_stmt *least_trust;
     sqlite3_stmt *mark_compromized;
+    sqlite3_stmt *fpr_has_mistrust;
     sqlite3_stmt *reset_trust;
     sqlite3_stmt *crashdump;
     sqlite3_stmt *languagelist;
@@ -389,6 +390,18 @@ static inline bool is_me(PEP_SESSION session, pEp_identity* test_ident) {
     }
     return retval;
 }
+
+#ifndef EMPTYSTR
+#define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
+#endif
+
+#ifndef _MIN
+#define _MIN(A, B) ((B) > (A) ? (A) : (B))
+#endif
+#ifndef _MAX
+#define _MAX(A, B) ((B) > (A) ? (B) : (A))
+#endif
+
 
 // These are globals used in generating message IDs and should only be
 // computed once, as they're either really constants or OS-dependent

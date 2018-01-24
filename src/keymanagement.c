@@ -15,19 +15,7 @@
 #include "sync_fsm.h"
 #include "blacklist.h"
 
-#ifndef EMPTYSTR
-#define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
-#endif
-
 #define KEY_EXPIRE_DELTA (60 * 60 * 24 * 365)
-
-#ifndef _MIN
-#define _MIN(A, B) ((B) > (A) ? (A) : (B))
-#endif
-#ifndef _MAX
-#define _MAX(A, B) ((B) > (A) ? (B) : (A))
-#endif
-
 
 static bool key_matches_address(PEP_SESSION session, const char* address,
                                 const char* fpr) {
@@ -1063,7 +1051,16 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
         if (session->cached_mistrusted)
             free(session->cached_mistrusted);
         session->cached_mistrusted = identity_dup(ident);
+        
+        // set mistrust for this user_id/keypair (even if there's not an
+        // identity set yet, this is important, as we need to record the mistrust
+        // action)
         status = set_trust(session, ident->user_id, ident->fpr, PEP_ct_mistrusted);
+        if (status == PEP_STATUS_OK)
+            // cascade that mistrust for anyone using this key
+            status = mark_as_compromized(session, ident->fpr);
+        if (status == PEP_STATUS_OK)
+            status = remove_fpr_as_default(session, ident->fpr);
     }
 
     return status;

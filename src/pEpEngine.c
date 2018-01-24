@@ -196,6 +196,11 @@ static const char *sql_least_trust =
 static const char *sql_mark_as_compromized = 
     "update trust not indexed set comm_type = 15"
     " where pgp_keypair_fpr = upper(replace(?1,' ','')) ;";
+    
+static const char *sql_fpr_has_mistrust =
+    "select count(*) from trust "
+    "   where pgp_keypair_fpr = upper(replace(?1,' ','')) "
+    "       and comm_type = 15 ; ";
 
 static const char *sql_crashdump = 
     "select timestamp, title, entity, description, comment"
@@ -915,6 +920,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     int_result = sqlite3_prepare_v2(_session->db, sql_mark_as_compromized,
             (int)strlen(sql_mark_as_compromized), &_session->mark_compromized,
+            NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_fpr_has_mistrust,
+            (int)strlen(sql_fpr_has_mistrust), &_session->fpr_has_mistrust,
             NULL);
     assert(int_result == SQLITE_OK);
 
@@ -2273,6 +2283,42 @@ DYNAMIC_API PEP_STATUS mark_as_compromized(
 void pEp_free(void *p)
 {
     free(p);
+}
+
+PEP_STATUS fpr_has_mistrust(PEP_SESSION session, 
+                            const char* fpr,
+                            bool* has_mistrust) {
+    assert(session);
+    assert(!EMPTYSTR(fpr));                            
+    assert(has_mistrust);
+    
+    if (!session || EMPTYSTR(fpr) || has_mistrust == NULL)
+        return PEP_ILLEGAL_VALUE;
+        
+    *has_mistrust = false;
+    
+    PEP_STATUS status = PEP_STATUS_OK;
+    int result;
+
+    sqlite3_reset(session->fpr_has_mistrust);
+    sqlite3_bind_text(session->fpr_has_mistrust, 1, fpr, -1,
+            SQLITE_STATIC);
+
+    result = sqlite3_step(session->fpr_has_mistrust);
+    switch (result) {
+    case SQLITE_ROW: {
+        *has_mistrust = (PEP_comm_type) sqlite3_column_int(session->fpr_has_mistrust,
+                         0);
+        break;
+    }
+ 
+    default:
+        status = PEP_UNKNOWN_ERROR; // DB error??
+    }
+
+    sqlite3_reset(session->fpr_has_mistrust);
+    return status;
+
 }
 
 PEP_STATUS set_trust(PEP_SESSION session, 
