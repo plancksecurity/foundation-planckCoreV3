@@ -20,12 +20,9 @@ extern "C" {
 //  return value:
 //      pointer to string object or NULL if out of memory
 //
-//  caveat:
-//      one of the two parameters has to be set at least
-//
 //  calling with str and len is equivalent to strndup()
 //  calling with str but len=0 is equivalent to strdup()
-//  calling with str=NULL and len is equivalent to calloc()
+//  calling with str=NULL is equivalent to calloc()
 
 DYNAMIC_API char * new_string(const char *src, size_t len);
 

@@ -8,10 +8,6 @@
 
 DYNAMIC_API char * new_string(const char *src, size_t len)
 {
-    assert(src || len);
-    if (!(src || len))
-        return NULL;
-
     char *s = NULL;
     if (src) {
         if (len)
