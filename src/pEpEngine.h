@@ -1229,10 +1229,6 @@ PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
     
 PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id);
 
-PEP_STATUS fpr_has_mistrust(PEP_SESSION session, 
-                            const char* fpr,
-                            bool* has_mistrust);
-
 #ifdef __cplusplus
 }
 #endif

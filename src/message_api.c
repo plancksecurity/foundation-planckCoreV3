@@ -1215,12 +1215,6 @@ static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist, cha
             continue;
 
         PEP_rating _rating_ = key_rating(session, _kl->value);
-
-        // check for mistrust
-        bool is_mistrusted = false;
-        fpr_has_mistrust(session, _kl->value, &is_mistrusted); // not sure what to do with status
-        if (is_mistrusted)
-            _rating_ = PEP_rating_mistrust;
          
         if (_rating_ <= PEP_rating_mistrust)
             return _rating_;
@@ -2035,7 +2029,6 @@ static PEP_STATUS amend_rating_according_to_sender_and_recipients(
             status = get_trust(session, _sender);
             if (_sender->comm_type == PEP_ct_unknown) {
                 get_key_rating(session, fpr, &_sender->comm_type);
-                // check mistrust
             }
             if (_sender->comm_type != PEP_ct_unknown) {
                 *rating = keylist_rating(session, recipients, 
