@@ -981,9 +981,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     // runtime config
 
-#ifdef ANDROID
-#elif TARGET_OS_IPHONE
-#else /* Desktop */
     if (very_first)
     {
         // On first run, all private keys already present in PGP keyring 
@@ -996,7 +993,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         //
         // Indeed, if pEpEngine did import spoofed private keys in previous
         // install, then those keys become automatically trusted in case 
-        // pEp_management.db is deleted.
+        // management.db is deleted.
         //
         // A solution to distinguish bare GPG keyring from pEp keyring is
         // needed here. Then keys managed by pEpEngine wouldn't be
@@ -1020,7 +1017,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             }
         }
     }
-#endif
 
     // sync_session set to own session by default
     // sync_session is then never null on a valid session
