@@ -37,6 +37,9 @@ typedef enum {
     PEP_INIT_GPGME_INIT_FAILED                      = 0x0111,
     PEP_INIT_NO_GPG_HOME                            = 0x0112,
     PEP_INIT_NETPGP_INIT_FAILED                     = 0x0113,
+    PEP_INIT_CANNOT_DETERMINE_GPG_VERSION           = 0x0114,
+    PEP_INIT_UNSUPPORTED_GPG_VERSION                = 0x0115,
+    PEP_INIT_CANNOT_CONFIG_GPG_AGENT                = 0x0116,
 
     PEP_INIT_SQLITE3_WITHOUT_MUTEX                  = 0x0120,
     PEP_INIT_CANNOT_OPEN_DB                         = 0x0121,
@@ -55,6 +58,7 @@ typedef enum {
     PEP_CANNOT_SET_IDENTITY                         = 0x0383,
     PEP_CANNOT_SET_TRUST                            = 0x0384,
     PEP_KEY_BLACKLISTED                             = 0x0385,
+    PEP_CANNOT_FIND_PERSON                          = 0x0386,
     
     PEP_CANNOT_FIND_ALIAS                           = 0x0391,
     PEP_CANNOT_SET_ALIAS                            = 0x0392,
@@ -665,6 +669,7 @@ DYNAMIC_API PEP_STATUS set_userid_alias (
         const char* default_id,
         const char* alias_id);
 
+
 // set_device_group() - update own person's device group
 //
 //    parameters:
@@ -1214,7 +1219,16 @@ PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
 PEP_STATUS remove_fpr_as_default(PEP_SESSION session, 
                                     const char* fpr);
                               
+                                    
+PEP_STATUS get_main_user_fpr(PEP_SESSION session, 
+                             const char* user_id,
+                             char** main_fpr);
+
+PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
+                              const char* new_fpr);
     
+PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id);
+
 #ifdef __cplusplus
 }
 #endif

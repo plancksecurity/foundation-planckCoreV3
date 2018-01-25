@@ -1,5 +1,6 @@
 #include "pEpEngine_test.h"
 #include "pEpEngine.h"
+#include "pEp_internal.h"
 #include "message_api.h"
 #include <fstream>
 #include <sstream>
@@ -30,6 +31,13 @@ void dump_out(const char* filename, const char* outdata)
     outfile.close();
 }
 
+char* get_new_uuid() {
+    char* new_uuid = (char*)calloc(37, 1);
+    pEpUUID uuid;
+    uuid_generate_random(uuid);
+    uuid_unparse_upper(uuid, new_uuid);
+    return new_uuid;
+}
 
 const char* tl_status_string(PEP_STATUS status) {
     switch (status) {
