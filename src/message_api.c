@@ -1512,8 +1512,13 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         }
 
         PEP_STATUS _status = PEP_STATUS_OK;
-        if (!is_me(session, _il->ident))
+        if (!is_me(session, _il->ident)) {
             _status = update_identity(session, _il->ident);
+            if (_status == PEP_CANNOT_FIND_IDENTITY) {
+                _il->ident->comm_type = PEP_ct_key_not_found;
+                _status = PEP_STATUS_OK;
+            }
+        }
         else
             _status = myself(session, _il->ident);
         if (_status != PEP_STATUS_OK) {
@@ -1537,8 +1542,13 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     {
         for (_il = src->to; _il && _il->ident; _il = _il->next) {
             PEP_STATUS _status = PEP_STATUS_OK;
-            if (!is_me(session, _il->ident))
+            if (!is_me(session, _il->ident)) {
                 _status = update_identity(session, _il->ident);
+                if (_status == PEP_CANNOT_FIND_IDENTITY) {
+                    _il->ident->comm_type = PEP_ct_key_not_found;
+                    _status = PEP_STATUS_OK;
+                }
+            }
             else
                 _status = myself(session, _il->ident);
             if (_status != PEP_STATUS_OK) {
@@ -1561,8 +1571,13 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
         for (_il = src->cc; _il && _il->ident; _il = _il->next) {
             PEP_STATUS _status = PEP_STATUS_OK;
-            if (!is_me(session, _il->ident))
+            if (!is_me(session, _il->ident)) {
                 _status = update_identity(session, _il->ident);
+                if (_status == PEP_CANNOT_FIND_IDENTITY) {
+                    _il->ident->comm_type = PEP_ct_key_not_found;
+                    _status = PEP_STATUS_OK;
+                }
+            }
             else
                 _status = myself(session, _il->ident);
             if (_status != PEP_STATUS_OK)
