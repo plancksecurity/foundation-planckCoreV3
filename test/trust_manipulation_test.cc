@@ -101,6 +101,7 @@ int main() {
     assert(user->comm_type == PEP_ct_key_not_found);
     cout << "Yup, we trust no keys from " << uniqname << endl;
     
+    cout << "TODO: Add cases where we have multiple user_ids addressing a single key, and multiple identities with that key + mistrust" << endl;
     cout << "Passed all of our exciting messing with the trust DB. Moving on..." << endl;
  
     free(user_id);

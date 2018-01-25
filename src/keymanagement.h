@@ -189,6 +189,15 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
 //  parameters:
 //      session (in)        session to use
 //      ident (in)          person and key which was compromised
+//  caveat:
+//      ident is INPUT ONLY. If you want updated trust on the identity, you'll have
+//      to call update_identity or myself respectively after this.
+//      N.B. If you are calling this on a key that is the identity or user default,
+//      it will be removed as the default key for ANY identity and user for which
+//      it is the default. Please keep in mind that the undo in undo_last_mistrust
+//      will only undo the current identity's / it's user's default, not any
+//      other identities which may be impacted (this will not affect most use
+//      cases)
 
 DYNAMIC_API PEP_STATUS key_mistrusted(
         PEP_SESSION session,
@@ -214,7 +223,7 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
 DYNAMIC_API PEP_STATUS undo_last_mistrust(PEP_SESSION session);
 
 
-// trust_personal_key() - mark a key as trusted with a person
+// trust_personal_key() - mark a key as trusted for a user
 //
 //  parameters:
 //      session (in)        session to use
@@ -222,6 +231,11 @@ DYNAMIC_API PEP_STATUS undo_last_mistrust(PEP_SESSION session);
 //
 //  caveat:
 //      the fields user_id, address and fpr must be supplied
+//      for non-own users, this will 1) set the trust bit on its comm type in the DN,
+//      2) set this key as the identity default if the current identity default
+//      is not trusted, and 3) set this key as the user default if the current
+//      user default is not trusted.
+//      For an own user, this is simply a call to myself().
 
 DYNAMIC_API PEP_STATUS trust_personal_key(
         PEP_SESSION session,
@@ -234,6 +248,13 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
 //  parameters:
 //      session (in)        session to use
 //      ident (in)          identity for person and key whose trust status is to be reset
+//
+//  caveat:
+//      ident is INPUT ONLY. If you want updated trust on the identity, you'll have
+//      to call update_identity or myself respectively after this.
+//      N.B. If you are calling this on a key that is the identity or user default,
+//      it will be removed as the default key for the identity and user (but is still
+//      available for key election, it is just not the cached default anymore)
 
 DYNAMIC_API PEP_STATUS key_reset_trust(
         PEP_SESSION session,
