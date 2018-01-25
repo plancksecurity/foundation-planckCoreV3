@@ -15,12 +15,7 @@
 #include "sync_fsm.h"
 #include "blacklist.h"
 
-#ifndef EMPTYSTR
-#define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
-#endif
-
 #define KEY_EXPIRE_DELTA (60 * 60 * 24 * 365)
-
 
 static bool key_matches_address(PEP_SESSION session, const char* address,
                                 const char* fpr) {
@@ -1056,7 +1051,16 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
         if (session->cached_mistrusted)
             free(session->cached_mistrusted);
         session->cached_mistrusted = identity_dup(ident);
-        status = mark_as_compromized(session, ident->fpr);
+        
+        // set mistrust for this user_id/keypair (even if there's not an
+        // identity set yet, this is important, as we need to record the mistrust
+        // action)
+        status = set_trust(session, ident->user_id, ident->fpr, PEP_ct_mistrusted);
+        if (status == PEP_STATUS_OK)
+            // cascade that mistrust for anyone using this key
+            status = mark_as_compromized(session, ident->fpr);
+        if (status == PEP_STATUS_OK)
+            status = remove_fpr_as_default(session, ident->fpr);
     }
 
     return status;
@@ -1093,42 +1097,70 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
 
     assert(session);
     assert(ident);
-    assert(!ident->me);
     assert(!EMPTYSTR(ident->fpr));
     assert(!EMPTYSTR(ident->address));
     assert(!EMPTYSTR(ident->user_id));
 
-    // Nope. We should be able to reset trust on an own key.
     if (!(session && ident && ident->fpr && ident->fpr[0] != '\0' && ident->address &&
             ident->user_id))
         return PEP_ILLEGAL_VALUE;
-        
-    bool me = is_me(session, ident); 
 
-    if (me)
-        status = myself(session, ident);
-    else     
-        status = update_identity(session, ident);
-        
-    if (status != PEP_STATUS_OK)
-        return status;
-
-    if (ident->comm_type == PEP_ct_mistrusted)
-        ident->comm_type = PEP_ct_unknown;
-    else
-        ident->comm_type &= ~PEP_ct_confirmed;
-
-    status = set_identity(session, ident);
+    // we do not change the input struct at ALL.
+    pEp_identity* input_copy = identity_dup(ident);
     
-    // FIXME: remove key as default for user_id
+    pEp_identity* tmp_ident = NULL;
+    
+    status = get_trust(session, input_copy);
     
     if (status != PEP_STATUS_OK)
-        return status;
+        goto pep_free;
+        
+    PEP_comm_type new_trust = PEP_ct_unknown;
 
-    // FIXME: What is this point of this here??
-    if (ident->comm_type == PEP_ct_unknown && !me) {
-        status = update_identity(session, ident);
+    if (input_copy->comm_type != PEP_ct_mistrusted)
+        new_trust = input_copy->comm_type & ~PEP_ct_confirmed;
+
+    status = set_trust(session, ident->user_id, ident->fpr, new_trust);
+    
+    if (status != PEP_STATUS_OK)
+        goto pep_free;
+
+        
+    input_copy->comm_type = new_trust;
+        
+    tmp_ident = new_identity(ident->address, NULL, ident->user_id, NULL);
+
+    if (!tmp_ident)
+        return PEP_OUT_OF_MEMORY;
+    
+    status = update_identity(session, tmp_ident);
+    
+    if (status != PEP_STATUS_OK)
+        goto pep_free;
+    
+    // remove as default if necessary
+    if (strcmp(tmp_ident->fpr, ident->fpr) == 0) {
+        free(tmp_ident->fpr);
+        tmp_ident->fpr = NULL;
+        tmp_ident->comm_type = PEP_ct_unknown;
+        status = set_identity(session, tmp_ident);
+        if (status != PEP_STATUS_OK)
+            goto pep_free;
     }
+    
+    char* user_default = NULL;
+    status = get_main_user_fpr(session, tmp_ident->user_id, &user_default);
+    
+    if (!EMPTYSTR(user_default)) {
+        if (strcmp(user_default, ident->fpr) == 0)
+            status = refresh_userid_default_key(session, ident->user_id);
+        if (status != PEP_STATUS_OK)
+            goto pep_free;    
+    }
+            
+pep_free:
+    free_identity(tmp_ident);
+    free_identity(input_copy);
     return status;
 }
 
@@ -1149,39 +1181,99 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
             EMPTYSTR(ident->fpr))
         return PEP_ILLEGAL_VALUE;
 
+    //bool ident_has_trusted_default = false;
+    char* ident_default_fpr = NULL;
+
+    // Before we do anything, be sure the input fpr is even eligible to be trusted
+    PEP_comm_type input_default_ct = PEP_ct_unknown;
+    status = get_key_rating(session, ident->fpr, &input_default_ct);
+    if (input_default_ct < PEP_ct_strong_but_unconfirmed)
+        return PEP_KEY_UNSUITABLE;
+
+    // Save the input fpr
+    char* cached_fpr = strdup(ident->fpr);
+    ident->fpr = NULL;
+
     bool me = is_me(session, ident);
 
     if (me)
-        status = myself(session, ident);
-    else {
-        char* saved_fpr = ident->fpr;
-        ident->fpr = NULL;
-        
-        status = update_identity(session, ident);
-        
-        if (EMPTYSTR(ident->fpr) || strcmp(ident->fpr, saved_fpr) != 0) {
-            ident->fpr = saved_fpr;
-            ident->comm_type = PEP_ct_unknown;
-            status = set_identity(session, ident);
-            if (status == PEP_STATUS_OK)
-                status = update_identity(session, ident);
-        }
-        // either saved_fpr got copied in update_identity and we're done
-        // with it, or it's not referenced anymore because we didn't call
-        // it.
-        free(saved_fpr);            
-    } 
-    if (status != PEP_STATUS_OK)
-        return status;
+        return myself(session, ident); // FIXME: Not the right thing if we 
+                                       // don't always replace user default!!!
 
-    if (ident->comm_type > PEP_ct_strong_but_unconfirmed) {
-        ident->comm_type |= PEP_ct_confirmed;
-        status = set_identity(session, ident);
-    }
-    else {
-        // MISSING: S/MIME has to be handled depending on trusted CAs
-        status = PEP_CANNOT_SET_TRUST;
-    }
+    // First, set up a temp trusted identity for the input fpr without a comm type;
+    pEp_identity* tmp_id = new_identity(ident->address, cached_fpr, ident->user_id, NULL);
+    status = validate_fpr(session, tmp_id);
+        
+    if (status == PEP_STATUS_OK) {
+        // Validate fpr gets trust DB or, when that fails, key comm type. we checked
+        // above that the key was ok. (not revoked or expired), but we want the max.
+        tmp_id->comm_type = _MAX(tmp_id->comm_type, input_default_ct) | PEP_ct_confirmed;
+                                       
+        // Get the default identity without setting the fpr
+        status = update_identity(session, ident);
+        ident_default_fpr = strdup(ident->fpr);
+
+        if (status == PEP_STATUS_OK) {
+            bool trusted_default = false;
+
+            // If there's no default, or the default is different from the input...
+            if (EMPTYSTR(ident_default_fpr) || strcmp(cached_fpr, ident_default_fpr) != 0) {
+                
+                // If the default fpr (if there is one) is trusted and key is strong enough,
+                // don't replace, we just set the trusted bit on this key for this user_id...
+                // (If there's no default fpr, this won't be true anyway.)
+                if (ident->comm_type >= PEP_ct_strong_but_unconfirmed && 
+                    (ident->comm_type & PEP_ct_confirmed)) {                        
+
+                    trusted_default = true;
+                                    
+                    status = set_trust(session, tmp_id->user_id, cached_fpr, tmp_id->comm_type);
+                    input_default_ct = tmp_id->comm_type;                    
+                }
+                else {
+                    free(ident->fpr);
+                    ident->fpr = strdup(cached_fpr);
+                    ident->comm_type = tmp_id->comm_type;
+                    status = set_identity(session, ident); // replace identity default            
+                }
+            }
+            else { // we're setting this on the default fpr
+                ident->comm_type = tmp_id->comm_type;
+                status = set_identity(session, ident);
+                trusted_default = true;
+            }
+            if (status == PEP_STATUS_OK && !trusted_default) {
+                // Ok, there wasn't a trusted default, so we replaced. Thus, we also
+                // make sure there's a trusted default on the user_id. If there
+                // is not, we make this the default.
+                char* user_default = NULL;
+                status = get_main_user_fpr(session, ident->user_id, &user_default);
+            
+                if (status == PEP_STATUS_OK && user_default) {
+                    pEp_identity* tmp_user_ident = new_identity(ident->address, 
+                                                                user_default, 
+                                                                ident->user_id, 
+                                                                NULL);
+                    if (!tmp_user_ident)
+                        status = PEP_OUT_OF_MEMORY;
+                    else {
+                        status = validate_fpr(session, tmp_user_ident);
+                        
+                        if (status != PEP_STATUS_OK ||
+                            tmp_user_ident->comm_type < PEP_ct_strong_but_unconfirmed ||
+                            !(tmp_user_ident->comm_type & PEP_ct_confirmed)) 
+                        {
+                            char* trusted_fpr = (trusted_default ? ident_default_fpr : cached_fpr);
+                            status = replace_main_user_fpr(session, ident->user_id, trusted_fpr);
+                        } 
+                    }
+                }
+            }
+        }
+        free(ident_default_fpr);
+        free(cached_fpr);
+        free_identity(tmp_id);
+    }    
 
     return status;
 }

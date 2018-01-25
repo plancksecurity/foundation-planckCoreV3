@@ -2029,7 +2029,6 @@ static PEP_STATUS amend_rating_according_to_sender_and_recipients(
             status = get_trust(session, _sender);
             if (_sender->comm_type == PEP_ct_unknown) {
                 get_key_rating(session, fpr, &_sender->comm_type);
-                
             }
             if (_sender->comm_type != PEP_ct_unknown) {
                 *rating = keylist_rating(session, recipients, 

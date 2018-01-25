@@ -113,6 +113,27 @@ static const char* sql_replace_userid =
     "update person set id = ?1 " 
     "where id = ?2;";
 
+static const char *sql_replace_main_user_fpr =  
+    "update person "
+    "   set main_key_id = ?1 "
+    "   where id = ?2 ;";
+
+static const char *sql_get_main_user_fpr =  
+    "select main_key_id from person"
+    "   where id = ?1 ;";
+
+static const char *sql_refresh_userid_default_key =
+    "update person "
+    "   set main_key_id = "
+    "       (select identity.main_key_id from identity "
+    "           join trust on trust.user_id = identity.user_id "
+    "               and trust.pgp_keypair_fpr = identity.main_key_id "
+    "           join person on identity.user_id = identity.user_id "
+    "       where identity.user_id = ?1 "
+    "       order by trust.comm_type desc "
+    "       limit 1) "
+    "where id = ?1 ; ";
+
 static const char *sql_get_device_group = 
     "select device_group from person "
     "where id = ?1;";
@@ -175,7 +196,7 @@ static const char *sql_least_trust =
 static const char *sql_mark_as_compromized = 
     "update trust not indexed set comm_type = 15"
     " where pgp_keypair_fpr = upper(replace(?1,' ','')) ;";
-
+    
 static const char *sql_crashdump = 
     "select timestamp, title, entity, description, comment"
     " from log order by timestamp desc limit ?1 ;";
@@ -823,6 +844,18 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_replace_userid), &_session->replace_userid, NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_replace_main_user_fpr,
+            (int)strlen(sql_replace_main_user_fpr), &_session->replace_main_user_fpr, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_main_user_fpr,
+            (int)strlen(sql_get_main_user_fpr), &_session->get_main_user_fpr, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_refresh_userid_default_key,
+            (int)strlen(sql_refresh_userid_default_key), &_session->refresh_userid_default_key, NULL);
+    assert(int_result == SQLITE_OK);
+
     int_result = sqlite3_prepare_v2(_session->db, sql_replace_identities_fpr,
             (int)strlen(sql_replace_identities_fpr), 
             &_session->replace_identities_fpr, NULL);
@@ -1113,6 +1146,12 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->i18n_token);
             if (session->replace_userid)
                 sqlite3_finalize(session->replace_userid);
+            if (session->replace_main_user_fpr)
+                sqlite3_finalize(session->replace_main_user_fpr);                
+            if (session->get_main_user_fpr)
+                sqlite3_finalize(session->get_main_user_fpr);
+            if (session->refresh_userid_default_key)
+                sqlite3_finalize(session->refresh_userid_default_key);
             if (session->blacklist_add)
                 sqlite3_finalize(session->blacklist_add);
             if (session->blacklist_delete)
@@ -1787,7 +1826,7 @@ DYNAMIC_API PEP_STATUS set_identity(
     bool has_fpr = (identity->fpr && identity->fpr[0] != '\0');
     
     if (has_fpr) {    
-        // blacklist check
+        // blacklist check - FIXME: ENGINE-294 will remove
         status = blacklist_is_listed(session, identity->fpr, &listed);
         assert(status == PEP_STATUS_OK);
         if (status != PEP_STATUS_OK)
@@ -2088,8 +2127,8 @@ DYNAMIC_API PEP_STATUS unset_identity_flags(
     sqlite3_reset(session->unset_identity_flags);
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_IDENTITY;
+        identity->flags &= ~flags;
 
-    identity->flags &= ~flags;
     return PEP_STATUS_OK;
 }
 
@@ -2118,6 +2157,89 @@ PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
 
     return PEP_STATUS_OK;
 }
+
+PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id) {
+    assert(session);
+    assert(user_id);
+    
+    if (!session || !user_id)
+        return PEP_ILLEGAL_VALUE;
+
+    int result;
+
+    sqlite3_reset(session->refresh_userid_default_key);
+    sqlite3_bind_text(session->refresh_userid_default_key, 1, user_id, -1,
+            SQLITE_STATIC);
+    result = sqlite3_step(session->refresh_userid_default_key);
+    sqlite3_reset(session->refresh_userid_default_key);
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_PERSON;
+
+    return PEP_STATUS_OK;    
+}
+
+PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
+                                 const char* new_fpr) {
+    assert(session);
+    assert(user_id);
+    assert(new_fpr);
+    
+    if (!session || !user_id || !new_fpr)
+        return PEP_ILLEGAL_VALUE;
+
+    int result;
+
+    sqlite3_reset(session->replace_main_user_fpr);
+    sqlite3_bind_text(session->replace_main_user_fpr, 1, new_fpr, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->replace_main_user_fpr, 2, user_id, -1,
+            SQLITE_STATIC);
+    result = sqlite3_step(session->replace_main_user_fpr);
+    sqlite3_reset(session->replace_main_user_fpr);
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_PERSON;
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS get_main_user_fpr(PEP_SESSION session, 
+                             const char* user_id,
+                             char** main_fpr)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    int result;
+    
+    assert(session);
+    assert(user_id);
+    assert(main_fpr);
+    
+    if (!(session && user_id && user_id[0] && main_fpr))
+        return PEP_ILLEGAL_VALUE;
+        
+    *main_fpr = NULL;
+    
+    sqlite3_reset(session->get_main_user_fpr);
+    sqlite3_bind_text(session->get_main_user_fpr, 1, user_id, -1,
+                      SQLITE_STATIC);
+    result = sqlite3_step(session->get_main_user_fpr);
+    switch (result) {
+    case SQLITE_ROW: {
+        const char* _fpr = 
+            (const char *) sqlite3_column_text(session->get_main_user_fpr, 0);
+        if (_fpr)
+            *main_fpr = strdup(_fpr);
+        if (!(*main_fpr))
+            status = PEP_OUT_OF_MEMORY;
+        break;
+    }
+    default:
+        status = PEP_CANNOT_FIND_PERSON;
+    }
+
+    sqlite3_reset(session->get_main_user_fpr);
+    return status;
+}
+
 
 DYNAMIC_API PEP_STATUS mark_as_compromized(
         PEP_SESSION session,
@@ -2148,6 +2270,36 @@ void pEp_free(void *p)
 {
     free(p);
 }
+
+PEP_STATUS set_trust(PEP_SESSION session, 
+                     const char* user_id,
+                     const char* fpr, 
+                     PEP_comm_type comm_type) 
+{
+    assert(session);
+    assert(user_id);
+    assert(fpr);
+    
+    if (!session || !user_id || user_id[0] == '\0' || !fpr || fpr[0] == '\0')
+        return PEP_ILLEGAL_VALUE;
+        
+    int result;
+                
+    sqlite3_reset(session->set_trust);
+    sqlite3_bind_text(session->set_trust, 1, user_id, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->set_trust, 2, fpr, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_int(session->set_trust, 3, comm_type);
+    result = sqlite3_step(session->set_trust);
+    assert(result == SQLITE_DONE);
+    sqlite3_reset(session->set_trust);
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_TRUST;
+
+    return PEP_STATUS_OK;
+}
+
 
 DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
 {
