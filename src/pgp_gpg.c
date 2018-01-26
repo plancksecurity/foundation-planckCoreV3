@@ -292,9 +292,9 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
         gpg.gpgme_get_engine_info
             = (gpgme_get_engine_info_t) (intptr_t) dlsym(gpgme,
-            "gpgme_get_engine_info");
         assert(gpg.gpgme_get_engine_info);
 
+        "gpgme_get_engine_info");
         gpgme_engine_info_t info;
         int err = gpg.gpgme_get_engine_info(&info);
         assert(err == GPG_ERR_NO_ERROR);
@@ -1945,18 +1945,19 @@ PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session) {
     PEP_STATUS first_fail = PEP_STATUS_OK;
 
     // 1. get keys
-    PEP_status status = pgp_find_private_keys(session, NULL, &priv_keylist);
+    first_fail = pgp_find_private_keys(session, NULL, &priv_keylist);
 
     bool has_already_failed = (first_fail != PEP_STATUS_OK);
 
     if (status == PEP_STATUS_OK) {    
         stringlist_t* keylist_curr;    
+        
         // 2. for each key
         for (keylist_curr = priv_keylist; keylist_curr; keylist_curr = keylist_curr->next) {
             // a. get key data
             if (!keylist_curr->value)
                 continue;
-                
+    
             gpgme_error = gpg.gpgme_get_key(session->ctx, keylist_curr->value, &key, 1);
             gpgme_error = _GPGERR(gpgme_error);
             assert(gpgme_error != GPG_ERR_ENOMEM);
@@ -1982,18 +1983,30 @@ PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session) {
             if (key && gpgme_error == GPG_ERR_NO_ERROR) {
                 if (key->revoked || key->disabled)
                     first_fail = (has_already_failed ? first_fail : PEP_KEY_UNSUITABLE);
-                
-                    
+                else {
+                    if (key->fpr && key->private && key->can_encrypt && key->can_sign) {
+                        if (key->owner_trust == GPGME_VALIDITY_ULTIMATE &&
+                                            key->uids && key->uids->address) { 
+                            pEp_identity* new_id = new_identity(key->uids->address,
+                                                                key->uids->fpr,
+                                                                PEP_OWN_USERID,
+                                                                key->uids->name);
+                            if (!new_id)
+                                status = PEP_OUT_OF_MEMORY;
+                            else    
+                                status = myself(new_id);
+                                
+                            first_fail = (has_already_failed ? first_fail : status);
+                        }
+                    }
+                }
             }
             
-            // a. ensure keypair
-            // b. ensure ultimately trusted
-            // c. get the name / address
-            // d. create identity
+            has_already_failed = first_fail != PEP_STATUS_OK;
         }
     }
+    return first_fail;
 }
-//gpgme_error_t gpgme_op_keylist_ext_start (gpgme_ctx_t ctx, const char *pattern[], int secret_only, int reserved)
 
 PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
 {

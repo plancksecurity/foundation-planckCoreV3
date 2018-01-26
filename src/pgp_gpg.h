@@ -114,5 +114,4 @@ PEP_STATUS pgp_replace_only_uid(
         const char* email
     );
 
-
 #define PGP_BINARY_PATH pgp_binary
