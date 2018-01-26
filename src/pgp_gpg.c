@@ -1939,6 +1939,82 @@ PEP_STATUS pgp_find_private_keys(
     return _pgp_search_keys(session, pattern, keylist, 1);
 }
 
+PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session) {
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    stringlist_t* priv_keylist = NULL;
+    gpgme_key_t key;
+    gpgme_error_t gpgme_error;
+    PEP_STATUS status = PEP_STATUS_OK;
+    PEP_STATUS first_fail = PEP_STATUS_OK;
+
+
+    // 1. get keys
+    first_fail = pgp_find_private_keys(session, NULL, &priv_keylist);
+
+    bool has_already_failed = (first_fail != PEP_STATUS_OK);
+
+    if (!has_already_failed) {    
+        stringlist_t* keylist_curr;    
+        
+        // 2. for each key
+        for (keylist_curr = priv_keylist; keylist_curr; keylist_curr = keylist_curr->next) {
+            // a. get key data
+            if (!keylist_curr->value)
+                continue;
+    
+            gpgme_error = gpg.gpgme_get_key(session->ctx, keylist_curr->value, &key, 1);
+            gpgme_error = _GPGERR(gpgme_error);
+            assert(gpgme_error != GPG_ERR_ENOMEM);
+            switch (gpgme_error) {
+                case GPG_ERR_NO_ERROR:
+                    break;
+                case GPG_ERR_EOF:
+                    first_fail = (has_already_failed ? first_fail : PEP_KEY_NOT_FOUND);
+                    break;
+                case GPG_ERR_INV_VALUE:
+                    first_fail = (has_already_failed ? first_fail : PEP_ILLEGAL_VALUE);
+                    break;
+                case GPG_ERR_AMBIGUOUS_NAME:
+                    first_fail = (has_already_failed ? first_fail : PEP_KEY_HAS_AMBIG_NAME);
+                    break;
+                case GPG_ERR_ENOMEM:
+                    first_fail = (has_already_failed ? first_fail : PEP_OUT_OF_MEMORY);
+                    break;
+                default:
+                    assert(0);
+                    first_fail = (has_already_failed ? first_fail : PEP_UNKNOWN_ERROR);
+            }
+            if (key && gpgme_error == GPG_ERR_NO_ERROR) {
+                if (key->revoked || key->disabled)
+                    first_fail = (has_already_failed ? first_fail : PEP_KEY_UNSUITABLE);
+                else {
+                    if (key->fpr && key->secret && key->can_encrypt && key->can_sign) {
+                        if (key->owner_trust == GPGME_VALIDITY_ULTIMATE &&
+                                            key->uids && key->uids->address) { 
+                            pEp_identity* new_id = new_identity(key->uids->address,
+                                                                key->fpr,
+                                                                PEP_OWN_USERID,
+                                                                key->uids->name);
+                            if (!new_id)
+                                status = PEP_OUT_OF_MEMORY;
+                            else    
+                                status = myself(session, new_id);
+                                
+                            first_fail = (has_already_failed ? first_fail : status);
+                        }
+                    }
+                }
+            }
+            
+            has_already_failed = first_fail != PEP_STATUS_OK;
+        }
+    }
+    return first_fail;
+}
+
 PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
 {
     gpgme_error_t gpgme_error;

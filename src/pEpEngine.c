@@ -1020,35 +1020,15 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         // are taken as own in order to seamlessly integrate with
         // pre-existing GPG setup.
 
-        ////////////////////////////// WARNING: ///////////////////////////
-        // Considering all PGP priv keys as own is dangerous in case of 
-        // re-initialization of pEp DB, while keeping PGP keyring as-is!
-        //
-        // Indeed, if pEpEngine did import spoofed private keys in previous
-        // install, then those keys become automatically trusted in case 
-        // management.db is deleted.
-        //
-        // A solution to distinguish bare GPG keyring from pEp keyring is
-        // needed here. Then keys managed by pEpEngine wouldn't be
-        // confused with GPG keys managed by the user through GPA.
-        ///////////////////////////////////////////////////////////////////
-        
-        stringlist_t *keylist = NULL;
+        // Note: earlier fears about danger because of DB reinitialisation should
+        // be a non-issue here, as we ONLY take the ultimately trusted keys now.
+        // Thus, unless the user has assigned ultimate trust through PGP, there is
+        // no chance of automatically imported pEp keys from a previous run making
+        // their way into PEP trusted status without explicit action (Bare imported
+        // private keys have an 'unknown' trust designation in PGP).
 
-        status = find_private_keys(_session, NULL, &keylist);
-        assert(status != PEP_OUT_OF_MEMORY);
-        if (status == PEP_OUT_OF_MEMORY)
-            return PEP_OUT_OF_MEMORY;
-        
-        if (keylist != NULL && keylist->value != NULL)
-        {
-            stringlist_t *_keylist;
-            for (_keylist = keylist; _keylist && _keylist->value; _keylist = _keylist->next) {
-                status = set_own_key(_session, 
-                                     "" /* address is unused in own_keys */,
-                                     _keylist->value);
-            }
-        }
+        // We don't really worry about the status here.
+        status = import_trusted_own_keys(_session);        
     }
 
     // sync_session set to own session by default
@@ -3184,6 +3164,14 @@ PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
     
     return session->cryptotech[PEP_crypt_OpenPGP].find_private_keys(session, pattern,
                                                                     keylist);
+}
+
+PEP_STATUS import_trusted_own_keys(PEP_SESSION session) {
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+        
+    return session->cryptotech[PEP_crypt_OpenPGP].import_trusted_own_keys(session); 
 }
 
 DYNAMIC_API const char* get_engine_version() {
