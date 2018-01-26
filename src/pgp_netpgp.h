@@ -100,3 +100,6 @@ PEP_STATUS pgp_contains_priv_key(
 PEP_STATUS pgp_find_private_keys(
     PEP_SESSION session, const char *pattern, stringlist_t **keylist
 );
+
+// Stub - just returns PEP_STATUS_OK, as netpgp isn't sufficient to do this.
+PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session);

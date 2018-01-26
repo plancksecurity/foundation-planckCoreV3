@@ -1950,3 +1950,9 @@ PEP_STATUS pgp_contains_priv_key(
     }
     return status;
 }
+
+PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session) {
+    // Not implemented - netpgp doesn't appear to keep track of trust status in
+    // a meaningful way, though there is space for it in the structs.
+    return PEP_STATUS_OK;
+}

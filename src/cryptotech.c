@@ -53,6 +53,7 @@ PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first)
         cryptotech[PEP_crypt_OpenPGP].key_created = pgp_key_created;
         cryptotech[PEP_crypt_OpenPGP].contains_priv_key = pgp_contains_priv_key;
         cryptotech[PEP_crypt_OpenPGP].find_private_keys = pgp_find_private_keys;
+        cryptotech[PEP_crypt_OpenPGP].import_trusted_own_keys = pgp_import_ultimately_trusted_keypairs;
 #ifdef PGP_BINARY_PATH
         cryptotech[PEP_crypt_OpenPGP].binary_path = PGP_BINARY_PATH;
 #endif

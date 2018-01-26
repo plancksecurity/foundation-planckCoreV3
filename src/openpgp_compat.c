@@ -24,7 +24,3 @@ DYNAMIC_API PEP_STATUS OpenPGP_list_keyinfo (
     
     return retval;
 }
-
-PEP_STATUS import_ultimately_trusted_keypairs (PEP_SESSION session) {
-    
-}
