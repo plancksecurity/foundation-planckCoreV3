@@ -24,4 +24,3 @@ DYNAMIC_API PEP_STATUS OpenPGP_list_keyinfo (
     
     return retval;
 }
-

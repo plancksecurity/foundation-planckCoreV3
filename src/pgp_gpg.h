@@ -106,6 +106,10 @@ PEP_STATUS pgp_find_private_keys(
 
 PEP_STATUS pgp_binary(const char **path);
 
+// Returns first failure status, if there were any. Keys may have been
+// imported into DB regardless of status.
+PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session);
+
 /* Really only internal. */
 PEP_STATUS pgp_replace_only_uid(
         PEP_SESSION session,
@@ -113,6 +117,5 @@ PEP_STATUS pgp_replace_only_uid(
         const char* realname,
         const char* email
     );
-
 
 #define PGP_BINARY_PATH pgp_binary
