@@ -1,17 +1,17 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#include "pEp_internal.h"
-
+#include <stdbool.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 
+#include "platform.h"
 #include "bloblist.h"
 
 static bool set_blob_data(bloblist_t* bloblist, char* blob, size_t size, const char* mime_type,
-                          const char* filename) {
-    
+        const char* filename)
+{
     if (!bloblist)
         return false;
         
@@ -30,9 +30,8 @@ static bool set_blob_data(bloblist_t* bloblist, char* blob, size_t size, const c
        }
        /* Default behaviour, can be overwritten post-allocation with
           set_blob_content_disposition */
-       if (strstr(filename, "cid://") == filename)
+       if (strncmp(filename, "cid://", 6) == 0)
            bloblist->disposition = PEP_CONTENT_DISP_INLINE;
-                        
     }               
     
     if (blob) {
@@ -65,7 +64,10 @@ DYNAMIC_API void free_bloblist(bloblist_t *bloblist)
 
     while (curr) {
         bloblist_t *next = curr->next;
-        free(curr->value);
+        if (curr->release_value)
+            curr->release_value(curr->value);
+        else
+            free(curr->value);
         free(curr->mime_type);
         free(curr->filename);
         free(curr);
@@ -126,14 +128,15 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
         const char *mime_type, const char *filename)
 {
     assert(blob);
-    if (blob == NULL)
+    if (!blob)
         return NULL;
 
-    if (bloblist == NULL)
+    if (!bloblist)
         return new_bloblist(blob, size, mime_type, filename);
 
-    if (bloblist->value == NULL) { // empty list
-        if (bloblist->next != NULL)
+    if (!bloblist->value) { // empty list
+        assert(!bloblist->next);
+        if (bloblist->next)
             return NULL; // invalid list
             
         if (!set_blob_data(bloblist, blob, size, mime_type, filename)) {
@@ -145,18 +148,19 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
     }
 
     bloblist_t* list_curr = bloblist;
+    void (*release_value)(char *) = list_curr->release_value;
 
     while (list_curr->next)
         list_curr = list_curr->next;
 
     list_curr->next = new_bloblist(blob, size, mime_type, filename);
+    list_curr->release_value = release_value;
 
     assert(list_curr->next);
-    if (list_curr->next == NULL)
+    if (!list_curr->next)
         return NULL;
 
     return list_curr->next;
-
 }
 
 DYNAMIC_API int bloblist_length(const bloblist_t *bloblist)
@@ -170,7 +174,8 @@ DYNAMIC_API int bloblist_length(const bloblist_t *bloblist)
 }
 
 DYNAMIC_API void set_blob_disposition(bloblist_t* blob, 
-                                      content_disposition_type disposition) {
+        content_disposition_type disposition)
+{
     if (blob)                                    
         blob->disposition = disposition;
 }

@@ -14,39 +14,98 @@ extern "C" {
 //  parameters:
 //      session (in)        session to use
 //      identity (inout)    identity information of communication partner
-//                          (identity->fpr is OUT ONLY)
+//                          (identity->fpr is OUT ONLY), and at least
+//                          .address must be set. 
+//                          If .username is set, it will be used to set or patch
+//                          the username record for this identity.                         
 //  return value:
 //      PEP_STATUS_OK if identity could be updated,
-//      PEP_GET_KEY_FAILED for own identity that must be completed (myself())
+//      PEP_ILLEGAL_VALUE if called with illegal inputs, including an identity
+//                        with .me set or with an own user_id specified in the
+//                        *input* (see caveats) 
+//      PEP_KEY_UNSUITABLE if a default key was found for this identity, no
+//                         other acceptable keys were found; if this is returned,
+//                         the reason for rejecting the first default key found
+//                         may be found in the comm_type
 //      any other value on error
 //
 //  caveat:
-//      if this function returns PEP_ct_unknown or PEP_ct_key_expired in
-//      identity->comm_type, the caller must insert the identity into the
-//      asynchronous management implementation, so retrieve_next_identity()
-//      will return this identity later
 //      at least identity->address must be a non-empty UTF-8 string as input
 //      update_identity() never writes flags; use set_identity_flags() for
 //      writing
 //      this function NEVER reads the incoming fpr, only writes to it.
+//      this function will fail if called on an identity which, with its input
+//      values, *explicitly* indicates it is an own identity (i.e. .me is set
+//      to true on input, or a user_id is given AND it is a known own user_id).
+//      however, it can RETURN an own identity if this is not indicated a
+//      priori, and in fact will do so with prejudice when not faced with a
+//      matching default (i.e. it is forced to search by address only).
+//      if the identity is known to be an own identity (or the caller wishes
+//      to make it one), call myself() on the identity instead.
+//
+//      FIXME: is this next point accurate?
+//      if this function returns PEP_ct_unknown or PEP_ct_key_expired in
+//      identity->comm_type, the caller must insert the identity into the
+//      asynchronous management implementation, so retrieve_next_identity()
+//      will return this identity later
+//      END FIXME
 
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
     );
 
+// initialise_own_identities () - ensures that an own identity is complete
+//
+//  parameters:
+//      session (in)        session to use
+//      my_idents (inout)   identities of local user to quick-set
+//                          For these, at least .address must be set.
+//                          if no .user_id is set, AND the DB doesn't contain
+//                          a default user_id, PEP_OWN_USERID will be used and
+//                          become the perennial default for the DB.
+//
+//  return value:
+//      PEP_STATUS_OK if identity could be set,
+//      any other value on error
+//
+//  caveat:
+//      this function does NOT generate keypairs. It is intended to
+//      precede running of the engine on actual messages. It effectively
+//      behaves like myself(), but when there would normally be key generation
+//      (when there is no valid key, for example),
+//      it instead stores an identity without keys.
+//
+//      N.B. to adapter devs - this function is likely unnecessary, so please
+//      do not put work into exposing it yet. Tickets will be filed if need be.
 
-// myself() - ensures that the own identity is being complete
+DYNAMIC_API PEP_STATUS initialise_own_identities(PEP_SESSION session,
+                                                 identity_list* my_idents);
+
+// myself() - ensures that an own identity is complete
 //
 //  parameters:
 //      session (in)        session to use
 //      identity (inout)    identity of local user
-//                          at least .address, .username, .user_id must be set
+//                          both .address and .user_id must be set.
+//                          if .fpr is set, an attempt will be made to make
+//                          that the default key for this identity after key
+//                          validation
+//                          if .fpr is not set, key retrieval is performed
+//                          If .username is set, it will be used to set or patch
+//                          the username record for this identity.                         
 //
 //  return value:
 //      PEP_STATUS_OK if identity could be completed or was already complete,
 //      any other value on error
-//
 //  caveat:
+//      If an fpr was entered and is not a valid key, the reason for failure
+//      is immediately returned in the status and, possibly, identity->comm_type
+//      If a default own user_id exists in the database, an alias will 
+//      be created for the default for the input user_id. The ENGINE'S default
+//      user_id is always returned in the .user_id field
+//      myself() NEVER elects keys from the keyring; it will only choose keys
+//      which have been set up explicitly via myself(), or which were imported
+//      during a first time DB setup from an OpenPGP keyring (compatibility only) 
 //      this function generates a keypair on demand; because it's synchronous
 //      it can need a decent amount of time to return
 //      if you need to do this asynchronous, you need to return an identity
@@ -130,6 +189,15 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
 //  parameters:
 //      session (in)        session to use
 //      ident (in)          person and key which was compromised
+//  caveat:
+//      ident is INPUT ONLY. If you want updated trust on the identity, you'll have
+//      to call update_identity or myself respectively after this.
+//      N.B. If you are calling this on a key that is the identity or user default,
+//      it will be removed as the default key for ANY identity and user for which
+//      it is the default. Please keep in mind that the undo in undo_last_mistrust
+//      will only undo the current identity's / it's user's default, not any
+//      other identities which may be impacted (this will not affect most use
+//      cases)
 
 DYNAMIC_API PEP_STATUS key_mistrusted(
         PEP_SESSION session,
@@ -155,7 +223,7 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
 DYNAMIC_API PEP_STATUS undo_last_mistrust(PEP_SESSION session);
 
 
-// trust_personal_key() - mark a key as trusted with a person
+// trust_personal_key() - mark a key as trusted for a user
 //
 //  parameters:
 //      session (in)        session to use
@@ -163,6 +231,11 @@ DYNAMIC_API PEP_STATUS undo_last_mistrust(PEP_SESSION session);
 //
 //  caveat:
 //      the fields user_id, address and fpr must be supplied
+//      for non-own users, this will 1) set the trust bit on its comm type in the DN,
+//      2) set this key as the identity default if the current identity default
+//      is not trusted, and 3) set this key as the user default if the current
+//      user default is not trusted.
+//      For an own user, this is simply a call to myself().
 
 DYNAMIC_API PEP_STATUS trust_personal_key(
         PEP_SESSION session,
@@ -170,12 +243,18 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     );
 
 
-// key_reset_trust() - undo trust_personal_key and key_mistrusted() for keys
-//                     we don't own
-//
+// key_reset_trust() - reset trust bit or explicitly mistrusted status for an identity and
+//                     its accompanying key/user_id pair.
 //  parameters:
 //      session (in)        session to use
-//      ident (in)          person and key which was compromized
+//      ident (in)          identity for person and key whose trust status is to be reset
+//
+//  caveat:
+//      ident is INPUT ONLY. If you want updated trust on the identity, you'll have
+//      to call update_identity or myself respectively after this.
+//      N.B. If you are calling this on a key that is the identity or user default,
+//      it will be removed as the default key for the identity and user (but is still
+//      available for key election, it is just not the cached default anymore)
 
 DYNAMIC_API PEP_STATUS key_reset_trust(
         PEP_SESSION session,
@@ -262,6 +341,8 @@ DYNAMIC_API PEP_STATUS set_own_key(
        const char *address,
        const char *fpr
     );
+
+PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags);
 
 #ifdef __cplusplus
 }

@@ -42,7 +42,7 @@ PEP_STATUS pgp_find_keys(
     );
 
 PEP_STATUS pgp_list_keyinfo(
-    PEP_SESSION session, const char* pattern, stringpair_list_t** keyinfo_list
+        PEP_SESSION session, const char* pattern, stringpair_list_t** keyinfo_list
     );
 
 PEP_STATUS pgp_generate_keypair(

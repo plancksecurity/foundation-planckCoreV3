@@ -1,6 +1,7 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
+#include "platform.h"
 #include "pEp_string.h"
 
 #include <stdlib.h>
@@ -8,10 +9,6 @@
 
 DYNAMIC_API char * new_string(const char *src, size_t len)
 {
-    assert(src || len);
-    if (!(src || len))
-        return NULL;
-
     char *s = NULL;
     if (src) {
         if (len)
@@ -21,7 +18,7 @@ DYNAMIC_API char * new_string(const char *src, size_t len)
         assert(s);
     }
     else {
-        s = calloc(1, len);
+        s = calloc(1, len + 1);
         assert(s);
     }
 

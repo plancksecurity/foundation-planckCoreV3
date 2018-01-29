@@ -920,6 +920,33 @@ enomem:
     return NULL;    
 }
 
+static PEP_STATUS update_identity_recip_list(PEP_SESSION session,
+                                             identity_list* list) {
+
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    if (!session)
+        return PEP_UNKNOWN_ERROR;
+    
+    identity_list* id_list_ptr = NULL;
+        
+    for (id_list_ptr = list; id_list_ptr; id_list_ptr = id_list_ptr->next) {
+        pEp_identity* curr_identity = id_list_ptr->ident;
+        if (curr_identity) {
+            if (!is_me(session, curr_identity))
+                status = update_identity(session, curr_identity);
+            else
+                status = myself(session, curr_identity);
+        if (status == PEP_ILLEGAL_VALUE || status == PEP_OUT_OF_MEMORY)
+            return status;
+        }
+        else
+            break;
+    }
+    
+    return PEP_STATUS_OK;                                  
+}
+
 static PEP_STATUS encrypt_PGP_MIME(
     PEP_SESSION session,
     const message *src,
@@ -1206,19 +1233,28 @@ static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist, cha
     return rating;
 }
 
+// Internal function WARNING:
+// Only call this on an ident that might have its FPR set from retrieval!
+// (or on one without an fpr)
+// We do not want myself() setting the fpr here.
 static PEP_comm_type _get_comm_type(
     PEP_SESSION session,
     PEP_comm_type max_comm_type,
     pEp_identity *ident
     )
 {
-    PEP_STATUS status = update_identity(session, ident);
+    PEP_STATUS status = PEP_STATUS_OK;
 
     if (max_comm_type == PEP_ct_compromized)
         return PEP_ct_compromized;
 
     if (max_comm_type == PEP_ct_mistrusted)
         return PEP_ct_mistrusted;
+
+    if (!is_me(session, ident))
+        status = update_identity(session, ident);
+    else
+        status = myself(session, ident);
 
     if (status == PEP_STATUS_OK) {
         if (ident->comm_type == PEP_ct_compromized)
@@ -1433,6 +1469,15 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
     *dst = NULL;
 
+    if (src->from && (!src->from->user_id || src->from->user_id[0] == '\0')) {
+        char* own_id = NULL;
+        status = get_default_own_userid(session, &own_id);
+        if (own_id) {
+            free(src->from->user_id);
+            src->from->user_id = own_id; // ownership transfer
+        }
+    }
+    
     status = myself(session, src->from);
     if (status != PEP_STATUS_OK)
         GOTO(pep_error);
@@ -1466,7 +1511,16 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             return PEP_ILLEGAL_VALUE;
         }
 
-        PEP_STATUS _status = update_identity(session, _il->ident);
+        PEP_STATUS _status = PEP_STATUS_OK;
+        if (!is_me(session, _il->ident)) {
+            _status = update_identity(session, _il->ident);
+            if (_status == PEP_CANNOT_FIND_IDENTITY) {
+                _il->ident->comm_type = PEP_ct_key_not_found;
+                _status = PEP_STATUS_OK;
+            }
+        }
+        else
+            _status = myself(session, _il->ident);
         if (_status != PEP_STATUS_OK) {
             status = _status;
             GOTO(pep_error);
@@ -1487,7 +1541,16 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     else
     {
         for (_il = src->to; _il && _il->ident; _il = _il->next) {
-            PEP_STATUS _status = update_identity(session, _il->ident);
+            PEP_STATUS _status = PEP_STATUS_OK;
+            if (!is_me(session, _il->ident)) {
+                _status = update_identity(session, _il->ident);
+                if (_status == PEP_CANNOT_FIND_IDENTITY) {
+                    _il->ident->comm_type = PEP_ct_key_not_found;
+                    _status = PEP_STATUS_OK;
+                }
+            }
+            else
+                _status = myself(session, _il->ident);
             if (_status != PEP_STATUS_OK) {
                 status = _status;
                 GOTO(pep_error);
@@ -1507,7 +1570,16 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         }
 
         for (_il = src->cc; _il && _il->ident; _il = _il->next) {
-            PEP_STATUS _status = update_identity(session, _il->ident);
+            PEP_STATUS _status = PEP_STATUS_OK;
+            if (!is_me(session, _il->ident)) {
+                _status = update_identity(session, _il->ident);
+                if (_status == PEP_CANNOT_FIND_IDENTITY) {
+                    _il->ident->comm_type = PEP_ct_key_not_found;
+                    _status = PEP_STATUS_OK;
+                }
+            }
+            else
+                _status = myself(session, _il->ident);
             if (_status != PEP_STATUS_OK)
             {
                 status = _status;
@@ -1659,18 +1731,26 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     if (src->enc_format != PEP_enc_none)
         return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
 
+    if (target_id && (!target_id->user_id || target_id->user_id[0] == '\0')) {
+        char* own_id = NULL;
+        status = get_default_own_userid(session, &own_id);
+        if (own_id) {
+            free(target_id->user_id);
+            target_id->user_id = own_id; // ownership transfer
+        }
+    }
+
     status = myself(session, target_id);
     if (status != PEP_STATUS_OK)
         GOTO(pep_error);
 
     *dst = NULL;
 
-
-    PEP_STATUS _status = update_identity(session, target_id);
-    if (_status != PEP_STATUS_OK) {
-        status = _status;
-        goto pep_error;
-    }
+    // PEP_STATUS _status = update_identity(session, target_id);
+    // if (_status != PEP_STATUS_OK) {
+    //     status = _status;
+    //     goto pep_error;
+    // }
 
     char* target_fpr = target_id->fpr;
     if (!target_fpr)
@@ -1749,8 +1829,12 @@ static PEP_STATUS _update_identity_for_incoming_message(
     )
 {
     PEP_STATUS status;
+
     if (src->from && src->from->address) {
-        status = update_identity(session, src->from);
+        if (!is_me(session, src->from))
+            status = update_identity(session, src->from);
+        else
+            status = myself(session, src->from);
         if (status == PEP_STATUS_OK
                 && is_a_pEpmessage(src)
                 && src->from->comm_type >= PEP_ct_OpenPGP_unconfirmed
@@ -1958,11 +2042,15 @@ static PEP_STATUS amend_rating_according_to_sender_and_recipients(
                 return PEP_OUT_OF_MEMORY;
 
             status = get_trust(session, _sender);
+            if (_sender->comm_type == PEP_ct_unknown) {
+                get_key_rating(session, fpr, &_sender->comm_type);
+            }
             if (_sender->comm_type != PEP_ct_unknown) {
                 *rating = keylist_rating(session, recipients, 
                             fpr, _rating(_sender->comm_type, 
                                           PEP_rating_undefined));
             }
+            
             free_identity(_sender);
             if (status == PEP_CANNOT_FIND_IDENTITY)
                status = PEP_STATUS_OK;
@@ -2304,14 +2392,37 @@ static PEP_STATUS import_priv_keys_from_decrypted_msg(PEP_SESSION session,
         _private_il->ident->address)
         *imported_private = true;
 
-    if (private_il && imported_private)
+    if (private_il && imported_private) {
+        // the private identity list should NOT be subject to myself() or
+        // update_identity() at this point.
+        // If the receiving app wants them to be in the trust DB, it
+        // should call myself() on them upon return.
+        // We do, however, prepare these so the app can use them
+        // directly in a myself() call by putting the own_id on it.
+        char* own_id = NULL;
+        status = get_default_own_userid(session, &own_id);
+        
+        if (status != PEP_STATUS_OK) {
+            free(own_id);
+            own_id = NULL;
+        }
+        
+        identity_list* il = _private_il;
+        for ( ; il; il = il->next) {
+            if (own_id) {
+                free(il->ident->user_id);
+                il->ident->user_id = strdup(own_id);
+            }
+            il->ident->me = true;
+        }
         *private_il = _private_il;
+        
+        free(own_id);
+    }
     else
         free_identity_list(_private_il);
-
-    if (imported_keys)
-        status = _update_identity_for_incoming_message(session, src);
-        
+ 
+    
     return status;
 }
 
@@ -2361,7 +2472,18 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     // Update src->from in case we just imported a key
     // we would need to check signature
     status = _update_identity_for_incoming_message(session, src);
-    if(status != PEP_STATUS_OK)
+    
+    if (status == PEP_ILLEGAL_VALUE && src->from && is_me(session, src->from)) {
+        // the above function should fail if it's us.
+        // We don't need to update, as any revocations or expirations
+        // of our own key imported above, which are all that we 
+        // would care about for anything imported,
+        // SHOULD get caught when they matter later.
+        // (Private keys imported above are not stored in the trust DB)
+        status = PEP_STATUS_OK;
+    }
+        
+    if (status != PEP_STATUS_OK)
         return ADD_TO_LOG(status);
 
     /*** End Import any attached public keys and update identities accordingly ***/
@@ -2522,8 +2644,12 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                             // FIXME: free msg, but check references
                                             src = msg = inner_message;
                                             
-                                            if (src->from)
-                                                update_identity(session, src->from);
+                                            if (src->from) {
+                                                if (!is_me(session, src->from))
+                                                    update_identity(session, (src->from));
+                                                else
+                                                    myself(session, src->from);
+                                            }
                                             break;        
                                         }
                                         else { // should never happen
@@ -2579,8 +2705,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     // 1. Check to see if this message is to us and contains an own key imported 
     // from own trusted message 
     if (msg && *rating >= PEP_rating_trusted && imported_private_key_address &&
-        msg->to->ident->user_id &&
-        strcmp(msg->to->ident->user_id, PEP_OWN_USERID) == 0) {
+        msg->to && msg->to->ident && msg->to->ident->me) {
 
         // flag it as such
         *flags |= PEP_decrypt_flag_own_private_key;
@@ -2682,8 +2807,12 @@ static void _max_comm_type_from_identity_list(
     for (il = identities; il != NULL; il = il->next)
     {
         if (il->ident)
-        {
-            PEP_STATUS status = update_identity(session, il->ident);
+        {   
+            PEP_STATUS status = PEP_STATUS_OK;
+            if (!is_me(session, il->ident))
+                status = update_identity(session, il->ident);
+            else
+                status = myself(session, il->ident);
             if (status == PEP_STATUS_OK)
             {
                 *max_comm_type = _get_comm_type(session, *max_comm_type,
@@ -2749,7 +2878,7 @@ DYNAMIC_API PEP_STATUS identity_rating(
     if (!(session && ident && rating))
         return PEP_ILLEGAL_VALUE;
 
-    if (_identity_me(ident))
+    if (ident->me)
         status = _myself(session, ident, false, true);
     else
         status = update_identity(session, ident);
@@ -3123,6 +3252,29 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     if (status != PEP_STATUS_OK)
         GOTO(pep_error);
 
+    // MIME decode message delivers only addresses. We need more.
+    if (tmp_msg->from) {
+        if (!is_me(session, tmp_msg->from))
+            status = update_identity(session, (tmp_msg->from));
+        else
+            status = myself(session, tmp_msg->from);
+
+        if (status == PEP_ILLEGAL_VALUE || status == PEP_OUT_OF_MEMORY)
+            GOTO(pep_error);
+    }
+
+    status = update_identity_recip_list(session, tmp_msg->to);
+    if (status != PEP_STATUS_OK)
+        GOTO(pep_error);
+
+    status = update_identity_recip_list(session, tmp_msg->cc);
+    if (status != PEP_STATUS_OK)
+        GOTO(pep_error);
+
+    status = update_identity_recip_list(session, tmp_msg->bcc);
+    if (status != PEP_STATUS_OK)
+        GOTO(pep_error);
+
     PEP_STATUS decrypt_status = decrypt_message(session,
                                                 tmp_msg,
                                                 &dec_msg,
@@ -3176,6 +3328,39 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
     if (status != PEP_STATUS_OK)
         GOTO(pep_error);
 
+    // MIME decode message delivers only addresses. We need more.
+    if (tmp_msg->from) {
+        char* own_id = NULL;
+        status = get_default_own_userid(session, &own_id);
+        free(tmp_msg->from->user_id);
+        
+        if (status != PEP_STATUS_OK || !own_id) {
+            tmp_msg->from->user_id = strdup(PEP_OWN_USERID);
+        }
+        else {
+            tmp_msg->from->user_id = own_id; // ownership transfer
+        }
+            
+        status = myself(session, tmp_msg->from);
+        if (status != PEP_STATUS_OK)
+            GOTO(pep_error);
+    }
+
+    // Own identities can be retrieved here where they would otherwise
+    // fail because we lack all other information. This is ok and even
+    // desired. FIXME: IS it?
+    status = update_identity_recip_list(session, tmp_msg->to);
+    if (status != PEP_STATUS_OK)
+        GOTO(pep_error);
+
+    status = update_identity_recip_list(session, tmp_msg->cc);
+    if (status != PEP_STATUS_OK)
+        GOTO(pep_error);
+
+    status = update_identity_recip_list(session, tmp_msg->bcc);
+    if (status != PEP_STATUS_OK)
+        GOTO(pep_error);
+    
     // This isn't incoming, though... so we need to reverse the direction
     tmp_msg->dir = PEP_dir_outgoing;
     status = encrypt_message(session,
@@ -3375,7 +3560,11 @@ got_rating:
     }
 got_keylist:
 
-    status = update_identity(session, msg->from);
+    if (!is_me(session, msg->from))
+        status = update_identity(session, msg->from);
+    else
+        status = myself(session, msg->from);
+
     if (status != PEP_STATUS_OK)
         GOTO(pep_error);
 

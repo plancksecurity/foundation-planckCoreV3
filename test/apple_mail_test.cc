@@ -34,9 +34,11 @@ int main(int argc, char** argv) {
         
     const string mailtext = slurp(mailfile);
     pEp_identity * me = new_identity("pep.test.recip@kgrothoff.org", "93D19F24AD6F4C4BA9134AAF84D9217908DB0AEE", PEP_OWN_USERID, "pEp Test Recipient");    
+    me->me = true;    
     PEP_STATUS status = myself(session, me);
     
     pEp_identity * you = new_identity("pep.test.apple@pep-project.org", NULL, "TOFU_pep.test.apple@pep-project.org", "pEp Test Recipient");    
+    you->me = false;    
     status = update_identity(session, you);
 
     trust_personal_key(session, you);
@@ -53,7 +55,12 @@ int main(int argc, char** argv) {
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     assert(status == PEP_STATUS_OK);
     assert(msg_ptr);
+    
+    update_identity(session, msg_ptr->from);
+    update_identity(session, msg_ptr->to->ident);
+    
     final_ptr = msg_ptr;
+    
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
   

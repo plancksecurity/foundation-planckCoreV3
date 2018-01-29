@@ -5,6 +5,7 @@
 
 // Windows platform specifica
 
+#define _EXPORT_PEP_ENGINE_DLL
 #pragma warning(disable : 4996)
 
 // We need to make sure winsock2 is included before windows.h, or we will get redefinitions of symbols
@@ -85,7 +86,7 @@ void uuid_generate_random(pEpUUID out);
 int uuid_parse(char *in, pEpUUID uu);
 void uuid_unparse_upper(pEpUUID uu, uuid_string_t out);
 
-#ifndef inline
+#ifndef __cplusplus
 #define inline __inline
 #endif
 
