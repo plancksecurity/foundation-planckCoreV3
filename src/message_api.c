@@ -2796,6 +2796,9 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
     return ADD_TO_LOG(status);
 }
 
+// Note: if comm_type_determine is false, it generally means that
+// we were unable to get key information for anyone in the list,
+// likely because a key is missing.
 static void _max_comm_type_from_identity_list(
         identity_list *identities,
         PEP_SESSION session,
@@ -2813,8 +2816,17 @@ static void _max_comm_type_from_identity_list(
                 status = update_identity(session, il->ident);
             else
                 status = myself(session, il->ident);
-            if (status == PEP_STATUS_OK)
-            {
+                
+            // check for the return statuses which might not a representative
+            // value in the comm_type
+            if (status == PEP_ILLEGAL_VALUE || status == PEP_CANNOT_SET_PERSON ||
+                status == PEP_CANNOT_FIND_IDENTITY) {
+                // PEP_CANNOT_FIND_IDENTITY only comes back when we've really
+                // got nothing from update_identity after applying the whole
+                // heuristic
+                *max_comm_type = PEP_ct_unknown;
+            }
+            else {
                 *max_comm_type = _get_comm_type(session, *max_comm_type,
                         il->ident);
                 *comm_type_determined = true;
@@ -2854,8 +2866,11 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
     _max_comm_type_from_identity_list(msg->bcc, session,
                                       &max_comm_type, &comm_type_determined);
 
-    if (comm_type_determined == false)
-        *rating = PEP_rating_undefined;
+    if (comm_type_determined == false) {
+        // likely means there was a massive screwup with no sender or recipient
+        // keys, but regardless, this'll end up being unencrypted
+        *rating = PEP_rating_unencrypted;
+    }
     else
         *rating = _MAX(_rating(max_comm_type, PEP_rating_undefined),
                 PEP_rating_unencrypted);

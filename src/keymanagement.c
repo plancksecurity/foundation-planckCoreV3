@@ -374,6 +374,9 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     if (status == PEP_STATUS_OK && !EMPTYSTR(stored_ident->fpr))
         return_id->fpr = strdup(stored_ident->fpr);
         
+    // This is outside the if block ON PURPOSE - we return an empty FPR +
+    // the reason why a key wasn't used in the comm_type string if we can't
+    // find or use one.
     return_id->comm_type = stored_ident->comm_type;
                 
     // We patch the DB with the input username, but if we didn't have
