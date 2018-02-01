@@ -199,6 +199,7 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
             status = update_trust_for_fpr(session, 
                                           fpr, 
                                           ct);
+        case PEP_ct_mistrusted:                                  
             free(ident->fpr);
             ident->fpr = NULL;
             ident->comm_type = ct;            

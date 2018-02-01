@@ -405,8 +405,8 @@ static inline bool is_me(PEP_SESSION session, pEp_identity* test_ident) {
 // These are globals used in generating message IDs and should only be
 // computed once, as they're either really constants or OS-dependent
 
-int _pEp_rand_max_bits;
-double _pEp_log2_36;
+extern int _pEp_rand_max_bits;
+extern double _pEp_log2_36;
 
 static inline void _init_globals() {
     _pEp_rand_max_bits = ceil(log2(RAND_MAX));

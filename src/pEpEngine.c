@@ -468,7 +468,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     sqlite3_busy_timeout(_session->system_db, 1000);
 
 // increment this when patching DDL
-#define _DDL_USER_VERSION "6"
+#define _DDL_USER_VERSION "7"
 
     if (in_first) {
 
@@ -563,6 +563,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "    default_id text references person (id)\n"
                 "       on delete cascade on update cascade,\n"
                 "    alternate_id text primary key\n"
+                ");\n"
+                // mistrusted keys
+                "create table if not exists mistrusted_keys (\n"
+                "    fpr text primary key\n"
                 ");\n"
                 ,
             NULL,
@@ -777,6 +781,17 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 );
                 assert(int_result == SQLITE_OK);    
             }
+        }
+        if (version < 7) {
+            int_result = sqlite3_exec(
+                _session->db,
+                "create table if not exists mistrusted_keys (\n"
+                "    fpr text primary key\n"
+                ");\n"            
+                NULL,
+                NULL,
+                NULL
+            );
         }
         else { 
             // Version from DB was 0, it means this is initial setup.
