@@ -32,7 +32,7 @@ std::string slurp(const std::string& filename)
         return sstr.str();
 }
 
-// no C++11, yet? So do our own implementation:
+// no C++11, yet? So do our own implementation:1G
 namespace{
     std::string to_string(unsigned long u)
     {
@@ -270,6 +270,7 @@ int main(int argc, char* argv[])
 
     cout << "\nsetting identity...\n";
     PEP_STATUS pep_set_result = set_identity(session, identity);
+    cout << pep_set_result << endl;
     assert(pep_set_result == PEP_STATUS_OK);
     free_identity(identity);
     get_identity(session, "leon.schumacher@digitalekho.com", "23", &identity);

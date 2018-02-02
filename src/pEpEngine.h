@@ -1231,6 +1231,21 @@ PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id);
 
 PEP_STATUS import_trusted_own_keys(PEP_SESSION session);
 
+// This ONLY sets the *user* flag, and creates a shell identity if necessary.
+PEP_STATUS set_as_pep_user(PEP_SESSION session, pEp_identity* user);
+
+// returns true (by reference) if a person with this user_id exists; if default_id != NULL,
+// function will also return by reference a copy of the default id which
+// is this user_id is aliased to (which will usually, but not always, 
+// string equivalent to the user_id)
+PEP_STATUS exists_person(PEP_SESSION session, const char* user_id,
+                         char** default_id, bool* exists);
+
+// returns true if the USER corresponding to this identity has been listed in
+// the *person* table as a pEp user. This *does not check comm_type*                         
+PEP_STATUS is_pep_user(PEP_SESSION session, pEp_identity *identity, bool* is_pep);
+
+
 #ifdef __cplusplus
 }
 #endif
