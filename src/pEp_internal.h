@@ -173,6 +173,11 @@ struct _pEpSession {
     sqlite3_stmt *set_revoked;
     sqlite3_stmt *get_revoked;
 
+    // mistrusted
+    sqlite3_stmt* add_mistrusted_key;
+    sqlite3_stmt* is_mistrusted_key;    
+    sqlite3_stmt* delete_mistrusted_key;
+    
     // aliases
     sqlite3_stmt *get_userid_alias_default;
     sqlite3_stmt *add_userid_alias;

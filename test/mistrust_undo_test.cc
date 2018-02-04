@@ -58,8 +58,12 @@ int main() {
     assert(status == PEP_STATUS_OK);
     status = update_identity(session,recip1);
     assert(status == PEP_STATUS_OK);
+    assert(recip1->comm_type == PEP_ct_key_not_found);
+    recip1->fpr = strdup("BACC7A60A88A39A25D99B4A545D7542F39E5DAB5");
+    status = get_trust(session, recip1);
     assert(recip1->comm_type == PEP_ct_mistrusted);
-    cout << "Mistrusted mistrust.undo.test@pep-project.org (BACC7A60A88A39A25D99B4A545D7542F39E5DAB5) and comm_type set to PEP_ct_mistrusted)." << endl  << endl;    
+     
+    cout << "Mistrusted mistrust.undo.test@pep-project.org (BACC7A60A88A39A25D99B4A545D7542F39E5DAB5) and comm_type IN DB set to PEP_ct_mistrusted)." << endl  << endl;    
     
     cout << "Undo mistrust (restore identity and trust in DB)" << endl;
     // Undo it

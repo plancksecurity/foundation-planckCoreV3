@@ -77,8 +77,11 @@ PEP_STATUS elect_pubkey(
                     _comm_type_key > identity->comm_type)
                 {
                     bool blacklisted;
-                    status = blacklist_is_listed(session, _keylist->value, &blacklisted);
-                    if (status == PEP_STATUS_OK && !blacklisted) {
+                    bool mistrusted;
+                    status = is_mistrusted_key(session, _keylist->value, &mistrusted);
+                    if (status == PEP_STATUS_OK)
+                        status = blacklist_is_listed(session, _keylist->value, &blacklisted);
+                    if (status == PEP_STATUS_OK && !mistrusted && !blacklisted) {
                         identity->comm_type = _comm_type_key;
                         _fpr = _keylist->value;
                     }
@@ -88,10 +91,14 @@ PEP_STATUS elect_pubkey(
     }
     free(identity->fpr);
 
-    identity->fpr = strdup(_fpr);
-    if (identity->fpr == NULL) {
-        free_stringlist(keylist);
-        return PEP_OUT_OF_MEMORY;
+    if (!_fpr || _fpr[0] == '\0')
+        identity->fpr = NULL;
+    else {    
+        identity->fpr = strdup(_fpr);
+        if (identity->fpr == NULL) {
+            free_stringlist(keylist);
+            return PEP_OUT_OF_MEMORY;
+        }
     }
     
     free_stringlist(keylist);
@@ -370,14 +377,15 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
             stored_ident->comm_type = ct;
         }
     }
+    else {
+        if (stored_ident->comm_type == PEP_ct_unknown)
+            stored_ident->comm_type = PEP_ct_key_not_found;
+    }
     free(return_id->fpr);
     return_id->fpr = NULL;
     if (status == PEP_STATUS_OK && !EMPTYSTR(stored_ident->fpr))
         return_id->fpr = strdup(stored_ident->fpr);
         
-    // This is outside the if block ON PURPOSE - we return an empty FPR +
-    // the reason why a key wasn't used in the comm_type string if we can't
-    // find or use one.
     return_id->comm_type = stored_ident->comm_type;
                 
     // We patch the DB with the input username, but if we didn't have
@@ -1065,6 +1073,8 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
             status = mark_as_compromized(session, ident->fpr);
         if (status == PEP_STATUS_OK)
             status = remove_fpr_as_default(session, ident->fpr);
+        if (status == PEP_STATUS_OK)
+            status = add_mistrusted_key(session, ident->fpr);
     }
 
     return status;
@@ -1083,12 +1093,15 @@ DYNAMIC_API PEP_STATUS undo_last_mistrust(PEP_SESSION session) {
     if (!cached_ident)
         status = PEP_CANNOT_FIND_IDENTITY;
     else {
-        status = set_identity(session, cached_ident);            
-        free_identity(session->cached_mistrusted);
+        status = delete_mistrusted_key(session, cached_ident->fpr);
+        if (status == PEP_STATUS_OK) {
+            status = set_identity(session, cached_ident);            
+            free_identity(session->cached_mistrusted);
+        }
     }
     
     session->cached_mistrusted = NULL;
-
+    
     return status;
 }
 
@@ -1129,7 +1142,19 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
     if (status != PEP_STATUS_OK)
         goto pep_free;
 
+    bool mistrusted_key = false;
         
+    status = is_mistrusted_key(session, ident->fpr, &mistrusted_key);
+
+    if (status != PEP_STATUS_OK)
+        goto pep_free;
+    
+    if (mistrusted_key)
+        status = delete_mistrusted_key(session, ident->fpr);
+
+    if (status != PEP_STATUS_OK)
+        goto pep_free;
+    
     input_copy->comm_type = new_trust;
         
     tmp_ident = new_identity(ident->address, NULL, ident->user_id, NULL);
@@ -1568,4 +1593,81 @@ PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
         return PEP_ILLEGAL_VALUE;
 
     return session->cryptotech[PEP_crypt_OpenPGP].contains_priv_key(session, fpr, has_private);
+}
+
+PEP_STATUS add_mistrusted_key(PEP_SESSION session, const char* fpr)
+{
+    int result;
+
+    assert(!EMPTYSTR(fpr));
+    
+    if (!(session) || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    sqlite3_reset(session->add_mistrusted_key);
+    sqlite3_bind_text(session->add_mistrusted_key, 1, fpr, -1,
+            SQLITE_STATIC);
+
+    result = sqlite3_step(session->add_mistrusted_key);
+    sqlite3_reset(session->add_mistrusted_key);
+
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_PGP_KEYPAIR; // FIXME: Better status?
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS delete_mistrusted_key(PEP_SESSION session, const char* fpr)
+{
+    int result;
+
+    assert(!EMPTYSTR(fpr));
+    
+    if (!(session) || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    sqlite3_reset(session->delete_mistrusted_key);
+    sqlite3_bind_text(session->delete_mistrusted_key, 1, fpr, -1,
+            SQLITE_STATIC);
+
+    result = sqlite3_step(session->delete_mistrusted_key);
+    sqlite3_reset(session->delete_mistrusted_key);
+
+    if (result != SQLITE_DONE)
+        return PEP_UNKNOWN_ERROR; // FIXME: Better status?
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr,
+                             bool* mistrusted)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session);
+    assert(!EMPTYSTR(fpr));
+
+    if (!(session && fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    *mistrusted = false;
+
+    sqlite3_reset(session->is_mistrusted_key);
+    sqlite3_bind_text(session->is_mistrusted_key, 1, fpr, -1, SQLITE_STATIC);
+
+    int result;
+
+    result = sqlite3_step(session->is_mistrusted_key);
+    switch (result) {
+    case SQLITE_ROW:
+        *mistrusted = sqlite3_column_int(session->is_mistrusted_key, 0);
+        status = PEP_STATUS_OK;
+        break;
+
+    default:
+        status = PEP_UNKNOWN_ERROR;
+    }
+
+    sqlite3_reset(session->is_mistrusted_key);
+    return status;
 }

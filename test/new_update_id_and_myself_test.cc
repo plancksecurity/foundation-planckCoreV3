@@ -601,7 +601,7 @@ int main() {
     assert(!revokemaster_3000->fpr);
     assert(revokemaster_3000->username);
     assert(strcmp(revokemaster_3000->user_id, revoke_uuid) == 0);
-    assert(revokemaster_3000->comm_type == PEP_ct_key_revoked || revokemaster_3000->comm_type == PEP_ct_mistrusted);
+    assert(revokemaster_3000->comm_type == PEP_ct_key_not_found);
     cout << "Success! No key found. The comm_status error was " << revokemaster_3000->comm_type << "and the return status was " << tl_status_string(status) << endl;
 
     free_identity(revokemaster_3000);
