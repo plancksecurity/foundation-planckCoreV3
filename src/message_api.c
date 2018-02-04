@@ -1495,6 +1495,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     bool dest_keys_found = true;
+    bool has_pep_user = false;
+    
     PEP_comm_type max_comm_type = PEP_ct_pEp;
 
     identity_list * _il;
@@ -1518,6 +1520,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 _il->ident->comm_type = PEP_ct_key_not_found;
                 _status = PEP_STATUS_OK;
             }
+            if (!has_pep_user)
+                is_pep_user(session, _il->ident, &has_pep_user);
         }
         else
             _status = myself(session, _il->ident);
@@ -1548,6 +1552,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                     _il->ident->comm_type = PEP_ct_key_not_found;
                     _status = PEP_STATUS_OK;
                 }
+                if (!has_pep_user)
+                    is_pep_user(session, _il->ident, &has_pep_user);
             }
             else
                 _status = myself(session, _il->ident);
@@ -1577,6 +1583,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                     _il->ident->comm_type = PEP_ct_key_not_found;
                     _status = PEP_STATUS_OK;
                 }
+                if (!has_pep_user)
+                    is_pep_user(session, _il->ident, &has_pep_user);
             }
             else
                 _status = myself(session, _il->ident);
@@ -1606,7 +1614,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 PEP_rating_undefined) < PEP_rating_reliable)
     {
         free_stringlist(keys);
-        if (!session->passive_mode && 
+        if ((has_pep_user || !session->passive_mode) && 
             !(flags & PEP_encrypt_flag_force_no_attached_key)) {
             attach_own_key(session, src);
             decorate_message(src, PEP_rating_undefined, NULL, true);
