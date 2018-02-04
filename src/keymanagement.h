@@ -344,6 +344,11 @@ DYNAMIC_API PEP_STATUS set_own_key(
 
 PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags);
 
+PEP_STATUS add_mistrusted_key(PEP_SESSION session, const char* fpr);
+PEP_STATUS delete_mistrusted_key(PEP_SESSION session, const char* fpr);
+PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr, bool* mistrusted);
+
+
 #ifdef __cplusplus
 }
 #endif
