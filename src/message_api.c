@@ -20,6 +20,12 @@
 #define _MAX(A, B) ((B) > (A) ? (B) : (A))
 #endif
 
+// These are globals used in generating message IDs and should only be
+// computed once, as they're either really constants or OS-dependent
+
+int _pEp_rand_max_bits;
+double _pEp_log2_36;
+
 static bool is_a_pEpmessage(const message *msg)
 {
     for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {

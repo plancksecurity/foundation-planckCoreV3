@@ -294,6 +294,17 @@ static const char *sql_get_userid_alias_default =
     "select default_id from alternate_user_id "
     "   where alternate_id = ?1 ; ";
 
+// Revocation tracking
+static const char *sql_add_mistrusted_key =
+    "insert or replace into mistrusted_keys (fpr) "
+    "   values (upper(replace(?1,' ',''))) ;";
+        
+static const char *sql_delete_mistrusted_key = 
+    "delete from blacklist_keys where fpr = upper(replace(?1,' ','')) ;";
+
+static const char *sql_is_mistrusted_key = 
+    "select count(*) from mistrusted_keys where fpr = upper(replace(?1,' ','')) ;";
+
 static const char *sql_add_userid_alias =
     "insert or replace into alternate_user_id (default_id, alternate_id) "
     "values (?1, ?2) ;";
@@ -468,7 +479,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     sqlite3_busy_timeout(_session->system_db, 1000);
 
 // increment this when patching DDL
-#define _DDL_USER_VERSION "6"
+#define _DDL_USER_VERSION "7"
 
     if (in_first) {
 
@@ -563,6 +574,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "    default_id text references person (id)\n"
                 "       on delete cascade on update cascade,\n"
                 "    alternate_id text primary key\n"
+                ");\n"
+                // mistrusted keys
+                "create table if not exists mistrusted_keys (\n"
+                "    fpr text primary key\n"
                 ");\n"
                 ,
             NULL,
@@ -776,6 +791,17 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                     NULL
                 );
                 assert(int_result == SQLITE_OK);    
+            }
+            if (version < 7) {
+                int_result = sqlite3_exec(
+                    _session->db,
+                    "create table if not exists mistrusted_keys (\n"
+                    "    fpr text primary key\n"
+                    ");\n",            
+                    NULL,
+                    NULL,
+                    NULL
+                );
             }
         }
         else { 
@@ -1000,6 +1026,18 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_get_revoked), &_session->get_revoked, NULL);
     assert(int_result == SQLITE_OK);
     
+    int_result = sqlite3_prepare_v2(_session->db, sql_add_mistrusted_key,
+            (int)strlen(sql_add_mistrusted_key), &_session->add_mistrusted_key, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_delete_mistrusted_key,
+            (int)strlen(sql_delete_mistrusted_key), &_session->delete_mistrusted_key, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_is_mistrusted_key,
+            (int)strlen(sql_is_mistrusted_key), &_session->is_mistrusted_key, NULL);
+    assert(int_result == SQLITE_OK);
+    
     status = init_cryptotech(_session, in_first);
     if (status != PEP_STATUS_OK)
         goto pep_error;
@@ -1158,6 +1196,13 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->set_revoked);
             if (session->get_revoked)
                 sqlite3_finalize(session->get_revoked);
+
+            if (session->add_mistrusted_key)
+                sqlite3_finalize(session->add_mistrusted_key);
+            if (session->delete_mistrusted_key)
+                sqlite3_finalize(session->delete_mistrusted_key);
+            if (session->is_mistrusted_key)
+                sqlite3_finalize(session->is_mistrusted_key);
 
             if (session->db)
                 sqlite3_close_v2(session->db);

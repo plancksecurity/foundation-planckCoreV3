@@ -173,6 +173,11 @@ struct _pEpSession {
     sqlite3_stmt *set_revoked;
     sqlite3_stmt *get_revoked;
 
+    // mistrusted
+    sqlite3_stmt* add_mistrusted_key;
+    sqlite3_stmt* is_mistrusted_key;    
+    sqlite3_stmt* delete_mistrusted_key;
+    
     // aliases
     sqlite3_stmt *get_userid_alias_default;
     sqlite3_stmt *add_userid_alias;
@@ -405,8 +410,8 @@ static inline bool is_me(PEP_SESSION session, pEp_identity* test_ident) {
 // These are globals used in generating message IDs and should only be
 // computed once, as they're either really constants or OS-dependent
 
-int _pEp_rand_max_bits;
-double _pEp_log2_36;
+extern int _pEp_rand_max_bits;
+extern double _pEp_log2_36;
 
 static inline void _init_globals() {
     _pEp_rand_max_bits = ceil(log2(RAND_MAX));

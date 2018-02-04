@@ -38,7 +38,7 @@ int main() {
     
     cout << uniqname << "\n";
     
-    const char* own_user_id = "FineOwnIdentitiesOfBuckTFerris";
+    const char* own_user_id = get_new_uuid();
     const char* start_username = "Unser Testkandidat";
 
     pEp_identity * new_me = new_identity(uniqname, NULL, own_user_id, start_username);
@@ -481,28 +481,130 @@ int main() {
 
 
     cout << "****************************************************************************************" << endl;
-    cout << "* III: 2. key election: get identity for user with only revoked keys " << endl;
+    cout << "* III: 2. key election: get identity for user with only revoked or mistrusted keys " << endl;
     cout << "****************************************************************************************" << endl << endl;
-    
-    status = revoke_key(session, new_fpr, "Because it's more fun to revoke ALL of someone's keys");
-    assert (status == PEP_STATUS_OK);
-    
-    new_me = new_identity(uniqname, NULL, NULL, NULL);
-    
-    status = update_identity(session, new_me);
-    assert(status != PEP_STATUS_OK);
-    assert(!new_me->fpr);
-    assert(new_me->username);
-    assert(strcmp(new_me->username, start_username) == 0);
-    assert(new_me->user_id);
-    assert(strcmp(new_me->user_id, default_own_id) == 0);
-    assert(new_me->me);
-    assert(new_me->comm_type == PEP_ct_key_revoked);
-    
-    cout << "PASS: update_identity() correctly rejected two revoked keys with PEP_KEY_UNSUITABLE and PEP_ct_key_revoked";
-    cout << endl << endl;
 
-    free_identity(new_me);
+    // Create id with no key
+    cout << "Creating new id with no key for : ";
+    char *uniqname_10000 = strdup("AAAAtestuser@testdomain.org");
+    srandom(time(NULL));
+    for(int i=0; i < 4;i++)
+        uniqname_10000[i] += random() & 0xf;
+    
+    cout << uniqname_10000 << "\n";
+
+    char* revoke_uuid = get_new_uuid();
+
+    pEp_identity * revokemaster_3000 = new_identity(uniqname_10000, NULL, revoke_uuid, start_username);
+    
+    cout << "Generate three keys for "  << uniqname_10000 << " who has user_id " << revoke_uuid << endl; 
+
+    char* revoke_fpr_arr[3];
+    
+    status = generate_keypair(session, revokemaster_3000);
+    assert(status == PEP_STATUS_OK && revokemaster_3000->fpr);
+    revoke_fpr_arr[0] = strdup(revokemaster_3000->fpr);
+    free(revokemaster_3000->fpr);
+    revokemaster_3000->fpr = NULL;
+    
+    status = generate_keypair(session, revokemaster_3000);
+    assert(status == PEP_STATUS_OK && revokemaster_3000->fpr);
+    revoke_fpr_arr[1] = strdup(revokemaster_3000->fpr);
+    free(revokemaster_3000->fpr);
+    revokemaster_3000->fpr = NULL;
+    
+    status = generate_keypair(session, revokemaster_3000);
+    assert(status == PEP_STATUS_OK && revokemaster_3000->fpr);
+    revoke_fpr_arr[2] = strdup(revokemaster_3000->fpr);
+    free(revokemaster_3000->fpr);
+    revokemaster_3000->fpr = NULL;
+    
+    cout << "Trust "  << revoke_fpr_arr[2] << " (default for identity) and " << revoke_fpr_arr[0] << endl;
+    
+    free(revokemaster_3000->fpr);
+    revokemaster_3000->fpr = strdup(revoke_fpr_arr[2]);
+    status = trust_personal_key(session, revokemaster_3000);
+    assert(status == PEP_STATUS_OK); 
+    assert(revokemaster_3000->comm_type & PEP_ct_confirmed);
+
+    free(revokemaster_3000->fpr);
+    revokemaster_3000->fpr = strdup(revoke_fpr_arr[0]);
+    status = trust_personal_key(session, revokemaster_3000);
+    assert(status == PEP_STATUS_OK);
+    assert(revokemaster_3000->comm_type & PEP_ct_confirmed);
+    
+    status = update_identity(session, revokemaster_3000);
+    assert(status == PEP_STATUS_OK);
+    assert(revokemaster_3000->fpr);
+    assert(strcmp(revokemaster_3000->fpr, revoke_fpr_arr[2]) == 0);
+    assert(revokemaster_3000->comm_type & PEP_ct_confirmed);
+
+    cout << "update_identity returns the correct identity default." << endl;
+    
+    cout << "Ok, now... we revoke the default..." << endl;
+    
+    cout << "Revoking " << revoke_fpr_arr[2] << endl;
+
+    status = revoke_key(session, revoke_fpr_arr[2], "This little pubkey went to market");
+    assert (status == PEP_STATUS_OK);
+
+    bool is_revoked;
+    status = key_revoked(session, revokemaster_3000->fpr, &is_revoked);    
+    assert(status == PEP_STATUS_OK);
+    assert(is_revoked);
+
+    cout << "Success revoking " << revoke_fpr_arr[2] << "!!! get_trust for this fpr gives us " << revokemaster_3000->comm_type << endl;
+    
+    cout << "Now see if update_identity gives us " << revoke_fpr_arr[0] << ", the only trusted key left." << endl;
+    status = update_identity(session, revokemaster_3000);
+    assert(status == PEP_STATUS_OK);
+    assert(revokemaster_3000->fpr);
+    assert(strcmp(revokemaster_3000->fpr, revoke_fpr_arr[0]) == 0);
+    assert(revokemaster_3000->comm_type & PEP_ct_confirmed);    
+    
+    cout << "Success! So let's mistrust it, because seriously, that key was so uncool." << endl;
+    
+    status = key_mistrusted(session, revokemaster_3000);
+    assert(status == PEP_STATUS_OK);
+
+    status = get_trust(session, revokemaster_3000);
+    assert(status == PEP_STATUS_OK);
+    assert(revokemaster_3000->comm_type == PEP_ct_mistrusted);
+    
+    cout << "Success! get_trust for this fpr gives us " << revokemaster_3000->comm_type << endl;
+
+    cout << "The only fpr left is an untrusted one - let's make sure this is what we get from update_identity." << endl;
+
+    status = update_identity(session, revokemaster_3000);
+    assert(status == PEP_STATUS_OK);
+    assert(revokemaster_3000->fpr);
+    assert(strcmp(revokemaster_3000->fpr, revoke_fpr_arr[1]) == 0);
+    assert(!(revokemaster_3000->comm_type & PEP_ct_confirmed));    
+
+    cout << "Success! We got " << revoke_fpr_arr[1] << "as the fpr with comm_type " << revokemaster_3000->comm_type << endl;
+    
+    cout << "But, you know... let's revoke that one too and see what update_identity gives us." << endl;
+
+    status = revoke_key(session, revoke_fpr_arr[1], "Because it's more fun to revoke ALL of someone's keys");
+    assert (status == PEP_STATUS_OK);
+
+    status = key_revoked(session, revokemaster_3000->fpr, &is_revoked);    
+    assert(status == PEP_STATUS_OK);
+    assert(is_revoked);
+    
+    cout << "Success! get_trust for this fpr gives us " << revokemaster_3000->comm_type << endl;
+
+    cout << "Call update_identity - we expect nothing, plus an error comm type." << endl;
+
+    status = update_identity(session, revokemaster_3000);
+    assert(status != PEP_STATUS_OK);
+    assert(!revokemaster_3000->fpr);
+    assert(revokemaster_3000->username);
+    assert(strcmp(revokemaster_3000->user_id, revoke_uuid) == 0);
+    assert(revokemaster_3000->comm_type == PEP_ct_key_not_found);
+    cout << "Success! No key found. The comm_status error was " << revokemaster_3000->comm_type << "and the return status was " << tl_status_string(status) << endl;
+
+    free_identity(revokemaster_3000);
 
     cout << "****************************************************************************************" << endl;
     cout << "* III: 100000000. key election: more to come " << endl;
