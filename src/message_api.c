@@ -1532,7 +1532,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         else
             _status = myself(session, _il->ident);
         if (_status != PEP_STATUS_OK) {
-            status = _status;
+            status = PEP_UNENCRYPTED;
             GOTO(pep_error);
         }
 
@@ -1564,7 +1564,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             else
                 _status = myself(session, _il->ident);
             if (_status != PEP_STATUS_OK) {
-                status = _status;
+                status = PEP_UNENCRYPTED;
                 GOTO(pep_error);
             }
 
@@ -1596,7 +1596,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 _status = myself(session, _il->ident);
             if (_status != PEP_STATUS_OK)
             {
-                status = _status;
+                status = PEP_UNENCRYPTED;
                 GOTO(pep_error);
             }
 
@@ -1609,7 +1609,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             }
             else {
                 dest_keys_found = false;
-                status = PEP_KEY_NOT_FOUND;
             }
         }
     }

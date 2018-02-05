@@ -436,6 +436,9 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     
     transfer_ident_lang_and_flags(return_id, stored_ident);
     
+    if (return_id->comm_type == PEP_ct_unknown)
+        return_id->comm_type = PEP_ct_key_not_found;
+    
     return status;
 }
 
@@ -1219,6 +1222,10 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     if (input_default_ct < PEP_ct_strong_but_unconfirmed)
         return PEP_KEY_UNSUITABLE;
 
+    status = set_pgp_keypair(session, ident->fpr);
+    if (status != PEP_STATUS_OK)
+        return status;
+        
     // Save the input fpr
     char* cached_fpr = strdup(ident->fpr);
     ident->fpr = NULL;

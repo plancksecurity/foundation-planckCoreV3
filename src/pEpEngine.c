@@ -98,12 +98,23 @@ static const char *sql_remove_fpr_as_default =
 // Set person, but if already exist, only update.
 // if main_key_id already set, don't touch.
 static const char *sql_set_person = 
-    "insert or replace into person (id, username, lang, main_key_id, device_group)"
-    "  values (?1, ?2, ?3,"
-    "    (select coalesce((select main_key_id from person "
-    "      where id = ?1), upper(replace(?4,' ','')))),"
-    "    (select device_group from person where id = ?1)) ;";
-
+     "insert or ignore into person (id, username, lang, main_key_id, device_group)"
+     "  values (?1, ?2, ?3,"
+     "    (select coalesce( "
+     "          (select main_key_id from person where id = ?1), " 
+     "           upper(replace(?4,' ','')))),"     
+     "    (select device_group from person where id = ?1)) ;"
+    "update person "
+    "   set username = ?2, "
+    "       lang = ?3, "
+    "       main_key_id =  "
+    "           (select coalesce( "
+    "               (select main_key_id from person where id = ?1), " 
+    "                upper(replace(?4,' ','')))),"         
+    "       device_group = "
+    "           (select device_group from person where id = ?1)"
+    "   where id = ?1 ;";
+    
 static const char *sql_set_as_pep_user =
     "update person set is_pep_user = 1 "
     "   where id = ?1 ; ";
@@ -151,17 +162,26 @@ static const char *sql_get_device_group =
     "where id = ?1;";
 
 static const char *sql_set_pgp_keypair = 
-    "insert or replace into pgp_keypair (fpr) "
+    "insert or ignore into pgp_keypair (fpr) "
     "values (upper(replace(?1,' ',''))) ;";
 
 static const char *sql_set_identity = 
-    "insert or replace into identity ("
-    " address, main_key_id, "
-    " user_id, flags, is_own"
-    ") values ("
-    " ?1,"
-    " upper(replace(?2,' ','')),"
-    " ?3,"
+    "insert or ignore into identity ("
+    "       address, main_key_id, "
+    "       user_id, flags, is_own"
+    "   ) values ("
+    "       ?1,"
+    "       upper(replace(?2,' ','')),"
+    "       ?3,"
+    "       ?4,"
+    "       ?5"
+    "   );"
+    "update identity "
+    "   set main_key_id = upper(replace(?2,' ','')), "
+    "       flags = ?4, " 
+    "       is_own = ?5 "
+    "   where address = ?1 and user_id = ?3 ;";
+
     // " (select"
     // "   coalesce("
     // "    (select flags from identity"
@@ -170,9 +190,8 @@ static const char *sql_set_identity =
     // "    0)"
     // " ) | (?4 & 255)"
     /* set_identity ignores previous flags, and doesn't filter machine flags */
-    " ?4,"
-    " ?5"
-    ");";
+
+
         
 static const char *sql_set_identity_flags = 
     "update identity set flags = "
@@ -187,9 +206,11 @@ static const char *sql_unset_identity_flags =
     "where address = ?2 and user_id = ?3 ;";
 
 static const char *sql_set_trust =
-    "insert or replace into trust (user_id, pgp_keypair_fpr, comm_type) "
-    "values (?1, upper(replace(?2,' ','')), ?3) ;";
-
+    "insert or ignore into trust (user_id, pgp_keypair_fpr, comm_type) "
+    "values (?1, upper(replace(?2,' ','')), ?3) ;"
+    "update trust set comm_type = ?3 " 
+    "   where user_id = ?1 and pgp_keypair_fpr = upper(replace(?2,' ',''));";
+    
 static const char *sql_update_trust_for_fpr =
     "update trust "
     "set comm_type = ?1 "
@@ -222,7 +243,7 @@ static const char *sql_i18n_token =
 
 // blacklist
 static const char *sql_blacklist_add = 
-    "insert or replace into blacklist_keys (fpr) values (upper(replace(?1,' ',''))) ;"
+    "insert or ignore into blacklist_keys (fpr) values (upper(replace(?1,' ',''))) ;"
     "delete from identity where main_key_id = upper(replace(?1,' ','')) ;"
     "delete from pgp_keypair where fpr = upper(replace(?1,' ','')) ;";
 
@@ -308,7 +329,7 @@ static const char *sql_get_userid_alias_default =
 
 // Revocation tracking
 static const char *sql_add_mistrusted_key =
-    "insert or replace into mistrusted_keys (fpr) "
+    "insert or ignore into mistrusted_keys (fpr) "
     "   values (upper(replace(?1,' ',''))) ;";
         
 static const char *sql_delete_mistrusted_key = 
@@ -318,7 +339,7 @@ static const char *sql_is_mistrusted_key =
     "select count(*) from mistrusted_keys where fpr = upper(replace(?1,' ','')) ;";
 
 static const char *sql_add_userid_alias =
-    "insert or replace into alternate_user_id (default_id, alternate_id) "
+    "insert or ignore into alternate_user_id (default_id, alternate_id) "
     "values (?1, ?2) ;";
     
 static int user_version(void *_version, int count, char **text, char **name)
@@ -384,6 +405,10 @@ static int table_contains_column(PEP_SESSION session, const char* table_name,
     return retval;
 }
 
+void errorLogCallback(void *pArg, int iErrCode, const char *zMsg){
+  fprintf(stderr, "(%d) %s\n", iErrCode, zMsg);
+}
+
 DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -441,6 +466,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         status = PEP_INIT_CANNOT_OPEN_DB;
         goto pep_error;
     }
+    
+    sqlite3_config(SQLITE_CONFIG_LOG, errorLogCallback, NULL);
 
     int_result = sqlite3_open_v2(
             LOCAL_DB,
@@ -584,8 +611,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 ");\n"
                 // user id aliases
                 "create table if not exists alternate_user_id (\n"
-                "    default_id text references person (id)\n"
-                "       on delete cascade on update cascade,\n"
+                "    default_id text references person (id),\n"
+//                "       on delete cascade on update cascade,\n"
                 "    alternate_id text primary key\n"
                 ");\n"
                 // mistrusted keys
@@ -623,6 +650,17 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             NULL,
             NULL);
         assert(int_result == SQLITE_OK);
+
+        int_result = sqlite3_exec(
+            _session->db,
+            "pragma foreign_keys=ON;\n",
+            NULL,
+            NULL,
+            NULL
+        );
+
+        assert(int_result == SQLITE_OK);
+
         
         // Sometimes the user_version wasn't set correctly. Check to see if this
         // is really necessary...
@@ -797,8 +835,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                     "\n"
                     "PRAGMA foreign_keys=on;\n"
                     "create table if not exists alternate_user_id (\n"
-                    "    default_id text references person (id)\n"
-                    "       on delete cascade on update cascade,\n"
+                    "    default_id text references person (id),\n"
+//                    "       on delete cascade on update cascade,\n"
                     "    alternate_id text primary key\n"
                     ");\n"
                     ,
@@ -1888,6 +1926,25 @@ PEP_STATUS get_identities_by_address(
     return PEP_STATUS_OK;
 }
 
+// FIXME: We can rollback in set_identity on the return status,
+// so we should probably do that.
+PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr) {
+    if (!session || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+        
+    int result;
+    
+    sqlite3_reset(session->set_pgp_keypair);
+    sqlite3_bind_text(session->set_pgp_keypair, 1, fpr, -1,
+            SQLITE_STATIC);
+    result = sqlite3_step(session->set_pgp_keypair);
+    sqlite3_reset(session->set_pgp_keypair);
+    if (result != SQLITE_DONE) {
+        return PEP_CANNOT_SET_PGP_KEYPAIR;
+    }
+    
+    return PEP_STATUS_OK;
+}
 
 DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
@@ -2768,6 +2825,10 @@ DYNAMIC_API PEP_STATUS generate_keypair(
     if (status != PEP_STATUS_OK)
         return status;
 
+    if (identity->fpr)
+        status = set_pgp_keypair(session, identity->fpr);
+
+    // add to known keypair DB, as this might not end up being a default
     return status;
 }
 

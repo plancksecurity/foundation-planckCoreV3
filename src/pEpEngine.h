@@ -1245,6 +1245,7 @@ PEP_STATUS exists_person(PEP_SESSION session, const char* user_id,
 // the *person* table as a pEp user. This *does not check comm_type*                         
 PEP_STATUS is_pep_user(PEP_SESSION session, pEp_identity *identity, bool* is_pep);
 
+PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
 
 #ifdef __cplusplus
 }

@@ -56,11 +56,8 @@ typedef unsigned int PEP_encrypt_flags_t;
 //
 //  return value:
 //      PEP_STATUS_OK                   on success
-//      PEP_KEY_NOT_FOUND               at least one of the receipient keys
-//                                      could not be found
 //      PEP_KEY_HAS_AMBIG_NAME          at least one of the receipient keys has
 //                                      an ambiguous name
-//      PEP_GET_KEY_FAILED              cannot retrieve key
 //      PEP_UNENCRYPTED                 on demand or no recipients with usable
 //                                      key, is left unencrypted, and key is
 //                                      attached to it

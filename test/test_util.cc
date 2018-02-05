@@ -6,6 +6,13 @@
 #include <sstream>
 #include <stdexcept>
 
+
+void test_init() {
+    unlink ("../test_home/.pEp_management.db");
+    unlink ("../test_home/.pEp_management.db-shm");
+    unlink ("../test_home/.pEp_management.db-wal");
+}
+
 std::string slurp(const std::string& filename)
 {
 	std::ifstream input(filename.c_str());
