@@ -1070,7 +1070,12 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
         // set mistrust for this user_id/keypair (even if there's not an
         // identity set yet, this is important, as we need to record the mistrust
         // action)
-        status = set_trust(session, ident->user_id, ident->fpr, PEP_ct_mistrusted);
+        
+        // We set this temporarily but will grab it back from the cache afterwards
+        ident->comm_type = PEP_ct_mistrusted;
+        status = set_trust(session, ident);
+        ident->comm_type = session->cached_mistrusted->comm_type;
+        
         if (status == PEP_STATUS_OK)
             // cascade that mistrust for anyone using this key
             status = mark_as_compromized(session, ident->fpr);
@@ -1140,7 +1145,9 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
     if (input_copy->comm_type != PEP_ct_mistrusted)
         new_trust = input_copy->comm_type & ~PEP_ct_confirmed;
 
-    status = set_trust(session, ident->user_id, ident->fpr, new_trust);
+    // We'll return the status from the input_copy cache afterward
+    input_copy->comm_type = new_trust;
+    status = set_trust(session, input_copy);
     
     if (status != PEP_STATUS_OK)
         goto pep_free;
@@ -1157,8 +1164,6 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
 
     if (status != PEP_STATUS_OK)
         goto pep_free;
-    
-    input_copy->comm_type = new_trust;
         
     tmp_ident = new_identity(ident->address, NULL, ident->user_id, NULL);
 
@@ -1263,7 +1268,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
 
                     trusted_default = true;
                                     
-                    status = set_trust(session, tmp_id->user_id, cached_fpr, tmp_id->comm_type);
+                    status = set_trust(session, tmp_id);
                     input_default_ct = tmp_id->comm_type;                    
                 }
                 else {

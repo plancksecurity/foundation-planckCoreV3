@@ -55,7 +55,7 @@ TEST_CMD_PFX=$(LIBPATH)=$(EXTRA_LIB_PATHS) HOME=$(TEST_HOME) GNUPGHOME=$(TEST_GN
 
 UNIT_TESTS_SOURCE=$(wildcard *_test.cc)
 UNIT_TESTS=$(subst .cc,,$(UNIT_TESTS_SOURCE))
-UNIT_TESTS_RUN=$(subst .cc,_gdb,$(UNIT_TESTS_SOURCE))
+UNIT_TESTS_RUN=$(subst .cc,_run,$(UNIT_TESTS_SOURCE))
 
 CFLAGS:=$(filter-out -DNDEBUG,$(CFLAGS))
 ifneq ($(MAKECMDGOALS),clean)

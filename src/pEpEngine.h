@@ -934,9 +934,7 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity);
 
 
 PEP_STATUS set_trust(PEP_SESSION session, 
-                            const char* user_id,
-                            const char* fpr, 
-                            PEP_comm_type comm_type);
+                     const pEp_identity* identity);
                             
 PEP_STATUS update_trust_for_fpr(PEP_SESSION session, 
                                 const char* fpr, 
