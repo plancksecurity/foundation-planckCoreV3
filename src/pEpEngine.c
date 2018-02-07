@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <sqlite3.h>
 
-#define _PEP_SQLITE_DEBUG 0
+#define _PEP_SQLITE_DEBUG 1
 
 static volatile int init_count = -1;
 
@@ -200,8 +200,13 @@ static const char *sql_set_pgp_keypair =
 
 static const char* sql_exists_identity_entry = 
     "select count(*) from identity "
-    "   where address = ?1 and user_id = ?2;";
-
+    "   where (case when (address = ?1) then (1)"
+    "               when (lower(address) = lower(?1)) then (1)"
+    "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1)"
+    "               else 0"
+    "          end) = 1"
+    "    and user_id = ?2;";
+ 
 static const char *sql_set_identity_entry = 
     "insert into identity ("
     "       address, main_key_id, "
@@ -219,7 +224,12 @@ static const char* sql_update_identity_entry =
     "   set main_key_id = upper(replace(?2,' ','')), "
     "       flags = ?4, " 
     "       is_own = ?5 "
-    "   where address = ?1 and user_id = ?3 ;";
+    "   where (case when (address = ?1) then (1)"
+    "               when (lower(address) = lower(?1)) then (1)"
+    "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1) "
+    "               else 0 "
+    "          end) = 1 "
+    "          and user_id = ?3 ;";
 
     // " (select"
     // "   coalesce("
@@ -233,14 +243,34 @@ static const char* sql_update_identity_entry =
 static const char *sql_set_identity_flags = 
     "update identity set flags = "
     "    ((?1 & 255) | (select flags from identity"
-    "                   where address = ?2 and user_id = ?3)) "
-    "where address = ?2 and user_id = ?3 ;";
+    "                    where (case when (address = ?2) then (1)"
+    "                                when (lower(address) = lower(?2)) then (1)"
+    "                                when (replace(lower(address),'.','') = replace(lower(?2),'.','')) then (1)"
+    "                                else 0 "    
+    "                           end) = 1 "
+    "                           and user_id = ?3)) "
+    "   where (case when (address = ?2) then (1)"
+    "               when (lower(address) = lower(?2)) then (1)"
+    "               when (replace(lower(address),'.','') = replace(lower(?2),'.','')) then (1)"
+    "               else 0"
+    "          end) = 1"
+    "          and user_id = ?3 ;";
 
 static const char *sql_unset_identity_flags = 
     "update identity set flags = "
     "    ( ~(?1 & 255) & (select flags from identity"
-    "                   where address = ?2 and user_id = ?3)) "
-    "where address = ?2 and user_id = ?3 ;";
+    "                    where (case when (address = ?2) then (1)"
+    "                                when (lower(address) = lower(?2)) then (1)"
+    "                                when (replace(lower(address),'.','') = replace(lower(?2),'.','')) then (1)"
+    "                                else 0 "    
+    "                           end) = 1 "
+    "                           and user_id = ?3)) "
+    "   where (case when (address = ?2) then (1)"
+    "               when (lower(address) = lower(?2)) then (1)"
+    "               when (replace(lower(address),'.','') = replace(lower(?2),'.','')) then (1)"
+    "               else 0"
+    "          end) = 1"
+    "          and user_id = ?3 ;";
 
 static const char *sql_set_trust =
     "insert into trust (user_id, pgp_keypair_fpr, comm_type) "

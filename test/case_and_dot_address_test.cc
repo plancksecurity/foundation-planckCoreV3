@@ -55,6 +55,7 @@ int main() {
     alice_id = new_identity(alice_email_case, NULL, PEP_OWN_USERID, "Alice Test");
     status = myself(session, alice_id);
     assert(alice_id->fpr);
+    cout << "Alice email: " << alice_email_case << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
     assert(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
     free_identity(alice_id);
     alice_id = NULL;
@@ -62,6 +63,7 @@ int main() {
     alice_id = new_identity(alice_email_dot, NULL, PEP_OWN_USERID, "Alice Test");
     status = myself(session, alice_id);
     assert(alice_id->fpr);
+    cout << "Alice email: " << alice_email_dot << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
     assert(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
     free_identity(alice_id);
     alice_id = NULL;
@@ -69,6 +71,7 @@ int main() {
     alice_id = new_identity(alice_email_dotless, NULL, PEP_OWN_USERID, "Alice Test");
     status = myself(session, alice_id);
     assert(alice_id->fpr);
+    cout << "Alice email: " << alice_email_dotless << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
     assert(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
     free_identity(alice_id);
     alice_id = NULL;
@@ -76,6 +79,7 @@ int main() {
     alice_id = new_identity(alice_email_case_and_dot, NULL, PEP_OWN_USERID, "Alice Test");
     status = myself(session, alice_id);
     assert(alice_id->fpr);
+    cout << "Alice email: " << alice_email_case_and_dot << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
     assert(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
     free_identity(alice_id);
     alice_id = NULL;
