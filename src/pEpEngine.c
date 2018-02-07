@@ -9,6 +9,9 @@
 
 #include <time.h>
 #include <stdlib.h>
+#include <sqlite3.h>
+
+#define _PEP_SQLITE_DEBUG 0
 
 static volatile int init_count = -1;
 
@@ -37,6 +40,33 @@ static void _sql_lower(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
     }
 }
 
+#if _PEP_SQLITE_DEBUG
+int sql_trace_callback (unsigned trace_constant, 
+                        void* context_ptr,
+                        void* P,
+                        void* X) {
+    switch (trace_constant) {
+        case SQLITE_TRACE_STMT:
+            fprintf(stderr, "SQL_DEBUG: STMT - ");
+            const char* X_str = (const char*) X;
+            if (!EMPTYSTR(X_str) && X_str[0] == '-' && X_str[1] == '-')
+                fprintf(stderr, "%s\n", X_str);
+            else
+                fprintf(stderr, "%s\n", sqlite3_expanded_sql((sqlite3_stmt*)P));
+            break;
+        case SQLITE_TRACE_ROW:
+            fprintf(stderr, "SQL_DEBUG: ROW - ");
+            fprintf(stderr, "%s\n", sqlite3_expanded_sql((sqlite3_stmt*)P));
+            break;            
+        case SQLITE_TRACE_CLOSE:
+            fprintf(stderr, "SQL_DEBUG: CLOSE - ");
+            break;
+        default:
+            break;
+    }
+    return 0;
+}
+#endif
 
 // sql manipulation statements
 static const char *sql_log = 
@@ -98,12 +128,26 @@ static const char *sql_remove_fpr_as_default =
 // Set person, but if already exist, only update.
 // if main_key_id already set, don't touch.
 static const char *sql_set_person = 
-    "insert or replace into person (id, username, lang, main_key_id, device_group)"
-    "  values (?1, ?2, ?3,"
-    "    (select coalesce((select main_key_id from person "
-    "      where id = ?1), upper(replace(?4,' ','')))),"
-    "    (select device_group from person where id = ?1)) ;";
+     "insert into person (id, username, lang, main_key_id, device_group)"
+     "  values (?1, ?2, ?3,"
+//     "    (select coalesce( "
+//     "          (select main_key_id from person where id = ?1), " 
+//     "           upper(replace(?4,' ','')))),"
+    "   ?4,"
+     "    (select device_group from person where id = ?1)) ;";
 
+static const char *sql_update_person = 
+    "update person "
+    "   set username = ?2, "
+    "       lang = ?3, "
+    "       main_key_id =  "
+    "           (select coalesce( "
+    "               (select main_key_id from person where id = ?1), " 
+    "                upper(replace(?4,' ','')))),"         
+    "       device_group = "
+    "           (select device_group from person where id = ?1)"
+    "   where id = ?1 ;";
+    
 static const char *sql_set_as_pep_user =
     "update person set is_pep_user = 1 "
     "   where id = ?1 ; ";
@@ -151,17 +195,42 @@ static const char *sql_get_device_group =
     "where id = ?1;";
 
 static const char *sql_set_pgp_keypair = 
-    "insert or replace into pgp_keypair (fpr) "
+    "insert or ignore into pgp_keypair (fpr) "
     "values (upper(replace(?1,' ',''))) ;";
 
-static const char *sql_set_identity = 
-    "insert or replace into identity ("
-    " address, main_key_id, "
-    " user_id, flags, is_own"
-    ") values ("
-    " ?1,"
-    " upper(replace(?2,' ','')),"
-    " ?3,"
+static const char* sql_exists_identity_entry = 
+    "select count(*) from identity "
+    "   where (case when (address = ?1) then (1)"
+    "               when (lower(address) = lower(?1)) then (1)"
+    "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1)"
+    "               else 0"
+    "          end) = 1"
+    "    and user_id = ?2;";
+ 
+static const char *sql_set_identity_entry = 
+    "insert into identity ("
+    "       address, main_key_id, "
+    "       user_id, flags, is_own"
+    "   ) values ("
+    "       ?1,"
+    "       upper(replace(?2,' ','')),"
+    "       ?3,"
+    "       ?4,"
+    "       ?5"
+    "   );";
+    
+static const char* sql_update_identity_entry =    
+    "update identity "
+    "   set main_key_id = upper(replace(?2,' ','')), "
+    "       flags = ?4, " 
+    "       is_own = ?5 "
+    "   where (case when (address = ?1) then (1)"
+    "               when (lower(address) = lower(?1)) then (1)"
+    "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1) "
+    "               else 0 "
+    "          end) = 1 "
+    "          and user_id = ?3 ;";
+
     // " (select"
     // "   coalesce("
     // "    (select flags from identity"
@@ -170,26 +239,51 @@ static const char *sql_set_identity =
     // "    0)"
     // " ) | (?4 & 255)"
     /* set_identity ignores previous flags, and doesn't filter machine flags */
-    " ?4,"
-    " ?5"
-    ");";
         
 static const char *sql_set_identity_flags = 
     "update identity set flags = "
     "    ((?1 & 255) | (select flags from identity"
-    "                   where address = ?2 and user_id = ?3)) "
-    "where address = ?2 and user_id = ?3 ;";
+    "                    where (case when (address = ?2) then (1)"
+    "                                when (lower(address) = lower(?2)) then (1)"
+    "                                when (replace(lower(address),'.','') = replace(lower(?2),'.','')) then (1)"
+    "                                else 0 "    
+    "                           end) = 1 "
+    "                           and user_id = ?3)) "
+    "   where (case when (address = ?2) then (1)"
+    "               when (lower(address) = lower(?2)) then (1)"
+    "               when (replace(lower(address),'.','') = replace(lower(?2),'.','')) then (1)"
+    "               else 0"
+    "          end) = 1"
+    "          and user_id = ?3 ;";
 
 static const char *sql_unset_identity_flags = 
     "update identity set flags = "
     "    ( ~(?1 & 255) & (select flags from identity"
-    "                   where address = ?2 and user_id = ?3)) "
-    "where address = ?2 and user_id = ?3 ;";
+    "                    where (case when (address = ?2) then (1)"
+    "                                when (lower(address) = lower(?2)) then (1)"
+    "                                when (replace(lower(address),'.','') = replace(lower(?2),'.','')) then (1)"
+    "                                else 0 "    
+    "                           end) = 1 "
+    "                           and user_id = ?3)) "
+    "   where (case when (address = ?2) then (1)"
+    "               when (lower(address) = lower(?2)) then (1)"
+    "               when (replace(lower(address),'.','') = replace(lower(?2),'.','')) then (1)"
+    "               else 0"
+    "          end) = 1"
+    "          and user_id = ?3 ;";
 
 static const char *sql_set_trust =
-    "insert or replace into trust (user_id, pgp_keypair_fpr, comm_type) "
+    "insert into trust (user_id, pgp_keypair_fpr, comm_type) "
     "values (?1, upper(replace(?2,' ','')), ?3) ;";
 
+static const char *sql_update_trust =
+    "update trust set comm_type = ?3 " 
+    "   where user_id = ?1 and pgp_keypair_fpr = upper(replace(?2,' ',''));";
+
+static const char* sql_exists_trust_entry = 
+    "select count(*) from trust "
+    "   where user_id = ?1 and pgp_keypair_fpr = upper(replace(?2,' ',''));";
+    
 static const char *sql_update_trust_for_fpr =
     "update trust "
     "set comm_type = ?1 "
@@ -222,7 +316,7 @@ static const char *sql_i18n_token =
 
 // blacklist
 static const char *sql_blacklist_add = 
-    "insert or replace into blacklist_keys (fpr) values (upper(replace(?1,' ',''))) ;"
+    "insert or ignore into blacklist_keys (fpr) values (upper(replace(?1,' ',''))) ;"
     "delete from identity where main_key_id = upper(replace(?1,' ','')) ;"
     "delete from pgp_keypair where fpr = upper(replace(?1,' ','')) ;";
 
@@ -318,8 +412,8 @@ static const char *sql_is_mistrusted_key =
     "select count(*) from mistrusted_keys where fpr = upper(replace(?1,' ','')) ;";
 
 static const char *sql_add_userid_alias =
-    "insert or replace into alternate_user_id (default_id, alternate_id) "
-    "values (?1, ?2) ;";
+    "insert or replace into alternate_user_id (alternate_id, default_id) "
+    "values (?2, ?1) ;";
     
 static int user_version(void *_version, int count, char **text, char **name)
 {
@@ -384,6 +478,10 @@ static int table_contains_column(PEP_SESSION session, const char* table_name,
     return retval;
 }
 
+void errorLogCallback(void *pArg, int iErrCode, const char *zMsg){
+  fprintf(stderr, "(%d) %s\n", iErrCode, zMsg);
+}
+
 DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -441,6 +539,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         status = PEP_INIT_CANNOT_OPEN_DB;
         goto pep_error;
     }
+    
+#if _PEP_SQLITE_DEBUG    
+    sqlite3_config(SQLITE_CONFIG_LOG, errorLogCallback, NULL);
+#endif
 
     int_result = sqlite3_open_v2(
             LOCAL_DB,
@@ -468,6 +570,13 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
 
     sqlite3_busy_timeout(_session->db, BUSY_WAIT_TIME);
+
+#if _PEP_SQLITE_DEBUG
+    sqlite3_trace_v2(_session->db, 
+        SQLITE_TRACE_STMT | SQLITE_TRACE_ROW | SQLITE_TRACE_CLOSE,
+        sql_trace_callback,
+        NULL);
+#endif
 
     assert(SYSTEM_DB);
     if (SYSTEM_DB == NULL) {
@@ -623,6 +732,17 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             NULL,
             NULL);
         assert(int_result == SQLITE_OK);
+
+        int_result = sqlite3_exec(
+            _session->db,
+            "pragma foreign_keys=ON;\n",
+            NULL,
+            NULL,
+            NULL
+        );
+
+        assert(int_result == SQLITE_OK);
+
         
         // Sometimes the user_version wasn't set correctly. Check to see if this
         // is really necessary...
@@ -939,16 +1059,20 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_set_person), &_session->set_person, NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_update_person,
+            (int)strlen(sql_update_person), &_session->update_person, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_exists_person,
+            (int)strlen(sql_exists_person), &_session->exists_person, NULL);
+    assert(int_result == SQLITE_OK);
+
     int_result = sqlite3_prepare_v2(_session->db, sql_set_as_pep_user,
             (int)strlen(sql_set_as_pep_user), &_session->set_as_pep_user, NULL);
     assert(int_result == SQLITE_OK);
     
     int_result = sqlite3_prepare_v2(_session->db, sql_is_pep_user,
             (int)strlen(sql_is_pep_user), &_session->is_pep_user, NULL);
-    assert(int_result == SQLITE_OK);
-
-    int_result = sqlite3_prepare_v2(_session->db, sql_exists_person,
-            (int)strlen(sql_exists_person), &_session->exists_person, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_device_group,
@@ -964,8 +1088,16 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             NULL);
     assert(int_result == SQLITE_OK);
 
-    int_result = sqlite3_prepare_v2(_session->db, sql_set_identity,
-            (int)strlen(sql_set_identity), &_session->set_identity, NULL);
+    int_result = sqlite3_prepare_v2(_session->db, sql_set_identity_entry,
+            (int)strlen(sql_set_identity_entry), &_session->set_identity_entry, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_update_identity_entry,
+            (int)strlen(sql_update_identity_entry), &_session->update_identity_entry, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_exists_identity_entry,
+            (int)strlen(sql_exists_identity_entry), &_session->exists_identity_entry, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_identity_flags,
@@ -980,6 +1112,14 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_trust,
             (int)strlen(sql_set_trust), &_session->set_trust, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_update_trust,
+            (int)strlen(sql_update_trust), &_session->update_trust, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_exists_trust_entry,
+                 (int)strlen(sql_exists_trust_entry), &_session->exists_trust_entry, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_update_trust_for_fpr,
@@ -1121,7 +1261,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         // private keys have an 'unknown' trust designation in PGP).
 
         // We don't really worry about the status here.
-        status = import_trusted_own_keys(_session);        
+//        status = import_trusted_own_keys(_session);        
     }
 
     // sync_session set to own session by default
@@ -1201,14 +1341,22 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->get_device_group);
             if (session->set_pgp_keypair)
                 sqlite3_finalize(session->set_pgp_keypair);
-            if (session->set_identity)
-                sqlite3_finalize(session->set_identity);
+            if (session->exists_identity_entry)
+                sqlite3_finalize(session->exists_identity_entry);                
+            if (session->set_identity_entry)
+                sqlite3_finalize(session->set_identity_entry);
+            if (session->update_identity_entry)
+                sqlite3_finalize(session->update_identity_entry);    
             if (session->set_identity_flags)
                 sqlite3_finalize(session->set_identity_flags);
             if (session->unset_identity_flags)
                 sqlite3_finalize(session->unset_identity_flags);
+            if (session->exists_trust_entry)
+                sqlite3_finalize(session->exists_trust_entry);                                
             if (session->set_trust)
                 sqlite3_finalize(session->set_trust);
+            if (session->update_trust)
+                sqlite3_finalize(session->update_trust);                
             if (session->update_trust_for_fpr)
                 sqlite3_finalize(session->update_trust_for_fpr);
             if (session->get_trust)
@@ -1674,6 +1822,8 @@ DYNAMIC_API PEP_STATUS set_userid_alias (
     if (!(session && default_id && alias_id && 
           default_id[0] != '\0' && alias_id[0] != '\0'))
         return PEP_ILLEGAL_VALUE;
+    
+    sqlite3_exec(session->db, "BEGIN TRANSACTION ;", NULL, NULL, NULL);
 
     sqlite3_reset(session->add_userid_alias);
     sqlite3_bind_text(session->add_userid_alias, 1, default_id, -1,
@@ -1684,9 +1834,13 @@ DYNAMIC_API PEP_STATUS set_userid_alias (
     result = sqlite3_step(session->add_userid_alias);
 
     sqlite3_reset(session->add_userid_alias);
-    if (result != SQLITE_DONE)
+    if (result != SQLITE_DONE) {
+        sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);        
         return PEP_CANNOT_SET_ALIAS;
-    
+    }
+    sqlite3_exec(session->db, "COMMIT ;", NULL, NULL, NULL);
+        
+
     return PEP_STATUS_OK;
 }
 
@@ -1888,6 +2042,238 @@ PEP_STATUS get_identities_by_address(
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
+                                 bool* exists) {
+    assert(session);
+    assert(identity);
+    assert(!EMPTYSTR(identity->user_id));        
+    assert(!EMPTYSTR(identity->address));
+    if (!session || !exists || EMPTYSTR(identity->user_id) || EMPTYSTR(identity->address))
+        return PEP_ILLEGAL_VALUE;
+    
+    *exists = false;
+    
+    sqlite3_reset(session->exists_identity_entry);
+    sqlite3_bind_text(session->exists_identity_entry, 1, identity->address, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->exists_identity_entry, 2, identity->user_id, -1,
+                      SQLITE_STATIC);
+                  
+    int result = sqlite3_step(session->exists_identity_entry);
+    switch (result) {
+        case SQLITE_ROW: {
+            // yeah yeah, I know, we could be lazy here, but it looks bad.
+            *exists = (sqlite3_column_int(session->exists_identity_entry, 0) != 0);
+            break;
+        }
+        default:
+            return PEP_UNKNOWN_ERROR;
+    }
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
+                              bool* exists) {
+    assert(session);
+    assert(identity);
+    assert(!EMPTYSTR(identity->user_id));        
+    assert(!EMPTYSTR(identity->fpr));
+    if (!session || !exists || EMPTYSTR(identity->user_id) || EMPTYSTR(identity->fpr))
+        return PEP_ILLEGAL_VALUE;
+    
+    *exists = false;
+    
+    sqlite3_reset(session->exists_trust_entry);
+    sqlite3_bind_text(session->exists_trust_entry, 1, identity->user_id, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->exists_trust_entry, 2, identity->fpr, -1,
+                      SQLITE_STATIC);
+                  
+    int result = sqlite3_step(session->exists_trust_entry);
+    switch (result) {
+        case SQLITE_ROW: {
+            // yeah yeah, I know, we could be lazy here, but it looks bad.
+            *exists = (sqlite3_column_int(session->exists_trust_entry, 0) != 0);
+            break;
+        }
+        default:
+            return PEP_UNKNOWN_ERROR;
+    }
+
+    return PEP_STATUS_OK;
+}
+
+// FIXME: We can rollback in set_identity on the return status,
+// so we should probably do that.
+PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr) {
+    if (!session || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+        
+    int result;
+    
+    sqlite3_reset(session->set_pgp_keypair);
+    sqlite3_bind_text(session->set_pgp_keypair, 1, fpr, -1,
+            SQLITE_STATIC);
+    result = sqlite3_step(session->set_pgp_keypair);
+    sqlite3_reset(session->set_pgp_keypair);
+    if (result != SQLITE_DONE) {
+        return PEP_CANNOT_SET_PGP_KEYPAIR;
+    }
+    
+    return PEP_STATUS_OK;
+}
+
+static PEP_STATUS _set_or_update_trust(PEP_SESSION session,
+                                       pEp_identity* identity,
+                                       sqlite3_stmt* set_or_update) {
+
+    assert(session);
+    assert(identity);
+    assert(identity->user_id);
+    assert(identity->fpr);
+    
+    if (!session || !identity || EMPTYSTR(identity->user_id) || EMPTYSTR(identity->fpr))
+        return PEP_ILLEGAL_VALUE;
+        
+    int result;
+                
+    sqlite3_reset(set_or_update);
+    sqlite3_bind_text(set_or_update, 1, identity->user_id, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(set_or_update, 2, identity->fpr, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_int(set_or_update, 3, identity->comm_type);
+    result = sqlite3_step(set_or_update);
+    assert(result == SQLITE_DONE);
+    sqlite3_reset(set_or_update);
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_TRUST;
+
+    return PEP_STATUS_OK;
+}
+
+static PEP_STATUS _set_or_update_identity_entry(PEP_SESSION session,
+                                                pEp_identity* identity,
+                                                sqlite3_stmt* set_or_update) {
+    assert(session);
+    assert(identity);
+    assert(set_or_update);
+                      
+    if (!session || !identity || !identity->user_id || !identity->address)
+        return PEP_ILLEGAL_VALUE;
+                                              
+    sqlite3_reset(set_or_update);
+    sqlite3_bind_text(set_or_update, 1, identity->address, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(set_or_update, 2, identity->fpr, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(set_or_update, 3, identity->user_id, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_int(set_or_update, 4, identity->flags);
+    sqlite3_bind_int(set_or_update, 5, identity->me);
+    int result = sqlite3_step(set_or_update);
+    sqlite3_reset(set_or_update);
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_IDENTITY;
+    
+    return PEP_STATUS_OK;
+}
+
+static PEP_STATUS _set_or_update_person(PEP_SESSION session, 
+                                        pEp_identity* identity,
+                                        sqlite3_stmt* set_or_update) {
+    assert(session);
+    assert(identity);
+    assert(set_or_update);
+                        
+    if (!session || !identity || !identity->user_id || !identity->username)
+        return PEP_ILLEGAL_VALUE;
+        
+    sqlite3_reset(set_or_update);
+    sqlite3_bind_text(set_or_update, 1, identity->user_id, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(set_or_update, 2, identity->username, -1,
+            SQLITE_STATIC);
+    if (identity->lang[0])
+        sqlite3_bind_text(set_or_update, 3, identity->lang, 2,
+                SQLITE_STATIC);
+    else
+        sqlite3_bind_null(set_or_update, 3);
+    sqlite3_bind_text(set_or_update, 4, identity->fpr, -1,
+                      SQLITE_STATIC);
+    int result = sqlite3_step(set_or_update);
+    sqlite3_reset(set_or_update);
+    
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_PERSON;
+    
+    return PEP_STATUS_OK;                                         
+}
+
+PEP_STATUS set_or_update_with_identity(PEP_SESSION session,
+                                       pEp_identity* identity,
+                                       PEP_STATUS (* set_function)(PEP_SESSION, pEp_identity*, sqlite3_stmt*),
+                                       PEP_STATUS (* exists_function)(PEP_SESSION, pEp_identity*, bool*),                                       
+                                       sqlite3_stmt* update_query,
+                                       sqlite3_stmt* set_query,
+                                       bool guard_transaction) {
+
+    if (guard_transaction) {
+        sqlite3_exec(session->db, "BEGIN TRANSACTION ;", NULL, NULL, NULL);
+    }
+    bool exists = false;
+    PEP_STATUS status = exists_function(session, identity, &exists);
+    
+    if (status == PEP_STATUS_OK) {
+        if (exists) {
+            status = set_function(session, identity, update_query);
+        }
+        else {
+            status = set_function(session, identity, set_query);                                              
+        }                    
+    }   
+    if (guard_transaction) {        
+        if (status != PEP_STATUS_OK)
+            sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
+        else 
+            sqlite3_exec(session->db, "COMMIT ;", NULL, NULL, NULL);
+    }                      
+    return status;
+}
+
+PEP_STATUS _set_trust_internal(PEP_SESSION session, pEp_identity* identity,
+                               bool guard_transaction) {
+    return set_or_update_with_identity(session, identity,
+                                       _set_or_update_trust,
+                                       exists_trust_entry,
+                                       session->update_trust,
+                                       session->set_trust,
+                                       guard_transaction);
+}
+PEP_STATUS set_trust(PEP_SESSION session, pEp_identity* identity) {
+    return _set_trust_internal(session, identity, true);
+}
+
+PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,
+                      bool guard_transaction) {
+    return set_or_update_with_identity(session, identity,
+                                       _set_or_update_person,
+                                       exists_person,
+                                       session->update_person,
+                                       session->set_person,
+                                       guard_transaction);
+}
+
+PEP_STATUS set_identity_entry(PEP_SESSION session, pEp_identity* identity,
+                              bool guard_transaction) {
+    return set_or_update_with_identity(session, identity,
+                                       _set_or_update_identity_entry,
+                                       exists_identity_entry,
+                                       session->update_identity_entry,
+                                       session->set_identity_entry,
+                                       guard_transaction);
+}
 
 DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
@@ -1909,7 +2295,7 @@ DYNAMIC_API PEP_STATUS set_identity(
     
     bool listed;
 
-    bool has_fpr = (identity->fpr && identity->fpr[0] != '\0');
+    bool has_fpr = (!EMPTYSTR(identity->fpr));
     
     if (has_fpr) {    
         // blacklist check - FIXME: ENGINE-294 will remove
@@ -1922,7 +2308,7 @@ DYNAMIC_API PEP_STATUS set_identity(
             return PEP_KEY_BLACKLISTED;
     }
 
-    sqlite3_exec(session->db, "BEGIN ;", NULL, NULL, NULL);
+    sqlite3_exec(session->db, "BEGIN TRANSACTION ;", NULL, NULL, NULL);
 
     if (identity->lang[0]) {
         assert(identity->lang[0] >= 'a' && identity->lang[0] <= 'z');
@@ -1942,61 +2328,41 @@ DYNAMIC_API PEP_STATUS set_identity(
         }
     }
 
-    sqlite3_reset(session->set_person);
-    sqlite3_bind_text(session->set_person, 1, identity->user_id, -1,
-            SQLITE_STATIC);
-    sqlite3_bind_text(session->set_person, 2, identity->username, -1,
-            SQLITE_STATIC);
-    if (identity->lang[0])
-        sqlite3_bind_text(session->set_person, 3, identity->lang, 2,
-                SQLITE_STATIC);
-    else
-        sqlite3_bind_null(session->set_person, 3);
-    sqlite3_bind_text(session->set_person, 4, identity->fpr, -1,
-                      SQLITE_STATIC);
-    result = sqlite3_step(session->set_person);
-    sqlite3_reset(session->set_person);
-    if (result != SQLITE_DONE) {
+    // We do this because there are checks in set_person for
+    // aliases, which modify the identity object on return.
+    pEp_identity* ident_copy = identity_dup(identity); 
+    if (!ident_copy)
+        return PEP_OUT_OF_MEMORY;
+
+    status = set_person(session, ident_copy, false);
+    if (status != PEP_STATUS_OK) {
         sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
-        return PEP_CANNOT_SET_PERSON;
+        goto pep_free;
     }
 
-    sqlite3_reset(session->set_identity);
-    sqlite3_bind_text(session->set_identity, 1, identity->address, -1,
-            SQLITE_STATIC);
-    sqlite3_bind_text(session->set_identity, 2, identity->fpr, -1,
-            SQLITE_STATIC);
-    sqlite3_bind_text(session->set_identity, 3, identity->user_id, -1,
-            SQLITE_STATIC);
-    sqlite3_bind_int(session->set_identity, 4, identity->flags);
-    sqlite3_bind_int(session->set_identity, 5, identity->me);
-    result = sqlite3_step(session->set_identity);
-    sqlite3_reset(session->set_identity);
-    if (result != SQLITE_DONE) {
+    status = set_identity_entry(session, ident_copy, false);
+    if (status != PEP_STATUS_OK) {
         sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
-        return PEP_CANNOT_SET_IDENTITY;
+        goto pep_free;
     }
 
     if (has_fpr) {
-        sqlite3_reset(session->set_trust);
-        sqlite3_bind_text(session->set_trust, 1, identity->user_id, -1,
-                SQLITE_STATIC);
-        sqlite3_bind_text(session->set_trust, 2, identity->fpr, -1,
-                SQLITE_STATIC);
-        sqlite3_bind_int(session->set_trust, 3, identity->comm_type);
-        result = sqlite3_step(session->set_trust);
-        sqlite3_reset(session->set_trust);
-        if (result != SQLITE_DONE) {
+        status = _set_trust_internal(session, ident_copy, false);
+        if (status != PEP_STATUS_OK) {
             sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
-            return PEP_CANNOT_SET_TRUST;
+            goto pep_free;
         }
     }
     
     result = sqlite3_exec(session->db, "COMMIT ;", NULL, NULL, NULL);
     if (result == SQLITE_OK)
-        return PEP_STATUS_OK;
+        status = PEP_STATUS_OK;
     else
-        return PEP_COMMIT_FAILED;
+        status = PEP_COMMIT_FAILED;
+
+pep_free:
+    free_identity(ident_copy);
+    return status;
 }
 
 // This ONLY sets the user flag, and creates a shell identity if necessary.
@@ -2006,19 +2372,15 @@ PEP_STATUS set_as_pep_user(PEP_SESSION session, pEp_identity* user) {
     assert(user);
     assert(user->address);
     assert(!EMPTYSTR(user->user_id));
-    
-    char* user_id = user->user_id;
-    
-    if (!session || !user || user->address || EMPTYSTR(user_id))
+        
+    if (!session || !user || user->address || EMPTYSTR(user->user_id))
         return PEP_ILLEGAL_VALUE;
             
     PEP_STATUS status = PEP_STATUS_OK;
     
-    char* alias_default = NULL;
-    
     bool person_exists = false;
     
-    status = exists_person(session, user_id, &alias_default, &person_exists);
+    status = exists_person(session, user, &person_exists);
     
     if (status != PEP_STATUS_OK)
         return status;
@@ -2033,12 +2395,11 @@ PEP_STATUS set_as_pep_user(PEP_SESSION session, pEp_identity* user) {
         free_identity(tmp_id);
         if (status != PEP_STATUS_OK)
             return status;
-        alias_default = strdup(user->user_id);
     }
         
     // Ok, let's set it.
     sqlite3_reset(session->set_as_pep_user);
-    sqlite3_bind_text(session->set_as_pep_user, 1, alias_default, -1,
+    sqlite3_bind_text(session->set_as_pep_user, 1, user->user_id, -1,
             SQLITE_STATIC);
     int result = sqlite3_step(session->set_as_pep_user);
     sqlite3_reset(session->set_as_pep_user);
@@ -2049,24 +2410,27 @@ PEP_STATUS set_as_pep_user(PEP_SESSION session, pEp_identity* user) {
     return PEP_STATUS_OK;    
 }
 
-PEP_STATUS exists_person(PEP_SESSION session, const char* user_id,
-                         char** default_id, bool* exists) {
+PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
+                         bool* exists) {            
+    
+    // const char* user_id,
+    //                      char** default_id, bool* exists) {
     assert(session);
     assert(exists);
-    assert(!EMPTYSTR(user_id));
+    assert(identity);
+    assert(!EMPTYSTR(identity->user_id));
         
-    if (!session || !exists || EMPTYSTR(user_id))
+    if (!session || !exists || !identity || EMPTYSTR(identity->user_id))
         return PEP_ILLEGAL_VALUE;
     
     *exists = false;
-    
+
+    const char* user_id = identity->user_id;
     char* alias_default = NULL;
     
     PEP_STATUS status = get_userid_alias_default(session, user_id, &alias_default);
     
     if (status == PEP_CANNOT_FIND_ALIAS || EMPTYSTR(alias_default)) {
-        free(alias_default);
-        alias_default = NULL;
         sqlite3_reset(session->exists_person);
         sqlite3_bind_text(session->exists_person, 1, user_id, -1,
                 SQLITE_STATIC);
@@ -2075,23 +2439,23 @@ PEP_STATUS exists_person(PEP_SESSION session, const char* user_id,
             case SQLITE_ROW: {
                 // yeah yeah, I know, we could be lazy here, but it looks bad.
                 *exists = (sqlite3_column_int(session->exists_person, 0) != 0);
+                status = PEP_STATUS_OK;
                 break;
             }
             default:
                 return PEP_UNKNOWN_ERROR;
         }
-        if (*exists)
-            alias_default = strdup(user_id);
+    }
+    else if (status == PEP_STATUS_OK) {
+        *exists = true; // thank you, delete on cascade!
+        // FIXME: Should we correct the userid default here? I think we should.
+        free(identity->user_id);
+        identity->user_id = alias_default; // ownership transfer
     }
     else
-        *exists = true; // thank you, delete on cascade!
-
-    if (!default_id)
         free(alias_default);
-    else    
-        *default_id = alias_default;
-    
-    return PEP_STATUS_OK;
+        
+    return status;
 }
 
 PEP_STATUS is_pep_user(PEP_SESSION session, pEp_identity *identity, bool* is_pep)
@@ -2497,35 +2861,6 @@ void pEp_free(void *p)
     free(p);
 }
 
-PEP_STATUS set_trust(PEP_SESSION session, 
-                     const char* user_id,
-                     const char* fpr, 
-                     PEP_comm_type comm_type) 
-{
-    assert(session);
-    assert(user_id);
-    assert(fpr);
-    
-    if (!session || !user_id || user_id[0] == '\0' || !fpr || fpr[0] == '\0')
-        return PEP_ILLEGAL_VALUE;
-        
-    int result;
-                
-    sqlite3_reset(session->set_trust);
-    sqlite3_bind_text(session->set_trust, 1, user_id, -1,
-            SQLITE_STATIC);
-    sqlite3_bind_text(session->set_trust, 2, fpr, -1,
-            SQLITE_STATIC);
-    sqlite3_bind_int(session->set_trust, 3, comm_type);
-    result = sqlite3_step(session->set_trust);
-    assert(result == SQLITE_DONE);
-    sqlite3_reset(session->set_trust);
-    if (result != SQLITE_DONE)
-        return PEP_CANNOT_SET_TRUST;
-
-    return PEP_STATUS_OK;
-}
-
 
 DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
 {
@@ -2768,6 +3103,10 @@ DYNAMIC_API PEP_STATUS generate_keypair(
     if (status != PEP_STATUS_OK)
         return status;
 
+    if (identity->fpr)
+        status = set_pgp_keypair(session, identity->fpr);
+
+    // add to known keypair DB, as this might not end up being a default
     return status;
 }
 
@@ -3244,7 +3583,7 @@ DYNAMIC_API PEP_STATUS sequence_value(
     }
 
     if (*value) {
-        sqlite3_exec(session->db, "BEGIN ;", NULL, NULL, NULL);
+        sqlite3_exec(session->db, "BEGIN TRANSACTION ;", NULL, NULL, NULL);
         int32_t old_value = 0;
         status = _get_sequence_value(session, name, &old_value);
         if (status != PEP_STATUS_OK && status != PEP_RECORD_NOT_FOUND)
@@ -3273,7 +3612,7 @@ DYNAMIC_API PEP_STATUS sequence_value(
     }
 
     assert(*value == 0);
-    sqlite3_exec(session->db, "BEGIN ;", NULL, NULL, NULL);
+    sqlite3_exec(session->db, "BEGIN TRANSACTION ;", NULL, NULL, NULL);
     status = _increment_sequence_value(session, name, own);
     if (status == PEP_STATUS_OK) {
         status = _get_sequence_value(session, name, value);

@@ -1532,7 +1532,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         else
             _status = myself(session, _il->ident);
         if (_status != PEP_STATUS_OK) {
-            status = _status;
+            status = PEP_UNENCRYPTED;
             GOTO(pep_error);
         }
 
@@ -1564,7 +1564,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             else
                 _status = myself(session, _il->ident);
             if (_status != PEP_STATUS_OK) {
-                status = _status;
+                status = PEP_UNENCRYPTED;
                 GOTO(pep_error);
             }
 
@@ -1596,7 +1596,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 _status = myself(session, _il->ident);
             if (_status != PEP_STATUS_OK)
             {
-                status = _status;
+                status = PEP_UNENCRYPTED;
                 GOTO(pep_error);
             }
 
@@ -1609,7 +1609,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             }
             else {
                 dest_keys_found = false;
-                status = PEP_KEY_NOT_FOUND;
             }
         }
     }
@@ -2479,12 +2478,12 @@ static PEP_STATUS update_sender_to_pep_trust(
     // This file's code is difficult enough to parse. But change at will.
     switch (sender->comm_type) {
         case PEP_ct_OpenPGP_unconfirmed:
-            status = set_trust(session, sender->user_id, sender->fpr, PEP_ct_pEp_unconfirmed);
-            break;
         case PEP_ct_OpenPGP:
-            status = set_trust(session, sender->user_id, sender->fpr, PEP_ct_pEp);
+            sender->comm_type = PEP_ct_pEp_unconfirmed | (sender->comm_type & PEP_ct_confirmed);
+            status = set_trust(session, sender);
             break;
         default:
+            status = PEP_CANNOT_SET_TRUST;
             break;
     }
     

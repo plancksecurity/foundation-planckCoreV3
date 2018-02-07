@@ -148,7 +148,7 @@ int main() {
     // (note - as of 23.5.17, revoke_key() doesn't touch the trust db, just the keyring, so we can do this)
 
     cout << "Revoking key." << endl;
-    status = get_identity(session, uniqname, r1_userid, &recip1);    
+    status = update_identity(session, recip1);    
     status = revoke_key(session, recip1->fpr, "encrypt_for_identity_test");
     cout << "Status of revocation call for " << recip1->fpr << " is "<< tl_status_string(status) << endl;
 
@@ -177,12 +177,13 @@ int main() {
     cout << "2b. Encrypt message for recip whose key has been externally revoked in the keyring, not the app." << endl;
     cout << "---------------------------------------------------------" << endl << endl;
 
+
     status = encrypt_message(session, outgoing_msg, NULL, &encrypted_outgoing_msg, PEP_enc_PGP_MIME, 0);
     cout << "Encryption returns with status " << tl_status_string(status) << endl;
-    assert (status == PEP_KEY_UNSUITABLE);
+    assert (status == PEP_UNENCRYPTED);
     assert (encrypted_outgoing_msg == NULL);
     status = update_identity(session, recip1);
-    assert (recip1->comm_type = PEP_ct_key_revoked);
+    assert(recip1->comm_type = PEP_ct_key_not_found);
 
     cout << endl << "---------------------------------------------------------" << endl;
     cout << "2c. Check trust of recip, whose only key has been revoked, once an encryption attempt has been made." << endl;
@@ -194,7 +195,7 @@ int main() {
     recip1->fpr = NULL;
 
     cout << "Recip's trust DB comm_type = " << hex << tl_ct_string(recip1->comm_type) << endl;
-    assert(recip1->comm_type == PEP_ct_key_revoked);
+    assert(recip1->comm_type == PEP_ct_unknown || recip1->comm_type == PEP_ct_key_revoked);
 
     free_message(decrypted_msg);
     free_message(outgoing_msg);

@@ -17,6 +17,8 @@ using namespace std;
 int main() {
     cout << "\n*** test update_identity and myself ***\n\n";
     
+    test_init();
+    
     PEP_SESSION session;
     
     cout << "calling init()\n";
@@ -225,7 +227,8 @@ int main() {
 
     const char* new_username = "Test Patchy";
             
-    alex = new_identity(alex_address, NULL, alex_userid, new_username); 
+    alex = new_identity(alex_address, NULL, alex_userid, new_username);
+    cout << "Timing is everything" << endl; 
     status = update_identity(session, alex);
     assert(status == PEP_STATUS_OK);
     assert(alex->fpr);

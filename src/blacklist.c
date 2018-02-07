@@ -13,6 +13,8 @@ DYNAMIC_API PEP_STATUS blacklist_add(PEP_SESSION session, const char *fpr)
     if (!(session && fpr && fpr[0]))
         return PEP_ILLEGAL_VALUE;
 
+    sqlite3_exec(session->db, "BEGIN ;", NULL, NULL, NULL);
+
     sqlite3_reset(session->blacklist_add);
 	sqlite3_bind_text(session->blacklist_add, 1, fpr, -1, SQLITE_STATIC);
 
@@ -22,9 +24,11 @@ DYNAMIC_API PEP_STATUS blacklist_add(PEP_SESSION session, const char *fpr)
     switch (result) {
     case SQLITE_DONE:
         status = PEP_STATUS_OK;
+        sqlite3_exec(session->db, "COMMIT ;", NULL, NULL, NULL);
         break;
 
     default:
+        sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
         status = PEP_UNKNOWN_ERROR;
     }
 
@@ -157,4 +161,3 @@ enomem:
 the_end:
     return status;
 }
-
