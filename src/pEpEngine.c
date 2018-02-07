@@ -9,9 +9,11 @@
 
 #include <time.h>
 #include <stdlib.h>
-#include <sqlite3.h>
 
 #define _PEP_SQLITE_DEBUG 0
+#ifdef _PEP_SQLITE_DEBUG
+#include <sqlite3.h>
+#endif
 
 static volatile int init_count = -1;
 
