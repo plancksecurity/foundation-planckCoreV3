@@ -1071,6 +1071,10 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
         // identity set yet, this is important, as we need to record the mistrust
         // action)
         
+        // double-check to be sure key is even in the DB
+        if (ident->fpr)
+            status = set_pgp_keypair(session, ident->fpr);
+
         // We set this temporarily but will grab it back from the cache afterwards
         ident->comm_type = PEP_ct_mistrusted;
         status = set_trust(session, ident);

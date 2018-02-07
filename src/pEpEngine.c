@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <sqlite3.h>
 
-#define _PEP_SQLITE_DEBUG 1
+#define _PEP_SQLITE_DEBUG 0
 
 static volatile int init_count = -1;
 
