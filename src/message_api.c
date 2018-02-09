@@ -946,8 +946,6 @@ static PEP_STATUS update_identity_recip_list(PEP_SESSION session,
         if (status == PEP_ILLEGAL_VALUE || status == PEP_OUT_OF_MEMORY)
             return status;
         }
-        else
-            break;
     }
     
     return PEP_STATUS_OK;                                  
