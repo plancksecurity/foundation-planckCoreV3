@@ -334,8 +334,11 @@ int main() {
 
     somebody = new_identity("nope@nope.nope", NULL, "some_user_id", NULL); 
     status = update_identity(session, somebody);
-    assert(status == PEP_CANNOT_FIND_IDENTITY);
-    cout << "PASS: update_identity() returns PEP_CANNOT_FIND_IDENTITY" << endl << endl;
+    assert(status == PEP_STATUS_OK);
+    assert(!somebody->fpr);
+    assert(somebody->comm_type == PEP_ct_key_not_found);
+    
+    cout << "PASS: update_identity() returns identity with no key and unknown comm type" << endl << endl;
 
     free_identity(somebody);
     

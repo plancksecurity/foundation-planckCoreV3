@@ -394,14 +394,17 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     //  a DB username, we replace)
     if (!EMPTYSTR(stored_ident->username)) {
         if (!EMPTYSTR(return_id->username) && 
-            (strcasecmp(return_id->username, "anonymous") == 0)) {
+            (strcasecmp(return_id->username, return_id->address) == 0)) {
             free(return_id->username);
-            return_id->username = NULL;
         }
         if (EMPTYSTR(return_id->username)) {
             free(return_id->username);
             return_id->username = strdup(stored_ident->username);
         }
+    }
+    else {
+        if (EMPTYSTR(return_id->username))
+            return_id->username = strdup(return_id->address);
     }
     
     return_id->me = stored_ident->me;
@@ -494,8 +497,10 @@ DYNAMIC_API PEP_STATUS update_identity(
                             
                             // if usernames match, we replace the userid. Or if the temp username
                             // is anonymous.
+                            // FIXME: do we need to create an address match function which
+                            // matches the whole dot-and-case rigamarole from 
                             if (EMPTYSTR(this_id->username) ||
-                                strcasecmp(this_id->username, "anonymous") == 0 ||
+                                strcasecmp(this_id->username, this_id->address) == 0 ||
                                 (identity->username && 
                                  strcasecmp(identity->username, 
                                             this_id->username) == 0)) {
@@ -541,29 +546,31 @@ DYNAMIC_API PEP_STATUS update_identity(
         //  * else (identity unavailable)
         else {
             status = PEP_STATUS_OK;
-            
+
+            // FIXME: We may need to roll this back.
+            // FIXME: change docs if we don't
             //  if we only have user_id and address and identity not available
             //      * return error status (identity not found)
-            if (EMPTYSTR(identity->username))
-                status = PEP_CANNOT_FIND_IDENTITY;
+            if (EMPTYSTR(identity->username)) {
+                free(identity->username);
+                identity->username = strdup(identity->address);
+            }
             
             // Otherwise, if we had user_id, address, and username:
             //    * create identity with user_id, address, username
             //      (this is the input id without the fpr + comm type!)
-            free(identity->fpr);
-            identity->fpr = NULL;
-            identity->comm_type = PEP_ct_unknown;
-            
+
+            if (status == PEP_STATUS_OK) {
+                elect_pubkey(session, identity);
+            }
+                        
             //    * We've already checked and retrieved
             //      any applicable temporary identities above. If we're 
             //      here, none of them fit.
             //    * call set_identity() to store
-            if (status == PEP_STATUS_OK) {
+            if (status == PEP_STATUS_OK)
+                // FIXME: Do we set if we had to copy in the address?
                 status = set_identity(session, identity);
-                if (status == PEP_STATUS_OK) {
-                    elect_pubkey(session, identity);
-                }
-            }
             //  * Return: created identity
         }        
     }
@@ -649,8 +656,8 @@ DYNAMIC_API PEP_STATUS update_identity(
     }
     else {
         /*
+        * Input: address (no others)
          * Temporary identity information without username suplied
-            * Input: address (no others)
          */
          
         //  * Again, see if there is an own identity that uses this address. If so, we'll
@@ -845,12 +852,12 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     if (status == PEP_OUT_OF_MEMORY)
         return PEP_OUT_OF_MEMORY;
 
-    // Set usernames - priority is input username > stored name > "Anonymous"
+    // Set usernames - priority is input username > stored name > address
     // If there's an input username, we always patch the username with that
     // input.
     if (EMPTYSTR(identity->username)) {
         bool stored_uname = (stored_identity && stored_identity->username);
-        char* uname = (stored_uname ? stored_identity->username : "Anonymous");
+        char* uname = (stored_uname ? stored_identity->username : identity->address);
         free(identity->username);
         identity->username = strdup(uname);
         if (identity->username == NULL)
