@@ -2246,13 +2246,19 @@ PEP_STATUS set_or_update_with_identity(PEP_SESSION session,
 
 PEP_STATUS _set_trust_internal(PEP_SESSION session, pEp_identity* identity,
                                bool guard_transaction) {
-    return set_or_update_with_identity(session, identity,
-                                       _set_or_update_trust,
-                                       exists_trust_entry,
-                                       session->update_trust,
-                                       session->set_trust,
-                                       guard_transaction);
+    PEP_STATUS status = set_or_update_with_identity(session, identity,
+                                                    _set_or_update_trust,
+                                                    exists_trust_entry,
+                                                    session->update_trust,
+                                                    session->set_trust,
+                                                    guard_transaction);
+    if (status == PEP_STATUS_OK) {
+        if ((identity->comm_type | PEP_ct_confirmed) == PEP_ct_pEp)
+            status = set_as_pep_user(session, identity);
+    }
+    return status;
 }
+
 PEP_STATUS set_trust(PEP_SESSION session, pEp_identity* identity) {
     return _set_trust_internal(session, identity, true);
 }
@@ -2372,10 +2378,9 @@ PEP_STATUS set_as_pep_user(PEP_SESSION session, pEp_identity* user) {
 
     assert(session);
     assert(user);
-    assert(user->address);
     assert(!EMPTYSTR(user->user_id));
         
-    if (!session || !user || user->address || EMPTYSTR(user->user_id))
+    if (!session || !user || EMPTYSTR(user->user_id))
         return PEP_ILLEGAL_VALUE;
             
     PEP_STATUS status = PEP_STATUS_OK;
