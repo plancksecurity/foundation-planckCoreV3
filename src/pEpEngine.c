@@ -2460,7 +2460,7 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
     return status;
 }
 
-PEP_STATUS is_pep_user(PEP_SESSION session, pEp_identity *identity, bool* is_pep)
+DYNAMIC_API PEP_STATUS is_pep_user(PEP_SESSION session, pEp_identity *identity, bool* is_pep)
 {
     assert(session);
     assert(is_pep);

@@ -1192,6 +1192,27 @@ PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
 //
 DYNAMIC_API const char* get_engine_version();
 
+// is_pep_user() - returns true if the USER corresponding to this identity 
+//                 has been listed in the *person* table as a pEp user. 
+//
+//  parameters:
+//      identity (in) - identity containing the user_id to check (this is
+//                      the only part of the struct we require to be set)
+//      is_pep (out)  - boolean pointer - will return true or false by
+//                      reference with respect to whether or not user is
+//                      a known pep user
+//
+//  return_value: PEP_STATUS_OK if user found in person table
+//                PEP_ILLEGAL_VALUE if no user_id in input
+//                PEP_CANNOT_FIND_PERSON if user_id doesn't exist
+//
+//  caveat: This *does not check comm_type*
+//                         
+DYNAMIC_API PEP_STATUS is_pep_user(PEP_SESSION session, 
+                                   pEp_identity *identity, 
+                                   bool* is_pep);
+
+
 
 DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session);
 
@@ -1235,10 +1256,6 @@ PEP_STATUS set_as_pep_user(PEP_SESSION session, pEp_identity* user);
 // returns true (by reference) if a person with this user_id exists; 
 // Also replaces aliased user_ids by defaults in identity.
 PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exists);
-
-// returns true if the USER corresponding to this identity has been listed in
-// the *person* table as a pEp user. This *does not check comm_type*                         
-PEP_STATUS is_pep_user(PEP_SESSION session, pEp_identity *identity, bool* is_pep);
 
 PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
 
