@@ -231,7 +231,7 @@ DYNAMIC_API PEP_STATUS undo_last_mistrust(PEP_SESSION session);
 //
 //  caveat:
 //      the fields user_id, address and fpr must be supplied
-//      for non-own users, this will 1) set the trust bit on its comm type in the DN,
+//      for non-own users, this will 1) set the trust bit on its comm type in the DB,
 //      2) set this key as the identity default if the current identity default
 //      is not trusted, and 3) set this key as the user default if the current
 //      user default is not trusted.

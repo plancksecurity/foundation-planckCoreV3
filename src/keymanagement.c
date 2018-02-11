@@ -856,7 +856,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     // If there's an input username, we always patch the username with that
     // input.
     if (EMPTYSTR(identity->username)) {
-        bool stored_uname = (stored_identity && stored_identity->username);
+        bool stored_uname = (stored_identity && !EMPTYSTR(stored_identity->username));
         char* uname = (stored_uname ? stored_identity->username : identity->address);
         free(identity->username);
         identity->username = strdup(uname);
@@ -1241,19 +1241,28 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     status = set_pgp_keypair(session, ident->fpr);
     if (status != PEP_STATUS_OK)
         return status;
-        
-    // Save the input fpr
-    char* cached_fpr = strdup(ident->fpr);
-    ident->fpr = NULL;
 
     bool me = is_me(session, ident);
 
-    if (me)
-        return myself(session, ident); // FIXME: Not the right thing if we 
-                                       // don't always replace user default!!!
+    pEp_identity* ident_copy = identity_dup(ident);
+    char* cached_fpr = NULL;
+
+    // for setting up a temp trusted identity for the input fpr
+    pEp_identity* tmp_id = NULL;
+
+    if (me) {
+        status = myself(session, ident_copy); 
+        goto pep_free;
+    }
+    
+    // For later, in case we need to check the user default key
+    pEp_identity* tmp_user_ident = NULL;
+    
+    // Save the input fpr
+    cached_fpr = strdup(ident->fpr);
 
     // First, set up a temp trusted identity for the input fpr without a comm type;
-    pEp_identity* tmp_id = new_identity(ident->address, cached_fpr, ident->user_id, NULL);
+    tmp_id = new_identity(ident->address, ident->fpr, ident->user_id, NULL);
     status = validate_fpr(session, tmp_id);
         
     if (status == PEP_STATUS_OK) {
@@ -1262,8 +1271,8 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
         tmp_id->comm_type = _MAX(tmp_id->comm_type, input_default_ct) | PEP_ct_confirmed;
                                        
         // Get the default identity without setting the fpr
-        status = update_identity(session, ident);
-        ident_default_fpr = strdup(ident->fpr);
+        status = update_identity(session, ident_copy);
+        ident_default_fpr = strdup(ident_copy->fpr);
 
         if (status == PEP_STATUS_OK) {
             bool trusted_default = false;
@@ -1283,10 +1292,10 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
                     input_default_ct = tmp_id->comm_type;                    
                 }
                 else {
-                    free(ident->fpr);
-                    ident->fpr = strdup(cached_fpr);
-                    ident->comm_type = tmp_id->comm_type;
-                    status = set_identity(session, ident); // replace identity default            
+                    free(ident_copy->fpr);
+                    ident_copy->fpr = strdup(cached_fpr);
+                    ident_copy->comm_type = tmp_id->comm_type;
+                    status = set_identity(session, ident_copy); // replace identity default            
                 }
             }
             else { // we're setting this on the default fpr
@@ -1302,10 +1311,10 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
                 status = get_main_user_fpr(session, ident->user_id, &user_default);
             
                 if (status == PEP_STATUS_OK && user_default) {
-                    pEp_identity* tmp_user_ident = new_identity(ident->address, 
-                                                                user_default, 
-                                                                ident->user_id, 
-                                                                NULL);
+                    tmp_user_ident = new_identity(ident->address, 
+                                                  user_default, 
+                                                  ident->user_id, 
+                                                  NULL);
                     if (!tmp_user_ident)
                         status = PEP_OUT_OF_MEMORY;
                     else {
@@ -1322,11 +1331,14 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
                 }
             }
         }
-        free(ident_default_fpr);
-        free(cached_fpr);
-        free_identity(tmp_id);
     }    
 
+pep_free:
+    free(ident_default_fpr);
+    free(cached_fpr);
+    free_identity(tmp_id);
+    free_identity(ident_copy);
+    free_identity(tmp_user_ident);
     return status;
 }
 

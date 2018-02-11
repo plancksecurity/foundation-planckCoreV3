@@ -530,12 +530,16 @@ int main() {
     free(revokemaster_3000->fpr);
     revokemaster_3000->fpr = strdup(revoke_fpr_arr[2]);
     status = trust_personal_key(session, revokemaster_3000);
-    assert(status == PEP_STATUS_OK); 
+    assert(status == PEP_STATUS_OK);
+    status = get_trust(session, revokemaster_3000);
+    assert(status == PEP_STATUS_OK);
     assert(revokemaster_3000->comm_type & PEP_ct_confirmed);
 
     free(revokemaster_3000->fpr);
     revokemaster_3000->fpr = strdup(revoke_fpr_arr[0]);
     status = trust_personal_key(session, revokemaster_3000);
+    assert(status == PEP_STATUS_OK);
+    status = get_trust(session, revokemaster_3000);
     assert(status == PEP_STATUS_OK);
     assert(revokemaster_3000->comm_type & PEP_ct_confirmed);
     
