@@ -1263,7 +1263,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         // private keys have an 'unknown' trust designation in PGP).
 
         // We don't really worry about the status here.
-        status = import_trusted_own_keys(_session);        
+    //    status = import_trusted_own_keys(_session);        
     }
 
     // sync_session set to own session by default
@@ -1492,7 +1492,7 @@ DYNAMIC_API PEP_STATUS log_event(
     } while (result == SQLITE_BUSY);
     sqlite3_reset(session->log);
 
-    return ADD_TO_LOG(status);
+    return status;
 }
 
 DYNAMIC_API PEP_STATUS log_service(
