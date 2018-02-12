@@ -142,7 +142,7 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
     status = key_revoked(session, fpr, &revoked);    
         
     if (status != PEP_STATUS_OK) {
-        return ADD_TO_LOG(status);
+        return status;
     }
     
     if (!revoked) {
@@ -155,7 +155,7 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
                              
         assert(status == PEP_STATUS_OK);
         if (status != PEP_STATUS_OK)
-            return ADD_TO_LOG(status);
+            return status;
 
         if ((ct | PEP_ct_confirmed) == PEP_ct_OpenPGP &&
             !ident->me) {
@@ -164,7 +164,7 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
                                          &blacklisted);
                                          
             if (status != PEP_STATUS_OK)
-                return ADD_TO_LOG(status);
+                return status;
         }
     }
             
@@ -180,7 +180,7 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
             status = key_expired(session, fpr, time(NULL), &expired);            
             if (status != PEP_STATUS_OK) {
                  ident->comm_type = PEP_ct_key_expired;
-                 return ADD_TO_LOG(status);
+                 return status;
              }
             // communicate key(?)
         }        
@@ -458,7 +458,7 @@ DYNAMIC_API PEP_STATUS update_identity(
     assert(!EMPTYSTR(identity->address));
 
     if (!(session && identity && !EMPTYSTR(identity->address)))
-        return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
+        return PEP_ILLEGAL_VALUE;
 
     char* default_own_id = NULL;
     status = get_default_own_userid(session, &default_own_id);    
@@ -729,7 +729,7 @@ DYNAMIC_API PEP_STATUS update_identity(
         if (session->examine_identity)
             session->examine_identity(identity, session->examine_management);
 
-    return ADD_TO_LOG(status);
+    return status;
 }
 
 PEP_STATUS elect_ownkey(
@@ -819,7 +819,7 @@ PEP_STATUS _has_usable_priv_key(PEP_SESSION session, char* fpr,
     
     *is_usable = !dont_use_fpr;
     
-    return ADD_TO_LOG(status);
+    return status;
 }
 
 PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags)
@@ -834,7 +834,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
 
     if (!session || !identity || EMPTYSTR(identity->address) ||
         EMPTYSTR(identity->user_id))
-        return ADD_TO_LOG(PEP_ILLEGAL_VALUE);
+        return PEP_ILLEGAL_VALUE;
 
     pEp_identity *stored_identity = NULL;
     char* revoked_fpr = NULL; 
@@ -871,7 +871,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     
     // Let's see if we have an identity record in the DB for 
     // this user_id + address
-    DEBUG_LOG("myself", "debug", identity->address);
+//    DEBUG_LOG("myself", "debug", identity->address);
  
     status = get_identity(session,
                           identity->address,
@@ -942,7 +942,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
         if (!do_keygen)
             status = PEP_GET_KEY_FAILED;
         else {
-            DEBUG_LOG("Generating key pair", "debug", identity->address);
+// /            DEBUG_LOG("Generating key pair", "debug", identity->address);
 
             free(identity->fpr);
             identity->fpr = NULL;
@@ -952,7 +952,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
             if (status != PEP_STATUS_OK) {
                 char buf[11];
                 snprintf(buf, 11, "%d", status); // uh, this is kludgey. FIXME
-                DEBUG_LOG("Generating key pair failed", "debug", buf);
+//                DEBUG_LOG("Generating key pair failed", "debug", buf);
             }        
             else {
                 valid_key_found = true;
@@ -980,7 +980,7 @@ pep_free:
     free(default_own_id);
     free(revoked_fpr);                     
     free_identity(stored_identity);
-    return ADD_TO_LOG(status);
+    return status;
 }
 
 DYNAMIC_API PEP_STATUS initialise_own_identities(PEP_SESSION session,
@@ -1011,7 +1011,7 @@ pep_error:
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 {
-    return ADD_TO_LOG(_myself(session, identity, true, false));
+    return _myself(session, identity, true, false);
 }
 
 DYNAMIC_API PEP_STATUS register_examine_function(

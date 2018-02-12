@@ -425,12 +425,3 @@ static inline void _init_globals() {
     _pEp_rand_max_bits = ceil(log2(RAND_MAX));
     _pEp_log2_36 = log2(36);
 }
-
-#ifdef DEBUG_ERRORSTACK
-    PEP_STATUS session_add_error(PEP_SESSION session, const char* file, unsigned line, PEP_STATUS status);
-    #define ADD_TO_LOG(status)   session_add_error(session, __FILE__, __LINE__, (status))
-    #define GOTO(label)          do{ (void)session_add_error(session, __FILE__, __LINE__, status); goto label; }while(0)
-#else
-    #define ADD_TO_LOG(status)   (status)
-    #define GOTO(label)          goto label
-#endif

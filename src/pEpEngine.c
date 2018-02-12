@@ -3356,7 +3356,7 @@ enomem:
     status = PEP_OUT_OF_MEMORY;
 
 the_end:
-    return ADD_TO_LOG(status);
+    return status;
 }
 
 DYNAMIC_API PEP_STATUS get_languagelist(
