@@ -1279,13 +1279,14 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     // for setting up a temp trusted identity for the input fpr
     pEp_identity* tmp_id = NULL;
 
+    // For later, in case we need to check the user default key
+    pEp_identity* tmp_user_ident = NULL;
+
     if (me) {
         status = myself(session, ident_copy); 
         goto pep_free;
     }
     
-    // For later, in case we need to check the user default key
-    pEp_identity* tmp_user_ident = NULL;
     
     // Save the input fpr
     cached_fpr = strdup(ident->fpr);
