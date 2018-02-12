@@ -1484,15 +1484,10 @@ DYNAMIC_API PEP_STATUS log_event(
         sqlite3_bind_text(session->log, 4, comment, -1, SQLITE_STATIC);
     else
         sqlite3_bind_null(session->log, 4);
-    do {
-        result = sqlite3_step(session->log);
-        assert(result == SQLITE_DONE || result == SQLITE_BUSY);
-        if (result != SQLITE_DONE && result != SQLITE_BUSY)
-            status = PEP_UNKNOWN_ERROR;
-    } while (result == SQLITE_BUSY);
+    result = sqlite3_step(session->log);
     sqlite3_reset(session->log);
 
-    return status;
+    return PEP_STATUS_OK; // We ignore errors for this function.
 }
 
 DYNAMIC_API PEP_STATUS log_service(
