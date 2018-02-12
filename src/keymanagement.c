@@ -396,6 +396,7 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
         if (!EMPTYSTR(return_id->username) && 
             (strcasecmp(return_id->username, return_id->address) == 0)) {
             free(return_id->username);
+            return_id->username = NULL;
         }
         if (EMPTYSTR(return_id->username)) {
             free(return_id->username);
