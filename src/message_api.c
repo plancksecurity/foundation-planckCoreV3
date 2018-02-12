@@ -1524,7 +1524,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 _il->ident->comm_type = PEP_ct_key_not_found;
                 _status = PEP_STATUS_OK;
             }
-            if (!has_pep_user)
+            if (!has_pep_user && !EMPTYSTR(_il->ident->user_id))
                 is_pep_user(session, _il->ident, &has_pep_user);
         }
         else
@@ -1556,7 +1556,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                     _il->ident->comm_type = PEP_ct_key_not_found;
                     _status = PEP_STATUS_OK;
                 }
-                if (!has_pep_user)
+                if (!has_pep_user && !EMPTYSTR(_il->ident->user_id))
                     is_pep_user(session, _il->ident, &has_pep_user);
             }
             else
@@ -1587,7 +1587,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                     _il->ident->comm_type = PEP_ct_key_not_found;
                     _status = PEP_STATUS_OK;
                 }
-                if (!has_pep_user)
+                if (!has_pep_user && !EMPTYSTR(_il->ident->user_id))
                     is_pep_user(session, _il->ident, &has_pep_user);
             }
             else
@@ -3451,21 +3451,21 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
         if (status != PEP_STATUS_OK)
             GOTO(pep_error);
     }
-    // 
-    // // Own identities can be retrieved here where they would otherwise
-    // // fail because we lack all other information. This is ok and even
-    // // desired. FIXME: IS it?
-    // status = update_identity_recip_list(session, tmp_msg->to);
-    // if (status != PEP_STATUS_OK)
-    //     GOTO(pep_error);
-    // 
-    // status = update_identity_recip_list(session, tmp_msg->cc);
-    // if (status != PEP_STATUS_OK)
-    //     GOTO(pep_error);
-    // 
-    // status = update_identity_recip_list(session, tmp_msg->bcc);
-    // if (status != PEP_STATUS_OK)
-    //     GOTO(pep_error);
+    
+    // Own identities can be retrieved here where they would otherwise
+    // fail because we lack all other information. This is ok and even
+    // desired. FIXME: IS it?
+    status = update_identity_recip_list(session, tmp_msg->to);
+    if (status != PEP_STATUS_OK)
+        GOTO(pep_error);
+    
+    status = update_identity_recip_list(session, tmp_msg->cc);
+    if (status != PEP_STATUS_OK)
+        GOTO(pep_error);
+    
+    status = update_identity_recip_list(session, tmp_msg->bcc);
+    if (status != PEP_STATUS_OK)
+        GOTO(pep_error);
     
     // This isn't incoming, though... so we need to reverse the direction
     tmp_msg->dir = PEP_dir_outgoing;

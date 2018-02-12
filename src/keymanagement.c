@@ -639,19 +639,19 @@ DYNAMIC_API PEP_STATUS update_identity(
 
             snprintf(identity->user_id, strlen(identity->address) + 6,
                      "TOFU_%s", identity->address);        
-            
-            free(identity->fpr);
-            identity->fpr = NULL;
-            identity->comm_type = PEP_ct_unknown;
-             
+
             //    * We've already checked and retrieved
             //      any applicable temporary identities above. If we're 
             //      here, none of them fit.
+            
+            status = elect_pubkey(session, identity);
+                         
             //    * call set_identity() to store
+            if (identity->fpr)
+                status = get_key_rating(session, identity->fpr, &identity->comm_type);
+        
+            //    * call set_identity() to store            
             status = set_identity(session, identity);
-            if (status == PEP_STATUS_OK) {
-                elect_pubkey(session, identity);
-            }
         }
     }
     else {
@@ -688,8 +688,37 @@ DYNAMIC_API PEP_STATUS update_identity(
         if (stored_ident)
             status = prepare_updated_identity(session, identity,
                                               stored_ident, false);
-        else // too little info
-            status = PEP_CANNOT_FIND_IDENTITY; 
+        else  {            
+            // too little info. BUT. We see if we can find a key; if so, we create a
+            // temp identity, look for a key, and store.
+                         
+            // create temporary identity, store it, and Return this
+            // This means TOFU_ user_id
+            identity->user_id = calloc(1, strlen(identity->address) + 6);
+            if (!identity->user_id)
+                return PEP_OUT_OF_MEMORY;
+
+            snprintf(identity->user_id, strlen(identity->address) + 6,
+                     "TOFU_%s", identity->address);        
+        
+            identity->username = strdup(identity->address);
+            if (!identity->address)
+                return PEP_OUT_OF_MEMORY;            
+            
+            free(identity->fpr);
+            identity->fpr = NULL;
+            identity->comm_type = PEP_ct_unknown;
+
+            status = elect_pubkey(session, identity);
+                         
+            if (identity->fpr)
+                status = get_key_rating(session, identity->fpr, &identity->comm_type);
+        
+            //    * call set_identity() to store            
+            status = set_identity(session, identity);
+
+        }
+            
     }
     
     // FIXME: This is legacy. I presume it's a notification for the caller...

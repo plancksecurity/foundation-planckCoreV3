@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
     me->me = true;    
     PEP_STATUS status = myself(session, me);
     
-    pEp_identity * you = new_identity("pep.test.apple@pep-project.org", NULL, "TOFU_pep.test.apple@pep-project.org", "pEp Test Recipient");    
+    pEp_identity * you = new_identity("pep.test.apple@pep-project.org", NULL, "pep.test.apple@pep-project.org", "pEp Apple Test");    
     you->me = false;    
     status = update_identity(session, you);
 
