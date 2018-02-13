@@ -2903,11 +2903,20 @@ static void _max_comm_type_from_identity_list(
         if (il->ident)
         {   
             PEP_STATUS status = PEP_STATUS_OK;
-            if (!is_me(session, il->ident))
+            DEBUG_LOG("timing_log", "_max_comm_type_from_identity_list for address ", il->ident->address);            
+            DEBUG_LOG("timing_log", "_max_comm_type_from_identity_list - calling is_me", quick_ts());
+            if (!is_me(session, il->ident)) {
+                DEBUG_LOG("timing_log", "_max_comm_type_from_identity_list - done with is_me, calling update_identity", quick_ts());
                 status = update_identity(session, il->ident);
-            else
+                DEBUG_LOG("timing_log", "_max_comm_type_from_identity_list - return from update_identity", quick_ts());                
+            }
+            else {
+                DEBUG_LOG("timing_log", "_max_comm_type_from_identity_list -done with is_me, calling myself", quick_ts());
                 status = myself(session, il->ident);
-                
+                DEBUG_LOG("timing_log", "_max_comm_type_from_identity_list - return from myself", quick_ts());
+            }    
+
+            DEBUG_LOG("timing_log", "_max_comm_type_from_identity_list - evaluating comm type", quick_ts());                
             // check for the return statuses which might not a representative
             // value in the comm_type
             if (status == PEP_ILLEGAL_VALUE || status == PEP_CANNOT_SET_PERSON ||
@@ -2922,6 +2931,7 @@ static void _max_comm_type_from_identity_list(
                         il->ident);
                 *comm_type_determined = true;
             }
+            DEBUG_LOG("timing_log", "_max_comm_type_from_identity_list - done evaluating comm type", quick_ts());                
         }
     }
 }
@@ -2932,6 +2942,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
         PEP_rating *rating
     )
 {
+    DEBUG_LOG("timing_log", "outgoing_message_rating - start", quick_ts());
     PEP_comm_type max_comm_type = PEP_ct_pEp;
     bool comm_type_determined = false;
 
@@ -2948,12 +2959,15 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
 
     *rating = PEP_rating_undefined;
 
+    DEBUG_LOG("timing_log", "outgoing_message_rating - calling _max_comm_type_from_identity on msg->to", quick_ts());
     _max_comm_type_from_identity_list(msg->to, session,
                                       &max_comm_type, &comm_type_determined);
-
+                                      
+    DEBUG_LOG("timing_log", "outgoing_message_rating - finished, calling _max_comm_type_from_identity on msg->cc", quick_ts());
     _max_comm_type_from_identity_list(msg->cc, session,
                                       &max_comm_type, &comm_type_determined);
 
+    DEBUG_LOG("timing_log", "outgoing_message_rating - finished, calling _max_comm_type_from_identity on msg->bcc", quick_ts());
     _max_comm_type_from_identity_list(msg->bcc, session,
                                       &max_comm_type, &comm_type_determined);
 
@@ -2966,6 +2980,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
         *rating = _MAX(_rating(max_comm_type, PEP_rating_undefined),
                 PEP_rating_unencrypted);
 
+    DEBUG_LOG("timing_log", "outgoing_message_rating - end", quick_ts());
     return PEP_STATUS_OK;
 }
 

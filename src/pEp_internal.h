@@ -425,3 +425,8 @@ static inline void _init_globals() {
     _pEp_rand_max_bits = ceil(log2(RAND_MAX));
     _pEp_log2_36 = log2(36);
 }
+
+static inline char* quick_ts() {
+    time_t the_time = time(NULL);
+    return ctime(&the_time);
+}
