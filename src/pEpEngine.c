@@ -1463,7 +1463,7 @@ DYNAMIC_API PEP_STATUS log_event(
         const char *comment
     )
 {
-    PEP_STATUS status = PEP_STATUS_OK;
+//    PEP_STATUS status = PEP_STATUS_OK;
     int result;
 
     assert(session);
@@ -2241,21 +2241,25 @@ PEP_STATUS set_or_update_with_identity(PEP_SESSION session,
 
 PEP_STATUS _set_trust_internal(PEP_SESSION session, pEp_identity* identity,
                                bool guard_transaction) {
-    PEP_STATUS status = set_or_update_with_identity(session, identity,
-                                                    _set_or_update_trust,
-                                                    exists_trust_entry,
-                                                    session->update_trust,
-                                                    session->set_trust,
-                                                    guard_transaction);
+    return set_or_update_with_identity(session, identity,
+                                       _set_or_update_trust,
+                                        exists_trust_entry,
+                                        session->update_trust,
+                                        session->set_trust,
+                                        guard_transaction);
+}
+
+// This is the TOP-LEVEL function. If you're calling from set_identity,
+// you can't use this one.
+PEP_STATUS set_trust(PEP_SESSION session, pEp_identity* identity) {
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    status = _set_trust_internal(session, identity, true);
     if (status == PEP_STATUS_OK) {
         if ((identity->comm_type | PEP_ct_confirmed) == PEP_ct_pEp)
             status = set_as_pep_user(session, identity);
     }
     return status;
-}
-
-PEP_STATUS set_trust(PEP_SESSION session, pEp_identity* identity) {
-    return _set_trust_internal(session, identity, true);
 }
 
 PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,
@@ -2278,6 +2282,7 @@ PEP_STATUS set_identity_entry(PEP_SESSION session, pEp_identity* identity,
                                        guard_transaction);
 }
 
+// This will NOT call set_as_pep_user; you have to do that separately.
 DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
     )
@@ -2368,7 +2373,7 @@ pep_free:
     return status;
 }
 
-// This ONLY sets the user flag, and creates a shell identity if necessary.
+// This ONLY sets the user flag. Must be called outside of a transaction.
 PEP_STATUS set_as_pep_user(PEP_SESSION session, pEp_identity* user) {
 
     assert(session);
@@ -2387,17 +2392,8 @@ PEP_STATUS set_as_pep_user(PEP_SESSION session, pEp_identity* user) {
     if (status != PEP_STATUS_OK)
         return status;
         
-    if (!person_exists) {
-        if (!user->address)
-            return PEP_ILLEGAL_VALUE;
-            
-        // create shell identity
-        pEp_identity* tmp_id = new_identity(user->address, NULL, user->user_id, user->username);
-        status = set_identity(session, tmp_id); // this creates the person
-        free_identity(tmp_id);
-        if (status != PEP_STATUS_OK)
-            return status;
-    }
+    if (!person_exists)
+        status = set_person(session, user, true);
         
     // Ok, let's set it.
     sqlite3_reset(session->set_as_pep_user);

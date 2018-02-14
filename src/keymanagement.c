@@ -975,6 +975,8 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     }
     
     status = set_identity(session, identity);
+    if (status == PEP_STATUS_OK)
+        status = set_as_pep_user(session, identity);
 
 pep_free:    
     free(default_own_id);
@@ -1144,7 +1146,12 @@ DYNAMIC_API PEP_STATUS undo_last_mistrust(PEP_SESSION session) {
     else {
         status = delete_mistrusted_key(session, cached_ident->fpr);
         if (status == PEP_STATUS_OK) {
-            status = set_identity(session, cached_ident);            
+            status = set_identity(session, cached_ident);
+            // THIS SHOULDN'T BE NECESSARY - PREVIOUS VALUE WAS IN THE DB
+            // if (status == PEP_STATUS_OK) {
+            //     if ((cached_ident->comm_type | PEP_ct_confirmed) == PEP_ct_pEp)
+            //         status = set_as_pep_user(session, cached_ident);
+            // }            
             free_identity(session->cached_mistrusted);
         }
     }
@@ -1326,7 +1333,11 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
                     free(ident_copy->fpr);
                     ident_copy->fpr = strdup(cached_fpr);
                     ident_copy->comm_type = tmp_id->comm_type;
-                    status = set_identity(session, ident_copy); // replace identity default            
+                    status = set_identity(session, ident_copy); // replace identity default
+                    if (status == PEP_STATUS_OK) {
+                        if ((ident_copy->comm_type | PEP_ct_confirmed) == PEP_ct_pEp)
+                            status = set_as_pep_user(session, ident_copy);
+                    }            
                 }
             }
             else { // we're setting this on the default fpr
