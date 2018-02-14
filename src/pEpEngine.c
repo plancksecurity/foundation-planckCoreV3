@@ -94,7 +94,8 @@ static const char *sql_get_identity =
     "               else 0"
     "          end) = 1"
     "   and identity.user_id = ?2" 
-    "   order by is_own desc; ";
+    "   order by is_own desc, "
+    "   timestamp desc; ";
 
 static const char *sql_get_identity_without_trust_check =  
     "select identity.main_key_id, username, lang,"
@@ -107,7 +108,8 @@ static const char *sql_get_identity_without_trust_check =
     "               else 0"
     "          end) = 1"
     "   and identity.user_id = ?2 "
-    "   order by is_own desc; ";
+    "   order by is_own desc, "
+    "   timestamp desc; ";
 
 static const char *sql_get_identities_by_address =  
     "select user_id, identity.main_key_id, username, lang,"
@@ -119,7 +121,8 @@ static const char *sql_get_identities_by_address =
     "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1)"
     "               else 0"
     "          end) = 1 "
-    "   order by is_own desc; ";
+    "   order by is_own desc, "
+    "   timestamp desc; ";
 
 static const char *sql_replace_identities_fpr =  
     "update identity"
@@ -601,7 +604,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     sqlite3_busy_timeout(_session->system_db, 1000);
 
 // increment this when patching DDL
-#define _DDL_USER_VERSION "7"
+#define _DDL_USER_VERSION "8"
 
     if (in_first) {
 
@@ -662,6 +665,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "   comment text,\n"
                 "   flags integer default 0,\n"
                 "   is_own integer default 0,\n"
+                "   timestamp integer default (datetime('now')),\n"
                 "   primary key (address, user_id)\n"
                 ");\n"
                 "create table if not exists trust (\n"
@@ -749,7 +753,9 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         // is really necessary...
         if (version == 1) {
             bool version_changed = true;
-
+            if (table_contains_column(_session, "identity", "timestamp") > 0) {
+                version = 8;
+            }            
             if (table_contains_column(_session, "person", "is_pep_user") > 0) {
                 version = 7;
             }            
@@ -966,6 +972,17 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                     NULL
                 );
                 assert(int_result == SQLITE_OK);    
+            }
+            if (version < 8) {
+                int_result = sqlite3_exec(
+                    _session->db,
+                    "alter table identity \n"
+                    "   add column timestamp timestamp integer default (datetime('now'));\n",
+                    NULL,
+                    NULL,
+                    NULL
+                );
+                assert(int_result == SQLITE_OK);
             }
         }        
         else { 

@@ -676,13 +676,14 @@ DYNAMIC_API PEP_STATUS update_identity(
         if (status == PEP_CANNOT_FIND_IDENTITY || !stored_ident) { 
  
             identity_list* id_list = NULL;
+            //    * Search for identity with this address
             status = get_identities_by_address(session, identity->address, &id_list);
 
-            //    * Search for identity with this address
-            if (id_list && !(id_list->next)) { // exactly one            
-                //    * If exactly one found
-                //      * elect valid key for identity (see below)
-                //      * Return this identity
+            // Results are ordered by timestamp descending, so this covers
+            // both the one-result and multi-result cases
+            if (id_list) {
+                if (stored_ident) // unlikely
+                    free_identity(stored_ident);
                 stored_ident = id_list->ident;
             }
         }
