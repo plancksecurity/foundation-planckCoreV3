@@ -93,7 +93,8 @@ static const char *sql_get_identity =
     "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1)"
     "               else 0"
     "          end) = 1"
-    "   and identity.user_id = ?2;";
+    "   and identity.user_id = ?2" 
+    "   order by is_own desc; ";
 
 static const char *sql_get_identity_without_trust_check =  
     "select identity.main_key_id, username, lang,"
@@ -105,7 +106,8 @@ static const char *sql_get_identity_without_trust_check =
     "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1)"
     "               else 0"
     "          end) = 1"
-    "   and identity.user_id = ?2;";
+    "   and identity.user_id = ?2 "
+    "   order by is_own desc; ";
 
 static const char *sql_get_identities_by_address =  
     "select user_id, identity.main_key_id, username, lang,"
@@ -116,7 +118,8 @@ static const char *sql_get_identities_by_address =
     "               when (lower(address) = lower(?1)) then (1)"
     "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1)"
     "               else 0"
-    "          end) = 1;";
+    "          end) = 1 "
+    "   order by is_own desc; ";
 
 static const char *sql_replace_identities_fpr =  
     "update identity"
@@ -131,12 +134,8 @@ static const char *sql_remove_fpr_as_default =
 // if main_key_id already set, don't touch.
 static const char *sql_set_person = 
      "insert into person (id, username, lang, main_key_id, device_group)"
-     "  values (?1, ?2, ?3,"
-//     "    (select coalesce( "
-//     "          (select main_key_id from person where id = ?1), " 
-//     "           upper(replace(?4,' ','')))),"
-    "   ?4,"
-     "    (select device_group from person where id = ?1)) ;";
+     "  values (?1, ?2, ?3, ?4, "
+     "          (select device_group from person where id = ?1)) ;";
 
 static const char *sql_update_person = 
     "update person "
