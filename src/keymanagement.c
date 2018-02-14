@@ -1225,7 +1225,7 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
         goto pep_free;
     
     // remove as default if necessary
-    if (strcmp(tmp_ident->fpr, ident->fpr) == 0) {
+    if (!EMPTYSTR(tmp_ident->fpr) && strcmp(tmp_ident->fpr, ident->fpr) == 0) {
         free(tmp_ident->fpr);
         tmp_ident->fpr = NULL;
         tmp_ident->comm_type = PEP_ct_unknown;
@@ -1295,7 +1295,6 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
         status = myself(session, ident_copy); 
         goto pep_free;
     }
-    
     
     // Save the input fpr
     cached_fpr = strdup(ident->fpr);
