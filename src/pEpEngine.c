@@ -976,13 +976,34 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             if (version < 8) {
                 int_result = sqlite3_exec(
                     _session->db,
-                    "alter table identity \n"
-                    "   add column timestamp timestamp integer default (datetime('now'));\n",
+                    "PRAGMA foreign_keys=off;\n"
+                    "BEGIN TRANSACTION;\n"
+                    "ALTER TABLE identity RENAME TO _identity_old;\n"
+                    "create table identity (\n"
+                    "   address text,\n"
+                    "   user_id text\n"
+                    "       references person (id)\n"
+                    "       on delete cascade on update cascade,\n"
+                    "   main_key_id text\n"
+                    "       references pgp_keypair (fpr)\n"
+                    "       on delete set null,\n"
+                    "   comment text,\n"
+                    "   flags integer default 0,\n"
+                    "   is_own integer default 0,\n"
+                    "   timestamp integer default (datetime('now')),\n"
+                    "   primary key (address, user_id)\n"
+                    ");\n"
+                    "INSERT INTO identity SELECT * FROM _identity_old;\n"
+                    "DROP TABLE _identity_old;\n"
+                    "COMMIT;\n"
+                    "\n"
+                    "PRAGMA foreign_keys=on;\n"
+                    ,
                     NULL,
                     NULL,
                     NULL
                 );
-                assert(int_result == SQLITE_OK);
+                assert(int_result == SQLITE_OK);    
             }
         }        
         else { 
