@@ -329,8 +329,6 @@
 		64A826661B455D0800EECAF0 /* platform_unix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = platform_unix.h; path = ../src/platform_unix.h; sourceTree = "<group>"; };
 		64A826691B455D0800EECAF0 /* platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = platform.h; path = ../src/platform.h; sourceTree = "<group>"; };
 		64A8266A1B455D0800EECAF0 /* resource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = resource.h; path = ../src/resource.h; sourceTree = "<group>"; };
-		64A8266B1B455D0800EECAF0 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = ../src/sqlite3.c; sourceTree = "<group>"; };
-		64A8266C1B455D0800EECAF0 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = ../src/sqlite3.h; sourceTree = "<group>"; };
 		64A8266D1B455D0800EECAF0 /* stringlist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = stringlist.c; path = ../src/stringlist.c; sourceTree = "<group>"; };
 		64A8266E1B455D0800EECAF0 /* stringlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stringlist.h; path = ../src/stringlist.h; sourceTree = "<group>"; };
 		64A8266F1B455D0800EECAF0 /* stringpair.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = stringpair.c; path = ../src/stringpair.c; sourceTree = "<group>"; };
@@ -559,8 +557,6 @@
 				64A826661B455D0800EECAF0 /* platform_unix.h */,
 				64A826691B455D0800EECAF0 /* platform.h */,
 				64A8266A1B455D0800EECAF0 /* resource.h */,
-				64A8266B1B455D0800EECAF0 /* sqlite3.c */,
-				64A8266C1B455D0800EECAF0 /* sqlite3.h */,
 				64A8266D1B455D0800EECAF0 /* stringlist.c */,
 				64A8266E1B455D0800EECAF0 /* stringlist.h */,
 				64A8266F1B455D0800EECAF0 /* stringpair.c */,
