@@ -587,8 +587,8 @@ DYNAMIC_API PEP_STATUS update_identity(
         
         if (default_own_id) {
             status = get_identity(session, 
-                                  default_own_id, 
                                   identity->address, 
+                                  default_own_id, 
                                   &stored_ident);
         }
         // If there isn't an own identity, search for a non-temp stored ident
@@ -667,8 +667,8 @@ DYNAMIC_API PEP_STATUS update_identity(
          
         if (default_own_id) {
             status = get_identity(session, 
-                                  default_own_id, 
                                   identity->address, 
+                                  default_own_id, 
                                   &stored_ident);
         }
         // If there isn't an own identity, search for a non-temp stored ident
@@ -1627,7 +1627,7 @@ DYNAMIC_API PEP_STATUS set_own_key(
     
     pEp_identity* my_id = NULL;
     
-    status = get_identity(session, my_user_id, address, &my_id);
+    status = get_identity(session, address, my_user_id, &my_id);
 
     if (status == PEP_STATUS_OK && my_id) {
         if (my_id->fpr && strcasecmp(my_id->fpr, fpr) == 0) {
