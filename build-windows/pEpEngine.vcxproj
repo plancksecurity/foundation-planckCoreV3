@@ -121,6 +121,7 @@ cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.h ..\src\ /y
     <ClCompile Include="..\src\mime.c" />
     <ClCompile Include="..\src\openpgp_compat.c" />
     <ClCompile Include="..\src\pEpEngine.c" />
+    <ClCompile Include="..\src\pEp_string.c" />
     <ClCompile Include="..\src\pgp_gpg.c" />
     <ClCompile Include="..\src\platform_windows.cpp" />
     <ClCompile Include="..\src\resource_id.c" />
@@ -155,6 +156,7 @@ cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.h ..\src\ /y
     <ClInclude Include="..\src\openpgp_compat.h" />
     <ClInclude Include="..\src\pEpEngine.h" />
     <ClInclude Include="..\src\pEp_internal.h" />
+    <ClInclude Include="..\src\pEp_string.h" />
     <ClInclude Include="..\src\pgp_gpg.h" />
     <ClInclude Include="..\src\pgp_gpg_internal.h" />
     <ClInclude Include="..\src\platform.h" />

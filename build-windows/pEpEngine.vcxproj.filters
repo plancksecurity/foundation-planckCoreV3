@@ -105,6 +105,9 @@
     <ClCompile Include="..\src\resource_id.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\pEp_string.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\keymanagement.h">
@@ -204,6 +207,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="..\src\resource_id.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\pEp_string.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
