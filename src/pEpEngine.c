@@ -10,7 +10,7 @@
 #include <time.h>
 #include <stdlib.h>
 
-#define _PEP_SQLITE_DEBUG 0
+#define _PEP_SQLITE_DEBUG 1
 #if _PEP_SQLITE_DEBUG
 #include <sqlite3.h>
 #endif
@@ -993,7 +993,13 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                     "   timestamp integer default (datetime('now')),\n"
                     "   primary key (address, user_id)\n"
                     ");\n"
-                    "INSERT INTO identity SELECT * FROM _identity_old;\n"
+                    "INSERT INTO identity (address, user_id, main_key_id, "
+                    "                      comment, flags, is_own) "
+                    "   SELECT _identity_old.address, _identity_old.user_id, "
+                    "          _identity_old.main_key_id, _identity_old.comment, "
+                    "          _identity_old.flags, _identity_old.is_own "
+                    "   FROM _identity_old "
+                    "   WHERE 1;\n"
                     "DROP TABLE _identity_old;\n"
                     "COMMIT;\n"
                     "\n"
