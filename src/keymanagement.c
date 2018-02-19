@@ -1321,7 +1321,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
         goto pep_free;
     }
     
-    // Save the input fpr
+    // Save the input fpr, which we already tested as non-NULL
     cached_fpr = strdup(ident->fpr);
 
     // First, set up a temp trusted identity for the input fpr without a comm type;
@@ -1335,7 +1335,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
                                        
         // Get the default identity without setting the fpr
         status = update_identity(session, ident_copy);
-        ident_default_fpr = strdup(ident_copy->fpr);
+        ident_default_fpr = (EMPTYSTR(ident_copy->fpr) ? NULL : strdup(ident_copy->fpr));
 
         if (status == PEP_STATUS_OK) {
             bool trusted_default = false;
