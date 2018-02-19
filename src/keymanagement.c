@@ -349,6 +349,25 @@ static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
     new_ident->me = new_ident->me || stored_ident->me;
 }
 
+static void adjust_pep_trust_status(PEP_SESSION session, pEp_identity* identity) {
+    assert(session);
+    assert(identity);
+    
+    if (identity->comm_type < PEP_ct_strong_but_unconfirmed ||
+        (identity->comm_type | PEP_ct_confirmed) == PEP_ct_pEp)
+        return;
+    
+    bool pep_user;
+    
+    is_pep_user(session, identity, &pep_user);
+    
+    if (pep_user) {
+        PEP_comm_type confirmation_status = identity->comm_type & PEP_ct_confirmed;
+        identity->comm_type = PEP_ct_pEp_unconfirmed | confirmation_status;    
+    }
+}
+
+
 static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
                                                  pEp_identity* return_id,
                                                  pEp_identity* stored_ident,
@@ -387,6 +406,8 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
         return_id->fpr = strdup(stored_ident->fpr);
         
     return_id->comm_type = stored_ident->comm_type;
+    
+    adjust_pep_trust_status(session, return_id);
                 
     // We patch the DB with the input username, but if we didn't have
     // one, we pull it out of storage if available.
@@ -445,7 +466,6 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     
     return status;
 }
-
 
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
@@ -569,9 +589,11 @@ DYNAMIC_API PEP_STATUS update_identity(
             //      any applicable temporary identities above. If we're 
             //      here, none of them fit.
             //    * call set_identity() to store
-            if (status == PEP_STATUS_OK)
+            if (status == PEP_STATUS_OK) {
                 // FIXME: Do we set if we had to copy in the address?
+                adjust_pep_trust_status(session, identity);
                 status = set_identity(session, identity);
+            }
             //  * Return: created identity
         }        
     }
@@ -651,7 +673,8 @@ DYNAMIC_API PEP_STATUS update_identity(
             if (identity->fpr)
                 status = get_key_rating(session, identity->fpr, &identity->comm_type);
         
-            //    * call set_identity() to store            
+            //    * call set_identity() to store
+            adjust_pep_trust_status(session, identity);            
             status = set_identity(session, identity);
         }
     }
@@ -716,7 +739,8 @@ DYNAMIC_API PEP_STATUS update_identity(
             if (identity->fpr)
                 status = get_key_rating(session, identity->fpr, &identity->comm_type);
         
-            //    * call set_identity() to store            
+            //    * call set_identity() to store
+            adjust_pep_trust_status(session, identity);            
             status = set_identity(session, identity);
 
         }

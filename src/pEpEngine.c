@@ -2120,7 +2120,7 @@ PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
     }
 
     sqlite3_reset(session->exists_identity_entry);
-    return PEP_STATUS_OK;
+    return status;
 }
 
 PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
@@ -2154,7 +2154,7 @@ PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
     }
     
     sqlite3_reset(session->exists_trust_entry);
-    return PEP_STATUS_OK;
+    return status;
 }
 
 // FIXME: We can rollback in set_identity on the return status,
