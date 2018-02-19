@@ -2959,12 +2959,12 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
 
     if (comm_type_determined == false) {
         // likely means there was a massive screwup with no sender or recipient
-        // keys, but regardless, this'll end up being unencrypted
-        *rating = PEP_rating_unencrypted;
+        // keys
+        *rating = PEP_rating_undefined;
     }
     else
         *rating = _MAX(_rating(max_comm_type, PEP_rating_undefined),
-                PEP_rating_unencrypted);
+                               PEP_rating_unencrypted);
 
     return PEP_STATUS_OK;
 }
