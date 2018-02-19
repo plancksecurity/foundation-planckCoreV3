@@ -2915,7 +2915,8 @@ static void _max_comm_type_from_identity_list(
                 // PEP_CANNOT_FIND_IDENTITY only comes back when we've really
                 // got nothing from update_identity after applying the whole
                 // heuristic
-                *max_comm_type = PEP_ct_unknown;
+                *max_comm_type = PEP_rating_unencrypted;
+                *comm_type_determined = true;
             }
             else {
                 *max_comm_type = _get_comm_type(session, *max_comm_type,
