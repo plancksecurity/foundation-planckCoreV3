@@ -1918,8 +1918,10 @@ DYNAMIC_API PEP_STATUS get_identity(
                 (const char *) sqlite3_column_text(session->get_identity, 1)
                 );
         assert(_identity);
-        if (_identity == NULL)
+        if (_identity == NULL) {
+            sqlite3_reset(session->get_identity);
             return PEP_OUT_OF_MEMORY;
+        }
 
         _identity->comm_type = (PEP_comm_type)
             sqlite3_column_int(session->get_identity, 2);
@@ -1941,6 +1943,7 @@ DYNAMIC_API PEP_STATUS get_identity(
         *identity = _identity;
         break;
     default:
+        sqlite3_reset(session->get_identity);
         status = PEP_CANNOT_FIND_IDENTITY;
         *identity = NULL;
     }
@@ -1983,8 +1986,10 @@ PEP_STATUS get_identity_without_trust_check(
                 (const char *) sqlite3_column_text(session->get_identity_without_trust_check, 1)
                 );
         assert(_identity);
-        if (_identity == NULL)
+        if (_identity == NULL) {
+            sqlite3_reset(session->get_identity_without_trust_check);
             return PEP_OUT_OF_MEMORY;
+        }
 
         _identity->comm_type = PEP_ct_unknown;
         const char* const _lang = (const char *)
@@ -2046,8 +2051,10 @@ PEP_STATUS get_identities_by_address(
                 (const char *) sqlite3_column_text(session->get_identities_by_address, 2)
                 );
         assert(ident);
-        if (ident == NULL)
+        if (ident == NULL) {
+            sqlite3_reset(session->get_identities_by_address);
             return PEP_OUT_OF_MEMORY;
+        }
 
         ident->comm_type = PEP_ct_unknown;
         
@@ -2093,6 +2100,8 @@ PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
     
     *exists = false;
     
+    PEP_STATUS status = PEP_STATUS_OK;
+    
     sqlite3_reset(session->exists_identity_entry);
     sqlite3_bind_text(session->exists_identity_entry, 1, identity->address, -1,
                       SQLITE_STATIC);
@@ -2106,10 +2115,11 @@ PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
             *exists = (sqlite3_column_int(session->exists_identity_entry, 0) != 0);
             break;
         }
-        default:
-            return PEP_UNKNOWN_ERROR;
+        default: 
+            status = PEP_UNKNOWN_ERROR;
     }
 
+    sqlite3_reset(session->exists_identity_entry);
     return PEP_STATUS_OK;
 }
 
@@ -2123,6 +2133,8 @@ PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
         return PEP_ILLEGAL_VALUE;
     
     *exists = false;
+    
+    PEP_STATUS status = PEP_STATUS_OK;
     
     sqlite3_reset(session->exists_trust_entry);
     sqlite3_bind_text(session->exists_trust_entry, 1, identity->user_id, -1,
@@ -2138,9 +2150,10 @@ PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
             break;
         }
         default:
-            return PEP_UNKNOWN_ERROR;
+            status = PEP_UNKNOWN_ERROR;
     }
-
+    
+    sqlite3_reset(session->exists_trust_entry);
     return PEP_STATUS_OK;
 }
 
@@ -2484,8 +2497,10 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
                 break;
             }
             default:
+                sqlite3_reset(session->exists_person);
                 return PEP_UNKNOWN_ERROR;
         }
+        sqlite3_reset(session->exists_person);
     }
     else if (status == PEP_STATUS_OK) {
         *exists = true; // thank you, delete on cascade!
@@ -2495,7 +2510,7 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
     }
     else
         free(alias_default);
-        
+            
     return status;
 }
 
@@ -2536,10 +2551,12 @@ DYNAMIC_API PEP_STATUS is_pep_user(PEP_SESSION session, pEp_identity *identity, 
             break;
         }
         default:
+            sqlite3_reset(session->is_pep_user);
             free(alias_default);
             return PEP_CANNOT_FIND_PERSON;
     }
 
+    sqlite3_reset(session->is_pep_user);
     return PEP_STATUS_OK;
 }
 
