@@ -2525,7 +2525,7 @@ DYNAMIC_API PEP_STATUS is_pep_user(PEP_SESSION session, pEp_identity *identity, 
         return PEP_ILLEGAL_VALUE;
     
     *is_pep = false;
-    
+            
     const char* user_id = identity->user_id;
     
     if (!session || EMPTYSTR(user_id))

@@ -406,9 +406,7 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
         return_id->fpr = strdup(stored_ident->fpr);
         
     return_id->comm_type = stored_ident->comm_type;
-    
-    adjust_pep_trust_status(session, return_id);
-                
+                    
     // We patch the DB with the input username, but if we didn't have
     // one, we pull it out of storage if available.
     // (also, if the input username is "anonymous" and there exists
@@ -435,7 +433,10 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     if (EMPTYSTR(return_id->user_id)) {
         free(return_id->user_id);
         return_id->user_id = strdup(stored_ident->user_id);
-    }    
+    } 
+    
+    adjust_pep_trust_status(session, return_id);
+   
     // Call set_identity() to store
     if ((is_identity_default || is_user_default) &&
          is_address_default) {                 
