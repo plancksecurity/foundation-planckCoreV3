@@ -1507,29 +1507,29 @@ DYNAMIC_API PEP_STATUS log_event(
     )
 {
 //    PEP_STATUS status = PEP_STATUS_OK;
-    int result;
-
-    assert(session);
-    assert(title);
-    assert(entity);
-
-    if (!(session && title && entity))
-        return PEP_ILLEGAL_VALUE;
-
-    sqlite3_reset(session->log);
-    sqlite3_bind_text(session->log, 1, title, -1, SQLITE_STATIC);
-    sqlite3_bind_text(session->log, 2, entity, -1, SQLITE_STATIC);
-    if (description)
-        sqlite3_bind_text(session->log, 3, description, -1, SQLITE_STATIC);
-    else
-        sqlite3_bind_null(session->log, 3);
-    if (comment)
-        sqlite3_bind_text(session->log, 4, comment, -1, SQLITE_STATIC);
-    else
-        sqlite3_bind_null(session->log, 4);
-    result = sqlite3_step(session->log);
-    sqlite3_reset(session->log);
-
+    // int result;
+    // 
+    // assert(session);
+    // assert(title);
+    // assert(entity);
+    // 
+    // if (!(session && title && entity))
+    //     return PEP_ILLEGAL_VALUE;
+    // 
+    // sqlite3_reset(session->log);
+    // sqlite3_bind_text(session->log, 1, title, -1, SQLITE_STATIC);
+    // sqlite3_bind_text(session->log, 2, entity, -1, SQLITE_STATIC);
+    // if (description)
+    //     sqlite3_bind_text(session->log, 3, description, -1, SQLITE_STATIC);
+    // else
+    //     sqlite3_bind_null(session->log, 3);
+    // if (comment)
+    //     sqlite3_bind_text(session->log, 4, comment, -1, SQLITE_STATIC);
+    // else
+    //     sqlite3_bind_null(session->log, 4);
+    // result = sqlite3_step(session->log);
+    // sqlite3_reset(session->log);
+    // 
     return PEP_STATUS_OK; // We ignore errors for this function.
 }
 
