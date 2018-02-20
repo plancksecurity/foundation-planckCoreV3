@@ -1457,7 +1457,7 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->delete_mistrusted_key);
             if (session->is_mistrusted_key)
                 sqlite3_finalize(session->is_mistrusted_key);
-
+        
             if (session->db)
                 sqlite3_close_v2(session->db);
             if (session->system_db)
