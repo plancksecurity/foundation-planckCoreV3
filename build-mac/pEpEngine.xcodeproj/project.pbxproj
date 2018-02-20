@@ -10,6 +10,8 @@
 		430BCC482015EE800077E998 /* pEp_string.h in Headers */ = {isa = PBXBuildFile; fileRef = 430BCC462015EE800077E998 /* pEp_string.h */; };
 		430BCC492015EE800077E998 /* pEp_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 430BCC472015EE800077E998 /* pEp_string.c */; };
 		430D258B1C9ED75A00B94535 /* blacklist.c in Sources */ = {isa = PBXBuildFile; fileRef = 430D258A1C9ED75A00B94535 /* blacklist.c */; };
+		43370833203C075A004E6547 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 4337082D203C075A004E6547 /* sqlite3.c */; };
+		43370834203C075A004E6547 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 43370832203C075A004E6547 /* sqlite3.h */; };
 		4354FF651D6EDF300033069C /* sync_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = 4354FF641D6EDF300033069C /* sync_impl.c */; };
 		4354FF691D6EE1A70033069C /* NULL.c in Sources */ = {isa = PBXBuildFile; fileRef = 4354FF681D6EE1A70033069C /* NULL.c */; };
 		43BA0F461D7964750059172F /* asn1_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 43BA0F451D7964750059172F /* asn1_helper.c */; };
@@ -194,6 +196,8 @@
 		430BCC462015EE800077E998 /* pEp_string.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pEp_string.h; path = ../src/pEp_string.h; sourceTree = "<group>"; };
 		430BCC472015EE800077E998 /* pEp_string.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEp_string.c; path = ../src/pEp_string.c; sourceTree = "<group>"; };
 		430D258A1C9ED75A00B94535 /* blacklist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = blacklist.c; path = ../src/blacklist.c; sourceTree = "<group>"; };
+		4337082D203C075A004E6547 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = ../src/sqlite3.c; sourceTree = "<group>"; };
+		43370832203C075A004E6547 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = ../src/sqlite3.h; sourceTree = "<group>"; };
 		4346F86A1ECB38E700381CBE /* sync_app.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = sync_app.h; path = ../src/sync_app.h; sourceTree = "<group>"; };
 		4354FF641D6EDF300033069C /* sync_impl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_impl.c; path = ../src/sync_impl.c; sourceTree = "<group>"; };
 		4354FF681D6EE1A70033069C /* NULL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NULL.c; path = ../asn.1/NULL.c; sourceTree = "<group>"; };
@@ -510,6 +514,8 @@
 		64A8264B1B455C5600EECAF0 /* srcref */ = {
 			isa = PBXGroup;
 			children = (
+				4337082D203C075A004E6547 /* sqlite3.c */,
+				43370832203C075A004E6547 /* sqlite3.h */,
 				430BCC472015EE800077E998 /* pEp_string.c */,
 				430BCC462015EE800077E998 /* pEp_string.h */,
 				43F6921C1F164A47009418F5 /* resource_id.c */,
@@ -603,6 +609,7 @@
 				6467888D1CEB3D120001F54C /* map_asn1.h in Headers */,
 				646C41131D510CD800C63EFF /* HandshakeRequest.h in Headers */,
 				646C40F31D510CD800C63EFF /* asn_system.h in Headers */,
+				43370834203C075A004E6547 /* sqlite3.h in Headers */,
 				646C410B1D510CD800C63EFF /* constraints.h in Headers */,
 				646C41251D510CD800C63EFF /* NativeInteger.h in Headers */,
 				646C41271D510CD800C63EFF /* OCTET_STRING.h in Headers */,
@@ -857,6 +864,7 @@
 				64A826781B455D0800EECAF0 /* bloblist.c in Sources */,
 				430BCC492015EE800077E998 /* pEp_string.c in Sources */,
 				646C41041D510CD800C63EFF /* constr_SEQUENCE.c in Sources */,
+				43370833203C075A004E6547 /* sqlite3.c in Sources */,
 				64A826881B455D0800EECAF0 /* timestamp.c in Sources */,
 				646C41221D510CD800C63EFF /* NativeEnumerated.c in Sources */,
 				43F6921D1F164A47009418F5 /* resource_id.c in Sources */,
