@@ -1620,8 +1620,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         if ((has_pep_user || !session->passive_mode) && 
             !(flags & PEP_encrypt_flag_force_no_attached_key)) {
             attach_own_key(session, src);
-            decorate_message(src, PEP_rating_undefined, NULL, true);
         }
+        decorate_message(src, PEP_rating_undefined, NULL, true);
         return PEP_UNENCRYPTED;
     }
     else {
