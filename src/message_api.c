@@ -176,11 +176,6 @@ void replace_opt_field(message *msg, const char *name, const char *value)
         stringpair_list_t* opt_fields = msg->opt_fields;
         stringpair_t* pair = NULL;
         
-        if (!opt_fields) {
-            msg->opt_fields = new_stringpair_list(NULL);
-            opt_fields = msg->opt_fields;
-        }
-        
         if (opt_fields) {
             while (opt_fields) {
                 pair = opt_fields->value;
@@ -191,9 +186,6 @@ void replace_opt_field(message *msg, const char *name, const char *value)
                 opt_fields = opt_fields->next;
             }
         }
-        else
-            return;
-
         
         if (pair) {
             free(pair->value);
@@ -1822,6 +1814,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
              if (msg->id == NULL)
                  goto enomem;
          }
+         decorate_message(msg, PEP_rating_undefined, NULL, true);
      }
 
     *dst = msg;
