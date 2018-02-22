@@ -2661,11 +2661,13 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 break;
 
             case PEP_enc_pieces:
-                status = _decrypt_in_pieces(session, src, &msg, ptext, psize);
+                decrypt_status = _decrypt_in_pieces(session, src, &msg, ptext, psize);
             
-                if (status == PEP_OUT_OF_MEMORY)
+                if (decrypt_status == PEP_OUT_OF_MEMORY)
                     goto enomem;
-
+                else
+                    status = PEP_STATUS_OK;
+                     
                 break;
 
             default:
