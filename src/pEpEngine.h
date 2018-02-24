@@ -1248,8 +1248,6 @@ PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
     
 PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id);
 
-PEP_STATUS import_trusted_own_keys(PEP_SESSION session);
-
 // This ONLY sets the *user* flag, and creates a shell identity if necessary.
 PEP_STATUS set_as_pep_user(PEP_SESSION session, pEp_identity* user);
 

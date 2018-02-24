@@ -486,6 +486,10 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg){
   fprintf(stderr, "(%d) %s\n", iErrCode, zMsg);
 }
 
+#ifdef USE_GPG
+PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session);
+#endif // USE_GPG
+
 DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1294,6 +1298,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     if (very_first)
     {
+#ifdef USE_GPG
         // On first run, all private keys already present in PGP keyring 
         // are taken as own in order to seamlessly integrate with
         // pre-existing GPG setup.
@@ -1306,7 +1311,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         // private keys have an 'unknown' trust designation in PGP).
 
         // We don't really worry about the status here.
-        status = import_trusted_own_keys(_session);        
+        status = pgp_import_ultimately_trusted_keypairs(_session);        
+#endif // USE_GPG
     }
 
     // sync_session set to own session by default
@@ -3823,14 +3829,6 @@ PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
     
     return session->cryptotech[PEP_crypt_OpenPGP].find_private_keys(session, pattern,
                                                                     keylist);
-}
-
-PEP_STATUS import_trusted_own_keys(PEP_SESSION session) {
-    assert(session);
-    if (!session)
-        return PEP_ILLEGAL_VALUE;
-        
-    return session->cryptotech[PEP_crypt_OpenPGP].import_trusted_own_keys(session); 
 }
 
 DYNAMIC_API const char* get_engine_version() {
