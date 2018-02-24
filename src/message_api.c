@@ -940,8 +940,16 @@ static PEP_STATUS update_identity_recip_list(PEP_SESSION session,
     for (id_list_ptr = list; id_list_ptr; id_list_ptr = id_list_ptr->next) {
         pEp_identity* curr_identity = id_list_ptr->ident;
         if (curr_identity) {
-            if (!is_me(session, curr_identity))
+            if (!is_me(session, curr_identity)) {
+                char* name_bak = curr_identity->username;
+                curr_identity->username = NULL;
                 status = update_identity(session, curr_identity);
+                if (name_bak && 
+                    (EMPTYSTR(curr_identity->username) || strcmp(name_bak, curr_identity->username) != 0)) {
+                    free(curr_identity->username);
+                    curr_identity->username = name_bak;
+                }                        
+            }
             else
                 status = myself(session, curr_identity);
         if (status == PEP_ILLEGAL_VALUE || status == PEP_OUT_OF_MEMORY)

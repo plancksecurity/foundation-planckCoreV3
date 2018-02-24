@@ -6,6 +6,43 @@
 #include <sstream>
 #include <stdexcept>
 
+char* str_to_lower(const char* str) {
+    if (!str)
+        return NULL;
+    int str_len = strlen(str);
+    if (str_len == 0)
+        return strdup("");
+    int i;
+    
+    char* retval = (char*) calloc(1, str_len + 1);
+    for (i = 0; i < str_len; i++) {
+        retval[i] = tolower(str[i]);
+    }    
+    return retval;
+}
+
+// Because annoyed
+bool _streq(const char* str1, const char* str2) {
+    if (!str1) {
+        if (str2)
+            return false;
+        return true;
+    }
+    if (!str2)
+        return false;
+        
+    return (strcmp(str1, str2) == 0);
+}
+
+bool _strceq(const char* str1, const char* str2) {
+    char* str1_dup = str_to_lower(str1);
+    char* str2_dup = str_to_lower(str2);
+
+    bool retval = _streq(str_to_lower(str1_dup), str_to_lower(str2_dup));
+    free(str1_dup);
+    free(str2_dup);
+    return retval;
+}
 
 void test_init() {
     unlink ("../test_home/.pEp_management.db");

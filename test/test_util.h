@@ -4,6 +4,10 @@
 
 void test_init();
 
+// string equality (case and non-case sensitive)
+bool _streq(const char* str1, const char* str2);
+bool _strceq(const char* str1, const char* str2);
+
 // reads a whole file and returns it as std::string
 // throws std::runtime_error() if the file cannot be read. Empty file is not an error.
 std::string slurp(const std::string& filename);
