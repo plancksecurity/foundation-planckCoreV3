@@ -40,7 +40,7 @@ int main() {
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, "42", "Bob Test");
     alice->me = true;
 
-    PEP_STATUS mystatus = myself(session, alice);
+    PEP_STATUS mystatus = set_own_key(session, alice, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
     assert(mystatus == PEP_STATUS_OK);
 
     identity_list* to_list = new_identity_list(bob); // to bob

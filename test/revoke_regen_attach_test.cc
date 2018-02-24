@@ -46,6 +46,7 @@ int main() {
 
     cout << "re-generated fingerprint \n";
     free(me->fpr);
+    me->fpr = NULL;
     status = myself(session, me);
     assert(status == PEP_STATUS_OK);
     cout << me->fpr << "\n";

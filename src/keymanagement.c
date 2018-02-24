@@ -864,6 +864,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
 
     pEp_identity *stored_identity = NULL;
     char* revoked_fpr = NULL; 
+    bool valid_key_found = false;
         
     char* default_own_id = NULL;
     status = get_default_own_userid(session, &default_own_id);
@@ -905,8 +906,10 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
                           &stored_identity);
 
     assert(status != PEP_OUT_OF_MEMORY);
-    if (status == PEP_OUT_OF_MEMORY)
-        return PEP_OUT_OF_MEMORY;
+    if (status == PEP_OUT_OF_MEMORY) {
+        status = PEP_OUT_OF_MEMORY;
+        goto pep_free;
+    }
 
     // Set usernames - priority is input username > stored name > address
     // If there's an input username, we always patch the username with that
@@ -916,50 +919,49 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
         char* uname = (stored_uname ? stored_identity->username : identity->address);
         free(identity->username);
         identity->username = strdup(uname);
-        if (identity->username == NULL)
-            return PEP_OUT_OF_MEMORY;
+        if (identity->username == NULL) {
+            status = PEP_OUT_OF_MEMORY;
+            goto pep_free;
+        }
     }
 
-    bool valid_key_found = false;
-    
-    // Now deal with keys.
-    // Different from update_identity(), the input fpr here
-    // MATTERS. 
-    // If the input fpr is invalid, we return, giving the reason why.
-    if (!EMPTYSTR(identity->fpr)) {
-        status = validate_fpr(session, identity);
-    
-        if (status != PEP_STATUS_OK || 
-            identity->comm_type < PEP_ct_strong_but_unconfirmed) {
-            if (identity->comm_type != PEP_ct_key_expired)
-                goto pep_free;
-            // Otherwise, it was expired and key renewal failed
-            // and we take the stored one or do keygen. 
-        } 
-        else
-            valid_key_found = true;
-    }    
-    
-    // Ok, if there wasn't a valid input fpr, check stored identity
-    if (!valid_key_found && stored_identity && 
-        (EMPTYSTR(identity->fpr) || strcmp(stored_identity->fpr, identity->fpr) != 0)) {
-        
+    // ignore input fpr
+
+    if (identity->fpr) {
+        free(identity->fpr);
+        identity->fpr = NULL;
+    }
+
+    // check stored identity
+    if (stored_identity && !EMPTYSTR(stored_identity->fpr)) {
         // Fall back / retrieve
         status = validate_fpr(session, stored_identity);
-        if (status == PEP_STATUS_OK && 
-            stored_identity->comm_type >= PEP_ct_strong_but_unconfirmed) {
-          
-            free(identity->fpr);
-            identity->fpr = strdup(stored_identity->fpr);
-            valid_key_found = true;            
-        }
-        else {
-            bool revoked = false;
-            if (!EMPTYSTR(stored_identity->fpr)) {
+        if (status == PEP_OUT_OF_MEMORY)
+            goto pep_free;
+        if (status == PEP_STATUS_OK) {
+            if (stored_identity->comm_type >= PEP_ct_strong_but_unconfirmed) {
+                identity->fpr = strdup(stored_identity->fpr);
+                assert(identity->fpr);
+                if (!identity->fpr) {
+                    status = PEP_OUT_OF_MEMORY;
+                    goto pep_free;
+                }
+                valid_key_found = true;            
+            }
+            else {
+                bool revoked = false;
                 status = key_revoked(session, stored_identity->fpr, &revoked);
-                if (revoked)
+                if (status)
+                    goto pep_free;
+                if (revoked) {
                     revoked_fpr = strdup(stored_identity->fpr);
-            }        
+                    assert(revoked_fpr);
+                    if (!revoked_fpr) {
+                        status = PEP_OUT_OF_MEMORY;
+                        goto pep_free;
+                    }
+                }
+            }
         }
     }
     
@@ -1011,31 +1013,31 @@ pep_free:
     return status;
 }
 
-DYNAMIC_API PEP_STATUS initialise_own_identities(PEP_SESSION session,
-                                                 identity_list* my_idents) {
-    PEP_STATUS status = PEP_STATUS_OK;
-    if (!session)
-        return PEP_ILLEGAL_VALUE;
-        
-    if (!my_idents)
-        return PEP_STATUS_OK;
-            
-    identity_list* ident_curr = my_idents;
-    while (ident_curr) {
-        pEp_identity* ident = ident_curr->ident;
-        if (!ident || !ident->address) {
-            status = PEP_ILLEGAL_VALUE;
-            goto pep_error;
-        }
-
-        status = _myself(session, ident, false, false);
-        
-        ident_curr = ident_curr->next;
-    }
-    
-pep_error:
-    return status;
-}
+// DYNAMIC_API PEP_STATUS initialise_own_identities(PEP_SESSION session,
+//                                                  identity_list* my_idents) {
+//     PEP_STATUS status = PEP_STATUS_OK;
+//     if (!session)
+//         return PEP_ILLEGAL_VALUE;
+//         
+//     if (!my_idents)
+//         return PEP_STATUS_OK;
+//             
+//     identity_list* ident_curr = my_idents;
+//     while (ident_curr) {
+//         pEp_identity* ident = ident_curr->ident;
+//         if (!ident || !ident->address) {
+//             status = PEP_ILLEGAL_VALUE;
+//             goto pep_error;
+//         }
+// 
+//         status = _myself(session, ident, false, false);
+//         
+//         ident_curr = ident_curr->next;
+//     }
+//     
+// pep_error:
+//     return status;
+// }
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 {
@@ -1618,69 +1620,43 @@ DYNAMIC_API PEP_STATUS own_keys_retrieve(PEP_SESSION session, stringlist_t **key
     return _own_keys_retrieve(session, keylist, 0);
 }
 
-// FIXME: should it be be used when sync receive old keys ? (ENGINE-145)
 DYNAMIC_API PEP_STATUS set_own_key(
        PEP_SESSION session,
-       const char *address,
+       pEp_identity *me,
        const char *fpr
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
     
-    assert(session &&
-           address &&
-           fpr && fpr[0]
-          );
-    
-    if (!(session &&
-          address &&
-          fpr && fpr[0]
-         ))
-        return PEP_ILLEGAL_VALUE;
-                        
-    // First see if we have it in own identities already, AND we retrieve
-    // our own user_id
-    char* my_user_id = NULL;
-    status = get_default_own_userid(session, &my_user_id);
-    if (status != PEP_STATUS_OK)
-        return status;
-        
-    if (!my_user_id) {
-        // We have no own user_id. So we cannot set it for an identity.
-        return PEP_CANNOT_FIND_IDENTITY;
-    }
-    
-    pEp_identity* my_id = NULL;
-    
-    status = get_identity(session, address, my_user_id, &my_id);
+    assert(session && me);
+    assert(!EMPTYSTR(fpr));
+    assert(!EMPTYSTR(me->address));
+    assert(!EMPTYSTR(me->user_id));
+    assert(!EMPTYSTR(me->username));
 
-    if (status == PEP_STATUS_OK && my_id) {
-        if (my_id->fpr && strcasecmp(my_id->fpr, fpr) == 0) {
-            // We're done. It was already here.
-            goto pep_free;
-        }           
-    }
-                
-    // If there's an id w/ user_id + address
-    if (my_id) {
-        free(my_id->fpr);
-        my_id->fpr = my_user_id;
-        my_id->comm_type = PEP_ct_pEp;
-        my_id->me = true;
-    }
-    else { // Else, we need a new identity
-        my_id = new_identity(address, fpr, my_user_id, NULL); 
-        if (status != PEP_STATUS_OK)
-            goto pep_free; 
-        my_id->me = true;
-        my_id->comm_type = PEP_ct_pEp;
-    }
-        
-    status = set_identity(session, my_id);
-    
-pep_free:
-    free(my_id);
-    free(my_user_id);
+    if (!session || !me || EMPTYSTR(fpr) || EMPTYSTR(me->address) ||
+            EMPTYSTR(me->user_id) || EMPTYSTR(me->username))
+        return PEP_ILLEGAL_VALUE;
+
+    status = _myself(session, me, false, true);
+    // we do not need a valid key but dislike other errors
+    if (status != PEP_STATUS_OK && status != PEP_GET_KEY_FAILED && status != PEP_KEY_UNSUITABLE)
+        return status;
+    status = PEP_STATUS_OK;
+ 
+    if (me->fpr)
+        free(me->fpr);
+    me->fpr = strdup(fpr);
+    assert(me->fpr);
+    if (!me->fpr)
+        return PEP_OUT_OF_MEMORY;
+
+    status = validate_fpr(session, me);
+    if (status)
+        return status;
+
+    me->comm_type = PEP_ct_pEp;
+    status = set_identity(session, me);
     return status;
 }
 

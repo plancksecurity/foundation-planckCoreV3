@@ -132,9 +132,7 @@ int main() {
 
     char* new_fpr = strdup(new_me->fpr);
 
-    new_me = new_identity(uniqname, new_fpr, alias_id, NULL);
-
-    status = myself(session, new_me);
+    status = set_own_key(session, new_me, new_fpr);
     assert(status == PEP_STATUS_OK);
     assert(new_me->fpr);
     assert(strcmp(new_me->fpr, generated_fpr) != 0);
@@ -153,7 +151,7 @@ int main() {
     free(new_me->fpr);
     new_me->fpr = strdup(generated_fpr);
     new_me->comm_type = PEP_ct_unknown;
-    status = myself(session, new_me);
+    status = set_own_key(session, new_me, generated_fpr);
     assert(status == PEP_STATUS_OK);
     assert(strcmp(new_me->fpr, generated_fpr) == 0);
     assert(new_me->comm_type == PEP_ct_pEp);
@@ -165,9 +163,9 @@ int main() {
     status = revoke_key(session, generated_fpr, "Because it's fun");
     assert (status == PEP_STATUS_OK);
     
-    new_me = new_identity(uniqname, new_fpr, alias_id, NULL);
+    new_me = new_identity(uniqname, NULL, alias_id, start_username);
     
-    status = myself(session, new_me);
+    status = set_own_key(session, new_me, new_fpr);
     assert(status == PEP_STATUS_OK);
     assert(new_me->fpr);
     assert(strcmp(new_me->fpr, generated_fpr) != 0);

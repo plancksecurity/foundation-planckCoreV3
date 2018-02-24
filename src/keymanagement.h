@@ -54,6 +54,7 @@ DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
     );
 
+// TODO: remove
 // initialise_own_identities () - ensures that an own identity is complete
 //
 //  parameters:
@@ -78,8 +79,8 @@ DYNAMIC_API PEP_STATUS update_identity(
 //      N.B. to adapter devs - this function is likely unnecessary, so please
 //      do not put work into exposing it yet. Tickets will be filed if need be.
 
-DYNAMIC_API PEP_STATUS initialise_own_identities(PEP_SESSION session,
-                                                 identity_list* my_idents);
+// DYNAMIC_API PEP_STATUS initialise_own_identities(PEP_SESSION session,
+//                                                  identity_list* my_idents);
 
 // myself() - ensures that an own identity is complete
 //
@@ -336,9 +337,24 @@ DYNAMIC_API PEP_STATUS own_keys_retrieve(
         stringlist_t **keylist
       );
 
+// set_own_key() - mark a key as own key
+//
+//  parameters:
+//      session (in)            session to use
+//      me (inout)              own identity this key is used for
+//      fpr (in)                fingerprint of the key to mark as own key
+//
+//  caveat:
+//      the key has to be in the key ring already
+//      me->address, me->user_id and me->username must be set to valid data
+//      myself() is called by set_own_key() without key generation
+//      me->flags are ignored
+//      me->address must not be an alias
+//      me->fpr will be ignored and replaced by fpr
+
 DYNAMIC_API PEP_STATUS set_own_key(
        PEP_SESSION session,
-       const char *address,
+       pEp_identity *me,
        const char *fpr
     );
 
