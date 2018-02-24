@@ -655,8 +655,6 @@ DYNAMIC_API PEP_STATUS update_identity(
                                               stored_ident, true);
         }
         else {
-            // create temporary identity, store it, and Return this
-            // This means TOFU_ user_id
             identity->user_id = calloc(1, strlen(identity->address) + 6);
             if (!identity->user_id)
                 return PEP_OUT_OF_MEMORY;
@@ -664,19 +662,32 @@ DYNAMIC_API PEP_STATUS update_identity(
             snprintf(identity->user_id, strlen(identity->address) + 6,
                      "TOFU_%s", identity->address);        
 
-            //    * We've already checked and retrieved
-            //      any applicable temporary identities above. If we're 
-            //      here, none of them fit.
-            
-            status = elect_pubkey(session, identity);
+            status = get_identity(session, 
+                                  identity->address, 
+                                  identity->user_id, 
+                                  &stored_ident);
+
+            if (status == PEP_STATUS_OK && stored_ident) {
+                status = prepare_updated_identity(session,
+                                                  identity,
+                                                  stored_ident, true);
+            }
+            else {
                          
-            //    * call set_identity() to store
-            if (identity->fpr)
-                status = get_key_rating(session, identity->fpr, &identity->comm_type);
-        
-            //    * call set_identity() to store
-            adjust_pep_trust_status(session, identity);            
-            status = set_identity(session, identity);
+                //    * We've already checked and retrieved
+                //      any applicable temporary identities above. If we're 
+                //      here, none of them fit.
+                
+                status = elect_pubkey(session, identity);
+                             
+                //    * call set_identity() to store
+                if (identity->fpr)
+                    status = get_key_rating(session, identity->fpr, &identity->comm_type);
+            
+                //    * call set_identity() to store
+                adjust_pep_trust_status(session, identity);            
+                status = set_identity(session, identity);
+            }
         }
     }
     else {
