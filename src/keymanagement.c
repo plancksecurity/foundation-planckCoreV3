@@ -1802,7 +1802,8 @@ PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session) {
 
     pEp_identity *identity = NULL;
     stringlist_t *_sl;
-    char *fpr;
+	
+    char *fpr = NULL;
     enum _pgp_thing thing = _pgp_none;
     for (_sl = priv_keylist; _sl && _sl->value; _sl = _sl->next) {
         thing = _pgp_thing_next(thing);
