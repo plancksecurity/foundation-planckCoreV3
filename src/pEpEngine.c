@@ -284,6 +284,14 @@ static const char *sql_update_trust =
     "update trust set comm_type = ?3 " 
     "   where user_id = ?1 and pgp_keypair_fpr = upper(replace(?2,' ',''));";
 
+static const char *sql_update_trust_to_pep =
+    "update trust set comm_type = comm_type + 71 "
+    "   where (user_id = ?1 "
+    "          and (case when (comm_type = 56) then (1) "
+    "                    when (comm_type = 184) then (1) "
+    "                    else 0"
+    "               end) = 1); ";
+
 static const char* sql_exists_trust_entry = 
     "select count(*) from trust "
     "   where user_id = ?1 and pgp_keypair_fpr = upper(replace(?2,' ',''));";
@@ -1163,6 +1171,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_update_trust), &_session->update_trust, NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_update_trust_to_pep,
+            (int)strlen(sql_update_trust_to_pep), &_session->update_trust_to_pep, NULL);
+    assert(int_result == SQLITE_OK);
+
     int_result = sqlite3_prepare_v2(_session->db, sql_exists_trust_entry,
                  (int)strlen(sql_exists_trust_entry), &_session->exists_trust_entry, NULL);
     assert(int_result == SQLITE_OK);
@@ -1401,7 +1413,9 @@ DYNAMIC_API void release(PEP_SESSION session)
             if (session->set_trust)
                 sqlite3_finalize(session->set_trust);
             if (session->update_trust)
-                sqlite3_finalize(session->update_trust);                
+                sqlite3_finalize(session->update_trust);
+            if (session->update_trust_to_pep)
+                sqlite3_finalize(session->update_trust_to_pep);                                                
             if (session->update_trust_for_fpr)
                 sqlite3_finalize(session->update_trust_for_fpr);
             if (session->get_trust)
@@ -2437,6 +2451,23 @@ pep_free:
     return status;
 }
 
+PEP_STATUS update_pep_user_trust_vals(PEP_SESSION session,
+                                      pEp_identity* user) {
+    if (!user->user_id)
+        return PEP_ILLEGAL_VALUE;
+    
+    sqlite3_reset(session->update_trust_to_pep);
+    sqlite3_bind_text(session->update_trust_to_pep, 1, user->user_id, -1,
+            SQLITE_STATIC);
+    int result = sqlite3_step(session->update_trust_to_pep);
+    sqlite3_reset(session->update_trust_to_pep);
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_TRUST;
+
+    return PEP_STATUS_OK;
+}
+
+
 // This ONLY sets the user flag. Must be called outside of a transaction.
 PEP_STATUS set_as_pep_user(PEP_SESSION session, pEp_identity* user) {
 
@@ -2468,8 +2499,10 @@ PEP_STATUS set_as_pep_user(PEP_SESSION session, pEp_identity* user) {
     
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PERSON;
+
+    status = update_pep_user_trust_vals(session, user);
         
-    return PEP_STATUS_OK;    
+    return status;
 }
 
 PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
