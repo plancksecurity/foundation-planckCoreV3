@@ -136,6 +136,22 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
         ident->comm_type = ct;
     }
     
+    bool pep_user = false;
+    
+    is_pep_user(session, ident, &pep_user);
+
+    if (pep_user) {
+        switch (ct) {
+            case PEP_ct_OpenPGP:
+            case PEP_ct_OpenPGP_unconfirmed:
+                ct += 0x47; // difference between PEP and OpenPGP values;
+                ident->comm_type = ct;
+                break;
+            default:
+                break;
+        }
+    }
+    
     bool revoked, expired;
     bool blacklisted = false;
     
