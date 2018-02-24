@@ -3411,8 +3411,16 @@ DYNAMIC_API PEP_STATUS get_crashdump_log(
     } while (result != SQLITE_DONE);
 
     sqlite3_reset(session->crashdump);
-    if (status == PEP_STATUS_OK)
-        *logdata = _logdata;
+    if (status == PEP_STATUS_OK) {
+        if (_logdata) {
+            *logdata = _logdata;
+        }
+        else {
+            *logdata = strdup("");
+            if (!*logdata)
+                goto enomem;
+        }
+    }
 
     goto the_end;
 
