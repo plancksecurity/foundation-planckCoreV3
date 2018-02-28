@@ -3684,8 +3684,18 @@ got_keylist:
     else
         status = myself(session, msg->from);
 
-    if (status != PEP_STATUS_OK)
-        goto pep_error;
+    switch (status) {
+        case PEP_KEY_NOT_FOUND:
+        case PEP_KEY_UNSUITABLE:
+        case PEP_KEY_BLACKLISTED:
+        case PEP_CANNOT_FIND_IDENTITY:
+        case PEP_CANNOT_FIND_ALIAS:
+            status = PEP_STATUS_OK;
+        case PEP_STATUS_OK:
+            break;
+        default:
+            goto pep_error;
+    }
 
     status = amend_rating_according_to_sender_and_recipients(session, &_rating,
             msg->from, _keylist);
