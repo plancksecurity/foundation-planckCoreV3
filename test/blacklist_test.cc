@@ -110,7 +110,7 @@ int main() {
     PEP_STATUS status11 = update_identity(session, blacklisted_identity);
     /* new!!! */
     assert(is_blacklisted);
-    assert(status11 == PEP_KEY_BLACKLISTED);
+    assert(status11 == PEP_STATUS_OK);
     assert(_streq(bl_fpr_1, blacklisted_identity->fpr));
     
     bool id_def, us_def, addr_def;

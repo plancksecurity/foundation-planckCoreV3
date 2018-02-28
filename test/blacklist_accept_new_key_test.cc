@@ -50,12 +50,14 @@ int main() {
     PEP_STATUS status10 = blacklist_is_listed(session, bl_fpr_1, &is_blacklisted);
     assert(is_blacklisted);
     PEP_STATUS status11 = update_identity(session, blacklisted_identity);
-    assert(status11 == PEP_KEY_BLACKLISTED);
+    assert(status11 == PEP_STATUS_OK);
     assert(_streq(bl_fpr_1, blacklisted_identity->fpr));
     
     bool id_def, us_def, addr_def;
     status11 = get_valid_pubkey(session, blacklisted_identity,
                                 &id_def, &us_def, &addr_def, true);
+    assert(blacklisted_identity->comm_type == PEP_ct_unknown);
+                        
     if (!(blacklisted_identity->fpr))
         cout << "OK! blacklisted_identity->fpr is empty. Yay!" << endl;
     else

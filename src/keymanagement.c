@@ -174,7 +174,7 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
         if (status != PEP_STATUS_OK)
             return status;
 
-        if (check_blacklist && (ct | PEP_ct_confirmed) == PEP_ct_OpenPGP &&
+        if (check_blacklist && IS_PGP_CT(ct) &&
             !ident->me) {
             status = blacklist_is_listed(session, 
                                          fpr, 
@@ -866,19 +866,10 @@ PEP_STATUS elect_ownkey(
 PEP_STATUS _has_usable_priv_key(PEP_SESSION session, char* fpr,
                                 bool* is_usable) {
     
-    bool dont_use_fpr = true;
+    bool has_private = false;
+    PEP_STATUS status = contains_priv_key(session, fpr, &has_private);
     
-    PEP_STATUS status = blacklist_is_listed(session, fpr, &dont_use_fpr);
-    if (status == PEP_STATUS_OK && !dont_use_fpr) {
-        // Make sure there is a *private* key associated with this fpr
-        bool has_private = false;
-        status = contains_priv_key(session, fpr, &has_private);
-
-        if (status == PEP_STATUS_OK)
-            dont_use_fpr = !has_private;
-    }
-    
-    *is_usable = !dont_use_fpr;
+    *is_usable = has_private;
     
     return status;
 }
