@@ -48,7 +48,20 @@ int main() {
     PEP_STATUS status8 = update_identity(session, blacklisted_identity);
     PEP_STATUS status9 = blacklist_add(session, bl_fpr_1);
     PEP_STATUS status10 = blacklist_is_listed(session, bl_fpr_1, &is_blacklisted);
+    assert(is_blacklisted);
     PEP_STATUS status11 = update_identity(session, blacklisted_identity);
+    assert(status11 == PEP_KEY_BLACKLISTED);
+    assert(_streq(bl_fpr_1, blacklisted_identity->fpr));
+    
+    bool id_def, us_def, addr_def;
+    status11 = get_valid_pubkey(session, blacklisted_identity,
+                                &id_def, &us_def, &addr_def, true);
+    if (!(blacklisted_identity->fpr))
+        cout << "OK! blacklisted_identity->fpr is empty. Yay!" << endl;
+    else
+        cout << "Not OK. blacklisted_identity->fpr is " << blacklisted_identity->fpr << "." << endl
+             << "Expected it to be empty." << endl;
+    assert(!(blacklisted_identity->fpr) || blacklisted_identity->fpr[0] == '\0');
 
     /* identity is blacklisted. Now let's read in a message which contains a new key for that ID. */
     
@@ -67,7 +80,8 @@ int main() {
     assert(status == PEP_STATUS_OK);
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
 
-    PEP_STATUS status12 = update_identity(session, blacklisted_identity);
+    PEP_STATUS status12 = get_valid_pubkey(session, blacklisted_identity,
+                                           &id_def, &us_def, &addr_def, true);
 
     assert(strcasecmp(blacklisted_identity->fpr, new_key) == 0);
 
