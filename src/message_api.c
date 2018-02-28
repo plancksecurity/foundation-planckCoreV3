@@ -441,7 +441,7 @@ static char* message_id_prand_part(void) {
 
         output_value |= temp_val;
 
-        i -= num_bits; 
+        i -= _MIN(num_bits, i); 
         
         bitshift = _MIN(num_bits, i);
         output_value <<= bitshift;        
