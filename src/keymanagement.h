@@ -364,6 +364,16 @@ PEP_STATUS add_mistrusted_key(PEP_SESSION session, const char* fpr);
 PEP_STATUS delete_mistrusted_key(PEP_SESSION session, const char* fpr);
 PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr, bool* mistrusted);
 
+// Only call on retrieval of previously stored identity!
+// Also, we presume that if the stored_identity was sent in
+// without an fpr, there wasn't one in the trust DB for this
+// identity.
+PEP_STATUS get_valid_pubkey(PEP_SESSION session,
+                            pEp_identity* stored_identity,
+                            bool* is_identity_default,
+                            bool* is_user_default,
+                            bool* is_address_default,
+                            bool check_blacklist);
 
 #ifdef __cplusplus
 }

@@ -408,6 +408,10 @@ static inline bool is_me(PEP_SESSION session, pEp_identity* test_ident) {
 #define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
 #endif
 
+#ifndef IS_PGP_CT
+#define IS_PGP_CT(CT) (((CT) | PEP_ct_confirmed) == PEP_ct_OpenPGP)
+#endif
+
 #ifndef _MIN
 #define _MIN(A, B) ((B) > (A) ? (A) : (B))
 #endif

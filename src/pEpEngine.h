@@ -600,7 +600,6 @@ PEP_STATUS replace_identities_fpr(PEP_SESSION session,
 //        PEP_CANNOT_SET_PGP_KEYPAIR    writing to table pgp_keypair failed
 //        PEP_CANNOT_SET_IDENTITY       writing to table identity failed
 //        PEP_COMMIT_FAILED             SQL commit failed
-//        PEP_KEY_BLACKLISTED           Key blacklisted, cannot set identity
 //
 //    caveat:
 //        address, fpr, user_id and username must be given

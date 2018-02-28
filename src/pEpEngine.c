@@ -2385,21 +2385,8 @@ DYNAMIC_API PEP_STATUS set_identity(
 
     PEP_STATUS status = PEP_STATUS_OK;
     
-    bool listed;
-
     bool has_fpr = (!EMPTYSTR(identity->fpr));
     
-    if (has_fpr) {    
-        // blacklist check - FIXME: ENGINE-294 will remove
-        status = blacklist_is_listed(session, identity->fpr, &listed);
-        assert(status == PEP_STATUS_OK);
-        if (status != PEP_STATUS_OK)
-            return status;
-
-        if (listed)
-            return PEP_KEY_BLACKLISTED;
-    }
-
     sqlite3_exec(session->db, "BEGIN TRANSACTION ;", NULL, NULL, NULL);
 
     if (identity->lang[0]) {

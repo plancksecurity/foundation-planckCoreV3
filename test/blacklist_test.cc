@@ -92,7 +92,7 @@ int main() {
                                                       "Blacklist Keypair");
 
     PEP_STATUS status8 = update_identity(session, blacklisted_identity);
-    
+        
     // THERE IS NO BLACKLISTING OF PEP KEYS
     //blacklisted_identity->comm_type = PEP_ct_pEp;
     blacklisted_identity->comm_type = PEP_ct_OpenPGP_unconfirmed;
@@ -108,6 +108,15 @@ int main() {
     PEP_STATUS status9 = blacklist_add(session, bl_fpr_1);
     status10 = blacklist_is_listed(session, bl_fpr_1, &is_blacklisted);
     PEP_STATUS status11 = update_identity(session, blacklisted_identity);
+    /* new!!! */
+    assert(is_blacklisted);
+    assert(status11 == PEP_STATUS_OK);
+    assert(_streq(bl_fpr_1, blacklisted_identity->fpr));
+    
+    bool id_def, us_def, addr_def;
+    status11 = get_valid_pubkey(session, blacklisted_identity,
+                                &id_def, &us_def, &addr_def, true);
+    
     if (!(blacklisted_identity->fpr))
         cout << "OK! blacklisted_identity->fpr is empty. Yay!" << endl;
     else if (strcmp(blacklisted_identity->fpr, bl_fpr_2) == 0)
@@ -120,7 +129,6 @@ int main() {
              << "Expected it to be empty or (possibly) " << bl_fpr_2 << endl;
     assert(!(blacklisted_identity->fpr) || blacklisted_identity->fpr[0] == '\0'|| (strcmp(blacklisted_identity->fpr, bl_fpr_2) == 0));
 
-
     const string keytext2 = slurp("blacklisted_pub2.asc");
     PEP_STATUS status14 = import_key(session, keytext2.c_str(), keytext2.length(), NULL);
     
@@ -129,25 +137,25 @@ int main() {
                                                         NULL,
                                                        "Blacklist Keypair");
     PEP_STATUS status15 = update_identity(session, blacklisted_identity2);
-
-    assert(blacklisted_identity2->fpr && strcmp(blacklisted_identity2->fpr, bl_fpr_2) == 0);
-    if (blacklisted_identity2->fpr && strcmp(blacklisted_identity2->fpr, bl_fpr_2) == 0)
-        cout << "blacklisted identity's fpr successfully replaced by the unblacklisted one" << endl;
-    // else
-    //     cout << "blacklisted_identity->fpr should be " << bl_fpr_2 << " but is " << blacklisted_identity->fpr << endl;
-    
-    PEP_STATUS status12 = blacklist_delete(session, bl_fpr_1);
-    PEP_STATUS status13 = update_identity(session, blacklisted_identity);
-        
-    pEp_identity* stored_identity = new_identity("blacklistedkeys@kgrothoff.org",
-                                                  NULL,
-                                                  blacklisted_identity->user_id,
-                                                  "Blacklist Keypair");
-     
-    PEP_STATUS status00 = update_identity(session, stored_identity);
-    
-    // FIXME
-    // assert(stored_identity->comm_type == PEP_ct_pEp);    
+    // 
+    // assert(blacklisted_identity2->fpr && strcmp(blacklisted_identity2->fpr, bl_fpr_2) == 0);
+    // if (blacklisted_identity2->fpr && strcmp(blacklisted_identity2->fpr, bl_fpr_2) == 0)
+    //     cout << "blacklisted identity's fpr successfully replaced by the unblacklisted one" << endl;
+    // // else
+    // //     cout << "blacklisted_identity->fpr should be " << bl_fpr_2 << " but is " << blacklisted_identity->fpr << endl;
+    // 
+    // PEP_STATUS status12 = blacklist_delete(session, bl_fpr_1);
+    // PEP_STATUS status13 = update_identity(session, blacklisted_identity);
+    //     
+    // pEp_identity* stored_identity = new_identity("blacklistedkeys@kgrothoff.org",
+    //                                               NULL,
+    //                                               blacklisted_identity->user_id,
+    //                                               "Blacklist Keypair");
+    //  
+    // PEP_STATUS status00 = update_identity(session, stored_identity);
+    // 
+    // // FIXME
+    // // assert(stored_identity->comm_type == PEP_ct_pEp);    
     
     PEP_STATUS status16 = delete_keypair(session, bl_fpr_1);
     update_identity(session, blacklisted_identity);

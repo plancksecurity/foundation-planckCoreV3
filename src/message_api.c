@@ -6,6 +6,7 @@
 
 #include "platform.h"
 #include "mime.h"
+#include "blacklist.h"
 
 #include <assert.h>
 #include <string.h>
@@ -1533,6 +1534,26 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 _il->ident->comm_type = PEP_ct_key_not_found;
                 _status = PEP_STATUS_OK;
             }
+            bool is_blacklisted = false;
+            if (_il->ident->fpr && IS_PGP_CT(_il->ident->comm_type)) {
+                _status = blacklist_is_listed(session, _il->ident->fpr, &is_blacklisted);
+                if (_status != PEP_STATUS_OK) {
+                    // DB error
+                    status = PEP_UNENCRYPTED;
+                    goto pep_error;
+                }
+                if (is_blacklisted) {
+                    bool user_default, ident_default, address_default; 
+                    _status = get_valid_pubkey(session, _il->ident,
+                                               &ident_default, &user_default,
+                                               &address_default,
+                                               true);
+                    if (_status != PEP_STATUS_OK || _il->ident->fpr == NULL) {
+                        _il->ident->comm_type = PEP_ct_key_not_found;
+                        _status = PEP_STATUS_OK;                        
+                    }
+                }    
+            }
             if (!has_pep_user && !EMPTYSTR(_il->ident->user_id))
                 is_pep_user(session, _il->ident, &has_pep_user);
         }
@@ -1565,6 +1586,26 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                     _il->ident->comm_type = PEP_ct_key_not_found;
                     _status = PEP_STATUS_OK;
                 }
+                bool is_blacklisted = false;
+                if (_il->ident->fpr && IS_PGP_CT(_il->ident->comm_type)) {
+                    _status = blacklist_is_listed(session, _il->ident->fpr, &is_blacklisted);
+                    if (_status != PEP_STATUS_OK) {
+                        // DB error
+                        status = PEP_UNENCRYPTED;
+                        goto pep_error;
+                    }
+                    if (is_blacklisted) {
+                        bool user_default, ident_default, address_default; 
+                        _status = get_valid_pubkey(session, _il->ident,
+                                                   &ident_default, &user_default,
+                                                   &address_default,
+                                                   true);
+                        if (_status != PEP_STATUS_OK || _il->ident->fpr == NULL) {
+                            _il->ident->comm_type = PEP_ct_key_not_found;
+                            _status = PEP_STATUS_OK;                        
+                        }
+                    }    
+                }
                 if (!has_pep_user && !EMPTYSTR(_il->ident->user_id))
                     is_pep_user(session, _il->ident, &has_pep_user);
             }
@@ -1595,6 +1636,26 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 if (_status == PEP_CANNOT_FIND_IDENTITY) {
                     _il->ident->comm_type = PEP_ct_key_not_found;
                     _status = PEP_STATUS_OK;
+                }
+                bool is_blacklisted = false;
+                if (_il->ident->fpr && IS_PGP_CT(_il->ident->comm_type)) {
+                    _status = blacklist_is_listed(session, _il->ident->fpr, &is_blacklisted);
+                    if (_status != PEP_STATUS_OK) {
+                        // DB error
+                        status = PEP_UNENCRYPTED;
+                        goto pep_error;
+                    }
+                    if (is_blacklisted) {
+                        bool user_default, ident_default, address_default; 
+                        _status = get_valid_pubkey(session, _il->ident,
+                                                   &ident_default, &user_default,
+                                                   &address_default,
+                                                   true);
+                        if (_status != PEP_STATUS_OK || _il->ident->fpr == NULL) {
+                            _il->ident->comm_type = PEP_ct_key_not_found;
+                            _status = PEP_STATUS_OK;                        
+                        }
+                    }    
                 }
                 if (!has_pep_user && !EMPTYSTR(_il->ident->user_id))
                     is_pep_user(session, _il->ident, &has_pep_user);
@@ -2919,7 +2980,22 @@ static void _max_comm_type_from_identity_list(
                 status = update_identity(session, il->ident);
             else
                 status = myself(session, il->ident);
-                
+            
+            bool is_blacklisted = false;
+            if (il->ident->fpr && IS_PGP_CT(il->ident->comm_type)) {
+                status = blacklist_is_listed(session, il->ident->fpr, &is_blacklisted);
+                if (is_blacklisted) {
+                    bool user_default, ident_default, address_default; 
+                    status = get_valid_pubkey(session, il->ident,
+                                              &ident_default, &user_default,
+                                              &address_default,
+                                              true);
+                    if (status != PEP_STATUS_OK || il->ident->fpr == NULL) {
+                        il->ident->comm_type = PEP_ct_key_not_found;
+                    }
+                }    
+            }
+    
             // check for the return statuses which might not a representative
             // value in the comm_type
             if (status == PEP_ILLEGAL_VALUE || status == PEP_CANNOT_SET_PERSON ||
@@ -3001,6 +3077,26 @@ DYNAMIC_API PEP_STATUS identity_rating(
         status = _myself(session, ident, false, true);
     else
         status = update_identity(session, ident);
+
+    bool is_blacklisted = false;
+    
+    if (ident->fpr && IS_PGP_CT(ident->comm_type)) {
+        status = blacklist_is_listed(session, ident->fpr, &is_blacklisted);
+        if (status != PEP_STATUS_OK) {
+            return status; // DB ERROR
+        }
+        if (is_blacklisted) {
+            bool user_default, ident_default, address_default; 
+            status = get_valid_pubkey(session, ident,
+                                       &ident_default, &user_default,
+                                       &address_default,
+                                       true);
+            if (status != PEP_STATUS_OK || ident->fpr == NULL) {
+                ident->comm_type = PEP_ct_key_not_found;
+                status = PEP_STATUS_OK;                        
+            }
+        }    
+    }
 
     if (status == PEP_STATUS_OK)
         *rating = _rating(ident->comm_type, PEP_rating_undefined);
