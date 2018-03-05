@@ -1345,37 +1345,54 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     pEp_identity* tmp_user_ident = NULL;
 
     if (me) {
-        status = myself(session, ident_copy); 
-        goto pep_free;
+        bool has_private = false;
+        // first of all, does this key even have a private component.
+        status = contains_priv_key(session, ident->fpr, &has_private);
+        if (status != PEP_STATUS_OK && status != PEP_KEY_NOT_FOUND)
+            goto pep_free;
+            
+        if (has_private) {
+            status = set_own_key(session, ident_copy, ident->fpr); 
+            goto pep_free;
+        }
     }
+    
+    // Either it's not me, or it's me but the key has no private key. 
+    // We're only talking about pub keys here. Moving on.
     
     // Save the input fpr, which we already tested as non-NULL
     cached_fpr = strdup(ident->fpr);
 
-    // First, set up a temp trusted identity for the input fpr without a comm type;
+    // Set up a temp trusted identity for the input fpr without a comm type;
     tmp_id = new_identity(ident->address, ident->fpr, ident->user_id, NULL);
+    
+    // ->me isn't set, even if this is an own identity, so this will work.
     status = validate_fpr(session, tmp_id, false);
         
     if (status == PEP_STATUS_OK) {
         // Validate fpr gets trust DB or, when that fails, key comm type. we checked
         // above that the key was ok. (not revoked or expired), but we want the max.
         tmp_id->comm_type = _MAX(tmp_id->comm_type, input_default_ct) | PEP_ct_confirmed;
-                                       
-        // Get the default identity without setting the fpr
-        status = update_identity(session, ident_copy);
+
+        // Get the default identity without setting the fpr                                       
+        if (me)
+            status = _myself(session, ident_copy, false, true);
+        else    
+            status = update_identity(session, ident_copy);
+            
         ident_default_fpr = (EMPTYSTR(ident_copy->fpr) ? NULL : strdup(ident_copy->fpr));
 
         if (status == PEP_STATUS_OK) {
             bool trusted_default = false;
 
             // If there's no default, or the default is different from the input...
-            if (EMPTYSTR(ident_default_fpr) || strcmp(cached_fpr, ident_default_fpr) != 0) {
+            if (me || EMPTYSTR(ident_default_fpr) || strcmp(cached_fpr, ident_default_fpr) != 0) {
                 
                 // If the default fpr (if there is one) is trusted and key is strong enough,
                 // don't replace, we just set the trusted bit on this key for this user_id...
                 // (If there's no default fpr, this won't be true anyway.)
-                if (ident->comm_type >= PEP_ct_strong_but_unconfirmed && 
-                    (ident->comm_type & PEP_ct_confirmed)) {                        
+                if (me || (ident_copy->comm_type >= PEP_ct_strong_but_unconfirmed && 
+                          (ident_copy->comm_type & PEP_ct_confirmed))) {                        
 
                     trusted_default = true;
                                     
