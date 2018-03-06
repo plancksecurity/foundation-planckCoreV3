@@ -2422,8 +2422,8 @@ PEP_STATUS pgp_replace_only_uid(
     data_cbs.write = _nullwriter;
     gpg.gpgme_data_new_from_cbs(&output, &data_cbs, &handle);
 
-    gpgme_error = gpg.gpgme_op_edit(session->ctx, key, replace_only_uid_fsm, &handle,
-            output);
+    gpgme_error = _GPGERR(gpg.gpgme_op_edit(session->ctx, key, replace_only_uid_fsm, &handle,
+            output));
     assert(gpgme_error == GPG_ERR_NO_ERROR);
     if(gpgme_error != GPG_ERR_NO_ERROR) {
         status = PEP_CANNOT_EDIT_KEY;
@@ -2586,8 +2586,8 @@ PEP_STATUS pgp_renew_key(
     data_cbs.write = _nullwriter;
     gpg.gpgme_data_new_from_cbs(&output, &data_cbs, &handle);
 
-    gpgme_error = gpg.gpgme_op_edit(session->ctx, key, renew_fsm, &handle,
-            output);
+    gpgme_error = _GPGERR(gpg.gpgme_op_edit(session->ctx, key, renew_fsm, &handle,
+            output));
     assert(gpgme_error == GPG_ERR_NO_ERROR);
     if(gpgme_error != GPG_ERR_NO_ERROR) {
         status = PEP_CANNOT_EDIT_KEY;
@@ -2776,8 +2776,8 @@ PEP_STATUS pgp_revoke_key(
     data_cbs.write = _nullwriter;
     gpg.gpgme_data_new_from_cbs(&output, &data_cbs, &handle);
 
-    gpgme_error = gpg.gpgme_op_edit(session->ctx, key, revoke_fsm, &handle,
-            output);
+    gpgme_error = _GPGERR(gpg.gpgme_op_edit(session->ctx, key, revoke_fsm, &handle,
+            output));
     assert(gpgme_error == GPG_ERR_NO_ERROR);
     if(gpgme_error != GPG_ERR_NO_ERROR) {
         status = PEP_CANNOT_EDIT_KEY;
@@ -2921,7 +2921,7 @@ PEP_STATUS pgp_binary(const char **path)
     *path = NULL;
 
     gpgme_engine_info_t info;
-    int err = gpg.gpgme_get_engine_info(&info);
+    gpgme_error_t err = _GPGERR(gpg.gpgme_get_engine_info(&info));
     assert(err == GPG_ERR_NO_ERROR);
     if (err != GPG_ERR_NO_ERROR)
         return PEP_OUT_OF_MEMORY;
@@ -2937,7 +2937,7 @@ PEP_STATUS pgp_contains_priv_key(PEP_SESSION session, const char *fpr,
     gpgme_key_t output_key;
     gpgme_error_t gpgerr = gpg.gpgme_get_key(session->ctx, fpr, &output_key, true);
     *has_private = false;
-    switch (gpgerr) {
+    switch (_GPGERR(gpgerr)) {
         case GPG_ERR_EOF:
         case GPG_ERR_INV_VALUE:
             status = PEP_KEY_NOT_FOUND;
