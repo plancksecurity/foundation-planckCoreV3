@@ -2559,6 +2559,79 @@ static PEP_STATUS update_sender_to_pep_trust(
     return status;
 }
 
+static PEP_STATUS reconcile_identity(pEp_identity* srcid,
+                                     pEp_identity* resultid) {
+    assert(srcid);
+    assert(resultid);
+
+    if (!srcid || !resultid)
+        return PEP_ILLEGAL_VALUE;
+        
+    if (!EMPTYSTR(srcid->user_id)) {
+        if (EMPTYSTR(resultid->user_id) ||
+             strcmp(srcid->user_id, resultid->user_id) != 0) {
+            free(resultid->user_id);
+            resultid->user_id = strdup(srcid->user_id);
+        }
+    }
+    
+    resultid->lang[0] = srcid->lang[0];
+    resultid->me = srcid->me;
+    resultid->flags = srcid->flags;
+
+    return PEP_STATUS_OK;
+}
+
+static PEP_STATUS reconcile_identity_lists(identity_list* src_ids,
+                                           identity_list* result_ids) {
+                                           
+    identity_list* curr_id = result_ids;
+    
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    while (curr_id) {
+        identity_list* curr_src_id = src_ids;
+        pEp_identity* result_identity = curr_id->ident;
+        
+        while (curr_src_id) {
+            pEp_identity* source_identity = curr_src_id->ident;
+            
+            if (EMPTYSTR(source_identity->address) || EMPTYSTR(result_identity->address))
+                return PEP_ILLEGAL_VALUE; // something went badly wrong
+            
+            if (strcasecmp(source_identity->address, result_identity->address) == 0) {
+                status = reconcile_identity(source_identity, result_identity);
+                if (status != PEP_STATUS_OK)
+                    return status;
+            }
+            curr_src_id = curr_src_id->next;        
+        }
+        curr_id = curr_id->next;
+    }
+    return status;    
+}
+
+static PEP_STATUS reconcile_src_and_inner_messages(message* src, 
+                                             message* inner_message) {
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    if (strcasecmp(src->from->address, inner_message->from->address) == 0)
+        status = reconcile_identity(src->from, inner_message->from);
+    
+    if (status == PEP_STATUS_OK && inner_message->to)
+        status = reconcile_identity_lists(src->to, inner_message->to);
+
+    if (status == PEP_STATUS_OK && inner_message->cc)
+        status = reconcile_identity_lists(src->cc, inner_message->cc);
+
+    if (status == PEP_STATUS_OK && inner_message->bcc)
+        status = reconcile_identity_lists(src->bcc, inner_message->bcc);
+
+    return status;
+    // FIXME - are there any flags or anything else we need to be sure are carried?
+}
+
 
 DYNAMIC_API PEP_STATUS _decrypt_message(
         PEP_SESSION session,
@@ -2797,8 +2870,13 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                                 free_message(inner_message);
                                                 goto pep_error;
                                             }
-                                                
+                                                    
                                             // THIS is our message
+                                            // Now, let's make sure we've copied in 
+                                            // any information sent in by the app if
+                                            // needed...
+                                            reconcile_src_and_inner_messages(src, inner_message);
+                                            
                                             // FIXME: free msg, but check references
                                             src = msg = inner_message;
                                             
