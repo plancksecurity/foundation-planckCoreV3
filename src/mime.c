@@ -438,8 +438,7 @@ static clist * stringlist_to_clist(stringlist_t *sl, bool transport_encode)
     return cl;
 }
 
-static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **result,
-                               bool transport_encode)
+static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **result)
 {
     PEP_STATUS status = PEP_STATUS_OK;
     struct mailimf_fields * fields = NULL;
@@ -518,19 +517,15 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
         }
     }
 
-    /* if (subject) */ {
-        char *_subject = (transport_encode ? 
-                          mailmime_encode_subject_header("utf-8", subject, 1) :
-                          strdup(subject));
-        if (_subject == NULL)
-            goto enomem;
+    char *_subject = mailmime_encode_subject_header("utf-8", subject, 1);
+    if (_subject == NULL)
+        goto enomem;
 
-        r = _append_field(fields_list, MAILIMF_FIELD_SUBJECT,
-                (_new_func_t) mailimf_subject_new, _subject);
-        if (r) {
-            free(_subject);
-            goto enomem;
-        }
+    r = _append_field(fields_list, MAILIMF_FIELD_SUBJECT,
+            (_new_func_t) mailimf_subject_new, _subject);
+    if (r) {
+        free(_subject);
+        goto enomem;
     }
 
     if (msg->cc) {
@@ -573,7 +568,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
 
     if (msg->in_reply_to) {
-        clist *in_reply_to = stringlist_to_clist(msg->in_reply_to, transport_encode);
+        clist *in_reply_to = stringlist_to_clist(msg->in_reply_to, true);
         if (in_reply_to == NULL)
             goto enomem;
 
@@ -586,7 +581,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
 
     if (msg->references) {
-        clist *references = stringlist_to_clist(msg->references, transport_encode);
+        clist *references = stringlist_to_clist(msg->references, true);
         if (references == NULL)
             goto enomem;
 
@@ -599,7 +594,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
 
     if (msg->keywords) {
-        clist *keywords = stringlist_to_clist(msg->keywords, transport_encode);
+        clist *keywords = stringlist_to_clist(msg->keywords, true);
         if (keywords == NULL)
             goto enomem;
 
@@ -612,9 +607,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
 
     if (msg->comments) {
-        char *comments = (transport_encode ?
-                          mailmime_encode_subject_header("utf-8", msg->comments, 0) :
-                          strdup(msg->comments));
+        char *comments = mailmime_encode_subject_header("utf-8", msg->comments, 0);
         if (comments == NULL)
             goto enomem;
 
@@ -632,9 +625,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
             char *key = _l->value->key;
             char *value = _l->value->value;
             if (key && value) {
-                char *_value = (transport_encode ?
-                                mailmime_encode_subject_header("utf-8", value, 0) :
-                                strdup(value));
+                char *_value = mailmime_encode_subject_header("utf-8", value, 1);
                 if (_value == NULL)
                     goto enomem;
 
@@ -997,7 +988,7 @@ PEP_STATUS _mime_encode_message_internal(
     mime = NULL;
 
     if (!omit_fields) {
-        status = build_fields(msg, &fields, transport_encode);
+        status = build_fields(msg, &fields);
         if (status != PEP_STATUS_OK)
             goto pep_error;
 
