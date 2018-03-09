@@ -497,6 +497,7 @@ free_pgp:
     pgp_validate_result_free(vresult);
 
 unlock_netpgp:
+    free(recipients_key_ids);
     pthread_mutex_unlock(&netpgp_mutex);
 
     return result;
