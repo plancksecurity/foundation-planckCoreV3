@@ -902,7 +902,7 @@ bool must_field_value_be_encoded(const char* field_value) {
     const char* cur_char_ptr = field_value;
     while (cur_char_ptr < end_ptr) {
         char cur_char = *cur_char_ptr;
-        if (cur_char > 127)
+        if (cur_char > 127 || cur_char < 0)
             return true;
         // FIXME - do we need to deal with CRCRLF here?
         //         I guess in the worst case, it gets encoded, which
