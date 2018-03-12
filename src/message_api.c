@@ -393,7 +393,7 @@ unsigned long long get_bitmask(int num_bits) {
 
 static char* get_base_36_rep(unsigned long long value, int num_sig_bits) {
         
-    int bufsize = ceil(num_sig_bits / _pEp_log2_36) + 1;
+    int bufsize = ((int) ceil((double) num_sig_bits / _pEp_log2_36)) + 1;
     
     // based on
     // https://en.wikipedia.org/wiki/Base36#C_implementation
@@ -478,7 +478,7 @@ static PEP_STATUS generate_message_id(message* msg) {
     
     time_t curr_time = time(NULL);
     
-    time_prefix = get_base_36_rep(curr_time, ceil(log2(curr_time)));
+    time_prefix = get_base_36_rep(curr_time, (int) ceil(log2((double) curr_time)));
 
     if (!time_prefix)
         goto enomem;

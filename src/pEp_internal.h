@@ -427,6 +427,6 @@ extern int _pEp_rand_max_bits;
 extern double _pEp_log2_36;
 
 static inline void _init_globals() {
-    _pEp_rand_max_bits = ceil(log2(RAND_MAX));
+    _pEp_rand_max_bits = (int) ceil(log2((double) RAND_MAX));
     _pEp_log2_36 = log2(36);
 }

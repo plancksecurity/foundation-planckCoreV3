@@ -1336,7 +1336,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     // Note: Following statement is NOT for any cryptographic/secure functionality; it is
     //       ONLY used for some randomness in generated outer message ID, which are
     //       required by the RFC to be globally unique!
-    srand(time(NULL));
+    srand((unsigned int) time(NULL));
     
     return PEP_STATUS_OK;
 
