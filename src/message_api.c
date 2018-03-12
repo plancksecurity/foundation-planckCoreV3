@@ -3586,7 +3586,7 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     }
 
     // FIXME: test with att
-    status = _mime_encode_message_internal(dec_msg, false, mime_plaintext, false);
+    status = _mime_encode_message_internal(dec_msg, false, mime_plaintext, true);
 
     if (status == PEP_STATUS_OK)
     {
