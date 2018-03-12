@@ -299,8 +299,10 @@ static struct mailimf_mailbox * identity_to_mailbox(const pEp_identity *ident)
     char *_username = NULL;
     struct mailimf_mailbox *mb;
 
-    _username = ident->username ? mailmime_encode_subject_header("utf-8",
-            ident->username, 0) : strdup("");
+    _username = (ident->username && must_field_value_be_encoded(ident->username))
+                  ? mailmime_encode_subject_header("utf-8", ident->username, 0) 
+                  : strdup("");
+                  
     if (_username == NULL)
         goto enomem;
 
@@ -418,7 +420,7 @@ static clist * stringlist_to_clist(stringlist_t *sl, bool transport_encode)
     stringlist_t *_sl;
     for (_sl = sl; _sl; _sl = _sl->next) {
         int r;
-        char * value = (transport_encode ?
+        char * value = ((transport_encode && must_field_value_be_encoded(_sl->value)) ?
                         mailmime_encode_subject_header("utf-8", _sl->value, 0) :
                         strdup(_sl->value));
         assert(value);
@@ -517,7 +519,11 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
         }
     }
 
-    char *_subject = mailmime_encode_subject_header("utf-8", subject, 1);
+    char* _subject = NULL;
+    if (!must_field_value_be_encoded(subject))
+        _subject = strdup(subject);
+    else    
+        _subject = mailmime_encode_subject_header("utf-8", subject, 1);
     if (_subject == NULL)
         goto enomem;
 
@@ -607,7 +613,11 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
 
     if (msg->comments) {
-        char *comments = mailmime_encode_subject_header("utf-8", msg->comments, 0);
+        char *comments = NULL;
+        if (!must_field_value_be_encoded(msg->comments))
+            comments = strdup(comments);
+        else 
+            comments = mailmime_encode_subject_header("utf-8", msg->comments, 0);
         if (comments == NULL)
             goto enomem;
 
@@ -625,12 +635,8 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
             char *key = _l->value->key;
             char *value = _l->value->value;
             if (key && value) {
-                char *_value = mailmime_encode_subject_header("utf-8", value, 1);
-                if (_value == NULL)
-                    goto enomem;
+                r = _append_optional_field(fields_list, key, value);
 
-                r = _append_optional_field(fields_list, key, _value);
-                free(_value);
                 if (r)
                     goto enomem;
             }

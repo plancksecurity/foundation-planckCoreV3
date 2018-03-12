@@ -541,6 +541,7 @@ enomem:
     return NULL;
 }
 
+
 struct mailimf_field * create_optional_field(
         const char *field,
         const char *value
@@ -554,7 +555,10 @@ struct mailimf_field * create_optional_field(
     if (_field == NULL)
         goto enomem;
 
-    _value = mailmime_encode_subject_header("utf-8", value, 0);
+    if (!must_field_value_be_encoded(value))
+        _value = strdup(value);
+    else    
+        _value = mailmime_encode_subject_header("utf-8", value, 0);
     if (_value == NULL)
         goto enomem;
 
@@ -884,4 +888,40 @@ int _get_content_type(
     }
 
     return EINVAL;
+}
+
+// Only for null-terminated field strings.
+// can this field be transported as is without modification?)
+// (See rfc2822, section 2.2.3 - libetpan's handling isn't quite what
+// we need here.)
+bool must_field_value_be_encoded(const char* field_value) {
+    
+    int val_len = strlen(field_value);
+    const char* end_ptr = field_value + val_len;
+
+    const char* cur_char_ptr = field_value;
+    while (cur_char_ptr < end_ptr) {
+        char cur_char = *cur_char_ptr;
+        if (cur_char > 127)
+            return true;
+        // FIXME - do we need to deal with CRCRLF here?
+        //         I guess in the worst case, it gets encoded, which
+        //         is *supposed* to be harmless...
+        if (cur_char == '\r') {
+            const char* next = cur_char_ptr + 1;
+            const char* nextnext = next + 1;
+            if (next >= end_ptr || nextnext >= end_ptr
+                || *next != '\n'
+                || (*nextnext != ' ' && *nextnext != '\t')) {
+                return true;
+            }            
+        }
+        else if (cur_char == '\n') {
+            const char* prev = cur_char_ptr - 1;
+            if (prev == field_value || *prev != '\r')
+                return true;
+        }
+        cur_char_ptr++;
+    }    
+    return false;
 }
