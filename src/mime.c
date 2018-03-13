@@ -615,7 +615,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     if (msg->comments) {
         char *comments = NULL;
         if (!must_field_value_be_encoded(msg->comments))
-            comments = strdup(comments);
+            comments = strdup(msg->comments);
         else 
             comments = mailmime_encode_subject_header("utf-8", msg->comments, 0);
         if (comments == NULL)
