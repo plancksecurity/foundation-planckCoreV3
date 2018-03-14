@@ -303,6 +303,7 @@ static struct mailimf_mailbox * identity_to_mailbox(const pEp_identity *ident)
                   ? mailmime_encode_subject_header("utf-8", ident->username, 0) 
                   : strdup("");
                   
+    assert(_username);
     if (_username == NULL)
         goto enomem;
 
@@ -468,6 +469,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
 
     if (msg->id) {
         char *_msgid = strdup(msg->id);
+        assert(_msgid);
         if (_msgid == NULL)
             goto enomem;
 
@@ -520,10 +522,13 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     }
 
     char* _subject = NULL;
-    if (!must_field_value_be_encoded(subject))
+    if (!must_field_value_be_encoded(subject)) {
         _subject = strdup(subject);
-    else    
+        assert(_subject);
+    }
+    else {
         _subject = mailmime_encode_subject_header("utf-8", subject, 1);
+    }
     if (_subject == NULL)
         goto enomem;
 
@@ -614,10 +619,13 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
 
     if (msg->comments) {
         char *comments = NULL;
-        if (!must_field_value_be_encoded(msg->comments))
+        if (!must_field_value_be_encoded(msg->comments)) {
             comments = strdup(msg->comments);
-        else 
+            assert(comments);
+        }
+        else  {
             comments = mailmime_encode_subject_header("utf-8", msg->comments, 0);
+        }
         if (comments == NULL)
             goto enomem;
 
@@ -1481,6 +1489,9 @@ static PEP_STATUS interpret_MIME(
         else if (_is_multipart(content, "encrypted")) {
             if (msg->longmsg == NULL)
                 msg->longmsg = strdup("");
+            assert(msg->longmsg);
+            if (!msg->longmsg)
+                return PEP_OUT_OF_MEMORY;
 
             clist *partlist = mime->mm_data.mm_multipart.mm_mp_list;
             if (partlist == NULL)
