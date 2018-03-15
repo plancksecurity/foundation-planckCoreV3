@@ -512,6 +512,7 @@ DYNAMIC_API PEP_STATUS update_identity(
     if (identity->me || 
        (default_own_id && identity->user_id && (strcmp(default_own_id, identity->user_id) == 0))) 
     {
+        free(default_own_id);
         return PEP_ILLEGAL_VALUE;
     }
 
@@ -558,6 +559,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                                                         identity->user_id);
                                 if (status != PEP_STATUS_OK) {
                                     free_identity_list(id_list);
+                                    free(default_own_id);
                                     return status;
                                 }
                                     
@@ -681,7 +683,7 @@ DYNAMIC_API PEP_STATUS update_identity(
         else {
             identity->user_id = calloc(1, strlen(identity->address) + 6);
             if (!identity->user_id)
-                return PEP_OUT_OF_MEMORY;
+                goto enomem;
 
             snprintf(identity->user_id, strlen(identity->address) + 6,
                      "TOFU_%s", identity->address);        
@@ -757,14 +759,14 @@ DYNAMIC_API PEP_STATUS update_identity(
             // This means TOFU_ user_id
             identity->user_id = calloc(1, strlen(identity->address) + 6);
             if (!identity->user_id)
-                return PEP_OUT_OF_MEMORY;
+                goto enomem;
 
             snprintf(identity->user_id, strlen(identity->address) + 6,
                      "TOFU_%s", identity->address);        
         
             identity->username = strdup(identity->address);
             if (!identity->address)
-                return PEP_OUT_OF_MEMORY;            
+                goto enomem;
             
             free(identity->fpr);
             identity->fpr = NULL;
@@ -780,7 +782,6 @@ DYNAMIC_API PEP_STATUS update_identity(
             status = set_identity(session, identity);
 
         }
-            
     }
     
     // FIXME: This is legacy. I presume it's a notification for the caller...
@@ -790,6 +791,13 @@ DYNAMIC_API PEP_STATUS update_identity(
         if (session->examine_identity)
             session->examine_identity(identity, session->examine_management);
 
+    goto pep_free;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+pep_free:
+    free(default_own_id);
     return status;
 }
 
