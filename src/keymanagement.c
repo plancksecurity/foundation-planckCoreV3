@@ -661,9 +661,10 @@ DYNAMIC_API PEP_STATUS update_identity(
                                 
                                 // Ok, we have a real ID. Copy it!
                                 identity->user_id = strdup(this_uid);
-                                
+                                assert(identity->user_id);
                                 if (!identity->user_id)
-                                    status = PEP_OUT_OF_MEMORY;
+                                    goto enomem;
+
                                 stored_ident = this_id;
                                 
                                 break;                                
@@ -798,6 +799,7 @@ enomem:
 
 pep_free:
     free(default_own_id);
+    free_identity(stored_ident);
     return status;
 }
 
