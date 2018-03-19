@@ -3054,10 +3054,9 @@ static void _max_comm_type_from_identity_list(
         if (il->ident)
         {   
             PEP_STATUS status = PEP_STATUS_OK;
-            if (!is_me(session, il->ident))
-                status = update_identity(session, il->ident);
-            else
-                status = myself(session, il->ident);
+            *max_comm_type = _get_comm_type(session, *max_comm_type,
+                il->ident);
+            *comm_type_determined = true;
             
             bool is_blacklisted = false;
             if (il->ident->fpr && IS_PGP_CT(il->ident->comm_type)) {
@@ -3082,11 +3081,6 @@ static void _max_comm_type_from_identity_list(
                 // got nothing from update_identity after applying the whole
                 // heuristic
                 *max_comm_type = PEP_ct_no_encryption;
-                *comm_type_determined = true;
-            }
-            else {
-                *max_comm_type = _get_comm_type(session, *max_comm_type,
-                        il->ident);
                 *comm_type_determined = true;
             }
         }
