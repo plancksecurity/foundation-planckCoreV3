@@ -492,6 +492,86 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     return status;
 }
 
+PEP_rating _rating(PEP_comm_type ct, PEP_rating rating)
+{
+    if (ct == PEP_ct_unknown)
+        return PEP_rating_undefined;
+
+    else if (ct == PEP_ct_key_not_found)
+        return PEP_rating_have_no_key;
+
+    else if (ct == PEP_ct_compromized)
+        return PEP_rating_under_attack;
+
+    else if (ct == PEP_ct_mistrusted)
+        return PEP_rating_mistrust;
+
+    if (rating == PEP_rating_unencrypted_for_some)
+        return PEP_rating_unencrypted_for_some;
+
+    if (ct == PEP_ct_no_encryption || ct == PEP_ct_no_encrypted_channel ||
+        ct == PEP_ct_my_key_not_included) {
+        if (rating > PEP_rating_unencrypted_for_some)
+            return PEP_rating_unencrypted_for_some;
+        else
+            return PEP_rating_unencrypted;
+    }
+
+    if (rating == PEP_rating_unencrypted)
+        return PEP_rating_unencrypted_for_some;
+
+    if (ct >= PEP_ct_confirmed_enc_anon)
+        return PEP_rating_trusted_and_anonymized;
+
+    else if (ct >= PEP_ct_strong_encryption)
+        return PEP_rating_trusted;
+
+    else if (ct >= PEP_ct_strong_but_unconfirmed && ct < PEP_ct_confirmed)
+        return PEP_rating_reliable;
+
+    else
+        return PEP_rating_unreliable;
+}
+
+DYNAMIC_API PEP_STATUS preview_rating(
+    PEP_SESSION session, pEp_identity * identity, PEP_rating *rating
+)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    assert(session && identity && rating);
+    assert(!EMPTYSTR(identity->address));
+
+    if (!(session && identity && rating && !EMPTYSTR(identity->address)))
+        return PEP_ILLEGAL_VALUE;
+
+    if (identity->me)
+        return PEP_ILLEGAL_VALUE;
+
+    identity->comm_type = PEP_ct_unknown;
+    *rating = PEP_rating_undefined;
+
+    if (!EMPTYSTR(identity->user_id)) {
+        pEp_identity *stored_ident = NULL;
+        status = get_identity_without_trust_check(session, identity->address, identity->user_id, &stored_ident);
+        if (!status)
+            identity->comm_type = stored_ident->comm_type;
+        free_identity(stored_ident);
+    }
+    else {
+        identity_list *id_list = NULL;
+        status = get_identities_by_address(session, identity->address, &id_list);
+        if (!status) {
+            if (identity_list_length(id_list) == 1)
+                identity->comm_type = id_list->ident->comm_type;
+        }
+        free_identity_list(id_list);
+    }
+
+    *rating = _rating(identity->comm_type, PEP_rating_undefined);
+    return status;
+}
+
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
     )
@@ -524,6 +604,9 @@ DYNAMIC_API PEP_STATUS update_identity(
         // (we're gonna update the trust/fpr anyway, so we use the no-fpr-from-trust-db variant)
         //      * do get_identity() to retrieve stored identity information
         status = get_identity_without_trust_check(session, identity->address, identity->user_id, &stored_ident);
+        if (stored_ident)
+            stored_ident->comm_type = PEP_ct_unknown; // FIXME: why is this necessary?
+
 
         // Before we start - if there was no stored identity, we should check to make sure we don't
         // have a stored identity with a temporary user_id that differs from the input user_id. This
@@ -531,7 +614,6 @@ DYNAMIC_API PEP_STATUS update_identity(
         if (!stored_ident) {
             identity_list* id_list = NULL;
             status = get_identities_by_address(session, identity->address, &id_list);
-
             if (id_list) {
                 identity_list* id_curr = id_list;
                 while (id_curr) {

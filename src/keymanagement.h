@@ -9,6 +9,7 @@
 extern "C" {
 #endif
 
+
 // update_identity() - update identity information
 //
 //  parameters:
@@ -53,6 +54,42 @@ extern "C" {
 DYNAMIC_API PEP_STATUS update_identity(
         PEP_SESSION session, pEp_identity * identity
     );
+
+
+typedef enum _PEP_rating {
+    PEP_rating_undefined = 0,
+    PEP_rating_cannot_decrypt,
+    PEP_rating_have_no_key,
+    PEP_rating_unencrypted,
+    PEP_rating_unencrypted_for_some,
+    PEP_rating_unreliable,
+    PEP_rating_reliable,
+    PEP_rating_trusted,
+    PEP_rating_trusted_and_anonymized,
+    PEP_rating_fully_anonymous,
+
+    PEP_rating_mistrust = -1,
+    PEP_rating_b0rken = -2,
+    PEP_rating_under_attack = -3
+} PEP_rating;
+
+PEP_rating _rating(PEP_comm_type ct, PEP_rating rating);
+
+// preview_rating() - quicker preview version of update_identity for use in
+//                    outgoing_rating only
+//
+//  parameters:
+//      session (in)        session to use
+//      identity (inout)    identity information of communication partner
+//                          at least .address must be set
+//      rating (out)        calculated rating
+
+// quicker preview version of update_identity for use in outgoing_rating only
+
+DYNAMIC_API PEP_STATUS preview_rating(
+    PEP_SESSION session, pEp_identity * identity, PEP_rating *rating
+);
+
 
 // TODO: remove
 // initialise_own_identities () - ensures that an own identity is complete

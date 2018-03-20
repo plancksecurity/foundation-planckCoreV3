@@ -98,9 +98,10 @@ static const char *sql_get_identity =
     "   timestamp desc; ";
 
 static const char *sql_get_identity_without_trust_check =  
-    "select identity.main_key_id, username, lang,"
+    "select identity.main_key_id, username, comm_type, lang,"
     "   identity.flags, is_own"
     "   from identity"
+    "   join trust on id = trust.user_id"
     "   join person on id = identity.user_id"
     "   where (case when (address = ?1) then (1)"
     "               when (lower(address) = lower(?1)) then (1)"
@@ -2019,9 +2020,9 @@ PEP_STATUS get_identity_without_trust_check(
             return PEP_OUT_OF_MEMORY;
         }
 
-        _identity->comm_type = PEP_ct_unknown;
+        _identity->comm_type = sqlite3_column_int(session->get_identity_without_trust_check, 2);
         const char* const _lang = (const char *)
-            sqlite3_column_text(session->get_identity_without_trust_check, 2);
+            sqlite3_column_text(session->get_identity_without_trust_check, 3);
         if (_lang && _lang[0]) {
             assert(_lang[0] >= 'a' && _lang[0] <= 'z');
             assert(_lang[1] >= 'a' && _lang[1] <= 'z');
@@ -2031,9 +2032,9 @@ PEP_STATUS get_identity_without_trust_check(
             _identity->lang[2] = 0;
         }
         _identity->flags = (unsigned int)
-            sqlite3_column_int(session->get_identity_without_trust_check, 3);
-        _identity->me = (unsigned int)
             sqlite3_column_int(session->get_identity_without_trust_check, 4);
+        _identity->me = (unsigned int)
+            sqlite3_column_int(session->get_identity_without_trust_check, 5);
     
         *identity = _identity;
         break;

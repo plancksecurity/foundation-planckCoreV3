@@ -1050,48 +1050,6 @@ pep_error:
     return status;
 }
 
-
-static PEP_rating _rating(PEP_comm_type ct, PEP_rating rating)
-{
-    if (ct == PEP_ct_unknown)
-        return PEP_rating_undefined;
-
-    else if (ct == PEP_ct_key_not_found)
-        return PEP_rating_have_no_key;
-
-    else if (ct == PEP_ct_compromized)
-        return PEP_rating_under_attack;
-
-    else if (ct == PEP_ct_mistrusted)
-        return PEP_rating_mistrust;
-
-    if (rating == PEP_rating_unencrypted_for_some)
-        return PEP_rating_unencrypted_for_some;
-
-    if (ct == PEP_ct_no_encryption || ct == PEP_ct_no_encrypted_channel ||
-            ct == PEP_ct_my_key_not_included) {
-        if (rating > PEP_rating_unencrypted_for_some)
-            return PEP_rating_unencrypted_for_some;
-        else
-            return PEP_rating_unencrypted;
-    }
-
-    if (rating == PEP_rating_unencrypted)
-        return PEP_rating_unencrypted_for_some;
-
-    if (ct >= PEP_ct_confirmed_enc_anon)
-        return PEP_rating_trusted_and_anonymized;
-
-    else if (ct >= PEP_ct_strong_encryption)
-        return PEP_rating_trusted;
-
-    else if (ct >= PEP_ct_strong_but_unconfirmed && ct < PEP_ct_confirmed)
-        return PEP_rating_reliable;
-
-    else
-        return PEP_rating_unreliable;
-}
-
 static bool is_encrypted_attachment(const bloblist_t *blob)
 {
     assert(blob);

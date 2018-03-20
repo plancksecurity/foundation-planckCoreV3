@@ -178,24 +178,6 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message_for_self(
     PEP_encrypt_flags_t flags
 );
 
-
-typedef enum _PEP_rating {
-    PEP_rating_undefined = 0,
-    PEP_rating_cannot_decrypt,
-    PEP_rating_have_no_key,
-    PEP_rating_unencrypted,
-    PEP_rating_unencrypted_for_some,
-    PEP_rating_unreliable,
-    PEP_rating_reliable,
-    PEP_rating_trusted,
-    PEP_rating_trusted_and_anonymized,
-    PEP_rating_fully_anonymous,   
-
-    PEP_rating_mistrust = -1,
-    PEP_rating_b0rken = -2,
-    PEP_rating_under_attack = -3
-} PEP_rating;
-
 typedef enum _PEP_color {
     PEP_color_no_color = 0,
     PEP_color_yellow,
