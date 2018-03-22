@@ -80,7 +80,7 @@ bool _is_multipart(struct mailmime_content *content, const char *subtype);
 bool _is_PGP_MIME(struct mailmime_content *content);
 bool _is_text_part(struct mailmime_content *content, const char *subtype);
 bool must_field_value_be_encoded(const char* field_value);
-bool must_chunk_be_encoded(const void* value, size_t size);
+bool must_chunk_be_encoded(const void* value, size_t size, bool ignore_fws);
 
 
 int _get_content_type(

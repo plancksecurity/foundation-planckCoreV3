@@ -898,10 +898,10 @@ bool must_field_value_be_encoded(const char* field_value) {
     if (!field_value)
         return false;
         
-    return must_chunk_be_encoded((const void*)field_value, strlen(field_value));    
+    return must_chunk_be_encoded((const void*)field_value, strlen(field_value), false);    
 }
 
-bool must_chunk_be_encoded(const void* value, size_t size) {
+bool must_chunk_be_encoded(const void* value, size_t size, bool ignore_fws) {
 
     const char* begin_ptr = (const char*)value;    
 
@@ -915,19 +915,21 @@ bool must_chunk_be_encoded(const void* value, size_t size) {
         // FIXME - do we need to deal with CRCRLF here?
         //         I guess in the worst case, it gets encoded, which
         //         is *supposed* to be harmless...
-        if (cur_char == '\r') {
-            const char* next = cur_char_ptr + 1;
-            const char* nextnext = next + 1;
-            if (next >= end_ptr || nextnext >= end_ptr
-                || *next != '\n'
-                || (*nextnext != ' ' && *nextnext != '\t')) {
-                return true;
-            }            
-        }
-        else if (cur_char == '\n') {
-            const char* prev = cur_char_ptr - 1;
-            if (prev == begin_ptr || *prev != '\r')
-                return true;
+        if (!ignore_fws) {
+            if (cur_char == '\r') {
+                const char* next = cur_char_ptr + 1;
+                const char* nextnext = next + 1;
+                if (next >= end_ptr || nextnext >= end_ptr
+                    || *next != '\n'
+                    || (*nextnext != ' ' && *nextnext != '\t')) {
+                    return true;
+                }            
+            }
+            else if (cur_char == '\n') {
+                const char* prev = cur_char_ptr - 1;
+                if (prev == begin_ptr || *prev != '\r')
+                    return true;
+            }
         }
         cur_char_ptr++;
     }    
