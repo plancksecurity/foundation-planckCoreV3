@@ -895,11 +895,19 @@ int _get_content_type(
 // (See rfc2822, section 2.2.3 - libetpan's handling isn't quite what
 // we need here.)
 bool must_field_value_be_encoded(const char* field_value) {
-    
-    int val_len = strlen(field_value);
-    const char* end_ptr = field_value + val_len;
+    if (!field_value)
+        return false;
+        
+    return must_chunk_be_encoded((const void*)field_value, strlen(field_value));    
+}
 
-    const char* cur_char_ptr = field_value;
+bool must_chunk_be_encoded(const void* value, size_t size) {
+
+    const char* begin_ptr = (const char*)value;    
+
+    const char* end_ptr = begin_ptr + size;
+
+    const char* cur_char_ptr = begin_ptr;
     while (cur_char_ptr < end_ptr) {
         char cur_char = *cur_char_ptr;
         if (cur_char > 127 || cur_char < 0)
@@ -918,7 +926,7 @@ bool must_field_value_be_encoded(const char* field_value) {
         }
         else if (cur_char == '\n') {
             const char* prev = cur_char_ptr - 1;
-            if (prev == field_value || *prev != '\r')
+            if (prev == begin_ptr || *prev != '\r')
                 return true;
         }
         cur_char_ptr++;
