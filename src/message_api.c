@@ -2944,12 +2944,22 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     */
     
     // 1. Check to see if this message is to us and contains an own key imported 
-    // from own trusted message 
-    if (msg && *rating >= PEP_rating_trusted && imported_private_key_address &&
-        msg->to && msg->to->ident && msg->to->ident->me) {
+    // from own trusted message
+    if (*rating >= PEP_rating_trusted && imported_private_key_address) {
 
-        // flag it as such
-        *flags |= PEP_decrypt_flag_own_private_key;
+        if (msg && msg->to && msg->to->ident) {            
+            // This will only happen rarely, so we can do this.
+            PEP_STATUS _tmp_status = PEP_STATUS_OK;
+            
+            if (!is_me(session, msg->to->ident))
+                _tmp_status = update_identity(session, msg->to->ident);
+            
+            if (_tmp_status == PEP_STATUS_OK && msg->to->ident->me) {
+                // flag it as such
+                *flags |= PEP_decrypt_flag_own_private_key;
+            }
+        }
+        
     }
 
     // 2. Clean up message and prepare for return 
