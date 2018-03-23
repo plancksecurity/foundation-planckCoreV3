@@ -2954,7 +2954,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             if (!is_me(session, msg->to->ident))
                 _tmp_status = update_identity(session, msg->to->ident);
             
-            if (_tmp_status == PEP_STATUS_OK && msg->to->ident->me) {
+            if (_tmp_status == PEP_STATUS_OK && is_me(session, msg->to->ident)) {
                 // flag it as such
                 *flags |= PEP_decrypt_flag_own_private_key;
             }
