@@ -136,9 +136,12 @@ static PEP_STATUS mime_attachment(
         mime_type = blob->mime_type;
 
     pEp_rid_list_t* resource = parse_uri(blob->filename);
-    bool already_ascii = known_ascii_type(mime_type);
+//    bool already_ascii = known_ascii_type(mime_type);
+
+    bool already_ascii = !(must_chunk_be_encoded(blob->value, blob->size, true));
+
     mime = get_file_part(resource, mime_type, blob->value, blob->size, 
-                         (already_ascii ? false : transport_encode));
+                          (already_ascii ? false : transport_encode));
     free_rid_list(resource);
     
     assert(mime);
