@@ -1253,12 +1253,19 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
         goto pep_free;
         
     PEP_comm_type new_trust = PEP_ct_unknown;
+    status = get_key_rating(session, ident->fpr, &new_trust);
+    if (status != PEP_STATUS_OK)
+        goto pep_free;
 
-    if (input_copy->comm_type != PEP_ct_mistrusted)
-        new_trust = input_copy->comm_type & ~PEP_ct_confirmed;
-
-    // We'll return the status from the input_copy cache afterward
-    input_copy->comm_type = new_trust;
+    bool pep_user = false;
+    
+    status = is_pep_user(session, ident, &pep_user);
+    
+    if (pep_user && new_trust >= PEP_ct_unconfirmed_encryption)
+        input_copy->comm_type = PEP_ct_pEp_unconfirmed;
+    else
+        input_copy->comm_type = new_trust;
+        
     status = set_trust(session, input_copy);
     
     if (status != PEP_STATUS_OK)
@@ -1298,7 +1305,7 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
     }
     
     char* user_default = NULL;
-    status = get_main_user_fpr(session, tmp_ident->user_id, &user_default);
+    get_main_user_fpr(session, tmp_ident->user_id, &user_default);
     
     if (!EMPTYSTR(user_default)) {
         if (strcmp(user_default, ident->fpr) == 0)

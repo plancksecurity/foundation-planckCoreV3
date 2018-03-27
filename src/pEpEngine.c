@@ -418,7 +418,7 @@ static const char *sql_add_mistrusted_key =
     "   values (upper(replace(?1,' ',''))) ;";
         
 static const char *sql_delete_mistrusted_key = 
-    "delete from blacklist_keys where fpr = upper(replace(?1,' ','')) ;";
+    "delete from mistrusted_keys where fpr = upper(replace(?1,' ','')) ;";
 
 static const char *sql_is_mistrusted_key = 
     "select count(*) from mistrusted_keys where fpr = upper(replace(?1,' ','')) ;";
@@ -2908,10 +2908,14 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
     case SQLITE_ROW: {
         const char* _fpr = 
             (const char *) sqlite3_column_text(session->get_main_user_fpr, 0);
-        if (_fpr)
+        if (_fpr) {
             *main_fpr = strdup(_fpr);
-        if (!(*main_fpr))
-            status = PEP_OUT_OF_MEMORY;
+            if (!(*main_fpr))
+                status = PEP_OUT_OF_MEMORY;
+        }
+        else {
+            status = PEP_KEY_NOT_FOUND;
+        }
         break;
     }
     default:
