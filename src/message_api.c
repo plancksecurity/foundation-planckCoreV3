@@ -1357,13 +1357,42 @@ bool import_attached_keys(
         if (bl && bl->value && bl->size && bl->size < MAX_KEY_SIZE
                 && is_key(bl))
         {
+            char* blob_value = bl->value;
+            size_t blob_size = bl->size;
+            bool free_blobval = false;
+            
+            if (is_encrypted_attachment(bl)) {
+                char* bl_ptext = NULL;
+                size_t bl_psize = 0;
+                stringlist_t* bl_keylist = NULL;
+                PEP_STATUS _status = decrypt_and_verify(session, 
+                                                        blob_value, blob_size,
+                                                        NULL, 0,
+                                                        &bl_ptext, &bl_psize, 
+                                                        &bl_keylist);
+                free_stringlist(bl_keylist); // we don't care about key encryption as long as we decrypt
+                if (_status == PEP_DECRYPTED || _status == PEP_DECRYPTED_AND_VERIFIED) {
+                    free_blobval = true;
+                    blob_value = bl_ptext;
+                    blob_size = bl_psize;
+                }
+                else {
+                    // This is an encrypted attachment we can do nothing with.
+                    // We shouldn't delete it or import it, because we can't
+                    // do the latter.
+                    free(bl_ptext);
+                    continue;
+                }
+            }
             identity_list *local_private_idents = NULL;
-            import_key(session, bl->value, bl->size, &local_private_idents);
+            import_key(session, blob_value, blob_size, &local_private_idents);
             remove = true;
             if (private_idents && *private_idents == NULL && local_private_idents != NULL)
                 *private_idents = local_private_idents;
             else
                 free_identity_list(local_private_idents);
+            if (free_blobval)
+                free(blob_value);
         }
     }
     return remove;
@@ -2351,8 +2380,8 @@ static PEP_STATUS verify_decrypted(PEP_SESSION session,
         //                                         &verify_keylist);
         free_stringlist(*keylist);
         *decrypt_status = decrypt_and_verify(session, ctext, csize,
-                                            NULL, 0,
-                                            &ptext, &psize, keylist);
+                                             NULL, 0,
+                                             &ptext, &psize, keylist);
         
     }
 
@@ -2377,7 +2406,7 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
 
     message* msg = *msg_ptr;
 
-    msg->longmsg = ptext;
+    msg->longmsg = strdup(ptext);
     ptext = NULL;
 
     bloblist_t *_m = msg->attachments;
@@ -2402,11 +2431,10 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
             free(ptext);
             ptext = NULL;
 
-            // FIXME: What about attachments with separate sigs???
             status = decrypt_and_verify(session, attctext, attcsize,
                                         NULL, 0,
                                         &ptext, &psize, &_keylist);
-            free_stringlist(_keylist); // FIXME: Why do we do this?
+            free_stringlist(_keylist);
 
             if (ptext) {
                 if (is_encrypted_html_attachment(_s)) {
@@ -2657,6 +2685,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     /*** Begin init ***/
     PEP_STATUS status = PEP_STATUS_OK;
     PEP_STATUS decrypt_status = PEP_CANNOT_DECRYPT_UNKNOWN;
+    PEP_STATUS _decrypt_in_pieces_status = PEP_CANNOT_DECRYPT_UNKNOWN;
     message *msg = NULL;
     char *ctext;
     size_t csize;
@@ -2803,15 +2832,25 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 break;
 
             case PEP_enc_pieces:
-                decrypt_status = _decrypt_in_pieces(session, src, &msg, ptext, psize);
+                status = PEP_STATUS_OK;
+                
+                _decrypt_in_pieces_status = _decrypt_in_pieces(session, src, &msg, ptext, psize);
             
-                if (decrypt_status == PEP_OUT_OF_MEMORY)
-                    goto enomem;
-                else
-                    status = PEP_STATUS_OK;
-                     
+                switch (_decrypt_in_pieces_status) {
+                    case PEP_DECRYPTED:
+                    case PEP_DECRYPTED_AND_VERIFIED:
+                        if (decrypt_status <= PEP_DECRYPTED_AND_VERIFIED)
+                            decrypt_status = _MIN(decrypt_status, _decrypt_in_pieces_status);
+                        break;
+                    case PEP_STATUS_OK:
+                        break;    
+                    case PEP_OUT_OF_MEMORY:
+                        goto enomem;
+                    default:
+                        decrypt_status = _decrypt_in_pieces_status;
+                        break;
+                }
                 break;
-
             default:
                 // BUG: must implement more
                 NOT_IMPLEMENTED
