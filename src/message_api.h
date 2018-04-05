@@ -82,6 +82,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 //      session (in)        session handle
 //      target_id (in)      self identity this message should be encrypted for
 //      src (in)            message to encrypt
+//      extra (in)          extra keys for encryption
 //      dst (out)           pointer to new encrypted message or NULL on failure
 //      enc_format (in)     encrypted format
 //      flags (in)          flags to set special encryption features
@@ -104,6 +105,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_SESSION session,
         pEp_identity* target_id,
         message *src,
+        stringlist_t* extra,
         message **dst,
         PEP_enc_format enc_format,
         PEP_encrypt_flags_t flags
@@ -152,6 +154,7 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
 //      target_id (in)          self identity this message should be encrypted for
 //      mimetext (in)           MIME encoded text to encrypt
 //      size (in)               size of input mime text
+//      extra (in)              extra keys for encryption
 //      mime_ciphertext (out)   encrypted, encoded message
 //      enc_format (in)         encrypted format
 //      flags (in)              flags to set special encryption features
@@ -173,6 +176,7 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message_for_self(
     pEp_identity* target_id,
     const char *mimetext,
     size_t size,
+    stringlist_t* extra,
     char** mime_ciphertext,
     PEP_enc_format enc_format,
     PEP_encrypt_flags_t flags

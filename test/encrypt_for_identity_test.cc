@@ -66,7 +66,7 @@ int main() {
     cout << "encrypting message as MIME multipart…\n";
     message* encrypted_msg = nullptr;
     cout << "calling encrypt_message_for_identity()\n";
-    status = encrypt_message_for_self(session, alice, outgoing_message, &encrypted_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);
+    status = encrypt_message_for_self(session, alice, outgoing_message, NULL, &encrypted_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);
     cout << "encrypt_message() returns " << std::hex << status << '.' << endl;
     assert(status == PEP_STATUS_OK);
     assert(encrypted_msg);
@@ -142,6 +142,7 @@ int main() {
     cout << "Calling MIME_encrypt_message_for_self" << endl;
     status = MIME_encrypt_message_for_self(session, alice, mimetext.c_str(),
                                            mimetext.size(), 
+                                           NULL,
                                            &encrypted_mimetext, 
                                            PEP_enc_PGP_MIME, 
                                            PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);

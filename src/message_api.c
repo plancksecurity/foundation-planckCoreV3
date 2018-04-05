@@ -1816,6 +1816,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_SESSION session,
         pEp_identity* target_id,
         message *src,
+        stringlist_t* extra,
         message **dst,
         PEP_enc_format enc_format,
         PEP_encrypt_flags_t flags
@@ -1868,6 +1869,14 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
  
     keys = new_stringlist(target_fpr);
     
+    stringlist_t *_k = keys;
+
+    if (extra) {
+        _k = stringlist_append(_k, extra);
+        if (_k == NULL)
+            goto enomem;
+    }
+
     /* KG: did we ever do this??? */
     if (!(flags & PEP_encrypt_flag_force_no_attached_key))
         _attach_key(session, target_fpr, src);
@@ -3729,6 +3738,7 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message_for_self(
     pEp_identity* target_id,
     const char *mimetext,
     size_t size,
+    stringlist_t* extra,
     char** mime_ciphertext,
     PEP_enc_format enc_format,
     PEP_encrypt_flags_t flags
@@ -3747,6 +3757,7 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message_for_self(
     status = encrypt_message_for_self(session,
                                       target_id,
                                       tmp_msg,
+                                      extra,
                                       &enc_msg,
                                       enc_format,
                                       flags);
