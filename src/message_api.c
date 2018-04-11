@@ -1812,6 +1812,90 @@ pep_error:
     return status;
 }
 
+
+DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
+        PEP_SESSION session,
+        message *src,
+        message **dst,
+        const char* to_fpr,
+        PEP_enc_format enc_format
+    )
+{
+    assert(session);
+    assert(src);
+    assert(dst);
+    assert(to_fpr);
+    
+    if (!session || !src || !dst || !to_fpr)
+        return PEP_ILLEGAL_VALUE;
+        
+    if (enc_format == PEP_enc_none)
+        return PEP_ILLEGAL_VALUE;
+    
+    if (src->cc || src->bcc)
+        return PEP_ILLEGAL_VALUE;
+        
+    if (!src->to || src->to->next)
+        return PEP_ILLEGAL_VALUE;
+        
+    if (!src->from->address || !src->to->ident || !src->to->ident->address)
+        return PEP_ILLEGAL_VALUE;
+            
+    if (!strcasecmp(src->from->address, src->to->ident->address) == 0)
+        return PEP_ILLEGAL_VALUE;
+    
+    char* own_id = NULL;
+    char* default_id = NULL;
+    
+    PEP_STATUS status = get_default_own_userid(session, &own_id);
+    
+    if (!own_id)
+        return PEP_UNKNOWN_ERROR; // Probably a DB error at this point
+        
+    if (src->from->user_id) {
+        if (strcmp(src->from->user_id, own_id) != 0) {
+            status = get_userid_alias_default(session, src->from->user_id, &default_id);
+            if (status != PEP_STATUS_OK || !default_id || strcmp(default_id, own_id) != 0) {
+                status = PEP_ILLEGAL_VALUE;
+                goto pep_free;
+            }
+        }        
+    }
+    
+    // Ok, we are at least marginally sure the initial stuff is ok.
+        
+    // Let's get our own, normal identity
+    pEp_identity* own_identity = NULL;
+    status = get_identity(session, src->to->ident->address, own_id, own_identity);    
+
+    if (status != PEP_STATUS_OK)
+        goto pep_free;
+
+    // Ok, now we know the address is an own address. All good. Then...
+    char* own_private_fpr = own_identity->fpr;
+    own_identity->fpr = strdup(to_fpr);
+    
+    status = get_trust(session, own_identity);
+    
+    if (status != PEP_STATUS_OK)
+        goto pep_free;
+        
+    if ((own_identity->comm_type & PEP_ct_confirmed) != PEP_ct_confirmed) {
+        status = PEP_ILLEGAL_VALUE;
+        goto pep_free;
+    }
+                
+    // Ok, so all the things are now allowed.
+    // So let's get our own private key and roll with it.
+                
+                
+pep_free:
+    free(own_id);
+    free(default_id);
+    return status;
+}
+
+
 DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_SESSION session,
         pEp_identity* target_id,
