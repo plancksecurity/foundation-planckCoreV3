@@ -431,7 +431,8 @@ typedef enum _PEP_comm_type {
     PEP_ct_b0rken_crypto = 0x0b,
     PEP_ct_key_too_short = 0x0c,
 
-    PEP_ct_compromized = 0x0e,                  // known compromized connection
+    PEP_ct_compromised = 0x0e,                  // known compromised connection
+    PEP_ct_compromized = 0x0e,                  // deprecated misspelling
     PEP_ct_mistrusted = 0x0f,                   // known mistrusted key
 
     // range 0x10 to 0x3f: unconfirmed encryption
@@ -742,11 +743,20 @@ DYNAMIC_API PEP_STATUS unset_identity_flags(
         identity_flags_t flags
     );
 
-// mark_as_compromized() - mark key in trust db as compromized
+// mark_as_compromised() - mark key in trust db as compromised
 //
 //    parameters:
 //        session (in)        session handle
 //        fpr (in)            fingerprint of key to mark
+
+DYNAMIC_API PEP_STATUS mark_as_compromised(
+        PEP_SESSION session,
+        const char *fpr
+    );
+
+
+// mark_as_compromized() - deprecated to fix misspelling. Please move to
+//                         mark_as_compromised();
 
 DYNAMIC_API PEP_STATUS mark_as_compromized(
         PEP_SESSION session,
@@ -860,6 +870,14 @@ DYNAMIC_API PEP_STATUS export_key(
 //      the key_data goes to the ownership of the caller
 //      the caller is responsible to free() it (on Windoze use pEp_free())
 //      beware of leaking secret key data - overwrite it in memory after use
+
+DYNAMIC_API PEP_STATUS export_secret_key(
+        PEP_SESSION session, const char *fpr, char **key_data, size_t *size
+    );
+
+
+// export_secrect_key() - deprecated misspelled function. Please replace with
+//                        export_secret_key
 
 DYNAMIC_API PEP_STATUS export_secrect_key(
         PEP_SESSION session, const char *fpr, char **key_data, size_t *size

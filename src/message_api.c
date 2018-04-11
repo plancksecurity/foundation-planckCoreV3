@@ -1059,7 +1059,7 @@ static PEP_rating _rating(PEP_comm_type ct, PEP_rating rating)
     else if (ct == PEP_ct_key_not_found)
         return PEP_rating_have_no_key;
 
-    else if (ct == PEP_ct_compromized)
+    else if (ct == PEP_ct_compromised)
         return PEP_rating_under_attack;
 
     else if (ct == PEP_ct_mistrusted)
@@ -1259,8 +1259,8 @@ static PEP_comm_type _get_comm_type(
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
-    if (max_comm_type == PEP_ct_compromized)
-        return PEP_ct_compromized;
+    if (max_comm_type == PEP_ct_compromised)
+        return PEP_ct_compromised;
 
     if (max_comm_type == PEP_ct_mistrusted)
         return PEP_ct_mistrusted;
@@ -1271,8 +1271,8 @@ static PEP_comm_type _get_comm_type(
         status = myself(session, ident);
 
     if (status == PEP_STATUS_OK) {
-        if (ident->comm_type == PEP_ct_compromized)
-            return PEP_ct_compromized;
+        if (ident->comm_type == PEP_ct_compromised)
+            return PEP_ct_compromised;
         else if (ident->comm_type == PEP_ct_mistrusted)
             return PEP_ct_mistrusted;
         else
@@ -1889,7 +1889,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     char* priv_key_data = NULL;
     size_t priv_key_size = 0;
     
-    status = export_secrect_key(session, own_private_fpr, &priv_key_data, 
+    status = export_secret_key(session, own_private_fpr, &priv_key_data, 
                                 &priv_key_size);
 
     if (status != PEP_STATUS_OK)

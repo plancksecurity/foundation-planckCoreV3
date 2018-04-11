@@ -266,8 +266,9 @@ const char* tl_ct_string(PEP_comm_type ct) {
             return "PEP_ct_b0rken_crypto";
         case PEP_ct_key_too_short:
             return "PEP_ct_key_too_short";
+        case PEP_ct_compromised:
         case PEP_ct_compromized:
-            return "PEP_ct_compromized";
+            return "PEP_ct_compromised";
         case PEP_ct_mistrusted:
             return "PEP_ct_mistrusted";
         case PEP_ct_unconfirmed_encryption:

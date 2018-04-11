@@ -311,7 +311,7 @@ static const char *sql_least_trust =
     " and comm_type != 0;"; // ignores PEP_ct_unknown
     // returns PEP_ct_unknown only when no known trust is recorded
 
-static const char *sql_mark_as_compromized = 
+static const char *sql_mark_as_compromised = 
     "update trust not indexed set comm_type = 15"
     " where pgp_keypair_fpr = upper(replace(?1,' ','')) ;";
     
@@ -1195,8 +1195,8 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_least_trust), &_session->least_trust, NULL);
     assert(int_result == SQLITE_OK);
 
-    int_result = sqlite3_prepare_v2(_session->db, sql_mark_as_compromized,
-            (int)strlen(sql_mark_as_compromized), &_session->mark_compromized,
+    int_result = sqlite3_prepare_v2(_session->db, sql_mark_as_compromised,
+            (int)strlen(sql_mark_as_compromised), &_session->mark_compromised,
             NULL);
     assert(int_result == SQLITE_OK);
 
@@ -1428,8 +1428,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->get_trust);
             if (session->least_trust)
                 sqlite3_finalize(session->least_trust);
-            if (session->mark_compromized)
-                sqlite3_finalize(session->mark_compromized);
+            if (session->mark_compromised)
+                sqlite3_finalize(session->mark_compromised);
             if (session->crashdump)
                 sqlite3_finalize(session->crashdump);
             if (session->languagelist)
@@ -2926,8 +2926,16 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
     return status;
 }
 
-
+// Deprecated
 DYNAMIC_API PEP_STATUS mark_as_compromized(
+        PEP_SESSION session,
+        const char *fpr
+    )
+{
+    return mark_as_compromised(session, fpr);
+}
+
+DYNAMIC_API PEP_STATUS mark_as_compromised(
         PEP_SESSION session,
         const char *fpr
     )
@@ -2940,11 +2948,11 @@ DYNAMIC_API PEP_STATUS mark_as_compromized(
     if (!(session && fpr && fpr[0]))
         return PEP_ILLEGAL_VALUE;
 
-    sqlite3_reset(session->mark_compromized);
-    sqlite3_bind_text(session->mark_compromized, 1, fpr, -1,
+    sqlite3_reset(session->mark_compromised);
+    sqlite3_bind_text(session->mark_compromised, 1, fpr, -1,
             SQLITE_STATIC);
-    result = sqlite3_step(session->mark_compromized);
-    sqlite3_reset(session->mark_compromized);
+    result = sqlite3_step(session->mark_compromised);
+    sqlite3_reset(session->mark_compromised);
 
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_TRUST;
@@ -3142,7 +3150,7 @@ DYNAMIC_API PEP_STATUS export_key(
             key_data, size, false);
 }
 
-DYNAMIC_API PEP_STATUS export_secrect_key(
+DYNAMIC_API PEP_STATUS export_secret_key(
         PEP_SESSION session, const char *fpr, char **key_data, size_t *size
     )
 {
@@ -3160,6 +3168,14 @@ DYNAMIC_API PEP_STATUS export_secrect_key(
 
     return session->cryptotech[PEP_crypt_OpenPGP].export_key(session, fpr,
             key_data, size, true);
+}
+
+// Deprecated
+DYNAMIC_API PEP_STATUS export_secrect_key(
+        PEP_SESSION session, const char *fpr, char **key_data, size_t *size
+    )
+{
+    return export_secret_key(session, fpr, key_data, size);
 }
 
 DYNAMIC_API PEP_STATUS find_keys(

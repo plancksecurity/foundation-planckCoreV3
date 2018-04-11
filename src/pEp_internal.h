@@ -150,7 +150,7 @@ struct _pEpSession {
     sqlite3_stmt *update_trust_for_fpr;
     sqlite3_stmt *get_trust;
     sqlite3_stmt *least_trust;
-    sqlite3_stmt *mark_compromized;
+    sqlite3_stmt *mark_compromised;
     sqlite3_stmt *reset_trust;
     sqlite3_stmt *crashdump;
     sqlite3_stmt *languagelist;
