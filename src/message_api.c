@@ -1887,11 +1887,27 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
                 
     // Ok, so all the things are now allowed.
     // So let's get our own private key and roll with it.
-                
-                
+    char* priv_key_data = NULL;
+    size_t priv_key_size = 0;
+    
+    status = export_key(session, own_private_fpr, &priv_key_data, 
+                        &priv_key_size, true);
+
+    if (status != PEP_STATUS_OK)
+        goto pep_free;
+    
+    if (!priv_key_data) {
+        status = PEP_CANNOT_EXPORT_KEY;
+        goto pep_free;
+    }
+    
+    // Ok, fine... let's encrypt yon blob.
 pep_free:
     free(own_id);
     free(default_id);
+    free(priv_key_data);
+    free(own_private_fpr);
+    free_identity(own_identity);
     return status;
 }
 
