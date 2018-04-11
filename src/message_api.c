@@ -1812,7 +1812,6 @@ pep_error:
     return status;
 }
 
-
 DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
         PEP_SESSION session,
         message *src,
@@ -1866,7 +1865,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
         
     // Let's get our own, normal identity
     pEp_identity* own_identity = NULL;
-    status = get_identity(session, src->to->ident->address, own_id, own_identity);    
+    status = get_identity(session, src->to->ident->address, own_id, &own_identity);    
 
     if (status != PEP_STATUS_OK)
         goto pep_free;
@@ -1890,8 +1889,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     char* priv_key_data = NULL;
     size_t priv_key_size = 0;
     
-    status = export_key(session, own_private_fpr, &priv_key_data, 
-                        &priv_key_size, true);
+    status = export_secrect_key(session, own_private_fpr, &priv_key_data, 
+                                &priv_key_size);
 
     if (status != PEP_STATUS_OK)
         goto pep_free;
@@ -1901,13 +1900,67 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
         goto pep_free;
     }
     
-    // Ok, fine... let's encrypt yon blob.
+    // Ok, fine... let's encrypt yon blob
+    stringlist_t* keys = new_stringlist(to_fpr);
+    if (!keys) {
+        status = PEP_OUT_OF_MEMORY;
+        goto pep_free;
+    }
+    
+    char* encrypted_key_text = NULL;
+    size_t encrypted_key_size = 0;
+    status = encrypt_and_sign(session, keys, priv_key_data, priv_key_size,
+                              &encrypted_key_text, &encrypted_key_size);
+    
+    if (!encrypted_key_text) {
+        status = PEP_UNKNOWN_ERROR;
+        goto pep_free;
+    }
+
+    // We will have to delete this before returning, as we allocated it.
+    bloblist_t* created_bl = NULL;
+    bloblist_t* created_predecessor = NULL;
+    if (!src->attachments) {
+        src->attachments = new_bloblist(encrypted_key_text, encrypted_key_size,
+                                        "application/octet-stream", 
+                                        "file://pEpkey.asc.pgp");
+        created_bl = src->attachments;
+    } 
+    else {
+        bloblist_t* tmp = src->attachments;
+        while (src->attachments->next) {
+            tmp = src->attachments->next;
+        }
+        created_bl = bloblist_add(src->attachments, 
+                                  encrypted_key_text, encrypted_key_size,
+                                  "application/octet-stream", 
+                                   "file://pEpkey.asc.pgp");
+                                
+        created_predecessor = tmp;                                    
+    }
+    
+    if (!created_bl) {
+        status = PEP_OUT_OF_MEMORY;
+        goto pep_free;
+    }
+            
+    // Ok, it's in there. Let's do this.        
+    status = encrypt_message(session, src, keys, dst, enc_format, 0);
+    
+    // Delete what we added to src
+    free_bloblist(created_bl);
+    if (created_predecessor)
+        created_predecessor->next = NULL;
+    else
+        src->attachments = NULL;    
+    
 pep_free:
     free(own_id);
     free(default_id);
     free(priv_key_data);
     free(own_private_fpr);
     free_identity(own_identity);
+    free_stringlist(keys);
     return status;
 }
 
