@@ -80,7 +80,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
         message *src,
         message **dst,
         const char* to_fpr,
-        PEP_enc_format enc_format
+        PEP_enc_format enc_format,
+        PEP_encrypt_flags_t flags
     );
 
 

@@ -1817,7 +1817,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
         message *src,
         message **dst,
         const char* to_fpr,
-        PEP_enc_format enc_format
+        PEP_enc_format enc_format,
+        PEP_encrypt_flags_t flags
     )
 {
     assert(session);
@@ -1909,8 +1910,13 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     
     char* encrypted_key_text = NULL;
     size_t encrypted_key_size = 0;
-    status = encrypt_and_sign(session, keys, priv_key_data, priv_key_size,
+    
+    if (flags & PEP_encrypt_flag_force_unsigned)
+        status = encrypt_only(session, keys, priv_key_data, priv_key_size,
                               &encrypted_key_text, &encrypted_key_size);
+    else
+        status = encrypt_and_sign(session, keys, priv_key_data, priv_key_size,
+                                  &encrypted_key_text, &encrypted_key_size);
     
     if (!encrypted_key_text) {
         status = PEP_UNKNOWN_ERROR;
