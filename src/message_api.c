@@ -2737,12 +2737,16 @@ static PEP_STATUS update_sender_to_pep_trust(
     
     PEP_STATUS status = 
             is_me(session, sender) ? myself(session, sender) : update_identity(session, sender);
-    
+
     if (EMPTYSTR(sender->fpr) || strcmp(sender->fpr, keylist->value) != 0) {
         free(sender->fpr);
         sender->fpr = strdup(keylist->value);
         if (!sender->fpr)
             return PEP_OUT_OF_MEMORY;
+        status = set_pgp_keypair(session, sender->fpr);
+        if (status != PEP_STATUS_OK)
+            return status;
+            
         status = get_trust(session, sender);
         
         if (status == PEP_CANNOT_FIND_IDENTITY || sender->comm_type == PEP_ct_unknown) {
