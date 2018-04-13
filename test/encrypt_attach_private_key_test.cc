@@ -277,7 +277,13 @@ int main() {
     cout << "Case 8 Status: " << tl_status_string(status) << endl;
     assert(status == PEP_ILLEGAL_VALUE);
     cout << "PASS!" << endl;
-                                          
+    
+    cout << "Correctly encrypted message:" << endl << endl;                
+    char* encrypted_msg_text = NULL;
+    mime_encode_message(enc_same_addr_same_uid_trusted, false, &encrypted_msg_text);                                    
+    cout << encrypted_msg_text << endl << endl;
+    
+      
     release(session);
     
     return 0;
