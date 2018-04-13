@@ -1825,7 +1825,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     assert(src);
     assert(dst);
     assert(to_fpr);
-    
+        
     if (!session || !src || !dst || !to_fpr)
         return PEP_ILLEGAL_VALUE;
         
@@ -1844,6 +1844,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     if (!strcasecmp(src->from->address, src->to->ident->address) == 0)
         return PEP_ILLEGAL_VALUE;
     
+    stringlist_t* keys = NULL;
+
     char* own_id = NULL;
     char* default_id = NULL;
     
@@ -1865,8 +1867,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     // Ok, we are at least marginally sure the initial stuff is ok.
         
     // Let's get our own, normal identity
-    pEp_identity* own_identity = NULL;
-    status = get_identity(session, src->to->ident->address, own_id, &own_identity);    
+    pEp_identity* own_identity = identity_dup(src->from);
+    status = myself(session, own_identity);
 
     if (status != PEP_STATUS_OK)
         goto pep_free;
@@ -1877,8 +1879,11 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     
     status = get_trust(session, own_identity);
     
-    if (status != PEP_STATUS_OK)
+    if (status != PEP_STATUS_OK) {
+        if (status == PEP_CANNOT_FIND_IDENTITY)
+            status = PEP_ILLEGAL_VALUE;
         goto pep_free;
+    }
         
     if ((own_identity->comm_type & PEP_ct_confirmed) != PEP_ct_confirmed) {
         status = PEP_ILLEGAL_VALUE;
@@ -1902,11 +1907,13 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     }
     
     // Ok, fine... let's encrypt yon blob
-    stringlist_t* keys = new_stringlist(to_fpr);
+    keys = new_stringlist(own_private_fpr);
     if (!keys) {
         status = PEP_OUT_OF_MEMORY;
         goto pep_free;
     }
+    
+    stringlist_add(keys, to_fpr);
     
     char* encrypted_key_text = NULL;
     size_t encrypted_key_size = 0;
@@ -1926,7 +1933,14 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     // We will have to delete this before returning, as we allocated it.
     bloblist_t* created_bl = NULL;
     bloblist_t* created_predecessor = NULL;
-    if (!src->attachments) {
+    
+    bloblist_t* old_head = NULL;
+    
+    if (!src->attachments || src->attachments->value == NULL) {
+        if (src->attachments->value == NULL) {
+            old_head = src->attachments;
+            src->attachments = NULL;
+        }
         src->attachments = new_bloblist(encrypted_key_text, encrypted_key_size,
                                         "application/octet-stream", 
                                         "file://pEpkey.asc.pgp");
@@ -1934,15 +1948,14 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     } 
     else {
         bloblist_t* tmp = src->attachments;
-        while (src->attachments->next) {
-            tmp = src->attachments->next;
+        while (tmp && tmp->next) {
+            tmp = tmp->next;
         }
-        created_bl = bloblist_add(src->attachments, 
+        created_predecessor = tmp;                                    
+        created_bl = bloblist_add(tmp, 
                                   encrypted_key_text, encrypted_key_size,
                                   "application/octet-stream", 
                                    "file://pEpkey.asc.pgp");
-                                
-        created_predecessor = tmp;                                    
     }
     
     if (!created_bl) {
@@ -1957,13 +1970,16 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     free_bloblist(created_bl);
     if (created_predecessor)
         created_predecessor->next = NULL;
-    else
-        src->attachments = NULL;    
+    else {
+        if (old_head)
+            src->attachments = old_head;
+        else
+            src->attachments = NULL;    
+    }
     
 pep_free:
     free(own_id);
     free(default_id);
-    free(priv_key_data);
     free(own_private_fpr);
     free_identity(own_identity);
     free_stringlist(keys);

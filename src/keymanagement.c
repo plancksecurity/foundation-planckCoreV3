@@ -1289,7 +1289,10 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
     if (!tmp_ident)
         return PEP_OUT_OF_MEMORY;
     
-    status = update_identity(session, tmp_ident);
+    if (is_me(session, tmp_ident))
+        status = myself(session, tmp_ident);
+    else
+        status = update_identity(session, tmp_ident);
     
     if (status != PEP_STATUS_OK)
         goto pep_free;
