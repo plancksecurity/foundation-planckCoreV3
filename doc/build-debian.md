@@ -9,13 +9,13 @@ See CC_BY-SA.txt -->
 
 ~~~
 # general
-apt install -y ca-cacert mercurial
+apt install -y mercurial
 # YML2
 apt install -y python-lxml
 # libetpan
 apt install -y git build-essential automake libtool
 # asn1c
-apt install -y git build-essential automake libtool
+apt install -y git build-essential automake libtool autoconf
 # engine
 apt install -y uuid-dev libgpgme-dev libsqlite3-dev sqlite3
 ~~~
@@ -25,7 +25,7 @@ apt install -y uuid-dev libgpgme-dev libsqlite3-dev sqlite3
 
 ~~~
 mkdir -p ~/code/yml2
-hg clone https://cacert.pep.foundation/dev/repos/yml2/ ~/code/yml2
+hg clone https://pep.foundation/dev/repos/yml2/ ~/code/yml2
 ~~~
 
 ## libetpan
@@ -59,7 +59,7 @@ make install
 
 ~~~
 mkdir -p ~/code/pep-engine
-hg clone https://cacert.pep.foundation/dev/repos/pEpEngine/ ~/code/pep-engine
+hg clone https://pep.foundation/dev/repos/pEpEngine/ ~/code/pep-engine
 cd ~/code/pep-engine
 mkdir ~/code/pep-engine/build
 ~~~

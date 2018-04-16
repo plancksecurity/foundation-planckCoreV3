@@ -66,7 +66,7 @@ root
 
 ~~~
 mkdir -p ~/code/yml2
-hg clone https://cacert.pep.foundation/dev/repos/yml2/ ~/code/yml2
+hg clone https://pep.foundation/dev/repos/yml2/ ~/code/yml2
 ~~~
 
 ## libetpan
@@ -100,7 +100,7 @@ It's of course possible to skip MacPort's version, and use a self-compiled GPGME
 
 ~~~
 mkdir -p ~/code/pep-engine
-hg clone https://cacert.pep.foundation/dev/repos/pEpEngine/ ~/code/pep-engine
+hg clone https://pep.foundation/dev/repos/pEpEngine/ ~/code/pep-engine
 cd ~/code/pep-engine
 mkdir ~/code/pep-engine/build
 ~~~

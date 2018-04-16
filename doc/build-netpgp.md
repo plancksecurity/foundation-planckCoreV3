@@ -23,7 +23,7 @@ Get and autoconf NetPGP
 
 ```
 cd $SRC
-hg clone https://cacert.pep.foundation/dev/repos/netpgp-et/
+hg clone https://pep.foundation/dev/repos/netpgp-et/
 cd netpgp-et
 autoreconf -i
 ```
