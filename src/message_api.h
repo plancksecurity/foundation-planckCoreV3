@@ -75,6 +75,16 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     );
 
 
+DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
+        PEP_SESSION session,
+        message *src,
+        message **dst,
+        const char* to_fpr,
+        PEP_enc_format enc_format,
+        PEP_encrypt_flags_t flags
+    );
+
+
 // encrypt_message_for_self() - encrypt message in memory for user's identity only,
 //                              ignoring recipients and other identities from
 //                              the message

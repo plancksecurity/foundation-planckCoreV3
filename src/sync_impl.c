@@ -894,7 +894,7 @@ PEP_STATUS unicast_msg(
                     goto enomem;
                 char *key = NULL;
                 size_t size = 0;
-                status = export_secrect_key(session, fpr, &key, &size);
+                status = export_secret_key(session, fpr, &key, &size);
                 if (status != PEP_STATUS_OK)
                     goto error;
                 bloblist_t *bl = bloblist_add(_message->attachments,

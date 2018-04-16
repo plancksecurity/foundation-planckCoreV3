@@ -302,9 +302,12 @@ static struct mailimf_mailbox * identity_to_mailbox(const pEp_identity *ident)
     char *_username = NULL;
     struct mailimf_mailbox *mb;
 
-    _username = (ident->username && must_field_value_be_encoded(ident->username))
-                  ? mailmime_encode_subject_header("utf-8", ident->username, 0) 
-                  : strdup("");
+    if (!ident->username)
+        _username = strdup("");
+    else
+        _username = must_field_value_be_encoded(ident->username) ?
+                    mailmime_encode_subject_header("utf-8", ident->username, 0) : 
+                    strdup(ident->username);
                   
     assert(_username);
     if (_username == NULL)

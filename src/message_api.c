@@ -1059,7 +1059,7 @@ static PEP_rating _rating(PEP_comm_type ct, PEP_rating rating)
     else if (ct == PEP_ct_key_not_found)
         return PEP_rating_have_no_key;
 
-    else if (ct == PEP_ct_compromized)
+    else if (ct == PEP_ct_compromised)
         return PEP_rating_under_attack;
 
     else if (ct == PEP_ct_mistrusted)
@@ -1259,8 +1259,8 @@ static PEP_comm_type _get_comm_type(
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
-    if (max_comm_type == PEP_ct_compromized)
-        return PEP_ct_compromized;
+    if (max_comm_type == PEP_ct_compromised)
+        return PEP_ct_compromised;
 
     if (max_comm_type == PEP_ct_mistrusted)
         return PEP_ct_mistrusted;
@@ -1271,8 +1271,8 @@ static PEP_comm_type _get_comm_type(
         status = myself(session, ident);
 
     if (status == PEP_STATUS_OK) {
-        if (ident->comm_type == PEP_ct_compromized)
-            return PEP_ct_compromized;
+        if (ident->comm_type == PEP_ct_compromised)
+            return PEP_ct_compromised;
         else if (ident->comm_type == PEP_ct_mistrusted)
             return PEP_ct_mistrusted;
         else
@@ -1811,6 +1811,181 @@ pep_error:
 
     return status;
 }
+
+DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
+        PEP_SESSION session,
+        message *src,
+        message **dst,
+        const char* to_fpr,
+        PEP_enc_format enc_format,
+        PEP_encrypt_flags_t flags
+    )
+{
+    assert(session);
+    assert(src);
+    assert(dst);
+    assert(to_fpr);
+        
+    if (!session || !src || !dst || !to_fpr)
+        return PEP_ILLEGAL_VALUE;
+        
+    if (enc_format == PEP_enc_none)
+        return PEP_ILLEGAL_VALUE;
+    
+    if (src->cc || src->bcc)
+        return PEP_ILLEGAL_VALUE;
+        
+    if (!src->to || src->to->next)
+        return PEP_ILLEGAL_VALUE;
+        
+    if (!src->from->address || !src->to->ident || !src->to->ident->address)
+        return PEP_ILLEGAL_VALUE;
+            
+    if (!strcasecmp(src->from->address, src->to->ident->address) == 0)
+        return PEP_ILLEGAL_VALUE;
+    
+    stringlist_t* keys = NULL;
+
+    char* own_id = NULL;
+    char* default_id = NULL;
+    
+    PEP_STATUS status = get_default_own_userid(session, &own_id);
+    
+    if (!own_id)
+        return PEP_UNKNOWN_ERROR; // Probably a DB error at this point
+        
+    if (src->from->user_id) {
+        if (strcmp(src->from->user_id, own_id) != 0) {
+            status = get_userid_alias_default(session, src->from->user_id, &default_id);
+            if (status != PEP_STATUS_OK || !default_id || strcmp(default_id, own_id) != 0) {
+                status = PEP_ILLEGAL_VALUE;
+                goto pep_free;
+            }
+        }        
+    }
+    
+    // Ok, we are at least marginally sure the initial stuff is ok.
+        
+    // Let's get our own, normal identity
+    pEp_identity* own_identity = identity_dup(src->from);
+    status = myself(session, own_identity);
+
+    if (status != PEP_STATUS_OK)
+        goto pep_free;
+
+    // Ok, now we know the address is an own address. All good. Then...
+    char* own_private_fpr = own_identity->fpr;
+    own_identity->fpr = strdup(to_fpr);
+    
+    status = get_trust(session, own_identity);
+    
+    if (status != PEP_STATUS_OK) {
+        if (status == PEP_CANNOT_FIND_IDENTITY)
+            status = PEP_ILLEGAL_VALUE;
+        goto pep_free;
+    }
+        
+    if ((own_identity->comm_type & PEP_ct_confirmed) != PEP_ct_confirmed) {
+        status = PEP_ILLEGAL_VALUE;
+        goto pep_free;
+    }
+                
+    // Ok, so all the things are now allowed.
+    // So let's get our own private key and roll with it.
+    char* priv_key_data = NULL;
+    size_t priv_key_size = 0;
+    
+    status = export_secret_key(session, own_private_fpr, &priv_key_data, 
+                                &priv_key_size);
+
+    if (status != PEP_STATUS_OK)
+        goto pep_free;
+    
+    if (!priv_key_data) {
+        status = PEP_CANNOT_EXPORT_KEY;
+        goto pep_free;
+    }
+    
+    // Ok, fine... let's encrypt yon blob
+    keys = new_stringlist(own_private_fpr);
+    if (!keys) {
+        status = PEP_OUT_OF_MEMORY;
+        goto pep_free;
+    }
+    
+    stringlist_add(keys, to_fpr);
+    
+    char* encrypted_key_text = NULL;
+    size_t encrypted_key_size = 0;
+    
+    if (flags & PEP_encrypt_flag_force_unsigned)
+        status = encrypt_only(session, keys, priv_key_data, priv_key_size,
+                              &encrypted_key_text, &encrypted_key_size);
+    else
+        status = encrypt_and_sign(session, keys, priv_key_data, priv_key_size,
+                                  &encrypted_key_text, &encrypted_key_size);
+    
+    if (!encrypted_key_text) {
+        status = PEP_UNKNOWN_ERROR;
+        goto pep_free;
+    }
+
+    // We will have to delete this before returning, as we allocated it.
+    bloblist_t* created_bl = NULL;
+    bloblist_t* created_predecessor = NULL;
+    
+    bloblist_t* old_head = NULL;
+    
+    if (!src->attachments || src->attachments->value == NULL) {
+        if (src->attachments->value == NULL) {
+            old_head = src->attachments;
+            src->attachments = NULL;
+        }
+        src->attachments = new_bloblist(encrypted_key_text, encrypted_key_size,
+                                        "application/octet-stream", 
+                                        "file://pEpkey.asc.pgp");
+        created_bl = src->attachments;
+    } 
+    else {
+        bloblist_t* tmp = src->attachments;
+        while (tmp && tmp->next) {
+            tmp = tmp->next;
+        }
+        created_predecessor = tmp;                                    
+        created_bl = bloblist_add(tmp, 
+                                  encrypted_key_text, encrypted_key_size,
+                                  "application/octet-stream", 
+                                   "file://pEpkey.asc.pgp");
+    }
+    
+    if (!created_bl) {
+        status = PEP_OUT_OF_MEMORY;
+        goto pep_free;
+    }
+            
+    // Ok, it's in there. Let's do this.        
+    status = encrypt_message(session, src, keys, dst, enc_format, 0);
+    
+    // Delete what we added to src
+    free_bloblist(created_bl);
+    if (created_predecessor)
+        created_predecessor->next = NULL;
+    else {
+        if (old_head)
+            src->attachments = old_head;
+        else
+            src->attachments = NULL;    
+    }
+    
+pep_free:
+    free(own_id);
+    free(default_id);
+    free(own_private_fpr);
+    free_identity(own_identity);
+    free_stringlist(keys);
+    return status;
+}
+
 
 DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_SESSION session,
@@ -2515,9 +2690,9 @@ static PEP_STATUS import_priv_keys_from_decrypted_msg(PEP_SESSION session,
         // the private identity list should NOT be subject to myself() or
         // update_identity() at this point.
         // If the receiving app wants them to be in the trust DB, it
-        // should call myself() on them upon return.
+        // should call set_own_key() on them upon return.
         // We do, however, prepare these so the app can use them
-        // directly in a myself() call by putting the own_id on it.
+        // directly in a set_own_key() call by putting the own_id on it.
         char* own_id = NULL;
         status = get_default_own_userid(session, &own_id);
         
@@ -2562,12 +2737,16 @@ static PEP_STATUS update_sender_to_pep_trust(
     
     PEP_STATUS status = 
             is_me(session, sender) ? myself(session, sender) : update_identity(session, sender);
-    
+
     if (EMPTYSTR(sender->fpr) || strcmp(sender->fpr, keylist->value) != 0) {
         free(sender->fpr);
         sender->fpr = strdup(keylist->value);
         if (!sender->fpr)
             return PEP_OUT_OF_MEMORY;
+        status = set_pgp_keypair(session, sender->fpr);
+        if (status != PEP_STATUS_OK)
+            return status;
+            
         status = get_trust(session, sender);
         
         if (status == PEP_CANNOT_FIND_IDENTITY || sender->comm_type == PEP_ct_unknown) {
@@ -2918,7 +3097,24 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                                 free_message(inner_message);
                                                 goto pep_error;
                                             }
-                                                    
+
+                                            // check for private key in decrypted message attachment while importing
+                                            // N.B. Apparently, we always import private keys into the keyring; however,
+                                            // we do NOT always allow those to be used for encryption. THAT is controlled
+                                            // by setting it as an own identity associated with the key in the DB.
+                                            
+                                            // If we have a message 2.0 message, we are ONLY going to be ok with keys
+                                            // we imported from THIS part of the message.
+                                            imported_private_key_address = false;
+                                            free(private_il);
+                                            private_il = NULL;
+                                            status = import_priv_keys_from_decrypted_msg(session, src, inner_message,
+                                                                                         &imported_keys,
+                                                                                         &imported_private_key_address,
+                                                                                         private_il);
+                                            if (status != PEP_STATUS_OK)
+                                                goto pep_error;            
+
                                             // THIS is our message
                                             // Now, let's make sure we've copied in 
                                             // any information sent in by the app if

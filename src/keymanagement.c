@@ -70,7 +70,7 @@ PEP_STATUS elect_pubkey(
                 return PEP_OUT_OF_MEMORY;
             }
 
-            if (_comm_type_key != PEP_ct_compromized &&
+            if (_comm_type_key != PEP_ct_compromised &&
                 _comm_type_key != PEP_ct_unknown)
             {
                 if (identity->comm_type == PEP_ct_unknown ||
@@ -341,7 +341,7 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
         case PEP_ct_key_revoked:
         case PEP_ct_key_b0rken:
         case PEP_ct_key_expired:
-        case PEP_ct_compromized:
+        case PEP_ct_compromised:
         case PEP_ct_mistrusted:
             // this only happens when it's all there is
             status = first_reject_status;
@@ -787,7 +787,7 @@ DYNAMIC_API PEP_STATUS update_identity(
     
     // FIXME: This is legacy. I presume it's a notification for the caller...
     // Revisit once I can talk to Volker
-    if (identity->comm_type != PEP_ct_compromized &&
+    if (identity->comm_type != PEP_ct_compromised &&
         identity->comm_type < PEP_ct_strong_but_unconfirmed)
         if (session->examine_identity)
             session->examine_identity(identity, session->examine_management);
@@ -845,7 +845,7 @@ PEP_STATUS elect_ownkey(
                     return PEP_OUT_OF_MEMORY;
                 }
                 
-                if (_comm_type_key != PEP_ct_compromized &&
+                if (_comm_type_key != PEP_ct_compromised &&
                     _comm_type_key != PEP_ct_unknown)
                 {
                     if (identity->comm_type == PEP_ct_unknown ||
@@ -1185,7 +1185,7 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
         
         if (status == PEP_STATUS_OK)
             // cascade that mistrust for anyone using this key
-            status = mark_as_compromized(session, ident->fpr);
+            status = mark_as_compromised(session, ident->fpr);
         if (status == PEP_STATUS_OK)
             status = remove_fpr_as_default(session, ident->fpr);
         if (status == PEP_STATUS_OK)
@@ -1289,7 +1289,10 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
     if (!tmp_ident)
         return PEP_OUT_OF_MEMORY;
     
-    status = update_identity(session, tmp_ident);
+    if (is_me(session, tmp_ident))
+        status = myself(session, tmp_ident);
+    else
+        status = update_identity(session, tmp_ident);
     
     if (status != PEP_STATUS_OK)
         goto pep_free;
