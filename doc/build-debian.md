@@ -15,7 +15,7 @@ apt install -y python-lxml
 # libetpan
 apt install -y git build-essential automake libtool
 # asn1c
-apt install -y git build-essential automake libtool
+apt install -y git build-essential automake libtool autoconf
 # engine
 apt install -y uuid-dev libgpgme-dev libsqlite3-dev sqlite3
 ~~~
