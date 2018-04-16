@@ -15,7 +15,7 @@
 using namespace std;
 
 int main() {
-    cout << "\n*** decrypt_attach_private_key_test ***\n\n";
+    cout << "\n*** decrypt_attach_private_key_untrusted_test ***\n\n";
 
     PEP_SESSION session;
     
@@ -76,7 +76,7 @@ int main() {
     cout << "Done!" << endl << endl;
     
     cout << "Setting up sender identities and resetting key trust." << endl;
-    cout << "#1: same address, same user_id - address: " << main_addr << ", user_id: " << own_uid << ", fpr: " << fpr_same_addr_same_uid << endl;  
+    cout << "Same address, same user_id - address: " << main_addr << ", user_id: " << own_uid << ", fpr: " << fpr_same_addr_same_uid << endl;  
     same_addr_same_uid = new_identity(main_addr, fpr_same_addr_same_uid, own_uid, "PrivateKey Import Test");
     assert(status == PEP_STATUS_OK || status == PEP_CANNOT_FIND_IDENTITY);
     assert((same_addr_same_uid->comm_type & PEP_ct_confirmed) != PEP_ct_confirmed);
@@ -92,7 +92,7 @@ int main() {
     cout << "Starting tests..." << endl;
     // Case 1:
     // Same address, same user_id, untrusted
-    cout << "Case 1: Same address, same user_id, untrusted" << endl;
+    cout << "Same address, same user_id, untrusted" << endl;
     char* decrypted_text = NULL;
     stringlist_t* keylist_used = NULL;
     PEP_rating rating;
@@ -116,50 +116,7 @@ int main() {
 
     // Case 2:
     cout << decrypted_text << endl;
-    // Same address, same_user_id, trusted
-    cout << "Case 2: Same address, same user_id, trusted" << endl;
     
-    // remove private key
-    cout << "SORRY, have to delete keys here to continue to run test..." << endl;
-    status = delete_keypair(session, fpr_same_addr_same_uid);
-    if (status == PEP_STATUS_OK)
-        cout << "Successfully deleted keypair for " << fpr_same_addr_same_uid << " - will now import the public key only" << endl;
-        
-    // key with same address and user_id
-    // 8AB616A3BD51DEF714B5E688EFFB540C3276D2E5
-    status = import_key(session, input_key.c_str(), input_key.length(), NULL);
-    assert(status == PEP_STATUS_OK);
-
-    has_priv = false;
-    status = contains_priv_key(session, fpr_same_addr_same_uid, &has_priv);
-    assert(has_priv == false);
-    cout << "(Double-checking - Private key successfully deleted.)" << endl;
-    
-    status = trust_personal_key(session, same_addr_same_uid);
-    assert(status == PEP_STATUS_OK);
-    free(decrypted_text);
-    decrypted_text = NULL;
-
-    status = get_trust(session, same_addr_same_uid);
-    cout << tl_ct_string(same_addr_same_uid->comm_type) << endl;
-    
-    assert(same_addr_same_uid->comm_type == PEP_ct_pEp);
-    
-    status = MIME_decrypt_message(session, encoded_text.c_str(), 
-                                  encoded_text.size(), &decrypted_text, 
-                                  &keylist_used, &rating, &flags);
-    
-    cout << "Case 2 Status: " << tl_status_string(status) << endl;
-    assert(status == PEP_STATUS_OK);
-
-    cout << decrypted_text << endl;
-    
-    has_priv = false;
-    status = contains_priv_key(session, fpr_same_addr_same_uid, &has_priv);
-    assert(has_priv == true);
-    cout << "Private key was also imported." << endl;
-    
-    cout << "PASS!" << endl;
     status = key_reset_trust(session, main_me);      
     status = key_reset_trust(session, same_addr_same_uid);      
     release(session);
