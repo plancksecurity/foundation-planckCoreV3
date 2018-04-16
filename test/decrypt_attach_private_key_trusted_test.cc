@@ -49,21 +49,21 @@ int main() {
     status = import_key(session, input_key.c_str(), input_key.length(), NULL);
     assert(status == PEP_STATUS_OK);
 
-    // ensure there's no private key
+    // ensure there's no private key - doesn't work in automated tests, sadly. Uncommon when running script manually.
     bool has_priv = false;
-    status = contains_priv_key(session, fpr_same_addr_same_uid, &has_priv);
-    if (status == PEP_STATUS_OK && has_priv) {
-        cout << "SORRY, have to delete keys here to run test correctly..." << endl;
-        status = delete_keypair(session, fpr_same_addr_same_uid);
-        if (status == PEP_STATUS_OK) {
-            has_priv = false;
-            status = contains_priv_key(session, fpr_same_addr_same_uid, &has_priv);
-            assert(has_priv == false);
-            cout << "Successfully deleted keypair for " << fpr_same_addr_same_uid << " - will now import the public key only" << endl;
-        }
-        else
-            cout << "Warning - delete keypair returned status " << tl_status_string(status) << ". This may or may not be an error, depending on what you expect." << endl;            
-    }
+    // status = contains_priv_key(session, fpr_same_addr_same_uid, &has_priv);
+    // if (status == PEP_STATUS_OK && has_priv) {
+    //     cout << "SORRY, have to delete keys here to run test correctly..." << endl;
+    //     status = delete_keypair(session, fpr_same_addr_same_uid);
+    //     if (status == PEP_STATUS_OK) {
+    //         has_priv = false;
+    //         status = contains_priv_key(session, fpr_same_addr_same_uid, &has_priv);
+    //         assert(has_priv == false);
+    //         cout << "Successfully deleted keypair for " << fpr_same_addr_same_uid << " - will now import the public key only" << endl;
+    //     }
+    //     else
+    //         cout << "Warning - delete keypair returned status " << tl_status_string(status) << ". This may or may not be an error, depending on what you expect." << endl;            
+    // }
         
     // key with same address and user_id
     // 8AB616A3BD51DEF714B5E688EFFB540C3276D2E5
@@ -104,7 +104,9 @@ int main() {
     PEP_rating rating;
     PEP_decrypt_flags_t flags;
     
+    cout << "Trusting personal key for " << same_addr_same_uid->user_id << " and " << same_addr_same_uid->fpr << endl;
     status = trust_personal_key(session, same_addr_same_uid);
+    cout << "Status is " << tl_status_string(status) << endl;  
     assert(status == PEP_STATUS_OK);
     free(decrypted_text);
     decrypted_text = NULL;

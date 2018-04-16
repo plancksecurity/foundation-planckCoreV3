@@ -49,15 +49,15 @@ int main() {
     status = import_key(session, input_key.c_str(), input_key.length(), NULL);
     assert(status == PEP_STATUS_OK);
 
-    // ensure there's no private key
+    // ensure there's no private key - doesn't work in automated tests, sadly. Uncommon when running script manually.
     bool has_priv = false;
-    status = contains_priv_key(session, fpr_same_addr_same_uid, &has_priv);
-    if (status == PEP_STATUS_OK && has_priv) {
-        cout << "SORRY, have to delete keys here to run test correctly..." << endl;
-        status = delete_keypair(session, fpr_same_addr_same_uid);
-        if (status == PEP_STATUS_OK)
-            cout << "Successfully deleted keypair for " << fpr_same_addr_same_uid << " - will now import the public key only" << endl;
-    }
+    // status = contains_priv_key(session, fpr_same_addr_same_uid, &has_priv);
+    // if (status == PEP_STATUS_OK && has_priv) {
+    //     cout << "SORRY, have to delete keys here to run test correctly..." << endl;
+    //     status = delete_keypair(session, fpr_same_addr_same_uid);
+    //     if (status == PEP_STATUS_OK)
+    //         cout << "Successfully deleted keypair for " << fpr_same_addr_same_uid << " - will now import the public key only" << endl;
+    // }
         
     // key with same address and user_id
     // 8AB616A3BD51DEF714B5E688EFFB540C3276D2E5
