@@ -1849,6 +1849,11 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     char* own_id = NULL;
     char* default_id = NULL;
     
+    pEp_identity* own_identity = NULL;
+    char* own_private_fpr = NULL;
+
+    char* priv_key_data = NULL;
+    
     PEP_STATUS status = get_default_own_userid(session, &own_id);
     
     if (!own_id)
@@ -1867,14 +1872,14 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     // Ok, we are at least marginally sure the initial stuff is ok.
         
     // Let's get our own, normal identity
-    pEp_identity* own_identity = identity_dup(src->from);
+    own_identity = identity_dup(src->from);
     status = myself(session, own_identity);
 
     if (status != PEP_STATUS_OK)
         goto pep_free;
 
     // Ok, now we know the address is an own address. All good. Then...
-    char* own_private_fpr = own_identity->fpr;
+    own_private_fpr = own_identity->fpr;
     own_identity->fpr = strdup(to_fpr);
     
     status = get_trust(session, own_identity);
@@ -1892,7 +1897,6 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
                 
     // Ok, so all the things are now allowed.
     // So let's get our own private key and roll with it.
-    char* priv_key_data = NULL;
     size_t priv_key_size = 0;
     
     status = export_secret_key(session, own_private_fpr, &priv_key_data, 
@@ -1981,6 +1985,7 @@ pep_free:
     free(own_id);
     free(default_id);
     free(own_private_fpr);
+    free(priv_key_data);
     free_identity(own_identity);
     free_stringlist(keys);
     return status;
@@ -3203,7 +3208,6 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 *flags |= PEP_decrypt_flag_own_private_key;
             }
         }
-        
     }
 
     // 2. Clean up message and prepare for return 
