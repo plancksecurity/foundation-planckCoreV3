@@ -2690,9 +2690,9 @@ static PEP_STATUS import_priv_keys_from_decrypted_msg(PEP_SESSION session,
         // the private identity list should NOT be subject to myself() or
         // update_identity() at this point.
         // If the receiving app wants them to be in the trust DB, it
-        // should call myself() on them upon return.
+        // should call set_own_key() on them upon return.
         // We do, however, prepare these so the app can use them
-        // directly in a myself() call by putting the own_id on it.
+        // directly in a set_own_key() call by putting the own_id on it.
         char* own_id = NULL;
         status = get_default_own_userid(session, &own_id);
         
@@ -3097,7 +3097,24 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                                 free_message(inner_message);
                                                 goto pep_error;
                                             }
-                                                    
+
+                                            // check for private key in decrypted message attachment while importing
+                                            // N.B. Apparently, we always import private keys into the keyring; however,
+                                            // we do NOT always allow those to be used for encryption. THAT is controlled
+                                            // by setting it as an own identity associated with the key in the DB.
+                                            
+                                            // If we have a message 2.0 message, we are ONLY going to be ok with keys
+                                            // we imported from THIS part of the message.
+                                            imported_private_key_address = false;
+                                            free(private_il);
+                                            private_il = NULL;
+                                            status = import_priv_keys_from_decrypted_msg(session, src, inner_message,
+                                                                                         &imported_keys,
+                                                                                         &imported_private_key_address,
+                                                                                         private_il);
+                                            if (status != PEP_STATUS_OK)
+                                                goto pep_error;            
+
                                             // THIS is our message
                                             // Now, let's make sure we've copied in 
                                             // any information sent in by the app if
