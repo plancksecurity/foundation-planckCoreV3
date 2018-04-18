@@ -2015,8 +2015,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     if (!(session && src && dst && enc_format != PEP_enc_none))
         return PEP_ILLEGAL_VALUE;
 
-    if (src->dir == PEP_dir_incoming)
-        return PEP_ILLEGAL_VALUE;
+    // if (src->dir == PEP_dir_incoming)
+    //     return PEP_ILLEGAL_VALUE;
 
     determine_encryption_format(src);
     if (src->enc_format != PEP_enc_none)
