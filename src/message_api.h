@@ -38,6 +38,7 @@ typedef enum _PEP_encrypt_flags {
     // This is used for outer messages (used to wrap the real message)
     // This is only used internally and (eventually) by transport functions
     PEP_encrypt_flag_inner_message = 0x8
+    
 } PEP_encrypt_flags; 
 
 typedef unsigned int PEP_encrypt_flags_t;
@@ -229,7 +230,8 @@ DYNAMIC_API PEP_color color_from_rating(PEP_rating rating);
 typedef enum _PEP_decrypt_flags {
     PEP_decrypt_flag_own_private_key = 0x1,
     PEP_decrypt_flag_consume = 0x2,
-    PEP_decrypt_flag_ignore = 0x4
+    PEP_decrypt_flag_ignore = 0x4,    
+    PEP_decrypt_flag_untrusted_server = 0x8
 } PEP_decrypt_flags; 
 
 typedef unsigned int PEP_decrypt_flags_t;
@@ -243,7 +245,7 @@ typedef unsigned int PEP_decrypt_flags_t;
 //      dst (out)           pointer to new decrypted message or NULL on failure
 //      keylist (out)       stringlist with keyids
 //      rating (out)        rating for the message
-//      flags (out)         flags to signal special decryption features
+//      flags (in/out)         flags to signal special decryption features
 //
 //  return value:
 //      error status 

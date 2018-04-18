@@ -2030,11 +2030,15 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
             target_id->user_id = own_id; // ownership transfer
         }
     }
-
-    status = myself(session, target_id);
-    if (status != PEP_STATUS_OK)
-        goto pep_error;
-
+    
+    if (target_id->address) {
+        status = myself(session, target_id);
+        if (status != PEP_STATUS_OK)
+            goto pep_error;
+    }
+    else if (!target_fpr)
+        return PEP_ILLEGAL_VALUE;
+    
     *dst = NULL;
 
     // PEP_STATUS _status = update_identity(session, target_id);
@@ -2853,6 +2857,84 @@ static PEP_STATUS reconcile_src_and_inner_messages(message* src,
     // FIXME - are there any flags or anything else we need to be sure are carried?
 }
 
+static bool is_trusted_own_priv_fpr(PEP_SESSION session, 
+                       const char* own_id, 
+                       const char* fpr
+    ) 
+{   
+    bool retval = false;
+    if (!EMPTYSTR(fpr)) {
+        pEp_identity* test_identity = new_identity(NULL, fpr, own_id, NULL);
+        if (test_identity) {
+            PEP_STATUS status = get_trust(session, test_identity);
+            if (status == PEP_STATUS_OK) {
+                if (test_identity->comm_type & PEP_ct_confirmed) {
+                    bool has_priv = false;
+                    status = contains_priv_key(session, fpr, &has_priv);
+                    if (status == PEP_STATUS_OK && has_priv)
+                        retval = true;
+                }
+            }
+            free(test_identity);
+        }
+    }
+    return retval;
+}
+
+static bool reject_fpr(PEP_SESSION session, const char* fpr) {
+    bool reject = true;
+
+    PEP_STATUS status = key_revoked(session, fpr, &reject);
+
+    if (!reject) {
+        status = key_expired(session, fpr, &reject);
+        if (reject) {
+            timestamp *ts = new_timestamp(time(NULL) + KEY_EXPIRE_DELTA);
+            status = renew_key(session, fpr, ts);
+            free_timestamp(ts);
+            if (status == PEP_STATUS_OK)
+                reject = false;
+        }
+    }
+    return reject;
+}
+
+static char* seek_good_trusted_private_fpr(PEP_SESSION session, char* own_id, 
+                                           stringlist_t* keylist) {
+    if (!own_id || !keylist)
+        return NULL;
+        
+    stringlist_t* kl_curr = keylist;
+    char* retval = NULL;
+    while (kl_curr) {
+        char* fpr = kl_curr->value;
+        
+        if (is_own_trusted_private_fpr(fpr)) { 
+            if (!reject_fpr(fpr))
+                return strdup(fpr);
+        }
+            
+        kl_curr = kl_curr->next;
+    }
+
+    char* target_own_fpr = NULL;
+    
+    // Last shot...
+    status = get_user_default_key(session, own_id, 
+                                  &target_own_fpr);
+
+    if (status == PEP_STATUS_OK && !EMPTYSTR(target_own_fpr)) {
+        if (is_own_trusted_private_fpr(target_own_fpr)) { 
+            if (!reject_fpr(target_own_fpr))
+                return target_own_fpr;
+        }
+    }
+    
+    // TODO: We can also go through all of the other available fprs for the
+    // own identity, but then I submit this function requires a little refactoring
+        
+    return NULL;
+}
 
 DYNAMIC_API PEP_STATUS _decrypt_message(
         PEP_SESSION session,
@@ -2888,11 +2970,21 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     char* signer_fpr = NULL;
     bool is_pep_msg = is_a_pEpmessage(src);
 
+    // Grab input flags
+    bool reencrypt = (*flags & PEP_decrypt_flag_untrusted_server > 0);
+    
+    // We own this pointer, and we take control of *keylist if reencrypting.
+    stringlist_t* extra = NULL;
+    if (reencrypt) {
+        if (*keylist) {
+            extra = *keylist;
+        }
+    }
+            
     *dst = NULL;
     *keylist = NULL;
     *rating = PEP_rating_undefined;
-
-    *flags = 0;
+//    *flags = 0;
     
     /*** End init ***/
 
@@ -3230,6 +3322,41 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     *dst = msg;
     *keylist = _keylist;
 
+    if (reencrypt) {
+        if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
+            PEP_STATUS reencrypt_status = PEP_CANNOT_REENCRYPT;
+            char* own_id = NULL;
+            status = get_default_own_userid(session, &own_id);
+            if (own_id) {
+                char* target_own_fpr = seek_good_trusted_private_fpr(session,
+                                                                     own_id,
+                                                                     _keylist);
+                if (target_own_fpr) {
+                    pEp_identity* target_id = new_identity(NULL, own_id, 
+                                                           target_own_fpr, NULL);
+                    if (target_id) {
+                        *dst = NULL;
+                        reencrypt_status = encrypt_message_for_self(session, target_id, msg,
+                                                                    extra, dst, PEP_enc_PGP_MIME,
+                                                                    0);
+                        if (reencrypt_status != PEP_STATUS_OK)
+                            reencrypt_status = PEP_CANNOT_REENCRYPT;
+                            
+                        free_identity(target_id);
+                    }
+                    free(target_own_fpr);
+                }     
+                free(own_id);
+            }
+        }
+        free_stringlist(extra); // This was an input variable for us. Keylist is overwritten above.
+        if (reencrypt_status == PEP_CANNOT_REENCRYPT)
+            decrypt_status = reencrypt_status;
+        else {
+            // Copy msg into src
+        }
+    }
+        
     if(decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
         return PEP_STATUS_OK;
     else
