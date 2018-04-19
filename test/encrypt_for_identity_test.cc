@@ -107,6 +107,7 @@ int main() {
     PEP_rating rating;
     PEP_decrypt_flags_t flags;
 
+    flags = 0;
     status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &rating, &flags);
     assert(decrypted_msg);
     assert(keylist_used);
@@ -152,6 +153,7 @@ int main() {
     assert(encrypted_msg);
     cout << "message encrypted.\n";
     
+    flags = 0;
     status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &rating, &flags);
     assert(decrypted_msg);
     assert(keylist_used);
@@ -246,6 +248,7 @@ int main() {
     PEP_decrypt_flags_t mimeflags;
     PEP_rating mimerating;
 
+    mimeflags = 0;
     status = MIME_decrypt_message(session,
                                   encrypted_mimetext,
                                   strlen(encrypted_mimetext),

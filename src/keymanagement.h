@@ -363,6 +363,11 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
 PEP_STATUS add_mistrusted_key(PEP_SESSION session, const char* fpr);
 PEP_STATUS delete_mistrusted_key(PEP_SESSION session, const char* fpr);
 PEP_STATUS is_mistrusted_key(PEP_SESSION session, const char* fpr, bool* mistrusted);
+PEP_STATUS get_user_default_key(PEP_SESSION session, const char* user_id,
+                                char** default_key);
+
+
+
 
 // Only call on retrieval of previously stored identity!
 // Also, we presume that if the stored_identity was sent in

@@ -103,6 +103,7 @@ int main() {
     
     assert((same_addr_same_uid->comm_type & PEP_ct_confirmed) != PEP_ct_confirmed);
     
+    flags = 0;
     status = MIME_decrypt_message(session, encoded_text.c_str(), 
                                   encoded_text.size(), &decrypted_text, 
                                   &keylist_used, &rating, &flags);

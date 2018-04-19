@@ -61,6 +61,7 @@ int main(int argc, char** argv) {
     assert(status == PEP_STATUS_OK);
     assert(msg_ptr);
     final_ptr = msg_ptr;
+    flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
   
@@ -93,6 +94,7 @@ int main(int argc, char** argv) {
     assert(status == PEP_STATUS_OK);
     assert(msg_ptr);
     final_ptr = msg_ptr;
+    flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
   
@@ -125,6 +127,7 @@ int main(int argc, char** argv) {
     assert(status == PEP_STATUS_OK);
     assert(msg_ptr);
     final_ptr = msg_ptr;
+    flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
   
@@ -157,6 +160,7 @@ int main(int argc, char** argv) {
     assert(status == PEP_STATUS_OK);
     assert(msg_ptr);
     final_ptr = msg_ptr;
+    flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
   
@@ -190,6 +194,7 @@ int main(int argc, char** argv) {
     assert(status == PEP_STATUS_OK);
     assert(msg_ptr);
     final_ptr = msg_ptr;
+    flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
   
@@ -222,6 +227,7 @@ int main(int argc, char** argv) {
     assert(status == PEP_STATUS_OK);
     assert(msg_ptr);
     final_ptr = msg_ptr;
+    flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
   
@@ -255,6 +261,7 @@ int main(int argc, char** argv) {
     assert(status == PEP_STATUS_OK);
     assert(msg_ptr);
     final_ptr = msg_ptr;
+    flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
   
@@ -287,6 +294,7 @@ int main(int argc, char** argv) {
     assert(status == PEP_STATUS_OK);
     assert(msg_ptr);
     final_ptr = msg_ptr;
+    flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
   
@@ -319,6 +327,7 @@ int main(int argc, char** argv) {
     assert(status == PEP_STATUS_OK);
     assert(msg_ptr);
     final_ptr = msg_ptr;
+    flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
   
@@ -351,6 +360,7 @@ int main(int argc, char** argv) {
     assert(status == PEP_STATUS_OK);
     assert(msg_ptr);
     final_ptr = msg_ptr;
+    flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
   
@@ -384,6 +394,7 @@ int main(int argc, char** argv) {
     assert(status == PEP_STATUS_OK);
     assert(msg_ptr);
     final_ptr = msg_ptr;
+    flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
   
@@ -417,6 +428,7 @@ int main(int argc, char** argv) {
     assert(status == PEP_STATUS_OK);
     assert(msg_ptr);
     final_ptr = msg_ptr;
+    flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
   
@@ -449,6 +461,7 @@ int main(int argc, char** argv) {
     assert(status == PEP_STATUS_OK);
     assert(msg_ptr);
     final_ptr = msg_ptr;
+    flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
   

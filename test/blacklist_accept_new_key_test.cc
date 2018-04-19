@@ -76,7 +76,7 @@ int main() {
     message* dest_msg = nullptr;
     stringlist_t* keylist = nullptr;
     PEP_rating rating;
-    PEP_decrypt_flags_t flags;
+    PEP_decrypt_flags_t flags = 0;
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     assert(status == PEP_STATUS_OK);

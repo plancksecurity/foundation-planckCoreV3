@@ -142,6 +142,7 @@ void test_MIME_decrypt_message()
 	PEP_rating rating;
 	PEP_decrypt_flags_t dec_flags;
 	
+        dec_flags = 0;
 	PEP_STATUS status2 = MIME_decrypt_message(session, mimetext.c_str(), mimetext.length(),
 		&plaintext, &keys_used, &rating, &dec_flags);
 	

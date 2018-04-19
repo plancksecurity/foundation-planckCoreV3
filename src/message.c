@@ -201,6 +201,81 @@ enomem:
     return NULL;
 }
 
+DYNAMIC_API void message_transfer(message* dst, message *src)
+{
+    assert(dst);
+    assert(src);
+
+    dst->dir = src->dir;
+    dst->rawmsg_ref = src->rawmsg_ref;
+    dst->rawmsg_size = src->rawmsg_size;
+    dst->refering_msg_ref = src->refering_msg_ref;
+    dst->enc_format = src->enc_format;
+
+    /* Strings */
+    free(dst->id);
+    free(dst->shortmsg);
+    free(dst->longmsg);
+    free(dst->longmsg_formatted);
+    free(dst->comments);
+    dst->id = src->id;
+    dst->shortmsg = src->shortmsg;
+    dst->longmsg = src->longmsg;
+    dst->longmsg_formatted = src->longmsg_formatted;
+    dst->comments = src->comments;    
+    src->id = src->shortmsg = src->longmsg = src->longmsg_formatted = NULL;
+    src->comments = NULL;
+    
+    /* bloblists */
+    free_bloblist(dst->attachments);
+    dst->attachments = src->attachments;
+    src->attachments = NULL;
+    
+    /* timestamps */
+    free_timestamp(dst->sent);
+    free_timestamp(dst->recv);
+    dst->sent = src->sent;
+    dst->recv = src->recv;
+    src->sent = src->recv = NULL;
+    
+    /* identities */
+    free_identity(dst->from);
+    free_identity(dst->recv_by);
+    dst->from = src->from;
+    dst->recv_by = src->recv_by;
+    src->from = src->recv_by = NULL;
+    
+    /* identity lists */
+    free_identity_list(dst->to);
+    free_identity_list(dst->cc);
+    free_identity_list(dst->bcc);
+    free_identity_list(dst->reply_to);
+    dst->to = src->to;
+    dst->cc = src->cc;
+    dst->bcc = src->bcc;
+    dst->reply_to = src->reply_to;
+    src->to = src->cc = src->bcc = src->reply_to = NULL;
+
+    /* stringlists */
+    free_stringlist(dst->references);
+    free_stringlist(dst->keywords);
+    free_stringlist(dst->in_reply_to);
+    dst->references = src->references;
+    dst->keywords = src->keywords;
+    dst->in_reply_to = src->in_reply_to;
+    src->references = src->keywords = src->in_reply_to = NULL;
+
+    /* message ref list */
+    free_message_ref_list(dst->refered_by);
+    dst->refered_by = src->refered_by;
+    src->refered_by = NULL;
+    
+    /* stringpair lists */
+    free_stringpair_list(dst->opt_fields);
+    dst->opt_fields = src->opt_fields;
+    src->opt_fields = NULL;
+}
+
 DYNAMIC_API message_ref_list *new_message_ref_list(message *msg)
 {
     message_ref_list *msg_list = calloc(1, sizeof(message_ref_list));
@@ -266,4 +341,3 @@ DYNAMIC_API message_ref_list *message_ref_list_add(message_ref_list *msg_list, m
         return message_ref_list_add(msg_list->next, msg);
     }
 }
-
