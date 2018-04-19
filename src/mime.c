@@ -97,21 +97,6 @@ pep_error:
     return status;
 }
 
-static bool known_ascii_type(const char* mime_type) {
-    const char* text_types[] = {"application/pgp-keys",
-                                "application/pgp-encrypted"};
-    const int TEXT_TYPE_ARRAY_SIZE = sizeof(text_types)/sizeof(text_types[0]);
-    
-    int i;
-    
-    for (i = 0; i < TEXT_TYPE_ARRAY_SIZE; i++) {
-        if (strcmp(text_types[i], mime_type) == 0)
-            return true;
-    }
-    return false;
-}
-
-
 static PEP_STATUS mime_attachment(
         bloblist_t *blob,
         struct mailmime **result,
@@ -136,7 +121,6 @@ static PEP_STATUS mime_attachment(
         mime_type = blob->mime_type;
 
     pEp_rid_list_t* resource = parse_uri(blob->filename);
-//    bool already_ascii = known_ascii_type(mime_type);
 
     bool already_ascii = !(must_chunk_be_encoded(blob->value, blob->size, true));
 
