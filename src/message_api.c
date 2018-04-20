@@ -1846,7 +1846,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     if (!src->from->address || !src->to->ident || !src->to->ident->address)
         return PEP_ILLEGAL_VALUE;
             
-    if (!strcasecmp(src->from->address, src->to->ident->address) == 0)
+    if (strcasecmp(src->from->address, src->to->ident->address) != 0)
         return PEP_ILLEGAL_VALUE;
     
     stringlist_t* keys = NULL;
