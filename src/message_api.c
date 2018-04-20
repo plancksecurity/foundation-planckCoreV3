@@ -280,8 +280,7 @@ static bool is_fileending(const bloblist_t *bl, const char *fe)
     return strcmp(bl->filename + (fn_len - fe_len), fe) == 0;
 }
 
-
-static char * encapsulate_message_wrap_info(const char *msg_wrap_info, const char *longmsg)
+char * encapsulate_message_wrap_info(const char *msg_wrap_info, const char *longmsg)
 {
     assert(msg_wrap_info);
     
@@ -1486,6 +1485,36 @@ PEP_cryptotech determine_encryption_format(message *msg)
     }
 }
 
+static void _cleanup_src(message* src, bool remove_attached_key) {
+    assert(src);
+    
+    if (!src)
+        return;
+        
+    char* longmsg = NULL;
+    char* shortmsg = NULL;
+    char* msg_wrap_info = NULL;
+    separate_short_and_long(src->longmsg, &shortmsg, &msg_wrap_info,
+                            &longmsg);
+    if (longmsg) {                    
+        free(src->longmsg);
+        free(shortmsg);
+        free(msg_wrap_info);
+        src->longmsg = longmsg;
+    }
+    if (remove_attached_key) {
+        // End of the attachment list
+        if (src->attachments) {
+            bloblist_t* tmp = src->attachments;
+            while (tmp->next && tmp->next->next) {
+                tmp = tmp->next;
+            }
+            free_bloblist(tmp->next);
+            tmp->next = NULL;
+        }    
+    }                   
+}
+
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
         message *src,
@@ -1548,6 +1577,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     PEP_comm_type max_comm_type = PEP_ct_pEp;
 
     identity_list * _il;
+
+    bool added_key_to_real_src = false;
 
     if (enc_format != PEP_enc_none && (_il = src->bcc) && _il->ident)
     {
@@ -1714,7 +1745,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             }
         }
     }
-
+        
     if (enc_format == PEP_enc_none || !dest_keys_found ||
         stringlist_length(keys)  == 0 ||
         _rating(max_comm_type,
@@ -1724,6 +1755,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         if ((has_pep_user || !session->passive_mode) && 
             !(flags & PEP_encrypt_flag_force_no_attached_key)) {
             attach_own_key(session, src);
+            added_key_to_real_src = true;
         }
         decorate_message(src, PEP_rating_undefined, NULL, true);
         return PEP_UNENCRYPTED;
@@ -1742,6 +1774,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 if (status == PEP_OUT_OF_MEMORY)
                     goto enomem;
             }
+            if (!(flags & PEP_encrypt_flag_force_no_attached_key))
+                added_key_to_real_src = true;            
         }
         if (!(flags & PEP_encrypt_flag_force_no_attached_key))
             attach_own_key(session, _src);
@@ -1755,10 +1789,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             case PEP_enc_PEP: // BUG: should be implemented extra
                 status = encrypt_PGP_MIME(session, _src, keys, msg, flags);
                 break;
-
-            // case PEP_enc_pieces:
-            //     status = encrypt_PGP_in_pieces(session, src, keys, msg, flags);
-            //     break;
 
             /* case PEP_enc_PEP:
                 // TODO: implement
@@ -1802,6 +1832,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     // I don't think we do.
     if (_src && _src != src)
         free_message(_src);
+    
+    _cleanup_src(src, added_key_to_real_src);
         
     return status;
 
@@ -1813,6 +1845,8 @@ pep_error:
     free_message(msg);
     if (_src && _src != src)
         free_message(_src);
+
+    _cleanup_src(src, added_key_to_real_src);
 
     return status;
 }
@@ -2067,8 +2101,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     }
 
     /* KG: did we ever do this??? */
-    if (!(flags & PEP_encrypt_flag_force_no_attached_key))
-        _attach_key(session, target_fpr, src);
+    // if (!(flags & PEP_encrypt_flag_force_no_attached_key))
+    //     _attach_key(session, target_fpr, src);
 
     _src = wrap_message_as_attachment(NULL, src, session->unencrypted_subject);
     if (!_src)
@@ -2082,6 +2116,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         case PEP_enc_PGP_MIME:
         case PEP_enc_PEP: // BUG: should be implemented extra
             status = encrypt_PGP_MIME(session, _src, keys, msg, flags);
+            if (status == PEP_STATUS_OK || (src->longmsg && strstr(src->longmsg, "INNER")))
+                _cleanup_src(src, false);
             break;
 
         default:
