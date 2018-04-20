@@ -1,0 +1,193 @@
+Message-ID: <32df1e74-e7ec-be9e-d7d0-b54c42f179e8@darthmama.org>
+Date: Thu, 19 Apr 2018 18:13:49 +0200
+From: Reencrypt Sender <reencrypt_sender@darthmama.cool>
+To: "reencrypt_other_recip_0@darthmama.cool"
+ <reencrypt_other_recip_0@darthmama.cool>, 
+ "reencrypt_recip@darthmama.cool" <reencrypt_recip@darthmama.cool>, 
+ "reencrypt_other_recip_1@darthmama.cool"
+ <reencrypt_other_recip_1@darthmama.cool>, 
+ "reencrypt_other_recip_2@darthmama.cool"
+ <reencrypt_other_recip_2@darthmama.cool>
+Subject: =?utf-8?Q?p=E2=89=A1p?=
+Cc: Reencrypt Sender <krista@darthmama.org>
+Reply-To:  <krista@darthmama.org>
+Return-Path: <SRS0=Iqydak=HI=darthmama.org=krista@srs.smtpin.rzone.de>
+X-Original-To: krista@gnunet.org
+Delivered-To: krista@gnunet.org
+Received: from vmmailrelay1.informatik.tu-muenchen.de
+ (mailrelay1.informatik.tu-muenchen.de [131.159.254.14]) by
+ sam.net.in.tum.de (Postfix) with ESMTP id 386C01C00BE for
+ <krista@gnunet.org>; Thu, 19 Apr 2018 18:14:08 +0200 (CEST)
+Received: by vmmailrelay1.informatik.tu-muenchen.de (Postfix, from
+ userid 109) id 14A381C038A; Thu, 19 Apr 2018 18:14:09 +0200 (CEST)
+Received: from vmmailrelay1.informatik.tu-muenchen.de (localhost
+ [127.0.0.1]) by vmmailrelay1.informatik.tu-muenchen.de (Postfix) with
+ ESMTP id E67A61C0378 for <krista@gnunet.org>; Thu, 19 Apr 2018 18:14:08
+ +0200 (CEST)
+Received: from vmmaildmz2.informatik.tu-muenchen.de
+ (vmmaildmz2.informatik.tu-muenchen.de [131.159.0.88]) by
+ vmmailrelay1.informatik.tu-muenchen.de (Postfix) with ESMTP id
+ DBA271C0376 for <krista@gnunet.org>; Thu, 19 Apr 2018 18:14:08 +0200
+ (CEST)
+Received: by vmmaildmz2.informatik.tu-muenchen.de (Postfix, from userid
+ 109) id D9D791C24B8; Thu, 19 Apr 2018 18:14:08 +0200 (CEST)
+X-Spam-Checker-Version: SpamAssassin 3.4.0-tuminfo_1 (2014-02-07) on
+ vmmaildmz2.informatik.tu-muenchen.de
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.6 required=7.0 tests=AWL,BAYES_00,
+ DKIM_ADSP_NXDOMAIN,RCVD_IN_DNSWL_NONE,SPF_HELO_PASS,SUSPICIOUS_RECIPS,
+ TVD_RCVD_SPACE_BRACKET,UNPARSEABLE_RELAY autolearn=no
+ autolearn_force=no version=3.4.0-tuminfo_1
+Received: from vmmaildmz2.informatik.tu-muenchen.de (localhost
+ [127.0.0.1]) by vmmaildmz2.informatik.tu-muenchen.de (Postfix) with
+ ESMTP id 3EE881C24B7 for <krista@gnunet.org>; Thu, 19 Apr 2018 18:14:07
+ +0200 (CEST)
+Received: from mi4-p00-ob.smtp.rzone.de (mi4-p00-ob.smtp.rzone.de
+ [81.169.146.144]) (using TLSv1.2 with cipher
+ ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits)) (No client certificate
+ requested) by vmmaildmz2.informatik.tu-muenchen.de (Postfix) with
+ ESMTPS id 2F70A1C03AC for <krista@gnunet.org>; Thu, 19 Apr 2018
+ 18:14:07 +0200 (CEST)
+X-RZG-FWD-BY: krista@darthmama.org
+Received: from mailin.rzone.de ([unix socket]) by mailin.rzone.de (RZmta
+ 43.2) with LMTPA; Thu, 19 Apr 2018 18:13:56 +0200 (CEST)
+Authentication-Results: strato.com; dmarc=none
+ header.from=darthmama.cool
+Authentication-Results: strato.com; arc=none
+Authentication-Results: strato.com; dkim=none
+Authentication-Results: strato.com; dkim-adsp=nxdomain
+ header.from="reencrypt_sender@darthmama.cool"
+Authentication-Results: strato.com; spf=none
+ smtp.mailfrom="krista@darthmama.org"
+X-RZG-Expurgate: clean/normal
+X-RZG-Expurgate-ID: 149500::1524154436-00001063-4E0F052C/0/0
+X-Strato-MessageType: email
+X-RZG-CLASS-ID: mi00
+Received-SPF: none client-ip=131.159.0.36;
+ helo="mail-out2.informatik.tu-muenchen.de";
+ envelope-from="krista@darthmama.org"; receiver=smtpin.rzone.de;
+ identity=mailfrom;
+Received: from mail-out2.informatik.tu-muenchen.de ([131.159.0.36]) by
+ smtpin.rzone.de (RZmta 43.2 OK) with ESMTPS id m0496bu3JGDuDS2 (using
+ TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (curve secp521r1 with
+ 521 ECDH bits, eq. 15360 bits RSA)) (Client did not present a
+ certificate) for <krista@darthmama.org>; Thu, 19 Apr 2018 18:13:56
+ +0200 (CEST)
+Received: from [192.168.178.22] (ip5b439605.dynamic.kabel-deutschland.de
+ [91.67.150.5]) by services.sec.in.tum.de (Postfix) with ESMTPSA id
+ 5A2D8102926CA; Thu, 19 Apr 2018 18:13:50 +0200 (CEST)
+Openpgp: preference=signencrypt
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.7.0
+X-pEp-Version: 2.0
+MIME-Version: 1.0
+Content-Type: multipart/encrypted; boundary="51be29f17cd84a367a2f9514845aabb"; 
+ protocol="application/pgp-encrypted"
+
+--51be29f17cd84a367a2f9514845aabb
+Content-Type: application/pgp-encrypted
+
+Version: 1
+--51be29f17cd84a367a2f9514845aabb
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline; filename="msg.asc"
+
+-----BEGIN PGP MESSAGE-----
+
+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
+=LsrV
+-----END PGP MESSAGE-----
+
+--51be29f17cd84a367a2f9514845aabb--
+
+

@@ -3325,10 +3325,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
     *dst = msg;
     *keylist = _keylist;
-    message* reencrypt_msg;
 
     if (reencrypt) {
         if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
+            message* reencrypt_msg = NULL;
             PEP_STATUS reencrypt_status = PEP_CANNOT_REENCRYPT;
             char* own_id = NULL;
             status = get_default_own_userid(session, &own_id);
@@ -3340,7 +3340,6 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                     pEp_identity* target_id = new_identity(NULL, target_own_fpr, 
                                                            own_id, NULL);
                     if (target_id) {
-                        *dst = NULL;
                         reencrypt_status = encrypt_message_for_self(session, target_id, msg,
                                                                     extra, &reencrypt_msg, PEP_enc_PGP_MIME,
                                                                     0);
