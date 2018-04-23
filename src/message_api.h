@@ -76,6 +76,31 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     );
 
 
+// encrypt_message_and_add_priv_key() - encrypt message in memory, adding an encrypted private
+//                                      key (encrypted separately and sent within the inner message)
+//
+//  parameters:
+//      session (in)        session handle
+//      src (in)            message to encrypt
+//      extra (in)          extra keys for encryption
+//      dst (out)           pointer to new encrypted message or NULL if no
+//                          encryption could take place
+//      to_fpr              fingerprint of the private key that should
+//                          be encrypted and attached to the message
+//      enc_format (in)     encrypted format
+//      flags (in)          flags to set special encryption features
+//
+//  return value:
+//      PEP_STATUS_OK                   on success
+//      PEP_KEY_HAS_AMBIG_NAME          at least one of the receipient keys has
+//                                      an ambiguous name
+//      PEP_UNENCRYPTED                 on demand or no recipients with usable
+//                                      key, is left unencrypted, and key is
+//                                      attached to it
+//
+//  caveat:
+//      the ownershop of src remains with the caller
+//      the ownership of dst goes to the caller
 DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
         PEP_SESSION session,
         message *src,
