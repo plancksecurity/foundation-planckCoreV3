@@ -3392,6 +3392,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             
             if (reencrypt_status != PEP_CANNOT_REENCRYPT && reencrypt_msg) {
                 message_transfer(src, reencrypt_msg);
+                *flags |= PEP_decrypt_flag_src_modified;
                 free_message(reencrypt_msg);
             }
             else
@@ -3948,7 +3949,8 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     char** mime_plaintext,
     stringlist_t **keylist,
     PEP_rating *rating,
-    PEP_decrypt_flags_t *flags
+    PEP_decrypt_flags_t *flags,
+    char** modified_src
 )
 {
     assert(mimetext);
@@ -3956,7 +3958,11 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     assert(keylist);
     assert(rating);
     assert(flags);
+    assert(modified_src);
 
+    if (!(mimetext && mime_plaintext && keylist && rating && flags && modified_src))
+        return PEP_ILLEGAL_VALUE;
+        
     PEP_STATUS status = PEP_STATUS_OK;
     message* tmp_msg = NULL;
     message* dec_msg = NULL;
@@ -3995,15 +4001,24 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
                                                 keylist,
                                                 rating,
                                                 flags);
-                                                
+
+
     if (!dec_msg && (decrypt_status == PEP_UNENCRYPTED || decrypt_status == PEP_VERIFIED)) {
         dec_msg = message_dup(tmp_msg);
     }
-        
+    
     if (decrypt_status > PEP_CANNOT_DECRYPT_UNKNOWN || !dec_msg)
     {
         status = decrypt_status;
         goto pep_error;
+    }
+
+    if (*flags & PEP_decrypt_flag_src_modified) {
+        _mime_encode_message_internal(tmp_msg, false, modified_src, true);
+        if (!modified_src) {
+            *flags &= (~PEP_decrypt_flag_src_modified);
+            decrypt_status = PEP_CANNOT_REENCRYPT; // Because we couldn't return it, I guess.
+        }
     }
 
     // FIXME: test with att
@@ -4083,6 +4098,7 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
                              &enc_msg,
                              enc_format,
                              flags);
+                             
     if (status != PEP_STATUS_OK)
         goto pep_error;
 

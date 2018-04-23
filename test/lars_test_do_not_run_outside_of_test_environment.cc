@@ -141,10 +141,11 @@ void test_MIME_decrypt_message()
 	stringlist_t* keys_used = nullptr;
 	PEP_rating rating;
 	PEP_decrypt_flags_t dec_flags;
+        char* modified_src = NULL;
 	
         dec_flags = 0;
 	PEP_STATUS status2 = MIME_decrypt_message(session, mimetext.c_str(), mimetext.length(),
-		&plaintext, &keys_used, &rating, &dec_flags);
+		&plaintext, &keys_used, &rating, &dec_flags, &modified_src);
 	
 	std::cout << "MIME_decrypt_message returned " << std::dec << status2 << std::hex << " (0x" << status2 << ")" << std::dec << endl;
 	

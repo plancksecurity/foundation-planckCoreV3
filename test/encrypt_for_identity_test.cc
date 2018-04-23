@@ -247,6 +247,7 @@ int main() {
     keylist_used = nullptr;
     PEP_decrypt_flags_t mimeflags;
     PEP_rating mimerating;
+    char* modified_src = NULL;
 
     mimeflags = 0;
     status = MIME_decrypt_message(session,
@@ -255,7 +256,8 @@ int main() {
                                   &decrypted_mimetext,
                                   &keylist_used,
                                   &mimerating,
-                                  &mimeflags);
+                                  &mimeflags,
+				  &modified_src);
 
     assert(decrypted_mimetext);
     assert(keylist_used);

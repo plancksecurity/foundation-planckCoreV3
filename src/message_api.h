@@ -230,8 +230,10 @@ DYNAMIC_API PEP_color color_from_rating(PEP_rating rating);
 typedef enum _PEP_decrypt_flags {
     PEP_decrypt_flag_own_private_key = 0x1,
     PEP_decrypt_flag_consume = 0x2,
-    PEP_decrypt_flag_ignore = 0x4,    
-    PEP_decrypt_flag_untrusted_server = 0x8
+    PEP_decrypt_flag_ignore = 0x4,
+    PEP_decrypt_flag_src_modified = 0x8,
+    // input flags    
+    PEP_decrypt_flag_untrusted_server = 0x100
 } PEP_decrypt_flags; 
 
 typedef unsigned int PEP_decrypt_flags_t;
@@ -278,6 +280,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 //      keylist (out)           stringlist with keyids
 //      rating (out)            rating for the message
 //      flags (out)             flags to signal special decryption features
+//      modified_src (out)      modified source string, if decrypt had reason to change it
 //
 //  return value:
 //      decrypt status          if everything worked with MIME encode/decode, 
@@ -300,7 +303,8 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     char** mime_plaintext,
     stringlist_t **keylist,
     PEP_rating *rating,
-    PEP_decrypt_flags_t *flags
+    PEP_decrypt_flags_t *flags,
+    char** modified_src
 );
 
 

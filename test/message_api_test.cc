@@ -180,7 +180,8 @@ int main() {
     stringlist_t* keys_used;
     
     dec_flags = 0;
-    PEP_STATUS status8 = MIME_decrypt_message(session, text5.c_str(), text5.length(), &dec_msg, &keys_used, &rating, &dec_flags);
+    char* modified_src = NULL;
+    PEP_STATUS status8 = MIME_decrypt_message(session, text5.c_str(), text5.length(), &dec_msg, &keys_used, &rating, &dec_flags, &modified_src);
     assert(status8 == PEP_STATUS_OK);
     
     cout << dec_msg << endl;
