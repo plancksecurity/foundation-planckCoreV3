@@ -243,23 +243,49 @@ typedef unsigned int PEP_decrypt_flags_t;
 //
 //  parameters:
 //      session (in)        session handle
-//      src (in)            message to decrypt
+//      src (inout)         message to decrypt
 //      dst (out)           pointer to new decrypted message or NULL on failure
 //      keylist (out)       stringlist with keyids
 //      rating (out)        rating for the message
-//      flags (in/out)         flags to signal special decryption features
+//      flags (inout)       flags to signal special decryption features
 //
 //  return value:
 //      error status 
 //      or PEP_DECRYPTED if message decrypted but not verified
+//      or PEP_CANNOT_REENCRYPT if message was decrypted (and possibly
+//         verified) but a reencryption operation is expected by the caller
+//         and failed
 //      or PEP_STATUS_OK on success
 //
+//  flag values:
+//      in:
+//          PEP_decrypt_flag_untrusted_server
+//              used to signal that decrypt function should engage in behaviour
+//              specified for when the server storing the source is untrusted
+//      out:
+//          PEP_decrypt_flag_own_private_key
+//              private key was imported for one of our addresses (NOT trusted
+//              or set to be used - handshake/trust is required for that)
+//          PEP_decrypt_flag_src_modified
+//              indicates that the src object has been modified. At the moment,
+//              this is always as a direct result of the behaviour driven
+//              by the input flags. This flag is the ONLY value that should be
+//              relied upon to see if such changes have taken place.
+//          PEP_decrypt_flag_consume
+//              used by sync 
+//          PEP_decrypt_flag_ignore
+//              used by sync 
+//
+//
 // caveat:
-//      the ownership of src remains with the caller
+//      the ownership of src remains with the caller - however, the contents 
+//          might be modified (strings freed and allocated anew or set to NULL,
+//          etc) intentionally; when this happens, PEP_decrypt_flag_src_modified
+//          is set.
 //      the ownership of dst goes to the caller
 //      the ownership of keylist goes to the caller
 //      if src is unencrypted this function returns PEP_UNENCRYPTED and sets
-//      dst to NULL
+//         dst to NULL
 DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -279,7 +305,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 //      mime_plaintext (out)    decrypted, encoded message
 //      keylist (out)           stringlist with keyids
 //      rating (out)            rating for the message
-//      flags (out)             flags to signal special decryption features
+//      flags (inout)           flags to signal special decryption features (see below)
 //      modified_src (out)      modified source string, if decrypt had reason to change it
 //
 //  return value:
@@ -293,6 +319,24 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 //                              error
 //      PEP_OUT_OF_MEMORY       if not enough memory could be allocated
 //
+//  flag values:
+//      in:
+//          PEP_decrypt_flag_untrusted_server
+//              used to signal that decrypt function should engage in behaviour
+//              specified for when the server storing the source is untrusted.
+//      out:
+//          PEP_decrypt_flag_own_private_key
+//              private key was imported for one of our addresses (NOT trusted
+//              or set to be used - handshake/trust is required for that)
+//          PEP_decrypt_flag_src_modified
+//              indicates that the modified_src field should contain a modified
+//              version of the source, at the moment always as a result of the
+//              input flags. 
+//          PEP_decrypt_flag_consume
+//              used by sync 
+//          PEP_decrypt_flag_ignore
+//              used by sync 
+// 
 //  caveat:
 //      the decrypted, encoded mime text will go to the ownership of the caller; mimetext
 //      will remain in the ownership of the caller
