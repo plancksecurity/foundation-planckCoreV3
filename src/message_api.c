@@ -1109,8 +1109,13 @@ static bool is_encrypted_attachment(const bloblist_t *blob)
             return true;
     }
     else if (strcmp(blob->mime_type, "text/plain") == 0) {
-        if (strcmp(ext, ".asc") == 0)
-            return true;
+        if (strcmp(ext, ".asc") == 0) {
+            // NOTE: if this ends up being too expensive, we can implement
+            // strnstr...
+            if (strstr(blob->value, "BEGIN PGP PUBLIC KEY") == NULL &&
+                strstr(blob->value, "BEGIN PGP PRIVATE KEY") == NULL)
+                return true;
+        }
     }
 
     return false;
@@ -1841,7 +1846,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     if (!src->from->address || !src->to->ident || !src->to->ident->address)
         return PEP_ILLEGAL_VALUE;
             
-    if (!strcasecmp(src->from->address, src->to->ident->address) == 0)
+    if (strcasecmp(src->from->address, src->to->ident->address) != 0)
         return PEP_ILLEGAL_VALUE;
     
     stringlist_t* keys = NULL;
