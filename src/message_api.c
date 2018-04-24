@@ -1528,6 +1528,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     message * msg = NULL;
     stringlist_t * keys = NULL;
     message* _src = src;
+
+    bool added_key_to_real_src = false;
     
     assert(session);
     assert(src);
@@ -1578,7 +1580,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 
     identity_list * _il;
 
-    bool added_key_to_real_src = false;
 
     if (enc_format != PEP_enc_none && (_il = src->bcc) && _il->ident)
     {
