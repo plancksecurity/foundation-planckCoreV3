@@ -206,6 +206,7 @@ const char* tl_status_string(PEP_STATUS status) {
         case PEP_UNKNOWN_ERROR:
             return "PEP_UNKNOWN_ERROR";
         default:
+ 
             return "PEP_STATUS_OMGWTFBBQ - This means you're using a status the test lib doesn't know about!";
     }
 }
