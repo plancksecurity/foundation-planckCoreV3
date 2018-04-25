@@ -8,8 +8,6 @@ using namespace std;
 // Constructors
 EngineTest::EngineTest() {
     session = nullptr;
-    test_home = nullptr;
-    prev_gpg_home = nullptr;
 }
 
 EngineTest::EngineTest(string suitename, string test_home_dir) {
@@ -21,24 +19,24 @@ EngineTest::EngineTest(string suitename, string test_home_dir) {
     prev_gpg_home = getenv("GNUPGHOME");
 }
 
-virtual void EngineTest::setup() {
+void EngineTest::setup() {
     set_full_env(); // This will be called by default before every test
 }
 
-virtual void EngineTest::teardown() {
+void EngineTest::tear_down() {
     cout << "calling release()\n";
     release(session);
-    return 0;
+    restore_full_env();
 }
 
 void EngineTest::set_full_env() {
 
-    if (!test_home)
+    if (test_home.empty())
         throw "SETUP: BAD INITIALISATION. No test home.";
     
     int success = system("gpgconf --kill all");
     if (success != 0)
-        throw "SETUP: Error when executing 'gpgconf --kill all'."
+        throw "SETUP: Error when executing 'gpgconf --kill all'.";
     
     string home = getenv("HOME");
     if (test_home.compare(home) == 0 || test_home.compare(home + "/") == 0 ||
@@ -50,7 +48,7 @@ void EngineTest::set_full_env() {
     cout << "Ok - checked if new test home will be safe. We'll try and make the directory, deleting it if it has already exists." << endl;
     
     struct stat buf;
-    if (stat(test_home.c_str(), buf) == 0) {
+    if (stat(test_home.c_str(), &buf) == 0) {
         cout << test_home << " exists. We'll recursively delete. We hope we're not horking your whole system..." << endl;
         success = nftw(test_home.c_str(), util_delete_filepath, 100, FTW_DEPTH);
         if (success != 0)
@@ -61,19 +59,29 @@ void EngineTest::set_full_env() {
     if (success != 0)
         throw "SETUP: Error when setting GNUPGHOME.";
 
-    success = setenv("HOME", test_home)
+    success = setenv("HOME", test_home.c_str(), 1);
     if (success != 0)
         throw "SETUP: Cannot set test_home for init.";
     
     cout << "calling init()\n";
     PEP_STATUS status = init(&session);
-    assert(status == PEP_STATUS_OK);
-    assert(session);
+    // assert(status == PEP_STATUS_OK);
+    // assert(session);
     cout << "init() completed.\n";
 
-    success = setenv("HOME", home);
+    success = setenv("HOME", home.c_str(), 1);
     if (success != 0)
         throw "SETUP: Cannot reset home directory! Either set environment variable manually back to your home, or quit this session!";    
+}
+
+void EngineTest::restore_full_env() {
+    int success = system("gpgconf --kill all");
+    if (success != 0)
+        throw "RESTORE: Error when executing 'gpgconf --kill all'.";
+
+    success = setenv("GNUPGHOME", prev_gpg_home.c_str(), 1);
+    if (success != 0)
+        throw "RESTORE: Warning - cannot restore GNUPGHOME. Either set environment variable manually back to your home, or quit this session!";
 }
 
 int EngineTest::util_delete_filepath(const char *filepath, 
