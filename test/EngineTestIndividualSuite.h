@@ -11,5 +11,8 @@ class EngineTestIndividualSuite : public EngineTestSuite {
     public:
         EngineIndividualTestSuite(string suitename, string test_home_dir);
         ~EngineIndividualTestSuite();
+    protected:
+        virtual void setup();
+        virtual void tear_down();
 };
 #endif

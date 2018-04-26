@@ -89,3 +89,6 @@ int EngineTestSuite::util_delete_filepath(const char *filepath,
     
     return retval;
 }
+
+void EngineTestSuite::setup() {}
+void EngineTestSuite::tear_down() {}
