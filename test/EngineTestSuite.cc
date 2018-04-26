@@ -2,15 +2,11 @@
 #include <unistd.h>
 #include <ftw.h>
 
-#include "EngineTest.h"
+#include "EngineTestSuite.h"
 using namespace std;
 
-// Constructors
-EngineTest::EngineTest() {
-    session = nullptr;
-}
-
-EngineTest::EngineTest(string suitename, string test_home_dir) {
+// Constructor
+EngineTestSuite::EngineTestSuite(string suitename, string test_home_dir) {
     // FIXME: deal with base
     test_home = test_home_dir;
     
@@ -19,17 +15,7 @@ EngineTest::EngineTest(string suitename, string test_home_dir) {
     prev_gpg_home = getenv("GNUPGHOME");
 }
 
-void EngineTest::setup() {
-    set_full_env(); // This will be called by default before every test
-}
-
-void EngineTest::tear_down() {
-    cout << "calling release()\n";
-    release(session);
-    restore_full_env();
-}
-
-void EngineTest::set_full_env() {
+void EngineTestSuite::set_full_env() {
 
     if (test_home.empty())
         throw "SETUP: BAD INITIALISATION. No test home.";
@@ -74,7 +60,7 @@ void EngineTest::set_full_env() {
         throw "SETUP: Cannot reset home directory! Either set environment variable manually back to your home, or quit this session!";    
 }
 
-void EngineTest::restore_full_env() {
+void EngineTestSuite::restore_full_env() {
     int success = system("gpgconf --kill all");
     if (success != 0)
         throw "RESTORE: Error when executing 'gpgconf --kill all'.";
@@ -84,7 +70,7 @@ void EngineTest::restore_full_env() {
         throw "RESTORE: Warning - cannot restore GNUPGHOME. Either set environment variable manually back to your home, or quit this session!";
 }
 
-int EngineTest::util_delete_filepath(const char *filepath, 
+int EngineTestSuite::util_delete_filepath(const char *filepath, 
                                      const struct stat *file_stat, 
                                      int ftw_info, 
                                      struct FTW * ftw_struct) {

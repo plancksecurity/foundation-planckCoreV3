@@ -1,4 +1,5 @@
-#ifndef ENGINE_TEST_H
+#ifndef ENGINE_TEST_SUITE_H
+#define ENGINE_TEST_SUITE_H
 
 #include <cpptest-suite.h>
 #include <string>
@@ -6,10 +7,9 @@
 
 using namespace std;
 
-class EngineTest : public Test::Suite {
+class EngineTestSuite : public Test::Suite {
     public:
-        EngineTest();
-        EngineTest(string suitename, string test_home_dir);
+        EngineTestSuite(string suitename, string test_home_dir);
         
     protected:
         PEP_SESSION session;
