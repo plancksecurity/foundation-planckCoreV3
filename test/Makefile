@@ -9,6 +9,8 @@ include ../default.conf
 HERE:=$(CURDIR)
 TEST_HOME=$(HERE)pEp_test_home
 
+TARGET=TestDriver
+
 SRC_DIRS := ./src ./src/util ./src/engine_tests
 SRCS := src/EngineTestSuite.cc src/EngineTestIndividualSuite.cc src/EngineTestSessionSuite.cc $(wildcard src/*/*.cc) src/SuiteMaker.cc src/TestDriver.cc
 OBJS := $(addsuffix .o,$(basename $(SRCS)))
