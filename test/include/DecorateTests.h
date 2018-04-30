@@ -1,3 +1,5 @@
+#ifndef DECORATE_TESTS_H
+#define DECORATE_TESTS_H
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -7,6 +9,9 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <cpptest.h>
+#include <cpptest-suite.h>
+#include <cpptest-textoutput.h>
 #include "mime.h"
 #include "message_api.h"
 #include "test_util.h"
@@ -19,3 +24,5 @@ class DecorateTests : public EngineTestSessionSuite {
     private:
         void check_decorate();
 };
+
+#endif

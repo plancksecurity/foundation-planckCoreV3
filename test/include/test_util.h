@@ -1,3 +1,6 @@
+#ifndef PEP_TEST_UTILS_H
+#define PEP_TEST_UTILS_H
+
 #include <string>
 #include "pEpEngine.h"
 #include "message_api.h"
@@ -27,3 +30,5 @@ const char* tl_status_string(PEP_STATUS status);
 
 // Grabs a new uuid for your randomish string needs.
 char* get_new_uuid();
+
+#endif

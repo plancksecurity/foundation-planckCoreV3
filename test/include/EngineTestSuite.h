@@ -1,7 +1,9 @@
 #ifndef ENGINE_TEST_SUITE_H
 #define ENGINE_TEST_SUITE_H
 
+#include <cpptest.h>
 #include <cpptest-suite.h>
+#include <cpptest-textoutput.h>
 #include <string>
 #include "pEpEngine.h"
 

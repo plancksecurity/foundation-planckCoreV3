@@ -1,8 +1,13 @@
+#include <cpptest.h>
+#include <cpptest-suite.h>
+#include <cpptest-textoutput.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <ftw.h>
 
-#include "EngineTest.h"
+#include "EngineTestSuite.h"
+#include "EngineTestIndividualSuite.h"
+
 using namespace std;
 
 void EngineTestIndividualSuite::setup() {

@@ -1,16 +1,19 @@
-#ifndef ENGINE_INDIVIDUAL_SESSION_SUITE_H
-#define ENGINE_INDIVIDUAL_SESSION_SUITE_H
+#ifndef ENGINE_TEST_INDIVIDUAL_SUITE_H
+#define ENGINE_TEST_INDIVIDUAL_SUITE_H
 
+#include <cpptest.h>
 #include <cpptest-suite.h>
+#include <cpptest-textoutput.h>
 #include <string>
 #include "pEpEngine.h"
+#include "EngineTestSuite.h"
 
 using namespace std;
 
 class EngineTestIndividualSuite : public EngineTestSuite {
     public:
-        EngineIndividualTestSuite(string suitename, string test_home_dir);
-        ~EngineIndividualTestSuite();
+        EngineTestIndividualSuite(string suitename, string test_home_dir);
+        ~EngineTestIndividualSuite();
     protected:
         virtual void setup();
         virtual void tear_down();

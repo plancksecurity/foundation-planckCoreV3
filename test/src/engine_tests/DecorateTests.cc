@@ -1,16 +1,23 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
+#include <cpptest.h>
+#include <cpptest-suite.h>
+#include <cpptest-textoutput.h>
 #include <stdlib.h>
 #include <string.h>
 #include "platform.h"
 #include <iostream>
 #include <fstream>
-#include <TEST_ASSERT.h>
+#include <assert.h>
 #include <sstream>
 #include "mime.h"
 #include "message_api.h"
 #include "test_util.h"
+
+#include "EngineTestSuite.h"
+#include "EngineTestSessionSuite.h"
+#include "DecorateTests.h"
 
 using namespace std;
 
