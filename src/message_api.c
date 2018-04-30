@@ -1981,7 +1981,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     bloblist_t* old_head = NULL;
     
     if (!src->attachments || src->attachments->value == NULL) {
-        if (src->attachments->value == NULL) {
+        if (src->attachments && src->attachments->value == NULL) {
             old_head = src->attachments;
             src->attachments = NULL;
         }
