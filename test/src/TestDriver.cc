@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <cpptest.h>
 #include <cpptest-suite.h>
 #include <cpptest-textoutput.h>
@@ -11,10 +12,10 @@
 
 using namespace std;
 
-string common_test_home = "~/pEp_tests";
+string common_test_home = "./pEp_test_home";
 
 void usage() {
-    throw "Bad usage. Fix me, you loser developer.";
+    throw std::runtime_error("Bad usage. Fix me, you loser developer.");
 }
 
 int main(int argc, char** argv) {
@@ -24,35 +25,18 @@ int main(int argc, char** argv) {
 
     int start_index = 1;
     
-
-    if (argc > 1) {
-        string tmpstr = argv[1];
-        if (tmpstr.compare(0,10,"--testdir=")) {
-            try {
-                tmpstr = tmpstr.substr(10);
-            } 
-            catch (std::out_of_range o) {
-                usage();
-            }
-            common_test_home = tmpstr;
-            start_index++;
-        }
-    }
-
     struct stat dirchk;
     if (stat(common_test_home.c_str(), &dirchk) == 0) {
         if (!S_ISDIR(dirchk.st_mode))
-            throw ("The test directory, " + common_test_home + "exists, but is not a directory.").c_str(); 
+            throw std::runtime_error(("The test directory, " + common_test_home + "exists, but is not a directory.").c_str()); 
     }
-    else if (common_test_home.compare("~/pEp_tests")) {
+    else {
         int errchk = mkdir(common_test_home.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+        cout << errchk << endl;
         if (errchk != 0)
-            throw "Error creating a test directory.";
+            throw std::runtime_error("Error creating a test directory.");
     }
-    else
-        throw "Test directory does not exist. Test directories from the command line must be created first. Because we're lazy.";
-        
-            
+                    
     EngineTestSuite* test_runner = new EngineTestSuite("MainTestDriver", common_test_home);
         
     for (int i = start_index; i < argc; i++) {
@@ -60,7 +44,7 @@ int main(int argc, char** argv) {
         auto_ptr<Test::Suite> test_suite;
         suitemaker_build(argv[i], common_test_home.c_str(), test_suite);
         if (test_suite.get() == NULL)
-            throw "Could not create a test suite instance."; // FIXME, better error, cleanup, obviously
+            throw std::runtime_error("Could not create a test suite instance."); // FIXME, better error, cleanup, obviously
         test_runner->add(test_suite);
     }
 

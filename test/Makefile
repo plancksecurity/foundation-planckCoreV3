@@ -7,16 +7,15 @@
 include ../default.conf
 
 HERE:=$(CURDIR)
-TEST_HOME=$(HERE)pEp_test_home
+TEST_HOME=$(HERE)/pEp_test_home
 
 TARGET=TestDriver
 
-SRC_DIRS := ./src ./src/util ./src/engine_tests
-SRCS := src/EngineTestSuite.cc src/EngineTestIndividualSuite.cc src/EngineTestSessionSuite.cc $(wildcard src/*/*.cc) src/SuiteMaker.cc src/TestDriver.cc
+SRCS := $(wildcard src/*.cc) $(wildcard src/*/*.cc)
 OBJS := $(addsuffix .o,$(basename $(SRCS)))
 DEPS := $(OBJS:.o=.d)
 
-INC_DIRS := ./include /usr/local/include #$(shell find $(SRC_DIRS) -type d) 
+INC_DIRS := ./include /usr/local/include  
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 LDFLAGS += -L/usr/local/lib
@@ -80,108 +79,28 @@ ifneq ($(MAKECMDGOALS),clean)
 	endif
 endif
 
-
 CPPFLAGS += $(INC_FLAGS) -MMD -MP
 
+all: $(TARGET) test_home_
+	
 $(TARGET): $(OBJS)
-	$(CXX) $(CPPFLAGS) $(LDFLAGS) $(OBJS) -o $@ $(LOADLIBES) $(LDLIBS)
+	$(CXX) $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LDFLAGS) $(LDLIBS) -o $@
 
+.PHONY: test_home_
+test_home_: 
+	mkdir -p $(TEST_HOME)
+
+TEST_CMD_=$(TARGET)
+
+.PHONY: test
+test: all
+	./$(TARGET) $(TEST_CMD_)
+	
 .PHONY: clean
 clean:
 	$(RM) $(TARGET) $(OBJS) $(DEPS)
 
+
+
 -include $(DEPS)
-
-
-# 
-# TEST_CMD_PFX=$(LIBPATH)=$(EXTRA_LIB_PATHS) #HOME=$(TEST_HOME) GNUPGHOME=$(TEST_GNUPGHOME)
-# 
-# 
-# CFLAGS:=$(filter-out -DNDEBUG,$(CFLAGS))
-# ifneq ($(MAKECMDGOALS),clean)
-# 	ifneq (,$(findstring -DNDEBUG,$(CFLAGS)))
-# 		$(error The macro NDEBUG must not be defined for test compilation.)
-# 	endif
-# endif
-# 
-# CXXFLAGS:=$(filter-out -DNDEBUG,$(CXXFLAGS))
-# ifneq ($(MAKECMDGOALS),clean)
-# 	ifneq (,$(findstring -DNDEBUG,$(CXXFLAGS)))
-# 		$(error The macro NDEBUG must not be defined for test compilation.)
-# 	endif
-# endif
-# 
-# # .PHONY: all
-# # all: main
-# 
-# # don't delete .o files!
-# .PRECIOUS: %.o
-# 
-# 
-# SRC_DIRS ?= ./src
-# 
-# SRCS := $(wildcard src/*.cc) $(wildcard src/*/*.cc)
-# OBJS := $(addsuffix .o,$(basename $(SRCS)))
-# DEPS := $(OBJS:.o=.d)
-# 
-# CPPFLAGS += -I./include -MMD -MP
-# 
-# #	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LOADLIBES) $(LDLIBS)
-# $(TARGET): $(OBJS)
-# 	$(CXX) $(CXXFLAGS) $^ $(OBJS) $(LDFLAGS) $(LDLIBS) -o $@
-# 
-# 
-# .PHONY: test_home_
-# test_home_: 
-# 	mkdir -p $(TEST_HOME)
-# 
-# # .PHONY: clean
-# # clean:
-# # 	rm -f *.o $(TARGET) *.a *~ $(UNIT_TESTS) msg4.asc msg_encrypt_for_self.asc
-# 
-# 
-# .PHONY: clean
-# clean:
-# 	$(RM) $(TARGET) $(OBJS) $(DEPS)
-# 
-# -include $(DEPS)
-# 
-# # .PHONY: main
-# # main: TestDriver
-# # 	
-# # TestDriver : src/TestDriver
-# # 	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) $(LDLIBS) $(TESTOBJ) $(SUITEOBJ) -o TestDriver
-# # 
-# # .PHONY: testfiles
-# # testfiles : $(TESTOBJ)
-# # 	$(CXX) -c $(CXXFLAGS) $^ $(LDFLAGS) $(LDLIBS)
-# # 
-# # .PHONY: suitefiles	
-# # suitefiles : $(SUITEOBJ)
-# # 	$(CXX) -c $(CXXFLAGS) $^ $(LDFLAGS) $(LDLIBS)
-# #  
-# # # %_test : %_test.o test_util.o
-# # # 	$(CXX) $^ $(LDFLAGS) $(LDLIBS) -o $@
-# # # 
-# # # %_run : % test_home_
-# # # 	$(TEST_CMD_PFX) ./$<
-# # # 
-# # # %_lldb : % test_home_
-# # # 	$(TEST_CMD_PFX) $(LLDB_BIN) ./$<
-# # # 
-# # # %_valgrind : % test_home_
-# # # 	$(TEST_CMD_PFX) valgrind --leak-check=yes ./$<
-# # # 
-# # # %_gdb : % test_home_
-# # # 	$(TEST_CMD_PFX) gdb ./$<
-# # 
-# # # .PHONY: unit_tests
-# # # unit_tests: $(UNIT_TESTS) $(UNIT_TESTS_RUN)
-# # 
-# # # .PHONY: compile
-# # # compile: $(UNIT_TESTS) $(TARGET)
-# # 
-# # # Installs the engine, not the test binaries
-# # .PHONY: install
-# # install:
-# # 	$(MAKE) -C .. install
+ 
