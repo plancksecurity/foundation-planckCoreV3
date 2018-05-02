@@ -82,11 +82,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
 //  parameters:
 //      session (in)        session handle
 //      src (in)            message to encrypt
-//      extra (in)          extra keys for encryption
 //      dst (out)           pointer to new encrypted message or NULL if no
 //                          encryption could take place
-//      to_fpr              fingerprint of the private key that should
-//                          be encrypted and attached to the message
+//      to_fpr              fingerprint of the recipient key to which the private key
+//                          should be encrypted
 //      enc_format (in)     encrypted format
 //      flags (in)          flags to set special encryption features
 //
