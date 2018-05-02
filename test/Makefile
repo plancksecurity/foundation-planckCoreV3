@@ -6,6 +6,8 @@
 
 include ../default.conf
 
+PY_ENV := $(shell command -v python3 2> /dev/null)
+
 HERE:=$(CURDIR)
 TEST_HOME=$(HERE)/pEp_test_home
 
@@ -81,11 +83,19 @@ endif
 
 CPPFLAGS += $(INC_FLAGS) -MMD -MP
 
-all: $(TARGET) test_home_
+all: suitemaker $(TARGET) test_home_
 	
 $(TARGET): $(OBJS)
 	$(CXX) $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LDFLAGS) $(LDLIBS) -o $@
 
+.PHONY: suitemaker
+suitemaker:
+ifndef PY_ENV
+	@echo "WARNING: Can't find python3 - this is fine unless you're adding test suites. If so, please install python3."
+else
+	$(PY_ENV) gensuitemaker.py
+endif
+		
 .PHONY: test_home_
 test_home_: 
 	mkdir -p $(TEST_HOME)
