@@ -15,6 +15,13 @@ EngineTestSuite::EngineTestSuite(string suitename, string test_home_dir) {
     char* tmp = getenv("GNUPGHOME");
     if (tmp)
         prev_gpg_home = getenv("GNUPGHOME");
+    
+    struct stat buf;
+    
+    if (stat(test_home.c_str(), &buf) == 0) {
+        cout << test_home << " exists. We'll recursively delete. We hope we're not horking your whole system..." << endl;
+        int success = nftw((test_home + "/.").c_str(), util_delete_filepath, 100, FTW_DEPTH);
+    }
 }
 
 void EngineTestSuite::set_full_env() {
@@ -36,12 +43,6 @@ void EngineTestSuite::set_full_env() {
     cout << "Ok - checked if new test home will be safe. We'll try and make the directory, deleting it if it has already exists." << endl;
     
     struct stat buf;
-    if (stat(test_home.c_str(), &buf) == 0) {
-        cout << test_home << " exists. We'll recursively delete. We hope we're not horking your whole system..." << endl;
-        success = nftw((test_home + "/.").c_str(), util_delete_filepath, 100, FTW_DEPTH);
-        if (success != 0)
-            throw std::runtime_error("SETUP: can't delete the whole directory.");
-    }
     
     success = setenv("GNUPGHOME", (test_home + "/.gnupg").c_str(), 1);
     if (success != 0)
