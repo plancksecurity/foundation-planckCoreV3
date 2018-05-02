@@ -13,7 +13,7 @@ using namespace std;
 class EngineTestIndividualSuite : public EngineTestSuite {
     public:
         EngineTestIndividualSuite(string suitename, string test_home_dir);
-        ~EngineTestIndividualSuite();
+        virtual ~EngineTestIndividualSuite();
     protected:
         virtual void setup();
         virtual void tear_down();

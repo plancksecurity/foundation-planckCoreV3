@@ -10,6 +10,15 @@
 
 using namespace std;
 
+// Constructor
+EngineTestIndividualSuite::EngineTestIndividualSuite(string suitename, string test_home_dir) 
+    : EngineTestSuite(suitename, test_home_dir) { 
+}
+
+EngineTestIndividualSuite::~EngineTestIndividualSuite() {
+    
+}
+
 void EngineTestIndividualSuite::setup() {
     set_full_env(); // This will be called by default before every test
 }

@@ -18,7 +18,7 @@
 
 using namespace std;
 
-class DecorateTests : public EngineTestSessionSuite {
+class DecorateTests : public EngineTestIndividualSuite {
     public:
         DecorateTests(string suitename, string test_home_dir);
     private:
