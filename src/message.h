@@ -114,6 +114,20 @@ DYNAMIC_API void free_message(message *msg);
 
 DYNAMIC_API message * message_dup(const message *msg);
 
+// message_transfer - assign ownership of all fields of the src message to
+//                    the dst message object passed in. Free respective memory
+//                    in the dst message, and reinitialise and pointers in 
+//                    the src message to NULL so that it can be freed properly
+//                    by its owner.
+//  parameters:
+//      dst (inout)        message to clobber and reassign values to
+//      src (inout)        message whose values will be transfered to dst
+//  NOTA BENE:
+//      not owned pointees (msg->rawmsg_ref and msg->refering_msg_ref) are shared!
+//      these are simply transferred.
+DYNAMIC_API void message_transfer(message* dst, message *src);
+
+
 // new_message_ref_list() - allocate new message reference list
 //
 //  parameters:

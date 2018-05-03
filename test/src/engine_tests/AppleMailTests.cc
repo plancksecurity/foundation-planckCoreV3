@@ -60,7 +60,7 @@ void AppleMailTests::check_apple_mail() {
     message* final_ptr = nullptr;
     stringlist_t* keylist = nullptr;
     PEP_rating rating;
-    PEP_decrypt_flags_t flags;
+    PEP_decrypt_flags_t flags = 0;
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     TEST_ASSERT(status == PEP_STATUS_OK);
@@ -90,6 +90,7 @@ void AppleMailTests::check_apple_mail() {
     final_ptr = nullptr;
     keylist = nullptr;
     rating = PEP_rating_unreliable;
+    flags = 0;
     
     const char* mailfile2 = "test_mails/apple_mail_TC_html_signed_encrypted.eml";
     const string mailtext2 = slurp(mailfile2);

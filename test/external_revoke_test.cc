@@ -125,6 +125,7 @@ int main() {
     cout << "1b. Decrypt message that was encrypted for trusted partner." << endl;
     cout << "---------------------------------------------------------" << endl << endl;
 
+    flags = 0;
     cout << "Decrypting message." << endl;
     status = decrypt_message(session, encrypted_outgoing_msg, &outgoing_msg, &keylist, &rating, &flags);
     cout << "Decrypted message with status " << tl_status_string(status) << endl;
@@ -260,6 +261,7 @@ int main() {
     cout << "---------------------------------------------------------" << endl << endl;
 
 
+    flags = 0;
     status = decrypt_message(session, encrypted_outgoing_msg, &decrypted_msg, &keylist, &rating, &flags);
     cout << "Decryption returns with status " << tl_status_string(status) << endl;
     assert(status == PEP_STATUS_OK);

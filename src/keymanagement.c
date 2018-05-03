@@ -15,8 +15,6 @@
 #include "sync_fsm.h"
 #include "blacklist.h"
 
-#define KEY_EXPIRE_DELTA (60 * 60 * 24 * 365)
-
 static bool key_matches_address(PEP_SESSION session, const char* address,
                                 const char* fpr) {
     if (!session || !address || !fpr)

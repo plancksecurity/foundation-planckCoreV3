@@ -97,15 +97,18 @@ int main() {
     stringlist_t* keylist_used = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags;
+    char* modified_src = NULL;
     
     status = get_trust(session, same_addr_same_uid);
     cout << tl_ct_string(same_addr_same_uid->comm_type) << endl;
     
     assert((same_addr_same_uid->comm_type & PEP_ct_confirmed) != PEP_ct_confirmed);
     
+    flags = 0;
     status = MIME_decrypt_message(session, encoded_text.c_str(), 
                                   encoded_text.size(), &decrypted_text, 
-                                  &keylist_used, &rating, &flags);
+                                  &keylist_used, &rating, &flags,
+				  &modified_src);
 
     status = get_trust(session, same_addr_same_uid);
     assert(same_addr_same_uid->comm_type == PEP_ct_pEp_unconfirmed);

@@ -93,6 +93,7 @@ int main() {
     PEP_rating rating;
     PEP_decrypt_flags_t flags;
     
+    flags = 0;
     PEP_STATUS status4 = decrypt_message(session, enc_msg2, &msg4, &keylist4, &rating, &flags);
     assert(status4 == PEP_STATUS_OK);
     assert(msg4);
@@ -136,6 +137,7 @@ int main() {
     stringlist_t *keylist5 = nullptr;
     PEP_rating rating2;
     PEP_decrypt_flags_t flags2;
+    flags2 = 0;
     PEP_STATUS status6 = decrypt_message(session, msg5, &msg6, &keylist5, &rating2, &flags2);
     assert(status6 == PEP_DECRYPT_NO_KEY);
     assert(msg6 == NULL);
@@ -177,7 +179,9 @@ int main() {
     PEP_decrypt_flags_t dec_flags;
     stringlist_t* keys_used;
     
-    PEP_STATUS status8 = MIME_decrypt_message(session, text5.c_str(), text5.length(), &dec_msg, &keys_used, &rating, &dec_flags);
+    dec_flags = 0;
+    char* modified_src = NULL;
+    PEP_STATUS status8 = MIME_decrypt_message(session, text5.c_str(), text5.length(), &dec_msg, &keys_used, &rating, &dec_flags, &modified_src);
     assert(status8 == PEP_STATUS_OK);
     
     cout << dec_msg << endl;
