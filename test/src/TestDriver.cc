@@ -3,6 +3,7 @@
 #include <cpptest-suite.h>
 #include <cpptest-textoutput.h>
 #include <string>
+#include <vector>
 #include <sys/stat.h>
 #include <errno.h>
 #include "EngineTestSuite.h"
@@ -18,12 +19,10 @@ void usage() {
     throw std::runtime_error("Bad usage. Fix me, you loser developer.");
 }
 
-int main(int argc, char** argv) {
+int main(int argc, const char** argv) {
     const int MIN_ARGC = 1;
     if (argc < MIN_ARGC)
         usage();
-
-    int start_index = 1;
     
     struct stat dirchk;
     if (stat(common_test_home.c_str(), &dirchk) == 0) {
@@ -38,14 +37,17 @@ int main(int argc, char** argv) {
     }
                     
     EngineTestSuite* test_runner = new EngineTestSuite("MainTestDriver", common_test_home);
+
+    std::vector<Test::Suite*> suites_to_run;
+    
+    if (argc == MIN_ARGC)
+        SuiteMaker::suitemaker_buildall(common_test_home.c_str(), suites_to_run);
+    else
+        SuiteMaker::suitemaker_buildlist(&argv[1], argc - MIN_ARGC, common_test_home.c_str(), suites_to_run);
         
-    for (int i = start_index; i < argc; i++) {
-        char* curr_arg = argv[i];
-        auto_ptr<Test::Suite> test_suite;
-        suitemaker_build(argv[i], common_test_home.c_str(), test_suite);
-        if (test_suite.get() == NULL)
-            throw std::runtime_error("Could not create a test suite instance."); // FIXME, better error, cleanup, obviously
-        test_runner->add(test_suite);
+    for (std::vector<Test::Suite*>::iterator it = suites_to_run.begin(); it != suites_to_run.end(); ++it) {
+        auto_ptr<Test::Suite> suite(*it);
+        test_runner->add(suite); 
     }
 
     Test::TextOutput output(Test::TextOutput::Terse);

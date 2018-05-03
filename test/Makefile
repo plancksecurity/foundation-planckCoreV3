@@ -6,7 +6,7 @@
 
 include ../default.conf
 
-PY_ENV := $(shell command -v python3 2> /dev/null)
+#PY_ENV := $(shell command -v python3 2> /dev/null)
 
 HERE:=$(CURDIR)
 TEST_HOME=$(HERE)/pEp_test_home
