@@ -102,7 +102,8 @@ int main() {
     char* decrypted_text = NULL;
     stringlist_t* keylist_used = NULL;
     PEP_rating rating;
-    PEP_decrypt_flags_t flags;
+    PEP_decrypt_flags_t flags = 0;
+    char* modified_src = NULL;
     
     cout << "Trusting personal key for " << same_addr_same_uid->user_id << " and " << same_addr_same_uid->fpr << endl;
     status = trust_personal_key(session, same_addr_same_uid);
@@ -116,16 +117,20 @@ int main() {
     
     assert(same_addr_same_uid->comm_type == PEP_ct_pEp);
     
+    flags = 0;
     status = MIME_decrypt_message(session, encoded_text.c_str(), 
                                   encoded_text.size(), &decrypted_text, 
-                                  &keylist_used, &rating, &flags);
+                                  &keylist_used, &rating, &flags,
+                                  &modified_src);
 
     status = get_trust(session, same_addr_same_uid);
     assert(same_addr_same_uid->comm_type == PEP_ct_pEp);
     
+    flags = 0;
     status = MIME_decrypt_message(session, encoded_text.c_str(), 
                                   encoded_text.size(), &decrypted_text, 
-                                  &keylist_used, &rating, &flags);
+                                  &keylist_used, &rating, &flags,
+                                  &modified_src);
     
     cout << "Status: " << tl_status_string(status) << endl;
     assert(status == PEP_STATUS_OK);

@@ -134,6 +134,7 @@ int main() {
     // 
     stringpair_t* autoconsume = new_stringpair("pEp-auto-consume", "yes");
     stringpair_list_add(encrypted_msg->opt_fields, autoconsume);
+    flags = 0;
     status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &rating, &flags);
     assert(decrypted_msg);
     assert(keylist_used);

@@ -280,8 +280,7 @@ static bool is_fileending(const bloblist_t *bl, const char *fe)
     return strcmp(bl->filename + (fn_len - fe_len), fe) == 0;
 }
 
-
-static char * encapsulate_message_wrap_info(const char *msg_wrap_info, const char *longmsg)
+char * encapsulate_message_wrap_info(const char *msg_wrap_info, const char *longmsg)
 {
     assert(msg_wrap_info);
     
@@ -1486,6 +1485,36 @@ PEP_cryptotech determine_encryption_format(message *msg)
     }
 }
 
+static void _cleanup_src(message* src, bool remove_attached_key) {
+    assert(src);
+    
+    if (!src)
+        return;
+        
+    char* longmsg = NULL;
+    char* shortmsg = NULL;
+    char* msg_wrap_info = NULL;
+    separate_short_and_long(src->longmsg, &shortmsg, &msg_wrap_info,
+                            &longmsg);
+    if (longmsg) {                    
+        free(src->longmsg);
+        free(shortmsg);
+        free(msg_wrap_info);
+        src->longmsg = longmsg;
+    }
+    if (remove_attached_key) {
+        // End of the attachment list
+        if (src->attachments) {
+            bloblist_t* tmp = src->attachments;
+            while (tmp->next && tmp->next->next) {
+                tmp = tmp->next;
+            }
+            free_bloblist(tmp->next);
+            tmp->next = NULL;
+        }    
+    }                   
+}
+
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
         message *src,
@@ -1499,6 +1528,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     message * msg = NULL;
     stringlist_t * keys = NULL;
     message* _src = src;
+
+    bool added_key_to_real_src = false;
     
     assert(session);
     assert(src);
@@ -1548,6 +1579,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     PEP_comm_type max_comm_type = PEP_ct_pEp;
 
     identity_list * _il;
+
 
     if (enc_format != PEP_enc_none && (_il = src->bcc) && _il->ident)
     {
@@ -1714,7 +1746,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             }
         }
     }
-
+        
     if (enc_format == PEP_enc_none || !dest_keys_found ||
         stringlist_length(keys)  == 0 ||
         _rating(max_comm_type,
@@ -1724,6 +1756,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         if ((has_pep_user || !session->passive_mode) && 
             !(flags & PEP_encrypt_flag_force_no_attached_key)) {
             attach_own_key(session, src);
+            added_key_to_real_src = true;
         }
         decorate_message(src, PEP_rating_undefined, NULL, true);
         return PEP_UNENCRYPTED;
@@ -1742,6 +1775,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 if (status == PEP_OUT_OF_MEMORY)
                     goto enomem;
             }
+            if (!(flags & PEP_encrypt_flag_force_no_attached_key))
+                added_key_to_real_src = true;            
         }
         if (!(flags & PEP_encrypt_flag_force_no_attached_key))
             attach_own_key(session, _src);
@@ -1755,10 +1790,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             case PEP_enc_PEP: // BUG: should be implemented extra
                 status = encrypt_PGP_MIME(session, _src, keys, msg, flags);
                 break;
-
-            // case PEP_enc_pieces:
-            //     status = encrypt_PGP_in_pieces(session, src, keys, msg, flags);
-            //     break;
 
             /* case PEP_enc_PEP:
                 // TODO: implement
@@ -1802,6 +1833,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     // I don't think we do.
     if (_src && _src != src)
         free_message(_src);
+    
+    _cleanup_src(src, added_key_to_real_src);
         
     return status;
 
@@ -1813,6 +1846,8 @@ pep_error:
     free_message(msg);
     if (_src && _src != src)
         free_message(_src);
+
+    _cleanup_src(src, added_key_to_real_src);
 
     return status;
 }
@@ -1946,7 +1981,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     bloblist_t* old_head = NULL;
     
     if (!src->attachments || src->attachments->value == NULL) {
-        if (src->attachments->value == NULL) {
+        if (src->attachments && src->attachments->value == NULL) {
             old_head = src->attachments;
             src->attachments = NULL;
         }
@@ -2035,11 +2070,15 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
             target_id->user_id = own_id; // ownership transfer
         }
     }
-
-    status = myself(session, target_id);
-    if (status != PEP_STATUS_OK)
-        goto pep_error;
-
+    
+    if (target_id->address) {
+        status = myself(session, target_id);
+        if (status != PEP_STATUS_OK)
+            goto pep_error;
+    }
+    else if (!target_id->fpr)
+        return PEP_ILLEGAL_VALUE;
+    
     *dst = NULL;
 
     // PEP_STATUS _status = update_identity(session, target_id);
@@ -2063,8 +2102,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     }
 
     /* KG: did we ever do this??? */
-    if (!(flags & PEP_encrypt_flag_force_no_attached_key))
-        _attach_key(session, target_fpr, src);
+    // if (!(flags & PEP_encrypt_flag_force_no_attached_key))
+    //     _attach_key(session, target_fpr, src);
 
     _src = wrap_message_as_attachment(NULL, src, false);
     if (!_src)
@@ -2078,6 +2117,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         case PEP_enc_PGP_MIME:
         case PEP_enc_PEP: // BUG: should be implemented extra
             status = encrypt_PGP_MIME(session, _src, keys, msg, flags);
+            if (status == PEP_STATUS_OK || (src->longmsg && strstr(src->longmsg, "INNER")))
+                _cleanup_src(src, false);
             break;
 
         default:
@@ -2858,6 +2899,83 @@ static PEP_STATUS reconcile_src_and_inner_messages(message* src,
     // FIXME - are there any flags or anything else we need to be sure are carried?
 }
 
+static bool is_trusted_own_priv_fpr(PEP_SESSION session, 
+                       const char* own_id, 
+                       const char* fpr
+    ) 
+{   
+    bool retval = false;
+    if (!EMPTYSTR(fpr)) {
+        pEp_identity* test_identity = new_identity(NULL, fpr, own_id, NULL);
+        if (test_identity) {
+            PEP_STATUS status = get_trust(session, test_identity);
+            if (status == PEP_STATUS_OK) {
+                if (test_identity->comm_type & PEP_ct_confirmed) {
+                    bool has_priv = false;
+                    status = contains_priv_key(session, fpr, &has_priv);
+                    if (status == PEP_STATUS_OK && has_priv)
+                        retval = true;
+                }
+            }
+            free(test_identity);
+        }
+    }
+    return retval;
+}
+
+static bool reject_fpr(PEP_SESSION session, const char* fpr) {
+    bool reject = true;
+
+    PEP_STATUS status = key_revoked(session, fpr, &reject);
+
+    if (!reject) {
+        status = key_expired(session, fpr, time(NULL), &reject);
+        if (reject) {
+            timestamp *ts = new_timestamp(time(NULL) + KEY_EXPIRE_DELTA);
+            status = renew_key(session, fpr, ts);
+            free_timestamp(ts);
+            if (status == PEP_STATUS_OK)
+                reject = false;
+        }
+    }
+    return reject;
+}
+
+static char* seek_good_trusted_private_fpr(PEP_SESSION session, char* own_id, 
+                                           stringlist_t* keylist) {
+    if (!own_id || !keylist)
+        return NULL;
+        
+    stringlist_t* kl_curr = keylist;
+    while (kl_curr) {
+        char* fpr = kl_curr->value;
+        
+        if (is_trusted_own_priv_fpr(session, own_id, fpr)) { 
+            if (!reject_fpr(session, fpr))
+                return strdup(fpr);
+        }
+            
+        kl_curr = kl_curr->next;
+    }
+
+    char* target_own_fpr = NULL;
+    
+    // Last shot...
+    PEP_STATUS status = get_user_default_key(session, own_id, 
+                                             &target_own_fpr);
+
+    if (status == PEP_STATUS_OK && !EMPTYSTR(target_own_fpr)) {
+        if (is_trusted_own_priv_fpr(session, own_id, target_own_fpr)) { 
+            if (!reject_fpr(session, target_own_fpr))
+                return target_own_fpr;
+        }
+    }
+    
+    // TODO: We can also go through all of the other available fprs for the
+    // own identity, but then I submit this function requires a little refactoring
+        
+    return NULL;
+}
 
 DYNAMIC_API PEP_STATUS _decrypt_message(
         PEP_SESSION session,
@@ -2893,11 +3011,21 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     char* signer_fpr = NULL;
     bool is_pep_msg = is_a_pEpmessage(src);
 
+    // Grab input flags
+    bool reencrypt = ((*flags & PEP_decrypt_flag_untrusted_server) > 0);
+    
+    // We own this pointer, and we take control of *keylist if reencrypting.
+    stringlist_t* extra = NULL;
+    if (reencrypt) {
+        if (*keylist) {
+            extra = *keylist;
+        }
+    }
+            
     *dst = NULL;
     *keylist = NULL;
     *rating = PEP_rating_undefined;
-
-    *flags = 0;
+//    *flags = 0;
     
     /*** End init ***/
 
@@ -3235,6 +3363,44 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     *dst = msg;
     *keylist = _keylist;
 
+    if (reencrypt) {
+        if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
+            message* reencrypt_msg = NULL;
+            PEP_STATUS reencrypt_status = PEP_CANNOT_REENCRYPT;
+            char* own_id = NULL;
+            status = get_default_own_userid(session, &own_id);
+            if (own_id) {
+                char* target_own_fpr = seek_good_trusted_private_fpr(session,
+                                                                     own_id,
+                                                                     _keylist);
+                if (target_own_fpr) {
+                    pEp_identity* target_id = new_identity(NULL, target_own_fpr, 
+                                                           own_id, NULL);
+                    if (target_id) {
+                        reencrypt_status = encrypt_message_for_self(session, target_id, msg,
+                                                                    extra, &reencrypt_msg, PEP_enc_PGP_MIME,
+                                                                    0);
+                        if (reencrypt_status != PEP_STATUS_OK)
+                            reencrypt_status = PEP_CANNOT_REENCRYPT;
+                        
+                        free_identity(target_id);
+                    }
+                    free(target_own_fpr);
+                }     
+                free(own_id);
+            }
+            free_stringlist(extra); // This was an input variable for us. Keylist is overwritten above.
+            
+            if (reencrypt_status != PEP_CANNOT_REENCRYPT && reencrypt_msg) {
+                message_transfer(src, reencrypt_msg);
+                *flags |= PEP_decrypt_flag_src_modified;
+                free_message(reencrypt_msg);
+            }
+            else
+                decrypt_status = PEP_CANNOT_REENCRYPT;
+        }
+    }
+        
     if(decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
         return PEP_STATUS_OK;
     else
@@ -3784,7 +3950,8 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     char** mime_plaintext,
     stringlist_t **keylist,
     PEP_rating *rating,
-    PEP_decrypt_flags_t *flags
+    PEP_decrypt_flags_t *flags,
+    char** modified_src
 )
 {
     assert(mimetext);
@@ -3792,7 +3959,11 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     assert(keylist);
     assert(rating);
     assert(flags);
+    assert(modified_src);
 
+    if (!(mimetext && mime_plaintext && keylist && rating && flags && modified_src))
+        return PEP_ILLEGAL_VALUE;
+        
     PEP_STATUS status = PEP_STATUS_OK;
     message* tmp_msg = NULL;
     message* dec_msg = NULL;
@@ -3831,15 +4002,24 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
                                                 keylist,
                                                 rating,
                                                 flags);
-                                                
+
+
     if (!dec_msg && (decrypt_status == PEP_UNENCRYPTED || decrypt_status == PEP_VERIFIED)) {
         dec_msg = message_dup(tmp_msg);
     }
-        
+    
     if (decrypt_status > PEP_CANNOT_DECRYPT_UNKNOWN || !dec_msg)
     {
         status = decrypt_status;
         goto pep_error;
+    }
+
+    if (*flags & PEP_decrypt_flag_src_modified) {
+        _mime_encode_message_internal(tmp_msg, false, modified_src, true);
+        if (!modified_src) {
+            *flags &= (~PEP_decrypt_flag_src_modified);
+            decrypt_status = PEP_CANNOT_REENCRYPT; // Because we couldn't return it, I guess.
+        }
     }
 
     // FIXME: test with att
@@ -3919,6 +4099,7 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
                              &enc_msg,
                              enc_format,
                              flags);
+                             
     if (status != PEP_STATUS_OK)
         goto pep_error;
 

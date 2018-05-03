@@ -8,6 +8,8 @@
 #define MAX_KEY_SIZE (1024 * 1024)
 #define MAX_KEYS_TO_IMPORT  20
 
+#define KEY_EXPIRE_DELTA (60 * 60 * 24 * 365)
+
 // this is 20 trustwords with 79 chars max
 #define MAX_TRUSTWORDS_SPACE (20 * 80)
 

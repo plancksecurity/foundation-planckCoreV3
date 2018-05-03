@@ -66,6 +66,7 @@ int main(int argc, char** argv) {
     assert(status == PEP_STATUS_OK);
     assert(msg_ptr);
 
+    flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     assert(status == PEP_STATUS_OK);
     assert(dest_msg);
@@ -113,6 +114,7 @@ int main(int argc, char** argv) {
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     assert(status == PEP_STATUS_OK);
     assert(msg_ptr);
+    flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
   
     cout << "shortmsg: " << dest_msg->shortmsg << endl << endl;
