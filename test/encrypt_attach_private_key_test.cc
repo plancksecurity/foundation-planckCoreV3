@@ -161,6 +161,7 @@ int main() {
     // Same address, same_user_id, trusted
     cout << "Case 2: Same address, same user_id, trusted" << endl;
     status = trust_personal_key(session, same_addr_same_uid);
+    cout << "Trust personal key for " << same_addr_same_uid << " gives status " << tl_status_string(status) << " (" << status << ")" << endl;
     assert(status == PEP_STATUS_OK);
     message* enc_same_addr_same_uid_trusted = NULL;
     status = encrypt_message_and_add_priv_key(session,

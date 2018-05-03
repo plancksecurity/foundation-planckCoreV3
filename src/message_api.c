@@ -1764,7 +1764,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     else {
         // FIXME - we need to deal with transport types (via flag)
         if ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp) {
-            _src = wrap_message_as_attachment(NULL, src, session->unencrypted_subject);
+            _src = wrap_message_as_attachment(NULL, src, false);
             if (!_src)
                 goto pep_error;
         }
@@ -2105,7 +2105,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     // if (!(flags & PEP_encrypt_flag_force_no_attached_key))
     //     _attach_key(session, target_fpr, src);
 
-    _src = wrap_message_as_attachment(NULL, src, session->unencrypted_subject);
+    _src = wrap_message_as_attachment(NULL, src, false);
     if (!_src)
         goto pep_error;
 
