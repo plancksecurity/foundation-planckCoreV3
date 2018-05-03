@@ -6,7 +6,7 @@
 
 include ../default.conf
 
-#PY_ENV := $(shell command -v python3 2> /dev/null)
+PY_ENV := $(shell command -v python3 2> /dev/null)
 
 HERE:=$(CURDIR)
 TEST_HOME=$(HERE)/pEp_test_home
@@ -100,11 +100,9 @@ endif
 test_home_: 
 	mkdir -p $(TEST_HOME)
 
-TEST_CMD_=$(TARGET)
-
 .PHONY: test
 test: all
-	./$(TARGET) $(TEST_CMD_)
+	./$(TARGET)
 	
 .PHONY: clean
 clean:

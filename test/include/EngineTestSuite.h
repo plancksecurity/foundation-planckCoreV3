@@ -12,6 +12,7 @@ using namespace std;
 class EngineTestSuite : public Test::Suite {
     public:
         EngineTestSuite(string suitename, string test_home_dir);
+        virtual ~EngineTestSuite();
         
     protected:
         PEP_SESSION session;

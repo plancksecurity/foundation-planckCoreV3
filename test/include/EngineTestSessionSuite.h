@@ -12,6 +12,6 @@ using namespace std;
 class EngineTestSessionSuite : public EngineTestSuite {
     public:
         EngineTestSessionSuite(string suitename, string test_home_dir);
-        ~EngineTestSessionSuite();
+        virtual ~EngineTestSessionSuite();
 };
 #endif

@@ -1,3 +1,6 @@
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
 #ifndef SUITEMAKER_H
 #define SUITEMAKER_H
 

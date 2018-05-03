@@ -1,7 +1,8 @@
-#ifndef DECORATE_TESTS_H
-#define DECORATE_TESTS_H
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
+
+#ifndef DECORATE_TESTS_H
+#define DECORATE_TESTS_H
 
 #include <string>
 #include "EngineTestIndividualSuite.h"

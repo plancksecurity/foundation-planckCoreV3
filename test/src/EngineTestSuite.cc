@@ -24,6 +24,8 @@ EngineTestSuite::EngineTestSuite(string suitename, string test_home_dir) {
     }
 }
 
+EngineTestSuite::~EngineTestSuite() {}
+
 void EngineTestSuite::set_full_env() {
 
     if (test_home.empty())
