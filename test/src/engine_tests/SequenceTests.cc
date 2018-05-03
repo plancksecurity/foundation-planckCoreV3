@@ -7,18 +7,19 @@
 #include <assert.h>
 #include "pEpEngine.h"
 
+#include "EngineTestSuite.h"
+#include "EngineTestIndividualSuite.h"
+#include "SequenceTests.h"
+
 using namespace std;
 
-int main() {
-    cout << "\n*** sequence_test ***\n\n";
+SequenceTests::SequenceTests(string suitename, string test_home_dir) : 
+    EngineTestIndividualSuite::EngineTestIndividualSuite(suitename, test_home_dir) {            
+    TEST_ADD(SequenceTests::check_sequences);
+}
 
-    PEP_SESSION session;
-    
-    cout << "calling init()\n";
-    PEP_STATUS status1 = init(&session);   
-    assert(status1 == PEP_STATUS_OK);
-    assert(session);
-    cout << "init() completed.\n";
+void SequenceTests::check_sequences() {
+    cout << "\n*** sequence_test ***\n\n";
 
     // sequence test code
 
@@ -60,9 +61,4 @@ int main() {
     PEP_STATUS status7 = sequence_value(session, name1, &value6);
     assert(status7 == PEP_STATUS_OK);
     cout << "value set to " << value6 << "\n";
-
-    cout << "calling release()\n";
-    release(session);
-    return 0;
 }
-

@@ -15,8 +15,10 @@
 #include "DecorateTests.h"
 #include "AppleMailTests.h"
 #include "CaseAndDotAddressTests.h"
+#include "SequenceTests.h"
 #include "StringpairListTests.h"
 #include "BloblistTests.h"
+#include "StringlistTests.h"
 #include "TrustwordsTests.h"
 #include "TrustManipulationTests.h"
 #include "UserIDAliasTests.h"
@@ -26,15 +28,17 @@ const char* SuiteMaker::all_suites[] = {
     "DecorateTests",
     "AppleMailTests",
     "CaseAndDotAddressTests",
+    "SequenceTests",
     "StringpairListTests",
     "BloblistTests",
+    "StringlistTests",
     "TrustwordsTests",
     "TrustManipulationTests",
     "UserIDAliasTests",
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 8;
+int SuiteMaker::num_suites = 10;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "DecorateTests") == 0)
@@ -43,10 +47,14 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new AppleMailTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "CaseAndDotAddressTests") == 0)
         *test_suite = new CaseAndDotAddressTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "SequenceTests") == 0)
+        *test_suite = new SequenceTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "StringpairListTests") == 0)
         *test_suite = new StringpairListTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "BloblistTests") == 0)
         *test_suite = new BloblistTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "StringlistTests") == 0)
+        *test_suite = new StringlistTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "TrustwordsTests") == 0)
         *test_suite = new TrustwordsTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "TrustManipulationTests") == 0)

@@ -10,9 +10,18 @@
 
 #include "stringlist.h"
 
+#include "EngineTestSuite.h"
+#include "EngineTestIndividualSuite.h"
+#include "StringlistTests.h"
+
 using namespace std;
 
-int main() {
+StringlistTests::StringlistTests(string suitename, string test_home_dir) : 
+    EngineTestSuite::EngineTestSuite(suitename, test_home_dir) {            
+    TEST_ADD(StringlistTests::check_stringlists);
+}
+
+void StringlistTests::check_stringlists() {
     cout << "\n*** data structures: stringlist_test ***\n\n";
 
     const char* str0 = "I am your father, Luke\n";
@@ -109,7 +118,4 @@ int main() {
     dst = NULL;
     
     cout << "done.\n";
-
-    return 0;
 }
-
