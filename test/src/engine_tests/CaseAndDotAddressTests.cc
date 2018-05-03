@@ -7,23 +7,23 @@
 #include "platform.h"
 #include <iostream>
 #include <fstream>
-#include <assert.h>
 #include "mime.h"
 #include "message_api.h"
 #include "test_util.h"
 
+#include "EngineTestSuite.h"
+#include "EngineTestIndividualSuite.h"
+#include "CaseAndDotAddressTests.h"
+
 using namespace std;
 
-int main() {
-    cout << "\n*** case_and_dot_address_test.cc ***\n\n";
+CaseAndDotAddressTests::CaseAndDotAddressTests(string suitename, string test_home_dir) : 
+    EngineTestIndividualSuite::EngineTestIndividualSuite(suitename, test_home_dir) {            
+    TEST_ADD(CaseAndDotAddressTests::check_case_and_dot_address);
+}
 
-    PEP_SESSION session;
-    
-    cout << "calling init()\n";
-    PEP_STATUS status = init(&session);   
-    assert(status == PEP_STATUS_OK);
-    assert(session);
-    cout << "init() completed.\n";
+void CaseAndDotAddressTests::check_case_and_dot_address() {
+    cout << "\n*** case_and_dot_address_test.cc ***\n\n";
     
     char* user_id = get_new_uuid();
     
@@ -35,16 +35,16 @@ int main() {
     const char* alice_email_case_and_dot = "PE.p.teS.t.ALICE@pep-project.OrG";
 
     PEP_STATUS statuspub = import_key(session, alice_pub_key.c_str(), alice_pub_key.length(), NULL);
-    assert(statuspub == PEP_STATUS_OK);
+    TEST_ASSERT(statuspub == PEP_STATUS_OK);
 
     pEp_identity * alice_id = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", user_id, "Alice Test");
 
-    status = trust_personal_key(session, alice_id);
+    PEP_STATUS status = trust_personal_key(session, alice_id);
 
     pEp_identity * new_alice_id = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", user_id, "Alice Test");
     status = update_identity(session, new_alice_id);
-    assert(new_alice_id->fpr);
-    assert(strcmp(new_alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
+    TEST_ASSERT(new_alice_id->fpr);
+    TEST_ASSERT(strcmp(new_alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
     free_identity(new_alice_id);
     free_identity(alice_id);
     alice_id = NULL;
@@ -52,37 +52,33 @@ int main() {
 
     alice_id = new_identity(alice_email_case, NULL, user_id, "Alice Test");
     status = update_identity(session, alice_id);
-    assert(alice_id->fpr);
+    TEST_ASSERT(alice_id->fpr);
     cout << "Alice email: " << alice_email_case << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
-    assert(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
+    TEST_ASSERT(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
     free_identity(alice_id);
     alice_id = NULL;
 
     alice_id = new_identity(alice_email_dot, NULL, user_id, "Alice Test");
     status = update_identity(session, alice_id);
-    assert(alice_id->fpr);
+    TEST_ASSERT(alice_id->fpr);
     cout << "Alice email: " << alice_email_dot << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
-    assert(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
+    TEST_ASSERT(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
     free_identity(alice_id);
     alice_id = NULL;
 
     alice_id = new_identity(alice_email_dotless, NULL, user_id, "Alice Test");
     status = update_identity(session, alice_id);
-    assert(alice_id->fpr);
+    TEST_ASSERT(alice_id->fpr);
     cout << "Alice email: " << alice_email_dotless << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
-    assert(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
+    TEST_ASSERT(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
     free_identity(alice_id);
     alice_id = NULL;
 
     alice_id = new_identity(alice_email_case_and_dot, NULL, user_id, "Alice Test");
     status = update_identity(session, alice_id);
-    assert(alice_id->fpr);
+    TEST_ASSERT(alice_id->fpr);
     cout << "Alice email: " << alice_email_case_and_dot << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
-    assert(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
+    TEST_ASSERT(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
     free_identity(alice_id);
     alice_id = NULL;
-    
-    release(session);
-
-    return 0;
 }

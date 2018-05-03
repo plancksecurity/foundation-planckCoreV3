@@ -14,21 +14,45 @@
 // Begin where we generate stuff
 #include "DecorateTests.h"
 #include "AppleMailTests.h"
+#include "CaseAndDotAddressTests.h"
+#include "StringpairListTests.h"
+#include "BloblistTests.h"
+#include "TrustwordsTests.h"
+#include "TrustManipulationTests.h"
+#include "UserIDAliasTests.h"
 
 
 const char* SuiteMaker::all_suites[] = {
     "DecorateTests",
     "AppleMailTests",
+    "CaseAndDotAddressTests",
+    "StringpairListTests",
+    "BloblistTests",
+    "TrustwordsTests",
+    "TrustManipulationTests",
+    "UserIDAliasTests",
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 2;
+int SuiteMaker::num_suites = 8;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "DecorateTests") == 0)
         *test_suite = new DecorateTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "AppleMailTests") == 0)
         *test_suite = new AppleMailTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "CaseAndDotAddressTests") == 0)
+        *test_suite = new CaseAndDotAddressTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "StringpairListTests") == 0)
+        *test_suite = new StringpairListTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "BloblistTests") == 0)
+        *test_suite = new BloblistTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "TrustwordsTests") == 0)
+        *test_suite = new TrustwordsTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "TrustManipulationTests") == 0)
+        *test_suite = new TrustManipulationTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "UserIDAliasTests") == 0)
+        *test_suite = new UserIDAliasTests(test_class_name, test_home);
 }
 
 void SuiteMaker::suitemaker_buildlist(const char** test_class_names, int num_to_run, const char* test_home, std::vector<Test::Suite*>& test_suites) {

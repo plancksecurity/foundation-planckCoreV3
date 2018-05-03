@@ -10,20 +10,18 @@
 
 #include "bloblist.h"
 
+#include "EngineTestSuite.h"
+#include "EngineTestIndividualSuite.h"
+#include "BloblistTests.h"
+
 using namespace std;
 
-/*
- *     char *address;              // C string with address UTF-8 encoded
-    char *fpr;                  // C string with fingerprint UTF-8 encoded
-    char *user_id;              // C string with user ID UTF-8 encoded
-    char *username;             // C string with user name UTF-8 encoded
-    PEP_comm_type comm_type;    // type of communication with this ID
-    char lang[3];               // language of conversation
-                                // ISO 639-1 ALPHA-2, last byte is 0
-    bool me;                    // if this is the local user herself/himself
-    */
+BloblistTests::BloblistTests(string suitename, string test_home_dir) : 
+    EngineTestSuite::EngineTestSuite(suitename, test_home_dir) {            
+    TEST_ADD(BloblistTests::check_bloblists);
+}
 
-bool test_blob_equals(size_t size1, char* blob1, size_t size2, char* blob2) {
+bool BloblistTests::test_blob_equals(size_t size1, char* blob1, size_t size2, char* blob2) {
     if (size1 != size2)
         return false;
     size_t i;
@@ -34,7 +32,7 @@ bool test_blob_equals(size_t size1, char* blob1, size_t size2, char* blob2) {
     return true;
 }
 
-bool test_bloblist_node_equals(bloblist_t* val1, bloblist_t* val2) {
+bool BloblistTests::test_bloblist_node_equals(bloblist_t* val1, bloblist_t* val2) {
     assert(val1);
     assert(val2);
     assert(val1->size == val2->size);
@@ -43,7 +41,7 @@ bool test_bloblist_node_equals(bloblist_t* val1, bloblist_t* val2) {
         && ((!val1->filename && !val2->filename) || (strcmp(val1->filename, val2->filename) == 0)));
 }
 
-int main() {
+void BloblistTests::check_bloblists() {
     cout << "\n*** data structures: bloblist_test ***\n\n";
     char* text1 = strdup("This is just some text.");
     char* text2 = strdup("More text.");
@@ -61,12 +59,12 @@ int main() {
     cout << "duping one-element bloblist...\n";
     
     bloblist_t* new_bl = bloblist_dup(bl1);
-    assert(new_bl);
-    assert(test_bloblist_node_equals(bl1, new_bl));
-    assert(new_bl->next == NULL);
-    assert(bl1->value != new_bl->value);
-    assert(bl1->mime_type != new_bl->mime_type || !(bl1->mime_type || new_bl->mime_type));
-    assert(bl1->filename != new_bl->filename || !(bl1->filename || new_bl->filename));
+    TEST_ASSERT(new_bl);
+    TEST_ASSERT(test_bloblist_node_equals(bl1, new_bl));
+    TEST_ASSERT(new_bl->next == NULL);
+    TEST_ASSERT(bl1->value != new_bl->value);
+    TEST_ASSERT(bl1->mime_type != new_bl->mime_type || !(bl1->mime_type || new_bl->mime_type));
+    TEST_ASSERT(bl1->filename != new_bl->filename || !(bl1->filename || new_bl->filename));
     cout << "one-element bloblist duplicated.\n\n";
     
     cout << "freeing bloblist...\n";
@@ -81,22 +79,22 @@ int main() {
         to_copy = bl_arr[i];
         p = bloblist_add(new_bl, strdup(to_copy->value), to_copy->size, to_copy->mime_type, to_copy->filename);
 
-        assert(p);
+        TEST_ASSERT(p);
     }
     
     p = new_bl;
     
     for (i = 0; i < 4; i++) {
-        assert(p);
+        TEST_ASSERT(p);
         
-        assert(test_bloblist_node_equals(p, bl_arr[i]));
-        assert(p->value != bl_arr[i]->value);
-        assert(p->mime_type != bl_arr[i]->mime_type || !(p->mime_type || bl_arr[i]->mime_type));
-        assert(p->filename != bl_arr[i]->filename || !(p->filename || bl_arr[i]->filename));
+        TEST_ASSERT(test_bloblist_node_equals(p, bl_arr[i]));
+        TEST_ASSERT(p->value != bl_arr[i]->value);
+        TEST_ASSERT(p->mime_type != bl_arr[i]->mime_type || !(p->mime_type || bl_arr[i]->mime_type));
+        TEST_ASSERT(p->filename != bl_arr[i]->filename || !(p->filename || bl_arr[i]->filename));
         
         p = p->next;
     }
-    assert(p == NULL);
+    TEST_ASSERT(p == NULL);
     
     cout << "\nduplicating four-element list...\n\n";
     bloblist_t* duplist = bloblist_dup(new_bl);
@@ -105,15 +103,15 @@ int main() {
     bloblist_t* dup_p = duplist;
     
     while (dup_p) {
-        assert(test_bloblist_node_equals(p, dup_p));
-        assert(p != dup_p);
-        assert(p->value != dup_p->value);
-        assert(p->mime_type != dup_p->mime_type || !(p->mime_type || dup_p->mime_type));
-        assert(p->filename != dup_p->filename || !(p->filename || dup_p->filename));
+        TEST_ASSERT(test_bloblist_node_equals(p, dup_p));
+        TEST_ASSERT(p != dup_p);
+        TEST_ASSERT(p->value != dup_p->value);
+        TEST_ASSERT(p->mime_type != dup_p->mime_type || !(p->mime_type || dup_p->mime_type));
+        TEST_ASSERT(p->filename != dup_p->filename || !(p->filename || dup_p->filename));
 
         dup_p = dup_p->next;
         p = p->next;
-        assert((p == NULL) == (dup_p == NULL));
+        TEST_ASSERT((p == NULL) == (dup_p == NULL));
     }
     cout << "\nfour-element bloblist successfully duplicated.\n\n";
 
@@ -127,8 +125,4 @@ int main() {
     free(text3);
     free(text4);    
     cout << "done.\n";
-        
-    
-    return 0;
 }
-

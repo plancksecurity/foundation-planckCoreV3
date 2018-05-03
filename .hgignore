@@ -61,4 +61,5 @@ trustdb.gpg
 __pycache__
 *.pyc
 test/python_tests/test?
-GNUMakefile
+test/pEp_test_home
+test/TestDriver
