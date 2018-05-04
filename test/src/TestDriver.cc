@@ -6,6 +6,9 @@
 #include <vector>
 #include <sys/stat.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <ftw.h>
 #include "EngineTestSuite.h"
 #include "EngineTestIndividualSuite.h"
 #include "EngineTestSessionSuite.h"
@@ -19,6 +22,27 @@ void usage() {
     throw std::runtime_error("Bad usage. Fix me, you loser developer.");
 }
 
+int util_delete_filepath(const char *filepath, 
+                         const struct stat *file_stat, 
+                         int ftw_info, 
+                         struct FTW * ftw_struct) {
+    int retval = 0;
+    switch (ftw_info) {
+        case FTW_DP:
+            retval = rmdir(filepath);
+            break;
+        case FTW_F:
+        case FTW_SLN:
+            retval = unlink(filepath);
+            break;    
+        default:
+            retval = -1;
+    }
+    
+    return retval;
+}
+
+
 int main(int argc, const char** argv) {
     const int MIN_ARGC = 1;
     if (argc < MIN_ARGC)
@@ -28,6 +52,13 @@ int main(int argc, const char** argv) {
     if (stat(common_test_home.c_str(), &dirchk) == 0) {
         if (!S_ISDIR(dirchk.st_mode))
             throw std::runtime_error(("The test directory, " + common_test_home + "exists, but is not a directory.").c_str()); 
+                    
+        struct stat buf;
+
+        if (stat(common_test_home.c_str(), &buf) == 0) {
+            cout << common_test_home << " exists. We'll recursively delete. We hope we're not horking your whole system..." << endl;
+            int success = nftw((common_test_home + "/.").c_str(), util_delete_filepath, 100, FTW_DEPTH);
+        }
     }
     else {
         int errchk = mkdir(common_test_home.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);

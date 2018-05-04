@@ -22,8 +22,8 @@
 using namespace std;
 
 DecorateTests::DecorateTests(string suitename, string test_home_dir) : 
-    EngineTestIndividualSuite::EngineTestIndividualSuite(suitename, test_home_dir) {            
-    TEST_ADD(DecorateTests::check_decorate);
+    EngineTestIndividualSuite::EngineTestIndividualSuite(suitename, test_home_dir) {           
+    add_test_to_suite(check_decorate);
 }
 
 void DecorateTests::check_decorate() {

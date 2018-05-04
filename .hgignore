@@ -63,3 +63,7 @@ __pycache__
 test/python_tests/test?
 test/pEp_test_home
 test/TestDriver
+test/local
+.tags
+*/.tags
+*/*/.tags

@@ -15,16 +15,17 @@ EngineTestSuite::EngineTestSuite(string suitename, string test_home_dir) {
     char* tmp = getenv("GNUPGHOME");
     if (tmp)
         prev_gpg_home = getenv("GNUPGHOME");
-    
-    struct stat buf;
-    
-    if (stat(test_home.c_str(), &buf) == 0) {
-        cout << test_home << " exists. We'll recursively delete. We hope we're not horking your whole system..." << endl;
-        int success = nftw((test_home + "/.").c_str(), util_delete_filepath, 100, FTW_DEPTH);
-    }
+        
+    number_of_tests = 0;
+    on_test_number = 0;
 }
 
 EngineTestSuite::~EngineTestSuite() {}
+
+void EngineTestSuite::add_test_to_suite(Test::Suite::Func test) {
+    TEST_ADD(test);
+    number_of_tests++;
+}
 
 void EngineTestSuite::set_full_env() {
 
@@ -73,26 +74,6 @@ void EngineTestSuite::restore_full_env() {
     success = setenv("GNUPGHOME", prev_gpg_home.c_str(), 1);
     if (success != 0)
         throw std::runtime_error("RESTORE: Warning - cannot restore GNUPGHOME. Either set environment variable manually back to your home, or quit this session!");
-}
-
-int EngineTestSuite::util_delete_filepath(const char *filepath, 
-                                     const struct stat *file_stat, 
-                                     int ftw_info, 
-                                     struct FTW * ftw_struct) {
-    int retval = 0;
-    switch (ftw_info) {
-        case FTW_DP:
-            retval = rmdir(filepath);
-            break;
-        case FTW_F:
-        case FTW_SLN:
-            retval = unlink(filepath);
-            break;    
-        default:
-            retval = -1;
-    }
-    
-    return retval;
 }
 
 void EngineTestSuite::setup() {}
