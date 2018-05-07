@@ -5,11 +5,11 @@
 #define DECORATE_TESTS_H
 
 #include <string>
-#include "EngineTestIndividualSuite.h"
+#include "EngineTestSessionSuite.h"
 
 using namespace std;
 
-class DecorateTests : public EngineTestIndividualSuite {
+class DecorateTests : public EngineTestSessionSuite {
     public:
         DecorateTests(string suitename, string test_home_dir);
     private:

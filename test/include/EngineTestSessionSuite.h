@@ -13,5 +13,8 @@ class EngineTestSessionSuite : public EngineTestSuite {
     public:
         EngineTestSessionSuite(string suitename, string test_home_dir);
         virtual ~EngineTestSessionSuite();
+        
+        virtual void setup();
+        virtual void tear_down();
 };
 #endif

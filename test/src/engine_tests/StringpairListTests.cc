@@ -11,7 +11,6 @@
 #include "stringpair.h"
 
 #include "EngineTestSuite.h"
-#include "EngineTestIndividualSuite.h"
 #include "StringpairListTests.h"
 
 using namespace std;

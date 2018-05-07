@@ -5,11 +5,11 @@
 #define TRUST_MANIPULATION_TESTS_H
 
 #include <string>
-#include "EngineTestIndividualSuite.h"
+#include "EngineTestSessionSuite.h"
 
 using namespace std;
 
-class TrustManipulationTests : public EngineTestIndividualSuite {
+class TrustManipulationTests : public EngineTestSessionSuite {
     public:
         TrustManipulationTests(string suitename, string test_home_dir);
     private:

@@ -22,8 +22,9 @@ EngineTestSuite::EngineTestSuite(string suitename, string test_home_dir) {
 
 EngineTestSuite::~EngineTestSuite() {}
 
-void EngineTestSuite::add_test_to_suite(Test::Suite::Func test) {
-    TEST_ADD(test);
+void EngineTestSuite::add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()> test_func) {
+    test_map.insert(test_func);
+    register_test(test_func.second, test_func.first);
     number_of_tests++;
 }
 
@@ -76,5 +77,8 @@ void EngineTestSuite::restore_full_env() {
         throw std::runtime_error("RESTORE: Warning - cannot restore GNUPGHOME. Either set environment variable manually back to your home, or quit this session!");
 }
 
-void EngineTestSuite::setup() {}
+void EngineTestSuite::setup() {
+    on_test_number++;
+}
+
 void EngineTestSuite::tear_down() {}

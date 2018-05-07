@@ -5,6 +5,7 @@
 #define BLOBLIST_TESTS_H
 
 #include <string>
+#include "bloblist.h"
 #include "EngineTestSuite.h"
 
 using namespace std;

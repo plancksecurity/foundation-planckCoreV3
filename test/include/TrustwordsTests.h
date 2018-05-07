@@ -5,11 +5,11 @@
 #define TRUSTWORDS_TESTS_H
 
 #include <string>
-#include "EngineTestIndividualSuite.h"
+#include "EngineTestSessionSuite.h"
 
 using namespace std;
 
-class TrustwordsTests : public EngineTestIndividualSuite {
+class TrustwordsTests : public EngineTestSessionSuite {
     public:
         TrustwordsTests(string suitename, string test_home_dir);
     private:

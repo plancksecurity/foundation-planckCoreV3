@@ -5,11 +5,11 @@
 #define CASE_AND_DOT_ADDRESS_TESTS_H
 
 #include <string>
-#include "EngineTestIndividualSuite.h"
+#include "EngineTestSessionSuite.h"
 
 using namespace std;
 
-class CaseAndDotAddressTests : public EngineTestIndividualSuite {
+class CaseAndDotAddressTests : public EngineTestSessionSuite {
     public:
         CaseAndDotAddressTests(string suitename, string test_home_dir);
     private:

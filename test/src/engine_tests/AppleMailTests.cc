@@ -20,13 +20,13 @@
 #include "test_util.h" // for slurp()
 
 #include "EngineTestSuite.h"
-#include "EngineTestIndividualSuite.h"
+#include "EngineTestSessionSuite.h"
 #include "AppleMailTests.h"
 
 using namespace std;
 
 AppleMailTests::AppleMailTests(string suitename, string test_home_dir) : 
-    EngineTestIndividualSuite::EngineTestIndividualSuite(suitename, test_home_dir) {            
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {            
     TEST_ADD(AppleMailTests::check_apple_mail);
 }
 

@@ -11,7 +11,6 @@
 #include "bloblist.h"
 
 #include "EngineTestSuite.h"
-#include "EngineTestIndividualSuite.h"
 #include "BloblistTests.h"
 
 using namespace std;

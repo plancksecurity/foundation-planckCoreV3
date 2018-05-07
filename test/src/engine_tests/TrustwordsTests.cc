@@ -7,13 +7,13 @@
 #include "message_api.h"
 
 #include "EngineTestSuite.h"
-#include "EngineTestIndividualSuite.h"
+#include "EngineTestSessionSuite.h"
 #include "TrustwordsTests.h"
 
 using namespace std;
 
 TrustwordsTests::TrustwordsTests(string suitename, string test_home_dir) : 
-    EngineTestIndividualSuite::EngineTestIndividualSuite(suitename, test_home_dir) {            
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {            
     TEST_ADD(TrustwordsTests::check_trustwords);
 }
 

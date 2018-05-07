@@ -8,13 +8,13 @@
 #include "pEpEngine.h"
 
 #include "EngineTestSuite.h"
-#include "EngineTestIndividualSuite.h"
+#include "EngineTestSessionSuite.h"
 #include "SequenceTests.h"
 
 using namespace std;
 
 SequenceTests::SequenceTests(string suitename, string test_home_dir) : 
-    EngineTestIndividualSuite::EngineTestIndividualSuite(suitename, test_home_dir) {            
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {            
     TEST_ADD(SequenceTests::check_sequences);
 }
 

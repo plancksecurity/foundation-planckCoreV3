@@ -5,11 +5,11 @@
 #define USERID_ALIAS_TESTS_H
 
 #include <string>
-#include "EngineTestIndividualSuite.h"
+#include "EngineTestSessionSuite.h"
 
 using namespace std;
 
-class UserIDAliasTests : public EngineTestIndividualSuite {
+class UserIDAliasTests : public EngineTestSessionSuite {
     public:
         UserIDAliasTests(string suitename, string test_home_dir);
     private:

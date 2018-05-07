@@ -5,11 +5,11 @@
 #define SEQUENCE_TESTS_H
 
 #include <string>
-#include "EngineTestIndividualSuite.h"
+#include "EngineTestSessionSuite.h"
 
 using namespace std;
 
-class SequenceTests : public EngineTestIndividualSuite {
+class SequenceTests : public EngineTestSessionSuite {
     public:
         SequenceTests(string suitename, string test_home_dir);
     private:

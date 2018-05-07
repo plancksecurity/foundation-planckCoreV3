@@ -16,14 +16,15 @@
 #include "test_util.h"
 
 #include "EngineTestSuite.h"
-#include "EngineTestIndividualSuite.h"
+#include "EngineTestSessionSuite.h"
 #include "DecorateTests.h"
 
 using namespace std;
 
 DecorateTests::DecorateTests(string suitename, string test_home_dir) : 
-    EngineTestIndividualSuite::EngineTestIndividualSuite(suitename, test_home_dir) {           
-    add_test_to_suite(check_decorate);
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {               
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("DecorateTests::check_decorate"), 
+                                                                      static_cast<Func>(&DecorateTests::check_decorate)));
 }
 
 void DecorateTests::check_decorate() {

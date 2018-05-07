@@ -12,13 +12,13 @@
 #include "test_util.h"
 
 #include "EngineTestSuite.h"
-#include "EngineTestIndividualSuite.h"
+#include "EngineTestSessionSuite.h"
 #include "CaseAndDotAddressTests.h"
 
 using namespace std;
 
 CaseAndDotAddressTests::CaseAndDotAddressTests(string suitename, string test_home_dir) : 
-    EngineTestIndividualSuite::EngineTestIndividualSuite(suitename, test_home_dir) {            
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {            
     TEST_ADD(CaseAndDotAddressTests::check_case_and_dot_address);
 }
 

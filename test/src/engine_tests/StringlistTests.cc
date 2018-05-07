@@ -11,7 +11,6 @@
 #include "stringlist.h"
 
 #include "EngineTestSuite.h"
-#include "EngineTestIndividualSuite.h"
 #include "StringlistTests.h"
 
 using namespace std;
