@@ -269,7 +269,9 @@ typedef unsigned int PEP_decrypt_flags_t;
 //      session (in)        session handle
 //      src (inout)         message to decrypt
 //      dst (out)           pointer to new decrypted message or NULL on failure
-//      keylist (out)       stringlist with keyids
+//      keylist (inout)     in: stringlist with additional keys for reencryption if needed
+//                              (will be freed and replaced with output keylist) 
+//                          out: stringlist with keyids
 //      rating (out)        rating for the message
 //      flags (inout)       flags to signal special decryption features
 //
