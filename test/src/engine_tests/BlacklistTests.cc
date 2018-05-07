@@ -1,46 +1,60 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#include <iostream>
-#include <iostream>
-#include <fstream>
+// #include <iostream>
+// #include <iostream>
+// #include <fstream>
+// #include <string>
+// #include <cstring> // for strcmp()
+// #include <TEST_ASSERT.h>
+// #include "blacklist.h"
+// #include "keymanagement.h"
+// #include "test_util.h"
+// 
+// // This file is under GNU General Public License 3.0
+// // see LICENSE.txt
+
+#include <stdlib.h>
 #include <string>
 #include <cstring> // for strcmp()
-#include <assert.h>
+
+#include <cpptest.h>
+
+#include "pEpEngine.h"
+
 #include "blacklist.h"
 #include "keymanagement.h"
 #include "test_util.h"
 
+#include "EngineTestSessionSuite.h"
+#include "BlacklistTests.h"
+
 using namespace std;
 
-int main() {
-    cout << "\n*** blacklist_test ***\n\n";
+BlacklistTests::BlacklistTests(string suitename, string test_home_dir) :
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("BlacklistTests::check_blacklist"),
+                                                                      static_cast<Func>(&BlacklistTests::check_blacklist)));
+}
 
-    PEP_SESSION session;
-    
-    cout << "calling init()\n";
-    PEP_STATUS status1 = init(&session);   
-    assert(status1 == PEP_STATUS_OK);
-    assert(session);
-    cout << "init() completed.\n";
-
+void BlacklistTests::check_blacklist() {
     // blacklist test code
 
     cout << "adding 23 to blacklist\n";
     PEP_STATUS status2 = blacklist_add(session, "23");
-    assert(status2 == PEP_STATUS_OK);
+    TEST_ASSERT(status2 == PEP_STATUS_OK);
     cout << "added.\n";
 
     bool listed;
     PEP_STATUS status3 = blacklist_is_listed(session, "23", &listed);
-    assert(status3 == PEP_STATUS_OK);
-    assert(listed);
+    TEST_ASSERT(status3 == PEP_STATUS_OK);
+    TEST_ASSERT(listed);
     cout << "23 is listed.\n";
 
     stringlist_t *blacklist;
     PEP_STATUS status6 = blacklist_retrieve(session, &blacklist);
-    assert(status6 == PEP_STATUS_OK);
-    assert(blacklist);
+    TEST_ASSERT(status6 == PEP_STATUS_OK);
+    TEST_ASSERT(blacklist);
 
     bool in23 = false;
     cout << "the blacklist contains now: ";
@@ -50,17 +64,17 @@ int main() {
             in23 = true;
     }
     cout << "END\n";
-    assert(in23);
+    TEST_ASSERT(in23);
     free_stringlist(blacklist);
 
     cout << "deleting 23 from blacklist\n";
     PEP_STATUS status4 = blacklist_delete(session, "23");
-    assert(status4 == PEP_STATUS_OK);
+    TEST_ASSERT(status4 == PEP_STATUS_OK);
     cout << "deleted.\n";
     
     PEP_STATUS status5 = blacklist_is_listed(session, "23", &listed);
-    assert(status5 == PEP_STATUS_OK);
-    assert(!listed);
+    TEST_ASSERT(status5 == PEP_STATUS_OK);
+    TEST_ASSERT(!listed);
     cout << "23 is not listed any more.\n";
 
     cout << "blacklist only key for identity / unblacklist key / add key" << endl;
@@ -103,15 +117,15 @@ int main() {
 
     PEP_STATUS status999 = update_identity(session, blacklisted_identity);
 
-    assert(blacklisted_identity->comm_type == PEP_ct_OpenPGP);
+    TEST_ASSERT(blacklisted_identity->comm_type == PEP_ct_OpenPGP);
 
     PEP_STATUS status9 = blacklist_add(session, bl_fpr_1);
     status10 = blacklist_is_listed(session, bl_fpr_1, &is_blacklisted);
     PEP_STATUS status11 = update_identity(session, blacklisted_identity);
     /* new!!! */
-    assert(is_blacklisted);
-    assert(status11 == PEP_STATUS_OK);
-    assert(_streq(bl_fpr_1, blacklisted_identity->fpr));
+    TEST_ASSERT(is_blacklisted);
+    TEST_ASSERT(status11 == PEP_STATUS_OK);
+    TEST_ASSERT(_streq(bl_fpr_1, blacklisted_identity->fpr));
     
     bool id_def, us_def, addr_def;
     status11 = get_valid_pubkey(session, blacklisted_identity,
@@ -127,7 +141,7 @@ int main() {
     else
         cout << "Not OK. blacklisted_identity->fpr is " << blacklisted_identity->fpr << "." << endl
              << "Expected it to be empty or (possibly) " << bl_fpr_2 << endl;
-    assert(!(blacklisted_identity->fpr) || blacklisted_identity->fpr[0] == '\0'|| (strcmp(blacklisted_identity->fpr, bl_fpr_2) == 0));
+    TEST_ASSERT(!(blacklisted_identity->fpr) || blacklisted_identity->fpr[0] == '\0'|| (strcmp(blacklisted_identity->fpr, bl_fpr_2) == 0));
 
     const string keytext2 = slurp("blacklisted_pub2.asc");
     PEP_STATUS status14 = import_key(session, keytext2.c_str(), keytext2.length(), NULL);
@@ -138,7 +152,7 @@ int main() {
                                                        "Blacklist Keypair");
     PEP_STATUS status15 = update_identity(session, blacklisted_identity2);
     // 
-    // assert(blacklisted_identity2->fpr && strcmp(blacklisted_identity2->fpr, bl_fpr_2) == 0);
+    // TEST_ASSERT(blacklisted_identity2->fpr && strcmp(blacklisted_identity2->fpr, bl_fpr_2) == 0);
     // if (blacklisted_identity2->fpr && strcmp(blacklisted_identity2->fpr, bl_fpr_2) == 0)
     //     cout << "blacklisted identity's fpr successfully replaced by the unblacklisted one" << endl;
     // // else
@@ -155,7 +169,7 @@ int main() {
     // PEP_STATUS status00 = update_identity(session, stored_identity);
     // 
     // // FIXME
-    // // assert(stored_identity->comm_type == PEP_ct_pEp);    
+    // // TEST_ASSERT(stored_identity->comm_type == PEP_ct_pEp);    
     
     PEP_STATUS status16 = delete_keypair(session, bl_fpr_1);
     update_identity(session, blacklisted_identity);
@@ -164,8 +178,4 @@ int main() {
         
     free_identity(blacklisted_identity);
     free_identity(blacklisted_identity2);
-    
-    cout << "calling release()\n";
-    release(session);
-    return 0;
 }

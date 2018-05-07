@@ -7,6 +7,8 @@
 #include <string>
 #include "pEpEngine.h"
 
+#include "EngineTestSuite.h"
+
 using namespace std;
 
 class EngineTestSessionSuite : public EngineTestSuite {

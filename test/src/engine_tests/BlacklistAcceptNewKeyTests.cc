@@ -1,30 +1,31 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#include <iostream>
-#include <iostream>
-#include <fstream>
+#include <stdlib.h>
 #include <string>
 #include <cstring> // for strcmp()
-#include <assert.h>
+#include <cpptest.h>
+
+#include "test_util.h"
+
+#include "pEpEngine.h"
 #include "blacklist.h"
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"
-#include "test_util.h"
+
+#include "EngineTestSessionSuite.h"
+#include "BlacklistAcceptNewKeyTests.h"
 
 using namespace std;
 
-int main() {
-    cout << "\n*** blacklist_test ***\n\n";
+BlacklistAcceptNewKeyTests::BlacklistAcceptNewKeyTests(string suitename, string test_home_dir) :
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("BlacklistAcceptNewKeyTests::check_blacklist_accept_new_key"),
+                                                                      static_cast<Func>(&BlacklistAcceptNewKeyTests::check_blacklist_accept_new_key)));
+}
 
-    PEP_SESSION session;
-    
-    cout << "calling init()\n";
-    PEP_STATUS status1 = init(&session);   
-    assert(status1 == PEP_STATUS_OK);
-    assert(session);
-    cout << "init() completed.\n";
+void BlacklistAcceptNewKeyTests::check_blacklist_accept_new_key() {
 
     // blacklist test code
 
@@ -48,22 +49,22 @@ int main() {
     PEP_STATUS status8 = update_identity(session, blacklisted_identity);
     PEP_STATUS status9 = blacklist_add(session, bl_fpr_1);
     PEP_STATUS status10 = blacklist_is_listed(session, bl_fpr_1, &is_blacklisted);
-    assert(is_blacklisted);
+    TEST_ASSERT(is_blacklisted);
     PEP_STATUS status11 = update_identity(session, blacklisted_identity);
-    assert(status11 == PEP_STATUS_OK);
-    assert(_streq(bl_fpr_1, blacklisted_identity->fpr));
+    TEST_ASSERT(status11 == PEP_STATUS_OK);
+    TEST_ASSERT(_streq(bl_fpr_1, blacklisted_identity->fpr));
     
     bool id_def, us_def, addr_def;
     status11 = get_valid_pubkey(session, blacklisted_identity,
                                 &id_def, &us_def, &addr_def, true);
-    assert(blacklisted_identity->comm_type == PEP_ct_unknown);
+    TEST_ASSERT(blacklisted_identity->comm_type == PEP_ct_unknown);
                         
     if (!(blacklisted_identity->fpr))
         cout << "OK! blacklisted_identity->fpr is empty. Yay!" << endl;
     else
         cout << "Not OK. blacklisted_identity->fpr is " << blacklisted_identity->fpr << "." << endl
              << "Expected it to be empty." << endl;
-    assert(!(blacklisted_identity->fpr) || blacklisted_identity->fpr[0] == '\0');
+    TEST_ASSERT(!(blacklisted_identity->fpr) || blacklisted_identity->fpr[0] == '\0');
 
     /* identity is blacklisted. Now let's read in a message which contains a new key for that ID. */
     
@@ -79,13 +80,13 @@ int main() {
     PEP_decrypt_flags_t flags = 0;
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    assert(status == PEP_STATUS_OK);
+    TEST_ASSERT(status == PEP_STATUS_OK);
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
 
     PEP_STATUS status12 = get_valid_pubkey(session, blacklisted_identity,
                                            &id_def, &us_def, &addr_def, true);
 
-    assert(strcasecmp(blacklisted_identity->fpr, new_key) == 0);
+    TEST_ASSERT(strcasecmp(blacklisted_identity->fpr, new_key) == 0);
 
     PEP_STATUS status13 = blacklist_delete(session, bl_fpr_1);
     PEP_STATUS status14 = update_identity(session, blacklisted_identity);
@@ -98,8 +99,4 @@ int main() {
     free_message(msg_ptr);
     free_message(dest_msg);
     free_stringlist(keylist);
-    
-    cout << "calling release()\n";
-    release(session);
-    return 0;
 }
