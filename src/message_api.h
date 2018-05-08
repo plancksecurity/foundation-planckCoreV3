@@ -12,8 +12,8 @@
 extern "C" {
 #endif
 
-
 bool import_attached_keys(
+    
         PEP_SESSION session, 
         const message *msg,
         identity_list **private_idents
@@ -269,7 +269,9 @@ typedef unsigned int PEP_decrypt_flags_t;
 //      session (in)        session handle
 //      src (inout)         message to decrypt
 //      dst (out)           pointer to new decrypted message or NULL on failure
-//      keylist (out)       stringlist with keyids
+//      keylist (inout)     in: stringlist with additional keyids for reencryption if needed
+//                              (will be freed and replaced with output keylist) 
+//                          out: stringlist with keyids
 //      rating (out)        rating for the message
 //      flags (inout)       flags to signal special decryption features
 //
@@ -327,7 +329,9 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 //      mimetext (in)           MIME encoded text to decrypt
 //      size (in)               size of mime text to decode (in order to decrypt)
 //      mime_plaintext (out)    decrypted, encoded message
-//      keylist (out)           stringlist with keyids
+//      keylist (inout)         in: stringlist with additional keyids for reencryption if needed
+//                                  (will be freed and replaced with output keylist)
+//                              out: stringlist with keyids
 //      rating (out)            rating for the message
 //      flags (inout)           flags to signal special decryption features (see below)
 //      modified_src (out)      modified source string, if decrypt had reason to change it

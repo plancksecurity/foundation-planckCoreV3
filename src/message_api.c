@@ -3012,7 +3012,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     bool is_pep_msg = is_a_pEpmessage(src);
 
     // Grab input flags
-    bool reencrypt = ((*flags & PEP_decrypt_flag_untrusted_server) > 0);
+    bool reencrypt = (((*flags & PEP_decrypt_flag_untrusted_server) > 0) && *keylist && !EMPTYSTR((*keylist)->value));
     
     // We own this pointer, and we take control of *keylist if reencrypting.
     stringlist_t* extra = NULL;
