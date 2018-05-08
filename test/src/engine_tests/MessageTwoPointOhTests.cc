@@ -2,28 +2,31 @@
 // see LICENSE.txt
 
 #include <stdlib.h>
-#include <string.h>
-#include "platform.h"
+#include <string>
+#include <cstring>
 #include <iostream>
 #include <fstream>
-#include <assert.h>
+
+#include "pEpEngine.h"
+#include "platform.h"
 #include "mime.h"
 #include "message_api.h"
 #include "keymanagement.h"
 #include "test_util.h"
 
+#include <cpptest.h>
+#include "EngineTestSessionSuite.h"
+#include "MessageTwoPointOhTests.h"
+
 using namespace std;
 
-int main() {
-    cout << "\n*** message_2.0_test ***\n\n";
+MessageTwoPointOhTests::MessageTwoPointOhTests(string suitename, string test_home_dir) :
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("MessageTwoPointOhTests::check_message_two_point_oh"),
+                                                                      static_cast<Func>(&MessageTwoPointOhTests::check_message_two_point_oh)));
+}
 
-    PEP_SESSION session;
-    
-    cout << "calling init()\n";
-    PEP_STATUS status1 = init(&session);
-    assert(status1 == PEP_STATUS_OK);
-    assert(session);
-    cout << "init() completed.\n";
+void MessageTwoPointOhTests::check_message_two_point_oh() {
 
     PEP_comm_type carol_comm_type = PEP_ct_OpenPGP_unconfirmed;
 
@@ -36,12 +39,12 @@ int main() {
 
     PEP_STATUS statuspub = import_key(session, alice_pub_key.c_str(), alice_pub_key.length(), NULL);
     PEP_STATUS statuspriv = import_key(session, alice_priv_key.c_str(), alice_priv_key.length(), NULL);
-    assert(statuspub == PEP_STATUS_OK);
-    assert(statuspriv == PEP_STATUS_OK);
+    TEST_ASSERT(statuspub == PEP_STATUS_OK);
+    TEST_ASSERT(statuspriv == PEP_STATUS_OK);
     statuspub = import_key(session, carol_pub_key.c_str(), carol_pub_key.length(), NULL);
     statuspriv = import_key(session, carol_priv_key.c_str(), carol_priv_key.length(), NULL);
-    assert(statuspub == PEP_STATUS_OK);
-    assert(statuspriv == PEP_STATUS_OK);
+    TEST_ASSERT(statuspub == PEP_STATUS_OK);
+    TEST_ASSERT(statuspriv == PEP_STATUS_OK);
 
     cout << "creating message…\n";
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", PEP_OWN_USERID, "Alice Test");
@@ -54,15 +57,15 @@ int main() {
     status = update_trust_for_fpr(session, carol->fpr, carol_comm_type);
     
     PEP_STATUS mystatus = myself(session, alice);
-    assert(mystatus == PEP_STATUS_OK);
+    TEST_ASSERT(mystatus == PEP_STATUS_OK);
     alice_status = update_identity(session, alice);
     alice_status = update_identity(session, carol);
-    assert(alice->comm_type == PEP_ct_pEp);
-    assert(carol->comm_type == carol_comm_type);
+    TEST_ASSERT(alice->comm_type == PEP_ct_pEp);
+    TEST_ASSERT(carol->comm_type == carol_comm_type);
     
     identity_list* to_list = new_identity_list(carol); // to carol
     message* outgoing_message = new_message(PEP_dir_outgoing);
-    assert(outgoing_message);
+    TEST_ASSERT(outgoing_message);
     outgoing_message->from = alice;
     outgoing_message->to = to_list;
     outgoing_message->shortmsg = strdup("Greetings, humans!");
@@ -77,8 +80,8 @@ int main() {
 
     char* encoded_text = nullptr;
     status = mime_encode_message(outgoing_message, false, &encoded_text);
-    assert(status == PEP_STATUS_OK);
-    assert(encoded_text);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(encoded_text);
 
     cout << "unencrypted:\n\n";
     cout << encoded_text << "\n";
@@ -91,14 +94,14 @@ int main() {
     status = encrypt_message(session, outgoing_message, NULL, 
         &encrypted_msg, PEP_enc_PGP_MIME, 0);
     cout << "encrypt_message() returns " << std::hex << status << '.' << endl;
-    assert(status == PEP_STATUS_OK);
-    assert(encrypted_msg);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(encrypted_msg);
     cout << "message encrypted.\n";
     
     encrypted_msg->enc_format = PEP_enc_none;
     status = mime_encode_message(encrypted_msg, false, &encoded_text);
-    assert(status == PEP_STATUS_OK);
-    assert(encoded_text);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(encoded_text);
      
     cout << "encrypted:\n\n";
     cout << encoded_text << "\n";
@@ -118,7 +121,7 @@ int main() {
     
     message* decoded_msg = nullptr;
     status = mime_decode_message(encoded_text, strlen(encoded_text), &decoded_msg);
-    assert(status == PEP_STATUS_OK);
+    TEST_ASSERT(status == PEP_STATUS_OK);
     const string string3 = encoded_text;
       
     unlink("msg_2.0.asc");
@@ -136,12 +139,12 @@ int main() {
     stringpair_list_add(encrypted_msg->opt_fields, autoconsume);
     flags = 0;
     status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &rating, &flags);
-    assert(decrypted_msg);
-    assert(keylist_used);
-    assert(rating);
-    //assert(status == PEP_STATUS_OK && rating == PEP_rating_reliable);
+    TEST_ASSERT(decrypted_msg);
+    TEST_ASSERT(keylist_used);
+    TEST_ASSERT(rating);
+    //TEST_ASSERT(status == PEP_STATUS_OK && rating == PEP_rating_reliable);
     //PEP_comm_type ct = encrypted_msg->from->comm_type;
-    //assert(ct == PEP_ct_pEp);
+    //TEST_ASSERT(ct == PEP_ct_pEp);
     
     cout << "keys used:\n";
     
@@ -152,8 +155,8 @@ int main() {
      
     decrypted_msg->enc_format = PEP_enc_none; 
     status = _mime_encode_message_internal(decrypted_msg, false, &encoded_text, false);
-    assert(status == PEP_STATUS_OK);
-    assert(encoded_text);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(encoded_text);
     cout << "Decrypted message: " << endl;
     cout << encoded_text << endl;
      
@@ -162,8 +165,4 @@ int main() {
     free_message(decrypted_msg);
     free_message(outgoing_message);
     cout << "done.\n";
-    
-    cout << "calling release()\n";
-    release(session);
-    return 0;
 }

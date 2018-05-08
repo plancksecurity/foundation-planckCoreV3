@@ -2,21 +2,33 @@
 // see LICENSE.txt
 
 #include <stdlib.h>
-#include <string.h>
-#include "platform.h"
-
+#include <string>
+#include <cstring>
 #include <iostream>
 #include <fstream>
-#include <string>
 #include <assert.h>
 
+#include "pEpEngine.h"
+#include "platform.h"
 #include "mime.h"
+
+#include <cpptest.h>
+#include "EngineTestSessionSuite.h"
+#include "MimeTests.h"
 
 using namespace std;
 
-void test_mime_decoding(string filename) {
+MimeTests::MimeTests(string suitename, string test_home_dir) :
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("MimeTests::check_mime"),
+                                                                      static_cast<Func>(&MimeTests::check_mime)));
+}
+
+// FIXME: refactor so we can assert
+static void test_mime_decoding(string filename) {
     cout << "opening " << filename << " for reading\n";
     ifstream inFile3 (filename.c_str());
+
     assert(inFile3.is_open());
 
     string mimetext3;
@@ -55,15 +67,16 @@ void test_mime_decoding(string filename) {
     free_message(msg3);
 }
 
-int main() {
+void MimeTests::check_mime() {
+
     cout << "\n*** mime_test ***\n\n";
 
     PEP_SESSION session;
     
     cout << "calling init()\n";
     PEP_STATUS status1 = init(&session);   
-    assert(status1 == PEP_STATUS_OK);
-    assert(session);
+    TEST_ASSERT(status1 == PEP_STATUS_OK);
+    TEST_ASSERT(session);
     cout << "init() completed.\n";
 
     // mime test code
@@ -71,7 +84,7 @@ int main() {
     // testing multipart/alternative
 
     message *msg2 = new_message(PEP_dir_incoming);
-    assert(msg2);
+    TEST_ASSERT(msg2);
     msg2->from = new_identity("vb@dingens.org", NULL, NULL, "Volker Birk");
     msg2->to = new_identity_list(new_identity("trischa@dingens.org", NULL, NULL, "Patricia Bädnar")),
     msg2->shortmsg = strdup("my sübject");
@@ -80,13 +93,13 @@ int main() {
     msg2->longmsg = strdup(text2.c_str());
     string html2 = "<html><body><p>my message to you</p></body></html>";
     msg2->longmsg_formatted = strdup(html2.c_str());
-    assert(msg2->longmsg_formatted);
+    TEST_ASSERT(msg2->longmsg_formatted);
 
     cout << "encoding message…\n";
     char *result2;
     PEP_STATUS status2 = mime_encode_message(msg2, false, &result2);
-    assert(result2);
-    assert(status2 == PEP_STATUS_OK);
+    TEST_ASSERT(result2);
+    TEST_ASSERT(status2 == PEP_STATUS_OK);
 
     cout << "result:\n";
     cout << result2 << "\n";
@@ -97,8 +110,4 @@ int main() {
     test_mime_decoding("msg1.asc");
     test_mime_decoding("msg2.asc");
     test_mime_decoding("msg3.asc");
-
-    cout << "calling release()\n";
-    release(session);
-    return 0;
 }

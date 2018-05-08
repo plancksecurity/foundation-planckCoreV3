@@ -1,29 +1,34 @@
-#include <iostream>
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
+#include <stdlib.h>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <cstring> // for strcmp()
-#include <assert.h>
-#include "blacklist.h"
+
+#include "pEpEngine.h"
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"
 #include "test_util.h"
 
+#include <cpptest.h>
+#include "EngineTestSessionSuite.h"
+#include "LeastCommonDenomColorTests.h"
+
 using namespace std;
 
-int main(int argc, char** argv) {
+LeastCommonDenomColorTests::LeastCommonDenomColorTests(string suitename, string test_home_dir) :
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("LeastCommonDenomColorTests::check_least_common_denom_color"),
+                                                                      static_cast<Func>(&LeastCommonDenomColorTests::check_least_common_denom_color)));
+}
+
+void LeastCommonDenomColorTests::check_least_common_denom_color() {
         
     const char* mailfile = "test_mails/Test_Message_JSON-21_Color_Problems.eml";
-    
-    PEP_SESSION session;
-    
-    cout << "calling init()\n";
-    PEP_STATUS status1 = init(&session);   
-    assert(status1 == PEP_STATUS_OK);
-    assert(session);
-    cout << "init() completed.\n";
-    
+            
     // import keys
     const string keytextkey1 = slurp("test_keys/pub/banmeonce-0x07B29090_pub.asc");
     const string keytextkey2 = slurp("test_keys/pub/banmetwice-0x4080C3E7_pub.asc");
@@ -63,15 +68,15 @@ int main(int argc, char** argv) {
     PEP_decrypt_flags_t flags;
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    assert(status == PEP_STATUS_OK);
-    assert(msg_ptr);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(msg_ptr);
 
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
-    assert(status == PEP_STATUS_OK);
-    assert(dest_msg);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(dest_msg);
     /* message is signed and no recip is mistrusted... */
-    assert(color_from_rating(rating) == PEP_color_yellow);
+    TEST_ASSERT(color_from_rating(rating) == PEP_color_yellow);
 
     cout << "shortmsg: " << dest_msg->shortmsg << endl << endl;
     cout << "longmsg: " << dest_msg->longmsg << endl << endl;
@@ -81,26 +86,26 @@ int main(int argc, char** argv) {
     
     /* re-evaluate rating, counting on optional fields */
     status = re_evaluate_message_rating(session, dest_msg, NULL, PEP_rating_undefined, &rating);
-    assert(status == PEP_STATUS_OK);
-    assert(color_from_rating(rating) == PEP_color_yellow);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(color_from_rating(rating) == PEP_color_yellow);
 
     /* re-evaluate rating, without optional fields */
     status = re_evaluate_message_rating(session, dest_msg, keylist, decrypt_rating, &rating);
-    assert(status == PEP_STATUS_OK);
-    assert(color_from_rating(rating) == PEP_color_yellow);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(color_from_rating(rating) == PEP_color_yellow);
 
     /* Ok, now mistrust one recip */
     key_mistrusted(session, recip2);
 
     /* re-evaluate rating, counting on optional fields */
     status = re_evaluate_message_rating(session, dest_msg, NULL, PEP_rating_undefined, &rating);
-    assert(status == PEP_STATUS_OK);
-    assert(color_from_rating(rating) == PEP_color_red);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(color_from_rating(rating) == PEP_color_red);
 
     /* re-evaluate rating, without optional fields */
     status = re_evaluate_message_rating(session, dest_msg, keylist, decrypt_rating, &rating);
-    assert(status == PEP_STATUS_OK);
-    assert(color_from_rating(rating) == PEP_color_red);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(color_from_rating(rating) == PEP_color_red);
 
     free_message(dest_msg);
     free_message(msg_ptr);
@@ -112,8 +117,8 @@ int main(int argc, char** argv) {
     rating = PEP_rating_unreliable;
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    assert(status == PEP_STATUS_OK);
-    assert(msg_ptr);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(msg_ptr);
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
   
@@ -122,7 +127,7 @@ int main(int argc, char** argv) {
     cout << "longmsg_formatted: " << (dest_msg->longmsg_formatted ? dest_msg->longmsg_formatted : "(empty)") << endl << endl;
 
     /* message is signed and no recip is mistrusted... */
-    assert(color_from_rating(rating) == PEP_color_red);
+    TEST_ASSERT(color_from_rating(rating) == PEP_color_red);
 
     free_message(dest_msg);
     free_message(msg_ptr);
@@ -133,7 +138,4 @@ int main(int argc, char** argv) {
     keylist = nullptr;
     rating = PEP_rating_unreliable;
     
-    cout << "calling release()\n";
-    release(session);
-    return 0;
 }

@@ -1,30 +1,35 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#include <iostream>
+#include <stdlib.h>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <cstring> // for strcmp()
-#include <assert.h>
+#include <cpptest.h>
+
 #include "blacklist.h"
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"
 #include "test_util.h"
 
+#include "pEpEngine.h"
+
 using namespace std;
 
-int main() {
-    cout << "\n*** encrypt_missing_private_key_test ***\n\n";
+#include "EngineTestSessionSuite.h"
+#include "EncryptMissingPrivateKeyTests.h"
 
-    PEP_SESSION session;
-    
-    cout << "calling init()\n";
-    PEP_STATUS status1 = init(&session);   
-    assert(status1 == PEP_STATUS_OK);
-    assert(session);
-    cout << "init() completed.\n";
+using namespace std;
+
+EncryptMissingPrivateKeyTests::EncryptMissingPrivateKeyTests(string suitename, string test_home_dir) :
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("EncryptMissingPrivateKeyTests::check_encrypt_missing_private_key"),
+                                                                      static_cast<Func>(&EncryptMissingPrivateKeyTests::check_encrypt_missing_private_key)));
+}
+
+void EncryptMissingPrivateKeyTests::check_encrypt_missing_private_key() {
     
     pEp_identity* no_key_identity = new_identity("blacklistself@kgrothoff.org",
                                                       NULL,
@@ -32,7 +37,7 @@ int main() {
                                                       "Blacklist Self");
     no_key_identity->me = true;
     PEP_STATUS status8 = myself(session, no_key_identity);
-    assert (status8 == PEP_STATUS_OK);
+    TEST_ASSERT (status8 == PEP_STATUS_OK);
 
     /* Now let's try to encrypt a message. */
         
@@ -42,7 +47,7 @@ int main() {
     const string mailtext = slurp("test_mails/blacklist_no_key.eml");
 
     PEP_STATUS status = mime_decode_message(mailtext.c_str(), mailtext.length(), &tmp_msg);
-    assert(status == PEP_STATUS_OK);
+    TEST_ASSERT(status == PEP_STATUS_OK);
     
     status = update_identity(session, tmp_msg->from);
     identity_list* to_list = tmp_msg->to;
@@ -61,7 +66,7 @@ int main() {
                              &enc_msg,
                              PEP_enc_PGP_MIME,
                              0);
-    assert(status == PEP_STATUS_OK);
+    TEST_ASSERT(status == PEP_STATUS_OK);
     
 
     char* new_key = enc_msg->from->fpr;
@@ -72,8 +77,4 @@ int main() {
 
     free_message(tmp_msg);    
     free_message(enc_msg);
-    
-    cout << "calling release()\n";
-    release(session);
-    return 0;
 }

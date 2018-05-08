@@ -1,16 +1,28 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#include <iostream>
+#include <stdlib.h>
 #include <string>
-#include <assert.h>
+#include <iostream>
+
+#include "pEpEngine.h"
 #include "pEpEngine.h"
 #include "stringpair.h"
 #include "openpgp_compat.h"
 
+#include <cpptest.h>
+#include "EngineTestSessionSuite.h"
+#include "PgpListKeysTests.h"
+
 using namespace std;
 
-void print_stringpair_list(stringpair_list_t* spl) {
+PgpListKeysTests::PgpListKeysTests(string suitename, string test_home_dir) :
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("PgpListKeysTests::check_pgp_list_keys"),
+                                                                      static_cast<Func>(&PgpListKeysTests::check_pgp_list_keys)));
+}
+
+static void print_stringpair_list(stringpair_list_t* spl) {
     for ( ; spl != NULL; spl = spl->next) {
         if (spl->value) {
             cout << "Key:" << endl;
@@ -22,16 +34,7 @@ void print_stringpair_list(stringpair_list_t* spl) {
     }
 }
 
-int main() {
-    cout << "\n*** openpgp_compat test ***\n\n";
-
-    PEP_SESSION session;
-    
-    cout << "calling init()\n";
-    PEP_STATUS status1 = init(&session);   
-    assert(status1 == PEP_STATUS_OK);
-    assert(session);
-    cout << "init() completed.\n";
+void PgpListKeysTests::check_pgp_list_keys() {
 
     cout << "Listing all the keys:" << endl;
     stringpair_list_t* all_the_ids = NULL;
@@ -68,7 +71,4 @@ int main() {
     free_stringpair_list(all_the_ids);
 
     cout << "calling release()\n";
-    release(session);
-    return 0;
 }
-

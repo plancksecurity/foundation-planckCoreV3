@@ -2,27 +2,31 @@
 // see LICENSE.txt
 
 #include <stdlib.h>
-#include <string.h>
+#include <string>
+#include <cstring>
 #include <time.h>
-#include "platform.h"
 #include <iostream>
 #include <fstream>
-#include <assert.h>
+
+#include "pEpEngine.h"
+#include "platform.h"
 #include "mime.h"
 #include "message_api.h"
 
+#include "cpptest.h"
+#include "EngineTestSessionSuite.h"
+#include "RevokeRegenAttachTests.h"
+
 using namespace std;
 
-int main() {
-    cout << "\n*** revoke_regen_attach_test ***\n\n";
+RevokeRegenAttachTests::RevokeRegenAttachTests(string suitename, string test_home_dir) :
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("RevokeRegenAttachTests::check_revoke_regen_attach"),
+                                                                      static_cast<Func>(&RevokeRegenAttachTests::check_revoke_regen_attach)));
+}
 
-    PEP_SESSION session;
-    
-    cout << "calling init()\n";
-    PEP_STATUS status = init(&session);   
-    assert(status == PEP_STATUS_OK);
-    assert(session);
-    cout << "init() completed.\n";
+void RevokeRegenAttachTests::check_revoke_regen_attach() {
+    PEP_STATUS status = PEP_STATUS_OK;   
 
     cout << "creating own id for : ";
     char *uniqname = strdup("AAAAtestuser@testdomain.org");
@@ -48,11 +52,11 @@ int main() {
     free(me->fpr);
     me->fpr = NULL;
     status = myself(session, me);
-    assert(status == PEP_STATUS_OK);
+    TEST_ASSERT(status == PEP_STATUS_OK);
     cout << me->fpr << "\n";
     
-    assert(me->fpr);
-    assert(strcmp(me->fpr, prev_fpr) != 0);
+    TEST_ASSERT(me->fpr);
+    TEST_ASSERT(strcmp(me->fpr, prev_fpr) != 0);
     cout << "New fpr is: " << me->fpr;
     
     me->fpr = NULL;
@@ -61,7 +65,7 @@ int main() {
     
     identity_list *to = new_identity_list(new_identity("pep.test.alice@pep-project.org", NULL, "42", "pEp Test Alice (test key don't use)"));
     message *msg = new_message(PEP_dir_outgoing);
-    assert(msg);
+    TEST_ASSERT(msg);
     msg->from = me;
     msg->to = to;
     msg->shortmsg = strdup("hello, world");
@@ -71,16 +75,16 @@ int main() {
     message *enc_msg;
     cout << "calling encrypt_message()\n";
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    assert(status == PEP_STATUS_OK);
-    assert(enc_msg);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(enc_msg);
     cout << "message encrypted.\n";
 
     // cout << msg->attachments->filename;
     // int bl_len = bloblist_length(msg->attachments);
     // cout << "Message contains " << bloblist_length(msg->attachments) << " attachments." << endl;
-    // assert(bloblist_length(msg->attachments) == 2);
-    // assert(strcmp(msg->attachments->filename, "file://pEpkey.asc") == 0);
-    // assert(strcmp(msg->attachments->next->filename, "file://pEpkey.asc") == 0);
+    // TEST_ASSERT(bloblist_length(msg->attachments) == 2);
+    // TEST_ASSERT(strcmp(msg->attachments->filename, "file://pEpkey.asc") == 0);
+    // TEST_ASSERT(strcmp(msg->attachments->next->filename, "file://pEpkey.asc") == 0);
     // 
     // cout << "message contains 2 key attachments.\n";
 
@@ -89,7 +93,4 @@ int main() {
    
     // TODO: check that revoked key isn't sent after some time.
 
-    release(session);
-
-    return 0;
 }

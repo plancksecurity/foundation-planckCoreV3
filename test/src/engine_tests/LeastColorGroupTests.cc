@@ -1,18 +1,31 @@
-#include <iostream>
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
+#include <stdlib.h>
+#include <string>
 #include <iostream>
 #include <vector>
 #include <cstring> // for strcmp()
-#include <assert.h>
-#include "blacklist.h"
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"
 #include "test_util.h"
 
+#include "pEpEngine.h"
+
+#include <cpptest.h>
+#include "EngineTestSessionSuite.h"
+#include "LeastColorGroupTests.h"
+
 using namespace std;
 
-int main(int argc, char** argv) {
-    cout << "\n*** least_color_group_test.cc ***\n\n";
+LeastColorGroupTests::LeastColorGroupTests(string suitename, string test_home_dir) :
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("LeastColorGroupTests::check_least_color_group"),
+                                                                      static_cast<Func>(&LeastColorGroupTests::check_least_color_group)));
+}
+
+void LeastColorGroupTests::check_least_color_group() {
     
     const char* mailfile = "test_mails/color_test.eml";
     
@@ -23,20 +36,12 @@ int main(int argc, char** argv) {
                               "test_keys/pub/pep.color.test.P-0x3EBE215C_pub.asc",
                               "test_keys/pub/pep.color.test.V-0x71FC6D28_pub.asc"
                           };
-    
-    PEP_SESSION session;
-    
-    cout << "calling init()\n";
-    PEP_STATUS status1 = init(&session);   
-    assert(status1 == PEP_STATUS_OK);
-    assert(session);
-    cout << "init() completed.\n";
-    
+            
     for (auto name : keynames) {
         cout << "\t read keyfile \"" << name << "\"..." << std::endl;
         const string keytextkey = slurp(name);
         PEP_STATUS statuskey = import_key(session, keytextkey.c_str(), keytextkey.length(), NULL);
-        assert(statuskey == PEP_STATUS_OK);
+        TEST_ASSERT(statuskey == PEP_STATUS_OK);
     }
     
     cout << "\t read keyfile mailfile \"" << mailfile << "\"..." << std::endl;
@@ -65,8 +70,8 @@ int main(int argc, char** argv) {
     PEP_decrypt_flags_t flags;
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    assert(status == PEP_STATUS_OK);
-    assert(msg_ptr);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -91,9 +96,5 @@ int main(int argc, char** argv) {
     if (final_ptr == dest_msg)
     	free_message(dest_msg);
     free_message(msg_ptr);
-    free_stringlist(keylist);
-    
-    cout << "calling release()\n";
-    release(session);
-    return 0;
+    free_stringlist(keylist);    
 }

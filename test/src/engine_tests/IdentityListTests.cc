@@ -2,28 +2,25 @@
 // see LICENSE.txt
 
 #include <stdlib.h>
-#include <string.h>
-#include "platform.h"
+#include <string>
+#include <cstring>
 #include <iostream>
 #include <fstream>
 #include <assert.h>
 
+#include "pEpEngine.h"
+#include "platform.h"
+
 #include "identity_list.h"
+
+#include <cpptest.h>
+#include "EngineTestSessionSuite.h"
+#include "IdentityListTests.h"
 
 using namespace std;
 
-/*
- *     char *address;              // C string with address UTF-8 encoded
-    char *fpr;                  // C string with fingerprint UTF-8 encoded
-    char *user_id;              // C string with user ID UTF-8 encoded
-    char *username;             // C string with user name UTF-8 encoded
-    PEP_comm_type comm_type;    // type of communication with this ID
-    char lang[3];               // language of conversation
-                                // ISO 639-1 ALPHA-2, last byte is 0
--    bool me;                    // if this is the local user herself/himself
-    */
-
-int test_identity_equals(pEp_identity* val1, pEp_identity* val2) {
+// FIXME
+static int test_identity_equals(pEp_identity* val1, pEp_identity* val2) {
     assert(val1);
     assert(val2);
     assert(val1->address);
@@ -38,8 +35,14 @@ int test_identity_equals(pEp_identity* val1, pEp_identity* val2) {
         && (val1->lang[2] == val2->lang[2]) && (val1->me == val2->me));
 }
 
-int main() {
-    cout << "\n*** data structures: identity_list_test ***\n\n";
+
+IdentityListTests::IdentityListTests(string suitename, string test_home_dir) :
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("IdentityListTests::check_identity_list"),
+                                                                      static_cast<Func>(&IdentityListTests::check_identity_list)));
+}
+
+void IdentityListTests::check_identity_list() {
 
     pEp_identity* id1 = new_identity(
         "leon.schumacher@digitalekho.com",
@@ -83,23 +86,23 @@ int main() {
     cout << "creating one-element identity_list...\n";
     
     pEp_identity* new_id = identity_dup(id1);
-    assert(new_id);
+    TEST_ASSERT(new_id);
     identity_list* idlist = new_identity_list(new_id);
-    assert(idlist->ident);
-    assert(test_identity_equals(id1, idlist->ident));
-    assert(idlist->next == NULL);
+    TEST_ASSERT(idlist->ident);
+    TEST_ASSERT(test_identity_equals(id1, idlist->ident));
+    TEST_ASSERT(idlist->next == NULL);
     cout << "one-element identity_list created, next element is NULL\n\n";
     
     cout << "duplicating one-element list...\n";
     identity_list* duplist = identity_list_dup(idlist);
     pEp_identity* srcid = idlist->ident;
     pEp_identity* dstid = duplist->ident;
-    assert(dstid);
-    assert(test_identity_equals(srcid, dstid));
-    assert(srcid->address != dstid->address);   // test deep copies 
-    assert(srcid->fpr != dstid->fpr);
-    assert(srcid->username != dstid->username);
-    assert(duplist->next == NULL);
+    TEST_ASSERT(dstid);
+    TEST_ASSERT(test_identity_equals(srcid, dstid));
+    TEST_ASSERT(srcid->address != dstid->address);   // test deep copies 
+    TEST_ASSERT(srcid->fpr != dstid->fpr);
+    TEST_ASSERT(srcid->username != dstid->username);
+    TEST_ASSERT(duplist->next == NULL);
     cout << "one-element identity_list duplicated.\n\n";
     
     cout << "freeing identity_lists...\n";
@@ -114,25 +117,25 @@ int main() {
     idlist = identity_list_add(idlist, identity_dup(id_arr[0]));
     for (i = 1; i < 4; i++) {
         p = identity_list_add(idlist, identity_dup(id_arr[i]));
-        assert(p);
+        TEST_ASSERT(p);
     }
     
     p = idlist;
     
     for (i = 0; i < 4; i++) {
-        assert(p);
+        TEST_ASSERT(p);
         
         srcid = p->ident;
-        assert(srcid);
+        TEST_ASSERT(srcid);
         
-        assert(test_identity_equals(srcid, id_arr[i]));
-        assert(srcid->address != id_arr[i]->address);   // test deep copies
-        assert(srcid->fpr != id_arr[i]->fpr);
-        assert(srcid->username != id_arr[i]->username);
+        TEST_ASSERT(test_identity_equals(srcid, id_arr[i]));
+        TEST_ASSERT(srcid->address != id_arr[i]->address);   // test deep copies
+        TEST_ASSERT(srcid->fpr != id_arr[i]->fpr);
+        TEST_ASSERT(srcid->username != id_arr[i]->username);
 
         p = p->next;
     }
-    assert(p == NULL);
+    TEST_ASSERT(p == NULL);
     
     cout << "\nduplicating four-element list...\n\n";
     duplist = identity_list_dup(idlist);
@@ -144,20 +147,20 @@ int main() {
         srcid = p->ident;
         dstid = dup_p->ident;
 
-        assert(dstid);
+        TEST_ASSERT(dstid);
         
-        assert(test_identity_equals(srcid, dstid));
+        TEST_ASSERT(test_identity_equals(srcid, dstid));
 
-        assert(srcid != dstid);   // test deep copies
-        assert(srcid->address != dstid->address);   // test deep copies
-        assert(srcid->fpr != dstid->fpr);
-        assert(srcid->username != dstid->username);
+        TEST_ASSERT(srcid != dstid);   // test deep copies
+        TEST_ASSERT(srcid->address != dstid->address);   // test deep copies
+        TEST_ASSERT(srcid->fpr != dstid->fpr);
+        TEST_ASSERT(srcid->username != dstid->username);
         
         i++;
         p = p->next;
 
         dup_p = dup_p->next;
-        assert((p == NULL) == (dup_p == NULL));
+        TEST_ASSERT((p == NULL) == (dup_p == NULL));
     }
     cout << "\nfour-element identity_list successfully duplicated.\n\n";
 
@@ -168,7 +171,4 @@ int main() {
     duplist = NULL;
     
     cout << "done.\n";
-        
-    
-    return 0;
 }

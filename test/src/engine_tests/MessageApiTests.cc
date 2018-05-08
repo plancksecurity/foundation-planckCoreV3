@@ -2,27 +2,30 @@
 // see LICENSE.txt
 
 #include <stdlib.h>
-#include <string.h>
-#include "platform.h"
+#include <string>
+#include <cstring>
 #include <iostream>
 #include <fstream>
-#include <assert.h>
+
+#include "pEpEngine.h"
+#include "platform.h"
 #include "mime.h"
 #include "message_api.h"
 #include "test_util.h"
 
+#include <cpptest.h>
+#include "EngineTestSessionSuite.h"
+#include "MessageApiTests.h"
+
 using namespace std;
 
-int main() {
-    cout << "\n*** message_api_test ***\n\n";
+MessageApiTests::MessageApiTests(string suitename, string test_home_dir) :
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("MessageApiTests::check_message_api"),
+                                                                      static_cast<Func>(&MessageApiTests::check_message_api)));
+}
 
-    PEP_SESSION session;
-    
-    cout << "calling init()\n";
-    PEP_STATUS status1 = init(&session);
-    assert(status1 == PEP_STATUS_OK);
-    assert(session);
-    cout << "init() completed.\n";
+void MessageApiTests::check_message_api() {
 
     cout << "Importing Alice's key " << endl;
     const string alice_pub_key = slurp("test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
@@ -30,11 +33,11 @@ int main() {
     const string bob_pub_key = slurp("test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
 
     PEP_STATUS status0 = import_key(session, alice_pub_key.c_str(), alice_pub_key.size(), NULL);
-    assert(status0 == PEP_STATUS_OK);
+    TEST_ASSERT(status0 == PEP_STATUS_OK);
     status0 = import_key(session, alice_priv_key.c_str(), alice_priv_key.size(), NULL);
-    assert(status0 == PEP_STATUS_OK);
+    TEST_ASSERT(status0 == PEP_STATUS_OK);
     status0 = import_key(session, bob_pub_key.c_str(), bob_pub_key.size(), NULL);
-    assert(status0 == PEP_STATUS_OK);
+    TEST_ASSERT(status0 == PEP_STATUS_OK);
     // message_api test code
 
     cout << "creating message…\n";
@@ -44,7 +47,7 @@ int main() {
     identity_list *to2 = new_identity_list(new_identity("pep.test.bob@pep-project.org", NULL, "42", "Bob Test"));
     // identity_list *to2 = new_identity_list(new_identity("still@nokey.blup", NULL, "42", "Still no key"));
     message *msg2 = new_message(PEP_dir_outgoing);
-    assert(msg2);
+    TEST_ASSERT(msg2);
     msg2->from = me2;
     msg2->to = to2;
     msg2->shortmsg = strdup("hello, world");
@@ -53,8 +56,8 @@ int main() {
 
     char *text2 = nullptr;
     PEP_STATUS status2 = mime_encode_message(msg2, false, &text2);
-    assert(status2 == PEP_STATUS_OK);
-    assert(text2);
+    TEST_ASSERT(status2 == PEP_STATUS_OK);
+    TEST_ASSERT(text2);
 
     cout << "decrypted:\n\n";
     cout << text2 << "\n";
@@ -66,20 +69,20 @@ int main() {
     cout << "calling encrypt_message()\n";
     status2 = encrypt_message(session, msg2, NULL, &enc_msg2, PEP_enc_PGP_MIME, 0);
     cout << "encrypt_message() returns " << status2 << '.' << endl;
-    assert(status2 == PEP_STATUS_OK);
-    assert(enc_msg2);
+    TEST_ASSERT(status2 == PEP_STATUS_OK);
+    TEST_ASSERT(enc_msg2);
     cout << "message encrypted.\n";
     
     status2 = mime_encode_message(enc_msg2, false, &text2);
-    assert(status2 == PEP_STATUS_OK);
-    assert(text2);
+    TEST_ASSERT(status2 == PEP_STATUS_OK);
+    TEST_ASSERT(text2);
 
     cout << "encrypted:\n\n";
     cout << text2 << "\n";
 
     message *msg3 = nullptr;
     PEP_STATUS status3 = mime_decode_message(text2, strlen(text2), &msg3);
-    assert(status3 == PEP_STATUS_OK);
+    TEST_ASSERT(status3 == PEP_STATUS_OK);
     const string string3 = text2;
     //free(text2);
 
@@ -95,12 +98,12 @@ int main() {
     
     flags = 0;
     PEP_STATUS status4 = decrypt_message(session, enc_msg2, &msg4, &keylist4, &rating, &flags);
-    assert(status4 == PEP_STATUS_OK);
-    assert(msg4);
-    assert(keylist4);
-    assert(rating);
+    TEST_ASSERT(status4 == PEP_STATUS_OK);
+    TEST_ASSERT(msg4);
+    TEST_ASSERT(keylist4);
+    TEST_ASSERT(rating);
     PEP_comm_type ct = enc_msg2->from->comm_type;
-    assert(ct == PEP_ct_pEp || ct == PEP_ct_pEp_unconfirmed || ct == PEP_ct_OpenPGP || ct == PEP_ct_OpenPGP_unconfirmed );
+    TEST_ASSERT(ct == PEP_ct_pEp || ct == PEP_ct_pEp_unconfirmed || ct == PEP_ct_OpenPGP || ct == PEP_ct_OpenPGP_unconfirmed );
 
     free_stringpair_list(enc_msg2->opt_fields);
     enc_msg2->opt_fields = NULL;
@@ -117,7 +120,7 @@ int main() {
 
     cout << "opening msg_no_key.asc for reading\n";
     ifstream inFile3 ("msg_no_key.asc");
-    assert(inFile3.is_open());
+    TEST_ASSERT(inFile3.is_open());
 
     string text3;
 
@@ -131,7 +134,7 @@ int main() {
 
     message *msg5 = nullptr;
     PEP_STATUS status5 = mime_decode_message(text3.c_str(), text3.length(), &msg5);
-    assert(status5 == PEP_STATUS_OK);
+    TEST_ASSERT(status5 == PEP_STATUS_OK);
 
     message *msg6 = nullptr;
     stringlist_t *keylist5 = nullptr;
@@ -139,10 +142,10 @@ int main() {
     PEP_decrypt_flags_t flags2;
     flags2 = 0;
     PEP_STATUS status6 = decrypt_message(session, msg5, &msg6, &keylist5, &rating2, &flags2);
-    assert(status6 == PEP_DECRYPT_NO_KEY);
-    assert(msg6 == NULL);
-    assert(keylist5 == NULL);
-    assert(rating2 == PEP_rating_have_no_key);
+    TEST_ASSERT(status6 == PEP_DECRYPT_NO_KEY);
+    TEST_ASSERT(msg6 == NULL);
+    TEST_ASSERT(keylist5 == NULL);
+    TEST_ASSERT(rating2 == PEP_rating_have_no_key);
     cout << "rating :" << rating2 << "\n";
     free_stringlist(keylist5);
 
@@ -150,7 +153,7 @@ int main() {
 
     cout << "opening alice_bob_encrypt_test_plaintext_mime.eml for reading\n";
     ifstream inFile4 ("test_mails/alice_bob_encrypt_test_plaintext_mime.eml");
-    assert(inFile4.is_open());
+    TEST_ASSERT(inFile4.is_open());
     
     string text4;
     
@@ -170,7 +173,7 @@ int main() {
 
     PEP_STATUS status7 = MIME_encrypt_message(session, text4.c_str(), text4.length(), NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
 //    PEP_STATUS status7 = MIME_encrypt_message(session, out_msg_plain, strlen(out_msg_plain), NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    assert(status7 == PEP_STATUS_OK);
+    TEST_ASSERT(status7 == PEP_STATUS_OK);
     
     cout << enc_msg << endl;
 
@@ -182,7 +185,7 @@ int main() {
     dec_flags = 0;
     char* modified_src = NULL;
     PEP_STATUS status8 = MIME_decrypt_message(session, text5.c_str(), text5.length(), &dec_msg, &keys_used, &rating, &dec_flags, &modified_src);
-    assert(status8 == PEP_STATUS_OK);
+    TEST_ASSERT(status8 == PEP_STATUS_OK);
     
     cout << dec_msg << endl;
     
@@ -199,13 +202,13 @@ int main() {
     message *enc7 = nullptr;
     PEP_STATUS status9 = encrypt_message(session, msg7, NULL, &enc7, PEP_enc_none, 0);
 	std::cout << "encrypt_message returned " << std::dec << status9 << std::hex << " (0x" << status9 << ")" << std::dec << endl;
-    assert(status9 == PEP_UNENCRYPTED);
-    assert(enc7 == nullptr);
-    assert(msg7->shortmsg && msg7->longmsg);
+    TEST_ASSERT(status9 == PEP_UNENCRYPTED);
+    TEST_ASSERT(enc7 == nullptr);
+    TEST_ASSERT(msg7->shortmsg && msg7->longmsg);
     cout << msg7->shortmsg << "\n";
     cout << msg7->longmsg << "\n";
-    assert(strcmp(msg7->shortmsg, "My Subject") == 0);
-    assert(strcmp(msg7->longmsg, "This is some text.\n") == 0);
+    TEST_ASSERT(strcmp(msg7->shortmsg, "My Subject") == 0);
+    TEST_ASSERT(strcmp(msg7->longmsg, "This is some text.\n") == 0);
     
     cout << "\nfreeing messages…\n";
     free_message(msg7);
@@ -219,7 +222,4 @@ int main() {
 
     free(enc_msg);
     free(dec_msg);
-    cout << "calling release()\n";
-    release(session);
-    return 0;
 }

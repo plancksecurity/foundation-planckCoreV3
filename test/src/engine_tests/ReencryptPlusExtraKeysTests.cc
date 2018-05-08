@@ -2,28 +2,31 @@
 // see LICENSE.txt
 
 #include <stdlib.h>
-#include <string.h>
-#include "platform.h"
+#include <cstring>
 #include <iostream>
 #include <fstream>
-#include <assert.h>
+
+#include "pEpEngine.h"
+#include "platform.h"
 #include "mime.h"
 #include "message_api.h"
 #include "keymanagement.h"
 #include "test_util.h"
 
+#include <cpptest.h>
+#include "EngineTestSessionSuite.h"
+#include "ReencryptPlusExtraKeysTests.h"
+
 using namespace std;
 
-int main() {
-    cout << "\n*** reencrypt_plus_extra_keys_test ***\n\n";
+ReencryptPlusExtraKeysTests::ReencryptPlusExtraKeysTests(string suitename, string test_home_dir) :
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys"),
+                                                                      static_cast<Func>(&ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys)));
+}
 
-    PEP_SESSION session;
-    
-    cout << "calling init()\n";
-    PEP_STATUS status = init(&session);
-    assert(status == PEP_STATUS_OK);
-    assert(session);
-    cout << "init() completed.\n";
+void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
+    PEP_STATUS status = PEP_STATUS_OK;
 
     /* import all the keys */
     const char* fpr_own_recip_key = "85D022E0CC9BA9F6B922CA7B638E5211B1A2BE89";
@@ -49,24 +52,24 @@ int main() {
     const string pub_extra_key_1 = slurp("test_keys/pub/reencrypt_extra_keys_1-0x8B026AEC_pub.asc");
 
     status = import_key(session, own_recip_pub_key.c_str(), own_recip_pub_key.length(), NULL);
-    assert (status == PEP_STATUS_OK);
+    TEST_ASSERT (status == PEP_STATUS_OK);
     status = import_key(session, own_recip_priv_key.c_str(), own_recip_priv_key.length(), NULL);
-    assert (status == PEP_STATUS_OK);    
+    TEST_ASSERT (status == PEP_STATUS_OK);    
     status = import_key(session, own_recip_2_pub_key.c_str(), own_recip_2_pub_key.length(), NULL);
-    assert (status == PEP_STATUS_OK);
+    TEST_ASSERT (status == PEP_STATUS_OK);
     status = import_key(session, own_recip_2_priv_key.c_str(), own_recip_2_priv_key.length(), NULL);
-    assert (status == PEP_STATUS_OK);
+    TEST_ASSERT (status == PEP_STATUS_OK);
     
     status = import_key(session, sender_pub_key.c_str(), sender_pub_key.length(), NULL);
-    assert (status == PEP_STATUS_OK);
+    TEST_ASSERT (status == PEP_STATUS_OK);
     status = import_key(session, recip_2_pub_key.c_str(), recip_2_pub_key.length(), NULL);
-    assert (status == PEP_STATUS_OK);
+    TEST_ASSERT (status == PEP_STATUS_OK);
     status = import_key(session, recip_0_pub_key.c_str(), recip_0_pub_key.length(), NULL);
-    assert (status == PEP_STATUS_OK);
+    TEST_ASSERT (status == PEP_STATUS_OK);
     status = import_key(session, pub_extra_key_0.c_str(), pub_extra_key_0.length(), NULL);
-    assert (status == PEP_STATUS_OK);
+    TEST_ASSERT (status == PEP_STATUS_OK);
     status = import_key(session, pub_extra_key_1.c_str(), pub_extra_key_1.length(), NULL);
-    assert (status == PEP_STATUS_OK);
+    TEST_ASSERT (status == PEP_STATUS_OK);
 
     cout << "Keys imported." << endl;
 
@@ -75,7 +78,7 @@ int main() {
     
     cout << "Inserting own identities and keys into database." << endl;
     status = set_own_key(session, me_recip_2, fpr_own_recip_2_key);
-    assert(status == PEP_STATUS_OK);
+    TEST_ASSERT(status == PEP_STATUS_OK);
     cout << "Done: inserting own identities and keys into database." << endl;
 
     const string to_reencrypt_from_enigmail = slurp("test_mails/reencrypt_sent_by_enigmail.eml");
@@ -106,11 +109,11 @@ int main() {
     cout << decrypted_text << endl;
 
     cout << "Status is " << tl_status_string(status) << endl;
-    assert(decrypted_text);
-    assert(rating);
-    assert(!(flags & PEP_decrypt_flag_src_modified));
+    TEST_ASSERT(decrypted_text);
+    TEST_ASSERT(rating);
+    TEST_ASSERT(!(flags & PEP_decrypt_flag_src_modified));
     
-    assert(!modified_src);
+    TEST_ASSERT(!modified_src);
     //cout << modified_src << endl;
     
     free(decrypted_text);
@@ -141,14 +144,14 @@ int main() {
     {
         if (i == 0) {
               cout << "Signed by " << (strcasecmp("", kl->value) == 0 ? "NOBODY" : kl->value) << endl;
-              assert(strcasecmp(fpr_own_recip_2_key,kl->value) == 0);
+              TEST_ASSERT(strcasecmp(fpr_own_recip_2_key,kl->value) == 0);
         }
         else {
             cout << "\t " << kl->value << endl;
-            assert(strcasecmp(fpr_own_recip_2_key, kl->value) == 0);
+            TEST_ASSERT(strcasecmp(fpr_own_recip_2_key, kl->value) == 0);
             cout << "Encrypted only for own identity! Yay! It worked!" << endl;
         }
-        assert(i < 2);
+        TEST_ASSERT(i < 2);
     }
     cout << "Case 1a: PASS" << endl << endl;
 
@@ -174,8 +177,8 @@ int main() {
     cout << "Status is " << tl_status_string(status) << endl;
 
 
-    assert(decrypted_text);
-    assert(rating);
+    TEST_ASSERT(decrypted_text);
+    TEST_ASSERT(rating);
 
     free(decrypted_text);
     decrypted_text = nullptr;
@@ -208,7 +211,7 @@ int main() {
     {
         if (i == 0) {
               cout << "Signed by " << (strcasecmp("", kl->value) == 0 ? "NOBODY" : kl->value) << endl;
-              assert(strcasecmp(fpr_own_recip_2_key,kl->value) == 0);
+              TEST_ASSERT(strcasecmp(fpr_own_recip_2_key,kl->value) == 0);
         }
         else {
             if (strcasecmp(fpr_own_recip_2_key, kl->value) == 0) {
@@ -225,13 +228,13 @@ int main() {
             }
             else {
                 cout << "FAIL: Encrypted for " << kl->value << ", which it should not be." << endl;
-                assert(false);
+                TEST_ASSERT(false);
             }
             cout << "\t " << kl->value << endl;
         }
-        assert(i < 4);
+        TEST_ASSERT(i < 4);
     }
-    assert (own_key_found && extra_key_0_found && extra_key_1_found);
+    TEST_ASSERT (own_key_found && extra_key_0_found && extra_key_1_found);
     cout << "Message was encrypted for all the keys it should be, and none it should not!" << endl;
 
     cout << "Case 1b: PASS" << endl << endl;
@@ -256,8 +259,8 @@ int main() {
     cout << "Status is " << tl_status_string(status) << endl;
 
 
-    assert(decrypted_text);
-    assert(rating);
+    TEST_ASSERT(decrypted_text);
+    TEST_ASSERT(rating);
 
     free(decrypted_text);
     decrypted_text = nullptr;
@@ -286,14 +289,14 @@ int main() {
     {
         if (i == 0) {
               cout << "Signed by " << (strcasecmp("", kl->value) == 0 ? "NOBODY" : kl->value) << endl;
-//              assert(strcasecmp(fpr_own_recip_2_key,kl->value) == 0);
+//              TEST_ASSERT(strcasecmp(fpr_own_recip_2_key,kl->value) == 0);
         }
         else {
             cout << "\t " << kl->value << endl;
-//            assert(strcasecmp(fpr_own_recip_2_key, kl->value) == 0);
+//            TEST_ASSERT(strcasecmp(fpr_own_recip_2_key, kl->value) == 0);
             cout << "Encrypted only for own identity! Yay! It worked!" << endl;
         }
-        assert(i < 2);
+        TEST_ASSERT(i < 2);
     }
 
     cout << "Case 2a: PASS" << endl << endl;
@@ -319,8 +322,8 @@ int main() {
     cout << "Status is " << tl_status_string(status) << endl;
 
 
-    assert(decrypted_text);
-    assert(rating);
+    TEST_ASSERT(decrypted_text);
+    TEST_ASSERT(rating);
 
     free(decrypted_text);
     decrypted_text = nullptr;
@@ -353,7 +356,7 @@ int main() {
     {
         if (i == 0) {
               cout << "Signed by " << (strcasecmp("", kl->value) == 0 ? "NOBODY" : kl->value) << endl;
-//              assert(strcasecmp(fpr_own_recip_2_key,kl->value) == 0);
+//              TEST_ASSERT(strcasecmp(fpr_own_recip_2_key,kl->value) == 0);
         }
         else {
             if (strcasecmp(fpr_own_recip_2_key, kl->value) == 0) {
@@ -370,13 +373,13 @@ int main() {
             }
             else {
                 cout << "FAIL: Encrypted for " << kl->value << ", which it should not be." << endl;
-//                assert(false);
+//                TEST_ASSERT(false);
             }
             cout << "\t " << kl->value << endl;
         }
-        assert(i < 4);
+        TEST_ASSERT(i < 4);
     }
-//    assert (own_key_found && extra_key_0_found && extra_key_1_found);
+//    TEST_ASSERT (own_key_found && extra_key_0_found && extra_key_1_found);
     cout << "Message was encrypted for all the keys it should be, and none it should not!" << endl;
 
     cout << "Case 2b: PASS" << endl << endl;
@@ -386,7 +389,7 @@ int main() {
     keys = NULL;
 
     status = set_own_key(session, me_recip_1, fpr_own_recip_key);
-    assert(status == PEP_STATUS_OK);
+    TEST_ASSERT(status == PEP_STATUS_OK);
 
     flags = PEP_decrypt_flag_untrusted_server;
     
@@ -403,8 +406,8 @@ int main() {
     cout << "Status is " << tl_status_string(status) << endl;
 
 
-    assert(decrypted_text);
-    assert(rating);
+    TEST_ASSERT(decrypted_text);
+    TEST_ASSERT(rating);
 
     free(decrypted_text);
     decrypted_text = nullptr;
@@ -433,14 +436,14 @@ int main() {
     {
         if (i == 0) {
             cout << "Signed by " << (strcasecmp("", kl->value) == 0 ? "NOBODY" : kl->value) << endl;
-//            assert(strcasecmp(fpr_own_recip_key,kl->value) == 0);
+//            TEST_ASSERT(strcasecmp(fpr_own_recip_key,kl->value) == 0);
         }
         else {
             cout << "\t " << kl->value << endl;
-//            assert(strcasecmp(fpr_own_recip_key, kl->value) == 0);
+//            TEST_ASSERT(strcasecmp(fpr_own_recip_key, kl->value) == 0);
             cout << "Encrypted only for own identity! Yay! It worked!" << endl;
         }
-        assert(i < 2);
+        TEST_ASSERT(i < 2);
     }
 
     cout << "Case 3a: PASS" << endl << endl;
@@ -466,8 +469,8 @@ int main() {
     cout << decrypted_text << endl;
     cout << "Status is " << tl_status_string(status) << endl;
 
-    assert(decrypted_text);
-    assert(rating);
+    TEST_ASSERT(decrypted_text);
+    TEST_ASSERT(rating);
 
     free(decrypted_text);
     decrypted_text = nullptr;
@@ -500,7 +503,7 @@ int main() {
     {
         if (i == 0) {
               cout << "Signed by " << (strcasecmp("", kl->value) == 0 ? "NOBODY" : kl->value) << endl;
-//              assert(strcasecmp(fpr_own_recip_key,kl->value) == 0);
+//              TEST_ASSERT(strcasecmp(fpr_own_recip_key,kl->value) == 0);
         }
         else {
             if (strcasecmp(fpr_own_recip_key, kl->value) == 0) {
@@ -517,18 +520,15 @@ int main() {
             }
             else {
                 cout << "FAIL: Encrypted for " << kl->value << ", which it should not be." << endl;
-//                assert(false);
+//                TEST_ASSERT(false);
             }
             cout << "\t " << kl->value << endl;
         }
-        assert(i < 4);
+        TEST_ASSERT(i < 4);
     }
-//    assert (own_key_found && extra_key_0_found && extra_key_1_found);
+//    TEST_ASSERT (own_key_found && extra_key_0_found && extra_key_1_found);
     cout << "Message was encrypted for all the keys it should be, and none it should not!" << endl;
 
     cout << "Case 3b: PASS" << endl << endl;
     
-    cout << "calling release()\n";
-    release(session);
-    return 0;
 }

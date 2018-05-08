@@ -1,28 +1,31 @@
-#include <iostream>
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
+#include <stdlib.h>
+#include <string>
 #include <iostream>
 #include <fstream>
-#include <string>
 #include <cstring> // for strcmp()
-#include <assert.h>
-#include "blacklist.h"
+
+#include "pEpEngine.h"
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"
 #include "test_util.h" // for slurp()
 
+#include <cpptest.h>
+#include "EngineTestSessionSuite.h"
+#include "PepSubjectReceivedTests.h"
+
 using namespace std;
 
-int main(int argc, char** argv) {
+PepSubjectReceivedTests::PepSubjectReceivedTests(string suitename, string test_home_dir) :
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("PepSubjectReceivedTests::check_pep_subject_received"),
+                                                                      static_cast<Func>(&PepSubjectReceivedTests::check_pep_subject_received)));
+}
 
-    cout << "\n*** check that p≡p subject is handled properly in received mails ***\n\n";
-
-    PEP_SESSION session;
-    
-    cout << "calling init()\n";
-    PEP_STATUS status1 = init(&session);   
-    assert(status1 == PEP_STATUS_OK);
-    assert(session);
-    cout << "init() completed.\n";
+void PepSubjectReceivedTests::check_pep_subject_received() {
 
     const char* keytexts[3];
 
@@ -58,8 +61,8 @@ int main(int argc, char** argv) {
     PEP_decrypt_flags_t flags;
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    assert(status == PEP_STATUS_OK);
-    assert(msg_ptr);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -69,7 +72,7 @@ int main(int argc, char** argv) {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    assert(strcmp("This is the usual pEp subject that should replace the above.", final_ptr->shortmsg) == 0);
+    TEST_ASSERT(strcmp("This is the usual pEp subject that should replace the above.", final_ptr->shortmsg) == 0);
 
     cout << "Test 1a: Subject replaced as expected." << endl << endl;
 
@@ -91,8 +94,8 @@ int main(int argc, char** argv) {
     rating = PEP_rating_unreliable;
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    assert(status == PEP_STATUS_OK);
-    assert(msg_ptr);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -102,7 +105,7 @@ int main(int argc, char** argv) {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    assert(strcmp("This is the usual pEp subject that should replace the above.", final_ptr->shortmsg) == 0);
+    TEST_ASSERT(strcmp("This is the usual pEp subject that should replace the above.", final_ptr->shortmsg) == 0);
 
     cout << "Test 1b: Subject replaced as expected." << endl << endl;
 
@@ -124,8 +127,8 @@ int main(int argc, char** argv) {
     mailtext = slurp("test_mails/pEp_subject_normal_signed_2a.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    assert(status == PEP_STATUS_OK);
-    assert(msg_ptr);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -135,7 +138,7 @@ int main(int argc, char** argv) {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    assert(strcmp("Now signed!", final_ptr->shortmsg) == 0);
+    TEST_ASSERT(strcmp("Now signed!", final_ptr->shortmsg) == 0);
 
     cout << "Test 2a: Subject replaced as expected." << endl << endl;
 
@@ -157,8 +160,8 @@ int main(int argc, char** argv) {
     mailtext = slurp("test_mails/p3p_subject_normal_signed_2b.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    assert(status == PEP_STATUS_OK);
-    assert(msg_ptr);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -168,7 +171,7 @@ int main(int argc, char** argv) {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    assert(strcmp("Now signed!", final_ptr->shortmsg) == 0);
+    TEST_ASSERT(strcmp("Now signed!", final_ptr->shortmsg) == 0);
 
     cout << "Test 2b: Subject replaced as expected." << endl << endl;
 
@@ -191,8 +194,8 @@ int main(int argc, char** argv) {
     mailtext = slurp("test_mails/pEp_encrypted_subject_IS_pEp_3a.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    assert(status == PEP_STATUS_OK);
-    assert(msg_ptr);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -202,7 +205,7 @@ int main(int argc, char** argv) {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    assert(strcmp("pEp", final_ptr->shortmsg) == 0);
+    TEST_ASSERT(strcmp("pEp", final_ptr->shortmsg) == 0);
 
     cout << "Test 3a: Subject remains intact as desired." << endl << endl;
 
@@ -224,8 +227,8 @@ int main(int argc, char** argv) {
     mailtext = slurp("test_mails/p3p_encrypted_subject_IS_pEp_3b.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    assert(status == PEP_STATUS_OK);
-    assert(msg_ptr);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -235,7 +238,7 @@ int main(int argc, char** argv) {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    assert(strcmp("p≡p", final_ptr->shortmsg) == 0);
+    TEST_ASSERT(strcmp("p≡p", final_ptr->shortmsg) == 0);
 
     cout << "Test 3: Subject remains intact as desired." << endl << endl;
 
@@ -258,8 +261,8 @@ int main(int argc, char** argv) {
     mailtext = slurp("test_mails/pEp_subject_pEp_replaced_w_pEp_4a.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    assert(status == PEP_STATUS_OK);
-    assert(msg_ptr);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -269,7 +272,7 @@ int main(int argc, char** argv) {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    assert(strcmp("pEp", final_ptr->shortmsg) == 0);
+    TEST_ASSERT(strcmp("pEp", final_ptr->shortmsg) == 0);
 
     cout << "Test 4a: Subject correct." << endl << endl;
 
@@ -291,8 +294,8 @@ int main(int argc, char** argv) {
     mailtext = slurp("test_mails/pEp_subject_pEp_replaced_w_p3p_4b.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    assert(status == PEP_STATUS_OK);
-    assert(msg_ptr);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -302,7 +305,7 @@ int main(int argc, char** argv) {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    assert(strcmp("pEp", final_ptr->shortmsg) == 0);
+    TEST_ASSERT(strcmp("pEp", final_ptr->shortmsg) == 0);
 
     cout << "Test 4b: Subject correct." << endl << endl;
 
@@ -324,8 +327,8 @@ int main(int argc, char** argv) {
     mailtext = slurp("test_mails/pEp_subject_p3p_replaced_w_pEp_4c.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    assert(status == PEP_STATUS_OK);
-    assert(msg_ptr);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -335,7 +338,7 @@ int main(int argc, char** argv) {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    assert(strcmp("p≡p", final_ptr->shortmsg) == 0);
+    TEST_ASSERT(strcmp("p≡p", final_ptr->shortmsg) == 0);
 
     cout << "Test 4c: Subject correct." << endl << endl;
 
@@ -357,8 +360,8 @@ int main(int argc, char** argv) {
     mailtext = slurp("test_mails/pEp_subject_p3p_replaced_w_p3p_4d.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    assert(status == PEP_STATUS_OK);
-    assert(msg_ptr);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -368,7 +371,7 @@ int main(int argc, char** argv) {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    assert(strcmp("p≡p", final_ptr->shortmsg) == 0);
+    TEST_ASSERT(strcmp("p≡p", final_ptr->shortmsg) == 0);
 
     cout << "Test 4d: Subject correct, in any event." << endl << endl;
 
@@ -391,8 +394,8 @@ int main(int argc, char** argv) {
     mailtext = slurp("test_mails/pEp_unencrypted_pEp_subject_5a.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    assert(status == PEP_STATUS_OK);
-    assert(msg_ptr);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -402,7 +405,7 @@ int main(int argc, char** argv) {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    assert(strcmp("pEp", final_ptr->shortmsg) == 0);
+    TEST_ASSERT(strcmp("pEp", final_ptr->shortmsg) == 0);
 
     cout << "Test 5a: Subject remains intact." << endl << endl;
 
@@ -425,8 +428,8 @@ int main(int argc, char** argv) {
     mailtext = slurp("test_mails/pEp_unencrypted_p3p_subject_5b.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    assert(status == PEP_STATUS_OK);
-    assert(msg_ptr);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -436,7 +439,7 @@ int main(int argc, char** argv) {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    assert(strcmp("p≡p", final_ptr->shortmsg) == 0);
+    TEST_ASSERT(strcmp("p≡p", final_ptr->shortmsg) == 0);
 
     cout << "Test 5b: Subject remains intact." << endl << endl;
 
@@ -458,8 +461,8 @@ int main(int argc, char** argv) {
     mailtext = slurp("test_mails/pEp_subject_normal_unencrypted_6.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    assert(status == PEP_STATUS_OK);
-    assert(msg_ptr);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(msg_ptr);
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -469,7 +472,7 @@ int main(int argc, char** argv) {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    assert(strcmp("This is just a normal subject, really", final_ptr->shortmsg) == 0);
+    TEST_ASSERT(strcmp("This is just a normal subject, really", final_ptr->shortmsg) == 0);
 
     cout << "Test 6: Subject remains intact." << endl << endl;
 
@@ -477,8 +480,4 @@ int main(int argc, char** argv) {
         free_message(dest_msg);
     free_message(msg_ptr);
     free_stringlist(keylist);
-        
-    cout << "calling release()\n";
-    release(session);
-    return 0;
 }

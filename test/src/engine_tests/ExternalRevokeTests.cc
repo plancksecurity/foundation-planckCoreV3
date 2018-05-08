@@ -2,28 +2,33 @@
 // see LICENSE.txt
 
 #include <stdlib.h>
-#include <string.h>
+#include <string>
+#include <cstring>
 #include <time.h>
 #include "platform.h"
 #include <iostream>
 #include <fstream>
-#include <assert.h>
 #include "mime.h"
 #include "message_api.h"
 #include "test_util.h"
 
+#include "pEpEngine.h"
+
+#include <cpptest.h>
+#include "EngineTestSessionSuite.h"
+#include "ExternalRevokeTests.h"
+
 using namespace std;
 
-int main() {
-    cout << "\n*** external_revoke_test.cc ***\n\n";
+ExternalRevokeTests::ExternalRevokeTests(string suitename, string test_home_dir) :
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("ExternalRevokeTests::check_external_revoke"),
+                                                                      static_cast<Func>(&ExternalRevokeTests::check_external_revoke)));
+}
 
-    PEP_SESSION session;
-    
-    cout << "calling init()\n";
-    PEP_STATUS status = init(&session);   
-    assert(status == PEP_STATUS_OK);
-    assert(session);
-    cout << "init() completed.\n";
+void ExternalRevokeTests::check_external_revoke() {
+
+    PEP_STATUS status = PEP_STATUS_OK;   
 
 #ifndef NETPGP
     char* fprs[2];
@@ -31,13 +36,13 @@ int main() {
     const string fenris_pub_key = slurp("test_keys/pub/pep.test.fenris-0x4F3D2900_pub.asc");
     const string fenris_priv_key = slurp("test_keys/priv/pep.test.fenris-0x4F3D2900_priv.asc");
 
-    assert(fenris_pub_key.length() != 0);
-    assert(fenris_priv_key.length() != 0);
+    TEST_ASSERT(fenris_pub_key.length() != 0);
+    TEST_ASSERT(fenris_priv_key.length() != 0);
     
     PEP_STATUS statuspub = import_key(session, fenris_pub_key.c_str(), fenris_pub_key.length(), NULL);
     PEP_STATUS statuspriv = import_key(session, fenris_priv_key.c_str(), fenris_priv_key.length(), NULL);
-    assert(statuspub == PEP_STATUS_OK);
-    assert(statuspriv == PEP_STATUS_OK);
+    TEST_ASSERT(statuspub == PEP_STATUS_OK);
+    TEST_ASSERT(statuspriv == PEP_STATUS_OK);
 
     // Create sender ID
     
@@ -86,7 +91,7 @@ int main() {
     cout << "Creating message…\n";
     identity_list* to_list = new_identity_list(identity_dup(recip1)); // to bob
     message* outgoing_msg = new_message(PEP_dir_outgoing);
-    assert(outgoing_msg);
+    TEST_ASSERT(outgoing_msg);
     outgoing_msg->from = identity_dup(me);
     outgoing_msg->to = to_list;
     outgoing_msg->shortmsg = strdup("Greetings, humans!");
@@ -100,18 +105,18 @@ int main() {
     status = encrypt_message(session, outgoing_msg, NULL, &encrypted_outgoing_msg, PEP_enc_PGP_MIME, 0);
     cout << "Encrypted message with status " << tl_status_string(status) << endl;
     // check status
-    assert(status == PEP_STATUS_OK);
-    assert(encrypted_outgoing_msg);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(encrypted_outgoing_msg);
 
     cout << "Checking message recipient comm_type from message." << endl;
     // check comm_type
     cout << "comm_type: " << tl_ct_string(encrypted_outgoing_msg->to->ident->comm_type) << endl;
-    assert(encrypted_outgoing_msg->to->ident->comm_type == PEP_ct_OpenPGP);
+    TEST_ASSERT(encrypted_outgoing_msg->to->ident->comm_type == PEP_ct_OpenPGP);
     
     status = get_trust(session, recip1);
     
     cout << "Recip's trust DB comm_type = " << hex << tl_ct_string(recip1->comm_type) << endl;
-    assert(recip1->comm_type == PEP_ct_OpenPGP); // FIXME: PEP_ct_pEp???
+    TEST_ASSERT(recip1->comm_type == PEP_ct_OpenPGP); // FIXME: PEP_ct_pEp???
 
     // decrypt message
     free_message(outgoing_msg);
@@ -129,18 +134,18 @@ int main() {
     cout << "Decrypting message." << endl;
     status = decrypt_message(session, encrypted_outgoing_msg, &outgoing_msg, &keylist, &rating, &flags);
     cout << "Decrypted message with status " << tl_status_string(status) << endl;
-    assert(status == PEP_STATUS_OK);
-    assert(rating == PEP_rating_trusted);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(rating == PEP_rating_trusted);
 
     // check rating
     cout << "Rating of decrypted message to trusted recip: " << tl_rating_string(rating) << endl;
-    assert(rating == PEP_rating_trusted); // FIXME: trusted and anonymised?
+    TEST_ASSERT(rating == PEP_rating_trusted); // FIXME: trusted and anonymised?
     
     // check comm_type
     status = get_trust(session, recip1);
 
     cout << "Recip's trust DB comm_type = " << tl_ct_string(recip1->comm_type) << endl;
-    assert(recip1->comm_type == PEP_ct_OpenPGP); // FIXME: PEP_ct_pEp???
+    TEST_ASSERT(recip1->comm_type == PEP_ct_OpenPGP); // FIXME: PEP_ct_pEp???
 
     cout << endl << "---------------------------------------------------------" << endl;
     cout << "2a. Revoke key for (currently) trusted partner." << endl;
@@ -163,7 +168,7 @@ int main() {
     cout << "creating message…\n";
     to_list = new_identity_list(identity_dup(recip1)); // to bob
     outgoing_msg = new_message(PEP_dir_outgoing);
-    assert(outgoing_msg);
+    TEST_ASSERT(outgoing_msg);
     outgoing_msg->from = identity_dup(me);
     outgoing_msg->to = to_list;
     outgoing_msg->shortmsg = strdup("Greetings, humans!");
@@ -181,22 +186,22 @@ int main() {
 
     status = encrypt_message(session, outgoing_msg, NULL, &encrypted_outgoing_msg, PEP_enc_PGP_MIME, 0);
     cout << "Encryption returns with status " << tl_status_string(status) << endl;
-    assert (status == PEP_UNENCRYPTED);
-    assert (encrypted_outgoing_msg == NULL);
+    TEST_ASSERT (status == PEP_UNENCRYPTED);
+    TEST_ASSERT (encrypted_outgoing_msg == NULL);
     status = update_identity(session, recip1);
-    assert(recip1->comm_type = PEP_ct_key_not_found);
+    TEST_ASSERT(recip1->comm_type = PEP_ct_key_not_found);
 
     cout << endl << "---------------------------------------------------------" << endl;
     cout << "2c. Check trust of recip, whose only key has been revoked, once an encryption attempt has been made." << endl;
     cout << "---------------------------------------------------------" << endl << endl;
 
-    assert(recip1->fpr == NULL);
+    TEST_ASSERT(recip1->fpr == NULL);
     recip1->fpr = fprs[0];
     status = get_trust(session, recip1);
     recip1->fpr = NULL;
 
     cout << "Recip's trust DB comm_type = " << hex << tl_ct_string(recip1->comm_type) << endl;
-    assert(recip1->comm_type == PEP_ct_unknown || recip1->comm_type == PEP_ct_key_revoked);
+    TEST_ASSERT(recip1->comm_type == PEP_ct_unknown || recip1->comm_type == PEP_ct_key_revoked);
 
     free_message(decrypted_msg);
     free_message(outgoing_msg);
@@ -228,7 +233,7 @@ int main() {
     // status = update_identity(session, recip1);
     to_list = new_identity_list(identity_dup(recip1)); // to bob
     outgoing_msg = new_message(PEP_dir_outgoing);
-    assert(outgoing_msg);
+    TEST_ASSERT(outgoing_msg);
     outgoing_msg->from = identity_dup(me);
     outgoing_msg->to = to_list;
     outgoing_msg->shortmsg = strdup("Greetings, humans!");
@@ -245,12 +250,12 @@ int main() {
 
     // check comm_type
     cout << "comm_type: " << tl_ct_string(ct) << endl;
-    assert(ct == PEP_ct_OpenPGP_unconfirmed);
+    TEST_ASSERT(ct == PEP_ct_OpenPGP_unconfirmed);
     
     status = get_trust(session, recip1);
 
     cout << "Recip's trust DB comm_type (should be unknown, as we're using a keyring-only key, not in DB) = " << hex << tl_ct_string(recip1->comm_type) << endl;
-    assert(recip1->comm_type != PEP_ct_OpenPGP_unconfirmed);
+    TEST_ASSERT(recip1->comm_type != PEP_ct_OpenPGP_unconfirmed);
 
     // decrypt message
 //    free_message(outgoing_msg);
@@ -264,23 +269,23 @@ int main() {
     flags = 0;
     status = decrypt_message(session, encrypted_outgoing_msg, &decrypted_msg, &keylist, &rating, &flags);
     cout << "Decryption returns with status " << tl_status_string(status) << endl;
-    assert(status == PEP_STATUS_OK);
-    assert(decrypted_msg);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(decrypted_msg);
     
     // check rating
     cout << "Rating of decrypted message to trusted recip: " << tl_rating_string(rating) << endl;
-    assert(rating == PEP_rating_reliable);
+    TEST_ASSERT(rating == PEP_rating_reliable);
 
     status = update_identity(session, decrypted_msg->to->ident);
     ct = (decrypted_msg ? decrypted_msg->to->ident->comm_type : outgoing_msg->to->ident->comm_type);
 
     cout << "comm_type: " << tl_ct_string(ct) << endl;
-    assert(ct == PEP_ct_OpenPGP_unconfirmed);
+    TEST_ASSERT(ct == PEP_ct_OpenPGP_unconfirmed);
     
     status = get_trust(session, recip1);
     
     cout << "Recip's trust DB comm_type (should be unknown - there's nothing in the DB) = " << hex << tl_ct_string(recip1->comm_type) << endl;
-    assert(recip1->comm_type == PEP_ct_unknown);
+    TEST_ASSERT(recip1->comm_type == PEP_ct_unknown);
 
     free_message(encrypted_outgoing_msg);
     free_message(decrypted_msg);
@@ -303,8 +308,4 @@ int main() {
     cout << "Sorry, test is not defined for NETPGP at this time." << endl;
     
 #endif
-    
-    release(session);
-
-    return 0;
 }

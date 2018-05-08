@@ -1,16 +1,27 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
+#include <stdlib.h>
 #include <iostream>
 #include <string>
 #include <cstring>
-#include <assert.h>
+
+#include "pEpEngine.h"
 #include "map_asn1.h"
+
+#include <cpptest.h>
+#include "EngineTestSessionSuite.h"
+#include "MapAsn1Tests.h"
 
 using namespace std;
 
-int main() {
-    cout << "\n*** map_asn1_test ***\n\n";
+MapAsn1Tests::MapAsn1Tests(string suitename, string test_home_dir) :
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("MapAsn1Tests::check_map_asn1"),
+                                                                      static_cast<Func>(&MapAsn1Tests::check_map_asn1)));
+}
+
+void MapAsn1Tests::check_map_asn1() {
 
     cout << "creating new identity...\n";
 
@@ -43,8 +54,4 @@ int main() {
     asn_DEF_Identity.free_struct(&asn_DEF_Identity, ident_asn1, 0);
     free_identity(ident1);
     free_identity(ident2);
-
-
-    return 0;
 }
-
