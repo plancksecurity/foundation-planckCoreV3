@@ -108,10 +108,10 @@ int main() {
     cout << "Status is " << tl_status_string(status) << endl;
     assert(decrypted_text);
     assert(rating);
-    assert(flags & PEP_decrypt_flag_src_modified);
+    assert(!(flags & PEP_decrypt_flag_src_modified));
     
-    assert(modified_src);
-    cout << modified_src << endl;
+    assert(!modified_src);
+    //cout << modified_src << endl;
     
     free(decrypted_text);
     decrypted_text = nullptr;
