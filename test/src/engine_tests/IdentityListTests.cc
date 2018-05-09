@@ -86,23 +86,23 @@ void IdentityListTests::check_identity_list() {
     cout << "creating one-element identity_list...\n";
     
     pEp_identity* new_id = identity_dup(id1);
-    TEST_ASSERT(new_id);
+    TEST_ASSERT_MSG((new_id), "new_id");
     identity_list* idlist = new_identity_list(new_id);
-    TEST_ASSERT(idlist->ident);
-    TEST_ASSERT(test_identity_equals(id1, idlist->ident));
-    TEST_ASSERT(idlist->next == NULL);
+    TEST_ASSERT_MSG((idlist->ident), "idlist->ident");
+    TEST_ASSERT_MSG((test_identity_equals(id1, idlist->ident)), "test_identity_equals(id1, idlist->ident)");
+    TEST_ASSERT_MSG((idlist->next == NULL), "idlist->next == NULL");
     cout << "one-element identity_list created, next element is NULL\n\n";
     
     cout << "duplicating one-element list...\n";
     identity_list* duplist = identity_list_dup(idlist);
     pEp_identity* srcid = idlist->ident;
     pEp_identity* dstid = duplist->ident;
-    TEST_ASSERT(dstid);
-    TEST_ASSERT(test_identity_equals(srcid, dstid));
-    TEST_ASSERT(srcid->address != dstid->address);   // test deep copies 
-    TEST_ASSERT(srcid->fpr != dstid->fpr);
-    TEST_ASSERT(srcid->username != dstid->username);
-    TEST_ASSERT(duplist->next == NULL);
+    TEST_ASSERT_MSG((dstid), "dstid");
+    TEST_ASSERT_MSG((test_identity_equals(srcid, dstid)), "test_identity_equals(srcid, dstid)");
+    TEST_ASSERT_MSG((srcid->address != dstid->address), "srcid->address != dstid->address");   // test deep copies 
+    TEST_ASSERT_MSG((srcid->fpr != dstid->fpr), "srcid->fpr != dstid->fpr");
+    TEST_ASSERT_MSG((srcid->username != dstid->username), "srcid->username != dstid->username");
+    TEST_ASSERT_MSG((duplist->next == NULL), "duplist->next == NULL");
     cout << "one-element identity_list duplicated.\n\n";
     
     cout << "freeing identity_lists...\n";
@@ -117,25 +117,25 @@ void IdentityListTests::check_identity_list() {
     idlist = identity_list_add(idlist, identity_dup(id_arr[0]));
     for (i = 1; i < 4; i++) {
         p = identity_list_add(idlist, identity_dup(id_arr[i]));
-        TEST_ASSERT(p);
+        TEST_ASSERT_MSG((p), "p");
     }
     
     p = idlist;
     
     for (i = 0; i < 4; i++) {
-        TEST_ASSERT(p);
+        TEST_ASSERT_MSG((p), "p");
         
         srcid = p->ident;
-        TEST_ASSERT(srcid);
+        TEST_ASSERT_MSG((srcid), "srcid");
         
-        TEST_ASSERT(test_identity_equals(srcid, id_arr[i]));
-        TEST_ASSERT(srcid->address != id_arr[i]->address);   // test deep copies
-        TEST_ASSERT(srcid->fpr != id_arr[i]->fpr);
-        TEST_ASSERT(srcid->username != id_arr[i]->username);
+        TEST_ASSERT_MSG((test_identity_equals(srcid, id_arr[i])), "test_identity_equals(srcid, id_arr[i])");
+        TEST_ASSERT_MSG((srcid->address != id_arr[i]->address), "srcid->address != id_arr[i]->address");   // test deep copies
+        TEST_ASSERT_MSG((srcid->fpr != id_arr[i]->fpr), "srcid->fpr != id_arr[i]->fpr");
+        TEST_ASSERT_MSG((srcid->username != id_arr[i]->username), "srcid->username != id_arr[i]->username");
 
         p = p->next;
     }
-    TEST_ASSERT(p == NULL);
+    TEST_ASSERT_MSG((p == NULL), "p == NULL");
     
     cout << "\nduplicating four-element list...\n\n";
     duplist = identity_list_dup(idlist);
@@ -147,20 +147,20 @@ void IdentityListTests::check_identity_list() {
         srcid = p->ident;
         dstid = dup_p->ident;
 
-        TEST_ASSERT(dstid);
+        TEST_ASSERT_MSG((dstid), "dstid");
         
-        TEST_ASSERT(test_identity_equals(srcid, dstid));
+        TEST_ASSERT_MSG((test_identity_equals(srcid, dstid)), "test_identity_equals(srcid, dstid)");
 
-        TEST_ASSERT(srcid != dstid);   // test deep copies
-        TEST_ASSERT(srcid->address != dstid->address);   // test deep copies
-        TEST_ASSERT(srcid->fpr != dstid->fpr);
-        TEST_ASSERT(srcid->username != dstid->username);
+        TEST_ASSERT_MSG((srcid != dstid), "srcid != dstid");   // test deep copies
+        TEST_ASSERT_MSG((srcid->address != dstid->address), "srcid->address != dstid->address");   // test deep copies
+        TEST_ASSERT_MSG((srcid->fpr != dstid->fpr), "srcid->fpr != dstid->fpr");
+        TEST_ASSERT_MSG((srcid->username != dstid->username), "srcid->username != dstid->username");
         
         i++;
         p = p->next;
 
         dup_p = dup_p->next;
-        TEST_ASSERT((p == NULL) == (dup_p == NULL));
+        TEST_ASSERT_MSG(((p == NULL) == (dup_p == NULL)), "(p == NULL) == (dup_p == NULL)");
     }
     cout << "\nfour-element identity_list successfully duplicated.\n\n";
 

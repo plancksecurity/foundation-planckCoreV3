@@ -41,7 +41,7 @@ void LeastColorGroupTests::check_least_color_group() {
         cout << "\t read keyfile \"" << name << "\"..." << std::endl;
         const string keytextkey = slurp(name);
         PEP_STATUS statuskey = import_key(session, keytextkey.c_str(), keytextkey.length(), NULL);
-        TEST_ASSERT(statuskey == PEP_STATUS_OK);
+        TEST_ASSERT_MSG((statuskey == PEP_STATUS_OK), "statuskey == PEP_STATUS_OK");
     }
     
     cout << "\t read keyfile mailfile \"" << mailfile << "\"..." << std::endl;
@@ -70,8 +70,8 @@ void LeastColorGroupTests::check_least_color_group() {
     PEP_decrypt_flags_t flags;
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(msg_ptr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);

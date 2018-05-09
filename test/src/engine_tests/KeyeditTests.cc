@@ -33,10 +33,10 @@ void KeyeditTests::check_keyedit() {
             "423",
             "expire test key"
         );
-    TEST_ASSERT(identity);
+    TEST_ASSERT_MSG((identity), "identity");
     PEP_STATUS generate_status = generate_keypair(session, identity);
     cout << "generate_keypair() exits with " << generate_status << "\n";
-    TEST_ASSERT(generate_status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((generate_status == PEP_STATUS_OK), "generate_status == PEP_STATUS_OK");
     cout << "generated key is " << identity->fpr << "\n";
 
     string key(identity->fpr);
@@ -51,7 +51,7 @@ void KeyeditTests::check_keyedit() {
 
     PEP_STATUS status2 = renew_key(session, key.c_str(), ts);
     cout << "renew_key() exited with " << status2 << "\n";
-    TEST_ASSERT(status2 == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status2 == PEP_STATUS_OK), "status2 == PEP_STATUS_OK");
     free_timestamp(ts);
 
     cout << "key renewed.\n";
@@ -59,12 +59,12 @@ void KeyeditTests::check_keyedit() {
     cout << "key will be revoked\n";
     PEP_STATUS status3 = revoke_key(session, key.c_str(), "revoke test");
     cout << "revoke_key() exited with " << status3 << "\n";
-    TEST_ASSERT(status3 == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status3 == PEP_STATUS_OK), "status3 == PEP_STATUS_OK");
     
     cout << "key revoked.\n";
 
     cout << "deleting key pair " << key.c_str() << "\n";
     PEP_STATUS delete_status = delete_keypair(session, key.c_str());
     cout << "delete_keypair() exits with " << delete_status << "\n";
-    TEST_ASSERT(delete_status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((delete_status == PEP_STATUS_OK), "delete_status == PEP_STATUS_OK");
 }

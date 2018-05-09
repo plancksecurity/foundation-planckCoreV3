@@ -39,12 +39,12 @@ void MessageTwoPointOhTests::check_message_two_point_oh() {
 
     PEP_STATUS statuspub = import_key(session, alice_pub_key.c_str(), alice_pub_key.length(), NULL);
     PEP_STATUS statuspriv = import_key(session, alice_priv_key.c_str(), alice_priv_key.length(), NULL);
-    TEST_ASSERT(statuspub == PEP_STATUS_OK);
-    TEST_ASSERT(statuspriv == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((statuspub == PEP_STATUS_OK), "statuspub == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statuspriv == PEP_STATUS_OK), "statuspriv == PEP_STATUS_OK");
     statuspub = import_key(session, carol_pub_key.c_str(), carol_pub_key.length(), NULL);
     statuspriv = import_key(session, carol_priv_key.c_str(), carol_priv_key.length(), NULL);
-    TEST_ASSERT(statuspub == PEP_STATUS_OK);
-    TEST_ASSERT(statuspriv == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((statuspub == PEP_STATUS_OK), "statuspub == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statuspriv == PEP_STATUS_OK), "statuspriv == PEP_STATUS_OK");
 
     cout << "creating message…\n";
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", PEP_OWN_USERID, "Alice Test");
@@ -57,15 +57,15 @@ void MessageTwoPointOhTests::check_message_two_point_oh() {
     status = update_trust_for_fpr(session, carol->fpr, carol_comm_type);
     
     PEP_STATUS mystatus = myself(session, alice);
-    TEST_ASSERT(mystatus == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((mystatus == PEP_STATUS_OK), "mystatus == PEP_STATUS_OK");
     alice_status = update_identity(session, alice);
     alice_status = update_identity(session, carol);
-    TEST_ASSERT(alice->comm_type == PEP_ct_pEp);
-    TEST_ASSERT(carol->comm_type == carol_comm_type);
+    TEST_ASSERT_MSG((alice->comm_type == PEP_ct_pEp), "alice->comm_type == PEP_ct_pEp");
+    TEST_ASSERT_MSG((carol->comm_type == carol_comm_type), "carol->comm_type == carol_comm_type");
     
     identity_list* to_list = new_identity_list(carol); // to carol
     message* outgoing_message = new_message(PEP_dir_outgoing);
-    TEST_ASSERT(outgoing_message);
+    TEST_ASSERT_MSG((outgoing_message), "outgoing_message");
     outgoing_message->from = alice;
     outgoing_message->to = to_list;
     outgoing_message->shortmsg = strdup("Greetings, humans!");
@@ -80,8 +80,8 @@ void MessageTwoPointOhTests::check_message_two_point_oh() {
 
     char* encoded_text = nullptr;
     status = mime_encode_message(outgoing_message, false, &encoded_text);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(encoded_text);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((encoded_text), "encoded_text");
 
     cout << "unencrypted:\n\n";
     cout << encoded_text << "\n";
@@ -94,14 +94,14 @@ void MessageTwoPointOhTests::check_message_two_point_oh() {
     status = encrypt_message(session, outgoing_message, NULL, 
         &encrypted_msg, PEP_enc_PGP_MIME, 0);
     cout << "encrypt_message() returns " << std::hex << status << '.' << endl;
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(encrypted_msg);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((encrypted_msg), "encrypted_msg");
     cout << "message encrypted.\n";
     
     encrypted_msg->enc_format = PEP_enc_none;
     status = mime_encode_message(encrypted_msg, false, &encoded_text);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(encoded_text);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((encoded_text), "encoded_text");
      
     cout << "encrypted:\n\n";
     cout << encoded_text << "\n";
@@ -121,7 +121,7 @@ void MessageTwoPointOhTests::check_message_two_point_oh() {
     
     message* decoded_msg = nullptr;
     status = mime_decode_message(encoded_text, strlen(encoded_text), &decoded_msg);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     const string string3 = encoded_text;
       
     unlink("msg_2.0.asc");
@@ -139,12 +139,12 @@ void MessageTwoPointOhTests::check_message_two_point_oh() {
     stringpair_list_add(encrypted_msg->opt_fields, autoconsume);
     flags = 0;
     status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &rating, &flags);
-    TEST_ASSERT(decrypted_msg);
-    TEST_ASSERT(keylist_used);
-    TEST_ASSERT(rating);
-    //TEST_ASSERT(status == PEP_STATUS_OK && rating == PEP_rating_reliable);
+    TEST_ASSERT_MSG((decrypted_msg), "decrypted_msg");
+    TEST_ASSERT_MSG((keylist_used), "keylist_used");
+    TEST_ASSERT_MSG((rating), "rating");
+    //TEST_ASSERT_MSG((status == PEP_STATUS_OK && rating == PEP_rating_reliable), "status == PEP_STATUS_OK && rating == PEP_rating_reliable");
     //PEP_comm_type ct = encrypted_msg->from->comm_type;
-    //TEST_ASSERT(ct == PEP_ct_pEp);
+    //TEST_ASSERT_MSG((ct == PEP_ct_pEp), "ct == PEP_ct_pEp");
     
     cout << "keys used:\n";
     
@@ -155,8 +155,8 @@ void MessageTwoPointOhTests::check_message_two_point_oh() {
      
     decrypted_msg->enc_format = PEP_enc_none; 
     status = _mime_encode_message_internal(decrypted_msg, false, &encoded_text, false);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(encoded_text);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((encoded_text), "encoded_text");
     cout << "Decrypted message: " << endl;
     cout << encoded_text << endl;
      

@@ -75,8 +75,8 @@ void MimeTests::check_mime() {
     
     cout << "calling init()\n";
     PEP_STATUS status1 = init(&session);   
-    TEST_ASSERT(status1 == PEP_STATUS_OK);
-    TEST_ASSERT(session);
+    TEST_ASSERT_MSG((status1 == PEP_STATUS_OK), "status1 == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((session), "session");
     cout << "init() completed.\n";
 
     // mime test code
@@ -84,7 +84,7 @@ void MimeTests::check_mime() {
     // testing multipart/alternative
 
     message *msg2 = new_message(PEP_dir_incoming);
-    TEST_ASSERT(msg2);
+    TEST_ASSERT_MSG((msg2), "msg2");
     msg2->from = new_identity("vb@dingens.org", NULL, NULL, "Volker Birk");
     msg2->to = new_identity_list(new_identity("trischa@dingens.org", NULL, NULL, "Patricia Bädnar")),
     msg2->shortmsg = strdup("my sübject");
@@ -93,13 +93,13 @@ void MimeTests::check_mime() {
     msg2->longmsg = strdup(text2.c_str());
     string html2 = "<html><body><p>my message to you</p></body></html>";
     msg2->longmsg_formatted = strdup(html2.c_str());
-    TEST_ASSERT(msg2->longmsg_formatted);
+    TEST_ASSERT_MSG((msg2->longmsg_formatted), "msg2->longmsg_formatted");
 
     cout << "encoding message…\n";
     char *result2;
     PEP_STATUS status2 = mime_encode_message(msg2, false, &result2);
-    TEST_ASSERT(result2);
-    TEST_ASSERT(status2 == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((result2), "result2");
+    TEST_ASSERT_MSG((status2 == PEP_STATUS_OK), "status2 == PEP_STATUS_OK");
 
     cout << "result:\n";
     cout << result2 << "\n";

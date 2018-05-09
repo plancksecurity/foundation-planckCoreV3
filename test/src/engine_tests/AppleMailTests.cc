@@ -63,8 +63,8 @@ void AppleMailTests::check_apple_mail() {
     PEP_decrypt_flags_t flags = 0;
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(msg_ptr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     
     update_identity(session, msg_ptr->from);
     update_identity(session, msg_ptr->to->ident);
@@ -78,7 +78,7 @@ void AppleMailTests::check_apple_mail() {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    TEST_ASSERT(color_from_rating(rating) == PEP_color_green);
+    TEST_ASSERT_MSG((color_from_rating(rating) == PEP_color_green), "color_from_rating(rating) == PEP_color_green");
 
     if (final_ptr == dest_msg)
     	free_message(dest_msg);
@@ -96,8 +96,8 @@ void AppleMailTests::check_apple_mail() {
     const string mailtext2 = slurp(mailfile2);
     
     status = mime_decode_message(mailtext2.c_str(), mailtext2.length(), &msg_ptr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(msg_ptr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
@@ -106,7 +106,7 @@ void AppleMailTests::check_apple_mail() {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    TEST_ASSERT(color_from_rating(rating) == PEP_color_green);
+    TEST_ASSERT_MSG((color_from_rating(rating) == PEP_color_green), "color_from_rating(rating) == PEP_color_green");
 
     if (final_ptr == dest_msg)
     	free_message(dest_msg);

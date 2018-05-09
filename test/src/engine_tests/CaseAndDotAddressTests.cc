@@ -35,7 +35,7 @@ void CaseAndDotAddressTests::check_case_and_dot_address() {
     const char* alice_email_case_and_dot = "PE.p.teS.t.ALICE@pep-project.OrG";
 
     PEP_STATUS statuspub = import_key(session, alice_pub_key.c_str(), alice_pub_key.length(), NULL);
-    TEST_ASSERT(statuspub == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((statuspub == PEP_STATUS_OK), "statuspub == PEP_STATUS_OK");
 
     pEp_identity * alice_id = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", user_id, "Alice Test");
 
@@ -43,8 +43,8 @@ void CaseAndDotAddressTests::check_case_and_dot_address() {
 
     pEp_identity * new_alice_id = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", user_id, "Alice Test");
     status = update_identity(session, new_alice_id);
-    TEST_ASSERT(new_alice_id->fpr);
-    TEST_ASSERT(strcmp(new_alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
+    TEST_ASSERT_MSG((new_alice_id->fpr), "new_alice_id->fpr");
+    TEST_ASSERT_MSG((strcmp(new_alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0), "strcmp(new_alice_id->fpr, \"4ABE3AAF59AC32CFE4F86500A9411D176FF00E97\") == 0");
     free_identity(new_alice_id);
     free_identity(alice_id);
     alice_id = NULL;
@@ -52,33 +52,33 @@ void CaseAndDotAddressTests::check_case_and_dot_address() {
 
     alice_id = new_identity(alice_email_case, NULL, user_id, "Alice Test");
     status = update_identity(session, alice_id);
-    TEST_ASSERT(alice_id->fpr);
+    TEST_ASSERT_MSG((alice_id->fpr), "alice_id->fpr");
     cout << "Alice email: " << alice_email_case << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
-    TEST_ASSERT(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
+    TEST_ASSERT_MSG((strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0), "strcmp(alice_id->fpr, \"4ABE3AAF59AC32CFE4F86500A9411D176FF00E97\") == 0");
     free_identity(alice_id);
     alice_id = NULL;
 
     alice_id = new_identity(alice_email_dot, NULL, user_id, "Alice Test");
     status = update_identity(session, alice_id);
-    TEST_ASSERT(alice_id->fpr);
+    TEST_ASSERT_MSG((alice_id->fpr), "alice_id->fpr");
     cout << "Alice email: " << alice_email_dot << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
-    TEST_ASSERT(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
+    TEST_ASSERT_MSG((strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0), "strcmp(alice_id->fpr, \"4ABE3AAF59AC32CFE4F86500A9411D176FF00E97\") == 0");
     free_identity(alice_id);
     alice_id = NULL;
 
     alice_id = new_identity(alice_email_dotless, NULL, user_id, "Alice Test");
     status = update_identity(session, alice_id);
-    TEST_ASSERT(alice_id->fpr);
+    TEST_ASSERT_MSG((alice_id->fpr), "alice_id->fpr");
     cout << "Alice email: " << alice_email_dotless << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
-    TEST_ASSERT(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
+    TEST_ASSERT_MSG((strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0), "strcmp(alice_id->fpr, \"4ABE3AAF59AC32CFE4F86500A9411D176FF00E97\") == 0");
     free_identity(alice_id);
     alice_id = NULL;
 
     alice_id = new_identity(alice_email_case_and_dot, NULL, user_id, "Alice Test");
     status = update_identity(session, alice_id);
-    TEST_ASSERT(alice_id->fpr);
+    TEST_ASSERT_MSG((alice_id->fpr), "alice_id->fpr");
     cout << "Alice email: " << alice_email_case_and_dot << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
-    TEST_ASSERT(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
+    TEST_ASSERT_MSG((strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0), "strcmp(alice_id->fpr, \"4ABE3AAF59AC32CFE4F86500A9411D176FF00E97\") == 0");
     free_identity(alice_id);
     alice_id = NULL;
 }

@@ -45,11 +45,11 @@ void DecryptAttachPrivateKeyTrustedTests::check_decrypt_attach_private_key_trust
     // 13A9F97964A2B52520CAA40E51BCA783C065A213    
     input_key = slurp("test_keys/pub/priv-key-import-test-main_0-0xC065A213_pub.asc");
     status = import_key(session, input_key.c_str(), input_key.length(), NULL);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
 
     input_key = slurp("test_keys/priv/priv-key-import-test-main_0-0xC065A213_priv.asc");
     status = import_key(session, input_key.c_str(), input_key.length(), NULL);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
 
     // ensure there's no private key - doesn't work in automated tests, sadly. Uncommon when running script manually.
     bool has_priv = false;
@@ -60,7 +60,7 @@ void DecryptAttachPrivateKeyTrustedTests::check_decrypt_attach_private_key_trust
     //     if (status == PEP_STATUS_OK) {
     //         has_priv = false;
     //         status = contains_priv_key(session, fpr_same_addr_same_uid, &has_priv);
-    //         TEST_ASSERT(has_priv == false);
+    //         TEST_ASSERT_MSG((has_priv == false), "has_priv == false");
     //         cout << "Successfully deleted keypair for " << fpr_same_addr_same_uid << " - will now import the public key only" << endl;
     //     }
     //     else
@@ -71,23 +71,23 @@ void DecryptAttachPrivateKeyTrustedTests::check_decrypt_attach_private_key_trust
     // 8AB616A3BD51DEF714B5E688EFFB540C3276D2E5
     input_key = slurp("test_keys/pub/priv-key-import-test-main_0-0x3276D2E5_pub.asc");
     status = import_key(session, input_key.c_str(), input_key.length(), NULL);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
 
     
     cout << "Setting up own identity with default key " << fpr_main_me << endl;
     // Own identity with default key etc
     main_me = new_identity(main_addr, fpr_main_me, own_uid, "PrivateKey Import Test");
     status = set_own_key(session, main_me, fpr_main_me);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
 
-    TEST_ASSERT(strcmp(main_me->fpr, fpr_main_me) == 0);
+    TEST_ASSERT_MSG((strcmp(main_me->fpr, fpr_main_me) == 0), "strcmp(main_me->fpr, fpr_main_me) == 0");
     cout << "Done!" << endl << endl;
     
     cout << "Setting up sender identities and resetting key trust." << endl;
     cout << "Same address, same user_id - address: " << main_addr << ", user_id: " << own_uid << ", fpr: " << fpr_same_addr_same_uid << endl;  
     same_addr_same_uid = new_identity(main_addr, fpr_same_addr_same_uid, own_uid, "PrivateKey Import Test");
-    TEST_ASSERT(status == PEP_STATUS_OK || status == PEP_CANNOT_FIND_IDENTITY);
-    TEST_ASSERT((same_addr_same_uid->comm_type & PEP_ct_confirmed) != PEP_ct_confirmed);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK || status == PEP_CANNOT_FIND_IDENTITY), "status == PEP_STATUS_OK || status == PEP_CANNOT_FIND_IDENTITY");
+    TEST_ASSERT_MSG(((same_addr_same_uid->comm_type & PEP_ct_confirmed) != PEP_ct_confirmed), "(same_addr_same_uid->comm_type & PEP_ct_confirmed) != PEP_ct_confirmed");
 
     status = key_reset_trust(session, same_addr_same_uid);
     
@@ -110,14 +110,14 @@ void DecryptAttachPrivateKeyTrustedTests::check_decrypt_attach_private_key_trust
     cout << "Trusting personal key for " << same_addr_same_uid->user_id << " and " << same_addr_same_uid->fpr << endl;
     status = trust_personal_key(session, same_addr_same_uid);
     cout << "Status is " << tl_status_string(status) << endl;  
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     free(decrypted_text);
     decrypted_text = NULL;
 
     status = get_trust(session, same_addr_same_uid);
     cout << tl_ct_string(same_addr_same_uid->comm_type) << endl;
     
-    TEST_ASSERT(same_addr_same_uid->comm_type == PEP_ct_pEp);
+    TEST_ASSERT_MSG((same_addr_same_uid->comm_type == PEP_ct_pEp), "same_addr_same_uid->comm_type == PEP_ct_pEp");
     
     flags = 0;
     status = MIME_decrypt_message(session, encoded_text.c_str(), 
@@ -126,7 +126,7 @@ void DecryptAttachPrivateKeyTrustedTests::check_decrypt_attach_private_key_trust
                                   &modified_src);
 
     status = get_trust(session, same_addr_same_uid);
-    TEST_ASSERT(same_addr_same_uid->comm_type == PEP_ct_pEp);
+    TEST_ASSERT_MSG((same_addr_same_uid->comm_type == PEP_ct_pEp), "same_addr_same_uid->comm_type == PEP_ct_pEp");
     
     flags = 0;
     status = MIME_decrypt_message(session, encoded_text.c_str(), 
@@ -135,13 +135,13 @@ void DecryptAttachPrivateKeyTrustedTests::check_decrypt_attach_private_key_trust
                                   &modified_src);
     
     cout << "Status: " << tl_status_string(status) << endl;
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
 
     cout << decrypted_text << endl;
     
     has_priv = false;
     status = contains_priv_key(session, fpr_same_addr_same_uid, &has_priv);
-    TEST_ASSERT(has_priv == true);
+    TEST_ASSERT_MSG((has_priv == true), "has_priv == true");
     cout << "Private key was also imported." << endl;
     
     cout << "PASS!" << endl;

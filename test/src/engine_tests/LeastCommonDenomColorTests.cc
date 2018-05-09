@@ -68,15 +68,15 @@ void LeastCommonDenomColorTests::check_least_common_denom_color() {
     PEP_decrypt_flags_t flags;
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(msg_ptr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
 
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(dest_msg);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((dest_msg), "dest_msg");
     /* message is signed and no recip is mistrusted... */
-    TEST_ASSERT(color_from_rating(rating) == PEP_color_yellow);
+    TEST_ASSERT_MSG((color_from_rating(rating) == PEP_color_yellow), "color_from_rating(rating) == PEP_color_yellow");
 
     cout << "shortmsg: " << dest_msg->shortmsg << endl << endl;
     cout << "longmsg: " << dest_msg->longmsg << endl << endl;
@@ -86,26 +86,26 @@ void LeastCommonDenomColorTests::check_least_common_denom_color() {
     
     /* re-evaluate rating, counting on optional fields */
     status = re_evaluate_message_rating(session, dest_msg, NULL, PEP_rating_undefined, &rating);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(color_from_rating(rating) == PEP_color_yellow);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((color_from_rating(rating) == PEP_color_yellow), "color_from_rating(rating) == PEP_color_yellow");
 
     /* re-evaluate rating, without optional fields */
     status = re_evaluate_message_rating(session, dest_msg, keylist, decrypt_rating, &rating);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(color_from_rating(rating) == PEP_color_yellow);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((color_from_rating(rating) == PEP_color_yellow), "color_from_rating(rating) == PEP_color_yellow");
 
     /* Ok, now mistrust one recip */
     key_mistrusted(session, recip2);
 
     /* re-evaluate rating, counting on optional fields */
     status = re_evaluate_message_rating(session, dest_msg, NULL, PEP_rating_undefined, &rating);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(color_from_rating(rating) == PEP_color_red);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((color_from_rating(rating) == PEP_color_red), "color_from_rating(rating) == PEP_color_red");
 
     /* re-evaluate rating, without optional fields */
     status = re_evaluate_message_rating(session, dest_msg, keylist, decrypt_rating, &rating);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(color_from_rating(rating) == PEP_color_red);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((color_from_rating(rating) == PEP_color_red), "color_from_rating(rating) == PEP_color_red");
 
     free_message(dest_msg);
     free_message(msg_ptr);
@@ -117,8 +117,8 @@ void LeastCommonDenomColorTests::check_least_common_denom_color() {
     rating = PEP_rating_unreliable;
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(msg_ptr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
   
@@ -127,7 +127,7 @@ void LeastCommonDenomColorTests::check_least_common_denom_color() {
     cout << "longmsg_formatted: " << (dest_msg->longmsg_formatted ? dest_msg->longmsg_formatted : "(empty)") << endl << endl;
 
     /* message is signed and no recip is mistrusted... */
-    TEST_ASSERT(color_from_rating(rating) == PEP_color_red);
+    TEST_ASSERT_MSG((color_from_rating(rating) == PEP_color_red), "color_from_rating(rating) == PEP_color_red");
 
     free_message(dest_msg);
     free_message(msg_ptr);

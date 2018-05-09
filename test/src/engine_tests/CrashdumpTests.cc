@@ -20,6 +20,6 @@ void CrashdumpTests::check_crashdump() {
     // MODULE test code
     char *text;
     PEP_STATUS status2 = get_crashdump_log(session, 0, &text);
-    TEST_ASSERT(status2 == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status2 == PEP_STATUS_OK), "status2 == PEP_STATUS_OK");
     cout << text;
 }

@@ -61,8 +61,8 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     PEP_decrypt_flags_t flags;
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(msg_ptr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -72,7 +72,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    TEST_ASSERT(strcmp("This is the usual pEp subject that should replace the above.", final_ptr->shortmsg) == 0);
+    TEST_ASSERT_MSG((strcmp("This is the usual pEp subject that should replace the above.", final_ptr->shortmsg) == 0), "strcmp(\"This is the usual pEp subject that should replace the above.\", final_ptr->shortmsg) == 0");
 
     cout << "Test 1a: Subject replaced as expected." << endl << endl;
 
@@ -94,8 +94,8 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     rating = PEP_rating_unreliable;
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(msg_ptr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -105,7 +105,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    TEST_ASSERT(strcmp("This is the usual pEp subject that should replace the above.", final_ptr->shortmsg) == 0);
+    TEST_ASSERT_MSG((strcmp("This is the usual pEp subject that should replace the above.", final_ptr->shortmsg) == 0), "strcmp(\"This is the usual pEp subject that should replace the above.\", final_ptr->shortmsg) == 0");
 
     cout << "Test 1b: Subject replaced as expected." << endl << endl;
 
@@ -127,8 +127,8 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     mailtext = slurp("test_mails/pEp_subject_normal_signed_2a.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(msg_ptr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -138,7 +138,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    TEST_ASSERT(strcmp("Now signed!", final_ptr->shortmsg) == 0);
+    TEST_ASSERT_MSG((strcmp("Now signed!", final_ptr->shortmsg) == 0), "strcmp(\"Now signed!\", final_ptr->shortmsg) == 0");
 
     cout << "Test 2a: Subject replaced as expected." << endl << endl;
 
@@ -160,8 +160,8 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     mailtext = slurp("test_mails/p3p_subject_normal_signed_2b.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(msg_ptr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -171,7 +171,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    TEST_ASSERT(strcmp("Now signed!", final_ptr->shortmsg) == 0);
+    TEST_ASSERT_MSG((strcmp("Now signed!", final_ptr->shortmsg) == 0), "strcmp(\"Now signed!\", final_ptr->shortmsg) == 0");
 
     cout << "Test 2b: Subject replaced as expected." << endl << endl;
 
@@ -194,8 +194,8 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     mailtext = slurp("test_mails/pEp_encrypted_subject_IS_pEp_3a.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(msg_ptr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -205,7 +205,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    TEST_ASSERT(strcmp("pEp", final_ptr->shortmsg) == 0);
+    TEST_ASSERT_MSG((strcmp("pEp", final_ptr->shortmsg) == 0), "strcmp(\"pEp\", final_ptr->shortmsg) == 0");
 
     cout << "Test 3a: Subject remains intact as desired." << endl << endl;
 
@@ -227,8 +227,8 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     mailtext = slurp("test_mails/p3p_encrypted_subject_IS_pEp_3b.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(msg_ptr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -238,7 +238,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    TEST_ASSERT(strcmp("p≡p", final_ptr->shortmsg) == 0);
+    TEST_ASSERT_MSG((strcmp("p≡p", final_ptr->shortmsg) == 0), "strcmp(\"p≡p\", final_ptr->shortmsg) == 0");
 
     cout << "Test 3: Subject remains intact as desired." << endl << endl;
 
@@ -261,8 +261,8 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     mailtext = slurp("test_mails/pEp_subject_pEp_replaced_w_pEp_4a.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(msg_ptr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -272,7 +272,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    TEST_ASSERT(strcmp("pEp", final_ptr->shortmsg) == 0);
+    TEST_ASSERT_MSG((strcmp("pEp", final_ptr->shortmsg) == 0), "strcmp(\"pEp\", final_ptr->shortmsg) == 0");
 
     cout << "Test 4a: Subject correct." << endl << endl;
 
@@ -294,8 +294,8 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     mailtext = slurp("test_mails/pEp_subject_pEp_replaced_w_p3p_4b.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(msg_ptr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -305,7 +305,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    TEST_ASSERT(strcmp("pEp", final_ptr->shortmsg) == 0);
+    TEST_ASSERT_MSG((strcmp("pEp", final_ptr->shortmsg) == 0), "strcmp(\"pEp\", final_ptr->shortmsg) == 0");
 
     cout << "Test 4b: Subject correct." << endl << endl;
 
@@ -327,8 +327,8 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     mailtext = slurp("test_mails/pEp_subject_p3p_replaced_w_pEp_4c.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(msg_ptr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -338,7 +338,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    TEST_ASSERT(strcmp("p≡p", final_ptr->shortmsg) == 0);
+    TEST_ASSERT_MSG((strcmp("p≡p", final_ptr->shortmsg) == 0), "strcmp(\"p≡p\", final_ptr->shortmsg) == 0");
 
     cout << "Test 4c: Subject correct." << endl << endl;
 
@@ -360,8 +360,8 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     mailtext = slurp("test_mails/pEp_subject_p3p_replaced_w_p3p_4d.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(msg_ptr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -371,7 +371,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    TEST_ASSERT(strcmp("p≡p", final_ptr->shortmsg) == 0);
+    TEST_ASSERT_MSG((strcmp("p≡p", final_ptr->shortmsg) == 0), "strcmp(\"p≡p\", final_ptr->shortmsg) == 0");
 
     cout << "Test 4d: Subject correct, in any event." << endl << endl;
 
@@ -394,8 +394,8 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     mailtext = slurp("test_mails/pEp_unencrypted_pEp_subject_5a.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(msg_ptr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -405,7 +405,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    TEST_ASSERT(strcmp("pEp", final_ptr->shortmsg) == 0);
+    TEST_ASSERT_MSG((strcmp("pEp", final_ptr->shortmsg) == 0), "strcmp(\"pEp\", final_ptr->shortmsg) == 0");
 
     cout << "Test 5a: Subject remains intact." << endl << endl;
 
@@ -428,8 +428,8 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     mailtext = slurp("test_mails/pEp_unencrypted_p3p_subject_5b.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(msg_ptr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -439,7 +439,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    TEST_ASSERT(strcmp("p≡p", final_ptr->shortmsg) == 0);
+    TEST_ASSERT_MSG((strcmp("p≡p", final_ptr->shortmsg) == 0), "strcmp(\"p≡p\", final_ptr->shortmsg) == 0");
 
     cout << "Test 5b: Subject remains intact." << endl << endl;
 
@@ -461,8 +461,8 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     mailtext = slurp("test_mails/pEp_subject_normal_unencrypted_6.eml");
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(msg_ptr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -472,7 +472,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    TEST_ASSERT(strcmp("This is just a normal subject, really", final_ptr->shortmsg) == 0);
+    TEST_ASSERT_MSG((strcmp("This is just a normal subject, really", final_ptr->shortmsg) == 0), "strcmp(\"This is just a normal subject, really\", final_ptr->shortmsg) == 0");
 
     cout << "Test 6: Subject remains intact." << endl << endl;
 

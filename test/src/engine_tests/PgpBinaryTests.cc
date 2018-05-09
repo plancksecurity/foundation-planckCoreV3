@@ -26,9 +26,9 @@ void PgpBinaryTests::check_pgp_binary() {
 
     const char *path;
     PEP_STATUS status2 = get_binary_path(PEP_crypt_OpenPGP, &path);
-    TEST_ASSERT(status2 == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status2 == PEP_STATUS_OK), "status2 == PEP_STATUS_OK");
 #ifdef USE_GPG
-    TEST_ASSERT(path);
+    TEST_ASSERT_MSG((path), "path");
 #endif
     if (path)
         cout << "PGP binary at " << path << "\n";

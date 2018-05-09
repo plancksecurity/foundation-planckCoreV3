@@ -50,15 +50,15 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
     cout << "* I: 1. myself() on id with no record in the DB and no input fpr" << endl;
     cout << "***********************************************************************" << endl << endl;
     status = myself(session, new_me);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(new_me->fpr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((new_me->fpr), "new_me->fpr");
     
     cout << "PASS: myself() generated fingerprint ";
     cout << new_me->fpr << endl << endl;
 
     char* generated_fpr = strdup(new_me->fpr);
     
-    TEST_ASSERT(new_me->comm_type == PEP_ct_pEp);
+    TEST_ASSERT_MSG((new_me->comm_type == PEP_ct_pEp), "new_me->comm_type == PEP_ct_pEp");
     
     free_identity(new_me);
 
@@ -68,14 +68,14 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
 
     new_me = new_identity(uniqname, NULL, own_user_id, NULL);
     status = myself(session, new_me);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     
-    TEST_ASSERT(new_me->fpr);
-    TEST_ASSERT(strcmp(new_me->fpr, generated_fpr) == 0);
-    TEST_ASSERT(new_me->username);
-    TEST_ASSERT(strcmp(new_me->username, start_username) == 0);
-    TEST_ASSERT(new_me->user_id);
-    TEST_ASSERT(new_me->comm_type == PEP_ct_pEp);
+    TEST_ASSERT_MSG((new_me->fpr), "new_me->fpr");
+    TEST_ASSERT_MSG((strcmp(new_me->fpr, generated_fpr) == 0), "strcmp(new_me->fpr, generated_fpr) == 0");
+    TEST_ASSERT_MSG((new_me->username), "new_me->username");
+    TEST_ASSERT_MSG((strcmp(new_me->username, start_username) == 0), "strcmp(new_me->username, start_username) == 0");
+    TEST_ASSERT_MSG((new_me->user_id), "new_me->user_id");
+    TEST_ASSERT_MSG((new_me->comm_type == PEP_ct_pEp), "new_me->comm_type == PEP_ct_pEp");
     
     char* default_own_id = NULL;
     status = get_userid_alias_default(session, own_user_id, &default_own_id);
@@ -84,7 +84,7 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
         default_own_id = strdup(own_user_id);
     }
 
-    TEST_ASSERT(strcmp(new_me->user_id, default_own_id) == 0);
+    TEST_ASSERT_MSG((strcmp(new_me->user_id, default_own_id) == 0), "strcmp(new_me->user_id, default_own_id) == 0");
     
     cout << "PASS: myself() retrieved the correct fpr, username and default user id" << endl << endl;
 
@@ -98,21 +98,21 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
 
     new_me = new_identity(uniqname, NULL, alias_id, NULL);
     status = myself(session, new_me);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     
-    TEST_ASSERT(new_me->fpr);
-    TEST_ASSERT(strcmp(new_me->fpr, generated_fpr) == 0);
-    TEST_ASSERT(new_me->username);
-    TEST_ASSERT(strcmp(new_me->username, start_username) == 0);
-    TEST_ASSERT(new_me->user_id);
-    TEST_ASSERT(strcmp(new_me->user_id, default_own_id) == 0);
-    TEST_ASSERT(new_me->comm_type == PEP_ct_pEp);
+    TEST_ASSERT_MSG((new_me->fpr), "new_me->fpr");
+    TEST_ASSERT_MSG((strcmp(new_me->fpr, generated_fpr) == 0), "strcmp(new_me->fpr, generated_fpr) == 0");
+    TEST_ASSERT_MSG((new_me->username), "new_me->username");
+    TEST_ASSERT_MSG((strcmp(new_me->username, start_username) == 0), "strcmp(new_me->username, start_username) == 0");
+    TEST_ASSERT_MSG((new_me->user_id), "new_me->user_id");
+    TEST_ASSERT_MSG((strcmp(new_me->user_id, default_own_id) == 0), "strcmp(new_me->user_id, default_own_id) == 0");
+    TEST_ASSERT_MSG((new_me->comm_type == PEP_ct_pEp), "new_me->comm_type == PEP_ct_pEp");
     
     char* tmp_def = NULL;
     
     status = get_userid_alias_default(session, alias_id, &tmp_def);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(strcmp(tmp_def, default_own_id) == 0);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((strcmp(tmp_def, default_own_id) == 0), "strcmp(tmp_def, default_own_id) == 0");
 
     cout << "PASS: myself() retrieved the correct fpr, username and default user id, and put the right alias in for the default";
     cout << endl << endl;
@@ -126,7 +126,7 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
 
     new_me = new_identity(uniqname, NULL, alias_id, start_username);
     status = generate_keypair(session, new_me);
-    TEST_ASSERT(new_me->fpr);
+    TEST_ASSERT_MSG((new_me->fpr), "new_me->fpr");
     
     cout << "Generated fingerprint ";
     cout << new_me->fpr << "\n";
@@ -134,16 +134,16 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
     char* new_fpr = strdup(new_me->fpr);
 
     status = set_own_key(session, new_me, new_fpr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(new_me->fpr);
-    TEST_ASSERT(strcmp(new_me->fpr, generated_fpr) != 0);
-    TEST_ASSERT(strcmp(new_me->fpr, new_fpr) == 0);
-    TEST_ASSERT(new_me->username);
-    TEST_ASSERT(strcmp(new_me->username, start_username) == 0);
-    TEST_ASSERT(new_me->user_id);
-    TEST_ASSERT(strcmp(new_me->user_id, default_own_id) == 0);
-    TEST_ASSERT(new_me->me);
-    TEST_ASSERT(new_me->comm_type == PEP_ct_pEp);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((new_me->fpr), "new_me->fpr");
+    TEST_ASSERT_MSG((strcmp(new_me->fpr, generated_fpr) != 0), "strcmp(new_me->fpr, generated_fpr) != 0");
+    TEST_ASSERT_MSG((strcmp(new_me->fpr, new_fpr) == 0), "strcmp(new_me->fpr, new_fpr) == 0");
+    TEST_ASSERT_MSG((new_me->username), "new_me->username");
+    TEST_ASSERT_MSG((strcmp(new_me->username, start_username) == 0), "strcmp(new_me->username, start_username) == 0");
+    TEST_ASSERT_MSG((new_me->user_id), "new_me->user_id");
+    TEST_ASSERT_MSG((strcmp(new_me->user_id, default_own_id) == 0), "strcmp(new_me->user_id, default_own_id) == 0");
+    TEST_ASSERT_MSG((new_me->me), "new_me->me");
+    TEST_ASSERT_MSG((new_me->comm_type == PEP_ct_pEp), "new_me->comm_type == PEP_ct_pEp");
 
     cout << "PASS: myself() set and retrieved the new fpr, username and default user id, and put the right alias in for the default";
     cout << endl << endl;
@@ -153,9 +153,9 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
     new_me->fpr = strdup(generated_fpr);
     new_me->comm_type = PEP_ct_unknown;
     status = set_own_key(session, new_me, generated_fpr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(strcmp(new_me->fpr, generated_fpr) == 0);
-    TEST_ASSERT(new_me->comm_type == PEP_ct_pEp);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((strcmp(new_me->fpr, generated_fpr) == 0), "strcmp(new_me->fpr, generated_fpr) == 0");
+    TEST_ASSERT_MSG((new_me->comm_type == PEP_ct_pEp), "new_me->comm_type == PEP_ct_pEp");
     
     cout << "****************************************************************************************" << endl;
     cout << "* I: 5. myself(), replace fpr, revoke key" << endl;
@@ -167,15 +167,15 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
     new_me = new_identity(uniqname, NULL, alias_id, start_username);
     
     status = set_own_key(session, new_me, new_fpr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(new_me->fpr);
-    TEST_ASSERT(strcmp(new_me->fpr, generated_fpr) != 0);
-    TEST_ASSERT(new_me->username);
-    TEST_ASSERT(strcmp(new_me->username, start_username) == 0);
-    TEST_ASSERT(new_me->user_id);
-    TEST_ASSERT(strcmp(new_me->user_id, default_own_id) == 0);
-    TEST_ASSERT(new_me->me);
-    TEST_ASSERT(new_me->comm_type == PEP_ct_pEp);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((new_me->fpr), "new_me->fpr");
+    TEST_ASSERT_MSG((strcmp(new_me->fpr, generated_fpr) != 0), "strcmp(new_me->fpr, generated_fpr) != 0");
+    TEST_ASSERT_MSG((new_me->username), "new_me->username");
+    TEST_ASSERT_MSG((strcmp(new_me->username, start_username) == 0), "strcmp(new_me->username, start_username) == 0");
+    TEST_ASSERT_MSG((new_me->user_id), "new_me->user_id");
+    TEST_ASSERT_MSG((strcmp(new_me->user_id, default_own_id) == 0), "strcmp(new_me->user_id, default_own_id) == 0");
+    TEST_ASSERT_MSG((new_me->me), "new_me->me");
+    TEST_ASSERT_MSG((new_me->comm_type == PEP_ct_pEp), "new_me->comm_type == PEP_ct_pEp");
     
     cout << "PASS: myself() retrieved the new fpr, username and default user id, and put the right alias in for the default";
     cout << endl << endl;
@@ -195,27 +195,27 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
     const string alex_pub_key = slurp("test_keys/pub/pep.test.alexander-0x26B54E4E_pub.asc");
     
     PEP_STATUS statuspub = import_key(session, alex_pub_key.c_str(), alex_pub_key.length(), NULL);
-    TEST_ASSERT(statuspub == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((statuspub == PEP_STATUS_OK), "statuspub == PEP_STATUS_OK");
 
     pEp_identity* alex = new_identity(alex_address, alex_fpr, alex_userid, alex_username);
 
     // 2. set identity
     status = set_identity(session, alex);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     free_identity(alex);
             
     alex = new_identity(alex_address, NULL, alex_userid, alex_username); 
     status = update_identity(session, alex);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(alex->fpr);
-    TEST_ASSERT(strcmp(alex->fpr, alex_fpr) == 0);
-    TEST_ASSERT(alex->username);
-    TEST_ASSERT(strcmp(alex->username, alex_username) == 0);
-    TEST_ASSERT(alex->user_id);
-    TEST_ASSERT(strcmp(alex->user_id, alex_userid) == 0);
-    TEST_ASSERT(!alex->me); 
-    TEST_ASSERT(alex->comm_type == PEP_ct_OpenPGP_unconfirmed);
-    TEST_ASSERT(strcmp(alex->address, alex_address) == 0);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((alex->fpr), "alex->fpr");
+    TEST_ASSERT_MSG((strcmp(alex->fpr, alex_fpr) == 0), "strcmp(alex->fpr, alex_fpr) == 0");
+    TEST_ASSERT_MSG((alex->username), "alex->username");
+    TEST_ASSERT_MSG((strcmp(alex->username, alex_username) == 0), "strcmp(alex->username, alex_username) == 0");
+    TEST_ASSERT_MSG((alex->user_id), "alex->user_id");
+    TEST_ASSERT_MSG((strcmp(alex->user_id, alex_userid) == 0), "strcmp(alex->user_id, alex_userid) == 0");
+    TEST_ASSERT_MSG((!alex->me), "!alex->me"); 
+    TEST_ASSERT_MSG((alex->comm_type == PEP_ct_OpenPGP_unconfirmed), "alex->comm_type == PEP_ct_OpenPGP_unconfirmed");
+    TEST_ASSERT_MSG((strcmp(alex->address, alex_address) == 0), "strcmp(alex->address, alex_address) == 0");
 
     cout << "PASS: update_identity() correctly retrieved extant record with matching address, id, and username" << endl << endl;
     free_identity(alex);
@@ -229,16 +229,16 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
     alex = new_identity(alex_address, NULL, alex_userid, new_username);
     cout << "Timing is everything" << endl; 
     status = update_identity(session, alex);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(alex->fpr);
-    TEST_ASSERT(strcmp(alex->fpr, alex_fpr) == 0);
-    TEST_ASSERT(alex->username);
-    TEST_ASSERT(strcmp(alex->username, new_username) == 0);
-    TEST_ASSERT(alex->user_id);
-    TEST_ASSERT(strcmp(alex->user_id, alex_userid) == 0);
-    TEST_ASSERT(!alex->me); 
-    TEST_ASSERT(alex->comm_type == PEP_ct_OpenPGP_unconfirmed);
-    TEST_ASSERT(strcmp(alex->address, alex_address) == 0);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((alex->fpr), "alex->fpr");
+    TEST_ASSERT_MSG((strcmp(alex->fpr, alex_fpr) == 0), "strcmp(alex->fpr, alex_fpr) == 0");
+    TEST_ASSERT_MSG((alex->username), "alex->username");
+    TEST_ASSERT_MSG((strcmp(alex->username, new_username) == 0), "strcmp(alex->username, new_username) == 0");
+    TEST_ASSERT_MSG((alex->user_id), "alex->user_id");
+    TEST_ASSERT_MSG((strcmp(alex->user_id, alex_userid) == 0), "strcmp(alex->user_id, alex_userid) == 0");
+    TEST_ASSERT_MSG((!alex->me), "!alex->me"); 
+    TEST_ASSERT_MSG((alex->comm_type == PEP_ct_OpenPGP_unconfirmed), "alex->comm_type == PEP_ct_OpenPGP_unconfirmed");
+    TEST_ASSERT_MSG((strcmp(alex->address, alex_address) == 0), "strcmp(alex->address, alex_address) == 0");
 
     cout << "PASS: update_identity() correctly retrieved extant record with matching address and id, and patched username" << endl << endl;
     free_identity(alex);
@@ -249,16 +249,16 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
         
     alex = new_identity(alex_address, NULL, alex_userid, NULL); 
     status = update_identity(session, alex);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(alex->fpr);
-    TEST_ASSERT(strcmp(alex->fpr, alex_fpr) == 0);
-    TEST_ASSERT(alex->username);
-    TEST_ASSERT(strcmp(alex->username, new_username) == 0);
-    TEST_ASSERT(alex->user_id);
-    TEST_ASSERT(strcmp(alex->user_id, alex_userid) == 0);
-    TEST_ASSERT(!alex->me); 
-    TEST_ASSERT(alex->comm_type == PEP_ct_OpenPGP_unconfirmed);
-    TEST_ASSERT(strcmp(alex->address, alex_address) == 0);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((alex->fpr), "alex->fpr");
+    TEST_ASSERT_MSG((strcmp(alex->fpr, alex_fpr) == 0), "strcmp(alex->fpr, alex_fpr) == 0");
+    TEST_ASSERT_MSG((alex->username), "alex->username");
+    TEST_ASSERT_MSG((strcmp(alex->username, new_username) == 0), "strcmp(alex->username, new_username) == 0");
+    TEST_ASSERT_MSG((alex->user_id), "alex->user_id");
+    TEST_ASSERT_MSG((strcmp(alex->user_id, alex_userid) == 0), "strcmp(alex->user_id, alex_userid) == 0");
+    TEST_ASSERT_MSG((!alex->me), "!alex->me"); 
+    TEST_ASSERT_MSG((alex->comm_type == PEP_ct_OpenPGP_unconfirmed), "alex->comm_type == PEP_ct_OpenPGP_unconfirmed");
+    TEST_ASSERT_MSG((strcmp(alex->address, alex_address) == 0), "strcmp(alex->address, alex_address) == 0");
 
     cout << "PASS: update_identity() correctly retrieved extant record with matching address and id, and patched username" << endl << endl;
     free_identity(alex);
@@ -269,16 +269,16 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
 
     alex = new_identity(alex_address, NULL, NULL, new_username); 
     status = update_identity(session, alex);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(alex->fpr);
-    TEST_ASSERT(strcmp(alex->fpr, alex_fpr) == 0);
-    TEST_ASSERT(alex->username);
-    TEST_ASSERT(strcmp(alex->username, new_username) == 0);
-    TEST_ASSERT(alex->user_id);
-    TEST_ASSERT(strcmp(alex->user_id, alex_userid) == 0);
-    TEST_ASSERT(!alex->me); 
-    TEST_ASSERT(alex->comm_type == PEP_ct_OpenPGP_unconfirmed);
-    TEST_ASSERT(strcmp(alex->address, alex_address) == 0);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((alex->fpr), "alex->fpr");
+    TEST_ASSERT_MSG((strcmp(alex->fpr, alex_fpr) == 0), "strcmp(alex->fpr, alex_fpr) == 0");
+    TEST_ASSERT_MSG((alex->username), "alex->username");
+    TEST_ASSERT_MSG((strcmp(alex->username, new_username) == 0), "strcmp(alex->username, new_username) == 0");
+    TEST_ASSERT_MSG((alex->user_id), "alex->user_id");
+    TEST_ASSERT_MSG((strcmp(alex->user_id, alex_userid) == 0), "strcmp(alex->user_id, alex_userid) == 0");
+    TEST_ASSERT_MSG((!alex->me), "!alex->me"); 
+    TEST_ASSERT_MSG((alex->comm_type == PEP_ct_OpenPGP_unconfirmed), "alex->comm_type == PEP_ct_OpenPGP_unconfirmed");
+    TEST_ASSERT_MSG((strcmp(alex->address, alex_address) == 0), "strcmp(alex->address, alex_address) == 0");
 
     cout << "PASS: update_identity() correctly retrieved extant record with matching address and username" << endl << endl;
     free_identity(alex);
@@ -289,16 +289,16 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
     
     alex = new_identity(alex_address, NULL, NULL, NULL); 
     status = update_identity(session, alex);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(alex->fpr);
-    TEST_ASSERT(strcmp(alex->fpr, alex_fpr) == 0);
-    TEST_ASSERT(alex->username);
-    TEST_ASSERT(strcmp(alex->username, new_username) == 0);
-    TEST_ASSERT(alex->user_id);
-    TEST_ASSERT(strcmp(alex->user_id, alex_userid) == 0);
-    TEST_ASSERT(!alex->me); 
-    TEST_ASSERT(alex->comm_type == PEP_ct_OpenPGP_unconfirmed);
-    TEST_ASSERT(strcmp(alex->address, alex_address) == 0);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((alex->fpr), "alex->fpr");
+    TEST_ASSERT_MSG((strcmp(alex->fpr, alex_fpr) == 0), "strcmp(alex->fpr, alex_fpr) == 0");
+    TEST_ASSERT_MSG((alex->username), "alex->username");
+    TEST_ASSERT_MSG((strcmp(alex->username, new_username) == 0), "strcmp(alex->username, new_username) == 0");
+    TEST_ASSERT_MSG((alex->user_id), "alex->user_id");
+    TEST_ASSERT_MSG((strcmp(alex->user_id, alex_userid) == 0), "strcmp(alex->user_id, alex_userid) == 0");
+    TEST_ASSERT_MSG((!alex->me), "!alex->me"); 
+    TEST_ASSERT_MSG((alex->comm_type == PEP_ct_OpenPGP_unconfirmed), "alex->comm_type == PEP_ct_OpenPGP_unconfirmed");
+    TEST_ASSERT_MSG((strcmp(alex->address, alex_address) == 0), "strcmp(alex->address, alex_address) == 0");
 
     cout << "PASS: update_identity() correctly retrieved extant record with just matching address. Retrieved previously patched username." << endl << endl;
     free_identity(alex);
@@ -310,17 +310,17 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
     
     pEp_identity* somebody = new_identity(uniqname, NULL, NULL, NULL); 
     status = update_identity(session, somebody);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     myself(session, somebody);
-    TEST_ASSERT(somebody->fpr);
-    TEST_ASSERT(strcmp(somebody->fpr, new_fpr) == 0);
-    TEST_ASSERT(somebody->username);
-    TEST_ASSERT(strcmp(somebody->username, start_username) == 0);
-    TEST_ASSERT(somebody->user_id);
-    TEST_ASSERT(strcmp(somebody->user_id, default_own_id) == 0);
-    TEST_ASSERT(somebody->me); // true in this case, as it was an own identity
-    TEST_ASSERT(somebody->comm_type == PEP_ct_pEp);
-    TEST_ASSERT(strcmp(somebody->address, uniqname) == 0);
+    TEST_ASSERT_MSG((somebody->fpr), "somebody->fpr");
+    TEST_ASSERT_MSG((strcmp(somebody->fpr, new_fpr) == 0), "strcmp(somebody->fpr, new_fpr) == 0");
+    TEST_ASSERT_MSG((somebody->username), "somebody->username");
+    TEST_ASSERT_MSG((strcmp(somebody->username, start_username) == 0), "strcmp(somebody->username, start_username) == 0");
+    TEST_ASSERT_MSG((somebody->user_id), "somebody->user_id");
+    TEST_ASSERT_MSG((strcmp(somebody->user_id, default_own_id) == 0), "strcmp(somebody->user_id, default_own_id) == 0");
+    TEST_ASSERT_MSG((somebody->me), "somebody->me"); // true in this case, as it was an own identity
+    TEST_ASSERT_MSG((somebody->comm_type == PEP_ct_pEp), "somebody->comm_type == PEP_ct_pEp");
+    TEST_ASSERT_MSG((strcmp(somebody->address, uniqname) == 0), "strcmp(somebody->address, uniqname) == 0");
     
     cout << "PASS: update_identity() retrieved the right identity information given just an address";
     cout << endl << endl;
@@ -333,9 +333,9 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
 
     somebody = new_identity("nope@nope.nope", NULL, "some_user_id", NULL); 
     status = update_identity(session, somebody);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(!somebody->fpr);
-    TEST_ASSERT(somebody->comm_type == PEP_ct_key_not_found);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((!somebody->fpr), "!somebody->fpr");
+    TEST_ASSERT_MSG((somebody->comm_type == PEP_ct_key_not_found), "somebody->comm_type == PEP_ct_key_not_found");
     
     cout << "PASS: update_identity() returns identity with no key and unknown comm type" << endl << endl;
 
@@ -353,29 +353,29 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
     const string bella_pub_key = slurp("test_keys/pub/pep.test.bella-0xAF516AAE_pub.asc");
     
     statuspub = import_key(session, bella_pub_key.c_str(), bella_pub_key.length(), NULL);
-    TEST_ASSERT(statuspub == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((statuspub == PEP_STATUS_OK), "statuspub == PEP_STATUS_OK");
 
     pEp_identity* bella = new_identity(bella_address, bella_fpr, bella_userid, bella_username);
     
     // 2. set identity
     status = set_identity(session, bella);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     free_identity(bella);
     
     const char* not_my_userid = "Bad Company";
             
     bella = new_identity(bella_address, NULL, not_my_userid, bella_username); 
     status = update_identity(session, bella);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(bella->fpr);
-    TEST_ASSERT(strcmp(bella->fpr, bella_fpr) == 0);
-    TEST_ASSERT(bella->username);
-    TEST_ASSERT(strcmp(bella->username, bella_username) == 0);
-    TEST_ASSERT(bella->user_id);
-    TEST_ASSERT(strcmp(bella->user_id, not_my_userid) == 0); // ???
-    TEST_ASSERT(!bella->me); 
-    TEST_ASSERT(bella->comm_type == PEP_ct_OpenPGP_unconfirmed);
-    TEST_ASSERT(strcmp(bella->address, bella_address) == 0);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((bella->fpr), "bella->fpr");
+    TEST_ASSERT_MSG((strcmp(bella->fpr, bella_fpr) == 0), "strcmp(bella->fpr, bella_fpr) == 0");
+    TEST_ASSERT_MSG((bella->username), "bella->username");
+    TEST_ASSERT_MSG((strcmp(bella->username, bella_username) == 0), "strcmp(bella->username, bella_username) == 0");
+    TEST_ASSERT_MSG((bella->user_id), "bella->user_id");
+    TEST_ASSERT_MSG((strcmp(bella->user_id, not_my_userid) == 0), "strcmp(bella->user_id, not_my_userid) == 0"); // ???
+    TEST_ASSERT_MSG((!bella->me), "!bella->me"); 
+    TEST_ASSERT_MSG((bella->comm_type == PEP_ct_OpenPGP_unconfirmed), "bella->comm_type == PEP_ct_OpenPGP_unconfirmed");
+    TEST_ASSERT_MSG((strcmp(bella->address, bella_address) == 0), "strcmp(bella->address, bella_address) == 0");
 
     cout << "PASS: update_identity() correctly retrieved extant record with matching address and username; temp user_id in DB patched" << endl << endl;
     free_identity(bella);
@@ -390,15 +390,15 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
     somebody = new_identity(rando_address, NULL, rando_userid, rando_name);
     status = update_identity(session, somebody);
 
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(!somebody->fpr || somebody->fpr[0] == '\0');
-    TEST_ASSERT(somebody->username);
-    TEST_ASSERT(strcmp(somebody->username, rando_name) == 0);
-    TEST_ASSERT(somebody->user_id);
-    TEST_ASSERT(strcmp(somebody->user_id, rando_userid) == 0); // ???
-    TEST_ASSERT(!somebody->me); 
-    TEST_ASSERT(somebody->comm_type == PEP_ct_key_not_found);
-    TEST_ASSERT(strcmp(somebody->address, rando_address) == 0);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((!somebody->fpr || somebody->fpr[0] == '\0'), "!somebody->fpr || somebody->fpr[0] == '\0'");
+    TEST_ASSERT_MSG((somebody->username), "somebody->username");
+    TEST_ASSERT_MSG((strcmp(somebody->username, rando_name) == 0), "strcmp(somebody->username, rando_name) == 0");
+    TEST_ASSERT_MSG((somebody->user_id), "somebody->user_id");
+    TEST_ASSERT_MSG((strcmp(somebody->user_id, rando_userid) == 0), "strcmp(somebody->user_id, rando_userid) == 0"); // ???
+    TEST_ASSERT_MSG((!somebody->me), "!somebody->me"); 
+    TEST_ASSERT_MSG((somebody->comm_type == PEP_ct_key_not_found), "somebody->comm_type == PEP_ct_key_not_found");
+    TEST_ASSERT_MSG((strcmp(somebody->address, rando_address) == 0), "strcmp(somebody->address, rando_address) == 0");
 
     cout << "PASS: update_identity() correctly created record with no key" << endl << endl;
     free_identity(somebody);
@@ -413,15 +413,15 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
     status = update_identity(session, somebody);
     const char* expected_rando2_userid = "TOFU_boof2@pickles.org";
 
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(!somebody->fpr || somebody->fpr[0] == '\0');
-    TEST_ASSERT(somebody->username);
-    TEST_ASSERT(strcmp(somebody->username, rando2_name) == 0);
-    TEST_ASSERT(somebody->user_id);
-    TEST_ASSERT(strcmp(somebody->user_id, expected_rando2_userid) == 0); // ???
-    TEST_ASSERT(!somebody->me); 
-    TEST_ASSERT(somebody->comm_type == PEP_ct_key_not_found);
-    TEST_ASSERT(strcmp(somebody->address, rando2_address) == 0);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((!somebody->fpr || somebody->fpr[0] == '\0'), "!somebody->fpr || somebody->fpr[0] == '\0'");
+    TEST_ASSERT_MSG((somebody->username), "somebody->username");
+    TEST_ASSERT_MSG((strcmp(somebody->username, rando2_name) == 0), "strcmp(somebody->username, rando2_name) == 0");
+    TEST_ASSERT_MSG((somebody->user_id), "somebody->user_id");
+    TEST_ASSERT_MSG((strcmp(somebody->user_id, expected_rando2_userid) == 0), "strcmp(somebody->user_id, expected_rando2_userid) == 0"); // ???
+    TEST_ASSERT_MSG((!somebody->me), "!somebody->me"); 
+    TEST_ASSERT_MSG((somebody->comm_type == PEP_ct_key_not_found), "somebody->comm_type == PEP_ct_key_not_found");
+    TEST_ASSERT_MSG((strcmp(somebody->address, rando2_address) == 0), "strcmp(somebody->address, rando2_address) == 0");
 
     cout << "PASS: update_identity() correctly created record with no key" << endl << endl;
     free_identity(somebody);
@@ -435,12 +435,12 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
     
     // 2. set identity
     status = set_identity(session, bella);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     free_identity(bella);
                 
     bella = new_identity(bella_address, NULL, NULL, NULL); 
     status = update_identity(session, bella);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
 
 //    cout << "PASS: update_identity() correctly failed with no matching records (too little info)" << endl << endl;
     
@@ -460,26 +460,26 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
     const string bernd_pub_key = slurp("test_keys/pub/bernd.das.brot-0xCAFAA422_pub.asc");
     
     statuspub = import_key(session, bernd_pub_key.c_str(), bernd_pub_key.length(), NULL);
-    TEST_ASSERT(statuspub == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((statuspub == PEP_STATUS_OK), "statuspub == PEP_STATUS_OK");
 
     pEp_identity* bernd = new_identity(bernd_address, bernd_fpr, bernd_userid, bernd_username);
     
     // 2. set identity
     status = set_identity(session, bernd);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     free_identity(bernd);
                 
     bernd = new_identity(bernd_address, NULL, bernd_userid, bernd_username); 
     status = update_identity(session, bernd);
-    TEST_ASSERT(status != PEP_STATUS_OK);
-    TEST_ASSERT(!bernd->fpr || bernd->fpr[0] == '\0');
-    TEST_ASSERT(bernd->username);
-    TEST_ASSERT(strcmp(bernd->username, bernd_username) == 0);
-    TEST_ASSERT(bernd->user_id);
-    TEST_ASSERT(strcmp(bernd->user_id, bernd_userid) == 0); // ???
-    TEST_ASSERT(!bernd->me); 
-    TEST_ASSERT(bernd->comm_type == PEP_ct_key_expired);
-    TEST_ASSERT(strcmp(bernd->address, bernd_address) == 0);
+    TEST_ASSERT_MSG((status != PEP_STATUS_OK), "status != PEP_STATUS_OK");
+    TEST_ASSERT_MSG((!bernd->fpr || bernd->fpr[0] == '\0'), "!bernd->fpr || bernd->fpr[0] == '\0'");
+    TEST_ASSERT_MSG((bernd->username), "bernd->username");
+    TEST_ASSERT_MSG((strcmp(bernd->username, bernd_username) == 0), "strcmp(bernd->username, bernd_username) == 0");
+    TEST_ASSERT_MSG((bernd->user_id), "bernd->user_id");
+    TEST_ASSERT_MSG((strcmp(bernd->user_id, bernd_userid) == 0), "strcmp(bernd->user_id, bernd_userid) == 0"); // ???
+    TEST_ASSERT_MSG((!bernd->me), "!bernd->me"); 
+    TEST_ASSERT_MSG((bernd->comm_type == PEP_ct_key_expired), "bernd->comm_type == PEP_ct_key_expired");
+    TEST_ASSERT_MSG((strcmp(bernd->address, bernd_address) == 0), "strcmp(bernd->address, bernd_address) == 0");
 
     cout << "PASS: update_identity() correctly rejected expired key with PEP_KEY_UNSUITABLE and PEP_ct_key_expired" << endl << endl;
     free_identity(bernd);
@@ -507,19 +507,19 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
     char* revoke_fpr_arr[3];
     
     status = generate_keypair(session, revokemaster_3000);
-    TEST_ASSERT(status == PEP_STATUS_OK && revokemaster_3000->fpr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK && revokemaster_3000->fpr), "status == PEP_STATUS_OK && revokemaster_3000->fpr");
     revoke_fpr_arr[0] = strdup(revokemaster_3000->fpr);
     free(revokemaster_3000->fpr);
     revokemaster_3000->fpr = NULL;
     
     status = generate_keypair(session, revokemaster_3000);
-    TEST_ASSERT(status == PEP_STATUS_OK && revokemaster_3000->fpr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK && revokemaster_3000->fpr), "status == PEP_STATUS_OK && revokemaster_3000->fpr");
     revoke_fpr_arr[1] = strdup(revokemaster_3000->fpr);
     free(revokemaster_3000->fpr);
     revokemaster_3000->fpr = NULL;
     
     status = generate_keypair(session, revokemaster_3000);
-    TEST_ASSERT(status == PEP_STATUS_OK && revokemaster_3000->fpr);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK && revokemaster_3000->fpr), "status == PEP_STATUS_OK && revokemaster_3000->fpr");
     revoke_fpr_arr[2] = strdup(revokemaster_3000->fpr);
     free(revokemaster_3000->fpr);
     revokemaster_3000->fpr = NULL;
@@ -529,24 +529,24 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
     free(revokemaster_3000->fpr);
     revokemaster_3000->fpr = strdup(revoke_fpr_arr[2]);
     status = trust_personal_key(session, revokemaster_3000);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     status = get_trust(session, revokemaster_3000);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(revokemaster_3000->comm_type & PEP_ct_confirmed);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((revokemaster_3000->comm_type & PEP_ct_confirmed), "revokemaster_3000->comm_type & PEP_ct_confirmed");
 
     free(revokemaster_3000->fpr);
     revokemaster_3000->fpr = strdup(revoke_fpr_arr[0]);
     status = trust_personal_key(session, revokemaster_3000);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     status = get_trust(session, revokemaster_3000);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(revokemaster_3000->comm_type & PEP_ct_confirmed);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((revokemaster_3000->comm_type & PEP_ct_confirmed), "revokemaster_3000->comm_type & PEP_ct_confirmed");
     
     status = update_identity(session, revokemaster_3000);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(revokemaster_3000->fpr);
-    TEST_ASSERT(strcmp(revokemaster_3000->fpr, revoke_fpr_arr[2]) == 0);
-    TEST_ASSERT(revokemaster_3000->comm_type & PEP_ct_confirmed);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((revokemaster_3000->fpr), "revokemaster_3000->fpr");
+    TEST_ASSERT_MSG((strcmp(revokemaster_3000->fpr, revoke_fpr_arr[2]) == 0), "strcmp(revokemaster_3000->fpr, revoke_fpr_arr[2]) == 0");
+    TEST_ASSERT_MSG((revokemaster_3000->comm_type & PEP_ct_confirmed), "revokemaster_3000->comm_type & PEP_ct_confirmed");
 
     cout << "update_identity returns the correct identity default." << endl;
     
@@ -559,36 +559,36 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
 
     bool is_revoked;
     status = key_revoked(session, revokemaster_3000->fpr, &is_revoked);    
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(is_revoked);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((is_revoked), "is_revoked");
 
     cout << "Success revoking " << revoke_fpr_arr[2] << "!!! get_trust for this fpr gives us " << revokemaster_3000->comm_type << endl;
     
     cout << "Now see if update_identity gives us " << revoke_fpr_arr[0] << ", the only trusted key left." << endl;
     status = update_identity(session, revokemaster_3000);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(revokemaster_3000->fpr);
-    TEST_ASSERT(strcmp(revokemaster_3000->fpr, revoke_fpr_arr[0]) == 0);
-    TEST_ASSERT(revokemaster_3000->comm_type & PEP_ct_confirmed);    
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((revokemaster_3000->fpr), "revokemaster_3000->fpr");
+    TEST_ASSERT_MSG((strcmp(revokemaster_3000->fpr, revoke_fpr_arr[0]) == 0), "strcmp(revokemaster_3000->fpr, revoke_fpr_arr[0]) == 0");
+    TEST_ASSERT_MSG((revokemaster_3000->comm_type & PEP_ct_confirmed), "revokemaster_3000->comm_type & PEP_ct_confirmed");    
     
     cout << "Success! So let's mistrust it, because seriously, that key was so uncool." << endl;
     
     status = key_mistrusted(session, revokemaster_3000);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
 
     status = get_trust(session, revokemaster_3000);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(revokemaster_3000->comm_type == PEP_ct_mistrusted);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((revokemaster_3000->comm_type == PEP_ct_mistrusted), "revokemaster_3000->comm_type == PEP_ct_mistrusted");
     
     cout << "Success! get_trust for this fpr gives us " << revokemaster_3000->comm_type << endl;
 
     cout << "The only fpr left is an untrusted one - let's make sure this is what we get from update_identity." << endl;
 
     status = update_identity(session, revokemaster_3000);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(revokemaster_3000->fpr);
-    TEST_ASSERT(strcmp(revokemaster_3000->fpr, revoke_fpr_arr[1]) == 0);
-    TEST_ASSERT(!(revokemaster_3000->comm_type & PEP_ct_confirmed));    
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((revokemaster_3000->fpr), "revokemaster_3000->fpr");
+    TEST_ASSERT_MSG((strcmp(revokemaster_3000->fpr, revoke_fpr_arr[1]) == 0), "strcmp(revokemaster_3000->fpr, revoke_fpr_arr[1]) == 0");
+    TEST_ASSERT_MSG((!(revokemaster_3000->comm_type & PEP_ct_confirmed)), "!(revokemaster_3000->comm_type & PEP_ct_confirmed)");    
 
     cout << "Success! We got " << revoke_fpr_arr[1] << "as the fpr with comm_type " << revokemaster_3000->comm_type << endl;
     
@@ -598,19 +598,19 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
     TEST_ASSERT (status == PEP_STATUS_OK);
 
     status = key_revoked(session, revokemaster_3000->fpr, &is_revoked);    
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(is_revoked);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((is_revoked), "is_revoked");
     
     cout << "Success! get_trust for this fpr gives us " << revokemaster_3000->comm_type << endl;
 
     cout << "Call update_identity - we expect nothing, plus an error comm type." << endl;
 
     status = update_identity(session, revokemaster_3000);
-    TEST_ASSERT(status != PEP_STATUS_OK);
-    TEST_ASSERT(!revokemaster_3000->fpr);
-    TEST_ASSERT(revokemaster_3000->username);
-    TEST_ASSERT(strcmp(revokemaster_3000->user_id, revoke_uuid) == 0);
-    TEST_ASSERT(revokemaster_3000->comm_type == PEP_ct_key_not_found);
+    TEST_ASSERT_MSG((status != PEP_STATUS_OK), "status != PEP_STATUS_OK");
+    TEST_ASSERT_MSG((!revokemaster_3000->fpr), "!revokemaster_3000->fpr");
+    TEST_ASSERT_MSG((revokemaster_3000->username), "revokemaster_3000->username");
+    TEST_ASSERT_MSG((strcmp(revokemaster_3000->user_id, revoke_uuid) == 0), "strcmp(revokemaster_3000->user_id, revoke_uuid) == 0");
+    TEST_ASSERT_MSG((revokemaster_3000->comm_type == PEP_ct_key_not_found), "revokemaster_3000->comm_type == PEP_ct_key_not_found");
     cout << "Success! No key found. The comm_status error was " << revokemaster_3000->comm_type << "and the return status was " << tl_status_string(status) << endl;
 
     free_identity(revokemaster_3000);

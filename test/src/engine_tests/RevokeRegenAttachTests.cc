@@ -52,11 +52,11 @@ void RevokeRegenAttachTests::check_revoke_regen_attach() {
     free(me->fpr);
     me->fpr = NULL;
     status = myself(session, me);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     cout << me->fpr << "\n";
     
-    TEST_ASSERT(me->fpr);
-    TEST_ASSERT(strcmp(me->fpr, prev_fpr) != 0);
+    TEST_ASSERT_MSG((me->fpr), "me->fpr");
+    TEST_ASSERT_MSG((strcmp(me->fpr, prev_fpr) != 0), "strcmp(me->fpr, prev_fpr) != 0");
     cout << "New fpr is: " << me->fpr;
     
     me->fpr = NULL;
@@ -65,7 +65,7 @@ void RevokeRegenAttachTests::check_revoke_regen_attach() {
     
     identity_list *to = new_identity_list(new_identity("pep.test.alice@pep-project.org", NULL, "42", "pEp Test Alice (test key don't use)"));
     message *msg = new_message(PEP_dir_outgoing);
-    TEST_ASSERT(msg);
+    TEST_ASSERT_MSG((msg), "msg");
     msg->from = me;
     msg->to = to;
     msg->shortmsg = strdup("hello, world");
@@ -75,16 +75,16 @@ void RevokeRegenAttachTests::check_revoke_regen_attach() {
     message *enc_msg;
     cout << "calling encrypt_message()\n";
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(enc_msg);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((enc_msg), "enc_msg");
     cout << "message encrypted.\n";
 
     // cout << msg->attachments->filename;
     // int bl_len = bloblist_length(msg->attachments);
     // cout << "Message contains " << bloblist_length(msg->attachments) << " attachments." << endl;
-    // TEST_ASSERT(bloblist_length(msg->attachments) == 2);
-    // TEST_ASSERT(strcmp(msg->attachments->filename, "file://pEpkey.asc") == 0);
-    // TEST_ASSERT(strcmp(msg->attachments->next->filename, "file://pEpkey.asc") == 0);
+    // TEST_ASSERT_MSG((bloblist_length(msg->attachments) == 2), "bloblist_length(msg->attachments) == 2");
+    // TEST_ASSERT_MSG((strcmp(msg->attachments->filename, "file://pEpkey.asc") == 0), "strcmp(msg->attachments->filename, \"file://pEpkey.asc\") == 0");
+    // TEST_ASSERT_MSG((strcmp(msg->attachments->next->filename, "file://pEpkey.asc") == 0), "strcmp(msg->attachments->next->filename, \"file://pEpkey.asc\") == 0");
     // 
     // cout << "message contains 2 key attachments.\n";
 

@@ -58,12 +58,12 @@ void BloblistTests::check_bloblists() {
     cout << "duping one-element bloblist...\n";
     
     bloblist_t* new_bl = bloblist_dup(bl1);
-    TEST_ASSERT(new_bl);
-    TEST_ASSERT(test_bloblist_node_equals(bl1, new_bl));
-    TEST_ASSERT(new_bl->next == NULL);
-    TEST_ASSERT(bl1->value != new_bl->value);
-    TEST_ASSERT(bl1->mime_type != new_bl->mime_type || !(bl1->mime_type || new_bl->mime_type));
-    TEST_ASSERT(bl1->filename != new_bl->filename || !(bl1->filename || new_bl->filename));
+    TEST_ASSERT_MSG((new_bl), "new_bl");
+    TEST_ASSERT_MSG((test_bloblist_node_equals(bl1, new_bl)), "test_bloblist_node_equals(bl1, new_bl)");
+    TEST_ASSERT_MSG((new_bl->next == NULL), "new_bl->next == NULL");
+    TEST_ASSERT_MSG((bl1->value != new_bl->value), "bl1->value != new_bl->value");
+    TEST_ASSERT_MSG((bl1->mime_type != new_bl->mime_type || !(bl1->mime_type || new_bl->mime_type)), "bl1->mime_type != new_bl->mime_type || !(bl1->mime_type || new_bl->mime_type)");
+    TEST_ASSERT_MSG((bl1->filename != new_bl->filename || !(bl1->filename || new_bl->filename)), "bl1->filename != new_bl->filename || !(bl1->filename || new_bl->filename)");
     cout << "one-element bloblist duplicated.\n\n";
     
     cout << "freeing bloblist...\n";
@@ -78,22 +78,22 @@ void BloblistTests::check_bloblists() {
         to_copy = bl_arr[i];
         p = bloblist_add(new_bl, strdup(to_copy->value), to_copy->size, to_copy->mime_type, to_copy->filename);
 
-        TEST_ASSERT(p);
+        TEST_ASSERT_MSG((p), "p");
     }
     
     p = new_bl;
     
     for (i = 0; i < 4; i++) {
-        TEST_ASSERT(p);
+        TEST_ASSERT_MSG((p), "p");
         
-        TEST_ASSERT(test_bloblist_node_equals(p, bl_arr[i]));
-        TEST_ASSERT(p->value != bl_arr[i]->value);
-        TEST_ASSERT(p->mime_type != bl_arr[i]->mime_type || !(p->mime_type || bl_arr[i]->mime_type));
-        TEST_ASSERT(p->filename != bl_arr[i]->filename || !(p->filename || bl_arr[i]->filename));
+        TEST_ASSERT_MSG((test_bloblist_node_equals(p, bl_arr[i])), "test_bloblist_node_equals(p, bl_arr[i])");
+        TEST_ASSERT_MSG((p->value != bl_arr[i]->value), "p->value != bl_arr[i]->value");
+        TEST_ASSERT_MSG((p->mime_type != bl_arr[i]->mime_type || !(p->mime_type || bl_arr[i]->mime_type)), "p->mime_type != bl_arr[i]->mime_type || !(p->mime_type || bl_arr[i]->mime_type)");
+        TEST_ASSERT_MSG((p->filename != bl_arr[i]->filename || !(p->filename || bl_arr[i]->filename)), "p->filename != bl_arr[i]->filename || !(p->filename || bl_arr[i]->filename)");
         
         p = p->next;
     }
-    TEST_ASSERT(p == NULL);
+    TEST_ASSERT_MSG((p == NULL), "p == NULL");
     
     cout << "\nduplicating four-element list...\n\n";
     bloblist_t* duplist = bloblist_dup(new_bl);
@@ -102,15 +102,15 @@ void BloblistTests::check_bloblists() {
     bloblist_t* dup_p = duplist;
     
     while (dup_p) {
-        TEST_ASSERT(test_bloblist_node_equals(p, dup_p));
-        TEST_ASSERT(p != dup_p);
-        TEST_ASSERT(p->value != dup_p->value);
-        TEST_ASSERT(p->mime_type != dup_p->mime_type || !(p->mime_type || dup_p->mime_type));
-        TEST_ASSERT(p->filename != dup_p->filename || !(p->filename || dup_p->filename));
+        TEST_ASSERT_MSG((test_bloblist_node_equals(p, dup_p)), "test_bloblist_node_equals(p, dup_p)");
+        TEST_ASSERT_MSG((p != dup_p), "p != dup_p");
+        TEST_ASSERT_MSG((p->value != dup_p->value), "p->value != dup_p->value");
+        TEST_ASSERT_MSG((p->mime_type != dup_p->mime_type || !(p->mime_type || dup_p->mime_type)), "p->mime_type != dup_p->mime_type || !(p->mime_type || dup_p->mime_type)");
+        TEST_ASSERT_MSG((p->filename != dup_p->filename || !(p->filename || dup_p->filename)), "p->filename != dup_p->filename || !(p->filename || dup_p->filename)");
 
         dup_p = dup_p->next;
         p = p->next;
-        TEST_ASSERT((p == NULL) == (dup_p == NULL));
+        TEST_ASSERT_MSG(((p == NULL) == (dup_p == NULL)), "(p == NULL) == (dup_p == NULL)");
     }
     cout << "\nfour-element bloblist successfully duplicated.\n\n";
 

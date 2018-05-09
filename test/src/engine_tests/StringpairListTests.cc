@@ -53,23 +53,23 @@ void StringpairListTests::check_stringpair_lists() {
     cout << "creating one-element stringpair_list...\n";
     
     stringpair_t* strpair = new_stringpair(val_1_arr[0], val_2_arr[0]);
-    TEST_ASSERT(strpair);
+    TEST_ASSERT_MSG((strpair), "strpair");
     stringpair_list_t* pairlist = new_stringpair_list(strpair);
-    TEST_ASSERT(pairlist->value);
-    TEST_ASSERT(test_stringpair_equals(strpair, pairlist->value));
-    TEST_ASSERT(pairlist->next == NULL);
+    TEST_ASSERT_MSG((pairlist->value), "pairlist->value");
+    TEST_ASSERT_MSG((test_stringpair_equals(strpair, pairlist->value)), "test_stringpair_equals(strpair, pairlist->value)");
+    TEST_ASSERT_MSG((pairlist->next == NULL), "pairlist->next == NULL");
     cout << "one-element stringpair_list created, next element is NULL\n\n";
     
     cout << "duplicating one-element list...\n";
     stringpair_list_t* duplist = stringpair_list_dup(pairlist);
     stringpair_t* srcpair = pairlist->value;
     stringpair_t* dstpair = duplist->value;
-    TEST_ASSERT(dstpair);
-    TEST_ASSERT(dstpair->value);
-    TEST_ASSERT(test_stringpair_equals(srcpair, dstpair));
-    TEST_ASSERT(srcpair->key != dstpair->key);   // test deep copies (to be fixed in next 2 commits)
-    TEST_ASSERT(srcpair->value != dstpair->value);
-    TEST_ASSERT(duplist->next == NULL);
+    TEST_ASSERT_MSG((dstpair), "dstpair");
+    TEST_ASSERT_MSG((dstpair->value), "dstpair->value");
+    TEST_ASSERT_MSG((test_stringpair_equals(srcpair, dstpair)), "test_stringpair_equals(srcpair, dstpair)");
+    TEST_ASSERT_MSG((srcpair->key != dstpair->key), "srcpair->key != dstpair->key");   // test deep copies (to be fixed in next 2 commits)
+    TEST_ASSERT_MSG((srcpair->value != dstpair->value), "srcpair->value != dstpair->value");
+    TEST_ASSERT_MSG((duplist->next == NULL), "duplist->next == NULL");
     cout << "one-element stringpair_list duplicated.\n\n";
     
     cout << "freeing stringpair_lists...\n";
@@ -84,29 +84,29 @@ void StringpairListTests::check_stringpair_lists() {
     pairlist = stringpair_list_add(pairlist, new_stringpair(val_1_arr[0], val_2_arr[0]));
     for (i = 1; i < 4; i++) {
         p = stringpair_list_add(pairlist, new_stringpair(val_1_arr[i], val_2_arr[i]));
-        TEST_ASSERT(p);
+        TEST_ASSERT_MSG((p), "p");
     }
     
     p = pairlist;
     
     for (i = 0; i < 4; i++) {
-        TEST_ASSERT(p);
+        TEST_ASSERT_MSG((p), "p");
         
         strpair = p->value;
-        TEST_ASSERT(strpair);
+        TEST_ASSERT_MSG((strpair), "strpair");
         
-        TEST_ASSERT(strpair->key);
-        TEST_ASSERT(strcmp(val_1_arr[i], strpair->key) == 0);
+        TEST_ASSERT_MSG((strpair->key), "strpair->key");
+        TEST_ASSERT_MSG((strcmp(val_1_arr[i], strpair->key) == 0), "strcmp(val_1_arr[i], strpair->key) == 0");
         
-        TEST_ASSERT(strpair->value);
-        TEST_ASSERT(strcmp(val_2_arr[i], strpair->value) == 0);
+        TEST_ASSERT_MSG((strpair->value), "strpair->value");
+        TEST_ASSERT_MSG((strcmp(val_2_arr[i], strpair->value) == 0), "strcmp(val_2_arr[i], strpair->value) == 0");
         
-        TEST_ASSERT(val_1_arr[i] != strpair->key);
-        TEST_ASSERT(val_2_arr[i] != strpair->value);
+        TEST_ASSERT_MSG((val_1_arr[i] != strpair->key), "val_1_arr[i] != strpair->key");
+        TEST_ASSERT_MSG((val_2_arr[i] != strpair->value), "val_2_arr[i] != strpair->value");
         
         p = p->next;
     }
-    TEST_ASSERT(p == NULL);
+    TEST_ASSERT_MSG((p == NULL), "p == NULL");
     
     cout << "\nduplicating four-element list...\n\n";
     duplist = stringpair_list_dup(pairlist);
@@ -118,20 +118,20 @@ void StringpairListTests::check_stringpair_lists() {
         srcpair = p->value;
         dstpair = dup_p->value;
 
-        TEST_ASSERT(dstpair);
-        TEST_ASSERT(dstpair->value);
+        TEST_ASSERT_MSG((dstpair), "dstpair");
+        TEST_ASSERT_MSG((dstpair->value), "dstpair->value");
         
         cout << srcpair->key << ":" << srcpair->value << " / " << dstpair->key << ":" << dstpair->value << "\n";
-        TEST_ASSERT(test_stringpair_equals(srcpair, dstpair));
+        TEST_ASSERT_MSG((test_stringpair_equals(srcpair, dstpair)), "test_stringpair_equals(srcpair, dstpair)");
 
-        TEST_ASSERT(srcpair->key != dstpair->key);   // test deep copies (to be fixed in next 2 commits)
-        TEST_ASSERT(srcpair->value != dstpair->value);
+        TEST_ASSERT_MSG((srcpair->key != dstpair->key), "srcpair->key != dstpair->key");   // test deep copies (to be fixed in next 2 commits)
+        TEST_ASSERT_MSG((srcpair->value != dstpair->value), "srcpair->value != dstpair->value");
 
         i++;
         p = p->next;
 
         dup_p = dup_p->next;
-        TEST_ASSERT((p == NULL) == (dup_p == NULL));
+        TEST_ASSERT_MSG(((p == NULL) == (dup_p == NULL)), "(p == NULL) == (dup_p == NULL)");
     }
     cout << "\nfour-element stringpair_list successfully duplicated.\n\n";
 

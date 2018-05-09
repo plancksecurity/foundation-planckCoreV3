@@ -49,22 +49,22 @@ void BlacklistAcceptNewKeyTests::check_blacklist_accept_new_key() {
     PEP_STATUS status8 = update_identity(session, blacklisted_identity);
     PEP_STATUS status9 = blacklist_add(session, bl_fpr_1);
     PEP_STATUS status10 = blacklist_is_listed(session, bl_fpr_1, &is_blacklisted);
-    TEST_ASSERT(is_blacklisted);
+    TEST_ASSERT_MSG((is_blacklisted), "is_blacklisted");
     PEP_STATUS status11 = update_identity(session, blacklisted_identity);
-    TEST_ASSERT(status11 == PEP_STATUS_OK);
-    TEST_ASSERT(_streq(bl_fpr_1, blacklisted_identity->fpr));
+    TEST_ASSERT_MSG((status11 == PEP_STATUS_OK), "status11 == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((_streq(bl_fpr_1, blacklisted_identity->fpr)), "_streq(bl_fpr_1, blacklisted_identity->fpr)");
     
     bool id_def, us_def, addr_def;
     status11 = get_valid_pubkey(session, blacklisted_identity,
                                 &id_def, &us_def, &addr_def, true);
-    TEST_ASSERT(blacklisted_identity->comm_type == PEP_ct_unknown);
+    TEST_ASSERT_MSG((blacklisted_identity->comm_type == PEP_ct_unknown), "blacklisted_identity->comm_type == PEP_ct_unknown");
                         
     if (!(blacklisted_identity->fpr))
         cout << "OK! blacklisted_identity->fpr is empty. Yay!" << endl;
     else
         cout << "Not OK. blacklisted_identity->fpr is " << blacklisted_identity->fpr << "." << endl
              << "Expected it to be empty." << endl;
-    TEST_ASSERT(!(blacklisted_identity->fpr) || blacklisted_identity->fpr[0] == '\0');
+    TEST_ASSERT_MSG((!(blacklisted_identity->fpr) || blacklisted_identity->fpr[0] == '\0'), "!(blacklisted_identity->fpr) || blacklisted_identity->fpr[0] == '\0'");
 
     /* identity is blacklisted. Now let's read in a message which contains a new key for that ID. */
     
@@ -80,13 +80,13 @@ void BlacklistAcceptNewKeyTests::check_blacklist_accept_new_key() {
     PEP_decrypt_flags_t flags = 0;
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
 
     PEP_STATUS status12 = get_valid_pubkey(session, blacklisted_identity,
                                            &id_def, &us_def, &addr_def, true);
 
-    TEST_ASSERT(strcasecmp(blacklisted_identity->fpr, new_key) == 0);
+    TEST_ASSERT_MSG((strcasecmp(blacklisted_identity->fpr, new_key) == 0), "strcasecmp(blacklisted_identity->fpr, new_key) == 0");
 
     PEP_STATUS status13 = blacklist_delete(session, bl_fpr_1);
     PEP_STATUS status14 = update_identity(session, blacklisted_identity);

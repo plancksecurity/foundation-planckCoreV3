@@ -36,13 +36,13 @@ void ExternalRevokeTests::check_external_revoke() {
     const string fenris_pub_key = slurp("test_keys/pub/pep.test.fenris-0x4F3D2900_pub.asc");
     const string fenris_priv_key = slurp("test_keys/priv/pep.test.fenris-0x4F3D2900_priv.asc");
 
-    TEST_ASSERT(fenris_pub_key.length() != 0);
-    TEST_ASSERT(fenris_priv_key.length() != 0);
+    TEST_ASSERT_MSG((fenris_pub_key.length() != 0), "fenris_pub_key.length() != 0");
+    TEST_ASSERT_MSG((fenris_priv_key.length() != 0), "fenris_priv_key.length() != 0");
     
     PEP_STATUS statuspub = import_key(session, fenris_pub_key.c_str(), fenris_pub_key.length(), NULL);
     PEP_STATUS statuspriv = import_key(session, fenris_priv_key.c_str(), fenris_priv_key.length(), NULL);
-    TEST_ASSERT(statuspub == PEP_STATUS_OK);
-    TEST_ASSERT(statuspriv == PEP_STATUS_OK);
+    TEST_ASSERT_MSG((statuspub == PEP_STATUS_OK), "statuspub == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statuspriv == PEP_STATUS_OK), "statuspriv == PEP_STATUS_OK");
 
     // Create sender ID
     
@@ -91,7 +91,7 @@ void ExternalRevokeTests::check_external_revoke() {
     cout << "Creating message…\n";
     identity_list* to_list = new_identity_list(identity_dup(recip1)); // to bob
     message* outgoing_msg = new_message(PEP_dir_outgoing);
-    TEST_ASSERT(outgoing_msg);
+    TEST_ASSERT_MSG((outgoing_msg), "outgoing_msg");
     outgoing_msg->from = identity_dup(me);
     outgoing_msg->to = to_list;
     outgoing_msg->shortmsg = strdup("Greetings, humans!");
@@ -105,18 +105,18 @@ void ExternalRevokeTests::check_external_revoke() {
     status = encrypt_message(session, outgoing_msg, NULL, &encrypted_outgoing_msg, PEP_enc_PGP_MIME, 0);
     cout << "Encrypted message with status " << tl_status_string(status) << endl;
     // check status
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(encrypted_outgoing_msg);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((encrypted_outgoing_msg), "encrypted_outgoing_msg");
 
     cout << "Checking message recipient comm_type from message." << endl;
     // check comm_type
     cout << "comm_type: " << tl_ct_string(encrypted_outgoing_msg->to->ident->comm_type) << endl;
-    TEST_ASSERT(encrypted_outgoing_msg->to->ident->comm_type == PEP_ct_OpenPGP);
+    TEST_ASSERT_MSG((encrypted_outgoing_msg->to->ident->comm_type == PEP_ct_OpenPGP), "encrypted_outgoing_msg->to->ident->comm_type == PEP_ct_OpenPGP");
     
     status = get_trust(session, recip1);
     
     cout << "Recip's trust DB comm_type = " << hex << tl_ct_string(recip1->comm_type) << endl;
-    TEST_ASSERT(recip1->comm_type == PEP_ct_OpenPGP); // FIXME: PEP_ct_pEp???
+    TEST_ASSERT_MSG((recip1->comm_type == PEP_ct_OpenPGP), "recip1->comm_type == PEP_ct_OpenPGP"); // FIXME: PEP_ct_pEp???
 
     // decrypt message
     free_message(outgoing_msg);
@@ -134,18 +134,18 @@ void ExternalRevokeTests::check_external_revoke() {
     cout << "Decrypting message." << endl;
     status = decrypt_message(session, encrypted_outgoing_msg, &outgoing_msg, &keylist, &rating, &flags);
     cout << "Decrypted message with status " << tl_status_string(status) << endl;
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(rating == PEP_rating_trusted);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((rating == PEP_rating_trusted), "rating == PEP_rating_trusted");
 
     // check rating
     cout << "Rating of decrypted message to trusted recip: " << tl_rating_string(rating) << endl;
-    TEST_ASSERT(rating == PEP_rating_trusted); // FIXME: trusted and anonymised?
+    TEST_ASSERT_MSG((rating == PEP_rating_trusted), "rating == PEP_rating_trusted"); // FIXME: trusted and anonymised?
     
     // check comm_type
     status = get_trust(session, recip1);
 
     cout << "Recip's trust DB comm_type = " << tl_ct_string(recip1->comm_type) << endl;
-    TEST_ASSERT(recip1->comm_type == PEP_ct_OpenPGP); // FIXME: PEP_ct_pEp???
+    TEST_ASSERT_MSG((recip1->comm_type == PEP_ct_OpenPGP), "recip1->comm_type == PEP_ct_OpenPGP"); // FIXME: PEP_ct_pEp???
 
     cout << endl << "---------------------------------------------------------" << endl;
     cout << "2a. Revoke key for (currently) trusted partner." << endl;
@@ -168,7 +168,7 @@ void ExternalRevokeTests::check_external_revoke() {
     cout << "creating message…\n";
     to_list = new_identity_list(identity_dup(recip1)); // to bob
     outgoing_msg = new_message(PEP_dir_outgoing);
-    TEST_ASSERT(outgoing_msg);
+    TEST_ASSERT_MSG((outgoing_msg), "outgoing_msg");
     outgoing_msg->from = identity_dup(me);
     outgoing_msg->to = to_list;
     outgoing_msg->shortmsg = strdup("Greetings, humans!");
@@ -189,19 +189,19 @@ void ExternalRevokeTests::check_external_revoke() {
     TEST_ASSERT (status == PEP_UNENCRYPTED);
     TEST_ASSERT (encrypted_outgoing_msg == NULL);
     status = update_identity(session, recip1);
-    TEST_ASSERT(recip1->comm_type = PEP_ct_key_not_found);
+    TEST_ASSERT_MSG((recip1->comm_type = PEP_ct_key_not_found), "recip1->comm_type = PEP_ct_key_not_found");
 
     cout << endl << "---------------------------------------------------------" << endl;
     cout << "2c. Check trust of recip, whose only key has been revoked, once an encryption attempt has been made." << endl;
     cout << "---------------------------------------------------------" << endl << endl;
 
-    TEST_ASSERT(recip1->fpr == NULL);
+    TEST_ASSERT_MSG((recip1->fpr == NULL), "recip1->fpr == NULL");
     recip1->fpr = fprs[0];
     status = get_trust(session, recip1);
     recip1->fpr = NULL;
 
     cout << "Recip's trust DB comm_type = " << hex << tl_ct_string(recip1->comm_type) << endl;
-    TEST_ASSERT(recip1->comm_type == PEP_ct_unknown || recip1->comm_type == PEP_ct_key_revoked);
+    TEST_ASSERT_MSG((recip1->comm_type == PEP_ct_unknown || recip1->comm_type == PEP_ct_key_revoked), "recip1->comm_type == PEP_ct_unknown || recip1->comm_type == PEP_ct_key_revoked");
 
     free_message(decrypted_msg);
     free_message(outgoing_msg);
@@ -233,7 +233,7 @@ void ExternalRevokeTests::check_external_revoke() {
     // status = update_identity(session, recip1);
     to_list = new_identity_list(identity_dup(recip1)); // to bob
     outgoing_msg = new_message(PEP_dir_outgoing);
-    TEST_ASSERT(outgoing_msg);
+    TEST_ASSERT_MSG((outgoing_msg), "outgoing_msg");
     outgoing_msg->from = identity_dup(me);
     outgoing_msg->to = to_list;
     outgoing_msg->shortmsg = strdup("Greetings, humans!");
@@ -250,12 +250,12 @@ void ExternalRevokeTests::check_external_revoke() {
 
     // check comm_type
     cout << "comm_type: " << tl_ct_string(ct) << endl;
-    TEST_ASSERT(ct == PEP_ct_OpenPGP_unconfirmed);
+    TEST_ASSERT_MSG((ct == PEP_ct_OpenPGP_unconfirmed), "ct == PEP_ct_OpenPGP_unconfirmed");
     
     status = get_trust(session, recip1);
 
     cout << "Recip's trust DB comm_type (should be unknown, as we're using a keyring-only key, not in DB) = " << hex << tl_ct_string(recip1->comm_type) << endl;
-    TEST_ASSERT(recip1->comm_type != PEP_ct_OpenPGP_unconfirmed);
+    TEST_ASSERT_MSG((recip1->comm_type != PEP_ct_OpenPGP_unconfirmed), "recip1->comm_type != PEP_ct_OpenPGP_unconfirmed");
 
     // decrypt message
 //    free_message(outgoing_msg);
@@ -269,23 +269,23 @@ void ExternalRevokeTests::check_external_revoke() {
     flags = 0;
     status = decrypt_message(session, encrypted_outgoing_msg, &decrypted_msg, &keylist, &rating, &flags);
     cout << "Decryption returns with status " << tl_status_string(status) << endl;
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(decrypted_msg);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((decrypted_msg), "decrypted_msg");
     
     // check rating
     cout << "Rating of decrypted message to trusted recip: " << tl_rating_string(rating) << endl;
-    TEST_ASSERT(rating == PEP_rating_reliable);
+    TEST_ASSERT_MSG((rating == PEP_rating_reliable), "rating == PEP_rating_reliable");
 
     status = update_identity(session, decrypted_msg->to->ident);
     ct = (decrypted_msg ? decrypted_msg->to->ident->comm_type : outgoing_msg->to->ident->comm_type);
 
     cout << "comm_type: " << tl_ct_string(ct) << endl;
-    TEST_ASSERT(ct == PEP_ct_OpenPGP_unconfirmed);
+    TEST_ASSERT_MSG((ct == PEP_ct_OpenPGP_unconfirmed), "ct == PEP_ct_OpenPGP_unconfirmed");
     
     status = get_trust(session, recip1);
     
     cout << "Recip's trust DB comm_type (should be unknown - there's nothing in the DB) = " << hex << tl_ct_string(recip1->comm_type) << endl;
-    TEST_ASSERT(recip1->comm_type == PEP_ct_unknown);
+    TEST_ASSERT_MSG((recip1->comm_type == PEP_ct_unknown), "recip1->comm_type == PEP_ct_unknown");
 
     free_message(encrypted_outgoing_msg);
     free_message(decrypted_msg);

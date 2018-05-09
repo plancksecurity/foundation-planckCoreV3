@@ -25,21 +25,21 @@ void I18nTests::check_i18n() {
 
     char *languages;
     PEP_STATUS status2 = get_languagelist(session, &languages);
-    TEST_ASSERT(status2 == PEP_STATUS_OK);
-    TEST_ASSERT(languages);
+    TEST_ASSERT_MSG((status2 == PEP_STATUS_OK), "status2 == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((languages), "languages");
 
     cout << languages;
     pEp_free(languages);
 
     char *phrase;
     PEP_STATUS status3 = get_phrase(session, "de", 1000, &phrase);
-    TEST_ASSERT(status3 == PEP_STATUS_OK);
-    TEST_ASSERT(phrase);
+    TEST_ASSERT_MSG((status3 == PEP_STATUS_OK), "status3 == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((phrase), "phrase");
 
     cout << "\nGerman: " << phrase << "\n";
     pEp_free(phrase);
 
     status3 = get_phrase(session, "zz", 1000, &phrase);
-    TEST_ASSERT(status3 == PEP_PHRASE_NOT_FOUND);
-    TEST_ASSERT(phrase == NULL);
+    TEST_ASSERT_MSG((status3 == PEP_PHRASE_NOT_FOUND), "status3 == PEP_PHRASE_NOT_FOUND");
+    TEST_ASSERT_MSG((phrase == NULL), "phrase == NULL");
 }
