@@ -52,24 +52,24 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     const string pub_extra_key_1 = slurp("test_keys/pub/reencrypt_extra_keys_1-0x8B026AEC_pub.asc");
 
     status = import_key(session, own_recip_pub_key.c_str(), own_recip_pub_key.length(), NULL);
-    TEST_ASSERT (status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Failed to import own recipient public key.");
     status = import_key(session, own_recip_priv_key.c_str(), own_recip_priv_key.length(), NULL);
-    TEST_ASSERT (status == PEP_STATUS_OK);    
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Failed to import own recipient private key.");    
     status = import_key(session, own_recip_2_pub_key.c_str(), own_recip_2_pub_key.length(), NULL);
-    TEST_ASSERT (status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Failed to import own second recipient public key.");
     status = import_key(session, own_recip_2_priv_key.c_str(), own_recip_2_priv_key.length(), NULL);
-    TEST_ASSERT (status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Failed to import own second recipient public key.");
     
     status = import_key(session, sender_pub_key.c_str(), sender_pub_key.length(), NULL);
-    TEST_ASSERT (status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Failed to import own sender public key.");
     status = import_key(session, recip_2_pub_key.c_str(), recip_2_pub_key.length(), NULL);
-    TEST_ASSERT (status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Failed to second recipient public key.");
     status = import_key(session, recip_0_pub_key.c_str(), recip_0_pub_key.length(), NULL);
-    TEST_ASSERT (status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Failed to import zeroth recipient public key.");
     status = import_key(session, pub_extra_key_0.c_str(), pub_extra_key_0.length(), NULL);
-    TEST_ASSERT (status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Failed to import first extra public key.");
     status = import_key(session, pub_extra_key_1.c_str(), pub_extra_key_1.length(), NULL);
-    TEST_ASSERT (status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Failed to import second extra public key.");
 
     cout << "Keys imported." << endl;
 
@@ -78,7 +78,7 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     
     cout << "Inserting own identities and keys into database." << endl;
     status = set_own_key(session, me_recip_2, fpr_own_recip_2_key);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Failed to set own second recipient key as own key.");
     cout << "Done: inserting own identities and keys into database." << endl;
 
     const string to_reencrypt_from_enigmail = slurp("test_mails/reencrypt_sent_by_enigmail.eml");
@@ -109,12 +109,11 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     cout << decrypted_text << endl;
 
     cout << "Status is " << tl_status_string(status) << endl;
-    TEST_ASSERT(decrypted_text);
-    TEST_ASSERT(rating);
-    TEST_ASSERT(!(flags & PEP_decrypt_flag_src_modified));
+    TEST_ASSERT_MSG(decrypted_text, "No decrypted test");
+    TEST_ASSERT_MSG(rating, "No rating. FIXME: what???");
+    TEST_ASSERT_MSG((flags & PEP_decrypt_flag_src_modified) == 0, "Source was modified, but shouldn't have been.");
     
-    TEST_ASSERT(!modified_src);
-    TEST_ASSERT(flags & PEP_decrypt_flag_src_modified == 0);
+    TEST_ASSERT_MSG(!modified_src, "Modified source was returned, but should not have been generated");
     //cout << modified_src << endl;
     
     free(decrypted_text);
@@ -144,8 +143,8 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     cout << "Status is " << tl_status_string(status) << endl;
 
 
-    TEST_ASSERT(decrypted_text);
-    TEST_ASSERT(rating);
+    TEST_ASSERT_MSG(decrypted_text, "No decrypted text");
+    TEST_ASSERT_MSG(rating, "No rating. FIXME: what???");
 
     free(decrypted_text);
     decrypted_text = nullptr;
@@ -178,7 +177,7 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     {
         if (i == 0) {
               cout << "Signed by " << (strcasecmp("", kl->value) == 0 ? "NOBODY" : kl->value) << endl;
-              TEST_ASSERT(strcasecmp(fpr_own_recip_2_key,kl->value) == 0);
+              TEST_ASSERT_MSG(strcasecmp(fpr_own_recip_2_key,kl->value) == 0, "Own recip 2 was not the signer of this message.");
         }
         else {
             if (strcasecmp(fpr_own_recip_2_key, kl->value) == 0) {
@@ -195,13 +194,13 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
             }
             else {
                 cout << "FAIL: Encrypted for " << kl->value << ", which it should not be." << endl;
-                TEST_ASSERT(false);
+                TEST_ASSERT_MSG(false, "Encrypted for someone it shouldn't have been.");
             }
             cout << "\t " << kl->value << endl;
         }
-        TEST_ASSERT(i < 4);
+        TEST_ASSERT_MSG(i < 4, "Encrypted for more extra keys than indicated...");
     }
-    TEST_ASSERT (own_key_found && extra_key_0_found && extra_key_1_found);
+    TEST_ASSERT_MSG(own_key_found && extra_key_0_found && extra_key_1_found, "Not encrypted for all desired keys.");
     cout << "Message was encrypted for all the keys it should be, and none it should not!" << endl;
 
     cout << "Case 1b: PASS" << endl << endl;
@@ -228,15 +227,19 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     cout << decrypted_text << endl;
     cout << "Status is " << tl_status_string(status) << endl;
 
-
-    TEST_ASSERT(decrypted_text);
-    TEST_ASSERT(rating);
+    cout << "1";
+    TEST_ASSERT_MSG(decrypted_text, "No decrypted test");
+    cout << "2";
+    TEST_ASSERT_MSG(rating, "No rating. FIXME: what???");
+    cout << "3";
+    TEST_ASSERT_MSG((flags & PEP_decrypt_flag_src_modified) == 0, "Source was modified, but shouldn't have been.");
+    cout << "4";    
+    TEST_ASSERT_MSG(!modified_src, "Modified source was returned, but should not have been generated");
+    cout << "5";
 
     free(decrypted_text);
     decrypted_text = nullptr;
 
-    TEST_ASSERT(!modified_src);
-    TEST_ASSERT(flags & PEP_decrypt_flag_src_modified == 0);
 
     cout << "Case 2a: PASS" << endl << endl;
 
@@ -260,9 +263,8 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     cout << decrypted_text << endl;
     cout << "Status is " << tl_status_string(status) << endl;
 
-
-    TEST_ASSERT(decrypted_text);
-    TEST_ASSERT(rating);
+    TEST_ASSERT_MSG(decrypted_text, "No decrypted test");
+    TEST_ASSERT_MSG(rating, "No rating. FIXME: what???");
 
     free(decrypted_text);
     decrypted_text = nullptr;
@@ -295,7 +297,7 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     {
         if (i == 0) {
               cout << "Signed by " << (strcasecmp("", kl->value) == 0 ? "NOBODY" : kl->value) << endl;
-//              TEST_ASSERT(strcasecmp(fpr_own_recip_2_key,kl->value) == 0);
+              // TEST_ASSERT_MSG(strcasecmp(fpr_own_recip_2_key,kl->value) == 0, "Own recip 2 was not the signer of this message.");
         }
         else {
             if (strcasecmp(fpr_own_recip_2_key, kl->value) == 0) {
@@ -312,13 +314,14 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
             }
             else {
                 cout << "FAIL: Encrypted for " << kl->value << ", which it should not be." << endl;
-//                TEST_ASSERT(false);
+                // TEST_ASSERT_MSG(false, "Encrypted for someone it shouldn't have been.");
             }
             cout << "\t " << kl->value << endl;
         }
-        TEST_ASSERT(i < 4);
+        TEST_ASSERT_MSG(i < 4, "Encrypted for too many keys.");
     }
-//    TEST_ASSERT (own_key_found && extra_key_0_found && extra_key_1_found);
+//        TEST_ASSERT_MSG(own_key_found && extra_key_0_found && extra_key_1_found, "Not encrypted for all desired keys.");
+
     cout << "Message was encrypted for all the keys it should be, and none it should not!" << endl;
 
     cout << "Case 2b: PASS" << endl << endl;
@@ -331,7 +334,7 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     keys = NULL;
 
     status = set_own_key(session, me_recip_1, fpr_own_recip_key);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Unable to set own key.");
 
     flags = PEP_decrypt_flag_untrusted_server;
     
@@ -347,11 +350,10 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     cout << decrypted_text << endl;
     cout << "Status is " << tl_status_string(status) << endl;
 
-
-    TEST_ASSERT(decrypted_text);
-    TEST_ASSERT(rating);
-    TEST_ASSERT(!modified_src);
-    TEST_ASSERT(flags & PEP_decrypt_flag_src_modified == 0);
+    TEST_ASSERT_MSG(decrypted_text, "No decrypted test");
+    TEST_ASSERT_MSG(rating, "No rating. FIXME: what???");
+    TEST_ASSERT_MSG((flags & PEP_decrypt_flag_src_modified) == 0, "Source was modified, but shouldn't have been.");    
+    TEST_ASSERT_MSG(!modified_src, "Modified source was returned, but should not have been generated");
 
     free(decrypted_text);
     decrypted_text = nullptr;
@@ -379,8 +381,8 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     cout << decrypted_text << endl;
     cout << "Status is " << tl_status_string(status) << endl;
 
-    TEST_ASSERT(decrypted_text);
-    TEST_ASSERT(rating);
+    TEST_ASSERT_MSG(decrypted_text, "No decrypted test");
+    TEST_ASSERT_MSG(rating, "No rating. FIXME: what???");
 
     free(decrypted_text);
     decrypted_text = nullptr;
@@ -413,7 +415,7 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     {
         if (i == 0) {
               cout << "Signed by " << (strcasecmp("", kl->value) == 0 ? "NOBODY" : kl->value) << endl;
-//              TEST_ASSERT(strcasecmp(fpr_own_recip_key,kl->value) == 0);
+//              TEST_ASSERT_MSG(strcasecmp(fpr_own_recip_key,kl->value) == 0);
         }
         else {
             if (strcasecmp(fpr_own_recip_key, kl->value) == 0) {
@@ -430,13 +432,13 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
             }
             else {
                 cout << "FAIL: Encrypted for " << kl->value << ", which it should not be." << endl;
-//                TEST_ASSERT(false);
+//                TEST_ASSERT_MSG(false);
             }
             cout << "\t " << kl->value << endl;
         }
-        TEST_ASSERT(i < 4);
+        TEST_ASSERT_MSG(i < 4, "Encrypted for too many keys.");
     }
-//    TEST_ASSERT (own_key_found && extra_key_0_found && extra_key_1_found);
+//    TEST_ASSERT_MSG(own_key_found && extra_key_0_found && extra_key_1_found);
     cout << "Message was encrypted for all the keys it should be, and none it should not!" << endl;
 
     cout << "Case 3b: PASS" << endl << endl;

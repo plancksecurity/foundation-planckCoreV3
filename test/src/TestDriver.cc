@@ -81,7 +81,7 @@ int main(int argc, const char** argv) {
         test_runner->add(suite); 
     }
 
-    Test::TextOutput output(Test::TextOutput::Terse);
-    return test_runner->run(output) ? 1 : 0;
+    Test::TextOutput output(Test::TextOutput::Verbose);
+    return test_runner->run(output, false) ? 1 : 0;
     
 }
