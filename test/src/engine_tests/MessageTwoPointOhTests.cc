@@ -93,7 +93,7 @@ void MessageTwoPointOhTests::check_message_two_point_oh() {
     cout << "calling encrypt_message\n";
     status = encrypt_message(session, outgoing_message, NULL, 
         &encrypted_msg, PEP_enc_PGP_MIME, 0);
-    cout << "encrypt_message() returns " << std::hex << status << '.' << endl;
+    cout << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((encrypted_msg), "encrypted_msg");
     cout << "message encrypted.\n";

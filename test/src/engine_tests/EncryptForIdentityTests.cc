@@ -82,7 +82,7 @@ void EncryptForIdentityTests::check_encrypt_for_identity() {
     message* encrypted_msg = nullptr;
     cout << "calling encrypt_message_for_identity()\n";
     status = encrypt_message_for_self(session, alice, outgoing_message, NULL, &encrypted_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);
-    cout << "encrypt_message() returns " << std::hex << status << '.' << endl;
+    cout << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((encrypted_msg), "encrypted_msg");
     cout << "message encrypted.\n";
@@ -152,7 +152,7 @@ void EncryptForIdentityTests::check_encrypt_for_identity() {
 
     cout << "calling encrypt_message_for_identity()\n";
     status = encrypt_message_for_self(session, alice, outgoing_message, extra_keys, &encrypted_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);
-    cout << "encrypt_message() returns " << std::hex << status << '.' << endl;
+    cout << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((encrypted_msg), "encrypted_msg");
     cout << "message encrypted.\n";
@@ -207,7 +207,7 @@ void EncryptForIdentityTests::check_encrypt_for_identity() {
     
     cout << "calling encrypt_message_for_identity()\n";
     status = encrypt_message_for_self(session, alice, outgoing_message, extra_keys, &encrypted_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);
-    cout << "encrypt_message() returns " << std::hex << status << '.' << endl;
+    cout << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
     TEST_ASSERT_MSG((status != PEP_STATUS_OK), "status != PEP_STATUS_OK");
 
     free_message(outgoing_message);

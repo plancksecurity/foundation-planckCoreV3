@@ -115,7 +115,7 @@ void ExternalRevokeTests::check_external_revoke() {
     
     status = get_trust(session, recip1);
     
-    cout << "Recip's trust DB comm_type = " << hex << tl_ct_string(recip1->comm_type) << endl;
+    cout << "Recip's trust DB comm_type = "  << tl_ct_string(recip1->comm_type) << endl;
     TEST_ASSERT_MSG((recip1->comm_type == PEP_ct_OpenPGP), "recip1->comm_type == PEP_ct_OpenPGP"); // FIXME: PEP_ct_pEp???
 
     // decrypt message
@@ -200,7 +200,7 @@ void ExternalRevokeTests::check_external_revoke() {
     status = get_trust(session, recip1);
     recip1->fpr = NULL;
 
-    cout << "Recip's trust DB comm_type = " << hex << tl_ct_string(recip1->comm_type) << endl;
+    cout << "Recip's trust DB comm_type = " << tl_ct_string(recip1->comm_type) << endl;
     TEST_ASSERT_MSG((recip1->comm_type == PEP_ct_unknown || recip1->comm_type == PEP_ct_key_revoked), "recip1->comm_type == PEP_ct_unknown || recip1->comm_type == PEP_ct_key_revoked");
 
     free_message(decrypted_msg);
@@ -254,7 +254,7 @@ void ExternalRevokeTests::check_external_revoke() {
     
     status = get_trust(session, recip1);
 
-    cout << "Recip's trust DB comm_type (should be unknown, as we're using a keyring-only key, not in DB) = " << hex << tl_ct_string(recip1->comm_type) << endl;
+    cout << "Recip's trust DB comm_type (should be unknown, as we're using a keyring-only key, not in DB) = "  << tl_ct_string(recip1->comm_type) << endl;
     TEST_ASSERT_MSG((recip1->comm_type != PEP_ct_OpenPGP_unconfirmed), "recip1->comm_type != PEP_ct_OpenPGP_unconfirmed");
 
     // decrypt message
@@ -284,7 +284,7 @@ void ExternalRevokeTests::check_external_revoke() {
     
     status = get_trust(session, recip1);
     
-    cout << "Recip's trust DB comm_type (should be unknown - there's nothing in the DB) = " << hex << tl_ct_string(recip1->comm_type) << endl;
+    cout << "Recip's trust DB comm_type (should be unknown - there's nothing in the DB) = "  << tl_ct_string(recip1->comm_type) << endl;
     TEST_ASSERT_MSG((recip1->comm_type == PEP_ct_unknown), "recip1->comm_type == PEP_ct_unknown");
 
     free_message(encrypted_outgoing_msg);
