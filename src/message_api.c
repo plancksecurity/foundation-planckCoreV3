@@ -3002,7 +3002,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     PEP_STATUS status = PEP_STATUS_OK;
     PEP_STATUS decrypt_status = PEP_CANNOT_DECRYPT_UNKNOWN;
     PEP_STATUS _decrypt_in_pieces_status = PEP_CANNOT_DECRYPT_UNKNOWN;
-    message *msg = NULL;
+    message* msg = NULL;
+    message* calculated_src = src;
+    
     char *ctext;
     size_t csize;
     char *ptext = NULL;
@@ -3260,7 +3262,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                             reconcile_src_and_inner_messages(src, inner_message);
                                             
                                             // FIXME: free msg, but check references
-                                            src = msg = inner_message;
+                                            //src = msg = inner_message;
+                                            calculated_src = msg = inner_message;
                                             
                                             if (src->from) {
                                                 if (!is_me(session, src->from))
@@ -3299,13 +3302,13 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         // Ok, so if it was signed and it's all verified, we can update
         // eligible signer comm_types to PEP_ct_pEp_*
         if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && is_pep_msg)
-            status = update_sender_to_pep_trust(session, src->from, _keylist);
+            status = update_sender_to_pep_trust(session, calculated_src->from, _keylist);
 
         /* Ok, now we have a keylist used for decryption/verification.
            now we need to update the message rating with the 
            sender and recipients in mind */
         status = amend_rating_according_to_sender_and_recipients(session,
-                 rating, src->from, _keylist);
+                 rating, calculated_src->from, _keylist);
 
         if (status != PEP_STATUS_OK)
             goto pep_error;
@@ -3352,8 +3355,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         if (imported_keys)
             remove_attached_keys(msg);
                     
-        if (src->id && src != msg) {
-            msg->id = strdup(src->id);
+        if (calculated_src->id && calculated_src != msg) {
+            msg->id = strdup(calculated_src->id);
             assert(msg->id);
             if (msg->id == NULL)
                 goto enomem;
