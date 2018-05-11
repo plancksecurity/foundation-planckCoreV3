@@ -61,4 +61,9 @@ trustdb.gpg
 __pycache__
 *.pyc
 test/python_tests/test?
-
+test/pEp_test_home
+test/TestDriver
+test/local
+.tags
+*/.tags
+*/*/.tags

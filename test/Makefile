@@ -1,120 +1,114 @@
+
 # Copyright 2017, pEp Foundation
 # This file is part of pEpEngine
 # This file may be used under the terms of the GNU General Public License version 3
 # see LICENSE.txt
 
-HERE:=$(CURDIR)
-
 include ../default.conf
 
-TARGET=pEpEngineTest
+PY_ENV := $(shell command -v python3 2> /dev/null)
 
-unexport GNUPGHOME
-TEST_HOME=$(HERE)test_home
-TEST_GNUPGHOME=$(TEST_HOME)/gnupg
+HERE:=$(CURDIR)
+TEST_HOME=$(HERE)/pEp_test_home
+
+TARGET=TestDriver
+
+SRCS := $(wildcard src/*.cc) $(wildcard src/*/*.cc)
+OBJS := $(addsuffix .o,$(basename $(SRCS)))
+DEPS := $(OBJS:.o=.d)
+
+INC_DIRS := ./include /usr/local/include  
+INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+
+LDFLAGS += -L/usr/local/lib
+
+CFLAGS += -Wno-deprecated
+CXXFLAGS += -Wno-deprecated
 
 LDFLAGS+= $(ETPAN_LIB) -L../asn.1 -L../src
 LDLIBS+= -letpan -lpEpEngine -lstdc++ -lasn1
 
 ifeq ($(BUILD_FOR),Linux)
-    LDLIBS+= -luuid
+	LDLIBS+= -luuid
 endif
 
 ifeq ($(OPENPGP),NETPGP)
-    LDLIBS+= -lnetpgp
+	LDLIBS+= -lnetpgp
 endif
 
 ifdef SQLITE3_FROM_OS
-    LDLIBS+= -lsqlite3
+	LDLIBS+= -lsqlite3
 endif
 
 ifeq ($(shell uname),Darwin)
-    LIBPATH=DYLD_LIBRARY_PATH
-    LLDB_BIN=/Applications/Xcode.app/Contents/Developer/usr/bin/lldb
+	LIBPATH=DYLD_LIBRARY_PATH
+	LLDB_BIN=/Applications/Xcode.app/Contents/Developer/usr/bin/lldb
 else
-    LIBPATH=LD_LIBRARY_PATH
-    LLDB_BIN=lldb
+	LIBPATH=LD_LIBRARY_PATH
+	LLDB_BIN=lldb
 endif
+
+LDLIBS += -lcpptest
+
 
 # Create a list of the extra library paths for the loader. I do not assume that the engine (and its dependencies) are installed for testing.
 # Note that += can not be used here, as it changes the amount of whitespace
 EXTRA_LIB_PATHS=../src:
 ifdef ETPAN_LIB
-    EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(ETPAN_LIB)):
+	EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(ETPAN_LIB)):
 endif
 ifdef GPGME_LIB
-    EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(GPGME_LIB)):
+	EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(GPGME_LIB)):
 endif
 ifdef NETPGP_LIB
-    EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(NETPGP_LIB)):
+	EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(NETPGP_LIB)):
 endif
+
 # Remove trailing ':'
 EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS::=)
 
-TEST_CMD_PFX=$(LIBPATH)=$(EXTRA_LIB_PATHS) HOME=$(TEST_HOME) GNUPGHOME=$(TEST_GNUPGHOME)
-
-UNIT_TESTS_SOURCE=$(wildcard *_test.cc) 
-UNIT_TESTS=$(subst .cc,,$(UNIT_TESTS_SOURCE))
-UNIT_TESTS_RUN=$(subst .cc,_run,$(UNIT_TESTS_SOURCE))
-
 CFLAGS:=$(filter-out -DNDEBUG,$(CFLAGS))
 ifneq ($(MAKECMDGOALS),clean)
-    ifneq (,$(findstring -DNDEBUG,$(CFLAGS)))
-        $(error The macro NDEBUG must not be defined for test compilation.)
-    endif
+	ifneq (,$(findstring -DNDEBUG,$(CFLAGS)))
+		$(error The macro NDEBUG must not be defined for test compilation.)
+	endif
 endif
 
 CXXFLAGS:=$(filter-out -DNDEBUG,$(CXXFLAGS))
 ifneq ($(MAKECMDGOALS),clean)
-    ifneq (,$(findstring -DNDEBUG,$(CXXFLAGS)))
-        $(error The macro NDEBUG must not be defined for test compilation.)
-    endif
+	ifneq (,$(findstring -DNDEBUG,$(CXXFLAGS)))
+		$(error The macro NDEBUG must not be defined for test compilation.)
+	endif
 endif
 
-.PHONY: all
-all: $(TARGET) $(UNIT_TESTS)
+CPPFLAGS += $(INC_FLAGS) -MMD -MP
 
-# don't delete .o files!
-.PRECIOUS: %.o
+all: suitemaker $(TARGET) test_home_
+	
+$(TARGET): $(OBJS)
+	$(CXX) $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LDFLAGS) $(LDLIBS) -o $@
 
+.PHONY: suitemaker
+suitemaker:
+ifndef PY_ENV
+	@echo "WARNING: Can't find python3 - this is fine unless you're adding test suites. If so, please install python3."
+else
+	$(PY_ENV) gensuitemaker.py
+endif
+		
 .PHONY: test_home_
 test_home_: 
-	-GNUPGHOME=$(TEST_GNUPGHOME) gpgconf --kill gpg-agent
-	rm -rf $(TEST_HOME)
-	mkdir -p $(TEST_GNUPGHOME)/private-keys-v1.d
-	$(GPG_CMD) --import --batch --homedir $(TEST_GNUPGHOME) 0x*.asc *_sec.asc
-
-.PHONY: clean
-clean:
-	rm -f *.o $(TARGET) *.a *~ $(UNIT_TESTS) pep_Dokument_Titel.pdf msg4.asc msg_encrypt_for_self.asc
-	rm -Rf *.dSYM $(TEST_HOME) pubring.gpg secring.gpg random_seed *.conf trustdb.gpg
+	mkdir -p $(TEST_HOME)
 
 .PHONY: test
-test: $(TARGET) test_home_
-	$(TEST_CMD_PFX) ./$<
+test: all
+	./$(TARGET)
+	
+.PHONY: clean
+clean:
+	$(RM) $(TARGET) $(OBJS) $(DEPS)
 
-%_test : %_test.o test_util.o
-	$(CXX) $^ $(LDFLAGS) $(LDLIBS) -o $@
 
-%_run : % test_home_
-	$(TEST_CMD_PFX) ./$<
 
-%_lldb : % test_home_
-	$(TEST_CMD_PFX) $(LLDB_BIN) ./$<
-
-%_valgrind : % test_home_
-	$(TEST_CMD_PFX) valgrind --leak-check=yes ./$<
-
-%_gdb : % test_home_
-	$(TEST_CMD_PFX) gdb ./$<
-
-.PHONY: unit_tests
-unit_tests: $(UNIT_TESTS) $(UNIT_TESTS_RUN)
-
-.PHONY: compile
-compile: $(UNIT_TESTS) $(TARGET)
-
-# Installs the engine, not the test binaries
-.PHONY: install
-install:
-	$(MAKE) -C .. install
+-include $(DEPS)
+ 
