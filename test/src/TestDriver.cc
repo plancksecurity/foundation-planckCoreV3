@@ -82,6 +82,6 @@ int main(int argc, const char** argv) {
     }
 
     Test::TextOutput output(Test::TextOutput::Verbose);
-    return test_runner->run(output, false) ? 1 : 0;
+    return test_runner->run(output, false) ? 0 : 1;
     
 }
