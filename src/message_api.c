@@ -1162,6 +1162,8 @@ static PEP_rating decrypt_rating(PEP_STATUS status)
         return PEP_rating_unencrypted;
 
     case PEP_DECRYPTED:
+    case PEP_DECRYPTED_BUT_UNSIGNED:
+    case PEP_DECRYPT_NO_KEY_FOR_SIGNER:
     case PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH:
         return PEP_rating_unreliable;
 
@@ -1175,6 +1177,9 @@ static PEP_rating decrypt_rating(PEP_STATUS status)
     case PEP_CANNOT_DECRYPT_UNKNOWN:
         return PEP_rating_cannot_decrypt;
 
+    case PEP_DECRYPT_MODIFICATION_DETECTED:
+        return PEP_rating_under_attack;
+        
     default:
         return PEP_rating_undefined;
     }
@@ -3015,6 +3020,17 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
     // Grab input flags
     bool reencrypt = (((*flags & PEP_decrypt_flag_untrusted_server) > 0) && *keylist && !EMPTYSTR((*keylist)->value));
+    bool deliver_badsig_pgpmime = ((*flags & PEP_decrypt_deliver_pgpmime_badsigned) > 0);
+    
+    bool inline_pgp = false;
+    
+    if (src->longmsg) {
+        const char* start_inline = strstr(src->longmsg, "---- BEGIN PGP ");
+        if (start_inline && strstr(start_inline, "---- END PGP")) {
+            // We'll decide if this IS encrypted, it was inline.
+            inline_pgp = true;
+        }
+    }
     
     // We own this pointer, and we take control of *keylist if reencrypting.
     stringlist_t* extra = NULL;
@@ -3157,6 +3173,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                               &decrypt_status,
                                               crypto);
                 }
+                
                 break;
 
             case PEP_enc_pieces:
@@ -3196,9 +3213,35 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             status = unencapsulate_hidden_fields(src, msg, &wrap_info);
 
 //            bool is_transport_wrapper = false;
-            
+
+            if (!wrap_info) {
+                // NOT Message 2.0.
+                // Fail hard on 1.0 and PGP/MIME messages which don't verify. 
+                // (We will have been failing anyway due to gpg error codes, but we make sure here.)
+                if (decrypt_status == PEP_DECRYPTED) {
+                    if (!inline_pgp) {
+                        if (!_keylist || EMPTYSTR(_keylist->value))
+                            status = decrypt_status = PEP_DECRYPTED_BUT_UNSIGNED;
+                        else
+                            status = decrypt_status = PEP_DECRYPT_NO_KEY_FOR_SIGNER;
+                        
+                        if (decrypt_status == PEP_DECRYPTED_BUT_UNSIGNED && !deliver_badsig_pgpmime) {
+                            *rating = decrypt_rating(decrypt_status);
+                            goto pep_error;
+                        }
+                    }
+                }
+            }            
             // FIXME: replace with enums, check status
-            if (wrap_info) {
+            else {
+                if (decrypt_status == PEP_DECRYPTED || 
+                    decrypt_status == PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH) {
+                    // For Message 2.0, if it's not signed and verified, it's 
+                    // been modified. So...
+                    status = decrypt_status = PEP_DECRYPT_MODIFICATION_DETECTED;
+                    *rating = decrypt_rating(decrypt_status);
+                    goto pep_error;
+                }
                 if (strcmp(wrap_info, "OUTER") == 0) {
                     // this only occurs in with a direct outer wrapper
                     // where the actual content is in the inner wrapper

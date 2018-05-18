@@ -23,6 +23,9 @@ class EngineTestSuite : public Test::Suite {
         
         string current_test_name;
 
+#define TEST_FAILED_MESSAGE_BUFSIZE 1000        
+        char failed_msg_buf[TEST_FAILED_MESSAGE_BUFSIZE];
+        
         std::map<std::string, void (Test::Suite::*)()> test_map;                
         
         unsigned int number_of_tests;

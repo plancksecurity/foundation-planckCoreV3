@@ -24,7 +24,6 @@ void EngineTestIndividualSuite::setup() {
 }
 
 void EngineTestIndividualSuite::tear_down() {
-    cout << "calling release()\n";
     release(session);
     restore_full_env();
 }

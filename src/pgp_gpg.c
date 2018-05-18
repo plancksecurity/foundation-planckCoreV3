@@ -622,11 +622,14 @@ PEP_STATUS pgp_decrypt_and_verify(
         }
         gpgme_error = _GPGERR(gpgme_error);
         assert(gpgme_error != GPG_ERR_INV_VALUE);
-        assert(gpgme_error != GPG_ERR_NO_DATA);
+//        assert(gpgme_error != GPG_ERR_NO_DATA);
 
         switch (gpgme_error) {
             case GPG_ERR_NO_ERROR:
             {
+                // EFail: We should get an MDC warning if there were modifications
+                //        and never make it here. So the decrypted text is not
+                //        returned regardless.
                 gpgme_decrypt_result = gpg.gpgme_op_decrypt_result(session->ctx);
                 /* NOW is when we have to process the decrypt_result, period.
                    it is only valid until the next call on the context. */
@@ -792,7 +795,7 @@ PEP_STATUS pgp_decrypt_and_verify(
                         }
                         case GPG_ERR_CERT_REVOKED:
                         case GPG_ERR_BAD_SIGNATURE:
-                            result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
+                            result = PEP_DECRYPT_BAD_SIGNATURE;
                             break;
                         case GPG_ERR_SIG_EXPIRED:
                         case GPG_ERR_KEY_EXPIRED:
@@ -853,6 +856,7 @@ PEP_STATUS pgp_decrypt_and_verify(
                 break;
             }
             case GPG_ERR_BAD_PASSPHRASE:
+            case GPG_ERR_NO_DATA:
                 result = PEP_DECRYPT_NO_KEY;
                 break;
             case GPG_ERR_DECRYPT_FAILED:

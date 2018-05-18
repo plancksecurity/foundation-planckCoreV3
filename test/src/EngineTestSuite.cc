@@ -44,7 +44,7 @@ void EngineTestSuite::set_full_env() {
         test_home.compare(prev_gpg_home + ".gnupg") == 0)
         throw std::runtime_error("SETUP: new GNUPGHOME threatens to mess up user GNUPGHOME (and delete all their keys). NO DICE.");
     
-    cout << "Ok - checked if new test home will be safe. We'll try and make the directory, deleting it if it has already exists." << endl;
+//    cout << "Ok - checked if new test home will be safe. We'll try and make the directory, deleting it if it has already exists." << endl;
     
     struct stat buf;
     
@@ -56,11 +56,11 @@ void EngineTestSuite::set_full_env() {
     if (success != 0)
         throw std::runtime_error("SETUP: Cannot set test_home for init.");
     
-    cout << "calling init()\n";
+//    cout << "calling init()\n";
     PEP_STATUS status = init(&session);
     // assert(status == PEP_STATUS_OK);
     // assert(session);
-    cout << "init() completed.\n";
+//    cout << "init() completed.\n";
 
     success = setenv("HOME", home.c_str(), 1);
     if (success != 0)
