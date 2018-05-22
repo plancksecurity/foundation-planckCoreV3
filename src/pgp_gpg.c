@@ -622,11 +622,14 @@ PEP_STATUS pgp_decrypt_and_verify(
         }
         gpgme_error = _GPGERR(gpgme_error);
         assert(gpgme_error != GPG_ERR_INV_VALUE);
-        assert(gpgme_error != GPG_ERR_NO_DATA);
+//        assert(gpgme_error != GPG_ERR_NO_DATA);
 
         switch (gpgme_error) {
             case GPG_ERR_NO_ERROR:
             {
+                // EFail: We should get an MDC warning if there were modifications
+                //        and never make it here. So the decrypted text is not
+                //        returned regardless.
                 gpgme_decrypt_result = gpg.gpgme_op_decrypt_result(session->ctx);
                 /* NOW is when we have to process the decrypt_result, period.
                    it is only valid until the next call on the context. */
@@ -853,6 +856,7 @@ PEP_STATUS pgp_decrypt_and_verify(
                 break;
             }
             case GPG_ERR_BAD_PASSPHRASE:
+            case GPG_ERR_NO_DATA:
                 result = PEP_DECRYPT_NO_KEY;
                 break;
             case GPG_ERR_DECRYPT_FAILED:
@@ -1826,7 +1830,6 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
     return PEP_STATUS_OK;
 }
 
-
 static PEP_STATUS _pgp_search_keys(PEP_SESSION session, const char* pattern,
                             stringlist_t** keylist,
                             int private_only) {
@@ -1871,8 +1874,9 @@ static PEP_STATUS _pgp_search_keys(PEP_SESSION session, const char* pattern,
                 // check that at least one uid's email matches pattern exactly,
                 // modulo the email-diff heuristic
                 while(kuid) {
-                    if((pattern && kuid->email && _email_heuristic_match(kuid->email, pattern)) ||
-                       pattern == NULL /* match all */ )
+                    if((pattern == NULL) ||
+                       (strstr(pattern, "@") == NULL) || // not an email
+                       (kuid->email && _email_heuristic_match(kuid->email, pattern)))
                     { 
                         char *fpr = key->subkeys->fpr;
                         assert(fpr);
