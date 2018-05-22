@@ -56,13 +56,13 @@ void IntegrityTests::setup() {
     assert(status == PEP_STATUS_OK);
     recip_key = "";
     string priv_key = slurp("test_keys/priv/integrity_test_recip_0-0xF390A40D_priv.asc");
-    cout << priv_key << endl;
-    cout << "GNUPGHOME is " << getenv("GNUPGHOME") << endl;
+    // cout << priv_key << endl;
+    // cout << "GNUPGHOME is " << getenv("GNUPGHOME") << endl;
     status = import_key(session, priv_key.c_str(), priv_key.size(), NULL);
     assert(status == PEP_STATUS_OK);
-    stringlist_t* debug_keylist = NULL;
-    status = find_private_keys(session, recip_fpr, &debug_keylist);
-    assert(debug_keylist);
+    // stringlist_t* debug_keylist = NULL;
+    // status = find_private_keys(session, recip_fpr, &debug_keylist);
+    // assert(debug_keylist);
     
     pEp_identity* me = new_identity("integrity_test_recip@darthmama.org", recip_fpr, PEP_OWN_USERID, "Integrity Test Recipient");
     assert(me != NULL);

@@ -25,7 +25,6 @@ void EngineTestIndividualSuite::setup() {
 }
 
 void EngineTestIndividualSuite::tear_down() {
-    release(session);
     restore_full_env();
     EngineTestSuite::tear_down();
 }

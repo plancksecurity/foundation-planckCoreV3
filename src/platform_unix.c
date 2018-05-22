@@ -208,12 +208,21 @@ int regnexec(const regex_t* preg, const char* string,
 
 #endif
 
+#ifdef NDEBUG
 const char *unix_local_db(void)
+#else
+const char *unix_local_db(int reset)
+#endif
 {
     static char buffer[MAX_PATH];
     static bool done = false;
 
-    if (!done) {
+    #ifdef NDEBUG
+    if (!done)
+    #else
+    if ((!done) || reset)
+    #endif
+    {
         char *home_env;
         if((home_env = getenv("HOME"))){
             char *p = stpncpy(buffer, home_env, MAX_PATH);
@@ -240,12 +249,20 @@ static const char *gpg_conf_name = "gpg.conf";
 static const char *gpg_agent_conf_name = "gpg-agent.conf";
 static const char *gpg_conf_empty = "# Created by pEpEngine\n";
 
+#ifdef NDEBUG
 static bool ensure_gpg_home(const char **conf, const char **home){
+#else
+static bool ensure_gpg_home(const char **conf, const char **home, int reset){
+#endif    
     static char path[MAX_PATH];
     static char dirname[MAX_PATH];
     static bool done = false;
 
+#ifdef NDEBUG
     if (!done) {
+#else
+    if (reset || !done) {
+#endif        
         char *p;
         ssize_t len;
         char *gpg_home_env = getenv("GNUPGHOME");
@@ -317,15 +334,27 @@ static bool ensure_gpg_home(const char **conf, const char **home){
     return true;
 }
 
+#ifdef NDEBUG
 static bool ensure_gpg_agent_conf(const char **agent_conf){
+#else
+static bool ensure_gpg_agent_conf(const char **agent_conf, int reset){    
+#endif    
     static char agent_path[MAX_PATH];
     static bool done = false;
 
+#ifdef NDEBUG
     if (!done) {
         const char *dirname;
 
         if (!ensure_gpg_home(NULL, &dirname)) /* Then dirname won't be set. */
             return false;
+#else
+    if (reset || !done) {
+        const char *dirname;
+
+        if (!ensure_gpg_home(NULL, &dirname, reset)) /* Then dirname won't be set. */
+            return false;
+#endif
 
         char *p = stpncpy(agent_path, dirname, MAX_PATH);
         
@@ -367,6 +396,7 @@ static bool ensure_gpg_agent_conf(const char **agent_conf){
     return true;
 }
 
+#ifdef NDEBUG
 const char *gpg_conf(void)
 {
     const char *conf;
@@ -374,7 +404,17 @@ const char *gpg_conf(void)
         return conf;
     return NULL;
 }
+#else
+const char *gpg_conf(int reset)
+{
+    const char *conf;
+    if(ensure_gpg_home(&conf, NULL, reset))
+        return conf;
+    return NULL;
+}
+#endif
 
+#ifdef NDEBUG
 const char *gpg_home(void)
 {
     const char *home;
@@ -382,7 +422,17 @@ const char *gpg_home(void)
         return home;
     return NULL;
 }
+#else
+const char *gpg_home(int reset)
+{
+    const char *home;
+    if(ensure_gpg_home(NULL, &home, reset))
+        return home;
+    return NULL;
+}
+#endif
 
+#ifdef NDEBUG
 const char *gpg_agent_conf(void)
 {
     const char *agent_conf;
@@ -390,3 +440,12 @@ const char *gpg_agent_conf(void)
         return agent_conf;
     return NULL;
 }
+#else
+const char *gpg_agent_conf(int reset)
+{
+    const char *agent_conf;
+    if(ensure_gpg_agent_conf(&agent_conf, reset))
+        return agent_conf;
+    return NULL;
+}
+#endif

@@ -6,6 +6,8 @@
 #include <ftw.h>
 #include <assert.h>
 
+#include "platform_unix.h"
+
 #include "test_util.h"
 #include "EngineTestSuite.h"
 using namespace std;
@@ -30,6 +32,12 @@ void EngineTestSuite::add_test_to_suite(std::pair<std::string, void (Test::Suite
 void EngineTestSuite::set_full_env() {
     int success = 0;
     struct stat dirchk;
+    
+    success = system("gpgconf --kill all");
+    if (success != 0)
+        throw std::runtime_error("SETUP: Error when executing 'gpgconf --kill all'.");
+    sleep(1); // hopefully enough time for the system to recognise that it is dead. *sigh*    
+
     if (stat(test_home.c_str(), &dirchk) == 0) {
         if (!S_ISDIR(dirchk.st_mode))
             throw std::runtime_error(("The test directory, " + test_home + "exists, but is not a directory.").c_str()); 
@@ -63,7 +71,7 @@ void EngineTestSuite::set_full_env() {
         
     if (temp_test_home.empty())
         throw std::runtime_error("SETUP: BAD INITIALISATION. No test home.");
-    
+
     
     string home = getenv("HOME");
     if (temp_test_home.compare(home) == 0 || temp_test_home.compare(home + "/") == 0 ||
@@ -82,26 +90,26 @@ void EngineTestSuite::set_full_env() {
 
     cout << "New GNUPGHOME is " << getenv("GNUPGHOME") << endl;
     
-    success = system("gpgconf --kill all");
-    if (success != 0)
-        throw std::runtime_error("SETUP: Error when executing 'gpgconf --kill all'.");
-    sleep(1); // hopefully enough time for the system to recognise that it is dead. *sigh*
-
-    
     success = setenv("HOME", temp_test_home.c_str(), 1);
     if (success != 0)
         throw std::runtime_error("SETUP: Cannot set test_home for init.");
     
+    const char* new_home_db = unix_local_db(true);
+    gpg_conf(true);
+    gpg_agent_conf(true);
+    
 //    cout << "calling init()\n";
     PEP_STATUS status = init(&session);
-    // assert(status == PEP_STATUS_OK);
+    assert(status == PEP_STATUS_OK);
     assert(session);
 //    cout << "init() completed.\n";
 
 }
 
 void EngineTestSuite::restore_full_env() {
-            
+    release(session);
+    session = NULL;
+        
     int success = system("gpgconf --kill all");
     if (success != 0)
         throw std::runtime_error("RESTORE: Error when executing 'gpgconf --kill all'.");
