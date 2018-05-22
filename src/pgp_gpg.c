@@ -1830,8 +1830,6 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
     return PEP_STATUS_OK;
 }
 
-
-
 static PEP_STATUS _pgp_search_keys(PEP_SESSION session, const char* pattern,
                             stringlist_t** keylist,
                             int private_only) {
@@ -1876,8 +1874,9 @@ static PEP_STATUS _pgp_search_keys(PEP_SESSION session, const char* pattern,
                 // check that at least one uid's email matches pattern exactly,
                 // modulo the email-diff heuristic
                 while(kuid) {
-                    if((pattern && kuid->email && _email_heuristic_match(kuid->email, pattern)) ||
-                       pattern == NULL /* match all */ )
+                    if((pattern == NULL) ||
+                       (strstr(pattern, "@") == NULL) || // not an email
+                       (kuid->email && _email_heuristic_match(kuid->email, pattern)))
                     { 
                         char *fpr = key->subkeys->fpr;
                         assert(fpr);
