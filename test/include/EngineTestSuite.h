@@ -18,6 +18,7 @@ class EngineTestSuite : public Test::Suite {
     protected:
         PEP_SESSION session;
         string test_home;
+        string real_home;
         string prev_gpg_home;
         string name;
         
@@ -37,6 +38,5 @@ class EngineTestSuite : public Test::Suite {
         void set_full_env();
         void restore_full_env();
         void initialise_test_home();
-        
 };
 #endif

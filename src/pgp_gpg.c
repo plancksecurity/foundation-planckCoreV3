@@ -1831,6 +1831,7 @@ PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
 }
 
 
+
 static PEP_STATUS _pgp_search_keys(PEP_SESSION session, const char* pattern,
                             stringlist_t** keylist,
                             int private_only) {

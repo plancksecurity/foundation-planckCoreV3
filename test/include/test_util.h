@@ -2,6 +2,10 @@
 #define PEP_TEST_UTILS_H
 
 #include <string>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <ftw.h>
+
 #include "pEpEngine.h"
 #include "message_api.h"
 
@@ -33,4 +37,9 @@ char* get_new_uuid();
 
 bool slurp_message_and_import_key(PEP_SESSION session, const char* message_fname, std::string& message, const char* key_filename);
 
+int util_delete_filepath(const char *filepath, 
+                         const struct stat *file_stat, 
+                         int ftw_info, 
+                         struct FTW * ftw_struct);
+        
 #endif

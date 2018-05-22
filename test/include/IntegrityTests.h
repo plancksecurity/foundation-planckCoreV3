@@ -41,6 +41,11 @@ class IntegrityTests : public EngineTestIndividualSuite {
         void check_unknown_signed_PGP_MIME_attached_key();
         void check_unsigned_PGP_MIME_corrupted();
         void check_signed_PGP_MIME_corrupted();
+        void check_unsigned_2_0();
+        void check_unknown_signed_2_0_no_key();
+        void check_unknown_signed_2_0_no_key_known_signer();
+        void check_unknown_signed_2_0_key_attached();
+
         void check_integrity();
         
 

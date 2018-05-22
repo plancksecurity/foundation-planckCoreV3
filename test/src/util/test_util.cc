@@ -2,9 +2,16 @@
 #include "pEpEngine.h"
 #include "pEp_internal.h"
 #include "message_api.h"
+
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <ftw.h>
 
 char* str_to_lower(const char* str) {
     if (!str)
@@ -333,3 +340,26 @@ bool slurp_message_and_import_key(PEP_SESSION session, const char* message_fname
     }
     return true;
 }
+
+
+
+int util_delete_filepath(const char *filepath, 
+                         const struct stat *file_stat, 
+                         int ftw_info, 
+                         struct FTW * ftw_struct) {
+    int retval = 0;
+    switch (ftw_info) {
+        case FTW_DP:
+            retval = rmdir(filepath);
+            break;
+        case FTW_F:
+        case FTW_SLN:
+            retval = unlink(filepath);
+            break;    
+        default:
+            retval = -1;
+    }
+    
+    return retval;
+}
+
