@@ -6,6 +6,7 @@
 #include <fstream>
 #include <string>
 #include <cstring> // for strcmp()
+#include <assert.h>
 #include <cpptest.h>
 
 #include "blacklist.h"
@@ -27,6 +28,13 @@ EncryptMissingPrivateKeyTests::EncryptMissingPrivateKeyTests(string suitename, s
     EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("EncryptMissingPrivateKeyTests::check_encrypt_missing_private_key"),
                                                                       static_cast<Func>(&EncryptMissingPrivateKeyTests::check_encrypt_missing_private_key)));
+}
+
+void EncryptMissingPrivateKeyTests::setup() {
+    EngineTestSessionSuite::setup();
+    string recip_key = slurp("test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
+    PEP_STATUS status = import_key(session, recip_key.c_str(), recip_key.size(), NULL);
+    assert(status == PEP_STATUS_OK);
 }
 
 void EncryptMissingPrivateKeyTests::check_encrypt_missing_private_key() {
