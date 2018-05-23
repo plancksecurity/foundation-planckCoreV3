@@ -19,6 +19,7 @@ EngineTestSuite::EngineTestSuite(string suitename, string test_home_dir) {
             
     number_of_tests = 0;
     on_test_number = 0;
+    real_home = getenv("HOME");
 }
 
 EngineTestSuite::~EngineTestSuite() {}
@@ -33,6 +34,8 @@ void EngineTestSuite::set_full_env() {
     int success = 0;
     struct stat dirchk;
     
+    set_my_name();
+
     success = system("gpgconf --kill all");
     if (success != 0)
         throw std::runtime_error("SETUP: Error when executing 'gpgconf --kill all'.");
@@ -56,10 +59,15 @@ void EngineTestSuite::set_full_env() {
             throw std::runtime_error("Error creating a test directory.");
     }
 
-    string temp_test_home = test_home + "/" + to_string(on_test_number);
+    string temp_test_home = test_home + "/" + my_name;
     
     int errchk = mkdir(temp_test_home.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-    cout << errchk << endl;
+    if (errchk != 0)
+        throw std::runtime_error("Error creating a test directory.");
+
+    temp_test_home += "/" + to_string(on_test_number);
+
+    errchk = mkdir(temp_test_home.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
     if (errchk != 0)
         throw std::runtime_error("Error creating a test directory.");
 
@@ -67,13 +75,22 @@ void EngineTestSuite::set_full_env() {
     // but it needn't remain so forever and always
     char* tmp = getenv("GNUPGHOME");
     if (tmp)
-        prev_gpg_home = getenv("GNUPGHOME");
+        prev_gpg_home = tmp;
         
     if (temp_test_home.empty())
         throw std::runtime_error("SETUP: BAD INITIALISATION. No test home.");
 
     
     string home = getenv("HOME");
+    cout << "home is " << home << endl;
+    assert(temp_test_home.compare(home) != 0);
+    assert(temp_test_home.compare(home + "/") != 0);
+    assert(temp_test_home.compare(home + "/.gnupg") != 0);
+    assert(temp_test_home.compare(home + ".gnupg") != 0);
+    assert(temp_test_home.compare(prev_gpg_home) != 0);
+    assert(temp_test_home.compare(prev_gpg_home + "/.gnupg") != 0);
+    assert(temp_test_home.compare(prev_gpg_home + ".gnupg") != 0);
+
     if (temp_test_home.compare(home) == 0 || temp_test_home.compare(home + "/") == 0 ||
         temp_test_home.compare(home + "/.gnupg") == 0 || temp_test_home.compare(home + ".gnupg") == 0 ||
         temp_test_home.compare(prev_gpg_home) == 0 || temp_test_home.compare(prev_gpg_home + "/.gnupg") == 0 ||
@@ -94,7 +111,7 @@ void EngineTestSuite::set_full_env() {
     if (success != 0)
         throw std::runtime_error("SETUP: Cannot set test_home for init.");
     
-    const char* new_home_db = unix_local_db(true);
+    unix_local_db(true);
     gpg_conf(true);
     gpg_agent_conf(true);
     
@@ -122,7 +139,12 @@ void EngineTestSuite::restore_full_env() {
     
     success = setenv("HOME", real_home.c_str(), 1);
     if (success != 0)
-        throw std::runtime_error("RESTORE: Cannot reset home directory! Either set environment variable manually back to your home, or quit this session!");    
+        throw std::runtime_error("RESTORE: Cannot reset home directory! Either set environment variable manually back to your home, or quit this session!");
+    else
+        cout << "RESTORE: HOME is now " << getenv("HOME") << endl;
+    unix_local_db(true);
+    gpg_conf(true);
+    gpg_agent_conf(true);
 
 }
 
@@ -131,3 +153,7 @@ void EngineTestSuite::setup() {
 }
 
 void EngineTestSuite::tear_down() {}
+
+void EngineTestSuite::set_my_name() {
+    my_name = typeid(*this).name();
+}

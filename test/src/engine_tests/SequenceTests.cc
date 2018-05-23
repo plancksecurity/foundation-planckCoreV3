@@ -15,7 +15,8 @@ using namespace std;
 
 SequenceTests::SequenceTests(string suitename, string test_home_dir) : 
     EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {            
-    TEST_ADD(SequenceTests::check_sequences);
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("SequenceTests::check_sequences"),
+                                                                      static_cast<Func>(&SequenceTests::check_sequences)));
 }
 
 void SequenceTests::check_sequences() {

@@ -29,6 +29,8 @@ class EngineTestSuite : public Test::Suite {
         
         std::map<std::string, void (Test::Suite::*)()> test_map;                
         
+        string my_name;
+        
         unsigned int number_of_tests;
         unsigned int on_test_number;
         
@@ -38,5 +40,6 @@ class EngineTestSuite : public Test::Suite {
         void set_full_env();
         void restore_full_env();
         void initialise_test_home();
+        void set_my_name();    
 };
 #endif

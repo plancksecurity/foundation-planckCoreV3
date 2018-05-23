@@ -16,7 +16,8 @@ using namespace std;
 
 StringlistTests::StringlistTests(string suitename, string test_home_dir) : 
     EngineTestSuite::EngineTestSuite(suitename, test_home_dir) {            
-    TEST_ADD(StringlistTests::check_stringlists);
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("StringlistTests::check_stringlists"),
+                                                                      static_cast<Func>(&StringlistTests::check_stringlists)));
 }
 
 void StringlistTests::check_stringlists() {

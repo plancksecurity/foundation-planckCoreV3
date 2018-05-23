@@ -17,7 +17,8 @@ using namespace std;
 
 StringpairListTests::StringpairListTests(string suitename, string test_home_dir) : 
     EngineTestSuite::EngineTestSuite(suitename, test_home_dir) {            
-    TEST_ADD(StringpairListTests::check_stringpair_lists);
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("StringpairListTests::check_stringpair_lists"),
+                                                                      static_cast<Func>(&StringpairListTests::check_stringpair_lists)));
 }
 
 bool StringpairListTests::test_stringpair_equals(stringpair_t* val1, stringpair_t* val2) {

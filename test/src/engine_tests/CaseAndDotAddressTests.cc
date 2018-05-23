@@ -19,7 +19,8 @@ using namespace std;
 
 CaseAndDotAddressTests::CaseAndDotAddressTests(string suitename, string test_home_dir) : 
     EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {            
-    TEST_ADD(CaseAndDotAddressTests::check_case_and_dot_address);
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("CaseAndDotAddressTests::check_case_and_dot_address"),
+                                                                      static_cast<Func>(&CaseAndDotAddressTests::check_case_and_dot_address)));
 }
 
 void CaseAndDotAddressTests::check_case_and_dot_address() {
