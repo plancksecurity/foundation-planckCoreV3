@@ -2809,7 +2809,8 @@ DYNAMIC_API PEP_STATUS unset_identity_flags(
     sqlite3_reset(session->unset_identity_flags);
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_IDENTITY;
-        identity->flags &= ~flags;
+
+    identity->flags &= ~flags;
 
     return PEP_STATUS_OK;
 }
