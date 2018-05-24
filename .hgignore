@@ -67,3 +67,5 @@ test/local
 .tags
 */.tags
 */*/.tags
+test/msg_2.0.asc
+test/*Tests

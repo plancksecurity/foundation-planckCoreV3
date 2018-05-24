@@ -83,7 +83,7 @@ endif
 
 CPPFLAGS += $(INC_FLAGS) -MMD -MP
 
-all: suitemaker $(TARGET) test_home_
+all: suitemaker $(TARGET) test_home_ scripts
 	
 $(TARGET): $(OBJS)
 	$(CXX) $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LDFLAGS) $(LDLIBS) -o $@
@@ -98,7 +98,13 @@ endif
 		
 .PHONY: test_home_
 test_home_: 
-	mkdir -p $(TEST_HOME)
+	
+
+.PHONY: test_home_
+scripts: 
+ifdef PY_ENV
+	$(PY_ENV) genscripts.py
+endif
 
 .PHONY: test
 test: all
@@ -107,6 +113,7 @@ test: all
 .PHONY: clean
 clean:
 	$(RM) $(TARGET) $(OBJS) $(DEPS)
+	$(RM) $(HERE)/*Tests
 
 
 
