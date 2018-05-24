@@ -37,28 +37,28 @@ struct mailmime * part_new_empty(
         int force_single
     )
 {
-	struct mailmime * build_info;
-	clist * list = NULL;
-	int r;
-	int mime_type;
+    struct mailmime * build_info;
+    clist * list = NULL;
+    int r;
+    int mime_type;
     char * attr_name = NULL;
     char * attr_value = NULL;
     struct mailmime_parameter * param = NULL;
     clist * parameters = NULL;
     char *boundary = NULL;
 
-	list = NULL;
+    list = NULL;
 
-	if (force_single) {
-		mime_type = MAILMIME_SINGLE;
-	}
-	else {
-		switch (content->ct_type->tp_type) {
-			case MAILMIME_TYPE_DISCRETE_TYPE:
+    if (force_single) {
+        mime_type = MAILMIME_SINGLE;
+    }
+    else {
+        switch (content->ct_type->tp_type) {
+            case MAILMIME_TYPE_DISCRETE_TYPE:
                 mime_type = MAILMIME_SINGLE;
                 break;
 
-			case MAILMIME_TYPE_COMPOSITE_TYPE:
+            case MAILMIME_TYPE_COMPOSITE_TYPE:
                 switch (content->ct_type->tp_data.tp_composite_type->ct_type) {
                     case MAILMIME_COMPOSITE_TYPE_MULTIPART:
                         mime_type = MAILMIME_MULTIPLE;
@@ -76,60 +76,60 @@ struct mailmime * part_new_empty(
                 }
                 break;
 
-			default:
+            default:
                 goto enomem;
-		}
-	}
+        }
+    }
 
-	if (mime_type == MAILMIME_MULTIPLE) {
-		list = clist_new();
+    if (mime_type == MAILMIME_MULTIPLE) {
+        list = clist_new();
         assert(list);
-		if (list == NULL)
-			goto enomem;
+        if (list == NULL)
+            goto enomem;
 
-		attr_name = strdup("boundary");
+        attr_name = strdup("boundary");
         assert(attr_name);
         if (attr_name == NULL)
             goto enomem;
 
-		boundary = generate_boundary();
+        boundary = generate_boundary();
         assert(boundary);
-		attr_value = boundary;
-		if (attr_value == NULL)
-			goto enomem;
+        attr_value = boundary;
+        if (attr_value == NULL)
+            goto enomem;
 
-		param = mailmime_parameter_new(attr_name, attr_value);
+        param = mailmime_parameter_new(attr_name, attr_value);
         assert(param);
-		if (param == NULL)
-			goto enomem;
+        if (param == NULL)
+            goto enomem;
         attr_name = NULL;
         attr_value = NULL;
 
-		if (content->ct_parameters == NULL) {
-			parameters = clist_new();
+        if (content->ct_parameters == NULL) {
+            parameters = clist_new();
             assert(parameters);
-			if (parameters == NULL)
-				goto enomem;
-		}
-		else {
-			parameters = content->ct_parameters;
+            if (parameters == NULL)
+                goto enomem;
+        }
+        else {
+            parameters = content->ct_parameters;
         }
 
-		r = clist_append(parameters, param);
-		if (r)
-			goto enomem;
+        r = clist_append(parameters, param);
+        if (r)
+            goto enomem;
         param = NULL;
 
-		if (content->ct_parameters == NULL)
-			content->ct_parameters = parameters;
-	}
+        if (content->ct_parameters == NULL)
+            content->ct_parameters = parameters;
+    }
 
     build_info = mailmime_new(mime_type, NULL, 0, mime_fields, content, NULL,
             NULL, NULL, list, NULL, NULL);
-	if (build_info == NULL)
-		goto enomem;
+    if (build_info == NULL)
+        goto enomem;
 
-	return build_info;
+    return build_info;
 
 enomem:
     if (list)
@@ -141,17 +141,17 @@ enomem:
             clist_free(parameters);
     if (param)
         mailmime_parameter_free(param);
-	return NULL;
+    return NULL;
 }
 
 struct mailmime * get_pgp_encrypted_part(void)
 {
-	struct mailmime * mime = NULL;
-	struct mailmime_fields * mime_fields = NULL;
-	struct mailmime_content * content = NULL;
+    struct mailmime * mime = NULL;
+    struct mailmime_fields * mime_fields = NULL;
+    struct mailmime_content * content = NULL;
     int r;
 
-	content = mailmime_content_new_with_str("application/pgp-encrypted");
+    content = mailmime_content_new_with_str("application/pgp-encrypted");
     if (content == NULL)
         goto enomem;
 
@@ -159,7 +159,7 @@ struct mailmime * get_pgp_encrypted_part(void)
     if (mime_fields == NULL)
         goto enomem;
 
-	mime = part_new_empty(content, mime_fields, 1);
+    mime = part_new_empty(content, mime_fields, 1);
     if (mime == NULL)
         goto enomem;
     mime_fields = NULL;
@@ -169,7 +169,7 @@ struct mailmime * get_pgp_encrypted_part(void)
     if (r != 0)
         goto enomem;
 
-	return mime;
+    return mime;
 
 enomem:
     if (content)
@@ -191,12 +191,12 @@ struct mailmime * get_text_part(
     )
 {
     char * disposition_name = NULL;
-	struct mailmime_fields * mime_fields = NULL;
-	struct mailmime * mime = NULL;
-	struct mailmime_content * content = NULL;
-	struct mailmime_parameter * param = NULL;
-	struct mailmime_disposition * disposition = NULL;
-	struct mailmime_mechanism * encoding = NULL;
+    struct mailmime_fields * mime_fields = NULL;
+    struct mailmime * mime = NULL;
+    struct mailmime_content * content = NULL;
+    struct mailmime_parameter * param = NULL;
+    struct mailmime_disposition * disposition = NULL;
+    struct mailmime_mechanism * encoding = NULL;
     char* content_id = NULL;
     int r;
                 
@@ -237,7 +237,7 @@ struct mailmime * get_text_part(
     disposition = NULL;
     content_id = NULL;
 
-	content = mailmime_content_new_with_str(mime_type);
+    content = mailmime_content_new_with_str(mime_type);
     if (content == NULL)
         goto enomem;
     
@@ -248,7 +248,7 @@ struct mailmime * get_text_part(
             goto enomem;
     }
 
-	mime = part_new_empty(content, mime_fields, 1);
+    mime = part_new_empty(content, mime_fields, 1);
     if (mime == NULL)
         goto enomem;
     content = NULL;
@@ -259,8 +259,8 @@ struct mailmime * get_text_part(
         if (r != 0)
             goto enomem;
     }
-	
-	return mime;
+    
+    return mime;
 
 enomem:
     free(disposition_name);
