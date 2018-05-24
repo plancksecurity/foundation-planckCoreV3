@@ -22,6 +22,17 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
     stringlist_t *_v;
     unsigned int i;
     unsigned int found = 0;
+    bool eof_nl = 0;
+    char * rest;
+    char * token;
+    char * s;
+    const char* line_end;
+
+#ifdef WIN32
+    line_end = "\r\n";
+#else
+    line_end = "\n";
+#endif    
 
     FILE *f = Fopen(config_file_path, "r");
     if (f == NULL && errno == ENOMEM)
@@ -29,7 +40,6 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
 
     if (f != NULL) {
         int length = stringlist_length(keys);
-        unsigned int n = (1 << length) - 1;
 
         // make sure we 1) have the same number of keys and values
         // and 2) we don't have more key/value pairs than
@@ -44,31 +54,26 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
             return false;
         }
 
-        do {
-            char * s = Fgets(buf, MAX_LINELENGTH, f);
-            if (!feof(f)) {
-                assert(s);
-                if (s == NULL)
-                    return false;
+        while ((s = Fgets(buf, MAX_LINELENGTH, f))) {
+            token = strtok_r(s, " \t\r\n", &rest);
+            for (_k = keys, _v = values, i = 1;
+                 _k != NULL;
+                 _k = _k->next, _v = _v->next, i <<= 1) {
 
-                if (s && !feof(f)) {
-                    char * rest;
-                    char * t = strtok_r(s, " ", &rest);
-                    for (i = 1, _k = keys, _v = values; _k != NULL;
-                            _k = _k->next, _v = _v->next, i <<= 1) {
-                        if (t && strncmp(t, _k->value, strlen(_k->value)) == 0)
-                            found |= i;
-
-                        if (i == n) {
-                            r = Fclose(f);
-                            if (r != 0)
-                                return false;
-                            return true;
-                        }
-                    }
+                if (((found & i) != i) && token &&
+                    (strncmp(token, _k->value, strlen(_k->value)) == 0)) {
+                    found |= i;
+                    break;
                 }
             }
-        } while (!feof(f));
+            if (feof(f)) {
+                eof_nl = 1;
+                break;
+            }
+        }
+
+        if (!s && ferror(f))
+            return false;
         f = Freopen(config_file_path, "a", f);
     }
     else {
@@ -78,13 +83,16 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
     assert(f);
     if (f == NULL)
         return false;
+    
+    if (eof_nl)
+        r = Fprintf(f, line_end);
 
     for (i = 1, _k = keys, _v = values; _k != NULL; _k = _k->next,
             _v = _v->next, i <<= 1) {
         if ((found & i) == 0) {
-            r = Fprintf(f, "%s %s\n", _k->value, _v->value);
+            r = Fprintf(f, "%s %s%s", _k->value, _v->value, line_end);
             assert(r >= 0);
-            if(r<0)
+            if (r < 0)
                 return false;
         }
     }
