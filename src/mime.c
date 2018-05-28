@@ -1153,8 +1153,12 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
     clistiter *cur;
     size_t index;
     int r;
+    
     stringpair_list_t *opt = msg->opt_fields;
 
+    if (!fieldlist)
+        return PEP_STATUS_OK;
+        
     for (cur = clist_begin(fieldlist); cur != NULL; cur = clist_next(cur)) {
         _field = clist_content(cur);
 
@@ -1342,7 +1346,7 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
                 break;
         }
     }
-
+    
     return PEP_STATUS_OK;
 
 enomem:
@@ -1508,7 +1512,6 @@ static PEP_STATUS interpret_MIME(
                 struct mailmime *part= clist_content(cur);
                 if (part == NULL)
                     return PEP_ILLEGAL_VALUE;
-
                 status = interpret_MIME(part, msg);
                 if (status != PEP_STATUS_OK)
                     return status;
