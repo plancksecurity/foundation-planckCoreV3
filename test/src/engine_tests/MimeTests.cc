@@ -69,18 +69,6 @@ static void test_mime_decoding(string filename) {
 
 void MimeTests::check_mime() {
 
-    cout << "\n*** mime_test ***\n\n";
-
-    PEP_SESSION session;
-    
-    cout << "calling init()\n";
-    PEP_STATUS status1 = init(&session);   
-    TEST_ASSERT_MSG((status1 == PEP_STATUS_OK), "status1 == PEP_STATUS_OK");
-    TEST_ASSERT_MSG((session), "session");
-    cout << "init() completed.\n";
-
-    // mime test code
-
     // testing multipart/alternative
 
     message *msg2 = new_message(PEP_dir_incoming);

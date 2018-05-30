@@ -27,7 +27,8 @@ using namespace std;
 
 AppleMailTests::AppleMailTests(string suitename, string test_home_dir) : 
     EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {            
-    TEST_ADD(AppleMailTests::check_apple_mail);
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("AppleMailTests::check_apple_mail"),
+                                                                      static_cast<Func>(&AppleMailTests::check_apple_mail)));
 }
 
 void AppleMailTests::check_apple_mail() {

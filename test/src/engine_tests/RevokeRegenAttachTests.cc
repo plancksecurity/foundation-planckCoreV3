@@ -7,13 +7,16 @@
 #include <time.h>
 #include <iostream>
 #include <fstream>
+#include <assert.h>
 
 #include "pEpEngine.h"
 #include "platform.h"
 #include "mime.h"
 #include "message_api.h"
 
-#include "cpptest.h"
+#include "test_util.h"
+
+#include <cpptest.h>
 #include "EngineTestSessionSuite.h"
 #include "RevokeRegenAttachTests.h"
 
@@ -24,6 +27,14 @@ RevokeRegenAttachTests::RevokeRegenAttachTests(string suitename, string test_hom
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("RevokeRegenAttachTests::check_revoke_regen_attach"),
                                                                       static_cast<Func>(&RevokeRegenAttachTests::check_revoke_regen_attach)));
 }
+
+void RevokeRegenAttachTests::setup() {
+    EngineTestSessionSuite::setup();
+    string recip_key = slurp("test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
+    PEP_STATUS status = import_key(session, recip_key.c_str(), recip_key.size(), NULL);
+    assert(status == PEP_STATUS_OK);
+}
+
 
 void RevokeRegenAttachTests::check_revoke_regen_attach() {
     PEP_STATUS status = PEP_STATUS_OK;   

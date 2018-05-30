@@ -14,7 +14,8 @@ using namespace std;
 
 TrustwordsTests::TrustwordsTests(string suitename, string test_home_dir) : 
     EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {            
-    TEST_ADD(TrustwordsTests::check_trustwords);
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("TrustwordsTests::check_trustwords"),
+                                                                      static_cast<Func>(&TrustwordsTests::check_trustwords)));
 }
 
 void TrustwordsTests::check_trustwords() {

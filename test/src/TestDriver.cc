@@ -16,57 +16,27 @@
 
 using namespace std;
 
-string common_test_home = "./pEp_test_home";
+string common_test_home;
 
 void usage() {
     throw std::runtime_error("Bad usage. Fix me, you loser developer.");
 }
-
-int util_delete_filepath(const char *filepath, 
-                         const struct stat *file_stat, 
-                         int ftw_info, 
-                         struct FTW * ftw_struct) {
-    int retval = 0;
-    switch (ftw_info) {
-        case FTW_DP:
-            retval = rmdir(filepath);
-            break;
-        case FTW_F:
-        case FTW_SLN:
-            retval = unlink(filepath);
-            break;    
-        default:
-            retval = -1;
-    }
-    
-    return retval;
-}
-
 
 int main(int argc, const char** argv) {
     const int MIN_ARGC = 1;
     if (argc < MIN_ARGC)
         usage();
     
-    struct stat dirchk;
-    if (stat(common_test_home.c_str(), &dirchk) == 0) {
-        if (!S_ISDIR(dirchk.st_mode))
-            throw std::runtime_error(("The test directory, " + common_test_home + "exists, but is not a directory.").c_str()); 
-                    
-        struct stat buf;
+    size_t BUF_MAX_PATHLEN = 4097; 
+    char buf[BUF_MAX_PATHLEN];// Linux max path size...
+                          
+    string curr_wd = getcwd(buf, BUF_MAX_PATHLEN);
+    
+    if (curr_wd.empty())
+        throw std::runtime_error("Error grabbing current working directory"); 
 
-        if (stat(common_test_home.c_str(), &buf) == 0) {
-            cout << common_test_home << " exists. We'll recursively delete. We hope we're not horking your whole system..." << endl;
-            int success = nftw((common_test_home + "/.").c_str(), util_delete_filepath, 100, FTW_DEPTH);
-        }
-    }
-    else {
-        int errchk = mkdir(common_test_home.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-        cout << errchk << endl;
-        if (errchk != 0)
-            throw std::runtime_error("Error creating a test directory.");
-    }
-                    
+    common_test_home = curr_wd + "/pEp_test_home";    
+    
     EngineTestSuite* test_runner = new EngineTestSuite("MainTestDriver", common_test_home);
 
     std::vector<Test::Suite*> suites_to_run;

@@ -19,7 +19,8 @@ using namespace std;
 
 TrustManipulationTests::TrustManipulationTests(string suitename, string test_home_dir) : 
     EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {            
-    TEST_ADD(TrustManipulationTests::check_trust_manipulation);
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("TrustManipulationTests::check_trust_manipulation"),
+                                                                      static_cast<Func>(&TrustManipulationTests::check_trust_manipulation)));
 }
 
 void TrustManipulationTests::check_trust_manipulation() {

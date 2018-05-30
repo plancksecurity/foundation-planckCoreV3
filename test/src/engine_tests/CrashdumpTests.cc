@@ -13,7 +13,8 @@ using namespace std;
 
 CrashdumpTests::CrashdumpTests(string suitename, string test_home_dir) :
     EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {
-    TEST_ADD(CrashdumpTests::check_crashdump);
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("CrashdumpTests::check_crashdump"),
+                                                                      static_cast<Func>(&CrashdumpTests::check_crashdump)));
 }
 
 void CrashdumpTests::check_crashdump() {

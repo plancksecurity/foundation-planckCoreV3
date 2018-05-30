@@ -79,7 +79,7 @@ for i in range(num_keys):
 
     
     pubkey = gpg.export_keys(fpr)
-    privkey = gpg.export_keys(fpr, True)
+    privkey = gpg.export_keys(fpr, True, passphrase="")
 
     pubkey_filename = os.path.join(pub_path, key_filename_prefix + "pub.asc")
     privkey_filename = os.path.join(priv_path, key_filename_prefix + "priv.asc")    
@@ -93,7 +93,7 @@ for i in range(num_keys):
     privkey_file.close()
         
     # Delete keys from keyring
-    gpg.delete_keys(fpr, True) # True => private keys
+    gpg.delete_keys(fpr, True, passphrase="") # True => private keys
     gpg.delete_keys(fpr)
 
     if (args.hgadd):

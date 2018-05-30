@@ -23,6 +23,7 @@ void EngineTestSessionSuite::setup() {
 }
 
 void EngineTestSessionSuite::tear_down() {
+    cout << "Session: tear_down - OTN: " << on_test_number << " NOT: " << number_of_tests << endl; 
     if (on_test_number == number_of_tests)
         restore_full_env();
         

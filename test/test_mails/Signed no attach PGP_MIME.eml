@@ -1,0 +1,118 @@
+Return-Path: <SRS0=Yoy/Rz=ID=pep-project.org=krista@srs.smtpin.rzone.de>
+X-Original-To: krista@gnunet.org
+Delivered-To: krista@gnunet.org
+Received: from vmmailrelay1.informatik.tu-muenchen.de (mailrelay1.informatik.tu-muenchen.de [131.159.254.14])
+	by sam.net.in.tum.de (Postfix) with ESMTP id 472E31C00BE
+	for <krista@gnunet.org>; Wed, 16 May 2018 09:53:45 +0200 (CEST)
+Received: by vmmailrelay1.informatik.tu-muenchen.de (Postfix, from userid 109)
+	id 1997F1C037C; Wed, 16 May 2018 09:53:45 +0200 (CEST)
+Received: from vmmailrelay1.informatik.tu-muenchen.de (localhost [127.0.0.1])
+	by vmmailrelay1.informatik.tu-muenchen.de (Postfix) with ESMTP id E86001C0376
+	for <krista@gnunet.org>; Wed, 16 May 2018 09:53:44 +0200 (CEST)
+Received: from vmmaildmz1.informatik.tu-muenchen.de (vmmaildmz1.informatik.tu-muenchen.de [131.159.0.87])
+	by vmmailrelay1.informatik.tu-muenchen.de (Postfix) with ESMTP id D482E1C037C
+	for <krista@gnunet.org>; Wed, 16 May 2018 09:53:44 +0200 (CEST)
+Received: by vmmaildmz1.informatik.tu-muenchen.de (Postfix, from userid 109)
+	id D30771C2DB6; Wed, 16 May 2018 09:53:44 +0200 (CEST)
+X-Spam-Checker-Version: SpamAssassin 3.4.0-tuminfo_1 (2014-02-07) on
+	vmmaildmz1.informatik.tu-muenchen.de
+X-Spam-Level: 
+X-Spam-Status: No, score=-3.1 required=7.0 tests=AWL,BAYES_00,
+	ENCRYPTED_MESSAGE,SPF_HELO_PASS,TVD_RCVD_SPACE_BRACKET,UNPARSEABLE_RELAY
+	autolearn=no autolearn_force=no version=3.4.0-tuminfo_1
+Received: from vmmaildmz1.informatik.tu-muenchen.de (localhost [127.0.0.1])
+	by vmmaildmz1.informatik.tu-muenchen.de (Postfix) with ESMTP id AE6991C2DB5
+	for <krista@gnunet.org>; Wed, 16 May 2018 09:53:37 +0200 (CEST)
+Received: from mi4-p00-ob.smtp.rzone.de (mi4-p00-ob.smtp.rzone.de [85.215.255.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by vmmaildmz1.informatik.tu-muenchen.de (Postfix) with ESMTPS id 9E3BF1C2DAD
+	for <krista@gnunet.org>; Wed, 16 May 2018 09:53:32 +0200 (CEST)
+X-RZG-FWD-BY: integrity_test_recip@darthmama.org
+Received: from mailin.rzone.de ([unix socket])
+	by mailin.rzone.de (RZmta 43.8) with LMTPA;
+	Wed, 16 May 2018 09:53:14 +0200 (CEST)
+Authentication-Results: strato.com; dmarc=none header.from=darthmama.org
+Authentication-Results: strato.com; arc=none
+Authentication-Results: strato.com; dkim=none
+Authentication-Results: strato.com; dkim-adsp=none header.from="integrity_test_signer@darthmama.org"
+Authentication-Results: strato.com; spf=none smtp.mailfrom="krista@pep-project.org"
+X-RZG-Expurgate: clean/normal
+X-RZG-Expurgate-ID: 149500::1526457194-00007BD0-5EC49E58/0/0
+X-Strato-MessageType: email
+X-RZG-CLASS-ID: mi00
+Received-SPF: none
+	client-ip=131.159.0.8;
+	helo="mail-out1.informatik.tu-muenchen.de";
+	envelope-from="krista@pep-project.org";
+	receiver=smtpin.rzone.de;
+	identity=mailfrom;
+Received: from mail-out1.informatik.tu-muenchen.de ([131.159.0.8])
+	by smtpin.rzone.de (RZmta 43.8 OK)
+	with ESMTPS id n01032u4G7rElHf
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (curve secp521r1 with 521 ECDH bits, eq. 15360 bits RSA))
+	(Client did not present a certificate)
+	for <integrity_test_recip@darthmama.org>;
+	Wed, 16 May 2018 09:53:14 +0200 (CEST)
+Received: from [192.168.178.22] (ip5b439605.dynamic.kabel-deutschland.de [91.67.150.5])
+	by services.sec.in.tum.de (Postfix) with ESMTPSA id 409EC1042EC0B
+	for <integrity_test_recip@darthmama.org>; Wed, 16 May 2018 09:53:08 +0200 (CEST)
+To: integrity_test_recip@darthmama.org
+From: integrity_test_signer@darthmama.org
+Subject: Signed, no attach, PGP/MIME
+Openpgp: preference=signencrypt
+Organization: =?UTF-8?B?cOKJoXA=?=
+Message-ID: <4ce2245d-226d-cf82-06dc-aba9e3a0ecbe@pep-project.org>
+Date: Wed, 16 May 2018 09:53:07 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.7.0
+MIME-Version: 1.0
+Content-Type: multipart/encrypted;
+ protocol="application/pgp-encrypted";
+ boundary="SlMATmhocAaxIBNTEgPcJilafyaUyA1G7"
+
+This is an OpenPGP/MIME encrypted message (RFC 4880 and 3156)
+--SlMATmhocAaxIBNTEgPcJilafyaUyA1G7
+Content-Type: application/pgp-encrypted
+Content-Description: PGP/MIME version identification
+
+Version: 1
+
+--SlMATmhocAaxIBNTEgPcJilafyaUyA1G7
+Content-Type: application/octet-stream; name="encrypted.asc"
+Content-Description: OpenPGP encrypted message
+Content-Disposition: inline; filename="encrypted.asc"
+
+-----BEGIN PGP MESSAGE-----
+
+hQEMA7q5KACkWjQlAQf/SJxqQPmfvxAJOW4E/UkBhs7i0f69pzABNpHtMNUdM0+P
+19sC0+t6XXljKfACi6uw/4mZmVPm4xTUhwKw/676Eh03XV86gWQaervpm0LkQtzZ
+cX5GsUaMArzQC4z9jmpDlPMz+u6XKlRYGzKgzdju8QfVVGpta/SgYCKV177cXgpm
+FYmyyzq4XL/quNf8ql3RS1gi0ciY1mSc+b7Z82FMtDbwiHgfxtrSOcIxuuNCEe15
+gJY6w8Z5i/ib/rxuN0TNxbXhsjHUqmfiKOVnSQpHG8sLZsGCGCyyONlEbavYAgpk
+z8GcdEEcuZbreuVvWgZ3XcEqk/ztNpcLbXT1UXoPl4UBDAOoEzPD1TjKdAEH/1g8
+LD7Qw3sxX/b0OkMM2DWsNreZpSp2pJAHVcFJBeSCzJCdGgGVH6cjig86lLwWlzEV
+h3xQG38KrTF66yFk0XQTePDr90DPEXCjKObjloNwV6Ir6fwZwPum98kVZa6mjBGk
+kEgVc95P6EAUnBZHsuE6mHaToSf2vN9GkVukoMHlmMM5q4goJcIk9DSVZw4BpBzC
+cFWSPuQRN9XZKxSYebFmff1ETBFs9K7yYsYvGRVZOWxaVUMIVIr0p8Y9NXar58oW
++j+gAWWbWvAK72bYuN8hfG9cjR/4/pzlCsSz3zXqXbM/tsGtVexy0h+Cb6a77iT4
+UB/vAO55e6V6o2bPUdjS6QFkeXKs6njHJ+YEDuHhh4UifgEV2gO2adkYexnRDsy/
+cUGRKTu3AvDgybKBM8q78UComXnZVKpzq2sNeU9ff9HDJVHjonUx93YOoGhHYfKO
+1kSJc2wY9jOTCY/6ZimTAu+qzRYr6QFtSQa1i1qVz3iAVPphbbVePXxsFiuwBrGo
+RuAHY2DClxDrYA9/ziTU/fp12VCyDhBu3T2ParLqAiBHOyn2dqVjQXqovkRqWp7h
+nb8uX2O1z8lMsjX+DcYAlva2/+Dli+yAj9YQ7IWEwjMht0RS0kb6bji7Uv9ukm2y
+zDzKXGfa1Ri3HYTZhMpPrxnoV+aoZQDi6QElg0aqu+P/UwmXWQ1SKpOJoMUNg9zb
+Bj6A0glicHTo7yArtGXP0hliwY8fs169esXvs+kffogpmuZTk0MLq8fGmpDC81ut
+/NJplorQRrYO3gg8ZPdMfMVHPtNB6cXpS4eusYwar3Hm8qzD2PoApqp7kqb6qjY6
+pUDQAwNI6/aq71/P6EAenvGPBDGmFrVD6PIJ9TI7svd9pMD2XODzno/rRgutaAJw
+CYrcZAbs44O/ord5sYuXkLjBR327myIja98sbcN+uHTdgIRn4u3ymwaN1RLSUI3/
+9RSn3N6ypDa06b2JssDk8YFWfIMiQ5mnwbiGL1Axv6rbH8SI1DOJqDuKlVBFMmG7
+wCsSYiSO6iB1Wm9cZkJ//3Y3328otMGBBviFK25ukMx3uKTjD5TYFd+8v/bZao8z
+SY+rMRCaXytsul/D8QtwEczXsgv8jt+zGBhtPoSBMfoPAd4KliE4ma3XJpSQEPIs
+YdCZPFZp/Mv/ftIaOR/QxV3zkdLAZAqy1kuZZCLg0MPOBhtJ7xOhI2SnvgOpCOvN
+6e8JEEJsOr/Mzm5uFHdejZ78XX1y/Ha4gnD8mLy7qk/OVgT/+W6rMjL5U73rvIg5
+5q4LxSI2oTcR/rJ51lXxWB+QJ/RskYh6x4AoLzWz1lCER2ChS7Q8fNLhEb9P
+=GJ3e
+-----END PGP MESSAGE-----
+
+--SlMATmhocAaxIBNTEgPcJilafyaUyA1G7--

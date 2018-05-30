@@ -262,8 +262,11 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         stringlist_add(conf_keys, "allow-freeform-uid");
         stringlist_add(conf_values, "");
 
+#if defined(WIN32) || defined(NDEBUG)
         bResult = ensure_config_values(conf_keys, conf_values, gpg_conf());
-
+#else
+        bResult = ensure_config_values(conf_keys, conf_values, gpg_conf(false));
+#endif
         free_stringlist(conf_keys);
         free_stringlist(conf_values);
 
@@ -279,8 +282,11 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         stringlist_add(conf_keys, "max-cache-ttl");
         stringlist_add(conf_values, "1200");
 
+#if defined(WIN32) || defined(NDEBUG)
         bResult = ensure_config_values(conf_keys, conf_values, gpg_agent_conf());
-
+#else        
+        bResult = ensure_config_values(conf_keys, conf_values, gpg_agent_conf(false));
+#endif
         free_stringlist(conf_keys);
         free_stringlist(conf_values);
 
@@ -803,7 +809,8 @@ PEP_STATUS pgp_decrypt_and_verify(
                         }
                         case GPG_ERR_CERT_REVOKED:
                         case GPG_ERR_BAD_SIGNATURE:
-                            result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
+			    result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
+                            //result = PEP_DECRYPT_BAD_SIGNATURE;
                             break;
                         case GPG_ERR_SIG_EXPIRED:
                         case GPG_ERR_KEY_EXPIRED:
