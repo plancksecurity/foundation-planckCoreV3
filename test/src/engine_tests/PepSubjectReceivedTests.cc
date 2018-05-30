@@ -238,7 +238,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    TEST_ASSERT_MSG((strcmp("p≡p", final_ptr->shortmsg) == 0), "strcmp(\"p≡p\", final_ptr->shortmsg) == 0");
+    TEST_ASSERT_MSG((strcmp("pEp", final_ptr->shortmsg) == 0), "strcmp(\"pEp\", final_ptr->shortmsg) == 0");
 
     cout << "Test 3: Subject remains intact as desired." << endl << endl;
 
