@@ -616,7 +616,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     sqlite3_busy_timeout(_session->system_db, 1000);
 
 // increment this when patching DDL
-#define _DDL_USER_VERSION "8"
+#define _DDL_USER_VERSION "9"
 
     if (in_first) {
 
@@ -717,6 +717,12 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 // mistrusted keys
                 "create table if not exists mistrusted_keys (\n"
                 "    fpr text primary key\n"
+                ");\n"
+                // social graph for key resets
+                "create table if not exists social_graph (\n"
+                "    own_id text,"
+                "    own_address text,\n"
+                "    out_count integer default 0\n"
                 ");\n"
                 ,
             NULL,
