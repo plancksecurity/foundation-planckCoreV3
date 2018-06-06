@@ -298,6 +298,8 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
         gpgme = dlopen(LIBGPGME, RTLD_LAZY);
         if (gpgme == NULL) {
+            // FIXME: Hotfix here?
+            
             status = PEP_INIT_CANNOT_LOAD_GPGME;
             goto pep_error;
         }
