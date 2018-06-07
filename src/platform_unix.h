@@ -20,11 +20,18 @@
 extern "C" {
 #endif
 
+#ifdef NDEBUG
 const char *unix_local_db(void);
-
 const char *gpg_conf(void);
 const char *gpg_agent_conf(void);
 const char *gpg_home(void);
+#else
+const char *unix_local_db(int reset);
+const char *gpg_conf(int reset);
+const char *gpg_agent_conf(int reset);
+const char *gpg_home(int reset);
+#endif
+
 
 #ifdef ANDROID
 

@@ -61,7 +61,11 @@
 #else // UNIX
 #define _POSIX_C_SOURCE 200809L
 #include <dlfcn.h>
+#ifdef NDEBUG
 #define LOCAL_DB unix_local_db()
+#else
+#define LOCAL_DB unix_local_db(false)
+#endif
 #ifndef SYSTEM_DB
 #define SYSTEM_DB "/usr/share/pEp/system.db"
 #endif

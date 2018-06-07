@@ -12,6 +12,8 @@ using namespace std;
 class RevokeRegenAttachTests : public EngineTestSessionSuite {
     public:
         RevokeRegenAttachTests(string test_suite, string test_home_dir);
+    protected:
+        void setup();
     private:
         void check_revoke_regen_attach();
 };

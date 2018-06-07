@@ -46,7 +46,12 @@ static PEP_STATUS init_netpgp()
     // netpgp_setvar(&netpgp, "need userid", "1");
 
     // NetPGP shares home with GPG
-    home = gpg_home();
+    #if defined(WIN32) || defined(NDEBUG)
+        home = gpg_home();
+    #else
+        home = gpg_home(false);
+    #endif
+    
     if(home){
         netpgp_set_homedir(&netpgp,(char*)home, NULL, 0);
     }else{

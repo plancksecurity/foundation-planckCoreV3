@@ -19,7 +19,8 @@ using namespace std;
 
 UserIDAliasTests::UserIDAliasTests(string suitename, string test_home_dir) : 
     EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {            
-    TEST_ADD(UserIDAliasTests::check_userid_aliases);
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("UserIDAliasTests::check_userid_aliases"),
+                                                                      static_cast<Func>(&UserIDAliasTests::check_userid_aliases)));
 }
 
 void UserIDAliasTests::check_userid_aliases() {

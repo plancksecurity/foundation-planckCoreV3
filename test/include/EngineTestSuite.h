@@ -18,12 +18,18 @@ class EngineTestSuite : public Test::Suite {
     protected:
         PEP_SESSION session;
         string test_home;
+        string real_home;
         string prev_gpg_home;
         string name;
         
         string current_test_name;
 
+#define TEST_FAILED_MESSAGE_BUFSIZE 1000        
+        char failed_msg_buf[TEST_FAILED_MESSAGE_BUFSIZE];
+        
         std::map<std::string, void (Test::Suite::*)()> test_map;                
+        
+        string my_name;
         
         unsigned int number_of_tests;
         unsigned int on_test_number;
@@ -34,6 +40,6 @@ class EngineTestSuite : public Test::Suite {
         void set_full_env();
         void restore_full_env();
         void initialise_test_home();
-        
+        void set_my_name();    
 };
 #endif

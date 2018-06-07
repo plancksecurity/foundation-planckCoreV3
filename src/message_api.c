@@ -3131,9 +3131,13 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 
                 /* Ensure messages whose maintext is in the attachments
                    move main text into message struct longmsg et al */
-                if (pull_up_attached_main_msg(msg) && msg->shortmsg) {
+                /* KG: This IS a src modification of old - we're adding to it
+                   w/ memhole subject, but the question is whether or not
+                   this is OK overall... */
+                pull_up_attached_main_msg(msg);
+                if (msg->shortmsg) {
                     free(src->shortmsg);
-                    src->shortmsg = strdup(msg->shortmsg);
+                    src->shortmsg = strdup(msg->shortmsg);                    
                 }
 
                 // check for private key in decrypted message attachment while importing

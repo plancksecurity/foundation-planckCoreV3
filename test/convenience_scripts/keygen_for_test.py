@@ -67,9 +67,14 @@ for i in range(num_keys):
     
     print(input_data)
     key = None
-    key = gpg.gen_key(input_data)
-    if not key:
-        raise Exception('Key not created in iteration ' + str(i))
+    try:
+        key = gpg.gen_key(input_data)
+        if not key:
+            raise Exception('Key not created in iteration ' + str(i))
+    except ValueError:
+        pass
+
+
     pubkey = None
     privkey = None
     
@@ -79,7 +84,7 @@ for i in range(num_keys):
 
     
     pubkey = gpg.export_keys(fpr)
-    privkey = gpg.export_keys(fpr, True)
+    privkey = gpg.export_keys(fpr, True, passphrase="")
 
     pubkey_filename = os.path.join(pub_path, key_filename_prefix + "pub.asc")
     privkey_filename = os.path.join(priv_path, key_filename_prefix + "priv.asc")    
@@ -93,7 +98,7 @@ for i in range(num_keys):
     privkey_file.close()
         
     # Delete keys from keyring
-    gpg.delete_keys(fpr, True) # True => private keys
+    gpg.delete_keys(fpr, True, passphrase="") # True => private keys
     gpg.delete_keys(fpr)
 
     if (args.hgadd):

@@ -2,9 +2,16 @@
 #include "pEpEngine.h"
 #include "pEp_internal.h"
 #include "message_api.h"
+
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <ftw.h>
 
 char* str_to_lower(const char* str) {
     if (!str)
@@ -137,6 +144,12 @@ const char* tl_status_string(PEP_STATUS status) {
             return "PEP_DECRYPT_NO_KEY";
         case PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH:
             return "PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH";
+//        case PEP_DECRYPTED_BUT_UNSIGNED:
+//            return "PEP_DECRYPTED_BUT_UNSIGNED";
+//        case PEP_DECRYPT_MODIFICATION_DETECTED:
+//            return "PEP_DECRYPT_MODIFICATION_DETECTED";
+//        case PEP_DECRYPT_NO_KEY_FOR_SIGNER:
+//            return "PEP_DECRYPT_NO_KEY_FOR_SIGNER";
         case PEP_VERIFY_NO_KEY:
             return "PEP_VERIFY_NO_KEY";
         case PEP_VERIFIED_AND_TRUSTED:
@@ -204,7 +217,7 @@ const char* tl_status_string(PEP_STATUS status) {
         case PEP_OUT_OF_MEMORY:
             return "PEP_OUT_OF_MEMORY";
         case PEP_UNKNOWN_ERROR:
-            return "PEP_UNKNOWN_ERROR";
+            return "PEP_UNKNOWN_ERROR";    
         default:
  
             return "PEP_STATUS_OMGWTFBBQ - This means you're using a status the test lib doesn't know about!";
@@ -317,3 +330,36 @@ const char* tl_ct_string(PEP_comm_type ct) {
             return "PEP_ct_OMGWTFBBQ\n\nIn other words, comm type is invalid. Either something's corrupt or a new ct value has been added to the enum but not to the test function.";
     }
 }
+
+bool slurp_message_and_import_key(PEP_SESSION session, const char* message_fname, std::string& message, const char* key_filename) {
+    message = slurp(message_fname);
+    if (key_filename) {
+        std::string keyfile = slurp(key_filename);
+        if (import_key(session, keyfile.c_str(), keyfile.size(), NULL) != PEP_STATUS_OK)
+            return false;
+    }
+    return true;
+}
+
+
+
+int util_delete_filepath(const char *filepath, 
+                         const struct stat *file_stat, 
+                         int ftw_info, 
+                         struct FTW * ftw_struct) {
+    int retval = 0;
+    switch (ftw_info) {
+        case FTW_DP:
+            retval = rmdir(filepath);
+            break;
+        case FTW_F:
+        case FTW_SLN:
+            retval = unlink(filepath);
+            break;    
+        default:
+            retval = -1;
+    }
+    
+    return retval;
+}
+

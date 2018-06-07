@@ -1153,8 +1153,12 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
     clistiter *cur;
     size_t index;
     int r;
+    
     stringpair_list_t *opt = msg->opt_fields;
 
+    if (!fieldlist)
+        return PEP_STATUS_OK;
+        
     for (cur = clist_begin(fieldlist); cur != NULL; cur = clist_next(cur)) {
         _field = clist_content(cur);
 
@@ -1342,7 +1346,7 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
                 break;
         }
     }
-
+    
     return PEP_STATUS_OK;
 
 enomem:
@@ -1429,6 +1433,47 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
     return PEP_STATUS_OK;
 }
 
+// THIS IS A BEST-EFFORT ONLY FUNCTION, AND WE ARE NOT DOING MORE THAN THE
+// SUBJECT FOR NOW.
+static PEP_STATUS interpret_protected_headers(
+        struct mailmime* mime, 
+        message* msg
+    )
+{
+    // N.B. this is *very much* enigmail output specific, and right now,
+    // we only care about subject replacement.
+    const char* header_string = "Content-Type: text/rfc822-headers; protected-headers=\"v1\"\nContent-Disposition: inline\n\n";
+    size_t content_length = mime->mm_length;
+    size_t header_strlen = strlen(header_string);
+    if (header_strlen < content_length) {
+        const char* headerblock = mime->mm_mime_start;
+        size_t subject_len = 0;
+        headerblock = strstr(headerblock, header_string);
+        if (headerblock) {
+            const char* subj_start = "Subject: ";
+            size_t subj_len = strlen(subj_start);
+            headerblock = strstr(headerblock, subj_start);
+            if (headerblock) {
+                headerblock += subj_len;
+                char* end_pt = strstr(headerblock, "\n");
+                if (end_pt) {
+                    if (end_pt != mime->mm_mime_start && *(end_pt - 1) == '\r')
+                        end_pt--;
+                    subject_len = end_pt - headerblock;
+                    char* new_subj = (char*)calloc(subject_len + 1, 1);
+                    if (new_subj) {
+                        strlcpy(new_subj, headerblock, subject_len + 1);
+                        free(msg->shortmsg);
+                        msg->shortmsg = new_subj;
+                    }    
+                } // if there's no endpoint, there's something wrong here so we ignore all
+                  // This is best effort.
+            }
+        }
+    }
+    return PEP_STATUS_OK;
+}
+
 static PEP_STATUS interpret_MIME(
         struct mailmime *mime,
         message *msg
@@ -1459,6 +1504,11 @@ static PEP_STATUS interpret_MIME(
 
                 if (_is_text_part(content, "plain") && msg->longmsg == NULL) {
                     status = interpret_body(part, &msg->longmsg, NULL);
+                    if (status)
+                        return status;
+                }
+                else if (_is_text_part(content, "rfc822-headers")) {
+                    status = interpret_protected_headers(part, msg);
                     if (status)
                         return status;
                 }
@@ -1508,7 +1558,6 @@ static PEP_STATUS interpret_MIME(
                 struct mailmime *part= clist_content(cur);
                 if (part == NULL)
                     return PEP_ILLEGAL_VALUE;
-
                 status = interpret_MIME(part, msg);
                 if (status != PEP_STATUS_OK)
                     return status;
@@ -1519,6 +1568,11 @@ static PEP_STATUS interpret_MIME(
                 msg->longmsg_formatted == NULL) {
                 status = interpret_body(mime, &msg->longmsg_formatted,
                                         NULL);
+                if (status)
+                    return status;
+            }
+            else if (_is_text_part(content, "rfc822-headers")) {
+                status = interpret_protected_headers(mime, msg);
                 if (status)
                     return status;
             }

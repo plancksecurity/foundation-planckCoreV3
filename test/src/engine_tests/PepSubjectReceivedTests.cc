@@ -64,6 +64,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
+    //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
@@ -97,6 +98,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
+    //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
@@ -197,6 +199,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
+    //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
@@ -230,6 +233,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
+    //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
@@ -238,7 +242,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     cout << "longmsg: " << final_ptr->longmsg << endl << endl;
     cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
-    TEST_ASSERT_MSG((strcmp("p≡p", final_ptr->shortmsg) == 0), "strcmp(\"p≡p\", final_ptr->shortmsg) == 0");
+    TEST_ASSERT_MSG((strcmp("pEp", final_ptr->shortmsg) == 0), "strcmp(\"pEp\", final_ptr->shortmsg) == 0");
 
     cout << "Test 3: Subject remains intact as desired." << endl << endl;
 
@@ -264,6 +268,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
+    //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
@@ -297,6 +302,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
+    //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
@@ -330,6 +336,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
+    //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
@@ -363,6 +370,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
+    //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
@@ -397,6 +405,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
+    //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
@@ -431,6 +440,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
+    //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
@@ -464,6 +474,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
+    //flags = PEP_decrypt_deliver_pgpmime_badsigned; // We created this test before deciding not to display unsigned messages
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
