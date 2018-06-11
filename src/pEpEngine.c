@@ -6,6 +6,7 @@
 #include "cryptotech.h"
 #include "transport.h"
 #include "blacklist.h"
+#include "wrappers.h"
 
 #include <time.h>
 #include <stdlib.h>
