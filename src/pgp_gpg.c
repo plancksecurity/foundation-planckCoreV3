@@ -34,7 +34,7 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
 
     FILE *f = Fopen(config_file_path, "r");    
        
-    if (f == NULL && errno == ENOMEM)
+    if (f == NULL)
         return false;
 
     int i;
@@ -45,7 +45,7 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
     char* s = NULL;
 
     // Go through every line in the file
-    while ((s = fgets(buf, MAX_LINELENGTH, f))) {
+    while ((s = Fgets(buf, MAX_LINELENGTH, f))) {
         // pointers to the keys found in this string
         str_ptr_and_bit* found_keys = (str_ptr_and_bit*)(calloc(num_keys, sizeof(str_ptr_and_bit)));
         int num_found_keys = 0;
@@ -527,7 +527,6 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         gpgme = dlopen(LIBGPGME, RTLD_LAZY);
         if (gpgme == NULL) {
             // FIXME: Hotfix here?
-            
             status = PEP_INIT_CANNOT_LOAD_GPGME;
             goto pep_error;
         }
