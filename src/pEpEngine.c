@@ -426,6 +426,10 @@ static const char *sql_is_mistrusted_key =
 static const char *sql_add_userid_alias =
     "insert or replace into alternate_user_id (alternate_id, default_id) "
     "values (?2, ?1) ;";
+
+static const char *sql_add_into_social_graph =
+    "insert or replace into social_graph(own_userid, own_address, contact_userid text) "
+    "values (?1, ?2, ?3) ;";
     
 static int user_version(void *_version, int count, char **text, char **name)
 {
@@ -720,9 +724,15 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 ");\n"
                 // social graph for key resets
                 "create table if not exists social_graph (\n"
-                "    own_id text,"
+                "    own_userid text,\n"
                 "    own_address text,\n"
-                "    out_count integer default 0\n"
+                "    contact_userid text\n"
+                "       references person (id)\n"
+                "       on delete cascade on update cascade,\n"
+                "    CONSTRAINT fk_identity\n"
+                "       FOREIGN KEY(own_address, own_userid)\n" 
+                "       REFERENCES identity(address, user_id)\n"
+                "       ON DELETE CASCADE ON UPDATE CASCADE\n"
                 ");\n"
                 ,
             NULL,
@@ -1029,6 +1039,27 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 );
                 assert(int_result == SQLITE_OK);    
             }
+            if (version < 9) {
+                int_result = sqlite3_exec(
+                    _session->db,
+                    "create table if not exists social_graph (\n"
+                    "    own_userid text,\n"
+                    "    own_address text,\n"
+                    "    contact_userid text\n"
+                    "       references person (id)\n"
+                    "       on delete cascade on update cascade,\n"
+                    "    CONSTRAINT fk_identity\n"
+                    "       FOREIGN KEY(own_address, own_userid)\n" 
+                    "       REFERENCES identity(address, user_id)\n"
+                    "       ON DELETE CASCADE ON UPDATE CASCADE\n"
+                    ");\n"
+                    ,
+                    NULL,
+                    NULL,
+                    NULL
+                );
+                assert(int_result == SQLITE_OK);    
+            }
         }        
         else { 
             // Version from DB was 0, it means this is initial setup.
@@ -1136,6 +1167,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     
     int_result = sqlite3_prepare_v2(_session->db, sql_is_pep_user,
             (int)strlen(sql_is_pep_user), &_session->is_pep_user, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_add_into_social_graph,
+            (int)strlen(sql_add_into_social_graph), &_session->add_into_social_graph, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_device_group,
@@ -1403,7 +1438,9 @@ DYNAMIC_API void release(PEP_SESSION session)
             if (session->is_pep_user)
                 sqlite3_finalize(session->is_pep_user);
             if (session->exists_person)
-                sqlite3_finalize(session->exists_person);                        
+                sqlite3_finalize(session->exists_person);
+            if (session->add_into_social_graph)
+                sqlite3_finalize(session->add_into_social_graph);                        
             if (session->set_device_group)
                 sqlite3_finalize(session->set_device_group);
             if (session->get_device_group)
@@ -2597,6 +2634,30 @@ DYNAMIC_API PEP_STATUS is_pep_user(PEP_SESSION session, pEp_identity *identity, 
     }
 
     sqlite3_reset(session->is_pep_user);
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS bind_own_ident_with_contact_ident(PEP_SESSION session,
+                                             pEp_identity* own_ident, 
+                                             pEp_identity* contact_ident) {
+    if (!own_ident || !contact_ident || 
+        !own_ident->address || !own_ident->user_id || !contact_ident->user_id)
+        return PEP_ILLEGAL_VALUE;
+        
+    sqlite3_reset(session->add_into_social_graph);
+    sqlite3_bind_text(session->add_into_social_graph, 1, own_ident->user_id, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->add_into_social_graph, 2, own_ident->address, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->add_into_social_graph, 3, contact_ident->user_id, -1,
+            SQLITE_STATIC);
+        
+    int result = sqlite3_step(session->add_into_social_graph);
+    sqlite3_reset(session->add_into_social_graph);
+    
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_PERSON;
+
     return PEP_STATUS_OK;
 }
 
@@ -3877,6 +3938,7 @@ PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
     return session->cryptotech[PEP_crypt_OpenPGP].find_private_keys(session, pattern,
                                                                     keylist);
 }
+
 
 DYNAMIC_API const char* get_engine_version() {
     return PEP_ENGINE_VERSION;

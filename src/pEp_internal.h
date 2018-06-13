@@ -141,6 +141,7 @@ struct _pEpSession {
     sqlite3_stmt *exists_person;    
     sqlite3_stmt *set_as_pep_user;
     sqlite3_stmt *is_pep_user;
+    sqlite3_stmt *add_into_social_graph;
     sqlite3_stmt *set_device_group;
     sqlite3_stmt *get_device_group;
     sqlite3_stmt *set_pgp_keypair;
