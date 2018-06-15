@@ -449,3 +449,4 @@ const char *gpg_agent_conf(int reset)
     return NULL;
 }
 #endif
+
