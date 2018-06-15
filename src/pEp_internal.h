@@ -142,6 +142,10 @@ struct _pEpSession {
     sqlite3_stmt *set_as_pep_user;
     sqlite3_stmt *is_pep_user;
     sqlite3_stmt *add_into_social_graph;
+    sqlite3_stmt *get_own_address_binding_from_contact;
+    sqlite3_stmt *set_revoke_contact_as_notified;
+    sqlite3_stmt *get_contacted_ids_from_revoke_fpr;
+    sqlite3_stmt *was_id_for_revoke_contacted;
     sqlite3_stmt *set_device_group;
     sqlite3_stmt *get_device_group;
     sqlite3_stmt *set_pgp_keypair;
@@ -188,6 +192,7 @@ struct _pEpSession {
     // revoked keys
     sqlite3_stmt *set_revoked;
     sqlite3_stmt *get_revoked;
+    sqlite3_stmt *get_replacement_fpr;
 
     // mistrusted
     sqlite3_stmt* add_mistrusted_key;

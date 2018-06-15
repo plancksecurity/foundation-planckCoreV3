@@ -37,12 +37,19 @@ typedef enum _PEP_encrypt_flags {
     
     // This is used for outer messages (used to wrap the real message)
     // This is only used internally and (eventually) by transport functions
-    PEP_encrypt_flag_inner_message = 0x8
+    PEP_encrypt_flag_inner_message = 0x8,
+    
+    PEP_encrypt_flag_key_reset_only = 0x16,
     
 } PEP_encrypt_flags; 
 
 typedef unsigned int PEP_encrypt_flags_t;
 
+typedef enum _message_wrap_type {
+    PEP_message_default,    // typical inner/outer message 2.0
+    PEP_message_transport,  // e.g. for onion layers
+    PEP_message_key_reset   // for wrapped key reset information
+} message_wrap_type;
 
 // encrypt_message() - encrypt message in memory
 //

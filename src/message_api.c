@@ -857,7 +857,7 @@ enomem:
 }
 
 static message* wrap_message_as_attachment(message* envelope, 
-    message* attachment, bool keep_orig_subject) {
+    message* attachment, message_wrap_type wrap_type, bool keep_orig_subject) {
     
     if (!attachment)
         return NULL;
@@ -868,14 +868,22 @@ static message* wrap_message_as_attachment(message* envelope,
 
     replace_opt_field(attachment, "X-pEp-Version", PEP_VERSION);
         
-    if (!_envelope) {
+    if (!_envelope && (wrap_type != PEP_message_transport)) {
         _envelope = extract_minimal_envelope(attachment, PEP_dir_outgoing);
         status = generate_message_id(_envelope);
         
         if (status != PEP_STATUS_OK)
             goto enomem;
         
-        attachment->longmsg = encapsulate_message_wrap_info("INNER", attachment->longmsg);
+        const char* inner_type_string = "";
+        switch (wrap_type) {
+            case PEP_message_key_reset:
+                inner_type_string = "KEY_RESET";
+                break;
+            default:
+                inner_type_string = "INNER";
+        }
+        attachment->longmsg = encapsulate_message_wrap_info(inner_type_string, attachment->longmsg);
         _envelope->longmsg = encapsulate_message_wrap_info("OUTER", _envelope->longmsg);
     }
     else {
@@ -1457,6 +1465,48 @@ void attach_own_key(PEP_SESSION session, message *msg)
     free(revoked_fpr);
 }
 
+PEP_STATUS create_standalone_key_reset_message(message** dst, 
+                                               pEp_identity* recip,
+                                               const char* revoke_fpr,
+                                               const char* new_fpr) {
+                                                   
+    if (!dst || !recip->user_id || !recip->address)
+        return PEP_ILLEGAL_VALUE;
+
+    *dst = NULL;
+    // Get own identity user has corresponded with
+    pEp_identity* own_identity = NULL;
+    PEP_STATUS status = get_own_address_for_contact_id(PEP_SESSION session,
+                                                       recip,
+                                                       &own_identity);                                                       
+    if (status != PEP_STATUS_OK)
+        return status;
+        
+    message* reset_message = new_message(PEP_dir_outgoing);
+    reset_message->from = own_identity;
+    reset_message->to = new_identity_list(identity_dup(recip)); // ?
+    
+    status = _attach_key(session, revoke_fpr, reset_message);
+    if (status != PEP_STATUS_OK)
+        goto pep_free;
+    status = _attach_key(session, new_fpr, reset_message);
+    if (status != PEP_STATUS_OK)
+        goto pep_free;
+    
+    message* output_msg = NULL;
+    
+    status = encrypt_message(session, reset_message, NULL,
+                             output_msg, PEP_enc_PGP_MIME,
+                             PEP_encrypt_flag_key_reset_only);
+
+    if (status == PEP_STATUS_OK)
+        *dst = output_msg;
+        
+pep_free:
+    free_message(reset_message);
+    return status;
+}
+
 PEP_cryptotech determine_encryption_format(message *msg)
 {
     assert(msg);
@@ -1579,7 +1629,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     PEP_comm_type max_comm_type = PEP_ct_pEp;
 
     identity_list * _il;
-
 
     if (enc_format != PEP_enc_none && (_il = src->bcc) && _il->ident)
     {
@@ -1764,7 +1813,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     else {
         // FIXME - we need to deal with transport types (via flag)
         if ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp) {
-            _src = wrap_message_as_attachment(NULL, src, false);
+            message_wrap_type = ((flags & PEP_encrypt_flag_key_reset_only) ? PEP_message_key_reset : PEP_message_default);
+            _src = wrap_message_as_attachment(NULL, src, message_wrap_type, false);
             if (!_src)
                 goto pep_error;
         }
@@ -2061,8 +2111,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     determine_encryption_format(src);
     if (src->enc_format != PEP_enc_none)
         return PEP_ILLEGAL_VALUE;
-
     if (target_id && (!target_id->user_id || target_id->user_id[0] == '\0')) {
+        
         char* own_id = NULL;
         status = get_default_own_userid(session, &own_id);
         if (own_id) {
@@ -2105,7 +2155,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     // if (!(flags & PEP_encrypt_flag_force_no_attached_key))
     //     _attach_key(session, target_fpr, src);
 
-    _src = wrap_message_as_attachment(NULL, src, false);
+    _src = wrap_message_as_attachment(NULL, src, PEP_message_default, false);
     if (!_src)
         goto pep_error;
 
@@ -2977,6 +3027,22 @@ static char* seek_good_trusted_private_fpr(PEP_SESSION session, char* own_id,
     return NULL;
 }
 
+PEP_STATUS check_for_own_revoked_key(
+        PEP_SESSION session, 
+        stringlist_t* keylist,
+        char** bad_fpr,
+        char** replacement_fpr
+    ) 
+{
+    if (!session || !bad_fpr || !replacement_fpr)
+        return PEP_ILLEGAL_VALUE;
+    stringlist_t* _k = keylist;
+    while (_k) {
+        
+    }
+}
+
+
 DYNAMIC_API PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -3367,6 +3433,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         }
     } // End prepare output message for return
 
+    // 3. Check to see if the sender used a bad key
+    char* bad_fpr = NULL;
+    status = check_for_own_revoked_key(session, _keylist, &bad_fpr);
+    
     *dst = msg;
     *keylist = _keylist;
 

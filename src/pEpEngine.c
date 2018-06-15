@@ -408,6 +408,10 @@ static const char *sql_get_revoked =
     "select revoked_fpr, revocation_date from revoked_keys"
     "    where replacement_fpr = upper(replace(?1,' ','')) ;";
 
+static const char *sql_get_replacement_fpr = 
+    "select replacement_fpr, revocation_date from revoked_keys"
+    "    where revoked_fpr = upper(replace(?1,' ','')) ;";
+
 static const char *sql_get_userid_alias_default =
     "select default_id from alternate_user_id "
     "   where alternate_id = ?1 ; ";
@@ -428,8 +432,20 @@ static const char *sql_add_userid_alias =
     "values (?2, ?1) ;";
 
 static const char *sql_add_into_social_graph =
-    "insert or replace into social_graph(own_userid, own_address, contact_userid text) "
+    "insert or replace into social_graph(own_userid, own_address, contact_userid) "
     "values (?1, ?2, ?3) ;";
+
+static const char *sql_get_own_address_binding_from_contact =
+    "select own_address from social_graph where own_userid = ?1 and contact_userid = ?2 ;";
+
+static const char *sql_set_revoke_contact_as_notified =
+    "insert or replace into revocation_contact_list(fpr, contact_id) values (?1, ?2) ;";
+    
+static const char *sql_get_contacted_ids_from_revoke_fpr =
+    "select * from revocation_contact_list where fpr = ?1 ;";
+
+static const char *sql_was_id_for_revoke_contacted = 
+    "select count(*) from revocation_contact_list where fpr = ?1 and contact_id = ?2 ;";
     
 static int user_version(void *_version, int count, char **text, char **name)
 {
@@ -726,13 +742,20 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "create table if not exists social_graph (\n"
                 "    own_userid text,\n"
                 "    own_address text,\n"
-                "    contact_userid text\n"
-                "       references person (id)\n"
-                "       on delete cascade on update cascade,\n"
-                "    CONSTRAINT fk_identity\n"
+                "    contact_userid text,\n"
+                "    CONSTRAINT fk_own_identity\n"
                 "       FOREIGN KEY(own_address, own_userid)\n" 
                 "       REFERENCES identity(address, user_id)\n"
-                "       ON DELETE CASCADE ON UPDATE CASCADE\n"
+                "       ON DELETE CASCADE ON UPDATE CASCADE,\n"
+                ");\n"
+                // list of user_ids sent revocation
+                "create table if not exists revocation_contact_list (\n"
+                "   fpr text not null references pgp_keypair (fpr)\n"
+                "       on delete cascade,\n"
+                "   contact_id text not null references person (id)\n"
+                "       on delete cascade on update cascade,\n"
+                "   timestamp integer default (datetime('now')),\n"
+                "   PRIMARY KEY(fpr, contact_id)\n"
                 ");\n"
                 ,
             NULL,
@@ -1045,13 +1068,19 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                     "create table if not exists social_graph (\n"
                     "    own_userid text,\n"
                     "    own_address text,\n"
-                    "    contact_userid text\n"
-                    "       references person (id)\n"
-                    "       on delete cascade on update cascade,\n"
-                    "    CONSTRAINT fk_identity\n"
+                    "    contact_userid text,\n"
+                    "    CONSTRAINT fk_own_identity\n"
                     "       FOREIGN KEY(own_address, own_userid)\n" 
                     "       REFERENCES identity(address, user_id)\n"
-                    "       ON DELETE CASCADE ON UPDATE CASCADE\n"
+                    "       ON DELETE CASCADE ON UPDATE CASCADE,\n"
+                    ");\n"
+                    "create table if not exists revocation_contact_list (\n"
+                    "   fpr text not null references pgp_keypair (fpr)\n"
+                    "       on delete cascade,\n"
+                    "   contact_id text not null references person (id)\n"
+                    "       on delete cascade on update cascade,\n"
+                    "   timestamp integer default (datetime('now')),\n"
+                    "   PRIMARY KEY(fpr, contact_id)\n"
                     ");\n"
                     ,
                     NULL,
@@ -1171,6 +1200,30 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     int_result = sqlite3_prepare_v2(_session->db, sql_add_into_social_graph,
             (int)strlen(sql_add_into_social_graph), &_session->add_into_social_graph, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, 
+            sql_get_own_address_binding_from_contact,
+            (int)strlen(sql_get_own_address_binding_from_contact), 
+            &_session->get_own_address_binding_from_contact, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, 
+            sql_set_revoke_contact_as_notified,
+            (int)strlen(sql_set_revoke_contact_as_notified), 
+            &_session->set_revoke_contact_as_notified, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, 
+            sql_get_contacted_ids_from_revoke_fpr,
+            (int)strlen(sql_get_contacted_ids_from_revoke_fpr), 
+            &_session->get_contacted_ids_from_revoke_fpr, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, 
+            sql_get_own_address_binding_from_contact,
+            (int)strlen(sql_get_own_address_binding_from_contact), 
+            &_session->get_own_address_binding_from_contact, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_device_group,
@@ -1323,6 +1376,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_get_revoked), &_session->get_revoked, NULL);
     assert(int_result == SQLITE_OK);
     
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_replacement_fpr,
+            (int)strlen(sql_get_replacement_fpr), &_session->get_replacement_fpr, NULL);
+    assert(int_result == SQLITE_OK);
+
     int_result = sqlite3_prepare_v2(_session->db, sql_add_mistrusted_key,
             (int)strlen(sql_add_mistrusted_key), &_session->add_mistrusted_key, NULL);
     assert(int_result == SQLITE_OK);
@@ -1440,7 +1497,15 @@ DYNAMIC_API void release(PEP_SESSION session)
             if (session->exists_person)
                 sqlite3_finalize(session->exists_person);
             if (session->add_into_social_graph)
-                sqlite3_finalize(session->add_into_social_graph);                        
+                sqlite3_finalize(session->add_into_social_graph);  
+            if (session->get_own_address_binding_from_contact)
+                sqlite3_finalize(session->get_own_address_binding_from_contact);  
+            if (session->set_revoke_contact_as_notified)
+                sqlite3_finalize(session->set_revoke_contact_as_notified);  
+            if (session->get_contacted_ids_from_revoke_fpr)
+                sqlite3_finalize(session->get_contacted_ids_from_revoke_fpr);  
+            if (session->was_id_for_revoke_contacted)
+                sqlite3_finalize(session->was_id_for_revoke_contacted);                                        
             if (session->set_device_group)
                 sqlite3_finalize(session->set_device_group);
             if (session->get_device_group)
@@ -1513,7 +1578,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->set_revoked);
             if (session->get_revoked)
                 sqlite3_finalize(session->get_revoked);
-
+            if (session->get_replacement_fpr)
+                sqlite3_finalize(session->get_replacement_fpr);                
             if (session->add_mistrusted_key)
                 sqlite3_finalize(session->add_mistrusted_key);
             if (session->delete_mistrusted_key)
@@ -2177,9 +2243,9 @@ PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
     sqlite3_bind_text(session->exists_identity_entry, 1, identity->address, -1,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->exists_identity_entry, 2, identity->user_id, -1,
-                      SQLITE_STATIC);
                   
     int result = sqlite3_step(session->exists_identity_entry);
+    SQLITE_STATIC);
     switch (result) {
         case SQLITE_ROW: {
             // yeah yeah, I know, we could be lazy here, but it looks bad.
@@ -2661,6 +2727,45 @@ PEP_STATUS bind_own_ident_with_contact_ident(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS get_own_ident_for_contact_id(PEP_SESSION session,
+                                          const pEp_identity* contact
+                                          pEp_identity** own_ident) {
+    if (!contact || !contact->user_id || !own_ident)
+        return PEP_ILLEGAL_VALUE;
+        
+    char* own_user_id = NULL;
+    *own_ident = NULL;
+    PEP_STATUS status = get_default_own_userid(session, &own_user_id);
+    
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    sqlite3_reset(session->get_own_address_binding_from_contact);
+    sqlite3_bind_text(session->get_own_address_binding_from_contact, 1, own_user_id, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->get_own_address_binding_from_contact, 2, contact_ident->user_id, -1,
+            SQLITE_STATIC);
+
+    result = sqlite3_step(session->get_own_address_binding_from_contact);
+    switch (result) {
+        case SQLITE_ROW:
+            const char* const own_address = (const char *)
+                sqlite3_column_text(session->get_own_address_binding_from_contact, 0);
+            if (own_address) {
+                status = get_identity(session, own_address, own_user_id, own_ident);
+                if (status == PEP_STATUS_OK) {
+                    if (!own_ident)
+                        status = PEP_CANNOT_FIND_IDENTITY;
+                }
+            }
+            break;
+        default:
+            status = PEP_CANNOT_FIND_IDENTITY;
+    }
+    
+    free(own_user_id);
+    return status;
+}
 
 PEP_STATUS remove_fpr_as_default(PEP_SESSION session, 
                                  const char* fpr) 
@@ -3914,6 +4019,57 @@ DYNAMIC_API PEP_STATUS get_revoked(
 
     return status;
 }
+
+DYNAMIC_API PEP_STATUS get_replacement_fpr(
+        PEP_SESSION session,
+        const char *fpr,
+        char **revoked_fpr,
+        uint64_t *revocation_date
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session &&
+           revoked_fpr &&
+           fpr && fpr[0]
+          );
+    
+    if (!(session &&
+           revoked_fpr &&
+           fpr && fpr[0]
+          ))
+        return PEP_ILLEGAL_VALUE;
+
+    *revoked_fpr = NULL;
+    *revocation_date = 0;
+
+    sqlite3_reset(session->get_replacement_fpr);
+    sqlite3_bind_text(session->get_replacement_fpr, 1, fpr, -1, SQLITE_STATIC);
+
+    int result;
+    
+    result = sqlite3_step(session->get_replacement_fpr);
+    switch (result) {
+        case SQLITE_ROW: {
+            *revoked_fpr = strdup((const char *)
+                    sqlite3_column_text(session->get_replacement_fpr, 0));
+            if(*revoked_fpr)
+                *revocation_date = sqlite3_column_int64(session->get_replacement_fpr,
+                        1);
+            else
+                status = PEP_OUT_OF_MEMORY;
+
+            break;
+        }
+        default:
+            status = PEP_CANNOT_FIND_IDENTITY;
+    }
+
+    sqlite3_reset(session->get_replacement_fpr);
+
+    return status;
+}
+
 
 PEP_STATUS key_created(
         PEP_SESSION session,
