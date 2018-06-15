@@ -17,8 +17,8 @@ SRCS := $(wildcard src/*.cc) $(wildcard src/*/*.cc)
 OBJS := $(addsuffix .o,$(basename $(SRCS)))
 DEPS := $(OBJS:.o=.d)
 
-INC_DIRS := ./include /usr/local/include  
-INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+INC_DIRS := ./include /usr/local/include 
+INC_FLAGS := $(addprefix -I,$(INC_DIRS)) $(GPGME_INC)
 
 LDFLAGS += -L/usr/local/lib
 
