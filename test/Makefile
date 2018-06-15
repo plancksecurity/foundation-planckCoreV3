@@ -100,7 +100,7 @@ endif
 test_home_: 
 	
 
-.PHONY: test_home_
+.PHONY: scripts
 scripts: 
 ifdef PY_ENV
 	$(PY_ENV) genscripts.py
@@ -108,7 +108,7 @@ endif
 
 .PHONY: test
 test: all
-	./$(TARGET)
+	$(TEST_DEBUGGER) ./$(TARGET)
 	
 .PHONY: clean
 clean:
