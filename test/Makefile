@@ -17,8 +17,8 @@ SRCS := $(wildcard src/*.cc) $(wildcard src/*/*.cc)
 OBJS := $(addsuffix .o,$(basename $(SRCS)))
 DEPS := $(OBJS:.o=.d)
 
-INC_DIRS := ./include /usr/local/include  
-INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+INC_DIRS := ./include /usr/local/include 
+INC_FLAGS := $(addprefix -I,$(INC_DIRS)) $(GPGME_INC)
 
 LDFLAGS += -L/usr/local/lib
 
@@ -100,7 +100,7 @@ endif
 test_home_: 
 	
 
-.PHONY: test_home_
+.PHONY: scripts
 scripts: 
 ifdef PY_ENV
 	$(PY_ENV) genscripts.py
@@ -108,7 +108,7 @@ endif
 
 .PHONY: test
 test: all
-	./$(TARGET)
+	$(TEST_DEBUGGER) ./$(TARGET)
 	
 .PHONY: clean
 clean:

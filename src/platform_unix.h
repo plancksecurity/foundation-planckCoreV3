@@ -46,7 +46,11 @@ char *stpcpy(char *, const char *);
 
 const char *android_system_db(void);
 #define SYSTEM_DB android_system_db()
+#ifdef __APPLE__
+#define LIBGPGME "libgpgme.11.dylib"
+#else
 #define LIBGPGME "libgpgme.so"
+#endif
 
 #elif __APPLE__
 #include "TargetConditionals.h"

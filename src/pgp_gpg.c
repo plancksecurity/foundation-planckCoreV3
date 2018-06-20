@@ -298,6 +298,8 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
         gpgme = dlopen(LIBGPGME, RTLD_LAZY);
         if (gpgme == NULL) {
+            // FIXME: Hotfix here?
+            
             status = PEP_INIT_CANNOT_LOAD_GPGME;
             goto pep_error;
         }
@@ -809,7 +811,8 @@ PEP_STATUS pgp_decrypt_and_verify(
                         }
                         case GPG_ERR_CERT_REVOKED:
                         case GPG_ERR_BAD_SIGNATURE:
-                            result = PEP_DECRYPT_BAD_SIGNATURE;
+			    result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
+                            //result = PEP_DECRYPT_BAD_SIGNATURE;
                             break;
                         case GPG_ERR_SIG_EXPIRED:
                         case GPG_ERR_KEY_EXPIRED:

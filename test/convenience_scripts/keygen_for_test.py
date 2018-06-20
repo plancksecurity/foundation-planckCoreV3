@@ -67,9 +67,14 @@ for i in range(num_keys):
     
     print(input_data)
     key = None
-    key = gpg.gen_key(input_data)
-    if not key:
-        raise Exception('Key not created in iteration ' + str(i))
+    try:
+        key = gpg.gen_key(input_data)
+        if not key:
+            raise Exception('Key not created in iteration ' + str(i))
+    except ValueError:
+        pass
+
+
     pubkey = None
     privkey = None
     

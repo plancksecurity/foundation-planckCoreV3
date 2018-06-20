@@ -21,6 +21,7 @@
 #include "AppleMailTests.h"
 #include "CaseAndDotAddressTests.h"
 #include "SequenceTests.h"
+#include "BCCTests.h"
 #include "MessageApiTests.h"
 #include "I18nTests.h"
 #include "CrashdumpTests.h"
@@ -60,6 +61,7 @@ const char* SuiteMaker::all_suites[] = {
     "AppleMailTests",
     "CaseAndDotAddressTests",
     "SequenceTests",
+    "BCCTests",
     "MessageApiTests",
     "I18nTests",
     "CrashdumpTests",
@@ -111,6 +113,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new CaseAndDotAddressTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "SequenceTests") == 0)
         *test_suite = new SequenceTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "BCCTests") == 0)
+        *test_suite = new BCCTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "MessageApiTests") == 0)
         *test_suite = new MessageApiTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "I18nTests") == 0)
