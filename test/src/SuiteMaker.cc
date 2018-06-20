@@ -92,7 +92,7 @@ const char* SuiteMaker::all_suites[] = {
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 36;
+int SuiteMaker::num_suites = 37;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "MapAsn1Tests") == 0)

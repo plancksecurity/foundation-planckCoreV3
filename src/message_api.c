@@ -3223,15 +3223,16 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
             if (!wrap_info) {
                 // NOT Message 2.0.
-                // Fail hard on 1.0 and PGP/MIME messages which don't verify. 
-                // (We will have been failing anyway due to gpg error codes, but we make sure here.)
+                // EFAIL: We already fail due to gpg error codes (not MDC directly, but a GPG_ERR_NO_DATA)
+                // This is to determine failure behaviour for unsigned or signed-but-no-key-available messages 
+                // Bad sigs still fail as they should.
                 if (decrypt_status == PEP_DECRYPTED) {
-                    if (!inline_pgp) {
-                        if (!_keylist || EMPTYSTR(_keylist->value))
-                            status = decrypt_status = PEP_DECRYPTED_BUT_UNSIGNED;
-                        else
-                            status = decrypt_status = PEP_DECRYPT_NO_KEY_FOR_SIGNER;
-                        
+                    if (!_keylist || EMPTYSTR(_keylist->value))
+                        status = decrypt_status = PEP_DECRYPTED_BUT_UNSIGNED;
+                    else
+                        status = decrypt_status = PEP_DECRYPT_NO_KEY_FOR_SIGNER;
+                    
+                    if (is_pep_msg) {                        
                         if (decrypt_status == PEP_DECRYPTED_BUT_UNSIGNED && !deliver_badsig_pgpmime) {
                             *rating = decrypt_rating(decrypt_status);
                             goto pep_error;
