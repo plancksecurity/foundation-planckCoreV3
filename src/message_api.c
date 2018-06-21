@@ -148,6 +148,43 @@ static const char * rating_to_string(PEP_rating rating)
     }
 }
 
+bool _memnmemn(const char* needle, 
+                size_t needle_size,
+                const char* haystack, 
+                size_t haystack_size) 
+{
+    if (needle_size > haystack_size) {
+        return false;
+    }
+    else if (needle_size == 0) {
+        return true;
+    }
+                        
+    bool found = true;
+    const char* haystack_ptr = haystack;
+    unsigned int i = 0;
+    size_t remaining_hay = haystack_size;
+    for (i = 0; i < haystack_size && (remaining_hay >= needle_size); i++, haystack_ptr++) {
+        found = false;
+        const char* needle_ptr = needle;
+        if (*haystack_ptr == *needle) {
+            const char* haystack_tmp = haystack_ptr;
+            unsigned int j;
+            found = true;
+            for (j = 0; j < needle_size; j++) {
+                if (*needle_ptr++ != *haystack_tmp++) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found)
+                break;
+        }
+        remaining_hay--;
+    }
+    return found;
+}
+
 void add_opt_field(message *msg, const char *name, const char *value)
 {
     assert(msg && name && value);
@@ -1103,18 +1140,18 @@ static bool is_encrypted_attachment(const bloblist_t *blob)
         return false;
 
     if (strcmp(blob->mime_type, "application/octet-stream") == 0) {
-        if (strcmp(ext, ".pgp") == 0 || strcmp(ext, ".gpg") == 0 ||
-            strcmp(ext, ".asc") == 0)
+        if (strcmp(ext, ".pgp") == 0 || strcmp(ext, ".gpg") == 0)
             return true;
     }
-    else if (strcmp(blob->mime_type, "text/plain") == 0) {
-        if (strcmp(ext, ".asc") == 0) {
-            // NOTE: if this ends up being too expensive, we can implement
-            // strnstr...
-            if (strstr(blob->value, "BEGIN PGP PUBLIC KEY") == NULL &&
-                strstr(blob->value, "BEGIN PGP PRIVATE KEY") == NULL)
-                return true;
-        }
+    if (strcmp(ext, ".asc") == 0 && blob->size > 0) {            
+        const char* pubk_needle = "BEGIN PGP PUBLIC KEY";
+        size_t pubk_needle_size = strlen(pubk_needle);
+        const char* privk_needle = "BEGIN PGP PRIVATE KEY";
+        size_t privk_needle_size = strlen(privk_needle);
+
+        if (!(_memnmemn(pubk_needle, pubk_needle_size, blob->value, blob->size)) &&
+            !(_memnmemn(privk_needle, privk_needle_size, blob->value, blob->size)))
+            return true;
     }
 
     return false;
@@ -1365,9 +1402,7 @@ bool import_attached_keys(
             size_t blob_size = bl->size;
             bool free_blobval = false;
             
-            if (is_encrypted_attachment(bl) &&
-                    strstr(blob_value, "BEGIN PGP PUBLIC KEY") == NULL &&
-                    strstr(blob_value, "BEGIN PGP PRIVATE KEY") == NULL) {
+            if (is_encrypted_attachment(bl)) {
                     
                 char* bl_ptext = NULL;
                 size_t bl_psize = 0;
