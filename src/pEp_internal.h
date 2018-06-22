@@ -1,7 +1,12 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#define PEP_ENGINE_VERSION "0.9.0"
+
+// THESE MUST ALL BE CHANGED TOGETHER!!!!
+#define PEP_ENGINE_VERSION "1.0.440"
+#define PEP_ENGINE_MAJOR 1
+#define PEP_ENGINE_MINOR 0
+#define PEP_ENGINE_PATCH 440
 
 // maximum attachment size to import as key 1MB, maximum of 20 attachments
 
