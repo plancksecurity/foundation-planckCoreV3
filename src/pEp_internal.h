@@ -134,6 +134,7 @@ struct _pEpSession {
     sqlite3_stmt *log;
     sqlite3_stmt *trustword;
     sqlite3_stmt *get_cached_engine_version;
+    sqlite3_stmt *set_cached_engine_version;    
     sqlite3_stmt *get_identity;
     sqlite3_stmt *get_identity_without_trust_check;
     sqlite3_stmt *get_identities_by_address;

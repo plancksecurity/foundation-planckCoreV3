@@ -442,11 +442,11 @@ PEP_STATUS set_engine_version_in_DB(PEP_SESSION session,
     PEP_STATUS status = PEP_STATUS_OK;
     int result;
 
-    if (!(session && version_str)
+    if (!(session && version_str))
         return PEP_ILLEGAL_VALUE;
 
     sqlite3_reset(session->set_cached_engine_version);
-    sqlite3_bind_text(session->set_cached_engine_version, 1, version_str, -1,
+    sqlite3_bind_text(session->set_cached_engine_version, 1, *version_str, -1,
             SQLITE_STATIC);
 
     result = sqlite3_step(session->set_cached_engine_version);
@@ -460,12 +460,12 @@ PEP_STATUS set_engine_version_in_DB(PEP_SESSION session,
 }
 
 PEP_STATUS get_engine_version_from_DB(PEP_SESSION session, 
-                                                  char** version_str)
+                                      char** version_str)
 {
     PEP_STATUS status = PEP_STATUS_OK;
     int result;
 
-    if (!(session && version_str)
+    if (!(session && version_str))
         return PEP_ILLEGAL_VALUE;
 
     sqlite3_reset(session->get_cached_engine_version);
@@ -576,13 +576,13 @@ static int parse_three_part_version_string(char* version,
         *minor = -1;
         return -1;
     }
-    *minor = atoint success = i(ver_token);
-    ver_token = strtok(NULL, "            .");
-    if (ver_token =      = NULL) {
-        *pa tch = -1;
+    *minor = atoi(ver_token);
+    ver_token = strtok(NULL, ".");
+    if (ver_token == NULL) {
+        *patch = -1;
         return -1;
     }
-    pasuccess != 0 || tch = atoi(ver_token);
+    *patch = atoi(ver_token);
     return 0;
 }
 
@@ -597,7 +597,8 @@ int compare_engine_versions(int major1, int minor1, int patch1,
     return 0;    
 }
 
-PEP_STATUS compare_cached_engine_version_to_other(int* result, 
+PEP_STATUS compare_cached_engine_version_to_other(PEP_SESSION session,
+                                                  int* result, 
                                                   int major, 
                                                   int minor, 
                                                   int patch) {
@@ -605,8 +606,8 @@ PEP_STATUS compare_cached_engine_version_to_other(int* result,
         return PEP_ILLEGAL_VALUE;
         
     PEP_STATUS status = PEP_STATUS_OK;
-    const char* cached_engine_version = NULL;
-    status = get_engine_version_from_DB(&cached_engine_version);
+    char* cached_engine_version = NULL;
+    status = get_engine_version_from_DB(session, &cached_engine_version);
     if (status != PEP_STATUS_OK)
         return status;
         
@@ -636,8 +637,8 @@ PEP_STATUS compare_cached_engine_version_to_other(int* result,
     return status;    
 }
 
-PEP_STATUS compare_cached_engine_version_to_curr(int* result) {
-    return compare_cached_engine_version_to_other(*result, 
+PEP_STATUS compare_cached_engine_version_to_curr(PEP_SESSION session, int* result) {
+    return compare_cached_engine_version_to_other(session, result, 
                                                   PEP_ENGINE_MAJOR,
                                                   PEP_ENGINE_MINOR,
                                                   PEP_ENGINE_PATCH);

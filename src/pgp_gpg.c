@@ -267,17 +267,6 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
         return false;
 
     if (f != NULL) {
-        // ENGINE-427 - quick fix here. This will be removed in a few
-        // versions, but we need to clean up our mess.
-        int compare_result = -1;
-        PEP_STATUS status = compare_cached_engine_version_to_other(
-            &compare_result, 1, 0, 440);
-        
-        if (status != PEP_STATUS_OK)
-            return false;
-            
-        if (compare_result < 0)
-            quickfix_config(keys, config_file_path);
                 
         int length = stringlist_length(keys);
 
@@ -502,11 +491,28 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         stringlist_add(conf_keys, "allow-freeform-uid");
         stringlist_add(conf_values, "");
 
+
+        // ENGINE-427 - quick fix here. This will be removed in a few
+        // versions, but we need to clean up our mess.
+        int compare_result = -1;
+        status = compare_cached_engine_version_to_other(session,
+                                                        &compare_result, 
+                                                        1, 0, 440);            
+
+        bResult = true;
+        // status != OK => no cached engine version, i.e. first-time run.
+        if (compare_result < 0 && status == PEP_STATUS_OK)
 #if defined(WIN32) || defined(NDEBUG)
-        bResult = ensure_config_values(conf_keys, conf_values, gpg_conf());
+            bResult = quickfix_config(conf_keys, gpg_conf());
+        if (bResult)
+            bResult = ensure_config_values(conf_keys, conf_values, gpg_conf());
 #else
-        bResult = ensure_config_values(conf_keys, conf_values, gpg_conf(false));
+            bResult = quickfix_config(conf_keys, gpg_conf(false));
+        if (bResult)
+            bResult = ensure_config_values(conf_keys, conf_values, gpg_conf(false));
 #endif
+        status = PEP_STATUS_OK;
+        
         free_stringlist(conf_keys);
         free_stringlist(conf_values);
 
