@@ -267,6 +267,18 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
         return false;
 
     if (f != NULL) {
+        // ENGINE-427 - quick fix here. This will be removed in a few
+        // versions, but we need to clean up our mess.
+        int compare_result = -1;
+        PEP_STATUS status = compare_cached_engine_version_to_other(
+            &compare_result, 1, 0, 440);
+        
+        if (status != PEP_STATUS_OK)
+            return false;
+            
+        if (compare_result < 0)
+            quickfix_config(keys, config_file_path);
+                
         int length = stringlist_length(keys);
 
         // make sure we 1) have the same number of keys and values

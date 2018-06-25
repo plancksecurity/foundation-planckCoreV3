@@ -1178,9 +1178,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         if (version < atoi(_DDL_USER_VERSION)) {
             int_result = sqlite3_exec(
                 _session->db,
-                "pragma user_version = "_DDL_USER_VERSION";\n"
-                "insert or replace into version_info (id, version)"
-                    "values (1, '" PEP_ENGINE_VERSION "');",
+                "pragma user_version = "_DDL_USER_VERSION";\n",
                 NULL,
                 NULL,
                 NULL
@@ -1458,6 +1456,17 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     status = log_event(_session, "init", "pEp " PEP_ENGINE_VERSION, NULL, NULL);
     if (status != PEP_STATUS_OK)
         goto pep_error;
+
+    // Because of ENGINE-427 hotfix, we can only update the version here.
+    int_result = sqlite3_exec(
+        _session->db,
+        "insert or replace into version_info (id, version)"
+            "values (1, '" PEP_ENGINE_VERSION "');",
+        NULL,
+        NULL,
+        NULL
+    );
+    assert(int_result == SQLITE_OK);
 
     // runtime config
 
