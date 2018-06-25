@@ -1365,7 +1365,10 @@ bool import_attached_keys(
             size_t blob_size = bl->size;
             bool free_blobval = false;
             
-            if (is_encrypted_attachment(bl)) {
+            if (is_encrypted_attachment(bl) &&
+                    strstr(blob_value, "BEGIN PGP PUBLIC KEY") == NULL &&
+                    strstr(blob_value, "BEGIN PGP PRIVATE KEY") == NULL) {
+                    
                 char* bl_ptext = NULL;
                 size_t bl_psize = 0;
                 stringlist_t* bl_keylist = NULL;

@@ -271,7 +271,10 @@ typedef unsigned int PEP_decrypt_flags_t;
 //      dst (out)           pointer to new decrypted message or NULL on failure
 //      keylist (inout)     in: stringlist with additional keyids for reencryption if needed
 //                              (will be freed and replaced with output keylist) 
-//                          out: stringlist with keyids
+//                          out: stringlist with keyids used for signing and encryption. first
+//                               first key is signer, additional keys are the ones it was encrypted
+//                               to. Only signer and whichever of the user's keys was used are 
+//                               reliable
 //      rating (out)        rating for the message
 //      flags (inout)       flags to signal special decryption features
 //
