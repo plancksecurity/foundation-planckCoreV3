@@ -206,7 +206,10 @@ void add_opt_field(message *msg, const char *name, const char *value)
     }
 }
 
-void replace_opt_field(message *msg, const char *name, const char *value)
+void replace_opt_field(message *msg, 
+                       const char *name, 
+                       const char *value,
+                       bool clobber)
 {
     assert(msg && name && value);
     
@@ -226,8 +229,10 @@ void replace_opt_field(message *msg, const char *name, const char *value)
         }
         
         if (pair) {
-            free(pair->value);
-            pair->value = strdup(value);
+            if (clobber) {
+                free(pair->value);
+                pair->value = strdup(value);
+            }
         }
         else {
             add_opt_field(msg, name, value);
@@ -235,25 +240,25 @@ void replace_opt_field(message *msg, const char *name, const char *value)
     }
 }
 
-
 static void decorate_message(
     message *msg,
     PEP_rating rating,
     stringlist_t *keylist,
-    bool add_version
+    bool add_version,
+    bool clobber
     )
 {
     assert(msg);
 
     if (add_version)
-        replace_opt_field(msg, "X-pEp-Version", PEP_VERSION);
+        replace_opt_field(msg, "X-pEp-Version", PEP_VERSION, clobber);
 
     if (rating != PEP_rating_undefined)
-        replace_opt_field(msg, "X-EncStatus", rating_to_string(rating));
+        replace_opt_field(msg, "X-EncStatus", rating_to_string(rating), clobber);
 
     if (keylist) {
         char *_keylist = keylist_to_string(keylist);
-        replace_opt_field(msg, "X-KeyList", _keylist);
+        replace_opt_field(msg, "X-KeyList", _keylist, clobber);
         free(_keylist);
     }
 }
@@ -903,7 +908,7 @@ static message* wrap_message_as_attachment(message* envelope,
 
     PEP_STATUS status = PEP_STATUS_OK;
 
-    replace_opt_field(attachment, "X-pEp-Version", PEP_VERSION);
+    replace_opt_field(attachment, "X-pEp-Version", PEP_VERSION, true);
         
     if (!_envelope) {
         _envelope = extract_minimal_envelope(attachment, PEP_dir_outgoing);
@@ -1796,7 +1801,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             attach_own_key(session, src);
             added_key_to_real_src = true;
         }
-        decorate_message(src, PEP_rating_undefined, NULL, true);
+        decorate_message(src, PEP_rating_undefined, NULL, true, true);
         return PEP_UNENCRYPTED;
     }
     else {
@@ -1856,7 +1861,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     if (msg) {
-        decorate_message(msg, PEP_rating_undefined, NULL, true);
+        decorate_message(msg, PEP_rating_undefined, NULL, true, true);
         if (_src->id) {
             msg->id = strdup(_src->id);
             assert(msg->id);
@@ -2185,7 +2190,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
              if (msg->id == NULL)
                  goto enomem;
          }
-         decorate_message(msg, PEP_rating_undefined, NULL, true);
+         decorate_message(msg, PEP_rating_undefined, NULL, true, true);
      }
 
     *dst = msg;
@@ -3392,7 +3397,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     if (msg) {
         
         /* add pEp-related status flags to header */
-        decorate_message(msg, *rating, _keylist, false);
+        decorate_message(msg, *rating, _keylist, false, false);
         
         if (imported_keys)
             remove_attached_keys(msg);
