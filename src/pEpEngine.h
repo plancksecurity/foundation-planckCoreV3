@@ -300,9 +300,9 @@ DYNAMIC_API PEP_STATUS verify_text(
 //
 //    return value:
 //        PEP_STATUS_OK = 0            encryption and signing succeeded
-//        PEP_KEY_NOT_FOUND            at least one of the receipient keys
+//        PEP_KEY_NOT_FOUND            at least one of the recipient keys
 //                                     could not be found
-//        PEP_KEY_HAS_AMBIG_NAME       at least one of the receipient keys has
+//        PEP_KEY_HAS_AMBIG_NAME       at least one of the recipient keys has
 //                                     an ambiguous name
 //        PEP_GET_KEY_FAILED           cannot retrieve key
 //
