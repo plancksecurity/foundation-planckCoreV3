@@ -462,7 +462,7 @@ typedef enum _PEP_comm_type {
     PEP_ct_confirmed_encryption = 0x90,         // generic
     PEP_ct_OpenPGP_weak = 0x91,                 // RSA 1024 is weak (unused)
 
-    PEP_ct_to_be_checked_confirmed = 0xa0,      //generic
+    PEP_ct_to_be_checked_confirmed = 0xa0,      // generic
     PEP_ct_SMIME = 0xa1,
     PEP_ct_CMS = 0xa2,
 
