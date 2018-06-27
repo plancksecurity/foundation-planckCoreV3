@@ -1803,7 +1803,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
     else {
         // FIXME - we need to deal with transport types (via flag)
-        if ((!PEP_encrypt_flag_force_version_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
+        if ((!force_v_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
             _src = wrap_message_as_attachment(NULL, src, false);
             if (!_src)
                 goto pep_error;
