@@ -1589,6 +1589,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     if (src->enc_format != PEP_enc_none)
         return PEP_ILLEGAL_VALUE;
 
+    bool force_v_1 = flags & PEP_encrypt_flag_force_version_1;
+    
     *dst = NULL;
 
     if (src->from && (!src->from->user_id || src->from->user_id[0] == '\0')) {
@@ -1806,7 +1808,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
     else {
         // FIXME - we need to deal with transport types (via flag)
-        if ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp) {
+        if ((!force_v_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
             _src = wrap_message_as_attachment(NULL, src, false);
             if (!_src)
                 goto pep_error;
@@ -2051,7 +2053,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     }
             
     // Ok, it's in there. Let's do this.        
-    status = encrypt_message(session, src, keys, dst, enc_format, 0);
+    status = encrypt_message(session, src, keys, dst, enc_format, flags);
     
     // Delete what we added to src
     free_bloblist(created_bl);

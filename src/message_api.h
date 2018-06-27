@@ -37,7 +37,11 @@ typedef enum _PEP_encrypt_flags {
     
     // This is used for outer messages (used to wrap the real message)
     // This is only used internally and (eventually) by transport functions
-    PEP_encrypt_flag_inner_message = 0x8
+    PEP_encrypt_flag_inner_message = 0x8,
+    
+    // This is mainly used by pEp clients to send private keys to 
+    // their own PGP-only device
+    PEP_encrypt_flag_force_version_1 = 0x16
     
 } PEP_encrypt_flags; 
 
