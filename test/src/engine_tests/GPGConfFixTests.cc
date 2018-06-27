@@ -13,11 +13,51 @@ using namespace std;
 
 GPGConfFixTests::GPGConfFixTests(string suitename, string test_home_dir) :
     EngineTestIndividualSuite::EngineTestIndividualSuite(suitename, test_home_dir) {
-    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("GPGConfFixTests::check_g_p_g_conf_fix"),
-                                                                      static_cast<Func>(&GPGConfFixTests::check_g_p_g_conf_fix)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("GPGConfFixTests::check_conf_fix_broken_conf_old_db_0"),
+                                                                      static_cast<Func>(&GPGConfFixTests::check_conf_fix_broken_conf_old_db_0)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("GPGConfFixTests::check_conf_fix_broken_conf_old_db_1"),
+                                                                      static_cast<Func>(&GPGConfFixTests::check_conf_fix_broken_conf_old_db_1)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("GPGConfFixTests::check_conf_fix_broken_conf_old_db_2"),
+                                                                      static_cast<Func>(&GPGConfFixTests::check_conf_fix_broken_conf_old_db_2)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("GPGConfFixTests::check_conf_fix_broken_conf_old_db_3"),
+                                                                      static_cast<Func>(&GPGConfFixTests::check_conf_fix_broken_conf_old_db_3)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("GPGConfFixTests::check_conf_fix_broken_conf_old_db_4"),
+                                                                      static_cast<Func>(&GPGConfFixTests::check_conf_fix_broken_conf_old_db_4)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("GPGConfFixTests::check_conf_fix_broken_conf_old_db_5"),
+                                                                      static_cast<Func>(&GPGConfFixTests::check_conf_fix_broken_conf_old_db_5)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("GPGConfFixTests::check_conf_fix_broken_conf_old_db_6"),
+                                                                      static_cast<Func>(&GPGConfFixTests::check_conf_fix_broken_conf_old_db_6)));                                                                      
 }
 
-void GPGConfFixTests::check_g_p_g_conf_fix() {
-    TEST_ASSERT(true);
+void GPGConfFixTests::setup() {
+    EngineTestSuite::setup();
+}
+
+void GPGConfFixTests::check_conf_fix_broken_conf_old_db_0() {
+    set_full_env("test_files/427_bad_gpg_conf_0", NULL, "test_files/427_old_db");
+}
+
+void GPGConfFixTests::check_conf_fix_broken_conf_old_db_1() {
+    set_full_env("test_files/427_bad_gpg_conf_1", NULL, "test_files/427_old_db");    
+}
+
+void GPGConfFixTests::check_conf_fix_broken_conf_old_db_2() {
+    set_full_env("test_files/427_bad_gpg_conf_2", NULL, "test_files/427_old_db");        
+}
+
+void GPGConfFixTests::check_conf_fix_broken_conf_old_db_3()() {
+    set_full_env("test_files/427_bad_gpg_conf_3", NULL, "test_files/427_old_db");    
+}
+
+void GPGConfFixTests::check_conf_fix_broken_conf_old_db_4() {
+    set_full_env("test_files/427_bad_gpg_conf_4", NULL, "test_files/427_old_db");        
+}
+
+void GPGConfFixTests::check_conf_fix_broken_conf_old_db_5() {
+    set_full_env("test_files/427_bad_gpg_conf_5", NULL, "test_files/427_old_db");        
+}
+
+void GPGConfFixTests::check_conf_fix_broken_conf_old_db_6() {
+    set_full_env("test_files/427_bad_gpg_conf_6", NULL, "test_files/427_old_db");        
 }
 
