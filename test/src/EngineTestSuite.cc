@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <ftw.h>
 #include <assert.h>
+#include <fstream>
+#include <iostream>
 
 #include "platform_unix.h"
 
@@ -30,7 +32,23 @@ void EngineTestSuite::add_test_to_suite(std::pair<std::string, void (Test::Suite
     number_of_tests++;
 }
 
+void EngineTestSuite::copy_conf_file_to_test_dir(const char* dest_path, const char* conf_orig_path, const char* conf_dest_name) {
+    string conf_dest_path = dest_path + "/" + conf_dest_name;
+    ifstream src(conf_orig_path);
+    ofstream dst(conf_dest_path, ios::trunc);
+    assert(src && dst);
+    
+    dst << src.rdbuf();
+     
+    src.close()
+    dst.close();
+}
+
 void EngineTestSuite::set_full_env() {
+    set_full_env(NULL, NULL, NULL);
+}
+
+void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* gpg_agent_conf_file_copy_path, const char* db_conf_file_copy_path) {
     int success = 0;
     struct stat dirchk;
     
@@ -110,7 +128,14 @@ void EngineTestSuite::set_full_env() {
     success = setenv("HOME", temp_test_home.c_str(), 1);
     if (success != 0)
         throw std::runtime_error("SETUP: Cannot set test_home for init.");
-    
+
+    if (gpg_conf_copy_path)
+        copy_conf_file_to_test_dir(temp_test_home + "/.gnupg", gpg_conf_copy_path, "gpg.conf")
+    if (gpg_agent_conf_file_copy_path)        
+        copy_conf_file_to_test_dir(temp_test_home + "/.gnupg", gpg_agent_conf_file_copy_path, "gpg-agent.conf")
+    if (db_conf_file_copy_path)
+        copy copy_conf_file_to_test_dir(temp_test_home, db_conf_file_copy_path, ".pEp_management.db");
+        
     unix_local_db(true);
     gpg_conf(true);
     gpg_agent_conf(true);
