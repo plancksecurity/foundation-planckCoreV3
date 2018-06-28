@@ -17,7 +17,13 @@ class GPGConfFixTests : public EngineTestIndividualSuite {
 	void setup();
 
     private:
-        void check_g_p_g_conf_fix();
+        void check_conf_fix_broken_conf_old_db_0();
+        void check_conf_fix_broken_conf_old_db_1();
+        void check_conf_fix_broken_conf_old_db_2();
+        void check_conf_fix_broken_conf_old_db_3();
+        void check_conf_fix_broken_conf_old_db_4();
+        void check_conf_fix_broken_conf_old_db_5();
+        void check_conf_fix_broken_conf_old_db_6();        
 };
 
 #endif

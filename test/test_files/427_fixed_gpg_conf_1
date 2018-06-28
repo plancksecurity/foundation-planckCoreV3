@@ -1,0 +1,5 @@
+comment No Comment
+keyid-format 0xlong
+ignore-time-conflict 
+personal-cipher-preferences AES 
+allow-freeform-uid
