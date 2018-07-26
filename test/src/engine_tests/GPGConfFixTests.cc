@@ -43,15 +43,37 @@ static bool file_bytes_equal(const char* file_path_1, const char* file_path_2) {
     
     while (f1.get(c1)) {
         if (f2.get(c2)) {
-            if (c1 != c2)
+            if (c1 != c2) {
+                if (c1 == '\n' && c2 == ' ') {
+                    if (f2.get(c2)) {
+                        if (c1 == c2)
+                            continue;
+                    }    
+                }
+                else if (c2 == '\n' && c1 == ' ') {
+                    if (f1.get(c1)) {
+                        if (c1 == c2)
+                            continue;
+                    }                        
+                }
                 return false;
+            }
         }
         else {
-            return false;
+            if (c1 == '\n' || c1 == ' ') {
+                while (f1.get(c1)) {
+                    if (c2 == '\n' || c2 == ' ')
+                        continue;
+                    return false;
+                }
+            }
         }        
     }
-    if (f2.get(c2))
+    while (f2.get(c2)) {
+        if (c2 == '\n' || c2 == ' ')
+            continue;
         return false;
+    }
     
     return true;
     

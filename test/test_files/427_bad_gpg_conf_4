@@ -1,4 +1,4 @@
-comment No Commentallow-freeform-uiddefault-cache-ttl ignore-time-conflict-buttsallow-freeform-uid
+comment No Commentallow-freeform-uidcert-digest-algo SHA256 ignore-time-conflict-buttsallow-freeform-uid
 keyid-format 0xlongignore-time-conflict 
 personal-cipher-preferences AES 
 ignore-time-conflict 
