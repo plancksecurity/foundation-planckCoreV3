@@ -1,0 +1,10 @@
+comment No Comment
+allow-freeform-uid
+cert-digest-algo SHA256 ignore-time-conflict-butts
+keyid-format 0xlong
+ignore-time-conflict 
+personal-cipher-preferences AES 
+keyserver hkp://keys.gnupg.net
+no-emit-version
+no-comments
+personal-digest-preferences SHA256 SHA512 SHA384 SHA224

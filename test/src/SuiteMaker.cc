@@ -39,6 +39,7 @@
 #include "NewUpdateIdAndMyselfTests.h"
 #include "StringlistTests.h"
 #include "LeastColorGroupTests.h"
+#include "GPGConfFixTests.h"
 #include "ExternalRevokeTests.h"
 #include "EncryptForIdentityTests.h"
 #include "TrustwordsTests.h"
@@ -78,6 +79,7 @@ const char* SuiteMaker::all_suites[] = {
     "NewUpdateIdAndMyselfTests",
     "StringlistTests",
     "LeastColorGroupTests",
+    "GPGConfFixTests",
     "ExternalRevokeTests",
     "EncryptForIdentityTests",
     "TrustwordsTests",
@@ -90,7 +92,7 @@ const char* SuiteMaker::all_suites[] = {
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 36;
+int SuiteMaker::num_suites = 37;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "MapAsn1Tests") == 0)
@@ -147,6 +149,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new StringlistTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "LeastColorGroupTests") == 0)
         *test_suite = new LeastColorGroupTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "GPGConfFixTests") == 0)
+        *test_suite = new GPGConfFixTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "ExternalRevokeTests") == 0)
         *test_suite = new ExternalRevokeTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "EncryptForIdentityTests") == 0)

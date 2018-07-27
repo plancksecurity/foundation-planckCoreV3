@@ -1,0 +1,8 @@
+personal-cipher-preferences AES 
+no-emit-version
+keyserver hkp://keys.gnupg.net
+cert-digest-algo SHA256
+no-comments 
+personal-digest-preferences SHA256 SHA512 SHA384 SHA224
+ignore-time-conflict 
+allow-freeform-uid 

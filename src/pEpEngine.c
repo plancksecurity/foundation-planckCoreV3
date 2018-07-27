@@ -6,6 +6,7 @@
 #include "cryptotech.h"
 #include "transport.h"
 #include "blacklist.h"
+#include "wrappers.h"
 
 #include <time.h>
 #include <stdlib.h>
@@ -427,6 +428,64 @@ static const char *sql_add_userid_alias =
     "insert or replace into alternate_user_id (alternate_id, default_id) "
     "values (?2, ?1) ;";
     
+static const char* sql_get_cached_engine_version =
+    "select version from version_info where id = 1 ;";
+
+static const char* sql_set_cached_engine_version =
+    "insert or replace into version_info (id, version)"
+    "values (1, ?1) ; ";
+
+
+PEP_STATUS set_engine_version_in_DB(PEP_SESSION session, 
+                                                  char** version_str)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    int result;
+
+    if (!(session && version_str))
+        return PEP_ILLEGAL_VALUE;
+
+    sqlite3_reset(session->set_cached_engine_version);
+    sqlite3_bind_text(session->set_cached_engine_version, 1, *version_str, -1,
+            SQLITE_STATIC);
+
+    result = sqlite3_step(session->set_cached_engine_version);
+    sqlite3_reset(session->set_cached_engine_version);
+    if (result != SQLITE_DONE) {
+        return PEP_UNKNOWN_ERROR;
+    }
+
+    
+    return status;
+}
+
+PEP_STATUS get_engine_version_from_DB(PEP_SESSION session, 
+                                      char** version_str)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    int result;
+
+    if (!(session && version_str))
+        return PEP_ILLEGAL_VALUE;
+
+    sqlite3_reset(session->get_cached_engine_version);
+    result = sqlite3_step(session->get_cached_engine_version);
+    switch (result) {
+    case SQLITE_ROW: {
+        *version_str = strdup((const char *) sqlite3_column_text(session->get_cached_engine_version,
+                       0));
+        break;
+    } 
+    default:
+        status = PEP_UNKNOWN_ERROR;
+    }
+
+    sqlite3_reset(session->get_cached_engine_version);
+    
+    return status;
+}
+
+    
 static int user_version(void *_version, int count, char **text, char **name)
 {
     assert(_version);
@@ -497,6 +556,93 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg){
 #ifdef USE_GPG
 PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session);
 #endif // USE_GPG
+
+
+static int parse_three_part_version_string(char* version, 
+                                            int* major, 
+                                            int* minor, 
+                                            int* patch) {
+    if (!major || !minor || !patch)
+        return -1;
+        
+    char* ver_token = strtok(version, ".");
+    if (ver_token == NULL) {
+        *major = -1;
+        return -1;
+    }
+    *major = atoi(ver_token);
+    ver_token = strtok(NULL, ".");
+    if (ver_token == NULL) {
+        *minor = -1;
+        return -1;
+    }
+    *minor = atoi(ver_token);
+    ver_token = strtok(NULL, ".");
+    if (ver_token == NULL) {
+        *patch = -1;
+        return -1;
+    }
+    *patch = atoi(ver_token);
+    return 0;
+}
+
+int compare_engine_versions(int major1, int minor1, int patch1,
+                            int major2, int minor2, int patch2) {
+    if (major1 != major2)
+        return (major1 < major2 ? -1 : 1);
+    if (minor1 != minor2)
+        return (minor1 < minor2 ? -1 : 1);
+    if (patch1 != patch2)
+        return (patch1 < patch2 ? -1 : 1);
+    return 0;    
+}
+
+PEP_STATUS compare_cached_engine_version_to_other(PEP_SESSION session,
+                                                  int* result, 
+                                                  int major, 
+                                                  int minor, 
+                                                  int patch) {
+    if (!result)
+        return PEP_ILLEGAL_VALUE;
+        
+    PEP_STATUS status = PEP_STATUS_OK;
+    char* cached_engine_version = NULL;
+    status = get_engine_version_from_DB(session, &cached_engine_version);
+    if (status != PEP_STATUS_OK)
+        return status;
+        
+    if (cached_engine_version && cached_engine_version[0] != '\0') {
+        char* cached_version_info = strdup(cached_engine_version);
+
+        int cmajor = -1;
+        int cminor = -1;
+        int cpatch = -1;
+        int success = parse_three_part_version_string(cached_version_info, 
+                                                      &cmajor, 
+                                                      &cminor, 
+                                                      &cpatch);
+        
+        if (success != 0 || cmajor < 0 || cminor < 0 || cpatch < 0) {
+            status = PEP_UNKNOWN_ERROR;
+        }
+        else 
+            *result = compare_engine_versions(cmajor, cminor, cpatch,
+                                              major, minor, patch);
+        free(cached_version_info);
+        //free(cached_engine_version);                                    
+    }
+    else {
+        return PEP_UNKNOWN_ERROR;
+    }
+    return status;    
+}
+
+PEP_STATUS compare_cached_engine_version_to_curr(PEP_SESSION session, int* result) {
+    return compare_cached_engine_version_to_other(session, result, 
+                                                  PEP_ENGINE_MAJOR,
+                                                  PEP_ENGINE_MINOR,
+                                                  PEP_ENGINE_PATCH);
+}
 
 DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 {
@@ -1033,9 +1179,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         if (version < atoi(_DDL_USER_VERSION)) {
             int_result = sqlite3_exec(
                 _session->db,
-                "pragma user_version = "_DDL_USER_VERSION";\n"
-                "insert or replace into version_info (id, version)"
-                    "values (1, '" PEP_ENGINE_VERSION "');",
+                "pragma user_version = "_DDL_USER_VERSION";\n",
                 NULL,
                 NULL,
                 NULL
@@ -1054,6 +1198,14 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 
     int_result = sqlite3_prepare_v2(_session->system_db, sql_trustword,
             (int)strlen(sql_trustword), &_session->trustword, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_cached_engine_version,
+            (int)strlen(sql_get_cached_engine_version), &_session->get_cached_engine_version, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_set_cached_engine_version,
+            (int)strlen(sql_set_cached_engine_version), &_session->set_cached_engine_version, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_identity,
@@ -1306,6 +1458,17 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
     if (status != PEP_STATUS_OK)
         goto pep_error;
 
+    // Because of ENGINE-427 hotfix, we can only update the version here.
+    int_result = sqlite3_exec(
+        _session->db,
+        "insert or replace into version_info (id, version)"
+            "values (1, '" PEP_ENGINE_VERSION "');",
+        NULL,
+        NULL,
+        NULL
+    );
+    assert(int_result == SQLITE_OK);
+
     // runtime config
 
     if (very_first)
@@ -1372,6 +1535,10 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->log);
             if (session->trustword)
                 sqlite3_finalize(session->trustword);
+            if (session->get_cached_engine_version)
+                sqlite3_finalize(session->get_cached_engine_version);                
+            if (session->set_cached_engine_version)
+                sqlite3_finalize(session->set_cached_engine_version);                                
             if (session->get_identity)
                 sqlite3_finalize(session->get_identity);
             if (session->get_identity_without_trust_check)
