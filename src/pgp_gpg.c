@@ -14,234 +14,6 @@
 static void *gpgme;
 static struct gpg_s gpg;
 
-struct _str_ptr_and_bit {
-    const char* key;
-    int bit;
-};
-
-typedef struct _str_ptr_and_bit str_ptr_and_bit;
-
-int strptrcmp(const void* a, const void* b) {
-    return (int)((((str_ptr_and_bit*)(a))->key) - (((str_ptr_and_bit*)(b))->key));
-}
-
-// This is in response to ENGINE-427. We should NOT be aiming to keep this here.
-bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
-    static char buf[MAX_LINELENGTH];
-    size_t num_keys = stringlist_length(keys);
-
-    // Open file
-
-    FILE *f = Fopen(config_file_path, "r");    
-       
-    if (f == NULL)
-        return false;
-
-    int i;
-    stringlist_t* _k;
-    stringlist_t* lines = new_stringlist(NULL);
-    int found = 0;
-
-    char* s = NULL;
-
-    // Go through every line in the file
-    while ((s = Fgets(buf, MAX_LINELENGTH, f))) {
-        // pointers to the keys found in this string
-        str_ptr_and_bit* found_keys = (str_ptr_and_bit*)(calloc(num_keys, sizeof(str_ptr_and_bit)));
-        int num_found_keys = 0;
-
-        char* rest;
-        char* line_token = strtok_r(s, "\r\n", &rest);
-        if (!line_token)
-            line_token = s;
-            
-        if (*line_token == '#' || *line_token == '\0') {
-            stringlist_add(lines, strdup(line_token));
-            continue;
-        }
-
-        bool only_key_on_line = false;
-        for (_k = keys, i = 1; _k; _k = _k->next, i<<=1) {
-            char* keypos = strstr(line_token, _k->value);
-            if (!keypos)
-                continue;
-            size_t keystr_len = strlen(_k->value);
-            char* nextpos = keypos + keystr_len;
-            bool notkey = false;
-            
-            if (keypos != line_token) {
-                char prevchar = *(keypos - 1);
-                switch (prevchar) {
-                    case '-':
-                    case ':':
-                    case '/':
-                        notkey = true;
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            if (*nextpos && !notkey) {
-                char nextchar = *nextpos;
-                switch (nextchar) {
-                    case '-':
-                    case ':':
-                    case '/':
-                        notkey = true;
-                        break;
-                    default:
-                        break;
-                }
-            }
-            else if (line_token == keypos) {
-                only_key_on_line = true;
-                if (!(found & i)) {
-                    found |= i;
-                    stringlist_add(lines, strdup(line_token));
-                    num_found_keys++;
-                }
-                break;
-            }
-
-            if (!notkey) {
-                // Ok, it's not just the key with a null terminator. So...
-                // add a pointer to the key to the list from this string
-                found_keys[num_found_keys].key = keypos; 	
-                found_keys[num_found_keys].bit = i;
-                num_found_keys++;
-            }
-            
-            // Check to see if there are more annoying occurences of this 
-            // key in the string
-            for (keypos = strstr(nextpos, _k->value); 
-                keypos; keypos = strstr(nextpos, _k->value)) {
-                notkey = false;
-                nextpos = keypos + keystr_len;
-                char prevchar = *(keypos - 1);
-                switch (prevchar) {
-                    case '-':
-                    case ':':
-                    case '/':
-                        notkey = true;
-                        break;
-                    default:
-                        break;
-                }
-                if (!notkey) {
-                    char nextchar = *nextpos;
-                    switch (nextchar) {
-                        case '-':
-                        case ':':
-                        case '/':
-                            notkey = true;
-                            break;
-                        default:
-                            break;
-                    }
-                }    
-                if (notkey)
-                    continue;
-                found_keys[num_found_keys].key = keypos; 	
-                found_keys[num_found_keys].bit = i;
-                num_found_keys++;     
-            }
-        }
-        
-        if (!only_key_on_line) {
-            if (num_found_keys == 0)
-                stringlist_add(lines, strdup(line_token));        
-            else if (num_found_keys == 1 && (line_token == found_keys[0].key)) {
-                if (!(found & found_keys[0].bit)) {
-                    stringlist_add(lines, strdup(line_token)); 
-                    found |= found_keys[0].bit;
-                }
-            }
-            else {
-                qsort(found_keys, num_found_keys, sizeof(str_ptr_and_bit), strptrcmp);
-                int j;
-                const char* curr_start = line_token;
-                const char* next_start = NULL;
-                for (j = 0; j < num_found_keys; j++, curr_start = next_start) {
-                    next_start = found_keys[j].key;
-                    if (curr_start == next_start)
-                        continue;
-                    size_t copy_len = next_start - curr_start;
-                    const char* movable_end = next_start - 1;
-                    while (copy_len > 0 && (*movable_end == ' ' || *movable_end == '\t' || *movable_end == '\0')) {
-                        movable_end--;
-                        copy_len--;
-                    }
-                    if (copy_len > 0) {
-                        if (j == 0 || !(found & found_keys[j - 1].bit)) {
-                            // if j is 0 here, the first thing in the string wasn't a key, or we'd have continued.
-                            // otherwise, regardless of the value of j, we check that the "last" key (j-1) isn't already
-                            // found and dealt with.
-                            // Having passed that, we copy.
-                            stringlist_add(lines, strndup(curr_start, copy_len));
-                            if (j > 0)
-                                found |= found_keys[j-1].bit;
-                        }
-                    }
-                }
-                if (!(found & found_keys[num_found_keys - 1].bit)) {
-                    stringlist_add(lines, strdup(found_keys[num_found_keys - 1].key));
-                    found |= found_keys[num_found_keys - 1].bit;
-                }            
-            }
-        }
-        free(found_keys);
-        found_keys = NULL;
-    } // End of file
-    // then write all lines to file.
-    const char* line_end;
-#ifdef WIN32
-    line_end = "\r\n";
-#else
-    line_end = "\n";
-#endif    
-    size_t cf_path_len = strlen(config_file_path);
-    size_t new_buf_size = cf_path_len + 5; // + .old\0
-    char* old_config_path_fname = (char*)calloc(new_buf_size, 1);
-    if (!old_config_path_fname)
-        return false;
-    strlcpy(old_config_path_fname, config_file_path, new_buf_size);
-    strlcat(old_config_path_fname, ".old", new_buf_size);
-    int ret = Fclose(f);
-    assert(ret == 0);
-    if (ret != 0)
-        return false;
-    
-    ret = rename(config_file_path, old_config_path_fname);
-    assert(ret == 0);
-    if (ret != 0)
-        return false;
-
-    // Ok, now open the thing for writing.
-    f = Fopen(config_file_path, "w");
-    
-    assert(f);
-    if (f == NULL)
-        return false;
-  
-    stringlist_t* cur_string;
-    
-    for (cur_string = lines; cur_string; cur_string = cur_string->next) {
-        ret = Fprintf(f, "%s%s", cur_string->value, line_end);
-        assert(ret >= 0);
-        if (ret < 0)
-            return false;
-    }
-    free_stringlist(lines); // FIXME: memory
-    
-    ret = Fclose(f);
-    assert(ret == 0);
-    if (ret != 0)
-        return false;
-
-    return true;
-}
-
 static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const char* config_file_path)
 {
     static char buf[MAX_LINELENGTH];
@@ -267,7 +39,6 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
         return false;
 
     if (f != NULL) {
-                
         int length = stringlist_length(keys);
 
         // make sure we 1) have the same number of keys and values
@@ -491,28 +262,11 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         stringlist_add(conf_keys, "allow-freeform-uid");
         stringlist_add(conf_values, "");
 
-
-        // ENGINE-427 - quick fix here. This will be removed in a few
-        // versions, but we need to clean up our mess.
-        int compare_result = -1;
-        status = compare_cached_engine_version_to_other(session,
-                                                        &compare_result, 
-                                                        1, 0, 441);            
-
-        bResult = true;
-        // status != OK => no cached engine version, i.e. first-time run.
-        if (compare_result < 0 && status == PEP_STATUS_OK)
 #if defined(WIN32) || defined(NDEBUG)
-            bResult = quickfix_config(conf_keys, gpg_conf());
-        if (bResult)
-            bResult = ensure_config_values(conf_keys, conf_values, gpg_conf());
+        bResult = ensure_config_values(conf_keys, conf_values, gpg_conf());
 #else
-            bResult = quickfix_config(conf_keys, gpg_conf(false));
-        if (bResult)
-            bResult = ensure_config_values(conf_keys, conf_values, gpg_conf(false));
+        bResult = ensure_config_values(conf_keys, conf_values, gpg_conf(false));
 #endif
-        status = PEP_STATUS_OK;
-        
         free_stringlist(conf_keys);
         free_stringlist(conf_values);
 
@@ -528,15 +282,10 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         stringlist_add(conf_keys, "max-cache-ttl");
         stringlist_add(conf_values, "1200");
 
-        if (compare_result < 0 && status == PEP_STATUS_OK)
 #if defined(WIN32) || defined(NDEBUG)
-            bResult = quickfix_config(conf_keys, gpg_agent_conf());
-        if (bResult)
-            bResult = ensure_config_values(conf_keys, conf_values, gpg_agent_conf());
+        bResult = ensure_config_values(conf_keys, conf_values, gpg_agent_conf());
 #else        
-            bResult = quickfix_config(conf_keys, gpg_agent_conf(false));
-        if (bResult)
-            bResult = ensure_config_values(conf_keys, conf_values, gpg_agent_conf(false));
+        bResult = ensure_config_values(conf_keys, conf_values, gpg_agent_conf(false));
 #endif
         free_stringlist(conf_keys);
         free_stringlist(conf_values);
@@ -550,6 +299,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         gpgme = dlopen(LIBGPGME, RTLD_LAZY);
         if (gpgme == NULL) {
             // FIXME: Hotfix here?
+            
             status = PEP_INIT_CANNOT_LOAD_GPGME;
             goto pep_error;
         }

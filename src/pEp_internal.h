@@ -1,12 +1,7 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-
-// THESE MUST ALL BE CHANGED TOGETHER!!!!
-#define PEP_ENGINE_VERSION "1.0.441"
-#define PEP_ENGINE_MAJOR 1
-#define PEP_ENGINE_MINOR 0
-#define PEP_ENGINE_PATCH 441
+#define PEP_ENGINE_VERSION "0.9.0"
 
 // maximum attachment size to import as key 1MB, maximum of 20 attachments
 
@@ -133,8 +128,6 @@ struct _pEpSession {
 
     sqlite3_stmt *log;
     sqlite3_stmt *trustword;
-    sqlite3_stmt *get_cached_engine_version;
-    sqlite3_stmt *set_cached_engine_version;    
     sqlite3_stmt *get_identity;
     sqlite3_stmt *get_identity_without_trust_check;
     sqlite3_stmt *get_identities_by_address;
