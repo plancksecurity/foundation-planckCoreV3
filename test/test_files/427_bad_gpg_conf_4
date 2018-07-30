@@ -1,6 +1,0 @@
-comment No Commentallow-freeform-uidcert-digest-algo SHA256 ignore-time-conflict-buttsallow-freeform-uid
-keyid-format 0xlongignore-time-conflict 
-personal-cipher-preferences AES 
-ignore-time-conflict 
-ignore-time-conflict 
-allow-freeform-uid

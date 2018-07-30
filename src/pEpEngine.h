@@ -1275,12 +1275,6 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exis
 
 PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
 
-PEP_STATUS compare_cached_engine_version_to_other(PEP_SESSION session,
-                                                  int* result, 
-                                                  int major, 
-                                                  int minor, 
-                                                  int patch);
-
 #ifdef __cplusplus
 }
 #endif
