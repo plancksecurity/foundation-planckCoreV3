@@ -142,6 +142,10 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
                 }    
                 if (notkey)
                     continue;
+                    
+                if (num_found_keys >= num_keys)
+                    found_keys = (str_ptr_and_bit*)realloc(found_keys, (num_found_keys + 1) * sizeof(str_ptr_and_bit));
+                    
                 found_keys[num_found_keys].key = keypos; 	
                 found_keys[num_found_keys].bit = i;
                 num_found_keys++;     
