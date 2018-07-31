@@ -1,0 +1,6 @@
+comment No Commentallow-freeform-uidcert-digest-algo SHA256 default-cache-ttl 2000000-buttsallow-freeform-uid
+keyid-format 0xlongdefault-cache-ttl 2000000 
+personal-cipher-preferences AES 
+default-cache-ttl 2000000 
+default-cache-ttl 2000000 
+allow-freeform-uid

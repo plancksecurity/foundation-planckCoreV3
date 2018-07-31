@@ -1,0 +1,6 @@
+comment No Comment
+keyid-format 0xlong
+max-cache-ttl 300 
+personal-cipher-preferences AES 
+allow-freeform-uid
+default-cache-ttl 300

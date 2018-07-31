@@ -73,7 +73,7 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
     success = system("gpgconf --kill all");
     if (success != 0)
         throw std::runtime_error("SETUP: Error when executing 'gpgconf --kill all'.");
-    sleep(1); // hopefully enough time for the system to recognise that it is dead. *sigh*    
+ //   sleep(1); // hopefully enough time for the system to recognise that it is dead. *sigh*    
 
     if (stat(test_home.c_str(), &dirchk) == 0) {
         if (!S_ISDIR(dirchk.st_mode))

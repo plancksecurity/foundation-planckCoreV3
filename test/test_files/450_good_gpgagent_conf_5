@@ -1,0 +1,5 @@
+comment No Comment
+max-cache-ttl 2000000
+keyid-format 0xlong
+default-cache-ttl 2000000 
+personal-cipher-preferences AES 

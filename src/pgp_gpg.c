@@ -142,6 +142,10 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
                 }    
                 if (notkey)
                     continue;
+                    
+                if (num_found_keys >= num_keys)
+                    found_keys = (str_ptr_and_bit*)realloc(found_keys, (num_found_keys + 1) * sizeof(str_ptr_and_bit));
+                    
                 found_keys[num_found_keys].key = keypos; 	
                 found_keys[num_found_keys].bit = i;
                 num_found_keys++;     
@@ -497,7 +501,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         int compare_result = -1;
         status = compare_cached_engine_version_to_other(session,
                                                         &compare_result, 
-                                                        1, 0, 440);            
+                                                        1, 0, 441);            
 
         bResult = true;
         // status != OK => no cached engine version, i.e. first-time run.
@@ -528,11 +532,16 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         stringlist_add(conf_keys, "max-cache-ttl");
         stringlist_add(conf_values, "1200");
 
+        if (compare_result < 0 && status == PEP_STATUS_OK)
 #if defined(WIN32) || defined(NDEBUG)
-        bResult = ensure_config_values(conf_keys, conf_values, gpg_agent_conf());
-#else        
-        bResult = ensure_config_values(conf_keys, conf_values, gpg_agent_conf(false));
-#endif
+            bResult = quickfix_config(conf_keys, gpg_agent_conf());
+        if (bResult)
+            bResult = ensure_config_values(conf_keys, conf_values, gpg_agent_conf());
+ #else        
+            bResult = quickfix_config(conf_keys, gpg_agent_conf(false));
+        if (bResult)
+            bResult = ensure_config_values(conf_keys, conf_values, gpg_agent_conf(false));
+ #endif
         free_stringlist(conf_keys);
         free_stringlist(conf_values);
 
