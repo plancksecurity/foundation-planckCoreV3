@@ -30,7 +30,8 @@ class GPGConfFixTests : public EngineTestIndividualSuite {
         void check_conf_fix_broken_agent_conf_old_db_3();
         void check_conf_fix_broken_agent_conf_old_db_4();
         void check_conf_fix_broken_agent_conf_old_db_5();
-        void check_conf_fix_broken_agent_conf_old_db_6();                
+        void check_conf_fix_broken_agent_conf_old_db_6();  
+        void check_gpgconf_overwrite_0();              
 };
 
 #endif

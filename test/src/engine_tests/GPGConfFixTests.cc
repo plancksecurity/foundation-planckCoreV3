@@ -8,6 +8,7 @@
 
 #include "pEpEngine.h"
 
+#include "test_util.h"
 #include "EngineTestIndividualSuite.h"
 #include "GPGConfFixTests.h"
 
@@ -43,7 +44,8 @@ GPGConfFixTests::GPGConfFixTests(string suitename, string temp_test_home_dir) :
                                                                       static_cast<Func>(&GPGConfFixTests::check_conf_fix_broken_agent_conf_old_db_5)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("GPGConfFixTests::check_conf_fix_broken_agent_conf_old_db_6"),
                                                                       static_cast<Func>(&GPGConfFixTests::check_conf_fix_broken_agent_conf_old_db_6)));                                                                      
-                                                                      
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("GPGConfFixTests::check_gpgconf_overwrite_0"),
+                                                                      static_cast<Func>(&GPGConfFixTests::check_gpgconf_overwrite_0)));
 }
 
 void GPGConfFixTests::setup() {
@@ -164,4 +166,12 @@ void GPGConfFixTests::check_conf_fix_broken_agent_conf_old_db_5() {
 void GPGConfFixTests::check_conf_fix_broken_agent_conf_old_db_6() {
     set_full_env(NULL, "test_files/450_bad_gpgagent_conf_6", "test_files/427_old_db");        
     TEST_ASSERT(file_bytes_equal("test_files/450_good_gpgagent_conf_6", (temp_test_home + "/.gnupg/gpg-agent.conf").c_str()));    
+}
+
+void GPGConfFixTests::check_gpgconf_overwrite_0() {
+    add_file_to_gpg_dir_queue("test_files/450_bad_gpgagent_conf_6", "gpg-agent.conf.0.pep.old");
+    set_full_env(NULL, "test_files/450_bad_gpgagent_conf_6", "test_files/427_old_db");        
+    TEST_ASSERT(file_bytes_equal("test_files/450_good_gpgagent_conf_6", (temp_test_home + "/.gnupg/gpg-agent.conf").c_str()));    
+    TEST_ASSERT(file_exists(temp_test_home + "/.gnupg/gpg-agent.conf.1.pep.old"));
+    TEST_ASSERT(!file_exists(temp_test_home + "/.gnupg/gpg-agent.conf.pep.new"));    
 }
