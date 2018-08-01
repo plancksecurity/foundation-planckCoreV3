@@ -25,13 +25,81 @@ int strptrcmp(const void* a, const void* b) {
     return (int)((((str_ptr_and_bit*)(a))->key) - (((str_ptr_and_bit*)(b))->key));
 }
 
+static bool write_old_conf_file(const char* old_fname) {
+    if (!old_fname)
+        return NULL;
+        
+    const unsigned int MAX_OPEN_TRIES = 20;
+    const unsigned int MAX_DIGITS = 2; // cheaper than using math to sort out the MAX TRIES for a hotfix.
+    unsigned int curr_attempt = 0;
+    const char* old_ext = ".pep.old";    
+    // name + . + num + old_ext + \0 - this is unoptimised for clarity.
+    size_t buf_size = strlen(old_fname) + 1 + MAX_DIGITS + strlen(old_ext) + 1;
+    char* buf = (char*)calloc(buf_size, 1);
+    
+    while (curr_attempt < MAX_OPEN_TRIES) {
+        strlcpy(buf, old_fname, buf_size);
+        strlcat(buf, ".", buf_size);
+        unsigned int num_index = strlen(buf);
+        sprintf(buf + num_index, "%d", curr_attempt);
+        strlcat(buf, old_ext, buf_size);
+    
+        // Attn Claudio: Fopen vs. open is a portability choice here, consistent
+        // with usage throughout the rest of the engine.
+        FILE* test = Fopen(buf, "r");
+        if (!test) 
+            break;
+        
+        Fclose(test);
+        curr_attempt++;
+    }                
+    
+    if (curr_attempt >= MAX_OPEN_TRIES)
+        return false;
+    
+    FILE* input = Fopen(old_fname, "r");    
+    if (!input)
+        return false;
+        
+    FILE* output = Fopen(buf, "w");
+    if (!output) {
+        Fclose(input);
+        return false;
+    }
+    
+    static char read_buf[MAX_LINELENGTH];
+
+//     const char* line_end;
+// #ifdef WIN32
+//     line_end = "\r\n";
+// #else
+//     line_end = "\n";
+// #endif    
+
+    int success = 0;
+    char* s = NULL;
+    
+    while ((s = Fgets(read_buf, MAX_LINELENGTH, input))) {
+        success = Fprintf(output, "%s", s);        
+        assert(success >= 0);
+        if (success < 0)
+            return false;
+    }
+
+    Fclose(output);
+    Fclose(input);
+    return true;
+}
+
 // This is in response to ENGINE-427. We should NOT be aiming to keep this here.
 bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
     static char buf[MAX_LINELENGTH];
     size_t num_keys = stringlist_length(keys);
 
-    // Open file
-
+    if (!write_old_conf_file(config_file_path))
+        return false;
+        
+    // Open old conf file
     FILE *f = Fopen(config_file_path, "r");    
        
     if (f == NULL)
@@ -197,6 +265,12 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
         free(found_keys);
         found_keys = NULL;
     } // End of file
+    
+    int ret = Fclose(f);
+    assert(ret == 0);
+    if (ret != 0)
+        return false;
+
     // then write all lines to file.
     const char* line_end;
 #ifdef WIN32
@@ -204,25 +278,17 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
 #else
     line_end = "\n";
 #endif    
-    size_t cf_path_len = strlen(config_file_path);
-    size_t new_buf_size = cf_path_len + 5; // + .old\0
-    char* old_config_path_fname = (char*)calloc(new_buf_size, 1);
-    if (!old_config_path_fname)
-        return false;
-    strlcpy(old_config_path_fname, config_file_path, new_buf_size);
-    strlcat(old_config_path_fname, ".old", new_buf_size);
-    int ret = Fclose(f);
-    assert(ret == 0);
-    if (ret != 0)
-        return false;
-    
-    ret = rename(config_file_path, old_config_path_fname);
-    assert(ret == 0);
-    if (ret != 0)
-        return false;
 
+    size_t cf_path_len = strlen(config_file_path);
+    size_t new_buf_size = cf_path_len + 8; // + pep.new\0
+    char* temp_config_path_fname = (char*)calloc(new_buf_size, 1);
+    if (!temp_config_path_fname)
+        return false;
+    strlcpy(temp_config_path_fname, config_file_path, new_buf_size);
+    strlcat(temp_config_path_fname, ".pep.new", new_buf_size);
+        
     // Ok, now open the thing for writing.
-    f = Fopen(config_file_path, "w");
+    f = Fopen(temp_config_path_fname, "w");
     
     assert(f);
     if (f == NULL)
@@ -239,6 +305,11 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
     free_stringlist(lines); // FIXME: memory
     
     ret = Fclose(f);
+    assert(ret == 0);
+    if (ret != 0)
+        return false;
+
+    ret = rename(temp_config_path_fname, config_file_path);
     assert(ret == 0);
     if (ret != 0)
         return false;
