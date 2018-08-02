@@ -300,9 +300,9 @@ DYNAMIC_API PEP_STATUS verify_text(
 //
 //    return value:
 //        PEP_STATUS_OK = 0            encryption and signing succeeded
-//        PEP_KEY_NOT_FOUND            at least one of the receipient keys
+//        PEP_KEY_NOT_FOUND            at least one of the recipient keys
 //                                     could not be found
-//        PEP_KEY_HAS_AMBIG_NAME       at least one of the receipient keys has
+//        PEP_KEY_HAS_AMBIG_NAME       at least one of the recipient keys has
 //                                     an ambiguous name
 //        PEP_GET_KEY_FAILED           cannot retrieve key
 //
@@ -462,7 +462,7 @@ typedef enum _PEP_comm_type {
     PEP_ct_confirmed_encryption = 0x90,         // generic
     PEP_ct_OpenPGP_weak = 0x91,                 // RSA 1024 is weak (unused)
 
-    PEP_ct_to_be_checked_confirmed = 0xa0,      //generic
+    PEP_ct_to_be_checked_confirmed = 0xa0,      // generic
     PEP_ct_SMIME = 0xa1,
     PEP_ct_CMS = 0xa2,
 

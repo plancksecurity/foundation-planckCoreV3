@@ -148,6 +148,43 @@ static const char * rating_to_string(PEP_rating rating)
     }
 }
 
+bool _memnmemn(const char* needle, 
+                size_t needle_size,
+                const char* haystack, 
+                size_t haystack_size) 
+{
+    if (needle_size > haystack_size) {
+        return false;
+    }
+    else if (needle_size == 0) {
+        return true;
+    }
+                        
+    bool found = true;
+    const char* haystack_ptr = haystack;
+    unsigned int i = 0;
+    size_t remaining_hay = haystack_size;
+    for (i = 0; i < haystack_size && (remaining_hay >= needle_size); i++, haystack_ptr++) {
+        found = false;
+        const char* needle_ptr = needle;
+        if (*haystack_ptr == *needle) {
+            const char* haystack_tmp = haystack_ptr;
+            unsigned int j;
+            found = true;
+            for (j = 0; j < needle_size; j++) {
+                if (*needle_ptr++ != *haystack_tmp++) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found)
+                break;
+        }
+        remaining_hay--;
+    }
+    return found;
+}
+
 void add_opt_field(message *msg, const char *name, const char *value)
 {
     assert(msg && name && value);
@@ -169,7 +206,10 @@ void add_opt_field(message *msg, const char *name, const char *value)
     }
 }
 
-void replace_opt_field(message *msg, const char *name, const char *value)
+void replace_opt_field(message *msg, 
+                       const char *name, 
+                       const char *value,
+                       bool clobber)
 {
     assert(msg && name && value);
     
@@ -189,8 +229,10 @@ void replace_opt_field(message *msg, const char *name, const char *value)
         }
         
         if (pair) {
-            free(pair->value);
-            pair->value = strdup(value);
+            if (clobber) {
+                free(pair->value);
+                pair->value = strdup(value);
+            }
         }
         else {
             add_opt_field(msg, name, value);
@@ -198,25 +240,25 @@ void replace_opt_field(message *msg, const char *name, const char *value)
     }
 }
 
-
 static void decorate_message(
     message *msg,
     PEP_rating rating,
     stringlist_t *keylist,
-    bool add_version
+    bool add_version,
+    bool clobber
     )
 {
     assert(msg);
 
     if (add_version)
-        replace_opt_field(msg, "X-pEp-Version", PEP_VERSION);
+        replace_opt_field(msg, "X-pEp-Version", PEP_VERSION, clobber);
 
     if (rating != PEP_rating_undefined)
-        replace_opt_field(msg, "X-EncStatus", rating_to_string(rating));
+        replace_opt_field(msg, "X-EncStatus", rating_to_string(rating), clobber);
 
     if (keylist) {
         char *_keylist = keylist_to_string(keylist);
-        replace_opt_field(msg, "X-KeyList", _keylist);
+        replace_opt_field(msg, "X-KeyList", _keylist, clobber);
         free(_keylist);
     }
 }
@@ -857,7 +899,7 @@ enomem:
 }
 
 static message* wrap_message_as_attachment(message* envelope, 
-    message* attachment, message_wrap_type wrap_type, bool keep_orig_subject) {
+    message* attachment, bool keep_orig_subject) {
     
     if (!attachment)
         return NULL;
@@ -866,24 +908,16 @@ static message* wrap_message_as_attachment(message* envelope,
 
     PEP_STATUS status = PEP_STATUS_OK;
 
-    replace_opt_field(attachment, "X-pEp-Version", PEP_VERSION);
+    replace_opt_field(attachment, "X-pEp-Version", PEP_VERSION, true);
         
-    if (!_envelope && (wrap_type != PEP_message_transport)) {
+    if (!_envelope) {
         _envelope = extract_minimal_envelope(attachment, PEP_dir_outgoing);
         status = generate_message_id(_envelope);
         
         if (status != PEP_STATUS_OK)
             goto enomem;
         
-        const char* inner_type_string = "";
-        switch (wrap_type) {
-            case PEP_message_key_reset:
-                inner_type_string = "KEY_RESET";
-                break;
-            default:
-                inner_type_string = "INNER";
-        }
-        attachment->longmsg = encapsulate_message_wrap_info(inner_type_string, attachment->longmsg);
+        attachment->longmsg = encapsulate_message_wrap_info("INNER", attachment->longmsg);
         _envelope->longmsg = encapsulate_message_wrap_info("OUTER", _envelope->longmsg);
     }
     else {
@@ -1111,18 +1145,18 @@ static bool is_encrypted_attachment(const bloblist_t *blob)
         return false;
 
     if (strcmp(blob->mime_type, "application/octet-stream") == 0) {
-        if (strcmp(ext, ".pgp") == 0 || strcmp(ext, ".gpg") == 0 ||
-            strcmp(ext, ".asc") == 0)
+        if (strcmp(ext, ".pgp") == 0 || strcmp(ext, ".gpg") == 0)
             return true;
     }
-    else if (strcmp(blob->mime_type, "text/plain") == 0) {
-        if (strcmp(ext, ".asc") == 0) {
-            // NOTE: if this ends up being too expensive, we can implement
-            // strnstr...
-            if (strstr(blob->value, "BEGIN PGP PUBLIC KEY") == NULL &&
-                strstr(blob->value, "BEGIN PGP PRIVATE KEY") == NULL)
-                return true;
-        }
+    if (strcmp(ext, ".asc") == 0 && blob->size > 0) {            
+        const char* pubk_needle = "BEGIN PGP PUBLIC KEY";
+        size_t pubk_needle_size = strlen(pubk_needle);
+        const char* privk_needle = "BEGIN PGP PRIVATE KEY";
+        size_t privk_needle_size = strlen(privk_needle);
+
+        if (!(_memnmemn(pubk_needle, pubk_needle_size, blob->value, blob->size)) &&
+            !(_memnmemn(privk_needle, privk_needle_size, blob->value, blob->size)))
+            return true;
     }
 
     return false;
@@ -1374,6 +1408,7 @@ bool import_attached_keys(
             bool free_blobval = false;
             
             if (is_encrypted_attachment(bl)) {
+                    
                 char* bl_ptext = NULL;
                 size_t bl_psize = 0;
                 stringlist_t* bl_keylist = NULL;
@@ -1465,48 +1500,6 @@ void attach_own_key(PEP_SESSION session, message *msg)
     free(revoked_fpr);
 }
 
-PEP_STATUS create_standalone_key_reset_message(message** dst, 
-                                               pEp_identity* recip,
-                                               const char* revoke_fpr,
-                                               const char* new_fpr) {
-                                                   
-    if (!dst || !recip->user_id || !recip->address)
-        return PEP_ILLEGAL_VALUE;
-
-    *dst = NULL;
-    // Get own identity user has corresponded with
-    pEp_identity* own_identity = NULL;
-    PEP_STATUS status = get_own_address_for_contact_id(PEP_SESSION session,
-                                                       recip,
-                                                       &own_identity);                                                       
-    if (status != PEP_STATUS_OK)
-        return status;
-        
-    message* reset_message = new_message(PEP_dir_outgoing);
-    reset_message->from = own_identity;
-    reset_message->to = new_identity_list(identity_dup(recip)); // ?
-    
-    status = _attach_key(session, revoke_fpr, reset_message);
-    if (status != PEP_STATUS_OK)
-        goto pep_free;
-    status = _attach_key(session, new_fpr, reset_message);
-    if (status != PEP_STATUS_OK)
-        goto pep_free;
-    
-    message* output_msg = NULL;
-    
-    status = encrypt_message(session, reset_message, NULL,
-                             output_msg, PEP_enc_PGP_MIME,
-                             PEP_encrypt_flag_key_reset_only);
-
-    if (status == PEP_STATUS_OK)
-        *dst = output_msg;
-        
-pep_free:
-    free_message(reset_message);
-    return status;
-}
-
 PEP_cryptotech determine_encryption_format(message *msg)
 {
     assert(msg);
@@ -1596,6 +1589,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     if (src->enc_format != PEP_enc_none)
         return PEP_ILLEGAL_VALUE;
 
+    bool force_v_1 = flags & PEP_encrypt_flag_force_version_1;
+    
     *dst = NULL;
 
     if (src->from && (!src->from->user_id || src->from->user_id[0] == '\0')) {
@@ -1629,6 +1624,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     PEP_comm_type max_comm_type = PEP_ct_pEp;
 
     identity_list * _il;
+
 
     if (enc_format != PEP_enc_none && (_il = src->bcc) && _il->ident)
     {
@@ -1807,14 +1803,13 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             attach_own_key(session, src);
             added_key_to_real_src = true;
         }
-        decorate_message(src, PEP_rating_undefined, NULL, true);
+        decorate_message(src, PEP_rating_undefined, NULL, true, true);
         return PEP_UNENCRYPTED;
     }
     else {
         // FIXME - we need to deal with transport types (via flag)
-        if ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp) {
-            message_wrap_type = ((flags & PEP_encrypt_flag_key_reset_only) ? PEP_message_key_reset : PEP_message_default);
-            _src = wrap_message_as_attachment(NULL, src, message_wrap_type, false);
+        if ((!force_v_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
+            _src = wrap_message_as_attachment(NULL, src, false);
             if (!_src)
                 goto pep_error;
         }
@@ -1868,7 +1863,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     if (msg) {
-        decorate_message(msg, PEP_rating_undefined, NULL, true);
+        decorate_message(msg, PEP_rating_undefined, NULL, true, true);
         if (_src->id) {
             msg->id = strdup(_src->id);
             assert(msg->id);
@@ -2058,7 +2053,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
     }
             
     // Ok, it's in there. Let's do this.        
-    status = encrypt_message(session, src, keys, dst, enc_format, 0);
+    status = encrypt_message(session, src, keys, dst, enc_format, flags);
     
     // Delete what we added to src
     free_bloblist(created_bl);
@@ -2111,8 +2106,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     determine_encryption_format(src);
     if (src->enc_format != PEP_enc_none)
         return PEP_ILLEGAL_VALUE;
+
     if (target_id && (!target_id->user_id || target_id->user_id[0] == '\0')) {
-        
         char* own_id = NULL;
         status = get_default_own_userid(session, &own_id);
         if (own_id) {
@@ -2155,7 +2150,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     // if (!(flags & PEP_encrypt_flag_force_no_attached_key))
     //     _attach_key(session, target_fpr, src);
 
-    _src = wrap_message_as_attachment(NULL, src, PEP_message_default, false);
+    _src = wrap_message_as_attachment(NULL, src, false);
     if (!_src)
         goto pep_error;
 
@@ -2197,7 +2192,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
              if (msg->id == NULL)
                  goto enomem;
          }
-         decorate_message(msg, PEP_rating_undefined, NULL, true);
+         decorate_message(msg, PEP_rating_undefined, NULL, true, true);
      }
 
     *dst = msg;
@@ -3027,22 +3022,6 @@ static char* seek_good_trusted_private_fpr(PEP_SESSION session, char* own_id,
     return NULL;
 }
 
-PEP_STATUS check_for_own_revoked_key(
-        PEP_SESSION session, 
-        stringlist_t* keylist,
-        char** bad_fpr,
-        char** replacement_fpr
-    ) 
-{
-    if (!session || !bad_fpr || !replacement_fpr)
-        return PEP_ILLEGAL_VALUE;
-    stringlist_t* _k = keylist;
-    while (_k) {
-        
-    }
-}
-
-
 DYNAMIC_API PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -3420,7 +3399,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     if (msg) {
         
         /* add pEp-related status flags to header */
-        decorate_message(msg, *rating, _keylist, false);
+        decorate_message(msg, *rating, _keylist, false, false);
         
         if (imported_keys)
             remove_attached_keys(msg);
@@ -3433,10 +3412,6 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         }
     } // End prepare output message for return
 
-    // 3. Check to see if the sender used a bad key
-    char* bad_fpr = NULL;
-    status = check_for_own_revoked_key(session, _keylist, &bad_fpr);
-    
     *dst = msg;
     *keylist = _keylist;
 
