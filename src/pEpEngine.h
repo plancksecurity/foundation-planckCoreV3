@@ -44,6 +44,7 @@ typedef enum {
     PEP_INIT_SQLITE3_WITHOUT_MUTEX                  = 0x0120,
     PEP_INIT_CANNOT_OPEN_DB                         = 0x0121,
     PEP_INIT_CANNOT_OPEN_SYSTEM_DB                  = 0x0122,
+    PEP_UNKNOWN_DB_ERROR                            = 0x01ff,
     
     PEP_KEY_NOT_FOUND                               = 0x0201,
     PEP_KEY_HAS_AMBIG_NAME                          = 0x0202,
@@ -91,6 +92,7 @@ typedef enum {
     PEP_SYNC_NO_NOTIFY_CALLBACK                     = 0x0901,
     PEP_SYNC_ILLEGAL_MESSAGE                        = 0x0902,
     PEP_SYNC_NO_INJECT_CALLBACK                     = 0x0903,
+    PEP_SYNC_INJECT_FAILED                          = 0x0904,
 
     PEP_SEQUENCE_VIOLATED                           = 0x0970,
     PEP_CANNOT_INCREASE_SEQUENCE                    = 0x0971,
