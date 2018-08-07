@@ -85,23 +85,23 @@ void EngineTestSuite::set_full_env() {
     cout << "home is " << home << endl;
     assert(temp_test_home.compare(home) != 0);
     assert(temp_test_home.compare(home + "/") != 0);
-    assert(temp_test_home.compare(home + "/.gnupg") != 0);
-    assert(temp_test_home.compare(home + ".gnupg") != 0);
+    assert(temp_test_home.compare(home + "/gnupg") != 0);
+    assert(temp_test_home.compare(home + "gnupg") != 0);
     assert(temp_test_home.compare(prev_gpg_home) != 0);
-    assert(temp_test_home.compare(prev_gpg_home + "/.gnupg") != 0);
-    assert(temp_test_home.compare(prev_gpg_home + ".gnupg") != 0);
+    assert(temp_test_home.compare(prev_gpg_home + "/gnupg") != 0);
+    assert(temp_test_home.compare(prev_gpg_home + "gnupg") != 0);
 
     if (temp_test_home.compare(home) == 0 || temp_test_home.compare(home + "/") == 0 ||
-        temp_test_home.compare(home + "/.gnupg") == 0 || temp_test_home.compare(home + ".gnupg") == 0 ||
-        temp_test_home.compare(prev_gpg_home) == 0 || temp_test_home.compare(prev_gpg_home + "/.gnupg") == 0 ||
-        temp_test_home.compare(prev_gpg_home + ".gnupg") == 0)
+        temp_test_home.compare(home + "/gnupg") == 0 || temp_test_home.compare(home + "gnupg") == 0 ||
+        temp_test_home.compare(prev_gpg_home) == 0 || temp_test_home.compare(prev_gpg_home + "/gnupg") == 0 ||
+        temp_test_home.compare(prev_gpg_home + "gnupg") == 0)
         throw std::runtime_error("SETUP: new GNUPGHOME threatens to mess up user GNUPGHOME (and delete all their keys). NO DICE.");
     
 //    cout << "Ok - checked if new test home will be safe. We'll try and make the directory, deleting it if it has already exists." << endl;
     
     struct stat buf;
     
-    success = setenv("GNUPGHOME", (temp_test_home + "/.gnupg").c_str(), 1);
+    success = setenv("GNUPGHOME", (temp_test_home + "/gnupg").c_str(), 1);
     if (success != 0)
         throw std::runtime_error("SETUP: Error when setting GNUPGHOME.");
 
@@ -157,3 +157,4 @@ void EngineTestSuite::tear_down() {}
 void EngineTestSuite::set_my_name() {
     my_name = typeid(*this).name();
 }
+

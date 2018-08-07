@@ -38,7 +38,7 @@ def create_own_identities(mydir, arthome, username):
     "create own identities as part of the test setup"
 
     os.environ["HOME"] = os.path.join(mydir, arthome)
-    os.environ["GNUPGHOME"] = os.path.join(mydir, arthome, '.gnupg')
+    os.environ["GNUPGHOME"] = os.path.join(mydir, arthome, 'gnupg')
 
     import pEp
     me = pEp.Identity()
