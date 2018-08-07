@@ -3,60 +3,82 @@
 
 #pragma once
 
-#include "../asn.1/DeviceGroup-Protocol.h"
-#include "message.h"
-#include "sync.h"
-#include "sync_fsm.h"
+#include "fsm_common.h"
+#include "message_api.h"
+#include "../asn.1/Sync.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct _group_keys_extra {
-    identity_list *group_keys;
-    char *group_id;
-} group_keys_extra_t;
+// event struct
 
-void free_group_keys_extra(group_keys_extra_t* groupkeys);
-group_keys_extra_t* group_keys_extra_dup(group_keys_extra_t* groupkeys);
+typedef struct _Sync_event {
+    Sync_PR fsm;
+    int event;
+    Sync_t *msg;
+} Sync_event_t;
 
-PEP_STATUS receive_sync_msg(
-        PEP_SESSION session,
-        sync_msg_t *sync_msg,
-        time_t *timeout
+// conditions
+
+PEP_STATUS deviceGrouped(PEP_SESSION session, bool *result);
+PEP_STATUS challengeAccepted(PEP_SESSION session, bool *result);
+PEP_STATUS partnerIsGrouped(PEP_SESSION session, bool *result);
+PEP_STATUS keyElectionWon(PEP_SESSION session, bool *result);
+// actions
+
+PEP_STATUS closeHandshakeDialog(PEP_SESSION session);
+PEP_STATUS openChallenge(PEP_SESSION session);
+PEP_STATUS storeChallenge(PEP_SESSION session);
+PEP_STATUS openTransaction(PEP_SESSION session);
+PEP_STATUS storeTransaction(PEP_SESSION session);
+PEP_STATUS showSoleHandshake(PEP_SESSION session);
+PEP_STATUS disable(PEP_SESSION session);
+PEP_STATUS saveGroupKeys(PEP_SESSION session);
+PEP_STATUS ownKeysAreGroupKeys(PEP_SESSION session);
+PEP_STATUS showJoinGroupHandshake(PEP_SESSION session);
+PEP_STATUS showGroupedHandshake(PEP_SESSION session);
+
+// send event to own state machine, use state to generate
+// Sync message if necessary
+
+PEP_STATUS Sync_send(
+        PEP_SESSION session, 
+        Sync_PR fsm,
+        int message_type
     );
 
-PEP_STATUS inject_DeviceState_event(
-    PEP_SESSION session, 
-    DeviceState_event event,
-    Identity partner,
-    void *extra);
+// send message to partners
 
-PEP_STATUS receive_DeviceState_msg(
-    PEP_SESSION session, 
-    message *src, 
-    PEP_rating rating, 
-    stringlist_t *keylist);
-
-DeviceGroup_Protocol_t *new_DeviceGroup_Protocol_msg(DeviceGroup_Protocol__payload_PR type);
-void free_DeviceGroup_Protocol_msg(DeviceGroup_Protocol_t *msg);
-
-PEP_STATUS unicast_msg(
-        PEP_SESSION session,
-        const Identity partner,
-        DeviceState_state state,
-        DeviceGroup_Protocol_t *msg,
-        bool encrypted
+PEP_STATUS send_Sync_message(
+        PEP_SESSION session, 
+        Sync_PR fsm,
+        int event
     );
 
-PEP_STATUS multicast_self_msg(
-        PEP_SESSION session,
-        DeviceState_state state,
-        DeviceGroup_Protocol_t *msg,
-        bool encrypted
+// receive event, free Sync_event_t structure if call does not fail
+// with PEP_ILLEGAL_VALUE
+
+PEP_STATUS recv_Sync_event(
+        PEP_SESSION session, 
+        Sync_event_t *ev
     );
 
-bool is_double(DeviceGroup_Protocol_t *msg);
+// state machine driver
+// if fsm or event set to 0 use fields in src if present
+
+PEP_STATUS Sync_driver(
+        PEP_SESSION session,
+        Sync_PR fsm,
+        int event
+    );
+
+PEP_STATUS inject_Sync_event(
+        PEP_SESSION session, 
+        Sync_PR fsm,
+        int event
+    );
+
 
 #ifdef __cplusplus
 }

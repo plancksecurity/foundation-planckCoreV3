@@ -1,454 +1,409 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-// Actions for DeviceState state machine
+#include "Sync_impl.h"
+#include "KeySync_fsm.h"
 
-#include <assert.h>
-#include "pEp_internal.h"
-#include "message.h"
-#include "sync_fsm.h"
-#include "sync_impl.h"
-#include "map_asn1.h"
-#include "baseprotocol.h"
+PEP_STATUS deviceGrouped(PEP_SESSION session, bool *result)
+{
+    assert(session && result);
+    if (!(session && result))
+        return PEP_ILLEGAL_VALUE;
 
-// conditions
+    static const char *sql = "select count(*) from identity where user_id = '"PEP_OWN_USERID"' and (flags & 4) = 4;";
+    static const size_t len = strlen(sql);
+    sqlite3_stmt *_sql;
+    int int_result = sqlite3_prepare_v2(session->db, sql, (int) len, &_sql, NULL);
+    assert(int_result == SQLITE_OK);
+    if (!(int_result == SQLITE_OK))
+        return PEP_UNKNOWN_ERROR;
 
-int deviceGrouped(PEP_SESSION session)
+    int _result = 0;
+    int_result = sqlite3_step(_sql);
+    assert(int_result == SQLITE_ROW);
+    if (int_result == SQLITE_ROW)
+        _result = sqlite3_column_int(_sql, 0);
+    sqlite3_finalize(_sql);
+    if (int_result != SQLITE_ROW)
+        return PEP_UNKNOWN_ERROR;
+
+    *result = _result > 0;
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS challengeAccepted(PEP_SESSION session, bool *result)
+{
+    assert(session && result);
+    if (!(session && result))
+        return PEP_ILLEGAL_VALUE;
+
+    TID_t *t1 = &session->sync_state.keysync.challenge;
+    TID_t *t2 = &session->own_sync_state.challenge;
+
+    *result = t1->size == t2->size && memcmp(t1->buf, t2->buf, t1->size) == 0;
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS partnerIsGrouped(PEP_SESSION session, bool *result)
+{
+    assert(session && result);
+    if (!(session && result))
+        return PEP_ILLEGAL_VALUE;
+
+    *result = session->sync_state.keysync.is_group;
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS keyElectionWon(PEP_SESSION session, bool *result)
+{
+    assert(session && result);
+    if (!(session && result))
+        return PEP_ILLEGAL_VALUE;
+
+    pEp_identity *from = session->sync_state.basic.from;
+
+    assert(from && from->fpr && from->fpr[0] && from->address && from->address[0]);
+    if (!(from && from->fpr && from->fpr[0] && from->address && from->address[0]))
+        return PEP_ILLEGAL_VALUE;
+
+    pEp_identity *me = NULL;
+    PEP_STATUS status = get_identity(session, from->address, PEP_OWN_USERID, &me);
+    assert(status == PEP_STATUS_OK);
+    if (status)
+        return status;
+
+    assert(me->fpr && me->fpr[0]);
+    if (!(me->fpr && me->fpr[0])) {
+        free_identity(me);
+        return PEP_ILLEGAL_VALUE;
+    }
+
+    size_t len = MIN(strlen(from->fpr), strlen(me->fpr));
+    *result = strncasecmp(from->fpr, me->fpr, len) > 0;
+    free_identity(me);
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS closeHandshakeDialog(PEP_SESSION session)
 {
     assert(session);
     if (!session)
-        return invalid_condition; // error
-
-    char *devgrp = NULL;
-    int res = 0;
-    PEP_STATUS status;
-
-    status = get_device_group(session, &devgrp);
-
-    if (status == PEP_STATUS_OK && devgrp && devgrp[0])
-        res = 1;
-
-    free(devgrp);
-
-    return res;
-}
-
-int keyElectionWon(PEP_SESSION session, Identity partner)
-{
-    assert(session);
-    assert(partner);
-    if (!(session && partner))
-        return invalid_condition; // error
-
-    int partner_is_group = partner->flags & PEP_idf_devicegroup;
-
-    if (deviceGrouped(session)){
-        // existing group always wins against sole device
-        if(!partner_is_group)
-            return 1;
-    } else {
-        // sole device always loses against group
-        if(partner_is_group)
-            return 0;
-    }
-
-    // two groups or two sole are elected based on key age
-    // key created first wins
-
-    Identity me = NULL;
-    
-    char* own_id = NULL;
-    PEP_STATUS status = get_default_own_userid(session, &own_id);
-    if (own_id) {
-        status = get_identity(session, partner->address, own_id,
-                              &me);
-        free(own_id);
-    }
-    if (status == PEP_OUT_OF_MEMORY)
-        return invalid_out_of_memory;
-    if (status != PEP_STATUS_OK)
-        return invalid_condition; // error
-
-    int result = invalid_condition; // error state has to be overwritten
-
-    time_t own_created;
-    time_t partners_created;
-
-    status = key_created(session, me->fpr, &own_created);
-    if (status != PEP_STATUS_OK)
-        goto the_end;
-
-    status = key_created(session, partner->fpr, &partners_created);
-    if (status != PEP_STATUS_OK)
-        goto the_end;
-
-    if (own_created > partners_created)
-        result = 0;
-    else
-        result = 1;
-
-the_end:
-    free_identity(me);
-    return result;
-}
-
-int sameIdentities(PEP_SESSION session, Identity a, Identity b)
-{
-    assert(session);
-    assert(a);
-    assert(b);
-
-    if (!(session && a && b))
-        return invalid_condition; // error
-
-    if (a->fpr == NULL || b->fpr == NULL ||
-        (!_same_fpr(a->fpr, strlen(a->fpr), b->fpr, strlen(b->fpr))) ||
-        a->address == NULL || b->address == NULL ||
-        strcmp(a->address, b->address) != 0 ||
-        a->user_id == NULL || b->user_id == NULL ||
-        strcmp(a->user_id, b->user_id) != 0)
-            return 0;
-    return 1;
-}
-
-int sameKeyAndAddress(PEP_SESSION session, Identity a, Identity b)
-{
-    assert(session);
-    assert(a);
-    assert(b);
-
-    if (!(session && a && b))
-        return invalid_condition; // error
-
-    if (a->fpr == NULL || b->fpr == NULL ||
-        (!_same_fpr(a->fpr, strlen(a->fpr), b->fpr, strlen(b->fpr))) ||
-        a->address == NULL || b->address == NULL ||
-        strcmp(a->address, b->address) != 0)
-            return 0;
-    return 1;
-}
-
-// actions
-
-PEP_STATUS _notifyHandshake(
-        PEP_SESSION session,
-        Identity partner,
-        sync_handshake_signal signal
-    )
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session);
-    assert(partner);
-
-    if (!(session && partner))
         return PEP_ILLEGAL_VALUE;
 
     assert(session->notifyHandshake);
     if (!session->notifyHandshake)
         return PEP_SYNC_NO_NOTIFY_CALLBACK;
 
-    char* own_id = NULL;
-    status = get_default_own_userid(session, &own_id);
-        
-    // notifyHandshake take ownership of given identities
+    PEP_STATUS status = session->notifyHandshake(
+            session->sync_management, NULL, NULL, SYNC_NOTIFY_OVERTAKEN);
+    if (status)
+        return status;
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS openChallenge(PEP_SESSION session)
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    pEpUUID c;
+    uuid_generate_random(c);
+
+    OCTET_STRING_fromBuf(&session->own_sync_state.challenge, c, 16);
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS storeChallenge(PEP_SESSION session)
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    TID_t *src = &session->sync_state.keysync.challenge;
+    TID_t *dst = &session->own_sync_state.challenge;
+
+    assert(src->size == 16);
+    if (!(src->size == 16))
+        return PEP_UNKNOWN_ERROR;
+
+    OCTET_STRING_fromBuf(dst, (char *) src->buf, src->size);
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS openTransaction(PEP_SESSION session)
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    pEpUUID c;
+    uuid_generate_random(c);
+
+    OCTET_STRING_fromBuf(&session->own_sync_state.transaction, c, 16);
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS storeTransaction(PEP_SESSION session)
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    TID_t *src = &session->sync_state.keysync.transaction;
+    TID_t *dst =  &session->own_sync_state.transaction;
+
+    assert(src->size == 16);
+    if (!(src->size == 16))
+        return PEP_UNKNOWN_ERROR;
+
+    OCTET_STRING_fromBuf(dst, (char *) src->buf, src->size);
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS showSoleHandshake(PEP_SESSION session)
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    assert(session->notifyHandshake);
+    if (!session->notifyHandshake)
+        return PEP_SYNC_NO_NOTIFY_CALLBACK;
+ 
+    assert(session->sync_state.basic.from);
+    if (!session->sync_state.basic.from)
+        return PEP_ILLEGAL_VALUE;
+
     pEp_identity *me = NULL;
-    if (own_id) {
-        status = get_identity(session, partner->address, own_id, &me);
-        free(own_id);
-    }
-    if (status != PEP_STATUS_OK)
-        goto error;
-    
-    pEp_identity *_partner = NULL;
-    _partner = identity_dup(partner);
-    if (_partner == NULL){
-        status = PEP_OUT_OF_MEMORY;
-        goto error;
-    }
-
-    status = session->notifyHandshake(session->sync_obj, me, _partner, signal);
-    if (status != PEP_STATUS_OK)
-        goto error;
-
-    return status;
-
-error:
-    free_identity(me);
-    return status;
-}
-
-// acceptHandshake() - stores acception of partner
-//
-//  params:
-//      session (in)        session handle
-//      state (in)          state the state machine is in
-//      partner (in)        partner to communicate with
-//
-//  returns:
-//      PEP_STATUS_OK or any other value on error
-
-PEP_STATUS acceptHandshake(
-        PEP_SESSION session,
-        DeviceState_state state,
-        Identity partner,
-        void *extra
-    )
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session);
-    assert(partner);
-    assert(extra == NULL);
-    if (!(session && partner))
-        return PEP_ILLEGAL_VALUE;
-
-    status = trust_personal_key(session, partner);
-
-    return status;
-}
-
-
-// rejectHandshake() - stores rejection of partner
-//
-//  params:
-//      session (in)        session handle
-//      state (in)          state the state machine is in
-//      partner (in)        partner to communicate with
-//
-//  returns:
-//      PEP_STATUS_OK or any other value on error
-
-PEP_STATUS rejectHandshake(
-        PEP_SESSION session,
-        DeviceState_state state,
-        Identity partner,
-        void *extra
-    )
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session);
-    assert(partner);
-    assert(extra == NULL);
-    if (!(session && partner))
-        return PEP_ILLEGAL_VALUE;
-
-    // TODO : disable sync globally if not in a group
-    status = set_identity_flags(session, partner,
-            partner->flags | PEP_idf_not_for_sync);
-
-    return status;
-}
-
-PEP_STATUS _storeGroupKeys(
-        PEP_SESSION session,
-        identity_list *group_keys
-    )
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-    
-    char* own_id = NULL;
-    status = get_default_own_userid(session, &own_id);
-    
-    // FIXME: Is this where and what we wanna do with this?
-    if (status != PEP_STATUS_OK)
+    PEP_STATUS status = get_identity(session, from->address, PEP_OWN_USERID, &me);
+    assert(status == PEP_STATUS_OK);
+    if (status)
         return status;
-        
-    for (identity_list *il = group_keys; il && il->ident; il = il->next) {
 
-        if (strcmp(il->ident->user_id, own_id)!=0) {
-            assert(0);
-            continue;
+    assert(me->fpr && me->fpr[0]);
+    if (!(me->fpr && me->fpr[0])) {
+        free_identity(me);
+        return PEP_ILLEGAL_VALUE;
+    }
+
+    pEp_identity *partner = identity_dup(session->sync_state.basic.from);
+    if (!partner) {
+        free_identity(me);
+        return PEP_OUT_OF_MEMORY;
+    }
+
+    PEP_STATUS status = session->notifyHandshake(
+            session->sync_management, me, partner, SYNC_NOTIFY_INIT_FORM_GROUP);
+    if (status)
+        return status;
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS disable(PEP_SESSION session)
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS saveGroupKeys(PEP_SESSION session)
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    identity_list *il = IdentityList_to_identity_list(&session->sync_state.keysync.identities, NULL);
+    if (!il)
+        return PEP_OUT_OF_MEMORY;
+    
+    // BUG: this should be a transaction and been rolled back completely on error
+    for (identity_list *_il = il; _il && _il->ident; _il = _il->next) {
+        PEP_STATUS status = set_identity(session, _il->ident);
+        if (status) {
+            free_identity_list(il);
+            return status;
         }
-        // Check that identity isn't excluded from sync.
-        pEp_identity *stored_identity = NULL;
-        status = get_identity(session, il->ident->address, own_id,
-                &stored_identity);
-        if (status == PEP_STATUS_OK) {
-            if(stored_identity->flags & PEP_idf_not_for_sync){
-                free_identity(stored_identity);
-                continue;
+    }
+
+    free_identity_list(il);
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS ownKeysAreGroupKeys(PEP_SESSION session)
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    static const char *sql = "select fpr, username, comm_type, lang,"
+        "   identity.flags | pgp_keypair.flags"
+        "   from identity"
+        "   join person on id = identity.user_id"
+        "   join pgp_keypair on fpr = identity.main_key_id"
+        "   join trust on id = trust.user_id"
+        "       and pgp_keypair_fpr = identity.main_key_id"
+        "   where identity.user_id = '" PEP_OWN_USERID "';";
+    static const size_t len = strlen(sql);
+    sqlite3_stmt *_sql;
+    int int_result = sqlite3_prepare_v2(session->db, sql, (int) len, &_sql, NULL);
+    assert(int_result == SQLITE_OK);
+    if (!(int_result == SQLITE_OK))
+        return PEP_UNKNOWN_ERROR;
+
+    identity_list *il = new_identity_list(NULL);
+    if (!il)
+        return PEP_OUT_OF_MEMORY;
+
+    identity_list *_il = il;
+
+    int result;
+    do {
+        result = sqlite3_step(_sql);
+        pEp_identity *_identity = NULL;
+        switch (result) {
+        case SQLITE_ROW:
+            _identity = new_identity(
+                    address,
+                    (const char *) sqlite3_column_text(_sql, 0),
+                    user_id,
+                    (const char *) sqlite3_column_text(_sql, 1)
+                    );
+            assert(_identity);
+            if (_identity == NULL)
+                return PEP_OUT_OF_MEMORY;
+
+            _identity->comm_type = (PEP_comm_type)
+                sqlite3_column_int(_sql, 2);
+            const char* const _lang = (const char *)
+                sqlite3_column_text(_sql, 3);
+            if (_lang && _lang[0]) {
+                assert(_lang[0] >= 'a' && _lang[0] <= 'z');
+                assert(_lang[1] >= 'a' && _lang[1] <= 'z');
+                assert(_lang[2] == 0);
+                _identity->lang[0] = _lang[0];
+                _identity->lang[1] = _lang[1];
+                _identity->lang[2] = 0;
             }
-            free_identity(stored_identity);
-        }
+            _identity->flags = (unsigned int)
+                sqlite3_column_int(_sql, 4);
 
-        status = set_identity(session, il->ident);
-        if (status != PEP_STATUS_OK)
+            _il = identity_list_add(_il, _identity);
+            if (!_il) {
+                free_identity_list(il);
+                free_identity(_identity);
+                return PEP_OUT_OF_MEMORY;
+            }
             break;
+
+        case SQLITE_DONE:
+            break;
+
+        default:
+            free_identity_list(il);
+            return PEP_UNKOWN_ERROR;
+        }
+    } while (result != SQLITE_DONE);
+
+    IdentityList_t *r = IdentityList_from_identity_list(il, &session->sync_state.keysync.identities);
+    free_identity_list(il);
+    if (!r)
+        return PEP_OUT_OF_MEMORY;
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS showJoinGroupHandshake(PEP_SESSION session)
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    assert(session->notifyHandshake);
+    if (!session->notifyHandshake)
+        return PEP_SYNC_NO_NOTIFY_CALLBACK;
+ 
+    assert(session->sync_state.basic.from);
+    if (!session->sync_state.basic.from)
+        return PEP_ILLEGAL_VALUE;
+
+    pEp_identity *me = NULL;
+    PEP_STATUS status = get_identity(session, from->address, PEP_OWN_USERID, &me);
+    assert(status == PEP_STATUS_OK);
+    if (status)
+        return status;
+
+    assert(me->fpr && me->fpr[0]);
+    if (!(me->fpr && me->fpr[0])) {
+        free_identity(me);
+        return PEP_ILLEGAL_VALUE;
     }
-    
-    free(own_id);
-    return status;
-}
-    
 
-// storeGroupKeys() - 
-//
-//  params:
-//      session (in)        session handle
-//      state (in)          state the state machine is in
-//      partner (in)        partner to communicate with
-//      _group_keys (in)    group keys received from partner
-//
-//  returns:
-//      PEP_STATUS_OK or any other value on error
+    pEp_identity *partner = identity_dup(session->sync_state.basic.from);
+    if (!partner) {
+        free_identity(me);
+        return PEP_OUT_OF_MEMORY;
+    }
 
-PEP_STATUS storeGroupKeys(
-        PEP_SESSION session,
-        DeviceState_state state,
-        Identity partner,
-        void *group_keys_extra_
-    )
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session);
-    assert(partner);
-    assert(group_keys_extra_);
-    if (!(session && partner && group_keys_extra_))
-        return PEP_ILLEGAL_VALUE;
-
-    group_keys_extra_t *group_keys_extra = 
-        (group_keys_extra_t*) group_keys_extra_;
-    identity_list *group_keys = group_keys_extra->group_keys;
-    char *group_id = group_keys_extra->group_id;
-
-    status = _storeGroupKeys(session, group_keys);
-    if (status != PEP_STATUS_OK)
+    PEP_STATUS status = session->notifyHandshake(
+            session->sync_management, me, partner, SYNC_NOTIFY_INIT_ADD_OUR_DEVICE);
+    if (status)
         return status;
 
-    // set group id according to given group-id
-    status = set_device_group(session, group_id);
-    if (status != PEP_STATUS_OK)
-        return status;
-    
-    return status;
+    return PEP_STATUS_OK;
 }
 
-// storeGroupUpdate() - 
-//
-//  params:
-//      session (in)        session handle
-//      state (in)          state the state machine is in
-//      partner (in)        partner to communicate with
-//      _group_keys (in)    group keys received from partner
-//
-//  returns:
-//      PEP_STATUS_OK or any other value on error
-
-PEP_STATUS storeGroupUpdate(
-        PEP_SESSION session,
-        DeviceState_state state,
-        Identity partner,
-        void *group_keys_
-    )
+PEP_STATUS showGroupedHandshake(PEP_SESSION session)
 {
-    PEP_STATUS status = PEP_STATUS_OK;
-
     assert(session);
-    assert(partner);
-    assert(group_keys_);
-    if (!(session && partner && group_keys_))
+    if (!session)
         return PEP_ILLEGAL_VALUE;
 
-    identity_list *group_keys = (identity_list*) group_keys_;
+    assert(session->notifyHandshake);
+    if (!session->notifyHandshake)
+        return PEP_SYNC_NO_NOTIFY_CALLBACK;
+ 
+    assert(session->sync_state.basic.from);
+    if (!session->sync_state.basic.from)
+        return PEP_ILLEGAL_VALUE;
 
-    status = _storeGroupKeys(session, group_keys);
+    pEp_identity *me = NULL;
+    PEP_STATUS status = get_identity(session, from->address, PEP_OWN_USERID, &me);
+    assert(status == PEP_STATUS_OK);
+    if (status)
+        return status;
 
+    assert(me->fpr && me->fpr[0]);
+    if (!(me->fpr && me->fpr[0])) {
+        free_identity(me);
+        return PEP_ILLEGAL_VALUE;
+    }
 
-    return status;
+    pEp_identity *partner = identity_dup(session->sync_state.basic.from);
+    if (!partner) {
+        free_identity(me);
+        return PEP_OUT_OF_MEMORY;
+    }
+
+    PEP_STATUS status = session->notifyHandshake(
+            session->sync_management, me, partner, SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE);
+    if (status)
+        return status;
+
+    return PEP_STATUS_OK;
 }
 
-// makeGroup() - 
-//
-//  params:
-//      session (in)        session handle
-//      state (in)          state the state machine is in
-//      partner (in)        ignored
-//      extra (in)          ignored
-//
-//  returns:
-//      PEP_STATUS_OK or any other value on error
-
-PEP_STATUS makeGroup(
-        PEP_SESSION session,
-        DeviceState_state state,
-        Identity partner,
-        void *extra
-    )
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session);
-   
-    // make a new uuid 
-    char new_uuid[37];
-    pEpUUID uuid;
-    uuid_generate_random(uuid);
-    uuid_unparse_upper(uuid, new_uuid);
-
-    // take that new uuid as group-id
-    status = set_device_group(session, new_uuid);
-
-    return status;
-}
-
-// renewUUID() - 
-//
-//  params:
-//      session (in)        session handle
-//      state (in)          state the state machine is in
-//      partner (in)        ignored
-//      extra (in)          ignored
-//
-//  returns:
-//      PEP_STATUS_OK or any other value on error
-
-PEP_STATUS renewUUID(
-        PEP_SESSION session,
-        DeviceState_state state,
-        Identity partner,
-        void *extra
-    )
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session);
-
-    // change sync_uuid when entering group 
-    // thus ignoring unprocessed handshakes
-    // addressed to previous self (sole) once in.
-    pEpUUID uuid;
-    uuid_generate_random(uuid);
-    uuid_unparse_upper(uuid, session->sync_uuid);
-    
-    return status;
-}
-
-// leaveGroup() - 
-//
-//  params:
-//      session (in)        session handle
-//      state (in)          state the state machine is in
-//      partner (in)        ignored
-//      extra (in)          ignored
-//
-//  returns:
-//      PEP_STATUS_OK or any other value on error
-
-PEP_STATUS leaveGroup(
-        PEP_SESSION session,
-        DeviceState_state state,
-        Identity partner,
-        void *extra
-    )
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    assert(session);
-
-    status = set_device_group(session, NULL);
-    
-    return status;
-}

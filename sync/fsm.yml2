@@ -1,19 +1,54 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-// FSM Y language 1.0
+// FSM Y language 1.2
 
-// Copyleft (c) 2016, p≡p foundation
+// Copyleft (c) 2016, 2017, p≡p foundation
 
 // Written by Volker Birk
 
-decl protocol @name;
-decl fsm @name;
+decl version(major, minor);
+
+// a protocol family has a name and an ID
+
+decl protocol @name (id);
+
+// each protocol in a family has a finite state machine
+
+decl fsm< protocol >;
+
+// a state has a name and a timeout; after the timeout the state machine will
+// be reset
+
 decl state @name (timeout=0);
+
+// events have names
+
 decl event @name, on is event;
+
+// a transistion moves the statemachine to another state
+
 decl transition @target, go is transition;
+
+// an action is executed; if an action name starts with 'send' then it is
+// sending a message
+
 decl action @name, do is action;
+
+// a condition is for different cases
+
 decl condition @name, if is condition;
-decl alternative, else is alternative;
-decl interface @name;
-decl tag @name (id);
+
+// some events have messages on the line signalling the event to the
+// communication partner
+
+decl message @name (id);
+
+// messages can have transmitted fields…
+
+decl field @type @name;
+
+// … or automatically calculated fields…
+
+decl auto < field >;
+

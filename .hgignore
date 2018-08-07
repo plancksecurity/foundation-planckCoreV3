@@ -9,6 +9,7 @@ syntax: regexp
 
 syntax: glob
 *.orig
+*.old
 *.d
 *.d.*
 *.o

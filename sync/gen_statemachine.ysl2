@@ -3,7 +3,7 @@
 
 // generate state machine code
 
-// Copyleft (c) 2016, p≡p foundation
+// Copyleft (c) 2016, 2017, p≡p foundation
 
 // Written by Volker Birk
 
@@ -14,122 +14,334 @@ tstylesheet {
     include ./functions.ysl2
 
     template "/protocol" {
-        document "generated/Makefile.protocols", "text"
-            apply "fsm", 0, mode="make";
-        apply "fsm", 0, mode=gen;
-    }
-
-    template "fsm", mode=make
-    ||
-    «@filename»_fsm.c: ../sync/devicegroup.fsm
-    \tmake -C ../«@filename»
-    ||
-
-    template "fsm", mode=gen {
-        document "generated/{@filename}_fsm.h", "text" {
+        document "generated/{@name}_impl.h", "text" {
         ||
+        // This file is under GNU General Public License 3.0
+        // see LICENSE.txt
+
         #pragma once
 
-        // state machine for «@name»
-
+        #include "fsm_common.h"
         #include "message_api.h"
+        #include "../asn.1/Sync.h"
         
         #ifdef __cplusplus
         extern "C" {
         #endif
 
-        // types
+        // event struct
 
-        typedef pEp_identity * Identity;
-        typedef stringlist_t * Stringlist;
-
-        // error values
-
-        typedef enum _fsm_error {
-            // these error values are corresponding to
-            // PEP_SYNC_STATEMACHINE_ERROR - value
-            invalid_state = -2,
-            invalid_event = -3,
-            invalid_condition = -4,
-            invalid_action = -5,
-
-            // out of memory condition
-            invalid_out_of_memory = -128
-        } fsm_error;
+        typedef struct _«@name»_event {
+            «@name»_PR fsm;
+            int event;
+            «@name»_t *msg;
+        } «@name»_event_t;
 
         // conditions
 
-        `` for "func:distinctName(condition)" | int «@name»(PEP_SESSION session`apply "parm", 0`);
+        ||
+        for "func:distinctName(*//condition)"
+            | PEP_STATUS «@name»(PEP_SESSION session, bool *result);
+        ||
+        // actions
+
+        ||
+        const "name", "@name";
+        for "func:distinctName(*//action[not(starts-with(@name, 'send'))])"
+            | PEP_STATUS «@name»(PEP_SESSION session);
+        ||
+
+        // send event to own state machine, use state to generate
+        // «@name» message if necessary
+
+        PEP_STATUS «@name»_send(
+                PEP_SESSION session, 
+                «@name»_PR fsm,
+                int message_type
+            );
+
+        // send message to partners
+
+        PEP_STATUS send_«@name»_message(
+                PEP_SESSION session, 
+                «@name»_PR fsm,
+                int event
+            );
+
+        // receive event, free «@name»_event_t structure if call does not fail
+        // with PEP_ILLEGAL_VALUE
+
+        PEP_STATUS recv_«@name»_event(
+                PEP_SESSION session, 
+                «@name»_event_t *ev
+            );
+    
+        // state machine driver
+        // if fsm or event set to 0 use fields in src if present
+
+        PEP_STATUS «@name»_driver(
+                PEP_SESSION session,
+                «@name»_PR fsm,
+                int event
+            );
+
+        PEP_STATUS inject_«@name»_event(
+                PEP_SESSION session, 
+                «@name»_PR fsm,
+                int event
+            );
+
+
+        #ifdef __cplusplus
+        }
+        #endif
+
+        ||
+        }
+
+        document "generated/{@name}_impl.c", "text"
+        ||
+        // This file is under GNU General Public License 3.0
+        // see LICENSE.txt
+    
+        #include "«@name»_impl.h"
+        #include "pEp_internal.h"
+        `` for "fsm" | #include "«@name»_fsm.h"
+
+        PEP_STATUS «@name»_driver(
+                PEP_SESSION session,
+                «@name»_PR fsm,
+                int event
+            )
+        {
+            assert(session && fsm);
+            if (!(session && fsm))
+                return PEP_ILLEGAL_VALUE;
+
+            switch (fsm) {
+                `` apply "fsm", 2, mode=driver               
+                default:
+                    return PEP_ILLEGAL_VALUE;
+            }
+
+            return PEP_STATUS_OK;
+        }
+
+        PEP_STATUS inject_«@name»_event(
+                PEP_SESSION session, 
+                «@name»_PR fsm,
+                int event
+            )
+        {
+            «@name»_t *msg = NULL;
+            «@name»_event_t *ev = NULL;
+
+            assert(session && fsm > 0 && event > None);
+            if (!(session && fsm > 0 && event > None))
+                return PEP_ILLEGAL_VALUE;
+
+            PEP_STATUS status = PEP_STATUS_OK;
+
+            if (!session->inject_«yml:lcase(@name)»_msg) {
+               status = PEP_«yml:ucase(@name)»_NO_INJECT_CALLBACK;
+               goto error;
+            }
+
+            if (event < Extra) {
+                msg = new_«@name»_message(fsm, event);
+                assert(msg);
+                if (!msg) {
+                    status = PEP_OUT_OF_MEMORY;
+                    goto error;
+                }
+
+                status = update_«@name»_message(session, fsm, event, msg);
+                if (status)
+                    goto error;
+            }
+
+            ev = («@name»_event_t *) calloc(1, sizeof(«@name»_event_t));
+            assert(ev);
+            if (!ev) {
+                status = PEP_OUT_OF_MEMORY;
+                goto error;
+            }
+            
+            ev->fsm = fsm;
+            ev->event = event;
+            ev->msg = msg;
+
+            int result = session->inject_«yml:lcase(@name)»_msg(ev,
+                    session->«yml:lcase(@name)»_management);
+            if (result) {
+                status = PEP_STATEMACHINE_ERROR;
+                goto error;
+            }
+
+            goto the_end;
+
+        error:
+            free(ev);
+            free_«@name»_message(msg);
+
+        the_end:
+            return status;
+        }
+
+        PEP_STATUS «@name»_send(
+                PEP_SESSION session, 
+                «@name»_PR fsm,
+                int message_type
+            )
+        {
+            assert(session && fsm > 0 && message_type > 1 && message_type < Extra);
+            if (!(session && fsm > 0 && message_type > 1 && message_type < Extra))
+                return PEP_ILLEGAL_VALUE;
+
+            PEP_STATUS status = PEP_STATUS_OK;
+
+            «@name»_t *msg = new_«@name»_message(fsm, message_type);
+            assert(msg);
+            if (!msg) {
+                status = PEP_OUT_OF_MEMORY;
+                goto error;
+            }
+
+            status = update_«@name»_message(session, fsm, message_type, msg);
+            if (status)
+                goto error;
+
+            goto the_end;
+
+        error:
+            free_«@name»_message(msg);
+
+        the_end:
+            return status;
+        }
+
+        PEP_STATUS recv_«@name»_event(
+                PEP_SESSION session, 
+                «@name»_event_t *ev
+            )
+        {
+            assert(session && ev);
+            if (!(session && ev))
+                return PEP_ILLEGAL_VALUE;
+
+            assert(ev->fsm >= None && ev->event >= None);
+            if (!(ev->fsm >= None && ev->event >= None))
+                return PEP_ILLEGAL_VALUE;
+
+            PEP_STATUS status = PEP_STATUS_OK;
+
+            if (ev->event < Extra) {
+                «@name»_PR fsm = (int) None;
+                int event = None;
+
+                status = update_«@name»_state(session, ev->msg, &fsm, &event);
+                if (status)
+                    goto error;
+
+                if (ev->fsm) {
+                    if (ev->fsm != fsm |`> |` ev->event != event) {
+                        status = PEP_SYNC_ILLEGAL_MESSAGE;
+                        goto error;
+                    }
+                }
+                else {
+                    if (ev->event) {
+                        status = PEP_SYNC_ILLEGAL_MESSAGE;
+                        goto error;
+                    }
+                    ev->fsm = fsm;
+                    ev->event = event;
+                }
+            }
+
+            free_«@name»_message(ev->msg);
+            free(ev);
+            status = «@name»_driver(session, ev->fsm, ev->event);
+            return status;
+
+        error:
+            free_«@name»_message(ev->msg);
+            free(ev);
+            return status;
+        }
+
+        ||
+
+        apply "fsm", 0, mode=gen;
+    }
+
+    template "fsm", mode=driver
+    ||
+    case Sync_PR_«yml:lcase(@name)»: {
+        int state = session->sync_state.«yml:lcase(@name)».state;
+        state = fsm_«@name»(session, state, event);
+        if (state > 0)
+            session->sync_state.«yml:lcase(@name)».state = state;
+        else if (state < 0)
+            return PEP_STATEMACHINE_ERROR - state;
+        break;
+    }
+
+    ||
+
+    template "fsm", mode=gen {
+        document "generated/{@name}_fsm.h", "text" {
+        ||
+        // This file is under GNU General Public License 3.0
+        // see LICENSE.txt
+
+        #pragma once
+
+        #include "«../@name»_impl.h"
+
+        #ifdef __cplusplus
+        extern "C" {
+        #endif
+
+        // state machine for «@name»
 
         // states
 
         typedef enum _«@name»_state {
-            // error values also in this namespace
-            «@name»_state_invalid_state = (int) invalid_state,
-            «@name»_state_invalid_event = (int) invalid_event,
-            «@name»_state_invalid_condition = (int) invalid_condition,
-            «@name»_state_invalid_action = (int) invalid_action,
-            «@name»_state_invalid_out_of_memory = (int) invalid_out_of_memory,
-
-            «@name»_state_NONE = 0,
-        `` for "func:distinctName(state)" |> «@name»`if "position()!=last()" > , `
+            «@name»_state_None = None,
+            «@name»_state_Init = Init,
+        ||
+        for "func:distinctName(state[not(@name='InitState')])"
+            |> «@name»`if "position()!=last()" > , `
+        ||
         } «@name»_state;
 
         // events
 
         typedef enum _«@name»_event {
-            «@name»_event_NONE = 0,
+            «@name»_event_None = None,
+            «@name»_event_Init = Init,
         ||
-        for "func:distinctName(state/event[not(not(/protocol/fsm/tag/@name=@name))])" {
+        for "func:distinctName(state/event[not(not(../../message/@name=@name))])" {
             const "name", "@name";
-            |> «$name» = «/protocol/fsm/tag[@name=$name]/@id»,
+            |> «$name» = «/protocol/fsm/message[@name=$name]/@id»,
         }
-        for "func:distinctName(state/event[not(/protocol/fsm/tag/@name=@name)])"
-            |> «@name»`if "position()!=last()" > , `
+        |> «@name»_event_Extra = Extra,
+        for "func:distinctName(state/event[not(../../message/@name=@name)])" {
+            if "@name!='Init'"
+                |> «@name»`if "position()!=last()" > , `
+        }
         ||
         } «@name»_event;
 
-        // actions
-
-        `` const "name", "@name"
-        `` for "func:distinctName(//action)" | PEP_STATUS «@name»(PEP_SESSION session, «$name»_state state, Identity partner, void *extra);
-
-        // event injector
-
-        PEP_STATUS inject_DeviceState_event(
-            PEP_SESSION session, 
-            DeviceState_event event,
-            Identity partner,
-            void *extra);
-
-        // message receiver
-        
-        PEP_STATUS receive_DeviceState_msg(
-                PEP_SESSION session, 
-                message *src, 
-                PEP_rating rating, 
-                stringlist_t *keylist
-            );
-
         // state machine
+
+        const char *«@name»_state_name(int state);
 
         «@name»_state fsm_«@name»(
                 PEP_SESSION session,
                 «@name»_state state,
-                «@name»_event event,
-                Identity partner,
-                void *extra,
-                time_t *timeout
-            );
-
-        // driver
-
-        DYNAMIC_API PEP_STATUS fsm_«@name»_inject(
-                PEP_SESSION session,
-                «@name»_event event,
-                Identity partner,
-                void *extra,
-                time_t *timeout
+                «@name»_event event
             );
 
         #ifdef __cplusplus
@@ -138,278 +350,195 @@ tstylesheet {
 
         ||
         }
-        document "generated/{@filename}_driver.c", "text"
+
+        document "generated/{@name}_fsm.c", "text" {
         ||
-        // Driver for «@name» state machine
+        // This file is under GNU General Public License 3.0
+        // see LICENSE.txt
 
-        #include <assert.h>
-        #include "pEp_internal.h"
+        #include "«@name»_fsm.h"
 
-
-        DYNAMIC_API PEP_STATUS fsm_«@name»_inject(
-                PEP_SESSION session,
-                «@name»_event event,
-                Identity partner,
-                void *extra,
-                time_t *timeout
-            )
+        const char *«@name»_state_name(int state)
         {
-            assert(session);
-            if (!session)
-                return PEP_ILLEGAL_VALUE;
-
-            while(true)
-            {
-                «@name»_state new_state = fsm_«@name»(session,
-                    session->«@filename»_state, event, partner, extra, timeout);
-
-                if (new_state == «@name»_state_invalid_out_of_memory)
-                    return PEP_OUT_OF_MEMORY;
-
-                if (new_state < 0)
-                    return PEP_SYNC_STATEMACHINE_ERROR - new_state;
-                
-                if (new_state == session->«@filename»_state)
-                    break;
-
-                event = Init;
-                extra = NULL;
-                session->«@filename»_state = new_state;
-            } 
-
-            return PEP_STATUS_OK;
+            switch (state) {
+                case End:
+                    return "End";
+                case None:
+                    return "None";
+                case Init:
+                    return "InitState";
+        ||
+        for "func:distinctName(state[not(@name='InitState')])" {
+            |>> case «@name»:
+            |>>> return "«@name»";
+        }
+        ||
+                default:
+                    return "unknown state";
+            }
         }
 
-        ||
-        document "generated/{@filename}_fsm.c", "text"
-        ||
-        #include "pEp_internal.h"
-        #include "«@filename»_fsm.h"
-        #include "«@filename»_impl.h"
+        static char *_str(int n, bool hex)
+        {
+            char *buf = calloc(1, 24);
+            assert(buf);
+            if (!buf)
+                return NULL;
 
-        // local definitions for «@name»'s state machine 
+            if (hex)
+                snprintf(buf, 24, "%.4x", n);
+            else
+                snprintf(buf, 24, "%d", n);
+            return buf;
+        }
 
-        `` apply "state", 0 mode="declStatePayload"
+        #define «@name»_ERR_LOG(t, d) log_event(session, (t), "«@name»", (d), "error")
 
-        // state machine for «@name»
+        static PEP_STATUS _«@name»_ERR_LOG_int(PEP_SESSION session, char *t, int n, bool hex)
+        {
+            char *_buf = _str(n, hex);
+            if (!_buf)
+                return PEP_OUT_OF_MEMORY;
+            PEP_STATUS status = «@name»_ERR_LOG(t, _buf);
+            free(_buf);
+            return status;
+        }
+
+        #define «@name»_ERR_LOG_INT(t, n) _«@name»_ERR_LOG_int(session, (t), (n), false)
+        #define «@name»_ERR_LOG_HEX(t, n) _«@name»_ERR_LOG_int(session, (t), (n), true)
+
+        #ifndef SERVICE_LOG
+        // SERVICE LOG is meant to check session->service_log in runtime config;
+        // for older engines log more than needed
+        #define SERVICE_LOG(session, t, n, d) log_event((session), (t), (n), (d), "service")
+        #endif 
+
+        #define «@name»_SERVICE_LOG(t, d) SERVICE_LOG(session, (t), "«@name»", (d))
 
         «@name»_state fsm_«@name»(
                 PEP_SESSION session,
                 «@name»_state state,
-                «@name»_event event,
-                Identity partner,
-                void *extra,
-                time_t *timeout
+                «@name»_event event
             )
         {
-            PEP_STATUS status = PEP_STATUS_OK;
+            assert(session);
+            if (!session)
+                return invalid_state;
 
             switch (state) {
-            `` apply "state", 2
+                case None:
+                    «@name»_SERVICE_LOG("transition to state Init", "None is not a valid state");
+                    return Init;
+                
+                `` apply "state", 2, mode=fsm
                 default:
-                    return («@name»_state) invalid_state;
+                    «@name»_ERR_LOG_INT("«@name»_fsm() called with invalid state", state);
+                    return invalid_state;
             }
-
+            
             return state;
         }
 
         ||
+        }
     }
+    
+    template "state", mode=fsm {
+        choose {
+            when "@name='InitState'" | case «../@name»_state_Init:
+            otherwise | case «@name»:
+        }
+        ||
+            «../@name»_SERVICE_LOG("in state", "«@name»");
 
-    template "state" {
-        ||
-        case «@name»:
-        {
-            DEBUG_LOG("Entering FSM state", "«../@filename»_fsm.c", "state=«@name»")
-        ||
-
-        if "count(parm) > 0" 
-        || 
-            assert(session->sync_state_payload);
-            if(!session->sync_state_payload) return («../@name»_state) invalid_state;
-            `` apply "parm", 1 mode="unpackStatePayloadParm" with "stateName", "@name"
-        ||
-
-        ||
             switch (event) {
-        ||
-
-        if "not(event[@name='Init'])" 
-        ||
-                case Init: 
-                    DEBUG_LOG("FSM event", "«../@filename»_fsm.c, state=«@name»", "event=Init") 
-                    *timeout = «@timeout»;
-                    break;
-        ||
-
-        apply "event", 2;
-
-        ||
+                case None:
+                    «../@name»_SERVICE_LOG("received None event", "ignoring");
+                    return state;
+     
+                `` apply "event", 2, mode=fsm
                 default:
-                    return («../@name»_state) invalid_event;
+                    «../@name»_ERR_LOG_INT("«../@name»_fsm() called with invalid event", event);
+                    return invalid_event;
             }
             break;
+
+        ||
+    }
+
+    template "event", mode=fsm {
+        | case «@name»: {
+        if "condition|action" |> PEP_STATUS status;
+        if "condition" |> bool result = false;
+        if "condition|action" |
+        ||
+            «../../@name»_SERVICE_LOG("received event", "«@name»");
+            `` apply "transition|action|condition" with "protocol", "../../..", with "fsm", "../.."
+        ||
+        if "name(*[last()])!='transition'" {
+            |
+            |> KeySync_SERVICE_LOG("remaining in state", "«../@name»");
+            |> break;
         }
+        ||
+        }
+        
         ||
     }
 
-    function "pEp_type" {
-        param "type";
-
-        choose {
-            when "$type = 'Identity'" > Identity
-            when "$type = 'IdentityList'" > identity_list*
-            when "$type = 'GroupKeys'" > group_keys_extra_t*
-            otherwise value "$type";
-        }
-    }
-
-    function "pEp_type_op_radix" {
-        param "type";
-
-        choose {
-            when "$type = 'Identity'" > identity
-            when "$type = 'IdentityList'" > identity_list
-            when "$type = 'GroupKeys'" > group_keys_extra
-            otherwise call "pEp_type" with "type", "$type";
-        }
-    }
-
-    template "parm" mode="unpackStatePayloadParm" 
-    {
-        param "stateName";
-        const "pEpType" call "pEp_type" with "type","name(*[1])"; 
-        | «$pEpType» «name(*[2])» = ((«$stateName»_state_payload_t*)session->sync_state_payload)->«name(*[2])»;
-    }
-
-    template "state" mode="declStatePayload" if "count(parm) > 0"
-    ||
-    typedef struct _«@name»_state_payload {
-        `` apply "parm", 1 mode="declStatePayloadParm"
-    } «@name»_state_payload_t;
-
-    ||
-
-    template "parm" mode="declStatePayloadParm" {
-        const "pEpType" call "pEp_type" with "type","name(*[1])"; 
-        | «$pEpType» «name(*[2])»;
-    }
-
-    template "event" {
-        ||
-        case «@name»:
-        {
-            DEBUG_LOG("FSM event", "«../../@filename»_fsm.c, state=«../@name»", "event=«@name»")
-        `` if "@name='Init'" |> *timeout = «../@timeout»;
+    template "transition" {
+        param "fsm";
         ||
 
-        if "count(parm) > 1" {
-            // TODO get ride of void *extra, pass per-event struct incl all params.
-            const "extrapEpType" call "pEp_type" with "type","name(parm[2]/*[1])"; 
-            const "extraArgName","name(parm[2]/*[2])"; 
-            |> «$extrapEpType» «$extraArgName» = («$extrapEpType»)extra;
-        }
-
-        ||
-        `` apply "action|transition|condition";
-        `` if "name(*[position()=last()]) != 'transition'" |> break;
-        }
+        «$fsm/@name»_SERVICE_LOG("transition to state", "«@target»");
+        state = «@target»;
+        break;
         ||
     }
 
     template "action" {
-        | DEBUG_LOG("FSM action", "«ancestor::fsm/@filename»_fsm.c, state=«ancestor::state/@name», event=«ancestor::event/@name»", "action=«@name»")
-        indent(0);
-        > status = «@name»(session, state, 
+        param "protocol";
+        param "fsm";
         choose {
-            when "parm" > «name(parm/*)»
-            otherwise > NULL
+            when "starts-with(@name, 'send')" {
+                const "name", "substring(@name, 5)";
+                ||
+
+                «$fsm/@name»_SERVICE_LOG("send message", "«$name»");
+                status = «$protocol/@name»_send(session, «$fsm/@id», «$name»);
+                ||
+            }
+            otherwise
+                ||
+
+                «$fsm/@name»_SERVICE_LOG("do action", "«@name»");
+                status = «@name»(session);
+                ||
         }
-        choose {
-            when "count(parm) > 1" > , «name(parm[2]/*)»
-            otherwise > , NULL
+        ||
+        if (status) {
+            «$fsm/@name»_ERR_LOG_HEX("executing action «@name»() failed", status);
+            return invalid_action;
         }
-        > );\n
-        | if (status == PEP_OUT_OF_MEMORY)
-        |> return (int) invalid_out_of_memory;
-        | if (status != PEP_STATUS_OK)
-        |> return (int) invalid_action;
+        ||
     }
 
     template "condition" {
-        | {
-        |> int cond_result = «@name»(session`apply "parm", 0`);
-        |> #ifndef NDEBUG
-        |> char resstr[11] = {0,};
-        |> snprintf(resstr,10,"result=%d",cond_result);
-        |> #endif
-        |> DEBUG_LOG("FSM condition", "«ancestor::fsm/@filename»_fsm.c, state=«ancestor::state/@name», event=«ancestor::event/@name», condition=«@name»", resstr)
-        |> if (cond_result < 0)
-        |>> return cond_result;
-        |> if (cond_result) {
-        apply "action|transition|condition";
-        |> }
-        const "alternative", "./following-sibling::*[position()=1][name(.)='alternative']";
-        if "$alternative" {
-        |> else {
-        apply "$alternative/action|$alternative/transition|$alternative/condition";
-        |> }
+        param "protocol";
+        param "fsm";
+        ||
+
+        status = «@name»(session, &result);
+        if (status) {
+            «$fsm/@name»_ERR_LOG_HEX("computing condition «@name» failed", status);
+            return invalid_condition;
         }
+        if (result) {
+            KeySync_SERVICE_LOG("condition applies", "«@name»");
+        ||
+            apply "transition|action|condition"
+                with "protocol", "$protocol", with "fsm", "$fsm";
         | }
-    }
-
-    template "parm" choose {
-        when "count(*) = 1"
-            > , «name(*)»
-        otherwise
-            > , «name(*[1])» «name(*[2])»
-    }
-
-    template "transition"{
-        const "stateparm", "ancestor::state/child::parm";
-        if "count($stateparm) > 0" {
-            ||
-            assert(session->sync_state_payload);
-            if(!session->sync_state_payload) return («ancestor::fsm/@name»_state) invalid_state;
-            `` apply "$stateparm", 0 mode="freeStatePayloadParm" with "stateName", "ancestor::state/@name"
-            free(session->sync_state_payload);
-            session->sync_state_payload = NULL;
-            ||
-        }
-        if "count(parm) > 0" {
-            const "nextstatename", "@target";
-            const "nextstateparm", "ancestor::fsm/child::state[@name = $nextstatename]/child::parm";
-            if "count(parm) != count($nextstateparm)" 
-                error > different state parameters and transition parameters count state=«ancestor::state/@name», event=«ancestor::event/@name» target=«@target»
-            ||
-            session->sync_state_payload = malloc(sizeof(«$nextstatename»_state_payload_t));
-            assert(session->sync_state_payload);
-            if(!session->sync_state_payload) return («ancestor::fsm/@name»_state) invalid_out_of_memory;
-            ||
-            apply "$nextstateparm", 0 mode="dupStatePayloadParm" {
-                with "stateName", "$nextstatename";
-                with "transitionParms", "parm";
-            }
-        }
-        | DEBUG_LOG("FSM transition", "«ancestor::fsm/@filename»_fsm.c, state=«ancestor::state/@name», event=«ancestor::event/@name»", "target=«@target»")
-        | return «@target»;
-    }
-
-    template "parm" mode="freeStatePayloadParm" 
-    {
-        param "stateName";
-        const "pEpTypeOpRadix" call "pEp_type_op_radix" with "type","name(*[1])"; 
-        | free_«$pEpTypeOpRadix»(((«$stateName»_state_payload_t*)session->sync_state_payload)->«name(*[2])»);
-    }
-
-    template "parm" mode="dupStatePayloadParm" 
-    {
-        param "stateName";
-        param "transitionParms";
-        const "pEpTypeOpRadix" call "pEp_type_op_radix" with "type","name(*[1])"; 
-        const "pos", "position()";
-        | ((«$stateName»_state_payload_t*)session->sync_state_payload)->«name(*[2])» =
-        |     «$pEpTypeOpRadix»_dup(«name($transitionParms[$pos]/*)»);
     }
 }
 

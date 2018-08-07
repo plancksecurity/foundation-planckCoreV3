@@ -1,5 +1,9 @@
-/* This file is under GNU General Public License 3.0 */
-/* see LICENSE.txt */
+-- This file is under BSD License 2.0
+
+-- Sync protocol for p≡p
+-- Copyright (c) 2016, 2017 p≡p foundation
+
+-- Written by Volker Birk
 
 PEP
     { iso(1) org(3) dod(6) internet(1) private(4) enterprise(1) pEp(47878) basic(0) }
@@ -8,27 +12,24 @@ DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
 
 BEGIN
 
-EXPORTS Version, Identity, IdentityList;
+EXPORTS Identity, IdentityList, TID, Hash;
 
 ISO639-1 ::= PrintableString(FROM ("a".."z")) (SIZE(2))
 Hex ::= PrintableString(FROM ("A".."F") | FROM ("0".."9"))
-Hash ::= Hex(SIZE(1..128)) -- SHA1 to SHA512 in hex
+Hash ::= Hex(SIZE(16..128)) -- 32bit Key ID to SHA512 in hex
+PString ::= UTF8String  (SIZE(1..1024))
+TID ::= OCTET STRING (SIZE(16)) -- UUID version 4 variant 1
 
 Identity ::= SEQUENCE {
-    address     UTF8String  (SIZE(1..1024)) OPTIONAL,
+    address     PString,
     fpr         Hash,
-    user-id     UTF8String  (SIZE(1..1024)) OPTIONAL,
-    username    UTF8String  (SIZE(1..1024)) OPTIONAL,
-    comm-type   INTEGER     (0..255) OPTIONAL,
+    user-id     PString,
+    username    PString,
+    comm-type   INTEGER (0..255),
     lang        ISO639-1
 }
 
 IdentityList ::= SEQUENCE OF Identity
-
-Version ::= SEQUENCE {
-    major       INTEGER (0..255),
-    minor       INTEGER (0..255)
-}
 
 END
 

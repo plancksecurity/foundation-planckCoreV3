@@ -8,8 +8,49 @@ def "func:distinctName" {
     choose {
         when "not($nodes)"
             result "/..";
-        otherwise {
+        otherwise
             result "$nodes[1] | func:distinctName($nodes[position() > 1])[@name != $nodes[1]/@name]";
-        }
+    }
+}
+
+def "func:distinctType" {
+    param "nodes", "/..";
+    choose {
+        when "not($nodes)"
+            result "/..";
+        otherwise
+            result "$nodes[1] | func:distinctType($nodes[position() > 1])[@type != $nodes[1]/@type]";
+    }
+}
+
+def "func:asn1name"
+    result "translate(@name, '_', '-')";
+
+def "func:asn1type" {
+    choose {
+        when "@type='bool'"
+            result "'BOOLEAN'";
+        when "@type='int'"
+            result "'INTEGER'";
+        otherwise
+            result "translate(@type, '_', '-')";
+    }
+}
+
+def "func:basicType" {
+    choose {
+        when "substring(@type,1,1)=yml:lcase(substring(@type,1,1))"
+            result "true()";
+        otherwise
+            result "false()";
+    }
+}
+
+def "func:ctype" {
+    choose {
+        when "func:basicType()"
+            result "@type";
+        otherwise
+            result "concat(@type,'_t')";
     }
 }
