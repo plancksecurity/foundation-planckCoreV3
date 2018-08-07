@@ -1597,6 +1597,9 @@ PEP_STATUS create_standalone_key_reset_message(message** dst,
     if (!dst || !recip->user_id || !recip->address)
         return PEP_ILLEGAL_VALUE;
 
+    if (!revoke_fpr || !new_fpr)
+        return PEP_ILLEGAL_VALUE;
+        
     *dst = NULL;
     // Get own identity user has corresponded with
     pEp_identity* own_identity = NULL;
@@ -1609,6 +1612,18 @@ PEP_STATUS create_standalone_key_reset_message(message** dst,
     message* reset_message = new_message(PEP_dir_outgoing);
     reset_message->from = own_identity;
     reset_message->to = new_identity_list(identity_dup(recip)); // ?
+    
+    const char* oldtag = "OLD: ";
+    const char* newtag = "\nNEW: ";
+    const size_t taglens = 11;
+    size_t full_len = taglens + strlen(revoke_fpr) + strlen(new_fpr) + 2; // \n and \0
+    char* longmsg = calloc(full_len, 1);
+     
+    strlcpy(longmsg, oldtag, full_len);
+    strlcat(longmsg, revoke_fpr, full_len);
+    strlcat(longmsg, newtag, full_len);
+    strlcat(longmsg, new_fpr);
+    strlcat(longmsg, "\n");
     
     status = _attach_key(session, revoke_fpr, reset_message);
     if (status != PEP_STATUS_OK)
@@ -3168,6 +3183,111 @@ PEP_STATUS check_for_own_revoked_key(
     }
 }
 
+PEP_STATUS receive_key_reset(PEP_SESSION session,
+                             message* reset_msg,
+                             const char* signing_fpr) {
+
+    if (!session || !reset_msg || !revoke_fpr || !new_fpr)
+        return PEP_ILLEGAL_VALUE;
+        
+    if (EMPTYSTR(signing_fpr))
+        return PEP_ILLEGAL_VALUE; // need better error - this is an attack 
+        
+    if (!reset_msg->from || !reset_msg->from->user_id)
+        return PEP_MALFORMED_KEY_RESET_MSG;
+        
+    if (is_me(reset_msg->from)) // hrm...
+        return PEP_ILLEGAL_VALUE;
+        
+    if (!reset_msg->longmsg || strncmp(reset_msg->longmsg, "OLD: ", 5) != 0) 
+        return PEP_MALFORMED_KEY_RESET_MSG;
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    const char* revoke_fpr = NULL;
+    const char* new_fpr = NULL;
+    
+    stringlist_t* keylist = NULL;
+
+    // Make sure the signing fpr belongs to the "from" user, since that is 
+    // who we are to change defaults for.
+    
+    // 1. See if this fpr is even associated with this user_id
+    const char* sender_id = reset_msg->from->user_id;
+    status = exists_trust_entry(session, sender_id, *signing_fpr, user_has_fpr);
+    if (status != PEP_STATUS_OK)
+        goto pep_free;
+        
+    if (!user_has_fpr) {   
+        status = PEP_KEY_NOT_FOUND;
+        goto pep_free;
+    }
+    
+    char* rest = NULL;
+    char* p = strtok_r(reset_msg->longmsg, "\n", &rest);
+    if (!EMPTYSTR(p + 5))
+        revoke_fpr = strdup(p + 5);
+    else {
+        status = PEP_MALFORMED_KEY_RESET_MSG;
+        goto pep_free;
+    }
+
+    // Before we go further, let's be sure this was signed be the revoked fpr.
+    if (strcasecmp(revoke_fpr, signing_fpr) != 0) {
+        status = PEP_ILLEGAL_VALUE;
+        goto pep_free;
+    }
+        
+    // Ok, we can go on. This was a first check, in any event.    
+    p = strtok_r(NULL, "\n", &rest); 
+    if (strncmp(p, "NEW: ", 5) != 0  || EMPTYSTR(p + 5)) {
+        status = PEP_MALFORMED_KEY_RESET_MSG;
+        goto pep_free;
+    }
+
+    new_fpr = strdup(p + 5);
+        
+    // We do NOT want to import private keys - we're trying to make sure nobody
+    // tricks us into using one here.
+    identity_list* private_il = NULL;
+    
+    bool imported_keys = import_attached_keys(session, reset_message, &private_il);
+
+    if (private_il) {
+        // This is clearly not a real key reset message. We NEVER distribute
+        // private keys this way, so indicate foul play and abort.
+        free(private_il);
+        status = PEP_MALFORMED_KEY_RESET_MSG;
+        goto pep_free;
+    }
+        
+    // We know that the signer has the sender's user_id, and that the revoked fpr
+    // is theirs. We now need to make sure that we've imported the key we need.
+    
+    status = find_keys(session, *new_fpr, &keylist);
+    if (status != PEP_STATUS_OK)
+        goto pep_free;
+        
+    if (!keylist) {
+        status = PEP_KEY_NOT_FOUND;
+        goto pep_free;
+    }
+
+    // alright, we've checked as best we can. Let's set that baby.
+    sender_id->from->fpr = new_fpr;
+    
+    reset_msg->flags |= PEP_decrypt_flag_consume;
+    sender_id->comm_type = sender_id->comm_type & (~PEP_ct_confirmed);
+    status = set_identity(session, sender_id);
+    
+    if (status == PEP_STATUS_OK)
+        status = PEP_KEY_RESET_SUCCESSFUL;
+    
+pep_free:    
+    free(keylist);    
+    free(revoke_fpr);
+    free(new_fpr);
+    return status;
+}
 
 DYNAMIC_API PEP_STATUS _decrypt_message(
         PEP_SESSION session,
@@ -3426,13 +3546,35 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                     inner_message->enc_format = src->enc_format;
                                     // FIXME
                                     status = unencapsulate_hidden_fields(inner_message, NULL, &wrap_info);
+                                    
+                                    // ?
+                                    if (status != PEP_STATUS_OK) {
+                                        free_message(inner_message);
+                                        goto pep_error;
+                                    }
+    
                                     if (wrap_info) {
-                                        // useless check, but just in case we screw up?
-                                        if (strcmp(wrap_info, "INNER") == 0) {
+                                        bool is_inner = (strcmp(wrap_info, "INNER") == 0);
+                                        bool is_key_reset = (strcmp(wrap_info, "KEY_RESET") == 0)
+
+                                        if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && is_key_reset) {
+                                            
+                                        }
+
+                                        if (is_key_reset) {
+                                            const char* revoke_fpr = NULL;
+                                            const char* new_fpr = NULL; 
+                                            status = receive_key_reset(session,
+                                                                       inner_message,
+                                                                       &revoke_fpr,
+                                                                       &new_fpr);
                                             if (status != PEP_STATUS_OK) {
                                                 free_message(inner_message);
                                                 goto pep_error;
                                             }
+                                            
+                                        }
+                                        if (is_inner || is_key_reset) {
 
                                             // check for private key in decrypted message attachment while importing
                                             // N.B. Apparently, we always import private keys into the keyring; however,
@@ -3457,10 +3599,19 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                             // needed...
                                             reconcile_src_and_inner_messages(src, inner_message);
                                             
+
+                                            if (is_key_reset) {
+                                                // FIXME: WE HAVE TO DO WAY MORE THAN THIS.
+                                                // Key reset message needs to contain both old and new key fprs.
+                                                // We need to check this here.
+                                                inner_message->flags |= PEP_decrypt_flag_consume;
+                                            }
+    
                                             // FIXME: free msg, but check references
                                             //src = msg = inner_message;
                                             calculated_src = msg = inner_message;
                                             
+                                            // FIXME: should this be msg???
                                             if (src->from) {
                                                 if (!is_me(session, src->from))
                                                     update_identity(session, (src->from));
