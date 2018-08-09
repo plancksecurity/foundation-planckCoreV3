@@ -7,7 +7,7 @@
 #include <assert.h>
 
 #include "asn1_helper.h"
-#include "../asn.1/DeviceGroup-Protocol.h"
+#include "KeySync_fsm.h"
 
 // receive_sync_msg is defined in the sync_impl
 
@@ -30,10 +30,6 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
     if (!(session && management && messageToSend && notifyHandshake && inject_sync_msg && retrieve_next_sync_msg))
         return PEP_ILLEGAL_VALUE;
 
-    pEpUUID uuid;
-    uuid_generate_random(uuid);
-    uuid_unparse_upper(uuid, session->sync_uuid);
-
     session->sync_management = management;
     session->messageToSend = messageToSend;
     session->notifyHandshake = notifyHandshake;
@@ -41,9 +37,7 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
     session->retrieve_next_sync_msg = retrieve_next_sync_msg;
 
     // start state machine
-    session->sync_state = InitState;
-    time_t unused = 0;
-    PEP_STATUS status = fsm_DeviceState_inject(session, Init, NULL, NULL, &unused);
+    PEP_STATUS status = inject_Sync_event(session, Sync_PR_keysync, Init);
     if (status != PEP_STATUS_OK)
         unregister_sync_callbacks(session);
 
@@ -95,7 +89,7 @@ int call_inject_sync_msg(PEP_SESSION session, void *msg)
 
 DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
     // stop state machine
-    session->sync_state = DeviceState_state_NONE;
+    memset(&session->sync_state, 0, sizeof(session->sync_state));
 
     // unregister
     session->sync_management = NULL;
@@ -107,7 +101,7 @@ DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
 
 DYNAMIC_API PEP_STATUS deliverHandshakeResult(
         PEP_SESSION session,
-        Identity partner,
+        pEp_identity *partner,
         sync_handshake_result result
     )
 {
@@ -117,7 +111,7 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
 
     PEP_STATUS status = PEP_STATUS_OK;
 
-    DeviceState_event event;
+    int event;
     bool need_partner = false;
 
     switch (result) {
@@ -126,14 +120,12 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
             break;
         case SYNC_HANDSHAKE_ACCEPTED:
         {
-            event = HandshakeAccepted;
-            need_partner = true;
+            event = Accept;
             break;
         }
         case SYNC_HANDSHAKE_REJECTED:
         {
-            event = HandshakeRejected;
-            need_partner = true;
+            event = Reject;
             break;
         }
         default:

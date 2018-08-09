@@ -30,6 +30,11 @@ extern "C" {
 #define RTLD_LAZY 1
 #define mode_t int
 
+#ifndef MIN
+#define MIN(A, B) ((A)>(B) ? (B) : (A))
+#define MAX(A, B) ((A)>(B) ? (A) : (B))
+#endif
+
 void *dlopen(const char *filename, int flag);
 int dlclose(void *handle);
 void *dlsym(void *handle, const char *symbol);

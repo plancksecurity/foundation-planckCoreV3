@@ -12,7 +12,6 @@
 #include "pEp_internal.h"
 #include "keymanagement.h"
 
-#include "sync_fsm.h"
 #include "blacklist.h"
 
 static bool key_matches_address(PEP_SESSION session, const char* address,

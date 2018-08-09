@@ -107,6 +107,7 @@
 #include "cryptotech.h"
 #include "transport.h"
 #include "sync.h"
+#include "Sync_func.h"
 
 #define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
 
@@ -182,7 +183,6 @@ struct _pEpSession {
     // sequence value
     sqlite3_stmt *sequence_value1;
     sqlite3_stmt *sequence_value2;
-    sqlite3_stmt *sequence_value3;
 
     // revoked keys
     sqlite3_stmt *set_revoked;
@@ -207,13 +207,15 @@ struct _pEpSession {
     inject_sync_msg_t inject_sync_msg;
     retrieve_next_sync_msg_t retrieve_next_sync_msg;
 
-    // key sync
+    // pEp Sync
     pEpSession* sync_session;
-    DeviceState_state sync_state;
-    void* sync_state_payload;
-    char sync_uuid[37];
-    time_t LastCannotDecrypt;
-    time_t LastUpdateRequest;
+    struct Sync_state_s sync_state;
+    struct own_Sync_state_s own_sync_state;
+
+//     void* sync_state_payload;
+//     char sync_uuid[37];
+//     time_t LastCannotDecrypt;
+//     time_t LastUpdateRequest;
 
     // runtime config
 

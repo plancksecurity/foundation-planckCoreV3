@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <strings.h>
 #include <sys/select.h>
+#include <sys/param.h>
 #include <regex.h>
 
 #ifndef ANDROID

@@ -6,8 +6,8 @@ include ../default.conf
 all: .codegen
 
 .codegen: .statemachines .actions .codecs .messages
-	cp -f generated/*.c generated/*.h ../src
 	touch .codegen
+	make copy
 
 .actions: sync.fsm gen_actions.ysl2 fsm.yml2 functions.ysl2 cond_act.yml2
 	$(YML2_PROC) -y gen_actions.ysl2 $< -o $@
@@ -21,12 +21,15 @@ all: .codegen
 .messages: sync.fsm gen_messages.ysl2 fsm.yml2 functions.ysl2
 	$(YML2_PROC) -y gen_messages.ysl2 $< -o $@
 
-.PHONY: clean
+.PHONY: clean copy
 
 clean:
 	rm -f *.xml *.xsl \
     $(pathsub generated/%, ../src/% $(wildcard generated/*.*)) \
     ../generated/* .statemachines .actions .codecs .messages *.dot *.svg
+
+copy:
+	cp -f generated/*.c generated/*.h ../src
 
 %.xml: %.fsm
 	yml2c $< -o $@

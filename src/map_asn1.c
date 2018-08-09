@@ -23,9 +23,8 @@ Identity_t *Identity_from_Struct(
         return NULL;
 
     if (ident->address) {
-        result->address = OCTET_STRING_new_fromBuf(&asn_DEF_UTF8String,
-                ident->address, -1);
-        if (ident->address && !result->address)
+        int r = OCTET_STRING_fromBuf(&result->address, ident->address, -1);
+        if (r)
             goto enomem;
     }
 
@@ -35,25 +34,19 @@ Identity_t *Identity_from_Struct(
     }
 
     if (ident->user_id) {
-        result->user_id = OCTET_STRING_new_fromBuf(&asn_DEF_UTF8String,
-                ident->user_id, -1);
-        if (ident->user_id && !result->user_id)
+        int r = OCTET_STRING_fromBuf(&result->user_id, ident->user_id, -1);
+        if (r)
             goto enomem;
     }
 
     if (ident->username) {
-        result->username = OCTET_STRING_new_fromBuf(&asn_DEF_UTF8String,
-                ident->username, -1);
-        if (ident->username && !result->username)
+        int r = OCTET_STRING_fromBuf(&result->username, ident->username, -1);
+        if (r)
             goto enomem;
     }
 
     if (ident->comm_type != PEP_ct_unknown) {
-        result->comm_type = malloc(sizeof(long));
-        assert(result->comm_type);
-        if (!result->comm_type)
-            goto enomem;
-        *result->comm_type = ident->comm_type;
+        result->comm_type = ident->comm_type;
     }
 
     if (ident->lang[0]) {
@@ -91,37 +84,30 @@ pEp_identity *Identity_to_Struct(Identity_t *ident, pEp_identity *result)
     if (!result)
         return NULL;
 
-    if (ident->address) {
-        result->address = strndup((char *) ident->address->buf,
-                ident->address->size);
-        assert(result->address);
-        if (!result->address)
-            goto enomem;
-    }
+    result->address = strndup((char *) ident->address.buf,
+            ident->address.size);
+    assert(result->address);
+    if (!result->address)
+        goto enomem;
 
     result->fpr = strndup((char *) ident->fpr.buf, ident->fpr.size);
     assert(result->fpr);
     if (!result->fpr)
         goto enomem;
 
-    if (ident->user_id) {
-        result->user_id = strndup((char *) ident->user_id->buf,
-                ident->user_id->size);
-        assert(result->user_id);
-        if (!result->user_id)
-            goto enomem;
-    }
+    result->user_id = strndup((char *) ident->user_id.buf,
+            ident->user_id.size);
+    assert(result->user_id);
+    if (!result->user_id)
+        goto enomem;
 
-    if (ident->username) {
-        result->username = strndup((char *) ident->username->buf,
-                ident->username->size);
-        assert(result->username);
-        if (!result->username)
-            goto enomem;
-    }
+    result->username = strndup((char *) ident->username.buf,
+            ident->username.size);
+    assert(result->username);
+    if (!result->username)
+        goto enomem;
 
-    if (ident->comm_type)
-        result->comm_type = (PEP_comm_type) *ident->comm_type;
+    result->comm_type = (PEP_comm_type) ident->comm_type;
 
     if (ident->lang.size == 2) {
         result->lang[0] = ident->lang.buf[0];

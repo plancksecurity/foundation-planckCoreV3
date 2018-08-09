@@ -14,13 +14,6 @@
 #include <math.h>
 
 
-#ifndef _MIN
-#define _MIN(A, B) ((B) > (A) ? (A) : (B))
-#endif
-#ifndef _MAX
-#define _MAX(A, B) ((B) > (A) ? (B) : (A))
-#endif
-
 // These are globals used in generating message IDs and should only be
 // computed once, as they're either really constants or OS-dependent
 
@@ -463,7 +456,7 @@ static char* message_id_prand_part(void) {
         
     const int DESIRED_BITS = 64;
 
-    num_bits = _MIN(num_bits, DESIRED_BITS);
+    num_bits = MIN(num_bits, DESIRED_BITS);
     
     int i;
     
@@ -482,9 +475,9 @@ static char* message_id_prand_part(void) {
 
         output_value |= temp_val;
 
-        i -= _MIN(num_bits, i); 
+        i -= MIN(num_bits, i); 
         
-        bitshift = _MIN(num_bits, i);
+        bitshift = MIN(num_bits, i);
         output_value <<= bitshift;        
         bitmask = get_bitmask(bitshift);
     }
@@ -1322,7 +1315,7 @@ static PEP_comm_type _get_comm_type(
         else if (ident->comm_type == PEP_ct_mistrusted)
             return PEP_ct_mistrusted;
         else
-            return _MIN(max_comm_type, ident->comm_type);
+            return MIN(max_comm_type, ident->comm_type);
     }
     else {
         return PEP_ct_unknown;
@@ -3217,7 +3210,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                     case PEP_DECRYPTED:
                     case PEP_DECRYPTED_AND_VERIFIED:
                         if (decrypt_status <= PEP_DECRYPTED_AND_VERIFIED)
-                            decrypt_status = _MIN(decrypt_status, _decrypt_in_pieces_status);
+                            decrypt_status = MIN(decrypt_status, _decrypt_in_pieces_status);
                         break;
                     case PEP_STATUS_OK:
                         break;    
@@ -3605,7 +3598,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
         *rating = PEP_rating_undefined;
     }
     else
-        *rating = _MAX(_rating(max_comm_type, PEP_rating_undefined),
+        *rating = MAX(_rating(max_comm_type, PEP_rating_undefined),
                                PEP_rating_unencrypted);
 
     return PEP_STATUS_OK;

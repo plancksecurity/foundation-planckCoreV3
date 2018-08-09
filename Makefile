@@ -22,7 +22,6 @@ endif
 .PHONY: all
 all:
 	$(MAKE) -C sync
-	$(MAKE) -C asn.1 generate
 	$(MAKE) -C asn.1
 	$(MAKE) -C src all
 

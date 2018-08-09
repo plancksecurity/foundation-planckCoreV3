@@ -26,6 +26,10 @@ decl state @name (timeout=0);
 
 decl event @name, on is event;
 
+// external events can have IDs
+
+decl external @name (id);
+
 // a transistion moves the statemachine to another state
 
 decl transition @target, go is transition;

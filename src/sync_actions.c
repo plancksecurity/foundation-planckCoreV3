@@ -1,6 +1,9 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
+#include "pEp_internal.h"
+#include "map_asn1.h"
+
 #include "Sync_impl.h"
 #include "KeySync_fsm.h"
 
@@ -11,7 +14,7 @@ PEP_STATUS deviceGrouped(PEP_SESSION session, bool *result)
         return PEP_ILLEGAL_VALUE;
 
     static const char *sql = "select count(*) from identity where user_id = '"PEP_OWN_USERID"' and (flags & 4) = 4;";
-    static const size_t len = strlen(sql);
+    static const size_t len = sizeof("select count(*) from identity where user_id = '"PEP_OWN_USERID"' and (flags & 4) = 4;");
     sqlite3_stmt *_sql;
     int int_result = sqlite3_prepare_v2(session->db, sql, (int) len, &_sql, NULL);
     assert(int_result == SQLITE_OK);
@@ -115,7 +118,7 @@ PEP_STATUS openChallenge(PEP_SESSION session)
     pEpUUID c;
     uuid_generate_random(c);
 
-    OCTET_STRING_fromBuf(&session->own_sync_state.challenge, c, 16);
+    OCTET_STRING_fromBuf(&session->own_sync_state.challenge, (char *) c, 16);
 
     return PEP_STATUS_OK;
 }
@@ -147,7 +150,7 @@ PEP_STATUS openTransaction(PEP_SESSION session)
     pEpUUID c;
     uuid_generate_random(c);
 
-    OCTET_STRING_fromBuf(&session->own_sync_state.transaction, c, 16);
+    OCTET_STRING_fromBuf(&session->own_sync_state.transaction, (char *) c, 16);
 
     return PEP_STATUS_OK;
 }
@@ -184,6 +187,7 @@ PEP_STATUS showSoleHandshake(PEP_SESSION session)
     if (!session->sync_state.basic.from)
         return PEP_ILLEGAL_VALUE;
 
+    pEp_identity *from = session->sync_state.basic.from;
     pEp_identity *me = NULL;
     PEP_STATUS status = get_identity(session, from->address, PEP_OWN_USERID, &me);
     assert(status == PEP_STATUS_OK);
@@ -196,14 +200,14 @@ PEP_STATUS showSoleHandshake(PEP_SESSION session)
         return PEP_ILLEGAL_VALUE;
     }
 
-    pEp_identity *partner = identity_dup(session->sync_state.basic.from);
+    pEp_identity *partner = identity_dup(from);
     if (!partner) {
         free_identity(me);
         return PEP_OUT_OF_MEMORY;
     }
 
-    PEP_STATUS status = session->notifyHandshake(
-            session->sync_management, me, partner, SYNC_NOTIFY_INIT_FORM_GROUP);
+    status = session->notifyHandshake(session->sync_management, me,
+            partner, SYNC_NOTIFY_INIT_FORM_GROUP);
     if (status)
         return status;
 
@@ -258,7 +262,14 @@ PEP_STATUS ownKeysAreGroupKeys(PEP_SESSION session)
         "   join trust on id = trust.user_id"
         "       and pgp_keypair_fpr = identity.main_key_id"
         "   where identity.user_id = '" PEP_OWN_USERID "';";
-    static const size_t len = strlen(sql);
+    static const size_t len = sizeof("select fpr, username, comm_type, lang,"
+        "   identity.flags | pgp_keypair.flags"
+        "   from identity"
+        "   join person on id = identity.user_id"
+        "   join pgp_keypair on fpr = identity.main_key_id"
+        "   join trust on id = trust.user_id"
+        "       and pgp_keypair_fpr = identity.main_key_id"
+        "   where identity.user_id = '" PEP_OWN_USERID "';");
     sqlite3_stmt *_sql;
     int int_result = sqlite3_prepare_v2(session->db, sql, (int) len, &_sql, NULL);
     assert(int_result == SQLITE_OK);
@@ -269,6 +280,7 @@ PEP_STATUS ownKeysAreGroupKeys(PEP_SESSION session)
     if (!il)
         return PEP_OUT_OF_MEMORY;
 
+    pEp_identity *from = session->sync_state.basic.from;
     identity_list *_il = il;
 
     int result;
@@ -278,9 +290,9 @@ PEP_STATUS ownKeysAreGroupKeys(PEP_SESSION session)
         switch (result) {
         case SQLITE_ROW:
             _identity = new_identity(
-                    address,
+                    from->address,
                     (const char *) sqlite3_column_text(_sql, 0),
-                    user_id,
+                    from->user_id,
                     (const char *) sqlite3_column_text(_sql, 1)
                     );
             assert(_identity);
@@ -315,7 +327,7 @@ PEP_STATUS ownKeysAreGroupKeys(PEP_SESSION session)
 
         default:
             free_identity_list(il);
-            return PEP_UNKOWN_ERROR;
+            return PEP_UNKNOWN_ERROR;
         }
     } while (result != SQLITE_DONE);
 
@@ -341,6 +353,7 @@ PEP_STATUS showJoinGroupHandshake(PEP_SESSION session)
     if (!session->sync_state.basic.from)
         return PEP_ILLEGAL_VALUE;
 
+    pEp_identity *from = session->sync_state.basic.from;
     pEp_identity *me = NULL;
     PEP_STATUS status = get_identity(session, from->address, PEP_OWN_USERID, &me);
     assert(status == PEP_STATUS_OK);
@@ -353,14 +366,14 @@ PEP_STATUS showJoinGroupHandshake(PEP_SESSION session)
         return PEP_ILLEGAL_VALUE;
     }
 
-    pEp_identity *partner = identity_dup(session->sync_state.basic.from);
+    pEp_identity *partner = identity_dup(from);
     if (!partner) {
         free_identity(me);
         return PEP_OUT_OF_MEMORY;
     }
 
-    PEP_STATUS status = session->notifyHandshake(
-            session->sync_management, me, partner, SYNC_NOTIFY_INIT_ADD_OUR_DEVICE);
+    status = session->notifyHandshake(session->sync_management, me,
+            partner, SYNC_NOTIFY_INIT_ADD_OUR_DEVICE);
     if (status)
         return status;
 
@@ -381,6 +394,7 @@ PEP_STATUS showGroupedHandshake(PEP_SESSION session)
     if (!session->sync_state.basic.from)
         return PEP_ILLEGAL_VALUE;
 
+    pEp_identity *from = session->sync_state.basic.from;
     pEp_identity *me = NULL;
     PEP_STATUS status = get_identity(session, from->address, PEP_OWN_USERID, &me);
     assert(status == PEP_STATUS_OK);
@@ -393,14 +407,14 @@ PEP_STATUS showGroupedHandshake(PEP_SESSION session)
         return PEP_ILLEGAL_VALUE;
     }
 
-    pEp_identity *partner = identity_dup(session->sync_state.basic.from);
+    pEp_identity *partner = identity_dup(from);
     if (!partner) {
         free_identity(me);
         return PEP_OUT_OF_MEMORY;
     }
 
-    PEP_STATUS status = session->notifyHandshake(
-            session->sync_management, me, partner, SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE);
+    status = session->notifyHandshake(session->sync_management, me,
+            partner, SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE);
     if (status)
         return status;
 

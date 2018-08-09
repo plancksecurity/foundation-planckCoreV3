@@ -97,8 +97,8 @@ typedef enum {
     PEP_CANNOT_SET_SEQUENCE_VALUE                   = 0x0972,
     PEP_OWN_SEQUENCE                                = 0x097f,
 
-    PEP_SYNC_STATEMACHINE_ERROR                     = 0x0980,
-    PEP_SYNC_NO_TRUST                               = 0x0981,
+    PEP_STATEMACHINE_ERROR                          = 0x0980,
+    PEP_NO_TRUST                                    = 0x0981,
     PEP_STATEMACHINE_INVALID_STATE                  = 0x0982,
     PEP_STATEMACHINE_INVALID_EVENT                  = 0x0983,
     PEP_STATEMACHINE_INVALID_CONDITION              = 0x0984,
