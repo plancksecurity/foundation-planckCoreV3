@@ -1297,10 +1297,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
 #endif // USE_GPG
     }
 
-    // sync_session set to own session by default
-    // sync_session is then never null on a valid session
-    _session->sync_session = _session;
-
     *session = _session;
     
     // Note: Following statement is NOT for any cryptographic/secure functionality; it is

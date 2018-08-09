@@ -44,49 +44,6 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
     return status;
 }
 
-DYNAMIC_API PEP_STATUS attach_sync_session(
-        PEP_SESSION session,
-        PEP_SESSION sync_session
-    )
-{
-    assert(session && sync_session && sync_session->sync_management && sync_session->inject_sync_msg );
-    if (!(session && sync_session && sync_session->sync_management && sync_session->inject_sync_msg ))
-        return PEP_ILLEGAL_VALUE;
-
-    session->sync_session = sync_session;
-    // memcpy(session->sync_uuid, sync_session->sync_uuid, 37);
-
-    // session->sync_management = sync_session->sync_management;
-    // session->inject_sync_msg = sync_session->inject_sync_msg;
-
-    return PEP_STATUS_OK;
-}
-
-DYNAMIC_API PEP_STATUS detach_sync_session(PEP_SESSION session)
-{
-    assert(session);
-    if (!(session))
-        return PEP_ILLEGAL_VALUE;
-
-    session->sync_session = session;
-    // memset(session->sync_uuid, 0, 37);
-
-    // session->sync_management = NULL;
-    // session->inject_sync_msg = NULL;
-
-    return PEP_STATUS_OK;
-}
-
-int call_inject_sync_msg(PEP_SESSION session, void *msg)
-{
-    if(session->sync_session->inject_sync_msg &&
-       session->sync_session->sync_management)
-        return session->sync_session->inject_sync_msg(msg, 
-            session->sync_session->sync_management);
-    else
-       return PEP_SYNC_NO_INJECT_CALLBACK;
-}
-
 DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
     // stop state machine
     memset(&session->sync_state, 0, sizeof(session->sync_state));

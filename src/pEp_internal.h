@@ -208,7 +208,6 @@ struct _pEpSession {
     retrieve_next_sync_msg_t retrieve_next_sync_msg;
 
     // pEp Sync
-    pEpSession* sync_session;
     struct Sync_state_s sync_state;
     struct own_Sync_state_s own_sync_state;
 

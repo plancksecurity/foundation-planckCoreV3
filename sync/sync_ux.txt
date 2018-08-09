@@ -94,9 +94,3 @@ this account, too, implicitely.
 
 If Sync is enabled in 2) then adding a new account will have Sync
 switched off for this account by default.
-
-Yours,
-VB.
--- 
-Volker Birk, p≡p project
-mailto:vb@pep-project.org  https://pep-project.org
