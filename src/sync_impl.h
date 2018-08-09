@@ -40,10 +40,10 @@ PEP_STATUS ownKeysAreGroupKeys(PEP_SESSION session);
 PEP_STATUS showJoinGroupHandshake(PEP_SESSION session);
 PEP_STATUS showGroupedHandshake(PEP_SESSION session);
 
-// send event to own state machine, use state to generate
-// Sync message if necessary
+// notify state machine from event
+// use state to generate Sync message if necessary
 
-PEP_STATUS Sync_send(
+PEP_STATUS Sync_notify(
         PEP_SESSION session, 
         Sync_PR fsm,
         int message_type

@@ -52,10 +52,10 @@ tstylesheet {
             | PEP_STATUS «@name»(PEP_SESSION session);
         ||
 
-        // send event to own state machine, use state to generate
-        // «@name» message if necessary
+        // notify state machine from event
+        // use state to generate «@name» message if necessary
 
-        PEP_STATUS «@name»_send(
+        PEP_STATUS «@name»_notify(
                 PEP_SESSION session, 
                 «@name»_PR fsm,
                 int message_type
@@ -189,7 +189,7 @@ tstylesheet {
             return status;
         }
 
-        PEP_STATUS «@name»_send(
+        PEP_STATUS «@name»_notify(
                 PEP_SESSION session, 
                 «@name»_PR fsm,
                 int message_type
@@ -510,7 +510,7 @@ tstylesheet {
                 ||
 
                 «$fsm/@name»_SERVICE_LOG("send message", "«$name»");
-                status = «$protocol/@name»_send(session, «$fsm/@id», «$name»);
+                status = «$protocol/@name»_notify(session, «$fsm/@id», «$name»);
                 ||
             }
             otherwise

@@ -94,7 +94,7 @@ the_end:
     return status;
 }
 
-PEP_STATUS Sync_send(
+PEP_STATUS Sync_notify(
         PEP_SESSION session, 
         Sync_PR fsm,
         int message_type
