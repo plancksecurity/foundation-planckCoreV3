@@ -92,7 +92,7 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
         if (_partner == NULL)
             return PEP_OUT_OF_MEMORY;
     }
-    status = inject_DeviceState_event(session, event, _partner, NULL);
+    status = send_Sync_message(session, Sync_PR_keysync, event);
 
     return status;
 }
@@ -107,46 +107,29 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
     time_t timeout = 0;
 
     assert(session && session->retrieve_next_sync_msg);
-    assert(obj);
-
-    if (!(session && session->retrieve_next_sync_msg) || !obj)
+    if (!(session && session->retrieve_next_sync_msg))
         return PEP_ILLEGAL_VALUE;
 
     log_event(session, "sync_protocol thread started", "pEp sync protocol", NULL, NULL);
 
     session->sync_obj = obj;
-
     while (true) 
     {
         msg = (sync_msg_t *) session->retrieve_next_sync_msg(session->sync_management, &timeout);
-        if(msg == NULL && timeout == 0)
+        if (msg == NULL)
             break;
-        else if(msg == NULL && timeout != 0){
-            status = fsm_DeviceState_inject(session, Timeout, NULL, NULL, &timeout);
-#ifndef NDEBUG
+
+        status = receive_sync_msg(session, msg, &timeout);
+        if (status != PEP_STATUS_OK && status != PEP_MESSAGE_IGNORE) {
             char buffer[MAX_LINELENGTH];
             memset(buffer, 0, MAX_LINELENGTH);
-            snprintf(buffer, MAX_LINELENGTH, "problem with timeout event : %d\n", (int) status);
+            snprintf(buffer, MAX_LINELENGTH, "problem with msg received: %d\n", (int) status);
             log_event(session, buffer, "pEp sync protocol", NULL, NULL);
-            continue;
-#endif
-        }
-        else {
-            status = receive_sync_msg(session, msg, &timeout);
-            if (status != PEP_STATUS_OK && status != PEP_MESSAGE_IGNORE) {
-#ifndef NDEBUG
-                char buffer[MAX_LINELENGTH];
-                memset(buffer, 0, MAX_LINELENGTH);
-                snprintf(buffer, MAX_LINELENGTH, "problem with msg received: %d\n", (int) status);
-                log_event(session, buffer, "pEp sync protocol", NULL, NULL);
-#endif
-            }
         }
     }
+    session->sync_obj = NULL;
 
     log_event(session, "sync_protocol thread shutdown", "pEp sync protocol", NULL, NULL);
-
-    session->sync_obj = NULL;
 
     return PEP_STATUS_OK;
 }
@@ -165,9 +148,8 @@ DYNAMIC_API PEP_STATUS decode_sync_msg(
 
     *text = NULL;
 
-    DeviceGroup_Protocol_t *msg = NULL;
-    uper_decode_complete(NULL, &asn_DEF_DeviceGroup_Protocol, (void **) &msg,
-            data, size);
+    Sync_t *msg = NULL;
+    uper_decode_complete(NULL, &asn_DEF_Sync, (void **) &msg, data, size);
     if (!msg)
         return PEP_SYNC_ILLEGAL_MESSAGE;
 
@@ -177,8 +159,8 @@ DYNAMIC_API PEP_STATUS decode_sync_msg(
         goto the_end;
     }
 
-    asn_enc_rval_t er = xer_encode(&asn_DEF_DeviceGroup_Protocol, msg,
-            XER_F_BASIC, (asn_app_consume_bytes_f *) consume_bytes, (void *) dst);
+    asn_enc_rval_t er = xer_encode(&asn_DEF_Sync, msg, XER_F_BASIC,
+            (asn_app_consume_bytes_f *) consume_bytes, (void *) dst);
     if (er.encoded == -1) {
         status = PEP_CANNOT_ENCODE;
         goto the_end;
@@ -189,7 +171,7 @@ DYNAMIC_API PEP_STATUS decode_sync_msg(
 
 the_end:
     free_growing_buf(dst);
-    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+    ASN_STRUCT_FREE(asn_DEF_Sync, msg);
     return status;
 }
 
@@ -208,17 +190,17 @@ DYNAMIC_API PEP_STATUS encode_sync_msg(
     *data = NULL;
     *size = 0;
 
-    DeviceGroup_Protocol_t *msg = NULL;
-    asn_dec_rval_t dr = xer_decode(NULL, &asn_DEF_DeviceGroup_Protocol,
-            (void **) &msg, (const void *) text, strlen(text));
+    Sync_t *msg = NULL;
+    asn_dec_rval_t dr = xer_decode(NULL, &asn_DEF_Sync, (void **) &msg,
+            (const void *) text, strlen(text));
     if (dr.code != RC_OK) {
         status = PEP_SYNC_ILLEGAL_MESSAGE;
         goto the_end;
     }
 
     char *payload = NULL;
-    ssize_t _size = uper_encode_to_new_buffer(&asn_DEF_DeviceGroup_Protocol,
-            NULL, msg, (void **) &payload);
+    ssize_t _size = uper_encode_to_new_buffer(&asn_DEF_Sync, NULL, msg,
+            (void **) &payload);
     if (_size == -1) {
         status = PEP_CANNOT_ENCODE;
         goto the_end;
@@ -228,7 +210,7 @@ DYNAMIC_API PEP_STATUS encode_sync_msg(
     *size = (size_t) _size;
 
 the_end:
-    ASN_STRUCT_FREE(asn_DEF_DeviceGroup_Protocol, msg);
+    ASN_STRUCT_FREE(asn_DEF_Sync, msg);
     return status;
 }
 

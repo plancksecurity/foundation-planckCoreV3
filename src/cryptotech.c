@@ -62,11 +62,11 @@ PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first)
 
     status = pgp_init(session, in_first);
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        goto pEp_error;
 
     return PEP_STATUS_OK;
 
-pep_error:
+pEp_error:
     pgp_release(session, in_first);
     return status;
 }

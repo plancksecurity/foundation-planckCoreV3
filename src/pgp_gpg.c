@@ -273,7 +273,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         assert(bResult);
         if (!bResult) {
             status = PEP_INIT_NO_GPG_HOME;
-            goto pep_error;
+            goto pEp_error;
         }
 
         conf_keys = new_stringlist("default-cache-ttl");
@@ -293,7 +293,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         assert(bResult);
         if (!bResult) {
             status = PEP_INIT_CANNOT_CONFIG_GPG_AGENT;
-            goto pep_error;
+            goto pEp_error;
         }
 
         gpgme = dlopen(LIBGPGME, RTLD_LAZY);
@@ -301,7 +301,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
             // FIXME: Hotfix here?
             
             status = PEP_INIT_CANNOT_LOAD_GPGME;
-            goto pep_error;
+            goto pEp_error;
         }
 
         memset(&gpg, 0, sizeof(struct gpg_s));
@@ -545,7 +545,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     gpgme_error = _GPGERR(gpgme_error);
     if (gpgme_error != GPG_ERR_NO_ERROR) {
         status = PEP_INIT_GPGME_INIT_FAILED;
-        goto pep_error;
+        goto pEp_error;
     }
     assert(session->ctx);
 
@@ -557,7 +557,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
     return PEP_STATUS_OK;
 
-pep_error:
+pEp_error:
     pgp_release(session, in_first);
     return status;
 }

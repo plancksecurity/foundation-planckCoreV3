@@ -154,8 +154,8 @@ struct _pEpSession {
     sqlite3_stmt *unset_identity_flags;
     sqlite3_stmt *set_trust;
     sqlite3_stmt *update_trust;
-    sqlite3_stmt *update_trust_to_pep;    
     sqlite3_stmt *exists_trust_entry;
+    sqlite3_stmt *update_trust_to_pEp;
     sqlite3_stmt *update_trust_for_fpr;
     sqlite3_stmt *get_trust;
     sqlite3_stmt *least_trust;
@@ -387,11 +387,11 @@ static inline int _unsigned_signed_strcmp(const unsigned char* bytestr, const ch
 }
 
 // This is just a horrible example of C type madness. UTF-8 made me do it.
-static inline char* _pep_subj_copy() {
+static inline char* _pEp_subj_copy() {
 #ifndef WIN32
-    unsigned char pepstr[] = PEP_SUBJ_STRING;
+    unsigned char pEpstr[] = PEP_SUBJ_STRING;
     void* retval = calloc(1, sizeof(unsigned char)*PEP_SUBJ_BYTELEN + 1);
-    memcpy(retval, pepstr, PEP_SUBJ_BYTELEN);
+    memcpy(retval, pEpstr, PEP_SUBJ_BYTELEN);
     return (char*)retval;
 #else
     return strdup("pEp");

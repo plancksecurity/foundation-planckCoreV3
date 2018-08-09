@@ -25,6 +25,7 @@ PEP_STATUS deviceGrouped(PEP_SESSION session, bool *result);
 PEP_STATUS challengeAccepted(PEP_SESSION session, bool *result);
 PEP_STATUS partnerIsGrouped(PEP_SESSION session, bool *result);
 PEP_STATUS keyElectionWon(PEP_SESSION session, bool *result);
+
 // actions
 
 PEP_STATUS closeHandshakeDialog(PEP_SESSION session);

@@ -43,6 +43,7 @@ tstylesheet {
         for "func:distinctName(*//condition)"
             | PEP_STATUS «@name»(PEP_SESSION session, bool *result);
         ||
+
         // actions
 
         ||

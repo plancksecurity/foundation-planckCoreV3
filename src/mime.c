@@ -84,12 +84,12 @@ static PEP_STATUS render_mime(struct mailmime *mime, char **mimetext)
 
 err_file:
     status = PEP_CANNOT_CREATE_TEMP_FILE;
-    goto pep_error;
+    goto pEp_error;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
 
-pep_error:
+pEp_error:
 	if (buffer)
 		mmap_string_free(buffer);
 	if (buf)
@@ -111,10 +111,10 @@ static PEP_STATUS mime_attachment(
 
     *result = NULL;
 
-// TODO: It seems the pep com server adapter sends an empty string here,
+// TODO: It seems the pEp COM server adapter sends an empty string here,
 // which leads to a crash later. Thus, we workaround here by treating an
 // empty string as NULL. We need to check whether the bug really is here,
-// or the pep com server adapter needs to be changed.
+// or the pEp COM server adapter needs to be changed.
     if (blob->mime_type == NULL || blob->mime_type[0] == '\0')
         mime_type = "application/octet-stream";
     else
@@ -437,11 +437,11 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     struct mailimf_fields * fields = NULL;
     int r;
     clist * fields_list = NULL;
-    unsigned char pepstr[] = PEP_SUBJ_STRING; // unsigned due to UTF-8 byte fun
+    unsigned char pEpstr[] = PEP_SUBJ_STRING; // unsigned due to UTF-8 byte fun
 #ifdef WIN32
     char* altstr = "pEp";
 #else
-    char* altstr = (char*)pepstr;
+    char* altstr = (char*)pEpstr;
 #endif        
     char *subject = msg->shortmsg ? msg->shortmsg : altstr;
 
@@ -754,7 +754,7 @@ static PEP_STATUS mime_encode_message_plain(
                                 transport_encode);
                 
         if (status != PEP_STATUS_OK)
-            goto pep_error;
+            goto pEp_error;
     }
     else {
         pEp_rid_list_t* resource = NULL;
@@ -814,7 +814,7 @@ static PEP_STATUS mime_encode_message_plain(
 
             status = mime_attachment(_a, &submime, transport_encode);
             if (status != PEP_STATUS_OK)
-                goto pep_error;
+                goto pEp_error;
 
             r = mailmime_smart_add_part(mime, submime);
             assert(r == MAILIMF_NO_ERROR);
@@ -834,7 +834,7 @@ static PEP_STATUS mime_encode_message_plain(
 enomem:
     status = PEP_OUT_OF_MEMORY;
 
-pep_error:
+pEp_error:
     if (mime)
         mailmime_free(mime);
 
@@ -977,7 +977,7 @@ PEP_STATUS _mime_encode_message_internal(
     }
 
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        goto pEp_error;
 
     msg_mime = mailmime_new_message_data(NULL);
     assert(msg_mime);
@@ -994,14 +994,14 @@ PEP_STATUS _mime_encode_message_internal(
     if (!omit_fields) {
         status = build_fields(msg, &fields);
         if (status != PEP_STATUS_OK)
-            goto pep_error;
+            goto pEp_error;
 
         mailmime_set_imf_fields(msg_mime, fields);
     }
 
     status = render_mime(msg_mime, &buf);
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        goto pEp_error;
 
     mailmime_free(msg_mime);
     *mimetext = buf;
@@ -1011,7 +1011,7 @@ PEP_STATUS _mime_encode_message_internal(
 enomem:
     status = PEP_OUT_OF_MEMORY;
 
-pep_error:
+pEp_error:
     if (msg_mime)
         mailmime_free(msg_mime);
     else
@@ -1209,7 +1209,7 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
 
                     ident = mbl_to_identity(mbl);
                     if (ident == NULL)
-                        goto pep_error;
+                        goto pEp_error;
 
                     free_identity(msg->from);
                     msg->from = ident;
@@ -1352,7 +1352,7 @@ static PEP_STATUS read_fields(message *msg, clist *fieldlist)
 enomem:
     status = PEP_OUT_OF_MEMORY;
 
-pep_error:
+pEp_error:
     return status;
 }
 
@@ -1705,7 +1705,7 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
     if (_fieldlist) {
         status = read_fields(_msg, _fieldlist);
         if (status != PEP_STATUS_OK)
-            goto pep_error;
+            goto pEp_error;
     }
 
     struct mailmime_content *content = _get_content(mime);
@@ -1714,7 +1714,7 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
         status = interpret_MIME(mime->mm_data.mm_message.mm_msg_mime,
                 _msg);
         if (status != PEP_STATUS_OK)
-            goto pep_error;
+            goto pEp_error;
     }
 
     mailmime_free(mime);
@@ -1724,12 +1724,12 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
 
 err_mime:
     status = PEP_ILLEGAL_VALUE;
-    goto pep_error;
+    goto pEp_error;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
 
-pep_error:
+pEp_error:
     free_message(_msg);
 
     if (mime)

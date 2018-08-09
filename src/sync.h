@@ -82,7 +82,6 @@ typedef struct _sync_msg_t sync_msg_t;
 //      msg (in)            message to inject
 //      management (in)     application defined
 //
-//  *** BEWARE: msg is 1st parameter, obj is second!!! ***
 //  return value:
 //      0 if msg could be stored successfully or nonzero otherwise
 

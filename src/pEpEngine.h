@@ -1240,9 +1240,9 @@ DYNAMIC_API const char* get_engine_version();
 //  parameters:
 //      identity (in) - identity containing the user_id to check (this is
 //                      the only part of the struct we require to be set)
-//      is_pep (out)  - boolean pointer - will return true or false by
+//      is_pEp (out)  - boolean pointer - will return true or false by
 //                      reference with respect to whether or not user is
-//                      a known pep user
+//                      a known pEp user
 //
 //  return_value: PEP_STATUS_OK if user found in person table
 //                PEP_ILLEGAL_VALUE if no user_id in input
@@ -1252,7 +1252,7 @@ DYNAMIC_API const char* get_engine_version();
 //                         
 DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session, 
                                    pEp_identity *identity, 
-                                   bool* is_pep);
+                                   bool* is_pEp);
 
 
 
@@ -1291,7 +1291,7 @@ PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
 PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id);
 
 // This ONLY sets the *user* flag, and creates a shell identity if necessary.
-PEP_STATUS set_as_pep_user(PEP_SESSION session, pEp_identity* user);
+PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user);
 
 // returns true (by reference) if a person with this user_id exists; 
 // Also replaces aliased user_ids by defaults in identity.

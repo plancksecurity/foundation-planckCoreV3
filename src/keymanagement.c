@@ -134,11 +134,11 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
         ident->comm_type = ct;
     }
     
-    bool pep_user = false;
+    bool pEp_user = false;
     
-    is_pep_user(session, ident, &pep_user);
+    is_pEp_user(session, ident, &pEp_user);
 
-    if (pep_user) {
+    if (pEp_user) {
         switch (ct) {
             case PEP_ct_OpenPGP:
             case PEP_ct_OpenPGP_unconfirmed:
@@ -369,7 +369,7 @@ static void transfer_ident_lang_and_flags(pEp_identity* new_ident,
     new_ident->me = new_ident->me || stored_ident->me;
 }
 
-static void adjust_pep_trust_status(PEP_SESSION session, pEp_identity* identity) {
+static void adjust_pEp_trust_status(PEP_SESSION session, pEp_identity* identity) {
     assert(session);
     assert(identity);
     
@@ -377,11 +377,11 @@ static void adjust_pep_trust_status(PEP_SESSION session, pEp_identity* identity)
         (identity->comm_type | PEP_ct_confirmed) == PEP_ct_pEp)
         return;
     
-    bool pep_user;
+    bool pEp_user;
     
-    is_pep_user(session, identity, &pep_user);
+    is_pEp_user(session, identity, &pEp_user);
     
-    if (pep_user) {
+    if (pEp_user) {
         PEP_comm_type confirmation_status = identity->comm_type & PEP_ct_confirmed;
         identity->comm_type = PEP_ct_pEp_unconfirmed | confirmation_status;    
     }
@@ -456,7 +456,7 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
         return_id->user_id = strdup(stored_ident->user_id);
     } 
     
-    adjust_pep_trust_status(session, return_id);
+    adjust_pEp_trust_status(session, return_id);
    
     // Call set_identity() to store
     if ((is_identity_default || is_user_default) &&
@@ -615,7 +615,7 @@ DYNAMIC_API PEP_STATUS update_identity(
             //    * call set_identity() to store
             if (status == PEP_STATUS_OK) {
                 // FIXME: Do we set if we had to copy in the address?
-                adjust_pep_trust_status(session, identity);
+                adjust_pEp_trust_status(session, identity);
                 status = set_identity(session, identity);
             }
             //  * Return: created identity
@@ -709,7 +709,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                     status = get_key_rating(session, identity->fpr, &identity->comm_type);
             
                 //    * call set_identity() to store
-                adjust_pep_trust_status(session, identity);            
+                adjust_pEp_trust_status(session, identity);            
                 status = set_identity(session, identity);
             }
         }
@@ -776,7 +776,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                 status = get_key_rating(session, identity->fpr, &identity->comm_type);
         
             //    * call set_identity() to store
-            adjust_pep_trust_status(session, identity);            
+            adjust_pEp_trust_status(session, identity);            
             status = set_identity(session, identity);
 
         }
@@ -789,12 +789,12 @@ DYNAMIC_API PEP_STATUS update_identity(
         if (session->examine_identity)
             session->examine_identity(identity, session->examine_management);
 
-    goto pep_free;
+    goto pEp_free;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
 
-pep_free:
+pEp_free:
     free(default_own_id);
     free_identity(stored_ident);
     return status;
@@ -908,13 +908,13 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
         status = set_userid_alias(session, default_own_id, identity->user_id);
         // Do we want this to be fatal? For now, we'll do it...
         if (status != PEP_STATUS_OK)
-            goto pep_free;
+            goto pEp_free;
             
         free(identity->user_id);
         identity->user_id = strdup(default_own_id);
         if (identity->user_id == NULL) {
             status = PEP_OUT_OF_MEMORY;
-            goto pep_free;
+            goto pEp_free;
         }
     }
 
@@ -941,7 +941,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     assert(status != PEP_OUT_OF_MEMORY);
     if (status == PEP_OUT_OF_MEMORY) {
         status = PEP_OUT_OF_MEMORY;
-        goto pep_free;
+        goto pEp_free;
     }
 
     // Set usernames - priority is input username > stored name > address
@@ -954,7 +954,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
         identity->username = strdup(uname);
         if (identity->username == NULL) {
             status = PEP_OUT_OF_MEMORY;
-            goto pep_free;
+            goto pEp_free;
         }
     }
 
@@ -970,14 +970,14 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
         // Fall back / retrieve
         status = validate_fpr(session, stored_identity, false);
         if (status == PEP_OUT_OF_MEMORY)
-            goto pep_free;
+            goto pEp_free;
         if (status == PEP_STATUS_OK) {
             if (stored_identity->comm_type >= PEP_ct_strong_but_unconfirmed) {
                 identity->fpr = strdup(stored_identity->fpr);
                 assert(identity->fpr);
                 if (!identity->fpr) {
                     status = PEP_OUT_OF_MEMORY;
-                    goto pep_free;
+                    goto pEp_free;
                 }
                 valid_key_found = true;            
             }
@@ -985,13 +985,13 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
                 bool revoked = false;
                 status = key_revoked(session, stored_identity->fpr, &revoked);
                 if (status)
-                    goto pep_free;
+                    goto pEp_free;
                 if (revoked) {
                     revoked_fpr = strdup(stored_identity->fpr);
                     assert(revoked_fpr);
                     if (!revoked_fpr) {
                         status = PEP_OUT_OF_MEMORY;
-                        goto pep_free;
+                        goto pEp_free;
                     }
                 }
             }
@@ -1037,40 +1037,14 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     
     status = set_identity(session, identity);
     if (status == PEP_STATUS_OK)
-        status = set_as_pep_user(session, identity);
+        status = set_as_pEp_user(session, identity);
 
-pep_free:    
+pEp_free:    
     free(default_own_id);
     free(revoked_fpr);                     
     free_identity(stored_identity);
     return status;
 }
-
-// DYNAMIC_API PEP_STATUS initialise_own_identities(PEP_SESSION session,
-//                                                  identity_list* my_idents) {
-//     PEP_STATUS status = PEP_STATUS_OK;
-//     if (!session)
-//         return PEP_ILLEGAL_VALUE;
-//         
-//     if (!my_idents)
-//         return PEP_STATUS_OK;
-//             
-//     identity_list* ident_curr = my_idents;
-//     while (ident_curr) {
-//         pEp_identity* ident = ident_curr->ident;
-//         if (!ident || !ident->address) {
-//             status = PEP_ILLEGAL_VALUE;
-//             goto pep_error;
-//         }
-// 
-//         status = _myself(session, ident, false, false);
-//         
-//         ident_curr = ident_curr->next;
-//     }
-//     
-// pep_error:
-//     return status;
-// }
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity)
 {
@@ -1094,25 +1068,18 @@ DYNAMIC_API PEP_STATUS register_examine_function(
 }
 
 DYNAMIC_API PEP_STATUS do_keymanagement(
+        PEP_SESSION session,
         retrieve_next_identity_t retrieve_next_identity,
         messageToSend_t messageToSend,
         void *management
     )
 {
-    PEP_SESSION session;
     pEp_identity *identity;
     PEP_STATUS status;
 
-    assert(retrieve_next_identity);
-    assert(management);
-
-    if (!retrieve_next_identity || !management)
+    assert(session && retrieve_next_identity);
+    if (!(session && retrieve_next_identity))
         return PEP_ILLEGAL_VALUE;
-
-    status = init(&session, messageToSend);
-    assert(status == PEP_STATUS_OK);
-    if (status != PEP_STATUS_OK)
-        return status;
 
     log_event(session, "keymanagement thread started", "pEp engine", NULL, NULL);
 
@@ -1138,7 +1105,6 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
 
     log_event(session, "keymanagement thread shutdown", "pEp engine", NULL, NULL);
 
-    release(session);
     return PEP_STATUS_OK;
 }
 
@@ -1212,7 +1178,7 @@ DYNAMIC_API PEP_STATUS undo_last_mistrust(PEP_SESSION session) {
             // THIS SHOULDN'T BE NECESSARY - PREVIOUS VALUE WAS IN THE DB
             // if (status == PEP_STATUS_OK) {
             //     if ((cached_ident->comm_type | PEP_ct_confirmed) == PEP_ct_pEp)
-            //         status = set_as_pep_user(session, cached_ident);
+            //         status = set_as_pEp_user(session, cached_ident);
             // }            
             free_identity(session->cached_mistrusted);
         }
@@ -1248,18 +1214,18 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
     status = get_trust(session, input_copy);
     
     if (status != PEP_STATUS_OK)
-        goto pep_free;
+        goto pEp_free;
         
     PEP_comm_type new_trust = PEP_ct_unknown;
     status = get_key_rating(session, ident->fpr, &new_trust);
     if (status != PEP_STATUS_OK)
-        goto pep_free;
+        goto pEp_free;
 
-    bool pep_user = false;
+    bool pEp_user = false;
     
-    status = is_pep_user(session, ident, &pep_user);
+    status = is_pEp_user(session, ident, &pEp_user);
     
-    if (pep_user && new_trust >= PEP_ct_unconfirmed_encryption)
+    if (pEp_user && new_trust >= PEP_ct_unconfirmed_encryption)
         input_copy->comm_type = PEP_ct_pEp_unconfirmed;
     else
         input_copy->comm_type = new_trust;
@@ -1267,20 +1233,20 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
     status = set_trust(session, input_copy);
     
     if (status != PEP_STATUS_OK)
-        goto pep_free;
+        goto pEp_free;
 
     bool mistrusted_key = false;
         
     status = is_mistrusted_key(session, ident->fpr, &mistrusted_key);
 
     if (status != PEP_STATUS_OK)
-        goto pep_free;
+        goto pEp_free;
     
     if (mistrusted_key)
         status = delete_mistrusted_key(session, ident->fpr);
 
     if (status != PEP_STATUS_OK)
-        goto pep_free;
+        goto pEp_free;
         
     tmp_ident = new_identity(ident->address, NULL, ident->user_id, NULL);
 
@@ -1293,7 +1259,7 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
         status = update_identity(session, tmp_ident);
     
     if (status != PEP_STATUS_OK)
-        goto pep_free;
+        goto pEp_free;
     
     // remove as default if necessary
     if (!EMPTYSTR(tmp_ident->fpr) && strcmp(tmp_ident->fpr, ident->fpr) == 0) {
@@ -1302,7 +1268,7 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
         tmp_ident->comm_type = PEP_ct_unknown;
         status = set_identity(session, tmp_ident);
         if (status != PEP_STATUS_OK)
-            goto pep_free;
+            goto pEp_free;
     }
     
     char* user_default = NULL;
@@ -1312,10 +1278,10 @@ DYNAMIC_API PEP_STATUS key_reset_trust(
         if (strcmp(user_default, ident->fpr) == 0)
             status = refresh_userid_default_key(session, ident->user_id);
         if (status != PEP_STATUS_OK)
-            goto pep_free;    
+            goto pEp_free;    
     }
             
-pep_free:
+pEp_free:
     free_identity(tmp_ident);
     free_identity(input_copy);
     return status;
@@ -1367,11 +1333,11 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
         // first of all, does this key even have a private component.
         status = contains_priv_key(session, ident->fpr, &has_private);
         if (status != PEP_STATUS_OK && status != PEP_KEY_NOT_FOUND)
-            goto pep_free;
+            goto pEp_free;
             
         if (has_private) {
             status = set_own_key(session, ident_copy, ident->fpr); 
-            goto pep_free;
+            goto pEp_free;
         }
     }
     
@@ -1424,7 +1390,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
                     status = set_identity(session, ident_copy); // replace identity default
                     if (status == PEP_STATUS_OK) {
                         if ((ident_copy->comm_type | PEP_ct_confirmed) == PEP_ct_pEp)
-                            status = set_as_pep_user(session, ident_copy);
+                            status = set_as_pEp_user(session, ident_copy);
                     }            
                 }
             }
@@ -1463,7 +1429,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
         }
     }    
 
-pep_free:
+pEp_free:
     free(ident_default_fpr);
     free(cached_fpr);
     free_identity(tmp_id);

@@ -284,7 +284,7 @@ static const char *sql_update_trust =
     "update trust set comm_type = ?3 " 
     "   where user_id = ?1 and pgp_keypair_fpr = upper(replace(?2,' ',''));";
 
-static const char *sql_update_trust_to_pep =
+static const char *sql_update_trust_to_pEp =
     "update trust set comm_type = comm_type + 71 "
     "   where (user_id = ?1 "
     "          and (case when (comm_type = 56) then (1) "
@@ -548,7 +548,7 @@ DYNAMIC_API PEP_STATUS init(
     assert(LOCAL_DB);
     if (LOCAL_DB == NULL) {
         status = PEP_INIT_CANNOT_OPEN_DB;
-        goto pep_error;
+        goto pEp_error;
     }
     
 #if _PEP_SQLITE_DEBUG    
@@ -567,7 +567,7 @@ DYNAMIC_API PEP_STATUS init(
 
     if (int_result != SQLITE_OK) {
         status = PEP_INIT_CANNOT_OPEN_DB;
-        goto pep_error;
+        goto pEp_error;
     }
 
     int_result = sqlite3_exec(
@@ -592,7 +592,7 @@ DYNAMIC_API PEP_STATUS init(
     assert(SYSTEM_DB);
     if (SYSTEM_DB == NULL) {
         status = PEP_INIT_CANNOT_OPEN_SYSTEM_DB;
-        goto pep_error;
+        goto pEp_error;
     }
 
     int_result = sqlite3_open_v2(
@@ -605,7 +605,7 @@ DYNAMIC_API PEP_STATUS init(
 
     if (int_result != SQLITE_OK) {
         status = PEP_INIT_CANNOT_OPEN_SYSTEM_DB;
-        goto pep_error;
+        goto pEp_error;
     }
 
     sqlite3_busy_timeout(_session->system_db, 1000);
@@ -1154,8 +1154,8 @@ DYNAMIC_API PEP_STATUS init(
             (int)strlen(sql_update_trust), &_session->update_trust, NULL);
     assert(int_result == SQLITE_OK);
 
-    int_result = sqlite3_prepare_v2(_session->db, sql_update_trust_to_pep,
-            (int)strlen(sql_update_trust_to_pep), &_session->update_trust_to_pep, NULL);
+    int_result = sqlite3_prepare_v2(_session->db, sql_update_trust_to_pEp,
+            (int)strlen(sql_update_trust_to_pEp), &_session->update_trust_to_pEp, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_exists_trust_entry,
@@ -1270,15 +1270,15 @@ DYNAMIC_API PEP_STATUS init(
     
     status = init_cryptotech(_session, in_first);
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        goto pEp_error;
 
     status = init_transport_system(_session, in_first);
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        goto pEp_error;
 
     status = log_event(_session, "init", "pEp " PEP_ENGINE_VERSION, NULL, NULL);
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        goto pEp_error;
 
     // runtime config
 
@@ -1313,7 +1313,7 @@ DYNAMIC_API PEP_STATUS init(
 enomem:
     status = PEP_OUT_OF_MEMORY;
 
-pep_error:
+pEp_error:
     release(_session);
     return status;
 }
@@ -1390,8 +1390,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->set_trust);
             if (session->update_trust)
                 sqlite3_finalize(session->update_trust);
-            if (session->update_trust_to_pep)
-                sqlite3_finalize(session->update_trust_to_pep);                                                
+            if (session->update_trust_to_pEp)
+                sqlite3_finalize(session->update_trust_to_pEp);                                                
             if (session->update_trust_for_fpr)
                 sqlite3_finalize(session->update_trust_for_fpr);
             if (session->get_trust)
@@ -2384,20 +2384,20 @@ DYNAMIC_API PEP_STATUS set_identity(
     status = set_person(session, ident_copy, false);
     if (status != PEP_STATUS_OK) {
         sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
-        goto pep_free;
+        goto pEp_free;
     }
 
     status = set_identity_entry(session, ident_copy, false);
     if (status != PEP_STATUS_OK) {
         sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
-        goto pep_free;
+        goto pEp_free;
     }
 
     if (has_fpr) {
         status = _set_trust_internal(session, ident_copy, false);
         if (status != PEP_STATUS_OK) {
             sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
-            goto pep_free;
+            goto pEp_free;
         }
     }
     
@@ -2407,7 +2407,7 @@ DYNAMIC_API PEP_STATUS set_identity(
     else
         status = PEP_COMMIT_FAILED;
 
-pep_free:
+pEp_free:
     free_identity(ident_copy);
     return status;
 }
@@ -2417,11 +2417,11 @@ PEP_STATUS update_pEp_user_trust_vals(PEP_SESSION session,
     if (!user->user_id)
         return PEP_ILLEGAL_VALUE;
     
-    sqlite3_reset(session->update_trust_to_pep);
-    sqlite3_bind_text(session->update_trust_to_pep, 1, user->user_id, -1,
+    sqlite3_reset(session->update_trust_to_pEp);
+    sqlite3_bind_text(session->update_trust_to_pEp, 1, user->user_id, -1,
             SQLITE_STATIC);
-    int result = sqlite3_step(session->update_trust_to_pep);
-    sqlite3_reset(session->update_trust_to_pep);
+    int result = sqlite3_step(session->update_trust_to_pEp);
+    sqlite3_reset(session->update_trust_to_pEp);
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_TRUST;
 
@@ -2516,17 +2516,17 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
     return status;
 }
 
-DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session, pEp_identity *identity, bool* is_pep)
+DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session, pEp_identity *identity, bool* is_pEp)
 {
     assert(session);
-    assert(is_pep);
+    assert(is_pEp);
     assert(identity);
     assert(!EMPTYSTR(identity->user_id));
 
-    if (!session || !is_pep || !identity || EMPTYSTR(identity->user_id))
+    if (!session || !is_pEp || !identity || EMPTYSTR(identity->user_id))
         return PEP_ILLEGAL_VALUE;
     
-    *is_pep = false;
+    *is_pEp = false;
             
     const char* user_id = identity->user_id;
     
@@ -2549,7 +2549,7 @@ DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session, pEp_identity *identity, 
     switch (result) {
         case SQLITE_ROW: {
             // yeah yeah, I know, we could be lazy here, but it looks bad.
-            *is_pep = (sqlite3_column_int(session->is_pEp_user, 0) != 0);
+            *is_pEp = (sqlite3_column_int(session->is_pEp_user, 0) != 0);
             break;
         }
         default:
