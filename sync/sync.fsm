@@ -1,0 +1,349 @@
+// This file is under BSD License 2.0
+
+// Sync protocol for p≡p
+// Copyright (c) 2016, 2017 p≡p foundation
+
+// Written by Volker Birk
+
+include ./fsm.yml2
+
+protocol Sync 1 {
+    // all messages have a timestamp, time out and are removed after timeout
+
+    unencrypted sendBeacon;
+    acceptUnencrypted Beacon;
+
+    acceptUntrusted HandshakeRequest;
+    acceptUntrusted Rollback;
+    acceptUntrusted CommitReject;
+
+    fsm KeySync 1 {
+        version 1, 2;
+        state InitState {
+            on Init {
+                if deviceGrouped
+                    go Grouped;
+                do sendBeacon;
+                go Sole;
+            }
+        }
+
+        state Sole {
+            on Init {
+                do closeHandshakeDialog;
+                do openChallenge; // own challenge
+            }
+
+            on KeyGen
+                do sendBeacon;
+
+            on CannotDecrypt // cry baby
+                do sendBeacon;
+
+            on Beacon {
+                do storeChallenge; // partner's challenge
+                do openTransaction;
+                do storeTransaction;
+                do sendHandshakeRequest;
+            }
+
+            on HandshakeRequest {
+                if challengeAccepted {
+                    do storeTransaction;
+                    do sendHandshakeAnswer;
+                    if partnerIsGrouped
+                        go HandshakingWithGroup;
+
+                    go HandshakingNew();
+                }
+            }
+
+            on HandshakeAnswer
+                go HandshakingNew();
+        }
+
+        // handshaking without existing Device group
+        state HandshakingNew {
+            on Init
+                do showSoleHandshake;
+
+            // Cancel is Rollback
+            on Cancel {
+                do sendRollback;
+                go Sole;
+            }
+
+            on Rollback
+                go Sole;
+
+            // Reject is CommitReject
+            on Reject {
+                do sendCommitReject;
+                do disable;
+                go End;
+            }
+
+            on CommitReject {
+                do disable;
+                go End;
+            }
+
+            // Accept is Phase1Commit
+            on Accept {
+                do sendCommitAccept;
+                go HandshakingNewPhase1;
+            }
+
+            on CommitAccept
+                go HandshakingNewPhase1Own;
+        }
+
+        state HandshakingNewPhase1 {
+            on Rollback
+                go Sole;
+            
+            on CommitReject {
+                do disable;
+                go End;
+            }
+
+            on CommitAccept
+                go NewGroup;
+        }
+
+        state HandshakingNewPhase1Own {
+            on Cancel {
+                do sendRollback;
+                go Sole;
+            }
+
+            on Reject {
+                do sendCommitReject;
+                do disable;
+                go End;
+            }
+
+            on Accept
+                go NewGroup;
+        }
+
+        state NewGroup {
+            on Init
+                do sendGroupKeysAndClose; // we're not grouped yet, this is our own keys
+
+            on GroupKeysAndClose {
+                do saveGroupKeys;
+                if keyElectionWon {
+                    do ownKeysAreGroupKeys;
+                    go Grouped;
+                }
+                // do receivedKeysAreGroupKeys; -- implicit
+                go Grouped;
+            }
+        }
+
+        state HandshakingWithGroup {
+            on Init
+                do showJoinGroupHandshake;
+
+            // Cancel is Rollback
+            on Cancel {
+                do sendRollback;
+                go Sole;
+            }
+
+            on Rollback
+                go Sole;
+
+            // Reject is CommitReject
+            on Reject {
+                do sendCommitReject;
+                do disable;
+                go End;
+            }
+
+            on CommitReject {
+                do disable;
+                go End;
+            }
+
+            // Accept is Phase1Commit
+            on Accept {
+                do sendCommitAccept;
+                go HandshakingJoinPhase1;
+            }
+
+            on CommitAccept
+                go HandshakingJoinPhase1Own;
+        }
+
+        state HandshakingJoinPhase1 {
+            on Rollback
+                go Sole;
+            
+            on CommitReject {
+                do disable;
+                go End;
+            }
+
+            on CommitAccept
+                go JoinGroup;
+        }
+
+        state HandshakingJoinPhase1Own {
+            on Cancel {
+                do sendRollback;
+                go Sole;
+            }
+
+            on Reject {
+                do sendCommitReject;
+                do disable;
+                go End;
+            }
+
+            on Accept
+                go JoinGroup;
+        }
+
+        state JoinGroup {
+            on GroupKeysAndClose {
+                do sendGroupKeys; // first send own keys
+                do saveGroupKeys; // then store new group keys
+                go Grouped;
+            }
+        }
+
+        state Grouped {
+            on Init
+                do closeHandshakeDialog;
+
+            on GroupKeys
+                do saveGroupKeys;
+
+            on KeyGen
+                do sendGroupKeys;
+
+            on Beacon
+                do sendHandshakeRequest;
+
+            on HandshakeAnswer
+                go HandshakingGrouped;
+        }
+
+        state HandshakingGrouped {
+            on Init
+                do showGroupedHandshake;
+    
+            // Cancel is Rollback
+            on Cancel {
+                do sendRollback;
+                go Grouped;
+            }
+
+            on Rollback
+                go Grouped;
+
+            // Reject is CommitReject
+            on Reject {
+                do sendCommitReject;
+                go Grouped;
+            }
+
+            on CommitReject
+                go Grouped;
+
+            // Accept is Phase1Commit
+            on Accept {
+                do sendCommitAccept;
+                go HandshakingGroupedPhase1;
+            }
+
+            on CommitAccept
+                go HandshakingGroupedPhase1Own;
+
+            on GroupKeys
+                do saveGroupKeys;
+        }
+
+        state HandshakingGroupedPhase1 {
+            on Rollback
+                go Grouped;
+
+            on CommitReject
+                go Grouped;
+
+            on CommitAccept {
+                do sendGroupKeysAndClose;
+                go Grouped;
+            }
+
+            on GroupKeys
+                do saveGroupKeys;
+        }
+
+        state HandshakingGroupedPhase1Own {
+            on Cancel {
+                do sendRollback;
+                go Grouped;
+            }
+
+            on Reject {
+                do sendCommitReject;
+                go Grouped;
+            }
+
+            on Accept {
+                do sendGroupKeysAndClose;
+                go Grouped;
+            }
+
+            on GroupKeys
+                do saveGroupKeys;
+        }
+ 
+        external Accept 30;
+        external Reject 31;
+        external Cancel 32;
+
+        message Beacon 2 {
+            field TID challenge;
+            auto Version version;
+        }
+
+        message HandshakeRequest 3 {
+            field TID challenge;
+            auto Version version;
+            field TID transaction;
+            field Hash fpr;
+            field bool is_group;
+        }
+
+        message HandshakeAnswer 4 {
+            field TID transaction;
+            field Hash fpr;
+        }
+
+        message Rollback 5 {
+            field TID transaction;
+        }
+
+        message CommitReject 6 {
+            field TID transaction;
+        }
+
+        message CommitAccept 7 {
+            field TID transaction;
+        }
+
+        message GroupKeysAndClose 8 {
+            field TID transaction;
+            field IdentityList identities;
+        }
+
+        message GroupKeys 9 {
+            field IdentityList identities;
+        }
+    }
+}
+

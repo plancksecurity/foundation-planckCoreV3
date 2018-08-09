@@ -113,7 +113,7 @@ test: all
 .PHONY: clean
 clean:
 	$(RM) $(TARGET) $(OBJS) $(DEPS)
-	$(RM) $(HERE)/*Tests
+	$(RM) $(HERE)/*Tests msg_2.0.asc
 
 
 

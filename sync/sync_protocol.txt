@@ -1,0 +1,39 @@
+p≡p Sync protocol
+=================
+
+1. Protocol Stack
+-----------------
+
+Trust Sync | Contact Sync | Task Sync
+Sync | Key Sync
+Baseprotocol
+Transport
+
+1. Device View
+--------------
+
+1.1 State Sole
+
+A Device is in state Sole when it is not member of a Device group and when it
+is not part of a Negotiation.
+
+1.1 State Grouped
+
+A Device is in state Grouped when it is member of a Device group and when it is
+not part of a Negotiation.
+
+1.1 State Handshaking
+
+A Device is in state Handshaking when it is triggered by receiving a Beacon.
+
+1.1 State SentCommit
+
+1.1 State ReceivedCommit
+
+1. Transaction View for Negotiation
+-----------------------------------
+
+A Negotiation is identified by the FPR of the Key of the Identity, which is
+used for transport. 
+
+
