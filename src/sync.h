@@ -33,19 +33,6 @@ typedef enum _sync_handshake_signal {
     SYNC_NOTIFY_OVERTAKEN
 } sync_handshake_signal;
 
-// messageToSend() - send a message
-//
-//  parameters:
-//      obj (in)        object handle (implementation defined)
-//      msg (in)        message struct with message to send
-//
-//  return value:
-//      PEP_STATUS_OK or any other value on error
-//
-//  caveat:
-//      the ownership of msg goes to the callee
-
-typedef PEP_STATUS (*messageToSend_t)(void *obj, message *msg);
 
 // notifyHandshake() - notify UI about sync handshaking process
 //
@@ -122,7 +109,6 @@ typedef void *(*retrieve_next_sync_msg_t)(void *management, time_t *timeout);
 //  parameters:
 //      session (in)                session where to store obj handle
 //      management (in)             application defined
-//      messageToSend (in)          callback for sending message
 //      notifyHandshake (in)        callback for doing the handshake
 //      retrieve_next_sync_msg (in) callback for receiving sync messages
 //
@@ -135,7 +121,6 @@ typedef void *(*retrieve_next_sync_msg_t)(void *management, time_t *timeout);
 DYNAMIC_API PEP_STATUS register_sync_callbacks(
         PEP_SESSION session,
         void *management,
-        messageToSend_t messageToSend,
         notifyHandshake_t notifyHandshake,
         inject_sync_msg_t inject_sync_msg,
         retrieve_next_sync_msg_t retrieve_next_sync_msg

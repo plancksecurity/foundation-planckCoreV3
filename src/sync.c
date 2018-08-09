@@ -20,18 +20,16 @@ PEP_STATUS receive_sync_msg(
 DYNAMIC_API PEP_STATUS register_sync_callbacks(
         PEP_SESSION session,
         void *management,
-        messageToSend_t messageToSend,
         notifyHandshake_t notifyHandshake,
         inject_sync_msg_t inject_sync_msg,
         retrieve_next_sync_msg_t retrieve_next_sync_msg
     )
 {
-    assert(session && management && messageToSend && notifyHandshake && inject_sync_msg && retrieve_next_sync_msg);
-    if (!(session && management && messageToSend && notifyHandshake && inject_sync_msg && retrieve_next_sync_msg))
+    assert(session && management && notifyHandshake && inject_sync_msg && retrieve_next_sync_msg);
+    if (!(session && management && notifyHandshake && inject_sync_msg && retrieve_next_sync_msg))
         return PEP_ILLEGAL_VALUE;
 
     session->sync_management = management;
-    session->messageToSend = messageToSend;
     session->notifyHandshake = notifyHandshake;
     session->inject_sync_msg = inject_sync_msg;
     session->retrieve_next_sync_msg = retrieve_next_sync_msg;
@@ -50,7 +48,6 @@ DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
 
     // unregister
     session->sync_management = NULL;
-    session->messageToSend = NULL;
     session->notifyHandshake = NULL;
     session->inject_sync_msg = NULL;
     session->retrieve_next_sync_msg = NULL;

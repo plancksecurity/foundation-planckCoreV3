@@ -115,6 +115,8 @@ struct _pEpSession;
 typedef struct _pEpSession pEpSession;
 struct _pEpSession {
     const char *version;
+    messageToSend_t messageToSend;
+
 #ifdef USE_GPG
     gpgme_ctx_t ctx;
 #elif defined(USE_NETPGP)
@@ -140,8 +142,8 @@ struct _pEpSession {
     sqlite3_stmt *set_person;
     sqlite3_stmt *update_person;
     sqlite3_stmt *exists_person;    
-    sqlite3_stmt *set_as_pep_user;
-    sqlite3_stmt *is_pep_user;
+    sqlite3_stmt *set_as_pEp_user;
+    sqlite3_stmt *is_pEp_user;
     sqlite3_stmt *set_device_group;
     sqlite3_stmt *get_device_group;
     sqlite3_stmt *set_pgp_keypair;
@@ -202,7 +204,6 @@ struct _pEpSession {
     void *examine_management;
     void *sync_management;
     void *sync_obj;
-    messageToSend_t messageToSend;
     notifyHandshake_t notifyHandshake;
     inject_sync_msg_t inject_sync_msg;
     retrieve_next_sync_msg_t retrieve_next_sync_msg;

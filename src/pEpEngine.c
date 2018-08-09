@@ -152,12 +152,12 @@ static const char *sql_update_person =
     "           (select device_group from person where id = ?1)"
     "   where id = ?1 ;";
     
-static const char *sql_set_as_pep_user =
-    "update person set is_pep_user = 1 "
+static const char *sql_set_as_pEp_user =
+    "update person set is_pEp_user = 1 "
     "   where id = ?1 ; ";
 
-static const char *sql_is_pep_user =
-    "select is_pep_user from person "
+static const char *sql_is_pEp_user =
+    "select is_pEp_user from person "
     "   where id = ?1 ; ";
 
 static const char* sql_exists_person = 
@@ -489,7 +489,10 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg){
 PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session);
 #endif // USE_GPG
 
-DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
+DYNAMIC_API PEP_STATUS init(
+        PEP_SESSION *session,
+        messageToSend_t messageToSend
+    )
 {
     PEP_STATUS status = PEP_STATUS_OK;
     int int_result;
@@ -536,6 +539,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
         goto enomem;
 
     _session->version = PEP_ENGINE_VERSION;
+    _session->messageToSend = messageToSend;
 
 #ifdef DEBUG_ERRORSTACK
     _session->errorstack = new_stringlist("init()");
@@ -655,7 +659,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "   lang text,\n"
                 "   comment text,\n"
                 "   device_group text,\n"
-                "   is_pep_user integer default 0\n"
+                "   is_pEp_user integer default 0\n"
                 ");\n"
                 "create table if not exists identity (\n"
                 "   address text,\n"
@@ -758,7 +762,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             if (table_contains_column(_session, "identity", "timestamp") > 0) {
                 version = 8;
             }            
-            if (table_contains_column(_session, "person", "is_pep_user") > 0) {
+            if (table_contains_column(_session, "person", "is_pEp_user") > 0) {
                 version = 7;
             }            
             else if (table_contains_column(_session, "identity", "is_own") > 0) {
@@ -926,7 +930,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 int_result = sqlite3_exec(
                     _session->db,
                     "alter table person\n"
-                    "   add column is_pep_user integer default 0;\n",
+                    "   add column is_pEp_user integer default 0;\n",
                     NULL,
                     NULL,
                     NULL
@@ -935,7 +939,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 int_result = sqlite3_exec(
                     _session->db,
                     "update person\n"
-                    "   set is_pep_user = 1\n"
+                    "   set is_pEp_user = 1\n"
                     "   where id = "
                     "       (select distinct id from person "
                     "               join trust on id = user_id "
@@ -1099,12 +1103,12 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_exists_person), &_session->exists_person, NULL);
     assert(int_result == SQLITE_OK);
 
-    int_result = sqlite3_prepare_v2(_session->db, sql_set_as_pep_user,
-            (int)strlen(sql_set_as_pep_user), &_session->set_as_pep_user, NULL);
+    int_result = sqlite3_prepare_v2(_session->db, sql_set_as_pEp_user,
+            (int)strlen(sql_set_as_pEp_user), &_session->set_as_pEp_user, NULL);
     assert(int_result == SQLITE_OK);
     
-    int_result = sqlite3_prepare_v2(_session->db, sql_is_pep_user,
-            (int)strlen(sql_is_pep_user), &_session->is_pep_user, NULL);
+    int_result = sqlite3_prepare_v2(_session->db, sql_is_pEp_user,
+            (int)strlen(sql_is_pEp_user), &_session->is_pEp_user, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_device_group,
@@ -1358,10 +1362,10 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->remove_fpr_as_default);            
             if (session->set_person)
                 sqlite3_finalize(session->set_person);
-            if (session->set_as_pep_user)
-                sqlite3_finalize(session->set_as_pep_user);
-            if (session->is_pep_user)
-                sqlite3_finalize(session->is_pep_user);
+            if (session->set_as_pEp_user)
+                sqlite3_finalize(session->set_as_pEp_user);
+            if (session->is_pEp_user)
+                sqlite3_finalize(session->is_pEp_user);
             if (session->exists_person)
                 sqlite3_finalize(session->exists_person);                        
             if (session->set_device_group)
@@ -2305,7 +2309,7 @@ PEP_STATUS set_trust(PEP_SESSION session, pEp_identity* identity) {
     status = _set_trust_internal(session, identity, true);
     if (status == PEP_STATUS_OK) {
         if ((identity->comm_type | PEP_ct_confirmed) == PEP_ct_pEp)
-            status = set_as_pep_user(session, identity);
+            status = set_as_pEp_user(session, identity);
     }
     return status;
 }
@@ -2330,7 +2334,7 @@ PEP_STATUS set_identity_entry(PEP_SESSION session, pEp_identity* identity,
                                        guard_transaction);
 }
 
-// This will NOT call set_as_pep_user; you have to do that separately.
+// This will NOT call set_as_pEp_user; you have to do that separately.
 DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
     )
@@ -2408,7 +2412,7 @@ pep_free:
     return status;
 }
 
-PEP_STATUS update_pep_user_trust_vals(PEP_SESSION session,
+PEP_STATUS update_pEp_user_trust_vals(PEP_SESSION session,
                                       pEp_identity* user) {
     if (!user->user_id)
         return PEP_ILLEGAL_VALUE;
@@ -2426,7 +2430,7 @@ PEP_STATUS update_pep_user_trust_vals(PEP_SESSION session,
 
 
 // This ONLY sets the user flag. Must be called outside of a transaction.
-PEP_STATUS set_as_pep_user(PEP_SESSION session, pEp_identity* user) {
+PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user) {
 
     assert(session);
     assert(user);
@@ -2448,16 +2452,16 @@ PEP_STATUS set_as_pep_user(PEP_SESSION session, pEp_identity* user) {
         status = set_person(session, user, true);
         
     // Ok, let's set it.
-    sqlite3_reset(session->set_as_pep_user);
-    sqlite3_bind_text(session->set_as_pep_user, 1, user->user_id, -1,
+    sqlite3_reset(session->set_as_pEp_user);
+    sqlite3_bind_text(session->set_as_pEp_user, 1, user->user_id, -1,
             SQLITE_STATIC);
-    int result = sqlite3_step(session->set_as_pep_user);
-    sqlite3_reset(session->set_as_pep_user);
+    int result = sqlite3_step(session->set_as_pEp_user);
+    sqlite3_reset(session->set_as_pEp_user);
     
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PERSON;
 
-    status = update_pep_user_trust_vals(session, user);
+    status = update_pEp_user_trust_vals(session, user);
         
     return status;
 }
@@ -2512,7 +2516,7 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
     return status;
 }
 
-DYNAMIC_API PEP_STATUS is_pep_user(PEP_SESSION session, pEp_identity *identity, bool* is_pep)
+DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session, pEp_identity *identity, bool* is_pep)
 {
     assert(session);
     assert(is_pep);
@@ -2538,23 +2542,23 @@ DYNAMIC_API PEP_STATUS is_pep_user(PEP_SESSION session, pEp_identity *identity, 
         alias_default = strdup(user_id);
     }
     
-    sqlite3_reset(session->is_pep_user);
-    sqlite3_bind_text(session->is_pep_user, 1, user_id, -1,
+    sqlite3_reset(session->is_pEp_user);
+    sqlite3_bind_text(session->is_pEp_user, 1, user_id, -1,
             SQLITE_STATIC);
-    int result = sqlite3_step(session->is_pep_user);
+    int result = sqlite3_step(session->is_pEp_user);
     switch (result) {
         case SQLITE_ROW: {
             // yeah yeah, I know, we could be lazy here, but it looks bad.
-            *is_pep = (sqlite3_column_int(session->is_pep_user, 0) != 0);
+            *is_pep = (sqlite3_column_int(session->is_pEp_user, 0) != 0);
             break;
         }
         default:
-            sqlite3_reset(session->is_pep_user);
+            sqlite3_reset(session->is_pEp_user);
             free(alias_default);
             return PEP_CANNOT_FIND_PERSON;
     }
 
-    sqlite3_reset(session->is_pep_user);
+    sqlite3_reset(session->is_pEp_user);
     return PEP_STATUS_OK;
 }
 
@@ -3778,7 +3782,7 @@ DYNAMIC_API const char* get_engine_version() {
 }
 
 
-DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session)
+DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session)
 {
     assert(session);
 
@@ -3787,7 +3791,7 @@ DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session)
 
     int int_result = sqlite3_exec(
         session->db,
-        "delete from identity where address like '%@peptest.ch' ;",
+        "delete from identity where address like '%@pEptest.ch' ;",
         NULL,
         NULL,
         NULL

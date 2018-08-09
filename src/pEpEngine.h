@@ -120,11 +120,29 @@ typedef enum {
 } PEP_STATUS;
 
 
+// messageToSend() - a message needs to be delivered by application
+//
+//  parameters:
+//      obj (in)        object handle (implementation defined)
+//      msg (in)        message struct with message to send
+//
+//  return value:
+//      PEP_STATUS_OK or any other value on error
+//
+//  caveat:
+//      the ownership of msg goes to the callee
+
+struct _message;
+typedef PEP_STATUS (*messageToSend_t)(void *obj, struct _message *msg);
+
+
 // INIT_STATUS init() - initialize pEpEngine for a thread
 //
 //  parameters:
-//        session (out)   init() allocates session memory and returns a pointer
-//                        as a handle
+//        session (out)                     init() allocates session memory and
+//                                          returns a pointer as a handle
+//        messageToSend (in)                callback for sending message by the
+//                                          application
 //
 //  return value:
 //        PEP_STATUS_OK = 0                 if init() succeeds
@@ -138,8 +156,8 @@ typedef enum {
 //                                            opened
 //
 //  caveat:
-//      THE CALLER MUST GUARD THIS CALL EXTERNALLY WITH A MUTEX. release() should
-//      be similarly guarded.
+//      THE CALLER MUST GUARD THIS CALL EXTERNALLY WITH A MUTEX. release()
+//      should be similarly guarded.
 //
 //      the pointer is valid only if the return value is PEP_STATUS_OK
 //      in other case a NULL pointer will be returned; a valid handle must
@@ -147,8 +165,14 @@ typedef enum {
 //
 //      the caller has to guarantee that the first call to this function
 //      will succeed before further calls can be done
+//
+//      messageToSend can only be null if no transport is application based
+//      if transport system is not used it must not be NULL
 
-DYNAMIC_API PEP_STATUS init(PEP_SESSION *session);
+DYNAMIC_API PEP_STATUS init(
+        PEP_SESSION *session,
+        messageToSend_t messageToSend
+    );
 
 
 // void release() - release thread session handle
@@ -1210,7 +1234,7 @@ PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
 //
 DYNAMIC_API const char* get_engine_version();
 
-// is_pep_user() - returns true if the USER corresponding to this identity 
+// is_pEp_user() - returns true if the USER corresponding to this identity 
 //                 has been listed in the *person* table as a pEp user. 
 //
 //  parameters:
@@ -1226,13 +1250,13 @@ DYNAMIC_API const char* get_engine_version();
 //
 //  caveat: This *does not check comm_type*
 //                         
-DYNAMIC_API PEP_STATUS is_pep_user(PEP_SESSION session, 
+DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session, 
                                    pEp_identity *identity, 
                                    bool* is_pep);
 
 
 
-DYNAMIC_API PEP_STATUS reset_peptest_hack(PEP_SESSION session);
+DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session);
 
 // This is used internally when there is a temporary identity to be retrieved
 // that may not yet have an FPR attached. See get_identity() for functionality,

@@ -164,23 +164,32 @@ DYNAMIC_API PEP_STATUS register_examine_function(
 // do_keymanagement() - function to be run on an extra thread
 //
 //  parameters:
-//      retrieve_next_identity  pointer to retrieve_next_identity() callback
-//                              which returns at least a valid address field in
-//                              the identity struct
-//      management              management data to give to keymanagement
-//                              (implementation defined)
+//      retrieve_next_identity (in) pointer to retrieve_next_identity()
+//                                  callback which returns at least a valid
+//                                  address field in the identity struct
+//      messageToSend (in)          callback for sending message by the
+//                                  application
+//      management (in)             management data to give to keymanagement
+//                                  (implementation defined)
 //
 //  return value:
 //      PEP_STATUS_OK if thread has to terminate successfully or any other
 //      value on failure
 //
 //  caveat:
+//      this function is creating and releasing a new session
+//
 //      to ensure proper working of this library, a thread has to be started
 //      with this function immediately after initialization
+//
 //      do_keymanagement() calls retrieve_next_identity(management)
+//
+//      messageToSend can only be null if no transport is application based
+//      if transport system is not used it must not be NULL
 
 DYNAMIC_API PEP_STATUS do_keymanagement(
         retrieve_next_identity_t retrieve_next_identity,
+        messageToSend_t messageToSend,
         void *management
     );
 

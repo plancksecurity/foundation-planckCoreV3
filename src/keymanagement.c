@@ -1095,6 +1095,7 @@ DYNAMIC_API PEP_STATUS register_examine_function(
 
 DYNAMIC_API PEP_STATUS do_keymanagement(
         retrieve_next_identity_t retrieve_next_identity,
+        messageToSend_t messageToSend,
         void *management
     )
 {
@@ -1108,7 +1109,7 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
     if (!retrieve_next_identity || !management)
         return PEP_ILLEGAL_VALUE;
 
-    status = init(&session);
+    status = init(&session, messageToSend);
     assert(status == PEP_STATUS_OK);
     if (status != PEP_STATUS_OK)
         return status;

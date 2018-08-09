@@ -1612,7 +1612,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
 
     bool dest_keys_found = true;
-    bool has_pep_user = false;
+    bool has_pEp_user = false;
     
     PEP_comm_type max_comm_type = PEP_ct_pEp;
 
@@ -1658,8 +1658,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                     }
                 }    
             }
-            if (!has_pep_user && !EMPTYSTR(_il->ident->user_id))
-                is_pep_user(session, _il->ident, &has_pep_user);
+            if (!has_pEp_user && !EMPTYSTR(_il->ident->user_id))
+                is_pEp_user(session, _il->ident, &has_pEp_user);
         }
         else
             _status = myself(session, _il->ident);
@@ -1710,8 +1710,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                         }
                     }    
                 }
-                if (!has_pep_user && !EMPTYSTR(_il->ident->user_id))
-                    is_pep_user(session, _il->ident, &has_pep_user);
+                if (!has_pEp_user && !EMPTYSTR(_il->ident->user_id))
+                    is_pEp_user(session, _il->ident, &has_pEp_user);
             }
             else
                 _status = myself(session, _il->ident);
@@ -1761,8 +1761,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                         }
                     }    
                 }
-                if (!has_pep_user && !EMPTYSTR(_il->ident->user_id))
-                    is_pep_user(session, _il->ident, &has_pep_user);
+                if (!has_pEp_user && !EMPTYSTR(_il->ident->user_id))
+                    is_pEp_user(session, _il->ident, &has_pEp_user);
             }
             else
                 _status = myself(session, _il->ident);
@@ -1791,7 +1791,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 PEP_rating_undefined) < PEP_rating_reliable)
     {
         free_stringlist(keys);
-        if ((has_pep_user || !session->passive_mode) && 
+        if ((has_pEp_user || !session->passive_mode) && 
             !(flags & PEP_encrypt_flag_force_no_attached_key)) {
             attach_own_key(session, src);
             added_key_to_real_src = true;
@@ -3090,7 +3090,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             }
             if (status == PEP_STATUS_OK) {
                 // Now set user as PEP (may also create an identity if none existed yet)
-                status = set_as_pep_user(session, tmp_from);
+                status = set_as_pEp_user(session, tmp_from);
             }
         }
     }
