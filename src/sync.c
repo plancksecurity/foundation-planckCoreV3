@@ -39,7 +39,7 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
 
 DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
     // stop state machine
-    memset(&session->sync_state, 0, sizeof(session->sync_state));
+    free_Sync_state(session);
 
     // unregister
     session->sync_management = NULL;
