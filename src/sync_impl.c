@@ -127,16 +127,12 @@ the_end:
 }
 
 PEP_STATUS recv_Sync_event(
-        PEP_SESSION session, 
-        Sync_event_t *ev
+        PEP_SESSION session,
+        Sync_t *ev
     )
 {
     assert(session && ev);
     if (!(session && ev))
-        return PEP_ILLEGAL_VALUE;
-
-    assert(ev->fsm >= None && ev->event >= None);
-    if (!(ev->fsm >= None && ev->event >= None))
         return PEP_ILLEGAL_VALUE;
 
     PEP_STATUS status = PEP_STATUS_OK;

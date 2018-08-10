@@ -1,9 +1,6 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-// this module is for being used WITHOUT the Transport API in transport.h
-// DO NOT USE IT WHEN USING Transport API!
-
 #pragma once
 
 #include "message.h"
@@ -11,6 +8,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+struct Sync;
+
 
 typedef enum _sync_handshake_signal {
     SYNC_NOTIFY_UNDEFINED = 0,
@@ -73,8 +74,6 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
         sync_handshake_result result
     );
 
-// sync_msg_t - items queued for serialized handling by protocol engine
-typedef struct _sync_msg_t sync_msg_t;
 
 // inject_sync_msg - inject sync protocol message
 //
@@ -85,7 +84,7 @@ typedef struct _sync_msg_t sync_msg_t;
 //  return value:
 //      0 if msg could be stored successfully or nonzero otherwise
 
-typedef int (*inject_sync_msg_t)(void *msg, void *management);
+typedef int (*inject_sync_msg_t)(struct Sync *msg, void *management);
 
 
 // retrieve_next_sync_msg - receive next sync message
@@ -100,7 +99,7 @@ typedef int (*inject_sync_msg_t)(void *msg, void *management);
 //      NULL and timeout[out] != 0 for timeout occurence
 //      NULL and timeout[out] == 0 for termination
 
-typedef void *(*retrieve_next_sync_msg_t)(void *management, time_t *timeout);
+typedef struct Sync *(*retrieve_next_sync_msg_t)(void *management, time_t *timeout);
 
 
 // register_sync_callbacks() - register adapter's callbacks
@@ -149,13 +148,6 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
         void *obj
     );
 
-// free_sync_msg() - free sync_msg_t struct when not passed to do_sync_protocol  
-//
-//  parameters:
-//      sync_msg (in)            pointer to sync_msg_t struct to free.
-//                               pointer can be NULL.
-
-DYNAMIC_API void free_sync_msg(sync_msg_t *sync_msg);
 
 // decode_sync_msg() - decode sync message from PER into XER
 //

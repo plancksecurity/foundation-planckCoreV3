@@ -61,7 +61,7 @@ tstylesheet {
                 int message_type
             );
 
-        // send message to partners
+        // send message about an event to partners using state
 
         PEP_STATUS send_«@name»_message(
                 PEP_SESSION session, 
@@ -69,11 +69,10 @@ tstylesheet {
                 int event
             );
 
-        // receive event, free «@name»_event_t structure if call does not fail
-        // with PEP_ILLEGAL_VALUE
+        // receive event and store it in state
 
         PEP_STATUS recv_«@name»_event(
-                PEP_SESSION session, 
+                PEP_SESSION session,
                 «@name»_event_t *ev
             );
     
@@ -222,16 +221,12 @@ tstylesheet {
         }
 
         PEP_STATUS recv_«@name»_event(
-                PEP_SESSION session, 
-                «@name»_event_t *ev
+                PEP_SESSION session,
+                «@name»_t *ev
             )
         {
             assert(session && ev);
             if (!(session && ev))
-                return PEP_ILLEGAL_VALUE;
-
-            assert(ev->fsm >= None && ev->event >= None);
-            if (!(ev->fsm >= None && ev->event >= None))
                 return PEP_ILLEGAL_VALUE;
 
             PEP_STATUS status = PEP_STATUS_OK;

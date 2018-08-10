@@ -49,7 +49,7 @@ PEP_STATUS Sync_notify(
         int message_type
     );
 
-// send message to partners
+// send message about an event to partners using state
 
 PEP_STATUS send_Sync_message(
         PEP_SESSION session, 
@@ -57,11 +57,10 @@ PEP_STATUS send_Sync_message(
         int event
     );
 
-// receive event, free Sync_event_t structure if call does not fail
-// with PEP_ILLEGAL_VALUE
+// receive event and store it in state
 
 PEP_STATUS recv_Sync_event(
-        PEP_SESSION session, 
+        PEP_SESSION session,
         Sync_event_t *ev
     );
 

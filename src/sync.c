@@ -7,15 +7,10 @@
 #include <assert.h>
 
 #include "asn1_helper.h"
+#include "../asn.1/Sync.h"
 #include "KeySync_fsm.h"
 
 // receive_sync_msg is defined in the sync_impl
-
-PEP_STATUS receive_sync_msg(
-        PEP_SESSION session,
-        sync_msg_t *sync_msg,
-        time_t *timeout
-    );
 
 DYNAMIC_API PEP_STATUS register_sync_callbacks(
         PEP_SESSION session,
@@ -102,7 +97,7 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
         void *obj
     )
 {
-    sync_msg_t *msg = NULL;
+    Sync_t *msg = NULL;
     PEP_STATUS status = PEP_STATUS_OK;
     time_t timeout = 0;
 
@@ -115,11 +110,11 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
     session->sync_obj = obj;
     while (true) 
     {
-        msg = (sync_msg_t *) session->retrieve_next_sync_msg(session->sync_management, &timeout);
+        msg = session->retrieve_next_sync_msg(session->sync_management, &timeout);
         if (msg == NULL)
             break;
 
-        status = receive_sync_msg(session, msg, &timeout);
+        status = recv_Sync_event(session, msg);
         if (status != PEP_STATUS_OK && status != PEP_MESSAGE_IGNORE) {
             char buffer[MAX_LINELENGTH];
             memset(buffer, 0, MAX_LINELENGTH);
