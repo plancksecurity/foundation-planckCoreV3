@@ -14,6 +14,107 @@ tstylesheet {
     include ./functions.ysl2
 
     template "/protocol" {
+        document "generated/{@name}_event.h", "text"
+        ||
+        // This file is under GNU General Public License 3.0
+        // see LICENSE.txt
+
+        #pragma once
+
+        #include "dynamic_api.h"
+
+        #ifdef __cplusplus
+        extern "C" {
+        #endif
+
+        #include "../asn.1/«@name».h"
+
+
+        typedef struct _«@name»_event {
+            «@name»_PR fsm;
+            int event;
+            «@name»_t *msg;
+        } «@name»_event_t;
+
+ 
+        // new_«@name»_event() - allocate a new «@name»_event
+        //
+        //  parameters:
+        //      fsm (in)        finite state machine the event is for
+        //      event (in)      event or None
+        //      msg (in)        message to compute event from
+        //
+        //  return value:
+        //      pointer to new event or NULL in case of failure
+        //
+        //  caveat:
+        //      event must be valid for fsm or None
+        //      in case msg is given event will be calculated out of message
+
+        DYNAMIC_API «@name»_event_t *new_«@name»_event(«@name»_PR fsm, int event, «@name»_t *msg);
+
+
+        // free_«@name»_event() - free memory occupied by event
+        //
+        //  parameters:
+        //      ev (in)         event to free
+
+        DYNAMIC_API void free_«@name»_event(«@name»_event_t *ev);
+
+
+        #ifdef __cplusplus
+        }
+        #endif
+
+        ||
+
+        document "generated/{@name}_event.c", "text"
+        ||
+        // This file is under GNU General Public License 3.0
+        // see LICENSE.txt
+
+        #include "pEp_internal.h"
+        #include "«@name»_event.h"
+        #include "«@name»_func.h"
+
+        DYNAMIC_API «@name»_event_t *new_«@name»_event(«@name»_PR fsm, int event, «@name»_t *msg)
+        {
+            assert(fsm > 0 && (event >= 0 |`> |` msg));
+            if (!(fsm > 0 && (event >= 0 |`> |` msg)))
+                return NULL;
+
+            «@name»_event_t *ev = («@name»_event_t *) calloc(1, sizeof(«@name»_event_t));
+            assert(ev);
+            if (!ev)
+                return NULL;
+
+            ev->fsm = fsm;
+            ev->event = event;
+            ev->msg = msg;
+
+            if (msg) {
+                switch (fsm) {
+                    `` apply "fsm", 3, mode=event
+                    default:
+                        // unknown protocol
+                        free(ev);
+                        return NULL;
+                }
+            }
+
+            return ev;
+        }
+
+        DYNAMIC_API void free_«@name»_event(«@name»_event_t *ev)
+        {
+            if (ev) {
+                free_«@name»_message(ev->msg);
+                free(ev);
+            }
+        }
+
+        ||
+
         document "generated/{@name}_impl.h", "text" {
         ||
         // This file is under GNU General Public License 3.0
@@ -28,14 +129,6 @@ tstylesheet {
         #ifdef __cplusplus
         extern "C" {
         #endif
-
-        // event struct
-
-        typedef struct _«@name»_event {
-            «@name»_PR fsm;
-            int event;
-            «@name»_t *msg;
-        } «@name»_event_t;
 
         // conditions
 
@@ -69,11 +162,11 @@ tstylesheet {
                 int event
             );
 
-        // receive event and store it in state
+        // receive message and store it in state
 
-        PEP_STATUS recv_«@name»_event(
+        PEP_STATUS recv_«@name»_message(
                 PEP_SESSION session,
-                «@name»_event_t *ev
+                «@name»_t *msg
             );
     
         // state machine driver
@@ -118,11 +211,14 @@ tstylesheet {
             if (!(session && fsm))
                 return PEP_ILLEGAL_VALUE;
 
-            switch (fsm) {
-                `` apply "fsm", 2, mode=driver               
-                default:
-                    return PEP_ILLEGAL_VALUE;
-            }
+            int next_state = None;
+            do {
+                switch (fsm) {
+                    `` apply "fsm", 3, mode=driver               
+                    default:
+                        return PEP_ILLEGAL_VALUE;
+                }
+            }  while (next_state);
 
             return PEP_STATUS_OK;
         }
@@ -271,15 +367,41 @@ tstylesheet {
         apply "fsm", 0, mode=gen;
     }
 
+    template "fsm", mode=event
+    {
+    ||
+    case Sync_PR_«yml:lcase(@name)»: {
+        switch (msg->choice.keysync.choice.present) {
+    ||
+    for "message"
+    ||
+            case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+                ev->event = «@name»;
+                break;
+    ||
+    ||
+            default:
+                // unknown message type
+                free(ev);
+                return NULL;
+        }
+        break;
+    }
+
+    ||
+    }
+
     template "fsm", mode=driver
     ||
     case Sync_PR_«yml:lcase(@name)»: {
-        int state = session->sync_state.«yml:lcase(@name)».state;
-        state = fsm_«@name»(session, state, event);
-        if (state > 0)
-            session->sync_state.«yml:lcase(@name)».state = state;
-        else if (state < 0)
+        next_state = fsm_«@name»(session, session->«yml:lcase(../@name)»_state.«yml:lcase(@name)».state, event);
+        if (next_state > None) {
+            session->«yml:lcase(../@name)»_state.«yml:lcase(@name)».state = next_state;
+            event = Init;
+        }
+        else if (next_state < None) {
             return PEP_STATEMACHINE_ERROR - state;
+        }
         break;
     }
 
@@ -337,6 +459,9 @@ tstylesheet {
         // state machine
 
         const char *«@name»_state_name(int state);
+
+        // the state machine function is returning the next state in case of a
+        // transition or None for staying
 
         «@name»_state fsm_«@name»(
                 PEP_SESSION session,
@@ -427,16 +552,15 @@ tstylesheet {
 
             switch (state) {
                 case None:
-                    «@name»_SERVICE_LOG("transition to state Init", "None is not a valid state");
-                    return Init;
+                    return «@name»_state_Init;
                 
                 `` apply "state", 2, mode=fsm
                 default:
-                    «@name»_ERR_LOG_INT("«@name»_fsm() called with invalid state", state);
+                    «@name»_ERR_LOG_INT("invalid state", state);
                     return invalid_state;
             }
             
-            return state;
+            return None;
         }
 
         ||
@@ -454,11 +578,20 @@ tstylesheet {
             switch (event) {
                 case None:
                     «../@name»_SERVICE_LOG("received None event", "ignoring");
-                    return state;
+                    break;
      
+        ||
+        if "not(event[@name='Init'])"
+        ||
+                case Init:
+                    // nothing to do
+                    break;
+
+        ||
+        ||
                 `` apply "event", 2, mode=fsm
                 default:
-                    «../@name»_ERR_LOG_INT("«../@name»_fsm() called with invalid event", event);
+                    «../@name»_ERR_LOG_INT("invalid event", event);
                     return invalid_event;
             }
             break;
@@ -491,8 +624,7 @@ tstylesheet {
         ||
 
         «$fsm/@name»_SERVICE_LOG("transition to state", "«@target»");
-        state = «@target»;
-        break;
+        return «@target»;
         ||
     }
 

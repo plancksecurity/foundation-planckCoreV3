@@ -66,7 +66,7 @@ PEP_STATUS keyElectionWon(PEP_SESSION session, bool *result)
     if (!(session && result))
         return PEP_ILLEGAL_VALUE;
 
-    pEp_identity *from = session->sync_state.basic.from;
+    pEp_identity *from = session->sync_state.common.from;
 
     assert(from && from->fpr && from->fpr[0] && from->address && from->address[0]);
     if (!(from && from->fpr && from->fpr[0] && from->address && from->address[0]))
@@ -183,11 +183,11 @@ PEP_STATUS showSoleHandshake(PEP_SESSION session)
     if (!session->notifyHandshake)
         return PEP_SYNC_NO_NOTIFY_CALLBACK;
  
-    assert(session->sync_state.basic.from);
-    if (!session->sync_state.basic.from)
+    assert(session->sync_state.common.from);
+    if (!session->sync_state.common.from)
         return PEP_ILLEGAL_VALUE;
 
-    pEp_identity *from = session->sync_state.basic.from;
+    pEp_identity *from = session->sync_state.common.from;
     pEp_identity *me = NULL;
     PEP_STATUS status = get_identity(session, from->address, PEP_OWN_USERID, &me);
     assert(status == PEP_STATUS_OK);
@@ -280,7 +280,7 @@ PEP_STATUS ownKeysAreGroupKeys(PEP_SESSION session)
     if (!il)
         return PEP_OUT_OF_MEMORY;
 
-    pEp_identity *from = session->sync_state.basic.from;
+    pEp_identity *from = session->sync_state.common.from;
     identity_list *_il = il;
 
     int result;
@@ -349,11 +349,11 @@ PEP_STATUS showJoinGroupHandshake(PEP_SESSION session)
     if (!session->notifyHandshake)
         return PEP_SYNC_NO_NOTIFY_CALLBACK;
  
-    assert(session->sync_state.basic.from);
-    if (!session->sync_state.basic.from)
+    assert(session->sync_state.common.from);
+    if (!session->sync_state.common.from)
         return PEP_ILLEGAL_VALUE;
 
-    pEp_identity *from = session->sync_state.basic.from;
+    pEp_identity *from = session->sync_state.common.from;
     pEp_identity *me = NULL;
     PEP_STATUS status = get_identity(session, from->address, PEP_OWN_USERID, &me);
     assert(status == PEP_STATUS_OK);
@@ -390,11 +390,11 @@ PEP_STATUS showGroupedHandshake(PEP_SESSION session)
     if (!session->notifyHandshake)
         return PEP_SYNC_NO_NOTIFY_CALLBACK;
  
-    assert(session->sync_state.basic.from);
-    if (!session->sync_state.basic.from)
+    assert(session->sync_state.common.from);
+    if (!session->sync_state.common.from)
         return PEP_ILLEGAL_VALUE;
 
-    pEp_identity *from = session->sync_state.basic.from;
+    pEp_identity *from = session->sync_state.common.from;
     pEp_identity *me = NULL;
     PEP_STATUS status = get_identity(session, from->address, PEP_OWN_USERID, &me);
     assert(status == PEP_STATUS_OK);

@@ -11,14 +11,6 @@
 extern "C" {
 #endif
 
-// event struct
-
-typedef struct _Sync_event {
-    Sync_PR fsm;
-    int event;
-    Sync_t *msg;
-} Sync_event_t;
-
 // conditions
 
 PEP_STATUS deviceGrouped(PEP_SESSION session, bool *result);
@@ -57,11 +49,11 @@ PEP_STATUS send_Sync_message(
         int event
     );
 
-// receive event and store it in state
+// receive message and store it in state
 
-PEP_STATUS recv_Sync_event(
+PEP_STATUS recv_Sync_message(
         PEP_SESSION session,
-        Sync_event_t *ev
+        Sync_t *msg
     );
 
 // state machine driver

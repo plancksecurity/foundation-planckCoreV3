@@ -29,11 +29,6 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
     session->inject_sync_msg = inject_sync_msg;
     session->retrieve_next_sync_msg = retrieve_next_sync_msg;
 
-    // start state machine
-    PEP_STATUS status = inject_Sync_event(session, Sync_PR_keysync, Init);
-    if (status != PEP_STATUS_OK)
-        unregister_sync_callbacks(session);
-
     return status;
 }
 

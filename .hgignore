@@ -67,6 +67,8 @@ src/KeySync_fsm.c
 src/KeySync_fsm.h
 src/Sync_func.c
 src/Sync_func.h
+src/Sync_event.c
+src/Sync_event.h
 asn.1/keysync.asn1
 asn.1/sync.asn1
 sync/.codecs
@@ -74,3 +76,4 @@ sync/.messages
 sync/.actions
 sync/.codegen
 sync/.statemachines
+

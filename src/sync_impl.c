@@ -15,20 +15,25 @@ PEP_STATUS Sync_driver(
     if (!(session && fsm))
         return PEP_ILLEGAL_VALUE;
 
-    switch (fsm) {
-        case Sync_PR_keysync: {
-            int state = session->sync_state.keysync.state;
-            state = fsm_KeySync(session, state, event);
-            if (state > 0)
-                session->sync_state.keysync.state = state;
-            else if (state < 0)
-                return PEP_STATEMACHINE_ERROR - state;
-            break;
+    int next_state = None;
+    do {
+        switch (fsm) {
+            case Sync_PR_keysync: {
+                next_state = fsm_KeySync(session, session->sync_state.keysync.state, event);
+                if (next_state > None) {
+                    session->sync_state.keysync.state = next_state;
+                    event = Init;
+                }
+                else if (next_state < None) {
+                    return PEP_STATEMACHINE_ERROR - state;
+                }
+                break;
+            }
+            
+            default:
+                return PEP_ILLEGAL_VALUE;
         }
-        
-        default:
-            return PEP_ILLEGAL_VALUE;
-    }
+    }  while (next_state);
 
     return PEP_STATUS_OK;
 }

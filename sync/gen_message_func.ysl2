@@ -39,9 +39,9 @@ extern "C" {
 // state
 
 struct «@name»_state_s {
-    struct basic_state_s {
+    struct common_state_s {
         pEp_identity *from;
-    } basic;
+    } common;
 
     `` apply "fsm", mode=state
 };
@@ -95,17 +95,17 @@ void free_«@name»_state(PEP_SESSION session)
     if (!session)
         return;
 
-    free_identity(session->«yml:lcase(@name)»_state.basic.from);
-    session->«yml:lcase(@name)»_state.basic.from = NULL;
+    free_identity(session->«yml:lcase(@name)»_state.common.from);
 
 ||
 for "fsm"
     for "func:distinctName(message/field[not(func:basicType())])"
         |> ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_«@type», &session->«yml:lcase(../../../@name)»_state.«yml:lcase(../../@name)».«@name»);
-|
 for "func:distinctName(fsm/message/field[@type='TID'])"
     |> ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_«@type», &session->own_«yml:lcase(../../../@name)»_state.«@name»);
 ||
+
+    memset(&session->sync_state, 0, sizeof(session->sync_state));
 }
 
 «@name»_t *new_«@name»_message(«@name»_PR fsm, int message_type)
