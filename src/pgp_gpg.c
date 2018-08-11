@@ -27,8 +27,96 @@ int strptrcmp(const void* a, const void* b) {
 
 // This is in response to ENGINE-427. We should NOT be aiming to keep this here.
 bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
-    return false;
-#if 0
+    static char buf[MAX_LINELENGTH];
+    size_t num_keys = stringlist_length(keys);
+
+    // This function does:
+    // 1. find a non-existent backup name numbered from 0 to 99 (otherwise fails)
+    // 2. read the original file and meanwhile write the backup copy
+    // 3. write the new config file to a temporary file in the same directory
+    // 4. rename the temp file replacing the original config file
+    // 5. on Windows remove the left-overs
+
+    /* Find a suitable backup file name, without trashing previous ones */
+    char* backup_file_path = NULL;
+    size_t backup_file_path_baselen = strlen(config_file_path);
+    FILE *backup_file = 0;
+    int ret;
+    int found = 0;
+    int i;
+    char* temp_config_file_path = NULL;
+    char* s = NULL;
+    stringlist_t* _k;
+    stringlist_t* lines = new_stringlist(NULL);
+    FILE *f;
+    FILE *temp_config_file;
+    stringlist_t* cur_string;
+    bool status = false;
+
+#ifdef WIN32
+    WIN32_FIND_DATA FindFileData;
+    HANDLE handle;
+
+    const char* line_end = "\r\n";
+#else
+    const char* line_end = "\n";
+#endif
+
+    // If we bork it up somehow, we don't go beyond 100 tries...
+    for (int nr = 0; nr < 99; nr++) {
+        backup_file_path = (char*)calloc(backup_file_path_baselen + 12, 1);  // .99.pep.old\0
+        ret = snprintf(backup_file_path, backup_file_path_baselen + 12,
+                                        "%s.%d.pep.bkp", config_file_path, nr);
+        fprintf(stderr, "backup_file_path = '%s' (ret = %d)\n", backup_file_path, ret);
+        assert(ret >= 0);  // snprintf(2)
+        if (ret < 0) {
+            goto quickfix_error;  // frees backup_file_path
+        }
+
+#ifdef WIN32
+        // The fopen(.., "x") is not documented on Windows (fopen_s actually respects it, but...).
+        // So we make an extra check for the existence of the file. This introduces a possible
+        // race-condition, but it has little effect even if we incur into it.
+        handle = FindFirstFile(backup_file_path, &FindFileData);
+        if (handle != INVALID_HANDLE_VALUE) {
+                fprintf(stderr, "Windows says file may exist %s\n", backup_file_path);
+                FindClose(handle);
+                free(backup_file_path);
+                backup_file_path = NULL;
+                continue;
+        }
+        FindClose(handle);
+
+        backup_file = Fopen(backup_file_path, "wb");
+#else
+        backup_file = Fopen(backup_file_path, "wbx");    // the 'x' is important
+#endif
+        fprintf(stderr, "backup_file = %d\n", backup_file);
+        if (backup_file <= 0) {
+            fprintf(stderr, "backup_file open fail\n");
+            free(backup_file_path);
+            backup_file_path = NULL;
+            continue;
+        }
+        break;
+    }
+
+    if (!backup_file_path)
+        goto quickfix_error;
+
+    if (backup_file <= 0)
+        goto quickfix_error;
+
+    // Open original file, parse it, and meanwhile write a backup copy
+
+    f = Fopen(config_file_path, "rb");
+
+    if (f == NULL)
+        goto quickfix_error;
+
+    ret = Fprintf(backup_file, "# Backup created by pEp.%s"
+                               "# If GnuPG and pEp work smoothly this file may safely be removed.%s%s",
+                               line_end, line_end, line_end);
 
     // Go through every line in the file
     while ((s = Fgets(buf, MAX_LINELENGTH, f))) {
@@ -36,11 +124,23 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
         str_ptr_and_bit* found_keys = (str_ptr_and_bit*)(calloc(num_keys, sizeof(str_ptr_and_bit)));
         int num_found_keys = 0;
 
+        ret = Fprintf(backup_file, "%s", s);
+        assert(ret >= 0);
+        if (ret < 0) {
+            free(found_keys);
+            found_keys = NULL;
+            goto quickfix_error;
+        }
+
         char* rest;
         char* line_token = strtok_r(s, "\r\n", &rest);
+
         if (!line_token)
             line_token = s;
-            
+
+        if (*line_token == '\n' || *line_token == '\r')
+            line_token = "";
+
         if (*line_token == '#' || *line_token == '\0') {
             stringlist_add(lines, strdup(line_token));
             continue;
@@ -61,6 +161,7 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
                     case '-':
                     case ':':
                     case '/':
+                    case '\\':
                         notkey = true;
                         break;
                     default:
@@ -74,6 +175,7 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
                     case '-':
                     case ':':
                     case '/':
+                    case '\\':
                         notkey = true;
                         break;
                     default:
@@ -93,11 +195,11 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
             if (!notkey) {
                 // Ok, it's not just the key with a null terminator. So...
                 // add a pointer to the key to the list from this string
-                found_keys[num_found_keys].key = keypos; 	
+                found_keys[num_found_keys].key = keypos;
                 found_keys[num_found_keys].bit = i;
                 num_found_keys++;
             }
-            
+
             // Check to see if there are more annoying occurences of this 
             // key in the string
             for (keypos = strstr(nextpos, _k->value); 
@@ -109,6 +211,7 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
                     case '-':
                     case ':':
                     case '/':
+                    case '\\':
                         notkey = true;
                         break;
                     default:
@@ -120,6 +223,7 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
                         case '-':
                         case ':':
                         case '/':
+                        case '\\':
                             notkey = true;
                             break;
                         default:
@@ -132,12 +236,12 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
                 if (num_found_keys >= num_keys)
                     found_keys = (str_ptr_and_bit*)realloc(found_keys, (num_found_keys + 1) * sizeof(str_ptr_and_bit));
                     
-                found_keys[num_found_keys].key = keypos; 	
+                found_keys[num_found_keys].key = keypos;
                 found_keys[num_found_keys].bit = i;
                 num_found_keys++;     
             }
         }
-        
+
         if (!only_key_on_line) {
             if (num_found_keys == 0)
                 stringlist_add(lines, strdup(line_token));        
@@ -183,7 +287,116 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
         free(found_keys);
         found_keys = NULL;
     } // End of file
+
+    // Now do the failsafe writing dance
+
+    ret = Fclose(f);
+    fprintf(stderr, "close config file ret = %d\n", ret);
+    assert(ret == 0);
+    if (ret != 0)
+        goto quickfix_error;
+
+    ret = Fclose(backup_file);
+    fprintf(stderr, "close backup config file ret = %d\n", ret);
+    assert(ret == 0);
+    if (ret != 0)
+        goto quickfix_error;
+
+    // 2. Write the new config file to a temporary file in the same directory
+
+    assert(backup_file_path_baselen != NULL);
+
+    temp_config_file_path = (char*)calloc(backup_file_path_baselen + 8, 1);  // .XXXXXX\0
+    ret = snprintf(temp_config_file_path, backup_file_path_baselen + 8, "%s.XXXXXX", config_file_path);
+    fprintf(stderr, "temp_config_file_path = '%s' (ret = %d)\n", temp_config_file_path, ret);
+    assert(ret == NULL);
+    if (!ret)
+        goto quickfix_error;
+
+    int temp_config_filedesc = Mkstemp(temp_config_file_path);
+    fprintf(stderr, "temp_config_filedesc '%s' (fd: %d, errno: %d)\n", temp_config_file_path, temp_config_filedesc, errno);
+    if (temp_config_filedesc == -1)
+        goto quickfix_error;
+
+    temp_config_file = fdopen(temp_config_filedesc, "w");    // no "b" in fdopen() is documentend, use freopen()
+    fprintf(stderr, "temp_config_file '%s' (fd=%d)\n", temp_config_filedesc, temp_config_file);
+    assert(temp_config_file != NULL);
+    if (temp_config_file == NULL)
+        goto quickfix_error;
+
+    temp_config_file = Freopen(config_file_path, "wb", temp_config_file);
+    fprintf(stderr, "reopen: temp_config_file = '%d'\n", temp_config_file);
+    assert(temp_config_file != NULL);
+    if (temp_config_file == NULL)
+        goto quickfix_error;
+
+    ret = Fprintf(temp_config_file, "# File re-created by pEp%s"
+                                    "# See backup in '%s'%s%s", line_end,
+                                                                backup_file_path,
+                                                                line_end, line_end);
+    assert(ret >= 0);
+    if (ret < 0)
+        goto quickfix_error;
+        
+    for (cur_string = lines; cur_string; cur_string = cur_string->next) {
+        assert(cur_string->value != NULL);
+        ret = Fprintf(temp_config_file, "%s%s", cur_string->value, line_end);
+        fprintf(stderr, "Fprintf = '%s' (ret=%d)\n", cur_string->value, ret);
+        assert(ret >= 0);
+        if (ret < 0)
+            goto quickfix_error;
+    }
+
+    ret = Fclose(temp_config_file);
+    assert(ret == 0);
+    if (ret != 0)
+        goto quickfix_error;
+
+#ifdef WIN32
+    ret = !(0 == ReplaceFile(config_file_path, temp_config_file_path, NULL, 0, NULL, NULL));
+    fprintf(stderr, "rename temp_config_file_path = '%s' (ret=%d)\n", temp_config_file_path, ret);
+    assert(ret == 0);
+    if (ret != 0)
+        goto quickfix_error;
+
+    ret = unlink(temp_config_file_path);
+    fprintf(stderr, "unlink temp_config_file_path = '%s' (ret=%d)\n", temp_config_file_path, ret);
+#else
+    ret = rename(config_file_path, temp_config_file_path);
+    fprintf(stderr, "rename temp_config_file_path = '%s' (ret=%d)\n", temp_config_file_path, ret);
 #endif
+    assert(ret == 0);
+    if (ret != 0)
+        goto quickfix_error;
+
+    free(temp_config_file_path);
+    temp_config_file_path = NULL;
+
+    status = true;
+
+    free(backup_file_path);
+
+    goto quickfix_success;
+
+
+quickfix_error:
+
+    assert(status == false);
+
+    free(backup_file_path);
+
+
+quickfix_success:
+
+    assert(found_keys == NULL);
+
+    if (temp_config_file_path)
+        free(temp_config_file_path);
+
+    free_stringlist(lines);
+
+    return status;
+
 }
 
 static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const char* config_file_path)
@@ -206,7 +419,7 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
     line_end = "\n";
 #endif    
 
-    FILE *f = Fopen(config_file_path, "r");
+    FILE *f = Fopen(config_file_path, "rb");
     if (f == NULL && errno == ENOMEM)
         return false;
 
@@ -247,10 +460,14 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
 
         if (!s && ferror(f))
             return false;
-        f = Freopen(config_file_path, "a", f);
+        f = Freopen(config_file_path, "ab", f);
     }
     else {
-        f = Fopen(config_file_path, "w");
+#ifdef WIN32
+        f = Fopen(config_file_path, "wb");
+#else
+        f = Fopen(config_file_path, "wbx");
+#endif
     }
 
     assert(f);
