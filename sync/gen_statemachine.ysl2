@@ -76,6 +76,7 @@ tstylesheet {
         #include "pEp_internal.h"
         #include "«@name»_event.h"
         #include "«@name»_func.h"
+        `` for "fsm" | #include "«@name»_fsm.h"
 
         DYNAMIC_API «@name»_event_t *new_«@name»_event(«@name»_PR fsm, int event, «@name»_t *msg)
         {
@@ -124,7 +125,7 @@ tstylesheet {
 
         #include "fsm_common.h"
         #include "message_api.h"
-        #include "../asn.1/Sync.h"
+        #include "«@name»_event.h"
         
         #ifdef __cplusplus
         extern "C" {
@@ -154,7 +155,7 @@ tstylesheet {
                 int message_type
             );
 
-        // send message about an event to partners using state
+        // send message about an event to communication partners using state
 
         PEP_STATUS send_«@name»_message(
                 PEP_SESSION session, 
@@ -164,9 +165,9 @@ tstylesheet {
 
         // receive message and store it in state
 
-        PEP_STATUS recv_«@name»_message(
+        PEP_STATUS recv_«@name»_event(
                 PEP_SESSION session,
-                «@name»_t *msg
+                «@name»_event_t *ev
             );
     
         // state machine driver
@@ -199,6 +200,7 @@ tstylesheet {
     
         #include "«@name»_impl.h"
         #include "pEp_internal.h"
+        #include "«@name»_event.h"
         `` for "fsm" | #include "«@name»_fsm.h"
 
         PEP_STATUS «@name»_driver(
@@ -238,14 +240,13 @@ tstylesheet {
 
             PEP_STATUS status = PEP_STATUS_OK;
 
-            if (!session->inject_«yml:lcase(@name)»_msg) {
+            if (!session->inject_«yml:lcase(@name)»_event) {
                status = PEP_«yml:ucase(@name)»_NO_INJECT_CALLBACK;
                goto error;
             }
 
             if (event < Extra) {
                 msg = new_«@name»_message(fsm, event);
-                assert(msg);
                 if (!msg) {
                     status = PEP_OUT_OF_MEMORY;
                     goto error;
@@ -267,7 +268,7 @@ tstylesheet {
             ev->event = event;
             ev->msg = msg;
 
-            int result = session->inject_«yml:lcase(@name)»_msg(ev,
+            int result = session->inject_«yml:lcase(@name)»_event(ev,
                     session->«yml:lcase(@name)»_management);
             if (result) {
                 status = PEP_STATEMACHINE_ERROR;
@@ -297,7 +298,6 @@ tstylesheet {
             PEP_STATUS status = PEP_STATUS_OK;
 
             «@name»_t *msg = new_«@name»_message(fsm, message_type);
-            assert(msg);
             if (!msg) {
                 status = PEP_OUT_OF_MEMORY;
                 goto error;
@@ -318,7 +318,7 @@ tstylesheet {
 
         PEP_STATUS recv_«@name»_event(
                 PEP_SESSION session,
-                «@name»_t *ev
+                «@name»_event_t *ev
             )
         {
             assert(session && ev);
@@ -371,7 +371,7 @@ tstylesheet {
     {
     ||
     case Sync_PR_«yml:lcase(@name)»: {
-        switch (msg->choice.keysync.choice.present) {
+        switch (msg->choice.«yml:lcase(@name)».payload.present) {
     ||
     for "message"
     ||
@@ -394,7 +394,8 @@ tstylesheet {
     template "fsm", mode=driver
     ||
     case Sync_PR_«yml:lcase(@name)»: {
-        next_state = fsm_«@name»(session, session->«yml:lcase(../@name)»_state.«yml:lcase(@name)».state, event);
+        int state = session->«yml:lcase(../@name)»_state.«yml:lcase(@name)».state;
+        next_state = fsm_«@name»(session, state, event);
         if (next_state > None) {
             session->«yml:lcase(../@name)»_state.«yml:lcase(@name)».state = next_state;
             event = Init;
@@ -637,7 +638,7 @@ tstylesheet {
                 ||
 
                 «$fsm/@name»_SERVICE_LOG("send message", "«$name»");
-                status = «$protocol/@name»_notify(session, «$fsm/@id», «$name»);
+                status = send_«$protocol/@name»_message(session, «$fsm/@id», «$name»);
                 ||
             }
             otherwise

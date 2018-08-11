@@ -5,7 +5,7 @@
 
 #include "fsm_common.h"
 #include "message_api.h"
-#include "../asn.1/Sync.h"
+#include "Sync_event.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,7 +41,7 @@ PEP_STATUS Sync_notify(
         int message_type
     );
 
-// send message about an event to partners using state
+// send message about an event to communication partners using state
 
 PEP_STATUS send_Sync_message(
         PEP_SESSION session, 
@@ -51,9 +51,9 @@ PEP_STATUS send_Sync_message(
 
 // receive message and store it in state
 
-PEP_STATUS recv_Sync_message(
+PEP_STATUS recv_Sync_event(
         PEP_SESSION session,
-        Sync_t *msg
+        Sync_event_t *ev
     );
 
 // state machine driver

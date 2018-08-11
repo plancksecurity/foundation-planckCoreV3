@@ -205,8 +205,8 @@ struct _pEpSession {
     void *sync_management;
     void *sync_obj;
     notifyHandshake_t notifyHandshake;
-    inject_sync_msg_t inject_sync_msg;
-    retrieve_next_sync_msg_t retrieve_next_sync_msg;
+    inject_sync_event_t inject_sync_event;
+    retrieve_next_sync_event_t retrieve_next_sync_event;
 
     // pEp Sync
     struct Sync_state_s sync_state;

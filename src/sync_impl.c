@@ -3,6 +3,7 @@
 
 #include "Sync_impl.h"
 #include "pEp_internal.h"
+#include "Sync_event.h"
 #include "KeySync_fsm.h"
 
 PEP_STATUS Sync_driver(
@@ -19,7 +20,8 @@ PEP_STATUS Sync_driver(
     do {
         switch (fsm) {
             case Sync_PR_keysync: {
-                next_state = fsm_KeySync(session, session->sync_state.keysync.state, event);
+                int state = session->sync_state.keysync.state;
+                next_state = fsm_KeySync(session, state, event);
                 if (next_state > None) {
                     session->sync_state.keysync.state = next_state;
                     event = Init;
@@ -53,14 +55,13 @@ PEP_STATUS inject_Sync_event(
 
     PEP_STATUS status = PEP_STATUS_OK;
 
-    if (!session->inject_sync_msg) {
+    if (!session->inject_sync_event) {
        status = PEP_SYNC_NO_INJECT_CALLBACK;
        goto error;
     }
 
     if (event < Extra) {
         msg = new_Sync_message(fsm, event);
-        assert(msg);
         if (!msg) {
             status = PEP_OUT_OF_MEMORY;
             goto error;
@@ -82,7 +83,7 @@ PEP_STATUS inject_Sync_event(
     ev->event = event;
     ev->msg = msg;
 
-    int result = session->inject_sync_msg(ev,
+    int result = session->inject_sync_event(ev,
             session->sync_management);
     if (result) {
         status = PEP_STATEMACHINE_ERROR;
@@ -112,7 +113,6 @@ PEP_STATUS Sync_notify(
     PEP_STATUS status = PEP_STATUS_OK;
 
     Sync_t *msg = new_Sync_message(fsm, message_type);
-    assert(msg);
     if (!msg) {
         status = PEP_OUT_OF_MEMORY;
         goto error;
@@ -133,7 +133,7 @@ the_end:
 
 PEP_STATUS recv_Sync_event(
         PEP_SESSION session,
-        Sync_t *ev
+        Sync_event_t *ev
     )
 {
     assert(session && ev);

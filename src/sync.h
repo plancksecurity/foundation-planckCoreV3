@@ -3,14 +3,14 @@
 
 #pragma once
 
+
 #include "message.h"
+#include "Sync_event.h"
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-struct Sync;
 
 
 typedef enum _sync_handshake_signal {
@@ -75,40 +75,36 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
     );
 
 
-// inject_sync_msg - inject sync protocol message
+// inject_sync_event - inject sync protocol message
 //
 //  parameters:
-//      msg (in)            message to inject
+//      ev (in)             event to inject
 //      management (in)     application defined
 //
 //  return value:
-//      0 if msg could be stored successfully or nonzero otherwise
+//      0 if event could be stored successfully or nonzero otherwise
 
-typedef int (*inject_sync_msg_t)(struct Sync *msg, void *management);
+typedef int (*inject_sync_event_t)(Sync_event_t *ev, void *management);
 
 
-// retrieve_next_sync_msg - receive next sync message
+// retrieve_next_sync_event - receive next sync event
 //
 //  parameters:
 //      management (in)     application defined
-//      timeout (in,out)    do not wait longer than timeout for message
-//                          timeout == NULL or *timeout == 0 is blocking
 //
 //  return value:
-//      next message, then timeout[out] == remaining time
-//      NULL and timeout[out] != 0 for timeout occurence
-//      NULL and timeout[out] == 0 for termination
+//      next event
 
-typedef struct Sync *(*retrieve_next_sync_msg_t)(void *management, time_t *timeout);
+typedef struct Sync_event_t *(*retrieve_next_sync_event_t)(void *management);
 
 
 // register_sync_callbacks() - register adapter's callbacks
 //
 //  parameters:
-//      session (in)                session where to store obj handle
-//      management (in)             application defined
-//      notifyHandshake (in)        callback for doing the handshake
-//      retrieve_next_sync_msg (in) callback for receiving sync messages
+//      session (in)                    session where to store obj handle
+//      management (in)                 application defined
+//      notifyHandshake (in)            callback for doing the handshake
+//      retrieve_next_sync_event (in)   callback for receiving sync event
 //
 //  return value:
 //      PEP_STATUS_OK or any other value on errror
@@ -120,11 +116,12 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
         PEP_SESSION session,
         void *management,
         notifyHandshake_t notifyHandshake,
-        inject_sync_msg_t inject_sync_msg,
-        retrieve_next_sync_msg_t retrieve_next_sync_msg
+        inject_sync_event_t inject_sync_event,
+        retrieve_next_sync_event_t retrieve_next_sync_event
     );
 
 DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session);
+
 
 // do_sync_protocol() - function to be run on an extra thread
 //
@@ -146,34 +143,6 @@ DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session);
 DYNAMIC_API PEP_STATUS do_sync_protocol(
         PEP_SESSION session,
         void *obj
-    );
-
-
-// decode_sync_msg() - decode sync message from PER into XER
-//
-//  parameters:
-//      data (in)               PER encoded data
-//      size (in)               size of PER encoded data
-//      text (out)              XER text of the same sync message
-
-DYNAMIC_API PEP_STATUS decode_sync_msg(
-        const char *data,
-        size_t size,
-        char **text
-    );
-
-
-// encode_sync_msg() - encode sync message from XER into PER
-//
-//  parameters:
-//      text (in)               string with XER text of the sync message
-//      data (out)              PER encoded data
-//      size (out)              size of PER encoded data
-
-DYNAMIC_API PEP_STATUS encode_sync_msg(
-        const char *text,
-        char **data,
-        size_t *size
     );
 
 
