@@ -67,7 +67,6 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
         backup_file_path = (char*)calloc(backup_file_path_baselen + 12, 1);  // .99.pep.old\0
         ret = snprintf(backup_file_path, backup_file_path_baselen + 12,
                                         "%s.%d.pep.bkp", config_file_path, nr);
-        fprintf(stderr, "backup_file_path = '%s' (ret = %d)\n", backup_file_path, ret);
         assert(ret >= 0);  // snprintf(2)
         if (ret < 0) {
             goto quickfix_error;  // frees backup_file_path
@@ -79,7 +78,6 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
         // race-condition, but it has little effect even if we incur into it.
         handle = FindFirstFile(backup_file_path, &FindFileData);
         if (handle != INVALID_HANDLE_VALUE) {
-                fprintf(stderr, "Windows says file may exist %s\n", backup_file_path);
                 FindClose(handle);
                 free(backup_file_path);
                 backup_file_path = NULL;
@@ -91,9 +89,7 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
 #else
         backup_file = Fopen(backup_file_path, "wbx");    // the 'x' is important
 #endif
-        fprintf(stderr, "backup_file = %d\n", backup_file);
         if (backup_file <= 0) {
-            fprintf(stderr, "backup_file open fail\n");
             free(backup_file_path);
             backup_file_path = NULL;
             continue;
@@ -291,13 +287,11 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
     // Now do the failsafe writing dance
 
     ret = Fclose(f);
-    fprintf(stderr, "close config file ret = %d\n", ret);
     assert(ret == 0);
     if (ret != 0)
         goto quickfix_error;
 
     ret = Fclose(backup_file);
-    fprintf(stderr, "close backup config file ret = %d\n", ret);
     assert(ret == 0);
     if (ret != 0)
         goto quickfix_error;
@@ -308,24 +302,20 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
 
     temp_config_file_path = (char*)calloc(backup_file_path_baselen + 8, 1);  // .XXXXXX\0
     ret = snprintf(temp_config_file_path, backup_file_path_baselen + 8, "%s.XXXXXX", config_file_path);
-    fprintf(stderr, "temp_config_file_path = '%s' (ret = %d)\n", temp_config_file_path, ret);
     assert(ret == NULL);
     if (!ret)
         goto quickfix_error;
 
     int temp_config_filedesc = Mkstemp(temp_config_file_path);
-    fprintf(stderr, "temp_config_filedesc '%s' (fd: %d, errno: %d)\n", temp_config_file_path, temp_config_filedesc, errno);
     if (temp_config_filedesc == -1)
         goto quickfix_error;
 
     temp_config_file = Fdopen(temp_config_filedesc, "w");    // no "b" in fdopen() is documentend, use freopen()
-    fprintf(stderr, "temp_config_file '%s' (fd=%d)\n", temp_config_filedesc, temp_config_file);
     assert(temp_config_file != NULL);
     if (temp_config_file == NULL)
         goto quickfix_error;
 
     temp_config_file = Freopen(config_file_path, "wb", temp_config_file);
-    fprintf(stderr, "reopen: temp_config_file = '%d'\n", temp_config_file);
     assert(temp_config_file != NULL);
     if (temp_config_file == NULL)
         goto quickfix_error;
@@ -341,7 +331,6 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
     for (cur_string = lines; cur_string; cur_string = cur_string->next) {
         assert(cur_string->value != NULL);
         ret = Fprintf(temp_config_file, "%s%s", cur_string->value, line_end);
-        fprintf(stderr, "Fprintf = '%s' (ret=%d)\n", cur_string->value, ret);
         assert(ret >= 0);
         if (ret < 0)
             goto quickfix_error;
@@ -354,16 +343,13 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
 
 #ifdef WIN32
     ret = !(0 == ReplaceFile(config_file_path, temp_config_file_path, NULL, 0, NULL, NULL));
-    fprintf(stderr, "rename temp_config_file_path = '%s' (ret=%d)\n", temp_config_file_path, ret);
     assert(ret == 0);
     if (ret != 0)
         goto quickfix_error;
 
     ret = unlink(temp_config_file_path);
-    fprintf(stderr, "unlink temp_config_file_path = '%s' (ret=%d)\n", temp_config_file_path, ret);
 #else
     ret = rename(config_file_path, temp_config_file_path);
-    fprintf(stderr, "rename temp_config_file_path = '%s' (ret=%d)\n", temp_config_file_path, ret);
 #endif
     assert(ret == 0);
     if (ret != 0)
