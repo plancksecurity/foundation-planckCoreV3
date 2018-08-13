@@ -286,7 +286,6 @@ size_t strlcat(char* dst, const	char* src, size_t size) {
 
 int mkstemp(char *templ)
 {
-    errno = 0;
     char *pathname = _mktemp(templ);
     if (pathname == NULL)
         return -1;
