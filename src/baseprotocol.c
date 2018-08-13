@@ -4,7 +4,7 @@
 #include "pEp_internal.h"
 #include "message_api.h"
 
-PEP_STATUS decorate_message(
+PEP_STATUS base_decorate_message(
         message *msg,
         char *payload,
         size_t size
@@ -29,7 +29,7 @@ enomem:
     return PEP_OUT_OF_MEMORY;
 }
 
-PEP_STATUS prepare_message(
+PEP_STATUS base_prepare_message(
         const pEp_identity *me,
         const pEp_identity *partner,
         char *payload,
@@ -75,7 +75,7 @@ PEP_STATUS prepare_message(
     if (!msg->longmsg)
         goto enomem;
 
-    status = decorate_message(msg, payload, size);
+    status = base_decorate_message(msg, payload, size);
     if (status == PEP_STATUS_OK)
         *result = msg;
     return status;

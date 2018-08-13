@@ -161,7 +161,7 @@ PEP_STATUS send_Sync_message(
     if (status)
         goto the_end;
 
-    status = prepare_message(
+    status = base_prepare_message(
             session->sync_state.common.from,
             session->sync_state.common.from,
             data,

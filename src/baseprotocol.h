@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 
-// decorate_message() - decorate a message with payload
+// base_decorate_message() - decorate a message with payload
 //
 //  parameters:
 //      msg (inout)     message to decorate
@@ -24,14 +24,14 @@ extern "C" {
 //      on success (and only then) payload goes to the ownership of the msg
 //      the ownership of the msg remains with the caller
 
-PEP_STATUS decorate_message(
+PEP_STATUS base_decorate_message(
         message *msg,
         char *payload,
         size_t size
     );
 
 
-// prepare_message() - prepare a sync message with payload
+// base_prepare_message() - prepare a sync message with payload
 //
 //  parameters:
 //      me (in)         identity to use for the sender
@@ -47,7 +47,7 @@ PEP_STATUS decorate_message(
 //      on success (and only then) payload goes to the ownership of the result
 //      the ownership of the result goes to the caller
 
-PEP_STATUS prepare_message(
+PEP_STATUS base_prepare_message(
         const pEp_identity *me,
         const pEp_identity *partner,
         char *payload,

@@ -346,7 +346,7 @@ tstylesheet {
             if (status)
                 goto the_end;
 
-            status = prepare_message(
+            status = base_prepare_message(
                     session->«yml:lcase(@name)»_state.common.from,
                     session->«yml:lcase(@name)»_state.common.from,
                     data,
