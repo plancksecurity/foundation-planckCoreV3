@@ -1,3 +1,11 @@
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
+// Copyleft (c) 2017, 2018, p≡p foundation
+
+// Written by Volker Birk
+
+
 // prepare SQL statement
 
 function "init_sql" {
