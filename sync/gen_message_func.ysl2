@@ -110,21 +110,21 @@ for "func:distinctName(fsm/message/field[@type='TID'])"
 
 «@name»_t *new_«@name»_message(«@name»_PR fsm, int message_type)
 {
-    assert(fsm && message_type);
-    if (!(fsm && message_type))
-        return NULL;
-
     «@name»_t *msg = calloc(sizeof(«@name»_t), 1);
     assert(msg);
     if (!msg)
         return NULL;
 
-    msg->present = fsm;
-    switch (fsm) {
-        `` apply "fsm", mode=impl
-        default:
-            free(msg);
-            return NULL;
+    if (fsm) {
+        msg->present = fsm;
+        if (message_type) {
+            switch (fsm) {
+                `` apply "fsm", 4, mode=impl
+                default:
+                    free(msg);
+                    return NULL;
+            }
+        }
     }
 
     return msg;

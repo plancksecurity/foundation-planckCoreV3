@@ -30,7 +30,7 @@ tstylesheet {
         #endif
 
 
-        // decode_«@name»_msg() - decode PER encoded «@name» message
+        // decode_«@name»_message() - decode PER encoded «@name» message
         //
         //  parameters:
         //      data (in)               PER encoded data
@@ -40,14 +40,14 @@ tstylesheet {
         //  caveat:
         //      msg goes into the ownership of the caller
 
-        DYNAMIC_API PEP_STATUS decode_«@name»_msg(
+        DYNAMIC_API PEP_STATUS decode_«@name»_message(
                 const char *data,
                 size_t size,
                 «@name»_t **msg
             );
 
 
-        // encode_«@name»_msg() - encode «@name» message into PER encoded data
+        // encode_«@name»_message() - encode «@name» message into PER encoded data
         //
         //  parameters:
         //      msg (in)                «@name» message
@@ -57,7 +57,7 @@ tstylesheet {
         //  caveat:
         //      data goes to the ownership of the caller
 
-        DYNAMIC_API PEP_STATUS encode_«@name»_msg(
+        DYNAMIC_API PEP_STATUS encode_«@name»_message(
                 «@name»_t *msg,
                 char **data,
                 size_t *size
@@ -106,7 +106,7 @@ tstylesheet {
         #include "pEp_internal.h"
         #include "growing_buf.h"
 
-        DYNAMIC_API PEP_STATUS decode_«@name»_msg(
+        DYNAMIC_API PEP_STATUS decode_«@name»_message(
                 const char *data,
                 size_t size,
                 «@name»_t **msg
@@ -124,7 +124,7 @@ tstylesheet {
             return PEP_STATUS_OK;
         }
 
-        DYNAMIC_API PEP_STATUS encode_«@name»_msg(
+        DYNAMIC_API PEP_STATUS encode_«@name»_message(
                 «@name»_t *msg,
                 char **data,
                 size_t *size
@@ -165,7 +165,7 @@ tstylesheet {
             *text = NULL;
 
             «@name»_t *msg = NULL;
-            status = decode_«@name»_msg(data, size, &msg);
+            status = decode_«@name»_message(data, size, &msg);
             if (status)
                 goto the_end;
 
@@ -216,7 +216,7 @@ tstylesheet {
 
             char *_data = NULL;
             size_t _size = 0;
-            status = encode_«@name»_msg(msg, &_data, &_size);
+            status = encode_«@name»_message(msg, &_data, &_size);
             if (status)
                 goto the_end;
 

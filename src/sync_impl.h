@@ -46,7 +46,7 @@ PEP_STATUS Sync_notify(
 PEP_STATUS send_Sync_message(
         PEP_SESSION session, 
         Sync_PR fsm,
-        int event
+        int message_type
     );
 
 // receive message and store it in state

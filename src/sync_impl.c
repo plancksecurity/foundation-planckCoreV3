@@ -4,6 +4,8 @@
 #include "Sync_impl.h"
 #include "pEp_internal.h"
 #include "Sync_event.h"
+#include "Sync_codec.h"
+#include "baseprotocol.h"
 #include "KeySync_fsm.h"
 
 PEP_STATUS Sync_driver(
@@ -134,16 +136,47 @@ the_end:
 PEP_STATUS send_Sync_message(
         PEP_SESSION session, 
         Sync_PR fsm,
-        int event
+        int message_type
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
-    assert(session && fsm > None && event > None);
-    if (!(session && fsm > None && event > None))
+    assert(session && fsm > None && message_type > None);
+    if (!(session && fsm > None && message_type > None))
         return PEP_ILLEGAL_VALUE;
     
+    Sync_t *msg = new_Sync_message(None, None);
+    if (!msg)
+        return PEP_OUT_OF_MEMORY;
 
+    char *data = NULL;
+    message *m = NULL;
+
+    status = update_Sync_message(session, fsm, message_type, msg);
+    if (status)
+        goto the_end;
+
+    size_t size = 0;
+    status = encode_Sync_message(msg, &data, &size);
+    if (status)
+        goto the_end;
+
+    status = prepare_message(
+            session->sync_state.common.from,
+            session->sync_state.common.from,
+            data,
+            size,
+            &m
+        );
+    if (status)
+        goto the_end;
+    
+    session->messageToSend(session->sync_obj, m);
+
+the_end:
+    free_message(m);
+    free(data);
+    free_Sync_message(msg);
     return status;
 }
 
