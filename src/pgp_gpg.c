@@ -318,7 +318,7 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
     if (temp_config_filedesc == -1)
         goto quickfix_error;
 
-    temp_config_file = fdopen(temp_config_filedesc, "w");    // no "b" in fdopen() is documentend, use freopen()
+    temp_config_file = Fdopen(temp_config_filedesc, "w");    // no "b" in fdopen() is documentend, use freopen()
     fprintf(stderr, "temp_config_file '%s' (fd=%d)\n", temp_config_filedesc, temp_config_file);
     assert(temp_config_file != NULL);
     if (temp_config_file == NULL)
