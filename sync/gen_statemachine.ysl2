@@ -356,7 +356,7 @@ tstylesheet {
             if (status)
                 goto the_end;
             
-            session->messageToSend(session->sync_obj, m);
+            status = session->messageToSend(session->sync_obj, m);
 
         the_end:
             free_message(m);
