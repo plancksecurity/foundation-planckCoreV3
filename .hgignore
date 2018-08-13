@@ -69,6 +69,8 @@ src/Sync_func.c
 src/Sync_func.h
 src/Sync_event.c
 src/Sync_event.h
+src/Sync_codec.c
+src/Sync_codec.h
 asn.1/keysync.asn1
 asn.1/sync.asn1
 sync/.codecs
@@ -76,4 +78,3 @@ sync/.messages
 sync/.actions
 sync/.codegen
 sync/.statemachines
-

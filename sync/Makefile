@@ -15,11 +15,12 @@ all: .codegen
 .statemachines: sync.fsm gen_statemachine.ysl2 fsm.yml2 functions.ysl2
 	$(YML2_PROC) -y gen_statemachine.ysl2 $< -o $@
 
-.codecs: sync.fsm gen_message_func.ysl2 fsm.yml2 functions.ysl2
-	$(YML2_PROC) -y gen_message_func.ysl2 $< -o $@
+.codecs: sync.fsm gen_codec.ysl2 fsm.yml2 functions.ysl2
+	$(YML2_PROC) -y gen_codec.ysl2 $< -o $@
 
-.messages: sync.fsm gen_messages.ysl2 fsm.yml2 functions.ysl2
+.messages: sync.fsm gen_messages.ysl2 gen_message_func.ysl2 fsm.yml2 functions.ysl2
 	$(YML2_PROC) -y gen_messages.ysl2 $< -o $@
+	$(YML2_PROC) -y gen_message_func.ysl2 $< -o $@
 
 .PHONY: clean copy
 

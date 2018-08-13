@@ -131,6 +131,22 @@ the_end:
     return status;
 }
 
+PEP_STATUS send_Sync_message(
+        PEP_SESSION session, 
+        Sync_PR fsm,
+        int event
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session && fsm > None && event > None);
+    if (!(session && fsm > None && event > None))
+        return PEP_ILLEGAL_VALUE;
+    
+
+    return status;
+}
+
 PEP_STATUS recv_Sync_event(
         PEP_SESSION session,
         Sync_event_t *ev

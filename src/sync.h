@@ -95,7 +95,7 @@ typedef int (*inject_sync_event_t)(Sync_event_t *ev, void *management);
 //  return value:
 //      next event
 
-typedef struct Sync_event_t *(*retrieve_next_sync_event_t)(void *management);
+typedef Sync_event_t *(*retrieve_next_sync_event_t)(void *management);
 
 
 // register_sync_callbacks() - register adapter's callbacks

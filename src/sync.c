@@ -88,7 +88,7 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
         void *obj
     )
 {
-    Sync_t *msg = NULL;
+    Sync_event_t *event= NULL;
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session && session->retrieve_next_sync_event);
@@ -101,10 +101,10 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
     while (true) 
     {
         event = session->retrieve_next_sync_event(session->sync_management);
-        if (msg == NULL)
+        if (!event)
             break;
 
-        status = recv_Sync_event(session, msg);
+        status = recv_Sync_event(session, event);
         if (status != PEP_STATUS_OK && status != PEP_MESSAGE_IGNORE) {
             char buffer[MAX_LINELENGTH];
             memset(buffer, 0, MAX_LINELENGTH);
