@@ -119,7 +119,7 @@ tstylesheet {
             *msg = NULL;
             uper_decode_complete(NULL, &asn_DEF_«@name», (void **) &msg, data, size);
             if (!msg)
-                return PEP_SYNC_ILLEGAL_MESSAGE;
+                return PEP_«yml:ucase(@name)»_ILLEGAL_MESSAGE;
 
             return PEP_STATUS_OK;
         }
@@ -210,7 +210,7 @@ tstylesheet {
             asn_dec_rval_t dr = xer_decode(NULL, &asn_DEF_«@name», (void **) &msg,
                     (const void *) text, strlen(text));
             if (dr.code != RC_OK) {
-                status = PEP_SYNC_ILLEGAL_MESSAGE;
+                status = PEP_«yml:ucase(@name)»_ILLEGAL_MESSAGE;
                 goto the_end;
             }
 

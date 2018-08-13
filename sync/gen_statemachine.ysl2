@@ -386,13 +386,13 @@ tstylesheet {
 
                 if (ev->fsm) {
                     if (ev->fsm != fsm |`> |` ev->event != event) {
-                        status = PEP_SYNC_ILLEGAL_MESSAGE;
+                        status = PEP_«yml:ucase(@name)»_ILLEGAL_MESSAGE;
                         goto error;
                     }
                 }
                 else {
                     if (ev->event) {
-                        status = PEP_SYNC_ILLEGAL_MESSAGE;
+                        status = PEP_«yml:ucase(@name)»_ILLEGAL_MESSAGE;
                         goto error;
                     }
                     ev->fsm = fsm;

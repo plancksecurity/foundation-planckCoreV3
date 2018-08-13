@@ -105,7 +105,7 @@ for "func:distinctName(fsm/message/field[@type='TID'])"
     |> ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_«@type», &session->own_«yml:lcase(../../../@name)»_state.«@name»);
 ||
 
-    memset(&session->sync_state, 0, sizeof(session->sync_state));
+    memset(&session->«yml:lcase(@name)»_state, 0, sizeof(session->«yml:lcase(@name)»_state));
 }
 
 «@name»_t *new_«@name»_message(«@name»_PR fsm, int message_type)

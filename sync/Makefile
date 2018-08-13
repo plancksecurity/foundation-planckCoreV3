@@ -9,7 +9,7 @@ all: .codegen
 	touch .codegen
 	make copy
 
-.actions: sync.fsm gen_actions.ysl2 fsm.yml2 functions.ysl2 cond_act.yml2
+.actions: sync.fsm gen_actions.ysl2 fsm.yml2 functions.ysl2 $(wildcard cond_act_*.yml2)
 	$(YML2_PROC) -y gen_actions.ysl2 $< -o $@
 
 .statemachines: sync.fsm gen_statemachine.ysl2 fsm.yml2 functions.ysl2
