@@ -330,14 +330,14 @@ tstylesheet {
             if (!(session && fsm > None && message_type > None))
                 return PEP_ILLEGAL_VALUE;
             
-            Sync_t *msg = new_«@name»_message(None, None);
+            «@name»_t *msg = new_«@name»_message(None, None);
             if (!msg)
                 return PEP_OUT_OF_MEMORY;
 
             char *data = NULL;
             message *m = NULL;
 
-            status = update_Sync_message(session, fsm, message_type, msg);
+            status = update_«@name»_message(session, fsm, message_type, msg);
             if (status)
                 goto the_end;
 
@@ -347,8 +347,8 @@ tstylesheet {
                 goto the_end;
 
             status = prepare_message(
-                    session->sync_state.common.from,
-                    session->sync_state.common.from,
+                    session->«yml:lcase(@name)»_state.common.from,
+                    session->«yml:lcase(@name)»_state.common.from,
                     data,
                     size,
                     &m
@@ -356,7 +356,7 @@ tstylesheet {
             if (status)
                 goto the_end;
             
-            status = session->messageToSend(session->sync_obj, m);
+            status = session->messageToSend(session->«yml:lcase(@name)»_obj, m);
 
         the_end:
             free_message(m);
@@ -419,7 +419,7 @@ tstylesheet {
     template "fsm", mode=event
     {
     ||
-    case Sync_PR_«yml:lcase(@name)»: {
+    case «../@name»_PR_«yml:lcase(@name)»: {
         switch (msg->choice.«yml:lcase(@name)».payload.present) {
     ||
     for "message"
@@ -442,7 +442,7 @@ tstylesheet {
 
     template "fsm", mode=driver
     ||
-    case Sync_PR_«yml:lcase(@name)»: {
+    case «../@name»_PR_«yml:lcase(@name)»: {
         int state = session->«yml:lcase(../@name)»_state.«yml:lcase(@name)».state;
         next_state = fsm_«@name»(session, state, event);
         if (next_state > None) {
@@ -660,7 +660,7 @@ tstylesheet {
         ||
         if "name(*[last()])!='transition'" {
             |
-            |> KeySync_SERVICE_LOG("remaining in state", "«../@name»");
+            |> «../../@name»_SERVICE_LOG("remaining in state", "«../@name»");
             |> break;
         }
         ||
@@ -716,7 +716,7 @@ tstylesheet {
             return invalid_condition;
         }
         if (result) {
-            KeySync_SERVICE_LOG("condition applies", "«@name»");
+            «$fsm/@name»_SERVICE_LOG("condition applies", "«@name»");
         ||
             apply "transition|action|condition"
                 with "protocol", "$protocol", with "fsm", "$fsm";
