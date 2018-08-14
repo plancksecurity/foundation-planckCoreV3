@@ -1704,6 +1704,15 @@ DYNAMIC_API PEP_STATUS set_own_key(
     if (status != PEP_STATUS_OK && status != PEP_GET_KEY_FAILED && status != PEP_KEY_UNSUITABLE)
         return status;
     status = PEP_STATUS_OK;
+
+    bool private = false;
+    status = contains_priv_key(session, fpr, &private);
+    
+    if (status != PEP_STATUS_OK)
+        return status;
+        
+    if (!private)
+        return PEP_KEY_UNSUITABLE;
  
     if (me->fpr)
         free(me->fpr);

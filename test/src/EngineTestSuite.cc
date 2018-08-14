@@ -119,15 +119,21 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
     cout << "home is " << home << endl;
     assert(temp_test_home.compare(home) != 0);
     assert(temp_test_home.compare(home + "/") != 0);
-    assert(temp_test_home.compare(home + "") != 0);
+    assert(temp_test_home.compare(home + "/.gnupg") != 0); // This is an EXCLUSION test, so we leave this.
     assert(temp_test_home.compare(home + ".gnupg") != 0);
+    assert(temp_test_home.compare(home + "/gnupg") != 0);
+    assert(temp_test_home.compare(home + "gnupg") != 0);
     assert(temp_test_home.compare(prev_gpg_home) != 0);
+    assert(temp_test_home.compare(prev_gpg_home + "/gnupg") != 0);
+    assert(temp_test_home.compare(prev_gpg_home + "gnupg") != 0);
     assert(temp_test_home.compare(prev_gpg_home + "/.gnupg") != 0);
     assert(temp_test_home.compare(prev_gpg_home + ".gnupg") != 0);
 
     if (temp_test_home.compare(home) == 0 || temp_test_home.compare(home + "/") == 0 ||
+        temp_test_home.compare(home + "/gnupg") == 0 || temp_test_home.compare(home + "gnupg") == 0 ||
         temp_test_home.compare(home + "/.gnupg") == 0 || temp_test_home.compare(home + ".gnupg") == 0 ||
-        temp_test_home.compare(prev_gpg_home) == 0 || temp_test_home.compare(prev_gpg_home + "/.gnupg") == 0 ||
+        temp_test_home.compare(prev_gpg_home) == 0 || temp_test_home.compare(prev_gpg_home + "/gnupg") == 0 ||
+        temp_test_home.compare(prev_gpg_home + "gnupg") == 0 || temp_test_home.compare(prev_gpg_home + "/.gnupg") == 0 ||
         temp_test_home.compare(prev_gpg_home + ".gnupg") == 0)
         throw std::runtime_error("SETUP: new GNUPGHOME threatens to mess up user GNUPGHOME (and delete all their keys). NO DICE.");
     
@@ -135,7 +141,7 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
     
     struct stat buf;
     
-    success = setenv("GNUPGHOME", (temp_test_home + "/.gnupg").c_str(), 1);
+    success = setenv("GNUPGHOME", (temp_test_home + "/gnupg").c_str(), 1);
     if (success != 0)
         throw std::runtime_error("SETUP: Error when setting GNUPGHOME.");
 
@@ -146,9 +152,9 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
         throw std::runtime_error("SETUP: Cannot set test_home for init.");
 
     if (gpg_conf_copy_path)
-        copy_conf_file_to_test_dir((temp_test_home + "/.gnupg").c_str(), gpg_conf_copy_path, "gpg.conf");
+        copy_conf_file_to_test_dir((temp_test_home + "/gnupg").c_str(), gpg_conf_copy_path, "gpg.conf");
     if (gpg_agent_conf_file_copy_path)        
-        copy_conf_file_to_test_dir((temp_test_home + "/.gnupg").c_str(), gpg_agent_conf_file_copy_path, "gpg-agent.conf");
+        copy_conf_file_to_test_dir((temp_test_home + "/gnupg").c_str(), gpg_agent_conf_file_copy_path, "gpg-agent.conf");
     if (db_conf_file_copy_path)
         copy_conf_file_to_test_dir(temp_test_home.c_str(), db_conf_file_copy_path, ".pEp_management.db");
         
@@ -198,3 +204,4 @@ void EngineTestSuite::tear_down() {}
 void EngineTestSuite::set_my_name() {
     my_name = typeid(*this).name();
 }
+

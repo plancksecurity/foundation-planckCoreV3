@@ -16,7 +16,7 @@ args = parser.parse_args()
 pub_path = os.path.join(args.output_root, "pub")
 priv_path = os.path.join(args.output_root, "priv")
 
-homedir = os.path.join(os.path.expanduser('~'),".gnupg")
+homedir = os.path.join(os.path.expanduser('~'),"gnupg")
 print("GNUPGHOME=" + homedir + "\n")
 
 try:
