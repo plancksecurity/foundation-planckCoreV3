@@ -13,6 +13,11 @@
 #include <unistd.h>
 #include <ftw.h>
 
+bool file_exists(std::string filename) {
+    struct stat buffer;
+    return (stat(filename.c_str(), &buffer) == 0);
+}
+
 char* str_to_lower(const char* str) {
     if (!str)
         return NULL;
