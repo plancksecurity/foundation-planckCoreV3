@@ -9,7 +9,7 @@ parser.add_argument("--priv", "-p", help="also delete associated private keys", 
 
 args = parser.parse_args()
 
-homedir = os.path.join(os.path.expanduser('~'),".gnupg")
+homedir = os.path.join(os.path.expanduser('~'),"gnupg")
 print("GNUPGHOME=" + homedir + "\n")
 
 try:

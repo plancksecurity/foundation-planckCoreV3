@@ -1305,11 +1305,8 @@ static PEP_STATUS _pgp_createkey(PEP_SESSION session, pEp_identity *identity) {
                     break;
                 case GPG_ERR_INV_VALUE:
                     return PEP_ILLEGAL_VALUE;
-                case GPG_ERR_GENERAL:
-                    return PEP_CANNOT_CREATE_KEY;
                 default:
-                    assert(0);
-                    return PEP_UNKNOWN_ERROR;
+                    return PEP_CANNOT_CREATE_KEY;
             }
 
             /* This is the same regardless of whether we got it from genkey or createkey */

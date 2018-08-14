@@ -20,7 +20,7 @@ class Test1:
         arthome = "test1"
 
         os.environ["HOME"] = os.path.join(mydir, arthome)
-        os.environ["GNUPGHOME"] = os.path.join(mydir, arthome, '.gnupg')
+        os.environ["GNUPGHOME"] = os.path.join(mydir, arthome, 'gnupg')
 
         os.chdir(os.path.join(mydir, arthome))
 
@@ -79,7 +79,7 @@ class Test2:
         arthome = "test2"
 
         os.environ["HOME"] = os.path.join(mydir, arthome)
-        os.environ["GNUPGHOME"] = os.path.join(mydir, arthome, '.gnupg')
+        os.environ["GNUPGHOME"] = os.path.join(mydir, arthome, 'gnupg')
 
         os.chdir(os.path.join(mydir, arthome))
 
