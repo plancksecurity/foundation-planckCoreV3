@@ -30,12 +30,12 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
     static char buf[MAX_LINELENGTH];
     size_t num_keys = stringlist_length(keys);
 
-    // This function does:
-    // 1. find a non-existent backup name numbered from 0 to 99 (otherwise fails)
-    // 2. read the original file and meanwhile write the backup copy
-    // 3. write the new config file to a temporary file in the same directory
-    // 4. rename the temp file replacing the original config file
-    // 5. on Windows remove the left-overs
+    // This function:
+    // 1. finds a non-existent backup name numbered from 0 to 99 (otherwise fails)
+    // 2. reads the original file and meanwhiles write the backup copy
+    // 3. writes the new config file to a temporary file in the same directory
+    // 4. renames the temp file replacing the original config file
+    // 5. on Windows removes the left-overs
 
     /* Find a suitable backup file name, without trashing previous ones */
     char* backup_file_path = NULL;
@@ -52,7 +52,7 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
     FILE *temp_config_file;
     stringlist_t* cur_string;
     bool status = false;
-
+    str_ptr_and_bit* found_keys = NULL;
 #ifdef WIN32
     WIN32_FIND_DATA FindFileData;
     HANDLE handle;
@@ -89,7 +89,7 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
 #else
         backup_file = Fopen(backup_file_path, "wbx");    // the 'x' is important
 #endif
-        if (backup_file <= 0) {
+        if (!backup_file) {
             free(backup_file_path);
             backup_file_path = NULL;
             continue;
@@ -100,7 +100,7 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
     if (!backup_file_path)
         goto quickfix_error;
 
-    if (backup_file <= 0)
+    if (!backup_file)
         goto quickfix_error;
 
     // Open original file, parse it, and meanwhile write a backup copy
@@ -117,7 +117,7 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
     // Go through every line in the file
     while ((s = Fgets(buf, MAX_LINELENGTH, f))) {
         // pointers to the keys found in this string
-        str_ptr_and_bit* found_keys = (str_ptr_and_bit*)(calloc(num_keys, sizeof(str_ptr_and_bit)));
+        found_keys = (str_ptr_and_bit*)(calloc(num_keys, sizeof(str_ptr_and_bit)));
         int num_found_keys = 0;
 
         ret = Fprintf(backup_file, "%s", s);
@@ -297,13 +297,15 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
         goto quickfix_error;
 
     // 2. Write the new config file to a temporary file in the same directory
-
-    assert(backup_file_path_baselen != NULL);
+    assert(backup_file_path_baselen > 0);
+    if (backup_file_path_baselen <= 0)
+        goto quickfix_error;
 
     temp_config_file_path = (char*)calloc(backup_file_path_baselen + 8, 1);  // .XXXXXX\0
     ret = snprintf(temp_config_file_path, backup_file_path_baselen + 8, "%s.XXXXXX", config_file_path);
-    assert(ret == NULL);
-    if (!ret)
+    assert(ret >= 0);
+
+    if (ret < 0)
         goto quickfix_error;
 
     int temp_config_filedesc = Mkstemp(temp_config_file_path);
