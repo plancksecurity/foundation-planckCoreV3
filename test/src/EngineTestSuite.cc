@@ -10,6 +10,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#import <string>
+#import <vector>
+#include <utility>
+
 #include "platform_unix.h"
 
 #include "test_util.h"
@@ -58,6 +62,27 @@ void EngineTestSuite::copy_conf_file_to_test_dir(const char* dest_path, const ch
      
     src.close();
     dst.close();
+}
+
+void EngineTestSuite::add_file_to_gpg_dir_queue(string copy_from, string dst_fname) {    
+    gpgdir_fileadd_queue.push_back(make_pair(copy_from, dst_fname));
+}
+
+void EngineTestSuite::add_file_to_home_dir_queue(string copy_from, string dst_fname) {
+    homedir_fileadd_queue.push_back(make_pair(copy_from, dst_fname));
+}
+
+void EngineTestSuite::process_file_queue(string dirname, vector<pair<string, string>> file_queue) {
+    if (file_queue.empty())
+        return;
+        
+    vector<pair<string, string>>::iterator it;
+    
+    for (it = file_queue.begin(); it != file_queue.end(); it++) {
+        copy_conf_file_to_test_dir(dirname.c_str(), it->first.c_str(), it->second.c_str());
+    }
+    
+    file_queue.clear();
 }
 
 void EngineTestSuite::set_full_env() {
@@ -150,6 +175,11 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
     success = setenv("HOME", temp_test_home.c_str(), 1);
     if (success != 0)
         throw std::runtime_error("SETUP: Cannot set test_home for init.");
+
+    string tmp_gpg_dir = temp_test_home + "/.gnupg";
+
+    process_file_queue(tmp_gpg_dir, gpgdir_fileadd_queue);
+    process_file_queue(temp_test_home, homedir_fileadd_queue);
 
     if (gpg_conf_copy_path)
         copy_conf_file_to_test_dir((temp_test_home + "/gnupg").c_str(), gpg_conf_copy_path, "gpg.conf");

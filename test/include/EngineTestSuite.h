@@ -4,6 +4,8 @@
 #include <cpptest.h>
 #include <string>
 #include <map>
+#include <vector>
+#include <utility>
 #include "pEpEngine.h"
 
 using namespace std;
@@ -40,11 +42,18 @@ class EngineTestSuite : public Test::Suite {
         virtual void tear_down();
         
         void set_full_env();
-	void set_full_env(const char* gpg_conf_copy_path, const char* gpg_agent_conf_file_copy_path, const char* db_conf_file_copy_path);
+        void set_full_env(const char* gpg_conf_copy_path, const char* gpg_agent_conf_file_copy_path, const char* db_conf_file_copy_path);
         void restore_full_env();
         void initialise_test_home();
         void set_my_name();    
 	
-	void copy_conf_file_to_test_dir(const char* dest_path, const char* conf_orig_path, const char* conf_dest_name);
+        void copy_conf_file_to_test_dir(const char* dest_path, const char* conf_orig_path, const char* conf_dest_name);
+        
+        std::vector<std::pair<std::string, std::string>> gpgdir_fileadd_queue;
+        std::vector<std::pair<std::string, std::string>> homedir_fileadd_queue;
+        void add_file_to_gpg_dir_queue(std::string copy_from, std::string dst_fname);    
+        void add_file_to_home_dir_queue(std::string copy_from, std::string dst_fname);
+        void process_file_queue(std::string dirname, std::vector<std::pair<std::string, std::string>> file_queue);
+
 };
 #endif
