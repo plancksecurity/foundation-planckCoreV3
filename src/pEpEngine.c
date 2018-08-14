@@ -1237,15 +1237,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             &_session->get_last_contacted, NULL);
     assert(int_result == SQLITE_OK);
 
-static const char *sql_was_id_for_revoke_contacted = 
-    "select count(*) from revocation_contact_list where fpr = ?1 and contact_id = ?2 ;";
-
-// We only need user_id and address, since in the main usage, we'll call update_identity
-// on this anyway when sending out messages.
-static const char *sql_get_last_contacted =
-    "select userid, address from identity where datetime('now') < datetime(timestamp, '+14 days') ; ";
-
-
     int_result = sqlite3_prepare_v2(_session->db, 
             sql_get_own_address_binding_from_contact,
             (int)strlen(sql_get_own_address_binding_from_contact), 
@@ -2272,9 +2263,10 @@ PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
     sqlite3_bind_text(session->exists_identity_entry, 1, identity->address, -1,
                       SQLITE_STATIC);
     sqlite3_bind_text(session->exists_identity_entry, 2, identity->user_id, -1,
+                      SQLITE_STATIC);
                   
     int result = sqlite3_step(session->exists_identity_entry);
-    SQLITE_STATIC);
+
     switch (result) {
         case SQLITE_ROW: {
             // yeah yeah, I know, we could be lazy here, but it looks bad.
@@ -2754,8 +2746,9 @@ PEP_STATUS bind_own_ident_with_contact_ident(PEP_SESSION session,
 }
 
 PEP_STATUS get_own_ident_for_contact_id(PEP_SESSION session,
-                                          const pEp_identity* contact
+                                          const pEp_identity* contact,
                                           pEp_identity** own_ident) {
+                                              
     if (!contact || !contact->user_id || !own_ident)
         return PEP_ILLEGAL_VALUE;
         
@@ -2769,13 +2762,16 @@ PEP_STATUS get_own_ident_for_contact_id(PEP_SESSION session,
     sqlite3_reset(session->get_own_address_binding_from_contact);
     sqlite3_bind_text(session->get_own_address_binding_from_contact, 1, own_user_id, -1,
             SQLITE_STATIC);
-    sqlite3_bind_text(session->get_own_address_binding_from_contact, 2, contact_ident->user_id, -1,
+    sqlite3_bind_text(session->get_own_address_binding_from_contact, 2, contact->user_id, -1,
             SQLITE_STATIC);
 
-    result = sqlite3_step(session->get_own_address_binding_from_contact);
+    int result = sqlite3_step(session->get_own_address_binding_from_contact);
+    
+    const char* own_address = NULL;
+    
     switch (result) {
         case SQLITE_ROW:
-            const char* const own_address = (const char *)
+            own_address = (const char *)
                 sqlite3_column_text(session->get_own_address_binding_from_contact, 0);
             if (own_address) {
                 status = get_identity(session, own_address, own_user_id, own_ident);
@@ -3954,6 +3950,35 @@ DYNAMIC_API PEP_STATUS sequence_value(
     return status;
 }
 
+PEP_STATUS is_own_key(PEP_SESSION session, const char* fpr, bool* own_key) {
+    
+    assert(session);
+    assert(!EMPTYSTR(fpr));
+
+    if (!session || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+    
+    *own_key = false;
+    sqlite3_reset(session->own_key_is_listed);
+    
+    sqlite3_bind_text(session->own_key_is_listed, 1, fpr, -1,
+            SQLITE_STATIC);
+    int result = sqlite3_step(session->own_key_is_listed);
+    switch (result) {
+        case SQLITE_ROW: {
+            *own_key = (sqlite3_column_int(session->own_key_is_listed, 0) != 0);
+            break;
+        }
+        default:
+            sqlite3_reset(session->own_key_is_listed);
+            return PEP_UNKNOWN_DB_ERROR;
+    }
+
+    sqlite3_reset(session->own_key_is_listed);
+    return PEP_STATUS_OK;
+
+}
+
 DYNAMIC_API PEP_STATUS set_revoked(
        PEP_SESSION session,
        const char *revoked_fpr,
@@ -4055,15 +4080,9 @@ DYNAMIC_API PEP_STATUS get_replacement_fpr(
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
-    assert(session &&
-           revoked_fpr &&
-           fpr && fpr[0]
-          );
+    assert(session && revoked_fpr && !EMPTYSTR(fpr) && revocation_date);
     
-    if (!(session &&
-           revoked_fpr &&
-           fpr && fpr[0]
-          ))
+    if (!session || !revoked_fpr || EMPTYSTR(fpr) || !revocation_date)
         return PEP_ILLEGAL_VALUE;
 
     *revoked_fpr = NULL;
@@ -4104,11 +4123,9 @@ PEP_STATUS get_last_contacted(
     pEp_identity* ident;
 
     assert(session);
-    assert(address);
-    assert(address[0]);
     assert(id_list);
 
-    if (!(session && address && address[0] && id_list))
+    if (!(session && id_list))
         return PEP_ILLEGAL_VALUE;
 
     *id_list = NULL;
@@ -4122,7 +4139,8 @@ PEP_STATUS get_last_contacted(
                 (const char *) sqlite3_column_text(session->get_last_contacted, 1),
                 NULL,
                 (const char *) sqlite3_column_text(session->get_last_contacted, 0),
-                );
+                NULL);
+                
         assert(ident);
         if (ident == NULL) {
             sqlite3_reset(session->get_last_contacted);
@@ -4154,10 +4172,11 @@ PEP_STATUS has_key_reset_been_sent(
 {
     assert(session);
     assert(contacted);
-    assert(identity);
+    assert(user_id);
+    assert(revoked_fpr);
     assert(!EMPTYSTR(user_id));
 
-    if (!session || !contacted || !identity || EMPTYSTR(user_id))
+    if (!session || !contacted || EMPTYSTR(revoked_fpr) || EMPTYSTR(user_id))
         return PEP_ILLEGAL_VALUE;
     
     *contacted = false;
@@ -4203,9 +4222,9 @@ PEP_STATUS set_reset_contact_notified(
 {
     PEP_STATUS status = PEP_STATUS_OK;
     
-    assert(session && !EMPTY_STR(revoke_fpr) && !EMPTY_STR(contact_id));
+    assert(session && !EMPTYSTR(revoke_fpr) && !EMPTYSTR(contact_id));
     
-    if (!session || EMPTY_STR(revoke_fpr) || EMPTY_STR(contact_id))
+    if (!session || EMPTYSTR(revoke_fpr) || EMPTYSTR(contact_id))
         return PEP_ILLEGAL_VALUE;
     
     sqlite3_reset(session->set_revoke_contact_as_notified);

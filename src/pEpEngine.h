@@ -54,6 +54,7 @@ typedef enum {
     PEP_KEY_UNSUITABLE                              = 0x0206,
     PEP_KEY_RESET_SUCCESSFUL                        = 0x0210,
     PEP_MALFORMED_KEY_RESET_MSG                     = 0x0211,
+    PEP_KEY_NOT_RESET                               = 0x0212,
     
     PEP_CANNOT_FIND_IDENTITY                        = 0x0301,
     PEP_CANNOT_SET_PERSON                           = 0x0381,
@@ -1268,6 +1269,13 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
 PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
                               const char* new_fpr);
     
+DYNAMIC_API PEP_STATUS get_replacement_fpr(
+        PEP_SESSION session,
+        const char *fpr,
+        char **revoked_fpr,
+        uint64_t *revocation_date
+    );
+    
 PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id);
 
 // This ONLY sets the *user* flag, and creates a shell identity if necessary.
@@ -1278,6 +1286,33 @@ PEP_STATUS set_as_pep_user(PEP_SESSION session, pEp_identity* user);
 PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exists);
 
 PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
+
+PEP_STATUS get_last_contacted(
+        PEP_SESSION session,
+        identity_list** id_list
+    );
+
+
+PEP_STATUS has_key_reset_been_sent(
+        PEP_SESSION session, 
+        const char* user_id, 
+        const char* revoked_fpr,
+        bool* contacted);
+
+PEP_STATUS set_reset_contact_notified(
+        PEP_SESSION session,
+        const char* revoke_fpr,
+        const char* contact_id
+    );
+
+PEP_STATUS get_own_ident_for_contact_id(PEP_SESSION session,
+                                          const pEp_identity* contact,
+                                          pEp_identity** own_ident);
+
+PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
+                              bool* exists);
+
+PEP_STATUS is_own_key(PEP_SESSION session, const char* fpr, bool* own_key);
 
 #ifdef __cplusplus
 }
