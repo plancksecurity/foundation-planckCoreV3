@@ -27,6 +27,10 @@ int strptrcmp(const void* a, const void* b) {
 
 // This is in response to ENGINE-427. We should NOT be aiming to keep this here.
 bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
+    
+    if (!keys || !config_file_path)
+        return false;
+        
     static char buf[MAX_LINELENGTH];
     size_t num_keys = stringlist_length(keys);
 
@@ -41,18 +45,22 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
     char* backup_file_path = NULL;
     size_t backup_file_path_baselen = strlen(config_file_path);
     FILE *backup_file = 0;
+    FILE *f;
+    FILE *temp_config_file;
+
     int ret;
     int found = 0;
     int i;
     char* temp_config_file_path = NULL;
     char* s = NULL;
+
     stringlist_t* _k;
     stringlist_t* lines = new_stringlist(NULL);
-    FILE *f;
-    FILE *temp_config_file;
     stringlist_t* cur_string;
+
     bool status = false;
     str_ptr_and_bit* found_keys = NULL;
+
 #ifdef WIN32
     WIN32_FIND_DATA FindFileData;
     HANDLE handle;
@@ -63,13 +71,13 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
 #endif
 
     // If we bork it up somehow, we don't go beyond 100 tries...
-    for (int nr = 0; nr < 99; nr++) {
+    for (int nr = 0; nr < 100; nr++) {
         backup_file_path = (char*)calloc(backup_file_path_baselen + 12, 1);  // .99.pep.old\0
         ret = snprintf(backup_file_path, backup_file_path_baselen + 12,
                                         "%s.%d.pep.bkp", config_file_path, nr);
         assert(ret >= 0);  // snprintf(2)
         if (ret < 0) {
-            goto quickfix_error;  // frees backup_file_path
+            goto pep_free;  // frees backup_file_path
         }
 
 #ifdef WIN32
@@ -98,17 +106,17 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
     }
 
     if (!backup_file_path)
-        goto quickfix_error;
+        goto pep_free;
 
     if (!backup_file)
-        goto quickfix_error;
+        goto pep_free;
 
     // Open original file, parse it, and meanwhile write a backup copy
 
     f = Fopen(config_file_path, "rb");
 
     if (f == NULL)
-        goto quickfix_error;
+        goto pep_free;
 
     ret = Fprintf(backup_file, "# Backup created by pEp.%s"
                                "# If GnuPG and pEp work smoothly this file may safely be removed.%s%s",
@@ -125,7 +133,7 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
         if (ret < 0) {
             free(found_keys);
             found_keys = NULL;
-            goto quickfix_error;
+            goto pep_free;
         }
 
         char* rest;
@@ -139,6 +147,8 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
 
         if (*line_token == '#' || *line_token == '\0') {
             stringlist_add(lines, strdup(line_token));
+            free(found_keys);
+            found_keys = NULL;
             continue;
         }
 
@@ -283,44 +293,39 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
         free(found_keys);
         found_keys = NULL;
     } // End of file
-
+    
     // Now do the failsafe writing dance
 
     ret = Fclose(f);
     assert(ret == 0);
     if (ret != 0)
-        goto quickfix_error;
+        goto pep_free;
 
     ret = Fclose(backup_file);
     assert(ret == 0);
     if (ret != 0)
-        goto quickfix_error;
+        goto pep_free;
 
     // 2. Write the new config file to a temporary file in the same directory
     assert(backup_file_path_baselen > 0);
     if (backup_file_path_baselen <= 0)
-        goto quickfix_error;
+        goto pep_free;
 
     temp_config_file_path = (char*)calloc(backup_file_path_baselen + 8, 1);  // .XXXXXX\0
     ret = snprintf(temp_config_file_path, backup_file_path_baselen + 8, "%s.XXXXXX", config_file_path);
-    assert(ret >= 0);
 
+    assert(ret >= 0);
     if (ret < 0)
-        goto quickfix_error;
+        goto pep_free;
 
     int temp_config_filedesc = Mkstemp(temp_config_file_path);
     if (temp_config_filedesc == -1)
-        goto quickfix_error;
+        goto pep_free;
 
-    temp_config_file = Fdopen(temp_config_filedesc, "w");    // no "b" in fdopen() is documentend, use freopen()
-    assert(temp_config_file != NULL);
+    temp_config_file = Fdopen(temp_config_filedesc, "w");    // "b" in fdopen() IS documented.
+    assert(temp_config_file != NULL);                        // And "w" is sufficient.
     if (temp_config_file == NULL)
-        goto quickfix_error;
-
-    temp_config_file = Freopen(config_file_path, "wb", temp_config_file);
-    assert(temp_config_file != NULL);
-    if (temp_config_file == NULL)
-        goto quickfix_error;
+        goto pep_free;
 
     ret = Fprintf(temp_config_file, "# File re-created by pEp%s"
                                     "# See backup in '%s'%s%s", line_end,
@@ -328,63 +333,49 @@ bool quickfix_config(stringlist_t* keys, const char* config_file_path) {
                                                                 line_end, line_end);
     assert(ret >= 0);
     if (ret < 0)
-        goto quickfix_error;
+        goto pep_free;
         
     for (cur_string = lines; cur_string; cur_string = cur_string->next) {
         assert(cur_string->value != NULL);
         ret = Fprintf(temp_config_file, "%s%s", cur_string->value, line_end);
         assert(ret >= 0);
         if (ret < 0)
-            goto quickfix_error;
+            goto pep_free;
     }
 
     ret = Fclose(temp_config_file);
     assert(ret == 0);
     if (ret != 0)
-        goto quickfix_error;
+        goto pep_free;
 
 #ifdef WIN32
     ret = !(0 == ReplaceFile(config_file_path, temp_config_file_path, NULL, 0, NULL, NULL));
     assert(ret == 0);
     if (ret != 0)
-        goto quickfix_error;
+        goto pep_free;
 
     ret = unlink(temp_config_file_path);
 #else
     ret = rename(config_file_path, temp_config_file_path);
 #endif
+
     assert(ret == 0);
     if (ret != 0)
-        goto quickfix_error;
+        goto pep_free;
 
     free(temp_config_file_path);
     temp_config_file_path = NULL;
 
     status = true;
 
-    free(backup_file_path);
-
-    goto quickfix_success;
-
-
-quickfix_error:
-
-    assert(status == false);
-
-    free(backup_file_path);
-
-
-quickfix_success:
-
     assert(found_keys == NULL);
-
-    if (temp_config_file_path)
-        free(temp_config_file_path);
-
+    
+pep_free:
+    free(backup_file_path);
+    free(temp_config_file_path);
     free_stringlist(lines);
 
     return status;
-
 }
 
 static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const char* config_file_path)
