@@ -5,7 +5,6 @@
 
 
 #include "message.h"
-#include "Sync_event.h"
 
 
 #ifdef __cplusplus
@@ -75,6 +74,9 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
     );
 
 
+struct Sync_event;
+typedef struct Sync_event *SYNC_EVENT;
+
 // inject_sync_event - inject sync protocol message
 //
 //  parameters:
@@ -84,7 +86,7 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
 //  return value:
 //      0 if event could be stored successfully or nonzero otherwise
 
-typedef int (*inject_sync_event_t)(Sync_event_t *ev, void *management);
+typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 
 
 // retrieve_next_sync_event - receive next sync event
@@ -95,7 +97,7 @@ typedef int (*inject_sync_event_t)(Sync_event_t *ev, void *management);
 //  return value:
 //      next event
 
-typedef Sync_event_t *(*retrieve_next_sync_event_t)(void *management);
+typedef SYNC_EVENT (*retrieve_next_sync_event_t)(void *management);
 
 
 // register_sync_callbacks() - register adapter's callbacks

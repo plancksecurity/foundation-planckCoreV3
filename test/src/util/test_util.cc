@@ -186,10 +186,10 @@ const char* tl_status_string(PEP_STATUS status) {
             return "PEP_CANNOT_SET_SEQUENCE_VALUE";
         case PEP_OWN_SEQUENCE:
             return "PEP_OWN_SEQUENCE";
-        case PEP_SYNC_STATEMACHINE_ERROR:
-            return "PEP_SYNC_STATEMACHINE_ERROR";
-        case PEP_SYNC_NO_TRUST:
-            return "PEP_SYNC_NO_TRUST";
+        case PEP_STATEMACHINE_ERROR:
+            return "PEP_STATEMACHINE_ERROR";
+        case PEP_NO_TRUST:
+            return "PEP_NO_TRUST";
         case PEP_STATEMACHINE_INVALID_STATE:
             return "PEP_STATEMACHINE_INVALID_STATE";
         case PEP_STATEMACHINE_INVALID_EVENT:

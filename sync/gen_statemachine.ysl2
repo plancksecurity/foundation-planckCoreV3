@@ -27,10 +27,10 @@ tstylesheet {
         extern "C" {
         #endif
 
-        #include "../asn.1/«@name».h"
+        #include "«@name».h"
 
 
-        typedef struct _«@name»_event {
+        typedef struct «@name»_event {
             «@name»_PR fsm;
             int event;
             «@name»_t *msg;
@@ -532,6 +532,7 @@ tstylesheet {
         // see LICENSE.txt
 
         #include "«@name»_fsm.h"
+        #include <stdlib.h>
 
         const char *«@name»_state_name(int state)
         {

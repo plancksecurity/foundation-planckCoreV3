@@ -106,7 +106,7 @@
 #include "keymanagement.h"
 #include "cryptotech.h"
 #include "transport.h"
-#include "sync.h"
+#include "sync_api.h"
 #include "Sync_func.h"
 
 #define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;

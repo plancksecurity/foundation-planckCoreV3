@@ -116,7 +116,7 @@ void EngineTestSuite::set_full_env() {
     gpg_agent_conf(true);
     
 //    cout << "calling init()\n";
-    PEP_STATUS status = init(&session);
+    PEP_STATUS status = init(&session, NULL);
     assert(status == PEP_STATUS_OK);
     assert(session);
 //    cout << "init() completed.\n";
