@@ -178,14 +178,8 @@ const char* tl_status_string(PEP_STATUS status) {
             return "PEP_SYNC_ILLEGAL_MESSAGE";
         case PEP_SYNC_NO_INJECT_CALLBACK:
             return "PEP_SYNC_NO_INJECT_CALLBACK";
-        case PEP_SEQUENCE_VIOLATED:
-            return "PEP_SEQUENCE_VIOLATED";
         case PEP_CANNOT_INCREASE_SEQUENCE:
             return "PEP_CANNOT_INCREASE_SEQUENCE";
-        case PEP_CANNOT_SET_SEQUENCE_VALUE:
-            return "PEP_CANNOT_SET_SEQUENCE_VALUE";
-        case PEP_OWN_SEQUENCE:
-            return "PEP_OWN_SEQUENCE";
         case PEP_STATEMACHINE_ERROR:
             return "PEP_STATEMACHINE_ERROR";
         case PEP_NO_TRUST:

@@ -92,10 +92,7 @@ typedef enum {
     PEP_SYNC_ILLEGAL_MESSAGE                        = 0x0902,
     PEP_SYNC_NO_INJECT_CALLBACK                     = 0x0903,
 
-    PEP_SEQUENCE_VIOLATED                           = 0x0970,
     PEP_CANNOT_INCREASE_SEQUENCE                    = 0x0971,
-    PEP_CANNOT_SET_SEQUENCE_VALUE                   = 0x0972,
-    PEP_OWN_SEQUENCE                                = 0x097f,
 
     PEP_STATEMACHINE_ERROR                          = 0x0980,
     PEP_NO_TRUST                                    = 0x0981,
@@ -1147,10 +1144,8 @@ DYNAMIC_API PEP_STATUS get_phrase(
 //
 //  parameters:
 //      session (in)            session handle
-//      name (inout)            name of sequence or char[37] set to {0, }
-//                              for new own sequence named as UUID
-//      value (inout)           value of sequence value to test or 0 for
-//                              getting next value
+//      name (in)               name of sequence
+//      value (out)             value of sequence
 //
 //  returns:
 //      PEP_STATUS_OK                   no error, not own sequence
@@ -1160,7 +1155,7 @@ DYNAMIC_API PEP_STATUS get_phrase(
 
 DYNAMIC_API PEP_STATUS sequence_value(
         PEP_SESSION session,
-        char *name,
+        const char *name,
         int32_t *value
     );
 

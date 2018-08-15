@@ -385,7 +385,7 @@ static const char *sql_sequence_value1 =
     "           where name = ?1), 1 ))); ";
 
 static const char *sql_sequence_value2 = 
-    "select value, own from sequences where name = ?1 ;";
+    "select value from sequences where name = ?1 ;";
 
 // Revocation tracking
 static const char *sql_set_revoked =
@@ -3586,11 +3586,7 @@ static PEP_STATUS _get_sequence_value(PEP_SESSION session, const char *name,
         case SQLITE_ROW: {
             int32_t _value = (int32_t)
                     sqlite3_column_int(session->sequence_value2, 0);
-            int _own = (int)
-                    sqlite3_column_int(session->sequence_value2, 1);
             *value = _value;
-            if (_own)
-                status = PEP_OWN_SEQUENCE;
             break;
         }
         case SQLITE_DONE:
@@ -3624,7 +3620,7 @@ static PEP_STATUS _increment_sequence_value(PEP_SESSION session,
 
 DYNAMIC_API PEP_STATUS sequence_value(
         PEP_SESSION session,
-        char *name,
+        const char *name,
         int32_t *value
     )
 {
@@ -3640,10 +3636,10 @@ DYNAMIC_API PEP_STATUS sequence_value(
     *value = 0;
     sqlite3_exec(session->db, "BEGIN TRANSACTION ;", NULL, NULL, NULL);
     status = _increment_sequence_value(session, name);
-    if (status == PEP_STATUS_OK) {
+    if (status == PEP_STATUS_OK)
         status = _get_sequence_value(session, name, value);
-    }
-    if (status == PEP_STATUS_OK || status == PEP_OWN_SEQUENCE) {
+
+    if (status == PEP_STATUS_OK) {
         result = sqlite3_exec(session->db, "COMMIT ;", NULL, NULL, NULL);
         if (result == SQLITE_OK){
             assert(*value < INT32_MAX);
@@ -3658,6 +3654,7 @@ DYNAMIC_API PEP_STATUS sequence_value(
         sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
         return status;
     }
+
     return status;
 }
 
