@@ -78,3 +78,5 @@ sync/.messages
 sync/.actions
 sync/.codegen
 sync/.statemachines
+test/msg_2.0.asc
+
