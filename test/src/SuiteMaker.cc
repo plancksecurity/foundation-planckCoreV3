@@ -47,6 +47,7 @@
 #include "StringpairListTests.h"
 #include "EncryptForIdentityTests.h"
 #include "TrustManipulationTests.h"
+#include "SyncTests.h"
 #include "AppleMailTests.h"
 
 
@@ -86,11 +87,12 @@ const char* SuiteMaker::all_suites[] = {
     "StringpairListTests",
     "EncryptForIdentityTests",
     "TrustManipulationTests",
+    "SyncTests",
     "AppleMailTests",
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 36;
+int SuiteMaker::num_suites = 37;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "MimeTests") == 0)
@@ -163,6 +165,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new EncryptForIdentityTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "TrustManipulationTests") == 0)
         *test_suite = new TrustManipulationTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "SyncTests") == 0)
+        *test_suite = new SyncTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "AppleMailTests") == 0)
         *test_suite = new AppleMailTests(test_class_name, test_home);
 }
