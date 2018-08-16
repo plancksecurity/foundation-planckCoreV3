@@ -254,7 +254,7 @@ tstylesheet {
                     goto error;
                 }
 
-                status = update_«@name»_message(session, fsm, event, msg);
+                status = update_«@name»_message(session, msg);
                 if (status)
                     goto error;
             }
@@ -305,7 +305,7 @@ tstylesheet {
                 goto error;
             }
 
-            status = update_«@name»_message(session, fsm, message_type, msg);
+            status = update_«@name»_message(session, msg);
             if (status)
                 goto error;
 
@@ -330,14 +330,14 @@ tstylesheet {
             if (!(session && fsm > None && message_type > None))
                 return PEP_ILLEGAL_VALUE;
             
-            «@name»_t *msg = new_«@name»_message(None, None);
+            «@name»_t *msg = new_«@name»_message(fsm, message_type);
             if (!msg)
                 return PEP_OUT_OF_MEMORY;
 
             char *data = NULL;
             message *m = NULL;
 
-            status = update_«@name»_message(session, fsm, message_type, msg);
+            status = update_«@name»_message(session, msg);
             if (status)
                 goto the_end;
 
@@ -688,7 +688,7 @@ tstylesheet {
                 ||
 
                 «$fsm/@name»_SERVICE_LOG("send message", "«$name»");
-                status = send_«$protocol/@name»_message(session, «$fsm/@id», «$name»);
+                status = send_«$protocol/@name»_message(session, «$fsm/@id», «$fsm/@name»__payload_PR_«yml:mixedCase($name)»);
                 ||
             }
             otherwise

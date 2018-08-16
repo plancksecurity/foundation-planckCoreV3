@@ -23,7 +23,6 @@ protocol Sync 1 {
             on Init {
                 if deviceGrouped
                     go Grouped;
-                do sendBeacon;
                 go Sole;
             }
         }
@@ -32,6 +31,7 @@ protocol Sync 1 {
             on Init {
                 do closeHandshakeDialog;
                 do openChallenge; // own challenge
+                do sendBeacon;
             }
 
             on KeyGen

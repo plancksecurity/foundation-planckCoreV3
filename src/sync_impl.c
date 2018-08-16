@@ -69,7 +69,7 @@ PEP_STATUS inject_Sync_event(
             goto error;
         }
 
-        status = update_Sync_message(session, fsm, event, msg);
+        status = update_Sync_message(session, msg);
         if (status)
             goto error;
     }
@@ -120,7 +120,7 @@ PEP_STATUS Sync_notify(
         goto error;
     }
 
-    status = update_Sync_message(session, fsm, message_type, msg);
+    status = update_Sync_message(session, msg);
     if (status)
         goto error;
 
@@ -145,14 +145,14 @@ PEP_STATUS send_Sync_message(
     if (!(session && fsm > None && message_type > None))
         return PEP_ILLEGAL_VALUE;
     
-    Sync_t *msg = new_Sync_message(None, None);
+    Sync_t *msg = new_Sync_message(fsm, message_type);
     if (!msg)
         return PEP_OUT_OF_MEMORY;
 
     char *data = NULL;
     message *m = NULL;
 
-    status = update_Sync_message(session, fsm, message_type, msg);
+    status = update_Sync_message(session, msg);
     if (status)
         goto the_end;
 

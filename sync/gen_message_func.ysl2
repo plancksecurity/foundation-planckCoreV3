@@ -60,8 +60,7 @@ void free_«@name»_message(«@name»_t *msg);
 PEP_STATUS update_«@name»_state(PEP_SESSION session, «@name»_t *msg,
         «@name»_PR *fsm, int *message_type);
 
-PEP_STATUS update_«@name»_message(PEP_SESSION session, «@name»_PR fsm,
-        int message_type, «@name»_t *msg);
+PEP_STATUS update_«@name»_message(PEP_SESSION session, «@name»_t *msg);
 
 #ifdef __cplusplus
 }
@@ -160,8 +159,7 @@ PEP_STATUS update_«@name»_state(PEP_SESSION session, «@name»_t *msg,
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS update_«@name»_message(PEP_SESSION session, «@name»_PR fsm,
-        int message_type, «@name»_t *msg)
+PEP_STATUS update_«@name»_message(PEP_SESSION session, «@name»_t *msg)
 {
     int result = 0;
 
@@ -169,6 +167,7 @@ PEP_STATUS update_«@name»_message(PEP_SESSION session, «@name»_PR fsm,
     if (!(session && msg))
         return PEP_ILLEGAL_VALUE;
 
+    int fsm = msg->present;
     switch (fsm) {
         case «@name»_PR_NOTHING:
             return PEP_ILLEGAL_VALUE;
@@ -187,16 +186,18 @@ PEP_STATUS update_«@name»_message(PEP_SESSION session, «@name»_PR fsm,
 template "fsm", mode=update_message
 ||
 case «../@name»_PR_«yml:lcase(@name)»:
-    switch (message_type) {
-        case «@name»__payload_PR_NOTHING:
-            return PEP_ILLEGAL_VALUE;
+    {
+        int message_type = msg->choice.«yml:lcase(@name)».payload.present;
+        switch (message_type) {
+            case «@name»__payload_PR_NOTHING:
+                return PEP_ILLEGAL_VALUE;
 
-        `` apply "message", 2, mode=update_message
-        default:
-            return PEP_ILLEGAL_VALUE;
+            `` apply "message", 2, mode=update_message
+            default:
+                return PEP_ILLEGAL_VALUE;
+        }
+        break;
     }
-    break;
-
 ||
 
 template "message", mode=update_message {
