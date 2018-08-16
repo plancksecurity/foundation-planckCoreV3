@@ -31,11 +31,14 @@ public:
 
     static int inject_sync_event(SYNC_EVENT ev, void *management)
     {
+        auto adapter = static_cast< Sync_Adapter *>(management);
+        adapter->q.push_front(ev);
         return 0;
     }
     static Sync_event_t *retrieve_next_sync_event(void *management)
     {
-        return NULL;
+        auto adapter = static_cast< Sync_Adapter *>(management);
+        return adapter->q.pop_front();
     }
 };
 

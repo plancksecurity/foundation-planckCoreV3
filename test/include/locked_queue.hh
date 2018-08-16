@@ -23,15 +23,19 @@ namespace utility
             lock_guard<mutex> lg(_mtx);
             return _q.front();
         }
-        void pop_back()
+        T pop_back()
         {
             lock_guard<mutex> lg(_mtx);
+            T r = _q.back();
             _q.pop_back();
+            return r;
         }
-        void pop_front()
+        T pop_front()
         {
             lock_guard<mutex> lg(_mtx);
+            T r = _q.front();
             _q.pop_front();
+            return r;
         }
         void push_back(const T& data)
         {
