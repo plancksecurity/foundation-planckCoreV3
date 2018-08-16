@@ -81,7 +81,7 @@ typedef struct Sync_event *SYNC_EVENT;
 //
 //  parameters:
 //      ev (in)             event to inject
-//      management (in)     application defined
+//      management (in)     application defined; usually a locked queue
 //
 //  return value:
 //      0 if event could be stored successfully or nonzero otherwise
@@ -92,7 +92,7 @@ typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 // retrieve_next_sync_event - receive next sync event
 //
 //  parameters:
-//      management (in)     application defined
+//      management (in)     application defined; usually a locked queue
 //
 //  return value:
 //      next event
@@ -104,7 +104,7 @@ typedef SYNC_EVENT (*retrieve_next_sync_event_t)(void *management);
 //
 //  parameters:
 //      session (in)                    session where to store obj handle
-//      management (in)                 application defined
+//      management (in)                 application defined; usually a locked queue
 //      notifyHandshake (in)            callback for doing the handshake
 //      retrieve_next_sync_event (in)   callback for receiving sync event
 //

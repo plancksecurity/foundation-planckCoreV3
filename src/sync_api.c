@@ -25,7 +25,8 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
     session->inject_sync_event = inject_sync_event;
     session->retrieve_next_sync_event = retrieve_next_sync_event;
 
-    return PEP_STATUS_OK;
+    // start state machine
+    return Sync_driver(session, Sync_PR_keysync, Init);
 }
 
 DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
