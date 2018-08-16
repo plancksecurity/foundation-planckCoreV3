@@ -187,6 +187,8 @@ template "fsm", mode=update_message
 ||
 case «../@name»_PR_«yml:lcase(@name)»:
     {
+        static long sequence = 0;
+        msg->choice.«yml:lcase(@name)».header.sequence = ++sequence;
         int message_type = msg->choice.«yml:lcase(@name)».payload.present;
         switch (message_type) {
             case «@name»__payload_PR_NOTHING:
@@ -204,10 +206,34 @@ template "message", mode=update_message {
     const "message_name", "concat(yml:lcase(substring(@name,1,1)), substring(@name,2))";
     ||
     case «../@name»__payload_PR_«$message_name»:
+        `` apply "auto"
         `` apply "field", mode=update_message with "message_name", "$message_name"
         break;
 
     ||
+}
+
+template "auto" choose {
+    when "@type = 'Version'"
+        ||
+        {
+            long *major = (long *) malloc(sizeof(long));
+            long *minor = (long *) malloc(sizeof(long));
+            assert(major && minor);
+            if (!(major && minor))
+                return PEP_OUT_OF_MEMORY;
+
+            *major = «../../version/@major»;
+            *minor = «../../version/@minor»;
+
+            msg->choice.«yml:lcase(../../@name)».payload.choice.«yml:mixedCase(../@name)».«@name».major = major;
+            msg->choice.«yml:lcase(../../@name)».payload.choice.«yml:mixedCase(../@name)».«@name».minor = minor;
+        }
+
+        ||
+
+    otherwise
+        error "unkown type for auto in message: {@type}; allowed types: Version";
 }
 
 template "field", mode=update_message {
