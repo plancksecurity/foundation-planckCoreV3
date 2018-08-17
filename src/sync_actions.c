@@ -109,6 +109,17 @@ PEP_STATUS closeHandshakeDialog(PEP_SESSION session)
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS clearState(PEP_SESSION session)
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    free_Sync_state(session);
+
+    return PEP_STATUS_OK;
+}
+
 PEP_STATUS openChallenge(PEP_SESSION session)
 {
     assert(session);

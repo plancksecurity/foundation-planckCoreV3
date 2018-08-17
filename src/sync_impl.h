@@ -21,6 +21,7 @@ PEP_STATUS keyElectionWon(PEP_SESSION session, bool *result);
 // actions
 
 PEP_STATUS closeHandshakeDialog(PEP_SESSION session);
+PEP_STATUS clearState(PEP_SESSION session);
 PEP_STATUS openChallenge(PEP_SESSION session);
 PEP_STATUS storeChallenge(PEP_SESSION session);
 PEP_STATUS openTransaction(PEP_SESSION session);

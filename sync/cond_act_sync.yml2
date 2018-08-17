@@ -92,6 +92,9 @@ function "copy_UUID" {
     ||
 }
 
+action clearState
+    |> free_Sync_state(session);
+
 action openChallenge
     call "new_UUID" with "dst" > &session->own_sync_state.challenge
 

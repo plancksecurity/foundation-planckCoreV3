@@ -30,6 +30,7 @@ protocol Sync 1 {
         state Sole {
             on Init {
                 do closeHandshakeDialog;
+                do clearState;
                 do openChallenge; // own challenge
                 do sendBeacon;
             }
@@ -215,8 +216,10 @@ protocol Sync 1 {
         }
 
         state Grouped {
-            on Init
+            on Init {
                 do closeHandshakeDialog;
+                do clearState;
+            }
 
             on GroupKeys
                 do saveGroupKeys;
