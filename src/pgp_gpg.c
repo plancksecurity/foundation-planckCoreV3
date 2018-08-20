@@ -14,95 +14,120 @@
 static void *gpgme;
 static struct gpg_s gpg;
 
-static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const char* config_file_path)
-{
-    static char buf[MAX_LINELENGTH];
-    int r;
+// typedef struct _pep_gpgme_val_list {
+//     gpgme_conf_arg_t type;
+//     void* value;
+//     _pep_gpgme_val_list* next;
+// } pep_gpgme_val_list_t;
+// 
+// static pep_gpgme_val_list_t* new_pep_conf_val(gpgme_conf_arg_t type,
+//                                                 void* value) {
+//     pep_gpgme_val_list_t* retval = calloc(1, sizeof(pep_gpgme_val_list_t));
+//     if (!retval)
+//         return NULL;
+//     retval->type = type;
+//     retval->value = value;
+//     return retval;    
+// }
+// 
+// static pep_gpgme_val_list_t* add_pep_conf_val(pep_gpgme_val_list_t* list, 
+//                                               gpgme_conf_arg_t type,
+//                                               void* value) {
+//     pep_gpgme_val_list_t* newnode = new_pep_conf_val(type, value);
+//     if (!newnode)
+//         return NULL;
+// 
+//     if (list) {
+//         pep_gpgme_val_list_t** last_next = &(list->next);
+//         while (*last_next)
+//             last_next = &((*last_next)->next);
+// 
+//         *last_next = new_node;
+//     }
+//     return newnode; 
+// }
+
+// // the lists are never long, so this should be fine.
+// static void free_pep_conf_val_list(pep_gpgme_val_list_t* head) {
+//     if (head) {
+//         free_pep_conf_val_list(head->next);
+//         free(value);
+//         free(head);
+//     }
+// }
+
+bloblist_t* make_conf_val(gpgme_conf_type_t type, const void* value) {    
+    char* strval = NULL;
+    void* otherval = NULL;
+    switch(type) {
+        case GPGME_CONF_NONE:
+            strval = (char*)calloc(1,1);
+            return new_bloblist(strval, 1, NULL, NULL); // BL placeholder 
+        case GPGME_CONF_STRING:
+        case GPGME_CONF_FILENAME:
+        case GPGME_CONF_LDAP_SERVER:
+        case GPGME_CONF_KEY_FPR:
+        case GPGME_CONF_PUB_KEY:
+        case GPGME_CONF_SEC_KEY:
+        case GPGME_CONF_ALIAS_LIST:
+            strval = strdup((const char*)value);
+            if (!strval)
+                return NULL;
+            return new_bloblist(strval, strlen(strval), NULL, NULL);
+        case GPGME_CONF_INT32:
+        case GPGME_CONF_UINT32:
+            otherval = calloc(1,4);
+            if (!memcpy(otherval, value, 4))
+                return NULL;
+            return new_bloblist(otherval, 4, NULL, NULL);
+        default:
+            return NULL;
+    }
+}
+
+static bool ensure_config_values(PEP_SESSION session,
+                                 gpgme_conf_comp_t configs, 
+                                 const char* conf_name, 
+                                 stringlist_t *keys, 
+                                 bloblist_t *values)
+{    
+    gpgme_conf_comp_t curr_conf = configs;
+    gpgme_conf_opt_t opt;
+    gpgme_error_t gpgme_error;
     stringlist_t *_k;
-    stringlist_t *_v;
-    unsigned int i;
-    unsigned int found = 0;
-    bool eof_nl = 0;
-    char * rest;
-    char * token;
-    char * s;
-    const char* line_end;
-
-#ifdef WIN32
-    line_end = "\r\n";
-#else
-    line_end = "\n";
-#endif    
-
-    FILE *f = Fopen(config_file_path, "r");
-    if (f == NULL && errno == ENOMEM)
-        return false;
-
-    if (f != NULL) {
-        int length = stringlist_length(keys);
-
-        // make sure we 1) have the same number of keys and values
-        // and 2) we don't have more key/value pairs than
-        // the size of the bitfield used to hold the indices
-        // of key/value pairs matching keys in the config file.
-        assert(length <= sizeof(unsigned int) * CHAR_BIT);
-        assert(length == stringlist_length(values));
-        if (!(length == stringlist_length(values) &&
-              length <= sizeof(unsigned int) * CHAR_BIT)) {
-            Fclose(f);
-
-            return false;
-        }
-
-        while ((s = Fgets(buf, MAX_LINELENGTH, f))) {
-            token = strtok_r(s, " \t\r\n", &rest);
-            for (_k = keys, _v = values, i = 1;
-                 _k != NULL;
-                 _k = _k->next, _v = _v->next, i <<= 1) {
-
-                if (((found & i) != i) && token &&
-                    (strncmp(token, _k->value, strlen(_k->value)) == 0)) {
-                    found |= i;
-                    break;
+    bloblist_t *_v;
+     
+    while (curr_conf) {
+        if (strcmp(curr_conf->name, conf_name) == 0) {
+            for (_k = keys, _v = values; _k != NULL; _k = _k->next, _v = _v->next) {
+                for (opt = curr_conf->options; opt; opt = opt->next) {
+                    if (!(opt->flags & GPGME_CONF_GROUP) && strcmp(opt->name, _k->value) == 0) {
+                        if (!opt->value) {
+                            // Option has *not* been *explicitly* set. So we can set it.
+                            gpgme_conf_arg_t new_val;
+                            if (opt->type == GPGME_CONF_NONE)
+                                gpgme_error = gpgme_conf_arg_new(&new_val, opt->type, NULL);    
+                            else     
+                                gpgme_error = gpgme_conf_arg_new(&new_val, opt->type, _v->value);
+                                
+                            if (gpgme_error != GPG_ERR_NO_ERROR)
+                                return false;
+                                
+                            gpgme_error = gpgme_conf_opt_change(opt, 0, new_val);    
+                            if (gpgme_error != GPG_ERR_NO_ERROR)
+                                return false;
+                        }
+                        break;
+                    }
                 }
             }
-            if (feof(f)) {
-                eof_nl = 1;
-                break;
-            }
-        }
-
-        if (!s && ferror(f))
-            return false;
-        f = Freopen(config_file_path, "a", f);
-    }
-    else {
-        f = Fopen(config_file_path, "w");
-    }
-
-    assert(f);
-    if (f == NULL)
-        return false;
-    
-    if (eof_nl)
-        r = Fprintf(f, line_end);
-
-    for (i = 1, _k = keys, _v = values; _k != NULL; _k = _k->next,
-            _v = _v->next, i <<= 1) {
-        if ((found & i) == 0) {
-            r = Fprintf(f, "%s %s%s", _k->value, _v->value, line_end);
-            assert(r >= 0);
-            if (r < 0)
+            gpgme_error_t gpgme_err = gpgme_op_conf_save(session->ctx, curr_conf);
+            if (gpgme_err != GPG_ERR_NO_ERROR)
                 return false;
+            return true;
         }
     }
-
-    r = Fclose(f);
-    assert(r == 0);
-    if (r != 0)
-        return false;
-
-    return true;
+    return false;    
 }
 
 char* _undot_address(const char* address) {
@@ -238,37 +263,51 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     bool bResult;
 
     if (in_first) {
-        stringlist_t *conf_keys   = new_stringlist("keyserver");
-        stringlist_t *conf_values = new_stringlist("hkp://keys.gnupg.net");
+        
+        gpgme_conf_comp_t configs; 
 
+        gpgme_error = gpgme_op_conf_load(session->ctx, &configs);
+        
+        stringlist_t *conf_keys   = new_stringlist("keyserver");
+        bloblist_t   *conf_values = make_conf_val(GPGME_CONF_STRING,
+                                                  "hkp://keys.gnupg.net");
+
+        bloblist_t** nextval = &(conf_values->next);
+                                                          
         stringlist_add(conf_keys, "cert-digest-algo");
-        stringlist_add(conf_values, "SHA256");
+        *nextval = make_conf_val(GPGME_CONF_STRING, "SHA256");
+        nextval = &((*nextval)->next);
 
         stringlist_add(conf_keys, "no-emit-version");
-        stringlist_add(conf_values, "");
-
+        *nextval = make_conf_val(GPGME_CONF_NONE, NULL); // placeholder
+        nextval = &((*nextval)->next);
+        
         stringlist_add(conf_keys, "no-comments");
-        stringlist_add(conf_values, "");
+        *nextval = make_conf_val(GPGME_CONF_NONE, NULL); // placeholder
+        nextval = &((*nextval)->next);
 
         stringlist_add(conf_keys, "personal-cipher-preferences");
-        stringlist_add(conf_values, "AES AES256 AES192 CAST5");
+        *nextval = make_conf_val(GPGME_CONF_STRING, "AES AES256 AES192 CAST5");
+        nextval = &((*nextval)->next);
 
         stringlist_add(conf_keys, "personal-digest-preferences");
-        stringlist_add(conf_values, "SHA256 SHA512 SHA384 SHA224");
+        *nextval = make_conf_val(GPGME_CONF_STRING, "SHA256 SHA512 SHA384 SHA224");
+        nextval = &((*nextval)->next);
 
         stringlist_add(conf_keys, "ignore-time-conflict");
-        stringlist_add(conf_values, "");
+        *nextval = make_conf_val(GPGME_CONF_NONE, NULL); // placeholder
+        nextval = &((*nextval)->next);
 
         stringlist_add(conf_keys, "allow-freeform-uid");
-        stringlist_add(conf_values, "");
+        *nextval = make_conf_val(GPGME_CONF_NONE, NULL); // placeholder
+        nextval = &((*nextval)->next);
 
-#if defined(WIN32) || defined(NDEBUG)
-        bResult = ensure_config_values(conf_keys, conf_values, gpg_conf());
-#else
-        bResult = ensure_config_values(conf_keys, conf_values, gpg_conf(false));
-#endif
+        bResult = ensure_config_values(session, configs, 
+                                       "gpg", conf_keys, 
+                                       conf_values);
+        
         free_stringlist(conf_keys);
-        free_stringlist(conf_values);
+        free_bloblist(conf_values);
 
         assert(bResult);
         if (!bResult) {
@@ -276,19 +315,22 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
             goto pep_error;
         }
 
+        uint32_t temp_uint = 300;
         conf_keys = new_stringlist("default-cache-ttl");
-        conf_values = new_stringlist("300");
+        conf_values = make_conf_val(GPGME_CONF_UINT32, &temp_uint);
+        nextval = &(conf_values->next);
 
+        temp_uint = 1200;
         stringlist_add(conf_keys, "max-cache-ttl");
-        stringlist_add(conf_values, "1200");
+        *nextval = make_conf_val(GPGME_CONF_UINT32, &temp_uint);        
+        nextval = &((*nextval)->next);
 
-#if defined(WIN32) || defined(NDEBUG)
-        bResult = ensure_config_values(conf_keys, conf_values, gpg_agent_conf());
-#else        
-        bResult = ensure_config_values(conf_keys, conf_values, gpg_agent_conf(false));
-#endif
+        bResult = ensure_config_values(session, configs, 
+                                       "gpg-agent", conf_keys, 
+                                       conf_values);
+        
         free_stringlist(conf_keys);
-        free_stringlist(conf_values);
+        free_bloblist(conf_values);
 
         assert(bResult);
         if (!bResult) {
@@ -298,8 +340,6 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
         gpgme = dlopen(LIBGPGME, RTLD_LAZY);
         if (gpgme == NULL) {
-            // FIXME: Hotfix here?
-            
             status = PEP_INIT_CANNOT_LOAD_GPGME;
             goto pep_error;
         }
@@ -548,6 +588,13 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         goto pep_error;
     }
     assert(session->ctx);
+
+    gpgme_conf_comp_t configs;
+    gpgme_error = gpgme_op_conf_load(session->ctx, &configs);
+    if (gpgme_error != GPG_ERR_NO_ERROR) {
+        status = PEP_INIT_GPGME_INIT_FAILED;
+        goto pep_error;
+    }
 
     gpgme_error = gpg.gpgme_set_protocol(session->ctx, GPGME_PROTOCOL_OpenPGP);
     gpgme_error = _GPGERR(gpgme_error);
