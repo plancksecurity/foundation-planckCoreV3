@@ -93,6 +93,13 @@ typedef gpgme_error_t(*gpgme_op_createsubkey_t)(gpgme_ctx_t ctx,
 #endif
 #endif
 
+typedef gpgme_error_t(*gpgme_conf_arg_new_t)(gpgme_conf_arg_t *ARG_P,
+    gpgme_conf_type_t TYPE, const void *VALUE);
+typedef gpgme_error_t(*gpgme_op_conf_load_t)(gpgme_ctx_t CTX, 
+    gpgme_conf_comp_t *CONF_P);
+typedef gpgme_error_t(*gpgme_op_conf_save_t)(gpgme_ctx_t CTX, gpgme_conf_comp_t COMP);
+typedef gpgme_error_t(*gpgme_conf_opt_change_t)(gpgme_conf_opt_t OPT, 
+    int RESET, gpgme_conf_arg_t ARG);
 
 typedef gpgme_error_t(*gpgme_set_passphrase_cb_t)(gpgme_ctx_t ctx, 
 		gpgme_passphrase_cb_t passfunc, void *hook_value);
@@ -150,6 +157,11 @@ struct gpg_s {
 	gpgme_key_release_t gpgme_key_release;
     gpgme_op_edit_t gpgme_op_edit;
     gpgme_io_write_t gpgme_io_write;
+
+    gpgme_conf_arg_new_t gpgme_conf_arg_new;
+    gpgme_op_conf_load_t gpgme_op_conf_load;
+    gpgme_op_conf_save_t gpgme_op_conf_save;
+    gpgme_conf_opt_change_t gpgme_conf_opt_change;
 
     gpgme_set_passphrase_cb_t gpgme_set_passphrase_cb;
 };

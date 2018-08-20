@@ -106,14 +106,14 @@ static bool ensure_config_values(PEP_SESSION session,
                             // Option has *not* been *explicitly* set. So we can set it.
                             gpgme_conf_arg_t new_val;
                             if (opt->type == GPGME_CONF_NONE)
-                                gpgme_error = gpgme_conf_arg_new(&new_val, opt->type, NULL);    
+                                gpgme_error = gpg.gpgme_conf_arg_new(&new_val, opt->type, NULL);    
                             else     
-                                gpgme_error = gpgme_conf_arg_new(&new_val, opt->type, _v->value);
+                                gpgme_error = gpg.gpgme_conf_arg_new(&new_val, opt->type, _v->value);
                                 
                             if (gpgme_error != GPG_ERR_NO_ERROR)
                                 return false;
                                 
-                            gpgme_error = gpgme_conf_opt_change(opt, 0, new_val);    
+                            gpgme_error = gpg.gpgme_conf_opt_change(opt, 0, new_val);    
                             if (gpgme_error != GPG_ERR_NO_ERROR)
                                 return false;
                         }
@@ -121,7 +121,7 @@ static bool ensure_config_values(PEP_SESSION session,
                     }
                 }
             }
-            gpgme_error_t gpgme_err = gpgme_op_conf_save(session->ctx, curr_conf);
+            gpgme_error_t gpgme_err = gpg.gpgme_op_conf_save(session->ctx, curr_conf);
             if (gpgme_err != GPG_ERR_NO_ERROR)
                 return false;
             return true;
@@ -264,80 +264,6 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
     if (in_first) {
         
-        gpgme_conf_comp_t configs; 
-
-        gpgme_error = gpgme_op_conf_load(session->ctx, &configs);
-        
-        stringlist_t *conf_keys   = new_stringlist("keyserver");
-        bloblist_t   *conf_values = make_conf_val(GPGME_CONF_STRING,
-                                                  "hkp://keys.gnupg.net");
-
-        bloblist_t** nextval = &(conf_values->next);
-                                                          
-        stringlist_add(conf_keys, "cert-digest-algo");
-        *nextval = make_conf_val(GPGME_CONF_STRING, "SHA256");
-        nextval = &((*nextval)->next);
-
-        stringlist_add(conf_keys, "no-emit-version");
-        *nextval = make_conf_val(GPGME_CONF_NONE, NULL); // placeholder
-        nextval = &((*nextval)->next);
-        
-        stringlist_add(conf_keys, "no-comments");
-        *nextval = make_conf_val(GPGME_CONF_NONE, NULL); // placeholder
-        nextval = &((*nextval)->next);
-
-        stringlist_add(conf_keys, "personal-cipher-preferences");
-        *nextval = make_conf_val(GPGME_CONF_STRING, "AES AES256 AES192 CAST5");
-        nextval = &((*nextval)->next);
-
-        stringlist_add(conf_keys, "personal-digest-preferences");
-        *nextval = make_conf_val(GPGME_CONF_STRING, "SHA256 SHA512 SHA384 SHA224");
-        nextval = &((*nextval)->next);
-
-        stringlist_add(conf_keys, "ignore-time-conflict");
-        *nextval = make_conf_val(GPGME_CONF_NONE, NULL); // placeholder
-        nextval = &((*nextval)->next);
-
-        stringlist_add(conf_keys, "allow-freeform-uid");
-        *nextval = make_conf_val(GPGME_CONF_NONE, NULL); // placeholder
-        nextval = &((*nextval)->next);
-
-        bResult = ensure_config_values(session, configs, 
-                                       "gpg", conf_keys, 
-                                       conf_values);
-        
-        free_stringlist(conf_keys);
-        free_bloblist(conf_values);
-
-        assert(bResult);
-        if (!bResult) {
-            status = PEP_INIT_NO_GPG_HOME;
-            goto pep_error;
-        }
-
-        uint32_t temp_uint = 300;
-        conf_keys = new_stringlist("default-cache-ttl");
-        conf_values = make_conf_val(GPGME_CONF_UINT32, &temp_uint);
-        nextval = &(conf_values->next);
-
-        temp_uint = 1200;
-        stringlist_add(conf_keys, "max-cache-ttl");
-        *nextval = make_conf_val(GPGME_CONF_UINT32, &temp_uint);        
-        nextval = &((*nextval)->next);
-
-        bResult = ensure_config_values(session, configs, 
-                                       "gpg-agent", conf_keys, 
-                                       conf_values);
-        
-        free_stringlist(conf_keys);
-        free_bloblist(conf_values);
-
-        assert(bResult);
-        if (!bResult) {
-            status = PEP_INIT_CANNOT_CONFIG_GPG_AGENT;
-            goto pep_error;
-        }
-
         gpgme = dlopen(LIBGPGME, RTLD_LAZY);
         if (gpgme == NULL) {
             status = PEP_INIT_CANNOT_LOAD_GPGME;
@@ -568,6 +494,23 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
             dlsym(gpgme, "gpgme_io_write");
         assert(gpg.gpgme_io_write);
 
+        gpg.gpgme_conf_arg_new = (gpgme_conf_arg_new_t) (intptr_t)
+            dlsym(gpgme, "gpgme_conf_arg_new");
+        assert(gpg.gpgme_conf_arg_new);
+
+        gpg.gpgme_op_conf_load = (gpgme_op_conf_load_t) (intptr_t)
+            dlsym(gpgme, "gpgme_op_conf_load");
+        assert(gpg.gpgme_op_conf_load);
+
+        gpg.gpgme_op_conf_save = (gpgme_op_conf_save_t) (intptr_t)
+            dlsym(gpgme, "gpgme_op_conf_save");
+        assert(gpg.gpgme_op_conf_save);
+
+        gpg.gpgme_conf_opt_change = (gpgme_conf_opt_change_t) (intptr_t)
+            dlsym(gpgme, "gpgme_conf_opt_change");
+        assert(gpg.gpgme_conf_opt_change);
+
+
         gpg.version = gpg.gpgme_check(NULL);
 
         const char * const cLocal = setlocale(LC_ALL, NULL);
@@ -578,6 +521,85 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 #ifdef LC_MESSAGES // Windoze
         gpg.gpgme_set_locale (NULL, LC_MESSAGES, setlocale(LC_MESSAGES, NULL));
 #endif
+
+        // Set up gpg and gpg-agent configs
+        gpgme_conf_comp_t configs; 
+
+        gpgme_error = gpg.gpgme_op_conf_load(session->ctx, &configs);
+        if (gpgme_error != GPG_ERR_NO_ERROR) {
+            status = PEP_INIT_GPGME_INIT_FAILED;
+            goto pep_error;
+        }
+        
+        stringlist_t *conf_keys   = new_stringlist("keyserver");
+        bloblist_t   *conf_values = make_conf_val(GPGME_CONF_STRING,
+                                                  "hkp://keys.gnupg.net");
+
+        bloblist_t** nextval = &(conf_values->next);
+                                                          
+        stringlist_add(conf_keys, "cert-digest-algo");
+        *nextval = make_conf_val(GPGME_CONF_STRING, "SHA256");
+        nextval = &((*nextval)->next);
+
+        stringlist_add(conf_keys, "no-emit-version");
+        *nextval = make_conf_val(GPGME_CONF_NONE, NULL); // placeholder
+        nextval = &((*nextval)->next);
+        
+        stringlist_add(conf_keys, "no-comments");
+        *nextval = make_conf_val(GPGME_CONF_NONE, NULL); // placeholder
+        nextval = &((*nextval)->next);
+
+        stringlist_add(conf_keys, "personal-cipher-preferences");
+        *nextval = make_conf_val(GPGME_CONF_STRING, "AES AES256 AES192 CAST5");
+        nextval = &((*nextval)->next);
+
+        stringlist_add(conf_keys, "personal-digest-preferences");
+        *nextval = make_conf_val(GPGME_CONF_STRING, "SHA256 SHA512 SHA384 SHA224");
+        nextval = &((*nextval)->next);
+
+        stringlist_add(conf_keys, "ignore-time-conflict");
+        *nextval = make_conf_val(GPGME_CONF_NONE, NULL); // placeholder
+        nextval = &((*nextval)->next);
+
+        stringlist_add(conf_keys, "allow-freeform-uid");
+        *nextval = make_conf_val(GPGME_CONF_NONE, NULL); // placeholder
+        nextval = &((*nextval)->next);
+
+        bResult = ensure_config_values(session, configs, 
+                                       "gpg", conf_keys, 
+                                       conf_values);
+        
+        free_stringlist(conf_keys);
+        free_bloblist(conf_values);
+
+        assert(bResult);
+        if (!bResult) {
+            status = PEP_INIT_NO_GPG_HOME;
+            goto pep_error;
+        }
+
+        uint32_t temp_uint = 300;
+        conf_keys = new_stringlist("default-cache-ttl");
+        conf_values = make_conf_val(GPGME_CONF_UINT32, &temp_uint);
+        nextval = &(conf_values->next);
+
+        temp_uint = 1200;
+        stringlist_add(conf_keys, "max-cache-ttl");
+        *nextval = make_conf_val(GPGME_CONF_UINT32, &temp_uint);        
+        nextval = &((*nextval)->next);
+
+        bResult = ensure_config_values(session, configs, 
+                                       "gpg-agent", conf_keys, 
+                                       conf_values);
+        
+        free_stringlist(conf_keys);
+        free_bloblist(conf_values);
+
+        assert(bResult);
+        if (!bResult) {
+            status = PEP_INIT_CANNOT_CONFIG_GPG_AGENT;
+            goto pep_error;
+        }
     }
 
     gpg.gpgme_check(NULL);
@@ -588,13 +610,6 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         goto pep_error;
     }
     assert(session->ctx);
-
-    gpgme_conf_comp_t configs;
-    gpgme_error = gpgme_op_conf_load(session->ctx, &configs);
-    if (gpgme_error != GPG_ERR_NO_ERROR) {
-        status = PEP_INIT_GPGME_INIT_FAILED;
-        goto pep_error;
-    }
 
     gpgme_error = gpg.gpgme_set_protocol(session->ctx, GPGME_PROTOCOL_OpenPGP);
     gpgme_error = _GPGERR(gpgme_error);
