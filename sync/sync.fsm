@@ -32,26 +32,26 @@ protocol Sync 1 {
                 do closeHandshakeDialog;
                 do clearState;
                 do openChallenge; // own challenge
-                do sendBeacon;
+                send Beacon;
             }
 
             on KeyGen
-                do sendBeacon;
+                send Beacon;
 
             on CannotDecrypt // cry baby
-                do sendBeacon;
+                send Beacon;
 
             on Beacon {
                 do storeChallenge; // partner's challenge
                 do openTransaction;
                 do storeTransaction;
-                do sendHandshakeRequest;
+                send HandshakeRequest;
             }
 
             on HandshakeRequest {
                 if challengeAccepted {
                     do storeTransaction;
-                    do sendHandshakeAnswer;
+                    send HandshakeAnswer;
                     if partnerIsGrouped
                         go HandshakingWithGroup;
 
@@ -70,7 +70,7 @@ protocol Sync 1 {
 
             // Cancel is Rollback
             on Cancel {
-                do sendRollback;
+                send Rollback;
                 go Sole;
             }
 
@@ -79,7 +79,7 @@ protocol Sync 1 {
 
             // Reject is CommitReject
             on Reject {
-                do sendCommitReject;
+                send CommitReject;
                 do disable;
                 go End;
             }
@@ -91,7 +91,7 @@ protocol Sync 1 {
 
             // Accept is Phase1Commit
             on Accept {
-                do sendCommitAccept;
+                send CommitAccept;
                 go HandshakingNewPhase1;
             }
 
@@ -114,12 +114,12 @@ protocol Sync 1 {
 
         state HandshakingNewPhase1Own {
             on Cancel {
-                do sendRollback;
+                send Rollback;
                 go Sole;
             }
 
             on Reject {
-                do sendCommitReject;
+                send CommitReject;
                 do disable;
                 go End;
             }
@@ -130,7 +130,7 @@ protocol Sync 1 {
 
         state NewGroup {
             on Init
-                do sendGroupKeysAndClose; // we're not grouped yet, this is our own keys
+                send GroupKeysAndClose; // we're not grouped yet, this is our own keys
 
             on GroupKeysAndClose {
                 do saveGroupKeys;
@@ -149,7 +149,7 @@ protocol Sync 1 {
 
             // Cancel is Rollback
             on Cancel {
-                do sendRollback;
+                send Rollback;
                 go Sole;
             }
 
@@ -158,7 +158,7 @@ protocol Sync 1 {
 
             // Reject is CommitReject
             on Reject {
-                do sendCommitReject;
+                send CommitReject;
                 do disable;
                 go End;
             }
@@ -170,7 +170,7 @@ protocol Sync 1 {
 
             // Accept is Phase1Commit
             on Accept {
-                do sendCommitAccept;
+                send CommitAccept;
                 go HandshakingJoinPhase1;
             }
 
@@ -193,12 +193,12 @@ protocol Sync 1 {
 
         state HandshakingJoinPhase1Own {
             on Cancel {
-                do sendRollback;
+                send Rollback;
                 go Sole;
             }
 
             on Reject {
-                do sendCommitReject;
+                send CommitReject;
                 do disable;
                 go End;
             }
@@ -209,7 +209,7 @@ protocol Sync 1 {
 
         state JoinGroup {
             on GroupKeysAndClose {
-                do sendGroupKeys; // first send own keys
+                send GroupKeys; // first send own keys
                 do saveGroupKeys; // then store new group keys
                 go Grouped;
             }
@@ -225,10 +225,10 @@ protocol Sync 1 {
                 do saveGroupKeys;
 
             on KeyGen
-                do sendGroupKeys;
+                send GroupKeys;
 
             on Beacon
-                do sendHandshakeRequest;
+                send HandshakeRequest;
 
             on HandshakeAnswer
                 go HandshakingGrouped;
@@ -240,7 +240,7 @@ protocol Sync 1 {
     
             // Cancel is Rollback
             on Cancel {
-                do sendRollback;
+                send Rollback;
                 go Grouped;
             }
 
@@ -249,7 +249,7 @@ protocol Sync 1 {
 
             // Reject is CommitReject
             on Reject {
-                do sendCommitReject;
+                send CommitReject;
                 go Grouped;
             }
 
@@ -258,7 +258,7 @@ protocol Sync 1 {
 
             // Accept is Phase1Commit
             on Accept {
-                do sendCommitAccept;
+                send CommitAccept;
                 go HandshakingGroupedPhase1;
             }
 
@@ -277,7 +277,7 @@ protocol Sync 1 {
                 go Grouped;
 
             on CommitAccept {
-                do sendGroupKeysAndClose;
+                send GroupKeysAndClose;
                 go Grouped;
             }
 
@@ -287,17 +287,17 @@ protocol Sync 1 {
 
         state HandshakingGroupedPhase1Own {
             on Cancel {
-                do sendRollback;
+                send Rollback;
                 go Grouped;
             }
 
             on Reject {
-                do sendCommitReject;
+                send CommitReject;
                 go Grouped;
             }
 
             on Accept {
-                do sendGroupKeysAndClose;
+                send GroupKeysAndClose;
                 go Grouped;
             }
 

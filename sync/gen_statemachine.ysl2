@@ -141,8 +141,7 @@ tstylesheet {
         // actions
 
         ||
-        const "name", "@name";
-        for "func:distinctName(*//action[not(starts-with(@name, 'send'))])"
+        for "func:distinctName(*//action)"
             | PEP_STATUS «@name»(PEP_SESSION session);
         ||
 
@@ -652,12 +651,12 @@ tstylesheet {
 
     template "event", mode=fsm {
         | case «@name»: {
-        if "condition|action" |> PEP_STATUS status;
+        if "condition|action|send" |> PEP_STATUS status;
         if "condition" |> bool result = false;
-        if "condition|action" |
+        if "condition|action|send" |
         ||
             «../../@name»_SERVICE_LOG("received event", "«@name»");
-            `` apply "transition|action|condition" with "protocol", "../../..", with "fsm", "../.."
+            `` apply "transition|action|condition|send";
         ||
         if "name(*[last()])!='transition'" {
             |
@@ -671,7 +670,7 @@ tstylesheet {
     }
 
     template "transition" {
-        param "fsm";
+        const "fsm", "ancestor::fsm";
         ||
 
         «$fsm/@name»_SERVICE_LOG("transition to state", "«@target»");
@@ -679,26 +678,22 @@ tstylesheet {
         ||
     }
 
-    template "action" {
-        param "protocol";
-        param "fsm";
-        choose {
-            when "starts-with(@name, 'send')" {
-                const "name", "substring(@name, 5)";
-                ||
-
-                «$fsm/@name»_SERVICE_LOG("send message", "«$name»");
-                status = send_«$protocol/@name»_message(session, «$fsm/@id», «$fsm/@name»__payload_PR_«yml:mixedCase($name)»);
-                ||
-            }
-            otherwise
-                ||
-
-                «$fsm/@name»_SERVICE_LOG("do action", "«@name»");
-                status = «@name»(session);
-                ||
-        }
+    template "send" {
+        const "fsm", "ancestor::fsm";
+        const "protocol", "ancestor::protocol";
         ||
+
+        «$fsm/@name»_SERVICE_LOG("send message", "«@name»");
+        status = send_«$protocol/@name»_message(session, «$fsm/@id», «$fsm/@name»__payload_PR_«yml:mixedCase(@name)»);
+        ||
+    }
+
+    template "action" {
+        const "fsm", "ancestor::fsm";
+        ||
+
+        «$fsm/@name»_SERVICE_LOG("do action", "«@name»");
+        status = «@name»(session);
         if (status) {
             «$fsm/@name»_ERR_LOG_HEX("executing action «@name»() failed", status);
             return invalid_action;
@@ -707,8 +702,7 @@ tstylesheet {
     }
 
     template "condition" {
-        param "protocol";
-        param "fsm";
+        const "fsm", "ancestor::fsm";
         ||
 
         status = «@name»(session, &result);
@@ -719,8 +713,7 @@ tstylesheet {
         if (result) {
             «$fsm/@name»_SERVICE_LOG("condition applies", "«@name»");
         ||
-            apply "transition|action|condition"
-                with "protocol", "$protocol", with "fsm", "$fsm";
+        apply "transition|action|condition|send";
         | }
     }
 }
