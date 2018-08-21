@@ -14,48 +14,6 @@
 static void *gpgme;
 static struct gpg_s gpg;
 
-// typedef struct _pep_gpgme_val_list {
-//     gpgme_conf_arg_t type;
-//     void* value;
-//     _pep_gpgme_val_list* next;
-// } pep_gpgme_val_list_t;
-// 
-// static pep_gpgme_val_list_t* new_pep_conf_val(gpgme_conf_arg_t type,
-//                                                 void* value) {
-//     pep_gpgme_val_list_t* retval = calloc(1, sizeof(pep_gpgme_val_list_t));
-//     if (!retval)
-//         return NULL;
-//     retval->type = type;
-//     retval->value = value;
-//     return retval;    
-// }
-// 
-// static pep_gpgme_val_list_t* add_pep_conf_val(pep_gpgme_val_list_t* list, 
-//                                               gpgme_conf_arg_t type,
-//                                               void* value) {
-//     pep_gpgme_val_list_t* newnode = new_pep_conf_val(type, value);
-//     if (!newnode)
-//         return NULL;
-// 
-//     if (list) {
-//         pep_gpgme_val_list_t** last_next = &(list->next);
-//         while (*last_next)
-//             last_next = &((*last_next)->next);
-// 
-//         *last_next = new_node;
-//     }
-//     return newnode; 
-// }
-
-// // the lists are never long, so this should be fine.
-// static void free_pep_conf_val_list(pep_gpgme_val_list_t* head) {
-//     if (head) {
-//         free_pep_conf_val_list(head->next);
-//         free(value);
-//         free(head);
-//     }
-// }
-
 bloblist_t* make_conf_val(gpgme_conf_type_t type, const void* value) {    
     char* strval = NULL;
     void* otherval = NULL;
@@ -91,13 +49,13 @@ static bool ensure_config_values(PEP_SESSION session,
                                  stringlist_t *keys, 
                                  bloblist_t *values)
 {    
-    gpgme_conf_comp_t curr_conf = configs;
+    gpgme_conf_comp_t curr_conf;
     gpgme_conf_opt_t opt;
     gpgme_error_t gpgme_error;
     stringlist_t *_k;
     bloblist_t *_v;
      
-    while (curr_conf) {
+    for (curr_conf = configs; curr_conf; curr_conf = curr_conf->next) {
         if (strcmp(curr_conf->name, conf_name) == 0) {
             for (_k = keys, _v = values; _k != NULL; _k = _k->next, _v = _v->next) {
                 for (opt = curr_conf->options; opt; opt = opt->next) {
@@ -522,7 +480,25 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         gpg.gpgme_set_locale (NULL, LC_MESSAGES, setlocale(LC_MESSAGES, NULL));
 #endif
 
-        // Set up gpg and gpg-agent configs
+    }
+
+    gpg.gpgme_check(NULL);
+    gpgme_error = gpg.gpgme_new(&session->ctx);
+    gpgme_error = _GPGERR(gpgme_error);
+    if (gpgme_error != GPG_ERR_NO_ERROR) {
+        status = PEP_INIT_GPGME_INIT_FAILED;
+        goto pep_error;
+    }
+    assert(session->ctx);
+
+    gpgme_error = gpg.gpgme_set_protocol(session->ctx, GPGME_PROTOCOL_OpenPGP);
+    gpgme_error = _GPGERR(gpgme_error);
+    assert(gpgme_error == GPG_ERR_NO_ERROR);
+
+    gpg.gpgme_set_armor(session->ctx, 1);
+
+    // Set up gpg and gpg-agent configs
+    if (in_first) {
         gpgme_conf_comp_t configs; 
 
         gpgme_error = gpg.gpgme_op_conf_load(session->ctx, &configs);
@@ -602,20 +578,6 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         }
     }
 
-    gpg.gpgme_check(NULL);
-    gpgme_error = gpg.gpgme_new(&session->ctx);
-    gpgme_error = _GPGERR(gpgme_error);
-    if (gpgme_error != GPG_ERR_NO_ERROR) {
-        status = PEP_INIT_GPGME_INIT_FAILED;
-        goto pep_error;
-    }
-    assert(session->ctx);
-
-    gpgme_error = gpg.gpgme_set_protocol(session->ctx, GPGME_PROTOCOL_OpenPGP);
-    gpgme_error = _GPGERR(gpgme_error);
-    assert(gpgme_error == GPG_ERR_NO_ERROR);
-
-    gpg.gpgme_set_armor(session->ctx, 1);
 
     return PEP_STATUS_OK;
 
