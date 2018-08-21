@@ -71,6 +71,9 @@ src/Sync_event.c
 src/Sync_event.h
 src/Sync_codec.c
 src/Sync_codec.h
+src/Sync_actions.c
+src/Sync_impl.c
+src/Sync_impl.h
 asn.1/keysync.asn1
 asn.1/sync.asn1
 sync/.codecs
@@ -79,4 +82,5 @@ sync/.actions
 sync/.codegen
 sync/.statemachines
 test/msg_2.0.asc
+test/*Tests
 
