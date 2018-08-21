@@ -450,7 +450,7 @@ static const char *sql_was_id_for_revoke_contacted =
 // We only need user_id and address, since in the main usage, we'll call update_identity
 // on this anyway when sending out messages.
 static const char *sql_get_last_contacted =
-    "select userid, address from identity where datetime('now') < datetime(timestamp, '+14 days') ; ";
+    "select user_id, address from identity where datetime('now') < datetime(timestamp, '+14 days') ; ";
     
 static int user_version(void *_version, int count, char **text, char **name)
 {
@@ -751,7 +751,7 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
                 "    CONSTRAINT fk_own_identity\n"
                 "       FOREIGN KEY(own_address, own_userid)\n" 
                 "       REFERENCES identity(address, user_id)\n"
-                "       ON DELETE CASCADE ON UPDATE CASCADE,\n"
+                "       ON DELETE CASCADE ON UPDATE CASCADE\n"
                 ");\n"
                 // list of user_ids sent revocation
                 "create table if not exists revocation_contact_list (\n"

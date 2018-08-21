@@ -3777,6 +3777,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     assert(status != PEP_STATUS_OK); // FIXME: FOR DEBUGGING ONLY DO NOT LEAVE IN    
     if (status != PEP_STATUS_OK) {
         // This should really never choke unless the DB is broken.
+        status = PEP_UNKNOWN_DB_ERROR;
+        goto pep_error;
     }
     
     stringpair_list_t* curr_pair_node;
@@ -3803,10 +3805,18 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 goto pep_error;
             }
             // insert into queue
-            int result = session->sync_session->inject_sync_msg(reset_msg, 
-                                                                session->sync_session->sync_management);
+            if (session->messageToSend) {
+                status = session->messageToSend(session->sync_obj, reset_msg);
+            } 
+            else if (session->sync_session->messageToSend) {
+                status = session->sync_session->messageToSend(session->sync_session->sync_obj, 
+                                                              reset_msg); 
+            }
+            else {
+                status = PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
+            }
 
-            if (result == 0) {    
+            if (status == PEP_STATUS_OK) {    
                 // Put into notified DB
                 status = set_reset_contact_notified(session, curr_pair->key, msg->from->user_id);
                 if (status != PEP_STATUS_OK) // It's ok to barf because it's a DB problem??
@@ -3814,12 +3824,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             }
             else {
                 // According to Volker, this would only be a fatal error, so...
-                status = PEP_SYNC_INJECT_FAILED; // FIXME: see what can happen here
+                free_message(reset_msg); // ??
+                reset_msg = NULL; // ??
                 goto pep_error;
             }
-        
-            free_message(reset_msg);
-            reset_msg = NULL;
         }
     }
     
