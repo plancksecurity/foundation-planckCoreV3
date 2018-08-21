@@ -11,6 +11,8 @@
 
 void test_init();
 
+bool file_exists(std::string filename);
+
 // string equality (case and non-case sensitive)
 bool _streq(const char* str1, const char* str2);
 bool _strceq(const char* str1, const char* str2);
