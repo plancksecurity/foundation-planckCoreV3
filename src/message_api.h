@@ -68,7 +68,7 @@ typedef unsigned int PEP_encrypt_flags_t;
 //                                      attached to it
 //
 //  caveat:
-//      the ownershop of src remains with the caller
+//      the ownership of src remains with the caller
 //      the ownership of dst goes to the caller
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,

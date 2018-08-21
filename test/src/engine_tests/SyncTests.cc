@@ -35,6 +35,7 @@ public:
         adapter->q.push_front(ev);
         return 0;
     }
+
     static Sync_event_t *retrieve_next_sync_event(void *management)
     {
         auto adapter = static_cast< Sync_Adapter *>(management);

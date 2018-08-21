@@ -17,77 +17,80 @@ tstylesheet {
     function "pEp_imports"
         | IMPORTS Identity, IdentityList, TID, Hash FROM PEP;
 
+    function "header"
+    ||
+    -- This file is under BSD License 2.0
+
+    -- «@name» protocol for p≡p
+    -- Copyright (c) 2016-2018 p≡p foundation
+
+    -- Written by Volker Birk
+
+    ||
+
     template "/" {
         apply "protocol", 0, mode=overview;
         apply "protocol/fsm", 0, mode=individual;
     }
 
     template "protocol", mode=overview
-        document "generated/{yml:lcase(@name)}.asn1", "text"
-    ||
-    -- This file is under BSD License 2.0
+        document "generated/{yml:lcase(@name)}.asn1", "text" {
 
-    -- «@name» protocol stack for p≡p
-    -- Copyright (c) 2016, 2017 p≡p foundation
+        call "header";
+        ||
+        «yml:ucase(@name)»
+            { iso(1) org(3) dod(6) internet(1) private(4) enterprise(1) pEp(47878) «yml:lcase(@name)»(«@id») }
 
-    -- Written by Volker Birk
+        DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
 
-    «yml:ucase(@name)»
-        { iso(1) org(3) dod(6) internet(1) private(4) enterprise(1) pEp(47878) «yml:lcase(@name)»(«@id») }
+        BEGIN
 
-    DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
+        `` for "fsm" | IMPORTS «@name» FROM «yml:ucase(@name)»;
 
-    BEGIN
+        «@name» ::= CHOICE {
+            `` for "fsm" |> «yml:lcase(@name)» [APPLICATION «@id»] «@name»`if "position()!=last()" > , `
+        }
 
-    `` for "fsm" | IMPORTS «@name» FROM «yml:ucase(@name)»;
+        END
 
-    «@name» ::= CHOICE {
-        `` for "fsm" |> «yml:lcase(@name)» [APPLICATION «@id»] «@name»`if "position()!=last()" > , `
+        ||
     }
-
-    END
-
-    ||
 
     template "fsm", mode=individual
-        document "generated/{yml:lcase(@name)}.asn1", "text"
-    ||
-    -- This file is under BSD License 2.0
+        document "generated/{yml:lcase(@name)}.asn1", "text" {
 
-    -- «@name» protocol for p≡p version «version/@major».«version/@minor»
-    -- Copyright (c) 2016, 2017 p≡p foundation
+        call "header";
+        ||
+        «yml:ucase(@name)»
+            { iso(1) org(3) dod(6) internet(1) private(4) enterprise(1) pEp(47878) «yml:lcase(../@name)»(«../@id») «yml:lcase(@name)»(«@id») }
 
-    -- Written by Volker Birk
+        DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
 
-    «yml:ucase(@name)»
-        { iso(1) org(3) dod(6) internet(1) private(4) enterprise(1) pEp(47878) «yml:lcase(../@name)»(«../@id») «yml:lcase(@name)»(«@id») }
+        BEGIN
 
-    DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
+        EXPORTS «@name»;
+        `` call "pEp_imports"
 
-    BEGIN
-
-    EXPORTS «@name»;
-    `` call "pEp_imports"
-
-    Version ::= SEQUENCE {
-        major INTEGER (0..255) DEFAULT «version/@major»,
-        minor INTEGER (0..255) DEFAULT «version/@minor»
-    }
-
-    `` apply "message", 0, mode=impl;
-    «@name» ::= SEQUENCE {
-        header SEQUENCE {
-            sequence INTEGER  -- always increases
-        },
-
-        payload CHOICE {
-        `` for "message" |>> «yml:mixedCase(@name)» [APPLICATION «@id»] «@name»`if "position()!=last()" > ,`
+        Version ::= SEQUENCE {
+            major INTEGER (0..255) DEFAULT «version/@major»,
+            minor INTEGER (0..255) DEFAULT «version/@minor»
         }
+
+        `` apply "message", 0, mode=impl;
+        «@name» ::= SEQUENCE {
+            header SEQUENCE {
+                sequence INTEGER  -- always increases
+            },
+
+            payload CHOICE {
+            `` for "message" |>> «yml:mixedCase(@name)» [APPLICATION «@id»] «@name»`if "position()!=last()" > ,`
+            }
+        }
+
+        END
+
+        ||
     }
-
-    END
-
-    ||
 
     template "message", mode=impl
     ||
