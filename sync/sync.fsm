@@ -309,7 +309,9 @@ protocol Sync 1 {
         external Reject 31;
         external Cancel 32;
 
-        message Beacon 2 {
+        // beacons are always broadcasted
+
+        message Beacon 2, type=broadcast {
             field TID challenge;
             auto Version version;
         }
