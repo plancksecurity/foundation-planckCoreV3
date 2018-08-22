@@ -335,6 +335,7 @@ tstylesheet {
 
             char *data = NULL;
             message *m = NULL;
+            identity_list *channels = NULL;
 
             status = update_«@name»_message(session, msg);
             if (status)
@@ -345,19 +346,56 @@ tstylesheet {
             if (status)
                 goto the_end;
 
-            status = base_prepare_message(
-                    session->«yml:lcase(@name)»_state.common.from,
-                    session->«yml:lcase(@name)»_state.common.from,
-                    data,
-                    size,
-                    &m
-                );
-            if (status)
-                goto the_end;
-            
-            status = session->messageToSend(session->«yml:lcase(@name)»_obj, m);
+            switch (message_type) {
+                // these messages are broadcasted
+                `` for "fsm/message[@type='broadcast']" |>> case «@name»:
+                    status = _own_identities_retrieve(session, &channels, PEP_idf_not_for_sync);
+                    if (!status)
+                        goto the_end;
+                    break;
+
+                // all other go unicast
+                default: {
+                    if (!(session->«yml:lcase(@name)»_state.common.from &&
+                        (session->«yml:lcase(@name)»_state.common.from->flags &
+                        PEP_idf_not_for_sync)))
+                    {
+                        status = PEP_SYNC_NO_CHANNEL;
+                        goto the_end;
+                    }
+
+                    pEp_identity *channel = identity_dup(session->«yml:lcase(@name)»_state.common.from);
+                    if (!channel) {
+                        status = PEP_OUT_OF_MEMORY;
+                        goto the_end;
+                    }
+
+                    channels = new_identity_list(channel);
+                    if (!channels) {
+                        status = PEP_OUT_OF_MEMORY;
+                        goto the_end;
+                    }
+                }
+            }
+
+            for (identity_list *li = channels; li && li->ident ; li = li->next) {
+                status = base_prepare_message(
+                        li->ident,
+                        li->ident,
+                        data,
+                        size,
+                        &m
+                    );
+                if (status)
+                    goto the_end;
+                
+                status = session->messageToSend(session->«yml:lcase(@name)»_obj, m);
+                free_message(m);
+                m = NULL;
+            }
 
         the_end:
+            free_identity_list(channels);
             free_message(m);
             free(data);
             free_«@name»_message(msg);

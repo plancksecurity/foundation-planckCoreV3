@@ -42,7 +42,6 @@ decl action @name, do is action;
 // send network messages
 
 decl send @name (type="unicast");
-decl broadcast @name (type="broadcast") alias send;
 
 // a condition is for different cases
 

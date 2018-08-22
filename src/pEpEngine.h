@@ -91,6 +91,7 @@ typedef enum {
     PEP_SYNC_NO_NOTIFY_CALLBACK                     = 0x0901,
     PEP_SYNC_ILLEGAL_MESSAGE                        = 0x0902,
     PEP_SYNC_NO_INJECT_CALLBACK                     = 0x0903,
+    PEP_SYNC_NO_CHANNEL                             = 0x0904,
 
     PEP_CANNOT_INCREASE_SEQUENCE                    = 0x0971,
 
