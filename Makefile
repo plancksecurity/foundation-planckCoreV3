@@ -44,6 +44,11 @@ clean:
 	$(MAKE) -C asn.1 clean
 	rm -rf test_home
 
+.PHONY: tags
+tags:
+	$(MAKE) -C asn.1 tags
+	$(MAKE) -C src tags
+
 .PHONY: test
 test: all
 	$(MAKE) -C test test
