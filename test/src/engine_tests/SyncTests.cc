@@ -10,6 +10,7 @@
 
 #include "pEp_internal.h"
 #include "KeySync_fsm.h"
+#include "Sync_codec.h"
 
 #include "EngineTestSessionSuite.h"
 #include "SyncTests.h"
@@ -55,8 +56,17 @@ public:
 
     static PEP_STATUS messageToSend(void *obj, struct _message *msg)
     {
-        assert(msg);
-        cout << "messageToSend\n";
+        assert(msg && msg->attachments && msg->attachments->value && msg->attachments->size);
+        
+        cout << "sending message:\n";
+
+        char *text = NULL;
+        PEP_STATUS status = PER_to_XER_Sync_msg(msg->attachments->value, msg->attachments->size, &text);
+        assert(status == PEP_STATUS_OK);
+        cout << text << "\n";
+
+        free(text);
+        free_message(msg);
         return PEP_STATUS_OK;
     }
 
@@ -82,6 +92,15 @@ void SyncTests::check_sync()
 
     PEP_STATUS status = init(&sync, Sync_Adapter::messageToSend);
     TEST_ASSERT(status == PEP_STATUS_OK);
+
+    pEp_identity *self = new_identity("alice@synctests.pep", nullptr, "23", "Alice Miller");
+    assert(self);
+    cout << "setting own identity for " << self->address << "\n";
+    status = myself(session, self);
+    assert(self->me);
+    assert(self->fpr);
+    cout << "fpr: " << self->fpr << "\n";
+    free_identity(self);
 
     status = register_sync_callbacks(
             sync,
