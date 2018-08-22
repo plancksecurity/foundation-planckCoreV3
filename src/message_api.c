@@ -3206,6 +3206,7 @@ PEP_STATUS check_for_own_revoked_key(
         
         switch (status) {
             case PEP_CANNOT_FIND_IDENTITY:
+                status = PEP_STATUS_OK;
                 continue;
             case PEP_STATUS_OK:
         
@@ -3774,7 +3775,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     stringpair_list_t* revoke_replace_pairs = NULL;
     status = check_for_own_revoked_key(session, _keylist, &revoke_replace_pairs);
 
-    assert(status != PEP_STATUS_OK); // FIXME: FOR DEBUGGING ONLY DO NOT LEAVE IN    
+    //assert(status != PEP_STATUS_OK); // FIXME: FOR DEBUGGING ONLY DO NOT LEAVE IN    
     if (status != PEP_STATUS_OK) {
         // This should really never choke unless the DB is broken.
         status = PEP_UNKNOWN_DB_ERROR;
