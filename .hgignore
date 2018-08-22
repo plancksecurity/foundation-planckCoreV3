@@ -67,3 +67,4 @@ test/local
 .tags
 */.tags
 */*/.tags
+test/*Tests
