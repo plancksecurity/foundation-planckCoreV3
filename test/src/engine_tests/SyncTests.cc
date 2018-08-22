@@ -89,9 +89,7 @@ void SyncTests::check_sync()
     Sync_Adapter adapter;
     PEP_SESSION sync = NULL;
     thread *sync_thread;
-
-    PEP_STATUS status = init(&sync, Sync_Adapter::messageToSend);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    PEP_STATUS status = PEP_STATUS_OK;
 
     pEp_identity *self = new_identity("alice@synctests.pep", nullptr, "23", "Alice Miller");
     assert(self);
@@ -101,6 +99,9 @@ void SyncTests::check_sync()
     assert(self->fpr);
     cout << "fpr: " << self->fpr << "\n";
     free_identity(self);
+
+    status = init(&sync, Sync_Adapter::messageToSend);
+    TEST_ASSERT(status == PEP_STATUS_OK);
 
     status = register_sync_callbacks(
             sync,

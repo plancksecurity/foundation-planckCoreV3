@@ -117,10 +117,12 @@ tstylesheet {
                 return PEP_ILLEGAL_VALUE;
 
             *msg = NULL;
-            uper_decode_complete(NULL, &asn_DEF_«@name», (void **) &msg, data, size);
-            if (!msg)
+            «@name»_t *_msg = NULL;
+            uper_decode_complete(NULL, &asn_DEF_«@name», (void **) &_msg, data, size);
+            if (!_msg)
                 return PEP_«yml:ucase(@name)»_ILLEGAL_MESSAGE;
 
+            *msg = _msg;
             return PEP_STATUS_OK;
         }
 

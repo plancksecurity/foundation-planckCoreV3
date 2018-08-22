@@ -350,7 +350,7 @@ tstylesheet {
                     // these messages are being broadcasted
                     `` for "fsm/message[@type='broadcast']" |>> case «../@name»__payload_PR_«yml:lcase(@name)»:
                         status = _own_identities_retrieve(session, &channels, PEP_idf_not_for_«yml:lcase(@name)»);
-                        if (!status)
+                        if (status)
                             goto the_end;
 
                         if (!(channels && channels->ident)) {
@@ -407,9 +407,9 @@ tstylesheet {
                         );
                     if (status)
                         goto the_end;
-                    
+                    data = NULL;
+
                     status = session->messageToSend(session->«yml:lcase(@name)»_obj, m);
-                    free_message(m);
                     m = NULL;
                 }
 
