@@ -356,9 +356,9 @@ tstylesheet {
 
                 // all other go unicast
                 default: {
-                    if (!(session->«yml:lcase(@name)»_state.common.from &&
+                    if (!session->«yml:lcase(@name)»_state.common.from `> |`|
                         (session->«yml:lcase(@name)»_state.common.from->flags &
-                        PEP_idf_not_for_sync)))
+                        PEP_idf_not_for_sync))
                     {
                         status = PEP_SYNC_NO_CHANNEL;
                         goto the_end;
