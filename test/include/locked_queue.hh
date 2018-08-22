@@ -52,5 +52,10 @@ namespace utility
             lock_guard<mutex> lg(_mtx);
             return _q.size();
         }
+        bool empty()
+        {
+            lock_guard<mutex> lg(_mtx);
+            return _q.empty();
+        }
     };
 };

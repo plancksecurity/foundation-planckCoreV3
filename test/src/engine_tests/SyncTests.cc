@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <string>
+#include <thread>
 
 #include "pEpEngine.h"
 #include "sync_api.h"
@@ -41,13 +42,29 @@ public:
     static Sync_event_t *retrieve_next_sync_event(void *management)
     {
         auto adapter = static_cast< Sync_Adapter *>(management);
-        return adapter->q.pop_front();
+        while (adapter->q.empty()) {
+            sleep(1);
+        }
+        Sync_event_t *result = adapter->q.pop_front();
+        if (result)
+            cout << "retrieving sync event\n";
+        else
+            cout << "retrieving shutdown\n";
+        return result;
     }
 
     static PEP_STATUS messageToSend(void *obj, struct _message *msg)
     {
         assert(msg);
+        cout << "messageToSend\n";
         return PEP_STATUS_OK;
+    }
+
+    static void sync_thread(PEP_SESSION session, Sync_Adapter *adapter)
+    {
+        cout << "sync_thread: startup\n";
+        do_sync_protocol(session, adapter);
+        cout << "sync_thread: shutdown\n";
     }
 };
 
@@ -61,6 +78,7 @@ void SyncTests::check_sync()
 {
     Sync_Adapter adapter;
     PEP_SESSION sync = NULL;
+    thread *sync_thread;
 
     PEP_STATUS status = init(&sync, Sync_Adapter::messageToSend);
     TEST_ASSERT(status == PEP_STATUS_OK);
@@ -73,8 +91,14 @@ void SyncTests::check_sync()
             Sync_Adapter::retrieve_next_sync_event
         );
     TEST_ASSERT(status == PEP_STATUS_OK);
-
     TEST_ASSERT(sync->sync_state.keysync.state == Sole);
+
+    cout << "creating thread for sync\n";
+    sync_thread = new thread(Sync_Adapter::sync_thread, sync, &adapter);
+ 
+    cout << "sending shutdown to sync thread\n";
+    adapter.q.push_front(nullptr);
+    sync_thread->join();
 
     unregister_sync_callbacks(sync);
     release(sync);
