@@ -29,8 +29,6 @@ protocol Sync 1 {
 
         state Sole {
             on Init {
-                do closeHandshakeDialog;
-                do clearState;
                 do openChallenge; // own challenge
                 send Beacon;
             }
@@ -216,11 +214,6 @@ protocol Sync 1 {
         }
 
         state Grouped {
-            on Init {
-                do closeHandshakeDialog;
-                do clearState;
-            }
-
             on GroupKeys
                 do saveGroupKeys;
 

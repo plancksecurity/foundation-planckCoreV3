@@ -96,3 +96,8 @@ install: $(TARGET)
 uninstall:
 	rm -f $(PREFIX)/lib/$(TARGET)
 	rm -rf $(PREFIX)/include/pEp
+
+.PHONY: tags
+tags:
+	ctags *.c *.h
+

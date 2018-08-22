@@ -347,21 +347,26 @@ tstylesheet {
                     goto the_end;
 
                 switch (message_type) {
-                    // these messages are broadcasted
-                    `` for "fsm/message[@type='broadcast']" |>> case «@name»:
-                        status = _own_identities_retrieve(session, &channels, PEP_idf_not_for_sync);
+                    // these messages are being broadcasted
+                    `` for "fsm/message[@type='broadcast']" |>> case «../@name»__payload_PR_«yml:lcase(@name)»:
+                        status = _own_identities_retrieve(session, &channels, PEP_idf_not_for_«yml:lcase(@name)»);
                         if (!status)
                             goto the_end;
+
+                        if (!(channels && channels->ident)) {
+                            status = PEP_«yml:ucase(@name)»_NO_CHANNEL;
+                            goto the_end;
+                        }
                         break;
 
                     // all other go anycast; previously used address is sticky (unicast)
                     default: {
                         if (!session->«yml:lcase(@name)»_state.common.from `> |`|
                             (session->«yml:lcase(@name)»_state.common.from->flags &
-                            PEP_idf_not_for_sync)) {
+                            PEP_idf_not_for_«yml:lcase(@name)»)) {
 
                             // no address available yet, try to find one
-                            status = _own_identities_retrieve(session, &channels, PEP_idf_not_for_sync);
+                            status = _own_identities_retrieve(session, &channels, PEP_idf_not_for_«yml:lcase(@name)»);
                             if (!status)
                                 goto the_end;
                             break;
@@ -372,7 +377,7 @@ tstylesheet {
                                 channels->next = NULL;
                             }
                             else {
-                                status = PEP_SYNC_NO_CHANNEL;
+                                status = PEP_«yml:ucase(@name)»_NO_CHANNEL;
                                 goto the_end;
                             }
                         }

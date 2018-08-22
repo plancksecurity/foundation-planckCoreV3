@@ -56,18 +56,6 @@ condition keyElectionWon
 
 // action: PEP_STATUS «@name»(PEP_SESSION session)
 
-action closeHandshakeDialog
-||
-    assert(session->notifyHandshake);
-    if (!session->notifyHandshake)
-        return PEP_SYNC_NO_NOTIFY_CALLBACK;
-
-    PEP_STATUS status = session->notifyHandshake(
-            session->sync_management, NULL, NULL, SYNC_NOTIFY_OVERTAKEN);
-    if (status)
-        return status;
-||
-
 function "new_UUID" {
     param "dst";
     ||
@@ -91,9 +79,6 @@ function "copy_UUID" {
         OCTET_STRING_fromBuf(dst, (char *) src->buf, src->size);
     ||
 }
-
-action clearState
-    |> free_Sync_state(session);
 
 action openChallenge
     call "new_UUID" with "dst" > &session->own_sync_state.challenge
