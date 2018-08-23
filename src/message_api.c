@@ -7,7 +7,7 @@
 #include "platform.h"
 #include "mime.h"
 #include "blacklist.h"
-#include "Sync_impl.h"
+#include "KeySync_fsm.h"
 
 #include <assert.h>
 #include <string.h>

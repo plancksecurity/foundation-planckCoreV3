@@ -124,8 +124,8 @@ tstylesheet {
             #pragma once
 
             #include "fsm_common.h"
-            #include "message_api.h"
             #include "«@name»_event.h"
+            #include "message_api.h"
             
             #ifdef __cplusplus
             extern "C" {
@@ -179,8 +179,8 @@ tstylesheet {
                     int event
                 );
             
-            // call this if you are a transport and are receiving a sync
-            // message
+            // call this if you are a transport and are receiving
+            // a «@name» message
 
             PEP_STATUS signal_«@name»_message(
                     PEP_SESSION session, 
