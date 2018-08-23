@@ -10,13 +10,6 @@ include ./fsm.yml2
 protocol Sync 1 {
     // all messages have a timestamp, time out and are removed after timeout
 
-    unencrypted sendBeacon;
-    acceptUnencrypted Beacon;
-
-    acceptUntrusted HandshakeRequest;
-    acceptUntrusted Rollback;
-    acceptUntrusted CommitReject;
-
     fsm KeySync 1 {
         version 1, 2;
         state InitState {
@@ -304,12 +297,12 @@ protocol Sync 1 {
 
         // beacons are always broadcasted
 
-        message Beacon 2, type=broadcast {
+        message Beacon 2, type=broadcast, security=unencrypted {
             field TID challenge;
             auto Version version;
         }
 
-        message HandshakeRequest 3 {
+        message HandshakeRequest 3, security=untrusted {
             field TID challenge;
             auto Version version;
             field TID transaction;
@@ -322,11 +315,11 @@ protocol Sync 1 {
             field Hash fpr;
         }
 
-        message Rollback 5 {
+        message Rollback 5, security=untrusted {
             field TID transaction;
         }
 
-        message CommitReject 6 {
+        message CommitReject 6, security=untrusted {
             field TID transaction;
         }
 

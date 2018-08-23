@@ -56,16 +56,20 @@ public:
 
     static PEP_STATUS messageToSend(void *obj, struct _message *msg)
     {
-        assert(msg && msg->attachments && msg->attachments->value && msg->attachments->size);
+        assert(msg && msg->attachments);
         
         cout << "sending message:\n";
 
-        char *text = NULL;
-        PEP_STATUS status = PER_to_XER_Sync_msg(msg->attachments->value, msg->attachments->size, &text);
-        assert(status == PEP_STATUS_OK);
-        cout << text << "\n";
+        for (bloblist_t *b = msg->attachments; b && b->value; b = b->next) {
+            if (b->mime_type && strcasecmp(b->mime_type, "application/pEp.sync") == 0) {
+                char *text = NULL;
+                PEP_STATUS status = PER_to_XER_Sync_msg(msg->attachments->value, msg->attachments->size, &text);
+                assert(status == PEP_STATUS_OK);
+                cout << text << "\n";
+                free(text);
+            }
+        }
 
-        free(text);
         free_message(msg);
         return PEP_STATUS_OK;
     }
@@ -91,7 +95,7 @@ void SyncTests::check_sync()
     thread *sync_thread;
     PEP_STATUS status = PEP_STATUS_OK;
 
-    pEp_identity *self = new_identity("alice@synctests.pep", nullptr, "23", "Alice Miller");
+    pEp_identity *self = new_identity("alice@synctests.pEp", nullptr, "23", "Alice Miller");
     assert(self);
     cout << "setting own identity for " << self->address << "\n";
     status = myself(session, self);
@@ -103,6 +107,7 @@ void SyncTests::check_sync()
     status = init(&sync, Sync_Adapter::messageToSend);
     TEST_ASSERT(status == PEP_STATUS_OK);
 
+    cout << "initialize sync and start first state machine\n";
     status = register_sync_callbacks(
             sync,
             &adapter.q,
