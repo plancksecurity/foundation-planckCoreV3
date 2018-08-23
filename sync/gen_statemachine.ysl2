@@ -738,12 +738,9 @@ tstylesheet {
         ||
                 `` apply "event", 2, mode=fsm
                 default:
-                    // ignore extra events, which are coming while in wrong state
-                    if (event > «../@name»_event_Extra)
-                        break;
-
-                    «../@name»_ERR_LOG_INT("invalid event", event);
-                    return invalid_event;
+                    // ignore events not handled here
+                    «../@name»_SERVICE_LOG("ignoring event", KeySync_event_name(event));
+                    break;
             }
             break;
 
