@@ -96,14 +96,14 @@ int main(int argc, char* argv[])
     PEP_SESSION session;
 
     cout << "calling init()\n";
-    PEP_STATUS init_result = init(&session, NULL);
+    PEP_STATUS init_result = init(&session, NULL, NULL);
     
     cout << "returning from init() with result == " << status(init_result) << endl;
     assert(init_result == PEP_STATUS_OK);
 
     PEP_SESSION second_session;
     cout << "second session test\n";
-    PEP_STATUS second_init_result = init(&second_session, NULL);
+    PEP_STATUS second_init_result = init(&second_session, NULL, NULL);
     cout << "returning from second init() with result == " << status(second_init_result) << endl;
     assert(second_init_result == PEP_STATUS_OK);
     assert(second_session);

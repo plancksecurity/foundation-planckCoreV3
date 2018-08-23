@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     PEP_SESSION session;
     
     cout << "calling init()\n";
-    PEP_STATUS status = init(&session);
+    PEP_STATUS status = init(&session, NULL, NULL);
     assert(status == PEP_STATUS_OK);
     assert(session);
     cout << "init() completed.\n";

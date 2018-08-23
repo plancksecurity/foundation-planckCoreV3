@@ -74,21 +74,6 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
     );
 
 
-struct Sync_event;
-typedef struct Sync_event *SYNC_EVENT;
-
-// inject_sync_event - inject sync protocol message
-//
-//  parameters:
-//      ev (in)             event to inject
-//      management (in)     application defined; usually a locked queue
-//
-//  return value:
-//      0 if event could be stored successfully or nonzero otherwise
-
-typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
-
-
 // retrieve_next_sync_event - receive next sync event
 //
 //  parameters:
@@ -118,7 +103,6 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
         PEP_SESSION session,
         void *management,
         notifyHandshake_t notifyHandshake,
-        inject_sync_event_t inject_sync_event,
         retrieve_next_sync_event_t retrieve_next_sync_event
     );
 

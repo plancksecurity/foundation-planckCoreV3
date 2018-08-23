@@ -104,7 +104,7 @@ void SyncTests::check_sync()
     cout << "fpr: " << self->fpr << "\n";
     free_identity(self);
 
-    status = init(&sync, Sync_Adapter::messageToSend);
+    status = init(&sync, Sync_Adapter::messageToSend, Sync_Adapter::inject_sync_event);
     TEST_ASSERT(status == PEP_STATUS_OK);
 
     cout << "initialize sync and start first state machine\n";
@@ -112,7 +112,6 @@ void SyncTests::check_sync()
             sync,
             &adapter.q,
             Sync_Adapter::notifyHandshake,
-            Sync_Adapter::inject_sync_event,
             Sync_Adapter::retrieve_next_sync_event
         );
     TEST_ASSERT(status == PEP_STATUS_OK);

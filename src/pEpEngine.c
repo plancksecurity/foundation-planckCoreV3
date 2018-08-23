@@ -491,7 +491,8 @@ PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session);
 
 DYNAMIC_API PEP_STATUS init(
         PEP_SESSION *session,
-        messageToSend_t messageToSend
+        messageToSend_t messageToSend,
+        inject_sync_event_t inject_sync_event
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -540,6 +541,7 @@ DYNAMIC_API PEP_STATUS init(
 
     _session->version = PEP_ENGINE_VERSION;
     _session->messageToSend = messageToSend;
+    _session->inject_sync_event = inject_sync_event;
 
 #ifdef DEBUG_ERRORSTACK
     _session->errorstack = new_stringlist("init()");

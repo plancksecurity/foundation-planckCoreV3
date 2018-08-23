@@ -92,6 +92,7 @@ typedef enum {
     PEP_SYNC_ILLEGAL_MESSAGE                        = 0x0902,
     PEP_SYNC_NO_INJECT_CALLBACK                     = 0x0903,
     PEP_SYNC_NO_CHANNEL                             = 0x0904,
+    PEP_SYNC_CANNOT_ENCRYPT                         = 0x0905,
 
     PEP_CANNOT_INCREASE_SEQUENCE                    = 0x0971,
 
@@ -134,24 +135,40 @@ struct _message;
 typedef PEP_STATUS (*messageToSend_t)(void *obj, struct _message *msg);
 
 
+struct Sync_event;
+typedef struct Sync_event *SYNC_EVENT;
+
+// inject_sync_event - inject sync protocol message
+//
+//  parameters:
+//      ev (in)             event to inject
+//      management (in)     application defined; usually a locked queue
+//
+//  return value:
+//      0 if event could be stored successfully or nonzero otherwise
+
+typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
+
+
 // INIT_STATUS init() - initialize pEpEngine for a thread
 //
 //  parameters:
-//        session (out)                     init() allocates session memory and
+//      session (out)                       init() allocates session memory and
 //                                          returns a pointer as a handle
-//        messageToSend (in)                callback for sending message by the
+//      messageToSend (in)                  callback for sending message by the
 //                                          application
+//      inject_sync_event (in)              callback for injecting a sync event
 //
 //  return value:
-//        PEP_STATUS_OK = 0                 if init() succeeds
-//        PEP_INIT_SQLITE3_WITHOUT_MUTEX    if SQLite3 was compiled with
-//                                            SQLITE_THREADSAFE 0
-//        PEP_INIT_CANNOT_LOAD_GPGME        if libgpgme.dll cannot be found
-//        PEP_INIT_GPGME_INIT_FAILED        if GPGME init fails
-//        PEP_INIT_CANNOT_OPEN_DB           if user's management db cannot be
-//                                            opened
-//        PEP_INIT_CANNOT_OPEN_SYSTEM_DB    if system's management db cannot be
-//                                            opened
+//      PEP_STATUS_OK = 0                   if init() succeeds
+//      PEP_INIT_SQLITE3_WITHOUT_MUTEX      if SQLite3 was compiled with
+//                                          SQLITE_THREADSAFE 0
+//      PEP_INIT_CANNOT_LOAD_GPGME          if libgpgme.dll cannot be found
+//      PEP_INIT_GPGME_INIT_FAILED          if GPGME init fails
+//      PEP_INIT_CANNOT_OPEN_DB             if user's management db cannot be
+//                                          opened
+//      PEP_INIT_CANNOT_OPEN_SYSTEM_DB      if system's management db cannot be
+//                                          opened
 //
 //  caveat:
 //      THE CALLER MUST GUARD THIS CALL EXTERNALLY WITH A MUTEX. release()
@@ -169,7 +186,8 @@ typedef PEP_STATUS (*messageToSend_t)(void *obj, struct _message *msg);
 
 DYNAMIC_API PEP_STATUS init(
         PEP_SESSION *session,
-        messageToSend_t messageToSend
+        messageToSend_t messageToSend,
+        inject_sync_event_t inject_sync_event
     );
 
 

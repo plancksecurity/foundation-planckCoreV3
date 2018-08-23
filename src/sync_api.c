@@ -12,17 +12,15 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
         PEP_SESSION session,
         void *management,
         notifyHandshake_t notifyHandshake,
-        inject_sync_event_t inject_sync_event,
         retrieve_next_sync_event_t retrieve_next_sync_event
     )
 {
-    assert(session && management && notifyHandshake && inject_sync_event && retrieve_next_sync_event);
-    if (!(session && management && notifyHandshake && inject_sync_event && retrieve_next_sync_event))
+    assert(session && management && notifyHandshake && retrieve_next_sync_event);
+    if (!(session && management && notifyHandshake && retrieve_next_sync_event))
         return PEP_ILLEGAL_VALUE;
 
     session->sync_management = management;
     session->notifyHandshake = notifyHandshake;
-    session->inject_sync_event = inject_sync_event;
     session->retrieve_next_sync_event = retrieve_next_sync_event;
 
     // start state machine
@@ -36,7 +34,6 @@ DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
     // unregister
     session->sync_management = NULL;
     session->notifyHandshake = NULL;
-    session->inject_sync_event = NULL;
     session->retrieve_next_sync_event = NULL;
 }
 

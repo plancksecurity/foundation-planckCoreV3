@@ -421,8 +421,10 @@ tstylesheet {
 
                         default:
                             status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
-                            if (status)
+                            if (status) {
+                                status = PEP_SYNC_CANNOT_ENCRYPT;
                                 goto the_end;
+                            }
                             free_message(_m);
                     }
 
