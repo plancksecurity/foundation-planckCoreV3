@@ -361,7 +361,6 @@ tstylesheet {
 
                     // these go anycast; previously used address is sticky (unicast)
                     `` for "fsm/message[@type='anycast']" |>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
-                    {
                         if (!session->«yml:lcase(@name)»_state.common.from `> |`|
                             (session->«yml:lcase(@name)»_state.common.from->flags &
                             PEP_idf_not_for_«yml:lcase(@name)»)) {
@@ -395,7 +394,6 @@ tstylesheet {
                                 goto the_end;
                             }
                         }
-                    }
 
                     default:
                         status = PEP_«yml:ucase(@name)»_ILLEGAL_MESSAGE;
@@ -403,16 +401,30 @@ tstylesheet {
                 }
 
                 for (identity_list *li = channels; li && li->ident ; li = li->next) {
+                    message *_m = NULL;
+
                     status = base_prepare_message(
                             li->ident,
                             li->ident,
                             data,
                             size,
-                            &m
+                            &_m
                         );
                     if (status)
                         goto the_end;
                     data = NULL;
+
+                    switch (message_type) {
+                    `` for "fsm/message[@security='unencrypted']" |>>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+                            m = _m;
+                            break;
+
+                        default:
+                            status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
+                            if (status)
+                                goto the_end;
+                            free_message(_m);
+                    }
 
                     status = session->messageToSend(session->«yml:lcase(@name)»_obj, m);
                     m = NULL;
