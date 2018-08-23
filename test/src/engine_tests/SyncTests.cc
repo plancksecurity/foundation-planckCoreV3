@@ -132,6 +132,11 @@ void SyncTests::setup()
 
 void SyncTests::tear_down()
 {
+    cout << "waiting for processing\n";
+    while (!adapter.q.empty()) {
+        sleep(1);
+    }
+
     cout << "sending shutdown to sync thread\n";
     adapter.q.push_front(nullptr);
     sync_thread->join();
@@ -144,12 +149,10 @@ void SyncTests::tear_down()
 
 void SyncTests::check_sync()
 {
-    cout << "trigger KeyGen event\n";
+    cout << "check_sync(): trigger KeyGen event\n";
     signal_Sync_event(sync, Sync_PR_keysync, KeyGen);
 
-    cout << "waiting for processing\n";
-    while (!adapter.q.empty()) {
-        sleep(1);
-    }
+    cout << "check_sync(): cry for unknown key\n";
+    signal_Sync_event(sync, Sync_PR_keysync, CannotDecrypt);
 }
 

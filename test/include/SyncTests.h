@@ -41,6 +41,7 @@ class SyncTests : public EngineTestSessionSuite {
         Sync_Adapter adapter;
         PEP_SESSION sync = NULL;
         thread *sync_thread;
+
         void check_sync();
 };
 
