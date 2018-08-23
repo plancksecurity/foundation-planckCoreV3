@@ -6,6 +6,7 @@
 #include "cryptotech.h"
 #include "transport.h"
 #include "blacklist.h"
+#include "KeySync_fsm.h"
 
 #include <time.h>
 #include <stdlib.h>
@@ -3188,6 +3189,8 @@ DYNAMIC_API PEP_STATUS generate_keypair(
 
     if (identity->fpr)
         status = set_pgp_keypair(session, identity->fpr);
+
+    signal_Sync_event(session, Sync_PR_keysync, KeyGen);
 
     // add to known keypair DB, as this might not end up being a default
     return status;

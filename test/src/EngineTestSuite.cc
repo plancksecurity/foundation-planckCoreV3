@@ -48,7 +48,7 @@ void EngineTestSuite::set_full_env() {
         struct stat buf;
 
         if (stat(test_home.c_str(), &buf) == 0) {
-            cout << test_home << " exists. We'll recursively delete. We hope we're not horking your whole system..." << endl;
+            cout << test_home << " exists. Deleting..." << endl;
             int success = nftw((test_home + "/.").c_str(), util_delete_filepath, 100, FTW_DEPTH);
         }
     }

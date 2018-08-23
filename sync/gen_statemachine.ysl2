@@ -178,7 +178,7 @@ tstylesheet {
                     int event
                 );
 
-            PEP_STATUS inject_«@name»_event(
+            PEP_STATUS signal_«@name»_event(
                     PEP_SESSION session, 
                     «@name»_PR fsm,
                     int event
@@ -226,7 +226,7 @@ tstylesheet {
                 return PEP_STATUS_OK;
             }
 
-            PEP_STATUS inject_«@name»_event(
+            PEP_STATUS signal_«@name»_event(
                     PEP_SESSION session, 
                     «@name»_PR fsm,
                     int event

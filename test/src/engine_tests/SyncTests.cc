@@ -35,6 +35,8 @@ public:
 
     static int inject_sync_event(SYNC_EVENT ev, void *management)
     {
+        Sync_event_t *_ev = ev;
+        cout << "injecting event " << _ev->event << "\n";
         auto adapter = static_cast< Sync_Adapter *>(management);
         adapter->q.push_front(ev);
         return 0;
