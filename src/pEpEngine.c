@@ -3033,8 +3033,12 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
     if (!(session && ctext && csize && ptext && psize && keylist))
         return PEP_ILLEGAL_VALUE;
 
-    return session->cryptotech[PEP_crypt_OpenPGP].decrypt_and_verify(
+    PEP_STATUS status = session->cryptotech[PEP_crypt_OpenPGP].decrypt_and_verify(
             session, ctext, csize, dsigtext, dsigsize, ptext, psize, keylist);
+    if (status == PEP_DECRYPT_NO_KEY)
+        signal_Sync_event(session, Sync_PR_keysync, CannotDecrypt);
+
+    return status;
 }
 
 DYNAMIC_API PEP_STATUS encrypt_and_sign(

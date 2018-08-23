@@ -45,15 +45,18 @@ public:
     static Sync_event_t *retrieve_next_sync_event(void *management)
     {
         auto adapter = static_cast< Sync_Adapter *>(management);
+
         while (adapter->q.empty()) {
             sleep(1);
         }
-        Sync_event_t *result = adapter->q.pop_front();
-        if (result)
+
+        Sync_event_t *ev = adapter->q.pop_front();
+        if (ev)
             cout << "retrieving sync event\n";
         else
             cout << "retrieving shutdown\n";
-        return result;
+
+        return ev;
     }
 
     static PEP_STATUS messageToSend(void *obj, struct _message *msg)
