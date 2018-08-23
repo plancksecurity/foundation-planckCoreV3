@@ -299,7 +299,16 @@ tstylesheet {
                 if (status)
                     return status;
 
-                «@name»_event_t *ev = new_«@name»_event(None, None, msg);
+                «@name»_event_t *ev = NULL;
+
+                switch (msg->present) {
+                    `` apply "fsm", 2, mode=signal_message
+                    default:
+                        status = PEP_«yml:ucase(@name)»_ILLEGAL_MESSAGE;
+                        goto the_end;
+                }
+
+                ev = new_«@name»_event(None, None, msg);
                 if (!ev) {
                     status = PEP_OUT_OF_MEMORY;
                     goto the_end;
@@ -487,6 +496,40 @@ tstylesheet {
         }
 
         apply "fsm", 0, mode=gen;
+    }
+
+    template "fsm", mode=signal_message
+    {
+        ||
+        case «../@name»_PR_«yml:lcase(@name)»:
+            switch (msg->choice.«yml:lcase(@name)».payload.present) {
+                // these messages are going untested
+        `` for "message[@security='unencrypted']" |>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+                    break;
+
+                // these messages must arrive encrypted
+        `` for "message[@security='untrusted']" |>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+                    if (rating < PEP_rating_reliable) {
+                        status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
+                        goto the_end;
+                    }
+                    break;
+
+                // these messages must come through a trusted channel
+        `` for "message[@security='trusted']" |>> case «ancestor::fsm/@name»__payload_PR_«yml:mixedCase(@name)»:
+                    if (rating < PEP_rating_trusted) {
+                        status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
+                        goto the_end;
+                    }
+                    break;
+
+                default:
+                    status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
+                    goto the_end;
+            }
+            break;
+
+        ||
     }
 
     template "fsm", mode=event
