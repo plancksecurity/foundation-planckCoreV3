@@ -122,6 +122,13 @@ void SyncTests::check_sync()
     cout << "creating thread for sync\n";
     sync_thread = new thread(Sync_Adapter::sync_thread, sync, &adapter);
  
+    cout << "trigger KeyGen event\n";
+    signal_Sync_event(sync, Sync_PR_keysync, KeyGen);
+
+    cout << "waiting for empty queue\n";
+    while (!adapter.q.empty()) {
+        sleep(1);
+    }
     cout << "sending shutdown to sync thread\n";
     adapter.q.push_front(nullptr);
     sync_thread->join();
