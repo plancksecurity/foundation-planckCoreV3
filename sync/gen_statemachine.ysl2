@@ -145,15 +145,6 @@ tstylesheet {
                 | PEP_STATUS «@name»(PEP_SESSION session);
             ||
 
-            // notify state machine from event
-            // use state to generate «@name» message if necessary
-
-            PEP_STATUS «@name»_notify(
-                    PEP_SESSION session, 
-                    «@name»_PR fsm,
-                    int message_type
-                );
-
             // send message about an event to communication partners using state
 
             PEP_STATUS send_«@name»_message(
@@ -178,12 +169,25 @@ tstylesheet {
                     int event
                 );
 
+            // API being used by the engine internally
+
+            // call this if you need to signal an external event
+
             PEP_STATUS signal_«@name»_event(
                     PEP_SESSION session, 
                     «@name»_PR fsm,
                     int event
                 );
+            
+            // call this if you are a transport and are receiving a sync
+            // message
 
+            PEP_STATUS signal_«@name»_message(
+                    PEP_SESSION session, 
+                    PEP_rating rating,
+                    const char *data,
+                    size_t size
+                );
 
             #ifdef __cplusplus
             }
@@ -241,79 +245,77 @@ tstylesheet {
 
                 PEP_STATUS status = PEP_STATUS_OK;
 
-                if (!session->inject_«yml:lcase(@name)»_event) {
-                   status = PEP_«yml:ucase(@name)»_NO_INJECT_CALLBACK;
-                   goto error;
-                }
+                if (!session->inject_«yml:lcase(@name)»_event)
+                   return PEP_«yml:ucase(@name)»_NO_INJECT_CALLBACK;
 
                 if (event < Extra) {
                     msg = new_«@name»_message(fsm, event);
                     if (!msg) {
                         status = PEP_OUT_OF_MEMORY;
-                        goto error;
+                        goto the_end;
                     }
 
                     status = update_«@name»_message(session, msg);
                     if (status)
-                        goto error;
+                        goto the_end;
                 }
 
-                ev = («@name»_event_t *) calloc(1, sizeof(«@name»_event_t));
-                assert(ev);
+                ev = new_«@name»_event(fsm, event, msg);
                 if (!ev) {
                     status = PEP_OUT_OF_MEMORY;
-                    goto error;
+                    goto the_end;
                 }
-                
-                ev->fsm = fsm;
-                ev->event = event;
-                ev->msg = msg;
 
                 int result = session->inject_«yml:lcase(@name)»_event(ev,
                         session->«yml:lcase(@name)»_management);
                 if (result) {
                     status = PEP_STATEMACHINE_ERROR;
-                    goto error;
+                    goto the_end;
                 }
-
-                goto the_end;
-
-            error:
-                free(ev);
-                free_«@name»_message(msg);
+                return PEP_STATUS_OK;
 
             the_end:
+                free_«@name»_event(ev);
+                free_«@name»_message(msg);
                 return status;
             }
 
-            PEP_STATUS «@name»_notify(
+            PEP_STATUS signal_«@name»_message(
                     PEP_SESSION session, 
-                    «@name»_PR fsm,
-                    int message_type
+                    PEP_rating rating,
+                    const char *data,
+                    size_t size
                 )
             {
-                assert(session && fsm > 0 && message_type > 1 && message_type < Extra);
-                if (!(session && fsm > 0 && message_type > 1 && message_type < Extra))
+                assert(session && data && size);
+                if (!(session && data && size))
                     return PEP_ILLEGAL_VALUE;
 
-                PEP_STATUS status = PEP_STATUS_OK;
+                if (!session->inject_«yml:lcase(@name)»_event)
+                   return PEP_«yml:ucase(@name)»_NO_INJECT_CALLBACK;
 
-                «@name»_t *msg = new_«@name»_message(fsm, message_type);
-                if (!msg) {
+                «@name»_t *msg = NULL;
+                PEP_STATUS status = decode_«@name»_message(data, size, &msg);
+                if (status)
+                    return status;
+
+                «@name»_event_t *ev = new_«@name»_event(None, None, msg);
+                if (!ev) {
                     status = PEP_OUT_OF_MEMORY;
-                    goto error;
+                    goto the_end;
                 }
 
-                status = update_«@name»_message(session, msg);
-                if (status)
-                    goto error;
-
-                goto the_end;
-
-            error:
-                free_«@name»_message(msg);
+                int result = session->inject_«yml:lcase(@name)»_event(ev,
+                        session->«yml:lcase(@name)»_management);
+                if (result) {
+                    status = PEP_STATEMACHINE_ERROR;
+                    goto the_end;
+                }
+                return PEP_STATUS_OK;
 
             the_end:
+                free_«@name»_event(ev);
+                free_«@name»_message(msg);
                 return status;
             }
 
@@ -450,39 +452,34 @@ tstylesheet {
                     return PEP_ILLEGAL_VALUE;
 
                 PEP_STATUS status = PEP_STATUS_OK;
+                «@name»_PR fsm = (int) None;
+                int event = None;
 
                 if (ev->event < Extra) {
-                    «@name»_PR fsm = (int) None;
-                    int event = None;
-
                     status = update_«@name»_state(session, ev->msg, &fsm, &event);
                     if (status)
-                        goto error;
+                        goto the_end;
 
                     if (ev->fsm) {
                         if (ev->fsm != fsm |`> |` ev->event != event) {
                             status = PEP_«yml:ucase(@name)»_ILLEGAL_MESSAGE;
-                            goto error;
+                            goto the_end;
                         }
                     }
-                    else {
-                        if (ev->event) {
-                            status = PEP_«yml:ucase(@name)»_ILLEGAL_MESSAGE;
-                            goto error;
-                        }
-                        ev->fsm = fsm;
-                        ev->event = event;
+                    else if (ev->event) {
+                        status = PEP_«yml:ucase(@name)»_ILLEGAL_MESSAGE;
+                        goto the_end;
                     }
                 }
+                else {
+                    fsm = ev->fsm;
+                    event = ev->event;
+                }
 
-                free_«@name»_message(ev->msg);
-                free(ev);
-                status = «@name»_driver(session, ev->fsm, ev->event);
-                return status;
+                status = «@name»_driver(session, fsm, event);
 
-            error:
-                free_«@name»_message(ev->msg);
-                free(ev);
+            the_end:
+                free_«@name»_event(ev);
                 return status;
             }
 

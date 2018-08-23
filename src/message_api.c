@@ -7,6 +7,7 @@
 #include "platform.h"
 #include "mime.h"
 #include "blacklist.h"
+#include "Sync_impl.h"
 
 #include <assert.h>
 #include <string.h>
@@ -3472,7 +3473,16 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_decrypt_flags_t *flags
     )
 {
-    return _decrypt_message( session, src, dst, keylist, rating, flags, NULL );
+    PEP_STATUS status = _decrypt_message(session, src, dst, keylist, rating, flags, NULL);
+
+    if (session->inject_sync_event && *dst && (*dst)->attachments) {
+        for (bloblist_t *bl = (*dst)->attachments; bl ; bl = bl->next) {
+            if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp.sync") == 0)
+                signal_Sync_message(session, *rating, bl->value, bl->size);
+        }
+    }
+
+    return status;
 }
 
 DYNAMIC_API PEP_STATUS own_message_private_key_details(

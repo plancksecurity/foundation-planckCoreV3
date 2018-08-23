@@ -15,6 +15,14 @@
 
 using namespace std;
 
+void Sync_Adapter::processing()
+{
+    cout << "waiting for processing\n";
+    while (!q.empty()) {
+        sleep(1);
+    }
+}
+
 PEP_STATUS Sync_Adapter::notifyHandshake(
         void *obj,
         pEp_identity *me,
@@ -132,10 +140,7 @@ void SyncTests::setup()
 
 void SyncTests::tear_down()
 {
-    cout << "waiting for processing\n";
-    while (!adapter.q.empty()) {
-        sleep(1);
-    }
+    adapter.processing();
 
     cout << "sending shutdown to sync thread\n";
     adapter.q.push_front(nullptr);
@@ -151,6 +156,7 @@ void SyncTests::check_sync()
 {
     cout << "check_sync(): trigger KeyGen event\n";
     signal_Sync_event(sync, Sync_PR_keysync, KeyGen);
+    adapter.processing();
 
     cout << "check_sync(): cry for unknown key\n";
     signal_Sync_event(sync, Sync_PR_keysync, CannotDecrypt);

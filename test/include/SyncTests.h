@@ -17,6 +17,8 @@ class Sync_Adapter {
 public:
     utility::locked_queue< Sync_event_t * > q;
 
+    void processing();
+
     static PEP_STATUS notifyHandshake(
             void *obj,
             pEp_identity *me,
