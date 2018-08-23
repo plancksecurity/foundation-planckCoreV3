@@ -585,6 +585,7 @@ tstylesheet {
         // state machine
 
         const char *«@name»_state_name(int state);
+        const char *«@name»_event_name(int event);
 
         // the state machine function is returning the next state in case of a
         // transition or None for staying
@@ -629,6 +630,25 @@ tstylesheet {
                     return "unknown state";
             }
         }
+
+        const char *«@name»_event_name(int event)
+        {
+            switch (event) {
+                case None:
+                    return "None";
+                case Init:
+                    return "Init";
+        ||
+        for "func:distinctName(state/event[not(@name='Init')])" {
+            |>> case «@name»:
+            |>>> return "«@name»";
+        }
+        ||
+                default:
+                    return "unknown event";
+            }
+        }
+
 
         static char *_str(int n, bool hex)
         {
