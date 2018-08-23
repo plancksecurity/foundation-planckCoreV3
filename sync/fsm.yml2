@@ -41,7 +41,7 @@ decl action @name, do is action;
 
 // send network messages
 
-decl send @name (type="unicast");
+decl send @name;
 
 // a condition is for different cases
 
@@ -50,7 +50,7 @@ decl condition @name, if is condition;
 // some events have messages on the line signalling the event to the
 // communication partner
 
-decl message @name (id);
+decl message @name (id, type="anycast", security="trusted");
 
 // messages can have transmitted fields…
 

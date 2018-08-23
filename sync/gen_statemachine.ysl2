@@ -348,7 +348,7 @@ tstylesheet {
 
                 switch (message_type) {
                     // these messages are being broadcasted
-                    `` for "fsm/message[@type='broadcast']" |>> case «../@name»__payload_PR_«yml:lcase(@name)»:
+                    `` for "fsm/message[@type='broadcast']" |>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
                         status = _own_identities_retrieve(session, &channels, PEP_idf_not_for_«yml:lcase(@name)»);
                         if (status)
                             goto the_end;
@@ -359,8 +359,9 @@ tstylesheet {
                         }
                         break;
 
-                    // all other go anycast; previously used address is sticky (unicast)
-                    default: {
+                    // these go anycast; previously used address is sticky (unicast)
+                    `` for "fsm/message[@type='anycast']" |>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+                    {
                         if (!session->«yml:lcase(@name)»_state.common.from `> |`|
                             (session->«yml:lcase(@name)»_state.common.from->flags &
                             PEP_idf_not_for_«yml:lcase(@name)»)) {
@@ -395,6 +396,10 @@ tstylesheet {
                             }
                         }
                     }
+
+                    default:
+                        status = PEP_«yml:ucase(@name)»_ILLEGAL_MESSAGE;
+                        goto the_end;
                 }
 
                 for (identity_list *li = channels; li && li->ident ; li = li->next) {
