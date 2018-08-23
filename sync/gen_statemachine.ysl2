@@ -503,10 +503,18 @@ tstylesheet {
         ||
         case «../@name»_PR_«yml:lcase(@name)»:
             switch (msg->choice.«yml:lcase(@name)».payload.present) {
-                // these messages are going untested
-        `` for "message[@security='unencrypted']" |>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
-                    break;
+        ||
+        if "message[@security='unencrypted']" {
+            |         // these messages are going untested
+            for "message[@security='unencrypted']"
+                |>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+            ||
+                       break;
 
+            ||
+        }
+        if "message[@security='untrusted']"
+        ||
                 // these messages must arrive encrypted
         `` for "message[@security='untrusted']" |>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
                     if (rating < PEP_rating_reliable) {
@@ -515,6 +523,9 @@ tstylesheet {
                     }
                     break;
 
+        ||
+        if "message[@security='trusted']"
+        ||
                 // these messages must come through a trusted channel
         `` for "message[@security='trusted']" |>> case «ancestor::fsm/@name»__payload_PR_«yml:mixedCase(@name)»:
                     if (rating < PEP_rating_trusted) {
