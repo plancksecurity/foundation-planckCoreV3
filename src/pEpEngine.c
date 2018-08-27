@@ -97,6 +97,32 @@ static const char *sql_get_identity =
     "   order by is_own desc, "
     "   timestamp desc; ";
 
+static const char *sql_get_identities_by_userid =  
+    "select address, fpr, username, comm_type, lang,"
+    "   identity.flags | pgp_keypair.flags,"
+    "   is_own"
+    "   from identity"
+    "   join person on id = identity.user_id"
+    "   join pgp_keypair on fpr = identity.main_key_id"
+    "   join trust on id = trust.user_id"
+    "       and pgp_keypair_fpr = identity.main_key_id"    
+    "   where identity.user_id = ?1" 
+    "   order by is_own desc, "
+    "   timestamp desc; ";
+
+static const char *sql_get_identities_by_main_key_id =  
+    "select address, user_id, username, comm_type, lang,"
+    "   identity.flags | pgp_keypair.flags,"
+    "   is_own"
+    "   from identity"
+    "   join person on id = identity.user_id"
+    "   join pgp_keypair on fpr = identity.main_key_id"
+    "   join trust on id = trust.user_id"
+    "       and pgp_keypair_fpr = identity.main_key_id"    
+    "   where main_key_id = ?1" 
+    "   order by is_own desc, "
+    "   timestamp desc; ";
+
 static const char *sql_get_identity_without_trust_check =  
     "select identity.main_key_id, username, lang,"
     "   identity.flags, is_own"
@@ -371,6 +397,10 @@ static const char *sql_own_keys_retrieve =
 static const char* sql_get_user_default_key =
     "select main_key_id from person" 
     "   where id = ?1;";
+
+static const char* sql_get_all_keys_for_user =
+    "select pgp_keypair_fpr from trust"
+    "   where user_id = ?1; ";
 
 static const char* sql_get_default_own_userid =
     "select id from person"
@@ -1141,8 +1171,22 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             &_session->get_identities_by_address, NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_identities_by_userid,
+            (int)strlen(sql_get_identities_by_userid), 
+            &_session->get_identities_by_userid, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_identities_by_main_key_id,
+            (int)strlen(sql_get_identities_by_main_key_id), 
+            &_session->get_identities_by_main_key_id, NULL);
+    assert(int_result == SQLITE_OK);
+
     int_result = sqlite3_prepare_v2(_session->db, sql_get_user_default_key,
             (int)strlen(sql_get_user_default_key), &_session->get_user_default_key, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_all_keys_for_user,
+            (int)strlen(sql_get_all_keys_for_user), &_session->get_all_keys_for_user, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_default_own_userid,
@@ -1493,8 +1537,14 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->get_identity_without_trust_check);
             if (session->get_identities_by_address)
                 sqlite3_finalize(session->get_identities_by_address);            
+            if (session->get_identities_by_userid)
+                sqlite3_finalize(session->get_identities_by_userid);                
+            if (session->get_identities_by_main_key_id)
+                sqlite3_finalize(session->get_identities_by_main_key_id);                                
             if (session->get_user_default_key)
-                sqlite3_finalize(session->get_user_default_key);    
+                sqlite3_finalize(session->get_user_default_key);
+            if (session->get_all_keys_for_user)
+                sqlite3_finalize(session->get_all_keys_for_user);                        
             if (session->get_default_own_userid)
                 sqlite3_finalize(session->get_default_own_userid);
             if (session->get_userid_alias_default)
@@ -2105,6 +2155,149 @@ DYNAMIC_API PEP_STATUS get_identity(
     }
 
     sqlite3_reset(session->get_identity);
+    return status;
+}
+
+PEP_STATUS get_identities_by_userid(
+        PEP_SESSION session,
+        const char *user_id,
+        identity_list **identities
+    )
+{
+    if (!session || !identities || EMPTYSTR(user_id))
+        return PEP_ILLEGAL_VALUE;
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    pEp_identity* ident = NULL;
+
+    *identities = new_identity_list(NULL);
+
+    sqlite3_reset(session->get_identities_by_userid);
+    sqlite3_bind_text(session->get_identities_by_userid, 1, user_id, -1, SQLITE_STATIC);
+
+    int result = -1;
+    while ((result = sqlite3_step(session->get_identities_by_userid)) == SQLITE_ROW) {
+            // "select address, fpr, username, comm_type, lang,"
+            // "   identity.flags | pgp_keypair.flags,"
+            // "   is_own"
+            // "   from identity"
+            // "   join person on id = identity.user_id"
+            // "   join pgp_keypair on fpr = identity.main_key_id"
+            // "   join trust on id = trust.user_id"
+            // "       and pgp_keypair_fpr = identity.main_key_id"    
+            // "   where identity.user_id = ?1" 
+            // "   order by is_own desc, "
+            // "   timestamp desc; ";
+
+        ident = new_identity(
+                    (const char *) sqlite3_column_text(session->get_identities_by_userid, 0),
+                    (const char *) sqlite3_column_text(session->get_identities_by_userid, 1),                
+                    user_id,
+                    (const char *) sqlite3_column_text(session->get_identities_by_userid, 2)
+                );
+                
+        assert(ident);
+        if (ident == NULL) {
+            sqlite3_reset(session->get_identities_by_userid);
+            return PEP_OUT_OF_MEMORY;
+        }
+
+        ident->comm_type = (PEP_comm_type)
+            sqlite3_column_int(session->get_identities_by_userid, 3);
+        const char* const _lang = (const char *)
+            sqlite3_column_text(session->get_identities_by_userid, 4);
+        if (_lang && _lang[0]) {
+            assert(_lang[0] >= 'a' && _lang[0] <= 'z');
+            assert(_lang[1] >= 'a' && _lang[1] <= 'z');
+            assert(_lang[2] == 0);
+            ident->lang[0] = _lang[0];
+            ident->lang[1] = _lang[1];
+            ident->lang[2] = 0;
+        }
+        ident->flags = (unsigned int)
+            sqlite3_column_int(session->get_identities_by_userid, 5);
+        ident->me = (unsigned int)
+            sqlite3_column_int(session->get_identities_by_userid, 6);
+    
+        identity_list_add(*identities, ident);
+        ident = NULL;
+    }
+
+    if ((*identities)->ident == NULL) {
+        free_identity_list(*identities);
+        *identities = NULL;
+        status = PEP_CANNOT_FIND_IDENTITY;
+    }
+            
+    sqlite3_reset(session->get_identities_by_userid);
+
+    return status;
+}
+
+PEP_STATUS get_identities_by_main_key_id(
+        PEP_SESSION session,
+        const char *fpr,
+        identity_list **identities
+    )
+{
+    if (!session || !identities || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    pEp_identity* ident = NULL;
+
+    *identities = new_identity_list(NULL);
+
+    sqlite3_reset(session->get_identities_by_main_key_id);
+    sqlite3_bind_text(session->get_identities_by_main_key_id, 1, fpr, -1, SQLITE_STATIC);
+
+    int result = -1;
+    
+    while ((result = sqlite3_step(session->get_identities_by_main_key_id)) == SQLITE_ROW) {
+        ident = new_identity(
+                    (const char *) sqlite3_column_text(session->get_identities_by_main_key_id, 0),
+                    fpr,
+                    (const char *) sqlite3_column_text(session->get_identities_by_main_key_id, 1),                
+                    (const char *) sqlite3_column_text(session->get_identities_by_main_key_id, 2)
+                );
+                
+        assert(ident);
+        if (ident == NULL) {
+            sqlite3_reset(session->get_identities_by_main_key_id);
+            return PEP_OUT_OF_MEMORY;
+        }
+
+        ident->comm_type = (PEP_comm_type)
+            sqlite3_column_int(session->get_identities_by_main_key_id, 3);
+        const char* const _lang = (const char *)
+            sqlite3_column_text(session->get_identities_by_main_key_id, 4);
+        if (_lang && _lang[0]) {
+            assert(_lang[0] >= 'a' && _lang[0] <= 'z');
+            assert(_lang[1] >= 'a' && _lang[1] <= 'z');
+            assert(_lang[2] == 0);
+            ident->lang[0] = _lang[0];
+            ident->lang[1] = _lang[1];
+            ident->lang[2] = 0;
+        }
+        ident->flags = (unsigned int)
+            sqlite3_column_int(session->get_identities_by_main_key_id, 5);
+        ident->me = (unsigned int)
+            sqlite3_column_int(session->get_identities_by_main_key_id, 6);
+    
+        identity_list_add(*identities, ident);
+        ident = NULL;
+    }
+
+    if ((*identities)->ident == NULL) {
+        free_identity_list(*identities);
+        *identities = NULL;
+        status = PEP_CANNOT_FIND_IDENTITY;
+    }
+            
+    sqlite3_reset(session->get_identities_by_main_key_id);
+
     return status;
 }
 

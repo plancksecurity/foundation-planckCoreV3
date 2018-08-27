@@ -1178,6 +1178,53 @@ DYNAMIC_API PEP_STATUS get_revoked(
         uint64_t *revocation_date
     );
 
+// Algorithm:
+// 
+//     Key Reset trigger; either manually or in another protocol, parameter key (optional)
+// 
+//     if identity given:
+// 
+//     key reset for one identity
+// 
+//     else
+// 
+//     For identity in own identities
+// 
+//     key reset for one identitiy
+// 
+//     Key Reset for identity:
+// 
+//     if own identity:
+// 
+//     Create revocation
+// 
+//     add to revocation list
+// 
+//     mistrust fpr from trust
+// 
+//     Remove fpr from ALL identities
+// 
+//     Remove fpr from ALL users
+// 
+//     generate new key
+// 
+//     for all active communication partners:
+// 
+//     active_send revocation
+// 
+//     else
+// 
+//     remove fpr from all identities
+// 
+//     remove fpr from all users
+// 
+//     delete key from key ring
+DYNAMIC_API PEP_STATUS key_reset(
+        PEP_SESSION session,
+        const char* fpr,
+        pEp_identity* ident
+    );
+
 
 // key_created() - get creation date of a key
 //
@@ -1255,6 +1302,12 @@ PEP_STATUS get_identities_by_address(
         const char *address,
         identity_list** id_list
     );
+    
+PEP_STATUS get_identities_by_userid(
+        PEP_SESSION session,
+        const char *user_id,
+        identity_list **identities
+    );    
         
 PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
                               const char* new_uid);
@@ -1314,6 +1367,11 @@ PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
                               bool* exists);
 
 PEP_STATUS is_own_key(PEP_SESSION session, const char* fpr, bool* own_key);
+
+PEP_STATUS get_identities_by_main_key_id(
+        PEP_SESSION session,
+        const char *fpr,
+        identity_list **identities);
 
 #ifdef __cplusplus
 }

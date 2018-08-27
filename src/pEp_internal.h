@@ -131,6 +131,8 @@ struct _pEpSession {
     sqlite3_stmt *get_identity;
     sqlite3_stmt *get_identity_without_trust_check;
     sqlite3_stmt *get_identities_by_address;
+    sqlite3_stmt *get_identities_by_userid;
+    sqlite3_stmt *get_identities_by_main_key_id;
     sqlite3_stmt *replace_identities_fpr;
     sqlite3_stmt *replace_main_user_fpr;
     sqlite3_stmt *get_main_user_fpr;
@@ -175,13 +177,15 @@ struct _pEpSession {
     sqlite3_stmt *blacklist_is_listed;
     sqlite3_stmt *blacklist_retrieve;
     
-    // Own keys
+    // Keys
     sqlite3_stmt *own_key_is_listed;
     sqlite3_stmt *own_identities_retrieve;
     sqlite3_stmt *own_keys_retrieve;
     sqlite3_stmt *get_user_default_key;
+    sqlite3_stmt *get_all_keys_for_user;
         
     sqlite3_stmt *get_default_own_userid;
+
 
 //    sqlite3_stmt *set_own_key;
 
