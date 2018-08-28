@@ -3109,13 +3109,15 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     bool imported_keys = import_attached_keys(session, src, NULL);
 
     // FIXME: is this really necessary here?
-    if (!is_me(session, src->from))
-        status = update_identity(session, src->from);
-    else
-        status = myself(session, src->from);
+    if (src->from) {
+        if (!is_me(session, src->from))
+            status = update_identity(session, src->from);
+        else
+            status = myself(session, src->from);
         
-    if (status != PEP_STATUS_OK)
-        return status;
+        if (status != PEP_STATUS_OK)
+            return status;
+    }
     
     /*** End Import any attached public keys and update identities accordingly ***/
     
@@ -3350,7 +3352,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         
         // Ok, so if it was signed and it's all verified, we can update
         // eligible signer comm_types to PEP_ct_pEp_*
-        if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && is_pep_msg)
+        if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && is_pep_msg && calculated_src->from)
             status = update_sender_to_pep_trust(session, calculated_src->from, _keylist);
 
         /* Ok, now we have a keylist used for decryption/verification.
