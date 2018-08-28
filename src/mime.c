@@ -446,8 +446,6 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     char *subject = msg->shortmsg ? msg->shortmsg : altstr;
 
     assert(msg);
-    assert(msg->from);
-    assert(msg->from->address);
     assert(result);
 
     *result = NULL;
@@ -485,7 +483,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
         dt = NULL;
     }
 
-    /* if (msg->from) */ {
+     if (msg->from) {
         struct mailimf_mailbox_list *from = identity_to_mbl(msg->from);
         if (from == NULL)
             goto enomem;
