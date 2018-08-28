@@ -3200,13 +3200,14 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
                 /* if decrypted, but not verified... */
                 if (decrypt_status == PEP_DECRYPTED) {
-                                                                                     
-                    status = verify_decrypted(session,
-                                              src, msg,
-                                              ptext, psize,
-                                              &_keylist,
-                                              &decrypt_status,
-                                              crypto);
+                    
+                    if (src->from)                                                                 
+                        status = verify_decrypted(session,
+                                                  src, msg,
+                                                  ptext, psize,
+                                                  &_keylist,
+                                                  &decrypt_status,
+                                                  crypto);
                 }
                 break;
 
