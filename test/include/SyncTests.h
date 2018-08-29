@@ -26,7 +26,7 @@ public:
             sync_handshake_signal signal
         );
     static int inject_sync_event(SYNC_EVENT ev, void *management);
-    static Sync_event_t *retrieve_next_sync_event(void *management);
+    static Sync_event_t *retrieve_next_sync_event(void *management, time_t threshold);
     static PEP_STATUS messageToSend(struct _message *msg);
 
     static void sync_thread(PEP_SESSION session, Sync_Adapter *adapter);

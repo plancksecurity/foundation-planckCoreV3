@@ -49,7 +49,7 @@ int Sync_Adapter::inject_sync_event(SYNC_EVENT ev, void *management)
     return 0;
 }
 
-Sync_event_t *Sync_Adapter::retrieve_next_sync_event(void *management)
+Sync_event_t *Sync_Adapter::retrieve_next_sync_event(void *management, time_t threshold)
 {
     auto adapter = static_cast< Sync_Adapter *>(management);
 

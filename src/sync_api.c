@@ -92,11 +92,13 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
     if (!(session && session->retrieve_next_sync_event))
         return PEP_ILLEGAL_VALUE;
 
-    log_event(session, "sync_protocol thread started", "pEp sync protocol", NULL, NULL);
+    log_event(session, "sync_protocol thread started", "pEp sync protocol",
+            NULL, NULL);
 
     while (true) 
     {
-        event = session->retrieve_next_sync_event(session->sync_management);
+        event = session->retrieve_next_sync_event(session->sync_management,
+                SYNC_THRESHOLD);
         if (!event)
             break;
 
@@ -104,7 +106,8 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
     }
     session->sync_obj = NULL;
 
-    log_event(session, "sync_protocol thread shutdown", "pEp sync protocol", NULL, NULL);
+    log_event(session, "sync_protocol thread shutdown", "pEp sync protocol",
+            NULL, NULL);
 
     return PEP_STATUS_OK;
 }

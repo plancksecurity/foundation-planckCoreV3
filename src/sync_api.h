@@ -78,11 +78,13 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
 //
 //  parameters:
 //      management (in)     application defined; usually a locked queue
+//      threshold (in)      threshold in seconds for timeout
 //
 //  return value:
 //      next event
 
-typedef SYNC_EVENT (*retrieve_next_sync_event_t)(void *management);
+typedef SYNC_EVENT (*retrieve_next_sync_event_t)(void *management,
+        time_t threshold);
 
 
 // register_sync_callbacks() - register adapter's callbacks

@@ -127,6 +127,9 @@ tstylesheet {
             #include "«@name»_event.h"
             #include "message_api.h"
             
+            #define «yml:ucase(@name)»_THRESHOLD «@threshold»
+            `` for "fsm" | #define «yml:ucase(@name)»_THRESHOLD «@threshold»
+
             #ifdef __cplusplus
             extern "C" {
             #endif
@@ -208,6 +211,7 @@ tstylesheet {
             #include "baseprotocol.h"
             `` for "fsm" | #include "«@name»_fsm.h"
 
+            `` apply "fsm", 0, mode=timeout
             PEP_STATUS «@name»_driver(
                     PEP_SESSION session,
                     «@name»_PR fsm,
@@ -217,6 +221,12 @@ tstylesheet {
                 assert(session && fsm);
                 if (!(session && fsm))
                     return PEP_ILLEGAL_VALUE;
+
+                switch (fsm) {
+                    `` apply "fsm", mode=reset_state_machine;
+                    default:
+                        return PEP_ILLEGAL_VALUE;
+                }
 
                 int next_state = None;
                 do {
@@ -497,6 +507,56 @@ tstylesheet {
 
         apply "fsm", 0, mode=gen;
     }
+
+    template "fsm", mode=timeout
+    ||
+    static bool _«@name»_timeout(int state)
+    {
+        static int last_state = None;
+        static time_t switch_time = 0;
+
+        if (state > Init) {
+            if (state == last_state) {
+                if (time(NULL) - switch_time > «yml:ucase(@name)»_THRESHOLD) {
+                    last_state = None;
+                    switch_time = 0;
+                    return true;
+                }
+            }
+            else {
+                last_state = state;
+                switch_time = time(NULL);
+            }
+        }
+        else {
+            last_state = None;
+            switch_time = 0;
+        }
+
+        return false;
+    }
+
+    ||
+
+    template "fsm", mode=reset_state_machine
+    ||
+        case «../@name»_PR_«yml:lcase(@name)»: {
+            int state = session->«yml:lcase(../@name)»_state.«yml:lcase(@name)».state;
+            switch (state) {
+                `` for "state[@name!='InitState' and @timeout != 'off']" |>>> case «@name»:
+                    if (_«@name»_timeout(state)) {
+                        session->«yml:lcase(../@name)»_state.«yml:lcase(@name)».state = Init;
+                        event = Init;
+                    }
+                    break;
+                
+                default:
+                    _«@name»_timeout(None);
+            }
+            break;
+        }
+
+    ||
 
     template "fsm", mode=signal_message
     {
