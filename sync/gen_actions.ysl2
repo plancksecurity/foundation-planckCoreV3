@@ -37,6 +37,12 @@ tstylesheet {
 
             static bool _TID_greater(TID_t *t1, TID_t *t2)
             {
+                assert(t1 && t2);
+                if (t1 && !t2)
+                    return true;
+                if (!t1)
+                    return false;
+
                 if (t1->size > t2->size)
                     return true;
 
