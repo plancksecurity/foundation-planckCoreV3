@@ -1,6 +1,5 @@
 syntax: regexp
 ^asn\.1/.*\.(c|h)$
-^asn\.1/Makefile\.am\.sample$
 ^asn\.1/libasn1\.a$
 .*xcuserdata/
 ^build/
@@ -8,6 +7,8 @@ syntax: regexp
 ^test_home/
 
 syntax: glob
+asn.1/Makefile.am.*
+asn.1/converter-example.mk
 *.orig
 *.old
 *.d
@@ -63,17 +64,9 @@ test/local
 */.tags
 */*/.tags
 asn.1/.generated
-src/KeySync_fsm.c
-src/KeySync_fsm.h
-src/Sync_func.c
-src/Sync_func.h
-src/Sync_event.c
-src/Sync_event.h
-src/Sync_codec.c
-src/Sync_codec.h
-src/Sync_actions.c
-src/Sync_impl.c
-src/Sync_impl.h
+src/KeySync_*
+src/Sync_*
+src/sync_codec.*
 asn.1/keysync.asn1
 asn.1/sync.asn1
 sync/.codecs
