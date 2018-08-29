@@ -20,7 +20,7 @@ decl fsm< protocol >;
 // a state has a name and a timeout; after the timeout the state machine will
 // be reset
 
-decl state @name (timeout=0);
+decl state @name (timeout=on);
 
 // events have names
 
@@ -51,7 +51,7 @@ decl else;
 // some events have messages on the line signalling the event to the
 // communication partner
 
-decl message @name (id, type="anycast", security="trusted");
+decl message @name (id, type=anycast, security=trusted);
 
 // messages can have transmitted fields…
 

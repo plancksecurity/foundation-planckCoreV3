@@ -20,7 +20,7 @@ protocol Sync 1 {
             }
         }
 
-        state Sole {
+        state Sole timeout=off {
             on Init {
                 do openChallenge; // own challenge
                 send Beacon;
@@ -211,7 +211,7 @@ protocol Sync 1 {
             }
         }
 
-        state Grouped {
+        state Grouped timeout=off {
             on GroupKeys
                 do saveGroupKeys;
 
