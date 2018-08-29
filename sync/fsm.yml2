@@ -46,6 +46,7 @@ decl send @name;
 // a condition is for different cases
 
 decl condition @name, if is condition;
+decl else;
 
 // some events have messages on the line signalling the event to the
 // communication partner

@@ -33,14 +33,15 @@ protocol Sync 1 {
                 send Beacon;
 
             on Beacon {
-                if weAreSecond {
+                if weAreFirst {
+                    send Beacon;
+                }
+                else {
                     do storeChallenge; // partner's challenge
                     do openTransaction;
                     do storeTransaction;
                     send HandshakeRequest;
                 }
-                if weAreFirst
-                    send Beacon;
             }
 
             on HandshakeRequest {

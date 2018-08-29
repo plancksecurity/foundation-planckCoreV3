@@ -805,7 +805,7 @@ tstylesheet {
         if "condition|action|send" |
         ||
             «../../@name»_SERVICE_LOG("received event", "«@name»");
-            `` apply "transition|action|condition|send";
+            `` apply "transition|action|condition|else|send";
         ||
         if "name(*[last()])!='transition'" {
             |
@@ -862,7 +862,17 @@ tstylesheet {
         if (result) {
             «$fsm/@name»_SERVICE_LOG("condition applies", "«@name»");
         ||
-        apply "transition|action|condition|send";
+        apply "transition|action|condition|else|send";
+        | }
+    }
+
+    template "else" {
+        if "not(name(preceding-sibling::*[last()]) = 'condition')"
+            error "else without if";
+
+        | else {
+        |> «ancestor::fsm/@name»_SERVICE_LOG("condition does not apply", "«preceding-sibling::*[last()]/@name»");
+        apply "transition|action|condition|else|send";
         | }
     }
 }
