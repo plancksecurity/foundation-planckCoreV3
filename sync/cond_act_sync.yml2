@@ -14,7 +14,7 @@ include ./sql_func.yml2
 
 condition deviceGrouped {
     call "exec_sql_int" with "sql"
-        > "select count(*) from identity where user_id = '"PEP_OWN_USERID"' and (flags & 4) = 4;"
+        > "select count(*) from identity where is_own = true and (flags & 4) = 4;"
     |> *result = _result > 0;
 }
 
@@ -33,12 +33,14 @@ condition keyElectionWon
 ||
     pEp_identity *from = session->sync_state.common.from;
 
-    assert(from && from->fpr && from->fpr[0] && from->address && from->address[0]);
-    if (!(from && from->fpr && from->fpr[0] && from->address && from->address[0]))
+    assert(from && from->fpr && from->fpr[0] && from->address &&
+            from->address[0] && from->user_id && from->user_id[0]);
+    if (!(from && from->fpr && from->fpr[0] && from->address &&
+            from->address[0] && from->user_id && from->user_id[0]))
         return PEP_ILLEGAL_VALUE;
 
     pEp_identity *me = NULL;
-    PEP_STATUS status = get_identity(session, from->address, PEP_OWN_USERID, &me);
+    PEP_STATUS status = get_identity(session, from->address, from->user_id, &me);
     assert(status == PEP_STATUS_OK);
     if (status)
         return status;
@@ -109,7 +111,7 @@ function "show_handshake" {
 
         pEp_identity *from = session->sync_state.common.from;
         pEp_identity *me = NULL;
-        PEP_STATUS status = get_identity(session, from->address, PEP_OWN_USERID, &me);
+        PEP_STATUS status = get_identity(session, from->address, from->user_id, &me);
         assert(status == PEP_STATUS_OK);
         if (status)
             return status;
@@ -170,8 +172,8 @@ action ownKeysAreGroupKeys {
                 "   join pgp_keypair on fpr = identity.main_key_id"
                 "   join trust on id = trust.user_id"
                 "       and pgp_keypair_fpr = identity.main_key_id"
+                "   where identity.is_own = true ;"
         ||
-        >         "   where identity.user_id = '" PEP_OWN_USERID "';"
     }
 
     ||
