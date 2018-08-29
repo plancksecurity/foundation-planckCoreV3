@@ -35,6 +35,22 @@ tstylesheet {
             #include "«@name»_impl.h"
             `` for "fsm" | #include "«@name»_fsm.h"
 
+            static bool _TID_greater(TID_t *t1, TID_t *t2)
+            {
+                if (t1->size > t2->size)
+                    return true;
+
+                if (t2->size > t1->size)
+                    return false;
+
+                for (int i=0; i<t1->size; i++) {
+                    if (t1->buf[i] > t2->buf[i])
+                        return true;
+                }
+
+                return false;
+            }
+
             ||
             apply "func:distinctName(//condition)", 0;
             apply "func:distinctName(//action[not(starts-with(@name, 'send'))])", 0;

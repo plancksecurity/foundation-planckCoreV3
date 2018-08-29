@@ -18,6 +18,42 @@ condition deviceGrouped {
     |> *result = _result > 0;
 }
 
+condition weAreFirst
+||
+    TID_t *t1 = &session->sync_state.keysync.challenge;
+    TID_t *t2 = &session->own_sync_state.challenge;
+
+    assert(t1 && t2);
+
+    if (!t2) {
+        *result = false;
+    }
+    else {
+        if (!t1)
+            *result = true;
+        else
+            *result = _TID_greater(t1, t2);
+    }
+||
+
+condition weAreSecond
+||
+    TID_t *t1 = &session->sync_state.keysync.challenge;
+    TID_t *t2 = &session->own_sync_state.challenge;
+
+    assert(t1 && t2);
+
+    if (!t1) {
+        *result = false;
+    }
+    else {
+        if (!t2)
+            *result = true;
+        else
+            *result = !_TID_greater(t1, t2);
+    }
+||
+
 condition partnerIsGrouped
 |> *result = session->sync_state.keysync.is_group;
 
