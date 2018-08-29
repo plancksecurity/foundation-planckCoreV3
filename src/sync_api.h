@@ -121,15 +121,39 @@ DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session);
 //  return value:
 //      PEP_STATUS_OK if thread has to terminate successfully or any other
 //      value on failure
-//
-//  caveat:
-//      to ensure proper working of this library, a thread has to be started
-//      with this function immediately after initialization
 
 DYNAMIC_API PEP_STATUS do_sync_protocol(
         PEP_SESSION session,
         void *obj
     );
+
+
+// do_sync_protocol_step() - function for single threaded implementations
+//
+//  parameters:
+//      session                 pEp session to use
+//      retrieve_next_sync_msg  pointer to retrieve_next_identity() callback
+//                              which returns at least a valid address field in
+//                              the identity struct
+//      obj                     application defined sync object
+//      event                   Sync event to process
+
+DYNAMIC_API PEP_STATUS do_sync_protocol_step(
+        PEP_SESSION session,
+        void *obj,
+        SYNC_EVENT event
+    );
+
+
+// is_sync_thread() - determine if this is sync thread's session
+//
+//  paramters:
+//      session                 pEp session to test
+//
+//  return value:
+//      true if this is sync thread's session, false otherwise
+
+DYNAMIC_API bool is_sync_thread(PEP_SESSION session);
 
 
 #ifdef __cplusplus

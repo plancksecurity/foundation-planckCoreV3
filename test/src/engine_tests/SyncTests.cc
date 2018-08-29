@@ -8,7 +8,7 @@
 
 #include "pEp_internal.h"
 #include "KeySync_fsm.h"
-#include "Sync_codec.h"
+#include "sync_codec.h"
 
 #include "EngineTestSessionSuite.h"
 #include "SyncTests.h"
@@ -19,7 +19,7 @@ void Sync_Adapter::processing()
 {
     cout << "waiting for processing\n";
     while (!q.empty()) {
-        sleep(1);
+        nanosleep((const struct timespec[]){{0, 100000000L}}, NULL);
     }
 }
 
@@ -54,7 +54,7 @@ Sync_event_t *Sync_Adapter::retrieve_next_sync_event(void *management)
     auto adapter = static_cast< Sync_Adapter *>(management);
 
     while (adapter->q.empty()) {
-        sleep(1);
+        nanosleep((const struct timespec[]){{0, 100000000L}}, NULL);
     }
 
     Sync_event_t *ev = adapter->q.pop_front();
@@ -75,7 +75,7 @@ Sync_event_t *Sync_Adapter::retrieve_next_sync_event(void *management)
     return ev;
 }
 
-PEP_STATUS Sync_Adapter::messageToSend(void *obj, struct _message *msg)
+PEP_STATUS Sync_Adapter::messageToSend(struct _message *msg)
 {
     assert(msg && msg->attachments);
     

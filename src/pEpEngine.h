@@ -122,7 +122,6 @@ typedef enum {
 // messageToSend() - a message needs to be delivered by application
 //
 //  parameters:
-//      obj (in)        object handle (implementation defined)
 //      msg (in)        message struct with message to send
 //
 //  return value:
@@ -132,7 +131,7 @@ typedef enum {
 //      the ownership of msg goes to the callee
 
 struct _message;
-typedef PEP_STATUS (*messageToSend_t)(void *obj, struct _message *msg);
+typedef PEP_STATUS (*messageToSend_t)(struct _message *msg);
 
 
 struct Sync_event;

@@ -87,7 +87,6 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
     )
 {
     Sync_event_t *event= NULL;
-    PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session && session->retrieve_next_sync_event);
     if (!(session && session->retrieve_next_sync_event))
@@ -95,25 +94,52 @@ DYNAMIC_API PEP_STATUS do_sync_protocol(
 
     log_event(session, "sync_protocol thread started", "pEp sync protocol", NULL, NULL);
 
-    session->sync_obj = obj;
     while (true) 
     {
         event = session->retrieve_next_sync_event(session->sync_management);
         if (!event)
             break;
 
-        status = recv_Sync_event(session, event);
-        if (status != PEP_STATUS_OK && status != PEP_MESSAGE_IGNORE) {
-            char buffer[MAX_LINELENGTH];
-            memset(buffer, 0, MAX_LINELENGTH);
-            snprintf(buffer, MAX_LINELENGTH, "problem with msg received: %d\n", (int) status);
-            log_event(session, buffer, "pEp sync protocol", NULL, NULL);
-        }
+        do_sync_protocol_step(session, obj, event);
     }
     session->sync_obj = NULL;
 
     log_event(session, "sync_protocol thread shutdown", "pEp sync protocol", NULL, NULL);
 
     return PEP_STATUS_OK;
+}
+
+DYNAMIC_API PEP_STATUS do_sync_protocol_step(
+        PEP_SESSION session,
+        void *obj,
+        SYNC_EVENT event
+    )
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    if (!event)
+        return PEP_STATUS_OK;
+
+    session->sync_obj = obj;
+
+    PEP_STATUS status = recv_Sync_event(session, event);
+    if (status != PEP_STATUS_OK && status != PEP_MESSAGE_IGNORE) {
+        char buffer[MAX_LINELENGTH];
+        memset(buffer, 0, MAX_LINELENGTH);
+        snprintf(buffer, MAX_LINELENGTH, "problem with msg received: %d\n", (int) status);
+        log_event(session, buffer, "pEp sync protocol", NULL, NULL);
+    }
+
+    return status == PEP_MESSAGE_IGNORE ? PEP_STATUS_OK : status;
+}
+
+DYNAMIC_API bool is_sync_thread(PEP_SESSION session)
+{
+    assert(session);
+    if (!session)
+        return false;
+    return session->retrieve_next_sync_event != NULL;
 }
 

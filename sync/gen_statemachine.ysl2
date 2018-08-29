@@ -51,7 +51,7 @@ tstylesheet {
         //      event must be valid for fsm or None
         //      in case msg is given event will be calculated out of message
 
-        DYNAMIC_API «@name»_event_t *new_«@name»_event(«@name»_PR fsm, int event, «@name»_t *msg);
+        «@name»_event_t *new_«@name»_event(«@name»_PR fsm, int event, «@name»_t *msg);
 
 
         // free_«@name»_event() - free memory occupied by event
@@ -59,7 +59,7 @@ tstylesheet {
         //  parameters:
         //      ev (in)         event to free
 
-        DYNAMIC_API void free_«@name»_event(«@name»_event_t *ev);
+        void free_«@name»_event(«@name»_event_t *ev);
 
 
         #ifdef __cplusplus
@@ -78,7 +78,7 @@ tstylesheet {
         #include "«@name»_func.h"
         `` for "fsm" | #include "«@name»_fsm.h"
 
-        DYNAMIC_API «@name»_event_t *new_«@name»_event(«@name»_PR fsm, int event, «@name»_t *msg)
+        «@name»_event_t *new_«@name»_event(«@name»_PR fsm, int event, «@name»_t *msg)
         {
             assert(fsm > 0 && (event >= 0 |`> |` msg));
             if (!(fsm > 0 && (event >= 0 |`> |` msg)))
@@ -106,7 +106,7 @@ tstylesheet {
             return ev;
         }
 
-        DYNAMIC_API void free_«@name»_event(«@name»_event_t *ev)
+        void free_«@name»_event(«@name»_event_t *ev)
         {
             if (ev) {
                 free_«@name»_message(ev->msg);
@@ -204,7 +204,7 @@ tstylesheet {
             #include "«@name»_impl.h"
             #include "pEp_internal.h"
             #include "«@name»_event.h"
-            #include "«@name»_codec.h"
+            #include "«yml:lcase(@name)»_codec.h"
             #include "baseprotocol.h"
             `` for "fsm" | #include "«@name»_fsm.h"
 
@@ -433,13 +433,13 @@ tstylesheet {
                         default:
                             status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
                             if (status) {
-                                status = PEP_SYNC_CANNOT_ENCRYPT;
+                                status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
                             }
                             free_message(_m);
                     }
 
-                    status = session->messageToSend(session->«yml:lcase(@name)»_obj, m);
+                    status = session->messageToSend(m);
                     m = NULL;
                 }
 

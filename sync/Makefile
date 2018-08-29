@@ -27,7 +27,7 @@ all: .codegen
 clean:
 	rm -f *.xml *.xsl \
     $(pathsub generated/%, ../src/% $(wildcard generated/*.*)) \
-    ../generated/* .statemachines .actions .codecs .messages *.dot *.svg
+    generated/* .statemachines .actions .codecs .messages *.dot *.svg
 
 copy:
 	cp -f generated/*.c generated/*.h ../src

@@ -13,7 +13,7 @@ tstylesheet {
     include standardlib.ysl2
 
     template "/protocol" {
-        document "generated/{@name}_codec.h", "text"
+        document "generated/{yml:lcase(@name)}_codec.h", "text"
         ||
         // This file is under GNU General Public License 3.0
         // see LICENSE.txt
@@ -22,13 +22,14 @@ tstylesheet {
 
 
         #include "pEpEngine.h"
-        #include "../asn.1/«@name».h"
 
 
         #ifdef __cplusplus
         extern "C" {
         #endif
 
+
+        struct «@name»;
 
         // decode_«@name»_message() - decode PER encoded «@name» message
         //
@@ -43,7 +44,7 @@ tstylesheet {
         DYNAMIC_API PEP_STATUS decode_«@name»_message(
                 const char *data,
                 size_t size,
-                «@name»_t **msg
+                struct «@name» **msg
             );
 
 
@@ -58,7 +59,7 @@ tstylesheet {
         //      data goes to the ownership of the caller
 
         DYNAMIC_API PEP_STATUS encode_«@name»_message(
-                «@name»_t *msg,
+                struct «@name» *msg,
                 char **data,
                 size_t *size
             );
@@ -97,12 +98,13 @@ tstylesheet {
         #endif
 
         ||
-        document "generated/{@name}_codec.c", "text"
+        document "generated/{yml:lcase(@name)}_codec.c", "text"
         ||
         // This file is under GNU General Public License 3.0
         // see LICENSE.txt
 
-        #include "«@name»_codec.h"
+        #include "«yml:lcase(@name)»_codec.h"
+        #include "../asn.1/«@name».h"
         #include "pEp_internal.h"
         #include "growing_buf.h"
 

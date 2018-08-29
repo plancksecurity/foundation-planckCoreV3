@@ -27,7 +27,7 @@ public:
         );
     static int inject_sync_event(SYNC_EVENT ev, void *management);
     static Sync_event_t *retrieve_next_sync_event(void *management);
-    static PEP_STATUS messageToSend(void *obj, struct _message *msg);
+    static PEP_STATUS messageToSend(struct _message *msg);
 
     static void sync_thread(PEP_SESSION session, Sync_Adapter *adapter);
 };

@@ -19,7 +19,7 @@ generate: Sync.c
 	$(CC) $(CFLAGS) $(OPTIMIZE) -I. -I$(ASN1C_INC) -c $< -o $@
 
 Sync.c: sync.asn1 keysync.asn1 pEp.asn1
-	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=PEP.Message pEp.asn1 keysync.asn1 $<
+	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keysync.asn1 $<
 
 sync.asn1 keysync.asn1 pEp.asn1:
 	cp -f ../sync/generated/*.asn1 ../asn.1
