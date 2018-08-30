@@ -52,10 +52,24 @@ int Sync_Adapter::inject_sync_event(SYNC_EVENT ev, void *management)
 Sync_event_t *Sync_Adapter::retrieve_next_sync_event(void *management, time_t threshold)
 {
     auto adapter = static_cast< Sync_Adapter *>(management);
+    time_t started = time(nullptr);
+    bool timeout = false;
 
     while (adapter->q.empty()) {
+        int i = 0;
+        ++i;
+        if (i > 10) {
+            if (time(nullptr) > started + threshold) {
+                timeout = true;
+                break;
+            }
+            i = 0;
+        }
         nanosleep((const struct timespec[]){{0, 100000000L}}, NULL);
     }
+
+    if (timeout)
+        return SYNC_TIMEOUT_EVENT;
 
     Sync_event_t *ev = adapter->q.pop_front();
     if (ev) {

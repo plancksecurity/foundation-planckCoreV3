@@ -53,6 +53,8 @@ tstylesheet {
 
         «@name»_event_t *new_«@name»_event(«@name»_PR fsm, int event, «@name»_t *msg);
 
+        #define «yml:ucase(@name)»_TIMEOUT_EVENT new_«@name»_event(«@name»_PR_NOTHING, 0, NULL);
+
 
         // free_«@name»_event() - free memory occupied by event
         //
@@ -80,10 +82,6 @@ tstylesheet {
 
         «@name»_event_t *new_«@name»_event(«@name»_PR fsm, int event, «@name»_t *msg)
         {
-            assert(fsm > 0 && (event >= 0 |`> |` msg));
-            if (!(fsm > 0 && (event >= 0 |`> |` msg)))
-                return NULL;
-
             «@name»_event_t *ev = («@name»_event_t *) calloc(1, sizeof(«@name»_event_t));
             assert(ev);
             if (!ev)
@@ -218,11 +216,19 @@ tstylesheet {
                     int event
                 )
             {
-                assert(session && fsm);
-                if (!(session && fsm))
+                assert(session);
+                if (!session)
                     return PEP_ILLEGAL_VALUE;
 
                 switch (fsm) {
+                    case None:
+                        if (!event) {
+                            // timeout occured
+                        `` for "fsm" |>>>> «../@name»_driver(session, «../@name»_PR_«yml:lcase(@name)», None);
+                            return PEP_STATUS_OK;
+                        }
+                        return PEP_ILLEGAL_VALUE;
+
                     `` apply "fsm", mode=reset_state_machine;
                     default:
                         return PEP_ILLEGAL_VALUE;
@@ -474,7 +480,7 @@ tstylesheet {
                 «@name»_PR fsm = (int) None;
                 int event = None;
 
-                if (ev->event < Extra) {
+                if (ev->event > None && ev->event < Extra) {
                     status = update_«@name»_state(session, ev->msg, &fsm, &event);
                     if (status)
                         goto the_end;
