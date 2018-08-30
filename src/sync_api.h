@@ -158,6 +158,14 @@ DYNAMIC_API PEP_STATUS do_sync_protocol_step(
 DYNAMIC_API bool is_sync_thread(PEP_SESSION session);
 
 
+// new_sync_timeout_event() - create a Sync timeout event
+//
+//  return value:
+//      returns a new Sync timeout event, or NULL on failure
+
+DYNAMIC_API SYNC_EVENT new_sync_timeout_event();
+
+
 #ifdef __cplusplus
 }
 #endif
