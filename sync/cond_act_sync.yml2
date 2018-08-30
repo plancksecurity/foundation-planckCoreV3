@@ -152,6 +152,9 @@ action showJoinGroupHandshake
 action showGroupedHandshake
     call "show_handshake" with "type" > SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE
 
+action KeySyncTimeoutHandler
+    call "show_handshake" with "type" > SYNC_NOTIFY_TIMEOUT
+
 action saveGroupKeys
 ||
     identity_list *il = IdentityList_to_identity_list(&session->sync_state.keysync.identities, NULL);

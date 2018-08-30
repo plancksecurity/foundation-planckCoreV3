@@ -60,7 +60,8 @@ tstylesheet {
 
             ||
             apply "func:distinctName(//condition)", 0;
-            apply "func:distinctName(//action[not(starts-with(@name, 'send'))])", 0;
+            apply "func:distinctName(//action)", 0;
+            callTimeoutHandler KeySync;
         }
     }
 

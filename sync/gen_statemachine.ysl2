@@ -553,6 +553,7 @@ tstylesheet {
                     if (_«@name»_timeout(state)) {
                         session->«yml:lcase(../@name)»_state.«yml:lcase(@name)».state = Init;
                         event = Init;
+                        `` if "action" |>>>>> «action/@name»(session);
                     }
                     break;
                 
