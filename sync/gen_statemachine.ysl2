@@ -146,6 +146,13 @@ tstylesheet {
                 | PEP_STATUS «@name»(PEP_SESSION session);
             ||
 
+            // timeout handler
+            
+            ||
+            for "fsm[@threshold > 0]"
+                | PEP_STATUS «@name»TimeoutHandler(PEP_SESSION session);
+            ||
+
             // send message about an event to communication partners using state
 
             PEP_STATUS send_«@name»_message(
@@ -553,7 +560,7 @@ tstylesheet {
                     if (_«@name»_timeout(state)) {
                         session->«yml:lcase(../@name)»_state.«yml:lcase(@name)».state = Init;
                         event = Init;
-                        `` if "action" |>>>>> «action/@name»(session);
+                        `` if "@threshold > 0" |>>>>> «@name»TimeoutHandler(session);
                     }
                     break;
                 

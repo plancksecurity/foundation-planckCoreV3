@@ -17,6 +17,11 @@ decl _func *name (*type) alias - {
 decl condition is _func (*type="condition");
 decl action is _func (*type="action");
 
+decl timeout *name alias - {
+    template %name=*name, "fsm[@name='%name']", mode=handler
+        call "fsm" with "content" content;
+};
+
 tstylesheet {
     include standardlib.ysl2
     include ./functions.ysl2
@@ -61,7 +66,7 @@ tstylesheet {
             ||
             apply "func:distinctName(//condition)", 0;
             apply "func:distinctName(//action)", 0;
-            callTimeoutHandler KeySync;
+            apply "/protocol/fsm", 0, mode=handler;
         }
     }
 
@@ -91,6 +96,25 @@ tstylesheet {
         param "content";
         ||
         PEP_STATUS «@name»(PEP_SESSION session)
+        {
+            assert(session);
+            if (!session)
+                return PEP_ILLEGAL_VALUE;
+
+        ||
+        copy "$content";
+        ||
+
+            return PEP_STATUS_OK;
+        }
+
+        ||
+    }
+
+    function "fsm" {
+        param "content";
+        ||
+        PEP_STATUS «@name»TimeoutHandler(PEP_SESSION session)
         {
             assert(session);
             if (!session)

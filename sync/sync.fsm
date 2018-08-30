@@ -12,7 +12,6 @@ protocol Sync 1 {
 
     fsm KeySync 1 {
         version 1, 2;
-        action KeySyncTimeoutHandler;
 
         state InitState {
             on Init {
