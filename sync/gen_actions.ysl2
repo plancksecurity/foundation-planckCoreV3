@@ -16,11 +16,7 @@ decl _func *name (*type) alias - {
 
 decl condition is _func (*type="condition");
 decl action is _func (*type="action");
-
-decl timeout *name alias - {
-    template %name=*name, "fsm[@name='%name']"
-        call "fsm" with "content" content;
-};
+decl timeout is _func (*type="fsm");
 
 tstylesheet {
     include standardlib.ysl2
