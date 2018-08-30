@@ -82,6 +82,10 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
 //
 //  return value:
 //      next event
+//
+//  caveat:
+//      an implementation of retrieve_next_sync_event must return
+//      new_sync_timeout_event() in case of timeout
 
 typedef SYNC_EVENT (*retrieve_next_sync_event_t)(void *management,
         time_t threshold);

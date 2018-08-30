@@ -131,7 +131,8 @@ DYNAMIC_API PEP_STATUS do_sync_protocol_step(
     if (status != PEP_STATUS_OK && status != PEP_MESSAGE_IGNORE) {
         char buffer[MAX_LINELENGTH];
         memset(buffer, 0, MAX_LINELENGTH);
-        snprintf(buffer, MAX_LINELENGTH, "problem with msg received: %d\n", (int) status);
+        snprintf(buffer, MAX_LINELENGTH, "problem with msg received: %d\n",
+                (int) status);
         log_event(session, buffer, "pEp sync protocol", NULL, NULL);
     }
 
