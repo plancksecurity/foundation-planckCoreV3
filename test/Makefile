@@ -48,7 +48,7 @@ else
 	LLDB_BIN=lldb
 endif
 
-LDLIBS += -lcpptest
+LDLIBS+= -lcpptest
 
 
 # Create a list of the extra library paths for the loader. I do not assume that the engine (and its dependencies) are installed for testing.

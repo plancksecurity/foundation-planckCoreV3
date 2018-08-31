@@ -111,7 +111,7 @@ static const char *sql_get_identities_by_userid =
     "   timestamp desc; ";
 
 static const char *sql_get_identities_by_main_key_id =  
-    "select address, user_id, username, comm_type, lang,"
+    "select address, identity.user_id, username, comm_type, lang,"
     "   identity.flags | pgp_keypair.flags,"
     "   is_own"
     "   from identity"
@@ -119,7 +119,7 @@ static const char *sql_get_identities_by_main_key_id =
     "   join pgp_keypair on fpr = identity.main_key_id"
     "   join trust on id = trust.user_id"
     "       and pgp_keypair_fpr = identity.main_key_id"    
-    "   where main_key_id = ?1" 
+    "   where identity.main_key_id = ?1" 
     "   order by is_own desc, "
     "   timestamp desc; ";
 
@@ -3692,6 +3692,15 @@ DYNAMIC_API PEP_STATUS revoke_key(
 
     if (!(session && fpr))
         return PEP_ILLEGAL_VALUE;
+
+    // Check to see first if it is revoked
+    bool revoked = false;
+    PEP_STATUS status = key_revoked(session, fpr, &revoked);
+    if (status != PEP_STATUS_OK)
+        return status;
+        
+    if (revoked)
+        return PEP_STATUS_OK;
 
     return session->cryptotech[PEP_crypt_OpenPGP].revoke_key(session, fpr,
             reason);

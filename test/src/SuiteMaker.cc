@@ -47,6 +47,7 @@
 #include "EncryptAttachPrivateKeyTests.h"
 #include "DecryptAttachPrivateKeyTrustedTests.h"
 #include "IdentityListTests.h"
+#include "KeyResetMessageTests.h"
 #include "UserIDAliasTests.h"
 
 
@@ -86,11 +87,12 @@ const char* SuiteMaker::all_suites[] = {
     "EncryptAttachPrivateKeyTests",
     "DecryptAttachPrivateKeyTrustedTests",
     "IdentityListTests",
+    "KeyResetMessageTests",
     "UserIDAliasTests",
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 36;
+int SuiteMaker::num_suites = 37;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "MapAsn1Tests") == 0)
@@ -163,6 +165,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new DecryptAttachPrivateKeyTrustedTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "IdentityListTests") == 0)
         *test_suite = new IdentityListTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "KeyResetMessageTests") == 0)
+        *test_suite = new KeyResetMessageTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "UserIDAliasTests") == 0)
         *test_suite = new UserIDAliasTests(test_class_name, test_home);
 }

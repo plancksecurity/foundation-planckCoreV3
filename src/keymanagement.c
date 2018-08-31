@@ -1193,6 +1193,10 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
     if (!(session && ident && ident->fpr))
         return PEP_ILLEGAL_VALUE;
 
+    // ident is INPUT ONLY, so we need to preserve the input fpr
+    char* preserve_fpr = ident->fpr;
+    ident->fpr = strdup(preserve_fpr);
+    
     if (ident->me)
     {
         revoke_key(session, ident->fpr, NULL);
@@ -1226,7 +1230,8 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
         if (status == PEP_STATUS_OK)
             status = add_mistrusted_key(session, ident->fpr);
     }
-
+    free(ident->fpr);
+    ident->fpr = preserve_fpr;
     return status;
 }
 
