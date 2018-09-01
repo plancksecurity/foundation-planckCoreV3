@@ -159,6 +159,7 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
     
     status = key_reset(session, alice_fpr, from_ident);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
+    TEST_ASSERT(m_queue.size() > 0);
     
     TEST_ASSERT(true);
 }

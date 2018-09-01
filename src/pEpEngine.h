@@ -1341,6 +1341,10 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exis
 
 PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
 
+PEP_STATUS bind_own_ident_with_contact_ident(PEP_SESSION session,
+                                             pEp_identity* own_ident, 
+                                             pEp_identity* contact_ident);
+
 PEP_STATUS get_last_contacted(
         PEP_SESSION session,
         identity_list** id_list

@@ -1539,12 +1539,13 @@ PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
     const size_t taglens = 11;
     size_t full_len = taglens + strlen(revoke_fpr) + strlen(new_fpr) + 2; // \n and \0
     char* longmsg = calloc(full_len, 1);
-     
     strlcpy(longmsg, oldtag, full_len);
     strlcat(longmsg, revoke_fpr, full_len);
     strlcat(longmsg, newtag, full_len);
     strlcat(longmsg, new_fpr, full_len);
     strlcat(longmsg, "\n", full_len);
+    reset_message->longmsg = longmsg; 
+    reset_message->shortmsg = strdup("Key reset");    
     
     status = _attach_key(session, revoke_fpr, reset_message);
     if (status != PEP_STATUS_OK)
@@ -1607,7 +1608,11 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
         const char* user_id = curr_id->user_id;
         
         // Should be impossible, but?
-        if (user_id)
+        if (!user_id)
+            continue;
+        
+        // Check if it's us - if so, pointless...
+        if (is_me(session, curr_id))
             continue;
             
         // Check if they've already been told - this shouldn't be the case, but...
@@ -1868,6 +1873,13 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 }
                 if (!has_pep_user && !EMPTYSTR(_il->ident->user_id))
                     is_pep_user(session, _il->ident, &has_pep_user);
+                
+                _status = bind_own_ident_with_contact_ident(session, src->from, _il->ident);
+                if (_status != PEP_STATUS_OK) {
+                    status = PEP_UNKNOWN_DB_ERROR;
+                    goto pep_error;
+                }
+    
             }
             else
                 _status = myself(session, _il->ident);
