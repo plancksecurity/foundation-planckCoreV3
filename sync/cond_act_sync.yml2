@@ -206,7 +206,7 @@ action ownKeysAreGroupKeys {
                         (const char *) sqlite3_column_text(_sql, 0),
                         from->user_id,
                         (const char *) sqlite3_column_text(_sql, 1)
-                        );
+                    );
                 assert(_identity);
                 if (_identity == NULL)
                     return PEP_OUT_OF_MEMORY;
