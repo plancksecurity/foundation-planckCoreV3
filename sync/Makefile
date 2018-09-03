@@ -5,36 +5,33 @@ include ../default.conf
 
 all: .codegen
 
-.codegen: .statemachines .actions .codecs .messages
+.codegen: makedir .statemachines .actions .codecs .messages
 	touch .codegen
 	make copy
 
 .actions: sync.fsm gen_actions.ysl2 fsm.yml2 functions.ysl2 $(wildcard cond_act_*.yml2)
-	-mkdir -p generated
 	$(YML2_PROC) -y gen_actions.ysl2 $< -o $@
 
 .statemachines: sync.fsm gen_statemachine.ysl2 fsm.yml2 functions.ysl2
-	-mkdir -p generated
 	$(YML2_PROC) -y gen_statemachine.ysl2 $< -o $@
 
 .codecs: sync.fsm gen_codec.ysl2 fsm.yml2 functions.ysl2
-	-mkdir -p generated
 	$(YML2_PROC) -y gen_codec.ysl2 $< -o $@
 
 .messages: sync.fsm gen_messages.ysl2 gen_message_func.ysl2 fsm.yml2 functions.ysl2
-	-mkdir -p generated
 	$(YML2_PROC) -y gen_messages.ysl2 $< -o $@
 	$(YML2_PROC) -y gen_message_func.ysl2 $< -o $@
 
-.PHONY: clean copy
+.PHONY: clean copy makedir
 
 clean:
-	rm -f *.xml *.xsl \
-    $(pathsub generated/%, ../src/% $(wildcard generated/*.*)) \
-    generated/* .statemachines .actions .codecs .messages *.dot *.svg
+	rm -f *.xml *.xsl generated/* .statemachines .actions .codecs .messages *.dot *.svg
 
 copy:
 	cp -f generated/*.c generated/*.h ../src
+
+makedir:
+	-mkdir -p generated
 
 %.xml: %.fsm
 	yml2c $< -o $@
