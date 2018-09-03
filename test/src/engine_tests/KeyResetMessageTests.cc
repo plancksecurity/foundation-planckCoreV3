@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 #include <string>
+#include <vector>
+#include <unordered_map>
 #include <assert.h>
 
 #include "pEpEngine.h"
@@ -14,8 +16,16 @@
 
 using namespace std;
 
+const string KeyResetMessageTests::alice_user_id = PEP_OWN_USERID;
+const string KeyResetMessageTests::bob_user_id = "BobId";    
+const string KeyResetMessageTests::carol_user_id = "carolId";
+const string KeyResetMessageTests::dave_user_id = "DaveId";
+const string KeyResetMessageTests::erin_user_id = "ErinErinErin";
+const string KeyResetMessageTests::fenris_user_id = "BadWolf";
+
 KeyResetMessageTests::KeyResetMessageTests(string suitename, string test_home_dir) :
     EngineTestIndividualSuite::EngineTestIndividualSuite(suitename, test_home_dir) {
+        
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_key_reset_message"),
                                                                       static_cast<Func>(&KeyResetMessageTests::check_key_reset_message)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_reset_key_and_notify"),
@@ -51,41 +61,41 @@ void KeyResetMessageTests::send_setup() {
     status = set_up_ident_from_scratch(session,
                 "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc",
                 "pep.test.alice@pep-project.org", alice_fpr, 
-                PEP_OWN_USERID, "Alice in Wonderland", NULL, true
+                alice_user_id.c_str(), "Alice in Wonderland", NULL, true
             );
     assert(status == PEP_STATUS_OK);
     
     status = set_up_ident_from_scratch(session,
                 "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc",
-                "pep.test.bob@pep-project.org", NULL, "BobId", "Bob's Burgers",
+                "pep.test.bob@pep-project.org", NULL, bob_user_id.c_str(), "Bob's Burgers",
                 NULL, false
             );
     assert(status == PEP_STATUS_OK);
             
     status = set_up_ident_from_scratch(session,
                 "test_keys/pub/pep-test-carol-0x42A85A42_pub.asc",
-                "pep-test-carol@pep-project.org", NULL, "carolId", "Carol Burnett",
+                "pep-test-carol@pep-project.org", NULL, carol_user_id.c_str(), "Carol Burnett",
                 NULL, false
             );
     assert(status == PEP_STATUS_OK);
     
     status = set_up_ident_from_scratch(session,
                 "test_keys/pub/pep-test-dave-0xBB5BCCF6_pub.asc",
-                "pep-test-dave@pep-project.org", NULL, "DaveId", 
+                "pep-test-dave@pep-project.org", NULL, dave_user_id.c_str(), 
                 "David Hasselhoff (Germans Love Me)", NULL, false
             );
     assert(status == PEP_STATUS_OK);
 
     status = set_up_ident_from_scratch(session,
                 "test_keys/pub/pep-test-erin-0x9F8D7CBA_pub.asc",
-                "pep-test-erin@pep-project.org", NULL, "ErinErinErin", 
+                "pep-test-erin@pep-project.org", NULL, erin_user_id.c_str(), 
                 "Éirinn go Brách", NULL, false
             );
     assert(status == PEP_STATUS_OK);
 
     status = set_up_ident_from_scratch(session,
                 "test_keys/pub/pep.test.fenris-0x4F3D2900_pub.asc",
-                "pep.test.fenris@thisstilldoesntwork.lu", NULL, "BadWolf", 
+                "pep.test.fenris@thisstilldoesntwork.lu", NULL, fenris_user_id.c_str(), 
                 "Fenris Leto Hawke", NULL, false
             );
     assert(status == PEP_STATUS_OK);
@@ -140,7 +150,7 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
     // If this all worked, we should have a list of recent guys in our DB which, when we reset Alice's 
     // key, will get sent some nice key reset messages.
     // But... we need to have one look like an older message. So. Time to mess with the DB.
-    // Dave is our victim. Because friend called Dave, who is actually a nice dude, but it amuses me.
+    // Dave is our victim. Because I have a friend called Dave, who is actually a nice dude, but it amuses me.
     // (Note: said friend is NOT David Hasselhoff. To my knowledge. Hi Dave!)
     //
     // update identity
@@ -160,6 +170,37 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
     status = key_reset(session, alice_fpr, from_ident);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     TEST_ASSERT(m_queue.size() > 0);
+    
+    unordered_map<string, bool> hashmap;
+    hashmap[alice_user_id] = false;
+    hashmap[bob_user_id] = false;
+    hashmap[carol_user_id] = false;
+    hashmap[dave_user_id] = false;
+    hashmap[erin_user_id] = false;
+    hashmap[fenris_user_id] = false;
+    
+    for (vector<message*>::iterator it = m_queue.begin(); it != m_queue.end(); it++) {
+        message* curr_sent_msg = *it;
+        TEST_ASSERT(curr_sent_msg);
+        TEST_ASSERT(curr_sent_msg->to);
+        TEST_ASSERT(curr_sent_msg->to->ident);
+        TEST_ASSERT(!(curr_sent_msg->to->next));
+        pEp_identity* to = curr_sent_msg->to->ident;
+        TEST_ASSERT(to);
+        TEST_ASSERT(to->user_id);
+        
+        unordered_map<string, bool>::iterator jt = hashmap.find(to->user_id);
+        
+        TEST_ASSERT(jt != hashmap.end());
+        hashmap[jt->first] = true;        
+    }
+    
+    TEST_ASSERT(hashmap[alice_user_id] == false);
+    TEST_ASSERT(hashmap[bob_user_id] == true);
+    TEST_ASSERT(hashmap[carol_user_id] == true);
+    TEST_ASSERT(hashmap[dave_user_id] == false);
+    TEST_ASSERT(hashmap[erin_user_id] == true);
+    TEST_ASSERT(hashmap[fenris_user_id] == true);
     
     TEST_ASSERT(true);
 }

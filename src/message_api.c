@@ -1633,14 +1633,18 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
                                                      revoke_fpr,
                                                      new_fpr);
 
-        if (status != PEP_STATUS_OK)
+        if (status != PEP_STATUS_OK) {
+            free(reset_msg);
             goto pep_free;
+        }
         
         // insert into queue
         status = send_cb(sync_obj, reset_msg);
 
-        if (status != PEP_STATUS_OK)
-            goto pep_free;
+        if (status != PEP_STATUS_OK) {
+            free(reset_msg);
+            goto pep_free;            
+        }
             
         // Put into notified DB
         status = set_reset_contact_notified(session, revoke_fpr, user_id);
@@ -1650,7 +1654,6 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
     
 pep_free:
     free_identity_list(recent_contacts);
-    free_message(reset_msg);
     return status;
 }
 

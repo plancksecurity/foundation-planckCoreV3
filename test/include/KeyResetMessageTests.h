@@ -21,6 +21,13 @@ class KeyResetMessageTests : public EngineTestIndividualSuite {
         
         static constexpr const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
 
+        static const string alice_user_id;
+        static const string bob_user_id;    
+        static const string carol_user_id;
+        static const string dave_user_id;
+        static const string erin_user_id;
+        static const string fenris_user_id;
+
     protected:
         void setup();
                 
@@ -35,6 +42,7 @@ class KeyResetMessageTests : public EngineTestIndividualSuite {
         
         void send_setup();
         void receive_setup();     
+        
 };
 
 #endif
