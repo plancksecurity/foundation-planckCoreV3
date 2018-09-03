@@ -10,15 +10,19 @@ all: .codegen
 	make copy
 
 .actions: sync.fsm gen_actions.ysl2 fsm.yml2 functions.ysl2 $(wildcard cond_act_*.yml2)
+	-mkdir -p generated
 	$(YML2_PROC) -y gen_actions.ysl2 $< -o $@
 
 .statemachines: sync.fsm gen_statemachine.ysl2 fsm.yml2 functions.ysl2
+	-mkdir -p generated
 	$(YML2_PROC) -y gen_statemachine.ysl2 $< -o $@
 
 .codecs: sync.fsm gen_codec.ysl2 fsm.yml2 functions.ysl2
+	-mkdir -p generated
 	$(YML2_PROC) -y gen_codec.ysl2 $< -o $@
 
 .messages: sync.fsm gen_messages.ysl2 gen_message_func.ysl2 fsm.yml2 functions.ysl2
+	-mkdir -p generated
 	$(YML2_PROC) -y gen_messages.ysl2 $< -o $@
 	$(YML2_PROC) -y gen_message_func.ysl2 $< -o $@
 
