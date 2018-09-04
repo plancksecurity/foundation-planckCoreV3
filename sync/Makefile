@@ -5,7 +5,7 @@ include ../default.conf
 
 all: .codegen
 
-.codegen: makedir .statemachines .actions .codecs .messages
+.codegen: generated .statemachines .actions .codecs .messages
 	touch .codegen
 	make copy
 
@@ -22,7 +22,7 @@ all: .codegen
 	$(YML2_PROC) -y gen_messages.ysl2 $< -o $@
 	$(YML2_PROC) -y gen_message_func.ysl2 $< -o $@
 
-.PHONY: clean copy makedir
+.PHONY: clean copy
 
 clean:
 	rm -f *.xml *.xsl generated/* .statemachines .actions .codecs .messages *.dot *.svg
@@ -30,7 +30,7 @@ clean:
 copy:
 	cp -f generated/*.c generated/*.h ../src
 
-makedir:
+generated: .codegen
 	-mkdir -p generated
 
 %.xml: %.fsm
