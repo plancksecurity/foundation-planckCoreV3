@@ -9,6 +9,7 @@
 
 #include "pEpEngine.h"
 #include "pEp_internal.h"
+#include "mime.h"
 
 #include "test_util.h"
 #include "EngineTestIndividualSuite.h"
@@ -102,7 +103,22 @@ void KeyResetMessageTests::send_setup() {
 }
 
 void KeyResetMessageTests::receive_setup() {
+    PEP_STATUS status = read_file_and_import_key(session,
+                "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");  
+    assert(status == PEP_STATUS_OK);
+    status = set_up_ident_from_scratch(session,
+                "test_keys/priv/pep-test-bob-0xC9C2EE39_priv.asc",  
+                "pep.test.bob@pep-project.org", bob_fpr, 
+                bob_user_id.c_str(), "Robert Redford", NULL, true
+            );
+    assert(status == PEP_STATUS_OK);
     
+    status = set_up_ident_from_scratch(session,
+                "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc",
+                "pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), "Alice is tired of Bob",
+                NULL, false
+            );
+    assert(status == PEP_STATUS_OK);    
 }
 
 void KeyResetMessageTests::check_key_reset_message() {
@@ -179,6 +195,9 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
     hashmap[erin_user_id] = false;
     hashmap[fenris_user_id] = false;
     
+    // Number of messages we SHOULD be sending.
+    TEST_ASSERT(m_queue.size() == 4);
+    
     for (vector<message*>::iterator it = m_queue.begin(); it != m_queue.end(); it++) {
         message* curr_sent_msg = *it;
         TEST_ASSERT(curr_sent_msg);
@@ -192,9 +211,10 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
         unordered_map<string, bool>::iterator jt = hashmap.find(to->user_id);
         
         TEST_ASSERT(jt != hashmap.end());
-        hashmap[jt->first] = true;        
+        hashmap[jt->first] = true;   
     }
     
+    // Make sure we have 
     TEST_ASSERT(hashmap[alice_user_id] == false);
     TEST_ASSERT(hashmap[bob_user_id] == true);
     TEST_ASSERT(hashmap[carol_user_id] == true);
@@ -206,6 +226,31 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
 }
 
 void KeyResetMessageTests::check_receive_revoked() {
+    receive_setup();
+    pEp_identity* alice_ident = new_identity("pep.test.alice@pep-project.org", NULL,
+                                            alice_user_id.c_str(), NULL);
+                                            
+    PEP_STATUS status = update_identity(session, alice_ident);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(strcmp(alice_fpr, alice_ident->fpr) == 0);
+    
+    
+//    TEST_ASSERT(strcmp("3EB562B0BE859A313636885910B2C4691EF99182", alice_ident->fpr) == 0);
+    
+    string received_mail = slurp("test_files/398_reset_from_alice_to_bob.eml");
+    char* decrypted_msg = NULL;
+    char* modified_src = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags;
+    status = MIME_decrypt_message(session, received_mail.c_str(), received_mail.size(),
+                                  &decrypted_msg, &keylist, &rating, &flags, &modified_src);
+                                  
+    TEST_ASSERT_MSG(status == PEP_DECRYPTED, tl_status_string(status));
+    
+    status = update_identity(session, alice_ident);
+    TEST_ASSERT(strcmp(alice_receive_reset_fpr, alice_ident->fpr) == 0);
+    
     TEST_ASSERT(true);
 }
 

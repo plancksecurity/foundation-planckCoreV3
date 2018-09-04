@@ -3254,15 +3254,11 @@ pep_free:
 }
 
 PEP_STATUS receive_key_reset(PEP_SESSION session,
-                             message* reset_msg,
-                             const char* signing_fpr) {
+                             message* reset_msg) {
 
     if (!session || !reset_msg)
         return PEP_ILLEGAL_VALUE;
-        
-    if (EMPTYSTR(signing_fpr))
-        return PEP_ILLEGAL_VALUE; // need better error - this is an attack 
-        
+                
     if (!reset_msg->from || !reset_msg->from->user_id)
         return PEP_MALFORMED_KEY_RESET_MSG;
         
@@ -3278,27 +3274,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
     
     stringlist_t* keylist = NULL;
     pEp_identity* temp_ident = NULL;
-    
-    // Make sure the signing fpr belongs to the "from" user, since that is 
-    // who we are to change defaults for.
-    
-    // 1. See if this fpr is even associated with this user_id
-    pEp_identity* sender_id = reset_msg->from;
-    bool user_has_fpr = false;
-    
-    temp_ident = identity_dup(sender_id);
-    free(temp_ident->fpr);
-    temp_ident->fpr = strdup(signing_fpr);
-    
-    status = exists_trust_entry(session, temp_ident, &user_has_fpr);
-    if (status != PEP_STATUS_OK)
-        goto pep_free;
-        
-    if (!user_has_fpr) {   
-        status = PEP_KEY_NOT_FOUND;
-        goto pep_free;
-    }
-    
+            
     char* rest = NULL;
     char* p = strtok_r(reset_msg->longmsg, "\n", &rest);
     if (!EMPTYSTR(p + 5))
@@ -3307,10 +3283,23 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         status = PEP_MALFORMED_KEY_RESET_MSG;
         goto pep_free;
     }
+    
+    // 1. See if this fpr is even associated with this user_id
+    pEp_identity* sender_id = reset_msg->from;
+    bool user_has_fpr = false;
 
-    // Before we go further, let's be sure this was signed by the revoked fpr.
-    if (strcasecmp(revoke_fpr, signing_fpr) != 0) {
-        status = PEP_ILLEGAL_VALUE;
+    temp_ident = identity_dup(sender_id);
+    free(temp_ident->fpr);
+    temp_ident->fpr = strdup(revoke_fpr);
+    
+    status = exists_trust_entry(session, temp_ident, &user_has_fpr);
+    free_identity(temp_ident);
+    
+    if (status != PEP_STATUS_OK)
+        goto pep_free;
+        
+    if (!user_has_fpr) {   
+        status = PEP_KEY_NOT_FOUND;
         goto pep_free;
     }
         
@@ -3358,7 +3347,6 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
     
     sender_id->comm_type = sender_id->comm_type & (~PEP_ct_confirmed);
     status = set_identity(session, sender_id);
-
     
     if (status == PEP_STATUS_OK)
         status = PEP_KEY_RESET_SUCCESSFUL;
@@ -3644,14 +3632,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                         bool is_key_reset = (strcmp(wrap_info, "KEY_RESET") == 0);
 
                                         if (is_key_reset) {
-                                            if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
-                                                if (!_keylist || !_keylist->value) {
-                                                    status = PEP_UNKNOWN_ERROR;
-                                                    goto pep_error;
-                                                }    
+                                            if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
                                                 status = receive_key_reset(session,
-                                                                           inner_message,
-                                                                           _keylist->value);
+                                                                           inner_message);
                                                 if (status != PEP_STATUS_OK) {
                                                     free_message(inner_message);
                                                     goto pep_error;

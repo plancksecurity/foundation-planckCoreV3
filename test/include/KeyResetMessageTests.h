@@ -20,6 +20,9 @@ class KeyResetMessageTests : public EngineTestIndividualSuite {
         vector<message*> m_queue;
         
         static constexpr const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
+        static constexpr const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
+        
+        static constexpr const char* alice_receive_reset_fpr = "3EB562B0BE859A313636885910B2C4691EF99182";
 
         static const string alice_user_id;
         static const string bob_user_id;    
