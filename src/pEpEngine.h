@@ -137,6 +137,14 @@ typedef PEP_STATUS (*messageToSend_t)(struct _message *msg);
 struct Sync_event;
 typedef struct Sync_event *SYNC_EVENT;
 
+// free_Sync_event() - free memory occupied by sync protocol message
+//
+//  parameters:
+//      ev (in)         event to free
+
+void free_Sync_event(SYNC_EVENT ev);
+
+
 // inject_sync_event - inject sync protocol message
 //
 //  parameters:
