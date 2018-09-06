@@ -43,5 +43,6 @@ int util_delete_filepath(const char *filepath,
                          const struct stat *file_stat, 
                          int ftw_info, 
                          struct FTW * ftw_struct);
+                         
         
 #endif
