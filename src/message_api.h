@@ -442,6 +442,26 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
     );
 
 
+// outgoing_message_rating_preview() - get rating preview
+//
+//  parameters:
+//      session (in)        session handle
+//      msg (in)            message to get the rating for
+//      rating (out)        rating preview for the message
+//
+//  return value:
+//      error status or PEP_STATUS_OK on success
+//
+//  caveat:
+//      msg->from must point to a valid pEp_identity
+//      msg->dir must be PEP_dir_outgoing
+//      the ownership of msg remains with the caller
+DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
+        PEP_SESSION session,
+        message *msg,
+        PEP_rating *rating
+    );
+
 // identity_rating() - get rating for a single identity
 //
 //  parameters:

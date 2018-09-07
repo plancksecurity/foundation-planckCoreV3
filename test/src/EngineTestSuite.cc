@@ -18,6 +18,7 @@
 
 #include "test_util.h"
 #include "EngineTestSuite.h"
+
 using namespace std;
 
 // Constructor
@@ -107,7 +108,7 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
         struct stat buf;
 
         if (stat(test_home.c_str(), &buf) == 0) {
-            cout << test_home << " exists. We'll recursively delete. We hope we're not horking your whole system..." << endl;
+//            cout << test_home << " exists. We'll recursively delete. We hope we're not horking your whole system..." << endl;
             int success = nftw((test_home + "/.").c_str(), util_delete_filepath, 100, FTW_DEPTH);
         }
     }
@@ -141,7 +142,6 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
 
     
     string home = getenv("HOME");
-    cout << "home is " << home << endl;
     assert(temp_test_home.compare(home) != 0);
     assert(temp_test_home.compare(home + "/") != 0);
     assert(temp_test_home.compare(home + "/.gnupg") != 0); // This is an EXCLUSION test, so we leave this.
@@ -163,6 +163,7 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
         throw std::runtime_error("SETUP: new GNUPGHOME threatens to mess up user GNUPGHOME (and delete all their keys). NO DICE.");
     
 //    cout << "Ok - checked if new test home will be safe. We'll try and make the directory, deleting it if it has already exists." << endl;
+    cout << "Test home directory is " << temp_test_home << endl;
     
     struct stat buf;
     
@@ -170,7 +171,7 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
     if (success != 0)
         throw std::runtime_error("SETUP: Error when setting GNUPGHOME.");
 
-    cout << "New GNUPGHOME is " << getenv("GNUPGHOME") << endl;
+    cout << "New GNUPGHOME is " << getenv("GNUPGHOME") << endl << endl;
     
     success = setenv("HOME", temp_test_home.c_str(), 1);
     if (success != 0)
@@ -217,8 +218,8 @@ void EngineTestSuite::restore_full_env() {
     success = setenv("HOME", real_home.c_str(), 1);
     if (success != 0)
         throw std::runtime_error("RESTORE: Cannot reset home directory! Either set environment variable manually back to your home, or quit this session!");
-    else
-        cout << "RESTORE: HOME is now " << getenv("HOME") << endl;
+    // else
+    //     cout << "RESTORE: HOME is now " << getenv("HOME") << endl;
     unix_local_db(true);
     gpg_conf(true);
     gpg_agent_conf(true);
@@ -234,4 +235,3 @@ void EngineTestSuite::tear_down() {}
 void EngineTestSuite::set_my_name() {
     my_name = typeid(*this).name();
 }
-

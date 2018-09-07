@@ -16,7 +16,9 @@ class EngineTestSuite : public Test::Suite {
         virtual ~EngineTestSuite();
         
         void add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()> test_func);
-        
+        void output_test_header(const char* test_name);
+        void output_test_footer(const char* test_name);
+
     protected:
         PEP_SESSION session;
         string test_home;
