@@ -1329,6 +1329,45 @@ static PEP_comm_type _get_comm_type(
     }
 }
 
+static PEP_comm_type _get_comm_type_preview(
+    PEP_SESSION session,
+    PEP_comm_type max_comm_type,
+    pEp_identity *ident
+    )
+{
+    assert(session);
+    assert(ident);
+
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    if (max_comm_type == PEP_ct_compromised)
+        return PEP_ct_compromised;
+
+    if (max_comm_type == PEP_ct_mistrusted)
+        return PEP_ct_mistrusted;
+
+    PEP_comm_type comm_type = PEP_ct_unknown;
+    if (ident && !EMPTYSTR(ident->address) && !EMPTYSTR(ident->user_id)) {
+        pEp_identity *ident2;
+        status = get_identity(session, ident->address, ident->user_id, &ident2);
+        comm_type = ident2 ? ident2->comm_type : PEP_ct_unknown;
+        free_identity(ident2);
+
+        if (status == PEP_STATUS_OK) {
+            if (comm_type == PEP_ct_compromised)
+                comm_type = PEP_ct_compromised;
+            else if (comm_type == PEP_ct_mistrusted)
+                comm_type = PEP_ct_mistrusted;
+            else
+                comm_type = _MIN(max_comm_type, comm_type);
+        }
+        else {
+            comm_type = PEP_ct_unknown;
+        }
+    }
+    return comm_type;
+}
+
 static void free_bl_entry(bloblist_t *bl)
 {
     if (bl) {
@@ -3571,6 +3610,24 @@ static void _max_comm_type_from_identity_list(
     }
 }
 
+static void _max_comm_type_from_identity_list_preview(
+        identity_list *identities,
+        PEP_SESSION session,
+        PEP_comm_type *max_comm_type,
+        bool *comm_type_determined
+    )
+{
+    identity_list * il;
+    for (il = identities; il != NULL; il = il->next)
+    {
+        if (il->ident)
+        {   
+            *max_comm_type = _get_comm_type_preview(session, *max_comm_type,
+                il->ident);
+        }
+    }
+}
+
 DYNAMIC_API PEP_STATUS outgoing_message_rating(
         PEP_SESSION session,
         message *msg,
@@ -3600,6 +3657,49 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
                                       &max_comm_type, &comm_type_determined);
 
     _max_comm_type_from_identity_list(msg->bcc, session,
+                                      &max_comm_type, &comm_type_determined);
+
+    if (comm_type_determined == false) {
+        // likely means there was a massive screwup with no sender or recipient
+        // keys
+        *rating = PEP_rating_undefined;
+    }
+    else
+        *rating = _MAX(_rating(max_comm_type, PEP_rating_undefined),
+                               PEP_rating_unencrypted);
+
+    return PEP_STATUS_OK;
+}
+
+DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
+        PEP_SESSION session,
+        message *msg,
+        PEP_rating *rating
+    )
+{
+    PEP_comm_type max_comm_type = PEP_ct_pEp;
+    bool comm_type_determined = false;
+
+    assert(session);
+    assert(msg);
+    assert(msg->dir == PEP_dir_outgoing);
+    assert(rating);
+
+    if (!(session && msg && rating))
+        return PEP_ILLEGAL_VALUE;
+
+    if (msg->dir != PEP_dir_outgoing)
+        return PEP_ILLEGAL_VALUE;
+
+    *rating = PEP_rating_undefined;
+
+    _max_comm_type_from_identity_list_preview(msg->to, session,
+                                      &max_comm_type, &comm_type_determined);
+
+    _max_comm_type_from_identity_list_preview(msg->cc, session,
+                                      &max_comm_type, &comm_type_determined);
+
+    _max_comm_type_from_identity_list_preview(msg->bcc, session,
                                       &max_comm_type, &comm_type_determined);
 
     if (comm_type_determined == false) {
