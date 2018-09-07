@@ -3613,8 +3613,7 @@ static void _max_comm_type_from_identity_list(
 static void _max_comm_type_from_identity_list_preview(
         identity_list *identities,
         PEP_SESSION session,
-        PEP_comm_type *max_comm_type,
-        bool *comm_type_determined
+        PEP_comm_type *max_comm_type
     )
 {
     identity_list * il;
@@ -3678,7 +3677,6 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
     )
 {
     PEP_comm_type max_comm_type = PEP_ct_pEp;
-    bool comm_type_determined = false;
 
     assert(session);
     assert(msg);
@@ -3694,22 +3692,16 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
     *rating = PEP_rating_undefined;
 
     _max_comm_type_from_identity_list_preview(msg->to, session,
-                                      &max_comm_type, &comm_type_determined);
+            &max_comm_type);
 
     _max_comm_type_from_identity_list_preview(msg->cc, session,
-                                      &max_comm_type, &comm_type_determined);
+            &max_comm_type);
 
     _max_comm_type_from_identity_list_preview(msg->bcc, session,
-                                      &max_comm_type, &comm_type_determined);
+            &max_comm_type);
 
-    if (comm_type_determined == false) {
-        // likely means there was a massive screwup with no sender or recipient
-        // keys
-        *rating = PEP_rating_undefined;
-    }
-    else
-        *rating = _MAX(_rating(max_comm_type, PEP_rating_undefined),
-                               PEP_rating_unencrypted);
+    *rating = _MAX(_rating(max_comm_type, PEP_rating_undefined),
+            PEP_rating_unencrypted);
 
     return PEP_STATUS_OK;
 }
