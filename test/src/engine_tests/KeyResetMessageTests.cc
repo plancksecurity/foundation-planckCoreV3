@@ -10,6 +10,7 @@
 #include "pEpEngine.h"
 #include "pEp_internal.h"
 #include "mime.h"
+#include "keymanagement.h"
 
 #include "test_util.h"
 #include "EngineTestIndividualSuite.h"
@@ -167,7 +168,8 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
     // key, will get sent some nice key reset messages.
     // But... we need to have one look like an older message. So. Time to mess with the DB.
     // Dave is our victim. Because I have a friend called Dave, who is actually a nice dude, but it amuses me.
-    // (Note: said friend is NOT David Hasselhoff. To my knowledge. Hi Dave!)
+    // (Note: said friend is NOT David Hasselhoff. To my knowledge. Hi Dave! (Addendum: Dave confirms he is
+    // not Hasselhoff. But he wishes he were, sort of.))
     //
     // update identity
     //      set timestamp = 661008730
@@ -212,17 +214,30 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
         
         TEST_ASSERT(jt != hashmap.end());
         hashmap[jt->first] = true;   
+        
+        message* decrypted_msg = NULL;
+        stringlist_t* keylist = NULL;
+        PEP_rating rating;
+        PEP_decrypt_flags_t flags;
+        
+        status = decrypt_message(session, curr_sent_msg, 
+                                 &decrypted_msg, &keylist, 
+                                 &rating, &flags);
+                                 
+        TEST_ASSERT_MSG((status == PEP_DECRYPTED_AND_VERIFIED), tl_status_string(status));
+        free_message(curr_sent_msg); // DO NOT USE AFTER THIS
     }
     
-    // Make sure we have 
+    // MESSAGE LIST NOW INVALID.
+    m_queue.clear();
+    
+    // Make sure we have messages only to desired recips
     TEST_ASSERT(hashmap[alice_user_id] == false);
     TEST_ASSERT(hashmap[bob_user_id] == true);
     TEST_ASSERT(hashmap[carol_user_id] == true);
     TEST_ASSERT(hashmap[dave_user_id] == false);
     TEST_ASSERT(hashmap[erin_user_id] == true);
     TEST_ASSERT(hashmap[fenris_user_id] == true);
-    
-    TEST_ASSERT(true);
 }
 
 void KeyResetMessageTests::check_receive_revoked() {
@@ -234,9 +249,6 @@ void KeyResetMessageTests::check_receive_revoked() {
     TEST_ASSERT(status == PEP_STATUS_OK);
     TEST_ASSERT(strcmp(alice_fpr, alice_ident->fpr) == 0);
     
-    
-//    TEST_ASSERT(strcmp("3EB562B0BE859A313636885910B2C4691EF99182", alice_ident->fpr) == 0);
-    
     string received_mail = slurp("test_files/398_reset_from_alice_to_bob.eml");
     char* decrypted_msg = NULL;
     char* modified_src = NULL;
@@ -247,11 +259,22 @@ void KeyResetMessageTests::check_receive_revoked() {
                                   &decrypted_msg, &keylist, &rating, &flags, &modified_src);
                                   
     TEST_ASSERT_MSG(status == PEP_DECRYPTED, tl_status_string(status));
+    TEST_ASSERT(keylist);
+    if (keylist) // there's a test option to continue when asserts fail, so...
+        TEST_ASSERT_MSG(strcmp(keylist->value, alice_receive_reset_fpr) == 0,
+                        keylist->value);
     
     status = update_identity(session, alice_ident);
-    TEST_ASSERT(strcmp(alice_receive_reset_fpr, alice_ident->fpr) == 0);
+    TEST_ASSERT(alice_ident->fpr);
+    TEST_ASSERT_MSG(strcmp(alice_receive_reset_fpr, alice_ident->fpr) == 0,
+                    alice_ident->fpr);
     
-    TEST_ASSERT(true);
+    keylist = NULL;
+    status = find_keys(session, alice_fpr, &keylist);
+
+    TEST_ASSERT(status == PEP_KEY_NOT_FOUND);
+    free(keylist);
+    
 }
 
 void KeyResetMessageTests::check_receive_key_reset_private() {

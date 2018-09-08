@@ -3332,7 +3332,6 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
     temp_ident->fpr = strdup(revoke_fpr);
     
     status = exists_trust_entry(session, temp_ident, &user_has_fpr);
-    free_identity(temp_ident);
     
     if (status != PEP_STATUS_OK)
         goto pep_free;
@@ -3369,9 +3368,12 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         status = PEP_MALFORMED_KEY_RESET_MSG;
         goto pep_free;
     }
+
+    // Reset the original key
+    status = key_reset(session, revoke_fpr, temp_ident);
+    if (status != PEP_STATUS_OK)
+        goto pep_free;
         
-    // We know that the signer has the sender's user_id, and that the revoked fpr
-    // is theirs. We now need to make sure that we've imported the key we need.    
     status = find_keys(session, new_fpr, &keylist);
     if (status != PEP_STATUS_OK)
         goto pep_free;
@@ -3391,10 +3393,10 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         status = PEP_KEY_RESET_SUCCESSFUL;
     
 pep_free:    
-    free(keylist);    
+    free_stringlist(keylist);    
     free(revoke_fpr);
     free(new_fpr);
-    free(temp_ident);
+    free_identity(temp_ident);
     return status;
 }
 
@@ -3994,6 +3996,7 @@ DYNAMIC_API PEP_STATUS key_reset(
         
     char* fpr_copy = NULL;
     char* own_id = NULL;
+    char* new_key = NULL;
     identity_list* key_idents = NULL;
     stringlist_t* keys = NULL;
     
@@ -4065,35 +4068,47 @@ DYNAMIC_API PEP_STATUS key_reset(
                 }
             }
                         
-//            char* fpr_backup = ident->fpr;
             free(ident->fpr);
             ident->fpr = fpr_copy;            
             // Create revocation
             status = revoke_key(session, fpr_copy, NULL);
-            // mistrust fpr from trust
-            if (status == PEP_STATUS_OK)
-                status = key_mistrusted(session, ident);
-            // Remove fpr from ALL identities
-            // Remove fpr from ALL users    
-            if (status == PEP_STATUS_OK)
-                status = remove_fpr_as_default(session, fpr_copy);
-            if (status == PEP_STATUS_OK)
-                status = add_mistrusted_key(session, fpr_copy);
             // generate new key
             if (status == PEP_STATUS_OK) {
                 ident->fpr = NULL;
                 status = generate_keypair(session, ident);
             }
-            // add to revocation list (ident->fpr is now the NEW key)
-            if (status == PEP_STATUS_OK) 
-                status = set_revoked(session, fpr_copy, ident->fpr, time(NULL));
+            if (status == PEP_STATUS_OK) {
+                new_key = strdup(ident->fpr);
+                status = set_own_key(session, ident, new_key);
+            }
+            // mistrust fpr from trust
+            ident->fpr = fpr_copy;
             
+            ident->comm_type = PEP_ct_mistrusted;
+            status = set_trust(session, ident);
+            ident->fpr = NULL;
+            
+            // Done with old use of ident.
+            if (status == PEP_STATUS_OK) {
+                // Update fpr for outgoing
+                status = myself(session, ident);
+            }
+            
+            if (status == PEP_STATUS_OK)
+                // cascade that mistrust for anyone using this key
+                status = mark_as_compromised(session, fpr_copy);
+            if (status == PEP_STATUS_OK)
+                status = remove_fpr_as_default(session, fpr_copy);
+            if (status == PEP_STATUS_OK)
+                status = add_mistrusted_key(session, fpr_copy);
+            // add to revocation list 
+            if (status == PEP_STATUS_OK) 
+                status = set_revoked(session, fpr_copy, new_key, time(NULL));            
             // for all active communication partners:
             //      active_send revocation
             if (status == PEP_STATUS_OK)
-                status = send_key_reset_to_recents(session, fpr_copy, ident->fpr);
-            
-//            ident->fpr = fpr_backup;
+                status = send_key_reset_to_recents(session, fpr_copy, new_key);
+                
         }
         else { // not is_me
             // remove fpr from all identities
@@ -4112,7 +4127,8 @@ pep_free:
     free(fpr_copy);
     free(own_id);
     free_identity_list(key_idents);
-    free_stringlist(keys);    
+    free_stringlist(keys);
+    free(new_key);    
     return status;
 }
 

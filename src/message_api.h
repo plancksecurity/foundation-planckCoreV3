@@ -43,7 +43,7 @@ typedef enum _PEP_encrypt_flags {
     // their own PGP-only device
     PEP_encrypt_flag_force_version_1 = 0x16,
     
-    PEP_encrypt_flag_key_reset_only = 0x32,
+    PEP_encrypt_flag_key_reset_only = 0x20
     
 } PEP_encrypt_flags; 
 
