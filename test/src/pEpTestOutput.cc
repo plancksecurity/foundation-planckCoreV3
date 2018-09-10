@@ -53,7 +53,7 @@ namespace Test {
         if (tests > 0) {
             cout << endl << "Suite results:" << endl; 
             cout << right << setw(30) << "Number of tests run: " << setw(7) << tests << endl;
-            cout << right << setw(30) << "Tests failed: " << setw(7) << _total_failed << endl;
+            cout << right << setw(30) << "Tests failed: " << setw(7) << _suite_failed << endl;
             cout << right << setw(30) << "Pass percentage: ";
             outputCorrectPercentage(_suite_total, _suite_failed, 7);
             cout << endl << endl;
