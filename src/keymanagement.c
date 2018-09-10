@@ -1192,76 +1192,21 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
 
     if (!(session && ident && ident->fpr))
         return PEP_ILLEGAL_VALUE;
+            
+    // double-check to be sure key is even in the DB
+    if (ident->fpr)
+        status = set_pgp_keypair(session, ident->fpr);
 
-    // ident is INPUT ONLY, so we need to preserve the input fpr
-    char* preserve_fpr = ident->fpr;
-    ident->fpr = strdup(preserve_fpr);
+    // We set this temporarily but will grab it back from the cache afterwards
+    ident->comm_type = PEP_ct_mistrusted;
+    status = set_trust(session, ident);
     
-    if (ident->me)
-    {
-        revoke_key(session, ident->fpr, NULL);
-        myself(session, ident);
-    }
-    else
-    {
-        // for undo
-        if (session->cached_mistrusted)
-            free(session->cached_mistrusted);
-        session->cached_mistrusted = identity_dup(ident);
-        
-        // set mistrust for this user_id/keypair (even if there's not an
-        // identity set yet, this is important, as we need to record the mistrust
-        // action)
-        
-        // double-check to be sure key is even in the DB
-        if (ident->fpr)
-            status = set_pgp_keypair(session, ident->fpr);
-
-        // We set this temporarily but will grab it back from the cache afterwards
-        ident->comm_type = PEP_ct_mistrusted;
-        status = set_trust(session, ident);
-        ident->comm_type = session->cached_mistrusted->comm_type;
-        
-        if (status == PEP_STATUS_OK)
-            // cascade that mistrust for anyone using this key
-            status = mark_as_compromised(session, ident->fpr);
-        if (status == PEP_STATUS_OK)
-            status = remove_fpr_as_default(session, ident->fpr);
-        if (status == PEP_STATUS_OK)
-            status = add_mistrusted_key(session, ident->fpr);
-    }
-    free(ident->fpr);
-    ident->fpr = preserve_fpr;
-    return status;
-}
-
-DYNAMIC_API PEP_STATUS undo_last_mistrust(PEP_SESSION session) {
-    assert(session);
-    
-    if (!session)
-        return PEP_ILLEGAL_VALUE;
-    
-    PEP_STATUS status = PEP_STATUS_OK;
-        
-    pEp_identity* cached_ident = session->cached_mistrusted;
-    
-    if (!cached_ident)
-        status = PEP_CANNOT_FIND_IDENTITY;
-    else {
-        status = delete_mistrusted_key(session, cached_ident->fpr);
-        if (status == PEP_STATUS_OK) {
-            status = set_identity(session, cached_ident);
-            // THIS SHOULDN'T BE NECESSARY - PREVIOUS VALUE WAS IN THE DB
-            // if (status == PEP_STATUS_OK) {
-            //     if ((cached_ident->comm_type | PEP_ct_confirmed) == PEP_ct_pEp)
-            //         status = set_as_pep_user(session, cached_ident);
-            // }            
-            free_identity(session->cached_mistrusted);
-        }
-    }
-    
-    session->cached_mistrusted = NULL;
-    
+    if (status == PEP_STATUS_OK)
+        // cascade that mistrust for anyone using this key
+        status = mark_as_compromised(session, ident->fpr);
+    if (status == PEP_STATUS_OK)
+        status = add_mistrusted_key(session, ident->fpr);
+            
     return status;
 }
 

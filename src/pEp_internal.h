@@ -232,9 +232,6 @@ struct _pEpSession {
     bool unencrypted_subject;
     bool keep_sync_msg;
     bool service_log;
-
-    // mistrust undo cache
-    pEp_identity* cached_mistrusted;
     
 #ifdef DEBUG_ERRORSTACK
     stringlist_t* errorstack;

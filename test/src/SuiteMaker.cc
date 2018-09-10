@@ -30,7 +30,6 @@
 #include "BlacklistTests.h"
 #include "LeastCommonDenomColorTests.h"
 #include "PepSubjectReceivedTests.h"
-#include "MistrustUndoTests.h"
 #include "StringpairListTests.h"
 #include "PgpListKeysTests.h"
 #include "ReencryptPlusExtraKeysTests.h"
@@ -71,7 +70,6 @@ const char* SuiteMaker::all_suites[] = {
     "BlacklistTests",
     "LeastCommonDenomColorTests",
     "PepSubjectReceivedTests",
-    "MistrustUndoTests",
     "StringpairListTests",
     "PgpListKeysTests",
     "ReencryptPlusExtraKeysTests",
@@ -94,7 +92,7 @@ const char* SuiteMaker::all_suites[] = {
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 38;
+int SuiteMaker::num_suites = 37;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "MapAsn1Tests") == 0)
@@ -133,8 +131,6 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new LeastCommonDenomColorTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "PepSubjectReceivedTests") == 0)
         *test_suite = new PepSubjectReceivedTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "MistrustUndoTests") == 0)
-        *test_suite = new MistrustUndoTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "StringpairListTests") == 0)
         *test_suite = new StringpairListTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "PgpListKeysTests") == 0)

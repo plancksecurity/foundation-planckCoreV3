@@ -188,6 +188,9 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
     status = key_reset(session, alice_fpr, from_ident);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     TEST_ASSERT(m_queue.size() > 0);
+    status = myself(session, from_ident);
+    string new_fpr = from_ident->fpr;
+    TEST_ASSERT_MSG((strcmp(alice_fpr, new_fpr.c_str()) != 0), new_fpr.c_str());
     
     unordered_map<string, bool> hashmap;
     hashmap[alice_user_id] = false;
@@ -214,7 +217,16 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
         
         TEST_ASSERT(jt != hashmap.end());
         hashmap[jt->first] = true;   
-        
+
+        // Uncomment to regenerate received message - remember to update
+        // alice_receive_reset_fpr
+        //
+        // if (it == m_queue.begin()) {
+        //     char* bob_msg = NULL;
+        //     mime_encode_message(curr_sent_msg, false, &bob_msg);
+        //     cout << bob_msg;
+        // }
+            
         message* decrypted_msg = NULL;
         stringlist_t* keylist = NULL;
         PEP_rating rating;
@@ -224,7 +236,14 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
                                  &decrypted_msg, &keylist, 
                                  &rating, &flags);
                                  
-        TEST_ASSERT_MSG((status == PEP_DECRYPTED_AND_VERIFIED), tl_status_string(status));
+        TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
+        TEST_ASSERT(keylist);
+        if (keylist) {
+            TEST_ASSERT(keylist->value);
+            if (keylist->value)
+                TEST_ASSERT_MSG(strcmp(keylist->value, new_fpr.c_str()) == 0,
+                                keylist->value);
+        }
         free_message(curr_sent_msg); // DO NOT USE AFTER THIS
     }
     
@@ -258,7 +277,7 @@ void KeyResetMessageTests::check_receive_revoked() {
     status = MIME_decrypt_message(session, received_mail.c_str(), received_mail.size(),
                                   &decrypted_msg, &keylist, &rating, &flags, &modified_src);
                                   
-    TEST_ASSERT_MSG(status == PEP_DECRYPTED, tl_status_string(status));
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(keylist);
     if (keylist) // there's a test option to continue when asserts fail, so...
         TEST_ASSERT_MSG(strcmp(keylist->value, alice_receive_reset_fpr) == 0,
@@ -272,7 +291,8 @@ void KeyResetMessageTests::check_receive_revoked() {
     keylist = NULL;
     status = find_keys(session, alice_fpr, &keylist);
 
-    TEST_ASSERT(status == PEP_KEY_NOT_FOUND);
+    // Do we really want to delete it, or do we need its revoked status hanging about?
+    TEST_ASSERT_MSG(status == PEP_KEY_NOT_FOUND, tl_status_string(status));
     free(keylist);
     
 }

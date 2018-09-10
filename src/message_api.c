@@ -4115,9 +4115,9 @@ DYNAMIC_API PEP_STATUS key_reset(
             // remove fpr from all users
             if (status == PEP_STATUS_OK)
                 status = remove_fpr_as_default(session, fpr_copy);
-            // delete key from key ring
-            if (status == PEP_STATUS_OK)
-                status = delete_keypair(session, fpr_copy);
+            // delete key from DB
+            if (status == PEP_STATUS_OK) {};
+//                status = delete_keypair(session, fpr_copy);
             // N.B. If this key is being replaced by something else, it
             // is done outside of this function.    
         }
