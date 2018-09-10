@@ -289,10 +289,7 @@ void KeyResetMessageTests::check_receive_revoked() {
                     alice_ident->fpr);
     
     keylist = NULL;
-    status = find_keys(session, alice_fpr, &keylist);
 
-    // Do we really want to delete it, or do we need its revoked status hanging about?
-    TEST_ASSERT_MSG(status == PEP_KEY_NOT_FOUND, tl_status_string(status));
     free(keylist);
     
 }
