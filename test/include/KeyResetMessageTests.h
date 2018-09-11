@@ -22,7 +22,7 @@ class KeyResetMessageTests : public EngineTestIndividualSuite {
         static constexpr const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
         static constexpr const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
         
-        static constexpr const char* alice_receive_reset_fpr = "E7281DAE65DDD847F186B6988819915AA104FB62";
+        static constexpr const char* alice_receive_reset_fpr = "6A349E4F68801E39145CD4C5712616A385412538";
 
         static const string alice_user_id;
         static const string bob_user_id;    
@@ -37,7 +37,8 @@ class KeyResetMessageTests : public EngineTestIndividualSuite {
     private:
         void check_key_reset_message();        
         void check_reset_key_and_notify();
-        void check_receive_revoked();
+        void check_non_reset_receive_revoked();
+        void check_reset_receive_revoked();
         void check_receive_key_reset_private();
         void check_receive_key_reset_wrong_signer();
         void check_receive_key_reset_unsigned();

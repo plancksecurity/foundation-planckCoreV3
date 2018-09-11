@@ -32,8 +32,10 @@ KeyResetMessageTests::KeyResetMessageTests(string suitename, string test_home_di
                                                                       static_cast<Func>(&KeyResetMessageTests::check_key_reset_message)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_reset_key_and_notify"),
                                                                       static_cast<Func>(&KeyResetMessageTests::check_reset_key_and_notify)));
-    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_receive_revoked"),
-                                                                      static_cast<Func>(&KeyResetMessageTests::check_receive_revoked)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_non_reset_receive_revoked"),
+                                                                      static_cast<Func>(&KeyResetMessageTests::check_non_reset_receive_revoked)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_reset_receive_revoked"),
+                                                                      static_cast<Func>(&KeyResetMessageTests::check_reset_receive_revoked)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_receive_key_reset_private"),
                                                                       static_cast<Func>(&KeyResetMessageTests::check_receive_key_reset_private)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_receive_key_reset_wrong_signer"),
@@ -140,12 +142,23 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
     identity_list* send_idents = 
         new_identity_list(
             new_identity("pep.test.bob@pep-project.org", 
-                         NULL, "BobId", "Bob's Burgers"));
+                         NULL, bob_user_id.c_str(), "Bob's Burgers"));
                          
     identity_list_add(send_idents, new_identity("pep-test-carol@pep-project.org", NULL, NULL, NULL));    
     identity_list_add(send_idents, new_identity("pep-test-dave@pep-project.org", NULL, NULL, NULL)); 
     identity_list_add(send_idents, new_identity("pep-test-erin@pep-project.org", NULL, NULL, NULL)); 
     identity_list_add(send_idents, new_identity("pep.test.fenris@thisstilldoesntwork.lu", NULL, NULL, NULL)); 
+
+    identity_list* curr_ident;
+    
+    for (curr_ident = send_idents; curr_ident && curr_ident->ident; curr_ident = curr_ident->next) {
+        status = update_identity(session, curr_ident->ident);
+        if (strcmp(curr_ident->ident->user_id, bob_user_id.c_str()) == 0)
+            continue;
+        
+        status = set_as_pep_user(session, curr_ident->ident);
+        TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    }
     
     cout << "Creating outgoing message to update DB" << endl;
     message* outgoing_msg = new_message(PEP_dir_outgoing);
@@ -219,32 +232,17 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
         hashmap[jt->first] = true;   
 
         // Uncomment to regenerate received message - remember to update
-        // alice_receive_reset_fpr
-        //
-        // if (it == m_queue.begin()) {
+        // alice_receive_reset_fpr        
+        // if (strcmp(curr_sent_msg->to->ident->user_id, bob_user_id.c_str()) == 0) {
         //     char* bob_msg = NULL;
         //     mime_encode_message(curr_sent_msg, false, &bob_msg);
         //     cout << bob_msg;
         // }
-            
-        message* decrypted_msg = NULL;
-        stringlist_t* keylist = NULL;
-        PEP_rating rating;
-        PEP_decrypt_flags_t flags;
-        
-        status = decrypt_message(session, curr_sent_msg, 
-                                 &decrypted_msg, &keylist, 
-                                 &rating, &flags);
-                                 
-        TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
-        TEST_ASSERT(keylist);
-        if (keylist) {
-            TEST_ASSERT(keylist->value);
-            if (keylist->value)
-                TEST_ASSERT_MSG(strcmp(keylist->value, new_fpr.c_str()) == 0,
-                                keylist->value);
-        }
-        free_message(curr_sent_msg); // DO NOT USE AFTER THIS
+        // else if (strcmp(curr_sent_msg->to->ident->user_id, fenris_user_id.c_str()) == 0) {
+        //     char* fenris_msg = NULL;
+        //     mime_encode_message(curr_sent_msg, false, &fenris_msg);
+        //     cout << fenris_msg;
+        // }
     }
     
     // MESSAGE LIST NOW INVALID.
@@ -259,7 +257,7 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
     TEST_ASSERT(hashmap[fenris_user_id] == true);
 }
 
-void KeyResetMessageTests::check_receive_revoked() {
+void KeyResetMessageTests::check_non_reset_receive_revoked() {
     receive_setup();
     pEp_identity* alice_ident = new_identity("pep.test.alice@pep-project.org", NULL,
                                             alice_user_id.c_str(), NULL);
@@ -290,9 +288,62 @@ void KeyResetMessageTests::check_receive_revoked() {
     
     keylist = NULL;
 
-    free(keylist);
-    
+    free(keylist);    
 }
+
+void KeyResetMessageTests::check_reset_receive_revoked() {
+    PEP_STATUS status = set_up_ident_from_scratch(session,
+                "test_keys/pub/pep.test.fenris-0x4F3D2900_pub.asc",
+                "pep.test.fenris@thisstilldoesntwork.lu", NULL, fenris_user_id.c_str(), 
+                "Fenris Leto Hawke", NULL, false
+            );
+    assert(status == PEP_STATUS_OK);
+    status = set_up_ident_from_scratch(session,
+                "test_keys/priv/pep.test.fenris-0x4F3D2900_priv.asc",
+                "pep.test.fenris@thisstilldoesntwork.lu", NULL, fenris_user_id.c_str(), 
+                "Fenris Leto Hawke", NULL, false
+            );
+    assert(status == PEP_STATUS_OK);
+    
+    status = set_up_ident_from_scratch(session,
+                "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc",
+                "pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), "Alice is tired of Bob",
+                NULL, false
+            );
+    assert(status == PEP_STATUS_OK);    
+    
+    pEp_identity* alice_ident = new_identity("pep.test.alice@pep-project.org", NULL,
+                                            alice_user_id.c_str(), NULL);
+                                            
+    status = update_identity(session, alice_ident);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(strcmp(alice_fpr, alice_ident->fpr) == 0);
+    
+    string received_mail = slurp("test_files/398_reset_from_alice_to_fenris.eml");
+    char* decrypted_msg = NULL;
+    char* modified_src = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags;
+    status = MIME_decrypt_message(session, received_mail.c_str(), received_mail.size(),
+                                  &decrypted_msg, &keylist, &rating, &flags, &modified_src);
+                                  
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    TEST_ASSERT(keylist);
+    if (keylist) // there's a test option to continue when asserts fail, so...
+        TEST_ASSERT_MSG(strcmp(keylist->value, alice_receive_reset_fpr) == 0,
+                        keylist->value);
+    
+    status = update_identity(session, alice_ident);
+    TEST_ASSERT(alice_ident->fpr);
+    TEST_ASSERT_MSG(strcmp(alice_receive_reset_fpr, alice_ident->fpr) == 0,
+                    alice_ident->fpr);
+    
+    keylist = NULL;
+
+    free(keylist);    
+}
+
 
 void KeyResetMessageTests::check_receive_key_reset_private() {
     TEST_ASSERT(true);
