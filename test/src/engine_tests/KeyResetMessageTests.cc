@@ -36,14 +36,10 @@ KeyResetMessageTests::KeyResetMessageTests(string suitename, string test_home_di
                                                                       static_cast<Func>(&KeyResetMessageTests::check_non_reset_receive_revoked)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_reset_receive_revoked"),
                                                                       static_cast<Func>(&KeyResetMessageTests::check_reset_receive_revoked)));
-    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_receive_key_reset_private"),
-                                                                      static_cast<Func>(&KeyResetMessageTests::check_receive_key_reset_private)));
-    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_receive_key_reset_wrong_signer"),
-                                                                      static_cast<Func>(&KeyResetMessageTests::check_receive_key_reset_wrong_signer)));
-    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_receive_key_reset_unsigned"),
-                                                                      static_cast<Func>(&KeyResetMessageTests::check_receive_key_reset_unsigned)));
-    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_receive_message_to_revoked_key"),
-                                                                      static_cast<Func>(&KeyResetMessageTests::check_receive_message_to_revoked_key)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_receive_message_to_revoked_key_from_unknown"),
+                                                                      static_cast<Func>(&KeyResetMessageTests::check_receive_message_to_revoked_key_from_unknown)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_receive_message_to_revoked_key_from_contact"),
+                                                                      static_cast<Func>(&KeyResetMessageTests::check_receive_message_to_revoked_key_from_contact)));                                                                      
 }
 
 PEP_STATUS KeyResetMessageTests::message_send_callback(void* obj, message* msg) {
@@ -55,6 +51,7 @@ void KeyResetMessageTests::setup() {
     EngineTestIndividualSuite::setup();
     session->sync_obj = this;
     session->messageToSend = &KeyResetMessageTests::message_send_callback;
+    m_queue.clear();
 }
 
 void KeyResetMessageTests::send_setup() {
@@ -344,19 +341,167 @@ void KeyResetMessageTests::check_reset_receive_revoked() {
     free(keylist);    
 }
 
-
-void KeyResetMessageTests::check_receive_key_reset_private() {
-    TEST_ASSERT(true);
+void KeyResetMessageTests::create_msg_for_revoked_key() {
+    PEP_STATUS status = set_up_ident_from_scratch(session,
+                "test_keys/pub/pep-test-gabrielle-0xE203586C_pub.asc",
+                "pep-test-gabrielle@pep-project.org", NULL, PEP_OWN_USERID, 
+                "Gabi", NULL, false
+            );
+    assert(status == PEP_STATUS_OK);
+    status = set_up_ident_from_scratch(session,
+                "test_keys/priv/pep-test-gabrielle-0xE203586C_priv.asc",
+                "pep-test-gabrielle@pep-project.org", NULL, PEP_OWN_USERID, 
+                "Gabi", NULL, false
+            );
+    assert(status == PEP_STATUS_OK);
+    
+    status = set_up_ident_from_scratch(session,
+                "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc",
+                "pep.test.alice@pep-project.org", NULL, "AliceOther", "Alice is tired of Bob",
+                NULL, false
+            );
+    
+    pEp_identity* from_ident = new_identity("pep-test-gabrielle@pep-project.org", NULL, PEP_OWN_USERID, NULL);
+    status = myself(session, from_ident); 
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    TEST_ASSERT_MSG(from_ident->fpr && strcasecmp(from_ident->fpr, "906C9B8349954E82C5623C3C8C541BD4E203586C") == 0,
+                    from_ident->fpr);
+    TEST_ASSERT(from_ident->me);
+    
+    // "send" some messages to update the social graph entries
+    identity_list* send_idents = 
+        new_identity_list(
+            new_identity("pep.test.alice@pep-project.org", NULL, "AliceOther", NULL));
+    status = update_identity(session, send_idents->ident);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));    
+    status = set_as_pep_user(session, send_idents->ident);
+                             
+    message* outgoing_msg = new_message(PEP_dir_outgoing);
+    TEST_ASSERT(outgoing_msg);
+    outgoing_msg->from = from_ident;
+    outgoing_msg->to = send_idents;
+    outgoing_msg->shortmsg = strdup("Well isn't THIS a useless message...");
+    outgoing_msg->longmsg = strdup("Hi Mom...\n");
+    outgoing_msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
+    cout << "Message created.\n\n";
+    cout << "Encrypting message as MIME multipart…\n";
+    message* enc_outgoing_msg = nullptr;
+    cout << "Calling encrypt_message()\n";
+    status = encrypt_message(session, outgoing_msg, NULL, &enc_outgoing_msg, PEP_enc_PGP_MIME, 0);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
+    TEST_ASSERT(enc_outgoing_msg);
+    cout << "Message encrypted.\n";    
+    char* outstring = NULL;
+    mime_encode_message(enc_outgoing_msg, false, &outstring);
+    cout << outstring << endl;
+    free_message(enc_outgoing_msg);
+    free(outstring);
 }
 
-void KeyResetMessageTests::check_receive_key_reset_wrong_signer() {
-    TEST_ASSERT(true);
+void KeyResetMessageTests::check_receive_message_to_revoked_key_from_unknown() {
+    // create_msg_for_revoked_key(); // call to recreate msg
+    send_setup();
+    pEp_identity* from_ident = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
+    PEP_STATUS status = myself(session, from_ident); 
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    TEST_ASSERT_MSG(from_ident->fpr && strcasecmp(from_ident->fpr, alice_fpr) == 0,
+                    from_ident->fpr);
+    TEST_ASSERT(from_ident->me);
+
+    status = key_reset(session, alice_fpr, from_ident);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
+    m_queue.clear();
+    
+    string received_mail = slurp("test_files/398_gabrielle_to_alice.eml");
+    char* decrypted_msg = NULL;
+    char* modified_src = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags;
+    status = MIME_decrypt_message(session, received_mail.c_str(), received_mail.size(),
+                                  &decrypted_msg, &keylist, &rating, &flags, &modified_src);
+    TEST_ASSERT(m_queue.size() == 0);
+    free(decrypted_msg);
+    free(modified_src);
+    free_stringlist(keylist);
+    free_identity(from_ident);
 }
 
-void KeyResetMessageTests::check_receive_key_reset_unsigned() {
-    TEST_ASSERT(true);
-}
+void KeyResetMessageTests::check_receive_message_to_revoked_key_from_contact() {
+    // create_msg_for_revoked_key(); // call to recreate msg
+    send_setup();
+    pEp_identity* from_ident = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
+    PEP_STATUS status = myself(session, from_ident); 
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    TEST_ASSERT_MSG(from_ident->fpr && strcasecmp(from_ident->fpr, alice_fpr) == 0,
+                    from_ident->fpr);
+    TEST_ASSERT(from_ident->me);
 
-void KeyResetMessageTests::check_receive_message_to_revoked_key() {
+    // Send Gabrielle a message
+    identity_list* send_idents = new_identity_list(new_identity("pep-test-gabrielle@pep-project.org", NULL, "Gabi", "Gabi"));
+    cout << "Creating outgoing message to update DB" << endl;
+    message* outgoing_msg = new_message(PEP_dir_outgoing);
+    TEST_ASSERT(outgoing_msg);
+    outgoing_msg->from = from_ident;
+    outgoing_msg->to = send_idents;
+    outgoing_msg->shortmsg = strdup("Well isn't THIS a useless message...");
+    outgoing_msg->longmsg = strdup("Hi Mom...\n");
+    outgoing_msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
+    cout << "Message created.\n\n";
+    cout << "Encrypting message as MIME multipart…\n";
+    message* enc_outgoing_msg = nullptr;
+    cout << "Calling encrypt_message()\n";
+    status = encrypt_message(session, outgoing_msg, NULL, &enc_outgoing_msg, PEP_enc_PGP_MIME, 0);
+    TEST_ASSERT_MSG((status == PEP_UNENCRYPTED), tl_status_string(status));
+    //
+    cout << "Message created." << endl;
+    
+    // Make the update have occurred earlier, so we don't notify her
+    // (We have no key for her yet anyway!)
+    int int_result = sqlite3_exec(
+        session->db,
+        "update identity "
+        "   set timestamp = 661008730 "
+        "   where address = 'pep-test-gabrielle@pep-project.org' ;",
+        NULL,
+        NULL,
+        NULL
+    );
+    TEST_ASSERT(int_result == SQLITE_OK);
+
+    status = key_reset(session, alice_fpr, from_ident);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
+    TEST_ASSERT(m_queue.size() == 0);
+    m_queue.clear();
+
+    // Now we get mail from Gabi, who only has our old key AND has become
+    // a pEp user in the meantime...
+    string received_mail = slurp("test_files/398_gabrielle_to_alice.eml");
+    char* decrypted_msg = NULL;
+    char* modified_src = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags;
+    status = MIME_decrypt_message(session, received_mail.c_str(), received_mail.size(),
+                                  &decrypted_msg, &keylist, &rating, &flags, &modified_src);
+    
+    TEST_ASSERT(m_queue.size() == 1);
+    vector<message*>::iterator it = m_queue.begin();
+    message* reset_msg = *it;
+    TEST_ASSERT(reset_msg);    
+    TEST_ASSERT(reset_msg->from);    
+    TEST_ASSERT(reset_msg->to);    
+    TEST_ASSERT(reset_msg->to->ident);    
+    TEST_ASSERT(strcmp(reset_msg->to->ident->address, "pep-test-gabrielle@pep-project.org") == 0);
+    TEST_ASSERT(strcmp(reset_msg->to->ident->fpr, "906C9B8349954E82C5623C3C8C541BD4E203586C") == 0);    
+    TEST_ASSERT(strcmp(reset_msg->from->fpr, alice_fpr) != 0);
+    TEST_ASSERT(keylist);
+    TEST_ASSERT(keylist->value);
+    TEST_ASSERT(strcmp(keylist->value, alice_fpr) != 0);
+    TEST_ASSERT(keylist->next);
+    if (strcmp(keylist->next->value, "906C9B8349954E82C5623C3C8C541BD4E203586C") != 0)
+        TEST_ASSERT(keylist->next->next && 
+                    strcmp(keylist->next->value, 
+                           "906C9B8349954E82C5623C3C8C541BD4E203586C") == 0);
     TEST_ASSERT(true);
 }

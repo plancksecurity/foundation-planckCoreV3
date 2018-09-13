@@ -39,13 +39,12 @@ class KeyResetMessageTests : public EngineTestIndividualSuite {
         void check_reset_key_and_notify();
         void check_non_reset_receive_revoked();
         void check_reset_receive_revoked();
-        void check_receive_key_reset_private();
-        void check_receive_key_reset_wrong_signer();
-        void check_receive_key_reset_unsigned();
-        void check_receive_message_to_revoked_key();   
+        void check_receive_message_to_revoked_key_from_unknown();   
+        void check_receive_message_to_revoked_key_from_contact();   
         
         void send_setup();
         void receive_setup();     
+        void create_msg_for_revoked_key();
         
 };
 
