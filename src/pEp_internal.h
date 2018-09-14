@@ -108,6 +108,8 @@
 #include "transport.h"
 #include "sync.h"
 
+#include "key_reset.h"
+
 #define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
 
 struct _pEpSession;
