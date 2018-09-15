@@ -5,48 +5,107 @@
 
 #include "pEpEngine.h"
 
+
+// pgp_init(): initialize PGP backend
+//
+//  parameters:
+//      session (in)        session handle
+//      in_first (in)       true if this is the first session
+//
+//  return value:
+//      PEP_STATUS_OK if PGP backend was successfully initialized
+//      or any other value on error
+
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first);
+
+
+// pgp_release(): release PGP backend
+//
+//  paramters:
+//      session (in)        session handle
+//      out_last (in)       true if this is the last session to release
+
 void pgp_release(PEP_SESSION session, bool out_last);
 
+
+// pgp_decrypt_and_verify(): decrypt and verify cyphertext
+//
+//  parameters:
+//      session (in)        session handle
+//      ctext (in)          bytes with ciphertext
+//      csize (in)          size of ciphertext in bytes
+//      dsigtext (in)       pointer to bytes with detached signature
+//                          or NULL if no detached signature
+//      dsigsize (in)       size of detached signature in bytes
+//      ptext (out)         pointer to receive plaintext
+//      psize (out)         size of plaintext delivered
+//      keylist (out)       list of keys being used
+
 PEP_STATUS pgp_decrypt_and_verify(
-        PEP_SESSION session, const char *ctext, size_t csize,
-        const char *dsigtext, size_t dsigsize,
-        char **ptext, size_t *psize, stringlist_t **keylist
+        PEP_SESSION session,
+        const char *ctext,
+        size_t csize,
+        const char *dsigtext,
+        size_t dsigsize,
+        char **ptext,
+        size_t *psize,
+        stringlist_t **keylist
     );
 
+
 PEP_STATUS pgp_encrypt_and_sign(
-        PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
-        size_t psize, char **ctext, size_t *csize
+        PEP_SESSION session,
+        const stringlist_t *keylist,
+        const char *ptext,
+        size_t psize,
+        char **ctext,
+        size_t *csize
     );
 
 PEP_STATUS pgp_encrypt_only(
-        PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
-        size_t psize, char **ctext, size_t *csize
+        PEP_SESSION session,
+        const stringlist_t *keylist,
+        const char *ptext,
+        size_t psize,
+        char **ctext,
+        size_t *csize
     );
 
 
 PEP_STATUS pgp_verify_text(
-        PEP_SESSION session, const char *text, size_t size,
-        const char *signature, size_t sig_size, stringlist_t **keylist
+        PEP_SESSION session,
+        const char *text,
+        size_t size,
+        const char *signature,
+        size_t sig_size,
+        stringlist_t **keylist
     );
 
 PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr);
 
 PEP_STATUS pgp_export_keydata(
-        PEP_SESSION session, const char *fpr, char **key_data, size_t *size,
+        PEP_SESSION session,
+        const char *fpr,
+        char **key_data,
+        size_t *size,
         bool secret
     );
 
 PEP_STATUS pgp_find_keys(
-        PEP_SESSION session, const char *pattern, stringlist_t **keylist
+        PEP_SESSION session,
+        const char *pattern,
+        stringlist_t **keylist
     );
 
 PEP_STATUS pgp_list_keyinfo(
-        PEP_SESSION session, const char* pattern, stringpair_list_t** keyinfo_list
+        PEP_SESSION session,
+        const char* pattern,
+        stringpair_list_t** keyinfo_list
     );
 
 PEP_STATUS pgp_generate_keypair(
-        PEP_SESSION session, pEp_identity *identity
+        PEP_SESSION session,
+        pEp_identity *identity
     );
 
 PEP_STATUS pgp_get_key_rating(
@@ -55,13 +114,22 @@ PEP_STATUS pgp_get_key_rating(
         PEP_comm_type *comm_type
     );
 
-PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
-                              size_t size, identity_list **private_idents);
+PEP_STATUS pgp_import_keydata(
+        PEP_SESSION session,
+        const char *key_data,
+        size_t size,
+        identity_list **private_idents
+    );
 
-PEP_STATUS pgp_import_private_keydata(PEP_SESSION session, const char *key_data,
-                                      size_t size, identity_list **private_idents);
+PEP_STATUS pgp_import_private_keydata(
+        PEP_SESSION session,
+        const char *key_data,
+        size_t size,
+        identity_list **private_idents
+    );
 
 PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern);
+
 PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern);
 
 PEP_STATUS pgp_renew_key(
@@ -98,16 +166,20 @@ PEP_STATUS pgp_key_created(
 PEP_STATUS pgp_contains_priv_key(
         PEP_SESSION session, 
         const char *fpr,
-        bool *has_private);
+        bool *has_private
+    );
 
 PEP_STATUS pgp_find_private_keys(
-    PEP_SESSION session, const char *pattern, stringlist_t **keylist
-);
+        PEP_SESSION session,
+        const char *pattern,
+        stringlist_t **keylist
+    );
 
 PEP_STATUS pgp_binary(const char **path);
 
 // Returns first failure status, if there were any. Keys may have been
 // imported into DB regardless of status.
+
 PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session);
 
 /* Really only internal. */
