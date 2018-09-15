@@ -6,7 +6,7 @@
 #include "pEpEngine.h"
 
 
-// pgp_init(): initialize PGP backend
+// pgp_init() - initialize PGP backend
 //
 //  parameters:
 //      session (in)        session handle
@@ -19,7 +19,7 @@
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first);
 
 
-// pgp_release(): release PGP backend
+// pgp_release() - release PGP backend
 //
 //  paramters:
 //      session (in)        session handle
@@ -28,7 +28,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first);
 void pgp_release(PEP_SESSION session, bool out_last);
 
 
-// pgp_decrypt_and_verify(): decrypt and verify cyphertext
+// pgp_decrypt_and_verify() - decrypt and verify cyphertext
 //
 //  parameters:
 //      session (in)        session handle
@@ -37,9 +37,24 @@ void pgp_release(PEP_SESSION session, bool out_last);
 //      dsigtext (in)       pointer to bytes with detached signature
 //                          or NULL if no detached signature
 //      dsigsize (in)       size of detached signature in bytes
-//      ptext (out)         pointer to receive plaintext
-//      psize (out)         size of plaintext delivered
-//      keylist (out)       list of keys being used
+//      ptext (out)         bytes with cyphertext
+//      psize (out)         size of cyphertext in bytes
+//      keylist (out)       list of keys being used; first is the key being
+//                          used for signing
+//
+//  return value:
+//      PEP_DECRYPTED_AND_VERIFIED      data could be decryped and verified
+//      PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH
+//                                      a signature does not match
+//      PEP_DECRYPTED                   data could be decrypted but not verified
+//      PEP_VERIFIED_AND_TRUSTED        data was unencrypted but perfectly signed
+//      PEP_VERIFIED                    data was unencrypted, signature matches
+//      PEP_DECRYPT_NO_KEY              data could not be decrypted because a
+//                                      key is missing
+//      PEP_DECRYPT_WRONG_FORMAT        data format not readable
+//      PEP_ILLEGAL_VALUE               parameters wrong
+//      PEP_OUT_OF_MEMORY               out of memory error
+//      PEP_UNKOWN_ERROR                internal error
 
 PEP_STATUS pgp_decrypt_and_verify(
         PEP_SESSION session,
@@ -53,6 +68,26 @@ PEP_STATUS pgp_decrypt_and_verify(
     );
 
 
+// pgp_encrypt_and_sign() - encrypt plaintext and sign
+//
+//  parameters:
+//      session (in)        session handle
+//      keylist (in)        first key to sign and encrypt, all other keys to
+//                          encrypt
+//      ptext (in)          bytes with plaintext
+//      psize (in)          size of plaintext in bytes
+//      ctext (out)         bytes with ciphertext, ASCII armored
+//      csize (out)         size of ciphertext in bytes
+//
+//  return value:
+//      PEP_STATUS_OK                   successful
+//      PEP_KEY_NOT_FOUND               key not in keyring
+//      PEP_KEY_HAS_AMBIG_NAME          multiple keys match data in keylist
+//      PEP_GET_KEY_FAILED              access to keyring failed
+//      PEP_ILLEGAL_VALUE               parameters wrong
+//      PEP_OUT_OF_MEMORY               out of memory error
+//      PEP_UNKOWN_ERROR                internal error
+
 PEP_STATUS pgp_encrypt_and_sign(
         PEP_SESSION session,
         const stringlist_t *keylist,
@@ -61,6 +96,26 @@ PEP_STATUS pgp_encrypt_and_sign(
         char **ctext,
         size_t *csize
     );
+
+
+// pgp_encrypt_only() - encrypt plaintext
+//
+//  parameters:
+//      session (in)        session handle
+//      keylist (in)        keys to encrypt plaintext
+//      ptext (in)          bytes with plaintext
+//      psize (in)          size of plaintext in bytes
+//      ctext (out)         bytes with ciphertext, ASCII armored
+//      csize (out)         size of ciphertext in bytes
+//
+//  return value:
+//      PEP_STATUS_OK                   successful
+//      PEP_KEY_NOT_FOUND               key not in keyring
+//      PEP_KEY_HAS_AMBIG_NAME          multiple keys match data in keylist
+//      PEP_GET_KEY_FAILED              access to keyring failed
+//      PEP_ILLEGAL_VALUE               parameters wrong
+//      PEP_OUT_OF_MEMORY               out of memory error
+//      PEP_UNKOWN_ERROR                internal error
 
 PEP_STATUS pgp_encrypt_only(
         PEP_SESSION session,
@@ -72,6 +127,28 @@ PEP_STATUS pgp_encrypt_only(
     );
 
 
+// pgp_verify_text() - verify signed data
+//
+//  parameters:
+//      session (in)        session handle
+//      keylist (in)        keys to encrypt plaintext
+//      text (in)           data to verify, may include signature
+//      size (in)           size of data to verify in bytes
+//      signature (in)      detached signature data or NULL
+//      sig_size (in)       size of detached signature in bytes
+//      keylist (out)       list of keys being used for signing
+//
+//  return value:
+//      PEP_VERIFIED_AND_TRUSTED        data was unencrypted but perfectly signed
+//                                      this is depending on PGP trust concept
+//      PEP_VERIFIED                    data was unencrypted, signature matches
+//      PEP_DECRYPT_NO_KEY              data could not be verified because a
+//                                      key is missing
+//      PEP_DECRYPT_WRONG_FORMAT        data format not readable
+//      PEP_ILLEGAL_VALUE               parameters wrong
+//      PEP_OUT_OF_MEMORY               out of memory error
+//      PEP_UNKOWN_ERROR                internal error
+
 PEP_STATUS pgp_verify_text(
         PEP_SESSION session,
         const char *text,
@@ -81,7 +158,24 @@ PEP_STATUS pgp_verify_text(
         stringlist_t **keylist
     );
 
+
+// pgp_delete_keypair() - delete key or keypair
+//
+//  parameters:
+//      session (in)        session handle
+//      fpr (in)            fingerprint of key or keypair to delete
+
 PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr);
+
+
+// pgp_export_keydata() - export public key data ASCII armored
+//
+//  parameters:
+//      session (in)        session handle
+//      fpr (in)            fingerprint of public key to export
+//      key_data (out)      ascii armored key data
+//      size (out)          size of ascii armored key data
+//      secret (in)         additionally export private key data
 
 PEP_STATUS pgp_export_keydata(
         PEP_SESSION session,
@@ -91,11 +185,20 @@ PEP_STATUS pgp_export_keydata(
         bool secret
     );
 
+
+// pgp_find_keys() - find keys where fprs are matching a pattern
+//
+//  parameters:
+//      session (in)        session handle
+//      pattern (in)        UTF-8 string with pattern
+//      keylist (out)       list of fprs matching
+
 PEP_STATUS pgp_find_keys(
         PEP_SESSION session,
         const char *pattern,
         stringlist_t **keylist
     );
+
 
 PEP_STATUS pgp_list_keyinfo(
         PEP_SESSION session,
