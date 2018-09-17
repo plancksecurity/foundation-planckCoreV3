@@ -199,6 +199,11 @@ static const char* sql_replace_userid =
     "update person set id = ?1 " 
     "   where id = ?2;";
 
+// Hopefully this cascades and removes trust entries...
+static const char *sql_delete_key =
+    "delete from pgp_keypair "
+    "   where fpr = ?1 ; ";
+
 static const char *sql_replace_main_user_fpr =  
     "update person "
     "   set main_key_id = ?1 "
@@ -1205,6 +1210,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_replace_userid), &_session->replace_userid, NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_delete_key,
+            (int)strlen(sql_delete_key), &_session->delete_key, NULL);
+    assert(int_result == SQLITE_OK);
+
     int_result = sqlite3_prepare_v2(_session->db, sql_replace_main_user_fpr,
             (int)strlen(sql_replace_main_user_fpr), &_session->replace_main_user_fpr, NULL);
     assert(int_result == SQLITE_OK);
@@ -1615,6 +1624,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->i18n_token);
             if (session->replace_userid)
                 sqlite3_finalize(session->replace_userid);
+            if (session->delete_key)
+                sqlite3_finalize(session->delete_key);                
             if (session->replace_main_user_fpr)
                 sqlite3_finalize(session->replace_main_user_fpr);                
             if (session->get_main_user_fpr)
@@ -3227,6 +3238,27 @@ PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
 
     return PEP_STATUS_OK;
 }
+
+PEP_STATUS remove_key(PEP_SESSION session, const char* fpr) {
+    assert(session);
+    assert(fpr);
+    
+    if (!session || EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    int result;
+
+    sqlite3_reset(session->delete_key);
+    sqlite3_bind_text(session->delete_key, 1, fpr, -1,
+            SQLITE_STATIC);
+    result = sqlite3_step(session->delete_key);
+    sqlite3_reset(session->delete_key);
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_PGP_KEYPAIR;
+
+    return PEP_STATUS_OK;
+}
+
 
 PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id) {
     assert(session);

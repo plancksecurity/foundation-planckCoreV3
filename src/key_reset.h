@@ -15,48 +15,33 @@
 extern "C" {
 #endif
 
-// FIXME: Proper docs!
-//  Algorithm:
-// 
-//     Key Reset trigger; either manually or in another protocol, parameter key (optional)
-// 
-//     if identity given:
-// 
-//     key reset for one identity
-// 
-//     else
-// 
-//     For identity in own identities
-// 
-//     key reset for one identitiy
-// 
-//     Key Reset for identity:
-// 
-//     if own identity:
-// 
-//     Create revocation
-// 
-//     add to revocation list
-// 
-//     mistrust fpr from trust
-// 
-//     Remove fpr from ALL identities
-// 
-//     Remove fpr from ALL users
-// 
-//     generate new key
-// 
-//     for all active communication partners:
-// 
-//     active_send revocation
-// 
-//     else
-// 
-//     remove fpr from all identities
-// 
-//     remove fpr from all users
-// 
-//     delete key from key ring
+// key_reset() - reset the database status for a key, removing all trust information
+//               and default database connections. For own keys, also revoke the key
+//               and communicate the revocation and new key to partners we have sent
+//               mail to recently from the specific identity (i.e. address/user_id)
+//               that contacted them. We also in this case set up information so that
+//               if someone we mail uses the wrong key and wasn't yet contacted,
+//               we can send them the reset information from the right address.
+//
+//               Can be called manually or through another protocol.
+//
+//  parameters:
+//      session (in)            session handle
+//      fpr (in)                fingerprint of key to reset. If NULL and ident is NULL,
+//                              we reset all keys for the own user. If NULL and ident is
+//                              an own identity, we reset the default key for that
+//                              identity. If that own identity has no default key, we
+//                              reset the user default.
+//                              if it is NULL and there is a non-own identity, this is
+//                              currently undefined and will return an error. Later, we
+//                              may decide on semantics for it (e.g. remove all keys
+//                              in the DB for that identity)
+//      ident (in)              identity for which the key reset should occur.
+//                              if NULL and fpr is non-NULL, we'll reset the key for all
+//                              associated identities. If both ident and fpr are NULL, see 
+//                              the fpr arg documentation.
+//
+//
 DYNAMIC_API PEP_STATUS key_reset(
         PEP_SESSION session,
         const char* fpr,

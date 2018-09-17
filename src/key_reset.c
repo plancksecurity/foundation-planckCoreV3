@@ -456,15 +456,20 @@ DYNAMIC_API PEP_STATUS key_reset(
                 
         }
         else { // not is_me
+            // TODO: Decide what this means. We have a non-own identity, we don't
+            //       have an fpr. Do we reset all keys for that identity?
+            if (EMPTYSTR(fpr_copy)) {
+                NOT_IMPLEMENTED
+            }
+                
             // remove fpr from all identities
             // remove fpr from all users
             if (status == PEP_STATUS_OK)
                 status = remove_fpr_as_default(session, fpr_copy);
             // delete key from DB
-            if (status == PEP_STATUS_OK) {};
-//                status = delete_keypair(session, fpr_copy);
-            // N.B. If this key is being replaced by something else, it
-            // is done outside of this function.    
+            if (status == PEP_STATUS_OK) {
+                status = remove_key(session, fpr_copy);
+            };
         }
     }
     

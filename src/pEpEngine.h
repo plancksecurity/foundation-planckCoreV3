@@ -1263,6 +1263,8 @@ PEP_STATUS get_identities_by_userid(
 PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
                               const char* new_uid);
                               
+PEP_STATUS remove_key(PEP_SESSION session, const char* fpr);
+                              
 PEP_STATUS remove_fpr_as_default(PEP_SESSION session, 
                                     const char* fpr);
                               
