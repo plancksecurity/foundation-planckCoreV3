@@ -61,7 +61,7 @@ for i in range(num_keys):
             email = e_split[0] + "_" + i_str + "@" + e_split[1]
 
     print("Generating key data for " + name + " " + email + "\n")
-    input_data = gpg.gen_key_input(key_type="RSA", key_length=2048, subkey_type="RSA", subkey_length=2048, expire_date=0, name_real=name, name_email=email, password="")
+    input_data = gpg.gen_key_input(key_type="RSA", key_length=2048, subkey_type="RSA", subkey_length=2048, expire_date="2018-09-18", name_real=name, name_email=email, password="")
     if not input_data:
         raise Exception('Input data not created in iteration ' + str(i))
     
