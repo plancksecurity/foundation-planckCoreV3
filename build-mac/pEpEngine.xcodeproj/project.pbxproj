@@ -15,6 +15,7 @@
 		4354FF651D6EDF300033069C /* sync_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = 4354FF641D6EDF300033069C /* sync_impl.c */; };
 		4354FF691D6EE1A70033069C /* NULL.c in Sources */ = {isa = PBXBuildFile; fileRef = 4354FF681D6EE1A70033069C /* NULL.c */; };
 		435854CA2150D35100D5FDC7 /* key_reset.c in Sources */ = {isa = PBXBuildFile; fileRef = 435854C52150D35000D5FDC7 /* key_reset.c */; };
+		435854D32150D81100D5FDC7 /* key_reset.h in Headers */ = {isa = PBXBuildFile; fileRef = 435854CE2150D81100D5FDC7 /* key_reset.h */; };
 		43BA0F461D7964750059172F /* asn1_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 43BA0F451D7964750059172F /* asn1_helper.c */; };
 		43E9BC6A1DB51A1E00AD2352 /* GroupUpdate.c in Sources */ = {isa = PBXBuildFile; fileRef = 43E9BC691DB51A1E00AD2352 /* GroupUpdate.c */; };
 		43E9BC7F1DB6720E00AD2352 /* UpdateRequest.c in Sources */ = {isa = PBXBuildFile; fileRef = 43E9BC7E1DB6720E00AD2352 /* UpdateRequest.c */; };
@@ -203,6 +204,7 @@
 		4354FF641D6EDF300033069C /* sync_impl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_impl.c; path = ../src/sync_impl.c; sourceTree = "<group>"; };
 		4354FF681D6EE1A70033069C /* NULL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NULL.c; path = ../asn.1/NULL.c; sourceTree = "<group>"; };
 		435854C52150D35000D5FDC7 /* key_reset.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = key_reset.c; path = ../src/key_reset.c; sourceTree = "<group>"; };
+		435854CE2150D81100D5FDC7 /* key_reset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = key_reset.h; path = ../src/key_reset.h; sourceTree = "<group>"; };
 		43BA0F451D7964750059172F /* asn1_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = asn1_helper.c; path = ../src/asn1_helper.c; sourceTree = "<group>"; };
 		43E9BC691DB51A1E00AD2352 /* GroupUpdate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupUpdate.c; path = ../asn.1/GroupUpdate.c; sourceTree = "<group>"; };
 		43E9BC7E1DB6720E00AD2352 /* UpdateRequest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = UpdateRequest.c; path = ../asn.1/UpdateRequest.c; sourceTree = "<group>"; };
@@ -517,6 +519,7 @@
 			isa = PBXGroup;
 			children = (
 				435854C52150D35000D5FDC7 /* key_reset.c */,
+				435854CE2150D81100D5FDC7 /* key_reset.h */,
 				4337082D203C075A004E6547 /* sqlite3.c */,
 				43370832203C075A004E6547 /* sqlite3.h */,
 				430BCC472015EE800077E998 /* pEp_string.c */,
@@ -611,6 +614,7 @@
 				646C414F1D510D8800C63EFF /* baseprotocol.h in Headers */,
 				6467888D1CEB3D120001F54C /* map_asn1.h in Headers */,
 				646C41131D510CD800C63EFF /* HandshakeRequest.h in Headers */,
+				435854D32150D81100D5FDC7 /* key_reset.h in Headers */,
 				646C40F31D510CD800C63EFF /* asn_system.h in Headers */,
 				43370834203C075A004E6547 /* sqlite3.h in Headers */,
 				646C410B1D510CD800C63EFF /* constraints.h in Headers */,
