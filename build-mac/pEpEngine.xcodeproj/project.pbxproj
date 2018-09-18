@@ -1052,6 +1052,15 @@
 		64796A541B455AA5004B1C24 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)",
+					"$(SRCROOT)/../../netpgp-et/include/",
+					"$(SRCROOT)/../../netpgp-et/src/",
+					"$(SRCROOT)/../../OpenSSL-for-iPhone/include",
+					"$(SRCROOT)/../asn.1/",
+					"$(SRCROOT)/../src",
+				);
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1068,6 +1077,15 @@
 		64796A551B455AA5004B1C24 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)",
+					"$(SRCROOT)/../../netpgp-et/include/",
+					"$(SRCROOT)/../../netpgp-et/src/",
+					"$(SRCROOT)/../../OpenSSL-for-iPhone/include",
+					"$(SRCROOT)/../asn.1/",
+					"$(SRCROOT)/../src",
+				);
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
