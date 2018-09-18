@@ -41,6 +41,8 @@ extern "C" {
 //                              associated identities. If both ident and fpr are NULL, see 
 //                              the fpr arg documentation.
 //
+//      Note: ident->fpr is always ignored
+//
 //
 DYNAMIC_API PEP_STATUS key_reset(
         PEP_SESSION session,
