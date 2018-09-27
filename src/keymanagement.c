@@ -1070,7 +1070,6 @@ DYNAMIC_API PEP_STATUS register_examine_function(
 DYNAMIC_API PEP_STATUS do_keymanagement(
         PEP_SESSION session,
         retrieve_next_identity_t retrieve_next_identity,
-        messageToSend_t messageToSend,
         void *management
     )
 {
