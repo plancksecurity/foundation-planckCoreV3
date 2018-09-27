@@ -48,7 +48,7 @@ else
 	LLDB_BIN=lldb
 endif
 
-LDLIBS += -lcpptest
+LDLIBS+= -lcpptest
 
 
 # Create a list of the extra library paths for the loader. I do not assume that the engine (and its dependencies) are installed for testing.
@@ -93,7 +93,12 @@ suitemaker:
 ifndef PY_ENV
 	@echo "WARNING: Can't find python3 - this is fine unless you're adding test suites. If so, please install python3."
 else
+ifndef EXCLUDE
 	$(PY_ENV) gensuitemaker.py
+else
+	# Comma-separated list, no spaces
+	$(PY_ENV) gensuitemaker.py --exclude=$(EXCLUDE)
+endif
 endif
 		
 .PHONY: test_home_

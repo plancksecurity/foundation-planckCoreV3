@@ -5,11 +5,20 @@
 #include <unistd.h>
 #include <ftw.h>
 #include <assert.h>
+#include <fstream>
+#include <iostream>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#import <string>
+#import <vector>
+#include <utility>
 
 #include "platform_unix.h"
 
 #include "test_util.h"
 #include "EngineTestSuite.h"
+
 using namespace std;
 
 // Constructor
@@ -30,7 +39,58 @@ void EngineTestSuite::add_test_to_suite(std::pair<std::string, void (Test::Suite
     number_of_tests++;
 }
 
+void EngineTestSuite::copy_conf_file_to_test_dir(const char* dest_path, const char* conf_orig_path, const char* conf_dest_name) {
+    string conf_dest_path = dest_path;
+    
+    struct stat pathinfo;
+
+    if(stat(conf_dest_path.c_str(), &pathinfo) != 0) {
+        int errchk = mkdir(conf_dest_path.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+        if (errchk != 0)
+            throw std::runtime_error("Error accessing conf file directory.");
+    }
+    
+    conf_dest_path += "/";
+    conf_dest_path += conf_dest_name;
+    
+    ifstream src(conf_orig_path);
+    ofstream dst(conf_dest_path.c_str(), ios::trunc);
+    
+    assert(src);
+    assert(dst);
+    
+    dst << src.rdbuf();
+     
+    src.close();
+    dst.close();
+}
+
+void EngineTestSuite::add_file_to_gpg_dir_queue(string copy_from, string dst_fname) {    
+    gpgdir_fileadd_queue.push_back(make_pair(copy_from, dst_fname));
+}
+
+void EngineTestSuite::add_file_to_home_dir_queue(string copy_from, string dst_fname) {
+    homedir_fileadd_queue.push_back(make_pair(copy_from, dst_fname));
+}
+
+void EngineTestSuite::process_file_queue(string dirname, vector<pair<string, string>> file_queue) {
+    if (file_queue.empty())
+        return;
+        
+    vector<pair<string, string>>::iterator it;
+    
+    for (it = file_queue.begin(); it != file_queue.end(); it++) {
+        copy_conf_file_to_test_dir(dirname.c_str(), it->first.c_str(), it->second.c_str());
+    }
+    
+    file_queue.clear();
+}
+
 void EngineTestSuite::set_full_env() {
+    set_full_env(NULL, NULL, NULL);
+}
+
+void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* gpg_agent_conf_file_copy_path, const char* db_conf_file_copy_path) {
     int success = 0;
     struct stat dirchk;
     
@@ -39,7 +99,7 @@ void EngineTestSuite::set_full_env() {
     success = system("gpgconf --kill all");
     if (success != 0)
         throw std::runtime_error("SETUP: Error when executing 'gpgconf --kill all'.");
-    sleep(1); // hopefully enough time for the system to recognise that it is dead. *sigh*    
+ //   sleep(1); // hopefully enough time for the system to recognise that it is dead. *sigh*    
 
     if (stat(test_home.c_str(), &dirchk) == 0) {
         if (!S_ISDIR(dirchk.st_mode))
@@ -48,7 +108,7 @@ void EngineTestSuite::set_full_env() {
         struct stat buf;
 
         if (stat(test_home.c_str(), &buf) == 0) {
-            cout << test_home << " exists. Deleting..." << endl;
+//            cout << test_home << " exists. We'll recursively delete. We hope we're not horking your whole system..." << endl;
             int success = nftw((test_home + "/.").c_str(), util_delete_filepath, 100, FTW_DEPTH);
         }
     }
@@ -59,7 +119,7 @@ void EngineTestSuite::set_full_env() {
             throw std::runtime_error("Error creating a test directory.");
     }
 
-    string temp_test_home = test_home + "/" + my_name;
+    temp_test_home = test_home + "/" + my_name;
     
     int errchk = mkdir(temp_test_home.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
     if (errchk != 0)
@@ -82,22 +142,28 @@ void EngineTestSuite::set_full_env() {
 
     
     string home = getenv("HOME");
-    cout << "home is " << home << endl;
     assert(temp_test_home.compare(home) != 0);
     assert(temp_test_home.compare(home + "/") != 0);
+    assert(temp_test_home.compare(home + "/.gnupg") != 0); // This is an EXCLUSION test, so we leave this.
+    assert(temp_test_home.compare(home + ".gnupg") != 0);
     assert(temp_test_home.compare(home + "/gnupg") != 0);
     assert(temp_test_home.compare(home + "gnupg") != 0);
     assert(temp_test_home.compare(prev_gpg_home) != 0);
     assert(temp_test_home.compare(prev_gpg_home + "/gnupg") != 0);
     assert(temp_test_home.compare(prev_gpg_home + "gnupg") != 0);
+    assert(temp_test_home.compare(prev_gpg_home + "/.gnupg") != 0);
+    assert(temp_test_home.compare(prev_gpg_home + ".gnupg") != 0);
 
     if (temp_test_home.compare(home) == 0 || temp_test_home.compare(home + "/") == 0 ||
         temp_test_home.compare(home + "/gnupg") == 0 || temp_test_home.compare(home + "gnupg") == 0 ||
+        temp_test_home.compare(home + "/.gnupg") == 0 || temp_test_home.compare(home + ".gnupg") == 0 ||
         temp_test_home.compare(prev_gpg_home) == 0 || temp_test_home.compare(prev_gpg_home + "/gnupg") == 0 ||
-        temp_test_home.compare(prev_gpg_home + "gnupg") == 0)
+        temp_test_home.compare(prev_gpg_home + "gnupg") == 0 || temp_test_home.compare(prev_gpg_home + "/.gnupg") == 0 ||
+        temp_test_home.compare(prev_gpg_home + ".gnupg") == 0)
         throw std::runtime_error("SETUP: new GNUPGHOME threatens to mess up user GNUPGHOME (and delete all their keys). NO DICE.");
     
 //    cout << "Ok - checked if new test home will be safe. We'll try and make the directory, deleting it if it has already exists." << endl;
+    cout << "Test home directory is " << temp_test_home << endl;
     
     struct stat buf;
     
@@ -105,12 +171,24 @@ void EngineTestSuite::set_full_env() {
     if (success != 0)
         throw std::runtime_error("SETUP: Error when setting GNUPGHOME.");
 
-    cout << "New GNUPGHOME is " << getenv("GNUPGHOME") << endl;
+    cout << "New GNUPGHOME is " << getenv("GNUPGHOME") << endl << endl;
     
     success = setenv("HOME", temp_test_home.c_str(), 1);
     if (success != 0)
         throw std::runtime_error("SETUP: Cannot set test_home for init.");
-    
+
+    string tmp_gpg_dir = temp_test_home + "/.gnupg";
+
+    process_file_queue(tmp_gpg_dir, gpgdir_fileadd_queue);
+    process_file_queue(temp_test_home, homedir_fileadd_queue);
+
+    if (gpg_conf_copy_path)
+        copy_conf_file_to_test_dir((temp_test_home + "/gnupg").c_str(), gpg_conf_copy_path, "gpg.conf");
+    if (gpg_agent_conf_file_copy_path)        
+        copy_conf_file_to_test_dir((temp_test_home + "/gnupg").c_str(), gpg_agent_conf_file_copy_path, "gpg-agent.conf");
+    if (db_conf_file_copy_path)
+        copy_conf_file_to_test_dir(temp_test_home.c_str(), db_conf_file_copy_path, ".pEp_management.db");
+        
     unix_local_db(true);
     gpg_conf(true);
     gpg_agent_conf(true);
@@ -140,8 +218,8 @@ void EngineTestSuite::restore_full_env() {
     success = setenv("HOME", real_home.c_str(), 1);
     if (success != 0)
         throw std::runtime_error("RESTORE: Cannot reset home directory! Either set environment variable manually back to your home, or quit this session!");
-    else
-        cout << "RESTORE: HOME is now " << getenv("HOME") << endl;
+    // else
+    //     cout << "RESTORE: HOME is now " << getenv("HOME") << endl;
     unix_local_db(true);
     gpg_conf(true);
     gpg_agent_conf(true);
@@ -157,4 +235,3 @@ void EngineTestSuite::tear_down() {}
 void EngineTestSuite::set_my_name() {
     my_name = typeid(*this).name();
 }
-

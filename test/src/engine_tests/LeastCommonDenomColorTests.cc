@@ -26,7 +26,7 @@ LeastCommonDenomColorTests::LeastCommonDenomColorTests(string suitename, string 
 }
 
 void LeastCommonDenomColorTests::check_least_common_denom_color() {
-        
+
     const char* mailfile = "test_mails/Test_Message_JSON-21_Color_Problems.eml";
             
     // import keys
@@ -137,5 +137,4 @@ void LeastCommonDenomColorTests::check_least_common_denom_color() {
     dest_msg = nullptr;
     keylist = nullptr;
     rating = PEP_rating_unreliable;
-    
 }

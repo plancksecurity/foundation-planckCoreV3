@@ -109,6 +109,8 @@
 #include "sync_api.h"
 #include "Sync_func.h"
 
+#include "key_reset.h"
+
 #define NOT_IMPLEMENTED assert(0); return PEP_UNKNOWN_ERROR;
 
 struct _pEpSession;
@@ -134,16 +136,25 @@ struct _pEpSession {
     sqlite3_stmt *get_identity;
     sqlite3_stmt *get_identity_without_trust_check;
     sqlite3_stmt *get_identities_by_address;
+    sqlite3_stmt *get_identities_by_userid;
+    sqlite3_stmt *get_identities_by_main_key_id;
     sqlite3_stmt *replace_identities_fpr;
     sqlite3_stmt *replace_main_user_fpr;
     sqlite3_stmt *get_main_user_fpr;
     sqlite3_stmt *refresh_userid_default_key;
+    sqlite3_stmt *delete_key;
     sqlite3_stmt *remove_fpr_as_default;
     sqlite3_stmt *set_person;
     sqlite3_stmt *update_person;
     sqlite3_stmt *exists_person;    
     sqlite3_stmt *set_as_pEp_user;
     sqlite3_stmt *is_pEp_user;
+    sqlite3_stmt *add_into_social_graph;
+    sqlite3_stmt *get_own_address_binding_from_contact;
+    sqlite3_stmt *set_revoke_contact_as_notified;
+    sqlite3_stmt *get_contacted_ids_from_revoke_fpr;
+    sqlite3_stmt *was_id_for_revoke_contacted;
+    sqlite3_stmt *get_last_contacted;
     sqlite3_stmt *set_device_group;
     sqlite3_stmt *get_device_group;
     sqlite3_stmt *set_pgp_keypair;
@@ -172,13 +183,15 @@ struct _pEpSession {
     sqlite3_stmt *blacklist_is_listed;
     sqlite3_stmt *blacklist_retrieve;
     
-    // Own keys
+    // Keys
     sqlite3_stmt *own_key_is_listed;
     sqlite3_stmt *own_identities_retrieve;
     sqlite3_stmt *own_keys_retrieve;
     sqlite3_stmt *get_user_default_key;
+    sqlite3_stmt *get_all_keys_for_user;
         
     sqlite3_stmt *get_default_own_userid;
+
 
 //    sqlite3_stmt *set_own_key;
 
@@ -189,6 +202,7 @@ struct _pEpSession {
     // revoked keys
     sqlite3_stmt *set_revoked;
     sqlite3_stmt *get_revoked;
+    sqlite3_stmt *get_replacement_fpr;
 
     // mistrusted
     sqlite3_stmt* add_mistrusted_key;
@@ -223,9 +237,6 @@ struct _pEpSession {
     bool unencrypted_subject;
     bool keep_sync_msg;
     bool service_log;
-
-    // mistrust undo cache
-    pEp_identity* cached_mistrusted;
     
 #ifdef DEBUG_ERRORSTACK
     stringlist_t* errorstack;

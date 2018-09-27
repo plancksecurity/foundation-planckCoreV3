@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <cpptest.h>
 #include <cpptest-suite.h>
-#include <cpptest-textoutput.h>
+#include <cpptest-output.h>
+#include "pEpTestOutput.h"
+
 #include <string>
 #include <vector>
 #include <sys/stat.h>
@@ -51,7 +53,7 @@ int main(int argc, const char** argv) {
         test_runner->add(suite); 
     }
 
-    Test::TextOutput output(Test::TextOutput::Verbose);
-    return test_runner->run(output, false) ? 0 : 1;
-    
+    Test::Output* output = new Test::pEpTestOutput(); // blah
+    return test_runner->run(*output, false) ? 0 : 1;
+    delete(output);
 }

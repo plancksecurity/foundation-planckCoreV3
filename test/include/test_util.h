@@ -11,6 +11,18 @@
 
 void test_init();
 
+bool file_exists(std::string filename);
+
+PEP_STATUS read_file_and_import_key(PEP_SESSION session, const char* fname);
+PEP_STATUS set_up_ident_from_scratch(PEP_SESSION session, 
+                                     const char* key_fname,
+                                     const char* address,
+                                     const char* fpr,
+                                     const char* user_id,
+                                     const char* username,
+                                     pEp_identity** ret_ident,
+                                     bool is_priv);
+
 // string equality (case and non-case sensitive)
 bool _streq(const char* str1, const char* str2);
 bool _strceq(const char* str1, const char* str2);
@@ -41,5 +53,6 @@ int util_delete_filepath(const char *filepath,
                          const struct stat *file_stat, 
                          int ftw_info, 
                          struct FTW * ftw_struct);
+                         
         
 #endif
