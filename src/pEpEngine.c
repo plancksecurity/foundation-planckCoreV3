@@ -2834,6 +2834,12 @@ PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
     sqlite3_bind_text(session->replace_userid, 2, old_uid, -1,
             SQLITE_STATIC);
     result = sqlite3_step(session->replace_userid);
+#ifndef NDEBUG
+    if (result) {
+        const char *errmsg = sqlite3_errmsg(session->db);
+        log_event(session, "SQLite3 error", "replace_userid", errmsg, NULL);
+    }
+#endif // !NDEBUG
     sqlite3_reset(session->replace_userid);
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PERSON; // May need clearer retval
