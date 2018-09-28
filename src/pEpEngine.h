@@ -44,6 +44,7 @@ typedef enum {
     PEP_INIT_SQLITE3_WITHOUT_MUTEX                  = 0x0120,
     PEP_INIT_CANNOT_OPEN_DB                         = 0x0121,
     PEP_INIT_CANNOT_OPEN_SYSTEM_DB                  = 0x0122,
+    PEP_UNKNOWN_DB_ERROR                            = 0x01ff,
     
     PEP_KEY_NOT_FOUND                               = 0x0201,
     PEP_KEY_HAS_AMBIG_NAME                          = 0x0202,
@@ -51,6 +52,8 @@ typedef enum {
     PEP_CANNOT_EXPORT_KEY                           = 0x0204,
     PEP_CANNOT_EDIT_KEY                             = 0x0205,
     PEP_KEY_UNSUITABLE                              = 0x0206,
+    PEP_MALFORMED_KEY_RESET_MSG                     = 0x0210,
+    PEP_KEY_NOT_RESET                               = 0x0211,
     
     PEP_CANNOT_FIND_IDENTITY                        = 0x0301,
     PEP_CANNOT_SET_PERSON                           = 0x0381,
@@ -93,6 +96,7 @@ typedef enum {
     PEP_SYNC_NO_INJECT_CALLBACK                     = 0x0903,
     PEP_SYNC_NO_CHANNEL                             = 0x0904,
     PEP_SYNC_CANNOT_ENCRYPT                         = 0x0905,
+    PEP_SYNC_NO_MESSAGE_SEND_CALLBACK               = 0x0906,
 
     PEP_CANNOT_INCREASE_SEQUENCE                    = 0x0971,
 
@@ -1217,7 +1221,6 @@ DYNAMIC_API PEP_STATUS get_revoked(
         uint64_t *revocation_date
     );
 
-
 // key_created() - get creation date of a key
 //
 //  parameters:
@@ -1294,9 +1297,17 @@ PEP_STATUS get_identities_by_address(
         const char *address,
         identity_list** id_list
     );
+    
+PEP_STATUS get_identities_by_userid(
+        PEP_SESSION session,
+        const char *user_id,
+        identity_list **identities
+    );    
         
 PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
                               const char* new_uid);
+                              
+PEP_STATUS remove_key(PEP_SESSION session, const char* fpr);
                               
 PEP_STATUS remove_fpr_as_default(PEP_SESSION session, 
                                     const char* fpr);
@@ -1309,16 +1320,46 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
 PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
                               const char* new_fpr);
     
+DYNAMIC_API PEP_STATUS get_replacement_fpr(
+        PEP_SESSION session,
+        const char *fpr,
+        char **revoked_fpr,
+        uint64_t *revocation_date
+    );
+    
 PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id);
 
 // This ONLY sets the *user* flag, and creates a shell identity if necessary.
-PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user);
+DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user);
 
 // returns true (by reference) if a person with this user_id exists; 
 // Also replaces aliased user_ids by defaults in identity.
 PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exists);
 
 PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
+
+PEP_STATUS bind_own_ident_with_contact_ident(PEP_SESSION session,
+                                             pEp_identity* own_ident, 
+                                             pEp_identity* contact_ident);
+
+PEP_STATUS get_last_contacted(
+        PEP_SESSION session,
+        identity_list** id_list
+    );
+
+PEP_STATUS get_own_ident_for_contact_id(PEP_SESSION session,
+                                          const pEp_identity* contact,
+                                          pEp_identity** own_ident);
+
+PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
+                              bool* exists);
+
+PEP_STATUS is_own_key(PEP_SESSION session, const char* fpr, bool* own_key);
+
+PEP_STATUS get_identities_by_main_key_id(
+        PEP_SESSION session,
+        const char *fpr,
+        identity_list **identities);
 
 #ifdef __cplusplus
 }

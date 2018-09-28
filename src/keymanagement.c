@@ -232,6 +232,43 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
     return status;
 }
 
+PEP_STATUS get_all_keys_for_user(PEP_SESSION session, 
+                                 const char* user_id,
+                                 stringlist_t** keys) {
+
+    if (!session || EMPTYSTR(user_id) || !keys)
+        return PEP_ILLEGAL_VALUE;
+        
+    PEP_STATUS status = PEP_STATUS_OK;
+        
+    *keys = NULL;
+    stringlist_t* _kl = NULL;
+    
+    sqlite3_reset(session->get_all_keys_for_user);
+    sqlite3_bind_text(session->get_all_keys_for_user, 1, user_id, -1, SQLITE_STATIC);
+
+    int result = -1;
+    
+    while ((result = sqlite3_step(session->get_all_keys_for_user)) == SQLITE_ROW) {
+        const char* keyres = (const char *) sqlite3_column_text(session->get_all_keys_for_user, 0);
+        if (keyres) {
+            if (_kl)
+                stringlist_add(_kl, keyres);
+            else
+                _kl = new_stringlist(keyres);
+        }
+    }
+    
+    if (!_kl)
+        return PEP_KEY_NOT_FOUND;
+        
+    *keys = _kl;
+    
+    sqlite3_reset(session->get_all_keys_for_user);
+
+    return status;
+}
+
 PEP_STATUS get_user_default_key(PEP_SESSION session, const char* user_id,
                                 char** default_key) {
     assert(session);
@@ -1121,71 +1158,21 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
 
     if (!(session && ident && ident->fpr))
         return PEP_ILLEGAL_VALUE;
+            
+    // double-check to be sure key is even in the DB
+    if (ident->fpr)
+        status = set_pgp_keypair(session, ident->fpr);
 
-    if (ident->me)
-    {
-        revoke_key(session, ident->fpr, NULL);
-        myself(session, ident);
-    }
-    else
-    {
-        // for undo
-        if (session->cached_mistrusted)
-            free(session->cached_mistrusted);
-        session->cached_mistrusted = identity_dup(ident);
-        
-        // set mistrust for this user_id/keypair (even if there's not an
-        // identity set yet, this is important, as we need to record the mistrust
-        // action)
-        
-        // double-check to be sure key is even in the DB
-        if (ident->fpr)
-            status = set_pgp_keypair(session, ident->fpr);
-
-        // We set this temporarily but will grab it back from the cache afterwards
-        ident->comm_type = PEP_ct_mistrusted;
-        status = set_trust(session, ident);
-        ident->comm_type = session->cached_mistrusted->comm_type;
-        
-        if (status == PEP_STATUS_OK)
-            // cascade that mistrust for anyone using this key
-            status = mark_as_compromised(session, ident->fpr);
-        if (status == PEP_STATUS_OK)
-            status = remove_fpr_as_default(session, ident->fpr);
-        if (status == PEP_STATUS_OK)
-            status = add_mistrusted_key(session, ident->fpr);
-    }
-
-    return status;
-}
-
-DYNAMIC_API PEP_STATUS undo_last_mistrust(PEP_SESSION session) {
-    assert(session);
+    // We set this temporarily but will grab it back from the cache afterwards
+    ident->comm_type = PEP_ct_mistrusted;
+    status = set_trust(session, ident);
     
-    if (!session)
-        return PEP_ILLEGAL_VALUE;
-    
-    PEP_STATUS status = PEP_STATUS_OK;
-        
-    pEp_identity* cached_ident = session->cached_mistrusted;
-    
-    if (!cached_ident)
-        status = PEP_CANNOT_FIND_IDENTITY;
-    else {
-        status = delete_mistrusted_key(session, cached_ident->fpr);
-        if (status == PEP_STATUS_OK) {
-            status = set_identity(session, cached_ident);
-            // THIS SHOULDN'T BE NECESSARY - PREVIOUS VALUE WAS IN THE DB
-            // if (status == PEP_STATUS_OK) {
-            //     if ((cached_ident->comm_type | PEP_ct_confirmed) == PEP_ct_pEp)
-            //         status = set_as_pEp_user(session, cached_ident);
-            // }            
-            free_identity(session->cached_mistrusted);
-        }
-    }
-    
-    session->cached_mistrusted = NULL;
-    
+    if (status == PEP_STATUS_OK)
+        // cascade that mistrust for anyone using this key
+        status = mark_as_compromised(session, ident->fpr);
+    if (status == PEP_STATUS_OK)
+        status = add_mistrusted_key(session, ident->fpr);
+            
     return status;
 }
 
@@ -1670,6 +1657,15 @@ DYNAMIC_API PEP_STATUS set_own_key(
     if (status != PEP_STATUS_OK && status != PEP_GET_KEY_FAILED && status != PEP_KEY_UNSUITABLE)
         return status;
     status = PEP_STATUS_OK;
+
+    bool private = false;
+    status = contains_priv_key(session, fpr, &private);
+    
+    if (status != PEP_STATUS_OK)
+        return status;
+        
+    if (!private)
+        return PEP_KEY_UNSUITABLE;
  
     if (me->fpr)
         free(me->fpr);

@@ -1,6 +1,6 @@
 # This file is under GNU General Public License 3.0
 # see LICENSE.txt
-
+import argparse
 from os import listdir, getcwd
 from os.path import isfile, join
 from re import sub
@@ -14,11 +14,23 @@ suites = []
 
 indent = "    "
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--exclude", "-x", help="Comma-separated list of tests to exclude from test suite build")
+
+args = parser.parse_args()
+
+exclude_arg = args.exclude
+exclude_list = []
+if exclude_arg:
+    exclude_list = exclude_arg.split(",")
+    for x in exclude_list:
+        x.replace(" ","")
 for f in ls:
     if isfile(join(srcpath, f)):
         if (f.endswith(".cc")):
             suite = sub('\.cc$', '', f)
-            suites.append(suite)
+            if not suite in exclude_list:
+                suites.append(suite)
 
 license = (''
 '// This file is under GNU General Public License 3.0\n'

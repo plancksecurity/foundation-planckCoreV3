@@ -26,7 +26,6 @@ MessageApiTests::MessageApiTests(string suitename, string test_home_dir) :
 }
 
 void MessageApiTests::check_message_api() {
-
     cout << "Importing Alice's key " << endl;
     const string alice_pub_key = slurp("test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
     const string alice_priv_key = slurp("test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc");
@@ -221,5 +220,5 @@ void MessageApiTests::check_message_api() {
     cout << "done.\n";
 
     free(enc_msg);
-    free(dec_msg);
+    free(dec_msg);    
 }
