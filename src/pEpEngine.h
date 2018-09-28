@@ -1330,7 +1330,7 @@ DYNAMIC_API PEP_STATUS get_replacement_fpr(
 PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id);
 
 // This ONLY sets the *user* flag, and creates a shell identity if necessary.
-PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user);
+DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user);
 
 // returns true (by reference) if a person with this user_id exists; 
 // Also replaces aliased user_ids by defaults in identity.

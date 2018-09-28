@@ -57,6 +57,7 @@ PEP_STATUS set_up_ident_from_scratch(PEP_SESSION session,
 pep_free:
     if (!ret_ident)
         free_identity(ident);
+    return status;    
 }
 
 

@@ -2767,7 +2767,7 @@ PEP_STATUS update_pEp_user_trust_vals(PEP_SESSION session,
 
 
 // This ONLY sets the user flag. Must be called outside of a transaction.
-PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user) {
+DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user) {
 
     assert(session);
     assert(user);

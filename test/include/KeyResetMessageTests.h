@@ -6,7 +6,6 @@
 
 #include <string>
 #include "EngineTestIndividualSuite.h"
-#include "sync.h"
 #include "pEpEngine.h"
 
 using namespace std;
@@ -15,7 +14,9 @@ class KeyResetMessageTests : public EngineTestIndividualSuite {
     public:
         KeyResetMessageTests(string test_suite, string test_home_dir);
         
-        static PEP_STATUS message_send_callback(void *obj, message *msg);
+        static PEP_STATUS message_send_callback(message *msg);
+        
+        static KeyResetMessageTests* fake_this;
         
         vector<message*> m_queue;
         

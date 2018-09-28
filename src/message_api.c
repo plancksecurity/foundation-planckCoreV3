@@ -1763,7 +1763,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 _status = bind_own_ident_with_contact_ident(session, src->from, _il->ident);
                 if (_status != PEP_STATUS_OK) {
                     status = PEP_UNKNOWN_DB_ERROR;
-                    goto pep_error;
+                    goto pEp_error;
                 }
     
             }
@@ -3122,7 +3122,7 @@ PEP_STATUS check_for_own_revoked_key(
                 replace_fpr = NULL;
                 break;
             default:    
-                goto pep_free;    
+                goto pEp_free;    
         }
     }
     
@@ -3131,7 +3131,7 @@ PEP_STATUS check_for_own_revoked_key(
         _the_list = NULL;
     }
             
-pep_free:
+pEp_free:
     free_stringpair_list(_the_list);
     return status;
 
@@ -3402,7 +3402,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                     // ?
                                     if (status != PEP_STATUS_OK) {
                                         free_message(inner_message);
-                                        goto pep_error;
+                                        goto pEp_error;
                                     }
     
                                     if (wrap_info) {
@@ -3557,7 +3557,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     if (status != PEP_STATUS_OK) {
         // This should really never choke unless the DB is broken.
         status = PEP_UNKNOWN_DB_ERROR;
-        goto pep_error;
+        goto pEp_error;
     }
     
     stringpair_list_t* curr_pair_node;
@@ -3580,35 +3580,30 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
             // go on letting them use the wrong key until we mail them ourselves. (Spammers, etc)
             if (status != PEP_CANNOT_FIND_IDENTITY) {
                 if (status != PEP_STATUS_OK)
-                    goto pep_error;
+                    goto pEp_error;
                     
                 if (!reset_msg) {
                     status = PEP_OUT_OF_MEMORY;
-                    goto pep_error;
+                    goto pEp_error;
                 }
                 // insert into queue
-                if (session->messageToSend) {
-                    status = session->messageToSend(session->sync_obj, reset_msg);
-                } 
-                else if (session->sync_session->messageToSend) {
-                    status = session->sync_session->messageToSend(session->sync_session->sync_obj, 
-                                                                  reset_msg); 
-                }
-                else {
+                if (session->messageToSend)
+                    status = session->messageToSend(reset_msg);
+                else
                     status = PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
-                }
+            
 
                 if (status == PEP_STATUS_OK) {    
                     // Put into notified DB
                     status = set_reset_contact_notified(session, curr_pair->key, msg->from->user_id);
                     if (status != PEP_STATUS_OK) // It's ok to barf because it's a DB problem??
-                        goto pep_error;
+                        goto pEp_error;
                 }
                 else {
                     // According to Volker, this would only be a fatal error, so...
                     free_message(reset_msg); // ??
                     reset_msg = NULL; // ??
-                    goto pep_error;
+                    goto pEp_error;
                 }
             }
         }

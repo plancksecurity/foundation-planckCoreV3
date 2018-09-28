@@ -123,7 +123,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
     pEp_identity* temp_ident = identity_dup(sender_id);
     if (!temp_ident) {
         status = PEP_OUT_OF_MEMORY;
-        goto pep_free;
+        goto pEp_free;
     }        
             
     char* rest = NULL;
@@ -132,7 +132,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         old_fpr = strdup(p + 5);
     else {
         status = PEP_MALFORMED_KEY_RESET_MSG;
-        goto pep_free;
+        goto pEp_free;
     }
     
     bool own_key = false;
@@ -142,13 +142,13 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         // Nope, no one can make us our own default. If we want to do that,
         // that's keysync, NOT key reset.
         status = PEP_ILLEGAL_VALUE;
-        goto pep_free;
+        goto pEp_free;
     }
             
     p = strtok_r(NULL, "\r\n", &rest); 
     if (strncmp(p, "NEW: ", 5) != 0  || EMPTYSTR(p + 5)) {
         status = PEP_MALFORMED_KEY_RESET_MSG;
-        goto pep_free;
+        goto pEp_free;
     }
 
     new_fpr = strdup(p + 5);
@@ -156,15 +156,15 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
     // Reset the original key
     status = key_reset(session, old_fpr, temp_ident);
     if (status != PEP_STATUS_OK)
-        goto pep_free;
+        goto pEp_free;
         
     status = find_keys(session, new_fpr, &keylist);
     if (status != PEP_STATUS_OK)
-        goto pep_free;
+        goto pEp_free;
         
     if (!keylist) {
         status = PEP_KEY_NOT_FOUND;
-        goto pep_free;
+        goto pEp_free;
     }
 
     // alright, we've checked as best we can. Let's set that baby.
@@ -175,7 +175,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
     status = set_identity(session, sender_id);
     
     sender_id->fpr = NULL; // ownership for free
-pep_free:    
+pEp_free:    
     free_stringlist(keylist);    
     free(old_fpr);
     free(new_fpr);
@@ -241,17 +241,12 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
     assert(old_fpr);
     assert(new_fpr);
     assert(session);
-    assert(session->messageToSend || session->sync_session->messageToSend);
+    assert(session->messageToSend);
     
     if (!session || !old_fpr || !new_fpr)
         return PEP_ILLEGAL_VALUE;
 
-    messageToSend_t send_cb = send_cb = session->messageToSend;
-    void* sync_obj = session->sync_obj;
-    if (!send_cb) {
-        send_cb = session->sync_session->messageToSend;
-        sync_obj = session->sync_session->sync_obj;
-    }
+    messageToSend_t send_cb = session->messageToSend;
     if (!send_cb)
         return PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
         
@@ -261,7 +256,7 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
     PEP_STATUS status = get_last_contacted(session, &recent_contacts);
     
     if (status != PEP_STATUS_OK)
-        goto pep_free;
+        goto pEp_free;
                     
     identity_list* curr_id_ptr = recent_contacts;
 
@@ -285,7 +280,7 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
         bool contacted = false;
         status = has_key_reset_been_sent(session, user_id, old_fpr, &contacted);
         if (status != PEP_STATUS_OK)
-            goto pep_free;
+            goto pEp_free;
     
         if (contacted)
             continue;
@@ -306,24 +301,24 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
             
         if (status != PEP_STATUS_OK) {
             free(reset_msg);
-            goto pep_free;
+            goto pEp_free;
         }
         
         // insert into queue
-        status = send_cb(sync_obj, reset_msg);
+        status = send_cb(reset_msg);
 
         if (status != PEP_STATUS_OK) {
             free(reset_msg);
-            goto pep_free;            
+            goto pEp_free;            
         }
             
         // Put into notified DB
         status = set_reset_contact_notified(session, old_fpr, user_id);
         if (status != PEP_STATUS_OK)
-            goto pep_free;            
+            goto pEp_free;            
     }
     
-pep_free:
+pEp_free:
     free_identity_list(recent_contacts);
     return status;
 }
@@ -355,7 +350,7 @@ DYNAMIC_API PEP_STATUS key_reset(
         // Get list of own identities
         status = get_default_own_userid(session, &own_id);
         if (status != PEP_STATUS_OK)
-            goto pep_free;
+            goto pEp_free;
             
         if (EMPTYSTR(fpr_copy)) {
             status = get_all_keys_for_user(session, own_id, &keys);
@@ -367,7 +362,7 @@ DYNAMIC_API PEP_STATUS key_reset(
                         break;
                 }
             }
-            goto pep_free;
+            goto pEp_free;
         } // otherwise, we have a specific fpr to process
 
         // fpr_copy exists, so... let's go.
@@ -385,7 +380,7 @@ DYNAMIC_API PEP_STATUS key_reset(
                     break;                    
             }
         }
-        goto pep_free;
+        goto pEp_free;
     }
     else { // an identity was specified.       
         if (is_me(session, ident)) {            
@@ -473,7 +468,7 @@ DYNAMIC_API PEP_STATUS key_reset(
         }
     }
     
-pep_free:
+pEp_free:
     free(fpr_copy);
     free(own_id);
     free_identity_list(key_idents);

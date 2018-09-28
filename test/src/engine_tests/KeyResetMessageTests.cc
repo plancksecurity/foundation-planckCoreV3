@@ -25,6 +25,8 @@ const string KeyResetMessageTests::dave_user_id = "DaveId";
 const string KeyResetMessageTests::erin_user_id = "ErinErinErin";
 const string KeyResetMessageTests::fenris_user_id = "BadWolf";
 
+KeyResetMessageTests* KeyResetMessageTests::fake_this = NULL;
+
 KeyResetMessageTests::KeyResetMessageTests(string suitename, string test_home_dir) :
     EngineTestIndividualSuite::EngineTestIndividualSuite(suitename, test_home_dir) {
         
@@ -40,10 +42,11 @@ KeyResetMessageTests::KeyResetMessageTests(string suitename, string test_home_di
                                                                       static_cast<Func>(&KeyResetMessageTests::check_receive_message_to_revoked_key_from_unknown)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_receive_message_to_revoked_key_from_contact"),
                                                                       static_cast<Func>(&KeyResetMessageTests::check_receive_message_to_revoked_key_from_contact)));                                                                      
+    fake_this = this;                                                                  
 }
 
-PEP_STATUS KeyResetMessageTests::message_send_callback(void* obj, message* msg) {
-    ((KeyResetMessageTests*)obj)->m_queue.push_back(msg);
+PEP_STATUS KeyResetMessageTests::message_send_callback(message* msg) {
+    fake_this->m_queue.push_back(msg);
     return PEP_STATUS_OK;    
 }
 
@@ -153,7 +156,7 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
         if (strcmp(curr_ident->ident->user_id, bob_user_id.c_str()) == 0)
             continue;
         
-        status = set_as_pep_user(session, curr_ident->ident);
+        status = set_as_pEp_user(session, curr_ident->ident);
         TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     }
     
@@ -374,7 +377,7 @@ void KeyResetMessageTests::create_msg_for_revoked_key() {
             new_identity("pep.test.alice@pep-project.org", NULL, "AliceOther", NULL));
     status = update_identity(session, send_idents->ident);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));    
-    status = set_as_pep_user(session, send_idents->ident);
+    status = set_as_pEp_user(session, send_idents->ident);
                              
     message* outgoing_msg = new_message(PEP_dir_outgoing);
     TEST_ASSERT(outgoing_msg);
