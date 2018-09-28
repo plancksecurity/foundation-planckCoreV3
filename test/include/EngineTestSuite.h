@@ -28,6 +28,9 @@ class EngineTestSuite : public Test::Suite {
         
         string current_test_name;
 
+        messageToSend_t cached_messageToSend;
+        inject_sync_event_t cached_inject_sync_event;
+
 #define TEST_FAILED_MESSAGE_BUFSIZE 1000        
         char failed_msg_buf[TEST_FAILED_MESSAGE_BUFSIZE];
         

@@ -43,6 +43,8 @@ KeyResetMessageTests::KeyResetMessageTests(string suitename, string test_home_di
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_receive_message_to_revoked_key_from_contact"),
                                                                       static_cast<Func>(&KeyResetMessageTests::check_receive_message_to_revoked_key_from_contact)));                                                                      
     fake_this = this;                                                                  
+    
+    cached_messageToSend = &KeyResetMessageTests::message_send_callback;
 }
 
 PEP_STATUS KeyResetMessageTests::message_send_callback(message* msg) {
@@ -52,8 +54,6 @@ PEP_STATUS KeyResetMessageTests::message_send_callback(message* msg) {
 
 void KeyResetMessageTests::setup() {
     EngineTestIndividualSuite::setup();
-    session->sync_obj = this;
-    session->messageToSend = &KeyResetMessageTests::message_send_callback;
     m_queue.clear();
 }
 

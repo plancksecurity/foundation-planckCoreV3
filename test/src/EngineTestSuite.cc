@@ -29,6 +29,8 @@ EngineTestSuite::EngineTestSuite(string suitename, string test_home_dir) {
     number_of_tests = 0;
     on_test_number = 0;
     real_home = getenv("HOME");
+    cached_messageToSend = NULL;
+    cached_inject_sync_event = NULL;
 }
 
 EngineTestSuite::~EngineTestSuite() {}
@@ -194,7 +196,7 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
     gpg_agent_conf(true);
     
 //    cout << "calling init()\n";
-    PEP_STATUS status = init(&session, NULL, NULL);
+    PEP_STATUS status = init(&session, cached_messageToSend, cached_inject_sync_event);
     assert(status == PEP_STATUS_OK);
     assert(session);
 //    cout << "init() completed.\n";
