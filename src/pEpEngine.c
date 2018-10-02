@@ -113,6 +113,7 @@ static const char *sql_get_identity_without_trust_check =
 
 static const char *sql_get_identities_by_address =  
     "select user_id, identity.main_key_id, username, lang,"
+
     "   identity.flags, is_own"
     "   from identity"
     "   join person on id = identity.user_id"
@@ -121,6 +122,15 @@ static const char *sql_get_identities_by_address =
     "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1)"
     "               else 0"
     "          end) = 1 "
+    "   order by is_own desc, "
+    "   timestamp desc; ";
+    
+static const char* sql_get_identities_by_userid =
+    "select address, identity.main_key_id, username, lang"
+    "   identity.flags, is_own"
+    "   from identity"
+    "   join person on id = identity.user_id"
+    "   where identity.user_id = ?1 "
     "   order by is_own desc, "
     "   timestamp desc; ";
 
@@ -1073,6 +1083,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_get_identities_by_address), 
             &_session->get_identities_by_address, NULL);
     assert(int_result == SQLITE_OK);
+    
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_identities_by_userid,
+            (int)strlen(sql_get_identities_by_userid), 
+            &_session->get_identities_by_userid, NULL);
+    assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_user_default_key,
             (int)strlen(sql_get_user_default_key), &_session->get_user_default_key, NULL);
@@ -1386,6 +1401,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->get_identity_without_trust_check);
             if (session->get_identities_by_address)
                 sqlite3_finalize(session->get_identities_by_address);            
+            if (session->get_identities_by_userid)
+                sqlite3_finalize(session->get_identities_by_userid);                            
             if (session->get_user_default_key)
                 sqlite3_finalize(session->get_user_default_key);    
             if (session->get_default_own_userid)
@@ -2126,6 +2143,76 @@ PEP_STATUS get_identities_by_address(
     
     return PEP_STATUS_OK;
 }
+
+PEP_STATUS get_identities_by_userid(
+        PEP_SESSION session,
+        const char *user_id,
+        identity_list** id_list
+    )
+{
+    pEp_identity* ident;
+
+    assert(session);
+    assert(user_id);
+    assert(user_id[0]);
+    assert(id_list);
+
+    if (!(session && user_id && user_id[0] && id_list))
+        return PEP_ILLEGAL_VALUE;
+
+    *id_list = NULL;
+    identity_list* ident_list = NULL;
+
+    sqlite3_reset(session->get_identities_by_userid);
+    sqlite3_bind_text(session->get_identities_by_userid, 1, user_id, -1, SQLITE_STATIC);
+    int result;
+
+    while ((result = sqlite3_step(session->get_identities_by_userid)) == SQLITE_ROW) {
+        ident = new_identity(
+                (const char *) sqlite3_column_text(session->get_identities_by_userid, 0),
+                (const char *) sqlite3_column_text(session->get_identities_by_userid, 1),
+                user_id,
+                (const char *) sqlite3_column_text(session->get_identities_by_userid, 2)
+                );
+        assert(ident);
+        if (ident == NULL) {
+            sqlite3_reset(session->get_identities_by_userid);
+            return PEP_OUT_OF_MEMORY;
+        }
+
+        ident->comm_type = PEP_ct_unknown;
+        
+        const char* const _lang = (const char *)
+            sqlite3_column_text(session->get_identities_by_userid, 3);
+        if (_lang && _lang[0]) {
+            assert(_lang[0] >= 'a' && _lang[0] <= 'z');
+            assert(_lang[1] >= 'a' && _lang[1] <= 'z');
+            assert(_lang[2] == 0);
+            ident->lang[0] = _lang[0];
+            ident->lang[1] = _lang[1];
+            ident->lang[2] = 0;
+        }
+        ident->flags = (unsigned int)
+            sqlite3_column_int(session->get_identities_by_userid, 4);
+        ident->me = (unsigned int)
+            sqlite3_column_int(session->get_identities_by_userid, 5);
+    
+        if (ident_list)
+            identity_list_add(ident_list, ident);
+        else
+            ident_list = new_identity_list(ident);
+    }
+
+    sqlite3_reset(session->get_identities_by_userid);
+    
+    *id_list = ident_list;
+    
+    if (!ident_list)
+        return PEP_CANNOT_FIND_IDENTITY;
+    
+    return PEP_STATUS_OK;
+}
+
 
 PEP_STATUS exists_identity_entry(PEP_SESSION session, pEp_identity* identity,
                                  bool* exists) {
