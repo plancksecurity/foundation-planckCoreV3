@@ -113,7 +113,6 @@ static const char *sql_get_identity_without_trust_check =
 
 static const char *sql_get_identities_by_address =  
     "select user_id, identity.main_key_id, username, lang,"
-
     "   identity.flags, is_own"
     "   from identity"
     "   join person on id = identity.user_id"
@@ -126,7 +125,7 @@ static const char *sql_get_identities_by_address =
     "   timestamp desc; ";
     
 static const char* sql_get_identities_by_userid =
-    "select address, identity.main_key_id, username, lang"
+    "select address, identity.main_key_id, username, lang,"
     "   identity.flags, is_own"
     "   from identity"
     "   join person on id = identity.user_id"
@@ -318,6 +317,9 @@ static const char *sql_update_trust_for_fpr =
 static const char *sql_get_trust = 
     "select comm_type from trust where user_id = ?1 "
     "and pgp_keypair_fpr = upper(replace(?2,' ','')) ;";
+
+static const char *sql_get_trust_by_userid = 
+    "select pgp_keypair_fpr, comm_type from trust where user_id = ?1 ";
 
 static const char *sql_least_trust = 
     "select min(comm_type) from trust where"
@@ -1214,6 +1216,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_get_trust), &_session->get_trust, NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_trust_by_userid,
+            (int)strlen(sql_get_trust_by_userid), &_session->get_trust_by_userid, NULL);
+    assert(int_result == SQLITE_OK);
+
     int_result = sqlite3_prepare_v2(_session->db, sql_least_trust,
             (int)strlen(sql_least_trust), &_session->least_trust, NULL);
     assert(int_result == SQLITE_OK);
@@ -1453,6 +1459,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->update_trust_for_fpr);
             if (session->get_trust)
                 sqlite3_finalize(session->get_trust);
+            if (session->get_trust_by_userid)
+                sqlite3_finalize(session->get_trust_by_userid);                
             if (session->least_trust)
                 sqlite3_finalize(session->least_trust);
             if (session->mark_compromised)
@@ -3110,6 +3118,35 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
 
     sqlite3_reset(session->get_trust);
     return status;
+}
+
+PEP_STATUS get_trust_by_userid(PEP_SESSION session, const char* user_id,
+                                           labeled_int_list_t** trust_list)
+{
+    int result;
+
+    if (!(session && user_id && user_id[0]))
+        return PEP_ILLEGAL_VALUE;
+
+    *trust_list = NULL;
+    labeled_int_list_t* t_list = new_labeled_int_list(0, NULL); // empty
+
+    sqlite3_reset(session->get_trust_by_userid);
+    sqlite3_bind_text(session->get_trust_by_userid, 1, user_id, -1, SQLITE_STATIC);
+
+    while ((result = sqlite3_step(session->get_trust_by_userid)) == SQLITE_ROW) {
+        labeled_int_list_add(t_list, sqlite3_column_int(session->get_trust_by_userid, 1),
+                            (const char *) sqlite3_column_text(session->get_trust_by_userid, 0));
+    }
+
+    sqlite3_reset(session->get_trust_by_userid);
+
+    if (!t_list->label)
+        free_labeled_int_list(t_list);
+    else
+        *trust_list = t_list;
+        
+    return PEP_STATUS_OK;
 }
 
 DYNAMIC_API PEP_STATUS least_trust(

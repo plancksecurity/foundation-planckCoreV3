@@ -13,7 +13,8 @@ extern "C" {
 
 #include "dynamic_api.h"
 #include "stringlist.h"
-#include "stringpair.h"    
+#include "stringpair.h"
+#include "labeled_int_list.h"    
 #include "timestamp.h"
 
 #define PEP_VERSION "2.0" // protocol version
