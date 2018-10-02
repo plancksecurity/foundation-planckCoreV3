@@ -2941,6 +2941,35 @@ DYNAMIC_API PEP_STATUS unset_identity_flags(
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS get_trust_by_userid(PEP_SESSION session, const char* user_id,
+                                           labeled_int_list_t** trust_list)
+{
+    int result;
+
+    if (!(session && user_id && user_id[0]))
+        return PEP_ILLEGAL_VALUE;
+
+    *trust_list = NULL;
+    labeled_int_list_t* t_list = new_labeled_int_list(0, NULL); // empty
+
+    sqlite3_reset(session->get_trust_by_userid);
+    sqlite3_bind_text(session->get_trust_by_userid, 1, user_id, -1, SQLITE_STATIC);
+
+    while ((result = sqlite3_step(session->get_trust_by_userid)) == SQLITE_ROW) {
+        labeled_int_list_add(t_list, sqlite3_column_int(session->get_trust_by_userid, 1),
+                            (const char *) sqlite3_column_text(session->get_trust_by_userid, 0));
+    }
+
+    sqlite3_reset(session->get_trust_by_userid);
+
+    if (!t_list->label)
+        free_labeled_int_list(t_list);
+    else
+        *trust_list = t_list;
+        
+    return PEP_STATUS_OK;
+}
+
 PEP_comm_type reconcile_trust(PEP_comm_type t_old, PEP_comm_type t_new) {
     switch (t_new) {
         case PEP_ct_mistrusted:
@@ -3059,6 +3088,17 @@ PEP_STATUS reconcile_default_keys(PEP_SESSION session, pEp_identity* old_ident,
     return status;
 }
 
+void reconcile_language(pEp_identity* old_ident,
+                        pEp_identity* new_ident) {
+    if (new_ident->lang[0] == 0) {
+        if (old_ident->lang[0] != 0) {
+            new_ident->lang[0] = old_ident->lang[0];
+            new_ident->lang[1] = old_ident->lang[1];
+            new_ident->lang[2] = old_ident->lang[2];
+        }
+    }
+}
+
 // ONLY CALL THIS IF BOTH IDs ARE IN THE PERSON DB, FOOL! </Mr_T>
 PEP_STATUS merge_records(PEP_SESSION session, const char* old_uid,
                          const char* new_uid) {
@@ -3072,6 +3112,7 @@ PEP_STATUS merge_records(PEP_SESSION session, const char* old_uid,
     identity_list* old_identities = NULL;
     labeled_int_list_t* trust_list = NULL;
     stringlist_t* touched_keys = new_stringlist(NULL);
+    char* main_user_fpr = NULL;
         
     status = get_identities_by_userid(session, old_uid, &old_identities);
     if (status == PEP_STATUS_OK && old_identities) {
@@ -3114,19 +3155,67 @@ PEP_STATUS merge_records(PEP_SESSION session, const char* old_uid,
                 if (status != PEP_STATUS_OK)
                     goto pEp_free;
                     
+                // reconcile languages
+                reconcile_language(old_ident, new_ident);
+
+                // reconcile flags - FIXME - is this right?
+                new_ident->flags |= old_ident->flags;
+                
+                // NOTE: In principle, this is only called from update_identity,
+                // which would never have me flags set. So I am ignoring them here.
+                // if this function is ever USED for that, though, you'll have
+                // to go through making sure that the user ids are appropriately
+                // aliased, etc. So be careful.
+                
                 // Set the reconciled record
+                    
                 status = set_identity(session, new_ident);
                 if (status != PEP_STATUS_OK)
                     goto pEp_free;
-                    
+
+                if (new_ident->fpr)
+                    stringlist_add(touched_keys, new_ident->fpr);
+                        
                 free_identity(new_ident);
                 new_ident = NULL;    
             }
         }
     }
     // otherwise, no need to reconcile identity records. But maybe trust...    
+    new_ident = new_identity(NULL, NULL, new_uid, NULL);
+    if (!new_ident) {
+        status = PEP_OUT_OF_MEMORY;
+        goto pEp_free;
+    }
+    status = get_trust_by_userid(session, old_uid, &trust_list);
+
+    labeled_int_list_t* trust_curr = trust_list;
+    for (; trust_curr && trust_curr->label; trust_curr = trust_curr->next) {
+        const char* curr_fpr = trust_curr->label;
+        new_ident->fpr = strdup(curr_fpr); 
+        status = get_trust(session, new_ident);
+        if (status == PEP_STATUS_OK) {
+            new_ident->comm_type = reconcile_trust(trust_curr->value,
+                                                   new_ident->comm_type);
+            status = set_trust(session, new_ident);
+            if (status != PEP_STATUS_OK) {
+                goto pEp_free;
+            }                                        
+        }
+        free(new_ident->fpr);
+        new_ident->fpr = NULL;
+        new_ident->comm_type = 0;
+    }
 
     // reconcile the default keys if the new id doesn't have one?
+    status = get_main_user_fpr(session, new_uid, &main_user_fpr);
+    if (status == PEP_KEY_NOT_FOUND || (status == PEP_STATUS_OK && !main_user_fpr)) {
+        status = get_main_user_fpr(session, old_uid, &main_user_fpr);
+        if (status == PEP_STATUS_OK && main_user_fpr)
+            status = replace_main_user_fpr(session, new_uid, main_user_fpr);
+        if (status != PEP_STATUS_OK)
+            goto pEp_free;
+    }
     
     // delete the old user
     status = delete_person(session, old_uid);
@@ -3136,11 +3225,12 @@ pEp_free:
     free_identity_list(old_identities);
     free_labeled_int_list(trust_list);
     free_stringlist(touched_keys);
+    free(main_user_fpr);
     return status;
 }
 
 PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
-                              const char* new_uid) {
+                          const char* new_uid) {
     assert(session);
     assert(old_uid);
     assert(new_uid);
@@ -3148,6 +3238,15 @@ PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
     if (!session || !old_uid || !new_uid)
         return PEP_ILLEGAL_VALUE;
 
+    pEp_identity* temp_ident = new_identity(NULL, NULL, new_uid, NULL);
+    bool new_exists = false;
+    PEP_STATUS status = exists_person(session, temp_ident, &new_exists);
+    free_identity(temp_ident);
+    if (status != PEP_STATUS_OK) // DB error
+        return status;
+        
+    if (new_exists)
+        return merge_records(session, old_uid, new_uid);
 
     int result;
 
@@ -3315,8 +3414,8 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
         return PEP_ILLEGAL_VALUE;
 
     identity->comm_type = PEP_ct_unknown;
-
     sqlite3_reset(session->get_trust);
+
     sqlite3_bind_text(session->get_trust, 1, identity->user_id, -1,
             SQLITE_STATIC);
     sqlite3_bind_text(session->get_trust, 2, identity->fpr, -1, SQLITE_STATIC);
@@ -3338,34 +3437,6 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
     return status;
 }
 
-PEP_STATUS get_trust_by_userid(PEP_SESSION session, const char* user_id,
-                                           labeled_int_list_t** trust_list)
-{
-    int result;
-
-    if (!(session && user_id && user_id[0]))
-        return PEP_ILLEGAL_VALUE;
-
-    *trust_list = NULL;
-    labeled_int_list_t* t_list = new_labeled_int_list(0, NULL); // empty
-
-    sqlite3_reset(session->get_trust_by_userid);
-    sqlite3_bind_text(session->get_trust_by_userid, 1, user_id, -1, SQLITE_STATIC);
-
-    while ((result = sqlite3_step(session->get_trust_by_userid)) == SQLITE_ROW) {
-        labeled_int_list_add(t_list, sqlite3_column_int(session->get_trust_by_userid, 1),
-                            (const char *) sqlite3_column_text(session->get_trust_by_userid, 0));
-    }
-
-    sqlite3_reset(session->get_trust_by_userid);
-
-    if (!t_list->label)
-        free_labeled_int_list(t_list);
-    else
-        *trust_list = t_list;
-        
-    return PEP_STATUS_OK;
-}
 
 DYNAMIC_API PEP_STATUS least_trust(
         PEP_SESSION session,
