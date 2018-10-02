@@ -2970,10 +2970,36 @@ PEP_comm_type reconcile_trust(PEP_comm_type t_old, PEP_comm_type t_new) {
     return result;
 }
 
+PEP_STATUS reconcile_pEp_status(PEP_SESSION session, const char* old_uid, 
+                                const char* new_uid) {
+    PEP_STATUS status = PEP_STATUS_OK;
+    // We'll make this easy - if the old one has a pEp status, we set no matter
+    // what.
+    pEp_identity* ident = new_identity(NULL, NULL, old_uid, NULL);
+    bool is_pEp_peep = false;
+    status = is_pep_user(session, ident, &is_pEp_peep);
+    if (is_pEp_peep) {
+        free(ident->user_id);
+        ident->user_id = strdup(new_uid);
+        if (!ident->user_id) {
+            status = PEP_OUT_OF_MEMORY;
+            goto pEp_free;
+        }
+        status = set_as_pep_user(session, ident);
+    }
+pEp_free:
+    free_identity(ident);
+    return status;
+}
+
 PEP_STATUS merge_records(PEP_SESSION session, const char* old_uid,
                          const char* new_uid) {
     PEP_STATUS status = PEP_STATUS_OK;
     
+    status = reconcile_pEp_status(session, old_uid, new_uid);
+    if (status != PEP_STATUS_OK)
+        goto pEp_free;
+        
 pEp_free:
     return status;
 }
