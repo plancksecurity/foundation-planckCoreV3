@@ -18,14 +18,14 @@ OBJS := $(addsuffix .o,$(basename $(SRCS)))
 DEPS := $(OBJS:.o=.d)
 
 INC_DIRS := ./include /usr/local/include 
-INC_FLAGS := $(addprefix -I,$(INC_DIRS)) $(GPGME_INC)
+INC_FLAGS := $(addprefix -I,$(INC_DIRS)) $(GPGME_INC) $(CPPUNIT_INC)
 
 LDFLAGS += -L/usr/local/lib
 
 CFLAGS += -Wno-deprecated
 CXXFLAGS += -Wno-deprecated
 
-LDFLAGS+= $(ETPAN_LIB) -L../asn.1 -L../src
+LDFLAGS+= $(ETPAN_LIB) $(CPPUNIT_LIB) -L../asn.1 -L../src
 LDLIBS+= -letpan -lpEpEngine -lstdc++ -lasn1
 
 ifeq ($(BUILD_FOR),Linux)
