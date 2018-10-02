@@ -2992,6 +2992,74 @@ pEp_free:
     return status;
 }
 
+const char* reconcile_usernames(const char* old_name, const char* new_name, 
+                                const char* address) {
+    if (EMPTYSTR(old_name)) {
+        if (EMPTYSTR(new_name))
+            return address;
+        else
+            return new_name;
+    }
+    if (EMPTYSTR(new_name))
+        return old_name;        
+    if (strcmp(new_name, address) == 0)
+        return old_name;
+    return new_name;        
+}
+
+PEP_STATUS reconcile_default_keys(PEP_SESSION session, pEp_identity* old_ident,
+                                  pEp_identity* new_ident) {
+    PEP_STATUS status = PEP_STATUS_OK;
+                                      
+    const char* old_fpr = old_ident->fpr;
+    const char* new_fpr = new_ident->fpr;
+    if (!old_fpr)
+        return status;
+
+    PEP_comm_type old_ct = old_ident->comm_type;    
+    PEP_comm_type new_ct = new_ident->comm_type;
+    
+    if (!new_fpr) {
+        new_ident->fpr = strdup(old_fpr);
+        if (!new_ident->fpr)
+            status = PEP_OUT_OF_MEMORY;
+        else    
+            new_ident->comm_type = old_ct;
+        return status;
+    }        
+    
+    if (strcmp(old_fpr, new_fpr) == 0) {
+        new_ident->comm_type = reconcile_trust(old_ct, new_ct);
+        return status;
+    }
+    
+    bool old_confirmed = old_ct & PEP_ct_confirmed;
+    bool new_confirmed = new_ct & PEP_ct_confirmed;
+    
+    if (new_confirmed)
+        return status;
+    else if (old_confirmed) {
+        free(new_ident->fpr);
+        new_ident->fpr = strdup(old_fpr);
+        if (!new_ident->fpr)
+            status = PEP_OUT_OF_MEMORY;
+        else    
+            new_ident->comm_type = old_ct;
+        return status;
+    }
+    
+    if (old_ct > new_ct) {
+        free(new_ident->fpr);
+        new_ident->fpr = strdup(old_fpr);
+        if (!new_ident->fpr)
+            status = PEP_OUT_OF_MEMORY;
+        else    
+            new_ident->comm_type = old_ct;
+    }
+    return status;
+}
+
+// ONLY CALL THIS IF BOTH IDs ARE IN THE PERSON DB, FOOL! </Mr_T>
 PEP_STATUS merge_records(PEP_SESSION session, const char* old_uid,
                          const char* new_uid) {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -3000,7 +3068,74 @@ PEP_STATUS merge_records(PEP_SESSION session, const char* old_uid,
     if (status != PEP_STATUS_OK)
         goto pEp_free;
         
+    pEp_identity* new_ident = NULL;
+    identity_list* old_identities = NULL;
+    labeled_int_list_t* trust_list = NULL;
+    stringlist_t* touched_keys = new_stringlist(NULL);
+        
+    status = get_identities_by_userid(session, old_uid, &old_identities);
+    if (status == PEP_STATUS_OK && old_identities) {
+        identity_list* curr_old = old_identities;
+        for (; curr_old && curr_old->ident; curr_old = curr_old->next) {
+            pEp_identity* old_ident = curr_old->ident;
+            const char* address = old_ident->address;
+            status = get_identity(session, address, new_uid, &new_ident);
+            if (status == PEP_CANNOT_FIND_IDENTITY) {
+                // No new identity matching the old one, so we just set one w. new user_id
+                free(old_ident->user_id);
+                old_ident->user_id = strdup(new_uid);
+                if (!old_ident->user_id) {
+                    status = PEP_OUT_OF_MEMORY;
+                    goto pEp_free;
+                }
+                status = set_identity(session, old_ident);
+                if (status != PEP_STATUS_OK)
+                    goto pEp_free;
+            }
+            else if (status != PEP_STATUS_OK)
+                goto pEp_free;
+            else {
+                // Ok, so we have two idents which might be in conflict. Have to merge them.
+                const char* username = reconcile_usernames(old_ident->username,
+                                                           new_ident->username,
+                                                           address);
+                                                           
+                if (!new_ident->username || strcmp(username, new_ident->username) != 0) {
+                    free(new_ident->username);
+                    new_ident->username = strdup(username);
+                    if (!new_ident->username) {
+                        status = PEP_OUT_OF_MEMORY;
+                        goto pEp_free;
+                    }
+                }
+        
+                // Reconcile default keys if they differ, trust if they don't
+                status = reconcile_default_keys(session, old_ident, new_ident);
+                if (status != PEP_STATUS_OK)
+                    goto pEp_free;
+                    
+                // Set the reconciled record
+                status = set_identity(session, new_ident);
+                if (status != PEP_STATUS_OK)
+                    goto pEp_free;
+                    
+                free_identity(new_ident);
+                new_ident = NULL;    
+            }
+        }
+    }
+    // otherwise, no need to reconcile identity records. But maybe trust...    
+
+    // reconcile the default keys if the new id doesn't have one?
+    
+    // delete the old user
+    status = delete_person(session, old_uid);
+    
 pEp_free:
+    free_identity(new_ident);
+    free_identity_list(old_identities);
+    free_labeled_int_list(trust_list);
+    free_stringlist(touched_keys);
     return status;
 }
 
