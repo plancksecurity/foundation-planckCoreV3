@@ -138,6 +138,7 @@ struct _pEpSession {
     sqlite3_stmt *remove_fpr_as_default;
     sqlite3_stmt *set_person;
     sqlite3_stmt *update_person;
+    sqlite3_stmt *delete_person;
     sqlite3_stmt *exists_person;    
     sqlite3_stmt *set_as_pep_user;
     sqlite3_stmt *is_pep_user;

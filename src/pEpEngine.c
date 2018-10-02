@@ -151,7 +151,11 @@ static const char *sql_update_person =
     "       device_group = "
     "           (select device_group from person where id = ?1)"
     "   where id = ?1 ;";
-    
+
+// Will cascade.
+static const char *sql_delete_person = 
+     "delete from person where id = ?1 ;";
+
 static const char *sql_set_as_pep_user =
     "update person set is_pep_user = 1 "
     "   where id = ?1 ; ";
@@ -1120,6 +1124,10 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_update_person), &_session->update_person, NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_delete_person,
+            (int)strlen(sql_delete_person), &_session->delete_person, NULL);
+    assert(int_result == SQLITE_OK);
+
     int_result = sqlite3_prepare_v2(_session->db, sql_exists_person,
             (int)strlen(sql_exists_person), &_session->exists_person, NULL);
     assert(int_result == SQLITE_OK);
@@ -1392,6 +1400,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->remove_fpr_as_default);            
             if (session->set_person)
                 sqlite3_finalize(session->set_person);
+            if (session->delete_person)
+                sqlite3_finalize(session->delete_person);                
             if (session->set_as_pep_user)
                 sqlite3_finalize(session->set_as_pep_user);
             if (session->is_pep_user)
