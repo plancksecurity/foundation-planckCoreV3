@@ -2941,6 +2941,42 @@ DYNAMIC_API PEP_STATUS unset_identity_flags(
     return PEP_STATUS_OK;
 }
 
+PEP_comm_type reconcile_trust(PEP_comm_type t_old, PEP_comm_type t_new) {
+    switch (t_new) {
+        case PEP_ct_mistrusted:
+        case PEP_ct_key_revoked:
+        case PEP_ct_compromised:
+        case PEP_ct_key_b0rken:
+            return t_new;
+        default:
+            break;
+    }
+    switch (t_old) {
+        case PEP_ct_mistrusted:
+        case PEP_ct_key_revoked:
+        case PEP_ct_compromised:
+        case PEP_ct_key_b0rken:
+            return t_old;
+        default:
+            break;
+    }
+    if (t_old < PEP_ct_strong_but_unconfirmed && t_new >= PEP_ct_strong_but_unconfirmed)
+        return t_new;
+    
+    bool confirmed = (t_old & PEP_ct_confirmed) || (t_new & PEP_ct_confirmed);
+    PEP_comm_type result = _MAX(t_old, t_new);
+    if (confirmed)
+        result |= PEP_ct_confirmed;
+    return result;
+}
+
+PEP_STATUS merge_records(PEP_SESSION session, const char* old_uid,
+                         const char* new_uid) {
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+pEp_free:
+    return status;
+}
 
 PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
                               const char* new_uid) {
