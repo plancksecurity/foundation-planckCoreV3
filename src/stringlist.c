@@ -118,7 +118,7 @@ stringlist_t* stringlist_search(stringlist_t* head, const char* value) {
         return NULL;
     stringlist_t* retval = head;
     for (; retval ; retval = retval->next) {
-        if (strcmp(retval->value, value) == 0))
+        if (strcmp(retval->value, value) == 0)
             break;
     }
     return retval;
