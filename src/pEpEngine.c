@@ -2653,6 +2653,27 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
     return status;
 }
 
+PEP_STATUS delete_person(PEP_SESSION session, const char* user_id) {
+    assert(session);
+    assert(!EMPTYSTR(user_id));        
+    if (!session || EMPTYSTR(user_id))
+        return PEP_ILLEGAL_VALUE;
+        
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    sqlite3_reset(session->delete_person);
+    sqlite3_bind_text(session->delete_person, 1, user_id, -1,
+                      SQLITE_STATIC);
+                      
+    int result = sqlite3_step(session->delete_person);
+    
+    if (result != SQLITE_OK)
+        status = PEP_UNKNOWN_ERROR;
+        
+    sqlite3_reset(session->delete_person);
+    return status;
+}
+
 DYNAMIC_API PEP_STATUS is_pep_user(PEP_SESSION session, pEp_identity *identity, bool* is_pep)
 {
     assert(session);
