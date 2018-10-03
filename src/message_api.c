@@ -1164,6 +1164,7 @@ static bool is_encrypted_html_attachment(const bloblist_t *blob)
         return false;
 
     const char* bare_filename_ptr = _get_resource_ptr_noown(blob->filename);
+    bare_filename_ptr += strlen(bare_filename_ptr) - 15;
     if (strncmp(bare_filename_ptr, "PGPexch.htm.", 12) == 0) {
         if (strcmp(bare_filename_ptr + 11, ".pgp") == 0 ||
             strcmp(bare_filename_ptr + 11, ".asc") == 0)
