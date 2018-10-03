@@ -1456,7 +1456,8 @@ bool import_attached_keys(
                                                         blob_value, blob_size,
                                                         NULL, 0,
                                                         &bl_ptext, &bl_psize, 
-                                                        &bl_keylist);
+                                                        &bl_keylist,
+                                                        NULL);
                 free_stringlist(bl_keylist); // we don't care about key encryption as long as we decrypt
                 if (_status == PEP_DECRYPTED || _status == PEP_DECRYPTED_AND_VERIFIED) {
                     free_blobval = true;
@@ -2701,7 +2702,8 @@ static PEP_STATUS verify_decrypted(PEP_SESSION session,
         free_stringlist(*keylist);
         *decrypt_status = decrypt_and_verify(session, ctext, csize,
                                              NULL, 0,
-                                             &ptext, &psize, keylist);
+                                             &ptext, &psize, keylist,
+                                             NULL);
         
     }
 
@@ -2751,9 +2753,12 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
             free(ptext);
             ptext = NULL;
 
+            char* pgp_filename = NULL;
             status = decrypt_and_verify(session, attctext, attcsize,
                                         NULL, 0,
-                                        &ptext, &psize, &_keylist);
+                                        &ptext, &psize, &_keylist,
+                                        &pgp_filename);
+                                        
             free_stringlist(_keylist);
 
             if (ptext) {
@@ -2763,17 +2768,25 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                 }
                 else {
                     static const char * const mime_type = "application/octet-stream";
-                    char * const filename =
-                        without_double_ending(_s->filename);
-                    if (filename == NULL)
-                        return PEP_OUT_OF_MEMORY;
+                    if (pgp_filename) {
+                        _m = bloblist_add(_m, ptext, psize, mime_type,
+                             pgp_filename);
+                        free(pgp_filename);                        
+                        if (_m == NULL)
+                            return PEP_OUT_OF_MEMORY;
+                    }
+                    else {
+                        char * const filename =
+                            without_double_ending(_s->filename);
+                        if (filename == NULL)
+                            return PEP_OUT_OF_MEMORY;
 
-                    _m = bloblist_add(_m, ptext, psize, mime_type,
-                        filename);
-                    free(filename);
-                    if (_m == NULL)
-                        return PEP_OUT_OF_MEMORY;
-
+                        _m = bloblist_add(_m, ptext, psize, mime_type,
+                            filename);
+                        free(filename);
+                        if (_m == NULL)
+                            return PEP_OUT_OF_MEMORY;
+                    }
                     ptext = NULL;
 
                     if (msg->attachments == NULL)
@@ -3197,7 +3210,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     /** Ok, we should be ready to decrypt. Try decrypt and verify first! **/
     status = cryptotech[crypto].decrypt_and_verify(session, ctext,
                                                    csize, dsig_text, dsig_size,
-                                                   &ptext, &psize, &_keylist);
+                                                   &ptext, &psize, &_keylist,
+                                                   NULL);
 
     if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
         goto pep_error;
