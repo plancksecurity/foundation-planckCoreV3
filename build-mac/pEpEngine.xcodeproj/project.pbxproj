@@ -30,6 +30,7 @@
 		43F73C0F2166282C00AB4524 /* KeySync_fsm.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73C072166282C00AB4524 /* KeySync_fsm.c */; };
 		43F73C112166282C00AB4524 /* sync_api.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73C092166282C00AB4524 /* sync_api.c */; };
 		43F73C122166282C00AB4524 /* growing_buf.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73C0A2166282C00AB4524 /* growing_buf.c */; };
+		43F73C14216628CA00AB4524 /* Sync.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73C13216628CA00AB4524 /* Sync.c */; };
 		6400FB861B8CA1C6005221E3 /* libnetpgp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 645922521B8BD32B00A5AF93 /* libnetpgp.a */; };
 		6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E371B8B630200FC617B /* libetpan-ios.a */; };
 		644297C51BE11CE0002BC73B /* system.db in Resources */ = {isa = PBXBuildFile; fileRef = 64951A1B1BE0FCD800B10E71 /* system.db */; };
@@ -218,6 +219,7 @@
 		43F73C072166282C00AB4524 /* KeySync_fsm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = KeySync_fsm.c; path = ../src/KeySync_fsm.c; sourceTree = "<group>"; };
 		43F73C092166282C00AB4524 /* sync_api.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_api.c; path = ../src/sync_api.c; sourceTree = "<group>"; };
 		43F73C0A2166282C00AB4524 /* growing_buf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = growing_buf.c; path = ../src/growing_buf.c; sourceTree = "<group>"; };
+		43F73C13216628CA00AB4524 /* Sync.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync.c; path = ../asn.1/Sync.c; sourceTree = "<group>"; };
 		644297BF1BE11C65002BC73B /* pEpTrustWords.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pEpTrustWords.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		644297C11BE11C65002BC73B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		646788871CEB3D120001F54C /* map_asn1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = map_asn1.c; path = ../src/map_asn1.c; sourceTree = "<group>"; };
@@ -374,6 +376,7 @@
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
 			isa = PBXGroup;
 			children = (
+				43F73C13216628CA00AB4524 /* Sync.c */,
 				43F73BF5216627CB00AB4524 /* CommitAccept.c */,
 				43F73BFB216627CC00AB4524 /* CommitReject.c */,
 				43F73BF8216627CC00AB4524 /* GroupKeysAndClose.c */,
@@ -865,6 +868,7 @@
 				430BCC492015EE800077E998 /* pEp_string.c in Sources */,
 				43F73C00216627CC00AB4524 /* Rollback.c in Sources */,
 				646C41041D510CD800C63EFF /* constr_SEQUENCE.c in Sources */,
+				43F73C14216628CA00AB4524 /* Sync.c in Sources */,
 				43F73C0B2166282C00AB4524 /* openpgp_compat.c in Sources */,
 				43370833203C075A004E6547 /* sqlite3.c in Sources */,
 				43F73C02216627CC00AB4524 /* CommitReject.c in Sources */,
