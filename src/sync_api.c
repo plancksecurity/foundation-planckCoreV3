@@ -15,8 +15,8 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
         retrieve_next_sync_event_t retrieve_next_sync_event
     )
 {
-    assert(session && management && notifyHandshake && retrieve_next_sync_event);
-    if (!(session && management && notifyHandshake && retrieve_next_sync_event))
+    assert(session && notifyHandshake && retrieve_next_sync_event);
+    if (!(session && notifyHandshake && retrieve_next_sync_event))
         return PEP_ILLEGAL_VALUE;
 
     session->sync_management = management;
