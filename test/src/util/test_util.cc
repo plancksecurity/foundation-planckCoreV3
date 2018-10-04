@@ -2,6 +2,7 @@
 #include "pEpEngine.h"
 #include "pEp_internal.h"
 #include "message_api.h"
+#include "test_util.h"
 
 #include <fstream>
 #include <sstream>
@@ -12,6 +13,58 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <ftw.h>
+
+PEP_STATUS read_file_and_import_key(PEP_SESSION session, const char* fname) {
+    const std::string key = slurp(fname);
+    PEP_STATUS status = (key.empty() ? PEP_KEY_NOT_FOUND : PEP_STATUS_OK);
+    if (status == PEP_STATUS_OK)
+        status = import_key(session, key.c_str(), key.size(), NULL);
+    return status;    
+}
+
+PEP_STATUS set_up_ident_from_scratch(PEP_SESSION session,
+                                     const char* key_fname,
+                                     const char* address,
+                                     const char* fpr,
+                                     const char* user_id,
+                                     const char* username,
+                                     pEp_identity** ret_ident,
+                                     bool is_priv) {
+    PEP_STATUS status = read_file_and_import_key(session,key_fname);
+    if (status != PEP_STATUS_OK)
+        return status;
+    
+    pEp_identity* ident = new_identity(address, fpr, user_id, username);
+    if (is_priv && fpr) {
+        status = set_own_key(session, ident, fpr);
+        if (status == PEP_STATUS_OK)
+            status = myself(session, ident);
+    }
+    else    
+        status = update_identity(session, ident);
+
+    if (status != PEP_STATUS_OK)
+        goto pep_free;
+        
+    if (!ident || !ident->fpr) {
+        status = PEP_CANNOT_FIND_IDENTITY;
+        goto pep_free;
+    }
+    
+    if (ret_ident)
+        *ret_ident = ident;
+        
+pep_free:
+    if (!ret_ident)
+        free_identity(ident);
+    return status;    
+}
+
+
+bool file_exists(std::string filename) {
+    struct stat buffer;
+    return (stat(filename.c_str(), &buffer) == 0);
+}
 
 char* str_to_lower(const char* str) {
     if (!str)
