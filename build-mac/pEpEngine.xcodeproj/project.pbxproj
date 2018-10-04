@@ -793,7 +793,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "mkdir -p \"$BUILT_PRODUCTS_DIR/include\"\n\ncp \"$SRCROOT/../src/\"{\\\npEpEngine.h,\\\ncryptotech.h,\\\nkeymanagement.h,\\\nmessage_api.h,\\\ndynamic_api.h,\\\nstringlist.h,\\\ntimestamp.h,\\\nidentity_list.h,\\\nbloblist.h,\\\nstringpair.h,\\\nmessage.h,\\\nmime.h,\\\nsync_fsm.h,\\\nsync.h,\\\nsync_app.h} \"$BUILT_PRODUCTS_DIR/include\"\n\nbash -l -c \"make -C ../asn.1 generate\"\nbash -l -c \"make -C ../asn.1\"\nbash -l -c \"LC_ALL=en_US.UTF-8 YML_PATH=$HOME/yml2 make -C ../sync\"\n";
+			shellScript = "mkdir -p \"$BUILT_PRODUCTS_DIR/include\"\n\ncd \"$SRCROOT/..\"\n\nbash -l -c \"gmake -C sync\"\nbash -l -c \"gmake -C asn.1\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
