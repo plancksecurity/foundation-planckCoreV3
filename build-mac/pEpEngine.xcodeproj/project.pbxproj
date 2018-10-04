@@ -16,6 +16,13 @@
 		43F6921D1F164A47009418F5 /* resource_id.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F6921C1F164A47009418F5 /* resource_id.c */; };
 		43F73BF02166269200AB4524 /* PString.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73BEB2166269200AB4524 /* PString.c */; };
 		43F73BF2216626E100AB4524 /* Sync_func.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73BF1216626E100AB4524 /* Sync_func.c */; };
+		43F73BFC216627CC00AB4524 /* CommitAccept.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73BF5216627CB00AB4524 /* CommitAccept.c */; };
+		43F73BFD216627CC00AB4524 /* TID.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73BF6216627CC00AB4524 /* TID.c */; };
+		43F73BFE216627CC00AB4524 /* KeySync.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73BF7216627CC00AB4524 /* KeySync.c */; };
+		43F73BFF216627CC00AB4524 /* GroupKeysAndClose.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73BF8216627CC00AB4524 /* GroupKeysAndClose.c */; };
+		43F73C00216627CC00AB4524 /* Rollback.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73BF9216627CC00AB4524 /* Rollback.c */; };
+		43F73C01216627CC00AB4524 /* HandshakeAnswer.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73BFA216627CC00AB4524 /* HandshakeAnswer.c */; };
+		43F73C02216627CC00AB4524 /* CommitReject.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73BFB216627CC00AB4524 /* CommitReject.c */; };
 		6400FB861B8CA1C6005221E3 /* libnetpgp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 645922521B8BD32B00A5AF93 /* libnetpgp.a */; };
 		6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E371B8B630200FC617B /* libetpan-ios.a */; };
 		644297C51BE11CE0002BC73B /* system.db in Resources */ = {isa = PBXBuildFile; fileRef = 64951A1B1BE0FCD800B10E71 /* system.db */; };
@@ -190,6 +197,13 @@
 		43F6921C1F164A47009418F5 /* resource_id.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = resource_id.c; path = ../src/resource_id.c; sourceTree = "<group>"; };
 		43F73BEB2166269200AB4524 /* PString.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PString.c; path = ../asn.1/PString.c; sourceTree = "<group>"; };
 		43F73BF1216626E100AB4524 /* Sync_func.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_func.c; path = ../src/Sync_func.c; sourceTree = "<group>"; };
+		43F73BF5216627CB00AB4524 /* CommitAccept.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = CommitAccept.c; path = ../asn.1/CommitAccept.c; sourceTree = "<group>"; };
+		43F73BF6216627CC00AB4524 /* TID.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = TID.c; path = ../asn.1/TID.c; sourceTree = "<group>"; };
+		43F73BF7216627CC00AB4524 /* KeySync.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = KeySync.c; path = ../asn.1/KeySync.c; sourceTree = "<group>"; };
+		43F73BF8216627CC00AB4524 /* GroupKeysAndClose.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysAndClose.c; path = ../asn.1/GroupKeysAndClose.c; sourceTree = "<group>"; };
+		43F73BF9216627CC00AB4524 /* Rollback.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Rollback.c; path = ../asn.1/Rollback.c; sourceTree = "<group>"; };
+		43F73BFA216627CC00AB4524 /* HandshakeAnswer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = HandshakeAnswer.c; path = ../asn.1/HandshakeAnswer.c; sourceTree = "<group>"; };
+		43F73BFB216627CC00AB4524 /* CommitReject.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = CommitReject.c; path = ../asn.1/CommitReject.c; sourceTree = "<group>"; };
 		644297BF1BE11C65002BC73B /* pEpTrustWords.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pEpTrustWords.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		644297C11BE11C65002BC73B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		646788871CEB3D120001F54C /* map_asn1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = map_asn1.c; path = ../src/map_asn1.c; sourceTree = "<group>"; };
@@ -346,6 +360,13 @@
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
 			isa = PBXGroup;
 			children = (
+				43F73BF5216627CB00AB4524 /* CommitAccept.c */,
+				43F73BFB216627CC00AB4524 /* CommitReject.c */,
+				43F73BF8216627CC00AB4524 /* GroupKeysAndClose.c */,
+				43F73BFA216627CC00AB4524 /* HandshakeAnswer.c */,
+				43F73BF7216627CC00AB4524 /* KeySync.c */,
+				43F73BF9216627CC00AB4524 /* Rollback.c */,
+				43F73BF6216627CC00AB4524 /* TID.c */,
 				43F73BEB2166269200AB4524 /* PString.c */,
 				646C40951D510CD700C63EFF /* asn_application.h */,
 				646C40961D510CD700C63EFF /* asn_codecs_prim.c */,
@@ -791,18 +812,22 @@
 				64A826891B455D0800EECAF0 /* trans_auto.c in Sources */,
 				646C410C1D510CD800C63EFF /* der_encoder.c in Sources */,
 				646C41381D510CD800C63EFF /* xer_decoder.c in Sources */,
+				43F73BFE216627CC00AB4524 /* KeySync.c in Sources */,
 				646C41181D510CD800C63EFF /* Hex.c in Sources */,
 				64A8267D1B455D0800EECAF0 /* keymanagement.c in Sources */,
+				43F73C01216627CC00AB4524 /* HandshakeAnswer.c in Sources */,
 				646C40EB1D510CD800C63EFF /* asn_codecs_prim.c in Sources */,
 				646C41451D510D2C00C63EFF /* sync_actions.c in Sources */,
 				646C40F61D510CD800C63EFF /* ber_decoder.c in Sources */,
 				646C40F11D510CD800C63EFF /* asn_SET_OF.c in Sources */,
 				646C413A1D510CD800C63EFF /* xer_encoder.c in Sources */,
+				43F73BFD216627CC00AB4524 /* TID.c in Sources */,
 				646C41021D510CD800C63EFF /* constr_SEQUENCE_OF.c in Sources */,
 				646C410A1D510CD800C63EFF /* constraints.c in Sources */,
 				64A8267C1B455D0800EECAF0 /* identity_list.c in Sources */,
 				646C40FC1D510CD800C63EFF /* BIT_STRING.c in Sources */,
 				646C40F41D510CD800C63EFF /* Beacon.c in Sources */,
+				43F73BFC216627CC00AB4524 /* CommitAccept.c in Sources */,
 				646C411E1D510CD800C63EFF /* INTEGER.c in Sources */,
 				646C413C1D510CD800C63EFF /* xer_support.c in Sources */,
 				64A8268A1B455D0800EECAF0 /* transport.c in Sources */,
@@ -812,8 +837,10 @@
 				646C412E1D510CD800C63EFF /* per_support.c in Sources */,
 				64A826781B455D0800EECAF0 /* bloblist.c in Sources */,
 				430BCC492015EE800077E998 /* pEp_string.c in Sources */,
+				43F73C00216627CC00AB4524 /* Rollback.c in Sources */,
 				646C41041D510CD800C63EFF /* constr_SEQUENCE.c in Sources */,
 				43370833203C075A004E6547 /* sqlite3.c in Sources */,
+				43F73C02216627CC00AB4524 /* CommitReject.c in Sources */,
 				64A826881B455D0800EECAF0 /* timestamp.c in Sources */,
 				646C41221D510CD800C63EFF /* NativeEnumerated.c in Sources */,
 				43F6921D1F164A47009418F5 /* resource_id.c in Sources */,
@@ -828,6 +855,7 @@
 				64A826801B455D0800EECAF0 /* mime.c in Sources */,
 				64A8267F1B455D0800EECAF0 /* message.c in Sources */,
 				646C411A1D510CD800C63EFF /* Identity.c in Sources */,
+				43F73BFF216627CC00AB4524 /* GroupKeysAndClose.c in Sources */,
 				64A826811B455D0800EECAF0 /* pEpEngine.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
