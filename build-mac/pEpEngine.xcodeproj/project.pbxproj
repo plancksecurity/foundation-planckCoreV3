@@ -14,6 +14,8 @@
 		43370834203C075A004E6547 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 43370832203C075A004E6547 /* sqlite3.h */; };
 		4354FF651D6EDF300033069C /* sync_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = 4354FF641D6EDF300033069C /* sync_impl.c */; };
 		43F6921D1F164A47009418F5 /* resource_id.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F6921C1F164A47009418F5 /* resource_id.c */; };
+		43F73BF02166269200AB4524 /* PString.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73BEB2166269200AB4524 /* PString.c */; };
+		43F73BF2216626E100AB4524 /* Sync_func.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73BF1216626E100AB4524 /* Sync_func.c */; };
 		6400FB861B8CA1C6005221E3 /* libnetpgp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 645922521B8BD32B00A5AF93 /* libnetpgp.a */; };
 		6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E371B8B630200FC617B /* libetpan-ios.a */; };
 		644297C51BE11CE0002BC73B /* system.db in Resources */ = {isa = PBXBuildFile; fileRef = 64951A1B1BE0FCD800B10E71 /* system.db */; };
@@ -186,6 +188,8 @@
 		43370832203C075A004E6547 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = ../src/sqlite3.h; sourceTree = "<group>"; };
 		4354FF641D6EDF300033069C /* sync_impl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_impl.c; path = ../src/sync_impl.c; sourceTree = "<group>"; };
 		43F6921C1F164A47009418F5 /* resource_id.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = resource_id.c; path = ../src/resource_id.c; sourceTree = "<group>"; };
+		43F73BEB2166269200AB4524 /* PString.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PString.c; path = ../asn.1/PString.c; sourceTree = "<group>"; };
+		43F73BF1216626E100AB4524 /* Sync_func.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_func.c; path = ../src/Sync_func.c; sourceTree = "<group>"; };
 		644297BF1BE11C65002BC73B /* pEpTrustWords.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = pEpTrustWords.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		644297C11BE11C65002BC73B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		646788871CEB3D120001F54C /* map_asn1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = map_asn1.c; path = ../src/map_asn1.c; sourceTree = "<group>"; };
@@ -342,6 +346,7 @@
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
 			isa = PBXGroup;
 			children = (
+				43F73BEB2166269200AB4524 /* PString.c */,
 				646C40951D510CD700C63EFF /* asn_application.h */,
 				646C40961D510CD700C63EFF /* asn_codecs_prim.c */,
 				646C40971D510CD700C63EFF /* asn_codecs_prim.h */,
@@ -476,6 +481,7 @@
 		64A8264B1B455C5600EECAF0 /* srcref */ = {
 			isa = PBXGroup;
 			children = (
+				43F73BF1216626E100AB4524 /* Sync_func.c */,
 				4337082D203C075A004E6547 /* sqlite3.c */,
 				43370832203C075A004E6547 /* sqlite3.h */,
 				430BCC472015EE800077E998 /* pEp_string.c */,
@@ -763,12 +769,14 @@
 				646C41341D510CD800C63EFF /* UTF8String.c in Sources */,
 				64A826831B455D0800EECAF0 /* platform_unix.c in Sources */,
 				646C40F81D510CD800C63EFF /* ber_tlv_length.c in Sources */,
+				43F73BF2216626E100AB4524 /* Sync_func.c in Sources */,
 				646C411C1D510CD800C63EFF /* IdentityList.c in Sources */,
 				646C41301D510CD800C63EFF /* PrintableString.c in Sources */,
 				64A8267B1B455D0800EECAF0 /* etpan_mime.c in Sources */,
 				64A8267A1B455D0800EECAF0 /* email.c in Sources */,
 				646C41261D510CD800C63EFF /* OCTET_STRING.c in Sources */,
 				646C41141D510CD800C63EFF /* Hash.c in Sources */,
+				43F73BF02166269200AB4524 /* PString.c in Sources */,
 				64A826861B455D0800EECAF0 /* stringlist.c in Sources */,
 				4354FF651D6EDF300033069C /* sync_impl.c in Sources */,
 				64A8267E1B455D0800EECAF0 /* message_api.c in Sources */,
