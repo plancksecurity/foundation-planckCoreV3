@@ -532,40 +532,51 @@ DYNAMIC_API PEP_STATUS update_identity(
 
             if (id_list) {
                 identity_list* id_curr = id_list;
+                bool input_is_TOFU = strstr(identity->user_id, "TOFU_") == identity->user_id;
                 while (id_curr) {
                     pEp_identity* this_id = id_curr->ident;
                     if (this_id) {
                         char* this_uid = this_id->user_id;
-                        if (this_uid && (strstr(this_uid, "TOFU_") == this_uid)) {
-                            // FIXME: should we also be fixing pEp_own_userId in this
-                            // function here?
-                            
-                            // if usernames match, we replace the userid. Or if the temp username
-                            // is anonymous.
-                            // FIXME: do we need to create an address match function which
-                            // matches the whole dot-and-case rigamarole from 
-                            if (EMPTYSTR(this_id->username) ||
-                                strcasecmp(this_id->username, this_id->address) == 0 ||
-                                (identity->username && 
-                                 strcasecmp(identity->username, 
-                                            this_id->username) == 0)) {
+                        bool curr_is_TOFU = strstr(this_uid, "TOFU_") == this_uid;
+                        if (this_uid) {
+                            if (curr_is_TOFU && !input_is_TOFU) {
+                                // FIXME: should we also be fixing pEp_own_userId in this
+                                // function here?
                                 
-                                // Ok, we have a temp ID. We have to replace this
-                                // with the real ID.
-                                status = replace_userid(session, 
-                                                        this_uid, 
-                                                        identity->user_id);
-                                if (status != PEP_STATUS_OK) {
-                                    free_identity_list(id_list);
-                                    free(default_own_id);
-                                    return status;
-                                }
+                                // if usernames match, we replace the userid. Or if the temp username
+                                // is anonymous.
+                                // FIXME: do we need to create an address match function which
+                                // matches the whole dot-and-case rigamarole from 
+                                if (EMPTYSTR(this_id->username) ||
+                                    strcasecmp(this_id->username, this_id->address) == 0 ||
+                                    (identity->username && 
+                                     strcasecmp(identity->username, 
+                                                this_id->username) == 0)) {
                                     
-                                free(this_uid);
-                                this_uid = NULL;
-                                
-                                // Reflect the change we just made to the DB
-                                this_id->user_id = strdup(identity->user_id);
+                                    // Ok, we have a temp ID. We have to replace this
+                                    // with the real ID.
+                                    status = replace_userid(session, 
+                                                            this_uid, 
+                                                            identity->user_id);
+                                    if (status != PEP_STATUS_OK) {
+                                        free_identity_list(id_list);
+                                        free(default_own_id);
+                                        return status;
+                                    }
+                                        
+                                    free(this_uid);
+                                    this_uid = NULL;
+                                    
+                                    // Reflect the change we just made to the DB
+                                    this_id->user_id = strdup(identity->user_id);
+                                    stored_ident = this_id;
+                                    // FIXME: free list.
+                                    break;                                
+                                }
+                            }
+                            else if (input_is_TOFU && !curr_is_TOFU) {
+                                // Replace ruthlessly - this is NOT supposed to happen.
+                                // BAD APP BEHAVIOUR.
                                 stored_ident = this_id;
                                 // FIXME: free list.
                                 break;                                
