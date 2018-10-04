@@ -577,7 +577,8 @@ void pgp_release(PEP_SESSION session, bool out_last)
 PEP_STATUS pgp_decrypt_and_verify(
     PEP_SESSION session, const char *ctext, size_t csize,
     const char *dsigtext, size_t dsigsize,
-    char **ptext, size_t *psize, stringlist_t **keylist
+    char **ptext, size_t *psize, stringlist_t **keylist,
+    char** filename_ptr
     )
 {
     PEP_STATUS result;
@@ -692,6 +693,15 @@ PEP_STATUS pgp_decrypt_and_verify(
                             free_stringlist(*keylist);
                         *keylist = NULL;
                         result = PEP_OUT_OF_MEMORY;
+                    }
+                    // Get filename, if desired
+                    if (filename_ptr) {
+                        const char* fname = gpgme_decrypt_result->file_name;
+                        if (fname) {
+                            *filename_ptr = strdup(fname);
+                            if (!(*filename_ptr))
+                                result = PEP_OUT_OF_MEMORY;
+                        }
                     }
                 } /* Ok, so now we have any recipients it was encrypted for
                      in recipient_keylist */
@@ -811,7 +821,7 @@ PEP_STATUS pgp_decrypt_and_verify(
                         }
                         case GPG_ERR_CERT_REVOKED:
                         case GPG_ERR_BAD_SIGNATURE:
-			    result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
+                            result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
                             //result = PEP_DECRYPT_BAD_SIGNATURE;
                             break;
                         case GPG_ERR_SIG_EXPIRED:

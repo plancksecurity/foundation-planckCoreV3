@@ -232,16 +232,20 @@ DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable);
 // decrypt_and_verify() - decrypt and/or verify a message
 //
 //    parameters:
-//        session (in)    session handle
-//        ctext (in)      cipher text to decrypt and/or verify
-//        csize (in)      size of cipher text
-//        dsigtext (in)   if extant, *detached* signature text for this
-//                        message (or NULL if not)
-//        dsize (in)      size of *detached* signature text for this
-//                        message (0, if no detached sig exists)
-//        ptext (out)     pointer to internal buffer with plain text
-//        psize (out)     size of plain text
-//        keylist (out)   list of key ids which where used to encrypt
+//        session (in)          session handle
+//        ctext (in)            cipher text to decrypt and/or verify
+//        csize (in)            size of cipher text
+//        dsigtext (in)         if extant, *detached* signature text for this
+//                              message (or NULL if not)
+//        dsize (in)            size of *detached* signature text for this
+//                              message (0, if no detached sig exists)
+//        ptext (out)           pointer to internal buffer with plain text
+//        psize (out)           size of plain text
+//        keylist (out)         list of key ids which where used to encrypt
+//        filename_ptr (out)    mails produced by certain PGP implementations 
+//                              may return a decrypted filename here for attachments. 
+//                              Externally, this can generally be NULL, and is an optional
+//                              parameter.
 //
 //    return value:
 //        PEP_UNENCRYPTED               message was unencrypted and not signed
@@ -263,7 +267,8 @@ DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable);
 DYNAMIC_API PEP_STATUS decrypt_and_verify(
         PEP_SESSION session, const char *ctext, size_t csize,
         const char *dsigtext, size_t dsigsize,
-        char **ptext, size_t *psize, stringlist_t **keylist
+        char **ptext, size_t *psize, stringlist_t **keylist,
+        char ** filename_ptr
     );
 
 
