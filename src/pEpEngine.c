@@ -2950,22 +2950,23 @@ PEP_STATUS get_trust_by_userid(PEP_SESSION session, const char* user_id,
         return PEP_ILLEGAL_VALUE;
 
     *trust_list = NULL;
-    labeled_int_list_t* t_list = new_labeled_int_list(0, NULL); // empty
+    labeled_int_list_t* t_list = NULL;
 
     sqlite3_reset(session->get_trust_by_userid);
     sqlite3_bind_text(session->get_trust_by_userid, 1, user_id, -1, SQLITE_STATIC);
 
     while ((result = sqlite3_step(session->get_trust_by_userid)) == SQLITE_ROW) {
-        labeled_int_list_add(t_list, sqlite3_column_int(session->get_trust_by_userid, 1),
-                            (const char *) sqlite3_column_text(session->get_trust_by_userid, 0));
+        if (!t_list)
+            t_list = new_labeled_int_list(sqlite3_column_int(session->get_trust_by_userid, 1),
+                                         (const char *) sqlite3_column_text(session->get_trust_by_userid, 0));
+        else
+            labeled_int_list_add(t_list, sqlite3_column_int(session->get_trust_by_userid, 1),
+                                (const char *) sqlite3_column_text(session->get_trust_by_userid, 0));
     }
 
     sqlite3_reset(session->get_trust_by_userid);
 
-    if (!t_list->label)
-        free_labeled_int_list(t_list);
-    else
-        *trust_list = t_list;
+    *trust_list = t_list;
         
     return PEP_STATUS_OK;
 }
@@ -3113,6 +3114,14 @@ PEP_STATUS merge_records(PEP_SESSION session, const char* old_uid,
     labeled_int_list_t* trust_list = NULL;
     stringlist_t* touched_keys = new_stringlist(NULL);
     char* main_user_fpr = NULL;
+                
+    bool new_is_pep = false;
+    new_ident = new_identity(NULL, NULL, new_uid, NULL);
+    status = is_pep_user(session, new_ident, &new_is_pep);
+    if (status != PEP_STATUS_OK)
+        goto pEp_free;
+    free(new_ident);
+    new_ident = NULL;
         
     status = get_identities_by_userid(session, old_uid, &old_identities);
     if (status == PEP_STATUS_OK && old_identities) {
@@ -3129,6 +3138,12 @@ PEP_STATUS merge_records(PEP_SESSION session, const char* old_uid,
                     status = PEP_OUT_OF_MEMORY;
                     goto pEp_free;
                 }
+                if (new_is_pep) {
+                    PEP_comm_type confirmed_bit = old_ident->comm_type & PEP_ct_confirmed;
+                    if ((old_ident->comm_type | PEP_ct_confirmed) == PEP_ct_OpenPGP)
+                        old_ident->comm_type = PEP_ct_pEp_unconfirmed | confirmed_bit;
+                }
+                
                 status = set_identity(session, old_ident);
                 if (status != PEP_STATUS_OK)
                     goto pEp_free;
@@ -3197,6 +3212,12 @@ PEP_STATUS merge_records(PEP_SESSION session, const char* old_uid,
         if (status == PEP_STATUS_OK) {
             new_ident->comm_type = reconcile_trust(trust_curr->value,
                                                    new_ident->comm_type);
+            if (new_is_pep) {
+                PEP_comm_type confirmed_bit = new_ident->comm_type & PEP_ct_confirmed;
+                if ((new_ident->comm_type | PEP_ct_confirmed) == PEP_ct_OpenPGP)
+                    new_ident->comm_type = PEP_ct_pEp_unconfirmed | confirmed_bit;
+            }
+
             status = set_trust(session, new_ident);
             if (status != PEP_STATUS_OK) {
                 goto pEp_free;

@@ -1281,6 +1281,10 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exis
 
 PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
 
+// exposed for testing
+PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,
+                      bool guard_transaction);
+
 #ifdef __cplusplus
 }
 #endif

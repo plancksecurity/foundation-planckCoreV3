@@ -13,6 +13,7 @@
 
 // Begin where we generate stuff
 #include "DecorateTests.h"
+#include "UserIdCollisionTests.h"
 #include "ReencryptPlusExtraKeysTests.h"
 #include "BlacklistTests.h"
 #include "AppleMailTests.h"
@@ -54,6 +55,7 @@
 
 const char* SuiteMaker::all_suites[] = {
     "DecorateTests",
+    "UserIdCollisionTests",
     "ReencryptPlusExtraKeysTests",
     "BlacklistTests",
     "AppleMailTests",
@@ -94,11 +96,13 @@ const char* SuiteMaker::all_suites[] = {
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 38;
+int SuiteMaker::num_suites = 39;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "DecorateTests") == 0)
         *test_suite = new DecorateTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "UserIdCollisionTests") == 0)
+        *test_suite = new UserIdCollisionTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "ReencryptPlusExtraKeysTests") == 0)
         *test_suite = new ReencryptPlusExtraKeysTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "BlacklistTests") == 0)

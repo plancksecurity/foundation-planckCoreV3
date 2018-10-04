@@ -577,6 +577,8 @@ DYNAMIC_API PEP_STATUS update_identity(
                             else if (input_is_TOFU && !curr_is_TOFU) {
                                 // Replace ruthlessly - this is NOT supposed to happen.
                                 // BAD APP BEHAVIOUR.
+                                free(identity->user_id);
+                                identity->user_id = strdup(this_id->user_id);
                                 stored_ident = this_id;
                                 // FIXME: free list.
                                 break;                                
