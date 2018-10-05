@@ -7,6 +7,7 @@
 #include <string>
 #include "EngineTestIndividualSuite.h"
 #include "pEpEngine.h"
+#include "message.h"
 
 using namespace std;
 

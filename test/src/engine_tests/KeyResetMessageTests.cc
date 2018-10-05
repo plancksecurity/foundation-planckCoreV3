@@ -167,7 +167,8 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
     outgoing_msg->to = send_idents;
     outgoing_msg->shortmsg = strdup("Well isn't THIS a useless message...");
     outgoing_msg->longmsg = strdup("Hi Mom...\n");
-    outgoing_msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
+    // outgoing_msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
+    // that's illegal - VB.
     cout << "Message created.\n\n";
     cout << "Encrypting message as MIME multipart…\n";
     message* enc_outgoing_msg = nullptr;
