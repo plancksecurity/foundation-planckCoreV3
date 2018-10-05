@@ -47,6 +47,8 @@ const char* tl_status_string(PEP_STATUS status);
 // Grabs a new uuid for your randomish string needs.
 char* get_new_uuid();
 
+bool slurp_and_import_key(PEP_SESSION session, const char* key_filename);
+
 bool slurp_message_and_import_key(PEP_SESSION session, const char* message_fname, std::string& message, const char* key_filename);
 
 int util_delete_filepath(const char *filepath, 

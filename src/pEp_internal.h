@@ -146,6 +146,7 @@ struct _pEpSession {
     sqlite3_stmt *remove_fpr_as_default;
     sqlite3_stmt *set_person;
     sqlite3_stmt *update_person;
+    sqlite3_stmt *delete_person;
     sqlite3_stmt *exists_person;    
     sqlite3_stmt *set_as_pEp_user;
     sqlite3_stmt *is_pEp_user;
@@ -169,6 +170,7 @@ struct _pEpSession {
     sqlite3_stmt *update_trust_to_pEp;
     sqlite3_stmt *update_trust_for_fpr;
     sqlite3_stmt *get_trust;
+    sqlite3_stmt *get_trust_by_userid;
     sqlite3_stmt *least_trust;
     sqlite3_stmt *mark_compromised;
     sqlite3_stmt *reset_trust;
