@@ -3105,16 +3105,16 @@ PEP_STATUS merge_records(PEP_SESSION session, const char* old_uid,
                          const char* new_uid) {
     PEP_STATUS status = PEP_STATUS_OK;
     
-    status = reconcile_pEp_status(session, old_uid, new_uid);
-    if (status != PEP_STATUS_OK)
-        goto pEp_free;
-        
     pEp_identity* new_ident = NULL;
     identity_list* old_identities = NULL;
     labeled_int_list_t* trust_list = NULL;
     stringlist_t* touched_keys = new_stringlist(NULL);
     char* main_user_fpr = NULL;
-                
+
+    status = reconcile_pEp_status(session, old_uid, new_uid);
+    if (status != PEP_STATUS_OK)
+        goto pEp_free;
+                        
     bool new_is_pep = false;
     new_ident = new_identity(NULL, NULL, new_uid, NULL);
     status = is_pep_user(session, new_ident, &new_is_pep);
