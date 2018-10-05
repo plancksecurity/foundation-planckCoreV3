@@ -16,15 +16,15 @@ typedef struct _labeled_int_list_t {
     struct _labeled_int_list_t *next;           // this is a single linked list
 } labeled_int_list_t;
 
-labeled_int_list_t *new_labeled_int_list(int value, const char* label);
+DYNAMIC_API labeled_int_list_t *new_labeled_int_list(int value, const char* label);
 
-void free_labeled_int_list(labeled_int_list_t *labeled_int_list);
+DYNAMIC_API void free_labeled_int_list(labeled_int_list_t *labeled_int_list);
 
-labeled_int_list_t *labeled_int_list_dup(const labeled_int_list_t *src);
+DYNAMIC_API labeled_int_list_t *labeled_int_list_dup(const labeled_int_list_t *src);
 
-labeled_int_list_t *labeled_int_list_add(labeled_int_list_t *labeled_int_list, int value, const char* label);
+DYNAMIC_API labeled_int_list_t *labeled_int_list_add(labeled_int_list_t *labeled_int_list, int value, const char* label);
 
-int labeled_int_list_length(const labeled_int_list_t *labeled_int_list);
+DYNAMIC_API int labeled_int_list_length(const labeled_int_list_t *labeled_int_list);
 
 #ifdef __cplusplus
 }
