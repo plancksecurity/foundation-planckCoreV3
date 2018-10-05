@@ -43,12 +43,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-	<IncludePath>$(ProjectDir)\..\..\libetpan\build-windows\include;C:\Program Files %28x86%29\GnuPG\include;$(IncludePath);$(ProjectDir)\asn.1;%ASN1C%\share\asn1c</IncludePath>
+    <IncludePath>$(ProjectDir)\..\..\libetpan\build-windows\include;C:\Program Files %28x86%29\GnuPG\include;$(IncludePath);$(ProjectDir)\asn.1;%ASN1C%\share\asn1c</IncludePath>
     <LibraryPath>$(ProjectDir)\..\..\libetpan\build-windows\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-	<IncludePath>$(ProjectDir)\..\..\libetpan\build-windows\include;C:\Program Files %28x86%29\GnuPG\include;$(IncludePath);$(ProjectDir)\asn.1;%ASN1C%\share\asn1c</IncludePath>
+    <IncludePath>$(ProjectDir)\..\..\libetpan\build-windows\include;C:\Program Files %28x86%29\GnuPG\include;$(IncludePath);$(ProjectDir)\asn.1;%ASN1C%\share\asn1c</IncludePath>
     <LibraryPath>$(ProjectDir)\..\..\libetpan\build-windows\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -68,10 +68,7 @@
       <AdditionalDependencies>$(TargetDir)\pEpEngineASN1.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_statemachine.ysl2 devicegroup.fsm -o .statemachines
-cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -ygen_actions.ysl2 devicegroup.fsm -o .skeletons
-cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.c ..\src\ /y
-cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.h ..\src\ /y
+      <Command>cmd /c "$(ProjectDir)build_windows\generate_code.cmd" "$(ProjectDir)"
 </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -98,10 +95,7 @@ cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.h ..\src\ /y
       <AdditionalDependencies>$(TargetDir)\pEpEngineASN1.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_statemachine.ysl2 devicegroup.fsm -o .statemachines
-cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -ygen_actions.ysl2 devicegroup.fsm -o .skeletons
-cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.c ..\src\ /y
-cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.h ..\src\ /y
+      <Command>cmd /c "$(ProjectDir)build_windows\generate_code.cmd" "$(ProjectDir)"
 </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
