@@ -13,7 +13,8 @@ extern "C" {
 
 #include "dynamic_api.h"
 #include "stringlist.h"
-#include "stringpair.h"    
+#include "stringpair.h"
+#include "labeled_int_list.h"    
 #include "timestamp.h"
 
 #define PEP_VERSION "2.0" // protocol version
@@ -1279,6 +1280,10 @@ PEP_STATUS set_as_pep_user(PEP_SESSION session, pEp_identity* user);
 PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exists);
 
 PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
+
+// exposed for testing
+PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,
+                      bool guard_transaction);
 
 #ifdef __cplusplus
 }

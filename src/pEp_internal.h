@@ -131,6 +131,7 @@ struct _pEpSession {
     sqlite3_stmt *get_identity;
     sqlite3_stmt *get_identity_without_trust_check;
     sqlite3_stmt *get_identities_by_address;
+    sqlite3_stmt *get_identities_by_userid;
     sqlite3_stmt *replace_identities_fpr;
     sqlite3_stmt *replace_main_user_fpr;
     sqlite3_stmt *get_main_user_fpr;
@@ -138,6 +139,7 @@ struct _pEpSession {
     sqlite3_stmt *remove_fpr_as_default;
     sqlite3_stmt *set_person;
     sqlite3_stmt *update_person;
+    sqlite3_stmt *delete_person;
     sqlite3_stmt *exists_person;    
     sqlite3_stmt *set_as_pep_user;
     sqlite3_stmt *is_pep_user;
@@ -155,6 +157,7 @@ struct _pEpSession {
     sqlite3_stmt *exists_trust_entry;
     sqlite3_stmt *update_trust_for_fpr;
     sqlite3_stmt *get_trust;
+    sqlite3_stmt *get_trust_by_userid;
     sqlite3_stmt *least_trust;
     sqlite3_stmt *mark_compromised;
     sqlite3_stmt *reset_trust;
