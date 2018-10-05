@@ -1171,6 +1171,12 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
     if (!(session && ident && ident->fpr))
         return PEP_ILLEGAL_VALUE;
             
+        // See if key is revoked already
+        bool revoked = false;
+        status = key_revoked(session, ident->fpr, &revoked);
+        if (!revoked)
+            revoke_key(session, ident->fpr, NULL);
+            
     // double-check to be sure key is even in the DB
     if (ident->fpr)
         status = set_pgp_keypair(session, ident->fpr);
