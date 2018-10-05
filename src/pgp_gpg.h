@@ -41,7 +41,8 @@ void pgp_release(PEP_SESSION session, bool out_last);
 //      psize (out)         size of cyphertext in bytes
 //      keylist (out)       list of keys being used; first is the key being
 //                          used for signing
-//
+//	filename (out)	    PGP filename, when rendered (Optional, only necessary for some PGP implementations (e.g. Symantec),
+//                          *** Mostly internal ***
 //  return value:
 //      PEP_DECRYPTED_AND_VERIFIED      data could be decryped and verified
 //      PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH
@@ -64,7 +65,8 @@ PEP_STATUS pgp_decrypt_and_verify(
         size_t dsigsize,
         char **ptext,
         size_t *psize,
-        stringlist_t **keylist
+        stringlist_t **keylist,
+        char** filename_ptr
     );
 
 
@@ -115,7 +117,7 @@ PEP_STATUS pgp_encrypt_and_sign(
 //      PEP_GET_KEY_FAILED              access to keyring failed
 //      PEP_ILLEGAL_VALUE               parameters wrong
 //      PEP_OUT_OF_MEMORY               out of memory error
-//      PEP_UNKOWN_ERROR                internal error
+//      PEP_UNKNOWN_ERROR                internal error
 
 PEP_STATUS pgp_encrypt_only(
         PEP_SESSION session,

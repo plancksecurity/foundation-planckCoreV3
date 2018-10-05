@@ -98,19 +98,6 @@ static const char *sql_get_identity =
     "   order by is_own desc, "
     "   timestamp desc; ";
 
-static const char *sql_get_identities_by_userid =  
-    "select address, fpr, username, comm_type, lang,"
-    "   identity.flags | pgp_keypair.flags,"
-    "   is_own"
-    "   from identity"
-    "   join person on id = identity.user_id"
-    "   join pgp_keypair on fpr = identity.main_key_id"
-    "   join trust on id = trust.user_id"
-    "       and pgp_keypair_fpr = identity.main_key_id"    
-    "   where identity.user_id = ?1" 
-    "   order by is_own desc, "
-    "   timestamp desc; ";
-
 static const char *sql_get_identities_by_main_key_id =  
     "select address, identity.user_id, username, comm_type, lang,"
     "   identity.flags | pgp_keypair.flags,"
@@ -150,6 +137,19 @@ static const char *sql_get_identities_by_address =
     "          end) = 1 "
     "   order by is_own desc, "
     "   timestamp desc; ";
+    
+static const char *sql_get_identities_by_userid =  
+    "select address, fpr, username, comm_type, lang,"
+    "   identity.flags | pgp_keypair.flags,"
+    "   is_own"
+    "   from identity"
+    "   join person on id = identity.user_id"
+    "   join pgp_keypair on fpr = identity.main_key_id"
+    "   join trust on id = trust.user_id"
+    "       and pgp_keypair_fpr = identity.main_key_id"    
+    "   where identity.user_id = ?1" 
+    "   order by is_own desc, "
+    "   timestamp desc; ";
 
 static const char *sql_replace_identities_fpr =  
     "update identity"
@@ -178,7 +178,11 @@ static const char *sql_update_person =
     "       device_group = "
     "           (select device_group from person where id = ?1)"
     "   where id = ?1 ;";
-    
+
+// Will cascade.
+static const char *sql_delete_person = 
+     "delete from person where id = ?1 ;";
+
 static const char *sql_set_as_pEp_user =
     "update person set is_pEp_user = 1 "
     "   where id = ?1 ; ";
@@ -336,6 +340,9 @@ static const char *sql_update_trust_for_fpr =
 static const char *sql_get_trust = 
     "select comm_type from trust where user_id = ?1 "
     "and pgp_keypair_fpr = upper(replace(?2,' ','')) ;";
+
+static const char *sql_get_trust_by_userid = 
+    "select pgp_keypair_fpr, comm_type from trust where user_id = ?1 ";
 
 static const char *sql_least_trust = 
     "select min(comm_type) from trust where"
@@ -1157,7 +1164,7 @@ DYNAMIC_API PEP_STATUS init(
             (int)strlen(sql_get_identities_by_address), 
             &_session->get_identities_by_address, NULL);
     assert(int_result == SQLITE_OK);
-
+    
     int_result = sqlite3_prepare_v2(_session->db, sql_get_identities_by_userid,
             (int)strlen(sql_get_identities_by_userid), 
             &_session->get_identities_by_userid, NULL);
@@ -1224,6 +1231,10 @@ DYNAMIC_API PEP_STATUS init(
 
     int_result = sqlite3_prepare_v2(_session->db, sql_update_person,
             (int)strlen(sql_update_person), &_session->update_person, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_delete_person,
+            (int)strlen(sql_delete_person), &_session->delete_person, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_exists_person,
@@ -1335,6 +1346,10 @@ DYNAMIC_API PEP_STATUS init(
 
     int_result = sqlite3_prepare_v2(_session->db, sql_get_trust,
             (int)strlen(sql_get_trust), &_session->get_trust, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_get_trust_by_userid,
+            (int)strlen(sql_get_trust_by_userid), &_session->get_trust_by_userid, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_least_trust,
@@ -1539,6 +1554,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->remove_fpr_as_default);            
             if (session->set_person)
                 sqlite3_finalize(session->set_person);
+            if (session->delete_person)
+                sqlite3_finalize(session->delete_person);                
             if (session->set_as_pEp_user)
                 sqlite3_finalize(session->set_as_pEp_user);
             if (session->is_pEp_user)
@@ -1585,6 +1602,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->update_trust_for_fpr);
             if (session->get_trust)
                 sqlite3_finalize(session->get_trust);
+            if (session->get_trust_by_userid)
+                sqlite3_finalize(session->get_trust_by_userid);                
             if (session->least_trust)
                 sqlite3_finalize(session->least_trust);
             if (session->mark_compromised)
@@ -2853,6 +2872,27 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity,
     return status;
 }
 
+PEP_STATUS delete_person(PEP_SESSION session, const char* user_id) {
+    assert(session);
+    assert(!EMPTYSTR(user_id));        
+    if (!session || EMPTYSTR(user_id))
+        return PEP_ILLEGAL_VALUE;
+        
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    sqlite3_reset(session->delete_person);
+    sqlite3_bind_text(session->delete_person, 1, user_id, -1,
+                      SQLITE_STATIC);
+                      
+    int result = sqlite3_step(session->delete_person);
+    
+    if (result != SQLITE_DONE)
+        status = PEP_UNKNOWN_ERROR;
+        
+    sqlite3_reset(session->delete_person);
+    return status;
+}
+
 DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session, pEp_identity *identity, bool* is_pEp)
 {
     assert(session);
@@ -3184,9 +3224,327 @@ DYNAMIC_API PEP_STATUS unset_identity_flags(
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS get_trust_by_userid(PEP_SESSION session, const char* user_id,
+                                           labeled_int_list_t** trust_list)
+{
+    int result;
+
+    if (!(session && user_id && user_id[0]))
+        return PEP_ILLEGAL_VALUE;
+
+    *trust_list = NULL;
+    labeled_int_list_t* t_list = NULL;
+
+    sqlite3_reset(session->get_trust_by_userid);
+    sqlite3_bind_text(session->get_trust_by_userid, 1, user_id, -1, SQLITE_STATIC);
+
+    while ((result = sqlite3_step(session->get_trust_by_userid)) == SQLITE_ROW) {
+        if (!t_list)
+            t_list = new_labeled_int_list(sqlite3_column_int(session->get_trust_by_userid, 1),
+                                         (const char *) sqlite3_column_text(session->get_trust_by_userid, 0));
+        else
+            labeled_int_list_add(t_list, sqlite3_column_int(session->get_trust_by_userid, 1),
+                                (const char *) sqlite3_column_text(session->get_trust_by_userid, 0));
+    }
+
+    sqlite3_reset(session->get_trust_by_userid);
+
+    *trust_list = t_list;
+        
+    return PEP_STATUS_OK;
+}
+
+PEP_comm_type reconcile_trust(PEP_comm_type t_old, PEP_comm_type t_new) {
+    switch (t_new) {
+        case PEP_ct_mistrusted:
+        case PEP_ct_key_revoked:
+        case PEP_ct_compromised:
+        case PEP_ct_key_b0rken:
+            return t_new;
+        default:
+            break;
+    }
+    switch (t_old) {
+        case PEP_ct_mistrusted:
+        case PEP_ct_key_revoked:
+        case PEP_ct_compromised:
+        case PEP_ct_key_b0rken:
+            return t_old;
+        default:
+            break;
+    }
+    if (t_old < PEP_ct_strong_but_unconfirmed && t_new >= PEP_ct_strong_but_unconfirmed)
+        return t_new;
+    
+    bool confirmed = (t_old & PEP_ct_confirmed) || (t_new & PEP_ct_confirmed);
+    PEP_comm_type result = _MAX(t_old, t_new);
+    if (confirmed)
+        result |= PEP_ct_confirmed;
+    return result;
+}
+
+PEP_STATUS reconcile_pEp_status(PEP_SESSION session, const char* old_uid, 
+                                const char* new_uid) {
+    PEP_STATUS status = PEP_STATUS_OK;
+    // We'll make this easy - if the old one has a pEp status, we set no matter
+    // what.
+    pEp_identity* ident = new_identity(NULL, NULL, old_uid, NULL);
+    bool is_pEp_peep = false;
+    status = is_pEp_user(session, ident, &is_pEp_peep);
+    if (is_pEp_peep) {
+        free(ident->user_id);
+        ident->user_id = strdup(new_uid);
+        if (!ident->user_id) {
+            status = PEP_OUT_OF_MEMORY;
+            goto pEp_free;
+        }
+        status = set_as_pEp_user(session, ident);
+    }
+pEp_free:
+    free_identity(ident);
+    return status;
+}
+
+const char* reconcile_usernames(const char* old_name, const char* new_name, 
+                                const char* address) {
+    if (EMPTYSTR(old_name)) {
+        if (EMPTYSTR(new_name))
+            return address;
+        else
+            return new_name;
+    }
+    if (EMPTYSTR(new_name))
+        return old_name;        
+    if (strcmp(new_name, address) == 0)
+        return old_name;
+    return new_name;        
+}
+
+PEP_STATUS reconcile_default_keys(PEP_SESSION session, pEp_identity* old_ident,
+                                  pEp_identity* new_ident) {
+    PEP_STATUS status = PEP_STATUS_OK;
+                                      
+    const char* old_fpr = old_ident->fpr;
+    const char* new_fpr = new_ident->fpr;
+    if (!old_fpr)
+        return status;
+
+    PEP_comm_type old_ct = old_ident->comm_type;    
+    PEP_comm_type new_ct = new_ident->comm_type;
+    
+    if (!new_fpr) {
+        new_ident->fpr = strdup(old_fpr);
+        if (!new_ident->fpr)
+            status = PEP_OUT_OF_MEMORY;
+        else    
+            new_ident->comm_type = old_ct;
+        return status;
+    }        
+    
+    if (strcmp(old_fpr, new_fpr) == 0) {
+        new_ident->comm_type = reconcile_trust(old_ct, new_ct);
+        return status;
+    }
+    
+    bool old_confirmed = old_ct & PEP_ct_confirmed;
+    bool new_confirmed = new_ct & PEP_ct_confirmed;
+    
+    if (new_confirmed)
+        return status;
+    else if (old_confirmed) {
+        free(new_ident->fpr);
+        new_ident->fpr = strdup(old_fpr);
+        if (!new_ident->fpr)
+            status = PEP_OUT_OF_MEMORY;
+        else    
+            new_ident->comm_type = old_ct;
+        return status;
+    }
+    
+    if (old_ct > new_ct) {
+        free(new_ident->fpr);
+        new_ident->fpr = strdup(old_fpr);
+        if (!new_ident->fpr)
+            status = PEP_OUT_OF_MEMORY;
+        else    
+            new_ident->comm_type = old_ct;
+    }
+    return status;
+}
+
+void reconcile_language(pEp_identity* old_ident,
+                        pEp_identity* new_ident) {
+    if (new_ident->lang[0] == 0) {
+        if (old_ident->lang[0] != 0) {
+            new_ident->lang[0] = old_ident->lang[0];
+            new_ident->lang[1] = old_ident->lang[1];
+            new_ident->lang[2] = old_ident->lang[2];
+        }
+    }
+}
+
+// ONLY CALL THIS IF BOTH IDs ARE IN THE PERSON DB, FOOL! </Mr_T>
+PEP_STATUS merge_records(PEP_SESSION session, const char* old_uid,
+                         const char* new_uid) {
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    pEp_identity* new_ident = NULL;
+    identity_list* old_identities = NULL;
+    labeled_int_list_t* trust_list = NULL;
+    stringlist_t* touched_keys = new_stringlist(NULL);
+    char* main_user_fpr = NULL;
+
+    status = reconcile_pEp_status(session, old_uid, new_uid);
+    if (status != PEP_STATUS_OK)
+        goto pEp_free;
+                        
+    bool new_is_pEp = false;
+    new_ident = new_identity(NULL, NULL, new_uid, NULL);
+    status = is_pEp_user(session, new_ident, &new_is_pEp);
+    if (status != PEP_STATUS_OK)
+        goto pEp_free;
+    free(new_ident);
+    new_ident = NULL;
+        
+    status = get_identities_by_userid(session, old_uid, &old_identities);
+    if (status == PEP_STATUS_OK && old_identities) {
+        identity_list* curr_old = old_identities;
+        for (; curr_old && curr_old->ident; curr_old = curr_old->next) {
+            pEp_identity* old_ident = curr_old->ident;
+            const char* address = old_ident->address;
+            status = get_identity(session, address, new_uid, &new_ident);
+            if (status == PEP_CANNOT_FIND_IDENTITY) {
+                // No new identity matching the old one, so we just set one w. new user_id
+                free(old_ident->user_id);
+                old_ident->user_id = strdup(new_uid);
+                if (!old_ident->user_id) {
+                    status = PEP_OUT_OF_MEMORY;
+                    goto pEp_free;
+                }
+                if (new_is_pEp) {
+                    PEP_comm_type confirmed_bit = old_ident->comm_type & PEP_ct_confirmed;
+                    if ((old_ident->comm_type | PEP_ct_confirmed) == PEP_ct_OpenPGP)
+                        old_ident->comm_type = PEP_ct_pEp_unconfirmed | confirmed_bit;
+                }
+                
+                status = set_identity(session, old_ident);
+                if (status != PEP_STATUS_OK)
+                    goto pEp_free;
+            }
+            else if (status != PEP_STATUS_OK)
+                goto pEp_free;
+            else {
+                // Ok, so we have two idents which might be in conflict. Have to merge them.
+                const char* username = reconcile_usernames(old_ident->username,
+                                                           new_ident->username,
+                                                           address);
+                                                           
+                if (!new_ident->username || strcmp(username, new_ident->username) != 0) {
+                    free(new_ident->username);
+                    new_ident->username = strdup(username);
+                    if (!new_ident->username) {
+                        status = PEP_OUT_OF_MEMORY;
+                        goto pEp_free;
+                    }
+                }
+        
+                // Reconcile default keys if they differ, trust if they don't
+                status = reconcile_default_keys(session, old_ident, new_ident);
+                if (status != PEP_STATUS_OK)
+                    goto pEp_free;
+                    
+                // reconcile languages
+                reconcile_language(old_ident, new_ident);
+
+                // reconcile flags - FIXME - is this right?
+                new_ident->flags |= old_ident->flags;
+                
+                // NOTE: In principle, this is only called from update_identity,
+                // which would never have me flags set. So I am ignoring them here.
+                // if this function is ever USED for that, though, you'll have
+                // to go through making sure that the user ids are appropriately
+                // aliased, etc. So be careful.
+                
+                // Set the reconciled record
+                    
+                status = set_identity(session, new_ident);
+                if (status != PEP_STATUS_OK)
+                    goto pEp_free;
+
+                if (new_ident->fpr)
+                    stringlist_add(touched_keys, new_ident->fpr);
+                        
+                free_identity(new_ident);
+                new_ident = NULL;    
+            }
+        }
+    }
+    // otherwise, no need to reconcile identity records. But maybe trust...    
+    new_ident = new_identity(NULL, NULL, new_uid, NULL);
+    if (!new_ident) {
+        status = PEP_OUT_OF_MEMORY;
+        goto pEp_free;
+    }
+    status = get_trust_by_userid(session, old_uid, &trust_list);
+
+    labeled_int_list_t* trust_curr = trust_list;
+    for (; trust_curr && trust_curr->label; trust_curr = trust_curr->next) {
+        const char* curr_fpr = trust_curr->label;
+        new_ident->fpr = strdup(curr_fpr); 
+        status = get_trust(session, new_ident);
+        switch (status) {
+            case PEP_STATUS_OK:
+                new_ident->comm_type = reconcile_trust(trust_curr->value,
+                                                       new_ident->comm_type);
+                break;
+            case PEP_CANNOT_FIND_IDENTITY:
+                new_ident->comm_type = trust_curr->value;
+                break;
+            default:
+                goto pEp_free;
+        }
+        new_ident->comm_type = reconcile_trust(trust_curr->value,
+                                               new_ident->comm_type);
+        if (new_is_pEp) {
+            PEP_comm_type confirmed_bit = new_ident->comm_type & PEP_ct_confirmed;
+            if ((new_ident->comm_type | PEP_ct_confirmed) == PEP_ct_OpenPGP)
+                new_ident->comm_type = PEP_ct_pEp_unconfirmed | confirmed_bit;
+        }
+
+        status = set_trust(session, new_ident);
+        if (status != PEP_STATUS_OK) {
+            goto pEp_free;
+        }                  
+                              
+        free(new_ident->fpr);
+        new_ident->fpr = NULL;
+        new_ident->comm_type = 0;
+    }
+
+    // reconcile the default keys if the new id doesn't have one?
+    status = get_main_user_fpr(session, new_uid, &main_user_fpr);
+    if (status == PEP_KEY_NOT_FOUND || (status == PEP_STATUS_OK && !main_user_fpr)) {
+        status = get_main_user_fpr(session, old_uid, &main_user_fpr);
+        if (status == PEP_STATUS_OK && main_user_fpr)
+            status = replace_main_user_fpr(session, new_uid, main_user_fpr);
+        if (status != PEP_STATUS_OK)
+            goto pEp_free;
+    }
+    
+    // delete the old user
+    status = delete_person(session, old_uid);
+    
+pEp_free:
+    free_identity(new_ident);
+    free_identity_list(old_identities);
+    free_labeled_int_list(trust_list);
+    free_stringlist(touched_keys);
+    free(main_user_fpr);
+    return status;
+}
 
 PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
-                              const char* new_uid) {
+                          const char* new_uid) {
     assert(session);
     assert(old_uid);
     assert(new_uid);
@@ -3194,6 +3552,15 @@ PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
     if (!session || !old_uid || !new_uid)
         return PEP_ILLEGAL_VALUE;
 
+    pEp_identity* temp_ident = new_identity(NULL, NULL, new_uid, NULL);
+    bool new_exists = false;
+    PEP_STATUS status = exists_person(session, temp_ident, &new_exists);
+    free_identity(temp_ident);
+    if (status != PEP_STATUS_OK) // DB error
+        return status;
+        
+    if (new_exists)
+        return merge_records(session, old_uid, new_uid);
 
     int result;
 
@@ -3203,6 +3570,12 @@ PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
     sqlite3_bind_text(session->replace_userid, 2, old_uid, -1,
             SQLITE_STATIC);
     result = sqlite3_step(session->replace_userid);
+#ifndef NDEBUG
+    if (result) {
+        const char *errmsg = sqlite3_errmsg(session->db);
+        log_event(session, "SQLite3 error", "replace_userid", errmsg, NULL);
+    }
+#endif // !NDEBUG
     sqlite3_reset(session->replace_userid);
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PERSON; // May need clearer retval
@@ -3376,8 +3749,8 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
         return PEP_ILLEGAL_VALUE;
 
     identity->comm_type = PEP_ct_unknown;
-
     sqlite3_reset(session->get_trust);
+
     sqlite3_bind_text(session->get_trust, 1, identity->user_id, -1,
             SQLITE_STATIC);
     sqlite3_bind_text(session->get_trust, 2, identity->fpr, -1, SQLITE_STATIC);
@@ -3398,6 +3771,7 @@ DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
     sqlite3_reset(session->get_trust);
     return status;
 }
+
 
 DYNAMIC_API PEP_STATUS least_trust(
         PEP_SESSION session,
@@ -3439,7 +3813,8 @@ DYNAMIC_API PEP_STATUS least_trust(
 DYNAMIC_API PEP_STATUS decrypt_and_verify(
     PEP_SESSION session, const char *ctext, size_t csize,
     const char *dsigtext, size_t dsigsize,
-    char **ptext, size_t *psize, stringlist_t **keylist
+    char **ptext, size_t *psize, stringlist_t **keylist,
+    char** filename_ptr
     )
 {
     assert(session);
@@ -3453,8 +3828,8 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
         return PEP_ILLEGAL_VALUE;
 
     PEP_STATUS status = session->cryptotech[PEP_crypt_OpenPGP].decrypt_and_verify(
-            session, ctext, csize, dsigtext, dsigsize, ptext, psize, keylist);
-    if (status == PEP_DECRYPT_NO_KEY)
+            session, ctext, csize, dsigtext, dsigsize, ptext, psize, keylist,
+            filename_ptr);
         signal_Sync_event(session, Sync_PR_keysync, CannotDecrypt);
 
     return status;

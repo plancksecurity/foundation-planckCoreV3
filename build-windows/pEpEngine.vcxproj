@@ -115,6 +115,7 @@ cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.h ..\src\ /y
     <ClCompile Include="..\src\etpan_mime.c" />
     <ClCompile Include="..\src\identity_list.c" />
     <ClCompile Include="..\src\keymanagement.c" />
+    <ClCompile Include="..\src\labeled_int_list.c" />
     <ClCompile Include="..\src\map_asn1.c" />
     <ClCompile Include="..\src\message.c" />
     <ClCompile Include="..\src\message_api.c" />
@@ -149,6 +150,7 @@ cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.h ..\src\ /y
     <ClInclude Include="..\src\etpan_mime.h" />
     <ClInclude Include="..\src\identity_list.h" />
     <ClInclude Include="..\src\keymanagement.h" />
+    <ClInclude Include="..\src\labeled_int_list.h" />
     <ClInclude Include="..\src\map_asn1.h" />
     <ClInclude Include="..\src\message.h" />
     <ClInclude Include="..\src\message_api.h" />
