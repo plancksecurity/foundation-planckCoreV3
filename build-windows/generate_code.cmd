@@ -4,8 +4,8 @@ cd %1\sync
 python %YML_PATH%\yml2proc -E utf-8 -y gen_actions.ysl2 sync.fsm
 python %YML_PATH%\yml2proc -E utf-8 -y gen_statemachine.ysl2 sync.fsm
 python %YML_PATH%\yml2proc -E utf-8 -y gen_codec.ysl2 sync.fsm
-python %YML_PATH%\yml2proc -E utf-8 -y gen_messages sync.fsm
-python %YML_PATH%\yml2proc -E utf-8 -y gen_message_func sync.fsm
+python %YML_PATH%\yml2proc -E utf-8 -y gen_messages.ysl2 sync.fsm
+python %YML_PATH%\yml2proc -E utf-8 -y gen_message_func.ysl2 sync.fsm
 
 xcopy /y generated\*.asn1 ..\asn.1\
 xcopy /y generated\*.c ..\src\
