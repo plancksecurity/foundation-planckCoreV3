@@ -108,7 +108,7 @@ tstylesheet {
         #include "pEp_internal.h"
         #include "growing_buf.h"
 
-        DYNAMIC_API PEP_STATUS decode_«@name»_message(
+        PEP_STATUS decode_«@name»_message(
                 const char *data,
                 size_t size,
                 «@name»_t **msg
@@ -128,7 +128,7 @@ tstylesheet {
             return PEP_STATUS_OK;
         }
 
-        DYNAMIC_API PEP_STATUS encode_«@name»_message(
+        PEP_STATUS encode_«@name»_message(
                 «@name»_t *msg,
                 char **data,
                 size_t *size
@@ -153,7 +153,7 @@ tstylesheet {
             return PEP_STATUS_OK;
         }
 
-        DYNAMIC_API PEP_STATUS PER_to_XER_«@name»_msg(
+        PEP_STATUS PER_to_XER_«@name»_msg(
                 const char *data,
                 size_t size,
                 char **text
@@ -195,7 +195,7 @@ tstylesheet {
             return status;
         }
 
-        DYNAMIC_API PEP_STATUS XER_to_PER_«@name»_msg(
+        PEP_STATUS XER_to_PER_«@name»_msg(
                 const char *text,
                 char **data,
                 size_t *size
