@@ -9,7 +9,7 @@
 #include "platform.h"
 #include "labeled_int_list.h"
 
-labeled_int_list_t *new_labeled_int_list(int value, const char* label)
+DYNAMIC_API labeled_int_list_t *new_labeled_int_list(int value, const char* label)
 {
     assert(label);
     if (!label)
@@ -29,7 +29,7 @@ labeled_int_list_t *new_labeled_int_list(int value, const char* label)
     return labeled_int_list;
 }
 
-void free_labeled_int_list(labeled_int_list_t *labeled_int_list)
+DYNAMIC_API void free_labeled_int_list(labeled_int_list_t *labeled_int_list)
 {
     labeled_int_list_t *curr = labeled_int_list;
 
@@ -41,7 +41,7 @@ void free_labeled_int_list(labeled_int_list_t *labeled_int_list)
     }
 }
 
-labeled_int_list_t *labeled_int_list_dup(const labeled_int_list_t *src)
+DYNAMIC_API labeled_int_list_t *labeled_int_list_dup(const labeled_int_list_t *src)
 {
     assert(src);
     if (src == NULL)
@@ -73,7 +73,7 @@ enomem:
     return NULL;
 }
 
-labeled_int_list_t *labeled_int_list_add(labeled_int_list_t *labeled_int_list, int value, const char* label)
+DYNAMIC_API labeled_int_list_t *labeled_int_list_add(labeled_int_list_t *labeled_int_list, int value, const char* label)
 {
     if (!label)
         return NULL;
@@ -110,7 +110,7 @@ labeled_int_list_t *labeled_int_list_add(labeled_int_list_t *labeled_int_list, i
     return list_curr->next;
 }
 
-int labeled_int_list_length(const labeled_int_list_t *labeled_int_list)
+DYNAMIC_API int labeled_int_list_length(const labeled_int_list_t *labeled_int_list)
 {
     int len = 0;
 
