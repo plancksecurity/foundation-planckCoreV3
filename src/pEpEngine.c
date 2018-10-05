@@ -2667,7 +2667,7 @@ PEP_STATUS delete_person(PEP_SESSION session, const char* user_id) {
                       
     int result = sqlite3_step(session->delete_person);
     
-    if (result != SQLITE_OK)
+    if (result != SQLITE_DONE)
         status = PEP_UNKNOWN_ERROR;
         
     sqlite3_reset(session->delete_person);
@@ -3209,20 +3209,30 @@ PEP_STATUS merge_records(PEP_SESSION session, const char* old_uid,
         const char* curr_fpr = trust_curr->label;
         new_ident->fpr = strdup(curr_fpr); 
         status = get_trust(session, new_ident);
-        if (status == PEP_STATUS_OK) {
-            new_ident->comm_type = reconcile_trust(trust_curr->value,
-                                                   new_ident->comm_type);
-            if (new_is_pep) {
-                PEP_comm_type confirmed_bit = new_ident->comm_type & PEP_ct_confirmed;
-                if ((new_ident->comm_type | PEP_ct_confirmed) == PEP_ct_OpenPGP)
-                    new_ident->comm_type = PEP_ct_pEp_unconfirmed | confirmed_bit;
-            }
-
-            status = set_trust(session, new_ident);
-            if (status != PEP_STATUS_OK) {
+        switch (status) {
+            case PEP_STATUS_OK:
+                new_ident->comm_type = reconcile_trust(trust_curr->value,
+                                                       new_ident->comm_type);
+                break;
+            case PEP_CANNOT_FIND_IDENTITY:
+                new_ident->comm_type = trust_curr->value;
+                break;
+            default:
                 goto pEp_free;
-            }                                        
         }
+        new_ident->comm_type = reconcile_trust(trust_curr->value,
+                                               new_ident->comm_type);
+        if (new_is_pep) {
+            PEP_comm_type confirmed_bit = new_ident->comm_type & PEP_ct_confirmed;
+            if ((new_ident->comm_type | PEP_ct_confirmed) == PEP_ct_OpenPGP)
+                new_ident->comm_type = PEP_ct_pEp_unconfirmed | confirmed_bit;
+        }
+
+        status = set_trust(session, new_ident);
+        if (status != PEP_STATUS_OK) {
+            goto pEp_free;
+        }                  
+                              
         free(new_ident->fpr);
         new_ident->fpr = NULL;
         new_ident->comm_type = 0;
