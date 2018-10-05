@@ -68,7 +68,7 @@
       <AdditionalDependencies>$(TargetDir)\pEpEngineASN1.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>cmd /c "$(ProjectDir)build_windows\generate_code.cmd" "$(ProjectDir)"
+      <Command>"$(SysProjectDir)generate_code.cmd" "$(ProjectDir).."
 </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -95,7 +95,7 @@
       <AdditionalDependencies>$(TargetDir)\pEpEngineASN1.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>cmd /c "$(ProjectDir)build_windows\generate_code.cmd" "$(ProjectDir)"
+      <Command>"$(SysProjectDir)generate_code.cmd" "$(ProjectDir).."
 </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>

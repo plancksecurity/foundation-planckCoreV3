@@ -13,6 +13,11 @@ xcopy /y generated\*.h ..\src\
 
 cd %1\asn.1
 
+del *.h*
+del *.c*
+
 ..\..\Tools\asn1c\bin\asn1c -S ../../Tools/asn1c/share/asn1c -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keysync.asn1 sync.asn1
+
+del *-sample.c
 
 popd
