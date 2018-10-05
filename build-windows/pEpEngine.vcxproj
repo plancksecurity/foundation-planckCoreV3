@@ -68,7 +68,15 @@
       <AdditionalDependencies>$(TargetDir)\pEpEngineASN1.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_actions.ysl2 sync.fsm -o .actions</Command>
+      <Command>cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_actions.ysl2 sync.fsm -o .actions
+cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_statemachine.ysl2 sync.fsm -o .statemachines
+cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_codec.ysl2 sync.fsm -o .codecs
+cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_messages.ysl2 sync.fsm -o .messages
+cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_message_func.ysl2 sync.fsm -o .messages
+cd "$(ProjectDir)..\sync" &amp;&amp; xcopy /y generated\*.asn1 ..\asn.1\
+cd "$(ProjectDir)..\sync" &amp;&amp; xcopy /y generated\*.c ..\src\
+cd "$(ProjectDir)..\sync" &amp;&amp; xcopy /y generated\*.h ..\src\
+</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -94,7 +102,15 @@
       <AdditionalDependencies>$(TargetDir)\pEpEngineASN1.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_actions.ysl2 sync.fsm -o .actions</Command>
+      <Command>cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_actions.ysl2 sync.fsm -o .actions
+cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_statemachine.ysl2 sync.fsm -o .statemachines
+cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_codec.ysl2 sync.fsm -o .codecs
+cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_messages.ysl2 sync.fsm -o .messages
+cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_message_func.ysl2 sync.fsm -o .messages
+cd "$(ProjectDir)..\sync" &amp;&amp; xcopy /y generated\*.asn1 ..\asn.1\
+cd "$(ProjectDir)..\sync" &amp;&amp; xcopy /y generated\*.c ..\src\
+cd "$(ProjectDir)..\sync" &amp;&amp; xcopy /y generated\*.h ..\src\
+</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -107,6 +123,7 @@
     <ClCompile Include="..\src\etpan_mime.c" />
     <ClCompile Include="..\src\identity_list.c" />
     <ClCompile Include="..\src\keymanagement.c" />
+    <ClCompile Include="..\src\KeySync_fsm.c" />
     <ClCompile Include="..\src\labeled_int_list.c" />
     <ClCompile Include="..\src\map_asn1.c" />
     <ClCompile Include="..\src\message.c" />
@@ -121,12 +138,11 @@
     <ClCompile Include="..\src\sqlite3.c" />
     <ClCompile Include="..\src\stringlist.c" />
     <ClCompile Include="..\src\stringpair.c" />
-    <ClCompile Include="..\src\sync.c" />
-    <ClCompile Include="..\src\sync_actions.c" />
-    <ClCompile Include="..\src\sync_driver.c" />
-    <ClCompile Include="..\src\sync_fsm.c" />
-    <ClCompile Include="..\src\sync_impl.c" />
-    <ClCompile Include="..\src\sync_send_actions.c" />
+    <ClCompile Include="..\src\Sync_actions.c" />
+    <ClCompile Include="..\src\sync_api.c" />
+    <ClCompile Include="..\src\sync_codec.c" />
+    <ClCompile Include="..\src\Sync_event.c" />
+    <ClCompile Include="..\src\Sync_impl.c" />
     <ClCompile Include="..\src\timestamp.c" />
     <ClCompile Include="..\src\transport.c" />
     <ClCompile Include="..\src\trans_auto.c" />
@@ -142,6 +158,7 @@
     <ClInclude Include="..\src\etpan_mime.h" />
     <ClInclude Include="..\src\identity_list.h" />
     <ClInclude Include="..\src\keymanagement.h" />
+    <ClInclude Include="..\src\KeySync_fsm.h" />
     <ClInclude Include="..\src\labeled_int_list.h" />
     <ClInclude Include="..\src\map_asn1.h" />
     <ClInclude Include="..\src\message.h" />
@@ -161,6 +178,9 @@
     <ClInclude Include="..\src\stringlist.h" />
     <ClInclude Include="..\src\stringpair.h" />
     <ClInclude Include="..\src\sync.h" />
+    <ClInclude Include="..\src\sync_api.h" />
+    <ClInclude Include="..\src\sync_codec.h" />
+    <ClInclude Include="..\src\Sync_event.h" />
     <ClInclude Include="..\src\sync_fsm.h" />
     <ClInclude Include="..\src\sync_impl.h" />
     <ClInclude Include="..\src\timestamp.h" />
