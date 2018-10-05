@@ -1171,7 +1171,12 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
 
     if (ident->me)
     {
-        revoke_key(session, ident->fpr, NULL);
+        // See if key is revoked already
+        bool revoked = false;
+        status = key_revoked(session, ident->fpr, &revoked);
+        if (!revoked)
+            revoke_key(session, ident->fpr, NULL);
+            
         myself(session, ident);
     }
     else
