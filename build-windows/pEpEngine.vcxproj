@@ -43,12 +43,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-	<IncludePath>$(ProjectDir)\..\..\libetpan\build-windows\include;C:\Program Files %28x86%29\GnuPG\include;$(IncludePath);$(ProjectDir)\asn.1;%ASN1C%\share\asn1c</IncludePath>
+    <IncludePath>$(ProjectDir)\..\..\libetpan\build-windows\include;C:\Program Files %28x86%29\GnuPG\include;$(IncludePath);$(ProjectDir)\asn.1;%ASN1C%\share\asn1c</IncludePath>
     <LibraryPath>$(ProjectDir)\..\..\libetpan\build-windows\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-	<IncludePath>$(ProjectDir)\..\..\libetpan\build-windows\include;C:\Program Files %28x86%29\GnuPG\include;$(IncludePath);$(ProjectDir)\asn.1;%ASN1C%\share\asn1c</IncludePath>
+    <IncludePath>$(ProjectDir)\..\..\libetpan\build-windows\include;C:\Program Files %28x86%29\GnuPG\include;$(IncludePath);$(ProjectDir)\asn.1;%ASN1C%\share\asn1c</IncludePath>
     <LibraryPath>$(ProjectDir)\..\..\libetpan\build-windows\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -68,10 +68,7 @@
       <AdditionalDependencies>$(TargetDir)\pEpEngineASN1.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_statemachine.ysl2 devicegroup.fsm -o .statemachines
-cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -ygen_actions.ysl2 devicegroup.fsm -o .skeletons
-cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.c ..\src\ /y
-cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.h ..\src\ /y
+      <Command>"$(SysProjectDir)generate_code.cmd" "$(ProjectDir).."
 </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -98,23 +95,22 @@ cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.h ..\src\ /y
       <AdditionalDependencies>$(TargetDir)\pEpEngineASN1.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -y gen_statemachine.ysl2 devicegroup.fsm -o .statemachines
-cd "$(ProjectDir)..\sync" &amp;&amp; python "%YML_PATH%\yml2proc" -E utf-8 -ygen_actions.ysl2 devicegroup.fsm -o .skeletons
-cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.c ..\src\ /y
-cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.h ..\src\ /y
+      <Command>"$(SysProjectDir)generate_code.cmd" "$(ProjectDir).."
 </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\asn1_helper.c" />
     <ClCompile Include="..\src\baseprotocol.c" />
     <ClCompile Include="..\src\blacklist.c" />
     <ClCompile Include="..\src\bloblist.c" />
     <ClCompile Include="..\src\cryptotech.c" />
     <ClCompile Include="..\src\email.c" />
     <ClCompile Include="..\src\etpan_mime.c" />
+    <ClCompile Include="..\src\growing_buf.c" />
     <ClCompile Include="..\src\identity_list.c" />
     <ClCompile Include="..\src\keymanagement.c" />
+    <ClCompile Include="..\src\KeySync_fsm.c" />
+    <ClCompile Include="..\src\key_reset.c" />
     <ClCompile Include="..\src\labeled_int_list.c" />
     <ClCompile Include="..\src\map_asn1.c" />
     <ClCompile Include="..\src\message.c" />
@@ -129,12 +125,12 @@ cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.h ..\src\ /y
     <ClCompile Include="..\src\sqlite3.c" />
     <ClCompile Include="..\src\stringlist.c" />
     <ClCompile Include="..\src\stringpair.c" />
-    <ClCompile Include="..\src\sync.c" />
-    <ClCompile Include="..\src\sync_actions.c" />
-    <ClCompile Include="..\src\sync_driver.c" />
-    <ClCompile Include="..\src\sync_fsm.c" />
-    <ClCompile Include="..\src\sync_impl.c" />
-    <ClCompile Include="..\src\sync_send_actions.c" />
+    <ClCompile Include="..\src\Sync_actions.c" />
+    <ClCompile Include="..\src\sync_api.c" />
+    <ClCompile Include="..\src\sync_codec.c" />
+    <ClCompile Include="..\src\Sync_event.c" />
+    <ClCompile Include="..\src\Sync_func.c" />
+    <ClCompile Include="..\src\Sync_impl.c" />
     <ClCompile Include="..\src\timestamp.c" />
     <ClCompile Include="..\src\transport.c" />
     <ClCompile Include="..\src\trans_auto.c" />
@@ -148,8 +144,11 @@ cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.h ..\src\ /y
     <ClInclude Include="..\src\dynamic_api.h" />
     <ClInclude Include="..\src\email.h" />
     <ClInclude Include="..\src\etpan_mime.h" />
+    <ClInclude Include="..\src\growing_buf.h" />
     <ClInclude Include="..\src\identity_list.h" />
     <ClInclude Include="..\src\keymanagement.h" />
+    <ClInclude Include="..\src\KeySync_fsm.h" />
+    <ClInclude Include="..\src\key_reset.h" />
     <ClInclude Include="..\src\labeled_int_list.h" />
     <ClInclude Include="..\src\map_asn1.h" />
     <ClInclude Include="..\src\message.h" />
@@ -168,9 +167,11 @@ cd "$(ProjectDir)..\sync" &amp;&amp; xcopy generated\*.h ..\src\ /y
     <ClInclude Include="..\src\sqlite3.h" />
     <ClInclude Include="..\src\stringlist.h" />
     <ClInclude Include="..\src\stringpair.h" />
-    <ClInclude Include="..\src\sync.h" />
-    <ClInclude Include="..\src\sync_fsm.h" />
-    <ClInclude Include="..\src\sync_impl.h" />
+    <ClInclude Include="..\src\sync_api.h" />
+    <ClInclude Include="..\src\sync_codec.h" />
+    <ClInclude Include="..\src\Sync_event.h" />
+    <ClInclude Include="..\src\Sync_func.h" />
+    <ClInclude Include="..\src\Sync_impl.h" />
     <ClInclude Include="..\src\timestamp.h" />
     <ClInclude Include="..\src\transport.h" />
     <ClInclude Include="..\src\trans_auto.h" />

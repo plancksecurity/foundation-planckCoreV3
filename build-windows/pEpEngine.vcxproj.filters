@@ -72,34 +72,13 @@
     <ClCompile Include="..\src\blacklist.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\sync.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\sync_actions.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\sync_driver.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\sync_fsm.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\map_asn1.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="..\src\baseprotocol.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\sync_send_actions.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\openpgp_compat.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\asn1_helper.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\sync_impl.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="..\src\resource_id.c">
@@ -109,6 +88,33 @@
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="..\src\labeled_int_list.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\key_reset.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\KeySync_fsm.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Sync_actions.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\sync_api.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\sync_codec.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Sync_event.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Sync_func.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Sync_impl.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\growing_buf.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>
@@ -188,12 +194,6 @@
     <ClInclude Include="..\src\blacklist.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\sync.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\sync_fsm.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\map_asn1.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
@@ -206,9 +206,6 @@
     <ClInclude Include="..\src\asn1_helper.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\sync_impl.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\resource_id.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
@@ -217,6 +214,42 @@
     </ClInclude>
     <ClInclude Include="..\src\labeled_int_list.h">
       <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\key_reset.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\KeySync_fsm.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\sync_api.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\sync_codec.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Sync_event.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Sync_func.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Sync_impl.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\growing_buf.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\sync_api.h">
+      <Filter>Quelldateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\sync_codec.h">
+      <Filter>Quelldateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Sync_event.h">
+      <Filter>Quelldateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\KeySync_fsm.h">
+      <Filter>Quelldateien</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
