@@ -48,6 +48,20 @@ static size_t subtract_whitespace(const char* input, int length) {
     return actual_size;
 }
     
+static void trim_end(const char* input, int* length) {
+    const char* end = input + *length;
+    
+    int start_length = *length;
+    
+    int i;
+    
+    for (i = 0; i < start_length; i++) {
+        if (!_is_whitespace(*(--end)))
+            break;
+        (*length) = (*length) - 1;        
+    }
+}    
+    
 char next_char(const char** input_ptr, const char* end) {
     const char* input = *input_ptr;
     char this_ch = 0;
@@ -61,9 +75,6 @@ char next_char(const char** input_ptr, const char* end) {
         break;    
     }
     
-    if (input == end)
-        this_ch = 0;
-        
     *input_ptr = input;
     return this_ch;
 }
@@ -72,15 +83,19 @@ char next_char(const char** input_ptr, const char* end) {
 bloblist_t* base64_str_to_binary_blob(const char* input, int length) {
     if (length == 0)
         return NULL;
+    
+    trim_end(input, &length);
+        
     const char* input_curr;
     input_curr = input;
     const char* input_end = input_curr + length;
     length = subtract_whitespace(input, length);
     size_t final_length = (length / 4) * 3;
 
-    // padded 
+    // padded -- FIXME: whitespace in between ==!!!! 
     if (*(input_end - 1) == '=') {
         final_length -= 1;
+        
         if (*(input_end - 2) == '=')
             final_length -=1;
     }
@@ -95,6 +110,7 @@ bloblist_t* base64_str_to_binary_blob(const char* input, int length) {
                 break;
             case 3:
                 final_length+=2;
+                break;
             default:
                 return NULL;
         }
@@ -160,14 +176,9 @@ bloblist_t* base64_str_to_binary_blob(const char* input, int length) {
 
     int last_bytes = final_length % 3;
 
-    // inelegant, but sure. We could integrate this into the
-    // above, but for now, nah.
     if (last_bytes != 0) {
         char byte_1 = 0;
         char byte_2 = 0;
-        // Boo, we have one or two more bytes to write
-        if (last_bytes == 1)
-            goto pEp_error;
 
         char in_val = next_char(&input_curr, input_end);
         if (in_val == 0)
