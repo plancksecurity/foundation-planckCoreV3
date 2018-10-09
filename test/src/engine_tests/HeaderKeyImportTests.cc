@@ -11,6 +11,7 @@
 #include "bloblist.h"
 #include "base64.h"
 
+#include "test_util.h"
 #include "EngineTestIndividualSuite.h"
 #include "HeaderKeyImportTests.h"
 
@@ -98,6 +99,8 @@ HeaderKeyImportTests::HeaderKeyImportTests(string suitename, string test_home_di
                                                                       static_cast<Func>(&HeaderKeyImportTests::base_64_kitchen_sink_unpadded_1)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("HeaderKeyImportTests::base_64_kitchen_sink_unpadded_2"),
                                                                       static_cast<Func>(&HeaderKeyImportTests::base_64_kitchen_sink_unpadded_2)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("HeaderKeyImportTests::check_header_key_import"),
+                                                                      static_cast<Func>(&HeaderKeyImportTests::check_header_key_import)));                                                                  
 }
 
 bool HeaderKeyImportTests::verify_base_64_test(const char* input, const char* desired_output) {
@@ -727,4 +730,34 @@ void HeaderKeyImportTests::base_64_kitchen_sink_unpadded_2() {
 
     TEST_ASSERT(verify_base_64_test(input, output));
 
+}
+
+void HeaderKeyImportTests::check_header_key_import() {
+    const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
+    slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
+    slurp_and_import_key(session, "test_keys/priv/pep-test-bob-0xC9C2EE39_priv.asc");
+    
+    string message = slurp("test_mails/Header_key_import.eml");
+    
+    char* dec_msg = NULL;
+
+    stringlist_t* keylist = NULL;
+
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags;
+
+    flags = 0;
+    char* modified_src = NULL;
+    PEP_STATUS status = MIME_decrypt_message(session, message.c_str(), message.size(), &dec_msg, &keylist, &rating, &flags, &modified_src);
+    TEST_ASSERT_MSG(rating == PEP_rating_reliable, tl_rating_string(rating));
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+
+    pEp_identity* alice_check = new_identity("pep.test.alice@pep-project.org", NULL, NULL, "pEp Test Alice");
+    status = update_identity(session, alice_check);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    TEST_ASSERT(alice_check->fpr);
+    TEST_ASSERT_MSG(strcmp(alice_check->fpr, alice_fpr) == 0, alice_check->fpr);
+    free(dec_msg);
+    free(modified_src);
+    free_identity(alice_check);
 }

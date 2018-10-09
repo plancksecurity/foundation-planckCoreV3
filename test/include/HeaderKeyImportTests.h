@@ -53,6 +53,7 @@ class HeaderKeyImportTests : public EngineTestIndividualSuite {
         void base_64_kitchen_sink_padded_2();
         void base_64_kitchen_sink_unpadded_1();        
         void base_64_kitchen_sink_unpadded_2();
+        void check_header_key_import();
         
         bool verify_base_64_test(const char* input, const char* desired_output);
 };

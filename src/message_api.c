@@ -3094,7 +3094,6 @@ static bool import_header_keys(PEP_SESSION session, message* src) {
         return false;
     PEP_STATUS status = import_key(session, the_key->value, the_key->size, NULL);
     free_bloblist(the_key);
-    free_stringpair_list(header_keys); // FIXME
     if (status == PEP_STATUS_OK)
         return true;
     return false;
