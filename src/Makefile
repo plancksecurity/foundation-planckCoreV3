@@ -90,7 +90,7 @@ install: $(TARGET)
 	cp -v pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
 	      timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h \
 	      cryptotech.h sync.h sync_fsm.h sync_app.h blacklist.h pEp_string.h \
-	      labeled_int_list.h openpgp_compat.h $(PREFIX)/include/pEp/
+	      labeled_int_list.h openpgp_compat.h base64.h $(PREFIX)/include/pEp/
 
 .PHONY: uninstall
 uninstall:
