@@ -111,6 +111,9 @@
     <ClCompile Include="..\src\labeled_int_list.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base64.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\keymanagement.h">
@@ -216,6 +219,9 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="..\src\labeled_int_list.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\base64.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
