@@ -14,6 +14,8 @@
 		43370834203C075A004E6547 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 43370832203C075A004E6547 /* sqlite3.h */; };
 		4354FF651D6EDF300033069C /* sync_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = 4354FF641D6EDF300033069C /* sync_impl.c */; };
 		4354FF691D6EE1A70033069C /* NULL.c in Sources */ = {isa = PBXBuildFile; fileRef = 4354FF681D6EE1A70033069C /* NULL.c */; };
+		438C43B52167752C00C7425B /* labeled_int_list.h in Headers */ = {isa = PBXBuildFile; fileRef = 438C43AF2167752C00C7425B /* labeled_int_list.h */; };
+		438C43B62167752C00C7425B /* labeled_int_list.c in Sources */ = {isa = PBXBuildFile; fileRef = 438C43B42167752C00C7425B /* labeled_int_list.c */; };
 		43BA0F461D7964750059172F /* asn1_helper.c in Sources */ = {isa = PBXBuildFile; fileRef = 43BA0F451D7964750059172F /* asn1_helper.c */; };
 		43E9BC6A1DB51A1E00AD2352 /* GroupUpdate.c in Sources */ = {isa = PBXBuildFile; fileRef = 43E9BC691DB51A1E00AD2352 /* GroupUpdate.c */; };
 		43E9BC7F1DB6720E00AD2352 /* UpdateRequest.c in Sources */ = {isa = PBXBuildFile; fileRef = 43E9BC7E1DB6720E00AD2352 /* UpdateRequest.c */; };
@@ -133,6 +135,8 @@
 		64A826891B455D0800EECAF0 /* trans_auto.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826731B455D0800EECAF0 /* trans_auto.c */; };
 		64A8268A1B455D0800EECAF0 /* transport.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826751B455D0800EECAF0 /* transport.c */; };
 		64A8268C1B455D9D00EECAF0 /* pEpEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = 64A826611B455D0800EECAF0 /* pEpEngine.h */; };
+		C46EBAED216E445F0042A6A3 /* base64.c in Sources */ = {isa = PBXBuildFile; fileRef = C46EBAE7216E445F0042A6A3 /* base64.c */; };
+		C46EBAEE216E445F0042A6A3 /* base64.h in Headers */ = {isa = PBXBuildFile; fileRef = C46EBAEC216E445F0042A6A3 /* base64.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -201,6 +205,8 @@
 		4346F86A1ECB38E700381CBE /* sync_app.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = sync_app.h; path = ../src/sync_app.h; sourceTree = "<group>"; };
 		4354FF641D6EDF300033069C /* sync_impl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_impl.c; path = ../src/sync_impl.c; sourceTree = "<group>"; };
 		4354FF681D6EE1A70033069C /* NULL.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NULL.c; path = ../asn.1/NULL.c; sourceTree = "<group>"; };
+		438C43AF2167752C00C7425B /* labeled_int_list.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = labeled_int_list.h; path = ../src/labeled_int_list.h; sourceTree = "<group>"; };
+		438C43B42167752C00C7425B /* labeled_int_list.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = labeled_int_list.c; path = ../src/labeled_int_list.c; sourceTree = "<group>"; };
 		43BA0F451D7964750059172F /* asn1_helper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = asn1_helper.c; path = ../src/asn1_helper.c; sourceTree = "<group>"; };
 		43E9BC691DB51A1E00AD2352 /* GroupUpdate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupUpdate.c; path = ../asn.1/GroupUpdate.c; sourceTree = "<group>"; };
 		43E9BC7E1DB6720E00AD2352 /* UpdateRequest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = UpdateRequest.c; path = ../asn.1/UpdateRequest.c; sourceTree = "<group>"; };
@@ -346,6 +352,8 @@
 		64A826771B455D0800EECAF0 /* wrappers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wrappers.h; path = ../src/wrappers.h; sourceTree = "<group>"; };
 		64DA240C1B832EA0000BEE80 /* netpgp.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = netpgp.xcodeproj; path = "../../netpgp-et/netpgp-xcode/netpgp.xcodeproj"; sourceTree = "<group>"; };
 		64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libetpan.xcodeproj; path = "../../libetpan/build-mac/libetpan.xcodeproj"; sourceTree = "<group>"; };
+		C46EBAE7216E445F0042A6A3 /* base64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = base64.c; path = ../src/base64.c; sourceTree = "<group>"; };
+		C46EBAEC216E445F0042A6A3 /* base64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = base64.h; path = ../src/base64.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -514,6 +522,10 @@
 		64A8264B1B455C5600EECAF0 /* srcref */ = {
 			isa = PBXGroup;
 			children = (
+				C46EBAE7216E445F0042A6A3 /* base64.c */,
+				C46EBAEC216E445F0042A6A3 /* base64.h */,
+				438C43B42167752C00C7425B /* labeled_int_list.c */,
+				438C43AF2167752C00C7425B /* labeled_int_list.h */,
 				4337082D203C075A004E6547 /* sqlite3.c */,
 				43370832203C075A004E6547 /* sqlite3.h */,
 				430BCC472015EE800077E998 /* pEp_string.c */,
@@ -593,6 +605,7 @@
 				646C40F21D510CD800C63EFF /* asn_SET_OF.h in Headers */,
 				646C41311D510CD800C63EFF /* PrintableString.h in Headers */,
 				646C40F51D510CD800C63EFF /* Beacon.h in Headers */,
+				438C43B52167752C00C7425B /* labeled_int_list.h in Headers */,
 				646C40F71D510CD800C63EFF /* ber_decoder.h in Headers */,
 				646C41351D510CD800C63EFF /* UTF8String.h in Headers */,
 				646C40EC1D510CD800C63EFF /* asn_codecs_prim.h in Headers */,
@@ -631,6 +644,7 @@
 				646C41231D510CD800C63EFF /* NativeEnumerated.h in Headers */,
 				646C41071D510CD800C63EFF /* constr_SET_OF.h in Headers */,
 				646C414B1D510D2C00C63EFF /* sync.h in Headers */,
+				C46EBAEE216E445F0042A6A3 /* base64.h in Headers */,
 				646C411B1D510CD800C63EFF /* Identity.h in Headers */,
 				646C412B1D510CD800C63EFF /* per_encoder.h in Headers */,
 				646C40F91D510CD800C63EFF /* ber_tlv_length.h in Headers */,
@@ -793,7 +807,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "mkdir -p \"$BUILT_PRODUCTS_DIR/include\"\n\ncp \"$SRCROOT/../src/\"{\\\npEpEngine.h,\\\ncryptotech.h,\\\nkeymanagement.h,\\\nmessage_api.h,\\\ndynamic_api.h,\\\nstringlist.h,\\\ntimestamp.h,\\\nidentity_list.h,\\\nbloblist.h,\\\nstringpair.h,\\\nmessage.h,\\\nmime.h,\\\nsync_fsm.h,\\\nsync.h,\\\nsync_app.h} \"$BUILT_PRODUCTS_DIR/include\"\n\nbash -l -c \"make -C ../asn.1 generate\"\nbash -l -c \"make -C ../asn.1\"\nbash -l -c \"LC_ALL=en_US.UTF-8 YML_PATH=$HOME/yml2 make -C ../sync\"\n";
+			shellScript = "bash -l -c \"make -C ../asn.1 generate\"\nbash -l -c \"make -C ../asn.1\"\nbash -l -c \"LC_ALL=en_US.UTF-8 YML_PATH=$HOME/yml2 make -C ../sync\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -818,6 +832,7 @@
 				646C41301D510CD800C63EFF /* PrintableString.c in Sources */,
 				64A8267B1B455D0800EECAF0 /* etpan_mime.c in Sources */,
 				64A8267A1B455D0800EECAF0 /* email.c in Sources */,
+				438C43B62167752C00C7425B /* labeled_int_list.c in Sources */,
 				646C41261D510CD800C63EFF /* OCTET_STRING.c in Sources */,
 				646C41141D510CD800C63EFF /* Hash.c in Sources */,
 				646C410E1D510CD800C63EFF /* DeviceGroup-Protocol.c in Sources */,
@@ -862,6 +877,7 @@
 				646C412A1D510CD800C63EFF /* per_encoder.c in Sources */,
 				646C412E1D510CD800C63EFF /* per_support.c in Sources */,
 				64A826781B455D0800EECAF0 /* bloblist.c in Sources */,
+				C46EBAED216E445F0042A6A3 /* base64.c in Sources */,
 				430BCC492015EE800077E998 /* pEp_string.c in Sources */,
 				646C41041D510CD800C63EFF /* constr_SEQUENCE.c in Sources */,
 				43370833203C075A004E6547 /* sqlite3.c in Sources */,
@@ -1044,6 +1060,7 @@
 		64796A541B455AA5004B1C24 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = "$(inherited)";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1054,12 +1071,14 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				USER_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/../src $(PROJECT_DIR) $(PROJECT_DIR)/../../netpgp-et/include/ $(PROJECT_DIR)/../../netpgp-et/src/ $(PROJECT_DIR)/../../OpenSSL-for-iPhone/include $(PROJECT_DIR)/../asn.1/ $(inherited)";
 			};
 			name = Debug;
 		};
 		64796A551B455AA5004B1C24 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = "$(inherited)";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1069,6 +1088,7 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				USER_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/../src $(PROJECT_DIR) $(PROJECT_DIR)/../../netpgp-et/include/ $(PROJECT_DIR)/../../netpgp-et/src/ $(PROJECT_DIR)/../../OpenSSL-for-iPhone/include $(PROJECT_DIR)/../asn.1/ $(inherited)";
 			};
 			name = Release;
 		};

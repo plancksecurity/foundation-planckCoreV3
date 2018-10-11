@@ -13,6 +13,11 @@
 #include <unistd.h>
 #include <ftw.h>
 
+bool file_exists(std::string filename) {
+    struct stat buffer;
+    return (stat(filename.c_str(), &buffer) == 0);
+}
+
 char* str_to_lower(const char* str) {
     if (!str)
         return NULL;
@@ -331,14 +336,19 @@ const char* tl_ct_string(PEP_comm_type ct) {
     }
 }
 
-bool slurp_message_and_import_key(PEP_SESSION session, const char* message_fname, std::string& message, const char* key_filename) {
-    message = slurp(message_fname);
-    if (key_filename) {
-        std::string keyfile = slurp(key_filename);
-        if (import_key(session, keyfile.c_str(), keyfile.size(), NULL) != PEP_STATUS_OK)
-            return false;
-    }
+bool slurp_and_import_key(PEP_SESSION session, const char* key_filename) {
+    std::string keyfile = slurp(key_filename);
+    if (import_key(session, keyfile.c_str(), keyfile.size(), NULL) != PEP_STATUS_OK)
+        return false;
     return true;
+}
+
+bool slurp_message_and_import_key(PEP_SESSION session, const char* message_fname, std::string& message, const char* key_filename) {
+    bool ok = true;
+    message = slurp(message_fname);
+    if (key_filename)
+        ok = slurp_and_import_key(session, key_filename);
+    return ok;
 }
 
 

@@ -11,6 +11,8 @@
 
 void test_init();
 
+bool file_exists(std::string filename);
+
 // string equality (case and non-case sensitive)
 bool _streq(const char* str1, const char* str2);
 bool _strceq(const char* str1, const char* str2);
@@ -35,11 +37,14 @@ const char* tl_status_string(PEP_STATUS status);
 // Grabs a new uuid for your randomish string needs.
 char* get_new_uuid();
 
+bool slurp_and_import_key(PEP_SESSION session, const char* key_filename);
+
 bool slurp_message_and_import_key(PEP_SESSION session, const char* message_fname, std::string& message, const char* key_filename);
 
 int util_delete_filepath(const char *filepath, 
                          const struct stat *file_stat, 
                          int ftw_info, 
                          struct FTW * ftw_struct);
+                         
         
 #endif

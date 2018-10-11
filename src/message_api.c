@@ -7,6 +7,7 @@
 #include "platform.h"
 #include "mime.h"
 #include "blacklist.h"
+#include "base64.h"
 
 #include <assert.h>
 #include <string.h>
@@ -1170,6 +1171,7 @@ static bool is_encrypted_html_attachment(const bloblist_t *blob)
         return false;
 
     const char* bare_filename_ptr = _get_resource_ptr_noown(blob->filename);
+    bare_filename_ptr += strlen(bare_filename_ptr) - 15;
     if (strncmp(bare_filename_ptr, "PGPexch.htm.", 12) == 0) {
         if (strcmp(bare_filename_ptr + 11, ".pgp") == 0 ||
             strcmp(bare_filename_ptr + 11, ".asc") == 0)
@@ -1329,6 +1331,45 @@ static PEP_comm_type _get_comm_type(
     }
 }
 
+static PEP_comm_type _get_comm_type_preview(
+    PEP_SESSION session,
+    PEP_comm_type max_comm_type,
+    pEp_identity *ident
+    )
+{
+    assert(session);
+    assert(ident);
+
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    if (max_comm_type == PEP_ct_compromised)
+        return PEP_ct_compromised;
+
+    if (max_comm_type == PEP_ct_mistrusted)
+        return PEP_ct_mistrusted;
+
+    PEP_comm_type comm_type = PEP_ct_unknown;
+    if (ident && !EMPTYSTR(ident->address) && !EMPTYSTR(ident->user_id)) {
+        pEp_identity *ident2;
+        status = get_identity(session, ident->address, ident->user_id, &ident2);
+        comm_type = ident2 ? ident2->comm_type : PEP_ct_unknown;
+        free_identity(ident2);
+
+        if (status == PEP_STATUS_OK) {
+            if (comm_type == PEP_ct_compromised)
+                comm_type = PEP_ct_compromised;
+            else if (comm_type == PEP_ct_mistrusted)
+                comm_type = PEP_ct_mistrusted;
+            else
+                comm_type = _MIN(max_comm_type, comm_type);
+        }
+        else {
+            comm_type = PEP_ct_unknown;
+        }
+    }
+    return comm_type;
+}
+
 static void free_bl_entry(bloblist_t *bl)
 {
     if (bl) {
@@ -1416,7 +1457,8 @@ bool import_attached_keys(
                                                         blob_value, blob_size,
                                                         NULL, 0,
                                                         &bl_ptext, &bl_psize, 
-                                                        &bl_keylist);
+                                                        &bl_keylist,
+                                                        NULL);
                 free_stringlist(bl_keylist); // we don't care about key encryption as long as we decrypt
                 if (_status == PEP_DECRYPTED || _status == PEP_DECRYPTED_AND_VERIFIED) {
                     free_blobval = true;
@@ -2661,7 +2703,8 @@ static PEP_STATUS verify_decrypted(PEP_SESSION session,
         free_stringlist(*keylist);
         *decrypt_status = decrypt_and_verify(session, ctext, csize,
                                              NULL, 0,
-                                             &ptext, &psize, keylist);
+                                             &ptext, &psize, keylist,
+                                             NULL);
         
     }
 
@@ -2711,9 +2754,12 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
             free(ptext);
             ptext = NULL;
 
+            char* pgp_filename = NULL;
             status = decrypt_and_verify(session, attctext, attcsize,
                                         NULL, 0,
-                                        &ptext, &psize, &_keylist);
+                                        &ptext, &psize, &_keylist,
+                                        &pgp_filename);
+                                        
             free_stringlist(_keylist);
 
             if (ptext) {
@@ -2722,18 +2768,26 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                     ptext = NULL;
                 }
                 else {
-                    static const char * const mime_type = "application/octet-stream";
-                    char * const filename =
-                        without_double_ending(_s->filename);
-                    if (filename == NULL)
-                        return PEP_OUT_OF_MEMORY;
+                    static const char * const mime_type = "application/octet-stream";                    
+                    if (pgp_filename) {
+                        _m = bloblist_add(_m, ptext, psize, mime_type,
+                             pgp_filename);
+                        free(pgp_filename);                        
+                        if (_m == NULL)
+                            return PEP_OUT_OF_MEMORY;
+                    }
+                    else {
+                        char * const filename =
+                            without_double_ending(_s->filename);
+                        if (filename == NULL)
+                            return PEP_OUT_OF_MEMORY;
 
-                    _m = bloblist_add(_m, ptext, psize, mime_type,
-                        filename);
-                    free(filename);
-                    if (_m == NULL)
-                        return PEP_OUT_OF_MEMORY;
-
+                        _m = bloblist_add(_m, ptext, psize, mime_type,
+                            filename);
+                        free(filename);
+                        if (_m == NULL)
+                            return PEP_OUT_OF_MEMORY;
+                    }
                     ptext = NULL;
 
                     if (msg->attachments == NULL)
@@ -2762,6 +2816,7 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                 return PEP_OUT_OF_MEMORY;
         }
     }
+
     return status;
 }
 
@@ -3022,6 +3077,28 @@ static char* seek_good_trusted_private_fpr(PEP_SESSION session, char* own_id,
     return NULL;
 }
 
+static bool import_header_keys(PEP_SESSION session, message* src) {
+    stringpair_list_t* header_keys = stringpair_list_find(src->opt_fields, "Autocrypt"); 
+    if (!header_keys || !header_keys->value)
+        return false;
+    const char* value = header_keys->value->value;
+    if (!value)
+        return false;
+    const char* start_key = strstr(value, "keydata=");
+    if (!start_key)
+        return false;
+    start_key += 8; // length of "keydata="
+    int length = strlen(start_key);
+    bloblist_t* the_key = base64_str_to_binary_blob(start_key, length);
+    if (!the_key)
+        return false;
+    PEP_STATUS status = import_key(session, the_key->value, the_key->size, NULL);
+    free_bloblist(the_key);
+    if (status == PEP_STATUS_OK)
+        return true;
+    return false;
+}
+
 DYNAMIC_API PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -3107,15 +3184,18 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     /*** Begin Import any attached public keys and update identities accordingly ***/
     // Private key in unencrypted mail are ignored -> NULL
     bool imported_keys = import_attached_keys(session, src, NULL);
-
+    import_header_keys(session, src);
+    
     // FIXME: is this really necessary here?
-    if (!is_me(session, src->from))
-        status = update_identity(session, src->from);
-    else
-        status = myself(session, src->from);
+    if (src->from) {
+        if (!is_me(session, src->from))
+            status = update_identity(session, src->from);
+        else
+            status = myself(session, src->from);
         
-    if (status != PEP_STATUS_OK)
-        return status;
+        if (status != PEP_STATUS_OK)
+            return status;
+    }
     
     /*** End Import any attached public keys and update identities accordingly ***/
     
@@ -3154,7 +3234,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     /** Ok, we should be ready to decrypt. Try decrypt and verify first! **/
     status = cryptotech[crypto].decrypt_and_verify(session, ctext,
                                                    csize, dsig_text, dsig_size,
-                                                   &ptext, &psize, &_keylist);
+                                                   &ptext, &psize, &_keylist,
+                                                   NULL);
 
     if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
         goto pep_error;
@@ -3198,13 +3279,14 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
                 /* if decrypted, but not verified... */
                 if (decrypt_status == PEP_DECRYPTED) {
-                                                                                     
-                    status = verify_decrypted(session,
-                                              src, msg,
-                                              ptext, psize,
-                                              &_keylist,
-                                              &decrypt_status,
-                                              crypto);
+                    
+                    if (src->from)                                                                 
+                        status = verify_decrypted(session,
+                                                  src, msg,
+                                                  ptext, psize,
+                                                  &_keylist,
+                                                  &decrypt_status,
+                                                  crypto);
                 }
                 break;
 
@@ -3350,7 +3432,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         
         // Ok, so if it was signed and it's all verified, we can update
         // eligible signer comm_types to PEP_ct_pEp_*
-        if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && is_pep_msg)
+        if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && is_pep_msg && calculated_src->from)
             status = update_sender_to_pep_trust(session, calculated_src->from, _keylist);
 
         /* Ok, now we have a keylist used for decryption/verification.
@@ -3570,6 +3652,23 @@ static void _max_comm_type_from_identity_list(
     }
 }
 
+static void _max_comm_type_from_identity_list_preview(
+        identity_list *identities,
+        PEP_SESSION session,
+        PEP_comm_type *max_comm_type
+    )
+{
+    identity_list * il;
+    for (il = identities; il != NULL; il = il->next)
+    {
+        if (il->ident)
+        {   
+            *max_comm_type = _get_comm_type_preview(session, *max_comm_type,
+                il->ident);
+        }
+    }
+}
+
 DYNAMIC_API PEP_STATUS outgoing_message_rating(
         PEP_SESSION session,
         message *msg,
@@ -3609,6 +3708,42 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
     else
         *rating = _MAX(_rating(max_comm_type, PEP_rating_undefined),
                                PEP_rating_unencrypted);
+
+    return PEP_STATUS_OK;
+}
+
+DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
+        PEP_SESSION session,
+        message *msg,
+        PEP_rating *rating
+    )
+{
+    PEP_comm_type max_comm_type = PEP_ct_pEp;
+
+    assert(session);
+    assert(msg);
+    assert(msg->dir == PEP_dir_outgoing);
+    assert(rating);
+
+    if (!(session && msg && rating))
+        return PEP_ILLEGAL_VALUE;
+
+    if (msg->dir != PEP_dir_outgoing)
+        return PEP_ILLEGAL_VALUE;
+
+    *rating = PEP_rating_undefined;
+
+    _max_comm_type_from_identity_list_preview(msg->to, session,
+            &max_comm_type);
+
+    _max_comm_type_from_identity_list_preview(msg->cc, session,
+            &max_comm_type);
+
+    _max_comm_type_from_identity_list_preview(msg->bcc, session,
+            &max_comm_type);
+
+    *rating = _MAX(_rating(max_comm_type, PEP_rating_undefined),
+            PEP_rating_unencrypted);
 
     return PEP_STATUS_OK;
 }
