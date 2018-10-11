@@ -11,6 +11,12 @@
 
 #define _GPGERR(X) ((X) & 0xffffL)
 
+#ifdef NODLSYM
+#define DLOAD(X) gpg. ## X = X
+#else
+#define DLOAD(X) gpg.X = (X ## _t) (intptr_t) dlsym(gpgme, #X); assert(gpg.X)
+#endif
+
 static void *gpgme;
 static struct gpg_s gpg;
 
@@ -296,6 +302,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
             goto pep_error;
         }
 
+#ifndef NODLSYM
         gpgme = dlopen(LIBGPGME, RTLD_LAZY);
         if (gpgme == NULL) {
             // FIXME: Hotfix here?
@@ -303,6 +310,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
             status = PEP_INIT_CANNOT_LOAD_GPGME;
             goto pep_error;
         }
+#endif
 
         memset(&gpg, 0, sizeof(struct gpg_s));
 
@@ -325,208 +333,61 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         if (status != PEP_STATUS_OK)
             return status;
 
-        gpg.gpgme_set_locale
-            = (gpgme_set_locale_t) (intptr_t) dlsym(gpgme,
-            "gpgme_set_locale");
-        assert(gpg.gpgme_set_locale);
-
-        gpg.gpgme_check
-            = (gpgme_check_version_t) (intptr_t) dlsym(gpgme,
-            "gpgme_check_version");
+#ifdef NODLSYM
+        gpg.gpgme_check = gpgme_check_version;
+#else
+        gpg.gpgme_check = (gpgme_check_t) (intptr_t) dlsym(gpgme, "gpgme_check_version");
         assert(gpg.gpgme_check);
+#endif
 
-        gpg.gpgme_new
-            = (gpgme_new_t) (intptr_t) dlsym(gpgme, "gpgme_new");
-        assert(gpg.gpgme_new);
-
-        gpg.gpgme_release
-            = (gpgme_release_t) (intptr_t) dlsym(gpgme, "gpgme_release");
-        assert(gpg.gpgme_release);
-
-        gpg.gpgme_set_protocol
-            = (gpgme_set_protocol_t) (intptr_t) dlsym(gpgme,
-            "gpgme_set_protocol");
-        assert(gpg.gpgme_set_protocol);
-
-        gpg.gpgme_set_armor
-            = (gpgme_set_armor_t) (intptr_t) dlsym(gpgme,
-            "gpgme_set_armor");
-        assert(gpg.gpgme_set_armor);
-
-        gpg.gpgme_data_new
-            = (gpgme_data_new_t) (intptr_t) dlsym(gpgme,
-            "gpgme_data_new");
-        assert(gpg.gpgme_data_new);
-
-        gpg.gpgme_data_new_from_mem
-            = (gpgme_data_new_from_mem_t) (intptr_t) dlsym(gpgme,
-            "gpgme_data_new_from_mem");
-        assert(gpg.gpgme_data_new_from_mem);
-
-        gpg.gpgme_data_new_from_cbs
-            = (gpgme_data_new_from_cbs_t) (intptr_t) dlsym(gpgme,
-            "gpgme_data_new_from_cbs");
-        assert(gpg.gpgme_data_new_from_cbs);
-
-        gpg.gpgme_data_release
-            = (gpgme_data_release_t) (intptr_t) dlsym(gpgme,
-            "gpgme_data_release");
-        assert(gpg.gpgme_data_release);
-
-        gpg.gpgme_data_identify
-            = (gpgme_data_identify_t) (intptr_t) dlsym(gpgme,
-            "gpgme_data_identify");
-        assert(gpg.gpgme_data_identify);
-
-        gpg.gpgme_data_seek
-            = (gpgme_data_seek_t) (intptr_t) dlsym(gpgme,
-            "gpgme_data_seek");
-        assert(gpg.gpgme_data_seek);
-
-        gpg.gpgme_data_read
-            = (gpgme_data_read_t) (intptr_t) dlsym(gpgme,
-            "gpgme_data_read");
-        assert(gpg.gpgme_data_read);
-
-        gpg.gpgme_op_decrypt
-            = (gpgme_op_decrypt_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_decrypt");
-        assert(gpg.gpgme_op_decrypt);
-
-        gpg.gpgme_op_verify
-            = (gpgme_op_verify_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_verify");
-        assert(gpg.gpgme_op_verify);
-
-        gpg.gpgme_op_decrypt_verify
-            = (gpgme_op_decrypt_verify_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_decrypt_verify");
-        assert(gpg.gpgme_op_decrypt_verify);
-
-        gpg.gpgme_op_decrypt_result
-            = (gpgme_op_decrypt_result_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_decrypt_result");
-        assert(gpg.gpgme_op_decrypt_result);
-
-        gpg.gpgme_op_encrypt_sign
-            = (gpgme_op_encrypt_sign_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_encrypt_sign");
-        assert(gpg.gpgme_op_encrypt_sign);
-
-        gpg.gpgme_op_encrypt
-            = (gpgme_op_encrypt_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_encrypt");
-        assert(gpg.gpgme_op_encrypt);
-
-        gpg.gpgme_op_verify_result
-            = (gpgme_op_verify_result_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_verify_result");
-        assert(gpg.gpgme_op_verify_result);
-
-        gpg.gpgme_signers_clear
-            = (gpgme_signers_clear_t) (intptr_t) dlsym(gpgme,
-            "gpgme_signers_clear");
-        assert(gpg.gpgme_signers_clear);
-
-        gpg.gpgme_signers_add
-            = (gpgme_signers_add_t) (intptr_t) dlsym(gpgme,
-            "gpgme_signers_add");
-        assert(gpg.gpgme_signers_add);
-
-        gpg.gpgme_set_passphrase_cb
-            = (gpgme_set_passphrase_cb_t) (intptr_t) dlsym(gpgme,
-            "gpgme_set_passphrase_cb");
-        assert(gpg.gpgme_set_passphrase_cb);
-
-        gpg.gpgme_get_key
-            = (gpgme_get_key_t) (intptr_t) dlsym(gpgme, "gpgme_get_key");
-        assert(gpg.gpgme_get_key);
+        DLOAD(gpgme_set_locale);
+        DLOAD(gpgme_new);
+        DLOAD(gpgme_release);
+        DLOAD(gpgme_set_protocol);
+        DLOAD(gpgme_set_armor);
+        DLOAD(gpgme_data_new);
+        DLOAD(gpgme_data_new_from_mem);
+        DLOAD(gpgme_data_new_from_cbs);
+        DLOAD(gpgme_data_release);
+        DLOAD(gpgme_data_identify);
+        DLOAD(gpgme_data_seek);
+        DLOAD(gpgme_data_read);
+        DLOAD(gpgme_op_decrypt);
+        DLOAD(gpgme_op_verify);
+        DLOAD(gpgme_op_decrypt_verify);
+        DLOAD(gpgme_op_decrypt_result);
+        DLOAD(gpgme_op_encrypt_sign);
+        DLOAD(gpgme_op_encrypt);
+        DLOAD(gpgme_op_verify_result);
+        DLOAD(gpgme_signers_clear);
+        DLOAD(gpgme_signers_add);
+        DLOAD(gpgme_set_passphrase_cb);
+        DLOAD(gpgme_get_key);
         
-        #ifdef GPGME_VERSION_NUMBER
-        #if (GPGME_VERSION_NUMBER >= 0x010700)
-                gpg.gpgme_op_createkey
-                    = (gpgme_op_createkey_t) (intptr_t) dlsym(gpgme,
-                    "gpgme_op_createkey");
-                assert(gpg.gpgme_op_createkey);
-                
-                gpg.gpgme_op_createsubkey
-                    = (gpgme_op_createsubkey_t) (intptr_t) dlsym(gpgme,
-                    "gpgme_op_createsubkey");
-                assert(gpg.gpgme_op_createsubkey);
+#ifdef GPGME_VERSION_NUMBER
+#if (GPGME_VERSION_NUMBER >= 0x010700)
+        DLOAD(gpgme_op_createkey);
+        DLOAD(gpgme_op_createsubkey);
+#endif
+#endif
 
-        #endif
-        #endif
-        
-        gpg.gpgme_op_genkey
-            = (gpgme_op_genkey_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_genkey");
-        assert(gpg.gpgme_op_genkey);
-
-        gpg.gpgme_op_genkey_result
-            = (gpgme_op_genkey_result_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_genkey_result");
-        assert(gpg.gpgme_op_genkey_result);
-
-        gpg.gpgme_op_delete = (gpgme_op_delete_t) (intptr_t)
-            dlsym(gpgme, "gpgme_op_delete");
-        assert(gpg.gpgme_op_delete);
-
-        gpg.gpgme_op_import = (gpgme_op_import_t) (intptr_t)
-            dlsym(gpgme, "gpgme_op_import");
-        assert(gpg.gpgme_op_import);
-
-        gpg.gpgme_op_import_result
-            = (gpgme_op_import_result_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_import_result");
-        assert(gpg.gpgme_op_import_result);
-
-        gpg.gpgme_op_export = (gpgme_op_export_t) (intptr_t)
-            dlsym(gpgme, "gpgme_op_export");
-        assert(gpg.gpgme_op_export);
-
-        gpg.gpgme_set_keylist_mode = (gpgme_set_keylist_mode_t) (intptr_t)
-            dlsym(gpgme, "gpgme_set_keylist_mode");
-        assert(gpg.gpgme_set_keylist_mode);
-
-        gpg.gpgme_get_keylist_mode = (gpgme_get_keylist_mode_t) (intptr_t)
-            dlsym(gpgme, "gpgme_get_keylist_mode");
-        assert(gpg.gpgme_get_keylist_mode);
-
-        gpg.gpgme_op_keylist_start = (gpgme_op_keylist_start_t) (intptr_t)
-            dlsym(gpgme, "gpgme_op_keylist_start");
-        assert(gpg.gpgme_op_keylist_start);
-
-        gpg.gpgme_op_keylist_next = (gpgme_op_keylist_next_t) (intptr_t)
-            dlsym(gpgme, "gpgme_op_keylist_next");
-        assert(gpg.gpgme_op_keylist_next);
-
-        gpg.gpgme_op_keylist_end = (gpgme_op_keylist_end_t) (intptr_t)
-            dlsym(gpgme, "gpgme_op_keylist_end");
-        assert(gpg.gpgme_op_keylist_end);
-
-        gpg.gpgme_op_import_keys = (gpgme_op_import_keys_t) (intptr_t)
-            dlsym(gpgme, "gpgme_op_import_keys");
-        assert(gpg.gpgme_op_import_keys);
-
-        gpg.gpgme_key_ref = (gpgme_key_ref_t) (intptr_t)
-            dlsym(gpgme, "gpgme_key_ref");
-        assert(gpg.gpgme_key_ref);
-
-        gpg.gpgme_key_unref = (gpgme_key_unref_t) (intptr_t)
-            dlsym(gpgme, "gpgme_key_unref");
-        assert(gpg.gpgme_key_unref);
-
-		gpg.gpgme_key_release = (gpgme_key_release_t)(intptr_t)
-			dlsym(gpgme, "gpgme_key_release");
-		assert(gpg.gpgme_key_release);
-
-        gpg.gpgme_op_edit = (gpgme_op_edit_t) (intptr_t)
-            dlsym(gpgme, "gpgme_op_edit");
-        assert(gpg.gpgme_op_edit);
-
-        gpg.gpgme_io_write = (gpgme_io_write_t) (intptr_t)
-            dlsym(gpgme, "gpgme_io_write");
-        assert(gpg.gpgme_io_write);
+        DLOAD(gpgme_op_genkey);
+        DLOAD(gpgme_op_genkey_result);
+        DLOAD(gpgme_op_delete);
+        DLOAD(gpgme_op_import);
+        DLOAD(gpgme_op_import_result);
+        DLOAD(gpgme_op_export);
+        DLOAD(gpgme_set_keylist_mode);
+        DLOAD(gpgme_get_keylist_mode);
+        DLOAD(gpgme_op_keylist_start);
+        DLOAD(gpgme_op_keylist_next);
+        DLOAD(gpgme_op_keylist_end);
+        DLOAD(gpgme_op_import_keys);
+        DLOAD(gpgme_key_ref);
+        DLOAD(gpgme_key_unref);
+		DLOAD(gpgme_key_release);
+        DLOAD(gpgme_op_edit);
+        DLOAD(gpgme_io_write);
 
         gpg.version = gpg.gpgme_check(NULL);
 
