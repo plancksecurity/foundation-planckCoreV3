@@ -12,7 +12,7 @@
 #define _GPGERR(X) ((X) & 0xffffL)
 
 #ifdef NODLSYM
-#define DLOAD(X) gpg. ## X = X
+#define DLOAD(X) gpg.X = X
 #else
 #define DLOAD(X) gpg.X = (X ## _t) (intptr_t) dlsym(gpgme, #X); assert(gpg.X)
 #endif
