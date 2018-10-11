@@ -136,8 +136,7 @@ function "show_handshake" {
             return PEP_OUT_OF_MEMORY;
         }
 
-        status = session->notifyHandshake(session->sync_management, me,
-                partner, «$type»);
+        status = session->notifyHandshake(me, partner, «$type»);
         if (status)
             return status;
     ||
