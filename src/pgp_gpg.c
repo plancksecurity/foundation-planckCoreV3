@@ -314,10 +314,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
         memset(&gpg, 0, sizeof(struct gpg_s));
 
-        gpg.gpgme_get_engine_info
-            = (gpgme_get_engine_info_t) (intptr_t) dlsym(gpgme,
-            "gpgme_get_engine_info");
-        assert(gpg.gpgme_get_engine_info);
+        DLOAD(gpgme_get_engine_info);
 
         gpgme_engine_info_t info;
         int err = gpg.gpgme_get_engine_info(&info);
