@@ -3632,6 +3632,8 @@ static void _max_comm_type_from_identity_list(
                                               true);
                     if (status != PEP_STATUS_OK || il->ident->fpr == NULL) {
                         il->ident->comm_type = PEP_ct_key_not_found;
+                        if (*max_comm_type > PEP_ct_no_encryption)
+                            *max_comm_type = PEP_ct_no_encryption;
                     }
                 }    
             }
