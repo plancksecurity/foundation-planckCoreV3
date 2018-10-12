@@ -170,12 +170,7 @@ void BlacklistTests::check_blacklist() {
     // 
     // // FIXME
     // // TEST_ASSERT_MSG((stored_identity->comm_type == PEP_ct_pEp), "stored_identity->comm_type == PEP_ct_pEp");    
-    
-    PEP_STATUS status16 = delete_keypair(session, bl_fpr_1);
-    update_identity(session, blacklisted_identity);
-    PEP_STATUS status17 = delete_keypair(session, bl_fpr_2);
-    update_identity(session, blacklisted_identity2);
-        
+            
     free_identity(blacklisted_identity);
     free_identity(blacklisted_identity2);
 }

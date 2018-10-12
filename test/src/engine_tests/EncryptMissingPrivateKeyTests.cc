@@ -80,9 +80,6 @@ void EncryptMissingPrivateKeyTests::check_encrypt_missing_private_key() {
     char* new_key = enc_msg->from->fpr;
     cout << "Encrypted with key " << new_key << endl;
     
-    status = delete_keypair(session, new_key);
-    PEP_STATUS status14 = myself(session, no_key_identity);
-
     free_message(tmp_msg);    
     free_message(enc_msg);
 }

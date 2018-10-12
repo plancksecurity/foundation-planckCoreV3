@@ -63,8 +63,12 @@ void KeyeditTests::check_keyedit() {
     
     cout << "key revoked.\n";
 
-    cout << "deleting key pair " << key.c_str() << "\n";
-    PEP_STATUS delete_status = delete_keypair(session, key.c_str());
-    cout << "delete_keypair() exits with " << delete_status << "\n";
-    TEST_ASSERT_MSG((delete_status == PEP_STATUS_OK), "delete_status == PEP_STATUS_OK");
+    // Because pEp's policy is never to delete keys from the keyring and delete_keypair
+    // though gnupg makes responding to a dialog mandatory under Debian, we will not test
+    // this anymore.
+    
+    // cout << "deleting key pair " << key.c_str() << "\n";
+    // PEP_STATUS delete_status = delete_keypair(session, key.c_str());
+    // cout << "delete_keypair() exits with " << delete_status << "\n";
+    // TEST_ASSERT_MSG((delete_status == PEP_STATUS_OK), "delete_status == PEP_STATUS_OK");
 }
