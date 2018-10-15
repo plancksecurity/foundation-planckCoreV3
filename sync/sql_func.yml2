@@ -11,10 +11,8 @@
 function "init_sql" {
     param "sql";
     ||
-        static const char *sql = `copy '$sql'`;
-        static const size_t len = sizeof(`copy '$sql'`);
         sqlite3_stmt *_sql;
-        int int_result = sqlite3_prepare_v2(session->db, sql, (int) len, &_sql, NULL);
+        int int_result = sqlite3_prepare_v2(session->db, `copy '$sql'`, -1, &_sql, NULL);
         assert(int_result == SQLITE_OK);
         if (!(int_result == SQLITE_OK))
             return PEP_UNKNOWN_ERROR;
