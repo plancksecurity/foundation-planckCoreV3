@@ -49,7 +49,6 @@ typedef enum _sync_handshake_signal {
 //      ownership of self and partner go to the callee
 
 typedef PEP_STATUS (*notifyHandshake_t)(
-        void *obj,
         pEp_identity *me,
         pEp_identity *partner,
         sync_handshake_signal signal

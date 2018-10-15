@@ -207,25 +207,6 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
         pEp_identity *ident
     );
 
-// undo_last_mistrust() - reset identity and trust status for the last
-//                        identity in this session marked as mistrusted
-//                        to their cached values from the time of mistrust
-//  parameters:
-//      session (in)        session to use
-//
-//  return value:
-//      PEP_STATUS_OK if identity and trust were successfully restored.
-//      Otherwise, error status from attempts to set.
-//
-//  caveat:
-//      only works for this session, and only once. cache is invalidated
-//      upon use.
-//
-//      WILL NOT WORK ON MISTRUSTED OWN KEY
-
-DYNAMIC_API PEP_STATUS undo_last_mistrust(PEP_SESSION session);
-
-
 // trust_personal_key() - mark a key as trusted for a user
 //
 //  parameters:

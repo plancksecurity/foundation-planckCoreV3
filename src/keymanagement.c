@@ -1886,3 +1886,4 @@ PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session) {
     return status;
 }
 #endif // USE_GPG
+
