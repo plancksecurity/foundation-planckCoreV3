@@ -20,4 +20,7 @@ del *.c*
 
 del *-sample.c
 
+cd %1\..
+if not exist pEp mklink /d pEp pEpEngine\src
+
 popd

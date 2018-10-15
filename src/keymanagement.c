@@ -1118,13 +1118,16 @@ DYNAMIC_API PEP_STATUS register_examine_function(
 }
 
 DYNAMIC_API PEP_STATUS do_keymanagement(
-        PEP_SESSION session,
         retrieve_next_identity_t retrieve_next_identity,
         void *management
     )
 {
+    PEP_SESSION session;
     pEp_identity *identity;
-    PEP_STATUS status;
+    PEP_STATUS status = init(&session, NULL, NULL);
+    assert(!status);
+    if (status)
+        return status;
 
     assert(session && retrieve_next_identity);
     if (!(session && retrieve_next_identity))
@@ -1153,7 +1156,7 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
     }
 
     log_event(session, "keymanagement thread shutdown", "pEp engine", NULL, NULL);
-
+    release(session);
     return PEP_STATUS_OK;
 }
 
