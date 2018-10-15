@@ -19,6 +19,8 @@ Engine463Tests::Engine463Tests(string suitename, string test_home_dir) :
                                                                       static_cast<Func>(&Engine463Tests::check_engine_463_no_own_key)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("Engine463Tests::check_engine_463_own_key"),
                                                                       static_cast<Func>(&Engine463Tests::check_engine_463_own_key)));                                                                  
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("Engine463Tests::check_engine_463_sender_expired_and_renewed"),
+                                                                      static_cast<Func>(&Engine463Tests::check_engine_463_sender_expired_and_renewed)));                                                                                                                                    
 }
 
 void Engine463Tests::check_engine_463_no_own_key() {
@@ -42,7 +44,6 @@ void Engine463Tests::check_engine_463_no_own_key() {
      
     status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
-    cout << decrypted_msg << endl;        
 }
 
 void Engine463Tests::check_engine_463_own_key() {
@@ -70,5 +71,42 @@ void Engine463Tests::check_engine_463_own_key() {
      
     status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
-    cout << decrypted_msg << endl;        
 }
+
+void Engine463Tests::check_engine_463_sender_expired_and_renewed() {
+    // I am not entirely sure what the setup of this bug is tbh, but here goes.
+    // 1. Import expired keys and own keys
+    bool ok = false;
+    ok = slurp_and_import_key(session, "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
+    TEST_ASSERT(ok);    
+    ok = slurp_and_import_key(session, "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc");    
+    TEST_ASSERT(ok);
+    ok = slurp_and_import_key(session, "test_keys/pub/inquisitor-0xA4728718_full_expired.pub.asc");    
+    TEST_ASSERT(ok);
+
+    // Ok, so I want to make sure we make an entry, so I'll try to decrypt the message WITH
+    // the expired key:
+    const string msg = slurp("test_mails/ENGINE-463-attempt-numero-dos.eml");
+    
+    char* decrypted_msg = NULL;
+    stringlist_t* keylist_used = nullptr;
+    char* modified_src = NULL;
+    
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags;
+     
+    PEP_STATUS status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
+//    cout << decrypted_msg << endl;            
+    TEST_ASSERT_MSG((status == PEP_DECRYPTED), tl_status_string(status));
+
+    free(decrypted_msg);
+    decrypted_msg = NULL;
+    ok = slurp_and_import_key(session, "test_keys/pub/inquisitor-0xA4728718_renewed_pub.asc");    
+    TEST_ASSERT(ok);    
+    
+    status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);    
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
+//    cout << decrypted_msg << endl;            
+
+}
+

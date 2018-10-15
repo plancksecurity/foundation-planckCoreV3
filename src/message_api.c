@@ -3193,7 +3193,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         else
             status = myself(session, src->from);
         
-        if (status != PEP_STATUS_OK)
+        // We absolutely should NOT be bailing here unless it's a serious error
+        if (status == PEP_OUT_OF_MEMORY)
             return status;
     }
     
