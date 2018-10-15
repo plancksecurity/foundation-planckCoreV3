@@ -14,7 +14,7 @@ include ./sql_func.yml2
 
 condition deviceGrouped {
     call "exec_sql_int" with "sql"
-        > "select count(*) from identity where is_own = true and (flags & 4) = 4;"
+        > "select count(*) from identity where is_own = 1 and (flags & 4) = 4;"
     |> *result = _result > 0;
 }
 
