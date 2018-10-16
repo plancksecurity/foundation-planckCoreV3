@@ -16,6 +16,7 @@ class Engine463Tests : public EngineTestIndividualSuite {
         void check_engine_463_no_own_key();
         void check_engine_463_own_key();
         void check_engine_463_sender_expired_and_renewed();
+	void check_engine_463_reply_recip_expired_and_renewed();
 };
 
 #endif

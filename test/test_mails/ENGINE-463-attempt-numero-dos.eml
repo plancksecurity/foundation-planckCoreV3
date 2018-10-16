@@ -1,0 +1,66 @@
+Reply-To: krista@darthmama.org
+To: pep.test.alice@pep-project.org
+From: Inquisitor Trevelyan <inquisitor@darthmama.org>
+Subject: Crossing the streams
+Openpgp: preference=signencrypt
+Message-ID: <56bbc9d9-7dbe-4ed0-354b-166e30dd52ce@darthmama.org>
+Date: Mon, 15 Oct 2018 11:45:05 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.9.1
+MIME-Version: 1.0
+Content-Type: multipart/encrypted;
+ protocol="application/pgp-encrypted";
+ boundary="6YUP5IjbJwN1sztUk72bHgdy31Yea4BsR"
+
+This is an OpenPGP/MIME encrypted message (RFC 4880 and 3156)
+--6YUP5IjbJwN1sztUk72bHgdy31Yea4BsR
+Content-Type: application/pgp-encrypted
+Content-Description: PGP/MIME version identification
+
+Version: 1
+
+--6YUP5IjbJwN1sztUk72bHgdy31Yea4BsR
+Content-Type: application/octet-stream; name="encrypted.asc"
+Content-Description: OpenPGP encrypted message
+Content-Disposition: inline; filename="encrypted.asc"
+
+-----BEGIN PGP MESSAGE-----
+
+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
+HNZOgGqf38WbIFY=
+=GZ9s
+-----END PGP MESSAGE-----
+
+--6YUP5IjbJwN1sztUk72bHgdy31Yea4BsR--
