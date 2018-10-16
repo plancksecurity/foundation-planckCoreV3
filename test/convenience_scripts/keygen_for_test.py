@@ -1,5 +1,5 @@
 import argparse
-import gnupg
+from pretty_bad_protocol import gnupg
 import os
 import subprocess
 
@@ -19,10 +19,11 @@ priv_path = os.path.join(args.output_root, "priv")
 homedir = os.path.join(os.path.expanduser('~'),"gnupg")
 print("GNUPGHOME=" + homedir + "\n")
 
+
 try:
-    gpg = gnupg.GPG(gnupghome=homedir) 
+    gpg = gnupg.GPG(binary='/usr/bin/gpg', gnupghome=homedir) 
 except TypeError:
-    gpg = gnupg.GPG(homedir=homedir)
+    gpg = gnupg.GPG(binary='/usr/bin/gpg', homedir=homedir)
 
 name = args.real_name_prefix
 email = args.email_address_prefix
@@ -61,7 +62,7 @@ for i in range(num_keys):
             email = e_split[0] + "_" + i_str + "@" + e_split[1]
 
     print("Generating key data for " + name + " " + email + "\n")
-    input_data = gpg.gen_key_input(key_type="RSA", key_length=2048, subkey_type="RSA", subkey_length=2048, expire_date="2018-09-18", name_real=name, name_email=email, password="")
+    input_data = gpg.gen_key_input(key_type="RSA", key_length=2048, expire_date=0, name_real=name, name_email=email)
     if not input_data:
         raise Exception('Input data not created in iteration ' + str(i))
     

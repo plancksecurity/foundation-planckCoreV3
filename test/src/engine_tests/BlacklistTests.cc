@@ -20,6 +20,8 @@
 
 #include <cpptest.h>
 
+#include <assert.h>
+
 #include "pEpEngine.h"
 
 #include "blacklist.h"
@@ -143,6 +145,25 @@ void BlacklistTests::check_blacklist() {
              << "Expected it to be empty or (possibly) " << bl_fpr_2 << endl;
     TEST_ASSERT_MSG((!(blacklisted_identity->fpr) || blacklisted_identity->fpr[0] == '\0'|| (strcmp(blacklisted_identity->fpr, bl_fpr_2) == 0)), "!(blacklisted_identity->fpr) || blacklisted_identity->fpr[0] == '\0'|| (strcmp(blacklisted_identity->fpr, bl_fpr_2) == 0)");
 
+    pEp_identity *me = new_identity("alice@peptest.ch", NULL, "423", "Alice Miller");
+    assert(me);
+    PEP_STATUS status24 = myself(session, me);
+    TEST_ASSERT_MSG((status24 == PEP_STATUS_OK), "myself: status24 == PEP_STATUS_OK");
+
+    message *msg23 = new_message(PEP_dir_outgoing);
+    assert(msg23);
+    msg23->from = me;
+    msg23->to = new_identity_list(identity_dup(blacklisted_identity));
+    assert(msg23->to && msg23->to->ident);
+    PEP_rating rating23;
+
+    cout << "testing outgoing_message_rating() with blacklisted key in to\n";
+    PEP_STATUS status23 = outgoing_message_rating(session, msg23, &rating23);
+    TEST_ASSERT_MSG((status23 == PEP_STATUS_OK), "outgoing_message_rating: status must be PEP_STATUS_OK");
+    TEST_ASSERT_MSG((rating23 == PEP_rating_unencrypted), "outgoing_message_rating: rating must be PEP_rating_unencrypted");
+
+    free_message(msg23);
+
     const string keytext2 = slurp("blacklisted_pub2.asc");
     PEP_STATUS status14 = import_key(session, keytext2.c_str(), keytext2.length(), NULL);
     
@@ -170,12 +191,7 @@ void BlacklistTests::check_blacklist() {
     // 
     // // FIXME
     // // TEST_ASSERT_MSG((stored_identity->comm_type == PEP_ct_pEp), "stored_identity->comm_type == PEP_ct_pEp");    
-    
-    PEP_STATUS status16 = delete_keypair(session, bl_fpr_1);
-    update_identity(session, blacklisted_identity);
-    PEP_STATUS status17 = delete_keypair(session, bl_fpr_2);
-    update_identity(session, blacklisted_identity2);
-        
+            
     free_identity(blacklisted_identity);
     free_identity(blacklisted_identity2);
 }

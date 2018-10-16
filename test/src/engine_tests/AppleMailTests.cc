@@ -20,18 +20,21 @@
 #include "test_util.h" // for slurp()
 
 #include "EngineTestSuite.h"
-#include "EngineTestSessionSuite.h"
+#include "EngineTestIndividualSuite.h"
 #include "AppleMailTests.h"
 
 using namespace std;
 
 AppleMailTests::AppleMailTests(string suitename, string test_home_dir) : 
-    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {            
-    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("AppleMailTests::check_apple_mail"),
-                                                                      static_cast<Func>(&AppleMailTests::check_apple_mail)));
+    EngineTestIndividualSuite::EngineTestIndividualSuite(suitename, test_home_dir) {            
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("AppleMailTests::check_apple_mail_text_signed_encrypted"),
+                                                                      static_cast<Func>(&AppleMailTests::check_apple_mail_text_signed_encrypted)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("AppleMailTests::check_apple_mail_html_signed_encrypted"),
+                                                                      static_cast<Func>(&AppleMailTests::check_apple_mail_html_signed_encrypted)));
+                                                                  
 }
 
-void AppleMailTests::check_apple_mail() {
+void AppleMailTests::check_apple_mail_text_signed_encrypted() {
     
     const char* mailfile = "test_mails/apple_mail_TC_signed_encrypted.eml";
     
@@ -58,11 +61,11 @@ void AppleMailTests::check_apple_mail() {
     
     message* msg_ptr = nullptr;
     message* dest_msg = nullptr;
-    message* final_ptr = nullptr;
     stringlist_t* keylist = nullptr;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     
+    message* final_ptr = nullptr;
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
@@ -85,14 +88,43 @@ void AppleMailTests::check_apple_mail() {
     	free_message(dest_msg);
     free_message(msg_ptr);
     free_stringlist(keylist);
+}
 
-    msg_ptr = nullptr;
-    dest_msg = nullptr;
-    final_ptr = nullptr;
-    keylist = nullptr;
-    rating = PEP_rating_unreliable;
-    flags = 0;
+void AppleMailTests::check_apple_mail_html_signed_encrypted() {
+
+    // Start state copy
+    // N.B. As part of breaking up formerly monolith tests into individual tests, I've copied state setup from the
+    // original functions into many functions. It should, when there's time, either be refactored (if necessary for this 
+    // test) or removed (if not).
+    const string keytextkey1 = slurp("test_keys/pub/pep-test-apple-0x1CCBC7D7_pub.asc");
+    const string keytextkey2 = slurp("test_keys/priv/pep-test-recip-0x08DB0AEE_priv.asc");
+    const string keytextkey3 = slurp("test_keys/pub/pep-test-recip-0x08DB0AEE_pub.asc");
+
+    PEP_STATUS statuskey1 = import_key(session, keytextkey1.c_str(), keytextkey1.length(), NULL);
+    PEP_STATUS statuskey2 = import_key(session, keytextkey2.c_str(), keytextkey2.length(), NULL);
+    PEP_STATUS statuskey3 = import_key(session, keytextkey3.c_str(), keytextkey3.length(), NULL);
+
+    pEp_identity * me = new_identity("pep.test.recip@kgrothoff.org", "93D19F24AD6F4C4BA9134AAF84D9217908DB0AEE", PEP_OWN_USERID, "pEp Test Recipient");    
+    me->me = true;    
+    PEP_STATUS status = set_own_key(session, me, "93D19F24AD6F4C4BA9134AAF84D9217908DB0AEE");
     
+    pEp_identity * you = new_identity("pep.test.apple@pep-project.org", NULL, "pep.test.apple@pep-project.org", "pEp Apple Test");    
+    you->me = false;    
+    status = update_identity(session, you);
+
+    trust_personal_key(session, you);
+    
+    status = update_identity(session, you);
+
+    // End state copy
+    
+    message* msg_ptr = nullptr;
+    message* dest_msg = nullptr;
+    message* final_ptr = nullptr;
+    stringlist_t* keylist = nullptr;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+     
     const char* mailfile2 = "test_mails/apple_mail_TC_html_signed_encrypted.eml";
     const string mailtext2 = slurp(mailfile2);
     

@@ -5,15 +5,16 @@
 #define APPLE_MAIL_TESTS_H
 
 #include <string.h>
-#include "EngineTestSessionSuite.h"
+#include "EngineTestIndividualSuite.h"
 
 using namespace std;
 
-class AppleMailTests : public EngineTestSessionSuite {
+class AppleMailTests : public EngineTestIndividualSuite {
     public:
         AppleMailTests(string suitename, string test_home_dir);
     private:
-        void check_apple_mail();
+        void check_apple_mail_text_signed_encrypted();
+        void check_apple_mail_html_signed_encrypted();
 };
 
 #endif

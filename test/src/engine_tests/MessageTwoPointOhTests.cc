@@ -112,7 +112,7 @@ void MessageTwoPointOhTests::check_message_two_point_oh() {
     stringlist_t* keylist_used = nullptr;
     
     PEP_rating rating;
-    PEP_decrypt_flags_t flags;
+    PEP_decrypt_flags_t flags = 0;
      
 //    MIME_decrypt_message(session, encoded_text, strlen(encoded_text), &decrypted_text, &keylist_used, &rating, &flags);
     
