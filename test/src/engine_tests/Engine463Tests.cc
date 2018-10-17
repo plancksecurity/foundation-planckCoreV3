@@ -150,12 +150,22 @@ void Engine463Tests::check_engine_463_sender_expired_and_renewed() {
     status = MIME_decrypt_message(session, msg.c_str(), msg.size(), &decrypted_msg, &keylist_used, &rating, &flags, &modified_src);
     TEST_ASSERT_MSG((status == PEP_DECRYPTED), tl_status_string(status));
 
+    pEp_identity* expired_inquisitor = new_identity("inquisitor@darthmama.org", NULL, NULL, "Lady Claire Trevelyan");
+    pEp_identity* expired_inquisitor2 = identity_dup(expired_inquisitor);
+
+    expired_inquisitor2->user_id = strdup("TOFU_inquisitor@darthmama.org");
+    expired_inquisitor2->fpr = strdup("8E8D2381AE066ABE1FEE509821BA977CA4728718");
+    status = get_trust(session, expired_inquisitor2);
+    cout << tl_ct_string(expired_inquisitor2->comm_type) << endl;
+
     free(decrypted_msg);
     decrypted_msg = NULL;
     ok = slurp_and_import_key(session, "test_keys/pub/inquisitor-0xA4728718_renewed_pub.asc");    
     TEST_ASSERT(ok);    
 
-    pEp_identity* expired_inquisitor = new_identity("inquisitor@darthmama.org", NULL, NULL, "Lady Claire Trevelyan");
+    status = get_trust(session, expired_inquisitor2);
+    cout << tl_ct_string(expired_inquisitor2->comm_type) << endl;
+
     message* msg2 = new_message(PEP_dir_outgoing);    
 
     msg2->from = alice_from;
