@@ -94,12 +94,14 @@ void CheckRenewedExpiredKeyTrustStatusTests::check_renewed_expired_key_trust_sta
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
 
     const char* inquisitor_fpr = "8E8D2381AE066ABE1FEE509821BA977CA4728718";
-    pEp_identity* expired_inquisitor = new_identity("inquisitor@darthmama.org", "8E8D2381AE066ABE1FEE509821BA977CA4728718", "Skyhold", "Lady Claire Trevelyan");
+    pEp_identity* expired_inquisitor = new_identity("inquisitor@darthmama.org", "8E8D2381AE066ABE1FEE509821BA977CA4728718", "TOFU_inquisitor@darthmama.org", "Lady Claire Trevelyan");
     status = set_identity(session, expired_inquisitor);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     expired_inquisitor->comm_type = PEP_ct_OpenPGP; // confirmed 
     status = set_trust(session, expired_inquisitor);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
+    status = get_trust(session, expired_inquisitor);
+    TEST_ASSERT_MSG(expired_inquisitor->comm_type == PEP_ct_OpenPGP, tl_ct_string(expired_inquisitor->comm_type));
     
     // Ok, now update_identity - we'll discover it's expired
     status = update_identity(session, expired_inquisitor);
@@ -164,7 +166,7 @@ void CheckRenewedExpiredKeyTrustStatusTests::check_renewed_expired_key_trust_sta
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
 
     const char* inquisitor_fpr = "8E8D2381AE066ABE1FEE509821BA977CA4728718";
-    pEp_identity* expired_inquisitor = new_identity("inquisitor@darthmama.org", "8E8D2381AE066ABE1FEE509821BA977CA4728718", "Skyhold", "Lady Claire Trevelyan");
+    pEp_identity* expired_inquisitor = new_identity("inquisitor@darthmama.org", "8E8D2381AE066ABE1FEE509821BA977CA4728718", "TOFU_inquisitor@darthmama.org", "Lady Claire Trevelyan");
     status = set_identity(session, expired_inquisitor);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     expired_inquisitor->comm_type = PEP_ct_pEp_unconfirmed;  
@@ -229,12 +231,14 @@ void CheckRenewedExpiredKeyTrustStatusTests::check_renewed_expired_key_trust_sta
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
 
     const char* inquisitor_fpr = "8E8D2381AE066ABE1FEE509821BA977CA4728718";
-    pEp_identity* expired_inquisitor = new_identity("inquisitor@darthmama.org", "8E8D2381AE066ABE1FEE509821BA977CA4728718", "Skyhold", "Lady Claire Trevelyan");
+    pEp_identity* expired_inquisitor = new_identity("inquisitor@darthmama.org", "8E8D2381AE066ABE1FEE509821BA977CA4728718", "TOFU_inquisitor@darthmama.org", "Lady Claire Trevelyan");
     status = set_identity(session, expired_inquisitor);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     expired_inquisitor->comm_type = PEP_ct_pEp; // confirmed 
     status = set_trust(session, expired_inquisitor);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
+    status = get_trust(session, expired_inquisitor);
+    TEST_ASSERT_MSG(expired_inquisitor->comm_type == PEP_ct_pEp, tl_ct_string(expired_inquisitor->comm_type));
 
     bool pEp_user = false;
     status = is_pep_user(session, expired_inquisitor, &pEp_user);
