@@ -134,6 +134,19 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
         get_key_rating(session, fpr, &ct);
         ident->comm_type = ct;
     }
+    else if (ct == PEP_ct_key_expired || ct == PEP_ct_key_expired_but_confirmed) {
+        PEP_comm_type ct_expire_check = PEP_ct_unknown;
+        get_key_rating(session, fpr, &ct_expire_check);
+        if (ct_expire_check >= PEP_ct_strong_but_unconfirmed) {
+            ident->comm_type = ct_expire_check;
+            if (ct == PEP_ct_key_expired_but_confirmed)
+                ident->comm_type |= PEP_ct_confirmed;
+            ct = ident->comm_type;
+            // We need to fix this trust in the DB.
+            status = set_trust(session, ident);
+        }
+    }
+    
     
     bool pep_user = false;
     
@@ -193,18 +206,28 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
             // if key is valid (second check because pEp key might be extended above)
             //      Return fpr        
             status = key_expired(session, fpr, time(NULL), &expired);            
-            if (status != PEP_STATUS_OK) {
-                 ident->comm_type = PEP_ct_key_expired;
-                 return status;
-             }
+            if (status != PEP_STATUS_OK)
+                return status;
+                
+            if (expired) {
+                if (ident->comm_type & PEP_ct_confirmed || (ident->comm_type == PEP_ct_key_expired_but_confirmed))
+                    ident->comm_type = PEP_ct_key_expired_but_confirmed;
+                else
+                    ident->comm_type = PEP_ct_key_expired;
+                return status;
+            }
             // communicate key(?)
         }        
     }
      
     if (revoked) 
         ct = PEP_ct_key_revoked;
-    else if (expired)
-        ct = PEP_ct_key_expired;        
+    else if (expired) {
+        if (ident->comm_type & PEP_ct_confirmed || (ident->comm_type == PEP_ct_key_expired_but_confirmed))
+            ct = PEP_ct_key_expired_but_confirmed;
+        else
+            ct = PEP_ct_key_expired;
+    }
     else if (blacklisted) { // never true for .me
         ident->comm_type = ct = PEP_ct_key_not_found;
         free(ident->fpr);
@@ -214,6 +237,7 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
     
     switch (ct) {
         case PEP_ct_key_expired:
+        case PEP_ct_key_expired_but_confirmed:
         case PEP_ct_key_revoked:
         case PEP_ct_key_b0rken:
             // delete key from being default key for all users/identities
@@ -339,6 +363,7 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
         case PEP_ct_key_revoked:
         case PEP_ct_key_b0rken:
         case PEP_ct_key_expired:
+        case PEP_ct_key_expired_but_confirmed:
         case PEP_ct_compromised:
         case PEP_ct_mistrusted:
             // this only happens when it's all there is
@@ -719,9 +744,36 @@ DYNAMIC_API PEP_STATUS update_identity(
                 status = elect_pubkey(session, identity, false);
                              
                 //    * call set_identity() to store
-                if (identity->fpr)
+                if (identity->fpr) {
+                    // it is still possible we have DB information on this key. Better check.
+                    status = get_trust(session, identity);
+                    PEP_comm_type db_ct = identity->comm_type;
                     status = get_key_rating(session, identity->fpr, &identity->comm_type);
-            
+                    PEP_comm_type key_ct = identity->comm_type;
+                                        
+                    if (status == PEP_STATUS_OK) {
+                        switch (key_ct) {
+                            case PEP_ct_key_expired:
+                                if (db_ct == PEP_ct_key_expired_but_confirmed)
+                                    identity->comm_type = db_ct;
+                                break;    
+                            default:
+                                switch(db_ct) {
+                                    case PEP_ct_key_expired_but_confirmed:
+                                        if (key_ct >= PEP_ct_strong_but_unconfirmed)
+                                            identity->comm_type |= PEP_ct_confirmed;
+                                        break;
+                                    case PEP_ct_mistrusted:
+                                    case PEP_ct_compromised:
+                                    case PEP_ct_key_b0rken:
+                                        identity->comm_type = db_ct;
+                                    default:
+                                        break;
+                                }    
+                                break;
+                        }
+                    }
+                }
                 //    * call set_identity() to store
                 adjust_pep_trust_status(session, identity);            
                 status = set_identity(session, identity);
