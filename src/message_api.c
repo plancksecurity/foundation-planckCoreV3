@@ -436,6 +436,9 @@ static char* get_base_36_rep(unsigned long long value, int num_sig_bits) {
     const char base_36_symbols[37] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     char* retbuf = calloc(bufsize, 1); 
+    assert(retbuf);
+    if (!retbuf)
+        return NULL;
 
     int i = bufsize - 1; // (end index)
 
