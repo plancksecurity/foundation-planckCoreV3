@@ -116,6 +116,9 @@ char* _undot_address(const char* address) {
         at = address + addr_len;
         
     char* retval = calloc(1, addr_len + 1);
+    assert(retval);
+    if (!retval)
+        return NULL;
 
     const char* addr_curr = address;
     char* retval_curr = retval;

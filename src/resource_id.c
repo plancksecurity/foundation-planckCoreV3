@@ -5,9 +5,22 @@
 #include "resource_id.h"
 
 pEp_rid_list_t* new_rid_node(pEp_resource_id_type type, const char* resource) {
+    assert(resource);
+    if (!resource)
+        return NULL;
+
     pEp_rid_list_t* retval = (pEp_rid_list_t*)calloc(1, sizeof(pEp_rid_list_t));
+    assert(retval);
+    if (!retval)
+        return NULL;
+
     retval->rid_type = type;
     retval->rid = strdup(resource);
+    assert(retval->rid);
+    if (!retval->rid) {
+        free(retval);
+        return NULL;
+    }
     return retval;
 }
 
