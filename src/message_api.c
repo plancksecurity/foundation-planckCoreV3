@@ -3586,50 +3586,52 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         goto pEp_error;
     }
     
-    stringpair_list_t* curr_pair_node;
-    stringpair_t* curr_pair;
-    
-    for (curr_pair_node = revoke_replace_pairs; curr_pair_node; curr_pair_node = curr_pair_node->next) {
-        curr_pair = curr_pair_node->value;
-        
-        if (!curr_pair)
-            continue; // Again, shouldn't occur
-            
-        if (curr_pair->key && curr_pair->value) {
-            status = create_standalone_key_reset_message(session,
-                                                         &reset_msg,
-                                                         msg->from,
-                                                         curr_pair->key,
-                                                         curr_pair->value);
+    if (msg) {
+        stringpair_list_t* curr_pair_node;
+        stringpair_t* curr_pair;
 
-            // If we can't find the identity, this is someone we've never mailed, so we just
-            // go on letting them use the wrong key until we mail them ourselves. (Spammers, etc)
-            if (status != PEP_CANNOT_FIND_IDENTITY) {
-                if (status != PEP_STATUS_OK)
-                    goto pEp_error;
-                    
-                if (!reset_msg) {
-                    status = PEP_OUT_OF_MEMORY;
-                    goto pEp_error;
-                }
-                // insert into queue
-                if (session->messageToSend)
-                    status = session->messageToSend(reset_msg);
-                else
-                    status = PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
-            
+        for (curr_pair_node = revoke_replace_pairs; curr_pair_node; curr_pair_node = curr_pair_node->next) {
+            curr_pair = curr_pair_node->value;
 
-                if (status == PEP_STATUS_OK) {    
-                    // Put into notified DB
-                    status = set_reset_contact_notified(session, curr_pair->key, msg->from->user_id);
-                    if (status != PEP_STATUS_OK) // It's ok to barf because it's a DB problem??
+            if (!curr_pair)
+                continue; // Again, shouldn't occur
+
+            if (curr_pair->key && curr_pair->value) {
+                status = create_standalone_key_reset_message(session,
+                    &reset_msg,
+                    msg->from,
+                    curr_pair->key,
+                    curr_pair->value);
+
+                // If we can't find the identity, this is someone we've never mailed, so we just
+                // go on letting them use the wrong key until we mail them ourselves. (Spammers, etc)
+                if (status != PEP_CANNOT_FIND_IDENTITY) {
+                    if (status != PEP_STATUS_OK)
                         goto pEp_error;
-                }
-                else {
-                    // According to Volker, this would only be a fatal error, so...
-                    free_message(reset_msg); // ??
-                    reset_msg = NULL; // ??
-                    goto pEp_error;
+
+                    if (!reset_msg) {
+                        status = PEP_OUT_OF_MEMORY;
+                        goto pEp_error;
+                    }
+                    // insert into queue
+                    if (session->messageToSend)
+                        status = session->messageToSend(reset_msg);
+                    else
+                        status = PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
+
+
+                    if (status == PEP_STATUS_OK) {
+                        // Put into notified DB
+                        status = set_reset_contact_notified(session, curr_pair->key, msg->from->user_id);
+                        if (status != PEP_STATUS_OK) // It's ok to barf because it's a DB problem??
+                            goto pEp_error;
+                    }
+                    else {
+                        // According to Volker, this would only be a fatal error, so...
+                        free_message(reset_msg); // ??
+                        reset_msg = NULL; // ??
+                        goto pEp_error;
+                    }
                 }
             }
         }
