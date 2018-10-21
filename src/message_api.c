@@ -907,7 +907,7 @@ static message* wrap_message_as_attachment(message* envelope,
 
     replace_opt_field(attachment, "X-pEp-Version", PEP_VERSION, true);
         
-    if (!_envelope || (wrap_type != PEP_message_transport)) {
+    if (!_envelope && (wrap_type != PEP_message_transport)) {
         _envelope = extract_minimal_envelope(attachment, PEP_dir_outgoing);
         status = generate_message_id(_envelope);
         
@@ -925,8 +925,11 @@ static message* wrap_message_as_attachment(message* envelope,
         attachment->longmsg = encapsulate_message_wrap_info(inner_type_string, attachment->longmsg);
         _envelope->longmsg = encapsulate_message_wrap_info("OUTER", _envelope->longmsg);
     }
-    else {
+    else if (_envelope) {
         _envelope->longmsg = encapsulate_message_wrap_info("TRANSPORT", _envelope->longmsg);
+    }
+    else {
+        return NULL;
     }
     
     if (!attachment->id || attachment->id[0] == '\0') {
