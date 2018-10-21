@@ -16,7 +16,6 @@ static struct gpg_s gpg;
 
 static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const char* config_file_path)
 {
-    static char buf[MAX_LINELENGTH];
     int r;
     stringlist_t *_k;
     stringlist_t *_v;
@@ -24,8 +23,6 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
     unsigned int found = 0;
     bool eof_nl = 0;
     char * rest = NULL;
-    char * token;
-    char * s;
     const char* line_end;
 
 #ifdef WIN32
@@ -39,7 +36,9 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
         return false;
 
     if (f != NULL) {
+        static char buf[MAX_LINELENGTH];
         int length = stringlist_length(keys);
+        char * s;
 
         // make sure we 1) have the same number of keys and values
         // and 2) we don't have more key/value pairs than
@@ -55,7 +54,7 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
         }
 
         while ((s = Fgets(buf, MAX_LINELENGTH, f))) {
-            token = strtok_r(s, " \t\r\n", &rest);
+            char *token = strtok_r(s, " \t\r\n", &rest);
             for (_k = keys, _v = values, i = 1;
                  _k != NULL;
                  _k = _k->next, _v = _v->next, i <<= 1) {
