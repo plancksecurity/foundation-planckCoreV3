@@ -24,7 +24,6 @@ void Sync_Adapter::processing()
 }
 
 PEP_STATUS Sync_Adapter::notifyHandshake(
-        void *obj,
         pEp_identity *me,
         pEp_identity *partner,
         sync_handshake_signal signal
@@ -141,7 +140,7 @@ void SyncTests::setup()
     cout << "initialize sync and start first state machine\n";
     status = register_sync_callbacks(
             sync,
-            &adapter.q,
+            (void *) &adapter.q,
             Sync_Adapter::notifyHandshake,
             Sync_Adapter::retrieve_next_sync_event
         );
