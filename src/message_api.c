@@ -2432,32 +2432,34 @@ static PEP_STATUS combine_keylists(PEP_SESSION session, stringlist_t** verify_in
         verify_curr->next = orig_verify;
     }
 
-    /* append keylist to signers */
-    if (keylist_in_out && *keylist_in_out && (*keylist_in_out)->value) {
-        stringlist_t** tail_pp = &verify_curr->next;
-        
-        while (*tail_pp) {
-            tail_pp = &((*tail_pp)->next);
-        }
-        stringlist_t* second_list = *keylist_in_out;
-        if (second_list) {
-            char* listhead_val = second_list->value;
-            if (!listhead_val || listhead_val[0] == '\0') {
-                /* remove head, basically. This can happen when,
-                   for example, the signature is detached and
-                   verification is not seen directly after
-                   decryption, so no signer is presumed in
-                   the first construction of the keylist */
-                *keylist_in_out = (*keylist_in_out)->next;
-                second_list->next = NULL;
-                free_stringlist(second_list);
+    if (keylist_in_out) {
+        /* append keylist to signers */
+        if (*keylist_in_out && (*keylist_in_out)->value) {
+            stringlist_t** tail_pp = &verify_curr->next;
+
+            while (*tail_pp) {
+                tail_pp = &((*tail_pp)->next);
             }
+            stringlist_t* second_list = *keylist_in_out;
+            if (second_list) {
+                char* listhead_val = second_list->value;
+                if (!listhead_val || listhead_val[0] == '\0') {
+                    /* remove head, basically. This can happen when,
+                       for example, the signature is detached and
+                       verification is not seen directly after
+                       decryption, so no signer is presumed in
+                       the first construction of the keylist */
+                    *keylist_in_out = (*keylist_in_out)->next;
+                    second_list->next = NULL;
+                    free_stringlist(second_list);
+                }
+            }
+            *tail_pp = *keylist_in_out;
         }
-        *tail_pp = *keylist_in_out;
+
+        *keylist_in_out = verify_curr;
     }
-    
-    *keylist_in_out = verify_curr;
-    
+
     status = PEP_STATUS_OK;
     
 free:
