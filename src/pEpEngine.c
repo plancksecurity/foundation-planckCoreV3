@@ -2002,7 +2002,6 @@ DYNAMIC_API PEP_STATUS get_default_own_userid(
         default:
             // Technically true, given how we find it, but FIXME we need a more descriptive error
             status = PEP_CANNOT_FIND_IDENTITY;
-            *userid = NULL;
     }
 
     *userid = retval;
