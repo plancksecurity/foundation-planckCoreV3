@@ -2147,11 +2147,12 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     message* _src = src;
 
     assert(session);
+    assert(target_id);
     assert(src);
     assert(dst);
     assert(enc_format != PEP_enc_none);
 
-    if (!(session && src && dst && enc_format != PEP_enc_none))
+    if (!(session && target_id && src && dst && enc_format != PEP_enc_none))
         return PEP_ILLEGAL_VALUE;
 
     // if (src->dir == PEP_dir_incoming)
@@ -2160,8 +2161,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     determine_encryption_format(src);
     if (src->enc_format != PEP_enc_none)
         return PEP_ILLEGAL_VALUE;
-    if (target_id && (!target_id->user_id || target_id->user_id[0] == '\0')) {
-        
+
+    if (!target_id->user_id || target_id->user_id[0] == '\0') {
         char* own_id = NULL;
         status = get_default_own_userid(session, &own_id);
         if (own_id) {
@@ -2169,14 +2170,18 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
             target_id->user_id = own_id; // ownership transfer
         }
     }
-    
+
+    if (!target_id->user_id || target_id->user_id[0] == '\0')
+        return PEP_CANNOT_FIND_IDENTITY;
+
     if (target_id->address) {
         status = myself(session, target_id);
         if (status != PEP_STATUS_OK)
             goto pEp_error;
     }
-    else if (!target_id->fpr)
+    else if (!target_id->fpr) {
         return PEP_ILLEGAL_VALUE;
+    }
     
     *dst = NULL;
 
