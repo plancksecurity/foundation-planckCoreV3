@@ -2354,6 +2354,10 @@ static PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
     size_t boundary_strlen = (end_boundary - start_boundary) + 2;
 
     signed_boundary = calloc(boundary_strlen + 1, 1);
+    assert(signed_boundary);
+    if (!signed_boundary)
+        return PEP_OUT_OF_MEMORY;
+
     strlcpy(signed_boundary, "--", boundary_strlen + 1);
     strlcat(signed_boundary, start_boundary, boundary_strlen + 1);
 
