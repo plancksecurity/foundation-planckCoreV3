@@ -1360,8 +1360,6 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
     char *_longmsg;
     size_t length;
     size_t _size;
-    int code;
-    int r;
     size_t index;
     char *type = NULL;
     char *charset = NULL;
@@ -1383,9 +1381,9 @@ static PEP_STATUS interpret_body(struct mailmime *part, char **longmsg, size_t *
     length = part->mm_body->dt_data.dt_text.dt_length;
 
     if (part->mm_body->dt_encoded) {
-        code = part->mm_body->dt_encoding;
+        int code = part->mm_body->dt_encoding;
         index = 0;
-        r = mailmime_part_parse(text, length, &index, code, &_longmsg, &_size);
+        int r = mailmime_part_parse(text, length, &index, code, &_longmsg, &_size);
         switch (r) {
             case MAILIMF_NO_ERROR:
                 break;
@@ -1449,9 +1447,9 @@ static PEP_STATUS interpret_protected_headers(
         headerblock = strstr(headerblock, header_string);
         if (headerblock) {
             const char* subj_start = "Subject: ";
-            size_t subj_len = strlen(subj_start);
             headerblock = strstr(headerblock, subj_start);
             if (headerblock) {
+                size_t subj_len = strlen(subj_start);
                 headerblock += subj_len;
                 char* end_pt = strstr(headerblock, "\n");
                 if (end_pt) {
