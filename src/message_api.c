@@ -1621,10 +1621,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     bool added_key_to_real_src = false;
     
     assert(session);
-    assert(src);
+    assert(src && src->from);
     assert(dst);
 
-    if (!(session && src && dst))
+    if (!(session && src && src->from && dst))
         return PEP_ILLEGAL_VALUE;
 
     if (src->dir == PEP_dir_incoming)
@@ -1639,7 +1639,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     
     *dst = NULL;
 
-    if (src->from && (!src->from->user_id || src->from->user_id[0] == '\0')) {
+    if (!src->from->user_id || src->from->user_id[0] == '\0') {
         char* own_id = NULL;
         status = get_default_own_userid(session, &own_id);
         if (own_id) {
