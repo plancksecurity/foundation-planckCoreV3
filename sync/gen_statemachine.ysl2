@@ -920,6 +920,12 @@ tstylesheet {
 
         «$fsm/@name»_SERVICE_LOG("send message", "«@name»");
         status = send_«$protocol/@name»_message(session, «$fsm/@id», «$fsm/@name»__payload_PR_«yml:mixedCase(@name)»);
+        if (status == PEP_OUT_OF_MEMORY)
+            return out_of_memory;
+        if (status) {
+            «$fsm/@name»_ERR_LOG_HEX("sending «@name» failed", status);
+            return cannot_send;
+        }
         ||
     }
 
@@ -929,6 +935,8 @@ tstylesheet {
 
         «$fsm/@name»_SERVICE_LOG("do action", "«@name»");
         status = «@name»(session);
+        if (status == PEP_OUT_OF_MEMORY)
+            return out_of_memory;
         if (status) {
             «$fsm/@name»_ERR_LOG_HEX("executing action «@name»() failed", status);
             return invalid_action;
@@ -941,6 +949,8 @@ tstylesheet {
         ||
 
         status = «@name»(session, &result);
+        if (status == PEP_OUT_OF_MEMORY)
+            return out_of_memory;
         if (status) {
             «$fsm/@name»_ERR_LOG_HEX("computing condition «@name» failed", status);
             return invalid_condition;

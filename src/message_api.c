@@ -471,9 +471,8 @@ static char* message_id_prand_part(void) {
     
     i = DESIRED_BITS;
     
-    int bitshift = 0;
-    
     while (i > 0) {
+        int bitshift = 0;
         int randval = rand();
         unsigned long long temp_val = randval & bitmask;
 
