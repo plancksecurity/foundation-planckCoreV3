@@ -433,7 +433,7 @@ static char* get_base_36_rep(unsigned long long value, int num_sig_bits) {
     // based on
     // https://en.wikipedia.org/wiki/Base36#C_implementation
     // ok, we supposedly have a 64-bit kinda sorta random blob
-    const char base_36_symbols[36] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const char base_36_symbols[37] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     char* retbuf = calloc(bufsize, 1); 
 
