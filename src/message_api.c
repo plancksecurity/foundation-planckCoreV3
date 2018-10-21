@@ -2762,7 +2762,7 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
     }
 
     bloblist_t *_s;
-    for (_s = src->attachments; _s; _s = _s->next) {
+    for (_s = src->attachments; _s && _s->value; _s = _s->next) {
         if (_s->value == NULL && _s->size == 0){
             _m = bloblist_add(_m, NULL, 0, _s->mime_type, _s->filename);
             if (_m == NULL)
