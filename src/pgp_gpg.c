@@ -23,7 +23,7 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
     unsigned int i;
     unsigned int found = 0;
     bool eof_nl = 0;
-    char * rest;
+    char * rest = NULL;
     char * token;
     char * s;
     const char* line_end;
