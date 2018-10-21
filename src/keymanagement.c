@@ -1843,8 +1843,10 @@ PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session) {
         switch (thing) {
             case _pgp_fpr:
                 identity = new_identity(NULL, NULL, PEP_OWN_USERID, NULL);
-                if (!identity)
+                if (!identity) {
                     status = PEP_OUT_OF_MEMORY;
+                    break;
+                }
                 identity->me = true;
                 fpr = strdup(_sl->value);
                 assert(fpr);
