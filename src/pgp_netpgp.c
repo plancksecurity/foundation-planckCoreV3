@@ -1424,7 +1424,6 @@ static PEP_STATUS send_key_cb(void *arg, pgp_key_t *key)
         request[HKP_REQ_PREFIX_LEN + encoded_key_len] = '\0';
 
         if(!stringlist_add(encoded_keys, request)){
-            free(request);
             result = PEP_OUT_OF_MEMORY;
         }
 
@@ -1953,7 +1952,7 @@ PEP_STATUS pgp_contains_priv_key(
         *has_private = true;
     }
     else {
-        has_private = false;
+        *has_private = false;
     }
     return status;
 }
