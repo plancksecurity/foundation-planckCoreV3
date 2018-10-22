@@ -1990,9 +1990,20 @@ PEP_STATUS pgp_get_key_rating(
     case GPG_ERR_NO_ERROR:
         assert(key);
         assert(key->subkeys);
+        bool crt_available = false;
+        bool sgn_available = false;
+        bool enc_available = false;
+        bool sk_too_short = false;
+        bool sk_weak = false;
+        bool sk_disabled = false;
+        bool sk_invalid = false;
+        bool sk_expired = ( key->expired || key->subkeys->expired );
+        bool sk_revoked = false;
         for (gpgme_subkey_t sk = key->subkeys; sk != NULL; sk = sk->next) {
-            if (sk->length < 1024)
-                *comm_type = PEP_ct_key_too_short;
+            if (sk->length < 1024) {
+                sk_too_short = 1;
+                continue;
+            }
             else if (
                 (
                 (sk->pubkey_algo == GPGME_PK_RSA)
@@ -2000,21 +2011,53 @@ PEP_STATUS pgp_get_key_rating(
                 || (sk->pubkey_algo == GPGME_PK_RSA_S)
                 )
                 && sk->length == 1024
-                )
-                *comm_type = PEP_ct_OpenPGP_weak_unconfirmed;
+                ) {
+                sk_weak = 1;
+            }
 
+            if (sk->disabled) {
+                sk_disabled = 1;
+                continue;
+            }
             if (sk->invalid) {
-                *comm_type = PEP_ct_key_b0rken;
-                break;
+                sk_invalid = 1;
+                continue;
             }
             if (sk->expired) {
-                *comm_type = PEP_ct_key_expired;
-                break;
+                sk_expired = 1;
+                continue;
             }
             if (sk->revoked) {
-                *comm_type = PEP_ct_key_revoked;
-                break;
+                sk_revoked = 1;
+                continue;
             }
+
+            if (sk->can_certify) crt_available = true;
+            if (sk->can_sign) sgn_available = true;
+            if (sk->can_encrypt) enc_available = true;
+        }
+        if(!(crt_available && sgn_available && enc_available)) {
+            if (sk_disabled)
+                *comm_type = PEP_ct_key_not_found;
+            else if (sk_invalid)
+                *comm_type = PEP_ct_key_b0rken;
+            else if (sk_expired)
+                *comm_type = PEP_ct_key_expired;
+            else if (sk_revoked)
+                *comm_type = PEP_ct_key_revoked;
+            else if (sk_too_short)
+                *comm_type = PEP_ct_key_too_short;
+            else if (sk_weak)
+                *comm_type = PEP_ct_OpenPGP_weak_unconfirmed;
+            else {
+                assert(NULL);
+                *comm_type = PEP_ct_key_not_found;
+            }
+            status = PEP_KEY_UNSUITABLE;
+        } else {
+            /* a tinkered key is not reliable */
+            if (sk_disabled || sk_invalid || sk_expired || sk_revoked || sk_too_short || sk_weak)
+                *comm_type = PEP_ct_OpenPGP_weak_unconfirmed;  // keep comm on no-color
         }
         break;
     case GPG_ERR_ENOMEM:
