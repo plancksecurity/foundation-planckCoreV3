@@ -144,15 +144,15 @@ void BlacklistTests::check_blacklist() {
     TEST_ASSERT_MSG((!(blacklisted_identity->fpr) || blacklisted_identity->fpr[0] == '\0'|| (strcmp(blacklisted_identity->fpr, bl_fpr_2) == 0)), "!(blacklisted_identity->fpr) || blacklisted_identity->fpr[0] == '\0'|| (strcmp(blacklisted_identity->fpr, bl_fpr_2) == 0)");
 
     pEp_identity *me = new_identity("alice@peptest.ch", NULL, "423", "Alice Miller");
-    assert(me);
+    TEST_ASSERT(me);
     PEP_STATUS status24 = myself(session, me);
     TEST_ASSERT_MSG((status24 == PEP_STATUS_OK), "myself: status24 == PEP_STATUS_OK");
 
     message *msg23 = new_message(PEP_dir_outgoing);
-    assert(msg23);
+    TEST_ASSERT(msg23);
     msg23->from = me;
     msg23->to = new_identity_list(identity_dup(blacklisted_identity));
-    assert(msg23->to && msg23->to->ident);
+    TEST_ASSERT(msg23->to && msg23->to->ident);
     PEP_rating rating23;
 
     cout << "testing outgoing_message_rating() with blacklisted key in to\n";
