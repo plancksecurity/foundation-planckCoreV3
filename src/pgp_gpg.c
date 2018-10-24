@@ -1983,38 +1983,95 @@ PEP_STATUS pgp_get_key_rating(
         gpg.gpgme_op_keylist_end(session->ctx);
         return PEP_STATUS_OK;
     }
+    
 
+    // N.B. and FIXME 
+    // We could get a key with a bad signing subkey and a good encryption
+    // subkey. For now, we reject this, because it forces large changes in
+    // how we rate keys. It's on the to-do list, but it's low priority.
+    // We don't really want to be doing much for tinkered keys in the first
+    // place.
     switch (gpgme_error) {
     case GPG_ERR_EOF:
         break;
     case GPG_ERR_NO_ERROR:
         assert(key);
         assert(key->subkeys);
-        for (gpgme_subkey_t sk = key->subkeys; sk != NULL; sk = sk->next) {
-            if (sk->length < 1024)
-                *comm_type = PEP_ct_key_too_short;
-            else if (
-                (
-                (sk->pubkey_algo == GPGME_PK_RSA)
-                || (sk->pubkey_algo == GPGME_PK_RSA_E)
-                || (sk->pubkey_algo == GPGME_PK_RSA_S)
-                )
-                && sk->length == 1024
-                )
-                *comm_type = PEP_ct_OpenPGP_weak_unconfirmed;
-
-            if (sk->invalid) {
+        
+        // is main key expired or revoked? If so, we can cut short this nonsense.
+        if (key->invalid)
+            *comm_type = PEP_ct_key_b0rken;
+        else if (key->revoked)
+            *comm_type = PEP_ct_key_revoked;            
+        else if (key->expired)
+            *comm_type = PEP_ct_key_expired;
+        else {
+            // Ok, so we now need to check subkeys. Normally, we could just
+            // shortcut this by looking at key->can_sign and key->can_encrypt,
+            // but we want the REASON we can't use a key, so this gets ugly.
+            PEP_comm_type max_comm_type = *comm_type;
+                        
+            PEP_comm_type best_sign = PEP_ct_no_encryption;
+            PEP_comm_type best_enc = PEP_ct_no_encryption;
+            
+            for (gpgme_subkey_t sk = key->subkeys; sk != NULL; sk = sk->next) {
+                if (sk->can_sign || sk->can_encrypt) {
+                    PEP_comm_type curr_sign = PEP_ct_no_encryption;
+                    PEP_comm_type curr_enc = PEP_ct_no_encryption;
+                    
+                    if (sk->length < 1024) {
+                        if (sk->can_sign)
+                            curr_sign = PEP_ct_key_too_short;
+                        if (sk->can_encrypt)                               
+                            curr_enc = PEP_ct_key_too_short;
+                    }
+                    else if (
+                        ((sk->pubkey_algo == GPGME_PK_RSA)
+                        || (sk->pubkey_algo == GPGME_PK_RSA_E)
+                        || (sk->pubkey_algo == GPGME_PK_RSA_S))
+                        && sk->length == 1024) {
+                        if (sk->can_sign)
+                            curr_sign = PEP_ct_OpenPGP_weak_unconfirmed;
+                        if (sk->can_encrypt)                               
+                            curr_enc = PEP_ct_OpenPGP_weak_unconfirmed;
+                    }
+                    else {
+                        if (sk->can_sign)
+                            curr_sign = max_comm_type;
+                        if (sk->can_encrypt)
+                            curr_enc = max_comm_type;
+                    }
+                    if (sk->invalid) {
+                        if (sk->can_sign)
+                            curr_sign = PEP_ct_key_b0rken;
+                        if (sk->can_encrypt)                               
+                            curr_enc = PEP_ct_key_b0rken;
+                    }
+                    if (sk->expired) {
+                        if (sk->can_sign)
+                            curr_sign = PEP_ct_key_expired;
+                        if (sk->can_encrypt)                               
+                            curr_enc = PEP_ct_key_expired;
+                    }
+                    if (sk->revoked) {
+                        if (sk->can_sign)
+                            curr_sign = PEP_ct_key_revoked;
+                        if (sk->can_encrypt)                               
+                            curr_enc = PEP_ct_key_revoked;
+                    }
+                    if (sk->can_sign)
+                        best_sign = _MAX(curr_sign, best_sign);
+                    if (sk->can_encrypt)
+                        best_enc = _MAX(curr_enc, best_enc);
+                }    
+            }
+            if (best_enc == PEP_ct_no_encryption ||
+                best_sign == PEP_ct_no_encryption) {
                 *comm_type = PEP_ct_key_b0rken;
-                break;
             }
-            if (sk->expired) {
-                *comm_type = PEP_ct_key_expired;
-                break;
-            }
-            if (sk->revoked) {
-                *comm_type = PEP_ct_key_revoked;
-                break;
-            }
+            else {
+                *comm_type = _MIN(best_sign, _MIN(max_comm_type, best_enc));
+            }                
         }
         break;
     case GPG_ERR_ENOMEM:
