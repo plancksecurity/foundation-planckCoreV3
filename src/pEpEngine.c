@@ -391,7 +391,7 @@ static const char *sql_own_key_is_listed =
     ");";
 
 static const char *sql_own_identities_retrieve =  
-    "select address, fpr, username, identity.user_id, "
+    "select address, fpr, identity.user_id, username,"
     "   lang, identity.flags | pgp_keypair.flags"
     "   from identity"
     "   join person on id = identity.user_id"
