@@ -12,7 +12,11 @@ function "init_sql" {
     param "sql";
     ||
         sqlite3_stmt *_sql;
-        int int_result = sqlite3_prepare_v2(session->db, `copy '$sql'`, -1, &_sql, NULL);
+        int int_result = sqlite3_prepare_v2(session->db,
+    ||
+    indent(2); copy '$sql';
+    ||
+            , -1, &_sql, NULL);
         assert(int_result == SQLITE_OK);
         if (!(int_result == SQLITE_OK))
             return PEP_UNKNOWN_ERROR;
