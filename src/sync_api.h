@@ -87,7 +87,7 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
 //      new_sync_timeout_event() in case of timeout
 
 typedef SYNC_EVENT (*retrieve_next_sync_event_t)(void *management,
-        time_t threshold);
+        unsigned threshold);
 
 
 // register_sync_callbacks() - register adapter's callbacks
