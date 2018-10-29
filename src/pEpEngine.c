@@ -20,17 +20,16 @@ static volatile int init_count = -1;
 
 // sql overloaded functions - modified from sqlite3.c
 static void _sql_lower(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
-    char *z1;
     const char *z2;
-    int i, n;
+    int n;
     z2 = (char*)sqlite3_value_text(argv[0]);
     n = sqlite3_value_bytes(argv[0]);
     /* Verify that the call to _bytes() does not invalidate the _text() pointer */
     assert( z2==(char*)sqlite3_value_text(argv[0]) );
     if( z2 ){
-        z1 = (char*)sqlite3_malloc(n+1);
+        char *z1 = (char*)sqlite3_malloc(n+1);
         if( z1 ){
-            for(i=0; i<n; i++){
+            for(int i=0; i<n; i++){
                 char c = z2[i];
                 char c_mod = c | 0x20;
                 if (c_mod < 0x61 || c_mod > 0x7a)
@@ -392,7 +391,7 @@ static const char *sql_own_key_is_listed =
     ");";
 
 static const char *sql_own_identities_retrieve =  
-    "select address, fpr, username, identity.user_id, "
+    "select address, fpr, identity.user_id, username,"
     "   lang, identity.flags | pgp_keypair.flags"
     "   from identity"
     "   join person on id = identity.user_id"
@@ -2002,7 +2001,6 @@ DYNAMIC_API PEP_STATUS get_default_own_userid(
         default:
             // Technically true, given how we find it, but FIXME we need a more descriptive error
             status = PEP_CANNOT_FIND_IDENTITY;
-            *userid = NULL;
     }
 
     *userid = retval;
@@ -2375,8 +2373,6 @@ PEP_STATUS get_identities_by_address(
         identity_list** id_list
     )
 {
-    pEp_identity* ident;
-
     assert(session);
     assert(address);
     assert(address[0]);
@@ -2395,7 +2391,7 @@ PEP_STATUS get_identities_by_address(
     while ((result = sqlite3_step(session->get_identities_by_address)) == SQLITE_ROW) {
         //"select user_id, main_key_id, username, comm_type, lang,"
         //"   identity.flags, is_own"
-        ident = new_identity(
+        pEp_identity *ident = new_identity(
                 address,
                 (const char *) sqlite3_column_text(session->get_identities_by_address, 1),
                 (const char *) sqlite3_column_text(session->get_identities_by_address, 0),
@@ -4437,7 +4433,6 @@ DYNAMIC_API PEP_STATUS sequence_value(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    int result;
 
     assert(session);
     assert(name && value);
@@ -4452,7 +4447,7 @@ DYNAMIC_API PEP_STATUS sequence_value(
         status = _get_sequence_value(session, name, value);
 
     if (status == PEP_STATUS_OK) {
-        result = sqlite3_exec(session->db, "COMMIT ;", NULL, NULL, NULL);
+        int result = sqlite3_exec(session->db, "COMMIT ;", NULL, NULL, NULL);
         if (result == SQLITE_OK){
             assert(*value < INT32_MAX);
             if (*value == INT32_MAX){
@@ -4640,8 +4635,6 @@ PEP_STATUS get_last_contacted(
         identity_list** id_list
     )
 {
-    pEp_identity* ident;
-
     assert(session);
     assert(id_list);
 
@@ -4655,7 +4648,7 @@ PEP_STATUS get_last_contacted(
     int result;
 
     while ((result = sqlite3_step(session->get_last_contacted)) == SQLITE_ROW) {
-        ident = new_identity(
+        pEp_identity *ident = new_identity(
                 (const char *) sqlite3_column_text(session->get_last_contacted, 1),
                 NULL,
                 (const char *) sqlite3_column_text(session->get_last_contacted, 0),

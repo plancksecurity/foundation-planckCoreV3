@@ -164,14 +164,9 @@ DYNAMIC_API PEP_STATUS register_examine_function(
 // do_keymanagement() - function to be run on an extra thread
 //
 //  parameters:
-//      session (in)                session to use
 //      retrieve_next_identity (in) pointer to retrieve_next_identity()
 //                                  callback which returns at least a valid
 //                                  address field in the identity struct
-//      messageToSend (in)          callback for sending message by the
-//                                  application
-//      management (in)             management data to give to keymanagement
-//                                  (implementation defined)
 //
 //  return value:
 //      PEP_STATUS_OK if thread has to terminate successfully or any other
@@ -187,7 +182,6 @@ DYNAMIC_API PEP_STATUS register_examine_function(
 //      if transport system is not used it must not be NULL
 
 DYNAMIC_API PEP_STATUS do_keymanagement(
-        PEP_SESSION session,
         retrieve_next_identity_t retrieve_next_identity,
         void *management
     );
@@ -212,25 +206,6 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
         PEP_SESSION session,
         pEp_identity *ident
     );
-
-// undo_last_mistrust() - reset identity and trust status for the last
-//                        identity in this session marked as mistrusted
-//                        to their cached values from the time of mistrust
-//  parameters:
-//      session (in)        session to use
-//
-//  return value:
-//      PEP_STATUS_OK if identity and trust were successfully restored.
-//      Otherwise, error status from attempts to set.
-//
-//  caveat:
-//      only works for this session, and only once. cache is invalidated
-//      upon use.
-//
-//      WILL NOT WORK ON MISTRUSTED OWN KEY
-
-DYNAMIC_API PEP_STATUS undo_last_mistrust(PEP_SESSION session);
-
 
 // trust_personal_key() - mark a key as trusted for a user
 //

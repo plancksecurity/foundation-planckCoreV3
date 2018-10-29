@@ -49,7 +49,6 @@ typedef enum _sync_handshake_signal {
 //      ownership of self and partner go to the callee
 
 typedef PEP_STATUS (*notifyHandshake_t)(
-        void *obj,
         pEp_identity *me,
         pEp_identity *partner,
         sync_handshake_signal signal
@@ -88,7 +87,7 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
 //      new_sync_timeout_event() in case of timeout
 
 typedef SYNC_EVENT (*retrieve_next_sync_event_t)(void *management,
-        time_t threshold);
+        unsigned threshold);
 
 
 // register_sync_callbacks() - register adapter's callbacks

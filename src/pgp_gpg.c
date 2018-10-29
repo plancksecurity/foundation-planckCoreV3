@@ -16,16 +16,13 @@ static struct gpg_s gpg;
 
 static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const char* config_file_path)
 {
-    static char buf[MAX_LINELENGTH];
     int r;
     stringlist_t *_k;
     stringlist_t *_v;
     unsigned int i;
     unsigned int found = 0;
     bool eof_nl = 0;
-    char * rest;
-    char * token;
-    char * s;
+    char * rest = NULL;
     const char* line_end;
 
 #ifdef WIN32
@@ -39,7 +36,9 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
         return false;
 
     if (f != NULL) {
+        static char buf[MAX_LINELENGTH];
         int length = stringlist_length(keys);
+        char * s;
 
         // make sure we 1) have the same number of keys and values
         // and 2) we don't have more key/value pairs than
@@ -55,7 +54,7 @@ static bool ensure_config_values(stringlist_t *keys, stringlist_t *values, const
         }
 
         while ((s = Fgets(buf, MAX_LINELENGTH, f))) {
-            token = strtok_r(s, " \t\r\n", &rest);
+            char *token = strtok_r(s, " \t\r\n", &rest);
             for (_k = keys, _v = values, i = 1;
                  _k != NULL;
                  _k = _k->next, _v = _v->next, i <<= 1) {
@@ -116,6 +115,9 @@ char* _undot_address(const char* address) {
         at = address + addr_len;
         
     char* retval = calloc(1, addr_len + 1);
+    assert(retval);
+    if (!retval)
+        return NULL;
 
     const char* addr_curr = address;
     char* retval_curr = retval;

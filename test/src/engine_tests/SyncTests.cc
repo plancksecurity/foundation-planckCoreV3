@@ -24,7 +24,6 @@ void Sync_Adapter::processing()
 }
 
 PEP_STATUS Sync_Adapter::notifyHandshake(
-        void *obj,
         pEp_identity *me,
         pEp_identity *partner,
         sync_handshake_signal signal
@@ -97,6 +96,8 @@ PEP_STATUS Sync_Adapter::messageToSend(struct _message *msg)
 
     for (bloblist_t *b = msg->attachments; b && b->value; b = b->next) {
         if (b->mime_type && strcasecmp(b->mime_type, "application/pEp.sync") == 0) {
+            assert(msg->from && msg->from->address && msg->from->username);
+            cout << "<!-- " << msg->from->username << " <" << msg->from->address << "> -->\n";
             char *text = NULL;
             PEP_STATUS status = PER_to_XER_Sync_msg(msg->attachments->value, msg->attachments->size, &text);
             assert(status == PEP_STATUS_OK);
@@ -141,7 +142,7 @@ void SyncTests::setup()
     cout << "initialize sync and start first state machine\n";
     status = register_sync_callbacks(
             sync,
-            &adapter.q,
+            (void *) &adapter.q,
             Sync_Adapter::notifyHandshake,
             Sync_Adapter::retrieve_next_sync_event
         );

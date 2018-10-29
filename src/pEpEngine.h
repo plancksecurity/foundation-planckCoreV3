@@ -108,6 +108,7 @@ typedef enum {
     PEP_STATEMACHINE_INVALID_CONDITION              = 0x0984,
     PEP_STATEMACHINE_INVALID_ACTION                 = 0x0985,
     PEP_STATEMACHINE_INHIBITED_EVENT                = 0x0986,
+    PEP_STATEMACHINE_CANNOT_SEND                    = 0x0987,
 
     PEP_COMMIT_FAILED                               = 0xff01,
     PEP_MESSAGE_CONSUME                             = 0xff02,

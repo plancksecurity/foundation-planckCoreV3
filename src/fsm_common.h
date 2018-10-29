@@ -3,7 +3,7 @@
 
 // generate state machine code
 
-// Copyleft (c) 2017, p≡p foundation
+// Copyleft (c) 2017-2018, pEp foundation
 
 // Written by Volker Birk
 
@@ -23,9 +23,11 @@ typedef enum _fsm_error {
     invalid_event = -3,
     invalid_condition = -4,
     invalid_action = -5,
+    inhibited_event = -6,
+    cannot_send = -7,
 
     // out of memory condition
-    invalid_out_of_memory = -128,
+    out_of_memory = -128,
 } fsm_error;
 
 // common

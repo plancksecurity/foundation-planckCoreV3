@@ -103,12 +103,14 @@ tstylesheet {
         // This file is under GNU General Public License 3.0
         // see LICENSE.txt
 
+        #include "platform.h"
+
         #include "«yml:lcase(@name)»_codec.h"
         #include "../asn.1/«@name».h"
         #include "pEp_internal.h"
         #include "growing_buf.h"
 
-        PEP_STATUS decode_«@name»_message(
+        DYNAMIC_API PEP_STATUS decode_«@name»_message(
                 const char *data,
                 size_t size,
                 «@name»_t **msg

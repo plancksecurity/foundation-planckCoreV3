@@ -433,9 +433,12 @@ static char* get_base_36_rep(unsigned long long value, int num_sig_bits) {
     // based on
     // https://en.wikipedia.org/wiki/Base36#C_implementation
     // ok, we supposedly have a 64-bit kinda sorta random blob
-    const char base_36_symbols[36] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const char base_36_symbols[37] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     char* retbuf = calloc(bufsize, 1); 
+    assert(retbuf);
+    if (!retbuf)
+        return NULL;
 
     int i = bufsize - 1; // (end index)
 
@@ -468,9 +471,8 @@ static char* message_id_prand_part(void) {
     
     i = DESIRED_BITS;
     
-    int bitshift = 0;
-    
     while (i > 0) {
+        int bitshift = 0;
         int randval = rand();
         unsigned long long temp_val = randval & bitmask;
 
@@ -922,8 +924,11 @@ static message* wrap_message_as_attachment(message* envelope,
         attachment->longmsg = encapsulate_message_wrap_info(inner_type_string, attachment->longmsg);
         _envelope->longmsg = encapsulate_message_wrap_info("OUTER", _envelope->longmsg);
     }
-    else {
+    else if (_envelope) {
         _envelope->longmsg = encapsulate_message_wrap_info("TRANSPORT", _envelope->longmsg);
+    }
+    else {
+        return NULL;
     }
     
     if (!attachment->id || attachment->id[0] == '\0') {
@@ -1618,10 +1623,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     bool added_key_to_real_src = false;
     
     assert(session);
-    assert(src);
+    assert(src && src->from);
     assert(dst);
 
-    if (!(session && src && dst))
+    if (!(session && src && src->from && dst))
         return PEP_ILLEGAL_VALUE;
 
     if (src->dir == PEP_dir_incoming)
@@ -1636,7 +1641,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     
     *dst = NULL;
 
-    if (src->from && (!src->from->user_id || src->from->user_id[0] == '\0')) {
+    if (!src->from->user_id || src->from->user_id[0] == '\0') {
         char* own_id = NULL;
         status = get_default_own_userid(session, &own_id);
         if (own_id) {
@@ -2144,11 +2149,12 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     message* _src = src;
 
     assert(session);
+    assert(target_id);
     assert(src);
     assert(dst);
     assert(enc_format != PEP_enc_none);
 
-    if (!(session && src && dst && enc_format != PEP_enc_none))
+    if (!(session && target_id && src && dst && enc_format != PEP_enc_none))
         return PEP_ILLEGAL_VALUE;
 
     // if (src->dir == PEP_dir_incoming)
@@ -2157,8 +2163,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     determine_encryption_format(src);
     if (src->enc_format != PEP_enc_none)
         return PEP_ILLEGAL_VALUE;
-    if (target_id && (!target_id->user_id || target_id->user_id[0] == '\0')) {
-        
+
+    if (!target_id->user_id || target_id->user_id[0] == '\0') {
         char* own_id = NULL;
         status = get_default_own_userid(session, &own_id);
         if (own_id) {
@@ -2166,14 +2172,18 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
             target_id->user_id = own_id; // ownership transfer
         }
     }
-    
+
+    if (!target_id->user_id || target_id->user_id[0] == '\0')
+        return PEP_CANNOT_FIND_IDENTITY;
+
     if (target_id->address) {
         status = myself(session, target_id);
         if (status != PEP_STATUS_OK)
             goto pEp_error;
     }
-    else if (!target_id->fpr)
+    else if (!target_id->fpr) {
         return PEP_ILLEGAL_VALUE;
+    }
     
     *dst = NULL;
 
@@ -2346,6 +2356,10 @@ static PEP_STATUS _get_signed_text(const char* ptext, const size_t psize,
     size_t boundary_strlen = (end_boundary - start_boundary) + 2;
 
     signed_boundary = calloc(boundary_strlen + 1, 1);
+    assert(signed_boundary);
+    if (!signed_boundary)
+        return PEP_OUT_OF_MEMORY;
+
     strlcpy(signed_boundary, "--", boundary_strlen + 1);
     strlcat(signed_boundary, start_boundary, boundary_strlen + 1);
 
@@ -2424,32 +2438,34 @@ static PEP_STATUS combine_keylists(PEP_SESSION session, stringlist_t** verify_in
         verify_curr->next = orig_verify;
     }
 
-    /* append keylist to signers */
-    if (keylist_in_out && *keylist_in_out && (*keylist_in_out)->value) {
-        stringlist_t** tail_pp = &verify_curr->next;
-        
-        while (*tail_pp) {
-            tail_pp = &((*tail_pp)->next);
-        }
-        stringlist_t* second_list = *keylist_in_out;
-        if (second_list) {
-            char* listhead_val = second_list->value;
-            if (!listhead_val || listhead_val[0] == '\0') {
-                /* remove head, basically. This can happen when,
-                   for example, the signature is detached and
-                   verification is not seen directly after
-                   decryption, so no signer is presumed in
-                   the first construction of the keylist */
-                *keylist_in_out = (*keylist_in_out)->next;
-                second_list->next = NULL;
-                free_stringlist(second_list);
+    if (keylist_in_out) {
+        /* append keylist to signers */
+        if (*keylist_in_out && (*keylist_in_out)->value) {
+            stringlist_t** tail_pp = &verify_curr->next;
+
+            while (*tail_pp) {
+                tail_pp = &((*tail_pp)->next);
             }
+            stringlist_t* second_list = *keylist_in_out;
+            if (second_list) {
+                char* listhead_val = second_list->value;
+                if (!listhead_val || listhead_val[0] == '\0') {
+                    /* remove head, basically. This can happen when,
+                       for example, the signature is detached and
+                       verification is not seen directly after
+                       decryption, so no signer is presumed in
+                       the first construction of the keylist */
+                    *keylist_in_out = (*keylist_in_out)->next;
+                    second_list->next = NULL;
+                    free_stringlist(second_list);
+                }
+            }
+            *tail_pp = *keylist_in_out;
         }
-        *tail_pp = *keylist_in_out;
+
+        *keylist_in_out = verify_curr;
     }
-    
-    *keylist_in_out = verify_curr;
-    
+
     status = PEP_STATUS_OK;
     
 free:
@@ -2748,7 +2764,7 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
     }
 
     bloblist_t *_s;
-    for (_s = src->attachments; _s; _s = _s->next) {
+    for (_s = src->attachments; _s && _s->value; _s = _s->next) {
         if (_s->value == NULL && _s->size == 0){
             _m = bloblist_add(_m, NULL, 0, _s->mime_type, _s->filename);
             if (_m == NULL)
@@ -3576,50 +3592,52 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         goto pEp_error;
     }
     
-    stringpair_list_t* curr_pair_node;
-    stringpair_t* curr_pair;
-    
-    for (curr_pair_node = revoke_replace_pairs; curr_pair_node; curr_pair_node = curr_pair_node->next) {
-        curr_pair = curr_pair_node->value;
-        
-        if (!curr_pair)
-            continue; // Again, shouldn't occur
-            
-        if (curr_pair->key && curr_pair->value) {
-            status = create_standalone_key_reset_message(session,
-                                                         &reset_msg,
-                                                         msg->from,
-                                                         curr_pair->key,
-                                                         curr_pair->value);
+    if (msg) {
+        stringpair_list_t* curr_pair_node;
+        stringpair_t* curr_pair;
 
-            // If we can't find the identity, this is someone we've never mailed, so we just
-            // go on letting them use the wrong key until we mail them ourselves. (Spammers, etc)
-            if (status != PEP_CANNOT_FIND_IDENTITY) {
-                if (status != PEP_STATUS_OK)
-                    goto pEp_error;
-                    
-                if (!reset_msg) {
-                    status = PEP_OUT_OF_MEMORY;
-                    goto pEp_error;
-                }
-                // insert into queue
-                if (session->messageToSend)
-                    status = session->messageToSend(reset_msg);
-                else
-                    status = PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
-            
+        for (curr_pair_node = revoke_replace_pairs; curr_pair_node; curr_pair_node = curr_pair_node->next) {
+            curr_pair = curr_pair_node->value;
 
-                if (status == PEP_STATUS_OK) {    
-                    // Put into notified DB
-                    status = set_reset_contact_notified(session, curr_pair->key, msg->from->user_id);
-                    if (status != PEP_STATUS_OK) // It's ok to barf because it's a DB problem??
+            if (!curr_pair)
+                continue; // Again, shouldn't occur
+
+            if (curr_pair->key && curr_pair->value) {
+                status = create_standalone_key_reset_message(session,
+                    &reset_msg,
+                    msg->from,
+                    curr_pair->key,
+                    curr_pair->value);
+
+                // If we can't find the identity, this is someone we've never mailed, so we just
+                // go on letting them use the wrong key until we mail them ourselves. (Spammers, etc)
+                if (status != PEP_CANNOT_FIND_IDENTITY) {
+                    if (status != PEP_STATUS_OK)
                         goto pEp_error;
-                }
-                else {
-                    // According to Volker, this would only be a fatal error, so...
-                    free_message(reset_msg); // ??
-                    reset_msg = NULL; // ??
-                    goto pEp_error;
+
+                    if (!reset_msg) {
+                        status = PEP_OUT_OF_MEMORY;
+                        goto pEp_error;
+                    }
+                    // insert into queue
+                    if (session->messageToSend)
+                        status = session->messageToSend(reset_msg);
+                    else
+                        status = PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
+
+
+                    if (status == PEP_STATUS_OK) {
+                        // Put into notified DB
+                        status = set_reset_contact_notified(session, curr_pair->key, msg->from->user_id);
+                        if (status != PEP_STATUS_OK) // It's ok to barf because it's a DB problem??
+                            goto pEp_error;
+                    }
+                    else {
+                        // According to Volker, this would only be a fatal error, so...
+                        free_message(reset_msg); // ??
+                        reset_msg = NULL; // ??
+                        goto pEp_error;
+                    }
                 }
             }
         }
@@ -3775,6 +3793,8 @@ static void _max_comm_type_from_identity_list(
                                               true);
                     if (status != PEP_STATUS_OK || il->ident->fpr == NULL) {
                         il->ident->comm_type = PEP_ct_key_not_found;
+                        if (*max_comm_type > PEP_ct_no_encryption)
+                            *max_comm_type = PEP_ct_no_encryption;
                     }
                 }    
             }

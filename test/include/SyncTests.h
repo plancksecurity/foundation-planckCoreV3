@@ -20,7 +20,6 @@ public:
     void processing();
 
     static PEP_STATUS notifyHandshake(
-            void *obj,
             pEp_identity *me,
             pEp_identity *partner,
             sync_handshake_signal signal
