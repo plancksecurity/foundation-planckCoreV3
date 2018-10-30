@@ -328,7 +328,7 @@ tstylesheet {
                 «@name»_event_t *ev = NULL;
 
                 «@name»_PR fsm = msg->present;
-                int event;
+                int event = 0;
 
                 switch (fsm) {
                     `` apply "fsm", 2, mode=signal_message
