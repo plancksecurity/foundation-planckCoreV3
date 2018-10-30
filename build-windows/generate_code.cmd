@@ -1,6 +1,8 @@
 pushd .
 cd %1\sync
 
+if not exist generated mkdir generated
+
 python "%YML_PATH%\yml2proc" -E utf-8 -y gen_actions.ysl2 sync.fsm
 python "%YML_PATH%\yml2proc" -E utf-8 -y gen_statemachine.ysl2 sync.fsm
 python "%YML_PATH%\yml2proc" -E utf-8 -y gen_codec.ysl2 sync.fsm
