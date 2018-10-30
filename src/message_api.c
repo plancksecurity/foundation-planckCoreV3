@@ -3713,6 +3713,16 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_decrypt_flags_t *flags
     )
 {
+    assert(session);
+    assert(src);
+    assert(dst);
+    assert(keylist);
+    assert(rating);
+    assert(flags);
+
+    if (!(session && src && dst && keylist && rating && flags))
+        return PEP_ILLEGAL_VALUE;
+
     PEP_STATUS status = _decrypt_message(session, src, dst, keylist, rating, flags, NULL);
 
     message *msg = *dst ? *dst : src;
