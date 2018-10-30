@@ -327,14 +327,17 @@ tstylesheet {
 
                 «@name»_event_t *ev = NULL;
 
-                switch (msg->present) {
+                «@name»_PR fsm = msg->present;
+                int event;
+
+                switch (fsm) {
                     `` apply "fsm", 2, mode=signal_message
                     default:
                         status = PEP_«yml:ucase(@name)»_ILLEGAL_MESSAGE;
                         goto the_end;
                 }
 
-                ev = new_«@name»_event(None, None, msg);
+                ev = new_«@name»_event(fsm, event, msg);
                 if (!ev) {
                     status = PEP_OUT_OF_MEMORY;
                     goto the_end;
@@ -588,14 +591,15 @@ tstylesheet {
     {
         ||
         case «../@name»_PR_«yml:lcase(@name)»:
-            switch (msg->choice.«yml:lcase(@name)».payload.present) {
+            event = msg->choice.«yml:lcase(@name)».payload.present;
+            switch (event) {
         ||
         if "message[@security='unencrypted']" {
             |         // these messages are going untested
             for "message[@security='unencrypted']"
                 |>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
             ||
-                       break;
+                        break;
 
             ||
         }
