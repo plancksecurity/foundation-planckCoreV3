@@ -515,8 +515,6 @@ PEP_STATUS pgp_decrypt_and_verify(
                 if (!recipient_keylist) {
                     gpg.gpgme_data_release(plain);
                     gpg.gpgme_data_release(cipher);
-                    if (recipient_keylist)
-                        free_stringlist(recipient_keylist);
                     return PEP_OUT_OF_MEMORY;
                 }
                
@@ -560,7 +558,7 @@ PEP_STATUS pgp_decrypt_and_verify(
                             if (!(*filename_ptr))
                                 result = PEP_OUT_OF_MEMORY;
                         }
-                    }
+                    }                    
                 } /* Ok, so now we have any recipients it was encrypted for
                      in recipient_keylist */
             

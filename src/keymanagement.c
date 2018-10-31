@@ -1088,6 +1088,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
                 if (revoked_fpr) {
                     status = set_revoked(session, revoked_fpr,
                                          stored_identity->fpr, time(NULL));
+                    assert(status == PEP_STATUS_OK);                     
                 }
             }
         }
