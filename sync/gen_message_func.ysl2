@@ -88,6 +88,7 @@ template "protocol", mode=impl
 #include "pEp_internal.h"
 #include "map_asn1.h"
 #include "«@name»_func.h"
+`` for "fsm" | #include "«@name»_fsm.h"
 
 void free_«@name»_state(PEP_SESSION session)
 {
@@ -144,7 +145,7 @@ PEP_STATUS update_«@name»_state(PEP_SESSION session, «@name»_t *msg,
         return PEP_ILLEGAL_VALUE;
 
     *fsm = 0;
-    *message_type = 0;
+    *message_type = None;
 
     switch (msg->present) {
         case «@name»_PR_NOTHING:
@@ -292,7 +293,6 @@ case «../@name»_PR_«yml:lcase(@name)»:
         default:
             return PEP_ILLEGAL_VALUE;
     }
-    *message_type = msg->choice.«yml:lcase(@name)».payload.present;
     break;
 
 ||
@@ -302,6 +302,7 @@ template "message", mode=update_state {
     ||
     case «../@name»__payload_PR_«$message_name»:
         `` apply "field", mode=update_state with "message_name", "$message_name"
+        *message_type = «yml:capit($message_name)»;
         break;
 
     ||
