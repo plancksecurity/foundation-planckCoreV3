@@ -465,6 +465,9 @@ tstylesheet {
 
                     switch (message_type) {
                     `` for "fsm/message[@security='unencrypted']" |>>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+                            status = encrypt_message(session, _m, NULL, &m, PEP_enc_none, 0);
+                            if (status != PEP_UNENCRYPTED)
+                                goto the_end;
                             m = _m;
                             break;
 
