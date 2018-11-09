@@ -99,11 +99,11 @@ action storeChallenge call "copy_UUID" {
 }
 
 action openTransaction
-    call "new_UUID" with "dst" > &session->own_sync_state.transaction
+    call "new_UUID" with "dst" > &session->sync_state.keysync.transaction
 
 action storeTransaction call "copy_UUID" {
     with "src" > &session->sync_state.keysync.transaction
-    with "dst" >  &session->own_sync_state.transaction
+    with "dst" > &session->own_sync_state.transaction
 }
 
 function "show_handshake" {
