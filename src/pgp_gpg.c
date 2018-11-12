@@ -1,4 +1,4 @@
-ssizessizessizessizesigner_key// This file is under GNU General Public License 3.0
+// This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
 #include "platform.h"
@@ -991,7 +991,8 @@ PEP_STATUS pgp_sign_only(
                                     signer_key_ptr, 0);
     gpgme_error = _GPGERR(gpgme_error);
     assert(gpgme_error != GPG_ERR_ENOMEM);
-
+    gpgme_error_t _gpgme_error;
+    
     switch (gpgme_error) {
     case GPG_ERR_ENOMEM:
         gpg.gpgme_key_unref(*signer_key_ptr);
@@ -1000,7 +1001,7 @@ PEP_STATUS pgp_sign_only(
         gpg.gpgme_data_release(signed_text);
         return PEP_OUT_OF_MEMORY;
     case GPG_ERR_NO_ERROR:
-        gpgme_error_t _gpgme_error = gpg.gpgme_signers_add(session->ctx, *signer_key_ptr);
+        _gpgme_error = gpg.gpgme_signers_add(session->ctx, *signer_key_ptr);
         _gpgme_error = _GPGERR(_gpgme_error);
         assert(_gpgme_error == GPG_ERR_NO_ERROR);
         break;

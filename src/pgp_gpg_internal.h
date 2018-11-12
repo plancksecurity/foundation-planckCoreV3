@@ -46,6 +46,8 @@ typedef gpgme_error_t(*gpgme_op_encrypt_sign_t)(gpgme_ctx_t CTX,
 typedef gpgme_error_t(*gpgme_op_encrypt_t)(gpgme_ctx_t CTX,
         gpgme_key_t RECP[], gpgme_encrypt_flags_t FLAGS, gpgme_data_t PLAIN,
         gpgme_data_t CIPHER);
+typedef gpgme_error_t(*gpgme_op_sign_t)(gpgme_ctx_t CTX,
+        gpgme_data_t PLAIN, gpgme_data_t SIG, gpgme_sig_mode_t MODE);        
 typedef gpgme_verify_result_t(*gpgme_op_verify_result_t)(gpgme_ctx_t CTX);
 typedef void(*gpgme_signers_clear_t)(gpgme_ctx_t CTX);
 typedef gpgme_error_t(*gpgme_signers_add_t)(gpgme_ctx_t CTX, const gpgme_key_t KEY);
@@ -122,6 +124,7 @@ struct gpg_s {
     gpgme_op_decrypt_result_t gpgme_op_decrypt_result;
     gpgme_op_encrypt_sign_t gpgme_op_encrypt_sign;
     gpgme_op_encrypt_t gpgme_op_encrypt;
+    gpgme_op_sign_t gpgme_op_sign;    
     gpgme_op_verify_result_t gpgme_op_verify_result;
     gpgme_signers_clear_t gpgme_signers_clear;
     gpgme_signers_add_t gpgme_signers_add;

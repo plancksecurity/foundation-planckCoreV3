@@ -39,7 +39,7 @@ typedef PEP_STATUS (*encrypt_only_t)(
     );
 
 typedef PEP_STATUS (*sign_only_t)(
-        PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+        PEP_SESSION session, const char* fpr, const char *ptext,
         size_t psize, char **stext, size_t *ssize
     );
 
@@ -104,6 +104,7 @@ typedef struct _PEP_cryptotech_t {
     verify_text_t verify_text;
     encrypt_and_sign_t encrypt_and_sign;
     encrypt_only_t encrypt_only;
+    sign_only_t sign_only;    
     delete_keypair_t delete_keypair;
     export_key_t export_key;
     find_keys_t find_keys;

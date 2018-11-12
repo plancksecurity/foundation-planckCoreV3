@@ -37,7 +37,7 @@ PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first)
         cryptotech[PEP_crypt_OpenPGP].decrypt_and_verify = pgp_decrypt_and_verify;
         cryptotech[PEP_crypt_OpenPGP].encrypt_and_sign = pgp_encrypt_and_sign;
         cryptotech[PEP_crypt_OpenPGP].encrypt_only = pgp_encrypt_only;
-        cryptotech[PEP_crypt_OpenPGP].encrypt_only = pgp_sign_only;        
+        cryptotech[PEP_crypt_OpenPGP].sign_only = pgp_sign_only;        
         cryptotech[PEP_crypt_OpenPGP].verify_text = pgp_verify_text;
         cryptotech[PEP_crypt_OpenPGP].delete_keypair = pgp_delete_keypair;
         cryptotech[PEP_crypt_OpenPGP].export_key = pgp_export_keydata;
