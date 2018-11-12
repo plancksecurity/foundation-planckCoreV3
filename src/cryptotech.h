@@ -38,6 +38,11 @@ typedef PEP_STATUS (*encrypt_only_t)(
         size_t psize, char **ctext, size_t *csize
     );
 
+typedef PEP_STATUS (*sign_only_t)(
+        PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
+        size_t psize, char **stext, size_t *ssize
+    );
+
 typedef PEP_STATUS (*delete_keypair_t)(PEP_SESSION session, const char *fpr);
 
 typedef PEP_STATUS (*export_key_t)(

@@ -1,4 +1,4 @@
-// This file is under GNU General Public License 3.0
+snrssnrs// This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
 #include "pEp_internal.h"
@@ -764,6 +764,132 @@ unlock_netpgp:
 
     return result;
 }
+
+
+PEP_STATUS pgp_sign_only(
+    PEP_SESSION session, const char* fpr, const char *ptext,
+    size_t psize, char **stext, size_t *ssize
+    )
+{
+    pgp_key_t *signer = NULL;
+    pgp_seckey_t *seckey = NULL;
+    pgp_memory_t *signedmem = NULL;
+    const char *hashalg;
+    pgp_keyring_t *snrs;
+
+    PEP_STATUS result;
+    const stringlist_t *_keylist;
+
+    assert(session);
+    assert(keylist);
+    assert(ptext);
+    assert(psize);
+    assert(stext);
+    assert(ssize);
+
+    if(!session || !ptext || !psize || !stext || !ssize || !fpr || !fpr[0])
+        return PEP_ILLEGAL_VALUE;
+
+    if(pthread_mutex_lock(&netpgp_mutex)){
+        return PEP_UNKNOWN_ERROR;
+    }
+
+    *stext = NULL;
+    *ssize = 0;
+
+    if ((snrs = calloc(1, sizeof(*rcpts))) == NULL) {
+        result = PEP_OUT_OF_MEMORY;
+        goto unlock_netpgp;
+    }
+    
+    assert(fpr && fpr[0]);
+
+    const pgp_key_t *key;
+    uint8_t uint_fpr[PGP_FINGERPRINT_SIZE];
+    size_t fprlen;
+    unsigned from = 0;
+
+    if (str_to_fpr(fpr, uint_fpr, &fprlen)) {
+        if ((signer = (pgp_key_t *)pgp_getkeybyfpr(netpgp.io, netpgp.pubring,
+                                                uint_fpr, fprlen, &from, NULL,
+                                                /* reject revoked and expired */
+                                                1,1)) == NULL) {
+            result = PEP_KEY_NOT_FOUND;
+            goto free_snrs;
+        }
+    }else{
+        result = PEP_ILLEGAL_VALUE;
+        goto free_snrs;
+    }
+
+    // add key to signers
+    pgp_keyring_add(snrs, signer);
+    if(snrs->keys == NULL){
+        result = PEP_OUT_OF_MEMORY;
+        goto free_snrs;
+    }
+
+    /* Empty keylist ?*/
+    if(snrs->keyc == 0){
+        result = PEP_ILLEGAL_VALUE;
+        goto free_snrs;
+    }
+
+    seckey = pgp_key_get_certkey(signer);
+
+    /* No signing key. Revoked ? */
+    if(seckey == NULL){
+        result = PEP_GET_KEY_FAILED;
+        goto free_snrs;
+    }
+
+    hashalg = netpgp_getvar(&netpgp, "hash");
+
+    const char *_stext;
+    size_t _ssize;
+    unsigned encrypt_raw_packet;
+   
+    // Sign data
+    signedmem = pgp_sign_buf(netpgp.io, ptext, psize, seckey,
+                time(NULL), /* birthtime */
+                0 /* duration */,
+                hashalg,
+                1 /* armored */,
+                0 /* cleartext */);
+
+    if (!signedmem) {
+        result = PEP_UNENCRYPTED;
+        goto free_snrs;
+    }
+    _stext = (char*) pgp_mem_data(signedmem);
+    _ssize = pgp_mem_len(signedmem);
+    
+    // Allocate transferable buffer
+    char *_buffer = malloc(_ssize + 1);
+
+    assert(_buffer);
+    if (_buffer == NULL) {
+        result = PEP_OUT_OF_MEMORY;
+        goto free_signedmem;
+    }
+
+    memcpy(_buffer, pgp_mem_data(_stext), _ssize);
+    *stext = _buffer;
+    *ssize = _ssize;
+    (*stext)[*ssize] = 0; // safeguard for naive users
+
+    result = PEP_STATUS_OK;
+
+free_signedmem :
+    pgp_memory_free(signedmem);
+free_snrs :
+    pgp_keyring_free(snrs);
+unlock_netpgp:
+    pthread_mutex_unlock(&netpgp_mutex);
+
+    return result;
+}
+
 
 PEP_STATUS pgp_encrypt_and_sign(
     PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
