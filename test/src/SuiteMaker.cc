@@ -31,6 +31,7 @@
 #include "HeaderKeyImportTests.h"
 #include "StringpairListTests.h"
 #include "TrustManipulationTests.h"
+#include "SignOnlyTests.h"
 #include "EncryptAttachPrivateKeyTests.h"
 #include "BloblistTests.h"
 #include "KeyResetMessageTests.h"
@@ -52,7 +53,6 @@
 #include "CrashdumpTests.h"
 #include "CaseAndDotAddressTests.h"
 #include "ExpiredSubkeyTests.h"
-#include "LeastCommonDenomColorTests.h"
 #include "ExternalRevokeTests.h"
 #include "UserIDAliasTests.h"
 
@@ -77,6 +77,7 @@ const char* SuiteMaker::all_suites[] = {
     "HeaderKeyImportTests",
     "StringpairListTests",
     "TrustManipulationTests",
+    "SignOnlyTests",
     "EncryptAttachPrivateKeyTests",
     "BloblistTests",
     "KeyResetMessageTests",
@@ -98,7 +99,6 @@ const char* SuiteMaker::all_suites[] = {
     "CrashdumpTests",
     "CaseAndDotAddressTests",
     "ExpiredSubkeyTests",
-    "LeastCommonDenomColorTests",
     "ExternalRevokeTests",
     "UserIDAliasTests",
 };
@@ -145,6 +145,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new StringpairListTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "TrustManipulationTests") == 0)
         *test_suite = new TrustManipulationTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "SignOnlyTests") == 0)
+        *test_suite = new SignOnlyTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "EncryptAttachPrivateKeyTests") == 0)
         *test_suite = new EncryptAttachPrivateKeyTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "BloblistTests") == 0)
@@ -187,8 +189,6 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new CaseAndDotAddressTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "ExpiredSubkeyTests") == 0)
         *test_suite = new ExpiredSubkeyTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "LeastCommonDenomColorTests") == 0)
-        *test_suite = new LeastCommonDenomColorTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "ExternalRevokeTests") == 0)
         *test_suite = new ExternalRevokeTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "UserIDAliasTests") == 0)

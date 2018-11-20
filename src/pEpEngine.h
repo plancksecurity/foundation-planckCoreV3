@@ -1371,7 +1371,14 @@ PEP_STATUS get_identities_by_main_key_id(
         PEP_SESSION session,
         const char *fpr,
         identity_list **identities);
-
+        
+PEP_STATUS sign_only(PEP_SESSION session, 
+                     const char *data, 
+                     size_t data_size, 
+                     const char *fpr, 
+                     char **sign, 
+                     size_t *sign_size);
+                     
 #ifdef __cplusplus
 }
 #endif
