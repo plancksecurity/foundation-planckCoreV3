@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <string>
+#include <cstring>
 #include <cpptest.h>
 
 #include "pEpEngine.h"
@@ -26,10 +27,21 @@ void SignOnlyTests::check_sign_only() {
     string msg_text = "Grrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr! I mean, yo. Greetings to Meesti.\n - Alice";
     char* signed_text = NULL;
     size_t signed_text_size = 0;
+
+    stringlist_t* keylist = NULL;
     
     PEP_STATUS status = sign_only(session, msg_text.c_str(), msg_text.size(), alice_fpr, &signed_text, &signed_text_size);
     TEST_ASSERT(status == PEP_STATUS_OK);
     cout << signed_text << endl;
         
+    status = verify_text(session, msg_text.c_str(), msg_text.size(),
+                         signed_text, signed_text_size, &keylist);
+    TEST_ASSERT(status == PEP_VERIFIED);
+    TEST_ASSERT(keylist);
+    TEST_ASSERT(keylist->value);
+    TEST_ASSERT(strcmp(keylist->value, alice_fpr) == 0);
+    
+    // FIXME: free stuff
+    
     TEST_ASSERT(true);
 }
