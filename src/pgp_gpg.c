@@ -355,6 +355,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         DLOAD(gpgme_op_decrypt_result);
         DLOAD(gpgme_op_encrypt_sign);
         DLOAD(gpgme_op_encrypt);
+        DLOAD(gpgme_op_sign);
         DLOAD(gpgme_op_verify_result);
         DLOAD(gpgme_signers_clear);
         DLOAD(gpgme_signers_add);
