@@ -71,7 +71,7 @@ void MessageTwoPointOhTests::check_message_two_point_oh() {
     outgoing_message->shortmsg = strdup("Greetings, humans!");
     outgoing_message->longmsg = strdup("This is a test of the emergency message system. This is only a test. BEEP.");
     outgoing_message->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
-//    outgoing_message->id = strdup("blahblahyourmama@pep-project.org");
+    outgoing_message->id = strdup("blahblahyourmama@pep-project.org");
     outgoing_message->references = new_stringlist("one-839274982347239847@pep-project.org");
     stringlist_add(outgoing_message->references, "two-dfddffd839274982347239847@pep-project.org");
     stringlist_add(outgoing_message->references, "three-OMGWTFBBQ.edfddffd839274982347239847@pep-project.org");

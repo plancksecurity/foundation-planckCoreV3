@@ -950,7 +950,7 @@ PEP_STATUS pgp_sign_only(
     gpgme_data_t plain, signed_text;
     gpgme_key_t* signer_key_ptr;
 
-    gpgme_sig_mode_t sign_mode = GPGME_SIG_MODE_NORMAL;
+    gpgme_sig_mode_t sign_mode = GPGME_SIG_MODE_DETACH;
        
     *stext = NULL;
     *ssize = 0;
