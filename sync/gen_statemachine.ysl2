@@ -339,13 +339,15 @@ tstylesheet {
                         goto the_end;
                 }
 
-                if (session->«yml:lcase(@name)»_state.common.from->fpr)
-                    free(session->«yml:lcase(@name)»_state.common.from->fpr);
-                session->«yml:lcase(@name)»_state.common.from->fpr = strdup(fpr);
-                assert(session->«yml:lcase(@name)»_state.common.from->fpr);
-                if (!session->«yml:lcase(@name)»_state.common.from->fpr) {
-                    status = PEP_OUT_OF_MEMORY;
-                    goto the_end;
+                if (fpr) {
+                    if (session->«yml:lcase(@name)»_state.common.from->fpr)
+                        free(session->«yml:lcase(@name)»_state.common.from->fpr);
+                    session->«yml:lcase(@name)»_state.common.from->fpr = strdup(fpr);
+                    assert(session->«yml:lcase(@name)»_state.common.from->fpr);
+                    if (!session->«yml:lcase(@name)»_state.common.from->fpr) {
+                        status = PEP_OUT_OF_MEMORY;
+                        goto the_end;
+                    }
                 }
 
                 ev = new_«@name»_event(fsm, event, msg);

@@ -3754,14 +3754,23 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     message *msg = *dst ? *dst : src;
 
-    if (session->inject_sync_event && msg) {
+    if (session->inject_sync_event && msg && msg->from) {
         size_t size;
         const char *data;
         char *sync_fpr = NULL;
         status = base_extract_message(session, msg, &size, &data, &sync_fpr);
-        const char *fpr = (*keylist && (*keylist)->value) ? (*keylist)->value : sync_fpr;
-        if (size && data && fpr)
-            signal_Sync_message(session, *rating, data, size, fpr);
+        if (!status && size && data) {
+            pEp_identity *_from = identity_dup(msg->from);
+            if (!_from) {
+                free_message(*dst);
+                *dst = NULL;
+                free_stringlist(*keylist);
+                *keylist = NULL;
+                return PEP_OUT_OF_MEMORY;
+            }
+            memcpy(&session->sync_state.common.from, _from, sizeof(pEp_identity));
+            signal_Sync_message(session, *rating, data, size, sync_fpr);
+        }
         free(sync_fpr);
     }
 

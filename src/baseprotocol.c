@@ -171,8 +171,6 @@ PEP_STATUS base_extract_message(
             status = PEP_OUT_OF_MEMORY;
             goto the_end;
         }
-
-        *fpr = _fpr;
     }
 
     *size = _payload_size;
