@@ -3749,6 +3749,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     if (!(session && src && dst && keylist && rating && flags))
         return PEP_ILLEGAL_VALUE;
 
+    *keylist = NULL;
     PEP_STATUS status = _decrypt_message(session, src, dst, keylist, rating, flags, NULL);
 
     message *msg = *dst ? *dst : src;
@@ -3756,9 +3757,12 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     if (session->inject_sync_event && msg) {
         size_t size;
         const char *data;
-        status = base_extract_message(msg, &size, &data);
-        if (size && data)
-            signal_Sync_message(session, *rating, data, size);
+        char *sync_fpr = NULL;
+        status = base_extract_message(session, msg, &size, &data, &sync_fpr);
+        const char *fpr = (*keylist && (*keylist)->value) ? (*keylist)->value : sync_fpr;
+        if (size && data && fpr)
+            signal_Sync_message(session, *rating, data, size, fpr);
+        free(sync_fpr);
     }
 
     return status;

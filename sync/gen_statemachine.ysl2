@@ -197,7 +197,8 @@ tstylesheet {
                     PEP_SESSION session, 
                     PEP_rating rating,
                     const char *data,
-                    size_t size
+                    size_t size,
+                    const char *fpr
                 );
 
             #ifdef __cplusplus
@@ -310,7 +311,8 @@ tstylesheet {
                     PEP_SESSION session, 
                     PEP_rating rating,
                     const char *data,
-                    size_t size
+                    size_t size,
+                    const char *fpr
                 )
             {
                 assert(session && data && size);
@@ -337,6 +339,15 @@ tstylesheet {
                         goto the_end;
                 }
 
+                if (session->«yml:lcase(@name)»_state.common.from->fpr)
+                    free(session->«yml:lcase(@name)»_state.common.from->fpr);
+                session->«yml:lcase(@name)»_state.common.from->fpr = strdup(fpr);
+                assert(session->«yml:lcase(@name)»_state.common.from->fpr);
+                if (!session->«yml:lcase(@name)»_state.common.from->fpr) {
+                    status = PEP_OUT_OF_MEMORY;
+                    goto the_end;
+                }
+
                 ev = new_«@name»_event(fsm, event, msg);
                 if (!ev) {
                     status = PEP_OUT_OF_MEMORY;
@@ -349,6 +360,7 @@ tstylesheet {
                     status = PEP_STATEMACHINE_ERROR;
                     goto the_end;
                 }
+
                 return PEP_STATUS_OK;
 
             the_end:
@@ -455,6 +467,7 @@ tstylesheet {
                     switch (message_type) {
                     `` for "fsm/message[@security='unencrypted']" |>>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
                             status = base_prepare_message(
+                                    session,
                                     li->ident,
                                     li->ident,
                                     _data,
@@ -472,6 +485,7 @@ tstylesheet {
 
                         default:
                             status = base_prepare_message(
+                                    session,
                                     li->ident,
                                     li->ident,
                                     _data,
