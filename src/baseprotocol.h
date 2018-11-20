@@ -16,6 +16,7 @@ extern "C" {
 //      msg (inout)     message to decorate
 //      payload (in)    payload to send
 //      size (in)       size of payload
+//      fpr (in)        optional key to sign or NULL
 //
 //  returns:
 //      PEP_STATUS_OK and result on success or an error on failure
@@ -27,7 +28,8 @@ extern "C" {
 PEP_STATUS base_decorate_message(
         message *msg,
         char *payload,
-        size_t size
+        size_t size,
+        char *fpr
     );
 
 
@@ -38,6 +40,7 @@ PEP_STATUS base_decorate_message(
 //      partner (in)    identity to use for the receiver
 //      payload (in)    payload to send
 //      size (in)       size of payload
+//      fpr (in)        optional key to sign or NULL
 //      result (out)    message with payload
 //
 //  returns:
@@ -52,6 +55,7 @@ PEP_STATUS base_prepare_message(
         const pEp_identity *partner,
         char *payload,
         size_t size,
+        char *fpr,
         message **result
     );
 
