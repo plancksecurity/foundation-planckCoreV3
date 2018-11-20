@@ -79,6 +79,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_encrypt_flags_t flags
     );
 
+
 // encrypt_message_and_add_priv_key() - encrypt message in memory, adding an encrypted private
 //                                      key (encrypted separately and sent within the inner message)
 //
@@ -148,6 +149,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
         PEP_enc_format enc_format,
         PEP_encrypt_flags_t flags
     );
+
 
 // MIME_encrypt_message() - encrypt a MIME message, with MIME output
 //
@@ -325,6 +327,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_rating *rating,
         PEP_decrypt_flags_t *flags
 );
+
 
 // MIME_decrypt_message() - decrypt a MIME message, with MIME output
 //
@@ -575,7 +578,6 @@ DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
     PEP_rating x_enc_status,
     PEP_rating *rating
 );
-
 #ifdef __cplusplus
 }
 #endif
