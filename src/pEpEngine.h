@@ -484,6 +484,7 @@ typedef enum _PEP_comm_type {
     PEP_ct_key_expired = 0x04,
     PEP_ct_key_revoked = 0x05,
     PEP_ct_key_b0rken = 0x06,
+    PEP_ct_key_expired_but_confirmed = 0x07, // NOT with confirmed bit. Just retaining info here in case of renewal.
     PEP_ct_my_key_not_included = 0x09,
 
     PEP_ct_security_by_obscurity = 0x0a,

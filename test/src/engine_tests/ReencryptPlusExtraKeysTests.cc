@@ -91,7 +91,7 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     
     // In: extra keys; Out: keys that were used to encrypt this.
     stringlist_t* keys = NULL;
-    PEP_decrypt_flags_t flags;
+    PEP_decrypt_flags_t flags = 0;
     PEP_rating rating;
 
     flags = PEP_decrypt_flag_untrusted_server;

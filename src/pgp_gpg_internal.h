@@ -7,7 +7,7 @@
 
 // init
 
-typedef const char * (*gpgme_check_version_t)(const char*);
+typedef const char * (*gpgme_check_t)(const char*);
 typedef gpgme_error_t (*gpgme_get_engine_info_t)(gpgme_engine_info_t *INFO);
 typedef gpgme_error_t(*gpgme_set_locale_t)(gpgme_ctx_t CTX, int CATEGORY,
     const char *VALUE);
@@ -46,6 +46,8 @@ typedef gpgme_error_t(*gpgme_op_encrypt_sign_t)(gpgme_ctx_t CTX,
 typedef gpgme_error_t(*gpgme_op_encrypt_t)(gpgme_ctx_t CTX,
         gpgme_key_t RECP[], gpgme_encrypt_flags_t FLAGS, gpgme_data_t PLAIN,
         gpgme_data_t CIPHER);
+typedef gpgme_error_t(*gpgme_op_sign_t)(gpgme_ctx_t CTX,
+        gpgme_data_t PLAIN, gpgme_data_t SIG, gpgme_sig_mode_t MODE);        
 typedef gpgme_verify_result_t(*gpgme_op_verify_result_t)(gpgme_ctx_t CTX);
 typedef void(*gpgme_signers_clear_t)(gpgme_ctx_t CTX);
 typedef gpgme_error_t(*gpgme_signers_add_t)(gpgme_ctx_t CTX, const gpgme_key_t KEY);
@@ -100,7 +102,7 @@ typedef gpgme_error_t(*gpgme_set_passphrase_cb_t)(gpgme_ctx_t ctx,
 
 struct gpg_s {
     const char * version;
-    gpgme_check_version_t gpgme_check;
+    gpgme_check_t gpgme_check;
     gpgme_get_engine_info_t gpgme_get_engine_info;
     gpgme_set_locale_t gpgme_set_locale;
     gpgme_new_t gpgme_new;
@@ -122,6 +124,7 @@ struct gpg_s {
     gpgme_op_decrypt_result_t gpgme_op_decrypt_result;
     gpgme_op_encrypt_sign_t gpgme_op_encrypt_sign;
     gpgme_op_encrypt_t gpgme_op_encrypt;
+    gpgme_op_sign_t gpgme_op_sign;    
     gpgme_op_verify_result_t gpgme_op_verify_result;
     gpgme_signers_clear_t gpgme_signers_clear;
     gpgme_signers_add_t gpgme_signers_add;

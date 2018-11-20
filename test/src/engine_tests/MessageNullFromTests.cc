@@ -50,7 +50,7 @@ void MessageNullFromTests::check_message_null_from_no_header_key_unencrypted() {
     string null_from_msg = slurp("test_files/432_no_from_2.eml");
     cout << null_from_msg << endl;
     stringlist_t* keylist = NULL;
-    PEP_decrypt_flags_t flags;
+    PEP_decrypt_flags_t flags = 0;
     PEP_rating rating;
     char* mime_plaintext = NULL;
     char* modified_src = NULL;
@@ -68,7 +68,7 @@ void MessageNullFromTests::check_message_null_from_header_key_unencrypted() {
     string null_from_msg = slurp("test_files/432_no_from.eml");
     cout << null_from_msg << endl;
     stringlist_t* keylist = NULL;
-    PEP_decrypt_flags_t flags;
+    PEP_decrypt_flags_t flags = 0;
     PEP_rating rating;
     char* mime_plaintext = NULL;
     char* modified_src = NULL;
@@ -87,7 +87,7 @@ void MessageNullFromTests::check_message_null_from_encrypted_not_signed() {
     string null_from_msg = slurp("test_files/432_no_from_encrypted_not_signed.eml");
     cout << null_from_msg << endl;
     stringlist_t* keylist = NULL;
-    PEP_decrypt_flags_t flags;
+    PEP_decrypt_flags_t flags = 0;
     PEP_rating rating;
     char* mime_plaintext = NULL;
     char* modified_src = NULL;
@@ -107,7 +107,7 @@ void MessageNullFromTests::check_message_null_from_encrypted_and_signed() {
     string null_from_msg = slurp("test_files/432_no_from_encrypted_and_signed.eml");
     cout << null_from_msg << endl;
     stringlist_t* keylist = NULL;
-    PEP_decrypt_flags_t flags;
+    PEP_decrypt_flags_t flags = 0;
     PEP_rating rating;
     char* mime_plaintext = NULL;
     char* modified_src = NULL;

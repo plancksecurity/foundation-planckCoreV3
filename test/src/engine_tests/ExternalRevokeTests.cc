@@ -297,10 +297,7 @@ void ExternalRevokeTests::check_external_revoke() {
     free_identity(me);
     free_identity(recip1);
     free(uniqname);
-    
-    delete_keypair(session, fprs[0]);    
-    delete_keypair(session, fprs[1]);
-    
+        
     free(fprs[0]);
     free(fprs[1]);
     

@@ -11,6 +11,12 @@
 
 #define _GPGERR(X) ((X) & 0xffffL)
 
+#ifdef NODLSYM
+#define DLOAD(X) gpg.X = X
+#else
+#define DLOAD(X) gpg.X = (X ## _t) (intptr_t) dlsym(gpgme, #X); assert(gpg.X)
+#endif
+
 static void *gpgme;
 static struct gpg_s gpg;
 
@@ -298,18 +304,17 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
             goto pEp_error;
         }
 
+#ifndef NODLSYM
         gpgme = dlopen(LIBGPGME, RTLD_LAZY);
         if (gpgme == NULL) {
             status = PEP_INIT_CANNOT_LOAD_GPGME;
             goto pEp_error;
         }
+#endif
 
         memset(&gpg, 0, sizeof(struct gpg_s));
 
-        gpg.gpgme_get_engine_info
-            = (gpgme_get_engine_info_t) (intptr_t) dlsym(gpgme,
-            "gpgme_get_engine_info");
-        assert(gpg.gpgme_get_engine_info);
+        DLOAD(gpgme_get_engine_info);
 
         gpgme_engine_info_t info;
         int err = gpg.gpgme_get_engine_info(&info);
@@ -325,208 +330,61 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         if (status != PEP_STATUS_OK)
             return status;
 
-        gpg.gpgme_set_locale
-            = (gpgme_set_locale_t) (intptr_t) dlsym(gpgme,
-            "gpgme_set_locale");
-        assert(gpg.gpgme_set_locale);
-
-        gpg.gpgme_check
-            = (gpgme_check_version_t) (intptr_t) dlsym(gpgme,
-            "gpgme_check_version");
+#ifdef NODLSYM
+        gpg.gpgme_check = gpgme_check_version;
+#else
+        gpg.gpgme_check = (gpgme_check_t) (intptr_t) dlsym(gpgme, "gpgme_check_version");
         assert(gpg.gpgme_check);
+#endif
 
-        gpg.gpgme_new
-            = (gpgme_new_t) (intptr_t) dlsym(gpgme, "gpgme_new");
-        assert(gpg.gpgme_new);
-
-        gpg.gpgme_release
-            = (gpgme_release_t) (intptr_t) dlsym(gpgme, "gpgme_release");
-        assert(gpg.gpgme_release);
-
-        gpg.gpgme_set_protocol
-            = (gpgme_set_protocol_t) (intptr_t) dlsym(gpgme,
-            "gpgme_set_protocol");
-        assert(gpg.gpgme_set_protocol);
-
-        gpg.gpgme_set_armor
-            = (gpgme_set_armor_t) (intptr_t) dlsym(gpgme,
-            "gpgme_set_armor");
-        assert(gpg.gpgme_set_armor);
-
-        gpg.gpgme_data_new
-            = (gpgme_data_new_t) (intptr_t) dlsym(gpgme,
-            "gpgme_data_new");
-        assert(gpg.gpgme_data_new);
-
-        gpg.gpgme_data_new_from_mem
-            = (gpgme_data_new_from_mem_t) (intptr_t) dlsym(gpgme,
-            "gpgme_data_new_from_mem");
-        assert(gpg.gpgme_data_new_from_mem);
-
-        gpg.gpgme_data_new_from_cbs
-            = (gpgme_data_new_from_cbs_t) (intptr_t) dlsym(gpgme,
-            "gpgme_data_new_from_cbs");
-        assert(gpg.gpgme_data_new_from_cbs);
-
-        gpg.gpgme_data_release
-            = (gpgme_data_release_t) (intptr_t) dlsym(gpgme,
-            "gpgme_data_release");
-        assert(gpg.gpgme_data_release);
-
-        gpg.gpgme_data_identify
-            = (gpgme_data_identify_t) (intptr_t) dlsym(gpgme,
-            "gpgme_data_identify");
-        assert(gpg.gpgme_data_identify);
-
-        gpg.gpgme_data_seek
-            = (gpgme_data_seek_t) (intptr_t) dlsym(gpgme,
-            "gpgme_data_seek");
-        assert(gpg.gpgme_data_seek);
-
-        gpg.gpgme_data_read
-            = (gpgme_data_read_t) (intptr_t) dlsym(gpgme,
-            "gpgme_data_read");
-        assert(gpg.gpgme_data_read);
-
-        gpg.gpgme_op_decrypt
-            = (gpgme_op_decrypt_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_decrypt");
-        assert(gpg.gpgme_op_decrypt);
-
-        gpg.gpgme_op_verify
-            = (gpgme_op_verify_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_verify");
-        assert(gpg.gpgme_op_verify);
-
-        gpg.gpgme_op_decrypt_verify
-            = (gpgme_op_decrypt_verify_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_decrypt_verify");
-        assert(gpg.gpgme_op_decrypt_verify);
-
-        gpg.gpgme_op_decrypt_result
-            = (gpgme_op_decrypt_result_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_decrypt_result");
-        assert(gpg.gpgme_op_decrypt_result);
-
-        gpg.gpgme_op_encrypt_sign
-            = (gpgme_op_encrypt_sign_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_encrypt_sign");
-        assert(gpg.gpgme_op_encrypt_sign);
-
-        gpg.gpgme_op_encrypt
-            = (gpgme_op_encrypt_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_encrypt");
-        assert(gpg.gpgme_op_encrypt);
-
-        gpg.gpgme_op_verify_result
-            = (gpgme_op_verify_result_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_verify_result");
-        assert(gpg.gpgme_op_verify_result);
-
-        gpg.gpgme_signers_clear
-            = (gpgme_signers_clear_t) (intptr_t) dlsym(gpgme,
-            "gpgme_signers_clear");
-        assert(gpg.gpgme_signers_clear);
-
-        gpg.gpgme_signers_add
-            = (gpgme_signers_add_t) (intptr_t) dlsym(gpgme,
-            "gpgme_signers_add");
-        assert(gpg.gpgme_signers_add);
-
-        gpg.gpgme_set_passphrase_cb
-            = (gpgme_set_passphrase_cb_t) (intptr_t) dlsym(gpgme,
-            "gpgme_set_passphrase_cb");
-        assert(gpg.gpgme_set_passphrase_cb);
-
-        gpg.gpgme_get_key
-            = (gpgme_get_key_t) (intptr_t) dlsym(gpgme, "gpgme_get_key");
-        assert(gpg.gpgme_get_key);
+        DLOAD(gpgme_set_locale);
+        DLOAD(gpgme_new);
+        DLOAD(gpgme_release);
+        DLOAD(gpgme_set_protocol);
+        DLOAD(gpgme_set_armor);
+        DLOAD(gpgme_data_new);
+        DLOAD(gpgme_data_new_from_mem);
+        DLOAD(gpgme_data_new_from_cbs);
+        DLOAD(gpgme_data_release);
+        DLOAD(gpgme_data_identify);
+        DLOAD(gpgme_data_seek);
+        DLOAD(gpgme_data_read);
+        DLOAD(gpgme_op_decrypt);
+        DLOAD(gpgme_op_verify);
+        DLOAD(gpgme_op_decrypt_verify);
+        DLOAD(gpgme_op_decrypt_result);
+        DLOAD(gpgme_op_encrypt_sign);
+        DLOAD(gpgme_op_encrypt);
+        DLOAD(gpgme_op_verify_result);
+        DLOAD(gpgme_signers_clear);
+        DLOAD(gpgme_signers_add);
+        DLOAD(gpgme_set_passphrase_cb);
+        DLOAD(gpgme_get_key);
         
-        #ifdef GPGME_VERSION_NUMBER
-        #if (GPGME_VERSION_NUMBER >= 0x010700)
-                gpg.gpgme_op_createkey
-                    = (gpgme_op_createkey_t) (intptr_t) dlsym(gpgme,
-                    "gpgme_op_createkey");
-                assert(gpg.gpgme_op_createkey);
-                
-                gpg.gpgme_op_createsubkey
-                    = (gpgme_op_createsubkey_t) (intptr_t) dlsym(gpgme,
-                    "gpgme_op_createsubkey");
-                assert(gpg.gpgme_op_createsubkey);
+#ifdef GPGME_VERSION_NUMBER
+#if (GPGME_VERSION_NUMBER >= 0x010700)
+        DLOAD(gpgme_op_createkey);
+        DLOAD(gpgme_op_createsubkey);
+#endif
+#endif
 
-        #endif
-        #endif
-        
-        gpg.gpgme_op_genkey
-            = (gpgme_op_genkey_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_genkey");
-        assert(gpg.gpgme_op_genkey);
-
-        gpg.gpgme_op_genkey_result
-            = (gpgme_op_genkey_result_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_genkey_result");
-        assert(gpg.gpgme_op_genkey_result);
-
-        gpg.gpgme_op_delete = (gpgme_op_delete_t) (intptr_t)
-            dlsym(gpgme, "gpgme_op_delete");
-        assert(gpg.gpgme_op_delete);
-
-        gpg.gpgme_op_import = (gpgme_op_import_t) (intptr_t)
-            dlsym(gpgme, "gpgme_op_import");
-        assert(gpg.gpgme_op_import);
-
-        gpg.gpgme_op_import_result
-            = (gpgme_op_import_result_t) (intptr_t) dlsym(gpgme,
-            "gpgme_op_import_result");
-        assert(gpg.gpgme_op_import_result);
-
-        gpg.gpgme_op_export = (gpgme_op_export_t) (intptr_t)
-            dlsym(gpgme, "gpgme_op_export");
-        assert(gpg.gpgme_op_export);
-
-        gpg.gpgme_set_keylist_mode = (gpgme_set_keylist_mode_t) (intptr_t)
-            dlsym(gpgme, "gpgme_set_keylist_mode");
-        assert(gpg.gpgme_set_keylist_mode);
-
-        gpg.gpgme_get_keylist_mode = (gpgme_get_keylist_mode_t) (intptr_t)
-            dlsym(gpgme, "gpgme_get_keylist_mode");
-        assert(gpg.gpgme_get_keylist_mode);
-
-        gpg.gpgme_op_keylist_start = (gpgme_op_keylist_start_t) (intptr_t)
-            dlsym(gpgme, "gpgme_op_keylist_start");
-        assert(gpg.gpgme_op_keylist_start);
-
-        gpg.gpgme_op_keylist_next = (gpgme_op_keylist_next_t) (intptr_t)
-            dlsym(gpgme, "gpgme_op_keylist_next");
-        assert(gpg.gpgme_op_keylist_next);
-
-        gpg.gpgme_op_keylist_end = (gpgme_op_keylist_end_t) (intptr_t)
-            dlsym(gpgme, "gpgme_op_keylist_end");
-        assert(gpg.gpgme_op_keylist_end);
-
-        gpg.gpgme_op_import_keys = (gpgme_op_import_keys_t) (intptr_t)
-            dlsym(gpgme, "gpgme_op_import_keys");
-        assert(gpg.gpgme_op_import_keys);
-
-        gpg.gpgme_key_ref = (gpgme_key_ref_t) (intptr_t)
-            dlsym(gpgme, "gpgme_key_ref");
-        assert(gpg.gpgme_key_ref);
-
-        gpg.gpgme_key_unref = (gpgme_key_unref_t) (intptr_t)
-            dlsym(gpgme, "gpgme_key_unref");
-        assert(gpg.gpgme_key_unref);
-
-		gpg.gpgme_key_release = (gpgme_key_release_t)(intptr_t)
-			dlsym(gpgme, "gpgme_key_release");
-		assert(gpg.gpgme_key_release);
-
-        gpg.gpgme_op_edit = (gpgme_op_edit_t) (intptr_t)
-            dlsym(gpgme, "gpgme_op_edit");
-        assert(gpg.gpgme_op_edit);
-
-        gpg.gpgme_io_write = (gpgme_io_write_t) (intptr_t)
-            dlsym(gpgme, "gpgme_io_write");
-        assert(gpg.gpgme_io_write);
+        DLOAD(gpgme_op_genkey);
+        DLOAD(gpgme_op_genkey_result);
+        DLOAD(gpgme_op_delete);
+        DLOAD(gpgme_op_import);
+        DLOAD(gpgme_op_import_result);
+        DLOAD(gpgme_op_export);
+        DLOAD(gpgme_set_keylist_mode);
+        DLOAD(gpgme_get_keylist_mode);
+        DLOAD(gpgme_op_keylist_start);
+        DLOAD(gpgme_op_keylist_next);
+        DLOAD(gpgme_op_keylist_end);
+        DLOAD(gpgme_op_import_keys);
+        DLOAD(gpgme_key_ref);
+        DLOAD(gpgme_key_unref);
+		DLOAD(gpgme_key_release);
+        DLOAD(gpgme_op_edit);
+        DLOAD(gpgme_io_write);
 
         gpg.version = gpg.gpgme_check(NULL);
 
@@ -657,8 +515,6 @@ PEP_STATUS pgp_decrypt_and_verify(
                 if (!recipient_keylist) {
                     gpg.gpgme_data_release(plain);
                     gpg.gpgme_data_release(cipher);
-                    if (recipient_keylist)
-                        free_stringlist(recipient_keylist);
                     return PEP_OUT_OF_MEMORY;
                 }
                
@@ -702,7 +558,7 @@ PEP_STATUS pgp_decrypt_and_verify(
                             if (!(*filename_ptr))
                                 result = PEP_OUT_OF_MEMORY;
                         }
-                    }
+                    }                    
                 } /* Ok, so now we have any recipients it was encrypted for
                      in recipient_keylist */
             
@@ -1077,6 +933,143 @@ PEP_STATUS pgp_verify_text(
     return result;
 }
 
+PEP_STATUS pgp_sign_only(    
+    PEP_SESSION session, const char* fpr, const char *ptext,
+    size_t psize, char **stext, size_t *ssize
+)
+{
+    assert(session);
+    assert(fpr && fpr[0]);
+    assert(ptext);
+    assert(psize);
+    assert(stext);
+    assert(ssize);
+
+    PEP_STATUS result;
+    gpgme_error_t gpgme_error;
+    gpgme_data_t plain, signed_text;
+    gpgme_key_t* signer_key_ptr;
+
+    gpgme_sig_mode_t sign_mode = GPGME_SIG_MODE_DETACH;
+       
+    *stext = NULL;
+    *ssize = 0;
+
+    gpgme_error = gpg.gpgme_data_new_from_mem(&plain, ptext, psize, 0);
+    gpgme_error = _GPGERR(gpgme_error);
+    assert(gpgme_error == GPG_ERR_NO_ERROR);
+    if (gpgme_error != GPG_ERR_NO_ERROR) {
+        if (gpgme_error == GPG_ERR_ENOMEM)
+            return PEP_OUT_OF_MEMORY;
+        else
+            return PEP_UNKNOWN_ERROR;
+    }
+
+    gpgme_error = gpg.gpgme_data_new(&signed_text);
+    gpgme_error = _GPGERR(gpgme_error);
+    assert(gpgme_error == GPG_ERR_NO_ERROR);
+    if (gpgme_error != GPG_ERR_NO_ERROR) {
+        gpg.gpgme_data_release(plain);
+        if (gpgme_error == GPG_ERR_ENOMEM)
+            return PEP_OUT_OF_MEMORY;
+        else
+            return PEP_UNKNOWN_ERROR;
+    }
+
+    signer_key_ptr = calloc(1, sizeof(gpgme_key_t));   
+    assert(signer_key_ptr);
+    if (signer_key_ptr == NULL) {
+        gpg.gpgme_data_release(plain);
+        gpg.gpgme_data_release(signed_text);
+        return PEP_OUT_OF_MEMORY;
+    }
+
+    gpg.gpgme_signers_clear(session->ctx);
+
+    // Get signing key
+    gpgme_error = gpg.gpgme_get_key(session->ctx, fpr,
+                                    signer_key_ptr, 0);
+    gpgme_error = _GPGERR(gpgme_error);
+    assert(gpgme_error != GPG_ERR_ENOMEM);
+    gpgme_error_t _gpgme_error;
+    
+    switch (gpgme_error) {
+    case GPG_ERR_ENOMEM:
+        gpg.gpgme_key_unref(*signer_key_ptr);
+        free(signer_key_ptr);
+        gpg.gpgme_data_release(plain);
+        gpg.gpgme_data_release(signed_text);
+        return PEP_OUT_OF_MEMORY;
+    case GPG_ERR_NO_ERROR:
+        _gpgme_error = gpg.gpgme_signers_add(session->ctx, *signer_key_ptr);
+        _gpgme_error = _GPGERR(_gpgme_error);
+        assert(_gpgme_error == GPG_ERR_NO_ERROR);
+        break;
+    case GPG_ERR_EOF:
+        gpg.gpgme_key_unref(*signer_key_ptr);
+        free(signer_key_ptr);
+        gpg.gpgme_data_release(plain);
+        gpg.gpgme_data_release(signed_text);
+        return PEP_KEY_NOT_FOUND;
+    case GPG_ERR_AMBIGUOUS_NAME:
+        gpg.gpgme_key_unref(*signer_key_ptr);
+        free(signer_key_ptr);
+        gpg.gpgme_data_release(plain);
+        gpg.gpgme_data_release(signed_text);
+        return PEP_KEY_HAS_AMBIG_NAME;
+    default: // GPG_ERR_INV_VALUE if CTX or R_KEY is not a valid pointer or
+        // FPR is not a fingerprint or key ID
+        gpg.gpgme_key_unref(*signer_key_ptr);
+        free(signer_key_ptr);
+        gpg.gpgme_data_release(plain);
+        gpg.gpgme_data_release(signed_text);
+        return PEP_GET_KEY_FAILED;
+    }
+ 
+    gpgme_error = gpg.gpgme_op_sign(session->ctx, plain, signed_text, sign_mode);
+
+    gpgme_error = _GPGERR(gpgme_error);
+    switch (gpgme_error) {
+    case GPG_ERR_NO_ERROR:
+    {
+        char *_buffer = NULL;
+        size_t reading;
+        size_t length = gpg.gpgme_data_seek(signed_text, 0, SEEK_END);
+        assert(length != -1);
+        gpg.gpgme_data_seek(signed_text, 0, SEEK_SET);
+
+        // TODO: make things less memory consuming
+        // the following algorithm allocates a buffer for the complete text
+
+        _buffer = malloc(length + 1);
+        assert(_buffer);
+        if (_buffer == NULL) {
+            gpg.gpgme_key_unref(*signer_key_ptr);
+            free(signer_key_ptr);
+            gpg.gpgme_data_release(plain);
+            gpg.gpgme_data_release(signed_text);
+            return PEP_OUT_OF_MEMORY;
+        }
+
+        reading = gpg.gpgme_data_read(signed_text, _buffer, length);
+        assert(length == reading);
+
+        *stext = _buffer;
+        *ssize = reading;
+        (*stext)[*ssize] = 0; // safeguard for naive users
+        result = PEP_STATUS_OK;
+        break;
+    }
+    default:
+        result = PEP_UNKNOWN_ERROR;
+    }
+
+    gpg.gpgme_key_unref(*signer_key_ptr);
+    free(signer_key_ptr);
+    gpg.gpgme_data_release(plain);
+    gpg.gpgme_data_release(signed_text);
+    return result;   
+}
 
 static PEP_STATUS pgp_encrypt_sign_optional(    
     PEP_SESSION session, const stringlist_t *keylist, const char *ptext,
@@ -2125,38 +2118,95 @@ PEP_STATUS pgp_get_key_rating(
         gpg.gpgme_op_keylist_end(session->ctx);
         return PEP_STATUS_OK;
     }
+    
 
+    // N.B. and FIXME 
+    // We could get a key with a bad signing subkey and a good encryption
+    // subkey. For now, we reject this, because it forces large changes in
+    // how we rate keys. It's on the to-do list, but it's low priority.
+    // We don't really want to be doing much for tinkered keys in the first
+    // place.
     switch (gpgme_error) {
     case GPG_ERR_EOF:
         break;
     case GPG_ERR_NO_ERROR:
         assert(key);
         assert(key->subkeys);
-        for (gpgme_subkey_t sk = key->subkeys; sk != NULL; sk = sk->next) {
-            if (sk->length < 1024)
-                *comm_type = PEP_ct_key_too_short;
-            else if (
-                (
-                (sk->pubkey_algo == GPGME_PK_RSA)
-                || (sk->pubkey_algo == GPGME_PK_RSA_E)
-                || (sk->pubkey_algo == GPGME_PK_RSA_S)
-                )
-                && sk->length == 1024
-                )
-                *comm_type = PEP_ct_OpenPGP_weak_unconfirmed;
-
-            if (sk->invalid) {
+        
+        // is main key expired or revoked? If so, we can cut short this nonsense.
+        if (key->invalid)
+            *comm_type = PEP_ct_key_b0rken;
+        else if (key->revoked)
+            *comm_type = PEP_ct_key_revoked;            
+        else if (key->expired)
+            *comm_type = PEP_ct_key_expired;
+        else {
+            // Ok, so we now need to check subkeys. Normally, we could just
+            // shortcut this by looking at key->can_sign and key->can_encrypt,
+            // but we want the REASON we can't use a key, so this gets ugly.
+            PEP_comm_type max_comm_type = *comm_type;
+                        
+            PEP_comm_type best_sign = PEP_ct_no_encryption;
+            PEP_comm_type best_enc = PEP_ct_no_encryption;
+            
+            for (gpgme_subkey_t sk = key->subkeys; sk != NULL; sk = sk->next) {
+                if (sk->can_sign || sk->can_encrypt) {
+                    PEP_comm_type curr_sign = PEP_ct_no_encryption;
+                    PEP_comm_type curr_enc = PEP_ct_no_encryption;
+                    
+                    if (sk->length < 1024) {
+                        if (sk->can_sign)
+                            curr_sign = PEP_ct_key_too_short;
+                        if (sk->can_encrypt)                               
+                            curr_enc = PEP_ct_key_too_short;
+                    }
+                    else if (
+                        ((sk->pubkey_algo == GPGME_PK_RSA)
+                        || (sk->pubkey_algo == GPGME_PK_RSA_E)
+                        || (sk->pubkey_algo == GPGME_PK_RSA_S))
+                        && sk->length == 1024) {
+                        if (sk->can_sign)
+                            curr_sign = PEP_ct_OpenPGP_weak_unconfirmed;
+                        if (sk->can_encrypt)                               
+                            curr_enc = PEP_ct_OpenPGP_weak_unconfirmed;
+                    }
+                    else {
+                        if (sk->can_sign)
+                            curr_sign = max_comm_type;
+                        if (sk->can_encrypt)
+                            curr_enc = max_comm_type;
+                    }
+                    if (sk->invalid) {
+                        if (sk->can_sign)
+                            curr_sign = PEP_ct_key_b0rken;
+                        if (sk->can_encrypt)                               
+                            curr_enc = PEP_ct_key_b0rken;
+                    }
+                    if (sk->expired) {
+                        if (sk->can_sign)
+                            curr_sign = PEP_ct_key_expired;
+                        if (sk->can_encrypt)                               
+                            curr_enc = PEP_ct_key_expired;
+                    }
+                    if (sk->revoked) {
+                        if (sk->can_sign)
+                            curr_sign = PEP_ct_key_revoked;
+                        if (sk->can_encrypt)                               
+                            curr_enc = PEP_ct_key_revoked;
+                    }
+                    if (sk->can_sign)
+                        best_sign = _MAX(curr_sign, best_sign);
+                    if (sk->can_encrypt)
+                        best_enc = _MAX(curr_enc, best_enc);
+                }    
+            }
+            if (best_enc == PEP_ct_no_encryption ||
+                best_sign == PEP_ct_no_encryption) {
                 *comm_type = PEP_ct_key_b0rken;
-                break;
             }
-            if (sk->expired) {
-                *comm_type = PEP_ct_key_expired;
-                break;
-            }
-            if (sk->revoked) {
-                *comm_type = PEP_ct_key_revoked;
-                break;
-            }
+            else {
+                *comm_type = _MIN(best_sign, _MIN(max_comm_type, best_enc));
+            }                
         }
         break;
     case GPG_ERR_ENOMEM:

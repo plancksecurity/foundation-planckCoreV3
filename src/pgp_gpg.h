@@ -99,6 +99,10 @@ PEP_STATUS pgp_encrypt_and_sign(
         size_t *csize
     );
 
+PEP_STATUS pgp_sign_only(
+        PEP_SESSION session, const char* fpr, const char *ptext,
+        size_t psize, char **stext, size_t *ssize
+    );
 
 // pgp_encrypt_only() - encrypt plaintext
 //
