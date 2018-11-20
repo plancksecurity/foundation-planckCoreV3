@@ -7,6 +7,7 @@
 #include "platform.h"
 #include "mime.h"
 #include "blacklist.h"
+#include "baseprotocol.h"
 #include "KeySync_fsm.h"
 #include "base64.h"
 
@@ -3752,11 +3753,12 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     message *msg = *dst ? *dst : src;
 
-    if (session->inject_sync_event && msg && msg->attachments) {
-        for (bloblist_t *bl = msg->attachments; bl ; bl = bl->next) {
-            if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp.sync") == 0)
-                signal_Sync_message(session, *rating, bl->value, bl->size);
-        }
+    if (session->inject_sync_event && msg) {
+        size_t size;
+        const char *data;
+        status = base_extract_message(msg, &size, &data);
+        if (size && data)
+            signal_Sync_message(session, *rating, data, size);
     }
 
     return status;

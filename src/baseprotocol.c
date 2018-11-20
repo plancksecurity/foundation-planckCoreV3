@@ -7,7 +7,8 @@
 PEP_STATUS base_decorate_message(
         message *msg,
         char *payload,
-        size_t size
+        size_t size,
+        char *fpr
     )
 {
     assert(msg);
@@ -22,6 +23,10 @@ PEP_STATUS base_decorate_message(
     if (bl == NULL)
         goto enomem;
 
+    if (fpr) {
+        // add signature
+    }
+
     msg->attachments = bl;
     return PEP_STATUS_OK;
 
@@ -34,6 +39,7 @@ PEP_STATUS base_prepare_message(
         const pEp_identity *partner,
         char *payload,
         size_t size,
+        char *fpr,
         message **result
     )
 {
@@ -75,7 +81,7 @@ PEP_STATUS base_prepare_message(
     if (!msg->longmsg)
         goto enomem;
 
-    status = base_decorate_message(msg, payload, size);
+    status = base_decorate_message(msg, payload, size, fpr);
     if (status == PEP_STATUS_OK)
         *result = msg;
     return status;
@@ -83,5 +89,27 @@ PEP_STATUS base_prepare_message(
 enomem:
     free_message(msg);
     return PEP_OUT_OF_MEMORY;
+}
+
+PEP_STATUS base_extract_message(message *msg, size_t *size, const char **payload)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(msg && size && payload);
+    if (!(msg && size && payload))
+        return PEP_ILLEGAL_VALUE;
+
+    *size = 0;
+    *payload = NULL;
+
+    for (bloblist_t *bl = msg->attachments; bl ; bl = bl->next) {
+        if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp.sync") == 0) {
+            *size = bl->size;
+            *payload = bl->value;
+            break;
+        }
+    }
+
+    return status;
 }
 

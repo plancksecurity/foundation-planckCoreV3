@@ -451,25 +451,38 @@ tstylesheet {
                         goto the_end;
                     }
                     memcpy(_data, data, size);
-                    status = base_prepare_message(
-                            li->ident,
-                            li->ident,
-                            _data,
-                            size,
-                            &_m
-                        );
-                    if (status) {
-                        free(_data);
-                        goto the_end;
-                    }
 
                     switch (message_type) {
                     `` for "fsm/message[@security='unencrypted']" |>>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+                            status = base_prepare_message(
+                                    li->ident,
+                                    li->ident,
+                                    _data,
+                                    size,
+                                    li->ident->fpr,
+                                    &_m
+                                );
+                            if (status) {
+                                free(_data);
+                                goto the_end;
+                            }
                             attach_own_key(session, _m);
                             m = _m;
                             break;
 
                         default:
+                            status = base_prepare_message(
+                                    li->ident,
+                                    li->ident,
+                                    _data,
+                                    size,
+                                    NULL,
+                                    &_m
+                                );
+                            if (status) {
+                                free(_data);
+                                goto the_end;
+                            }
                             status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
                             if (status) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
