@@ -91,3 +91,25 @@ enomem:
     return PEP_OUT_OF_MEMORY;
 }
 
+PEP_STATUS base_extract_message(message *msg, size_t *size, const char **payload)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(msg && size && payload);
+    if (!(msg && size && payload))
+        return PEP_ILLEGAL_VALUE;
+
+    *size = 0;
+    *payload = NULL;
+
+    for (bloblist_t *bl = msg->attachments; bl ; bl = bl->next) {
+        if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp.sync") == 0) {
+            *size = bl->size;
+            *payload = bl->value;
+            break;
+        }
+    }
+
+    return status;
+}
+

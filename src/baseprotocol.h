@@ -60,6 +60,24 @@ PEP_STATUS base_prepare_message(
     );
 
 
+// base_extract_message() - extract a sync message from a pEp message
+//
+//  parameters:
+//      msg (in)        message to analyze
+//      size (out)      size of extracted payload or 0 if not found
+//      payload (out)   extraced payload
+//
+//  returns:
+//      PEP_STATUS_OK and payload == NULL if no sync message
+//      PEP_STATUS_OK and payload, size if sync message found
+//      any other value on error
+//
+//  caveat:
+//      payload may point to msg attachment, the ownership does not change
+
+PEP_STATUS base_extract_message(message *msg, size_t *size, const char **payload);
+
+
 #ifdef __cplusplus
 }
 #endif
