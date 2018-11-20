@@ -625,10 +625,14 @@ tstylesheet {
             switch (event) {
         ||
         if "message[@security='unencrypted']" {
-            |         // these messages are going untested
+            |         // these messages require a detached signature
             for "message[@security='unencrypted']"
                 |>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
             ||
+                        if (!fpr) {
+                            status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
+                            goto the_end;
+                        }
                         break;
 
             ||
@@ -637,7 +641,7 @@ tstylesheet {
         ||
                 // these messages must arrive encrypted
         `` for "message[@security='untrusted']" |>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
-                    if (rating < PEP_rating_reliable) {
+                    if (fpr || rating < PEP_rating_reliable) {
                         status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
                         goto the_end;
                     }
@@ -648,7 +652,7 @@ tstylesheet {
         ||
                 // these messages must come through a trusted channel
         `` for "message[@security='trusted']" |>> case «ancestor::fsm/@name»__payload_PR_«yml:mixedCase(@name)»:
-                    if (rating < PEP_rating_trusted) {
+                    if (fpr || rating < PEP_rating_trusted) {
                         status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
                         goto the_end;
                     }
