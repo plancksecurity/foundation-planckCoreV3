@@ -21,9 +21,9 @@
 
 using namespace std;
 
-DecorateTests::DecorateTests(string suitename, string test_home_dir) : 
-    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {               
-    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("DecorateTests::check_decorate"), 
+DecorateTests::DecorateTests(string suitename, string test_home_dir) :
+    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("DecorateTests::check_decorate"),
                                                                       static_cast<Func>(&DecorateTests::check_decorate)));
 }
 
@@ -41,6 +41,11 @@ void DecorateTests::check_decorate() {
 
     cout << "creating message…\n";
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, "Alice Test");
+    pEp_identity* alice_dup = identity_dup(alice);
+    PEP_STATUS status = set_own_key(session, alice_dup, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    free_identity(alice_dup);
+
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, "42", "Bob Test");
     alice->me = true;
     identity_list* to_list = new_identity_list(bob); // to bob
@@ -58,21 +63,21 @@ void DecorateTests::check_decorate() {
 
     message* encrypted_msg = nullptr;
     cout << "calling encrypt_message\n";
-    PEP_STATUS status = encrypt_message (session, outgoing_message, NULL, &encrypted_msg, PEP_enc_PGP_MIME, 0);
+    status = encrypt_message (session, outgoing_message, NULL, &encrypted_msg, PEP_enc_PGP_MIME, 0);
     cout << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((encrypted_msg), "encrypted_msg");
     cout << "message encrypted.\n";
-    
+
     status = mime_encode_message(encrypted_msg, false, &encoded_text);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((encoded_text), "encoded_text");
-    
+
     bool contains_version = false;
-    
+
     const char* version_str = "X-pEp-Version: ";
     size_t version_prefix_len = strlen(version_str);
-    
+
     istringstream f(encoded_text);
     string enc_string;
     while (getline(f, enc_string)) {
@@ -80,7 +85,7 @@ void DecorateTests::check_decorate() {
             contains_version = true;
     }
     TEST_ASSERT_MSG((contains_version), "contains_version");
-    
+
     if (contains_version)
-        cout << "Version string in encrypted message, as it should be." << endl;    
+        cout << "Version string in encrypted message, as it should be." << endl;
 }

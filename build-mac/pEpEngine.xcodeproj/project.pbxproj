@@ -139,6 +139,8 @@
 		64A826891B455D0800EECAF0 /* trans_auto.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826731B455D0800EECAF0 /* trans_auto.c */; };
 		64A8268A1B455D0800EECAF0 /* transport.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826751B455D0800EECAF0 /* transport.c */; };
 		64A8268C1B455D9D00EECAF0 /* pEpEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = 64A826611B455D0800EECAF0 /* pEpEngine.h */; };
+		C46EBAED216E445F0042A6A3 /* base64.c in Sources */ = {isa = PBXBuildFile; fileRef = C46EBAE7216E445F0042A6A3 /* base64.c */; };
+		C46EBAEE216E445F0042A6A3 /* base64.h in Headers */ = {isa = PBXBuildFile; fileRef = C46EBAEC216E445F0042A6A3 /* base64.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -356,6 +358,8 @@
 		64A826771B455D0800EECAF0 /* wrappers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wrappers.h; path = ../src/wrappers.h; sourceTree = "<group>"; };
 		64DA240C1B832EA0000BEE80 /* netpgp.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = netpgp.xcodeproj; path = "../../netpgp-et/netpgp-xcode/netpgp.xcodeproj"; sourceTree = "<group>"; };
 		64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libetpan.xcodeproj; path = "../../libetpan/build-mac/libetpan.xcodeproj"; sourceTree = "<group>"; };
+		C46EBAE7216E445F0042A6A3 /* base64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = base64.c; path = ../src/base64.c; sourceTree = "<group>"; };
+		C46EBAEC216E445F0042A6A3 /* base64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = base64.h; path = ../src/base64.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -525,6 +529,8 @@
 		64A8264B1B455C5600EECAF0 /* srcref */ = {
 			isa = PBXGroup;
 			children = (
+				C46EBAE7216E445F0042A6A3 /* base64.c */,
+				C46EBAEC216E445F0042A6A3 /* base64.h */,
 				438C43B42167752C00C7425B /* labeled_int_list.c */,
 				438C43AF2167752C00C7425B /* labeled_int_list.h */,
 				438C43962167582400C7425B /* sync_api.h */,
@@ -643,6 +649,7 @@
 				646C410D1D510CD800C63EFF /* der_encoder.h in Headers */,
 				646C41231D510CD800C63EFF /* NativeEnumerated.h in Headers */,
 				646C41071D510CD800C63EFF /* constr_SET_OF.h in Headers */,
+				C46EBAEE216E445F0042A6A3 /* base64.h in Headers */,
 				646C411B1D510CD800C63EFF /* Identity.h in Headers */,
 				646C412B1D510CD800C63EFF /* per_encoder.h in Headers */,
 				646C40F91D510CD800C63EFF /* ber_tlv_length.h in Headers */,
@@ -877,6 +884,7 @@
 				646C412E1D510CD800C63EFF /* per_support.c in Sources */,
 				43F73C0C2166282C00AB4524 /* Sync_event.c in Sources */,
 				64A826781B455D0800EECAF0 /* bloblist.c in Sources */,
+				C46EBAED216E445F0042A6A3 /* base64.c in Sources */,
 				430BCC492015EE800077E998 /* pEp_string.c in Sources */,
 				43F73C00216627CC00AB4524 /* Rollback.c in Sources */,
 				646C41041D510CD800C63EFF /* constr_SEQUENCE.c in Sources */,

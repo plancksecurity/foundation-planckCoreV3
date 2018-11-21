@@ -7,7 +7,9 @@
 #include "platform.h"
 #include "mime.h"
 #include "blacklist.h"
+#include "baseprotocol.h"
 #include "KeySync_fsm.h"
+#include "base64.h"
 
 #include <assert.h>
 #include <string.h>
@@ -2793,7 +2795,7 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                     ptext = NULL;
                 }
                 else {
-                    static const char * const mime_type = "application/octet-stream";
+                    static const char * const mime_type = "application/octet-stream";                    
                     if (pgp_filename) {
                         _m = bloblist_add(_m, ptext, psize, mime_type,
                              pgp_filename);
@@ -3102,6 +3104,28 @@ static char* seek_good_trusted_private_fpr(PEP_SESSION session, char* own_id,
     return NULL;
 }
 
+static bool import_header_keys(PEP_SESSION session, message* src) {
+    stringpair_list_t* header_keys = stringpair_list_find(src->opt_fields, "Autocrypt"); 
+    if (!header_keys || !header_keys->value)
+        return false;
+    const char* value = header_keys->value->value;
+    if (!value)
+        return false;
+    const char* start_key = strstr(value, "keydata=");
+    if (!start_key)
+        return false;
+    start_key += 8; // length of "keydata="
+    int length = strlen(start_key);
+    bloblist_t* the_key = base64_str_to_binary_blob(start_key, length);
+    if (!the_key)
+        return false;
+    PEP_STATUS status = import_key(session, the_key->value, the_key->size, NULL);
+    free_bloblist(the_key);
+    if (status == PEP_STATUS_OK)
+        return true;
+    return false;
+}
+
 PEP_STATUS check_for_own_revoked_key(
         PEP_SESSION session, 
         stringlist_t* keylist,
@@ -3254,7 +3278,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     /*** Begin Import any attached public keys and update identities accordingly ***/
     // Private key in unencrypted mail are ignored -> NULL
     bool imported_keys = import_attached_keys(session, src, NULL);
-
+    import_header_keys(session, src);
+    
     // FIXME: is this really necessary here?
     if (src->from) {
         if (!is_me(session, src->from))
@@ -3262,7 +3287,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         else
             status = myself(session, src->from);
         
-        if (status != PEP_STATUS_OK)
+        // We absolutely should NOT be bailing here unless it's a serious error
+        if (status == PEP_OUT_OF_MEMORY)
             return status;
     }
     
@@ -3723,15 +3749,29 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     if (!(session && src && dst && keylist && rating && flags))
         return PEP_ILLEGAL_VALUE;
 
+    *keylist = NULL;
     PEP_STATUS status = _decrypt_message(session, src, dst, keylist, rating, flags, NULL);
 
     message *msg = *dst ? *dst : src;
 
-    if (session->inject_sync_event && msg && msg->attachments) {
-        for (bloblist_t *bl = msg->attachments; bl ; bl = bl->next) {
-            if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp.sync") == 0)
-                signal_Sync_message(session, *rating, bl->value, bl->size);
+    if (session->inject_sync_event && msg && msg->from) {
+        size_t size;
+        const char *data;
+        char *sync_fpr = NULL;
+        status = base_extract_message(session, msg, &size, &data, &sync_fpr);
+        if (!status && size && data) {
+            pEp_identity *_from = identity_dup(msg->from);
+            if (!_from) {
+                free_message(*dst);
+                *dst = NULL;
+                free_stringlist(*keylist);
+                *keylist = NULL;
+                return PEP_OUT_OF_MEMORY;
+            }
+            memcpy(&session->sync_state.common.from, _from, sizeof(pEp_identity));
+            signal_Sync_message(session, *rating, data, size, sync_fpr);
         }
+        free(sync_fpr);
     }
 
     return status;

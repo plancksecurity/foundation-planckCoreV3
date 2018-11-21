@@ -3869,6 +3869,28 @@ PEP_STATUS encrypt_only(
             keylist, ptext, psize, ctext, csize);
 }
 
+PEP_STATUS sign_only(PEP_SESSION session, 
+                     const char *data, 
+                     size_t data_size, 
+                     const char *fpr, 
+                     char **sign, 
+                     size_t *sign_size) {
+    assert(session);
+    assert(fpr);
+    assert(data);
+    assert(data_size);
+    assert(sign);
+    assert(sign_size);
+
+    if (!(session && fpr && data && data_size && sign && sign_size))
+        return PEP_ILLEGAL_VALUE;
+
+    return session->cryptotech[PEP_crypt_OpenPGP].sign_only(session,
+                                fpr, data, data_size, sign, sign_size);
+                         
+}
+
+
 
 DYNAMIC_API PEP_STATUS verify_text(
     PEP_SESSION session, const char *text, size_t size,

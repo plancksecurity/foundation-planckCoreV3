@@ -484,6 +484,7 @@ typedef enum _PEP_comm_type {
     PEP_ct_key_expired = 0x04,
     PEP_ct_key_revoked = 0x05,
     PEP_ct_key_b0rken = 0x06,
+    PEP_ct_key_expired_but_confirmed = 0x07, // NOT with confirmed bit. Just retaining info here in case of renewal.
     PEP_ct_my_key_not_included = 0x09,
 
     PEP_ct_security_by_obscurity = 0x0a,
@@ -1370,7 +1371,14 @@ PEP_STATUS get_identities_by_main_key_id(
         PEP_SESSION session,
         const char *fpr,
         identity_list **identities);
-
+        
+PEP_STATUS sign_only(PEP_SESSION session, 
+                     const char *data, 
+                     size_t data_size, 
+                     const char *fpr, 
+                     char **sign, 
+                     size_t *sign_size);
+                     
 #ifdef __cplusplus
 }
 #endif
