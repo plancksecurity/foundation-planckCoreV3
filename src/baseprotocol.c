@@ -25,6 +25,9 @@ PEP_STATUS base_decorate_message(
             "application/pEp.sync", "ignore_this_attachment.pEp");
     if (bl == NULL)
         goto enomem;
+    else if (!msg->attachments) {
+        msg->attachments = bl;
+    }
 
     if (fpr) {
         char *sign;
