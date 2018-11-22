@@ -3749,16 +3749,29 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     if (!(session && src && dst && keylist && rating && flags))
         return PEP_ILLEGAL_VALUE;
 
+    *keylist = NULL;
     PEP_STATUS status = _decrypt_message(session, src, dst, keylist, rating, flags, NULL);
 
     message *msg = *dst ? *dst : src;
 
-    if (session->inject_sync_event && msg) {
+    if (session->inject_sync_event && msg && msg->from) {
         size_t size;
         const char *data;
-        status = base_extract_message(msg, &size, &data);
-        if (size && data)
-            signal_Sync_message(session, *rating, data, size);
+        char *sync_fpr = NULL;
+        status = base_extract_message(session, msg, &size, &data, &sync_fpr);
+        if (!status && size && data) {
+            pEp_identity *_from = identity_dup(msg->from);
+            if (!_from) {
+                free_message(*dst);
+                *dst = NULL;
+                free_stringlist(*keylist);
+                *keylist = NULL;
+                return PEP_OUT_OF_MEMORY;
+            }
+            memcpy(&session->sync_state.common.from, _from, sizeof(pEp_identity));
+            signal_Sync_message(session, *rating, data, size, sync_fpr);
+        }
+        free(sync_fpr);
     }
 
     return status;
