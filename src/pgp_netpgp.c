@@ -778,10 +778,9 @@ PEP_STATUS pgp_sign_only(
     pgp_keyring_t *snrs;
 
     PEP_STATUS result;
-    const stringlist_t *_keylist;
 
     assert(session);
-    assert(keylist);
+    assert(fpr);
     assert(ptext);
     assert(psize);
     assert(stext);
@@ -797,14 +796,13 @@ PEP_STATUS pgp_sign_only(
     *stext = NULL;
     *ssize = 0;
 
-    if ((snrs = calloc(1, sizeof(*rcpts))) == NULL) {
+    if ((snrs = calloc(1, sizeof(*snrs))) == NULL) {
         result = PEP_OUT_OF_MEMORY;
         goto unlock_netpgp;
     }
     
     assert(fpr && fpr[0]);
 
-    const pgp_key_t *key;
     uint8_t uint_fpr[PGP_FINGERPRINT_SIZE];
     size_t fprlen;
     unsigned from = 0;
@@ -847,7 +845,6 @@ PEP_STATUS pgp_sign_only(
 
     const char *_stext;
     size_t _ssize;
-    unsigned encrypt_raw_packet;
    
     // Sign data
     signedmem = pgp_sign_buf(netpgp.io, ptext, psize, seckey,
@@ -873,7 +870,7 @@ PEP_STATUS pgp_sign_only(
         goto free_signedmem;
     }
 
-    memcpy(_buffer, pgp_mem_data(_stext), _ssize);
+    memcpy(_buffer, _stext, _ssize);
     *stext = _buffer;
     *ssize = _ssize;
     (*stext)[*ssize] = 0; // safeguard for naive users
