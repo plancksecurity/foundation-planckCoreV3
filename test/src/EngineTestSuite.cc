@@ -96,10 +96,12 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
     
     set_my_name();
 
+#ifndef NETPGP
     success = system("gpgconf --kill all");
     if (success != 0)
         throw std::runtime_error("SETUP: Error when executing 'gpgconf --kill all'.");
  //   sleep(1); // hopefully enough time for the system to recognise that it is dead. *sigh*    
+#endif
 
     if (stat(test_home.c_str(), &dirchk) == 0) {
         if (!S_ISDIR(dirchk.st_mode))
@@ -133,7 +135,11 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
 
     // TODO: This is *nix specific, which the current testing env is anyway,
     // but it needn't remain so forever and always
+#ifndef NETPGP
     char* tmp = getenv("GNUPGHOME");
+#else
+    char* tmp = strdup()
+#endif    
     if (tmp)
         prev_gpg_home = tmp;
         

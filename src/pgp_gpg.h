@@ -25,6 +25,10 @@ PEP_STATUS pgp_encrypt_only(
         size_t psize, char **ctext, size_t *csize
     );
 
+PEP_STATUS pgp_sign_only(
+        PEP_SESSION session, const char* fpr, const char *ptext,
+        size_t psize, char **stext, size_t *ssize
+    );
 
 PEP_STATUS pgp_verify_text(
         PEP_SESSION session, const char *text, size_t size,
