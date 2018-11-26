@@ -3768,7 +3768,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                 *keylist = NULL;
                 return PEP_OUT_OF_MEMORY;
             }
-            memcpy(&session->sync_state.common.from, _from, sizeof(pEp_identity));
+            session->sync_state.common.from = _from;
             signal_Sync_message(session, *rating, data, size, sync_fpr);
         }
         free(sync_fpr);

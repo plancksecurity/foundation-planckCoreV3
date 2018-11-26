@@ -127,6 +127,7 @@ PEP_STATUS base_extract_message(
 
     *size = 0;
     *payload = NULL;
+    *fpr = NULL;
 
     const char *_payload = NULL;
     size_t _payload_size = 0;
@@ -160,6 +161,7 @@ PEP_STATUS base_extract_message(
     if (!(_payload && _payload_size))
         goto the_end;
 
+    char *_fpr = NULL;
     if (_sign) {
         status = verify_text(session, _payload, _payload_size, _sign, _sign_size, &keylist);
         if (status != PEP_VERIFIED || !keylist || !keylist->value) {
@@ -168,7 +170,7 @@ PEP_STATUS base_extract_message(
             goto the_end;
         }
 
-        char *_fpr = strdup(keylist->value);
+        _fpr = strdup(keylist->value);
         assert(_fpr);
         if (!_fpr) {
             status = PEP_OUT_OF_MEMORY;
@@ -178,6 +180,7 @@ PEP_STATUS base_extract_message(
 
     *size = _payload_size;
     *payload = _payload;
+    *fpr = _fpr;
     status = PEP_STATUS_OK;
 
 the_end:
