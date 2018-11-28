@@ -145,7 +145,8 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
 
     TEST_ASSERT_MSG(decrypted_text, "No decrypted text");
     TEST_ASSERT_MSG(rating, "No rating. FIXME: what???");
-
+    TEST_ASSERT_MSG(modified_src != NULL, "No reeencrypted text!");
+    
     free(decrypted_text);
     decrypted_text = nullptr;
 
