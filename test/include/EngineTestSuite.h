@@ -23,7 +23,7 @@ class EngineTestSuite : public Test::Suite {
         PEP_SESSION session;
         string test_home;
         string real_home;
-        string prev_gpg_home;
+        string prev_pgp_home;
         string name;
         
         string current_test_name;
