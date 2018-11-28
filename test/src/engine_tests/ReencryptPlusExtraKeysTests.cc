@@ -224,11 +224,11 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
                                   &flags,
                                   &modified_src);
 
-    cout << decrypted_text << endl;
+    cout << (decrypted_text ? decrypted_text : "No decrypted text") << endl;
     cout << "Status is " << tl_status_string(status) << endl;
 
     cout << "1";
-    TEST_ASSERT_MSG(decrypted_text, "No decrypted test");
+    TEST_ASSERT_MSG(decrypted_text != NULL, "No decrypted test");
     cout << "2";
     TEST_ASSERT_MSG(rating, "No rating. FIXME: what???");
     cout << "3";
@@ -263,7 +263,7 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     cout << decrypted_text << endl;
     cout << "Status is " << tl_status_string(status) << endl;
 
-    TEST_ASSERT_MSG(decrypted_text, "No decrypted test");
+    TEST_ASSERT_MSG(decrypted_text != NULL, "No decrypted test");
     TEST_ASSERT_MSG(rating, "No rating. FIXME: what???");
 
     free(decrypted_text);
