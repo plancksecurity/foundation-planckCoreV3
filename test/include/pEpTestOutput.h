@@ -5,6 +5,7 @@
 #include <cpptest.h>
 #include <vector>
 #include <string>
+#include <utility>
 
 namespace Test {
     class pEpTestOutput : public Output {
@@ -37,7 +38,7 @@ namespace Test {
             std::string _suite_name;
             std::string _test_name;
             std::vector<Source> _test_errors;
-            
+            std::vector<std::pair<std::string,Source>> _all_errors;            
     };
 }
 #endif
