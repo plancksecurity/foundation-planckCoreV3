@@ -34,6 +34,9 @@ endif
 
 ifeq ($(OPENPGP),NETPGP)
 	LDLIBS+= -lnetpgp
+ifeq ($(BUILD_FOR),Linux)
+	LDLIBS+= -ltre
+endif
 endif
 
 ifdef SQLITE3_FROM_OS

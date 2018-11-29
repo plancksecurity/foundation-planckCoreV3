@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <cstring>
+#include <utility>
 
 #include "pEpTestOutput.h"
 using namespace std;
@@ -36,6 +37,18 @@ namespace Test {
         int remlen = 56 - finalstr.size();
         cout << left << setw(finalstr.size()) << finalstr << right << setw(remlen) << "+" << endl;
         cout << alt_sepline << endl;
+        cout << med_sepline;        
+        cout << "Error recap:" << endl;
+        vector<std::pair<string,Source>>::iterator it;
+        for (it = _all_errors.begin(); it != _all_errors.end(); it++) {
+            std::pair<string,Source> err = *it;
+            cout << lil_sepline;
+            cout << left << setw(10) << "Test name: " << err.first << endl;
+            Source src = err.second;
+            cout << left << setw(25) << "*** Assert location: " << src.file() << ":" << src.line() << endl;
+            cout << left << setw(25) << "*** Message: " << src.message() << endl;
+        }
+        cout << med_sepline << endl << endl;        
 	}
 	
 	void pEpTestOutput::suite_start(int tests, const string& name) {
@@ -72,6 +85,7 @@ namespace Test {
     }
     void pEpTestOutput::test_end(const string& name, bool ok, const Test::Time&) {
 	    if (!ok) {
+            std::pair<string,Source> test_error_set;
             _suite_failed++;
             _total_failed++;
             cout << endl << endl << alt_sepline;
@@ -81,7 +95,10 @@ namespace Test {
                 Source src = *it;
                 cout << lil_sepline;
                 cout << left << setw(25) << "*** Assert location: " << src.file() << ":" << src.line() << endl;
-                cout << left << setw(25) << "*** Message: " << src.message() << endl;                
+                cout << left << setw(25) << "*** Message: " << src.message() << endl;
+                test_error_set.first = name;
+                test_error_set.second = src;
+                _all_errors.push_back(test_error_set);                
             }
             cout << alt_sepline << endl;
         }
