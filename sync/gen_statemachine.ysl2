@@ -701,7 +701,7 @@ tstylesheet {
             event = Init;
         }
         else if (next_state < None) {
-            return PEP_STATEMACHINE_ERROR - state;
+            return PEP_STATEMACHINE_ERROR - next_state;
         }
         break;
     }
