@@ -98,10 +98,12 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
     
     set_my_name();
 
+#ifndef USE_NETPGP
     success = system("gpgconf --kill all");
     if (success != 0)
         throw std::runtime_error("SETUP: Error when executing 'gpgconf --kill all'.");
  //   sleep(1); // hopefully enough time for the system to recognise that it is dead. *sigh*    
+#endif
 
     if (stat(test_home.c_str(), &dirchk) == 0) {
         if (!S_ISDIR(dirchk.st_mode))
@@ -110,7 +112,6 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
         struct stat buf;
 
         if (stat(test_home.c_str(), &buf) == 0) {
-//            cout << test_home << " exists. We'll recursively delete. We hope we're not horking your whole system..." << endl;
             int success = nftw((test_home + "/.").c_str(), util_delete_filepath, 100, FTW_DEPTH);
         }
     }
@@ -133,36 +134,43 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
     if (errchk != 0)
         throw std::runtime_error("Error creating a test directory.");
 
+
     // TODO: This is *nix specific, which the current testing env is anyway,
     // but it needn't remain so forever and always
-    char* tmp = getenv("GNUPGHOME");
+
+    string home = getenv("HOME");
+
+    char* tmp = NULL;
+    
+    tmp = getenv("GNUPGHOME");
+
+    prev_pgp_home.clear();
+    
     if (tmp)
-        prev_gpg_home = tmp;
+        prev_pgp_home = tmp;
         
     if (temp_test_home.empty())
         throw std::runtime_error("SETUP: BAD INITIALISATION. No test home.");
-
     
-    string home = getenv("HOME");
     assert(temp_test_home.compare(home) != 0);
     assert(temp_test_home.compare(home + "/") != 0);
     assert(temp_test_home.compare(home + "/.gnupg") != 0); // This is an EXCLUSION test, so we leave this.
     assert(temp_test_home.compare(home + ".gnupg") != 0);
     assert(temp_test_home.compare(home + "/gnupg") != 0);
     assert(temp_test_home.compare(home + "gnupg") != 0);
-    assert(temp_test_home.compare(prev_gpg_home) != 0);
-    assert(temp_test_home.compare(prev_gpg_home + "/gnupg") != 0);
-    assert(temp_test_home.compare(prev_gpg_home + "gnupg") != 0);
-    assert(temp_test_home.compare(prev_gpg_home + "/.gnupg") != 0);
-    assert(temp_test_home.compare(prev_gpg_home + ".gnupg") != 0);
+    assert(temp_test_home.compare(prev_pgp_home) != 0);
+    assert(temp_test_home.compare(prev_pgp_home + "/gnupg") != 0);
+    assert(temp_test_home.compare(prev_pgp_home + "gnupg") != 0);
+    assert(temp_test_home.compare(prev_pgp_home + "/.gnupg") != 0);
+    assert(temp_test_home.compare(prev_pgp_home + ".gnupg") != 0);
 
     if (temp_test_home.compare(home) == 0 || temp_test_home.compare(home + "/") == 0 ||
         temp_test_home.compare(home + "/gnupg") == 0 || temp_test_home.compare(home + "gnupg") == 0 ||
         temp_test_home.compare(home + "/.gnupg") == 0 || temp_test_home.compare(home + ".gnupg") == 0 ||
-        temp_test_home.compare(prev_gpg_home) == 0 || temp_test_home.compare(prev_gpg_home + "/gnupg") == 0 ||
-        temp_test_home.compare(prev_gpg_home + "gnupg") == 0 || temp_test_home.compare(prev_gpg_home + "/.gnupg") == 0 ||
-        temp_test_home.compare(prev_gpg_home + ".gnupg") == 0)
-        throw std::runtime_error("SETUP: new GNUPGHOME threatens to mess up user GNUPGHOME (and delete all their keys). NO DICE.");
+        temp_test_home.compare(prev_pgp_home) == 0 || temp_test_home.compare(prev_pgp_home + "/gnupg") == 0 ||
+        temp_test_home.compare(prev_pgp_home + "gnupg") == 0 || temp_test_home.compare(prev_pgp_home + "/.gnupg") == 0 ||
+        temp_test_home.compare(prev_pgp_home + ".gnupg") == 0)
+        throw std::runtime_error("SETUP: new pgp homedir threatens to mess up user pgp homedir (and delete all their keys). NO DICE.");
     
 //    cout << "Ok - checked if new test home will be safe. We'll try and make the directory, deleting it if it has already exists." << endl;
     cout << "Test home directory is " << temp_test_home << endl;
@@ -207,11 +215,15 @@ void EngineTestSuite::restore_full_env() {
     release(session);
     session = NULL;
         
-    int success = system("gpgconf --kill all");
+    int success = 0;    
+
+#ifndef USE_NETPGP        
+    success = system("gpgconf --kill all");
     if (success != 0)
         throw std::runtime_error("RESTORE: Error when executing 'gpgconf --kill all'.");
+#endif
 
-    success = setenv("GNUPGHOME", prev_gpg_home.c_str(), 1);
+    success = setenv("GNUPGHOME", prev_pgp_home.c_str(), 1);
     if (success != 0)
         throw std::runtime_error("RESTORE: Warning - cannot restore GNUPGHOME. Either set environment variable manually back to your home, or quit this session!");
                 

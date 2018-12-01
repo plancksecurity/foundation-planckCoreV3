@@ -28,7 +28,7 @@ MessageTwoPointOhTests::MessageTwoPointOhTests(string suitename, string test_hom
 
 void MessageTwoPointOhTests::check_message_two_point_oh() {
 
-    PEP_comm_type carol_comm_type = PEP_ct_OpenPGP_unconfirmed;
+    PEP_comm_type carol_comm_type = PEP_ct_pEp;
 
     // message_api test code
 

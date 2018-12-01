@@ -109,11 +109,10 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     cout << decrypted_text << endl;
 
     cout << "Status is " << tl_status_string(status) << endl;
-    TEST_ASSERT_MSG(decrypted_text, "No decrypted test");
-    TEST_ASSERT_MSG(rating, "No rating. FIXME: what???");
+    TEST_ASSERT_MSG(decrypted_text != NULL, "No decrypted test");
     TEST_ASSERT_MSG((flags & PEP_decrypt_flag_src_modified) == 0, "Source was modified, but shouldn't have been.");
     
-    TEST_ASSERT_MSG(!modified_src, "Modified source was returned, but should not have been generated");
+    TEST_ASSERT_MSG(modified_src == NULL, "Modified source was returned, but should not have been generated");
     //cout << modified_src << endl;
     
     free(decrypted_text);
@@ -143,9 +142,9 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     cout << "Status is " << tl_status_string(status) << endl;
 
 
-    TEST_ASSERT_MSG(decrypted_text, "No decrypted text");
-    TEST_ASSERT_MSG(rating, "No rating. FIXME: what???");
-
+    TEST_ASSERT_MSG(decrypted_text != NULL, "No decrypted text");
+    TEST_ASSERT_MSG(modified_src != NULL, "No reeencrypted text!");
+    
     free(decrypted_text);
     decrypted_text = nullptr;
 
@@ -224,18 +223,12 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
                                   &flags,
                                   &modified_src);
 
-    cout << decrypted_text << endl;
+    cout << (decrypted_text ? decrypted_text : "No decrypted text") << endl;
     cout << "Status is " << tl_status_string(status) << endl;
 
-    cout << "1";
-    TEST_ASSERT_MSG(decrypted_text, "No decrypted test");
-    cout << "2";
-    TEST_ASSERT_MSG(rating, "No rating. FIXME: what???");
-    cout << "3";
+    TEST_ASSERT_MSG(decrypted_text != NULL, "No decrypted test");
     TEST_ASSERT_MSG((flags & PEP_decrypt_flag_src_modified) == 0, "Source was modified, but shouldn't have been.");
-    cout << "4";    
-    TEST_ASSERT_MSG(!modified_src, "Modified source was returned, but should not have been generated");
-    cout << "5";
+    TEST_ASSERT_MSG(modified_src == NULL, "Modified source was returned, but should not have been generated");
 
     free(decrypted_text);
     decrypted_text = nullptr;
@@ -263,8 +256,8 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     cout << decrypted_text << endl;
     cout << "Status is " << tl_status_string(status) << endl;
 
-    TEST_ASSERT_MSG(decrypted_text, "No decrypted test");
-    TEST_ASSERT_MSG(rating, "No rating. FIXME: what???");
+    TEST_ASSERT_MSG(decrypted_text != NULL, "No decrypted test");
+    TEST_ASSERT_MSG(modified_src != NULL, "No reeencrypted text!");
 
     free(decrypted_text);
     decrypted_text = nullptr;
@@ -350,10 +343,9 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     cout << decrypted_text << endl;
     cout << "Status is " << tl_status_string(status) << endl;
 
-    TEST_ASSERT_MSG(decrypted_text, "No decrypted test");
-    TEST_ASSERT_MSG(rating, "No rating. FIXME: what???");
+    TEST_ASSERT_MSG(decrypted_text != NULL, "No decrypted test");
     TEST_ASSERT_MSG((flags & PEP_decrypt_flag_src_modified) == 0, "Source was modified, but shouldn't have been.");    
-    TEST_ASSERT_MSG(!modified_src, "Modified source was returned, but should not have been generated");
+    TEST_ASSERT_MSG(modified_src == NULL, "Modified source was returned, but should not have been generated");
 
     free(decrypted_text);
     decrypted_text = nullptr;
@@ -381,8 +373,7 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     cout << decrypted_text << endl;
     cout << "Status is " << tl_status_string(status) << endl;
 
-    TEST_ASSERT_MSG(decrypted_text, "No decrypted test");
-    TEST_ASSERT_MSG(rating, "No rating. FIXME: what???");
+    TEST_ASSERT_MSG(decrypted_text != NULL, "No decrypted test");
 
     free(decrypted_text);
     decrypted_text = nullptr;
