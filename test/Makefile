@@ -17,13 +17,14 @@ SRCS := $(wildcard src/*.cc) $(wildcard src/*/*.cc)
 OBJS := $(addsuffix .o,$(basename $(SRCS)))
 DEPS := $(OBJS:.o=.d)
 
-INC_DIRS := ./include /usr/local/include 
+INC_DIRS := ./include /usr/local/include ../src ../sync ../asn.1
 INC_FLAGS := $(addprefix -I,$(INC_DIRS)) $(GPGME_INC) $(CPPUNIT_INC)
 
 LDFLAGS += -L/usr/local/lib
 
 CFLAGS += -Wno-deprecated
 CXXFLAGS += -Wno-deprecated
+CFLAGS:=$(filter-out -Wall,$(CFLAGS))
 
 LDFLAGS+= $(ETPAN_LIB) $(CPPUNIT_LIB) -L../asn.1 -L../src
 LDLIBS+= -letpan -lpEpEngine -lstdc++ -lasn1
@@ -34,6 +35,7 @@ endif
 
 ifeq ($(OPENPGP),NETPGP)
 	LDLIBS+= -lnetpgp
+	CFLAGS+= -DUSE_NETPGP
 ifeq ($(BUILD_FOR),Linux)
 	LDLIBS+= -ltre
 endif
@@ -88,8 +90,11 @@ CPPFLAGS += $(INC_FLAGS) -MMD -MP
 
 all: suitemaker $(TARGET) test_home_ scripts
 	
+%.o: %.cc
+	$(CXX) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
+
 $(TARGET): $(OBJS)
-	$(CXX) $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LDFLAGS) $(LDLIBS) -o $@
+	$(CXX) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LDFLAGS) $(LDLIBS) -o $@
 
 .PHONY: suitemaker
 suitemaker:

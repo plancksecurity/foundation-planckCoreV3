@@ -16,7 +16,7 @@ namespace Test {
         cout << setw(width);
         if (num_tests) {
             double percentage = ((num_tests - failures) / (double)num_tests) * 100;
-            cout << std::fixed << setprecision(1) << percentage << "\%"; 
+            cout << std::fixed << setprecision(1) << percentage << "%"; 
         }
         else 
             cout << "N/A";
