@@ -5,11 +5,11 @@
 #define LEAST_COMMON_DENOM_COLOR_H
 
 #include <string>
-#include "EngineTestSessionSuite.h"
+#include "EngineTestIndividualSuite.h"
 
 using namespace std;
 
-class LeastCommonDenomColorTests : public EngineTestSessionSuite {
+class LeastCommonDenomColorTests : public EngineTestIndividualSuite {
     public:
         LeastCommonDenomColorTests(string test_suite, string test_home_dir);
     private:

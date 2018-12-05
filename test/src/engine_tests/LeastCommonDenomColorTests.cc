@@ -14,13 +14,13 @@
 #include "test_util.h"
 
 #include <cpptest.h>
-#include "EngineTestSessionSuite.h"
+#include "EngineTestIndividualSuite.h"
 #include "LeastCommonDenomColorTests.h"
 
 using namespace std;
 
 LeastCommonDenomColorTests::LeastCommonDenomColorTests(string suitename, string test_home_dir) :
-    EngineTestSessionSuite::EngineTestSessionSuite(suitename, test_home_dir) {
+    EngineTestIndividualSuite::EngineTestIndividualSuite(suitename, test_home_dir) {
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("LeastCommonDenomColorTests::check_least_common_denom_color"),
                                                                       static_cast<Func>(&LeastCommonDenomColorTests::check_least_common_denom_color)));
 }

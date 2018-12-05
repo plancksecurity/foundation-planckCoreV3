@@ -1228,12 +1228,22 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
 
     if (!(session && ident && ident->fpr))
         return PEP_ILLEGAL_VALUE;
-            
-        // See if key is revoked already
+
+    bool has_private = false;
+    
+    status = contains_priv_key(session, ident->fpr, &has_private);        
+
+    if (status != PEP_STATUS_OK && status != PEP_KEY_NOT_FOUND)
+        return status;
+        
+    // See if key is revoked already
+    if (has_private) {
         bool revoked = false;
         status = key_revoked(session, ident->fpr, &revoked);
+
         if (!revoked)
             revoke_key(session, ident->fpr, NULL);
+    }            
             
     // double-check to be sure key is even in the DB
     if (ident->fpr)

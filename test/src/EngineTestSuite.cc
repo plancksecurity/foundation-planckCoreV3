@@ -10,8 +10,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#import <string>
-#import <vector>
+#include <string>
+#include <vector>
 #include <utility>
 
 #include "platform_unix.h"
