@@ -473,6 +473,9 @@ void KeyResetMessageTests::check_receive_message_to_revoked_key_from_contact() {
     );
     TEST_ASSERT(int_result == SQLITE_OK);
 
+    // FIXME: longer term we need to fix the test, but the key attached to the message below has expired, so for now, we give her a new key
+    slurp_and_import_key(session, "test_keys/pub/pep-test-gabrielle-0xE203586C_pub.asc");
+
     status = key_reset(session, alice_fpr, from_ident);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     TEST_ASSERT(m_queue.size() == 0);
