@@ -380,6 +380,9 @@ DYNAMIC_API PEP_STATUS key_reset(
                     break;                    
             }
         }
+        else if (status == PEP_CANNOT_FIND_IDENTITY) // not an error
+            status = PEP_STATUS_OK;
+            
         goto pEp_free;
     }
     else { // an identity was specified.       

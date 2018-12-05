@@ -42,6 +42,9 @@ KeyResetMessageTests::KeyResetMessageTests(string suitename, string test_home_di
                                                                       static_cast<Func>(&KeyResetMessageTests::check_receive_message_to_revoked_key_from_unknown)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_receive_message_to_revoked_key_from_contact"),
                                                                       static_cast<Func>(&KeyResetMessageTests::check_receive_message_to_revoked_key_from_contact)));                                                                      
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_multiple_resets_single_key"),
+                                                                      static_cast<Func>(&KeyResetMessageTests::check_multiple_resets_single_key)));                                                                      
+                                                                      
     fake_this = this;                                                                  
     
     cached_messageToSend = &KeyResetMessageTests::message_send_callback;
@@ -510,5 +513,26 @@ void KeyResetMessageTests::check_receive_message_to_revoked_key_from_contact() {
         TEST_ASSERT(keylist->next->next && 
                     strcmp(keylist->next->value, 
                            "906C9B8349954E82C5623C3C8C541BD4E203586C") == 0);
-    TEST_ASSERT(true);
+
+}
+
+void KeyResetMessageTests::check_multiple_resets_single_key() {
+    send_setup();
+    
+    pEp_identity* from_ident = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
+    PEP_STATUS status = myself(session, from_ident); 
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    TEST_ASSERT_MSG(from_ident->fpr && strcasecmp(from_ident->fpr, alice_fpr) == 0,
+                    from_ident->fpr);
+    TEST_ASSERT(from_ident->me);
+
+    status = key_reset(session, NULL, NULL);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    
+    status = key_reset(session, NULL, NULL);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    
+    status = myself(session, from_ident);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(from_ident->fpr != NULL && from_ident->fpr[0] != 0);
 }
