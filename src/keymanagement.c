@@ -1442,10 +1442,10 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
         if (status != PEP_STATUS_OK && status != PEP_KEY_NOT_FOUND)
             goto pep_free;
             
-        if (has_private) {
-            status = set_own_key(session, ident_copy, ident->fpr); 
-            goto pep_free;
-        }
+        // if (has_private) {
+        //     status = set_own_key(session, ident_copy, ident->fpr); 
+        //     goto pep_free;
+        // }
     }
     
     // Either it's not me, or it's me but the key has no private key. 
