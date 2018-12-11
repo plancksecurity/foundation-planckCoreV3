@@ -2290,7 +2290,8 @@ static PEP_STATUS _get_detached_signature(message* msg,
     *signature_blob = NULL;
 
     while (attach_curr) {
-        if (strcasecmp(attach_curr->mime_type, "application/pgp-signature") == 0) {
+        if (attach_curr->mime_type &&
+            (strcasecmp(attach_curr->mime_type, "application/pgp-signature") == 0)) {
             *signature_blob = attach_curr;
             break;
         }
