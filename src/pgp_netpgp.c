@@ -774,8 +774,14 @@ PEP_STATUS pgp_sign_only(
     pgp_key_t *signer = NULL;
     pgp_seckey_t *seckey = NULL;
     pgp_memory_t *signedmem = NULL;
+    pgp_memory_t *text = NULL;
+	pgp_output_t *output;
+    
     const char *hashalg;
     pgp_keyring_t *snrs;
+
+	pgp_create_sig_t	*sig;
+	uint8_t	keyid[PGP_KEY_ID_SIZE];
 
     PEP_STATUS result;
 
@@ -808,14 +814,14 @@ PEP_STATUS pgp_sign_only(
     unsigned from = 0;
 
     if (str_to_fpr(fpr, uint_fpr, &fprlen)) {
-        if ((signer = (pgp_key_t *)pgp_getkeybyfpr(netpgp.io, netpgp.pubring,
+        if ((signer = (pgp_key_t *)pgp_getkeybyfpr(netpgp.io, netpgp.secring,
                                                 uint_fpr, fprlen, &from, NULL,
                                                 /* reject revoked and expired */
                                                 1,1)) == NULL) {
             result = PEP_KEY_NOT_FOUND;
             goto free_snrs;
         }
-    }else{
+    } else{
         result = PEP_ILLEGAL_VALUE;
         goto free_snrs;
     }
@@ -842,25 +848,41 @@ PEP_STATUS pgp_sign_only(
     }
 
     hashalg = netpgp_getvar(&netpgp, "hash");
-
+    
     const char *_stext;
     size_t _ssize;
-   
-    // Sign data
-    signedmem = pgp_sign_buf(netpgp.io, ptext, psize, seckey,
-                time(NULL), /* birthtime */
-                0 /* duration */,
-                hashalg,
-                1 /* armored */,
-                0 /* cleartext */);
 
+	text = pgp_memory_new();
+    pgp_memory_add(text, (const uint8_t*)ptext, psize);
+
+    pgp_setup_memory_write(&output, &signedmem, psize);
+	pgp_writer_push_armor_msg(output);
+
+    pgp_hash_alg_t hash_alg = pgp_str_to_hash_alg(hashalg);
+    
+	sig = pgp_create_sig_new();
+	pgp_start_sig(sig, seckey, hash_alg, PGP_SIG_BINARY);
+
+	pgp_sig_add_data(sig, pgp_mem_data(text), pgp_mem_len(text));
+	pgp_memory_free(text);
+
+	pgp_add_creation_time(sig, time(NULL));
+	pgp_add_sig_expiration_time(sig, 0);
+	pgp_keyid(keyid, sizeof(keyid), &seckey->pubkey, hash_alg);
+	pgp_add_issuer_keyid(sig, keyid);
+	pgp_end_hashed_subpkts(sig);
+
+    pgp_write_sig(output, sig, &seckey->pubkey, seckey);
+	pgp_writer_close(output);
+	pgp_create_sig_delete(sig);
+   
     if (!signedmem) {
         result = PEP_UNENCRYPTED;
         goto free_snrs;
     }
     _stext = (char*) pgp_mem_data(signedmem);
     _ssize = pgp_mem_len(signedmem);
-    
+        
     // Allocate transferable buffer
     char *_buffer = malloc(_ssize + 1);
 

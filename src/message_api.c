@@ -3749,7 +3749,9 @@ DYNAMIC_API PEP_STATUS decrypt_message(
     if (!(session && src && dst && keylist && rating && flags))
         return PEP_ILLEGAL_VALUE;
 
-    *keylist = NULL;
+    if (!(*flags & PEP_decrypt_flag_untrusted_server))
+        *keylist = NULL;
+    //*keylist = NULL; // NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO!!!!!! This fucks up reencryption
     PEP_STATUS status = _decrypt_message(session, src, dst, keylist, rating, flags, NULL);
 
     message *msg = *dst ? *dst : src;

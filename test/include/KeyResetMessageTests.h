@@ -43,7 +43,7 @@ class KeyResetMessageTests : public EngineTestIndividualSuite {
         void check_reset_receive_revoked();
         void check_receive_message_to_revoked_key_from_unknown();   
         void check_receive_message_to_revoked_key_from_contact();   
-        
+        void check_multiple_resets_single_key();
         void send_setup();
         void receive_setup();     
         void create_msg_for_revoked_key();
