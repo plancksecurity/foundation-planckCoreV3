@@ -52,7 +52,9 @@ typedef unsigned int PEP_encrypt_flags_t;
 //
 //  parameters:
 //      session (in)        session handle
-//      src (in)            message to encrypt
+//      src (inout)         message to encrypt - usually in-only, but can be 
+//                          in-out for unencrypted messages; in that case, 
+//                          we may attach the key and decorate the message
 //      extra (in)          extra keys for encryption
 //      dst (out)           pointer to new encrypted message or NULL if no
 //                          encryption could take place
