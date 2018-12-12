@@ -54,6 +54,10 @@ int main(int argc, const char** argv) {
     }
 
     Test::Output* output = new Test::pEpTestOutput(); // blah
-    return test_runner->run(*output, false) ? 0 : 1;
+    int result = test_runner->run(*output, false) ? 0 : -1;
+
     delete(output);
+    delete(test_runner);
+
+    return result;
 }

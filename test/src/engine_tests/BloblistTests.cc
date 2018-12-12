@@ -117,11 +117,9 @@ void BloblistTests::check_bloblists() {
     cout << "freeing bloblists...\n";
     free_bloblist(new_bl);
     free_bloblist(duplist);
-    new_bl = NULL;
-    duplist = NULL;
-    free(text1);
-    free(text2);
-    free(text3);
-    free(text4);    
+    free_bloblist(bl1);
+    free_bloblist(bl2);
+    free_bloblist(bl3);
+    free_bloblist(bl4);
     cout << "done.\n";
 }
