@@ -2929,6 +2929,8 @@ DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session, pEp_identity *identity, 
     }
 
     sqlite3_reset(session->is_pEp_user);
+    
+    free(alias_default);
     return PEP_STATUS_OK;
 }
 
