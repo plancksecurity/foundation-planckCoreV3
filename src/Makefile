@@ -35,15 +35,20 @@ ifdef SQLITE3_FROM_OS
 endif
 
 ifeq ($(OPENPGP),GPG)
-    NO_SOURCE+= pgp_netpgp.c
+    NO_SOURCE+= pgp_netpgp.c pgp_sequoia.c
     CFLAGS+= -DUSE_GPG $(GPGME_INC) -DLIBGPGME=\"$(LIBGPGME)\"
     LDFLAGS+= $(GPGME_LIB)
     # No extra LDLIBS are needed here, because GPGME is dynamically loaded
 else ifeq ($(OPENPGP),NETPGP)
-    NO_SOURCE+= pgp_gpg.c
+    NO_SOURCE+= pgp_gpg.c pgp_sequoia.c
     CFLAGS+= -DUSE_NETPGP $(NETGPG_INC)
     LDFLAGS+= $(NETGPG_LIB)
     LDLIBS+= -lnetpgp -lcurl
+else ifeq ($(OPENPGP),SEQUOIA)
+    NO_SOURCE+= pgp_gpg.c pgp_netpgp.c
+    CFLAGS+= -DUSE_SEQUOIA $(SEQUOIA_CFLAGS) $(SEQUOIA_INC)
+    LDFLAGS+= $(SEQUOIA_LDFLAGS)
+    LDLIBS+= $(SEQUOIA_LIB)
 else
     $(error Unknown OpenPGP library: $(OPENPGP))
 endif
