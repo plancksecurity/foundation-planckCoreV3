@@ -8,6 +8,7 @@
 
 #include "EngineTestSessionSuite.h"
 #include "CrashdumpTests.h"
+#include "test_util.h"
 
 using namespace std;
 
@@ -20,7 +21,8 @@ CrashdumpTests::CrashdumpTests(string suitename, string test_home_dir) :
 void CrashdumpTests::check_crashdump() {
     // MODULE test code
     char *text;
-    PEP_STATUS status2 = get_crashdump_log(session, 0, &text);
-    TEST_ASSERT_MSG((status2 == PEP_STATUS_OK), "status2 == PEP_STATUS_OK");
-    cout << text;
+    PEP_STATUS status = get_crashdump_log(session, 0, &text);
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
+    cout << text << endl;
+    free(text);
 }
