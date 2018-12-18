@@ -25,7 +25,7 @@ all: .codegen
 .PHONY: clean copy
 
 clean:
-	rm -f *.xml *.xsl generated/* .statemachines .actions .codecs .messages *.dot *.svg
+	rm -f *.xml *.xsl generated/* .statemachines .actions .codecs .messages .codegen *.dot *.svg
 
 copy:
 	cp -f generated/*.c generated/*.h ../src

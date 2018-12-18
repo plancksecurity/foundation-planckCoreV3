@@ -81,6 +81,7 @@ libpEpEngine.a: $(ALL_OBJECTS)
 clean:
 	rm -f *.d *.o *.a $(TARGET) *.dll *.so *.zip *.d.* *.def *~
 	rm -Rf $(TARGET).dSYM
+	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.*
 
 .PHONY: install
 install: $(TARGET)
