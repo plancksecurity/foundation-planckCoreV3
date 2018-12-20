@@ -16,8 +16,8 @@
 
 #include "wrappers.h"
 
-// Set to 0 to disable tracing.
-#if 1
+// enable tracing if in debugging mode
+#ifndef NDEBUG
 #  define _T(...) do {                          \
         fprintf(stderr, ##__VA_ARGS__);         \
     } while (0)
