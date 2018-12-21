@@ -4,7 +4,7 @@
 # This file may be used under the terms of the GNU General Public License version 3
 # see LICENSE.txt
 
-include ../default.conf
+include ../Makefile.conf
 
 # This is done this way because we presume that users who don't have python3 installed are also not bothering with the generated parts of the test suite (i.e. non-devs).
 # Tests will totally build and run without it.
@@ -148,8 +148,6 @@ ifdef PY_ENV
 	$(PY_ENV) genscripts.py
 endif
 
-# Ah, yes, here it is. Finally someone tripped over me introducing both Makefile.conf and default.conf. TEST_DEBUGGER is documented in one, but not the other Makefile. Yeah, I should clean this up, otherwise every time a new knob is added, it will only appear in either Makefile.conf or default.conf.
-# KB: Discuss with Volker and/or Neal. I don't use the TEST_DEBUGGER thing.
 .PHONY: test
 test: all
 	$(TEST_DEBUGGER) ./$(TARGET)

@@ -1,7 +1,7 @@
 # This file is under GNU General Public License 3.0
 # see LICENSE.txt
 
-include ../default.conf
+include ../Makefile.conf
 
 ALL_SOURCE=$(subst $(NO_SOURCE),,$(wildcard *.c))
 ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))

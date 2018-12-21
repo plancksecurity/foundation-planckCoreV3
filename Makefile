@@ -5,7 +5,7 @@
 
 HERE_REL := $(notdir $(CURDIR))
 
-include default.conf
+include Makefile.conf
 
 ifneq ($(wildcard local.conf),)
     $(info ================================================)
