@@ -67,7 +67,8 @@ all: suitemaker $(TARGET) scripts
 	$(CXX) -MM $(CPPFLAGS) $(CXXFLAGS) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
 
 $(TARGET): $(OBJS)
-	$(LINK.cc) $^ $(LOADLIBES) $(LDLIBS) -o $@
+# This should actually be done with a built-in rule
+#	$(LINK.cc) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 .PHONY: suitemaker
 suitemaker:
