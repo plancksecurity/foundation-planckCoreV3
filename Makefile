@@ -51,7 +51,7 @@ tags:
 
 .PHONY: test
 test: all
-	$(MAKE) -C test test
+	$(MAKE) -C test all
 
 .PHONY: package
 package: clean
