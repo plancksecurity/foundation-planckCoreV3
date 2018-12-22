@@ -7,7 +7,7 @@ HERE:=$(CURDIR)
 
 include ../Makefile.conf
 
-VPATH=src
+#VPATH=src
 
 # User's without python3 will skip the generated parts of the test suite. That's OK.
 PY_ENV:=$(shell command -v python3 2> /dev/null)
@@ -69,8 +69,7 @@ all: suitemaker $(TARGET) scripts
 	$(CXX) -MM $(CPPFLAGS) $(CXXFLAGS) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
 
 $(TARGET): $(OBJS)
-# This should actually be done with a built-in rule
-#	$(LINK.cc) $^ $(LOADLIBES) $(LDLIBS) -o $@
+	$(LINK.cc) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 .PHONY: suitemaker
 suitemaker:
@@ -98,7 +97,7 @@ test: all
 .PHONY: clean
 clean:
 	$(RM) $(TARGET) $(TARGET).o $(OBJS) $(notdir $(basename $(OBJS))) $(DEPS)
-	$(RM) $(HERE)/*Tests msg_2.0.asc
+	$(RM) $(HERE)/*Tests msg_2.0.asc $(HERE)/pEp_test_home
 
 # If only the goal 'clean' is given, do not generate and include the '%.d' files.¬
 ifneq ($(MAKECMDGOALS),clean)
