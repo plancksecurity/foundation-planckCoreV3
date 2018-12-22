@@ -7,6 +7,8 @@ HERE:=$(CURDIR)
 
 include ../Makefile.conf
 
+VPATH=src
+
 # User's without python3 will skip the generated parts of the test suite. That's OK.
 PY_ENV:=$(shell command -v python3 2> /dev/null)
 
@@ -95,7 +97,7 @@ test: all
 
 .PHONY: clean
 clean:
-	$(RM) $(TARGET) $(OBJS) $(DEPS)
+	$(RM) $(TARGET) $(TARGET).o $(OBJS) $(notdir $(basename $(OBJS))) $(DEPS)
 	$(RM) $(HERE)/*Tests msg_2.0.asc
 
 # If only the goal 'clean' is given, do not generate and include the '%.d' files.¬

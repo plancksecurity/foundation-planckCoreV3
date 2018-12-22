@@ -5,9 +5,10 @@ include ../Makefile.conf
 
 all: .codegen
 
-.codegen: generated .statemachines .actions .codecs .messages
+.codegen: .statemachines .actions .codecs .messages
+	-mkdir -p generated
 	touch .codegen
-	make copy
+	$(MAKE) copy
 
 .actions: sync.fsm gen_actions.ysl2 fsm.yml2 functions.ysl2 $(wildcard cond_act_*.yml2)
 	$(YML2_PROC) -y gen_actions.ysl2 $< -o $@
@@ -29,9 +30,6 @@ clean:
 
 copy:
 	cp -f generated/*.c generated/*.h ../src
-
-generated: .codegen
-	-mkdir -p generated
 
 %.xml: %.fsm
 	yml2c $< -o $@
