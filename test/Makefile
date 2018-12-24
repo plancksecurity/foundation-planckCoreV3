@@ -7,8 +7,6 @@ HERE:=$(CURDIR)
 
 include ../Makefile.conf
 
-#VPATH=src
-
 # User's without python3 will skip the generated parts of the test suite. That's OK.
 PY_ENV:=$(shell command -v python3 2> /dev/null)
 
@@ -62,6 +60,32 @@ else ifeq ($(OPENPGP),NETPGP)
 endif
 
 
+EXTRA_LIB_PATHS=.:
+ifdef ETPAN_LIB
+    EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(ETPAN_LIB)):
+endif
+ifdef GPGME_LIB
+    EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(GPGME_LIB)):
+endif
+ifdef NETPGP_LIB
+    EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(NETPGP_LIB)):
+endif
+ifdef CPPUNIT_LIB
+    EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(CPPUNIT_LIB)):
+endif
+
+# Remove trailing ':'
+EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS::=)
+
+ifeq ($(BUILD_FOR),Darwin)
+    LIBPATH=DYLD_LIBRARY_PATH
+else
+    LIBPATH=LD_LIBRARY_PATH
+endif
+
+TEST_CMD_PFX=$(LIBPATH)=$(EXTRA_LIB_PATHS)
+
+
 .PHONY: all
 all: suitemaker $(TARGET) scripts
 
@@ -92,7 +116,7 @@ endif
 
 .PHONY: test
 test: all
-	$(TEST_DEBUGGER) ./$(TARGET)
+	$(TEST_CMD_PFX) $(TEST_DEBUGGER) ./$(TARGET)
 
 .PHONY: clean
 clean:
