@@ -60,7 +60,7 @@ else ifeq ($(OPENPGP),NETPGP)
 endif
 
 
-EXTRA_LIB_PATHS=.:
+EXTRA_LIB_PATHS=.:../src:
 ifdef ETPAN_LIB
     EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(ETPAN_LIB)):
 endif
