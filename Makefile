@@ -30,6 +30,10 @@ install: all
 	$(MAKE) -C src install
 	$(MAKE) -C asn.1 install
 
+.PHONY: dbinstall
+dbinstall: db
+	$(MAKE) -C db install
+
 .PHONY: uninstall
 uninstall:
 	$(MAKE) -C src uninstall
@@ -42,7 +46,6 @@ clean:
 	$(MAKE) -C db clean
 	$(MAKE) -C sync clean
 	$(MAKE) -C asn.1 clean
-	rm -rf test_home
 
 .PHONY: tags
 tags:
@@ -51,7 +54,7 @@ tags:
 
 .PHONY: test
 test: all
-	$(MAKE) -C test all
+	$(MAKE) -C test test
 
 .PHONY: package
 package: clean
