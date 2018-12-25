@@ -72,11 +72,6 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         ERROR_OUT(session, PEP_INIT_GPGME_INIT_FAILED,
                   "initializing sequoia context");
 
-    session->store = sq_store_open(session->ctx, "foundation.pep");
-    if (session->store == NULL)
-        ERROR_OUT(session, PEP_INIT_GPGME_INIT_FAILED, "opening the store");
-
-
     // Create the home directory.
     char *home_env = getenv("HOME");
     if (!home_env)
@@ -114,9 +109,12 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
     sqlite_result = sqlite3_exec(session->key_db,
                                  "CREATE TABLE IF NOT EXISTS keys (\n"
-                                 "   primary_key TEXT PRIMARY KEY,\n"
-                                 "   tsk BLOB\n"
-                                 ");\n",
+                                 "   primary_key TEXT UNIQUE PRIMARY KEY,\n"
+                                 "   secret BOOLEAN,\n"
+                                 "   tpk BLOB\n"
+                                 ");\n"
+                                 "CREATE INDEX IF NOT EXISTS keys_index\n"
+                                 "  ON keys (primary_key, secret)\n",
                                  NULL, NULL, NULL);
     if (sqlite_result != SQLITE_OK)
         ERROR_OUT(session, PEP_INIT_CANNOT_OPEN_DB,
@@ -125,16 +123,36 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
     sqlite_result = sqlite3_exec(session->key_db,
                                  "CREATE TABLE IF NOT EXISTS subkeys (\n"
-                                 "   subkey TEXT PRIMARY KEY,\n"
-                                 "   primary_key TEXT,\n"
+                                 "   subkey TEXT NOT NULL,\n"
+                                 "   primary_key TEXT NOT NULL,\n"
+                                 "   UNIQUE(subkey, primary_key),\n"
                                  "   FOREIGN KEY (primary_key)\n"
                                  "       REFERENCES keys(primary_key)\n"
                                  "     ON DELETE CASCADE\n"
-                                 ");\n",
+                                 ");\n"
+                                 "CREATE INDEX IF NOT EXISTS subkeys_index\n"
+                                 "  ON subkeys (subkey, primary_key)\n",
                                  NULL, NULL, NULL);
     if (sqlite_result != SQLITE_OK)
         ERROR_OUT(session, PEP_INIT_CANNOT_OPEN_DB,
                   "creating subkeys table: %s",
+                  sqlite3_errmsg(session->key_db));
+
+    sqlite_result = sqlite3_exec(session->key_db,
+                                 "CREATE TABLE IF NOT EXISTS userids (\n"
+                                 "   userid TEXT NOT NULL,\n"
+                                 "   primary_key TEXT NOT NULL,\n"
+                                 "   UNIQUE(userid, primary_key),\n"
+                                 "   FOREIGN KEY (primary_key)\n"
+                                 "       REFERENCES keys(primary_key)\n"
+                                 "     ON DELETE CASCADE\n"
+                                 ");\n"
+                                 "CREATE INDEX IF NOT EXISTS userids_index\n"
+                                 "  ON userids (userid, primary_key)\n",
+                                 NULL, NULL, NULL);
+    if (sqlite_result != SQLITE_OK)
+        ERROR_OUT(session, PEP_INIT_CANNOT_OPEN_DB,
+                  "creating userids table: %s",
                   sqlite3_errmsg(session->key_db));
 
     sqlite_result
@@ -154,10 +172,81 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
     sqlite_result
         = sqlite3_prepare_v2(session->key_db,
+                             "SELECT tpk, secret FROM keys"
+                             " WHERE primary_key == ?",
+                             -1, &session->tpk_find, NULL);
+    assert(sqlite_result == SQLITE_OK);
+
+    sqlite_result
+        = sqlite3_prepare_v2(session->key_db,
+                             "SELECT tpk, secret FROM keys"
+                             " WHERE primary_key == ? and secret == 1",
+                             -1, &session->tsk_find, NULL);
+    assert(sqlite_result == SQLITE_OK);
+
+    sqlite_result
+        = sqlite3_prepare_v2(session->key_db,
+                             "SELECT tpk, secret FROM subkeys"
+                             " LEFT JOIN keys"
+                             "  ON subkeys.primary_key == keys.primary_key"
+                             " WHERE subkey == ?",
+                             -1, &session->tpk_find_by_keyid, NULL);
+    assert(sqlite_result == SQLITE_OK);
+
+    sqlite_result
+        = sqlite3_prepare_v2(session->key_db,
+                             "SELECT tpk, secret FROM subkeys"
+                             " LEFT JOIN keys"
+                             "  ON subkeys.primary_key == keys.primary_key"
+                             " WHERE subkey == ?",
+                             -1, &session->tpk_find_by_keyid, NULL);
+    assert(sqlite_result == SQLITE_OK);
+
+    sqlite_result
+        = sqlite3_prepare_v2(session->key_db,
+                             "SELECT tpk, secret FROM subkeys"
+                             " LEFT JOIN keys"
+                             "  ON subkeys.primary_key == keys.primary_key"
+                             " WHERE subkey == ? and keys.secret == 1",
+                             -1, &session->tsk_find_by_keyid, NULL);
+    assert(sqlite_result == SQLITE_OK);
+
+    sqlite_result
+        = sqlite3_prepare_v2(session->key_db,
+                             "SELECT tpk, secret FROM userids"
+                             " LEFT JOIN keys"
+                             "  ON userids.primary_key == keys.primary_key"
+                             " WHERE userid == ?",
+                             -1, &session->tpk_find_by_email, NULL);
+    assert(sqlite_result == SQLITE_OK);
+
+    sqlite_result
+        = sqlite3_prepare_v2(session->key_db,
+                             "SELECT tpk, secret FROM userids"
+                             " LEFT JOIN keys"
+                             "  ON userids.primary_key == keys.primary_key"
+                             " WHERE userid == ? and keys.secret == 1",
+                             -1, &session->tsk_find_by_email, NULL);
+    assert(sqlite_result == SQLITE_OK);
+
+    sqlite_result
+        = sqlite3_prepare_v2(session->key_db,
+                             "select tpk, secret from keys",
+                             -1, &session->tpk_all, NULL);
+    assert(sqlite_result == SQLITE_OK);
+
+    sqlite_result
+        = sqlite3_prepare_v2(session->key_db,
+                             "select tpk, secret from keys where secret = 1",
+                             -1, &session->tsk_all, NULL);
+    assert(sqlite_result == SQLITE_OK);
+
+    sqlite_result
+        = sqlite3_prepare_v2(session->key_db,
                              "INSERT OR REPLACE INTO keys"
-                             "   (primary_key, tsk)"
-                             " VALUES (?, ?)",
-                             -1, &session->tsk_save_insert_primary, NULL);
+                             "   (primary_key, secret, tpk)"
+                             " VALUES (?, ?, ?)",
+                             -1, &session->tpk_save_insert_primary, NULL);
     assert(sqlite_result == SQLITE_OK);
 
     sqlite_result
@@ -165,22 +254,15 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                              "INSERT OR REPLACE INTO subkeys"
                              "   (subkey, primary_key)"
                              " VALUES (?, ?)",
-                             -1, &session->tsk_save_insert_subkeys, NULL);
-    assert(sqlite_result == SQLITE_OK);
-
-    sqlite_result
-        = sqlite3_prepare_v2(session->key_db, "select tsk from keys",
-                             -1, &session->tsk_all, NULL);
+                             -1, &session->tpk_save_insert_subkeys, NULL);
     assert(sqlite_result == SQLITE_OK);
 
     sqlite_result
         = sqlite3_prepare_v2(session->key_db,
-                             "SELECT keys.tsk FROM subkeys"
-                             " LEFT JOIN keys"
-                             "  ON subkeys.primary_key"
-                             "     == keys.primary_key"
-                             " WHERE subkey == ?",
-                             -1, &session->tsk_find_by_keyid, NULL);
+                             "INSERT OR REPLACE INTO userids"
+                             "   (userid, primary_key)"
+                             " VALUES (?, ?)",
+                             -1, &session->tpk_save_insert_userids, NULL);
     assert(sqlite_result == SQLITE_OK);
 
  out:
@@ -200,18 +282,44 @@ void pgp_release(PEP_SESSION session, bool out_last)
     if (session->rollback_transaction)
         sqlite3_finalize(session->rollback_transaction);
     session->rollback_transaction = NULL;
-    if (session->tsk_save_insert_primary)
-        sqlite3_finalize(session->tsk_save_insert_primary);
-    session->tsk_save_insert_primary = NULL;
-    if (session->tsk_save_insert_subkeys)
-        sqlite3_finalize(session->tsk_save_insert_subkeys);
-    session->tsk_save_insert_subkeys = NULL;
-    if (session->tsk_all)
-        sqlite3_finalize(session->tsk_all);
-    session->tsk_all = NULL;
+
+    if (session->tpk_find)
+        sqlite3_finalize(session->tpk_find);
+    session->tpk_find = NULL;
+    if (session->tsk_find)
+        sqlite3_finalize(session->tsk_find);
+    session->tsk_find = NULL;
+
+    if (session->tpk_find_by_keyid)
+        sqlite3_finalize(session->tpk_find_by_keyid);
+    session->tpk_find_by_keyid = NULL;
     if (session->tsk_find_by_keyid)
         sqlite3_finalize(session->tsk_find_by_keyid);
     session->tsk_find_by_keyid = NULL;
+
+    if (session->tpk_find_by_email)
+        sqlite3_finalize(session->tpk_find_by_email);
+    session->tpk_find_by_email = NULL;
+    if (session->tsk_find_by_email)
+        sqlite3_finalize(session->tsk_find_by_email);
+    session->tsk_find_by_email = NULL;
+
+    if (session->tpk_all)
+        sqlite3_finalize(session->tpk_all);
+    session->tpk_all = NULL;
+    if (session->tsk_all)
+        sqlite3_finalize(session->tsk_all);
+    session->tsk_all = NULL;
+
+    if (session->tpk_save_insert_primary)
+        sqlite3_finalize(session->tpk_save_insert_primary);
+    session->tpk_save_insert_primary = NULL;
+    if (session->tpk_save_insert_subkeys)
+        sqlite3_finalize(session->tpk_save_insert_subkeys);
+    session->tpk_save_insert_subkeys = NULL;
+    if (session->tpk_save_insert_userids)
+        sqlite3_finalize(session->tpk_save_insert_userids);
+    session->tpk_save_insert_userids = NULL;
 
     if (session->key_db) {
         int result = sqlite3_close_v2(session->key_db);
@@ -220,11 +328,6 @@ void pgp_release(PEP_SESSION session, bool out_last)
                      "Closing key DB: sqlite3_close_v2: %s",
                      sqlite3_errstr(result));
         session->key_db = NULL;
-    }
-
-    if (session->store) {
-        sq_store_free(session->store);
-        session->store = NULL;
     }
 
     if (session->ctx) {
@@ -300,37 +403,28 @@ static void user_id_split(char *user_id, char **namep, char **emailp)
     free(user_id);
 }
 
-
-// Returns the TSK identified by the provided keyid.
-//
-// If tsk is NULL, the TSK is not parsed and this function simply
-// returns whether the key is locally available.
-static PEP_STATUS tsk_find_by_keyid_hex(PEP_SESSION, const char *, sq_tsk_t *)
-  __attribute__((nonnull(1, 2)));
-static PEP_STATUS tsk_find_by_keyid_hex(
-        PEP_SESSION session,
-        const char *keyid_hex,
-        sq_tsk_t *tsk)
+// step statement and load the tpk and secret.
+static PEP_STATUS key_load(PEP_SESSION, sqlite3_stmt *, sq_tpk_t *, int *)
+    __attribute__((nonnull(1, 2)));
+static PEP_STATUS key_load(PEP_SESSION session, sqlite3_stmt *stmt,
+                           sq_tpk_t *tpkp, int *secretp)
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    T("%s", keyid_hex);
-
-    sqlite3_stmt *stmt = session->tsk_find_by_keyid;
-    sqlite3_bind_text(stmt, 1, keyid_hex, -1, SQLITE_STATIC);
     int sqlite_result = sqlite3_step(stmt);
     switch (sqlite_result) {
     case SQLITE_ROW:
-        if (tsk) {
-            // Get the TSK from the first column.
+        if (tpkp) {
             int data_len = sqlite3_column_bytes(stmt, 0);
             const void *data = sqlite3_column_blob(stmt, 0);
 
-            sq_tpk_t tpk = sq_tpk_from_bytes(session->ctx, data, data_len);
-            if (!tpk)
+            *tpkp = sq_tpk_from_bytes(session->ctx, data, data_len);
+            if (!*tpkp)
                 ERROR_OUT(session, PEP_GET_KEY_FAILED, "parsing TPK");
-
-            *tsk = sq_tpk_into_tsk(tpk);
         }
+
+        if (secretp)
+            *secretp = sqlite3_column_int(stmt, 1);
+
         break;
     case SQLITE_DONE:
         // Got nothing.
@@ -338,64 +432,214 @@ static PEP_STATUS tsk_find_by_keyid_hex(
         break;
     default:
         ERROR_OUT(session, PEP_UNKNOWN_ERROR,
-                  "stepping tsk_find_by_keyid: %s",
-                  sqlite3_errmsg(session->key_db));
+                  "stepping: %s", sqlite3_errmsg(session->key_db));
     }
 
  out:
-    sqlite3_reset(stmt);
-    T("%s -> %s", keyid_hex, pep_status_to_string(status));
+    T(" -> %s", pep_status_to_string(status));
     return status;
 }
 
-// See tsk_find_by_keyid_hex.
-PEP_STATUS tsk_find_by_keyid(PEP_SESSION, sq_keyid_t, sq_tsk_t *)
+// step statement until exhausted and load the tpks.
+static PEP_STATUS key_loadn(PEP_SESSION, sqlite3_stmt *, sq_tpk_t **, int *)
+    __attribute__((nonnull));
+static PEP_STATUS key_loadn(PEP_SESSION session, sqlite3_stmt *stmt,
+                            sq_tpk_t **tpksp, int *tpks_countp)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    int tpks_count = 0;
+    int tpks_capacity = 8;
+    sq_tpk_t *tpks = calloc(tpks_capacity, sizeof(sq_tpk_t));
+    if (!tpks)
+        ERROR_OUT(session, PEP_OUT_OF_MEMORY, "out of memory");
+
+    for (;;) {
+        sq_tpk_t tpk = NULL;
+        status = key_load(session, stmt, &tpk, NULL);
+        if (status == PEP_KEY_NOT_FOUND) {
+            status = PEP_STATUS_OK;
+            break;
+        }
+        ERROR_OUT(session, status, "loading TPK");
+
+        if (tpks_count == tpks_capacity) {
+            tpks_capacity *= 2;
+            tpks = realloc(tpks, sizeof(tpks[0]) * tpks_capacity);
+            if (!tpks)
+                ERROR_OUT(session, PEP_OUT_OF_MEMORY, "tpks");
+        }
+        tpks[tpks_count ++] = tpk;
+    }
+
+ out:
+    if (status != PEP_STATUS_OK) {
+        for (int i = 0; i < tpks_count; i ++)
+            sq_tpk_free(tpks[i]);
+        free(tpks);
+    } else {
+        *tpksp = tpks;
+        *tpks_countp = tpks_count;
+    }
+
+    T(" -> %s (%d tpks)", pep_status_to_string(status), *tpks_countp);
+    return status;
+}
+
+// Returns the TPK identified by the provided fingerprint.
+//
+// This function only matches on the primary key!
+static PEP_STATUS tpk_find(PEP_SESSION, sq_fingerprint_t, int, sq_tpk_t *, int *)
     __attribute__((nonnull(1, 2)));
-PEP_STATUS tsk_find_by_keyid(
-        PEP_SESSION session, sq_keyid_t keyid, sq_tsk_t *tsk)
+static PEP_STATUS tpk_find(PEP_SESSION session,
+                           sq_fingerprint_t fpr, int private_only,
+                           sq_tpk_t *tpk, int *secret)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    char *fpr_str = sq_fingerprint_to_hex(fpr);
+
+    T("(%s, %d)", fpr_str, private_only);
+
+    sqlite3_stmt *stmt = private_only ? session->tsk_find : session->tpk_find;
+    sqlite3_bind_text(stmt, 1, fpr_str, -1, SQLITE_STATIC);
+
+    status = key_load(session, stmt, tpk, secret);
+    ERROR_OUT(session, status, "Looking up %s", fpr_str);
+
+ out:
+    sqlite3_reset(stmt);
+    T("(%s, %d) -> %s", fpr_str, private_only, pep_status_to_string(status));
+    free(fpr_str);
+    return status;
+}
+
+// Returns the TPK identified by the provided keyid.
+//
+// This function matches on both primary keys and subkeys!
+//
+// Note: There can be multiple TPKs for a given keyid.  This can
+// occur, because an encryption subkey can be bound to multiple TPKs.
+// Also, it is possible to collide key ids.  If there are multiple key
+// ids for a given key, this just returns one of them.
+//
+// If private_only is set, this will only consider TPKs with some
+// secret key material.
+static PEP_STATUS tpk_find_by_keyid_hex(PEP_SESSION, const char *, int, sq_tpk_t *, int *)
+  __attribute__((nonnull(1, 2)));
+static PEP_STATUS tpk_find_by_keyid_hex(
+        PEP_SESSION session, const char *keyid_hex, int private_only,
+        sq_tpk_t *tpkp, int *secretp)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    T("(%s, %d)", keyid_hex, private_only);
+
+    sqlite3_stmt *stmt
+        = private_only ? session->tsk_find_by_keyid : session->tpk_find_by_keyid;
+    sqlite3_bind_text(stmt, 1, keyid_hex, -1, SQLITE_STATIC);
+
+    status = key_load(session, stmt, tpkp, secretp);
+    ERROR_OUT(session, status, "Looking up %s", keyid_hex);
+
+ out:
+    sqlite3_reset(stmt);
+    T("(%s, %d) -> %s", keyid_hex, private_only, pep_status_to_string(status));
+    return status;
+}
+
+// See tpk_find_by_keyid_hex.
+PEP_STATUS tpk_find_by_keyid(PEP_SESSION, sq_keyid_t, int, sq_tpk_t *, int *)
+    __attribute__((nonnull(1, 2)));
+PEP_STATUS tpk_find_by_keyid(PEP_SESSION session,
+                             sq_keyid_t keyid, int private_only,
+                             sq_tpk_t *tpkp, int *secretp)
 {
     char *keyid_hex = sq_keyid_to_hex(keyid);
     if (! keyid_hex)
         return PEP_OUT_OF_MEMORY;
-    PEP_STATUS status = tsk_find_by_keyid_hex(session, keyid_hex, tsk);
+    PEP_STATUS status
+        = tpk_find_by_keyid_hex(session, keyid_hex, private_only, tpkp, secretp);
     free(keyid_hex);
     return status;
 }
 
-// See tsk_find_by_keyid_hex.
-static PEP_STATUS tsk_find_by_fpr(PEP_SESSION, sq_fingerprint_t, sq_tsk_t *)
+// See tpk_find_by_keyid_hex.
+static PEP_STATUS tpk_find_by_fpr(PEP_SESSION, sq_fingerprint_t, int,
+                                  sq_tpk_t *, int *)
     __attribute__((nonnull(1, 2)));
-static PEP_STATUS tsk_find_by_fpr(
-        PEP_SESSION session, sq_fingerprint_t fpr, sq_tsk_t *tsk)
+static PEP_STATUS tpk_find_by_fpr(
+    PEP_SESSION session, sq_fingerprint_t fpr, int private_only,
+    sq_tpk_t *tpkp, int *secretp)
 {
     sq_keyid_t keyid = sq_fingerprint_to_keyid(fpr);
     if (! keyid)
         return PEP_OUT_OF_MEMORY;
-    PEP_STATUS status = tsk_find_by_keyid(session, keyid, tsk);
+    PEP_STATUS status
+        = tpk_find_by_keyid(session, keyid, private_only, tpkp, secretp);
     sq_keyid_free(keyid);
     return status;
 }
 
-// See tsk_find_by_keyid_hex.
-static PEP_STATUS tsk_find_by_fpr_hex(PEP_SESSION, const char *, sq_tsk_t *)
+// See tpk_find_by_keyid_hex.
+static PEP_STATUS tpk_find_by_fpr_hex(PEP_SESSION, const char *, int, sq_tpk_t *, int *secret)
     __attribute__((nonnull(1, 2)));
-static PEP_STATUS tsk_find_by_fpr_hex(
-        PEP_SESSION session, const char *fpr, sq_tsk_t *tsk)
+static PEP_STATUS tpk_find_by_fpr_hex(
+    PEP_SESSION session, const char *fpr, int private_only,
+    sq_tpk_t *tpkp, int *secretp)
 {
     sq_fingerprint_t sq_fpr = sq_fingerprint_from_hex(fpr);
     if (! sq_fpr)
         return PEP_OUT_OF_MEMORY;
-    PEP_STATUS status = tsk_find_by_fpr(session, sq_fpr, tsk);
+    PEP_STATUS status
+        = tpk_find_by_fpr(session, sq_fpr, private_only, tpkp, secretp);
     sq_fingerprint_free(sq_fpr);
     return status;
 }
 
+// Returns all known TPKs.
+static PEP_STATUS tpk_all(PEP_SESSION, int, sq_tpk_t **, int *) __attribute__((nonnull));
+static PEP_STATUS tpk_all(PEP_SESSION session, int private_only,
+                          sq_tpk_t **tpksp, int *tpks_countp) {
+    PEP_STATUS status = PEP_STATUS_OK;
+    sqlite3_stmt *stmt = private_only ? session->tsk_all : session->tpk_all;
+    status = key_loadn(session, stmt, tpksp, tpks_countp);
+    ERROR_OUT(session, status, "loading TPKs");
+ out:
+    sqlite3_reset(stmt);
+    return status;
+}
 
-// Saves the specified TSK.
+// Returns keys that have a user id that matches the specified pattern.
 //
-// This function takes ownership of TSK.
-static PEP_STATUS tsk_save(PEP_SESSION, sq_tsk_t) __attribute__((nonnull));
-static PEP_STATUS tsk_save(PEP_SESSION session, sq_tsk_t tsk)
+// The keys returned must be freed using sq_tpk_free.
+static PEP_STATUS tpk_find_by_email(PEP_SESSION, const char *, int, sq_tpk_t **, int *)
+    __attribute__((nonnull));
+static PEP_STATUS tpk_find_by_email(PEP_SESSION session,
+                                    const char *pattern, int private_only,
+                                    sq_tpk_t **tpksp, int *countp)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    T("(%s)", pattern);
+
+    sqlite3_stmt *stmt
+        = private_only ? session->tsk_find_by_email : session->tpk_find_by_email;
+    sqlite3_bind_text(stmt, 1, pattern, -1, SQLITE_STATIC);
+
+    status = key_loadn(session, stmt, tpksp, countp);
+    ERROR_OUT(session, status, "Searching for '%s'", pattern);
+
+ out:
+    sqlite3_reset(stmt);
+    T("(%s) -> %s (%d results)", pattern, pep_status_to_string(status), *countp);
+    return status;
+}
+
+
+// Saves the specified TPK.
+//
+// This function takes ownership of TPK.
+static PEP_STATUS tpk_save(PEP_SESSION, sq_tpk_t, identity_list **)
+    __attribute__((nonnull(1, 2)));
+static PEP_STATUS tpk_save(PEP_SESSION session, sq_tpk_t tpk,
+                           identity_list **private_idents)
 {
     PEP_STATUS status = PEP_STATUS_OK;
     sq_fingerprint_t sq_fpr = NULL;
@@ -403,37 +647,37 @@ static PEP_STATUS tsk_save(PEP_SESSION session, sq_tsk_t tsk)
     void *tsk_buffer = NULL;
     size_t tsk_buffer_len = 0;
     int tried_commit = 0;
-    sq_tpk_t tpk = sq_tsk_tpk(tsk); /* Reference. */
     sq_tpk_key_iter_t key_iter = NULL;
+    sq_user_id_binding_iter_t user_id_iter = NULL;
 
     sq_fpr = sq_tpk_fingerprint(tpk);
     fpr = sq_fingerprint_to_hex(sq_fpr);
-    T("%s", fpr);
+    T("(%s, private_idents: %s)", fpr, private_idents ? "yes" : "no");
 
-    // Merge any existing data into TSK.
-    sq_tsk_t current = NULL;
-    status = tsk_find_by_fpr(session, sq_fpr, &current);
+    // Merge any existing data into TPK.
+    sq_tpk_t current = NULL;
+    status = tpk_find(session, sq_fpr, false, &current, NULL);
     if (status == PEP_KEY_NOT_FOUND)
         status = PEP_STATUS_OK;
     else
         ERROR_OUT(session, status, "Looking up %s", fpr);
-    if (current) {
-        tpk = sq_tpk_merge(session->ctx,
-                           sq_tsk_into_tpk(tsk), sq_tsk_into_tpk(current));
-        tsk = sq_tpk_into_tsk(tpk);
-        tpk = sq_tsk_tpk(tsk);
-    }
+    if (current)
+        tpk = sq_tpk_merge(session->ctx, tpk, current);
 
+    int is_tsk = sq_tpk_is_tsk(tpk);
 
     // Serialize it.
     sq_writer_t writer = sq_writer_alloc(&tsk_buffer, &tsk_buffer_len);
     if (! writer)
         ERROR_OUT(session, PEP_OUT_OF_MEMORY, "out of memory");
 
-    sq_status_t sq_status = sq_tsk_serialize(session->ctx, tsk, writer);
+    sq_status_t sq_status;
+    sq_tsk_t tsk = sq_tpk_into_tsk(tpk);
+    sq_status = sq_tsk_serialize(session->ctx, tsk, writer);
+    tpk = sq_tsk_into_tpk(tsk);
     //sq_writer_free(writer);
     if (sq_status != 0)
-        ERROR_OUT(session, PEP_UNKNOWN_ERROR, "Serializing TSK");
+        ERROR_OUT(session, PEP_UNKNOWN_ERROR, "Serializing TPK");
 
 
     // Insert the TSK into the DB.
@@ -445,25 +689,24 @@ static PEP_STATUS tsk_save(PEP_SESSION session, sq_tsk_t tsk)
                   "begin transaction failed: %s",
                   sqlite3_errmsg(session->key_db));
 
-    stmt = session->tsk_save_insert_primary;
+    stmt = session->tpk_save_insert_primary;
     sqlite3_bind_text(stmt, 1, fpr, -1, SQLITE_STATIC);
-    sqlite3_bind_blob(stmt, 2, tsk_buffer, tsk_buffer_len, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 2, is_tsk);
+    sqlite3_bind_blob(stmt, 3, tsk_buffer, tsk_buffer_len, SQLITE_STATIC);
 
     sqlite_result = sqlite3_step(stmt);
     sqlite3_reset(stmt);
     if (sqlite_result != SQLITE_DONE)
         ERROR_OUT(session, PEP_UNKNOWN_ERROR,
-                  "Saving TSK to DB: %s",
-                  sqlite3_errmsg(session->key_db));
+                  "Saving TPK: %s", sqlite3_errmsg(session->key_db));
 
     // Insert the "subkeys" (the primary key and the subkeys).
-    stmt = session->tsk_save_insert_subkeys;
+    stmt = session->tpk_save_insert_subkeys;
     key_iter = sq_tpk_key_iter(tpk);
     sq_p_key_t key;
     while ((key = sq_tpk_key_iter_next(key_iter, NULL, NULL))) {
         sq_keyid_t keyid = sq_p_key_keyid(key);
         char *keyid_hex = sq_keyid_to_hex(keyid);
-        T("  subkey: %s", keyid_hex);
         sqlite3_bind_text(stmt, 1, keyid_hex, -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, fpr, -1, SQLITE_STATIC);
 
@@ -479,6 +722,63 @@ static PEP_STATUS tsk_save(PEP_SESSION session, sq_tsk_t tsk)
     }
     sq_tpk_key_iter_free(key_iter);
     key_iter = NULL;
+
+    // Insert the "userids".
+    stmt = session->tpk_save_insert_userids;
+    user_id_iter = sq_tpk_user_id_binding_iter(tpk);
+    sq_user_id_binding_t binding;
+    int first = 1;
+    while ((binding = sq_user_id_binding_iter_next(user_id_iter))) {
+        char *user_id = sq_user_id_binding_user_id(binding);
+        if (!user_id || !*user_id)
+            continue;
+
+        // Ignore bindings with a self-revocation certificate, but no
+        // self-signature.
+        if (!sq_user_id_binding_selfsig(binding)) {
+            free(user_id);
+            continue;
+        }
+
+        char *name, *email;
+        user_id_split(user_id, &name, &email); /* user_id is comsumed.  */
+        // XXX: Correctly clean up name and email on error...
+
+        if (email) {
+            T("  userid: %s", email);
+
+            sqlite3_bind_text(stmt, 1, email, -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 2, fpr, -1, SQLITE_STATIC);
+
+            sqlite_result = sqlite3_step(stmt);
+            sqlite3_reset(stmt);
+
+            if (sqlite_result != SQLITE_DONE) {
+                sq_user_id_binding_iter_free(user_id_iter);
+                free(name);
+                ERROR_OUT(session, PEP_UNKNOWN_ERROR,
+                          "Updating userids: %s", sqlite3_errmsg(session->key_db));
+            }
+        }
+
+        if (first && private_idents && is_tsk) {
+            first = 0;
+
+            // Create an identity for the primary user id.
+            pEp_identity *ident = new_identity(email, fpr, NULL, name);
+            if (ident == NULL)
+                ERROR_OUT(session, PEP_OUT_OF_MEMORY, "new_identity");
+
+            *private_idents = identity_list_add(*private_idents, ident);
+            if (*private_idents == NULL)
+                ERROR_OUT(session, PEP_OUT_OF_MEMORY, "identity_list_add");
+        }
+        free(email);
+        free(name);
+
+    }
+    sq_user_id_binding_iter_free(user_id_iter);
+    user_id_iter = NULL;
 
  out:
     // Prevent ERROR_OUT from causing an infinite loop.
@@ -497,310 +797,17 @@ static PEP_STATUS tsk_save(PEP_SESSION session, sq_tsk_t tsk)
 
     T("(%s) -> %s", fpr, pep_status_to_string(status));
 
+    if (user_id_iter)
+        sq_user_id_binding_iter_free(user_id_iter);
     if (key_iter)
         sq_tpk_key_iter_free(key_iter);
     if (stmt)
       sqlite3_reset(stmt);
     free(tsk_buffer);
-    sq_tsk_free(tsk);
-    free(fpr);
-    sq_fingerprint_free(sq_fpr);
-
-    return status;
-}
-
-// Returns all known TSKs.
-static PEP_STATUS tsk_all(PEP_SESSION, sq_tsk_t **, int *) __attribute__((nonnull));
-static PEP_STATUS tsk_all(PEP_SESSION session, sq_tsk_t **tsksp, int *tsks_countp) {
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    int tsks_count = 0;
-    int tsks_capacity = 8;
-    sq_tsk_t *tsks = calloc(tsks_capacity, sizeof(sq_tsk_t));
-    if (!tsks)
-        ERROR_OUT(session, PEP_OUT_OF_MEMORY, "out of memory");
-
-    sqlite3_stmt *stmt = session->tsk_all;
-    while (true) {
-        switch (sqlite3_step(stmt)) {
-        case SQLITE_ROW: {
-            int data_len = sqlite3_column_bytes(stmt, 0);
-            const void *data = sqlite3_column_blob(stmt, 0);
-            sq_tpk_t tpk = sq_tpk_from_bytes(session->ctx, data, data_len);
-            if (!tpk) {
-                ERROR_OUT(session, PEP_GET_KEY_FAILED, "parsing TSK");
-            } else {
-                if (tsks_count == tsks_capacity) {
-                    tsks_capacity *= 2;
-                    tsks = realloc(tsks, sizeof(tsks[0]) * tsks_capacity);
-                    if (!tsks)
-                        ERROR_OUT(session, PEP_OUT_OF_MEMORY, "tsks");
-                }
-                tsks[tsks_count ++] = sq_tpk_into_tsk(tpk);
-            }
-            break;
-        }
-        default:
-            ERROR_OUT(session, PEP_UNKNOWN_ERROR,
-                      "stepping sqlite statement: %s",
-                      sqlite3_errmsg(session->key_db));
-        case SQLITE_DONE:
-            goto out;
-        }
-    }
-
- out:
-    sqlite3_reset(stmt);
-
-    if (status != PEP_STATUS_OK) {
-        for (int i = 0; i < tsks_count; i ++)
-            sq_tsk_free(tsks[i]);
-        free(tsks);
-    } else {
-        *tsksp = tsks;
-        *tsks_countp = tsks_count;
-    }
-
-    return status;
-}
-
-// Returns the key with the label LABEL.
-//
-// The return is returned in *KEY and must be freed using sq_tpk_free.
-//
-// Note: we maintain labels for the fingerprint of primary keys, pep
-// user ids, and email addresses.  If you want to look something up by
-// subkey id, use tpk_find_by_keyid.
-static PEP_STATUS tpk_find_by_label(PEP_SESSION, const char *, sq_tpk_t *)
-    __attribute__((nonnull));
-static PEP_STATUS tpk_find_by_label(PEP_SESSION session, const char *label, sq_tpk_t *tpk)
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-
-    sq_binding_t binding
-        = sq_store_lookup(session->ctx, session->store, label);
-    if (!binding)
-        ERROR_OUT(session, PEP_KEY_NOT_FOUND, "looking up label %s", label);
-
-    *tpk = sq_binding_tpk(session->ctx, binding);
-    if (!*tpk)
-        ERROR_OUT(session, PEP_GET_KEY_FAILED, "getting TPK");
-
- out:
-    if (binding)
-        sq_binding_free(binding);
-
-    return status;
-}
-
-// Returns the key with keyid KEYID.
-//
-// Note: this function will match both the primary key as well as any
-// subkeys.
-static PEP_STATUS tpk_find_by_keyid(PEP_SESSION, sq_keyid_t, sq_tpk_t *)
-    __attribute__((nonnull));
-static PEP_STATUS tpk_find_by_keyid(PEP_SESSION session, sq_keyid_t keyid,
-                                    sq_tpk_t *tpk)
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-    char *keyid_hex = sq_keyid_to_hex(keyid);
-
-    sq_key_t key = sq_store_lookup_by_subkeyid(session->ctx, keyid);
-    if (!key)
-        ERROR_OUT(session, PEP_KEY_NOT_FOUND,
-                  "looking up key by keyid %s", keyid_hex);
-
-    *tpk = sq_key_tpk(session->ctx, key);
-    if (!*tpk)
-        ERROR_OUT(session, PEP_GET_KEY_FAILED, "getting TPK");
-
- out:
-    free(keyid_hex);
-
-    return status;
-}
-
-// Returns the key with fingerprint FPR.
-//
-// Note: this function will match both the primary key as well as any
-// subkeys.
-static PEP_STATUS tpk_find_by_fpr(PEP_SESSION, sq_fingerprint_t, sq_tpk_t *)
-    __attribute__((nonnull));
-static PEP_STATUS tpk_find_by_fpr(PEP_SESSION session, sq_fingerprint_t fpr,
-                                  sq_tpk_t *tpk)
-{
-    sq_keyid_t keyid = sq_fingerprint_to_keyid(fpr);
-    PEP_STATUS status = tpk_find_by_keyid(session, keyid, tpk);
-    sq_keyid_free(keyid);
-    return status;
-}
-
-
-
-// Saves a TPK.
-//
-// Creates labels under the fingerprint, address (if not NULL), and
-// the email address in each user id.
-//
-// If there are any keys with private key material, saves that
-// information in private_idents (if not NULL).
-//
-// This function takes ownership of the tpk.
-static PEP_STATUS tpk_save(PEP_SESSION, sq_tpk_t, const char *,
-                           identity_list **, int)
-  __attribute__((nonnull(1, 2)));
-static PEP_STATUS tpk_save(PEP_SESSION session, sq_tpk_t tpk,
-                           const char *address, identity_list **private_idents,
-                           int replace_bindings)
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-    sq_user_id_binding_iter_t iter = NULL;
-    sq_user_id_binding_t user_id_binding = NULL;
-
-    if (private_idents)
-        *private_idents = NULL;
-
-    sq_fingerprint_t sq_fpr = sq_tpk_fingerprint(tpk);
-    char *fpr = sq_fingerprint_to_hex(sq_fpr);
-    T("(%s)", fpr);
-
-    // Import the public part in the store.  If it was already present
-    // in the store, it will be merged.  We don't work with the merged
-    // TPK, because we only care about new user ids.
-    sq_tpk_t merged = sq_store_import(session->ctx, session->store, fpr, tpk);
-    if (! merged)
-        ERROR_OUT(session, PEP_UNKNOWN_ERROR, "Merging TPK (%s)", fpr);
-    sq_tpk_free(merged);
-
-    // Add the pep user id label.
-    if (address) {
-        int first_try = 1;
-        sq_binding_t binding;
-
-    make_address_binding:
-        binding = sq_store_add(session->ctx, session->store, address, sq_fpr);
-        if (! binding) {
-            // An error occured.  There's a good chance this is
-            // because the binding already exists.
-            if (replace_bindings && first_try) {
-                T("replacing userid binding %s -> %s", address, fpr);
-
-                // We should replace the existing binding.
-                binding = sq_store_lookup(session->ctx, session->store, address);
-                if (binding) {
-                    if (sq_binding_delete(session->ctx, binding)) {
-                        DUMP_ERR(session, PEP_STATUS_OK,
-                                 "Delete binding %s", address);
-                        sq_binding_free(binding);
-                    }
-
-                    first_try = 0;
-                    goto make_address_binding;
-                }
-            }
-
-            // This is a soft error: we always prefer the existing
-            // binding.
-            DUMP_ERR(session, PEP_STATUS_OK,
-                     "Creating userid binding %s -> %s", address, fpr);
-        } else {
-            sq_binding_free(binding);
-        }
-    }
-
-    // Create a binding for each user id.
-    //
-    // Note: the iterator only returns valid user ids in the sense
-    // that the user id has a self-signature or a self-revocation
-    // certificate.
-    int first = 1;
-    iter = sq_tpk_user_id_binding_iter(tpk);
-    while ((user_id_binding = sq_user_id_binding_iter_next(iter))) {
-        char *user_id = sq_user_id_binding_user_id(user_id_binding);
-        if (!user_id) {
-            // Completely ignore insane user ids (those with interior
-            // NUL bytes).
-            free(user_id);
-            continue;
-        }
-
-        // Ignore bindings with a self-revocation certificate, but no
-        // self-signature.
-        if (!sq_user_id_binding_selfsig(user_id_binding)) {
-            free(user_id);
-            continue;
-        }
-
-        char *name, *email;
-        user_id_split(user_id, &name, &email); /* user_id is comsumed.  */
-
-        if (email) {
-            int first_try = 1;
-            sq_binding_t binding;
-
-        make_email_binding:
-            binding = sq_store_add(session->ctx, session->store, email, sq_fpr);
-            if (! binding) {
-                // An error occured.  There's a good chance this is
-                // because the binding already exists.
-                if (replace_bindings && first_try) {
-                    // We should replace the existing binding.
-                    binding = sq_store_lookup(session->ctx, session->store, email);
-                    if (binding) {
-                        if (sq_binding_delete(session->ctx, binding)) {
-                            DUMP_ERR(session, PEP_STATUS_OK,
-                                     "Delete binding %s", email);
-                            sq_binding_free(binding);
-                        }
-
-                        first_try = 0;
-                        goto make_email_binding;
-                    }
-                }
-
-                // This is a soft error: we always prefer the existing
-                // binding.
-                DUMP_ERR(session, PEP_UNKNOWN_ERROR,
-                         "Creating email binding: %s -> %s", email, fpr);
-            } else {
-                sq_binding_free(binding);
-            }
-
-            if (first && private_idents && sq_tpk_is_tsk(tpk)) {
-                first = 0;
-
-                // Create an identity for the primary user id.
-                pEp_identity *ident = new_identity(email, fpr, NULL, name);
-                if (ident == NULL)
-                    ERROR_OUT(session, PEP_OUT_OF_MEMORY, "new_identity");
-
-                *private_idents = identity_list_add(*private_idents, ident);
-                if (*private_idents == NULL)
-                    ERROR_OUT(session, PEP_OUT_OF_MEMORY, "identity_list_add");
-            }
-        }
-    }
-
-    sq_user_id_binding_iter_free(iter);
-    iter = NULL;
-
-    // If it has any private key material, save it in the TSK store.
-    if (sq_tpk_is_tsk(tpk)) {
-        status = tsk_save(session, sq_tpk_into_tsk(tpk));
-        tpk = NULL;
-        ERROR_OUT(session, status, "Saving TSK");
-    }
-
- out:
-    T("(%s) -> %s", fpr, pep_status_to_string(status));
-
-    if (iter)
-        sq_user_id_binding_iter_free(iter);
-    free(fpr);
-    if (sq_fpr)
-        sq_fingerprint_free(sq_fpr);
     if (tpk)
         sq_tpk_free(tpk);
+    free(fpr);
+    sq_fingerprint_free(sq_fpr);
 
     return status;
 }
@@ -834,7 +841,8 @@ get_public_keys_cb(void *cookie_raw,
     j = 0;
     for (i = 0; i < keyids_len; i ++) {
         sq_tpk_t tpk = NULL;
-        sq_status_t status = tpk_find_by_keyid(session, keyids[i], &tpk);
+        sq_status_t status
+            = tpk_find_by_keyid(session, keyids[i], false, &tpk, NULL);
         if (status == SQ_STATUS_SUCCESS)
             (*tpks)[j ++] = tpk;
     }
@@ -850,7 +858,7 @@ get_secret_keys_cb(void *cookie_opaque,
 {
     struct decrypt_cookie *cookie = cookie_opaque;
     PEP_SESSION session = cookie->session;
-    sq_tsk_t *tsks = NULL;
+    sq_tpk_t *tsks = NULL;
     int tsks_count = 0;
     int wildcards = 0;
 
@@ -879,30 +887,24 @@ get_secret_keys_cb(void *cookie_opaque,
         // Collect the recipients.  Note: we must return the primary
         // key's fingerprint.
         sq_tpk_t tpk = NULL;
-        if (tpk_find_by_keyid(session, keyid, &tpk) == PEP_STATUS_OK) {
-            sq_fingerprint_t fp = sq_tpk_fingerprint(tpk);
-            char *fp_string = sq_fingerprint_to_hex(fp);
-            stringlist_add_unique(cookie->recipient_keylist, fp_string);
-            free(fp_string);
-            sq_fingerprint_free(fp);
-            sq_tpk_free(tpk);
-        }
+        int is_tsk = 0;
+        if (tpk_find_by_keyid(session, keyid, false, &tpk, &is_tsk) != PEP_STATUS_OK)
+            goto eol;
+
+        sq_fingerprint_t fp = sq_tpk_fingerprint(tpk);
+        char *fp_string = sq_fingerprint_to_hex(fp);
+        stringlist_add_unique(cookie->recipient_keylist, fp_string);
+        free(fp_string);
+        sq_fingerprint_free(fp);
 
         if (cookie->decrypted)
             goto eol;
 
         // See if we have the secret key.
-        sq_tsk_t tsk = NULL;
-        PEP_STATUS s = tsk_find_by_keyid(cookie->session, keyid, &tsk);
-        if (s != PEP_STATUS_OK) {
-            if (s != PEP_KEY_NOT_FOUND)
-                DUMP_ERR(cookie->session, s, "Parsing key %s", keyid_str);
-            else
-                T("No secret key material for %s", keyid_str);
+        assert(is_tsk == sq_tpk_is_tsk(tpk));
+        if (! is_tsk)
             goto eol;
-        }
 
-        tpk = sq_tsk_tpk(tsk);
         key_iter = sq_tpk_key_iter(tpk);
         sq_p_key_t key;
         while ((key = sq_tpk_key_iter_next(key_iter, NULL, NULL))) {
@@ -916,8 +918,10 @@ get_secret_keys_cb(void *cookie_opaque,
                 break;
         }
 
-        if (key == NULL)
+        if (key == NULL) {
             assert(!"Inconsistent DB: key doesn't contain a subkey with keyid!");
+            goto eol;
+        }
 
         uint8_t algo;
         uint8_t session_key[1024];
@@ -938,6 +942,8 @@ get_secret_keys_cb(void *cookie_opaque,
         free(keyid_str);
         if (key_iter)
             sq_tpk_key_iter_free(key_iter);
+        if (tpk)
+            sq_tpk_free(tpk);
     }
 
     // Consider wildcard recipients.
@@ -951,15 +957,15 @@ get_secret_keys_cb(void *cookie_opaque,
             goto eol2;
 
         if (!tsks) {
-            if (tsk_all(session, &tsks, &tsks_count) != PEP_STATUS_OK) {
+            if (tpk_all(session, true, &tsks, &tsks_count) != PEP_STATUS_OK) {
                 DUMP_ERR(session, PEP_UNKNOWN_ERROR, "Getting all tsks");
             }
         }
 
         for (int j = 0; j < tsks_count; j ++) {
-            sq_tpk_t tpk = sq_tsk_tpk(tsks[j]);
+            sq_tpk_t tsk = tsks[j];
 
-            key_iter = sq_tpk_key_iter(tpk);
+            key_iter = sq_tpk_key_iter(tsk);
             sq_p_key_t key;
             sq_signature_t selfsig;
             while ((key = sq_tpk_key_iter_next(key_iter, &selfsig, NULL))) {
@@ -979,7 +985,7 @@ get_secret_keys_cb(void *cookie_opaque,
                     continue;
 
                 // Add it to the recipient list.
-                sq_fingerprint_t fp = sq_tpk_fingerprint(tpk);
+                sq_fingerprint_t fp = sq_tpk_fingerprint(tsk);
                 char *fp_string = sq_fingerprint_to_hex(fp);
                 T("wildcard recipient appears to be %s", fp_string);
                 stringlist_add_unique(cookie->recipient_keylist, fp_string);
@@ -1001,7 +1007,7 @@ get_secret_keys_cb(void *cookie_opaque,
 
     if (tsks) {
         for (int i = 0; i < tsks_count; i ++)
-            sq_tsk_free(tsks[i]);
+            sq_tpk_free(tsks[i]);
         free(tsks);
     }
 
@@ -1046,7 +1052,7 @@ check_signatures_cb(void *cookie_opaque,
             sq_fingerprint_t issuer_fp = sq_signature_issuer_fingerprint(sig);
             if (issuer_fp) {
                 sq_keyid_t issuer = sq_fingerprint_to_keyid(issuer_fp);
-                if (tpk_find_by_keyid(session, issuer, &tpk) != PEP_STATUS_OK)
+                if (tpk_find_by_keyid(session, issuer, false, &tpk, NULL) != PEP_STATUS_OK)
                     ; // Soft error.  Ignore.
                 sq_keyid_free(issuer);
                 sq_fingerprint_free(issuer_fp);
@@ -1056,7 +1062,7 @@ check_signatures_cb(void *cookie_opaque,
             if (!tpk) {
                 sq_keyid_t issuer = sq_signature_issuer(sig);
                 if (issuer) {
-                    if (tpk_find_by_keyid(session, issuer, &tpk) != PEP_STATUS_OK)
+                    if (tpk_find_by_keyid(session, issuer, false, &tpk, NULL) != PEP_STATUS_OK)
                         ; // Soft error.  Ignore.
                 }
                 sq_keyid_free(issuer);
@@ -1268,13 +1274,11 @@ PEP_STATUS pgp_sign_only(
     assert(ssize);
 
     PEP_STATUS status = PEP_STATUS_OK;
-    sq_tsk_t signer = NULL;
-    sq_tpk_t signer_tpk = NULL; /* Reference.  */
+    sq_tpk_t signer = NULL;
     sq_writer_stack_t ws = NULL;
 
-    status = tsk_find_by_fpr_hex(session, fpr, &signer);
+    status = tpk_find_by_fpr_hex(session, fpr, true, &signer, NULL);
     ERROR_OUT(session, status, "Looking up key '%s'", fpr);
-    signer_tpk = sq_tsk_tpk(signer);
 
     sq_writer_t writer = sq_writer_alloc((void **) stext, ssize);
     writer = sq_armor_writer_new(session->ctx, writer,
@@ -1284,7 +1288,7 @@ PEP_STATUS pgp_sign_only(
 
     ws = sq_writer_stack_message(writer);
 
-    ws = sq_signer_new_detached(session->ctx, ws, &signer_tpk, 1);
+    ws = sq_signer_new_detached(session->ctx, ws, &signer, 1);
     if (!ws)
         ERROR_OUT(session, PEP_UNKNOWN_ERROR, "Setting up signer");
 
@@ -1310,7 +1314,7 @@ PEP_STATUS pgp_sign_only(
     }
 
     if (signer)
-        sq_tsk_free(signer);
+        sq_tpk_free(signer);
 
     T("(%s)-> %s", fpr, pep_status_to_string(status));
     return status;
@@ -1323,8 +1327,7 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     PEP_STATUS status = PEP_STATUS_OK;
     int keys_count = 0;
     sq_tpk_t *keys = NULL;
-    sq_tsk_t signer = NULL;
-    sq_tpk_t signer_tpk = NULL; /* Reference. */
+    sq_tpk_t signer = NULL;
     sq_writer_stack_t ws = NULL;
 
     assert(session);
@@ -1346,16 +1349,15 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     for (_keylist = keylist; _keylist != NULL; _keylist = _keylist->next) {
         assert(_keylist->value);
         sq_fingerprint_t sq_fpr = sq_fingerprint_from_hex(_keylist->value);
-        status = tpk_find_by_fpr(session, sq_fpr, &keys[keys_count ++]);
+        status = tpk_find_by_fpr(session, sq_fpr, false, &keys[keys_count ++], NULL);
         sq_fingerprint_free(sq_fpr);
-        ERROR_OUT(session, status, "Looking up key '%s'", _keylist->value);
+        ERROR_OUT(session, status, "Looking up key for recipient '%s'", _keylist->value);
     }
 
     if (sign) {
         // The first key in the keylist is the signer.
-        status = tsk_find_by_fpr_hex(session, keylist->value, &signer);
-        ERROR_OUT(session, status, "Looking up key '%s'", keylist->value);
-        signer_tpk = sq_tsk_tpk(signer);
+        status = tpk_find_by_fpr_hex(session, keylist->value, true, &signer, NULL);
+        ERROR_OUT(session, status, "Looking up key for signing '%s'", keylist->value);
     }
 
     sq_writer_t writer = sq_writer_alloc((void **) ctext, csize);
@@ -1374,7 +1376,7 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     }
 
     if (sign) {
-        ws = sq_signer_new(session->ctx, ws, &signer_tpk, 1);
+        ws = sq_signer_new(session->ctx, ws, &signer, 1);
         if (!ws)
             ERROR_OUT(session, PEP_UNKNOWN_ERROR, "Setting up signer");
     }
@@ -1405,7 +1407,7 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     }
 
     if (signer)
-        sq_tsk_free(signer);
+        sq_tpk_free(signer);
     for (int i = 0; i < keys_count; i ++)
         sq_tpk_free(keys[i]);
     free(keys);
@@ -1449,6 +1451,8 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     if (! userid)
         ERROR_OUT(session, PEP_OUT_OF_MEMORY, "asprintf");
 
+    T("(%s)", userid);
+
     // Generate a key.
     sq_tsk_t tsk;
     sq_signature_t rev;
@@ -1464,7 +1468,7 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     sq_fpr = sq_tpk_fingerprint(tpk);
     fpr = sq_fingerprint_to_hex(sq_fpr);
 
-    status = tpk_save(session, tpk, identity->address, NULL, 1);
+    status = tpk_save(session, tpk, NULL);
     tpk = NULL;
     if (status != 0)
         ERROR_OUT(session, PEP_CANNOT_CREATE_KEY, "saving TSK");
@@ -1534,7 +1538,7 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
 
         // If private_idents is not NULL and there is any private key
         // material, it will be saved.
-        status = tpk_save(session, tpk, NULL, private_idents, false);
+        status = tpk_save(session, tpk, private_idents);
         ERROR_OUT(session, status, "saving TPK");
 
         break;
@@ -1569,19 +1573,14 @@ PEP_STATUS pgp_export_keydata(
     T("(%s, %s)", fpr, secret ? "secret" : "public");
 
     if (secret) {
-        sq_tsk_t tsk;
-        status = tsk_find_by_fpr_hex(session, fpr, &tsk);
-        if (status == PEP_KEY_NOT_FOUND) {
+        status = tpk_find_by_fpr_hex(session, fpr, true, &secret_key, NULL);
+        if (status == PEP_KEY_NOT_FOUND)
             status = PEP_STATUS_OK;
-        } else if (status == PEP_STATUS_OK) {
-            secret_key = sq_tsk_into_tpk(tsk);
-        } else {
-            ERROR_OUT(session, status, "Looking up TSK");
-        }
+        ERROR_OUT(session, status, "Looking up TSK for %s", fpr);
     }
 
     sq_fingerprint_t sq_fpr = sq_fingerprint_from_hex(fpr);
-    status = tpk_find_by_fpr(session, sq_fpr, &tpk);
+    status = tpk_find_by_fpr(session, sq_fpr, false, &tpk, NULL);
     sq_fingerprint_free(sq_fpr);
     ERROR_OUT(session, status, "Looking up TPK for %s", fpr);
 
@@ -1628,121 +1627,6 @@ PEP_STATUS pgp_export_keydata(
     return status;
 }
 
-static stringpair_list_t *add_key(PEP_SESSION session, stringpair_list_t *k,
-                                  sq_tpk_t tpk, sq_fingerprint_t fpr) {
-    sq_revocation_status_t rs = sq_tpk_revocation_status(tpk);
-    sq_revocation_status_variant_t rsv = sq_revocation_status_variant(rs);
-    sq_revocation_status_free(rs);
-    if (rsv == SQ_REVOCATION_STATUS_REVOKED)
-        return k;
-
-    int dealloc_fpr = 0;
-    if (!fpr) {
-        dealloc_fpr = 1;
-        fpr = sq_tpk_fingerprint(tpk);
-    }
-
-    char *fpr_str = sq_fingerprint_to_hex(fpr);
-    char *user_id = sq_tpk_primary_user_id(tpk);
-    if (user_id) {
-        T("  %s -> %s", fpr_str, user_id);
-        k = stringpair_list_add(k, new_stringpair(fpr_str, user_id));
-    }
-
-    free(user_id);
-    free(fpr_str);
-    if (dealloc_fpr)
-        sq_fingerprint_free(fpr);
-
-    return k;
-}
-
-// pattern could be empty, an fpr, or a mailbox.
-//
-// keyinfo_list is a list of <fpr, openpgp userid> tuples for the
-// matching keys.
-//
-// This function filters out revoked key, but not expired keys.
-PEP_STATUS pgp_list_keyinfo(PEP_SESSION session,
-                            const char* pattern,
-                            stringpair_list_t** keyinfo_list)
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-    sq_tpk_t tpk = NULL;
-    sq_fingerprint_t fpr = NULL;
-
-    T("('%s')", pattern);
-
-    *keyinfo_list = new_stringpair_list(NULL);
-    if (!*keyinfo_list)
-        ERROR_OUT(session, PEP_OUT_OF_MEMORY, "new_stringlist");
-
-    // Trim any leading space.  This also makes it easier to recognize
-    // a string that is only whitespace.
-    while (*pattern == ' ')
-        pattern ++;
-
-    if (strchr(pattern, '@')) {
-        // Looks like a mailbox.
-        status = tpk_find_by_label(session, pattern, &tpk);
-        ERROR_OUT(session, status, "Looking up '%s'", pattern);
-        add_key(session, *keyinfo_list, tpk, NULL);
-
-        assert(!"pgp_list_keyinfo(email) untested, please make a test case");
-    } else if (// Only hex characters and spaces
-               pattern[strspn(pattern, "0123456789aAbBcCdDeEfF ")] == 0
-               // And a fair amount of them.
-               && strlen(pattern) >= 16) {
-        // Fingerprint.
-        fpr = sq_fingerprint_from_hex(pattern);
-        status = tpk_find_by_fpr(session, fpr, &tpk);
-        ERROR_OUT(session, status, "Looking up key");
-        add_key(session, *keyinfo_list, tpk, fpr);
-
-        assert(!"pgp_list_keyinfo(fpr) untested, please make a test case");
-    } else if (pattern[0] == 0) {
-        // Empty string.
-        sq_binding_iter_t iter = sq_store_iter(session->ctx, session->store);
-        sq_binding_t binding;
-        char *label;
-        stringpair_list_t *_k = *keyinfo_list;
-        while ((binding = sq_binding_iter_next(iter, &label, &fpr))) {
-            if (strchr(label, '@')) {
-                char *fpr_str = sq_fingerprint_to_hex(fpr);
-                T("  %s -> %s", fpr_str, label);
-                _k = stringpair_list_add(_k, new_stringpair(fpr_str, label));
-                free(fpr_str);
-            }
-            free(label);
-            sq_fingerprint_free(fpr);
-            fpr = NULL;
-            sq_binding_free(binding);
-        }
-        sq_binding_iter_free(iter);
-    }
-
- out:
-    if (tpk)
-        sq_tpk_free(tpk);
-    if (fpr)
-        sq_fingerprint_free(fpr);
-    if (status != PEP_STATUS_OK && *keyinfo_list) {
-        free_stringpair_list(*keyinfo_list);
-        *keyinfo_list = NULL;
-    }
-    if (status == PEP_KEY_NOT_FOUND)
-        status = PEP_STATUS_OK;
-
-    T("(%s) -> %s", pattern, pep_status_to_string(status));
-    return status;
-}
-
-PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
-{
-    assert(!"pgp_recv_key not implemented");
-    return PEP_UNKNOWN_ERROR;
-}
-
 char* _undot_address(const char* address) {
     if (!address)
         return NULL;
@@ -1773,24 +1657,89 @@ char* _undot_address(const char* address) {
     return retval;
 }
 
-// Unlike pgp_list_keyinfo, this function returns revoked keys.
-static PEP_STATUS _pgp_search_keys(PEP_SESSION session, const char* pattern,
-                                   stringlist_t** keylist, int private_only) {
+static stringpair_list_t *add_key(PEP_SESSION session,
+                                  stringpair_list_t *keyinfo_list,
+                                  stringlist_t* keylist,
+                                  sq_tpk_t tpk, sq_fingerprint_t fpr) {
+    bool revoked = false;
+    // Don't add revoked keys to the keyinfo_list.
+    if (keyinfo_list) {
+        sq_revocation_status_t rs = sq_tpk_revocation_status(tpk);
+        sq_revocation_status_variant_t rsv = sq_revocation_status_variant(rs);
+        sq_revocation_status_free(rs);
+        if (rsv == SQ_REVOCATION_STATUS_REVOKED)
+            revoked = true;
+    }
+
+    if (revoked && ! keylist)
+        return keyinfo_list;
+
+    int dealloc_fpr = 0;
+    if (!fpr) {
+        dealloc_fpr = 1;
+        fpr = sq_tpk_fingerprint(tpk);
+    }
+    char *fpr_str = sq_fingerprint_to_hex(fpr);
+
+    if (!revoked && keyinfo_list) {
+        char *user_id = sq_tpk_primary_user_id(tpk);
+        if (user_id)
+            keyinfo_list = stringpair_list_add(keyinfo_list,
+                                               new_stringpair(fpr_str, user_id));
+        free(user_id);
+    }
+
+    if (keylist)
+        keylist = stringlist_add(keylist, fpr_str);
+
+    free(fpr_str);
+    if (dealloc_fpr)
+        sq_fingerprint_free(fpr);
+
+    return keyinfo_list;
+}
+
+static PEP_STATUS list_keys(PEP_SESSION session,
+                            const char* pattern, int private_only,
+                            stringpair_list_t** keyinfo_list, stringlist_t** keylist)
+{
     PEP_STATUS status = PEP_STATUS_OK;
-    sq_binding_t binding = NULL;
     sq_tpk_t tpk = NULL;
-    sq_fingerprint_t fingerprint = NULL;
-    char *fingerprint_hex = NULL;
+    sq_fingerprint_t fpr = NULL;
 
-    *keylist = NULL;
+    T("('%s', private: %d)", pattern, private_only);
 
-    // XXX: We only return an exact match.
-    T("(pattern: %s, private_only: %d)", pattern, private_only);
+    stringpair_list_t* _keyinfo_list = NULL;
+    if (keyinfo_list) {
+        _keyinfo_list = new_stringpair_list(NULL);
+        if (!_keyinfo_list)
+            ERROR_OUT(session, PEP_OUT_OF_MEMORY, "new_stringpair_list");
+    }
+    stringlist_t* _keylist = NULL;
+    if (keylist) {
+        _keylist = new_stringlist(NULL);
+        if (!_keylist)
+            ERROR_OUT(session, PEP_OUT_OF_MEMORY, "new_string_list");
+    }
 
-    binding = sq_store_lookup(session->ctx, session->store, pattern);
-    if (! binding) {
-        // No binding is not an error: it means there is no match.
-        if (pattern != NULL) {
+    // Trim any leading space.  This also makes it easier to recognize
+    // a string that is only whitespace.
+    while (*pattern == ' ')
+        pattern ++;
+
+    if (strchr(pattern, '@')) {
+        // Looks like a mailbox.
+        sq_tpk_t *tpks = NULL;
+        int count = 0;
+        status = tpk_find_by_email(session, pattern, private_only, &tpks, &count);
+        ERROR_OUT(session, status, "Looking up '%s'", pattern);
+        for (int i = 0; i < count; i ++) {
+            add_key(session, _keyinfo_list, _keylist, tpks[i], NULL);
+            sq_tpk_free(tpks[i]);
+        }
+        free(tpks);
+
+        if (count == 0) {
             // If match failed, check to see if we've got a dotted
             // address in the pattern.  If so, try again without dots.
             const char* dotpos = strstr(pattern, ".");
@@ -1798,63 +1747,101 @@ static PEP_STATUS _pgp_search_keys(PEP_SESSION session, const char* pattern,
             if (dotpos && atpos && (dotpos < atpos)) {
                 char* undotted = _undot_address(pattern);
                 if (undotted) {
-                    PEP_STATUS status = _pgp_search_keys(session, undotted,
-                                                         keylist, private_only);
+                    PEP_STATUS status = list_keys(session, undotted, private_only,
+                                                  keyinfo_list, keylist);
                     free(undotted);
                     return status;
                 }
             }
         }
-        goto out;
+    } else if (// Only hex characters and spaces
+               pattern[strspn(pattern, "0123456789aAbBcCdDeEfF ")] == 0
+               // And a fair amount of them.
+               && strlen(pattern) >= 16) {
+        // Fingerprint.
+        fpr = sq_fingerprint_from_hex(pattern);
+        status = tpk_find_by_fpr(session, fpr, false, &tpk, NULL);
+        ERROR_OUT(session, status, "Looking up key");
+        add_key(session, _keyinfo_list, _keylist, tpk, fpr);
+    } else if (pattern[0] == 0) {
+        // Empty string.
+
+        sq_tpk_t *tpks = NULL;
+        int count = 0;
+        status = tpk_all(session, private_only, &tpks, &count);
+        ERROR_OUT(session, status, "Looking up '%s'", pattern);
+        for (int i = 0; i < count; i ++) {
+            add_key(session, _keyinfo_list, _keylist, tpks[i], NULL);
+            sq_tpk_free(tpks[i]);
+        }
+        free(tpks);
+    } else {
+        T("unsupported pattern '%s'", pattern);
     }
-
-    tpk = sq_binding_tpk(session->ctx, binding);
-    if (! tpk)
-        ERROR_OUT(session, PEP_GET_KEY_FAILED, "Getting TPK");
-
-    fingerprint = sq_tpk_fingerprint(tpk);
-    if (!fingerprint)
-        ERROR_OUT(session, PEP_OUT_OF_MEMORY, "Getting fingerprint");
-
-    if (private_only) {
-        // See if we have the private key.
-        status = tsk_find_by_fpr(session, fingerprint, NULL);
-        ERROR_OUT(session, status, "No private key material");
-    }
-
-    fingerprint_hex = sq_fingerprint_to_hex(fingerprint);
-    if (!fingerprint_hex)
-        ERROR_OUT(session, PEP_OUT_OF_MEMORY, "sq_fingerprint_to_hex");
-
-    stringlist_t *_keylist = new_stringlist(fingerprint_hex);
-    if (_keylist == NULL)
-        ERROR_OUT(session, PEP_OUT_OF_MEMORY, "new_stringlist");
-    *keylist = _keylist;
 
  out:
-    free(fingerprint_hex);
-    if (fingerprint)
-        sq_fingerprint_free(fingerprint);
     if (tpk)
         sq_tpk_free(tpk);
-    if (binding)
-        sq_binding_free(binding);
+    if (fpr)
+        sq_fingerprint_free(fpr);
 
-    T("(pattern: %s, private_only: %d) -> %s",
-      pattern, private_only, pep_status_to_string(status));
+    if (status == PEP_KEY_NOT_FOUND)
+        status = PEP_STATUS_OK;
+
+    if (status != PEP_STATUS_OK || (_keyinfo_list && !_keyinfo_list->value)) {
+        free_stringpair_list(_keyinfo_list);
+        _keyinfo_list = NULL;
+    }
+    if (keyinfo_list)
+        *keyinfo_list = _keyinfo_list;
+
+    if (status != PEP_STATUS_OK || (_keylist && !_keylist->value)) {
+        free_stringlist(_keylist);
+        _keylist = NULL;
+    }
+    if (keylist)
+        *keylist = _keylist;
+
+    int len = -1;
+    if (keylist)
+        len = stringlist_length(*keylist);
+    else if (keyinfo_list)
+        len = stringpair_list_length(*keyinfo_list);
+    T("(%s) -> %s (%d keys)", pattern, pep_status_to_string(status), len);
     return status;
 }
 
+// pattern could be empty, an fpr, or a mailbox.
+//
+// keyinfo_list is a list of <fpr, openpgp userid> tuples for the
+// matching keys.
+//
+// This function filters out revoked key, but not expired keys.
+PEP_STATUS pgp_list_keyinfo(PEP_SESSION session,
+                            const char* pattern,
+                            stringpair_list_t** keyinfo_list)
+{
+    return list_keys(session, pattern, false, keyinfo_list, NULL);
+}
+
+PEP_STATUS pgp_recv_key(PEP_SESSION session, const char *pattern)
+{
+    assert(!"pgp_recv_key not implemented");
+    return PEP_UNKNOWN_ERROR;
+}
+
+// Unlike pgp_list_keyinfo, this function returns revoked keys.
 PEP_STATUS pgp_find_keys(
     PEP_SESSION session, const char *pattern, stringlist_t **keylist)
 {
-    return _pgp_search_keys(session, pattern, keylist, 0);
+    return list_keys(session, pattern, false, NULL, keylist);
 }
 
+// Unlike pgp_list_keyinfo, this function returns revoked keys.
 PEP_STATUS pgp_find_private_keys(
     PEP_SESSION session, const char *pattern, stringlist_t **keylist)
 {
-    return _pgp_search_keys(session, pattern, keylist, 1);
+    return list_keys(session, pattern, true, NULL, keylist);
 }
 
 PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
@@ -1876,7 +1863,7 @@ PEP_STATUS pgp_get_key_rating(
     *comm_type = PEP_ct_unknown;
 
     sq_fingerprint_t sq_fpr = sq_fingerprint_from_hex(fpr);
-    status = tpk_find_by_fpr(session, sq_fpr, &tpk);
+    status = tpk_find_by_fpr(session, sq_fpr, false, &tpk, NULL);
     sq_fingerprint_free(sq_fpr);
     ERROR_OUT(session, status, "Looking up key: %s", fpr);
 
@@ -1959,15 +1946,13 @@ PEP_STATUS pgp_renew_key(
     PEP_SESSION session, const char *fpr, const timestamp *ts)
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    sq_tsk_t tsk = NULL;
     sq_tpk_t tpk = NULL;
-
     time_t t = mktime((struct tm *) ts);
 
-    status = tsk_find_by_fpr_hex(session, fpr, &tsk);
-    ERROR_OUT(session, status, "Looking up '%s'", fpr);
+    T("(%s)", fpr);
 
-    tpk = sq_tsk_into_tpk(tsk);
+    status = tpk_find_by_fpr_hex(session, fpr, true, &tpk, NULL);
+    ERROR_OUT(session, status, "Looking up '%s'", fpr);
 
     uint32_t creation_time = sq_p_key_creation_time(sq_tpk_primary(tpk));
     if (creation_time > t)
@@ -1980,7 +1965,7 @@ PEP_STATUS pgp_renew_key(
     if (! tpk)
         ERROR_OUT(session, PEP_UNKNOWN_ERROR, "setting expiration");
 
-    status = tpk_save(session, tpk, NULL, NULL, false);
+    status = tpk_save(session, tpk, NULL);
     tpk = NULL;
     ERROR_OUT(session, status, "Saving %s", fpr);
 
@@ -1988,6 +1973,7 @@ PEP_STATUS pgp_renew_key(
     if (tpk)
         sq_tpk_free(tpk);
 
+    T("(%s) -> %s", fpr, pep_status_to_string(status));
     return status;
 }
 
@@ -1995,13 +1981,13 @@ PEP_STATUS pgp_revoke_key(
     PEP_SESSION session, const char *fpr, const char *reason)
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    sq_tsk_t tsk = NULL;
     sq_tpk_t tpk = NULL;
 
-    status = tsk_find_by_fpr_hex(session, fpr, &tsk);
+    T("(%s)", fpr);
+
+    status = tpk_find_by_fpr_hex(session, fpr, true, &tpk, NULL);
     ERROR_OUT(session, status, "Looking up %s", fpr);
 
-    tpk = sq_tsk_into_tpk(tsk);
     tpk = sq_tpk_revoke_in_place(session->ctx, tpk,
                                  SQ_REASON_FOR_REVOCATION_UNSPECIFIED,
                                  reason);
@@ -2011,7 +1997,7 @@ PEP_STATUS pgp_revoke_key(
     assert(sq_revocation_status_variant(sq_tpk_revocation_status(tpk))
            == SQ_REVOCATION_STATUS_REVOKED);
 
-    status = tpk_save(session, tpk, NULL, NULL, false);
+    status = tpk_save(session, tpk, NULL);
     tpk = NULL;
     ERROR_OUT(session, status, "Saving %s", fpr);
 
@@ -2019,6 +2005,7 @@ PEP_STATUS pgp_revoke_key(
     if (tpk)
         sq_tpk_free(tpk);
 
+    T("(%s) -> %s", fpr, pep_status_to_string(status));
     return status;
 }
 
@@ -2027,6 +2014,7 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
 {
     PEP_STATUS status = PEP_STATUS_OK;
     sq_tpk_t tpk = NULL;
+    T("(%s)", fpr);
 
     assert(session);
     assert(fpr);
@@ -2035,7 +2023,7 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
     *expired = false;
 
     sq_fingerprint_t sq_fpr = sq_fingerprint_from_hex(fpr);
-    status = tpk_find_by_fpr(session, sq_fpr, &tpk);
+    status = tpk_find_by_fpr(session, sq_fpr, false, &tpk, NULL);
     sq_fingerprint_free(sq_fpr);
     ERROR_OUT(session, status, "Looking up %s", fpr);
 
@@ -2080,6 +2068,7 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
  out:
     if (tpk)
         sq_tpk_free(tpk);
+    T("(%s) -> %s", fpr, pep_status_to_string(status));
     return status;
 }
 
@@ -2088,6 +2077,8 @@ PEP_STATUS pgp_key_revoked(PEP_SESSION session, const char *fpr, bool *revoked)
     PEP_STATUS status = PEP_STATUS_OK;
     sq_tpk_t tpk;
 
+    T("(%s)", fpr);
+
     assert(session);
     assert(fpr);
     assert(revoked);
@@ -2095,7 +2086,7 @@ PEP_STATUS pgp_key_revoked(PEP_SESSION session, const char *fpr, bool *revoked)
     *revoked = false;
 
     sq_fingerprint_t sq_fpr = sq_fingerprint_from_hex(fpr);
-    status = tpk_find_by_fpr(session, sq_fpr, &tpk);
+    status = tpk_find_by_fpr(session, sq_fpr, false, &tpk, NULL);
     sq_fingerprint_free(sq_fpr);
     ERROR_OUT(session, status, "Looking up %s", fpr);
 
@@ -2105,6 +2096,7 @@ PEP_STATUS pgp_key_revoked(PEP_SESSION session, const char *fpr, bool *revoked)
     sq_tpk_free(tpk);
 
  out:
+    T("(%s) -> %s", fpr, pep_status_to_string(status));
     return status;
 }
 
@@ -2112,11 +2104,12 @@ PEP_STATUS pgp_key_created(PEP_SESSION session, const char *fpr, time_t *created
 {
     PEP_STATUS status = PEP_STATUS_OK;
     sq_tpk_t tpk = NULL;
+    T("(%s)", fpr);
 
     *created = 0;
 
     sq_fingerprint_t sq_fpr = sq_fingerprint_from_hex(fpr);
-    status = tpk_find_by_fpr(session, sq_fpr, &tpk);
+    status = tpk_find_by_fpr(session, sq_fpr, false, &tpk, NULL);
     sq_fingerprint_free(sq_fpr);
     ERROR_OUT(session, status, "Looking up %s", fpr);
 
@@ -2125,6 +2118,7 @@ PEP_STATUS pgp_key_created(PEP_SESSION session, const char *fpr, time_t *created
     sq_tpk_free(tpk);
 
  out:
+    T("(%s) -> %s", fpr, pep_status_to_string(status));
     return status;
 }
 
@@ -2136,16 +2130,16 @@ PEP_STATUS pgp_binary(const char **path)
 PEP_STATUS pgp_contains_priv_key(PEP_SESSION session, const char *fpr,
                                  bool *has_private)
 {
+    T("(%s)", fpr);
     sq_fingerprint_t sq_fpr = sq_fingerprint_from_hex(fpr);
-    PEP_STATUS status = tsk_find_by_fpr(session, sq_fpr, NULL);
+    PEP_STATUS status = tpk_find_by_fpr(session, sq_fpr, true, NULL, NULL);
     sq_fingerprint_free(sq_fpr);
     if (status == PEP_STATUS_OK) {
         *has_private = 1;
-        return PEP_STATUS_OK;
     } else if (status == PEP_KEY_NOT_FOUND) {
         *has_private = 0;
-        return PEP_STATUS_OK;
-    } else {
-        return status;
+        status = PEP_STATUS_OK;
     }
+    T("(%s) -> %s", fpr, pep_status_to_string(status));
+    return status;
 }
