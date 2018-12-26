@@ -16,8 +16,17 @@
 
 #include "wrappers.h"
 
+#define TRACE 0
+#ifndef TRACING
+#  ifndef NDEBUG
+#    define TRACING 0
+#  else
+#    define TRACING 1
+#  endif
+#endif
+
 // enable tracing if in debugging mode
-#ifndef NDEBUG
+#if TRACING
 #  define _T(...) do {                          \
         fprintf(stderr, ##__VA_ARGS__);         \
     } while (0)
