@@ -107,6 +107,8 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                   sqlite3_errmsg(session->key_db));
 
     sqlite_result = sqlite3_exec(session->key_db,
+                                 "PRAGMA secure_delete=true;\n"
+                                 "PRAGMA foreign_keys=true;\n"
                                  "PRAGMA locking_mode=NORMAL;\n"
                                  "PRAGMA journal_mode=WAL;\n",
                                  NULL, NULL, NULL);
