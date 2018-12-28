@@ -130,20 +130,22 @@ struct _pEpSession {
 #elif defined(USE_SEQUOIA)
     sq_context_t ctx;
     sqlite3 *key_db;
-    sqlite3_stmt *begin_transaction;
-    sqlite3_stmt *commit_transaction;
-    sqlite3_stmt *rollback_transaction;
-    sqlite3_stmt *tpk_find;
-    sqlite3_stmt *tsk_find;
-    sqlite3_stmt *tpk_find_by_keyid;
-    sqlite3_stmt *tsk_find_by_keyid;
-    sqlite3_stmt *tpk_find_by_email;
-    sqlite3_stmt *tsk_find_by_email;
-    sqlite3_stmt *tpk_all;
-    sqlite3_stmt *tsk_all;
-    sqlite3_stmt *tpk_save_insert_primary;
-    sqlite3_stmt *tpk_save_insert_subkeys;
-    sqlite3_stmt *tpk_save_insert_userids;
+    struct {
+        sqlite3_stmt *begin_transaction;
+        sqlite3_stmt *commit_transaction;
+        sqlite3_stmt *rollback_transaction;
+        sqlite3_stmt *tpk_find;
+        sqlite3_stmt *tsk_find;
+        sqlite3_stmt *tpk_find_by_keyid;
+        sqlite3_stmt *tsk_find_by_keyid;
+        sqlite3_stmt *tpk_find_by_email;
+        sqlite3_stmt *tsk_find_by_email;
+        sqlite3_stmt *tpk_all;
+        sqlite3_stmt *tsk_all;
+        sqlite3_stmt *tpk_save_insert_primary;
+        sqlite3_stmt *tpk_save_insert_subkeys;
+        sqlite3_stmt *tpk_save_insert_userids;
+    } sq_sql;
 #endif
 
     PEP_cryptotech_t *cryptotech;

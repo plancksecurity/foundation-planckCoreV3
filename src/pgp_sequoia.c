@@ -166,31 +166,31 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
     sqlite_result
         = sqlite3_prepare_v2(session->key_db, "begin transaction",
-                             -1, &session->begin_transaction, NULL);
+                             -1, &session->sq_sql.begin_transaction, NULL);
     assert(sqlite_result == SQLITE_OK);
 
     sqlite_result
         = sqlite3_prepare_v2(session->key_db, "commit transaction",
-                             -1, &session->commit_transaction, NULL);
+                             -1, &session->sq_sql.commit_transaction, NULL);
     assert(sqlite_result == SQLITE_OK);
 
     sqlite_result
         = sqlite3_prepare_v2(session->key_db, "rollback transaction",
-                             -1, &session->rollback_transaction, NULL);
+                             -1, &session->sq_sql.rollback_transaction, NULL);
     assert(sqlite_result == SQLITE_OK);
 
     sqlite_result
         = sqlite3_prepare_v2(session->key_db,
                              "SELECT tpk, secret FROM keys"
                              " WHERE primary_key == ?",
-                             -1, &session->tpk_find, NULL);
+                             -1, &session->sq_sql.tpk_find, NULL);
     assert(sqlite_result == SQLITE_OK);
 
     sqlite_result
         = sqlite3_prepare_v2(session->key_db,
                              "SELECT tpk, secret FROM keys"
                              " WHERE primary_key == ? and secret == 1",
-                             -1, &session->tsk_find, NULL);
+                             -1, &session->sq_sql.tsk_find, NULL);
     assert(sqlite_result == SQLITE_OK);
 
     sqlite_result
@@ -199,7 +199,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                              " LEFT JOIN keys"
                              "  ON subkeys.primary_key == keys.primary_key"
                              " WHERE subkey == ?",
-                             -1, &session->tpk_find_by_keyid, NULL);
+                             -1, &session->sq_sql.tpk_find_by_keyid, NULL);
     assert(sqlite_result == SQLITE_OK);
 
     sqlite_result
@@ -208,7 +208,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                              " LEFT JOIN keys"
                              "  ON subkeys.primary_key == keys.primary_key"
                              " WHERE subkey == ?",
-                             -1, &session->tpk_find_by_keyid, NULL);
+                             -1, &session->sq_sql.tpk_find_by_keyid, NULL);
     assert(sqlite_result == SQLITE_OK);
 
     sqlite_result
@@ -217,7 +217,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                              " LEFT JOIN keys"
                              "  ON subkeys.primary_key == keys.primary_key"
                              " WHERE subkey == ? and keys.secret == 1",
-                             -1, &session->tsk_find_by_keyid, NULL);
+                             -1, &session->sq_sql.tsk_find_by_keyid, NULL);
     assert(sqlite_result == SQLITE_OK);
 
     sqlite_result
@@ -226,7 +226,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                              " LEFT JOIN keys"
                              "  ON userids.primary_key == keys.primary_key"
                              " WHERE userid == ?",
-                             -1, &session->tpk_find_by_email, NULL);
+                             -1, &session->sq_sql.tpk_find_by_email, NULL);
     assert(sqlite_result == SQLITE_OK);
 
     sqlite_result
@@ -235,19 +235,19 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                              " LEFT JOIN keys"
                              "  ON userids.primary_key == keys.primary_key"
                              " WHERE userid == ? and keys.secret == 1",
-                             -1, &session->tsk_find_by_email, NULL);
+                             -1, &session->sq_sql.tsk_find_by_email, NULL);
     assert(sqlite_result == SQLITE_OK);
 
     sqlite_result
         = sqlite3_prepare_v2(session->key_db,
                              "select tpk, secret from keys",
-                             -1, &session->tpk_all, NULL);
+                             -1, &session->sq_sql.tpk_all, NULL);
     assert(sqlite_result == SQLITE_OK);
 
     sqlite_result
         = sqlite3_prepare_v2(session->key_db,
                              "select tpk, secret from keys where secret = 1",
-                             -1, &session->tsk_all, NULL);
+                             -1, &session->sq_sql.tsk_all, NULL);
     assert(sqlite_result == SQLITE_OK);
 
     sqlite_result
@@ -255,7 +255,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                              "INSERT OR REPLACE INTO keys"
                              "   (primary_key, secret, tpk)"
                              " VALUES (?, ?, ?)",
-                             -1, &session->tpk_save_insert_primary, NULL);
+                             -1, &session->sq_sql.tpk_save_insert_primary, NULL);
     assert(sqlite_result == SQLITE_OK);
 
     sqlite_result
@@ -263,7 +263,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                              "INSERT OR REPLACE INTO subkeys"
                              "   (subkey, primary_key)"
                              " VALUES (?, ?)",
-                             -1, &session->tpk_save_insert_subkeys, NULL);
+                             -1, &session->sq_sql.tpk_save_insert_subkeys, NULL);
     assert(sqlite_result == SQLITE_OK);
 
     sqlite_result
@@ -271,7 +271,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                              "INSERT OR REPLACE INTO userids"
                              "   (userid, primary_key)"
                              " VALUES (?, ?)",
-                             -1, &session->tpk_save_insert_userids, NULL);
+                             -1, &session->sq_sql.tpk_save_insert_userids, NULL);
     assert(sqlite_result == SQLITE_OK);
 
  out:
@@ -282,53 +282,12 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
 void pgp_release(PEP_SESSION session, bool out_last)
 {
-    if (session->begin_transaction)
-        sqlite3_finalize(session->begin_transaction);
-    session->begin_transaction = NULL;
-    if (session->commit_transaction)
-        sqlite3_finalize(session->commit_transaction);
-    session->commit_transaction = NULL;
-    if (session->rollback_transaction)
-        sqlite3_finalize(session->rollback_transaction);
-    session->rollback_transaction = NULL;
-
-    if (session->tpk_find)
-        sqlite3_finalize(session->tpk_find);
-    session->tpk_find = NULL;
-    if (session->tsk_find)
-        sqlite3_finalize(session->tsk_find);
-    session->tsk_find = NULL;
-
-    if (session->tpk_find_by_keyid)
-        sqlite3_finalize(session->tpk_find_by_keyid);
-    session->tpk_find_by_keyid = NULL;
-    if (session->tsk_find_by_keyid)
-        sqlite3_finalize(session->tsk_find_by_keyid);
-    session->tsk_find_by_keyid = NULL;
-
-    if (session->tpk_find_by_email)
-        sqlite3_finalize(session->tpk_find_by_email);
-    session->tpk_find_by_email = NULL;
-    if (session->tsk_find_by_email)
-        sqlite3_finalize(session->tsk_find_by_email);
-    session->tsk_find_by_email = NULL;
-
-    if (session->tpk_all)
-        sqlite3_finalize(session->tpk_all);
-    session->tpk_all = NULL;
-    if (session->tsk_all)
-        sqlite3_finalize(session->tsk_all);
-    session->tsk_all = NULL;
-
-    if (session->tpk_save_insert_primary)
-        sqlite3_finalize(session->tpk_save_insert_primary);
-    session->tpk_save_insert_primary = NULL;
-    if (session->tpk_save_insert_subkeys)
-        sqlite3_finalize(session->tpk_save_insert_subkeys);
-    session->tpk_save_insert_subkeys = NULL;
-    if (session->tpk_save_insert_userids)
-        sqlite3_finalize(session->tpk_save_insert_userids);
-    session->tpk_save_insert_userids = NULL;
+    sqlite3_stmt **stmts = (sqlite3_stmt **) &session->sq_sql;
+    for (int i = 0; i < sizeof(session->sq_sql) / sizeof(*stmts); i ++)
+        if (stmts[i]) {
+            sqlite3_finalize(stmts[i]);
+            stmts[i] = NULL;
+        }
 
     if (session->key_db) {
         int result = sqlite3_close_v2(session->key_db);
@@ -508,7 +467,7 @@ static PEP_STATUS tpk_find(PEP_SESSION session,
 
     T("(%s, %d)", fpr_str, private_only);
 
-    sqlite3_stmt *stmt = private_only ? session->tsk_find : session->tpk_find;
+    sqlite3_stmt *stmt = private_only ? session->sq_sql.tsk_find : session->sq_sql.tpk_find;
     sqlite3_bind_text(stmt, 1, fpr_str, -1, SQLITE_STATIC);
 
     status = key_load(session, stmt, tpk, secret);
@@ -542,7 +501,7 @@ static PEP_STATUS tpk_find_by_keyid_hex(
     T("(%s, %d)", keyid_hex, private_only);
 
     sqlite3_stmt *stmt
-        = private_only ? session->tsk_find_by_keyid : session->tpk_find_by_keyid;
+        = private_only ? session->sq_sql.tsk_find_by_keyid : session->sq_sql.tpk_find_by_keyid;
     sqlite3_bind_text(stmt, 1, keyid_hex, -1, SQLITE_STATIC);
 
     status = key_load(session, stmt, tpkp, secretp);
@@ -608,7 +567,7 @@ static PEP_STATUS tpk_all(PEP_SESSION, int, sq_tpk_t **, int *) __attribute__((n
 static PEP_STATUS tpk_all(PEP_SESSION session, int private_only,
                           sq_tpk_t **tpksp, int *tpks_countp) {
     PEP_STATUS status = PEP_STATUS_OK;
-    sqlite3_stmt *stmt = private_only ? session->tsk_all : session->tpk_all;
+    sqlite3_stmt *stmt = private_only ? session->sq_sql.tsk_all : session->sq_sql.tpk_all;
     status = key_loadn(session, stmt, tpksp, tpks_countp);
     ERROR_OUT(session, status, "loading TPKs");
  out:
@@ -629,7 +588,7 @@ static PEP_STATUS tpk_find_by_email(PEP_SESSION session,
     T("(%s)", pattern);
 
     sqlite3_stmt *stmt
-        = private_only ? session->tsk_find_by_email : session->tpk_find_by_email;
+        = private_only ? session->sq_sql.tsk_find_by_email : session->sq_sql.tpk_find_by_email;
     sqlite3_bind_text(stmt, 1, pattern, -1, SQLITE_STATIC);
 
     status = key_loadn(session, stmt, tpksp, countp);
@@ -690,7 +649,7 @@ static PEP_STATUS tpk_save(PEP_SESSION session, sq_tpk_t tpk,
 
 
     // Insert the TSK into the DB.
-    sqlite3_stmt *stmt = session->begin_transaction;
+    sqlite3_stmt *stmt = session->sq_sql.begin_transaction;
     int sqlite_result = sqlite3_step(stmt);
     sqlite3_reset(stmt);
     if (sqlite_result != SQLITE_DONE)
@@ -698,7 +657,7 @@ static PEP_STATUS tpk_save(PEP_SESSION session, sq_tpk_t tpk,
                   "begin transaction failed: %s",
                   sqlite3_errmsg(session->key_db));
 
-    stmt = session->tpk_save_insert_primary;
+    stmt = session->sq_sql.tpk_save_insert_primary;
     sqlite3_bind_text(stmt, 1, fpr, -1, SQLITE_STATIC);
     sqlite3_bind_int(stmt, 2, is_tsk);
     sqlite3_bind_blob(stmt, 3, tsk_buffer, tsk_buffer_len, SQLITE_STATIC);
@@ -710,7 +669,7 @@ static PEP_STATUS tpk_save(PEP_SESSION session, sq_tpk_t tpk,
                   "Saving TPK: %s", sqlite3_errmsg(session->key_db));
 
     // Insert the "subkeys" (the primary key and the subkeys).
-    stmt = session->tpk_save_insert_subkeys;
+    stmt = session->sq_sql.tpk_save_insert_subkeys;
     key_iter = sq_tpk_key_iter(tpk);
     sq_p_key_t key;
     while ((key = sq_tpk_key_iter_next(key_iter, NULL, NULL))) {
@@ -733,7 +692,7 @@ static PEP_STATUS tpk_save(PEP_SESSION session, sq_tpk_t tpk,
     key_iter = NULL;
 
     // Insert the "userids".
-    stmt = session->tpk_save_insert_userids;
+    stmt = session->sq_sql.tpk_save_insert_userids;
     user_id_iter = sq_tpk_user_id_binding_iter(tpk);
     sq_user_id_binding_t binding;
     int first = 1;
@@ -794,7 +753,8 @@ static PEP_STATUS tpk_save(PEP_SESSION session, sq_tpk_t tpk,
     if (! tried_commit) {
         tried_commit = 1;
         stmt = status == PEP_STATUS_OK
-            ? session->commit_transaction : session->rollback_transaction;
+            ? session->sq_sql.commit_transaction
+            : session->sq_sql.rollback_transaction;
         int sqlite_result = sqlite3_step(stmt);
         sqlite3_reset(stmt);
         if (sqlite_result != SQLITE_DONE)
