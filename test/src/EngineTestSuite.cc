@@ -125,7 +125,7 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
     temp_test_home = test_home + "/" + my_name;
     
     int errchk = mkdir(temp_test_home.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-    if (errchk != 0)
+    if (errchk != 0 && errno != EEXIST)
         throw std::runtime_error("Error creating a test directory.");
 
     temp_test_home += "/" + to_string(on_test_number);

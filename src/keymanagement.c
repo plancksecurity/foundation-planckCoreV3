@@ -1140,9 +1140,13 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
         identity->comm_type = PEP_ct_unknown;
     }
     
-    status = set_identity(session, identity);
-    if (status == PEP_STATUS_OK)
-        status = set_as_pEp_user(session, identity);
+    // We want to set an identity in the DB even if a key isn't found, but we have to preserve the status if
+    // it's NOT ok
+    PEP_STATUS set_id_status = set_identity(session, identity);
+    if (set_id_status == PEP_STATUS_OK)
+        set_id_status = set_as_pEp_user(session, identity);
+
+    status = (status == PEP_STATUS_OK ? set_id_status : status);
 
 pEp_free:    
     free(default_own_id);

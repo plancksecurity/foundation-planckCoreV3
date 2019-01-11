@@ -24,6 +24,10 @@ extern "C" {
 #else
 #ifdef USE_NETPGP
 #include "pgp_netpgp.h"
+#else
+#ifdef USE_SEQUOIA
+#include "pgp_sequoia.h"
+#endif
 #endif
 #endif    
     
