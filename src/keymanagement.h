@@ -228,15 +228,17 @@ DYNAMIC_API PEP_STATUS undo_last_mistrust(PEP_SESSION session);
 //
 //  parameters:
 //      session (in)        session to use
-//      ident (in)          person and key to trust in
+//      ident (in)          person and key to trust in - this must not be an
+//                          own_identity in which the .me flag is set or
+//                          the user_id is an own user_id.
 //
 //  caveat:
 //      the fields user_id, address and fpr must be supplied
+//      own identities will result in a return of PEP_ILLEGAL_VALUE.
 //      for non-own users, this will 1) set the trust bit on its comm type in the DB,
 //      2) set this key as the identity default if the current identity default
 //      is not trusted, and 3) set this key as the user default if the current
 //      user default is not trusted.
-//      For an own user, this is simply a call to myself().
 
 DYNAMIC_API PEP_STATUS trust_personal_key(
         PEP_SESSION session,
