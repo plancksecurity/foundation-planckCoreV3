@@ -68,12 +68,12 @@ void LeastCommonDenomColorTests::check_least_common_denom_color() {
     PEP_decrypt_flags_t flags;
     
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
 
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     TEST_ASSERT_MSG((dest_msg), "dest_msg");
     /* message is signed and no recip is mistrusted... */
     TEST_ASSERT_MSG((color_from_rating(rating) == PEP_color_yellow), "color_from_rating(rating) == PEP_color_yellow");
@@ -86,12 +86,12 @@ void LeastCommonDenomColorTests::check_least_common_denom_color() {
     
     /* re-evaluate rating, counting on optional fields */
     status = re_evaluate_message_rating(session, dest_msg, NULL, PEP_rating_undefined, &rating);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     TEST_ASSERT_MSG((color_from_rating(rating) == PEP_color_yellow), "color_from_rating(rating) == PEP_color_yellow");
 
     /* re-evaluate rating, without optional fields */
     status = re_evaluate_message_rating(session, dest_msg, keylist, decrypt_rating, &rating);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     TEST_ASSERT_MSG((color_from_rating(rating) == PEP_color_yellow), "color_from_rating(rating) == PEP_color_yellow");
 
     /* Ok, now mistrust one recip */
@@ -99,12 +99,12 @@ void LeastCommonDenomColorTests::check_least_common_denom_color() {
 
     /* re-evaluate rating, counting on optional fields */
     status = re_evaluate_message_rating(session, dest_msg, NULL, PEP_rating_undefined, &rating);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     TEST_ASSERT_MSG((color_from_rating(rating) == PEP_color_red), "color_from_rating(rating) == PEP_color_red");
 
     /* re-evaluate rating, without optional fields */
     status = re_evaluate_message_rating(session, dest_msg, keylist, decrypt_rating, &rating);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     TEST_ASSERT_MSG((color_from_rating(rating) == PEP_color_red), "color_from_rating(rating) == PEP_color_red");
 
     free_message(dest_msg);
@@ -117,7 +117,7 @@ void LeastCommonDenomColorTests::check_least_common_denom_color() {
     rating = PEP_rating_unreliable;
 
     status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
@@ -137,4 +137,6 @@ void LeastCommonDenomColorTests::check_least_common_denom_color() {
     dest_msg = nullptr;
     keylist = nullptr;
     rating = PEP_rating_unreliable;
+
+    TEST_ASSERT(true);
 }

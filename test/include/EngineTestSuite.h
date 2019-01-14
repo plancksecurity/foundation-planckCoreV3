@@ -27,7 +27,7 @@ class EngineTestSuite : public Test::Suite {
         string name;
         
         string current_test_name;
-
+        
 #define TEST_FAILED_MESSAGE_BUFSIZE 1000        
         char failed_msg_buf[TEST_FAILED_MESSAGE_BUFSIZE];
         
@@ -56,6 +56,5 @@ class EngineTestSuite : public Test::Suite {
         void add_file_to_gpg_dir_queue(std::string copy_from, std::string dst_fname);    
         void add_file_to_home_dir_queue(std::string copy_from, std::string dst_fname);
         void process_file_queue(std::string dirname, std::vector<std::pair<std::string, std::string>> file_queue);
-
 };
 #endif

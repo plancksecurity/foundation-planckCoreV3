@@ -15,6 +15,7 @@
 #include "EngineTestIndividualSuite.h"
 #include "EngineTestSessionSuite.h"
 #include "SuiteMaker.h"
+#include "pEpTestStatic.h"
 
 using namespace std;
 
@@ -38,7 +39,21 @@ int main(int argc, const char** argv) {
         throw std::runtime_error("Error grabbing current working directory"); 
 
     common_test_home = curr_wd + "/pEp_test_home";    
+
+    // Note: THIS IS BRITTLE. If you're trying on a new platform and it fails, it's because C++ names may be mangled differently
+    // and other platforms may have other requirements. Start by checking maximum socket path lengths...
+    // We need at least size for 3 chars of unique class dir, 3 chars of test number, 5 chars for "gnupg", for "S.gpg-agent", plus
+    // slashes. This is really just because gpg-agent fails on MacOS because of a shorter sun_path max.
     
+    // fixme = "gnupg" needs to be made central
+    string keypath_str = "gnupg";
+
+    if (common_test_home.size() > pEpTestStatic::getAvailablePathChars(keypath_str)) {
+        cerr << "Test home path size too long. Please notify the devs that this finally broke." 
+             << " In the meantime, try modifying common_test_home here in TestDriver.cc and hope nothing breaks" << endl;
+        throw -127;
+    }     
+
     EngineTestSuite* test_runner = new EngineTestSuite("MainTestDriver", common_test_home);
 
     std::vector<Test::Suite*> suites_to_run;

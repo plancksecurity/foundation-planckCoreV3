@@ -56,42 +56,42 @@ void EncryptAttachPrivateKeyTests::check_encrypt_attach_private_key() {
     // 8AB616A3BD51DEF714B5E688EFFB540C3276D2E5
     input_key = slurp("test_keys/pub/priv-key-import-test-main_0-0x3276D2E5_pub.asc");
     status = import_key(session, input_key.c_str(), input_key.length(), NULL);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
 
     input_key = slurp("test_keys/priv/priv-key-import-test-main_0-0x3276D2E5_priv.asc");
     status = import_key(session, input_key.c_str(), input_key.length(), NULL);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
         
     // key with same address and user_id (initially untrusted, then trusted)
     // 359DD8AC87D1F5E4304D08338D7185F180C8CD87
     input_key = slurp("test_keys/pub/priv-key-import-test-main_1-0x80C8CD87_pub.asc");
     status = import_key(session, input_key.c_str(), input_key.length(), NULL);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
 
     // key with same address and to have different (non-aliased) user_id (initially untrusted, then trusted)
     // B044B83639E292283A3F6E14C2E64B520B74809C
     input_key = slurp("test_keys/pub/priv-key-import-test-main_2-0x0B74809C_pub.asc");
     status = import_key(session, input_key.c_str(), input_key.length(), NULL);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
 
     // key with different address to have same user_id (initially untrusted, then trusted)
     // C52911EBA0D34B0F549594A15A7A363BD11252C9
     input_key = slurp("test_keys/pub/priv-key-import-test-other_0-0xD11252C9_pub.asc");
     status = import_key(session, input_key.c_str(), input_key.length(), NULL);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
         
     // key with different address to have different user_id (initially untrusted, then trusted)
     // 567212EFB8A3A76B1D32B9565F45BEA9C785F20A
     input_key = slurp("test_keys/pub/priv-key-import-test-other_1-0xC785F20A_pub.asc");
     status = import_key(session, input_key.c_str(), input_key.length(), NULL);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     cout << "Done!" << endl << endl;
     
     cout << "Setting up own identity with default key " << fpr_main_me << endl;
     // Own identity with default key etc
     main_me = new_identity(main_addr, fpr_main_me, own_uid, "PrivateKey Import Test");
     status = set_own_key(session, main_me, fpr_main_me);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
 
     TEST_ASSERT_MSG((strcmp(main_me->fpr, fpr_main_me) == 0), "strcmp(main_me->fpr, fpr_main_me) == 0");
     cout << "Done!" << endl << endl;
@@ -163,7 +163,7 @@ void EncryptAttachPrivateKeyTests::check_encrypt_attach_private_key() {
     cout << "Case 2: Same address, same user_id, trusted" << endl;
     status = trust_personal_key(session, same_addr_same_uid);
     cout << "Trust personal key for " << same_addr_same_uid << " gives status " << tl_status_string(status) << " (" << status << ")" << endl;
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     message* enc_same_addr_same_uid_trusted = NULL;
     status = encrypt_message_and_add_priv_key(session,
                                               msg_same_addr_same_uid,
@@ -173,7 +173,7 @@ void EncryptAttachPrivateKeyTests::check_encrypt_attach_private_key() {
                                               0);
 
     cout << "Case 2 Status: " << tl_status_string(status) << endl;
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     cout << "PASS!" << endl;
 
     // Case 3:
@@ -198,7 +198,7 @@ void EncryptAttachPrivateKeyTests::check_encrypt_attach_private_key() {
     // Different address, same user_id, trusted
     cout << "Case 4: Different address, same user_id, trusted" << endl;
     status = trust_personal_key(session, diff_addr_same_uid);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     message* enc_diff_addr_same_uid_trusted = NULL;
     status = encrypt_message_and_add_priv_key(session,
                                               msg_diff_addr_same_uid,
@@ -233,7 +233,7 @@ void EncryptAttachPrivateKeyTests::check_encrypt_attach_private_key() {
     // Same address, different user_id, trusted
     cout << "Case 6: Same address, different user_id, trusted" << endl;        
     status = trust_personal_key(session, same_addr_diff_uid);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     message* enc_same_addr_diff_uid_trusted = NULL;
     status = encrypt_message_and_add_priv_key(session,
                                               msg_same_addr_diff_uid,
@@ -268,7 +268,7 @@ void EncryptAttachPrivateKeyTests::check_encrypt_attach_private_key() {
     // Different address, different user_id, trusted
     cout << "Case 8: Different address, different user_id, trusted" << endl;    
     status = trust_personal_key(session, diff_addr_diff_uid);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     message* enc_diff_addr_diff_uid_trusted = NULL;
     status = encrypt_message_and_add_priv_key(session,
                                               msg_diff_addr_diff_uid,

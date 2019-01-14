@@ -18,6 +18,8 @@
 
 #include "test_util.h"
 #include "EngineTestSuite.h"
+#include "pEpTestStatic.h"
+#include <algorithm>
 
 using namespace std;
 
@@ -96,11 +98,11 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
     
     set_my_name();
 
+// FIXME
 #ifndef USE_NETPGP
     success = system("gpgconf --kill all");
     if (success != 0)
         throw std::runtime_error("SETUP: Error when executing 'gpgconf --kill all'.");
- //   sleep(1); // hopefully enough time for the system to recognise that it is dead. *sigh*    
 #endif
 
     if (stat(test_home.c_str(), &dirchk) == 0) {
@@ -120,6 +122,16 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
             throw std::runtime_error("Error creating a test directory.");
     }
 
+    if (my_name.size() > pEpTestStatic::classname_chars)
+        my_name.resize(pEpTestStatic::classname_chars);
+
+    if (on_test_number > pEpTestStatic::max_test_num) {
+        cerr << "Warning - there are at least " << pEpTestStatic::max_test_num << " tests in this suite. While this probably won't cause "
+             << endl << "problems, there is an obscure possibility that if your test path is REALLY REALLY LONG, tests will fail because gpg-agent "
+             << endl << "won't start with huge paths. In general, however, we stop well before these limits, and pEpTestStatic::testnum_path_chars "
+             << endl << "is overly conservative, so you probably don't need to worry." << endl;
+    }    
+
     temp_test_home = test_home + "/" + my_name;
     
     int errchk = mkdir(temp_test_home.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
@@ -131,7 +143,6 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
     errchk = mkdir(temp_test_home.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
     if (errchk != 0)
         throw std::runtime_error("Error creating a test directory.");
-
 
     // TODO: This is *nix specific, which the current testing env is anyway,
     // but it needn't remain so forever and always
@@ -203,6 +214,8 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
     
 //    cout << "calling init()\n";
     PEP_STATUS status = init(&session);
+    system("gpg-connect-agent /bye");   // Just in case - otherwise, we die on MacOS sometimes. Is this enough??
+
     assert(status == PEP_STATUS_OK);
     assert(session);
 //    cout << "init() completed.\n";
