@@ -1381,7 +1381,9 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
             EMPTYSTR(ident->fpr))
         return PEP_ILLEGAL_VALUE;
 
-    //bool ident_has_trusted_default = false;
+    if (is_me(session, ident))
+        return PEP_ILLEGAL_VALUE;
+        
     char* ident_default_fpr = NULL;
 
     // Before we do anything, be sure the input fpr is even eligible to be trusted
@@ -1394,8 +1396,6 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     if (status != PEP_STATUS_OK)
         return status;
 
-    bool me = is_me(session, ident);
-
     pEp_identity* ident_copy = identity_dup(ident);
     char* cached_fpr = NULL;
 
@@ -1404,23 +1404,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
 
     // For later, in case we need to check the user default key
     pEp_identity* tmp_user_ident = NULL;
-
-    if (me) {
-        bool has_private = false;
-        // first of all, does this key even have a private component.
-        status = contains_priv_key(session, ident->fpr, &has_private);
-        if (status != PEP_STATUS_OK && status != PEP_KEY_NOT_FOUND)
-            goto pEp_free;
-            
-        // if (has_private) {
-        //     status = set_own_key(session, ident_copy, ident->fpr); 
-        //     goto pEp_free;
-        // }
-    }
-    
-    // Either it's not me, or it's me but the key has no private key. 
-    // We're only talking about pub keys here. Moving on.
-    
+        
     // Save the input fpr, which we already tested as non-NULL
     cached_fpr = strdup(ident->fpr);
 
@@ -1436,10 +1420,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
         tmp_id->comm_type = _MAX(tmp_id->comm_type, input_default_ct) | PEP_ct_confirmed;
 
         // Get the default identity without setting the fpr                                       
-        if (me)
-            status = _myself(session, ident_copy, false, true);
-        else    
-            status = update_identity(session, ident_copy);
+        status = update_identity(session, ident_copy);
             
         ident_default_fpr = (EMPTYSTR(ident_copy->fpr) ? NULL : strdup(ident_copy->fpr));
 
@@ -1447,13 +1428,13 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
             bool trusted_default = false;
 
             // If there's no default, or the default is different from the input...
-            if (me || EMPTYSTR(ident_default_fpr) || strcmp(cached_fpr, ident_default_fpr) != 0) {
+            if (EMPTYSTR(ident_default_fpr) || strcmp(cached_fpr, ident_default_fpr) != 0) {
                 
                 // If the default fpr (if there is one) is trusted and key is strong enough,
                 // don't replace, we just set the trusted bit on this key for this user_id...
                 // (If there's no default fpr, this won't be true anyway.)
-                if (me || (ident_copy->comm_type >= PEP_ct_strong_but_unconfirmed && 
-                          (ident_copy->comm_type & PEP_ct_confirmed))) {                        
+                if ((ident_copy->comm_type >= PEP_ct_strong_but_unconfirmed && 
+                    (ident_copy->comm_type & PEP_ct_confirmed))) {                        
 
                     trusted_default = true;
                                     
@@ -1957,4 +1938,3 @@ PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session) {
     return status;
 }
 #endif // USE_GPG
-
