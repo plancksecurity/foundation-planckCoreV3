@@ -228,17 +228,46 @@ DYNAMIC_API PEP_STATUS undo_last_mistrust(PEP_SESSION session);
 //
 //  parameters:
 //      session (in)        session to use
-//      ident (in)          person and key to trust in
+//      ident (in)          person and key to trust in - this must not be an
+//                          own_identity in which the .me flag is set or
+//                          the user_id is an own user_id.
 //
 //  caveat:
 //      the fields user_id, address and fpr must be supplied
+//      own identities will result in a return of PEP_ILLEGAL_VALUE.
 //      for non-own users, this will 1) set the trust bit on its comm type in the DB,
 //      2) set this key as the identity default if the current identity default
 //      is not trusted, and 3) set this key as the user default if the current
 //      user default is not trusted.
-//      For an own user, this is simply a call to myself().
 
 DYNAMIC_API PEP_STATUS trust_personal_key(
+        PEP_SESSION session,
+        pEp_identity *ident
+    );
+
+// trust_own_key() - mark a key as trusted for self, generally
+//                   used when we need to trust a public key
+//                   associated with outselves for issues like
+//                   manual key import
+//  parameters:
+//      session (in)        session to use
+//      ident (in)          own ident containing fpr to trust
+//
+//  caveat:
+//      if this is a public key only, keep in mind that if
+//      the private part of the keypair is later added,
+//      it will not undergo separate trust evaluation. This
+//      is fine - even desired - as long as the semantics
+//      of this function are understood as both trusting
+//      the key and verifying it as an own key. This will
+//      NEVER cause replacement of or setting of a default
+//      *alone*. However, if a private key is ever associated
+//      with this fpr, please keep in mind that trusting it
+//      here makes it an eligible key for selection for    
+//      encryption later. So use this function on purpose with
+//      an understanding of what you're doing!
+//
+DYNAMIC_API PEP_STATUS trust_own_key(
         PEP_SESSION session,
         pEp_identity *ident
     );

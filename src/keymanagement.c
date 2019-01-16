@@ -103,9 +103,14 @@ PEP_STATUS elect_pubkey(
     return PEP_STATUS_OK;
 }
 
+
+// own_must_contain_private is usually true when calling;
+// we only set it to false when we have the idea of
+// possibly having an own pubkey that we need to check on its own
 static PEP_STATUS validate_fpr(PEP_SESSION session, 
                                pEp_identity* ident,
-                               bool check_blacklist) {
+                               bool check_blacklist,
+                               bool own_must_contain_private) {
     
     PEP_STATUS status = PEP_STATUS_OK;
     
@@ -115,12 +120,14 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
     char* fpr = ident->fpr;
     
     bool has_private = false;
+    status = contains_priv_key(session, fpr, &has_private);
     
-    if (ident->me) {
-        status = contains_priv_key(session, fpr, &has_private);
+    if (ident->me && own_must_contain_private) {
         if (status != PEP_STATUS_OK || !has_private)
             return PEP_KEY_UNSUITABLE;
     }
+    else if (status != PEP_STATUS_OK && has_private) // should never happen
+        has_private = false;
     
     status = get_trust(session, ident);
     if (status != PEP_STATUS_OK)
@@ -196,7 +203,9 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
         }
     }
             
-    if (ident->me && (ct >= PEP_ct_strong_but_unconfirmed) && !revoked && expired) {
+    if (ident->me && has_private && 
+        (ct >= PEP_ct_strong_but_unconfirmed) && 
+        !revoked && expired) {
         // extend key
         timestamp *ts = new_timestamp(time(NULL) + KEY_EXPIRE_DELTA);
         status = renew_key(session, fpr, ts);
@@ -315,7 +324,7 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
     // Input: stored identity retrieved from database
     // if stored identity contains a default key
     if (!EMPTYSTR(stored_fpr)) {
-        status = validate_fpr(session, stored_identity, check_blacklist);    
+        status = validate_fpr(session, stored_identity, check_blacklist, true);    
         if (status == PEP_STATUS_OK && !EMPTYSTR(stored_identity->fpr)) {
             *is_identity_default = *is_address_default = true;
             return status;
@@ -335,7 +344,7 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
     if (!EMPTYSTR(user_fpr)) {             
         // There exists a default key for user, so validate
         stored_identity->fpr = user_fpr;
-        status = validate_fpr(session, stored_identity, check_blacklist);
+        status = validate_fpr(session, stored_identity, check_blacklist, true);
         if (status == PEP_STATUS_OK && stored_identity->fpr) {
             *is_user_default = true;
             *is_address_default = key_matches_address(session, 
@@ -352,7 +361,7 @@ PEP_STATUS get_valid_pubkey(PEP_SESSION session,
     status = elect_pubkey(session, stored_identity, check_blacklist);
     if (status == PEP_STATUS_OK) {
         if (!EMPTYSTR(stored_identity->fpr))
-            validate_fpr(session, stored_identity, false); // blacklist already filtered of needed
+            validate_fpr(session, stored_identity, false, true); // blacklist already filtered of needed
     }    
     else if (status != PEP_KEY_NOT_FOUND && first_reject_status != PEP_KEY_NOT_FOUND) {
         first_reject_status = status;
@@ -1036,7 +1045,7 @@ PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen,
     // check stored identity
     if (stored_identity && !EMPTYSTR(stored_identity->fpr)) {
         // Fall back / retrieve
-        status = validate_fpr(session, stored_identity, false);
+        status = validate_fpr(session, stored_identity, false, true);
         if (status == PEP_OUT_OF_MEMORY)
             goto pep_free;
         if (status == PEP_STATUS_OK) {
@@ -1415,7 +1424,9 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
             EMPTYSTR(ident->fpr))
         return PEP_ILLEGAL_VALUE;
 
-    //bool ident_has_trusted_default = false;
+    if (is_me(session, ident))
+        return PEP_ILLEGAL_VALUE;
+        
     char* ident_default_fpr = NULL;
 
     // Before we do anything, be sure the input fpr is even eligible to be trusted
@@ -1428,8 +1439,6 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
     if (status != PEP_STATUS_OK)
         return status;
 
-    bool me = is_me(session, ident);
-
     pEp_identity* ident_copy = identity_dup(ident);
     char* cached_fpr = NULL;
 
@@ -1438,31 +1447,14 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
 
     // For later, in case we need to check the user default key
     pEp_identity* tmp_user_ident = NULL;
-
-    if (me) {
-        bool has_private = false;
-        // first of all, does this key even have a private component.
-        status = contains_priv_key(session, ident->fpr, &has_private);
-        if (status != PEP_STATUS_OK && status != PEP_KEY_NOT_FOUND)
-            goto pep_free;
-            
-        // if (has_private) {
-        //     status = set_own_key(session, ident_copy, ident->fpr); 
-        //     goto pep_free;
-        // }
-    }
-    
-    // Either it's not me, or it's me but the key has no private key. 
-    // We're only talking about pub keys here. Moving on.
-    
+        
     // Save the input fpr, which we already tested as non-NULL
     cached_fpr = strdup(ident->fpr);
 
     // Set up a temp trusted identity for the input fpr without a comm type;
     tmp_id = new_identity(ident->address, ident->fpr, ident->user_id, NULL);
     
-    // ->me isn't set, even if this is an own identity, so this will work.
-    status = validate_fpr(session, tmp_id, false);
+    status = validate_fpr(session, tmp_id, false, true);
         
     if (status == PEP_STATUS_OK) {
         // Validate fpr gets trust DB or, when that fails, key comm type. we checked
@@ -1470,10 +1462,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
         tmp_id->comm_type = _MAX(tmp_id->comm_type, input_default_ct) | PEP_ct_confirmed;
 
         // Get the default identity without setting the fpr                                       
-        if (me)
-            status = _myself(session, ident_copy, false, true);
-        else    
-            status = update_identity(session, ident_copy);
+        status = update_identity(session, ident_copy);
             
         ident_default_fpr = (EMPTYSTR(ident_copy->fpr) ? NULL : strdup(ident_copy->fpr));
 
@@ -1481,13 +1470,13 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
             bool trusted_default = false;
 
             // If there's no default, or the default is different from the input...
-            if (me || EMPTYSTR(ident_default_fpr) || strcmp(cached_fpr, ident_default_fpr) != 0) {
+            if (EMPTYSTR(ident_default_fpr) || strcmp(cached_fpr, ident_default_fpr) != 0) {
                 
                 // If the default fpr (if there is one) is trusted and key is strong enough,
                 // don't replace, we just set the trusted bit on this key for this user_id...
                 // (If there's no default fpr, this won't be true anyway.)
-                if (me || (ident_copy->comm_type >= PEP_ct_strong_but_unconfirmed && 
-                          (ident_copy->comm_type & PEP_ct_confirmed))) {                        
+                if ((ident_copy->comm_type >= PEP_ct_strong_but_unconfirmed && 
+                    (ident_copy->comm_type & PEP_ct_confirmed))) {                        
 
                     trusted_default = true;
                                     
@@ -1525,7 +1514,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
                     if (!tmp_user_ident)
                         status = PEP_OUT_OF_MEMORY;
                     else {
-                        status = validate_fpr(session, tmp_user_ident, false);
+                        status = validate_fpr(session, tmp_user_ident, false, true);
                         
                         if (status != PEP_STATUS_OK ||
                             tmp_user_ident->comm_type < PEP_ct_strong_but_unconfirmed ||
@@ -1548,6 +1537,45 @@ pep_free:
     free_identity(tmp_user_ident);
     return status;
 }
+
+DYNAMIC_API PEP_STATUS trust_own_key(
+        PEP_SESSION session,
+        pEp_identity* ident
+    ) 
+{
+    assert(session);
+    assert(ident);
+    assert(!EMPTYSTR(ident->address));
+    assert(!EMPTYSTR(ident->user_id));
+    assert(!EMPTYSTR(ident->fpr));
+    
+    if (!ident || EMPTYSTR(ident->address) || EMPTYSTR(ident->user_id) ||
+            EMPTYSTR(ident->fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    if (!is_me(session, ident))
+        return PEP_ILLEGAL_VALUE;
+
+    // don't check blacklist or require a private key
+    PEP_STATUS status = validate_fpr(session, ident, false, false);
+
+    if (status != PEP_STATUS_OK)
+        return status;
+
+    status = set_pgp_keypair(session, ident->fpr);
+    if (status != PEP_STATUS_OK)
+        return status;
+            
+    if (ident->comm_type < PEP_ct_strong_but_unconfirmed)
+        return PEP_KEY_UNSUITABLE;
+
+    ident->comm_type |= PEP_ct_confirmed;
+    
+    status = set_trust(session, ident);
+
+    return status;
+}
+
 
 DYNAMIC_API PEP_STATUS own_key_is_listed(
         PEP_SESSION session,
@@ -1798,7 +1826,7 @@ DYNAMIC_API PEP_STATUS set_own_key(
     if (!me->fpr)
         return PEP_OUT_OF_MEMORY;
 
-    status = validate_fpr(session, me, false);
+    status = validate_fpr(session, me, false, true);
     if (status)
         return status;
 
