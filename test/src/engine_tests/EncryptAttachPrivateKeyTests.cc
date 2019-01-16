@@ -161,7 +161,7 @@ void EncryptAttachPrivateKeyTests::check_encrypt_attach_private_key() {
     // Case 2:
     // Same address, same_user_id, trusted
     cout << "Case 2: Same address, same user_id, trusted" << endl;
-    status = trust_personal_key(session, same_addr_same_uid);
+    status = trust_own_key(session, same_addr_same_uid);
     cout << "Trust personal key for " << same_addr_same_uid << " gives status " << tl_status_string(status) << " (" << status << ")" << endl;
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     message* enc_same_addr_same_uid_trusted = NULL;
@@ -197,7 +197,7 @@ void EncryptAttachPrivateKeyTests::check_encrypt_attach_private_key() {
     // Case 4:
     // Different address, same user_id, trusted
     cout << "Case 4: Different address, same user_id, trusted" << endl;
-    status = trust_personal_key(session, diff_addr_same_uid);
+    status = trust_own_key(session, diff_addr_same_uid);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     message* enc_diff_addr_same_uid_trusted = NULL;
     status = encrypt_message_and_add_priv_key(session,

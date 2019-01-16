@@ -228,6 +228,33 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
         pEp_identity *ident
     );
 
+// trust_own_key() - mark a key as trusted for self, generally
+//                   used when we need to trust a public key
+//                   associated with outselves for issues like
+//                   manual key import
+//  parameters:
+//      session (in)        session to use
+//      ident (in)          own ident containing fpr to trust
+//
+//  caveat:
+//      if this is a public key only, keep in mind that if
+//      the private part of the keypair is later added,
+//      it will not undergo separate trust evaluation. This
+//      is fine - even desired - as long as the semantics
+//      of this function are understood as both trusting
+//      the key and verifying it as an own key. This will
+//      NEVER cause replacement of or setting of a default
+//      *alone*. However, if a private key is ever associated
+//      with this fpr, please keep in mind that trusting it
+//      here makes it an eligible key for selection for    
+//      encryption later. So use this function on purpose with
+//      an understanding of what you're doing!
+//
+DYNAMIC_API PEP_STATUS trust_own_key(
+        PEP_SESSION session,
+        pEp_identity *ident
+    );
+
 
 // key_reset_trust() - reset trust bit or explicitly mistrusted status for an identity and
 //                     its accompanying key/user_id pair.
