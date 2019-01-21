@@ -360,6 +360,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         DLOAD(gpgme_signers_add);
         DLOAD(gpgme_set_passphrase_cb);
         DLOAD(gpgme_get_key);
+        DLOAD(gpgme_strerror);
         
 #ifdef GPGME_VERSION_NUMBER
 #if (GPGME_VERSION_NUMBER >= 0x010700)
@@ -2108,7 +2109,7 @@ PEP_STATUS pgp_get_key_rating(
                             break;
                         default:    
                             if (sk->can_encrypt)
-                                worst_enc = _MAX(curr_enc, worst_enc);
+                                worst_enc = _MIN(curr_enc, worst_enc);
                             break;
                     }                    
                 }    
