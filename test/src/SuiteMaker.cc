@@ -21,6 +21,8 @@
 #include "I18nTests.h"
 #include "IdentityListTests.h"
 #include "PgpBinaryTests.h"
+#include "MistrustUndoTests.h"
+#include "SubkeyRatingEvalTests.h"
 #include "MessageNullFromTests.h"
 #include "LeastCommonDenomColorTests.h"
 #include "StringlistTests.h"
@@ -29,11 +31,11 @@
 #include "EncryptMissingPrivateKeyTests.h"
 #include "CaseAndDotAddressTests.h"
 #include "UserIDAliasTests.h"
-#include "SignOnlyTests.h"
 #include "BCCTests.h"
 #include "Engine358Tests.h"
 #include "BlacklistAcceptNewKeyTests.h"
 #include "DecryptAttachPrivateKeyUntrustedTests.h"
+#include "ReturnMistrustFprTests.h"
 #include "BlacklistTests.h"
 #include "RevokeRegenAttachTests.h"
 #include "PepSubjectReceivedTests.h"
@@ -53,7 +55,6 @@
 #include "CrashdumpTests.h"
 #include "StringpairListTests.h"
 #include "EncryptForIdentityTests.h"
-#include "KeyResetMessageTests.h"
 #include "TrustManipulationTests.h"
 #include "AppleMailTests.h"
 
@@ -68,6 +69,8 @@ const char* SuiteMaker::all_suites[] = {
     "I18nTests",
     "IdentityListTests",
     "PgpBinaryTests",
+    "MistrustUndoTests",
+    "SubkeyRatingEvalTests",
     "MessageNullFromTests",
     "LeastCommonDenomColorTests",
     "StringlistTests",
@@ -76,11 +79,11 @@ const char* SuiteMaker::all_suites[] = {
     "EncryptMissingPrivateKeyTests",
     "CaseAndDotAddressTests",
     "UserIDAliasTests",
-    "SignOnlyTests",
     "BCCTests",
     "Engine358Tests",
     "BlacklistAcceptNewKeyTests",
     "DecryptAttachPrivateKeyUntrustedTests",
+    "ReturnMistrustFprTests",
     "BlacklistTests",
     "RevokeRegenAttachTests",
     "PepSubjectReceivedTests",
@@ -100,13 +103,12 @@ const char* SuiteMaker::all_suites[] = {
     "CrashdumpTests",
     "StringpairListTests",
     "EncryptForIdentityTests",
-    "KeyResetMessageTests",
     "TrustManipulationTests",
     "AppleMailTests",
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 44;
+int SuiteMaker::num_suites = 45;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "MimeTests") == 0)
@@ -127,6 +129,10 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new IdentityListTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "PgpBinaryTests") == 0)
         *test_suite = new PgpBinaryTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "MistrustUndoTests") == 0)
+        *test_suite = new MistrustUndoTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "SubkeyRatingEvalTests") == 0)
+        *test_suite = new SubkeyRatingEvalTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "MessageNullFromTests") == 0)
         *test_suite = new MessageNullFromTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "LeastCommonDenomColorTests") == 0)
@@ -143,8 +149,6 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new CaseAndDotAddressTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "UserIDAliasTests") == 0)
         *test_suite = new UserIDAliasTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "SignOnlyTests") == 0)
-        *test_suite = new SignOnlyTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "BCCTests") == 0)
         *test_suite = new BCCTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "Engine358Tests") == 0)
@@ -153,6 +157,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new BlacklistAcceptNewKeyTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "DecryptAttachPrivateKeyUntrustedTests") == 0)
         *test_suite = new DecryptAttachPrivateKeyUntrustedTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "ReturnMistrustFprTests") == 0)
+        *test_suite = new ReturnMistrustFprTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "BlacklistTests") == 0)
         *test_suite = new BlacklistTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "RevokeRegenAttachTests") == 0)
@@ -191,8 +197,6 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new StringpairListTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "EncryptForIdentityTests") == 0)
         *test_suite = new EncryptForIdentityTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "KeyResetMessageTests") == 0)
-        *test_suite = new KeyResetMessageTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "TrustManipulationTests") == 0)
         *test_suite = new TrustManipulationTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "AppleMailTests") == 0)
