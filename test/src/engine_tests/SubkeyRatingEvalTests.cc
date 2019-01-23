@@ -45,7 +45,7 @@ void SubkeyRatingEvalTests::check_subkey_rating_eval_no_es() {
     slurp_and_import_key(session, "test_keys/pub/subkey_select_0-0x4929DC45_pub.asc");
     PEP_comm_type ct = PEP_ct_unknown;
     PEP_STATUS status = get_key_rating(session, "F0D03C842C0770C2C2A9FEAF2A1ED9814929DC45", &ct);
-    TEST_ASSERT_MSG(status == PEP_KEY_UNSUITABLE, tl_status_string(status));
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT_MSG(ct = PEP_ct_key_b0rken, tl_ct_string(ct));
     TEST_ASSERT(true);
 }
