@@ -34,6 +34,13 @@ ifeq ($(BUILD_FOR),Linux)
     LDLIBS+= -luuid
 endif
 
+ifeq ($(OPENPGP),SEQUOIA)
+	LDFLAGS+= $(SEQUOIA_LDFLAGS)
+	LDLIBS+= $(SEQUOIA_LIB)
+	CFLAGS+= $(SEQUOIA_CFLAGS) -DUSE_SEQUOIA
+	INC_FLAGS+= $(SEQUOIA_INC)
+endif
+
 ifdef SQLITE3_FROM_OS
     LDLIBS+= -lsqlite3
 endif
@@ -116,7 +123,7 @@ endif
 
 .PHONY: test
 test: all
-	$(TEST_CMD_PFX) $(TEST_DEBUGGER) ./$(TARGET)
+    $(TEST_CMD_PFX) $(TEST_DEBUGGER) ./$(TARGET)
 
 .PHONY: clean
 clean:

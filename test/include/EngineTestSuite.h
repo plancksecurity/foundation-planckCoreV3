@@ -59,6 +59,5 @@ class EngineTestSuite : public Test::Suite {
         void add_file_to_gpg_dir_queue(std::string copy_from, std::string dst_fname);    
         void add_file_to_home_dir_queue(std::string copy_from, std::string dst_fname);
         void process_file_queue(std::string dirname, std::vector<std::pair<std::string, std::string>> file_queue);
-
 };
 #endif

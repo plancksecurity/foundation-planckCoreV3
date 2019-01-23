@@ -88,6 +88,7 @@ void TrustManipulationTests::check_trust_manipulation() {
     cout << "Hoorah, we now do not trust key 2. (We never liked key 2 anyway.)" << endl;
     cout << "Now we call update_identity to see what gifts it gives us (should be key 1 with key 1's initial trust.)" << endl;    
     status = update_identity(session, user);
+    TEST_ASSERT_MSG((user->fpr), "user->fpr");
     TEST_ASSERT_MSG((strcmp(user->fpr, keypair1) == 0), "strcmp(user->fpr, keypair1) == 0");
     TEST_ASSERT_MSG((user->comm_type == PEP_ct_OpenPGP_unconfirmed), "user->comm_type == PEP_ct_OpenPGP_unconfirmed");
     cout << "Yup, got key 1, and the trust status is PEP_ct_OpenPGP_unconfirmed." << endl;

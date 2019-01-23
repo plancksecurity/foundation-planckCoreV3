@@ -145,7 +145,9 @@ DYNAMIC_API stringlist_t *stringlist_add_unique(
             found = true;
         list_curr = list_curr->next;
     }
-     
+    if(strcmp(list_curr->value,value)==0)
+        found = true;
+
     if (!found) {
         list_curr->next = new_stringlist(value);
 

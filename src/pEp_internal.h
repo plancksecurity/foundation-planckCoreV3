@@ -91,9 +91,11 @@
 #include "pEpEngine.h"
 
 // If not specified, build for GPG
+#ifndef USE_SEQUOIA
 #ifndef USE_NETPGP
 #ifndef USE_GPG
 #define USE_GPG
+#endif
 #endif
 #endif
 
@@ -101,6 +103,8 @@
 #include "pgp_gpg_internal.h"
 #elif defined(USE_NETPGP)
 #include "pgp_netpgp_internal.h"
+#elif defined(USE_SEQUOIA)
+#include "pgp_sequoia_internal.h"
 #endif
 
 #include "keymanagement.h"
@@ -123,6 +127,25 @@ struct _pEpSession {
     gpgme_ctx_t ctx;
 #elif defined(USE_NETPGP)
     pEpNetPGPSession ctx;
+#elif defined(USE_SEQUOIA)
+    sq_context_t ctx;
+    sqlite3 *key_db;
+    struct {
+        sqlite3_stmt *begin_transaction;
+        sqlite3_stmt *commit_transaction;
+        sqlite3_stmt *rollback_transaction;
+        sqlite3_stmt *tpk_find;
+        sqlite3_stmt *tsk_find;
+        sqlite3_stmt *tpk_find_by_keyid;
+        sqlite3_stmt *tsk_find_by_keyid;
+        sqlite3_stmt *tpk_find_by_email;
+        sqlite3_stmt *tsk_find_by_email;
+        sqlite3_stmt *tpk_all;
+        sqlite3_stmt *tsk_all;
+        sqlite3_stmt *tpk_save_insert_primary;
+        sqlite3_stmt *tpk_save_insert_subkeys;
+        sqlite3_stmt *tpk_save_insert_userids;
+    } sq_sql;
 #endif
 
     PEP_cryptotech_t *cryptotech;
