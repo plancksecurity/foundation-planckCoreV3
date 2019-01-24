@@ -408,7 +408,10 @@ tstylesheet {
                             goto the_end;
 
                         if (!(channels && channels->ident)) {
-                            status = PEP_«yml:ucase(@name)»_NO_CHANNEL;
+                            // status = PEP_«yml:ucase(@name)»_NO_CHANNEL;
+                            // we don't check for having a channel, because if
+                            // this is initial setup before having an own
+                            // identity we're fine
                             goto the_end;
                         }
                         break;
