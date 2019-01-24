@@ -361,6 +361,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         DLOAD(gpgme_signers_add);
         DLOAD(gpgme_set_passphrase_cb);
         DLOAD(gpgme_get_key);
+        DLOAD(gpgme_strerror);
         
 #ifdef GPGME_VERSION_NUMBER
 #if (GPGME_VERSION_NUMBER >= 0x010700)
@@ -2141,31 +2142,63 @@ PEP_STATUS pgp_get_key_rating(
             *comm_type = PEP_ct_key_revoked;            
         else if (key->expired)
             *comm_type = PEP_ct_key_expired;
+        else if (!key->subkeys)
+            *comm_type = PEP_ct_key_b0rken;
         else {
             // Ok, so we now need to check subkeys. Normally, we could just
             // shortcut this by looking at key->can_sign and key->can_encrypt,
             // but we want the REASON we can't use a key, so this gets ugly.
             PEP_comm_type max_comm_type = *comm_type;
-                        
-            PEP_comm_type best_sign = PEP_ct_no_encryption;
-            PEP_comm_type best_enc = PEP_ct_no_encryption;
-            
+
+            // NOTE: 
+            // PEP_ct_pEp functions here as an unreachable top;
+            // it is impossible on just a key.
+            // IF THIS CHANGES, we must choose something else.
+            PEP_comm_type worst_sign = PEP_ct_pEp;
+            PEP_comm_type worst_enc = PEP_ct_pEp;
+
+            PEP_comm_type error_sign = PEP_ct_unknown;
+            PEP_comm_type error_enc = PEP_ct_unknown;
+
+            // We require that the underlying client NOT force-use expired or revoked
+            // subkeys instead of a valid one.
+            //
+            // So here we check all the subkeys; we make note of the existence
+            // of an expired, revoked, or invalid subkey, in case there is no
+            // other alternative (we want to return useful information).
+            // At the same time, we try to evaluate the least strong useable keys 
+            // for signing and encryption. If there is a useable one of both,
+            // the key comm_type corresponds to the lesser of these two least strong
+            // keys
             for (gpgme_subkey_t sk = key->subkeys; sk != NULL; sk = sk->next) {
+                
+                // Only evaluate signing keys or encryption keys
                 if (sk->can_sign || sk->can_encrypt) {
                     PEP_comm_type curr_sign = PEP_ct_no_encryption;
                     PEP_comm_type curr_enc = PEP_ct_no_encryption;
-                    
-                    if (sk->length < 1024) {
+
+#ifdef GPGME_PK_ECC                    
+                    if ((sk->pubkey_algo != GPGME_PK_ECC && sk->length < 1024) 
+                        || (sk->pubkey_algo == GPGME_PK_ECC && sk->length < 160)) {
+#else
+                    if (sk->length < 1024) {                        
+#endif                        
                         if (sk->can_sign)
                             curr_sign = PEP_ct_key_too_short;
                         if (sk->can_encrypt)                               
                             curr_enc = PEP_ct_key_too_short;
                     }
-                    else if (
-                        ((sk->pubkey_algo == GPGME_PK_RSA)
-                        || (sk->pubkey_algo == GPGME_PK_RSA_E)
-                        || (sk->pubkey_algo == GPGME_PK_RSA_S))
-                        && sk->length == 1024) {
+                    else if 
+                        (
+                            (((sk->pubkey_algo == GPGME_PK_RSA)
+                                || (sk->pubkey_algo == GPGME_PK_RSA_E)
+                                || (sk->pubkey_algo == GPGME_PK_RSA_S))
+                                && sk->length == 1024)
+#ifdef GPGME_PK_ECC                    
+                            || (sk->pubkey_algo == GPGME_PK_ECC
+                                && sk->length == 160)
+#endif                             
+                        ) {
                         if (sk->can_sign)
                             curr_sign = PEP_ct_OpenPGP_weak_unconfirmed;
                         if (sk->can_encrypt)                               
@@ -2195,18 +2228,39 @@ PEP_STATUS pgp_get_key_rating(
                         if (sk->can_encrypt)                               
                             curr_enc = PEP_ct_key_revoked;
                     }
-                    if (sk->can_sign)
-                        best_sign = _MAX(curr_sign, best_sign);
-                    if (sk->can_encrypt)
-                        best_enc = _MAX(curr_enc, best_enc);
+                    switch (curr_sign) {
+                        case PEP_ct_key_b0rken:
+                        case PEP_ct_key_expired:
+                        case PEP_ct_key_revoked:
+                            error_sign = curr_sign;
+                            break;
+                        default:    
+                            if (sk->can_sign)
+                                worst_sign = _MIN(curr_sign, worst_sign);
+                            break;
+                    }
+                    switch (curr_enc) {
+                        case PEP_ct_key_b0rken:
+                        case PEP_ct_key_expired:
+                        case PEP_ct_key_revoked:
+                            error_sign = curr_sign;
+                            break;
+                        default:    
+                            if (sk->can_encrypt)
+                                worst_enc = _MIN(curr_enc, worst_enc);
+                            break;
+                    }                    
                 }    
             }
-            if (best_enc == PEP_ct_no_encryption ||
-                best_sign == PEP_ct_no_encryption) {
-                *comm_type = PEP_ct_key_b0rken;
+            if (worst_enc == PEP_ct_pEp ||
+                worst_sign == PEP_ct_pEp) {
+                // No valid key was found for one or both; return a useful 
+                // error comm_type
+                PEP_comm_type error_ct = _MAX(error_enc, error_sign);    
+                *comm_type = (error_ct == PEP_ct_unknown ? PEP_ct_key_b0rken : error_ct);
             }
             else {
-                *comm_type = _MIN(best_sign, _MIN(max_comm_type, best_enc));
+                *comm_type = _MIN(max_comm_type, _MIN(worst_sign, worst_enc));
             }                
         }
         break;

@@ -83,6 +83,8 @@ typedef gpgme_error_t (*gpgme_op_edit_t)(gpgme_ctx_t CTX, gpgme_key_t KEY,
         gpgme_edit_cb_t FNC, void *HANDLE, gpgme_data_t OUT);
 typedef gpgme_ssize_t (*gpgme_io_write_t)(int fd, const void *buffer,
         size_t count);
+typedef const char*(*gpgme_strerror_t)(gpgme_error_t err);
+
 
 #ifdef GPGME_VERSION_NUMBER 
 #if (GPGME_VERSION_NUMBER >= 0x010700)
@@ -153,6 +155,8 @@ struct gpg_s {
 	gpgme_key_release_t gpgme_key_release;
     gpgme_op_edit_t gpgme_op_edit;
     gpgme_io_write_t gpgme_io_write;
+    
+    gpgme_strerror_t gpgme_strerror;
 
     gpgme_set_passphrase_cb_t gpgme_set_passphrase_cb;
 };
