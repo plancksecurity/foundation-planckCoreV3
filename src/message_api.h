@@ -586,6 +586,16 @@ DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
     PEP_rating x_enc_status,
     PEP_rating *rating
 );
+
+// TODO: Implement this - and don't even try to use your light saber
+
+DYNAMIC_API PEP_STATUS get_key_rating_for_user(
+        PEP_SESSION session,
+        char *user_id,
+        char *fpr,
+        PEP_rating *rating
+    );
+
 #ifdef __cplusplus
 }
 #endif
