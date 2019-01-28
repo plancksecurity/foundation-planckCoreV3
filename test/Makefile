@@ -20,7 +20,7 @@ DEPS := $(OBJS:.o=.d)
 INC_DIRS := ./include /usr/local/include ../src ../sync ../asn.1
 INC_FLAGS := $(addprefix -I,$(INC_DIRS)) $(GPGME_INC) $(CPPUNIT_INC)
 
-LDFLAGS += -L/usr/local/lib
+LDFLAGS += -L/usr/local/lib -L/opt/local/lib
 
 CFLAGS += -Wno-deprecated
 CXXFLAGS += -Wno-deprecated
@@ -34,7 +34,7 @@ ifeq ($(BUILD_FOR),Linux)
 endif
 
 ifeq ($(OPENPGP),NETPGP)
-	LDLIBS+= -lnetpgp
+	LDLIBS+= -lnetpgp -lcrypto
 	CFLAGS+= -DUSE_NETPGP
 ifeq ($(BUILD_FOR),Linux)
 	LDLIBS+= -ltre
