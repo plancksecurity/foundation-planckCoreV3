@@ -602,8 +602,8 @@ DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
 
 DYNAMIC_API PEP_STATUS get_key_rating_for_user(
         PEP_SESSION session,
-        char *user_id,
-        char *fpr,
+        const char *user_id,
+        const char *fpr,
         PEP_rating *rating
     );
 
