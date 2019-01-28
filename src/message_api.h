@@ -588,7 +588,17 @@ DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
     PEP_rating *rating
 );
 
-// TODO: Implement this - and don't even try to use your light saber
+// get_key_rating_for_user() - get the rating of a certain key for a certain user
+//
+//  parameters:
+//
+//      session (in)            session handle
+//      user_id (in)            string with user ID
+//      fpr (in)                string with fingerprint
+//      rating (out)            rating of key for this user
+//
+//  returns:
+//      PEP_RECORD_NOT_FOUND if no trust record for user_id and fpr can be found
 
 DYNAMIC_API PEP_STATUS get_key_rating_for_user(
         PEP_SESSION session,
