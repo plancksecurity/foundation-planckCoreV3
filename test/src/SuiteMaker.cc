@@ -29,6 +29,7 @@
 #include "PgpListKeysTests.h"
 #include "MessageApiTests.h"
 #include "EncryptMissingPrivateKeyTests.h"
+#include "NetPGPPlaygroundTests.h"
 #include "CaseAndDotAddressTests.h"
 #include "UserIDAliasTests.h"
 #include "BCCTests.h"
@@ -77,6 +78,7 @@ const char* SuiteMaker::all_suites[] = {
     "PgpListKeysTests",
     "MessageApiTests",
     "EncryptMissingPrivateKeyTests",
+    "NetPGPPlaygroundTests",
     "CaseAndDotAddressTests",
     "UserIDAliasTests",
     "BCCTests",
@@ -108,7 +110,7 @@ const char* SuiteMaker::all_suites[] = {
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 45;
+int SuiteMaker::num_suites = 46;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "MimeTests") == 0)
@@ -145,6 +147,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new MessageApiTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "EncryptMissingPrivateKeyTests") == 0)
         *test_suite = new EncryptMissingPrivateKeyTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "NetPGPPlaygroundTests") == 0)
+        *test_suite = new NetPGPPlaygroundTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "CaseAndDotAddressTests") == 0)
         *test_suite = new CaseAndDotAddressTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "UserIDAliasTests") == 0)
