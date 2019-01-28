@@ -236,7 +236,7 @@ typedef enum _PEP_rating {
     PEP_rating_cannot_decrypt,
     PEP_rating_have_no_key,
     PEP_rating_unencrypted,
-    PEP_rating_unencrypted_for_some,
+    PEP_rating_unencrypted_for_some, // don't use this any more
     PEP_rating_unreliable,
     PEP_rating_reliable,
     PEP_rating_trusted,
@@ -602,8 +602,8 @@ DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
 
 DYNAMIC_API PEP_STATUS get_key_rating_for_user(
         PEP_SESSION session,
-        char *user_id,
-        char *fpr,
+        const char *user_id,
+        const char *fpr,
         PEP_rating *rating
     );
 

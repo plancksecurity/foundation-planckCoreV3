@@ -121,8 +121,8 @@ static const char * rating_to_string(PEP_rating rating)
         return "have_no_key";
     case PEP_rating_unencrypted:
         return "unencrypted";
-    case PEP_rating_unencrypted_for_some:
-        return "unencrypted_for_some";
+    case PEP_rating_unencrypted_for_some: // don't use this any more
+        return "undefined";
     case PEP_rating_unreliable:
         return "unreliable";
     case PEP_rating_reliable:
@@ -1279,15 +1279,7 @@ static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist, cha
         if (_rating_ <= PEP_rating_mistrust)
             return _rating_;
             
-        if (_rating_ == PEP_rating_unencrypted)
-        {
-            if (rating > PEP_rating_unencrypted_for_some)
-                rating = worst_rating(rating, PEP_rating_unencrypted_for_some);
-        }
-        else
-        {
-            rating = worst_rating(rating, _rating_);
-        }
+        rating = worst_rating(rating, _rating_);
     }
 
     return rating;
@@ -4566,7 +4558,7 @@ static PEP_rating string_to_rating(const char * rating)
     if (strcmp(rating, "unencrypted") == 0)
         return PEP_rating_unencrypted;
     if (strcmp(rating, "unencrypted_for_some") == 0)
-        return PEP_rating_unencrypted_for_some;
+        return PEP_rating_undefined; // don't use this any more
     if (strcmp(rating, "unreliable") == 0)
         return PEP_rating_unreliable;
     if (strcmp(rating, "reliable") == 0)
@@ -4716,8 +4708,8 @@ pEp_error:
 
 DYNAMIC_API PEP_STATUS get_key_rating_for_user(
         PEP_SESSION session,
-        char *user_id,
-        char *fpr,
+        const char *user_id,
+        const char *fpr,
         PEP_rating *rating
     )
 {
