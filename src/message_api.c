@@ -121,8 +121,8 @@ static const char * rating_to_string(PEP_rating rating)
         return "have_no_key";
     case PEP_rating_unencrypted:
         return "unencrypted";
-    case PEP_rating_unencrypted_for_some:
-        return "unencrypted_for_some";
+    case PEP_rating_unencrypted_for_some: // don't use this any more
+        return "undefined";
     case PEP_rating_unreliable:
         return "unreliable";
     case PEP_rating_reliable:
@@ -1101,7 +1101,7 @@ pEp_error:
 }
 
 
-static PEP_rating _rating(PEP_comm_type ct, PEP_rating rating)
+static PEP_rating _rating(PEP_comm_type ct)
 {
     if (ct == PEP_ct_unknown)
         return PEP_rating_undefined;
@@ -1115,19 +1115,9 @@ static PEP_rating _rating(PEP_comm_type ct, PEP_rating rating)
     else if (ct == PEP_ct_mistrusted)
         return PEP_rating_mistrust;
 
-    if (rating == PEP_rating_unencrypted_for_some)
-        return PEP_rating_unencrypted_for_some;
-
     if (ct == PEP_ct_no_encryption || ct == PEP_ct_no_encrypted_channel ||
-            ct == PEP_ct_my_key_not_included) {
-        if (rating > PEP_rating_unencrypted_for_some)
-            return PEP_rating_unencrypted_for_some;
-        else
+            ct == PEP_ct_my_key_not_included)
             return PEP_rating_unencrypted;
-    }
-
-    if (rating == PEP_rating_unencrypted)
-        return PEP_rating_unencrypted_for_some;
 
     if (ct >= PEP_ct_confirmed_enc_anon)
         return PEP_rating_trusted_and_anonymized;
@@ -1262,7 +1252,7 @@ static PEP_rating key_rating(PEP_SESSION session, const char *fpr)
     } else {
         resulting_comm_type = least_comm_type;
     }
-    return _rating(resulting_comm_type, PEP_rating_undefined);
+    return _rating(resulting_comm_type);
 }
 
 static PEP_rating worst_rating(PEP_rating rating1, PEP_rating rating2) {
@@ -1289,15 +1279,7 @@ static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist, cha
         if (_rating_ <= PEP_rating_mistrust)
             return _rating_;
             
-        if (_rating_ == PEP_rating_unencrypted)
-        {
-            if (rating > PEP_rating_unencrypted_for_some)
-                rating = worst_rating(rating, PEP_rating_unencrypted_for_some);
-        }
-        else
-        {
-            rating = worst_rating(rating, _rating_);
-        }
+        rating = worst_rating(rating, _rating_);
     }
 
     return rating;
@@ -1851,8 +1833,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         
     if (enc_format == PEP_enc_none || !dest_keys_found ||
         stringlist_length(keys)  == 0 ||
-        _rating(max_comm_type,
-                PEP_rating_undefined) < PEP_rating_reliable)
+        _rating(max_comm_type) < PEP_rating_reliable)
     {
         free_stringlist(keys);
         if ((has_pEp_user || !session->passive_mode) && 
@@ -2508,8 +2489,7 @@ static PEP_STATUS amend_rating_according_to_sender_and_recipients(
             }
             if (_sender->comm_type != PEP_ct_unknown) {
                 *rating = keylist_rating(session, recipients, 
-                            fpr, _rating(_sender->comm_type, 
-                                          PEP_rating_undefined));
+                            fpr, _rating(_sender->comm_type));
             }
             
             free_identity(_sender);
@@ -3922,8 +3902,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
         *rating = PEP_rating_undefined;
     }
     else
-        *rating = MAX(_rating(max_comm_type, PEP_rating_undefined),
-                               PEP_rating_unencrypted);
+        *rating = MAX(_rating(max_comm_type), PEP_rating_unencrypted);
 
     return PEP_STATUS_OK;
 }
@@ -3958,8 +3937,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
     _max_comm_type_from_identity_list_preview(msg->bcc, session,
             &max_comm_type);
 
-    *rating = _MAX(_rating(max_comm_type, PEP_rating_undefined),
-            PEP_rating_unencrypted);
+    *rating = _MAX(_rating(max_comm_type), PEP_rating_unencrypted);
 
     return PEP_STATUS_OK;
 }
@@ -4005,7 +3983,7 @@ DYNAMIC_API PEP_STATUS identity_rating(
     }
 
     if (status == PEP_STATUS_OK)
-        *rating = _rating(ident->comm_type, PEP_rating_undefined);
+        *rating = _rating(ident->comm_type);
 
     return status;
 }
@@ -4580,7 +4558,7 @@ static PEP_rating string_to_rating(const char * rating)
     if (strcmp(rating, "unencrypted") == 0)
         return PEP_rating_unencrypted;
     if (strcmp(rating, "unencrypted_for_some") == 0)
-        return PEP_rating_unencrypted_for_some;
+        return PEP_rating_undefined; // don't use this any more
     if (strcmp(rating, "unreliable") == 0)
         return PEP_rating_unreliable;
     if (strcmp(rating, "reliable") == 0)
@@ -4727,3 +4705,37 @@ pEp_error:
 
     return status;
 }
+
+DYNAMIC_API PEP_STATUS get_key_rating_for_user(
+        PEP_SESSION session,
+        const char *user_id,
+        const char *fpr,
+        PEP_rating *rating
+    )
+{
+    assert(session && user_id && user_id[0] && fpr && fpr[0] && rating);
+    if (!(session && user_id && user_id[0] && fpr && fpr[0] && rating))
+        return PEP_ILLEGAL_VALUE;
+
+    *rating = PEP_rating_undefined;
+
+    pEp_identity *ident = new_identity(NULL, fpr, user_id, NULL);
+    if (!ident)
+        return PEP_OUT_OF_MEMORY;
+
+    PEP_STATUS status = get_trust(session, ident);
+    if (status)
+        goto the_end;
+
+    if (!ident->comm_type) {
+        status = PEP_RECORD_NOT_FOUND;
+        goto the_end;
+    }
+
+    *rating = _rating(ident->comm_type);
+
+the_end:
+    free_identity(ident);
+    return status;
+}
+
