@@ -41,8 +41,8 @@ void ExternalRevokeTests::check_external_revoke() {
     
     PEP_STATUS statuspub = import_key(session, fenris_pub_key.c_str(), fenris_pub_key.length(), NULL);
     PEP_STATUS statuspriv = import_key(session, fenris_priv_key.c_str(), fenris_priv_key.length(), NULL);
-    TEST_ASSERT_MSG((statuspub == PEP_STATUS_OK), "statuspub == PEP_STATUS_OK");
-    TEST_ASSERT_MSG((statuspriv == PEP_STATUS_OK), "statuspriv == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statuspub == PEP_KEY_IMPORTED), "statuspub == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statuspriv == PEP_KEY_IMPORTED), "statuspriv == PEP_STATUS_OK");
 
     // Create sender ID
     

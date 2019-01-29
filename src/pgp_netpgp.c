@@ -1000,7 +1000,8 @@ PEP_STATUS pgp_import_keydata(
     if (netpgp_save_pubring(&netpgp) &&
         netpgp_save_secring(&netpgp))
     {
-        result = PEP_STATUS_OK;
+        // we never really know if a key was imported. MEH.
+        result = PEP_KEY_IMPORT_STATUS_UNKNOWN;
     }else{
         result = PEP_UNKNOWN_ERROR;
     }
