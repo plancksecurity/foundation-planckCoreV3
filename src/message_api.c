@@ -1513,6 +1513,7 @@ bool import_attached_keys(
                     // do the latter.
                     free(bl_ptext);
                     prev = bl;
+                    bl = bl->next;
                     continue;
                 }
             }

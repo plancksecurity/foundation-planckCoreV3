@@ -62,6 +62,9 @@ void KeyAttachmentTests::setup() {
     EngineTestIndividualSuite::setup();
     assert(slurp_and_import_key(session, "test_keys/pub/inquisitor-0xA4728718_renewed_pub.asc"));
     assert(slurp_and_import_key(session, "test_keys/priv/inquisitor-0xA4728718_renewed_priv.asc"));
+    // accidentally encrypted the encrypted attachment to alice - this really doesn't matter here tbh
+    assert(slurp_and_import_key(session, "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc"));
+    assert(slurp_and_import_key(session, "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc"));    
 }
 
 void KeyAttachmentTests::check_key_attachment() {
@@ -117,6 +120,7 @@ void KeyAttachmentTests::check_key_attach_OpenPGP() {
     TEST_ASSERT_MSG(dec_msg->attachments == NULL, "Decryption left attachments it should have deleted.");
     free_message(enc_msg);
     free_message(dec_msg);
+    free_stringlist(keylist);
 }
 
 void KeyAttachmentTests::check_key_plus_encr_att_OpenPGP() {
@@ -141,30 +145,153 @@ void KeyAttachmentTests::check_key_plus_encr_att_OpenPGP() {
     TEST_ASSERT_MSG(strcmp(dec_msg->attachments->mime_type, "application/octet-stream") == 0, dec_msg->attachments->mime_type);    
     free_message(enc_msg);
     free_message(dec_msg);
+    free_stringlist(keylist);
 }
 
 void KeyAttachmentTests::check_encr_att_plus_key_OpenPGP() {
-    TEST_ASSERT(true);
+    string msg = slurp("test_mails/OpenPGP PGP test - already encr attach then key.eml");
+    message* enc_msg = NULL;
+    message* dec_msg = NULL;
+
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    TEST_ASSERT(enc_msg);
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    TEST_ASSERT_MSG(status == PEP_DECRYPTED, tl_status_string(status));    
+    TEST_ASSERT(dec_msg);
+    TEST_ASSERT_MSG(dec_msg->attachments, "Encrypted attachment not preserved.");
+    TEST_ASSERT_MSG(dec_msg->attachments->next == NULL, "Decryption left attachments it should have deleted.");    
+    TEST_ASSERT_MSG(dec_msg->attachments->filename, "Attachment doesn't have a filename");
+    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->filename, "file://cheese.txt.gpg") == 0, dec_msg->attachments->filename);    
+    TEST_ASSERT_MSG(dec_msg->attachments->mime_type, "Attachment doesn't have a mime type");
+    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->mime_type, "application/octet-stream") == 0, dec_msg->attachments->mime_type);    
+    free_message(enc_msg);
+    free_message(dec_msg);
+    free_stringlist(keylist);
 }
 
+
 void KeyAttachmentTests::check_key_plus_unencr_att_OpenPGP() {
-    TEST_ASSERT(true);
+    string msg = slurp("test_mails/OpenPGP PGP test - key then not-yet encr attach.eml");
+    message* enc_msg = NULL;
+    message* dec_msg = NULL;
+
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    TEST_ASSERT(enc_msg);
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));    
+    TEST_ASSERT(dec_msg);
+    TEST_ASSERT_MSG(dec_msg->attachments, "Encrypted attachment not preserved.");
+    TEST_ASSERT_MSG(dec_msg->attachments->next == NULL, "Decryption left attachments it should have deleted.");    
+    TEST_ASSERT_MSG(dec_msg->attachments->filename, "Attachment doesn't have a filename");
+    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->filename, "file://cheese.txt") == 0, dec_msg->attachments->filename);    
+    TEST_ASSERT_MSG(dec_msg->attachments->mime_type, "Attachment doesn't have a mime type");
+    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->mime_type, "text/plain") == 0, dec_msg->attachments->mime_type);    
+    free_message(enc_msg);
+    free_message(dec_msg);
+    free_stringlist(keylist);
 }
  
 void KeyAttachmentTests::check_unencr_att_plus_key_OpenPGP() {
-    TEST_ASSERT(true);
+    string msg = slurp("test_mails/OpenPGP PGP test - not-yet encr attach then key.eml");
+    message* enc_msg = NULL;
+    message* dec_msg = NULL;
+
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    TEST_ASSERT(enc_msg);
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    TEST_ASSERT_MSG(status == PEP_DECRYPTED, tl_status_string(status));    
+    TEST_ASSERT(dec_msg);
+    TEST_ASSERT_MSG(dec_msg->attachments, "Encrypted attachment not preserved.");
+    TEST_ASSERT_MSG(dec_msg->attachments->next == NULL, "Decryption left attachments it should have deleted.");    
+    TEST_ASSERT_MSG(dec_msg->attachments->filename, "Attachment doesn't have a filename");
+    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->filename, "file://cheese.txt") == 0, dec_msg->attachments->filename);    
+    TEST_ASSERT_MSG(dec_msg->attachments->mime_type, "Attachment doesn't have a mime type");
+    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->mime_type, "text/plain") == 0, dec_msg->attachments->mime_type);    
+    free_message(enc_msg);
+    free_message(dec_msg);
+    free_stringlist(keylist);
 }
  
 void KeyAttachmentTests::check_many_keys_OpenPGP() {
-    TEST_ASSERT(true);
+    string msg = slurp("test_mails/OpenPGP PGP test - many keys.eml");
+    message* enc_msg = NULL;
+    message* dec_msg = NULL;
+
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    TEST_ASSERT(enc_msg);
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    TEST_ASSERT_MSG(status == PEP_DECRYPTED, tl_status_string(status));    
+    TEST_ASSERT(dec_msg);
+    TEST_ASSERT_MSG(!dec_msg->attachments, "Not all keys removed.");
+    free_message(enc_msg);
+    free_message(dec_msg);
+    free_stringlist(keylist);
 }
-        
+
 void KeyAttachmentTests::check_many_keys_w_encr_file_OpenPGP() {
-    TEST_ASSERT(true);
+    string msg = slurp("test_mails/OpenPGP PGP test - many keys enc file in middle.eml");
+    message* enc_msg = NULL;
+    message* dec_msg = NULL;
+
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    TEST_ASSERT(enc_msg);
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    TEST_ASSERT_MSG(status == PEP_DECRYPTED, tl_status_string(status));    
+    TEST_ASSERT(dec_msg);
+    TEST_ASSERT_MSG(dec_msg->attachments, "Encrypted attachment not preserved.");
+    TEST_ASSERT_MSG(dec_msg->attachments->next == NULL, "Decryption left attachments it should have deleted.");    
+    TEST_ASSERT_MSG(dec_msg->attachments->filename, "Attachment doesn't have a filename");
+    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->filename, "file://cheese.txt.gpg") == 0, dec_msg->attachments->filename);    
+    TEST_ASSERT_MSG(dec_msg->attachments->mime_type, "Attachment doesn't have a mime type");
+    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->mime_type, "application/octet-stream") == 0, dec_msg->attachments->mime_type);    
+    free_message(enc_msg);
+    free_message(dec_msg);
+    free_stringlist(keylist);
 }
-        
+
 void KeyAttachmentTests::check_many_keys_w_unencr_file_OpenPGP() {
-    TEST_ASSERT(true);
+    string msg = slurp("test_mails/OpenPGP PGP test - not-yet encr attach then key.eml");
+    message* enc_msg = NULL;
+    message* dec_msg = NULL;
+
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    TEST_ASSERT(enc_msg);
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    TEST_ASSERT_MSG(status == PEP_DECRYPTED, tl_status_string(status));    
+    TEST_ASSERT(dec_msg);
+    TEST_ASSERT_MSG(dec_msg->attachments, "Encrypted attachment not preserved.");
+    TEST_ASSERT_MSG(dec_msg->attachments->next == NULL, "Decryption left attachments it should have deleted.");    
+    TEST_ASSERT_MSG(dec_msg->attachments->filename, "Attachment doesn't have a filename");
+    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->filename, "file://cheese.txt") == 0, dec_msg->attachments->filename);    
+    TEST_ASSERT_MSG(dec_msg->attachments->mime_type, "Attachment doesn't have a mime type");
+    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->mime_type, "text/plain") == 0, dec_msg->attachments->mime_type);    
+    free_message(enc_msg);
+    free_message(dec_msg);
+    free_stringlist(keylist);
 }
          
 void KeyAttachmentTests::check_many_keys_w_many_files_OpenPGP() {
