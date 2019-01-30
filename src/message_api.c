@@ -3307,8 +3307,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         *rating = PEP_rating_unencrypted;
 
         // We remove these from the outermost source message
-        if (imported_keys)
-            remove_attached_keys(src);
+        // if (imported_keys)
+        //     remove_attached_keys(src);
                                     
         pull_up_attached_main_msg(src);
         
@@ -3577,8 +3577,8 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         decorate_message(msg, *rating, _keylist, false, false);
 
         // Maybe unnecessary
-        if (imported_keys)
-            remove_attached_keys(msg);
+        // if (imported_keys)
+        //     remove_attached_keys(msg);
                     
         if (calculated_src->id && calculated_src != msg) {
             msg->id = strdup(calculated_src->id);
