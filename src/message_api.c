@@ -1483,6 +1483,7 @@ bool import_attached_keys(
     for (bloblist_t *bl = msg->attachments; i < MAX_KEYS_TO_IMPORT && bl && bl->value;
          i++)
     {
+        do_not_advance = false;
         if (bl && bl->value && bl->size && bl->size < MAX_KEY_SIZE
                 && is_key(bl))
         {
