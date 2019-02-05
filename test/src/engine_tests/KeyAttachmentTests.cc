@@ -509,7 +509,7 @@ void KeyAttachmentTests::check_many_keys_w_many_files_OpenPGP() {
                                (*it).first.c_str()) == 0, 
                         curr_att->filename);        
         TEST_ASSERT_MSG(strcmp(curr_att->mime_type, 
-                                (*it).first.c_str()) == 0,
+                                (*it).second.c_str()) == 0,
                         curr_att->mime_type);        
         it++;
         curr_att = curr_att->next;
