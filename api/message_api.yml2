@@ -6,7 +6,6 @@
 // written by Volker Birk
 
 
-api message {
 /*
     struct message {
 typedef enum _PEP_text_format {
@@ -65,5 +64,4 @@ typedef struct _message {
 
     }
 */
-}
 

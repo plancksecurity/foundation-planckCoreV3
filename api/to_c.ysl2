@@ -6,14 +6,6 @@
 // written by Volker Birk
 
 
-function "abbr" {
-    param "text";
-    if "$text" {
-        > «substring($text, 1, 1)»
-        call "abbr" with "text", "substring-after($text, '_')";
-    }
-}
-
 template "*", mode=name {
     param "abbr", "false()";
     if ".!=/*" {
@@ -21,8 +13,8 @@ template "*", mode=name {
         > _
     }
     choose {
-        when "name()='enum' and $abbr"
-            call "abbr" with "text", "@name";
+        when '@name="basic"'
+            > «/*/@name»
         otherwise
             > «@name»
     }

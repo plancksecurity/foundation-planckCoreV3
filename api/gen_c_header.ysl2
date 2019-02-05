@@ -7,19 +7,23 @@
 
 
 include yslt.yml2
+include ./config.yml2
 
 tstylesheet {
     include ./to_c.ysl2
 
-    template "/"
-        apply "package/package[type='api']", 0;
+    const "version" **version;
+    const "copyleft" **copyleft;
 
-    template "package" document "{@name}_api.h", "text" {
+    template "/package"
+        apply "package", 0;
+
+    template "package" document "{@name}_{@type}.h", "text" {
     ||
-    // pEp API version 2.0
-    // «../@name»_api.h
+    // «../@name» «$version»
+    // «@name»_«@type».h
 
-    // Copyleft (c) 2019, p≡p foundation
+    // «$copyleft»
 
     #pragma once
 
