@@ -20,10 +20,6 @@ using namespace std;
 
 KeyAttachmentTests::KeyAttachmentTests(string suitename, string test_home_dir) :
     EngineTestIndividualSuite::EngineTestIndividualSuite(suitename, test_home_dir) {
-    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyAttachmentTests::check_key_attachment"),
-                                                                      static_cast<Func>(&KeyAttachmentTests::check_key_attachment)));
-    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyAttachmentTests::check_key_attachment"),
-                                                                      static_cast<Func>(&KeyAttachmentTests::check_key_attachment)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyAttachmentTests::check_key_attach_inline"),
                                                                       static_cast<Func>(&KeyAttachmentTests::check_key_attach_inline)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyAttachmentTests::check_key_plus_encr_att_inline"),
@@ -40,6 +36,8 @@ KeyAttachmentTests::KeyAttachmentTests(string suitename, string test_home_dir) :
                                                                       static_cast<Func>(&KeyAttachmentTests::check_many_keys_w_encr_file_inline)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyAttachmentTests::check_many_keys_w_unencr_file_inline"),
                                                                       static_cast<Func>(&KeyAttachmentTests::check_many_keys_w_unencr_file_inline)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyAttachmentTests::check_many_keys_with_many_files_inline"),
+                                                                      static_cast<Func>(&KeyAttachmentTests::check_many_keys_with_many_files_inline)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyAttachmentTests::check_key_attach_OpenPGP"),
                                                                       static_cast<Func>(&KeyAttachmentTests::check_key_attach_OpenPGP)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyAttachmentTests::check_key_plus_encr_att_OpenPGP"),
@@ -67,10 +65,6 @@ void KeyAttachmentTests::setup() {
     // accidentally encrypted the encrypted attachment to alice - this really doesn't matter here tbh
     assert(slurp_and_import_key(session, "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc"));
     assert(slurp_and_import_key(session, "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc"));    
-}
-
-void KeyAttachmentTests::check_key_attachment() {
-    TEST_ASSERT(true);
 }
 
 void KeyAttachmentTests::check_key_attach_inline() {
@@ -271,6 +265,61 @@ void KeyAttachmentTests::check_many_keys_w_unencr_file_inline() {
     free_message(enc_msg);
     free_message(dec_msg);
     free_stringlist(keylist);
+}
+
+void KeyAttachmentTests::check_many_keys_with_many_files_inline() {
+    string msg = slurp("test_mails/Inline PGP - many keys with many files.eml");
+    message* enc_msg = NULL;
+    message* dec_msg = NULL;
+
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    TEST_ASSERT(enc_msg);
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));    
+    TEST_ASSERT(dec_msg);
+
+    const char* not_pres = "Encrypted attachment not preserved.";
+    const char* left_att = "Decryption left attachments it should have deleted.";
+    const char* no_fname = "Attachment doesn't have a filename.";
+    const char* no_mime = "Attachment doesn't have a MIME type.";
+
+    // pair is filename, mime_type 
+    vector<pair<string,string>> v =
+        {
+            {"barky.txt","application/octet-stream"}, 
+            {"this_is_not_a_key_or_encrypted.asc","application/octet-stream"},
+            {"this_is_not_a_key_or_encrypted.gpg","application/octet-stream"},
+            {"CC_BY-SA.txt","application/octet-stream"}, 
+            {"Makefile","application/octet-stream"}, 
+            {"LICENSE.txt","application/octet-stream"}, 
+            {"README.md","application/octet-stream"}, 
+        };
+                             
+    bloblist_t* curr_att = dec_msg->attachments;
+    vector<pair<string,string>>::iterator it = v.begin();
+
+    while (it != v.end()) {
+        TEST_ASSERT_MSG(curr_att, not_pres);
+        TEST_ASSERT_MSG(curr_att->filename, no_fname);
+        TEST_ASSERT_MSG(curr_att->mime_type, no_fname);
+        cout << (*it).first << endl;    
+        TEST_ASSERT_MSG(strcmp(curr_att->filename, 
+                               (*it).first.c_str()) == 0, 
+                        curr_att->filename);        
+        TEST_ASSERT_MSG(strcmp(curr_att->mime_type, 
+                                (*it).second.c_str()) == 0,
+                        curr_att->mime_type);        
+        it++;
+        curr_att = curr_att->next;
+    } 
+    
+    free_message(enc_msg);
+    free_message(dec_msg);
+    free_stringlist(keylist);    
 }
 
 void KeyAttachmentTests::check_key_attach_OpenPGP() {
@@ -498,10 +547,7 @@ void KeyAttachmentTests::check_many_keys_w_many_files_OpenPGP() {
     bloblist_t* curr_att = dec_msg->attachments;
     vector<pair<string,string>>::iterator it = v.begin();
 
-    int i = 0;
-    
     while (it != v.end()) {
-        cout << i++ << endl; 
         TEST_ASSERT_MSG(curr_att, not_pres);
         TEST_ASSERT_MSG(curr_att->filename, no_fname);
         TEST_ASSERT_MSG(curr_att->mime_type, no_fname);    

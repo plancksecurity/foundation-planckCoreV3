@@ -15,7 +15,6 @@ class KeyAttachmentTests : public EngineTestIndividualSuite {
     protected:
         void setup();        
     private:
-        void check_key_attachment();
         void check_key_attach_inline();
         void check_key_plus_encr_att_inline();
         void check_encr_att_plus_key_inline();
@@ -24,6 +23,7 @@ class KeyAttachmentTests : public EngineTestIndividualSuite {
         void check_many_keys_inline();        
         void check_many_keys_w_encr_file_inline();        
         void check_many_keys_w_unencr_file_inline(); // not really unencrypted; just not encrypted before attachment
+        void check_many_keys_with_many_files_inline();
         void check_key_attach_OpenPGP();
         void check_key_plus_encr_att_OpenPGP();
         void check_encr_att_plus_key_OpenPGP();
