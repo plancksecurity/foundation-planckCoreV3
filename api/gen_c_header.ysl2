@@ -57,7 +57,7 @@ tstylesheet {
 
     template "enum" {
     ||
-    typedef enum _«func:name(false)» {
+    typedef enum _«func:name()» {
     ||
     apply "item|doc";
     ||
@@ -74,7 +74,7 @@ tstylesheet {
     ||
 
     template "item" {
-        0> «func:name(1)»`if "text()" { " = " value "." }``if "position()!=last()" > ,`
+        0> «func:name()»`if "text()" { " = " value "." }``if "position()!=last()" > ,`
         choose {
             when "@doc" >  /* «@doc» */\n
             otherwise > \n
