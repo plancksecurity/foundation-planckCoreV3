@@ -76,7 +76,7 @@ tstylesheet {
     template "item" {
         0> «func:name()»`if "text()" { " = " value "." }``if "position()!=last()" > ,`
         choose {
-            when "@doc" >  /* «@doc» */\n
+            when "@doc" >  // «@doc»\n
             otherwise > \n
         }
     }
