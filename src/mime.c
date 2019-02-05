@@ -1563,7 +1563,8 @@ static PEP_STATUS interpret_MIME(
         }
         else {
             if (_is_text_part(content, "html") &&
-                msg->longmsg_formatted == NULL) {
+                msg->longmsg_formatted == NULL &&
+                msg->longmsg == NULL) {
                 status = interpret_body(mime, &msg->longmsg_formatted,
                                         NULL);
                 if (status)
@@ -1574,7 +1575,15 @@ static PEP_STATUS interpret_MIME(
                 if (status)
                     return status;
             }
-            else if (_is_text_part(content, NULL) && msg->longmsg == NULL) {
+            else if (_is_text_part(content, "plain") && 
+                     msg->longmsg == NULL && msg->longmsg_formatted == NULL) {
+                status = interpret_body(mime, &msg->longmsg, NULL);
+                if (status)
+                    return status;
+            }            
+            else if (_is_text_part(content, NULL) && 
+                     !_is_text_part(content, "plain") &&
+                     msg->longmsg == NULL) {
                 status = interpret_body(mime, &msg->longmsg, NULL);
                 if (status)
                     return status;

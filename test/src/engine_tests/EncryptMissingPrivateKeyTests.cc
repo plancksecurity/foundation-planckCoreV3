@@ -34,7 +34,7 @@ void EncryptMissingPrivateKeyTests::setup() {
     EngineTestSessionSuite::setup();
     string recip_key = slurp("test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
     PEP_STATUS status = import_key(session, recip_key.c_str(), recip_key.size(), NULL);
-    assert(status == PEP_STATUS_OK);
+    assert(status == PEP_KEY_IMPORTED);
 }
 
 void EncryptMissingPrivateKeyTests::check_encrypt_missing_private_key() {

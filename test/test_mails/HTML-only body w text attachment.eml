@@ -1,0 +1,703 @@
+Return-Path: <SRS0=Ey77vN=QM=darthmama.org=krista@srs.smtpin.rzone.de>
+X-Original-To: krista@gnunet.org
+Delivered-To: krista@gnunet.org
+Received: from vmmailrelay1.informatik.tu-muenchen.de (mailrelay1.in.tum.de [131.159.254.14])
+	by sam.net.in.tum.de (Postfix) with ESMTP id EF7761C00D0
+	for <krista@gnunet.org>; Tue,  5 Feb 2019 11:12:46 +0100 (CET)
+Received: by vmmailrelay1.informatik.tu-muenchen.de (Postfix, from userid 109)
+	id C1A281C0224; Tue,  5 Feb 2019 11:12:46 +0100 (CET)
+Received: from vmmailrelay1.informatik.tu-muenchen.de (localhost [127.0.0.1])
+	by vmmailrelay1.informatik.tu-muenchen.de (Postfix) with ESMTP id 91E5C1C0223
+	for <krista@gnunet.org>; Tue,  5 Feb 2019 11:12:46 +0100 (CET)
+Received: from vmmaildmz1.informatik.tu-muenchen.de (vmmaildmz1.in.tum.de [131.159.0.87])
+	by vmmailrelay1.informatik.tu-muenchen.de (Postfix) with ESMTP id 86E571C0222
+	for <krista@gnunet.org>; Tue,  5 Feb 2019 11:12:46 +0100 (CET)
+Received: by vmmaildmz1.informatik.tu-muenchen.de (Postfix, from userid 109)
+	id 84C2A1C1915; Tue,  5 Feb 2019 11:12:46 +0100 (CET)
+X-Spam-Checker-Version: SpamAssassin 3.4.0-tuminfo_1 (2014-02-07) on
+	vmmaildmz1.informatik.tu-muenchen.de
+X-Spam-Level: 
+X-Spam-Status: No, score=-2.4 required=7.0 tests=AWL,BAYES_00,
+	HTML_FONT_LOW_CONTRAST,HTML_MESSAGE,RBG_YOU_CAN_UNSUBSCRIBE,RCVD_IN_DNSWL_LOW,
+	SPF_HELO_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0-tuminfo_1
+Received: from vmmaildmz1.informatik.tu-muenchen.de (localhost [127.0.0.1])
+	by vmmaildmz1.informatik.tu-muenchen.de (Postfix) with ESMTP id 4AB481C1914
+	for <krista@gnunet.org>; Tue,  5 Feb 2019 11:12:44 +0100 (CET)
+Received: from mi4-p00-ob.smtp.rzone.de (mi4-p00-ob.smtp.rzone.de [81.169.146.145])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by vmmaildmz1.informatik.tu-muenchen.de (Postfix) with ESMTPS id 32AB01C0284
+	for <krista@gnunet.org>; Tue,  5 Feb 2019 11:12:44 +0100 (CET)
+X-RZG-FWD-BY: inquisitor@darthmama.org
+Received: from mailin.rzone.de ([unix socket])
+	by mailin.rzone.de (RZmta 44.9) with LMTPA;
+	Tue, 5 Feb 2019 11:12:23 +0100 (CET)
+Authentication-Results: strato.com; dmarc=none header.from=darthmama.org
+Authentication-Results: strato.com; arc=none
+Authentication-Results: strato.com; dkim=none
+Authentication-Results: strato.com; dkim-adsp=none header.from="krista@darthmama.org"
+Authentication-Results: strato.com; spf=none smtp.mailfrom="krista@darthmama.org"
+X-RZG-Expurgate: clean/normal
+X-RZG-Expurgate-ID: 149500::1549361543-0000643C-0CCEDAB7/0/0
+X-Strato-MessageType: email
+X-RZG-CLASS-ID: mi00
+Received-SPF: none
+	client-ip=131.159.0.8;
+	helo="mail-out1.informatik.tu-muenchen.de";
+	envelope-from="krista@darthmama.org";
+	receiver=smtpin.rzone.de;
+	identity=mailfrom;
+Received: from mail-out1.informatik.tu-muenchen.de (mail-out1.in.tum.de [131.159.0.8])
+	by smtpin.rzone.de (RZmta 44.9 OK)
+	with ESMTPS id i06128v15ACNdfa
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (curve secp521r1 with 521 ECDH bits, eq. 15360 bits RSA))
+	(Client did not present a certificate)
+	for <inquisitor@darthmama.org>;
+	Tue, 5 Feb 2019 11:12:23 +0100 (CET)
+Received: from rylen.local (ip5f584961.dynamic.kabel-deutschland.de [95.88.73.97])
+	by services.sec.in.tum.de (Postfix) with ESMTPSA id 63F8D100ACC0A
+	for <inquisitor@darthmama.org>; Tue,  5 Feb 2019 11:12:17 +0100 (CET)
+From: Krista Bennett <krista@darthmama.org>
+Subject: =?UTF-8?Q?Jetzt_wird=27s_richtig_hei=c3=9f=3a_Gratis_Lava_Cake_f?=
+ =?UTF-8?B?w7xyIERpY2gh?=
+To: inquisitor@darthmama.org
+Message-ID: <389114db-28c1-73fb-7e16-54eb985a83d3@darthmama.org>
+Date: Tue, 5 Feb 2019 11:12:16 +0100
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.5.0
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------002ACF5D6DDAFABADA3A8AC1"
+Content-Language: en-GB
+
+This is a multi-part message in MIME format.
+--------------002ACF5D6DDAFABADA3A8AC1
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+<html>
+  <head>
+
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <style>* {margin:0;padding:0;} td {padding:0;} table {font-family:Arial, Verdana, sans-serif;}</style>
+  </head>
+  <body style="padding:0; margin:0; background-color:#f0f0f0;"
+    text="#000000" bgcolor="#FFFFFF">
+    <table style="width:100%; padding:0; margin:0;" width="100%">
+      <tbody>
+        <tr>
+          <td width="600" valign="top" align="center">
+            <table style="width:600px; padding:0; margin:0;
+              background-color:#ffffff" cellspacing="0" cellpadding="0"
+              border="0" align="center">
+              <tbody>
+                <tr>
+                  <td>
+                    <!-- Head -->
+                    <table width="600" cellspacing="0" cellpadding="0"
+                      border="0">
+                      <tbody>
+                        <tr>
+                          <td colspan="3" scope="col" width="600"
+                            height="20" align="left"><br>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colspan="3" align="left">
+                            <table width="600" cellspacing="0"
+                              cellpadding="0" border="0">
+                              <tbody>
+                                <tr>
+                                  <td rowspan="2" scope="col"
+                                    width="230" height="126"> <a
+href="https://www.call-a-pizza.de?utm_source=newsletter&amp;utm_campaign=20180802_dessert&amp;utm_medium=email&amp;goto=desserts&amp;code=OMG-WTF-BBQ"
+                                      target="_blank" style="border:0;"
+                                      moz-do-not-send="true"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/2018/0802-dessert/logo.jpg"
+                                        alt="Call a Pizza"
+                                        style="vertical-align:top;height:126px;width:230px;"
+                                        moz-do-not-send="true"> </a> </td>
+                                  <td scope="col" width="370"
+                                    height="86"> <a
+href="https://www.call-a-pizza.de?utm_source=newsletter&amp;utm_campaign=20180802_dessert&amp;utm_medium=email&amp;goto=desserts&amp;code=OMG-WTF-BBQ"
+                                      target="_blank" style="border:0;"
+                                      moz-do-not-send="true"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/slogan.jpg"
+                                        alt="Kommt schnell, kommt gut."
+style="vertical-align:top;height:86px;width:370px;"
+                                        moz-do-not-send="true"> </a> </td>
+                                </tr>
+                                <tr>
+                                  <td scope="col" width="370"
+                                    height="40"> <a
+href="https://www.call-a-pizza.de/bestellen?utm_source=newsletter&amp;utm_campaign=20180802_dessert&amp;utm_medium=email&amp;goto=desserts&amp;code=OMG-WTF-BBQ"
+                                      target="_blank" style="border:0;"
+                                      moz-do-not-send="true"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/2018/0802-dessert/header-top.jpg"
+                                        alt="Jetzt bei Call a Pizza
+                                        bestellen!"
+                                        style="vertical-align:top;height:40px;width:370px;"
+                                        moz-do-not-send="true"> </a> </td>
+                                </tr>
+                                <tr>
+                                  <td colspan="2" width="600"
+                                    height="240"> <a
+href="https://www.call-a-pizza.de/bestellen?utm_source=newsletter&amp;utm_campaign=20180802_dessert&amp;utm_medium=email&amp;goto=desserts&amp;code=OMG-WTF-BBQ"
+                                      target="_blank" style="border:0;"
+                                      moz-do-not-send="true"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/2018/0802-dessert/header.jpg"
+                                        alt="Jetzt bei Call a Pizza
+                                        bestellen!"
+                                        style="vertical-align:top;height:240px;width:600px;"
+                                        moz-do-not-send="true"> </a> </td>
+                                </tr>
+                                <tr>
+                                  <td colspan="2" width="600"
+                                    height="15"><br>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                        <!-- title --> <tr>
+                          <td colspan="3" width="600" height="27"
+                            align="left"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/2018/0802-dessert/title-01.jpg"
+                              alt="Lava Cake gratis!"
+                              style="vertical-align:top;height:27px;width:600px;"
+                              moz-do-not-send="true"></td>
+                        </tr>
+                        <tr>
+                          <td colspan="3" width="600" height="5"
+                            align="left"><br>
+                          </td>
+                        </tr>
+                        <!-- shadow --> <tr>
+                          <td colspan="3" width="600" height="10"
+                            align="left"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/headline-shadow.jpg"
+                              alt=""
+                              style="vertical-align:top;height:10px;width:600px;"
+                              moz-do-not-send="true"> </td>
+                        </tr>
+                        <tr>
+                          <td colspan="3" width="600" height="10"
+                            align="left"><br>
+                          </td>
+                        </tr>
+                        <!-- text --> <tr>
+                          <td width="20" align="left"><br>
+                          </td>
+                          <td width="560" align="left"> <span
+                              style="width:600px; color:#333333;
+                              padding:0; margin:0; font-size:13px;
+                              font-family:Arial, Verdana, sans-serif;">
+                              <strong style="color:#e60004;">Hallo Oli!</strong><br>
+                              <br>
+                              Jetzt neu in unserem Sortiment: Der <b>Lava
+                                Cake mit flüssigem, heißem Schoko-Kern</b>
+                              von Call a Pizza. Ab sofort erhälst Du auf
+                              <a
+href="https://www.call-a-pizza.de/bestellen?utm_source=newsletter&amp;utm_campaign=20180802_dessert&amp;utm_medium=email&amp;goto=desserts&amp;code=OMG-WTF-BBQ"
+                                target="_blank" style="border:0;
+                                font-weight:bold; color:#e60004;"
+                                moz-do-not-send="true">www.call-a-pizza.de</a>
+                              einen <a
+href="https://www.call-a-pizza.de/bestellen?utm_source=newsletter&amp;utm_campaign=20180802_dessert&amp;utm_medium=email&amp;goto=desserts&amp;code=OMG-WTF-BBQ"
+                                target="_blank" style="border:0;
+                                font-weight:bold; color:#e60004;"
+                                moz-do-not-send="true">Lava Cake</a> <b>gratis</b>
+                              zu Deiner Bestellung dazu, wenn Du den
+                              Mindestbestellwert erreicht hast! <br>
+                              <br>
+                              <strong>Wir wünschen Dir einen guten
+                                Appetit,<br>
+                                Dein Call a Pizza Team!</strong> </span>
+                          </td>
+                          <td width="20" align="left"><br>
+                          </td>
+                        </tr>
+                        <!-- coupon --> <tr>
+                          <td colspan="3" height="20" align="left"><br>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td align="left"><br>
+                          </td>
+                          <td align="left">
+                            <table style="width:560px;
+                              background-color:#0d6aad; color:#ffffff;
+                              padding:0; margin:0; font-size:13px;
+                              font-family:Arial, Verdana, sans-serif;"
+                              cellspacing="0" cellpadding="0" border="0"
+                              bgcolor="#0d6aad">
+                              <tbody>
+                                <tr>
+                                  <td rowspan="7" width="20"><br>
+                                  </td>
+                                  <td width="520" height="20"><br>
+                                  </td>
+                                  <td rowspan="7" width="20"><br>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td width="520" align="center"> <span
+                                      style="font-weight:bold;
+                                      font-family:Arial, Verdana,
+                                      sans-serif; font-size:20px;
+                                      color:#ffffff;">Dein persönlicher
+                                      Coupon-Code* lautet:</span> </td>
+                                </tr>
+                                <tr>
+                                  <td width="520" height="20"><br>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td width="520" valign="middle"
+                                    height="50" bgcolor="#FFFFFF"
+                                    align="center"> <span
+                                      style="font-family:Arial, Verdana,
+                                      sans-serif; font-size:32px;
+                                      color:#000;"> <strong>OMG-WTF-BBQ</strong>
+                                    </span> </td>
+                                </tr>
+                                <tr>
+                                  <td width="520" height="20"><br>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td width="520" align="center"> <span
+                                      style="font-family:Arial, Verdana,
+                                      sans-serif; font-size:11px;
+                                      color:#ffffff;"> *Coupons und
+                                      Gutscheine nur einmal pro Tag und
+                                      Code einlösbar. Nicht mit anderen
+                                      Preisaktionen kombinierbar
+                                      (Coupons, Bonuskarten,
+                                      Mittagsangebot usw.). Eine
+                                      nachträgliche Einlösung ist nicht
+                                      möglich. Nur online einlösbar.
+                                      Gültig bis 15.08.2018. </span> </td>
+                                </tr>
+                                <tr>
+                                  <td width="520" height="20"><br>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </td>
+                          <td align="left"><br>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colspan="3" height="10" align="left"><br>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td width="20" align="left"><br>
+                          </td>
+                          <td width="560" height="47" align="left"> <a
+href="https://www.call-a-pizza.de/bestellen?utm_source=newsletter&amp;utm_campaign=20180802_dessert&amp;utm_medium=email&amp;code=OMG-WTF-BBQ"
+                              target="_blank" border="0"
+                              moz-do-not-send="true"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/btn/btn-coupon-einloesen.gif"
+                                alt="Bestellen und sparen bei Call a
+                                Pizza"
+                                style="vertical-align:top;height:47px;width:560px;border:0;"
+                                moz-do-not-send="true"> </a> </td>
+                          <td width="20" align="left"><br>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colspan="3" height="20" align="left"><br>
+                          </td>
+                        </tr>
+                        <!-- Teaser Dessert -->
+                        <!-- title --> <tr>
+                          <td colspan="3" width="600" height="27"
+                            align="left"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/2018/0802-dessert/title-02.jpg"
+                              alt="Lass dich süß verführen!"
+                              style="vertical-align:top;height:27px;width:600px;"
+                              moz-do-not-send="true"></td>
+                        </tr>
+                        <tr>
+                          <td colspan="3" width="600" height="5"
+                            align="left"><br>
+                          </td>
+                        </tr>
+                        <!-- shadow --> <tr>
+                          <td colspan="3" width="600" height="10"
+                            align="left"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/headline-shadow.jpg"
+                              alt=""
+                              style="vertical-align:top;height:10px;width:600px;"
+                              moz-do-not-send="true"> </td>
+                        </tr>
+                        <tr>
+                          <td colspan="3" width="600" height="10"
+                            align="left"><br>
+                          </td>
+                        </tr>
+                        <!-- img --> <tr>
+                          <td width="20" align="left"><br>
+                          </td>
+                          <td width="560" height="600" align="left"> <a
+href="https://www.call-a-pizza.de/bestellen?utm_source=newsletter&amp;utm_campaign=20180802_dessert&amp;utm_medium=email&amp;goto=desserts"
+                              target="_blank" border="0"
+                              moz-do-not-send="true"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/2018/0802-dessert/teaser-desserts.jpg"
+                                alt="Die Dessert-Auswahl bei Call a
+                                Pizza!"
+                                style="vertical-align:top;height:600px;width:560px;border:0;"
+                                moz-do-not-send="true"> </a> </td>
+                          <td width="20" align="left"><br>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colspan="3" height="20" align="left"><br>
+                          </td>
+                        </tr>
+                        <!-- Teaser Fruchtzeit -->
+                        <!-- title --> <tr>
+                          <td colspan="3" width="600" height="27"
+                            align="left"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/2018/0802-dessert/title-03.jpg"
+                              alt="Jetzt iss Fruchtzeit!"
+                              style="vertical-align:top;height:27px;width:600px;"
+                              moz-do-not-send="true"></td>
+                        </tr>
+                        <tr>
+                          <td colspan="3" width="600" height="5"
+                            align="left"><br>
+                          </td>
+                        </tr>
+                        <!-- shadow --> <tr>
+                          <td colspan="3" width="600" height="10"
+                            align="left"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/headline-shadow.jpg"
+                              alt=""
+                              style="vertical-align:top;height:10px;width:600px;"
+                              moz-do-not-send="true"> </td>
+                        </tr>
+                        <tr>
+                          <td colspan="3" width="600" height="10"
+                            align="left"><br>
+                          </td>
+                        </tr>
+                        <!-- img --> <tr>
+                          <td width="20" align="left"><br>
+                          </td>
+                          <td width="560" height="600" align="left"> <a
+href="https://www.call-a-pizza.de/bestellen?utm_source=newsletter&amp;utm_campaign=20180802_dessert&amp;utm_medium=email&amp;goto=desserts"
+                              target="_blank" border="0"
+                              moz-do-not-send="true"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/2018/0802-dessert/teaser-fruchtzeit.jpg"
+                                alt="Die Eis-Auswahl bei Call a Pizza"
+                                style="vertical-align:top;height:600px;width:560px;border:0;"
+                                moz-do-not-send="true"> </a> </td>
+                          <td width="20" align="left"><br>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colspan="3" height="20" align="left"><br>
+                          </td>
+                        </tr>
+                        <!-- teaser app --> <tr>
+                          <td width="20" align="left"><br>
+                          </td>
+                          <td width="560" height="27" align="left"> <a
+href="https://www.call-a-pizza.de/mobile-apps?utm_source=newsletter&amp;utm_campaign=20180802_dessert&amp;utm_medium=email"
+                              target="_blank" border="0"
+                              moz-do-not-send="true"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/2018/title-app.jpg"
+                                alt="Hol' Dir die CaP APP!"
+                                style="vertical-align:top;height:17px;width:560px;border:0;"
+                                moz-do-not-send="true"> </a> </td>
+                          <td width="20" align="left"><br>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td width="20" align="left"><br>
+                          </td>
+                          <td width="560" height="280" align="left"> <a
+href="https://www.call-a-pizza.de/mobile-apps?utm_source=newsletter&amp;utm_campaign=20180802_dessert&amp;utm_medium=email"
+                              target="_blank" border="0"
+                              moz-do-not-send="true"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/2018/teaser-app.jpg"
+                                alt="Hol' Dir die CaP APP!"
+                                style="vertical-align:top;height:280px;width:560px;border:0;"
+                                moz-do-not-send="true"> </a> </td>
+                          <td width="20" align="left"><br>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colspan="3" height="20" align="left"><br>
+                          </td>
+                        </tr>
+                        <!-- jobs teaser --> <tr>
+                          <td width="20" align="left"><br>
+                          </td>
+                          <td width="560" height="27" align="left"> <a
+href="https://www.call-a-pizza.de/jobs?utm_source=newsletter&amp;utm_campaign=20180802_dessert&amp;utm_medium=email"
+                              target="_blank" border="0"
+                              moz-do-not-send="true"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/2018/title-jobs.jpg"
+                                alt="Jobs bei Call a Pizza"
+                                style="vertical-align:top;height:17px;width:560px;border:0;"
+                                moz-do-not-send="true"> </a> </td>
+                          <td width="20" align="left"><br>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td width="20" align="left"><br>
+                          </td>
+                          <td width="560" height="280" align="left"> <a
+href="https://www.call-a-pizza.de/jobs?utm_source=newsletter&amp;utm_campaign=20180802_dessert&amp;utm_medium=email"
+                              target="_blank" border="0"
+                              moz-do-not-send="true"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/2018/teaser-jobs.jpg"
+                                alt="Jobs bei Call a Pizza"
+                                style="vertical-align:top;height:280px;width:560px;border:0;"
+                                moz-do-not-send="true"> </a> </td>
+                          <td width="20" align="left"><br>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colspan="3" height="20" align="left"><br>
+                          </td>
+                        </tr>
+                        <!-- footer --> <tr>
+                          <td colspan="3" align="left">
+                            <table style="padding:0; margin:0;
+                              background-repeat:no-repeat;
+                              background-position:bottom left;
+                              background-color:#333333; color:#999999;
+                              font-size:11px; font-family:Arial,
+                              Verdana,sans-serif; width:600px;
+                              height:184; vertical-align:top;"
+                              width="600" height="184" cellspacing="0"
+                              cellpadding="0" border="0"
+background="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/bg-footer.gif">
+                              <tbody>
+                                <tr>
+                                  <td rowspan="9" width="20"><br>
+                                  </td>
+                                  <td colspan="9" width="560"
+                                    height="20"><br>
+                                  </td>
+                                  <td rowspan="9" width="20"><br>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td width="175" valign="top"><span
+                                      style="font-family:Arial, Verdana,
+                                      sans-serif; font-size:12px;
+                                      font-weight:bold; width:175px;">KONTAKT</span></td>
+                                  <td rowspan="7" width="20"><br>
+                                  </td>
+                                  <td colspan="5" width="170"
+                                    valign="top"><span
+                                      style="font-family:Arial, Verdana,
+                                      sans-serif; font-size:12px;
+                                      font-weight:bold;">SOCIAL MEDIA</span></td>
+                                  <td rowspan="7" width="20"
+                                    valign="top"><br>
+                                  </td>
+                                  <td width="175" valign="top"><span
+                                      style="font-family:Arial, Verdana,
+                                      sans-serif; font-size:12px;
+                                      font-weight:bold;">VERANTWORTLICH</span></td>
+                                </tr>
+                                <tr>
+                                  <td width="175" height="10"><br>
+                                  </td>
+                                  <td colspan="5" width="170"
+                                    height="10"><br>
+                                  </td>
+                                  <td width="175" height="10"><br>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td width="175" valign="top"><span
+                                      style="font-family:Arial, Verdana,
+                                      sans-serif; font-size:11px;">Call
+                                      a Pizza Marketing GmbH<br>
+                                      Heerstraße 14<br>
+                                      14052 Berlin</span></td>
+                                  <td rowspan="4" colspan="5"
+                                    width="170" valign="top"><span
+                                      style="font-family:Arial, Verdana,
+                                      sans-serif; font-size:11px;">Hier
+                                      erfährst Du alles über unsere
+                                      aktuellen Aktionen, Gewinnspiele
+                                      und mehr:</span></td>
+                                  <td rowspan="5" width="175"
+                                    valign="top"><span
+                                      style="font-family:Arial, Verdana,
+                                      sans-serif; font-size:11px;">Für
+                                      den Inhalt dieser Nachricht ist
+                                      die Call a Pizza Marketing GmbH
+                                      verantwortlich.</span></td>
+                                </tr>
+                                <tr>
+                                  <td width="175" height="10"><br>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td width="175" valign="top"><span
+                                      style="font-family:Arial, Verdana,
+                                      sans-serif; font-size:11px;">E-Mail:
+                                      <a style="color:#999999;"
+                                        href="mailto:info@call-a-pizza.de"
+                                        moz-do-not-send="true">info@call-a-pizza.de</a></span></td>
+                                </tr>
+                                <tr>
+                                  <td width="175" height="10"><br>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td valign="bottom"> <span
+                                      style="font-family:Arial, Verdana,
+                                      sans-serif; font-size:11px;">Tel.
+                                      +49 (0) 30 / 34 54 07 00<br>
+                                      Fax +49 (0) 30 / 34 54 07 03</span>
+                                  </td>
+                                  <td width="35" valign="top"
+                                    height="35" align="left"> <a
+                                      href="https://www.facebook.com/callapizza/"
+                                      target="_blank"
+                                      moz-do-not-send="true"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/f-icon.gif"
+                                        alt="Facebook"
+                                        style="vertical-align:top;height:35px;width:35px;"
+                                        moz-do-not-send="true"
+                                        border="0"> </a> </td>
+                                  <td width="15" valign="top"
+                                    height="35" align="left"><br>
+                                  </td>
+                                  <td width="35" valign="top"
+                                    height="35" align="left"> <a
+                                      href="https://www.youtube.com/channel/UCPRHi95JbhgJQUtj-s9f5vQ"
+                                      target="blank"
+                                      moz-do-not-send="true"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/yt-icon.gif"
+                                        alt="YouTube"
+                                        style="vertical-align:top;height:35px;width:35px;"
+                                        moz-do-not-send="true"
+                                        border="0"> </a> </td>
+                                  <td width="15" valign="top"
+                                    height="35" align="left"><br>
+                                  </td>
+                                  <td width="35" valign="top"
+                                    height="35" align="left"> <a
+                                      href="https://www.instagram.com/call.a.pizza/"
+                                      target="blank"
+                                      moz-do-not-send="true"> <img
+src="https://dlct0dt1hx57m.cloudfront.net/static/desktop/newsletter/insta-icon.gif"
+                                        alt="YouTube"
+                                        style="vertical-align:top;height:35px;width:35px;"
+                                        moz-do-not-send="true"
+                                        border="0"> </a> </td>
+                                </tr>
+                                <tr>
+                                  <td colspan="9" width="560"
+                                    height="20"><br>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colspan="3" height="20" bgcolor="#f0f0f0"
+                            align="left"><br>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td width="20" bgcolor="#f0f0f0" align="left"><br>
+                          </td>
+                          <td width="560" bgcolor="#f0f0f0"
+                            align="center"> <span
+                              style="font-family:Arial, Verdana,
+                              sans-serif; font-size:11px;
+                              background-color:#f0f0f0; color:#999999;">Diese
+                              Nachricht wurde von Call a Pizza an Dich
+                              versendet, weil diese E-Mail Adresse auf <a
+href="https://www.call-a-pizza.de?utm_source=newsletter&amp;utm_campaign=20180802_dessert&amp;utm_medium=email"
+                                target="_blank" style="color:#999999;
+                                text-decoration:underline;"
+                                moz-do-not-send="true">www.call-a-pizza.de</a>
+                              für den Erhalt des Newsletters angegeben
+                              wurde. Der Schutz Deiner Daten hat für
+                              Call a Pizza oberste Priorität. Auf
+                              unserer Seite findest Du weitere
+                              Informationen zu unserer <a
+href="https://www.call-a-pizza.de/datenschutz?utm_source=newsletter&amp;utm_campaign=20180802_dessert&amp;utm_medium=email"
+                                target="_blank" style="color:#999999;"
+                                moz-do-not-send="true">Datenschutzerklärung</a>
+                              und den <a
+href="https://www.call-a-pizza.de/agb?utm_source=newsletter&amp;utm_campaign=20180802_dessert&amp;utm_medium=email"
+                                target="_blank" style="color:#999999;"
+                                moz-do-not-send="true">Allgemeinen
+                                Geschäftsbedingungen</a>. Weitere
+                              Informationen zu unseren Produkten,
+                              Zusatzstoffen und allergieauslösenden
+                              Zutaten finden Sie unter <a
+href="https://www.call-a-pizza.de/allergene?utm_source=newsletter&amp;utm_campaign=20180802_dessert&amp;utm_medium=email"
+                                target="_blank" style="color:#999999;"
+                                moz-do-not-send="true">www.call-a-pizza.de/allergene</a>.
+                              Der Empfang des Newsletters kann jederzeit
+                              in den <a
+href="https://www.call-a-pizza.de/muenchen_schwabing/customer/account/edit/"
+                                target="_blank" style="color:#999999;
+                                text-decoration:underline;"
+                                moz-do-not-send="true">Profileinstellungen</a>
+                              oder über diesen <a
+href="https://www.call-a-pizza.de/muenchen_schwabing/newsletter/subscriber/unsubscribe/"
+                                style="color:#999999;"
+                                moz-do-not-send="true">Link</a>
+                              deaktiviert werden. </span> </td>
+                          <td width="20" bgcolor="#f0f0f0" align="left"><br>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colspan="3" height="20" bgcolor="#f0f0f0"
+                            align="left"><br>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>
+
+--------------002ACF5D6DDAFABADA3A8AC1
+Content-Type: text/plain; charset=UTF-8; x-mac-type="0"; x-mac-creator="0";
+ name="cheese.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="cheese.txt"
+
+QzogSW4gYSBudXRzaGVsbC4gQW5kIEkgdGhvdWdodCB0byBteXNlbGYsICdhIGxpdHRsZSBm
+ZXJtZW50ZWQgY3VyZCB3aWxsIGRvIHRoZSB0cmljaycsIHNvLCBJIGN1cnRhaWxlZCBteSBX
+YWxwb2xpbmcgYWN0aXZpdGVzLCBzYWxsaWVkIGZvcnRoLCBhbmQgaW5maWx0cmF0ZWQgeW91
+ciBwbGFjZSBvZiBwdXJ2ZXlhbmNlIHRvIG5lZ290aWF0ZSB0aGUgdmVuZGluZyBvZiBzb21l
+IGNoZWVzeSBjb21lc3RpYmxlcyEKCk86IENvbWUgYWdhaW4/CgpDOiBJIHdhbnQgdG8gYnV5
+IHNvbWUgY2hlZXNlLgoKTzogT2gsIEkgdGhvdWdodCB5b3Ugd2VyZSBjb21wbGFpbmluZyBh
+Ym91dCB0aGUgYm91em91a2kgcGxheWVyIQoKQzogT2gsIGhlYXZlbiBmb3JiaWQ6IEkgYW0g
+b25lIHdobyBkZWxpZ2h0cyBpbiBhbGwgbWFuaWZlc3RhdGlvbnMgb2YgdGhlIFRlcnBzaWNo
+b3JlYW4gbXVzZSEKCk86IFNvcnJ5PwoKQzogJ09vbywgQWggbGFoayBhIG5pY2UgdHVuZSwg
+J3llciBmb3JjZWQgdG8hCgpPOiBTbyBoZSBjYW4gZ28gb24gcGxheWluZywgY2FuIGhlPwoK
+QzogTW9zdCBjZXJ0YWlubHkhIE5vdyB0aGVuLCBzb21lIGNoZWVzZSBwbGVhc2UsIG15IGdv
+b2QgbWFuLiAK
+--------------002ACF5D6DDAFABADA3A8AC1--

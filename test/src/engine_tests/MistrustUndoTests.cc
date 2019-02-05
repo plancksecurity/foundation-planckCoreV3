@@ -35,7 +35,7 @@ void MistrustUndoTests::check_mistrust_undo() {
     TEST_ASSERT_MSG((pub_key.length() != 0), "pub_key.length() != 0");
     
     PEP_STATUS statuspub = import_key(session, pub_key.c_str(), pub_key.length(), NULL);
-    TEST_ASSERT_MSG((statuspub == PEP_STATUS_OK), "statuspub == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statuspub == PEP_KEY_IMPORTED), "statuspub == PEP_STATUS_OK");
     cout << "Key imported." << endl << endl;
     
     cout << "Setting up identity for mistrust.undo.test@pep-project.org and making comm_type PEP_ct_pEp."  << endl;

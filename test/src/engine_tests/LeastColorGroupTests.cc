@@ -41,7 +41,7 @@ void LeastColorGroupTests::check_least_color_group() {
         cout << "\t read keyfile \"" << name << "\"..." << std::endl;
         const string keytextkey = slurp(name);
         PEP_STATUS statuskey = import_key(session, keytextkey.c_str(), keytextkey.length(), NULL);
-        TEST_ASSERT_MSG((statuskey == PEP_STATUS_OK), "statuskey == PEP_STATUS_OK");
+        TEST_ASSERT_MSG((statuskey == PEP_KEY_IMPORTED), "statuskey == PEP_STATUS_OK");
     }
     
     cout << "\t read keyfile mailfile \"" << mailfile << "\"..." << std::endl;

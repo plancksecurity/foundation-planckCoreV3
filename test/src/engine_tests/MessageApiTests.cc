@@ -32,11 +32,11 @@ void MessageApiTests::check_message_api() {
     const string bob_pub_key = slurp("test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
 
     PEP_STATUS status0 = import_key(session, alice_pub_key.c_str(), alice_pub_key.size(), NULL);
-    TEST_ASSERT_MSG((status0 == PEP_STATUS_OK), "status0 == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status0 == PEP_KEY_IMPORTED), "status0 == PEP_STATUS_OK");
     status0 = import_key(session, alice_priv_key.c_str(), alice_priv_key.size(), NULL);
-    TEST_ASSERT_MSG((status0 == PEP_STATUS_OK), "status0 == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status0 == PEP_KEY_IMPORTED), "status0 == PEP_STATUS_OK");
     status0 = import_key(session, bob_pub_key.c_str(), bob_pub_key.size(), NULL);
-    TEST_ASSERT_MSG((status0 == PEP_STATUS_OK), "status0 == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status0 == PEP_KEY_IMPORTED), "status0 == PEP_STATUS_OK");
     // message_api test code
 
     cout << "creating message…\n";
@@ -97,7 +97,7 @@ void MessageApiTests::check_message_api() {
     
     flags = 0;
     PEP_STATUS status4 = decrypt_message(session, enc_msg2, &msg4, &keylist4, &rating, &flags);
-    TEST_ASSERT_MSG((status4 == PEP_STATUS_OK), "status4 == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status4 == PEP_STATUS_OK), tl_status_string(status4));
     TEST_ASSERT_MSG((msg4), "msg4");
     TEST_ASSERT_MSG((keylist4), "keylist4");
     TEST_ASSERT_MSG((rating), "rating");

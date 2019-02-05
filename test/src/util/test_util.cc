@@ -338,7 +338,7 @@ const char* tl_ct_string(PEP_comm_type ct) {
 
 bool slurp_and_import_key(PEP_SESSION session, const char* key_filename) {
     std::string keyfile = slurp(key_filename);
-    if (import_key(session, keyfile.c_str(), keyfile.size(), NULL) != PEP_STATUS_OK)
+    if (import_key(session, keyfile.c_str(), keyfile.size(), NULL) != PEP_KEY_IMPORTED)
         return false;
     return true;
 }
@@ -372,4 +372,3 @@ int util_delete_filepath(const char *filepath,
     
     return retval;
 }
-
