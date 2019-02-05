@@ -1,0 +1,40 @@
+// p≡p API version 2.0
+// C data types
+
+// Copyleft (c) 2019, p≡p foundation
+
+// written by Volker Birk
+
+
+function "abbr" {
+    param "text";
+    if "$text" {
+        > «substring($text, 1, 1)»
+        call "abbr" with "text", "substring-after($text, '_')";
+    }
+}
+
+template "*", mode=name {
+    param "abbr", "false()";
+    if ".!=/*" {
+        apply "..", 0, mode=name;
+        > _
+    }
+    choose {
+        when "name()='enum' and $abbr"
+            call "abbr" with "text", "@name";
+        otherwise
+            > «@name»
+    }
+}
+
+function "name" {
+    param "abbr", "false()";
+    apply ".", mode=name with "abbr", "$abbr";
+}
+
+def "func:name" {
+    param "abbr", "false()";
+    result call "name" with "abbr", "$abbr";
+}
+

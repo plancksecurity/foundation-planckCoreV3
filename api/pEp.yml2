@@ -1,0 +1,34 @@
+// p≡p API version 2.0
+
+// Copyleft (c) 2019, p≡p foundation
+
+// written by Volker Birk
+
+
+decl package @name;
+decl api @name (type=api) alias package;
+decl type @name;
+decl extends @type;
+decl enum @name;
+decl item @name;
+decl struct @name;
+decl field @type @name;
+decl hex is item (output=hex);
+decl flag @name;
+
+
+package pEp {
+    api transport {
+        include ./transport_api.yml2
+    }
+    api message {
+        include ./message_api.yml2
+    }
+    api keymanagement {
+        include ./keymanagement_api.yml2
+    }
+    api basic {
+        include ./basic_api.yml2
+    }
+}
+

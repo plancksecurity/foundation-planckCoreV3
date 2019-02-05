@@ -1,0 +1,80 @@
+// p≡p API version 2.0
+// C header generator
+
+// Copyleft (c) 2019, p≡p foundation
+
+// written by Volker Birk
+
+
+include yslt.yml2
+
+tstylesheet {
+    include ./to_c.ysl2
+
+    template "/"
+        apply "package/package[type='api']", 0;
+
+    template "package" document "{@name}_api.h", "text" {
+    ||
+    // pEp API version 2.0
+    // «../@name»_api.h
+
+    // Copyleft (c) 2019, p≡p foundation
+
+    #pragma once
+
+    #ifdef __cplusplus
+    extern "C" {
+    #endif
+
+    ||
+    apply "doc|enum|struct", 0;
+    ||
+
+    #ifdef __cplusplus
+    } // extern "C"
+    #endif
+
+    ||
+    }
+
+    template "struct" {
+    ||
+    typedef struct _«func:name()» {
+    ||
+    apply "field";
+    ||
+    } «func:name()»;
+
+    ||
+    }
+
+    template "field" | «@type» «@name»;
+
+    template "enum" {
+    ||
+    typedef enum _«func:name(false)» {
+    ||
+    apply "item|doc";
+    ||
+    } «func:name()»;
+
+    ||
+    }
+
+    template "doc"
+    ||
+
+    // «.»
+
+    ||
+
+    template "item" {
+        0> «func:name(1)»`if "text()" { " = " value "." }``if "position()!=last()" > ,`
+        choose {
+            when "@doc" >  /* «@doc» */\n
+            otherwise > \n
+        }
+    }
+}
+

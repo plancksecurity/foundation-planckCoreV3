@@ -1,0 +1,109 @@
+// p≡p API version 2.0
+// Basic API version 0.1
+
+// Copyleft (c) 2019, p≡p foundation
+
+// written by Volker Birk
+
+
+type ISO639_1 extends string size=2 > a-z
+
+type Hex extends string > a-f0-9
+
+type hash extends hex min=16, max=128,
+    doc="32bit Key ID to SHA512 in hex";
+
+type TID extends binary size=16,
+    doc="UUID version 4 variant 1";
+
+
+enum comm_type {
+    hex unknown 0;
+
+    doc > range 0x01 to 0x09: no encryption, 0x0a to 0x0e: nothing reasonable
+
+    hex no_encryption 0x01                 doc="generic";
+    hex no_encrypted_channel 0x02;
+    hex key_not_found 0x03;
+    hex key_expired 0x04;
+    hex key_revoked 0x05;
+    hex key_b0rken 0x06;
+
+    hex key_expired_but_confirmed 0x07
+        doc="NOT with confirmed bit. Just retaining info here in case of renewal.";
+
+    hex my_key_not_included 0x09;
+
+    hex security_by_obscurity 0x0a;
+    hex b0rken_crypto 0x0b;
+    hex key_too_short 0x0c;
+
+    hex compromised 0x0e                   doc="known compromised connection";
+    hex compromized 0x0e                   doc="deprecated misspelling";
+    hex mistrusted 0x0f                    doc="known mistrusted key";
+
+    doc > range 0x10 to 0x3f: unconfirmed encryption
+
+    hex unconfirmed_encryption 0x10        doc="generic";
+    hex OpenPGP_weak_unconfirmed 0x11      doc="RSA 1024 is weak";
+
+    hex to_be_checked 0x20                 doc="generic";
+    hex SMIME_unconfirmed 0x21;
+    hex CMS_unconfirmed 0x22;
+
+    hex strong_but_unconfirmed 0x30        doc="generic";
+    hex OpenPGP_unconfirmed 0x38           doc="key at least 2048 bit RSA or EC";
+    hex OTR_unconfirmed 0x3a;
+
+    doc > range 0x40 to 0x7f: unconfirmed encryption and anonymization
+
+    hex unconfirmed_enc_anon 0x40          doc="generic";
+    hex pEp_unconfirmed 0x7f 
+
+    hex confirmed 0x80                     doc="this bit decides if trust is confirmed";
+
+    doc > range 0x81 to 0x8f: reserved
+    doc > range 0x90 to 0xbf: confirmed encryption
+
+    hex confirmed_encryption 0x90          doc="generic";
+    hex OpenPGP_weak 0x91                  doc="RSA 1024 is weak (unused)";
+
+    hex to_be_checked_confirmed 0xa0       doc="generic";
+    hex SMIME 0xa1;
+    hex CMS 0xa2;
+
+    hex strong_encryption 0xb0             doc="generic";
+    hex OpenPGP 0xb8                       doc="key at least 2048 bit RSA or EC";
+    hex OTR 0xba;
+
+    doc > range 0xc0 to 0xff: confirmed encryption and anonymization
+
+    hex confirmed_enc_anon 0xc0            doc="generic";
+    hex pEp 0xff
+
+} // enum comm_type
+
+
+struct identity {
+    
+    field string address;
+    field hash fpr;
+    field string user_id;
+    field string username;
+    field ISO639_1 lang;
+
+    flags {
+        flag not_for_sync 0x0001
+            doc="don't use this identity for Sync";
+
+        flag list 0x0002
+            doc="identity of list of persons";
+
+        doc | the second octet flags are calculated
+
+        flag devicegroup 0x0100
+            doc="identity of a device group member"
+    }
+
+} // struct Identity
+
