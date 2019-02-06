@@ -14,7 +14,6 @@
 #include <unistd.h>
 #include <ftw.h>
 
-    if (status != PEP_TEST_KEY_IMPORT_SUCCESS)
 bool file_exists(std::string filename) {
     struct stat buffer;
     return (stat(filename.c_str(), &buffer) == 0);
