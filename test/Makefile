@@ -34,7 +34,7 @@ ifeq ($(BUILD_FOR),Linux)
 endif
 
 ifeq ($(OPENPGP),NETPGP)
-	LDLIBS+= -lnetpgp -lcrypto
+	LDLIBS+= -lnetpgp
 	CFLAGS+= -DUSE_NETPGP
 ifeq ($(BUILD_FOR),Linux)
 	LDLIBS+= -ltre
