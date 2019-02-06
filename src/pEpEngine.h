@@ -53,9 +53,9 @@ typedef enum {
     PEP_CANNOT_EDIT_KEY                             = 0x0205,
     PEP_KEY_UNSUITABLE                              = 0x0206,
 
-    PEP_KEY_IMPORTED                                = 0x0210,
-    PEP_NO_KEY_IMPORTED                             = 0x0211,
-    PEP_KEY_IMPORT_STATUS_UNKNOWN                   = 0x0212,
+    PEP_KEY_IMPORTED                                = 0x0220,
+    PEP_NO_KEY_IMPORTED                             = 0x0221,
+    PEP_KEY_IMPORT_STATUS_UNKNOWN                   = 0x0222,
     
     PEP_CANNOT_FIND_IDENTITY                        = 0x0301,
     PEP_CANNOT_SET_PERSON                           = 0x0381,
