@@ -1,6 +1,7 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
+#include "TestConstants.h"
 #include <stdlib.h>
 #include <string>
 #include <cstring>
@@ -105,7 +106,7 @@ void KeyAttachmentTests::check_key_plus_encr_att_inline() {
     TEST_ASSERT_MSG(dec_msg->attachments->next == NULL, "Decryption left attachments it should have deleted.");    
     TEST_ASSERT_MSG(dec_msg->attachments->filename, "Attachment doesn't have a filename");
     // TODO: is there a missing update to resource IDs in decrypt in parts?
-    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->filename, "cheese.txt.gpg") == 0, dec_msg->attachments->filename);    
+    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->filename, "file://cheese.txt.gpg") == 0, dec_msg->attachments->filename);    
     TEST_ASSERT_MSG(dec_msg->attachments->mime_type, "Attachment doesn't have a mime type");
     TEST_ASSERT_MSG(strcmp(dec_msg->attachments->mime_type, "application/octet-stream") == 0, dec_msg->attachments->mime_type);    
     free_message(enc_msg);
@@ -131,7 +132,7 @@ void KeyAttachmentTests::check_encr_att_plus_key_inline() {
     TEST_ASSERT_MSG(dec_msg->attachments->next == NULL, "Decryption left attachments it should have deleted.");    
     TEST_ASSERT_MSG(dec_msg->attachments->filename, "Attachment doesn't have a filename");
     // TODO: is there a missing update to resource IDs in decrypt in parts?
-    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->filename, "cheese.txt.gpg") == 0, dec_msg->attachments->filename);    
+    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->filename, "file://cheese.txt.gpg") == 0, dec_msg->attachments->filename);    
     TEST_ASSERT_MSG(dec_msg->attachments->mime_type, "Attachment doesn't have a mime type");
     TEST_ASSERT_MSG(strcmp(dec_msg->attachments->mime_type, "application/octet-stream") == 0, dec_msg->attachments->mime_type);    
     free_message(enc_msg);
@@ -157,7 +158,7 @@ void KeyAttachmentTests::check_key_plus_unencr_att_inline() {
     TEST_ASSERT_MSG(dec_msg->attachments->next == NULL, "Decryption left attachments it should have deleted.");    
     TEST_ASSERT_MSG(dec_msg->attachments->filename, "Attachment doesn't have a filename");
     // TODO: is there a missing update to resource IDs in decrypt in parts?
-    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->filename, "cheese.txt") == 0, dec_msg->attachments->filename);    
+    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->filename, "file://cheese.txt") == 0, dec_msg->attachments->filename);    
     TEST_ASSERT_MSG(dec_msg->attachments->mime_type, "Attachment doesn't have a mime type");
     TEST_ASSERT_MSG(strcmp(dec_msg->attachments->mime_type, "application/octet-stream") == 0, dec_msg->attachments->mime_type);    
     free_message(enc_msg);
@@ -183,7 +184,7 @@ void KeyAttachmentTests::check_unencr_att_plus_key_inline() {
     TEST_ASSERT_MSG(dec_msg->attachments->next == NULL, "Decryption left attachments it should have deleted.");    
     TEST_ASSERT_MSG(dec_msg->attachments->filename, "Attachment doesn't have a filename");
     // TODO: is there a missing update to resource IDs in decrypt in parts?
-    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->filename, "cheese.txt") == 0, dec_msg->attachments->filename);    
+    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->filename, "file://cheese.txt") == 0, dec_msg->attachments->filename);    
     TEST_ASSERT_MSG(dec_msg->attachments->mime_type, "Attachment doesn't have a mime type");
     TEST_ASSERT_MSG(strcmp(dec_msg->attachments->mime_type, "application/octet-stream") == 0, dec_msg->attachments->mime_type);    
     free_message(enc_msg);
@@ -233,7 +234,7 @@ void KeyAttachmentTests::check_many_keys_w_encr_file_inline() {
     TEST_ASSERT_MSG(dec_msg->attachments->next == NULL, "Decryption left attachments it should have deleted.");    
     TEST_ASSERT_MSG(dec_msg->attachments->filename, "Attachment doesn't have a filename");
     // TODO: is there a missing update to resource IDs in decrypt in parts?
-    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->filename, "cheese.txt.gpg") == 0, dec_msg->attachments->filename);    
+    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->filename, "file://cheese.txt.gpg") == 0, dec_msg->attachments->filename);    
     TEST_ASSERT_MSG(dec_msg->attachments->mime_type, "Attachment doesn't have a mime type");
     TEST_ASSERT_MSG(strcmp(dec_msg->attachments->mime_type, "application/octet-stream") == 0, dec_msg->attachments->mime_type);    
     free_message(enc_msg);
@@ -259,7 +260,7 @@ void KeyAttachmentTests::check_many_keys_w_unencr_file_inline() {
     TEST_ASSERT_MSG(dec_msg->attachments->next == NULL, "Decryption left attachments it should have deleted.");    
     TEST_ASSERT_MSG(dec_msg->attachments->filename, "Attachment doesn't have a filename");
     // TODO: is there a missing update to resource IDs in decrypt in parts?
-    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->filename, "barky.txt") == 0, dec_msg->attachments->filename);    
+    TEST_ASSERT_MSG(strcmp(dec_msg->attachments->filename, "file://barky.txt") == 0, dec_msg->attachments->filename);    
     TEST_ASSERT_MSG(dec_msg->attachments->mime_type, "Attachment doesn't have a mime type");
     TEST_ASSERT_MSG(strcmp(dec_msg->attachments->mime_type, "application/octet-stream") == 0, dec_msg->attachments->mime_type);    
     free_message(enc_msg);
@@ -290,13 +291,13 @@ void KeyAttachmentTests::check_many_keys_with_many_files_inline() {
     // pair is filename, mime_type 
     vector<pair<string,string>> v =
         {
-            {"barky.txt","application/octet-stream"}, 
-            {"this_is_not_a_key_or_encrypted.asc","application/octet-stream"},
-            {"this_is_not_a_key_or_encrypted.gpg","application/octet-stream"},
-            {"CC_BY-SA.txt","application/octet-stream"}, 
-            {"Makefile","application/octet-stream"}, 
-            {"LICENSE.txt","application/octet-stream"}, 
-            {"README.md","application/octet-stream"}, 
+            {"file://barky.txt","application/octet-stream"}, 
+            {"file://this_is_not_a_key_or_encrypted.asc","application/octet-stream"},
+            {"file://this_is_not_a_key_or_encrypted.gpg","application/octet-stream"},
+            {"file://CC_BY-SA.txt","application/octet-stream"}, 
+            {"file://Makefile","application/octet-stream"}, 
+            {"file://LICENSE.txt","application/octet-stream"}, 
+            {"file://README.md","application/octet-stream"}, 
         };
                              
     bloblist_t* curr_att = dec_msg->attachments;

@@ -1,6 +1,7 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
+#include "TestConstants.h"
 #include <stdlib.h>
 #include <string>
 #include <cstring>
@@ -41,8 +42,8 @@ void ExternalRevokeTests::check_external_revoke() {
     
     PEP_STATUS statuspub = import_key(session, fenris_pub_key.c_str(), fenris_pub_key.length(), NULL);
     PEP_STATUS statuspriv = import_key(session, fenris_priv_key.c_str(), fenris_priv_key.length(), NULL);
-    TEST_ASSERT_MSG((statuspub == PEP_KEY_IMPORTED), "statuspub == PEP_STATUS_OK");
-    TEST_ASSERT_MSG((statuspriv == PEP_KEY_IMPORTED), "statuspriv == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statuspub == PEP_TEST_KEY_IMPORT_SUCCESS), "statuspub == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statuspriv == PEP_TEST_KEY_IMPORT_SUCCESS), "statuspriv == PEP_STATUS_OK");
 
     // Create sender ID
     

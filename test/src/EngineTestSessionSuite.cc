@@ -1,4 +1,5 @@
 #include <cpptest.h>
+#include "TestConstants.h"
 #include <cpptest-suite.h>
 #include <cpptest-textoutput.h>
 #include <stdlib.h>

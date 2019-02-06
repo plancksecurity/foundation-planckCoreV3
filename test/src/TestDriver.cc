@@ -3,6 +3,7 @@
 #include <cpptest-suite.h>
 #include <cpptest-output.h>
 #include "pEpTestOutput.h"
+#include "TestConstants.h"
 
 #include <string>
 #include <vector>

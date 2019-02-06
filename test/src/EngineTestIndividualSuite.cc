@@ -1,3 +1,4 @@
+#include "TestConstants.h"
 #include <cpptest.h>
 #include <cpptest-suite.h>
 #include <cpptest-textoutput.h>
