@@ -1,6 +1,7 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
+#include "TestConstants.h"
 #include <stdlib.h>
 #include <string>
 #include <cstring>
@@ -32,7 +33,7 @@ void RevokeRegenAttachTests::setup() {
     EngineTestSessionSuite::setup();
     string recip_key = slurp("test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
     PEP_STATUS status = import_key(session, recip_key.c_str(), recip_key.size(), NULL);
-    assert(status == PEP_KEY_IMPORTED);
+    assert(status == PEP_TEST_KEY_IMPORT_SUCCESS);
 }
 
 

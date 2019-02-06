@@ -21,7 +21,6 @@ INC_DIRS := ./include /usr/local/include ../src ../sync ../asn.1
 INC_FLAGS := $(addprefix -I,$(INC_DIRS)) $(GPGME_INC) $(CPPUNIT_INC)
 
 LDFLAGS += -L/usr/local/lib
-
 CFLAGS += -Wno-deprecated
 CXXFLAGS += -Wno-deprecated
 CFLAGS:=$(filter-out -Wall,$(CFLAGS))

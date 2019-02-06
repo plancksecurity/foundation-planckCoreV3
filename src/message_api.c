@@ -8,6 +8,7 @@
 #include "mime.h"
 #include "blacklist.h"
 #include "base64.h"
+#include "resource_id.h"
 
 #include <assert.h>
 #include <string.h>
@@ -270,14 +271,6 @@ static char* _get_resource_ptr_noown(char* uri) {
         return uri;
     else
         return uri + 3;
-}
-
-// static bool is_file_uri(char* str) {
-//     return(strncmp(str, "file://", 7) == 0);
-// }
-
-static bool is_cid_uri(const char* str) {
-    return(strncmp(str, "cid://", 6) == 0);
 }
 
 static bool string_equality(const char *s1, const char *s2)
@@ -2839,6 +2832,15 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                                         
             free_stringlist(_keylist);
 
+            char* filename_uri = NULL;
+
+            bool has_uri_prefix = (pgp_filename ? (is_file_uri(pgp_filename) || is_cid_uri(pgp_filename)) :
+                                                  (_s->filename ? (is_file_uri(_s->filename) || is_cid_uri(_s->filename)) :
+                                                                  false
+                                                  )
+                                  );
+            
+
             if (ptext) {
                 if (is_encrypted_html_attachment(_s)) {
                     msg->longmsg_formatted = ptext;
@@ -2847,9 +2849,14 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                 else {
                     static const char * const mime_type = "application/octet-stream";                    
                     if (pgp_filename) {
+                        if (!has_uri_prefix)
+                            filename_uri = build_uri("file", pgp_filename);
+
                         _m = bloblist_add(_m, ptext, psize, mime_type,
-                             pgp_filename);
-                        free(pgp_filename);                        
+                             (filename_uri ? filename_uri : pgp_filename));
+
+                        free(pgp_filename);
+                        free(filename_uri);
                         if (_m == NULL)
                             return PEP_OUT_OF_MEMORY;
                     }
@@ -2859,9 +2866,13 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                         if (filename == NULL)
                             return PEP_OUT_OF_MEMORY;
 
+                        if (!has_uri_prefix)
+                            filename_uri = build_uri("file", filename);
+
                         _m = bloblist_add(_m, ptext, psize, mime_type,
-                            filename);
+                             (filename_uri ? filename_uri : filename));
                         free(filename);
+                        free(filename_uri);
                         if (_m == NULL)
                             return PEP_OUT_OF_MEMORY;
                     }
@@ -2877,7 +2888,12 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                 if (copy == NULL)
                     return PEP_OUT_OF_MEMORY;
                 memcpy(copy, _s->value, _s->size);
-                _m = bloblist_add(_m, copy, _s->size, _s->mime_type, _s->filename);
+
+                if (!has_uri_prefix && _s->filename)
+                    filename_uri = build_uri("file", _s->filename);
+
+                _m = bloblist_add(_m, copy, _s->size, _s->mime_type, 
+                        (filename_uri ? filename_uri : _s->filename));
                 if (_m == NULL)
                     return PEP_OUT_OF_MEMORY;
             }
@@ -2888,7 +2904,13 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
             if (copy == NULL)
                 return PEP_OUT_OF_MEMORY;
             memcpy(copy, _s->value, _s->size);
-            _m = bloblist_add(_m, copy, _s->size, _s->mime_type, _s->filename);
+
+            char* filename_uri = NULL;
+
+            _m = bloblist_add(_m, copy, _s->size, _s->mime_type, 
+                    ((_s->filename && !(is_file_uri(_s->filename) || is_cid_uri(_s->filename))) ?
+                         (filename_uri = build_uri("file", _s->filename)) : _s->filename));
+            free(filename_uri);
             if (_m == NULL)
                 return PEP_OUT_OF_MEMORY;
         }
