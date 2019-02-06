@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstring> // for strcmp()
+#include "TestConstants.h"
 
 #include "pEpEngine.h"
 #include "message_api.h"
@@ -195,7 +196,7 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
     const string alex_pub_key = slurp("test_keys/pub/pep.test.alexander-0x26B54E4E_pub.asc");
     
     PEP_STATUS statuspub = import_key(session, alex_pub_key.c_str(), alex_pub_key.length(), NULL);
-    TEST_ASSERT_MSG((statuspub == PEP_KEY_IMPORTED), "statuspub == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statuspub == PEP_TEST_KEY_IMPORT_SUCCESS), "statuspub == PEP_STATUS_OK");
 
     pEp_identity* alex = new_identity(alex_address, alex_fpr, alex_userid, alex_username);
 
@@ -353,7 +354,7 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
     const string bella_pub_key = slurp("test_keys/pub/pep.test.bella-0xAF516AAE_pub.asc");
     
     statuspub = import_key(session, bella_pub_key.c_str(), bella_pub_key.length(), NULL);
-    TEST_ASSERT_MSG((statuspub == PEP_KEY_IMPORTED), "statuspub == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statuspub == PEP_TEST_KEY_IMPORT_SUCCESS), "statuspub == PEP_STATUS_OK");
 
     pEp_identity* bella = new_identity(bella_address, bella_fpr, bella_userid, bella_username);
     
@@ -460,7 +461,7 @@ void NewUpdateIdAndMyselfTests::check_new_update_id_and_myself() {
     const string bernd_pub_key = slurp("test_keys/pub/bernd.das.brot-0xCAFAA422_pub.asc");
     
     statuspub = import_key(session, bernd_pub_key.c_str(), bernd_pub_key.length(), NULL);
-    TEST_ASSERT_MSG((statuspub == PEP_KEY_IMPORTED), "statuspub == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statuspub == PEP_TEST_KEY_IMPORT_SUCCESS), "statuspub == PEP_STATUS_OK");
 
     pEp_identity* bernd = new_identity(bernd_address, bernd_fpr, bernd_userid, bernd_username);
     

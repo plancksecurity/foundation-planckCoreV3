@@ -3,6 +3,7 @@
 #include "pEp_internal.h"
 #include "message_api.h"
 #include "test_util.h"
+#include "TestConstants.h"
 
 #include <fstream>
 #include <sstream>
@@ -31,7 +32,7 @@ PEP_STATUS set_up_ident_from_scratch(PEP_SESSION session,
                                      pEp_identity** ret_ident,
                                      bool is_priv) {
     PEP_STATUS status = read_file_and_import_key(session,key_fname);
-    if (status != PEP_KEY_IMPORTED)
+    if (status != PEP_TEST_KEY_IMPORT_SUCCESS)
         return status;
     else
         status = PEP_STATUS_OK;
@@ -382,7 +383,7 @@ const char* tl_ct_string(PEP_comm_type ct) {
 
 bool slurp_and_import_key(PEP_SESSION session, const char* key_filename) {
     std::string keyfile = slurp(key_filename);
-    if (import_key(session, keyfile.c_str(), keyfile.size(), NULL) != PEP_KEY_IMPORTED)
+    if (import_key(session, keyfile.c_str(), keyfile.size(), NULL) != PEP_TEST_KEY_IMPORT_SUCCESS)
         return false;
     return true;
 }

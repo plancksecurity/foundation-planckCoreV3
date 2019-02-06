@@ -1,6 +1,7 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
+#include "TestConstants.h"
 #include <iostream>
 #include <iostream>
 #include <fstream>
@@ -33,8 +34,8 @@ void UserIDAliasTests::check_userid_aliases() {
     
     PEP_STATUS statuspub = import_key(session, alice_pub_key.c_str(), alice_pub_key.length(), NULL);
     PEP_STATUS statuspriv = import_key(session, alice_priv_key.c_str(), alice_priv_key.length(), NULL);
-    TEST_ASSERT_MSG((statuspub == PEP_KEY_IMPORTED), "statuspub == PEP_STATUS_OK");
-    TEST_ASSERT_MSG((statuspriv == PEP_KEY_IMPORTED), "statuspriv == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statuspub == PEP_TEST_KEY_IMPORT_SUCCESS), "statuspub == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statuspriv == PEP_TEST_KEY_IMPORT_SUCCESS), "statuspriv == PEP_STATUS_OK");
 
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", PEP_OWN_USERID, "Alice Test");
 

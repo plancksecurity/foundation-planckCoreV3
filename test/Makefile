@@ -20,8 +20,6 @@ DEPS := $(OBJS:.o=.d)
 INC_DIRS := ./include /usr/local/include ../src ../sync ../asn.1
 INC_FLAGS := $(addprefix -I,$(INC_DIRS)) $(GPGME_INC) $(CPPUNIT_INC)
 
-LDFLAGS += -L/usr/local/lib -L$HOME/lib
-
 CFLAGS += -Wno-deprecated
 CXXFLAGS += -Wno-deprecated
 CFLAGS:=$(filter-out -Wall,$(CFLAGS))
@@ -128,7 +126,7 @@ endif
 
 .PHONY: test
 test: all
-	ulimit -n 20000; $(TEST_DEBUGGER) ./$(TARGET)
+	$(TEST_DEBUGGER) ./$(TARGET)
 
 .PHONY: clean
 clean:
