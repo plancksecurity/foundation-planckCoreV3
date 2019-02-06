@@ -55,6 +55,10 @@ typedef enum {
     PEP_KEY_UNSUITABLE                              = 0x0206,
     PEP_MALFORMED_KEY_RESET_MSG                     = 0x0210,
     PEP_KEY_NOT_RESET                               = 0x0211,
+
+    PEP_KEY_IMPORTED                                = 0x0220,
+    PEP_NO_KEY_IMPORTED                             = 0x0221,
+    PEP_KEY_IMPORT_STATUS_UNKNOWN                   = 0x0222,
     
     PEP_CANNOT_FIND_IDENTITY                        = 0x0301,
     PEP_CANNOT_SET_PERSON                           = 0x0381,

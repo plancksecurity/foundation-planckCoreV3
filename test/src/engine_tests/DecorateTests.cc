@@ -35,9 +35,9 @@ void DecorateTests::check_decorate() {
     PEP_STATUS statuspub = import_key(session, alice_pub_key.c_str(), alice_pub_key.length(), NULL);
     PEP_STATUS statuspriv = import_key(session, alice_priv_key.c_str(), alice_priv_key.length(), NULL);
     PEP_STATUS statusbob = import_key(session, bob_pub_key.c_str(), bob_pub_key.length(), NULL);
-    TEST_ASSERT_MSG((statuspub == PEP_STATUS_OK), "statuspub == PEP_STATUS_OK");
-    TEST_ASSERT_MSG((statuspriv == PEP_STATUS_OK), "statuspriv == PEP_STATUS_OK");
-    TEST_ASSERT_MSG((statusbob == PEP_STATUS_OK), "statusbob == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statuspub == PEP_KEY_IMPORTED), "statuspub == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statuspriv == PEP_KEY_IMPORTED), "statuspriv == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statusbob == PEP_KEY_IMPORTED), "statusbob == PEP_STATUS_OK");
 
     cout << "creating message…\n";
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, "Alice Test");

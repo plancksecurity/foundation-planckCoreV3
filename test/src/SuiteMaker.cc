@@ -35,6 +35,7 @@
 #include "Engine358Tests.h"
 #include "BlacklistAcceptNewKeyTests.h"
 #include "DecryptAttachPrivateKeyUntrustedTests.h"
+#include "ReturnMistrustFprTests.h"
 #include "BlacklistTests.h"
 #include "RevokeRegenAttachTests.h"
 #include "PepSubjectReceivedTests.h"
@@ -47,6 +48,7 @@
 #include "DecryptAttachPrivateKeyTrustedTests.h"
 #include "CheckRenewedExpiredKeyTrustStatusTests.h"
 #include "TrustwordsTests.h"
+#include "SimpleBodyNotAltTests.h"
 #include "ReencryptPlusExtraKeysTests.h"
 #include "MapAsn1Tests.h"
 #include "DecorateTests.h"
@@ -55,6 +57,7 @@
 #include "StringpairListTests.h"
 #include "EncryptForIdentityTests.h"
 #include "KeyResetMessageTests.h"
+#include "KeyAttachmentTests.h"
 #include "TrustManipulationTests.h"
 #include "SyncTests.h"
 #include "AppleMailTests.h"
@@ -84,6 +87,7 @@ const char* SuiteMaker::all_suites[] = {
     "Engine358Tests",
     "BlacklistAcceptNewKeyTests",
     "DecryptAttachPrivateKeyUntrustedTests",
+    "ReturnMistrustFprTests",
     "BlacklistTests",
     "RevokeRegenAttachTests",
     "PepSubjectReceivedTests",
@@ -96,6 +100,7 @@ const char* SuiteMaker::all_suites[] = {
     "DecryptAttachPrivateKeyTrustedTests",
     "CheckRenewedExpiredKeyTrustStatusTests",
     "TrustwordsTests",
+    "SimpleBodyNotAltTests",
     "ReencryptPlusExtraKeysTests",
     "MapAsn1Tests",
     "DecorateTests",
@@ -104,13 +109,14 @@ const char* SuiteMaker::all_suites[] = {
     "StringpairListTests",
     "EncryptForIdentityTests",
     "KeyResetMessageTests",
+    "KeyAttachmentTests",
     "TrustManipulationTests",
     "SyncTests",
     "AppleMailTests",
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 46;
+int SuiteMaker::num_suites = 49;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "MimeTests") == 0)
@@ -159,6 +165,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new BlacklistAcceptNewKeyTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "DecryptAttachPrivateKeyUntrustedTests") == 0)
         *test_suite = new DecryptAttachPrivateKeyUntrustedTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "ReturnMistrustFprTests") == 0)
+        *test_suite = new ReturnMistrustFprTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "BlacklistTests") == 0)
         *test_suite = new BlacklistTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "RevokeRegenAttachTests") == 0)
@@ -183,6 +191,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new CheckRenewedExpiredKeyTrustStatusTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "TrustwordsTests") == 0)
         *test_suite = new TrustwordsTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "SimpleBodyNotAltTests") == 0)
+        *test_suite = new SimpleBodyNotAltTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "ReencryptPlusExtraKeysTests") == 0)
         *test_suite = new ReencryptPlusExtraKeysTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "MapAsn1Tests") == 0)
@@ -199,6 +209,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new EncryptForIdentityTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "KeyResetMessageTests") == 0)
         *test_suite = new KeyResetMessageTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "KeyAttachmentTests") == 0)
+        *test_suite = new KeyAttachmentTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "TrustManipulationTests") == 0)
         *test_suite = new TrustManipulationTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "SyncTests") == 0)

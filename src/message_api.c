@@ -1100,6 +1100,19 @@ pEp_error:
     return status;
 }
 
+static bool _has_PGP_MIME_format(message* msg) {
+    if (!msg || !msg->attachments || !msg->attachments->next)
+        return false;
+    if (msg->attachments->next->next)
+        return false;
+    if (!msg->attachments->mime_type ||
+        strcmp(msg->attachments->mime_type, "application/pgp-encrypted") != 0)    
+        return false;
+    if (!msg->attachments->next->mime_type || 
+        strcmp(msg->attachments->next->mime_type, "application/octet-stream") != 0)        
+        return false;
+    return true;    
+}
 
 static PEP_rating _rating(PEP_comm_type ct)
 {
@@ -1413,9 +1426,28 @@ static void remove_attached_keys(message *msg)
     }
 }
 
+static bool compare_first_n_bytes(const char* first, const char* second, size_t n) {
+    int i;
+    for (i = 0; i < n; i++) {
+        char num1 = *first;
+        char num2 = *second;
+
+        if (num1 != num2)
+            return false;
+                    
+        if (num1 == '\0') {
+            if (num2 == '\0')
+                return true;
+        }   
+        first++;
+        second++;                     
+    }
+    return true;
+}
+
 bool import_attached_keys(
         PEP_SESSION session,
-        const message *msg,
+        message *msg,
         identity_list **private_idents
     )
 {
@@ -1428,9 +1460,20 @@ bool import_attached_keys(
     bool remove = false;
 
     int i = 0;
+    
+    bloblist_t* prev = NULL;
+    
+    bool do_not_advance = false;
+    const char* pubkey_header = "-----BEGIN PGP PUBLIC KEY BLOCK-----";
+    const char* privkey_header = "-----BEGIN PGP PRIVATE KEY BLOCK-----";
+    // Hate my magic numbers at your peril, but I don't want a strlen each time
+    const size_t PUBKEY_HSIZE = 36;
+    const size_t PRIVKEY_HSIZE = 37;
+
     for (bloblist_t *bl = msg->attachments; i < MAX_KEYS_TO_IMPORT && bl && bl->value;
-            bl = bl->next, i++)
+         i++)
     {
+        do_not_advance = false;
         if (bl && bl->value && bl->size && bl->size < MAX_KEY_SIZE
                 && is_key(bl))
         {
@@ -1460,18 +1503,51 @@ bool import_attached_keys(
                     // We shouldn't delete it or import it, because we can't
                     // do the latter.
                     free(bl_ptext);
+                    prev = bl;
+                    bl = bl->next;
                     continue;
                 }
             }
             identity_list *local_private_idents = NULL;
-            import_key(session, blob_value, blob_size, &local_private_idents);
-            remove = true;
+            PEP_STATUS import_status = import_key(session, blob_value, blob_size, &local_private_idents);
+            bloblist_t* to_delete = NULL;
+            switch (import_status) {
+                case PEP_NO_KEY_IMPORTED:
+                    break;
+                case PEP_KEY_IMPORT_STATUS_UNKNOWN:
+                    // We'll delete armoured stuff, at least
+                    if (blob_size <= PUBKEY_HSIZE)
+                        break;
+                    if ((!compare_first_n_bytes(pubkey_header, (const char*)blob_value, PUBKEY_HSIZE)) &&
+                       (!compare_first_n_bytes(privkey_header, (const char*)blob_value, PRIVKEY_HSIZE)))
+                        break;
+                    // else fall through and delete    
+                case PEP_KEY_IMPORTED:
+                    to_delete = bl;
+                    if (prev)
+                        prev->next = bl->next;
+                    else
+                        msg->attachments = bl->next;
+                    bl = bl->next;
+                    to_delete->next = NULL;
+                    free_bloblist(to_delete);
+                    do_not_advance = true;
+                    remove = true;
+                    break;
+                default:  
+                    // bad stuff, but ok.
+                    break;
+            }
             if (private_idents && *private_idents == NULL && local_private_idents != NULL)
                 *private_idents = local_private_idents;
             else
                 free_identity_list(local_private_idents);
             if (free_blobval)
                 free(blob_value);
+        }
+        if (!do_not_advance) {
+            prev = bl;
+            bl = bl->next;
         }
     }
     return remove;
@@ -3102,7 +3178,7 @@ static bool import_header_keys(PEP_SESSION session, message* src) {
         return false;
     PEP_STATUS status = import_key(session, the_key->value, the_key->size, NULL);
     free_bloblist(the_key);
-    if (status == PEP_STATUS_OK)
+    if (status == PEP_KEY_IMPORTED)
         return true;
     return false;
 }
@@ -3258,7 +3334,13 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
     /*** Begin Import any attached public keys and update identities accordingly ***/
     // Private key in unencrypted mail are ignored -> NULL
-    bool imported_keys = import_attached_keys(session, src, NULL);
+    //
+    // This import is from the outermost message.
+    // We don't do this for PGP_mime.
+    bool imported_keys = false;
+    if (!_has_PGP_MIME_format(src))
+        imported_keys = import_attached_keys(session, src, NULL);
+            
     import_header_keys(session, src);
     
     // FIXME: is this really necessary here?
@@ -3295,8 +3377,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
         *rating = PEP_rating_unencrypted;
 
-        if (imported_keys)
-            remove_attached_keys(src);
+        // We remove these from the outermost source message
+        // if (imported_keys)
+        //     remove_attached_keys(src);
                                     
         pull_up_attached_main_msg(src);
         
@@ -3346,6 +3429,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 // N.B. Apparently, we always import private keys into the keyring; however,
                 // we do NOT always allow those to be used for encryption. THAT is controlled
                 // by setting it as an own identity associated with the key in the DB.
+                //
+                // We are importing from the decrypted outermost message now.
+                //
                 status = import_priv_keys_from_decrypted_msg(session, src, msg,
                                                              &imported_keys,
                                                              &imported_private_key_address,
@@ -3469,8 +3555,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                             // If we have a message 2.0 message, we are ONLY going to be ok with keys
                                             // we imported from THIS part of the message.
                                             imported_private_key_address = false;
-                                            free(private_il);
+                                            free(private_il); 
                                             private_il = NULL;
+                                            
+                                            // import keys from decrypted INNER source
                                             status = import_priv_keys_from_decrypted_msg(session, src, inner_message,
                                                                                          &imported_keys,
                                                                                          &imported_private_key_address,
@@ -3576,9 +3664,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         
         /* add pEp-related status flags to header */
         decorate_message(msg, *rating, _keylist, false, false);
-        
-        if (imported_keys)
-            remove_attached_keys(msg);
+
+        // Maybe unnecessary
+        // if (imported_keys)
+        //     remove_attached_keys(msg);
                     
         if (calculated_src->id && calculated_src != msg) {
             msg->id = strdup(calculated_src->id);

@@ -37,13 +37,13 @@ void EncryptForIdentityTests::check_encrypt_for_identity() {
 
     PEP_STATUS statuspub = import_key(session, alice_pub_key.c_str(), alice_pub_key.length(), NULL);
     PEP_STATUS statuspriv = import_key(session, alice_priv_key.c_str(), alice_priv_key.length(), NULL);
-    TEST_ASSERT_MSG((statuspub == PEP_STATUS_OK), "statuspub == PEP_STATUS_OK");
-    TEST_ASSERT_MSG((statuspriv == PEP_STATUS_OK), "statuspriv == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statuspub == PEP_KEY_IMPORTED), "statuspub == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statuspriv == PEP_KEY_IMPORTED), "statuspriv == PEP_STATUS_OK");
     
     statuspub = import_key(session, gabrielle_pub_key.c_str(), gabrielle_pub_key.length(), NULL);
-    TEST_ASSERT_MSG((statuspub == PEP_STATUS_OK), "statuspub == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statuspub == PEP_KEY_IMPORTED), "statuspub == PEP_STATUS_OK");
     statuspub = import_key(session, bella_pub_key.c_str(), bella_pub_key.length(), NULL);
-    TEST_ASSERT_MSG((statuspub == PEP_STATUS_OK), "statuspub == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((statuspub == PEP_KEY_IMPORTED), "statuspub == PEP_STATUS_OK");
 
     const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
     const char* gabrielle_fpr = "906C9B8349954E82C5623C3C8C541BD4E203586C";
