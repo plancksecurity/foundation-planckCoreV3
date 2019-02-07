@@ -14,7 +14,7 @@ extern "C" {
 
 bool import_attached_keys(
         PEP_SESSION session, 
-        const message *msg,
+        message *msg,
         identity_list **private_idents
     );
 
@@ -78,6 +78,7 @@ typedef enum _message_wrap_type {
 //  caveat:
 //      the ownership of src remains with the caller
 //      the ownership of dst goes to the caller
+
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
         message *src,
@@ -235,7 +236,7 @@ typedef enum _PEP_rating {
     PEP_rating_cannot_decrypt,
     PEP_rating_have_no_key,
     PEP_rating_unencrypted,
-    PEP_rating_unencrypted_for_some,
+    PEP_rating_unencrypted_for_some, // don't use this any more
     PEP_rating_unreliable,
     PEP_rating_reliable,
     PEP_rating_trusted,
@@ -586,6 +587,26 @@ DYNAMIC_API PEP_STATUS re_evaluate_message_rating(
     PEP_rating x_enc_status,
     PEP_rating *rating
 );
+
+// get_key_rating_for_user() - get the rating of a certain key for a certain user
+//
+//  parameters:
+//
+//      session (in)            session handle
+//      user_id (in)            string with user ID
+//      fpr (in)                string with fingerprint
+//      rating (out)            rating of key for this user
+//
+//  returns:
+//      PEP_RECORD_NOT_FOUND if no trust record for user_id and fpr can be found
+
+DYNAMIC_API PEP_STATUS get_key_rating_for_user(
+        PEP_SESSION session,
+        const char *user_id,
+        const char *fpr,
+        PEP_rating *rating
+    );
+
 #ifdef __cplusplus
 }
 #endif

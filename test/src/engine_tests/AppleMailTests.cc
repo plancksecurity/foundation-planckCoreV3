@@ -18,6 +18,7 @@
 #include "message_api.h"
 #include "mime.h"
 #include "test_util.h" // for slurp()
+#include "TestConstants.h"
 
 #include "EngineTestSuite.h"
 #include "EngineTestIndividualSuite.h"

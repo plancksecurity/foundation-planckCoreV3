@@ -27,6 +27,7 @@
 #include "blacklist.h"
 #include "keymanagement.h"
 #include "test_util.h"
+#include "TestConstants.h"
 
 #include "EngineTestSessionSuite.h"
 #include "BlacklistTests.h"

@@ -10,6 +10,7 @@
 #include "baseprotocol.h"
 #include "KeySync_fsm.h"
 #include "base64.h"
+#include "resource_id.h"
 
 #include <assert.h>
 #include <string.h>
@@ -121,8 +122,8 @@ static const char * rating_to_string(PEP_rating rating)
         return "have_no_key";
     case PEP_rating_unencrypted:
         return "unencrypted";
-    case PEP_rating_unencrypted_for_some:
-        return "unencrypted_for_some";
+    case PEP_rating_unencrypted_for_some: // don't use this any more
+        return "undefined";
     case PEP_rating_unreliable:
         return "unreliable";
     case PEP_rating_reliable:
@@ -265,14 +266,6 @@ static char* _get_resource_ptr_noown(char* uri) {
         return uri;
     else
         return uri + 3;
-}
-
-// static bool is_file_uri(char* str) {
-//     return(strncmp(str, "file://", 7) == 0);
-// }
-
-static bool is_cid_uri(const char* str) {
-    return(strncmp(str, "cid://", 6) == 0);
 }
 
 static bool string_equality(const char *s1, const char *s2)
@@ -1100,8 +1093,21 @@ pEp_error:
     return status;
 }
 
+static bool _has_PGP_MIME_format(message* msg) {
+    if (!msg || !msg->attachments || !msg->attachments->next)
+        return false;
+    if (msg->attachments->next->next)
+        return false;
+    if (!msg->attachments->mime_type ||
+        strcmp(msg->attachments->mime_type, "application/pgp-encrypted") != 0)    
+        return false;
+    if (!msg->attachments->next->mime_type || 
+        strcmp(msg->attachments->next->mime_type, "application/octet-stream") != 0)        
+        return false;
+    return true;    
+}
 
-static PEP_rating _rating(PEP_comm_type ct, PEP_rating rating)
+static PEP_rating _rating(PEP_comm_type ct)
 {
     if (ct == PEP_ct_unknown)
         return PEP_rating_undefined;
@@ -1115,19 +1121,9 @@ static PEP_rating _rating(PEP_comm_type ct, PEP_rating rating)
     else if (ct == PEP_ct_mistrusted)
         return PEP_rating_mistrust;
 
-    if (rating == PEP_rating_unencrypted_for_some)
-        return PEP_rating_unencrypted_for_some;
-
     if (ct == PEP_ct_no_encryption || ct == PEP_ct_no_encrypted_channel ||
-            ct == PEP_ct_my_key_not_included) {
-        if (rating > PEP_rating_unencrypted_for_some)
-            return PEP_rating_unencrypted_for_some;
-        else
+            ct == PEP_ct_my_key_not_included)
             return PEP_rating_unencrypted;
-    }
-
-    if (rating == PEP_rating_unencrypted)
-        return PEP_rating_unencrypted_for_some;
 
     if (ct >= PEP_ct_confirmed_enc_anon)
         return PEP_rating_trusted_and_anonymized;
@@ -1262,7 +1258,7 @@ static PEP_rating key_rating(PEP_SESSION session, const char *fpr)
     } else {
         resulting_comm_type = least_comm_type;
     }
-    return _rating(resulting_comm_type, PEP_rating_undefined);
+    return _rating(resulting_comm_type);
 }
 
 static PEP_rating worst_rating(PEP_rating rating1, PEP_rating rating2) {
@@ -1289,15 +1285,7 @@ static PEP_rating keylist_rating(PEP_SESSION session, stringlist_t *keylist, cha
         if (_rating_ <= PEP_rating_mistrust)
             return _rating_;
             
-        if (_rating_ == PEP_rating_unencrypted)
-        {
-            if (rating > PEP_rating_unencrypted_for_some)
-                rating = worst_rating(rating, PEP_rating_unencrypted_for_some);
-        }
-        else
-        {
-            rating = worst_rating(rating, _rating_);
-        }
+        rating = worst_rating(rating, _rating_);
     }
 
     return rating;
@@ -1431,9 +1419,28 @@ static void remove_attached_keys(message *msg)
     }
 }
 
+static bool compare_first_n_bytes(const char* first, const char* second, size_t n) {
+    int i;
+    for (i = 0; i < n; i++) {
+        char num1 = *first;
+        char num2 = *second;
+
+        if (num1 != num2)
+            return false;
+                    
+        if (num1 == '\0') {
+            if (num2 == '\0')
+                return true;
+        }   
+        first++;
+        second++;                     
+    }
+    return true;
+}
+
 bool import_attached_keys(
         PEP_SESSION session,
-        const message *msg,
+        message *msg,
         identity_list **private_idents
     )
 {
@@ -1446,9 +1453,20 @@ bool import_attached_keys(
     bool remove = false;
 
     int i = 0;
+    
+    bloblist_t* prev = NULL;
+    
+    bool do_not_advance = false;
+    const char* pubkey_header = "-----BEGIN PGP PUBLIC KEY BLOCK-----";
+    const char* privkey_header = "-----BEGIN PGP PRIVATE KEY BLOCK-----";
+    // Hate my magic numbers at your peril, but I don't want a strlen each time
+    const size_t PUBKEY_HSIZE = 36;
+    const size_t PRIVKEY_HSIZE = 37;
+
     for (bloblist_t *bl = msg->attachments; i < MAX_KEYS_TO_IMPORT && bl && bl->value;
-            bl = bl->next, i++)
+         i++)
     {
+        do_not_advance = false;
         if (bl && bl->value && bl->size && bl->size < MAX_KEY_SIZE
                 && is_key(bl))
         {
@@ -1478,18 +1496,51 @@ bool import_attached_keys(
                     // We shouldn't delete it or import it, because we can't
                     // do the latter.
                     free(bl_ptext);
+                    prev = bl;
+                    bl = bl->next;
                     continue;
                 }
             }
             identity_list *local_private_idents = NULL;
-            import_key(session, blob_value, blob_size, &local_private_idents);
-            remove = true;
+            PEP_STATUS import_status = import_key(session, blob_value, blob_size, &local_private_idents);
+            bloblist_t* to_delete = NULL;
+            switch (import_status) {
+                case PEP_NO_KEY_IMPORTED:
+                    break;
+                case PEP_KEY_IMPORT_STATUS_UNKNOWN:
+                    // We'll delete armoured stuff, at least
+                    if (blob_size <= PUBKEY_HSIZE)
+                        break;
+                    if ((!compare_first_n_bytes(pubkey_header, (const char*)blob_value, PUBKEY_HSIZE)) &&
+                       (!compare_first_n_bytes(privkey_header, (const char*)blob_value, PRIVKEY_HSIZE)))
+                        break;
+                    // else fall through and delete    
+                case PEP_KEY_IMPORTED:
+                    to_delete = bl;
+                    if (prev)
+                        prev->next = bl->next;
+                    else
+                        msg->attachments = bl->next;
+                    bl = bl->next;
+                    to_delete->next = NULL;
+                    free_bloblist(to_delete);
+                    do_not_advance = true;
+                    remove = true;
+                    break;
+                default:  
+                    // bad stuff, but ok.
+                    break;
+            }
             if (private_idents && *private_idents == NULL && local_private_idents != NULL)
                 *private_idents = local_private_idents;
             else
                 free_identity_list(local_private_idents);
             if (free_blobval)
                 free(blob_value);
+        }
+        if (!do_not_advance) {
+            prev = bl;
+            bl = bl->next;
         }
     }
     return remove;
@@ -1851,8 +1902,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         
     if (enc_format == PEP_enc_none || !dest_keys_found ||
         stringlist_length(keys)  == 0 ||
-        _rating(max_comm_type,
-                PEP_rating_undefined) < PEP_rating_reliable)
+        _rating(max_comm_type) < PEP_rating_reliable)
     {
         free_stringlist(keys);
         if ((has_pEp_user || !session->passive_mode) && 
@@ -2508,8 +2558,7 @@ static PEP_STATUS amend_rating_according_to_sender_and_recipients(
             }
             if (_sender->comm_type != PEP_ct_unknown) {
                 *rating = keylist_rating(session, recipients, 
-                            fpr, _rating(_sender->comm_type, 
-                                          PEP_rating_undefined));
+                            fpr, _rating(_sender->comm_type));
             }
             
             free_identity(_sender);
@@ -2790,6 +2839,15 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                                         
             free_stringlist(_keylist);
 
+            char* filename_uri = NULL;
+
+            bool has_uri_prefix = (pgp_filename ? (is_file_uri(pgp_filename) || is_cid_uri(pgp_filename)) :
+                                                  (_s->filename ? (is_file_uri(_s->filename) || is_cid_uri(_s->filename)) :
+                                                                  false
+                                                  )
+                                  );
+            
+
             if (ptext) {
                 if (is_encrypted_html_attachment(_s)) {
                     msg->longmsg_formatted = ptext;
@@ -2798,9 +2856,14 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                 else {
                     static const char * const mime_type = "application/octet-stream";                    
                     if (pgp_filename) {
+                        if (!has_uri_prefix)
+                            filename_uri = build_uri("file", pgp_filename);
+
                         _m = bloblist_add(_m, ptext, psize, mime_type,
-                             pgp_filename);
-                        free(pgp_filename);                        
+                             (filename_uri ? filename_uri : pgp_filename));
+
+                        free(pgp_filename);
+                        free(filename_uri);
                         if (_m == NULL)
                             return PEP_OUT_OF_MEMORY;
                     }
@@ -2810,9 +2873,13 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                         if (filename == NULL)
                             return PEP_OUT_OF_MEMORY;
 
+                        if (!has_uri_prefix)
+                            filename_uri = build_uri("file", filename);
+
                         _m = bloblist_add(_m, ptext, psize, mime_type,
-                            filename);
+                             (filename_uri ? filename_uri : filename));
                         free(filename);
+                        free(filename_uri);
                         if (_m == NULL)
                             return PEP_OUT_OF_MEMORY;
                     }
@@ -2828,7 +2895,12 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                 if (copy == NULL)
                     return PEP_OUT_OF_MEMORY;
                 memcpy(copy, _s->value, _s->size);
-                _m = bloblist_add(_m, copy, _s->size, _s->mime_type, _s->filename);
+
+                if (!has_uri_prefix && _s->filename)
+                    filename_uri = build_uri("file", _s->filename);
+
+                _m = bloblist_add(_m, copy, _s->size, _s->mime_type, 
+                        (filename_uri ? filename_uri : _s->filename));
                 if (_m == NULL)
                     return PEP_OUT_OF_MEMORY;
             }
@@ -2839,7 +2911,13 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
             if (copy == NULL)
                 return PEP_OUT_OF_MEMORY;
             memcpy(copy, _s->value, _s->size);
-            _m = bloblist_add(_m, copy, _s->size, _s->mime_type, _s->filename);
+
+            char* filename_uri = NULL;
+
+            _m = bloblist_add(_m, copy, _s->size, _s->mime_type, 
+                    ((_s->filename && !(is_file_uri(_s->filename) || is_cid_uri(_s->filename))) ?
+                         (filename_uri = build_uri("file", _s->filename)) : _s->filename));
+            free(filename_uri);
             if (_m == NULL)
                 return PEP_OUT_OF_MEMORY;
         }
@@ -3122,7 +3200,7 @@ static bool import_header_keys(PEP_SESSION session, message* src) {
         return false;
     PEP_STATUS status = import_key(session, the_key->value, the_key->size, NULL);
     free_bloblist(the_key);
-    if (status == PEP_STATUS_OK)
+    if (status == PEP_KEY_IMPORTED)
         return true;
     return false;
 }
@@ -3278,7 +3356,13 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
     /*** Begin Import any attached public keys and update identities accordingly ***/
     // Private key in unencrypted mail are ignored -> NULL
-    bool imported_keys = import_attached_keys(session, src, NULL);
+    //
+    // This import is from the outermost message.
+    // We don't do this for PGP_mime.
+    bool imported_keys = false;
+    if (!_has_PGP_MIME_format(src))
+        imported_keys = import_attached_keys(session, src, NULL);
+            
     import_header_keys(session, src);
     
     // FIXME: is this really necessary here?
@@ -3315,8 +3399,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
 
         *rating = PEP_rating_unencrypted;
 
-        if (imported_keys)
-            remove_attached_keys(src);
+        // We remove these from the outermost source message
+        // if (imported_keys)
+        //     remove_attached_keys(src);
                                     
         pull_up_attached_main_msg(src);
         
@@ -3366,6 +3451,9 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                 // N.B. Apparently, we always import private keys into the keyring; however,
                 // we do NOT always allow those to be used for encryption. THAT is controlled
                 // by setting it as an own identity associated with the key in the DB.
+                //
+                // We are importing from the decrypted outermost message now.
+                //
                 status = import_priv_keys_from_decrypted_msg(session, src, msg,
                                                              &imported_keys,
                                                              &imported_private_key_address,
@@ -3489,8 +3577,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                             // If we have a message 2.0 message, we are ONLY going to be ok with keys
                                             // we imported from THIS part of the message.
                                             imported_private_key_address = false;
-                                            free(private_il);
+                                            free(private_il); 
                                             private_il = NULL;
+                                            
+                                            // import keys from decrypted INNER source
                                             status = import_priv_keys_from_decrypted_msg(session, src, inner_message,
                                                                                          &imported_keys,
                                                                                          &imported_private_key_address,
@@ -3596,9 +3686,10 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         
         /* add pEp-related status flags to header */
         decorate_message(msg, *rating, _keylist, false, false);
-        
-        if (imported_keys)
-            remove_attached_keys(msg);
+
+        // Maybe unnecessary
+        // if (imported_keys)
+        //     remove_attached_keys(msg);
                     
         if (calculated_src->id && calculated_src != msg) {
             msg->id = strdup(calculated_src->id);
@@ -3922,8 +4013,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
         *rating = PEP_rating_undefined;
     }
     else
-        *rating = MAX(_rating(max_comm_type, PEP_rating_undefined),
-                               PEP_rating_unencrypted);
+        *rating = MAX(_rating(max_comm_type), PEP_rating_unencrypted);
 
     return PEP_STATUS_OK;
 }
@@ -3958,8 +4048,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating_preview(
     _max_comm_type_from_identity_list_preview(msg->bcc, session,
             &max_comm_type);
 
-    *rating = _MAX(_rating(max_comm_type, PEP_rating_undefined),
-            PEP_rating_unencrypted);
+    *rating = _MAX(_rating(max_comm_type), PEP_rating_unencrypted);
 
     return PEP_STATUS_OK;
 }
@@ -4005,7 +4094,7 @@ DYNAMIC_API PEP_STATUS identity_rating(
     }
 
     if (status == PEP_STATUS_OK)
-        *rating = _rating(ident->comm_type, PEP_rating_undefined);
+        *rating = _rating(ident->comm_type);
 
     return status;
 }
@@ -4580,7 +4669,7 @@ static PEP_rating string_to_rating(const char * rating)
     if (strcmp(rating, "unencrypted") == 0)
         return PEP_rating_unencrypted;
     if (strcmp(rating, "unencrypted_for_some") == 0)
-        return PEP_rating_unencrypted_for_some;
+        return PEP_rating_undefined; // don't use this any more
     if (strcmp(rating, "unreliable") == 0)
         return PEP_rating_unreliable;
     if (strcmp(rating, "reliable") == 0)
@@ -4727,3 +4816,37 @@ pEp_error:
 
     return status;
 }
+
+DYNAMIC_API PEP_STATUS get_key_rating_for_user(
+        PEP_SESSION session,
+        const char *user_id,
+        const char *fpr,
+        PEP_rating *rating
+    )
+{
+    assert(session && user_id && user_id[0] && fpr && fpr[0] && rating);
+    if (!(session && user_id && user_id[0] && fpr && fpr[0] && rating))
+        return PEP_ILLEGAL_VALUE;
+
+    *rating = PEP_rating_undefined;
+
+    pEp_identity *ident = new_identity(NULL, fpr, user_id, NULL);
+    if (!ident)
+        return PEP_OUT_OF_MEMORY;
+
+    PEP_STATUS status = get_trust(session, ident);
+    if (status)
+        goto the_end;
+
+    if (!ident->comm_type) {
+        status = PEP_RECORD_NOT_FOUND;
+        goto the_end;
+    }
+
+    *rating = _rating(ident->comm_type);
+
+the_end:
+    free_identity(ident);
+    return status;
+}
+

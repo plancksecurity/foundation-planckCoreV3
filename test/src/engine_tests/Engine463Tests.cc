@@ -1,6 +1,7 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
+#include "TestConstants.h"
 #include <stdlib.h>
 #include <string>
 
@@ -31,9 +32,9 @@ void Engine463Tests::check_engine_463_no_own_key() {
     const string fake_schleuder_key = slurp("test_keys/pub/fake-schleuder.asc");
     
     PEP_STATUS status = import_key(session, claudio_keys.c_str(), claudio_keys.length(), NULL);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));    
+    TEST_ASSERT_MSG((status == PEP_TEST_KEY_IMPORT_SUCCESS), tl_status_string(status));    
     status = import_key(session, fake_schleuder_key.c_str(), fake_schleuder_key.length(), NULL);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));    
+    TEST_ASSERT_MSG((status == PEP_TEST_KEY_IMPORT_SUCCESS), tl_status_string(status));    
 
     // Ok, bring in message, decrypt, and see what happens.
     const string msg = slurp("test_mails/notfound-alt.msg");
@@ -54,9 +55,9 @@ void Engine463Tests::check_engine_463_own_key() {
     const string fake_schleuder_key = slurp("test_keys/pub/fake-schleuder.asc");
     
     PEP_STATUS status = import_key(session, claudio_keys.c_str(), claudio_keys.length(), NULL);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));    
+    TEST_ASSERT_MSG((status == PEP_TEST_KEY_IMPORT_SUCCESS), tl_status_string(status));    
     status = import_key(session, fake_schleuder_key.c_str(), fake_schleuder_key.length(), NULL);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));    
+    TEST_ASSERT_MSG((status == PEP_TEST_KEY_IMPORT_SUCCESS), tl_status_string(status));    
 
     pEp_identity* own_ident = new_identity("claudio+engine-463@pep.foundation", "A039BC60E43E0DFDDC9DE8663B48C38325210C88", PEP_OWN_USERID, "Not Actually Claudio");
     status = set_own_key(session, own_ident, "A039BC60E43E0DFDDC9DE8663B48C38325210C88");

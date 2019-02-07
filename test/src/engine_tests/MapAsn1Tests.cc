@@ -2,6 +2,7 @@
 // see LICENSE.txt
 
 #include <stdlib.h>
+#include "TestConstants.h"
 #include <iostream>
 #include <string>
 #include <cstring>

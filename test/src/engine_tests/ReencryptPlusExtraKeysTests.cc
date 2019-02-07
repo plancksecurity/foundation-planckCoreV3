@@ -2,6 +2,7 @@
 // see LICENSE.txt
 
 #include <stdlib.h>
+#include "TestConstants.h"
 #include <cstring>
 #include <iostream>
 #include <fstream>
@@ -52,24 +53,24 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     const string pub_extra_key_1 = slurp("test_keys/pub/reencrypt_extra_keys_1-0x8B026AEC_pub.asc");
 
     status = import_key(session, own_recip_pub_key.c_str(), own_recip_pub_key.length(), NULL);
-    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Failed to import own recipient public key.");
+    TEST_ASSERT_MSG(status == PEP_TEST_KEY_IMPORT_SUCCESS, "Failed to import own recipient public key.");
     status = import_key(session, own_recip_priv_key.c_str(), own_recip_priv_key.length(), NULL);
-    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Failed to import own recipient private key.");    
+    TEST_ASSERT_MSG(status == PEP_TEST_KEY_IMPORT_SUCCESS, "Failed to import own recipient private key.");    
     status = import_key(session, own_recip_2_pub_key.c_str(), own_recip_2_pub_key.length(), NULL);
-    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Failed to import own second recipient public key.");
+    TEST_ASSERT_MSG(status == PEP_TEST_KEY_IMPORT_SUCCESS, "Failed to import own second recipient public key.");
     status = import_key(session, own_recip_2_priv_key.c_str(), own_recip_2_priv_key.length(), NULL);
-    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Failed to import own second recipient public key.");
+    TEST_ASSERT_MSG(status == PEP_TEST_KEY_IMPORT_SUCCESS, "Failed to import own second recipient public key.");
     
     status = import_key(session, sender_pub_key.c_str(), sender_pub_key.length(), NULL);
-    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Failed to import own sender public key.");
+    TEST_ASSERT_MSG(status == PEP_TEST_KEY_IMPORT_SUCCESS, "Failed to import own sender public key.");
     status = import_key(session, recip_2_pub_key.c_str(), recip_2_pub_key.length(), NULL);
-    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Failed to second recipient public key.");
+    TEST_ASSERT_MSG(status == PEP_TEST_KEY_IMPORT_SUCCESS, "Failed to second recipient public key.");
     status = import_key(session, recip_0_pub_key.c_str(), recip_0_pub_key.length(), NULL);
-    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Failed to import zeroth recipient public key.");
+    TEST_ASSERT_MSG(status == PEP_TEST_KEY_IMPORT_SUCCESS, "Failed to import zeroth recipient public key.");
     status = import_key(session, pub_extra_key_0.c_str(), pub_extra_key_0.length(), NULL);
-    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Failed to import first extra public key.");
+    TEST_ASSERT_MSG(status == PEP_TEST_KEY_IMPORT_SUCCESS, "Failed to import first extra public key.");
     status = import_key(session, pub_extra_key_1.c_str(), pub_extra_key_1.length(), NULL);
-    TEST_ASSERT_MSG(status == PEP_STATUS_OK, "Failed to import second extra public key.");
+    TEST_ASSERT_MSG(status == PEP_TEST_KEY_IMPORT_SUCCESS, "Failed to import second extra public key.");
 
     cout << "Keys imported." << endl;
 

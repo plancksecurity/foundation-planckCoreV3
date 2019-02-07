@@ -64,7 +64,7 @@ void KeyResetMessageTests::send_setup() {
     // Setup own identity
     PEP_STATUS status = read_file_and_import_key(session,
                 "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
-    assert(status == PEP_STATUS_OK);
+    assert(status == PEP_KEY_IMPORTED);
     status = set_up_ident_from_scratch(session,
                 "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc",
                 "pep.test.alice@pep-project.org", alice_fpr, 
@@ -111,7 +111,7 @@ void KeyResetMessageTests::send_setup() {
 void KeyResetMessageTests::receive_setup() {
     PEP_STATUS status = read_file_and_import_key(session,
                 "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");  
-    assert(status == PEP_STATUS_OK);
+    assert(status == PEP_KEY_IMPORTED);
     status = set_up_ident_from_scratch(session,
                 "test_keys/priv/pep-test-bob-0xC9C2EE39_priv.asc",  
                 "pep.test.bob@pep-project.org", bob_fpr, 
