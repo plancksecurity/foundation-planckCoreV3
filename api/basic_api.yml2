@@ -9,14 +9,13 @@
 
 type ISO639_1 extends string size=2 > a-z
 
-type Hex extends string > a-f0-9
+type hex extends string > a-f0-9
 
-type hash extends hex min=16, max=128,
-    doc="32bit Key ID to SHA512 in hex";
+type hash doc="32bit Key ID to SHA512 in hex"
+    extends hex min=16, max=128;
 
-type TID extends binary size=16,
-    doc="UUID version 4 variant 1";
-
+type TID doc="UUID version 4 variant 1"
+    extends binary size=16;
 
 enum comm_type {
     hex unknown 0;
@@ -87,11 +86,11 @@ enum comm_type {
 
 struct identity {
     
-    field string address;
-    field hash fpr;
-    field string user_id;
-    field string username;
-    field ISO639_1 lang;
+    field string address doc="SMTP address or URI";
+    field hash fpr doc="fingerprint of key being used as ID";
+    field string user_id doc="ID for person or entity in M2M case";
+    field string username doc="descriptive string";
+    field ISO639_1 lang doc="two-digit language code or null bytes";
 
     flags {
         flag not_for_sync 0x0001

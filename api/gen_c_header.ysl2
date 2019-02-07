@@ -34,7 +34,7 @@ tstylesheet {
     #endif
 
     ||
-    apply "doc|enum|struct", 0;
+    apply "doc|type|enum|struct", 0;
     ||
 
     #ifdef __cplusplus
@@ -42,6 +42,12 @@ tstylesheet {
     #endif
 
     ||
+    }
+
+    template "type" {
+        if "@doc" | // «@doc»
+        | typedef «func:basetype(@name)» «@name»;
+        |
     }
 
     template "struct" {
@@ -55,7 +61,11 @@ tstylesheet {
     ||
     }
 
-    template "field" | «@type» «@name»;
+    template "field" {
+        if "@doc" | // «@doc»
+        | «func:c-type(@type)» «@name»;
+        |
+    }
 
     template "enum" {
     ||

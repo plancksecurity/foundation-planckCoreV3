@@ -31,3 +31,24 @@ def "func:name" {
     result call "name" with "abbr", "$abbr";
 }
 
+def "func:basetype" {
+    param "type";
+    const "definition", "//type[@name=$type]";
+    choose {
+        when "$definition/extends"
+            result "func:c-type($definition/extends/@type)";
+        otherwise
+            result "func:c-type($type)";
+    }
+}
+
+def "func:c-type" {
+    param "dsltype";
+    choose {
+        when "$dsltype = 'string' or $dsltype = 'binary'"
+            result "'char *'";
+        otherwise
+            result "$dsltype";
+    }
+}
+
