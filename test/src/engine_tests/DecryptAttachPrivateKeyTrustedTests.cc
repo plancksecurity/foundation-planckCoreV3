@@ -3,6 +3,7 @@
 
 // FIXME: the private key tests should be combined
 
+#include "TestConstants.h"
 #include <stdlib.h>
 #include <string>
 #include <cstring>
@@ -45,11 +46,11 @@ void DecryptAttachPrivateKeyTrustedTests::check_decrypt_attach_private_key_trust
     // 13A9F97964A2B52520CAA40E51BCA783C065A213    
     input_key = slurp("test_keys/pub/priv-key-import-test-main_0-0xC065A213_pub.asc");
     status = import_key(session, input_key.c_str(), input_key.length(), NULL);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
+    TEST_ASSERT_MSG((status == PEP_TEST_KEY_IMPORT_SUCCESS), tl_status_string(status));
 
     input_key = slurp("test_keys/priv/priv-key-import-test-main_0-0xC065A213_priv.asc");
     status = import_key(session, input_key.c_str(), input_key.length(), NULL);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
+    TEST_ASSERT_MSG((status == PEP_TEST_KEY_IMPORT_SUCCESS), tl_status_string(status));
 
     // ensure there's no private key - doesn't work in automated tests, sadly. Uncommon when running script manually.
     bool has_priv = false;
@@ -58,7 +59,7 @@ void DecryptAttachPrivateKeyTrustedTests::check_decrypt_attach_private_key_trust
     // 8AB616A3BD51DEF714B5E688EFFB540C3276D2E5
     input_key = slurp("test_keys/pub/priv-key-import-test-main_0-0x3276D2E5_pub.asc");
     status = import_key(session, input_key.c_str(), input_key.length(), NULL);
-    TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
+    TEST_ASSERT_MSG((status == PEP_TEST_KEY_IMPORT_SUCCESS), tl_status_string(status));
 
     
     cout << "Setting up own identity with default key " << fpr_main_me << endl;

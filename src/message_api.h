@@ -14,7 +14,7 @@ extern "C" {
 
 bool import_attached_keys(
         PEP_SESSION session, 
-        const message *msg,
+        message *msg,
         identity_list **private_idents
     );
 

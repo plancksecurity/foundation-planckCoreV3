@@ -7,6 +7,7 @@
 #include <cpptest.h>
 
 #include "test_util.h"
+#include "TestConstants.h"
 
 #include "pEpEngine.h"
 #include "blacklist.h"

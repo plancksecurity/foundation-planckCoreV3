@@ -1510,13 +1510,14 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
         // If private_idents is not NULL and there is any private key
         // material, it will be saved.
         status = tpk_save(session, tpk, private_idents);
+        if (status == PEP_STATUS_OK)
+            status = PEP_KEY_IMPORTED;
         ERROR_OUT(session, status, "saving TPK");
-
         break;
     }
     default:
-        ERROR_OUT(session, PEP_STATUS_OK,
-                  "Can't import %s", sq_tag_to_string(tag));
+        ERROR_OUT(session, PEP_NO_KEY_IMPORTED,
+                  "Can't import %s", sq_tag_to_string(tag));        
         break;
     }
 

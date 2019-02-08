@@ -8,6 +8,7 @@
 
 #include "pEpEngine.h"
 #include "message_api.h"
+#include "TestConstants.h"
 
 #include <cpptest.h>
 #include "test_util.h"
@@ -26,18 +27,18 @@ void BCCTests::setup() {
     EngineTestIndividualSuite::setup();
     string keystr = slurp("test_keys/priv/bcc_test_dude_0-0x1CCCFC41_priv.asc");
     PEP_STATUS status = import_key(session, keystr.c_str(), keystr.size(), NULL);
-    assert(status == PEP_STATUS_OK);    
+    assert(status == PEP_TEST_KEY_IMPORT_SUCCESS);    
     pEp_identity * me = new_identity("bcc_test_dude_0@darthmama.cool", "0AE9AA3E320595CF93296BDFA155AC491CCCFC41", PEP_OWN_USERID, "BCC Test Sender");    
     status = set_own_key(session, me, "0AE9AA3E320595CF93296BDFA155AC491CCCFC41");
     keystr = slurp("test_keys/pub/bcc_test_dude_0-0x1CCCFC41_pub.asc");
     status = import_key(session, keystr.c_str(), keystr.size(), NULL);
-    assert(status == PEP_STATUS_OK);
+    assert(status == PEP_TEST_KEY_IMPORT_SUCCESS);
     keystr = slurp("test_keys/pub/bcc_test_dude_1-0xDAC746BE_pub.asc");
     status = import_key(session, keystr.c_str(), keystr.size(), NULL);
-    assert(status == PEP_STATUS_OK);
+    assert(status == PEP_TEST_KEY_IMPORT_SUCCESS);
     keystr = slurp("test_keys/pub/bcc_test_dude_2-0x53CECCF7_pub.asc");
     status = import_key(session, keystr.c_str(), keystr.size(), NULL);
-    assert(status == PEP_STATUS_OK);    
+    assert(status == PEP_TEST_KEY_IMPORT_SUCCESS);    
 }
 
 void BCCTests::check_single_BCC() {
@@ -64,4 +65,3 @@ void BCCTests::check_single_BCC() {
 
     TEST_ASSERT(status == PEP_STATUS_OK);
 }
-

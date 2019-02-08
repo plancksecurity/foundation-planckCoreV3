@@ -20,6 +20,7 @@
 #include "EngineTestSuite.h"
 #include "pEpTestStatic.h"
 #include <algorithm>
+#include "TestConstants.h"
 
 using namespace std;
 
