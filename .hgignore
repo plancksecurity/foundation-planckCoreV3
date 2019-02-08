@@ -77,4 +77,5 @@ sync/.codegen
 sync/.statemachines
 test/msg_2.0.asc
 test/*Tests
+api/*.h
 

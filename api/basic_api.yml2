@@ -14,8 +14,12 @@ type hex extends string > a-f0-9
 type hash doc="32bit Key ID to SHA512 in hex"
     extends hex min=16, max=128;
 
+type hash_list doc="sequence of fingerprints of keys"
+    extends list< hash >;
+
 type TID doc="UUID version 4 variant 1"
     extends binary size=16;
+
 
 enum comm_type {
     hex unknown 0;
