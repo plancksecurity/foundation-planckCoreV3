@@ -44,6 +44,7 @@ tags
 asn.1/pEpEngineASN1/pEpEngineASN1.vcxproj.user
 sync/generated
 *.xml
+*.xsl
 *.dot
 *.svg
 gpg-agent.conf
