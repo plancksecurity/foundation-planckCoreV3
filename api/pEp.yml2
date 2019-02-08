@@ -20,19 +20,19 @@ decl flag @name;
 decl protocol @name;
 decl method @name;
 
-// use: readonly in param, ownership remains with caller
+// use: readonly in parm, ownership remains with caller
 decl use @type @name (mode=use) alias parm;
 
-// supply: inout param, ownership remains with caller
+// supply: inout parm, ownership remains with caller
 decl supply @type @name (mode=supply) alias parm;
 
 // create: factory delivers this, ownership goes to caller
 decl create @type @name (mode=create) alias parm;
 
-// provide: in param, ownership goes to callee
+// provide: in parm, ownership goes to callee
 decl provide @type @name (mode=provide) alias parm;
 
-// return: out param, ownership goes to callee
+// return: out parm, ownership goes to callee
 decl return @type @name (mode=return) alias parm;
 
 decl throws @except;
