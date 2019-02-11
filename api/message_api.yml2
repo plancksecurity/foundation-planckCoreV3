@@ -33,7 +33,7 @@ protocol session {
         // flags
 
         flags {
-            flag default 0x0;
+            flag default 0x0 doc='"default" means whatever the default behaviour for the function is.';
             flag force_encryption 0x1;
         }
 
