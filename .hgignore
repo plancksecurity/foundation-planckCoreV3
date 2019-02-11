@@ -64,6 +64,8 @@ test/python_tests/test?
 test/pEp_test_home
 test/TestDriver
 test/local
+test/include/LocalPlayground.h
+test/src/engine_test/LocalPlayground.cc
 .tags
 */.tags
 */*/.tags
