@@ -2,7 +2,7 @@
 #include "pEpEngine.h"
 #include "pEp_internal.h"
 #include "message_api.h"
-#include "test_util.h"
+#include "TestUtils.h"
 #include "TestConstants.h"
 
 #include <fstream>

@@ -11,7 +11,7 @@
 #include "pEpEngine.h"
 #include "message_api.h"
 #include "keymanagement.h"
-#include "test_util.h"
+#include "TestUtils.h"
 
 #include <cpptest.h>
 #include "EngineTestSessionSuite.h"

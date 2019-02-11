@@ -12,7 +12,7 @@
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"
-#include "test_util.h"
+#include "TestUtils.h"
 
 #include <cpptest.h>
 #include "EngineTestIndividualSuite.h"
