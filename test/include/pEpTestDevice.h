@@ -17,21 +17,23 @@ class pEpTestDevice {
                       inject_sync_event_t inject_sync_ev_func = NULL);        
                       
         virtual ~pEpTestDevice();
+        void set_mailbox_dir(string mbox_dirname);
+
+        void set_device_environment();
+        void unset_device_environment();
+        void grab_context(pEpTestDevice* victim);
+
         string device_name;
         PEP_SESSION session;
+        string device_dir;        
+        string root_test_dir;
+        string mbox_dir;
 
         messageToSend_t device_messageToSend;
         inject_sync_event_t device_inject_sync_event;
         
-    protected:
-        string device_dir;        
-        string root_test_dir;
-        
+//    protected:        
 //        string current_test_name;
-
-        void set_device_environment();
-        void teardown_device_environment();
-        void grab_context();
         
 //        void set_full_env();
 //        void set_full_env(const char* gpg_conf_copy_path, const char* gpg_agent_conf_file_copy_path, const char* db_conf_file_copy_path);

@@ -214,9 +214,9 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
     // if (db_conf_file_copy_path)
     //     copy_conf_file_to_test_dir(temp_test_home.c_str(), db_conf_file_copy_path, ".pEp_management.db");
         
-    unix_local_db(true);
-    gpg_conf(true);
-    gpg_agent_conf(true);
+    // unix_local_db(true);
+    // gpg_conf(true);
+    // gpg_agent_conf(true);
     
 //    cout << "calling init()\n";
 //     PEP_STATUS status = init(&session, cached_messageToSend, cached_inject_sync_event);
@@ -267,9 +267,9 @@ void EngineTestSuite::restore_full_env() {
         throw std::runtime_error("RESTORE: Cannot reset home directory! Either set environment variable manually back to your home, or quit this session!");
     // else
     //     cout << "RESTORE: HOME is now " << getenv("HOME") << endl;
-    unix_local_db(true);
-    gpg_conf(true);
-    gpg_agent_conf(true);
+    // unix_local_db(true);
+    // gpg_conf(true);
+    // gpg_agent_conf(true);
 
 }
 
