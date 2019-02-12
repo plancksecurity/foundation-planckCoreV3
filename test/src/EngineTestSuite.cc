@@ -34,8 +34,6 @@ EngineTestSuite::EngineTestSuite(string suitename,
     number_of_tests = 0;
     on_test_number = 0;
     real_home = getenv("HOME");
-    cached_messageToSend = NULL;
-    cached_inject_sync_event = NULL;
     session = NULL;
     device = NULL;
     make_device = make_default_device;

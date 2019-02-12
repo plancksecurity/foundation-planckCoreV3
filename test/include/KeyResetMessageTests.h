@@ -35,6 +35,7 @@ class KeyResetMessageTests : public EngineTestIndividualSuite {
 
     protected:
         void setup();
+        void tear_down();
                 
     private:
         void check_key_reset_message();        

@@ -46,8 +46,6 @@ KeyResetMessageTests::KeyResetMessageTests(string suitename, string test_home_di
                                                                       static_cast<Func>(&KeyResetMessageTests::check_multiple_resets_single_key)));                                                                      
                                                                       
     fake_this = this;                                                                  
-    
-    cached_messageToSend = &KeyResetMessageTests::message_send_callback;
 }
 
 PEP_STATUS KeyResetMessageTests::message_send_callback(message* msg) {
@@ -58,6 +56,14 @@ PEP_STATUS KeyResetMessageTests::message_send_callback(message* msg) {
 void KeyResetMessageTests::setup() {
     EngineTestIndividualSuite::setup();
     m_queue.clear();
+    device->device_messageToSend = &KeyResetMessageTests::message_send_callback;
+    session->messageToSend = device->device_messageToSend;
+}
+
+void KeyResetMessageTests::tear_down() {
+    device->device_messageToSend = NULL;
+    session->messageToSend = NULL;
+    EngineTestIndividualSuite::tear_down();
 }
 
 void KeyResetMessageTests::send_setup() {
