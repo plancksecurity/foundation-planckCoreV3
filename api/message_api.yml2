@@ -35,6 +35,11 @@ protocol session {
         flags {
             flag default 0x0 doc='"default" means whatever the default behaviour for the function is.';
             flag force_encryption 0x1;
+			flag force_unsigned 0x2 doc='This flag is for special use cases and should not be used by normal pEp clients!';
+			flag force_no_attached_key 0x4;
+			flag inner_message 0x8 doc='This is mainly used by pEp clients to send private keys to their own PGP-only device.';
+			flag force_version_1 0x10 doc='This is mainly used by pEp clients to send private keys to their own PGP-only device';
+			flag key_reset_only 0x20
         }
 
         // exceptions
@@ -49,4 +54,478 @@ protocol session {
             """
     }
 }
+
+
+protocol session {
+	method encrypt_message_and_add_priv_key
+		doc="encrypt message in memory, adding an encrypted private key (encrypted separately and sent within the inner message)"
+	{
+		// parms
+
+		use message src 
+		doc="message to encrypt";
+
+		create message dst
+		doc="pointer to new encrypted message or NULL if no encryption could take place";
+
+		to_fpr
+		doc="fingerprint of the recipient key to which the private key should be encrypted";
+
+		use format enc_format?
+		doc="encrypted format";
+
+		// flags
+
+		flags {
+			flag default 0x0 doc='"default" means whatever the default behaviour for the function is.';
+			flag force_encryption 0x1;
+			flag force_unsigned 0x2 doc='This flag is for special use cases and should not be used by normal pEp clients!';
+			flag force_no_attached_key 0x4;
+			flag inner_message 0x8 doc='This is mainly used by pEp clients to send private keys to their own PGP-only device.';
+			flag force_version_1 0x10 doc='This is mainly used by pEp clients to send private keys to their own PGP-only device';
+			flag key_reset_only 0x20
+		}
+
+		// exceptions
+
+		throws key_has_ambig_name
+			doc="at least one of the receipient keys has an ambiguous name";
+
+		throws unencrypted
+			doc="""
+				on demand or no recipients with usable key, is left unencrypted, 
+				and key is attached to it
+				"""
+	}
+}
+
+
+protocol session {
+	method encrypt_message_for_self
+		doc="""
+			encrypt message in memory for user's identity only,
+			ignoring recipients and other identities from the message
+			"""
+	{
+		// parms
+
+		use message target_id
+		doc="self identity this message should be encrypted for";
+
+		use message src
+		doc="message to encrypt";
+
+		provide key? extra
+		doc="extra keys for encryption";
+
+		create message dst
+		doc="pointer to new encrypted message or NULL on failure";
+
+		use format enc_format?
+		doc="encrypted format";
+
+		// flags
+
+		flags {
+			flag default 0x0 doc='"default" means whatever the default behaviour for the function is.';
+			flag force_encryption 0x1;
+			flag force_unsigned 0x2 doc='This flag is for special use cases and should not be used by normal pEp clients!';
+			flag force_no_attached_key 0x4;
+			flag inner_message 0x8 doc='This is mainly used by pEp clients to send private keys to their own PGP-only device.';
+			flag force_version_1 0x10 doc='This is mainly used by pEp clients to send private keys to their own PGP-only device';
+			flag key_reset_only 0x20
+		}
+
+		// exceptions
+
+		throws key_not_found
+			doc="at least one of the receipient keys could not be found";
+
+		throws key_has_ambig_name
+			doc="at least one of the receipient keys has an ambiguous name";
+
+		throws get_key_failed
+			doc="cannot retrieve key"
+	}
+}
+
+
+protocol session {
+	method color_from_rating
+		doc="calculate color from rating"
+	{
+		// parms
+	
+		provide message rating?
+		doc="color representing that rating";
+
+		// ratings
+
+		ratings {
+			rating_undefined 0;
+			rating_cannot_decrypt,
+			rating_have_no_key,
+			rating_unencrypted,
+			rating_unencrypted_for_some doc="don't use this any more",
+			rating_unreliable,
+			rating_reliable,
+			rating_trusted,
+			rating_trusted_and_anonymized,
+			rating_fully_anonymous,
+			rating_mistrust -1;
+			rating_b0rken -2;
+			rating_under_attack -3
+		}
+
+		// colors
+
+		colors {
+			color_no_color 0;
+			color_yellow,
+			color_green,
+			color_red -1
+		}
+
+		// return value
+			doc="color representing that rating"
+	}
+}
+
+
+protocol session {
+	method decrypt_message
+		doc="decrypt message in memory"
+	{
+	// parms
+
+	supply message src
+	doc="""
+		message to decrypt. 
+		The ownership of src remains with the caller - however, the contents 
+		might be modified (strings freed and allocated anew or set to NULL,
+		etc) intentionally; when this happens, decrypt_flag_src_modified is set.
+		""";
+
+	create message dst
+	doc="pointer to new decrypted message or NULL on failure";
+
+	supply message keylist
+	doc="""
+		in: stringlist with additional keyids for reencryption if needed
+			(will be freed and replaced with output keylist)
+		out: stringlist with keyids used for signing and encryption. first
+			first key is signer, additional keys are the ones it was encrypted
+			to. Only signer and whichever of the user's keys was used are reliable.
+		""";
+
+	return message rating
+	doc="rating for the message";
+
+	// flags
+	
+	decrypt_flags {
+		decrypt_flag_own_private_key 0x1 
+		doc="""
+			private key was imported for one of our addresses (NOT trusted
+			or set to be used - handshake/trust is required for that)
+			"""
+		decrypt_flag_consume 0x2 doc=’used by sync';
+		decrypt_flag_ignore 0x4 doc=’used by sync';
+		decrypt_flag_src_modified 0x8 
+		doc="""
+			indicates that the src object has been modified. At the moment,
+			this is always as a direct result of the behaviour driven
+			by the input flags. This flag is the ONLY value that should be
+			relied upon to see if such changes have taken place.
+			""";
+		decrypt_flag_untrusted_server 0x100 
+		doc="""
+			input flags. Used to signal that decrypt function should engage in behaviour
+			specified for when the server storing the source is untrusted.
+			"""
+	}
+
+	// exceptions
+	
+	throws decrypted
+		doc="if message decrypted but not verified";
+
+	throws cannot_reencrypt
+		doc="""
+			if message was decrypted (and possibly verified) but a reencryption 
+			operation is expected by the caller and failed.
+			""";
+
+	throws unencrypted
+		doc="""
+			if src is unencrypted this function returns unencrypted and sets
+			dst to NULL.
+			"""
+	}
+}
+
+
+protocol session {
+	method own_message_private_key_details
+		doc="details on own key in own message"
+	{
+	//parms
+
+	use message msg
+	doc="""
+		message to decrypt. msg MUST be encrypted so that this function 
+		can check own signature.
+		""";
+
+	create @type? ident
+	doc="identity containing uid, address and fpr of key"
+	}
+}
+
+
+protocol session {
+	method outgoing_message_rating
+		doc="get rating for an outgoing message"
+	{
+	//parms
+
+	use message msg
+	doc="""
+		message to get the rating for. From must point to a valid pEp_identity.
+		Dir must be dir_outgoing.
+		""";
+
+	create message rating
+	doc="rating for the message"
+	}
+}
+
+
+protocol session {
+	method outgoing_message_rating_preview
+		doc="get rating preview"
+	{
+	//parms
+
+	use message msg
+	doc="""
+		message to get the rating for. From must point to a valid pEp_identity.
+		Dir must be dir_outgoing.
+		""";
+
+	create message rating
+	doc="rating preview for the message"
+	}
+}
+
+
+protocol session {
+	method identity_rating
+		doc="get rating for a single identity"
+	{
+	//parms
+
+	use @type ident
+	doc="identity to get the rating for";
+
+	create identity rating
+	doc="rating for the identity"
+	}
+}
+
+
+protocol session {
+	method get_binary_path
+		doc="retrieve path of cryptotech binary if available"
+	{
+	//parms
+
+	use @type tech
+	doc="cryptotech to get the binary for";
+
+	use @type path
+	doc="""
+		path to cryptotech binary or NULL if not available. **path is owned by 
+		the library, do not change it!
+		"""
+	}
+}
+
+
+protocol session {
+	method get_trustwords
+		doc="get full trustwords string for a *pair* of identities"
+	{
+	//parms
+
+	provide message id1
+		doc="identity of first party in communication - fpr can't be NULL";
+
+	provide message id2
+		doc="identity of second party in communication - fpr can't be NULL";
+
+	provide message lang
+		doc="C string with ISO 639-1 language code";
+
+	create message words
+		doc="""
+			pointer to C string with all trustwords UTF-8 encoded, separated 
+			by a blank each NULL if language is not supported or trustword 
+			wordlist is damaged or unavailable. 
+			The word pointer goes to the ownership of the caller. 
+			The caller is responsible to free() it (on Windoze use pEp_free())
+			""";
+
+	create @type? wsize
+		doc="length of full trustwords string";
+
+	provide @type full
+		doc="""
+			if true, generate ALL trustwords for these identities.
+			else, generate a fixed-size subset. (TODO: fixed-minimum-entropy
+			subset in next version)
+			"""
+
+	// exceptions
+
+	throws out_of_memory
+		doc="out of memory";
+
+	throws trustword_not_found
+		doc="at least one trustword not found"
+	}
+}
+
+
+protocol session
+	method get_message_trustwords
+		doc="get full trustwords string for message sender and reciever identities"
+	{
+	//parms
+
+	provide @type msg
+		doc="message to get sender identity from";
+
+	provide message keylist
+		doc="NULL if message to be decrypted, keylist returned by decrypt_message() otherwise.";
+
+	provide message received_by
+		doc="identity for account receiving message can't be NULL";
+
+	provide @type? lang
+		doc="C string with ISO 639-1 language code";
+
+	create message words
+		doc="""
+			pointer to C string with all trustwords UTF-8 encoded, separated by a blank each.
+			NULL if language is not supported or trustword  wordlist is damaged or unavailable.
+			The word pointer goes to the ownership of the caller. 
+			The caller is responsible to free() it (on Windoze use pEp_free())
+			""";
+
+	provide @type full
+		doc="""
+			if true, generate ALL trustwords for these identities.
+			else, generate a fixed-size subset. (TODO: fixed-minimum-entropy
+			subset in next version)
+			"""
+
+	// exceptions
+
+	throws out_of_memory
+		doc="out of memory";
+
+	throws trustword_not_found
+		doc="at least one trustword not found"
+	}
+}
+
+
+protocol session
+	method re_evaluate_message_rating
+		doc="re-evaluate already decrypted message rating"
+	{
+	//parms
+
+	use @type msg
+		doc="message to get the rating for. msg->from must point to a valid pEp_identity";
+
+	use message x_keylist
+		doc="decrypted message recipients keys fpr";
+
+	provide message x_enc_status
+		doc="original rating for the decrypted message";
+
+	create message rating
+		doc="rating for the message"
+
+	// exceptions
+
+	throws illegal_value
+		doc="""
+			if decrypted message doesn't contain X-EncStatus optional field and 
+			x_enc_status is pEp_rating_udefined or if decrypted message doesn't 
+			contain X-Keylist optional field and x_keylist is NULL.
+			""";
+
+	throws out_of_memory
+		doc="if not enough memory could be allocated"
+	}
+}
+
+
+protocol session
+	method get_key_rating_for_user
+		doc="get the rating of a certain key for a certain user"
+	{
+	//parms
+
+	provide @type? user_id
+		doc="string with user ID";
+
+	provide @type fpr
+		doc="string with fingerprint";
+
+	create @type rating
+		doc="rating of key for this user"
+		
+	// exceptions
+
+	throws record_not_found
+		doc="if no trust record for user_id and fpr can be found"
+	}
+}	
+
+
+
+
+
+ 
+			
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
