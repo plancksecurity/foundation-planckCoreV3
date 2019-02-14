@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <sys/types.h>
+#include <dirent.h>
 
 #include <string>
 #include <vector>
@@ -19,6 +20,7 @@
 #include "pEpTestStatic.h"
 #include <algorithm>
 #include "TestConstants.h"
+#include <chrono>
 
 pEpTestDevice::pEpTestDevice(string test_dir, 
                              string my_name,
@@ -169,4 +171,85 @@ void pEpTestDevice::set_mailbox_dir(string mbox_dirname) {
         if (errchk != 0)
             throw std::runtime_error("Error creating an mbox directory.");
     }    
+}
+
+string pEpTestDevice::save_mail_to_mailbox(string mail) {
+    if (mail.empty())
+        throw std::runtime_error("Attempt to write empty mail to mailbox.");
+
+    struct stat dirchk;
+    
+    if (mbox_dir.empty() || stat(mbox_dir.c_str(), &dirchk) == 0)
+        throw std::runtime_error("pEpTestDevice: mailbox dir not initialised or removed.");                     
+
+    chrono::milliseconds timestamp = chrono::duration_cast< chrono::milliseconds >(
+                                        chrono::system_clock::now().time_since_epoch());
+    
+    string outfile_name = mbox_dir + "/" + to_string(timestamp.count()) + ".eml";
+
+    ofstream outfile;
+    
+    outfile.open(outfile_name);
+    outfile << mail;
+    outfile.close();    
+    return outfile_name;
+}
+
+// Presumes everything in mbox dir is a .eml file
+// and was written in above ts form. We can change later if needed.
+vector<string> pEpTestDevice::check_mail() {
+    mail_to_read.clear();
+    struct stat dirchk;
+
+    if (mbox_dir.empty() || stat(mbox_dir.c_str(), &dirchk) == 0)
+        throw std::runtime_error("pEpTestDevice: mailbox dir not initialised or removed.");                     
+
+    vector<string> email_list;
+    DIR* dir;   
+    dirent* pdir;
+ 
+    dir = opendir(mbox_dir.c_str()); 
+    while ((pdir = readdir(dir)))
+        email_list.push_back(pdir->d_name);  
+
+    if (email_list.empty())
+        return email_list;
+    else    
+        sort(email_list.begin(), email_list.end());
+    
+    if (mbox_last_read.empty())
+        return email_list;
+    
+    string last_read_time_str = 
+        mbox_last_read.substr(0, mbox_last_read.find_last_of("."));
+    unsigned long long last_read_ts = strtoull(last_read_time_str.c_str(), NULL, 10);
+    
+    int i = 0;
+    
+    for (vector<string>::iterator it = email_list.begin();
+         it != email_list.end(); it++, i++) {
+        string fname = *it;
+        if (fname.empty())
+            continue; // ??
+
+        // I don't want to think about how to format to do a strcmp atm
+        size_t dot_pos = fname.find_last_of(".");
+        string ts_str = fname.substr(0, dot_pos);
+        
+        unsigned long long file_ts = strtoull(ts_str.c_str(), NULL, 10);
+        
+        if (file_ts > last_read_ts)
+            break;
+    }
+    
+    if (i > email_list.size())
+        email_list.clear();
+    else {
+        if (i != 0) {
+            vector<string> not_read(email_list.begin() + i, email_list.end());
+            email_list = not_read;
+        }
+    }     
+    
+    return email_list;
 }

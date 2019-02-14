@@ -23,6 +23,9 @@ class pEpTestDevice {
         void unset_device_environment();
         void grab_context(pEpTestDevice* victim);
 
+        vector<string> check_mail();
+        string save_mail_to_mailbox(string mail);
+
         string device_name;
         PEP_SESSION session;
         string device_dir;        
@@ -32,7 +35,9 @@ class pEpTestDevice {
         messageToSend_t device_messageToSend;
         inject_sync_event_t device_inject_sync_event;
         
-//    protected:        
+    protected:        
+        string mbox_last_read;
+        vector<string> mail_to_read;
 //        string current_test_name;
         
 //        void set_full_env();
