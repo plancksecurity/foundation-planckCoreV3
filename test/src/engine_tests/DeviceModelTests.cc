@@ -197,82 +197,48 @@ void DeviceModelTests::check_two_device_functionality() {
     delete(second_device);
 }
 
-// void DeviceModelTests::check_shared_mbox() {
-//     // Set up devices and shared mailbox
-//     pEpTestDevice* first_device = new pEpTestDevice(temp_test_home, "First");
-//     first_device->set_mailbox_dir(first_device->device_dir + "/mbox");
-//     first_device->unset_device_environment();
-//     pEpTestDevice* second_device = new pEpTestDevice(temp_test_home, "Second");
-//     second_device->set_mailbox_dir(first_device->device_dir + "/mbox");
-//     first_device->grab_context(second_device);
-// 
-//     string alice_email = "pep.test.alice@pep-project.org";
-//     string alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
-// 
-//     // First device is Alice's established one with the current key
-//     slurp_and_import_key(first_device->session, "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
-//     slurp_and_import_key(first_device->session, "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc");
-// 
-//     pEp_identity* alice_dev_1_ident = new_identity(alice_email, alice_fpr, "ALICE", "Alice From Mel's Diner");
-// 
-//     PEP_STATUS status = set_own_key(first_device->session, alice_dev_1_ident, alice_fpr);    
-// 
-//     second_device->grab_context(first_device);
-// 
-//     pEp_identity* alice_dev_2_ident = new_identity(alice_email, NULL, PEP_OWN_USERID, "Alice Miller");
-//     // Second device is one Alice is setting up (we'll use this model for keysync tests, so why not?)
-// 
-//     status = myself(second_device->session, alice_dev_2_ident);
-// 
-//     const char* alice_2_fpr = alice_dev_2_ident->fpr;    
-//     char* alice_2_keydata = NULL;
-//     size_t alice_2_keydata_size = 0;
-// 
-//     status = export_key(session, alice_2_fpr, &alice_2_keydata, &alice_2_keydata_size);
-// 
-//     first_device->grab_context(second_device);
-// 
-//     status = import_key(first_device->session, alice_2_keydata, alice_2_keydata_size);
-// 
-//     second_device->grab_context(first_device);
-//     slurp_and_import_key(second_device->session, "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
-// 
-// 
-//         cout << "creating message…\n";
-//         pEp_identity * me2 = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, "Alice Test");
-//         // pEp_identity * me2 = new_identity("test@nokey.plop", NULL, PEP_OWN_USERID, "Test no key");
-//         me2->me = true;
-//         identity_list *to2 = new_identity_list(new_identity("pep.test.bob@pep-project.org", NULL, "42", "Bob Test"));
-//         // identity_list *to2 = new_identity_list(new_identity("still@nokey.blup", NULL, "42", "Still no key"));
-//         message *msg2 = new_message(PEP_dir_outgoing);
-//         TEST_ASSERT_MSG((msg2), "msg2");
-//         msg2->from = me2;
-//         msg2->to = to2;
-//         msg2->shortmsg = strdup("hello, world");
-//         msg2->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
-//         cout << "message created.\n";
-// 
-//         char *text2 = nullptr;
-//         PEP_STATUS status2 = mime_encode_message(msg2, false, &text2);
-//         TEST_ASSERT_MSG((status2 == PEP_STATUS_OK), "status2 == PEP_STATUS_OK");
-//         TEST_ASSERT_MSG((text2), "text2");
-// 
-//         cout << "decrypted:\n\n";
-//         cout << text2 << "\n";
-// 
-//         free(text2);
-// 
-//         cout << "encrypting message as MIME multipart…\n";
-//         message *enc_msg2 = nullptr;
-//         cout << "calling encrypt_message()\n";
-//         status2 = encrypt_message(session, msg2, NULL, &enc_msg2, PEP_enc_PGP_MIME, 0);
-//         cout << "encrypt_message() returns " << status2 << '.' << endl;
-//         TEST_ASSERT_MSG((status2 == PEP_STATUS_OK), "status2 == PEP_STATUS_OK");
-//         TEST_ASSERT_MSG((enc_msg2), "enc_msg2");
-//         cout << "message encrypted.\n";
-// 
-//         status2 = mime_encode_message(enc_msg2, false, &text2);
-//         TEST_ASSERT_MSG((status2 == PEP_STATUS_OK), "status2 == PEP_STATUS_OK");
-//         TEST_ASSERT_MSG((text2), "text2");
-// 
-// }
+void DeviceModelTests::check_shared_mbox() {
+    // Set up devices and shared mailbox
+    pEpTestDevice* first_device = new pEpTestDevice(temp_test_home, "First");
+    first_device->set_mailbox_dir(first_device->device_dir + "/mbox");
+    first_device->unset_device_environment();
+    pEpTestDevice* second_device = new pEpTestDevice(temp_test_home, "Second");
+    second_device->set_mailbox_dir(first_device->device_dir + "/mbox");
+    first_device->grab_context(second_device);
+    TEST_ASSERT_MSG(first_device->mbox_dir.compare(second_device->mbox_dir) == 0,
+                    "Shared mailbox is not really shared");
+
+    string alice_email = "pep.test.alice@pep-project.org";
+    string alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
+    
+    // First device is Alice's established one with the current key
+    TEST_ASSERT_MSG(slurp_and_import_key(first_device->session, "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc"),
+                    "Alice's pubkey not imported for first device.");
+    TEST_ASSERT_MSG(slurp_and_import_key(first_device->session, "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc"),
+                    "Alice's privkey not imported for first device.");
+
+    pEp_identity* alice_dev_1_ident = new_identity(alice_email.c_str(), alice_fpr.c_str(), "ALICE", "Alice From Mel's Diner");
+    
+    PEP_STATUS status = set_own_key(first_device->session, alice_dev_1_ident, alice_fpr.c_str());    
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, 
+        (string("Unable to set own key on first device. status is ") + tl_status_string(status)).c_str());
+
+    // Second device is one Alice is setting up (we'll use this model for keysync tests, so why not?)                
+    second_device->grab_context(first_device);
+
+    pEp_identity* alice_dev_2_ident = new_identity(alice_email.c_str(), NULL, PEP_OWN_USERID, "Alice Miller");
+
+    status = myself(second_device->session, alice_dev_2_ident);
+
+    TEST_ASSERT_MSG(alice_dev_2_ident->fpr, "No fpr for alice on second device");
+    TEST_ASSERT_MSG(alice_fpr.compare(alice_dev_2_ident->fpr) != 0,
+                    "myself did not generate new key for alice on device 2; alice's old key was found.");
+    
+    const char* alice_2_fpr = alice_dev_2_ident->fpr;
+    
+    // Ok, everybody's set up. Let's play with mailboxes.
+    
+    first_device->grab_context(second_device);
+    
+    
+}
