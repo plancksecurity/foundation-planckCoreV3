@@ -23,7 +23,7 @@ class pEpTestDevice {
         void unset_device_environment();
         void grab_context(pEpTestDevice* victim);
 
-        vector<string> check_mail();
+        void check_mail(vector<string> &unread);
         string save_mail_to_mailbox(string mail);
 
         string device_name;
@@ -38,6 +38,7 @@ class pEpTestDevice {
     protected:        
         string mbox_last_read;
         vector<string> mail_to_read;
+        
 //        string current_test_name;
         
 //        void set_full_env();
@@ -50,7 +51,6 @@ class pEpTestDevice {
         // void add_file_to_gpg_dir_queue(std::string copy_from, std::string dst_fname);    
         // void add_file_to_home_dir_queue(std::string copy_from, std::string dst_fname);
         // void process_file_queue(std::string dirname, std::vector<std::pair<std::string, std::string>> file_queue);
-
 };
-
+    
 #endif

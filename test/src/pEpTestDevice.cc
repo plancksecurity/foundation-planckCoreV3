@@ -179,7 +179,7 @@ string pEpTestDevice::save_mail_to_mailbox(string mail) {
 
     struct stat dirchk;
     
-    if (mbox_dir.empty() || stat(mbox_dir.c_str(), &dirchk) == 0)
+    if (mbox_dir.empty() || stat(mbox_dir.c_str(), &dirchk) != 0)
         throw std::runtime_error("pEpTestDevice: mailbox dir not initialised or removed.");                     
 
     chrono::milliseconds timestamp = chrono::duration_cast< chrono::milliseconds >(
@@ -191,65 +191,82 @@ string pEpTestDevice::save_mail_to_mailbox(string mail) {
     
     outfile.open(outfile_name);
     outfile << mail;
-    outfile.close();    
+    outfile.flush();
+    outfile.close(); 
+    cout << "Wrote " + outfile_name << endl;
+    usleep(1000); // guarantees change in filename
     return outfile_name;
 }
 
 // Presumes everything in mbox dir is a .eml file
 // and was written in above ts form. We can change later if needed.
-vector<string> pEpTestDevice::check_mail() {
+void pEpTestDevice::check_mail(vector<string> &unread) {
+    unread.clear();
     mail_to_read.clear();
     struct stat dirchk;
 
-    if (mbox_dir.empty() || stat(mbox_dir.c_str(), &dirchk) == 0)
+    if (mbox_dir.empty() || stat(mbox_dir.c_str(), &dirchk) != 0)
         throw std::runtime_error("pEpTestDevice: mailbox dir not initialised or removed.");                     
 
-    vector<string> email_list;
     DIR* dir;   
     dirent* pdir;
  
     dir = opendir(mbox_dir.c_str()); 
-    while ((pdir = readdir(dir)))
-        email_list.push_back(pdir->d_name);  
+    while ((pdir = readdir(dir))) {
+        struct stat dirchk2;
+        const char* fname = pdir->d_name;
+        if (strcmp(fname, ".") && strcmp(fname, "..")) {
+            stat((mbox_dir + fname).c_str(), &dirchk2);
+            cout << "I see " << fname << endl;
+            if (!S_ISDIR(dirchk2.st_mode)) {
+                unread.push_back(fname); 
+                cout << "I pushed " << fname << endl; 
+            }    
+        }        
+    }    
 
-    if (email_list.empty())
-        return email_list;
+    if (unread.empty())
+        return;
     else    
-        sort(email_list.begin(), email_list.end());
+        sort(unread.begin(), unread.end());
     
-    if (mbox_last_read.empty())
-        return email_list;
+    if (!mbox_last_read.empty()) {
     
-    string last_read_time_str = 
-        mbox_last_read.substr(0, mbox_last_read.find_last_of("."));
-    unsigned long long last_read_ts = strtoull(last_read_time_str.c_str(), NULL, 10);
-    
-    int i = 0;
-    
-    for (vector<string>::iterator it = email_list.begin();
-         it != email_list.end(); it++, i++) {
-        string fname = *it;
-        if (fname.empty())
-            continue; // ??
+        string last_read_time_str = 
+            mbox_last_read.substr(0, mbox_last_read.find_last_of("."));
+        unsigned long long last_read_ts = strtoull(last_read_time_str.c_str(), NULL, 10);
+        
+        int i = 0;
+        
+        for (vector<string>::iterator it = unread.begin();
+             it != unread.end(); it++, i++) {
+            string fname = *it;
+            if (fname.empty())
+                continue; // ??
 
-        // I don't want to think about how to format to do a strcmp atm
-        size_t dot_pos = fname.find_last_of(".");
-        string ts_str = fname.substr(0, dot_pos);
+            // I don't want to think about how to format to do a strcmp atm
+            size_t dot_pos = fname.find_last_of(".");
+            string ts_str = fname.substr(0, dot_pos);
+            
+            unsigned long long file_ts = strtoull(ts_str.c_str(), NULL, 10);
+            
+            if (file_ts > last_read_ts)
+                break;
+        }
         
-        unsigned long long file_ts = strtoull(ts_str.c_str(), NULL, 10);
-        
-        if (file_ts > last_read_ts)
-            break;
+        if (i > unread.size())
+            unread.clear();
+        else {
+            if (i != 0) {
+                unread.erase(unread.begin(), unread.begin() + i);
+                cout << "Unread contains: " << endl;
+                for (vector<string>::iterator it = unread.begin();
+                     it != unread.end(); it++) {
+                    cout << *it << endl;
+                }
+            }
+        }     
     }
     
-    if (i > email_list.size())
-        email_list.clear();
-    else {
-        if (i != 0) {
-            vector<string> not_read(email_list.begin() + i, email_list.end());
-            email_list = not_read;
-        }
-    }     
-    
-    return email_list;
+    mbox_last_read = string(unread.back());    
 }
