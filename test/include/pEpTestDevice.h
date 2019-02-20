@@ -7,6 +7,7 @@
 #include <vector>
 #include <utility>
 #include "pEpEngine.h"
+#include "message.h"
 
 using namespace std;
 
@@ -17,14 +18,22 @@ class pEpTestDevice {
                       inject_sync_event_t inject_sync_ev_func = NULL);        
                       
         virtual ~pEpTestDevice();
-        void set_mailbox_dir(string mbox_dirname);
 
+        static string save_mail_to_mailbox(string mailbox_path, string mail);
+
+        void set_mailbox_dir(string mbox_dirname);
         void set_device_environment();
         void unset_device_environment();
         void grab_context(pEpTestDevice* victim);
 
+        string receive_mail(string mail); // save mail to local mailbox
+                                          // kinda deprecated, but for 
+                                          // manual use.
+
         void check_mail(vector<string> &unread);
-        string save_mail_to_mailbox(string mail);
+        void read_mail(vector<string>mails, vector<string> &to_read);
+        PEP_STATUS process_send_queue();
+        PEP_STATUS send_mail(message* mail);
 
         string device_name;
         PEP_SESSION session;
@@ -38,6 +47,8 @@ class pEpTestDevice {
     protected:        
         string mbox_last_read;
         vector<string> mail_to_read;
+        map<string,string> address_to_mbox_map; // maybe string, vector<string>?
+        vector<message*> send_queue;
         
 //        string current_test_name;
         

@@ -20,6 +20,7 @@
 #include "pEpTestStatic.h"
 #include <algorithm>
 #include "TestConstants.h"
+#include "mime.h"
 #include <chrono>
 
 pEpTestDevice::pEpTestDevice(string test_dir, 
@@ -105,35 +106,9 @@ void pEpTestDevice::set_device_environment() {
 }
 
 void pEpTestDevice::grab_context(pEpTestDevice* victim) {
+    victim->process_send_queue();
     victim->unset_device_environment();
     set_device_environment();
-// 
-//     int success = system("gpgconf --kill all");
-//     if (success != 0)
-//         throw std::runtime_error("SETUP: Error when executing 'gpgconf --kill all'.");    
-//     struct stat buf;
-// 
-//     success = system("gpgconf --remove-socketdir");            
-//     if (success != 0)
-//         throw std::runtime_error("RESTORE: Error when executing 'gpgconf --remove-socketdir'.");    
-// 
-//     success = setenv("GNUPGHOME", (device_dir + "/gnupg").c_str(), 1);
-// 
-//     if (success != 0)
-//         throw std::runtime_error("SETUP: Error when setting GNUPGHOME.");
-// 
-//     cout << "New GNUPGHOME is " << getenv("GNUPGHOME") << endl << endl;
-// 
-//     success = setenv("HOME", device_dir.c_str(), 1);
-//     if (success != 0)
-//         throw std::runtime_error("SETUP: Cannot set device_dir for init.");
-// 
-// w#ifndef USE_NETPGP            
-//     success = system("gpgconf --create-socketdir");
-//     if (success != 0)
-//         throw std::runtime_error("RESTORE: Error when executing 'gpgconf --create-socketdir'.");        
-//     system("gpg-connect-agent /bye");   // Just in case - otherwise, we die on MacOS sometimes. Is this enough??
-// #endif
 }
 
 void pEpTestDevice::unset_device_environment() {
@@ -173,19 +148,67 @@ void pEpTestDevice::set_mailbox_dir(string mbox_dirname) {
     }    
 }
 
-string pEpTestDevice::save_mail_to_mailbox(string mail) {
+string pEpTestDevice::receive_mail(string mail) {
+    return save_mail_to_mailbox(mbox_dir, mail);
+}
+
+PEP_STATUS pEpTestDevice::send_mail(message* mail) {
+    if (!mail->to)
+        return PEP_ILLEGAL_VALUE;
+        
+    identity_list* to_list = mail->to;
+    if (!to_list)
+        return PEP_ILLEGAL_VALUE;
+
+    char* msg_str = NULL;
+    PEP_STATUS status = mime_encode_message(mail, false, &msg_str);
+    if (status != PEP_STATUS_OK)
+        return status;
+    if (!msg_str)
+        return PEP_UNKNOWN_ERROR;
+    
+    for (identity_list* tl_curr = to_list; tl_curr; tl_curr = tl_curr->next) {
+        if (!tl_curr->ident)
+            return PEP_ILLEGAL_VALUE;
+        const char* to = tl_curr->ident->address;
+        if (!to || to[0] == '\0')
+            return PEP_ILLEGAL_VALUE;
+            
+        std::map<string,string>::iterator it = address_to_mbox_map.find(to);
+        if (it == address_to_mbox_map.end() || it->second.empty())
+            return PEP_RECORD_NOT_FOUND;
+        string mbox = it->second;
+        if (save_mail_to_mailbox(mbox, msg_str).empty())
+            return PEP_CANNOT_CREATE_TEMP_FILE;
+    }    
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS pEpTestDevice::process_send_queue() {
+    for (vector<message*>::iterator it = send_queue.begin(); it != send_queue.end(); it++) {
+        if (!*it) {
+            PEP_STATUS status = send_mail(*it);
+            if (status != PEP_STATUS_OK)
+                return status;
+        }
+    }
+    send_queue.clear();
+    return PEP_STATUS_OK;
+}
+
+string pEpTestDevice::save_mail_to_mailbox(string mailbox_path, string mail) {
     if (mail.empty())
         throw std::runtime_error("Attempt to write empty mail to mailbox.");
 
     struct stat dirchk;
     
-    if (mbox_dir.empty() || stat(mbox_dir.c_str(), &dirchk) != 0)
+    if (mailbox_path.empty() || stat(mailbox_path.c_str(), &dirchk) != 0)
         throw std::runtime_error("pEpTestDevice: mailbox dir not initialised or removed.");                     
 
     chrono::milliseconds timestamp = chrono::duration_cast< chrono::milliseconds >(
                                         chrono::system_clock::now().time_since_epoch());
     
-    string outfile_name = mbox_dir + "/" + to_string(timestamp.count()) + ".eml";
+    string outfile_name = mailbox_path + "/" + to_string(timestamp.count()) + ".eml";
 
     ofstream outfile;
     
@@ -269,4 +292,15 @@ void pEpTestDevice::check_mail(vector<string> &unread) {
     }
     
     mbox_last_read = string(unread.back());    
+}
+
+void pEpTestDevice::read_mail(vector<string> mails, vector<string> &to_read) {
+    to_read.clear();
+    for (vector<string>::iterator it = mails.begin();
+         it != mails.end(); it++) {
+        string mail = slurp(mbox_dir + "/" + *it);
+        if (mail.empty())
+            continue;
+        to_read.push_back(mail);
+    }
 }

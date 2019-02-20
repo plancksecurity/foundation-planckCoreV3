@@ -30,8 +30,6 @@ DeviceModelTests::DeviceModelTests(string suitename, string test_home_dir) :
                                                                       static_cast<Func>(&DeviceModelTests::check_two_device_model)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("DeviceModelTests::check_mbox"),
                                                                       static_cast<Func>(&DeviceModelTests::check_mbox)));
-    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("DeviceModelTests::check_shared_mbox"),
-                                                                      static_cast<Func>(&DeviceModelTests::check_shared_mbox)));
 }
 
 void DeviceModelTests::tear_down() {
@@ -244,7 +242,7 @@ void DeviceModelTests::check_mbox() {
     mime_encode_message(enc_msg, false, &msg_text);
     TEST_ASSERT(msg_text);
     
-    string filename = first_device->save_mail_to_mailbox(msg_text);
+    string filename = first_device->receive_mail(msg_text);
     TEST_ASSERT(!filename.empty());
 
     vector<string> curr_mail_received;
@@ -252,64 +250,16 @@ void DeviceModelTests::check_mbox() {
     TEST_ASSERT_MSG(curr_mail_received.size() == 1, 
                     (string("Received ") + to_string(curr_mail_received.size()) + " emails, should have received 1.").c_str());
 
-    first_device->save_mail_to_mailbox(msg_text);
-    first_device->save_mail_to_mailbox(msg_text);
-    first_device->save_mail_to_mailbox(msg_text);
+    first_device->receive_mail(msg_text);
+    first_device->receive_mail(msg_text);
+    first_device->receive_mail(msg_text);
     first_device->check_mail(curr_mail_received);
     TEST_ASSERT_MSG(curr_mail_received.size() == 3, 
                     (string("Received ") + to_string(curr_mail_received.size()) + " emails, should have received 3.").c_str());
     
-    first_device->save_mail_to_mailbox(msg_text);
-    first_device->save_mail_to_mailbox(msg_text);
+    first_device->receive_mail(msg_text);
+    first_device->receive_mail(msg_text);
     first_device->check_mail(curr_mail_received);
     TEST_ASSERT_MSG(curr_mail_received.size() == 2, 
                     (string("Received ") + to_string(curr_mail_received.size()) + " emails, should have received 2.").c_str());
-}
-
-void DeviceModelTests::check_shared_mbox() {
-    // Set up devices and shared mailbox
-    pEpTestDevice* first_device = new pEpTestDevice(temp_test_home, "Muffins");
-    devices.push_back(first_device);
-
-    first_device->set_mailbox_dir(first_device->device_dir + "/mbox");
-    first_device->unset_device_environment();
-    pEpTestDevice* second_device = new pEpTestDevice(temp_test_home, "MoMuffins");
-    devices.push_back(second_device);
-
-    second_device->set_mailbox_dir(first_device->device_dir + "/mbox");
-    first_device->grab_context(second_device);
-    TEST_ASSERT_MSG(first_device->mbox_dir.compare(second_device->mbox_dir) == 0,
-                    "Shared mailbox is not really shared");
-
-    string alice_email = "pep.test.alice@pep-project.org";
-    string alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
-    
-    // First device is Alice's established one with the current key
-    TEST_ASSERT_MSG(slurp_and_import_key(first_device->session, "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc"),
-                    "Alice's pubkey not imported for first device.");
-    TEST_ASSERT_MSG(slurp_and_import_key(first_device->session, "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc"),
-                    "Alice's privkey not imported for first device.");
-
-    pEp_identity* alice_dev_1_ident = new_identity(alice_email.c_str(), alice_fpr.c_str(), "ALICE", "Alice From Mel's Diner");
-    
-    PEP_STATUS status = set_own_key(first_device->session, alice_dev_1_ident, alice_fpr.c_str());    
-    TEST_ASSERT_MSG(status == PEP_STATUS_OK, 
-        (string("Unable to set own key on first device. status is ") + tl_status_string(status)).c_str());
-
-    // Second device is one Alice is setting up (we'll use this model for keysync tests, so why not?)                
-    second_device->grab_context(first_device);
-
-    pEp_identity* alice_dev_2_ident = new_identity(alice_email.c_str(), NULL, PEP_OWN_USERID, "Alice Miller");
-
-    status = myself(second_device->session, alice_dev_2_ident);
-
-    TEST_ASSERT_MSG(alice_dev_2_ident->fpr, "No fpr for alice on second device");
-    TEST_ASSERT_MSG(alice_fpr.compare(alice_dev_2_ident->fpr) != 0,
-                    "myself did not generate new key for alice on device 2; alice's old key was found.");
-    
-    const char* alice_2_fpr = alice_dev_2_ident->fpr;
-    
-    // Ok, everybody's set up. Let's play with mailboxes.
-    
-    first_device->grab_context(second_device);    
 }
