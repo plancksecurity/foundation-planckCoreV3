@@ -7,3 +7,213 @@
 // written by Volker Birk
 
 
+protocol session {
+	method update_identity
+		doc="update identity information"
+	{
+	// parms
+
+	supply identity identity
+	doc="""
+		identity information of communication partner
+		(identity->fpr is OUT ONLY), and at least
+		.address must be set. 
+		If .username is set, it will be used to set or patch
+		the username record for this identity.
+		at least identity->address must be a non-empty UTF-8 string as input
+		update_identity() never writes flags; use set_identity_flags() for
+		writing
+		this function NEVER reads the incoming fpr, only writes to it.
+		this function will fail if called on an identity which, with its input
+		values, *explicitly* indicates it is an own identity (i.e. .me is set
+		to true on input, or a user_id is given AND it is a known own user_id).
+		however, it can RETURN an own identity if this is not indicated a
+		priori, and in fact will do so with prejudice when not faced with a
+		matching default (i.e. it is forced to search by address only).
+		if the identity is known to be an own identity (or the caller wishes
+		to make it one), call myself() on the identity instead.
+
+		FIXME: is this next point accurate?
+		if this function returns PEP_ct_unknown or PEP_ct_key_expired in
+		identity->comm_type, the caller must insert the identity into the
+		asynchronous management implementation, so retrieve_next_identity()
+		will return this identity later
+		END FIXME
+		"""
+
+		// exceptions
+
+		throws illegal_value
+			doc="""
+				if called with illegal inputs, including an identity
+				with .me set or with an own user_id specified in the
+				*input* (see caveats)
+				""";
+
+		throws key_unsuitable
+			doc="""
+				if a default key was found for this identity, no
+				other acceptable keys were found; if this is returned,
+				the reason for rejecting the first default key found
+				may be found in the comm_type
+				"""
+	}
+
+
+	method initialise_own_identities
+		doc="ensures that an own identity is complete"
+	{
+	// parms
+	
+	supply identity_list my_idents
+	doc="""
+		identities of local user to quick-set
+		For these, at least .address must be set.
+		if no .user_id is set, AND the DB doesn't contain
+		a default user_id, own_userid will be used and
+		become the perennial default for the DB.
+		
+		This function does NOT generate keypairs. It is intended to
+		precede running of the engine on actual messages. It effectively
+		behaves like myself(), but when there would normally be key generation
+		(when there is no valid key, for example),
+		it instead stores an identity without keys.
+
+		N.B. to adapter devs - this function is likely unnecessary, so please
+		do not put work into exposing it yet. Tickets will be filed if need be.
+		"""
+	}
+
+
+	method myself
+		doc="ensures that an own identity is complete"
+	{
+	// parms
+
+	supply identity identity
+	doc="""
+		identity of local user
+		both .address and .user_id must be set.
+		if .fpr is set, an attempt will be made to make
+		that the default key for this identity after key validation
+		if .fpr is not set, key retrieval is performed.
+		If .username is set, it will be used to set or patch
+		the username record for this identity. 
+ 
+		If an fpr was entered and is not a valid key, the reason for failure
+		is immediately returned in the status and, possibly, identity->comm_type
+		If a default own user_id exists in the database, an alias will 
+		be created for the default for the input user_id. The ENGINE'S default
+		user_id is always returned in the .user_id field
+		myself() NEVER elects keys from the keyring; it will only choose keys
+		which have been set up explicitly via myself(), or which were imported
+		during a first time DB setup from an OpenPGP keyring (compatibility only) 
+		this function generates a keypair on demand; because it's synchronous
+		it can need a decent amount of time to return
+		if you need to do this asynchronous, you need to return an identity
+		with retrieve_next_identity() where identity.me is true.
+		"""
+	}
+
+	method retrieve_next_identity
+		doc="callback being called by do_keymanagement"
+	{
+	// parms
+
+XXXXXX
+
+	method examine_identity
+		doc="callback for appending to queue"
+	{
+	// parms
+
+XXXX
+
+	method register_examine_function
+		doc="register examine_identity() callback"
+	{
+	//parms
+
+	provide?? examine_identity?? examine_identity doc="examine_identity() function to register";
+
+	provide void management doc="data structure to deliver (implementation defined)"
+
+XXX?
+// do_keymanagement() - function to be run on an extra thread
+//
+//  parameters:
+//      retrieve_next_identity (in) pointer to retrieve_next_identity()
+//                                  callback which returns at least a valid
+//                                  address field in the identity struct
+//
+//  return value:
+//      PEP_STATUS_OK if thread has to terminate successfully or any other
+//      value on failure
+//
+//  caveat:
+//      to ensure proper working of this library, a thread has to be started
+//      with this function immediately after initialization
+//
+//      do_keymanagement() calls retrieve_next_identity(management)
+//
+//      messageToSend can only be null if no transport is application based
+//      if transport system is not used it must not be NULL
+DYNAMIC_API PEP_STATUS do_keymanagement(
+        retrieve_next_identity_t retrieve_next_identity,
+        void *management
+
+
+	method key_mistrusted
+		doc="mark key as being compromised"
+	{
+	//parms
+
+	use identity ident
+	doc="""
+		person and key which was compromised
+		ident is INPUT ONLY. If you want updated trust on the identity, you'll have
+		to call update_identity or myself respectively after this.
+		N.B. If you are calling this on a key that is the identity or user default,
+		it will be removed as the default key for ANY identity and user for which
+		it is the default. Please keep in mind that the undo in undo_last_mistrust
+		will only undo the current identity's / it's user's default, not any
+		other identities which may be impacted (this will not affect most use
+		cases)
+		"""
+	}
+
+
+	method trust_personal_key
+		doc="mark a key as trusted for a user"
+	{
+	// parms
+
+	ident (in)          person and key to trust in - this must not be an
+//                          own_identity in which the .me flag is set or
+//                          the user_id is an own user_id.
+//
+//  caveat:
+//      the fields user_id, address and fpr must be supplied
+//      own identities will result in a return of PEP_ILLEGAL_VALUE.
+//      for non-own users, this will 1) set the trust bit on its comm type in the DB,
+//      2) set this key as the identity default if the current identity default
+//      is not trusted, and 3) set this key as the user default if the current
+//      user default is not trusted.
+
+DYNAMIC_API PEP_STATUS trust_personal_key(
+        PEP_SESSION session,
+        pEp_identity *ident
+
+
+
+
+
+
+   
+
+
+
+
+
+
+
