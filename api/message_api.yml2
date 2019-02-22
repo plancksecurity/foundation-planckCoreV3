@@ -38,19 +38,19 @@ enum message_wrap_type {
 
 
 struct message {
-field msg_direction dir;
-	field string id doc='UTF-8 string of message ID';
+    field msg_direction dir;
+	field string id doc='UTF-8 string of message ID' link="#message_ID";
 	field string shortmsg doc='UTF-8 string of short message';
-	field string longmsg doc='UTF-8 string of long message'(plain)';
+	field string longmsg doc='string of long message (plain)';
 	field string longmsg_formatted doc='UTF-8 string of long message (formatted)';
    	field bloblist_t attachments doc='blobs with attachements';
 	field char rawmsg_ref doc='reference to raw message data';
 	field size_t rawmsg_size doc='size of raw message data';
 	field timestamp sent doc='when the message is sent';
 	field timestamp recv doc='when the message is received';
-	field pEp_identity from doc='whom the message is from';
+	field identity from doc='whom the message is from';
 	field identity_list to doc='whom the message is to';
-	field pEp_identity recv_by doc='via which identity the message is received';
+	field identity recv_by doc='via which identity the message is received';
 	field identity_list cc doc='whom a CC is being sent';
 	field identity_list bcc doc='whom a BCC is being sent';
 	field identity_list reply_to doc='where a reply should go to';
@@ -304,7 +304,7 @@ protocol session {
 
 	use message msg
 	doc="""
-		message to get the rating for. From must point to a valid pEp_identity.
+		message to get the rating for. From must point to a valid identity.
 		Dir must be dir_outgoing.
 		""";
 
@@ -323,7 +323,7 @@ protocol session {
 
 	use message msg
 	doc="""
-		message to get the rating for. From must point to a valid pEp_identity.
+		message to get the rating for. From must point to a valid identity.
 		Dir must be dir_outgoing.
 		""";
 
@@ -434,7 +434,7 @@ protocol session {
 	//parms
 
 	use message msg
-		doc="message to get the rating for. msg->from must point to a valid pEp_identity";
+		doc="message to get the rating for. msg->from must point to a valid identity";
 
 	use hash_list x_keylist doc="decrypted message recipients keys fpr";
 
