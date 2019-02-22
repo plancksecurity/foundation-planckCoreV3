@@ -4,21 +4,23 @@
 // this file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-// written by Volker Birk
+// written by Nana Karlstetter and Volker Birk
 
 
-type ISO639_1 extends string size=2 > a-z
+type ISO639_1 is string size=2 > a-z
 
-type hex extends string > a-f0-9
+type hex is string > a-f0-9
 
 type hash doc="32bit Key ID to SHA512 in hex"
-    extends hex min=16, max=128;
+    is hex min=16, max=128;
 
 type hash_list doc="sequence of fingerprints of keys"
-    extends list< hash >;
+    is list< hash >;
 
 type TID doc="UUID version 4 variant 1"
-    extends binary size=16;
+    is binary size=16;
+
+type blob_list is list < blob >;
 
 
 enum comm_type {
