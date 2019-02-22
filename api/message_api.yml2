@@ -8,42 +8,35 @@
 
 
 enum text_format {
-	hex text_format_plain 0x0;
-	hex text_format_html 0x01;
+	hex text_format_plain 0;
+	hex text_format_html 1;
 	hex text_format_other 0xff;
 }
 
 
 enum msg_direction {
-	hex dir_incoming 0x0;
-	hex dir_outgoing 0x01;
+	item dir_incoming 0;
+	item dir_outgoing 1;
 }
 
 
 enum enc_format {
-	hex enc_none 0x0 doc='message is not encrypted';
-	hex enc_pieces 0x01 doc='inline PGP + PGP extensions';
-	hex enc_S_MIME 0x02 doc='RFC5751';
-	hex enc_PGP_MIME 0x04 doc='RFC3156';
-	hex enc_PEP 0x08 doc='pEp encryption format';
-	hex enc_PGP_MIME_Outlook1 0x10 doc='Message B0rken by Outlook type 1';
-}
-
-
-enum message_wrap_type {
-	message_default doc='typical inner/outer message 2.0';
-	message_transport doc='e.g. for onion layers';
-	message_key_reset doc='for wrapped key reset information';
+	item enc_none 0 doc='message is not encrypted';
+	item enc_pieces 1 doc='inline PGP + PGP extensions';
+	item enc_S_MIME 2 doc='RFC5751';
+	item enc_PGP_MIME 3 doc='RFC3156';
+	item enc_PEP 4 doc='pEp encryption format';
+	item enc_PGP_MIME_Outlook1 5 doc='Message B0rken by Outlook type 1';
 }
 
 
 struct message {
 field msg_direction dir;
-	field string id doc='UTF-8 string of message ID';
-	field string shortmsg doc='UTF-8 string of short message';
-	field string longmsg doc='UTF-8 string of long message'(plain)';
-	field string longmsg_formatted doc='UTF-8 string of long message (formatted)';
-   	field bloblist_t attachments doc='blobs with attachements';
+	field string id doc='string of message ID';
+	field string shortmsg doc='string of short message';
+	field string longmsg doc='string of long message'(plain)';
+	field string longmsg_formatted doc='string of long message (formatted)';
+   	field bloblist attachments doc='blobs with attachements';
 	field char rawmsg_ref doc='reference to raw message data';
 	field size_t rawmsg_size doc='size of raw message data';
 	field timestamp sent doc='when the message is sent';
@@ -54,12 +47,12 @@ field msg_direction dir;
 	field identity_list cc doc='whom a CC is being sent';
 	field identity_list bcc doc='whom a BCC is being sent';
 	field identity_list reply_to doc='where a reply should go to';
-	field string in_reply_to doc='list of UTF-8 strings with MessageIDs of refering messages';
+	field string in_reply_to doc='list of strings with MessageIDs of refering messages';
 	field struct _message refering_msg_ref doc='reference to refering message';
-	field string references doc='list of UTF-8 strings with references';
+	field string references doc='list of strings with references';
 	field struct _message_ref_list refered_by doc='list of references to messages being refered';
-    field string keywords doc='list of UTF-8 strings with keywords';
-    field string char comments doc='UTF-8 string with comments';
+    field string keywords doc='list of strings with keywords';
+    field string char comments doc='string with comments';
     field stringpair_list_t opt_fields doc='optional fields';
     field enc_format enc_format doc='format of encrypted data';
 }
@@ -474,12 +467,41 @@ protocol session {
 }	
 
 
+	// ratings
+
+	ratings {
+		item rating_undefined 0;
+		item rating_cannot_decrypt 1;
+		item rating_have_no_key 2;
+		item rating_unencrypted 3;
+		item rating_unencrypted_for_some doc="don't use this any more",
+		item rating_unreliable 4;
+		item rating_reliable 5;
+		item rating_trusted 6;
+		item rating_trusted_and_anonymized 7;
+		item rating_fully_anonymous 8;
+		item rating_mistrust -1;
+		item rating_b0rken -2;
+		item rating_under_attack -3;
+	}
+
+
+	// colors
+
+	colors {
+		item color_no_color 0;
+		item color_yellow 1;
+		item color_green 2;
+		item color_red -1;
+	}
+
+
 	func color_from_rating
 		doc="calculate color from rating"
 	{
 		// parms
 
-		provide color_from_rating rating doc="color representing that rating"
+		use color_from_rating rating doc="color representing that rating"
 
 		// return value
 		return color rating_color doc="color representing that rating"
@@ -500,48 +522,6 @@ protocol session {
 		the library, do not change it!;
 		"""
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	// ratings
-
-	ratings {
-		item rating_undefined 0;
-		item rating_cannot_decrypt 1;
-		item rating_have_no_key 2;
-		item rating_unencrypted 3;
-		item rating_unencrypted_for_some doc="don't use this any more",
-		item rating_unreliable 4;
-		item rating_reliable 5;
-		item rating_trusted 6;
-		item rating_trusted_and_anonymized 7;
-		item rating_fully_anonymous 8;
-		item rating_mistrust -1;
-		item rating_b0rken -2;
-		item rating_under_attack -3;
-	}
-
-	// colors
-
-	colors {
-		item color_no_color 0;
-		item color_yellow 1;
-		item color_green 2;
-		item color_red -1;
-	}
 
 
 
