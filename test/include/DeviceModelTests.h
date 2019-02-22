@@ -15,6 +15,7 @@ class DeviceModelTests : public EngineTestIndividualSuite {
         DeviceModelTests(string test_suite, string test_home_dir);
 
     protected:
+        void setup();
         void tear_down();
         
     private:
@@ -22,7 +23,8 @@ class DeviceModelTests : public EngineTestIndividualSuite {
         void check_two_device_model();
         void check_two_device_functionality();
         void check_mbox();
-        void check_shared_mbox();
+        void check_three_device_mbox_with_send();
+        void check_switch_context();
         
         void clear_and_delete_devices();
         

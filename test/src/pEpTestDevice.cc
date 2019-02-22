@@ -23,6 +23,8 @@
 #include "mime.h"
 #include <chrono>
 
+pEpTestDevice* pEpTestDevice::active = NULL;
+
 pEpTestDevice::pEpTestDevice(string test_dir, 
                              string my_name,
                              messageToSend_t mess_send_func,
@@ -36,6 +38,8 @@ pEpTestDevice::pEpTestDevice(string test_dir,
     device_messageToSend = mess_send_func;
     device_inject_sync_event = inject_sync_ev_func;
     
+    if (active)
+        active->unset_device_environment();
     set_device_environment();    
 }
 
@@ -45,7 +49,12 @@ pEpTestDevice::~pEpTestDevice() {
     nftw((device_dir).c_str(), util_delete_filepath, 100, FTW_DEPTH);
 }
 
+void pEpTestDevice::switch_context(pEpTestDevice* switch_to) {
+    switch_to->grab_context(active);
+}
+
 void pEpTestDevice::set_device_environment() {
+    active = this;
     int success = 0;
     struct stat dirchk;
     
@@ -62,11 +71,11 @@ void pEpTestDevice::set_device_environment() {
         if (!S_ISDIR(dirchk.st_mode))
             throw std::runtime_error(("The test directory, " + device_dir + "exists, but is not a directory.").c_str()); 
                     
-        struct stat buf;
-
-        if (stat(device_dir.c_str(), &buf) == 0) {
-            int success = nftw((device_dir + "/.").c_str(), util_delete_filepath, 100, FTW_DEPTH);
-        }
+        // struct stat buf;
+        // 
+        // if (stat(device_dir.c_str(), &buf) == 0) {
+        //     int success = nftw((device_dir + "/.").c_str(), util_delete_filepath, 100, FTW_DEPTH);
+        // }
     }
     else {
         int errchk = mkdir(device_dir.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
@@ -186,11 +195,13 @@ PEP_STATUS pEpTestDevice::send_mail(message* mail) {
 
 PEP_STATUS pEpTestDevice::process_send_queue() {
     for (vector<message*>::iterator it = send_queue.begin(); it != send_queue.end(); it++) {
-        if (!*it) {
+        if (*it) {
             PEP_STATUS status = send_mail(*it);
             if (status != PEP_STATUS_OK)
                 return status;
         }
+        free_message(*it);
+        *it = NULL;
     }
     send_queue.clear();
     return PEP_STATUS_OK;
@@ -202,8 +213,10 @@ string pEpTestDevice::save_mail_to_mailbox(string mailbox_path, string mail) {
 
     struct stat dirchk;
     
-    if (mailbox_path.empty() || stat(mailbox_path.c_str(), &dirchk) != 0)
-        throw std::runtime_error("pEpTestDevice: mailbox dir not initialised or removed.");                     
+    if (mailbox_path.empty() || stat(mailbox_path.c_str(), &dirchk) != 0) {
+        cerr << "ERROR: " << mailbox_path << endl;
+        throw std::runtime_error("pEpTestDevice: mailbox dir not initialised or removed."); 
+    }                    
 
     chrono::milliseconds timestamp = chrono::duration_cast< chrono::milliseconds >(
                                         chrono::system_clock::now().time_since_epoch());
@@ -228,9 +241,10 @@ void pEpTestDevice::check_mail(vector<string> &unread) {
     mail_to_read.clear();
     struct stat dirchk;
 
-    if (mbox_dir.empty() || stat(mbox_dir.c_str(), &dirchk) != 0)
+    if (mbox_dir.empty() || stat(mbox_dir.c_str(), &dirchk) != 0) {
+        cerr << "ERROR: " << mbox_dir << endl;        
         throw std::runtime_error("pEpTestDevice: mailbox dir not initialised or removed.");                     
-
+    }
     DIR* dir;   
     dirent* pdir;
  
@@ -294,13 +308,25 @@ void pEpTestDevice::check_mail(vector<string> &unread) {
     mbox_last_read = string(unread.back());    
 }
 
-void pEpTestDevice::read_mail(vector<string> mails, vector<string> &to_read) {
+void pEpTestDevice::read_mail(vector<string> mails, vector<message*> &to_read) {
     to_read.clear();
     for (vector<string>::iterator it = mails.begin();
          it != mails.end(); it++) {
         string mail = slurp(mbox_dir + "/" + *it);
         if (mail.empty())
             continue;
-        to_read.push_back(mail);
+        message* msg = NULL;
+        PEP_STATUS status = mime_decode_message(mail.c_str(), mail.size(), &msg);    
+        if (status != PEP_STATUS_OK) {
+            free(msg);
+            continue;
+        }
+        to_read.push_back(msg);
     }
+}
+
+void pEpTestDevice::add_message_to_send_queue(message* msg) {
+    if (!msg)
+        return;
+    send_queue.push_back(msg);
 }

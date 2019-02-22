@@ -18,23 +18,48 @@ class pEpTestDevice {
                       inject_sync_event_t inject_sync_ev_func = NULL);        
                       
         virtual ~pEpTestDevice();
+        
+        static pEpTestDevice* active;
+        static void switch_context(pEpTestDevice* switch_to);
 
+        // Write mail string to a timestamp-named file in the listed mailbox,
+        // and return the name of the file.
         static string save_mail_to_mailbox(string mailbox_path, string mail);
 
         void set_mailbox_dir(string mbox_dirname);
+        
+        // set my variables as the environment vars (HOME, GNUPGHOME, etc)
         void set_device_environment();
+        
+        // clean up crypto agents and 
         void unset_device_environment();
+        
+        // Make all of this device's environment information the current
+        // environment, and restart session for this device with this,
+        // releasing the victim's device and session (and processing their 
+        // send queue before doing this)
         void grab_context(pEpTestDevice* victim);
 
-        string receive_mail(string mail); // save mail to local mailbox
-                                          // kinda deprecated, but for 
-                                          // manual use.
-
+        // take string and save to own mailbox as timestamped mail file and 
+        // return filename 
+        string receive_mail(string mail); 
+        
+        // Get the filenames of all unread mails
         void check_mail(vector<string> &unread);
-        void read_mail(vector<string>mails, vector<string> &to_read);
+        
+        // Read all mails (by filename) into a vector of strings
+        void read_mail(vector<string>mails, vector<message*> &to_read);
+        
+        // write everything into the correct mail by mailbox.
+        // PRESUMES address_to_mbox_map HAS AN ENTRY FOR EVERY ADDRESS IN 
+        // THE RECIP LIST
         PEP_STATUS process_send_queue();
+        
+        // write individual message struct to the correct mailbox
         PEP_STATUS send_mail(message* mail);
 
+        void add_message_to_send_queue(message* msg);
+        
         string device_name;
         PEP_SESSION session;
         string device_dir;        
@@ -43,11 +68,11 @@ class pEpTestDevice {
 
         messageToSend_t device_messageToSend;
         inject_sync_event_t device_inject_sync_event;
+        map<string,string> address_to_mbox_map; // maybe string, vector<string>?
         
     protected:        
         string mbox_last_read;
         vector<string> mail_to_read;
-        map<string,string> address_to_mbox_map; // maybe string, vector<string>?
         vector<message*> send_queue;
         
 //        string current_test_name;
