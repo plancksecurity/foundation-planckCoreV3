@@ -38,12 +38,12 @@ field msg_direction dir;
 	field string longmsg_formatted doc='string of long message (formatted)';
    	field bloblist attachments doc='blobs with attachements';
 	field char rawmsg_ref doc='reference to raw message data';
-	field size_t rawmsg_size doc='size of raw message data';
+	field size rawmsg_size doc='size of raw message data';
 	field timestamp sent doc='when the message is sent';
 	field timestamp recv doc='when the message is received';
-	field pEp_identity from doc='whom the message is from';
+	field identity from doc='whom the message is from';
 	field identity_list to doc='whom the message is to';
-	field pEp_identity recv_by doc='via which identity the message is received';
+	field identity recv_by doc='via which identity the message is received';
 	field identity_list cc doc='whom a CC is being sent';
 	field identity_list bcc doc='whom a BCC is being sent';
 	field identity_list reply_to doc='where a reply should go to';
@@ -53,7 +53,7 @@ field msg_direction dir;
 	field struct _message_ref_list refered_by doc='list of references to messages being refered';
     field string keywords doc='list of strings with keywords';
     field string char comments doc='string with comments';
-    field stringpair_list_t opt_fields doc='optional fields';
+    field stringpair_list opt_fields doc='optional fields';
     field enc_format enc_format doc='format of encrypted data';
 }
 
