@@ -38,6 +38,16 @@ decl return @type @name (mode=return) alias parm;
 decl throws @except;
 decl caveat(mode=caveat) alias doc;
 
+// base types
+
+// string:  text
+// int:     integer number
+// blob:    Binary Large Object
+
+// collections
+
+// list:    one or more elements, which have a sequence
+// set:     one or more elements, which do not have a sequence
 
 package pEp {
     api transport include ./transport_api.yml2
