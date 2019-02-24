@@ -8,14 +8,15 @@
 #include <utility>
 #include "pEpEngine.h"
 #include "message.h"
+#include "sync_api.h"
+#include "locked_queue.hh"
+#include "Sync_event.h"
 
 using namespace std;
 
 class pEpTestDevice {
     public:
-        pEpTestDevice(string test_dir, string my_name,
-                      messageToSend_t mess_send_func = NULL,
-                      inject_sync_event_t inject_sync_ev_func = NULL);        
+        pEpTestDevice(string test_dir, string my_name);        
                       
         virtual ~pEpTestDevice();
         
@@ -65,9 +66,20 @@ class pEpTestDevice {
         string device_dir;        
         string root_test_dir;
         string mbox_dir;
+        utility::locked_queue<Sync_event_t*> q;
 
-        messageToSend_t device_messageToSend;
-        inject_sync_event_t device_inject_sync_event;
+        static Sync_event_t* retrieve_next_sync_event(void *management, time_t threshold);
+        static int notify_handshake(pEp_identity *me,
+                                    pEp_identity *partner,
+                                    sync_handshake_signal signal);
+        
+        static int inject_sync_event(SYNC_EVENT ev, void *management);
+//        Sync_event_t *retrieve_next_sync_event(void *management, unsigned threshold);
+        static PEP_STATUS message_to_send(struct _message *msg);
+
+
+//        messageToSend_t device_messageToSend;
+//        inject_sync_event_t device_inject_sync_event;
         map<string,string> address_to_mbox_map; // maybe string, vector<string>?
         
     protected:        
