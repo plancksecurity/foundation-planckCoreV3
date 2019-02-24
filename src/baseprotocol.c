@@ -39,7 +39,7 @@ PEP_STATUS base_decorate_message(
         assert(sign && sign_size);
 
         bl = bloblist_add(bl, sign, sign_size,
-                "application/pEp.sign", "ignore_this_attachment.pEp");
+                "application/pEp.sign", "electronic_signature.asc");
         if (!bl)
             goto enomem;
     }
