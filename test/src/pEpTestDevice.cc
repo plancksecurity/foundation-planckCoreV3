@@ -111,6 +111,7 @@ pEpTestDevice::pEpTestDevice(string test_dir,
     
     if (active)
         pEpTestDevice::active->unset_device_environment();
+        
     set_device_environment();    
 }
 
@@ -118,6 +119,7 @@ pEpTestDevice::~pEpTestDevice() {
     unset_device_environment();
     // FIXME: Remove homedir
     nftw((device_dir).c_str(), util_delete_filepath, 100, FTW_DEPTH);
+    active = NULL;
 }
 
 void pEpTestDevice::switch_context(pEpTestDevice* switch_to) {

@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <cpptest.h>
 
 #include "platform_unix.h"
 
