@@ -58,4 +58,4 @@ namespace utility
             return _q.empty();
         }
     };
-};
+}

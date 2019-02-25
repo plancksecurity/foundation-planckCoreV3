@@ -68,8 +68,8 @@ class pEpTestDevice {
         string mbox_dir;
         utility::locked_queue<Sync_event_t*> q;
 
-        static Sync_event_t* retrieve_next_sync_event(void *management, time_t threshold);
-        static int notify_handshake(pEp_identity *me,
+        static Sync_event_t* retrieve_next_sync_event(void *management, unsigned int threshold);
+        static PEP_STATUS notify_handshake(pEp_identity *me,
                                     pEp_identity *partner,
                                     sync_handshake_signal signal);
         
@@ -81,11 +81,11 @@ class pEpTestDevice {
 //        messageToSend_t device_messageToSend;
 //        inject_sync_event_t device_inject_sync_event;
         map<string,string> address_to_mbox_map; // maybe string, vector<string>?
+        vector<message*> send_queue;
         
     protected:        
         string mbox_last_read;
         vector<string> mail_to_read;
-        vector<message*> send_queue;
         
 //        string current_test_name;
         

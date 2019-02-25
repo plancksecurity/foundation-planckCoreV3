@@ -48,21 +48,21 @@ KeyResetMessageTests::KeyResetMessageTests(string suitename, string test_home_di
     fake_this = this;                                                                  
 }
 
-PEP_STATUS KeyResetMessageTests::message_send_callback(message* msg) {
-    fake_this->m_queue.push_back(msg);
-    return PEP_STATUS_OK;    
-}
+// PEP_STATUS KeyResetMessageTests::message_send_callback(message* msg) {
+//     fake_this->device->send_queue.push_back(msg);
+//     return PEP_STATUS_OK;    
+// }
 
 void KeyResetMessageTests::setup() {
     EngineTestIndividualSuite::setup();
-    m_queue.clear();
-    device->device_messageToSend = &KeyResetMessageTests::message_send_callback;
-    session->messageToSend = device->device_messageToSend;
+//    device->send_queue.clear();
+//    device->message_to_send = &KeyResetMessageTests::message_send_callback;
+//    session->messageToSend = device->message_to_send;
 }
 
 void KeyResetMessageTests::tear_down() {
-    device->device_messageToSend = NULL;
-    session->messageToSend = NULL;
+//    device->device_messageToSend = NULL;
+//    session->messageToSend = NULL;
     EngineTestIndividualSuite::tear_down();
 }
 
@@ -176,8 +176,9 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
     outgoing_msg->to = send_idents;
     outgoing_msg->shortmsg = strdup("Well isn't THIS a useless message...");
     outgoing_msg->longmsg = strdup("Hi Mom...\n");
-    // outgoing_msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
-    // that's illegal - VB.
+    outgoing_msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
+    // that's illegal - VB. 
+    // I got this from your tests, and IIRC, there was some reason you guys always put it in there. - KB
     cout << "Message created.\n\n";
     cout << "Encrypting message as MIME multipart…\n";
     message* enc_outgoing_msg = nullptr;
@@ -210,7 +211,7 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
     
     status = key_reset(session, alice_fpr, from_ident);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
-    TEST_ASSERT(m_queue.size() > 0);
+    TEST_ASSERT(device->send_queue.size() > 0);
     status = myself(session, from_ident);
     string new_fpr = from_ident->fpr;
     TEST_ASSERT_MSG((strcmp(alice_fpr, new_fpr.c_str()) != 0), new_fpr.c_str());
@@ -224,9 +225,9 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
     hashmap[fenris_user_id] = false;
     
     // Number of messages we SHOULD be sending.
-    TEST_ASSERT(m_queue.size() == 4);
+    TEST_ASSERT(device->send_queue.size() == 4);
     
-    for (vector<message*>::iterator it = m_queue.begin(); it != m_queue.end(); it++) {
+    for (vector<message*>::iterator it = device->send_queue.begin(); it != device->send_queue.end(); it++) {
         message* curr_sent_msg = *it;
         TEST_ASSERT(curr_sent_msg);
         TEST_ASSERT(curr_sent_msg->to);
@@ -256,7 +257,7 @@ void KeyResetMessageTests::check_reset_key_and_notify() {
     }
     
     // MESSAGE LIST NOW INVALID.
-    m_queue.clear();
+    device->send_queue.clear();
     
     // Make sure we have messages only to desired recips
     TEST_ASSERT(hashmap[alice_user_id] == false);
@@ -423,7 +424,7 @@ void KeyResetMessageTests::check_receive_message_to_revoked_key_from_unknown() {
 
     status = key_reset(session, alice_fpr, from_ident);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
-    m_queue.clear();
+    device->send_queue.clear();
     
     string received_mail = slurp("test_files/398_gabrielle_to_alice.eml");
     char* decrypted_msg = NULL;
@@ -433,7 +434,7 @@ void KeyResetMessageTests::check_receive_message_to_revoked_key_from_unknown() {
     PEP_decrypt_flags_t flags;
     status = MIME_decrypt_message(session, received_mail.c_str(), received_mail.size(),
                                   &decrypted_msg, &keylist, &rating, &flags, &modified_src);
-    TEST_ASSERT(m_queue.size() == 0);
+    TEST_ASSERT(device->send_queue.size() == 0);
     free(decrypted_msg);
     free(modified_src);
     free_stringlist(keylist);
@@ -487,8 +488,8 @@ void KeyResetMessageTests::check_receive_message_to_revoked_key_from_contact() {
 
     status = key_reset(session, alice_fpr, from_ident);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
-    TEST_ASSERT(m_queue.size() == 0);
-    m_queue.clear();
+    TEST_ASSERT(device->send_queue.size() == 0);
+    device->send_queue.clear();
 
     // Now we get mail from Gabi, who only has our old key AND has become
     // a pEp user in the meantime...
@@ -501,8 +502,8 @@ void KeyResetMessageTests::check_receive_message_to_revoked_key_from_contact() {
     status = MIME_decrypt_message(session, received_mail.c_str(), received_mail.size(),
                                   &decrypted_msg, &keylist, &rating, &flags, &modified_src);
     
-    TEST_ASSERT(m_queue.size() == 1);
-    vector<message*>::iterator it = m_queue.begin();
+    TEST_ASSERT(device->send_queue.size() == 1);
+    vector<message*>::iterator it = device->send_queue.begin();
     message* reset_msg = *it;
     TEST_ASSERT(reset_msg);    
     TEST_ASSERT(reset_msg->from);    

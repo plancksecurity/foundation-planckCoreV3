@@ -27,7 +27,77 @@
 #include "KeySync_fsm.h"
 #include <chrono>
 
+// Static stuff
 pEpTestDevice* pEpTestDevice::active = NULL;
+
+PEP_STATUS pEpTestDevice::message_to_send(struct _message* msg) {
+    pEpTestDevice::active->add_message_to_send_queue(msg);
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS pEpTestDevice::notify_handshake(pEp_identity* me,
+                                    pEp_identity* partner,
+                                    sync_handshake_signal signal) {
+    // 
+    // switch(signal) {
+    //     case SYNC_NOTIFY_UNDEFINED:
+    //     case SYNC_NOTIFY_TIMEOUT:
+    //     case SYNC_NOTIFY_OVERTAKEN:
+    //     case SYNC_NOTIFY_ACCEPTED_DEVICE_ADDED:
+    //     case SYNC_NOTIFY_ACCEPTED_GROUP_CREATED:
+    //     case SYNC_NOTIFY_ACCEPTED_DEVICE_MOVED:   
+    //         return SYNC_HANDSHAKE_CANCEL;
+    // 
+    //     // We don't simulate the handshake process here.
+    //     // If we need to, this is a TODO.
+    //     case SYNC_NOTIFY_INIT_ADD_OUR_DEVICE:
+    //     case SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE:
+    //     case SYNC_NOTIFY_INIT_FORM_GROUP:
+    //     case SYNC_NOTIFY_INIT_MOVE_OUR_DEVICE:
+    //         return SYNC_HANDSHAKE_ACCEPTED;
+    // 
+    //     default:    
+    //         return SYNC_HANDSHAKE_REJECTED;
+    // }
+    return PEP_STATUS_OK;
+}
+
+Sync_event_t* pEpTestDevice::retrieve_next_sync_event(void *management, unsigned int threshold)
+{
+    time_t started = time(nullptr);
+    bool timeout = false;
+    
+    while (active->q.empty()) {
+        int i = 0;
+        ++i;
+        if (i > 10) {
+            if (time(nullptr) > started + threshold) {
+                timeout = true;
+                break;
+            }   
+            i = 0;
+        }   
+        nanosleep((const struct timespec[]){{0, 100000000L}}, NULL);
+    }
+    if (timeout)
+        return new_sync_timeout_event();
+
+    return pEpTestDevice::active->q.pop_front();
+}
+
+int pEpTestDevice::inject_sync_event(Sync_event* ev, void* management) {
+    Sync_event_t *_ev = ev;
+    switch (_ev->fsm) {
+        case Sync_PR_keysync:
+//            cout << "injecting event " << KeySync_event_name(_ev->event) << "\n";
+            break;
+        default:
+            throw std::runtime_error("Unknown state machine.");
+    }
+    pEpTestDevice::active->q.push_front(ev);
+    return 0;
+}
+// End static stuff
 
 pEpTestDevice::pEpTestDevice(string test_dir, 
                              string my_name)                
@@ -102,7 +172,7 @@ void pEpTestDevice::set_device_environment() {
     gpg_conf(true);
     gpg_agent_conf(true);
         
-    PEP_STATUS status = init(session, message_to_send, inject_sync_event);
+    PEP_STATUS status = init(&session, message_to_send, inject_sync_event);
     if (status != PEP_STATUS_OK)
         throw std::runtime_error("init() exploded! Bad!");
     status = register_sync_callbacks(session, (void*)(&(active->q)),
@@ -339,69 +409,4 @@ void pEpTestDevice::add_message_to_send_queue(message* msg) {
     send_queue.push_back(msg);
 }
 
-PEP_STATUS pEpTestDevice::message_to_send(struct _message* msg) {
-    pEpTestDevice::active->add_message_to_send_queue(msg);
-}
-
-int pEpTestDevice::notify_handshake(pEp_identity* me,
-                                    pEp_identity* partner,
-                                    sync_handshake_signal signal) {
-                                        
-    switch(signal) {
-        case SYNC_NOTIFY_UNDEFINED:
-        case SYNC_NOTIFY_TIMEOUT:
-        case SYNC_NOTIFY_OVERTAKEN:
-        case SYNC_NOTIFY_ACCEPTED_DEVICE_ADDED:
-        case SYNC_NOTIFY_ACCEPTED_GROUP_CREATED:
-        case SYNC_NOTIFY_ACCEPTED_DEVICE_MOVED:   
-            return SYNC_HANDSHAKE_CANCEL;
-
-        // We don't simulate the handshake process here.
-        // If we need to, this is a TODO.
-        case SYNC_NOTIFY_INIT_ADD_OUR_DEVICE:
-        case SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE:
-        case SYNC_NOTIFY_INIT_FORM_GROUP:
-        case SYNC_NOTIFY_INIT_MOVE_OUR_DEVICE:
-            return SYNC_HANDSHAKE_ACCEPTED;
-        
-        default:    
-            return SYNC_HANDSHAKE_REJECTED;
-    }
-}
-
-Sync_event_t* pEpTestDevice::retrieve_next_sync_event(void *management, time_t threshold)
-{
-    time_t started = time(nullptr);
-    bool timeout = false;
-    
-    while (active->q.empty()) {
-        int i = 0;
-        ++i;
-        if (i > 10) {
-            if (time(nullptr) > started + threshold) {
-                timeout = true;
-                break;
-            }   
-            i = 0;
-        }   
-        nanosleep((const struct timespec[]){{0, 100000000L}}, NULL);
-    }
-    if (timeout)
-        return new_sync_timeout_event();
-
-    return pEpTestDevice::active->q.pop_front();
-}
-
-int inject_sync_event(SYNC_EVENT ev, void* management) {
-    Sync_event_t *_ev = ev;
-    switch (_ev->fsm) {
-        case Sync_PR_keysync:
-//            cout << "injecting event " << KeySync_event_name(_ev->event) << "\n";
-            break;
-        default:
-            throw std::runtime_error("Unknown state machine.");
-    }
-    pEpTestDevice::active->q.push_front(ev);
-    return 0;
-}
     
