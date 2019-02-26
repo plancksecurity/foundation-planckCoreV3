@@ -2,7 +2,7 @@
 #include "pEpEngine.h"
 #include "pEp_internal.h"
 #include "message_api.h"
-#include "test_util.h"
+#include "TestUtils.h"
 #include "TestConstants.h"
 
 #include <fstream>
@@ -158,12 +158,20 @@ const char* tl_status_string(PEP_STATUS status) {
             return "PEP_INIT_NO_GPG_HOME";
         case PEP_INIT_NETPGP_INIT_FAILED:
             return "PEP_INIT_NETPGP_INIT_FAILED";
+        case PEP_INIT_CANNOT_DETERMINE_GPG_VERSION:
+            return "PEP_INIT_CANNOT_DETERMINE_GPG_VERSION";
+        case PEP_INIT_UNSUPPORTED_GPG_VERSION:
+            return "PEP_INIT_UNSUPPORTED_GPG_VERSION";
+        case PEP_INIT_CANNOT_CONFIG_GPG_AGENT:
+            return "PEP_INIT_CANNOT_CONFIG_GPG_AGENT";
         case PEP_INIT_SQLITE3_WITHOUT_MUTEX:
             return "PEP_INIT_SQLITE3_WITHOUT_MUTEX";
         case PEP_INIT_CANNOT_OPEN_DB:
             return "PEP_INIT_CANNOT_OPEN_DB";
         case PEP_INIT_CANNOT_OPEN_SYSTEM_DB:
             return "PEP_INIT_CANNOT_OPEN_SYSTEM_DB";
+        case PEP_UNKNOWN_DB_ERROR:
+            return "PEP_UNKNOWN_DB_ERROR";
         case PEP_KEY_NOT_FOUND:
             return "PEP_KEY_NOT_FOUND";
         case PEP_KEY_HAS_AMBIG_NAME:
@@ -174,6 +182,18 @@ const char* tl_status_string(PEP_STATUS status) {
             return "PEP_CANNOT_EXPORT_KEY";
         case PEP_CANNOT_EDIT_KEY:
             return "PEP_CANNOT_EDIT_KEY";
+        case PEP_KEY_UNSUITABLE:
+            return "PEP_KEY_UNSUITABLE";
+        case PEP_MALFORMED_KEY_RESET_MSG:
+            return "PEP_MALFORMED_KEY_RESET_MSG";
+        case PEP_KEY_NOT_RESET:
+            return "PEP_KEY_NOT_RESET";
+        case PEP_KEY_IMPORTED:
+            return "PEP_KEY_IMPORTED";
+        case PEP_NO_KEY_IMPORTED:
+            return "PEP_NO_KEY_IMPORTED";
+        case PEP_KEY_IMPORT_STATUS_UNKNOWN:
+            return "PEP_KEY_IMPORT_STATUS_UNKNOWN";
         case PEP_CANNOT_FIND_IDENTITY:
             return "PEP_CANNOT_FIND_IDENTITY";
         case PEP_CANNOT_SET_PERSON:
@@ -184,6 +204,10 @@ const char* tl_status_string(PEP_STATUS status) {
             return "PEP_CANNOT_SET_IDENTITY";
         case PEP_CANNOT_SET_TRUST:
             return "PEP_CANNOT_SET_TRUST";
+        case PEP_CANNOT_FIND_PERSON:
+            return "PEP_CANNOT_FIND_PERSON";
+        case PEP_CANNOT_FIND_ALIAS:
+            return "PEP_CANNOT_FIND_ALIAS";        
         case PEP_KEY_BLACKLISTED:
             return "PEP_KEY_BLACKLISTED";
         case PEP_UNENCRYPTED:
@@ -210,12 +234,16 @@ const char* tl_status_string(PEP_STATUS status) {
             return "PEP_VERIFY_NO_KEY";
         case PEP_VERIFIED_AND_TRUSTED:
             return "PEP_VERIFIED_AND_TRUSTED";
+        case PEP_CANNOT_REENCRYPT:
+            return "PEP_CANNOT_REENCRYPT";    
         case PEP_CANNOT_DECRYPT_UNKNOWN:
             return "PEP_CANNOT_DECRYPT_UNKNOWN";
         case PEP_TRUSTWORD_NOT_FOUND:
             return "PEP_TRUSTWORD_NOT_FOUND";
         case PEP_TRUSTWORDS_FPR_WRONG_LENGTH:
             return "PEP_TRUSTWORDS_FPR_WRONG_LENGTH";
+        case PEP_TRUSTWORDS_DUPLICATE_FPR:
+            return "PEP_TRUSTWORDS_DUPLICATE_FPR";    
         case PEP_CANNOT_CREATE_KEY:
             return "PEP_CANNOT_CREATE_KEY";
         case PEP_CANNOT_SEND_KEY:
@@ -234,6 +262,12 @@ const char* tl_status_string(PEP_STATUS status) {
             return "PEP_SYNC_ILLEGAL_MESSAGE";
         case PEP_SYNC_NO_INJECT_CALLBACK:
             return "PEP_SYNC_NO_INJECT_CALLBACK";
+        case PEP_SYNC_NO_CHANNEL:
+            return "PEP_SYNC_NO_CHANNEL";
+        case PEP_SYNC_CANNOT_ENCRYPT:
+            return "PEP_SYNC_CANNOT_ENCRYPT";
+        case PEP_SYNC_NO_MESSAGE_SEND_CALLBACK:
+            return "PEP_SYNC_NO_MESSAGE_SEND_CALLBACK";            
         case PEP_CANNOT_INCREASE_SEQUENCE:
             return "PEP_CANNOT_INCREASE_SEQUENCE";
         case PEP_STATEMACHINE_ERROR:
@@ -250,6 +284,8 @@ const char* tl_status_string(PEP_STATUS status) {
             return "PEP_STATEMACHINE_INVALID_ACTION";
         case PEP_STATEMACHINE_INHIBITED_EVENT:
             return "PEP_STATEMACHINE_INHIBITED_EVENT";
+        case PEP_STATEMACHINE_CANNOT_SEND:
+            return "PEP_STATEMACHINE_CANNOT_SEND";    
         case PEP_COMMIT_FAILED:
             return "PEP_COMMIT_FAILED";
         case PEP_MESSAGE_CONSUME:
@@ -267,9 +303,10 @@ const char* tl_status_string(PEP_STATUS status) {
         case PEP_OUT_OF_MEMORY:
             return "PEP_OUT_OF_MEMORY";
         case PEP_UNKNOWN_ERROR:
-            return "PEP_UNKNOWN_ERROR";    
+            return "PEP_UNKNOWN_ERROR";
+        case PEP_VERSION_MISMATCH:
+            return "PEP_VERSION_MISMATCH";
         default:
- 
             return "PEP_STATUS_OMGWTFBBQ - This means you're using a status the test lib doesn't know about!";
     }
 }

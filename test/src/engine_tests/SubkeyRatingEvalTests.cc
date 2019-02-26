@@ -8,7 +8,7 @@
 #include "pEpEngine.h"
 
 #include <cpptest.h>
-#include "test_util.h"
+#include "TestUtils.h"
 
 #include "EngineTestIndividualSuite.h"
 #include "SubkeyRatingEvalTests.h"

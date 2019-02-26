@@ -6,7 +6,7 @@
 #include <cstring> // for strcmp()
 #include <cpptest.h>
 
-#include "test_util.h"
+#include "TestUtils.h"
 #include "TestConstants.h"
 
 #include "pEpEngine.h"

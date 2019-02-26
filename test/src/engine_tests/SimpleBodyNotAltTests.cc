@@ -10,7 +10,7 @@
 #include "pEpEngine.h"
 #include "message.h"
 #include "mime.h"
-#include "test_util.h"
+#include "TestUtils.h"
 
 #include "EngineTestIndividualSuite.h"
 #include "SimpleBodyNotAltTests.h"

@@ -7,12 +7,16 @@
 #include <vector>
 #include <utility>
 #include "pEpEngine.h"
+#include "pEpTestDevice.h"
 
 using namespace std;
 
 class EngineTestSuite : public Test::Suite {
     public:
-        EngineTestSuite(string suitename, string test_home_dir);
+        EngineTestSuite(string suitename, 
+                        string test_home_dir, 
+                        bool make_default_device = true);   
+                             
         virtual ~EngineTestSuite();
         
         void add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()> test_func);
@@ -21,15 +25,15 @@ class EngineTestSuite : public Test::Suite {
 
     protected:
         PEP_SESSION session;
+        bool make_device;
+        pEpTestDevice* device;
+        
         string test_home;
         string real_home;
         string prev_pgp_home;
         string name;
         
         string current_test_name;
-
-        messageToSend_t cached_messageToSend;
-        inject_sync_event_t cached_inject_sync_event;
 
 #define TEST_FAILED_MESSAGE_BUFSIZE 1000        
         char failed_msg_buf[TEST_FAILED_MESSAGE_BUFSIZE];

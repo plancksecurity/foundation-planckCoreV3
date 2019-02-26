@@ -14,7 +14,7 @@
 #include <sstream>
 #include "mime.h"
 #include "message_api.h"
-#include "test_util.h"
+#include "TestUtils.h"
 
 #include "EngineTestSuite.h"
 #include "EngineTestSessionSuite.h"
