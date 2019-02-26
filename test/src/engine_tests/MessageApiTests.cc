@@ -142,7 +142,7 @@ void MessageApiTests::check_message_api() {
     PEP_decrypt_flags_t flags2;
     flags2 = 0;
     PEP_STATUS status6 = decrypt_message(session, msg5, &msg6, &keylist5, &rating2, &flags2);
-    TEST_ASSERT_MSG((status6 == PEP_DECRYPT_NO_KEY), "status6 == PEP_DECRYPT_NO_KEY");
+    TEST_ASSERT_MSG((status6 == PEP_DECRYPT_NO_KEY), tl_status_string(status6));
     TEST_ASSERT_MSG((msg6 == NULL), "msg6 == NULL");
     TEST_ASSERT_MSG((keylist5 == NULL), "keylist5 == NULL");
     TEST_ASSERT_MSG((rating2 == PEP_rating_have_no_key), "rating2 == PEP_rating_have_no_key");
