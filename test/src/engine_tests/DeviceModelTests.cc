@@ -22,6 +22,23 @@
 
 using namespace std;
 
+static void remove_sync_mails(vector<message*> &mails) {
+    for (vector<message*>::iterator it = mails.begin(); it != mails.end(); ) {
+        stringpair_list_t* opt_fields = (*it)->opt_fields;
+        bool erased = false;
+        while (opt_fields && opt_fields->value && opt_fields->value->key && opt_fields->value->value) {
+            if (strcmp(opt_fields->value->key, "pEp-auto-consume") == 0 &&
+                strcmp(opt_fields->value->value, "yes") == 0) {
+                it = mails.erase(it);
+                erased = true;
+            }
+            opt_fields = opt_fields->next;
+        }
+        if (!erased)
+            it++;
+    }
+}
+
 DeviceModelTests::DeviceModelTests(string suitename, string test_home_dir) :
     EngineTestIndividualSuite::EngineTestIndividualSuite(suitename, test_home_dir, false) {
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("DeviceModelTests::check_device_model"),
@@ -333,8 +350,6 @@ void DeviceModelTests::check_three_device_mbox_with_send() {
         
         vector<string> inbox_list;
         second_device->check_mail(inbox_list);
-        TEST_ASSERT_MSG(inbox_list.size() == 1, 
-                        (string("Second device received ") + to_string(inbox_list.size()) + " emails, should have received 1.").c_str());
 
         vector<message*> inbox_mails;
         stringlist_t* keylist = NULL;
@@ -342,6 +357,7 @@ void DeviceModelTests::check_three_device_mbox_with_send() {
         PEP_decrypt_flags_t flags;
         
         second_device->read_mail(inbox_list, inbox_mails);
+        remove_sync_mails(inbox_mails);
         TEST_ASSERT(inbox_mails.size() == 1 && inbox_mails.at(0));
         
         // Get Alex's key
@@ -376,13 +392,14 @@ void DeviceModelTests::check_three_device_mbox_with_send() {
         msg = NULL;
             
         second_device->check_mail(inbox_list);
-        TEST_ASSERT_MSG(inbox_list.size() == 1, 
-                        (string("Second device received ") + to_string(inbox_list.size()) + " emails, should have received 1.").c_str());
-    
+            
         keylist = NULL;
         flags = 0;
         
         second_device->read_mail(inbox_list, inbox_mails);
+        
+        remove_sync_mails(inbox_mails);
+        
         TEST_ASSERT(inbox_mails.size() == 1 && inbox_mails.at(0));
         
         // Get Charmander's key
@@ -421,11 +438,9 @@ void DeviceModelTests::check_three_device_mbox_with_send() {
         first_device->grab_context(second_device);
         enc_msg = NULL;
 
-        first_device->check_mail(inbox_list);
-        TEST_ASSERT_MSG(inbox_list.size() == 1, 
-                        (string("First device received ") + to_string(inbox_list.size()) + " emails, should have received 1.").c_str());
-            
+        first_device->check_mail(inbox_list);            
         first_device->read_mail(inbox_list, inbox_mails);
+        remove_sync_mails(inbox_mails);
         TEST_ASSERT(inbox_mails.size() == 1 && inbox_mails.at(0));
         
         status = decrypt_message(first_device->session,
@@ -448,10 +463,10 @@ void DeviceModelTests::check_three_device_mbox_with_send() {
         third_device->grab_context(first_device);
 
         third_device->check_mail(inbox_list);
-        TEST_ASSERT_MSG(inbox_list.size() == 1, 
-                        (string("Third device received ") + to_string(inbox_list.size()) + " emails, should have received 1.").c_str());
             
         third_device->read_mail(inbox_list, inbox_mails);
+        remove_sync_mails(inbox_mails);
+
         TEST_ASSERT(inbox_mails.size() == 1 && inbox_mails.at(0));
         
         status = decrypt_message(third_device->session,
@@ -531,15 +546,14 @@ void DeviceModelTests::check_switch_context() {
         
         vector<string> inbox_list;
         pEpTestDevice::active->check_mail(inbox_list);
-        TEST_ASSERT_MSG(inbox_list.size() == 1, 
-                        (string("Second device received ") + to_string(inbox_list.size()) + " emails, should have received 1.").c_str());
 
         vector<message*> inbox_mails;
         stringlist_t* keylist = NULL;
         PEP_rating rating;
         PEP_decrypt_flags_t flags;
-        
         pEpTestDevice::active->read_mail(inbox_list, inbox_mails);
+        remove_sync_mails(inbox_mails);
+
         TEST_ASSERT(inbox_mails.size() == 1 && inbox_mails.at(0));
         
         // Get Alex's key
@@ -574,14 +588,12 @@ void DeviceModelTests::check_switch_context() {
         pEpTestDevice::switch_context(second_device);
         msg = NULL;
             
-        pEpTestDevice::active->check_mail(inbox_list);
-        TEST_ASSERT_MSG(inbox_list.size() == 1, 
-                        (string("Second device received ") + to_string(inbox_list.size()) + " emails, should have received 1.").c_str());
-    
+        pEpTestDevice::active->check_mail(inbox_list);    
         keylist = NULL;
         flags = 0;
-        
         pEpTestDevice::active->read_mail(inbox_list, inbox_mails);
+        remove_sync_mails(inbox_mails);
+
         TEST_ASSERT(inbox_mails.size() == 1 && inbox_mails.at(0));
         
         // Get Charmander's key
@@ -623,10 +635,9 @@ void DeviceModelTests::check_switch_context() {
         enc_msg = NULL;
 
         pEpTestDevice::active->check_mail(inbox_list);
-        TEST_ASSERT_MSG(inbox_list.size() == 1, 
-                        (string("First device received ") + to_string(inbox_list.size()) + " emails, should have received 1.").c_str());
             
         pEpTestDevice::active->read_mail(inbox_list, inbox_mails);
+        remove_sync_mails(inbox_mails);
         TEST_ASSERT(inbox_mails.size() == 1 && inbox_mails.at(0));
         
         status = decrypt_message(pEpTestDevice::active->session,
@@ -649,10 +660,8 @@ void DeviceModelTests::check_switch_context() {
         pEpTestDevice::switch_context(third_device);
 
         pEpTestDevice::active->check_mail(inbox_list);
-        TEST_ASSERT_MSG(inbox_list.size() == 1, 
-                        (string("Third device received ") + to_string(inbox_list.size()) + " emails, should have received 1.").c_str());
-            
         pEpTestDevice::active->read_mail(inbox_list, inbox_mails);
+        remove_sync_mails(inbox_mails);
         TEST_ASSERT(inbox_mails.size() == 1 && inbox_mails.at(0));
         
         status = decrypt_message(pEpTestDevice::active->session,
