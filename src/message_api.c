@@ -1638,8 +1638,9 @@ static void _cleanup_src(message* src, bool remove_attached_key) {
     char* longmsg = NULL;
     char* shortmsg = NULL;
     char* msg_wrap_info = NULL;
-    separate_short_and_long(src->longmsg, &shortmsg, &msg_wrap_info,
-                            &longmsg);
+    if (src->longmsg)
+        separate_short_and_long(src->longmsg, &shortmsg, &msg_wrap_info,
+                                &longmsg);
     if (longmsg) {                    
         free(src->longmsg);
         free(shortmsg);
@@ -3852,8 +3853,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         size_t size;
         const char *data;
         char *sync_fpr = NULL;
-        status = base_extract_message(session, msg, &size, &data, &sync_fpr);
-        if (!status && size && data) {
+        PEP_STATUS tmpstatus = base_extract_message(session, msg, &size, &data, &sync_fpr);
+        if (!tmpstatus && size && data) {
             pEp_identity *_from = identity_dup(msg->from);
             if (!_from) {
                 free_message(*dst);
@@ -4849,4 +4850,3 @@ the_end:
     free_identity(ident);
     return status;
 }
-
