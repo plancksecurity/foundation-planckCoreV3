@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <ftw.h>
+#include <vector>
 
 #include "pEpEngine.h"
 #include "message_api.h"
@@ -55,6 +56,7 @@ int util_delete_filepath(const char *filepath,
                          const struct stat *file_stat, 
                          int ftw_info, 
                          struct FTW * ftw_struct);
-                         
-        
+
+void clear_message_vector(std::vector<message*> &msgs);
+                                 
 #endif

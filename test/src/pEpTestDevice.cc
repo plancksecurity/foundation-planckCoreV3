@@ -59,6 +59,10 @@ PEP_STATUS pEpTestDevice::notify_handshake(pEp_identity* me,
     //     default:    
     //         return SYNC_HANDSHAKE_REJECTED;
     // }
+    cout << "Notify Handshake on device '" << active->device_name << "' with: " << endl
+         << "\tmy name and fpr as\t" << me->username << " : " << me->fpr << " and " << endl 
+         << "\tother name/fpr as\t" << partner->username << " : " << partner->fpr << endl;
+         
     return PEP_STATUS_OK;
 }
 
@@ -403,6 +407,11 @@ void pEpTestDevice::read_mail(vector<string> mails, vector<message*> &to_read) {
         }
         to_read.push_back(msg);
     }
+}
+
+void pEpTestDevice::delete_mail(string fname) {
+    if (!fname.empty())
+        remove((mbox_dir + "/" + fname).c_str());
 }
 
 void pEpTestDevice::add_message_to_send_queue(message* msg) {

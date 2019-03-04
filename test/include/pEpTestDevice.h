@@ -51,6 +51,8 @@ class pEpTestDevice {
         // Read all mails (by filename) into a vector of strings
         void read_mail(vector<string>mails, vector<message*> &to_read);
         
+        void delete_mail(string fname);
+
         // write everything into the correct mail by mailbox.
         // PRESUMES address_to_mbox_map HAS AN ENTRY FOR EVERY ADDRESS IN 
         // THE RECIP LIST

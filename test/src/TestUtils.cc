@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <ftw.h>
+#include <vector>
 
 PEP_STATUS read_file_and_import_key(PEP_SESSION session, const char* fname) {
     const std::string key = slurp(fname);
@@ -453,4 +454,12 @@ int util_delete_filepath(const char *filepath,
     }
     
     return retval;
+}
+
+void clear_message_vector(std::vector<message*> &msgs) {
+    for (std::vector<message*>::iterator it = msgs.begin();
+         it != msgs.end(); it++) {
+        free_message(*it);        
+    }
+    msgs.clear();
 }
