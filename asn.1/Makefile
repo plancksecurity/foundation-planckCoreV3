@@ -10,7 +10,7 @@ all: generate
 	make libasn1.a
 
 libasn1.a: $(ALL_OBJECTS)
-	ar -rc $@ $(ALL_OBJECTS)
+	$(AR) -rc $@ $(ALL_OBJECTS)
 
 generate: Sync.c
 	rm -f converter-sample.c
