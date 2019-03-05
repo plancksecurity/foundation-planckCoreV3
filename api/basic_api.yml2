@@ -37,8 +37,8 @@ type string_pair is pair< string, string >;
 // message:
 // rating:
 // enc_format:
-// hash:
-// TID:
+// bool:
+// cryptotech:
 
 
 enum comm_type {

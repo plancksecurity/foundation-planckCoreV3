@@ -51,6 +51,8 @@ decl caveat(mode=caveat) alias doc;
 // enc_format:
 // hash:
 // TID:
+// bool:
+// cryptotech:
 
 
 // collections
