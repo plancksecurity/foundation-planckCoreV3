@@ -54,7 +54,7 @@ protocol session {
 			doc="""
 				if a default key was found for this identity, no
 				other acceptable keys were found; if this is returned,
-				the reason for rejecting the first default key found
+				the reason for rejecting the first default key found	
 				may be found in the comm_type
 				"""
 	}

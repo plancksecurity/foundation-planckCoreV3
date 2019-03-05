@@ -20,7 +20,25 @@ type hash_list doc="sequence of fingerprints of keys"
 type TID doc="UUID version 4 variant 1"
     is binary size=16;
 
-type blob_list is list < blob >;
+type blob_list is list< blob >;
+
+type identity_list is list< identity >;
+
+type string_list is list< string > ; 
+
+type string_pair is pair< string, string >;
+
+// string:  text
+// int:     integer number
+// blob:    Binary Large Object
+// size_t:  size in memory
+// const:
+// identity:
+// message:
+// rating:
+// enc_format:
+// hash:
+// TID:
 
 
 enum comm_type {

@@ -43,11 +43,23 @@ decl caveat(mode=caveat) alias doc;
 // string:  text
 // int:     integer number
 // blob:    Binary Large Object
+// size_t:  size in memory
+// const:
+// identity:
+// message:
+// rating:
+// enc_format:
+// hash:
+// TID:
+
 
 // collections
 
 // list:    one or more elements, which have a sequence
 // set:     one or more elements, which do not have a sequence
+// pair:    two elements in sequence
+
+
 
 package pEp {
     api transport include ./transport_api.yml2

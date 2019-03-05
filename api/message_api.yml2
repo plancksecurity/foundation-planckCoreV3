@@ -30,15 +30,40 @@ enum enc_format {
 }
 
 
+enum ratings {
+    item rating_undefined 0;
+    item rating_cannot_decrypt 1;
+    item rating_have_no_key 2;
+    item rating_unencrypted 3;
+    item rating_unencrypted_for_some doc="don't use this any more",
+    item rating_unreliable 4;
+    item rating_reliable 5;
+    item rating_trusted 6;
+    item rating_trusted_and_anonymized 7;
+    item rating_fully_anonymous 8;
+    item rating_mistrust -1;
+    item rating_b0rken -2;
+    item rating_under_attack -3;
+}
+    
+
+enum colors {
+        item color_no_color 0;
+        item color_yellow 1;
+        item color_green 2;
+        item color_red -1;
+}
+
+
 struct message {
-field msg_direction dir;
+    field msg_direction dir;
     field string id doc='string of message ID';
     field string shortmsg doc='string of short message';
-    field string longmsg doc='string of long message'(plain)';
+    field string longmsg doc='string of long message (plain)';
     field string longmsg_formatted doc='string of long message (formatted)';
-       field bloblist attachments doc='blobs with attachements';
-    field char rawmsg_ref doc='reference to raw message data';
-    field size rawmsg_size doc='size of raw message data';
+    field blob_list attachments doc='blobs with attachements';
+    field blob_ref rawmsg_ref doc='reference to raw message data';
+    field size_t rawmsg_size doc='size of raw message data';
     field timestamp sent doc='when the message is sent';
     field timestamp recv doc='when the message is received';
     field identity from doc='whom the message is from';
@@ -47,20 +72,14 @@ field msg_direction dir;
     field identity_list cc doc='whom a CC is being sent';
     field identity_list bcc doc='whom a BCC is being sent';
     field identity_list reply_to doc='where a reply should go to';
-    field string in_reply_to doc='list of strings with MessageIDs of refering messages';
-    field struct _message refering_msg_ref doc='reference to refering message';
-    field string references doc='list of strings with references';
-    field struct _message_ref_list refered_by doc='list of references to messages being refered';
-    field string keywords doc='list of strings with keywords';
-    field string char comments doc='string with comments';
+    field string_list in_reply_to doc='list of strings with MessageIDs of refering messages';
+    field message_ref refering_msg_ref doc='reference to refering message';
+    field string_list references doc='list of strings with references';
+    field message_ref_list refered_by doc='list of references to messages being refered';
+    field string_list keywords doc='list of strings with keywords';
+    field string comments doc='string with comments';
     field stringpair_list opt_fields doc='optional fields';
-    field enc_format enc_format doc='format of encrypted data';
-}
-
-
-struct message_ref_list {
-    field message msg_ref doc='reference to message';
-    field struct _message_ref_list next;
+    field enc_format format doc='format of encrypted data';
 }
 
 
@@ -119,9 +138,9 @@ protocol session {
         use message src doc="message to encrypt";
 
         create message dst
-            doc="pointer to new encrypted message or NULL if no encryption could take place";
+            doc="pointer to new encrypted message or empty if no encryption could take place";
 
-        use const char to_fpr
+        use hash to_fpr
             doc="fingerprint of the recipient key to which the private key should be encrypted";
 
         use enc_format format doc="encrypted format";
@@ -168,7 +187,7 @@ protocol session {
 
         use hash_list extra doc="extra keys for encryption";
 
-        create message dst doc="pointer to new encrypted message or NULL on failure";
+        create message dst doc="pointer to new encrypted message or empty on failure";
 
         use enc_format format doc="encrypted format";
 
@@ -184,7 +203,7 @@ protocol session {
             flag key_reset_only 0x20;
         }
 
-        // exceptions doc="(FIXME: This may not be correct or complete)"
+        doc | (FIXME: The exceptions may not be correct or complete)
 
         throws key_not_found doc="at least one of the receipient keys could not be found";
 
@@ -197,53 +216,53 @@ protocol session {
     method decrypt_message
         doc="decrypt message in memory"
     {
-    // parms
+        // parms
 
-    supply message src
-    doc="""
-        message to decrypt. 
-        The ownership of src remains with the caller - however, the contents 
-        might be modified (strings freed and allocated anew or set to NULL,
-        etc) intentionally; when this happens, decrypt_flag_src_modified is set.
-        """;
-
-    create message dst doc="pointer to new decrypted message or NULL on failure";
-
-    supply hash_list keylist
-    doc="""
-        in: stringlist with additional keyids for reencryption if needed
-            (will be freed and replaced with output keylist)
-        out: stringlist with keyids used for signing and encryption. first
-            first key is signer, additional keys are the ones it was encrypted
-            to. Only signer and whichever of the user's keys was used are reliable.
-        The ownership of keylist goes to the caller.
-        If src is unencrypted this function returns unencrypted and sets dst to NULL.
-        """;
-
-    return rating msg_rating doc="rating for the message";
-
-    // flags
-    
-    decrypt_flags {
-        decrypt_flag_own_private_key 0x1 
+        supply message src
         doc="""
-            private key was imported for one of our addresses (NOT trusted
-            or set to be used - handshake/trust is required for that)
+            message to decrypt. 
+            The ownership of src remains with the caller - however, the contents 
+            might be modified (strings freed and allocated anew or set to empty,
+            etc) intentionally; when this happens, decrypt_flag_src_modified is set.
             """;
-        decrypt_flag_consume 0x2 doc=’used by sync';
-        decrypt_flag_ignore 0x4 doc=’used by sync';
-        decrypt_flag_src_modified 0x8 
+
+        create message dst doc="pointer to new decrypted message or empty on failure";
+
+        supply hash_list keylist
         doc="""
-            indicates that the src object has been modified. At the moment,
-            this is always as a direct result of the behaviour driven
-            by the input flags. This flag is the ONLY value that should be
-            relied upon to see if such changes have taken place.
+            in: stringlist with additional keyids for reencryption if needed
+                (will be freed and replaced with output keylist)
+            out: stringlist with keyids used for signing and encryption. first
+                first key is signer, additional keys are the ones it was encrypted
+                to. Only signer and whichever of the user's keys was used are reliable.
+            The ownership of keylist goes to the caller.
+            If src is unencrypted this function returns unencrypted and sets dst to empty.
             """;
-        decrypt_flag_untrusted_server 0x100 
-        doc="""
-            input flags. Used to signal that decrypt function should engage in behaviour
-            specified for when the server storing the source is untrusted.
-            """;
+
+        return rating msg_rating doc="rating for the message";
+
+        // flags
+        
+        decrypt_flags {
+            decrypt_flag_own_private_key 0x1 
+            doc="""
+                private key was imported for one of our addresses (NOT trusted
+                or set to be used - handshake/trust is required for that)
+                """;
+            decrypt_flag_consume 0x2 doc=’used by sync';
+            decrypt_flag_ignore 0x4 doc=’used by sync';
+            decrypt_flag_src_modified 0x8 
+            doc="""
+                indicates that the src object has been modified. At the moment,
+                this is always as a direct result of the behaviour driven
+                by the input flags. This flag is the ONLY value that should be
+                relied upon to see if such changes have taken place.
+                """;
+            decrypt_flag_untrusted_server 0x100 
+            doc="""
+                input flags. Used to signal that decrypt function should engage in behaviour
+                specified for when the server storing the source is untrusted.
+                """;
     }
 
     // exceptions
@@ -259,10 +278,10 @@ protocol session {
     throws unencrypted
         doc="""
             if src is unencrypted this function returns unencrypted and sets
-            dst to NULL.
+            dst to empty.
             """;
 
-    throws any doc="error status";
+    throws any doc="all error status values allowed";
     }
 
 
@@ -348,22 +367,20 @@ protocol session {
     {
     //parms
 
-    use const identity id1 doc="identity of first party in communication - fpr can't be NULL";
+    use identity id1 doc="identity of first party in communication - fpr can't be empty";
 
-    use const identity id2 doc="identity of second party in communication - fpr can't be NULL";
+    use identity id2 doc="identity of second party in communication - fpr can't be empty";
 
-    use const char lang doc="C string with ISO 639-1 language code";
+    use ISO639_1 lang doc="string with ISO 639-1 language code";
 
-    create char words
+    create string words
         doc="""
-            pointer to C string with all trustwords UTF-8 encoded, separated 
-            by a blank each NULL if language is not supported or trustword 
+            string with all trustwords, separated 
+            by a blank each. Empty if language is not supported or trustword 
             wordlist is damaged or unavailable. 
             The word pointer goes to the ownership of the caller. 
             The caller is responsible to free() it (on Windoze use pEp_free())
             """;
-
-    create size_t wsize doc="length of full trustwords string";
 
     use bool full
         doc="""
@@ -390,18 +407,16 @@ protocol session {
     use message msg doc="message to get sender identity from";
 
     use hash_list keylist
-        doc="NULL if message to be decrypted, keylist returned by decrypt_message() otherwise.";
+        doc="empty if message to be decrypted, keylist returned by decrypt_message() otherwise.";
 
-    use identity received_by doc="identity for account receiving message can't be NULL";
+    use identity received_by doc="identity for account receiving message can't be empty";
 
-    use string lang doc="C string with ISO 639-1 language code";
+    use ISO639_1 lang doc="C string with ISO 639-1 language code";
 
-    create char words
+    create string words
         doc="""
-            pointer to C string with all trustwords UTF-8 encoded, separated by a blank each.
-            NULL if language is not supported or trustword  wordlist is damaged or unavailable.
-            The word pointer goes to the ownership of the caller. 
-            The caller is responsible to free() it (on Windoze use pEp_free())
+            string with all trustwords, separated by a blank each.
+            Empty if language is not supported or trustword  wordlist is damaged or unavailable.
             """;
 
     use bool full
@@ -441,7 +456,7 @@ protocol session {
         doc="""
             if decrypted message doesn't contain X-EncStatus optional field and 
             x_enc_status is pEp_rating_udefined or if decrypted message doesn't 
-            contain X-Keylist optional field and x_keylist is NULL.
+            contain X-Keylist optional field and x_keylist is empty.
             """;
 
     throws out_of_memory doc="if not enough memory could be allocated";
@@ -467,50 +482,21 @@ protocol session {
 }    
 
 
-    // ratings
+func color_from_rating
+    doc="calculate color from rating"
+{
+    // parms
 
-    ratings {
-        item rating_undefined 0;
-        item rating_cannot_decrypt 1;
-        item rating_have_no_key 2;
-        item rating_unencrypted 3;
-        item rating_unencrypted_for_some doc="don't use this any more",
-        item rating_unreliable 4;
-        item rating_reliable 5;
-        item rating_trusted 6;
-        item rating_trusted_and_anonymized 7;
-        item rating_fully_anonymous 8;
-        item rating_mistrust -1;
-        item rating_b0rken -2;
-        item rating_under_attack -3;
-    }
+    use color_from_rating rating doc="color representing that rating"
 
-
-    // colors
-
-    colors {
-        item color_no_color 0;
-        item color_yellow 1;
-        item color_green 2;
-        item color_red -1;
-    }
-
-
-    func color_from_rating
-        doc="calculate color from rating"
-    {
-        // parms
-
-        use color_from_rating rating doc="color representing that rating"
-
-        // return value
-        return color rating_color doc="color representing that rating"
+    // return value
+    return color rating_color doc="color representing that rating"
 }
 
-            
-    func get_binary_path
-        doc="retrieve path of cryptotech binary if available"
-    {
+        
+func get_binary_path
+    doc="retrieve path of cryptotech binary if available"
+{
     //parms
 
     use cryptotech tech
@@ -518,7 +504,7 @@ protocol session {
 
     use string path
     doc="""
-        path to cryptotech binary or NULL if not available. **path is owned by 
+        path to cryptotech binary or empty if not available. **path is owned by 
         the library, do not change it!;
         """
 }
