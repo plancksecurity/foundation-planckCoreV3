@@ -498,6 +498,51 @@ static int user_version(void *_version, int count, char **text, char **name)
     return 0;
 }
 
+// TODO: refactor and generalise these two functions if possible.
+static int db_contains_table(PEP_SESSION session, const char* table_name) {
+    if (!session || !table_name)
+        return -1;
+    
+    // Table names can't be SQL parameters, so we do it this way.
+    
+    // these two must be the same number.
+    char sql_buf[500];
+    const size_t max_q_len = 500;
+    
+    size_t t_size, q_size;
+    
+    const char* q1 = "SELECT name FROM sqlite_master WHERE type='table' AND name='{"; // 61
+    const char* q2 = "'};";       // 3
+    
+    q_size = 64;
+    t_size = strlen(table_name);
+    
+    size_t query_len = q_size + t_size + 1;
+
+    if (query_len > max_q_len)
+        return -1;
+
+    strlcpy(sql_buf, q1, max_q_len);
+    strlcat(sql_buf, table_name, max_q_len);
+    strlcat(sql_buf, q2, max_q_len);
+
+    sqlite3_stmt *stmt; 
+
+    sqlite3_prepare_v2(session->db, sql_buf, -1, &stmt, NULL);
+
+    int retval = 0;
+
+    int rc = sqlite3_step(stmt);  
+    if (rc == SQLITE_DONE || rc == SQLITE_OK || rc == SQLITE_ROW) {
+        retval = 1;
+    }
+
+    sqlite3_finalize(stmt);      
+        
+    return retval;
+        
+}
+
 static int table_contains_column(PEP_SESSION session, const char* table_name,
                                                       const char* col_name) {
 
@@ -843,11 +888,13 @@ DYNAMIC_API PEP_STATUS init(
         assert(int_result == SQLITE_OK);
 
         
-        // Sometimes the user_version wasn't set correctly. Check to see if this
-        // is really necessary...
+        // Sometimes the user_version wasn't set correctly. 
         if (version == 1) {
             bool version_changed = true;
-            if (table_contains_column(_session, "identity", "timestamp") > 0) {
+            if (db_contains_table(_session, "social_graph") > 0) {
+                version = 9;
+            }            
+            else if (table_contains_column(_session, "identity", "timestamp") > 0) {
                 version = 8;
             }            
             if (table_contains_column(_session, "person", "is_pEp_user") > 0) {
@@ -1100,7 +1147,7 @@ DYNAMIC_API PEP_STATUS init(
                     "    CONSTRAINT fk_own_identity\n"
                     "       FOREIGN KEY(own_address, own_userid)\n" 
                     "       REFERENCES identity(address, user_id)\n"
-                    "       ON DELETE CASCADE ON UPDATE CASCADE,\n"
+                    "       ON DELETE CASCADE ON UPDATE CASCADE\n"
                     ");\n"
                     "create table if not exists revocation_contact_list (\n"
                     "   fpr text not null references pgp_keypair (fpr)\n"

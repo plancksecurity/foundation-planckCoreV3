@@ -302,8 +302,7 @@ tstylesheet {
                 return PEP_STATUS_OK;
 
             the_end:
-                free_«@name»_event(ev);
-                free_«@name»_message(msg);
+                free_«@name»_event(ev); // msg gets freed here
                 return status;
             }
 
@@ -366,8 +365,7 @@ tstylesheet {
                 return PEP_STATUS_OK;
 
             the_end:
-                free_«@name»_event(ev);
-                free_«@name»_message(msg);
+                free_«@name»_event(ev); // msg gets freed here
                 return status;
             }
 
@@ -559,7 +557,7 @@ tstylesheet {
                 status = «@name»_driver(session, fsm, event);
 
             the_end:
-                free_«@name»_event(ev);
+                //free_«@name»_event(ev); // FIXME: We don't own this pointer. Are we sure it gets freed externally?
                 return status;
             }
 
@@ -1013,4 +1011,3 @@ tstylesheet {
         | }
     }
 }
-
