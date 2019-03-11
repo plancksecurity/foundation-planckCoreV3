@@ -107,9 +107,11 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
 
 // // FIXME
 // #ifndef USE_NETPGP
+// #ifndef USE_SEQUOIA
 //     success = system("gpgconf --kill all");
 //     if (success != 0)
 //         throw std::runtime_error("SETUP: Error when executing 'gpgconf --kill all'.");    
+// #endif
 // #endif
 
     if (stat(test_home.c_str(), &dirchk) == 0) {
@@ -222,10 +224,12 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
 //    cout << "calling init()\n";
 //     PEP_STATUS status = init(&session, cached_messageToSend, cached_inject_sync_event);
 // #ifndef USE_NETPGP            
+// #ifndef USE_SEQUOIA
 //     success = system("gpgconf --create-socketdir");
 //     if (success != 0)
 //         throw std::runtime_error("RESTORE: Error when executing 'gpgconf --create-socketdir'.");        
 //     system("gpg-connect-agent /bye");   // Just in case - otherwise, we die on MacOS sometimes. Is this enough??
+// #endif
 // #endif
 
 //    assert(status == PEP_STATUS_OK);
@@ -249,12 +253,14 @@ void EngineTestSuite::restore_full_env() {
     int success = 0;    
 
 // #ifndef USE_NETPGP        
+// #ifndef USE_SEQUOIA
 //     success = system("gpgconf --kill all");
 //     if (success != 0)
 //         throw std::runtime_error("RESTORE: Error when executing 'gpgconf --kill all'.");
 //     success = system("gpgconf --remove-socketdir");            
 //     if (success != 0)
 //         throw std::runtime_error("RESTORE: Error when executing 'gpgconf --remove-socketdir'.");    
+// #endif
 // #endif
 
     success = setenv("GNUPGHOME", prev_pgp_home.c_str(), 1);
