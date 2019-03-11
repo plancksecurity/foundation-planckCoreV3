@@ -128,7 +128,6 @@ struct _pEpSession {
 #elif defined(USE_NETPGP)
     pEpNetPGPSession ctx;
 #elif defined(USE_SEQUOIA)
-    sq_context_t ctx;
     sqlite3 *key_db;
     struct {
         sqlite3_stmt *begin_transaction;
