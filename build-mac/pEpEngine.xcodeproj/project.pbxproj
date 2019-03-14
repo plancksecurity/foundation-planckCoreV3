@@ -1002,7 +1002,7 @@
 					"$(SRCROOT)/../../OpenSSL-for-iPhone/include",
 					"$(SRCROOT)/../asn.1/",
 				);
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "-DSQLITE3_FROM_OS";
@@ -1059,7 +1059,7 @@
 					"$(SRCROOT)/../../OpenSSL-for-iPhone/include",
 					"$(SRCROOT)/../asn.1/",
 				);
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = "-DSQLITE3_FROM_OS";
