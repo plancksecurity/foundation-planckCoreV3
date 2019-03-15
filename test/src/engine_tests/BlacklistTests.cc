@@ -9,7 +9,7 @@
 // #include <TEST_ASSERT.h>
 // #include "blacklist.h"
 // #include "keymanagement.h"
-// #include "TestUtils.h"
+// #include "test_util.h"
 // 
 // // This file is under GNU General Public License 3.0
 // // see LICENSE.txt
@@ -26,7 +26,7 @@
 
 #include "blacklist.h"
 #include "keymanagement.h"
-#include "TestUtils.h"
+#include "test_util.h"
 #include "TestConstants.h"
 
 #include "EngineTestSessionSuite.h"

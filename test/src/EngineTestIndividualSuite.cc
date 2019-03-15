@@ -12,10 +12,8 @@
 using namespace std;
 
 // Constructor
-EngineTestIndividualSuite::EngineTestIndividualSuite(string suitename, 
-                                                     string test_home_dir,
-                                                     bool make_default_device) 
-    : EngineTestSuite(suitename, test_home_dir, make_default_device) { 
+EngineTestIndividualSuite::EngineTestIndividualSuite(string suitename, string test_home_dir) 
+    : EngineTestSuite(suitename, test_home_dir) { 
 }
 
 EngineTestIndividualSuite::~EngineTestIndividualSuite() {

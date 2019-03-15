@@ -12,7 +12,7 @@
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"
-#include "TestUtils.h" // for slurp()
+#include "test_util.h" // for slurp()
 
 #include <cpptest.h>
 #include "EngineTestSessionSuite.h"

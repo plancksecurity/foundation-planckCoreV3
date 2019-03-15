@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string>
 #include <cpptest.h>
-#include "TestUtils.h"
+#include "test_util.h"
 
 #include "pEpEngine.h"
 

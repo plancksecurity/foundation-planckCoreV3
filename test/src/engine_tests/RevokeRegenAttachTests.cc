@@ -15,7 +15,7 @@
 #include "mime.h"
 #include "message_api.h"
 
-#include "TestUtils.h"
+#include "test_util.h"
 
 #include <cpptest.h>
 #include "EngineTestSessionSuite.h"

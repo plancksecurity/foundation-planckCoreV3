@@ -12,7 +12,7 @@
 #include "bloblist.h"
 #include "base64.h"
 
-#include "TestUtils.h"
+#include "test_util.h"
 #include "EngineTestIndividualSuite.h"
 #include "HeaderKeyImportTests.h"
 

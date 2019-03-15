@@ -8,7 +8,7 @@
 
 #include "pEpEngine.h"
 
-#include "TestUtils.h"
+#include "test_util.h"
 #include "EngineTestIndividualSuite.h"
 #include "UserIdCollisionTests.h"
 

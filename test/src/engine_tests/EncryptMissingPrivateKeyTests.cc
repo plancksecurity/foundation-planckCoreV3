@@ -14,7 +14,7 @@
 #include "keymanagement.h"
 #include "message_api.h"
 #include "mime.h"
-#include "TestUtils.h"
+#include "test_util.h"
 
 #include "pEpEngine.h"
 

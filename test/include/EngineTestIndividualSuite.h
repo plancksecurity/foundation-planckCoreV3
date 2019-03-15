@@ -12,8 +12,7 @@ using namespace std;
 
 class EngineTestIndividualSuite : public EngineTestSuite {
     public:
-        EngineTestIndividualSuite(string suitename, string test_home_dir,
-                                  bool make_default_device = true);
+        EngineTestIndividualSuite(string suitename, string test_home_dir);
         virtual ~EngineTestIndividualSuite();
     protected:
         virtual void setup();

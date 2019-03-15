@@ -9,7 +9,7 @@
 #include "pEpEngine.h"
 
 #include <cpptest.h>
-#include "TestUtils.h"
+#include "test_util.h"
 #include "EngineTestIndividualSuite.h"
 #include "CheckRenewedExpiredKeyTrustStatusTests.h"
 
