@@ -4069,6 +4069,8 @@ DYNAMIC_API PEP_STATUS identity_rating(
     if (!(session && ident && rating))
         return PEP_ILLEGAL_VALUE;
 
+    *rating = PEP_rating_undefined;
+
     if (ident->me)
         status = _myself(session, ident, false, true);
     else
