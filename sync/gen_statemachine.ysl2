@@ -644,7 +644,7 @@ tstylesheet {
             for "message[@security='untrusted']" {
             ||
                     case «../@name»__payload_PR_«yml:mixedCase(@name)»:
-                        if (fpr || rating < PEP_rating_reliable) {
+                        if (rating < PEP_rating_reliable) {
                             status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
                             goto the_end;
                         }
@@ -659,7 +659,7 @@ tstylesheet {
             for "message[@security='trusted']" {
             ||
                     case «../@name»__payload_PR_«yml:mixedCase(@name)»:
-                        if (fpr || rating < PEP_rating_trusted) {
+                        if (rating < PEP_rating_trusted) {
                             status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
                             goto the_end;
                         }
