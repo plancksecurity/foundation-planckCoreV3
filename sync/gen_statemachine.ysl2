@@ -449,6 +449,7 @@ tstylesheet {
                                 goto the_end;
                             }
                         }
+                        break;
 
                     default:
                         status = PEP_«yml:ucase(@name)»_ILLEGAL_MESSAGE;
