@@ -321,22 +321,8 @@ tstylesheet {
                 if (!session->inject_«yml:lcase(@name)»_event)
                    return PEP_«yml:ucase(@name)»_NO_INJECT_CALLBACK;
 
-                «@name»_t *msg = NULL;
-                PEP_STATUS status = decode_«@name»_message(data, size, &msg);
-                if (status)
-                    return status;
-
+                PEP_STATUS status = PEP_STATUS_OK;
                 «@name»_event_t *ev = NULL;
-
-                «@name»_PR fsm = msg->present;
-                int event = 0;
-
-                switch (fsm) {
-                    `` apply "fsm", 2, mode=signal_message
-                    default:
-                        status = PEP_«yml:ucase(@name)»_ILLEGAL_MESSAGE;
-                        goto the_end;
-                }
 
                 if (fpr) {
                     if (session->«yml:lcase(@name)»_state.common.from->fpr)
@@ -347,6 +333,21 @@ tstylesheet {
                         status = PEP_OUT_OF_MEMORY;
                         goto the_end;
                     }
+                }
+
+                «@name»_t *msg = NULL;
+                status = decode_«@name»_message(data, size, &msg);
+                if (status)
+                    return status;
+
+                «@name»_PR fsm = msg->present;
+                int event = 0;
+
+                switch (fsm) {
+                    `` apply "fsm", 2, mode=signal_message
+                    default:
+                        status = PEP_«yml:ucase(@name)»_ILLEGAL_MESSAGE;
+                        goto the_end;
                 }
 
                 ev = new_«@name»_event(fsm, event, msg);
