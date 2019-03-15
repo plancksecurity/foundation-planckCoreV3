@@ -55,7 +55,7 @@ tstylesheet {
 
         #define «yml:ucase(@name)»_TIMEOUT_EVENT new_«@name»_event(«@name»_PR_NOTHING, 0, NULL);
 
-
+    
         // free_«@name»_event() - free memory occupied by event
         //
         //  parameters:
@@ -622,43 +622,54 @@ tstylesheet {
     {
         ||
         case «../@name»_PR_«yml:lcase(@name)»:
-            event = msg->choice.«yml:lcase(@name)».payload.present;
-            switch (event) {
+            switch (msg->choice.«yml:lcase(@name)».payload.present) {
         ||
         if "message[@security='unencrypted']" {
-            |         // these messages require a detached signature
-            for "message[@security='unencrypted']"
-                |>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+            |>> // these messages require a detached signature
+            for "message[@security='unencrypted']" {
             ||
+                    case «../@name»__payload_PR_«yml:mixedCase(@name)»:
                         if (!fpr) {
                             status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
                             goto the_end;
                         }
+                        event = «@name»;
                         break;
 
             ||
+            }
         }
-        if "message[@security='untrusted']"
-        ||
-                // these messages must arrive encrypted
-        `` for "message[@security='untrusted']" |>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
-                    if (fpr || rating < PEP_rating_reliable) {
-                        status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
-                        goto the_end;
-                    }
-                    break;
+        if "message[@security='untrusted']" {
+            |>> // these messages must arrive encrypted
+            for "message[@security='untrusted']" {
+            ||
+                    case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+                        if (fpr || rating < PEP_rating_reliable) {
+                            status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
+                            goto the_end;
+                        }
+                        event = «@name»;
+                        break;
 
-        ||
-        if "message[@security='trusted']"
-        ||
-                // these messages must come through a trusted channel
-        `` for "message[@security='trusted']" |>> case «ancestor::fsm/@name»__payload_PR_«yml:mixedCase(@name)»:
-                    if (fpr || rating < PEP_rating_trusted) {
-                        status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
-                        goto the_end;
-                    }
-                    break;
+            ||
+            }
+        }
+        if "message[@security='trusted']" {
+            |>> // these messages must come through a trusted channel
+            for "message[@security='trusted']" {
+            ||
+                    case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+                        if (fpr || rating < PEP_rating_trusted) {
+                            status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
+                            goto the_end;
+                        }
+                        event = «@name»;
+                        break;
 
+            ||
+            }
+        }
+        ||
                 default:
                     status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
                     goto the_end;
