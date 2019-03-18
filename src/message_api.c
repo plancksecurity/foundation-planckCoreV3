@@ -3855,16 +3855,22 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         char *sync_fpr = NULL;
         PEP_STATUS tmpstatus = base_extract_message(session, msg, &size, &data, &sync_fpr);
         if (!tmpstatus && size && data) {
-            pEp_identity *_from = identity_dup(msg->from);
-            if (!_from) {
-                free_message(*dst);
-                *dst = NULL;
-                free_stringlist(*keylist);
-                *keylist = NULL;
-                return PEP_OUT_OF_MEMORY;
+            if ((*keylist && strcasecmp(msg->from->fpr, (*keylist)->value))
+                    || (sync_fpr && strcasecmp(msg->from->fpr, sync_fpr))) {
+                pEp_identity *_from = identity_dup(msg->from);
+                if (!_from) {
+                    free_message(*dst);
+                    *dst = NULL;
+                    free_stringlist(*keylist);
+                    *keylist = NULL;
+                    free(sync_fpr);
+                    return PEP_OUT_OF_MEMORY;
+                }
+                if (session->sync_state.common.from)
+                    free_identity(session->sync_state.common.from);
+                session->sync_state.common.from = _from;
+                signal_Sync_message(session, *rating, data, size, sync_fpr);
             }
-            session->sync_state.common.from = _from;
-            signal_Sync_message(session, *rating, data, size, sync_fpr);
         }
         free(sync_fpr);
     }
@@ -4068,6 +4074,8 @@ DYNAMIC_API PEP_STATUS identity_rating(
 
     if (!(session && ident && rating))
         return PEP_ILLEGAL_VALUE;
+
+    *rating = PEP_rating_undefined;
 
     if (ident->me)
         status = _myself(session, ident, false, true);

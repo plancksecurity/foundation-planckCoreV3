@@ -42,6 +42,7 @@ protocol Sync 1 {
                     do openTransaction;
                     do storeTransaction;
                     send HandshakeRequest;
+                    go HandshakeRequested;
                 }
             }
 
@@ -56,6 +57,9 @@ protocol Sync 1 {
                 }
             }
 
+        }
+
+        state HandshakeRequested {
             on HandshakeAnswer
                 go HandshakingNew();
         }
@@ -312,13 +316,11 @@ protocol Sync 1 {
             field TID challenge;
             auto Version version;
             field TID transaction;
-            field Hash fpr;
             field bool is_group;
         }
 
         message HandshakeAnswer 4 {
             field TID transaction;
-            field Hash fpr;
         }
 
         message Rollback 5, security=untrusted {
