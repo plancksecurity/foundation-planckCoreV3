@@ -114,7 +114,11 @@ DYNAMIC_API PEP_STATUS update_identity(
 
 DYNAMIC_API PEP_STATUS myself(PEP_SESSION session, pEp_identity * identity);
 
-PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags);
+PEP_STATUS _myself(PEP_SESSION session, 
+                   pEp_identity * identity, 
+                   bool do_keygen, 
+                   bool ignore_flags,
+                   bool read_only);
 
 // retrieve_next_identity() - callback being called by do_keymanagement()
 //
@@ -375,7 +379,7 @@ PEP_STATUS get_all_keys_for_user(PEP_SESSION session,
                                  stringlist_t** keys);
 
 
-PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags);
+//PEP_STATUS _myself(PEP_SESSION session, pEp_identity * identity, bool do_keygen, bool ignore_flags);
 
 PEP_STATUS add_mistrusted_key(PEP_SESSION session, const char* fpr);
 PEP_STATUS delete_mistrusted_key(PEP_SESSION session, const char* fpr);

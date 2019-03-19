@@ -209,6 +209,7 @@ struct _pEpSession {
     
     // Keys
     sqlite3_stmt *own_key_is_listed;
+    sqlite3_stmt *is_own_address;
     sqlite3_stmt *own_identities_retrieve;
     sqlite3_stmt *own_keys_retrieve;
     sqlite3_stmt *get_user_default_key;
