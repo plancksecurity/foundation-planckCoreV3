@@ -987,7 +987,7 @@ static PEP_STATUS update_identity_recip_list(PEP_SESSION session,
                 }                        
             }
             else
-                status = myself(session, curr_identity);
+                status = _myself(session, curr_identity, false, false, true);
         if (status == PEP_ILLEGAL_VALUE || status == PEP_OUT_OF_MEMORY)
             return status;
         }
@@ -1322,7 +1322,8 @@ static PEP_comm_type _get_comm_type(
     if (!is_me(session, ident))
         status = update_identity(session, ident);
     else
-        status = myself(session, ident);
+        // ???
+        status = _myself(session, ident, false, false, true);
 
     if (status == PEP_STATUS_OK) {
         if (ident->comm_type == PEP_ct_compromised)
@@ -2970,6 +2971,7 @@ static PEP_STATUS import_priv_keys_from_decrypted_msg(PEP_SESSION session,
     return status;
 }
 
+// FIXME: myself ??????
 static PEP_STATUS update_sender_to_pep_trust(
         PEP_SESSION session, 
         pEp_identity* sender, 
@@ -3238,6 +3240,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     stringlist_t *_keylist = NULL;
     char* signer_fpr = NULL;
     bool is_pep_msg = is_a_pEpmessage(src);
+    bool myself_read_only = (src->dir == PEP_dir_incoming);
 
     // Grab input flags
     bool reencrypt = (((*flags & PEP_decrypt_flag_untrusted_server) > 0) && *keylist && !EMPTYSTR((*keylist)->value));
@@ -3301,7 +3304,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         if (!is_me(session, src->from))
             status = update_identity(session, src->from);
         else
-            status = myself(session, src->from);
+            status = _myself(session, src->from, false, false, myself_read_only);
         
         // We absolutely should NOT be bailing here unless it's a serious error
         if (status == PEP_OUT_OF_MEMORY)
@@ -3517,7 +3520,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                                 if (!is_me(session, src->from))
                                                     update_identity(session, (src->from));
                                                 else
-                                                    myself(session, src->from);
+                                                    _myself(session, src->from, false, false, myself_read_only);
                                             }
                                             break;        
                                         }
@@ -3882,7 +3885,7 @@ DYNAMIC_API PEP_STATUS identity_rating(
         return PEP_ILLEGAL_VALUE;
 
     if (ident->me)
-        status = _myself(session, ident, false, true);
+        status = _myself(session, ident, false, true, true);
     else
         status = update_identity(session, ident);
 
@@ -4280,12 +4283,13 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     if (status != PEP_STATUS_OK)
         goto pep_error;
 
+    tmp_msg->dir = PEP_dir_incoming;
     // MIME decode message delivers only addresses. We need more.
     if (tmp_msg->from) {
         if (!is_me(session, tmp_msg->from))
             status = update_identity(session, (tmp_msg->from));
         else
-            status = myself(session, tmp_msg->from);
+            status = _myself(session, tmp_msg->from, false, false, true);
 
         if (status == PEP_ILLEGAL_VALUE || status == PEP_OUT_OF_MEMORY)
             goto pep_error;
@@ -4603,7 +4607,7 @@ got_keylist:
     if (!is_me(session, msg->from))
         status = update_identity(session, msg->from);
     else
-        status = myself(session, msg->from);
+        status = _myself(session, msg->from, false, false, true);
 
     switch (status) {
         case PEP_KEY_NOT_FOUND:

@@ -367,6 +367,17 @@ static const char *sql_own_key_is_listed =
     "      where pgp_keypair_fpr = upper(replace(?1,' ',''))"
     "           and identity.is_own = 1"
     ");";
+    
+static const char *sql_is_own_address =
+    "select count(*) from ("
+    "   select address from identity"
+    "       where (case when (address = ?1) then (1)"
+    "                   when (lower(address) = lower(?1)) then (1)"
+    "                   when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1)"
+    "                   else 0"
+    "           end) = 1 "
+    "           and identity.is_own = 1"
+    ");";
 
 static const char *sql_own_identities_retrieve =  
     "select address, fpr, username, identity.user_id, "
@@ -1268,6 +1279,11 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             (int)strlen(sql_own_key_is_listed), &_session->own_key_is_listed,
             NULL);
     assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_is_own_address,
+            (int)strlen(sql_is_own_address), &_session->is_own_address,
+            NULL);
+    assert(int_result == SQLITE_OK);
     
     int_result = sqlite3_prepare_v2(_session->db, sql_own_identities_retrieve,
             (int)strlen(sql_own_identities_retrieve),
@@ -1489,6 +1505,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->blacklist_retrieve);
             if (session->own_key_is_listed)
                 sqlite3_finalize(session->own_key_is_listed);
+            if (session->is_own_address)
+                sqlite3_finalize(session->is_own_address);
             if (session->own_identities_retrieve)
                 sqlite3_finalize(session->own_identities_retrieve);
             if (session->own_keys_retrieve)
@@ -2719,6 +2737,43 @@ DYNAMIC_API PEP_STATUS is_pep_user(PEP_SESSION session, pEp_identity *identity, 
     sqlite3_reset(session->is_pep_user);
     
     free(alias_default);
+    return PEP_STATUS_OK;
+}
+
+DYNAMIC_API PEP_STATUS is_own_address(PEP_SESSION session, pEp_identity *identity, bool* is_own_addr)
+{
+    assert(session);
+    assert(is_own_addr);
+    assert(identity);
+    assert(!EMPTYSTR(identity->user_id));
+
+    if (!session || !is_own_addr || !identity || EMPTYSTR(identity->address))
+        return PEP_ILLEGAL_VALUE;
+    
+    *is_own_addr = false;
+            
+    const char* address = identity->address;
+    
+    if (!session || EMPTYSTR(address))
+        return PEP_ILLEGAL_VALUE;
+        
+    sqlite3_reset(session->is_own_address);
+    sqlite3_bind_text(session->is_own_address, 1, address, -1,
+            SQLITE_STATIC);
+    int result = sqlite3_step(session->is_own_address);
+    switch (result) {
+        case SQLITE_ROW: {
+            // yeah yeah, I know, we could be lazy here, but it looks bad.
+            *is_own_addr = (sqlite3_column_int(session->is_own_address, 0) != 0);
+            break;
+        }
+        default:
+            sqlite3_reset(session->is_own_address);
+            return PEP_RECORD_NOT_FOUND;
+    }
+
+    sqlite3_reset(session->is_own_address);
+    
     return PEP_STATUS_OK;
 }
 
