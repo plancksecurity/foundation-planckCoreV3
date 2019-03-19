@@ -53,15 +53,14 @@ protocol Sync 1 {
                     if partnerIsGrouped
                         go HandshakingWithGroup;
 
-                    go HandshakingNew();
+                    go HandshakingNew;
                 }
             }
-
         }
 
         state HandshakeRequested {
             on HandshakeAnswer
-                go HandshakingNew();
+                go HandshakingNew;
         }
 
         // handshaking without existing Device group

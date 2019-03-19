@@ -1366,15 +1366,15 @@ static PEP_comm_type _get_comm_type_preview(
     return comm_type;
 }
 
-static void free_bl_entry(bloblist_t *bl)
-{
-    if (bl) {
-        free(bl->value);
-        free(bl->mime_type);
-        free(bl->filename);
-        free(bl);
-    }
-}
+// static void free_bl_entry(bloblist_t *bl)
+// {
+//     if (bl) {
+//         free(bl->value);
+//         free(bl->mime_type);
+//         free(bl->filename);
+//         free(bl);
+//     }
+// }
 
 static bool is_key(const bloblist_t *bl)
 {
@@ -1395,29 +1395,29 @@ static bool is_key(const bloblist_t *bl)
            );
 }
 
-static void remove_attached_keys(message *msg)
-{
-    if (msg) {
-        bloblist_t *last = NULL;
-        for (bloblist_t *bl = msg->attachments; bl && bl->value; ) {
-            bloblist_t *next = bl->next;
-
-            if (is_key(bl)) {
-                if (last) {
-                    last->next = next;
-                }
-                else {
-                    msg->attachments = next;
-                }
-                free_bl_entry(bl);
-            }
-            else {
-                last = bl;
-            }
-            bl = next;
-        }
-    }
-}
+// static void remove_attached_keys(message *msg)
+// {
+//     if (msg) {
+//         bloblist_t *last = NULL;
+//         for (bloblist_t *bl = msg->attachments; bl && bl->value; ) {
+//             bloblist_t *next = bl->next;
+// 
+//             if (is_key(bl)) {
+//                 if (last) {
+//                     last->next = next;
+//                 }
+//                 else {
+//                     msg->attachments = next;
+//                 }
+//                 free_bl_entry(bl);
+//             }
+//             else {
+//                 last = bl;
+//             }
+//             bl = next;
+//         }
+//     }
+// }
 
 static bool compare_first_n_bytes(const char* first, const char* second, size_t n) {
     int i;
@@ -3855,8 +3855,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         char *sync_fpr = NULL;
         PEP_STATUS tmpstatus = base_extract_message(session, msg, &size, &data, &sync_fpr);
         if (!tmpstatus && size && data) {
-            if ((*keylist && strcasecmp(msg->from->fpr, (*keylist)->value))
-                    || (sync_fpr && strcasecmp(msg->from->fpr, sync_fpr))) {
+        //    if ((*keylist && strcasecmp(msg->from->fpr, (*keylist)->value))
+        //            || (sync_fpr && strcasecmp(msg->from->fpr, sync_fpr))) {
                 pEp_identity *_from = identity_dup(msg->from);
                 if (!_from) {
                     free_message(*dst);
@@ -3870,7 +3870,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
                     free_identity(session->sync_state.common.from);
                 session->sync_state.common.from = _from;
                 signal_Sync_message(session, *rating, data, size, sync_fpr);
-            }
+        //    }
         }
         free(sync_fpr);
     }
