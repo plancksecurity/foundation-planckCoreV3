@@ -1911,12 +1911,6 @@ PEP_STATUS pgp_get_key_rating(
         if (! sig)
             continue;
 
-        if (pgp_revocation_status_variant(rev) == PGP_REVOCATION_STATUS_REVOKED)
-            continue;
-
-        if (! pgp_signature_key_alive(sig, key))
-            continue;
-
         PEP_comm_type curr = PEP_ct_no_encryption;
 
         int can_enc = pgp_signature_can_encrypt_for_transport(sig)
@@ -2122,12 +2116,6 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
     pgp_revocation_status_t rev;
     while ((key = pgp_tpk_key_iter_next(key_iter, &sig, &rev))) {
         if (! sig)
-            continue;
-
-        if (pgp_revocation_status_variant(rev) == PGP_REVOCATION_STATUS_REVOKED)
-            continue;
-
-        if (!pgp_signature_key_alive_at(sig, key, when))
             continue;
 
         if (pgp_signature_can_encrypt_for_transport(sig)
