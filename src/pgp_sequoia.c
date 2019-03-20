@@ -1597,8 +1597,8 @@ PEP_STATUS pgp_export_keydata(
 {
     PEP_STATUS status = PEP_STATUS_OK;
     pgp_error_t err = NULL;
-    pgp_tpk_t secret_key = NULL;
     pgp_tpk_t tpk = NULL;
+    pgp_writer_t armor_writer = NULL;
 
     assert(session);
     assert(fpr);
@@ -1610,36 +1610,16 @@ PEP_STATUS pgp_export_keydata(
 
     T("(%s, %s)", fpr, secret ? "secret" : "public");
 
-    if (secret) {
-        status = tpk_find_by_fpr_hex(session, fpr, true, &secret_key, NULL);
-        if (status == PEP_KEY_NOT_FOUND)
-            status = PEP_STATUS_OK;
-        ERROR_OUT(NULL, status, "Looking up TSK for %s", fpr);
-    }
-
-    pgp_fingerprint_t pgp_fpr = pgp_fingerprint_from_hex(fpr);
-    status = tpk_find_by_fpr(session, pgp_fpr, false, &tpk, NULL);
-    pgp_fingerprint_free(pgp_fpr);
-    ERROR_OUT(NULL, status, "Looking up TPK for %s", fpr);
-
-    if (secret_key) {
-        tpk = pgp_tpk_merge(&err, tpk, secret_key);
-        // pgp_tpk_merge can return NULL if the primary keys don't
-        // match.  But, we looked up the tpk by the secret key's
-        // fingerprint so this should not be possible.
-        assert(tpk);
-        if (! tpk)
-            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "merging TPKs");
-        secret_key = NULL;
-    }
+    // If the caller asks for a secret key and we only have a
+    // public key, then we return an error.
+    status = tpk_find_by_fpr_hex(session, fpr, true, &tpk, NULL);
+    ERROR_OUT(NULL, status, "Looking up TSK for %s", fpr);
 
     pgp_writer_t memory_writer = pgp_writer_alloc((void **) key_data, size);
     if (! memory_writer)
         ERROR_OUT(NULL, PEP_UNKNOWN_ERROR, "creating memory writer");
-    pgp_writer_t armor_writer = pgp_armor_writer_new(&err,
-                                                     memory_writer,
-                                                     PGP_ARMOR_KIND_PUBLICKEY,
-                                                     NULL, 0);
+    armor_writer = pgp_armor_writer_new(&err, memory_writer,
+                                        PGP_ARMOR_KIND_PUBLICKEY, NULL, 0);
     if (! armor_writer) {
         pgp_writer_free(memory_writer);
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "creating armored writer");
@@ -1656,14 +1636,11 @@ PEP_STATUS pgp_export_keydata(
     }
 
  out:
-    if (tpk)
-        pgp_tpk_free(tpk);
-
     if (armor_writer)
         pgp_writer_free(armor_writer);
 
-    if (secret_key)
-        pgp_tpk_free(secret_key);
+    if (tpk)
+        pgp_tpk_free(tpk);
 
     T("(%s) -> %s", fpr, pep_status_to_string(status));
     return status;
