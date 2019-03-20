@@ -663,7 +663,9 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
 
     // Insert the "subkeys" (the primary key and the subkeys).
     stmt = session->sq_sql.tpk_save_insert_subkeys;
-    key_iter = pgp_tpk_key_iter(tpk);
+    // This inserts all of the keys in the TPK, i.e., revoked and
+    // expired keys, which is what we want.
+    key_iter = pgp_tpk_key_iter_all(tpk);
     pgp_key_t key;
     while ((key = pgp_tpk_key_iter_next(key_iter, NULL, NULL))) {
         pgp_keyid_t keyid = pgp_key_keyid(key);
@@ -868,7 +870,7 @@ get_secret_keys_cb(void *cookie_opaque,
         if (! is_tsk)
             goto eol;
 
-        key_iter = pgp_tpk_key_iter(tpk);
+        key_iter = pgp_tpk_key_iter_all(tpk);
         pgp_key_t key;
         while ((key = pgp_tpk_key_iter_next(key_iter, NULL, NULL))) {
             pgp_keyid_t this_keyid = pgp_key_keyid(key);
@@ -929,7 +931,7 @@ get_secret_keys_cb(void *cookie_opaque,
         for (int j = 0; j < tsks_count; j ++) {
             pgp_tpk_t tsk = tsks[j];
 
-            key_iter = pgp_tpk_key_iter(tsk);
+            key_iter = pgp_tpk_key_iter_all(tsk);
             pgp_key_t key;
             pgp_signature_t selfsig;
             while ((key = pgp_tpk_key_iter_next(key_iter, &selfsig, NULL))) {
@@ -1872,7 +1874,7 @@ PEP_STATUS pgp_get_key_rating(
     }
 
     PEP_comm_type best_enc = PEP_ct_no_encryption, best_sign = PEP_ct_no_encryption;
-    pgp_tpk_key_iter_t key_iter = pgp_tpk_key_iter(tpk);
+    pgp_tpk_key_iter_t key_iter = pgp_tpk_key_iter_valid(tpk);
     pgp_key_t key;
     pgp_signature_t sig;
     pgp_revocation_status_t rev;
@@ -2036,7 +2038,7 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
     // and one encryption subkey that are live?
     int can_certify = 0, can_encrypt = 0, can_sign = 0;
 
-    pgp_tpk_key_iter_t key_iter = pgp_tpk_key_iter(tpk);
+    pgp_tpk_key_iter_t key_iter = pgp_tpk_key_iter_valid(tpk);
     pgp_key_t key;
     pgp_signature_t sig;
     pgp_revocation_status_t rev;
