@@ -888,8 +888,6 @@ get_secret_keys_cb(void *cookie_opaque,
             goto eol;
         }
 
-        fprintf(stderr, "key: %s\n", pgp_key_debug(key));
-
         uint8_t algo;
         uint8_t session_key[1024];
         size_t session_key_len = sizeof(session_key);
