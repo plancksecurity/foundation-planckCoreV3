@@ -2740,20 +2740,17 @@ DYNAMIC_API PEP_STATUS is_pep_user(PEP_SESSION session, pEp_identity *identity, 
     return PEP_STATUS_OK;
 }
 
-DYNAMIC_API PEP_STATUS is_own_address(PEP_SESSION session, pEp_identity *identity, bool* is_own_addr)
+PEP_STATUS is_own_address(PEP_SESSION session, const char* address, bool* is_own_addr)
 {
     assert(session);
     assert(is_own_addr);
-    assert(identity);
-    assert(!EMPTYSTR(identity->user_id));
+    assert(!EMPTYSTR(address));
 
-    if (!session || !is_own_addr || !identity || EMPTYSTR(identity->address))
+    if (!session || !is_own_addr || EMPTYSTR(address))
         return PEP_ILLEGAL_VALUE;
     
     *is_own_addr = false;
-            
-    const char* address = identity->address;
-    
+                
     if (!session || EMPTYSTR(address))
         return PEP_ILLEGAL_VALUE;
         
