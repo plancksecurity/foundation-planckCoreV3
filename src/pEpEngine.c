@@ -79,6 +79,7 @@ static const char *sql_trustword =
     "select id, word from wordlist where lang = lower(?1) "
     "and id = ?2 ;";
 
+// FIXME?: problems if we don't have a key for the user - we get nothing
 static const char *sql_get_identity =  
     "select fpr, username, comm_type, lang,"
     "   identity.flags | pgp_keypair.flags,"
