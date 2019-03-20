@@ -1777,7 +1777,8 @@ static PEP_STATUS list_keys(PEP_SESSION session,
                pattern[strspn(pattern, "0123456789aAbBcCdDeEfF ")] == 0
                // And a fair amount of them.
                && strlen(pattern) >= 16) {
-        // Fingerprint.
+        // Fingerprint.  Note: the pep engine never looks keys up by
+        // keyid, so we don't handle them.
         fpr = pgp_fingerprint_from_hex(pattern);
         status = tpk_find_by_fpr(session, fpr, false, &tpk, NULL);
         ERROR_OUT(NULL, status, "Looking up key");
