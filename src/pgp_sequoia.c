@@ -1249,11 +1249,34 @@ PEP_STATUS pgp_sign_only(
 
     PEP_STATUS status = PEP_STATUS_OK;
     pgp_error_t err = NULL;
-    pgp_tpk_t signer = NULL;
+    pgp_tpk_t signer_tpk = NULL;
+    pgp_tpk_key_iter_t iter = NULL;
+    pgp_key_pair_t signing_keypair = NULL;
+    pgp_signer_t signer = NULL;
     pgp_writer_stack_t ws = NULL;
 
-    status = tpk_find_by_fpr_hex(session, fpr, true, &signer, NULL);
+    status = tpk_find_by_fpr_hex(session, fpr, true, &signer_tpk, NULL);
     ERROR_OUT(NULL, status, "Looking up key '%s'", fpr);
+
+    iter = pgp_tpk_key_iter_valid(signer_tpk);
+    pgp_tpk_key_iter_signing_capable (iter);
+    pgp_tpk_key_iter_unencrypted_secret (iter, true);
+
+    // If there are multiple signing capable subkeys, we just take
+    // the first one, whichever one that happens to be.
+    pgp_key_t key = pgp_tpk_key_iter_next (iter, NULL, NULL);
+    if (! key)
+        ERROR_OUT (err, PEP_UNKNOWN_ERROR,
+                   "%s has no signing capable key", fpr);
+
+    signing_keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
+    if (! signing_keypair)
+        ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
+
+    signer = pgp_key_pair_as_signer (signing_keypair);
+    if (! signer)
+        ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
+
 
     pgp_writer_t writer = pgp_writer_alloc((void **) stext, ssize);
     writer = pgp_armor_writer_new(&err, writer,
@@ -1289,7 +1312,13 @@ PEP_STATUS pgp_sign_only(
     }
 
     if (signer)
-        pgp_tpk_free(signer);
+        pgp_signer_free (signer);
+    if (signing_keypair)
+        pgp_key_pair_free (signing_keypair);
+    if (iter)
+        pgp_tpk_key_iter_free (iter);
+    if (signer_tpk)
+        pgp_tpk_free(signer_tpk);
 
     T("(%s)-> %s", fpr, pep_status_to_string(status));
     return status;
@@ -1303,8 +1332,11 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     pgp_error_t err = NULL;
     int keys_count = 0;
     pgp_tpk_t *keys = NULL;
-    pgp_tpk_t signer = NULL;
+    pgp_tpk_t signer_tpk = NULL;
     pgp_writer_stack_t ws = NULL;
+    pgp_tpk_key_iter_t iter = NULL;
+    pgp_key_pair_t signing_keypair = NULL;
+    pgp_signer_t signer = NULL;
 
     assert(session);
     assert(keylist);
@@ -1332,7 +1364,7 @@ static PEP_STATUS pgp_encrypt_sign_optional(
 
     if (sign) {
         // The first key in the keylist is the signer.
-        status = tpk_find_by_fpr_hex(session, keylist->value, true, &signer, NULL);
+        status = tpk_find_by_fpr_hex(session, keylist->value, true, &signer_tpk, NULL);
         ERROR_OUT(NULL, status, "Looking up key for signing '%s'", keylist->value);
     }
 
@@ -1352,12 +1384,24 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     }
 
     if (sign) {
-        pgp_key_t primary_key = pgp_tpk_primary (signer);
-        pgp_key_pair_t primary_keypair
-            = pgp_key_into_key_pair (NULL, pgp_key_clone (primary_key));
-        pgp_key_free (primary_key);
-        assert (primary_keypair);
-        pgp_signer_t primary_signer = pgp_key_pair_as_signer (primary_keypair);
+        iter = pgp_tpk_key_iter_valid(signer_tpk);
+        pgp_tpk_key_iter_signing_capable (iter);
+        pgp_tpk_key_iter_unencrypted_secret (iter, true);
+
+        // If there are multiple signing capable subkeys, we just take
+        // the first one, whichever one that happens to be.
+        pgp_key_t key = pgp_tpk_key_iter_next (iter, NULL, NULL);
+        if (! key)
+            ERROR_OUT (err, PEP_UNKNOWN_ERROR,
+                       "%s has no signing capable key", keylist->value);
+
+        signing_keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
+        if (! signing_keypair)
+            ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
+
+        signer = pgp_key_pair_as_signer (signing_keypair);
+        if (! signer)
+            ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
 
         ws = pgp_signer_new(&err, ws, &signer, 1);
         if (!ws)
@@ -1390,7 +1434,14 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     }
 
     if (signer)
-        pgp_tpk_free(signer);
+        pgp_signer_free (signer);
+    if (signing_keypair)
+        pgp_key_pair_free (signing_keypair);
+    if (iter)
+        pgp_tpk_key_iter_free (iter);
+    if (signer_tpk)
+        pgp_tpk_free(signer_tpk);
+
     for (int i = 0; i < keys_count; i ++)
         pgp_tpk_free(keys[i]);
     free(keys);
@@ -1939,6 +1990,9 @@ PEP_STATUS pgp_renew_key(
     PEP_STATUS status = PEP_STATUS_OK;
     pgp_error_t err = NULL;
     pgp_tpk_t tpk = NULL;
+    pgp_tpk_key_iter_t iter = NULL;
+    pgp_key_pair_t keypair = NULL;
+    pgp_signer_t signer = NULL;
     time_t t = mktime((struct tm *) ts);
 
     T("(%s)", fpr);
@@ -1953,7 +2007,28 @@ PEP_STATUS pgp_renew_key(
                   "creation time can't be after expiration time");
 
     uint32_t delta = t - creation_time;
-    tpk = pgp_tpk_set_expiry(&err, tpk, delta);
+
+
+    iter = pgp_tpk_key_iter_valid(tpk);
+    pgp_tpk_key_iter_certification_capable (iter);
+    pgp_tpk_key_iter_unencrypted_secret (iter, true);
+
+    // If there are multiple certification capable subkeys, we just
+    // take the first one, whichever one that happens to be.
+    pgp_key_t key = pgp_tpk_key_iter_next (iter, NULL, NULL);
+    if (! key)
+        ERROR_OUT (err, PEP_UNKNOWN_ERROR,
+                   "%s has no usable certification capable key", fpr);
+
+    keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
+    if (! keypair)
+        ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
+
+    signer = pgp_key_pair_as_signer (keypair);
+    if (! signer)
+        ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
+
+    tpk = pgp_tpk_set_expiry(&err, tpk, signer, delta);
     if (! tpk)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "setting expiration");
 
@@ -1962,6 +2037,12 @@ PEP_STATUS pgp_renew_key(
     ERROR_OUT(NULL, status, "Saving %s", fpr);
 
  out:
+    if (signer)
+        pgp_signer_free (signer);
+    if (keypair)
+        pgp_key_pair_free (keypair);
+    if (iter)
+        pgp_tpk_key_iter_free (iter);
     if (tpk)
         pgp_tpk_free(tpk);
 
@@ -1975,24 +2056,37 @@ PEP_STATUS pgp_revoke_key(
     PEP_STATUS status = PEP_STATUS_OK;
     pgp_error_t err = NULL;
     pgp_tpk_t tpk = NULL;
+    pgp_tpk_key_iter_t iter = NULL;
+    pgp_key_pair_t keypair = NULL;
+    pgp_signer_t signer = NULL;
 
     T("(%s)", fpr);
 
     status = tpk_find_by_fpr_hex(session, fpr, true, &tpk, NULL);
     ERROR_OUT(NULL, status, "Looking up %s", fpr);
 
-    pgp_key_t primary_key = pgp_tpk_primary (tpk);
-    pgp_key_pair_t primary_keypair
-        = pgp_key_into_key_pair (NULL, pgp_key_clone (primary_key));
-    pgp_key_free (primary_key);
-    assert (primary_keypair);
-    pgp_signer_t primary_signer = pgp_key_pair_as_signer (primary_keypair);
+    iter = pgp_tpk_key_iter_valid(tpk);
+    pgp_tpk_key_iter_certification_capable (iter);
+    pgp_tpk_key_iter_unencrypted_secret (iter, true);
 
-    tpk = pgp_tpk_revoke_in_place(&err, tpk, primary_signer,
+    // If there are multiple certification capable subkeys, we just
+    // take the first one, whichever one that happens to be.
+    pgp_key_t key = pgp_tpk_key_iter_next (iter, NULL, NULL);
+    if (! key)
+        ERROR_OUT (err, PEP_UNKNOWN_ERROR,
+                   "%s has no usable certification capable key", fpr);
+
+    keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
+    if (! keypair)
+        ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
+
+    signer = pgp_key_pair_as_signer (keypair);
+    if (! signer)
+        ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
+
+    tpk = pgp_tpk_revoke_in_place(&err, tpk, signer,
                                   PGP_REASON_FOR_REVOCATION_UNSPECIFIED,
                                   reason);
-    pgp_signer_free (primary_signer);
-    pgp_key_pair_free (primary_keypair);
     if (! tpk)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "setting expiration");
 
@@ -2004,6 +2098,12 @@ PEP_STATUS pgp_revoke_key(
     ERROR_OUT(NULL, status, "Saving %s", fpr);
 
  out:
+    if (signer)
+        pgp_signer_free (signer);
+    if (keypair)
+        pgp_key_pair_free (keypair);
+    if (iter)
+        pgp_tpk_key_iter_free (iter);
     if (tpk)
         pgp_tpk_free(tpk);
 
