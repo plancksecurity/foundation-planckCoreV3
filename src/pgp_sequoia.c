@@ -2192,6 +2192,7 @@ PEP_STATUS pgp_key_created(PEP_SESSION session, const char *fpr, time_t *created
 
 PEP_STATUS pgp_binary(const char **path)
 {
+    *path = NULL;
     return PEP_STATUS_OK;
 }
 
