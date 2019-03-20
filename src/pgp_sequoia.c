@@ -1246,6 +1246,8 @@ PEP_STATUS pgp_sign_only(
     assert(psize);
     assert(stext);
     assert(ssize);
+    *stext = NULL;
+    *ssize = 0;
 
     PEP_STATUS status = PEP_STATUS_OK;
     pgp_error_t err = NULL;
