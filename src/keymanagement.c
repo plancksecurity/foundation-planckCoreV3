@@ -576,9 +576,44 @@ DYNAMIC_API PEP_STATUS update_identity(
     char* default_own_id = NULL;
     status = get_default_own_userid(session, &default_own_id);    
 
-    // Is this me, temporary or not? If so, BAIL.
-    if (identity->me || 
-       (default_own_id && identity->user_id && (strcmp(default_own_id, identity->user_id) == 0))) 
+    bool is_own_user = identity->me;
+
+    // Is this me, temporary or not? If so, BAIL.    
+    if (!is_own_user) {
+        if (default_own_id) {
+            if (!EMPTYSTR(identity->user_id)) {
+                if (strcmp(default_own_id, identity->user_id) == 0) {
+                    is_own_user = true;
+                }
+                else {
+                    char* alias = NULL;
+                    if (get_userid_alias_default(session, identity->user_id, &alias) == PEP_STATUS_OK) {
+                        if (alias && strcmp(default_own_id, alias) == 0)
+                            is_own_user = true;
+                        free(alias);    
+                    }
+                }
+            }
+            else {
+                // Check if own address. For now, this is a special case;
+                // we try to require apps to send in user_ids, but must prevent
+                // writes to an own identity from within THIS function
+                // NOTE: These semantics MAY CHANGE.
+                bool _own_addr = false;
+                is_own_address(session, identity->address, &_own_addr);
+                
+                // N.B. KB: I would prefer consistent semantics here - that is to say,
+                // we also set is_own_user here and force PEP_ILLEGAL_VALUE                
+                if (_own_addr) {
+                    free(identity->user_id);
+                    identity->user_id = strdup(default_own_id);
+                    return _myself(session, identity, false, false, true);
+                }    
+            }
+        }
+        // Otherwise, we don't even HAVE an own user yet, so we're ok.
+    }    
+    if (is_own_user)
     {
         free(default_own_id);
         return PEP_ILLEGAL_VALUE;

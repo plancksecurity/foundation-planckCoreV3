@@ -1455,6 +1455,10 @@ PEP_STATUS get_identities_by_userid(
         identity_list **identities
     );    
         
+PEP_STATUS is_own_address(PEP_SESSION session, 
+                          const char* address, 
+                          bool* is_own_addr);
+
 PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
                               const char* new_uid);
                               
