@@ -1495,7 +1495,7 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
         ERROR_OUT(err, PEP_CANNOT_CREATE_KEY, "Generating a key pair");
 
     // XXX: We should return this.
-    // pgp_signature_free(rev);
+    pgp_signature_free(rev);
 
     tpk = pgp_tsk_into_tpk(tsk);
 
