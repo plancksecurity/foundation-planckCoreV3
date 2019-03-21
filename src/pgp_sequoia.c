@@ -1378,10 +1378,8 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     ws = pgp_encryptor_new (&err, ws,
                             NULL, 0, keys, keys_count,
                             PGP_ENCRYPTION_MODE_FOR_TRANSPORT, 0);
-    if (!ws) {
-        pgp_writer_free(writer);
+    if (!ws)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Setting up encryptor");
-    }
 
     if (sign) {
         iter = pgp_tpk_key_iter_valid(signer_tpk);
