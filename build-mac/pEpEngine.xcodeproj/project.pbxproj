@@ -812,7 +812,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "mkdir -p \"$BUILT_PRODUCTS_DIR/include\"\n\ncd \"$SRCROOT/..\"\n\nbash -l -c \"gmake -C sync\"\nbash -l -c \"gmake -C asn.1\"\n";
+			shellScript = "export LANG=en_US.UTF8\nmkdir -p \"$BUILT_PRODUCTS_DIR/include\"\n\ncd \"$SRCROOT/..\"\n\nbash -l -c \"gmake -C sync\"\nbash -l -c \"gmake -C asn.1\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
