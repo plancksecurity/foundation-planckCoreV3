@@ -608,6 +608,14 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
     pgp_tpk_key_iter_t key_iter = NULL;
     pgp_user_id_binding_iter_t user_id_iter = NULL;
 
+    sqlite3_stmt *stmt = session->sq_sql.begin_transaction;
+    int sqlite_result = sqlite3_step(stmt);
+    sqlite3_reset(stmt);
+    if (sqlite_result != SQLITE_DONE)
+        ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
+                  "begin transaction failed: %s",
+                  sqlite3_errmsg(session->key_db));
+
     pgp_fpr = pgp_tpk_fingerprint(tpk);
     fpr = pgp_fingerprint_to_hex(pgp_fpr);
     T("(%s, private_idents: %s)", fpr, private_idents ? "yes" : "no");
@@ -642,14 +650,6 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
 
 
     // Insert the TSK into the DB.
-    sqlite3_stmt *stmt = session->sq_sql.begin_transaction;
-    int sqlite_result = sqlite3_step(stmt);
-    sqlite3_reset(stmt);
-    if (sqlite_result != SQLITE_DONE)
-        ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
-                  "begin transaction failed: %s",
-                  sqlite3_errmsg(session->key_db));
-
     stmt = session->sq_sql.tpk_save_insert_primary;
     sqlite3_bind_text(stmt, 1, fpr, -1, SQLITE_STATIC);
     sqlite3_bind_int(stmt, 2, is_tsk);
