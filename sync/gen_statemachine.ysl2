@@ -898,9 +898,6 @@ tstylesheet {
             if (state == None)
                 state = «@name»_state_Init;
 
-            if (event == None)
-                event = Init;
-
             switch (state) {
                 `` apply "state", 2, mode=fsm
                 default:
@@ -924,6 +921,10 @@ tstylesheet {
             «../@name»_SERVICE_LOG("in state", "«@name»");
 
             switch (event) {
+                case None:
+                    «../@name»_SERVICE_LOG("received None event", "ignoring");
+                    break;
+     
         ||
         if "not(event[@name='Init'])"
         ||
