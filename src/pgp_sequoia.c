@@ -1286,7 +1286,7 @@ PEP_STATUS pgp_sign_only(
 
     ws = pgp_writer_stack_message(writer);
 
-    ws = pgp_signer_new_detached(&err, ws, &signer, 1);
+    ws = pgp_signer_new_detached(&err, ws, &signer, 1, 0);
     if (!ws)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Setting up signer");
 
@@ -1376,8 +1376,8 @@ static PEP_STATUS pgp_encrypt_sign_optional(
 
     ws = pgp_writer_stack_message(writer);
     ws = pgp_encryptor_new (&err, ws,
-                           NULL, 0, keys, keys_count,
-                           PGP_ENCRYPTION_MODE_FOR_TRANSPORT);
+                            NULL, 0, keys, keys_count,
+                            PGP_ENCRYPTION_MODE_FOR_TRANSPORT, 0);
     if (!ws) {
         pgp_writer_free(writer);
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Setting up encryptor");
@@ -1403,7 +1403,7 @@ static PEP_STATUS pgp_encrypt_sign_optional(
         if (! signer)
             ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
 
-        ws = pgp_signer_new(&err, ws, &signer, 1);
+        ws = pgp_signer_new(&err, ws, &signer, 1, 0);
         if (!ws)
             ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Setting up signer");
     }
