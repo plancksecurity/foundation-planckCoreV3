@@ -1778,7 +1778,12 @@ DYNAMIC_API PEP_STATUS log_event(
         const char *comment
     )
 {
-//    PEP_STATUS status = PEP_STATUS_OK;
+#ifndef NDEBUG
+    fprintf(stdout, "\n*** %s %s %s %s\n", title, entity, description, comment);
+    session->service_log = true;
+#endif
+
+    // PEP_STATUS status = PEP_STATUS_OK;
     // int result;
     // 
     // assert(session);
