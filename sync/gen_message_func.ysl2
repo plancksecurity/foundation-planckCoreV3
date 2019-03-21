@@ -41,6 +41,7 @@ extern "C" {
 struct «@name»_state_s {
     struct common_state_s {
         pEp_identity *from;
+        char *signature_fpr;
     } common;
 
     `` apply "fsm", mode=state

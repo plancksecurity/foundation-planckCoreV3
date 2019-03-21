@@ -3856,21 +3856,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         const char *data;
         char *sync_fpr = NULL;
         PEP_STATUS tmpstatus = base_extract_message(session, msg, &size, &data, &sync_fpr);
-        if (!tmpstatus && size && data) {
-            pEp_identity *_from = identity_dup(msg->from);
-            if (!_from) {
-                free_message(*dst);
-                *dst = NULL;
-                free_stringlist(*keylist);
-                *keylist = NULL;
-                free(sync_fpr);
-                return PEP_OUT_OF_MEMORY;
-            }
-            if (session->sync_state.common.from)
-                free_identity(session->sync_state.common.from);
-            session->sync_state.common.from = _from;
-            signal_Sync_message(session, *rating, data, size, sync_fpr);
-        }
+        if (!tmpstatus && size && data)
+            signal_Sync_message(session, *rating, data, size, msg->from, sync_fpr);
         free(sync_fpr);
     }
 
