@@ -963,6 +963,7 @@ get_secret_keys_cb(void *cookie_opaque,
 
                 *secret = pgp_secret_cached(algo, session_key, session_key_len);
                 cookie->decrypted = 1;
+                break;
             }
 
             pgp_tpk_key_iter_free(key_iter);
