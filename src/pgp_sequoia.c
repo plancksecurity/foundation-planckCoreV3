@@ -608,6 +608,14 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
     pgp_tpk_key_iter_t key_iter = NULL;
     pgp_user_id_binding_iter_t user_id_iter = NULL;
 
+    sqlite3_stmt *stmt = session->sq_sql.begin_transaction;
+    int sqlite_result = sqlite3_step(stmt);
+    sqlite3_reset(stmt);
+    if (sqlite_result != SQLITE_DONE)
+        ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
+                  "begin transaction failed: %s",
+                  sqlite3_errmsg(session->key_db));
+
     pgp_fpr = pgp_tpk_fingerprint(tpk);
     fpr = pgp_fingerprint_to_hex(pgp_fpr);
     T("(%s, private_idents: %s)", fpr, private_idents ? "yes" : "no");
@@ -642,14 +650,6 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
 
 
     // Insert the TSK into the DB.
-    sqlite3_stmt *stmt = session->sq_sql.begin_transaction;
-    int sqlite_result = sqlite3_step(stmt);
-    sqlite3_reset(stmt);
-    if (sqlite_result != SQLITE_DONE)
-        ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
-                  "begin transaction failed: %s",
-                  sqlite3_errmsg(session->key_db));
-
     stmt = session->sq_sql.tpk_save_insert_primary;
     sqlite3_bind_text(stmt, 1, fpr, -1, SQLITE_STATIC);
     sqlite3_bind_int(stmt, 2, is_tsk);
@@ -963,6 +963,7 @@ get_secret_keys_cb(void *cookie_opaque,
 
                 *secret = pgp_secret_cached(algo, session_key, session_key_len);
                 cookie->decrypted = 1;
+                break;
             }
 
             pgp_tpk_key_iter_free(key_iter);
@@ -1286,7 +1287,7 @@ PEP_STATUS pgp_sign_only(
 
     ws = pgp_writer_stack_message(writer);
 
-    ws = pgp_signer_new_detached(&err, ws, &signer, 1);
+    ws = pgp_signer_new_detached(&err, ws, &signer, 1, 0);
     if (!ws)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Setting up signer");
 
@@ -1376,12 +1377,10 @@ static PEP_STATUS pgp_encrypt_sign_optional(
 
     ws = pgp_writer_stack_message(writer);
     ws = pgp_encryptor_new (&err, ws,
-                           NULL, 0, keys, keys_count,
-                           PGP_ENCRYPTION_MODE_FOR_TRANSPORT);
-    if (!ws) {
-        pgp_writer_free(writer);
+                            NULL, 0, keys, keys_count,
+                            PGP_ENCRYPTION_MODE_FOR_TRANSPORT, 0);
+    if (!ws)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Setting up encryptor");
-    }
 
     if (sign) {
         iter = pgp_tpk_key_iter_valid(signer_tpk);
@@ -1403,7 +1402,7 @@ static PEP_STATUS pgp_encrypt_sign_optional(
         if (! signer)
             ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
 
-        ws = pgp_signer_new(&err, ws, &signer, 1);
+        ws = pgp_signer_new(&err, ws, &signer, 1, 0);
         if (!ws)
             ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Setting up signer");
     }
