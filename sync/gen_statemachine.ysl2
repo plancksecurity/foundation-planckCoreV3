@@ -929,7 +929,7 @@ tstylesheet {
                 default:
                     // ignore events not handled here
                     «../@name»_SERVICE_LOG("ignoring event", KeySync_event_name(event));
-                    break;
+                    return invalid_event;
             }
             break;
 
