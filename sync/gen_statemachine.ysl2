@@ -876,13 +876,6 @@ tstylesheet {
 
         #define «@name»_ERR_LOG_INT(t, n) _«@name»_ERR_LOG_int(session, (t), (n), false)
         #define «@name»_ERR_LOG_HEX(t, n) _«@name»_ERR_LOG_int(session, (t), (n), true)
-
-        #ifndef SERVICE_LOG
-        // SERVICE LOG is meant to check session->service_log in runtime config;
-        // for older engines log more than needed
-        #define SERVICE_LOG(session, t, n, d) log_event((session), (t), (n), (d), "service")
-        #endif 
-
         #define «@name»_SERVICE_LOG(t, d) SERVICE_LOG(session, (t), "«@name»", (d))
 
         «@name»_state fsm_«@name»(

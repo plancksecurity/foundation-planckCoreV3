@@ -1525,7 +1525,9 @@ PEP_STATUS sign_only(PEP_SESSION session,
                      const char *fpr, 
                      char **sign, 
                      size_t *sign_size);
-                     
+
+const char *get_device_name(PEP_SESSION session);
+
 #ifdef __cplusplus
 }
 #endif

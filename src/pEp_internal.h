@@ -241,13 +241,13 @@ struct _pEpSession {
     // callbacks
     examine_identity_t examine_identity;
     void *examine_management;
-    void *sync_management;
-    void *sync_obj;
     notifyHandshake_t notifyHandshake;
     inject_sync_event_t inject_sync_event;
     retrieve_next_sync_event_t retrieve_next_sync_event;
 
     // pEp Sync
+    void *sync_management;
+    void *sync_obj;
     struct Sync_state_s sync_state;
     struct own_Sync_state_s own_sync_state;
 
