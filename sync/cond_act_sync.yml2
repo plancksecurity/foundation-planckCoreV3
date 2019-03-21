@@ -135,6 +135,7 @@ function "show_handshake" {
             free_identity(me);
             return PEP_OUT_OF_MEMORY;
         }
+
         free(partner->fpr);
         partner->fpr = strdup(session->sync_state.common.signature_fpr);
         if (!partner->fpr) {

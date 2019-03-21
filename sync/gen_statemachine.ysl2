@@ -895,10 +895,13 @@ tstylesheet {
             if (!session)
                 return invalid_state;
 
+            if (state == None)
+                state = «@name»_state_Init;
+
+            if (event == None)
+                event = Init;
+
             switch (state) {
-                case None:
-                    return «@name»_state_Init;
-                
                 `` apply "state", 2, mode=fsm
                 default:
                     «@name»_ERR_LOG_INT("invalid state", state);
@@ -921,10 +924,6 @@ tstylesheet {
             «../@name»_SERVICE_LOG("in state", "«@name»");
 
             switch (event) {
-                case None:
-                    «../@name»_SERVICE_LOG("received None event", "ignoring");
-                    break;
-     
         ||
         if "not(event[@name='Init'])"
         ||
