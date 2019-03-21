@@ -198,7 +198,8 @@ tstylesheet {
                     PEP_rating rating,
                     const char *data,
                     size_t size,
-                    const char *fpr
+                    const pEp_identity *from,
+                    const char *signature_fpr
                 );
 
             #ifdef __cplusplus
@@ -311,7 +312,8 @@ tstylesheet {
                     PEP_rating rating,
                     const char *data,
                     size_t size,
-                    const char *fpr
+                    const pEp_identity *from,
+                    const char *signature_fpr
                 )
             {
                 assert(session && data && size);
@@ -324,12 +326,19 @@ tstylesheet {
                 PEP_STATUS status = PEP_STATUS_OK;
                 «@name»_event_t *ev = NULL;
 
-                if (fpr) {
-                    if (session->«yml:lcase(@name)»_state.common.from->fpr)
-                        free(session->«yml:lcase(@name)»_state.common.from->fpr);
-                    session->«yml:lcase(@name)»_state.common.from->fpr = strdup(fpr);
-                    assert(session->«yml:lcase(@name)»_state.common.from->fpr);
-                    if (!session->«yml:lcase(@name)»_state.common.from->fpr) {
+                if (from) {
+                    free_identity(session->«yml:lcase(@name)»_state.common.from);
+                    session->«yml:lcase(@name)»_state.common.from = identity_dup(from);
+                    if (!session->«yml:lcase(@name)»_state.common.from) {
+                        status = PEP_OUT_OF_MEMORY;
+                        goto the_end;
+                    }
+                }
+
+                if (signature_fpr) {
+                    free(session->«yml:lcase(@name)»_state.common.signature_fpr);
+                    session->«yml:lcase(@name)»_state.common.signature_fpr = strdup(signature_fpr);
+                    if (!session->«yml:lcase(@name)»_state.common.signature_fpr) {
                         status = PEP_OUT_OF_MEMORY;
                         goto the_end;
                     }
@@ -631,7 +640,7 @@ tstylesheet {
             for "message[@security='unencrypted']" {
             ||
                     case «../@name»__payload_PR_«yml:mixedCase(@name)»:
-                        if (!fpr) {
+                        if (!signature_fpr) {
                             status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
                             goto the_end;
                         }
@@ -886,10 +895,10 @@ tstylesheet {
             if (!session)
                 return invalid_state;
 
+            if (state == None)
+                state = «@name»_state_Init;
+
             switch (state) {
-                case None:
-                    return «@name»_state_Init;
-                
                 `` apply "state", 2, mode=fsm
                 default:
                     «@name»_ERR_LOG_INT("invalid state", state);
@@ -929,7 +938,7 @@ tstylesheet {
                 default:
                     // ignore events not handled here
                     «../@name»_SERVICE_LOG("ignoring event", KeySync_event_name(event));
-                    break;
+                    return invalid_event;
             }
             break;
 
