@@ -68,8 +68,7 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
             return PEP_ILLEGAL_VALUE;
     }
 
-    status = send_Sync_message(session, Sync_PR_keysync, event);
-
+    status = signal_Sync_event(session, Sync_PR_keysync, event);
     return status;
 }
 

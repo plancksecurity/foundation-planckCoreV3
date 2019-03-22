@@ -768,11 +768,9 @@ tstylesheet {
             const "name", "@name";
             |> «$name» = «/protocol/fsm/message[@name=$name]/@id»,
         }
-        for "func:distinctName(state/event[not(not(../../external/@name=@name))])" {
-            const "name", "@name";
-            |> «$name» = «/protocol/fsm/external[@name=$name]/@id»,
-        }
         |> «@name»_event_Extra = Extra,
+        for "/protocol/fsm/external"
+            |> «@name» = «@id»,
         for "func:distinctName(state/event[not(../../message/@name=@name or ../../external/@name=@name)])" {
             if "@name!='Init'"
                 |> «@name»`if "position()!=last()" > , `

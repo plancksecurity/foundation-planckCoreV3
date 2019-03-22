@@ -299,9 +299,9 @@ protocol Sync 1 {
                 do saveGroupKeys;
         }
  
-        external Accept 30;
-        external Reject 31;
-        external Cancel 32;
+        external Accept 129;
+        external Reject 130;
+        external Cancel 131;
 
         // beacons are always broadcasted
 
