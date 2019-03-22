@@ -367,14 +367,6 @@ DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable);
 DYNAMIC_API void config_use_only_own_private_keys(PEP_SESSION session, bool enable);
 
 
-// config_keep_sync_msg() - do not remove sync messages (for debugging purposes)
-//
-//      session (in)    session handle
-//      enable (in)     flag if enabled or disabled
-
-DYNAMIC_API void config_keep_sync_msg(PEP_SESSION session, bool enable);
-
-
 // config_service_log() - log more for service purposes
 //
 //      session (in)    session handle

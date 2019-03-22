@@ -1758,12 +1758,6 @@ DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable)
     session->unencrypted_subject = enable;
 }
 
-DYNAMIC_API void config_keep_sync_msg(PEP_SESSION session, bool enable)
-{
-    assert(session);
-    session->keep_sync_msg = enable;
-}
-
 DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable)
 {
     assert(session);
