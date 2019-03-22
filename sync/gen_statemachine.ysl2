@@ -769,7 +769,7 @@ tstylesheet {
             |> «$name» = «/protocol/fsm/message[@name=$name]/@id»,
         }
         |> «@name»_event_Extra = Extra,
-        for "/protocol/fsm/external" {
+        for "/protocol/fsm[@name=@name]/external" {
             if "@id < 128"
                 error > external «@name» must have ID >= 128 but it's «@id»
             |> «@name» = «@id»,
