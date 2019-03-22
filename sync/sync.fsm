@@ -317,7 +317,7 @@ protocol Sync 1 {
             field bool is_group;
         }
 
-        message HandshakeAnswer 4 {
+        message HandshakeAnswer 4, security=untrusted {
             auto Version version;
             field TID transaction;
         }
