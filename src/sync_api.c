@@ -39,7 +39,6 @@ DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
 
 DYNAMIC_API PEP_STATUS deliverHandshakeResult(
         PEP_SESSION session,
-        pEp_identity *partner,
         sync_handshake_result result
     )
 {
@@ -50,7 +49,6 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
     PEP_STATUS status = PEP_STATUS_OK;
 
     int event;
-    bool need_partner = false;
 
     switch (result) {
         case SYNC_HANDSHAKE_CANCEL:
@@ -70,12 +68,6 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
             return PEP_ILLEGAL_VALUE;
     }
 
-    pEp_identity *_partner = NULL;
-    if(need_partner){
-        _partner = identity_dup(partner);
-        if (_partner == NULL)
-            return PEP_OUT_OF_MEMORY;
-    }
     status = send_Sync_message(session, Sync_PR_keysync, event);
 
     return status;

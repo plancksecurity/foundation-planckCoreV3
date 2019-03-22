@@ -60,7 +60,7 @@ typedef enum _sync_handshake_result {
     SYNC_HANDSHAKE_REJECTED = 1
 } sync_handshake_result;
 
-// deliverHandshakeResult() - give the result of the handshake dialog
+// deliverHandshakeResult() - provide the result of the handshake dialog
 //
 //  parameters:
 //      session (in)        session handle
@@ -68,7 +68,6 @@ typedef enum _sync_handshake_result {
 
 DYNAMIC_API PEP_STATUS deliverHandshakeResult(
         PEP_SESSION session,
-        pEp_identity *partner,
         sync_handshake_result result
     );
 
