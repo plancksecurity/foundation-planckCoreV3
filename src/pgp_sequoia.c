@@ -1078,6 +1078,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     struct decrypt_cookie cookie = { session, 0, NULL, NULL, 0, 0, 0, };
     pgp_reader_t reader = NULL;
     pgp_writer_t writer = NULL;
+    pgp_reader_t decryptor = NULL;
     *ptext = NULL;
     *psize = 0;
 
@@ -1102,22 +1103,25 @@ PEP_STATUS pgp_decrypt_and_verify(
         ERROR_OUT(NULL, PEP_UNKNOWN_ERROR, "Creating writer");
 
     pgp_error_t err = NULL;
-    pgp_status_t pgp_status
-        = pgp_decrypt(&err, reader, writer,
-                      get_public_keys_cb, get_secret_keys_cb,
-                      check_signatures_cb, &cookie);
-    if (pgp_status)
-        ERROR_OUT(err, PEP_DECRYPT_NO_KEY, "pgp_decrypt");
+    decryptor = pgp_decryptor_new(&err, reader,
+                                  get_public_keys_cb, get_secret_keys_cb,
+                                  check_signatures_cb, &cookie);
+    if (! decryptor)
+        ERROR_OUT(err, PEP_DECRYPT_NO_KEY, "pgp_decryptor_new");
+
+    // Copy 128 MB at a time.
+    ssize_t nread;
+    while ((nread = pgp_reader_copy (&err, decryptor, writer,
+                                     128 * 1024 * 1024) > 0))
+        ;
+    if (nread < 0)
+        ERROR_OUT(err, PGP_STATUS_UNKNOWN_ERROR, "pgp_reader_read");
+
+    // Add a terminating NUL for naive users
+    pgp_writer_write(&err, writer, (const uint8_t *) &""[0], 1);
 
     if (! cookie.decrypted)
         ERROR_OUT(err, PEP_DECRYPT_NO_KEY, "Decryption failed");
-
-    // Add a terminating NUL for naive users
-    void *t = realloc(*ptext, *psize + 1);
-    if (! t)
-        ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
-    *ptext = t;
-    (*ptext)[*psize] = 0;
 
     if (! cookie.signer_keylist) {
         cookie.signer_keylist = new_stringlist("");
@@ -1152,6 +1156,8 @@ PEP_STATUS pgp_decrypt_and_verify(
 
     if (reader)
         pgp_reader_free(reader);
+    if (decryptor)
+        pgp_reader_free(decryptor);
     if (writer)
         pgp_writer_free(writer);
 
@@ -1168,6 +1174,7 @@ PEP_STATUS pgp_verify_text(
     struct decrypt_cookie cookie = { session, 0, NULL, NULL, 0, 0, 0, };
     pgp_reader_t reader = NULL;
     pgp_reader_t dsig_reader = NULL;
+    pgp_reader_t verifier = NULL;
 
     if (size == 0 || sig_size == 0)
         return PEP_DECRYPT_WRONG_FORMAT;
@@ -1191,9 +1198,20 @@ PEP_STATUS pgp_verify_text(
             ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "Creating signature reader");
     }
 
-    if (pgp_verify(&err, reader, dsig_reader, /* output */ NULL,
-                  get_public_keys_cb, check_signatures_cb, &cookie))
-        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "pgp_verify");
+    if (dsig_reader)
+        verifier = pgp_detached_verifier_new(&err, dsig_reader, reader,
+                                             get_public_keys_cb,
+                                             check_signatures_cb,
+                                             &cookie);
+    else
+        verifier = pgp_verifier_new(&err, reader,
+                                    get_public_keys_cb,
+                                    check_signatures_cb,
+                                    &cookie);
+    if (! verifier)
+        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Creating verifier");
+    if (pgp_reader_discard(&err, verifier) < 0)
+        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "verifier");
 
     if (! cookie.signer_keylist) {
         cookie.signer_keylist = new_stringlist("");
@@ -1225,6 +1243,8 @@ PEP_STATUS pgp_verify_text(
         free_stringlist(cookie.signer_keylist);
     }
 
+    if (verifier)
+        pgp_reader_free(verifier);
     if (reader)
         pgp_reader_free(reader);
     if (dsig_reader)
