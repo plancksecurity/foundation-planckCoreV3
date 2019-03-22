@@ -136,12 +136,15 @@ function "show_handshake" {
             return PEP_OUT_OF_MEMORY;
         }
 
-        free(partner->fpr);
-        partner->fpr = strdup(session->sync_state.common.signature_fpr);
-        if (!partner->fpr) {
-            free_identity(me);
-            free_identity(partner);
-            return PEP_OUT_OF_MEMORY;
+        assert(session->sync_state.common.signature_fpr);
+        if (session->sync_state.common.signature_fpr) {
+            free(partner->fpr);
+            partner->fpr = strdup(session->sync_state.common.signature_fpr);
+            if (!partner->fpr) {
+                free_identity(me);
+                free_identity(partner);
+                return PEP_OUT_OF_MEMORY;
+            }
         }
 
         status = session->notifyHandshake(me, partner, «$type»);

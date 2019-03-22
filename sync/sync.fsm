@@ -318,6 +318,7 @@ protocol Sync 1 {
         }
 
         message HandshakeAnswer 4 {
+            auto Version version;
             field TID transaction;
         }
 

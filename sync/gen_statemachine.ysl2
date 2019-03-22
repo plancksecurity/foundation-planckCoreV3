@@ -922,7 +922,7 @@ tstylesheet {
         if "not(event[@name='Init'])"
         ||
                 case Init:
-                    // nothing to do
+                    «../@name»_SERVICE_LOG("received Init but nothing to do", "Init");
                     break;
 
         ||
