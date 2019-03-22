@@ -769,8 +769,11 @@ tstylesheet {
             |> «$name» = «/protocol/fsm/message[@name=$name]/@id»,
         }
         |> «@name»_event_Extra = Extra,
-        for "/protocol/fsm/external"
+        for "/protocol/fsm/external" {
+            if "@id < 128"
+                error > external «@name» must have ID >= 128 but it's «@id»
             |> «@name» = «@id»,
+        }
         for "func:distinctName(state/event[not(../../message/@name=@name or ../../external/@name=@name)])" {
             if "@name!='Init'"
                 |> «@name»`if "position()!=last()" > , `
