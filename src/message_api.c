@@ -3851,7 +3851,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     message *msg = *dst ? *dst : src;
 
-    if (session->inject_sync_event && msg && msg->from) {
+    if (session->inject_sync_event && msg && msg->from &&
+            !(*flags & PEP_decrypt_flag_dont_trigger_sync)) {
         size_t size;
         const char *data;
         char *sync_fpr = NULL;

@@ -270,7 +270,8 @@ typedef enum _PEP_decrypt_flags {
     PEP_decrypt_flag_ignore = 0x4,
     PEP_decrypt_flag_src_modified = 0x8,
     // input flags    
-    PEP_decrypt_flag_untrusted_server = 0x100
+    PEP_decrypt_flag_untrusted_server = 0x100,
+    PEP_decrypt_flag_dont_trigger_sync = 0x200,
 } PEP_decrypt_flags; 
 
 typedef unsigned int PEP_decrypt_flags_t;
