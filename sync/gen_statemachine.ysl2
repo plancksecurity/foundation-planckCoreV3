@@ -764,7 +764,7 @@ tstylesheet {
             «@name»_event_None = None,
             «@name»_event_Init = Init,
         ||
-        for "func:distinctName(state/event[not(not(../../message/@name=@name))])" {
+        for "message" {
             const "name", "@name";
             |> «$name» = «/protocol/fsm/message[@name=$name]/@id»,
         }
