@@ -176,6 +176,13 @@ action prepareOwnKeys
     if (session->sync_state.common.own_keys)
         free_stringlist(session->sync_state.common.own_keys);
     session->sync_state.common.own_keys = own_keys;
+
+    identity_list *il;
+    status = _own_identities_retrieve(session, &il, PEP_idf_not_for_sync);
+    if (status)
+        return status;
+
+    IdentityList_from_identity_list(il, &session->sync_state.keysync.ownIdentities);
 ||
 
 action saveGroupKeys
