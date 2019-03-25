@@ -10,7 +10,6 @@
 #include <limits.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <error.h>
 
 #include <sqlite3.h>
 
@@ -1582,7 +1581,8 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
     switch (tag) {
     case PGP_TAG_SIGNATURE:
         // XXX: Implement me.
-        assert(!"Have possible revocation certificate!");
+        // assert(!"Have possible revocation certificate!");
+		ERROR_OUT(NULL, PEP_NO_KEY_IMPORTED, "Implement me: Have possible revocation certificate!");
         break;
 
     case PGP_TAG_PUBLIC_KEY:
