@@ -40,11 +40,12 @@ condition challengeAccepted
 condition keyElectionWon
 ||
     pEp_identity *from = session->sync_state.common.from;
+    char *signature_fpr = session->sync_state.common.signature_fpr;
 
-    assert(from && from->fpr && from->fpr[0] && from->address &&
-            from->address[0] && from->user_id && from->user_id[0]);
-    if (!(from && from->fpr && from->fpr[0] && from->address &&
-            from->address[0] && from->user_id && from->user_id[0]))
+    assert(from && from->address && from->address[0] && from->user_id &&
+            from->user_id[0]);
+    if (!(from && from->address && from->address[0] && from->user_id &&
+            from->user_id[0]))
         return PEP_ILLEGAL_VALUE;
 
     pEp_identity *me = NULL;
@@ -59,8 +60,8 @@ condition keyElectionWon
         return PEP_ILLEGAL_VALUE;
     }
 
-    size_t len = MIN(strlen(from->fpr), strlen(me->fpr));
-    *result = strncasecmp(from->fpr, me->fpr, len) > 0;
+    size_t len = MIN(strlen(signature_fpr), strlen(me->fpr));
+    *result = strncasecmp(signature_fpr, me->fpr, len) > 0;
     free_identity(me);
 ||
 
