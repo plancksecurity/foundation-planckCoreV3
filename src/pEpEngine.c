@@ -1585,6 +1585,7 @@ DYNAMIC_API void release(PEP_SESSION session)
         out_last = true;
 
     if (session) {
+        free_Sync_state(session);
 
         if (session->db) {
             if (session->log)
@@ -1756,12 +1757,6 @@ DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable)
 {
     assert(session);
     session->unencrypted_subject = enable;
-}
-
-DYNAMIC_API void config_keep_sync_msg(PEP_SESSION session, bool enable)
-{
-    assert(session);
-    session->keep_sync_msg = enable;
 }
 
 DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable)

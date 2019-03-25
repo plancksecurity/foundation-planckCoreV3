@@ -1,7 +1,7 @@
 // This file is under BSD License 2.0
 
 // Sync protocol for p≡p
-// Copyright (c) 2016 - 2018, p≡p foundation
+// Copyright (c) 2016 - 2019, p≡p foundation
 
 // Written by Volker Birk
 
@@ -128,8 +128,10 @@ protocol Sync 1 {
         }
 
         state NewGroup {
-            on Init
+            on Init {
+                do prepareOwnKeys;
                 send GroupKeysAndClose; // we're not grouped yet, this is our own keys
+            }
 
             on GroupKeysAndClose {
                 do saveGroupKeys;
@@ -299,9 +301,9 @@ protocol Sync 1 {
                 do saveGroupKeys;
         }
  
-        external Accept 30;
-        external Reject 31;
-        external Cancel 32;
+        external Accept 129;
+        external Reject 130;
+        external Cancel 131;
 
         // beacons are always broadcasted
 
@@ -317,7 +319,8 @@ protocol Sync 1 {
             field bool is_group;
         }
 
-        message HandshakeAnswer 4 {
+        message HandshakeAnswer 4, security=untrusted {
+            auto Version version;
             field TID transaction;
         }
 
@@ -333,13 +336,13 @@ protocol Sync 1 {
             field TID transaction;
         }
 
-        message GroupKeysAndClose 8 {
+        message GroupKeysAndClose 8, security=attach_own_keys {
             field TID transaction;
-            field IdentityList identities;
+            field IdentityList ownIdentities;
         }
 
-        message GroupKeys 9 {
-            field IdentityList identities;
+        message GroupKeys 9, security=attach_own_keys {
+            field IdentityList ownIdentities;
         }
     }
 }

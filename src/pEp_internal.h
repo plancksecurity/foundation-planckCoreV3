@@ -260,7 +260,6 @@ struct _pEpSession {
 
     bool passive_mode;
     bool unencrypted_subject;
-    bool keep_sync_msg;
     bool service_log;
     
 #ifdef DEBUG_ERRORSTACK

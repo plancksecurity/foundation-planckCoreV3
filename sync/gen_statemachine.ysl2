@@ -3,7 +3,7 @@
 
 // generate state machine code
 
-// Copyleft (c) 2016 - 2018, p≡p foundation
+// Copyleft (c) 2016 - 2019, p≡p foundation
 
 // Written by Volker Birk
 
@@ -487,6 +487,7 @@ tstylesheet {
                                     _data,
                                     size,
                                     li->ident->fpr,
+                                    NULL,
                                     &_m
                                 );
                             if (status) {
@@ -497,6 +498,29 @@ tstylesheet {
                             m = _m;
                             break;
 
+                    `` for "fsm/message[@security='attach_own_keys']" |>>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+                            status = base_prepare_message(
+                                    session,
+                                    li->ident,
+                                    li->ident,
+                                    _data,
+                                    size,
+                                    NULL,
+                                    &session->«yml:lcase(@name)»_state.common.own_keys,
+                                    &_m
+                                );
+                            if (status) {
+                                free(_data);
+                                goto the_end;
+                            }
+                            status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
+                            if (status) {
+                                status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                goto the_end;
+                            }
+                            free_message(_m);
+                            break;
+
                         default:
                             status = base_prepare_message(
                                     session,
@@ -504,6 +528,7 @@ tstylesheet {
                                     li->ident,
                                     _data,
                                     size,
+                                    NULL,
                                     NULL,
                                     &_m
                                 );
@@ -764,15 +789,16 @@ tstylesheet {
             «@name»_event_None = None,
             «@name»_event_Init = Init,
         ||
-        for "func:distinctName(state/event[not(not(../../message/@name=@name))])" {
+        for "message" {
             const "name", "@name";
             |> «$name» = «/protocol/fsm/message[@name=$name]/@id»,
         }
-        for "func:distinctName(state/event[not(not(../../external/@name=@name))])" {
-            const "name", "@name";
-            |> «$name» = «/protocol/fsm/external[@name=$name]/@id»,
-        }
         |> «@name»_event_Extra = Extra,
+        for "external" {
+            if "@id < 128"
+                error > external «@name» must have ID >= 128 but it's «@id»
+            |> «@name» = «@id»,
+        }
         for "func:distinctName(state/event[not(../../message/@name=@name or ../../external/@name=@name)])" {
             if "@name!='Init'"
                 |> «@name»`if "position()!=last()" > , `
@@ -922,7 +948,7 @@ tstylesheet {
         if "not(event[@name='Init'])"
         ||
                 case Init:
-                    // nothing to do
+                    «../@name»_SERVICE_LOG("received Init but nothing to do", "Init");
                     break;
 
         ||
