@@ -336,12 +336,12 @@ protocol Sync 1 {
             field TID transaction;
         }
 
-        message GroupKeysAndClose 8 {
+        message GroupKeysAndClose 8, security=attach_own_keys {
             field TID transaction;
             field IdentityList ownIdentities;
         }
 
-        message GroupKeys 9 {
+        message GroupKeys 9, security=attach_own_keys {
             field IdentityList ownIdentities;
         }
     }

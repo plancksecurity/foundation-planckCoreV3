@@ -487,6 +487,7 @@ tstylesheet {
                                     _data,
                                     size,
                                     li->ident->fpr,
+                                    NULL,
                                     &_m
                                 );
                             if (status) {
@@ -497,6 +498,29 @@ tstylesheet {
                             m = _m;
                             break;
 
+                    `` for "fsm/message[@security='attach_own_keys']" |>>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+                            status = base_prepare_message(
+                                    session,
+                                    li->ident,
+                                    li->ident,
+                                    _data,
+                                    size,
+                                    NULL,
+                                    &session->«yml:lcase(@name)»_state.common.own_keys,
+                                    &_m
+                                );
+                            if (status) {
+                                free(_data);
+                                goto the_end;
+                            }
+                            status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
+                            if (status) {
+                                status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                goto the_end;
+                            }
+                            free_message(_m);
+                            break;
+
                         default:
                             status = base_prepare_message(
                                     session,
@@ -504,6 +528,7 @@ tstylesheet {
                                     li->ident,
                                     _data,
                                     size,
+                                    NULL,
                                     NULL,
                                     &_m
                                 );
