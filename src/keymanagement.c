@@ -1656,8 +1656,10 @@ PEP_STATUS _own_identities_retrieve(
     unsigned int flags = 0;
     
     identity_list *_bl = _own_identities;
+
+    sqlite3_bind_int(session->own_keys_retrieve, 1, excluded_flags);
+
     do {
-        sqlite3_bind_int(session->own_identities_retrieve, 1, excluded_flags);
         result = sqlite3_step(session->own_identities_retrieve);
         switch (result) {
             case SQLITE_ROW:
@@ -1749,8 +1751,9 @@ PEP_STATUS _own_keys_retrieve(
     char *fpr = NULL;
     
     stringlist_t *_bl = _keylist;
-    do {
-        sqlite3_bind_int(session->own_keys_retrieve, 1, excluded_flags);
+    sqlite3_bind_int(session->own_keys_retrieve, 1, excluded_flags);
+
+    do {        
         result = sqlite3_step(session->own_keys_retrieve);
         switch (result) {
             case SQLITE_ROW:

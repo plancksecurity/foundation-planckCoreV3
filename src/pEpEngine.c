@@ -11,7 +11,7 @@
 #include <time.h>
 #include <stdlib.h>
 
-#define _PEP_SQLITE_DEBUG 0
+#define _PEP_SQLITE_DEBUG 1
 #if _PEP_SQLITE_DEBUG
 #include <sqlite3.h>
 #endif
@@ -4901,4 +4901,3 @@ DYNAMIC_API void clear_errorstack(PEP_SESSION session)
 }
 
 #endif
-
