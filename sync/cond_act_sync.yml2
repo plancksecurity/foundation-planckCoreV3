@@ -166,9 +166,21 @@ action showGroupedHandshake
 timeout KeySync
     call "show_handshake" with "type" > SYNC_NOTIFY_TIMEOUT
 
+action prepareOwnKeys
+||
+    stringlist_t *own_keys;
+    PEP_STATUS status = _own_keys_retrieve(session, &own_keys, PEP_idf_not_for_sync);
+    if (status)
+        return status;
+
+    if (session->sync_state.common.own_keys)
+        free_stringlist(session->sync_state.common.own_keys);
+    session->sync_state.common.own_keys = own_keys;
+||
+
 action saveGroupKeys
 ||
-    identity_list *il = IdentityList_to_identity_list(&session->sync_state.keysync.identities, NULL);
+    identity_list *il = IdentityList_to_identity_list(&session->sync_state.keysync.ownIdentities, NULL);
     if (!il)
         return PEP_OUT_OF_MEMORY;
     
@@ -254,7 +266,7 @@ action ownKeysAreGroupKeys {
             }
         } while (result != SQLITE_DONE);
 
-        IdentityList_t *r = IdentityList_from_identity_list(il, &session->sync_state.keysync.identities);
+        IdentityList_t *r = IdentityList_from_identity_list(il, &session->sync_state.keysync.ownIdentities);
         free_identity_list(il);
         if (!r)
             return PEP_OUT_OF_MEMORY;

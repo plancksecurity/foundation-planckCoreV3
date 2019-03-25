@@ -128,8 +128,10 @@ protocol Sync 1 {
         }
 
         state NewGroup {
-            on Init
+            on Init {
+                do prepareOwnKeys;
                 send GroupKeysAndClose; // we're not grouped yet, this is our own keys
+            }
 
             on GroupKeysAndClose {
                 do saveGroupKeys;
@@ -336,11 +338,11 @@ protocol Sync 1 {
 
         message GroupKeysAndClose 8 {
             field TID transaction;
-            field IdentityList identities;
+            field IdentityList ownIdentities;
         }
 
         message GroupKeys 9 {
-            field IdentityList identities;
+            field IdentityList ownIdentities;
         }
     }
 }
