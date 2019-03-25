@@ -1585,6 +1585,7 @@ DYNAMIC_API void release(PEP_SESSION session)
         out_last = true;
 
     if (session) {
+        free_Sync_state(session);
 
         if (session->db) {
             if (session->log)
