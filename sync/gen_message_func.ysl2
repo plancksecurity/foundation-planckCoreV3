@@ -98,6 +98,8 @@ void free_«@name»_state(PEP_SESSION session)
         return;
 
     free_identity(session->«yml:lcase(@name)»_state.common.from);
+    free(session->«yml:lcase(@name)»_state.common.signature_fpr);
+    free_stringlist(session->«yml:lcase(@name)»_state.common.own_keys);
 
 ||
 for "fsm"
