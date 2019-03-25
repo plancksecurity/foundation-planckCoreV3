@@ -65,7 +65,6 @@ PEP_STATUS base_decorate_message(
         if (!bl)
             status = PEP_OUT_OF_MEMORY;
 
-        free(_keys);
         free_stringlist(*keys);
         *keys = NULL;
     }
