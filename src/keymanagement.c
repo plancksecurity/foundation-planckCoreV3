@@ -1657,7 +1657,7 @@ PEP_STATUS _own_identities_retrieve(
     
     identity_list *_bl = _own_identities;
 
-    sqlite3_bind_int(session->own_keys_retrieve, 1, excluded_flags);
+    sqlite3_bind_int(session->own_identities_retrieve, 1, excluded_flags);
 
     do {
         result = sqlite3_step(session->own_identities_retrieve);

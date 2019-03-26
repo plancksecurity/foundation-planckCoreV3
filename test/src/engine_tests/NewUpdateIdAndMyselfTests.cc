@@ -531,18 +531,21 @@ void NewUpdateIdAndMyselfTests::key_elect_only_revoked_mistrusted() {
     revoke_fpr_arr[0] = strdup(revokemaster_3000->fpr);
     free(revokemaster_3000->fpr);
     revokemaster_3000->fpr = NULL;
+    cout << "revoke_fpr_arr[0] is " << revoke_fpr_arr[0] << endl; 
     
     status = generate_keypair(session, revokemaster_3000);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK && revokemaster_3000->fpr), (string(tl_status_string(status)) + " " + revokemaster_3000->fpr).c_str());
     revoke_fpr_arr[1] = strdup(revokemaster_3000->fpr);
     free(revokemaster_3000->fpr);
     revokemaster_3000->fpr = NULL;
+    cout << "revoke_fpr_arr[1] is " << revoke_fpr_arr[1] << endl; 
     
     status = generate_keypair(session, revokemaster_3000);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK && revokemaster_3000->fpr), (string(tl_status_string(status)) + " " + revokemaster_3000->fpr).c_str());
     revoke_fpr_arr[2] = strdup(revokemaster_3000->fpr);
     free(revokemaster_3000->fpr);
     revokemaster_3000->fpr = NULL;
+    cout << "revoke_fpr_arr[2] is " << revoke_fpr_arr[2] << endl; 
     
     cout << "Trust "  << revoke_fpr_arr[2] << " (default for identity) and " << revoke_fpr_arr[0] << endl;
     
@@ -583,16 +586,21 @@ void NewUpdateIdAndMyselfTests::key_elect_only_revoked_mistrusted() {
     TEST_ASSERT_MSG((is_revoked), "is_revoked");
 
     cout << "Success revoking " << revoke_fpr_arr[2] << "!!! get_trust for this fpr gives us " << revokemaster_3000->comm_type << endl;
-    
-    cout << "Now see if update_identity gives us " << revoke_fpr_arr[0] << ", the only trusted key left." << endl;
+
+//  BAD ASSUMPTION - this only works if we query the trust DB in elect_pubkey, and we don't.    
+//    cout << "Now see if update_identity gives us " << revoke_fpr_arr[0] << ", the only trusted key left." << endl;
     status = update_identity(session, revokemaster_3000);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     TEST_ASSERT_MSG((revokemaster_3000->fpr), revokemaster_3000->fpr);
-    TEST_ASSERT_MSG((strcmp(revokemaster_3000->fpr, revoke_fpr_arr[0]) == 0), (string("Expected ") + revoke_fpr_arr[0] + ", Got " + revokemaster_3000->fpr).c_str());
+    TEST_ASSERT_MSG((strcmp(revokemaster_3000->fpr, revoke_fpr_arr[0]) == 0
+                    || (strcmp(revokemaster_3000->fpr, revoke_fpr_arr[0]) == 0)), 
+                    (string("Expected ") + revoke_fpr_arr[0] + " or " + revoke_fpr_arr[1] + ", Got " + revokemaster_3000->fpr).c_str());
     TEST_ASSERT_MSG((revokemaster_3000->comm_type & PEP_ct_confirmed), tl_ct_string(revokemaster_3000->comm_type));    
     
-    cout << "Success! So let's mistrust it, because seriously, that key was so uncool." << endl;
+    cout << "Success! So let's mistrust " << revoke_fpr_arr[0] << ", because seriously, that key was so uncool." << endl;
     
+    free(revokemaster_3000->fpr);
+    revokemaster_3000->fpr = strdup(revoke_fpr_arr[0]);
     status = key_mistrusted(session, revokemaster_3000);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
 
