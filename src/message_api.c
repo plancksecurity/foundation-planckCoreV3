@@ -4234,10 +4234,21 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
     // Find own identity corresponding to given account address.
     // In that case we want default key attached to own identity
     pEp_identity *stored_identity = NULL;
+    
+    char* own_id = NULL;
+    status = get_default_own_userid(session, &own_id);
+
+    if (!(status == PEP_STATUS_OK && own_id)) {
+        free(own_id);
+        return PEP_CANNOT_FIND_IDENTITY;
+    }
+    
     status = get_identity(session,
                           received_by->address,
-                          PEP_OWN_USERID,
+                          own_id,
                           &stored_identity);
+    free(own_id);
+    own_id = NULL;                      
 
     if (status != PEP_STATUS_OK) {
         free_identity(stored_identity);
