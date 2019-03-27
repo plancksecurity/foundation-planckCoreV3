@@ -135,3 +135,86 @@ DYNAMIC_API SYNC_EVENT new_sync_timeout_event()
     return SYNC_TIMEOUT_EVENT;
 }
 
+DYNAMIC_API PEP_STATUS enter_device_group(
+        PEP_SESSION session,
+        const identity_list *identities_sharing
+    )
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    for (const identity_list *_il = identities_sharing; _il && _il->ident;
+            _il = _il->next) {
+        if (!_il->ident->me || !_il->ident->user_id || !_il->ident->user_id[0]
+                || !_il->ident->address || !_il->ident->address[0])
+            return PEP_ILLEGAL_VALUE;
+    }
+
+    identity_list *own_identities = NULL;
+    PEP_STATUS status = own_identities_retrieve(session, &own_identities);
+    if (status)
+        goto the_end;
+
+    if (identities_sharing) {
+        for (identity_list *_il = own_identities; _il && _il->ident;
+                _il = _il->next) {
+            bool found = false;
+
+            for (const identity_list *_is = identities_sharing;
+                    _is && _is->ident; _is = _is->next) {
+                // FIXME: "john@doe.com" and "mailto:john@doe.com" should be equal
+                if (strcmp(_il->ident->address, _is->ident->address) == 0
+                        && strcmp(_il->ident->user_id, _is->ident->user_id) == 0) {
+                    found = true;
+
+                    status = set_identity_flags(session, _il->ident, PEP_idf_devicegroup);
+                    if (status)
+                        goto the_end;
+
+                    break;
+                }
+            }
+            if (!found) {
+                status = unset_identity_flags(session, _il->ident, PEP_idf_devicegroup);
+                if (status)
+                    goto the_end;
+            }
+        }
+    }
+    else {
+        for (identity_list *_il = own_identities; _il && _il->ident;
+                _il = _il->next) {
+            status = set_identity_flags(session, _il->ident, PEP_idf_devicegroup);
+            if (status)
+                goto the_end;
+        }
+    }
+
+the_end:
+    free_identity_list(own_identities);
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session)
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    identity_list *il = NULL;
+    PEP_STATUS status = own_identities_retrieve(session, &il);
+    if (status)
+        goto the_end;
+
+    for (identity_list *_il = il; _il && _il->ident ; _il = _il->next) {
+        status = unset_identity_flags(session, _il->ident, PEP_idf_devicegroup);
+        if (status)
+            goto the_end;
+    }
+
+the_end:
+    free_identity_list(il);
+    return status;
+}
+

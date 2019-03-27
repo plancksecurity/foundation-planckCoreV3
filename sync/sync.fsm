@@ -134,12 +134,10 @@ protocol Sync 1 {
             }
 
             on GroupKeysAndClose {
-                do saveGroupKeys;
-                if keyElectionWon {
+                if keyElectionWon
                     do ownKeysAreGroupKeys;
-                    go Grouped;
-                }
-                // do receivedKeysAreGroupKeys; -- implicit
+                else
+                    do receivedKeysAreGroupKeys;
                 go Grouped;
             }
         }

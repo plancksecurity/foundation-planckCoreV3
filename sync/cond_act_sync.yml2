@@ -280,5 +280,7 @@ action ownKeysAreGroupKeys {
     ||
 }
 
+action receivedKeysAreGroupKeys;
+
 action disable;
 
