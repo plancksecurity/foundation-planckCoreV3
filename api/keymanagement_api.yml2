@@ -60,31 +60,6 @@ protocol session {
 	}
 
 
-	method initialise_own_identities
-		doc="ensures that an own identity is complete"
-	{
-	// parms
-	
-	supply identity_list my_idents
-	doc="""
-		identities of local user to quick-set
-		For these, at least .address must be set.
-		if no .user_id is set, AND the DB doesn't contain
-		a default user_id, own_userid will be used and
-		become the perennial default for the DB.
-		
-		This function does NOT generate keypairs. It is intended to
-		precede running of the engine on actual messages. It effectively
-		behaves like myself(), but when there would normally be key generation
-		(when there is no valid key, for example),
-		it instead stores an identity without keys.
-
-		N.B. to adapter devs - this function is likely unnecessary, so please
-		do not put work into exposing it yet. Tickets will be filed if need be.
-		"""
-	}
-
-
 	method myself
 		doc="ensures that an own identity is complete"
 	{
@@ -115,53 +90,6 @@ protocol session {
 		"""
 	}
 
-	method retrieve_next_identity
-		doc="callback being called by do_keymanagement"
-	{
-	// parms
-
-XXXXXX
-
-	method examine_identity
-		doc="callback for appending to queue"
-	{
-	// parms
-
-XXXX
-
-	method register_examine_function
-		doc="register examine_identity() callback"
-	{
-	//parms
-
-	provide?? examine_identity?? examine_identity doc="examine_identity() function to register";
-
-	provide void management doc="data structure to deliver (implementation defined)"
-
-XXX?
-// do_keymanagement() - function to be run on an extra thread
-//
-//  parameters:
-//      retrieve_next_identity (in) pointer to retrieve_next_identity()
-//                                  callback which returns at least a valid
-//                                  address field in the identity struct
-//
-//  return value:
-//      PEP_STATUS_OK if thread has to terminate successfully or any other
-//      value on failure
-//
-//  caveat:
-//      to ensure proper working of this library, a thread has to be started
-//      with this function immediately after initialization
-//
-//      do_keymanagement() calls retrieve_next_identity(management)
-//
-//      messageToSend can only be null if no transport is application based
-//      if transport system is not used it must not be NULL
-DYNAMIC_API PEP_STATUS do_keymanagement(
-        retrieve_next_identity_t retrieve_next_identity,
-        void *management
-
 
 	method key_mistrusted
 		doc="mark key as being compromised"
@@ -183,37 +111,118 @@ DYNAMIC_API PEP_STATUS do_keymanagement(
 	}
 
 
-	method trust_personal_key
+    method trust_personal_key
 		doc="mark a key as trusted for a user"
 	{
 	// parms
 
-	ident (in)          person and key to trust in - this must not be an
-//                          own_identity in which the .me flag is set or
-//                          the user_id is an own user_id.
-//
-//  caveat:
-//      the fields user_id, address and fpr must be supplied
-//      own identities will result in a return of PEP_ILLEGAL_VALUE.
-//      for non-own users, this will 1) set the trust bit on its comm type in the DB,
-//      2) set this key as the identity default if the current identity default
-//      is not trusted, and 3) set this key as the user default if the current
-//      user default is not trusted.
-
-DYNAMIC_API PEP_STATUS trust_personal_key(
-        PEP_SESSION session,
-        pEp_identity *ident
+	use identity ident
+    doc="""
+        person and key to trust in - this must not be an own_identity in which 
+        the .me flag is set or the user_id is an own user_id. The fields user_id, 
+        address and fpr must be supplied own identities will result in a return 
+        of illegal_value.
+        For non-own users, this will 1) set the trust bit on its comm type in the DB,
+        2) set this key as the identity default if the current identity default
+        is not trusted, and 3) set this key as the user default if the current user
+        default is not trusted.
+        """
+    }
 
 
+    method trust_own_key
+        doc="""
+            mark a key as trusted for self, generally used when we need to trust 
+            a public key associated with outselves for issues like manual key import.
+            """
+    {
+    // parms
+
+    use identity ident
+    doc="""
+        own ident containing fpr to trust. 
+        If this is a public key only, keep in mind that if the private part of the 
+        keypair is later added, it will not undergo separate trust evaluation. This 
+        is fine - even desired - as long as the semantics of this function are 
+        understood as both trusting the key and verifying it as an own key. This will 
+        NEVER cause replacement of or setting of a default *alone*. However, if a 
+        private key is ever associated with this fpr, please keep in mind that trusting 
+        it here makes it an eligible key for selection for encryption later. So use 
+        this function on purpose with an understanding of what you're doing!
+        """
+    }
 
 
+    method key_reset_trust
+        doc="""
+            reset trust bit or explicitly mistrusted status for an identity and its 
+            accompanying key/user_id pair.
+            """
+    {
+    // parms
+
+    use ientity ident
+    doc="""
+        identity for person and key whose trust status is to be reset.
+        Ident is INPUT ONLY. If you want updated trust on the identity, you'll have 
+        to call update_identity or myself respectively after this.
+        N.B. If you are calling this on a key that is the identity or user default,
+        it will be removed as the default key for the identity and user (but is still
+        available for key election, it is just not the cached default anymore).
+        """
+    }
 
 
-   
+    method own_key_is_listed 
+        doc="returns true id key is listed as own key"
+    {
+    // parms
+
+    use hash fpr doc="fingerprint of key to test"
+
+    return bool listed doc="flags if key is own"
+    }
 
 
+    method own_identities_retrieve
+        doc="retrieve all own identities"
+    {
+
+    // parms
+
+    create identity_list own_identities 
+    doc="""
+        list of own identities. 
+        The ownership of the copy of own_identities goes to the caller.
+        """
+    }
 
 
+method own_keys_retrieve 
+        doc="retrieve all flagged keypair fingerprints" 
+    {
+    // parms
+
+    create hashlist keylist doc="list of fingerprints"
+    }
 
 
+method set_own_key 
+        doc="mark a key as own key"
+    {
+    // parms
+
+    supply identity me 
+    doc="""
+        own identity this key is used for. The key has to be in the key ring already.
+        me->address, me->user_id and me->username must be set to valid data.
+        myself is called by set_own_key without key generation.
+        me->flags are ignored
+        me->address must not be an alias
+        me->fpr will be ignored and replaced by fpr.
+        """
+
+    use hash fpr (in)                fingerprint of the key to mark as own key
+    }
+}
 

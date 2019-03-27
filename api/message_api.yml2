@@ -243,27 +243,27 @@ protocol session {
 
         // flags
         
-        decrypt_flags {
-            decrypt_flag_own_private_key 0x1 
+        flags {
+            flag decrypt_flag_own_private_key 0x1 
             doc="""
                 private key was imported for one of our addresses (NOT trusted
                 or set to be used - handshake/trust is required for that)
                 """;
-            decrypt_flag_consume 0x2 doc=’used by sync';
-            decrypt_flag_ignore 0x4 doc=’used by sync';
-            decrypt_flag_src_modified 0x8 
+            flag decrypt_flag_consume 0x2 doc=’used by sync';
+            flag decrypt_flag_ignore 0x4 doc=’used by sync';
+            flag decrypt_flag_src_modified 0x8 
             doc="""
                 indicates that the src object has been modified. At the moment,
                 this is always as a direct result of the behaviour driven
                 by the input flags. This flag is the ONLY value that should be
                 relied upon to see if such changes have taken place.
                 """;
-            decrypt_flag_untrusted_server 0x100 
+            flag decrypt_flag_untrusted_server 0x100 
             doc="""
                 input flags. Used to signal that decrypt function should engage in behaviour
                 specified for when the server storing the source is untrusted.
                 """;
-    }
+        }
 
     // exceptions
     
@@ -479,7 +479,7 @@ protocol session {
     throws record_not_found
         doc="if no trust record for user_id and fpr can be found"
     }
-}    
+}
 
 
 func color_from_rating
@@ -493,7 +493,7 @@ func color_from_rating
     return color rating_color doc="color representing that rating"
 }
 
-        
+
 func get_binary_path
     doc="retrieve path of cryptotech binary if available"
 {
@@ -508,24 +508,3 @@ func get_binary_path
         the library, do not change it!;
         """
 }
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

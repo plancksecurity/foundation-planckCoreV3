@@ -38,21 +38,14 @@ decl return @type @name (mode=return) alias parm;
 decl throws @except;
 decl caveat(mode=caveat) alias doc;
 
+
 // base types
 
 // string:  text
 // int:     integer number
 // blob:    Binary Large Object
 // size_t:  size in memory
-// const:
-// identity:
-// message:
-// rating:
-// enc_format:
-// hash:
-// TID:
-// bool:
-// cryptotech:
+// bool:    true or false
 
 
 // collections
