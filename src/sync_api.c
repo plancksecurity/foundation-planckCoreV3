@@ -78,8 +78,13 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
     free_identity_list(session->sync_state.common.own_identities);
     if (identities_sharing) {
         session->sync_state.common.own_identities = identity_list_dup(identities_sharing);
-        if (session->sync_state.common.own_identities)
+        if (!session->sync_state.common.own_identities)
             status = PEP_OUT_OF_MEMORY;
+        if (!session->sync_state.common.own_identities->ident) {
+            free_identity_list(session->sync_state.common.own_identities);
+            session->sync_state.common.own_identities = NULL;
+            status = own_identities_retrieve(session, &session->sync_state.common.own_identities);
+        }
     }
     else {
         status = own_identities_retrieve(session, &session->sync_state.common.own_identities);
