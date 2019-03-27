@@ -63,12 +63,19 @@ typedef enum _sync_handshake_result {
 // deliverHandshakeResult() - provide the result of the handshake dialog
 //
 //  parameters:
-//      session (in)        session handle
-//      result (in)         handshake result
+//      session (in)            session handle
+//      result (in)             handshake result
+//      identities_sharing (in) own_identities sharing data in this group
+//
+//  caveat:
+//      identities_sharing may be NULL; in this case all identities are sharing
+//      data in the group
+//      identities_sharing may only contain own identities
 
 DYNAMIC_API PEP_STATUS deliverHandshakeResult(
         PEP_SESSION session,
-        sync_handshake_result result
+        sync_handshake_result result,
+        const identity_list *identities_sharing
     );
 
 

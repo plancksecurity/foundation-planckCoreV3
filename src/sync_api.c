@@ -39,15 +39,22 @@ DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
 
 DYNAMIC_API PEP_STATUS deliverHandshakeResult(
         PEP_SESSION session,
-        sync_handshake_result result
+        sync_handshake_result result,
+        const identity_list *identities_sharing
     )
 {
     assert(session);
     if (!session)
         return PEP_ILLEGAL_VALUE;
 
-    PEP_STATUS status = PEP_STATUS_OK;
+    for (const identity_list *_il = identities_sharing; _il && _il->ident;
+            _il = _il->next) {
+        if (!_il->ident->me || !_il->ident->user_id || !_il->ident->user_id[0]
+                || !_il->ident->address || !_il->ident->address[0])
+            return PEP_ILLEGAL_VALUE;
+    }
 
+    PEP_STATUS status = PEP_STATUS_OK;
     int event;
 
     switch (result) {
@@ -68,7 +75,18 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
             return PEP_ILLEGAL_VALUE;
     }
 
-    status = signal_Sync_event(session, Sync_PR_keysync, event);
+    free_identity_list(session->sync_state.common.own_identities);
+    if (identities_sharing) {
+        session->sync_state.common.own_identities = identity_list_dup(identities_sharing);
+        if (session->sync_state.common.own_identities)
+            status = PEP_OUT_OF_MEMORY;
+    }
+    else {
+        status = own_identities_retrieve(session, &session->sync_state.common.own_identities);
+    }
+
+    if (!status)
+        status = signal_Sync_event(session, Sync_PR_keysync, event);
     return status;
 }
 

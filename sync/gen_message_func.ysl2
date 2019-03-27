@@ -43,6 +43,7 @@ struct «@name»_state_s {
         pEp_identity *from;
         char *signature_fpr;
         stringlist_t *own_keys;
+        identity_list *own_identities;
     } common;
 
     `` apply "fsm", mode=state
@@ -100,6 +101,7 @@ void free_«@name»_state(PEP_SESSION session)
     free_identity(session->«yml:lcase(@name)»_state.common.from);
     free(session->«yml:lcase(@name)»_state.common.signature_fpr);
     free_stringlist(session->«yml:lcase(@name)»_state.common.own_keys);
+    free_identity_list(session->«yml:lcase(@name)»_state.common.own_identities);
 
 ||
 for "fsm"
