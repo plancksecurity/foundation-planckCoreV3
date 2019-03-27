@@ -1988,6 +1988,7 @@ PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session) {
         thing = _pgp_thing_next(thing);
         switch (thing) {
             case _pgp_fpr:
+                // PEP_OWN_USERID is ok here because this is only run on first use!
                 identity = new_identity(NULL, NULL, PEP_OWN_USERID, NULL);
                 if (!identity) {
                     status = PEP_OUT_OF_MEMORY;
