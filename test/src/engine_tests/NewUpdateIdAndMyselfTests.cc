@@ -511,8 +511,7 @@ void NewUpdateIdAndMyselfTests::key_elect_expired_key() {
 void NewUpdateIdAndMyselfTests::key_elect_only_revoked_mistrusted() {
     // Create id with no key
     cout << "Creating new id with no key for : ";
-    char *uniqname_10000 = strdup("AAAAtestuser@testdomain.org");
-    srandom(time(NULL));
+    char *uniqname_10000 = strdup("AAAAtestfool@testdomain.org");
     for(int i=0; i < 4;i++)
         uniqname_10000[i] += random() & 0xf;
     
@@ -592,11 +591,17 @@ void NewUpdateIdAndMyselfTests::key_elect_only_revoked_mistrusted() {
     status = update_identity(session, revokemaster_3000);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     TEST_ASSERT_MSG((revokemaster_3000->fpr), revokemaster_3000->fpr);
-    TEST_ASSERT_MSG((strcmp(revokemaster_3000->fpr, revoke_fpr_arr[0]) == 0
-                    || (strcmp(revokemaster_3000->fpr, revoke_fpr_arr[0]) == 0)), 
-                    (string("Expected ") + revoke_fpr_arr[0] + " or " + revoke_fpr_arr[1] + ", Got " + revokemaster_3000->fpr).c_str());
-    TEST_ASSERT_MSG((revokemaster_3000->comm_type & PEP_ct_confirmed), tl_ct_string(revokemaster_3000->comm_type));    
-    
+    bool was_key_0 = (strcmp(revokemaster_3000->fpr, revoke_fpr_arr[0]) == 0); 
+    bool was_key_1 = (strcmp(revokemaster_3000->fpr, revoke_fpr_arr[1]) == 0); 
+    TEST_ASSERT_MSG(was_key_0 || was_key_1,    
+                    (string("Expected ") + revoke_fpr_arr[0] + " or " + revoke_fpr_arr[1] + ", Got " + revokemaster_3000->fpr).c_str());                
+    if (was_key_0) {               
+        TEST_ASSERT_MSG((revokemaster_3000->comm_type & PEP_ct_confirmed), tl_ct_string(revokemaster_3000->comm_type));    
+    }    
+    else {   
+        TEST_ASSERT_MSG((revokemaster_3000->comm_type & PEP_ct_OpenPGP_unconfirmed), tl_ct_string(revokemaster_3000->comm_type));
+    }
+                
     cout << "Success! So let's mistrust " << revoke_fpr_arr[0] << ", because seriously, that key was so uncool." << endl;
     
     free(revokemaster_3000->fpr);
