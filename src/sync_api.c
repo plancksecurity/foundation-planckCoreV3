@@ -179,7 +179,7 @@ DYNAMIC_API PEP_STATUS enter_device_group(
     if (status)
         goto the_end;
 
-    if (identities_sharing) {
+    if (identities_sharing && identities_sharing->ident) {
         for (identity_list *_il = own_identities; _il && _il->ident;
                 _il = _il->next) {
             bool found = false;
