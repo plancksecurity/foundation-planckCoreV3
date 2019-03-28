@@ -65,7 +65,7 @@ protocol session {
 	{
 	// parms
 
-	supply identity identity
+	supply identity ident
 	doc="""
 		identity of local user
 		both .address and .user_id must be set.

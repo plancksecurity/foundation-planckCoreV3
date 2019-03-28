@@ -80,6 +80,8 @@ struct message {
     field string comments doc='string with comments';
     field stringpair_list opt_fields doc='optional fields';
     field enc_format format doc='format of encrypted data';
+
+    new (msg_direction dir);
 }
 
 
@@ -249,8 +251,8 @@ protocol session {
                 private key was imported for one of our addresses (NOT trusted
                 or set to be used - handshake/trust is required for that)
                 """;
-            flag decrypt_flag_consume 0x2 doc=’used by sync';
-            flag decrypt_flag_ignore 0x4 doc=’used by sync';
+            flag decrypt_flag_consume 0x2 doc='used by sync';
+            flag decrypt_flag_ignore 0x4 doc='used by sync';
             flag decrypt_flag_src_modified 0x8 
             doc="""
                 indicates that the src object has been modified. At the moment,
