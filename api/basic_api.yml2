@@ -120,3 +120,15 @@ struct identity {
 } // struct Identity
 
 
+callback messageToSend
+    doc="a message needs to be delivered by application"
+{
+    // parms
+
+    provide struct_message msg doc="message struct with message to send"
+
+    // exceptions
+
+    throws any doc="error status"
+}
+
