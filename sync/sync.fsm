@@ -42,7 +42,6 @@ protocol Sync 1 {
                     do openTransaction;
                     do storeTransaction;
                     send HandshakeRequest;
-                    go HandshakeRequested;
                 }
             }
 
@@ -55,9 +54,7 @@ protocol Sync 1 {
                     go HandshakingNew;
                 }
             }
-        }
 
-        state HandshakeRequested {
             on HandshakeAnswer
                 go HandshakingNew;
         }
