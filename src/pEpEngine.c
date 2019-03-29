@@ -271,7 +271,7 @@ static const char* sql_update_identity_entry =
         
 static const char *sql_set_identity_flags = 
     "update identity set flags = "
-    "    ((?1 & 255) | (select flags from identity"
+    "    ((?1 & 65535) | (select flags from identity"
     "                    where (case when (address = ?2) then (1)"
     "                                when (lower(address) = lower(?2)) then (1)"
     "                                when (replace(lower(address),'.','') = replace(lower(?2),'.','')) then (1)"
@@ -287,7 +287,7 @@ static const char *sql_set_identity_flags =
 
 static const char *sql_unset_identity_flags = 
     "update identity set flags = "
-    "    ( ~(?1 & 255) & (select flags from identity"
+    "    ( ~(?1 & 65535) & (select flags from identity"
     "                    where (case when (address = ?2) then (1)"
     "                                when (lower(address) = lower(?2)) then (1)"
     "                                when (replace(lower(address),'.','') = replace(lower(?2),'.','')) then (1)"

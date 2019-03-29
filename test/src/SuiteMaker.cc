@@ -32,6 +32,7 @@
 #include "EncryptMissingPrivateKeyTests.h"
 #include "CaseAndDotAddressTests.h"
 #include "UserIDAliasTests.h"
+#include "EnterLeaveDeviceGroupTests.h"
 #include "SignOnlyTests.h"
 #include "BCCTests.h"
 #include "Engine358Tests.h"
@@ -85,6 +86,7 @@ const char* SuiteMaker::all_suites[] = {
     "EncryptMissingPrivateKeyTests",
     "CaseAndDotAddressTests",
     "UserIDAliasTests",
+    "EnterLeaveDeviceGroupTests",
     "SignOnlyTests",
     "BCCTests",
     "Engine358Tests",
@@ -118,7 +120,7 @@ const char* SuiteMaker::all_suites[] = {
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 50;
+int SuiteMaker::num_suites = 51;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "MimeTests") == 0)
@@ -161,6 +163,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new CaseAndDotAddressTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "UserIDAliasTests") == 0)
         *test_suite = new UserIDAliasTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "EnterLeaveDeviceGroupTests") == 0)
+        *test_suite = new EnterLeaveDeviceGroupTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "SignOnlyTests") == 0)
         *test_suite = new SignOnlyTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "BCCTests") == 0)
