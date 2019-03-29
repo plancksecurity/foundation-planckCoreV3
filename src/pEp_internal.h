@@ -178,8 +178,8 @@ struct _pEpSession {
     sqlite3_stmt *get_contacted_ids_from_revoke_fpr;
     sqlite3_stmt *was_id_for_revoke_contacted;
     sqlite3_stmt *get_last_contacted;
-    sqlite3_stmt *set_device_group;
-    sqlite3_stmt *get_device_group;
+    // sqlite3_stmt *set_device_group;
+    // sqlite3_stmt *get_device_group;
     sqlite3_stmt *set_pgp_keypair;
     sqlite3_stmt *set_identity_entry;
     sqlite3_stmt *update_identity_entry;
