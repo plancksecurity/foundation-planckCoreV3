@@ -909,7 +909,7 @@ DYNAMIC_API PEP_STATUS init(
             else if (table_contains_column(_session, "identity", "timestamp") > 0) {
                 version = 8;
             }            
-            if (table_contains_column(_session, "person", "is_pEp_user") > 0) {
+            else if (table_contains_column(_session, "person", "is_pEp_user") > 0) {
                 version = 7;
             }            
             else if (table_contains_column(_session, "identity", "is_own") > 0) {
