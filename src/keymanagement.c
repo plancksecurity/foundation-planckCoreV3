@@ -1088,36 +1088,41 @@ PEP_STATUS _myself(PEP_SESSION session,
     }
 
     // check stored identity
-    if (stored_identity && !EMPTYSTR(stored_identity->fpr)) {
-        // Fall back / retrieve
-        status = validate_fpr(session, stored_identity, false, true);
-        if (status == PEP_OUT_OF_MEMORY)
-            goto pep_free;
-        if (status == PEP_STATUS_OK) {
-            if (stored_identity->comm_type >= PEP_ct_strong_but_unconfirmed) {
-                identity->fpr = strdup(stored_identity->fpr);
-                assert(identity->fpr);
-                if (!identity->fpr) {
-                    status = PEP_OUT_OF_MEMORY;
-                    goto pep_free;
-                }
-                valid_key_found = true;            
-            }
-            else {
-                bool revoked = false;
-                status = key_revoked(session, stored_identity->fpr, &revoked);
-                if (status)
-                    goto pep_free;
-                if (revoked) {
-                    revoked_fpr = strdup(stored_identity->fpr);
-                    assert(revoked_fpr);
-                    if (!revoked_fpr) {
+    if (stored_identity) { 
+        if(!EMPTYSTR(stored_identity->fpr)) {
+        
+            // Fall back / retrieve
+            status = validate_fpr(session, stored_identity, false, true);
+            if (status == PEP_OUT_OF_MEMORY)
+                goto pep_free;
+            if (status == PEP_STATUS_OK) {
+                if (stored_identity->comm_type >= PEP_ct_strong_but_unconfirmed) {
+                    identity->fpr = strdup(stored_identity->fpr);
+                    assert(identity->fpr);
+                    if (!identity->fpr) {
                         status = PEP_OUT_OF_MEMORY;
                         goto pep_free;
+                    }
+                    valid_key_found = true;            
+                }
+                else {
+                    bool revoked = false;
+                    status = key_revoked(session, stored_identity->fpr, &revoked);
+                    if (status)
+                        goto pep_free;
+                    if (revoked) {
+                        revoked_fpr = strdup(stored_identity->fpr);
+                        assert(revoked_fpr);
+                        if (!revoked_fpr) {
+                            status = PEP_OUT_OF_MEMORY;
+                            goto pep_free;
+                        }
                     }
                 }
             }
         }
+        // reconcile language, flags
+        transfer_ident_lang_and_flags(identity, stored_identity);
     }
     
     // Nothing left to do but generate a key
