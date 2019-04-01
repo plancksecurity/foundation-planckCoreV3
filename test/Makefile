@@ -90,7 +90,10 @@ else
     LIBPATH=LD_LIBRARY_PATH
 endif
 
-TEST_CMD_PFX=$(LIBPATH)=$(EXTRA_LIB_PATHS)
+# FIXME: this forces a path on execution which overrides system paths for
+#        libraries like iconv and causes runtime errors.
+#TEST_CMD_PFX=$(LIBPATH)=$(EXTRA_LIB_PATHS)
+TEST_CMD_PFX=
 
 
 .PHONY: all
