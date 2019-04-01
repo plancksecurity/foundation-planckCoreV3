@@ -40,11 +40,12 @@ condition challengeAccepted
 condition keyElectionWon
 ||
     pEp_identity *from = session->sync_state.common.from;
+    char *signature_fpr = session->sync_state.common.signature_fpr;
 
-    assert(from && from->fpr && from->fpr[0] && from->address &&
-            from->address[0] && from->user_id && from->user_id[0]);
-    if (!(from && from->fpr && from->fpr[0] && from->address &&
-            from->address[0] && from->user_id && from->user_id[0]))
+    assert(from && from->address && from->address[0] && from->user_id &&
+            from->user_id[0]);
+    if (!(from && from->address && from->address[0] && from->user_id &&
+            from->user_id[0]))
         return PEP_ILLEGAL_VALUE;
 
     pEp_identity *me = NULL;
@@ -59,8 +60,8 @@ condition keyElectionWon
         return PEP_ILLEGAL_VALUE;
     }
 
-    size_t len = MIN(strlen(from->fpr), strlen(me->fpr));
-    *result = strncasecmp(from->fpr, me->fpr, len) > 0;
+    size_t len = MIN(strlen(signature_fpr), strlen(me->fpr));
+    *result = strncasecmp(signature_fpr, me->fpr, len) > 0;
     free_identity(me);
 ||
 
@@ -136,6 +137,17 @@ function "show_handshake" {
             return PEP_OUT_OF_MEMORY;
         }
 
+        assert(session->sync_state.common.signature_fpr);
+        if (session->sync_state.common.signature_fpr) {
+            free(partner->fpr);
+            partner->fpr = strdup(session->sync_state.common.signature_fpr);
+            if (!partner->fpr) {
+                free_identity(me);
+                free_identity(partner);
+                return PEP_OUT_OF_MEMORY;
+            }
+        }
+
         status = session->notifyHandshake(me, partner, «$type»);
         if (status)
             return status;
@@ -154,9 +166,28 @@ action showGroupedHandshake
 timeout KeySync
     call "show_handshake" with "type" > SYNC_NOTIFY_TIMEOUT
 
+action prepareOwnKeys
+||
+    stringlist_t *own_keys;
+    PEP_STATUS status = _own_keys_retrieve(session, &own_keys, PEP_idf_not_for_sync);
+    if (status)
+        return status;
+
+    if (session->sync_state.common.own_keys)
+        free_stringlist(session->sync_state.common.own_keys);
+    session->sync_state.common.own_keys = own_keys;
+
+    identity_list *il;
+    status = _own_identities_retrieve(session, &il, PEP_idf_not_for_sync);
+    if (status)
+        return status;
+
+    IdentityList_from_identity_list(il, &session->sync_state.keysync.ownIdentities);
+||
+
 action saveGroupKeys
 ||
-    identity_list *il = IdentityList_to_identity_list(&session->sync_state.keysync.identities, NULL);
+    identity_list *il = IdentityList_to_identity_list(&session->sync_state.keysync.ownIdentities, NULL);
     if (!il)
         return PEP_OUT_OF_MEMORY;
     
@@ -242,12 +273,14 @@ action ownKeysAreGroupKeys {
             }
         } while (result != SQLITE_DONE);
 
-        IdentityList_t *r = IdentityList_from_identity_list(il, &session->sync_state.keysync.identities);
+        IdentityList_t *r = IdentityList_from_identity_list(il, &session->sync_state.keysync.ownIdentities);
         free_identity_list(il);
         if (!r)
             return PEP_OUT_OF_MEMORY;
     ||
 }
+
+action receivedKeysAreGroupKeys;
 
 action disable;
 

@@ -995,7 +995,7 @@ static PEP_STATUS update_identity_recip_list(PEP_SESSION session,
                 }                        
             }
             else
-                status = myself(session, curr_identity);
+                status = _myself(session, curr_identity, false, false, true);
         if (status == PEP_ILLEGAL_VALUE || status == PEP_OUT_OF_MEMORY)
             return status;
         }
@@ -1312,7 +1312,8 @@ static PEP_comm_type _get_comm_type(
     if (!is_me(session, ident))
         status = update_identity(session, ident);
     else
-        status = myself(session, ident);
+        // ???
+        status = _myself(session, ident, false, false, true);
 
     if (status == PEP_STATUS_OK) {
         if (ident->comm_type == PEP_ct_compromised)
@@ -1366,15 +1367,15 @@ static PEP_comm_type _get_comm_type_preview(
     return comm_type;
 }
 
-static void free_bl_entry(bloblist_t *bl)
-{
-    if (bl) {
-        free(bl->value);
-        free(bl->mime_type);
-        free(bl->filename);
-        free(bl);
-    }
-}
+// static void free_bl_entry(bloblist_t *bl)
+// {
+//     if (bl) {
+//         free(bl->value);
+//         free(bl->mime_type);
+//         free(bl->filename);
+//         free(bl);
+//     }
+// }
 
 static bool is_key(const bloblist_t *bl)
 {
@@ -1395,29 +1396,29 @@ static bool is_key(const bloblist_t *bl)
            );
 }
 
-static void remove_attached_keys(message *msg)
-{
-    if (msg) {
-        bloblist_t *last = NULL;
-        for (bloblist_t *bl = msg->attachments; bl && bl->value; ) {
-            bloblist_t *next = bl->next;
-
-            if (is_key(bl)) {
-                if (last) {
-                    last->next = next;
-                }
-                else {
-                    msg->attachments = next;
-                }
-                free_bl_entry(bl);
-            }
-            else {
-                last = bl;
-            }
-            bl = next;
-        }
-    }
-}
+// static void remove_attached_keys(message *msg)
+// {
+//     if (msg) {
+//         bloblist_t *last = NULL;
+//         for (bloblist_t *bl = msg->attachments; bl && bl->value; ) {
+//             bloblist_t *next = bl->next;
+// 
+//             if (is_key(bl)) {
+//                 if (last) {
+//                     last->next = next;
+//                 }
+//                 else {
+//                     msg->attachments = next;
+//                 }
+//                 free_bl_entry(bl);
+//             }
+//             else {
+//                 last = bl;
+//             }
+//             bl = next;
+//         }
+//     }
+// }
 
 static bool compare_first_n_bytes(const char* first, const char* second, size_t n) {
     int i;
@@ -1638,8 +1639,9 @@ static void _cleanup_src(message* src, bool remove_attached_key) {
     char* longmsg = NULL;
     char* shortmsg = NULL;
     char* msg_wrap_info = NULL;
-    separate_short_and_long(src->longmsg, &shortmsg, &msg_wrap_info,
-                            &longmsg);
+    if (src->longmsg)
+        separate_short_and_long(src->longmsg, &shortmsg, &msg_wrap_info,
+                                &longmsg);
     if (longmsg) {                    
         free(src->longmsg);
         free(shortmsg);
@@ -2977,6 +2979,7 @@ static PEP_STATUS import_priv_keys_from_decrypted_msg(PEP_SESSION session,
     return status;
 }
 
+// FIXME: myself ??????
 static PEP_STATUS update_sender_to_pEp_trust(
         PEP_SESSION session, 
         pEp_identity* sender, 
@@ -3281,7 +3284,6 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         identity_list **private_il
     )
 {
-    
     assert(session);
     assert(src);
     assert(dst);
@@ -3307,6 +3309,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
     stringlist_t *_keylist = NULL;
     char* signer_fpr = NULL;
     bool is_pEp_msg = is_a_pEpmessage(src);
+    bool myself_read_only = (src->dir == PEP_dir_incoming);
 
     // Grab input flags
     bool reencrypt = (((*flags & PEP_decrypt_flag_untrusted_server) > 0) && *keylist && !EMPTYSTR((*keylist)->value));
@@ -3370,7 +3373,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
         if (!is_me(session, src->from))
             status = update_identity(session, src->from);
         else
-            status = myself(session, src->from);
+            status = _myself(session, src->from, false, false, myself_read_only);
         
         // We absolutely should NOT be bailing here unless it's a serious error
         if (status == PEP_OUT_OF_MEMORY)
@@ -3604,7 +3607,7 @@ DYNAMIC_API PEP_STATUS _decrypt_message(
                                                 if (!is_me(session, src->from))
                                                     update_identity(session, (src->from));
                                                 else
-                                                    myself(session, src->from);
+                                                    _myself(session, src->from, false, false, myself_read_only);
                                             }
                                             break;        
                                         }
@@ -3822,6 +3825,12 @@ pEp_error:
     return status;
 }
 
+static bool _own_sync_beacon(PEP_STATUS status, const char *sync_fpr,
+        const char *from_fpr) {
+    return status == PEP_UNENCRYPTED && sync_fpr && sync_fpr[0] &&
+        from_fpr && from_fpr[0] && strcmp(sync_fpr, from_fpr) == 0;
+}
+
 DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -3848,22 +3857,15 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     message *msg = *dst ? *dst : src;
 
-    if (session->inject_sync_event && msg && msg->from) {
+    if (session->inject_sync_event && msg && msg->from &&
+            !(*flags & PEP_decrypt_flag_dont_trigger_sync)) {
         size_t size;
         const char *data;
         char *sync_fpr = NULL;
-        status = base_extract_message(session, msg, &size, &data, &sync_fpr);
-        if (!status && size && data) {
-            pEp_identity *_from = identity_dup(msg->from);
-            if (!_from) {
-                free_message(*dst);
-                *dst = NULL;
-                free_stringlist(*keylist);
-                *keylist = NULL;
-                return PEP_OUT_OF_MEMORY;
-            }
-            session->sync_state.common.from = _from;
-            signal_Sync_message(session, *rating, data, size, sync_fpr);
+        PEP_STATUS tmpstatus = base_extract_message(session, msg, &size, &data, &sync_fpr);
+        if (!tmpstatus && size && data) {
+            if (!_own_sync_beacon(status, sync_fpr, msg->from->fpr))
+                signal_Sync_message(session, *rating, data, size, msg->from, sync_fpr);
         }
         free(sync_fpr);
     }
@@ -4068,8 +4070,10 @@ DYNAMIC_API PEP_STATUS identity_rating(
     if (!(session && ident && rating))
         return PEP_ILLEGAL_VALUE;
 
+    *rating = PEP_rating_undefined;
+
     if (ident->me)
-        status = _myself(session, ident, false, true);
+        status = _myself(session, ident, false, true, true);
     else
         status = update_identity(session, ident);
 
@@ -4418,10 +4422,21 @@ DYNAMIC_API PEP_STATUS get_message_trustwords(
     // Find own identity corresponding to given account address.
     // In that case we want default key attached to own identity
     pEp_identity *stored_identity = NULL;
+    
+    char* own_id = NULL;
+    status = get_default_own_userid(session, &own_id);
+
+    if (!(status == PEP_STATUS_OK && own_id)) {
+        free(own_id);
+        return PEP_CANNOT_FIND_IDENTITY;
+    }
+    
     status = get_identity(session,
                           received_by->address,
-                          PEP_OWN_USERID,
+                          own_id,
                           &stored_identity);
+    free(own_id);
+    own_id = NULL;                      
 
     if (status != PEP_STATUS_OK) {
         free_identity(stored_identity);
@@ -4467,12 +4482,13 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
+    tmp_msg->dir = PEP_dir_incoming;
     // MIME decode message delivers only addresses. We need more.
     if (tmp_msg->from) {
         if (!is_me(session, tmp_msg->from))
             status = update_identity(session, (tmp_msg->from));
         else
-            status = myself(session, tmp_msg->from);
+            status = _myself(session, tmp_msg->from, false, false, true);
 
         if (status == PEP_ILLEGAL_VALUE || status == PEP_OUT_OF_MEMORY)
             goto pEp_error;
@@ -4790,7 +4806,7 @@ got_keylist:
     if (!is_me(session, msg->from))
         status = update_identity(session, msg->from);
     else
-        status = myself(session, msg->from);
+        status = _myself(session, msg->from, false, false, true);
 
     switch (status) {
         case PEP_KEY_NOT_FOUND:
@@ -4849,4 +4865,3 @@ the_end:
     free_identity(ident);
     return status;
 }
-

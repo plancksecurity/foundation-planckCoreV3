@@ -9,7 +9,8 @@ PEP_STATUS base_decorate_message(
         message *msg,
         char *payload,
         size_t size,
-        char *fpr
+        const char *fpr,
+        stringlist_t **keys
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -39,12 +40,36 @@ PEP_STATUS base_decorate_message(
         assert(sign && sign_size);
 
         bl = bloblist_add(bl, sign, sign_size,
-                "application/pEp.sign", "ignore_this_attachment.pEp");
+                "application/pEp.sign", "electronic_signature.asc");
         if (!bl)
             goto enomem;
     }
 
-    return PEP_STATUS_OK;
+    if (keys) {
+        size_t size = 1;
+        for (stringlist_t *sl = *keys; sl && sl->value; sl = sl->next) {
+            size += strlen(sl->value);
+        }
+
+        char *_keys = calloc(1, size);
+        if (!_keys)
+            goto enomem;
+
+        char *_k = _keys;
+        for (stringlist_t *sl = *keys; sl && sl->value; sl = sl->next) {
+            strcpy(_k, sl->value);
+            _k += strlen(sl->value);
+        }
+
+        bl = bloblist_add(bl, _keys, size, "application/pgp-keys", "keys.asc");
+        if (!bl)
+            status = PEP_OUT_OF_MEMORY;
+
+        free_stringlist(*keys);
+        *keys = NULL;
+    }
+
+    return status;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
@@ -59,7 +84,8 @@ PEP_STATUS base_prepare_message(
         const pEp_identity *partner,
         char *payload,
         size_t size,
-        char *fpr,
+        const char *fpr,
+        stringlist_t **keys,
         message **result
     )
 {
@@ -101,7 +127,7 @@ PEP_STATUS base_prepare_message(
     if (!msg->longmsg)
         goto enomem;
 
-    status = base_decorate_message(session, msg, payload, size, fpr);
+    status = base_decorate_message(session, msg, payload, size, fpr, keys);
     if (status == PEP_STATUS_OK)
         *result = msg;
     return status;

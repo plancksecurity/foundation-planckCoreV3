@@ -60,16 +60,22 @@ typedef enum _sync_handshake_result {
     SYNC_HANDSHAKE_REJECTED = 1
 } sync_handshake_result;
 
-// deliverHandshakeResult() - give the result of the handshake dialog
+// deliverHandshakeResult() - provide the result of the handshake dialog
 //
 //  parameters:
-//      session (in)        session handle
-//      result (in)         handshake result
+//      session (in)            session handle
+//      result (in)             handshake result
+//      identities_sharing (in) own_identities sharing data in this group
+//
+//  caveat:
+//      identities_sharing may be NULL; in this case all identities are sharing
+//      data in the group
+//      identities_sharing may only contain own identities
 
 DYNAMIC_API PEP_STATUS deliverHandshakeResult(
         PEP_SESSION session,
-        pEp_identity *partner,
-        sync_handshake_result result
+        sync_handshake_result result,
+        const identity_list *identities_sharing
     );
 
 
@@ -153,7 +159,7 @@ DYNAMIC_API PEP_STATUS do_sync_protocol_step(
 // is_sync_thread() - determine if this is sync thread's session
 //
 //  paramters:
-//      session                 pEp session to test
+//      session (in)            pEp session to test
 //
 //  return value:
 //      true if this is sync thread's session, false otherwise
@@ -167,6 +173,33 @@ DYNAMIC_API bool is_sync_thread(PEP_SESSION session);
 //      returns a new Sync timeout event, or NULL on failure
 
 DYNAMIC_API SYNC_EVENT new_sync_timeout_event();
+
+
+// enter_device_group() - enter a device group
+//
+//  parameters:
+//      session (in)            pEp session
+//      identities_sharing (in) own_identities sharing data in this group
+//
+//  caveat:
+//      identities_sharing may be NULL; in this case all identities are sharing
+//      data in the group
+//      identities_sharing may only contain own identities
+//
+//      this call can be repeated if sharing information changes
+
+DYNAMIC_API PEP_STATUS enter_device_group(
+        PEP_SESSION session,
+        const identity_list *identities_sharing
+    );
+
+
+// leave_device_group() - leave a device group
+//
+//  parameters:
+//      session                 pEp session
+
+DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session);
 
 
 #ifdef __cplusplus

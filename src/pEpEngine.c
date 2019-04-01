@@ -79,6 +79,7 @@ static const char *sql_trustword =
     "select id, word from wordlist where lang = lower(?1) "
     "and id = ?2 ;";
 
+// FIXME?: problems if we don't have a key for the user - we get nothing
 static const char *sql_get_identity =  
     "select fpr, username, comm_type, lang,"
     "   identity.flags | pgp_keypair.flags,"
@@ -162,9 +163,8 @@ static const char *sql_remove_fpr_as_default =
 // Set person, but if already exist, only update.
 // if main_key_id already set, don't touch.
 static const char *sql_set_person = 
-     "insert into person (id, username, lang, main_key_id, device_group)"
-     "  values (?1, ?2, ?3, ?4, "
-     "          (select device_group from person where id = ?1)) ;";
+     "insert into person (id, username, lang, main_key_id)"
+     "  values (?1, ?2, ?3, ?4) ;";
 
 static const char *sql_update_person = 
     "update person "
@@ -173,9 +173,7 @@ static const char *sql_update_person =
     "       main_key_id =  "
     "           (select coalesce( "
     "               (select main_key_id from person where id = ?1), " 
-    "                upper(replace(?4,' ','')))),"         
-    "       device_group = "
-    "           (select device_group from person where id = ?1)"
+    "                upper(replace(?4,' ',''))))"         
     "   where id = ?1 ;";
 
 // Will cascade.
@@ -193,10 +191,6 @@ static const char *sql_is_pEp_user =
 static const char* sql_exists_person = 
     "select count(*) from person "
     "   where id = ?1 ;";
-
-static const char *sql_set_device_group = 
-    "update person set device_group = ?1 "
-    "   where id = ?2;";
 
 // This will cascade to identity and trust
 static const char* sql_replace_userid =
@@ -228,10 +222,6 @@ static const char *sql_refresh_userid_default_key =
     "       order by trust.comm_type desc "
     "       limit 1) "
     "where id = ?1 ; ";
-
-static const char *sql_get_device_group = 
-    "select device_group from person "
-    "where id = ?1;";
 
 static const char *sql_set_pgp_keypair = 
     "insert or ignore into pgp_keypair (fpr) "
@@ -281,7 +271,7 @@ static const char* sql_update_identity_entry =
         
 static const char *sql_set_identity_flags = 
     "update identity set flags = "
-    "    ((?1 & 255) | (select flags from identity"
+    "    ((?1 & 65535) | (select flags from identity"
     "                    where (case when (address = ?2) then (1)"
     "                                when (lower(address) = lower(?2)) then (1)"
     "                                when (replace(lower(address),'.','') = replace(lower(?2),'.','')) then (1)"
@@ -297,7 +287,7 @@ static const char *sql_set_identity_flags =
 
 static const char *sql_unset_identity_flags = 
     "update identity set flags = "
-    "    ( ~(?1 & 255) & (select flags from identity"
+    "    ( ~(?1 & 65535) & (select flags from identity"
     "                    where (case when (address = ?2) then (1)"
     "                                when (lower(address) = lower(?2)) then (1)"
     "                                when (replace(lower(address),'.','') = replace(lower(?2),'.','')) then (1)"
@@ -387,6 +377,17 @@ static const char *sql_own_key_is_listed =
     "   select pgp_keypair_fpr from trust"
     "      join identity on trust.user_id = identity.user_id"
     "      where pgp_keypair_fpr = upper(replace(?1,' ',''))"
+    "           and identity.is_own = 1"
+    ");";
+    
+static const char *sql_is_own_address =
+    "select count(*) from ("
+    "   select address from identity"
+    "       where (case when (address = ?1) then (1)"
+    "                   when (lower(address) = lower(?1)) then (1)"
+    "                   when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1)"
+    "                   else 0"
+    "           end) = 1 "
     "           and identity.is_own = 1"
     ");";
 
@@ -496,6 +497,51 @@ static int user_version(void *_version, int count, char **text, char **name)
     int *version = (int *) _version;
     *version = atoi(text[0]);
     return 0;
+}
+
+// TODO: refactor and generalise these two functions if possible.
+static int db_contains_table(PEP_SESSION session, const char* table_name) {
+    if (!session || !table_name)
+        return -1;
+    
+    // Table names can't be SQL parameters, so we do it this way.
+    
+    // these two must be the same number.
+    char sql_buf[500];
+    const size_t max_q_len = 500;
+    
+    size_t t_size, q_size;
+    
+    const char* q1 = "SELECT name FROM sqlite_master WHERE type='table' AND name='{"; // 61
+    const char* q2 = "'};";       // 3
+    
+    q_size = 64;
+    t_size = strlen(table_name);
+    
+    size_t query_len = q_size + t_size + 1;
+
+    if (query_len > max_q_len)
+        return -1;
+
+    strlcpy(sql_buf, q1, max_q_len);
+    strlcat(sql_buf, table_name, max_q_len);
+    strlcat(sql_buf, q2, max_q_len);
+
+    sqlite3_stmt *stmt; 
+
+    sqlite3_prepare_v2(session->db, sql_buf, -1, &stmt, NULL);
+
+    int retval = 0;
+
+    int rc = sqlite3_step(stmt);  
+    if (rc == SQLITE_DONE || rc == SQLITE_OK || rc == SQLITE_ROW) {
+        retval = 1;
+    }
+
+    sqlite3_finalize(stmt);      
+        
+    return retval;
+        
 }
 
 static int table_contains_column(PEP_SESSION session, const char* table_name,
@@ -680,7 +726,7 @@ DYNAMIC_API PEP_STATUS init(
     sqlite3_busy_timeout(_session->system_db, 1000);
 
 // increment this when patching DDL
-#define _DDL_USER_VERSION "9"
+#define _DDL_USER_VERSION "10"
 
     if (in_first) {
 
@@ -727,7 +773,7 @@ DYNAMIC_API PEP_STATUS init(
                 "       on delete set null,\n"
                 "   lang text,\n"
                 "   comment text,\n"
-                "   device_group text,\n"
+//                "   device_group text,\n"
                 "   is_pEp_user integer default 0\n"
                 ");\n"
                 "create table if not exists identity (\n"
@@ -843,14 +889,19 @@ DYNAMIC_API PEP_STATUS init(
         assert(int_result == SQLITE_OK);
 
         
-        // Sometimes the user_version wasn't set correctly. Check to see if this
-        // is really necessary...
+        // Sometimes the user_version wasn't set correctly. 
         if (version == 1) {
             bool version_changed = true;
-            if (table_contains_column(_session, "identity", "timestamp") > 0) {
+            if (db_contains_table(_session, "social_graph") > 0) {
+                if (!table_contains_column(_session, "person", "device_group"))
+                    version = 10;
+                else
+                    version = 9;
+            }            
+            else if (table_contains_column(_session, "identity", "timestamp") > 0) {
                 version = 8;
             }            
-            if (table_contains_column(_session, "person", "is_pEp_user") > 0) {
+            else if (table_contains_column(_session, "person", "is_pEp_user") > 0) {
                 version = 7;
             }            
             else if (table_contains_column(_session, "identity", "is_own") > 0) {
@@ -908,12 +959,13 @@ DYNAMIC_API PEP_STATUS init(
             // }
             
             if (version < 2) {
+                // N.B. addition of device_group column removed in DDL v10
                 int_result = sqlite3_exec(
                     _session->db,
                     "alter table pgp_keypair\n"
-                    "   add column flags integer default 0;\n"
-                    "alter table person\n"
-                    "   add column device_group text;\n",
+                    "   add column flags integer default 0;\n",
+                    // "alter table person\n"
+                    // "   add column device_group text;\n",
                     NULL,
                     NULL,
                     NULL
@@ -1100,7 +1152,7 @@ DYNAMIC_API PEP_STATUS init(
                     "    CONSTRAINT fk_own_identity\n"
                     "       FOREIGN KEY(own_address, own_userid)\n" 
                     "       REFERENCES identity(address, user_id)\n"
-                    "       ON DELETE CASCADE ON UPDATE CASCADE,\n"
+                    "       ON DELETE CASCADE ON UPDATE CASCADE\n"
                     ");\n"
                     "create table if not exists revocation_contact_list (\n"
                     "   fpr text not null references pgp_keypair (fpr)\n"
@@ -1110,6 +1162,40 @@ DYNAMIC_API PEP_STATUS init(
                     "   timestamp integer default (datetime('now')),\n"
                     "   PRIMARY KEY(fpr, contact_id)\n"
                     ");\n"
+                    ,
+                    NULL,
+                    NULL,
+                    NULL
+                );
+                assert(int_result == SQLITE_OK);    
+            }
+            if (version < 10 && version > 1) {
+                int_result = sqlite3_exec(
+                    _session->db,                
+                    "PRAGMA foreign_keys=off;\n"
+                    "BEGIN TRANSACTION;\n"
+                    "ALTER TABLE person RENAME TO _person_old;\n"                
+                    "create table if not exists person (\n"
+                    "   id text primary key,\n"
+                    "   username text not null,\n"
+                    "   main_key_id text\n"
+                    "       references pgp_keypair (fpr)\n"
+                    "       on delete set null,\n"
+                    "   lang text,\n"
+                    "   comment text,\n"
+                    "   is_pEp_user integer default 0\n"
+                    ");\n"
+                    "INSERT INTO person (id, username, main_key_id, "
+                    "                    lang, comment, is_pEp_user) "
+                    "   SELECT _person_old.id, _person_old.username, "
+                    "          _person_old.main_key_id, _person_old.lang, "
+                    "          _person_old.comment, _person_old.is_pEp_user "
+                    "   FROM _person_old "
+                    "   WHERE 1;\n"
+                    "DROP TABLE _person_old;\n"
+                    "COMMIT;\n"
+                    "\n"
+                    "PRAGMA foreign_keys=on;\n"
                     ,
                     NULL,
                     NULL,
@@ -1288,13 +1374,13 @@ DYNAMIC_API PEP_STATUS init(
             &_session->get_own_address_binding_from_contact, NULL);
     assert(int_result == SQLITE_OK);
 
-    int_result = sqlite3_prepare_v2(_session->db, sql_set_device_group,
-            (int)strlen(sql_set_device_group), &_session->set_device_group, NULL);
-    assert(int_result == SQLITE_OK);
-
-    int_result = sqlite3_prepare_v2(_session->db, sql_get_device_group,
-            (int)strlen(sql_get_device_group), &_session->get_device_group, NULL);
-    assert(int_result == SQLITE_OK);
+    // int_result = sqlite3_prepare_v2(_session->db, sql_set_device_group,
+    //         (int)strlen(sql_set_device_group), &_session->set_device_group, NULL);
+    // assert(int_result == SQLITE_OK);
+    // 
+    // int_result = sqlite3_prepare_v2(_session->db, sql_get_device_group,
+    //         (int)strlen(sql_get_device_group), &_session->get_device_group, NULL);
+    // assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_pgp_keypair,
             (int)strlen(sql_set_pgp_keypair), &_session->set_pgp_keypair,
@@ -1397,6 +1483,11 @@ DYNAMIC_API PEP_STATUS init(
     
     int_result = sqlite3_prepare_v2(_session->db, sql_own_key_is_listed,
             (int)strlen(sql_own_key_is_listed), &_session->own_key_is_listed,
+            NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_is_own_address,
+            (int)strlen(sql_is_own_address), &_session->is_own_address,
             NULL);
     assert(int_result == SQLITE_OK);
     
@@ -1521,6 +1612,7 @@ DYNAMIC_API void release(PEP_SESSION session)
         out_last = true;
 
     if (session) {
+        free_Sync_state(session);
 
         if (session->db) {
             if (session->log)
@@ -1573,10 +1665,10 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->was_id_for_revoke_contacted);   
             if (session->get_last_contacted)
                 sqlite3_finalize(session->get_last_contacted);                                       
-            if (session->set_device_group)
-                sqlite3_finalize(session->set_device_group);
-            if (session->get_device_group)
-                sqlite3_finalize(session->get_device_group);
+            // if (session->set_device_group)
+            //     sqlite3_finalize(session->set_device_group);
+            // if (session->get_device_group)
+            //     sqlite3_finalize(session->get_device_group);
             if (session->set_pgp_keypair)
                 sqlite3_finalize(session->set_pgp_keypair);
             if (session->exists_identity_entry)
@@ -1633,6 +1725,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->blacklist_retrieve);
             if (session->own_key_is_listed)
                 sqlite3_finalize(session->own_key_is_listed);
+            if (session->is_own_address)
+                sqlite3_finalize(session->is_own_address);
             if (session->own_identities_retrieve)
                 sqlite3_finalize(session->own_identities_retrieve);
             if (session->own_keys_retrieve)
@@ -1692,12 +1786,6 @@ DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable)
     session->unencrypted_subject = enable;
 }
 
-DYNAMIC_API void config_keep_sync_msg(PEP_SESSION session, bool enable)
-{
-    assert(session);
-    session->keep_sync_msg = enable;
-}
-
 DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable)
 {
     assert(session);
@@ -1712,7 +1800,12 @@ DYNAMIC_API PEP_STATUS log_event(
         const char *comment
     )
 {
-//    PEP_STATUS status = PEP_STATUS_OK;
+#ifndef NDEBUG
+    fprintf(stdout, "\n*** %s %s %s %s\n", title, entity, description, comment);
+    session->service_log = true;
+#endif
+
+    // PEP_STATUS status = PEP_STATUS_OK;
     // int result;
     // 
     // assert(session);
@@ -2934,6 +3027,40 @@ DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session, pEp_identity *identity, 
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS is_own_address(PEP_SESSION session, const char* address, bool* is_own_addr)
+{
+    assert(session);
+    assert(is_own_addr);
+    assert(!EMPTYSTR(address));
+
+    if (!session || !is_own_addr || EMPTYSTR(address))
+        return PEP_ILLEGAL_VALUE;
+    
+    *is_own_addr = false;
+                
+    if (!session || EMPTYSTR(address))
+        return PEP_ILLEGAL_VALUE;
+        
+    sqlite3_reset(session->is_own_address);
+    sqlite3_bind_text(session->is_own_address, 1, address, -1,
+            SQLITE_STATIC);
+    int result = sqlite3_step(session->is_own_address);
+    switch (result) {
+        case SQLITE_ROW: {
+            // yeah yeah, I know, we could be lazy here, but it looks bad.
+            *is_own_addr = (sqlite3_column_int(session->is_own_address, 0) != 0);
+            break;
+        }
+        default:
+            sqlite3_reset(session->is_own_address);
+            return PEP_RECORD_NOT_FOUND;
+    }
+
+    sqlite3_reset(session->is_own_address);
+    
+    return PEP_STATUS_OK;
+}
+
 PEP_STATUS bind_own_ident_with_contact_ident(PEP_SESSION session,
                                              pEp_identity* own_ident, 
                                              pEp_identity* contact_ident) {
@@ -3069,93 +3196,93 @@ PEP_STATUS update_trust_for_fpr(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
-DYNAMIC_API PEP_STATUS set_device_group(
-        PEP_SESSION session,
-        const char *group_name
-    )
-{
-    int result;
-
-    assert(session);
-
-    if (!(session && group_name))
-        return PEP_ILLEGAL_VALUE;
-
-    // 1. Get own user_id
-    char* user_id = NULL;
-    PEP_STATUS status = get_default_own_userid(session, &user_id);
-    
-    // No user_id is returned in this case, no need to free;
-    if (status != PEP_STATUS_OK)
-        return status;
-        
-    // 2. Set device group
-    sqlite3_reset(session->set_device_group);
-    if(group_name){
-        sqlite3_bind_text(session->set_device_group, 1, group_name, -1,
-                SQLITE_STATIC);
-    } else {
-        sqlite3_bind_null(session->set_device_group, 1);
-    }
-    
-    sqlite3_bind_text(session->set_device_group, 2, user_id, -1,
-            SQLITE_STATIC);
-
-    result = sqlite3_step(session->set_device_group);
-    sqlite3_reset(session->set_device_group);
-    
-    free(user_id);
-    
-    if (result != SQLITE_DONE)
-        return PEP_CANNOT_SET_PERSON;
-
-    return PEP_STATUS_OK;
-}
-
-DYNAMIC_API PEP_STATUS get_device_group(PEP_SESSION session, char **group_name)
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-    int result;
-
-    assert(session);
-    assert(group_name);
-
-    if (!(session && group_name))
-        return PEP_ILLEGAL_VALUE;
-
-    // 1. Get own user_id
-    char* user_id = NULL;
-    status = get_default_own_userid(session, &user_id);
-    
-    // No user_id is returned in this case, no need to free;
-    if (status != PEP_STATUS_OK)
-        return status;
-
-    // 2. get device group
-    sqlite3_reset(session->get_device_group);
-    sqlite3_bind_text(session->get_device_group, 1, user_id, -1,
-            SQLITE_STATIC);
-
-    result = sqlite3_step(session->get_device_group);
-    switch (result) {
-    case SQLITE_ROW: {
-        const char *_group_name = (const char *)sqlite3_column_text(session->get_device_group, 0);
-        if(_group_name){
-            *group_name = strdup(_group_name);
-                if(*group_name == NULL)
-                    status = PEP_OUT_OF_MEMORY;
-        }
-        break;
-    }
- 
-    default:
-        status = PEP_RECORD_NOT_FOUND;
-    }
-
-    free(user_id);
-    sqlite3_reset(session->get_device_group);
-    return status;
-}
+// DYNAMIC_API PEP_STATUS set_device_group(
+//         PEP_SESSION session,
+//         const char *group_name
+//     )
+// {
+//     int result;
+// 
+//     assert(session);
+// 
+//     if (!(session && group_name))
+//         return PEP_ILLEGAL_VALUE;
+// 
+//     // 1. Get own user_id
+//     char* user_id = NULL;
+//     PEP_STATUS status = get_default_own_userid(session, &user_id);
+// 
+//     // No user_id is returned in this case, no need to free;
+//     if (status != PEP_STATUS_OK)
+//         return status;
+// 
+//     // 2. Set device group
+//     sqlite3_reset(session->set_device_group);
+//     if(group_name){
+//         sqlite3_bind_text(session->set_device_group, 1, group_name, -1,
+//                 SQLITE_STATIC);
+//     } else {
+//         sqlite3_bind_null(session->set_device_group, 1);
+//     }
+// 
+//     sqlite3_bind_text(session->set_device_group, 2, user_id, -1,
+//             SQLITE_STATIC);
+// 
+//     result = sqlite3_step(session->set_device_group);
+//     sqlite3_reset(session->set_device_group);
+// 
+//     free(user_id);
+// 
+//     if (result != SQLITE_DONE)
+//         return PEP_CANNOT_SET_PERSON;
+// 
+//     return PEP_STATUS_OK;
+// }
+// 
+// DYNAMIC_API PEP_STATUS get_device_group(PEP_SESSION session, char **group_name)
+// {
+//     PEP_STATUS status = PEP_STATUS_OK;
+//     int result;
+// 
+//     assert(session);
+//     assert(group_name);
+// 
+//     if (!(session && group_name))
+//         return PEP_ILLEGAL_VALUE;
+// 
+//     // 1. Get own user_id
+//     char* user_id = NULL;
+//     status = get_default_own_userid(session, &user_id);
+// 
+//     // No user_id is returned in this case, no need to free;
+//     if (status != PEP_STATUS_OK)
+//         return status;
+// 
+//     // 2. get device group
+//     sqlite3_reset(session->get_device_group);
+//     sqlite3_bind_text(session->get_device_group, 1, user_id, -1,
+//             SQLITE_STATIC);
+// 
+//     result = sqlite3_step(session->get_device_group);
+//     switch (result) {
+//     case SQLITE_ROW: {
+//         const char *_group_name = (const char *)sqlite3_column_text(session->get_device_group, 0);
+//         if(_group_name){
+//             *group_name = strdup(_group_name);
+//                 if(*group_name == NULL)
+//                     status = PEP_OUT_OF_MEMORY;
+//         }
+//         break;
+//     }
+// 
+//     default:
+//         status = PEP_RECORD_NOT_FOUND;
+//     }
+// 
+//     free(user_id);
+//     sqlite3_reset(session->get_device_group);
+//     return status;
+// }
 
 DYNAMIC_API PEP_STATUS set_identity_flags(
         PEP_SESSION session,

@@ -381,6 +381,18 @@ const char* tl_ct_string(PEP_comm_type ct) {
     }
 }
 
+std::string tl_ident_flags_String(identity_flags_t fl) {
+    std::string retval;
+    if (fl & PEP_idf_not_for_sync)   // don't use this identity for sync
+        retval += " PEP_idf_not_for_sync";
+    if (fl & PEP_idf_list)           // identity of list of persons
+        retval += " PEP_idf_list";
+    if (fl & PEP_idf_devicegroup)
+        retval += "PEP_idf_devicegroup";
+    if (retval.empty())
+        return std::string("PEP_idf_OMGWTFBBQ");
+    return retval;
+}
 bool slurp_and_import_key(PEP_SESSION session, const char* key_filename) {
     std::string keyfile = slurp(key_filename);
     if (import_key(session, keyfile.c_str(), keyfile.size(), NULL) != PEP_TEST_KEY_IMPORT_SUCCESS)

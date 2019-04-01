@@ -80,7 +80,7 @@ $(TARGET): libpEpEngine.a
 objects: $(ALL_OBJECTS)
 
 libpEpEngine.a: $(ALL_OBJECTS)
-	ar -rc $@ $^
+	$(AR) -rc $@ $^
 
 .PHONY: clean
 clean:

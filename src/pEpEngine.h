@@ -367,14 +367,6 @@ DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable);
 DYNAMIC_API void config_use_only_own_private_keys(PEP_SESSION session, bool enable);
 
 
-// config_keep_sync_msg() - do not remove sync messages (for debugging purposes)
-//
-//      session (in)    session handle
-//      enable (in)     flag if enabled or disabled
-
-DYNAMIC_API void config_keep_sync_msg(PEP_SESSION session, bool enable);
-
-
 // config_service_log() - log more for service purposes
 //
 //      session (in)    session handle
@@ -873,38 +865,38 @@ DYNAMIC_API PEP_STATUS set_userid_alias (
         const char* alias_id);
 
 
-// set_device_group() - update own person's device group
-//
-//    parameters:
-//        session (in)        session handle
-//        group_name (in)     new group name
-//
-//    return value:
-//        PEP_STATUS_OK = 0             device group was updated
-//        PEP_CANNOT_SET_PERSON         update failed
-
-DYNAMIC_API PEP_STATUS set_device_group(
-        PEP_SESSION session,
-        const char *group_name
-    );
-
-// get_device_group() - get own person's device group
-//
-//    parameters:
-//        session (in)        session handle
-//        group_name (in)     new group name
-//
-//    return value:
-//        PEP_STATUS_OK = 0             couldn't get device group
-//        PEP_RECORD_NOT_FOUND          update failed
-//
-//    caveat:
-//        the ownerships of group_name is going to the caller
-
-DYNAMIC_API PEP_STATUS get_device_group(
-        PEP_SESSION session, 
-        char **group_name
-    );
+// // set_device_group() - update own person's device group
+// //
+// //    parameters:
+// //        session (in)        session handle
+// //        group_name (in)     new group name
+// //
+// //    return value:
+// //        PEP_STATUS_OK = 0             device group was updated
+// //        PEP_CANNOT_SET_PERSON         update failed
+// 
+// DYNAMIC_API PEP_STATUS set_device_group(
+//         PEP_SESSION session,
+//         const char *group_name
+//     );
+// 
+// // get_device_group() - get own person's device group
+// //
+// //    parameters:
+// //        session (in)        session handle
+// //        group_name (in)     new group name
+// //
+// //    return value:
+// //        PEP_STATUS_OK = 0             couldn't get device group
+// //        PEP_RECORD_NOT_FOUND          update failed
+// //
+// //    caveat:
+// //        the ownerships of group_name is going to the caller
+// 
+// DYNAMIC_API PEP_STATUS get_device_group(
+//         PEP_SESSION session, 
+//         char **group_name
+//     );
 
 // set_identity_flags() - update identity flags on existing identity
 //
@@ -1455,6 +1447,10 @@ PEP_STATUS get_identities_by_userid(
         identity_list **identities
     );    
         
+PEP_STATUS is_own_address(PEP_SESSION session, 
+                          const char* address, 
+                          bool* is_own_addr);
+
 PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
                               const char* new_uid);
                               
@@ -1521,7 +1517,9 @@ PEP_STATUS sign_only(PEP_SESSION session,
                      const char *fpr, 
                      char **sign, 
                      size_t *sign_size);
-                     
+
+const char *get_device_name(PEP_SESSION session);
+
 #ifdef __cplusplus
 }
 #endif

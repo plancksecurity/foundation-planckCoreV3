@@ -135,7 +135,8 @@ DYNAMIC_API void free_stringlist(stringlist_t *stringlist);
 
 stringlist_t* stringlist_search(stringlist_t* head, const char* value);
 
+void dedup_stringlist(stringlist_t* stringlist);
+
 #ifdef __cplusplus
 }
 #endif
-

@@ -19,6 +19,8 @@ StringlistTests::StringlistTests(string suitename, string test_home_dir) :
     EngineTestSuite::EngineTestSuite(suitename, test_home_dir) {            
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("StringlistTests::check_stringlists"),
                                                                       static_cast<Func>(&StringlistTests::check_stringlists)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("StringlistTests::check_dedup_stringlist"),
+                                                                      static_cast<Func>(&StringlistTests::check_dedup_stringlist)));
 }
 
 void StringlistTests::check_stringlists() {
@@ -118,4 +120,117 @@ void StringlistTests::check_stringlists() {
     dst = NULL;
     
     cout << "done.\n";
+}
+
+void StringlistTests::check_dedup_stringlist() {
+    const char* str1 = "Your Mama";
+    const char* str2 = "And your Papa";
+    const char* str3 = "And your little dog too!";
+    const char* str4 = "Meh";
+    
+    stringlist_t* s_list = NULL;
+    dedup_stringlist(s_list);
+    TEST_ASSERT(s_list == NULL);
+    
+    s_list = new_stringlist(NULL);
+    dedup_stringlist(s_list);    
+    TEST_ASSERT(s_list->value == NULL);
+    
+    stringlist_add(s_list, str1);
+    dedup_stringlist(s_list);
+    TEST_ASSERT(s_list->value);
+    TEST_ASSERT(strcmp(s_list->value, str1) == 0);
+    TEST_ASSERT(!s_list->next);
+
+    // Add same value
+    stringlist_add(s_list, str1);
+    dedup_stringlist(s_list);
+    TEST_ASSERT(s_list->value);
+    TEST_ASSERT(strcmp(s_list->value, str1) == 0);
+    TEST_ASSERT(!s_list->next);
+
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str2);
+    dedup_stringlist(s_list);
+    TEST_ASSERT(s_list->value);
+    TEST_ASSERT(strcmp(s_list->value, str1) == 0);
+    TEST_ASSERT(s_list->next);
+    TEST_ASSERT(!s_list->next->next);
+    TEST_ASSERT(s_list->next->value);
+    TEST_ASSERT(strcmp(s_list->next->value, str2) == 0);    
+
+    free_stringlist(s_list);
+    s_list = new_stringlist(str1);
+    
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    dedup_stringlist(s_list);
+    TEST_ASSERT(s_list->value);
+    TEST_ASSERT(strcmp(s_list->value, str1) == 0);
+    TEST_ASSERT(!s_list->next);
+
+    free_stringlist(s_list);
+    s_list = new_stringlist(str1);
+
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str2);
+    stringlist_add(s_list, str1);
+    dedup_stringlist(s_list);
+    TEST_ASSERT(s_list->value);
+    TEST_ASSERT(strcmp(s_list->value, str1) == 0);
+    TEST_ASSERT(s_list->next);
+    TEST_ASSERT(!s_list->next->next);
+    TEST_ASSERT(s_list->next->value);
+    TEST_ASSERT(strcmp(s_list->next->value, str2) == 0);    
+
+    free_stringlist(s_list);
+    s_list = new_stringlist(str3);
+
+    stringlist_add(s_list, str2);
+    stringlist_add(s_list, str3);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str3);
+    stringlist_add(s_list, str2);
+    stringlist_add(s_list, str1);
+    stringlist_add(s_list, str4);
+    stringlist_add(s_list, str3);
+
+    dedup_stringlist(s_list);
+    TEST_ASSERT(s_list->next);
+    TEST_ASSERT(s_list->next->next);
+    TEST_ASSERT(s_list->next->next->next);
+    TEST_ASSERT(!s_list->next->next->next->next);
+    TEST_ASSERT(s_list->value);
+    TEST_ASSERT(strcmp(s_list->value, str3) == 0);    
+    TEST_ASSERT(s_list->next->value);
+    TEST_ASSERT(strcmp(s_list->next->value, str2) == 0);    
+    TEST_ASSERT(s_list->next->next->value);
+    TEST_ASSERT(strcmp(s_list->next->next->value, str1) == 0);    
+    TEST_ASSERT(s_list->next->next->next->value);
+    TEST_ASSERT(strcmp(s_list->next->next->next->value, str4) == 0);    
 }

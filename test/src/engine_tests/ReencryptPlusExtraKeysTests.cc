@@ -173,6 +173,10 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     
     int i = 0;
     
+    if (keys->next)
+    dedup_stringlist(keys->next);
+;
+    
     for (stringlist_t* kl = keys; kl && kl->value; kl = kl->next, i++)
     {
         if (i == 0) {
@@ -286,6 +290,9 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     extra_key_1_found = false;
     
     i = 0;
+    
+    if (keys->next)
+        dedup_stringlist(keys->next);
     
     for (stringlist_t* kl = keys; kl && kl->value; kl = kl->next, i++)
     {
@@ -402,6 +409,10 @@ void ReencryptPlusExtraKeysTests::check_reencrypt_plus_extra_keys() {
     extra_key_1_found = false;
     
     i = 0;
+    
+    if (keys->next)
+    dedup_stringlist(keys->next);
+;
     
     for (stringlist_t* kl = keys; kl && kl->value; kl = kl->next, i++)
     {

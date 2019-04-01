@@ -3,7 +3,7 @@
 
 // generate state machine code
 
-// Copyleft (c) 2016 - 2018, p≡p foundation
+// Copyleft (c) 2016 - 2019, p≡p foundation
 
 // Written by Volker Birk
 
@@ -55,7 +55,7 @@ tstylesheet {
 
         #define «yml:ucase(@name)»_TIMEOUT_EVENT new_«@name»_event(«@name»_PR_NOTHING, 0, NULL);
 
-
+    
         // free_«@name»_event() - free memory occupied by event
         //
         //  parameters:
@@ -198,7 +198,8 @@ tstylesheet {
                     PEP_rating rating,
                     const char *data,
                     size_t size,
-                    const char *fpr
+                    const pEp_identity *from,
+                    const char *signature_fpr
                 );
 
             #ifdef __cplusplus
@@ -302,8 +303,7 @@ tstylesheet {
                 return PEP_STATUS_OK;
 
             the_end:
-                free_«@name»_event(ev);
-                free_«@name»_message(msg);
+                free_«@name»_event(ev); // msg gets freed here
                 return status;
             }
 
@@ -312,7 +312,8 @@ tstylesheet {
                     PEP_rating rating,
                     const char *data,
                     size_t size,
-                    const char *fpr
+                    const pEp_identity *from,
+                    const char *signature_fpr
                 )
             {
                 assert(session && data && size);
@@ -322,12 +323,31 @@ tstylesheet {
                 if (!session->inject_«yml:lcase(@name)»_event)
                    return PEP_«yml:ucase(@name)»_NO_INJECT_CALLBACK;
 
+                PEP_STATUS status = PEP_STATUS_OK;
+                «@name»_event_t *ev = NULL;
+
+                if (from) {
+                    free_identity(session->«yml:lcase(@name)»_state.common.from);
+                    session->«yml:lcase(@name)»_state.common.from = identity_dup(from);
+                    if (!session->«yml:lcase(@name)»_state.common.from) {
+                        status = PEP_OUT_OF_MEMORY;
+                        goto the_end;
+                    }
+                }
+
+                if (signature_fpr) {
+                    free(session->«yml:lcase(@name)»_state.common.signature_fpr);
+                    session->«yml:lcase(@name)»_state.common.signature_fpr = strdup(signature_fpr);
+                    if (!session->«yml:lcase(@name)»_state.common.signature_fpr) {
+                        status = PEP_OUT_OF_MEMORY;
+                        goto the_end;
+                    }
+                }
+
                 «@name»_t *msg = NULL;
-                PEP_STATUS status = decode_«@name»_message(data, size, &msg);
+                status = decode_«@name»_message(data, size, &msg);
                 if (status)
                     return status;
-
-                «@name»_event_t *ev = NULL;
 
                 «@name»_PR fsm = msg->present;
                 int event = 0;
@@ -337,17 +357,6 @@ tstylesheet {
                     default:
                         status = PEP_«yml:ucase(@name)»_ILLEGAL_MESSAGE;
                         goto the_end;
-                }
-
-                if (fpr) {
-                    if (session->«yml:lcase(@name)»_state.common.from->fpr)
-                        free(session->«yml:lcase(@name)»_state.common.from->fpr);
-                    session->«yml:lcase(@name)»_state.common.from->fpr = strdup(fpr);
-                    assert(session->«yml:lcase(@name)»_state.common.from->fpr);
-                    if (!session->«yml:lcase(@name)»_state.common.from->fpr) {
-                        status = PEP_OUT_OF_MEMORY;
-                        goto the_end;
-                    }
                 }
 
                 ev = new_«@name»_event(fsm, event, msg);
@@ -366,8 +375,7 @@ tstylesheet {
                 return PEP_STATUS_OK;
 
             the_end:
-                free_«@name»_event(ev);
-                free_«@name»_message(msg);
+                free_«@name»_event(ev); // msg gets freed here
                 return status;
             }
 
@@ -451,6 +459,7 @@ tstylesheet {
                                 goto the_end;
                             }
                         }
+                        break;
 
                     default:
                         status = PEP_«yml:ucase(@name)»_ILLEGAL_MESSAGE;
@@ -478,6 +487,7 @@ tstylesheet {
                                     _data,
                                     size,
                                     li->ident->fpr,
+                                    NULL,
                                     &_m
                                 );
                             if (status) {
@@ -488,6 +498,29 @@ tstylesheet {
                             m = _m;
                             break;
 
+                    `` for "fsm/message[@security='attach_own_keys']" |>>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+                            status = base_prepare_message(
+                                    session,
+                                    li->ident,
+                                    li->ident,
+                                    _data,
+                                    size,
+                                    NULL,
+                                    &session->«yml:lcase(@name)»_state.common.own_keys,
+                                    &_m
+                                );
+                            if (status) {
+                                free(_data);
+                                goto the_end;
+                            }
+                            status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
+                            if (status) {
+                                status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                goto the_end;
+                            }
+                            free_message(_m);
+                            break;
+
                         default:
                             status = base_prepare_message(
                                     session,
@@ -495,6 +528,7 @@ tstylesheet {
                                     li->ident,
                                     _data,
                                     size,
+                                    NULL,
                                     NULL,
                                     &_m
                                 );
@@ -559,7 +593,7 @@ tstylesheet {
                 status = «@name»_driver(session, fsm, event);
 
             the_end:
-                free_«@name»_event(ev);
+                //free_«@name»_event(ev); // FIXME: We don't own this pointer. Are we sure it gets freed externally?
                 return status;
             }
 
@@ -624,43 +658,54 @@ tstylesheet {
     {
         ||
         case «../@name»_PR_«yml:lcase(@name)»:
-            event = msg->choice.«yml:lcase(@name)».payload.present;
-            switch (event) {
+            switch (msg->choice.«yml:lcase(@name)».payload.present) {
         ||
         if "message[@security='unencrypted']" {
-            |         // these messages require a detached signature
-            for "message[@security='unencrypted']"
-                |>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+            |>> // these messages require a detached signature
+            for "message[@security='unencrypted']" {
             ||
-                        if (!fpr) {
+                    case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+                        if (!signature_fpr) {
                             status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
                             goto the_end;
                         }
+                        event = «@name»;
                         break;
 
             ||
+            }
         }
-        if "message[@security='untrusted']"
-        ||
-                // these messages must arrive encrypted
-        `` for "message[@security='untrusted']" |>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
-                    if (fpr || rating < PEP_rating_reliable) {
-                        status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
-                        goto the_end;
-                    }
-                    break;
+        if "message[@security='untrusted']" {
+            |>> // these messages must arrive encrypted
+            for "message[@security='untrusted']" {
+            ||
+                    case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+                        if (rating < PEP_rating_reliable) {
+                            status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
+                            goto the_end;
+                        }
+                        event = «@name»;
+                        break;
 
-        ||
-        if "message[@security='trusted']"
-        ||
-                // these messages must come through a trusted channel
-        `` for "message[@security='trusted']" |>> case «ancestor::fsm/@name»__payload_PR_«yml:mixedCase(@name)»:
-                    if (fpr || rating < PEP_rating_trusted) {
-                        status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
-                        goto the_end;
-                    }
-                    break;
+            ||
+            }
+        }
+        if "message[@security='trusted']" {
+            |>> // these messages must come through a trusted channel
+            for "message[@security='trusted']" {
+            ||
+                    case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+                        if (rating < PEP_rating_trusted) {
+                            status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
+                            goto the_end;
+                        }
+                        event = «@name»;
+                        break;
 
+            ||
+            }
+        }
+        ||
                 default:
                     status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
                     goto the_end;
@@ -744,15 +789,16 @@ tstylesheet {
             «@name»_event_None = None,
             «@name»_event_Init = Init,
         ||
-        for "func:distinctName(state/event[not(not(../../message/@name=@name))])" {
+        for "message" {
             const "name", "@name";
             |> «$name» = «/protocol/fsm/message[@name=$name]/@id»,
         }
-        for "func:distinctName(state/event[not(not(../../external/@name=@name))])" {
-            const "name", "@name";
-            |> «$name» = «/protocol/fsm/external[@name=$name]/@id»,
-        }
         |> «@name»_event_Extra = Extra,
+        for "external" {
+            if "@id < 128"
+                error > external «@name» must have ID >= 128 but it's «@id»
+            |> «@name» = «@id»,
+        }
         for "func:distinctName(state/event[not(../../message/@name=@name or ../../external/@name=@name)])" {
             if "@name!='Init'"
                 |> «@name»`if "position()!=last()" > , `
@@ -856,13 +902,6 @@ tstylesheet {
 
         #define «@name»_ERR_LOG_INT(t, n) _«@name»_ERR_LOG_int(session, (t), (n), false)
         #define «@name»_ERR_LOG_HEX(t, n) _«@name»_ERR_LOG_int(session, (t), (n), true)
-
-        #ifndef SERVICE_LOG
-        // SERVICE LOG is meant to check session->service_log in runtime config;
-        // for older engines log more than needed
-        #define SERVICE_LOG(session, t, n, d) log_event((session), (t), (n), (d), "service")
-        #endif 
-
         #define «@name»_SERVICE_LOG(t, d) SERVICE_LOG(session, (t), "«@name»", (d))
 
         «@name»_state fsm_«@name»(
@@ -875,10 +914,10 @@ tstylesheet {
             if (!session)
                 return invalid_state;
 
+            if (state == None)
+                state = «@name»_state_Init;
+
             switch (state) {
-                case None:
-                    return «@name»_state_Init;
-                
                 `` apply "state", 2, mode=fsm
                 default:
                     «@name»_ERR_LOG_INT("invalid state", state);
@@ -909,7 +948,7 @@ tstylesheet {
         if "not(event[@name='Init'])"
         ||
                 case Init:
-                    // nothing to do
+                    «../@name»_SERVICE_LOG("received Init but nothing to do", "Init");
                     break;
 
         ||
@@ -918,7 +957,7 @@ tstylesheet {
                 default:
                     // ignore events not handled here
                     «../@name»_SERVICE_LOG("ignoring event", KeySync_event_name(event));
-                    break;
+                    return invalid_event;
             }
             break;
 
@@ -1013,4 +1052,3 @@ tstylesheet {
         | }
     }
 }
-

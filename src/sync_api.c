@@ -39,18 +39,23 @@ DYNAMIC_API void unregister_sync_callbacks(PEP_SESSION session) {
 
 DYNAMIC_API PEP_STATUS deliverHandshakeResult(
         PEP_SESSION session,
-        pEp_identity *partner,
-        sync_handshake_result result
+        sync_handshake_result result,
+        const identity_list *identities_sharing
     )
 {
     assert(session);
     if (!session)
         return PEP_ILLEGAL_VALUE;
 
-    PEP_STATUS status = PEP_STATUS_OK;
+    for (const identity_list *_il = identities_sharing; _il && _il->ident;
+            _il = _il->next) {
+        if (!_il->ident->me || !_il->ident->user_id || !_il->ident->user_id[0]
+                || !_il->ident->address || !_il->ident->address[0])
+            return PEP_ILLEGAL_VALUE;
+    }
 
+    PEP_STATUS status = PEP_STATUS_OK;
     int event;
-    bool need_partner = false;
 
     switch (result) {
         case SYNC_HANDSHAKE_CANCEL:
@@ -70,14 +75,20 @@ DYNAMIC_API PEP_STATUS deliverHandshakeResult(
             return PEP_ILLEGAL_VALUE;
     }
 
-    pEp_identity *_partner = NULL;
-    if(need_partner){
-        _partner = identity_dup(partner);
-        if (_partner == NULL)
-            return PEP_OUT_OF_MEMORY;
-    }
-    status = send_Sync_message(session, Sync_PR_keysync, event);
+    free_identity_list(session->sync_state.common.own_identities);
+    session->sync_state.common.own_identities = NULL;
 
+    if (identities_sharing && identities_sharing->ident) {
+        session->sync_state.common.own_identities = identity_list_dup(identities_sharing);
+        if (!session->sync_state.common.own_identities)
+            status = PEP_OUT_OF_MEMORY;
+    }
+    else {
+        status = own_identities_retrieve(session, &session->sync_state.common.own_identities);
+    }
+
+    if (!status)
+        status = signal_Sync_event(session, Sync_PR_keysync, event);
     return status;
 }
 
@@ -128,14 +139,6 @@ DYNAMIC_API PEP_STATUS do_sync_protocol_step(
     session->sync_obj = obj;
 
     PEP_STATUS status = recv_Sync_event(session, event);
-    if (status != PEP_STATUS_OK && status != PEP_MESSAGE_IGNORE) {
-        char buffer[MAX_LINELENGTH];
-        memset(buffer, 0, MAX_LINELENGTH);
-        snprintf(buffer, MAX_LINELENGTH, "problem with msg received: %d\n",
-                (int) status);
-        log_event(session, buffer, "pEp sync protocol", NULL, NULL);
-    }
-
     return status == PEP_MESSAGE_IGNORE ? PEP_STATUS_OK : status;
 }
 
@@ -150,5 +153,88 @@ DYNAMIC_API bool is_sync_thread(PEP_SESSION session)
 DYNAMIC_API SYNC_EVENT new_sync_timeout_event()
 {
     return SYNC_TIMEOUT_EVENT;
+}
+
+DYNAMIC_API PEP_STATUS enter_device_group(
+        PEP_SESSION session,
+        const identity_list *identities_sharing
+    )
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    for (const identity_list *_il = identities_sharing; _il && _il->ident;
+            _il = _il->next) {
+        if (!_il->ident->me || !_il->ident->user_id || !_il->ident->user_id[0]
+                || !_il->ident->address || !_il->ident->address[0])
+            return PEP_ILLEGAL_VALUE;
+    }
+
+    identity_list *own_identities = NULL;
+    PEP_STATUS status = own_identities_retrieve(session, &own_identities);
+    if (status)
+        goto the_end;
+
+    if (identities_sharing && identities_sharing->ident) {
+        for (identity_list *_il = own_identities; _il && _il->ident;
+                _il = _il->next) {
+            bool found = false;
+
+            for (const identity_list *_is = identities_sharing;
+                    _is && _is->ident; _is = _is->next) {
+                // FIXME: "john@doe.com" and "mailto:john@doe.com" should be equal
+                if (strcmp(_il->ident->address, _is->ident->address) == 0
+                        && strcmp(_il->ident->user_id, _is->ident->user_id) == 0) {
+                    found = true;
+
+                    status = set_identity_flags(session, _il->ident, PEP_idf_devicegroup);
+                    if (status)
+                        goto the_end;
+
+                    break;
+                }
+            }
+            if (!found) {
+                status = unset_identity_flags(session, _il->ident, PEP_idf_devicegroup);
+                if (status)
+                    goto the_end;
+            }
+        }
+    }
+    else {
+        for (identity_list *_il = own_identities; _il && _il->ident;
+                _il = _il->next) {
+            status = set_identity_flags(session, _il->ident, PEP_idf_devicegroup);
+            if (status)
+                goto the_end;
+        }
+    }
+
+the_end:
+    free_identity_list(own_identities);
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session)
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    identity_list *il = NULL;
+    PEP_STATUS status = own_identities_retrieve(session, &il);
+    if (status)
+        goto the_end;
+
+    for (identity_list *_il = il; _il && _il->ident ; _il = _il->next) {
+        status = unset_identity_flags(session, _il->ident, PEP_idf_devicegroup);
+        if (status)
+            goto the_end;
+    }
+
+the_end:
+    free_identity_list(il);
+    return status;
 }
 

@@ -394,7 +394,7 @@ DYNAMIC_API PEP_STATUS key_reset(
                 //
                 // if (!EMPTYSTR(ident->fpr))
                 //     fpr_copy = strdup(ident->fpr);
-                status = _myself(session, ident, false, true);
+                status = _myself(session, ident, false, true, true);
                 if (status == PEP_STATUS_OK && ident->fpr)
                     fpr_copy = strdup(ident->fpr);
                 else {

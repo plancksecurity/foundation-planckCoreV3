@@ -31,7 +31,8 @@ PEP_STATUS base_decorate_message(
         message *msg,
         char *payload,
         size_t size,
-        char *fpr
+        const char *fpr,
+        stringlist_t **keys
     );
 
 
@@ -59,7 +60,8 @@ PEP_STATUS base_prepare_message(
         const pEp_identity *partner,
         char *payload,
         size_t size,
-        char *fpr,
+        const char *fpr,
+        stringlist_t **keys,
         message **result
     );
 

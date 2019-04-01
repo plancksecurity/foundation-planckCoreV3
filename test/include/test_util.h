@@ -44,6 +44,8 @@ const char* tl_ct_string(PEP_comm_type ct);
 // Returns the string value of the input status enum value. 
 const char* tl_status_string(PEP_STATUS status);
 
+std::string tl_ident_flags_String(identity_flags_t fl);
+
 // Grabs a new uuid for your randomish string needs.
 char* get_new_uuid();
 

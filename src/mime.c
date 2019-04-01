@@ -13,6 +13,10 @@
 #include "etpan_mime.h"
 #include "wrappers.h"
 
+static PEP_STATUS interpret_MIME(struct mailmime *mime,
+                                 message *msg);
+
+
 static bool is_whitespace(char c)
 {
     switch (c) {
@@ -1470,6 +1474,63 @@ static PEP_STATUS interpret_protected_headers(
     return PEP_STATUS_OK;
 }
 
+// ONLY for main part!!!
+static PEP_STATUS process_multipart_related(struct mailmime *mime,
+                                            message *msg) {
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(mime);
+    assert(msg);
+
+    clist *partlist = mime->mm_data.mm_multipart.mm_mp_list;                                                
+
+    if (partlist == NULL)
+        return PEP_ILLEGAL_VALUE;
+
+    clistiter *cur = clist_begin(partlist);
+    struct mailmime *part = clist_content(cur);
+    
+    if (part == NULL)
+        return PEP_ILLEGAL_VALUE;
+
+    struct mailmime_content *content = part->mm_content_type;    
+    assert(content);
+    
+    if (content == NULL)
+        return PEP_ILLEGAL_VALUE;
+
+    if (_is_text_part(content, "html")) {
+        status = interpret_body(part, &msg->longmsg_formatted,
+                NULL);
+        if (status)
+            return status;
+    }
+    else {
+        // ???
+        // This is what we would have done before, so... no
+        // worse than the status quo. But FIXME!
+        status = interpret_MIME(part, msg);
+        if (status)
+            return status;
+    }
+    
+    for (cur = clist_next(cur); cur; cur = clist_next(cur)) {
+        part = clist_content(cur);
+        if (part == NULL)
+            return PEP_ILLEGAL_VALUE;
+
+        content = part->mm_content_type;
+        assert(content);
+        if (content == NULL)
+            return PEP_ILLEGAL_VALUE;
+
+        status = interpret_MIME(part, msg);
+        if (status)
+            return status;
+    }
+    return status;
+}
+
 static PEP_STATUS interpret_MIME(
         struct mailmime *mime,
         message *msg
@@ -1512,6 +1573,12 @@ static PEP_STATUS interpret_MIME(
                         msg->longmsg_formatted == NULL) {
                     status = interpret_body(part, &msg->longmsg_formatted,
                             NULL);
+                    if (status)
+                        return status;
+                }
+                else if (_is_multipart(content, "related") && 
+                    msg->longmsg_formatted == NULL) {
+                    status = process_multipart_related(part, msg);
                     if (status)
                         return status;
                 }
