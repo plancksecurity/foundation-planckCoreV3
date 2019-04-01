@@ -41,6 +41,7 @@ EnterLeaveDeviceGroupTests::EnterLeaveDeviceGroupTests(string suitename, string 
 
 void EnterLeaveDeviceGroupTests::check_enter_device_group_no_own() {    
     pEp_identity* alice_id = NULL;
+    TEST_ASSERT(slurp_and_import_key(session, "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc"));
     PEP_STATUS status = set_up_ident_from_scratch(session,
                                 "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc",
                                 "pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", 
@@ -59,6 +60,7 @@ void EnterLeaveDeviceGroupTests::check_enter_device_group_no_own() {
 
 void EnterLeaveDeviceGroupTests::check_enter_device_group_one_own_empty() {    
     pEp_identity* alice_id = NULL;
+    TEST_ASSERT(slurp_and_import_key(session, "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc"));    
     PEP_STATUS status = set_up_ident_from_scratch(session,
                                 "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc",
                                 "pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", 
@@ -81,6 +83,27 @@ void EnterLeaveDeviceGroupTests::check_enter_device_group_one_own_empty() {
 }
 
 void EnterLeaveDeviceGroupTests::check_enter_device_group_one_own_one() {    
+    pEp_identity* alice_id = NULL;
+    TEST_ASSERT(slurp_and_import_key(session, "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc"));    
+    PEP_STATUS status = set_up_ident_from_scratch(session,
+                                "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc",
+                                "pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", 
+                                "ALICE", "Alice in Wonderland", &alice_id, true
+                        );    
+
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    status = myself(session, alice_id);
+
+    TEST_ASSERT(alice_id->me);
+    TEST_ASSERT(strcmp(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97") == 0);
+    identity_list* ids_to_group = new_identity_list(alice_id);
+    status = enter_device_group(session, ids_to_group);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    
+    status = myself(session, alice_id);
+    TEST_ASSERT(status == PEP_STATUS_OK);    
+    TEST_ASSERT_MSG(alice_id->flags & PEP_idf_devicegroup, tl_ident_flags_String(alice_id->flags).c_str());
+                        
     TEST_ASSERT(true);
 }
 
