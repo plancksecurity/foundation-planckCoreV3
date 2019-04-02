@@ -3955,6 +3955,8 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
     PEP_STATUS status = session->cryptotech[PEP_crypt_OpenPGP].decrypt_and_verify(
             session, ctext, csize, dsigtext, dsigsize, ptext, psize, keylist,
             filename_ptr);
+
+    if (status == PEP_DECRYPT_NO_KEY)
         signal_Sync_event(session, Sync_PR_keysync, CannotDecrypt);
 
     return status;
