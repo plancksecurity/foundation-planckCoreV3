@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <string>
+#include <assert.h>
 
 #include "pEpEngine.h"
 
@@ -137,7 +138,7 @@ void SyncTests::setup()
     free_identity(self);
 
     status = init(&sync, Sync_Adapter::messageToSend, Sync_Adapter::inject_sync_event);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    assert(status == PEP_STATUS_OK);
 
     cout << "initialize sync and start first state machine\n";
     status = register_sync_callbacks(
@@ -146,8 +147,8 @@ void SyncTests::setup()
             Sync_Adapter::notifyHandshake,
             Sync_Adapter::retrieve_next_sync_event
         );
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(sync->sync_state.keysync.state == Sole);
+    assert(status == PEP_STATUS_OK);
+    assert(sync->sync_state.keysync.state == Sole);
 
     cout << "creating thread for sync\n";
     sync_thread = new thread(Sync_Adapter::sync_thread, sync, &adapter);
@@ -176,4 +177,3 @@ void SyncTests::check_sync()
     cout << "check_sync(): cry for unknown key\n";
     signal_Sync_event(sync, Sync_PR_keysync, CannotDecrypt);
 }
-
