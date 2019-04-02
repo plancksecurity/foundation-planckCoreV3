@@ -1,7 +1,7 @@
 # This file is under GNU General Public License 3.0
 # see LICENSE.txt
 
-include ../default.conf
+include ../Makefile.conf
 
 ALL_SOURCE=$(subst $(NO_SOURCE),,$(wildcard *.c))
 ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
@@ -16,7 +16,7 @@ generate: Sync.c
 	rm -f converter-sample.c
 
 %.o: %.c %.h
-	$(CC) $(CFLAGS) $(OPTIMIZE) -I. -I$(ASN1C_INC) -c $< -o $@
+	$(CC) $(CFLAGS) $(OPTIMIZE) -I. $(ASN1C_INC) -c $< -o $@
 
 Sync.c: sync.asn1 keysync.asn1 pEp.asn1
 	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keysync.asn1 $<
