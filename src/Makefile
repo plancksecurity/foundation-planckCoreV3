@@ -3,7 +3,7 @@
 # This file may be used under the terms of the GNU General Public License version 3
 # see LICENSE.txt
 
-include ../default.conf
+include ../Makefile.conf
 
 CFLAGS+= $(ETPAN_INC) -I../asn.1 -DSYSTEM_DB=\"$(SYSTEM_DB)\" $(EXTRA_MACROS)
 LDFLAGS+= $(ETPAN_LIB) -L../asn.1 -shared
@@ -86,17 +86,18 @@ libpEpEngine.a: $(ALL_OBJECTS)
 clean:
 	rm -f *.d *.o *.a $(TARGET) *.dll *.so *.zip *.d.* *.def *~
 	rm -Rf $(TARGET).dSYM
+	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.*
 
 .PHONY: install
 install: $(TARGET)
 	mkdir -p "$(PREFIX)/lib/"
 	cp $< $(PREFIX)/lib/
 	mkdir -p $(PREFIX)/include/pEp
-	cp -v pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
-	      timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h \
-	      cryptotech.h sync_api.h blacklist.h pEp_string.h openpgp_compat.h \
-	      labeled_int_list.h key_reset.h base64.h sync_codec.h \
-		  ../asn.1/*.h $(PREFIX)/include/pEp/
+	cp pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
+	   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h \
+	   cryptotech.h sync_api.h blacklist.h pEp_string.h openpgp_compat.h \
+	   labeled_int_list.h key_reset.h base64.h sync_codec.h \
+	   ../asn.1/*.h $(PREFIX)/include/pEp/
 
 .PHONY: uninstall
 uninstall:
