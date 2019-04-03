@@ -1,4 +1,6 @@
 #include <cpptest.h>
+#include <cpptest-suite.h>
+#include <cpptest-output.h>
 #include <iostream>
 #include <iomanip>
 #include <vector>

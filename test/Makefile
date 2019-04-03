@@ -130,7 +130,7 @@ test: all
 
 .PHONY: clean
 clean:
-	$(RM) $(TARGET) $(TARGET).o $(OBJS) $(notdir $(basename $(OBJS))) $(DEPS)
+	$(RM) $(TARGET) $(TARGET).o $(TARGET).d $(OBJS) $(notdir $(basename $(OBJS))) $(DEPS)
 	$(RM) $(HERE)/*Tests msg_2.0.asc $(HERE)/pEp_test_home
 
 # If only the goal 'clean' is given, do not generate and include the '%.d' files.¬

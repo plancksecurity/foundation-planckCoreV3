@@ -1800,7 +1800,10 @@ DYNAMIC_API PEP_STATUS log_event(
         const char *comment
     )
 {
-#ifndef NDEBUG
+
+// N.B. If testing (so NDEBUG not defined) but this message is spam,
+//      put -D_PEP_SERVICE_LOG_OFF into CFLAGS/CXXFLAGS     
+#if !defined(NDEBUG) && !defined(_PEP_SERVICE_LOG_OFF)
     fprintf(stdout, "\n*** %s %s %s %s\n", title, entity, description, comment);
     session->service_log = true;
 #endif

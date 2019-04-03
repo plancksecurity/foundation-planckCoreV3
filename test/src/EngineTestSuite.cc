@@ -9,6 +9,7 @@
 #include <iostream>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <cpptest.h>
 
 #include <string>
 #include <vector>
@@ -224,7 +225,7 @@ void EngineTestSuite::set_full_env(const char* gpg_conf_copy_path, const char* g
     success = system("gpgconf --create-socketdir");
     if (success != 0)
         throw std::runtime_error("RESTORE: Error when executing 'gpgconf --create-socketdir'.");        
-    system("gpg-connect-agent /bye");   // Just in case - otherwise, we die on MacOS sometimes. Is this enough??
+    system("gpg-connect-agent /bye 2>/dev/null");   // Just in case - otherwise, we die on MacOS sometimes. Is this enough??
 #endif
 #endif
 
