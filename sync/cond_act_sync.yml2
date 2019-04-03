@@ -203,82 +203,19 @@ action saveGroupKeys
     free_identity_list(il);
 ||
 
-action ownKeysAreGroupKeys {
-    call "init_sql" with "sql" {
-        ||
-        "select fpr, username, comm_type, lang,"
-                "   identity.flags | pgp_keypair.flags"
-                "   from identity"
-                "   join person on id = identity.user_id"
-                "   join pgp_keypair on fpr = identity.main_key_id"
-                "   join trust on id = trust.user_id"
-                "       and pgp_keypair_fpr = identity.main_key_id"
-                "   where identity.is_own = true ;"
-        ||
+action ownKeysAreGroupKeys
+||
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    // set flag for current keys
+    for (identity_list *il = session->sync_state.common.own_identities; il && il->ident ; il = il->next) {
+        if (!(il->ident->flags && PEP_idf_not_for_sync)) {
+            status = set_identity_flags(session, il->ident, PEP_idf_devicegroup);
+            if (status)
+                return status;
+        }
     }
-
-    ||
-        identity_list *il = new_identity_list(NULL);
-        if (!il)
-            return PEP_OUT_OF_MEMORY;
-
-        pEp_identity *from = session->sync_state.common.from;
-        identity_list *_il = il;
-
-        int result;
-        do {
-            result = sqlite3_step(_sql);
-            pEp_identity *_identity = NULL;
-            switch (result) {
-            case SQLITE_ROW:
-                _identity = new_identity(
-                        from->address,
-                        (const char *) sqlite3_column_text(_sql, 0),
-                        from->user_id,
-                        (const char *) sqlite3_column_text(_sql, 1)
-                    );
-                assert(_identity);
-                if (_identity == NULL)
-                    return PEP_OUT_OF_MEMORY;
-
-                _identity->comm_type = (PEP_comm_type)
-                    sqlite3_column_int(_sql, 2);
-                const char* const _lang = (const char *)
-                    sqlite3_column_text(_sql, 3);
-                if (_lang && _lang[0]) {
-                    assert(_lang[0] >= 'a' && _lang[0] <= 'z');
-                    assert(_lang[1] >= 'a' && _lang[1] <= 'z');
-                    assert(_lang[2] == 0);
-                    _identity->lang[0] = _lang[0];
-                    _identity->lang[1] = _lang[1];
-                    _identity->lang[2] = 0;
-                }
-                _identity->flags = (unsigned int)
-                    sqlite3_column_int(_sql, 4);
-
-                _il = identity_list_add(_il, _identity);
-                if (!_il) {
-                    free_identity_list(il);
-                    free_identity(_identity);
-                    return PEP_OUT_OF_MEMORY;
-                }
-                break;
-
-            case SQLITE_DONE:
-                break;
-
-            default:
-                free_identity_list(il);
-                return PEP_UNKNOWN_ERROR;
-            }
-        } while (result != SQLITE_DONE);
-
-        IdentityList_t *r = IdentityList_from_identity_list(il, &session->sync_state.keysync.ownIdentities);
-        free_identity_list(il);
-        if (!r)
-            return PEP_OUT_OF_MEMORY;
-    ||
-}
+||
 
 action receivedKeysAreGroupKeys;
 

@@ -78,4 +78,5 @@ sync/.codegen
 sync/.statemachines
 test/msg_2.0.asc
 test/*Tests
-
+test/*.txt
+lldb-history
