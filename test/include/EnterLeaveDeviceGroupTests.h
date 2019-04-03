@@ -24,6 +24,11 @@ class EnterLeaveDeviceGroupTests : public EngineTestIndividualSuite {
         void check_enter_device_group_many_own_one();    
         void check_enter_device_group_many_own_many();    
         void check_enter_device_group_many_own_many_w_not_me();    
+        void check_leave_device_group_empty();
+        void check_leave_device_group_sole();
+        void check_leave_device_group_one_in_one_out();
+        void check_leave_device_group_three_in();
+        void check_leave_device_group_two_in_one_out();
 };
 
 #endif
