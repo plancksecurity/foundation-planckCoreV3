@@ -1,6 +1,7 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
+#define _EXPORT_PEP_ENGINE_DLL
 #include "mime.h"
 
 #include <string.h>
