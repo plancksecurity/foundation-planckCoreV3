@@ -22,7 +22,7 @@ endif
 all:
 	$(MAKE) -C sync
 	$(MAKE) -C asn.1
-	$(MAKE) -C src all
+	$(MAKE) -C src
 
 install: all
 	$(MAKE) -C src install

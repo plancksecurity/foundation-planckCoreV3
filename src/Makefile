@@ -17,7 +17,6 @@ LDLIBS+= -lpEpMIME
 NO_SOURCE+= etpan_mime.c
 endif
 
-
 ifeq ($(BUILD_ON),Darwin)
     ifeq ($(BUILD_FOR),Darwin)
         CFLAGS+= -DSQLITE_THREADSAFE=1

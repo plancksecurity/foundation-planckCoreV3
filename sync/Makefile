@@ -3,7 +3,7 @@
 
 include ../Makefile.conf
 
-all: copy
+all: .copy
 
 generated:
 	mkdir -p $@
@@ -26,8 +26,9 @@ clean:
 	rm -rf generated
 	rm -f *.xml *.xsl .statemachines .actions .codecs .messages *.dot *.svg
 
-copy: .actions .statemachines .codecs .messages
+.copy: .actions .statemachines .codecs .messages
 	cp -f generated/*.c generated/*.h ../src
+	touch .copy
 
 %.xml: %.fsm
 	yml2c $< -o $@
