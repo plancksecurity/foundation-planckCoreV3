@@ -24,13 +24,16 @@ all:
 	$(MAKE) -C asn.1
 	$(MAKE) -C src
 
+.PHONY: install
 install: all
 	$(MAKE) -C src install
 	$(MAKE) -C asn.1 install
 
+.PHONY: dbinstall
 dbinstall: db
 	$(MAKE) -C db install
 
+.PHONY: uninstall
 uninstall:
 	$(MAKE) -C src uninstall
 	$(MAKE) -C asn.1 uninstall
