@@ -61,8 +61,10 @@ protocol Sync 1 {
 
         // handshaking without existing Device group
         state HandshakingNew {
-            on Init
+            on Init {
+                do identifySole;
                 do showSoleHandshake;
+            }
 
             // Cancel is Rollback
             on Cancel {
@@ -91,8 +93,10 @@ protocol Sync 1 {
                 go HandshakingNewPhase1;
             }
 
-            on CommitAccept
-                go HandshakingNewPhase1Own;
+            on CommitAccept {
+                if notMe
+                    go HandshakingNewPhase1Own;
+            }
         }
 
         state HandshakingNewPhase1 {
@@ -105,7 +109,8 @@ protocol Sync 1 {
             }
 
             on CommitAccept
-                go NewGroup;
+                if notMe
+                    go NewGroup;
         }
 
         state HandshakingNewPhase1Own {
@@ -121,7 +126,8 @@ protocol Sync 1 {
             }
 
             on Accept
-                go NewGroup;
+                if notMe
+                    go NewGroup;
         }
 
         state NewGroup {
@@ -170,7 +176,7 @@ protocol Sync 1 {
                 go HandshakingJoinPhase1;
             }
 
-            on CommitAccept
+            on CommitAcceptForGroup
                 go HandshakingJoinPhase1Own;
         }
 
@@ -183,7 +189,7 @@ protocol Sync 1 {
                 go End;
             }
 
-            on CommitAccept
+            on CommitAcceptForGroup
                 go JoinGroup;
         }
 
@@ -249,7 +255,7 @@ protocol Sync 1 {
 
             // Accept is Phase1Commit
             on Accept {
-                send CommitAccept;
+                send CommitAcceptForGroup;
                 go HandshakingGroupedPhase1;
             }
 
@@ -329,14 +335,19 @@ protocol Sync 1 {
 
         message CommitAccept 7 {
             field TID transaction;
+            field TID me;
         }
 
-        message GroupKeysAndClose 8, security=attach_own_keys {
+        message CommitAcceptForGroup 8 {
+            field TID transaction;
+        }
+
+        message GroupKeysAndClose 9, security=attach_own_keys {
             field TID transaction;
             field IdentityList ownIdentities;
         }
 
-        message GroupKeys 9, security=attach_own_keys {
+        message GroupKeys 10, security=attach_own_keys {
             field IdentityList ownIdentities;
         }
     }
