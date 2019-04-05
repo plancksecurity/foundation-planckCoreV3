@@ -8,8 +8,6 @@
 #include <assert.h>
 #include <errno.h>
 
-#include "etpan_mime.h"
-
 static bool is_whitespace(char c)
 {
     switch (c) {
