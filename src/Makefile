@@ -22,17 +22,17 @@ ifeq ($(BUILD_ON),Darwin)
         CFLAGS+= -DSQLITE_THREADSAFE=1
         LDLIBS+= -lz -liconv
     else
-        $(error I don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
+        $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
     endif
 else ifeq ($(BUILD_ON),Linux)
     ifeq ($(BUILD_FOR),Linux)
         CFLAGS+= -DSQLITE_THREADSAFE=1 -D_GNU_SOURCE
         LDLIBS+= -ldl -luuid
     else
-        $(error I don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
+        $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
     endif
 else
-    $(error I don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
+    $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
 endif
 
 ifdef SQLITE3_FROM_OS
@@ -93,15 +93,20 @@ clean:
 	rm -Rf $(TARGET).dSYM
 	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.*
 
-install: $(TARGET)
-	mkdir -p "$(PREFIX)/lib/"
-	cp $< $(PREFIX)/lib/
+# CAVEAT:
+# install_headers is needed for building pEp MIME
+
+install_headers:
 	mkdir -p $(PREFIX)/include/pEp
 	cp pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
 	   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h \
 	   cryptotech.h sync_api.h blacklist.h pEp_string.h openpgp_compat.h \
 	   labeled_int_list.h key_reset.h base64.h sync_codec.h \
 	   ../asn.1/*.h $(PREFIX)/include/pEp/
+
+install: $(TARGET) install_headers
+	mkdir -p "$(PREFIX)/lib/"
+	cp $< $(PREFIX)/lib/
 
 .PHONY: uninstall
 uninstall:
