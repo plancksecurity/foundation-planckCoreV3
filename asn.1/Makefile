@@ -24,7 +24,7 @@ Sync.c: sync.asn1 keysync.asn1 pEp.asn1
 sync.asn1 keysync.asn1 pEp.asn1:
 	cp -f ../sync/generated/*.asn1 ../asn.1
 
-.PHONY: clean install uninstall tags
+.PHONY: clean uninstall tags
 
 clean:
 	rm -f *.a *.o *.c *.h *.sample sync.asn1 keysync.asn1

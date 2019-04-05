@@ -26,7 +26,6 @@ clean:
 	rm -rf generated
 	rm -f *.xml *.xsl .statemachines .actions .codecs .messages *.dot *.svg
 
-.PHONY: copy
 copy: .actions .statemachines .codecs .messages
 	cp -f generated/*.c generated/*.h ../src
 

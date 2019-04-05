@@ -65,7 +65,6 @@ ALL_SOURCE=$(filter-out $(NO_SOURCE),$(wildcard *.c))
 DEPENDS=$(subst .c,.d,$(ALL_SOURCE))
 ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
 
-.PHONY: all
 all: $(TARGET)
 
 -include Makefile.protocols
@@ -84,7 +83,6 @@ endif
 $(TARGET): libpEpEngine.a
 	$(CC) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
 
-.PHONY: objects
 objects: $(ALL_OBJECTS)
 
 libpEpEngine.a: $(ALL_OBJECTS)
@@ -96,7 +94,6 @@ clean:
 	rm -Rf $(TARGET).dSYM
 	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.*
 
-.PHONY: install
 install: $(TARGET)
 	mkdir -p "$(PREFIX)/lib/"
 	cp $< $(PREFIX)/lib/
