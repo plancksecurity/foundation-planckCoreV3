@@ -1826,15 +1826,6 @@ enomem:
     return status;
 }
 
-DYNAMIC_API PEP_STATUS mime_encode_message(
-        const message * msg,
-        bool omit_fields,
-        char **mimetext
-    )
-{
-    return _mime_encode_message_internal(msg, omit_fields, mimetext, true);
-}
-
 PEP_STATUS _mime_encode_message_internal(
         const message * msg,
         bool omit_fields,
