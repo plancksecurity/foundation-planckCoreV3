@@ -96,17 +96,12 @@ endif
 TEST_CMD_PFX=
 
 
-.PHONY: all
-all: suitemaker $(TARGET) scripts
+all: .suitemaker $(TARGET) .scripts
 
 %.d: %.cc
 	$(CXX) -MM $(CPPFLAGS) $(CXXFLAGS) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
 
-$(TARGET): $(OBJS)
-	$(LINK.cc) $^ $(LOADLIBES) $(LDLIBS) -o $@
-
-.PHONY: suitemaker
-suitemaker:
+.suitemaker: gensuitemaker.py
 ifndef PY_ENV
 	@echo "WARNING: Can't find python3 - this is fine unless you're adding test suites. If so, please install python3."
 else
@@ -116,22 +111,25 @@ else
 	# Comma-separated list, no spaces
 	$(PY_ENV) gensuitemaker.py --exclude=$(EXCLUDE)
 endif
+	touch .suitemaker
 endif
 
-.PHONY: scripts
-scripts:
+$(TARGET): $(OBJS) .suitemaker
+	$(LINK.cc) $(OBJS) $(LOADLIBES) $(LDLIBS) -o $@
+
+.scripts:
 ifdef PY_ENV
 	$(PY_ENV) genscripts.py
+	touch .scripts
 endif
 
-.PHONY: test
 test: all
 	$(TEST_CMD_PFX) $(TEST_DEBUGGER) ./$(TARGET)
 
 .PHONY: clean
 clean:
 	$(RM) $(TARGET) $(TARGET).o $(TARGET).d $(OBJS) $(notdir $(basename $(OBJS))) $(DEPS)
-	$(RM) $(HERE)/*Tests msg_2.0.asc $(HERE)/pEp_test_home
+	$(RM) $(HERE)/*Tests msg_2.0.asc $(HERE)/pEp_test_home .suitemaker .scripts
 
 # If only the goal 'clean' is given, do not generate and include the '%.d' files.¬
 ifneq ($(MAKECMDGOALS),clean)
