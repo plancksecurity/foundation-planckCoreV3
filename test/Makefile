@@ -96,12 +96,13 @@ endif
 TEST_CMD_PFX=
 
 
-all: .suitemaker $(TARGET) .scripts
+all: src/SuiteMaker.cc
+	make $(TARGET) .scripts
 
 %.d: %.cc
 	$(CXX) -MM $(CPPFLAGS) $(CXXFLAGS) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
 
-.suitemaker: gensuitemaker.py
+src/SuiteMaker.cc: gensuitemaker.py
 ifndef PY_ENV
 	@echo "WARNING: Can't find python3 - this is fine unless you're adding test suites. If so, please install python3."
 else
@@ -114,7 +115,7 @@ endif
 	touch .suitemaker
 endif
 
-$(TARGET): $(OBJS) .suitemaker
+$(TARGET): $(OBJS)
 	$(LINK.cc) $(OBJS) $(LOADLIBES) $(LDLIBS) -o $@
 
 .scripts:
@@ -129,7 +130,7 @@ test: all
 .PHONY: clean
 clean:
 	$(RM) $(TARGET) $(TARGET).o $(TARGET).d $(OBJS) $(notdir $(basename $(OBJS))) $(DEPS)
-	$(RM) $(HERE)/*Tests msg_2.0.asc $(HERE)/pEp_test_home .suitemaker .scripts
+	$(RM) $(HERE)/*Tests msg_2.0.asc $(HERE)/pEp_test_home .scripts
 
 # If only the goal 'clean' is given, do not generate and include the '%.d' files.¬
 ifneq ($(MAKECMDGOALS),clean)
