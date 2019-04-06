@@ -6,20 +6,18 @@ include ../Makefile.conf
 ALL_SOURCE=$(subst $(NO_SOURCE),,$(wildcard *.c))
 ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
 
-all: generate
+all: Sync.c
 	make libasn1.a
 
 libasn1.a: $(ALL_OBJECTS)
 	$(AR) -rc $@ $(ALL_OBJECTS)
-
-generate: Sync.c
-	rm -f converter-sample.c
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) $(OPTIMIZE) -I. $(ASN1C_INC) -c $< -o $@
 
 Sync.c: sync.asn1 keysync.asn1 pEp.asn1
 	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keysync.asn1 $<
+	rm -f converter-sample.c
 
 sync.asn1 keysync.asn1 pEp.asn1:
 	cp -f ../sync/generated/*.asn1 ../asn.1
