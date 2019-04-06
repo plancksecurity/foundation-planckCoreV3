@@ -82,3 +82,5 @@ test/*Tests
 test/*.txt
 lldb-history
 *.swo
+test/.scripts
+test/.suitemaker
