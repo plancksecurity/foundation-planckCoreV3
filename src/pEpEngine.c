@@ -1019,13 +1019,9 @@ DYNAMIC_API PEP_STATUS init(
                 // so here we go...
                 int_result = sqlite3_exec(
                     _session->db,
-#if SQLITE_VERSION_NUMBER >= 3025000                    
-                    "PRAGMA legacy_alter_table=ON;\n"
-#endif                                                        
                     "PRAGMA foreign_keys=off;\n"
                     "BEGIN TRANSACTION;\n"
-                    "ALTER TABLE identity RENAME TO _identity_old;\n"
-                    "create table identity (\n"
+                    "create table _identity_new (\n"
                     "   address text,\n"
                     "   user_id text\n"
                     "       references person (id)\n"
@@ -1037,11 +1033,14 @@ DYNAMIC_API PEP_STATUS init(
                     "   flags integer default 0,\n"
                     "   is_own integer default 0,\n"
                     "   primary key (address, user_id)\n"
-                    ");\n"
-                    "INSERT INTO identity SELECT * FROM _identity_old;\n"
-                    "DROP TABLE _identity_old;\n"
-                    "ALTER TABLE trust RENAME TO _trust_old;\n"
-                    "create table trust (\n"
+                    ");\n"                    
+                    "INSERT INTO _identity_new SELECT * FROM identity;\n"
+                    "DROP TABLE identity;\n"
+                    "ALTER TABLE _identity_new RENAME TO identity;\n"
+                    "COMMIT;\n"
+                    "\n"
+                    "BEGIN TRANSACTION;\n"
+                    "create table _trust_new (\n"
                     "   user_id text not null\n"
                     "       references person (id)\n"
                     "       on delete cascade on update cascade,\n"
@@ -1052,8 +1051,9 @@ DYNAMIC_API PEP_STATUS init(
                     "   comment text,\n"
                     "   primary key (user_id, pgp_keypair_fpr)\n"
                     ");\n"
-                    "INSERT INTO trust SELECT * FROM _trust_old;\n"
-                    "DROP TABLE _trust_old;\n"
+                    "INSERT INTO _trust_new SELECT * FROM trust;\n"
+                    "DROP TABLE trust;\n"
+                    "ALTER TABLE _trust_new RENAME TO trust;\n"
                     "COMMIT;\n"
                     "\n"
                     "PRAGMA foreign_keys=on;\n"
@@ -1067,7 +1067,19 @@ DYNAMIC_API PEP_STATUS init(
                     NULL,
                     NULL
                 );
-                assert(int_result == SQLITE_OK);    
+                assert(int_result == SQLITE_OK);   
+                
+                int_result = sqlite3_exec(
+                    _session->db,
+                    "PRAGMA foreign_key_check;\n"
+                    ,
+                    NULL,
+                    NULL,
+                    NULL
+                );
+                assert(int_result == SQLITE_OK);
+
+                // FIXME: foreign key check here 
             }
             if (version < 7) {
                 int_result = sqlite3_exec(
@@ -1110,13 +1122,9 @@ DYNAMIC_API PEP_STATUS init(
             if (version < 8) {
                 int_result = sqlite3_exec(
                     _session->db,
-#if SQLITE_VERSION_NUMBER >= 3025000                    
-                    "PRAGMA legacy_alter_table=ON;\n"
-#endif                                                        
                     "PRAGMA foreign_keys=off;\n"
                     "BEGIN TRANSACTION;\n"
-                    "ALTER TABLE identity RENAME TO _identity_old;\n"
-                    "create table identity (\n"
+                    "create table _identity_new (\n"
                     "   address text,\n"
                     "   user_id text\n"
                     "       references person (id)\n"
@@ -1130,14 +1138,15 @@ DYNAMIC_API PEP_STATUS init(
                     "   timestamp integer default (datetime('now')),\n"
                     "   primary key (address, user_id)\n"
                     ");\n"
-                    "INSERT INTO identity (address, user_id, main_key_id, "
+                    "INSERT INTO _identity_new (address, user_id, main_key_id, "
                     "                      comment, flags, is_own) "
                     "   SELECT _identity_old.address, _identity_old.user_id, "
                     "          _identity_old.main_key_id, _identity_old.comment, "
                     "          _identity_old.flags, _identity_old.is_own "
-                    "   FROM _identity_old "
+                    "   FROM identity "
                     "   WHERE 1;\n"
-                    "DROP TABLE _identity_old;\n"
+                    "DROP TABLE identity;\n"
+                    "ALTER TABLE _identity_new RENAME TO identity;\n"
                     "COMMIT;\n"
                     "\n"
                     "PRAGMA foreign_keys=on;\n"
@@ -1147,6 +1156,18 @@ DYNAMIC_API PEP_STATUS init(
                     NULL
                 );
                 assert(int_result == SQLITE_OK);    
+                
+                int_result = sqlite3_exec(
+                    _session->db,
+                    "PRAGMA foreign_key_check;\n"
+                    ,
+                    NULL,
+                    NULL,
+                    NULL
+                );
+                assert(int_result == SQLITE_OK);
+
+                // FIXME: foreign key check
             }
             if (version < 9) {
                 int_result = sqlite3_exec(
@@ -1176,16 +1197,11 @@ DYNAMIC_API PEP_STATUS init(
                 assert(int_result == SQLITE_OK);    
             }
             if (version < 10 && version > 1) {
-printf("%d", SQLITE_VERSION_NUMBER);                
                 int_result = sqlite3_exec(
                     _session->db,
-#if SQLITE_VERSION_NUMBER >= 3025000                    
-                    "PRAGMA legacy_alter_table=ON;\n"
-#endif                                    
                     "PRAGMA foreign_keys=off;\n"
                     "BEGIN TRANSACTION;\n"
-                    "ALTER TABLE person RENAME TO _person_old;\n"                
-                    "create table if not exists person (\n"
+                    "create table _person_new (\n"
                     "   id text primary key,\n"
                     "   username text not null,\n"
                     "   main_key_id text\n"
@@ -1195,14 +1211,15 @@ printf("%d", SQLITE_VERSION_NUMBER);
                     "   comment text,\n"
                     "   is_pEp_user integer default 0\n"
                     ");\n"
-                    "INSERT INTO person (id, username, main_key_id, "
+                    "INSERT INTO _person_new (id, username, main_key_id, "
                     "                    lang, comment, is_pEp_user) "
-                    "   SELECT _person_old.id, _person_old.username, "
-                    "          _person_old.main_key_id, _person_old.lang, "
-                    "          _person_old.comment, _person_old.is_pEp_user "
-                    "   FROM _person_old "
+                    "   SELECT person.id, person.username, "
+                    "          person.main_key_id, person.lang, "
+                    "          person.comment, person.is_pEp_user "
+                    "   FROM person "
                     "   WHERE 1;\n"
-                    "DROP TABLE _person_old;\n"
+                    "DROP TABLE person;\n"
+                    "ALTER TABLE _person_new RENAME TO person;\n"
                     "COMMIT;\n"
                     "\n"
                     "PRAGMA foreign_keys=on;\n"
@@ -1212,6 +1229,15 @@ printf("%d", SQLITE_VERSION_NUMBER);
                     NULL
                 );
                 assert(int_result == SQLITE_OK);    
+                int_result = sqlite3_exec(
+                    _session->db,
+                    "PRAGMA foreign_key_check;\n"
+                    ,
+                    NULL,
+                    NULL,
+                    NULL
+                );
+                assert(int_result == SQLITE_OK);
             }
         }        
         else { 
