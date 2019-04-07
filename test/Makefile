@@ -95,6 +95,7 @@ endif
 #TEST_CMD_PFX=$(LIBPATH)=$(EXTRA_LIB_PATHS)
 TEST_CMD_PFX=
 
+.PHONY: all clean test
 
 all: src/SuiteMaker.cc
 	make $(TARGET) .scripts
@@ -127,7 +128,6 @@ endif
 test: all
 	$(TEST_CMD_PFX) $(TEST_DEBUGGER) ./$(TARGET)
 
-.PHONY: clean
 clean:
 	$(RM) $(TARGET) $(TARGET).o $(TARGET).d $(OBJS) $(notdir $(basename $(OBJS))) $(DEPS)
 	$(RM) $(HERE)/*Tests msg_2.0.asc $(HERE)/pEp_test_home .scripts
