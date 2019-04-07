@@ -24,7 +24,7 @@ endif
 build: asn1
 	$(MAKE) -C src
 
-all: build install
+all: build
 	make -C test
 
 sync:
