@@ -5,27 +5,34 @@
 
 include ../Makefile.conf
 
-CFLAGS+= $(ETPAN_INC) -I../asn.1 -DSYSTEM_DB=\"$(SYSTEM_DB)\" $(EXTRA_MACROS)
-LDFLAGS+= $(ETPAN_LIB) -L../asn.1 -shared
-LDLIBS+= -lc -letpan -lasn1
+CFLAGS+= $(ETPAN_INC) $(PEP_MIME_INC) -I../asn.1 -DSYSTEM_DB=\"$(SYSTEM_DB)\" $(EXTRA_MACROS)
+LDFLAGS+= $(ETPAN_LIB) $(PEP_MIME_LIB) -L../asn.1 -shared
+LDLIBS+= -lc -lasn1
 NO_SOURCE=
+
+ifndef PEP_MIME
+LDLIBS+= -letpan
+else
+LDLIBS+= -lpEpMIME
+NO_SOURCE+= etpan_mime.c
+endif
 
 ifeq ($(BUILD_ON),Darwin)
     ifeq ($(BUILD_FOR),Darwin)
         CFLAGS+= -DSQLITE_THREADSAFE=1
         LDLIBS+= -lz -liconv
     else
-        $(error I don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
+        $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
     endif
 else ifeq ($(BUILD_ON),Linux)
     ifeq ($(BUILD_FOR),Linux)
         CFLAGS+= -DSQLITE_THREADSAFE=1 -D_GNU_SOURCE
         LDLIBS+= -ldl -luuid
     else
-        $(error I don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
+        $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
     endif
 else
-    $(error I don't know how to make for $(BUILD_FOR) on $(BUILD_ON))
+    $(error I do not know how to make for $(BUILD_FOR) on $(BUILD_ON))
 endif
 
 ifdef SQLITE3_FROM_OS
@@ -57,7 +64,6 @@ ALL_SOURCE=$(filter-out $(NO_SOURCE),$(wildcard *.c))
 DEPENDS=$(subst .c,.d,$(ALL_SOURCE))
 ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
 
-.PHONY: all
 all: $(TARGET)
 
 -include Makefile.protocols
@@ -76,7 +82,6 @@ endif
 $(TARGET): libpEpEngine.a
 	$(CC) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
 
-.PHONY: objects
 objects: $(ALL_OBJECTS)
 
 libpEpEngine.a: $(ALL_OBJECTS)
@@ -88,16 +93,20 @@ clean:
 	rm -Rf $(TARGET).dSYM
 	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.*
 
-.PHONY: install
-install: $(TARGET)
-	mkdir -p "$(PREFIX)/lib/"
-	cp $< $(PREFIX)/lib/
+# CAVEAT:
+# install_headers is needed for building pEp MIME
+
+install_headers:
 	mkdir -p $(PREFIX)/include/pEp
 	cp pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
 	   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h \
 	   cryptotech.h sync_api.h blacklist.h pEp_string.h openpgp_compat.h \
 	   labeled_int_list.h key_reset.h base64.h sync_codec.h \
 	   ../asn.1/*.h $(PREFIX)/include/pEp/
+
+install: $(TARGET) install_headers
+	mkdir -p "$(PREFIX)/lib/"
+	cp $< $(PREFIX)/lib/
 
 .PHONY: uninstall
 uninstall:

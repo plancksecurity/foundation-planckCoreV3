@@ -19,11 +19,10 @@ ifdef BUILD_CONFIG
     $(info ================================================)
 endif
 
-.PHONY: all
 all:
 	$(MAKE) -C sync
 	$(MAKE) -C asn.1
-	$(MAKE) -C src all
+	$(MAKE) -C src
 
 .PHONY: install
 install: all
@@ -60,6 +59,5 @@ test: all
 package: clean
 	cd .. ; COPYFILE_DISABLE=true tar cjf pEpEngine.tar.bz2 "$(HERE_REL)"
 
-.PHONY: db
 db:
 	$(MAKE) -C db db
