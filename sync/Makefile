@@ -3,6 +3,8 @@
 
 include ../Makefile.conf
 
+.PHONY: all clean
+
 all: .copy
 
 generated:
@@ -21,10 +23,9 @@ generated:
 	$(YML2_PROC) -y gen_messages.ysl2 $< -o $@
 	$(YML2_PROC) -y gen_message_func.ysl2 $< -o $@
 
-.PHONY: clean
 clean:
 	rm -rf generated
-	rm -f *.xml *.xsl .statemachines .actions .codecs .messages *.dot *.svg
+	rm -f *.xml *.xsl .statemachines .actions .codecs .messages .copy *.dot *.svg
 
 .copy: .actions .statemachines .codecs .messages
 	cp -f generated/*.c generated/*.h ../src
