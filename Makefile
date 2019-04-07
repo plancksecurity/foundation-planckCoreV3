@@ -21,16 +21,17 @@ endif
 
 .PHONY: all sync asn1 build install dbinstall uninstall clean tags test package db
 
-all: build
+build: asn1
+	$(MAKE) -C src
+
+all: build install
+	make -C test
 
 sync:
 	$(MAKE) -C sync
 
 asn1: sync
 	$(MAKE) -C asn.1
-
-build: asn1
-	$(MAKE) -C src
 
 install: build
 	$(MAKE) -C src install
