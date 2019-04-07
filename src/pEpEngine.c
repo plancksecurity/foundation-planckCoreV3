@@ -11,7 +11,7 @@
 #include <time.h>
 #include <stdlib.h>
 
-#define _PEP_SQLITE_DEBUG 0
+#define _PEP_SQLITE_DEBUG 1
 #if _PEP_SQLITE_DEBUG
 #include <sqlite3.h>
 #endif
@@ -513,7 +513,7 @@ static int db_contains_table(PEP_SESSION session, const char* table_name) {
     size_t t_size, q_size;
     
     const char* q1 = "SELECT name FROM sqlite_master WHERE type='table' AND name='{"; // 61
-    const char* q2 = "'};";       // 3
+    const char* q2 = "}';";       // 3
     
     q_size = 64;
     t_size = strlen(table_name);
@@ -1019,6 +1019,9 @@ DYNAMIC_API PEP_STATUS init(
                 // so here we go...
                 int_result = sqlite3_exec(
                     _session->db,
+#if SQLITE_VERSION_NUMBER >= 3025000                    
+                    "PRAGMA legacy_alter_table=ON;\n"
+#endif                                                        
                     "PRAGMA foreign_keys=off;\n"
                     "BEGIN TRANSACTION;\n"
                     "ALTER TABLE identity RENAME TO _identity_old;\n"
@@ -1107,6 +1110,9 @@ DYNAMIC_API PEP_STATUS init(
             if (version < 8) {
                 int_result = sqlite3_exec(
                     _session->db,
+#if SQLITE_VERSION_NUMBER >= 3025000                    
+                    "PRAGMA legacy_alter_table=ON;\n"
+#endif                                                        
                     "PRAGMA foreign_keys=off;\n"
                     "BEGIN TRANSACTION;\n"
                     "ALTER TABLE identity RENAME TO _identity_old;\n"
@@ -1170,8 +1176,12 @@ DYNAMIC_API PEP_STATUS init(
                 assert(int_result == SQLITE_OK);    
             }
             if (version < 10 && version > 1) {
+printf("%d", SQLITE_VERSION_NUMBER);                
                 int_result = sqlite3_exec(
-                    _session->db,                
+                    _session->db,
+#if SQLITE_VERSION_NUMBER >= 3025000                    
+                    "PRAGMA legacy_alter_table=ON;\n"
+#endif                                    
                     "PRAGMA foreign_keys=off;\n"
                     "BEGIN TRANSACTION;\n"
                     "ALTER TABLE person RENAME TO _person_old;\n"                

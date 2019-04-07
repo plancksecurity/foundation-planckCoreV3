@@ -15,6 +15,7 @@
 #include "MimeTests.h"
 #include "OwnIdentitiesRetrieveTests.h"
 #include "ExpiredSubkeyTests.h"
+#include "DDLUpgradeTests.h"
 #include "UserIdCollisionTests.h"
 #include "Engine463Tests.h"
 #include "BloblistTests.h"
@@ -69,6 +70,7 @@ const char* SuiteMaker::all_suites[] = {
     "MimeTests",
     "OwnIdentitiesRetrieveTests",
     "ExpiredSubkeyTests",
+    "DDLUpgradeTests",
     "UserIdCollisionTests",
     "Engine463Tests",
     "BloblistTests",
@@ -120,7 +122,7 @@ const char* SuiteMaker::all_suites[] = {
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 51;
+int SuiteMaker::num_suites = 52;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "MimeTests") == 0)
@@ -129,6 +131,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new OwnIdentitiesRetrieveTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "ExpiredSubkeyTests") == 0)
         *test_suite = new ExpiredSubkeyTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "DDLUpgradeTests") == 0)
+        *test_suite = new DDLUpgradeTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "UserIdCollisionTests") == 0)
         *test_suite = new UserIdCollisionTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "Engine463Tests") == 0)
