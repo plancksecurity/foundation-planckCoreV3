@@ -131,7 +131,7 @@ test: all
 
 clean:
 	$(RM) $(TARGET) $(TARGET).o $(TARGET).d $(OBJS) $(notdir $(basename $(OBJS))) $(DEPS)
-	$(RM) $(HERE)/*Tests msg_2.0.asc $(HERE)/pEp_test_home .scripts
+	$(RM) $(HERE)/*Tests msg_2.0.asc $(HERE)/pEp_test_home .scripts .suitemaker
 
 # If only the goal 'clean' is given, do not generate and include the '%.d' files.¬
 ifneq ($(MAKECMDGOALS),clean)
