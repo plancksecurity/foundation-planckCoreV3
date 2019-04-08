@@ -97,13 +97,15 @@ TEST_CMD_PFX=
 
 .PHONY: all clean test
 
-all: src/SuiteMaker.cc
+all:
+	make .suitemaker
 	make $(TARGET) .scripts
+	touch .suitemaker
 
 %.d: %.cc
 	$(CXX) -MM $(CPPFLAGS) $(CXXFLAGS) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
 
-src/SuiteMaker.cc: gensuitemaker.py $(filter-out src/SuiteMaker.cc,$(SRCS))
+.suitemaker: src
 ifndef PY_ENV
 	@echo "WARNING: Can't find python3 - this is fine unless you're adding test suites. If so, please install python3."
 else
@@ -113,7 +115,6 @@ else
 	# Comma-separated list, no spaces
 	$(PY_ENV) gensuitemaker.py --exclude=$(EXCLUDE)
 endif
-	touch .suitemaker
 endif
 
 $(TARGET): $(OBJS)
