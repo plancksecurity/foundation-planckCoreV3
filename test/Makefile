@@ -103,7 +103,7 @@ all: src/SuiteMaker.cc
 %.d: %.cc
 	$(CXX) -MM $(CPPFLAGS) $(CXXFLAGS) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
 
-src/SuiteMaker.cc: gensuitemaker.py
+src/SuiteMaker.cc: gensuitemaker.py $(filter-out src/SuiteMaker.cc,$(SRCS))
 ifndef PY_ENV
 	@echo "WARNING: Can't find python3 - this is fine unless you're adding test suites. If so, please install python3."
 else
