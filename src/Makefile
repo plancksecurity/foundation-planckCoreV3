@@ -82,12 +82,13 @@ endif
 $(TARGET): libpEpEngine.a
 	$(CC) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
 
+.PHONY: objects clean install_headers install uninstall
+
 objects: $(ALL_OBJECTS)
 
 libpEpEngine.a: $(ALL_OBJECTS)
 	$(AR) -rc $@ $^
 
-.PHONY: clean
 clean:
 	rm -f *.d *.o *.a $(TARGET) *.dll *.so *.zip *.d.* *.def *~
 	rm -Rf $(TARGET).dSYM
@@ -108,12 +109,10 @@ install: $(TARGET) install_headers
 	mkdir -p "$(PREFIX)/lib/"
 	cp $< $(PREFIX)/lib/
 
-.PHONY: uninstall
 uninstall:
 	rm -f $(PREFIX)/lib/$(TARGET)
 	rm -rf $(PREFIX)/include/pEp
 
-.PHONY: tags
-tags:
+tags: $(wildcard *.c) $(wildcard *.h)
 	ctags *.c *.h
 

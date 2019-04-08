@@ -6,6 +6,8 @@ include ../Makefile.conf
 ALL_SOURCE=$(subst $(NO_SOURCE),,$(wildcard *.c))
 ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
 
+.PHONY: all clean install uninstall
+
 all: Sync.c
 	make libasn1.a
 
@@ -22,8 +24,6 @@ Sync.c: sync.asn1 keysync.asn1 pEp.asn1
 sync.asn1 keysync.asn1 pEp.asn1:
 	cp -f ../sync/generated/*.asn1 ../asn.1
 
-.PHONY: clean uninstall tags
-
 clean:
 	rm -f *.a *.o *.c *.h *.sample sync.asn1 keysync.asn1
 
@@ -31,5 +31,5 @@ install:
 
 uninstall:
 
-tags:
+tags: $(wildcard *.c) $(wildcard *.h)
 	ctags *.c *.h

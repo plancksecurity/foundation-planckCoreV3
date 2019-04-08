@@ -95,6 +95,7 @@ endif
 #TEST_CMD_PFX=$(LIBPATH)=$(EXTRA_LIB_PATHS)
 TEST_CMD_PFX=
 
+.PHONY: all clean test
 
 all: src/SuiteMaker.cc
 	make $(TARGET) .scripts
@@ -102,7 +103,7 @@ all: src/SuiteMaker.cc
 %.d: %.cc
 	$(CXX) -MM $(CPPFLAGS) $(CXXFLAGS) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
 
-src/SuiteMaker.cc: gensuitemaker.py
+src/SuiteMaker.cc: gensuitemaker.py $(filter-out src/SuiteMaker.cc,$(SRCS))
 ifndef PY_ENV
 	@echo "WARNING: Can't find python3 - this is fine unless you're adding test suites. If so, please install python3."
 else
@@ -127,7 +128,6 @@ endif
 test: all
 	$(TEST_CMD_PFX) $(TEST_DEBUGGER) ./$(TARGET)
 
-.PHONY: clean
 clean:
 	$(RM) $(TARGET) $(TARGET).o $(TARGET).d $(OBJS) $(notdir $(basename $(OBJS))) $(DEPS)
 	$(RM) $(HERE)/*Tests msg_2.0.asc $(HERE)/pEp_test_home .scripts
