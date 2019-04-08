@@ -61,10 +61,8 @@ protocol Sync 1 {
 
         // handshaking without existing Device group
         state HandshakingNew {
-            on Init {
-                do identifySole;
+            on Init
                 do showSoleHandshake;
-            }
 
             // Cancel is Rollback
             on Cancel {
@@ -89,14 +87,12 @@ protocol Sync 1 {
 
             // Accept is Phase1Commit
             on Accept {
-                send CommitAccept;
+                send CommitAcceptForGroup;
                 go HandshakingNewPhase1;
             }
 
-            on CommitAccept {
-                if notMe
-                    go HandshakingNewPhase1Own;
-            }
+            on CommitAccept
+                go HandshakingNewPhase1Own;
         }
 
         state HandshakingNewPhase1 {
@@ -108,9 +104,8 @@ protocol Sync 1 {
                 go End;
             }
 
-            on CommitAccept
-                if notMe
-                    go NewGroup;
+            on CommitAcceptForGroup
+                go NewGroup;
         }
 
         state HandshakingNewPhase1Own {
@@ -126,8 +121,7 @@ protocol Sync 1 {
             }
 
             on Accept
-                if notMe
-                    go NewGroup;
+                go NewGroup;
         }
 
         state NewGroup {
@@ -335,7 +329,6 @@ protocol Sync 1 {
 
         message CommitAccept 7 {
             field TID transaction;
-            field TID me;
         }
 
         message CommitAcceptForGroup 8 {
