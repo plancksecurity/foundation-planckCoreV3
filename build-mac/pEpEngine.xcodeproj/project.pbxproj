@@ -164,6 +164,13 @@
 			remoteGlobalIDString = 43D47A7F225CC60600E97C5B;
 			remoteInfo = pEpGenerateSync;
 		};
+		43D47AA0225CC82400E97C5B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 644297BE1BE11C65002BC73B;
+			remoteInfo = pEpTrustWords;
+		};
 		64289E321B8B630200FC617B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */;
@@ -784,6 +791,7 @@
 			);
 			dependencies = (
 				43D47A90225CC63E00E97C5B /* PBXTargetDependency */,
+				43D47AA1225CC82400E97C5B /* PBXTargetDependency */,
 				645922541B8BD53F00A5AF93 /* PBXTargetDependency */,
 				64289E3F1B8B638800FC617B /* PBXTargetDependency */,
 			);
@@ -1030,6 +1038,11 @@
 			isa = PBXTargetDependency;
 			target = 43D47A7F225CC60600E97C5B /* pEpGenerateSync */;
 			targetProxy = 43D47A8F225CC63E00E97C5B /* PBXContainerItemProxy */;
+		};
+		43D47AA1225CC82400E97C5B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 644297BE1BE11C65002BC73B /* pEpTrustWords */;
+			targetProxy = 43D47AA0225CC82400E97C5B /* PBXContainerItemProxy */;
 		};
 		64289E3F1B8B638800FC617B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
