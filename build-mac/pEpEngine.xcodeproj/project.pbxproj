@@ -721,6 +721,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 64796A361B455AA5004B1C24;
@@ -812,7 +813,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export LANG=en_US.UTF-8\nmkdir -p \"$BUILT_PRODUCTS_DIR/include\"\n\ncd \"$SRCROOT/..\"\n\nbash -l -c \"gmake -C sync\"\nbash -l -c \"gmake -C asn.1\"\n";
+			shellScript = "export LANG=en_US.UTF-8\nmkdir -p \"$BUILT_PRODUCTS_DIR/include\"\n\ncd \"$SRCROOT/..\"\n\nbash -l -c \"gmake -C sync\"\nbash -l -c \"gmake -C asn.1 Sync.c\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
