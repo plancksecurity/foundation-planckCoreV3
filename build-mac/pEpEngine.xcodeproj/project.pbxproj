@@ -244,7 +244,7 @@
 		438C43AF2167752C00C7425B /* labeled_int_list.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = labeled_int_list.h; path = ../src/labeled_int_list.h; sourceTree = "<group>"; };
 		438C43B42167752C00C7425B /* labeled_int_list.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = labeled_int_list.c; path = ../src/labeled_int_list.c; sourceTree = "<group>"; };
 		43D47A88225CC60600E97C5B /* pEpTrustWords-iPad.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "pEpTrustWords-iPad.bundle"; sourceTree = BUILT_PRODUCTS_DIR; };
-		43D47A8A225CC60600E97C5B /* pEpTrustWords copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "pEpTrustWords copy-Info.plist"; path = "/Users/dirk/projects/pEp/pEpEngine/build-mac/pEpTrustWords copy-Info.plist"; sourceTree = "<absolute>"; };
+		43D47A8A225CC60600E97C5B /* pEpTrustWords-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "pEpTrustWords-Info.plist"; path = "/Users/dirk/projects/pEp/pEpEngine/build-mac/pEpTrustWords-Info.plist"; sourceTree = "<absolute>"; };
 		43F6921C1F164A47009418F5 /* resource_id.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = resource_id.c; path = ../src/resource_id.c; sourceTree = "<group>"; };
 		43F73BEB2166269200AB4524 /* PString.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PString.c; path = ../asn.1/PString.c; sourceTree = "<group>"; };
 		43F73BF1216626E100AB4524 /* Sync_func.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_func.c; path = ../src/Sync_func.c; sourceTree = "<group>"; };
@@ -577,7 +577,7 @@
 				64A8264B1B455C5600EECAF0 /* srcref */,
 				644297C01BE11C65002BC73B /* pEpTrustWords */,
 				64796A401B455AA5004B1C24 /* Products */,
-				43D47A8A225CC60600E97C5B /* pEpTrustWords copy-Info.plist */,
+				43D47A8A225CC60600E97C5B /* pEpTrustWords-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1047,7 +1047,7 @@
 		43D47A86225CC60600E97C5B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				INFOPLIST_FILE = "pEpTrustWords copy-Info.plist";
+				INFOPLIST_FILE = "pEpTrustWords-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pep.pEpTrustWords;
 				PRODUCT_NAME = "pEpTrustWords-iPad";
@@ -1059,7 +1059,7 @@
 		43D47A87225CC60600E97C5B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				INFOPLIST_FILE = "pEpTrustWords copy-Info.plist";
+				INFOPLIST_FILE = "pEpTrustWords-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pep.pEpTrustWords;
 				PRODUCT_NAME = "pEpTrustWords-iPad";
