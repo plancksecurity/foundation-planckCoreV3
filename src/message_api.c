@@ -1406,30 +1406,6 @@ static bool is_key(const bloblist_t *bl)
            );
 }
 
-static void remove_attached_keys(message *msg)
-{
-    if (msg) {
-        bloblist_t *last = NULL;
-        for (bloblist_t *bl = msg->attachments; bl && bl->value; ) {
-            bloblist_t *next = bl->next;
-
-            if (is_key(bl)) {
-                if (last) {
-                    last->next = next;
-                }
-                else {
-                    msg->attachments = next;
-                }
-                free_bl_entry(bl);
-            }
-            else {
-                last = bl;
-            }
-            bl = next;
-        }
-    }
-}
-
 static bool compare_first_n_bytes(const char* first, const char* second, size_t n) {
     int i;
     for (i = 0; i < n; i++) {

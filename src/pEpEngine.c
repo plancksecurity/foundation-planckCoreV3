@@ -518,6 +518,193 @@ static int table_contains_column(PEP_SESSION session, const char* table_name,
     return retval;
 }
 
+// N.B. In default, there are two tables in this check which are not 
+//      in the default branch; since this code is executed rarely, 
+//      we'll leave the checks in anyway (they're harmless), as 
+//      this'll prevent merge conflicts when we do the final merge from 
+//      default to sync; once 2.0.0 is released and we are then only 
+//      doing backports to this branch, we should remove these in this 
+//      branch.
+static PEP_STATUS repair_altered_tables(PEP_SESSION session) {
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    const unsigned int _PEP_MAX_AFFECTED = 5;
+    char** table_names = calloc(_PEP_MAX_AFFECTED, sizeof(char*));
+    if (!table_names)
+        return PEP_OUT_OF_MEMORY;
+
+    const char* sql_query = "select tbl_name from sqlite_master WHERE sql LIKE '%REFERENCES%' AND sql LIKE '%_old%';";
+    sqlite3_stmt *stmt; 
+    sqlite3_prepare_v2(session->db, sql_query, -1, &stmt, NULL);
+    int i = 0;
+    int int_result = 0;
+    while ((int_result = sqlite3_step(stmt)) == SQLITE_ROW && i < _PEP_MAX_AFFECTED) {
+        table_names[i++] = strdup((const char*)(sqlite3_column_text(stmt, 0)));
+    }
+    
+    sqlite3_finalize(stmt);      
+
+    if ((int_result != SQLITE_DONE && int_result != SQLITE_OK) || i > (_PEP_MAX_AFFECTED + 1)) {
+        status = PEP_UNKNOWN_ERROR;
+        goto pEp_free;
+    }
+        
+    for (i = 0; i < _PEP_MAX_AFFECTED; i++) {
+        const char* table_name = table_names[i];
+        if (!table_name)
+            break;
+            
+        if (strcmp(table_name, "identity") == 0) {
+            int_result = sqlite3_exec(session->db,
+                "PRAGMA foreign_keys=off;\n"
+                "BEGIN TRANSACTION;\n"
+                "create table _identity_new (\n"
+                "   address text,\n"
+                "   user_id text\n"
+                "       references person (id)\n"
+                "       on delete cascade on update cascade,\n"
+                "   main_key_id text\n"
+                "       references pgp_keypair (fpr)\n"
+                "       on delete set null,\n"
+                "   comment text,\n"
+                "   flags integer default 0,\n"
+                "   is_own integer default 0,\n"
+                "   timestamp integer default (datetime('now')),\n"
+                "   primary key (address, user_id)\n"
+                ");\n"
+                "INSERT INTO _identity_new SELECT * from identity;\n"
+                "DROP TABLE identity;\n"
+                "ALTER TABLE _identity_new RENAME TO identity;\n"
+                "COMMIT;\n"
+                "PRAGMA foreign_keys=on;"
+                ,
+                NULL,
+                NULL,
+                NULL
+            );
+            assert(int_result == PEP_STATUS_OK);
+        }
+        else if (strcmp(table_name, "trust") == 0) {
+            int_result = sqlite3_exec(session->db,
+                "PRAGMA foreign_keys=off;\n"
+                "BEGIN TRANSACTION;\n"
+                "create table _trust_new (\n"
+                "   user_id text not null\n"
+                "       references person (id)\n"
+                "       on delete cascade on update cascade,\n"
+                "   pgp_keypair_fpr text not null\n"
+                "       references pgp_keypair (fpr)\n"
+                "       on delete cascade,\n"
+                "   comm_type integer not null,\n"
+                "   comment text,\n"
+                "   primary key (user_id, pgp_keypair_fpr)\n"
+                ");\n"
+                "INSERT INTO _trust_new SELECT * from trust;\n"
+                "DROP TABLE trust;\n"
+                "ALTER TABLE _trust_new RENAME TO trust;\n"
+                "COMMIT;\n"
+                "PRAGMA foreign_keys=on;"
+                ,
+                NULL,
+                NULL,
+                NULL
+            );             
+            assert(int_result == PEP_STATUS_OK);                       
+        }
+        else if (strcmp(table_name, "alternate_user_id") == 0) {
+            int_result = sqlite3_exec(session->db,
+                "PRAGMA foreign_keys=off;\n"
+                "BEGIN TRANSACTION;\n"
+                "create table _alternate_user_id_new (\n"
+                "    default_id text references person (id)\n"
+                "       on delete cascade on update cascade,\n"
+                "    alternate_id text primary key\n"
+                ");\n"
+                "INSERT INTO _alternate_user_id_new SELECT * from alternate_user_id;\n"
+                "DROP TABLE alternate_user_id;\n"
+                "ALTER TABLE _alternate_user_id_new RENAME TO alternate_user_id;\n"
+                "COMMIT;\n"
+                "PRAGMA foreign_keys=on;"                
+                ,
+                NULL,
+                NULL,
+                NULL
+            );
+            assert(int_result == PEP_STATUS_OK);
+        }
+        else if (strcmp(table_name, "revocation_contact_list") == 0) {
+            int_result = sqlite3_exec(session->db,
+                "PRAGMA foreign_keys=off;\n"
+                "BEGIN TRANSACTION;\n"
+                "create table _revocation_contact_list_new (\n"
+                "   fpr text not null references pgp_keypair (fpr)\n"
+                "       on delete cascade,\n"
+                "   contact_id text not null references person (id)\n"
+                "       on delete cascade on update cascade,\n"
+                "   timestamp integer default (datetime('now')),\n"
+                "   PRIMARY KEY(fpr, contact_id)\n"            
+                ");\n"
+                "INSERT INTO _revocation_contact_list_new SELECT * from revocation_contact_list;\n"
+                "DROP TABLE revocation_contact_list;\n"
+                "ALTER TABLE _revocation_contact_list_new RENAME TO revocation_contact_list;\n"
+                "COMMIT;\n"
+                "PRAGMA foreign_keys=on;"                
+                ,
+                NULL,
+                NULL,
+                NULL
+            );      
+            assert(int_result == PEP_STATUS_OK);                              
+        }
+        else if (strcmp(table_name, "social_graph")) {
+            int_result = sqlite3_exec(session->db,
+                "PRAGMA foreign_keys=off;\n"
+                "BEGIN TRANSACTION;\n"
+                "create table _social_new (\n"
+                "    own_userid text,\n"
+                "    own_address text,\n"
+                "    contact_userid text,\n"
+                "    CONSTRAINT fk_own_identity\n"
+                "       FOREIGN KEY(own_address, own_userid)\n" 
+                "       REFERENCES identity(address, user_id)\n"
+                "       ON DELETE CASCADE ON UPDATE CASCADE\n"
+                ");\n"
+                "INSERT INTO _social_graph_new SELECT * from social_graph;\n"
+                "DROP TABLE social_graph;\n"
+                "ALTER TABLE _social_graph_new RENAME TO social_graph;\n"
+                "COMMIT;\n"
+                "PRAGMA foreign_keys=on;"                
+                ,
+                NULL,
+                NULL,
+                NULL
+            );
+            assert(int_result == PEP_STATUS_OK);                                    
+        }        
+    }
+    
+    int_result = sqlite3_exec(
+        session->db,
+        "PRAGMA foreign_key_check;\n"
+        ,
+        NULL,
+        NULL,
+        NULL
+    );
+    assert(int_result == SQLITE_OK);
+
+pEp_free:
+    for (i = 0; i < _PEP_MAX_AFFECTED; i++) {
+        if (table_names[i])
+            free(table_names[i]);
+        else
+            break;
+    }
+    free(table_names);
+    return status;
+}
+
+
 void errorLogCallback(void *pArg, int iErrCode, const char *zMsg){
   fprintf(stderr, "(%d) %s\n", iErrCode, zMsg);
 }
@@ -835,7 +1022,6 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             }
         }
 
-
         if(version != 0) { 
             // Version has been already set
 
@@ -1073,6 +1259,12 @@ DYNAMIC_API PEP_STATUS init(PEP_SESSION *session)
             );
             assert(int_result == SQLITE_OK);
         }
+        
+        // We just do this universally at this point on this branch.
+        // It's one quick DB query at init and should only 
+        // result in actual full function execution once.
+        status = repair_altered_tables(_session);
+        assert(status == PEP_STATUS_OK);
         
         // We need to init a few globals for message id that we'd rather not
         // calculate more than once.

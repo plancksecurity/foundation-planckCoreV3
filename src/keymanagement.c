@@ -1581,7 +1581,7 @@ DYNAMIC_API PEP_STATUS trust_personal_key(
         }
     }    
 
-pep_free:
+//pep_free:
     free(ident_default_fpr);
     free(cached_fpr);
     free_identity(tmp_id);
