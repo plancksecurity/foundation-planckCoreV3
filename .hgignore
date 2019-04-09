@@ -69,3 +69,4 @@ test/src/engine_test/LocalPlayground.cc
 .tags
 */.tags
 */*/.tags
+test/*Tests
