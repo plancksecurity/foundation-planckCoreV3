@@ -922,7 +922,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C \"$SRCROOT/../db\" system.db\n";
+			shellScript = "cd \"$SRCROOT/..\"\n\nbash -l -c \"make db\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
