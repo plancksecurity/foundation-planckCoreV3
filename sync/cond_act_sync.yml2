@@ -37,14 +37,6 @@ condition challengeAccepted
     *result = t1->size == t2->size && memcmp(t1->buf, t2->buf, t1->size) == 0;
 ||
 
-condition notMe
-||
-    TID_t *t1 = &session->sync_state.keysync.me;
-    TID_t *t2 = &session->own_sync_state.me;
-
-    *result = t1->size != t2->size || memcmp(t1->buf, t2->buf, t1->size) != 0;
-||
-
 condition keyElectionWon
 ||
     pEp_identity *from = session->sync_state.common.from;
@@ -113,14 +105,6 @@ action openTransaction
 action storeTransaction call "copy_UUID" {
     with "src" > &session->sync_state.keysync.transaction
     with "dst" > &session->own_sync_state.transaction
-}
-
-action identifySole {
-    call "new_UUID" with "dst" > &session->own_sync_state.me
-    call "copy_UUID" {
-        with "src" > &session->own_sync_state.me
-        with "dst" > &session->sync_state.keysync.me
-    }
 }
 
 function "show_handshake" {

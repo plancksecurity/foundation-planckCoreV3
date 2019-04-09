@@ -37,7 +37,7 @@ LOCAL_C_INCLUDES += $(GPGBUILD)/include
 $(shell sh $(LOCAL_PATH)/../takeOutHeaderFiles.sh $(LOCAL_PATH)../../)
 LOCAL_EXPORT_C_INCLUDES += $(LOCAL_PATH)../include
 
-ENGINE_SRC_FILES := $(shell find $(LOCAL_PATH)/../../src/ ! -name "*netpgp*" -name "*.c")
+ENGINE_SRC_FILES := $(shell find $(LOCAL_PATH)/../../src/ ! -name "*sequoia*" ! -name "*netpgp*" -name "*.c")
 #ENGINE_SRC_FILES := $(wildcard $(LOCAL_PATH)/../../src/*.c)
 ASN1_SRC_FILES := $(wildcard $(LOCAL_PATH)/../../asn.1/*.c)
 LOCAL_SRC_FILES := $(ENGINE_SRC_FILES:%=%)  $(ASN1_SRC_FILES:$(LOCAL_PATH)/%=%)
