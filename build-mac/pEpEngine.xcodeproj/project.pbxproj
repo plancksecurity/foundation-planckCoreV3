@@ -7,6 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1521CEF6225C9AEF00FD2AA2 /* CommitAcceptForGroup.c in Sources */ = {isa = PBXBuildFile; fileRef = 1521CEE9225C9AED00FD2AA2 /* CommitAcceptForGroup.c */; };
+		1521CEF7225C9AEF00FD2AA2 /* PString.h in Headers */ = {isa = PBXBuildFile; fileRef = 1521CEEA225C9AEE00FD2AA2 /* PString.h */; };
+		1521CEF8225C9AEF00FD2AA2 /* Rollback.h in Headers */ = {isa = PBXBuildFile; fileRef = 1521CEEB225C9AEE00FD2AA2 /* Rollback.h */; };
+		1521CEF9225C9AEF00FD2AA2 /* CommitAcceptForGroup.h in Headers */ = {isa = PBXBuildFile; fileRef = 1521CEEC225C9AEE00FD2AA2 /* CommitAcceptForGroup.h */; };
+		1521CEFA225C9AEF00FD2AA2 /* GroupKeysAndClose.h in Headers */ = {isa = PBXBuildFile; fileRef = 1521CEED225C9AEE00FD2AA2 /* GroupKeysAndClose.h */; };
+		1521CEFB225C9AEF00FD2AA2 /* CommitAccept.h in Headers */ = {isa = PBXBuildFile; fileRef = 1521CEEE225C9AEE00FD2AA2 /* CommitAccept.h */; };
+		1521CEFC225C9AEF00FD2AA2 /* HandshakeAnswer.h in Headers */ = {isa = PBXBuildFile; fileRef = 1521CEEF225C9AEE00FD2AA2 /* HandshakeAnswer.h */; };
+		1521CEFD225C9AEF00FD2AA2 /* pdu_collection.c in Sources */ = {isa = PBXBuildFile; fileRef = 1521CEF0225C9AEE00FD2AA2 /* pdu_collection.c */; };
+		1521CEFE225C9AEF00FD2AA2 /* KeySync.h in Headers */ = {isa = PBXBuildFile; fileRef = 1521CEF1225C9AEE00FD2AA2 /* KeySync.h */; };
+		1521CEFF225C9AEF00FD2AA2 /* CommitReject.h in Headers */ = {isa = PBXBuildFile; fileRef = 1521CEF2225C9AEE00FD2AA2 /* CommitReject.h */; };
+		1521CF00225C9AEF00FD2AA2 /* Sync.h in Headers */ = {isa = PBXBuildFile; fileRef = 1521CEF3225C9AEE00FD2AA2 /* Sync.h */; };
+		1521CF01225C9AEF00FD2AA2 /* TID.h in Headers */ = {isa = PBXBuildFile; fileRef = 1521CEF5225C9AEF00FD2AA2 /* TID.h */; };
 		430BCC482015EE800077E998 /* pEp_string.h in Headers */ = {isa = PBXBuildFile; fileRef = 430BCC462015EE800077E998 /* pEp_string.h */; };
 		430BCC492015EE800077E998 /* pEp_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 430BCC472015EE800077E998 /* pEp_string.c */; };
 		430D258B1C9ED75A00B94535 /* blacklist.c in Sources */ = {isa = PBXBuildFile; fileRef = 430D258A1C9ED75A00B94535 /* blacklist.c */; };
@@ -201,6 +213,19 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1521CEE9225C9AED00FD2AA2 /* CommitAcceptForGroup.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = CommitAcceptForGroup.c; path = ../asn.1/CommitAcceptForGroup.c; sourceTree = "<group>"; };
+		1521CEEA225C9AEE00FD2AA2 /* PString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PString.h; path = ../asn.1/PString.h; sourceTree = "<group>"; };
+		1521CEEB225C9AEE00FD2AA2 /* Rollback.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Rollback.h; path = ../asn.1/Rollback.h; sourceTree = "<group>"; };
+		1521CEEC225C9AEE00FD2AA2 /* CommitAcceptForGroup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommitAcceptForGroup.h; path = ../asn.1/CommitAcceptForGroup.h; sourceTree = "<group>"; };
+		1521CEED225C9AEE00FD2AA2 /* GroupKeysAndClose.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GroupKeysAndClose.h; path = ../asn.1/GroupKeysAndClose.h; sourceTree = "<group>"; };
+		1521CEEE225C9AEE00FD2AA2 /* CommitAccept.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommitAccept.h; path = ../asn.1/CommitAccept.h; sourceTree = "<group>"; };
+		1521CEEF225C9AEE00FD2AA2 /* HandshakeAnswer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HandshakeAnswer.h; path = ../asn.1/HandshakeAnswer.h; sourceTree = "<group>"; };
+		1521CEF0225C9AEE00FD2AA2 /* pdu_collection.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pdu_collection.c; path = ../asn.1/pdu_collection.c; sourceTree = "<group>"; };
+		1521CEF1225C9AEE00FD2AA2 /* KeySync.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KeySync.h; path = ../asn.1/KeySync.h; sourceTree = "<group>"; };
+		1521CEF2225C9AEE00FD2AA2 /* CommitReject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommitReject.h; path = ../asn.1/CommitReject.h; sourceTree = "<group>"; };
+		1521CEF3225C9AEE00FD2AA2 /* Sync.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Sync.h; path = ../asn.1/Sync.h; sourceTree = "<group>"; };
+		1521CEF4225C9AEE00FD2AA2 /* sync.asn1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = sync.asn1; path = ../asn.1/sync.asn1; sourceTree = "<group>"; };
+		1521CEF5225C9AEF00FD2AA2 /* TID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TID.h; path = ../asn.1/TID.h; sourceTree = "<group>"; };
 		430BCC462015EE800077E998 /* pEp_string.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pEp_string.h; path = ../src/pEp_string.h; sourceTree = "<group>"; };
 		430BCC472015EE800077E998 /* pEp_string.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEp_string.c; path = ../src/pEp_string.c; sourceTree = "<group>"; };
 		430D258A1C9ED75A00B94535 /* blacklist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = blacklist.c; path = ../src/blacklist.c; sourceTree = "<group>"; };
@@ -386,6 +411,19 @@
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
 			isa = PBXGroup;
 			children = (
+				1521CEEE225C9AEE00FD2AA2 /* CommitAccept.h */,
+				1521CEE9225C9AED00FD2AA2 /* CommitAcceptForGroup.c */,
+				1521CEEC225C9AEE00FD2AA2 /* CommitAcceptForGroup.h */,
+				1521CEF2225C9AEE00FD2AA2 /* CommitReject.h */,
+				1521CEED225C9AEE00FD2AA2 /* GroupKeysAndClose.h */,
+				1521CEEF225C9AEE00FD2AA2 /* HandshakeAnswer.h */,
+				1521CEF1225C9AEE00FD2AA2 /* KeySync.h */,
+				1521CEF0225C9AEE00FD2AA2 /* pdu_collection.c */,
+				1521CEEA225C9AEE00FD2AA2 /* PString.h */,
+				1521CEEB225C9AEE00FD2AA2 /* Rollback.h */,
+				1521CEF4225C9AEE00FD2AA2 /* sync.asn1 */,
+				1521CEF3225C9AEE00FD2AA2 /* Sync.h */,
+				1521CEF5225C9AEF00FD2AA2 /* TID.h */,
 				43F73C13216628CA00AB4524 /* Sync.c */,
 				43F73BF5216627CB00AB4524 /* CommitAccept.c */,
 				43F73BFB216627CC00AB4524 /* CommitReject.c */,
@@ -606,8 +644,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				646C41031D510CD800C63EFF /* constr_SEQUENCE_OF.h in Headers */,
+				1521CEFB225C9AEF00FD2AA2 /* CommitAccept.h in Headers */,
 				646C40ED1D510CD800C63EFF /* asn_codecs.h in Headers */,
 				646C41371D510CD800C63EFF /* Version.h in Headers */,
+				1521CEF8225C9AEF00FD2AA2 /* Rollback.h in Headers */,
 				646C412F1D510CD800C63EFF /* per_support.h in Headers */,
 				646C41111D510CD800C63EFF /* GroupKeys.h in Headers */,
 				646C40F21D510CD800C63EFF /* asn_SET_OF.h in Headers */,
@@ -624,36 +664,44 @@
 				646C40FD1D510CD800C63EFF /* BIT_STRING.h in Headers */,
 				646C411F1D510CD800C63EFF /* INTEGER.h in Headers */,
 				646C411D1D510CD800C63EFF /* IdentityList.h in Headers */,
+				1521CEFE225C9AEF00FD2AA2 /* KeySync.h in Headers */,
 				646C41011D510CD800C63EFF /* constr_CHOICE.h in Headers */,
 				646C40FB1D510CD800C63EFF /* ber_tlv_tag.h in Headers */,
 				646C414F1D510D8800C63EFF /* baseprotocol.h in Headers */,
 				6467888D1CEB3D120001F54C /* map_asn1.h in Headers */,
 				646C41131D510CD800C63EFF /* HandshakeRequest.h in Headers */,
+				1521CEF9225C9AEF00FD2AA2 /* CommitAcceptForGroup.h in Headers */,
 				646C40F31D510CD800C63EFF /* asn_system.h in Headers */,
 				43370834203C075A004E6547 /* sqlite3.h in Headers */,
 				646C410B1D510CD800C63EFF /* constraints.h in Headers */,
 				646C41251D510CD800C63EFF /* NativeInteger.h in Headers */,
 				646C41271D510CD800C63EFF /* OCTET_STRING.h in Headers */,
 				646C41391D510CD800C63EFF /* xer_decoder.h in Headers */,
+				1521CEFA225C9AEF00FD2AA2 /* GroupKeysAndClose.h in Headers */,
 				646C40EA1D510CD800C63EFF /* asn_application.h in Headers */,
 				646C41211D510CD800C63EFF /* ISO639-1.h in Headers */,
 				646C412D1D510CD800C63EFF /* per_opentype.h in Headers */,
 				646C413D1D510CD800C63EFF /* xer_support.h in Headers */,
 				646C41191D510CD800C63EFF /* Hex.h in Headers */,
 				646C41051D510CD800C63EFF /* constr_SEQUENCE.h in Headers */,
+				1521CF01225C9AEF00FD2AA2 /* TID.h in Headers */,
 				646C41151D510CD800C63EFF /* Hash.h in Headers */,
 				646C40FF1D510CD800C63EFF /* BOOLEAN.h in Headers */,
 				64A8268C1B455D9D00EECAF0 /* pEpEngine.h in Headers */,
 				646C41091D510CD800C63EFF /* constr_TYPE.h in Headers */,
 				430BCC482015EE800077E998 /* pEp_string.h in Headers */,
+				1521CEFF225C9AEF00FD2AA2 /* CommitReject.h in Headers */,
 				646C410D1D510CD800C63EFF /* der_encoder.h in Headers */,
 				646C41231D510CD800C63EFF /* NativeEnumerated.h in Headers */,
 				646C41071D510CD800C63EFF /* constr_SET_OF.h in Headers */,
+				1521CEF7225C9AEF00FD2AA2 /* PString.h in Headers */,
+				1521CF00225C9AEF00FD2AA2 /* Sync.h in Headers */,
 				C46EBAEE216E445F0042A6A3 /* base64.h in Headers */,
 				646C411B1D510CD800C63EFF /* Identity.h in Headers */,
 				646C412B1D510CD800C63EFF /* per_encoder.h in Headers */,
 				646C40F91D510CD800C63EFF /* ber_tlv_length.h in Headers */,
 				646C41291D510CD800C63EFF /* per_decoder.h in Headers */,
+				1521CEFC225C9AEF00FD2AA2 /* HandshakeAnswer.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -721,6 +769,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 64796A361B455AA5004B1C24;
@@ -812,7 +861,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export LANG=en_US.UTF-8\nmkdir -p \"$BUILT_PRODUCTS_DIR/include\"\n\ncd \"$SRCROOT/..\"\n\nbash -l -c \"gmake -C sync\"\nbash -l -c \"gmake -C asn.1\"\n";
+			shellScript = "export LANG=en_US.UTF-8\nmkdir -p \"$BUILT_PRODUCTS_DIR/include\"\n\ncd \"$SRCROOT/..\"\n\nbash -l -c \"gmake -C sync\"\nbash -l -c \"gmake -C asn.1 Sync.c\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -830,6 +879,7 @@
 			files = (
 				64A826871B455D0800EECAF0 /* stringpair.c in Sources */,
 				43F73C0E2166282C00AB4524 /* sync_codec.c in Sources */,
+				1521CEF6225C9AEF00FD2AA2 /* CommitAcceptForGroup.c in Sources */,
 				646C41341D510CD800C63EFF /* UTF8String.c in Sources */,
 				64A826831B455D0800EECAF0 /* platform_unix.c in Sources */,
 				646C40F81D510CD800C63EFF /* ber_tlv_length.c in Sources */,
@@ -900,6 +950,7 @@
 				6467888C1CEB3D120001F54C /* map_asn1.c in Sources */,
 				646C40FA1D510CD800C63EFF /* ber_tlv_tag.c in Sources */,
 				646C41241D510CD800C63EFF /* NativeInteger.c in Sources */,
+				1521CEFD225C9AEF00FD2AA2 /* pdu_collection.c in Sources */,
 				646C41061D510CD800C63EFF /* constr_SET_OF.c in Sources */,
 				43F73C122166282C00AB4524 /* growing_buf.c in Sources */,
 				646C412C1D510CD800C63EFF /* per_opentype.c in Sources */,
