@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -864,25 +864,9 @@
 			inputPaths = (
 			);
 			outputFileListPaths = (
+				"$(SRCROOT)/generated-files-asn1.txt",
 			);
 			outputPaths = (
-				"$(SRCROOT)/../asn.1/xer_encoder.c",
-				"$(SRCROOT)/../asn.1/xer_decoder.c",
-				"$(SRCROOT)/../asn.1/xer_support.c",
-				"$(SRCROOT)/../src/sync_impl.c",
-				"$(SRCROOT)/../src/sync_codec.c",
-				"$(SRCROOT)/../src/sync_actions.c",
-				"$(SRCROOT)/../asn.1/per_support.c",
-				"$(SRCROOT)/../asn.1/per_opentype.c",
-				"$(SRCROOT)/../asn.1/per_encoder.c",
-				"$(SRCROOT)/../asn.1/per_decoder.c",
-				"$(SRCROOT)/../asn.1/pdu_collection.c",
-				"$(SRCROOT)/../asn.1/der_encoder.c",
-				"$(SRCROOT)/../asn.1/constraints.c",
-				"$(SRCROOT)/../asn.1/constr_TYPE.c",
-				"$(SRCROOT)/../asn.1/constr_SET_OF.c",
-				"$(SRCROOT)/../asn.1/constr_SEQUENCE_OF.c",
-				"$(SRCROOT)/../asn.1/constr_SEQUENCE.c",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
@@ -1177,7 +1161,15 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
-				USER_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/../src $(PROJECT_DIR) $(PROJECT_DIR)/../../netpgp-et/include/ $(PROJECT_DIR)/../../netpgp-et/src/ $(PROJECT_DIR)/../../OpenSSL-for-iPhone/include $(PROJECT_DIR)/../asn.1/ $(inherited)";
+				USER_HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/../src",
+					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/../../netpgp-et/include/",
+					"$(PROJECT_DIR)/../../netpgp-et/src/",
+					"$(PROJECT_DIR)/../../OpenSSL-for-iPhone/include",
+					"$(PROJECT_DIR)/../asn.1/",
+					"$(inherited)",
+				);
 			};
 			name = Debug;
 		};
@@ -1194,7 +1186,15 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
-				USER_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/../src $(PROJECT_DIR) $(PROJECT_DIR)/../../netpgp-et/include/ $(PROJECT_DIR)/../../netpgp-et/src/ $(PROJECT_DIR)/../../OpenSSL-for-iPhone/include $(PROJECT_DIR)/../asn.1/ $(inherited)";
+				USER_HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/../src",
+					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/../../netpgp-et/include/",
+					"$(PROJECT_DIR)/../../netpgp-et/src/",
+					"$(PROJECT_DIR)/../../OpenSSL-for-iPhone/include",
+					"$(PROJECT_DIR)/../asn.1/",
+					"$(inherited)",
+				);
 			};
 			name = Release;
 		};
