@@ -163,6 +163,13 @@
 			remoteGlobalIDString = 644297BE1BE11C65002BC73B;
 			remoteInfo = pEpTrustWords;
 		};
+		43D47AF5225DE95100E97C5B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 43D47AEE225DE7B700E97C5B;
+			remoteInfo = pEpGenerateSync;
+		};
 		64289E321B8B630200FC617B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */;
@@ -724,6 +731,23 @@
 		};
 /* End PBXHeadersBuildPhase section */
 
+/* Begin PBXLegacyTarget section */
+		43D47AEE225DE7B700E97C5B /* pEpGenerateSync */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION)";
+			buildConfigurationList = 43D47AEF225DE7B700E97C5B /* Build configuration list for PBXLegacyTarget "pEpGenerateSync" */;
+			buildPhases = (
+			);
+			buildToolPath = "$(SRCROOT)/generate_sync_files.sh";
+			buildWorkingDirectory = "$(SRCROOT)/..";
+			dependencies = (
+			);
+			name = pEpGenerateSync;
+			passBuildSettingsInEnvironment = 1;
+			productName = pEpGenerateSync;
+		};
+/* End PBXLegacyTarget section */
+
 /* Begin PBXNativeTarget section */
 		644297BE1BE11C65002BC73B /* pEpTrustWords */ = {
 			isa = PBXNativeTarget;
@@ -756,6 +780,7 @@
 			);
 			dependencies = (
 				43D47AA1225CC82400E97C5B /* PBXTargetDependency */,
+				43D47AF6225DE95100E97C5B /* PBXTargetDependency */,
 				645922541B8BD53F00A5AF93 /* PBXTargetDependency */,
 				64289E3F1B8B638800FC617B /* PBXTargetDependency */,
 			);
@@ -773,6 +798,11 @@
 				LastUpgradeCheck = 0940;
 				ORGANIZATIONNAME = "p≡p Security S.A.";
 				TargetAttributes = {
+					43D47AEE225DE7B700E97C5B = {
+						CreatedOnToolsVersion = 10.2;
+						DevelopmentTeam = NQLYU6MGPN;
+						ProvisioningStyle = Automatic;
+					};
 					644297BE1BE11C65002BC73B = {
 						CreatedOnToolsVersion = 7.1;
 					};
@@ -806,6 +836,7 @@
 			targets = (
 				64796A3E1B455AA5004B1C24 /* pEpEngine */,
 				644297BE1BE11C65002BC73B /* pEpTrustWords */,
+				43D47AEE225DE7B700E97C5B /* pEpGenerateSync */,
 			);
 		};
 /* End PBXProject section */
@@ -974,6 +1005,11 @@
 			target = 644297BE1BE11C65002BC73B /* pEpTrustWords */;
 			targetProxy = 43D47AA0225CC82400E97C5B /* PBXContainerItemProxy */;
 		};
+		43D47AF6225DE95100E97C5B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 43D47AEE225DE7B700E97C5B /* pEpGenerateSync */;
+			targetProxy = 43D47AF5225DE95100E97C5B /* PBXContainerItemProxy */;
+		};
 		64289E3F1B8B638800FC617B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = "libetpan ios";
@@ -987,6 +1023,54 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		43D47AF0225DE7B700E97C5B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				DEBUGGING_SYMBOLS = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		43D47AF1225DE7B700E97C5B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				MTL_FAST_MATH = YES;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		644297C31BE11C65002BC73B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1166,6 +1250,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		43D47AEF225DE7B700E97C5B /* Build configuration list for PBXLegacyTarget "pEpGenerateSync" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				43D47AF0225DE7B700E97C5B /* Debug */,
+				43D47AF1225DE7B700E97C5B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		644297C21BE11C65002BC73B /* Build configuration list for PBXNativeTarget "pEpTrustWords" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
