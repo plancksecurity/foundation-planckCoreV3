@@ -906,6 +906,9 @@
 			inputPaths = (
 			);
 			outputPaths = (
+				"$(DERIVED_FILE_DIR)/asn.1/xer_encoder.c",
+				"$(DERIVED_FILE_DIR)/asn.1/xer_decoder.c",
+				"$(DERIVED_FILE_DIR)/asn.1/xer_support.c",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
