@@ -329,7 +329,7 @@ DYNAMIC_API PEP_STATUS key_reset_identity(
         pEp_identity* ident
     )
 {
-    if (!session || !ident || EMPTYSTR(ident->user_id) || EMPTYSTR(ident->address))
+    if (!session || (ident && EMPTYSTR(ident->user_id)))
         return PEP_ILLEGAL_VALUE;
     
     return key_reset(session, fpr, ident);    
