@@ -15,32 +15,54 @@
 extern "C" {
 #endif
 
-// key_reset_identity() - resets trust status for this identity and fpr, and remove
-//                        this fpr as a default for all identities and users and from 
-//                        the keyring.
-//                        
-//                        If the fpr is NULL, we will reset the identity default fpr
-//                        as above. When that does not exist, then we do it for 
-//                        the user default. 
+// key_reset_identity() - reset the default database status for the identity / keypair
+//                        provided. If this corresponds to the own user and a private key,
+//                        also revoke the key, generate a new one, and communicate the 
+//                        reset to recently contacted pEp partners for this identity.
+//                        If it does not, remove the key from the keyring; the key's 
+//                        status is completely fresh on next contact from the partner.
 //
-//                        For own identities, when the fpr has a private key part,
-//                        also revoke the key and communicate the revocation and new key 
-//                        to partners we have sent mail to recently from the specific identity 
-//                        (i.e. address/user_id) that contacted them. We also in this case 
-//                        set up information so that if someone we mail uses the wrong key 
-//                        and wasn't yet contacted, we can send them the reset information 
-//                        from the right address. 
+//                        If ident contains both a user_id and an address, and this is 
+//                        not the own_user:
+//                        1. If the fpr is non-NULL, we will delete this key from the keyring, 
+//                           remove this fpr as the default for all users and all identities,
+//                           and remove all key information for this key in the DB
+//                        2. If the fpr IS NULL, we will do what is in step 1 for the default 
+//                           key for this identity, and if there is not one, we do it for the 
+//                           user default key.                             
+//                        
+//                        If ident contains both a user_id and an address, and 
+//                        this IS the own_user:
+//                        1. If the fpr is non-NULL and the corresponding key has a private part,
+//                           we will revoke and mistrust this key, generate a new key for this identity,
+//                           and communicate the revocation and new key to partners we have 
+//                           sent mail to recently from the specific identity (i.e. address/user_id) 
+//                           that contacted them. We also in this case set up information so 
+//                           that if someone we mail uses the wrong key and wasn't yet contacted, 
+//                           we can send them the reset information from the right address.
+//                        2. If the fpr is non-NULL and does NOT correspond to a private key,
+//                           this behaves the same way as with a non-own user above.
+//                        3. If the fpr is NULL, we perform the steps in 1. of this section for 
+//                           the identity default if it exists, and if not, the user default. 
+//
+//                        If the ident only contains a user_id, we perform the above for every key 
+//                        associated with the user id. In the case of own private keys, we then 
+//                        go through each identity associated with the key and reset those identities 
+//                        as indicated above. (keys not associated with any identity will not
+//                        have replacement information or keys generated)
+//
+//                        If the identity is NULL, this is the same as calling the function with an
+//                        identity containing only the own user_id (and no address).
 //
 //  parameters:
 //      session (in)            session handle
 //      fpr (in)                fingerprint of key to reset. If NULL, we reset the default key
-//                              this user, if there is one.
+//                              this identity if there is one, and the user default if not.
 //      ident (in)              identity for which the key reset should occur. Must contain 
-//                              user_id and address.
+//                              user_id, at a minimum. If it contains no address, all keys for this user
+//                              are reset. If NULL, all keys for the own user will be reset.
 //
-//                              fpr field will be ignored. Cannot be NULL.
-//
-//      Note: ident->fpr is always ignored
+//                              Note: ident->fpr field will be ignored.
 //
 //
 DYNAMIC_API PEP_STATUS key_reset_identity(
@@ -49,21 +71,14 @@ DYNAMIC_API PEP_STATUS key_reset_identity(
         pEp_identity* ident
     );
 
-// key_reset_user() - reset the default key database status for each identity 
-//                    corresponding to this user and fpr (if present), and remove from 
-//                    the keyring. This will also remove the key(s) from all other 
-//                    users and identities. If no fpr is present, reset all default keys 
-//                    corresponding to this user and its identities.
-//           
-//                    For own keys, also revoke the key(s) and communicate the 
-//                    revocation and new key(s) to partners we have sent mail to 
-//                    recently from the specific identities (i.e. address/user_id) 
-//                    that contacted them. We also in this case set up information 
-//                    so that if someone we mail uses the wrong key and wasn't 
-//                    yet contacted, we can send them the reset information 
-//                    from the right address.
+// key_reset_user() -  reset the default database status for the user / keypair
+//                     provided. This will effectively perform key_reset_identity()
+//                     each identity associated with the key and user_id, if a key is
+//                     provided, and for each key (and all of their identities) if an fpr 
+//                     is not.
 //
-//                    If the user_id is NULL and fpr is NULL, we reset all keys for the own user. 
+//                     See key_reset_identity() under identities containing only user_id.
+//
 //
 //  parameters:
 //      session (in)            session handle
@@ -85,7 +100,8 @@ DYNAMIC_API PEP_STATUS key_reset_user(
 //               mail to recently from the specific identity (i.e. address/user_id)
 //               that contacted them. We also in this case set up information so that
 //               if someone we mail uses the wrong key and wasn't yet contacted,
-//               we can send them the reset information from the right address.
+//               we can send them the reset information from the right address. 
+//               For non-own keys, also remove key from the keyring.
 //
 //               Can be called manually or through another protocol.
 //
@@ -97,7 +113,7 @@ DYNAMIC_API PEP_STATUS key_reset_user(
 //                              identity. If that own identity has no default key, we
 //                              reset the user default.
 //                              if it is NULL and there is a non-own identity, we will reset 
-//                              the default key for this identity.
+//                              the default key for this identity if present, and user if not.
 //      ident (in)              identity for which the key reset should occur.
 //                              if NULL and fpr is non-NULL, we'll reset the key for all
 //                              associated identities. If both ident and fpr are NULL, see 
