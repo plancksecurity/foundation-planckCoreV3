@@ -156,13 +156,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		43D47A8F225CC63E00E97C5B /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 43D47A7F225CC60600E97C5B;
-			remoteInfo = pEpGenerateSync;
-		};
 		43D47AA0225CC82400E97C5B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
@@ -249,7 +242,6 @@
 		438C43962167582400C7425B /* sync_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sync_api.h; path = ../src/sync_api.h; sourceTree = "<group>"; };
 		438C43AF2167752C00C7425B /* labeled_int_list.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = labeled_int_list.h; path = ../src/labeled_int_list.h; sourceTree = "<group>"; };
 		438C43B42167752C00C7425B /* labeled_int_list.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = labeled_int_list.c; path = ../src/labeled_int_list.c; sourceTree = "<group>"; };
-		43D47A88225CC60600E97C5B /* pEpTrustWords-iPad.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "pEpTrustWords-iPad.bundle"; sourceTree = BUILT_PRODUCTS_DIR; };
 		43D47A8A225CC60600E97C5B /* pEpTrustWords-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "pEpTrustWords-Info.plist"; path = "/Users/dirk/projects/pEp/pEpEngine/build-mac/pEpTrustWords-Info.plist"; sourceTree = "<absolute>"; };
 		43F6921C1F164A47009418F5 /* resource_id.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = resource_id.c; path = ../src/resource_id.c; sourceTree = "<group>"; };
 		43F73BEB2166269200AB4524 /* PString.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PString.c; path = ../asn.1/PString.c; sourceTree = "<group>"; };
@@ -404,13 +396,6 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		43D47A81225CC60600E97C5B /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		644297BC1BE11C65002BC73B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -592,7 +577,6 @@
 			children = (
 				64796A3F1B455AA5004B1C24 /* libpEpEngine.a */,
 				644297BF1BE11C65002BC73B /* pEpTrustWords.bundle */,
-				43D47A88225CC60600E97C5B /* pEpTrustWords-iPad.bundle */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -741,23 +725,6 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		43D47A7F225CC60600E97C5B /* pEpGenerateSync */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 43D47A85225CC60600E97C5B /* Build configuration list for PBXNativeTarget "pEpGenerateSync" */;
-			buildPhases = (
-				43D47A80225CC60600E97C5B /* Sources */,
-				43D47A81225CC60600E97C5B /* Frameworks */,
-				43D47A82225CC60600E97C5B /* ShellScript */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = pEpGenerateSync;
-			productName = pEpTrustWords;
-			productReference = 43D47A88225CC60600E97C5B /* pEpTrustWords-iPad.bundle */;
-			productType = "com.apple.product-type.bundle";
-		};
 		644297BE1BE11C65002BC73B /* pEpTrustWords */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 644297C21BE11C65002BC73B /* Build configuration list for PBXNativeTarget "pEpTrustWords" */;
@@ -789,7 +756,6 @@
 			);
 			dependencies = (
 				43D47AA1225CC82400E97C5B /* PBXTargetDependency */,
-				43D47A90225CC63E00E97C5B /* PBXTargetDependency */,
 				645922541B8BD53F00A5AF93 /* PBXTargetDependency */,
 				64289E3F1B8B638800FC617B /* PBXTargetDependency */,
 			);
@@ -840,7 +806,6 @@
 			targets = (
 				64796A3E1B455AA5004B1C24 /* pEpEngine */,
 				644297BE1BE11C65002BC73B /* pEpTrustWords */,
-				43D47A7F225CC60600E97C5B /* pEpGenerateSync */,
 			);
 		};
 /* End PBXProject section */
@@ -888,22 +853,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		43D47A82225CC60600E97C5B /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-				"$(SRCROOT)/../xer_encoder.c",
-				"$(SRCROOT)/../xer_decoder.c",
-				"$(SRCROOT)/../xer_support.c",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "export LANG=en_US.UTF-8\nmkdir -p \"$BUILT_PRODUCTS_DIR/include\"\n\ncd \"$SRCROOT/..\"\n\nbash -l -c \"gmake -C sync\"\nbash -l -c \"gmake -C asn.1 Sync.c\"\n";
-		};
 		644297C61BE11D00002BC73B /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -920,13 +869,6 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		43D47A80225CC60600E97C5B /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		644297BB1BE11C65002BC73B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1027,11 +969,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		43D47A90225CC63E00E97C5B /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 43D47A7F225CC60600E97C5B /* pEpGenerateSync */;
-			targetProxy = 43D47A8F225CC63E00E97C5B /* PBXContainerItemProxy */;
-		};
 		43D47AA1225CC82400E97C5B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 644297BE1BE11C65002BC73B /* pEpTrustWords */;
@@ -1050,30 +987,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		43D47A86225CC60600E97C5B /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				INFOPLIST_FILE = "pEpTrustWords-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.pep.pEpTrustWords;
-				PRODUCT_NAME = "pEpTrustWords-iPad";
-				TARGETED_DEVICE_FAMILY = 2;
-				WRAPPER_EXTENSION = bundle;
-			};
-			name = Debug;
-		};
-		43D47A87225CC60600E97C5B /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				INFOPLIST_FILE = "pEpTrustWords-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.pep.pEpTrustWords;
-				PRODUCT_NAME = "pEpTrustWords-iPad";
-				TARGETED_DEVICE_FAMILY = 2;
-				WRAPPER_EXTENSION = bundle;
-			};
-			name = Release;
-		};
 		644297C31BE11C65002BC73B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1253,15 +1166,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		43D47A85225CC60600E97C5B /* Build configuration list for PBXNativeTarget "pEpGenerateSync" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				43D47A86225CC60600E97C5B /* Debug */,
-				43D47A87225CC60600E97C5B /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		644297C21BE11C65002BC73B /* Build configuration list for PBXNativeTarget "pEpTrustWords" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
