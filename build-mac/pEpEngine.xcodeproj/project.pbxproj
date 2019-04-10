@@ -28,7 +28,6 @@
 		438C439B2167582500C7425B /* sync_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 438C43962167582400C7425B /* sync_api.h */; };
 		438C43B52167752C00C7425B /* labeled_int_list.h in Headers */ = {isa = PBXBuildFile; fileRef = 438C43AF2167752C00C7425B /* labeled_int_list.h */; };
 		438C43B62167752C00C7425B /* labeled_int_list.c in Sources */ = {isa = PBXBuildFile; fileRef = 438C43B42167752C00C7425B /* labeled_int_list.c */; };
-		43D47A84225CC60600E97C5B /* system.db in Resources */ = {isa = PBXBuildFile; fileRef = 64951A1B1BE0FCD800B10E71 /* system.db */; };
 		43F6921D1F164A47009418F5 /* resource_id.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F6921C1F164A47009418F5 /* resource_id.c */; };
 		43F73BF02166269200AB4524 /* PString.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73BEB2166269200AB4524 /* PString.c */; };
 		43F73BF2216626E100AB4524 /* Sync_func.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73BF1216626E100AB4524 /* Sync_func.c */; };
@@ -749,7 +748,6 @@
 				43D47A80225CC60600E97C5B /* Sources */,
 				43D47A81225CC60600E97C5B /* Frameworks */,
 				43D47A82225CC60600E97C5B /* ShellScript */,
-				43D47A83225CC60600E97C5B /* Resources */,
 			);
 			buildRules = (
 			);
@@ -879,14 +877,6 @@
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
-		43D47A83225CC60600E97C5B /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				43D47A84225CC60600E97C5B /* system.db in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		644297BD1BE11C65002BC73B /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
