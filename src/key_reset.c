@@ -325,11 +325,11 @@ pEp_free:
 
 DYNAMIC_API PEP_STATUS key_reset_identity(
         PEP_SESSION session,
-        const char* fpr,
-        pEp_identity* ident
+        pEp_identity* ident,
+        const char* fpr        
     )
 {
-    if (!session || (ident && EMPTYSTR(ident->user_id)))
+    if (!session || !ident || (ident && (EMPTYSTR(ident->user_id) || EMPTYSTR(ident->address))))
         return PEP_ILLEGAL_VALUE;
     
     return key_reset(session, fpr, ident);    
@@ -337,26 +337,27 @@ DYNAMIC_API PEP_STATUS key_reset_identity(
 
 DYNAMIC_API PEP_STATUS key_reset_user(
         PEP_SESSION session,
-        const char* fpr,
-        const char* user_id
+        const char* user_id,
+        const char* fpr        
     )
 {
-    if (!session)
+    if (!session || EMPTYSTR(user_id))
         return PEP_ILLEGAL_VALUE;
 
-    pEp_identity* input_ident = NULL;
-    
-    if (!EMPTYSTR(user_id)) {
-        input_ident = new_identity(NULL, NULL, NULL, user_id);
-
-        if (!input_ident)
-            return PEP_OUT_OF_MEMORY;
-    }
+    pEp_identity* input_ident = new_identity(NULL, NULL, user_id, NULL);
+    if (!input_ident)
+        return PEP_OUT_OF_MEMORY;
+        
+    if (is_me(session, input_ident) && EMPTYSTR(fpr))
+        return PEP_ILLEGAL_VALUE;
         
     PEP_STATUS status = key_reset(session, fpr, input_ident);
-
     free_identity(input_ident);
-    return status;            
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session) {
+    return key_reset(session, NULL, NULL);
 }
 
 // Notes to integrate into header:
