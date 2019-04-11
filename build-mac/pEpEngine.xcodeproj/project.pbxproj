@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -156,6 +156,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		43D47AA0225CC82400E97C5B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 644297BE1BE11C65002BC73B;
+			remoteInfo = pEpTrustWords;
+		};
 		64289E321B8B630200FC617B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */;
@@ -235,6 +242,7 @@
 		438C43962167582400C7425B /* sync_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sync_api.h; path = ../src/sync_api.h; sourceTree = "<group>"; };
 		438C43AF2167752C00C7425B /* labeled_int_list.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = labeled_int_list.h; path = ../src/labeled_int_list.h; sourceTree = "<group>"; };
 		438C43B42167752C00C7425B /* labeled_int_list.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = labeled_int_list.c; path = ../src/labeled_int_list.c; sourceTree = "<group>"; };
+		43D47A8A225CC60600E97C5B /* pEpTrustWords-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "pEpTrustWords-Info.plist"; path = "/Users/dirk/projects/pEp/pEpEngine/build-mac/pEpTrustWords-Info.plist"; sourceTree = "<absolute>"; };
 		43F6921C1F164A47009418F5 /* resource_id.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = resource_id.c; path = ../src/resource_id.c; sourceTree = "<group>"; };
 		43F73BEB2166269200AB4524 /* PString.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PString.c; path = ../asn.1/PString.c; sourceTree = "<group>"; };
 		43F73BF1216626E100AB4524 /* Sync_func.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_func.c; path = ../src/Sync_func.c; sourceTree = "<group>"; };
@@ -408,6 +416,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		43D47A89225CC60600E97C5B /* Resources-iPad */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "Resources-iPad";
+			sourceTree = "<group>";
+		};
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
 			isa = PBXGroup;
 			children = (
@@ -544,6 +559,7 @@
 		64796A361B455AA5004B1C24 = {
 			isa = PBXGroup;
 			children = (
+				43D47A89225CC60600E97C5B /* Resources-iPad */,
 				64951A1B1BE0FCD800B10E71 /* system.db */,
 				64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */,
 				64DA240C1B832EA0000BEE80 /* netpgp.xcodeproj */,
@@ -552,6 +568,7 @@
 				64A8264B1B455C5600EECAF0 /* srcref */,
 				644297C01BE11C65002BC73B /* pEpTrustWords */,
 				64796A401B455AA5004B1C24 /* Products */,
+				43D47A8A225CC60600E97C5B /* pEpTrustWords-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -730,7 +747,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 64796A531B455AA5004B1C24 /* Build configuration list for PBXNativeTarget "pEpEngine" */;
 			buildPhases = (
-				64BDD59B1B7A2E1B00AC43AE /* Run Script */,
+				43D47B08225DEBD600E97C5B /* ShellScript */,
 				64796A3B1B455AA5004B1C24 /* Sources */,
 				64796A3C1B455AA5004B1C24 /* Frameworks */,
 				64796A3D1B455AA5004B1C24 /* CopyFiles */,
@@ -739,6 +756,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				43D47AA1225CC82400E97C5B /* PBXTargetDependency */,
 				645922541B8BD53F00A5AF93 /* PBXTargetDependency */,
 				64289E3F1B8B638800FC617B /* PBXTargetDependency */,
 			);
@@ -754,7 +772,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0940;
-				ORGANIZATIONNAME = "Edouard Tisserant";
+				ORGANIZATIONNAME = "p≡p Security S.A.";
 				TargetAttributes = {
 					644297BE1BE11C65002BC73B = {
 						CreatedOnToolsVersion = 7.1;
@@ -836,6 +854,25 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		43D47B08225DEBD600E97C5B /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+				"$(SRCROOT)/generated-files-asn1.txt",
+				"$(SRCROOT)/generated-files-sync.txt",
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "export LANG=en_US.UTF-8\n\necho \"warning: ***************************************\"\necho \"warning: *** Generate files: ACTION: $ACTION ***\"\necho \"warning: ***************************************\"\n\ncd \"$SRCROOT/..\"\n\nbash -l -c \"gmake -C sync\"\nbash -l -c \"gmake -C asn.1 Sync.c\"\n";
+		};
 		644297C61BE11D00002BC73B /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -847,21 +884,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C \"$SRCROOT/../db\" system.db\n";
-		};
-		64BDD59B1B7A2E1B00AC43AE /* Run Script */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Run Script";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "export LANG=en_US.UTF-8\nmkdir -p \"$BUILT_PRODUCTS_DIR/include\"\n\ncd \"$SRCROOT/..\"\n\nbash -l -c \"gmake -C sync\"\nbash -l -c \"gmake -C asn.1 Sync.c\"\n";
+			shellScript = "cd \"$SRCROOT/..\"\n\nbash -l -c \"make db\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -966,6 +989,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		43D47AA1225CC82400E97C5B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 644297BE1BE11C65002BC73B /* pEpTrustWords */;
+			targetProxy = 43D47AA0225CC82400E97C5B /* PBXContainerItemProxy */;
+		};
 		64289E3F1B8B638800FC617B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = "libetpan ios";
@@ -1134,7 +1162,15 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
-				USER_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/../src $(PROJECT_DIR) $(PROJECT_DIR)/../../netpgp-et/include/ $(PROJECT_DIR)/../../netpgp-et/src/ $(PROJECT_DIR)/../../OpenSSL-for-iPhone/include $(PROJECT_DIR)/../asn.1/ $(inherited)";
+				USER_HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/../src",
+					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/../../netpgp-et/include/",
+					"$(PROJECT_DIR)/../../netpgp-et/src/",
+					"$(PROJECT_DIR)/../../OpenSSL-for-iPhone/include",
+					"$(PROJECT_DIR)/../asn.1/",
+					"$(inherited)",
+				);
 			};
 			name = Debug;
 		};
@@ -1151,7 +1187,15 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
-				USER_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/../src $(PROJECT_DIR) $(PROJECT_DIR)/../../netpgp-et/include/ $(PROJECT_DIR)/../../netpgp-et/src/ $(PROJECT_DIR)/../../OpenSSL-for-iPhone/include $(PROJECT_DIR)/../asn.1/ $(inherited)";
+				USER_HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/../src",
+					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/../../netpgp-et/include/",
+					"$(PROJECT_DIR)/../../netpgp-et/src/",
+					"$(PROJECT_DIR)/../../OpenSSL-for-iPhone/include",
+					"$(PROJECT_DIR)/../asn.1/",
+					"$(inherited)",
+				);
 			};
 			name = Release;
 		};
