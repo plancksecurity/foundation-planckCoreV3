@@ -157,6 +157,7 @@
     <ClInclude Include="..\..\asn.1\BIT_STRING.h" />
     <ClInclude Include="..\..\asn.1\BOOLEAN.h" />
     <ClInclude Include="..\..\asn.1\CommitAccept.h" />
+    <ClInclude Include="..\..\asn.1\CommitAcceptForGroup.h" />
     <ClInclude Include="..\..\asn.1\CommitReject.h" />
     <ClInclude Include="..\..\asn.1\constraints.h" />
     <ClInclude Include="..\..\asn.1\constr_CHOICE.h" />
@@ -205,6 +206,7 @@
     <ClCompile Include="..\..\asn.1\BIT_STRING.c" />
     <ClCompile Include="..\..\asn.1\BOOLEAN.c" />
     <ClCompile Include="..\..\asn.1\CommitAccept.c" />
+    <ClCompile Include="..\..\asn.1\CommitAcceptForGroup.c" />
     <ClCompile Include="..\..\asn.1\CommitReject.c" />
     <ClCompile Include="..\..\asn.1\constraints.c" />
     <ClCompile Include="..\..\asn.1\constr_CHOICE.c" />
