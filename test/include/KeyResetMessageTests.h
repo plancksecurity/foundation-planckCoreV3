@@ -44,6 +44,17 @@ class KeyResetMessageTests : public EngineTestIndividualSuite {
         void check_receive_message_to_revoked_key_from_unknown();   
         void check_receive_message_to_revoked_key_from_contact();   
         void check_multiple_resets_single_key();
+        void check_reset_ident_uid_only();
+        void check_reset_ident_address_only();
+        void check_reset_ident_null_ident();
+        void check_reset_ident_other_pub_fpr();
+        void check_reset_ident_other_priv_fpr();
+        void check_reset_ident_other_pub_no_fpr();
+        void check_reset_ident_other_priv_no_fpr();
+        void check_reset_ident_own_pub_fpr();
+        void check_reset_ident_own_priv_fpr();
+        void check_reset_ident_own_priv_no_fpr();
+
         void send_setup();
         void receive_setup();     
         void create_msg_for_revoked_key();

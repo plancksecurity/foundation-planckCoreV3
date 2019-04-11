@@ -469,7 +469,7 @@ PEP_STATUS key_reset(
             }
 
             status = contains_priv_key(session, fpr_copy, &is_own_private);
-            if (status != PEP_STATUS_OK)
+            if (status != PEP_STATUS_OK && status != PEP_KEY_NOT_FOUND)
                 goto pEp_free;
         }
         
