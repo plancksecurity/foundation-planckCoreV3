@@ -323,20 +323,60 @@ pEp_free:
     return status;
 }
 
-DYNAMIC_API PEP_STATUS key_reset(
+DYNAMIC_API PEP_STATUS key_reset_identity(
+        PEP_SESSION session,
+        const char* fpr,
+        pEp_identity* ident
+    )
+{
+    if (!session || !ident || EMPTYSTR(ident->user_id) || EMPTYSTR(ident->address))
+        return PEP_ILLEGAL_VALUE;
+    
+    return key_reset(session, fpr, ident);    
+}
+
+DYNAMIC_API PEP_STATUS key_reset_user(
+        PEP_SESSION session,
+        const char* fpr,
+        const char* user_id
+    )
+{
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    pEp_identity* input_ident = NULL;
+    
+    if (!EMPTYSTR(user_id)) {
+        input_ident = new_identity(NULL, NULL, NULL, user_id);
+
+        if (!input_ident)
+            return PEP_OUT_OF_MEMORY;
+    }
+        
+    PEP_STATUS status = key_reset(session, fpr, input_ident);
+
+    free_identity(input_ident);
+    return status;            
+}
+
+// Notes to integrate into header:
+// IF there is an ident, it must have a user_id.
+PEP_STATUS key_reset(
         PEP_SESSION session,
         const char* key_id,
         pEp_identity* ident
     )
 {
-    if (!session)
+    if (!session || (ident && EMPTYSTR(ident->user_id)))
         return PEP_ILLEGAL_VALUE;
         
     PEP_STATUS status = PEP_STATUS_OK;
         
     char* fpr_copy = NULL;
     char* own_id = NULL;
+    char* user_id = NULL;
     char* new_key = NULL;
+    pEp_identity* tmp_ident = NULL;
     identity_list* key_idents = NULL;
     stringlist_t* keys = NULL;
     
@@ -345,133 +385,205 @@ DYNAMIC_API PEP_STATUS key_reset(
         if (!fpr_copy)
             return PEP_OUT_OF_MEMORY;
     }
-        
-    if (!ident) {
-        // Get list of own identities
-        status = get_default_own_userid(session, &own_id);
-        if (status != PEP_STATUS_OK)
-            goto pEp_free;
-            
-        if (EMPTYSTR(fpr_copy)) {
-            status = get_all_keys_for_user(session, own_id, &keys);
-            if (status == PEP_STATUS_OK) {
-                stringlist_t* curr_key;
-                for (curr_key = keys; curr_key && curr_key->value; curr_key = curr_key->next) {
-                    status = key_reset(session, curr_key->value, NULL);
-                    if (status != PEP_STATUS_OK)
-                        break;
-                }
-            }
-            goto pEp_free;
-        } // otherwise, we have a specific fpr to process
 
-        // fpr_copy exists, so... let's go.
-        // Process own identities with this fpr
-        status = get_identities_by_main_key_id(session, fpr_copy, &key_idents);
-        
+    // This is true when we don't have a user_id and address and the fpr isn't specified
+    bool reset_all_for_user = !fpr_copy && (!ident || EMPTYSTR(ident->address));
+
+    // FIXME: does this need to be done everywhere?> I think not.
+    if (ident) {
+        user_id = strdup(ident->user_id);
+        if (!user_id) {
+            status = PEP_OUT_OF_MEMORY;
+            goto pEp_free;
+        }
+    }
+    else {
+        status = get_default_own_userid(session, &user_id);
+        if (status != PEP_STATUS_OK || !user_id)
+            goto pEp_free;                    
+    }
+    
+    // FIXME: Make sure this can't result in a double-free in recursive calls
+    tmp_ident = (ident ? identity_dup(ident) : new_identity(NULL, NULL, user_id, NULL));
+    
+    if (reset_all_for_user) {
+        status = get_all_keys_for_user(session, user_id, &keys);
+        // TODO: free
         if (status == PEP_STATUS_OK) {
-            // have ident list, or should
-            identity_list* curr_ident;
-            for (curr_ident = key_idents; curr_ident && curr_ident->ident; 
-                 curr_ident = curr_ident->next) {
-                pEp_identity* this_identity = curr_ident->ident;
-                status = key_reset(session, fpr_copy, this_identity);
+            stringlist_t* curr_key;
+            
+            for (curr_key = keys; curr_key && curr_key->value; curr_key = curr_key->next) {
+                // FIXME: Is the ident really necessary?
+                status = key_reset(session, curr_key->value, tmp_ident);
                 if (status != PEP_STATUS_OK)
-                    break;                    
+                    break;
             }
         }
-        else if (status == PEP_CANNOT_FIND_IDENTITY) // not an error
-            status = PEP_STATUS_OK;
-            
         goto pEp_free;
-    }
-    else { // an identity was specified.       
-        if (is_me(session, ident)) {            
-            // FIXME: make sure this IS our fpr?
-            
-            // If it got sent in with an empty fpr...
-            if (EMPTYSTR(fpr_copy)) {
-                //
-                // if (!EMPTYSTR(ident->fpr))
-                //     fpr_copy = strdup(ident->fpr);
-                status = _myself(session, ident, false, true, true);
-                if (status == PEP_STATUS_OK && ident->fpr)
-                    fpr_copy = strdup(ident->fpr);
-                else {
-                    // last resort?
-                    // Get list of own identities
-                    char* own_id = NULL;
-                    status = get_default_own_userid(session, &own_id);
-                    if (status == PEP_STATUS_OK)
-                        status = get_user_default_key(session, own_id, &fpr_copy);
-                    if (status != PEP_STATUS_OK || EMPTYSTR(fpr_copy))  {
-                        free(own_id);
-                        return (status == PEP_STATUS_OK ? PEP_KEY_NOT_FOUND : status);
-                    }
-                }
+    }                   
+    else {
+        // tmp_ident => tmp_ident->user_id (was checked)
+        //
+        // !(EMPTYSTR(fpr) && (!tmp_ident || EMPTYSTR(tmp_ident->address)))
+        // => fpr || (tmp_ident && tmp_ident->address)
+        //
+        // so: We have an fpr or we have an ident with user_id and address
+        //     or both
+        if (!fpr_copy) {
+            // We are guaranteed to have an ident w/ id + addr here.
+            // Get the default key.
+            pEp_identity* stored_ident = NULL;
+            status = get_identity(session, tmp_ident->address, 
+                                  tmp_ident->user_id, &stored_ident);
+
+            // FIXME FIXME FIXME
+            if (status == PEP_STATUS_OK) {
+                // transfer ownership
+                fpr_copy = stored_ident->fpr;
+                stored_ident->fpr = NULL;
+                free_identity(stored_ident);                
             }
+            
+            if (!fpr_copy || status == PEP_CANNOT_FIND_IDENTITY) {
+                // There's no identity default. Try resetting user default
+                status = get_user_default_key(session, tmp_ident->user_id, &fpr_copy);
+            }            
+            
+            if (!fpr_copy || status != PEP_STATUS_OK) // No default to free. We're done here.
+                goto pEp_free;            
+        }
+        
+        // Ok - now we have at least an ident with user_id and an fpr.
+        // Now it matters if we're talking about ourselves or a partner.
+        bool is_own_private = false;
+        if (is_me(session, tmp_ident)) {
+            bool own_key = false;            
+            status = is_own_key(session, fpr_copy, &own_key);
+
+            if (status != PEP_STATUS_OK)
+                goto pEp_free;
+            if (!own_key) {
+                status = PEP_ILLEGAL_VALUE;
+                goto pEp_free;
+            }
+
+            status = contains_priv_key(session, fpr_copy, &is_own_private);
+            if (status != PEP_STATUS_OK)
+                goto pEp_free;
+        }
+        
+        // Up to this point, we haven't cared about whether or not we 
+        // had a full identity. Now we have to deal with that in the 
+        // case of own identities with private keys.
+        
+        if (is_own_private) {
+            
+            // If there's no address, we want to reset this key for every identity 
+            // it's a part of. Since this means generating new keys, we have to 
+            // grab all the identities associated with it.
+            if (EMPTYSTR(tmp_ident->address)) {
+                status = get_identities_by_main_key_id(session, fpr_copy, &key_idents);
+                
+                if (status != PEP_CANNOT_FIND_IDENTITY) {
+                    if (status == PEP_STATUS_OK) {
+                        // now have ident list, or should
+                        identity_list* curr_ident;
                         
-            free(ident->fpr);
-            ident->fpr = fpr_copy;            
+                        for (curr_ident = key_idents; curr_ident && curr_ident->ident; 
+                                                        curr_ident = curr_ident->next) {
+                            
+                            pEp_identity* this_identity = curr_ident->ident;
+                            // Do the full reset on this identity        
+                            status = key_reset(session, fpr_copy, this_identity);
+                            
+                            // Ident list gets freed below, do not free here!
+
+                            if (status != PEP_STATUS_OK)
+                                break;
+                            
+                        }
+                    }
+                    // Ok, we've either now reset for each own identity with this key, or 
+                    // we got an error and want to bail anyway.
+                    goto pEp_free;
+                }    
+            }
+            
             // Create revocation
             status = revoke_key(session, fpr_copy, NULL);
-            // generate new key
-            if (status == PEP_STATUS_OK) {
-                ident->fpr = NULL;
-                status = generate_keypair(session, ident);
-            }
-            if (status == PEP_STATUS_OK) {
-                new_key = strdup(ident->fpr);
-                status = set_own_key(session, ident, new_key);
-            }
-            // mistrust fpr from trust
-            ident->fpr = fpr_copy;
             
-            ident->comm_type = PEP_ct_mistrusted;
-            status = set_trust(session, ident);
-            ident->fpr = NULL;
-            
-            // Done with old use of ident.
-            if (status == PEP_STATUS_OK) {
-                // Update fpr for outgoing
-                status = myself(session, ident);
-            }
+            // If we have a full identity, we have some cleanup and generation tasks here
+            if (!EMPTYSTR(tmp_ident->address)) {
+                // generate new key
+                if (status == PEP_STATUS_OK) {
+                    tmp_ident->fpr = NULL;
+                    status = generate_keypair(session, tmp_ident);
+                }
+                if (status == PEP_STATUS_OK) {
+                    new_key = strdup(tmp_ident->fpr);
+                    status = set_own_key(session, tmp_ident, new_key);
+                }
+                // mistrust fpr from trust
+                tmp_ident->fpr = fpr_copy;
+                
+                tmp_ident->comm_type = PEP_ct_mistrusted;
+                status = set_trust(session, tmp_ident);
+                tmp_ident->fpr = NULL;
+                
+                // Done with old use of ident.
+                if (status == PEP_STATUS_OK) {
+                    // Update fpr for outgoing
+                    status = myself(session, tmp_ident);
+                }
+            }    
             
             if (status == PEP_STATUS_OK)
                 // cascade that mistrust for anyone using this key
                 status = mark_as_compromised(session, fpr_copy);
+                
             if (status == PEP_STATUS_OK)
                 status = remove_fpr_as_default(session, fpr_copy);
             if (status == PEP_STATUS_OK)
                 status = add_mistrusted_key(session, fpr_copy);
-            // add to revocation list 
-            if (status == PEP_STATUS_OK) 
-                status = set_revoked(session, fpr_copy, new_key, time(NULL));            
-            // for all active communication partners:
-            //      active_send revocation
-            if (status == PEP_STATUS_OK)
-                status = send_key_reset_to_recents(session, fpr_copy, new_key);
-                
+
+            // If there's a new key, do the DB linkage with the revoked one, and 
+            // send the key reset mail opportunistically to recently contacted
+            // partners
+            if (new_key) {
+                // add to revocation list 
+                if (status == PEP_STATUS_OK) 
+                    status = set_revoked(session, fpr_copy, new_key, time(NULL));            
+                // for all active communication partners:
+                //      active_send revocation
+                if (status == PEP_STATUS_OK)
+                    status = send_key_reset_to_recents(session, fpr_copy, new_key);        
+            }        
+        } // end is_own_private
+        else {
+            // This is a public key (or a private key that isn't ours, which means
+            // we want it gone anyway)
+            //
+            // Delete this key from the keyring.
+            status = delete_keypair(session, fpr_copy);
         }
-        else { // not is_me
-            // TODO: Decide what this means. We have a non-own identity, we don't
-            //       have an fpr. Do we reset all keys for that identity?
-            if (EMPTYSTR(fpr_copy)) {
-                NOT_IMPLEMENTED
-            }
-                
-            // remove fpr from all identities
-            // remove fpr from all users
-            if (status == PEP_STATUS_OK)
-                status = remove_fpr_as_default(session, fpr_copy);
-            // delete key from DB
-            if (status == PEP_STATUS_OK) {
-                status = remove_key(session, fpr_copy);
-            };
+
+        // REGARDLESS OF WHO OWNS THE KEY, WE NOW NEED TO REMOVE IT AS A DEFAULT.
+        PEP_STATUS cached_status = status;
+        // remove fpr from all identities
+        // remove fpr from all users
+        status = remove_fpr_as_default(session, fpr_copy);
+        // delete key from DB - this does NOT touch the keyring!
+        // Note: for own priv keys, we cannot do this. But we'll never encrypt to/from it.
+        if (status == PEP_STATUS_OK && !is_own_private) {
+            status = remove_key(session, fpr_copy);
         }
-    }
-    
+        if (status == PEP_STATUS_OK)
+            status = cached_status;
+    }           
+        
 pEp_free:
+    if (!ident)
+        free_identity(tmp_ident);
     free(fpr_copy);
     free(own_id);
     free_identity_list(key_idents);

@@ -468,7 +468,7 @@ void KeyResetMessageTests::check_receive_message_to_revoked_key_from_contact() {
     int int_result = sqlite3_exec(
         session->db,
         "update identity "
-        "   set timestamp = 661008730 "
+        "   set timestamp = '2018-04-10 16:48:33' "
         "   where address = 'pep-test-gabrielle@pep-project.org' ;",
         NULL,
         NULL,
