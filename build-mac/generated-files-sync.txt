@@ -1,0 +1,6 @@
+$(SRCROOT)/../src/sync_codec.c
+$(SRCROOT)/../src/sync_impl.c
+$(SRCROOT)/../src/sync_actions.c
+$(SRCROOT)/../src/Sync_func.c
+$(SRCROOT)/../src/Sync_event.c
+$(SRCROOT)/../src/KeySync_fsm.c
