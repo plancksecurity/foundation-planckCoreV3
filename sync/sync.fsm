@@ -79,7 +79,7 @@ protocol Sync 1 {
                 go Sole;
             }
 
-            on Rollback
+            on Rollback if sameTransaction
                 go Sole;
 
             // Reject is CommitReject
@@ -89,7 +89,7 @@ protocol Sync 1 {
                 go End;
             }
 
-            on CommitReject {
+            on CommitReject if sameTransaction {
                 do disable;
                 go End;
             }
@@ -101,7 +101,7 @@ protocol Sync 1 {
             }
 
             // got a CommitAccept from second
-            on CommitAccept
+            on CommitAccept if sameTransaction
                 go HandshakingNewPhase2;
         }
 
@@ -116,7 +116,7 @@ protocol Sync 1 {
                 go Sole;
             }
 
-            on Rollback
+            on Rollback if sameTransaction
                 go Sole;
 
             // Reject is CommitReject
@@ -126,7 +126,7 @@ protocol Sync 1 {
                 go End;
             }
 
-            on CommitReject {
+            on CommitReject if sameTransaction {
                 do disable;
                 go End;
             }
@@ -138,33 +138,33 @@ protocol Sync 1 {
             }
 
             // got a CommitAccept from first
-            on CommitAccept
+            on CommitAccept if sameTransaction
                 go HandshakingNewPhase2;
         }
 
         state HandshakingNewPhase1First {
-            on Rollback
+            on Rollback if sameTransaction
                 go Sole;
             
-            on CommitReject {
+            on CommitReject if sameTransaction {
                 do disable;
                 go End;
             }
 
-            on CommitAccept
+            on CommitAccept if sameTransaction
                 go NewGroup;
         }
 
         state HandshakingNewPhase1Second {
-            on Rollback
+            on Rollback if sameTransaction
                 go Sole;
             
-            on CommitReject {
+            on CommitReject if sameTransaction {
                 do disable;
                 go End;
             }
 
-            on CommitAcceptForGroup
+            on CommitAcceptForGroup if sameTransaction
                 go NewGroup;
         }
 
@@ -190,7 +190,7 @@ protocol Sync 1 {
                 send GroupKeysAndClose; // we're not grouped yet, this is our own keys
             }
 
-            on GroupKeysAndClose {
+            on GroupKeysAndClose if sameTransaction {
                 if keyElectionWon
                     do ownKeysAreGroupKeys;
                 else
@@ -209,7 +209,7 @@ protocol Sync 1 {
                 go Sole;
             }
 
-            on Rollback
+            on Rollback if sameTransaction
                 go Sole;
 
             // Reject is CommitReject
@@ -219,7 +219,7 @@ protocol Sync 1 {
                 go End;
             }
 
-            on CommitReject {
+            on CommitReject if sameTransaction {
                 do disable;
                 go End;
             }
@@ -230,20 +230,20 @@ protocol Sync 1 {
                 go HandshakingJoinPhase1;
             }
 
-            on CommitAcceptForGroup
+            on CommitAcceptForGroup if sameTransaction
                 go HandshakingJoinPhase1Own;
         }
 
         state HandshakingJoinPhase1 {
-            on Rollback
+            on Rollback if sameTransaction
                 go Sole;
             
-            on CommitReject {
+            on CommitReject if sameTransaction {
                 do disable;
                 go End;
             }
 
-            on CommitAcceptForGroup
+            on CommitAcceptForGroup if sameTransaction
                 go JoinGroup;
         }
 
@@ -303,7 +303,7 @@ protocol Sync 1 {
                 go Grouped;
             }
 
-            on Rollback
+            on Rollback if sameTransaction
                 go Grouped;
 
             // Reject is CommitReject
@@ -312,7 +312,7 @@ protocol Sync 1 {
                 go Grouped;
             }
 
-            on CommitReject
+            on CommitReject if sameTransaction
                 go Grouped;
 
             // Accept is Phase1Commit
@@ -321,7 +321,7 @@ protocol Sync 1 {
                 go HandshakingGroupedPhase1;
             }
 
-            on CommitAccept
+            on CommitAccept if sameTransaction
                 go HandshakingGroupedPhase1Own;
 
             on GroupKeys
@@ -329,13 +329,13 @@ protocol Sync 1 {
         }
 
         state HandshakingGroupedPhase1 {
-            on Rollback
+            on Rollback if sameTransaction
                 go Grouped;
 
-            on CommitReject
+            on CommitReject if sameTransaction
                 go Grouped;
 
-            on CommitAccept {
+            on CommitAccept if sameTransaction {
                 send GroupKeysAndClose;
                 go Grouped;
             }
