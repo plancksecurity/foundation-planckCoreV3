@@ -192,11 +192,9 @@ template "fsm", mode=update_message
 ||
 case «../@name»_PR_«yml:lcase(@name)»:
     {
-        static long sequence = 0;
-        msg->choice.«yml:lcase(@name)».header.sequence = ++sequence;
-        int message_type = msg->choice.«yml:lcase(@name)».payload.present;
+        int message_type = msg->choice.«yml:lcase(@name)».present;
         switch (message_type) {
-            case «@name»__payload_PR_NOTHING:
+            case «@name»_PR_NOTHING:
                 return PEP_ILLEGAL_VALUE;
 
             `` apply "message", 2, mode=update_message
@@ -209,7 +207,7 @@ case «../@name»_PR_«yml:lcase(@name)»:
 
 template "message", mode=update_message {
     ||
-    case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+    case «../@name»_PR_«yml:mixedCase(@name)»:
         `` apply "auto"
         `` apply "field", mode=update_message
         break;
@@ -231,8 +229,8 @@ template "auto" choose {
             *major = «$fsm/version/@major»;
             *minor = «$fsm/version/@minor»;
 
-            msg->choice.«yml:lcase($fsm/@name)».payload.choice.«yml:mixedCase(../@name)».«@name».major = major;
-            msg->choice.«yml:lcase($fsm/@name)».payload.choice.«yml:mixedCase(../@name)».«@name».minor = minor;
+            msg->choice.«yml:lcase($fsm/@name)».choice.«yml:mixedCase(../@name)».«@name».major = major;
+            msg->choice.«yml:lcase($fsm/@name)».choice.«yml:mixedCase(../@name)».«@name».minor = minor;
         }
 
         ||
@@ -254,7 +252,7 @@ template "field", mode=update_message {
     choose {
         when "func:basicType()" // copyable
         ||
-        msg->choice.«yml:lcase(../../@name)».payload.choice.«$message_name».«@name»
+        msg->choice.«yml:lcase(../../@name)».choice.«$message_name».«@name»
                  = session->«$state».«@name»;
 
         ||
@@ -266,7 +264,7 @@ template "field", mode=update_message {
             if (!il)
                 return PEP_OUT_OF_MEMORY;
             IdentityList_t *_il = IdentityList_from_identity_list(il,
-                    &msg->choice.«yml:lcase(../../@name)».payload.choice.«$message_name».«@name»);
+                    &msg->choice.«yml:lcase(../../@name)».choice.«$message_name».«@name»);
             free_identity_list(il);
             if (!_il)
                 return PEP_OUT_OF_MEMORY;
@@ -277,7 +275,7 @@ template "field", mode=update_message {
         ||
         {
             int result = OCTET_STRING_fromBuf(
-                    &msg->choice.«yml:lcase(../../@name)».payload.choice.«$message_name».«@name»,
+                    &msg->choice.«yml:lcase(../../@name)».choice.«$message_name».«@name»,
                     (char *) session->«$state».«@name».buf,
                     session->«$state».«@name».size
                 );
@@ -291,8 +289,8 @@ template "field", mode=update_message {
 template "fsm", mode=update_state
 ||
 case «../@name»_PR_«yml:lcase(@name)»:
-    switch (msg->choice.«yml:lcase(@name)».payload.present) {
-        case «@name»__payload_PR_NOTHING:
+    switch (msg->choice.«yml:lcase(@name)».present) {
+        case «@name»_PR_NOTHING:
             return PEP_ILLEGAL_VALUE;
 
         `` apply "message", 2, mode=update_state
@@ -306,7 +304,7 @@ case «../@name»_PR_«yml:lcase(@name)»:
 template "message", mode=update_state {
     const "message_name", "concat(yml:lcase(substring(@name,1,1)), substring(@name,2))";
     ||
-    case «../@name»__payload_PR_«$message_name»:
+    case «../@name»_PR_«$message_name»:
         `` apply "field", mode=update_state with "message_name", "$message_name"
         *message_type = «yml:capit($message_name)»;
         break;
@@ -320,14 +318,14 @@ template "field", mode=update_state {
         when "func:basicType()" // copyable
         ||
         session->«yml:lcase(../../../@name)»_state.«yml:lcase(../../@name)».«@name» = msg->choice.«yml:lcase(../../@name)»
-                .payload.choice.«$message_name».«@name»;
+                .choice.«$message_name».«@name»;
 
         ||
         when "@type='IdentityList'"
         ||
         {
             identity_list *il = IdentityList_to_identity_list(
-                    &msg->choice.«yml:lcase(../../@name)».payload.choice.«$message_name».«@name», NULL);
+                    &msg->choice.«yml:lcase(../../@name)».choice.«$message_name».«@name», NULL);
             if (!il)
                 return PEP_OUT_OF_MEMORY;
             IdentityList_t *_il = IdentityList_from_identity_list(il,
@@ -341,8 +339,8 @@ template "field", mode=update_state {
         otherwise // string based
         ||
         result = OCTET_STRING_fromBuf(&session->«yml:lcase(../../../@name)»_state.«yml:lcase(../../@name)».«@name»,
-                (char *) msg->choice.«yml:lcase(../../@name)».payload.choice.«$message_name».«@name».buf,
-                msg->choice.«yml:lcase(../../@name)».payload.choice.«$message_name».«@name».size);
+                (char *) msg->choice.«yml:lcase(../../@name)».choice.«$message_name».«@name».buf,
+                msg->choice.«yml:lcase(../../@name)».choice.«$message_name».«@name».size);
         if (result)
             return PEP_OUT_OF_MEMORY;
 
@@ -353,7 +351,7 @@ template "field", mode=update_state {
 template "fsm", mode=impl
 ||
 case «../@name»_PR_«yml:lcase(@name)»:
-    msg->choice.«yml:lcase(@name)».payload.present = message_type;
+    msg->choice.«yml:lcase(@name)».present = message_type;
         break;
 
 ||

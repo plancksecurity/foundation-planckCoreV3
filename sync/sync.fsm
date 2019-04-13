@@ -37,30 +37,42 @@ protocol Sync 1 {
                 if weAreFirst {
                     send Beacon;
                 }
-                else {
+                else /* we are second */ {
                     do storeChallenge; // partner's challenge
                     do openTransaction;
                     do storeTransaction;
+                    // second is sending HandshakeRequest
                     send HandshakeRequest;
                 }
             }
 
             on HandshakeRequest {
-                if challengeAccepted {
-                    do storeTransaction;
-                    send HandshakeAnswer;
-                    if partnerIsGrouped
-                        go HandshakingWithGroup;
-                    go HandshakingNew;
+                if weAreFirst {
+                    if challengeAccepted {
+                        // first is receiving HandshakeRequest
+                        do storeTransaction;
+                        // first is sending HandshakeAnswer
+                        send HandshakeAnswer;
+                        if partnerIsGrouped
+                            go HandshakingWithGroup;
+                        go HandshakingNewFirst;
+                    }
                 }
             }
 
-            on HandshakeAnswer
-                go HandshakingNew;
+            on HandshakeAnswer {
+                if weAreFirst {
+                    // ignore
+                }
+                else {
+                    // second is receiving HandshakeAnswer
+                    go HandshakingNewSecond;
+                }
+            }
         }
 
         // handshaking without existing Device group
-        state HandshakingNew {
+        state HandshakingNewFirst {
             on Init
                 do showSoleHandshake;
 
@@ -85,17 +97,68 @@ protocol Sync 1 {
                 go End;
             }
 
-            // Accept is Phase1Commit
+            // Accept means init Phase1Commit
             on Accept {
                 send CommitAcceptForGroup;
-                go HandshakingNewPhase1;
+                go HandshakingNewPhase1First;
+            }
+
+            // got a CommitAccept from second
+            on CommitAccept
+                go HandshakingNewPhase2;
+        }
+
+        // handshaking without existing Device group
+        state HandshakingNewSecond {
+            on Init
+                do showSoleHandshake;
+
+            // Cancel is Rollback
+            on Cancel {
+                send Rollback;
+                go Sole;
+            }
+
+            on Rollback
+                go Sole;
+
+            // Reject is CommitReject
+            on Reject {
+                send CommitReject;
+                do disable;
+                go End;
+            }
+
+            on CommitReject {
+                do disable;
+                go End;
+            }
+
+            // Accept means init Phase1Commit
+            on Accept {
+                send CommitAccept;
+                go HandshakingNewPhase1Second;
+            }
+
+            // got a CommitAccept from first
+            on CommitAccept
+                go HandshakingNewPhase2;
+        }
+
+        state HandshakingNewPhase1First {
+            on Rollback
+                go Sole;
+            
+            on CommitReject {
+                do disable;
+                go End;
             }
 
             on CommitAccept
-                go HandshakingNewPhase1Own;
+                go NewGroup;
         }
 
-        state HandshakingNewPhase1 {
+        state HandshakingNewPhase1Second {
             on Rollback
                 go Sole;
             
@@ -108,7 +171,7 @@ protocol Sync 1 {
                 go NewGroup;
         }
 
-        state HandshakingNewPhase1Own {
+        state HandshakingNewPhase2 {
             on Cancel {
                 send Rollback;
                 go Sole;
@@ -200,11 +263,19 @@ protocol Sync 1 {
             }
 
             on Accept
-                go JoinGroup;
+                go OwnGroup;
         }
 
         state JoinGroup {
             on GroupKeysAndClose {
+                send GroupKeys; // first send own keys
+                do saveGroupKeys; // then store new group keys
+                go Grouped;
+            }
+        }
+
+        state OwnGroup {
+            on GroupKeys {
                 send GroupKeys; // first send own keys
                 do saveGroupKeys; // then store new group keys
                 go Grouped;
