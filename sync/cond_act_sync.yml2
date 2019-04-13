@@ -37,6 +37,14 @@ condition challengeAccepted
     *result = t1->size == t2->size && memcmp(t1->buf, t2->buf, t1->size) == 0;
 ||
 
+condition sameTransaction
+||
+    TID_t *t1 = &session->sync_state.keysync.transaction;
+    TID_t *t2 = &session->own_sync_state.transaction;
+
+    *result = t1->size == t2->size && memcmp(t1->buf, t2->buf, t1->size) == 0;
+||
+
 condition keyElectionWon
 ||
     pEp_identity *from = session->sync_state.common.from;
@@ -91,7 +99,7 @@ function "copy_UUID" {
     ||
 }
 
-action openChallenge
+action newChallenge
     call "new_UUID" with "dst" > &session->own_sync_state.challenge
 
 action storeChallenge call "copy_UUID" {
@@ -99,8 +107,21 @@ action storeChallenge call "copy_UUID" {
     with "dst" > &session->own_sync_state.challenge
 }
 
-action openTransaction
+action openTransaction {
+||
+    for (int i=0; i<session->sync_state.keysync.transaction.size; ++i) {
+        if (session->sync_state.keysync.transaction.buf[i])
+            return PEP_STATUS_OK;
+    }
+||
     call "new_UUID" with "dst" > &session->sync_state.keysync.transaction
+}
+
+action closeTransaction
+||
+    memset(session->sync_state.keysync.transaction.buf, 0,
+            session->sync_state.keysync.transaction.size);
+||
 
 action storeTransaction call "copy_UUID" {
     with "src" > &session->sync_state.keysync.transaction

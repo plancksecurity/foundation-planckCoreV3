@@ -23,7 +23,8 @@ protocol Sync 1 {
 
         state Sole timeout=off {
             on Init {
-                do openChallenge; // own challenge
+                do newChallenge;
+                do closeTransaction;
                 send Beacon;
             }
 
@@ -46,28 +47,24 @@ protocol Sync 1 {
                 }
             }
 
-            on HandshakeRequest {
-                if weAreFirst {
-                    if challengeAccepted {
-                        // first is receiving HandshakeRequest
-                        do storeTransaction;
-                        // first is sending HandshakeAnswer
-                        send HandshakeAnswer;
-                        if partnerIsGrouped
-                            go HandshakingWithGroup;
-                        go HandshakingNewFirst;
-                    }
+            on HandshakeRequest if challengeAccepted {
+                if sameTransaction {
+                    // this is our own handshake request; ignore
+                }
+                else {
+                    // first is receiving HandshakeRequest
+                    do storeTransaction;
+                    // first is sending HandshakeAnswer
+                    send HandshakeAnswer;
+                    if partnerIsGrouped
+                        go HandshakingWithGroup;
+                    go HandshakingNewFirst;
                 }
             }
 
-            on HandshakeAnswer {
-                if weAreFirst {
-                    // ignore
-                }
-                else {
-                    // second is receiving HandshakeAnswer
-                    go HandshakingNewSecond;
-                }
+            on HandshakeAnswer if sameTransaction {
+                // second is receiving HandshakeAnswer
+                go HandshakingNewSecond;
             }
         }
 
