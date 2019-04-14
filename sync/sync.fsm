@@ -372,12 +372,18 @@ protocol Sync 1 {
             // Accept is Phase1Commit
             on Accept {
                 do trustThisKey;
+                send GroupTrustThisKey;
                 send CommitAcceptForGroup;
                 go HandshakingGroupedPhase1;
             }
 
             on CommitAccept if sameTransaction
                 go HandshakingGroupedPhase2;
+
+            on GroupTrustThisKey {
+                do hideHandshakeDialog;
+                go Grouped;
+            }
 
             on GroupKeys
                 do saveGroupKeys;
@@ -394,6 +400,9 @@ protocol Sync 1 {
                 send GroupKeysAndClose;
                 go Grouped;
             }
+
+            on GroupTrustThisKey
+                go Grouped;
 
             on GroupKeys
                 do saveGroupKeys;
@@ -412,7 +421,13 @@ protocol Sync 1 {
 
             on Accept {
                 do trustThisKey;
+                send GroupTrustThisKey;
                 send GroupKeysAndClose;
+                go Grouped;
+            }
+
+            on GroupTrustThisKey {
+                do hideHandshakeDialog;
                 go Grouped;
             }
 
@@ -459,14 +474,19 @@ protocol Sync 1 {
             field TID transaction;
         }
 
+        // default: security=trusted only
+        message GroupTrustThisKey 9 {
+            field Hash key;
+        }
+
         // security=attach_own_keys implies security=trusted
-        message GroupKeysAndClose 9, security=attach_own_keys {
+        message GroupKeysAndClose 10, security=attach_own_keys {
             field TID transaction;
             field IdentityList ownIdentities;
         }
 
         // security=attach_own_keys implies security=trusted
-        message GroupKeys 10, security=attach_own_keys {
+        message GroupKeys 11, security=attach_own_keys {
             field IdentityList ownIdentities;
         }
     }

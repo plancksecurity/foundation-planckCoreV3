@@ -267,6 +267,8 @@ action trustThisKey
     PEP_STATUS status = trust_own_key(session, ident);
     if (status)
         return status;
+
+    OCTET_STRING_fromBuf(&session->sync_state.keysync.key, ident->fpr, strlen(ident->fpr));
 ||
 
 action tellWeAreGrouped
