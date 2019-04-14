@@ -23,6 +23,7 @@ protocol Sync 1 {
 
         state Sole timeout=off {
             on Init {
+                do showBeingSole;
                 do newChallenge;
                 do closeTransaction;
                 send Beacon;
@@ -255,8 +256,10 @@ protocol Sync 1 {
         }
 
         state Grouped timeout=off {
-            on Init
+            on Init {
+                do showBeingInGroup;
                 do closeTransaction;
+            }
 
             on GroupKeys
                 do saveGroupKeys;

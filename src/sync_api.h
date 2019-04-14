@@ -30,7 +30,11 @@ typedef enum _sync_handshake_signal {
     // SYNC_NOTIFY_ACCEPTED_DEVICE_MOVED = 8,
 
     // handshake dialog must be closed
-    SYNC_NOTIFY_OVERTAKEN = 9
+    SYNC_NOTIFY_OVERTAKEN = 9,
+
+    // notificaton of actual group status
+    SYNC_NOTIFY_SOLE = 254,
+    SYNC_NOTIFY_IN_GROUP = 255
 } sync_handshake_signal;
 
 
