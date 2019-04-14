@@ -35,15 +35,20 @@ protocol Sync 1 {
                 send Beacon;
 
             on Beacon {
-                if weAreFirst {
-                    send Beacon;
+                if sameChallenge {
+                    // this is out own beacon; ignore
                 }
-                else /* we are second */ {
-                    do storeChallenge; // partner's challenge
-                    do openTransaction; // NOP if transaction already open
-                    do storeTransaction;
-                    // second is sending HandshakeRequest
-                    send HandshakeRequest;
+                else {
+                    if weAreFirst {
+                        send Beacon;
+                    }
+                    else /* we are second */ {
+                        do storeChallenge; // partner's challenge
+                        do openTransaction; // NOP if transaction already open
+                        do storeTransaction;
+                        // second is sending HandshakeRequest
+                        send HandshakeRequest;
+                    }
                 }
             }
 

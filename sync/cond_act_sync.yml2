@@ -37,6 +37,14 @@ condition challengeAccepted
     *result = t1->size == t2->size && memcmp(t1->buf, t2->buf, t1->size) == 0;
 ||
 
+condition sameChallenge
+||
+    TID_t *t1 = &session->sync_state.keysync.challenge;
+    TID_t *t2 = &session->own_sync_state.challenge;
+
+    *result = t1->size == t2->size && memcmp(t1->buf, t2->buf, t1->size) == 0;
+||
+
 condition sameTransaction
 ||
     TID_t *t1 = &session->sync_state.keysync.transaction;
