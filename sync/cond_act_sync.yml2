@@ -192,6 +192,9 @@ action showJoinGroupHandshake
 action showGroupedHandshake
     call "show_handshake" with "type" > SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE
 
+action hideHandshakeDialog
+    call "show_handshake" with "type" > SYNC_NOTIFY_OVERTAKEN
+
 timeout KeySync
     call "show_handshake" with "type" > SYNC_NOTIFY_TIMEOUT
 
