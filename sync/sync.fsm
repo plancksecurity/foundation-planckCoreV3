@@ -151,10 +151,13 @@ protocol Sync 1 {
         }
 
         state HandshakingNewPhase1First {
-            on Rollback if sameTransaction
+            on Rollback if sameTransaction {
+                do untrustThisKey;
                 go Sole;
+            }
             
             on CommitReject if sameTransaction {
+                do untrustThisKey;
                 do disable;
                 go End;
             }
@@ -164,10 +167,13 @@ protocol Sync 1 {
         }
 
         state HandshakingNewPhase1Second {
-            on Rollback if sameTransaction
+            on Rollback if sameTransaction {
+                do untrustThisKey;
                 go Sole;
+            }
             
             on CommitReject if sameTransaction {
+                do untrustThisKey;
                 do disable;
                 go End;
             }
@@ -225,6 +231,7 @@ protocol Sync 1 {
                     do ownKeysAreGroupKeys;
                 else
                     do receivedKeysAreGroupKeys;
+                do showGroupCreated;
                 go Grouped;
             }
         }
@@ -242,6 +249,7 @@ protocol Sync 1 {
                     do ownKeysAreGroupKeys;
                 else
                     do receivedKeysAreGroupKeys;
+                do showGroupCreated;
                 go Grouped;
             }
         }
@@ -266,6 +274,14 @@ protocol Sync 1 {
 
             on HandshakeAnswer if sameTransaction
                 go HandshakingGrouped;
+
+            on GroupTrustThisKey {
+                do storeThisKey;
+                do trustThisKey;
+            }
+
+            on GroupKeysAndClose
+                do showDeviceAdded;
         }
 
         // sole device handshaking with group
@@ -343,6 +359,7 @@ protocol Sync 1 {
             on GroupKeysAndClose {
                 do saveGroupKeys;
                 do receivedKeysAreGroupKeys;
+                do showDeviceAdded;
                 go Grouped;
             }
         }
@@ -382,7 +399,16 @@ protocol Sync 1 {
 
             on GroupTrustThisKey {
                 do hideHandshakeDialog;
-                go Grouped;
+                do storeThisKey;
+                do trustThisKey;
+            }
+
+            on CommitAcceptForGroup {
+                do showDeviceAdded;
+                if sameTransaction {
+                    do hideHandshakeDialog;
+                    go Grouped;
+                }
             }
 
             on GroupKeys
@@ -401,8 +427,16 @@ protocol Sync 1 {
                 go Grouped;
             }
 
-            on GroupTrustThisKey
-                go Grouped;
+            on GroupTrustThisKey {
+                do storeThisKey;
+                do trustThisKey;
+            }
+
+            on CommitAcceptForGroup {
+                do showDeviceAdded;
+                if sameTransaction
+                    go Grouped;
+            }
 
             on GroupKeys
                 do saveGroupKeys;
@@ -427,8 +461,16 @@ protocol Sync 1 {
             }
 
             on GroupTrustThisKey {
-                do hideHandshakeDialog;
-                go Grouped;
+                do storeThisKey;
+                do trustThisKey;
+            }
+
+            on CommitAcceptForGroup {
+                do showDeviceAdded;
+                if sameTransaction {
+                    do hideHandshakeDialog;
+                    go Grouped;
+                }
             }
 
             on GroupKeys
