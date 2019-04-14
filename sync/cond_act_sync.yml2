@@ -266,5 +266,15 @@ action trustThisKey
         return status;
 ||
 
+action tellWeAreGrouped
+||
+    session->sync_state.keysync.is_group = true;
+||
+
+action tellWeAreNotGrouped
+||
+    session->sync_state.keysync.is_group = false;
+||
+
 action disable;
 

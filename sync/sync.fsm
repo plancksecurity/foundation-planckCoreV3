@@ -46,6 +46,7 @@ protocol Sync 1 {
                         do storeChallenge; // partner's challenge
                         do openTransaction; // NOP if transaction already open
                         do storeTransaction;
+                        do tellWeAreNotGrouped;
                         // second is sending HandshakeRequest
                         send HandshakeRequest;
                     }
@@ -232,13 +233,35 @@ protocol Sync 1 {
                 send GroupKeysAndClose; // we're not grouped yet, this is our own keys
             }
 
-            on GroupKeys if sameTransaction {
+            on GroupKeys {
                 if keyElectionWon
                     do ownKeysAreGroupKeys;
                 else
                     do receivedKeysAreGroupKeys;
                 go Grouped;
             }
+        }
+
+        state Grouped timeout=off {
+            on Init
+                do closeTransaction;
+
+            on GroupKeys
+                do saveGroupKeys;
+
+            on KeyGen
+                send GroupKeys;
+
+            on Beacon {
+                do storeChallenge;
+                do openTransaction;
+                do storeTransaction;
+                do tellWeAreGrouped;
+                send HandshakeRequest;
+            }
+
+            on HandshakeAnswer if sameTransaction
+                go HandshakingGrouped;
         }
 
         state HandshakingWithGroup {
@@ -322,20 +345,6 @@ protocol Sync 1 {
                 do saveGroupKeys; // then store new group keys
                 go Grouped;
             }
-        }
-
-        state Grouped timeout=off {
-            on GroupKeys
-                do saveGroupKeys;
-
-            on KeyGen
-                send GroupKeys;
-
-            on Beacon
-                send HandshakeRequest;
-
-            on HandshakeAnswer
-                go HandshakingGrouped;
         }
 
         state HandshakingGrouped {
