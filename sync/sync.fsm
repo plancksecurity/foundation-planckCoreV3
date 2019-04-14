@@ -337,13 +337,11 @@ protocol Sync 1 {
         }
 
         state JoinGroup {
-            on Init {
-                // first send own keys
+            on Init
                 send GroupKeys;
-            }
 
             on GroupKeysAndClose {
-                do saveGroupKeys; // then store new group keys
+                do saveGroupKeys;
                 do receivedKeysAreGroupKeys;
                 go Grouped;
             }
@@ -379,7 +377,7 @@ protocol Sync 1 {
             }
 
             on CommitAccept if sameTransaction
-                go HandshakingGroupedPhase1Own;
+                go HandshakingGroupedPhase2;
 
             on GroupKeys
                 do saveGroupKeys;
@@ -401,7 +399,7 @@ protocol Sync 1 {
                 do saveGroupKeys;
         }
 
-        state HandshakingGroupedPhase1Own {
+        state HandshakingGroupedPhase2 {
             on Cancel {
                 send Rollback;
                 go Grouped;
@@ -461,11 +459,13 @@ protocol Sync 1 {
             field TID transaction;
         }
 
+        // security=attach_own_keys implies security=trusted
         message GroupKeysAndClose 9, security=attach_own_keys {
             field TID transaction;
             field IdentityList ownIdentities;
         }
 
+        // security=attach_own_keys implies security=trusted
         message GroupKeys 10, security=attach_own_keys {
             field IdentityList ownIdentities;
         }
