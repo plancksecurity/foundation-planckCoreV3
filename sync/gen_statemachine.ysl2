@@ -1097,7 +1097,7 @@ tstylesheet {
     }
 
     template "else" {
-        if "not(name(preceding-sibling::*[last()]) = 'condition')"
+        if "not(name(preceding-sibling::*[1]) = 'condition')"
             error "else without if";
 
         | else {

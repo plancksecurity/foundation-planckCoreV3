@@ -219,6 +219,8 @@ protocol Sync 1 {
             }
 
             on GroupKeysAndClose if sameTransaction {
+                do saveGroupKeys;
+
                 if keyElectionWon
                     do ownKeysAreGroupKeys;
                 else
@@ -234,6 +236,8 @@ protocol Sync 1 {
             }
 
             on GroupKeys {
+                do saveGroupKeys;
+
                 if keyElectionWon
                     do ownKeysAreGroupKeys;
                 else
@@ -328,22 +332,19 @@ protocol Sync 1 {
 
             on Accept {
                 do trustThisKey;
-                go OwnGroup;
+                go JoinGroup;
             }
         }
 
         state JoinGroup {
-            on GroupKeysAndClose {
-                send GroupKeys; // first send own keys
-                do saveGroupKeys; // then store new group keys
-                go Grouped;
+            on Init {
+                // first send own keys
+                send GroupKeys;
             }
-        }
 
-        state OwnGroup {
-            on GroupKeys {
-                send GroupKeys; // first send own keys
+            on GroupKeysAndClose {
                 do saveGroupKeys; // then store new group keys
+                do receivedKeysAreGroupKeys;
                 go Grouped;
             }
         }
