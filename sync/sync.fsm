@@ -264,6 +264,7 @@ protocol Sync 1 {
                 go HandshakingGrouped;
         }
 
+        // sole device handshaking with group
         state HandshakingWithGroup {
             on Init
                 do showJoinGroupHandshake;
@@ -297,7 +298,7 @@ protocol Sync 1 {
             }
 
             on CommitAcceptForGroup if sameTransaction
-                go HandshakingJoinPhase1Own;
+                go HandshakingJoinPhase2;
         }
 
         state HandshakingJoinPhase1 {
@@ -313,7 +314,7 @@ protocol Sync 1 {
                 go JoinGroup;
         }
 
-        state HandshakingJoinPhase1Own {
+        state HandshakingJoinPhase2 {
             on Cancel {
                 send Rollback;
                 go Sole;
@@ -451,11 +452,11 @@ protocol Sync 1 {
             field TID transaction;
         }
 
-        message CommitAccept 7 {
+        message CommitAccept 7, security=untrusted {
             field TID transaction;
         }
 
-        message CommitAcceptForGroup 8 {
+        message CommitAcceptForGroup 8, security=untrusted {
             field TID transaction;
         }
 

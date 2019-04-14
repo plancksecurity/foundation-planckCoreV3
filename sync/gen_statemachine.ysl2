@@ -501,6 +501,42 @@ tstylesheet {
                             break;
 
                     `` for "fsm/message[@security='attach_own_keys']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                            assert(session->«yml:lcase(@name)»_state.common.signature_fpr &&
+                                session->«yml:lcase(@name)»_state.common.from &&
+                                session->«yml:lcase(@name)»_state.common.from->user_id);
+                            if (!(session->«yml:lcase(@name)»_state.common.signature_fpr &&
+                                    session->«yml:lcase(@name)»_state.common.from &&
+                                    session->«yml:lcase(@name)»_state.common.from->user_id))
+                            {
+                                status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                goto the_end;
+                            }
+                            
+                            // double check if we fully trust this comm partner
+                            {
+                                pEp_identity *ident = new_identity(NULL,
+                                        session->«yml:lcase(@name)»_state.common.signature_fpr,
+                                        session->«yml:lcase(@name)»_state.common.from->user_id,
+                                        NULL
+                                    );
+                                if (!ident) {
+                                    status = PEP_OUT_OF_MEMORY;
+                                    goto the_end;
+                                }
+                                status = get_trust(session, ident);
+                                if (status) {
+                                    free_identity(ident);
+                                    goto the_end;
+                                }
+                                assert(ident->comm_type == PEP_ct_pEp); // we don't deliver otherwise
+                                if (ident->comm_type != PEP_ct_pEp) {
+                                    free_identity(ident);
+                                    status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                    goto the_end;
+                                }
+                                free_identity(ident);
+                            }
+
                             status = base_prepare_message(
                                     session,
                                     li->ident,
@@ -513,12 +549,6 @@ tstylesheet {
                                 );
                             if (status) {
                                 free(_data);
-                                goto the_end;
-                            }
-
-                            assert(session->«yml:lcase(@name)»_state.common.signature_fpr);
-                            if (!session->«yml:lcase(@name)»_state.common.signature_fpr) {
-                                status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
                             }
 
