@@ -248,5 +248,23 @@ action ownKeysAreGroupKeys
 
 action receivedKeysAreGroupKeys;
 
+action trustThisKey
+||
+    assert(session->sync_state.common.from && session->sync_state.common.signature_fpr);
+    if (!(session->sync_state.common.from && session->sync_state.common.signature_fpr))
+        return PEP_ILLEGAL_VALUE;
+
+    pEp_identity *ident = session->sync_state.common.from;
+    free(ident->fpr);
+    ident->fpr = strdup(session->sync_state.common.signature_fpr);
+    assert(ident->fpr);
+    if (!ident->fpr)
+        return PEP_OUT_OF_MEMORY;
+
+    PEP_STATUS status = trust_own_key(session, ident);
+    if (status)
+        return status;
+||
+
 action disable;
 

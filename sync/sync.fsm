@@ -36,7 +36,7 @@ protocol Sync 1 {
 
             on Beacon {
                 if sameChallenge {
-                    // this is out own beacon; ignore
+                    // this is our own beacon; ignore
                 }
                 else {
                     if weAreFirst {
@@ -101,6 +101,7 @@ protocol Sync 1 {
 
             // Accept means init Phase1Commit
             on Accept {
+                do trustThisKey;
                 send CommitAcceptForGroup;
                 go HandshakingNewPhase1First;
             }
@@ -138,6 +139,7 @@ protocol Sync 1 {
 
             // Accept means init Phase1Commit
             on Accept {
+                do trustThisKey;
                 send CommitAccept;
                 go HandshakingNewPhase1Second;
             }
@@ -185,8 +187,10 @@ protocol Sync 1 {
                 go End;
             }
 
-            on Accept
+            on Accept {
+                do trustThisKey;
                 go NewGroup;
+            }
         }
 
         state NewGroup {
@@ -231,6 +235,7 @@ protocol Sync 1 {
 
             // Accept is Phase1Commit
             on Accept {
+                do trustThisKey;
                 send CommitAccept;
                 go HandshakingJoinPhase1;
             }
@@ -264,8 +269,10 @@ protocol Sync 1 {
                 go End;
             }
 
-            on Accept
+            on Accept {
+                do trustThisKey;
                 go OwnGroup;
+            }
         }
 
         state JoinGroup {
@@ -322,6 +329,7 @@ protocol Sync 1 {
 
             // Accept is Phase1Commit
             on Accept {
+                do trustThisKey;
                 send CommitAcceptForGroup;
                 go HandshakingGroupedPhase1;
             }
@@ -361,6 +369,7 @@ protocol Sync 1 {
             }
 
             on Accept {
+                do trustThisKey;
                 send GroupKeysAndClose;
                 go Grouped;
             }

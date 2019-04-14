@@ -3824,8 +3824,12 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         const char *data;
         char *sync_fpr = NULL;
         PEP_STATUS tmpstatus = base_extract_message(session, msg, &size, &data, &sync_fpr);
-        if (!tmpstatus && size && data)
-            signal_Sync_message(session, *rating, data, size, msg->from, sync_fpr);
+        if (!tmpstatus && size && data) {
+            if (sync_fpr)
+                signal_Sync_message(session, *rating, data, size, msg->from, sync_fpr);
+            else if (*keylist)
+                signal_Sync_message(session, *rating, data, size, msg->from, (*keylist)->value);
+        }
         free(sync_fpr);
     }
 
