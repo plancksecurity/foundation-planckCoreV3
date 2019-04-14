@@ -102,13 +102,13 @@ protocol Sync 1 {
             // Accept means init Phase1Commit
             on Accept {
                 do trustThisKey;
-                send CommitAcceptForGroup;
+                send CommitAccept;
                 go HandshakingNewPhase1First;
             }
 
             // got a CommitAccept from second
-            on CommitAccept if sameTransaction
-                go HandshakingNewPhase2;
+            on CommitAcceptForGroup if sameTransaction
+                go HandshakingNewPhase2First;
         }
 
         // handshaking without existing Device group
@@ -140,13 +140,13 @@ protocol Sync 1 {
             // Accept means init Phase1Commit
             on Accept {
                 do trustThisKey;
-                send CommitAccept;
+                send CommitAcceptForGroup;
                 go HandshakingNewPhase1Second;
             }
 
             // got a CommitAccept from first
             on CommitAccept if sameTransaction
-                go HandshakingNewPhase2;
+                go HandshakingNewPhase2Second;
         }
 
         state HandshakingNewPhase1First {
@@ -158,8 +158,8 @@ protocol Sync 1 {
                 go End;
             }
 
-            on CommitAccept if sameTransaction
-                go NewGroup;
+            on CommitAcceptForGroup if sameTransaction
+                go NewGroupFirst;
         }
 
         state HandshakingNewPhase1Second {
@@ -171,11 +171,11 @@ protocol Sync 1 {
                 go End;
             }
 
-            on CommitAcceptForGroup if sameTransaction
-                go NewGroup;
+            on CommitAccept if sameTransaction
+                go NewGroupSecond;
         }
 
-        state HandshakingNewPhase2 {
+        state HandshakingNewPhase2First {
             on Cancel {
                 send Rollback;
                 go Sole;
@@ -189,17 +189,50 @@ protocol Sync 1 {
 
             on Accept {
                 do trustThisKey;
-                go NewGroup;
+                go NewGroupFirst;
             }
         }
 
-        state NewGroup {
+        state HandshakingNewPhase2Second {
+            on Cancel {
+                send Rollback;
+                go Sole;
+            }
+
+            on Reject {
+                send CommitReject;
+                do disable;
+                go End;
+            }
+
+            on Accept {
+                do trustThisKey;
+                go NewGroupSecond;
+            }
+        }
+
+        state NewGroupFirst {
+            on Init {
+                do prepareOwnKeys;
+                send GroupKeys; // we're not grouped yet, this is our own keys
+            }
+
+            on GroupKeysAndClose if sameTransaction {
+                if keyElectionWon
+                    do ownKeysAreGroupKeys;
+                else
+                    do receivedKeysAreGroupKeys;
+                go Grouped;
+            }
+        }
+
+        state NewGroupSecond {
             on Init {
                 do prepareOwnKeys;
                 send GroupKeysAndClose; // we're not grouped yet, this is our own keys
             }
 
-            on GroupKeysAndClose if sameTransaction {
+            on GroupKeys if sameTransaction {
                 if keyElectionWon
                     do ownKeysAreGroupKeys;
                 else
