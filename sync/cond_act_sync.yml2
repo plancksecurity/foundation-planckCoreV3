@@ -284,6 +284,16 @@ action ownKeysAreGroupKeys
 action receivedKeysAreGroupKeys
 ||
     PEP_STATUS status = PEP_STATUS_OK;
+
+    // set flag for current keys
+    for (identity_list *il = session->sync_state.common.own_identities; il && il->ident ; il = il->next) {
+        if (!(il->ident->flags && PEP_idf_not_for_sync)) {
+            status = set_identity_flags(session, il->ident, PEP_idf_devicegroup);
+            if (status)
+                return status;
+        }
+    }
+
     identity_list *il = IdentityList_to_identity_list(&session->sync_state.keysync.ownIdentities, NULL);
     if (!il)
         return PEP_OUT_OF_MEMORY;
