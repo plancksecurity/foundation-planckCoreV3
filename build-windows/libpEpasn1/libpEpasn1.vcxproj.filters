@@ -171,6 +171,9 @@
     <ClInclude Include="..\..\asn.1\CommitAcceptForGroup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\asn.1\GroupTrustThisKey.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\asn.1\asn_codecs_prim.c">
@@ -315,6 +318,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\asn.1\CommitAcceptForGroup.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\asn.1\GroupTrustThisKey.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
