@@ -54,6 +54,12 @@ class KeyResetMessageTests : public EngineTestIndividualSuite {
         void check_reset_ident_own_pub_fpr();
         void check_reset_ident_own_priv_fpr();
         void check_reset_ident_own_priv_no_fpr();
+        void check_reset_user_other_no_fpr();
+        void check_reset_user_other_fpr();
+        void check_reset_user_own_fpr();
+        void check_reset_user_no_fpr();
+        void check_reset_all_own_keys();
+        void check_reset_all_own_no_own();
 
         void send_setup();
         void receive_setup();     

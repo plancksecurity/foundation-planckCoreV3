@@ -57,7 +57,7 @@ DYNAMIC_API PEP_STATUS key_reset_identity(
 //  parameters:
 //      session (in)            session handle
 //      user_id (in)            user_id for which the key reset should occur. If this 
-//                              is the own user_id, for MUST NOT be NULL.
+//                              is the own user_id, fpr MUST NOT be NULL.
 //      fpr (in)                fingerprint of key to reset.
 //                              If NULL, we reset all default 
 //                              keys for this user and all of its identities.
@@ -76,6 +76,14 @@ DYNAMIC_API PEP_STATUS key_reset_user(
 //                             own identities, and opportunistically communicate
 //                             key reset information to people we have recently 
 //                             contacted. 
+//
+// caveat: this will return PEP_CANNOT_FIND_IDENTITY if no own user yet exists.
+//         HOWEVER, apps and adapters must decide if this is a reasonable state;
+//         since the period where no own user exists will necessarily be very short
+//         in most implementations, PEP_CANNOT_FIND_IDENTITY may be returned when 
+//         there is some sort of DB corruption and we expect there to be an own user.
+//         Apps are responsible for deciding whether or not this is an error condition;
+//         one would expect that it generally is (rather than the uninitialised DB case)
 //                             
 //  parameters:
 //      session (in)            session handle
