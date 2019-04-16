@@ -2821,8 +2821,6 @@ PEP_STATUS exists_trust_entry(PEP_SESSION session, pEp_identity* identity,
     return status;
 }
 
-// FIXME: We can rollback in set_identity on the return status,
-// so we should probably do that.
 PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr) {
     if (!session || EMPTYSTR(fpr))
         return PEP_ILLEGAL_VALUE;
@@ -2852,6 +2850,10 @@ static PEP_STATUS _set_or_update_trust(PEP_SESSION session,
     
     if (!session || !identity || EMPTYSTR(identity->user_id) || EMPTYSTR(identity->fpr))
         return PEP_ILLEGAL_VALUE;
+        
+    PEP_STATUS status = set_pgp_keypair(session, identity->fpr);
+    if (status != PEP_STATUS_OK)
+        return status;
         
     int result;
                 
