@@ -1,7 +1,7 @@
 // This file is under BSD License 2.0
 
 // Sync protocol for p≡p
-// Copyright (c) 2016 - 2019, p≡p foundation
+// Copyright (c) 2016-2019, p≡p foundation
 
 // Written by Volker Birk
 
@@ -23,7 +23,9 @@ protocol Sync 1 {
 
         state Sole timeout=off {
             on Init {
-                do openChallenge; // own challenge
+                do showBeingSole;
+                do newChallenge;
+                do closeTransaction;
                 send Beacon;
             }
 
@@ -34,33 +36,47 @@ protocol Sync 1 {
                 send Beacon;
 
             on Beacon {
-                if weAreFirst {
-                    send Beacon;
+                if sameChallenge {
+                    // this is our own beacon; ignore
                 }
                 else {
-                    do storeChallenge; // partner's challenge
-                    do openTransaction;
-                    do storeTransaction;
-                    send HandshakeRequest;
+                    if weAreFirst {
+                        send Beacon;
+                    }
+                    else /* we are second */ {
+                        do storeChallenge; // partner's challenge
+                        do openTransaction; // NOP if transaction already open
+                        do storeTransaction;
+                        do tellWeAreNotGrouped;
+                        // second is sending HandshakeRequest
+                        send HandshakeRequest;
+                    }
                 }
             }
 
-            on HandshakeRequest {
-                if challengeAccepted {
+            on HandshakeRequest if challengeAccepted {
+                if sameTransaction {
+                    // this is our own handshake request; ignore
+                }
+                else {
+                    // first is receiving HandshakeRequest
                     do storeTransaction;
+                    // first is sending HandshakeAnswer
                     send HandshakeAnswer;
                     if partnerIsGrouped
                         go HandshakingWithGroup;
-                    go HandshakingNew;
+                    go HandshakingNewFirst;
                 }
             }
 
-            on HandshakeAnswer
-                go HandshakingNew;
+            on HandshakeAnswer if sameTransaction {
+                // second is receiving HandshakeAnswer
+                go HandshakingNewSecond;
+            }
         }
 
         // handshaking without existing Device group
-        state HandshakingNew {
+        state HandshakingNewFirst {
             on Init
                 do showSoleHandshake;
 
@@ -70,7 +86,7 @@ protocol Sync 1 {
                 go Sole;
             }
 
-            on Rollback
+            on Rollback if sameTransaction
                 go Sole;
 
             // Reject is CommitReject
@@ -80,35 +96,94 @@ protocol Sync 1 {
                 go End;
             }
 
-            on CommitReject {
+            on CommitReject if sameTransaction {
                 do disable;
                 go End;
             }
 
-            // Accept is Phase1Commit
+            // Accept means init Phase1Commit
             on Accept {
-                send CommitAcceptForGroup;
-                go HandshakingNewPhase1;
+                do trustThisKey;
+                send CommitAccept;
+                go HandshakingNewPhase1First;
             }
 
-            on CommitAccept
-                go HandshakingNewPhase1Own;
+            // got a CommitAccept from second
+            on CommitAcceptForGroup if sameTransaction
+                go HandshakingNewPhase2First;
         }
 
-        state HandshakingNewPhase1 {
-            on Rollback
+        // handshaking without existing Device group
+        state HandshakingNewSecond {
+            on Init
+                do showSoleHandshake;
+
+            // Cancel is Rollback
+            on Cancel {
+                send Rollback;
                 go Sole;
-            
-            on CommitReject {
+            }
+
+            on Rollback if sameTransaction
+                go Sole;
+
+            // Reject is CommitReject
+            on Reject {
+                send CommitReject;
                 do disable;
                 go End;
             }
 
-            on CommitAcceptForGroup
-                go NewGroup;
+            on CommitReject if sameTransaction {
+                do disable;
+                go End;
+            }
+
+            // Accept means init Phase1Commit
+            on Accept {
+                do trustThisKey;
+                send CommitAcceptForGroup;
+                go HandshakingNewPhase1Second;
+            }
+
+            // got a CommitAccept from first
+            on CommitAccept if sameTransaction
+                go HandshakingNewPhase2Second;
         }
 
-        state HandshakingNewPhase1Own {
+        state HandshakingNewPhase1First {
+            on Rollback if sameTransaction {
+                do untrustThisKey;
+                go Sole;
+            }
+            
+            on CommitReject if sameTransaction {
+                do untrustThisKey;
+                do disable;
+                go End;
+            }
+
+            on CommitAcceptForGroup if sameTransaction
+                go NewGroupFirst;
+        }
+
+        state HandshakingNewPhase1Second {
+            on Rollback if sameTransaction {
+                do untrustThisKey;
+                go Sole;
+            }
+            
+            on CommitReject if sameTransaction {
+                do untrustThisKey;
+                do disable;
+                go End;
+            }
+
+            on CommitAccept if sameTransaction
+                go NewGroupSecond;
+        }
+
+        state HandshakingNewPhase2First {
             on Cancel {
                 send Rollback;
                 go Sole;
@@ -120,25 +195,99 @@ protocol Sync 1 {
                 go End;
             }
 
-            on Accept
-                go NewGroup;
+            on Accept {
+                do trustThisKey;
+                go NewGroupFirst;
+            }
         }
 
-        state NewGroup {
+        state HandshakingNewPhase2Second {
+            on Cancel {
+                send Rollback;
+                go Sole;
+            }
+
+            on Reject {
+                send CommitReject;
+                do disable;
+                go End;
+            }
+
+            on Accept {
+                do trustThisKey;
+                go NewGroupSecond;
+            }
+        }
+
+        state NewGroupFirst {
+            on Init {
+                do prepareOwnKeys;
+                send GroupKeys; // we're not grouped yet, this is our own keys
+            }
+
+            on GroupKeysAndClose if sameTransaction {
+                do saveGroupKeys;
+
+                if keyElectionWon
+                    do ownKeysAreGroupKeys;
+                else
+                    do receivedKeysAreGroupKeys;
+                do showGroupCreated;
+                go Grouped;
+            }
+        }
+
+        state NewGroupSecond {
             on Init {
                 do prepareOwnKeys;
                 send GroupKeysAndClose; // we're not grouped yet, this is our own keys
             }
 
-            on GroupKeysAndClose {
+            on GroupKeys {
+                do saveGroupKeys;
+
                 if keyElectionWon
                     do ownKeysAreGroupKeys;
                 else
                     do receivedKeysAreGroupKeys;
+                do showGroupCreated;
                 go Grouped;
             }
         }
 
+        state Grouped timeout=off {
+            on Init {
+                do showBeingInGroup;
+                do closeTransaction;
+            }
+
+            on GroupKeys
+                do saveGroupKeys;
+
+            on KeyGen
+                send GroupKeys;
+
+            on Beacon {
+                do storeChallenge;
+                do openTransaction;
+                do storeTransaction;
+                do tellWeAreGrouped;
+                send HandshakeRequest;
+            }
+
+            on HandshakeAnswer if sameTransaction
+                go HandshakingGrouped;
+
+            on GroupTrustThisKey {
+                do storeThisKey;
+                do trustThisKey;
+            }
+
+            on GroupKeysAndClose
+                do showDeviceAdded;
+        }
+
+        // sole device handshaking with group
         state HandshakingWithGroup {
             on Init
                 do showJoinGroupHandshake;
@@ -149,7 +298,7 @@ protocol Sync 1 {
                 go Sole;
             }
 
-            on Rollback
+            on Rollback if sameTransaction
                 go Sole;
 
             // Reject is CommitReject
@@ -159,35 +308,36 @@ protocol Sync 1 {
                 go End;
             }
 
-            on CommitReject {
+            on CommitReject if sameTransaction {
                 do disable;
                 go End;
             }
 
             // Accept is Phase1Commit
             on Accept {
+                do trustThisKey;
                 send CommitAccept;
                 go HandshakingJoinPhase1;
             }
 
-            on CommitAcceptForGroup
-                go HandshakingJoinPhase1Own;
+            on CommitAcceptForGroup if sameTransaction
+                go HandshakingJoinPhase2;
         }
 
         state HandshakingJoinPhase1 {
-            on Rollback
+            on Rollback if sameTransaction
                 go Sole;
             
-            on CommitReject {
+            on CommitReject if sameTransaction {
                 do disable;
                 go End;
             }
 
-            on CommitAcceptForGroup
+            on CommitAcceptForGroup if sameTransaction
                 go JoinGroup;
         }
 
-        state HandshakingJoinPhase1Own {
+        state HandshakingJoinPhase2 {
             on Cancel {
                 send Rollback;
                 go Sole;
@@ -199,30 +349,22 @@ protocol Sync 1 {
                 go End;
             }
 
-            on Accept
+            on Accept {
+                do trustThisKey;
                 go JoinGroup;
-        }
-
-        state JoinGroup {
-            on GroupKeysAndClose {
-                send GroupKeys; // first send own keys
-                do saveGroupKeys; // then store new group keys
-                go Grouped;
             }
         }
 
-        state Grouped timeout=off {
-            on GroupKeys
-                do saveGroupKeys;
-
-            on KeyGen
+        state JoinGroup {
+            on Init
                 send GroupKeys;
 
-            on Beacon
-                send HandshakeRequest;
-
-            on HandshakeAnswer
-                go HandshakingGrouped;
+            on GroupKeysAndClose {
+                do saveGroupKeys;
+                do receivedKeysAreGroupKeys;
+                do showDeviceAdded;
+                go Grouped;
+            }
         }
 
         state HandshakingGrouped {
@@ -235,7 +377,7 @@ protocol Sync 1 {
                 go Grouped;
             }
 
-            on Rollback
+            on Rollback if sameTransaction
                 go Grouped;
 
             // Reject is CommitReject
@@ -244,39 +386,66 @@ protocol Sync 1 {
                 go Grouped;
             }
 
-            on CommitReject
+            on CommitReject if sameTransaction
                 go Grouped;
 
             // Accept is Phase1Commit
             on Accept {
+                do trustThisKey;
+                send GroupTrustThisKey;
                 send CommitAcceptForGroup;
                 go HandshakingGroupedPhase1;
             }
 
-            on CommitAccept
-                go HandshakingGroupedPhase1Own;
+            on CommitAccept if sameTransaction
+                go HandshakingGroupedPhase2;
+
+            on GroupTrustThisKey {
+                do hideHandshakeDialog;
+                do storeThisKey;
+                do trustThisKey;
+            }
+
+            on CommitAcceptForGroup {
+                do showDeviceAdded;
+                if sameTransaction {
+                    do hideHandshakeDialog;
+                    go Grouped;
+                }
+            }
 
             on GroupKeys
                 do saveGroupKeys;
         }
 
         state HandshakingGroupedPhase1 {
-            on Rollback
+            on Rollback if sameTransaction
                 go Grouped;
 
-            on CommitReject
+            on CommitReject if sameTransaction
                 go Grouped;
 
-            on CommitAccept {
+            on CommitAccept if sameTransaction {
                 send GroupKeysAndClose;
                 go Grouped;
+            }
+
+            on GroupTrustThisKey {
+                do storeThisKey;
+                do trustThisKey;
+            }
+
+            on CommitAcceptForGroup {
+                do showDeviceAdded;
+                if sameTransaction
+                    go Grouped;
             }
 
             on GroupKeys
                 do saveGroupKeys;
         }
 
-        state HandshakingGroupedPhase1Own {
+        state HandshakingGroupedPhase2 {
             on Cancel {
                 send Rollback;
                 go Grouped;
@@ -288,8 +457,23 @@ protocol Sync 1 {
             }
 
             on Accept {
+                do trustThisKey;
+                send GroupTrustThisKey;
                 send GroupKeysAndClose;
                 go Grouped;
+            }
+
+            on GroupTrustThisKey {
+                do storeThisKey;
+                do trustThisKey;
+            }
+
+            on CommitAcceptForGroup {
+                do showDeviceAdded;
+                if sameTransaction {
+                    do hideHandshakeDialog;
+                    go Grouped;
+                }
             }
 
             on GroupKeys
@@ -327,20 +511,27 @@ protocol Sync 1 {
             field TID transaction;
         }
 
-        message CommitAccept 7 {
+        message CommitAccept 7, security=untrusted {
             field TID transaction;
         }
 
-        message CommitAcceptForGroup 8 {
+        message CommitAcceptForGroup 8, security=untrusted {
             field TID transaction;
         }
 
-        message GroupKeysAndClose 9, security=attach_own_keys {
+        // default: security=trusted only
+        message GroupTrustThisKey 9 {
+            field Hash key;
+        }
+
+        // security=attach_own_keys implies security=trusted
+        message GroupKeysAndClose 10, security=attach_own_keys {
             field TID transaction;
             field IdentityList ownIdentities;
         }
 
-        message GroupKeys 10, security=attach_own_keys {
+        // security=attach_own_keys implies security=trusted
+        message GroupKeys 11, security=attach_own_keys {
             field IdentityList ownIdentities;
         }
     }

@@ -3,7 +3,7 @@
 
 // generate state machine code
 
-// Copyleft (c) 2016 - 2019, p≡p foundation
+// Copyleft (c) 2016-2019, p≡p foundation
 
 // Written by Volker Birk
 
@@ -410,7 +410,7 @@ tstylesheet {
 
                 switch (message_type) {
                     // these messages are being broadcasted
-                    `` for "fsm/message[@type='broadcast']" |>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+                    `` for "fsm/message[@type='broadcast']" |>> case «../@name»_PR_«yml:mixedCase(@name)»:
                         status = _own_identities_retrieve(session, &channels, PEP_idf_not_for_«yml:lcase(@name)»);
                         if (status)
                             goto the_end;
@@ -425,7 +425,7 @@ tstylesheet {
                         break;
 
                     // these go anycast; previously used address is sticky (unicast)
-                    `` for "fsm/message[@type='anycast']" |>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+                    `` for "fsm/message[@type='anycast']" |>> case «../@name»_PR_«yml:mixedCase(@name)»:
                         if (!session->«yml:lcase(@name)»_state.common.from `> |`|
                             (session->«yml:lcase(@name)»_state.common.from->flags &
                             PEP_idf_not_for_«yml:lcase(@name)»)) {
@@ -478,8 +478,10 @@ tstylesheet {
                     }
                     memcpy(_data, data, size);
 
+                    stringlist_t *extra = NULL;
+
                     switch (message_type) {
-                    `` for "fsm/message[@security='unencrypted']" |>>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+                    `` for "fsm/message[@security='unencrypted']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
                             status = base_prepare_message(
                                     session,
                                     li->ident,
@@ -498,7 +500,43 @@ tstylesheet {
                             m = _m;
                             break;
 
-                    `` for "fsm/message[@security='attach_own_keys']" |>>> case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+                    `` for "fsm/message[@security='attach_own_keys']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                            assert(session->«yml:lcase(@name)»_state.common.signature_fpr &&
+                                session->«yml:lcase(@name)»_state.common.from &&
+                                session->«yml:lcase(@name)»_state.common.from->user_id);
+                            if (!(session->«yml:lcase(@name)»_state.common.signature_fpr &&
+                                    session->«yml:lcase(@name)»_state.common.from &&
+                                    session->«yml:lcase(@name)»_state.common.from->user_id))
+                            {
+                                status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                goto the_end;
+                            }
+                            
+                            // double check if we fully trust this comm partner
+                            {
+                                pEp_identity *ident = new_identity(NULL,
+                                        session->«yml:lcase(@name)»_state.common.signature_fpr,
+                                        session->«yml:lcase(@name)»_state.common.from->user_id,
+                                        NULL
+                                    );
+                                if (!ident) {
+                                    status = PEP_OUT_OF_MEMORY;
+                                    goto the_end;
+                                }
+                                status = get_trust(session, ident);
+                                if (status) {
+                                    free_identity(ident);
+                                    goto the_end;
+                                }
+                                assert(ident->comm_type == PEP_ct_pEp); // we don't deliver otherwise
+                                if (ident->comm_type != PEP_ct_pEp) {
+                                    free_identity(ident);
+                                    status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                    goto the_end;
+                                }
+                                free_identity(ident);
+                            }
+
                             status = base_prepare_message(
                                     session,
                                     li->ident,
@@ -513,7 +551,15 @@ tstylesheet {
                                 free(_data);
                                 goto the_end;
                             }
-                            status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
+
+                            extra = new_stringlist(session->«yml:lcase(@name)»_state.common.signature_fpr);
+                            if (extra) {
+                                status = encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
+                                free_stringlist(extra);
+                            }
+                            else {
+                                status = PEP_OUT_OF_MEMORY;
+                            }
                             if (status) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
@@ -536,7 +582,21 @@ tstylesheet {
                                 free(_data);
                                 goto the_end;
                             }
-                            status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
+
+                            assert(session->«yml:lcase(@name)»_state.common.signature_fpr);
+                            if (!session->«yml:lcase(@name)»_state.common.signature_fpr) {
+                                status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                goto the_end;
+                            }
+
+                            stringlist_t *extra = new_stringlist(session->«yml:lcase(@name)»_state.common.signature_fpr);
+                            if (extra) {
+                                status = encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
+                                free_stringlist(extra);
+                            }
+                            else {
+                                status = PEP_OUT_OF_MEMORY;
+                            }
                             if (status) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
@@ -658,52 +718,46 @@ tstylesheet {
     {
         ||
         case «../@name»_PR_«yml:lcase(@name)»:
-            switch (msg->choice.«yml:lcase(@name)».payload.present) {
+            switch (msg->choice.«yml:lcase(@name)».present) {
         ||
-        if "message[@security='unencrypted']" {
-            |>> // these messages require a detached signature
-            for "message[@security='unencrypted']" {
-            ||
-                    case «../@name»__payload_PR_«yml:mixedCase(@name)»:
-                        if (!signature_fpr) {
-                            status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
-                            goto the_end;
-                        }
-                        event = «@name»;
-                        break;
+        for "message[@security='unencrypted']" {
+        if "position()=1" |>> // these messages require a detached signature
+        ||
+                case «../@name»_PR_«yml:mixedCase(@name)»:
+                    if (!signature_fpr) {
+                        status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
+                        goto the_end;
+                    }
+                    event = «@name»;
+                    break;
 
-            ||
-            }
+        ||
         }
-        if "message[@security='untrusted']" {
-            |>> // these messages must arrive encrypted
-            for "message[@security='untrusted']" {
-            ||
-                    case «../@name»__payload_PR_«yml:mixedCase(@name)»:
-                        if (rating < PEP_rating_reliable) {
-                            status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
-                            goto the_end;
-                        }
-                        event = «@name»;
-                        break;
+        for "message[@security='untrusted']" {
+        if "position()=1" |>> // these messages must arrive encrypted
+        ||
+                case «../@name»_PR_«yml:mixedCase(@name)»:
+                    if (rating < PEP_rating_reliable) {
+                        status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
+                        goto the_end;
+                    }
+                    event = «@name»;
+                    break;
 
-            ||
-            }
+        ||
         }
-        if "message[@security='trusted']" {
-            |>> // these messages must come through a trusted channel
-            for "message[@security='trusted']" {
-            ||
-                    case «../@name»__payload_PR_«yml:mixedCase(@name)»:
-                        if (rating < PEP_rating_trusted) {
-                            status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
-                            goto the_end;
-                        }
-                        event = «@name»;
-                        break;
+        for "message[@security!='unencrypted' and @security!='untrusted']" {
+        if "position()=1" |>> // these messages must come through a trusted channel
+        ||
+                case «../@name»_PR_«yml:mixedCase(@name)»:
+                    if (rating < PEP_rating_trusted) {
+                        status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
+                        goto the_end;
+                    }
+                    event = «@name»;
+                    break;
 
-            ||
-            }
+        ||
         }
         ||
                 default:
@@ -719,11 +773,11 @@ tstylesheet {
     {
     ||
     case «../@name»_PR_«yml:lcase(@name)»: {
-        switch (msg->choice.«yml:lcase(@name)».payload.present) {
+        switch (msg->choice.«yml:lcase(@name)».present) {
     ||
     for "message"
     ||
-            case «../@name»__payload_PR_«yml:mixedCase(@name)»:
+            case «../@name»_PR_«yml:mixedCase(@name)»:
                 ev->event = «@name»;
                 break;
     ||
@@ -999,7 +1053,7 @@ tstylesheet {
         ||
 
         «$fsm/@name»_SERVICE_LOG("send message", "«@name»");
-        status = send_«$protocol/@name»_message(session, «$fsm/@id», «$fsm/@name»__payload_PR_«yml:mixedCase(@name)»);
+        status = send_«$protocol/@name»_message(session, «$fsm/@id», «$fsm/@name»_PR_«yml:mixedCase(@name)»);
         if (status == PEP_OUT_OF_MEMORY)
             return out_of_memory;
         if (status) {
@@ -1043,7 +1097,7 @@ tstylesheet {
     }
 
     template "else" {
-        if "not(name(preceding-sibling::*[last()]) = 'condition')"
+        if "not(name(preceding-sibling::*[1]) = 'condition')"
             error "else without if";
 
         | else {

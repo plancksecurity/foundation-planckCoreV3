@@ -3792,12 +3792,6 @@ pEp_error:
     return status;
 }
 
-static bool _own_sync_beacon(PEP_STATUS status, const char *sync_fpr,
-        const char *from_fpr) {
-    return status == PEP_UNENCRYPTED && sync_fpr && sync_fpr[0] &&
-        from_fpr && from_fpr[0] && strcmp(sync_fpr, from_fpr) == 0;
-}
-
 DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -3831,8 +3825,10 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         char *sync_fpr = NULL;
         PEP_STATUS tmpstatus = base_extract_message(session, msg, &size, &data, &sync_fpr);
         if (!tmpstatus && size && data) {
-            if (!_own_sync_beacon(status, sync_fpr, msg->from->fpr))
+            if (sync_fpr)
                 signal_Sync_message(session, *rating, data, size, msg->from, sync_fpr);
+            else if (*keylist)
+                signal_Sync_message(session, *rating, data, size, msg->from, (*keylist)->value);
         }
         free(sync_fpr);
     }
