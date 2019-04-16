@@ -65,6 +65,19 @@ KeyResetMessageTests::KeyResetMessageTests(string suitename, string test_home_di
                                                                       static_cast<Func>(&KeyResetMessageTests::check_reset_ident_own_priv_fpr)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_reset_ident_own_priv_no_fpr"),
                                                                       static_cast<Func>(&KeyResetMessageTests::check_reset_ident_own_priv_no_fpr)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_reset_user_other_no_fpr"),
+                                                                      static_cast<Func>(&KeyResetMessageTests::check_reset_user_other_no_fpr)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_reset_user_other_fpr"),
+                                                                      static_cast<Func>(&KeyResetMessageTests::check_reset_user_other_fpr)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_reset_user_own_fpr"),
+                                                                      static_cast<Func>(&KeyResetMessageTests::check_reset_user_own_fpr)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_reset_user_no_fpr"),
+                                                                      static_cast<Func>(&KeyResetMessageTests::check_reset_user_no_fpr)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_reset_all_own_keys"),
+                                                                      static_cast<Func>(&KeyResetMessageTests::check_reset_all_own_keys)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("KeyResetMessageTests::check_reset_all_own_no_own"),
+                                                                      static_cast<Func>(&KeyResetMessageTests::check_reset_all_own_no_own)));
+
     fake_this = this;                                                                  
     
     cached_messageToSend = &KeyResetMessageTests::message_send_callback;
@@ -760,4 +773,422 @@ void KeyResetMessageTests::check_reset_ident_own_priv_no_fpr() {
     char* alice_new_fpr = alice->fpr;
     TEST_ASSERT(alice_new_fpr && alice_new_fpr[0]);
     TEST_ASSERT_MSG(strcmp(alice_fpr, alice_new_fpr) != 0, alice_new_fpr);
+}
+
+void KeyResetMessageTests::check_reset_user_other_no_fpr() {
+      char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
+      char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
+      char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
+      char* pubkey4 = strdup("B4CE2F6947B6947C500F0687AEFDE530BDA17020");
+
+      pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
+                                            NULL,
+                                            "AlexID",
+                                            "Alexander Braithwaite");
+
+/*                                          
+test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc
+test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc
+test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc
+test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
+*/
+    PEP_STATUS status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc");
+
+    alex_id->fpr = pubkey1;
+    status = trust_personal_key(session, alex_id);
+    alex_id->fpr = pubkey3;
+    status = trust_personal_key(session, alex_id);
+    status = set_as_pEp_user(session, alex_id);
+    alex_id->fpr = pubkey4;
+    status = trust_personal_key(session, alex_id);
+
+    status = key_reset_user(session, alex_id->user_id, NULL);
+
+    stringlist_t* keylist = NULL;
+
+    alex_id->fpr = pubkey1;
+    status = get_trust(session, alex_id);
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_unknown, tl_ct_string(alex_id->comm_type));
+    status = find_keys(session, pubkey1, &keylist);
+    TEST_ASSERT_MSG(status == PEP_GET_KEY_FAILED || !keylist || EMPTYSTR(keylist->value),
+                    (string(pubkey1) + " was unfortunately not deleted.").c_str());        
+
+    alex_id->fpr = pubkey2;
+    status = get_trust(session, alex_id);
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_unknown, tl_ct_string(alex_id->comm_type));
+    status = find_keys(session, pubkey2, &keylist);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK && keylist && !EMPTYSTR(keylist->value),
+                    (string(pubkey2) + " was deleted and should not have been").c_str());        
+
+    alex_id->fpr = pubkey3;
+    status = get_trust(session, alex_id);
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_unknown, tl_ct_string(alex_id->comm_type));
+    status = find_keys(session, pubkey3, &keylist);
+    TEST_ASSERT_MSG(status == PEP_GET_KEY_FAILED || !keylist || EMPTYSTR(keylist->value),
+                    (string(pubkey3) + " was unfortunately not deleted.").c_str());        
+
+    alex_id->fpr = pubkey4;
+    status = get_trust(session, alex_id);    
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_unknown, tl_ct_string(alex_id->comm_type));
+    status = find_keys(session, pubkey4, &keylist);
+    TEST_ASSERT_MSG(status == PEP_GET_KEY_FAILED || !keylist || EMPTYSTR(keylist->value),
+                    (string(pubkey4) + " was unfortunately not deleted.").c_str());        
+
+    TEST_ASSERT(true);
+}
+
+void KeyResetMessageTests::check_reset_user_other_fpr() {
+      char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
+      char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
+      char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
+      char* pubkey4 = strdup("B4CE2F6947B6947C500F0687AEFDE530BDA17020");
+
+      pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
+                                            NULL,
+                                            "AlexID",
+                                            "Alexander Braithwaite");
+
+/*                                          
+test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc
+test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc
+test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc
+test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
+*/
+    PEP_STATUS status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc");
+
+    alex_id->fpr = pubkey1;
+    status = trust_personal_key(session, alex_id);
+    alex_id->fpr = pubkey3;
+    status = trust_personal_key(session, alex_id);
+    status = set_as_pEp_user(session, alex_id);
+    alex_id->fpr = pubkey4;
+    status = trust_personal_key(session, alex_id);
+
+    status = key_reset_user(session, alex_id->user_id, pubkey3);
+
+    stringlist_t* keylist = NULL;
+
+    alex_id->fpr = pubkey1;
+    status = get_trust(session, alex_id);
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_pEp, tl_ct_string(alex_id->comm_type));
+    status = find_keys(session, pubkey1, &keylist);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK && keylist && !EMPTYSTR(keylist->value),
+                    (string(pubkey1) + " was deleted and should not have been").c_str());        
+
+    free_stringlist(keylist);
+    keylist = NULL;
+    
+    alex_id->fpr = pubkey2;
+    status = get_trust(session, alex_id);
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_unknown, tl_ct_string(alex_id->comm_type));
+    status = find_keys(session, pubkey2, &keylist);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK && keylist && !EMPTYSTR(keylist->value),
+                    (string(pubkey2) + " was deleted and should not have been").c_str());        
+
+    alex_id->fpr = pubkey3;
+    status = get_trust(session, alex_id);
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_unknown, tl_ct_string(alex_id->comm_type));
+    status = find_keys(session, pubkey3, &keylist);
+    TEST_ASSERT_MSG(status == PEP_GET_KEY_FAILED || !keylist || EMPTYSTR(keylist->value),
+                    (string(pubkey3) + " was unfortunately not deleted.").c_str());        
+
+    alex_id->fpr = pubkey4;
+    status = get_trust(session, alex_id);    
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_pEp, tl_ct_string(alex_id->comm_type));
+    status = find_keys(session, pubkey4, &keylist);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK && keylist && !EMPTYSTR(keylist->value),
+                    (string(pubkey4) + " was deleted and should not have been").c_str());        
+
+    // next line is for readability.
+    alex_id->fpr = NULL;
+    free_stringlist(keylist);
+    free(pubkey1);
+    free(pubkey2);
+    free(pubkey3);
+    free(pubkey4);
+    free_identity(alex_id);
+}
+
+void KeyResetMessageTests::check_reset_user_own_fpr() {
+      char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
+      char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
+      char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
+      char* pubkey4 = strdup("B4CE2F6947B6947C500F0687AEFDE530BDA17020");
+
+      pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
+                                            NULL,
+                                            "AlexID",
+                                            "Alexander Braithwaite");
+
+/*                                          
+test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc
+test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc
+test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc
+test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
+*/
+    PEP_STATUS status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0x0019697D_priv.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0x503B14D8_priv.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0xA216E95A_priv.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0xBDA17020_priv.asc");
+
+    alex_id->me = true;
+    status = set_own_key(session, alex_id, pubkey1);
+    status = set_own_key(session, alex_id, pubkey3);
+    status = set_own_key(session, alex_id, pubkey4);
+
+    status = key_reset_user(session, alex_id->user_id, pubkey3);
+
+    alex_id->fpr = pubkey1;
+    status = get_trust(session, alex_id);
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_pEp, tl_ct_string(alex_id->comm_type));
+    
+    alex_id->fpr = pubkey2;
+    status = get_trust(session, alex_id);
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_unknown, tl_ct_string(alex_id->comm_type));
+
+    stringlist_t* keylist = NULL;
+    
+    alex_id->fpr = pubkey3;
+    status = get_trust(session, alex_id);
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_mistrusted, tl_ct_string(alex_id->comm_type));
+    status = find_keys(session, pubkey4, &keylist);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK && keylist && !EMPTYSTR(keylist->value),
+                    (string(pubkey3) + " was deleted and should not have been. Status is " + tl_status_string(status)).c_str());        
+
+    free_stringlist(keylist);
+    keylist = NULL;
+    
+    alex_id->fpr = pubkey4;
+    status = get_trust(session, alex_id);    
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_pEp, tl_ct_string(alex_id->comm_type));
+
+    // next line is for readability.
+    alex_id->fpr = NULL;
+    free_stringlist(keylist);
+    free(pubkey1);
+    free(pubkey2);
+    free(pubkey3);
+    free(pubkey4);
+    free_identity(alex_id);
+}
+
+void KeyResetMessageTests::check_reset_user_no_fpr() {
+      char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
+      char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
+      char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
+      char* pubkey4 = strdup("B4CE2F6947B6947C500F0687AEFDE530BDA17020");
+
+      pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
+                                            NULL,
+                                            "AlexID",
+                                            "Alexander Braithwaite");
+
+/*                                          
+test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc
+test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc
+test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc
+test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
+*/
+    PEP_STATUS status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0x0019697D_priv.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0x503B14D8_priv.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0xA216E95A_priv.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0xBDA17020_priv.asc");
+
+    alex_id->me = true;
+    status = set_own_key(session, alex_id, pubkey1);
+    status = set_own_key(session, alex_id, pubkey3);
+    status = set_own_key(session, alex_id, pubkey4);
+
+    status = key_reset_user(session, alex_id->user_id, NULL);
+    
+    TEST_ASSERT_MSG(status == PEP_ILLEGAL_VALUE, tl_status_string(status));
+
+    free(pubkey1);
+    free(pubkey2);
+    free(pubkey3);
+    free(pubkey4);
+    free_identity(alex_id);
+}
+
+void KeyResetMessageTests::check_reset_all_own_keys() {
+      char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
+      char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
+      char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
+      char* pubkey4 = strdup("B4CE2F6947B6947C500F0687AEFDE530BDA17020");
+
+      pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
+                                            NULL,
+                                            "AlexID",
+                                            "Alexander Braithwaite");
+
+/*                                          
+test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc
+test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc
+test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc
+test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
+*/
+    PEP_STATUS status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0x0019697D_priv.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0x503B14D8_priv.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0xA216E95A_priv.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0xBDA17020_priv.asc");
+
+    alex_id->me = true;
+    status = set_own_key(session, alex_id, pubkey1);
+    status = set_own_key(session, alex_id, pubkey3);
+    status = set_own_key(session, alex_id, pubkey4);
+
+    status = key_reset_all_own_keys(session);
+
+    stringlist_t* keylist = NULL;
+
+    alex_id->fpr = pubkey1;
+    status = get_trust(session, alex_id);
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_mistrusted, tl_ct_string(alex_id->comm_type));
+    status = find_keys(session, pubkey1, &keylist);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK && keylist && !EMPTYSTR(keylist->value),
+                    (string(pubkey1) + " was deleted and should not have been. Status is " + tl_status_string(status)).c_str());        
+    
+    free_stringlist(keylist);
+    keylist = NULL;
+    
+    alex_id->fpr = pubkey2;
+    status = get_trust(session, alex_id);
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_unknown, tl_ct_string(alex_id->comm_type));
+    status = find_keys(session, pubkey2, &keylist);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK && keylist && !EMPTYSTR(keylist->value),
+                    (string(pubkey2) + " was deleted and should not have been. Status is " + tl_status_string(status)).c_str());        
+
+    free_stringlist(keylist);
+    keylist = NULL;
+
+    alex_id->fpr = pubkey3;
+    status = get_trust(session, alex_id);
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_mistrusted, tl_ct_string(alex_id->comm_type));
+    status = find_keys(session, pubkey3, &keylist);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK && keylist && !EMPTYSTR(keylist->value),
+                    (string(pubkey3) + " was deleted and should not have been. Status is " + tl_status_string(status)).c_str());        
+
+    free_stringlist(keylist);
+    keylist = NULL;
+
+    alex_id->fpr = pubkey4;
+    status = get_trust(session, alex_id);    
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_mistrusted, tl_ct_string(alex_id->comm_type));
+    status = find_keys(session, pubkey4, &keylist);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK && keylist && !EMPTYSTR(keylist->value),
+                    (string(pubkey4) + " was deleted and should not have been. Status is " + tl_status_string(status)).c_str());        
+
+    free_stringlist(keylist);
+    keylist = NULL;
+
+    alex_id->fpr = NULL;
+    status = myself(session, alex_id);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+
+    TEST_ASSERT(alex_id->fpr);
+    TEST_ASSERT(strcmp(alex_id->fpr, pubkey1));
+    TEST_ASSERT(strcmp(alex_id->fpr, pubkey2));
+    TEST_ASSERT(strcmp(alex_id->fpr, pubkey3));
+    TEST_ASSERT(strcmp(alex_id->fpr, pubkey4));
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_pEp, tl_ct_string(alex_id->comm_type));
+    
+    free(pubkey1);
+    free(pubkey2);
+    free(pubkey3);
+    free(pubkey4);
+    free_identity(alex_id);
+}
+
+void KeyResetMessageTests::check_reset_all_own_no_own() {
+      char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
+      char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
+      char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
+      char* pubkey4 = strdup("B4CE2F6947B6947C500F0687AEFDE530BDA17020");
+
+      pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
+                                            NULL,
+                                            "AlexID",
+                                            "Alexander Braithwaite");
+
+/*                                          
+test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc
+test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc
+test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc
+test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
+*/
+    PEP_STATUS status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc");
+
+    alex_id->fpr = pubkey1;
+    status = trust_personal_key(session, alex_id);
+    alex_id->fpr = pubkey3;
+    status = trust_personal_key(session, alex_id);
+    alex_id->fpr = pubkey4;
+    status = trust_personal_key(session, alex_id);
+
+    status = key_reset_all_own_keys(session);
+    TEST_ASSERT_MSG(status == PEP_CANNOT_FIND_IDENTITY, tl_status_string(status));
+
+    stringlist_t* keylist = NULL;
+
+    alex_id->fpr = pubkey1;
+    status = get_trust(session, alex_id);
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_OpenPGP, tl_ct_string(alex_id->comm_type));
+    status = find_keys(session, pubkey1, &keylist);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK && keylist && !EMPTYSTR(keylist->value),
+                    (string(pubkey1) + " was deleted and should not have been").c_str());        
+
+    free_stringlist(keylist);
+    keylist = NULL;
+    
+    alex_id->fpr = pubkey2;
+    status = get_trust(session, alex_id);
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_unknown, tl_ct_string(alex_id->comm_type));
+    status = find_keys(session, pubkey2, &keylist);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK && keylist && !EMPTYSTR(keylist->value),
+                    (string(pubkey2) + " was deleted and should not have been").c_str());        
+
+    alex_id->fpr = pubkey3;
+    status = get_trust(session, alex_id);
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_OpenPGP, tl_ct_string(alex_id->comm_type));
+    status = find_keys(session, pubkey3, &keylist);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK && keylist && !EMPTYSTR(keylist->value),
+                    (string(pubkey3) + " was deleted and should not have been").c_str());        
+
+    alex_id->fpr = pubkey4;
+    status = get_trust(session, alex_id);    
+    TEST_ASSERT_MSG(alex_id->comm_type == PEP_ct_OpenPGP, tl_ct_string(alex_id->comm_type));
+    status = find_keys(session, pubkey4, &keylist);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK && keylist && !EMPTYSTR(keylist->value),
+                    (string(pubkey4) + " was deleted and should not have been").c_str());        
+
+    // next line is for readability.
+    alex_id->fpr = NULL;
+    free_stringlist(keylist);
+    free(pubkey1);
+    free(pubkey2);
+    free(pubkey3);
+    free(pubkey4);
+    free_identity(alex_id);
+
 }
