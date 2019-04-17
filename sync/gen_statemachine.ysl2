@@ -21,7 +21,7 @@ tstylesheet {
 
         #pragma once
 
-        #include "dynamic_api.h"
+        #include "pEpEngine.h"
 
         #ifdef __cplusplus
         extern "C" {
@@ -31,9 +31,14 @@ tstylesheet {
         typedef int «yml:ucase(@name)»_PR;
 
         typedef struct «@name»_event {
+            // state machine data
             «yml:ucase(@name)»_PR fsm;
             int event;
             «yml:ucase(@name)» *msg;
+
+            // transport data
+            pEp_identity *from;
+            char *signature_fpr;
         } «@name»_event_t;
 
  
@@ -110,6 +115,8 @@ tstylesheet {
         {
             if (ev) {
                 free_«@name»_message(ev->msg);
+                free_identity(ev->from);
+                free(ev->signature_fpr);
                 free(ev);
             }
         }
@@ -326,24 +333,6 @@ tstylesheet {
                 PEP_STATUS status = PEP_STATUS_OK;
                 «@name»_event_t *ev = NULL;
 
-                if (from) {
-                    free_identity(session->«yml:lcase(@name)»_state.common.from);
-                    session->«yml:lcase(@name)»_state.common.from = identity_dup(from);
-                    if (!session->«yml:lcase(@name)»_state.common.from) {
-                        status = PEP_OUT_OF_MEMORY;
-                        goto the_end;
-                    }
-                }
-
-                if (signature_fpr) {
-                    free(session->«yml:lcase(@name)»_state.common.signature_fpr);
-                    session->«yml:lcase(@name)»_state.common.signature_fpr = strdup(signature_fpr);
-                    if (!session->«yml:lcase(@name)»_state.common.signature_fpr) {
-                        status = PEP_OUT_OF_MEMORY;
-                        goto the_end;
-                    }
-                }
-
                 «@name»_t *msg = NULL;
                 status = decode_«@name»_message(data, size, &msg);
                 if (status)
@@ -363,6 +352,25 @@ tstylesheet {
                 if (!ev) {
                     status = PEP_OUT_OF_MEMORY;
                     goto the_end;
+                }
+
+                // add transport data
+
+                if (from) {
+                    ev->from = identity_dup(from);
+                    if (!ev->from) {
+                        status = PEP_OUT_OF_MEMORY;
+                        goto the_end;
+                    }
+                }
+
+                if (signature_fpr) {
+                    ev->signature_fpr = strdup(signature_fpr);
+                    assert(ev->signature_fpr);
+                    if (!ev->signature_fpr) {
+                        status = PEP_OUT_OF_MEMORY;
+                        goto the_end;
+                    }
                 }
 
                 int result = session->inject_«yml:lcase(@name)»_event(ev,
@@ -648,6 +656,27 @@ tstylesheet {
                 else {
                     fsm = ev->fsm;
                     event = ev->event;
+                }
+
+                // update transport data
+
+                if (ev->from) {
+                    free_identity(session->sync_state.common.from);
+                    session->sync_state.common.from = identity_dup(ev->from);
+                    if (!session->sync_state.common.from) {
+                        status = PEP_OUT_OF_MEMORY;
+                        goto the_end;
+                    }
+                }
+
+                if (ev->signature_fpr) {
+                    free(session->sync_state.common.signature_fpr);
+                    session->sync_state.common.signature_fpr = strdup(ev->signature_fpr);
+                    assert(session->sync_state.common.signature_fpr);
+                    if (!session->sync_state.common.signature_fpr) {
+                        status = PEP_OUT_OF_MEMORY;
+                        goto the_end;
+                    }
                 }
 
                 status = «@name»_driver(session, fsm, event);
