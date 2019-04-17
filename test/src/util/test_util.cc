@@ -176,6 +176,8 @@ const char* tl_status_string(PEP_STATUS status) {
             return "PEP_CANNOT_EXPORT_KEY";
         case PEP_CANNOT_EDIT_KEY:
             return "PEP_CANNOT_EDIT_KEY";
+        case PEP_CANNOT_DELETE_KEY:
+            return "PEP_CANNOT_DELETE_KEY";
         case PEP_CANNOT_FIND_IDENTITY:
             return "PEP_CANNOT_FIND_IDENTITY";
         case PEP_CANNOT_SET_PERSON:

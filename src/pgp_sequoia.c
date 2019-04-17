@@ -1544,6 +1544,9 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
 
 PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr_raw)
 {
+
+	return PEP_CANNOT_DELETE_KEY;
+/*    
     PEP_STATUS status = PEP_STATUS_OK;
     char *fpr = pgp_fingerprint_canonicalize(fpr_raw);
 
@@ -1556,6 +1559,7 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr_raw)
 
     free(fpr);
     return status;
+*/
 }
 
 // XXX: This needs to handle not only TPKs, but also keyrings and
