@@ -37,7 +37,7 @@ endif
 ifeq ($(OPENPGP),SEQUOIA)
     LDFLAGS+= $(SEQUOIA_LDFLAGS)
     LDLIBS+= $(SEQUOIA_LIB)
-    CFLAGS+= $(SEQUOIA_CFLAGS) -DUSE_SEQUOIA
+    CXXFLAGS+= $(SEQUOIA_CFLAGS) -DUSE_SEQUOIA
     INC_FLAGS+= $(SEQUOIA_INC)
 endif
 
@@ -58,7 +58,7 @@ endif
 CXXFLAGS:=$(filter-out -DNDEBUG,$(CXXFLAGS))
 
 # FIXME Possibly missing incdirs: ASN1C_INC
-CXXFLAGS+= -I./include -I../sync $(CPPUNIT_INC) -Wno-deprecated
+CXXFLAGS+= -I./include -I../sync $(CPPUNIT_INC) $(INC_FLAGS) -Wno-deprecated
 
 ifeq ($(OPENPGP),GPG)
     CXXFLAGS+= -DUSE_GPG $(GPGME_INC)
