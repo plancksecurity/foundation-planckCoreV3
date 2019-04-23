@@ -4182,7 +4182,7 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
             filename_ptr);
 
     if (status == PEP_DECRYPT_NO_KEY)
-        signal_Sync_event(session, Sync_PR_keysync, CannotDecrypt);
+        signal_Sync_event(session, Sync_PR_keysync, CannotDecrypt, NULL);
 
     return status;
 }
@@ -4362,7 +4362,7 @@ DYNAMIC_API PEP_STATUS generate_keypair(
     if (identity->fpr)
         status = set_pgp_keypair(session, identity->fpr);
 
-    signal_Sync_event(session, Sync_PR_keysync, KeyGen);
+    signal_Sync_event(session, Sync_PR_keysync, KeyGen, NULL);
 
     // add to known keypair DB, as this might not end up being a default
     return status;

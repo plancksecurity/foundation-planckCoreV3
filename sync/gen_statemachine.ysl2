@@ -39,6 +39,9 @@ tstylesheet {
             // transport data
             pEp_identity *from;
             char *signature_fpr;
+
+            // identities to sync
+            identity_list *own_identities;
         } «@name»_event_t;
 
  
@@ -114,6 +117,7 @@ tstylesheet {
         void free_«@name»_event(«@name»_event_t *ev)
         {
             if (ev) {
+                free_identity_list(ev->own_identities);
                 free_«@name»_message(ev->msg);
                 free_identity(ev->from);
                 free(ev->signature_fpr);
@@ -190,11 +194,13 @@ tstylesheet {
             // API being used by the engine internally
 
             // call this if you need to signal an external event
+            // caveat: the ownership of own_identities goes to the callee
 
             PEP_STATUS signal_«@name»_event(
                     PEP_SESSION session, 
                     «@name»_PR fsm,
-                    int event
+                    int event,
+                    identity_list *own_identities
                 );
             
             // call this if you are a transport and are receiving
@@ -268,7 +274,8 @@ tstylesheet {
             PEP_STATUS signal_«@name»_event(
                     PEP_SESSION session, 
                     «@name»_PR fsm,
-                    int event
+                    int event,
+                    identity_list *own_identities
                 )
             {
                 «@name»_t *msg = NULL;
@@ -300,6 +307,8 @@ tstylesheet {
                     status = PEP_OUT_OF_MEMORY;
                     goto the_end;
                 }
+
+                ev->own_identities = own_identities;
 
                 int result = session->inject_«yml:lcase(@name)»_event(ev,
                         session->«yml:lcase(@name)»_management);
@@ -661,22 +670,23 @@ tstylesheet {
                 // update transport data
 
                 if (ev->from) {
-                    free_identity(session->sync_state.common.from);
-                    session->sync_state.common.from = identity_dup(ev->from);
-                    if (!session->sync_state.common.from) {
-                        status = PEP_OUT_OF_MEMORY;
-                        goto the_end;
-                    }
+                    free_identity(session->«yml:lcase(@name)»_state.common.from);
+                    session->«yml:lcase(@name)»_state.common.from = ev->from;
+                    ev->from = NULL;
                 }
 
                 if (ev->signature_fpr) {
-                    free(session->sync_state.common.signature_fpr);
-                    session->sync_state.common.signature_fpr = strdup(ev->signature_fpr);
-                    assert(session->sync_state.common.signature_fpr);
-                    if (!session->sync_state.common.signature_fpr) {
-                        status = PEP_OUT_OF_MEMORY;
-                        goto the_end;
-                    }
+                    free(session->«yml:lcase(@name)»_state.common.signature_fpr);
+                    session->«yml:lcase(@name)»_state.common.signature_fpr = ev->signature_fpr;
+                    ev->signature_fpr = NULL;
+                }
+
+                // update own identities
+
+                if (ev->own_identities && ev->own_identities->ident) {
+                    free_identity_list(session->«yml:lcase(@name)»_state.common.own_identities);
+                    session->«yml:lcase(@name)»_state.common.own_identities = ev->own_identities;
+                    ev->own_identities = NULL;
                 }
 
                 status = «@name»_driver(session, fsm, event);

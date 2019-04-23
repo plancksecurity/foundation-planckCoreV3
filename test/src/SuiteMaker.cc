@@ -12,227 +12,219 @@
 #include "SuiteMaker.h"
 
 // Begin where we generate stuff
-#include "EnterLeaveDeviceGroupTests.h"
-#include "LeastCommonDenomColorTests.h"
-#include "PgpBinaryTests.h"
-#include "I18nTests.h"
-#include "TrustManipulationTests.h"
-#include "KeyResetMessageTests.h"
-#include "SyncTests.h"
 #include "MimeTests.h"
-#include "BlacklistTests.h"
-#include "UserIdCollisionTests.h"
-#include "CaseAndDotAddressTests.h"
-#include "DecryptAttachPrivateKeyTrustedTests.h"
-#include "NetPGPPlaygroundTests.h"
-#include "BlacklistAcceptNewKeyTests.h"
-#include "EncryptForIdentityTests.h"
-#include "LeastColorGroupTests.h"
-#include "MessageNullFromTests.h"
-#include "DecryptAttachPrivateKeyUntrustedTests.h"
-#include "BCCTests.h"
-#include "StringpairListTests.h"
-#include "EncryptAttachPrivateKeyTests.h"
+#include "OwnIdentitiesRetrieveTests.h"
 #include "ExpiredSubkeyTests.h"
+#include "UserIdCollisionTests.h"
+#include "Engine463Tests.h"
+#include "BloblistTests.h"
+#include "NewUpdateIdAndMyselfTests.h"
+#include "NoOwnIdentWritesOnDecryptTests.h"
+#include "I18nTests.h"
+#include "IdentityListTests.h"
+#include "PgpBinaryTests.h"
+#include "SubkeyRatingEvalTests.h"
+#include "MessageNullFromTests.h"
+#include "LeastCommonDenomColorTests.h"
+#include "StringlistTests.h"
+#include "PgpListKeysTests.h"
+#include "MessageApiTests.h"
+#include "EncryptMissingPrivateKeyTests.h"
+#include "CaseAndDotAddressTests.h"
+#include "UserIDAliasTests.h"
+#include "EnterLeaveDeviceGroupTests.h"
+#include "SignOnlyTests.h"
+#include "BCCTests.h"
+#include "Engine358Tests.h"
+#include "BlacklistAcceptNewKeyTests.h"
+#include "DecryptAttachPrivateKeyUntrustedTests.h"
+#include "BlacklistTests.h"
+#include "RevokeRegenAttachTests.h"
+#include "PepSubjectReceivedTests.h"
+#include "SequenceTests.h"
+#include "HeaderKeyImportTests.h"
+#include "EncryptAttachPrivateKeyTests.h"
+#include "ExternalRevokeTests.h"
+#include "KeyeditTests.h"
+#include "LeastColorGroupTests.h"
+#include "DecryptAttachPrivateKeyTrustedTests.h"
 #include "CheckRenewedExpiredKeyTrustStatusTests.h"
 #include "TrustwordsTests.h"
-#include "Engine358Tests.h"
-#include "ReturnMistrustFprTests.h"
-#include "DecorateTests.h"
-#include "EncryptMissingPrivateKeyTests.h"
-#include "SignOnlyTests.h"
-#include "KeyeditTests.h"
-#include "IdentityListTests.h"
-#include "ReencryptPlusExtraKeysTests.h"
-#include "Engine463Tests.h"
-#include "SubkeyRatingEvalTests.h"
-#include "NoOwnIdentWritesOnDecryptTests.h"
 #include "SimpleBodyNotAltTests.h"
-#include "AppleMailTests.h"
-#include "MessageTwoPointOhTests.h"
-#include "HeaderKeyImportTests.h"
-#include "SequenceTests.h"
-#include "PgpListKeysTests.h"
-#include "OwnIdentitiesRetrieveTests.h"
-#include "NewUpdateIdAndMyselfTests.h"
-#include "ExternalRevokeTests.h"
-#include "CrashdumpTests.h"
-#include "MessageApiTests.h"
-#include "BloblistTests.h"
-#include "RevokeRegenAttachTests.h"
-#include "UserIDAliasTests.h"
-#include "StringlistTests.h"
-#include "KeyAttachmentTests.h"
-#include "PepSubjectReceivedTests.h"
+#include "ReencryptPlusExtraKeysTests.h"
 #include "MapAsn1Tests.h"
+#include "DecorateTests.h"
+#include "MessageTwoPointOhTests.h"
+#include "CrashdumpTests.h"
+#include "StringpairListTests.h"
+#include "EncryptForIdentityTests.h"
+#include "KeyResetMessageTests.h"
+#include "KeyAttachmentTests.h"
+#include "TrustManipulationTests.h"
+#include "SyncTests.h"
+#include "AppleMailTests.h"
 
 
 const char* SuiteMaker::all_suites[] = {
-    "EnterLeaveDeviceGroupTests",
-    "LeastCommonDenomColorTests",
-    "PgpBinaryTests",
-    "I18nTests",
-    "TrustManipulationTests",
-    "KeyResetMessageTests",
-    "SyncTests",
     "MimeTests",
-    "BlacklistTests",
-    "UserIdCollisionTests",
-    "CaseAndDotAddressTests",
-    "DecryptAttachPrivateKeyTrustedTests",
-    "NetPGPPlaygroundTests",
-    "BlacklistAcceptNewKeyTests",
-    "EncryptForIdentityTests",
-    "LeastColorGroupTests",
-    "MessageNullFromTests",
-    "DecryptAttachPrivateKeyUntrustedTests",
-    "BCCTests",
-    "StringpairListTests",
-    "EncryptAttachPrivateKeyTests",
+    "OwnIdentitiesRetrieveTests",
     "ExpiredSubkeyTests",
+    "UserIdCollisionTests",
+    "Engine463Tests",
+    "BloblistTests",
+    "NewUpdateIdAndMyselfTests",
+    "NoOwnIdentWritesOnDecryptTests",
+    "I18nTests",
+    "IdentityListTests",
+    "PgpBinaryTests",
+    "SubkeyRatingEvalTests",
+    "MessageNullFromTests",
+    "LeastCommonDenomColorTests",
+    "StringlistTests",
+    "PgpListKeysTests",
+    "MessageApiTests",
+    "EncryptMissingPrivateKeyTests",
+    "CaseAndDotAddressTests",
+    "UserIDAliasTests",
+    "EnterLeaveDeviceGroupTests",
+    "SignOnlyTests",
+    "BCCTests",
+    "Engine358Tests",
+    "BlacklistAcceptNewKeyTests",
+    "DecryptAttachPrivateKeyUntrustedTests",
+    "BlacklistTests",
+    "RevokeRegenAttachTests",
+    "PepSubjectReceivedTests",
+    "SequenceTests",
+    "HeaderKeyImportTests",
+    "EncryptAttachPrivateKeyTests",
+    "ExternalRevokeTests",
+    "KeyeditTests",
+    "LeastColorGroupTests",
+    "DecryptAttachPrivateKeyTrustedTests",
     "CheckRenewedExpiredKeyTrustStatusTests",
     "TrustwordsTests",
-    "Engine358Tests",
-    "ReturnMistrustFprTests",
-    "DecorateTests",
-    "EncryptMissingPrivateKeyTests",
-    "SignOnlyTests",
-    "KeyeditTests",
-    "IdentityListTests",
-    "ReencryptPlusExtraKeysTests",
-    "Engine463Tests",
-    "SubkeyRatingEvalTests",
-    "NoOwnIdentWritesOnDecryptTests",
     "SimpleBodyNotAltTests",
-    "AppleMailTests",
-    "MessageTwoPointOhTests",
-    "HeaderKeyImportTests",
-    "SequenceTests",
-    "PgpListKeysTests",
-    "OwnIdentitiesRetrieveTests",
-    "NewUpdateIdAndMyselfTests",
-    "ExternalRevokeTests",
-    "CrashdumpTests",
-    "MessageApiTests",
-    "BloblistTests",
-    "RevokeRegenAttachTests",
-    "UserIDAliasTests",
-    "StringlistTests",
-    "KeyAttachmentTests",
-    "PepSubjectReceivedTests",
+    "ReencryptPlusExtraKeysTests",
     "MapAsn1Tests",
+    "DecorateTests",
+    "MessageTwoPointOhTests",
+    "CrashdumpTests",
+    "StringpairListTests",
+    "EncryptForIdentityTests",
+    "KeyResetMessageTests",
+    "KeyAttachmentTests",
+    "TrustManipulationTests",
+    "SyncTests",
+    "AppleMailTests",
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 53;
+int SuiteMaker::num_suites = 51;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
-    if (strcmp(test_class_name, "EnterLeaveDeviceGroupTests") == 0)
-        *test_suite = new EnterLeaveDeviceGroupTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "LeastCommonDenomColorTests") == 0)
-        *test_suite = new LeastCommonDenomColorTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "PgpBinaryTests") == 0)
-        *test_suite = new PgpBinaryTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "I18nTests") == 0)
-        *test_suite = new I18nTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "TrustManipulationTests") == 0)
-        *test_suite = new TrustManipulationTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "KeyResetMessageTests") == 0)
-        *test_suite = new KeyResetMessageTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "SyncTests") == 0)
-        *test_suite = new SyncTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "MimeTests") == 0)
+    if (strcmp(test_class_name, "MimeTests") == 0)
         *test_suite = new MimeTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "BlacklistTests") == 0)
-        *test_suite = new BlacklistTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "UserIdCollisionTests") == 0)
-        *test_suite = new UserIdCollisionTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "CaseAndDotAddressTests") == 0)
-        *test_suite = new CaseAndDotAddressTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "DecryptAttachPrivateKeyTrustedTests") == 0)
-        *test_suite = new DecryptAttachPrivateKeyTrustedTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "NetPGPPlaygroundTests") == 0)
-        *test_suite = new NetPGPPlaygroundTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "BlacklistAcceptNewKeyTests") == 0)
-        *test_suite = new BlacklistAcceptNewKeyTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "EncryptForIdentityTests") == 0)
-        *test_suite = new EncryptForIdentityTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "LeastColorGroupTests") == 0)
-        *test_suite = new LeastColorGroupTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "MessageNullFromTests") == 0)
-        *test_suite = new MessageNullFromTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "DecryptAttachPrivateKeyUntrustedTests") == 0)
-        *test_suite = new DecryptAttachPrivateKeyUntrustedTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "BCCTests") == 0)
-        *test_suite = new BCCTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "StringpairListTests") == 0)
-        *test_suite = new StringpairListTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "EncryptAttachPrivateKeyTests") == 0)
-        *test_suite = new EncryptAttachPrivateKeyTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "OwnIdentitiesRetrieveTests") == 0)
+        *test_suite = new OwnIdentitiesRetrieveTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "ExpiredSubkeyTests") == 0)
         *test_suite = new ExpiredSubkeyTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "UserIdCollisionTests") == 0)
+        *test_suite = new UserIdCollisionTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "Engine463Tests") == 0)
+        *test_suite = new Engine463Tests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "BloblistTests") == 0)
+        *test_suite = new BloblistTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "NewUpdateIdAndMyselfTests") == 0)
+        *test_suite = new NewUpdateIdAndMyselfTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "NoOwnIdentWritesOnDecryptTests") == 0)
+        *test_suite = new NoOwnIdentWritesOnDecryptTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "I18nTests") == 0)
+        *test_suite = new I18nTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "IdentityListTests") == 0)
+        *test_suite = new IdentityListTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "PgpBinaryTests") == 0)
+        *test_suite = new PgpBinaryTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "SubkeyRatingEvalTests") == 0)
+        *test_suite = new SubkeyRatingEvalTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "MessageNullFromTests") == 0)
+        *test_suite = new MessageNullFromTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "LeastCommonDenomColorTests") == 0)
+        *test_suite = new LeastCommonDenomColorTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "StringlistTests") == 0)
+        *test_suite = new StringlistTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "PgpListKeysTests") == 0)
+        *test_suite = new PgpListKeysTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "MessageApiTests") == 0)
+        *test_suite = new MessageApiTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "EncryptMissingPrivateKeyTests") == 0)
+        *test_suite = new EncryptMissingPrivateKeyTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "CaseAndDotAddressTests") == 0)
+        *test_suite = new CaseAndDotAddressTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "UserIDAliasTests") == 0)
+        *test_suite = new UserIDAliasTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "EnterLeaveDeviceGroupTests") == 0)
+        *test_suite = new EnterLeaveDeviceGroupTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "SignOnlyTests") == 0)
+        *test_suite = new SignOnlyTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "BCCTests") == 0)
+        *test_suite = new BCCTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "Engine358Tests") == 0)
+        *test_suite = new Engine358Tests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "BlacklistAcceptNewKeyTests") == 0)
+        *test_suite = new BlacklistAcceptNewKeyTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "DecryptAttachPrivateKeyUntrustedTests") == 0)
+        *test_suite = new DecryptAttachPrivateKeyUntrustedTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "BlacklistTests") == 0)
+        *test_suite = new BlacklistTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "RevokeRegenAttachTests") == 0)
+        *test_suite = new RevokeRegenAttachTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "PepSubjectReceivedTests") == 0)
+        *test_suite = new PepSubjectReceivedTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "SequenceTests") == 0)
+        *test_suite = new SequenceTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "HeaderKeyImportTests") == 0)
+        *test_suite = new HeaderKeyImportTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "EncryptAttachPrivateKeyTests") == 0)
+        *test_suite = new EncryptAttachPrivateKeyTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "ExternalRevokeTests") == 0)
+        *test_suite = new ExternalRevokeTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "KeyeditTests") == 0)
+        *test_suite = new KeyeditTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "LeastColorGroupTests") == 0)
+        *test_suite = new LeastColorGroupTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "DecryptAttachPrivateKeyTrustedTests") == 0)
+        *test_suite = new DecryptAttachPrivateKeyTrustedTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "CheckRenewedExpiredKeyTrustStatusTests") == 0)
         *test_suite = new CheckRenewedExpiredKeyTrustStatusTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "TrustwordsTests") == 0)
         *test_suite = new TrustwordsTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "Engine358Tests") == 0)
-        *test_suite = new Engine358Tests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "ReturnMistrustFprTests") == 0)
-        *test_suite = new ReturnMistrustFprTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "DecorateTests") == 0)
-        *test_suite = new DecorateTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "EncryptMissingPrivateKeyTests") == 0)
-        *test_suite = new EncryptMissingPrivateKeyTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "SignOnlyTests") == 0)
-        *test_suite = new SignOnlyTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "KeyeditTests") == 0)
-        *test_suite = new KeyeditTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "IdentityListTests") == 0)
-        *test_suite = new IdentityListTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "ReencryptPlusExtraKeysTests") == 0)
-        *test_suite = new ReencryptPlusExtraKeysTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "Engine463Tests") == 0)
-        *test_suite = new Engine463Tests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "SubkeyRatingEvalTests") == 0)
-        *test_suite = new SubkeyRatingEvalTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "NoOwnIdentWritesOnDecryptTests") == 0)
-        *test_suite = new NoOwnIdentWritesOnDecryptTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "SimpleBodyNotAltTests") == 0)
         *test_suite = new SimpleBodyNotAltTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "AppleMailTests") == 0)
-        *test_suite = new AppleMailTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "MessageTwoPointOhTests") == 0)
-        *test_suite = new MessageTwoPointOhTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "HeaderKeyImportTests") == 0)
-        *test_suite = new HeaderKeyImportTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "SequenceTests") == 0)
-        *test_suite = new SequenceTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "PgpListKeysTests") == 0)
-        *test_suite = new PgpListKeysTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "OwnIdentitiesRetrieveTests") == 0)
-        *test_suite = new OwnIdentitiesRetrieveTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "NewUpdateIdAndMyselfTests") == 0)
-        *test_suite = new NewUpdateIdAndMyselfTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "ExternalRevokeTests") == 0)
-        *test_suite = new ExternalRevokeTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "CrashdumpTests") == 0)
-        *test_suite = new CrashdumpTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "MessageApiTests") == 0)
-        *test_suite = new MessageApiTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "BloblistTests") == 0)
-        *test_suite = new BloblistTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "RevokeRegenAttachTests") == 0)
-        *test_suite = new RevokeRegenAttachTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "UserIDAliasTests") == 0)
-        *test_suite = new UserIDAliasTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "StringlistTests") == 0)
-        *test_suite = new StringlistTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "KeyAttachmentTests") == 0)
-        *test_suite = new KeyAttachmentTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "PepSubjectReceivedTests") == 0)
-        *test_suite = new PepSubjectReceivedTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "ReencryptPlusExtraKeysTests") == 0)
+        *test_suite = new ReencryptPlusExtraKeysTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "MapAsn1Tests") == 0)
         *test_suite = new MapAsn1Tests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "DecorateTests") == 0)
+        *test_suite = new DecorateTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "MessageTwoPointOhTests") == 0)
+        *test_suite = new MessageTwoPointOhTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "CrashdumpTests") == 0)
+        *test_suite = new CrashdumpTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "StringpairListTests") == 0)
+        *test_suite = new StringpairListTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "EncryptForIdentityTests") == 0)
+        *test_suite = new EncryptForIdentityTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "KeyResetMessageTests") == 0)
+        *test_suite = new KeyResetMessageTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "KeyAttachmentTests") == 0)
+        *test_suite = new KeyAttachmentTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "TrustManipulationTests") == 0)
+        *test_suite = new TrustManipulationTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "SyncTests") == 0)
+        *test_suite = new SyncTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "AppleMailTests") == 0)
+        *test_suite = new AppleMailTests(test_class_name, test_home);
 }
 
 void SuiteMaker::suitemaker_buildlist(const char** test_class_names, int num_to_run, const char* test_home, std::vector<Test::Suite*>& test_suites) {
