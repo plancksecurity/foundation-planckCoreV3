@@ -3019,6 +3019,8 @@ static PEP_STATUS reconcile_identity(pEp_identity* srcid,
     }
     
     resultid->lang[0] = srcid->lang[0];
+    resultid->lang[1] = srcid->lang[1];
+    resultid->lang[2] = 0;
     resultid->me = srcid->me;
     resultid->flags = srcid->flags;
 
