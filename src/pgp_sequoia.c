@@ -79,10 +79,16 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         ERROR_OUT(NULL, PEP_INIT_GPGME_INIT_FAILED, "HOME unset");
 
     // Create the DB and initialize it.
-    char *path = NULL;
-    asprintf(&path, "%s/.pEp_keys.db", home_env);
+    size_t path_size = strlen(home_env)+13+1;
+    char *path = (char *) calloc(1, path_size);
+    assert(path);
     if (!path)
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
+
+    int r = snprintf(path, path_size, "%s/.pEp_keys.db", home_env);
+    assert(r >= 0 && r < path_size);
+    if (r < 0)
+        ERROR_OUT(NULL, PEP_UNKNOWN_ERROR, "snprintf");
 
     int sqlite_result;
     sqlite_result = sqlite3_open_v2(path,
@@ -1506,9 +1512,16 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     assert(identity->fpr == NULL || identity->fpr[0] == 0);
     assert(identity->username);
 
-    asprintf(&userid, "%s <%s>", identity->username, identity->address);
-    if (! userid)
-        ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "asprintf");
+    size_t userid_size = strlen(identity->username)+strlen(identity->address)+3+1;
+    userid = (char *) calloc(1, userid_size);
+    assert(userid);
+    if (!userid)
+        ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
+
+    int r = snprintf(userid, userid_size, "%s <%s>", identity->username, identity->address);
+    assert(r >= 0 && r < userid_size);
+    if (r < 0)
+        ERROR_OUT(NULL, PEP_UNKNOWN_ERROR, "snprintf");
 
     T("(%s)", userid);
 
