@@ -1563,7 +1563,7 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
 static const char *sql_delete = SQL_DELETE;
 static const size_t sql_delete_size = sizeof(SQL_DELETE);
 
-// FIXME: this is deleteing the key from the index but not the key data
+// FIXME: this is deleting the key from the index but not the key data
 
 PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
 {
