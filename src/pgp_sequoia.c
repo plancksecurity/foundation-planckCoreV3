@@ -1559,24 +1559,35 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     return status;
 }
 
-PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr_raw)
+#define SQL_DELETE "DELETE FROM keys WHERE primary_key = '%s' ;"
+static const char *sql_delete = SQL_DELETE;
+static const size_t sql_delete_size = sizeof(SQL_DELETE);
+
+// FIXME: this is deleteing the key from the index but not the key data
+
+PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
 {
+    assert(session && fpr && fpr[0]);
+    if (!(session && fpr && fpr[0]))
+        return PEP_ILLEGAL_VALUE;
 
-	return PEP_CANNOT_DELETE_KEY;
-/*    
-    PEP_STATUS status = PEP_STATUS_OK;
-    char *fpr = pgp_fingerprint_canonicalize(fpr_raw);
+    size_t sql_size = sql_delete_size + strlen(fpr);
+    char *sql = calloc(1, sql_size);
+    assert(sql);
+    if (!sql)
+        return PEP_OUT_OF_MEMORY;
 
-    T("(%s)", fpr);
+    int r = snprintf(sql, sql_size, sql_delete, fpr);
+    assert(r > 0 && r < sql_size);
+    if (r < 0)
+        return PEP_UNKNOWN_ERROR;
 
-    // XXX: Can also be used for deleting public keys!!!
-    assert(!"implement me");
+    int sqlite_result = sqlite3_exec(session->key_db, sql, NULL, NULL, NULL);
+    assert(sqlite_result == SQLITE_OK);
+    if (sqlite_result != SQLITE_OK)
+        return PEP_CANNOT_DELETE_KEY;
 
-    T("(%s) -> %s", fpr, pep_status_to_string(status));
-
-    free(fpr);
-    return status;
-*/
+    return PEP_STATUS_OK;
 }
 
 // XXX: This needs to handle not only TPKs, but also keyrings and
