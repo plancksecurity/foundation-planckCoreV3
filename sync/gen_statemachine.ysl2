@@ -415,6 +415,8 @@ tstylesheet {
                 char *data = NULL;
                 message *m = NULL;
                 identity_list *channels = NULL;
+                char *key_data = NULL;
+                size_t key_data_size = 0;
 
                 status = update_«@name»_message(session, msg);
                 if (status)
@@ -567,6 +569,77 @@ tstylesheet {
                                 goto the_end;
                             }
 
+                            // export secret keys into memory
+
+                            key_data = strdup("");
+                            assert(key_data);
+                            if (!key_data) {
+                                free(_data);
+                                status = PEP_OUT_OF_MEMORY;
+                                goto the_end;
+                            }
+                            key_data_size = 1;
+
+                            for (stringlist_t *sl = session->«yml:lcase(@name)»_state.common.own_keys;
+                                    sl && sl->value ; sl = sl->next)
+                            {
+                                char *_key_data = NULL;
+                                size_t _size = 0;
+                                status = export_secret_key(session, sl->value, &_key_data, &_size);
+                                if (status && status != PEP_KEY_NOT_FOUND) {
+                                    free(_data);
+                                    goto the_end;
+                                }
+
+                                if (status != PEP_KEY_NOT_FOUND) {
+                                    assert(_key_data && _size);
+                                    char *n = realloc(key_data, key_data_size + _size);
+                                    if (!n) {
+                                        free(_data);
+                                        status = PEP_OUT_OF_MEMORY;
+                                        goto the_end;
+                                    }
+                                    key_data = n;
+                                    key_data_size += _size;
+                                    strlcat(key_data, _key_data, key_data_size);
+                                    free(_key_data);
+                                    _key_data = NULL;
+                                }
+                                status = export_key(session, sl->value, &_key_data, &_size);
+                                if (status && status != PEP_KEY_NOT_FOUND) {
+                                    free(_data);
+                                    goto the_end;
+                                }
+
+                                if (status != PEP_KEY_NOT_FOUND) {
+                                    assert(_key_data && _size);
+                                    char *n = realloc(key_data, key_data_size + _size);
+                                    if (!n) {
+                                        free(_data);
+                                        status = PEP_OUT_OF_MEMORY;
+                                        goto the_end;
+                                    }
+                                    key_data = n;
+                                    key_data_size += _size;
+                                    strlcat(key_data, _key_data, key_data_size);
+                                    free(_key_data);
+                                    _key_data = NULL;
+                                }
+                            }
+
+                            // add secret key data as attachment
+
+                            bloblist_t *bl = bloblist_add(_m->attachments, key_data, key_data_size,
+                                    "application/octet-stream", "file://own.key");
+                            if (!bl) {
+                                free(_data);
+                                status = PEP_OUT_OF_MEMORY;
+                                goto the_end;
+                            }
+                            key_data = NULL;
+
+                            // add fpr of key of comm partner
+
                             extra = new_stringlist(session->«yml:lcase(@name)»_state.common.signature_fpr);
                             if (extra) {
                                 status = encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
@@ -626,6 +699,7 @@ tstylesheet {
                 free_identity_list(channels);
                 free_message(m);
                 free(data);
+                free(key_data);
                 free_«@name»_message(msg);
                 return status;
             }
