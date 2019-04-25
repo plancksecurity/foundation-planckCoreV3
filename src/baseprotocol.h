@@ -31,8 +31,7 @@ PEP_STATUS base_decorate_message(
         message *msg,
         char *payload,
         size_t size,
-        const char *fpr,
-        stringlist_t **keys
+        const char *fpr
     );
 
 
@@ -61,7 +60,6 @@ PEP_STATUS base_prepare_message(
         char *payload,
         size_t size,
         const char *fpr,
-        stringlist_t **keys,
         message **result
     );
 

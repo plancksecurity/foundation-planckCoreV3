@@ -506,7 +506,6 @@ tstylesheet {
                                     _data,
                                     size,
                                     li->ident->fpr,
-                                    NULL,
                                     &_m
                                 );
                             if (status) {
@@ -561,7 +560,6 @@ tstylesheet {
                                     _data,
                                     size,
                                     NULL,
-                                    &session->«yml:lcase(@name)»_state.common.own_keys,
                                     &_m
                                 );
                             if (status) {
@@ -591,7 +589,6 @@ tstylesheet {
                                     li->ident,
                                     _data,
                                     size,
-                                    NULL,
                                     NULL,
                                     &_m
                                 );
