@@ -290,6 +290,8 @@ void pgp_release(PEP_SESSION session, bool out_last)
     }
 }
 
+/* commented out to omit compiler warning about unused function
+
 // Ensures that a fingerprint is in canonical form.  A canonical
 // fingerprint doesn't contain any white space.
 //
@@ -303,6 +305,8 @@ static char *pgp_fingerprint_canonicalize(const char *fpr)
 
     return fpr_canonicalized;
 }
+
+*/
 
 // Splits an OpenPGP user id into its name and email components.  A
 // user id looks like:
