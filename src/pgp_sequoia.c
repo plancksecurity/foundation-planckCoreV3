@@ -1,6 +1,8 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
+#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
+
 #define _GNU_SOURCE 1
 
 #include "platform.h"

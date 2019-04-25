@@ -264,8 +264,10 @@ protocol Sync 1 {
             on GroupKeys
                 do saveGroupKeys;
 
-            on KeyGen
+            on KeyGen {
+                do prepareOwnKeys;
                 send GroupKeys;
+            }
 
             on Beacon {
                 do storeChallenge;
@@ -356,8 +358,10 @@ protocol Sync 1 {
         }
 
         state JoinGroup {
-            on Init
+            on Init {
+                do prepareOwnKeys;
                 send GroupKeys;
+            }
 
             on GroupKeysAndClose {
                 do saveGroupKeys;
