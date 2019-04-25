@@ -13,8 +13,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <sqlite3.h>
-
 #include "wrappers.h"
 
 #define TRACING 0
