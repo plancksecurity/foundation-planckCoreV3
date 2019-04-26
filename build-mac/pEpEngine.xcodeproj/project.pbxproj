@@ -29,6 +29,8 @@
 		431F0495227322EF00CCE960 /* CommitAcceptFirst.c in Sources */ = {isa = PBXBuildFile; fileRef = 431F0493227322EF00CCE960 /* CommitAcceptFirst.c */; };
 		431F04A22273235300CCE960 /* GroupTrustThisKey.h in Headers */ = {isa = PBXBuildFile; fileRef = 431F049C2273235300CCE960 /* GroupTrustThisKey.h */; };
 		431F04A32273235300CCE960 /* GroupTrustThisKey.c in Sources */ = {isa = PBXBuildFile; fileRef = 431F04A12273235300CCE960 /* GroupTrustThisKey.c */; };
+		431F04A6227323A400CCE960 /* OwnKeysSecond.h in Headers */ = {isa = PBXBuildFile; fileRef = 431F04A4227323A400CCE960 /* OwnKeysSecond.h */; };
+		431F04A7227323A400CCE960 /* OwnKeysSecond.c in Sources */ = {isa = PBXBuildFile; fileRef = 431F04A5227323A400CCE960 /* OwnKeysSecond.c */; };
 		43370833203C075A004E6547 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 4337082D203C075A004E6547 /* sqlite3.c */; };
 		43370834203C075A004E6547 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 43370832203C075A004E6547 /* sqlite3.h */; };
 		4354FF651D6EDF300033069C /* sync_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = 4354FF641D6EDF300033069C /* sync_impl.c */; };
@@ -249,6 +251,8 @@
 		431F0493227322EF00CCE960 /* CommitAcceptFirst.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = CommitAcceptFirst.c; path = ../asn.1/CommitAcceptFirst.c; sourceTree = "<group>"; };
 		431F049C2273235300CCE960 /* GroupTrustThisKey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GroupTrustThisKey.h; path = ../asn.1/GroupTrustThisKey.h; sourceTree = "<group>"; };
 		431F04A12273235300CCE960 /* GroupTrustThisKey.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupTrustThisKey.c; path = ../asn.1/GroupTrustThisKey.c; sourceTree = "<group>"; };
+		431F04A4227323A400CCE960 /* OwnKeysSecond.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OwnKeysSecond.h; path = ../asn.1/OwnKeysSecond.h; sourceTree = "<group>"; };
+		431F04A5227323A400CCE960 /* OwnKeysSecond.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = OwnKeysSecond.c; path = ../asn.1/OwnKeysSecond.c; sourceTree = "<group>"; };
 		4337082D203C075A004E6547 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = ../src/sqlite3.c; sourceTree = "<group>"; };
 		43370832203C075A004E6547 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = ../src/sqlite3.h; sourceTree = "<group>"; };
 		4354FF641D6EDF300033069C /* sync_impl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_impl.c; path = ../src/sync_impl.c; sourceTree = "<group>"; };
@@ -442,6 +446,8 @@
 				431F049C2273235300CCE960 /* GroupTrustThisKey.h */,
 				431F048F2273227900CCE960 /* OwnKeysFirst.c */,
 				431F048E2273227900CCE960 /* OwnKeysFirst.h */,
+				431F04A5227323A400CCE960 /* OwnKeysSecond.c */,
+				431F04A4227323A400CCE960 /* OwnKeysSecond.h */,
 				431F0493227322EF00CCE960 /* CommitAcceptFirst.c */,
 				431F0492227322EF00CCE960 /* CommitAcceptFirst.h */,
 				431F048B2273223600CCE960 /* CommitAcceptSecond.c */,
@@ -696,6 +702,7 @@
 				438C439B2167582500C7425B /* sync_api.h in Headers */,
 				646C40EE1D510CD800C63EFF /* asn_internal.h in Headers */,
 				646C413B1D510CD800C63EFF /* xer_encoder.h in Headers */,
+				431F04A6227323A400CCE960 /* OwnKeysSecond.h in Headers */,
 				646C40F01D510CD800C63EFF /* asn_SEQUENCE_OF.h in Headers */,
 				646C40FD1D510CD800C63EFF /* BIT_STRING.h in Headers */,
 				646C411F1D510CD800C63EFF /* INTEGER.h in Headers */,
@@ -930,6 +937,7 @@
 				64A826831B455D0800EECAF0 /* platform_unix.c in Sources */,
 				646C40F81D510CD800C63EFF /* ber_tlv_length.c in Sources */,
 				43F73BF2216626E100AB4524 /* Sync_func.c in Sources */,
+				431F04A7227323A400CCE960 /* OwnKeysSecond.c in Sources */,
 				646C411C1D510CD800C63EFF /* IdentityList.c in Sources */,
 				646C41301D510CD800C63EFF /* PrintableString.c in Sources */,
 				64A8267B1B455D0800EECAF0 /* etpan_mime.c in Sources */,
