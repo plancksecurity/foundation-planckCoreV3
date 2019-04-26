@@ -157,7 +157,9 @@
     <ClInclude Include="..\..\asn.1\BIT_STRING.h" />
     <ClInclude Include="..\..\asn.1\BOOLEAN.h" />
     <ClInclude Include="..\..\asn.1\CommitAccept.h" />
+    <ClInclude Include="..\..\asn.1\CommitAcceptFirst.h" />
     <ClInclude Include="..\..\asn.1\CommitAcceptForGroup.h" />
+    <ClInclude Include="..\..\asn.1\CommitAcceptSecond.h" />
     <ClInclude Include="..\..\asn.1\CommitReject.h" />
     <ClInclude Include="..\..\asn.1\constraints.h" />
     <ClInclude Include="..\..\asn.1\constr_CHOICE.h" />
@@ -181,6 +183,9 @@
     <ClInclude Include="..\..\asn.1\NativeEnumerated.h" />
     <ClInclude Include="..\..\asn.1\NativeInteger.h" />
     <ClInclude Include="..\..\asn.1\OCTET_STRING.h" />
+    <ClInclude Include="..\..\asn.1\OwnKeys.h" />
+    <ClInclude Include="..\..\asn.1\OwnKeysFirst.h" />
+    <ClInclude Include="..\..\asn.1\OwnKeysSecond.h" />
     <ClInclude Include="..\..\asn.1\per_decoder.h" />
     <ClInclude Include="..\..\asn.1\per_encoder.h" />
     <ClInclude Include="..\..\asn.1\per_opentype.h" />
@@ -207,7 +212,9 @@
     <ClCompile Include="..\..\asn.1\BIT_STRING.c" />
     <ClCompile Include="..\..\asn.1\BOOLEAN.c" />
     <ClCompile Include="..\..\asn.1\CommitAccept.c" />
+    <ClCompile Include="..\..\asn.1\CommitAcceptFirst.c" />
     <ClCompile Include="..\..\asn.1\CommitAcceptForGroup.c" />
+    <ClCompile Include="..\..\asn.1\CommitAcceptSecond.c" />
     <ClCompile Include="..\..\asn.1\CommitReject.c" />
     <ClCompile Include="..\..\asn.1\constraints.c" />
     <ClCompile Include="..\..\asn.1\constr_CHOICE.c" />
@@ -217,7 +224,6 @@
     <ClCompile Include="..\..\asn.1\constr_TYPE.c" />
     <ClCompile Include="..\..\asn.1\der_encoder.c" />
     <ClCompile Include="..\..\asn.1\GroupKeys.c" />
-    <ClCompile Include="..\..\asn.1\GroupKeysAndClose.c" />
     <ClCompile Include="..\..\asn.1\GroupTrustThisKey.c" />
     <ClCompile Include="..\..\asn.1\HandshakeAnswer.c" />
     <ClCompile Include="..\..\asn.1\HandshakeRequest.c" />
@@ -231,6 +237,9 @@
     <ClCompile Include="..\..\asn.1\NativeEnumerated.c" />
     <ClCompile Include="..\..\asn.1\NativeInteger.c" />
     <ClCompile Include="..\..\asn.1\OCTET_STRING.c" />
+    <ClCompile Include="..\..\asn.1\OwnKeys.c" />
+    <ClCompile Include="..\..\asn.1\OwnKeysFirst.c" />
+    <ClCompile Include="..\..\asn.1\OwnKeysSecond.c" />
     <ClCompile Include="..\..\asn.1\pdu_collection.c" />
     <ClCompile Include="..\..\asn.1\per_decoder.c" />
     <ClCompile Include="..\..\asn.1\per_encoder.c" />
