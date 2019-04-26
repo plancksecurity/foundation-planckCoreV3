@@ -4,36 +4,52 @@ p≡p Sync protocol
 1. Protocol Stack
 -----------------
 
-Trust Sync | Contact Sync | Task Sync
-Sync | Key Sync
+Key Sync | Trust Sync | Contact Sync | Task Sync
+Sync
 Baseprotocol
 Transport
 
-1. Device View
+1. Group View
 --------------
 
 1.1 State Sole
 
-A Device is in state Sole when it is not member of a Device group and when it
+A Sender is in state Sole when it is not member of a Sender group and when it
 is not part of a Negotiation.
 
 1.1 State Grouped
 
-A Device is in state Grouped when it is member of a Device group and when it is
+A Sender is in state Grouped when it is member of a Sender group and when it is
 not part of a Negotiation.
-
-1.1 State Handshaking
-
-A Device is in state Handshaking when it is triggered by receiving a Beacon.
-
-1.1 State SentCommit
-
-1.1 State ReceivedCommit
 
 1. Transaction View for Negotiation
 -----------------------------------
 
-A Negotiation is identified by the FPR of the Key of the Identity, which is
-used for transport. 
+1.1 TID
 
+A TID (transaction ID) is a UUID version 4 variant 1.
+
+1.1 Negotiation
+
+A Negotiation is a transaction identified by a TID.
+
+1. Roles and Keys
+-----------------
+
+1.1 Sender signing
+
+The key with which the sender of the message is signing. In case of trusted
+messages this is signalled within the encrypted message. This is signalled by
+by opt_field pEp-sender-sign, which is not reflected to the outer message.
+
+Transports can opt to use HMAC or OMAC instead of digital signatures.
+
+1.1 Transport signing
+
+Keys with which others and not the sender are signing a message.
+
+1.1 Sender Group key
+
+This key is a sender signing key, which is used to update the group. If it is
+reset the group breaks.
 

@@ -47,8 +47,8 @@ condition sameChallenge
 
 condition sameTransaction
 ||
-    TID_t *t1 = &session->sync_state.keysync.transaction;
-    TID_t *t2 = &session->own_sync_state.transaction;
+    TID_t *t1 = &session->sync_state.keysync.negotiation;
+    TID_t *t2 = &session->own_sync_state.negotiation;
 
     *result = t1->size == t2->size && memcmp(t1->buf, t2->buf, t1->size) == 0;
 ||
@@ -117,23 +117,23 @@ action storeChallenge call "copy_UUID" {
 
 action openTransaction {
 ||
-    for (int i=0; i<session->sync_state.keysync.transaction.size; ++i) {
-        if (session->sync_state.keysync.transaction.buf[i])
+    for (int i=0; i<session->sync_state.keysync.negotiation.size; ++i) {
+        if (session->sync_state.keysync.negotiation.buf[i])
             return PEP_STATUS_OK;
     }
 ||
-    call "new_UUID" with "dst" > &session->sync_state.keysync.transaction
+    call "new_UUID" with "dst" > &session->sync_state.keysync.negotiation
 }
 
 action closeTransaction
 ||
-    memset(session->sync_state.keysync.transaction.buf, 0,
-            session->sync_state.keysync.transaction.size);
+    memset(session->sync_state.keysync.negotiation.buf, 0,
+            session->sync_state.keysync.negotiation.size);
 ||
 
 action storeTransaction call "copy_UUID" {
-    with "src" > &session->sync_state.keysync.transaction
-    with "dst" > &session->own_sync_state.transaction
+    with "src" > &session->sync_state.keysync.negotiation
+    with "dst" > &session->own_sync_state.negotiation
 }
 
 function "show_handshake" {
@@ -321,16 +321,6 @@ action receivedKeysAreGroupKeys
     }
 
     free_identity_list(il);
-||
-
-action storeThisKey
-||
-    free(session->sync_state.common.signature_fpr);
-    session->sync_state.common.signature_fpr =
-            strndup((char *)session->sync_state.keysync.key.buf, session->sync_state.keysync.key.size);
-    assert(session->sync_state.common.signature_fpr);
-    if (!session->sync_state.common.signature_fpr)
-        return PEP_OUT_OF_MEMORY;
 ||
 
 action trustThisKey
