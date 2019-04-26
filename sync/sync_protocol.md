@@ -8,7 +8,7 @@ Sync
 Baseprotocol
 Transport
 
-## Group View
+## Forming a Device Group with Key Sync
 
 ### Sender
 

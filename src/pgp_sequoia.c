@@ -814,9 +814,9 @@ get_public_keys_cb(void *cookie_raw,
     j = 0;
     for (i = 0; i < keyids_len; i ++) {
         pgp_tpk_t tpk = NULL;
-        pgp_status_t status
+        PEP_STATUS status
             = tpk_find_by_keyid(session, keyids[i], false, &tpk, NULL);
-        if (status == PGP_STATUS_SUCCESS)
+        if (status == PEP_STATUS_OK)
             (*tpks)[j ++] = tpk;
     }
     *tpk_len = j;
@@ -1124,7 +1124,7 @@ PEP_STATUS pgp_decrypt_and_verify(
                                      128 * 1024 * 1024) > 0))
         ;
     if (nread < 0)
-        ERROR_OUT(err, PGP_STATUS_UNKNOWN_ERROR, "pgp_reader_read");
+        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "pgp_reader_read");
 
     // Add a terminating NUL for naive users
     pgp_writer_write(&err, writer, (const uint8_t *) &""[0], 1);
