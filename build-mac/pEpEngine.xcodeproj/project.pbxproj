@@ -31,6 +31,8 @@
 		431F04A32273235300CCE960 /* GroupTrustThisKey.c in Sources */ = {isa = PBXBuildFile; fileRef = 431F04A12273235300CCE960 /* GroupTrustThisKey.c */; };
 		431F04A6227323A400CCE960 /* OwnKeysSecond.h in Headers */ = {isa = PBXBuildFile; fileRef = 431F04A4227323A400CCE960 /* OwnKeysSecond.h */; };
 		431F04A7227323A400CCE960 /* OwnKeysSecond.c in Sources */ = {isa = PBXBuildFile; fileRef = 431F04A5227323A400CCE960 /* OwnKeysSecond.c */; };
+		431F04AA227323EE00CCE960 /* OwnKeys.h in Headers */ = {isa = PBXBuildFile; fileRef = 431F04A8227323EE00CCE960 /* OwnKeys.h */; };
+		431F04AB227323EE00CCE960 /* OwnKeys.c in Sources */ = {isa = PBXBuildFile; fileRef = 431F04A9227323EE00CCE960 /* OwnKeys.c */; };
 		43370833203C075A004E6547 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 4337082D203C075A004E6547 /* sqlite3.c */; };
 		43370834203C075A004E6547 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 43370832203C075A004E6547 /* sqlite3.h */; };
 		4354FF651D6EDF300033069C /* sync_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = 4354FF641D6EDF300033069C /* sync_impl.c */; };
@@ -253,6 +255,8 @@
 		431F04A12273235300CCE960 /* GroupTrustThisKey.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupTrustThisKey.c; path = ../asn.1/GroupTrustThisKey.c; sourceTree = "<group>"; };
 		431F04A4227323A400CCE960 /* OwnKeysSecond.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OwnKeysSecond.h; path = ../asn.1/OwnKeysSecond.h; sourceTree = "<group>"; };
 		431F04A5227323A400CCE960 /* OwnKeysSecond.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = OwnKeysSecond.c; path = ../asn.1/OwnKeysSecond.c; sourceTree = "<group>"; };
+		431F04A8227323EE00CCE960 /* OwnKeys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OwnKeys.h; path = ../asn.1/OwnKeys.h; sourceTree = "<group>"; };
+		431F04A9227323EE00CCE960 /* OwnKeys.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = OwnKeys.c; path = ../asn.1/OwnKeys.c; sourceTree = "<group>"; };
 		4337082D203C075A004E6547 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = ../src/sqlite3.c; sourceTree = "<group>"; };
 		43370832203C075A004E6547 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = ../src/sqlite3.h; sourceTree = "<group>"; };
 		4354FF641D6EDF300033069C /* sync_impl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_impl.c; path = ../src/sync_impl.c; sourceTree = "<group>"; };
@@ -444,6 +448,8 @@
 			children = (
 				431F04A12273235300CCE960 /* GroupTrustThisKey.c */,
 				431F049C2273235300CCE960 /* GroupTrustThisKey.h */,
+				431F04A9227323EE00CCE960 /* OwnKeys.c */,
+				431F04A8227323EE00CCE960 /* OwnKeys.h */,
 				431F048F2273227900CCE960 /* OwnKeysFirst.c */,
 				431F048E2273227900CCE960 /* OwnKeysFirst.h */,
 				431F04A5227323A400CCE960 /* OwnKeysSecond.c */,
@@ -731,6 +737,7 @@
 				646C41151D510CD800C63EFF /* Hash.h in Headers */,
 				646C40FF1D510CD800C63EFF /* BOOLEAN.h in Headers */,
 				64A8268C1B455D9D00EECAF0 /* pEpEngine.h in Headers */,
+				431F04AA227323EE00CCE960 /* OwnKeys.h in Headers */,
 				646C41091D510CD800C63EFF /* constr_TYPE.h in Headers */,
 				431F0494227322EF00CCE960 /* CommitAcceptFirst.h in Headers */,
 				430BCC482015EE800077E998 /* pEp_string.h in Headers */,
@@ -970,6 +977,7 @@
 				646C40F61D510CD800C63EFF /* ber_decoder.c in Sources */,
 				646C40F11D510CD800C63EFF /* asn_SET_OF.c in Sources */,
 				646C413A1D510CD800C63EFF /* xer_encoder.c in Sources */,
+				431F04AB227323EE00CCE960 /* OwnKeys.c in Sources */,
 				43F73BFD216627CC00AB4524 /* TID.c in Sources */,
 				646C41021D510CD800C63EFF /* constr_SEQUENCE_OF.c in Sources */,
 				646C410A1D510CD800C63EFF /* constraints.c in Sources */,
