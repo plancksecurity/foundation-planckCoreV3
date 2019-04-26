@@ -21,6 +21,8 @@
 		430BCC482015EE800077E998 /* pEp_string.h in Headers */ = {isa = PBXBuildFile; fileRef = 430BCC462015EE800077E998 /* pEp_string.h */; };
 		430BCC492015EE800077E998 /* pEp_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 430BCC472015EE800077E998 /* pEp_string.c */; };
 		430D258B1C9ED75A00B94535 /* blacklist.c in Sources */ = {isa = PBXBuildFile; fileRef = 430D258A1C9ED75A00B94535 /* blacklist.c */; };
+		431F048C2273223600CCE960 /* CommitAcceptSecond.h in Headers */ = {isa = PBXBuildFile; fileRef = 431F04862273223600CCE960 /* CommitAcceptSecond.h */; };
+		431F048D2273223600CCE960 /* CommitAcceptSecond.c in Sources */ = {isa = PBXBuildFile; fileRef = 431F048B2273223600CCE960 /* CommitAcceptSecond.c */; };
 		43370833203C075A004E6547 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 4337082D203C075A004E6547 /* sqlite3.c */; };
 		43370834203C075A004E6547 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 43370832203C075A004E6547 /* sqlite3.h */; };
 		4354FF651D6EDF300033069C /* sync_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = 4354FF641D6EDF300033069C /* sync_impl.c */; };
@@ -233,6 +235,8 @@
 		430BCC462015EE800077E998 /* pEp_string.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pEp_string.h; path = ../src/pEp_string.h; sourceTree = "<group>"; };
 		430BCC472015EE800077E998 /* pEp_string.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEp_string.c; path = ../src/pEp_string.c; sourceTree = "<group>"; };
 		430D258A1C9ED75A00B94535 /* blacklist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = blacklist.c; path = ../src/blacklist.c; sourceTree = "<group>"; };
+		431F04862273223600CCE960 /* CommitAcceptSecond.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommitAcceptSecond.h; path = ../asn.1/CommitAcceptSecond.h; sourceTree = "<group>"; };
+		431F048B2273223600CCE960 /* CommitAcceptSecond.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = CommitAcceptSecond.c; path = ../asn.1/CommitAcceptSecond.c; sourceTree = "<group>"; };
 		4337082D203C075A004E6547 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = ../src/sqlite3.c; sourceTree = "<group>"; };
 		43370832203C075A004E6547 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = ../src/sqlite3.h; sourceTree = "<group>"; };
 		4354FF641D6EDF300033069C /* sync_impl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_impl.c; path = ../src/sync_impl.c; sourceTree = "<group>"; };
@@ -422,6 +426,8 @@
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
 			isa = PBXGroup;
 			children = (
+				431F048B2273223600CCE960 /* CommitAcceptSecond.c */,
+				431F04862273223600CCE960 /* CommitAcceptSecond.h */,
 				1521CEEE225C9AEE00FD2AA2 /* CommitAccept.h */,
 				1521CEE9225C9AED00FD2AA2 /* CommitAcceptForGroup.c */,
 				1521CEEC225C9AEE00FD2AA2 /* CommitAcceptForGroup.h */,
@@ -663,6 +669,7 @@
 				646C41111D510CD800C63EFF /* GroupKeys.h in Headers */,
 				646C40F21D510CD800C63EFF /* asn_SET_OF.h in Headers */,
 				646C41311D510CD800C63EFF /* PrintableString.h in Headers */,
+				431F048C2273223600CCE960 /* CommitAcceptSecond.h in Headers */,
 				646C40F51D510CD800C63EFF /* Beacon.h in Headers */,
 				438C43B52167752C00C7425B /* labeled_int_list.h in Headers */,
 				646C40F71D510CD800C63EFF /* ber_decoder.h in Headers */,
@@ -972,6 +979,7 @@
 				646C412C1D510CD800C63EFF /* per_opentype.c in Sources */,
 				646C41281D510CD800C63EFF /* per_decoder.c in Sources */,
 				64A826801B455D0800EECAF0 /* mime.c in Sources */,
+				431F048D2273223600CCE960 /* CommitAcceptSecond.c in Sources */,
 				64A8267F1B455D0800EECAF0 /* message.c in Sources */,
 				646C411A1D510CD800C63EFF /* Identity.c in Sources */,
 				64A826811B455D0800EECAF0 /* pEpEngine.c in Sources */,
