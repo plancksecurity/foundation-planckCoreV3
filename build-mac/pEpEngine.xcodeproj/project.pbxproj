@@ -23,6 +23,8 @@
 		430D258B1C9ED75A00B94535 /* blacklist.c in Sources */ = {isa = PBXBuildFile; fileRef = 430D258A1C9ED75A00B94535 /* blacklist.c */; };
 		431F048C2273223600CCE960 /* CommitAcceptSecond.h in Headers */ = {isa = PBXBuildFile; fileRef = 431F04862273223600CCE960 /* CommitAcceptSecond.h */; };
 		431F048D2273223600CCE960 /* CommitAcceptSecond.c in Sources */ = {isa = PBXBuildFile; fileRef = 431F048B2273223600CCE960 /* CommitAcceptSecond.c */; };
+		431F04902273227900CCE960 /* OwnKeysFirst.h in Headers */ = {isa = PBXBuildFile; fileRef = 431F048E2273227900CCE960 /* OwnKeysFirst.h */; };
+		431F04912273227900CCE960 /* OwnKeysFirst.c in Sources */ = {isa = PBXBuildFile; fileRef = 431F048F2273227900CCE960 /* OwnKeysFirst.c */; };
 		43370833203C075A004E6547 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 4337082D203C075A004E6547 /* sqlite3.c */; };
 		43370834203C075A004E6547 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 43370832203C075A004E6547 /* sqlite3.h */; };
 		4354FF651D6EDF300033069C /* sync_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = 4354FF641D6EDF300033069C /* sync_impl.c */; };
@@ -237,6 +239,8 @@
 		430D258A1C9ED75A00B94535 /* blacklist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = blacklist.c; path = ../src/blacklist.c; sourceTree = "<group>"; };
 		431F04862273223600CCE960 /* CommitAcceptSecond.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommitAcceptSecond.h; path = ../asn.1/CommitAcceptSecond.h; sourceTree = "<group>"; };
 		431F048B2273223600CCE960 /* CommitAcceptSecond.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = CommitAcceptSecond.c; path = ../asn.1/CommitAcceptSecond.c; sourceTree = "<group>"; };
+		431F048E2273227900CCE960 /* OwnKeysFirst.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OwnKeysFirst.h; path = ../asn.1/OwnKeysFirst.h; sourceTree = "<group>"; };
+		431F048F2273227900CCE960 /* OwnKeysFirst.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = OwnKeysFirst.c; path = ../asn.1/OwnKeysFirst.c; sourceTree = "<group>"; };
 		4337082D203C075A004E6547 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = ../src/sqlite3.c; sourceTree = "<group>"; };
 		43370832203C075A004E6547 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = ../src/sqlite3.h; sourceTree = "<group>"; };
 		4354FF641D6EDF300033069C /* sync_impl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_impl.c; path = ../src/sync_impl.c; sourceTree = "<group>"; };
@@ -426,6 +430,8 @@
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
 			isa = PBXGroup;
 			children = (
+				431F048F2273227900CCE960 /* OwnKeysFirst.c */,
+				431F048E2273227900CCE960 /* OwnKeysFirst.h */,
 				431F048B2273223600CCE960 /* CommitAcceptSecond.c */,
 				431F04862273223600CCE960 /* CommitAcceptSecond.h */,
 				1521CEEE225C9AEE00FD2AA2 /* CommitAccept.h */,
@@ -700,6 +706,7 @@
 				646C412D1D510CD800C63EFF /* per_opentype.h in Headers */,
 				646C413D1D510CD800C63EFF /* xer_support.h in Headers */,
 				646C41191D510CD800C63EFF /* Hex.h in Headers */,
+				431F04902273227900CCE960 /* OwnKeysFirst.h in Headers */,
 				646C41051D510CD800C63EFF /* constr_SEQUENCE.h in Headers */,
 				1521CF01225C9AEF00FD2AA2 /* TID.h in Headers */,
 				646C41151D510CD800C63EFF /* Hash.h in Headers */,
@@ -903,6 +910,7 @@
 				64A826871B455D0800EECAF0 /* stringpair.c in Sources */,
 				43F73C0E2166282C00AB4524 /* sync_codec.c in Sources */,
 				1521CEF6225C9AEF00FD2AA2 /* CommitAcceptForGroup.c in Sources */,
+				431F04912273227900CCE960 /* OwnKeysFirst.c in Sources */,
 				646C41341D510CD800C63EFF /* UTF8String.c in Sources */,
 				64A826831B455D0800EECAF0 /* platform_unix.c in Sources */,
 				646C40F81D510CD800C63EFF /* ber_tlv_length.c in Sources */,
