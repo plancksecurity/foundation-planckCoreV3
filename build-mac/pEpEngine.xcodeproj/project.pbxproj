@@ -25,6 +25,8 @@
 		431F048D2273223600CCE960 /* CommitAcceptSecond.c in Sources */ = {isa = PBXBuildFile; fileRef = 431F048B2273223600CCE960 /* CommitAcceptSecond.c */; };
 		431F04902273227900CCE960 /* OwnKeysFirst.h in Headers */ = {isa = PBXBuildFile; fileRef = 431F048E2273227900CCE960 /* OwnKeysFirst.h */; };
 		431F04912273227900CCE960 /* OwnKeysFirst.c in Sources */ = {isa = PBXBuildFile; fileRef = 431F048F2273227900CCE960 /* OwnKeysFirst.c */; };
+		431F0494227322EF00CCE960 /* CommitAcceptFirst.h in Headers */ = {isa = PBXBuildFile; fileRef = 431F0492227322EF00CCE960 /* CommitAcceptFirst.h */; };
+		431F0495227322EF00CCE960 /* CommitAcceptFirst.c in Sources */ = {isa = PBXBuildFile; fileRef = 431F0493227322EF00CCE960 /* CommitAcceptFirst.c */; };
 		43370833203C075A004E6547 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 4337082D203C075A004E6547 /* sqlite3.c */; };
 		43370834203C075A004E6547 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 43370832203C075A004E6547 /* sqlite3.h */; };
 		4354FF651D6EDF300033069C /* sync_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = 4354FF641D6EDF300033069C /* sync_impl.c */; };
@@ -241,6 +243,8 @@
 		431F048B2273223600CCE960 /* CommitAcceptSecond.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = CommitAcceptSecond.c; path = ../asn.1/CommitAcceptSecond.c; sourceTree = "<group>"; };
 		431F048E2273227900CCE960 /* OwnKeysFirst.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OwnKeysFirst.h; path = ../asn.1/OwnKeysFirst.h; sourceTree = "<group>"; };
 		431F048F2273227900CCE960 /* OwnKeysFirst.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = OwnKeysFirst.c; path = ../asn.1/OwnKeysFirst.c; sourceTree = "<group>"; };
+		431F0492227322EF00CCE960 /* CommitAcceptFirst.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommitAcceptFirst.h; path = ../asn.1/CommitAcceptFirst.h; sourceTree = "<group>"; };
+		431F0493227322EF00CCE960 /* CommitAcceptFirst.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = CommitAcceptFirst.c; path = ../asn.1/CommitAcceptFirst.c; sourceTree = "<group>"; };
 		4337082D203C075A004E6547 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = ../src/sqlite3.c; sourceTree = "<group>"; };
 		43370832203C075A004E6547 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = ../src/sqlite3.h; sourceTree = "<group>"; };
 		4354FF641D6EDF300033069C /* sync_impl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_impl.c; path = ../src/sync_impl.c; sourceTree = "<group>"; };
@@ -432,6 +436,8 @@
 			children = (
 				431F048F2273227900CCE960 /* OwnKeysFirst.c */,
 				431F048E2273227900CCE960 /* OwnKeysFirst.h */,
+				431F0493227322EF00CCE960 /* CommitAcceptFirst.c */,
+				431F0492227322EF00CCE960 /* CommitAcceptFirst.h */,
 				431F048B2273223600CCE960 /* CommitAcceptSecond.c */,
 				431F04862273223600CCE960 /* CommitAcceptSecond.h */,
 				1521CEEE225C9AEE00FD2AA2 /* CommitAccept.h */,
@@ -713,6 +719,7 @@
 				646C40FF1D510CD800C63EFF /* BOOLEAN.h in Headers */,
 				64A8268C1B455D9D00EECAF0 /* pEpEngine.h in Headers */,
 				646C41091D510CD800C63EFF /* constr_TYPE.h in Headers */,
+				431F0494227322EF00CCE960 /* CommitAcceptFirst.h in Headers */,
 				430BCC482015EE800077E998 /* pEp_string.h in Headers */,
 				1521CEFF225C9AEF00FD2AA2 /* CommitReject.h in Headers */,
 				646C410D1D510CD800C63EFF /* der_encoder.h in Headers */,
@@ -977,6 +984,7 @@
 				646C41221D510CD800C63EFF /* NativeEnumerated.c in Sources */,
 				43F6921D1F164A47009418F5 /* resource_id.c in Sources */,
 				430D258B1C9ED75A00B94535 /* blacklist.c in Sources */,
+				431F0495227322EF00CCE960 /* CommitAcceptFirst.c in Sources */,
 				646C414E1D510D8800C63EFF /* baseprotocol.c in Sources */,
 				6467888C1CEB3D120001F54C /* map_asn1.c in Sources */,
 				646C40FA1D510CD800C63EFF /* ber_tlv_tag.c in Sources */,
