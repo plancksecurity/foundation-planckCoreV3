@@ -29,6 +29,11 @@ not part of a Negotiation.
 
 A TID (transaction ID) is a UUID version 4 variant 1.
 
+1.1 Challenge
+
+The Challenge is identified by a TID. The Challenge is being set by each Beacon
+and must be repeated in a corresponding HandshakeRequest.
+
 1.1 Negotiation
 
 A Negotiation is a transaction identified by a TID.
