@@ -39,6 +39,8 @@
 		438C439B2167582500C7425B /* sync_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 438C43962167582400C7425B /* sync_api.h */; };
 		438C43B52167752C00C7425B /* labeled_int_list.h in Headers */ = {isa = PBXBuildFile; fileRef = 438C43AF2167752C00C7425B /* labeled_int_list.h */; };
 		438C43B62167752C00C7425B /* labeled_int_list.c in Sources */ = {isa = PBXBuildFile; fileRef = 438C43B42167752C00C7425B /* labeled_int_list.c */; };
+		43CC349E2276D31A002F77AF /* NegotiationRequest.c in Sources */ = {isa = PBXBuildFile; fileRef = 43CC349C2276D31A002F77AF /* NegotiationRequest.c */; };
+		43CC349F2276D31A002F77AF /* NegotiationRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 43CC349D2276D31A002F77AF /* NegotiationRequest.h */; };
 		43F6921D1F164A47009418F5 /* resource_id.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F6921C1F164A47009418F5 /* resource_id.c */; };
 		43F73BF02166269200AB4524 /* PString.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73BEB2166269200AB4524 /* PString.c */; };
 		43F73BF2216626E100AB4524 /* Sync_func.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73BF1216626E100AB4524 /* Sync_func.c */; };
@@ -260,6 +262,8 @@
 		438C43962167582400C7425B /* sync_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sync_api.h; path = ../src/sync_api.h; sourceTree = "<group>"; };
 		438C43AF2167752C00C7425B /* labeled_int_list.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = labeled_int_list.h; path = ../src/labeled_int_list.h; sourceTree = "<group>"; };
 		438C43B42167752C00C7425B /* labeled_int_list.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = labeled_int_list.c; path = ../src/labeled_int_list.c; sourceTree = "<group>"; };
+		43CC349C2276D31A002F77AF /* NegotiationRequest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NegotiationRequest.c; path = ../asn.1/NegotiationRequest.c; sourceTree = "<group>"; };
+		43CC349D2276D31A002F77AF /* NegotiationRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NegotiationRequest.h; path = ../asn.1/NegotiationRequest.h; sourceTree = "<group>"; };
 		43D47A8A225CC60600E97C5B /* pEpTrustWords-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "pEpTrustWords-Info.plist"; path = "/Users/dirk/projects/pEp/pEpEngine/build-mac/pEpTrustWords-Info.plist"; sourceTree = "<absolute>"; };
 		43F6921C1F164A47009418F5 /* resource_id.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = resource_id.c; path = ../src/resource_id.c; sourceTree = "<group>"; };
 		43F73BEB2166269200AB4524 /* PString.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PString.c; path = ../asn.1/PString.c; sourceTree = "<group>"; };
@@ -440,6 +444,8 @@
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
 			isa = PBXGroup;
 			children = (
+				43CC349C2276D31A002F77AF /* NegotiationRequest.c */,
+				43CC349D2276D31A002F77AF /* NegotiationRequest.h */,
 				431F04A12273235300CCE960 /* GroupTrustThisKey.c */,
 				431F049C2273235300CCE960 /* GroupTrustThisKey.h */,
 				431F04A9227323EE00CCE960 /* OwnKeys.c */,
@@ -701,6 +707,7 @@
 				646C413B1D510CD800C63EFF /* xer_encoder.h in Headers */,
 				431F04A6227323A400CCE960 /* OwnKeysSecond.h in Headers */,
 				646C40F01D510CD800C63EFF /* asn_SEQUENCE_OF.h in Headers */,
+				43CC349F2276D31A002F77AF /* NegotiationRequest.h in Headers */,
 				646C40FD1D510CD800C63EFF /* BIT_STRING.h in Headers */,
 				646C411F1D510CD800C63EFF /* INTEGER.h in Headers */,
 				646C411D1D510CD800C63EFF /* IdentityList.h in Headers */,
@@ -942,6 +949,7 @@
 				438C43B62167752C00C7425B /* labeled_int_list.c in Sources */,
 				646C41261D510CD800C63EFF /* OCTET_STRING.c in Sources */,
 				646C41141D510CD800C63EFF /* Hash.c in Sources */,
+				43CC349E2276D31A002F77AF /* NegotiationRequest.c in Sources */,
 				43F73BF02166269200AB4524 /* PString.c in Sources */,
 				64A826861B455D0800EECAF0 /* stringlist.c in Sources */,
 				4354FF651D6EDF300033069C /* sync_impl.c in Sources */,
