@@ -100,8 +100,6 @@
 		646C410D1D510CD800C63EFF /* der_encoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 646C40B81D510CD700C63EFF /* der_encoder.h */; };
 		646C41101D510CD800C63EFF /* GroupKeys.c in Sources */ = {isa = PBXBuildFile; fileRef = 646C40BB1D510CD700C63EFF /* GroupKeys.c */; };
 		646C41111D510CD800C63EFF /* GroupKeys.h in Headers */ = {isa = PBXBuildFile; fileRef = 646C40BC1D510CD700C63EFF /* GroupKeys.h */; };
-		646C41121D510CD800C63EFF /* HandshakeRequest.c in Sources */ = {isa = PBXBuildFile; fileRef = 646C40BD1D510CD700C63EFF /* HandshakeRequest.c */; };
-		646C41131D510CD800C63EFF /* HandshakeRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 646C40BE1D510CD700C63EFF /* HandshakeRequest.h */; };
 		646C41141D510CD800C63EFF /* Hash.c in Sources */ = {isa = PBXBuildFile; fileRef = 646C40BF1D510CD700C63EFF /* Hash.c */; };
 		646C41151D510CD800C63EFF /* Hash.h in Headers */ = {isa = PBXBuildFile; fileRef = 646C40C01D510CD700C63EFF /* Hash.h */; };
 		646C41181D510CD800C63EFF /* Hex.c in Sources */ = {isa = PBXBuildFile; fileRef = 646C40C31D510CD700C63EFF /* Hex.c */; };
@@ -325,8 +323,6 @@
 		646C40B81D510CD700C63EFF /* der_encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = der_encoder.h; path = ../asn.1/der_encoder.h; sourceTree = "<group>"; };
 		646C40BB1D510CD700C63EFF /* GroupKeys.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeys.c; path = ../asn.1/GroupKeys.c; sourceTree = "<group>"; };
 		646C40BC1D510CD700C63EFF /* GroupKeys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GroupKeys.h; path = ../asn.1/GroupKeys.h; sourceTree = "<group>"; };
-		646C40BD1D510CD700C63EFF /* HandshakeRequest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = HandshakeRequest.c; path = ../asn.1/HandshakeRequest.c; sourceTree = "<group>"; };
-		646C40BE1D510CD700C63EFF /* HandshakeRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HandshakeRequest.h; path = ../asn.1/HandshakeRequest.h; sourceTree = "<group>"; };
 		646C40BF1D510CD700C63EFF /* Hash.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Hash.c; path = ../asn.1/Hash.c; sourceTree = "<group>"; };
 		646C40C01D510CD700C63EFF /* Hash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Hash.h; path = ../asn.1/Hash.h; sourceTree = "<group>"; };
 		646C40C31D510CD700C63EFF /* Hex.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Hex.c; path = ../asn.1/Hex.c; sourceTree = "<group>"; };
@@ -518,8 +514,6 @@
 				646C40B81D510CD700C63EFF /* der_encoder.h */,
 				646C40BB1D510CD700C63EFF /* GroupKeys.c */,
 				646C40BC1D510CD700C63EFF /* GroupKeys.h */,
-				646C40BD1D510CD700C63EFF /* HandshakeRequest.c */,
-				646C40BE1D510CD700C63EFF /* HandshakeRequest.h */,
 				646C40BF1D510CD700C63EFF /* Hash.c */,
 				646C40C01D510CD700C63EFF /* Hash.h */,
 				646C40C31D510CD700C63EFF /* Hex.c */,
@@ -721,7 +715,6 @@
 				646C40FB1D510CD800C63EFF /* ber_tlv_tag.h in Headers */,
 				646C414F1D510D8800C63EFF /* baseprotocol.h in Headers */,
 				6467888D1CEB3D120001F54C /* map_asn1.h in Headers */,
-				646C41131D510CD800C63EFF /* HandshakeRequest.h in Headers */,
 				1521CEF9225C9AEF00FD2AA2 /* CommitAcceptForGroup.h in Headers */,
 				646C40F31D510CD800C63EFF /* asn_system.h in Headers */,
 				43370834203C075A004E6547 /* sqlite3.h in Headers */,
@@ -964,7 +957,6 @@
 				646C41081D510CD800C63EFF /* constr_TYPE.c in Sources */,
 				646C40FE1D510CD800C63EFF /* BOOLEAN.c in Sources */,
 				646C41001D510CD800C63EFF /* constr_CHOICE.c in Sources */,
-				646C41121D510CD800C63EFF /* HandshakeRequest.c in Sources */,
 				64A826821B455D0800EECAF0 /* pgp_netpgp.c in Sources */,
 				646C41101D510CD800C63EFF /* GroupKeys.c in Sources */,
 				646C40EF1D510CD800C63EFF /* asn_SEQUENCE_OF.c in Sources */,
