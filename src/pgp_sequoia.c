@@ -1,6 +1,8 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
+#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
+
 #define _GNU_SOURCE 1
 
 #include "platform.h"
@@ -10,8 +12,6 @@
 #include <limits.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
-#include <sqlite3.h>
 
 #include "wrappers.h"
 
@@ -77,10 +77,16 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         ERROR_OUT(NULL, PEP_INIT_GPGME_INIT_FAILED, "HOME unset");
 
     // Create the DB and initialize it.
-    char *path = NULL;
-    asprintf(&path, "%s/.pEp_keys.db", home_env);
+    size_t path_size = strlen(home_env)+13+1;
+    char *path = (char *) calloc(1, path_size);
+    assert(path);
     if (!path)
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
+
+    int r = snprintf(path, path_size, "%s/.pEp_keys.db", home_env);
+    assert(r >= 0 && r < path_size);
+    if (r < 0)
+        ERROR_OUT(NULL, PEP_UNKNOWN_ERROR, "snprintf");
 
     int sqlite_result;
     sqlite_result = sqlite3_open_v2(path,
@@ -290,6 +296,8 @@ void pgp_release(PEP_SESSION session, bool out_last)
     }
 }
 
+/* commented out to omit compiler warning about unused function
+
 // Ensures that a fingerprint is in canonical form.  A canonical
 // fingerprint doesn't contain any white space.
 //
@@ -303,6 +311,8 @@ static char *pgp_fingerprint_canonicalize(const char *fpr)
 
     return fpr_canonicalized;
 }
+
+*/
 
 // Splits an OpenPGP user id into its name and email components.  A
 // user id looks like:
@@ -804,9 +814,9 @@ get_public_keys_cb(void *cookie_raw,
     j = 0;
     for (i = 0; i < keyids_len; i ++) {
         pgp_tpk_t tpk = NULL;
-        pgp_status_t status
+        PEP_STATUS status
             = tpk_find_by_keyid(session, keyids[i], false, &tpk, NULL);
-        if (status == PGP_STATUS_SUCCESS)
+        if (status == PEP_STATUS_OK)
             (*tpks)[j ++] = tpk;
     }
     *tpk_len = j;
@@ -1114,7 +1124,7 @@ PEP_STATUS pgp_decrypt_and_verify(
                                      128 * 1024 * 1024) > 0))
         ;
     if (nread < 0)
-        ERROR_OUT(err, PGP_STATUS_UNKNOWN_ERROR, "pgp_reader_read");
+        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "pgp_reader_read");
 
     // Add a terminating NUL for naive users
     pgp_writer_write(&err, writer, (const uint8_t *) &""[0], 1);
@@ -1500,9 +1510,16 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     assert(identity->fpr == NULL || identity->fpr[0] == 0);
     assert(identity->username);
 
-    asprintf(&userid, "%s <%s>", identity->username, identity->address);
-    if (! userid)
-        ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "asprintf");
+    size_t userid_size = strlen(identity->username)+strlen(identity->address)+3+1;
+    userid = (char *) calloc(1, userid_size);
+    assert(userid);
+    if (!userid)
+        ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
+
+    int r = snprintf(userid, userid_size, "%s <%s>", identity->username, identity->address);
+    assert(r >= 0 && r < userid_size);
+    if (r < 0)
+        ERROR_OUT(NULL, PEP_UNKNOWN_ERROR, "snprintf");
 
     T("(%s)", userid);
 
@@ -1542,24 +1559,35 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     return status;
 }
 
-PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr_raw)
+#define SQL_DELETE "DELETE FROM keys WHERE primary_key = '%s' ;"
+static const char *sql_delete = SQL_DELETE;
+static const size_t sql_delete_size = sizeof(SQL_DELETE);
+
+// FIXME: this is deleting the key from the index but not the key data
+
+PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
 {
+    assert(session && fpr && fpr[0]);
+    if (!(session && fpr && fpr[0]))
+        return PEP_ILLEGAL_VALUE;
 
-	return PEP_CANNOT_DELETE_KEY;
-/*    
-    PEP_STATUS status = PEP_STATUS_OK;
-    char *fpr = pgp_fingerprint_canonicalize(fpr_raw);
+    size_t sql_size = sql_delete_size + strlen(fpr);
+    char *sql = calloc(1, sql_size);
+    assert(sql);
+    if (!sql)
+        return PEP_OUT_OF_MEMORY;
 
-    T("(%s)", fpr);
+    int r = snprintf(sql, sql_size, sql_delete, fpr);
+    assert(r > 0 && r < sql_size);
+    if (r < 0)
+        return PEP_UNKNOWN_ERROR;
 
-    // XXX: Can also be used for deleting public keys!!!
-    assert(!"implement me");
+    int sqlite_result = sqlite3_exec(session->key_db, sql, NULL, NULL, NULL);
+    assert(sqlite_result == SQLITE_OK);
+    if (sqlite_result != SQLITE_OK)
+        return PEP_CANNOT_DELETE_KEY;
 
-    T("(%s) -> %s", fpr, pep_status_to_string(status));
-
-    free(fpr);
-    return status;
-*/
+    return PEP_STATUS_OK;
 }
 
 // XXX: This needs to handle not only TPKs, but also keyrings and

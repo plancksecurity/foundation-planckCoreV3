@@ -99,12 +99,12 @@
 #endif
 #endif
 
-#ifdef USE_GPG
-#include "pgp_gpg_internal.h"
+#if defined(USE_SEQUOIA)
+#include "pgp_sequoia_internal.h"
 #elif defined(USE_NETPGP)
 #include "pgp_netpgp_internal.h"
-#elif defined(USE_SEQUOIA)
-#include "pgp_sequoia_internal.h"
+#elif defined(USE_GPG)
+#include "pgp_gpg_internal.h"
 #endif
 
 #include "keymanagement.h"

@@ -10,7 +10,7 @@ include ./fsm.yml2
 protocol Sync 1 {
     // all messages have a timestamp, time out and are removed after timeout
 
-    fsm KeySync 1 {
+    fsm KeySync 1, threshold=30 {
         version 1, 2;
 
         state InitState {
@@ -45,32 +45,32 @@ protocol Sync 1 {
                     }
                     else /* we are second */ {
                         do storeChallenge; // partner's challenge
-                        do openTransaction; // NOP if transaction already open
+                        do openTransaction; // NOP if negotiation already open
                         do storeTransaction;
                         do tellWeAreNotGrouped;
-                        // second is sending HandshakeRequest
-                        send HandshakeRequest;
+                        // second is sending NegotiationRequest
+                        send NegotiationRequest;
                     }
                 }
             }
 
-            on HandshakeRequest if challengeAccepted {
+            on NegotiationRequest if challengeAccepted {
                 if sameTransaction {
                     // this is our own handshake request; ignore
                 }
                 else {
-                    // first is receiving HandshakeRequest
+                    // first is receiving NegotiationRequest
                     do storeTransaction;
-                    // first is sending HandshakeAnswer
-                    send HandshakeAnswer;
+                    // first is sending NegotiationOpen
+                    send NegotiationOpen;
                     if partnerIsGrouped
                         go HandshakingWithGroup;
                     go HandshakingNewFirst;
                 }
             }
 
-            on HandshakeAnswer if sameTransaction {
-                // second is receiving HandshakeAnswer
+            on NegotiationOpen if sameTransaction {
+                // second is receiving NegotiationOpen
                 go HandshakingNewSecond;
             }
         }
@@ -104,12 +104,12 @@ protocol Sync 1 {
             // Accept means init Phase1Commit
             on Accept {
                 do trustThisKey;
-                send CommitAccept;
+                send CommitAcceptFirst;
                 go HandshakingNewPhase1First;
             }
 
             // got a CommitAccept from second
-            on CommitAcceptForGroup if sameTransaction
+            on CommitAcceptSecond if sameTransaction
                 go HandshakingNewPhase2First;
         }
 
@@ -142,12 +142,12 @@ protocol Sync 1 {
             // Accept means init Phase1Commit
             on Accept {
                 do trustThisKey;
-                send CommitAcceptForGroup;
+                send CommitAcceptSecond;
                 go HandshakingNewPhase1Second;
             }
 
             // got a CommitAccept from first
-            on CommitAccept if sameTransaction
+            on CommitAcceptFirst if sameTransaction
                 go HandshakingNewPhase2Second;
         }
 
@@ -163,8 +163,9 @@ protocol Sync 1 {
                 go End;
             }
 
-            on CommitAcceptForGroup if sameTransaction
+            on CommitAcceptSecond if sameTransaction {
                 go NewGroupFirst;
+            }
         }
 
         state HandshakingNewPhase1Second {
@@ -179,8 +180,9 @@ protocol Sync 1 {
                 go End;
             }
 
-            on CommitAccept if sameTransaction
+            on CommitAcceptFirst if sameTransaction {
                 go NewGroupSecond;
+            }
         }
 
         state HandshakingNewPhase2First {
@@ -196,6 +198,7 @@ protocol Sync 1 {
             }
 
             on Accept {
+                send CommitAcceptFirst;
                 do trustThisKey;
                 go NewGroupFirst;
             }
@@ -214,6 +217,7 @@ protocol Sync 1 {
             }
 
             on Accept {
+                send CommitAcceptSecond;
                 do trustThisKey;
                 go NewGroupSecond;
             }
@@ -222,10 +226,10 @@ protocol Sync 1 {
         state NewGroupFirst {
             on Init {
                 do prepareOwnKeys;
-                send GroupKeys; // we're not grouped yet, this is our own keys
+                send OwnKeysFirst; // we're not grouped yet, this is our own keys
             }
 
-            on GroupKeysAndClose if sameTransaction {
+            on OwnKeysSecond {
                 do saveGroupKeys;
 
                 if keyElectionWon
@@ -240,10 +244,10 @@ protocol Sync 1 {
         state NewGroupSecond {
             on Init {
                 do prepareOwnKeys;
-                send GroupKeysAndClose; // we're not grouped yet, this is our own keys
+                send OwnKeysSecond; // we're not grouped yet, this is our own keys
             }
 
-            on GroupKeys {
+            on OwnKeysFirst {
                 do saveGroupKeys;
 
                 if keyElectionWon
@@ -264,27 +268,25 @@ protocol Sync 1 {
             on GroupKeys
                 do saveGroupKeys;
 
-            on KeyGen
+            on KeyGen {
+                do prepareOwnKeys;
                 send GroupKeys;
+            }
 
             on Beacon {
                 do storeChallenge;
                 do openTransaction;
                 do storeTransaction;
                 do tellWeAreGrouped;
-                send HandshakeRequest;
+                send NegotiationRequest;
             }
 
-            on HandshakeAnswer if sameTransaction
+            on NegotiationOpen if sameTransaction
                 go HandshakingGrouped;
 
             on GroupTrustThisKey {
-                do storeThisKey;
                 do trustThisKey;
             }
-
-            on GroupKeysAndClose
-                do showDeviceAdded;
         }
 
         // sole device handshaking with group
@@ -333,8 +335,9 @@ protocol Sync 1 {
                 go End;
             }
 
-            on CommitAcceptForGroup if sameTransaction
+            on CommitAcceptForGroup if sameTransaction {
                 go JoinGroup;
+            }
         }
 
         state HandshakingJoinPhase2 {
@@ -356,10 +359,12 @@ protocol Sync 1 {
         }
 
         state JoinGroup {
-            on Init
+            on Init {
+                do prepareOwnKeys;
                 send GroupKeys;
+            }
 
-            on GroupKeysAndClose {
+            on GroupKeys if sameTransaction {
                 do saveGroupKeys;
                 do receivedKeysAreGroupKeys;
                 do showDeviceAdded;
@@ -402,7 +407,6 @@ protocol Sync 1 {
 
             on GroupTrustThisKey {
                 do hideHandshakeDialog;
-                do storeThisKey;
                 do trustThisKey;
             }
 
@@ -426,12 +430,11 @@ protocol Sync 1 {
                 go Grouped;
 
             on CommitAccept if sameTransaction {
-                send GroupKeysAndClose;
+                send GroupKeys;
                 go Grouped;
             }
 
             on GroupTrustThisKey {
-                do storeThisKey;
                 do trustThisKey;
             }
 
@@ -459,12 +462,11 @@ protocol Sync 1 {
             on Accept {
                 do trustThisKey;
                 send GroupTrustThisKey;
-                send GroupKeysAndClose;
+                send GroupKeys;
                 go Grouped;
             }
 
             on GroupTrustThisKey {
-                do storeThisKey;
                 do trustThisKey;
             }
 
@@ -491,47 +493,61 @@ protocol Sync 1 {
             auto Version version;
         }
 
-        message HandshakeRequest 3, security=untrusted {
+        message NegotiationRequest 3, security=untrusted {
             field TID challenge;
             auto Version version;
-            field TID transaction;
+            field TID negotiation;
             field bool is_group;
         }
 
-        message HandshakeAnswer 4, security=untrusted {
+        message NegotiationOpen 4, security=untrusted {
             auto Version version;
-            field TID transaction;
+            field TID negotiation;
         }
 
         message Rollback 5, security=untrusted {
-            field TID transaction;
+            field TID negotiation;
         }
 
         message CommitReject 6, security=untrusted {
-            field TID transaction;
+            field TID negotiation;
         }
 
-        message CommitAccept 7, security=untrusted {
-            field TID transaction;
+        message CommitAcceptFirst 7, security=untrusted {
+            field TID negotiation;
         }
 
-        message CommitAcceptForGroup 8, security=untrusted {
-            field TID transaction;
+        message CommitAcceptSecond 8, security=untrusted {
+            field TID negotiation;
+        }
+
+        message CommitAccept 9, security=untrusted {
+            field TID negotiation;
+        }
+
+        message CommitAcceptForGroup 10, security=untrusted {
+            field TID negotiation;
         }
 
         // default: security=trusted only
-        message GroupTrustThisKey 9 {
+        message GroupTrustThisKey 11 {
             field Hash key;
         }
 
         // security=attach_own_keys implies security=trusted
-        message GroupKeysAndClose 10, security=attach_own_keys {
-            field TID transaction;
+        message GroupKeys 12, security=attach_own_keys {
             field IdentityList ownIdentities;
         }
 
-        // security=attach_own_keys implies security=trusted
-        message GroupKeys 11, security=attach_own_keys {
+        message OwnKeys 13, security=attach_own_keys {
+            field IdentityList ownIdentities;
+        }
+
+        message OwnKeysFirst 14, security=attach_own_keys {
+            field IdentityList ownIdentities;
+        }
+
+        message OwnKeysSecond 15, security=attach_own_keys {
             field IdentityList ownIdentities;
         }
     }

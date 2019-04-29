@@ -177,9 +177,9 @@ void SyncTests::tear_down()
 void SyncTests::check_sync()
 {
     cout << "check_sync(): trigger KeyGen event\n";
-    signal_Sync_event(sync, Sync_PR_keysync, KeyGen);
+    signal_Sync_event(sync, Sync_PR_keysync, KeyGen, NULL);
     adapter.processing();
 
     cout << "check_sync(): cry for unknown key\n";
-    signal_Sync_event(sync, Sync_PR_keysync, CannotDecrypt);
+    signal_Sync_event(sync, Sync_PR_keysync, CannotDecrypt, NULL);
 }
