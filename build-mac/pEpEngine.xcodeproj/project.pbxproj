@@ -41,6 +41,8 @@
 		438C43B62167752C00C7425B /* labeled_int_list.c in Sources */ = {isa = PBXBuildFile; fileRef = 438C43B42167752C00C7425B /* labeled_int_list.c */; };
 		43CC349E2276D31A002F77AF /* NegotiationRequest.c in Sources */ = {isa = PBXBuildFile; fileRef = 43CC349C2276D31A002F77AF /* NegotiationRequest.c */; };
 		43CC349F2276D31A002F77AF /* NegotiationRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 43CC349D2276D31A002F77AF /* NegotiationRequest.h */; };
+		43CC34A22276D34C002F77AF /* NegotiationOpen.c in Sources */ = {isa = PBXBuildFile; fileRef = 43CC34A02276D34B002F77AF /* NegotiationOpen.c */; };
+		43CC34A32276D34C002F77AF /* NegotiationOpen.h in Headers */ = {isa = PBXBuildFile; fileRef = 43CC34A12276D34C002F77AF /* NegotiationOpen.h */; };
 		43F6921D1F164A47009418F5 /* resource_id.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F6921C1F164A47009418F5 /* resource_id.c */; };
 		43F73BF02166269200AB4524 /* PString.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73BEB2166269200AB4524 /* PString.c */; };
 		43F73BF2216626E100AB4524 /* Sync_func.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73BF1216626E100AB4524 /* Sync_func.c */; };
@@ -264,6 +266,8 @@
 		438C43B42167752C00C7425B /* labeled_int_list.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = labeled_int_list.c; path = ../src/labeled_int_list.c; sourceTree = "<group>"; };
 		43CC349C2276D31A002F77AF /* NegotiationRequest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NegotiationRequest.c; path = ../asn.1/NegotiationRequest.c; sourceTree = "<group>"; };
 		43CC349D2276D31A002F77AF /* NegotiationRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NegotiationRequest.h; path = ../asn.1/NegotiationRequest.h; sourceTree = "<group>"; };
+		43CC34A02276D34B002F77AF /* NegotiationOpen.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NegotiationOpen.c; path = ../asn.1/NegotiationOpen.c; sourceTree = "<group>"; };
+		43CC34A12276D34C002F77AF /* NegotiationOpen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NegotiationOpen.h; path = ../asn.1/NegotiationOpen.h; sourceTree = "<group>"; };
 		43D47A8A225CC60600E97C5B /* pEpTrustWords-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "pEpTrustWords-Info.plist"; path = "/Users/dirk/projects/pEp/pEpEngine/build-mac/pEpTrustWords-Info.plist"; sourceTree = "<absolute>"; };
 		43F6921C1F164A47009418F5 /* resource_id.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = resource_id.c; path = ../src/resource_id.c; sourceTree = "<group>"; };
 		43F73BEB2166269200AB4524 /* PString.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PString.c; path = ../asn.1/PString.c; sourceTree = "<group>"; };
@@ -444,6 +448,8 @@
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
 			isa = PBXGroup;
 			children = (
+				43CC34A02276D34B002F77AF /* NegotiationOpen.c */,
+				43CC34A12276D34C002F77AF /* NegotiationOpen.h */,
 				43CC349C2276D31A002F77AF /* NegotiationRequest.c */,
 				43CC349D2276D31A002F77AF /* NegotiationRequest.h */,
 				431F04A12273235300CCE960 /* GroupTrustThisKey.c */,
@@ -701,6 +707,7 @@
 				438C43B52167752C00C7425B /* labeled_int_list.h in Headers */,
 				646C40F71D510CD800C63EFF /* ber_decoder.h in Headers */,
 				646C41351D510CD800C63EFF /* UTF8String.h in Headers */,
+				43CC34A32276D34C002F77AF /* NegotiationOpen.h in Headers */,
 				646C40EC1D510CD800C63EFF /* asn_codecs_prim.h in Headers */,
 				438C439B2167582500C7425B /* sync_api.h in Headers */,
 				646C40EE1D510CD800C63EFF /* asn_internal.h in Headers */,
@@ -1017,6 +1024,7 @@
 				64A826801B455D0800EECAF0 /* mime.c in Sources */,
 				431F048D2273223600CCE960 /* CommitAcceptSecond.c in Sources */,
 				64A8267F1B455D0800EECAF0 /* message.c in Sources */,
+				43CC34A22276D34C002F77AF /* NegotiationOpen.c in Sources */,
 				646C411A1D510CD800C63EFF /* Identity.c in Sources */,
 				64A826811B455D0800EECAF0 /* pEpEngine.c in Sources */,
 			);
