@@ -105,11 +105,11 @@ cd ~/code/pep-engine
 mkdir ~/code/pep-engine/build
 ~~~
 
-Edit the build configuration to your needs in `Makefile.conf`, or create a `local.conf` that sets any of the make variables documented in `Makefile.conf`. All the default values for the build configuration variables on each platform are documented in `default.conf`.
+Edit the build configuration to your needs in `Makefile.conf`, or create a `local.conf` that sets any of the make variables documented in `Makefile.conf`. All the default values for the build configuration variables on each platform are documented in `Makefile.conf`.
 
 If a dependency is not found in your system's default include or library paths, you will have to specify the according paths in a make variable. Typically, this has to be done at least for YML2, and libetpan.
 
-For a more detailed explanation of the mechanics of these build configuration files, and overriding defaults, see the comments in `default.conf`.
+For a more detailed explanation of the mechanics of these build configuration files, and overriding defaults, see the comments in `Makefile.conf`.
 
 Below is a sample `./local.conf` file, for orientation.
 
