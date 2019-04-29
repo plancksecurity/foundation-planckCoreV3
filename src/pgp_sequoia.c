@@ -1587,6 +1587,10 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
     if (sqlite_result != SQLITE_OK)
         return PEP_CANNOT_DELETE_KEY;
 
+    sqlite_result = sqlite3_changes(session->key_db);
+    if (sqlite_result < 1)
+        return PEP_KEY_NOT_FOUND;
+
     return PEP_STATUS_OK;
 }
 
