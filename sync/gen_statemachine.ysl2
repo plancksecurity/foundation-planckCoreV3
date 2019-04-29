@@ -575,6 +575,7 @@ tstylesheet {
                             assert(key_data);
                             if (!key_data) {
                                 free(_data);
+                                free_message(_m);
                                 status = PEP_OUT_OF_MEMORY;
                                 goto the_end;
                             }
@@ -588,6 +589,7 @@ tstylesheet {
                                 status = export_secret_key(session, sl->value, &_key_data, &_size);
                                 if (status && status != PEP_KEY_NOT_FOUND) {
                                     free(_data);
+                                    free_message(_m);
                                     goto the_end;
                                 }
 
@@ -596,6 +598,7 @@ tstylesheet {
                                     char *n = realloc(key_data, key_data_size + _size);
                                     if (!n) {
                                         free(_data);
+                                        free_message(_m);
                                         status = PEP_OUT_OF_MEMORY;
                                         goto the_end;
                                     }
@@ -608,6 +611,7 @@ tstylesheet {
                                 status = export_key(session, sl->value, &_key_data, &_size);
                                 if (status && status != PEP_KEY_NOT_FOUND) {
                                     free(_data);
+                                    free_message(_m);
                                     goto the_end;
                                 }
 
@@ -616,6 +620,7 @@ tstylesheet {
                                     char *n = realloc(key_data, key_data_size + _size);
                                     if (!n) {
                                         free(_data);
+                                        free_message(_m);
                                         status = PEP_OUT_OF_MEMORY;
                                         goto the_end;
                                     }
@@ -633,6 +638,7 @@ tstylesheet {
                                     "application/octet-stream", "file://own.key");
                             if (!bl) {
                                 free(_data);
+                                free_message(_m);
                                 status = PEP_OUT_OF_MEMORY;
                                 goto the_end;
                             }

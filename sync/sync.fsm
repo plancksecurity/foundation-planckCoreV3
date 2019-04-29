@@ -10,7 +10,7 @@ include ./fsm.yml2
 protocol Sync 1 {
     // all messages have a timestamp, time out and are removed after timeout
 
-    fsm KeySync 1 {
+    fsm KeySync 1, threshold=30 {
         version 1, 2;
 
         state InitState {
@@ -48,29 +48,29 @@ protocol Sync 1 {
                         do openTransaction; // NOP if negotiation already open
                         do storeTransaction;
                         do tellWeAreNotGrouped;
-                        // second is sending HandshakeRequest
-                        send HandshakeRequest;
+                        // second is sending NegotiationRequest
+                        send NegotiationRequest;
                     }
                 }
             }
 
-            on HandshakeRequest if challengeAccepted {
+            on NegotiationRequest if challengeAccepted {
                 if sameTransaction {
                     // this is our own handshake request; ignore
                 }
                 else {
-                    // first is receiving HandshakeRequest
+                    // first is receiving NegotiationRequest
                     do storeTransaction;
-                    // first is sending HandshakeAnswer
-                    send HandshakeAnswer;
+                    // first is sending NegotiationOpen
+                    send NegotiationOpen;
                     if partnerIsGrouped
                         go HandshakingWithGroup;
                     go HandshakingNewFirst;
                 }
             }
 
-            on HandshakeAnswer if sameTransaction {
-                // second is receiving HandshakeAnswer
+            on NegotiationOpen if sameTransaction {
+                // second is receiving NegotiationOpen
                 go HandshakingNewSecond;
             }
         }
@@ -278,10 +278,10 @@ protocol Sync 1 {
                 do openTransaction;
                 do storeTransaction;
                 do tellWeAreGrouped;
-                send HandshakeRequest;
+                send NegotiationRequest;
             }
 
-            on HandshakeAnswer if sameTransaction
+            on NegotiationOpen if sameTransaction
                 go HandshakingGrouped;
 
             on GroupTrustThisKey {
@@ -493,14 +493,14 @@ protocol Sync 1 {
             auto Version version;
         }
 
-        message HandshakeRequest 3, security=untrusted {
+        message NegotiationRequest 3, security=untrusted {
             field TID challenge;
             auto Version version;
             field TID negotiation;
             field bool is_group;
         }
 
-        message HandshakeAnswer 4, security=untrusted {
+        message NegotiationOpen 4, security=untrusted {
             auto Version version;
             field TID negotiation;
         }
