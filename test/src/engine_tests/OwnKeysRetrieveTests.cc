@@ -439,12 +439,9 @@ void OwnKeysRetrieveTests::check_own_keys_retrieve_no_own() {
     free_identity(a_pub);
     a_pub = NULL;
 
-
-    // Own pub key
     TEST_ASSERT_MSG(slurp_and_import_key(session, "test_keys/pub/pep.test.alexander5-0x0773CD29_pub.asc"),
                     "Unable to import test_keys/pub/pep.test.alexander5-0x0773CD29_pub.asc");
     
-    // Make it an own identity in the DB
     a_pub = new_identity("pep.test.alexander0@darthmama.org", "58BCC2BF2AE1E3C4FBEAB89AD7838ACA0773CD29", "NotMe", NULL);
     a_pub->comm_type = PEP_ct_pEp;
     status = set_trust(session, a_pub);
@@ -452,11 +449,9 @@ void OwnKeysRetrieveTests::check_own_keys_retrieve_no_own() {
     free_identity(a_pub);
     a_pub = NULL;
 
-    // Own pub key
     TEST_ASSERT_MSG(slurp_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc"),
                     "Unable to import test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc");
     
-    // Make it an own identity in the DB
     a_pub = new_identity("pep.test.alexander0@darthmama.org", "74D79B4496E289BD8A71B70BA8E2C4530019697D", "NotMe", NULL);
     a_pub->comm_type = PEP_ct_pEp;
     status = set_trust(session, a_pub);
@@ -464,11 +459,9 @@ void OwnKeysRetrieveTests::check_own_keys_retrieve_no_own() {
     free_identity(a_pub);
     a_pub = NULL;
 
-    // Own pub key
     TEST_ASSERT_MSG(slurp_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc"),
                     "Unable to import test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc");
     
-    // Make it an own identity in the DB
     a_pub = new_identity("pep.test.alexander0@darthmama.org", "2E21325D202A44BFD9C607FCF095B202503B14D8", "NotMe", NULL);
     a_pub->comm_type = PEP_ct_pEp;
     status = set_trust(session, a_pub);
@@ -476,11 +469,9 @@ void OwnKeysRetrieveTests::check_own_keys_retrieve_no_own() {
     free_identity(a_pub);
     a_pub = NULL;
 
-    // Own pub key
     TEST_ASSERT_MSG(slurp_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc"),
                     "Unable to import test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc");
     
-    // Make it an own identity in the DB
     a_pub = new_identity("pep.test.alexander0@darthmama.org", "3C1E713D8519D7F907E3142D179EAA24A216E95A", "NotMe", NULL);
     a_pub->comm_type = PEP_ct_pEp;
     status = set_trust(session, a_pub);
@@ -499,9 +490,150 @@ void OwnKeysRetrieveTests::check_own_keys_retrieve_no_own() {
 }
 
 void OwnKeysRetrieveTests::check_own_keys_retrieve_multi_idents_one_key() {
-    TEST_ASSERT(true);
+    // Setup own identity
+    PEP_STATUS status = read_file_and_import_key(session,
+                "test_keys/pub/pep.test.alexander0-0x3B7302DB_pub.asc");
+    TEST_ASSERT(status == PEP_KEY_IMPORTED);
+    status = set_up_ident_from_scratch(session,
+                "test_keys/priv/pep.test.alexander0-0x3B7302DB_priv.asc",
+                "pep.test.xander@pep-project.org", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB", 
+                PEP_OWN_USERID, "Xander in Wonderland", NULL, true
+            );
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+
+    // Setup own identity
+    status = read_file_and_import_key(session,
+                "test_keys/pub/pep.test.alexander0-0x3B7302DB_pub.asc");
+    TEST_ASSERT(status == PEP_KEY_IMPORTED);
+    status = set_up_ident_from_scratch(session,
+                "test_keys/priv/pep.test.alexander0-0x3B7302DB_priv.asc",
+                "pep.test.xander1@pep-project.org", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB", 
+                PEP_OWN_USERID, "Xander in Wonderland", NULL, true
+            );
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+
+    // Setup own identity
+    status = read_file_and_import_key(session,
+                "test_keys/pub/pep.test.alexander0-0x3B7302DB_pub.asc");
+    TEST_ASSERT(status == PEP_KEY_IMPORTED);
+    status = set_up_ident_from_scratch(session,
+                "test_keys/priv/pep.test.alexander0-0x3B7302DB_priv.asc",
+                "pep.test.xander2@pep-project.org", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB", 
+                PEP_OWN_USERID, "Xander in Wonderland", NULL, true
+            );
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+
+    // Ok, see if we get one back.
+    stringlist_t* keylist = NULL;
+    
+    status = _own_keys_retrieve(session, &keylist, 0, true);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    TEST_ASSERT(keylist);
+    TEST_ASSERT(keylist->value);
+    TEST_ASSERT(!keylist->next);
+
+    TEST_ASSERT(strcmp(keylist->value, "F4598A17D4690EB3B5B0F6A344F04E963B7302DB") == 0);
+
 }
 
 void OwnKeysRetrieveTests::check_own_keys_retrieve_multi_idents_one_priv_key_multi_pub() {
-    TEST_ASSERT(true);
+    PEP_STATUS status = set_up_ident_from_scratch(session,
+                "test_keys/pub/pep.test.alexander5-0x0773CD29_pub.asc",
+                "pep.test.alexander5@darthmama.org", "58BCC2BF2AE1E3C4FBEAB89AD7838ACA0773CD29", 
+                PEP_OWN_USERID, "Xander in Wonderland", NULL, false
+            );
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    // Make it an own identity in the DB
+    pEp_identity* me_pub = new_identity("pep.test.alexander5@darthmama.org", NULL, PEP_OWN_USERID, NULL);
+    status = update_identity(session, me_pub);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(strcmp(me_pub->fpr, "58BCC2BF2AE1E3C4FBEAB89AD7838ACA0773CD29") == 0);
+    status = trust_personal_key(session, me_pub);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    
+    me_pub->me = true;
+    status = set_identity(session, me_pub);
+    free_identity(me_pub);
+    me_pub = NULL;
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    
+    // Own pub key
+    TEST_ASSERT_MSG(slurp_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc"),
+                    "Unable to import test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc");
+    
+    // Make it an own identity in the DB
+    me_pub = new_identity("pep.test.alexander5@darthmama.org", "74D79B4496E289BD8A71B70BA8E2C4530019697D", PEP_OWN_USERID, NULL);
+    me_pub->comm_type = PEP_ct_pEp;
+    status = set_trust(session, me_pub);
+    TEST_ASSERT(status == PEP_STATUS_OK);    
+    free_identity(me_pub);
+    me_pub = NULL;
+
+    // Own pub key
+    TEST_ASSERT_MSG(slurp_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc"),
+                    "Unable to import test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc");
+    
+    // Make it an own identity in the DB
+    me_pub = new_identity("pep.test.alexander5@darthmama.org", "2E21325D202A44BFD9C607FCF095B202503B14D8", PEP_OWN_USERID, NULL);
+    me_pub->comm_type = PEP_ct_pEp;
+    status = set_trust(session, me_pub);
+    TEST_ASSERT(status == PEP_STATUS_OK);    
+    free_identity(me_pub);
+    me_pub = NULL;
+
+    // Own pub key
+    TEST_ASSERT_MSG(slurp_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc"),
+                    "Unable to import test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc");
+    
+    // Make it an own identity in the DB
+    me_pub = new_identity("pep.test.alexander5@darthmama.org", "3C1E713D8519D7F907E3142D179EAA24A216E95A", PEP_OWN_USERID, NULL);
+    me_pub->comm_type = PEP_ct_pEp;
+    status = set_trust(session, me_pub);
+    TEST_ASSERT(status == PEP_STATUS_OK);    
+    free_identity(me_pub);
+    me_pub = NULL;
+
+    // Setup own identity
+    status = read_file_and_import_key(session,
+                "test_keys/pub/pep.test.alexander0-0x3B7302DB_pub.asc");
+    TEST_ASSERT(status == PEP_KEY_IMPORTED);
+    status = set_up_ident_from_scratch(session,
+                "test_keys/priv/pep.test.alexander0-0x3B7302DB_priv.asc",
+                "pep.test.xander@pep-project.org", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB", 
+                PEP_OWN_USERID, "Xander in Wonderland", NULL, true
+            );
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+
+    // Setup own identity
+    status = read_file_and_import_key(session,
+                "test_keys/pub/pep.test.alexander0-0x3B7302DB_pub.asc");
+    TEST_ASSERT(status == PEP_KEY_IMPORTED);
+    status = set_up_ident_from_scratch(session,
+                "test_keys/priv/pep.test.alexander0-0x3B7302DB_priv.asc",
+                "pep.test.xander1@pep-project.org", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB", 
+                PEP_OWN_USERID, "Xander in Wonderland", NULL, true
+            );
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+
+    // Setup own identity
+    status = read_file_and_import_key(session,
+                "test_keys/pub/pep.test.alexander0-0x3B7302DB_pub.asc");
+    TEST_ASSERT(status == PEP_KEY_IMPORTED);
+    status = set_up_ident_from_scratch(session,
+                "test_keys/priv/pep.test.alexander0-0x3B7302DB_priv.asc",
+                "pep.test.xander2@pep-project.org", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB", 
+                PEP_OWN_USERID, "Xander in Wonderland", NULL, true
+            );
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+
+    // Ok, see if we get one back.
+    stringlist_t* keylist = NULL;
+    
+    status = _own_keys_retrieve(session, &keylist, 0, true);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    TEST_ASSERT(keylist);
+    TEST_ASSERT(keylist->value);
+    TEST_ASSERT(!keylist->next);
+
+    TEST_ASSERT(strcmp(keylist->value, "F4598A17D4690EB3B5B0F6A344F04E963B7302DB") == 0);
 }
