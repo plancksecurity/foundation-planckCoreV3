@@ -78,7 +78,7 @@ void OwnKeysRetrieveTests::check_own_keys_retrieve_single_private_single_pub() {
     
     me_bob->me = true;
     status = set_identity(session, me_bob);
-    free(me_bob);
+    free_identity(me_bob);
     me_bob = NULL;
     TEST_ASSERT(status == PEP_STATUS_OK);
     
@@ -342,7 +342,84 @@ void OwnKeysRetrieveTests::check_own_keys_retrieve_multiple_private_and_pub() {
 }
 
 void OwnKeysRetrieveTests::check_own_keys_retrieve_multi_pub_only() {
-    TEST_ASSERT(true);
+        
+    PEP_STATUS status = set_up_ident_from_scratch(session,
+                "test_keys/pub/pep.test.alexander0-0x3B7302DB_pub.asc",
+                "pep.test.alexander0@darthmama.org", "F4598A17D4690EB3B5B0F6A344F04E963B7302DB", 
+                PEP_OWN_USERID, "Xander in Wonderland", NULL, false
+            );
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    // Make it an own identity in the DB
+    pEp_identity* me_pub = new_identity("pep.test.alexander0@darthmama.org", NULL, PEP_OWN_USERID, NULL);
+    status = update_identity(session, me_pub);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(strcmp(me_pub->fpr, "F4598A17D4690EB3B5B0F6A344F04E963B7302DB") == 0);
+    status = trust_personal_key(session, me_pub);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    
+    me_pub->me = true;
+    status = set_identity(session, me_pub);
+    free_identity(me_pub);
+    me_pub = NULL;
+    TEST_ASSERT(status == PEP_STATUS_OK);
+
+
+    // Own pub key
+    TEST_ASSERT_MSG(slurp_and_import_key(session, "test_keys/pub/pep.test.alexander5-0x0773CD29_pub.asc"),
+                    "Unable to import test_keys/pub/pep.test.alexander5-0x0773CD29_pub.asc");
+    
+    // Make it an own identity in the DB
+    me_pub = new_identity("pep.test.alexander0@darthmama.org", "58BCC2BF2AE1E3C4FBEAB89AD7838ACA0773CD29", PEP_OWN_USERID, NULL);
+    me_pub->comm_type = PEP_ct_pEp;
+    status = set_trust(session, me_pub);
+    TEST_ASSERT(status == PEP_STATUS_OK);    
+    free_identity(me_pub);
+    me_pub = NULL;
+
+    // Own pub key
+    TEST_ASSERT_MSG(slurp_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc"),
+                    "Unable to import test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc");
+    
+    // Make it an own identity in the DB
+    me_pub = new_identity("pep.test.alexander0@darthmama.org", "74D79B4496E289BD8A71B70BA8E2C4530019697D", PEP_OWN_USERID, NULL);
+    me_pub->comm_type = PEP_ct_pEp;
+    status = set_trust(session, me_pub);
+    TEST_ASSERT(status == PEP_STATUS_OK);    
+    free_identity(me_pub);
+    me_pub = NULL;
+
+    // Own pub key
+    TEST_ASSERT_MSG(slurp_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc"),
+                    "Unable to import test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc");
+    
+    // Make it an own identity in the DB
+    me_pub = new_identity("pep.test.alexander0@darthmama.org", "2E21325D202A44BFD9C607FCF095B202503B14D8", PEP_OWN_USERID, NULL);
+    me_pub->comm_type = PEP_ct_pEp;
+    status = set_trust(session, me_pub);
+    TEST_ASSERT(status == PEP_STATUS_OK);    
+    free_identity(me_pub);
+    me_pub = NULL;
+
+    // Own pub key
+    TEST_ASSERT_MSG(slurp_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc"),
+                    "Unable to import test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc");
+    
+    // Make it an own identity in the DB
+    me_pub = new_identity("pep.test.alexander0@darthmama.org", "3C1E713D8519D7F907E3142D179EAA24A216E95A", PEP_OWN_USERID, NULL);
+    me_pub->comm_type = PEP_ct_pEp;
+    status = set_trust(session, me_pub);
+    TEST_ASSERT(status == PEP_STATUS_OK);    
+    free_identity(me_pub);
+    me_pub = NULL;
+    
+    // Ok, see if we get anything back.
+    stringlist_t* keylist = NULL;
+    
+    status = _own_keys_retrieve(session, &keylist, 0, true);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    TEST_ASSERT(!keylist);
+
+    free_stringlist(keylist);
 }
 
 void OwnKeysRetrieveTests::check_own_keys_retrieve_no_own() {
