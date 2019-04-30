@@ -1796,9 +1796,11 @@ PEP_STATUS _own_keys_retrieve(
                 contains_priv_key(session, _kl->value, &has_private);
                 if (!has_private) {
                     stringlist_t* _kl_tmp = _kl;
-                    if (_kl_prev) {
+                    if (_kl_prev)
                         _kl_prev->next = _kl->next;
-                    }
+                    else 
+                        _keylist = _kl->next;
+                        
                     _kl = _kl->next;
                     
                     _kl_tmp->next = NULL;
