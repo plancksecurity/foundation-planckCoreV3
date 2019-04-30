@@ -153,8 +153,6 @@ action closeTransaction
 ||
     memset(session->sync_state.keysync.negotiation.buf, 0,
             session->sync_state.keysync.negotiation.size);
-    free(session->own_sync_state.signature_fpr);
-    session->own_sync_state.signature_fpr = NULL;
 ||
 
 action storeTransaction {

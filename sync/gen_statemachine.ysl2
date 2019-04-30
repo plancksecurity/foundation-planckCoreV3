@@ -349,6 +349,7 @@ tstylesheet {
 
                 «@name»_PR fsm = msg->present;
                 int event = 0;
+                bool is_own_key = false;
 
                 switch (fsm) {
                     `` apply "fsm", 2, mode=signal_message
@@ -554,7 +555,7 @@ tstylesheet {
                                 }
                                 free_identity(ident);
                             }
-
+                            
                             status = base_prepare_message(
                                     session,
                                     li->ident,
@@ -867,6 +868,13 @@ tstylesheet {
         ||
                 case «../@name»_PR_«yml:mixedCase(@name)»:
                     if (rating < PEP_rating_trusted) {
+                        status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
+                        goto the_end;
+                    }
+                    status = own_key_is_listed(session, signature_fpr, &is_own_key);
+                    if (status)
+                        goto the_end;
+                    if (!is_own_key) {
                         status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
                         goto the_end;
                     }
