@@ -37,7 +37,7 @@ protocol Sync 1 {
 
             on Beacon {
                 if sameChallenge {
-                    // this is our own beacon; ignore
+                    // this is our own Beacon; ignore
                 }
                 else {
                     if weAreFirst {
@@ -45,8 +45,7 @@ protocol Sync 1 {
                     }
                     else /* we are second */ {
                         do storeChallenge; // partner's challenge
-                        do openTransaction; // NOP if negotiation already open
-                        do storeTransaction;
+                        do newTransaction;
                         do tellWeAreNotGrouped;
                         // second is sending NegotiationRequest
                         send NegotiationRequest;
@@ -56,7 +55,7 @@ protocol Sync 1 {
 
             on NegotiationRequest if challengeAccepted {
                 if sameTransaction {
-                    // this is our own handshake request; ignore
+                    // this is our own NegotiationRequest; ignore
                 }
                 else {
                     // first is receiving NegotiationRequest
@@ -69,7 +68,7 @@ protocol Sync 1 {
                 }
             }
 
-            on NegotiationOpen if sameTransaction {
+            on NegotiationOpen if sameTransactionAndPartner {
                 // second is receiving NegotiationOpen
                 go HandshakingNewSecond;
             }
@@ -86,7 +85,7 @@ protocol Sync 1 {
                 go Sole;
             }
 
-            on Rollback if sameTransaction
+            on Rollback if sameTransactionAndPartner
                 go Sole;
 
             // Reject is CommitReject
@@ -96,7 +95,7 @@ protocol Sync 1 {
                 go End;
             }
 
-            on CommitReject if sameTransaction {
+            on CommitReject if sameTransactionAndPartner {
                 do disable;
                 go End;
             }
@@ -109,7 +108,7 @@ protocol Sync 1 {
             }
 
             // got a CommitAccept from second
-            on CommitAcceptSecond if sameTransaction
+            on CommitAcceptSecond if sameTransactionAndPartner
                 go HandshakingNewPhase2First;
         }
 
@@ -124,7 +123,7 @@ protocol Sync 1 {
                 go Sole;
             }
 
-            on Rollback if sameTransaction
+            on Rollback if sameTransactionAndPartner
                 go Sole;
 
             // Reject is CommitReject
@@ -134,7 +133,7 @@ protocol Sync 1 {
                 go End;
             }
 
-            on CommitReject if sameTransaction {
+            on CommitReject if sameTransactionAndPartner {
                 do disable;
                 go End;
             }
@@ -147,40 +146,40 @@ protocol Sync 1 {
             }
 
             // got a CommitAccept from first
-            on CommitAcceptFirst if sameTransaction
+            on CommitAcceptFirst if sameTransactionAndPartner
                 go HandshakingNewPhase2Second;
         }
 
         state HandshakingNewPhase1First {
-            on Rollback if sameTransaction {
+            on Rollback if sameTransactionAndPartner {
                 do untrustThisKey;
                 go Sole;
             }
             
-            on CommitReject if sameTransaction {
+            on CommitReject if sameTransactionAndPartner {
                 do untrustThisKey;
                 do disable;
                 go End;
             }
 
-            on CommitAcceptSecond if sameTransaction {
+            on CommitAcceptSecond if sameTransactionAndPartner {
                 go NewGroupFirst;
             }
         }
 
         state HandshakingNewPhase1Second {
-            on Rollback if sameTransaction {
+            on Rollback if sameTransactionAndPartner {
                 do untrustThisKey;
                 go Sole;
             }
             
-            on CommitReject if sameTransaction {
+            on CommitReject if sameTransactionAndPartner {
                 do untrustThisKey;
                 do disable;
                 go End;
             }
 
-            on CommitAcceptFirst if sameTransaction {
+            on CommitAcceptFirst if sameTransactionAndPartner {
                 go NewGroupSecond;
             }
         }
@@ -277,13 +276,12 @@ protocol Sync 1 {
 
             on Beacon {
                 do storeChallenge;
-                do openTransaction;
-                do storeTransaction;
+                do newTransaction;
                 do tellWeAreGrouped;
                 send NegotiationRequest;
             }
 
-            on NegotiationOpen if sameTransaction
+            on NegotiationOpen if sameTransactionAndPartner
                 go HandshakingGrouped;
 
             on GroupTrustThisKey {
@@ -302,7 +300,7 @@ protocol Sync 1 {
                 go Sole;
             }
 
-            on Rollback if sameTransaction
+            on Rollback if sameTransactionAndPartner
                 go Sole;
 
             // Reject is CommitReject
@@ -312,7 +310,7 @@ protocol Sync 1 {
                 go End;
             }
 
-            on CommitReject if sameTransaction {
+            on CommitReject if sameTransactionAndPartner {
                 do disable;
                 go End;
             }
@@ -324,20 +322,20 @@ protocol Sync 1 {
                 go HandshakingJoinPhase1;
             }
 
-            on CommitAcceptForGroup if sameTransaction
+            on CommitAcceptForGroup if sameTransactionAndPartner
                 go HandshakingJoinPhase2;
         }
 
         state HandshakingJoinPhase1 {
-            on Rollback if sameTransaction
+            on Rollback if sameTransactionAndPartner
                 go Sole;
             
-            on CommitReject if sameTransaction {
+            on CommitReject if sameTransactionAndPartner {
                 do disable;
                 go End;
             }
 
-            on CommitAcceptForGroup if sameTransaction {
+            on CommitAcceptForGroup if sameTransactionAndPartner {
                 go JoinGroup;
             }
         }
@@ -385,7 +383,7 @@ protocol Sync 1 {
                 go Grouped;
             }
 
-            on Rollback if sameTransaction
+            on Rollback if sameTransactionAndPartner
                 go Grouped;
 
             // Reject is CommitReject
@@ -394,7 +392,7 @@ protocol Sync 1 {
                 go Grouped;
             }
 
-            on CommitReject if sameTransaction
+            on CommitReject if sameTransactionAndPartner
                 go Grouped;
 
             // Accept is Phase1Commit
@@ -405,7 +403,7 @@ protocol Sync 1 {
                 go HandshakingGroupedPhase1;
             }
 
-            on CommitAccept if sameTransaction
+            on CommitAccept if sameTransactionAndPartner
                 go HandshakingGroupedPhase2;
 
             on GroupTrustThisKey {
@@ -415,7 +413,7 @@ protocol Sync 1 {
 
             on CommitAcceptForGroup {
                 do showDeviceAdded;
-                if sameTransaction {
+                if sameTransactionAndPartner {
                     do hideHandshakeDialog;
                     go Grouped;
                 }
@@ -426,13 +424,13 @@ protocol Sync 1 {
         }
 
         state HandshakingGroupedPhase1 {
-            on Rollback if sameTransaction
+            on Rollback if sameTransactionAndPartner
                 go Grouped;
 
-            on CommitReject if sameTransaction
+            on CommitReject if sameTransactionAndPartner
                 go Grouped;
 
-            on CommitAccept if sameTransaction {
+            on CommitAccept if sameTransactionAndPartner {
                 send GroupKeys;
                 go Grouped;
             }
@@ -443,7 +441,7 @@ protocol Sync 1 {
 
             on CommitAcceptForGroup {
                 do showDeviceAdded;
-                if sameTransaction
+                if sameTransactionAndPartner
                     go Grouped;
             }
 
@@ -475,7 +473,7 @@ protocol Sync 1 {
 
             on CommitAcceptForGroup {
                 do showDeviceAdded;
-                if sameTransaction {
+                if sameTransactionAndPartner {
                     do hideHandshakeDialog;
                     go Grouped;
                 }

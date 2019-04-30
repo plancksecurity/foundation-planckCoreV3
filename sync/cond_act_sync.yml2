@@ -50,7 +50,22 @@ condition sameTransaction
     TID_t *t1 = &session->sync_state.keysync.negotiation;
     TID_t *t2 = &session->own_sync_state.negotiation;
 
+    // test if TID is identical
     *result = t1->size == t2->size && memcmp(t1->buf, t2->buf, t1->size) == 0;
+||
+
+condition sameTransactionAndPartner
+||
+    TID_t *t1 = &session->sync_state.keysync.negotiation;
+    TID_t *t2 = &session->own_sync_state.negotiation;
+
+    const char *s1 = session->sync_state.common.signature_fpr;
+    const char *s2 = session->own_sync_state.signature_fpr;
+
+    // test if TID is identical
+    *result = t1->size == t2->size && memcmp(t1->buf, t2->buf, t1->size) == 0
+    // and test if we're talking to the same sender
+            && s1 && s2 && strcmp(s1, s2) == 0;
 ||
 
 condition keyElectionWon
@@ -115,26 +130,23 @@ action storeChallenge call "copy_UUID" {
     with "dst" > &session->own_sync_state.challenge
 }
 
-action openTransaction {
+action newTransaction {
 ||
-    // if transaction already open do nothing
-    for (int i=0; i<session->sync_state.keysync.negotiation.size; ++i) {
-        if (session->sync_state.keysync.negotiation.buf[i])
-            return PEP_STATUS_OK;
-    }
-
     // sender key must be stable while transaction
-    if (!session->own_sync_state.signature_fpr) {
-        assert(session->sync_state.common.signature_fpr);
-        session->own_sync_state.signature_fpr
-                = strdup(session->sync_state.common.signature_fpr);
-        assert(session->own_sync_state.signature_fpr);
-        if (!session->own_sync_state.signature_fpr)
-            return PEP_OUT_OF_MEMORY;
-    }
+    assert(session->sync_state.common.signature_fpr);
+    free(session->own_sync_state.signature_fpr);
+    session->own_sync_state.signature_fpr
+            = strdup(session->sync_state.common.signature_fpr);
+    assert(session->own_sync_state.signature_fpr);
+    if (!session->own_sync_state.signature_fpr)
+        return PEP_OUT_OF_MEMORY;
 
 ||
     call "new_UUID" with "dst" > &session->sync_state.keysync.negotiation
+    call "copy_UUID" {
+        with "src" > &session->sync_state.keysync.negotiation
+        with "dst" > &session->own_sync_state.negotiation
+    }
 }
 
 action closeTransaction
@@ -145,9 +157,22 @@ action closeTransaction
     session->own_sync_state.signature_fpr = NULL;
 ||
 
-action storeTransaction call "copy_UUID" {
-    with "src" > &session->sync_state.keysync.negotiation
-    with "dst" > &session->own_sync_state.negotiation
+action storeTransaction {
+||
+    // sender key must be stable while transaction
+    assert(session->sync_state.common.signature_fpr);
+    free(session->own_sync_state.signature_fpr);
+    session->own_sync_state.signature_fpr
+            = strdup(session->sync_state.common.signature_fpr);
+    assert(session->own_sync_state.signature_fpr);
+    if (!session->own_sync_state.signature_fpr)
+        return PEP_OUT_OF_MEMORY;
+
+||
+    call "copy_UUID" {
+        with "src" > &session->sync_state.keysync.negotiation
+        with "dst" > &session->own_sync_state.negotiation
+    }
 }
 
 function "show_handshake" {
