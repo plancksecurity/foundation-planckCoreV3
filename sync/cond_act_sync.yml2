@@ -233,7 +233,7 @@ timeout KeySync
 action prepareOwnKeys
 ||
     stringlist_t *own_keys;
-    PEP_STATUS status = _own_keys_retrieve(session, &own_keys, PEP_idf_not_for_sync);
+    PEP_STATUS status = _own_keys_retrieve(session, &own_keys, PEP_idf_not_for_sync, true);
     if (status)
         return status;
 
