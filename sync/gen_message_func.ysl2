@@ -41,9 +41,11 @@ extern "C" {
 struct «@name»_state_s {
     struct common_state_s {
         pEp_identity *from;
-        char *signature_fpr;
         stringlist_t *own_keys;
         identity_list *own_identities;
+
+        // transport data
+        char *signature_fpr;
     } common;
 
     `` apply "fsm", mode=state
@@ -51,6 +53,9 @@ struct «@name»_state_s {
 
 struct own_«@name»_state_s {
     `` for "func:distinctName(fsm/message/field[@type='TID'])" |> «func:ctype()» «@name»;
+
+    // transport data
+    char *signature_fpr;
 };
 
 void free_«@name»_state(PEP_SESSION session);
