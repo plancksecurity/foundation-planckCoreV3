@@ -153,6 +153,8 @@ action closeTransaction
 ||
     memset(session->sync_state.keysync.negotiation.buf, 0,
             session->sync_state.keysync.negotiation.size);
+    memset(session->own_sync_state.negotiation.buf, 0,
+            session->own_sync_state.negotiation.size);
 ||
 
 action storeTransaction {
@@ -274,9 +276,9 @@ action prepareOwnKeys
     if (status)
         return status;
 
-    if (session->sync_state.common.own_keys)
-        free_stringlist(session->sync_state.common.own_keys);
-    session->sync_state.common.own_keys = own_keys;
+    if (session->own_sync_state.own_keys)
+        free_stringlist(session->own_sync_state.own_keys);
+    session->own_sync_state.own_keys = own_keys;
 
     identity_list *il;
     status = _own_identities_retrieve(session, &il, PEP_idf_not_for_sync);
@@ -309,7 +311,7 @@ action ownKeysAreGroupKeys
     PEP_STATUS status = PEP_STATUS_OK;
 
     // set flag for current keys
-    for (identity_list *il = session->sync_state.common.own_identities; il && il->ident ; il = il->next) {
+    for (identity_list *il = session->own_sync_state.own_identities; il && il->ident ; il = il->next) {
         if (!(il->ident->flags && PEP_idf_not_for_sync)) {
             status = set_identity_flags(session, il->ident, PEP_idf_devicegroup);
             if (status)
@@ -323,7 +325,7 @@ action receivedKeysAreGroupKeys
     PEP_STATUS status = PEP_STATUS_OK;
 
     // set flag for current keys
-    for (identity_list *il = session->sync_state.common.own_identities; il && il->ident ; il = il->next) {
+    for (identity_list *il = session->own_sync_state.own_identities; il && il->ident ; il = il->next) {
         if (!(il->ident->flags && PEP_idf_not_for_sync)) {
             status = set_identity_flags(session, il->ident, PEP_idf_devicegroup);
             if (status)
@@ -335,7 +337,7 @@ action receivedKeysAreGroupKeys
     if (!il)
         return PEP_OUT_OF_MEMORY;
 
-    for (il = session->sync_state.common.own_identities; il && il->ident ; il = il->next) {
+    for (il = session->own_sync_state.own_identities; il && il->ident ; il = il->next) {
         // replace partner's user_id with own user_id
         free(il->ident->user_id);
         il->ident->user_id = strdup(session->sync_state.common.from->user_id);

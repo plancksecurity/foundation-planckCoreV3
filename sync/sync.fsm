@@ -535,7 +535,7 @@ protocol Sync 1 {
             field Hash key;
         }
 
-        // security=attach_own_keys implies security=trusted
+        // trust in future
         message GroupKeys 12, security=attach_own_keys {
             field IdentityList ownIdentities;
         }
