@@ -25,6 +25,7 @@
 #include "PgpBinaryTests.h"
 #include "SubkeyRatingEvalTests.h"
 #include "MessageNullFromTests.h"
+#include "ExportKeyTests.h"
 #include "LeastCommonDenomColorTests.h"
 #include "StringlistTests.h"
 #include "PgpListKeysTests.h"
@@ -81,6 +82,7 @@ const char* SuiteMaker::all_suites[] = {
     "PgpBinaryTests",
     "SubkeyRatingEvalTests",
     "MessageNullFromTests",
+    "ExportKeyTests",
     "LeastCommonDenomColorTests",
     "StringlistTests",
     "PgpListKeysTests",
@@ -124,7 +126,7 @@ const char* SuiteMaker::all_suites[] = {
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 53;
+int SuiteMaker::num_suites = 54;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "MimeTests") == 0)
@@ -153,6 +155,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new SubkeyRatingEvalTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "MessageNullFromTests") == 0)
         *test_suite = new MessageNullFromTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "ExportKeyTests") == 0)
+        *test_suite = new ExportKeyTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "LeastCommonDenomColorTests") == 0)
         *test_suite = new LeastCommonDenomColorTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "StringlistTests") == 0)
