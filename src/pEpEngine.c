@@ -1594,14 +1594,6 @@ DYNAMIC_API PEP_STATUS init(
             &_session->get_own_address_binding_from_contact, NULL);
     assert(int_result == SQLITE_OK);
 
-    // int_result = sqlite3_prepare_v2(_session->db, sql_set_device_group,
-    //         (int)strlen(sql_set_device_group), &_session->set_device_group, NULL);
-    // assert(int_result == SQLITE_OK);
-    // 
-    // int_result = sqlite3_prepare_v2(_session->db, sql_get_device_group,
-    //         (int)strlen(sql_get_device_group), &_session->get_device_group, NULL);
-    // assert(int_result == SQLITE_OK);
-
     int_result = sqlite3_prepare_v2(_session->db, sql_set_pgp_keypair,
             (int)strlen(sql_set_pgp_keypair), &_session->set_pgp_keypair,
             NULL);
@@ -1885,10 +1877,6 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->was_id_for_revoke_contacted);   
             if (session->get_last_contacted)
                 sqlite3_finalize(session->get_last_contacted);                                       
-            // if (session->set_device_group)
-            //     sqlite3_finalize(session->set_device_group);
-            // if (session->get_device_group)
-            //     sqlite3_finalize(session->get_device_group);
             if (session->set_pgp_keypair)
                 sqlite3_finalize(session->set_pgp_keypair);
             if (session->exists_identity_entry)
@@ -3420,94 +3408,6 @@ PEP_STATUS update_trust_for_fpr(PEP_SESSION session,
     
     return PEP_STATUS_OK;
 }
-
-// DYNAMIC_API PEP_STATUS set_device_group(
-//         PEP_SESSION session,
-//         const char *group_name
-//     )
-// {
-//     int result;
-// 
-//     assert(session);
-// 
-//     if (!(session && group_name))
-//         return PEP_ILLEGAL_VALUE;
-// 
-//     // 1. Get own user_id
-//     char* user_id = NULL;
-//     PEP_STATUS status = get_default_own_userid(session, &user_id);
-// 
-//     // No user_id is returned in this case, no need to free;
-//     if (status != PEP_STATUS_OK)
-//         return status;
-// 
-//     // 2. Set device group
-//     sqlite3_reset(session->set_device_group);
-//     if(group_name){
-//         sqlite3_bind_text(session->set_device_group, 1, group_name, -1,
-//                 SQLITE_STATIC);
-//     } else {
-//         sqlite3_bind_null(session->set_device_group, 1);
-//     }
-// 
-//     sqlite3_bind_text(session->set_device_group, 2, user_id, -1,
-//             SQLITE_STATIC);
-// 
-//     result = sqlite3_step(session->set_device_group);
-//     sqlite3_reset(session->set_device_group);
-// 
-//     free(user_id);
-// 
-//     if (result != SQLITE_DONE)
-//         return PEP_CANNOT_SET_PERSON;
-// 
-//     return PEP_STATUS_OK;
-// }
-// 
-// DYNAMIC_API PEP_STATUS get_device_group(PEP_SESSION session, char **group_name)
-// {
-//     PEP_STATUS status = PEP_STATUS_OK;
-//     int result;
-// 
-//     assert(session);
-//     assert(group_name);
-// 
-//     if (!(session && group_name))
-//         return PEP_ILLEGAL_VALUE;
-// 
-//     // 1. Get own user_id
-//     char* user_id = NULL;
-//     status = get_default_own_userid(session, &user_id);
-// 
-//     // No user_id is returned in this case, no need to free;
-//     if (status != PEP_STATUS_OK)
-//         return status;
-// 
-//     // 2. get device group
-//     sqlite3_reset(session->get_device_group);
-//     sqlite3_bind_text(session->get_device_group, 1, user_id, -1,
-//             SQLITE_STATIC);
-// 
-//     result = sqlite3_step(session->get_device_group);
-//     switch (result) {
-//     case SQLITE_ROW: {
-//         const char *_group_name = (const char *)sqlite3_column_text(session->get_device_group, 0);
-//         if(_group_name){
-//             *group_name = strdup(_group_name);
-//                 if(*group_name == NULL)
-//                     status = PEP_OUT_OF_MEMORY;
-//         }
-//         break;
-//     }
-// 
-//     default:
-//         status = PEP_RECORD_NOT_FOUND;
-//     }
-// 
-//     free(user_id);
-//     sqlite3_reset(session->get_device_group);
-//     return status;
-// }
 
 DYNAMIC_API PEP_STATUS set_identity_flags(
         PEP_SESSION session,

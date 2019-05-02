@@ -40,7 +40,6 @@ tstylesheet {
             pEp_identity *from;
             char *signature_fpr;
 
-            // identities to sync
             identity_list *own_identities;
         } «@name»_event_t;
 
@@ -349,6 +348,7 @@ tstylesheet {
 
                 «@name»_PR fsm = msg->present;
                 int event = 0;
+                bool is_own_key = false;
 
                 switch (fsm) {
                     `` apply "fsm", 2, mode=signal_message
@@ -417,6 +417,8 @@ tstylesheet {
                 identity_list *channels = NULL;
                 char *key_data = NULL;
                 size_t key_data_size = 0;
+                stringlist_t *extra = NULL;
+                bool transaction;
 
                 status = update_«@name»_message(session, msg);
                 if (status)
@@ -497,8 +499,6 @@ tstylesheet {
                     }
                     memcpy(_data, data, size);
 
-                    stringlist_t *extra = NULL;
-
                     switch (message_type) {
                     `` for "fsm/message[@security='unencrypted']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
                             status = base_prepare_message(
@@ -518,22 +518,76 @@ tstylesheet {
                             m = _m;
                             break;
 
-                    `` for "fsm/message[@security='attach_own_keys']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
-                            assert(session->«yml:lcase(@name)»_state.common.signature_fpr &&
-                                session->«yml:lcase(@name)»_state.common.from &&
-                                session->«yml:lcase(@name)»_state.common.from->user_id);
-                            if (!(session->«yml:lcase(@name)»_state.common.signature_fpr &&
-                                    session->«yml:lcase(@name)»_state.common.from &&
-                                    session->«yml:lcase(@name)»_state.common.from->user_id))
-                            {
+                    `` for "fsm/message[@security='untrusted']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                            // add fpr of key of comm partner
+
+                            assert(session->«yml:lcase(@name)»_state.common.signature_fpr);
+                            if (!session->«yml:lcase(@name)»_state.common.signature_fpr) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
                             }
+
+                            extra = new_stringlist(session->«yml:lcase(@name)»_state.common.signature_fpr);
+                            if (!extra) {
+                                status = PEP_OUT_OF_MEMORY;
+                                goto the_end;
+                            }
+
+                            status = base_prepare_message(
+                                    session,
+                                    li->ident,
+                                    li->ident,
+                                    _data,
+                                    size,
+                                    NULL,
+                                    &_m
+                                );
+                            if (status) {
+                                free(_data);
+                                goto the_end;
+                            }
+
+                            status = encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
+                            if (status) {
+                                status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                goto the_end;
+                            }
+                            free_message(_m);
+                            break;
+
+                    `` for "fsm/message[@security='attach_own_keys']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                            // check if this is the key of a former negotiation
+
+                            transaction = false;
+                            for (int i=0; i < session->own_«yml:lcase(@name)»_state.negotiation.size; i++) {
+                                if (session->own_«yml:lcase(@name)»_state.negotiation.buf[i]) {
+                                    transaction = true;
+                                    break;
+                                }
+                            }
+    
+                            // if it is a former negotiation check if the key
+                            // is fully trusted and the sender key of this
+                            // transaction; if so add the sender key to extra
+                            // keys allowing this new partner to read the
+                            // secret keys
+
+                            if (transaction) {
+                                assert(session->own_«yml:lcase(@name)»_state.signature_fpr &&
+                                    session->«yml:lcase(@name)»_state.common.from &&
+                                    session->«yml:lcase(@name)»_state.common.from->user_id);
+                                if (!(session->own_«yml:lcase(@name)»_state.signature_fpr &&
+                                        session->«yml:lcase(@name)»_state.common.from &&
+                                        session->«yml:lcase(@name)»_state.common.from->user_id))
+                                {
+                                    status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                    goto the_end;
+                                }
                             
-                            // double check if we fully trust this comm partner
-                            {
+                                // test if this is a green channel
+
                                 pEp_identity *ident = new_identity(NULL,
-                                        session->«yml:lcase(@name)»_state.common.signature_fpr,
+                                        session->own_«yml:lcase(@name)»_state.signature_fpr,
                                         session->«yml:lcase(@name)»_state.common.from->user_id,
                                         NULL
                                     );
@@ -553,8 +607,31 @@ tstylesheet {
                                     goto the_end;
                                 }
                                 free_identity(ident);
-                            }
 
+                                // test if we accepted this as own key already
+
+                                bool is_own_key = false;
+                                status = own_key_is_listed(session,
+                                        session->own_«yml:lcase(@name)»_state.signature_fpr,
+                                        &is_own_key);
+                                assert(!status);
+                                if (status)
+                                    goto the_end;
+                                assert(is_own_key);
+                                if (!is_own_key) {
+                                    status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                    goto the_end;
+                                }
+
+                                // if so add key of comm partner to extra keys
+
+                                extra = new_stringlist(session->own_«yml:lcase(@name)»_state.signature_fpr);
+                                if (!extra) {
+                                    status = PEP_OUT_OF_MEMORY;
+                                    goto the_end;
+                                }
+                            }
+                            
                             status = base_prepare_message(
                                     session,
                                     li->ident,
@@ -581,7 +658,7 @@ tstylesheet {
                             }
                             key_data_size = 1;
 
-                            for (stringlist_t *sl = session->«yml:lcase(@name)»_state.common.own_keys;
+                            for (stringlist_t *sl = session->own_«yml:lcase(@name)»_state.own_keys;
                                     sl && sl->value ; sl = sl->next)
                             {
                                 char *_key_data = NULL;
@@ -644,16 +721,7 @@ tstylesheet {
                             }
                             key_data = NULL;
 
-                            // add fpr of key of comm partner
-
-                            extra = new_stringlist(session->«yml:lcase(@name)»_state.common.signature_fpr);
-                            if (extra) {
-                                status = encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
-                                free_stringlist(extra);
-                            }
-                            else {
-                                status = PEP_OUT_OF_MEMORY;
-                            }
+                            status = encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
                             if (status) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
@@ -661,7 +729,7 @@ tstylesheet {
                             free_message(_m);
                             break;
 
-                        default:
+                        default: // security=trusted only
                             status = base_prepare_message(
                                     session,
                                     li->ident,
@@ -676,20 +744,7 @@ tstylesheet {
                                 goto the_end;
                             }
 
-                            assert(session->«yml:lcase(@name)»_state.common.signature_fpr);
-                            if (!session->«yml:lcase(@name)»_state.common.signature_fpr) {
-                                status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
-                                goto the_end;
-                            }
-
-                            stringlist_t *extra = new_stringlist(session->«yml:lcase(@name)»_state.common.signature_fpr);
-                            if (extra) {
-                                status = encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
-                                free_stringlist(extra);
-                            }
-                            else {
-                                status = PEP_OUT_OF_MEMORY;
-                            }
+                            status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
                             if (status) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
@@ -702,6 +757,7 @@ tstylesheet {
                 }
 
             the_end:
+                free_stringlist(extra);
                 free_identity_list(channels);
                 free_message(m);
                 free(data);
@@ -761,8 +817,8 @@ tstylesheet {
                 // update own identities
 
                 if (ev->own_identities && ev->own_identities->ident) {
-                    free_identity_list(session->«yml:lcase(@name)»_state.common.own_identities);
-                    session->«yml:lcase(@name)»_state.common.own_identities = ev->own_identities;
+                    free_identity_list(session->own_«yml:lcase(@name)»_state.own_identities);
+                    session->own_«yml:lcase(@name)»_state.own_identities = ev->own_identities;
                     ev->own_identities = NULL;
                 }
 
@@ -867,6 +923,13 @@ tstylesheet {
         ||
                 case «../@name»_PR_«yml:mixedCase(@name)»:
                     if (rating < PEP_rating_trusted) {
+                        status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
+                        goto the_end;
+                    }
+                    status = own_key_is_listed(session, signature_fpr, &is_own_key);
+                    if (status)
+                        goto the_end;
+                    if (!is_own_key) {
                         status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
                         goto the_end;
                     }
@@ -1126,7 +1189,7 @@ tstylesheet {
                 `` apply "event", 2, mode=fsm
                 default:
                     // ignore events not handled here
-                    «../@name»_SERVICE_LOG("ignoring event", KeySync_event_name(event));
+                    «../@name»_SERVICE_LOG("ignoring event", «../@name»_event_name(event));
                     return invalid_event;
             }
             break;

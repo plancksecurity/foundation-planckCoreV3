@@ -39,18 +39,27 @@ extern "C" {
 // state
 
 struct «@name»_state_s {
+    // common buffer for all types of «@name» messages
+
     struct common_state_s {
+        // transport data
         pEp_identity *from;
         char *signature_fpr;
-        stringlist_t *own_keys;
-        identity_list *own_identities;
     } common;
-
     `` apply "fsm", mode=state
 };
 
+// own state
+
 struct own_«@name»_state_s {
+    stringlist_t *own_keys;
+    identity_list *own_identities;
+
+    `` if "func:distinctName(fsm/message/field[@type='TID'])" |> // active TIDs
     `` for "func:distinctName(fsm/message/field[@type='TID'])" |> «func:ctype()» «@name»;
+
+    // transport data
+    char *signature_fpr;
 };
 
 void free_«@name»_state(PEP_SESSION session);
@@ -73,6 +82,9 @@ PEP_STATUS update_«@name»_message(PEP_SESSION session, «@name»_t *msg);
 
 template "fsm", mode=state
 ||
+
+// buffer for «@name» messages
+
 struct _«@name»_state_s {
     int state;
 
@@ -100,8 +112,8 @@ void free_«@name»_state(PEP_SESSION session)
 
     free_identity(session->«yml:lcase(@name)»_state.common.from);
     free(session->«yml:lcase(@name)»_state.common.signature_fpr);
-    free_stringlist(session->«yml:lcase(@name)»_state.common.own_keys);
-    free_identity_list(session->«yml:lcase(@name)»_state.common.own_identities);
+    free_stringlist(session->own_«yml:lcase(@name)»_state.own_keys);
+    free_identity_list(session->own_«yml:lcase(@name)»_state.own_identities);
 
 ||
 for "fsm"
