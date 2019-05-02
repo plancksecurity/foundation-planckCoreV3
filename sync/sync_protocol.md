@@ -48,7 +48,7 @@ two functions:
 ### Negotiation
 
 A Negotiation is a Transaction identified by a TID. The Negotiation's TID is
-the XOR of the two Challenge TIDs, respectively.
+the XOR of the two Challenge TIDs of the two devices, respectively.
 
 ## Roles and Keys
 
