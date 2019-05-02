@@ -14,6 +14,8 @@ class ExportKeyTests : public EngineTestIndividualSuite {
         ExportKeyTests(string test_suite, string test_home_dir);
     private:
         void check_export_key_no_key();
+        void check_export_key_pubkey();
+        void check_export_key_secret_key();
         void check_export_key_no_secret_key();
 };
 
