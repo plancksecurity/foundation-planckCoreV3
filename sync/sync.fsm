@@ -224,7 +224,6 @@ protocol Sync 1 {
 
         state NewGroupFirst {
             on Init {
-                do closeTransaction;
                 do prepareOwnKeys;
                 send OwnKeysFirst; // we're not grouped yet, this is our own keys
             }
@@ -243,7 +242,6 @@ protocol Sync 1 {
 
         state NewGroupSecond {
             on Init {
-                do closeTransaction;
                 do prepareOwnKeys;
                 send OwnKeysSecond; // we're not grouped yet, this is our own keys
             }
@@ -360,7 +358,6 @@ protocol Sync 1 {
 
         state JoinGroup {
             on Init {
-                do closeTransaction;
                 do prepareOwnKeys;
                 send OwnKeys;
             }
