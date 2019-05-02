@@ -55,6 +55,7 @@ void ExportKeyTests::check_export_key_pubkey() {
     PEP_STATUS status = find_keys(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", &keylist);
     TEST_ASSERT(keylist && keylist->value);
     TEST_ASSERT(strcmp(keylist->value, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39") == 0);
+    free_stringlist(keylist);
 
     status = export_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", 
                                    &keydata, &keysize);
@@ -63,7 +64,6 @@ void ExportKeyTests::check_export_key_pubkey() {
     TEST_ASSERT(keysize > 0);
     
     free(keydata);
-    keydata = NULL;
 }
 
 void ExportKeyTests::check_export_key_secret_key() {
@@ -87,12 +87,16 @@ void ExportKeyTests::check_export_key_secret_key() {
     status = export_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", 
                                    &keydata, &keysize);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    TEST_ASSERT(keydata);
+    TEST_ASSERT(keysize > 0);
+
     free(keydata);
     keydata = NULL;
     keysize = 0;
     status = export_secret_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", 
                                    &keydata, &keysize);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+
     free(keydata);
     TEST_ASSERT(true);
 }
