@@ -122,11 +122,23 @@ function "copy_UUID" {
     ||
 }
 
-action newChallenge
+action newChallenge {
+    // random new challenge
     call "new_UUID" with "dst" > &session->own_sync_state.challenge
+    // store a copy of this challenge
+    call "copy_UUID" {
+        with "src" > &session->own_sync_state.challenge
+        with "dst" > &session->sync_state.common.challenge
+    }
+}
 
-action storeChallenge call "copy_UUID" {
+action replyChallenge call "copy_UUID" {
     with "src" > &session->sync_state.keysync.challenge
+    with "dst" > &session->own_sync_state.challenge
+}
+
+action useOwnChallenge call "copy_UUID" {
+    with "src" > &session->sync_state.common.challenge
     with "dst" > &session->own_sync_state.challenge
 }
 

@@ -29,11 +29,13 @@ protocol Sync 1 {
                 send Beacon;
             }
 
-            on KeyGen
+            on KeyGen {
                 send Beacon;
+            }
 
-            on CannotDecrypt // cry baby
+            on CannotDecrypt { // cry baby
                 send Beacon;
+            }
 
             on Beacon {
                 if sameChallenge {
@@ -44,7 +46,7 @@ protocol Sync 1 {
                         send Beacon;
                     }
                     else /* we are second */ {
-                        do storeChallenge; // partner's challenge
+                        do replyChallenge; // partner's challenge
                         do newTransaction;
                         do tellWeAreNotGrouped;
                         // second is sending NegotiationRequest
@@ -53,18 +55,20 @@ protocol Sync 1 {
                 }
             }
 
-            on NegotiationRequest if challengeAccepted {
-                if sameTransaction {
-                    // this is our own NegotiationRequest; ignore
-                }
-                else {
-                    // first is receiving NegotiationRequest
-                    do storeTransaction;
-                    // first is sending NegotiationOpen
-                    send NegotiationOpen;
-                    if partnerIsGrouped
-                        go HandshakingWithGroup;
-                    go HandshakingNewFirst;
+            on NegotiationRequest {
+                if challengeAccepted {
+                    if sameTransaction {
+                        // this is our own NegotiationRequest; ignore
+                    }
+                    else {
+                        // first is receiving NegotiationRequest
+                        do storeTransaction;
+                        // first is sending NegotiationOpen
+                        send NegotiationOpen;
+                        if partnerIsGrouped
+                            go HandshakingWithGroup;
+                        go HandshakingNewFirst;
+                    }
                 }
             }
 
@@ -273,7 +277,7 @@ protocol Sync 1 {
             }
 
             on Beacon {
-                do storeChallenge;
+                do replyChallenge;
                 do newTransaction;
                 do tellWeAreGrouped;
                 send NegotiationRequest;

@@ -42,6 +42,9 @@ struct «@name»_state_s {
     // common buffer for all types of «@name» messages
 
     struct common_state_s {
+        // intermediate store own challenge
+        TID_t challenge;
+
         // transport data
         pEp_identity *from;
         char *signature_fpr;
