@@ -19,6 +19,13 @@ ifdef BUILD_CONFIG
     $(info ================================================)
 endif
 
+ifneq ($(MAKE_VERSION),$(word 2,$(sort $(MAKE_VERSION) 4)))
+    $(warning ================================================)
+    $(warning You are using a make version older than 4. This might cause problems.)
+    $(warning ================================================)
+endif
+
+
 .PHONY: all sync asn1 build install dbinstall uninstall clean tags test package db
 
 build: asn1
