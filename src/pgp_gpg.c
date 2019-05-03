@@ -1615,7 +1615,7 @@ PEP_STATUS pgp_export_keydata(
     gpgme_error_t gpgme_error;
     gpgme_data_t dh;
     size_t _size;
-    char *buffer;
+    char *buffer = NULL;
     int reading;
 
     assert(session);
@@ -1666,6 +1666,16 @@ PEP_STATUS pgp_export_keydata(
     assert(_size != -1);
     gpg.gpgme_data_seek(dh, 0, SEEK_SET);
 
+    // Unfortunately, gpgme doesn't give us an error
+    // when no key is found, so we end up with an 
+    // empty string. So we need to do this:
+    if (_size == 0) {
+        *key_data = NULL;
+        *size = 0;
+        gpg.gpgme_data_release(dh);
+        return PEP_KEY_NOT_FOUND;
+    }
+        
     buffer = malloc(_size + 1);
     assert(buffer);
     if (buffer == NULL) {

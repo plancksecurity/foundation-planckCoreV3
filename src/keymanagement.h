@@ -330,17 +330,19 @@ PEP_STATUS contains_priv_key(PEP_SESSION session, const char *fpr,
 //  parameters:
 //      session (in)            session to use
 //      keylist (out)           list of fingerprints
-//      excluded_flags (int)    flags to exclude from results
-//
+//      excluded_flags (in)     flags to exclude from results
+//      private_only (in)       if true, return only fprs for
+//                              which we have the secret part
 //  caveat:
 //      the ownership of the list goes to the caller
 DYNAMIC_API PEP_STATUS _own_keys_retrieve(
         PEP_SESSION session,
         stringlist_t **keylist,
-        identity_flags_t excluded_flags
+        identity_flags_t excluded_flags,
+        bool private_only
       );
 
-// own_keys_retrieve() - retrieve all flagged keypair fingerprints 
+// own_keys_retrieve() - retrieve all flagged public/private keypair fingerprints 
 //
 //  parameters:
 //      session (in)            session to use
@@ -348,6 +350,8 @@ DYNAMIC_API PEP_STATUS _own_keys_retrieve(
 //
 //  caveat:
 //      the ownership of the list goes to the caller
+//      this function does not return keys without a private key part
+//
 DYNAMIC_API PEP_STATUS own_keys_retrieve(
         PEP_SESSION session,
         stringlist_t **keylist

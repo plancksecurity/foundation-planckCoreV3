@@ -1737,7 +1737,8 @@ DYNAMIC_API PEP_STATUS own_identities_retrieve(
 PEP_STATUS _own_keys_retrieve(
         PEP_SESSION session,
         stringlist_t **keylist,
-        identity_flags_t excluded_flags
+        identity_flags_t excluded_flags,
+        bool private_only
       )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1752,7 +1753,6 @@ PEP_STATUS _own_keys_retrieve(
     sqlite3_reset(session->own_keys_retrieve);
     
     int result;
-    char *fpr = NULL;
     
     stringlist_t *_bl = _keylist;
     sqlite3_bind_int(session->own_keys_retrieve, 1, excluded_flags);
@@ -1761,18 +1761,12 @@ PEP_STATUS _own_keys_retrieve(
         result = sqlite3_step(session->own_keys_retrieve);
         switch (result) {
             case SQLITE_ROW:
-                fpr = strdup((const char *) sqlite3_column_text(session->own_keys_retrieve, 0));
-                if(fpr == NULL)
+                _bl = stringlist_add(_bl, (const char *)
+                        sqlite3_column_text(session->own_keys_retrieve, 0));
+                if (_bl == NULL)
                     goto enomem;
-
-                _bl = stringlist_add(_bl, fpr);
-                if (_bl == NULL) {
-                    free(fpr);
-                    goto enomem;
-                }
                 if (_keylist == NULL)
                     _keylist = _bl;
-                
                 break;
                 
             case SQLITE_DONE:
@@ -1785,8 +1779,33 @@ PEP_STATUS _own_keys_retrieve(
     } while (result != SQLITE_DONE);
     
     sqlite3_reset(session->own_keys_retrieve);
-    if (status == PEP_STATUS_OK)
+    if (status == PEP_STATUS_OK) {
+        dedup_stringlist(_keylist);
+        if (private_only) {
+            stringlist_t* _kl = _keylist;
+            stringlist_t* _kl_prev = NULL;
+            while (_kl) {
+                bool has_private = false;
+                contains_priv_key(session, _kl->value, &has_private);
+                if (!has_private) {
+                    stringlist_t* _kl_tmp = _kl;
+                    if (_kl_prev)
+                        _kl_prev->next = _kl->next;
+                    else 
+                        _keylist = _kl->next;
+                        
+                    _kl = _kl->next;
+                    
+                    _kl_tmp->next = NULL;
+                    free_stringlist(_kl_tmp);
+                    continue;
+                }
+                _kl_prev = _kl;
+                _kl = _kl->next;
+            }
+        }
         *keylist = _keylist;
+    }
     else
         free_stringlist(_keylist);
     
@@ -1802,7 +1821,7 @@ the_end:
 
 DYNAMIC_API PEP_STATUS own_keys_retrieve(PEP_SESSION session, stringlist_t **keylist)
 {
-    return _own_keys_retrieve(session, keylist, 0);
+    return _own_keys_retrieve(session, keylist, 0, true);
 }
 
 DYNAMIC_API PEP_STATUS set_own_key(

@@ -1668,7 +1668,7 @@ PEP_STATUS pgp_export_keydata(
 
     // If the caller asks for a secret key and we only have a
     // public key, then we return an error.
-    status = tpk_find_by_fpr_hex(session, fpr, true, &tpk, NULL);
+    status = tpk_find_by_fpr_hex(session, fpr, secret, &tpk, NULL);
     ERROR_OUT(NULL, status, "Looking up TSK for %s", fpr);
 
     pgp_writer_t memory_writer = pgp_writer_alloc((void **) key_data, size);

@@ -21,9 +21,6 @@ Sync.c: sync.asn1 keysync.asn1 pEp.asn1
 	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keysync.asn1 $<
 	rm -f converter-sample.c
 
-sync.asn1 keysync.asn1 pEp.asn1:
-	cp -f ../sync/generated/*.asn1 ../asn.1
-
 clean:
 	rm -f *.a *.o *.c *.h *.sample sync.asn1 keysync.asn1
 
