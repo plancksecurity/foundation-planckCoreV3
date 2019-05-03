@@ -2896,14 +2896,13 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
 }
 
 static PEP_STATUS import_priv_keys_from_decrypted_msg(PEP_SESSION session,
-                                                      message* src, 
                                                       message* msg,
                                                       bool* imported_keys,
                                                       bool* imported_private,
                                                       identity_list** private_il)
 {
-    assert(src && msg && imported_keys && imported_private);
-    if (!(src && msg && imported_keys && imported_private))
+    assert(msg && imported_keys && imported_private);
+    if (!(msg && imported_keys && imported_private))
         return PEP_ILLEGAL_VALUE;
 
     PEP_STATUS status = PEP_STATUS_OK;
@@ -3437,7 +3436,7 @@ static PEP_STATUS _decrypt_message(
                 //
                 // We are importing from the decrypted outermost message now.
                 //
-                status = import_priv_keys_from_decrypted_msg(session, src, msg,
+                status = import_priv_keys_from_decrypted_msg(session, msg,
                                                              &imported_keys,
                                                              &imported_private_key_address,
                                                              private_il);
@@ -3564,7 +3563,7 @@ static PEP_STATUS _decrypt_message(
                                             private_il = NULL;
                                             
                                             // import keys from decrypted INNER source
-                                            status = import_priv_keys_from_decrypted_msg(session, src, inner_message,
+                                            status = import_priv_keys_from_decrypted_msg(session, inner_message,
                                                                                          &imported_keys,
                                                                                          &imported_private_key_address,
                                                                                          private_il);
