@@ -2942,7 +2942,8 @@ static PEP_STATUS import_priv_keys_from_decrypted_msg(PEP_SESSION session,
             il->ident->me = true;
         }
         free(own_id);
-        *private_il = _private_il;
+        if (!status)
+            *private_il = _private_il;
     }
     else {
         free_identity_list(_private_il);
