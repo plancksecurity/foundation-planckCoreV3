@@ -324,6 +324,7 @@ action prepareOwnKeys
         return status;
 
     IdentityList_from_identity_list(il, &session->sync_state.keysync.ownIdentities);
+    free_identity_list(il);
 ||
 
 action saveGroupKeys
