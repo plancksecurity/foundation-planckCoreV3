@@ -29,6 +29,7 @@ clean:
 
 .copy: .actions .statemachines .codecs .messages
 	cp -f generated/*.c generated/*.h ../src
+	cp -f generated/*.asn1 ../asn.1
 	touch .copy
 
 %.xml: %.fsm
