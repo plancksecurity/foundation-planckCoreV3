@@ -111,14 +111,33 @@ function "new_UUID" {
 function "copy_UUID" {
     param "src", param "dst";
     ||
-        TID_t *src = «$src»;
-        TID_t *dst = «$dst»;
+        {
+            TID_t *src = «$src»;
+            TID_t *dst = «$dst»;
 
-        assert(src->size == 16);
-        if (!(src->size == 16))
-            return PEP_UNKNOWN_ERROR;
+            assert(src->size == 16);
+            if (!(src->size == 16))
+                return PEP_UNKNOWN_ERROR;
 
-        OCTET_STRING_fromBuf(dst, (char *) src->buf, src->size);
+            OCTET_STRING_fromBuf(dst, (char *) src->buf, src->size);
+        }
+    ||
+}
+
+function "xor_UUID" {
+    param "src", param "dst";
+    ||
+        {
+            TID_t *src = «$src»;
+            TID_t *dst = «$dst»;
+
+            assert(src->size == 16 && dst->size == 16);
+            if (!(src->size == 16 && dst->size == 16))
+                return PEP_UNKNOWN_ERROR;
+
+            for (int i=0; i < src->size; ++i)
+                dst->buf[i] ^= src->buf[i];
+        }
     ||
 }
 
@@ -154,7 +173,14 @@ action newTransaction {
         return PEP_OUT_OF_MEMORY;
 
 ||
-    call "new_UUID" with "dst" > &session->sync_state.keysync.negotiation
+    call "copy_UUID" {
+        with "src" > &session->sync_state.keysync.challenge
+        with "dst" > &session->sync_state.keysync.negotiation
+    }
+    call "xor_UUID" {
+        with "src" > &session->own_sync_state.challenge
+        with "dst" > &session->sync_state.keysync.negotiation
+    }
     call "copy_UUID" {
         with "src" > &session->sync_state.keysync.negotiation
         with "dst" > &session->own_sync_state.negotiation
@@ -298,6 +324,7 @@ action prepareOwnKeys
         return status;
 
     IdentityList_from_identity_list(il, &session->sync_state.keysync.ownIdentities);
+    free_identity_list(il);
 ||
 
 action saveGroupKeys

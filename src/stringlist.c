@@ -18,7 +18,7 @@ DYNAMIC_API stringlist_t *new_stringlist(const char *value)
     if (result && value) {
         result->value = strdup(value);
         assert(result->value);
-        if (result->value == 0) {
+        if (!result->value) {
             free(result);
             return NULL;
         }

@@ -23,9 +23,9 @@ protocol Sync 1 {
 
         state Sole timeout=off {
             on Init {
-                do showBeingSole;
-                do newChallenge;
                 do closeTransaction;
+                do newChallenge;
+                do showBeingSole;
                 send Beacon;
             }
 
@@ -46,11 +46,12 @@ protocol Sync 1 {
                         send Beacon;
                     }
                     else /* we are second */ {
-                        do replyChallenge; // partner's challenge
                         do newTransaction;
                         do tellWeAreNotGrouped;
                         // second is sending NegotiationRequest
+                        do replyChallenge; // partner's challenge
                         send NegotiationRequest;
+                        do useOwnChallenge;
                     }
                 }
             }
@@ -264,8 +265,9 @@ protocol Sync 1 {
 
         state Grouped timeout=off {
             on Init {
-                do showBeingInGroup;
                 do closeTransaction;
+                do newChallenge;
+                do showBeingInGroup;
             }
 
             on GroupKeys
@@ -277,10 +279,11 @@ protocol Sync 1 {
             }
 
             on Beacon {
-                do replyChallenge;
                 do newTransaction;
                 do tellWeAreGrouped;
+                do replyChallenge; // partner's challenge
                 send NegotiationRequest;
+                do useOwnChallenge;
             }
 
             on NegotiationOpen if sameTransactionAndPartner
