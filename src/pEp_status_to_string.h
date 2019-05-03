@@ -4,7 +4,7 @@
 "C" {
 #endif
 
-static inline const char *pep_status_to_string(PEP_STATUS status) {
+inline const char *pEp_status_to_string(PEP_STATUS status) {
     switch (status) {
     case PEP_STATUS_OK: return "PEP_STATUS_OK";
 
