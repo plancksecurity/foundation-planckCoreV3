@@ -2900,19 +2900,27 @@ static PEP_STATUS import_priv_keys_from_decrypted_msg(PEP_SESSION session,
                                                       message* msg,
                                                       bool* imported_keys,
                                                       bool* imported_private,
-                                                      identity_list** private_il) {
-                                                          
+                                                      identity_list** private_il)
+{
+    assert(src && msg && imported_keys && imported_private);
+    if (!(src && msg && imported_keys && imported_private))
+        return PEP_ILLEGAL_VALUE;
+
     PEP_STATUS status = PEP_STATUS_OK;
-    
+    *imported_keys = NULL;
+    *imported_private = false;
+    if (private_il)
+        *private_il = NULL;
+
     // check for private key in decrypted message attachment while importing
     identity_list *_private_il = NULL;
-    *imported_keys = import_attached_keys(session, msg, &_private_il);
-    
-    if (_private_il && identity_list_length(_private_il) == 1 &&
-        _private_il->ident->address)
-        *imported_private = true;
 
-    if (private_il && imported_private) {
+    bool _imported_keys = import_attached_keys(session, msg, &_private_il);
+    bool _imported_private = false;
+    if (_private_il && _private_il->ident && _private_il->ident->address)
+        _imported_private = true;
+
+    if (private_il && _imported_private) {
         // the private identity list should NOT be subject to myself() or
         // update_identity() at this point.
         // If the receiving app wants them to be in the trust DB, it
@@ -2922,27 +2930,30 @@ static PEP_STATUS import_priv_keys_from_decrypted_msg(PEP_SESSION session,
         char* own_id = NULL;
         status = get_default_own_userid(session, &own_id);
         
-        if (status != PEP_STATUS_OK) {
-            free(own_id);
-            own_id = NULL;
-        }
-        
-        identity_list* il = _private_il;
-        for ( ; il; il = il->next) {
+        for (identity_list* il = _private_il; il; il = il->next) {
             if (own_id) {
                 free(il->ident->user_id);
                 il->ident->user_id = strdup(own_id);
+                assert(il->ident->user_id);
+                if (!il->ident->user_id) {
+                    status = PEP_OUT_OF_MEMORY;
+                    break;
+                }
             }
             il->ident->me = true;
         }
-        *private_il = _private_il;
-        
         free(own_id);
+        *private_il = _private_il;
     }
-    else
+    else {
         free_identity_list(_private_il);
+    }
  
-    
+    if (!status) {
+        *imported_keys = _imported_keys;
+        *imported_private = _imported_private;
+    }
+
     return status;
 }
 
@@ -3243,7 +3254,7 @@ pEp_free:
 
 }
 
-DYNAMIC_API PEP_STATUS _decrypt_message(
+static PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
         message **dst,
