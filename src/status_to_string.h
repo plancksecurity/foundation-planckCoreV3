@@ -1,7 +1,7 @@
 #pragma once
 
 #ifdef __cplusplus
-"C" {
+extern "C" {
 #endif
 
 inline const char *pEp_status_to_string(PEP_STATUS status) {
