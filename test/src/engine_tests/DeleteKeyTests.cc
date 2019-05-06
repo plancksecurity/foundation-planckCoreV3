@@ -3,7 +3,9 @@
 
 #include <stdlib.h>
 #include <string>
+#include <cstring>
 #include <cpptest.h>
+#include <assert.h>
 
 #include "pEpEngine.h"
 #include "test_util.h"
