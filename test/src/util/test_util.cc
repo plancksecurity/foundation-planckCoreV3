@@ -432,6 +432,8 @@ int util_delete_filepath(const char *filepath,
     return retval;
 }
 
+#ifndef ENIGMAIL_MAY_USE_THIS
+
 static PEP_STATUS update_identity_recip_list(PEP_SESSION session,
                                       identity_list* list) {
 
@@ -687,3 +689,5 @@ pEp_error:
 
     return status;
 }
+
+#endif

@@ -8,6 +8,7 @@
 
 #include "pEpEngine.h"
 #include "message_api.h"
+#include "aux_mime_msg.h"
 
 void test_init();
 
@@ -58,6 +59,8 @@ int util_delete_filepath(const char *filepath,
                          int ftw_info, 
                          struct FTW * ftw_struct);
                          
+#ifndef ENIGMAIL_MAY_USE_THIS
+
 // MIME_decrypt_message() - decrypt a MIME message, with MIME output
 //
 //  parameters:
@@ -185,7 +188,7 @@ PEP_STATUS MIME_encrypt_message_for_self(
     PEP_encrypt_flags_t flags
 );
 
-
+#endif
 
 
         
