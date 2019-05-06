@@ -26,6 +26,7 @@
 
 // enable tracing if in debugging mode
 #if TRACING
+#include "status_to_string.h"
 #  define _T(...) do {                          \
         fprintf(stderr, ##__VA_ARGS__);         \
     } while (0)
@@ -53,7 +54,7 @@
         _T("Sequoia: %s => ", pgp_error_to_string(__de_err));   \
         pgp_error_free(__de_err);                               \
     }                                                           \
-    _T("%s\n", pep_status_to_string(__de_status));              \
+    _T("%s\n", pEp_status_to_string(__de_status));              \
 } while(0)
 
 // If __ec_status is an error, then disable the error, set 'status' to
@@ -401,7 +402,7 @@ static PEP_STATUS key_load(PEP_SESSION session, sqlite3_stmt *stmt,
     }
 
  out:
-    T(" -> %s", pep_status_to_string(status));
+    T(" -> %s", pEp_status_to_string(status));
     return status;
 }
 
@@ -446,7 +447,7 @@ static PEP_STATUS key_loadn(PEP_SESSION session, sqlite3_stmt *stmt,
         *tpks_countp = tpks_count;
     }
 
-    T(" -> %s (%d tpks)", pep_status_to_string(status), *tpks_countp);
+    T(" -> %s (%d tpks)", pEp_status_to_string(status), *tpks_countp);
     return status;
 }
 
@@ -473,7 +474,7 @@ static PEP_STATUS tpk_find(PEP_SESSION session,
 
  out:
     sqlite3_reset(stmt);
-    T("(%s, %d) -> %s", fpr_str, private_only, pep_status_to_string(status));
+    T("(%s, %d) -> %s", fpr_str, private_only, pEp_status_to_string(status));
     free(fpr_str);
     return status;
 }
@@ -507,7 +508,7 @@ static PEP_STATUS tpk_find_by_keyid_hex(
 
  out:
     sqlite3_reset(stmt);
-    T("(%s, %d) -> %s", keyid_hex, private_only, pep_status_to_string(status));
+    T("(%s, %d) -> %s", keyid_hex, private_only, pEp_status_to_string(status));
     return status;
 }
 
@@ -594,7 +595,7 @@ static PEP_STATUS tpk_find_by_email(PEP_SESSION session,
 
  out:
     sqlite3_reset(stmt);
-    T("(%s) -> %s (%d results)", pattern, pep_status_to_string(status), *countp);
+    T("(%s) -> %s (%d results)", pattern, pEp_status_to_string(status), *countp);
     return status;
 }
 
@@ -768,7 +769,7 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
                       sqlite3_errmsg(session->key_db));
     }
 
-    T("(%s) -> %s", fpr, pep_status_to_string(status));
+    T("(%s) -> %s", fpr, pEp_status_to_string(status));
 
     if (user_id_iter)
         pgp_user_id_binding_iter_free(user_id_iter);
@@ -1170,7 +1171,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     if (writer)
         pgp_writer_free(writer);
 
-    T("-> %s", pep_status_to_string(status));
+    T("-> %s", pEp_status_to_string(status));
     return status;
 }
 
@@ -1259,7 +1260,7 @@ PEP_STATUS pgp_verify_text(
     if (dsig_reader)
         pgp_reader_free(dsig_reader);
 
-    T("-> %s", pep_status_to_string(status));
+    T("-> %s", pEp_status_to_string(status));
     return status;
 }
 
@@ -1350,7 +1351,7 @@ PEP_STATUS pgp_sign_only(
     if (signer_tpk)
         pgp_tpk_free(signer_tpk);
 
-    T("(%s)-> %s", fpr, pep_status_to_string(status));
+    T("(%s)-> %s", fpr, pEp_status_to_string(status));
     return status;
 }
 
@@ -1474,7 +1475,7 @@ static PEP_STATUS pgp_encrypt_sign_optional(
         pgp_tpk_free(keys[i]);
     free(keys);
 
-    T("-> %s", pep_status_to_string(status));
+    T("-> %s", pEp_status_to_string(status));
     return status;
 }
 
@@ -1555,7 +1556,7 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
         pgp_tpk_free(tpk);
     free(userid);
 
-    T("-> %s", pep_status_to_string(status));
+    T("-> %s", pEp_status_to_string(status));
     return status;
 }
 
@@ -1643,7 +1644,7 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
     }
 
  out:
-    T("-> %s", pep_status_to_string(status));
+    T("-> %s", pEp_status_to_string(status));
     return status;
 }
 
@@ -1698,7 +1699,7 @@ PEP_STATUS pgp_export_keydata(
     if (tpk)
         pgp_tpk_free(tpk);
 
-    T("(%s) -> %s", fpr, pep_status_to_string(status));
+    T("(%s) -> %s", fpr, pEp_status_to_string(status));
     return status;
 }
 
@@ -1883,7 +1884,7 @@ static PEP_STATUS list_keys(PEP_SESSION session,
         len = stringlist_length(*keylist);
     else if (keyinfo_list)
         len = stringpair_list_length(*keyinfo_list);
-    T("(%s) -> %s (%d keys)", pattern, pep_status_to_string(status), len);
+    T("(%s) -> %s (%d keys)", pattern, pEp_status_to_string(status), len);
     return status;
 }
 
@@ -2074,7 +2075,7 @@ PEP_STATUS pgp_renew_key(
     if (tpk)
         pgp_tpk_free(tpk);
 
-    T("(%s) -> %s", fpr, pep_status_to_string(status));
+    T("(%s) -> %s", fpr, pEp_status_to_string(status));
     return status;
 }
 
@@ -2135,7 +2136,7 @@ PEP_STATUS pgp_revoke_key(
     if (tpk)
         pgp_tpk_free(tpk);
 
-    T("(%s) -> %s", fpr, pep_status_to_string(status));
+    T("(%s) -> %s", fpr, pEp_status_to_string(status));
     return status;
 }
 
@@ -2192,7 +2193,7 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
  out:
     if (tpk)
         pgp_tpk_free(tpk);
-    T("(%s) -> %s", fpr, pep_status_to_string(status));
+    T("(%s) -> %s", fpr, pEp_status_to_string(status));
     return status;
 }
 
@@ -2220,7 +2221,7 @@ PEP_STATUS pgp_key_revoked(PEP_SESSION session, const char *fpr, bool *revoked)
     pgp_tpk_free(tpk);
 
  out:
-    T("(%s) -> %s", fpr, pep_status_to_string(status));
+    T("(%s) -> %s", fpr, pEp_status_to_string(status));
     return status;
 }
 
@@ -2242,7 +2243,7 @@ PEP_STATUS pgp_key_created(PEP_SESSION session, const char *fpr, time_t *created
     pgp_tpk_free(tpk);
 
  out:
-    T("(%s) -> %s", fpr, pep_status_to_string(status));
+    T("(%s) -> %s", fpr, pEp_status_to_string(status));
     return status;
 }
 
@@ -2266,6 +2267,6 @@ PEP_STATUS pgp_contains_priv_key(PEP_SESSION session, const char *fpr,
         status = PEP_STATUS_OK;
     }
     T("(%s) -> %s, %s",
-      fpr, *has_private ? "priv" : "pub", pep_status_to_string(status));
+      fpr, *has_private ? "priv" : "pub", pEp_status_to_string(status));
     return status;
 }
