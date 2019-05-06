@@ -453,7 +453,7 @@ tstylesheet {
 
                             // no address available yet, try to find one
                             status = _own_identities_retrieve(session, &channels, PEP_idf_not_for_«yml:lcase(@name)»);
-                            if (!status)
+                            if (status)
                                 goto the_end;
                             break;
 
