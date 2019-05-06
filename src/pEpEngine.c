@@ -863,6 +863,12 @@ DYNAMIC_API PEP_STATUS init(
         goto pEp_error;
     }
 
+    assert(LOCAL_KEYS_DB);
+    if (LOCAL_KEYS_DB == NULL) {
+        status = PEP_INIT_CANNOT_OPEN_DB;
+        goto pEp_error;
+    }
+
     int_result = sqlite3_exec(
             _session->db,
             "PRAGMA locking_mode=NORMAL;\n"

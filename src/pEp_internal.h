@@ -56,6 +56,7 @@
 
 #ifdef WIN32
 #define LOCAL_DB windoze_local_db()
+#define LOCAL_KEYS_DB windoze_local_db()
 #define SYSTEM_DB windoze_system_db()
 #define LIBGPGME "libgpgme-11.dll"
 #else // UNIX
@@ -63,11 +64,17 @@
 #include <dlfcn.h>
 #ifdef NDEBUG
 #define LOCAL_DB unix_local_db()
+#define LOCAL_KEYS_DB unix_local_keys_db()
 #else
 #define LOCAL_DB unix_local_db(false)
+#define LOCAL_KEYS_DB unix_local_keys_db(false)
 #endif
 #ifndef SYSTEM_DB
-#define SYSTEM_DB "/usr/share/pEp/system.db"
+#ifdef NDEBUG
+#define SYSTEM_DB unix_system_db()
+#else
+#define SYSTEM_DB unix_system_db(false)
+#endif
 #endif
 #ifndef LIBGPGME
 #define LIBGPGME "libgpgme-pthread.so"

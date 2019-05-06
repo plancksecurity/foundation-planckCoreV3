@@ -17,14 +17,21 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <regex.h>
+// #include <stdio.h>
 
 #include "platform_unix.h"
 
 #define MAX_PATH 1024
 #ifndef LOCAL_DB_FILENAME
-#define LOCAL_DB_FILENAME ".pEp_management.db"
+#define LOCAL_DB_FILENAME "pEp_management.db"  /* dot (hidden file) now added in *_local_db() */
+#endif
+#ifndef LOCAL_KEYS_DB_FILENAME
+#define LOCAL_KEYS_DB_FILENAME "pEp_keys.db"
 #endif
 #define SYSTEM_DB_FILENAME "system.db"
+#ifndef SYSTEM_DB_PREFIX
+#define SYSTEM_DB_PREFIX "/usr/local/share/pEp"
+#endif
 
 #ifndef bool
 #define bool int
@@ -169,6 +176,58 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out)
 
 #endif
 
+#ifdef NDEBUG
+const char *unix_system_db(void)
+#else
+const char *unix_system_db(int reset)
+#endif
+{
+    static char buffer[MAX_PATH];
+    static bool done = false;
+
+    #ifdef NDEBUG
+    if (!done)
+    #else
+    if ((!done) || reset)
+    #endif
+    {
+        const char *home_env;
+        const char *subdir;
+        /* TODO: ugly data layout, maybe switch to nested struct */
+        const char * const confvars[] = { "TRUSTWORDS", "PEPHOME", "XDG_CONFIG_DIR", NULL,             "HOME",  NULL };
+        const char * const confvals[] = { NULL,         NULL,      NULL,             SYSTEM_DB_PREFIX, NULL,    NULL };
+        const char * const confsdir[] = { "",           "",        "/pEp",           "",               "/.pEp", NULL };
+        const bool confisimportant[] =  { true,         false,     false,            false,            false,   false };
+        int cf_i;
+        for (cf_i = 0; confvars[cf_i] || confvals[cf_i]; cf_i++) {
+            if (((home_env = confvals[cf_i]) || (home_env = getenv (confvars[cf_i]))) && (subdir = confsdir[cf_i])) {
+                // printf("unix_system_db (%s) [%s] %s\n", SYSTEM_DB_FILENAME, confvars[cf_i], home_env);
+                char *p = stpncpy (buffer, home_env, MAX_PATH);
+                ssize_t len = MAX_PATH - (p - buffer) - 2;
+
+                if (len < strlen (SYSTEM_DB_FILENAME) + strlen (confsdir[cf_i])) {
+                    assert(0);
+                    return NULL;
+                }
+
+                p = stpncpy(p, confsdir[cf_i], len);
+                *p++ = '/';
+                strncpy(p, SYSTEM_DB_FILENAME, len);
+                // printf("unix_system_db (%s) [%s] -> %s\n", SYSTEM_DB_FILENAME, confvars[cf_i], buffer);
+                if (access (buffer, R_OK) == 0) {
+                    done = true;
+                    return buffer;
+                }
+                else if (confisimportant[cf_i])
+                    return NULL;
+            }
+            // printf("unix_system_db (%s) %s failed\n", SYSTEM_DB_FILENAME, confvars[cf_i]);
+        }
+        return NULL;
+    }
+    return buffer;
+}
+
 #if !defined(BSD) && !defined(__APPLE__)
 
 size_t strlcpy(char* dst, const	char* src, size_t size) {
@@ -209,6 +268,45 @@ int regnexec(const regex_t* preg, const char* string,
 #endif
 
 #ifdef NDEBUG
+int unix_local_db_file(char *buffer, const char *fname)
+#else
+int unix_local_db_file(char *buffer, const char *fname, int reset)
+#endif
+{
+    const char *home_env;
+    const char *subdir;
+    /* TODO: ugly data layout, maybe switch to nested struct */
+    /* Note: in HOME, a dot is prepended to the file (~/.pEp_management.db, vs ~/.pEp/pEp_management.db) */
+    const char * const confvars[] = { "PEPHOME", "XDG_CONFIG_DIR", "HOME",  "HOME",   NULL };
+    const char * const confvals[] = { NULL,      NULL,             NULL,    NULL,     NULL };
+    const char * const confsdir[] = { "/",       "/pEp/",          "/.",    "/.pEp/", NULL };
+    const bool confisimportant[] =  { true,      false,            false,   true,     false };
+    int cf_i;
+
+    for (cf_i = 0; confvars[cf_i] || confvals[cf_i]; cf_i++) {
+        if (((home_env = confvals[cf_i]) || (home_env = getenv (confvars[cf_i]))) && (subdir = confsdir[cf_i])) {
+            // printf("unix_local_db_file(%s) [%s] %s\n", fname, confvars[cf_i], home_env);
+            char *p = stpncpy (buffer, home_env, MAX_PATH);
+            ssize_t len = MAX_PATH - (p - buffer) - 1;
+
+            if (len < strlen (fname) + strlen (confsdir[cf_i])) {
+                assert(0);
+                return false;
+            }
+
+            p = stpncpy(p, confsdir[cf_i], len);
+            strncpy(p, fname, len);
+            // printf("unix_local_db_file(%s) [%s] -> %s\n", fname, confvars[cf_i], buffer);
+            if (confisimportant[cf_i] || (access (buffer, R_OK) == 0)) {
+                return true;
+            }
+        }
+        // printf("unix_local_db_file(%s) %s failed\n", fname, confvars[cf_i]);
+    }
+    return false;
+}
+
+#ifdef NDEBUG
 const char *unix_local_db(void)
 #else
 const char *unix_local_db(int reset)
@@ -219,30 +317,40 @@ const char *unix_local_db(int reset)
 
     #ifdef NDEBUG
     if (!done)
+        done = unix_local_db_file(buffer, LOCAL_DB_FILENAME);
     #else
     if ((!done) || reset)
+        done = unix_local_db_file(buffer, LOCAL_DB_FILENAME, reset);
     #endif
-    {
-        char *home_env;
-        if((home_env = getenv("HOME"))){
-            char *p = stpncpy(buffer, home_env, MAX_PATH);
-            ssize_t len = MAX_PATH - (p - buffer) - 2;
 
-            if (len < strlen(LOCAL_DB_FILENAME)) {
-                assert(0);
-                return NULL;
-            }
-
-            *p++ = '/';
-            strncpy(p, LOCAL_DB_FILENAME, len);
-            done = true;
-        }else{
-            return NULL;
-        }
-
-    }
-    return buffer;
+    if (done)
+        return buffer;
+    return NULL;
 }
+
+#ifdef NDEBUG
+const char *unix_local_keys_db(void)
+#else
+const char *unix_local_keys_db(int reset)
+#endif
+{
+    static char buffer[MAX_PATH];
+    static bool done = false;
+
+    #ifdef NDEBUG
+    if (!done)
+        done = unix_local_db_file(buffer, LOCAL_KEYS_DB_FILENAME);
+    #else
+    if ((!done) || reset)
+        done = unix_local_db_file(buffer, LOCAL_KEYS_DB_FILENAME, reset);
+    #endif
+
+    if (done) {
+        return buffer;
+    }
+    return NULL;
+}
+
 
 static const char *gpg_conf_path = ".gnupg";
 static const char *gpg_conf_name = "gpg.conf";
