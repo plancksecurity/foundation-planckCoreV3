@@ -20,7 +20,6 @@
 #include "BloblistTests.h"
 #include "NewUpdateIdAndMyselfTests.h"
 #include "NoOwnIdentWritesOnDecryptTests.h"
-#include "SyncSendKeysMsgTests.h"
 #include "I18nTests.h"
 #include "IdentityListTests.h"
 #include "PgpBinaryTests.h"
@@ -63,7 +62,6 @@
 #include "KeyResetMessageTests.h"
 #include "DeleteKeyTests.h"
 #include "KeyAttachmentTests.h"
-#include "DecodePGTests.h"
 #include "OwnKeysRetrieveTests.h"
 #include "TrustManipulationTests.h"
 #include "SyncTests.h"
@@ -79,7 +77,6 @@ const char* SuiteMaker::all_suites[] = {
     "BloblistTests",
     "NewUpdateIdAndMyselfTests",
     "NoOwnIdentWritesOnDecryptTests",
-    "SyncSendKeysMsgTests",
     "I18nTests",
     "IdentityListTests",
     "PgpBinaryTests",
@@ -122,7 +119,6 @@ const char* SuiteMaker::all_suites[] = {
     "KeyResetMessageTests",
     "DeleteKeyTests",
     "KeyAttachmentTests",
-    "DecodePGTests",
     "OwnKeysRetrieveTests",
     "TrustManipulationTests",
     "SyncTests",
@@ -130,7 +126,7 @@ const char* SuiteMaker::all_suites[] = {
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 56;
+int SuiteMaker::num_suites = 54;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "MimeTests") == 0)
@@ -149,8 +145,6 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new NewUpdateIdAndMyselfTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "NoOwnIdentWritesOnDecryptTests") == 0)
         *test_suite = new NoOwnIdentWritesOnDecryptTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "SyncSendKeysMsgTests") == 0)
-        *test_suite = new SyncSendKeysMsgTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "I18nTests") == 0)
         *test_suite = new I18nTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "IdentityListTests") == 0)
@@ -235,8 +229,6 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new DeleteKeyTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "KeyAttachmentTests") == 0)
         *test_suite = new KeyAttachmentTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "DecodePGTests") == 0)
-        *test_suite = new DecodePGTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "OwnKeysRetrieveTests") == 0)
         *test_suite = new OwnKeysRetrieveTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "TrustManipulationTests") == 0)
