@@ -9,7 +9,7 @@ ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
 .PHONY: all clean install uninstall
 
 all: Sync.c
-	make libasn1.a
+	$(MAKE) libasn1.a
 
 libasn1.a: $(ALL_OBJECTS)
 	$(AR) -rc $@ $(ALL_OBJECTS)
@@ -20,6 +20,7 @@ libasn1.a: $(ALL_OBJECTS)
 Sync.c: sync.asn1 keysync.asn1 pEp.asn1
 	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keysync.asn1 $<
 	rm -f converter-sample.c
+	touch Sync.c
 
 clean:
 	rm -f *.a *.o *.c *.h *.sample sync.asn1 keysync.asn1
