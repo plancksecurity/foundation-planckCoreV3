@@ -656,7 +656,9 @@ tstylesheet {
                                 status = PEP_OUT_OF_MEMORY;
                                 goto the_end;
                             }
-                            key_data_size = 1;
+                            key_data_size = 1; // N.B. If null termination makes us happy for debugging, fine, but 
+                                               // if we include this in the size, libetpan will null terminate and 
+                                               // go bananas. We can't have a NUL in the mime text.
 
                             for (stringlist_t *sl = session->own_«yml:lcase(@name)»_state.own_keys;
                                     sl && sl->value ; sl = sl->next)
@@ -711,7 +713,8 @@ tstylesheet {
 
                             // add secret key data as attachment
 
-                            bloblist_t *bl = bloblist_add(_m->attachments, key_data, key_data_size,
+                            // N.B. The -1 makes sure we do NOT add a NUL into the mime stream!
+                            bloblist_t *bl = bloblist_add(_m->attachments, key_data, key_data_size - 1,
                                     "application/octet-stream", "file://own.key");
                             if (!bl) {
                                 free(_data);
