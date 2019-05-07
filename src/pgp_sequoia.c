@@ -47,6 +47,15 @@
 } while(0)
 
 // Verbosely displays errors.
+#  define DUMP_STATUS(__de_sq_status, __de_pep_status, ...) do { \
+    TC(__VA_ARGS__);                                            \
+    _T(": ");                                                   \
+    if (__de_sq_status) {                                       \
+        _T("Sequoia: %s => ", pgp_status_to_string(__de_sq_status));   \
+    }                                                           \
+    _T("%s\n", pEp_status_to_string(__de_pep_status));          \
+} while(0)
+
 #  define DUMP_ERR(__de_err, __de_status, ...) do {             \
     TC(__VA_ARGS__);                                            \
     _T(": ");                                                   \
@@ -651,9 +660,9 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
 
     pgp_status_t pgp_status;
-    pgp_tsk_t tsk = pgp_tpk_into_tsk(tpk);
+    pgp_tsk_t tsk = pgp_tpk_as_tsk(tpk);
     pgp_status = pgp_tsk_serialize(&err, tsk, writer);
-    tpk = pgp_tsk_into_tpk(tsk);
+    pgp_tsk_free(tsk);
     //pgp_writer_free(writer);
     if (pgp_status != 0)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Serializing TPK");
@@ -825,10 +834,12 @@ get_public_keys_cb(void *cookie_raw,
 }
 
 static pgp_status_t
-get_secret_keys_cb(void *cookie_opaque,
-                   pgp_pkesk_t *pkesks, size_t pkesk_count,
-                   pgp_skesk_t *skesks, size_t skesk_count,
-                   pgp_secret_t *secret)
+decrypt_cb(void *cookie_opaque,
+           pgp_pkesk_t *pkesks, size_t pkesk_count,
+           pgp_skesk_t *skesks, size_t skesk_count,
+           pgp_decryptor_do_decrypt_cb_t *decrypt,
+           void *decrypt_cookie,
+           pgp_fingerprint_t *identity_out)
 {
     pgp_error_t err = NULL;
     struct decrypt_cookie *cookie = cookie_opaque;
@@ -850,6 +861,7 @@ get_secret_keys_cb(void *cookie_opaque,
         pgp_keyid_t keyid = pgp_pkesk_recipient(pkesk); /* Reference. */
         char *keyid_str = pgp_keyid_to_hex(keyid);
         pgp_tpk_key_iter_t key_iter = NULL;
+        pgp_session_key_t sk = NULL;
 
         T("Considering PKESK for %s", keyid_str);
 
@@ -907,12 +919,21 @@ get_secret_keys_cb(void *cookie_opaque,
             goto eol;
         }
 
+        sk = pgp_session_key_from_bytes (session_key, session_key_len);
+        pgp_status_t status;
+        if ((status = decrypt (decrypt_cookie, algo, sk))) {
+            DUMP_STATUS(status, PEP_UNKNOWN_ERROR, "decrypt_cb");
+            goto eol;
+        }
+
         T("Decrypted PKESK for %s", keyid_str);
 
-        *secret = pgp_secret_cached(algo, session_key, session_key_len);
+        *identity_out = pgp_tpk_fingerprint(tpk);
         cookie->decrypted = 1;
 
     eol:
+        if (sk)
+            pgp_session_key_free (sk);
         free(keyid_str);
         if (key_iter)
             pgp_tpk_key_iter_free(key_iter);
@@ -926,6 +947,7 @@ get_secret_keys_cb(void *cookie_opaque,
         pgp_keyid_t keyid = pgp_pkesk_recipient(pkesk); /* Reference. */
         char *keyid_str = pgp_keyid_to_hex(keyid);
         pgp_tpk_key_iter_t key_iter = NULL;
+        pgp_session_key_t sk = NULL;
 
         if (strcmp(keyid_str, "0000000000000000") != 0)
             goto eol2;
@@ -971,8 +993,17 @@ get_secret_keys_cb(void *cookie_opaque,
                 free(fp_string);
                 pgp_fingerprint_free(fp);
 
-                *secret = pgp_secret_cached(algo, session_key, session_key_len);
+                pgp_session_key_t sk = pgp_session_key_from_bytes (session_key,
+                                                                   session_key_len);
+                pgp_status_t status;
+                if ((status = decrypt (decrypt_cookie, algo, sk))) {
+                    DUMP_STATUS(status, PEP_UNKNOWN_ERROR, "decrypt_cb");
+                    goto eol2;
+                }
+
+                *identity_out = pgp_tpk_fingerprint(tsk);
                 cookie->decrypted = 1;
+
                 break;
             }
 
@@ -980,6 +1011,8 @@ get_secret_keys_cb(void *cookie_opaque,
             key_iter = NULL;
         }
     eol2:
+        if (sk)
+            pgp_session_key_free (sk);
         free(keyid_str);
         if (key_iter)
             pgp_tpk_key_iter_free(key_iter);
@@ -1114,8 +1147,8 @@ PEP_STATUS pgp_decrypt_and_verify(
 
     pgp_error_t err = NULL;
     decryptor = pgp_decryptor_new(&err, reader,
-                                  get_public_keys_cb, get_secret_keys_cb,
-                                  check_signatures_cb, &cookie);
+                                  get_public_keys_cb, decrypt_cb,
+                                  check_signatures_cb, &cookie, 0);
     if (! decryptor)
         ERROR_OUT(err, PEP_DECRYPT_NO_KEY, "pgp_decryptor_new");
 
@@ -1212,12 +1245,12 @@ PEP_STATUS pgp_verify_text(
         verifier = pgp_detached_verifier_new(&err, dsig_reader, reader,
                                              get_public_keys_cb,
                                              check_signatures_cb,
-                                             &cookie);
+                                             &cookie, 0);
     else
         verifier = pgp_verifier_new(&err, reader,
                                     get_public_keys_cb,
                                     check_signatures_cb,
-                                    &cookie);
+                                    &cookie, 0);
     if (! verifier)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Creating verifier");
     if (pgp_reader_discard(&err, verifier) < 0)
@@ -1525,15 +1558,14 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     T("(%s)", userid);
 
     // Generate a key.
-    pgp_tsk_t tsk;
+    pgp_tpk_builder_t tpkb = pgp_tpk_builder_general_purpose
+        (PGP_TPK_CIPHER_SUITE_RSA3K, userid);
     pgp_signature_t rev;
-    if (pgp_tsk_new(&err, userid, &tsk, &rev) != 0)
+    if (pgp_tpk_builder_generate(&err, tpkb, &tpk, &rev))
         ERROR_OUT(err, PEP_CANNOT_CREATE_KEY, "Generating a key pair");
 
     // XXX: We should return this.
     pgp_signature_free(rev);
-
-    tpk = pgp_tsk_into_tpk(tsk);
 
     // Get the fingerprint.
     pgp_fpr = pgp_tpk_fingerprint(tpk);
@@ -1683,10 +1715,10 @@ PEP_STATUS pgp_export_keydata(
     }
 
     if (secret) {
-        pgp_tsk_t tsk = pgp_tpk_into_tsk(tpk);
+        pgp_tsk_t tsk = pgp_tpk_as_tsk(tpk);
         if (pgp_tsk_serialize(&err, tsk, armor_writer))
             ERROR_OUT(err, PEP_UNKNOWN_ERROR, "serializing TSK");
-        tpk = pgp_tsk_into_tpk(tsk);
+        pgp_tsk_free(tsk);
     } else {
         if (pgp_tpk_serialize(&err, tpk, armor_writer))
             ERROR_OUT(err, PEP_UNKNOWN_ERROR, "serializing TPK");
