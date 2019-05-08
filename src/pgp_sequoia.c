@@ -77,6 +77,48 @@
     }                                                               \
 } while(0)
 
+int email_cmp(void *cookie, int a_len, const void *a, int b_len, const void *b)
+{
+    pgp_packet_t a_userid = pgp_user_id_from_raw (a, a_len);
+    pgp_packet_t b_userid = pgp_user_id_from_raw (b, b_len);
+
+    T("(%.*s, %.*s)", a_len, a, b_len, b);
+
+    char *a_address = NULL;
+    pgp_user_id_address_normalized(NULL, a_userid, &a_address);
+
+    char *b_address = NULL;
+    pgp_user_id_address_normalized(NULL, b_userid, &b_address);
+
+    pgp_packet_free(a_userid);
+    pgp_packet_free(b_userid);
+
+    // return an integer that is negative, zero, or positive if the
+    // first string is less than, equal to, or greater than the
+    // second, respectively.
+    int result;
+    if (!a_address && !b_address)
+        result = 0;
+    else if (!a_address)
+        result = -1;
+    else if (!b_address)
+        result = 1;
+    else
+        result = strcmp(a_address, b_address);
+
+    if (true) {
+        T("'%s' %s '%s'",
+          a_address,
+          result == 0 ? "==" : result < 0 ? "<" : ">",
+          b_address);
+    }
+
+    free(a_address);
+    free(b_address);
+
+    return result;
+}
+
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -123,6 +165,17 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
     sqlite3_busy_timeout(session->key_db, BUSY_WAIT_TIME);
 
+    sqlite_result =
+        sqlite3_create_collation(session->key_db,
+                                "EMAIL",
+                                SQLITE_UTF8,
+                                /* pArg (cookie) */ NULL,
+                                email_cmp);
+    if (sqlite_result != SQLITE_OK)
+        ERROR_OUT(NULL, PEP_INIT_CANNOT_OPEN_DB,
+                  "registering EMAIL collation function: %s",
+                  sqlite3_errmsg(session->key_db));
+
     sqlite_result = sqlite3_exec(session->key_db,
                                  "CREATE TABLE IF NOT EXISTS keys (\n"
                                  "   primary_key TEXT UNIQUE PRIMARY KEY,\n"
@@ -156,7 +209,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
     sqlite_result = sqlite3_exec(session->key_db,
                                  "CREATE TABLE IF NOT EXISTS userids (\n"
-                                 "   userid TEXT NOT NULL,\n"
+                                 "   userid TEXT NOT NULL COLLATE EMAIL,\n"
                                  "   primary_key TEXT NOT NULL,\n"
                                  "   UNIQUE(userid, primary_key),\n"
                                  "   FOREIGN KEY (primary_key)\n"
@@ -164,7 +217,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                                  "     ON DELETE CASCADE\n"
                                  ");\n"
                                  "CREATE INDEX IF NOT EXISTS userids_index\n"
-                                 "  ON userids (userid, primary_key)\n",
+                                 "  ON userids (userid COLLATE EMAIL, primary_key)\n",
                                  NULL, NULL, NULL);
     if (sqlite_result != SQLITE_OK)
         ERROR_OUT(NULL, PEP_INIT_CANNOT_OPEN_DB,
@@ -323,59 +376,6 @@ static char *pgp_fingerprint_canonicalize(const char *fpr)
 }
 
 */
-
-// Splits an OpenPGP user id into its name and email components.  A
-// user id looks like:
-//
-//   Name (comment) <email>
-//
-// This function takes ownership of user_id!!!
-//
-// namep and emailp may be NULL if they are not required.
-static void user_id_split(char *, char **, char **) __attribute__((nonnull(1)));
-static void user_id_split(char *user_id, char **namep, char **emailp)
-{
-    if (namep)
-        *namep = NULL;
-    if (emailp)
-        *emailp = NULL;
-
-    char *email = strchr(user_id, '<');
-    if (email) {
-        // NUL terminate the string here so that user_id now points at
-        // most to: "Name (comment)"
-        *email = 0;
-
-        if (emailp && email[1]) {
-            email = email + 1;
-            char *end = strchr(email, '>');
-            if (end) {
-                *end = 0;
-                *emailp = strdup(email);
-            }
-        }
-    }
-
-    if (!namep)
-        return;
-
-    char *comment = strchr(user_id, '(');
-    if (comment)
-        *comment = 0;
-
-    // Kill any trailing white space.
-    for (size_t l = strlen(user_id); l > 0 && user_id[l - 1] == ' '; l --)
-        user_id[l - 1] = 0;
-
-    // Kill any leading whitespace.
-    char *start = user_id;
-    while (*start == ' ')
-        start ++;
-    if (start[0])
-        *namep = strdup(start);
-
-    free(user_id);
-}
 
 // step statement and load the tpk and secret.
 static PEP_STATUS key_load(PEP_SESSION, sqlite3_stmt *, pgp_tpk_t *, int *)
@@ -626,6 +626,8 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
     int tried_commit = 0;
     pgp_tpk_key_iter_t key_iter = NULL;
     pgp_user_id_binding_iter_t user_id_iter = NULL;
+    char *email = NULL;
+    char *name = NULL;
 
     sqlite3_stmt *stmt = session->sq_sql.begin_transaction;
     int sqlite_result = sqlite3_step(stmt);
@@ -711,20 +713,27 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
     pgp_user_id_binding_t binding;
     int first = 1;
     while ((binding = pgp_user_id_binding_iter_next(user_id_iter))) {
-        char *user_id = pgp_user_id_binding_user_id(binding);
-        if (!user_id || !*user_id)
+        char *user_id_value = pgp_user_id_binding_user_id(binding);
+        if (!user_id_value || !*user_id_value)
             continue;
 
         // Ignore bindings with a self-revocation certificate, but no
         // self-signature.
         if (!pgp_user_id_binding_selfsig(binding)) {
-            free(user_id);
+            free(user_id_value);
             continue;
         }
 
-        char *name, *email;
-        user_id_split(user_id, &name, &email); /* user_id is comsumed.  */
-        // XXX: Correctly clean up name and email on error...
+        free(name);
+        name = NULL;
+        free(email);
+        email = NULL;
+
+        pgp_packet_t userid = pgp_user_id_new (user_id_value);
+        pgp_user_id_name(NULL, userid, &name);
+        pgp_user_id_address(NULL, userid, &email);
+        pgp_packet_free(userid);
+        free(user_id_value);
 
         if (email) {
             T("  userid: %s", email);
@@ -737,7 +746,6 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
 
             if (sqlite_result != SQLITE_DONE) {
                 pgp_user_id_binding_iter_free(user_id_iter);
-                free(name);
                 ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
                           "Updating userids: %s", sqlite3_errmsg(session->key_db));
             }
@@ -755,8 +763,6 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
             if (*private_idents == NULL)
                 ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "identity_list_add");
         }
-        free(email);
-        free(name);
 
     }
     pgp_user_id_binding_iter_free(user_id_iter);
@@ -780,6 +786,8 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
 
     T("(%s) -> %s", fpr, pEp_status_to_string(status));
 
+    free(email);
+    free(name);
     if (user_id_iter)
         pgp_user_id_binding_iter_free(user_id_iter);
     if (key_iter)
