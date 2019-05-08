@@ -19,41 +19,13 @@ OBJS:=$(addsuffix .o,$(basename $(SRCS)))
 DEPS:=$(OBJS:.o=.d)
 
 
-LDFLAGS+= -L../asn.1 -L../src $(ETPAN_LIB) $(CPPUNIT_LIB)
-
-ifeq ($(OPENPGP),GPG)
-    LDFLAGS+= $(GPGME_LIB)
-else ifeq ($(OPENPGP),NETPGP)
-    LDFLAGS+= $(NETGPG_LIB)
-endif
-
-
-LDLIBS+= -letpan -lpEpEngine -lstdc++ -lasn1 -lcpptest
-
-ifeq ($(BUILD_FOR),Linux)
-    LDLIBS+= -luuid
-endif
-
-ifeq ($(OPENPGP),SEQUOIA)
-    LDFLAGS+= $(SEQUOIA_LDFLAGS)
-    LDLIBS+= $(SEQUOIA_LIB)
-    CXXFLAGS+= $(SEQUOIA_CFLAGS) -DUSE_SEQUOIA
-    INC_FLAGS+= $(SEQUOIA_INC)
-endif
+LDFLAGS+= -L../src $(CPPUNIT_LIB)
 
 ifdef SQLITE3_FROM_OS
     LDLIBS+= -lsqlite3
 endif
 
-ifeq ($(OPENPGP),GPG)
-    #LDLIBS+= -lgpgme
-else ifeq ($(OPENPGP),NETPGP)
-    LDLIBS+= -lnetpgp
-    ifeq ($(BUILD_FOR),Linux)
-        LDLIBS+= -ltre
-    endif
-endif
-
+LDLIBS+= -Wl,-rpath,../src -lpEpEngine -lstdc++ -lcpptest
 
 CXXFLAGS:=$(filter-out -DNDEBUG,$(CXXFLAGS))
 
@@ -68,15 +40,6 @@ endif
 
 
 EXTRA_LIB_PATHS=.:../src:
-ifdef ETPAN_LIB
-    EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(ETPAN_LIB)):
-endif
-ifdef GPGME_LIB
-    EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(GPGME_LIB)):
-endif
-ifdef NETPGP_LIB
-    EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(NETPGP_LIB)):
-endif
 ifdef CPPUNIT_LIB
     EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(CPPUNIT_LIB)):
 endif
