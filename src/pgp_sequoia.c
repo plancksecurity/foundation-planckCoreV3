@@ -77,6 +77,48 @@
     }                                                               \
 } while(0)
 
+int email_cmp(void *cookie, int a_len, const void *a, int b_len, const void *b)
+{
+    pgp_packet_t a_userid = pgp_user_id_from_raw (a, a_len);
+    pgp_packet_t b_userid = pgp_user_id_from_raw (b, b_len);
+
+    T("(%.*s, %.*s)", a_len, a, b_len, b);
+
+    char *a_address = NULL;
+    pgp_user_id_address_normalized(NULL, a_userid, &a_address);
+
+    char *b_address = NULL;
+    pgp_user_id_address_normalized(NULL, b_userid, &b_address);
+
+    pgp_packet_free(a_userid);
+    pgp_packet_free(b_userid);
+
+    // return an integer that is negative, zero, or positive if the
+    // first string is less than, equal to, or greater than the
+    // second, respectively.
+    int result;
+    if (!a_address && !b_address)
+        result = 0;
+    else if (!a_address)
+        result = -1;
+    else if (!b_address)
+        result = 1;
+    else
+        result = strcmp(a_address, b_address);
+
+    if (true) {
+        T("'%s' %s '%s'",
+          a_address,
+          result == 0 ? "==" : result < 0 ? "<" : ">",
+          b_address);
+    }
+
+    free(a_address);
+    free(b_address);
+
+    return result;
+}
+
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -123,6 +165,17 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
     sqlite3_busy_timeout(session->key_db, BUSY_WAIT_TIME);
 
+    sqlite_result =
+        sqlite3_create_collation(session->key_db,
+                                "EMAIL",
+                                SQLITE_UTF8,
+                                /* pArg (cookie) */ NULL,
+                                email_cmp);
+    if (sqlite_result != SQLITE_OK)
+        ERROR_OUT(NULL, PEP_INIT_CANNOT_OPEN_DB,
+                  "registering EMAIL collation function: %s",
+                  sqlite3_errmsg(session->key_db));
+
     sqlite_result = sqlite3_exec(session->key_db,
                                  "CREATE TABLE IF NOT EXISTS keys (\n"
                                  "   primary_key TEXT UNIQUE PRIMARY KEY,\n"
@@ -156,7 +209,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
     sqlite_result = sqlite3_exec(session->key_db,
                                  "CREATE TABLE IF NOT EXISTS userids (\n"
-                                 "   userid TEXT NOT NULL,\n"
+                                 "   userid TEXT NOT NULL COLLATE EMAIL,\n"
                                  "   primary_key TEXT NOT NULL,\n"
                                  "   UNIQUE(userid, primary_key),\n"
                                  "   FOREIGN KEY (primary_key)\n"
@@ -164,7 +217,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                                  "     ON DELETE CASCADE\n"
                                  ");\n"
                                  "CREATE INDEX IF NOT EXISTS userids_index\n"
-                                 "  ON userids (userid, primary_key)\n",
+                                 "  ON userids (userid COLLATE EMAIL, primary_key)\n",
                                  NULL, NULL, NULL);
     if (sqlite_result != SQLITE_OK)
         ERROR_OUT(NULL, PEP_INIT_CANNOT_OPEN_DB,

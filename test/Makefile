@@ -127,7 +127,7 @@ ifdef PY_ENV
 endif
 
 test: all
-	$(TEST_CMD_PFX) $(TEST_DEBUGGER) ./$(TARGET)
+	ulimit -n 30000; $(TEST_DEBUGGER) ./$(TARGET) LookupTests
 
 clean:
 	$(RM) $(TARGET) $(TARGET).o $(TARGET).d $(OBJS) $(notdir $(basename $(OBJS))) $(DEPS)
