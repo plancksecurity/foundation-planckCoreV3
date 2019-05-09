@@ -1636,14 +1636,13 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
     return PEP_STATUS_OK;
 }
 
-// XXX: This needs to handle not only TPKs, but also keyrings and
-// revocation certificates.  Right now, we only import a single TPK
-// and ignore everything else.
+// XXX: This also needs to handle revocation certificates.
 PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
                               size_t size, identity_list **private_idents)
 {
     PEP_STATUS status = PEP_STATUS_OK;
     pgp_error_t err;
+    pgp_tpk_parser_t parser = NULL;
 
     if (private_idents)
         *private_idents = NULL;
@@ -1665,16 +1664,27 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
 
     case PGP_TAG_PUBLIC_KEY:
     case PGP_TAG_SECRET_KEY: {
-        pgp_tpk_t tpk = pgp_tpk_from_packet_parser(&err, ppr);
-        if (! tpk)
-            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "parsing key data");
+        parser = pgp_tpk_parser_from_packet_parser(ppr);
+        pgp_tpk_t tpk;
+        int count = 0;
+        err = NULL;
+        while ((tpk = pgp_tpk_parser_next(&err, parser))) {
+            count ++;
 
-        // If private_idents is not NULL and there is any private key
-        // material, it will be saved.
-        status = tpk_save(session, tpk, private_idents);
-        if (status == PEP_STATUS_OK)
-            status = PEP_KEY_IMPORTED;
-        ERROR_OUT(NULL, status, "saving TPK");
+            T("#%d. TPK for %s, %s",
+              count, pgp_tpk_primary_user_id(tpk),
+              pgp_fingerprint_to_hex(pgp_tpk_fingerprint(tpk)));
+
+            // If private_idents is not NULL and there is any private key
+            // material, it will be saved.
+            status = tpk_save(session, tpk, private_idents);
+            if (status == PEP_STATUS_OK)
+                status = PEP_KEY_IMPORTED;
+            else
+                ERROR_OUT(NULL, status, "saving TPK");
+        }
+        if (err || count == 0)
+            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "parsing key data");
         break;
     }
     default:
@@ -1684,6 +1694,9 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
     }
 
  out:
+    if (parser)
+        pgp_tpk_parser_free(parser);
+
     T("-> %s", pEp_status_to_string(status));
     return status;
 }
