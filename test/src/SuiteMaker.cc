@@ -33,6 +33,7 @@
 #include "EncryptMissingPrivateKeyTests.h"
 #include "CaseAndDotAddressTests.h"
 #include "UserIDAliasTests.h"
+#include "KeyringImportTests.h"
 #include "EnterLeaveDeviceGroupTests.h"
 #include "SignOnlyTests.h"
 #include "BCCTests.h"
@@ -46,6 +47,7 @@
 #include "HeaderKeyImportTests.h"
 #include "EncryptAttachPrivateKeyTests.h"
 #include "ExternalRevokeTests.h"
+#include "LookupTests.h"
 #include "KeyeditTests.h"
 #include "LeastColorGroupTests.h"
 #include "DecryptAttachPrivateKeyTrustedTests.h"
@@ -90,6 +92,7 @@ const char* SuiteMaker::all_suites[] = {
     "EncryptMissingPrivateKeyTests",
     "CaseAndDotAddressTests",
     "UserIDAliasTests",
+    "KeyringImportTests",
     "EnterLeaveDeviceGroupTests",
     "SignOnlyTests",
     "BCCTests",
@@ -103,6 +106,7 @@ const char* SuiteMaker::all_suites[] = {
     "HeaderKeyImportTests",
     "EncryptAttachPrivateKeyTests",
     "ExternalRevokeTests",
+    "LookupTests",
     "KeyeditTests",
     "LeastColorGroupTests",
     "DecryptAttachPrivateKeyTrustedTests",
@@ -126,7 +130,7 @@ const char* SuiteMaker::all_suites[] = {
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 54;
+int SuiteMaker::num_suites = 56;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "MimeTests") == 0)
@@ -171,6 +175,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new CaseAndDotAddressTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "UserIDAliasTests") == 0)
         *test_suite = new UserIDAliasTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "KeyringImportTests") == 0)
+        *test_suite = new KeyringImportTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "EnterLeaveDeviceGroupTests") == 0)
         *test_suite = new EnterLeaveDeviceGroupTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "SignOnlyTests") == 0)
@@ -197,6 +203,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new EncryptAttachPrivateKeyTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "ExternalRevokeTests") == 0)
         *test_suite = new ExternalRevokeTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "LookupTests") == 0)
+        *test_suite = new LookupTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "KeyeditTests") == 0)
         *test_suite = new KeyeditTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "LeastColorGroupTests") == 0)

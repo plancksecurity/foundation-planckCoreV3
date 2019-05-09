@@ -1484,6 +1484,7 @@ bool import_attached_keys(
                         break;
                     // else fall through and delete    
                 case PEP_KEY_IMPORTED:
+                case PEP_STATUS_OK:
                     to_delete = bl;
                     if (prev)
                         prev->next = bl->next;
@@ -3183,7 +3184,7 @@ static bool import_header_keys(PEP_SESSION session, message* src) {
         return false;
     PEP_STATUS status = import_key(session, the_key->value, the_key->size, NULL);
     free_bloblist(the_key);
-    if (status == PEP_KEY_IMPORTED)
+    if (status == PEP_STATUS_OK || status == PEP_KEY_IMPORTED)
         return true;
     return false;
 }
