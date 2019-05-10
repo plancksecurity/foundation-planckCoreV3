@@ -82,7 +82,7 @@ int email_cmp(void *cookie, int a_len, const void *a, int b_len, const void *b)
     pgp_packet_t a_userid = pgp_user_id_from_raw (a, a_len);
     pgp_packet_t b_userid = pgp_user_id_from_raw (b, b_len);
 
-    T("(%.*s, %.*s)", a_len, a, b_len, b);
+    T("(%.*s, %.*s)", a_len, (const char *) a, b_len, (const char *) b);
 
     char *a_address = NULL;
     pgp_user_id_address_normalized(NULL, a_userid, &a_address);
@@ -1656,12 +1656,70 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
 
     pgp_tag_t tag = pgp_packet_parser_result_tag(ppr);
     switch (tag) {
-    case PGP_TAG_SIGNATURE:
-        // XXX: Implement me.
-        // assert(!"Have possible revocation certificate!");
-		ERROR_OUT(NULL, PEP_NO_KEY_IMPORTED, "Implement me: Have possible revocation certificate!");
-        break;
+    case PGP_TAG_SIGNATURE: {
+        // The following asserts can't fail, because
+        // pgp_packet_parser_result_tag succeeded and the tag is
+        // right.
+        pgp_packet_parser_t pp = pgp_packet_parser_result_packet_parser (ppr);
+        assert(pp);
 
+        pgp_packet_t packet = NULL;
+        if (pgp_packet_parser_next(&err, pp, &packet, &ppr))
+            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Getting signature packet");
+
+        pgp_signature_t sig = pgp_packet_ref_signature (packet);
+        assert(sig);
+
+        pgp_tpk_t tpk = NULL;
+
+        pgp_fingerprint_t issuer_fpr = pgp_signature_issuer_fingerprint(sig);
+        if (issuer_fpr) {
+            char *issuer_fpr_hex = pgp_fingerprint_to_hex(issuer_fpr);
+            T("Importing a signature issued by %s", issuer_fpr_hex);
+
+            status = tpk_find_by_fpr_hex(session, issuer_fpr_hex,
+                                         false, &tpk, NULL);
+            if (status && status != PEP_KEY_NOT_FOUND)
+                DUMP_ERR(NULL, status, "Looking up %s", issuer_fpr_hex);
+
+            free(issuer_fpr_hex);
+            pgp_fingerprint_free(issuer_fpr);
+        }
+
+        if (! tpk) {
+            pgp_keyid_t issuer = pgp_signature_issuer(sig);
+            if (issuer) {
+                char *issuer_hex = pgp_keyid_to_hex(issuer);
+                T("Importing a signature issued by %s", issuer_hex);
+
+                status = tpk_find_by_keyid_hex(session, issuer_hex,
+                                               false, &tpk, NULL);
+                if (status && status != PEP_KEY_NOT_FOUND)
+                    DUMP_ERR(NULL, status, "Looking up %s", issuer_hex);
+
+                free(issuer_hex);
+                pgp_keyid_free(issuer);
+            }
+        }
+
+        // We need a packet.  sig is only a reference, so we just need
+        // to free it.
+        pgp_signature_free(sig);
+
+        if (tpk) {
+            T("Merging packet: %s", pgp_packet_debug(packet));
+
+            tpk = pgp_tpk_merge_packets (&err, tpk, &packet, 1);
+            if (! tpk)
+                ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Merging signature");
+
+            status = tpk_save(session, tpk, NULL);
+            if (status)
+                ERROR_OUT(NULL, status, "saving merged TPK");
+            status = PEP_KEY_IMPORTED;
+        }
+        break;
+    }
     case PGP_TAG_PUBLIC_KEY:
     case PGP_TAG_SECRET_KEY: {
         parser = pgp_tpk_parser_from_packet_parser(ppr);
