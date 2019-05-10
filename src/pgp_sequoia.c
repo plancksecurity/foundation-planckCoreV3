@@ -1036,85 +1036,145 @@ decrypt_cb(void *cookie_opaque,
 }
 
 static pgp_status_t
-check_signatures_cb(void *cookie_opaque,
-                   pgp_verification_results_t results, size_t levels)
+check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
 {
     struct decrypt_cookie *cookie = cookie_opaque;
     PEP_SESSION session = cookie->session;
 
-    int level;
-    for (level = 0; level < levels; level ++) {
-        pgp_verification_result_t *vrs;
-        size_t vr_count;
-        pgp_verification_results_at_level(results, level, &vrs, &vr_count);
+    pgp_message_structure_iter_t iter
+        = pgp_message_structure_iter (structure);
+    for (pgp_message_layer_t layer = pgp_message_structure_iter_next (iter);
+         layer;
+         layer = pgp_message_structure_iter_next (iter)) {
+        pgp_verification_result_iter_t results;
 
-        int i;
-        for (i = 0; i < vr_count; i ++) {
-            pgp_tpk_t tpk = NULL;
-            pgp_verification_result_code_t code
-                = pgp_verification_result_code(vrs[i]);
+        switch (pgp_message_layer_variant (layer)) {
+        case PGP_MESSAGE_LAYER_COMPRESSION:
+        case PGP_MESSAGE_LAYER_ENCRYPTION:
+            break;
 
-            if (code == PGP_VERIFICATION_RESULT_CODE_BAD_CHECKSUM) {
-                cookie->bad_checksums ++;
-                continue;
-            }
-            if (code == PGP_VERIFICATION_RESULT_CODE_MISSING_KEY) {
-                // No key, nothing we can do.
-                cookie->missing_keys ++;
-                continue;
-            }
+        case PGP_MESSAGE_LAYER_SIGNATURE_GROUP:
+            pgp_message_layer_signature_group(layer, &results);
+            pgp_verification_result_t result;
+            while ((result = pgp_verification_result_iter_next (results))) {
+                pgp_signature_t sig;
+                pgp_keyid_t keyid = NULL;
+                char *keyid_str = NULL;
 
-            // We need to add the fingerprint of the primary key to
-            // cookie->signer_keylist.
-            pgp_signature_t sig = pgp_verification_result_signature(vrs[i]);
+                switch (pgp_verification_result_variant (result)) {
+                case PGP_VERIFICATION_RESULT_GOOD_CHECKSUM:
+                    // We need to add the fingerprint of the primary
+                    // key to cookie->signer_keylist.
 
-            // First try looking up by the TPK using the
-            // IssuerFingerprint subpacket.
-            pgp_fingerprint_t issuer_fp = pgp_signature_issuer_fingerprint(sig);
-            if (issuer_fp) {
-                pgp_keyid_t issuer = pgp_fingerprint_to_keyid(issuer_fp);
-                if (tpk_find_by_keyid(session, issuer, false, &tpk, NULL) != PEP_STATUS_OK)
-                    ; // Soft error.  Ignore.
-                pgp_keyid_free(issuer);
-                pgp_fingerprint_free(issuer_fp);
-            }
+                    pgp_verification_result_good_checksum (result, &sig, NULL,
+                                                           NULL, NULL, NULL);
 
-            // If that is not available, try using the Issuer subpacket.
-            if (!tpk) {
-                pgp_keyid_t issuer = pgp_signature_issuer(sig);
-                if (issuer) {
-                    if (tpk_find_by_keyid(session, issuer, false, &tpk, NULL) != PEP_STATUS_OK)
+                    // First try looking up by the TPK using the
+                    // IssuerFingerprint subpacket.
+                    pgp_fingerprint_t fpr
+                        = pgp_signature_issuer_fingerprint(sig);
+                    if (fpr) {
+                        // Even though we have a fingerprint, we have
+                        // to look the key up by keyid, because we
+                        // want to match on subkeys and we only store
+                        // keyids for subkeys.
+                        keyid = pgp_fingerprint_to_keyid(fpr);
+                        pgp_fingerprint_free(fpr);
+                    } else {
+                        // That is not available, try using the Issuer
+                        // subpacket.
+                        keyid = pgp_signature_issuer(sig);
+                    }
+
+                    if (! keyid) {
+                        T("signature with no Issuer or Issuer Fingerprint subpacket!");
+                        goto eol;
+                    }
+
+                    pgp_tpk_t tpk;
+                    if (tpk_find_by_keyid(session, keyid, false,
+                                          &tpk, NULL) != PEP_STATUS_OK)
                         ; // Soft error.  Ignore.
+
+                    if (tpk) {
+                        // Ok, we have a TPK.
+
+                        // We need the primary key's fingerprint (not
+                        // the issuer fingerprint).
+                        pgp_fingerprint_t primary_fpr
+                            = pgp_tpk_fingerprint(tpk);
+                        char *primary_fpr_str
+                            = pgp_fingerprint_to_hex(primary_fpr);
+                        stringlist_add_unique(cookie->signer_keylist,
+                                              primary_fpr_str);
+
+                        T("Good signature from %s", primary_fpr_str);
+
+                        // XXX: Check that the TPK and the key used to make
+                        // the signature and the signature itself are alive
+                        // and not revoked.  Revoked =>
+                        // PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH; Expired key
+                        // or sig => PEP_DECRYPTED.
+                        cookie->good_checksums ++;
+
+                        free(primary_fpr_str);
+                        pgp_fingerprint_free(primary_fpr);
+                        pgp_tpk_free(tpk);
+                    } else {
+                        // If we get
+                        // PGP_VERIFICATION_RESULT_CODE_GOOD_CHECKSUM, then the
+                        // TPK should be available.  But, another process
+                        // could have deleted the key from the store in the
+                        // mean time, so be tolerant.
+                        T("Key to check signature from %s disappeared",
+                          keyid_str);
+                        cookie->missing_keys ++;
+                    }
+                    break;
+
+                case PGP_VERIFICATION_RESULT_MISSING_KEY:
+                    pgp_verification_result_missing_key (result, &sig);
+                    keyid = pgp_signature_issuer (sig);
+                    keyid_str = pgp_keyid_to_string (keyid);
+                    T("No key to check signature from %s", keyid_str);
+
+                    cookie->missing_keys ++;
+                    break;
+
+                case PGP_VERIFICATION_RESULT_BAD_CHECKSUM:
+                    pgp_verification_result_bad_checksum (result, &sig);
+                    keyid = pgp_signature_issuer (sig);
+                    if (keyid) {
+                        keyid_str = pgp_keyid_to_string (keyid);
+                        T("Bad signature from %s", keyid_str);
+                    } else {
+                        T("Bad signature without issuer information");
+                    }
+
+                    cookie->bad_checksums ++;
+                    break;
+
+                default:
+                    assert (! "reachable");
                 }
-                pgp_keyid_free(issuer);
+
+            eol:
+                free (keyid_str);
+                pgp_signature_free (sig);
+                pgp_verification_result_free (result);
             }
+            pgp_verification_result_iter_free (results);
+            break;
 
-            if (tpk) {
-                // Ok, we have a TPK.
-                pgp_fingerprint_t fp = pgp_tpk_fingerprint(tpk);
-                char *fp_str = pgp_fingerprint_to_hex(fp);
-                stringlist_add_unique(cookie->signer_keylist, fp_str);
-
-                // XXX: Check that the TPK and the key used to make
-                // the signature and the signature itself are alive
-                // and not revoked.  Revoked =>
-                // PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH; Expired key
-                // or sig => PEP_DECRYPTED.
-                cookie->good_checksums ++;
-
-                free(fp_str);
-                pgp_fingerprint_free(fp);
-                pgp_tpk_free(tpk);
-            } else {
-                // If we get
-                // PGP_VERIFICATION_RESULT_CODE_GOOD_CHECKSUM, then the
-                // TPK should be available.  But, another process
-                // could have deleted the key from the store in the
-                // mean time, so be tolerant.
-                cookie->missing_keys ++;
-            }
+        default:
+            assert (! "reachable");
         }
+
+        pgp_message_layer_free (layer);
     }
+
+    pgp_message_structure_iter_free (iter);
+    pgp_message_structure_free (structure);
 
     return PGP_STATUS_SUCCESS;
 }
