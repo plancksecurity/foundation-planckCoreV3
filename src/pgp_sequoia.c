@@ -1640,7 +1640,7 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
 PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
                               size_t size, identity_list **private_idents)
 {
-    PEP_STATUS status = PEP_STATUS_OK;
+    PEP_STATUS status = PEP_NO_KEY_IMPORTED;
     pgp_error_t err;
     pgp_tpk_parser_t parser = NULL;
 
