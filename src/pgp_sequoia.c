@@ -7,7 +7,7 @@
 
 #include "platform.h"
 #include "pEp_internal.h"
-#include "pgp_gpg.h"
+#include "pgp_sequoia.h"
 
 #include <limits.h>
 #include <sys/stat.h>
@@ -124,18 +124,26 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     PEP_STATUS status = PEP_STATUS_OK;
 
     // Create the home directory.
-    char *home_env = getenv("HOME");
+#ifdef _WIN32
+	char *home_env = getenv("LOCALAPPDATA");
+#else
+	char *home_env = getenv("HOME");
+#endif
     if (!home_env)
         ERROR_OUT(NULL, PEP_INIT_GPGME_INIT_FAILED, "HOME unset");
 
     // Create the DB and initialize it.
-    size_t path_size = strlen(home_env)+13+1;
+    size_t path_size = strlen(home_env)+18;
     char *path = (char *) calloc(1, path_size);
     assert(path);
     if (!path)
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
 
-    int r = snprintf(path, path_size, "%s/.pEp_keys.db", home_env);
+#ifdef _WIN32
+	int r = snprintf(path, path_size, "%s\\pEp\\.pEp_keys.db", home_env);
+#else
+	int r = snprintf(path, path_size, "%s/.pEp_keys.db", home_env);
+#endif
     assert(r >= 0 && r < path_size);
     if (r < 0)
         ERROR_OUT(NULL, PEP_UNKNOWN_ERROR, "snprintf");
