@@ -17,7 +17,7 @@ extern "C" {
 #include "labeled_int_list.h"    
 #include "timestamp.h"
 
-#define PEP_VERSION "2.0" // protocol version
+#define PEP_VERSION "2.1" // protocol version
 
 #define PEP_OWN_USERID "pEp_own_userId"
     
