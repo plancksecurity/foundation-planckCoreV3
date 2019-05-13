@@ -5,7 +5,9 @@
 
 #define _GNU_SOURCE 1
 
-#include "platform.h"
+#define MAX_PATH 1024
+#define SQ_KEYS_DB "keys.db"
+
 #include "pEp_internal.h"
 #include "pgp_gpg.h"
 
@@ -121,31 +123,12 @@ int email_cmp(void *cookie, int a_len, const void *a, int b_len, const void *b)
 
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
-    #define PATH "/.pEp_keys.db"
- 
-    PEP_STATUS status = PEP_STATUS_OK;
+     PEP_STATUS status = PEP_STATUS_OK;
 
-    // Create the home directory.
-    char *home_env = NULL;
-#ifndef NDEBUG
-    home_env = getenv("PEP_HOME");
-#endif
-    if (!home_env)
-        home_env = getenv("HOME");
-    if (!home_env)
-        ERROR_OUT(NULL, PEP_INIT_GPGME_INIT_FAILED, "HOME unset");
-
-    // Create the DB and initialize it.
-    size_t path_size = strlen(home_env) + sizeof(PATH);
-    char *path = (char *) calloc(1, path_size);
-    assert(path);
-    if (!path)
-        ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
-
-    int r = snprintf(path, path_size, "%s/.pEp_keys.db", home_env);
-    assert(r >= 0 && r < path_size);
-    if (r < 0)
-        ERROR_OUT(NULL, PEP_UNKNOWN_ERROR, "snprintf");
+    char path[MAX_PATH];
+    if (!unix_local_db_file(path, SQ_KEYS_DB))
+        ERROR_OUT(NULL, PEP_INIT_GPGME_INIT_FAILED,
+                  "could not determine path to keys DB");
 
     int sqlite_result;
     sqlite_result = sqlite3_open_v2(path,
@@ -155,7 +138,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                                     | SQLITE_OPEN_FULLMUTEX
                                     | SQLITE_OPEN_PRIVATECACHE,
                                     NULL);
-    free(path);
+
     if (sqlite_result != SQLITE_OK)
         ERROR_OUT(NULL, PEP_INIT_CANNOT_OPEN_DB,
                   "opening keys DB: %s", sqlite3_errmsg(session->key_db));
