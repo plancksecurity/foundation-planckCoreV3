@@ -126,7 +126,12 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     PEP_STATUS status = PEP_STATUS_OK;
 
     // Create the home directory.
-    char *home_env = getenv("HOME");
+    char *home_env = NULL;
+#ifndef NDEBUG
+    home_env = getenv("PEP_HOME");
+#endif
+    if (!home_env)
+        home_env = getenv("HOME");
     if (!home_env)
         ERROR_OUT(NULL, PEP_INIT_GPGME_INIT_FAILED, "HOME unset");
 
