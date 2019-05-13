@@ -121,16 +121,17 @@ int email_cmp(void *cookie, int a_len, const void *a, int b_len, const void *b)
 
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
-    #define PATH "/.pEp_keys.db"
- 
     PEP_STATUS status = PEP_STATUS_OK;
 
     // Create the home directory.
 #ifdef _WIN32
+	#define PATH "\\pEp\\.pEp_keys.db"
 	char *home_env = getenv("LOCALAPPDATA");
 #else
+    #define PATH "/.pEp_keys.db"
 	char *home_env = getenv("HOME");
 #endif
+
     if (!home_env)
         ERROR_OUT(NULL, PEP_INIT_GPGME_INIT_FAILED, "HOME unset");
 
