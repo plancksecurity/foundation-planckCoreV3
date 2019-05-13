@@ -10,7 +10,7 @@ include ./fsm.yml2
 protocol Sync 1 {
     // all messages have a timestamp, time out and are removed after timeout
 
-    fsm KeySync 1, threshold=30 {
+    fsm KeySync 1, threshold=60 {
         version 1, 2;
 
         state InitState {

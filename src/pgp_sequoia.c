@@ -5,8 +5,7 @@
 
 #define _GNU_SOURCE 1
 
-#define MAX_PATH 1024
-
+#include "platform.h"
 #include "pEp_internal.h"
 #include "pgp_gpg.h"
 
@@ -48,6 +47,15 @@
 } while(0)
 
 // Verbosely displays errors.
+#  define DUMP_STATUS(__de_sq_status, __de_pep_status, ...) do { \
+    TC(__VA_ARGS__);                                            \
+    _T(": ");                                                   \
+    if (__de_sq_status) {                                       \
+        _T("Sequoia: %s => ", pgp_status_to_string(__de_sq_status));   \
+    }                                                           \
+    _T("%s\n", pEp_status_to_string(__de_pep_status));          \
+} while(0)
+
 #  define DUMP_ERR(__de_err, __de_status, ...) do {             \
     TC(__VA_ARGS__);                                            \
     _T(": ");                                                   \
@@ -69,15 +77,75 @@
     }                                                               \
 } while(0)
 
+int email_cmp(void *cookie, int a_len, const void *a, int b_len, const void *b)
+{
+    pgp_packet_t a_userid = pgp_user_id_from_raw (a, a_len);
+    pgp_packet_t b_userid = pgp_user_id_from_raw (b, b_len);
+
+    T("(%.*s, %.*s)", a_len, (const char *) a, b_len, (const char *) b);
+
+    char *a_address = NULL;
+    pgp_user_id_address_normalized(NULL, a_userid, &a_address);
+
+    char *b_address = NULL;
+    pgp_user_id_address_normalized(NULL, b_userid, &b_address);
+
+    pgp_packet_free(a_userid);
+    pgp_packet_free(b_userid);
+
+    // return an integer that is negative, zero, or positive if the
+    // first string is less than, equal to, or greater than the
+    // second, respectively.
+    int result;
+    if (!a_address && !b_address)
+        result = 0;
+    else if (!a_address)
+        result = -1;
+    else if (!b_address)
+        result = 1;
+    else
+        result = strcmp(a_address, b_address);
+
+    if (true) {
+        T("'%s' %s '%s'",
+          a_address,
+          result == 0 ? "==" : result < 0 ? "<" : ">",
+          b_address);
+    }
+
+    free(a_address);
+    free(b_address);
+
+    return result;
+}
+
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
+    #define PATH "/.pEp_keys.db"
+ 
     PEP_STATUS status = PEP_STATUS_OK;
 
-    char path[MAX_PATH];
-    unix_local_db_file(path, "pEp_keys.db");
+    // Create the home directory.
+    char *home_env = NULL;
+#ifndef NDEBUG
+    home_env = getenv("PEP_HOME");
+#endif
+    if (!home_env)
+        home_env = getenv("HOME");
+    if (!home_env)
+        ERROR_OUT(NULL, PEP_INIT_GPGME_INIT_FAILED, "HOME unset");
+
+    // Create the DB and initialize it.
+    size_t path_size = strlen(home_env) + sizeof(PATH);
+    char *path = (char *) calloc(1, path_size);
+    assert(path);
     if (!path)
-        ERROR_OUT(NULL, PEP_INIT_GPGME_INIT_FAILED,
-                  "could not determine path to keys DB");
+        ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
+
+    int r = snprintf(path, path_size, "%s/.pEp_keys.db", home_env);
+    assert(r >= 0 && r < path_size);
+    if (r < 0)
+        ERROR_OUT(NULL, PEP_UNKNOWN_ERROR, "snprintf");
 
     int sqlite_result;
     sqlite_result = sqlite3_open_v2(path,
@@ -87,7 +155,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                                     | SQLITE_OPEN_FULLMUTEX
                                     | SQLITE_OPEN_PRIVATECACHE,
                                     NULL);
-
+    free(path);
     if (sqlite_result != SQLITE_OK)
         ERROR_OUT(NULL, PEP_INIT_CANNOT_OPEN_DB,
                   "opening keys DB: %s", sqlite3_errmsg(session->key_db));
@@ -103,6 +171,17 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                   "setting pragmas: %s", sqlite3_errmsg(session->key_db));
 
     sqlite3_busy_timeout(session->key_db, BUSY_WAIT_TIME);
+
+    sqlite_result =
+        sqlite3_create_collation(session->key_db,
+                                "EMAIL",
+                                SQLITE_UTF8,
+                                /* pArg (cookie) */ NULL,
+                                email_cmp);
+    if (sqlite_result != SQLITE_OK)
+        ERROR_OUT(NULL, PEP_INIT_CANNOT_OPEN_DB,
+                  "registering EMAIL collation function: %s",
+                  sqlite3_errmsg(session->key_db));
 
     sqlite_result = sqlite3_exec(session->key_db,
                                  "CREATE TABLE IF NOT EXISTS keys (\n"
@@ -137,7 +216,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
     sqlite_result = sqlite3_exec(session->key_db,
                                  "CREATE TABLE IF NOT EXISTS userids (\n"
-                                 "   userid TEXT NOT NULL,\n"
+                                 "   userid TEXT NOT NULL COLLATE EMAIL,\n"
                                  "   primary_key TEXT NOT NULL,\n"
                                  "   UNIQUE(userid, primary_key),\n"
                                  "   FOREIGN KEY (primary_key)\n"
@@ -145,7 +224,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                                  "     ON DELETE CASCADE\n"
                                  ");\n"
                                  "CREATE INDEX IF NOT EXISTS userids_index\n"
-                                 "  ON userids (userid, primary_key)\n",
+                                 "  ON userids (userid COLLATE EMAIL, primary_key)\n",
                                  NULL, NULL, NULL);
     if (sqlite_result != SQLITE_OK)
         ERROR_OUT(NULL, PEP_INIT_CANNOT_OPEN_DB,
@@ -304,59 +383,6 @@ static char *pgp_fingerprint_canonicalize(const char *fpr)
 }
 
 */
-
-// Splits an OpenPGP user id into its name and email components.  A
-// user id looks like:
-//
-//   Name (comment) <email>
-//
-// This function takes ownership of user_id!!!
-//
-// namep and emailp may be NULL if they are not required.
-static void user_id_split(char *, char **, char **) __attribute__((nonnull(1)));
-static void user_id_split(char *user_id, char **namep, char **emailp)
-{
-    if (namep)
-        *namep = NULL;
-    if (emailp)
-        *emailp = NULL;
-
-    char *email = strchr(user_id, '<');
-    if (email) {
-        // NUL terminate the string here so that user_id now points at
-        // most to: "Name (comment)"
-        *email = 0;
-
-        if (emailp && email[1]) {
-            email = email + 1;
-            char *end = strchr(email, '>');
-            if (end) {
-                *end = 0;
-                *emailp = strdup(email);
-            }
-        }
-    }
-
-    if (!namep)
-        return;
-
-    char *comment = strchr(user_id, '(');
-    if (comment)
-        *comment = 0;
-
-    // Kill any trailing white space.
-    for (size_t l = strlen(user_id); l > 0 && user_id[l - 1] == ' '; l --)
-        user_id[l - 1] = 0;
-
-    // Kill any leading whitespace.
-    char *start = user_id;
-    while (*start == ' ')
-        start ++;
-    if (start[0])
-        *namep = strdup(start);
-
-    free(user_id);
-}
 
 // step statement and load the tpk and secret.
 static PEP_STATUS key_load(PEP_SESSION, sqlite3_stmt *, pgp_tpk_t *, int *)
@@ -607,6 +633,8 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
     int tried_commit = 0;
     pgp_tpk_key_iter_t key_iter = NULL;
     pgp_user_id_binding_iter_t user_id_iter = NULL;
+    char *email = NULL;
+    char *name = NULL;
 
     sqlite3_stmt *stmt = session->sq_sql.begin_transaction;
     int sqlite_result = sqlite3_step(stmt);
@@ -641,9 +669,9 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
 
     pgp_status_t pgp_status;
-    pgp_tsk_t tsk = pgp_tpk_into_tsk(tpk);
+    pgp_tsk_t tsk = pgp_tpk_as_tsk(tpk);
     pgp_status = pgp_tsk_serialize(&err, tsk, writer);
-    tpk = pgp_tsk_into_tpk(tsk);
+    pgp_tsk_free(tsk);
     //pgp_writer_free(writer);
     if (pgp_status != 0)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Serializing TPK");
@@ -692,20 +720,27 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
     pgp_user_id_binding_t binding;
     int first = 1;
     while ((binding = pgp_user_id_binding_iter_next(user_id_iter))) {
-        char *user_id = pgp_user_id_binding_user_id(binding);
-        if (!user_id || !*user_id)
+        char *user_id_value = pgp_user_id_binding_user_id(binding);
+        if (!user_id_value || !*user_id_value)
             continue;
 
         // Ignore bindings with a self-revocation certificate, but no
         // self-signature.
         if (!pgp_user_id_binding_selfsig(binding)) {
-            free(user_id);
+            free(user_id_value);
             continue;
         }
 
-        char *name, *email;
-        user_id_split(user_id, &name, &email); /* user_id is comsumed.  */
-        // XXX: Correctly clean up name and email on error...
+        free(name);
+        name = NULL;
+        free(email);
+        email = NULL;
+
+        pgp_packet_t userid = pgp_user_id_new (user_id_value);
+        pgp_user_id_name(NULL, userid, &name);
+        pgp_user_id_address(NULL, userid, &email);
+        pgp_packet_free(userid);
+        free(user_id_value);
 
         if (email) {
             T("  userid: %s", email);
@@ -718,7 +753,6 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
 
             if (sqlite_result != SQLITE_DONE) {
                 pgp_user_id_binding_iter_free(user_id_iter);
-                free(name);
                 ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
                           "Updating userids: %s", sqlite3_errmsg(session->key_db));
             }
@@ -736,8 +770,6 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
             if (*private_idents == NULL)
                 ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "identity_list_add");
         }
-        free(email);
-        free(name);
 
     }
     pgp_user_id_binding_iter_free(user_id_iter);
@@ -761,6 +793,8 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
 
     T("(%s) -> %s", fpr, pEp_status_to_string(status));
 
+    free(email);
+    free(name);
     if (user_id_iter)
         pgp_user_id_binding_iter_free(user_id_iter);
     if (key_iter)
@@ -815,10 +849,12 @@ get_public_keys_cb(void *cookie_raw,
 }
 
 static pgp_status_t
-get_secret_keys_cb(void *cookie_opaque,
-                   pgp_pkesk_t *pkesks, size_t pkesk_count,
-                   pgp_skesk_t *skesks, size_t skesk_count,
-                   pgp_secret_t *secret)
+decrypt_cb(void *cookie_opaque,
+           pgp_pkesk_t *pkesks, size_t pkesk_count,
+           pgp_skesk_t *skesks, size_t skesk_count,
+           pgp_decryptor_do_decrypt_cb_t *decrypt,
+           void *decrypt_cookie,
+           pgp_fingerprint_t *identity_out)
 {
     pgp_error_t err = NULL;
     struct decrypt_cookie *cookie = cookie_opaque;
@@ -840,6 +876,7 @@ get_secret_keys_cb(void *cookie_opaque,
         pgp_keyid_t keyid = pgp_pkesk_recipient(pkesk); /* Reference. */
         char *keyid_str = pgp_keyid_to_hex(keyid);
         pgp_tpk_key_iter_t key_iter = NULL;
+        pgp_session_key_t sk = NULL;
 
         T("Considering PKESK for %s", keyid_str);
 
@@ -897,12 +934,21 @@ get_secret_keys_cb(void *cookie_opaque,
             goto eol;
         }
 
+        sk = pgp_session_key_from_bytes (session_key, session_key_len);
+        pgp_status_t status;
+        if ((status = decrypt (decrypt_cookie, algo, sk))) {
+            DUMP_STATUS(status, PEP_UNKNOWN_ERROR, "decrypt_cb");
+            goto eol;
+        }
+
         T("Decrypted PKESK for %s", keyid_str);
 
-        *secret = pgp_secret_cached(algo, session_key, session_key_len);
+        *identity_out = pgp_tpk_fingerprint(tpk);
         cookie->decrypted = 1;
 
     eol:
+        if (sk)
+            pgp_session_key_free (sk);
         free(keyid_str);
         if (key_iter)
             pgp_tpk_key_iter_free(key_iter);
@@ -916,6 +962,7 @@ get_secret_keys_cb(void *cookie_opaque,
         pgp_keyid_t keyid = pgp_pkesk_recipient(pkesk); /* Reference. */
         char *keyid_str = pgp_keyid_to_hex(keyid);
         pgp_tpk_key_iter_t key_iter = NULL;
+        pgp_session_key_t sk = NULL;
 
         if (strcmp(keyid_str, "0000000000000000") != 0)
             goto eol2;
@@ -961,8 +1008,17 @@ get_secret_keys_cb(void *cookie_opaque,
                 free(fp_string);
                 pgp_fingerprint_free(fp);
 
-                *secret = pgp_secret_cached(algo, session_key, session_key_len);
+                pgp_session_key_t sk = pgp_session_key_from_bytes (session_key,
+                                                                   session_key_len);
+                pgp_status_t status;
+                if ((status = decrypt (decrypt_cookie, algo, sk))) {
+                    DUMP_STATUS(status, PEP_UNKNOWN_ERROR, "decrypt_cb");
+                    goto eol2;
+                }
+
+                *identity_out = pgp_tpk_fingerprint(tsk);
                 cookie->decrypted = 1;
+
                 break;
             }
 
@@ -970,6 +1026,8 @@ get_secret_keys_cb(void *cookie_opaque,
             key_iter = NULL;
         }
     eol2:
+        if (sk)
+            pgp_session_key_free (sk);
         free(keyid_str);
         if (key_iter)
             pgp_tpk_key_iter_free(key_iter);
@@ -985,85 +1043,145 @@ get_secret_keys_cb(void *cookie_opaque,
 }
 
 static pgp_status_t
-check_signatures_cb(void *cookie_opaque,
-                   pgp_verification_results_t results, size_t levels)
+check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
 {
     struct decrypt_cookie *cookie = cookie_opaque;
     PEP_SESSION session = cookie->session;
 
-    int level;
-    for (level = 0; level < levels; level ++) {
-        pgp_verification_result_t *vrs;
-        size_t vr_count;
-        pgp_verification_results_at_level(results, level, &vrs, &vr_count);
+    pgp_message_structure_iter_t iter
+        = pgp_message_structure_iter (structure);
+    for (pgp_message_layer_t layer = pgp_message_structure_iter_next (iter);
+         layer;
+         layer = pgp_message_structure_iter_next (iter)) {
+        pgp_verification_result_iter_t results;
 
-        int i;
-        for (i = 0; i < vr_count; i ++) {
-            pgp_tpk_t tpk = NULL;
-            pgp_verification_result_code_t code
-                = pgp_verification_result_code(vrs[i]);
+        switch (pgp_message_layer_variant (layer)) {
+        case PGP_MESSAGE_LAYER_COMPRESSION:
+        case PGP_MESSAGE_LAYER_ENCRYPTION:
+            break;
 
-            if (code == PGP_VERIFICATION_RESULT_CODE_BAD_CHECKSUM) {
-                cookie->bad_checksums ++;
-                continue;
-            }
-            if (code == PGP_VERIFICATION_RESULT_CODE_MISSING_KEY) {
-                // No key, nothing we can do.
-                cookie->missing_keys ++;
-                continue;
-            }
+        case PGP_MESSAGE_LAYER_SIGNATURE_GROUP:
+            pgp_message_layer_signature_group(layer, &results);
+            pgp_verification_result_t result;
+            while ((result = pgp_verification_result_iter_next (results))) {
+                pgp_signature_t sig;
+                pgp_keyid_t keyid = NULL;
+                char *keyid_str = NULL;
 
-            // We need to add the fingerprint of the primary key to
-            // cookie->signer_keylist.
-            pgp_signature_t sig = pgp_verification_result_signature(vrs[i]);
+                switch (pgp_verification_result_variant (result)) {
+                case PGP_VERIFICATION_RESULT_GOOD_CHECKSUM:
+                    // We need to add the fingerprint of the primary
+                    // key to cookie->signer_keylist.
 
-            // First try looking up by the TPK using the
-            // IssuerFingerprint subpacket.
-            pgp_fingerprint_t issuer_fp = pgp_signature_issuer_fingerprint(sig);
-            if (issuer_fp) {
-                pgp_keyid_t issuer = pgp_fingerprint_to_keyid(issuer_fp);
-                if (tpk_find_by_keyid(session, issuer, false, &tpk, NULL) != PEP_STATUS_OK)
-                    ; // Soft error.  Ignore.
-                pgp_keyid_free(issuer);
-                pgp_fingerprint_free(issuer_fp);
-            }
+                    pgp_verification_result_good_checksum (result, &sig, NULL,
+                                                           NULL, NULL, NULL);
 
-            // If that is not available, try using the Issuer subpacket.
-            if (!tpk) {
-                pgp_keyid_t issuer = pgp_signature_issuer(sig);
-                if (issuer) {
-                    if (tpk_find_by_keyid(session, issuer, false, &tpk, NULL) != PEP_STATUS_OK)
+                    // First try looking up by the TPK using the
+                    // IssuerFingerprint subpacket.
+                    pgp_fingerprint_t fpr
+                        = pgp_signature_issuer_fingerprint(sig);
+                    if (fpr) {
+                        // Even though we have a fingerprint, we have
+                        // to look the key up by keyid, because we
+                        // want to match on subkeys and we only store
+                        // keyids for subkeys.
+                        keyid = pgp_fingerprint_to_keyid(fpr);
+                        pgp_fingerprint_free(fpr);
+                    } else {
+                        // That is not available, try using the Issuer
+                        // subpacket.
+                        keyid = pgp_signature_issuer(sig);
+                    }
+
+                    if (! keyid) {
+                        T("signature with no Issuer or Issuer Fingerprint subpacket!");
+                        goto eol;
+                    }
+
+                    pgp_tpk_t tpk;
+                    if (tpk_find_by_keyid(session, keyid, false,
+                                          &tpk, NULL) != PEP_STATUS_OK)
                         ; // Soft error.  Ignore.
+
+                    if (tpk) {
+                        // Ok, we have a TPK.
+
+                        // We need the primary key's fingerprint (not
+                        // the issuer fingerprint).
+                        pgp_fingerprint_t primary_fpr
+                            = pgp_tpk_fingerprint(tpk);
+                        char *primary_fpr_str
+                            = pgp_fingerprint_to_hex(primary_fpr);
+                        stringlist_add_unique(cookie->signer_keylist,
+                                              primary_fpr_str);
+
+                        T("Good signature from %s", primary_fpr_str);
+
+                        // XXX: Check that the TPK and the key used to make
+                        // the signature and the signature itself are alive
+                        // and not revoked.  Revoked =>
+                        // PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH; Expired key
+                        // or sig => PEP_DECRYPTED.
+                        cookie->good_checksums ++;
+
+                        free(primary_fpr_str);
+                        pgp_fingerprint_free(primary_fpr);
+                        pgp_tpk_free(tpk);
+                    } else {
+                        // If we get
+                        // PGP_VERIFICATION_RESULT_CODE_GOOD_CHECKSUM, then the
+                        // TPK should be available.  But, another process
+                        // could have deleted the key from the store in the
+                        // mean time, so be tolerant.
+                        T("Key to check signature from %s disappeared",
+                          keyid_str);
+                        cookie->missing_keys ++;
+                    }
+                    break;
+
+                case PGP_VERIFICATION_RESULT_MISSING_KEY:
+                    pgp_verification_result_missing_key (result, &sig);
+                    keyid = pgp_signature_issuer (sig);
+                    keyid_str = pgp_keyid_to_string (keyid);
+                    T("No key to check signature from %s", keyid_str);
+
+                    cookie->missing_keys ++;
+                    break;
+
+                case PGP_VERIFICATION_RESULT_BAD_CHECKSUM:
+                    pgp_verification_result_bad_checksum (result, &sig);
+                    keyid = pgp_signature_issuer (sig);
+                    if (keyid) {
+                        keyid_str = pgp_keyid_to_string (keyid);
+                        T("Bad signature from %s", keyid_str);
+                    } else {
+                        T("Bad signature without issuer information");
+                    }
+
+                    cookie->bad_checksums ++;
+                    break;
+
+                default:
+                    assert (! "reachable");
                 }
-                pgp_keyid_free(issuer);
+
+            eol:
+                free (keyid_str);
+                pgp_signature_free (sig);
+                pgp_verification_result_free (result);
             }
+            pgp_verification_result_iter_free (results);
+            break;
 
-            if (tpk) {
-                // Ok, we have a TPK.
-                pgp_fingerprint_t fp = pgp_tpk_fingerprint(tpk);
-                char *fp_str = pgp_fingerprint_to_hex(fp);
-                stringlist_add_unique(cookie->signer_keylist, fp_str);
-
-                // XXX: Check that the TPK and the key used to make
-                // the signature and the signature itself are alive
-                // and not revoked.  Revoked =>
-                // PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH; Expired key
-                // or sig => PEP_DECRYPTED.
-                cookie->good_checksums ++;
-
-                free(fp_str);
-                pgp_fingerprint_free(fp);
-                pgp_tpk_free(tpk);
-            } else {
-                // If we get
-                // PGP_VERIFICATION_RESULT_CODE_GOOD_CHECKSUM, then the
-                // TPK should be available.  But, another process
-                // could have deleted the key from the store in the
-                // mean time, so be tolerant.
-                cookie->missing_keys ++;
-            }
+        default:
+            assert (! "reachable");
         }
+
+        pgp_message_layer_free (layer);
     }
+
+    pgp_message_structure_iter_free (iter);
+    pgp_message_structure_free (structure);
 
     return PGP_STATUS_SUCCESS;
 }
@@ -1104,8 +1222,8 @@ PEP_STATUS pgp_decrypt_and_verify(
 
     pgp_error_t err = NULL;
     decryptor = pgp_decryptor_new(&err, reader,
-                                  get_public_keys_cb, get_secret_keys_cb,
-                                  check_signatures_cb, &cookie);
+                                  get_public_keys_cb, decrypt_cb,
+                                  check_signatures_cb, &cookie, 0);
     if (! decryptor)
         ERROR_OUT(err, PEP_DECRYPT_NO_KEY, "pgp_decryptor_new");
 
@@ -1202,12 +1320,12 @@ PEP_STATUS pgp_verify_text(
         verifier = pgp_detached_verifier_new(&err, dsig_reader, reader,
                                              get_public_keys_cb,
                                              check_signatures_cb,
-                                             &cookie);
+                                             &cookie, 0);
     else
         verifier = pgp_verifier_new(&err, reader,
                                     get_public_keys_cb,
                                     check_signatures_cb,
-                                    &cookie);
+                                    &cookie, 0);
     if (! verifier)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Creating verifier");
     if (pgp_reader_discard(&err, verifier) < 0)
@@ -1515,15 +1633,14 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     T("(%s)", userid);
 
     // Generate a key.
-    pgp_tsk_t tsk;
+    pgp_tpk_builder_t tpkb = pgp_tpk_builder_general_purpose
+        (PGP_TPK_CIPHER_SUITE_RSA3K, userid);
     pgp_signature_t rev;
-    if (pgp_tsk_new(&err, userid, &tsk, &rev) != 0)
+    if (pgp_tpk_builder_generate(&err, tpkb, &tpk, &rev))
         ERROR_OUT(err, PEP_CANNOT_CREATE_KEY, "Generating a key pair");
 
     // XXX: We should return this.
     pgp_signature_free(rev);
-
-    tpk = pgp_tsk_into_tpk(tsk);
 
     // Get the fingerprint.
     pgp_fpr = pgp_tpk_fingerprint(tpk);
@@ -1586,14 +1703,13 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
     return PEP_STATUS_OK;
 }
 
-// XXX: This needs to handle not only TPKs, but also keyrings and
-// revocation certificates.  Right now, we only import a single TPK
-// and ignore everything else.
+// XXX: This also needs to handle revocation certificates.
 PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
                               size_t size, identity_list **private_idents)
 {
-    PEP_STATUS status = PEP_STATUS_OK;
+    PEP_STATUS status = PEP_NO_KEY_IMPORTED;
     pgp_error_t err;
+    pgp_tpk_parser_t parser = NULL;
 
     if (private_idents)
         *private_idents = NULL;
@@ -1607,24 +1723,93 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
 
     pgp_tag_t tag = pgp_packet_parser_result_tag(ppr);
     switch (tag) {
-    case PGP_TAG_SIGNATURE:
-        // XXX: Implement me.
-        // assert(!"Have possible revocation certificate!");
-		ERROR_OUT(NULL, PEP_NO_KEY_IMPORTED, "Implement me: Have possible revocation certificate!");
-        break;
+    case PGP_TAG_SIGNATURE: {
+        // The following asserts can't fail, because
+        // pgp_packet_parser_result_tag succeeded and the tag is
+        // right.
+        pgp_packet_parser_t pp = pgp_packet_parser_result_packet_parser (ppr);
+        assert(pp);
 
+        pgp_packet_t packet = NULL;
+        if (pgp_packet_parser_next(&err, pp, &packet, &ppr))
+            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Getting signature packet");
+
+        pgp_signature_t sig = pgp_packet_ref_signature (packet);
+        assert(sig);
+
+        pgp_tpk_t tpk = NULL;
+
+        pgp_fingerprint_t issuer_fpr = pgp_signature_issuer_fingerprint(sig);
+        if (issuer_fpr) {
+            char *issuer_fpr_hex = pgp_fingerprint_to_hex(issuer_fpr);
+            T("Importing a signature issued by %s", issuer_fpr_hex);
+
+            status = tpk_find_by_fpr_hex(session, issuer_fpr_hex,
+                                         false, &tpk, NULL);
+            if (status && status != PEP_KEY_NOT_FOUND)
+                DUMP_ERR(NULL, status, "Looking up %s", issuer_fpr_hex);
+
+            free(issuer_fpr_hex);
+            pgp_fingerprint_free(issuer_fpr);
+        }
+
+        if (! tpk) {
+            pgp_keyid_t issuer = pgp_signature_issuer(sig);
+            if (issuer) {
+                char *issuer_hex = pgp_keyid_to_hex(issuer);
+                T("Importing a signature issued by %s", issuer_hex);
+
+                status = tpk_find_by_keyid_hex(session, issuer_hex,
+                                               false, &tpk, NULL);
+                if (status && status != PEP_KEY_NOT_FOUND)
+                    DUMP_ERR(NULL, status, "Looking up %s", issuer_hex);
+
+                free(issuer_hex);
+                pgp_keyid_free(issuer);
+            }
+        }
+
+        // We need a packet.  sig is only a reference, so we just need
+        // to free it.
+        pgp_signature_free(sig);
+
+        if (tpk) {
+            T("Merging packet: %s", pgp_packet_debug(packet));
+
+            tpk = pgp_tpk_merge_packets (&err, tpk, &packet, 1);
+            if (! tpk)
+                ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Merging signature");
+
+            status = tpk_save(session, tpk, NULL);
+            if (status)
+                ERROR_OUT(NULL, status, "saving merged TPK");
+            status = PEP_KEY_IMPORTED;
+        }
+        break;
+    }
     case PGP_TAG_PUBLIC_KEY:
     case PGP_TAG_SECRET_KEY: {
-        pgp_tpk_t tpk = pgp_tpk_from_packet_parser(&err, ppr);
-        if (! tpk)
-            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "parsing key data");
+        parser = pgp_tpk_parser_from_packet_parser(ppr);
+        pgp_tpk_t tpk;
+        int count = 0;
+        err = NULL;
+        while ((tpk = pgp_tpk_parser_next(&err, parser))) {
+            count ++;
 
-        // If private_idents is not NULL and there is any private key
-        // material, it will be saved.
-        status = tpk_save(session, tpk, private_idents);
-        if (status == PEP_STATUS_OK)
-            status = PEP_KEY_IMPORTED;
-        ERROR_OUT(NULL, status, "saving TPK");
+            T("#%d. TPK for %s, %s",
+              count, pgp_tpk_primary_user_id(tpk),
+              pgp_fingerprint_to_hex(pgp_tpk_fingerprint(tpk)));
+
+            // If private_idents is not NULL and there is any private key
+            // material, it will be saved.
+            status = tpk_save(session, tpk, private_idents);
+            if (status == PEP_STATUS_OK)
+                status = PEP_KEY_IMPORTED;
+            else
+                ERROR_OUT(NULL, status, "saving TPK");
+        }
+        if (err || count == 0)
+            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "parsing key data");
         break;
     }
     default:
@@ -1634,6 +1819,9 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
     }
 
  out:
+    if (parser)
+        pgp_tpk_parser_free(parser);
+
     T("-> %s", pEp_status_to_string(status));
     return status;
 }
@@ -1673,10 +1861,10 @@ PEP_STATUS pgp_export_keydata(
     }
 
     if (secret) {
-        pgp_tsk_t tsk = pgp_tpk_into_tsk(tpk);
+        pgp_tsk_t tsk = pgp_tpk_as_tsk(tpk);
         if (pgp_tsk_serialize(&err, tsk, armor_writer))
             ERROR_OUT(err, PEP_UNKNOWN_ERROR, "serializing TSK");
-        tpk = pgp_tsk_into_tpk(tsk);
+        pgp_tsk_free(tsk);
     } else {
         if (pgp_tpk_serialize(&err, tpk, armor_writer))
             ERROR_OUT(err, PEP_UNKNOWN_ERROR, "serializing TPK");
