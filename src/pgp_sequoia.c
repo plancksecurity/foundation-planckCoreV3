@@ -124,12 +124,21 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     PEP_STATUS status = PEP_STATUS_OK;
 
     // Create the home directory.
+    char *home_env = NULL;
+#ifndef NDEBUG
+    home_env = getenv("PEP_HOME");
+#endif
+
 #ifdef _WIN32
-	#define PATH "\\pEp\\.pEp_keys.db"
-	char *home_env = getenv("LOCALAPPDATA");
+    #define PATH "\\pEp\\.pEp_keys.db"
+
+    if (!home_env)
+        home_env = getenv("LOCALAPPDATA");
 #else
     #define PATH "/.pEp_keys.db"
-	char *home_env = getenv("HOME");
+
+    if (!home_env)
+        home_env = getenv("HOME");
 #endif
 
     if (!home_env)
@@ -143,9 +152,9 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
 
 #ifdef _WIN32
-	int r = snprintf(path, path_size, "%s\\pEp\\.pEp_keys.db", home_env);
+    int r = snprintf(path, path_size, "%s\\pEp\\.pEp_keys.db", home_env);
 #else
-	int r = snprintf(path, path_size, "%s/.pEp_keys.db", home_env);
+    int r = snprintf(path, path_size, "%s/.pEp_keys.db", home_env);
 #endif
     assert(r >= 0 && r < path_size);
     if (r < 0)

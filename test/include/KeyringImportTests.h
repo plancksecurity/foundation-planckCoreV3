@@ -16,7 +16,8 @@ class KeyringImportTests : public EngineTestSessionSuite {
         void setup();
         void tear_down();
     private:
-        void import();
+        void import1();
+        void import2();
 };
 
 #endif
