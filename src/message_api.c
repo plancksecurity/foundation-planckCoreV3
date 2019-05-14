@@ -947,6 +947,12 @@ static message* wrap_message_as_attachment(message* envelope,
         if (!attachment->shortmsg)
             goto enomem;
     }
+    
+    /* add sender fpr to inner message */
+    add_opt_field(attachment, 
+                  "X-pEp-Sender-FPR", 
+                  (attachment->_sender_fpr ? attachment->_sender_fpr : "")
+              );
             
     /* Turn message into a MIME-blob */
     status = _mime_encode_message_internal(attachment, false, &message_text, true);
@@ -1677,7 +1683,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
-    keys = new_stringlist(src->from->fpr);
+    char* send_fpr = strdup(src->from->fpr ? src->from->fpr : "");
+    src->_sender_fpr = send_fpr;
+    
+    keys = new_stringlist(send_fpr);
     if (keys == NULL)
         goto enomem;
 
@@ -3255,6 +3264,51 @@ pEp_free:
 
 }
 
+static void parse_pEp_protocol_version(const char* version_str, unsigned int &major, unsigned int &minor) {
+    *major = 0;
+    *minor = 0;
+    int mj = 0;
+    int mn = 0;
+    int i;
+    char* buf = NULL;
+    
+    if (!EMPTYSTR(version_str)) {
+        const char* split = strstr(version_str, ".");
+        if (!EMPTYSTR(split) && split != version_str) {
+            // I think presuming we're not going to have a protocol larger than 99999.99999 is safe.
+            // Famous last programming words, I know. FIXME: put this up with the version as a constant.
+            const unsigned int _PEP_VERPARSE_BUFSIZE = 12;
+            buf = calloc(_PEP_VERPARSE_BUFSIZE, 1);
+            size_t major_digits = (size_t)(version_str - split);
+            if (major_digits < _PEP_VERPARSE_BUFSIZE) {
+                for (i = 0; i < major_digits; i++, version_str++) {
+                    buf[i] = *version_str;
+                }
+                        
+                mj = atoi(buf);
+                if (mj > 0) {
+                    size_t minor_digits = strlen(++version_str);
+                    if (minor_digits < (_PEP_VERPARSE_BUFSIZE - major_digits)) {
+                        mn = atoi(version_str);
+                        if (mn >= 0) {
+                            if (mn == 0) {
+                                for (i = 0; i < minor_digits; i++) {
+                                    if (*(++split) != '0')
+                                        goto pEp_free;
+                                }
+                            }
+                            *major = mj;
+                            *minor = mn;
+                        }
+                    } 
+                }                    
+            }
+        }
+    }
+pEp_free:
+    free(buf);
+}
+
 static PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -3527,8 +3581,21 @@ static PEP_STATUS _decrypt_message(
                                     // Since we capture the information, this is ok.
                                     wrap_info = NULL;
                                     inner_message->enc_format = src->enc_format;
-                                    // FIXME
+
+                                    const stringpair_list_t* pEp_protocol_version = NULL;
+                                    const stringpair_list_t* sender_fpr = NULL;
+                                    pEp_protocol_version = stringpair_list_find(inner_message->opt_fields, "X-pEp-Version");
+                                    unsigned int pEp_v_major = 0;
+                                    unsigned int pEp_v_minor = 0;
+                                    if (pEp_protocol_version)
+                                        parse_pEp_protocol_version(pep_protocol_version->value, &pEp_v_major, &pEp_v_minor);
+                                    
+                                    if (((pEp_v_major == 2) && (pEp_v_minor >= 1)) || (pEp_v_major > 2))                              
+                                        sender_fpr = stringpair_list_find(inner_message->opt_fields, "X-pEp-Sender-FPR");
+
+                                    // FIXME - Message 2.1                                    
                                     status = unencapsulate_hidden_fields(inner_message, NULL, &wrap_info);
+                                    
                                     
                                     // ?
                                     if (status != PEP_STATUS_OK) {

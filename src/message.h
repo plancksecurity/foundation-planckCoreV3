@@ -69,6 +69,9 @@ typedef struct _message {
     char *comments;                         // UTF-8 string with comments
     stringpair_list_t *opt_fields;          // optional fields
     PEP_enc_format enc_format;              // format of encrypted data
+    char* _sender_fpr;                      // INTERNAL USE ONLY - fingerprint of 
+                                            // sending signer.
+                                            // (read_only to the outside)
 } message;
 
 typedef struct _message_ref_list {
