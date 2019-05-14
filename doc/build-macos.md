@@ -5,6 +5,7 @@ See CC_BY-SA.txt -->
 
 # Build instructions for macOS Sierra
 
+
 # Installing packaged dependencies
 You will find instructions for using either Macports or Homebrew below to install the compile-time dependencies.
 
@@ -23,12 +24,6 @@ sudo port install git autoconf automake libtool
 sudo port install asn1c
 # engine
 sudo port install gpgme
-~~~
-
-Ensure that `python` is Python 2.7:
-
-~~~
-sudo port select python python27
 ~~~
 
 ## Homebrew
@@ -50,9 +45,10 @@ brew install asn1c
 brew install gpgme
 ~~~
 
+
 # Installing unpackaged dependencies
 ## YML2
-To check if lxml is properly installed, you can use this lxml "hello world" command:
+To check if lxml (a dependency of YML2) is properly installed for a given python interpreter, you can use this lxml "hello world" command:
 
 ~~~
 python2 -c 'from lxml import etree; root = etree.Element("root"); print(root.tag)'
@@ -63,6 +59,8 @@ It should generate the following output:
 ~~~
 root
 ~~~
+
+If you have used the Macports instructions from above to install your dependencies, you will want to use `/opt/local/bin/python2` instead of `python2` as your python interpreter. See also the setting of `YML2_PROC` below, you will need to select the appropriate python interpreter there.
 
 ~~~
 mkdir -p ~/code/yml2
@@ -94,10 +92,10 @@ mkdir -p ~/code/gpgme/build/lib
 cp -r /opt/local/lib/libgpg* ~/code/gpgme/build/lib
 ~~~
 
-It's of course possible to skip MacPort's version, and use a self-compiled GPGME/GPG. The default build configuration assumes this case, and assumes you have installed your GPGME with `$(HOME)` as your prefix.
+It is of course possible to use a self-compiled GPGME/GPG instead of the Macports version.
+
 
 # pEp Engine
-
 ~~~
 mkdir -p ~/code/pep-engine
 hg clone https://pep.foundation/dev/repos/pEpEngine/ ~/code/pep-engine
@@ -105,11 +103,13 @@ cd ~/code/pep-engine
 mkdir ~/code/pep-engine/build
 ~~~
 
-Edit the build configuration to your needs in `Makefile.conf`, or create a `local.conf` that sets any of the make variables documented in `Makefile.conf`. All the default values for the build configuration variables on each platform are documented in `Makefile.conf`.
+You can change the parameters of the build by assigning non-default values to certain `make` variables.
+All variables that you can safely change are documented in `/Makefile.conf`. The default values are also given in this file.
+You may edit these variables directly in `/Makefile.conf`, or you can create a `/local.conf` containing `make` variable assignments -- both methods work in the same manner.
 
-If a dependency is not found in your system's default include or library paths, you will have to specify the according paths in a make variable. Typically, this has to be done at least for YML2, and libetpan.
+If a dependency is not found in your system's default include or library paths, you will have to specify the according paths in the appropriate `make` variable. Typically, this has to be done at least for YML2, and libetpan.
 
-For a more detailed explanation of the mechanics of these build configuration files, and overriding defaults, see the comments in `Makefile.conf`.
+For a more detailed explanation of the mechanics of these build configuration files, and overriding defaults, see the comments in `/Makefile.conf`.
 
 Below is a sample `./local.conf` file, for orientation.
 
@@ -118,21 +118,28 @@ PREFIX=$(HOME)/code/engine/build
 SYSTEM_DB=$(PREFIX)/share/pEp/system.db
 
 YML2_PATH=$(HOME)/code/yml2
+YML2_PROC=/opt/local/bin/python2 $(YML2_PATH)/yml2proc $(YML2_OPTS)
 
 ETPAN_LIB=-L$(HOME)/code/libetpan/build/lib
 ETPAN_INC=-I$(HOME)/code/libetpan/build/include
 
-GPGME_LIB=-L$(HOME)/lib
-GPGME_INC=-I$(HOME)/include
+GPGME_LIB=-L$(HOME)/code/gpgme/build/lib
+GPGME_INC=-I$(HOME)/code/gpgme/build/include
+
+CPPUNIT_LIB=-L$(HOME)/code/cpptest/build/lib
+CPPUNIT_INC=-I$(HOME)/code/cpptest/build/include
 ~~~
 
 The engine is built as follows:
 
 ~~~
 make all
-make db
+make install
 ~~~
 
+A hand full of other build targets following the sematics of the GNU Build System are also available.
+
+## Troubleshooting
 If your build fails with an error message similar to the following:
 
 ~~~
@@ -145,7 +152,8 @@ or any other locale-related Python error, make sure Python does not have any loc
 Usually, `unset LC_CTYPE` is sufficient to take care of the problem, but it depends on your macOS's regional and language settings and which terminal emulator you use.
 This is a bug in Python, see [https://bugs.python.org/issue18378#msg215215](https://bugs.python.org/issue18378#msg215215).
 
-The unit tests can be run without the engine library being installed, however `system.db` must be installed:
+## Testing
+The unit tests can be run without the engine library being installed, however `system.db` must be installed. Install it like this:
 
 ~~~
 make -C db install
@@ -156,6 +164,5 @@ Since `system.db` rarely changes, its installation is not needed for every build
 Tests can be compiled and executed with the following commands:
 
 ~~~
-make -C test compile
-make test
+make check
 ~~~
