@@ -98,8 +98,8 @@ TEST_CMD_PFX=
 .PHONY: all clean test
 
 all:
-	make .suitemaker
-	make $(TARGET) .scripts
+	$(MAKE) .suitemaker
+	$(MAKE) $(TARGET) .scripts
 	touch .suitemaker
 
 %.d: %.cc
