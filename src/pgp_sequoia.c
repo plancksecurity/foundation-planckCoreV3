@@ -1761,7 +1761,7 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
 
     // Generate a key.
     pgp_tpk_builder_t tpkb = pgp_tpk_builder_general_purpose
-        (PGP_TPK_CIPHER_SUITE_RSA3K, userid);
+        (PGP_TPK_CIPHER_SUITE_RSA2K, userid);
     pgp_signature_t rev;
     if (pgp_tpk_builder_generate(&err, tpkb, &tpk, &rev))
         ERROR_OUT(err, PEP_CANNOT_CREATE_KEY, "Generating a key pair");
