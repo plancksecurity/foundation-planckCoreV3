@@ -1021,11 +1021,6 @@ static PEP_STATUS encrypt_PGP_inline(
         return PEP_OUT_OF_MEMORY;
     dst->attachments = bl;
 
-    if ((!session->passive_mode) && 
-        !(flags & PEP_encrypt_flag_force_no_attached_key)) {
-        attach_own_key(session, dst);
-    }
-
     return PEP_STATUS_OK;
 }
 
@@ -1943,7 +1938,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
     else {
         // FIXME - we need to deal with transport types (via flag)
-        if ((!force_v_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
+        if ((enc_format != PEP_enc_inline) && (!force_v_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
             message_wrap_type wrap_type = ((flags & PEP_encrypt_flag_key_reset_only) ? PEP_message_key_reset : PEP_message_default);
             _src = wrap_message_as_attachment(NULL, src, wrap_type, false);
             if (!_src)
