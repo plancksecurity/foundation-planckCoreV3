@@ -975,7 +975,8 @@ static PEP_STATUS encrypt_PGP_inline(
         PEP_SESSION session,
         const message *src,
         stringlist_t *keys,
-        message *dst
+        message *dst,
+        PEP_encrypt_flags_t flags
     )
 {
     char *ctext = NULL;
@@ -1000,8 +1001,19 @@ static PEP_STATUS encrypt_PGP_inline(
     _ctext[csize] = 0;
 
     dst->longmsg = _ctext;
-    dst->enc_format = PEP_enc_inline;
 
+    // attachments are going unencrypted
+    bloblist_t *bl = bloblist_dup(src->attachments);
+    if (!bl)
+        return PEP_OUT_OF_MEMORY;
+    dst->attachments = bl;
+
+    if ((!session->passive_mode) && 
+        !(flags & PEP_encrypt_flag_force_no_attached_key)) {
+        attach_own_key(session, dst);
+    }
+
+    dst->enc_format = PEP_enc_inline;
     return PEP_STATUS_OK;
 }
 
@@ -1949,7 +1961,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 break;
 
             case PEP_enc_inline:
-                status = encrypt_PGP_inline(session, _src, keys, msg);
+                status = encrypt_PGP_inline(session, _src, keys, msg, flags);
                 break;
 
             default:
@@ -2284,7 +2296,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
             break;
 
         case PEP_enc_inline:
-            status = encrypt_PGP_inline(session, _src, keys, msg);
+            status = encrypt_PGP_inline(session, _src, keys, msg, flags);
             break;
 
         default:
