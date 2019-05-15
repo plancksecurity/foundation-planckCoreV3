@@ -1000,6 +1000,8 @@ static PEP_STATUS encrypt_PGP_inline(
     _ctext[csize] = 0;
 
     dst->longmsg = _ctext;
+    dst->enc_format = PEP_enc_inline;
+
     return PEP_STATUS_OK;
 }
 
