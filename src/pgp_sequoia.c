@@ -9,6 +9,7 @@
 #include "pEp_internal.h"
 #include "pgp_gpg.h"
 
+#include <ctype.h>
 #include <limits.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -739,6 +740,48 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
         pgp_packet_t userid = pgp_user_id_new (user_id_value);
         pgp_user_id_name(NULL, userid, &name);
         pgp_user_id_address(NULL, userid, &email);
+        
+        if (!email || email[0] == '\0') {
+            size_t uid_value_len;
+            const char* uid_value = (const char*)pgp_user_id_value(userid, &uid_value_len);
+            if (!uid_value) {
+                // We need some kind of an error here, maybe?
+                
+            }
+            else {
+                const char* split = strstr(uid_value, "<");
+                if (split != uid_value) {                    
+                    while (split) {
+                        if (isspace(*(split - 1)))
+                            break;
+                        split = strstr(split + 1, "<");
+                    }
+                }
+                if (split) {
+                    char* stopchr = strrchr(split, '>');
+                    if (stopchr) {
+                        int email_len = stopchr - split - 1;
+                        email = calloc(email_len + 1, 1);                                
+                        strlcpy(email, split + 1, email_len + 1);
+                        const char* last = NULL;
+                        if (split != uid_value) {
+                            for (last = split - 1; last > uid_value; last--) {
+                                if (!isspace(*last))
+                                    break;
+                            }
+                            int name_len = (last - uid_value) + 1;
+                            name = calloc(name_len + 1, 1);
+                            strlcpy(name, uid_value, name_len + 1);
+                        }
+                    }
+                    else 
+                        split = NULL;
+                }
+                if (split == NULL) {
+                    email = strdup(uid_value);
+                }
+            }
+        }
         pgp_packet_free(userid);
         free(user_id_value);
 
@@ -2004,36 +2047,49 @@ static PEP_STATUS list_keys(PEP_SESSION session,
                     PEP_STATUS status = list_keys(session, undotted, private_only,
                                                   keyinfo_list, keylist);
                     free(undotted);
-                    return status;
+                    if (*keylist)
+                        return status;
                 }
             }
         }
-    } else if (// Only hex characters and spaces
-               pattern[strspn(pattern, "0123456789aAbBcCdDeEfF ")] == 0
-               // And a fair amount of them.
-               && strlen(pattern) >= 16) {
-        // Fingerprint.  Note: the pep engine never looks keys up by
-        // keyid, so we don't handle them.
-        fpr = pgp_fingerprint_from_hex(pattern);
-        status = tpk_find_by_fpr(session, fpr, false, &tpk, NULL);
-        ERROR_OUT(NULL, status, "Looking up key");
-        add_key(session, _keyinfo_list, _keylist, tpk, fpr);
-    } else if (pattern[0] == 0) {
-        // Empty string.
+    } 
+    if (!_keylist && !_keyinfo_list) {
+        if (// Only hex characters and spaces
+                   pattern[strspn(pattern, "0123456789aAbBcCdDeEfF ")] == 0
+                   // And a fair amount of them.
+                   && strlen(pattern) >= 16) {
+            // Fingerprint.  Note: the pep engine never looks keys up by
+            // keyid, so we don't handle them.
+            fpr = pgp_fingerprint_from_hex(pattern);
+            status = tpk_find_by_fpr(session, fpr, false, &tpk, NULL);
+            ERROR_OUT(NULL, status, "Looking up key");
+            add_key(session, _keyinfo_list, _keylist, tpk, fpr);
+        } else if (pattern[0] == 0) {
+            // Empty string.
 
-        pgp_tpk_t *tpks = NULL;
-        int count = 0;
-        status = tpk_all(session, private_only, &tpks, &count);
-        ERROR_OUT(NULL, status, "Looking up '%s'", pattern);
-        for (int i = 0; i < count; i ++) {
-            add_key(session, _keyinfo_list, _keylist, tpks[i], NULL);
-            pgp_tpk_free(tpks[i]);
+            pgp_tpk_t *tpks = NULL;
+            int count = 0;
+            status = tpk_all(session, private_only, &tpks, &count);
+            ERROR_OUT(NULL, status, "Looking up '%s'", pattern);
+            for (int i = 0; i < count; i ++) {
+                add_key(session, _keyinfo_list, _keylist, tpks[i], NULL);
+                pgp_tpk_free(tpks[i]);
+            }
+            free(tpks);
+        } else {
+    //        T("unsupported pattern '%s'", pattern);
+            // We look up whatever arbitrary string we have
+            pgp_tpk_t *tpks = NULL;
+            int count = 0;
+            status = tpk_find_by_email(session, pattern, private_only, &tpks, &count);
+            ERROR_OUT(NULL, status, "Looking up '%s'", pattern);
+            for (int i = 0; i < count; i ++) {
+                add_key(session, _keyinfo_list, _keylist, tpks[i], NULL);
+                pgp_tpk_free(tpks[i]);
+            }
+            free(tpks);
         }
-        free(tpks);
-    } else {
-        T("unsupported pattern '%s'", pattern);
     }
-
  out:
     if (tpk)
         pgp_tpk_free(tpk);
