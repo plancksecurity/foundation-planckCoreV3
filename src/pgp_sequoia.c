@@ -27,9 +27,17 @@
 // enable tracing if in debugging mode
 #if TRACING
 #include "status_to_string.h"
+
+#ifdef ANDROID
+#  include <android/log.h>
+#  define _T(...) do {                          \
+        __android_log_print(ANDROID_LOG_DEBUG, "pEpEngine-sequoia", __VA_ARGS__);         \
+    } while (0)
+#else
 #  define _T(...) do {                          \
         fprintf(stderr, ##__VA_ARGS__);         \
     } while (0)
+#endif
 #else
 #  define _T(...) do { } while (0)
 #endif
