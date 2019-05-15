@@ -126,7 +126,12 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     PEP_STATUS status = PEP_STATUS_OK;
 
     // Create the home directory.
-    char *home_env = getenv("HOME");
+    char *home_env = NULL;
+#ifndef NDEBUG
+    home_env = getenv("PEP_HOME");
+#endif
+    if (!home_env)
+        home_env = getenv("HOME");
     if (!home_env)
         ERROR_OUT(NULL, PEP_INIT_GPGME_INIT_FAILED, "HOME unset");
 
@@ -734,6 +739,49 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
         pgp_packet_t userid = pgp_user_id_new (user_id_value);
         pgp_user_id_name(NULL, userid, &name);
         pgp_user_id_address(NULL, userid, &email);
+                
+        if (!email || email[0] == '\0') {
+            size_t uid_value_len;
+            const char* uid_value = (const char*)pgp_user_id_value(userid, &uid_value_len);
+            if (!uid_value) {
+                // We need some kind of an error here, maybe?
+                 
+            }
+            else {
+                const char* split = strstr(uid_value, "<");
+                if (split != uid_value) {       
+                    while (split) {
+                        if (isspace(*(split - 1)))
+                            break;
+                        split = strstr(split + 1, "<");
+                    }
+                }
+                if (split) {
+                    char* stopchr = strrchr(split, '>');
+                    if (stopchr) {
+                        int email_len = stopchr - split - 1;
+                        email = calloc(email_len + 1, 1); 
+                        strlcpy(email, split + 1, email_len + 1);
+                        const char* last = NULL;
+                        if (split != uid_value) {
+                            for (last = split - 1; last > uid_value; last--) {
+                                if (!isspace(*last))
+                                    break;
+                            }
+                            int name_len = (last - uid_value) + 1;
+                            name = calloc(name_len + 1, 1);
+                            strlcpy(name, uid_value, name_len + 1);
+                        }
+                    }
+                    else  
+                        split = NULL;
+                }
+                if (split == NULL) {
+                    email = strdup(uid_value);
+                }
+            }
+        }
+        
         pgp_packet_free(userid);
         free(user_id_value);
 
@@ -811,6 +859,8 @@ struct decrypt_cookie {
     stringlist_t *recipient_keylist;
     stringlist_t *signer_keylist;
     int good_checksums;
+    int good_but_expired;
+    int good_but_revoked;
     int missing_keys;
     int bad_checksums;
     int decrypted;
@@ -1098,6 +1148,8 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
                                           &tpk, NULL) != PEP_STATUS_OK)
                         ; // Soft error.  Ignore.
 
+                    keyid_str = pgp_keyid_to_string (keyid);
+
                     if (tpk) {
                         // Ok, we have a TPK.
 
@@ -1107,27 +1159,79 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
                             = pgp_tpk_fingerprint(tpk);
                         char *primary_fpr_str
                             = pgp_fingerprint_to_hex(primary_fpr);
-                        stringlist_add_unique(cookie->signer_keylist,
-                                              primary_fpr_str);
 
-                        T("Good signature from %s", primary_fpr_str);
+                        bool good = true;
 
-                        // XXX: Check that the TPK and the key used to make
-                        // the signature and the signature itself are alive
-                        // and not revoked.  Revoked =>
-                        // PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH; Expired key
-                        // or sig => PEP_DECRYPTED.
-                        cookie->good_checksums ++;
+                        // Make sure the TPK is not revoked, it's
+                        // creation time is <= now, and it hasn't
+                        // expired.
+                        pgp_revocation_status_t rs = pgp_tpk_revocation_status(tpk);
+                        bool revoked = (pgp_revocation_status_variant(rs)
+                                        == PGP_REVOCATION_STATUS_REVOKED);
+                        pgp_revocation_status_free(rs);
+                        if (revoked) {
+                            T("TPK %s is revoked.", primary_fpr_str);
+                            good = false;
+                            cookie->good_but_revoked ++;
+                        } else if (! pgp_tpk_alive(tpk)) {
+                            T("TPK %s is not alive.", primary_fpr_str);
+                            good = false;
+                            cookie->good_but_expired ++;
+                        }
+
+                        // Same thing for the signing key.
+                        if (good) {
+                            pgp_tpk_key_iter_t iter = pgp_tpk_key_iter_all(tpk);
+                            pgp_key_t key;
+                            pgp_signature_t sig;
+                            while ((key = pgp_tpk_key_iter_next(iter, &sig, &rs))
+                                   && good) {
+                                pgp_keyid_t x = pgp_key_keyid(key);
+                                if (pgp_keyid_equal(keyid, x)) {
+                                    // Found the signing key.  Let's make
+                                    // sure it is valid.
+
+                                    revoked = (pgp_revocation_status_variant(rs)
+                                               == PGP_REVOCATION_STATUS_REVOKED);
+                                    if (revoked) {
+                                        T("TPK %s's signing key %s is revoked.",
+                                          primary_fpr_str, keyid_str);
+                                        good = false;
+                                        cookie->good_but_revoked ++;
+                                    } else if (! pgp_signature_key_alive(sig, key)) {
+                                        T("TPK %s's signing key %s is expired.",
+                                          primary_fpr_str, keyid_str);
+                                        good = false;
+                                        cookie->good_but_expired ++;
+                                    }
+                                }
+                                pgp_keyid_free(x);
+                                pgp_revocation_status_free(rs);
+                                pgp_signature_free(sig);
+                                pgp_key_free(key);
+                            }
+                            pgp_tpk_key_iter_free(iter);
+                        }
+
+                        if (good) {
+                            stringlist_add_unique(cookie->signer_keylist,
+                                                  primary_fpr_str);
+
+                            T("Good signature from %s", primary_fpr_str);
+
+                            cookie->good_checksums ++;
+                        }
 
                         free(primary_fpr_str);
                         pgp_fingerprint_free(primary_fpr);
                         pgp_tpk_free(tpk);
                     } else {
                         // If we get
-                        // PGP_VERIFICATION_RESULT_CODE_GOOD_CHECKSUM, then the
-                        // TPK should be available.  But, another process
-                        // could have deleted the key from the store in the
-                        // mean time, so be tolerant.
+                        // PGP_VERIFICATION_RESULT_CODE_GOOD_CHECKSUM,
+                        // then the TPK should be available.  But,
+                        // another process could have deleted the key
+                        // from the store in the mean time, so be
+                        // tolerant.
                         T("Key to check signature from %s disappeared",
                           keyid_str);
                         cookie->missing_keys ++;
@@ -1188,7 +1292,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     char** filename_ptr)
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    struct decrypt_cookie cookie = { session, 0, NULL, NULL, 0, 0, 0, };
+    struct decrypt_cookie cookie = { session, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, };
     pgp_reader_t reader = NULL;
     pgp_writer_t writer = NULL;
     pgp_reader_t decryptor = NULL;
@@ -1249,13 +1353,23 @@ PEP_STATUS pgp_decrypt_and_verify(
 
  out:
     if (status == PEP_STATUS_OK) {
-        if (cookie.bad_checksums) {
-            // If there are any bad signatures, fail.
-            status = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
-        } else if (cookie.good_checksums) {
+        // **********************************
+        // Sync changes with pgp_verify_text.
+        // **********************************
+
+        if (cookie.good_checksums) {
             // If there is at least one signature that we can verify,
             // succeed.
             status = PEP_DECRYPTED_AND_VERIFIED;
+        } else if (cookie.good_but_revoked) {
+            // If there are any signatures from revoked keys, fail.
+            status = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
+        } else if (cookie.bad_checksums) {
+            // If there are any bad signatures, fail.
+            status = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
+        } else if (cookie.good_but_expired) {
+            // If there are any signatures from expired keys, fail.
+            status = PEP_DECRYPTED;
         } else {
             // We couldn't verify any signatures (possibly because we
             // don't have the keys).
@@ -1339,7 +1453,17 @@ PEP_STATUS pgp_verify_text(
 
  out:
     if (status == PEP_STATUS_OK) {
-        if (cookie.bad_checksums) {
+        // *****************************************
+        // Sync changes with pgp_decrypt_and_verify.
+        // *****************************************
+
+        if (cookie.good_but_expired) {
+            // If there are any signatures from expired keys, fail.
+            status = PEP_UNENCRYPTED;
+        } else if (cookie.good_but_revoked) {
+            // If there are any signatures from revoked keys, fail.
+            status = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
+        } else if (cookie.bad_checksums) {
             // If there are any bad signatures, fail.
             status = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
         } else if (cookie.good_checksums) {
@@ -1698,7 +1822,6 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
     return PEP_STATUS_OK;
 }
 
-// XXX: This also needs to handle revocation certificates.
 PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
                               size_t size, identity_list **private_idents)
 {
