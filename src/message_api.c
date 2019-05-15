@@ -989,10 +989,19 @@ static PEP_STATUS encrypt_PGP_inline(
 
     dst->enc_format = PEP_enc_inline;
 
+    // shortmsg is being copied
     if (src->shortmsg) {
         dst->shortmsg = strdup(src->shortmsg);
         assert(dst->shortmsg);
         if (!dst->shortmsg)
+            return PEP_OUT_OF_MEMORY;
+    }
+
+    // id is staying the same
+    if (src->id) {
+        dst->id = strdup(src->id);
+        assert(dst->id);
+        if (!dst->id)
             return PEP_OUT_OF_MEMORY;
     }
 
