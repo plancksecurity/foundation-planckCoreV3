@@ -289,7 +289,7 @@ typedef enum {
     PEP_CIPHER_SUITE_RSA3K = 6,
     PEP_CIPHER_SUITE_RSA4K = 7,
     PEP_CIPHER_SUITE_RSA8K = 8
-} PEP_CYPHER_SUITE;
+} PEP_CIPHER_SUITE;
 
 // config_cipher_suite() - cipher suite being used when encrypting
 //
@@ -305,7 +305,7 @@ typedef enum {
 //  implementation defined
 
 DYNAMIC_API PEP_STATUS config_cipher_suite(PEP_SESSION session,
-        PEP_CYPHER_SUITE suite);
+        PEP_CIPHER_SUITE suite);
 
 
 // decrypt_and_verify() - decrypt and/or verify a message

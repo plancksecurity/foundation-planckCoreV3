@@ -3118,7 +3118,7 @@ PEP_STATUS pgp_contains_priv_key(PEP_SESSION session, const char *fpr,
 }
 
 PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
-        PEP_CYPHER_SUITE suite)
+        PEP_CIPHER_SUITE suite)
 {
     // functionaliy unsupported; use gpg.conf
 

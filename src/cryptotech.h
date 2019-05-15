@@ -96,7 +96,7 @@ typedef PEP_STATUS (*find_private_keys_t)(
 );
 
 typedef PEP_STATUS (*config_cipher_suite_t)(PEP_SESSION session,
-        PEP_CYPHER_SUITE suite);
+        PEP_CIPHER_SUITE suite);
 
 typedef struct _PEP_cryptotech_t {
     uint8_t id;

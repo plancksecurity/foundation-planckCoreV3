@@ -86,7 +86,7 @@
 } while(0)
 
 DYNAMIC_API PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
-        PEP_CYPHER_SUITE suite)
+        PEP_CIPHER_SUITE suite)
 {
     switch (suite) {
         // supported cipher suites
@@ -110,7 +110,7 @@ DYNAMIC_API PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
     }
 }
 
-static pgp_tpk_cipher_suite_t cipher_suite(PEP_CYPHER_SUITE suite)
+static pgp_tpk_cipher_suite_t cipher_suite(PEP_CIPHER_SUITE suite)
 {
     switch (suite) {
         // supported cipher suites

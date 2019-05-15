@@ -300,6 +300,6 @@ PEP_STATUS pgp_replace_only_uid(
     );
 
 PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
-        PEP_CYPHER_SUITE suite);
+        PEP_CIPHER_SUITE suite);
 
 #define PGP_BINARY_PATH pgp_binary

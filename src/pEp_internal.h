@@ -148,7 +148,7 @@ struct _pEpSession {
 #endif
 
     PEP_cryptotech_t *cryptotech;
-    PEP_CYPHER_SUITE cipher_suite;
+    PEP_CIPHER_SUITE cipher_suite;
 
     PEP_transport_t *transports;
 

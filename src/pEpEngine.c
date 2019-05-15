@@ -4403,7 +4403,7 @@ DYNAMIC_API PEP_STATUS key_revoked(
 }
 
 DYNAMIC_API PEP_STATUS config_cipher_suite(PEP_SESSION session,
-        PEP_CYPHER_SUITE suite)
+        PEP_CIPHER_SUITE suite)
 {
     assert(session);
     if (!session)
