@@ -3294,51 +3294,6 @@ pEp_free:
 
 }
 
-static void parse_pEp_protocol_version(const char* version_str, unsigned int &major, unsigned int &minor) {
-    *major = 0;
-    *minor = 0;
-    int mj = 0;
-    int mn = 0;
-    int i;
-    char* buf = NULL;
-    
-    if (!EMPTYSTR(version_str)) {
-        const char* split = strstr(version_str, ".");
-        if (!EMPTYSTR(split) && split != version_str) {
-            // I think presuming we're not going to have a protocol larger than 99999.99999 is safe.
-            // Famous last programming words, I know. FIXME: put this up with the version as a constant.
-            const unsigned int _PEP_VERPARSE_BUFSIZE = 12;
-            buf = calloc(_PEP_VERPARSE_BUFSIZE, 1);
-            size_t major_digits = (size_t)(version_str - split);
-            if (major_digits < _PEP_VERPARSE_BUFSIZE) {
-                for (i = 0; i < major_digits; i++, version_str++) {
-                    buf[i] = *version_str;
-                }
-                        
-                mj = atoi(buf);
-                if (mj > 0) {
-                    size_t minor_digits = strlen(++version_str);
-                    if (minor_digits < (_PEP_VERPARSE_BUFSIZE - major_digits)) {
-                        mn = atoi(version_str);
-                        if (mn >= 0) {
-                            if (mn == 0) {
-                                for (i = 0; i < minor_digits; i++) {
-                                    if (*(++split) != '0')
-                                        goto pEp_free;
-                                }
-                            }
-                            *major = mj;
-                            *minor = mn;
-                        }
-                    } 
-                }                    
-            }
-        }
-    }
-pEp_free:
-    free(buf);
-}
-
 static PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -3617,10 +3572,15 @@ static PEP_STATUS _decrypt_message(
                                     pEp_protocol_version = stringpair_list_find(inner_message->opt_fields, "X-pEp-Version");
                                     unsigned int pEp_v_major = 0;
                                     unsigned int pEp_v_minor = 0;
-                                    if (pEp_protocol_version)
-                                        parse_pEp_protocol_version(pep_protocol_version->value, &pEp_v_major, &pEp_v_minor);
+                                    if (pEp_protocol_version && !EMPTYSTR(pEp_protocol_version->value->value)) {
+                                        // Roker is of course right. Meh :)
+                                        if (sscanf(pEp_protocol_version->value->value, "%u.%u", &pEp_v_major, &pEp_v_minor) != 2) {
+                                            pEp_v_major = 0;
+                                            pEp_v_minor = 0;
+                                        }
+                                    }
                                     
-                                    if (((pEp_v_major == 2) && (pEp_v_minor >= 1)) || (pEp_v_major > 2))                              
+                                    if (((pEp_v_major == 2) && (pEp_v_minor > 0)) || (pEp_v_major > 2))                              
                                         sender_fpr = stringpair_list_find(inner_message->opt_fields, "X-pEp-Sender-FPR");
 
                                     // FIXME - Message 2.1                                    
