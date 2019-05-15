@@ -987,6 +987,8 @@ static PEP_STATUS encrypt_PGP_inline(
     if (status)
         return status;
 
+    dst->enc_format = PEP_enc_inline;
+
     if (src->shortmsg) {
         dst->shortmsg = strdup(src->shortmsg);
         assert(dst->shortmsg);
@@ -1002,6 +1004,8 @@ static PEP_STATUS encrypt_PGP_inline(
 
     dst->longmsg = _ctext;
 
+    // longmsg_formatted is unsupported
+
     // attachments are going unencrypted
     bloblist_t *bl = bloblist_dup(src->attachments);
     if (!bl)
@@ -1013,7 +1017,6 @@ static PEP_STATUS encrypt_PGP_inline(
         attach_own_key(session, dst);
     }
 
-    dst->enc_format = PEP_enc_inline;
     return PEP_STATUS_OK;
 }
 
