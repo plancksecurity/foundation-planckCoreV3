@@ -1985,19 +1985,22 @@ DYNAMIC_API void release(PEP_SESSION session)
 DYNAMIC_API void config_passive_mode(PEP_SESSION session, bool enable)
 {
     assert(session);
-    session->passive_mode = enable;
+    if (session)
+        session->passive_mode = enable;
 }
 
 DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable)
 {
     assert(session);
-    session->unencrypted_subject = enable;
+    if (session)
+        session->unencrypted_subject = enable;
 }
 
 DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable)
 {
     assert(session);
-    session->service_log = enable;
+    if (session)
+        session->service_log = enable;
 }
 
 DYNAMIC_API PEP_STATUS log_event(
@@ -4406,8 +4409,7 @@ DYNAMIC_API PEP_STATUS config_cipher_suite(PEP_SESSION session,
     if (!session)
         return PEP_ILLEGAL_VALUE;
 
-    return session->cryptotech[PEP_crypt_OpenPGP].config_cipher_suite(session,
-            suite);
+    return session->cryptotech[PEP_crypt_OpenPGP].config_cipher_suite(session, suite);
 }
 
 static void _clean_log_value(char *text)

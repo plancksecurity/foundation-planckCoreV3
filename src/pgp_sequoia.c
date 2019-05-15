@@ -85,6 +85,52 @@
     }                                                               \
 } while(0)
 
+DYNAMIC_API PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
+        PEP_CYPHER_SUITE suite)
+{
+    switch (suite) {
+        // supported cipher suites
+        case PEP_CIPHER_SUITE_RSA2K:
+        case PEP_CIPHER_SUITE_RSA3K:
+        case PEP_CIPHER_SUITE_CV25519:
+        case PEP_CIPHER_SUITE_P256:
+        case PEP_CIPHER_SUITE_P384:
+        case PEP_CIPHER_SUITE_P521:
+            session->cipher_suite = suite;
+            return PEP_STATUS_OK;
+
+        case PEP_CIPHER_SUITE_DEFAULT:
+            session->cipher_suite = PEP_CIPHER_SUITE_RSA2K;
+            return PEP_STATUS_OK;
+
+        // unsupported cipher suites
+        default:
+            session->cipher_suite = PEP_CIPHER_SUITE_RSA2K;
+            return PEP_CANNOT_CONFIG;
+    }
+}
+
+static pgp_tpk_cipher_suite_t cipher_suite(PEP_CYPHER_SUITE suite)
+{
+    switch (suite) {
+        // supported cipher suites
+        case PEP_CIPHER_SUITE_RSA2K:
+            return PGP_TPK_CIPHER_SUITE_RSA2K;
+        case PEP_CIPHER_SUITE_RSA3K:
+            return PGP_TPK_CIPHER_SUITE_RSA3K;
+        case PEP_CIPHER_SUITE_CV25519:
+            return PGP_TPK_CIPHER_SUITE_CV25519;
+        case PEP_CIPHER_SUITE_P256:
+            return PGP_TPK_CIPHER_SUITE_P256;
+        case PEP_CIPHER_SUITE_P384:
+            return PGP_TPK_CIPHER_SUITE_P384;
+        case PEP_CIPHER_SUITE_P521:
+            return PGP_TPK_CIPHER_SUITE_P521;
+        default:
+            return PGP_TPK_CIPHER_SUITE_RSA2K;
+    }
+}
+
 int email_cmp(void *cookie, int a_len, const void *a, int b_len, const void *b)
 {
     pgp_packet_t a_userid = pgp_user_id_from_raw (a, a_len);
@@ -1760,8 +1806,8 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     T("(%s)", userid);
 
     // Generate a key.
-    pgp_tpk_builder_t tpkb = pgp_tpk_builder_general_purpose
-        (PGP_TPK_CIPHER_SUITE_RSA2K, userid);
+    pgp_tpk_builder_t tpkb = pgp_tpk_builder_general_purpose(
+        cipher_suite(session->cipher_suite), userid);
     pgp_signature_t rev;
     if (pgp_tpk_builder_generate(&err, tpkb, &tpk, &rev))
         ERROR_OUT(err, PEP_CANNOT_CREATE_KEY, "Generating a key pair");
@@ -2573,30 +2619,5 @@ PEP_STATUS pgp_contains_priv_key(PEP_SESSION session, const char *fpr,
     T("(%s) -> %s, %s",
       fpr, *has_private ? "priv" : "pub", pEp_status_to_string(status));
     return status;
-}
-
-DYNAMIC_API PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
-        PEP_CYPHER_SUITE suite)
-{
-    switch (suite) {
-        // supported cipher suits
-        case PEP_CIPHER_SUITE_RSA3K:
-        case PEP_CIPHER_SUITE_CV25519:
-        case PEP_CIPHER_SUITE_P256:
-        case PEP_CIPHER_SUITE_P384:
-        case PEP_CIPHER_SUITE_P521:
-        case PEP_CIPHER_SUITE_RSA2K:
-            session->cipher_suite = suite;
-            return PEP_STATUS_OK;
-
-        case PEP_CIPHER_SUITE_DEFAULT:
-            session->cipher_suite = PEP_CIPHER_SUITE_RSA3K;
-            return PEP_STATUS_OK;
-
-        // unsupported cipher suits
-        default:
-            session->cipher_suite = PEP_CIPHER_SUITE_RSA3K;
-            return PEP_CANNOT_CONFIG;
-    }
 }
 
