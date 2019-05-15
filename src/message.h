@@ -30,7 +30,7 @@ typedef enum _PEP_msg_direction {
 
 typedef enum _PEP_enc_format {
     PEP_enc_none = 0,                       // message is not encrypted
-//  PEP_enc_pieces = 1,                     // inline PGP + PGP extensions, was removed
+    PEP_enc_pieces = 1,                     // inline PGP + PGP extensions, was removed
     PEP_enc_inline = 1,                     // still there
     PEP_enc_S_MIME,                         // RFC5751
     PEP_enc_PGP_MIME,                       // RFC3156
