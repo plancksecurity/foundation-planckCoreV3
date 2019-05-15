@@ -917,7 +917,13 @@ struct decrypt_cookie {
     int good_but_revoked;
     int missing_keys;
     int bad_checksums;
+
+    // Whether we decrypted anything.
     int decrypted;
+
+    // The filename stored in the literal data packet.  Note: this is
+    // *not* protected by the signature and should not be trusted!!!
+    char *filename;
 };
 
 static pgp_status_t
@@ -1339,6 +1345,29 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
     return PGP_STATUS_SUCCESS;
 }
 
+static pgp_status_t inspect_cb(
+    void *cookie_opaque, pgp_packet_parser_t pp)
+{
+    struct decrypt_cookie *cookie = cookie_opaque;
+
+    pgp_packet_t packet = pgp_packet_parser_packet(pp);
+    assert(packet);
+
+    pgp_tag_t tag = pgp_packet_tag(packet);
+
+    T("%s", pgp_tag_to_string(tag));
+
+    if (tag == PGP_TAG_LITERAL) {
+        pgp_literal_t literal = pgp_packet_ref_literal(packet);
+        cookie->filename = pgp_literal_filename(literal);
+        pgp_literal_free(literal);
+    }
+
+    pgp_packet_free(packet);
+
+    return 0;
+}
+
 PEP_STATUS pgp_decrypt_and_verify(
     PEP_SESSION session, const char *ctext, size_t csize,
     const char *dsigtext, size_t dsigsize,
@@ -1346,7 +1375,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     char** filename_ptr)
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    struct decrypt_cookie cookie = { session, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, };
+    struct decrypt_cookie cookie = { session, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, NULL };
     pgp_reader_t reader = NULL;
     pgp_writer_t writer = NULL;
     pgp_reader_t decryptor = NULL;
@@ -1376,7 +1405,8 @@ PEP_STATUS pgp_decrypt_and_verify(
     pgp_error_t err = NULL;
     decryptor = pgp_decryptor_new(&err, reader,
                                   get_public_keys_cb, decrypt_cb,
-                                  check_signatures_cb, &cookie, 0);
+                                  check_signatures_cb, inspect_cb,
+                                  &cookie, 0);
     if (! decryptor)
         ERROR_OUT(err, PEP_DECRYPT_NO_KEY, "pgp_decryptor_new");
 
@@ -1405,6 +1435,9 @@ PEP_STATUS pgp_decrypt_and_verify(
     *keylist = cookie.signer_keylist;
     stringlist_append(*keylist, cookie.recipient_keylist);
 
+    if (filename_ptr)
+        *filename_ptr = cookie.filename;
+
  out:
     if (status == PEP_STATUS_OK) {
         // **********************************
@@ -1432,6 +1465,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     } else {
         free_stringlist(cookie.recipient_keylist);
         free_stringlist(cookie.signer_keylist);
+        free(cookie.filename);
         free(*ptext);
     }
 
