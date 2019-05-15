@@ -1853,7 +1853,7 @@ PEP_STATUS _mime_encode_message_internal(
             status = mime_encode_message_plain(msg, omit_fields, &mime, transport_encode);
             break;
 
-        case PEP_enc_pieces:
+        case PEP_enc_inline:
             status = mime_encode_message_plain(msg, omit_fields, &mime, transport_encode);
             break;
 
