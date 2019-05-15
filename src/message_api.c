@@ -1946,7 +1946,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         }
         else {
             // hide subject
-            if (!session->unencrypted_subject) {
+            if (enc_format != PEP_enc_inline && !session->unencrypted_subject) {
                 status = replace_subject(_src);
                 if (status == PEP_OUT_OF_MEMORY)
                     goto enomem;
