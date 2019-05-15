@@ -993,7 +993,13 @@ static PEP_STATUS encrypt_PGP_inline(
             return PEP_OUT_OF_MEMORY;
     }
 
-    dst->longmsg = ctext;
+    char *_ctext = realloc(ctext, csize + 1);
+    assert(_ctext);
+    if (!_ctext)
+        return PEP_OUT_OF_MEMORY;
+    _ctext[csize] = 0;
+
+    dst->longmsg = _ctext;
     return PEP_STATUS_OK;
 }
 
