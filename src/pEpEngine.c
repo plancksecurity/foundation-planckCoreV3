@@ -4399,6 +4399,17 @@ DYNAMIC_API PEP_STATUS key_revoked(
             revoked);
 }
 
+DYNAMIC_API PEP_STATUS config_cipher_suite(PEP_SESSION session,
+        PEP_CYPHER_SUITE suite)
+{
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    return session->cryptotech[PEP_crypt_OpenPGP].config_cipher_suite(session,
+            suite);
+}
+
 static void _clean_log_value(char *text)
 {
     if (text) {

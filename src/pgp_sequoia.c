@@ -2574,3 +2574,29 @@ PEP_STATUS pgp_contains_priv_key(PEP_SESSION session, const char *fpr,
       fpr, *has_private ? "priv" : "pub", pEp_status_to_string(status));
     return status;
 }
+
+DYNAMIC_API PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
+        PEP_CYPHER_SUITE suite)
+{
+    switch (suite) {
+        // supported cipher suits
+        case PEP_CIPHER_SUITE_RSA3K:
+        case PEP_CIPHER_SUITE_CV25519:
+        case PEP_CIPHER_SUITE_P256:
+        case PEP_CIPHER_SUITE_P384:
+        case PEP_CIPHER_SUITE_P521:
+        case PEP_CIPHER_SUITE_RSA2K:
+            session->cipher_suite = suite;
+            return PEP_STATUS_OK;
+
+        case PEP_CIPHER_SUITE_DEFAULT:
+            session->cipher_suite = PEP_CIPHER_SUITE_RSA3K;
+            return PEP_STATUS_OK;
+
+        // unsupported cipher suits
+        default:
+            session->cipher_suite = PEP_CIPHER_SUITE_RSA3K;
+            return PEP_CANNOT_CONFIG;
+    }
+}
+

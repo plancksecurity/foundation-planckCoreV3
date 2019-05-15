@@ -3116,3 +3116,17 @@ PEP_STATUS pgp_contains_priv_key(PEP_SESSION session, const char *fpr,
     }
     return status;
 }
+
+PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
+        PEP_CYPHER_SUITE suite)
+{
+    // functionaliy unsupported; use gpg.conf
+
+    switch (suite) {
+        case PEP_CIPHER_SUITE_DEFAULT:
+            return PEP_STATUS_OK;
+        default:
+            return PEP_CANNOT_CONFIG;
+    }
+}
+
