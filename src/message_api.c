@@ -3539,148 +3539,176 @@ static PEP_STATUS _decrypt_message(
         if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
             char* wrap_info = NULL;
             
-            status = unencapsulate_hidden_fields(src, msg, &wrap_info);
+            if (!has_inner)
+                status = unencapsulate_hidden_fields(src, msg, &wrap_info);
 
 //            bool is_transport_wrapper = false;
             
+        
             // FIXME: replace with enums, check status
-            if (wrap_info) {
-                if (strcmp(wrap_info, "OUTER") == 0) {
-                    // this only occurs in with a direct outer wrapper
-                    // where the actual content is in the inner wrapper
-                    message* inner_message = NULL;                    
-                    bloblist_t* actual_message = msg->attachments;
+            if (has_inner || wrap_info) { // Given that only wrap_info OUTER happens as of the end of wrap_info use, we don't need to strcmp it
+                // if (strcmp(wrap_info, "OUTER") == 0) {
+                //     // this only occurs in with a direct outer wrapper
+                //     // where the actual content is in the inner wrapper
+                message* inner_message = NULL;
                     
+                // For a wrapped message, this is ALWAYS the second attachment; the 
+                // mime tree is:
+                // multipart/mixed
+                //     |
+                //     |----- text/plain 
+                //     |----- message/rfc822
+                //     |----- ...
+                //
+                // We leave this in below, but once we're rid of 2.0 format,
+                // we can dispense with the loop, as has_inner -> 1st message struct attachment is message/rfc822
+                //                   
+
+                bloblist_t* message_blob = msg->attachments;
+                                    
+                if (msg->attachments) {
+                    message_blob = msg->attachments;
+                    if (!has_inner && strcmp(message_blob->mime_type, "message/rfc822") != 0
+                                   && strcmp(message_blob->mime_type, "text/rfc822") != 0)
+                        message_blob = NULL;
+                }
+                    
+                if (!message_blob) {
+                    bloblist_t* actual_message = msg->attachments;
+                
                     while (actual_message) {
                         char* mime_type = actual_message->mime_type;
                         if (mime_type) {
-                            
+                        
                             // libetpan appears to change the mime_type on this one.
                             // *growl*
                             if (strcmp("message/rfc822", mime_type) == 0 ||
                                 strcmp("text/rfc822", mime_type) == 0) {
-                                    
-                                status = mime_decode_message(actual_message->value, 
-                                                             actual_message->size, 
-                                                             &inner_message,
-                                                             NULL);
-                                if (status != PEP_STATUS_OK)
-                                    goto pEp_error;
+                                message_blob = actual_message;
+                                break;
+                            }
+                        }
+                        actual_message = actual_message->next;
+                    }        
+                }    
+                if (message_blob) {              
+                    status = mime_decode_message(message_blob->value, 
+                                                 message_blob->size, 
+                                                 &inner_message,
+                                                 NULL);
+                    if (status != PEP_STATUS_OK)
+                        goto pEp_error;
                                 
-                                if (inner_message) {
-                                    // Though this will strip any message info on the
-                                    // attachment, this is safe, as we do not
-                                    // produce more than one attachment-as-message,
-                                    // and those are the only ones with such info.
-                                    // Since we capture the information, this is ok.
-                                    wrap_info = NULL;
-                                    inner_message->enc_format = src->enc_format;
+                    if (inner_message) {
+                        // Though this will strip any message info on the
+                        // attachment, this is safe, as we do not
+                        // produce more than one attachment-as-message,
+                        // and those are the only ones with such info.
+                        // Since we capture the information, this is ok.
+                        wrap_info = NULL;
+                        inner_message->enc_format = src->enc_format;
 
-                                    const stringpair_list_t* pEp_protocol_version = NULL;
-                                    const stringpair_list_t* sender_fpr = NULL;
-                                    pEp_protocol_version = stringpair_list_find(inner_message->opt_fields, "X-pEp-Version");
-                                    unsigned int pEp_v_major = 0;
-                                    unsigned int pEp_v_minor = 0;
-                                    if (pEp_protocol_version && !EMPTYSTR(pEp_protocol_version->value->value)) {
-                                        // Roker is of course right. Meh :)
-                                        if (sscanf(pEp_protocol_version->value->value, "%u.%u", &pEp_v_major, &pEp_v_minor) != 2) {
-                                            pEp_v_major = 0;
-                                            pEp_v_minor = 0;
-                                        }
-                                    }
-                                    
-                                    if (((pEp_v_major == 2) && (pEp_v_minor > 0)) || (pEp_v_major > 2))                              
-                                        sender_fpr = stringpair_list_find(inner_message->opt_fields, "X-pEp-Sender-FPR");
+                        const stringpair_list_t* pEp_protocol_version = NULL;
+                        const stringpair_list_t* sender_fpr = NULL;
+                        pEp_protocol_version = stringpair_list_find(inner_message->opt_fields, "X-pEp-Version");
+                        unsigned int pEp_v_major = 0;
+                        unsigned int pEp_v_minor = 0;
+                        if (pEp_protocol_version && !EMPTYSTR(pEp_protocol_version->value->value)) {
+                            // Roker is of course right. Meh :)
+                            if (sscanf(pEp_protocol_version->value->value, "%u.%u", &pEp_v_major, &pEp_v_minor) != 2) {
+                                pEp_v_major = 0;
+                                pEp_v_minor = 0;
+                            }
+                        }
+                            
+                        if (((pEp_v_major == 2) && (pEp_v_minor > 0)) || (pEp_v_major > 2))                              
+                            sender_fpr = stringpair_list_find(inner_message->opt_fields, "X-pEp-Sender-FPR");
 
-                                    // FIXME - Message 2.1                                    
-                                    status = unencapsulate_hidden_fields(inner_message, NULL, &wrap_info);
-                                    
-                                    
-                                    // ?
+                        // FIXME - Message 2.1                                    
+                        status = unencapsulate_hidden_fields(inner_message, NULL, &wrap_info);                            
+                        
+                        // ?
+                        if (status != PEP_STATUS_OK) {
+                            free_message(inner_message);
+                            goto pEp_error;
+                        }
+
+                        if (wrap_info) {
+                            bool is_inner = (strcmp(wrap_info, "INNER") == 0);
+                            bool is_key_reset = (strcmp(wrap_info, "KEY_RESET") == 0);
+
+                            if (is_key_reset) {
+                                if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
+                                    status = receive_key_reset(session,
+                                                               inner_message);
                                     if (status != PEP_STATUS_OK) {
                                         free_message(inner_message);
                                         goto pEp_error;
                                     }
-    
-                                    if (wrap_info) {
-                                        bool is_inner = (strcmp(wrap_info, "INNER") == 0);
-                                        bool is_key_reset = (strcmp(wrap_info, "KEY_RESET") == 0);
-
-                                        if (is_key_reset) {
-                                            if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
-                                                status = receive_key_reset(session,
-                                                                           inner_message);
-                                                if (status != PEP_STATUS_OK) {
-                                                    free_message(inner_message);
-                                                    goto pEp_error;
-                                                }
-                                                *flags |= PEP_decrypt_flag_consume;
-                                            }
-                                        }
-                                        else if (is_inner) {
-
-                                            // check for private key in decrypted message attachment while importing
-                                            // N.B. Apparently, we always import private keys into the keyring; however,
-                                            // we do NOT always allow those to be used for encryption. THAT is controlled
-                                            // by setting it as an own identity associated with the key in the DB.
-                                            
-                                            // If we have a message 2.0 message, we are ONLY going to be ok with keys
-                                            // we imported from THIS part of the message.
-                                            imported_private_key_address = false;
-                                            free(private_il); 
-                                            private_il = NULL;
-                                            
-                                            // import keys from decrypted INNER source
-                                            status = import_priv_keys_from_decrypted_msg(session, inner_message,
-                                                                                         &imported_keys,
-                                                                                         &imported_private_key_address,
-                                                                                         private_il);
-                                            if (status != PEP_STATUS_OK)
-                                                goto pEp_error;            
-
-                                            // THIS is our message
-                                            // Now, let's make sure we've copied in 
-                                            // any information sent in by the app if
-                                            // needed...
-                                            reconcile_src_and_inner_messages(src, inner_message);
-                                            
-
-                                            // FIXME: free msg, but check references
-                                            //src = msg = inner_message;
-                                            calculated_src = msg = inner_message;
-                                            
-                                            // FIXME: should this be msg???
-                                            if (src->from) {
-                                                if (!is_me(session, src->from))
-                                                    update_identity(session, (src->from));
-                                                else
-                                                    _myself(session, src->from, false, false, myself_read_only);
-                                            }
-                                            break;        
-                                        }
-                                        else { // should never happen
-                                            status = PEP_UNKNOWN_ERROR;
-                                            free_message(inner_message);
-                                            goto pEp_error;
-                                        }
-                                    }
-                                    inner_message->enc_format = PEP_enc_none;
-                                }
-                                else { // forwarded message, leave it alone
-                                    free_message(inner_message);
+                                    *flags |= PEP_decrypt_flag_consume;
                                 }
                             }
+                            else if (is_inner) {
+
+                                // check for private key in decrypted message attachment while importing
+                                // N.B. Apparently, we always import private keys into the keyring; however,
+                                // we do NOT always allow those to be used for encryption. THAT is controlled
+                                // by setting it as an own identity associated with the key in the DB.
+                                
+                                // If we have a message 2.0 message, we are ONLY going to be ok with keys
+                                // we imported from THIS part of the message.
+                                imported_private_key_address = false;
+                                free(private_il); 
+                                private_il = NULL;
+                                
+                                // import keys from decrypted INNER source
+                                status = import_priv_keys_from_decrypted_msg(session, inner_message,
+                                                                             &imported_keys,
+                                                                             &imported_private_key_address,
+                                                                             private_il);
+                                if (status != PEP_STATUS_OK)
+                                    goto pEp_error;            
+
+                                // THIS is our message
+                                // Now, let's make sure we've copied in 
+                                // any information sent in by the app if
+                                // needed...
+                                reconcile_src_and_inner_messages(src, inner_message);
+                                
+
+                                // FIXME: free msg, but check references
+                                //src = msg = inner_message;
+                                calculated_src = msg = inner_message;
+                                
+                                // FIXME: should this be msg???
+                                if (src->from) {
+                                    if (!is_me(session, src->from))
+                                        update_identity(session, (src->from));
+                                    else
+                                        _myself(session, src->from, false, false, myself_read_only);
+                                }
+                            }
+                            else { // should never happen
+                                status = PEP_UNKNOWN_ERROR;
+                                free_message(inner_message);
+                                goto pEp_error;
+                            }
                         }
-                        actual_message = actual_message->next;
-                    }                    
-                }
-                else if (strcmp(wrap_info, "TRANSPORT") == 0) {
-                    // FIXME: this gets even messier.
-                    // (TBI in ENGINE-278)
-                }
-                else {} // shouldn't be anything to be done here
-            }
-        }
+                        inner_message->enc_format = PEP_enc_none;
+                    }
+                    else { // forwarded message, leave it alone
+                        free_message(inner_message);
+                    }
+                } // end if (message_blob)
+                
+                //  else if (strcmp(wrap_info, "TRANSPORT") == 0) {
+                //      // FIXME: this gets even messier.
+                //      // (TBI in ENGINE-278)
+                //  }
+                //  else {} // shouldn't be anything to be done here
+    
+            } // end if (has_inner || wrap_info)
+        } // end if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
         
         *rating = decrypt_rating(decrypt_status);
         
