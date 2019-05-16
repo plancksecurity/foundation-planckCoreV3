@@ -176,9 +176,9 @@ int email_cmp(void *cookie, int a_len, const void *a, int b_len, const void *b)
 
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
-    #define PATH "/.pEp_keys.db"
- 
     PEP_STATUS status = PEP_STATUS_OK;
+
+#define PEP_KEYS_PATH "/.pEp_keys.db"
 
     // Create the home directory.
     char *home_env = NULL;
@@ -191,13 +191,13 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         ERROR_OUT(NULL, PEP_INIT_GPGME_INIT_FAILED, "HOME unset");
 
     // Create the DB and initialize it.
-    size_t path_size = strlen(home_env) + sizeof(PATH);
+    size_t path_size = strlen(home_env) + sizeof(PEP_KEYS_PATH);
     char *path = (char *) calloc(1, path_size);
     assert(path);
     if (!path)
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
 
-    int r = snprintf(path, path_size, "%s/.pEp_keys.db", home_env);
+    int r = snprintf(path, path_size, "%s" PEP_KEYS_PATH, home_env);
     assert(r >= 0 && r < path_size);
     if (r < 0)
         ERROR_OUT(NULL, PEP_UNKNOWN_ERROR, "snprintf");
