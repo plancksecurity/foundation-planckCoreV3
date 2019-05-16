@@ -38,6 +38,7 @@ static char * generate_boundary(void)
 struct mailmime * part_new_empty(
         struct mailmime_content * content,
         struct mailmime_fields * mime_fields,
+        stringpair_list_t* param_keyvals,
         int force_single
     )
 {
@@ -127,6 +128,40 @@ struct mailmime * part_new_empty(
         if (content->ct_parameters == NULL)
             content->ct_parameters = parameters;
     }
+    
+    if (param_keyvals) {
+        stringpair_list_t* cur;
+        for (cur = param_keyvals; cur; cur = cur->next) {
+            attr_name = strdup(cur->value->key);
+            attr_value = strdup(cur->value->value);
+            
+            param = mailmime_parameter_new(attr_name, attr_value);
+            assert(param);
+            if (param == NULL)
+                goto enomem;
+                
+            attr_name = NULL;
+            attr_value = NULL;
+
+            if (content->ct_parameters == NULL) {
+                parameters = clist_new();
+                assert(parameters);
+                if (parameters == NULL)
+                    goto enomem;
+            }
+            else {
+                parameters = content->ct_parameters;
+            }
+
+            r = clist_append(parameters, param);
+            if (r)
+                goto enomem;
+            param = NULL;
+
+            if (content->ct_parameters == NULL)
+                content->ct_parameters = parameters;            
+        }
+    }
 
     build_info = mailmime_new(mime_type, NULL, 0, mime_fields, content, NULL,
             NULL, NULL, list, NULL, NULL);
@@ -163,7 +198,7 @@ struct mailmime * get_pgp_encrypted_part(void)
     if (mime_fields == NULL)
         goto enomem;
 
-    mime = part_new_empty(content, mime_fields, 1);
+    mime = part_new_empty(content, mime_fields, NULL, 1);
     if (mime == NULL)
         goto enomem;
     mime_fields = NULL;
@@ -252,7 +287,7 @@ struct mailmime * get_text_part(
             goto enomem;
     }
 
-    mime = part_new_empty(content, mime_fields, 1);
+    mime = part_new_empty(content, mime_fields, NULL, 1);
     if (mime == NULL)
         goto enomem;
     content = NULL;
@@ -289,7 +324,8 @@ struct mailmime * get_file_part(
         const char * mime_type,
         char * data,
         size_t length,
-        bool transport_encode
+        bool transport_encode,
+        bool set_attachment_forward_comment
     )
 {
     char * disposition_name = NULL;
@@ -351,7 +387,13 @@ struct mailmime * get_file_part(
     encoding = NULL;
     disposition = NULL;
 
-    mime = part_new_empty(content, mime_fields, 1);
+    stringpair_list_t* extra_params = NULL;
+    
+    if (set_attachment_forward_comment)
+        extra_params = new_stringpair_list(new_stringpair("forward", "no"));
+    
+    mime = part_new_empty(content, mime_fields, extra_params, 1);
+    free_stringpair_list(extra_params);
     if (mime == NULL)
         goto enomem;
     content = NULL;
@@ -396,7 +438,7 @@ struct mailmime * part_multiple_new(const char *type)
     if (content == NULL)
         goto enomem;
     
-    mp = part_new_empty(content, mime_fields, 0);
+    mp = part_new_empty(content, mime_fields, NULL, 0);
     if (mp == NULL)
         goto enomem;
     
@@ -815,6 +857,22 @@ bool _is_text_part(struct mailmime_content *content, const char *subtype)
     return false;
 }
 
+bool _is_message_part(struct mailmime_content *content, const char* subtype) {
+    assert(content);
+    if (content->ct_type && content->ct_type->tp_type == MAILMIME_TYPE_COMPOSITE_TYPE &&
+            content->ct_type->tp_data.tp_composite_type &&
+            content->ct_type->tp_data.tp_composite_type->ct_type ==
+            MAILMIME_COMPOSITE_TYPE_MESSAGE) {
+        if (subtype)
+            return content->ct_subtype &&
+                    strcasecmp(content->ct_subtype, subtype) == 0;
+        else
+            return true;                
+    }
+    
+    return false;
+}
+
 int _get_content_type(
         const struct mailmime_content *content,
         char **type,
@@ -948,7 +1006,8 @@ bool must_chunk_be_encoded(const void* value, size_t size, bool ignore_fws) {
 #endif
 
 static PEP_STATUS interpret_MIME(struct mailmime *mime,
-                                 message *msg);
+                                 message *msg,
+                                 bool* raise_msg_attachment);
 
 // This function was rewritten to use in-memory buffers instead of
 // temporary files when the pgp/mime support was implemented for
@@ -1006,7 +1065,8 @@ pEp_error:
 static PEP_STATUS mime_attachment(
         bloblist_t *blob,
         struct mailmime **result,
-        bool transport_encode
+        bool transport_encode,
+        bool set_attachment_forward_comment
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1031,7 +1091,8 @@ static PEP_STATUS mime_attachment(
     bool already_ascii = !(must_chunk_be_encoded(blob->value, blob->size, true));
 
     mime = get_file_part(resource, mime_type, blob->value, blob->size, 
-                          (already_ascii ? false : transport_encode));
+                          (already_ascii ? false : transport_encode),
+                          set_attachment_forward_comment);
     free_rid_list(resource);
     
     assert(mime);
@@ -1155,7 +1216,7 @@ static PEP_STATUS mime_html_text(
     for (_a = attachments; _a != NULL; _a = _a->next) {
         if (_a->disposition != PEP_CONTENT_DISP_INLINE)
             continue;
-        status = mime_attachment(_a, &submime, transport_encode);
+        status = mime_attachment(_a, &submime, transport_encode, false);
         if (status != PEP_STATUS_OK)
             return PEP_UNKNOWN_ERROR; // FIXME
 
@@ -1632,7 +1693,8 @@ static PEP_STATUS mime_encode_message_plain(
         const message *msg,
         bool omit_fields,
         struct mailmime **result,
-        bool transport_encode
+        bool transport_encode,
+        bool set_attachment_forward_comment
     )
 {
     struct mailmime * mime = NULL;
@@ -1711,14 +1773,19 @@ static PEP_STATUS mime_encode_message_plain(
         }
 
         bloblist_t *_a;
+        bool first_one = true;
+        
         for (_a = msg->attachments; _a != NULL; _a = _a->next) {
 
             if (_a->disposition == PEP_CONTENT_DISP_INLINE)
                 continue;
 
-            status = mime_attachment(_a, &submime, transport_encode);
+            status = mime_attachment(_a, &submime, transport_encode,
+                                     (first_one && set_attachment_forward_comment));                         
             if (status != PEP_STATUS_OK)
                 goto pEp_error;
+            
+            first_one = false;    
 
             r = mailmime_smart_add_part(mime, submime);
             assert(r == MAILIMF_NO_ERROR);
@@ -1830,7 +1897,8 @@ PEP_STATUS _mime_encode_message_internal(
         const message * msg,
         bool omit_fields,
         char **mimetext,
-        bool transport_encode
+        bool transport_encode,
+        bool set_attachment_forward_comment
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1850,11 +1918,12 @@ PEP_STATUS _mime_encode_message_internal(
 
     switch (msg->enc_format) {
         case PEP_enc_none:
-            status = mime_encode_message_plain(msg, omit_fields, &mime, transport_encode);
+            status = mime_encode_message_plain(msg, omit_fields, &mime, transport_encode, set_attachment_forward_comment);
             break;
 
+        // I'm presuming we should hardcore ignoring set_attachment_forward_comment here...
         case PEP_enc_inline:
-            status = mime_encode_message_plain(msg, omit_fields, &mime, transport_encode);
+            status = mime_encode_message_plain(msg, omit_fields, &mime, transport_encode, false);
             break;
 
         case PEP_enc_S_MIME:
@@ -2402,7 +2471,7 @@ static PEP_STATUS process_multipart_related(struct mailmime *mime,
         // ???
         // This is what we would have done before, so... no
         // worse than the status quo. But FIXME!
-        status = interpret_MIME(part, msg);
+        status = interpret_MIME(part, msg, NULL);
         if (status)
             return status;
     }
@@ -2417,7 +2486,7 @@ static PEP_STATUS process_multipart_related(struct mailmime *mime,
         if (content == NULL)
             return PEP_ILLEGAL_VALUE;
 
-        status = interpret_MIME(part, msg);
+        status = interpret_MIME(part, msg, NULL);
         if (status)
             return status;
     }
@@ -2426,7 +2495,8 @@ static PEP_STATUS process_multipart_related(struct mailmime *mime,
 
 static PEP_STATUS interpret_MIME(
         struct mailmime *mime,
-        message *msg
+        message *msg,
+        bool* raise_msg_attachment
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -2476,7 +2546,7 @@ static PEP_STATUS interpret_MIME(
                         return status;
                 }
                 else /* add as attachment */ {
-                    status = interpret_MIME(part, msg);
+                    status = interpret_MIME(part, msg, NULL);
                     if (status)
                         return status;
                 }
@@ -2499,7 +2569,7 @@ static PEP_STATUS interpret_MIME(
                 if (part == NULL)
                     return PEP_ILLEGAL_VALUE;
 
-                status = interpret_MIME(part, msg);
+                status = interpret_MIME(part, msg, NULL);
                 if (status != PEP_STATUS_OK)
                     return status;
             }
@@ -2510,11 +2580,13 @@ static PEP_STATUS interpret_MIME(
                 return PEP_ILLEGAL_VALUE;
 
             clistiter *cur;
-            for (cur = clist_begin(partlist); cur; cur = clist_next(cur)) {
+            // only add raise_msg_attachment on 2nd part!
+            int _att_count = 0;
+            for (cur = clist_begin(partlist); cur; cur = clist_next(cur), _att_count++) {
                 struct mailmime *part= clist_content(cur);
                 if (part == NULL)
                     return PEP_ILLEGAL_VALUE;
-                status = interpret_MIME(part, msg);
+                status = interpret_MIME(part, msg, _att_count == 1 ? raise_msg_attachment : NULL);
                 if (status != PEP_STATUS_OK)
                     return status;
             }
@@ -2547,6 +2619,25 @@ static PEP_STATUS interpret_MIME(
                     return status;
             }
             else {
+                // Fixme - we need a control on recursion level here - KG: maybe NOT. We only go to depth 1.
+                if (raise_msg_attachment != NULL) {
+                    bool is_msg = (_is_message_part(content, "rfc822") || _is_text_part(content, "rfc822"));
+                    if (is_msg) {
+                        if (content->ct_parameters) {
+                            clistiter *cur;
+                            for (cur = clist_begin(content->ct_parameters); cur; cur =
+                                 clist_next(cur)) {
+                                struct mailmime_parameter * param = clist_content(cur);
+                                if (param && param->pa_name && strcasecmp(param->pa_name, "forward") == 0) {
+                                    if (param->pa_value && strcasecmp(param->pa_value, "no") == 0) {
+                                        *raise_msg_attachment = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
                 char *data = NULL;
                 size_t size = 0;
                 char * mime_type;
@@ -2633,7 +2724,8 @@ enomem:
 DYNAMIC_API PEP_STATUS mime_decode_message(
         const char *mimetext,
         size_t size,
-        message **msg
+        message **msg,
+        bool* raise_msg_attachment
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -2677,7 +2769,7 @@ DYNAMIC_API PEP_STATUS mime_decode_message(
 
     if (content) {
         status = interpret_MIME(mime->mm_data.mm_message.mm_msg_mime,
-                _msg);
+                _msg, raise_msg_attachment);
         if (status != PEP_STATUS_OK)
             goto pEp_error;
     }
@@ -2702,4 +2794,3 @@ pEp_error:
 
     return status;
 }
-

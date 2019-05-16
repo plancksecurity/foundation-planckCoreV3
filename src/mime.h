@@ -75,7 +75,8 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
 DYNAMIC_API PEP_STATUS mime_decode_message(
         const char *mimetext,
         size_t size,
-        message **msg
+        message **msg,
+        bool* raise_msg_attachment
     );
 
 /* sometimes we don't want to transport encode */
@@ -83,7 +84,8 @@ PEP_STATUS _mime_encode_message_internal(
         const message * msg,
         bool omit_fields,
         char **mimetext,
-        bool transport_encode
+        bool transport_encode,
+        bool set_attachment_forward_comment        
     );
 
 
