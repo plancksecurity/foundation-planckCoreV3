@@ -123,11 +123,11 @@ int email_cmp(void *cookie, int a_len, const void *a, int b_len, const void *b)
 
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
-     PEP_STATUS status = PEP_STATUS_OK;
+    PEP_STATUS status = PEP_STATUS_OK;
 
     char path[MAX_PATH];
-    if (!unix_local_db_file(path, SQ_KEYS_DB))
-        ERROR_OUT(NULL, PEP_INIT_GPGME_INIT_FAILED,
+    if ((status = unix_local_db_file(path, SQ_KEYS_DB)) != PEP_STATUS_OK)
+        ERROR_OUT(NULL, status,
                   "could not determine path to keys DB");
 
     int sqlite_result;

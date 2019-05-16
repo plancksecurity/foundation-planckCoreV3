@@ -15,18 +15,18 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <regex.h>
-// #include <stdio.h>
 
 #include "platform_unix.h"
 
 #define MAX_PATH 1024
 #ifndef LOCAL_DB_FILENAME
-#define LOCAL_DB_FILENAME "pEp_management.db"  /* dot (hidden file) now added in *_local_db() */
+#define LOCAL_DB_FILENAME "management.db"      /* ".pEp_" prefix now added in *_local_db() */
 #endif
 #ifndef LOCAL_KEYS_DB_FILENAME
-#define LOCAL_KEYS_DB_FILENAME "pEp_keys.db"
+#define LOCAL_KEYS_DB_FILENAME "keys.db"
 #endif
 #define SYSTEM_DB_FILENAME "system.db"
 #ifndef SYSTEM_DB_PREFIX
@@ -193,15 +193,15 @@ const char *unix_system_db(int reset)
     {
         const char *home_env;
         const char *subdir;
-        /* TODO: ugly data layout, maybe switch to nested struct */
-        const char * const confvars[] = { "TRUSTWORDS", "PEP_HOME", NULL,             "HOME",  NULL };
-        const char * const confvals[] = { NULL,         NULL,       SYSTEM_DB_PREFIX, NULL,    NULL };
-        const char * const confsdir[] = { "",           "",         "",               "/.pEp", NULL };
-        const bool confisimportant[] =  { true,         false,      false,            false,   false };
+        const char * const confvars[] = { "TRUSTWORDS", "PEP_HOME", "PEPHOME", NULL,             "HOME",   NULL };
+        const char * const confvals[] = { NULL,         NULL,       NULL,      SYSTEM_DB_PREFIX, NULL,     NULL };
+        const char * const confsdir[] = { "/",          "/",        "/",       "/",              "/.pEp/", NULL };
+        const bool automkdir[]        = { false,        true,       true,      false,            true,     false }; // use this on dirs only!
+        const bool enforceifset[]     = { true,         false,      false,     false,            false,    false };
         int cf_i;
+
         for (cf_i = 0; confvars[cf_i] || confvals[cf_i]; cf_i++) {
             if (((home_env = confvals[cf_i]) || (home_env = getenv (confvars[cf_i]))) && (subdir = confsdir[cf_i])) {
-                // printf("unix_system_db (%s) [%s] %s\n", SYSTEM_DB_FILENAME, confvars[cf_i], home_env);
                 char *p = stpncpy (buffer, home_env, MAX_PATH);
                 ssize_t len = MAX_PATH - (p - buffer) - 2;
 
@@ -211,17 +211,21 @@ const char *unix_system_db(int reset)
                 }
 
                 p = stpncpy(p, confsdir[cf_i], len);
-                *p++ = '/';
+                if (automkdir[cf_i]) {
+                    if (mkdir(buffer, S_IRUSR | S_IWUSR | S_IXUSR) != 0 && errno != EEXIST) {
+                        perror(SYSTEM_DB_FILENAME);
+                        return false;
+                    }
+                }
+
                 strncpy(p, SYSTEM_DB_FILENAME, len);
-                // printf("unix_system_db (%s) [%s] -> %s\n", SYSTEM_DB_FILENAME, confvars[cf_i], buffer);
                 if (access (buffer, R_OK) == 0) {
                     done = true;
                     return buffer;
                 }
-                else if (confisimportant[cf_i])
+                else if (enforceifset[cf_i])
                     return NULL;
             }
-            // printf("unix_system_db (%s) %s failed\n", SYSTEM_DB_FILENAME, confvars[cf_i]);
         }
         return NULL;
     }
@@ -268,42 +272,56 @@ int regnexec(const regex_t* preg, const char* string,
 #endif
 
 #ifdef NDEBUG
-int unix_local_db_file(char *buffer, const char *fname)
+PEP_STATUS unix_local_db_file(const char *buffer, const char *fname)
 #else
-int unix_local_db_file(char *buffer, const char *fname, int reset)
+PEP_STATUS unix_local_db_file(const char *buffer, const char *fname, int reset)
 #endif
 {
+    /*
+     * TODO: move this to libpEpAdapter and create an have an export symbol here only.
+     */
     const char *home_env;
     const char *subdir;
-    /* TODO: ugly data layout, maybe switch to nested struct */
-    /* Note: in HOME, a dot is prepended to the file (~/.pEp_management.db, vs ~/.pEp/pEp_management.db) */
-    const char * const confvars[] = { "PEP_HOME", "HOME",  "HOME",   NULL };
-    const char * const confvals[] = { NULL,       NULL,    NULL,     NULL };
-    const char * const confsdir[] = { "/",        "/.",    "/.pEp/", NULL };
-    const bool confisimportant[] =  { true,       false,   true,     false };
+    /* Note: in HOME, a dot and pEp_ is prepended to the file (~/.pEp_management.db, vs ~/.pEp/management.db) */
+    const char * const confvars[] = { "PEP_HOME", "PEPHOME", "HOME",   "HOME",   NULL };
+    const char * const confvals[] = { NULL,       NULL,      NULL,     NULL,     NULL };
+    const char * const confsdir[] = { "/",        "/",       "/.pEp_", "/.pEp/", NULL };
+    const bool automkdir[]        = { true,       true,      false,    true,     false }; // use this on dirs only!
+    const bool debugonly[]        = { true,       true,      false,    false,    false };
+    const bool enforceifset[]     = { true,       true,      false,    true,     false };
     int cf_i;
 
     for (cf_i = 0; confvars[cf_i] || confvals[cf_i]; cf_i++) {
         if (((home_env = confvals[cf_i]) || (home_env = getenv (confvars[cf_i]))) && (subdir = confsdir[cf_i])) {
-            // printf("unix_local_db_file(%s) [%s] %s\n", fname, confvars[cf_i], home_env);
             char *p = stpncpy (buffer, home_env, MAX_PATH);
             ssize_t len = MAX_PATH - (p - buffer) - 1;
 
             if (len < strlen (fname) + strlen (confsdir[cf_i])) {
                 assert(0);
-                return false;
+                return PEP_OUT_OF_MEMORY;
             }
 
+#ifdef NDEBUG
+            if (debugonly[cf_i] && enforceifset[cf_i]) {
+                printf("WARNING: Variable '%s' MUST NOT be used in production!\n", confvars[cf_i]);
+                // return PEP_INIT_CANNOT_OPEN_DB;
+            }
+#endif
+
             p = stpncpy(p, confsdir[cf_i], len);
+            if (automkdir[cf_i]) {
+                if (mkdir(buffer, S_IRUSR | S_IWUSR | S_IXUSR) != 0 && errno != EEXIST) {
+                    return PEP_INIT_CANNOT_OPEN_DB;
+                }
+            }
+
             strncpy(p, fname, len);
-            // printf("unix_local_db_file(%s) [%s] -> %s\n", fname, confvars[cf_i], buffer);
-            if (confisimportant[cf_i] || (access (buffer, R_OK) == 0)) {
-                return true;
+            if (enforceifset[cf_i] || (access (buffer, R_OK) == 0)) {
+                return PEP_STATUS_OK;
             }
         }
-        // printf("unix_local_db_file(%s) %s failed\n", fname, confvars[cf_i]);
     }
-    return false;
+    return PEP_UNKNOWN_DB_ERROR;
 }
 
 #ifdef NDEBUG
