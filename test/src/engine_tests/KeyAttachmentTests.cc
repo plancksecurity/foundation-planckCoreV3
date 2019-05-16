@@ -73,7 +73,7 @@ void KeyAttachmentTests::check_key_attach_inline() {
     message* enc_msg = NULL;
     message* dec_msg = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(enc_msg);
     stringlist_t* keylist = NULL;
@@ -93,7 +93,7 @@ void KeyAttachmentTests::check_key_plus_encr_att_inline() {
     message* enc_msg = NULL;
     message* dec_msg = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(enc_msg);
     stringlist_t* keylist = NULL;
@@ -119,7 +119,7 @@ void KeyAttachmentTests::check_encr_att_plus_key_inline() {
     message* enc_msg = NULL;
     message* dec_msg = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(enc_msg);
     stringlist_t* keylist = NULL;
@@ -145,7 +145,7 @@ void KeyAttachmentTests::check_key_plus_unencr_att_inline() {
     message* enc_msg = NULL;
     message* dec_msg = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(enc_msg);
     stringlist_t* keylist = NULL;
@@ -171,7 +171,7 @@ void KeyAttachmentTests::check_unencr_att_plus_key_inline() {
     message* enc_msg = NULL;
     message* dec_msg = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(enc_msg);
     stringlist_t* keylist = NULL;
@@ -201,7 +201,7 @@ void KeyAttachmentTests::check_many_keys_inline() {
     message* enc_msg = NULL;
     message* dec_msg = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(enc_msg);
     stringlist_t* keylist = NULL;
@@ -221,7 +221,7 @@ void KeyAttachmentTests::check_many_keys_w_encr_file_inline() {
     message* enc_msg = NULL;
     message* dec_msg = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(enc_msg);
     stringlist_t* keylist = NULL;
@@ -247,7 +247,7 @@ void KeyAttachmentTests::check_many_keys_w_unencr_file_inline() {
     message* enc_msg = NULL;
     message* dec_msg = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(enc_msg);
     stringlist_t* keylist = NULL;
@@ -273,7 +273,7 @@ void KeyAttachmentTests::check_many_keys_with_many_files_inline() {
     message* enc_msg = NULL;
     message* dec_msg = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(enc_msg);
     stringlist_t* keylist = NULL;
@@ -328,7 +328,7 @@ void KeyAttachmentTests::check_key_attach_OpenPGP() {
     message* enc_msg = NULL;
     message* dec_msg = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(enc_msg);
     stringlist_t* keylist = NULL;
@@ -348,7 +348,7 @@ void KeyAttachmentTests::check_key_plus_encr_att_OpenPGP() {
     message* enc_msg = NULL;
     message* dec_msg = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(enc_msg);
     stringlist_t* keylist = NULL;
@@ -373,7 +373,7 @@ void KeyAttachmentTests::check_encr_att_plus_key_OpenPGP() {
     message* enc_msg = NULL;
     message* dec_msg = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(enc_msg);
     stringlist_t* keylist = NULL;
@@ -399,7 +399,7 @@ void KeyAttachmentTests::check_key_plus_unencr_att_OpenPGP() {
     message* enc_msg = NULL;
     message* dec_msg = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(enc_msg);
     stringlist_t* keylist = NULL;
@@ -424,7 +424,7 @@ void KeyAttachmentTests::check_unencr_att_plus_key_OpenPGP() {
     message* enc_msg = NULL;
     message* dec_msg = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(enc_msg);
     stringlist_t* keylist = NULL;
@@ -449,7 +449,7 @@ void KeyAttachmentTests::check_many_keys_OpenPGP() {
     message* enc_msg = NULL;
     message* dec_msg = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(enc_msg);
     stringlist_t* keylist = NULL;
@@ -469,7 +469,7 @@ void KeyAttachmentTests::check_many_keys_w_encr_file_OpenPGP() {
     message* enc_msg = NULL;
     message* dec_msg = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(enc_msg);
     stringlist_t* keylist = NULL;
@@ -494,7 +494,7 @@ void KeyAttachmentTests::check_many_keys_w_unencr_file_OpenPGP() {
     message* enc_msg = NULL;
     message* dec_msg = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(enc_msg);
     stringlist_t* keylist = NULL;
@@ -519,7 +519,7 @@ void KeyAttachmentTests::check_many_keys_w_many_files_OpenPGP() {
     message* enc_msg = NULL;
     message* dec_msg = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &enc_msg, NULL);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(enc_msg);
     stringlist_t* keylist = NULL;

@@ -916,10 +916,14 @@ static message* wrap_message_as_attachment(message* envelope,
             default:
                 inner_type_string = "INNER";
         }
-        attachment->longmsg = encapsulate_message_wrap_info(inner_type_string, attachment->longmsg);
+        attachment->longmsg = encapsulate_message_wrap_info(inner_type_string, attachment->longmsg);        
         _envelope->longmsg = encapsulate_message_wrap_info("OUTER", _envelope->longmsg);
+
+        // 2.1, to replace the above
+        add_opt_field(attachment, PEP_MSG_WRAP_KEY, inner_type_string); 
     }
     else if (_envelope) {
+        // 2.1 - how do we peel this particular union when we get there?
         _envelope->longmsg = encapsulate_message_wrap_info("TRANSPORT", _envelope->longmsg);
     }
     else {
@@ -955,7 +959,7 @@ static message* wrap_message_as_attachment(message* envelope,
               );
             
     /* Turn message into a MIME-blob */
-    status = _mime_encode_message_internal(attachment, false, &message_text, true);
+    status = _mime_encode_message_internal(attachment, false, &message_text, true, false);
         
     if (status != PEP_STATUS_OK)
         goto enomem;
@@ -1032,8 +1036,11 @@ static PEP_STATUS encrypt_PGP_MIME(
     _src->longmsg_formatted = src->longmsg_formatted;
     _src->attachments = src->attachments;
     _src->enc_format = PEP_enc_none;
-    bool mime_encode = !is_wrapper(_src);
-    status = _mime_encode_message_internal(_src, true, &mimetext, mime_encode);
+    
+    // These vars are here to be clear, and because I don't know how this may change in the near future.
+    bool wrapped = is_wrapper(_src);
+    bool mime_encode = !wrapped;
+    status = _mime_encode_message_internal(_src, true, &mimetext, mime_encode, wrapped);
     assert(status == PEP_STATUS_OK);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
@@ -3447,6 +3454,7 @@ static PEP_STATUS _decrypt_message(
     decrypt_status = status;
     
     bool imported_private_key_address = false;
+    bool has_inner = false;
 
     if (ptext) { 
         /* we got a plaintext from decryption */
@@ -3455,7 +3463,7 @@ static PEP_STATUS _decrypt_message(
             case PEP_enc_PGP_MIME:
             case PEP_enc_PGP_MIME_Outlook1:
             
-                status = mime_decode_message(ptext, psize, &msg);
+                status = mime_decode_message(ptext, psize, &msg, &has_inner);
                 if (status != PEP_STATUS_OK)
                     goto pEp_error;
                 
@@ -3554,7 +3562,8 @@ static PEP_STATUS _decrypt_message(
                                     
                                 status = mime_decode_message(actual_message->value, 
                                                              actual_message->size, 
-                                                             &inner_message);
+                                                             &inner_message,
+                                                             NULL);
                                 if (status != PEP_STATUS_OK)
                                     goto pEp_error;
                                 
