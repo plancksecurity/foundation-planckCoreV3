@@ -86,7 +86,7 @@
     }                                                               \
 } while(0)
 
-DYNAMIC_API PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
+PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
         PEP_CIPHER_SUITE suite)
 {
     switch (suite) {
