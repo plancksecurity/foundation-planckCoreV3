@@ -118,6 +118,7 @@ typedef enum {
     PEP_COMMIT_FAILED                               = 0xff01,
     PEP_MESSAGE_CONSUME                             = 0xff02,
     PEP_MESSAGE_IGNORE                              = 0xff03,
+    PEP_CANNOT_CONFIG                               = 0xff04,
 
     PEP_RECORD_NOT_FOUND                            = -6,
     PEP_CANNOT_CREATE_TEMP_FILE                     = -5,
@@ -276,6 +277,35 @@ DYNAMIC_API void config_use_only_own_private_keys(PEP_SESSION session, bool enab
 //      enable (in)     flag if enabled or disabled
 
 DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable);
+
+
+typedef enum {
+    PEP_CIPHER_SUITE_DEFAULT = 0,
+    PEP_CIPHER_SUITE_CV25519 = 1,
+    PEP_CIPHER_SUITE_P256 = 2,
+    PEP_CIPHER_SUITE_P384 = 3,
+    PEP_CIPHER_SUITE_P521 = 4,
+    PEP_CIPHER_SUITE_RSA2K = 5,
+    PEP_CIPHER_SUITE_RSA3K = 6,
+    PEP_CIPHER_SUITE_RSA4K = 7,
+    PEP_CIPHER_SUITE_RSA8K = 8
+} PEP_CIPHER_SUITE;
+
+// config_cipher_suite() - cipher suite being used when encrypting
+//
+//  parameters:
+//      session (in)            session handle
+//      cipher_suite (in)       cipher suite to use
+//
+//  return value:
+//      PEP_STATUS_OK           cipher suite configured
+//      PEP_CANNOT_CONFIG       configuration failed; falling back to default
+//
+//  caveat: the default ciphersuite for a crypt tech implementation is
+//  implementation defined
+
+DYNAMIC_API PEP_STATUS config_cipher_suite(PEP_SESSION session,
+        PEP_CIPHER_SUITE suite);
 
 
 // decrypt_and_verify() - decrypt and/or verify a message

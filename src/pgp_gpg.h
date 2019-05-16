@@ -28,7 +28,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first);
 void pgp_release(PEP_SESSION session, bool out_last);
 
 
-// pgp_decrypt_and_verify() - decrypt and verify cyphertext
+// pgp_decrypt_and_verify() - decrypt and verify ciphertext
 //
 //  parameters:
 //      session (in)        session handle
@@ -37,8 +37,8 @@ void pgp_release(PEP_SESSION session, bool out_last);
 //      dsigtext (in)       pointer to bytes with detached signature
 //                          or NULL if no detached signature
 //      dsigsize (in)       size of detached signature in bytes
-//      ptext (out)         bytes with cyphertext
-//      psize (out)         size of cyphertext in bytes
+//      ptext (out)         bytes with ciphertext
+//      psize (out)         size of ciphertext in bytes
 //      keylist (out)       list of keys being used; first is the key being
 //                          used for signing
 //	filename (out)	    PGP filename, when rendered (Optional, only necessary for some PGP implementations (e.g. Symantec),
@@ -298,5 +298,8 @@ PEP_STATUS pgp_replace_only_uid(
         const char* realname,
         const char* email
     );
+
+PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
+        PEP_CIPHER_SUITE suite);
 
 #define PGP_BINARY_PATH pgp_binary
