@@ -28,16 +28,17 @@
 #if TRACING
 #include "status_to_string.h"
 
-#ifdef ANDROID
-#  include <android/log.h>
-#  define _T(...) do {                          \
-        __android_log_print(ANDROID_LOG_DEBUG, "pEpEngine-sequoia", __VA_ARGS__);         \
+#  ifdef ANDROID
+#    include <android/log.h>
+#    define _T(...) do {                                                \
+        __android_log_print(ANDROID_LOG_DEBUG, "pEpEngine-sequoia",     \
+                            ##__VA_ARGS__);                             \
     } while (0)
-#else
-#  define _T(...) do {                          \
+#  else
+#    define _T(...) do {                        \
         fprintf(stderr, ##__VA_ARGS__);         \
     } while (0)
-#endif
+#  endif
 #else
 #  define _T(...) do { } while (0)
 #endif
@@ -85,7 +86,7 @@
     }                                                               \
 } while(0)
 
-DYNAMIC_API PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
+PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
         PEP_CIPHER_SUITE suite)
 {
     switch (suite) {
@@ -184,12 +185,12 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 #endif
 
 #ifdef _WIN32
-    #define PATH "\\pEp\\.pEp_keys.db"
+	#define PEP_KEYS_PATH "\\pEp\\keys.db"
 
     if (!home_env)
-        home_env = getenv("LOCALAPPDATA");
+        home_env = getenv("APPDATA");
 #else
-    #define PATH "/.pEp_keys.db"
+	#define PEP_KEYS_PATH "/keys.db"
 
     if (!home_env)
         home_env = getenv("HOME");
@@ -199,17 +200,13 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         ERROR_OUT(NULL, PEP_INIT_GPGME_INIT_FAILED, "HOME unset");
 
     // Create the DB and initialize it.
-    size_t path_size = strlen(home_env) + sizeof(PATH);
+    size_t path_size = strlen(home_env) + sizeof(PEP_KEYS_PATH);
     char *path = (char *) calloc(1, path_size);
     assert(path);
     if (!path)
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
 
-#ifdef _WIN32
-    int r = snprintf(path, path_size, "%s\\pEp\\.pEp_keys.db", home_env);
-#else
-    int r = snprintf(path, path_size, "%s/.pEp_keys.db", home_env);
-#endif
+	int r = snprintf(path, path_size, "%s" PEP_KEYS_PATH, home_env);
     assert(r >= 0 && r < path_size);
     if (r < 0)
         ERROR_OUT(NULL, PEP_UNKNOWN_ERROR, "snprintf");
