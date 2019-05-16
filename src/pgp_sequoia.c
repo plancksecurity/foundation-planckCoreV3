@@ -27,9 +27,18 @@
 // enable tracing if in debugging mode
 #if TRACING
 #include "status_to_string.h"
-#  define _T(...) do {                          \
+
+#  ifdef ANDROID
+#    include <android/log.h>
+#    define _T(...) do {                                                \
+        __android_log_print(ANDROID_LOG_DEBUG, "pEpEngine-sequoia",     \
+                            ##__VA_ARGS__);                             \
+    } while (0)
+#  else
+#    define _T(...) do {                        \
         fprintf(stderr, ##__VA_ARGS__);         \
     } while (0)
+#  endif
 #else
 #  define _T(...) do { } while (0)
 #endif
@@ -77,6 +86,52 @@
     }                                                               \
 } while(0)
 
+PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
+        PEP_CIPHER_SUITE suite)
+{
+    switch (suite) {
+        // supported cipher suites
+        case PEP_CIPHER_SUITE_RSA2K:
+        case PEP_CIPHER_SUITE_RSA3K:
+        case PEP_CIPHER_SUITE_CV25519:
+        case PEP_CIPHER_SUITE_P256:
+        case PEP_CIPHER_SUITE_P384:
+        case PEP_CIPHER_SUITE_P521:
+            session->cipher_suite = suite;
+            return PEP_STATUS_OK;
+
+        case PEP_CIPHER_SUITE_DEFAULT:
+            session->cipher_suite = PEP_CIPHER_SUITE_RSA2K;
+            return PEP_STATUS_OK;
+
+        // unsupported cipher suites
+        default:
+            session->cipher_suite = PEP_CIPHER_SUITE_RSA2K;
+            return PEP_CANNOT_CONFIG;
+    }
+}
+
+static pgp_tpk_cipher_suite_t cipher_suite(PEP_CIPHER_SUITE suite)
+{
+    switch (suite) {
+        // supported cipher suites
+        case PEP_CIPHER_SUITE_RSA2K:
+            return PGP_TPK_CIPHER_SUITE_RSA2K;
+        case PEP_CIPHER_SUITE_RSA3K:
+            return PGP_TPK_CIPHER_SUITE_RSA3K;
+        case PEP_CIPHER_SUITE_CV25519:
+            return PGP_TPK_CIPHER_SUITE_CV25519;
+        case PEP_CIPHER_SUITE_P256:
+            return PGP_TPK_CIPHER_SUITE_P256;
+        case PEP_CIPHER_SUITE_P384:
+            return PGP_TPK_CIPHER_SUITE_P384;
+        case PEP_CIPHER_SUITE_P521:
+            return PGP_TPK_CIPHER_SUITE_P521;
+        default:
+            return PGP_TPK_CIPHER_SUITE_RSA2K;
+    }
+}
+
 int email_cmp(void *cookie, int a_len, const void *a, int b_len, const void *b)
 {
     pgp_packet_t a_userid = pgp_user_id_from_raw (a, a_len);
@@ -121,9 +176,9 @@ int email_cmp(void *cookie, int a_len, const void *a, int b_len, const void *b)
 
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
-    #define PATH "/.pEp_keys.db"
- 
     PEP_STATUS status = PEP_STATUS_OK;
+
+#define PEP_KEYS_PATH "/.pEp_keys.db"
 
     // Create the home directory.
     char *home_env = NULL;
@@ -136,13 +191,13 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         ERROR_OUT(NULL, PEP_INIT_GPGME_INIT_FAILED, "HOME unset");
 
     // Create the DB and initialize it.
-    size_t path_size = strlen(home_env) + sizeof(PATH);
+    size_t path_size = strlen(home_env) + sizeof(PEP_KEYS_PATH);
     char *path = (char *) calloc(1, path_size);
     assert(path);
     if (!path)
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
 
-    int r = snprintf(path, path_size, "%s/.pEp_keys.db", home_env);
+    int r = snprintf(path, path_size, "%s" PEP_KEYS_PATH, home_env);
     assert(r >= 0 && r < path_size);
     if (r < 0)
         ERROR_OUT(NULL, PEP_UNKNOWN_ERROR, "snprintf");
@@ -863,7 +918,13 @@ struct decrypt_cookie {
     int good_but_revoked;
     int missing_keys;
     int bad_checksums;
+
+    // Whether we decrypted anything.
     int decrypted;
+
+    // The filename stored in the literal data packet.  Note: this is
+    // *not* protected by the signature and should not be trusted!!!
+    char *filename;
 };
 
 static pgp_status_t
@@ -1285,6 +1346,29 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
     return PGP_STATUS_SUCCESS;
 }
 
+static pgp_status_t inspect_cb(
+    void *cookie_opaque, pgp_packet_parser_t pp)
+{
+    struct decrypt_cookie *cookie = cookie_opaque;
+
+    pgp_packet_t packet = pgp_packet_parser_packet(pp);
+    assert(packet);
+
+    pgp_tag_t tag = pgp_packet_tag(packet);
+
+    T("%s", pgp_tag_to_string(tag));
+
+    if (tag == PGP_TAG_LITERAL) {
+        pgp_literal_t literal = pgp_packet_ref_literal(packet);
+        cookie->filename = pgp_literal_filename(literal);
+        pgp_literal_free(literal);
+    }
+
+    pgp_packet_free(packet);
+
+    return 0;
+}
+
 PEP_STATUS pgp_decrypt_and_verify(
     PEP_SESSION session, const char *ctext, size_t csize,
     const char *dsigtext, size_t dsigsize,
@@ -1292,7 +1376,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     char** filename_ptr)
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    struct decrypt_cookie cookie = { session, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, };
+    struct decrypt_cookie cookie = { session, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, NULL };
     pgp_reader_t reader = NULL;
     pgp_writer_t writer = NULL;
     pgp_reader_t decryptor = NULL;
@@ -1322,7 +1406,8 @@ PEP_STATUS pgp_decrypt_and_verify(
     pgp_error_t err = NULL;
     decryptor = pgp_decryptor_new(&err, reader,
                                   get_public_keys_cb, decrypt_cb,
-                                  check_signatures_cb, &cookie, 0);
+                                  check_signatures_cb, inspect_cb,
+                                  &cookie, 0);
     if (! decryptor)
         ERROR_OUT(err, PEP_DECRYPT_NO_KEY, "pgp_decryptor_new");
 
@@ -1351,6 +1436,9 @@ PEP_STATUS pgp_decrypt_and_verify(
     *keylist = cookie.signer_keylist;
     stringlist_append(*keylist, cookie.recipient_keylist);
 
+    if (filename_ptr)
+        *filename_ptr = cookie.filename;
+
  out:
     if (status == PEP_STATUS_OK) {
         // **********************************
@@ -1378,6 +1466,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     } else {
         free_stringlist(cookie.recipient_keylist);
         free_stringlist(cookie.signer_keylist);
+        free(cookie.filename);
         free(*ptext);
     }
 
@@ -1752,8 +1841,8 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     T("(%s)", userid);
 
     // Generate a key.
-    pgp_tpk_builder_t tpkb = pgp_tpk_builder_general_purpose
-        (PGP_TPK_CIPHER_SUITE_RSA3K, userid);
+    pgp_tpk_builder_t tpkb = pgp_tpk_builder_general_purpose(
+        cipher_suite(session->cipher_suite), userid);
     pgp_signature_t rev;
     if (pgp_tpk_builder_generate(&err, tpkb, &tpk, &rev))
         ERROR_OUT(err, PEP_CANNOT_CREATE_KEY, "Generating a key pair");
@@ -2566,3 +2655,4 @@ PEP_STATUS pgp_contains_priv_key(PEP_SESSION session, const char *fpr,
       fpr, *has_private ? "priv" : "pub", pEp_status_to_string(status));
     return status;
 }
+

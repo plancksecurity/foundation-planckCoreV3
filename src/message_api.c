@@ -985,7 +985,8 @@ static PEP_STATUS encrypt_PGP_inline(
         PEP_SESSION session,
         const message *src,
         stringlist_t *keys,
-        message *dst
+        message *dst,
+        PEP_encrypt_flags_t flags
     )
 {
     char *ctext = NULL;
@@ -996,6 +997,9 @@ static PEP_STATUS encrypt_PGP_inline(
     if (status)
         return status;
 
+    dst->enc_format = PEP_enc_inline;
+
+    // shortmsg is being copied
     if (src->shortmsg) {
         dst->shortmsg = strdup(src->shortmsg);
         assert(dst->shortmsg);
@@ -1003,7 +1007,30 @@ static PEP_STATUS encrypt_PGP_inline(
             return PEP_OUT_OF_MEMORY;
     }
 
-    dst->longmsg = ctext;
+    // id is staying the same
+    if (src->id) {
+        dst->id = strdup(src->id);
+        assert(dst->id);
+        if (!dst->id)
+            return PEP_OUT_OF_MEMORY;
+    }
+
+    char *_ctext = realloc(ctext, csize + 1);
+    assert(_ctext);
+    if (!_ctext)
+        return PEP_OUT_OF_MEMORY;
+    _ctext[csize] = 0;
+
+    dst->longmsg = _ctext;
+
+    // longmsg_formatted is unsupported
+
+    // attachments are going unencrypted
+    bloblist_t *bl = bloblist_dup(src->attachments);
+    if (!bl)
+        return PEP_OUT_OF_MEMORY;
+    dst->attachments = bl;
+
     return PEP_STATUS_OK;
 }
 
@@ -1927,7 +1954,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
     else {
         // FIXME - we need to deal with transport types (via flag)
-        if ((!force_v_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
+        if ((enc_format != PEP_enc_inline) && (!force_v_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
             message_wrap_type wrap_type = ((flags & PEP_encrypt_flag_key_reset_only) ? PEP_message_key_reset : PEP_message_default);
             _src = wrap_message_as_attachment(NULL, src, wrap_type, false);
             if (!_src)
@@ -1935,7 +1962,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         }
         else {
             // hide subject
-            if (!session->unencrypted_subject) {
+            if (enc_format != PEP_enc_inline && !session->unencrypted_subject) {
                 status = replace_subject(_src);
                 if (status == PEP_OUT_OF_MEMORY)
                     goto enomem;
@@ -1957,7 +1984,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 break;
 
             case PEP_enc_inline:
-                status = encrypt_PGP_inline(session, _src, keys, msg);
+                status = encrypt_PGP_inline(session, _src, keys, msg, flags);
                 break;
 
             default:
@@ -2292,7 +2319,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
             break;
 
         case PEP_enc_inline:
-            status = encrypt_PGP_inline(session, _src, keys, msg);
+            status = encrypt_PGP_inline(session, _src, keys, msg, flags);
             break;
 
         default:
