@@ -49,6 +49,7 @@ typedef enum _PEP_encrypt_flags {
 typedef unsigned int PEP_encrypt_flags_t;
 
 typedef enum _message_wrap_type {
+    PEP_message_unwrapped,  // 1.0 or anything we don't wrap    
     PEP_message_default,    // typical inner/outer message 2.0
     PEP_message_transport,  // e.g. for onion layers
     PEP_message_key_reset   // for wrapped key reset information
