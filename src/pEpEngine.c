@@ -904,7 +904,7 @@ DYNAMIC_API PEP_STATUS init(
     sqlite3_busy_timeout(_session->system_db, 1000);
 
 // increment this when patching DDL
-#define _DDL_USER_VERSION "11"
+#define _DDL_USER_VERSION "12"
 
     if (in_first) {
 
@@ -965,6 +965,7 @@ DYNAMIC_API PEP_STATUS init(
                 "   comment text,\n"
                 "   flags integer default 0,\n"
                 "   is_own integer default 0,\n"
+                "   pep_version real default 0,\n"                
                 "   timestamp integer default (datetime('now')),\n"
                 "   primary key (address, user_id)\n"
                 ");\n"
@@ -1070,7 +1071,10 @@ DYNAMIC_API PEP_STATUS init(
         // Sometimes the user_version wasn't set correctly. 
         if (version == 1) {
             bool version_changed = true;
-            if (db_contains_table(_session, "social_graph") > 0) {
+            if (table_contains_column(_session, "identity", "pep_version") > 0) {
+                version = 12;
+            } // N.B. Version 11 was a DB internal fix; there's no identifying information, but this is only one extra exec.
+            else if (db_contains_table(_session, "social_graph") > 0) {
                 if (!table_contains_column(_session, "person", "device_group"))
                     version = 10;
                 else
@@ -1422,6 +1426,17 @@ DYNAMIC_API PEP_STATUS init(
                 assert(status == PEP_STATUS_OK);
                 if (status != PEP_STATUS_OK)
                     return status;
+            }
+            if (version < 12) {
+                int_result = sqlite3_exec(
+                    _session->db,
+                    "alter table identity\n"
+                    "   add column pep_version real default 0;\n",
+                    NULL,
+                    NULL,
+                    NULL
+                );
+                assert(int_result == SQLITE_OK);                
             }
         }        
         else { 
