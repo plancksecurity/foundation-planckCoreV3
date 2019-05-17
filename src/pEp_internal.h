@@ -51,7 +51,14 @@
 #define PEP_MSG_WRAP_KEY_LEN 26
 #endif
 
+#ifndef X_PEP_MSG_WRAP_KEY
+#define X_PEP_MSG_WRAP_KEY "X-pEp-Wrapped-Message-Info"
+#endif
 
+#ifndef X_PEP_SNDR_FPR_KEY
+#define X_PEP_SNDR_FPR_KEY "X-pEp-Sender-FPR"
+#endif
+ 
 #include "platform.h"
 
 #ifdef WIN32

@@ -66,7 +66,7 @@ void SenderFPRTests::check_sender_f_p_r() {
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
 
     char* text = NULL;
     mime_encode_message(dec_msg, false, &text);
