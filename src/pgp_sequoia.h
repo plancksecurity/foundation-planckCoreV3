@@ -112,4 +112,7 @@ PEP_STATUS pgp_find_private_keys(
 
 PEP_STATUS pgp_binary(const char **path);
 
+PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
+        PEP_CIPHER_SUITE suite);
+
 #define PGP_BINARY_PATH pgp_binary

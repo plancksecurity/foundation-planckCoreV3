@@ -18,7 +18,7 @@ DYNAMIC_API stringlist_t *new_stringlist(const char *value)
     if (result && value) {
         result->value = strdup(value);
         assert(result->value);
-        if (result->value == 0) {
+        if (!result->value) {
             free(result);
             return NULL;
         }
@@ -227,6 +227,50 @@ DYNAMIC_API stringlist_t *stringlist_delete(
         last = _sl;
     }
     return stringlist;
+}
+
+static stringlist_t* stringlist_multi_delete(stringlist_t* stringlist, const char* value) {
+    if (stringlist == NULL || !stringlist->value)
+        return stringlist;
+    
+    stringlist_t* list_curr = stringlist;
+    stringlist_t* prev_ptr = NULL;
+    
+    while (list_curr) {
+        if (strcmp(list_curr->value, value) == 0) {
+            stringlist_t* victim = list_curr;
+            if (prev_ptr)
+                prev_ptr->next = list_curr->next;    
+            else
+                stringlist = list_curr->next;
+            
+            list_curr = list_curr->next;
+
+            victim->next = NULL;
+            
+            free_stringlist(victim);
+        }
+        else {
+            prev_ptr = list_curr;
+            list_curr = list_curr->next;
+        }
+    }
+    return stringlist;
+}
+
+
+
+void dedup_stringlist(stringlist_t* stringlist) {
+    if (stringlist == NULL || !stringlist->value)
+        return;
+        
+    stringlist_t* list_curr = stringlist;
+
+    while (list_curr && list_curr->next) {
+        stringlist_t* new_next = stringlist_multi_delete(list_curr->next, list_curr->value);
+        list_curr->next = new_next;
+        list_curr = list_curr->next;
+    }    
 }
 
 DYNAMIC_API void free_stringlist(stringlist_t *stringlist)

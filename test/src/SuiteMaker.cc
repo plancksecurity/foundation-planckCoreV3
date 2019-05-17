@@ -12,17 +12,22 @@
 #include "SuiteMaker.h"
 
 // Begin where we generate stuff
+#include "URIAddressTests.h"
 #include "MimeTests.h"
+#include "OwnIdentitiesRetrieveTests.h"
 #include "ExpiredSubkeyTests.h"
+#include "VerifyTests.h"
 #include "UserIdCollisionTests.h"
 #include "Engine463Tests.h"
 #include "BloblistTests.h"
 #include "NewUpdateIdAndMyselfTests.h"
+#include "NoOwnIdentWritesOnDecryptTests.h"
 #include "I18nTests.h"
 #include "IdentityListTests.h"
 #include "PgpBinaryTests.h"
 #include "SubkeyRatingEvalTests.h"
 #include "MessageNullFromTests.h"
+#include "ExportKeyTests.h"
 #include "LeastCommonDenomColorTests.h"
 #include "StringlistTests.h"
 #include "PgpListKeysTests.h"
@@ -30,6 +35,8 @@
 #include "EncryptMissingPrivateKeyTests.h"
 #include "CaseAndDotAddressTests.h"
 #include "UserIDAliasTests.h"
+#include "KeyringImportTests.h"
+#include "EnterLeaveDeviceGroupTests.h"
 #include "SignOnlyTests.h"
 #include "BCCTests.h"
 #include "Engine358Tests.h"
@@ -42,11 +49,13 @@
 #include "HeaderKeyImportTests.h"
 #include "EncryptAttachPrivateKeyTests.h"
 #include "ExternalRevokeTests.h"
+#include "LookupTests.h"
 #include "KeyeditTests.h"
 #include "LeastColorGroupTests.h"
 #include "DecryptAttachPrivateKeyTrustedTests.h"
 #include "CheckRenewedExpiredKeyTrustStatusTests.h"
 #include "TrustwordsTests.h"
+#include "SimpleBodyNotAltTests.h"
 #include "ReencryptPlusExtraKeysTests.h"
 #include "MapAsn1Tests.h"
 #include "DecorateTests.h"
@@ -55,23 +64,32 @@
 #include "StringpairListTests.h"
 #include "EncryptForIdentityTests.h"
 #include "KeyResetMessageTests.h"
+#include "DeleteKeyTests.h"
+#include "KeyAttachmentTests.h"
+#include "OwnKeysRetrieveTests.h"
 #include "TrustManipulationTests.h"
 #include "SyncTests.h"
+#include "RevocationTests.h"
 #include "AppleMailTests.h"
 
 
 const char* SuiteMaker::all_suites[] = {
+    "URIAddressTests",
     "MimeTests",
+    "OwnIdentitiesRetrieveTests",
     "ExpiredSubkeyTests",
+    "VerifyTests",
     "UserIdCollisionTests",
     "Engine463Tests",
     "BloblistTests",
     "NewUpdateIdAndMyselfTests",
+    "NoOwnIdentWritesOnDecryptTests",
     "I18nTests",
     "IdentityListTests",
     "PgpBinaryTests",
     "SubkeyRatingEvalTests",
     "MessageNullFromTests",
+    "ExportKeyTests",
     "LeastCommonDenomColorTests",
     "StringlistTests",
     "PgpListKeysTests",
@@ -79,6 +97,8 @@ const char* SuiteMaker::all_suites[] = {
     "EncryptMissingPrivateKeyTests",
     "CaseAndDotAddressTests",
     "UserIDAliasTests",
+    "KeyringImportTests",
+    "EnterLeaveDeviceGroupTests",
     "SignOnlyTests",
     "BCCTests",
     "Engine358Tests",
@@ -91,11 +111,13 @@ const char* SuiteMaker::all_suites[] = {
     "HeaderKeyImportTests",
     "EncryptAttachPrivateKeyTests",
     "ExternalRevokeTests",
+    "LookupTests",
     "KeyeditTests",
     "LeastColorGroupTests",
     "DecryptAttachPrivateKeyTrustedTests",
     "CheckRenewedExpiredKeyTrustStatusTests",
     "TrustwordsTests",
+    "SimpleBodyNotAltTests",
     "ReencryptPlusExtraKeysTests",
     "MapAsn1Tests",
     "DecorateTests",
@@ -104,19 +126,29 @@ const char* SuiteMaker::all_suites[] = {
     "StringpairListTests",
     "EncryptForIdentityTests",
     "KeyResetMessageTests",
+    "DeleteKeyTests",
+    "KeyAttachmentTests",
+    "OwnKeysRetrieveTests",
     "TrustManipulationTests",
     "SyncTests",
+    "RevocationTests",
     "AppleMailTests",
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 46;
+int SuiteMaker::num_suites = 59;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
-    if (strcmp(test_class_name, "MimeTests") == 0)
+    if (strcmp(test_class_name, "URIAddressTests") == 0)
+        *test_suite = new URIAddressTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "MimeTests") == 0)
         *test_suite = new MimeTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "OwnIdentitiesRetrieveTests") == 0)
+        *test_suite = new OwnIdentitiesRetrieveTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "ExpiredSubkeyTests") == 0)
         *test_suite = new ExpiredSubkeyTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "VerifyTests") == 0)
+        *test_suite = new VerifyTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "UserIdCollisionTests") == 0)
         *test_suite = new UserIdCollisionTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "Engine463Tests") == 0)
@@ -125,6 +157,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new BloblistTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "NewUpdateIdAndMyselfTests") == 0)
         *test_suite = new NewUpdateIdAndMyselfTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "NoOwnIdentWritesOnDecryptTests") == 0)
+        *test_suite = new NoOwnIdentWritesOnDecryptTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "I18nTests") == 0)
         *test_suite = new I18nTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "IdentityListTests") == 0)
@@ -135,6 +169,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new SubkeyRatingEvalTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "MessageNullFromTests") == 0)
         *test_suite = new MessageNullFromTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "ExportKeyTests") == 0)
+        *test_suite = new ExportKeyTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "LeastCommonDenomColorTests") == 0)
         *test_suite = new LeastCommonDenomColorTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "StringlistTests") == 0)
@@ -149,6 +185,10 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new CaseAndDotAddressTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "UserIDAliasTests") == 0)
         *test_suite = new UserIDAliasTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "KeyringImportTests") == 0)
+        *test_suite = new KeyringImportTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "EnterLeaveDeviceGroupTests") == 0)
+        *test_suite = new EnterLeaveDeviceGroupTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "SignOnlyTests") == 0)
         *test_suite = new SignOnlyTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "BCCTests") == 0)
@@ -173,6 +213,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new EncryptAttachPrivateKeyTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "ExternalRevokeTests") == 0)
         *test_suite = new ExternalRevokeTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "LookupTests") == 0)
+        *test_suite = new LookupTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "KeyeditTests") == 0)
         *test_suite = new KeyeditTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "LeastColorGroupTests") == 0)
@@ -183,6 +225,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new CheckRenewedExpiredKeyTrustStatusTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "TrustwordsTests") == 0)
         *test_suite = new TrustwordsTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "SimpleBodyNotAltTests") == 0)
+        *test_suite = new SimpleBodyNotAltTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "ReencryptPlusExtraKeysTests") == 0)
         *test_suite = new ReencryptPlusExtraKeysTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "MapAsn1Tests") == 0)
@@ -199,10 +243,18 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new EncryptForIdentityTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "KeyResetMessageTests") == 0)
         *test_suite = new KeyResetMessageTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "DeleteKeyTests") == 0)
+        *test_suite = new DeleteKeyTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "KeyAttachmentTests") == 0)
+        *test_suite = new KeyAttachmentTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "OwnKeysRetrieveTests") == 0)
+        *test_suite = new OwnKeysRetrieveTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "TrustManipulationTests") == 0)
         *test_suite = new TrustManipulationTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "SyncTests") == 0)
         *test_suite = new SyncTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "RevocationTests") == 0)
+        *test_suite = new RevocationTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "AppleMailTests") == 0)
         *test_suite = new AppleMailTests(test_class_name, test_home);
 }

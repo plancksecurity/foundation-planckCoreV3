@@ -3,6 +3,9 @@
 
 #include <stdlib.h>
 #include <string>
+#include <assert.h>
+#include <cpptest.h>
+#include "test_util.h"
 
 #include "pEpEngine.h"
 
@@ -137,7 +140,8 @@ void SyncTests::setup()
     free_identity(self);
 
     status = init(&sync, Sync_Adapter::messageToSend, Sync_Adapter::inject_sync_event);
-    TEST_ASSERT(status == PEP_STATUS_OK);
+    if (status != PEP_STATUS_OK)
+        throw std::runtime_error((string("init returned ") + tl_status_string(status)).c_str()); 
 
     cout << "initialize sync and start first state machine\n";
     status = register_sync_callbacks(
@@ -146,8 +150,11 @@ void SyncTests::setup()
             Sync_Adapter::notifyHandshake,
             Sync_Adapter::retrieve_next_sync_event
         );
-    TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(sync->sync_state.keysync.state == Sole);
+    if (status != PEP_STATUS_OK)
+        throw std::runtime_error((string("register sync status returned ") + tl_status_string(status)).c_str()); 
+    if (sync->sync_state.keysync.state != Sole) 
+        throw std::runtime_error((string("keysync.state was supposed to be ") + to_string((int)Sole) + " but was " + to_string((int)(sync->sync_state.keysync.state))).c_str()); 
+      
 
     cout << "creating thread for sync\n";
     sync_thread = new thread(Sync_Adapter::sync_thread, sync, &adapter);
@@ -170,10 +177,9 @@ void SyncTests::tear_down()
 void SyncTests::check_sync()
 {
     cout << "check_sync(): trigger KeyGen event\n";
-    signal_Sync_event(sync, Sync_PR_keysync, KeyGen);
+    signal_Sync_event(sync, Sync_PR_keysync, KeyGen, NULL);
     adapter.processing();
 
     cout << "check_sync(): cry for unknown key\n";
-    signal_Sync_event(sync, Sync_PR_keysync, CannotDecrypt);
+    signal_Sync_event(sync, Sync_PR_keysync, CannotDecrypt, NULL);
 }
-

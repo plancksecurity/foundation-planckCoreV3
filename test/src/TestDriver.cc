@@ -3,6 +3,7 @@
 #include <cpptest-suite.h>
 #include <cpptest-output.h>
 #include "pEpTestOutput.h"
+#include "TestConstants.h"
 
 #include <string>
 #include <vector>
@@ -64,8 +65,8 @@ int main(int argc, const char** argv) {
         SuiteMaker::suitemaker_buildlist(&argv[1], argc - MIN_ARGC, common_test_home.c_str(), suites_to_run);
         
     for (std::vector<Test::Suite*>::iterator it = suites_to_run.begin(); it != suites_to_run.end(); ++it) {
-        auto_ptr<Test::Suite> suite(*it);
-        test_runner->add(suite); 
+        unique_ptr<Test::Suite> suite(*it);
+        test_runner->add(move(suite)); 
     }
 
     Test::Output* output = new Test::pEpTestOutput(); // blah

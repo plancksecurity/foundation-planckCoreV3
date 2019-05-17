@@ -99,12 +99,12 @@
 #endif
 #endif
 
-#ifdef USE_GPG
-#include "pgp_gpg_internal.h"
+#if defined(USE_SEQUOIA)
+#include "pgp_sequoia_internal.h"
 #elif defined(USE_NETPGP)
 #include "pgp_netpgp_internal.h"
-#elif defined(USE_SEQUOIA)
-#include "pgp_sequoia_internal.h"
+#elif defined(USE_GPG)
+#include "pgp_gpg_internal.h"
 #endif
 
 #include "keymanagement.h"
@@ -128,7 +128,6 @@ struct _pEpSession {
 #elif defined(USE_NETPGP)
     pEpNetPGPSession ctx;
 #elif defined(USE_SEQUOIA)
-    sq_context_t ctx;
     sqlite3 *key_db;
     struct {
         sqlite3_stmt *begin_transaction;
@@ -149,6 +148,8 @@ struct _pEpSession {
 #endif
 
     PEP_cryptotech_t *cryptotech;
+    PEP_CIPHER_SUITE cipher_suite;
+
     PEP_transport_t *transports;
 
     sqlite3 *db;
@@ -179,8 +180,8 @@ struct _pEpSession {
     sqlite3_stmt *get_contacted_ids_from_revoke_fpr;
     sqlite3_stmt *was_id_for_revoke_contacted;
     sqlite3_stmt *get_last_contacted;
-    sqlite3_stmt *set_device_group;
-    sqlite3_stmt *get_device_group;
+    // sqlite3_stmt *set_device_group;
+    // sqlite3_stmt *get_device_group;
     sqlite3_stmt *set_pgp_keypair;
     sqlite3_stmt *set_identity_entry;
     sqlite3_stmt *update_identity_entry;
@@ -210,6 +211,7 @@ struct _pEpSession {
     
     // Keys
     sqlite3_stmt *own_key_is_listed;
+    sqlite3_stmt *is_own_address;
     sqlite3_stmt *own_identities_retrieve;
     sqlite3_stmt *own_keys_retrieve;
     sqlite3_stmt *get_user_default_key;
@@ -241,13 +243,13 @@ struct _pEpSession {
     // callbacks
     examine_identity_t examine_identity;
     void *examine_management;
-    void *sync_management;
-    void *sync_obj;
     notifyHandshake_t notifyHandshake;
     inject_sync_event_t inject_sync_event;
     retrieve_next_sync_event_t retrieve_next_sync_event;
 
     // pEp Sync
+    void *sync_management;
+    void *sync_obj;
     struct Sync_state_s sync_state;
     struct own_Sync_state_s own_sync_state;
 
@@ -260,7 +262,6 @@ struct _pEpSession {
 
     bool passive_mode;
     bool unencrypted_subject;
-    bool keep_sync_msg;
     bool service_log;
     
 #ifdef DEBUG_ERRORSTACK

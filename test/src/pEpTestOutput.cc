@@ -1,4 +1,6 @@
 #include <cpptest.h>
+#include <cpptest-suite.h>
+#include <cpptest-output.h>
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -6,6 +8,7 @@
 #include <cstring>
 #include <utility>
 
+#include "TestConstants.h"
 #include "pEpTestOutput.h"
 using namespace std;
 

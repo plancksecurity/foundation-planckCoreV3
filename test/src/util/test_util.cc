@@ -3,6 +3,9 @@
 #include "pEp_internal.h"
 #include "message_api.h"
 #include "test_util.h"
+#include "TestConstants.h"
+#include "mime.h"
+#include "message_api.h"
 
 #include <fstream>
 #include <sstream>
@@ -31,8 +34,10 @@ PEP_STATUS set_up_ident_from_scratch(PEP_SESSION session,
                                      pEp_identity** ret_ident,
                                      bool is_priv) {
     PEP_STATUS status = read_file_and_import_key(session,key_fname);
-    if (status != PEP_STATUS_OK)
+    if (status != PEP_KEY_IMPORTED)
         return status;
+    else
+        status = PEP_STATUS_OK;
     
     pEp_identity* ident = new_identity(address, fpr, user_id, username);
     if (is_priv && fpr) {
@@ -171,6 +176,8 @@ const char* tl_status_string(PEP_STATUS status) {
             return "PEP_CANNOT_EXPORT_KEY";
         case PEP_CANNOT_EDIT_KEY:
             return "PEP_CANNOT_EDIT_KEY";
+        case PEP_CANNOT_DELETE_KEY:
+            return "PEP_CANNOT_DELETE_KEY";
         case PEP_CANNOT_FIND_IDENTITY:
             return "PEP_CANNOT_FIND_IDENTITY";
         case PEP_CANNOT_SET_PERSON:
@@ -378,9 +385,21 @@ const char* tl_ct_string(PEP_comm_type ct) {
     }
 }
 
+std::string tl_ident_flags_String(identity_flags_t fl) {
+    std::string retval;
+    if (fl & PEP_idf_not_for_sync)   // don't use this identity for sync
+        retval += " PEP_idf_not_for_sync";
+    if (fl & PEP_idf_list)           // identity of list of persons
+        retval += " PEP_idf_list";
+    if (fl & PEP_idf_devicegroup)
+        retval += "PEP_idf_devicegroup";
+    if (retval.empty())
+        return std::string("PEP_idf_OMGWTFBBQ");
+    return retval;
+}
 bool slurp_and_import_key(PEP_SESSION session, const char* key_filename) {
     std::string keyfile = slurp(key_filename);
-    if (import_key(session, keyfile.c_str(), keyfile.size(), NULL) != PEP_STATUS_OK)
+    if (import_key(session, keyfile.c_str(), keyfile.size(), NULL) != PEP_TEST_KEY_IMPORT_SUCCESS)
         return false;
     return true;
 }
@@ -392,8 +411,6 @@ bool slurp_message_and_import_key(PEP_SESSION session, const char* message_fname
         ok = slurp_and_import_key(session, key_filename);
     return ok;
 }
-
-
 
 int util_delete_filepath(const char *filepath, 
                          const struct stat *file_stat, 
@@ -415,3 +432,262 @@ int util_delete_filepath(const char *filepath,
     return retval;
 }
 
+#ifndef ENIGMAIL_MAY_USE_THIS
+
+static PEP_STATUS update_identity_recip_list(PEP_SESSION session,
+                                      identity_list* list) {
+
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    if (!session)
+        return PEP_UNKNOWN_ERROR;
+    
+    identity_list* id_list_ptr = NULL;
+        
+    for (id_list_ptr = list; id_list_ptr; id_list_ptr = id_list_ptr->next) {
+        pEp_identity* curr_identity = id_list_ptr->ident;
+        if (curr_identity) {
+            if (!is_me(session, curr_identity)) {
+                char* name_bak = curr_identity->username;
+                curr_identity->username = NULL;
+                status = update_identity(session, curr_identity);
+                if (name_bak && 
+                    (EMPTYSTR(curr_identity->username) || strcmp(name_bak, curr_identity->username) != 0)) {
+                    free(curr_identity->username);
+                    curr_identity->username = name_bak;
+                }                        
+            }
+            else
+                status = _myself(session, curr_identity, false, false, true);
+        if (status == PEP_ILLEGAL_VALUE || status == PEP_OUT_OF_MEMORY)
+            return status;
+        }
+    }
+    
+    return PEP_STATUS_OK;                                  
+}
+
+PEP_STATUS MIME_decrypt_message(
+    PEP_SESSION session,
+    const char *mimetext,
+    size_t size,
+    char** mime_plaintext,
+    stringlist_t **keylist,
+    PEP_rating *rating,
+    PEP_decrypt_flags_t *flags,
+    char** modified_src
+)
+{
+    assert(mimetext);
+    assert(mime_plaintext);
+    assert(keylist);
+    assert(rating);
+    assert(flags);
+    assert(modified_src);
+
+    if (!(mimetext && mime_plaintext && keylist && rating && flags && modified_src))
+        return PEP_ILLEGAL_VALUE;
+        
+    PEP_STATUS status = PEP_STATUS_OK;
+    PEP_STATUS decrypt_status = PEP_CANNOT_DECRYPT_UNKNOWN;
+         
+    message* tmp_msg = NULL;
+    message* dec_msg = NULL;
+    *mime_plaintext = NULL;
+
+    status = mime_decode_message(mimetext, size, &tmp_msg);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+
+    tmp_msg->dir = PEP_dir_incoming;
+    // MIME decode message delivers only addresses. We need more.
+    if (tmp_msg->from) {
+        if (!is_me(session, tmp_msg->from))
+            status = update_identity(session, (tmp_msg->from));
+        else
+            status = _myself(session, tmp_msg->from, false, false, true);
+
+        if (status == PEP_ILLEGAL_VALUE || status == PEP_OUT_OF_MEMORY)
+            goto pEp_error;
+    }
+
+    status = update_identity_recip_list(session, tmp_msg->to);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+
+    status = update_identity_recip_list(session, tmp_msg->cc);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+
+    status = update_identity_recip_list(session, tmp_msg->bcc);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+
+    decrypt_status = decrypt_message(session,
+                                     tmp_msg,
+                                     &dec_msg,
+                                     keylist,
+                                     rating,
+                                     flags);
+
+
+    if (!dec_msg && (decrypt_status == PEP_UNENCRYPTED || decrypt_status == PEP_VERIFIED)) {
+        dec_msg = message_dup(tmp_msg);
+    }
+    
+    if (decrypt_status > PEP_CANNOT_DECRYPT_UNKNOWN || !dec_msg)
+    {
+        status = decrypt_status;
+        goto pEp_error;
+    }
+
+    if (*flags & PEP_decrypt_flag_src_modified) {
+        _mime_encode_message_internal(tmp_msg, false, modified_src, true);
+        if (!modified_src) {
+            *flags &= (~PEP_decrypt_flag_src_modified);
+            decrypt_status = PEP_CANNOT_REENCRYPT; // Because we couldn't return it, I guess.
+        }
+    }
+
+    // FIXME: test with att
+    status = _mime_encode_message_internal(dec_msg, false, mime_plaintext, true);
+
+    if (status == PEP_STATUS_OK)
+    {
+        free(tmp_msg);
+        free(dec_msg);
+        return decrypt_status;
+    }
+    
+pEp_error:
+    free_message(tmp_msg);
+    free_message(dec_msg);
+
+    return status;
+}
+
+PEP_STATUS MIME_encrypt_message(
+    PEP_SESSION session,
+    const char *mimetext,
+    size_t size,
+    stringlist_t* extra,
+    char** mime_ciphertext,
+    PEP_enc_format enc_format,
+    PEP_encrypt_flags_t flags
+)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    message* tmp_msg = NULL;
+    message* enc_msg = NULL;
+
+    status = mime_decode_message(mimetext, size, &tmp_msg);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+
+    // MIME decode message delivers only addresses. We need more.
+    if (tmp_msg->from) {
+        char* own_id = NULL;
+        status = get_default_own_userid(session, &own_id);
+        free(tmp_msg->from->user_id);
+        
+        if (status != PEP_STATUS_OK || !own_id) {
+            tmp_msg->from->user_id = strdup(PEP_OWN_USERID);
+        }
+        else {
+            tmp_msg->from->user_id = own_id; // ownership transfer
+        }
+            
+        status = myself(session, tmp_msg->from);
+        if (status != PEP_STATUS_OK)
+            goto pEp_error;
+    }
+    
+    // Own identities can be retrieved here where they would otherwise
+    // fail because we lack all other information. This is ok and even
+    // desired. FIXME: IS it?
+    status = update_identity_recip_list(session, tmp_msg->to);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+    
+    status = update_identity_recip_list(session, tmp_msg->cc);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+    
+    status = update_identity_recip_list(session, tmp_msg->bcc);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+    
+    // This isn't incoming, though... so we need to reverse the direction
+    tmp_msg->dir = PEP_dir_outgoing;
+    status = encrypt_message(session,
+                             tmp_msg,
+                             extra,
+                             &enc_msg,
+                             enc_format,
+                             flags);
+                             
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+
+
+    if (!enc_msg) {
+        status = PEP_UNKNOWN_ERROR;
+        goto pEp_error;
+    }
+
+    status = _mime_encode_message_internal(enc_msg, false, mime_ciphertext, false);
+
+pEp_error:
+    free_message(tmp_msg);
+    free_message(enc_msg);
+
+    return status;
+
+}
+
+PEP_STATUS MIME_encrypt_message_for_self(
+    PEP_SESSION session,
+    pEp_identity* target_id,
+    const char *mimetext,
+    size_t size,
+    stringlist_t* extra,
+    char** mime_ciphertext,
+    PEP_enc_format enc_format,
+    PEP_encrypt_flags_t flags
+)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    message* tmp_msg = NULL;
+    message* enc_msg = NULL;
+
+    status = mime_decode_message(mimetext, size, &tmp_msg);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+
+    // This isn't incoming, though... so we need to reverse the direction
+    tmp_msg->dir = PEP_dir_outgoing;
+    status = encrypt_message_for_self(session,
+                                      target_id,
+                                      tmp_msg,
+                                      extra,
+                                      &enc_msg,
+                                      enc_format,
+                                      flags);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+ 
+    if (!enc_msg) {
+        status = PEP_UNKNOWN_ERROR;
+        goto pEp_error;
+    }
+
+    status = mime_encode_message(enc_msg, false, mime_ciphertext);
+
+pEp_error:
+    free_message(tmp_msg);
+    free_message(enc_msg);
+
+    return status;
+}
+
+#endif

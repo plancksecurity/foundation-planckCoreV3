@@ -55,6 +55,11 @@ typedef enum {
     PEP_KEY_UNSUITABLE                              = 0x0206,
     PEP_MALFORMED_KEY_RESET_MSG                     = 0x0210,
     PEP_KEY_NOT_RESET                               = 0x0211,
+    PEP_CANNOT_DELETE_KEY                           = 0x0212,
+
+    PEP_KEY_IMPORTED                                = 0x0220,
+    PEP_NO_KEY_IMPORTED                             = 0x0221,
+    PEP_KEY_IMPORT_STATUS_UNKNOWN                   = 0x0222,
     
     PEP_CANNOT_FIND_IDENTITY                        = 0x0301,
     PEP_CANNOT_SET_PERSON                           = 0x0381,
@@ -113,6 +118,7 @@ typedef enum {
     PEP_COMMIT_FAILED                               = 0xff01,
     PEP_MESSAGE_CONSUME                             = 0xff02,
     PEP_MESSAGE_IGNORE                              = 0xff03,
+    PEP_CANNOT_CONFIG                               = 0xff04,
 
     PEP_RECORD_NOT_FOUND                            = -6,
     PEP_CANNOT_CREATE_TEMP_FILE                     = -5,
@@ -162,100 +168,6 @@ void free_Sync_event(SYNC_EVENT ev);
 
 typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 
-static inline const char *pep_status_to_string(PEP_STATUS status) {
-    switch (status) {
-    case PEP_STATUS_OK: return "PEP_STATUS_OK";
-
-    case PEP_INIT_CANNOT_LOAD_GPGME: return "PEP_INIT_CANNOT_LOAD_GPGME";
-    case PEP_INIT_GPGME_INIT_FAILED: return "PEP_INIT_GPGME_INIT_FAILED";
-    case PEP_INIT_NO_GPG_HOME: return "PEP_INIT_NO_GPG_HOME";
-    case PEP_INIT_NETPGP_INIT_FAILED: return "PEP_INIT_NETPGP_INIT_FAILED";
-    case PEP_INIT_CANNOT_DETERMINE_GPG_VERSION: return "PEP_INIT_CANNOT_DETERMINE_GPG_VERSION";
-    case PEP_INIT_UNSUPPORTED_GPG_VERSION: return "PEP_INIT_UNSUPPORTED_GPG_VERSION";
-    case PEP_INIT_CANNOT_CONFIG_GPG_AGENT: return "PEP_INIT_CANNOT_CONFIG_GPG_AGENT";
-    case PEP_INIT_SQLITE3_WITHOUT_MUTEX: return "PEP_INIT_SQLITE3_WITHOUT_MUTEX";
-    case PEP_INIT_CANNOT_OPEN_DB: return "PEP_INIT_CANNOT_OPEN_DB";
-    case PEP_INIT_CANNOT_OPEN_SYSTEM_DB: return "PEP_INIT_CANNOT_OPEN_SYSTEM_DB";
-    case PEP_UNKNOWN_DB_ERROR: return "PEP_UNKNOWN_DB_ERROR";
-    case PEP_KEY_NOT_FOUND: return "PEP_KEY_NOT_FOUND";
-    case PEP_KEY_HAS_AMBIG_NAME: return "PEP_KEY_HAS_AMBIG_NAME";
-    case PEP_GET_KEY_FAILED: return "PEP_GET_KEY_FAILED";
-    case PEP_CANNOT_EXPORT_KEY: return "PEP_CANNOT_EXPORT_KEY";
-    case PEP_CANNOT_EDIT_KEY: return "PEP_CANNOT_EDIT_KEY";
-    case PEP_KEY_UNSUITABLE: return "PEP_KEY_UNSUITABLE";
-    case PEP_MALFORMED_KEY_RESET_MSG: return "PEP_MALFORMED_KEY_RESET_MSG";
-    case PEP_KEY_NOT_RESET: return "PEP_KEY_NOT_RESET";
-
-    case PEP_CANNOT_FIND_IDENTITY: return "PEP_CANNOT_FIND_IDENTITY";
-    case PEP_CANNOT_SET_PERSON: return "PEP_CANNOT_SET_PERSON";
-    case PEP_CANNOT_SET_PGP_KEYPAIR: return "PEP_CANNOT_SET_PGP_KEYPAIR";
-    case PEP_CANNOT_SET_IDENTITY: return "PEP_CANNOT_SET_IDENTITY";
-    case PEP_CANNOT_SET_TRUST: return "PEP_CANNOT_SET_TRUST";
-    case PEP_KEY_BLACKLISTED: return "PEP_KEY_BLACKLISTED";
-    case PEP_CANNOT_FIND_PERSON: return "PEP_CANNOT_FIND_PERSON";
-
-    case PEP_CANNOT_FIND_ALIAS: return "PEP_CANNOT_FIND_ALIAS";
-    case PEP_CANNOT_SET_ALIAS: return "PEP_CANNOT_SET_ALIAS";
-
-    case PEP_UNENCRYPTED: return "PEP_UNENCRYPTED";
-    case PEP_VERIFIED: return "PEP_VERIFIED";
-    case PEP_DECRYPTED: return "PEP_DECRYPTED";
-    case PEP_DECRYPTED_AND_VERIFIED: return "PEP_DECRYPTED_AND_VERIFIED";
-    case PEP_DECRYPT_WRONG_FORMAT: return "PEP_DECRYPT_WRONG_FORMAT";
-    case PEP_DECRYPT_NO_KEY: return "PEP_DECRYPT_NO_KEY";
-    case PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH: return "PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH";
-    case PEP_VERIFY_NO_KEY: return "PEP_VERIFY_NO_KEY";
-    case PEP_VERIFIED_AND_TRUSTED: return "PEP_VERIFIED_AND_TRUSTED";
-    case PEP_CANNOT_REENCRYPT: return "PEP_CANNOT_REENCRYPT";
-    case PEP_CANNOT_DECRYPT_UNKNOWN: return "PEP_CANNOT_DECRYPT_UNKNOWN";
-
-    case PEP_TRUSTWORD_NOT_FOUND: return "PEP_TRUSTWORD_NOT_FOUND";
-    case PEP_TRUSTWORDS_FPR_WRONG_LENGTH: return "PEP_TRUSTWORDS_FPR_WRONG_LENGTH";
-    case PEP_TRUSTWORDS_DUPLICATE_FPR: return "PEP_TRUSTWORDS_DUPLICATE_FPR";
-
-    case PEP_CANNOT_CREATE_KEY: return "PEP_CANNOT_CREATE_KEY";
-    case PEP_CANNOT_SEND_KEY: return "PEP_CANNOT_SEND_KEY";
-
-    case PEP_PHRASE_NOT_FOUND: return "PEP_PHRASE_NOT_FOUND";
-
-    case PEP_SEND_FUNCTION_NOT_REGISTERED: return "PEP_SEND_FUNCTION_NOT_REGISTERED";
-    case PEP_CONTRAINTS_VIOLATED: return "PEP_CONTRAINTS_VIOLATED";
-    case PEP_CANNOT_ENCODE: return "PEP_CANNOT_ENCODE";
-
-    case PEP_SYNC_NO_NOTIFY_CALLBACK: return "PEP_SYNC_NO_NOTIFY_CALLBACK";
-    case PEP_SYNC_ILLEGAL_MESSAGE: return "PEP_SYNC_ILLEGAL_MESSAGE";
-    case PEP_SYNC_NO_INJECT_CALLBACK: return "PEP_SYNC_NO_INJECT_CALLBACK";
-    case PEP_SYNC_NO_CHANNEL: return "PEP_SYNC_NO_CHANNEL";
-    case PEP_SYNC_CANNOT_ENCRYPT: return "PEP_SYNC_CANNOT_ENCRYPT";
-    case PEP_SYNC_NO_MESSAGE_SEND_CALLBACK: return "PEP_SYNC_NO_MESSAGE_SEND_CALLBACK";
-
-    case PEP_CANNOT_INCREASE_SEQUENCE: return "PEP_CANNOT_INCREASE_SEQUENCE";
-
-    case PEP_STATEMACHINE_ERROR: return "PEP_STATEMACHINE_ERROR";
-    case PEP_NO_TRUST: return "PEP_NO_TRUST";
-    case PEP_STATEMACHINE_INVALID_STATE: return "PEP_STATEMACHINE_INVALID_STATE";
-    case PEP_STATEMACHINE_INVALID_EVENT: return "PEP_STATEMACHINE_INVALID_EVENT";
-    case PEP_STATEMACHINE_INVALID_CONDITION: return "PEP_STATEMACHINE_INVALID_CONDITION";
-    case PEP_STATEMACHINE_INVALID_ACTION: return "PEP_STATEMACHINE_INVALID_ACTION";
-    case PEP_STATEMACHINE_INHIBITED_EVENT: return "PEP_STATEMACHINE_INHIBITED_EVENT";
-    case PEP_STATEMACHINE_CANNOT_SEND: return "PEP_STATEMACHINE_CANNOT_SEND";
-
-    case PEP_COMMIT_FAILED: return "PEP_COMMIT_FAILED";
-    case PEP_MESSAGE_CONSUME: return "PEP_MESSAGE_CONSUME";
-    case PEP_MESSAGE_IGNORE: return "PEP_MESSAGE_IGNORE";
-
-    case PEP_RECORD_NOT_FOUND: return "PEP_RECORD_NOT_FOUND";
-    case PEP_CANNOT_CREATE_TEMP_FILE: return "PEP_CANNOT_CREATE_TEMP_FILE";
-    case PEP_ILLEGAL_VALUE: return "PEP_ILLEGAL_VALUE";
-    case PEP_BUFFER_TOO_SMALL: return "PEP_BUFFER_TOO_SMALL";
-    case PEP_OUT_OF_MEMORY: return "PEP_OUT_OF_MEMORY";
-    case PEP_UNKNOWN_ERROR: return "PEP_UNKNOWN_ERROR";
-
-    case PEP_VERSION_MISMATCH: return "PEP_VERSION_MISMATCH";
-
-    default: return "unknown status code";
-    }
-}
 
 // INIT_STATUS init() - initialize pEpEngine for a thread
 //
@@ -359,20 +271,41 @@ DYNAMIC_API void config_unencrypted_subject(PEP_SESSION session, bool enable);
 DYNAMIC_API void config_use_only_own_private_keys(PEP_SESSION session, bool enable);
 
 
-// config_keep_sync_msg() - do not remove sync messages (for debugging purposes)
-//
-//      session (in)    session handle
-//      enable (in)     flag if enabled or disabled
-
-DYNAMIC_API void config_keep_sync_msg(PEP_SESSION session, bool enable);
-
-
 // config_service_log() - log more for service purposes
 //
 //      session (in)    session handle
 //      enable (in)     flag if enabled or disabled
 
 DYNAMIC_API void config_service_log(PEP_SESSION session, bool enable);
+
+
+typedef enum {
+    PEP_CIPHER_SUITE_DEFAULT = 0,
+    PEP_CIPHER_SUITE_CV25519 = 1,
+    PEP_CIPHER_SUITE_P256 = 2,
+    PEP_CIPHER_SUITE_P384 = 3,
+    PEP_CIPHER_SUITE_P521 = 4,
+    PEP_CIPHER_SUITE_RSA2K = 5,
+    PEP_CIPHER_SUITE_RSA3K = 6,
+    PEP_CIPHER_SUITE_RSA4K = 7,
+    PEP_CIPHER_SUITE_RSA8K = 8
+} PEP_CIPHER_SUITE;
+
+// config_cipher_suite() - cipher suite being used when encrypting
+//
+//  parameters:
+//      session (in)            session handle
+//      cipher_suite (in)       cipher suite to use
+//
+//  return value:
+//      PEP_STATUS_OK           cipher suite configured
+//      PEP_CANNOT_CONFIG       configuration failed; falling back to default
+//
+//  caveat: the default ciphersuite for a crypt tech implementation is
+//  implementation defined
+
+DYNAMIC_API PEP_STATUS config_cipher_suite(PEP_SESSION session,
+        PEP_CIPHER_SUITE suite);
 
 
 // decrypt_and_verify() - decrypt and/or verify a message
@@ -863,40 +796,6 @@ DYNAMIC_API PEP_STATUS set_userid_alias (
         PEP_SESSION session, 
         const char* default_id,
         const char* alias_id);
-
-
-// set_device_group() - update own person's device group
-//
-//    parameters:
-//        session (in)        session handle
-//        group_name (in)     new group name
-//
-//    return value:
-//        PEP_STATUS_OK = 0             device group was updated
-//        PEP_CANNOT_SET_PERSON         update failed
-
-DYNAMIC_API PEP_STATUS set_device_group(
-        PEP_SESSION session,
-        const char *group_name
-    );
-
-// get_device_group() - get own person's device group
-//
-//    parameters:
-//        session (in)        session handle
-//        group_name (in)     new group name
-//
-//    return value:
-//        PEP_STATUS_OK = 0             couldn't get device group
-//        PEP_RECORD_NOT_FOUND          update failed
-//
-//    caveat:
-//        the ownerships of group_name is going to the caller
-
-DYNAMIC_API PEP_STATUS get_device_group(
-        PEP_SESSION session, 
-        char **group_name
-    );
 
 // set_identity_flags() - update identity flags on existing identity
 //
@@ -1447,6 +1346,10 @@ PEP_STATUS get_identities_by_userid(
         identity_list **identities
     );    
         
+PEP_STATUS is_own_address(PEP_SESSION session, 
+                          const char* address, 
+                          bool* is_own_addr);
+
 PEP_STATUS replace_userid(PEP_SESSION session, const char* old_uid,
                               const char* new_uid);
                               
@@ -1513,7 +1416,7 @@ PEP_STATUS sign_only(PEP_SESSION session,
                      const char *fpr, 
                      char **sign, 
                      size_t *sign_size);
-                     
+
 #ifdef __cplusplus
 }
 #endif

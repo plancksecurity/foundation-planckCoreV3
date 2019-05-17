@@ -2,6 +2,7 @@
 // see LICENSE.txt
 
 #include <stdlib.h>
+#include "TestConstants.h"
 #include <string>
 #include <cstring>
 #include <iostream>
@@ -32,11 +33,11 @@ void MessageApiTests::check_message_api() {
     const string bob_pub_key = slurp("test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
 
     PEP_STATUS status0 = import_key(session, alice_pub_key.c_str(), alice_pub_key.size(), NULL);
-    TEST_ASSERT_MSG((status0 == PEP_STATUS_OK), "status0 == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status0 == PEP_TEST_KEY_IMPORT_SUCCESS), "status0 == PEP_STATUS_OK");
     status0 = import_key(session, alice_priv_key.c_str(), alice_priv_key.size(), NULL);
-    TEST_ASSERT_MSG((status0 == PEP_STATUS_OK), "status0 == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status0 == PEP_TEST_KEY_IMPORT_SUCCESS), "status0 == PEP_STATUS_OK");
     status0 = import_key(session, bob_pub_key.c_str(), bob_pub_key.size(), NULL);
-    TEST_ASSERT_MSG((status0 == PEP_STATUS_OK), "status0 == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status0 == PEP_TEST_KEY_IMPORT_SUCCESS), "status0 == PEP_STATUS_OK");
     // message_api test code
 
     cout << "creating message…\n";
@@ -97,7 +98,7 @@ void MessageApiTests::check_message_api() {
     
     flags = 0;
     PEP_STATUS status4 = decrypt_message(session, enc_msg2, &msg4, &keylist4, &rating, &flags);
-    TEST_ASSERT_MSG((status4 == PEP_STATUS_OK), "status4 == PEP_STATUS_OK");
+    TEST_ASSERT_MSG((status4 == PEP_STATUS_OK), tl_status_string(status4));
     TEST_ASSERT_MSG((msg4), "msg4");
     TEST_ASSERT_MSG((keylist4), "keylist4");
     TEST_ASSERT_MSG((rating), "rating");
@@ -141,7 +142,7 @@ void MessageApiTests::check_message_api() {
     PEP_decrypt_flags_t flags2;
     flags2 = 0;
     PEP_STATUS status6 = decrypt_message(session, msg5, &msg6, &keylist5, &rating2, &flags2);
-    TEST_ASSERT_MSG((status6 == PEP_DECRYPT_NO_KEY), "status6 == PEP_DECRYPT_NO_KEY");
+    TEST_ASSERT_MSG((status6 == PEP_DECRYPT_NO_KEY), tl_status_string(status6));
     TEST_ASSERT_MSG((msg6 == NULL), "msg6 == NULL");
     TEST_ASSERT_MSG((keylist5 == NULL), "keylist5 == NULL");
     TEST_ASSERT_MSG((rating2 == PEP_rating_have_no_key), "rating2 == PEP_rating_have_no_key");

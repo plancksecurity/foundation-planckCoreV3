@@ -1,110 +1,111 @@
-
 # Copyright 2017, pEp Foundation
 # This file is part of pEpEngine
 # This file may be used under the terms of the GNU General Public License version 3
 # see LICENSE.txt
 
-include ../default.conf
-
-PY_ENV := $(shell command -v python3 2> /dev/null)
-
 HERE:=$(CURDIR)
+
+include ../Makefile.conf
+
+# User's without python3 will skip the generated parts of the test suite. That's OK.
+PY_ENV:=$(shell command -v python3 2> /dev/null)
+
 TEST_HOME=$(HERE)/pEp_test_home
 
 TARGET=TestDriver
 
-SRCS := $(wildcard src/*.cc) $(wildcard src/*/*.cc)
-OBJS := $(addsuffix .o,$(basename $(SRCS)))
-DEPS := $(OBJS:.o=.d)
+SRCS:=$(wildcard src/*.cc) $(wildcard src/*/*.cc)
+OBJS:=$(addsuffix .o,$(basename $(SRCS)))
+DEPS:=$(OBJS:.o=.d)
 
-INC_DIRS := ./include /usr/local/include ../src ../sync ../asn.1
-INC_FLAGS := $(addprefix -I,$(INC_DIRS)) $(GPGME_INC) $(CPPUNIT_INC)
 
-LDFLAGS += -L/usr/local/lib
+LDFLAGS+= -L../asn.1 -L../src $(ETPAN_LIB) $(CPPUNIT_LIB)
 
-CFLAGS += -Wno-deprecated
-CXXFLAGS += -Wno-deprecated
-CFLAGS:=$(filter-out -Wall,$(CFLAGS))
-
-LDFLAGS+= $(ETPAN_LIB) $(CPPUNIT_LIB) -L../asn.1 -L../src
-LDLIBS+= -letpan -lpEpEngine -lstdc++ -lasn1
-
-ifeq ($(BUILD_FOR),Linux)
-	LDLIBS+= -luuid
+ifeq ($(OPENPGP),GPG)
+    LDFLAGS+= $(GPGME_LIB)
+else ifeq ($(OPENPGP),NETPGP)
+    LDFLAGS+= $(NETGPG_LIB)
 endif
 
-ifeq ($(OPENPGP),NETPGP)
-	LDLIBS+= -lnetpgp
-	CFLAGS+= -DUSE_NETPGP
+
+LDLIBS+= -letpan -lpEpEngine -lstdc++ -lasn1 -lcpptest
+
 ifeq ($(BUILD_FOR),Linux)
-	LDLIBS+= -ltre
-endif
+    LDLIBS+= -luuid
 endif
 
 ifeq ($(OPENPGP),SEQUOIA)
-	LDFLAGS+= $(SEQUOIA_LDFLAGS)
-	LDLIBS+= $(SEQUOIA_LIB)
-	CFLAGS+= $(SEQUOIA_CFLAGS) -DUSE_SEQUOIA
-	INC_FLAGS+= $(SEQUOIA_INC)
+    LDFLAGS+= $(SEQUOIA_LDFLAGS)
+    LDLIBS+= $(SEQUOIA_LIB)
+    CXXFLAGS+= $(SEQUOIA_CFLAGS) -DUSE_SEQUOIA
+    INC_FLAGS+= $(SEQUOIA_INC)
 endif
 
 ifdef SQLITE3_FROM_OS
-	LDLIBS+= -lsqlite3
+    LDLIBS+= -lsqlite3
 endif
 
-ifeq ($(shell uname),Darwin)
-	LIBPATH=DYLD_LIBRARY_PATH
-	LLDB_BIN=/Applications/Xcode.app/Contents/Developer/usr/bin/lldb
-else
-	LIBPATH=LD_LIBRARY_PATH
-	LLDB_BIN=lldb
+ifeq ($(OPENPGP),GPG)
+    #LDLIBS+= -lgpgme
+else ifeq ($(OPENPGP),NETPGP)
+    LDLIBS+= -lnetpgp
+    ifeq ($(BUILD_FOR),Linux)
+        LDLIBS+= -ltre
+    endif
 endif
 
-LDLIBS+= -lcpptest
+
+CXXFLAGS:=$(filter-out -DNDEBUG,$(CXXFLAGS))
+
+# FIXME Possibly missing incdirs: ASN1C_INC
+CXXFLAGS+= -I./include -I../sync $(CPPUNIT_INC) $(INC_FLAGS) -Wno-deprecated
+
+ifeq ($(OPENPGP),GPG)
+    CXXFLAGS+= -DUSE_GPG $(GPGME_INC)
+else ifeq ($(OPENPGP),NETPGP)
+    CXXFLAGS+= -DUSE_NETPGP $(NETPGP_INC)
+endif
 
 
-# Create a list of the extra library paths for the loader. I do not assume that the engine (and its dependencies) are installed for testing.
-# Note that += can not be used here, as it changes the amount of whitespace
-EXTRA_LIB_PATHS=../src:
+EXTRA_LIB_PATHS=.:../src:
 ifdef ETPAN_LIB
-	EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(ETPAN_LIB)):
+    EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(ETPAN_LIB)):
 endif
 ifdef GPGME_LIB
-	EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(GPGME_LIB)):
+    EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(GPGME_LIB)):
 endif
 ifdef NETPGP_LIB
-	EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(NETPGP_LIB)):
+    EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(NETPGP_LIB)):
+endif
+ifdef CPPUNIT_LIB
+    EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS)$(patsubst -L%,%,$(CPPUNIT_LIB)):
 endif
 
 # Remove trailing ':'
 EXTRA_LIB_PATHS:=$(EXTRA_LIB_PATHS::=)
 
-CFLAGS:=$(filter-out -DNDEBUG,$(CFLAGS))
-ifneq ($(MAKECMDGOALS),clean)
-	ifneq (,$(findstring -DNDEBUG,$(CFLAGS)))
-		$(error The macro NDEBUG must not be defined for test compilation.)
-	endif
+ifeq ($(BUILD_FOR),Darwin)
+    LIBPATH=DYLD_LIBRARY_PATH
+else
+    LIBPATH=LD_LIBRARY_PATH
 endif
 
-CXXFLAGS:=$(filter-out -DNDEBUG,$(CXXFLAGS))
-ifneq ($(MAKECMDGOALS),clean)
-	ifneq (,$(findstring -DNDEBUG,$(CXXFLAGS)))
-		$(error The macro NDEBUG must not be defined for test compilation.)
-	endif
-endif
+# FIXME: this forces a path on execution which overrides system paths for
+#        libraries like iconv and causes runtime errors.
+#TEST_CMD_PFX=$(LIBPATH)=$(EXTRA_LIB_PATHS)
+TEST_CMD_PFX=
 
-CPPFLAGS += $(INC_FLAGS) -MMD -MP
+.PHONY: all clean test
 
-all: suitemaker $(TARGET) test_home_ scripts
-	
-%.o: %.cc
-	$(CXX) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
+all:
+	make .suitemaker
+	make $(TARGET) .scripts
+	touch .suitemaker
 
-$(TARGET): $(OBJS)
-	$(CXX) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LDFLAGS) $(LDLIBS) -o $@
+%.d: %.cc
+	$(CXX) -MM $(CPPFLAGS) $(CXXFLAGS) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
 
-.PHONY: suitemaker
-suitemaker:
+.suitemaker: src
 ifndef PY_ENV
 	@echo "WARNING: Can't find python3 - this is fine unless you're adding test suites. If so, please install python3."
 else
@@ -115,27 +116,24 @@ else
 	$(PY_ENV) gensuitemaker.py --exclude=$(EXCLUDE)
 endif
 endif
-		
-.PHONY: test_home_
-test_home_: 
-	
 
-.PHONY: scripts
-scripts: 
+$(TARGET): $(OBJS)
+	$(LINK.cc) $(OBJS) $(LOADLIBES) $(LDLIBS) -o $@
+
+.scripts:
 ifdef PY_ENV
 	$(PY_ENV) genscripts.py
+	touch .scripts
 endif
 
-.PHONY: test
 test: all
-	ulimit -n 20000; $(TEST_DEBUGGER) ./$(TARGET)
+	$(TEST_CMD_PFX) $(TEST_DEBUGGER) ./$(TARGET)
 
-.PHONY: clean
 clean:
-	$(RM) $(TARGET) $(OBJS) $(DEPS)
-	$(RM) $(HERE)/*Tests msg_2.0.asc
+	$(RM) $(TARGET) $(TARGET).o $(TARGET).d $(OBJS) $(notdir $(basename $(OBJS))) $(DEPS)
+	$(RM) $(HERE)/*Tests msg_2.0.asc $(HERE)/pEp_test_home .scripts .suitemaker
 
-
-
--include $(DEPS)
- 
+# If only the goal 'clean' is given, do not generate and include the '%.d' files.¬
+ifneq ($(MAKECMDGOALS),clean)
+    -include $(DEPS)
+endif

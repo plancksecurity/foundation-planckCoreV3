@@ -5,58 +5,61 @@
 
 HERE_REL := $(notdir $(CURDIR))
 
-include default.conf
+include Makefile.conf
 
 ifneq ($(wildcard local.conf),)
     $(info ================================================)
-    $(info Overrides in \`local.conf\` are used.)
+    $(info Overrides in `local.conf` are used.)
     $(info ================================================)
 endif
 
 ifdef BUILD_CONFIG
     $(info ================================================)
-    $(info Overrides in \`$(BUILD_CONFIG)\` are used.)
+    $(info Overrides in `$(BUILD_CONFIG)` are used.)
     $(info ================================================)
 endif
 
-.PHONY: all
-all:
-	$(MAKE) -C sync
-	$(MAKE) -C asn.1
-	$(MAKE) -C src all
+.PHONY: all sync asn1 build install dbinstall uninstall clean tags test package db
 
-.PHONY: install
-install: all
+build: asn1
+	$(MAKE) -C src
+
+all: build
+	make -C test
+
+sync:
+	$(MAKE) -C sync
+
+asn1: sync
+	$(MAKE) -C asn.1
+
+install: build
 	$(MAKE) -C src install
 	$(MAKE) -C asn.1 install
 
-.PHONY: uninstall
+dbinstall: db
+	$(MAKE) -C db install
+
 uninstall:
 	$(MAKE) -C src uninstall
 	$(MAKE) -C asn.1 uninstall
 
-.PHONY: clean
 clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C test clean
 	$(MAKE) -C db clean
 	$(MAKE) -C sync clean
 	$(MAKE) -C asn.1 clean
-	rm -rf test_home
 
-.PHONY: tags
 tags:
 	$(MAKE) -C asn.1 tags
 	$(MAKE) -C src tags
 
-.PHONY: test
 test: all
 	$(MAKE) -C test test
 
-.PHONY: package
 package: clean
 	cd .. ; COPYFILE_DISABLE=true tar cjf pEpEngine.tar.bz2 "$(HERE_REL)"
 
-.PHONY: db
 db:
 	$(MAKE) -C db db

@@ -3,4 +3,4 @@
 
 #pragma once
 
-#include <sequoia.h>
+#include <sequoia/openpgp.h>

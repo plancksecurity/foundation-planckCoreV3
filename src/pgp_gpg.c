@@ -1510,20 +1510,31 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
 
     gpgme_import_result_t gpgme_import_result;
 
+    bool key_imported = false;
+    
     gpgme_error = gpg.gpgme_op_import(session->ctx, dh);
     gpgme_error = _GPGERR(gpgme_error);
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
+    
+        gpgme_import_result =
+            gpg.gpgme_op_import_result(session->ctx);
+        assert(gpgme_import_result);
+        if (!gpgme_import_result) {
+            gpg.gpgme_data_release(dh);
+            return PEP_UNKNOWN_ERROR;
+        }
+        // considered seems to only be true if it was 
+        // actually a key
+        if (gpgme_import_result->considered > 0)
+            // gpgme_import_result->imported > 0 ||
+            // gpgme_import_result->secret_imported > 0 ||
+            // gpgme_import_result->unchanged > 0 ||
+            // gpgme_import_result->secret_unchanged > 0)
+            key_imported = true;
+            
         if(private_idents)
         {
-            gpgme_import_result =
-                gpg.gpgme_op_import_result(session->ctx);
-            assert(gpgme_import_result);
-            if (!gpgme_import_result) {
-                gpg.gpgme_data_release(dh);
-                return PEP_UNKNOWN_ERROR;
-            }
-
             gpgme_import_status_t import;
             for (import = gpgme_import_result->imports;
                  import;
@@ -1589,7 +1600,11 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
     }
 
     gpg.gpgme_data_release(dh);
-    return PEP_STATUS_OK;
+    
+    if (key_imported)
+        return PEP_KEY_IMPORTED;
+        
+    return PEP_NO_KEY_IMPORTED;
 }
 
 PEP_STATUS pgp_export_keydata(
@@ -1600,7 +1615,7 @@ PEP_STATUS pgp_export_keydata(
     gpgme_error_t gpgme_error;
     gpgme_data_t dh;
     size_t _size;
-    char *buffer;
+    char *buffer = NULL;
     int reading;
 
     assert(session);
@@ -1651,6 +1666,16 @@ PEP_STATUS pgp_export_keydata(
     assert(_size != -1);
     gpg.gpgme_data_seek(dh, 0, SEEK_SET);
 
+    // Unfortunately, gpgme doesn't give us an error
+    // when no key is found, so we end up with an 
+    // empty string. So we need to do this:
+    if (_size == 0) {
+        *key_data = NULL;
+        *size = 0;
+        gpg.gpgme_data_release(dh);
+        return PEP_KEY_NOT_FOUND;
+    }
+        
     buffer = malloc(_size + 1);
     assert(buffer);
     if (buffer == NULL) {
@@ -3091,3 +3116,17 @@ PEP_STATUS pgp_contains_priv_key(PEP_SESSION session, const char *fpr,
     }
     return status;
 }
+
+PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
+        PEP_CIPHER_SUITE suite)
+{
+    // functionaliy unsupported; use gpg.conf
+
+    switch (suite) {
+        case PEP_CIPHER_SUITE_DEFAULT:
+            return PEP_STATUS_OK;
+        default:
+            return PEP_CANNOT_CONFIG;
+    }
+}
+

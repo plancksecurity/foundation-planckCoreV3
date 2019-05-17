@@ -7,8 +7,10 @@
 #include <iostream>
 #include <fstream>
 #include <assert.h>
+#include <cpptest.h>
 
 #include "bloblist.h"
+#include "TestConstants.h"
 
 #include "EngineTestSuite.h"
 #include "BloblistTests.h"

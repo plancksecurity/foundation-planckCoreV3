@@ -14,6 +14,7 @@ class StringlistTests : public EngineTestSuite {
         StringlistTests(string suitename, string test_home_dir);
     private:
         void check_stringlists();
+        void check_dedup_stringlist();
 };
 
 #endif

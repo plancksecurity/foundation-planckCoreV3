@@ -16,21 +16,25 @@ typedef enum _sync_handshake_signal {
     SYNC_NOTIFY_UNDEFINED = 0,
 
     // request show handshake dialog
-    SYNC_NOTIFY_INIT_ADD_OUR_DEVICE,
-    SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE,
-    SYNC_NOTIFY_INIT_FORM_GROUP,
-    SYNC_NOTIFY_INIT_MOVE_OUR_DEVICE,
+    SYNC_NOTIFY_INIT_ADD_OUR_DEVICE = 1,
+    SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE = 2,
+    SYNC_NOTIFY_INIT_FORM_GROUP = 3,
+    // SYNC_NOTIFY_INIT_MOVE_OUR_DEVICE = 4,
 
     // handshake process timed out
-    SYNC_NOTIFY_TIMEOUT,
+    SYNC_NOTIFY_TIMEOUT = 5,
 
     // handshake accepted by user
-    SYNC_NOTIFY_ACCEPTED_DEVICE_ADDED,
-    SYNC_NOTIFY_ACCEPTED_GROUP_CREATED,
-    SYNC_NOTIFY_ACCEPTED_DEVICE_MOVED,
+    SYNC_NOTIFY_ACCEPTED_DEVICE_ADDED = 6,
+    SYNC_NOTIFY_ACCEPTED_GROUP_CREATED = 7,
+    // SYNC_NOTIFY_ACCEPTED_DEVICE_MOVED = 8,
 
     // handshake dialog must be closed
-    SYNC_NOTIFY_OVERTAKEN
+    SYNC_NOTIFY_OVERTAKEN = 9,
+
+    // notificaton of actual group status
+    SYNC_NOTIFY_SOLE = 254,
+    SYNC_NOTIFY_IN_GROUP = 255
 } sync_handshake_signal;
 
 
@@ -60,16 +64,22 @@ typedef enum _sync_handshake_result {
     SYNC_HANDSHAKE_REJECTED = 1
 } sync_handshake_result;
 
-// deliverHandshakeResult() - give the result of the handshake dialog
+// deliverHandshakeResult() - provide the result of the handshake dialog
 //
 //  parameters:
-//      session (in)        session handle
-//      result (in)         handshake result
+//      session (in)            session handle
+//      result (in)             handshake result
+//      identities_sharing (in) own_identities sharing data in this group
+//
+//  caveat:
+//      identities_sharing may be NULL; in this case all identities are sharing
+//      data in the group
+//      identities_sharing may only contain own identities
 
 DYNAMIC_API PEP_STATUS deliverHandshakeResult(
         PEP_SESSION session,
-        pEp_identity *partner,
-        sync_handshake_result result
+        sync_handshake_result result,
+        const identity_list *identities_sharing
     );
 
 
@@ -153,7 +163,7 @@ DYNAMIC_API PEP_STATUS do_sync_protocol_step(
 // is_sync_thread() - determine if this is sync thread's session
 //
 //  paramters:
-//      session                 pEp session to test
+//      session (in)            pEp session to test
 //
 //  return value:
 //      true if this is sync thread's session, false otherwise
@@ -167,6 +177,33 @@ DYNAMIC_API bool is_sync_thread(PEP_SESSION session);
 //      returns a new Sync timeout event, or NULL on failure
 
 DYNAMIC_API SYNC_EVENT new_sync_timeout_event();
+
+
+// enter_device_group() - enter a device group
+//
+//  parameters:
+//      session (in)            pEp session
+//      identities_sharing (in) own_identities sharing data in this group
+//
+//  caveat:
+//      identities_sharing may be NULL; in this case all identities are sharing
+//      data in the group
+//      identities_sharing may only contain own identities
+//
+//      this call can be repeated if sharing information changes
+
+DYNAMIC_API PEP_STATUS enter_device_group(
+        PEP_SESSION session,
+        const identity_list *identities_sharing
+    );
+
+
+// leave_device_group() - leave a device group
+//
+//  parameters:
+//      session                 pEp session
+
+DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session);
 
 
 #ifdef __cplusplus

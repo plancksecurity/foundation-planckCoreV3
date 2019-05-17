@@ -1,15 +1,13 @@
-p≡p Sync UX
-===========
+# p≡p Sync UX
 
 Sync is a protocol to form one device group. It first is driving a
 transaction named the Negotiation. There are two situations Sync can be
 in:
 
-1) either there is no device group yet
-2) or there is already a device group
+1. either there is no device group yet
+2. or there is already a device group
 
-Case 1):
---------
+## Case 1):
 
 In case 1) we have two devices in the state Sole. When the user
 configures the first device, nothing happens. When the user configures
@@ -21,9 +19,9 @@ user: “There is another device detected. Shell we form a device group?”
 
 There are three possible answers:
 
-a) Accept
-b) Reject
-c) Cancel
+1. Accept
+1. Reject
+1. Cancel
 
 If one of the devices gets a Cancel, then the device group is NOT
 formed. Sync remains enabled on both devices. This is corresponding with
@@ -37,7 +35,7 @@ If both devices get an Accept, then the device group is formed. Sync is
 then enabled on both devices. This is corresponding with a two-phase
 COMMIT of the Negotiation with the result ACCEPT.
 
-Case 2):
+## Case 2):
 
 In case 2) we have at least two devices forming a device group already
 (named “old devices”), being in state Grouped. And we have one device,
@@ -85,8 +83,8 @@ out new group keys for all own identities.
 
 Sync can be switched on in two ways:
 
-1) Switched on for all (default in p≡p apps)
-2) Switched on only for a list of accounts (reached by switching it off
+1. Switched on for all (default in p≡p apps)
+2. Switched on only for a list of accounts (reached by switching it off
    first)
 
 If Sync is enabled in 1) then adding a new account will have Sync for

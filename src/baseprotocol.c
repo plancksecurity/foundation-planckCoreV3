@@ -9,7 +9,7 @@ PEP_STATUS base_decorate_message(
         message *msg,
         char *payload,
         size_t size,
-        char *fpr
+        const char *fpr
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -39,12 +39,12 @@ PEP_STATUS base_decorate_message(
         assert(sign && sign_size);
 
         bl = bloblist_add(bl, sign, sign_size,
-                "application/pEp.sign", "ignore_this_attachment.pEp");
+                "application/pEp.sign", "electronic_signature.asc");
         if (!bl)
             goto enomem;
     }
 
-    return PEP_STATUS_OK;
+    return status;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
@@ -59,7 +59,7 @@ PEP_STATUS base_prepare_message(
         const pEp_identity *partner,
         char *payload,
         size_t size,
-        char *fpr,
+        const char *fpr,
         message **result
     )
 {

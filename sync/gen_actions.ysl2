@@ -50,14 +50,7 @@ tstylesheet {
                 if (t2->size > t1->size)
                     return false;
 
-                for (int i=0; i<t1->size; i++) {
-                    if (t1->buf[i] > t2->buf[i])
-                        return true;
-                    if (t2->buf[i] > t1->buf[i])
-                        return false;
-                }
-
-                return false;
+                return memcmp(t1->buf, t2->buf, t1->size) > 0;
             }
 
             ||

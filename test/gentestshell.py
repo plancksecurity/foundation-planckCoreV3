@@ -86,7 +86,10 @@ if not args.no_hdr:
 
 if not args.no_src:
     src_inc = ('#include <stdlib.h>\n'
+               '#include <cstring>\n'
                '#include <string>\n\n'
+               '#include <cpptest.h>\n'
+               '#include "test_util.h"\n\n'
                '#include "pEpEngine.h"\n\n'
                '#include "' + superclass +'.h"\n'
                '#include "' + test_suite + '.h"\n\n')
