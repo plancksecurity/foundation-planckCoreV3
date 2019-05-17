@@ -630,7 +630,7 @@ typedef struct _pEp_identity {
     PEP_comm_type comm_type;    // type of communication with this ID
     char lang[3];               // language of conversation
                                 // ISO 639-1 ALPHA-2, last byte is 0
-    float latest_pEp_version;   // Used to determine highest seenencryption format.
+    float pEp_version;          // Used to determine highest seenencryption format.
                                 // default is 2.0 for pEp users                            
     bool me;                    // if this is the local user herself/himself
     identity_flags_t flags;     // identity_flag1 | identity_flag2 | ...
