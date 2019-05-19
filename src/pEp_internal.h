@@ -195,6 +195,7 @@ struct _pEpSession {
     sqlite3_stmt *exists_identity_entry;        
     sqlite3_stmt *set_identity_flags;
     sqlite3_stmt *unset_identity_flags;
+    sqlite3_stmt *set_pEp_version;    
     sqlite3_stmt *set_trust;
     sqlite3_stmt *update_trust;
     sqlite3_stmt *exists_trust_entry;

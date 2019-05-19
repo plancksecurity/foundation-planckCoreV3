@@ -68,6 +68,7 @@ typedef enum {
     PEP_CANNOT_SET_TRUST                            = 0x0384,
     PEP_KEY_BLACKLISTED                             = 0x0385,
     PEP_CANNOT_FIND_PERSON                          = 0x0386,
+    PEP_CANNOT_SET_PEP_VERSION                      = 0X0387,
     
     PEP_CANNOT_FIND_ALIAS                           = 0x0391,
     PEP_CANNOT_SET_ALIAS                            = 0x0392,
@@ -630,9 +631,8 @@ typedef struct _pEp_identity {
     PEP_comm_type comm_type;    // type of communication with this ID
     char lang[3];               // language of conversation
                                 // ISO 639-1 ALPHA-2, last byte is 0
-    float pEp_version;          // Used to determine highest seenencryption format.
-                                // default is 2.0 for pEp users                            
     bool me;                    // if this is the local user herself/himself
+    float _pEp_version;         // highest version of pEp message received, if any
     identity_flags_t flags;     // identity_flag1 | identity_flag2 | ...
 } pEp_identity;
 
@@ -1385,6 +1385,8 @@ DYNAMIC_API PEP_STATUS set_as_pEp_user(PEP_SESSION session, pEp_identity* user);
 PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exists);
 
 PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
+
+PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, float new_pEp_version);
 
 // exposed for testing
 PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,

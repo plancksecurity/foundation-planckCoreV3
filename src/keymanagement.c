@@ -1692,8 +1692,6 @@ PEP_STATUS _own_identities_retrieve(
                 }
                 ident->me = true;
                 ident->flags = flags;
-                ident->pEp_version = (float)
-                    sqlite3_column_double(session->own_identities_retrieve, 6);
 
                 _bl = identity_list_add(_bl, ident);
                 if (_bl == NULL) {
