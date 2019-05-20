@@ -80,7 +80,7 @@ protocol Sync 1 {
         }
 
         // handshaking without existing Device group
-        state HandshakingNewFirst {
+        state HandshakingNewFirst timeout=600 {
             on Init
                 do showSoleHandshake;
 
@@ -118,7 +118,7 @@ protocol Sync 1 {
         }
 
         // handshaking without existing Device group
-        state HandshakingNewSecond {
+        state HandshakingNewSecond timeout=600 {
             on Init
                 do showSoleHandshake;
 
