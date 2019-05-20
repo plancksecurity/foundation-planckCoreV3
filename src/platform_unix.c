@@ -311,6 +311,7 @@ PEP_STATUS unix_local_db_file(const char *buffer, const char *fname, int reset)
             p = stpncpy(p, confsdir[cf_i], len);
             if (automkdir[cf_i]) {
                 if (mkdir(buffer, S_IRUSR | S_IWUSR | S_IXUSR) != 0 && errno != EEXIST) {
+                    printf("ERROR: mkdir '%s' FAIL %d\n", confvals[cf_i], errno);
                     return PEP_INIT_CANNOT_OPEN_DB;
                 }
             }
@@ -335,10 +336,10 @@ const char *unix_local_db(int reset)
 
     #ifdef NDEBUG
     if (!done)
-        done = unix_local_db_file(buffer, LOCAL_DB_FILENAME);
+        done = (PEP_STATUS_OK == unix_local_db_file(buffer, LOCAL_DB_FILENAME));
     #else
     if ((!done) || reset)
-        done = unix_local_db_file(buffer, LOCAL_DB_FILENAME, reset);
+        done = (PEP_STATUS_OK == unix_local_db_file(buffer, LOCAL_DB_FILENAME, reset));
     #endif
 
     if (done)
@@ -357,10 +358,10 @@ const char *unix_local_keys_db(int reset)
 
     #ifdef NDEBUG
     if (!done)
-        done = unix_local_db_file(buffer, LOCAL_KEYS_DB_FILENAME);
+        done = (PEP_STATUS_OK == unix_local_db_file(buffer, LOCAL_KEYS_DB_FILENAME));
     #else
     if ((!done) || reset)
-        done = unix_local_db_file(buffer, LOCAL_KEYS_DB_FILENAME, reset);
+        done = (PEP_STATUS_OK == unix_local_db_file(buffer, LOCAL_KEYS_DB_FILENAME, reset));
     #endif
 
     if (done) {

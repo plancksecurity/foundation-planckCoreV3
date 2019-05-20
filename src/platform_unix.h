@@ -16,6 +16,7 @@
 #include <uuid/uuid.h>
 #endif
 
+#include "pEpEngine.h"
 
 #ifdef __cplusplus
 extern "C" {
