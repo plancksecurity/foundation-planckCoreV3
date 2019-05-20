@@ -181,6 +181,7 @@ struct _pEpSession {
     sqlite3_stmt *exists_person;    
     sqlite3_stmt *set_as_pEp_user;
     sqlite3_stmt *is_pEp_user;
+    sqlite3_stmt *upgrade_pEp_version_by_user_id;
     sqlite3_stmt *add_into_social_graph;
     sqlite3_stmt *get_own_address_binding_from_contact;
     sqlite3_stmt *set_revoke_contact_as_notified;
@@ -457,6 +458,68 @@ static inline bool is_me(PEP_SESSION session, pEp_identity* test_ident) {
     return retval;
 }
 
+static inline float pEp_version_numeric(const char* version_str) {
+    float retval = 0;    
+        
+    if (!version_str || sscanf(version_str, "%f", &retval) != 1)
+        return 0;
+        
+    return retval;    
+}
+
+static inline void pEp_version_major_minor(const char* version_str, unsigned int* major, unsigned int* minor) {
+    if (!major || !minor)
+        return;
+                
+    if (!version_str || sscanf(version_str, "%u.%u", major, minor) != 2) {
+        *major = 0;
+        *minor = 0;
+    }
+        
+    return;    
+}
+
+static inline int compare_versions(unsigned int first_maj, unsigned int first_min,
+                                   unsigned int second_maj, unsigned int second_min) {
+    if (first_maj > second_maj)
+        return 1;
+    if (first_maj < second_maj)
+        return -1;
+    if (first_min > second_min)
+        return 1;
+    if (first_min < second_min)
+        return -1;
+    return 0;    
+}
+
+static inline void set_min_version(unsigned int first_maj, unsigned int first_minor,
+                                   unsigned int second_maj, unsigned int second_minor,
+                                   unsigned int* result_maj, unsigned int* result_minor) {
+    int result = compare_versions(first_maj, first_minor, second_maj, second_minor);
+    if (result < 0) {
+        *result_maj = first_maj;
+        *result_minor = first_minor;
+    }
+    else {
+        *result_maj = second_maj;
+        *result_minor = second_minor;
+    }    
+}
+
+static inline void set_max_version(unsigned int first_maj, unsigned int first_minor,
+                                   unsigned int second_maj, unsigned int second_minor,
+                                   unsigned int* result_maj, unsigned int* result_minor) {
+    int result = compare_versions(first_maj, first_minor, second_maj, second_minor);
+    if (result > 0) {
+        *result_maj = first_maj;
+        *result_minor = first_minor;
+    }
+    else {
+        *result_maj = second_maj;
+        *result_minor = second_minor;
+    }    
+}
+
 #ifndef EMPTYSTR
 #define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
 #endif
@@ -471,7 +534,6 @@ static inline bool is_me(PEP_SESSION session, pEp_identity* test_ident) {
 #ifndef _MAX
 #define _MAX(A, B) ((B) > (A) ? (B) : (A))
 #endif
-
 
 // These are globals used in generating message IDs and should only be
 // computed once, as they're either really constants or OS-dependent

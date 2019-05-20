@@ -838,7 +838,7 @@ enomem:
 }
 
 static message* wrap_message_as_attachment(message* envelope, 
-    message* attachment, message_wrap_type wrap_type, bool keep_orig_subject) {
+    message* attachment, message_wrap_type wrap_type, bool keep_orig_subject, unsigned int max_major, unsigned int max_minor) {
     
     if (!attachment)
         return NULL;
@@ -864,9 +864,17 @@ static message* wrap_message_as_attachment(message* envelope,
             default:
                 inner_type_string = "INNER";
         }
-        attachment->longmsg = encapsulate_message_wrap_info(inner_type_string, attachment->longmsg);        
-        _envelope->longmsg = encapsulate_message_wrap_info("OUTER", _envelope->longmsg);
-
+        if (max_major < 2 || (max_major == 2 && max_minor == 0)) {
+            attachment->longmsg = encapsulate_message_wrap_info(inner_type_string, attachment->longmsg);        
+            _envelope->longmsg = encapsulate_message_wrap_info("OUTER", _envelope->longmsg);
+        }
+        else {
+            _envelope->longmsg = strdup(
+                "This message was encrypted with p≡p (https://pep.software). If you are seeing this message,\n" 
+                "your client does not support raising message attachments. Please click on the message attachment to\n"
+                "to view it, or better yet, consider using p≡p!\n"
+            );
+        }
         // 2.1, to replace the above
         add_opt_field(attachment, X_PEP_MSG_WRAP_KEY, inner_type_string); 
     }
@@ -1711,7 +1719,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     bool has_pEp_user = false;
     
     PEP_comm_type max_comm_type = PEP_ct_pEp;
-
+    unsigned int max_version_major = 0;
+    unsigned int max_version_minor = 0;
+    pEp_version_major_minor(PEP_VERSION, &max_version_major, &max_version_minor);
+    
     identity_list * _il = NULL;
 
     if (enc_format != PEP_enc_none && (_il = src->bcc) && _il->ident)
@@ -1719,7 +1730,6 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     {
         //     - App splits mails with BCC in multiple mails.
         //     - Each email is encrypted separately
-
         if(_il->next || (src->to && src->to->ident) || (src->cc && src->cc->ident))
         {
             // Only one Bcc with no other recipient allowed for now
@@ -1733,6 +1743,12 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 _il->ident->comm_type = PEP_ct_key_not_found;
                 _status = PEP_STATUS_OK;
             }
+            // 0 unless set, so safe.
+            
+            set_min_version( _il->ident->major_ver, _il->ident->minor_ver, 
+                             max_version_major, max_version_minor,
+                             &max_version_major, &max_version_minor);
+
             bool is_blacklisted = false;
             if (_il->ident->fpr && IS_PGP_CT(_il->ident->comm_type)) {
                 _status = blacklist_is_listed(session, _il->ident->fpr, &is_blacklisted);
@@ -1758,6 +1774,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         }
         else
             _status = myself(session, _il->ident);
+        
         if (_status != PEP_STATUS_OK) {
             status = PEP_UNENCRYPTED;
             goto pEp_error;
@@ -1785,6 +1802,11 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                     _il->ident->comm_type = PEP_ct_key_not_found;
                     _status = PEP_STATUS_OK;
                 }
+                // 0 unless set, so safe.
+                set_min_version( _il->ident->major_ver, _il->ident->minor_ver, 
+                                 max_version_major, max_version_minor,
+                                 &max_version_major, &max_version_minor);
+                
                 bool is_blacklisted = false;
                 if (_il->ident->fpr && IS_PGP_CT(_il->ident->comm_type)) {
                     _status = blacklist_is_listed(session, _il->ident->fpr, &is_blacklisted);
@@ -1906,7 +1928,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         message_wrap_type wrap_type = PEP_message_unwrapped;
         if ((enc_format != PEP_enc_inline) && (!force_v_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
             wrap_type = ((flags & PEP_encrypt_flag_key_reset_only) ? PEP_message_key_reset : PEP_message_default);
-            _src = wrap_message_as_attachment(NULL, src, wrap_type, false);
+            _src = wrap_message_as_attachment(NULL, src, wrap_type, false, max_version_major, max_version_minor);
             if (!_src)
                 goto pEp_error;
         }
@@ -2252,7 +2274,9 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     // if (!(flags & PEP_encrypt_flag_force_no_attached_key))
     //     _attach_key(session, target_fpr, src);
 
-    _src = wrap_message_as_attachment(NULL, src, PEP_message_default, false);
+    unsigned int major_ver, minor_ver;
+    pEp_version_major_minor(PEP_VERSION, &major_ver, &minor_ver);
+    _src = wrap_message_as_attachment(NULL, src, PEP_message_default, false, major_ver, minor_ver);
     if (!_src)
         goto pEp_error;
 
@@ -2985,11 +3009,13 @@ static PEP_STATUS import_priv_keys_from_decrypted_msg(PEP_SESSION session,
 static PEP_STATUS pEp_version_upgrade_or_ignore(
         PEP_SESSION session,
         pEp_identity* ident,
-        float version_number) {
+        unsigned int major,
+        unsigned int minor) {
             
     PEP_STATUS status = PEP_STATUS_OK;        
-    if (version_number > ident->_pEp_version)
-        status = set_pEp_version(session, ident, version_number);        
+    int ver_compare = compare_versions(major, minor, ident->major_ver, ident->minor_ver);
+    if (ver_compare > 0)
+        status = set_pEp_version(session, ident, major, minor);        
     
     return status;    
 }
@@ -2999,7 +3025,8 @@ static PEP_STATUS update_sender_to_pEp_trust(
         PEP_SESSION session, 
         pEp_identity* sender, 
         stringlist_t* keylist,
-        float version_number) 
+        unsigned int major,
+        unsigned int minor) 
 {
     assert(session);
     assert(sender);
@@ -3049,9 +3076,11 @@ static PEP_STATUS update_sender_to_pEp_trust(
         case PEP_ct_pEp:
         case PEP_ct_pEp_unconfirmed:
             // set version
-            if (version_number == 0)
-                version_number = 2;
-            status = pEp_version_upgrade_or_ignore(session, sender, version_number);    
+            if (major == 0) {
+                major = 2;
+                minor = 0;
+            }
+            status = pEp_version_upgrade_or_ignore(session, sender, major, minor);    
             break;
         default:
             status = PEP_CANNOT_SET_TRUST;
@@ -3338,8 +3367,9 @@ static PEP_STATUS _decrypt_message(
     char* signer_fpr = NULL;
     bool is_pEp_msg = is_a_pEpmessage(src);
     bool myself_read_only = (src->dir == PEP_dir_incoming);
-    float pEp_version = 0;
-
+    unsigned int major_ver;
+    unsigned int minor_ver;
+    
     // Grab input flags
     bool reencrypt = (((*flags & PEP_decrypt_flag_untrusted_server) > 0) && *keylist && !EMPTYSTR((*keylist)->value));
     
@@ -3625,15 +3655,10 @@ static PEP_STATUS _decrypt_message(
                         const stringpair_list_t* pEp_protocol_version = NULL;
                         pEp_protocol_version = stringpair_list_find(inner_message->opt_fields, "X-pEp-Version");
                         
-                        if (pEp_protocol_version && !EMPTYSTR(pEp_protocol_version->value->value)) {
-                            // Roker is of course right. Meh :)
-                            if (sscanf(pEp_protocol_version->value->value, "%f", &pEp_version) != 1) {
-                                pEp_version = 0;
-                            }
-                        }
+                        if (pEp_protocol_version && pEp_protocol_version->value)
+                            pEp_version_major_minor(pEp_protocol_version->value->value, &major_ver, &minor_ver);
 
                         // Sort out pEp user status and version number based on INNER message.
-                        
                         
                         bool is_inner = false;
                         bool is_key_reset = false;
@@ -3646,20 +3671,22 @@ static PEP_STATUS _decrypt_message(
                         if (status != PEP_STATUS_OK)
                             goto pEp_error;                                         
                             
-                        if (pEp_version < 2) {
+                        if (major_ver > 2 || (major_ver == 2 && minor_ver > 0)) {
                             stringpair_list_t* searched = stringpair_list_find(inner_message->opt_fields, "X-pEp-Sender-FPR");                             
                             inner_message->_sender_fpr = ((searched && searched->value && searched->value->value) ? strdup(searched->value->value) : NULL);
                             searched = stringpair_list_find(inner_message->opt_fields, X_PEP_MSG_WRAP_KEY);
                             if (searched && searched->value && searched->value->value) {
                                 is_inner = (strcmp(searched->value->value, "INNER") == 0);
                                 if (!is_inner)
-                                    is_key_reset = (strcmp(searched->value->value, "INNER") == 0);
+                                    is_key_reset = (strcmp(searched->value->value, "KEY_RESET") == 0);
+                                if (is_inner || is_key_reset)
+                                    inner_message->opt_fields = stringpair_list_delete_by_key(inner_message->opt_fields, X_PEP_MSG_WRAP_KEY);
                             }
                         }
                         else {
-                                is_inner = (strcmp(wrap_info, "INNER") == 0);
-                                if (!is_inner)
-                                    is_key_reset = (strcmp(wrap_info, "KEY_RESET") == 0);
+                            is_inner = (strcmp(wrap_info, "INNER") == 0);
+                            if (!is_inner)
+                                is_key_reset = (strcmp(wrap_info, "KEY_RESET") == 0);
                         }
                             
 
@@ -3754,7 +3781,7 @@ static PEP_STATUS _decrypt_message(
         // eligible signer comm_types to PEP_ct_pEp_*
         // This also sets and upgrades pEp version
         if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && is_pEp_msg && calculated_src->from)
-            status = update_sender_to_pEp_trust(session, calculated_src->from, _keylist, pEp_version);
+            status = update_sender_to_pEp_trust(session, calculated_src->from, _keylist, major_ver, minor_ver);
 
         /* Ok, now we have a keylist used for decryption/verification.
            now we need to update the message rating with the 
@@ -4125,7 +4152,7 @@ DYNAMIC_API PEP_STATUS outgoing_message_rating(
         *rating = PEP_rating_undefined;
     }
     else
-        *rating = MAX(_rating(max_comm_type), PEP_rating_unencrypted);
+        *rating = _MAX(_rating(max_comm_type), PEP_rating_unencrypted);
 
     return PEP_STATUS_OK;
 }
