@@ -95,6 +95,9 @@ typedef PEP_STATUS (*find_private_keys_t)(
     PEP_SESSION session, const char *pattern, stringlist_t **keylist
 );
 
+typedef PEP_STATUS (*config_cipher_suite_t)(PEP_SESSION session,
+        PEP_CIPHER_SUITE suite);
+
 typedef struct _PEP_cryptotech_t {
     uint8_t id;
     // the following are default values; comm_type may vary with key length or b0rken crypto
@@ -121,6 +124,7 @@ typedef struct _PEP_cryptotech_t {
     binary_path_t binary_path;
     contains_priv_key_t contains_priv_key;
     find_private_keys_t find_private_keys;
+    config_cipher_suite_t config_cipher_suite;
 } PEP_cryptotech_t;
 
 extern PEP_cryptotech_t cryptotech[PEP_crypt__count];
@@ -129,3 +133,4 @@ typedef uint64_t cryptotech_mask;
 
 PEP_STATUS init_cryptotech(PEP_SESSION session, bool in_first);
 void release_cryptotech(PEP_SESSION session, bool out_last);
+

@@ -273,6 +273,15 @@ function "show_handshake" {
             }
         }
 
+        free(partner->user_id);
+        partner->user_id = strdup("#NV");
+        assert(partner->user_id);
+        if (!partner->user_id) {
+            free_identity(me);
+            free_identity(partner);
+            return PEP_OUT_OF_MEMORY;
+        }
+
         status = session->notifyHandshake(me, partner, «$type»);
         if (status)
             return status;

@@ -155,6 +155,8 @@ struct _pEpSession {
 #endif
 
     PEP_cryptotech_t *cryptotech;
+    PEP_CIPHER_SUITE cipher_suite;
+
     PEP_transport_t *transports;
 
     sqlite3 *db;

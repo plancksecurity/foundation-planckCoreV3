@@ -971,6 +971,59 @@ enomem:
     return NULL;    
 }
 
+static PEP_STATUS encrypt_PGP_inline(
+        PEP_SESSION session,
+        const message *src,
+        stringlist_t *keys,
+        message *dst,
+        PEP_encrypt_flags_t flags
+    )
+{
+    char *ctext = NULL;
+    size_t csize = 0;
+
+    PEP_STATUS status = encrypt_and_sign(session, keys, src->longmsg,
+            strlen(src->longmsg), &ctext, &csize);
+    if (status)
+        return status;
+
+    dst->enc_format = PEP_enc_inline;
+
+    // shortmsg is being copied
+    if (src->shortmsg) {
+        dst->shortmsg = strdup(src->shortmsg);
+        assert(dst->shortmsg);
+        if (!dst->shortmsg)
+            return PEP_OUT_OF_MEMORY;
+    }
+
+    // id is staying the same
+    if (src->id) {
+        dst->id = strdup(src->id);
+        assert(dst->id);
+        if (!dst->id)
+            return PEP_OUT_OF_MEMORY;
+    }
+
+    char *_ctext = realloc(ctext, csize + 1);
+    assert(_ctext);
+    if (!_ctext)
+        return PEP_OUT_OF_MEMORY;
+    _ctext[csize] = 0;
+
+    dst->longmsg = _ctext;
+
+    // longmsg_formatted is unsupported
+
+    // attachments are going unencrypted
+    bloblist_t *bl = bloblist_dup(src->attachments);
+    if (!bl)
+        return PEP_OUT_OF_MEMORY;
+    dst->attachments = bl;
+
+    return PEP_STATUS_OK;
+}
+
 static PEP_STATUS encrypt_PGP_MIME(
     PEP_SESSION session,
     const message *src,
@@ -1575,7 +1628,7 @@ PEP_cryptotech determine_encryption_format(message *msg)
     assert(msg);
 
     if (is_PGP_message_text(msg->longmsg)) {
-        msg->enc_format = PEP_enc_pieces;
+        msg->enc_format = PEP_enc_inline;
         return PEP_crypt_OpenPGP;
     }
     else if (msg->attachments && msg->attachments->next &&
@@ -1885,7 +1938,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     }
     else {
         // FIXME - we need to deal with transport types (via flag)
-        if ((!force_v_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
+        if ((enc_format != PEP_enc_inline) && (!force_v_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
             message_wrap_type wrap_type = ((flags & PEP_encrypt_flag_key_reset_only) ? PEP_message_key_reset : PEP_message_default);
             _src = wrap_message_as_attachment(NULL, src, wrap_type, false);
             if (!_src)
@@ -1893,7 +1946,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         }
         else {
             // hide subject
-            if (!session->unencrypted_subject) {
+            if (enc_format != PEP_enc_inline && !session->unencrypted_subject) {
                 status = replace_subject(_src);
                 if (status == PEP_OUT_OF_MEMORY)
                     goto enomem;
@@ -1914,9 +1967,9 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 status = encrypt_PGP_MIME(session, _src, keys, msg, flags);
                 break;
 
-            /* case PEP_enc_PEP:
-                // TODO: implement
-                NOT_IMPLEMENTED */
+            case PEP_enc_inline:
+                status = encrypt_PGP_inline(session, _src, keys, msg, flags);
+                break;
 
             default:
                 assert(0);
@@ -2247,6 +2300,10 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
             status = encrypt_PGP_MIME(session, _src, keys, msg, flags);
             if (status == PEP_STATUS_OK || (src->longmsg && strstr(src->longmsg, "INNER")))
                 _cleanup_src(src, false);
+            break;
+
+        case PEP_enc_inline:
+            status = encrypt_PGP_inline(session, _src, keys, msg, flags);
             break;
 
         default:
@@ -2589,7 +2646,7 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
     
     switch (src->enc_format) {
         case PEP_enc_PGP_MIME:
-        case PEP_enc_pieces:
+        case PEP_enc_inline:
         case PEP_enc_PGP_MIME_Outlook1:
 //        case PEP_enc_none: // FIXME - this is wrong
 
@@ -2681,7 +2738,7 @@ static PEP_STATUS get_crypto_text(message* src, char** crypto_text, size_t* text
             *text_size = src->attachments->size;
             break;
 
-        case PEP_enc_pieces:
+        case PEP_enc_inline:
             *crypto_text = src->longmsg;
             *text_size = strlen(*crypto_text);
             break;
@@ -3458,7 +3515,7 @@ static PEP_STATUS _decrypt_message(
                 }
                 break;
 
-            case PEP_enc_pieces:
+            case PEP_enc_inline:
                 status = PEP_STATUS_OK;
                 
                 _decrypt_in_pieces_status = _decrypt_in_pieces(session, src, &msg, ptext, psize);
