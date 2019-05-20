@@ -1303,6 +1303,10 @@ PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
 //
 DYNAMIC_API const char* get_engine_version();
 
+// get_protocol_version() - returns the pEp protocol version
+
+DYNAMIC_API const char *get_protocol_version();
+
 // is_pEp_user() - returns true if the USER corresponding to this identity 
 //                 has been listed in the *person* table as a pEp user. 
 //

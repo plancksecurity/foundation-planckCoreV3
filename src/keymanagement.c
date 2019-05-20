@@ -1060,6 +1060,9 @@ PEP_STATUS _myself(PEP_SESSION session,
         if (read_only) {
             free(identity->user_id);
             identity->user_id = strdup(default_own_id);
+            assert(identity->user_id);
+            if (!identity->user_id)
+                return PEP_OUT_OF_MEMORY;
         }
         else {
             status = set_userid_alias(session, default_own_id, identity->user_id);
@@ -1069,6 +1072,7 @@ PEP_STATUS _myself(PEP_SESSION session,
                 
             free(identity->user_id);
             identity->user_id = strdup(default_own_id);
+            assert(identity->user_id);
             if (identity->user_id == NULL) {
                 status = PEP_OUT_OF_MEMORY;
                 goto pEp_free;
@@ -1108,11 +1112,14 @@ PEP_STATUS _myself(PEP_SESSION session,
     if (EMPTYSTR(identity->username) || read_only) {
         bool stored_uname = (stored_identity && !EMPTYSTR(stored_identity->username));
         char* uname = (stored_uname ? stored_identity->username : identity->address);
-        free(identity->username);
-        identity->username = strdup(uname);
-        if (identity->username == NULL) {
-            status = PEP_OUT_OF_MEMORY;
-            goto pEp_free;
+        if (uname) {
+            free(identity->username);
+            identity->username = strdup(uname);
+            assert(identity->username);
+            if (identity->username == NULL) {
+                status = PEP_OUT_OF_MEMORY;
+                goto pEp_free;
+            }
         }
     }
 

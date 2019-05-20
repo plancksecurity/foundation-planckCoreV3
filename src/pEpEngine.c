@@ -5181,6 +5181,9 @@ DYNAMIC_API const char* get_engine_version() {
     return PEP_ENGINE_VERSION;
 }
 
+DYNAMIC_API const char* get_protocol_version() {
+    return PEP_VERSION;
+}
 
 DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session)
 {
