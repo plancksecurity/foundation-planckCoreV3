@@ -482,3 +482,15 @@ static inline void _init_globals() {
     _pEp_rand_max_bits = (int) ceil(log2((double) RAND_MAX));
     _pEp_log2_36 = log2(36);
 }
+
+// spinlock implementation
+
+static inline int Sqlite3_step(sqlite3_stmt* stmt)
+{
+    int rc;
+    do {
+        rc = sqlite3_step(stmt);
+    } while (rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
+    return rc;
+}
+

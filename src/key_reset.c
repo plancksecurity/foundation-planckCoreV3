@@ -39,7 +39,7 @@ PEP_STATUS has_key_reset_been_sent(
             SQLITE_STATIC);
     sqlite3_bind_text(session->was_id_for_revoke_contacted, 2, user_id, -1,
             SQLITE_STATIC);        
-    int result = sqlite3_step(session->was_id_for_revoke_contacted);
+    int result = Sqlite3_step(session->was_id_for_revoke_contacted);
     switch (result) {
         case SQLITE_ROW: {
             *contacted = (sqlite3_column_int(session->was_id_for_revoke_contacted, 0) != 0);
@@ -79,7 +79,7 @@ PEP_STATUS set_reset_contact_notified(
 
     int result;
     
-    result = sqlite3_step(session->set_revoke_contact_as_notified);
+    result = Sqlite3_step(session->set_revoke_contact_as_notified);
     switch (result) {
         case SQLITE_DONE:
             status = PEP_STATUS_OK;
