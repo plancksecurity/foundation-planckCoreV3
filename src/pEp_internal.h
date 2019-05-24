@@ -54,6 +54,14 @@
 
 #include "platform.h"
 
+#ifndef LOCAL_DB_FILENAME
+#define LOCAL_DB_FILENAME "management.db"
+#endif
+#define SYSTEM_DB_FILENAME "system.db"
+#ifndef SYSTEM_DB_PREFIX
+#define SYSTEM_DB_PREFIX "/usr/local/share/pEp"     /* package maintainers please override this */
+#endif
+
 #ifdef WIN32
 #define LOCAL_DB windoze_local_db()
 #define LOCAL_KEYS_DB windoze_local_db()
@@ -62,20 +70,6 @@
 #else // UNIX
 #define _POSIX_C_SOURCE 200809L
 #include <dlfcn.h>
-#ifdef NDEBUG
-#define LOCAL_DB unix_local_db()
-#define LOCAL_KEYS_DB unix_local_keys_db()
-#else
-#define LOCAL_DB unix_local_db(false)
-#define LOCAL_KEYS_DB unix_local_keys_db(false)
-#endif
-#ifndef SYSTEM_DB
-#ifdef NDEBUG
-#define SYSTEM_DB unix_system_db()
-#else
-#define SYSTEM_DB unix_system_db(false)
-#endif
-#endif
 #ifndef LIBGPGME
 #define LIBGPGME "libgpgme-pthread.so"
 #endif
@@ -158,6 +152,9 @@ struct _pEpSession {
     PEP_CIPHER_SUITE cipher_suite;
 
     PEP_transport_t *transports;
+
+    const char *user_directory;
+    const char *machine_directory;
 
     sqlite3 *db;
     sqlite3 *system_db;

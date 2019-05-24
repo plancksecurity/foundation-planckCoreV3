@@ -9,6 +9,7 @@
 #endif
 #endif
 
+#include <assert.h>
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
@@ -19,19 +20,8 @@
 #include <fcntl.h>
 #include <regex.h>
 
+#include "pEp_internal.h"
 #include "platform_unix.h"
-
-#define MAX_PATH 1024
-#ifndef LOCAL_DB_FILENAME
-#define LOCAL_DB_FILENAME "management.db"      /* ".pEp_" prefix now added in *_local_db() */
-#endif
-#ifndef LOCAL_KEYS_DB_FILENAME
-#define LOCAL_KEYS_DB_FILENAME "keys.db"
-#endif
-#define SYSTEM_DB_FILENAME "system.db"
-#ifndef SYSTEM_DB_PREFIX
-#define SYSTEM_DB_PREFIX "/usr/local/share/pEp"
-#endif
 
 #ifndef bool
 #define bool int
@@ -103,14 +93,14 @@ long int random(void)
 
 const char *android_system_db(void)
 {
-    static char buffer[MAX_PATH];
+    static char buffer[PEP_MAX_PATH];
     static bool done = false;
 
     if (!done) {
         char *tw_env;
         if(tw_env = getenv("TRUSTWORDS")){
-            char *p = stpncpy(buffer, tw_env, MAX_PATH);
-            ssize_t len = MAX_PATH - (p - buffer) - 2;
+            char *p = stpncpy(buffer, tw_env, PEP_MAX_PATH);
+            ssize_t len = PEP_MAX_PATH - (p - buffer) - 2;
 
             if (len < strlen(SYSTEM_DB_FILENAME)) {
                 assert(0);
@@ -176,60 +166,63 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out)
 
 #endif
 
-#ifdef NDEBUG
-const char *unix_system_db(void)
-#else
-const char *unix_system_db(int reset)
-#endif
+PEP_STATUS unix_machine_file_path(PEP_SESSION session, const char *fname, char **path)
 {
-    static char buffer[MAX_PATH];
-    static bool done = false;
+    assert(session);
+    assert(fname);
 
-    #ifdef NDEBUG
-    if (!done)
-    #else
-    if ((!done) || reset)
-    #endif
-    {
-        const char *home_env;
-        const char *subdir;
-        const char * const confvars[] = { "TRUSTWORDS", "PEP_HOME", "PEPHOME", NULL,             "HOME",   NULL };
-        const char * const confvals[] = { NULL,         NULL,       NULL,      SYSTEM_DB_PREFIX, NULL,     NULL };
-        const char * const confsdir[] = { "/",          "/",        "/",       "/",              "/.pEp/", NULL };
-        const bool automkdir[]        = { false,        true,       true,      false,            true,     false }; // use this on dirs only!
-        const bool enforceifset[]     = { true,         false,      false,     false,            false,    false };
-        int cf_i;
+    const char buffer[PEP_MAX_PATH];
+    const char *s_dir = session->machine_directory;
+    size_t f_len = strlen (fname);
 
-        for (cf_i = 0; confvars[cf_i] || confvals[cf_i]; cf_i++) {
-            if (((home_env = confvals[cf_i]) || (home_env = getenv (confvars[cf_i]))) && (subdir = confsdir[cf_i])) {
-                char *p = stpncpy (buffer, home_env, MAX_PATH);
-                ssize_t len = MAX_PATH - (p - buffer) - 2;
+    const char * const confvars[] = { NULL,   "PER_MACHINE_DIRECTORY", "TRUSTWORDS", "PEP_HOME", "PEPHOME", NULL,            "HOME",    NULL };
+    const char * const confvals[] = { s_dir,   NULL,                   NULL,         NULL,       NULL,      SYSTEM_DB_PREFIX, NULL,     NULL };
+    const char * const confsdir[] = { "/",     "/",                    "/",          "/",        "/",       "/",              "/.pEp/", NULL };
+    const bool automkdir[]        = { false,   true,                   false,        true,       true,      false,            true,     false }; // use this on dirs only!
+    const bool enforceifset[]     = { true,    false,                  true,         false,      false,     false,            false,    false };
+    const bool deprecated[]       = { false,   false,                  true,         true,       true,      true,             true,     false };
+    const char *home_env;
+    int cf_i;
+    char *p;
 
-                if (len < strlen (SYSTEM_DB_FILENAME) + strlen (confsdir[cf_i])) {
-                    assert(0);
-                    return NULL;
+    for (cf_i = 0; confvars[cf_i] || confvals[cf_i] || confsdir[cf_i]; cf_i++) {
+        if (((home_env = confvals[cf_i]) || (confvars[cf_i] && (home_env = getenv (confvars[cf_i])))) && (confsdir[cf_i])) {
+
+            if (confvars[cf_i] && deprecated[cf_i]) {
+                printf("%s: the environment variable '%s' is deprecated, please use PER_MACHINE_DIRECTORY instead.\n", fname, confvars[cf_i]);
+            }
+
+            p = stpncpy (buffer, home_env, PEP_MAX_PATH);
+            ssize_t len = PEP_MAX_PATH - (p - buffer) - 2;
+
+            if (len < f_len + strlen (confsdir[cf_i])) {
+                assert(0);
+                return PEP_INIT_CANNOT_OPEN_SYSTEM_DB;
+            }
+
+            while (*(p-1) == '/' && (p-1) > buffer)   /* drop trailing slashes, note '>' on decremented p */
+                p--;
+            p = stpncpy (p, confsdir[cf_i], len);
+            if (automkdir[cf_i]) {
+                if (mkdir (buffer, S_IRUSR | S_IWUSR | S_IXUSR) != 0 && errno != EEXIST) {
+                    perror (buffer);
+                    return PEP_INIT_CANNOT_OPEN_SYSTEM_DB;
                 }
+            }
 
-                p = stpncpy(p, confsdir[cf_i], len);
-                if (automkdir[cf_i]) {
-                    if (mkdir(buffer, S_IRUSR | S_IWUSR | S_IXUSR) != 0 && errno != EEXIST) {
-                        perror(SYSTEM_DB_FILENAME);
-                        return false;
-                    }
-                }
-
-                strncpy(p, SYSTEM_DB_FILENAME, len);
-                if (access (buffer, R_OK) == 0) {
-                    done = true;
-                    return buffer;
-                }
-                else if (enforceifset[cf_i])
-                    return NULL;
+            strncpy (p, fname, len);
+            if (access (buffer, R_OK) == 0) {
+                *path = strndup (buffer, PEP_MAX_PATH);
+                if (!*path)
+                    return PEP_OUT_OF_MEMORY;
+                return PEP_STATUS_OK;
+            }
+            else if (enforceifset[cf_i]) {
+                return PEP_INIT_CANNOT_OPEN_SYSTEM_DB;
             }
         }
-        return NULL;
     }
-    return buffer;
+    return PEP_UNKNOWN_DB_ERROR;
 }
 
 #if !defined(BSD) && !defined(__APPLE__)
@@ -271,105 +264,61 @@ int regnexec(const regex_t* preg, const char* string,
 
 #endif
 
-#ifdef NDEBUG
-PEP_STATUS unix_local_db_file(const char *buffer, const char *fname)
-#else
-PEP_STATUS unix_local_db_file(const char *buffer, const char *fname, int reset)
-#endif
+PEP_STATUS unix_user_file_path(PEP_SESSION session, const char *fname, char **path)
 {
-    /*
-     * TODO: move this to libpEpAdapter and create an have an export symbol here only.
-     */
-    const char *home_env;
-    const char *subdir;
+    assert(session);
+    assert(fname);
+
+    const char buffer[PEP_MAX_PATH];
+    const char *s_dir = session->user_directory;
+    size_t f_len = strlen (fname);
+
     /* Note: in HOME, a dot and pEp_ is prepended to the file (~/.pEp_management.db, vs ~/.pEp/management.db) */
-    const char * const confvars[] = { "PEP_HOME", "PEPHOME", "HOME",   "HOME",   NULL };
-    const char * const confvals[] = { NULL,       NULL,      NULL,     NULL,     NULL };
-    const char * const confsdir[] = { "/",        "/",       "/.pEp_", "/.pEp/", NULL };
-    const bool automkdir[]        = { true,       true,      false,    true,     false }; // use this on dirs only!
-    const bool debugonly[]        = { true,       true,      false,    false,    false };
-    const bool enforceifset[]     = { true,       true,      false,    true,     false };
+    const char * const confvars[] = { NULL,  "PER_USER_DIRECTORY", "PEP_HOME", "PEPHOME", "HOME",   "HOME",    NULL };
+    const char * const confvals[] = { s_dir,  NULL,                 NULL,       NULL,      NULL,     NULL,     NULL };
+    const char * const confsdir[] = { "/",    "/",                  "/",        "/",       "/.pEp_", "/.pEp/", NULL };
+    const bool automkdir[]        = { false,  true,                 true,       true,      false,    true,     false }; // use this on dirs only!
+    const bool enforceifset[]     = { true,   true,                 true,       true,      false,    true,     false };
+    const bool deprecated[]       = { false,  false,                true,       true,      false,    false,    false };
+    const char *home_env;
     int cf_i;
+    ssize_t len;
+    char *p;
 
-    for (cf_i = 0; confvars[cf_i] || confvals[cf_i]; cf_i++) {
-        if (((home_env = confvals[cf_i]) || (home_env = getenv (confvars[cf_i]))) && (subdir = confsdir[cf_i])) {
-            char *p = stpncpy (buffer, home_env, MAX_PATH);
-            ssize_t len = MAX_PATH - (p - buffer) - 1;
+    for (cf_i = 0; confvars[cf_i] || confvals[cf_i] || confsdir[cf_i]; cf_i++) {
+        if (((home_env = confvals[cf_i]) || (confvars[cf_i] && (home_env = getenv (confvars[cf_i])))) && (confsdir[cf_i])) {
 
-            if (len < strlen (fname) + strlen (confsdir[cf_i])) {
+            if (confvars[cf_i] && deprecated[cf_i]) {
+                printf("%s: the environment variable '%s' is deprecated, please use PER_USER_DIRECTORY instead.\n", fname, confvars[cf_i]);
+            }
+
+            p = stpncpy (buffer, home_env, PEP_MAX_PATH);
+            len = PEP_MAX_PATH - (p - buffer) - 1;
+
+            if (len < f_len + strlen (confsdir[cf_i])) {
                 assert(0);
                 return PEP_OUT_OF_MEMORY;
             }
 
-#ifdef NDEBUG
-            if (debugonly[cf_i] && enforceifset[cf_i]) {
-                printf("WARNING: Variable '%s' MUST NOT be used in production!\n", confvars[cf_i]);
-                // return PEP_INIT_CANNOT_OPEN_DB;
-            }
-#endif
-
             p = stpncpy(p, confsdir[cf_i], len);
             if (automkdir[cf_i]) {
-                if (mkdir(buffer, S_IRUSR | S_IWUSR | S_IXUSR) != 0 && errno != EEXIST) {
-                    printf("ERROR: mkdir '%s' FAIL %d\n", confvals[cf_i], errno);
+                if (mkdir (buffer, S_IRUSR | S_IWUSR | S_IXUSR) != 0 && errno != EEXIST) {
+                    perror (buffer);
                     return PEP_INIT_CANNOT_OPEN_DB;
                 }
             }
 
             strncpy(p, fname, len);
             if (enforceifset[cf_i] || (access (buffer, R_OK) == 0)) {
+                *path = strndup (buffer, PEP_MAX_PATH);
+                if (!*path)
+                    return PEP_OUT_OF_MEMORY;
                 return PEP_STATUS_OK;
             }
         }
     }
     return PEP_UNKNOWN_DB_ERROR;
 }
-
-#ifdef NDEBUG
-const char *unix_local_db(void)
-#else
-const char *unix_local_db(int reset)
-#endif
-{
-    static char buffer[MAX_PATH];
-    static bool done = false;
-
-    #ifdef NDEBUG
-    if (!done)
-        done = (PEP_STATUS_OK == unix_local_db_file(buffer, LOCAL_DB_FILENAME));
-    #else
-    if ((!done) || reset)
-        done = (PEP_STATUS_OK == unix_local_db_file(buffer, LOCAL_DB_FILENAME, reset));
-    #endif
-
-    if (done)
-        return buffer;
-    return NULL;
-}
-
-#ifdef NDEBUG
-const char *unix_local_keys_db(void)
-#else
-const char *unix_local_keys_db(int reset)
-#endif
-{
-    static char buffer[MAX_PATH];
-    static bool done = false;
-
-    #ifdef NDEBUG
-    if (!done)
-        done = (PEP_STATUS_OK == unix_local_db_file(buffer, LOCAL_KEYS_DB_FILENAME));
-    #else
-    if ((!done) || reset)
-        done = (PEP_STATUS_OK == unix_local_db_file(buffer, LOCAL_KEYS_DB_FILENAME, reset));
-    #endif
-
-    if (done) {
-        return buffer;
-    }
-    return NULL;
-}
-
 
 static const char *gpg_conf_path = ".gnupg";
 static const char *gpg_conf_name = "gpg.conf";

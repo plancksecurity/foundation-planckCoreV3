@@ -780,17 +780,20 @@ void errorLogCallback(void *pArg, int iErrCode, const char *zMsg){
 PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session);
 #endif // USE_GPG
 
-DYNAMIC_API PEP_STATUS init(
+DYNAMIC_API PEP_STATUS init_with_paths(
         PEP_SESSION *session,
+        const char *machine_directory,
+        const char *user_directory,
         messageToSend_t messageToSend,
         inject_sync_event_t inject_sync_event
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
     int int_result;
-    
+
     bool in_first = false;
     bool very_first = false;
+    const char *db_file = NULL;
 
     assert(sqlite3_threadsafe());
     if (!sqlite3_threadsafe())
@@ -804,7 +807,7 @@ DYNAMIC_API PEP_STATUS init(
     int _count = ++init_count;
     if (_count == 0)
         in_first = true;
-    
+
     // Race condition mitigated by calling caveat starts here :
     // If another call to init() preempts right now, then preemptive call
     // will have in_first false, will not create SQL tables, and following
@@ -834,22 +837,28 @@ DYNAMIC_API PEP_STATUS init(
     _session->messageToSend = messageToSend;
     _session->inject_sync_event = inject_sync_event;
 
+    if (user_directory)
+        if (!(_session->user_directory = strndup (user_directory, PEP_MAX_PATH)))
+            goto enomem;
+    if (machine_directory)
+        if (!(_session->machine_directory = strndup (machine_directory, PEP_MAX_PATH)))
+            goto enomem;
+
 #ifdef DEBUG_ERRORSTACK
     _session->errorstack = new_stringlist("init()");
 #endif
 
-    assert(LOCAL_DB);
-    if (LOCAL_DB == NULL) {
-        status = PEP_INIT_CANNOT_OPEN_DB;
+    status = unix_user_file_path(_session, LOCAL_DB_FILENAME, &db_file);
+    if (status != PEP_STATUS_OK)
         goto pEp_error;
-    }
-    
+    assert(db_file);
+
 #if _PEP_SQLITE_DEBUG    
     sqlite3_config(SQLITE_CONFIG_LOG, errorLogCallback, NULL);
 #endif
 
     int_result = sqlite3_open_v2(
-            LOCAL_DB,
+            db_file,
             &_session->db,
             SQLITE_OPEN_READWRITE
                 | SQLITE_OPEN_CREATE
@@ -857,14 +866,10 @@ DYNAMIC_API PEP_STATUS init(
                 | SQLITE_OPEN_PRIVATECACHE,
             NULL 
         );
+    free(db_file);
+    db_file = NULL;
 
     if (int_result != SQLITE_OK) {
-        status = PEP_INIT_CANNOT_OPEN_DB;
-        goto pEp_error;
-    }
-
-    assert(LOCAL_KEYS_DB);
-    if (LOCAL_KEYS_DB == NULL) {
         status = PEP_INIT_CANNOT_OPEN_DB;
         goto pEp_error;
     }
@@ -888,19 +893,21 @@ DYNAMIC_API PEP_STATUS init(
         NULL);
 #endif
 
-    assert(SYSTEM_DB);
-    if (SYSTEM_DB == NULL) {
-        status = PEP_INIT_CANNOT_OPEN_SYSTEM_DB;
+    status = unix_machine_file_path(_session, SYSTEM_DB_FILENAME, &db_file);
+    if (status != PEP_STATUS_OK)
         goto pEp_error;
-    }
+    assert(db_file);
 
     int_result = sqlite3_open_v2(
-            SYSTEM_DB, &_session->system_db,
+            db_file,
+            &_session->system_db,
             SQLITE_OPEN_READONLY
                 | SQLITE_OPEN_FULLMUTEX
                 | SQLITE_OPEN_SHAREDCACHE,
             NULL
         );
+    free(db_file);
+    db_file = NULL;
 
     if (int_result != SQLITE_OK) {
         status = PEP_INIT_CANNOT_OPEN_SYSTEM_DB;
@@ -1986,6 +1993,15 @@ DYNAMIC_API void release(PEP_SESSION session)
 #endif
         free(session);
     }
+}
+
+DYNAMIC_API PEP_STATUS init(
+        PEP_SESSION *session,
+        messageToSend_t messageToSend,
+        inject_sync_event_t inject_sync_event
+    )
+{
+    return init_with_paths(session, NULL, NULL, messageToSend, inject_sync_event);
 }
 
 DYNAMIC_API void config_passive_mode(PEP_SESSION session, bool enable)

@@ -5,8 +5,9 @@
 
 #define _GNU_SOURCE 1
 
-#define MAX_PATH 1024
+#ifndef SQ_KEYS_DB
 #define SQ_KEYS_DB "keys.db"
+#endif
 
 #include "pEp_internal.h"
 #include "pgp_gpg.h"
@@ -179,20 +180,24 @@ int email_cmp(void *cookie, int a_len, const void *a, int b_len, const void *b)
 PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
     PEP_STATUS status = PEP_STATUS_OK;
+    const char * path_keys_db;
 
-    char path[MAX_PATH];
-    if ((status = unix_local_db_file(path, SQ_KEYS_DB)) != PEP_STATUS_OK)
+    status = unix_user_file_path(session, "keys.db", &path_keys_db);
+    if (status != PEP_STATUS_OK)
         ERROR_OUT(NULL, status,
                   "could not determine path to keys DB");
+    assert(path_local_db);
 
     int sqlite_result;
-    sqlite_result = sqlite3_open_v2(path,
+    sqlite_result = sqlite3_open_v2(path_keys_db,
                                     &session->key_db,
                                     SQLITE_OPEN_READWRITE
                                     | SQLITE_OPEN_CREATE
                                     | SQLITE_OPEN_FULLMUTEX
                                     | SQLITE_OPEN_PRIVATECACHE,
                                     NULL);
+    free(path_keys_db);
+    path_keys_db = NULL;
 
     if (sqlite_result != SQLITE_OK)
         ERROR_OUT(NULL, PEP_INIT_CANNOT_OPEN_DB,

@@ -178,6 +178,34 @@ typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 //                                          application
 //      inject_sync_event (in)              callback for injecting a sync event
 //
+//  caveat:
+//      THE CALLER MUST GUARD THIS CALL EXTERNALLY WITH A MUTEX. release()
+//      should be similarly guarded.
+//
+//      This function is a wrapper for init_with_paths(),
+//      with passes NULL machine_directory and user_directory.
+
+
+DYNAMIC_API PEP_STATUS init(
+        PEP_SESSION *session,
+        messageToSend_t messageToSend,
+        inject_sync_event_t inject_sync_event
+    );
+
+
+// INIT_STATUS init_with_paths() - initialize pEpEngine for a thread on alternate directories
+//
+//  parameters:
+//      session (out)                       init() allocates session memory and
+//                                          returns a pointer as a handle
+//      machine_directory (in)              non-default machine directory
+//                                          (NULL for automatic platform specific defaults)
+//      user_directory (in)                 non-default user directory
+//                                          (NULL for automatic platform specific defaults)
+//      messageToSend (in)                  callback for sending message by the
+//                                          application
+//      inject_sync_event (in)              callback for injecting a sync event
+//
 //  return value:
 //      PEP_STATUS_OK = 0                   if init() succeeds
 //      PEP_INIT_SQLITE3_WITHOUT_MUTEX      if SQLite3 was compiled with
@@ -203,11 +231,14 @@ typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 //      messageToSend can only be null if no transport is application based
 //      if transport system is not used it must not be NULL
 
-DYNAMIC_API PEP_STATUS init(
+DYNAMIC_API PEP_STATUS init_with_paths(
         PEP_SESSION *session,
+        const char *machine_directory,
+        const char *user_directory,
         messageToSend_t messageToSend,
         inject_sync_event_t inject_sync_event
-    );
+);
+
 
 
 // void release() - release thread session handle

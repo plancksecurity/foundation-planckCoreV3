@@ -22,17 +22,16 @@
 extern "C" {
 #endif
 
+#define PEP_MAX_PATH 1024
+
+PEP_STATUS unix_user_file_path(PEP_SESSION session, const char *fname, char **buffer);
+PEP_STATUS unix_machine_file_path(PEP_SESSION session, const char *fname, char **buffer);
+
 #ifdef NDEBUG
-int unix_local_db_file(const char *buffer, const char *fname);
-const char *unix_local_db(void);
-const char *unix_system_db(void);
 const char *gpg_conf(void);
 const char *gpg_agent_conf(void);
 const char *gpg_home(void);
 #else
-int unix_local_db_file(const char *buffer, const char *fname, int reset);
-const char *unix_local_db(int reset);
-const char *unix_system_db(int reset);
 const char *gpg_conf(int reset);
 const char *gpg_agent_conf(int reset);
 const char *gpg_home(int reset);
