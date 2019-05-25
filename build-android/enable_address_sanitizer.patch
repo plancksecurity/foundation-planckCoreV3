@@ -1,0 +1,92 @@
+diff --git a/build-android/jni/Android.mk b/build-android/jni/Android.mk
+--- a/build-android/jni/Android.mk
++++ b/build-android/jni/Android.mk
+@@ -14,7 +14,9 @@
+ 
+ LOCAL_MODULE    := pEpEngine
+ LOCAL_CFLAGS    += -std=c99
+-
++#LOCAL_CFLAGS    += -fsanitize=address -fno-omit-frame-pointer
++#LOCAL_LDFLAGS   += -fsanitize=address
++#LOCAL_ARM_MODE := arm
+ # from http://www.sqlite.org/android/finfo?name=jni/sqlite/Android.mk 
+ #      http://www.sqlite.org/android/artifact/e8ed354b3e58c835
+ 
+@@ -28,6 +30,7 @@
+                     $(GPGME_INCLUDE_PATH) \
+                     $(LIBETPAN_PATH)/include
+ LOCAL_C_INCLUDES += $(GPGBUILD)/$(TARGET_ARCH_ABI)/app_opt/include
++LOCAL_C_INCLUDES += /home/huss/src/test/sequoia/openpgp-ffi/include
+ 
+ $(shell sh $(LOCAL_PATH)/../takeOutHeaderFiles.sh $(LOCAL_PATH)../../)
+ LOCAL_EXPORT_C_INCLUDES += $(LOCAL_PATH)../include
+@@ -38,5 +41,6 @@
+ ASN1_SRC_FILES := $(wildcard $(LOCAL_PATH)/../../asn.1/*.c)
+ LOCAL_SRC_FILES := $(ENGINE_SRC_FILES:%=%)  $(ASN1_SRC_FILES:$(LOCAL_PATH)/%=%)
+ 
++#LOCAL_ADDRESS_SANITIZER:=true
+ 
+ include $(BUILD_STATIC_LIBRARY)
+diff --git a/src/pEpEngine.c b/src/pEpEngine.c
+--- a/src/pEpEngine.c
++++ b/src/pEpEngine.c
+@@ -2015,7 +2015,7 @@
+ // N.B. If testing (so NDEBUG not defined) but this message is spam,
+ //      put -D_PEP_SERVICE_LOG_OFF into CFLAGS/CXXFLAGS     
+ #if !defined(NDEBUG) && !defined(_PEP_SERVICE_LOG_OFF)
+-    fprintf(stdout, "\n*** %s %s %s %s\n", title, entity, description, comment);
++    __android_log_print(ANDROID_LOG_DEBUG, "pEpEngine", " %s :: %s :: %s :: %s ", title, entity, description, comment);
+     session->service_log = true;
+ #endif
+ 
+diff --git a/sync/gen_dot.ysl2 b/sync/gen_dot.ysl2
+--- a/sync/gen_dot.ysl2
++++ b/sync/gen_dot.ysl2
+@@ -9,7 +9,7 @@
+     digraph finite_state_machine {
+         rankdir=LR;
+         node [shape = doublecircle];
+-        `apply "state[@end='1']" mode=end`;
++        `apply "state[@timeout='off']" mode=end`;
+         node [shape = circle];
+ 
+         `` apply "state" mode=do
+diff --git a/sync/sync.fsm b/sync/sync.fsm
+--- a/sync/sync.fsm
++++ b/sync/sync.fsm
+@@ -155,7 +155,7 @@
+                 go HandshakingNewPhase2Second;
+         }
+ 
+-        state HandshakingNewPhase1First {
++        state HandshakingNewPhase1First timeout=300 {
+             on Rollback if sameTransactionAndPartner {
+                 do untrustThisKey;
+                 go Sole;
+@@ -172,7 +172,7 @@
+             }
+         }
+ 
+-        state HandshakingNewPhase1Second {
++        state HandshakingNewPhase1Second timeout=300 {
+             on Rollback if sameTransactionAndPartner {
+                 do untrustThisKey;
+                 go Sole;
+@@ -189,7 +189,7 @@
+             }
+         }
+ 
+-        state HandshakingNewPhase2First {
++        state HandshakingNewPhase2First timeout=300 {
+             on Cancel {
+                 send Rollback;
+                 go Sole;
+@@ -208,7 +208,7 @@
+             }
+         }
+ 
+-        state HandshakingNewPhase2Second {
++        state HandshakingNewPhase2Second timeout=300 {
+             on Cancel {
+                 send Rollback;
+                 go Sole;
