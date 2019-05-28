@@ -2087,7 +2087,7 @@ PEP_STATUS pgp_export_keydata(
     if (memory_writer) {
         if (status == PEP_STATUS_OK) {
             // Add a trailing NUL.
-            pgp_writer_write(NULL, memory_writer, "", 1);
+            pgp_writer_write(NULL, memory_writer, (const uint8_t *) "", 1);
         }
 
         pgp_writer_free(memory_writer);
