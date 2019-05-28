@@ -2096,6 +2096,8 @@ PEP_STATUS pgp_export_keydata(
     if (tpk)
         pgp_tpk_free(tpk);
 
+    (*size)--;  // Sequoia is delivering the 0 byte at the end with size, but
+                // pEp is expecting it without
     T("(%s) -> %s", fpr, pEp_status_to_string(status));
     return status;
 }
