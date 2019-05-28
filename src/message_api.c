@@ -3898,8 +3898,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         if (!tmpstatus && size && data) {
             if (sync_fpr)
                 signal_Sync_message(session, *rating, data, size, msg->from, sync_fpr);
-            else if (*keylist)
-                signal_Sync_message(session, *rating, data, size, msg->from, (*keylist)->value);
+            else
+                signal_Sync_message(session, *rating, data, size, msg->from, NULL);
         }
         free(sync_fpr);
     }
