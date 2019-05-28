@@ -2407,7 +2407,7 @@ PEP_STATUS pgp_get_key_rating(
     if (tpk)
         pgp_tpk_free(tpk);
 
-    T("(%s) -> %s", fpr, pep_comm_type_to_string(*comm_type));
+    T("(%s) -> %s", fpr, pEp_comm_type_to_string(*comm_type));
     return status;
 }
 
