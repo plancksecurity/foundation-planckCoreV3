@@ -803,8 +803,11 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
                  
             }
             else {
-                const char* split = strstr(uid_value, "<");
-                if (split != uid_value) {       
+                // Ok, asan gets really pissed at us using this string directly, SO...
+                char* uid_copy = calloc(uid_value_len + 1, 1);
+                strlcpy(uid_copy, uid_value, uid_value_len);
+                const char* split = strstr(uid_copy, "<");
+                if (split != uid_copy) {       
                     while (split) {
                         if (isspace(*(split - 1)))
                             break;
@@ -831,9 +834,10 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
                     else  
                         split = NULL;
                 }
-                if (split == NULL) {
-                    email = strdup(uid_value);
-                }
+                if (split == NULL)
+                    email = uid_copy;
+                else 
+                    free(uid_copy);
             }
         }
         
@@ -2655,4 +2659,3 @@ PEP_STATUS pgp_contains_priv_key(PEP_SESSION session, const char *fpr,
       fpr, *has_private ? "priv" : "pub", pEp_status_to_string(status));
     return status;
 }
-
