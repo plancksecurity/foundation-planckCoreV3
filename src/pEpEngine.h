@@ -103,6 +103,7 @@ typedef enum {
     PEP_SYNC_NO_CHANNEL                             = 0x0904,
     PEP_SYNC_CANNOT_ENCRYPT                         = 0x0905,
     PEP_SYNC_NO_MESSAGE_SEND_CALLBACK               = 0x0906,
+    PEP_SYNC_CANNOT_START                           = 0x0907,
 
     PEP_CANNOT_INCREASE_SEQUENCE                    = 0x0971,
 
