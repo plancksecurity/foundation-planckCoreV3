@@ -103,6 +103,7 @@ typedef enum {
     PEP_SYNC_NO_CHANNEL                             = 0x0904,
     PEP_SYNC_CANNOT_ENCRYPT                         = 0x0905,
     PEP_SYNC_NO_MESSAGE_SEND_CALLBACK               = 0x0906,
+    PEP_SYNC_CANNOT_START                           = 0x0907,
 
     PEP_CANNOT_INCREASE_SEQUENCE                    = 0x0971,
 
@@ -437,6 +438,11 @@ DYNAMIC_API PEP_STATUS log_service(PEP_SESSION session, const char *title,
 #define SERVICE_LOG(session, title, entity, desc) \
     log_service((session), (title), (entity), (desc), "service " __FILE__ ":" S_LINE)
 
+DYNAMIC_API void _service_error_log(PEP_SESSION session, const char *entity,
+        PEP_STATUS status, const char *where);
+
+#define SERVICE_ERROR_LOG(session, entity, status) \
+    _service_error_log((session), (entity), (status), __FILE__ ":" S_LINE)
 
 // trustword() - get the corresponding trustword for a 16 bit value
 //
@@ -561,47 +567,6 @@ typedef enum _PEP_comm_type {
     PEP_ct_confirmed_enc_anon = 0xc0,           // generic
     PEP_ct_pEp = 0xff
 } PEP_comm_type;
-
-static inline const char *pep_comm_type_to_string(PEP_comm_type ct) {
-    switch (ct) {
-    case PEP_ct_unknown: return "unknown";
-    case PEP_ct_no_encryption: return "no_encryption";
-    case PEP_ct_no_encrypted_channel: return "no_encrypted_channel";
-    case PEP_ct_key_not_found: return "key_not_found";
-    case PEP_ct_key_expired: return "key_expired";
-    case PEP_ct_key_revoked: return "key_revoked";
-    case PEP_ct_key_b0rken: return "key_b0rken";
-    case PEP_ct_my_key_not_included: return "my_key_not_included";
-    case PEP_ct_security_by_obscurity: return "security_by_obscurity";
-    case PEP_ct_b0rken_crypto: return "b0rken_crypto";
-    case PEP_ct_key_too_short: return "key_too_short";
-    case PEP_ct_compromised: return "compromised";
-    case PEP_ct_mistrusted: return "mistrusted";
-    case PEP_ct_unconfirmed_encryption: return "unconfirmed_encryption";
-    case PEP_ct_OpenPGP_weak_unconfirmed: return "OpenPGP_weak_unconfirmed";
-    case PEP_ct_to_be_checked: return "to_be_checked";
-    case PEP_ct_SMIME_unconfirmed: return "SMIME_unconfirmed";
-    case PEP_ct_CMS_unconfirmed: return "CMS_unconfirmed";
-    case PEP_ct_strong_but_unconfirmed: return "strong_but_unconfirmed";
-    case PEP_ct_OpenPGP_unconfirmed: return "OpenPGP_unconfirmed";
-    case PEP_ct_OTR_unconfirmed: return "OTR_unconfirmed";
-    case PEP_ct_unconfirmed_enc_anon: return "unconfirmed_enc_anon";
-    case PEP_ct_pEp_unconfirmed: return "pEp_unconfirmed";
-    case PEP_ct_confirmed: return "confirmed";
-    case PEP_ct_confirmed_encryption: return "confirmed_encryption";
-    case PEP_ct_OpenPGP_weak: return "OpenPGP_weak";
-    case PEP_ct_to_be_checked_confirmed: return "to_be_checked_confirmed";
-    case PEP_ct_SMIME: return "SMIME";
-    case PEP_ct_CMS: return "CMS";
-    case PEP_ct_strong_encryption: return "strong_encryption";
-    case PEP_ct_OpenPGP: return "OpenPGP";
-    case PEP_ct_OTR: return "OTR";
-    case PEP_ct_confirmed_enc_anon: return "confirmed_enc_anon";
-    case PEP_ct_pEp: return "pEp";
-    default: return "invalid comm type";
-    }
-}
-
 
 typedef enum _identity_flags {
     // the first octet flags are app defined settings
