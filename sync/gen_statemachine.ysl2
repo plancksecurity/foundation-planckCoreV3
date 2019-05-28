@@ -766,6 +766,8 @@ tstylesheet {
                 free(data);
                 free(key_data);
                 free_«@name»_message(msg);
+                if (status)
+                    SERVICE_ERROR_LOG(session, "send_«@name»_message()", status);
                 return status;
             }
 

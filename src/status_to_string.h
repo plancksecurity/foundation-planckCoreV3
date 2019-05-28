@@ -4,6 +4,10 @@
 extern "C" {
 #endif
 
+#ifndef PEP_STATUS_TO_STRING
+#define PEP_STATUS_TO_STRING
+#endif
+
 static inline const char *pEp_status_to_string(PEP_STATUS status) {
     switch (status) {
     case PEP_STATUS_OK: return "PEP_STATUS_OK";
@@ -100,6 +104,46 @@ static inline const char *pEp_status_to_string(PEP_STATUS status) {
     case PEP_VERSION_MISMATCH: return "PEP_VERSION_MISMATCH";
 
     default: return "unknown status code";
+    }
+}
+
+static inline const char *pEp_comm_type_to_string(PEP_comm_type ct) {
+    switch (ct) {
+    case PEP_ct_unknown: return "unknown";
+    case PEP_ct_no_encryption: return "no_encryption";
+    case PEP_ct_no_encrypted_channel: return "no_encrypted_channel";
+    case PEP_ct_key_not_found: return "key_not_found";
+    case PEP_ct_key_expired: return "key_expired";
+    case PEP_ct_key_revoked: return "key_revoked";
+    case PEP_ct_key_b0rken: return "key_b0rken";
+    case PEP_ct_my_key_not_included: return "my_key_not_included";
+    case PEP_ct_security_by_obscurity: return "security_by_obscurity";
+    case PEP_ct_b0rken_crypto: return "b0rken_crypto";
+    case PEP_ct_key_too_short: return "key_too_short";
+    case PEP_ct_compromised: return "compromised";
+    case PEP_ct_mistrusted: return "mistrusted";
+    case PEP_ct_unconfirmed_encryption: return "unconfirmed_encryption";
+    case PEP_ct_OpenPGP_weak_unconfirmed: return "OpenPGP_weak_unconfirmed";
+    case PEP_ct_to_be_checked: return "to_be_checked";
+    case PEP_ct_SMIME_unconfirmed: return "SMIME_unconfirmed";
+    case PEP_ct_CMS_unconfirmed: return "CMS_unconfirmed";
+    case PEP_ct_strong_but_unconfirmed: return "strong_but_unconfirmed";
+    case PEP_ct_OpenPGP_unconfirmed: return "OpenPGP_unconfirmed";
+    case PEP_ct_OTR_unconfirmed: return "OTR_unconfirmed";
+    case PEP_ct_unconfirmed_enc_anon: return "unconfirmed_enc_anon";
+    case PEP_ct_pEp_unconfirmed: return "pEp_unconfirmed";
+    case PEP_ct_confirmed: return "confirmed";
+    case PEP_ct_confirmed_encryption: return "confirmed_encryption";
+    case PEP_ct_OpenPGP_weak: return "OpenPGP_weak";
+    case PEP_ct_to_be_checked_confirmed: return "to_be_checked_confirmed";
+    case PEP_ct_SMIME: return "SMIME";
+    case PEP_ct_CMS: return "CMS";
+    case PEP_ct_strong_encryption: return "strong_encryption";
+    case PEP_ct_OpenPGP: return "OpenPGP";
+    case PEP_ct_OTR: return "OTR";
+    case PEP_ct_confirmed_enc_anon: return "confirmed_enc_anon";
+    case PEP_ct_pEp: return "pEp";
+    default: return "invalid comm type";
     }
 }
 
