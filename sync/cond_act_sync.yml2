@@ -20,35 +20,35 @@ condition deviceGrouped {
 
 condition weAreFirst
 ||
-    TID_t *t1 = &session->sync_state.keysync.challenge;
-    TID_t *t2 = &session->own_sync_state.challenge;
+    TID_t *t1 = &session->sync_state.keysync_buf.challenge;
+    TID_t *t2 = &session->sync_state.own.challenge;
 
     *result = _TID_greater(t1, t2);
 ||
 
 condition partnerIsGrouped
-|> *result = session->sync_state.keysync.is_group;
+|> *result = session->sync_state.keysync_buf.is_group;
 
 condition challengeAccepted
 ||
-    TID_t *t1 = &session->sync_state.keysync.challenge;
-    TID_t *t2 = &session->own_sync_state.challenge;
+    TID_t *t1 = &session->sync_state.keysync_buf.challenge;
+    TID_t *t2 = &session->sync_state.own.challenge;
 
     *result = t1->size == t2->size && memcmp(t1->buf, t2->buf, t1->size) == 0;
 ||
 
 condition sameChallenge
 ||
-    TID_t *t1 = &session->sync_state.keysync.challenge;
-    TID_t *t2 = &session->own_sync_state.challenge;
+    TID_t *t1 = &session->sync_state.keysync_buf.challenge;
+    TID_t *t2 = &session->sync_state.own.challenge;
 
     *result = t1->size == t2->size && memcmp(t1->buf, t2->buf, t1->size) == 0;
 ||
 
 condition sameTransaction
 ||
-    TID_t *t1 = &session->sync_state.keysync.negotiation;
-    TID_t *t2 = &session->own_sync_state.negotiation;
+    TID_t *t1 = &session->sync_state.keysync_buf.negotiation;
+    TID_t *t2 = &session->sync_state.own.negotiation;
 
     // test if TID is identical
     *result = t1->size == t2->size && memcmp(t1->buf, t2->buf, t1->size) == 0;
@@ -56,11 +56,11 @@ condition sameTransaction
 
 condition sameTransactionAndPartner
 ||
-    TID_t *t1 = &session->sync_state.keysync.negotiation;
-    TID_t *t2 = &session->own_sync_state.negotiation;
+    TID_t *t1 = &session->sync_state.keysync_buf.negotiation;
+    TID_t *t2 = &session->sync_state.own.negotiation;
 
     const char *s1 = session->sync_state.comm_partner.signature_fpr;
-    const char *s2 = session->own_sync_state.signature_fpr;
+    const char *s2 = session->sync_state.own.signature_fpr;
 
     // test if TID is identical
     *result = t1->size == t2->size && memcmp(t1->buf, t2->buf, t1->size) == 0
@@ -143,73 +143,68 @@ function "xor_UUID" {
 
 action newChallenge {
     // random new challenge
-    call "new_UUID" with "dst" > &session->own_sync_state.challenge
-    // store a copy of this challenge
-    call "copy_UUID" {
-        with "src" > &session->own_sync_state.challenge
-        with "dst" > &session->sync_state.temp.challenge
-    }
+    call "new_UUID" with "dst" > &session->sync_state.own.challenge
 }
 
 action replyChallenge call "copy_UUID" {
-    with "src" > &session->sync_state.keysync.challenge
-    with "dst" > &session->own_sync_state.challenge
+    with "src" > &session->sync_state.keysync_buf.challenge
+    with "dst" > &session->sync_state.comm_partner.challenge
 }
 
 action useOwnChallenge call "copy_UUID" {
-    with "src" > &session->sync_state.temp.challenge
-    with "dst" > &session->own_sync_state.challenge
+    with "src" > &session->sync_state.own.challenge
+    with "dst" > &session->sync_state.keysync_buf.challenge
 }
 
 action newTransaction {
 ||
     // sender key must be stable while transaction
     assert(session->sync_state.comm_partner.signature_fpr);
-    free(session->own_sync_state.signature_fpr);
-    session->own_sync_state.signature_fpr
+    free(session->sync_state.own.signature_fpr);
+    session->sync_state.own.signature_fpr
             = strdup(session->sync_state.comm_partner.signature_fpr);
-    assert(session->own_sync_state.signature_fpr);
-    if (!session->own_sync_state.signature_fpr)
+    assert(session->sync_state.own.signature_fpr);
+    if (!session->sync_state.own.signature_fpr)
         return PEP_OUT_OF_MEMORY;
 
 ||
     call "copy_UUID" {
-        with "src" > &session->sync_state.keysync.challenge
-        with "dst" > &session->sync_state.keysync.negotiation
+        with "src" > &session->sync_state.keysync_buf.challenge
+        with "dst" > &session->sync_state.keysync_buf.negotiation
     }
     call "xor_UUID" {
-        with "src" > &session->own_sync_state.challenge
-        with "dst" > &session->sync_state.keysync.negotiation
+        with "src" > &session->sync_state.own.challenge
+        with "dst" > &session->sync_state.keysync_buf.negotiation
     }
     call "copy_UUID" {
-        with "src" > &session->sync_state.keysync.negotiation
-        with "dst" > &session->own_sync_state.negotiation
+        with "src" > &session->sync_state.keysync_buf.negotiation
+        with "dst" > &session->sync_state.own.negotiation
     }
 }
 
 action closeTransaction
 ||
-    memset(session->sync_state.keysync.negotiation.buf, 0,
-            session->sync_state.keysync.negotiation.size);
-    memset(session->own_sync_state.negotiation.buf, 0,
-            session->own_sync_state.negotiation.size);
+    memset(session->sync_state.keysync_buf.negotiation.buf, 0,
+            session->sync_state.keysync_buf.negotiation.size);
+    memset(session->sync_state.own.negotiation.buf, 0,
+            session->sync_state.own.negotiation.size);
 ||
 
 action storeTransaction {
 ||
     // sender key must be stable while transaction
     assert(session->sync_state.comm_partner.signature_fpr);
-    free(session->own_sync_state.signature_fpr);
-    session->own_sync_state.signature_fpr
+    free(session->sync_state.own.signature_fpr);
+    session->sync_state.own.signature_fpr
             = strdup(session->sync_state.comm_partner.signature_fpr);
-    assert(session->own_sync_state.signature_fpr);
-    if (!session->own_sync_state.signature_fpr)
+    assert(session->sync_state.own.signature_fpr);
+    if (!session->sync_state.own.signature_fpr)
         return PEP_OUT_OF_MEMORY;
 
 ||
     call "copy_UUID" {
-        with "src" > &session->sync_state.keysync.negotiation
-        with "dst" > &session->own_sync_state.negotiation
+        with "src" > &session->sync_state.keysync_buf.negotiation
+        with "dst" > &session->sync_state.own.negotiation
     }
 }
 
@@ -323,22 +318,22 @@ action prepareOwnKeys
     if (status)
         return status;
 
-    if (session->own_sync_state.own_keys)
-        free_stringlist(session->own_sync_state.own_keys);
-    session->own_sync_state.own_keys = own_keys;
+    if (session->sync_state.own.keys)
+        free_stringlist(session->sync_state.own.keys);
+    session->sync_state.own.keys = own_keys;
 
     identity_list *il;
     status = _own_identities_retrieve(session, &il, PEP_idf_not_for_sync);
     if (status)
         return status;
 
-    IdentityList_from_identity_list(il, &session->sync_state.keysync.ownIdentities);
+    IdentityList_from_identity_list(il, &session->sync_state.keysync_buf.ownIdentities);
     free_identity_list(il);
 ||
 
 action saveGroupKeys
 ||
-    identity_list *il = IdentityList_to_identity_list(&session->sync_state.keysync.ownIdentities, NULL);
+    identity_list *il = IdentityList_to_identity_list(&session->sync_state.keysync_buf.ownIdentities, NULL);
     if (!il)
         return PEP_OUT_OF_MEMORY;
     
@@ -359,7 +354,7 @@ action ownKeysAreGroupKeys
     PEP_STATUS status = PEP_STATUS_OK;
 
     // set flag for current keys
-    for (identity_list *il = session->own_sync_state.own_identities; il && il->ident ; il = il->next) {
+    for (identity_list *il = session->sync_state.own.identities; il && il->ident ; il = il->next) {
         if (!(il->ident->flags && PEP_idf_not_for_sync)) {
             status = set_identity_flags(session, il->ident, PEP_idf_devicegroup);
             if (status)
@@ -373,7 +368,7 @@ action receivedKeysAreGroupKeys
     PEP_STATUS status = PEP_STATUS_OK;
 
     // set flag for current keys
-    for (identity_list *il = session->own_sync_state.own_identities; il && il->ident ; il = il->next) {
+    for (identity_list *il = session->sync_state.own.identities; il && il->ident ; il = il->next) {
         if (!(il->ident->flags && PEP_idf_not_for_sync)) {
             status = set_identity_flags(session, il->ident, PEP_idf_devicegroup);
             if (status)
@@ -381,11 +376,11 @@ action receivedKeysAreGroupKeys
         }
     }
 
-    identity_list *il = IdentityList_to_identity_list(&session->sync_state.keysync.ownIdentities, NULL);
+    identity_list *il = IdentityList_to_identity_list(&session->sync_state.keysync_buf.ownIdentities, NULL);
     if (!il)
         return PEP_OUT_OF_MEMORY;
 
-    for (il = session->own_sync_state.own_identities; il && il->ident ; il = il->next) {
+    for (il = session->sync_state.own.identities; il && il->ident ; il = il->next) {
         // replace partner's user_id with own user_id
         free(il->ident->user_id);
         il->ident->user_id = strdup(session->sync_state.comm_partner.from->user_id);
@@ -433,7 +428,7 @@ action trustThisKey
         return status;
     }
 
-    OCTET_STRING_fromBuf(&session->sync_state.keysync.key, ident->fpr, strlen(ident->fpr));
+    OCTET_STRING_fromBuf(&session->sync_state.keysync_buf.key, ident->fpr, strlen(ident->fpr));
     free_identity(ident);
 ||
 
@@ -454,17 +449,17 @@ action untrustThisKey
     if (status)
         return status;
 
-    OCTET_STRING_fromBuf(&session->sync_state.keysync.key, "", 0);
+    OCTET_STRING_fromBuf(&session->sync_state.keysync_buf.key, "", 0);
 ||
 
 action tellWeAreGrouped
 ||
-    session->sync_state.keysync.is_group = true;
+    session->sync_state.keysync_buf.is_group = true;
 ||
 
 action tellWeAreNotGrouped
 ||
-    session->sync_state.keysync.is_group = false;
+    session->sync_state.keysync_buf.is_group = false;
 ||
 
 action disable;

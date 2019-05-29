@@ -39,33 +39,35 @@ extern "C" {
 // state
 
 struct «@name»_state_s {
-    // state about our communication partner
+    // own state
+
+    struct own_«@name»_state_s {
+        stringlist_t *keys;
+        identity_list *identities;
+
+        `` if "func:distinctName(fsm/message/field[@type='TID'])" |>> // TIDs we're using ourselves
+        `` for "func:distinctName(fsm/message/field[@type='TID'])" |>> «func:ctype()» «@name»;
+    } own;
+
+    // state we learned about our communication partner
 
     struct comm_partner_state_s {
-        // transport data
+        // transport data we expect
         pEp_identity *from;
         char *signature_fpr;
+
+        // TIDs our comm partner wants to have
+        TID_t challenge;
     } comm_partner;
 
-    struct temporary_state_s {
-        // intermediate state / clipboard
-        TID_t challenge;
-    } temp;
+    // buffer for actual transport data coming in
 
+    struct transport_data_s {
+        // transport data we got
+        pEp_identity *from;
+        char *signature_fpr;
+    } transport_buf;
     `` apply "fsm", mode=state
-};
-
-// own state
-
-struct own_«@name»_state_s {
-    stringlist_t *own_keys;
-    identity_list *own_identities;
-
-    `` if "func:distinctName(fsm/message/field[@type='TID'])" |> // active TIDs
-    `` for "func:distinctName(fsm/message/field[@type='TID'])" |> «func:ctype()» «@name»;
-
-    // transport data
-    char *signature_fpr;
 };
 
 void free_«@name»_state(PEP_SESSION session);
@@ -95,7 +97,7 @@ struct _«@name»_state_s {
     int state;
 
     `` for "func:distinctName(message/field)" |> «func:ctype()» «@name»;
-} «yml:lcase(@name)»;
+} «yml:lcase(@name)»_buf;
 ||
 
 template "protocol", mode=impl
