@@ -1572,7 +1572,7 @@ bool import_attached_keys(
 PEP_STATUS _attach_key(PEP_SESSION session, const char* fpr, message *msg)
 {
     char *keydata = NULL;
-    size_t size;
+    size_t size = 0;
 
     PEP_STATUS status = export_key(session, fpr, &keydata, &size);
     assert(status == PEP_STATUS_OK);
@@ -1580,7 +1580,7 @@ PEP_STATUS _attach_key(PEP_SESSION session, const char* fpr, message *msg)
         return status;
     assert(size);
 
-     bloblist_t *bl = bloblist_add(msg->attachments, keydata, size, "application/pgp-keys",
+    bloblist_t *bl = bloblist_add(msg->attachments, keydata, size, "application/pgp-keys",
                       "file://pEpkey.asc");
 
     if (msg->attachments == NULL && bl)
@@ -3898,8 +3898,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         if (!tmpstatus && size && data) {
             if (sync_fpr)
                 signal_Sync_message(session, *rating, data, size, msg->from, sync_fpr);
-            else
-                signal_Sync_message(session, *rating, data, size, msg->from, NULL);
+            else if (*keylist)
+                signal_Sync_message(session, *rating, data, size, msg->from, (*keylist)->value);
         }
         free(sync_fpr);
     }
