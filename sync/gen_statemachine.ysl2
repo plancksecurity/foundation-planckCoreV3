@@ -335,6 +335,13 @@ tstylesheet {
                 if (!(session && data && size))
                     return PEP_ILLEGAL_VALUE;
 
+                // FIXME: this will go wrong if MAC is used instead of Signature
+                if (from && from->fpr && signature_fpr) {
+                    // ignore own messages
+                    if (strcmp(from->fpr, signature_fpr) == 0)
+                        return PEP_STATUS_OK;
+                }
+
                 if (!session->inject_«yml:lcase(@name)»_event)
                    return PEP_«yml:ucase(@name)»_NO_INJECT_CALLBACK;
 

@@ -812,8 +812,11 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
                  
             }
             else {
-                const char* split = strstr(uid_value, "<");
-                if (split != uid_value) {       
+                // Ok, asan gets really pissed at us using this string directly, SO...
+                char* uid_copy = calloc(uid_value_len + 1, 1);
+                strlcpy(uid_copy, uid_value, uid_value_len);
+                const char* split = strstr(uid_copy, "<");
+                if (split != uid_copy) {       
                     while (split) {
                         if (isspace(*(split - 1)))
                             break;
@@ -840,9 +843,10 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
                     else  
                         split = NULL;
                 }
-                if (split == NULL) {
-                    email = strdup(uid_value);
-                }
+                if (split == NULL)
+                    email = uid_copy;
+                else 
+                    free(uid_copy);
             }
         }
         
@@ -1652,6 +1656,11 @@ PEP_STATUS pgp_sign_only(
     if (write_status != 0)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Encrypting message");
 
+    pgp_status_t pgp_status = pgp_writer_stack_finalize (&err, ws);
+    ws = NULL;
+    if (pgp_status != 0)
+        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Flushing writer");
+
     // Add a terminating NUL for naive users
     void *t = realloc(*stext, *ssize + 1);
     if (! t)
@@ -1660,13 +1669,6 @@ PEP_STATUS pgp_sign_only(
     (*stext)[*ssize] = 0;
 
  out:
-    if (ws) {
-        pgp_status_t pgp_status = pgp_writer_stack_finalize (&err, ws);
-        ws = NULL;
-        if (pgp_status != 0)
-            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Flushing writer");
-    }
-
     if (signer)
         pgp_signer_free (signer);
     if (signing_keypair)
@@ -1772,21 +1774,22 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     if (write_status != 0)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Encrypting message");
 
+    pgp_status_t pgp_status = pgp_writer_stack_finalize (&err, ws);
+    ws = NULL;
+    if (pgp_status != 0)
+        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Flushing writer");
+
     // Add a terminating NUL for naive users
     void *t = realloc(*ctext, *csize + 1);
-    if (! t)
+    if (! t) {
+        free(*ctext);
+        *ctext = NULL;
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
+    }
     *ctext = t;
     (*ctext)[*csize] = 0;
 
  out:
-    if (ws) {
-        pgp_status_t pgp_status = pgp_writer_stack_finalize (&err, ws);
-        ws = NULL;
-        if (pgp_status != 0)
-            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Flushing writer");
-    }
-
     if (signer)
         pgp_signer_free (signer);
     if (signing_keypair)
@@ -2050,6 +2053,7 @@ PEP_STATUS pgp_export_keydata(
     pgp_error_t err = NULL;
     pgp_tpk_t tpk = NULL;
     pgp_writer_t armor_writer = NULL;
+    pgp_writer_t memory_writer = NULL;
 
     assert(session);
     assert(fpr);
@@ -2066,13 +2070,12 @@ PEP_STATUS pgp_export_keydata(
     status = tpk_find_by_fpr_hex(session, fpr, secret, &tpk, NULL);
     ERROR_OUT(NULL, status, "Looking up TSK for %s", fpr);
 
-    pgp_writer_t memory_writer = pgp_writer_alloc((void **) key_data, size);
+    memory_writer = pgp_writer_alloc((void **) key_data, size);
     if (! memory_writer)
         ERROR_OUT(NULL, PEP_UNKNOWN_ERROR, "creating memory writer");
     armor_writer = pgp_armor_writer_new(&err, memory_writer,
                                         PGP_ARMOR_KIND_PUBLICKEY, NULL, 0);
     if (! armor_writer) {
-        pgp_writer_free(memory_writer);
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "creating armored writer");
     }
 
@@ -2090,9 +2093,20 @@ PEP_STATUS pgp_export_keydata(
     if (armor_writer)
         pgp_writer_free(armor_writer);
 
+    if (memory_writer) {
+        if (status == PEP_STATUS_OK) {
+            // Add a trailing NUL.
+            pgp_writer_write(NULL, memory_writer, (const uint8_t *) "", 1);
+        }
+
+        pgp_writer_free(memory_writer);
+    }
+
     if (tpk)
         pgp_tpk_free(tpk);
 
+    (*size)--;  // Sequoia is delivering the 0 byte at the end with size, but
+                // pEp is expecting it without
     T("(%s) -> %s", fpr, pEp_status_to_string(status));
     return status;
 }
@@ -2402,7 +2416,7 @@ PEP_STATUS pgp_get_key_rating(
     if (tpk)
         pgp_tpk_free(tpk);
 
-    T("(%s) -> %s", fpr, pep_comm_type_to_string(*comm_type));
+    T("(%s) -> %s", fpr, pEp_comm_type_to_string(*comm_type));
     return status;
 }
 
@@ -2664,4 +2678,3 @@ PEP_STATUS pgp_contains_priv_key(PEP_SESSION session, const char *fpr,
       fpr, *has_private ? "priv" : "pub", pEp_status_to_string(status));
     return status;
 }
-
