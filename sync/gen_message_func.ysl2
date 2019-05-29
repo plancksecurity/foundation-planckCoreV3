@@ -42,13 +42,16 @@ struct «@name»_state_s {
     // state about our communication partner
 
     struct comm_partner_state_s {
-        // intermediate store own challenge
-        TID_t challenge;
-
         // transport data
         pEp_identity *from;
         char *signature_fpr;
     } comm_partner;
+
+    struct temporary_state_s {
+        // intermediate state / clipboard
+        TID_t challenge;
+    } temp;
+
     `` apply "fsm", mode=state
 };
 

@@ -147,7 +147,7 @@ action newChallenge {
     // store a copy of this challenge
     call "copy_UUID" {
         with "src" > &session->own_sync_state.challenge
-        with "dst" > &session->sync_state.comm_partner.challenge
+        with "dst" > &session->sync_state.temp.challenge
     }
 }
 
@@ -157,7 +157,7 @@ action replyChallenge call "copy_UUID" {
 }
 
 action useOwnChallenge call "copy_UUID" {
-    with "src" > &session->sync_state.comm_partner.challenge
+    with "src" > &session->sync_state.temp.challenge
     with "dst" > &session->own_sync_state.challenge
 }
 
