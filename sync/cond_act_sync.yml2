@@ -174,7 +174,6 @@ action openNegotiation {
     if (!session->sync_state.comm_partner.sender_fpr)
         return PEP_OUT_OF_MEMORY;
 
-||
     // we need a unique TID for the Negotiation with each single comm_partner
     // we identify the comm_partners by their Challenge
     // we derive the actual Negotiation TID by having random data and XORing it
@@ -182,21 +181,26 @@ action openNegotiation {
 
     // copy Negotiation base into buffer
 
+||
     call "copy_UUID" {
         with "src" > &session->sync_state.own.negotiation
         with "dst" > &session->sync_state.keysync.negotiation
     }
+||
 
     // we're XORing this with the challenge of the comm_partner, which is in
     // the buffer already
 
+||
     call "xor_UUID" {
         with "src" > &session->sync_state.keysync.challenge
         with "dst" > &session->sync_state.keysync.negotiation
     }
+||
 
     // this is the Negotiation's TID for this comm_partner
 
+||
     call "copy_UUID" {
         with "src" > &session->sync_state.keysync.negotiation
         with "dst" > &session->sync_state.comm_partner.negotiation
