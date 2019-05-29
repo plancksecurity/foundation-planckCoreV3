@@ -2403,7 +2403,7 @@ DYNAMIC_API PEP_STATUS get_identity(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    static pEp_identity *_identity;
+    pEp_identity *_identity = NULL;
 
     assert(session);
     assert(address);
@@ -2614,7 +2614,7 @@ PEP_STATUS get_identity_without_trust_check(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    static pEp_identity *_identity;
+    pEp_identity *_identity = NULL;
 
     assert(session);
     assert(address);
@@ -5084,4 +5084,3 @@ DYNAMIC_API void _service_error_log(PEP_SESSION session, const char *entity,
 #endif
     log_service(session, "### service error log ###", entity, buffer, where);
 }
-
