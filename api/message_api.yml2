@@ -48,10 +48,10 @@ enum ratings {
     
 
 enum colors {
-        item color_no_color 0;
-        item color_yellow 1;
-        item color_green 2;
-        item color_red -1;
+    item color_no_color 0;
+    item color_yellow 1;
+    item color_green 2;
+    item color_red -1;
 }
 
 
@@ -262,9 +262,10 @@ protocol session {
                 """;
             flag decrypt_flag_untrusted_server 0x100 
             doc="""
-                input flags. Used to signal that decrypt function should engage in behaviour
+                input flag. Used to signal that decrypt function should engage in behaviour
                 specified for when the server storing the source is untrusted.
                 """;
+            flag decrypt_flag_dont_trigger_sync 0x200 
         }
 
     // exceptions
@@ -413,7 +414,7 @@ protocol session {
 
     use identity received_by doc="identity for account receiving message can't be empty";
 
-    use ISO639_1 lang doc="C string with ISO 639-1 language code";
+    use ISO639_1 lang doc="string with ISO 639-1 language code";
 
     create string words
         doc="""
