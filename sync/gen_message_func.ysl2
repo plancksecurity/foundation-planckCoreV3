@@ -53,8 +53,7 @@ struct «@name»_state_s {
 
     struct comm_partner_state_s {
         // transport data we expect
-        pEp_identity *from;
-        char *signature_fpr;
+        char *sender_fpr;
 
         // TIDs our comm partner wants to have
         `` for "func:distinctName(fsm/message/field[@type='TID'])" |>> «func:ctype()» «@name»;
@@ -65,7 +64,7 @@ struct «@name»_state_s {
     struct transport_data_s {
         // transport data we got
         pEp_identity *from;
-        char *signature_fpr;
+        char *sender_fpr;
     } transport;
     `` apply "fsm", mode=state
 };
@@ -133,10 +132,8 @@ void free_«@name»_state(PEP_SESSION session)
 
     // state we learned about our communication partner
 
-    free_identity(session->«yml:lcase(@name)»_state.comm_partner.from);
-    session->«yml:lcase(@name)»_state.comm_partner.from = NULL;
-    free(session->«yml:lcase(@name)»_state.comm_partner.signature_fpr);
-    session->«yml:lcase(@name)»_state.comm_partner.signature_fpr = NULL;
+    free(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr);
+    session->«yml:lcase(@name)»_state.comm_partner.sender_fpr = NULL;
 
     // TIDs our comm partner wants to have
 ||
@@ -148,8 +145,8 @@ void free_«@name»_state(PEP_SESSION session)
 
     free_identity(session->«yml:lcase(@name)»_state.transport.from);
     session->«yml:lcase(@name)»_state.transport.from = NULL;
-    free(session->«yml:lcase(@name)»_state.transport.signature_fpr);
-    session->«yml:lcase(@name)»_state.transport.signature_fpr = NULL;
+    free(session->«yml:lcase(@name)»_state.transport.sender_fpr);
+    session->«yml:lcase(@name)»_state.transport.sender_fpr = NULL;
 
     // message buffers
 
