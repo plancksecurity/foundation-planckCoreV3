@@ -808,14 +808,14 @@ tstylesheet {
                 // update transport data
 
                 if (ev->from) {
-                    free_identity(session->«yml:lcase(@name)»_state.comm_partner.from);
-                    session->«yml:lcase(@name)»_state.comm_partner.from = ev->from;
+                    free_identity(session->«yml:lcase(@name)»_state.transport.from);
+                    session->«yml:lcase(@name)»_state.transport.from = ev->from;
                     ev->from = NULL;
                 }
 
                 if (ev->signature_fpr) {
-                    free(session->«yml:lcase(@name)»_state.comm_partner.signature_fpr);
-                    session->«yml:lcase(@name)»_state.comm_partner.signature_fpr = ev->signature_fpr;
+                    free(session->«yml:lcase(@name)»_state.transport.signature_fpr);
+                    session->«yml:lcase(@name)»_state.transport.signature_fpr = ev->signature_fpr;
                     ev->signature_fpr = NULL;
                 }
 
