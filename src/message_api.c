@@ -1534,7 +1534,7 @@ bool import_attached_keys(
 PEP_STATUS _attach_key(PEP_SESSION session, const char* fpr, message *msg)
 {
     char *keydata = NULL;
-    size_t size;
+    size_t size = 0;
 
     PEP_STATUS status = export_key(session, fpr, &keydata, &size);
     assert(status == PEP_STATUS_OK);
@@ -1542,7 +1542,7 @@ PEP_STATUS _attach_key(PEP_SESSION session, const char* fpr, message *msg)
         return status;
     assert(size);
 
-     bloblist_t *bl = bloblist_add(msg->attachments, keydata, size, "application/pgp-keys",
+    bloblist_t *bl = bloblist_add(msg->attachments, keydata, size, "application/pgp-keys",
                       "file://pEpkey.asc");
 
     if (msg->attachments == NULL && bl)
@@ -4236,7 +4236,7 @@ static char xor_hex_chars(char a, char b) {
     return num_to_asciihex(xor_num);
 }
 
-static char* skip_separators(char* current, char* begin) {
+static const char* skip_separators(const char* current, const char* begin) {
     while (current >= begin) {
         /* .:,;-_ ' ' - [2c-2e] [3a-3b] [20] [5f] */
         char check_char = *current;
@@ -4274,71 +4274,73 @@ PEP_STATUS check_for_zero_fpr(char* fpr) {
 }
 
 DYNAMIC_API PEP_STATUS get_trustwords(
-    PEP_SESSION session, const pEp_identity* id1, const pEp_identity* id2,
-    const char* lang, char **words, size_t *wsize, bool full
-)
+        PEP_SESSION session, const pEp_identity* id1, const pEp_identity* id2,
+        const char* lang, char **words, size_t *wsize, bool full
+    )
 {
-    assert(session);
-    assert(id1);
-    assert(id2);
-    assert(id1->fpr);
-    assert(id2->fpr);
-    assert(words);
-    assert(wsize);
-
-    int SHORT_NUM_TWORDS = 5; 
-    
-    PEP_STATUS status = PEP_STATUS_OK;
-    
-    if (!(session && id1 && id2 && words && wsize) ||
-        !(id1->fpr) || (!id2->fpr))
+    assert(session && id1 && id1->fpr && id2 && id2->fpr&& lang && words &&
+            wsize);
+    if (!(session && id1 && id1->fpr && id2 && id2->fpr&& lang && words &&
+                wsize))
         return PEP_ILLEGAL_VALUE;
 
-    char *source1 = id1->fpr;
-    char *source2 = id2->fpr;
+    return get_trustwords_for_fprs(session, id1->fpr, id2->fpr, lang, words,
+            wsize, full);
+}
 
-    int source1_len = strlen(source1);
-    int source2_len = strlen(source2);
-    int max_len;
-        
+DYNAMIC_API PEP_STATUS get_trustwords_for_fprs(
+        PEP_SESSION session, const char* fpr1, const char* fpr2,
+        const char* lang, char **words, size_t *wsize, bool full
+    )
+{
+    assert(session && fpr1 && fpr2 && words && wsize);
+    if (!(session && fpr1 && fpr2 && words && wsize))
+        return PEP_ILLEGAL_VALUE;
+
+    const int SHORT_NUM_TWORDS = 5; 
+    PEP_STATUS status = PEP_STATUS_OK;
+    
     *words = NULL;    
     *wsize = 0;
 
-    max_len = (source1_len > source2_len ? source1_len : source2_len);
+    int fpr1_len = strlen(fpr1);
+    int fpr2_len = strlen(fpr2);
+        
+    int max_len = (fpr1_len > fpr2_len ? fpr1_len : fpr2_len);
     
     char* XORed_fpr = (char*)(calloc(max_len + 1, 1));
     *(XORed_fpr + max_len) = '\0';
     char* result_curr = XORed_fpr + max_len - 1;
-    char* source1_curr = source1 + source1_len - 1;
-    char* source2_curr = source2 + source2_len - 1;
+    const char* fpr1_curr = fpr1 + fpr1_len - 1;
+    const char* fpr2_curr = fpr2 + fpr2_len - 1;
 
-    while (source1 <= source1_curr && source2 <= source2_curr) {
-        source1_curr = skip_separators(source1_curr, source1);
-        source2_curr = skip_separators(source2_curr, source2);
+    while (fpr1 <= fpr1_curr && fpr2 <= fpr2_curr) {
+        fpr1_curr = skip_separators(fpr1_curr, fpr1);
+        fpr2_curr = skip_separators(fpr2_curr, fpr2);
         
-        if (source1_curr < source1 || source2_curr < source2)
+        if (fpr1_curr < fpr1 || fpr2_curr < fpr2)
             break;
             
-        char xor_hex = xor_hex_chars(*source1_curr, *source2_curr);
+        char xor_hex = xor_hex_chars(*fpr1_curr, *fpr2_curr);
         if (xor_hex == '\0') {
             status = PEP_ILLEGAL_VALUE;
             goto error_release;
         }
         
         *result_curr = xor_hex;
-        result_curr--; source1_curr--; source2_curr--;
+        result_curr--; fpr1_curr--; fpr2_curr--;
     }
 
-    char* remainder_start = NULL;
-    char* remainder_curr = NULL;
+    const char* remainder_start = NULL;
+    const char* remainder_curr = NULL;
     
-    if (source1 <= source1_curr) {
-        remainder_start = source1;
-        remainder_curr = source1_curr;
+    if (fpr1 <= fpr1_curr) {
+        remainder_start = fpr1;
+        remainder_curr = fpr1_curr;
     }
-    else if (source2 <= source2_curr) {
-        remainder_start = source2;
-        remainder_curr = source2_curr;
+    else if (fpr2 <= fpr2_curr) {
+        remainder_start = fpr2;
+        remainder_curr = fpr2_curr;
     }
     if (remainder_curr) {
         while (remainder_start <= remainder_curr) {

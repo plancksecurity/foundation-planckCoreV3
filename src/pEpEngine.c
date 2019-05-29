@@ -2017,32 +2017,31 @@ DYNAMIC_API PEP_STATUS log_event(
 #if !defined(NDEBUG) && !defined(_PEP_SERVICE_LOG_OFF)
     fprintf(stdout, "\n*** %s %s %s %s\n", title, entity, description, comment);
     session->service_log = true;
-#endif
 
-    // PEP_STATUS status = PEP_STATUS_OK;
-    // int result;
-    // 
-    // assert(session);
-    // assert(title);
-    // assert(entity);
-    // 
-    // if (!(session && title && entity))
-    //     return PEP_ILLEGAL_VALUE;
-    // 
-    // sqlite3_reset(session->log);
-    // sqlite3_bind_text(session->log, 1, title, -1, SQLITE_STATIC);
-    // sqlite3_bind_text(session->log, 2, entity, -1, SQLITE_STATIC);
-    // if (description)
-    //     sqlite3_bind_text(session->log, 3, description, -1, SQLITE_STATIC);
-    // else
-    //     sqlite3_bind_null(session->log, 3);
-    // if (comment)
-    //     sqlite3_bind_text(session->log, 4, comment, -1, SQLITE_STATIC);
-    // else
-    //     sqlite3_bind_null(session->log, 4);
-    // result = Sqlite3_step(session->log);
-    // sqlite3_reset(session->log);
-    // 
+    int result;
+    
+    assert(session);
+    assert(title);
+    assert(entity);
+    
+    if (!(session && title && entity))
+        return PEP_ILLEGAL_VALUE;
+    
+    sqlite3_reset(session->log);
+    sqlite3_bind_text(session->log, 1, title, -1, SQLITE_STATIC);
+    sqlite3_bind_text(session->log, 2, entity, -1, SQLITE_STATIC);
+    if (description)
+        sqlite3_bind_text(session->log, 3, description, -1, SQLITE_STATIC);
+    else
+        sqlite3_bind_null(session->log, 3);
+    if (comment)
+        sqlite3_bind_text(session->log, 4, comment, -1, SQLITE_STATIC);
+    else
+        sqlite3_bind_null(session->log, 4);
+    result = Sqlite3_step(session->log);
+    sqlite3_reset(session->log);
+    
+#endif
     return PEP_STATUS_OK; // We ignore errors for this function.
 }
 
@@ -2404,7 +2403,7 @@ DYNAMIC_API PEP_STATUS get_identity(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    static pEp_identity *_identity;
+    pEp_identity *_identity = NULL;
 
     assert(session);
     assert(address);
@@ -2615,7 +2614,7 @@ PEP_STATUS get_identity_without_trust_check(
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    static pEp_identity *_identity;
+    pEp_identity *_identity = NULL;
 
     assert(session);
     assert(address);
@@ -5071,3 +5070,17 @@ DYNAMIC_API void clear_errorstack(PEP_SESSION session)
 }
 
 #endif
+
+DYNAMIC_API void _service_error_log(PEP_SESSION session, const char *entity,
+        PEP_STATUS status, const char *where)
+{
+    char buffer[128];
+    static const size_t size = 127;
+    memset(buffer, 0, size+1);
+#ifdef PEP_STATUS_TO_STRING
+    snprintf(buffer, size, "%s %.4x", pEp_status_to_string(status), status);
+#else
+    snprintf(buffer, size, "error %.4x", status);
+#endif
+    log_service(session, "### service error log ###", entity, buffer, where);
+}

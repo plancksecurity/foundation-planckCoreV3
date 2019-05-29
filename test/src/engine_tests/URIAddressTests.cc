@@ -40,7 +40,9 @@ void URIAddressTests::check_uri_address_genkey() {
     status = export_key(session, me->fpr, 
                         &keydata, &keysize);
 
-    cout << keydata << endl;
+    TEST_ASSERT(keydata && keysize > 0);
+    // no guarantee of NUL-termination atm.
+//    cout << keydata << endl;
 
     free(keydata);
     free_identity(me);
