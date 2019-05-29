@@ -59,7 +59,7 @@ condition sameTransactionAndPartner
     TID_t *t1 = &session->sync_state.keysync.negotiation;
     TID_t *t2 = &session->own_sync_state.negotiation;
 
-    const char *s1 = session->sync_state.common.signature_fpr;
+    const char *s1 = session->sync_state.comm_partner.signature_fpr;
     const char *s2 = session->own_sync_state.signature_fpr;
 
     // test if TID is identical
@@ -70,8 +70,8 @@ condition sameTransactionAndPartner
 
 condition keyElectionWon
 ||
-    pEp_identity *from = session->sync_state.common.from;
-    char *signature_fpr = session->sync_state.common.signature_fpr;
+    pEp_identity *from = session->sync_state.comm_partner.from;
+    char *signature_fpr = session->sync_state.comm_partner.signature_fpr;
 
     assert(from && from->address && from->address[0] && from->user_id &&
             from->user_id[0]);
@@ -147,7 +147,7 @@ action newChallenge {
     // store a copy of this challenge
     call "copy_UUID" {
         with "src" > &session->own_sync_state.challenge
-        with "dst" > &session->sync_state.common.challenge
+        with "dst" > &session->sync_state.comm_partner.challenge
     }
 }
 
@@ -157,17 +157,17 @@ action replyChallenge call "copy_UUID" {
 }
 
 action useOwnChallenge call "copy_UUID" {
-    with "src" > &session->sync_state.common.challenge
+    with "src" > &session->sync_state.comm_partner.challenge
     with "dst" > &session->own_sync_state.challenge
 }
 
 action newTransaction {
 ||
     // sender key must be stable while transaction
-    assert(session->sync_state.common.signature_fpr);
+    assert(session->sync_state.comm_partner.signature_fpr);
     free(session->own_sync_state.signature_fpr);
     session->own_sync_state.signature_fpr
-            = strdup(session->sync_state.common.signature_fpr);
+            = strdup(session->sync_state.comm_partner.signature_fpr);
     assert(session->own_sync_state.signature_fpr);
     if (!session->own_sync_state.signature_fpr)
         return PEP_OUT_OF_MEMORY;
@@ -198,10 +198,10 @@ action closeTransaction
 action storeTransaction {
 ||
     // sender key must be stable while transaction
-    assert(session->sync_state.common.signature_fpr);
+    assert(session->sync_state.comm_partner.signature_fpr);
     free(session->own_sync_state.signature_fpr);
     session->own_sync_state.signature_fpr
-            = strdup(session->sync_state.common.signature_fpr);
+            = strdup(session->sync_state.comm_partner.signature_fpr);
     assert(session->own_sync_state.signature_fpr);
     if (!session->own_sync_state.signature_fpr)
         return PEP_OUT_OF_MEMORY;
@@ -239,11 +239,11 @@ function "show_handshake" {
     ||
     otherwise
     ||
-        assert(session->sync_state.common.from);
-        if (!session->sync_state.common.from)
+        assert(session->sync_state.comm_partner.from);
+        if (!session->sync_state.comm_partner.from)
             return PEP_ILLEGAL_VALUE;
 
-        pEp_identity *from = session->sync_state.common.from;
+        pEp_identity *from = session->sync_state.comm_partner.from;
         pEp_identity *me = NULL;
         PEP_STATUS status = get_identity(session, from->address, from->user_id, &me);
         assert(status == PEP_STATUS_OK);
@@ -262,10 +262,10 @@ function "show_handshake" {
             return PEP_OUT_OF_MEMORY;
         }
 
-        assert(session->sync_state.common.signature_fpr);
-        if (session->sync_state.common.signature_fpr) {
+        assert(session->sync_state.comm_partner.signature_fpr);
+        if (session->sync_state.comm_partner.signature_fpr) {
             free(partner->fpr);
-            partner->fpr = strdup(session->sync_state.common.signature_fpr);
+            partner->fpr = strdup(session->sync_state.comm_partner.signature_fpr);
             if (!partner->fpr) {
                 free_identity(me);
                 free_identity(partner);
@@ -388,7 +388,7 @@ action receivedKeysAreGroupKeys
     for (il = session->own_sync_state.own_identities; il && il->ident ; il = il->next) {
         // replace partner's user_id with own user_id
         free(il->ident->user_id);
-        il->ident->user_id = strdup(session->sync_state.common.from->user_id);
+        il->ident->user_id = strdup(session->sync_state.comm_partner.from->user_id);
         if (!il->ident->user_id) {
             free_identity_list(il);
             return PEP_OUT_OF_MEMORY;
@@ -412,15 +412,15 @@ action receivedKeysAreGroupKeys
 
 action trustThisKey
 ||
-    assert(session->sync_state.common.from && session->sync_state.common.signature_fpr);
-    if (!(session->sync_state.common.from && session->sync_state.common.signature_fpr))
+    assert(session->sync_state.comm_partner.from && session->sync_state.comm_partner.signature_fpr);
+    if (!(session->sync_state.comm_partner.from && session->sync_state.comm_partner.signature_fpr))
         return PEP_ILLEGAL_VALUE;
 
-    pEp_identity *ident = identity_dup(session->sync_state.common.from);
+    pEp_identity *ident = identity_dup(session->sync_state.comm_partner.from);
     if (!ident)
         return PEP_OUT_OF_MEMORY;
     free(ident->fpr);
-    ident->fpr = strdup(session->sync_state.common.signature_fpr);
+    ident->fpr = strdup(session->sync_state.comm_partner.signature_fpr);
     assert(ident->fpr);
     if (!ident->fpr) {
         free_identity(ident);
@@ -439,13 +439,13 @@ action trustThisKey
 
 action untrustThisKey
 ||
-    assert(session->sync_state.common.from && session->sync_state.common.signature_fpr);
-    if (!(session->sync_state.common.from && session->sync_state.common.signature_fpr))
+    assert(session->sync_state.comm_partner.from && session->sync_state.comm_partner.signature_fpr);
+    if (!(session->sync_state.comm_partner.from && session->sync_state.comm_partner.signature_fpr))
         return PEP_ILLEGAL_VALUE;
 
-    pEp_identity *ident = session->sync_state.common.from;
+    pEp_identity *ident = session->sync_state.comm_partner.from;
     free(ident->fpr);
-    ident->fpr = strdup(session->sync_state.common.signature_fpr);
+    ident->fpr = strdup(session->sync_state.comm_partner.signature_fpr);
     assert(ident->fpr);
     if (!ident->fpr)
         return PEP_OUT_OF_MEMORY;

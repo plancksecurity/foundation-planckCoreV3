@@ -447,8 +447,8 @@ tstylesheet {
 
                     // these go anycast; previously used address is sticky (unicast)
                     `` for "fsm/message[@type='anycast']" |>> case «../@name»_PR_«yml:mixedCase(@name)»:
-                        if (!session->«yml:lcase(@name)»_state.common.from `> |`|
-                            (session->«yml:lcase(@name)»_state.common.from->flags &
+                        if (!session->«yml:lcase(@name)»_state.comm_partner.from `> |`|
+                            (session->«yml:lcase(@name)»_state.comm_partner.from->flags &
                             PEP_idf_not_for_«yml:lcase(@name)»)) {
 
                             // no address available yet, try to find one
@@ -468,7 +468,7 @@ tstylesheet {
                             }
                         }
                         else {
-                            pEp_identity *channel = identity_dup(session->«yml:lcase(@name)»_state.common.from);
+                            pEp_identity *channel = identity_dup(session->«yml:lcase(@name)»_state.comm_partner.from);
                             if (!channel) {
                                 status = PEP_OUT_OF_MEMORY;
                                 goto the_end;
@@ -521,13 +521,13 @@ tstylesheet {
                     `` for "fsm/message[@security='untrusted']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
                             // add fpr of key of comm partner
 
-                            assert(session->«yml:lcase(@name)»_state.common.signature_fpr);
-                            if (!session->«yml:lcase(@name)»_state.common.signature_fpr) {
+                            assert(session->«yml:lcase(@name)»_state.comm_partner.signature_fpr);
+                            if (!session->«yml:lcase(@name)»_state.comm_partner.signature_fpr) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
                             }
 
-                            extra = new_stringlist(session->«yml:lcase(@name)»_state.common.signature_fpr);
+                            extra = new_stringlist(session->«yml:lcase(@name)»_state.comm_partner.signature_fpr);
                             if (!extra) {
                                 status = PEP_OUT_OF_MEMORY;
                                 goto the_end;
@@ -574,11 +574,11 @@ tstylesheet {
 
                             if (transaction) {
                                 assert(session->own_«yml:lcase(@name)»_state.signature_fpr &&
-                                    session->«yml:lcase(@name)»_state.common.from &&
-                                    session->«yml:lcase(@name)»_state.common.from->user_id);
+                                    session->«yml:lcase(@name)»_state.comm_partner.from &&
+                                    session->«yml:lcase(@name)»_state.comm_partner.from->user_id);
                                 if (!(session->own_«yml:lcase(@name)»_state.signature_fpr &&
-                                        session->«yml:lcase(@name)»_state.common.from &&
-                                        session->«yml:lcase(@name)»_state.common.from->user_id))
+                                        session->«yml:lcase(@name)»_state.comm_partner.from &&
+                                        session->«yml:lcase(@name)»_state.comm_partner.from->user_id))
                                 {
                                     status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                     goto the_end;
@@ -588,7 +588,7 @@ tstylesheet {
 
                                 pEp_identity *ident = new_identity(NULL,
                                         session->own_«yml:lcase(@name)»_state.signature_fpr,
-                                        session->«yml:lcase(@name)»_state.common.from->user_id,
+                                        session->«yml:lcase(@name)»_state.comm_partner.from->user_id,
                                         NULL
                                     );
                                 if (!ident) {
@@ -808,14 +808,14 @@ tstylesheet {
                 // update transport data
 
                 if (ev->from) {
-                    free_identity(session->«yml:lcase(@name)»_state.common.from);
-                    session->«yml:lcase(@name)»_state.common.from = ev->from;
+                    free_identity(session->«yml:lcase(@name)»_state.comm_partner.from);
+                    session->«yml:lcase(@name)»_state.comm_partner.from = ev->from;
                     ev->from = NULL;
                 }
 
                 if (ev->signature_fpr) {
-                    free(session->«yml:lcase(@name)»_state.common.signature_fpr);
-                    session->«yml:lcase(@name)»_state.common.signature_fpr = ev->signature_fpr;
+                    free(session->«yml:lcase(@name)»_state.comm_partner.signature_fpr);
+                    session->«yml:lcase(@name)»_state.comm_partner.signature_fpr = ev->signature_fpr;
                     ev->signature_fpr = NULL;
                 }
 

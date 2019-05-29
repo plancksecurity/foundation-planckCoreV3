@@ -39,16 +39,16 @@ extern "C" {
 // state
 
 struct «@name»_state_s {
-    // common buffer for all types of «@name» messages
+    // state about our communication partner
 
-    struct common_state_s {
+    struct comm_partner_state_s {
         // intermediate store own challenge
         TID_t challenge;
 
         // transport data
         pEp_identity *from;
         char *signature_fpr;
-    } common;
+    } comm_partner;
     `` apply "fsm", mode=state
 };
 
@@ -113,8 +113,8 @@ void free_«@name»_state(PEP_SESSION session)
     if (!session)
         return;
 
-    free_identity(session->«yml:lcase(@name)»_state.common.from);
-    free(session->«yml:lcase(@name)»_state.common.signature_fpr);
+    free_identity(session->«yml:lcase(@name)»_state.comm_partner.from);
+    free(session->«yml:lcase(@name)»_state.comm_partner.signature_fpr);
     free_stringlist(session->own_«yml:lcase(@name)»_state.own_keys);
     free_identity_list(session->own_«yml:lcase(@name)»_state.own_identities);
     session->own_«yml:lcase(@name)»_state.own_keys = NULL;
