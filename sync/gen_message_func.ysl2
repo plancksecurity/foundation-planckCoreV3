@@ -45,7 +45,7 @@ struct «@name»_state_s {
         stringlist_t *keys;
         identity_list *identities;
 
-        `` if "func:distinctName(fsm/message/field[@type='TID'])" |>> // TIDs we're using ourselves
+        // TIDs we're using ourselves
         `` for "func:distinctName(fsm/message/field[@type='TID'])" |>> «func:ctype()» «@name»;
     } own;
 
@@ -57,7 +57,7 @@ struct «@name»_state_s {
         char *signature_fpr;
 
         // TIDs our comm partner wants to have
-        TID_t challenge;
+        `` for "func:distinctName(fsm/message/field[@type='TID'])" |>> «func:ctype()» «@name»;
     } comm_partner;
 
     // buffer for actual transport data coming in
@@ -66,7 +66,7 @@ struct «@name»_state_s {
         // transport data we got
         pEp_identity *from;
         char *signature_fpr;
-    } transport_buf;
+    } transport;
     `` apply "fsm", mode=state
 };
 
@@ -97,7 +97,7 @@ struct _«@name»_state_s {
     int state;
 
     `` for "func:distinctName(message/field)" |> «func:ctype()» «@name»;
-} «yml:lcase(@name)»_buf;
+} «yml:lcase(@name)»;
 ||
 
 template "protocol", mode=impl
@@ -118,21 +118,48 @@ void free_«@name»_state(PEP_SESSION session)
     if (!session)
         return;
 
+    // own state
+
+    free_stringlist(session->«yml:lcase(@name)»_state.own.keys);
+    session->«yml:lcase(@name)»_state.own.keys = NULL;
+    free_identity_list(session->«yml:lcase(@name)»_state.own.identities);
+    session->«yml:lcase(@name)»_state.own.identities = NULL;
+
+    // TIDs we're using ourselves
+||
+    for "func:distinctName(fsm/message/field[@type='TID'])"
+        |> ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_«@type», &session->«yml:lcase(../../../@name)»_state.own.«@name»);
+||
+
+    // state we learned about our communication partner
+
     free_identity(session->«yml:lcase(@name)»_state.comm_partner.from);
+    session->«yml:lcase(@name)»_state.comm_partner.from = NULL;
     free(session->«yml:lcase(@name)»_state.comm_partner.signature_fpr);
-    free_stringlist(session->own_«yml:lcase(@name)»_state.own_keys);
-    free_identity_list(session->own_«yml:lcase(@name)»_state.own_identities);
-    session->own_«yml:lcase(@name)»_state.own_keys = NULL;
-    session->own_«yml:lcase(@name)»_state.own_identities = NULL;
+    session->«yml:lcase(@name)»_state.comm_partner.signature_fpr = NULL;
 
+    // TIDs our comm partner wants to have
 ||
-for "fsm"
-    for "func:distinctName(message/field[not(func:basicType())])"
-        |> ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_«@type», &session->«yml:lcase(../../../@name)»_state.«yml:lcase(../../@name)».«@name»);
-for "func:distinctName(fsm/message/field[@type='TID'])"
-    |> ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_«@type», &session->own_«yml:lcase(../../../@name)»_state.«@name»);
+    for "func:distinctName(fsm/message/field[@type='TID'])"
+        |> ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_«@type», &session->«yml:lcase(../../../@name)»_state.comm_partner.«@name»);
 ||
 
+    // buffer for transport data
+
+    free_identity(session->«yml:lcase(@name)»_state.transport.from);
+    session->«yml:lcase(@name)»_state.transport.from = NULL;
+    free(session->«yml:lcase(@name)»_state.transport.signature_fpr);
+    session->«yml:lcase(@name)»_state.transport.signature_fpr = NULL;
+
+    // message buffers
+
+||
+    for "fsm" {
+        for "func:distinctName(message/field[not(substring(@type,1,1)=yml:lcase(substring(@type,1,1)))])"
+            |> ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_«@type», &session->«yml:lcase(../../../@name)»_state.«yml:lcase(../../@name)».«@name»);
+        |
+    }
+||
     memset(&session->«yml:lcase(@name)»_state, 0, sizeof(session->«yml:lcase(@name)»_state));
 }
 
@@ -266,7 +293,7 @@ template "field", mode=update_message {
     const "message_name", "yml:mixedCase(../@name)";
     const "state" choose {
         when "@type='TID'"
-            > own_«yml:lcase(ancestor::protocol/@name)»_state
+            > «yml:lcase(ancestor::protocol/@name)»_state.own
         otherwise
             > «yml:lcase(ancestor::protocol/@name)»_state.«yml:lcase(ancestor::fsm/@name)»
     }
