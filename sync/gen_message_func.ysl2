@@ -60,7 +60,7 @@ struct «@name»_state_s {
         `` for "func:distinctName(fsm/message/field[@type='TID'])" |>> «func:ctype()» «@name»;
     } comm_partner;
 
-    // buffer for actual transport data coming in
+    // input buffer for actual transport data coming in
 
     struct transport_data_s {
         // transport data we got
@@ -91,7 +91,7 @@ PEP_STATUS update_«@name»_message(PEP_SESSION session, «@name»_t *msg);
 template "fsm", mode=state
 ||
 
-// buffer for «@name» messages
+// input/output buffer for «@name» messages
 
 struct _«@name»_state_s {
     int state;
