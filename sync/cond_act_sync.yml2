@@ -145,6 +145,12 @@ action newChallengeAndNegotiationBase {
 
     // this is the random data we are using as a base
     call "new_UUID" with "dst" > &session->sync_state.own.negotiation
+||
+    memset(session->sync_state.keysync.negotiation.buf, 0,
+            session->sync_state.keysync.negotiation.size);
+    memset(session->sync_state.comm_partner.negotiation.buf, 0,
+            session->sync_state.comm_partner.negotiation.size);
+||
 }
 
 action useOwnChallenge call "copy_UUID" {
@@ -196,14 +202,6 @@ action openNegotiation {
         with "dst" > &session->sync_state.comm_partner.negotiation
     }
 }
-
-action closeNegotiation
-||
-    memset(session->sync_state.keysync.negotiation.buf, 0,
-            session->sync_state.keysync.negotiation.size);
-    memset(session->sync_state.comm_partner.negotiation.buf, 0,
-            session->sync_state.comm_partner.negotiation.size);
-||
 
 action storeNegotiation {
 ||

@@ -23,7 +23,6 @@ protocol Sync 1 {
 
         state Sole timeout=off {
             on Init {
-                do closeNegotiation;
                 do newChallengeAndNegotiationBase;
                 do showBeingSole;
                 send Beacon;
@@ -266,7 +265,6 @@ protocol Sync 1 {
 
         state Grouped timeout=off {
             on Init {
-                do closeNegotiation;
                 do newChallengeAndNegotiationBase;
                 do showBeingInGroup;
             }
