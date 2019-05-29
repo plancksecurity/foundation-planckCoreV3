@@ -288,12 +288,7 @@ template "auto" choose {
 
 template "field", mode=update_message {
     const "message_name", "yml:mixedCase(../@name)";
-    const "state" choose {
-        when "@type='TID'"
-            > «yml:lcase(ancestor::protocol/@name)»_state.own
-        otherwise
-            > «yml:lcase(ancestor::protocol/@name)»_state.«yml:lcase(ancestor::fsm/@name)»
-    }
+    const "state" > «yml:lcase(ancestor::protocol/@name)»_state.«yml:lcase(ancestor::fsm/@name)»
 
     choose {
         when "func:basicType()" // copyable
