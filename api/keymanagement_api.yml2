@@ -41,22 +41,22 @@ protocol session {
 		END FIXME
 		"""
 
-		// exceptions
+	// exceptions
 
-		throws illegal_value
-			doc="""
-				if called with illegal inputs, including an identity
-				with .me set or with an own user_id specified in the
-				*input* (see caveats)
-				""";
+	throws illegal_value
+		doc="""
+			if called with illegal inputs, including an identity
+			with .me set or with an own user_id specified in the
+			*input* (see caveats)
+			""";
 
-		throws key_unsuitable
-			doc="""
-				if a default key was found for this identity, no
-				other acceptable keys were found; if this is returned,
-				the reason for rejecting the first default key found	
-				may be found in the comm_type
-				"""
+	throws key_unsuitable
+		doc="""
+			if a default key was found for this identity, no
+			other acceptable keys were found; if this is returned,
+			the reason for rejecting the first default key found	
+			may be found in the comm_type
+			"""
 	}
 
 
@@ -198,16 +198,20 @@ protocol session {
     }
 
 
-method own_keys_retrieve 
-        doc="retrieve all flagged keypair fingerprints" 
+    method own_keys_retrieve 
+        doc="retrieve all flagged keypair fingerprints/private keypair fingerprints" 
     {
     // parms
 
-    create hashlist keylist doc="list of fingerprints"
+    create hashlist keylist 
+        doc="""
+            list of fingerprints. This function does not return keys without 
+            a private key part.
+            """
     }
 
 
-method set_own_key 
+    method set_own_key 
         doc="mark a key as own key"
     {
     // parms
