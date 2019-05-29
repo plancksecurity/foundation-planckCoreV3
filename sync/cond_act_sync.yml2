@@ -93,10 +93,12 @@ condition keyElectionWon
 function "new_UUID" {
     param "dst";
     ||
-        pEpUUID c;
-        uuid_generate_random(c);
+        {
+            pEpUUID c;
+            uuid_generate_random(c);
 
-        OCTET_STRING_fromBuf(«$dst», (char *) c, 16);
+            OCTET_STRING_fromBuf(«$dst», (char *) c, 16);
+        }
     ||
 }
 
@@ -133,14 +135,16 @@ function "xor_UUID" {
     ||
 }
 
-action newChallenge {
+action newChallengeAndNegotiationBase {
     // random new challenge
     call "new_UUID" with "dst" > &session->sync_state.own.challenge
-}
+    call "copy_UUID" {
+        with "src" > &session->sync_state.own.challenge
+        with "dst" > &session->sync_state.keysync.challenge
+    }
 
-action replyChallenge call "copy_UUID" {
-    with "src" > &session->sync_state.keysync.challenge
-    with "dst" > &session->sync_state.comm_partner.challenge
+    // this is the random data we are using as a base
+    call "new_UUID" with "dst" > &session->sync_state.own.negotiation
 }
 
 action useOwnChallenge call "copy_UUID" {
@@ -148,7 +152,7 @@ action useOwnChallenge call "copy_UUID" {
     with "dst" > &session->sync_state.keysync.challenge
 }
 
-action newNegotiation {
+action openNegotiation {
 ||
     // sender key must be stable while transaction
 
@@ -170,11 +174,7 @@ action newNegotiation {
     // we derive the actual Negotiation TID by having random data and XORing it
     // with comm_partner's Challenge
 
-    // this is the random data we are using as a base
-
-    call "new_UUID" with "dst" > &session->sync_state.own.negotiation
-
-    // copy this into the buffer
+    // copy Negotiation base into buffer
 
     call "copy_UUID" {
         with "src" > &session->sync_state.own.negotiation

@@ -24,7 +24,7 @@ protocol Sync 1 {
         state Sole timeout=off {
             on Init {
                 do closeNegotiation;
-                do newChallenge;
+                do newChallengeAndNegotiationBase;
                 do showBeingSole;
                 send Beacon;
             }
@@ -47,7 +47,7 @@ protocol Sync 1 {
                         send Beacon;
                     }
                     else /* we are second */ {
-                        do newNegotiation;
+                        do openNegotiation;
                         do tellWeAreNotGrouped;
                         // second is sending NegotiationRequest
                         send NegotiationRequest;
@@ -267,7 +267,7 @@ protocol Sync 1 {
         state Grouped timeout=off {
             on Init {
                 do closeNegotiation;
-                do newChallenge;
+                do newChallengeAndNegotiationBase;
                 do showBeingInGroup;
             }
 
@@ -280,7 +280,7 @@ protocol Sync 1 {
             }
 
             on Beacon {
-                do newNegotiation;
+                do openNegotiation;
                 do tellWeAreGrouped;
                 send NegotiationRequest;
                 do useOwnChallenge;
