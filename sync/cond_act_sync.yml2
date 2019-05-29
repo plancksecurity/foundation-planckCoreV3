@@ -156,7 +156,7 @@ action useOwnChallenge call "copy_UUID" {
     with "dst" > &session->sync_state.keysync.challenge
 }
 
-action newTransaction {
+action newNegotiation {
 ||
     // sender key must be stable while transaction
 

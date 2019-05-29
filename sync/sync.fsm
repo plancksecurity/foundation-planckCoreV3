@@ -46,7 +46,7 @@ protocol Sync 1 {
                         send Beacon;
                     }
                     else /* we are second */ {
-                        do newTransaction;
+                        do newNegotiation;
                         do tellWeAreNotGrouped;
                         // second is sending NegotiationRequest
                         do replyChallenge; // partner's challenge
@@ -279,7 +279,7 @@ protocol Sync 1 {
             }
 
             on Beacon {
-                do newTransaction;
+                do newNegotiation;
                 do tellWeAreGrouped;
                 do replyChallenge; // partner's challenge
                 send NegotiationRequest;
