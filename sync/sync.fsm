@@ -236,10 +236,7 @@ protocol Sync 1 {
             on OwnKeysSecond {
                 do saveGroupKeys;
 
-                if keyElectionWon
-                    do ownKeysAreGroupKeys;
-                else
-                    do receivedKeysAreGroupKeys;
+                do receivedKeysAreGroupKeys;
                 do showGroupCreated;
                 go Grouped;
             }
@@ -254,10 +251,7 @@ protocol Sync 1 {
             on OwnKeysFirst {
                 do saveGroupKeys;
 
-                if keyElectionWon
-                    do ownKeysAreGroupKeys;
-                else
-                    do receivedKeysAreGroupKeys;
+                do ownKeysAreGroupKeys;
                 do showGroupCreated;
                 go Grouped;
             }
