@@ -38,7 +38,7 @@ tstylesheet {
 
             // transport data
             pEp_identity *from;
-            char *signature_fpr;
+            char *sender_fpr;
 
             identity_list *own_identities;
         } «@name»_event_t;
@@ -119,7 +119,7 @@ tstylesheet {
                 free_identity_list(ev->own_identities);
                 free_«@name»_message(ev->msg);
                 free_identity(ev->from);
-                free(ev->signature_fpr);
+                free(ev->sender_fpr);
                 free(ev);
             }
         }
@@ -211,7 +211,7 @@ tstylesheet {
                     const char *data,
                     size_t size,
                     const pEp_identity *from,
-                    const char *signature_fpr
+                    const char *sender_fpr
                 );
 
             #ifdef __cplusplus
@@ -328,7 +328,7 @@ tstylesheet {
                     const char *data,
                     size_t size,
                     const pEp_identity *from,
-                    const char *signature_fpr
+                    const char *sender_fpr
                 )
             {
                 assert(session && data && size);
@@ -373,10 +373,10 @@ tstylesheet {
                     }
                 }
 
-                if (signature_fpr) {
-                    ev->signature_fpr = strdup(signature_fpr);
-                    assert(ev->signature_fpr);
-                    if (!ev->signature_fpr) {
+                if (sender_fpr) {
+                    ev->sender_fpr = strdup(sender_fpr);
+                    assert(ev->sender_fpr);
+                    if (!ev->sender_fpr) {
                         status = PEP_OUT_OF_MEMORY;
                         goto the_end;
                     }
@@ -447,8 +447,8 @@ tstylesheet {
 
                     // these go anycast; previously used address is sticky (unicast)
                     `` for "fsm/message[@type='anycast']" |>> case «../@name»_PR_«yml:mixedCase(@name)»:
-                        if (!session->«yml:lcase(@name)»_state.common.from `> |`|
-                            (session->«yml:lcase(@name)»_state.common.from->flags &
+                        if (!session->«yml:lcase(@name)»_state.transport.from `> |`|
+                            (session->«yml:lcase(@name)»_state.transport.from->flags &
                             PEP_idf_not_for_«yml:lcase(@name)»)) {
 
                             // no address available yet, try to find one
@@ -468,7 +468,7 @@ tstylesheet {
                             }
                         }
                         else {
-                            pEp_identity *channel = identity_dup(session->«yml:lcase(@name)»_state.common.from);
+                            pEp_identity *channel = identity_dup(session->«yml:lcase(@name)»_state.transport.from);
                             if (!channel) {
                                 status = PEP_OUT_OF_MEMORY;
                                 goto the_end;
@@ -521,13 +521,13 @@ tstylesheet {
                     `` for "fsm/message[@security='untrusted']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
                             // add fpr of key of comm partner
 
-                            assert(session->«yml:lcase(@name)»_state.common.signature_fpr);
-                            if (!session->«yml:lcase(@name)»_state.common.signature_fpr) {
+                            assert(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr);
+                            if (!session->«yml:lcase(@name)»_state.comm_partner.sender_fpr) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
                             }
 
-                            extra = new_stringlist(session->«yml:lcase(@name)»_state.common.signature_fpr);
+                            extra = new_stringlist(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr);
                             if (!extra) {
                                 status = PEP_OUT_OF_MEMORY;
                                 goto the_end;
@@ -556,11 +556,11 @@ tstylesheet {
                             break;
 
                     `` for "fsm/message[@security='attach_own_keys']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
-                            // check if this is the key of a former negotiation
+                            // check if we had a former negotiation
 
                             transaction = false;
-                            for (int i=0; i < session->own_«yml:lcase(@name)»_state.negotiation.size; i++) {
-                                if (session->own_«yml:lcase(@name)»_state.negotiation.buf[i]) {
+                            for (int i=0; i < session->«yml:lcase(@name)»_state.own.negotiation.size; i++) {
+                                if (session->«yml:lcase(@name)»_state.own.negotiation.buf[i]) {
                                     transaction = true;
                                     break;
                                 }
@@ -573,12 +573,12 @@ tstylesheet {
                             // secret keys
 
                             if (transaction) {
-                                assert(session->own_«yml:lcase(@name)»_state.signature_fpr &&
-                                    session->«yml:lcase(@name)»_state.common.from &&
-                                    session->«yml:lcase(@name)»_state.common.from->user_id);
-                                if (!(session->own_«yml:lcase(@name)»_state.signature_fpr &&
-                                        session->«yml:lcase(@name)»_state.common.from &&
-                                        session->«yml:lcase(@name)»_state.common.from->user_id))
+                                assert(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr &&
+                                    session->«yml:lcase(@name)»_state.transport.from &&
+                                    session->«yml:lcase(@name)»_state.transport.from->user_id);
+                                if (!(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr &&
+                                        session->«yml:lcase(@name)»_state.transport.from &&
+                                        session->«yml:lcase(@name)»_state.transport.from->user_id))
                                 {
                                     status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                     goto the_end;
@@ -587,8 +587,8 @@ tstylesheet {
                                 // test if this is a green channel
 
                                 pEp_identity *ident = new_identity(NULL,
-                                        session->own_«yml:lcase(@name)»_state.signature_fpr,
-                                        session->«yml:lcase(@name)»_state.common.from->user_id,
+                                        session->«yml:lcase(@name)»_state.comm_partner.sender_fpr,
+                                        session->«yml:lcase(@name)»_state.transport.from->user_id,
                                         NULL
                                     );
                                 if (!ident) {
@@ -612,7 +612,7 @@ tstylesheet {
 
                                 bool is_own_key = false;
                                 status = own_key_is_listed(session,
-                                        session->own_«yml:lcase(@name)»_state.signature_fpr,
+                                        session->«yml:lcase(@name)»_state.comm_partner.sender_fpr,
                                         &is_own_key);
                                 assert(!status);
                                 if (status)
@@ -625,7 +625,7 @@ tstylesheet {
 
                                 // if so add key of comm partner to extra keys
 
-                                extra = new_stringlist(session->own_«yml:lcase(@name)»_state.signature_fpr);
+                                extra = new_stringlist(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr);
                                 if (!extra) {
                                     status = PEP_OUT_OF_MEMORY;
                                     goto the_end;
@@ -660,7 +660,7 @@ tstylesheet {
                                                // if we include this in the size, libetpan will null terminate and 
                                                // go bananas. We can't have a NUL in the mime text.
 
-                            for (stringlist_t *sl = session->own_«yml:lcase(@name)»_state.own_keys;
+                            for (stringlist_t *sl = session->«yml:lcase(@name)»_state.own.keys;
                                     sl && sl->value ; sl = sl->next)
                             {
                                 char *_key_data = NULL;
@@ -766,6 +766,8 @@ tstylesheet {
                 free(data);
                 free(key_data);
                 free_«@name»_message(msg);
+                if (status)
+                    SERVICE_ERROR_LOG(session, "send_«@name»_message()", status);
                 return status;
             }
 
@@ -806,22 +808,22 @@ tstylesheet {
                 // update transport data
 
                 if (ev->from) {
-                    free_identity(session->«yml:lcase(@name)»_state.common.from);
-                    session->«yml:lcase(@name)»_state.common.from = ev->from;
+                    free_identity(session->«yml:lcase(@name)»_state.transport.from);
+                    session->«yml:lcase(@name)»_state.transport.from = ev->from;
                     ev->from = NULL;
                 }
 
-                if (ev->signature_fpr) {
-                    free(session->«yml:lcase(@name)»_state.common.signature_fpr);
-                    session->«yml:lcase(@name)»_state.common.signature_fpr = ev->signature_fpr;
-                    ev->signature_fpr = NULL;
+                if (ev->sender_fpr) {
+                    free(session->«yml:lcase(@name)»_state.transport.sender_fpr);
+                    session->«yml:lcase(@name)»_state.transport.sender_fpr = ev->sender_fpr;
+                    ev->sender_fpr = NULL;
                 }
 
                 // update own identities
 
                 if (ev->own_identities && ev->own_identities->ident) {
-                    free_identity_list(session->own_«yml:lcase(@name)»_state.own_identities);
-                    session->own_«yml:lcase(@name)»_state.own_identities = ev->own_identities;
+                    free_identity_list(session->«yml:lcase(@name)»_state.own.identities);
+                    session->«yml:lcase(@name)»_state.own.identities = ev->own_identities;
                     ev->own_identities = NULL;
                 }
 
@@ -899,7 +901,7 @@ tstylesheet {
         if "position()=1" |>> // these messages require a detached signature
         ||
                 case «../@name»_PR_«yml:mixedCase(@name)»:
-                    if (!signature_fpr) {
+                    if (!sender_fpr) {
                         status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
                         goto the_end;
                     }
@@ -929,7 +931,7 @@ tstylesheet {
                         status = PEP_«yml:ucase(ancestor::protocol/@name)»_ILLEGAL_MESSAGE;
                         goto the_end;
                     }
-                    status = own_key_is_listed(session, signature_fpr, &is_own_key);
+                    status = own_key_is_listed(session, sender_fpr, &is_own_key);
                     if (status)
                         goto the_end;
                     if (!is_own_key) {

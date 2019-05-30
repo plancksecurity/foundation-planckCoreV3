@@ -255,7 +255,6 @@ struct _pEpSession {
     void *sync_management;
     void *sync_obj;
     struct Sync_state_s sync_state;
-    struct own_Sync_state_s own_sync_state;
 
 //     void* sync_state_payload;
 //     char sync_uuid[37];
