@@ -318,9 +318,6 @@ protocol Sync 1 {
                 send CommitAccept;
                 go HandshakingJoinPhase1;
             }
-
-            on CommitAcceptForGroup if sameNegotiationAndPartner
-                go HandshakingJoinPhase2;
         }
 
         state HandshakingJoinPhase1 {

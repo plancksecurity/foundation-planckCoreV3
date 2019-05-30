@@ -355,6 +355,11 @@ action prepareOwnKeys
 
 action saveGroupKeys
 ||
+    char *user_id = NULL;
+    PEP_STATUS status = get_default_own_userid(session, &user_id);
+    if (status)
+        return status;
+
     identity_list *il = IdentityList_to_identity_list(&session->sync_state.keysync.ownIdentities, NULL);
     if (!il)
         return PEP_OUT_OF_MEMORY;
@@ -366,14 +371,7 @@ action saveGroupKeys
         pEp_identity *ident = _il->ident;
         bool is_own_already = false;
 
-        PEP_STATUS status = is_own_address(session, ident->address, &is_own_already);
-        if (status) {
-            free_identity_list(il);
-            return status;
-        }
-
-        char *user_id = NULL;
-        status = get_default_own_userid(session, &user_id);
+        status = is_own_address(session, ident->address, &is_own_already);
         if (status) {
             free_identity_list(il);
             return status;
