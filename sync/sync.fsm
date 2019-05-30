@@ -436,12 +436,6 @@ protocol Sync 1 {
                 do trustThisKey;
             }
 
-            on CommitAcceptForGroup {
-                do showDeviceAdded;
-                if sameNegotiationAndPartner
-                    go Grouped;
-            }
-
             on GroupKeys
                 do saveGroupKeys;
         }
@@ -467,14 +461,6 @@ protocol Sync 1 {
 
             on GroupTrustThisKey {
                 do trustThisKey;
-            }
-
-            on CommitAcceptForGroup {
-                do showDeviceAdded;
-                if sameNegotiationAndPartner {
-                    do hideHandshakeDialog;
-                    go Grouped;
-                }
             }
 
             on GroupKeys
