@@ -427,6 +427,7 @@ protocol Sync 1 {
                 go Grouped;
 
             on CommitAccept if sameNegotiationAndPartner {
+                do prepareOwnKeys;
                 send GroupKeys;
                 go Grouped;
             }
@@ -459,6 +460,7 @@ protocol Sync 1 {
             on Accept {
                 do trustThisKey;
                 send GroupTrustThisKey;
+                do prepareOwnKeys;
                 send GroupKeys;
                 go Grouped;
             }
