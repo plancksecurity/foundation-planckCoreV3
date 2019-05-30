@@ -239,22 +239,7 @@ function "show_handshake" {
      
     ||
     choose {
-    when "$type = 'SYNC_NOTIFY_TIMEOUT' or $type = 'SYNC_NOTIFY_SOLE' or $type = 'SYNC_NOTIFY_IN_GROUP'"
-    ||
-        pEp_identity *me = new_identity(NULL, NULL, NULL, NULL);
-        pEp_identity *partner = new_identity(NULL, NULL, NULL, NULL);
-        assert(me && partner);
-        if (!(me && partner)) {
-            free_identity(me);
-            free_identity(partner);
-            return PEP_OUT_OF_MEMORY;
-        }
-
-        PEP_STATUS status = session->notifyHandshake(me, partner, «$type»);
-        if (status)
-            return status;
-    ||
-    otherwise
+    when "$type = 'SYNC_NOTIFY_INIT_ADD_OUR_DEVICE' or $type = 'SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE' or $type = 'SYNC_NOTIFY_INIT_FORM_GROUP'"
     ||
         assert(session->sync_state.transport.from);
         if (!session->sync_state.transport.from)
@@ -266,7 +251,8 @@ function "show_handshake" {
         assert(status == PEP_STATUS_OK);
         if (status)
             return status;
-
+        assert(strcmp(me->fpr, session->sync_state.comm_partner.sender_fpr) != 0);
+        
         assert(me->fpr && me->fpr[0]);
         if (!(me->fpr && me->fpr[0])) {
             free_identity(me);
@@ -283,6 +269,7 @@ function "show_handshake" {
         if (session->sync_state.comm_partner.sender_fpr) {
             free(partner->fpr);
             partner->fpr = strdup(session->sync_state.comm_partner.sender_fpr);
+            assert(partner->fpr);
             if (!partner->fpr) {
                 free_identity(me);
                 free_identity(partner);
@@ -299,7 +286,23 @@ function "show_handshake" {
             return PEP_OUT_OF_MEMORY;
         }
 
+        assert(strcmp(me->fpr, partner->fpr) != 0);
         status = session->notifyHandshake(me, partner, «$type»);
+        if (status)
+            return status;
+    ||
+    otherwise
+    ||
+        pEp_identity *me = new_identity(NULL, NULL, NULL, NULL);
+        pEp_identity *partner = new_identity(NULL, NULL, NULL, NULL);
+        assert(me && partner);
+        if (!(me && partner)) {
+            free_identity(me);
+            free_identity(partner);
+            return PEP_OUT_OF_MEMORY;
+        }
+
+        PEP_STATUS status = session->notifyHandshake(me, partner, «$type»);
         if (status)
             return status;
     ||
