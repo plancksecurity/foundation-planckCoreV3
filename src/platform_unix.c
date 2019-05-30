@@ -200,7 +200,7 @@ PEP_STATUS unix_machine_file_path(PEP_SESSION session, const char *fname, char *
                 return PEP_INIT_CANNOT_OPEN_SYSTEM_DB;
             }
 
-            while (*(p-1) == '/' && (p-1) > buffer)   /* drop trailing slashes, note '>' on decremented p */
+            while (*(p-1) == '/' && (p-1) > buffer)   /* strip trailing slashes */
                 p--;
             p = stpncpy (p, confsdir[cf_i], len);
             if (automkdir[cf_i]) {

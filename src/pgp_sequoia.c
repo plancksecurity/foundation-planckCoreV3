@@ -182,7 +182,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     PEP_STATUS status = PEP_STATUS_OK;
     const char * path_keys_db;
 
-    status = unix_user_file_path(session, "keys.db", &path_keys_db);
+    status = unix_user_file_path(session, SQ_KEYS_DB, &path_keys_db);
     if (status != PEP_STATUS_OK)
         ERROR_OUT(NULL, status,
                   "could not determine path to keys DB");
