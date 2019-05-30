@@ -361,7 +361,28 @@ action saveGroupKeys
     
     // BUG: this should be a transaction and been rolled back completely on error
     for (identity_list *_il = il; _il && _il->ident; _il = _il->next) {
-        PEP_STATUS status = set_identity(session, _il->ident);
+        pEp_identity *ident = _il->ident;
+        bool is_own_already = false;
+
+        PEP_STATUS status = is_own_address(session, ident->address, &is_own_already);
+        if (status) {
+            free_identity_list(il);
+            return status;
+        }
+
+        if (is_own_already) {
+            char *user_id = NULL;
+            status = get_default_own_userid(session, &user_id);
+            if (!status) {
+                free(ident->user_id);
+                ident->user_id = user_id;
+                ident->comm_type = PEP_ct_pEp;
+                status = set_trust(session, ident);
+            }
+        }
+        else {
+            status = myself(session, ident);
+        }
         if (status) {
             free_identity_list(il);
             return status;
