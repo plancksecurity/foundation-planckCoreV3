@@ -141,9 +141,13 @@ int email_cmp(void *cookie, int a_len, const void *a, int b_len, const void *b)
 
     char *a_address = NULL;
     pgp_user_id_address_normalized(NULL, a_userid, &a_address);
+    if (!a_address)
+        pgp_user_id_other(NULL, a_userid, &a_address);
 
     char *b_address = NULL;
     pgp_user_id_address_normalized(NULL, b_userid, &b_address);
+    if (!b_address)
+        pgp_user_id_other(NULL, b_userid, &b_address);
 
     pgp_packet_free(a_userid);
     pgp_packet_free(b_userid);
@@ -793,54 +797,7 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
 
         pgp_packet_t userid = pgp_user_id_new (user_id_value);
         pgp_user_id_name(NULL, userid, &name);
-        pgp_user_id_address(NULL, userid, &email);
-                
-        if (!email || email[0] == '\0') {
-            size_t uid_value_len;
-            const char* uid_value = (const char*)pgp_user_id_value(userid, &uid_value_len);
-            if (!uid_value) {
-                // We need some kind of an error here, maybe?
-                 
-            }
-            else {
-                // Ok, asan gets really pissed at us using this string directly, SO...
-                char* uid_copy = calloc(uid_value_len + 1, 1);
-                strlcpy(uid_copy, uid_value, uid_value_len);
-                const char* split = strstr(uid_copy, "<");
-                if (split != uid_copy) {       
-                    while (split) {
-                        if (isspace(*(split - 1)))
-                            break;
-                        split = strstr(split + 1, "<");
-                    }
-                }
-                if (split) {
-                    char* stopchr = strrchr(split, '>');
-                    if (stopchr) {
-                        int email_len = stopchr - split - 1;
-                        email = calloc(email_len + 1, 1); 
-                        strlcpy(email, split + 1, email_len + 1);
-                        const char* last = NULL;
-                        if (split != uid_value) {
-                            for (last = split - 1; last > uid_value; last--) {
-                                if (!isspace(*last))
-                                    break;
-                            }
-                            int name_len = (last - uid_value) + 1;
-                            name = calloc(name_len + 1, 1);
-                            strlcpy(name, uid_value, name_len + 1);
-                        }
-                    }
-                    else  
-                        split = NULL;
-                }
-                if (split == NULL)
-                    email = uid_copy;
-                else 
-                    free(uid_copy);
-            }
-        }
-        
+        pgp_user_id_address_or_other(NULL, userid, &email);
         pgp_packet_free(userid);
         free(user_id_value);
 
@@ -1819,6 +1776,7 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
 {
     PEP_STATUS status = PEP_STATUS_OK;
     pgp_error_t err = NULL;
+    pgp_packet_t userid_packet = NULL;
     char *userid = NULL;
     pgp_tpk_t tpk = NULL;
     pgp_fingerprint_t pgp_fpr = NULL;
@@ -1830,16 +1788,22 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     assert(identity->fpr == NULL || identity->fpr[0] == 0);
     assert(identity->username);
 
-    size_t userid_size = strlen(identity->username)+strlen(identity->address)+3+1;
-    userid = (char *) calloc(1, userid_size);
-    assert(userid);
+    userid_packet = pgp_user_id_from_unchecked_address(&err,
+                                                       identity->username, NULL,
+                                                       identity->address);
+    if (!userid_packet)
+        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "pgp_user_id_from_other_address");
+
+    size_t userid_len = 0;
+    const uint8_t *raw = pgp_user_id_value(userid_packet, &userid_len);
+
+    // Null terminate it.
+    userid = malloc(userid_len + 1);
     if (!userid)
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
 
-    int r = snprintf(userid, userid_size, "%s <%s>", identity->username, identity->address);
-    assert(r >= 0 && r < userid_size);
-    if (r < 0)
-        ERROR_OUT(NULL, PEP_UNKNOWN_ERROR, "snprintf");
+    memcpy(userid, raw, userid_len);
+    userid[userid_len] = 0;
 
     T("(%s)", userid);
 
@@ -1873,6 +1837,8 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     if (tpk)
         pgp_tpk_free(tpk);
     free(userid);
+    if (userid_packet)
+        pgp_packet_free(userid_packet);
 
     T("-> %s", pEp_status_to_string(status));
     return status;
