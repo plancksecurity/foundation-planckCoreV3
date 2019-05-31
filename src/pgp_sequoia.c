@@ -190,7 +190,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     if (!home_env)
         home_env = getenv("LOCALAPPDATA");
 #else
-    #define PEP_KEYS_PATH "/keys.db"
+    #define PEP_KEYS_PATH "/.pEp_keys.db"
 
     if (!home_env)
         home_env = getenv("HOME");
