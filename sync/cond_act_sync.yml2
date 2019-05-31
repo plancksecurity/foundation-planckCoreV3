@@ -364,8 +364,10 @@ action saveGroupKeys
         return status;
 
     identity_list *il = IdentityList_to_identity_list(&session->sync_state.keysync.ownIdentities, NULL);
-    if (!il)
+    if (!il) {
+        free(user_id);
         return PEP_OUT_OF_MEMORY;
+    }
     
     identity_list *oil = session->sync_state.own.identities;
 
@@ -377,11 +379,18 @@ action saveGroupKeys
         status = is_own_address(session, ident->address, &is_own_already);
         if (status) {
             free_identity_list(il);
+            free(user_id);
             return status;
         }
 
         free(ident->user_id);
-        ident->user_id = user_id;
+        ident->user_id = strdup(user_id);
+        assert(ident->user_id);
+        if (!ident->user_id) {
+            free_identity_list(il);
+            free(user_id);
+            return PEP_OUT_OF_MEMORY;
+        }
 
         if (is_own_already) {
             ident->comm_type = PEP_ct_pEp;
@@ -391,16 +400,19 @@ action saveGroupKeys
             oil = identity_list_add(oil, ident);
             if (!oil) {
                 free_identity_list(il);
+                free(user_id);
                 return PEP_OUT_OF_MEMORY;
             }
             status = myself(session, ident);
         }
         if (status) {
             free_identity_list(il);
+            free(user_id);
             return status;
         }
     }
 
+    free(user_id);
     free_identity_list(il);
 ||
 
