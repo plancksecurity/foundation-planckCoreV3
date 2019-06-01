@@ -528,6 +528,94 @@ static PEP_STATUS key_loadn(PEP_SESSION session, sqlite3_stmt *stmt,
     return status;
 }
 
+struct tpk_cache {
+    // The TPK's (primary key's) fingerprint.
+    pgp_fingerprint_t fpr;
+    pgp_tpk_t tpk;
+    int inserts;
+    int hits;
+    int misses;
+};
+
+#define TPK_CACHE_FMT "(%d hits, %d misses, %d%% hit rate, %d inserts)"
+#define TPK_CACHE_PRINTF(o) \
+    (o.hits), (o.misses), (((o.hits + 1) * 100) / (o.misses + 1)), (o.inserts)
+
+static __thread struct tpk_cache tpk_cache;
+
+static pgp_tpk_t tpk_cache_lookup(pgp_fingerprint_t fpr)
+{
+    if (tpk_cache.fpr && pgp_fingerprint_equal(tpk_cache.fpr, fpr)) {
+        T("HIT: found %s in tpk cache! "TPK_CACHE_FMT,
+          pgp_fingerprint_to_string(fpr), TPK_CACHE_PRINTF(tpk_cache));
+        tpk_cache.hits ++;
+        return pgp_tpk_clone(tpk_cache.tpk);
+    } else {
+        T("MISS: %s not in tpk cache (%s)! "TPK_CACHE_FMT,
+          pgp_fingerprint_to_string(fpr),
+          tpk_cache.fpr ? pgp_fingerprint_to_string(tpk_cache.fpr) : " (empty)",
+          TPK_CACHE_PRINTF(tpk_cache));
+        tpk_cache.misses ++;
+        return NULL;
+    }
+}
+
+static pgp_tpk_t tpk_cache_lookup_keyid(pgp_keyid_t keyid)
+{
+    if (! tpk_cache.fpr) {
+        tpk_cache.hits ++;
+        T("MISS: %s not in tpk cache (empty)! "TPK_CACHE_FMT,
+          pgp_keyid_to_string(keyid),
+          TPK_CACHE_PRINTF(tpk_cache));
+        return NULL;
+    }
+
+    pgp_keyid_t cache_keyid = pgp_fingerprint_to_keyid(tpk_cache.fpr);
+    if (pgp_keyid_equal(cache_keyid, keyid)) {
+        T("HIT: found %s in tpk cache! "TPK_CACHE_FMT,
+          pgp_keyid_to_string(keyid),
+          TPK_CACHE_PRINTF(tpk_cache));
+        return pgp_tpk_clone(tpk_cache.tpk);
+    } else {
+        T("MISS: %s not in tpk cache (%s)! "TPK_CACHE_FMT,
+          pgp_keyid_to_string(keyid),
+          pgp_fingerprint_to_string(tpk_cache.fpr),
+          TPK_CACHE_PRINTF(tpk_cache));
+        tpk_cache.misses ++;
+        return NULL;
+    }
+}
+
+static void tpk_cache_clear(void)
+{
+    T("Clearing tpk cache. "TPK_CACHE_FMT, TPK_CACHE_PRINTF(tpk_cache));
+
+    if (tpk_cache.fpr) {
+        // Evict the old entry.
+        pgp_fingerprint_free(tpk_cache.fpr);
+        tpk_cache.fpr = NULL;
+
+        pgp_tpk_free(tpk_cache.tpk);
+        tpk_cache.tpk = NULL;
+    }
+}
+
+static void tpk_cache_insert(pgp_tpk_t tpk)
+{
+    pgp_fingerprint_t fpr = pgp_tpk_fingerprint(tpk);
+    if (! fpr)
+        return;
+
+    tpk_cache_clear();
+
+    T("Inserting %s into tpk cache", pgp_fingerprint_to_string(fpr));
+    tpk_cache.inserts ++;
+
+    // Insert the new one.
+    tpk_cache.fpr = fpr;
+    tpk_cache.tpk = pgp_tpk_clone(tpk);
+}
+
 // Returns the TPK identified by the provided fingerprint.
 //
 // This function only matches on the primary key!
@@ -539,18 +627,28 @@ static PEP_STATUS tpk_find(PEP_SESSION session,
 {
     PEP_STATUS status = PEP_STATUS_OK;
     char *fpr_str = pgp_fingerprint_to_hex(fpr);
+    sqlite3_stmt *stmt = NULL;
 
     T("(%s, %d)", fpr_str, private_only);
 
-    sqlite3_stmt *stmt
-        = private_only ? session->sq_sql.tsk_find : session->sq_sql.tpk_find;
+    if (! private_only && tpk) {
+        *tpk = tpk_cache_lookup(fpr);
+        if (*tpk)
+            goto out;
+    }
+
+    stmt = private_only ? session->sq_sql.tsk_find : session->sq_sql.tpk_find;
     sqlite3_bind_text(stmt, 1, fpr_str, -1, SQLITE_STATIC);
 
     status = key_load(session, stmt, tpk, secret);
     ERROR_OUT(NULL, status, "Looking up %s", fpr_str);
 
+    if (tpk && *tpk)
+        tpk_cache_insert(*tpk);
+
  out:
-    sqlite3_reset(stmt);
+    if (stmt)
+        sqlite3_reset(stmt);
     T("(%s, %d) -> %s", fpr_str, private_only, pEp_status_to_string(status));
     free(fpr_str);
     return status;
@@ -574,17 +672,30 @@ static PEP_STATUS tpk_find_by_keyid_hex(
         pgp_tpk_t *tpkp, int *secretp)
 {
     PEP_STATUS status = PEP_STATUS_OK;
+    sqlite3_stmt *stmt = NULL;
+
     T("(%s, %d)", keyid_hex, private_only);
 
-    sqlite3_stmt *stmt
-        = private_only ? session->sq_sql.tsk_find_by_keyid : session->sq_sql.tpk_find_by_keyid;
+    if (! private_only && tpkp) {
+        pgp_keyid_t keyid = pgp_keyid_from_hex(keyid_hex);
+        *tpkp = tpk_cache_lookup_keyid(keyid);
+        pgp_keyid_free(keyid);
+        if (*tpkp)
+            goto out;
+    }
+
+    stmt = private_only ? session->sq_sql.tsk_find_by_keyid : session->sq_sql.tpk_find_by_keyid;
     sqlite3_bind_text(stmt, 1, keyid_hex, -1, SQLITE_STATIC);
 
     status = key_load(session, stmt, tpkp, secretp);
     ERROR_OUT(NULL, status, "Looking up %s", keyid_hex);
 
+    if (tpkp && *tpkp)
+        tpk_cache_insert(*tpkp);
+
  out:
-    sqlite3_reset(stmt);
+    if (stmt)
+        sqlite3_reset(stmt);
     T("(%s, %d) -> %s", keyid_hex, private_only, pEp_status_to_string(status));
     return status;
 }
@@ -670,6 +781,9 @@ static PEP_STATUS tpk_find_by_email(PEP_SESSION session,
     status = key_loadn(session, stmt, tpksp, countp);
     ERROR_OUT(NULL, status, "Searching for '%s'", pattern);
 
+    if (*tpksp && *countp > 0)
+        tpk_cache_insert((*tpksp)[0]);
+
  out:
     sqlite3_reset(stmt);
     T("(%s) -> %s (%d results)", pattern, pEp_status_to_string(status), *countp);
@@ -697,6 +811,10 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
     char *email = NULL;
     char *name = NULL;
 
+    pgp_fpr = pgp_tpk_fingerprint(tpk);
+    fpr = pgp_fingerprint_to_hex(pgp_fpr);
+    T("(%s, private_idents: %s)", fpr, private_idents ? "yes" : "no");
+
     sqlite3_stmt *stmt = session->sq_sql.begin_transaction;
     int sqlite_result = Sqlite3_step(stmt);
     sqlite3_reset(stmt);
@@ -705,9 +823,8 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
                   "begin transaction failed: %s",
                   sqlite3_errmsg(session->key_db));
 
-    pgp_fpr = pgp_tpk_fingerprint(tpk);
-    fpr = pgp_fingerprint_to_hex(pgp_fpr);
-    T("(%s, private_idents: %s)", fpr, private_idents ? "yes" : "no");
+    // Make sure we read from the DB.
+    tpk_cache_clear();
 
     // Merge any existing data into TPK.
     pgp_tpk_t current = NULL;
@@ -836,6 +953,8 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
     pgp_user_id_binding_iter_free(user_id_iter);
     user_id_iter = NULL;
 
+    // It's essential that we at least clear the cache.
+    tpk_cache_insert(tpk);
  out:
     // Prevent ERROR_OUT from causing an infinite loop.
     if (! tried_commit) {
@@ -1858,6 +1977,8 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr_raw)
     if (! fpr)
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
 
+    tpk_cache_clear();
+
     T("Deleting %s", fpr);
 
     sqlite3_stmt *stmt = session->sq_sql.delete_keypair;
@@ -1888,6 +2009,8 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
 
     if (private_idents)
         *private_idents = NULL;
+
+    tpk_cache_clear();
 
     T("parsing %zd bytes", size);
 
