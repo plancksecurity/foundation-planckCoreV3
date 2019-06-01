@@ -144,6 +144,7 @@ struct _pEpSession {
         sqlite3_stmt *tpk_save_insert_primary;
         sqlite3_stmt *tpk_save_insert_subkeys;
         sqlite3_stmt *tpk_save_insert_userids;
+        sqlite3_stmt *delete_keypair;
     } sq_sql;
 #endif
 

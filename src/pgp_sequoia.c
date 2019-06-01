@@ -400,6 +400,12 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                              -1, &session->sq_sql.tpk_save_insert_userids, NULL);
     assert(sqlite_result == SQLITE_OK);
 
+    sqlite_result
+        = sqlite3_prepare_v2(session->key_db,
+                             "DELETE FROM keys WHERE primary_key = ?",
+                             -1, &session->sq_sql.delete_keypair, NULL);
+    assert(sqlite_result == SQLITE_OK);
+
  out:
     if (status != PEP_STATUS_OK)
         pgp_release(session, in_first);
@@ -425,8 +431,6 @@ void pgp_release(PEP_SESSION session, bool out_last)
     }
 }
 
-/* commented out to omit compiler warning about unused function
-
 // Ensures that a fingerprint is in canonical form.  A canonical
 // fingerprint doesn't contain any white space.
 //
@@ -440,8 +444,6 @@ static char *pgp_fingerprint_canonicalize(const char *fpr)
 
     return fpr_canonicalized;
 }
-
-*/
 
 // step statement and load the tpk and secret.
 static PEP_STATUS key_load(PEP_SESSION, sqlite3_stmt *, pgp_tpk_t *, int *)
@@ -1844,40 +1846,37 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     return status;
 }
 
-#define SQL_DELETE "DELETE FROM keys WHERE primary_key = '%s' ;"
-static const char *sql_delete = SQL_DELETE;
-static const size_t sql_delete_size = sizeof(SQL_DELETE);
-
-// FIXME: this is deleting the key from the index but not the key data
-
-PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
+PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr_raw)
 {
-    assert(session && fpr && fpr[0]);
-    if (!(session && fpr && fpr[0]))
-        return PEP_ILLEGAL_VALUE;
+    PEP_STATUS status = PEP_STATUS_OK;
 
-    size_t sql_size = sql_delete_size + strlen(fpr);
-    char *sql = calloc(1, sql_size);
-    assert(sql);
-    if (!sql)
-        return PEP_OUT_OF_MEMORY;
+    assert(session && fpr_raw && fpr_raw[0]);
+    if (!(session && fpr_raw && fpr_raw[0]))
+        ERROR_OUT(NULL, PEP_ILLEGAL_VALUE, "invalid arguments");
 
-    int r = snprintf(sql, sql_size, sql_delete, fpr);
-    assert(r > 0 && r < sql_size);
-    if (r < 0)
-        return PEP_UNKNOWN_ERROR;
+    char *fpr = pgp_fingerprint_canonicalize(fpr_raw);
+    if (! fpr)
+        ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
 
-    int sqlite_result = sqlite3_exec(session->key_db, sql, NULL, NULL, NULL);
-    assert(sqlite_result == SQLITE_OK);
-    if (sqlite_result != SQLITE_OK)
-        return PEP_CANNOT_DELETE_KEY;
+    T("Deleting %s", fpr);
+
+    sqlite3_stmt *stmt = session->sq_sql.delete_keypair;
+    sqlite3_bind_text(stmt, 1, fpr, -1, free);
+
+    int sqlite_result = Sqlite3_step(stmt);
+    sqlite3_reset(stmt);
+    if (sqlite_result != SQLITE_DONE)
+        ERROR_OUT(NULL, PEP_CANNOT_DELETE_KEY,
+                  "deletion failed: %s", sqlite3_errmsg(session->key_db));
 
     sqlite_result = sqlite3_changes(session->key_db);
     assert(sqlite_result >= 0 && sqlite_result < 2);
     if (sqlite_result < 1)
-        return PEP_KEY_NOT_FOUND;
+        ERROR_OUT(NULL, PEP_KEY_NOT_FOUND,
+                  "attempt to delete non-existent key: %s", fpr_raw);
 
-    return PEP_STATUS_OK;
+ out:
+    return status;
 }
 
 PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
