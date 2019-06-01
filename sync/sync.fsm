@@ -61,7 +61,6 @@ protocol Sync 1 {
                         // this is our own NegotiationRequest; ignore
                     }
                     else {
-                        // first is receiving NegotiationRequest
                         do storeNegotiation;
                         // first is sending NegotiationOpen
                         send NegotiationOpen;
@@ -75,6 +74,7 @@ protocol Sync 1 {
 
             on NegotiationOpen if sameNegotiationAndPartner {
                 // second is receiving NegotiationOpen
+                do storeNegotiation;
                 go HandshakingNewSecond;
             }
         }
@@ -235,11 +235,7 @@ protocol Sync 1 {
 
             on OwnKeysSecond {
                 do saveGroupKeys;
-
-                if keyElectionWon
-                    do ownKeysAreGroupKeys;
-                else
-                    do receivedKeysAreGroupKeys;
+                do receivedKeysAreGroupKeys;
                 do showGroupCreated;
                 go Grouped;
             }
@@ -254,10 +250,7 @@ protocol Sync 1 {
             on OwnKeysFirst {
                 do saveGroupKeys;
 
-                if keyElectionWon
-                    do ownKeysAreGroupKeys;
-                else
-                    do receivedKeysAreGroupKeys;
+                do ownKeysAreGroupKeys;
                 do showGroupCreated;
                 go Grouped;
             }
@@ -284,8 +277,10 @@ protocol Sync 1 {
                 do useOwnChallenge;
             }
 
-            on NegotiationOpen if sameNegotiationAndPartner
+            on NegotiationOpen if sameNegotiationAndPartner {
+                do storeNegotiation;
                 go HandshakingGrouped;
+            }
 
             on GroupTrustThisKey {
                 do trustThisKey;
@@ -324,9 +319,6 @@ protocol Sync 1 {
                 send CommitAccept;
                 go HandshakingJoinPhase1;
             }
-
-            on CommitAcceptForGroup if sameNegotiationAndPartner
-                go HandshakingJoinPhase2;
         }
 
         state HandshakingJoinPhase1 {
@@ -433,18 +425,13 @@ protocol Sync 1 {
                 go Grouped;
 
             on CommitAccept if sameNegotiationAndPartner {
+                do prepareOwnKeys;
                 send GroupKeys;
                 go Grouped;
             }
 
             on GroupTrustThisKey {
                 do trustThisKey;
-            }
-
-            on CommitAcceptForGroup {
-                do showDeviceAdded;
-                if sameNegotiationAndPartner
-                    go Grouped;
             }
 
             on GroupKeys
@@ -465,20 +452,13 @@ protocol Sync 1 {
             on Accept {
                 do trustThisKey;
                 send GroupTrustThisKey;
+                do prepareOwnKeys;
                 send GroupKeys;
                 go Grouped;
             }
 
             on GroupTrustThisKey {
                 do trustThisKey;
-            }
-
-            on CommitAcceptForGroup {
-                do showDeviceAdded;
-                if sameNegotiationAndPartner {
-                    do hideHandshakeDialog;
-                    go Grouped;
-                }
             }
 
             on GroupKeys

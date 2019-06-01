@@ -134,11 +134,15 @@ IdentityList_t *IdentityList_from_identity_list(
     if (!list)
         return NULL;
 
-    if (allocated)
+    if (allocated) {
         result = (IdentityList_t *) calloc(1, sizeof(IdentityList_t));
-    assert(result);
-    if (!result)
-        return NULL;
+        assert(result);
+        if (!result)
+            return NULL;
+    }
+    else {
+        asn_sequence_empty(result);
+    }
 
     for (const identity_list *l = list; l && l->ident; l=l->next) {
         Identity_t *ident = Identity_from_Struct(l->ident, NULL);

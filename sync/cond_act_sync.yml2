@@ -239,22 +239,7 @@ function "show_handshake" {
      
     ||
     choose {
-    when "$type = 'SYNC_NOTIFY_TIMEOUT' or $type = 'SYNC_NOTIFY_SOLE' or $type = 'SYNC_NOTIFY_IN_GROUP'"
-    ||
-        pEp_identity *me = new_identity(NULL, NULL, NULL, NULL);
-        pEp_identity *partner = new_identity(NULL, NULL, NULL, NULL);
-        assert(me && partner);
-        if (!(me && partner)) {
-            free_identity(me);
-            free_identity(partner);
-            return PEP_OUT_OF_MEMORY;
-        }
-
-        PEP_STATUS status = session->notifyHandshake(me, partner, «$type»);
-        if (status)
-            return status;
-    ||
-    otherwise
+    when "$type = 'SYNC_NOTIFY_INIT_ADD_OUR_DEVICE' or $type = 'SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE' or $type = 'SYNC_NOTIFY_INIT_FORM_GROUP'"
     ||
         assert(session->sync_state.transport.from);
         if (!session->sync_state.transport.from)
@@ -266,7 +251,8 @@ function "show_handshake" {
         assert(status == PEP_STATUS_OK);
         if (status)
             return status;
-
+        assert(strcmp(me->fpr, session->sync_state.comm_partner.sender_fpr) != 0);
+        
         assert(me->fpr && me->fpr[0]);
         if (!(me->fpr && me->fpr[0])) {
             free_identity(me);
@@ -283,6 +269,7 @@ function "show_handshake" {
         if (session->sync_state.comm_partner.sender_fpr) {
             free(partner->fpr);
             partner->fpr = strdup(session->sync_state.comm_partner.sender_fpr);
+            assert(partner->fpr);
             if (!partner->fpr) {
                 free_identity(me);
                 free_identity(partner);
@@ -299,7 +286,23 @@ function "show_handshake" {
             return PEP_OUT_OF_MEMORY;
         }
 
+        assert(strcmp(me->fpr, partner->fpr) != 0);
         status = session->notifyHandshake(me, partner, «$type»);
+        if (status)
+            return status;
+    ||
+    otherwise
+    ||
+        pEp_identity *me = new_identity(NULL, NULL, NULL, NULL);
+        pEp_identity *partner = new_identity(NULL, NULL, NULL, NULL);
+        assert(me && partner);
+        if (!(me && partner)) {
+            free_identity(me);
+            free_identity(partner);
+            return PEP_OUT_OF_MEMORY;
+        }
+
+        PEP_STATUS status = session->notifyHandshake(me, partner, «$type»);
         if (status)
             return status;
     ||
@@ -355,19 +358,61 @@ action prepareOwnKeys
 
 action saveGroupKeys
 ||
+    char *user_id = NULL;
+    PEP_STATUS status = get_default_own_userid(session, &user_id);
+    if (status)
+        return status;
+
     identity_list *il = IdentityList_to_identity_list(&session->sync_state.keysync.ownIdentities, NULL);
-    if (!il)
+    if (!il) {
+        free(user_id);
         return PEP_OUT_OF_MEMORY;
+    }
     
+    identity_list *oil = session->sync_state.own.identities;
+
     // BUG: this should be a transaction and been rolled back completely on error
     for (identity_list *_il = il; _il && _il->ident; _il = _il->next) {
-        PEP_STATUS status = set_identity(session, _il->ident);
+        pEp_identity *ident = _il->ident;
+        bool is_own_already = false;
+
+        status = is_own_address(session, ident->address, &is_own_already);
         if (status) {
             free_identity_list(il);
+            free(user_id);
+            return status;
+        }
+
+        free(ident->user_id);
+        ident->user_id = strdup(user_id);
+        assert(ident->user_id);
+        if (!ident->user_id) {
+            free_identity_list(il);
+            free(user_id);
+            return PEP_OUT_OF_MEMORY;
+        }
+
+        if (is_own_already) {
+            ident->comm_type = PEP_ct_pEp;
+            status = set_trust(session, ident);
+        }
+        else {
+            oil = identity_list_add(oil, ident);
+            if (!oil) {
+                free_identity_list(il);
+                free(user_id);
+                return PEP_OUT_OF_MEMORY;
+            }
+            status = myself(session, ident);
+        }
+        if (status) {
+            free_identity_list(il);
+            free(user_id);
             return status;
         }
     }
 
+    free(user_id);
     free_identity_list(il);
 ||
 
@@ -375,7 +420,7 @@ action ownKeysAreGroupKeys
 ||
     PEP_STATUS status = PEP_STATUS_OK;
 
-    // set flag for current keys
+    // set flag for all keys; don't change anything else
     for (identity_list *il = session->sync_state.own.identities; il && il->ident ; il = il->next) {
         if (!(il->ident->flags && PEP_idf_not_for_sync)) {
             status = set_identity_flags(session, il->ident, PEP_idf_devicegroup);
@@ -388,43 +433,48 @@ action ownKeysAreGroupKeys
 action receivedKeysAreGroupKeys
 ||
     PEP_STATUS status = PEP_STATUS_OK;
-
-    // set flag for current keys
+    // set flag for all keys
     for (identity_list *il = session->sync_state.own.identities; il && il->ident ; il = il->next) {
         if (!(il->ident->flags && PEP_idf_not_for_sync)) {
+            
             status = set_identity_flags(session, il->ident, PEP_idf_devicegroup);
             if (status)
                 return status;
         }
     }
 
+    char *user_id = NULL;
+    status = get_default_own_userid(session, &user_id);
+    if (status)
+        return status;
+
     identity_list *il = IdentityList_to_identity_list(&session->sync_state.keysync.ownIdentities, NULL);
     if (!il)
         return PEP_OUT_OF_MEMORY;
 
-    for (il = session->sync_state.own.identities; il && il->ident ; il = il->next) {
+    for (identity_list *_il = il; _il && _il->ident ; _il = _il->next) {
         // replace partner's user_id with own user_id
-        free(il->ident->user_id);
-        il->ident->user_id = strdup(session->sync_state.transport.from->user_id);
-        if (!il->ident->user_id) {
+        free(_il->ident->user_id);
+        _il->ident->user_id = strdup(user_id);
+        assert(_il->ident->user_id);
+        if (!_il->ident->user_id) {
             free_identity_list(il);
+            free(user_id);
             return PEP_OUT_OF_MEMORY;
         }
-
-        status = myself(session, il->ident);
+    
+        const char *own_key = _il->ident->fpr;
+        _il->ident->fpr = NULL;
+        status = set_own_key(session, _il->ident, own_key);
         if (status) {
             free_identity_list(il);
-            return status;
-        }
-
-        status = set_identity_flags(session, il->ident, PEP_idf_devicegroup);
-        if (status) {
-            free_identity_list(il);
+            free(user_id);
             return status;
         }
     }
 
     free_identity_list(il);
+    free(user_id);
 ||
 
 action trustThisKey
