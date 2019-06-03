@@ -856,15 +856,12 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
 
     free(email);
     free(name);
-    if (user_id_iter)
-        pgp_user_id_binding_iter_free(user_id_iter);
-    if (key_iter)
-        pgp_tpk_key_iter_free(key_iter);
+    pgp_user_id_binding_iter_free(user_id_iter);
+    pgp_tpk_key_iter_free(key_iter);
     if (stmt)
       sqlite3_reset(stmt);
     free(tsk_buffer);
-    if (tpk)
-        pgp_tpk_free(tpk);
+    pgp_tpk_free(tpk);
     free(fpr);
     pgp_fingerprint_free(pgp_fpr);
 
@@ -1016,13 +1013,10 @@ decrypt_cb(void *cookie_opaque,
         cookie->decrypted = 1;
 
     eol:
-        if (sk)
-            pgp_session_key_free (sk);
+        pgp_session_key_free (sk);
         free(keyid_str);
-        if (key_iter)
-            pgp_tpk_key_iter_free(key_iter);
-        if (tpk)
-            pgp_tpk_free(tpk);
+        pgp_tpk_key_iter_free(key_iter);
+        pgp_tpk_free(tpk);
     }
 
     // Consider wildcard recipients.
@@ -1095,11 +1089,9 @@ decrypt_cb(void *cookie_opaque,
             key_iter = NULL;
         }
     eol2:
-        if (sk)
-            pgp_session_key_free (sk);
+        pgp_session_key_free (sk);
         free(keyid_str);
-        if (key_iter)
-            pgp_tpk_key_iter_free(key_iter);
+        pgp_tpk_key_iter_free(key_iter);
     }
 
     if (tsks) {
@@ -1433,12 +1425,9 @@ PEP_STATUS pgp_decrypt_and_verify(
         free(*ptext);
     }
 
-    if (reader)
-        pgp_reader_free(reader);
-    if (decryptor)
-        pgp_reader_free(decryptor);
-    if (writer)
-        pgp_writer_free(writer);
+    pgp_reader_free(reader);
+    pgp_reader_free(decryptor);
+    pgp_writer_free(writer);
 
     T("-> %s", pEp_status_to_string(status));
     return status;
@@ -1532,12 +1521,9 @@ PEP_STATUS pgp_verify_text(
         free_stringlist(cookie.signer_keylist);
     }
 
-    if (verifier)
-        pgp_reader_free(verifier);
-    if (reader)
-        pgp_reader_free(reader);
-    if (dsig_reader)
-        pgp_reader_free(dsig_reader);
+    pgp_reader_free(verifier);
+    pgp_reader_free(reader);
+    pgp_reader_free(dsig_reader);
 
     T("-> %s", pEp_status_to_string(status));
     return status;
@@ -1619,14 +1605,10 @@ PEP_STATUS pgp_sign_only(
     (*stext)[*ssize] = 0;
 
  out:
-    if (signer)
-        pgp_signer_free (signer);
-    if (signing_keypair)
-        pgp_key_pair_free (signing_keypair);
-    if (iter)
-        pgp_tpk_key_iter_free (iter);
-    if (signer_tpk)
-        pgp_tpk_free(signer_tpk);
+    pgp_signer_free (signer);
+    pgp_key_pair_free (signing_keypair);
+    pgp_tpk_key_iter_free (iter);
+    pgp_tpk_free(signer_tpk);
 
     T("(%s)-> %s", fpr, pEp_status_to_string(status));
     return status;
@@ -1740,14 +1722,10 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     (*ctext)[*csize] = 0;
 
  out:
-    if (signer)
-        pgp_signer_free (signer);
-    if (signing_keypair)
-        pgp_key_pair_free (signing_keypair);
-    if (iter)
-        pgp_tpk_key_iter_free (iter);
-    if (signer_tpk)
-        pgp_tpk_free(signer_tpk);
+    pgp_signer_free (signer);
+    pgp_key_pair_free (signing_keypair);
+    pgp_tpk_key_iter_free (iter);
+    pgp_tpk_free(signer_tpk);
 
     for (int i = 0; i < keys_count; i ++)
         pgp_tpk_free(keys[i]);
@@ -1799,7 +1777,7 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     size_t userid_len = 0;
     const uint8_t *raw = pgp_user_id_value(userid_packet, &userid_len);
 
-    // Null terminate it.
+    // NUL terminate it.
     userid = malloc(userid_len + 1);
     if (!userid)
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
@@ -1833,14 +1811,11 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     fpr = NULL;
 
  out:
-    if (pgp_fpr)
-        pgp_fingerprint_free(pgp_fpr);
+    pgp_fingerprint_free(pgp_fpr);
     free(fpr);
-    if (tpk)
-        pgp_tpk_free(tpk);
+    pgp_tpk_free(tpk);
     free(userid);
-    if (userid_packet)
-        pgp_packet_free(userid_packet);
+    pgp_packet_free(userid_packet);
 
     T("-> %s", pEp_status_to_string(status));
     return status;
@@ -1994,8 +1969,7 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
     }
 
  out:
-    if (parser)
-        pgp_tpk_parser_free(parser);
+    pgp_tpk_parser_free(parser);
 
     T("-> %s", pEp_status_to_string(status));
     return status;
@@ -2067,12 +2041,12 @@ PEP_STATUS pgp_export_keydata(
     return status;
 }
 
-char* _undot_address(const char* address) {
+static char *_undot_address(const char* address) {
     if (!address)
         return NULL;
 
     int addr_len = strlen(address);
-    const char* at = strstr(address, "@");
+    const char* at = memchr(address, '@', addr_len);
 
     if (!at)
         at = address + addr_len;
@@ -2221,10 +2195,8 @@ static PEP_STATUS list_keys(PEP_SESSION session,
     }
 
  out:
-    if (tpk)
-        pgp_tpk_free(tpk);
-    if (fpr)
-        pgp_fingerprint_free(fpr);
+    pgp_tpk_free(tpk);
+    pgp_fingerprint_free(fpr);
 
     if (status == PEP_KEY_NOT_FOUND)
         status = PEP_STATUS_OK;
@@ -2369,8 +2341,7 @@ PEP_STATUS pgp_get_key_rating(
     }
 
  out:
-    if (tpk)
-        pgp_tpk_free(tpk);
+    pgp_tpk_free(tpk);
 
     T("(%s) -> %s", fpr, pEp_comm_type_to_string(*comm_type));
     return status;
@@ -2430,14 +2401,10 @@ PEP_STATUS pgp_renew_key(
     ERROR_OUT(NULL, status, "Saving %s", fpr);
 
  out:
-    if (signer)
-        pgp_signer_free (signer);
-    if (keypair)
-        pgp_key_pair_free (keypair);
-    if (iter)
-        pgp_tpk_key_iter_free (iter);
-    if (tpk)
-        pgp_tpk_free(tpk);
+    pgp_signer_free (signer);
+    pgp_key_pair_free (keypair);
+    pgp_tpk_key_iter_free (iter);
+    pgp_tpk_free(tpk);
 
     T("(%s) -> %s", fpr, pEp_status_to_string(status));
     return status;
@@ -2491,14 +2458,10 @@ PEP_STATUS pgp_revoke_key(
     ERROR_OUT(NULL, status, "Saving %s", fpr);
 
  out:
-    if (signer)
-        pgp_signer_free (signer);
-    if (keypair)
-        pgp_key_pair_free (keypair);
-    if (iter)
-        pgp_tpk_key_iter_free (iter);
-    if (tpk)
-        pgp_tpk_free(tpk);
+    pgp_signer_free (signer);
+    pgp_key_pair_free (keypair);
+    pgp_tpk_key_iter_free (iter);
+    pgp_tpk_free(tpk);
 
     T("(%s) -> %s", fpr, pEp_status_to_string(status));
     return status;
@@ -2555,8 +2518,7 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
     *expired = !(can_encrypt && can_sign && can_certify);
 
  out:
-    if (tpk)
-        pgp_tpk_free(tpk);
+    pgp_tpk_free(tpk);
     T("(%s) -> %s", fpr, pEp_status_to_string(status));
     return status;
 }
