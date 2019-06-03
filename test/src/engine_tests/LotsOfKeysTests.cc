@@ -139,7 +139,7 @@ static void dump_stats(struct stats *stats, int benchmark) {
 
 void LotsOfKeysTests::check() {
     struct tm tm;
-    time_t t = time((time_t) NULL);
+    time_t t = time((time_t *) NULL);
     localtime_r(&t, &tm);
     strftime(start_time, sizeof(start_time), "%Y%m%d-%H%M%S", &tm);
 
