@@ -997,6 +997,7 @@ DYNAMIC_API PEP_STATUS init(
                 "   timestamp integer default (datetime('now')),\n"
                 "   primary key (address, user_id)\n"
                 ");\n"
+                "create index if not exists identity_userid_addr on identity(address, user_id);\n"
                 "create table if not exists trust (\n"
                 "   user_id text not null\n"
                 "       references person (id)\n"
@@ -1456,6 +1457,16 @@ DYNAMIC_API PEP_STATUS init(
                     return status;
             }
             if (version < 12) {
+                int_result = sqlite3_exec(
+                    _session->db,
+                    "create index if not exists identity_userid_addr on identity(address, user_id);\n"
+                    ,
+                    NULL,
+                    NULL,
+                    NULL
+                );
+                assert(int_result == SQLITE_OK);
+                
                 int_result = sqlite3_exec(
                     _session->db,
                     "alter table identity\n"

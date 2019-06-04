@@ -151,6 +151,7 @@ struct _pEpSession {
         sqlite3_stmt *tpk_save_insert_primary;
         sqlite3_stmt *tpk_save_insert_subkeys;
         sqlite3_stmt *tpk_save_insert_userids;
+        sqlite3_stmt *delete_keypair;
     } sq_sql;
 #endif
 
@@ -260,7 +261,6 @@ struct _pEpSession {
     void *sync_management;
     void *sync_obj;
     struct Sync_state_s sync_state;
-    struct own_Sync_state_s own_sync_state;
 
 //     void* sync_state_payload;
 //     char sync_uuid[37];
