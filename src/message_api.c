@@ -3922,15 +3922,16 @@ DYNAMIC_API PEP_STATUS decrypt_message(
             !(*flags & PEP_decrypt_flag_dont_trigger_sync)) {
         size_t size;
         const char *data;
-        char *sync_fpr = NULL;
-        PEP_STATUS tmpstatus = base_extract_message(session, msg, &size, &data, &sync_fpr);
+        char *sender_fpr = NULL;
+        PEP_STATUS tmpstatus = base_extract_message(session, msg, &size, &data, &sender_fpr);
         if (!tmpstatus && size && data) {
-            if (sync_fpr)
-                signal_Sync_message(session, *rating, data, size, msg->from, sync_fpr);
+            if (sender_fpr)
+                signal_Sync_message(session, *rating, data, size, msg->from, sender_fpr);
+            // FIXME: this must be changed to sender_fpr
             else if (*keylist)
                 signal_Sync_message(session, *rating, data, size, msg->from, (*keylist)->value);
         }
-        free(sync_fpr);
+        free(sender_fpr);
     }
 
     return status;
