@@ -235,7 +235,7 @@ protocol Sync 1 {
 
             on OwnKeysSecond {
                 do saveGroupKeys;
-                do receivedKeysAreGroupKeys;
+                do receivedKeysAreDefaultKeys;
                 do showGroupCreated;
                 go Grouped;
             }
@@ -250,7 +250,7 @@ protocol Sync 1 {
             on OwnKeysFirst {
                 do saveGroupKeys;
 
-                do ownKeysAreGroupKeys;
+                do ownKeysAreDefaultKeys;
                 do showGroupCreated;
                 go Grouped;
             }
@@ -364,7 +364,7 @@ protocol Sync 1 {
 
             on GroupKeys {
                 do saveGroupKeys;
-                do receivedKeysAreGroupKeys;
+                do receivedKeysAreDefaultKeys;
                 do showDeviceAdded;
                 go Grouped;
             }
