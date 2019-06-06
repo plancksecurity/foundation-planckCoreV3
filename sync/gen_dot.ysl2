@@ -12,7 +12,7 @@ tstylesheet {
         InitState;
         node [shape = doublecircle];
         End;
-        node [shape = circle];
+        node [shape = circle, style=filled, fillcolor = lightgrey];
 
         `` apply "descendant::transition";
     }
