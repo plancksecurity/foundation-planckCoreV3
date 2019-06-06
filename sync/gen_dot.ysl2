@@ -14,29 +14,11 @@ tstylesheet {
         End;
         node [shape = circle];
 
-        `` apply "state" mode=do
+        `` apply "descendant::transition";
     }
     ||
 
-    template "state", mode=do apply "event", 0 with "state", "@name";
-
-    template "event" {
-        param "state";
-        choose {
-            when "count(descendant::transition) > 0"
-                apply "descendant::transition", 0
-                    with "state", "$state", with "event", "@name";
-            otherwise
-                if "@name != 'Init'"
-                    | «$state» -> «$state» [ label="«@name»" ];
-        }
-    }
-
-    template "transition" {
-        param "state";
-        param "event";
-
-        | «$state» -> «@target» [ label ="«$event»" ];
-    }
+    template "transition"
+        | «ancestor::state/@name» -> «@target» [ label="«ancestor::event/@name»" ];
 }
 
