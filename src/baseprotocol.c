@@ -22,7 +22,7 @@ PEP_STATUS base_decorate_message(
         return PEP_ILLEGAL_VALUE;
 
     bloblist_t *bl = bloblist_add(msg->attachments, payload, size,
-            "application/pEp-sync", "ignore_this_attachment.pEp");
+            "application/pEp.sync", "ignore_this_attachment.pEp");
     if (bl == NULL)
         goto enomem;
     else if (!msg->attachments) {
@@ -39,7 +39,7 @@ PEP_STATUS base_decorate_message(
         assert(sign && sign_size);
 
         bl = bloblist_add(bl, sign, sign_size,
-                "application/pEp-sign", "electronic_signature.asc");
+                "application/pEp.sign", "electronic_signature.asc");
         if (!bl)
             goto enomem;
     }
@@ -136,7 +136,7 @@ PEP_STATUS base_extract_message(
     stringlist_t *keylist = NULL;
 
     for (bloblist_t *bl = msg->attachments; bl ; bl = bl->next) {
-        if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp-sync") == 0) {
+        if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp.sync") == 0) {
             if (!_payload) {
                 _payload = bl->value;
                 _payload_size = bl->size;
@@ -146,7 +146,7 @@ PEP_STATUS base_extract_message(
                 goto the_end;
             }
         }
-        else if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp-sign") == 0) {
+        else if (bl->mime_type && strcasecmp(bl->mime_type, "application/pEp.sign") == 0) {
             if (!_sign) {
                 _sign = bl->value;
                 _sign_size = bl->size;
