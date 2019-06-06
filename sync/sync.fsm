@@ -308,6 +308,9 @@ protocol Sync 1 {
                 go End;
             }
 
+            on CommitAccept if sameNegotiationAndPartner
+                go HandshakingJoinPhase2;
+
             on CommitReject if sameNegotiationAndPartner {
                 do disable;
                 go End;
