@@ -9,14 +9,13 @@ tstylesheet {
     digraph finite_state_machine {
         rankdir=LR;
         node [shape = doublecircle];
-        `apply "state[@end='1']" mode=end`;
+        End;
         node [shape = circle];
 
         `` apply "state" mode=do
     }
     ||
 
-    template "state", mode=end > «@name» 
     template "state", mode=do apply "event", 0 with "state", "@name";
 
     template "event" {
