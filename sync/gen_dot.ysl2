@@ -8,10 +8,10 @@ tstylesheet {
     ||
     digraph finite_state_machine {
         rankdir=LR;
-        node [shape = doublecircle];
-        End;
         node [shape = point];
         InitState;
+        node [shape = doublecircle];
+        End;
         node [shape = circle];
 
         `` apply "state" mode=do
