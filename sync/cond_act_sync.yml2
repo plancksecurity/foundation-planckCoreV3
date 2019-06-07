@@ -416,7 +416,7 @@ action saveGroupKeys
     free_identity_list(il);
 ||
 
-action ownKeysAreGroupKeys
+action ownKeysAreDefaultKeys
 ||
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -430,7 +430,7 @@ action ownKeysAreGroupKeys
     }
 ||
 
-action receivedKeysAreGroupKeys
+action receivedKeysAreDefaultKeys
 ||
     PEP_STATUS status = PEP_STATUS_OK;
     // set flag for all keys
