@@ -307,7 +307,7 @@ protocol Sync 1 {
                 go End;
             }
 
-            on CommitAcceptForGroup
+            on CommitAcceptForGroup if sameNegotiationAndPartner
                 go HandshakingJoinPhase2;
 
             on CommitReject if sameNegotiationAndPartner {
@@ -332,9 +332,8 @@ protocol Sync 1 {
                 go End;
             }
 
-            on CommitAcceptForGroup {
+            on CommitAcceptForGroup if sameNegotiationAndPartner
                 go JoinGroup;
-            }
         }
 
         state HandshakingJoinPhase2 {
@@ -405,14 +404,6 @@ protocol Sync 1 {
             on GroupTrustThisKey {
                 do hideHandshakeDialog;
                 do trustThisKey;
-            }
-
-            on CommitAcceptForGroup {
-                do showDeviceAdded;
-                if sameNegotiationAndPartner {
-                    do hideHandshakeDialog;
-                    go Grouped;
-                }
             }
 
             on GroupKeys
