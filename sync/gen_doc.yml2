@@ -28,9 +28,17 @@ tstylesheet {
             sort "ancestor::state/@name",
             sort "@target",
             sort "ancestor::event/@name";
+        |
+        apply "message" sort "@name";
+        |
+        for "set:distinct(message/field/@name)" {
+            sort ".";
+            |> field «.»
+        }
     }
     template "state" | state «@name»
     template "transition"
         | from «ancestor::state/@name» -> to «@target» on event «ancestor::event/@name»
+    template "message" | message «@name»
 }
 
