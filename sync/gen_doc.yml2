@@ -1,0 +1,36 @@
+include yslt.yml2
+
+tstylesheet {
+    template "/protocol" {
+        | protocol «@name»
+        apply "fsm" sort "@name";
+    }
+    template "fsm" {
+        | fsm «@name»
+        apply "state" sort "@name";
+        |
+        for "set:distinct(*/event/@name)" {
+            sort ".";
+            |> event «.»
+        }
+        |
+        for "set:distinct(descendant::action/@name)" {
+            sort ".";
+            |> action «.»
+        }
+        |
+        for "set:distinct(descendant::condition/@name)" {
+            sort ".";
+            |> condition «.»
+        }
+        |
+        apply "descendant::transition"
+            sort "ancestor::state/@name",
+            sort "@target",
+            sort "ancestor::event/@name";
+    }
+    template "state" | state «@name»
+    template "transition"
+        | from «ancestor::state/@name» -> to «@target» on event «ancestor::event/@name»
+}
+
