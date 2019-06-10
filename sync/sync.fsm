@@ -281,9 +281,8 @@ protocol Sync 1 {
                 go HandshakingGrouped;
             }
 
-            on GroupTrustThisKey {
+            on GroupTrustThisKey
                 do trustThisKey;
-            }
         }
 
         // sole device handshaking with group
@@ -355,14 +354,11 @@ protocol Sync 1 {
         }
 
         state JoiningGroup {
-            on Init {
-                do prepareOwnKeys;
-                send OwnKeys;
-            }
-
             on GroupKeys {
                 do saveGroupKeys;
                 do receivedKeysAreDefaultKeys;
+                do prepareOwnKeys;
+                send GroupKeys;
                 do showDeviceAdded;
                 go Grouped;
             }
@@ -515,15 +511,11 @@ protocol Sync 1 {
             field IdentityList ownIdentities;
         }
 
-        message OwnKeys 13, security=attach_own_keys {
+        message OwnKeysOfferer 13, security=attach_own_keys {
             field IdentityList ownIdentities;
         }
 
-        message OwnKeysOfferer 14, security=attach_own_keys {
-            field IdentityList ownIdentities;
-        }
-
-        message OwnKeysRequester 15, security=attach_own_keys {
+        message OwnKeysRequester 14, security=attach_own_keys {
             field IdentityList ownIdentities;
         }
     }
