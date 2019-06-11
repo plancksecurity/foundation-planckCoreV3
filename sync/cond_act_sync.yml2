@@ -18,7 +18,7 @@ condition deviceGrouped {
     |> *result = _result > 0;
 }
 
-condition weAreFirst
+condition weAreOfferer
 ||
     TID_t *t1 = &session->sync_state.keysync.challenge;
     TID_t *t2 = &session->sync_state.own.challenge;
