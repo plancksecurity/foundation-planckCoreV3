@@ -182,23 +182,26 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
+#ifdef _WIN32
+	int sqlite_result;
+	sqlite_result = sqlite3_open_v2(KEYS_DB,
+		&session->key_db,
+		SQLITE_OPEN_READWRITE
+		| SQLITE_OPEN_CREATE
+		| SQLITE_OPEN_FULLMUTEX
+		| SQLITE_OPEN_PRIVATECACHE,
+		NULL);
+#else
     // Create the home directory.
     char *home_env = NULL;
 #ifndef NDEBUG
     home_env = getenv("PEP_HOME");
 #endif
 
-#ifdef _WIN32
-    #define PEP_KEYS_PATH "\\pEp\\keys.db"
-
-    if (!home_env)
-        home_env = getenv("LOCALAPPDATA");
-#else
     #define PEP_KEYS_PATH "/.pEp_keys.db"
 
     if (!home_env)
         home_env = getenv("HOME");
-#endif
 
     if (!home_env)
         ERROR_OUT(NULL, PEP_INIT_GPGME_INIT_FAILED, "HOME unset");
@@ -224,6 +227,8 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                                     | SQLITE_OPEN_PRIVATECACHE,
                                     NULL);
     free(path);
+#endif
+
     if (sqlite_result != SQLITE_OK)
         ERROR_OUT(NULL, PEP_INIT_CANNOT_OPEN_DB,
                   "opening keys DB: %s", sqlite3_errmsg(session->key_db));

@@ -25,6 +25,9 @@
 #define WC_ERR_INVALID_CHARS      0x00000080  // error for invalid chars
 #endif
 
+#define ENV_PEP_APPDATA "PEP_APPDATA"
+#define ENV_PEP_APPDATA_VAL "1" 
+
 using namespace std;
 
 static string utf8_string(wstring wstr) {
@@ -193,10 +196,31 @@ void *dlsym(void *handle, const char *symbol) {
 	return (void *) (intptr_t) GetProcAddress((HMODULE) handle, symbol);
 }
 
+const char *windoze_keys_db(void) {
+	static string path;
+	if (path.length() == 0) {
+
+		const char * env = getenv(ENV_PEP_APPDATA);
+
+		if (env && (strcmp(env, ENV_PEP_APPDATA_VAL) == 0))
+			path = managementPath("%APPDATA%\\pEp", "keys.db");
+		else
+			path = managementPath("%LOCALAPPDATA%\\pEp", "keys.db");
+	}
+	return path.c_str();
+}
+
 const char *windoze_local_db(void) {
 	static string path;
-	if (path.length() == 0)
-        path = managementPath("%LOCALAPPDATA%\\pEp", "management.db");
+	if (path.length() == 0) {
+
+		const char * env = getenv(ENV_PEP_APPDATA);
+
+		if (env && (strcmp(env, ENV_PEP_APPDATA_VAL) == 0))
+			path = managementPath("%APPDATA%\\pEp", "management.db");
+		else
+			path = managementPath("%LOCALAPPDATA%\\pEp", "management.db");
+	}
     return path.c_str();
 }
 
