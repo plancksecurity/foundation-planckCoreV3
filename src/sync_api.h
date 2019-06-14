@@ -41,10 +41,10 @@ typedef enum _sync_handshake_signal {
 // notifyHandshake() - notify UI about sync handshaking process
 //
 //  parameters:
-//      obj (in)        object handle (implementation defined)
-//      me (in)         own identity
-//      partner (in)    identity of partner
-//      signal (in)     reason of the notification
+//      address (in)        email address for the own identity we're syncing
+//      own_fpr (in)        own fpr to use for handshake
+//      partner_fpr (in)    partner for to use for handshake
+//      signal (in)         reason of the notification
 //
 //  return value:
 //      PEP_STATUS_OK or any other value on error
@@ -53,8 +53,9 @@ typedef enum _sync_handshake_signal {
 //      ownership of self and partner go to the callee
 
 typedef PEP_STATUS (*notifyHandshake_t)(
-        pEp_identity *me,
-        pEp_identity *partner,
+        const char* address,
+        const char* own_fpr,
+        const char* partner_fpr,
         sync_handshake_signal signal
     );
 
@@ -209,4 +210,3 @@ DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session);
 #ifdef __cplusplus
 }
 #endif
-

@@ -287,7 +287,7 @@ function "show_handshake" {
         }
 
         assert(strcmp(me->fpr, partner->fpr) != 0);
-        status = session->notifyHandshake(me, partner, «$type»);
+        status = session->notifyHandshake(me->address, me->fpr, partner->fpr, «$type»);
         if (status)
             return status;
     ||
@@ -302,7 +302,7 @@ function "show_handshake" {
             return PEP_OUT_OF_MEMORY;
         }
 
-        PEP_STATUS status = session->notifyHandshake(me, partner, «$type»);
+        PEP_STATUS status = session->notifyHandshake(me->address, me->fpr, partner->fpr, «$type»);
         if (status)
             return status;
     ||
@@ -535,4 +535,3 @@ action tellWeAreNotGrouped
 ||
 
 action disable;
-

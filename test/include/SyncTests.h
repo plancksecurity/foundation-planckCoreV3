@@ -20,9 +20,10 @@ public:
     void processing();
 
     static PEP_STATUS notifyHandshake(
-            pEp_identity *me,
-            pEp_identity *partner,
-            sync_handshake_signal signal
+        const char* address,
+        const char* own_fpr,
+        const char* partner_fpr,
+        sync_handshake_signal signal
         );
     static int inject_sync_event(SYNC_EVENT ev, void *management);
     static Sync_event_t *retrieve_next_sync_event(void *management, unsigned threshold);

@@ -27,8 +27,9 @@ void Sync_Adapter::processing()
 }
 
 PEP_STATUS Sync_Adapter::notifyHandshake(
-        pEp_identity *me,
-        pEp_identity *partner,
+        const char* address,
+        const char* own_fpr,
+        const char* partner_fpr,
         sync_handshake_signal signal
     )
 {
