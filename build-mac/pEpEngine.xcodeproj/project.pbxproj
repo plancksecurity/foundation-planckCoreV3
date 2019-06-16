@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		159EF40122B6CDC000149C0C /* sequoia.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 159EF40022B6CD7E00149C0C /* sequoia.framework */; };
+		159EF42722B6D3E900149C0C /* pgp_sequoia.c in Sources */ = {isa = PBXBuildFile; fileRef = 159EF42422B6D3E900149C0C /* pgp_sequoia.c */; };
+		159EF42822B6D3E900149C0C /* pgp_sequoia.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42522B6D3E900149C0C /* pgp_sequoia.h */; };
+		159EF42922B6D3E900149C0C /* pgp_sequoia_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */; };
 		15B037AA22B2B822002D664C /* ber_tlv_length.c in Sources */ = {isa = PBXBuildFile; fileRef = 15B0373F22B2B816002D664C /* ber_tlv_length.c */; };
 		15B037AB22B2B822002D664C /* GroupKeys.h in Headers */ = {isa = PBXBuildFile; fileRef = 15B0374022B2B817002D664C /* GroupKeys.h */; };
 		15B037AC22B2B822002D664C /* CommitAccept.c in Sources */ = {isa = PBXBuildFile; fileRef = 15B0374122B2B817002D664C /* CommitAccept.c */; };
@@ -223,6 +226,9 @@
 
 /* Begin PBXFileReference section */
 		159EF3FB22B6CD7E00149C0C /* Sequoia4iOS.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Sequoia4iOS.xcodeproj; path = ../../Sequoia4iOS/Sequoia4iOS.xcodeproj; sourceTree = "<group>"; };
+		159EF42422B6D3E900149C0C /* pgp_sequoia.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pgp_sequoia.c; path = ../src/pgp_sequoia.c; sourceTree = "<group>"; };
+		159EF42522B6D3E900149C0C /* pgp_sequoia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pgp_sequoia.h; path = ../src/pgp_sequoia.h; sourceTree = "<group>"; };
+		159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pgp_sequoia_internal.h; path = ../src/pgp_sequoia_internal.h; sourceTree = "<group>"; };
 		15B0373F22B2B816002D664C /* ber_tlv_length.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ber_tlv_length.c; path = ../asn.1/ber_tlv_length.c; sourceTree = "<group>"; };
 		15B0374022B2B817002D664C /* GroupKeys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GroupKeys.h; path = ../asn.1/GroupKeys.h; sourceTree = "<group>"; };
 		15B0374122B2B817002D664C /* CommitAccept.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = CommitAccept.c; path = ../asn.1/CommitAccept.c; sourceTree = "<group>"; };
@@ -430,13 +436,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		43D47A89225CC60600E97C5B /* Resources-iPad */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = "Resources-iPad";
-			sourceTree = "<group>";
-		};
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
 			isa = PBXGroup;
 			children = (
@@ -573,7 +572,6 @@
 			isa = PBXGroup;
 			children = (
 				159EF3FB22B6CD7E00149C0C /* Sequoia4iOS.xcodeproj */,
-				43D47A89225CC60600E97C5B /* Resources-iPad */,
 				64951A1B1BE0FCD800B10E71 /* system.db */,
 				64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */,
 				649DE08A1B45C19100912F72 /* libcurl.a */,
@@ -597,6 +595,9 @@
 		64A8264B1B455C5600EECAF0 /* srcref */ = {
 			isa = PBXGroup;
 			children = (
+				159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */,
+				159EF42422B6D3E900149C0C /* pgp_sequoia.c */,
+				159EF42522B6D3E900149C0C /* pgp_sequoia.h */,
 				C46EBAE7216E445F0042A6A3 /* base64.c */,
 				C46EBAEC216E445F0042A6A3 /* base64.h */,
 				438C43B42167752C00C7425B /* labeled_int_list.c */,
@@ -675,6 +676,7 @@
 				15B037EF22B2B822002D664C /* ber_decoder.h in Headers */,
 				15B037B822B2B822002D664C /* NativeInteger.h in Headers */,
 				438C43B52167752C00C7425B /* labeled_int_list.h in Headers */,
+				159EF42822B6D3E900149C0C /* pgp_sequoia.h in Headers */,
 				15B037E222B2B822002D664C /* per_encoder.h in Headers */,
 				15B0380F22B2B823002D664C /* Sync.h in Headers */,
 				15B0380422B2B822002D664C /* constr_SET_OF.h in Headers */,
@@ -727,6 +729,7 @@
 				15B037F122B2B822002D664C /* OCTET_STRING.h in Headers */,
 				15B037CE22B2B822002D664C /* Hash.h in Headers */,
 				15B037EE22B2B822002D664C /* der_encoder.h in Headers */,
+				159EF42922B6D3E900149C0C /* pgp_sequoia_internal.h in Headers */,
 				15B037BD22B2B822002D664C /* CommitAcceptOfferer.h in Headers */,
 				15B037CA22B2B822002D664C /* PrintableString.h in Headers */,
 				15B037B222B2B822002D664C /* Identity.h in Headers */,
@@ -931,6 +934,7 @@
 				15B037BE22B2B822002D664C /* ber_tlv_tag.c in Sources */,
 				15B037FE22B2B822002D664C /* xer_encoder.c in Sources */,
 				43F73BF2216626E100AB4524 /* Sync_func.c in Sources */,
+				159EF42722B6D3E900149C0C /* pgp_sequoia.c in Sources */,
 				64A8267B1B455D0800EECAF0 /* etpan_mime.c in Sources */,
 				15B037AC22B2B822002D664C /* CommitAccept.c in Sources */,
 				64A8267A1B455D0800EECAF0 /* email.c in Sources */,
