@@ -133,7 +133,6 @@
 		43F73C0F2166282C00AB4524 /* KeySync_fsm.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73C072166282C00AB4524 /* KeySync_fsm.c */; };
 		43F73C112166282C00AB4524 /* sync_api.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73C092166282C00AB4524 /* sync_api.c */; };
 		43F73C122166282C00AB4524 /* growing_buf.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73C0A2166282C00AB4524 /* growing_buf.c */; };
-		6400FB861B8CA1C6005221E3 /* libnetpgp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 645922521B8BD32B00A5AF93 /* libnetpgp.a */; };
 		6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64289E371B8B630200FC617B /* libetpan-ios.a */; };
 		644297C51BE11CE0002BC73B /* system.db in Resources */ = {isa = PBXBuildFile; fileRef = 64951A1B1BE0FCD800B10E71 /* system.db */; };
 		6467888C1CEB3D120001F54C /* map_asn1.c in Sources */ = {isa = PBXBuildFile; fileRef = 646788871CEB3D120001F54C /* map_asn1.c */; };
@@ -152,7 +151,6 @@
 		64A8267F1B455D0800EECAF0 /* message.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8265B1B455D0800EECAF0 /* message.c */; };
 		64A826801B455D0800EECAF0 /* mime.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8265D1B455D0800EECAF0 /* mime.c */; };
 		64A826811B455D0800EECAF0 /* pEpEngine.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826601B455D0800EECAF0 /* pEpEngine.c */; };
-		64A826821B455D0800EECAF0 /* pgp_netpgp.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826631B455D0800EECAF0 /* pgp_netpgp.c */; };
 		64A826831B455D0800EECAF0 /* platform_unix.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826651B455D0800EECAF0 /* platform_unix.c */; };
 		64A826861B455D0800EECAF0 /* stringlist.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8266D1B455D0800EECAF0 /* stringlist.c */; };
 		64A826871B455D0800EECAF0 /* stringpair.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8266F1B455D0800EECAF0 /* stringpair.c */; };
@@ -199,20 +197,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = C682E21815B315EF00BE9DA7;
 			remoteInfo = "libetpan ios";
-		};
-		645922511B8BD32B00A5AF93 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 64DA240C1B832EA0000BEE80 /* netpgp.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 64AA9C201B45686800D0F542;
-			remoteInfo = netpgp;
-		};
-		645922531B8BD53F00A5AF93 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 64DA240C1B832EA0000BEE80 /* netpgp.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 64AA9C1F1B45686800D0F542;
-			remoteInfo = netpgp;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -388,9 +372,6 @@
 		64A8265F1B455D0800EECAF0 /* pEp_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pEp_internal.h; path = ../src/pEp_internal.h; sourceTree = "<group>"; };
 		64A826601B455D0800EECAF0 /* pEpEngine.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEpEngine.c; path = ../src/pEpEngine.c; sourceTree = "<group>"; };
 		64A826611B455D0800EECAF0 /* pEpEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pEpEngine.h; path = ../src/pEpEngine.h; sourceTree = "<group>"; };
-		64A826621B455D0800EECAF0 /* pgp_netpgp_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pgp_netpgp_internal.h; path = ../src/pgp_netpgp_internal.h; sourceTree = "<group>"; };
-		64A826631B455D0800EECAF0 /* pgp_netpgp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pgp_netpgp.c; path = ../src/pgp_netpgp.c; sourceTree = "<group>"; };
-		64A826641B455D0800EECAF0 /* pgp_netpgp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pgp_netpgp.h; path = ../src/pgp_netpgp.h; sourceTree = "<group>"; };
 		64A826651B455D0800EECAF0 /* platform_unix.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = platform_unix.c; path = ../src/platform_unix.c; sourceTree = "<group>"; };
 		64A826661B455D0800EECAF0 /* platform_unix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = platform_unix.h; path = ../src/platform_unix.h; sourceTree = "<group>"; };
 		64A826691B455D0800EECAF0 /* platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = platform.h; path = ../src/platform.h; sourceTree = "<group>"; };
@@ -406,7 +387,6 @@
 		64A826751B455D0800EECAF0 /* transport.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = transport.c; path = ../src/transport.c; sourceTree = "<group>"; };
 		64A826761B455D0800EECAF0 /* transport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = transport.h; path = ../src/transport.h; sourceTree = "<group>"; };
 		64A826771B455D0800EECAF0 /* wrappers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wrappers.h; path = ../src/wrappers.h; sourceTree = "<group>"; };
-		64DA240C1B832EA0000BEE80 /* netpgp.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = netpgp.xcodeproj; path = "../../netpgp-et/netpgp-xcode/netpgp.xcodeproj"; sourceTree = "<group>"; };
 		64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libetpan.xcodeproj; path = "../../libetpan/build-mac/libetpan.xcodeproj"; sourceTree = "<group>"; };
 		C46EBAE7216E445F0042A6A3 /* base64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = base64.c; path = ../src/base64.c; sourceTree = "<group>"; };
 		C46EBAEC216E445F0042A6A3 /* base64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = base64.h; path = ../src/base64.h; sourceTree = "<group>"; };
@@ -425,7 +405,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */,
-				6400FB861B8CA1C6005221E3 /* libnetpgp.a in Frameworks */,
 				649DE08B1B45C19100912F72 /* libcurl.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -572,21 +551,12 @@
 			path = pEpTrustWords;
 			sourceTree = "<group>";
 		};
-		6459224E1B8BD32B00A5AF93 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				645922521B8BD32B00A5AF93 /* libnetpgp.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		64796A361B455AA5004B1C24 = {
 			isa = PBXGroup;
 			children = (
 				43D47A89225CC60600E97C5B /* Resources-iPad */,
 				64951A1B1BE0FCD800B10E71 /* system.db */,
 				64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */,
-				64DA240C1B832EA0000BEE80 /* netpgp.xcodeproj */,
 				649DE08A1B45C19100912F72 /* libcurl.a */,
 				6406CE811CE382F400C14D77 /* asn.1 */,
 				64A8264B1B455C5600EECAF0 /* srcref */,
@@ -656,9 +626,6 @@
 				64A8265F1B455D0800EECAF0 /* pEp_internal.h */,
 				64A826601B455D0800EECAF0 /* pEpEngine.c */,
 				64A826611B455D0800EECAF0 /* pEpEngine.h */,
-				64A826621B455D0800EECAF0 /* pgp_netpgp_internal.h */,
-				64A826631B455D0800EECAF0 /* pgp_netpgp.c */,
-				64A826641B455D0800EECAF0 /* pgp_netpgp.h */,
 				64A826651B455D0800EECAF0 /* platform_unix.c */,
 				64A826661B455D0800EECAF0 /* platform_unix.h */,
 				64A826691B455D0800EECAF0 /* platform.h */,
@@ -787,7 +754,6 @@
 			);
 			dependencies = (
 				43D47AA1225CC82400E97C5B /* PBXTargetDependency */,
-				645922541B8BD53F00A5AF93 /* PBXTargetDependency */,
 				64289E3F1B8B638800FC617B /* PBXTargetDependency */,
 			);
 			name = pEpEngine;
@@ -828,10 +794,6 @@
 					ProductGroup = 64289E2B1B8B630200FC617B /* Products */;
 					ProjectRef = 64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */;
 				},
-				{
-					ProductGroup = 6459224E1B8BD32B00A5AF93 /* Products */;
-					ProjectRef = 64DA240C1B832EA0000BEE80 /* netpgp.xcodeproj */;
-				},
 			);
 			projectRoot = "";
 			targets = (
@@ -861,13 +823,6 @@
 			fileType = archive.ar;
 			path = "libetpan-ios.a";
 			remoteRef = 64289E361B8B630200FC617B /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		645922521B8BD32B00A5AF93 /* libnetpgp.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libnetpgp.a;
-			remoteRef = 645922511B8BD32B00A5AF93 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -964,7 +919,6 @@
 				4354FF651D6EDF300033069C /* sync_impl.c in Sources */,
 				64A8267E1B455D0800EECAF0 /* message_api.c in Sources */,
 				15B037D122B2B822002D664C /* per_encoder.c in Sources */,
-				64A826821B455D0800EECAF0 /* pgp_netpgp.c in Sources */,
 				15B037CB22B2B822002D664C /* ISO639-1.c in Sources */,
 				15B037AF22B2B822002D664C /* constr_SEQUENCE.c in Sources */,
 				15B037B722B2B822002D664C /* Sync.c in Sources */,
@@ -1033,11 +987,6 @@
 			name = "libetpan ios";
 			targetProxy = 64289E3E1B8B638800FC617B /* PBXContainerItemProxy */;
 		};
-		645922541B8BD53F00A5AF93 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = netpgp;
-			targetProxy = 645922531B8BD53F00A5AF93 /* PBXContainerItemProxy */;
-		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -1096,10 +1045,7 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"USE_NETPGP=1",
-				);
+				GCC_PREPROCESSOR_DEFINITIONS = "USE_SEQUOIA=1";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -1157,7 +1103,7 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_PREPROCESSOR_DEFINITIONS = "USE_NETPGP=1";
+				GCC_PREPROCESSOR_DEFINITIONS = "USE_SEQUOIA=1";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -1185,6 +1131,10 @@
 		64796A541B455AA5004B1C24 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LIBRARY_SEARCH_PATHS = (
@@ -1211,6 +1161,7 @@
 		64796A551B455AA5004B1C24 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LIBRARY_SEARCH_PATHS = (
