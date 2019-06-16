@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		159EF40122B6CDC000149C0C /* sequoia.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 159EF40022B6CD7E00149C0C /* sequoia.framework */; };
 		15B037AA22B2B822002D664C /* ber_tlv_length.c in Sources */ = {isa = PBXBuildFile; fileRef = 15B0373F22B2B816002D664C /* ber_tlv_length.c */; };
 		15B037AB22B2B822002D664C /* GroupKeys.h in Headers */ = {isa = PBXBuildFile; fileRef = 15B0374022B2B817002D664C /* GroupKeys.h */; };
 		15B037AC22B2B822002D664C /* CommitAccept.c in Sources */ = {isa = PBXBuildFile; fileRef = 15B0374122B2B817002D664C /* CommitAccept.c */; };
@@ -163,6 +164,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		159EF3FF22B6CD7E00149C0C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 159EF3FB22B6CD7E00149C0C /* Sequoia4iOS.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 159EF1E122B6AB0700149C0C;
+			remoteInfo = sequoia;
+		};
 		43D47AA0225CC82400E97C5B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
@@ -207,12 +215,14 @@
 			dstPath = "include/$(PRODUCT_NAME)";
 			dstSubfolderSpec = 16;
 			files = (
+				159EF40122B6CDC000149C0C /* sequoia.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		159EF3FB22B6CD7E00149C0C /* Sequoia4iOS.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Sequoia4iOS.xcodeproj; path = ../../Sequoia4iOS/Sequoia4iOS.xcodeproj; sourceTree = "<group>"; };
 		15B0373F22B2B816002D664C /* ber_tlv_length.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ber_tlv_length.c; path = ../asn.1/ber_tlv_length.c; sourceTree = "<group>"; };
 		15B0374022B2B817002D664C /* GroupKeys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GroupKeys.h; path = ../asn.1/GroupKeys.h; sourceTree = "<group>"; };
 		15B0374122B2B817002D664C /* CommitAccept.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = CommitAccept.c; path = ../asn.1/CommitAccept.c; sourceTree = "<group>"; };
@@ -412,6 +422,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		159EF3FC22B6CD7E00149C0C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				159EF40022B6CD7E00149C0C /* sequoia.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		43D47A89225CC60600E97C5B /* Resources-iPad */ = {
 			isa = PBXGroup;
 			children = (
@@ -554,6 +572,7 @@
 		64796A361B455AA5004B1C24 = {
 			isa = PBXGroup;
 			children = (
+				159EF3FB22B6CD7E00149C0C /* Sequoia4iOS.xcodeproj */,
 				43D47A89225CC60600E97C5B /* Resources-iPad */,
 				64951A1B1BE0FCD800B10E71 /* system.db */,
 				64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */,
@@ -794,6 +813,10 @@
 					ProductGroup = 64289E2B1B8B630200FC617B /* Products */;
 					ProjectRef = 64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */;
 				},
+				{
+					ProductGroup = 159EF3FC22B6CD7E00149C0C /* Products */;
+					ProjectRef = 159EF3FB22B6CD7E00149C0C /* Sequoia4iOS.xcodeproj */;
+				},
 			);
 			projectRoot = "";
 			targets = (
@@ -804,6 +827,13 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		159EF40022B6CD7E00149C0C /* sequoia.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = sequoia.framework;
+			remoteRef = 159EF3FF22B6CD7E00149C0C /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		64289E331B8B630200FC617B /* libetpan.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
