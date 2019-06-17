@@ -692,4 +692,201 @@ pEp_error:
     return status;
 }
 
+PEP_STATUS set_up_preset(pEp_test_ident_preset preset_name,
+                         bool set_identity, 
+                         bool set_pep,
+                         bool trust,
+                         bool set_own, 
+                         bool private, 
+                         pEp_identity** ident) {
+    if (set_own && !set_identity)
+        return PEP_ILLEGAL_VALUE;
+        
+    const char* name = NULL;
+    const char* user_id = NULL;
+    const char* email = NULL;
+    const char* key_prefix = NULL;
+    string pubkey_dir = "test_keys/pub/";
+    string privkey_dir = "test_keys/priv";
+    if (ident)
+        *ident = NULL;
+
+    pEp_identity* retval = NULL;
+        
+    switch (preset_name) {
+        case ALICE:
+            name = "Alice Spivak Hyatt";
+            user_id = "ALICE";
+            email = "pep.test.alice@pep-project.org";
+            key_prefix = "pep-test-alice-0x6FF00E97";
+            break;
+        case APPLE:
+            name = "Apple of my Computer";
+            user_id = "APPLE";
+            email = "pep.test.apple@pep-project.org";
+            key_prefix = "pep-test-apple-0x1CCBC7D7";
+            break;
+        case BOB:
+            name = "Bob Dog";
+            user_id = "BOB";
+            email = "pep.test.bob@pep-project.org";
+            key_prefix = "pep-test-bob-0xC9C2EE39";
+            break;
+        case CAROL:
+            name = "Carol Burnett";
+            user_id = "CAROL";
+            email = "pep-test-carol@pep-project.org";
+            key_prefix = "pep-test-carol-0x42A85A42";
+            break;
+        case DAVE:
+            name = "Dave Brown";
+            user_id = "DAVE";
+            email = "pep-test-dave@pep-project.org";
+            key_prefix = "pep-test-dave-0xBB5BCCF6";
+            break;
+        case ERIN:
+            name = "Erin Ireland";
+            user_id = "ERIN";
+            email = "pep-test-erin@pep-project.org";
+            key_prefix = "pep-test-erin-0x9F8D7CBA";
+            break;
+        case FRANK:
+            name = "Frank N. Furter";
+            user_id = "FRANK";
+            email = "pep-test-frank@pep-project.org";
+            key_prefix = "pep-test-frank-0x9A7FC670";
+            break;
+        case GABRIELLE:
+            name = "Gabrielle Gonzales";
+            user_id = "GABI";
+            email = "pep-test-gabrielle@pep-project.org";
+            key_prefix = "pep-test-gabrielle-0xE203586C";
+            break;
+        case JOHN:
+            name = "John Denver";
+            user_id = "JOHN";
+            email = "pep.test.john@pep-project.org";
+            key_prefix = "pep-test-john-0x70DCF575";
+            break;
+        case ALEX:
+            name = "Alex Braithwaite";
+            user_id = "ALEX";
+            email = "pep.test.alexander@peptest.ch";
+            key_prefix = "pep.test.alexander-0x26B54E4E";
+            break;
+        case ALEX_0:
+            name = "ALEX";
+            user_id = "pep.test.alexander0-0x3B7302DB";
+            email = "pep.test.alexander0@darthmama.org";
+            key_prefix = "";
+            break;
+        case ALEX_1:
+            name = "Alex Braithwaite";
+            user_id = "ALEX";
+            email = "pep.test.alexander1@darthmama.org";
+            key_prefix = "pep.test.alexander1-0x541260F6";
+            break;
+        case ALEX_2:
+            name = "Alex Braithwaite";
+            user_id = "ALEX";
+            email = "pep.test.alexander2@darthmama.org";
+            key_prefix = "pep.test.alexander2-0xA6512F30";
+            break;
+        case ALEX_3:
+            name = "Alex Braithwaite";
+            user_id = "ALEX";
+            email = "pep.test.alexander3@darthmama.org";
+            key_prefix = "pep.test.alexander3-0x724B3975";
+            break;
+        case ALEX_4:
+            name = "Alex Braithwaite";
+            user_id = "ALEX";
+            email = "pep.test.alexander4@darthmama.org";
+            key_prefix = "pep.test.alexander4-0x844B9DCF";
+            break;
+        case ALEX_5:
+            name = "Alex Braithwaite";
+            user_id = "ALEX";
+            email = "pep.test.alexander5@darthmama.org";
+            key_prefix = "pep.test.alexander5-0x0773CD29";
+            break;
+        case ALEX_6A:
+            name = "Alex Braithwaite";
+            user_id = "ALEX";
+            email = "pep.test.alexander6@darthmama.org";
+            key_prefix = "pep.test.alexander6-0x0019697D";
+            break;
+        case ALEX_6B:
+            name = "Alex Braithwaite";
+            user_id = "ALEX";
+            email = "pep.test.alexander6@darthmama.org";
+            key_prefix = "pep.test.alexander6-0x503B14D8";
+            break;
+        case ALEX_6C:
+            name = "Alex Braithwaite";
+            user_id = "ALEX";
+            email = "pep.test.alexander6@darthmama.org";
+            key_prefix = "pep.test.alexander6-0xA216E95A";
+            break;
+        case ALEX_6D:
+            name = "Alex Braithwaite";
+            user_id = "ALEX";
+            email = "pep.test.alexander6@darthmama.org";
+            key_prefix = "pep.test.alexander6-0xBDA17020";
+            break;
+        case BELLA:
+            name = "Bella Cat";
+            user_id = "BELLA";
+            email = "pep.test.bella@peptest.ch";
+            key_prefix = "pep.test.bella-0xAF516AAE";
+            break;
+        case FENRIS:
+            name = "Fenris Leto Hawke";
+            user_id = "FENRIS";
+            email = "pep.test.fenris@thisstilldoesntwork.lu";
+            key_prefix = "pep.test.fenris-0x4F3D2900";
+            break;
+        case SERCULLEN:
+            name = "Cullen Rutherford";
+            user_id = "CULLEN";
+            email = "sercullen-test@darthmama.org";
+            key_prefix = "sercullen-0x3CEAADED4"; // NB expired
+            break;
+        case INQUISITOR:
+            name = "Inquisitor Claire Trevelyan";
+            user_id = "INQUISITOR";
+            email = "inquisitor@darthmama.org";
+            key_prefix = "inquisitor-0xA4728718_renewed";
+            break;
+        case BERND:
+            name = "Bernd das Brot";
+            user_id = "BERNDI";
+            email = "bernd.das.brot@darthmama.org";
+            key_prefix = "bernd.das.brot-0xCAFAA422";
+            break;
+        default:
+            return PEP_CANNOT_SET_IDENTITY;
+    }
+    
+    string pubkey_file = pubkey_dir + key_prefix + "_pub.asc";
+    string privkey_file = privkey_dir + key_prefix + "_priv.asc";
+    
+    if (!slurp_and_import_key(session, pubkey_file.c_str())
+        return PEP_KEY_NOT_FOUND;
+
+    if (private) {    
+        if (!slurp_and_import_key(session, privkey_file.c_str())
+            return PEP_KEY_NOT_FOUND;
+    }
+
+    retval = new_identity(email, NULL, user_id, name);
+    if (!retval)
+        return PEP_OUT_OF_MEMORY;
+    
+    retval->me = set_own;
+    
+    
+    
+}
+
 #endif
