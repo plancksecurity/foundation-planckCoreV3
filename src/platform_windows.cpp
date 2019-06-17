@@ -372,6 +372,18 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out)
     }
 }
 
+void log_output_debug(const char *title,
+                       const char *entity,
+                       const char *description,
+                       const char *comment)
+{
+	const size_t size = 256;
+	char str[size];
+	
+	snprintf(str, size, "*** %s %s %s %s\n", title, entity, description, comment);
+	OutputDebugStringA(str);
+}
+
 time_t timegm(struct tm* tm) {
     return _mkgmtime(tm);
 }
