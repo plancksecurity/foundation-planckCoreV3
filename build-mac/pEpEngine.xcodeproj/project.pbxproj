@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		159EF40122B6CDC000149C0C /* sequoia.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 159EF40022B6CD7E00149C0C /* sequoia.framework */; };
 		159EF42722B6D3E900149C0C /* pgp_sequoia.c in Sources */ = {isa = PBXBuildFile; fileRef = 159EF42422B6D3E900149C0C /* pgp_sequoia.c */; };
 		159EF42822B6D3E900149C0C /* pgp_sequoia.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42522B6D3E900149C0C /* pgp_sequoia.h */; };
 		159EF42922B6D3E900149C0C /* pgp_sequoia_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */; };
@@ -144,7 +143,6 @@
 		646C41451D510D2C00C63EFF /* sync_actions.c in Sources */ = {isa = PBXBuildFile; fileRef = 646C413E1D510D2C00C63EFF /* sync_actions.c */; };
 		646C414E1D510D8800C63EFF /* baseprotocol.c in Sources */ = {isa = PBXBuildFile; fileRef = 646C414C1D510D8800C63EFF /* baseprotocol.c */; };
 		646C414F1D510D8800C63EFF /* baseprotocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 646C414D1D510D8800C63EFF /* baseprotocol.h */; };
-		649DE08B1B45C19100912F72 /* libcurl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 649DE08A1B45C19100912F72 /* libcurl.a */; };
 		64A826781B455D0800EECAF0 /* bloblist.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8264C1B455D0800EECAF0 /* bloblist.c */; };
 		64A826791B455D0800EECAF0 /* cryptotech.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A8264E1B455D0800EECAF0 /* cryptotech.c */; };
 		64A8267A1B455D0800EECAF0 /* email.c in Sources */ = {isa = PBXBuildFile; fileRef = 64A826511B455D0800EECAF0 /* email.c */; };
@@ -167,13 +165,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		159EF3FF22B6CD7E00149C0C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 159EF3FB22B6CD7E00149C0C /* Sequoia4iOS.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 159EF1E122B6AB0700149C0C;
-			remoteInfo = sequoia;
-		};
 		43D47AA0225CC82400E97C5B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 64796A371B455AA5004B1C24 /* Project object */;
@@ -218,14 +209,12 @@
 			dstPath = "include/$(PRODUCT_NAME)";
 			dstSubfolderSpec = 16;
 			files = (
-				159EF40122B6CDC000149C0C /* sequoia.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		159EF3FB22B6CD7E00149C0C /* Sequoia4iOS.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Sequoia4iOS.xcodeproj; path = ../../Sequoia4iOS/Sequoia4iOS.xcodeproj; sourceTree = "<group>"; };
 		159EF42422B6D3E900149C0C /* pgp_sequoia.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pgp_sequoia.c; path = ../src/pgp_sequoia.c; sourceTree = "<group>"; };
 		159EF42522B6D3E900149C0C /* pgp_sequoia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pgp_sequoia.h; path = ../src/pgp_sequoia.h; sourceTree = "<group>"; };
 		159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pgp_sequoia_internal.h; path = ../src/pgp_sequoia_internal.h; sourceTree = "<group>"; };
@@ -365,7 +354,6 @@
 		646C414D1D510D8800C63EFF /* baseprotocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = baseprotocol.h; path = ../src/baseprotocol.h; sourceTree = "<group>"; };
 		64796A3F1B455AA5004B1C24 /* libpEpEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpEpEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		64951A1B1BE0FCD800B10E71 /* system.db */ = {isa = PBXFileReference; lastKnownFileType = text; name = system.db; path = ../db/system.db; sourceTree = "<group>"; };
-		649DE08A1B45C19100912F72 /* libcurl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcurl.a; sourceTree = "<group>"; };
 		64A8264C1B455D0800EECAF0 /* bloblist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bloblist.c; path = ../src/bloblist.c; sourceTree = "<group>"; };
 		64A8264D1B455D0800EECAF0 /* bloblist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bloblist.h; path = ../src/bloblist.h; sourceTree = "<group>"; };
 		64A8264E1B455D0800EECAF0 /* cryptotech.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cryptotech.c; path = ../src/cryptotech.c; sourceTree = "<group>"; };
@@ -421,21 +409,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */,
-				649DE08B1B45C19100912F72 /* libcurl.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		159EF3FC22B6CD7E00149C0C /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				159EF40022B6CD7E00149C0C /* sequoia.framework */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
 			isa = PBXGroup;
 			children = (
@@ -571,10 +550,8 @@
 		64796A361B455AA5004B1C24 = {
 			isa = PBXGroup;
 			children = (
-				159EF3FB22B6CD7E00149C0C /* Sequoia4iOS.xcodeproj */,
 				64951A1B1BE0FCD800B10E71 /* system.db */,
 				64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */,
-				649DE08A1B45C19100912F72 /* libcurl.a */,
 				6406CE811CE382F400C14D77 /* asn.1 */,
 				64A8264B1B455C5600EECAF0 /* srcref */,
 				644297C01BE11C65002BC73B /* pEpTrustWords */,
@@ -816,10 +793,6 @@
 					ProductGroup = 64289E2B1B8B630200FC617B /* Products */;
 					ProjectRef = 64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */;
 				},
-				{
-					ProductGroup = 159EF3FC22B6CD7E00149C0C /* Products */;
-					ProjectRef = 159EF3FB22B6CD7E00149C0C /* Sequoia4iOS.xcodeproj */;
-				},
 			);
 			projectRoot = "";
 			targets = (
@@ -830,13 +803,6 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		159EF40022B6CD7E00149C0C /* sequoia.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = sequoia.framework;
-			remoteRef = 159EF3FF22B6CD7E00149C0C /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		64289E331B8B630200FC617B /* libetpan.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
@@ -1090,10 +1056,9 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)",
-					"$(SRCROOT)/../../netpgp-et/include/",
-					"$(SRCROOT)/../../netpgp-et/src/",
 					"$(SRCROOT)/../../OpenSSL-for-iPhone/include",
 					"$(SRCROOT)/../asn.1/",
+					"$(PROJECT_DIR)/../../Sequoia4iOS/build/include",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
@@ -1147,10 +1112,9 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)",
-					"$(SRCROOT)/../../netpgp-et/include/",
-					"$(SRCROOT)/../../netpgp-et/src/",
 					"$(SRCROOT)/../../OpenSSL-for-iPhone/include",
 					"$(SRCROOT)/../asn.1/",
+					"$(PROJECT_DIR)/../../Sequoia4iOS/build/include",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
@@ -1173,7 +1137,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/../../Sequoia4iOS/build/lib",
 				);
 				New_Setting = "";
 				ONLY_ACTIVE_ARCH = NO;
@@ -1183,8 +1147,6 @@
 				USER_HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/../src",
 					"$(PROJECT_DIR)",
-					"$(PROJECT_DIR)/../../netpgp-et/include/",
-					"$(PROJECT_DIR)/../../netpgp-et/src/",
 					"$(PROJECT_DIR)/../../OpenSSL-for-iPhone/include",
 					"$(PROJECT_DIR)/../asn.1/",
 					"$(inherited)",
@@ -1200,7 +1162,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/../../Sequoia4iOS/build/lib",
 				);
 				New_Setting = "";
 				OTHER_LDFLAGS = "-ObjC";
@@ -1209,8 +1171,6 @@
 				USER_HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/../src",
 					"$(PROJECT_DIR)",
-					"$(PROJECT_DIR)/../../netpgp-et/include/",
-					"$(PROJECT_DIR)/../../netpgp-et/src/",
 					"$(PROJECT_DIR)/../../OpenSSL-for-iPhone/include",
 					"$(PROJECT_DIR)/../asn.1/",
 					"$(inherited)",
