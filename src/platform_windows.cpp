@@ -25,8 +25,13 @@
 #define WC_ERR_INVALID_CHARS      0x00000080  // error for invalid chars
 #endif
 
-#define ENV_PEP_APPDATA "PEP_APPDATA"
-#define ENV_PEP_APPDATA_VAL "1" 
+#define SYSTEM_FOLDER_DEFAULT "%ALLUSERSPROFILE%\\pEp"
+#define USER_FOLDER_DEFAULT "%LOCALAPPDATA%\\pEp"
+#define KEYS_DB "keys.db"
+#define MANAGEMENT_DB "management.db"
+#define SYSTEM_DB "system.db"
+#define USER_FOLDER_PATH pEpUserFolderPath().c_str()
+#define SYSTEM_FOLDER_PATH pEpSystemFolderPath().c_str()
 
 using namespace std;
 
@@ -135,6 +140,38 @@ static inline string managementPath(const char *file_path, const char *file_name
 	return path;
 }
 
+static inline string pEpSystemFolderPath(void)
+{
+	static TCHAR tPath[PATH_BUF_SIZE];
+	string path = SYSTEM_FOLDER_DEFAULT;
+
+	// Get SystemFolder Registry value and use if available
+	bool result = readRegistryString(HKEY_CURRENT_USER,
+		TEXT("SOFTWARE\\pEp"), TEXT("SystemFolder"), tPath,
+		PATH_BUF_SIZE, NULL);
+
+	if (result)
+		path = utf8_string(tPath);
+
+	return path;
+}
+
+static inline string pEpUserFolderPath(void)
+{
+	static TCHAR tPath[PATH_BUF_SIZE];
+	string path = USER_FOLDER_DEFAULT;
+
+	// Get UserFolder Registry value and use if available
+	bool result = readRegistryString(HKEY_CURRENT_USER,
+		TEXT("SOFTWARE\\pEp"), TEXT("UserFolder"), tPath,
+		PATH_BUF_SIZE, NULL);
+
+	if (result)
+		path = utf8_string(tPath);
+	
+	return path;
+}
+
 extern "C" {
 
 void *dlopen(const char *filename, int flag) {
@@ -199,35 +236,22 @@ void *dlsym(void *handle, const char *symbol) {
 const char *windoze_keys_db(void) {
 	static string path;
 	if (path.length() == 0) {
-
-		const char * env = getenv(ENV_PEP_APPDATA);
-
-		if (env && (strcmp(env, ENV_PEP_APPDATA_VAL) == 0))
-			path = managementPath("%APPDATA%\\pEp", "keys.db");
-		else
-			path = managementPath("%LOCALAPPDATA%\\pEp", "keys.db");
+		path = managementPath(USER_FOLDER_PATH, KEYS_DB);
 	}
 	return path.c_str();
 }
 
 const char *windoze_local_db(void) {
 	static string path;
-	if (path.length() == 0) {
-
-		const char * env = getenv(ENV_PEP_APPDATA);
-
-		if (env && (strcmp(env, ENV_PEP_APPDATA_VAL) == 0))
-			path = managementPath("%APPDATA%\\pEp", "management.db");
-		else
-			path = managementPath("%LOCALAPPDATA%\\pEp", "management.db");
-	}
+	if (path.length() == 0)
+		path = managementPath(USER_FOLDER_PATH, MANAGEMENT_DB);
     return path.c_str();
 }
 
 const char *windoze_system_db(void) {
 	static string path;
 	if (path.length() == 0)
-		path = managementPath("%ALLUSERSPROFILE%\\pEp", "system.db");
+		path = managementPath(SYSTEM_FOLDER_PATH, SYSTEM_DB);
     return path.c_str();
 }
 
