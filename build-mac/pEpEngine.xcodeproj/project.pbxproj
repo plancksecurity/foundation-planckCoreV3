@@ -11,6 +11,7 @@
 		154917FE22B926700091B6D6 /* libsequoia_openpgp_ffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 154917FA22B926700091B6D6 /* libsequoia_openpgp_ffi.a */; };
 		154917FF22B926700091B6D6 /* libhogweed.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 154917FB22B926700091B6D6 /* libhogweed.a */; };
 		1549180022B926700091B6D6 /* libgmp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 154917FC22B926700091B6D6 /* libgmp.a */; };
+		1549181222B92EA20091B6D6 /* libiconv.2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 1549180D22B92EA20091B6D6 /* libiconv.2.tbd */; };
 		159EF42722B6D3E900149C0C /* pgp_sequoia.c in Sources */ = {isa = PBXBuildFile; fileRef = 159EF42422B6D3E900149C0C /* pgp_sequoia.c */; };
 		159EF42822B6D3E900149C0C /* pgp_sequoia.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42522B6D3E900149C0C /* pgp_sequoia.h */; };
 		159EF42922B6D3E900149C0C /* pgp_sequoia_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */; };
@@ -223,6 +224,8 @@
 		154917FA22B926700091B6D6 /* libsequoia_openpgp_ffi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsequoia_openpgp_ffi.a; path = ../../sequoia4ios/build/lib/libsequoia_openpgp_ffi.a; sourceTree = "<group>"; };
 		154917FB22B926700091B6D6 /* libhogweed.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libhogweed.a; path = ../../sequoia4ios/build/lib/libhogweed.a; sourceTree = "<group>"; };
 		154917FC22B926700091B6D6 /* libgmp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgmp.a; path = ../../sequoia4ios/build/lib/libgmp.a; sourceTree = "<group>"; };
+		1549180D22B92EA20091B6D6 /* libiconv.2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.2.tbd; path = usr/lib/libiconv.2.tbd; sourceTree = SDKROOT; };
+		1549181322B92EA50091B6D6 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		159EF42422B6D3E900149C0C /* pgp_sequoia.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pgp_sequoia.c; path = ../src/pgp_sequoia.c; sourceTree = "<group>"; };
 		159EF42522B6D3E900149C0C /* pgp_sequoia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pgp_sequoia.h; path = ../src/pgp_sequoia.h; sourceTree = "<group>"; };
 		159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pgp_sequoia_internal.h; path = ../src/pgp_sequoia_internal.h; sourceTree = "<group>"; };
@@ -409,6 +412,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1549181222B92EA20091B6D6 /* libiconv.2.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -581,6 +585,8 @@
 		64796A361B455AA5004B1C24 = {
 			isa = PBXGroup;
 			children = (
+				1549180D22B92EA20091B6D6 /* libiconv.2.tbd */,
+				1549181322B92EA50091B6D6 /* libz.dylib */,
 				64951A1B1BE0FCD800B10E71 /* system.db */,
 				64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */,
 				6406CE811CE382F400C14D77 /* asn.1 */,
