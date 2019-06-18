@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		154917FD22B926700091B6D6 /* libnettle.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 154917F922B9266F0091B6D6 /* libnettle.a */; };
+		154917FE22B926700091B6D6 /* libsequoia_openpgp_ffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 154917FA22B926700091B6D6 /* libsequoia_openpgp_ffi.a */; };
+		154917FF22B926700091B6D6 /* libhogweed.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 154917FB22B926700091B6D6 /* libhogweed.a */; };
+		1549180022B926700091B6D6 /* libgmp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 154917FC22B926700091B6D6 /* libgmp.a */; };
 		159EF42722B6D3E900149C0C /* pgp_sequoia.c in Sources */ = {isa = PBXBuildFile; fileRef = 159EF42422B6D3E900149C0C /* pgp_sequoia.c */; };
 		159EF42822B6D3E900149C0C /* pgp_sequoia.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42522B6D3E900149C0C /* pgp_sequoia.h */; };
 		159EF42922B6D3E900149C0C /* pgp_sequoia_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */; };
@@ -215,6 +219,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		154917F922B9266F0091B6D6 /* libnettle.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libnettle.a; path = ../../sequoia4ios/build/lib/libnettle.a; sourceTree = "<group>"; };
+		154917FA22B926700091B6D6 /* libsequoia_openpgp_ffi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsequoia_openpgp_ffi.a; path = ../../sequoia4ios/build/lib/libsequoia_openpgp_ffi.a; sourceTree = "<group>"; };
+		154917FB22B926700091B6D6 /* libhogweed.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libhogweed.a; path = ../../sequoia4ios/build/lib/libhogweed.a; sourceTree = "<group>"; };
+		154917FC22B926700091B6D6 /* libgmp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgmp.a; path = ../../sequoia4ios/build/lib/libgmp.a; sourceTree = "<group>"; };
 		159EF42422B6D3E900149C0C /* pgp_sequoia.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pgp_sequoia.c; path = ../src/pgp_sequoia.c; sourceTree = "<group>"; };
 		159EF42522B6D3E900149C0C /* pgp_sequoia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pgp_sequoia.h; path = ../src/pgp_sequoia.h; sourceTree = "<group>"; };
 		159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pgp_sequoia_internal.h; path = ../src/pgp_sequoia_internal.h; sourceTree = "<group>"; };
@@ -409,12 +417,35 @@
 			buildActionMask = 2147483647;
 			files = (
 				6400FB8B1B8CA1CF005221E3 /* libetpan-ios.a in Frameworks */,
+				1549180022B926700091B6D6 /* libgmp.a in Frameworks */,
+				154917FF22B926700091B6D6 /* libhogweed.a in Frameworks */,
+				154917FE22B926700091B6D6 /* libsequoia_openpgp_ffi.a in Frameworks */,
+				154917FD22B926700091B6D6 /* libnettle.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		154917EB22B926080091B6D6 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				154917F422B926420091B6D6 /* sequoia4ios */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		154917F422B926420091B6D6 /* sequoia4ios */ = {
+			isa = PBXGroup;
+			children = (
+				154917FC22B926700091B6D6 /* libgmp.a */,
+				154917FB22B926700091B6D6 /* libhogweed.a */,
+				154917F922B9266F0091B6D6 /* libnettle.a */,
+				154917FA22B926700091B6D6 /* libsequoia_openpgp_ffi.a */,
+			);
+			name = sequoia4ios;
+			sourceTree = "<group>";
+		};
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
 			isa = PBXGroup;
 			children = (
@@ -557,6 +588,7 @@
 				644297C01BE11C65002BC73B /* pEpTrustWords */,
 				64796A401B455AA5004B1C24 /* Products */,
 				43D47A8A225CC60600E97C5B /* pEpTrustWords-Info.plist */,
+				154917EB22B926080091B6D6 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1058,7 +1090,7 @@
 					"$(SRCROOT)",
 					"$(SRCROOT)/../../OpenSSL-for-iPhone/include",
 					"$(SRCROOT)/../asn.1/",
-					"$(PROJECT_DIR)/../../Sequoia4iOS/build/include",
+					"$(PROJECT_DIR)/../../sequoia4ios/build/include",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
@@ -1114,7 +1146,7 @@
 					"$(SRCROOT)",
 					"$(SRCROOT)/../../OpenSSL-for-iPhone/include",
 					"$(SRCROOT)/../asn.1/",
-					"$(PROJECT_DIR)/../../Sequoia4iOS/build/include",
+					"$(PROJECT_DIR)/../../sequoia4ios/build/include",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
