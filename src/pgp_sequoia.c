@@ -1982,6 +1982,17 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
         break;
     }
 
+    int int_result = sqlite3_exec(
+        session->key_db,
+        "PRAGMA wal_checkpoint(FULL);\n"
+        ,
+        NULL,
+        NULL,
+        NULL
+    );
+    if (int_result != SQLITE_OK)
+        status = PEP_UNKNOWN_DB_ERROR;
+
  out:
     pgp_tpk_parser_free(parser);
 
