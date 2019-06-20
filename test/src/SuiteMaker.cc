@@ -19,6 +19,7 @@
 #include "VerifyTests.h"
 #include "UserIdCollisionTests.h"
 #include "Engine463Tests.h"
+#include "IOS1664Tests.h"
 #include "BloblistTests.h"
 #include "NewUpdateIdAndMyselfTests.h"
 #include "NoOwnIdentWritesOnDecryptTests.h"
@@ -83,6 +84,7 @@ const char* SuiteMaker::all_suites[] = {
     "VerifyTests",
     "UserIdCollisionTests",
     "Engine463Tests",
+    "IOS1664Tests",
     "BloblistTests",
     "NewUpdateIdAndMyselfTests",
     "NoOwnIdentWritesOnDecryptTests",
@@ -140,7 +142,7 @@ const char* SuiteMaker::all_suites[] = {
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 61;
+int SuiteMaker::num_suites = 62;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "URIAddressTests") == 0)
@@ -157,6 +159,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new UserIdCollisionTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "Engine463Tests") == 0)
         *test_suite = new Engine463Tests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "IOS1664Tests") == 0)
+        *test_suite = new IOS1664Tests(test_class_name, test_home);
     else if (strcmp(test_class_name, "BloblistTests") == 0)
         *test_suite = new BloblistTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "NewUpdateIdAndMyselfTests") == 0)
