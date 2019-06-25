@@ -4199,6 +4199,9 @@ DYNAMIC_API PEP_STATUS get_rating_from_bare_key(
         PEP_rating* rating
     )
 {
+    if (!rating || !fpr)
+        return PEP_ILLEGAL_VALUE;
+        
     PEP_comm_type comm_type = PEP_ct_unknown;
     *rating = PEP_rating_undefined;
     PEP_STATUS status = get_key_rating(session, fpr, &comm_type);
