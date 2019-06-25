@@ -17,7 +17,7 @@
 #define PARMS_MAX 32768
 
 // maximum busy wait time in ms
-#define BUSY_WAIT_TIME 5000
+#define BUSY_WAIT_TIME 10000
 
 // maximum line length for reading gpg.conf
 #define MAX_LINELENGTH 1024
@@ -131,6 +131,7 @@ struct _pEpSession {
     sqlite3 *key_db;
     struct {
         sqlite3_stmt *begin_transaction;
+        sqlite3_stmt *begin_transaction_excl;
         sqlite3_stmt *commit_transaction;
         sqlite3_stmt *rollback_transaction;
         sqlite3_stmt *tpk_find;
@@ -486,4 +487,3 @@ static inline int Sqlite3_step(sqlite3_stmt* stmt)
     } while (rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
     return rc;
 }
-
