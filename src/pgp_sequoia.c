@@ -697,6 +697,17 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
     char *email = NULL;
     char *name = NULL;
 
+    int int_result = sqlite3_exec(
+        session->key_db,
+        "PRAGMA locking_mode=EXCLUSIVE;\n"
+        ,
+        NULL,
+        NULL,
+        NULL
+    );
+    if (int_result != SQLITE_OK)
+        status = PEP_UNKNOWN_DB_ERROR;
+
     sqlite3_stmt *stmt = session->sq_sql.begin_transaction;
     int sqlite_result = Sqlite3_step(stmt);
     sqlite3_reset(stmt);
@@ -851,6 +862,18 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
                       ? "commit failed: %s" : "rollback failed: %s",
                       sqlite3_errmsg(session->key_db));
     }
+
+    int int_result = sqlite3_exec(
+        session->key_db,
+        "PRAGMA locking_mode=NORMAL;\n"
+        ,
+        NULL,
+        NULL,
+        NULL
+    );
+    // FIXME: what to do here? Don't want to override status.
+    // if (int_result != SQLITE_OK)
+    //     status = PEP_UNKNOWN_DB_ERROR;
 
     T("(%s) -> %s", fpr, pEp_status_to_string(status));
 
