@@ -3328,98 +3328,6 @@ pEp_free:
 
 }
 
-static PEP_STATUS set_key_if_exists_and_no_default(
-        PEP_SESSION session,
-        pEp_identity* identity
-    )
-{
-    // assert(session);
-    // assert(identity);
-    // assert(!(EMPTYSTR(identity->address) || EMPTYSTR(identity->user_id)));
-    PEP_STATUS status = PEP_STATUS_OK;
-    
-    if (!session || !identity || EMPTYSTR(identity->address) || EMPTYSTR(identity->user_id))
-        return PEP_ILLEGAL_VALUE;
-
-    if (is_me(session, identity))
-        return PEP_STATUS_OK; // we won't set this, but it's not an error
-        
-    bool has_default = false;
-    PEP_comm_type cached_ct = PEP_ct_unknown;
-    char* cached_fpr = NULL;
-    
-    if (EMPTYSTR(identity->fpr)) {
-        // OK, we may have imported one. Let's check it out.
-        status = update_identity(session, identity);
-        
-        if (status != PEP_STATUS_OK)
-            return status;
-            
-        if (EMPTYSTR(identity->fpr))
-            return PEP_STATUS_OK; // ok, we've got nothing, bye!
-        
-        cached_ct = identity->comm_type;
-    
-        // see if we have trust info for this fpr
-        status = get_trust(session, identity);
-        
-        if (status == PEP_CANNOT_FIND_IDENTITY) // nope, use update_ident info
-            identity->comm_type = cached_ct;
-        else {
-            // there's already a trust entry for this fpr in the DB.
-            // should be all good
-            return PEP_STATUS_OK;
-        }            
-    }
-    else {
-        // See if there is a trust entry for the input fpr
-        status = get_trust(session, identity);
-    
-        if (status == PEP_CANNOT_FIND_IDENTITY) {
-            // there's no trust for this key/user
-            // So: 
-            // 1. find out if we have a default key at all 
-            cached_fpr = identity->fpr;
-            identity->fpr = NULL;
-            status = update_identity(session, identity);
-
-            if (EMPTYSTR(identity->fpr)) {
-                // We don't.
-                has_default = false;
-                identity->fpr = cached_fpr;
-                cached_fpr = NULL;
-                status = get_key_rating(session, identity->fpr, &(identity->comm_type));
-                if (status != PEP_STATUS_OK)
-                    goto pEp_free;
-            }
-            else if (strcasecmp(identity->fpr, cached_fpr) != 0) {
-                // We do, but they don't match.
-                // make sure identity->fpr has an entry
-                cached_ct = identity->comm_type;
-                status = get_trust(session, identity);
-                if (status == PEP_CANNOT_FIND_IDENTITY)
-                    identity->comm_type = cached_ct;    
-                else {
-                    status = PEP_STATUS_OK;
-                    goto pEp_free;
-                }                        
-            }
-        }
-        else { 
-            status = PEP_STATUS_OK;
-            goto pEp_free;
-        }    
-    }
-    
-    // At this point, if there was a valid, set trust entry, we've returned.
-    // there isn't, so:
-    status = set_identity(session, identity);
-    
-pEp_free:
-    free(cached_fpr);
-    return status;
-}    
-
 static PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -3514,6 +3422,7 @@ static PEP_STATUS _decrypt_message(
             
     import_header_keys(session, src);
     
+    // FIXME: is this really necessary here?
     if (src->from) {
         if (!is_me(session, src->from))
             status = update_identity(session, src->from);
@@ -3552,11 +3461,6 @@ static PEP_STATUS _decrypt_message(
         //     remove_attached_keys(src);
                                     
         pull_up_attached_main_msg(src);
-        
-        //
-        // We may have imported a key.
-        //
-        set_key_if_exists_and_no_default(session, src->from);
         
         return PEP_UNENCRYPTED;
     }
@@ -3802,8 +3706,7 @@ static PEP_STATUS _decrypt_message(
             goto pEp_error;
         
         /* We decrypted ok, hallelujah. */
-        msg->enc_format = PEP_enc_none;  
-          
+        msg->enc_format = PEP_enc_none;    
     } 
     else {
         // We did not get a plaintext out of the decryption process.
@@ -3837,9 +3740,6 @@ static PEP_STATUS _decrypt_message(
 
     // 2. Clean up message and prepare for return 
     if (msg) {
-        
-        /* if the sender has no default and we have a key for them, set it. */
-        set_key_if_exists_and_no_default(session, msg->from);
         
         /* add pEp-related status flags to header */
         decorate_message(msg, *rating, _keylist, false, false);
@@ -4291,6 +4191,21 @@ DYNAMIC_API PEP_color color_from_rating(PEP_rating rating)
     // this should never happen
     assert(false);
     return PEP_color_no_color;
+}
+
+DYNAMIC_API PEP_STATUS get_rating_from_bare_key(
+        PEP_SESSION session, 
+        const char* fpr,
+        PEP_rating* rating
+    )
+{
+    PEP_comm_type comm_type = PEP_ct_unknown;
+    *rating = PEP_rating_undefined;
+    PEP_STATUS status = get_key_rating(session, fpr, &comm_type);
+    if (status == PEP_STATUS_OK)
+        *rating = _rating(comm_type);
+    
+    return status;    
 }
 
 /* [0-9]: 0x30 - 0x39; [A-F] = 0x41 - 0x46; [a-f] = 0x61 - 0x66 */
