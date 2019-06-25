@@ -233,6 +233,8 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         ERROR_OUT(NULL, PEP_INIT_CANNOT_OPEN_DB,
                   "opening keys DB: %s", sqlite3_errmsg(session->key_db));
 
+    sqlite3_busy_timeout(session->key_db, BUSY_WAIT_TIME);
+
     sqlite_result = sqlite3_exec(session->key_db,
                                  "PRAGMA secure_delete=true;\n"
                                  "PRAGMA foreign_keys=true;\n"
@@ -307,6 +309,11 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     sqlite_result
         = sqlite3_prepare_v2(session->key_db, "begin transaction",
                              -1, &session->sq_sql.begin_transaction, NULL);
+    assert(sqlite_result == SQLITE_OK);
+
+    sqlite_result
+        = sqlite3_prepare_v2(session->key_db, "begin transaction exclusive",
+                             -1, &session->sq_sql.begin_transaction_excl, NULL);
     assert(sqlite_result == SQLITE_OK);
 
     sqlite_result
@@ -711,7 +718,7 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
     char *email = NULL;
     char *name = NULL;
 
-    sqlite3_stmt *stmt = session->sq_sql.begin_transaction;
+    sqlite3_stmt *stmt = session->sq_sql.begin_transaction_excl;
     int sqlite_result = Sqlite3_step(stmt);
     sqlite3_reset(stmt);
     if (sqlite_result != SQLITE_DONE)
@@ -865,6 +872,7 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
                       ? "commit failed: %s" : "rollback failed: %s",
                       sqlite3_errmsg(session->key_db));
     }
+
 
     T("(%s) -> %s", fpr, pEp_status_to_string(status));
 
