@@ -507,6 +507,23 @@ DYNAMIC_API PEP_STATUS get_key_rating_for_user(
         PEP_rating *rating
     );
 
+// get_rating_from_bare_key() - get the rating of a certain key (instead of just the comm_type)
+//
+//  parameters:
+//
+//      session (in)            session handle
+//      fpr (in)                string with fingerprint
+//      rating (out)            rating of key for this user
+//
+//  returns:
+//      status from get_key_rating, which only returns comm_type.
+
+DYNAMIC_API PEP_STATUS get_rating_from_bare_key(
+        PEP_SESSION session, 
+        const char* fpr,
+        PEP_rating* rating
+    );
+
 #ifdef __cplusplus
 }
 #endif
