@@ -42,6 +42,16 @@ typedef enum _pEp_test_ident_preset {
     BERND
 } pEp_test_ident_preset;
 
+PEP_STATUS set_up_preset(PEP_SESSION session,
+                         pEp_test_ident_preset preset_name,
+                         bool set_identity, 
+                         bool set_pep,
+                         bool trust,
+                         bool set_own, 
+                         bool setup_private, 
+                         pEp_identity** ident);
+
+
 PEP_STATUS read_file_and_import_key(PEP_SESSION session, const char* fname);
 PEP_STATUS set_up_ident_from_scratch(PEP_SESSION session, 
                                      const char* key_fname,

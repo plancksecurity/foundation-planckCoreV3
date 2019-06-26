@@ -17,11 +17,25 @@ using namespace std;
 
 Message2_1Tests::Message2_1Tests(string suitename, string test_home_dir) :
     EngineTestIndividualSuite::EngineTestIndividualSuite(suitename, test_home_dir) {
-    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("Message2_1Tests::check_message2_1"),
-                                                                      static_cast<Func>(&Message2_1Tests::check_message2_1)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("Message2_1Tests::check_message2_1_recip_2_0"),
+                                                                      static_cast<Func>(&Message2_1Tests::check_message2_1_recip_2_0)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("Message2_1Tests::check_message2_1_recip_OpenPGP"),
+                                                                      static_cast<Func>(&Message2_1Tests::check_message2_1_recip_OpenPGP)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("Message2_1Tests::check_message2_1_recip_2_1"),
+                                                                      static_cast<Func>(&Message2_1Tests::check_message2_1_recip_2_1)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("Message2_1Tests::check_message2_1_recip_1_0_from_msg_OpenPGP"),
+                                                                      static_cast<Func>(&Message2_1Tests::check_message2_1_recip_1_0_from_msg_OpenPGP)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("Message2_1Tests::check_message2_1_recip_2_0_from_msg"),
+                                                                      static_cast<Func>(&Message2_1Tests::check_message2_1_recip_2_0_from_msg)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("Message2_1Tests::check_message2_1_recip_2_1_from_msg"),
+                                                                      static_cast<Func>(&Message2_1Tests::check_message2_1_recip_2_1_from_msg)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("Message2_1Tests::check_message2_1_recip_mixed_2_0"),
+                                                                      static_cast<Func>(&Message2_1Tests::check_message2_1_recip_mixed_2_0)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("Message2_1Tests::check_message2_1_recip_mixed_1_0_OpenPGP"),
+                                                                      static_cast<Func>(&Message2_1Tests::check_message2_1_recip_mixed_1_0_OpenPGP)));
 }
 
-static bool verify_message_version_produced(message* enc_msg, unsigned int* maj_inout, unsigned it* min_inout) {
+bool Message2_1Tests::verify_message_version_produced(message* enc_msg, unsigned int* maj_inout, unsigned int* min_inout) {
     if (!maj_inout || !min_inout)
         return false;
     int major = *maj_inout;
@@ -31,10 +45,10 @@ static bool verify_message_version_produced(message* enc_msg, unsigned int* maj_
     size_t psize = 0;
     stringlist_t* keylist = NULL;
     
-    PEP_STATUS status = cryptotech[crypto].decrypt_and_verify(session, enc_msg->attachments->next->value,
-                                                              enc_msg->attachments->next->size, NULL, 0,
-                                                              &ptext, &psize, &_keylist,
-                                                              NULL);
+    PEP_STATUS status = decrypt_and_verify(session, enc_msg->attachments->next->value,
+                                           enc_msg->attachments->next->size, NULL, 0,
+                                           &ptext, &psize, &keylist,
+                                           NULL);
 
     // fixme, check status
     if (strstr(ptext, "pEp-Wrapped-Message-Info: OUTER") != NULL && strstr(ptext, "pEp-Wrapped-Message-Info: OUTER") != NULL) {
@@ -68,29 +82,65 @@ static bool verify_message_version_produced(message* enc_msg, unsigned int* maj_
     }
 }
 
+/* PEP_STATUS set_up_preset(PEP_SESSION session,
+                         pEp_test_ident_preset preset_name,
+                         bool set_ident, 
+                         bool set_pep,
+                         bool trust,
+                         bool set_own, 
+                         bool setup_private, 
+                         pEp_identity** ident) {
+*/
 void Message2_1Tests::check_message2_1_recip_2_0() {
-    TEST_ASSERT(slurp_and_import_key(session, "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc"));
-    TEST_ASSERT(slurp_and_import_key(session, "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc"));    
+
+    pEp_identity* alice = NULL;
+    pEp_identity* carol = NULL;
+    
+    PEP_STATUS status = set_up_preset(session, ALICE, 
+                                      true, true, true, true, true, &alice);
+
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(alice);
+    
+    status = set_up_preset(session, CAROL, 
+                           false, true, false, false, false, &carol);
+
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(carol);
 
     // default should be 2.0 after setting pep status
-    
+    status = update_identity(session, carol);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(carol->major_ver == 2);
+    TEST_ASSERT(carol->minor_ver == 0);
     // generate message
+    pEp_identity* carol_to = new_identity(carol->address, NULL, NULL, NULL);
+    
+    message* msg = new_message(PEP_dir_outgoing);
+    
+    msg->from = alice;
+    msg->to = new_identity_list(carol_to);
+    msg->shortmsg = strdup("Boom shaka laka");
+    msg->longmsg = strdup("Don't you get sick of these?");
+    
+    message* enc_msg = NULL;
+
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    TEST_ASSERT(status == PEP_STATUS_OK);
     
     // ensure sent message is in 2.0 format
+    unsigned int major = 2;
+    unsigned int minor = 0;
+    TEST_ASSERT_MSG(verify_message_version_produced(enc_msg, &major, &minor),
+                                                    (to_string(major) + to_string(minor)).c_str());
+    
+    free_identity(carol);
+    free_message(msg);
+    free_message(enc_msg);
     TEST_ASSERT(true);
 }
 
-void Message2_1Tests::check_message2_1_recip_1_0() {
-    // set recip to 1.0
-    
-    // generate message
-    
-    // ensure sent message is in 1.0 format
-    
-    TEST_ASSERT(true);
-}
-
-void Message2_1Tests::check_message2_1_recip_1_0_OpenPGP() {
+void Message2_1Tests::check_message2_1_recip_OpenPGP() {
     // set recip to 1.0
     
     // generate message
@@ -108,16 +158,6 @@ void Message2_1Tests::check_message2_1_recip_2_1() {
     // ensure sent message is in 2.1 format
     
     
-    TEST_ASSERT(true);
-}
-
-void Message2_1Tests::check_message2_1_recip_1_0_from_msg() {
-    // receive 1.0 message
-
-    // generate message
-    
-    // ensure sent message is in 1.0 format
-
     TEST_ASSERT(true);
 }
 
@@ -152,16 +192,6 @@ void Message2_1Tests::check_message2_1_recip_mixed_2_0() {
     // generate message
     
     // ensure sent message is in 2.0 format
-
-    TEST_ASSERT(true);
-}
-
-void Message2_1Tests::check_message2_1_recip_mixed_1_0() {
-    // Set mixed recipient values
-
-    // generate message
-    
-    // ensure sent message is in 1.0 format
 
     TEST_ASSERT(true);
 }
