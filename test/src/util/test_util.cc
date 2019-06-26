@@ -711,7 +711,7 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
     const char* email = NULL;
     const char* key_prefix = NULL;
     string pubkey_dir = "test_keys/pub/";
-    string privkey_dir = "test_keys/priv";
+    string privkey_dir = "test_keys/priv/";
     const char* fpr = NULL;
     PEP_STATUS status = PEP_STATUS_OK;
     

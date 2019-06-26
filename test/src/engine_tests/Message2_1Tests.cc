@@ -50,10 +50,12 @@ bool Message2_1Tests::verify_message_version_produced(message* enc_msg, unsigned
                                            &ptext, &psize, &keylist,
                                            NULL);
 
+    cout << ptext << endl;
+
     // fixme, check status
-    if (strstr(ptext, "pEp-Wrapped-Message-Info: OUTER") != NULL && strstr(ptext, "pEp-Wrapped-Message-Info: OUTER") != NULL) {
+    if (strstr(ptext, "pEp-Wrapped-Message-Info: OUTER") != NULL && strstr(ptext, "pEp-Wrapped-Message-Info: INNER") != NULL) {
         *maj_inout = 2;
-        *min_inout = 1;
+        *min_inout = 0;
     }
     else if (strstr(ptext, "X-pEp-Wrapped-Message-Info: INNER") != NULL && strstr(ptext, "forwarded=no") != NULL) {
         *maj_inout = 2;
@@ -132,7 +134,7 @@ void Message2_1Tests::check_message2_1_recip_2_0() {
     unsigned int major = 2;
     unsigned int minor = 0;
     TEST_ASSERT_MSG(verify_message_version_produced(enc_msg, &major, &minor),
-                                                    (to_string(major) + to_string(minor)).c_str());
+                                                    (to_string(major) + "." + to_string(minor)).c_str());
     
     free_identity(carol);
     free_message(msg);
