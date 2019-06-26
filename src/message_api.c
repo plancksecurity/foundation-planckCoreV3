@@ -3091,6 +3091,20 @@ static PEP_STATUS reconcile_identity_lists(identity_list* src_ids,
     return status;    
 }
 
+static PEP_STATUS reconcile_sent_and_recv_info(message* src, message* inner_message) {
+    PEP_STATUS status = PEP_STATUS_OK;
+    if (!src || !inner_message)
+        return PEP_ILLEGAL_VALUE;
+        
+    if (!inner_message->sent)
+        inner_message->sent = timestamp_dup(src->sent);
+        
+    // This will never be set otherwise, since it's a transport header on the outside    
+    inner_message->recv = timestamp_dup(src->recv);
+    
+    return PEP_STATUS_OK;
+}
+
 static PEP_STATUS reconcile_src_and_inner_messages(message* src, 
                                              message* inner_message) {
 
@@ -3108,6 +3122,9 @@ static PEP_STATUS reconcile_src_and_inner_messages(message* src,
     if (status == PEP_STATUS_OK && inner_message->bcc)
         status = reconcile_identity_lists(src->bcc, inner_message->bcc);
 
+    if (status == PEP_STATUS_OK)
+        status = reconcile_sent_and_recv_info(src, inner_message);
+        
     return status;
     // FIXME - are there any flags or anything else we need to be sure are carried?
 }
