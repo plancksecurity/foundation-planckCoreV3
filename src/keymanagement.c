@@ -470,6 +470,8 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     PEP_STATUS status;
     
     bool is_identity_default, is_user_default, is_address_default;
+    bool no_stored_default = EMPTYSTR(stored_ident->fpr);
+    
     status = get_valid_pubkey(session, stored_ident,
                                 &is_identity_default,
                                 &is_user_default,
@@ -487,6 +489,11 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
             status = get_key_rating(session, stored_ident->fpr, &ct);
             stored_ident->comm_type = ct;
         }
+    }
+    else if (status != PEP_STATUS_OK) {
+        free(stored_ident->fpr);
+        stored_ident->fpr = NULL;
+        stored_ident->comm_type = PEP_ct_key_not_found;        
     }
     else {
         if (stored_ident->comm_type == PEP_ct_unknown)
@@ -536,8 +543,17 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
          // or identity AND is valid for this address, set in DB
          // as default
          status = set_identity(session, return_id);
+    } 
+    else if (no_stored_default && !EMPTYSTR(return_id->fpr) 
+             && return_id->comm_type != PEP_ct_key_revoked
+             && return_id->comm_type != PEP_ct_key_expired
+             && return_id->comm_type != PEP_ct_key_expired_but_confirmed
+             && return_id->comm_type != PEP_ct_mistrusted 
+             && return_id->comm_type != PEP_ct_key_b0rken) { 
+        // We would have stored this anyway for a first-time elected key. We just have an ident w/ no default already.
+        status = set_identity(session, return_id);
     }
-    else {
+    else { // this is a key other than the default, but there IS a default (FIXME: fdik, do we really want behaviour below?)
         // Store without default fpr/ct, but return the fpr and ct 
         // for current use
         char* save_fpr = return_id->fpr;
