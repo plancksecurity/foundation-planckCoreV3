@@ -3126,6 +3126,7 @@ static PEP_STATUS reconcile_identity_lists(identity_list* src_ids,
 }
 
 static PEP_STATUS reconcile_sent_and_recv_info(message* src, message* inner_message) {
+    PEP_STATUS status = PEP_STATUS_OK;
     if (!src || !inner_message)
         return PEP_ILLEGAL_VALUE;
         
@@ -4191,24 +4192,6 @@ DYNAMIC_API PEP_color color_from_rating(PEP_rating rating)
     // this should never happen
     assert(false);
     return PEP_color_no_color;
-}
-
-DYNAMIC_API PEP_STATUS get_rating_from_bare_key(
-        PEP_SESSION session, 
-        const char* fpr,
-        PEP_rating* rating
-    )
-{
-    if (!rating || !fpr)
-        return PEP_ILLEGAL_VALUE;
-        
-    PEP_comm_type comm_type = PEP_ct_unknown;
-    *rating = PEP_rating_undefined;
-    PEP_STATUS status = get_key_rating(session, fpr, &comm_type);
-    if (status == PEP_STATUS_OK)
-        *rating = _rating(comm_type);
-    
-    return status;    
 }
 
 /* [0-9]: 0x30 - 0x39; [A-F] = 0x41 - 0x46; [a-f] = 0x61 - 0x66 */
