@@ -4267,8 +4267,8 @@ DYNAMIC_API PEP_STATUS generate_keypair(
             identity->username))
         return PEP_ILLEGAL_VALUE;
 
-    const char* saved_username = NULL;
-    const char* at = NULL;
+    char* saved_username = NULL;
+    char* at = NULL;
     size_t uname_len = strlen(identity->username);
     
     if (uname_len > 0)
