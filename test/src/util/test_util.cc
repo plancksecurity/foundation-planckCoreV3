@@ -914,7 +914,11 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
     retval = new_identity(email, NULL, user_id, name);
     if (!retval)
         return PEP_OUT_OF_MEMORY;
-    
+        
+    // honestly probably happens anyway  
+    if (set_ident && status == PEP_STATUS_OK)
+        status = set_identity(session, retval);
+
     if (set_own) {
         retval->me = true;
         status = set_own_key(session, retval, fpr);
@@ -922,6 +926,7 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
     
     if (set_pep && status == PEP_STATUS_OK)
         status = set_as_pEp_user(session, retval);
+        
     if (trust && status == PEP_STATUS_OK) {
         if (!retval->me)
             status = update_identity(session, retval);
@@ -931,9 +936,6 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
         }
     }
     
-    // honestly probably happens anyway  
-    if (set_ident && status == PEP_STATUS_OK)
-        status = set_identity(session, retval);
     
     if (ident)
         *ident = retval;

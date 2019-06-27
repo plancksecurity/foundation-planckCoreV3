@@ -525,6 +525,9 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     
     return_id->me = stored_ident->me;
     
+    return_id->major_ver = stored_ident->major_ver;
+    return_id->minor_ver = stored_ident->minor_ver;
+
     // FIXME: Do we ALWAYS do this? We probably should...
     if (EMPTYSTR(return_id->user_id)) {
         free(return_id->user_id);
@@ -557,7 +560,7 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     }
     
     transfer_ident_lang_and_flags(return_id, stored_ident);
-    
+        
     if (return_id->comm_type == PEP_ct_unknown)
         return_id->comm_type = PEP_ct_key_not_found;
     

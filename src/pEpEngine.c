@@ -2379,6 +2379,8 @@ pEp_identity *identity_dup(const pEp_identity *src)
     dup->lang[2] = 0;
     dup->flags = src->flags;
     dup->me = src->me;
+    dup->major_ver = src->major_ver;
+    dup->minor_ver = src->minor_ver;
     
     return dup;
 }
@@ -2651,9 +2653,9 @@ PEP_STATUS get_identities_by_userid(
         ident->me = (unsigned int)
             sqlite3_column_int(session->get_identities_by_userid, 6);
         ident->major_ver =
-            sqlite3_column_int(session->get_identities_by_userid, 6);
-        ident->minor_ver =
             sqlite3_column_int(session->get_identities_by_userid, 7);
+        ident->minor_ver =
+            sqlite3_column_int(session->get_identities_by_userid, 8);
     
         identity_list_add(*identities, ident);
         ident = NULL;
@@ -2795,9 +2797,9 @@ PEP_STATUS get_identity_without_trust_check(
         _identity->me = (unsigned int)
             sqlite3_column_int(session->get_identity_without_trust_check, 4);
         _identity->major_ver =
-            sqlite3_column_int(session->get_identity_without_trust_check, 6);
+            sqlite3_column_int(session->get_identity_without_trust_check, 5);
         _identity->minor_ver =
-            sqlite3_column_int(session->get_identity_without_trust_check, 7);
+            sqlite3_column_int(session->get_identity_without_trust_check, 6);
     
         *identity = _identity;
         break;
@@ -3204,6 +3206,12 @@ DYNAMIC_API PEP_STATUS set_identity(
             sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
             goto pEp_free;
         }
+    }
+    
+    status = set_pEp_version(session, ident_copy, ident_copy->major_ver, ident_copy->minor_ver);
+    if (status != PEP_STATUS_OK) {
+        sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
+        goto pEp_free;            
     }
     
     result = sqlite3_exec(session->db, "COMMIT ;", NULL, NULL, NULL);
@@ -4450,8 +4458,8 @@ DYNAMIC_API PEP_STATUS generate_keypair(
             identity->username))
         return PEP_ILLEGAL_VALUE;
 
-    const char* saved_username = NULL;
-    const char* at = NULL;
+    char* saved_username = NULL;
+    char* at = NULL;
     size_t uname_len = strlen(identity->username);
     
     if (uname_len > 0)
