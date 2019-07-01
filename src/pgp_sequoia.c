@@ -2578,6 +2578,22 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
 
     // Is the TPK live?
     *expired = !pgp_tpk_alive_at(tpk, when);
+#ifdef TRACING
+    {
+        char buffer[26];
+        time_t now = time(NULL);
+
+        if (when == now || when == now - 1) {
+            sprintf(buffer, "now");
+        } else {
+            struct tm tm;
+            gmtime_r(&when, &tm);
+            strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &tm);
+        }
+
+        T("TPK is %slive as of %s", *expired ? "not " : "", buffer);
+    }
+#endif
     if (*expired)
         goto out;
 
@@ -2608,9 +2624,15 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
 
     *expired = !(can_encrypt && can_sign && can_certify);
 
+    T("Key can%s encrypt, can%s sign, can%s certify => %sexpired",
+      can_encrypt ? "" : "not",
+      can_sign ? "" : "not",
+      can_certify ? "" : "not",
+      *expired ? "" : "not ");
+
  out:
     pgp_tpk_free(tpk);
-    T("(%s) -> %s", fpr, pEp_status_to_string(status));
+    T("(%s) -> %s (expired: %d)", fpr, pEp_status_to_string(status), *expired);
     return status;
 }
 
