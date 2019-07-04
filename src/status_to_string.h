@@ -35,6 +35,7 @@ static inline const char *pEp_status_to_string(PEP_STATUS status) {
     case PEP_KEY_IMPORTED: return "PEP_KEY_IMPORTED";
     case PEP_NO_KEY_IMPORTED: return "PEP_NO_KEY_IMPORTED";
     case PEP_KEY_IMPORT_STATUS_UNKNOWN: return "PEP_KEY_IMPORT_STATUS_UNKNOWN";
+    case PEP_SOME_KEYS_IMPORTED: return "PEP_SOME_KEYS_IMPORTED";
     
     case PEP_CANNOT_FIND_IDENTITY: return "PEP_CANNOT_FIND_IDENTITY";
     case PEP_CANNOT_SET_PERSON: return "PEP_CANNOT_SET_PERSON";
