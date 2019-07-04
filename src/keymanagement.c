@@ -495,7 +495,7 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
         stored_ident->fpr = NULL;
         stored_ident->comm_type = PEP_ct_key_not_found;        
     }
-    else {
+    else { // no key returned, but status ok?
         if (stored_ident->comm_type == PEP_ct_unknown)
             stored_ident->comm_type = PEP_ct_key_not_found;
     }

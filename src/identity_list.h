@@ -63,6 +63,16 @@ DYNAMIC_API void free_identity_list(identity_list *id_list);
 
 DYNAMIC_API identity_list *identity_list_add(identity_list *id_list, pEp_identity *ident);
 
+// identity_list_add - join second identity_list to the first.
+//
+//  parameters:
+//      first_list (in)             identity_list to add to
+//      second_list (in)            identity list to add
+//
+//  return value:
+//      pointer to the HEAD of the new list, or NULL if both lists are empty.
+//
+DYNAMIC_API identity_list *identity_list_join(identity_list *first_list, identity_list* second_list);
 
 // identity_list_length() - get length of identity_list
 //
@@ -73,9 +83,7 @@ DYNAMIC_API identity_list *identity_list_add(identity_list *id_list, pEp_identit
 //      length of identity_list in number of elements
 
 DYNAMIC_API int identity_list_length(const identity_list *id_list);
-
-
+    
 #ifdef __cplusplus
 }
 #endif
-

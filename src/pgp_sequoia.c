@@ -1868,7 +1868,22 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr_raw)
     return status;
 }
 
-PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
+static unsigned int count_keydata_parts(const char* key_data) {
+    unsigned int retval = 0;
+    
+    const char* pgp_begin = "-----BEGIN PGP";
+    size_t prefix_len = strlen(pgp_begin);
+    while (key_data) {
+        key_data = strstr(key_data, pgp_begin);
+        if (key_data) {
+            retval++;
+            key_data += prefix_len;
+        }
+    }
+    return retval;
+ }
+
+PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
                               size_t size, identity_list **private_idents)
 {
     PEP_STATUS status = PEP_NO_KEY_IMPORTED;
@@ -1998,6 +2013,71 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
 
     T("-> %s", pEp_status_to_string(status));
     return status;
+}
+
+PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
+                              size_t size, identity_list **private_idents)
+{
+    unsigned int keycount = count_keydata_parts(key_data);
+    if (keycount < 2)
+        return(_pgp_import_keydata(session, key_data, size, private_idents));
+
+    const char* pgp_begin = "-----BEGIN PGP";
+    size_t prefix_len = strlen(pgp_begin);
+        
+    unsigned int i;
+    const char* curr_begin;
+    size_t curr_size;
+    
+    identity_list* collected_idents = NULL;        
+    
+    PEP_STATUS retval = PEP_KEY_IMPORTED;
+    
+    for (i = 0, curr_begin = key_data; i < keycount; i++) {
+        const char* next_begin = strstr(curr_begin + prefix_len, pgp_begin);
+        if (next_begin)
+            curr_size = next_begin - curr_begin;
+        else
+            curr_size = (key_data + size) - curr_begin;
+        
+        PEP_STATUS curr_status = _pgp_import_keydata(session, curr_begin, curr_size, private_idents);
+        if (private_idents && *private_idents) {
+            if (!collected_idents)
+                collected_idents = *private_idents;
+            else 
+                identity_list_join(collected_idents, *private_idents);
+            *private_idents = NULL;    
+        }
+        
+        if (curr_status != retval) {
+            switch (curr_status) {
+                case PEP_NO_KEY_IMPORTED:
+                case PEP_KEY_NOT_FOUND:
+                case PEP_UNKNOWN_ERROR:
+                    switch (retval) {
+                        case PEP_KEY_IMPORTED:
+                            retval = PEP_SOME_KEYS_IMPORTED;
+                            break;
+                        case PEP_UNKNOWN_ERROR:
+                            retval = curr_status;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case PEP_KEY_IMPORTED:
+                    retval = PEP_SOME_KEYS_IMPORTED;
+                default:
+                    break;
+            }        
+        }        
+        curr_begin = next_begin;     
+    }
+    
+    if (private_idents)
+        *private_idents = collected_idents;
+    
+    return retval;    
 }
 
 PEP_STATUS pgp_export_keydata(
@@ -2512,6 +2592,22 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
 
     // Is the TPK live?
     *expired = !pgp_tpk_alive_at(tpk, when);
+#ifdef TRACING
+    {
+        char buffer[26];
+        time_t now = time(NULL);
+
+        if (when == now || when == now - 1) {
+            sprintf(buffer, "now");
+        } else {
+            struct tm tm;
+            gmtime_r(&when, &tm);
+            strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &tm);
+        }
+
+        T("TPK is %slive as of %s", *expired ? "not " : "", buffer);
+    }
+#endif
     if (*expired)
         goto out;
 
@@ -2542,9 +2638,15 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
 
     *expired = !(can_encrypt && can_sign && can_certify);
 
+    T("Key can%s encrypt, can%s sign, can%s certify => %sexpired",
+      can_encrypt ? "" : "not",
+      can_sign ? "" : "not",
+      can_certify ? "" : "not",
+      *expired ? "" : "not ");
+
  out:
     pgp_tpk_free(tpk);
-    T("(%s) -> %s", fpr, pEp_status_to_string(status));
+    T("(%s) -> %s (expired: %d)", fpr, pEp_status_to_string(status), *expired);
     return status;
 }
 
