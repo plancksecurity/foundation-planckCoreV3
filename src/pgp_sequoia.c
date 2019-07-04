@@ -1860,6 +1860,8 @@ static unsigned int count_keydata_parts(const char* key_data) {
     const char* pgp_begin = "-----BEGIN PGP";
     size_t prefix_len = strlen(pgp_begin);
     while (key_data) {
+        if (key_data[0] == '\0' || strlen(key_data) <= prefix_len)
+            break;
         key_data = strstr(key_data, pgp_begin);
         if (key_data) {
             retval++;
