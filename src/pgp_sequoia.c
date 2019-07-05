@@ -2022,7 +2022,13 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
     PEP_STATUS retval = PEP_KEY_IMPORTED;
     
     for (i = 0, curr_begin = key_data; i < keycount; i++) {
-        const char* next_begin = strstr(curr_begin + prefix_len, pgp_begin);
+        const char* next_begin = NULL;
+
+        // This is assured to be OK because the count function above 
+        // made sure that THIS round contains at least prefix_len chars
+        if (strlen(curr_begin + prefix_len) > prefix_len)
+            next_begin = strstr(curr_begin + prefix_len, pgp_begin);
+
         if (next_begin)
             curr_size = next_begin - curr_begin;
         else
