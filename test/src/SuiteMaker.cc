@@ -21,6 +21,7 @@
 #include "Engine463Tests.h"
 #include "IOS1664Tests.h"
 #include "BloblistTests.h"
+#include "KeyImportAndRetrieveTests.h"
 #include "NewUpdateIdAndMyselfTests.h"
 #include "NoOwnIdentWritesOnDecryptTests.h"
 #include "LiteralFilenameTests.h"
@@ -71,6 +72,7 @@
 #include "KeyAttachmentTests.h"
 #include "OwnKeysRetrieveTests.h"
 #include "TrustManipulationTests.h"
+#include "StrnstrTests.h"
 #include "SyncTests.h"
 #include "RevocationTests.h"
 #include "AppleMailTests.h"
@@ -86,6 +88,7 @@ const char* SuiteMaker::all_suites[] = {
     "Engine463Tests",
     "IOS1664Tests",
     "BloblistTests",
+    "KeyImportAndRetrieveTests",
     "NewUpdateIdAndMyselfTests",
     "NoOwnIdentWritesOnDecryptTests",
     "LiteralFilenameTests",
@@ -136,13 +139,14 @@ const char* SuiteMaker::all_suites[] = {
     "KeyAttachmentTests",
     "OwnKeysRetrieveTests",
     "TrustManipulationTests",
+    "StrnstrTests",
     "SyncTests",
     "RevocationTests",
     "AppleMailTests",
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 62;
+int SuiteMaker::num_suites = 64;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "URIAddressTests") == 0)
@@ -163,6 +167,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new IOS1664Tests(test_class_name, test_home);
     else if (strcmp(test_class_name, "BloblistTests") == 0)
         *test_suite = new BloblistTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "KeyImportAndRetrieveTests") == 0)
+        *test_suite = new KeyImportAndRetrieveTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "NewUpdateIdAndMyselfTests") == 0)
         *test_suite = new NewUpdateIdAndMyselfTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "NoOwnIdentWritesOnDecryptTests") == 0)
@@ -263,6 +269,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new OwnKeysRetrieveTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "TrustManipulationTests") == 0)
         *test_suite = new TrustManipulationTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "StrnstrTests") == 0)
+        *test_suite = new StrnstrTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "SyncTests") == 0)
         *test_suite = new SyncTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "RevocationTests") == 0)
