@@ -1854,16 +1854,21 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr_raw)
     return status;
 }
 
-static unsigned int count_keydata_parts(const char* key_data) {
+static unsigned int count_keydata_parts(const char* key_data, size_t size) {
     unsigned int retval = 0;
     
     const char* pgp_begin = "-----BEGIN PGP";
     size_t prefix_len = strlen(pgp_begin);
+    size_t size_remaining = size;
+    
     while (key_data) {
-        key_data = strstr(key_data, pgp_begin);
+        if (size_remaining <= prefix_len || key_data[0] == '\0')
+            break;
+        key_data = strnstr(key_data, pgp_begin, size_remaining);
         if (key_data) {
             retval++;
             key_data += prefix_len;
+            size_remaining -= prefix_len;
         }
     }
     return retval;
@@ -2004,7 +2009,7 @@ PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
 PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
                               size_t size, identity_list **private_idents)
 {
-    unsigned int keycount = count_keydata_parts(key_data);
+    unsigned int keycount = count_keydata_parts(key_data, size);
     if (keycount < 2)
         return(_pgp_import_keydata(session, key_data, size, private_idents));
 
@@ -2020,7 +2025,14 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
     PEP_STATUS retval = PEP_KEY_IMPORTED;
     
     for (i = 0, curr_begin = key_data; i < keycount; i++) {
-        const char* next_begin = strstr(curr_begin + prefix_len, pgp_begin);
+        const char* next_begin = NULL;
+
+        // This is assured to be OK because the count function above 
+        // made sure that THIS round contains at least prefix_len chars
+        // We used strnstr to count, so we know that strstr will be ok.
+        if (strlen(curr_begin + prefix_len) > prefix_len)
+            next_begin = strstr(curr_begin + prefix_len, pgp_begin);
+
         if (next_begin)
             curr_size = next_begin - curr_begin;
         else
