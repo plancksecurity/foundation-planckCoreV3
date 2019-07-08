@@ -331,6 +331,41 @@ size_t strlcat(char* dst, const	char* src, size_t size) {
     dst[start_len + size_to_copy] = '\0';
     return retval;
 }
+char *strnstr(const char *big, const char *little, size_t len) {
+    if (big == NULL || little == NULL)
+        return NULL;
+        
+    if (*little == '\0')
+        return (char*)big;
+        
+    const char* curr_big = big;
+    
+    size_t little_len = strlen(little);
+    size_t remaining = len;
+
+    const char* retval = NULL;
+    
+    for (remaining = len; remaining >= little_len && *curr_big != '\0'; remaining--, curr_big++) {
+        // find first-char match
+        if (*curr_big != *little) {
+            continue;
+        }
+        retval = curr_big;
+
+        const char* inner_big = retval + 1;
+        const char* curr_little = little + 1;
+        int j;
+        for (j = 1; j < little_len; j++, inner_big++, curr_little++) {
+            if (*inner_big != *curr_little) {
+                retval = NULL;
+                break;
+            }    
+        }
+        if (retval)
+            break;
+    }
+    return (char*)retval;
+}
 
 int mkstemp(char *templ)
 {
