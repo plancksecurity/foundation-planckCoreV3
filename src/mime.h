@@ -55,9 +55,10 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
 // mime_decode_message() - decode a MIME message
 //
 //  parameters:
-//      mimetext (in)           MIME encoded text to decode
-//      size (in)               size of text to decode
-//      msg (out)               decoded message
+//      mimetext (in)           	MIME encoded text to decode
+//      size (in)               	size of text to decode
+//      msg (out)               	decoded message
+//      raise_msg_attachment (out)		
 //
 //  return value:
 //      PEP_STATUS_OK           if everything worked
