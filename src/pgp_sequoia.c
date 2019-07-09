@@ -15,7 +15,7 @@
 
 #include "wrappers.h"
 
-#define TRACING 1
+#define TRACING 0
 #ifndef TRACING
 #  ifndef NDEBUG
 #    define TRACING 0
@@ -2393,101 +2393,6 @@ PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
     return PEP_UNKNOWN_ERROR;
 }
 
-PEP_STATUS pgp_get_key_rating(
-    PEP_SESSION session, const char *fpr, PEP_comm_type *comm_type)
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-    pgp_tpk_t tpk = NULL;
-
-    assert(session);
-    assert(fpr);
-    assert(comm_type);
-
-    *comm_type = PEP_ct_unknown;
-
-    pgp_fingerprint_t pgp_fpr = pgp_fingerprint_from_hex(fpr);
-    status = tpk_find_by_fpr(session, pgp_fpr, false, &tpk, NULL);
-    pgp_fingerprint_free(pgp_fpr);
-    ERROR_OUT(NULL, status, "Looking up key: %s", fpr);
-
-    *comm_type = PEP_ct_OpenPGP_unconfirmed;
-
-    bool expired = false;
-    
-    // FIXME: we should refactor this and pgp_key_expired. For now, we 
-    // MUST guarantee the same behaviour.
-    pgp_key_expired(session, fpr, time(NULL), &expired);
-    
-    if (expired) {
-        *comm_type = PEP_ct_key_expired;
-        goto out;        
-    }
-    
-    // if (pgp_tpk_expired(tpk)) {
-    //     *comm_type = PEP_ct_key_expired;
-    //     goto out;
-    // }
-
-    pgp_revocation_status_t rs = pgp_tpk_revocation_status(tpk);
-    pgp_revocation_status_variant_t rsv = pgp_revocation_status_variant(rs);
-    pgp_revocation_status_free(rs);
-    if (rsv == PGP_REVOCATION_STATUS_REVOKED) {
-        *comm_type = PEP_ct_key_revoked;
-        goto out;
-    }
-
-    PEP_comm_type best_enc = PEP_ct_no_encryption, best_sign = PEP_ct_no_encryption;
-    pgp_tpk_key_iter_t key_iter = pgp_tpk_key_iter_valid(tpk);
-    pgp_key_t key;
-    pgp_signature_t sig;
-    pgp_revocation_status_t rev;
-    while ((key = pgp_tpk_key_iter_next(key_iter, &sig, &rev))) {
-        if (! sig)
-            continue;
-
-        PEP_comm_type curr = PEP_ct_no_encryption;
-
-        int can_enc = pgp_signature_can_encrypt_for_transport(sig)
-            || pgp_signature_can_encrypt_at_rest(sig);
-        int can_sign = pgp_signature_can_sign(sig);
-
-        pgp_public_key_algo_t pk_algo = pgp_key_public_key_algo(key);
-        if (pk_algo == PGP_PUBLIC_KEY_ALGO_RSA_ENCRYPT_SIGN
-            || pk_algo == PGP_PUBLIC_KEY_ALGO_RSA_ENCRYPT
-            || pk_algo == PGP_PUBLIC_KEY_ALGO_RSA_SIGN) {
-            int bits = pgp_key_public_key_bits(key);
-            if (bits < 1024)
-                curr = PEP_ct_key_too_short;
-            else if (bits == 1024)
-                curr = PEP_ct_OpenPGP_weak_unconfirmed;
-            else
-                curr = PEP_ct_OpenPGP_unconfirmed;
-        } else {
-            curr = PEP_ct_OpenPGP_unconfirmed;
-        }
-
-        if (can_enc)
-            best_enc = _MAX(best_enc, curr);
-
-        if (can_sign)
-            best_sign = _MAX(best_sign, curr);
-    }
-    pgp_tpk_key_iter_free(key_iter);
-
-    if (best_enc == PEP_ct_no_encryption || best_sign == PEP_ct_no_encryption) {
-        *comm_type = PEP_ct_key_b0rken;
-        goto out;
-    } else {
-        *comm_type = _MIN(best_enc, best_sign);
-    }
-
- out:
-    pgp_tpk_free(tpk);
-
-    T("(%s) -> %s", fpr, pEp_comm_type_to_string(*comm_type));
-    return status;
-}
-
 
 PEP_STATUS pgp_renew_key(
     PEP_SESSION session, const char *fpr, const timestamp *ts)
@@ -2608,26 +2513,11 @@ PEP_STATUS pgp_revoke_key(
     return status;
 }
 
-PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
-                           const time_t when, bool *expired)
+static void _pgp_key_expired(pgp_tpk_t tpk, const time_t when, bool* expired)
 {
-    PEP_STATUS status = PEP_STATUS_OK;
-    pgp_tpk_t tpk = NULL;
-    T("(%s)", fpr);
-
-    assert(session);
-    assert(fpr);
-    assert(expired);
-
-    *expired = false;
-
-    pgp_fingerprint_t pgp_fpr = pgp_fingerprint_from_hex(fpr);
-    status = tpk_find_by_fpr(session, pgp_fpr, false, &tpk, NULL);
-    pgp_fingerprint_free(pgp_fpr);
-    ERROR_OUT(NULL, status, "Looking up %s", fpr);
-
     // Is the TPK live?
     *expired = !pgp_tpk_alive_at(tpk, when);
+
 #ifdef TRACING
     {
         char buffer[26];
@@ -2649,7 +2539,8 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
 
     // Are there at least one certification subkey, one signing subkey
     // and one encryption subkey that are live?
-    int can_certify = 0, can_encrypt = 0, can_sign = 0;
+    //    int can_certify = 0, can_encrypt = 0, can_sign = 0;
+    int can_encrypt = 0, can_sign = 0;
 
     pgp_tpk_key_iter_t key_iter = pgp_tpk_key_iter_valid(tpk);
     pgp_key_t key;
@@ -2664,22 +2555,49 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
             can_encrypt = 1;
         if (pgp_signature_can_sign(sig))
             can_sign = 1;
-        if (pgp_signature_can_certify(sig))
-            can_certify = 1;
+        // if (pgp_signature_can_certify(sig))
+        //     can_certify = 1;
 
-        if (can_encrypt && can_sign && can_certify)
+//        if (can_encrypt && can_sign && can_certify)
+        if (can_encrypt && can_sign)
             break;
     }
     pgp_tpk_key_iter_free(key_iter);
 
-    *expired = !(can_encrypt && can_sign && can_certify);
+//    *expired = !(can_encrypt && can_sign && can_certify);
+    *expired = !(can_encrypt && can_sign);
 
     T("Key can%s encrypt, can%s sign, can%s certify => %sexpired",
       can_encrypt ? "" : "not",
       can_sign ? "" : "not",
-      can_certify ? "" : "not",
+      // can_certify ? "" : "not",
       *expired ? "" : "not ");
+      
+out:
+    // Er, this might be problematic in terms of internal vs. external in log. FIXME?
+    T("(%s) -> %s (expired: %d)", fpr, pEp_status_to_string(status), *expired);
+    return;
+}
+                            
+PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
+                           const time_t when, bool *expired)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    pgp_tpk_t tpk = NULL;
+    T("(%s)", fpr);
 
+    assert(session);
+    assert(fpr);
+    assert(expired);
+
+    *expired = false;
+
+    pgp_fingerprint_t pgp_fpr = pgp_fingerprint_from_hex(fpr);
+    status = tpk_find_by_fpr(session, pgp_fpr, false, &tpk, NULL);
+    pgp_fingerprint_free(pgp_fpr);
+    ERROR_OUT(NULL, status, "Looking up %s", fpr);
+
+    _pgp_key_expired(tpk, when, expired);
  out:
     pgp_tpk_free(tpk);
     T("(%s) -> %s (expired: %d)", fpr, pEp_status_to_string(status), *expired);
@@ -2713,6 +2631,101 @@ PEP_STATUS pgp_key_revoked(PEP_SESSION session, const char *fpr, bool *revoked)
     T("(%s) -> %s", fpr, pEp_status_to_string(status));
     return status;
 }
+
+PEP_STATUS pgp_get_key_rating(
+    PEP_SESSION session, const char *fpr, PEP_comm_type *comm_type)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    pgp_tpk_t tpk = NULL;
+
+    assert(session);
+    assert(fpr);
+    assert(comm_type);
+
+    *comm_type = PEP_ct_unknown;
+
+    pgp_fingerprint_t pgp_fpr = pgp_fingerprint_from_hex(fpr);
+    status = tpk_find_by_fpr(session, pgp_fpr, false, &tpk, NULL);
+    pgp_fingerprint_free(pgp_fpr);
+    ERROR_OUT(NULL, status, "Looking up key: %s", fpr);
+
+    *comm_type = PEP_ct_OpenPGP_unconfirmed;
+
+    bool expired = false;
+    
+    // MUST guarantee the same behaviour.
+    _pgp_key_expired(tpk, time(NULL), &expired);
+    
+    if (expired) {
+        *comm_type = PEP_ct_key_expired;
+        goto out;        
+    }
+    
+    // if (pgp_tpk_expired(tpk)) {
+    //     *comm_type = PEP_ct_key_expired;
+    //     goto out;
+    // }
+
+    pgp_revocation_status_t rs = pgp_tpk_revocation_status(tpk);
+    pgp_revocation_status_variant_t rsv = pgp_revocation_status_variant(rs);
+    pgp_revocation_status_free(rs);
+    if (rsv == PGP_REVOCATION_STATUS_REVOKED) {
+        *comm_type = PEP_ct_key_revoked;
+        goto out;
+    }
+
+    PEP_comm_type best_enc = PEP_ct_no_encryption, best_sign = PEP_ct_no_encryption;
+    pgp_tpk_key_iter_t key_iter = pgp_tpk_key_iter_valid(tpk);
+    pgp_key_t key;
+    pgp_signature_t sig;
+    pgp_revocation_status_t rev;
+    while ((key = pgp_tpk_key_iter_next(key_iter, &sig, &rev))) {
+        if (! sig)
+            continue;
+
+        PEP_comm_type curr = PEP_ct_no_encryption;
+
+        int can_enc = pgp_signature_can_encrypt_for_transport(sig)
+            || pgp_signature_can_encrypt_at_rest(sig);
+        int can_sign = pgp_signature_can_sign(sig);
+
+        pgp_public_key_algo_t pk_algo = pgp_key_public_key_algo(key);
+        if (pk_algo == PGP_PUBLIC_KEY_ALGO_RSA_ENCRYPT_SIGN
+            || pk_algo == PGP_PUBLIC_KEY_ALGO_RSA_ENCRYPT
+            || pk_algo == PGP_PUBLIC_KEY_ALGO_RSA_SIGN) {
+            int bits = pgp_key_public_key_bits(key);
+            if (bits < 1024)
+                curr = PEP_ct_key_too_short;
+            else if (bits == 1024)
+                curr = PEP_ct_OpenPGP_weak_unconfirmed;
+            else
+                curr = PEP_ct_OpenPGP_unconfirmed;
+        } else {
+            curr = PEP_ct_OpenPGP_unconfirmed;
+        }
+
+        if (can_enc)
+            best_enc = _MAX(best_enc, curr);
+
+        if (can_sign)
+            best_sign = _MAX(best_sign, curr);
+    }
+    pgp_tpk_key_iter_free(key_iter);
+
+    if (best_enc == PEP_ct_no_encryption || best_sign == PEP_ct_no_encryption) {
+        *comm_type = PEP_ct_key_b0rken;
+        goto out;
+    } else {
+        *comm_type = _MIN(best_enc, best_sign);
+    }
+
+ out:
+    pgp_tpk_free(tpk);
+
+    T("(%s) -> %s", fpr, pEp_comm_type_to_string(*comm_type));
+    return status;
+}
+
 
 PEP_STATUS pgp_key_created(PEP_SESSION session, const char *fpr, time_t *created)
 {
