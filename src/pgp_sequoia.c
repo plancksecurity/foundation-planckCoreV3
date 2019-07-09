@@ -15,7 +15,7 @@
 
 #include "wrappers.h"
 
-#define TRACING 0
+#define TRACING 1
 #ifndef TRACING
 #  ifndef NDEBUG
 #    define TRACING 0
@@ -2412,10 +2412,21 @@ PEP_STATUS pgp_get_key_rating(
 
     *comm_type = PEP_ct_OpenPGP_unconfirmed;
 
-    if (pgp_tpk_expired(tpk)) {
+    bool expired = false;
+    
+    // FIXME: we should refactor this and pgp_key_expired. For now, we 
+    // MUST guarantee the same behaviour.
+    pgp_key_expired(session, fpr, time(NULL), &expired);
+    
+    if (expired) {
         *comm_type = PEP_ct_key_expired;
-        goto out;
+        goto out;        
     }
+    
+    // if (pgp_tpk_expired(tpk)) {
+    //     *comm_type = PEP_ct_key_expired;
+    //     goto out;
+    // }
 
     pgp_revocation_status_t rs = pgp_tpk_revocation_status(tpk);
     pgp_revocation_status_variant_t rsv = pgp_revocation_status_variant(rs);
