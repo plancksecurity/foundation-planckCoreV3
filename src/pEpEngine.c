@@ -4251,27 +4251,8 @@ DYNAMIC_API PEP_STATUS find_keys(
     if (!(session && pattern && keylist))
         return PEP_ILLEGAL_VALUE;
 
-    PEP_STATUS status = session->cryptotech[PEP_crypt_OpenPGP].find_keys(session, pattern,
-                                                                         keylist);
-                                                                         
-#ifndef USE_GPG
-    if (*keylist == NULL) {
-        // we have a problem, in that older GPG keys with no username associated don't 
-        // quote out the address-as-username, meaning the uid is non-standard.
-        // sequoia then stores the whole uid string for lookup, so we try again here with 
-        // a whole-uid-pattern:
-        if (strchr(pattern, '@')) {
-            char* new_pattern = calloc(2*strlen(pattern) + 4, 1);
-            int n = sprintf(new_pattern, "%s <%s>", pattern, pattern);
-            if (n > 0)
-                status = session->cryptotech[PEP_crypt_OpenPGP].find_keys(session, new_pattern,
-                                                                          keylist);
-            free(new_pattern);                                                                      
-        }    
-    }
-#endif 
-    
-    return status;
+    return session->cryptotech[PEP_crypt_OpenPGP].find_keys(session, pattern,
+            keylist);
 }
 
 
