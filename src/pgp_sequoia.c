@@ -34,6 +34,13 @@
         __android_log_print(ANDROID_LOG_DEBUG, "pEpEngine-sequoia",     \
                             ##__VA_ARGS__);                             \
     } while (0)
+#  elif _WIN32
+#    define _T(...) do {                        \
+		char str[256];                          \
+		snprintf(str, 256, ##__VA_ARGS__);      \
+		OutputDebugStringA(str);                \
+    } while (0)
+
 #  else
 #    define _T(...) do {                        \
         fprintf(stderr, ##__VA_ARGS__);         \
