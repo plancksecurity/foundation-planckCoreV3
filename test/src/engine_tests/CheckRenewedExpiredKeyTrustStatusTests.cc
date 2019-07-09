@@ -108,6 +108,13 @@ void CheckRenewedExpiredKeyTrustStatusTests::check_renewed_expired_key_trust_sta
     status = update_identity(session, expired_inquisitor);
     TEST_ASSERT_MSG((status == PEP_KEY_UNSUITABLE), tl_status_string(status));
     PEP_comm_type ct = expired_inquisitor->comm_type;    
+    TEST_ASSERT_MSG(ct == PEP_ct_key_not_found, tl_ct_string(ct));
+    TEST_ASSERT(!expired_inquisitor->fpr);
+    
+    expired_inquisitor->fpr = strdup(inquisitor_fpr);
+    status = get_trust(session, expired_inquisitor);
+    ct = expired_inquisitor->comm_type;    
+    TEST_ASSERT(status == PEP_STATUS_OK);
     TEST_ASSERT_MSG(ct == PEP_ct_key_expired_but_confirmed, tl_ct_string(ct));
     
     // Ok, so I want to make sure we make an entry, so I'll try to decrypt the message WITH
@@ -250,6 +257,13 @@ void CheckRenewedExpiredKeyTrustStatusTests::check_renewed_expired_key_trust_sta
     status = update_identity(session, expired_inquisitor);
     TEST_ASSERT_MSG((status == PEP_KEY_UNSUITABLE), tl_status_string(status));
     PEP_comm_type ct = expired_inquisitor->comm_type;    
+    TEST_ASSERT_MSG(ct == PEP_ct_key_not_found, tl_ct_string(ct));
+    TEST_ASSERT(!expired_inquisitor->fpr);
+    
+    expired_inquisitor->fpr = strdup(inquisitor_fpr);
+    status = get_trust(session, expired_inquisitor);
+    ct = expired_inquisitor->comm_type;    
+    TEST_ASSERT(status == PEP_STATUS_OK);
     TEST_ASSERT_MSG(ct == PEP_ct_key_expired_but_confirmed, tl_ct_string(ct));
     
     // Ok, so I want to make sure we make an entry, so I'll try to decrypt the message WITH

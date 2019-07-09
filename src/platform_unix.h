@@ -67,6 +67,7 @@ extern char* SystemDB;
 #if !defined(BSD) && !defined(__APPLE__)
 size_t strlcpy(char* dst, const	char* src, size_t size);
 size_t strlcat(char* dst, const	char* src, size_t size);
+char *strnstr(const char *big, const char *little, size_t len);
 
 // N.B. This is ifdef'd out because NDK users sometimes have trouble finding regex functions in
 //      the library in spite of the inclusion of regex.h - this is a FIXME, but since iOS is

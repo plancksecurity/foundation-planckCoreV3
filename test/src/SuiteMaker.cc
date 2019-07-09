@@ -71,6 +71,7 @@
 #include "KeyAttachmentTests.h"
 #include "OwnKeysRetrieveTests.h"
 #include "TrustManipulationTests.h"
+#include "StrnstrTests.h"
 #include "SyncTests.h"
 #include "SenderFPRTests.h"
 #include "RevocationTests.h"
@@ -137,6 +138,7 @@ const char* SuiteMaker::all_suites[] = {
     "KeyAttachmentTests",
     "OwnKeysRetrieveTests",
     "TrustManipulationTests",
+    "StrnstrTests",
     "SyncTests",
     "SenderFPRTests",
     "RevocationTests",
@@ -265,6 +267,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new OwnKeysRetrieveTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "TrustManipulationTests") == 0)
         *test_suite = new TrustManipulationTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "StrnstrTests") == 0)
+        *test_suite = new StrnstrTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "SyncTests") == 0)
         *test_suite = new SyncTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "SenderFPRTests") == 0)
