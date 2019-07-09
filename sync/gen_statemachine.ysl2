@@ -1046,8 +1046,10 @@ tstylesheet {
 
         // state machine
 
+        #ifndef NDEBUG
         const char *«@name»_state_name(int state);
         const char *«@name»_event_name(int event);
+        #endif
 
         // the state machine function is returning the next state in case of a
         // transition or None for staying
@@ -1073,6 +1075,9 @@ tstylesheet {
         #include "«@name»_fsm.h"
         #include <stdlib.h>
 
+        #ifdef NDEBUG
+        static
+        #endif
         const char *«@name»_state_name(int state)
         {
             switch (state) {
@@ -1093,6 +1098,9 @@ tstylesheet {
             }
         }
 
+        #ifdef NDEBUG
+        static
+        #endif
         const char *«@name»_event_name(int event)
         {
             switch (event) {
@@ -1158,7 +1166,7 @@ tstylesheet {
             switch (state) {
                 `` apply "state", 2, mode=fsm
                 default:
-                    «@name»_ERR_LOG_INT("invalid state", state);
+                    «@name»_ERR_LOG("invalid state", «@name»_state_name(state));
                     return invalid_state;
             }
             
