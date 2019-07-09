@@ -1155,7 +1155,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "-DSQLITE3_FROM_OS";
 				SDKROOT = iphoneos;
-				VALID_ARCHS = "arm64 armv7s armv7";
+				VALID_ARCHS = "$(VALID_ARCHS) x86_64";
 			};
 			name = Debug;
 		};
@@ -1214,7 +1214,7 @@
 				OTHER_CFLAGS = "-DSQLITE3_FROM_OS";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
-				VALID_ARCHS = "arm64 armv7s armv7";
+				VALID_ARCHS = "$(VALID_ARCHS) x86_64";
 			};
 			name = Release;
 		};

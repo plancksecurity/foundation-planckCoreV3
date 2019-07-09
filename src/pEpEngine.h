@@ -60,6 +60,7 @@ typedef enum {
     PEP_KEY_IMPORTED                                = 0x0220,
     PEP_NO_KEY_IMPORTED                             = 0x0221,
     PEP_KEY_IMPORT_STATUS_UNKNOWN                   = 0x0222,
+    PEP_SOME_KEYS_IMPORTED                          = 0x0223,
     
     PEP_CANNOT_FIND_IDENTITY                        = 0x0301,
     PEP_CANNOT_SET_PERSON                           = 0x0381,

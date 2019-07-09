@@ -48,12 +48,23 @@ void IOS1664Tests::check_i_o_s1664() {
     
     pEp_identity* you = new_identity("superxat@gmail.com", NULL, NULL, NULL);
     
+    // N.B. while obviously it would be better to write the test expecting us to 
+    // accept the key, I'm actually testing that we don't get the wrong status
+    // based on the presumption of rejection
+    
     message* out_msg = new_message(PEP_dir_outgoing);
     out_msg->from = me;
     out_msg->to = new_identity_list(you);
     out_msg->shortmsg = strdup("Hussidente 2020!");
     out_msg->longmsg = strdup("A Huss in every office!");
     
+    status = identity_rating(session, out_msg->from, &rating);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT_MSG(rating == PEP_rating_trusted_and_anonymized, tl_rating_string(rating));
+    status = identity_rating(session, out_msg->to->ident, &rating);
+    TEST_ASSERT_MSG(status == PEP_KEY_NOT_FOUND, tl_status_string(status));
+    TEST_ASSERT_MSG(rating == PEP_rating_undefined, tl_rating_string(rating));
+
     status = outgoing_message_rating(session, out_msg, &rating);
     TEST_ASSERT(rating == PEP_rating_unencrypted);
     

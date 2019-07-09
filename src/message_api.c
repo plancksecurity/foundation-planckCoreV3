@@ -3145,7 +3145,6 @@ static PEP_STATUS reconcile_identity_lists(identity_list* src_ids,
 }
 
 static PEP_STATUS reconcile_sent_and_recv_info(message* src, message* inner_message) {
-    PEP_STATUS status = PEP_STATUS_OK;
     if (!src || !inner_message)
         return PEP_ILLEGAL_VALUE;
         
