@@ -62,11 +62,11 @@ void IOS1664Tests::check_i_o_s1664() {
     TEST_ASSERT(status == PEP_STATUS_OK);
     TEST_ASSERT_MSG(rating == PEP_rating_trusted_and_anonymized, tl_rating_string(rating));
     status = identity_rating(session, out_msg->to->ident, &rating);
-    TEST_ASSERT_MSG(status == PEP_KEY_NOT_FOUND, tl_status_string(status));
-    TEST_ASSERT_MSG(rating == PEP_rating_undefined, tl_rating_string(rating));
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    TEST_ASSERT_MSG(rating == PEP_rating_reliable, tl_rating_string(rating));
 
     status = outgoing_message_rating(session, out_msg, &rating);
-    TEST_ASSERT(rating == PEP_rating_unencrypted);
+    TEST_ASSERT(rating == PEP_rating_reliable);
     
     TEST_ASSERT(true);
 }
