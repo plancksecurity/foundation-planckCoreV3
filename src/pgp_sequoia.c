@@ -1468,6 +1468,33 @@ PEP_STATUS pgp_verify_text(
     if (size == 0 || sig_size == 0)
         return PEP_DECRYPT_WRONG_FORMAT;
 
+#if TRACING > 0
+    {
+        int cr = 0;
+        int crlf = 0;
+        int lf = 0;
+
+        for (int i = 0; i < size; i ++) {
+            // CR
+            if (text[i] == '\r') {
+                cr ++;
+            }
+            // LF
+            if (text[i] == '\n') {
+                if (i > 0 && text[i - 1] == '\r') {
+                    cr --;
+                    crlf ++;
+                } else {
+                    lf ++;
+                }
+            }
+        }
+
+        T("Text to verify: %zd bytes with %d crlfs, %d bare crs and %d bare lfs",
+          size, crlf, cr, lf);
+    }
+#endif
+
     cookie.recipient_keylist = new_stringlist(NULL);
     if (!cookie.recipient_keylist)
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
