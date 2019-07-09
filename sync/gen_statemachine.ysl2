@@ -1158,7 +1158,7 @@ tstylesheet {
             switch (state) {
                 `` apply "state", 2, mode=fsm
                 default:
-                    «@name»_ERR_LOG_INT("invalid state", state);
+                    «@name»_ERR_LOG("invalid state", «@name»_state_name(state));
                     return invalid_state;
             }
             
