@@ -552,6 +552,7 @@ tstylesheet {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
                             }
+                            add_opt_field(m, "pEp-auto-consume", "yes");
                             free_message(_m);
                             break;
 
@@ -729,6 +730,7 @@ tstylesheet {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
                             }
+                            add_opt_field(m, "pEp-auto-consume", "yes");
                             free_message(_m);
                             break;
 
@@ -752,6 +754,7 @@ tstylesheet {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
                             }
+                            add_opt_field(m, "pEp-auto-consume", "yes");
                             free_message(_m);
                     }
 
