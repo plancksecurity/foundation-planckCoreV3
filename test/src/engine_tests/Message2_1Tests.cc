@@ -251,12 +251,50 @@ void Message2_1Tests::check_message2_1_recip_2_1() {
 }
 
 void Message2_1Tests::check_message2_1_recip_1_0_from_msg_OpenPGP() {
-    // receive 1.0 message from OpenPGP
+    pEp_identity* alice = NULL;
+    
+    PEP_STATUS status = set_up_preset(session, ALICE, 
+                                      true, true, true, true, true, &alice);
 
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(alice);
+
+    // receive 1.0 message from OpenPGP
+    string incoming = slurp("test_mails/From_M1_0.eml");
+    
+    char* dec_msg;
+    char* mod_src;
+    PEP_decrypt_flags_t flags = 0;
+    stringlist_t* keylist_used = NULL;
+    PEP_rating rating;
+    
+    status = MIME_decrypt_message(session, incoming.c_str(), incoming.size(), &dec_msg, &keylist_used, &rating, &flags, &mod_src);
+
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     // generate message
     
-    // ensure sent message is in 1.0 format
+    message* msg = new_message(PEP_dir_outgoing);
+    
+    msg->from = alice;
+    msg->to = new_identity_list(new_identity("pep-test-carol@pep-project.org", NULL, NULL, NULL));
+    msg->shortmsg = strdup("Boom shaka laka");
+    msg->longmsg = strdup("Don't you get sick of these?");
+    
+    message* enc_msg = NULL;
 
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    
+    // ensure sent message is in 1.0 format
+    unsigned int major = 1;
+    unsigned int minor = 0;
+    TEST_ASSERT_MSG(verify_message_version_produced(enc_msg, &major, &minor),
+                                                    (to_string(major) + "." + to_string(minor)).c_str());
+    
+    free_message(msg);
+    free_message(enc_msg);
+    free(dec_msg);
+    free(mod_src);
     TEST_ASSERT(true);
 }
 
