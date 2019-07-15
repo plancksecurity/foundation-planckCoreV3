@@ -21,7 +21,6 @@
 #include "Engine463Tests.h"
 #include "IOS1664Tests.h"
 #include "BloblistTests.h"
-#include "KeyImportAndRetrieveTests.h"
 #include "NewUpdateIdAndMyselfTests.h"
 #include "NoOwnIdentWritesOnDecryptTests.h"
 #include "LiteralFilenameTests.h"
@@ -30,7 +29,6 @@
 #include "PgpBinaryTests.h"
 #include "SubkeyRatingEvalTests.h"
 #include "MessageNullFromTests.h"
-#include "Engine587Tests.h"
 #include "ExportKeyTests.h"
 #include "LeastCommonDenomColorTests.h"
 #include "StringlistTests.h"
@@ -89,7 +87,6 @@ const char* SuiteMaker::all_suites[] = {
     "Engine463Tests",
     "IOS1664Tests",
     "BloblistTests",
-    "KeyImportAndRetrieveTests",
     "NewUpdateIdAndMyselfTests",
     "NoOwnIdentWritesOnDecryptTests",
     "LiteralFilenameTests",
@@ -98,7 +95,6 @@ const char* SuiteMaker::all_suites[] = {
     "PgpBinaryTests",
     "SubkeyRatingEvalTests",
     "MessageNullFromTests",
-    "Engine587Tests",
     "ExportKeyTests",
     "LeastCommonDenomColorTests",
     "StringlistTests",
@@ -148,7 +144,7 @@ const char* SuiteMaker::all_suites[] = {
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 65;
+int SuiteMaker::num_suites = 63;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "URIAddressTests") == 0)
@@ -169,8 +165,6 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new IOS1664Tests(test_class_name, test_home);
     else if (strcmp(test_class_name, "BloblistTests") == 0)
         *test_suite = new BloblistTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "KeyImportAndRetrieveTests") == 0)
-        *test_suite = new KeyImportAndRetrieveTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "NewUpdateIdAndMyselfTests") == 0)
         *test_suite = new NewUpdateIdAndMyselfTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "NoOwnIdentWritesOnDecryptTests") == 0)
@@ -187,8 +181,6 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new SubkeyRatingEvalTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "MessageNullFromTests") == 0)
         *test_suite = new MessageNullFromTests(test_class_name, test_home);
-    else if (strcmp(test_class_name, "Engine587Tests") == 0)
-        *test_suite = new Engine587Tests(test_class_name, test_home);
     else if (strcmp(test_class_name, "ExportKeyTests") == 0)
         *test_suite = new ExportKeyTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "LeastCommonDenomColorTests") == 0)
