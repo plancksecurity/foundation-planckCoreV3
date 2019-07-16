@@ -72,7 +72,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PEPENGINE_EXPORTS;_CRT_SECURE_NO_WARNINGS;USE_SEQUOIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <EnablePREfast>false</EnablePREfast>
-      <AdditionalIncludeDirectories>$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
       <DisableSpecificWarnings>4703</DisableSpecificWarnings>
     </ClCompile>
@@ -104,7 +104,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PEPENGINE_EXPORTS;USE_SEQUOIA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>false</SDLCheck>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(SolutionDir)libetpan\build-windows\include;$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Tools\asn1c\share\asn1c;$(SolutionDir)sequoia\openpgp-ffi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ControlFlowGuard>Guard</ControlFlowGuard>
@@ -135,7 +135,6 @@
     <ClCompile Include="..\src\bloblist.c" />
     <ClCompile Include="..\src\cryptotech.c" />
     <ClCompile Include="..\src\email.c" />
-    <ClCompile Include="..\src\etpan_mime.c" />
     <ClCompile Include="..\src\growing_buf.c" />
     <ClCompile Include="..\src\identity_list.c" />
     <ClCompile Include="..\src\keymanagement.c" />
@@ -174,7 +173,6 @@
     <ClInclude Include="..\src\cryptotech.h" />
     <ClInclude Include="..\src\dynamic_api.h" />
     <ClInclude Include="..\src\email.h" />
-    <ClInclude Include="..\src\etpan_mime.h" />
     <ClInclude Include="..\src\fsm_common.h" />
     <ClInclude Include="..\src\growing_buf.h" />
     <ClInclude Include="..\src\identity_list.h" />
@@ -213,8 +211,8 @@
     <Text Include="..\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\libetpan\build-windows\libetpan\libetpan.vcxproj">
-      <Project>{ba4ded3c-e56f-4484-bfc3-9c13e461a1be}</Project>
+    <ProjectReference Include="..\..\pEpMIME\build-windows\pEpMIME.vcxproj">
+      <Project>{a6fa4848-3d26-44a3-a305-efe6d1cb57df}</Project>
     </ProjectReference>
     <ProjectReference Include="libpEpasn1\libpEpasn1.vcxproj">
       <Project>{9a67164d-b8f8-4601-a24b-28afe774d41c}</Project>

@@ -117,9 +117,6 @@
     <ClCompile Include="..\src\pgp_sequoia.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\etpan_mime.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\keymanagement.h">
@@ -255,9 +252,6 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Sync_impl.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\etpan_mime.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
