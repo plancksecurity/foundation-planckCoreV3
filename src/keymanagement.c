@@ -249,7 +249,7 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
         case PEP_ct_key_revoked:
         case PEP_ct_key_b0rken:
             // delete key from being default key for all users/identities
-            status = remove_fpr_as_default(session, fpr); //BUFF: considers the key as "revoked" ...
+            status = remove_fpr_as_default(session, fpr);
             status = update_trust_for_fpr(session, 
                                           fpr, 
                                           ct);
@@ -257,7 +257,7 @@ static PEP_STATUS validate_fpr(PEP_SESSION session,
             free(ident->fpr);
             ident->fpr = NULL;
             ident->comm_type = ct;            
-            status = PEP_KEY_UNSUITABLE; //BUFF: ... and returns PEP_KEY_UNSUITABLE
+            status = PEP_KEY_UNSUITABLE;
         default:
             break;
     }            
