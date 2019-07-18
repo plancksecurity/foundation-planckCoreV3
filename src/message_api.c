@@ -2604,8 +2604,8 @@ static bool pull_up_attached_main_msg(message* src) {
     
     if ((!slong || slong[0] == '\0')
          && (!sform || sform[0] == '\0')) {
-        if (satt) {
-            const char* inner_mime_type = satt->mime_type;
+        const char* inner_mime_type = (satt ? satt->mime_type : NULL);     
+        if (inner_mime_type) {
             if (strcasecmp(inner_mime_type, "text/plain") == 0) {
                 free(slong); /* in case of "" */
                 src->longmsg = strndup(satt->value, satt->size); 
