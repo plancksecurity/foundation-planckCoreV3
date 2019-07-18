@@ -944,5 +944,4 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
         
     return status;
 }
-
 #endif

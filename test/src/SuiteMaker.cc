@@ -49,6 +49,7 @@
 #include "BlacklistAcceptNewKeyTests.h"
 #include "DecryptAttachPrivateKeyUntrustedTests.h"
 #include "BlacklistTests.h"
+#include "GetKeyRatingForUserTests.h"
 #include "RevokeRegenAttachTests.h"
 #include "PepSubjectReceivedTests.h"
 #include "SequenceTests.h"
@@ -119,6 +120,7 @@ const char* SuiteMaker::all_suites[] = {
     "BlacklistAcceptNewKeyTests",
     "DecryptAttachPrivateKeyUntrustedTests",
     "BlacklistTests",
+    "GetKeyRatingForUserTests",
     "RevokeRegenAttachTests",
     "PepSubjectReceivedTests",
     "SequenceTests",
@@ -152,7 +154,7 @@ const char* SuiteMaker::all_suites[] = {
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 67;
+int SuiteMaker::num_suites = 68;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "URIAddressTests") == 0)
@@ -229,6 +231,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new DecryptAttachPrivateKeyUntrustedTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "BlacklistTests") == 0)
         *test_suite = new BlacklistTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "GetKeyRatingForUserTests") == 0)
+        *test_suite = new GetKeyRatingForUserTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "RevokeRegenAttachTests") == 0)
         *test_suite = new RevokeRegenAttachTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "PepSubjectReceivedTests") == 0)
