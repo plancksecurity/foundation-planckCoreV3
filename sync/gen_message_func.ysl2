@@ -297,6 +297,20 @@ template "field", mode=update_message {
                  = session->«$state».«@name»;
 
         ||
+        when "@type='Identity'"
+        ||
+        {
+            pEp_identity *ident = Identity_to_Struct(&session->«$state».«@name», NULL);
+            if (!ident)
+                return PEP_OUT_OF_MEMORY;
+            Identity_t *_ident = Identity_from_Struct(ident,
+                    &msg->choice.«yml:lcase(../../@name)».choice.«$message_name».«@name»);
+            free_identity(ident);
+            if (!_ident)
+                return PEP_OUT_OF_MEMORY;
+        }
+
+        ||
         when "@type='IdentityList'"
         ||
         {
@@ -360,6 +374,21 @@ template "field", mode=update_state {
         ||
         session->«yml:lcase(../../../@name)»_state.«yml:lcase(../../@name)».«@name» = msg->choice.«yml:lcase(../../@name)»
                 .choice.«$message_name».«@name»;
+
+        ||
+        when "@type='Identity'"
+        ||
+        {
+            pEp_identity *ident = Identity_to_Struct(
+                    &msg->choice.«yml:lcase(../../@name)».choice.«$message_name».«@name», NULL);
+            if (!ident)
+                return PEP_OUT_OF_MEMORY;
+            Identity_t *_ident = Identity_from_Struct(ident,
+                    &session->«yml:lcase(../../../@name)»_state.«yml:lcase(../../@name)».«@name»);
+            free_identity(ident);
+            if (!_ident)
+                return PEP_OUT_OF_MEMORY;
+        }
 
         ||
         when "@type='IdentityList'"
