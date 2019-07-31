@@ -19,8 +19,6 @@ sudo port install mercurial
 sudo port install py27-lxml
 # libetpan
 sudo port install git autoconf automake libtool
-# asn1c
-sudo port install asn1c
 # engine
 sudo port install gpgme
 ~~~
@@ -30,6 +28,8 @@ Ensure that `python` is Python 2.7:
 ~~~
 sudo port select python python27
 ~~~
+
+
 
 ## Homebrew
 Install Homebrew according to the instructions found [here](https://docs.brew.sh/Installation.html).
@@ -44,10 +44,11 @@ brew install python
 pip2 install --user lxml
 # libetpan
 brew install git autoconf automake libtool
-# asn1c
-brew install asn1c
-# engine
-brew install gpgme
+# engine / sequoia
+brew install capnp 
+brew install pkg-config
+brew install nettle
+brew install coreutils
 ~~~
 
 # Installing unpackaged dependencies
@@ -69,6 +70,16 @@ mkdir -p ~/code/yml2
 hg clone https://pep.foundation/dev/repos/yml2/ ~/code/yml2
 ~~~
 
+# asn1c
+git clone git://github.com/vlm/asn1c.git ~/code/asn1c
+cd ~/code/asn1c
+git checkout tags/v0.9.28 -b pep-engine
+autoreconf -iv
+mkdir ~/code/asn1c/build
+./configure --prefix="$HOME/code/asn1c/build"
+make
+make install
+
 ## libetpan
 pEp Engine requires libetpan with a set of patches that have not been upstreamed yet.
 
@@ -82,19 +93,23 @@ make
 make install
 ~~~
 
-## GPGME
-The MacPorts-packaged GPGME links to a version of GNU libiconv that has files in the same include/library paths as GPGME. This version of libiconv must not be visible to the linker when the pEp Engine is build or run.
+## Sequoia
 
-Thus the files of the GPGME distribution will have to be manually copied to separate include/library folders, so that no include or library paths used for building the pEp Engine contains files of MacPorts' libiconv distribution.
-
+Install rustup
 ~~~
-mkdir -p ~/code/gpgme/build/include
-cp /opt/local/include/gpg*.h ~/code/gpgme/build/include
-mkdir -p ~/code/gpgme/build/lib
-cp -r /opt/local/lib/libgpg* ~/code/gpgme/build/lib
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ~~~
 
-It's of course possible to skip MacPort's version, and use a self-compiled GPGME/GPG. The default build configuration assumes this case, and assumes you have installed your GPGME with `$(HOME)` as your prefix.
+Proceed with the default installation and restart the console in order to add cargo to your $PATH
+
+Clone and build the sequoia project
+~~~
+mkdir -p ~/code/sequoia
+git clone https://gitlab.com/sequoia-pgp/sequoia.git ~/code/sequoia
+cd ~/code/sequoia
+make
+make install
+~~~
 
 # pEp Engine
 
@@ -122,8 +137,8 @@ YML2_PATH=$(HOME)/code/yml2
 ETPAN_LIB=-L$(HOME)/code/libetpan/build/lib
 ETPAN_INC=-I$(HOME)/code/libetpan/build/include
 
-GPGME_LIB=-L$(HOME)/lib
-GPGME_INC=-I$(HOME)/include
+OPENPGP=SEQUOIA
+
 ~~~
 
 The engine is built as follows:
