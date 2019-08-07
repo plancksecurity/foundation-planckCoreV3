@@ -390,7 +390,7 @@ struct mailmime * get_file_part(
     stringpair_list_t* extra_params = NULL;
     
     if (set_attachment_forward_comment)
-        extra_params = new_stringpair_list(new_stringpair("forward", "no"));
+        extra_params = new_stringpair_list(new_stringpair("forwarded", "no"));
     
     mime = part_new_empty(content, mime_fields, extra_params, 1);
     free_stringpair_list(extra_params);
@@ -2628,7 +2628,7 @@ static PEP_STATUS interpret_MIME(
                             for (cur = clist_begin(content->ct_parameters); cur; cur =
                                  clist_next(cur)) {
                                 struct mailmime_parameter * param = clist_content(cur);
-                                if (param && param->pa_name && strcasecmp(param->pa_name, "forward") == 0) {
+                                if (param && param->pa_name && strcasecmp(param->pa_name, "forwarded") == 0) {
                                     if (param->pa_value && strcasecmp(param->pa_value, "no") == 0) {
                                         *raise_msg_attachment = true;
                                         break;

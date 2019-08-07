@@ -14,6 +14,44 @@ void test_init();
 
 bool file_exists(std::string filename);
 
+typedef enum _pEp_test_ident_preset {
+    ALICE,
+    APPLE,
+    BOB,
+    CAROL,
+    DAVE,
+    ERIN,
+    FRANK,
+    GABRIELLE,
+    JOHN,
+    ALEX,
+    ALEX_0,
+    ALEX_1,
+    ALEX_2,
+    ALEX_3,
+    ALEX_4,
+    ALEX_5,
+    ALEX_6A,
+    ALEX_6B,
+    ALEX_6C,
+    ALEX_6D,
+    BELLA,
+    FENRIS,
+    SERCULLEN,
+    INQUISITOR,
+    BERND
+} pEp_test_ident_preset;
+
+PEP_STATUS set_up_preset(PEP_SESSION session,
+                         pEp_test_ident_preset preset_name,
+                         bool set_identity, 
+                         bool set_pep,
+                         bool trust,
+                         bool set_own, 
+                         bool setup_private, 
+                         pEp_identity** ident);
+
+
 PEP_STATUS read_file_and_import_key(PEP_SESSION session, const char* fname);
 PEP_STATUS set_up_ident_from_scratch(PEP_SESSION session, 
                                      const char* key_fname,

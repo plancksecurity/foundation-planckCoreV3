@@ -454,7 +454,11 @@ static void adjust_pEp_trust_status(PEP_SESSION session, pEp_identity* identity)
     
     if (pEp_user) {
         PEP_comm_type confirmation_status = identity->comm_type & PEP_ct_confirmed;
-        identity->comm_type = PEP_ct_pEp_unconfirmed | confirmation_status;    
+        identity->comm_type = PEP_ct_pEp_unconfirmed | confirmation_status;
+        if (identity->major_ver == 0) {
+            identity->major_ver = 2;
+            identity->minor_ver = 0;
+        }    
     }
 }
 
@@ -528,6 +532,9 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     
     return_id->me = stored_ident->me;
     
+    return_id->major_ver = stored_ident->major_ver;
+    return_id->minor_ver = stored_ident->minor_ver;
+
     // FIXME: Do we ALWAYS do this? We probably should...
     if (EMPTYSTR(return_id->user_id)) {
         free(return_id->user_id);
@@ -569,7 +576,7 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     }
     
     transfer_ident_lang_and_flags(return_id, stored_ident);
-    
+        
     if (return_id->comm_type == PEP_ct_unknown)
         return_id->comm_type = PEP_ct_key_not_found;
     
@@ -1220,6 +1227,12 @@ PEP_STATUS _myself(PEP_SESSION session,
         identity->fpr = NULL;
         identity->comm_type = PEP_ct_unknown;
     }
+    
+    int major_ver = 0;
+    int minor_ver = 0;
+    pEp_version_major_minor(PEP_VERSION, &major_ver, &minor_ver);
+    identity->major_ver = major_ver;
+    identity->minor_ver = minor_ver;
     
     // We want to set an identity in the DB even if a key isn't found, but we have to preserve the status if
     // it's NOT ok
