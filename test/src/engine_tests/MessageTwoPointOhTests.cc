@@ -121,7 +121,7 @@ void MessageTwoPointOhTests::check_message_two_point_oh() {
 //    cout << decrypted_text << endl;
     
     message* decoded_msg = nullptr;
-    status = mime_decode_message(encoded_text, strlen(encoded_text), &decoded_msg);
+    status = mime_decode_message(encoded_text, strlen(encoded_text), &decoded_msg, NULL);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     const string string3 = encoded_text;
       
@@ -155,7 +155,7 @@ void MessageTwoPointOhTests::check_message_two_point_oh() {
     }
      
     decrypted_msg->enc_format = PEP_enc_none; 
-    status = _mime_encode_message_internal(decrypted_msg, false, &encoded_text, false);
+    status = _mime_encode_message_internal(decrypted_msg, false, &encoded_text, false, false);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((encoded_text), "encoded_text");
     cout << "Decrypted message: " << endl;

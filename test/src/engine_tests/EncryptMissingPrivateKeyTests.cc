@@ -55,7 +55,7 @@ void EncryptMissingPrivateKeyTests::check_encrypt_missing_private_key() {
     
     const string mailtext = slurp("test_mails/blacklist_no_key.eml");
 
-    PEP_STATUS status = mime_decode_message(mailtext.c_str(), mailtext.length(), &tmp_msg);
+    PEP_STATUS status = mime_decode_message(mailtext.c_str(), mailtext.length(), &tmp_msg, NULL);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     
     status = update_identity(session, tmp_msg->from);

@@ -159,8 +159,13 @@ DYNAMIC_API stringpair_list_t *stringpair_list_find(
         const char *key
     );
 
+// ONLY DELETES ONE.
+DYNAMIC_API stringpair_list_t *stringpair_list_delete_by_key(
+        stringpair_list_t *sp_list,
+        const char *key
+    );
+
 
 #ifdef __cplusplus
 }
 #endif
-

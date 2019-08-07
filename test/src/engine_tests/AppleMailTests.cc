@@ -67,7 +67,7 @@ void AppleMailTests::check_apple_mail_text_signed_encrypted() {
     PEP_decrypt_flags_t flags = 0;
     
     message* final_ptr = nullptr;
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     
@@ -129,7 +129,7 @@ void AppleMailTests::check_apple_mail_html_signed_encrypted() {
     const char* mailfile2 = "test_mails/apple_mail_TC_html_signed_encrypted.eml";
     const string mailtext2 = slurp(mailfile2);
     
-    status = mime_decode_message(mailtext2.c_str(), mailtext2.length(), &msg_ptr);
+    status = mime_decode_message(mailtext2.c_str(), mailtext2.length(), &msg_ptr, NULL);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
