@@ -185,7 +185,7 @@ void replace_opt_field(message *msg,
     }
 }
 
-static void decorate_message(
+void decorate_message(
     message *msg,
     PEP_rating rating,
     stringlist_t *keylist,

@@ -288,6 +288,13 @@ PEP_STATUS encrypt_only(
         size_t psize, char **ctext, size_t *csize
 );
 
+void decorate_message(
+    message *msg,
+    PEP_rating rating,
+    stringlist_t *keylist,
+    bool add_version,
+    bool clobber);
+
 #if defined(NDEBUG) || defined(NOLOG)
 #define DEBUG_LOG(TITLE, ENTITY, DESC)
 #else
@@ -556,4 +563,3 @@ static inline int Sqlite3_step(sqlite3_stmt* stmt)
     } while (rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
     return rc;
 }
-
