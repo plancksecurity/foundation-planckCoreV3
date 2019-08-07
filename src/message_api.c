@@ -1909,6 +1909,9 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             }
         }
     }
+    
+    if (max_version_major == 1)
+        force_v_1 = true;
         
     if (enc_format == PEP_enc_none || !dest_keys_found ||
         stringlist_length(keys)  == 0 ||

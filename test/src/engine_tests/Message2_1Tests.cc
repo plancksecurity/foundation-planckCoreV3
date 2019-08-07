@@ -130,7 +130,6 @@ void Message2_1Tests::check_message2_1_recip_2_0() {
     free_identity(carol);
     free_message(msg);
     free_message(enc_msg);
-    TEST_ASSERT(true);
 }
 
 /* PEP_STATUS set_up_preset(PEP_SESSION session,
@@ -189,13 +188,6 @@ void Message2_1Tests::check_message2_1_recip_OpenPGP() {
     free_identity(carol);
     free_message(msg);
     free_message(enc_msg);
-    TEST_ASSERT(true);
-    
-    // generate message
-    
-    // ensure sent message is in 1.0 format
-    
-    TEST_ASSERT(true);
 }
 
 void Message2_1Tests::check_message2_1_recip_2_1() {
@@ -251,19 +243,19 @@ void Message2_1Tests::check_message2_1_recip_2_1() {
 }
 
 void Message2_1Tests::check_message2_1_recip_1_0_from_msg_OpenPGP() {
-    pEp_identity* alice = NULL;
+    pEp_identity* alex = NULL;
     
-    PEP_STATUS status = set_up_preset(session, ALICE, 
-                                      true, true, true, true, true, &alice);
+    PEP_STATUS status = set_up_preset(session, ALEX_0, 
+                                      true, true, true, true, true, &alex);
 
     TEST_ASSERT(status == PEP_STATUS_OK);
-    TEST_ASSERT(alice);
+    TEST_ASSERT(alex);
 
     // receive 1.0 message from OpenPGP
     string incoming = slurp("test_mails/From_M1_0.eml");
     
     char* dec_msg;
-    char* mod_src;
+    char* mod_src = NULL;
     PEP_decrypt_flags_t flags = 0;
     stringlist_t* keylist_used = NULL;
     PEP_rating rating;
@@ -275,7 +267,7 @@ void Message2_1Tests::check_message2_1_recip_1_0_from_msg_OpenPGP() {
     
     message* msg = new_message(PEP_dir_outgoing);
     
-    msg->from = alice;
+    msg->from = alex;
     msg->to = new_identity_list(new_identity("pep-test-carol@pep-project.org", NULL, NULL, NULL));
     msg->shortmsg = strdup("Boom shaka laka");
     msg->longmsg = strdup("Don't you get sick of these?");
@@ -300,35 +292,288 @@ void Message2_1Tests::check_message2_1_recip_1_0_from_msg_OpenPGP() {
 
 void Message2_1Tests::check_message2_1_recip_2_0_from_msg() {
     // receive 2.0 message
-    TEST_ASSERT(true);
+    pEp_identity* carol = NULL;
+    
+    PEP_STATUS status = set_up_preset(session, CAROL, 
+                                      true, true, true, true, true, &carol);
+
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(carol);
+
+    // receive 1.0 message from OpenPGP
+    string incoming = slurp("test_mails/2_0_msg.eml");
+    
+    char* dec_msg;
+    char* mod_src = NULL;
+    PEP_decrypt_flags_t flags = 0;
+    stringlist_t* keylist_used = NULL;
+    PEP_rating rating;
+    
+    status = MIME_decrypt_message(session, incoming.c_str(), incoming.size(), &dec_msg, &keylist_used, &rating, &flags, &mod_src);
+
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    // generate message
+    
+    message* msg = new_message(PEP_dir_outgoing);
+    
+    msg->from = carol;
+    msg->to = new_identity_list(new_identity("pep.test.alice@pep-project.org", NULL, NULL, NULL));
+    msg->shortmsg = strdup("Boom shaka laka");
+    msg->longmsg = strdup("Don't you get sick of these?");
+    
+    message* enc_msg = NULL;
+
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    
+    // ensure sent message is in 1.0 format
+    unsigned int major = 2;
+    unsigned int minor = 0;
+    TEST_ASSERT_MSG(verify_message_version_produced(enc_msg, &major, &minor),
+                                                    (to_string(major) + "." + to_string(minor)).c_str());
+    
+    free_message(msg);
+    free_message(enc_msg);
+    free(dec_msg);
+    free(mod_src);
 }
 
 void Message2_1Tests::check_message2_1_recip_2_1_from_msg() {
     // receive 2.1 message
+    pEp_identity* carol = NULL;
+    
+    PEP_STATUS status = set_up_preset(session, CAROL, 
+                                      true, true, true, true, true, &carol);
 
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(carol);
+
+    // receive 1.0 message from OpenPGP
+    string incoming = slurp("test_mails/From_M2_1.eml");
+    
+    char* dec_msg;
+    char* mod_src = NULL;
+    PEP_decrypt_flags_t flags = 0;
+    stringlist_t* keylist_used = NULL;
+    PEP_rating rating;
+    
+    status = MIME_decrypt_message(session, incoming.c_str(), incoming.size(), &dec_msg, &keylist_used, &rating, &flags, &mod_src);
+
+    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     // generate message
     
-    // ensure sent message is in 2.1 format
+    message* msg = new_message(PEP_dir_outgoing);
+    
+    msg->from = carol;
+    msg->to = new_identity_list(new_identity("pep.test.alice@pep-project.org", NULL, NULL, NULL));
+    msg->shortmsg = strdup("Boom shaka laka");
+    msg->longmsg = strdup("Don't you get sick of these?");
+    
+    message* enc_msg = NULL;
 
-    TEST_ASSERT(true);
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    
+    // ensure sent message is in 2.1 format
+    unsigned int major = 2;
+    unsigned int minor = 1;
+    TEST_ASSERT_MSG(verify_message_version_produced(enc_msg, &major, &minor),
+                                                    (to_string(major) + "." + to_string(minor)).c_str());
+    
+    free_message(msg);
+    free_message(enc_msg);
+    free(dec_msg);
+    free(mod_src);
 }
 
 void Message2_1Tests::check_message2_1_recip_mixed_2_0() {
     // Set mixed recipient values
+    pEp_identity* alice = NULL;
+    pEp_identity* bob = NULL;
+    pEp_identity* carol = NULL;
+    pEp_identity* dave = NULL;
+    pEp_identity* alex = NULL;
+
+    PEP_STATUS status = set_up_preset(session, ALICE, 
+                                      true, true, true, true, true, &alice);
+
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(alice);
+
+    status = set_up_preset(session, BOB, 
+                           true, true, false, false, false, &bob);
+
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(bob);
+
+    status = set_pEp_version(session, bob, 2, 1);
+
+    // default should be 2.1 after setting pep status
+    status = update_identity(session, bob);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(bob->major_ver == 2);
+    TEST_ASSERT(bob->minor_ver == 1);
+    
+    status = set_up_preset(session, CAROL, 
+                           true, true, false, false, false, &carol);
+
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(carol);
+
+    status = set_pEp_version(session, carol, 2, 1);
+
+    // default should be 2.1 after setting pep status
+    status = update_identity(session, carol);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(carol->major_ver == 2);
+    TEST_ASSERT(carol->minor_ver == 1);
+    
+    status = set_up_preset(session, DAVE, 
+                           true, true, false, false, false, &dave);
+
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(dave);
+
+    status = set_pEp_version(session, dave, 2, 0);
+
+    // default should be 2.1 after setting pep status
+    status = update_identity(session, dave);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(dave->major_ver == 2);
+    TEST_ASSERT(dave->minor_ver == 0);
+
+    status = set_up_preset(session, ALEX, 
+                           true, true, true, false, false, &alex);
+
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(alex);
+
+    status = set_pEp_version(session, alex, 2, 1);
+
+    // default should be 2.1 after setting pep status
+    status = update_identity(session, alex);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(alex->major_ver == 2);
+    TEST_ASSERT(alex->minor_ver == 1);
 
     // generate message
+    message* msg = new_message(PEP_dir_outgoing);
+    
+    msg->from = alice;
+    msg->to = new_identity_list(new_identity(bob->address, NULL, NULL, NULL));
+    identity_list_add(msg->to, new_identity(carol->address, NULL, NULL, NULL));
+    identity_list_add(msg->to, new_identity(dave->address, NULL, NULL, NULL));
+    identity_list_add(msg->to, new_identity(alex->address, NULL, NULL, NULL));    
+    msg->shortmsg = strdup("Boom shaka laka");
+    msg->longmsg = strdup("Don't you get sick of these?");
+    
+    message* enc_msg = NULL;
+
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    TEST_ASSERT(status == PEP_STATUS_OK);
     
     // ensure sent message is in 2.0 format
-
-    TEST_ASSERT(true);
+    unsigned int major = 2;
+    unsigned int minor = 0;
+    TEST_ASSERT_MSG(verify_message_version_produced(enc_msg, &major, &minor),
+                                                    (to_string(major) + "." + to_string(minor)).c_str());
+    
+    free_message(msg);
+    free_message(enc_msg);
 }
 
 void Message2_1Tests::check_message2_1_recip_mixed_1_0_OpenPGP() {
     // Set mixed recipient values
+    pEp_identity* alice = NULL;
+    pEp_identity* bob = NULL;
+    pEp_identity* carol = NULL;
+    pEp_identity* dave = NULL;
+    pEp_identity* alex = NULL;
+
+    PEP_STATUS status = set_up_preset(session, ALICE, 
+                                      true, true, true, true, true, &alice);
+
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(alice);
+
+    status = set_up_preset(session, BOB, 
+                           true, true, false, false, false, &bob);
+
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(bob);
+
+    status = set_pEp_version(session, bob, 2, 1);
+
+    // default should be 2.1 after setting pep status
+    status = update_identity(session, bob);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(bob->major_ver == 2);
+    TEST_ASSERT(bob->minor_ver == 1);
+    
+    status = set_up_preset(session, CAROL, 
+                           true, true, false, false, false, &carol);
+
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(carol);
+
+    status = set_pEp_version(session, carol, 2, 1);
+
+    // default should be 2.1 after setting pep status
+    status = update_identity(session, carol);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(carol->major_ver == 2);
+    TEST_ASSERT(carol->minor_ver == 1);
+    
+    status = set_up_preset(session, DAVE, 
+                           true, true, false, false, false, &dave);
+
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(dave);
+
+    status = set_pEp_version(session, dave, 2, 0);
+
+    // default should be 2.1 after setting pep status
+    status = update_identity(session, dave);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(dave->major_ver == 2);
+    TEST_ASSERT(dave->minor_ver == 0);
+
+    status = set_up_preset(session, ALEX, 
+                           true, false, true, false, false, &alex);
+
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(alex);
+
+    status = set_pEp_version(session, alex, 1, 0);
+
+    // default should be 1.0 after setting pep status
+    status = update_identity(session, alex);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    TEST_ASSERT(alex->major_ver == 1);
+    TEST_ASSERT(alex->minor_ver == 0);
 
     // generate message
+    message* msg = new_message(PEP_dir_outgoing);
     
-    // ensure sent message is in 1.0 format
+    msg->from = alice;
+    msg->to = new_identity_list(new_identity(bob->address, NULL, NULL, NULL));
+    identity_list_add(msg->to, new_identity(carol->address, NULL, NULL, NULL));
+    identity_list_add(msg->to, new_identity(dave->address, NULL, NULL, NULL));
+    identity_list_add(msg->to, new_identity(alex->address, NULL, NULL, NULL));    
+    msg->shortmsg = strdup("Boom shaka laka");
+    msg->longmsg = strdup("Don't you get sick of these?");
+    
+    message* enc_msg = NULL;
 
-    TEST_ASSERT(true);
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    
+    // ensure sent message is in 2.0 format
+    unsigned int major = 1;
+    unsigned int minor = 0;
+    TEST_ASSERT_MSG(verify_message_version_produced(enc_msg, &major, &minor),
+                                                    (to_string(major) + "." + to_string(minor)).c_str());
+    
+    free_message(msg);
+    free_message(enc_msg);
 }
