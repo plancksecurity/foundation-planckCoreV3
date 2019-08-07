@@ -164,7 +164,7 @@ PEP_STATUS base_extract_message(
     char *_fpr = NULL;
     if (_sign) {
         status = verify_text(session, _payload, _payload_size, _sign, _sign_size, &keylist);
-        if (status != PEP_VERIFIED || !keylist || !keylist->value) {
+        if (!(status == PEP_VERIFIED || status == PEP_VERIFIED_AND_TRUSTED) || !keylist || !keylist->value) {
             // signature invalid or does not match; ignore sync message
             status = PEP_STATUS_OK;
             goto the_end;
@@ -187,4 +187,3 @@ the_end:
     free_stringlist(keylist);
     return status;
 }
-

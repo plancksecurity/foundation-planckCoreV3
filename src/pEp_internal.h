@@ -51,7 +51,14 @@
 #define PEP_MSG_WRAP_KEY_LEN 26
 #endif
 
+#ifndef X_PEP_MSG_WRAP_KEY
+#define X_PEP_MSG_WRAP_KEY "X-pEp-Wrapped-Message-Info"
+#endif
 
+#ifndef X_PEP_SNDR_FPR_KEY
+#define X_PEP_SNDR_FPR_KEY "X-pEp-Sender-FPR"
+#endif
+ 
 #include "platform.h"
 
 #ifdef WIN32
@@ -144,6 +151,7 @@ struct _pEpSession {
         sqlite3_stmt *tpk_save_insert_primary;
         sqlite3_stmt *tpk_save_insert_subkeys;
         sqlite3_stmt *tpk_save_insert_userids;
+        sqlite3_stmt *delete_keypair;
     } sq_sql;
 #endif
 
@@ -174,6 +182,7 @@ struct _pEpSession {
     sqlite3_stmt *exists_person;    
     sqlite3_stmt *set_as_pEp_user;
     sqlite3_stmt *is_pEp_user;
+    sqlite3_stmt *upgrade_pEp_version_by_user_id;
     sqlite3_stmt *add_into_social_graph;
     sqlite3_stmt *get_own_address_binding_from_contact;
     sqlite3_stmt *set_revoke_contact_as_notified;
@@ -188,6 +197,7 @@ struct _pEpSession {
     sqlite3_stmt *exists_identity_entry;        
     sqlite3_stmt *set_identity_flags;
     sqlite3_stmt *unset_identity_flags;
+    sqlite3_stmt *set_pEp_version;    
     sqlite3_stmt *set_trust;
     sqlite3_stmt *update_trust;
     sqlite3_stmt *exists_trust_entry;
@@ -251,7 +261,6 @@ struct _pEpSession {
     void *sync_management;
     void *sync_obj;
     struct Sync_state_s sync_state;
-    struct own_Sync_state_s own_sync_state;
 
 //     void* sync_state_payload;
 //     char sync_uuid[37];
@@ -449,6 +458,68 @@ static inline bool is_me(PEP_SESSION session, pEp_identity* test_ident) {
     return retval;
 }
 
+static inline float pEp_version_numeric(const char* version_str) {
+    float retval = 0;    
+        
+    if (!version_str || sscanf(version_str, "%f", &retval) != 1)
+        return 0;
+        
+    return retval;    
+}
+
+static inline void pEp_version_major_minor(const char* version_str, unsigned int* major, unsigned int* minor) {
+    if (!major || !minor)
+        return;
+                
+    if (!version_str || sscanf(version_str, "%u.%u", major, minor) != 2) {
+        *major = 0;
+        *minor = 0;
+    }
+        
+    return;    
+}
+
+static inline int compare_versions(unsigned int first_maj, unsigned int first_min,
+                                   unsigned int second_maj, unsigned int second_min) {
+    if (first_maj > second_maj)
+        return 1;
+    if (first_maj < second_maj)
+        return -1;
+    if (first_min > second_min)
+        return 1;
+    if (first_min < second_min)
+        return -1;
+    return 0;    
+}
+
+static inline void set_min_version(unsigned int first_maj, unsigned int first_minor,
+                                   unsigned int second_maj, unsigned int second_minor,
+                                   unsigned int* result_maj, unsigned int* result_minor) {
+    int result = compare_versions(first_maj, first_minor, second_maj, second_minor);
+    if (result < 0) {
+        *result_maj = first_maj;
+        *result_minor = first_minor;
+    }
+    else {
+        *result_maj = second_maj;
+        *result_minor = second_minor;
+    }    
+}
+
+static inline void set_max_version(unsigned int first_maj, unsigned int first_minor,
+                                   unsigned int second_maj, unsigned int second_minor,
+                                   unsigned int* result_maj, unsigned int* result_minor) {
+    int result = compare_versions(first_maj, first_minor, second_maj, second_minor);
+    if (result > 0) {
+        *result_maj = first_maj;
+        *result_minor = first_minor;
+    }
+    else {
+        *result_maj = second_maj;
+        *result_minor = second_minor;
+    }    
+}
+
 #ifndef EMPTYSTR
 #define EMPTYSTR(STR) ((STR) == NULL || (STR)[0] == '\0')
 #endif
@@ -464,7 +535,6 @@ static inline bool is_me(PEP_SESSION session, pEp_identity* test_ident) {
 #define _MAX(A, B) ((B) > (A) ? (B) : (A))
 #endif
 
-
 // These are globals used in generating message IDs and should only be
 // computed once, as they're either really constants or OS-dependent
 
@@ -475,3 +545,15 @@ static inline void _init_globals() {
     _pEp_rand_max_bits = (int) ceil(log2((double) RAND_MAX));
     _pEp_log2_36 = log2(36);
 }
+
+// spinlock implementation
+
+static inline int Sqlite3_step(sqlite3_stmt* stmt)
+{
+    int rc;
+    do {
+        rc = sqlite3_step(stmt);
+    } while (rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
+    return rc;
+}
+

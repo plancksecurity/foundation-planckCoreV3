@@ -49,6 +49,7 @@ typedef enum _PEP_encrypt_flags {
 typedef unsigned int PEP_encrypt_flags_t;
 
 typedef enum _message_wrap_type {
+    PEP_message_unwrapped,  // 1.0 or anything we don't wrap    
     PEP_message_default,    // typical inner/outer message 2.0
     PEP_message_transport,  // e.g. for onion layers
     PEP_message_key_reset   // for wrapped key reset information
@@ -388,9 +389,9 @@ DYNAMIC_API PEP_STATUS get_binary_path(PEP_cryptotech tech, const char **path);
 //        the caller is responsible to free() it (on Windoze use pEp_free())
 //
 DYNAMIC_API PEP_STATUS get_trustwords(
-    PEP_SESSION session, const pEp_identity* id1, const pEp_identity* id2,
-    const char* lang, char **words, size_t *wsize, bool full
-);
+        PEP_SESSION session, const pEp_identity* id1, const pEp_identity* id2,
+        const char* lang, char **words, size_t *wsize, bool full
+    );
 
 
 // get_message_trustwords() - get full trustwords string for message sender and reciever identities 
@@ -421,12 +422,42 @@ DYNAMIC_API PEP_STATUS get_trustwords(
 //        the caller is responsible to free() it (on Windoze use pEp_free())
 //
 DYNAMIC_API PEP_STATUS get_message_trustwords(
-    PEP_SESSION session, 
-    message *msg,
-    stringlist_t *keylist,
-    pEp_identity* received_by,
-    const char* lang, char **words, bool full
-);
+        PEP_SESSION session, 
+        message *msg,
+        stringlist_t *keylist,
+        pEp_identity* received_by,
+        const char* lang, char **words, bool full
+    );
+
+// get_trustwords_for_fprs() - get full trustwords string for a pair of fingerprints
+//
+//    parameters:
+//        session (in)        session handle
+//        fpr1 (in)           fingerprint 1
+//        fpr2 (in)           fingerprint 2
+//        lang (in)           C string with ISO 639-1 language code
+//        words (out)         pointer to C string with all trustwords UTF-8 encoded,
+//                            separated by a blank each
+//                            NULL if language is not supported or trustword
+//                            wordlist is damaged or unavailable
+//        wsize (out)         length of full trustwords string
+//        full (in)           if true, generate ALL trustwords for these identities.
+//                            else, generate a fixed-size subset. (TODO: fixed-minimum-entropy
+//                            subset in next version)
+//
+//    return value:
+//        PEP_STATUS_OK            trustwords retrieved
+//        PEP_OUT_OF_MEMORY        out of memory
+//        PEP_TRUSTWORD_NOT_FOUND  at least one trustword not found
+//
+//    caveat:
+//        the word pointer goes to the ownership of the caller
+//        the caller is responsible to free() it (on Windoze use pEp_free())
+//
+DYNAMIC_API PEP_STATUS get_trustwords_for_fprs(
+        PEP_SESSION session, const char* fpr1, const char* fpr2,
+        const char* lang, char **words, size_t *wsize, bool full
+    );
 
 // re_evaluate_message_rating() - re-evaluate already decrypted message rating
 //

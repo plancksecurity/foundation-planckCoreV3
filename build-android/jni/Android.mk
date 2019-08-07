@@ -5,16 +5,11 @@
 LOCAL_PATH := $(call my-dir)
 
 LIBETPAN_PATH:=  $(LOCAL_PATH)/../../../pEpJNIAdapter/android/external/libetpan/build-android
-GPGME_INCLUDE_PATH:=  $(LOCAL_PATH)/../../../pEpJNIAdapter/android/external/data/data/pep.android.k9/app_opt/include
 
 include $(CLEAR_VARS)
 
 ifeq ($(LIBETPAN_PATH),)
 $(error LIBETPAN_PATH must be set)
-endif
-
-ifeq ($(GPGME_INCLUDE_PATH),)
-$(error GPGME_INCLUDE_PATH must be set)
 endif
 
 LOCAL_MODULE    := pEpEngine
@@ -27,17 +22,18 @@ LOCAL_CFLAGS    += -std=c99
 # Android has no globally writable temp directory, if this is not defined the
 # application throws an exception when it tries to create a temp file.
 #
-LOCAL_CFLAGS    += -DSQLITE_TEMP_STORE=3
+LOCAL_CFLAGS    += -DSQLITE_TEMP_STORE=3 -DUSE_SEQUOIA
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../asn.1 \
                     $(GPGME_INCLUDE_PATH) \
                     $(LIBETPAN_PATH)/include
-LOCAL_C_INCLUDES += $(GPGBUILD)/include
+LOCAL_C_INCLUDES += $(GPGBUILD)/$(TARGET_ARCH_ABI)/app_opt/include
 
 $(shell sh $(LOCAL_PATH)/../takeOutHeaderFiles.sh $(LOCAL_PATH)../../)
 LOCAL_EXPORT_C_INCLUDES += $(LOCAL_PATH)../include
 
-ENGINE_SRC_FILES := $(shell find $(LOCAL_PATH)/../../src/ ! -name "*sequoia*" ! -name "*netpgp*" -name "*.c")
+#ENGINE_SRC_FILES := $(shell find $(LOCAL_PATH)/../../src/ ! -name "*sequoia*" ! -name "*netpgp*" -name "*.c")
+ENGINE_SRC_FILES := $(shell find $(LOCAL_PATH)/../../src/ ! -name "*gpg*" ! -name "*netpgp*" -name "*.c")
 #ENGINE_SRC_FILES := $(wildcard $(LOCAL_PATH)/../../src/*.c)
 ASN1_SRC_FILES := $(wildcard $(LOCAL_PATH)/../../asn.1/*.c)
 LOCAL_SRC_FILES := $(ENGINE_SRC_FILES:%=%)  $(ASN1_SRC_FILES:$(LOCAL_PATH)/%=%)

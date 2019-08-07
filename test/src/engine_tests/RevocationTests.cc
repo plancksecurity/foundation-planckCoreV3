@@ -52,8 +52,24 @@ void RevocationTests::revocation() {
     TEST_ASSERT_MSG((status == PEP_TEST_KEY_IMPORT_SUCCESS), "status == PEP_STATUS_OK");
 
     pEp_identity* post = new_identity("linda@example.org", NULL, NULL, NULL);
+    
+//    string save_fpr = post->fpr;
+
+    stringlist_t* keylist = NULL;
+    
+    status = find_keys(session, "linda@example.org", &keylist);
+    TEST_ASSERT(status == PEP_STATUS_OK);
+    
     status = update_identity(session, post);
     // PEP_KEY_UNSUITABLE => revoked (or something similar).
     TEST_ASSERT_MSG((status == PEP_KEY_UNSUITABLE), tl_status_string(status));
+    TEST_ASSERT_MSG((post->comm_type == PEP_ct_key_not_found), tl_ct_string(post->comm_type));
+    free(post->fpr);
+    post->fpr = strdup(keylist->value);
+    status = get_trust(session, post);
+    TEST_ASSERT(status == PEP_STATUS_OK);
     TEST_ASSERT_MSG((post->comm_type == PEP_ct_key_revoked), tl_ct_string(post->comm_type));
+    free_identity(pre);
+    free_identity(post);
+    free_stringlist(keylist);    
 }

@@ -141,9 +141,13 @@ int email_cmp(void *cookie, int a_len, const void *a, int b_len, const void *b)
 
     char *a_address = NULL;
     pgp_user_id_address_normalized(NULL, a_userid, &a_address);
+    if (!a_address)
+        pgp_user_id_other(NULL, a_userid, &a_address);
 
     char *b_address = NULL;
     pgp_user_id_address_normalized(NULL, b_userid, &b_address);
+    if (!b_address)
+        pgp_user_id_other(NULL, b_userid, &b_address);
 
     pgp_packet_free(a_userid);
     pgp_packet_free(b_userid);
@@ -396,6 +400,12 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                              -1, &session->sq_sql.tpk_save_insert_userids, NULL);
     assert(sqlite_result == SQLITE_OK);
 
+    sqlite_result
+        = sqlite3_prepare_v2(session->key_db,
+                             "DELETE FROM keys WHERE primary_key = ?",
+                             -1, &session->sq_sql.delete_keypair, NULL);
+    assert(sqlite_result == SQLITE_OK);
+
  out:
     if (status != PEP_STATUS_OK)
         pgp_release(session, in_first);
@@ -421,8 +431,6 @@ void pgp_release(PEP_SESSION session, bool out_last)
     }
 }
 
-/* commented out to omit compiler warning about unused function
-
 // Ensures that a fingerprint is in canonical form.  A canonical
 // fingerprint doesn't contain any white space.
 //
@@ -437,8 +445,6 @@ static char *pgp_fingerprint_canonicalize(const char *fpr)
     return fpr_canonicalized;
 }
 
-*/
-
 // step statement and load the tpk and secret.
 static PEP_STATUS key_load(PEP_SESSION, sqlite3_stmt *, pgp_tpk_t *, int *)
     __attribute__((nonnull(1, 2)));
@@ -446,7 +452,7 @@ static PEP_STATUS key_load(PEP_SESSION session, sqlite3_stmt *stmt,
                            pgp_tpk_t *tpkp, int *secretp)
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    int sqlite_result = sqlite3_step(stmt);
+    int sqlite_result = Sqlite3_step(stmt);
     switch (sqlite_result) {
     case SQLITE_ROW:
         if (tpkp) {
@@ -692,7 +698,7 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
     char *name = NULL;
 
     sqlite3_stmt *stmt = session->sq_sql.begin_transaction;
-    int sqlite_result = sqlite3_step(stmt);
+    int sqlite_result = Sqlite3_step(stmt);
     sqlite3_reset(stmt);
     if (sqlite_result != SQLITE_DONE)
         ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
@@ -738,7 +744,7 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
     sqlite3_bind_int(stmt, 2, is_tsk);
     sqlite3_bind_blob(stmt, 3, tsk_buffer, tsk_buffer_len, SQLITE_STATIC);
 
-    sqlite_result = sqlite3_step(stmt);
+    sqlite_result = Sqlite3_step(stmt);
     sqlite3_reset(stmt);
     if (sqlite_result != SQLITE_DONE)
         ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
@@ -756,7 +762,7 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
         sqlite3_bind_text(stmt, 1, keyid_hex, -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, fpr, -1, SQLITE_STATIC);
 
-        sqlite_result = sqlite3_step(stmt);
+        sqlite_result = Sqlite3_step(stmt);
         sqlite3_reset(stmt);
         free(keyid_hex);
         pgp_keyid_free(keyid);
@@ -793,50 +799,7 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
 
         pgp_packet_t userid = pgp_user_id_new (user_id_value);
         pgp_user_id_name(NULL, userid, &name);
-        pgp_user_id_address(NULL, userid, &email);
-                
-        if (!email || email[0] == '\0') {
-            size_t uid_value_len;
-            const char* uid_value = (const char*)pgp_user_id_value(userid, &uid_value_len);
-            if (!uid_value) {
-                // We need some kind of an error here, maybe?
-                 
-            }
-            else {
-                const char* split = strstr(uid_value, "<");
-                if (split != uid_value) {       
-                    while (split) {
-                        if (isspace(*(split - 1)))
-                            break;
-                        split = strstr(split + 1, "<");
-                    }
-                }
-                if (split) {
-                    char* stopchr = strrchr(split, '>');
-                    if (stopchr) {
-                        int email_len = stopchr - split - 1;
-                        email = calloc(email_len + 1, 1); 
-                        strlcpy(email, split + 1, email_len + 1);
-                        const char* last = NULL;
-                        if (split != uid_value) {
-                            for (last = split - 1; last > uid_value; last--) {
-                                if (!isspace(*last))
-                                    break;
-                            }
-                            int name_len = (last - uid_value) + 1;
-                            name = calloc(name_len + 1, 1);
-                            strlcpy(name, uid_value, name_len + 1);
-                        }
-                    }
-                    else  
-                        split = NULL;
-                }
-                if (split == NULL) {
-                    email = strdup(uid_value);
-                }
-            }
-        }
-        
+        pgp_user_id_address_or_other(NULL, userid, &email);
         pgp_packet_free(userid);
         free(user_id_value);
 
@@ -846,7 +809,7 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
             sqlite3_bind_text(stmt, 1, email, -1, SQLITE_STATIC);
             sqlite3_bind_text(stmt, 2, fpr, -1, SQLITE_STATIC);
 
-            sqlite_result = sqlite3_step(stmt);
+            sqlite_result = Sqlite3_step(stmt);
             sqlite3_reset(stmt);
 
             if (sqlite_result != SQLITE_DONE) {
@@ -880,7 +843,7 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
         stmt = status == PEP_STATUS_OK
             ? session->sq_sql.commit_transaction
             : session->sq_sql.rollback_transaction;
-        int sqlite_result = sqlite3_step(stmt);
+        int sqlite_result = Sqlite3_step(stmt);
         sqlite3_reset(stmt);
         if (sqlite_result != SQLITE_DONE)
             ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
@@ -893,15 +856,12 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
 
     free(email);
     free(name);
-    if (user_id_iter)
-        pgp_user_id_binding_iter_free(user_id_iter);
-    if (key_iter)
-        pgp_tpk_key_iter_free(key_iter);
+    pgp_user_id_binding_iter_free(user_id_iter);
+    pgp_tpk_key_iter_free(key_iter);
     if (stmt)
       sqlite3_reset(stmt);
     free(tsk_buffer);
-    if (tpk)
-        pgp_tpk_free(tpk);
+    pgp_tpk_free(tpk);
     free(fpr);
     pgp_fingerprint_free(pgp_fpr);
 
@@ -1053,13 +1013,10 @@ decrypt_cb(void *cookie_opaque,
         cookie->decrypted = 1;
 
     eol:
-        if (sk)
-            pgp_session_key_free (sk);
+        pgp_session_key_free (sk);
         free(keyid_str);
-        if (key_iter)
-            pgp_tpk_key_iter_free(key_iter);
-        if (tpk)
-            pgp_tpk_free(tpk);
+        pgp_tpk_key_iter_free(key_iter);
+        pgp_tpk_free(tpk);
     }
 
     // Consider wildcard recipients.
@@ -1132,11 +1089,9 @@ decrypt_cb(void *cookie_opaque,
             key_iter = NULL;
         }
     eol2:
-        if (sk)
-            pgp_session_key_free (sk);
+        pgp_session_key_free (sk);
         free(keyid_str);
-        if (key_iter)
-            pgp_tpk_key_iter_free(key_iter);
+        pgp_tpk_key_iter_free(key_iter);
     }
 
     if (tsks) {
@@ -1470,12 +1425,9 @@ PEP_STATUS pgp_decrypt_and_verify(
         free(*ptext);
     }
 
-    if (reader)
-        pgp_reader_free(reader);
-    if (decryptor)
-        pgp_reader_free(decryptor);
-    if (writer)
-        pgp_writer_free(writer);
+    pgp_reader_free(reader);
+    pgp_reader_free(decryptor);
+    pgp_writer_free(writer);
 
     T("-> %s", pEp_status_to_string(status));
     return status;
@@ -1494,6 +1446,33 @@ PEP_STATUS pgp_verify_text(
 
     if (size == 0 || sig_size == 0)
         return PEP_DECRYPT_WRONG_FORMAT;
+
+#if TRACING > 0
+    {
+        int cr = 0;
+        int crlf = 0;
+        int lf = 0;
+
+        for (int i = 0; i < size; i ++) {
+            // CR
+            if (text[i] == '\r') {
+                cr ++;
+            }
+            // LF
+            if (text[i] == '\n') {
+                if (i > 0 && text[i - 1] == '\r') {
+                    cr --;
+                    crlf ++;
+                } else {
+                    lf ++;
+                }
+            }
+        }
+
+        T("Text to verify: %zd bytes with %d crlfs, %d bare crs and %d bare lfs",
+          size, crlf, cr, lf);
+    }
+#endif
 
     cookie.recipient_keylist = new_stringlist(NULL);
     if (!cookie.recipient_keylist)
@@ -1569,12 +1548,9 @@ PEP_STATUS pgp_verify_text(
         free_stringlist(cookie.signer_keylist);
     }
 
-    if (verifier)
-        pgp_reader_free(verifier);
-    if (reader)
-        pgp_reader_free(reader);
-    if (dsig_reader)
-        pgp_reader_free(dsig_reader);
+    pgp_reader_free(verifier);
+    pgp_reader_free(reader);
+    pgp_reader_free(dsig_reader);
 
     T("-> %s", pEp_status_to_string(status));
     return status;
@@ -1643,6 +1619,11 @@ PEP_STATUS pgp_sign_only(
     if (write_status != 0)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Encrypting message");
 
+    pgp_status_t pgp_status = pgp_writer_stack_finalize (&err, ws);
+    ws = NULL;
+    if (pgp_status != 0)
+        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Flushing writer");
+
     // Add a terminating NUL for naive users
     void *t = realloc(*stext, *ssize + 1);
     if (! t)
@@ -1651,21 +1632,10 @@ PEP_STATUS pgp_sign_only(
     (*stext)[*ssize] = 0;
 
  out:
-    if (ws) {
-        pgp_status_t pgp_status = pgp_writer_stack_finalize (&err, ws);
-        ws = NULL;
-        if (pgp_status != 0)
-            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Flushing writer");
-    }
-
-    if (signer)
-        pgp_signer_free (signer);
-    if (signing_keypair)
-        pgp_key_pair_free (signing_keypair);
-    if (iter)
-        pgp_tpk_key_iter_free (iter);
-    if (signer_tpk)
-        pgp_tpk_free(signer_tpk);
+    pgp_signer_free (signer);
+    pgp_key_pair_free (signing_keypair);
+    pgp_tpk_key_iter_free (iter);
+    pgp_tpk_free(signer_tpk);
 
     T("(%s)-> %s", fpr, pEp_status_to_string(status));
     return status;
@@ -1763,29 +1733,26 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     if (write_status != 0)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Encrypting message");
 
+    pgp_status_t pgp_status = pgp_writer_stack_finalize (&err, ws);
+    ws = NULL;
+    if (pgp_status != 0)
+        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Flushing writer");
+
     // Add a terminating NUL for naive users
     void *t = realloc(*ctext, *csize + 1);
-    if (! t)
+    if (! t) {
+        free(*ctext);
+        *ctext = NULL;
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
+    }
     *ctext = t;
     (*ctext)[*csize] = 0;
 
  out:
-    if (ws) {
-        pgp_status_t pgp_status = pgp_writer_stack_finalize (&err, ws);
-        ws = NULL;
-        if (pgp_status != 0)
-            ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Flushing writer");
-    }
-
-    if (signer)
-        pgp_signer_free (signer);
-    if (signing_keypair)
-        pgp_key_pair_free (signing_keypair);
-    if (iter)
-        pgp_tpk_key_iter_free (iter);
-    if (signer_tpk)
-        pgp_tpk_free(signer_tpk);
+    pgp_signer_free (signer);
+    pgp_key_pair_free (signing_keypair);
+    pgp_tpk_key_iter_free (iter);
+    pgp_tpk_free(signer_tpk);
 
     for (int i = 0; i < keys_count; i ++)
         pgp_tpk_free(keys[i]);
@@ -1816,6 +1783,7 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
 {
     PEP_STATUS status = PEP_STATUS_OK;
     pgp_error_t err = NULL;
+    pgp_packet_t userid_packet = NULL;
     char *userid = NULL;
     pgp_tpk_t tpk = NULL;
     pgp_fingerprint_t pgp_fpr = NULL;
@@ -1827,16 +1795,22 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     assert(identity->fpr == NULL || identity->fpr[0] == 0);
     assert(identity->username);
 
-    size_t userid_size = strlen(identity->username)+strlen(identity->address)+3+1;
-    userid = (char *) calloc(1, userid_size);
-    assert(userid);
+    userid_packet = pgp_user_id_from_unchecked_address(&err,
+                                                       identity->username, NULL,
+                                                       identity->address);
+    if (!userid_packet)
+        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "pgp_user_id_from_other_address");
+
+    size_t userid_len = 0;
+    const uint8_t *raw = pgp_user_id_value(userid_packet, &userid_len);
+
+    // NUL terminate it.
+    userid = malloc(userid_len + 1);
     if (!userid)
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
 
-    int r = snprintf(userid, userid_size, "%s <%s>", identity->username, identity->address);
-    assert(r >= 0 && r < userid_size);
-    if (r < 0)
-        ERROR_OUT(NULL, PEP_UNKNOWN_ERROR, "snprintf");
+    memcpy(userid, raw, userid_len);
+    userid[userid_len] = 0;
 
     T("(%s)", userid);
 
@@ -1864,54 +1838,70 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     fpr = NULL;
 
  out:
-    if (pgp_fpr)
-        pgp_fingerprint_free(pgp_fpr);
+    pgp_fingerprint_free(pgp_fpr);
     free(fpr);
-    if (tpk)
-        pgp_tpk_free(tpk);
+    pgp_tpk_free(tpk);
     free(userid);
+    pgp_packet_free(userid_packet);
 
     T("-> %s", pEp_status_to_string(status));
     return status;
 }
 
-#define SQL_DELETE "DELETE FROM keys WHERE primary_key = '%s' ;"
-static const char *sql_delete = SQL_DELETE;
-static const size_t sql_delete_size = sizeof(SQL_DELETE);
-
-// FIXME: this is deleting the key from the index but not the key data
-
-PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
+PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr_raw)
 {
-    assert(session && fpr && fpr[0]);
-    if (!(session && fpr && fpr[0]))
-        return PEP_ILLEGAL_VALUE;
+    PEP_STATUS status = PEP_STATUS_OK;
 
-    size_t sql_size = sql_delete_size + strlen(fpr);
-    char *sql = calloc(1, sql_size);
-    assert(sql);
-    if (!sql)
-        return PEP_OUT_OF_MEMORY;
+    assert(session && fpr_raw && fpr_raw[0]);
+    if (!(session && fpr_raw && fpr_raw[0]))
+        ERROR_OUT(NULL, PEP_ILLEGAL_VALUE, "invalid arguments");
 
-    int r = snprintf(sql, sql_size, sql_delete, fpr);
-    assert(r > 0 && r < sql_size);
-    if (r < 0)
-        return PEP_UNKNOWN_ERROR;
+    char *fpr = pgp_fingerprint_canonicalize(fpr_raw);
+    if (! fpr)
+        ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
 
-    int sqlite_result = sqlite3_exec(session->key_db, sql, NULL, NULL, NULL);
-    assert(sqlite_result == SQLITE_OK);
-    if (sqlite_result != SQLITE_OK)
-        return PEP_CANNOT_DELETE_KEY;
+    T("Deleting %s", fpr);
+
+    sqlite3_stmt *stmt = session->sq_sql.delete_keypair;
+    sqlite3_bind_text(stmt, 1, fpr, -1, free);
+
+    int sqlite_result = Sqlite3_step(stmt);
+    sqlite3_reset(stmt);
+    if (sqlite_result != SQLITE_DONE)
+        ERROR_OUT(NULL, PEP_CANNOT_DELETE_KEY,
+                  "deletion failed: %s", sqlite3_errmsg(session->key_db));
 
     sqlite_result = sqlite3_changes(session->key_db);
     assert(sqlite_result >= 0 && sqlite_result < 2);
     if (sqlite_result < 1)
-        return PEP_KEY_NOT_FOUND;
+        ERROR_OUT(NULL, PEP_KEY_NOT_FOUND,
+                  "attempt to delete non-existent key: %s", fpr_raw);
 
-    return PEP_STATUS_OK;
+ out:
+    return status;
 }
 
-PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
+static unsigned int count_keydata_parts(const char* key_data, size_t size) {
+    unsigned int retval = 0;
+    
+    const char* pgp_begin = "-----BEGIN PGP";
+    size_t prefix_len = strlen(pgp_begin);
+    size_t size_remaining = size;
+    
+    while (key_data) {
+        if (size_remaining <= prefix_len || key_data[0] == '\0')
+            break;
+        key_data = strnstr(key_data, pgp_begin, size_remaining);
+        if (key_data) {
+            retval++;
+            key_data += prefix_len;
+            size_remaining -= prefix_len;
+        }
+    }
+    return retval;
+ }
+
+PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
                               size_t size, identity_list **private_idents)
 {
     PEP_STATUS status = PEP_NO_KEY_IMPORTED;
@@ -2025,12 +2015,94 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
         break;
     }
 
+    int int_result = sqlite3_exec(
+        session->key_db,
+        "PRAGMA wal_checkpoint(FULL);\n"
+        ,
+        NULL,
+        NULL,
+        NULL
+    );
+    if (int_result != SQLITE_OK)
+        status = PEP_UNKNOWN_DB_ERROR;
+
  out:
-    if (parser)
-        pgp_tpk_parser_free(parser);
+    pgp_tpk_parser_free(parser);
 
     T("-> %s", pEp_status_to_string(status));
     return status;
+}
+
+PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
+                              size_t size, identity_list **private_idents)
+{
+    unsigned int keycount = count_keydata_parts(key_data, size);
+    if (keycount < 2)
+        return(_pgp_import_keydata(session, key_data, size, private_idents));
+
+    const char* pgp_begin = "-----BEGIN PGP";
+    size_t prefix_len = strlen(pgp_begin);
+        
+    unsigned int i;
+    const char* curr_begin;
+    size_t curr_size;
+    
+    identity_list* collected_idents = NULL;        
+    
+    PEP_STATUS retval = PEP_KEY_IMPORTED;
+    
+    for (i = 0, curr_begin = key_data; i < keycount; i++) {
+        const char* next_begin = NULL;
+
+        // This is assured to be OK because the count function above 
+        // made sure that THIS round contains at least prefix_len chars
+        // We used strnstr to count, so we know that strstr will be ok.
+        if (strlen(curr_begin + prefix_len) > prefix_len)
+            next_begin = strstr(curr_begin + prefix_len, pgp_begin);
+
+        if (next_begin)
+            curr_size = next_begin - curr_begin;
+        else
+            curr_size = (key_data + size) - curr_begin;
+        
+        PEP_STATUS curr_status = _pgp_import_keydata(session, curr_begin, curr_size, private_idents);
+        if (private_idents && *private_idents) {
+            if (!collected_idents)
+                collected_idents = *private_idents;
+            else 
+                identity_list_join(collected_idents, *private_idents);
+            *private_idents = NULL;    
+        }
+        
+        if (curr_status != retval) {
+            switch (curr_status) {
+                case PEP_NO_KEY_IMPORTED:
+                case PEP_KEY_NOT_FOUND:
+                case PEP_UNKNOWN_ERROR:
+                    switch (retval) {
+                        case PEP_KEY_IMPORTED:
+                            retval = PEP_SOME_KEYS_IMPORTED;
+                            break;
+                        case PEP_UNKNOWN_ERROR:
+                            retval = curr_status;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case PEP_KEY_IMPORTED:
+                    retval = PEP_SOME_KEYS_IMPORTED;
+                default:
+                    break;
+            }        
+        }        
+        curr_begin = next_begin;     
+    }
+    
+    if (private_idents)
+        *private_idents = collected_idents;
+    
+    return retval;    
 }
 
 PEP_STATUS pgp_export_keydata(
@@ -2041,6 +2113,7 @@ PEP_STATUS pgp_export_keydata(
     pgp_error_t err = NULL;
     pgp_tpk_t tpk = NULL;
     pgp_writer_t armor_writer = NULL;
+    pgp_writer_t memory_writer = NULL;
 
     assert(session);
     assert(fpr);
@@ -2057,13 +2130,12 @@ PEP_STATUS pgp_export_keydata(
     status = tpk_find_by_fpr_hex(session, fpr, secret, &tpk, NULL);
     ERROR_OUT(NULL, status, "Looking up TSK for %s", fpr);
 
-    pgp_writer_t memory_writer = pgp_writer_alloc((void **) key_data, size);
+    memory_writer = pgp_writer_alloc((void **) key_data, size);
     if (! memory_writer)
         ERROR_OUT(NULL, PEP_UNKNOWN_ERROR, "creating memory writer");
     armor_writer = pgp_armor_writer_new(&err, memory_writer,
                                         PGP_ARMOR_KIND_PUBLICKEY, NULL, 0);
     if (! armor_writer) {
-        pgp_writer_free(memory_writer);
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "creating armored writer");
     }
 
@@ -2081,19 +2153,30 @@ PEP_STATUS pgp_export_keydata(
     if (armor_writer)
         pgp_writer_free(armor_writer);
 
+    if (memory_writer) {
+        if (status == PEP_STATUS_OK) {
+            // Add a trailing NUL.
+            pgp_writer_write(NULL, memory_writer, (const uint8_t *) "", 1);
+        }
+
+        pgp_writer_free(memory_writer);
+    }
+
     if (tpk)
         pgp_tpk_free(tpk);
 
+    (*size)--;  // Sequoia is delivering the 0 byte at the end with size, but
+                // pEp is expecting it without
     T("(%s) -> %s", fpr, pEp_status_to_string(status));
     return status;
 }
 
-char* _undot_address(const char* address) {
+static char *_undot_address(const char* address) {
     if (!address)
         return NULL;
 
     int addr_len = strlen(address);
-    const char* at = strstr(address, "@");
+    const char* at = memchr(address, '@', addr_len);
 
     if (!at)
         at = address + addr_len;
@@ -2242,10 +2325,8 @@ static PEP_STATUS list_keys(PEP_SESSION session,
     }
 
  out:
-    if (tpk)
-        pgp_tpk_free(tpk);
-    if (fpr)
-        pgp_fingerprint_free(fpr);
+    pgp_tpk_free(tpk);
+    pgp_fingerprint_free(fpr);
 
     if (status == PEP_KEY_NOT_FOUND)
         status = PEP_STATUS_OK;
@@ -2312,6 +2393,245 @@ PEP_STATUS pgp_send_key(PEP_SESSION session, const char *pattern)
     return PEP_UNKNOWN_ERROR;
 }
 
+
+PEP_STATUS pgp_renew_key(
+    PEP_SESSION session, const char *fpr, const timestamp *ts)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    pgp_error_t err = NULL;
+    pgp_tpk_t tpk = NULL;
+    pgp_tpk_key_iter_t iter = NULL;
+    pgp_key_pair_t keypair = NULL;
+    pgp_signer_t signer = NULL;
+    time_t t = mktime((struct tm *) ts);
+
+    T("(%s)", fpr);
+
+    status = tpk_find_by_fpr_hex(session, fpr, true, &tpk, NULL);
+    ERROR_OUT(NULL, status, "Looking up '%s'", fpr);
+
+    uint32_t creation_time = pgp_key_creation_time(pgp_tpk_primary(tpk));
+    if (creation_time > t)
+        // The creation time is after the expiration time!
+        ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
+                  "creation time can't be after expiration time");
+
+    uint32_t delta = t - creation_time;
+
+
+    iter = pgp_tpk_key_iter_valid(tpk);
+    pgp_tpk_key_iter_certification_capable (iter);
+    pgp_tpk_key_iter_unencrypted_secret (iter, true);
+
+    // If there are multiple certification capable subkeys, we just
+    // take the first one, whichever one that happens to be.
+    pgp_key_t key = pgp_tpk_key_iter_next (iter, NULL, NULL);
+    if (! key)
+        ERROR_OUT (err, PEP_UNKNOWN_ERROR,
+                   "%s has no usable certification capable key", fpr);
+
+    keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
+    if (! keypair)
+        ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
+
+    signer = pgp_key_pair_as_signer (keypair);
+    if (! signer)
+        ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
+
+    tpk = pgp_tpk_set_expiry(&err, tpk, signer, delta);
+    if (! tpk)
+        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "setting expiration");
+
+    status = tpk_save(session, tpk, NULL);
+    tpk = NULL;
+    ERROR_OUT(NULL, status, "Saving %s", fpr);
+
+ out:
+    pgp_signer_free (signer);
+    pgp_key_pair_free (keypair);
+    pgp_tpk_key_iter_free (iter);
+    pgp_tpk_free(tpk);
+
+    T("(%s) -> %s", fpr, pEp_status_to_string(status));
+    return status;
+}
+
+PEP_STATUS pgp_revoke_key(
+    PEP_SESSION session, const char *fpr, const char *reason)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    pgp_error_t err = NULL;
+    pgp_tpk_t tpk = NULL;
+    pgp_tpk_key_iter_t iter = NULL;
+    pgp_key_pair_t keypair = NULL;
+    pgp_signer_t signer = NULL;
+
+    T("(%s)", fpr);
+
+    status = tpk_find_by_fpr_hex(session, fpr, true, &tpk, NULL);
+    ERROR_OUT(NULL, status, "Looking up %s", fpr);
+
+    iter = pgp_tpk_key_iter_valid(tpk);
+    pgp_tpk_key_iter_certification_capable (iter);
+    pgp_tpk_key_iter_unencrypted_secret (iter, true);
+
+    // If there are multiple certification capable subkeys, we just
+    // take the first one, whichever one that happens to be.
+    pgp_key_t key = pgp_tpk_key_iter_next (iter, NULL, NULL);
+    if (! key)
+        ERROR_OUT (err, PEP_UNKNOWN_ERROR,
+                   "%s has no usable certification capable key", fpr);
+
+    keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
+    if (! keypair)
+        ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
+
+    signer = pgp_key_pair_as_signer (keypair);
+    if (! signer)
+        ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
+
+    tpk = pgp_tpk_revoke_in_place(&err, tpk, signer,
+                                  PGP_REASON_FOR_REVOCATION_UNSPECIFIED,
+                                  reason);
+    if (! tpk)
+        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "setting expiration");
+
+    assert(pgp_revocation_status_variant(pgp_tpk_revocation_status(tpk))
+           == PGP_REVOCATION_STATUS_REVOKED);
+
+    status = tpk_save(session, tpk, NULL);
+    tpk = NULL;
+    ERROR_OUT(NULL, status, "Saving %s", fpr);
+
+ out:
+    pgp_signer_free (signer);
+    pgp_key_pair_free (keypair);
+    pgp_tpk_key_iter_free (iter);
+    pgp_tpk_free(tpk);
+
+    T("(%s) -> %s", fpr, pEp_status_to_string(status));
+    return status;
+}
+
+static void _pgp_key_expired(pgp_tpk_t tpk, const time_t when, bool* expired)
+{
+    // Is the TPK live?
+    *expired = !pgp_tpk_alive_at(tpk, when);
+
+#ifdef TRACING
+    {
+        char buffer[26];
+        time_t now = time(NULL);
+
+        if (when == now || when == now - 1) {
+            sprintf(buffer, "now");
+        } else {
+            struct tm tm;
+            gmtime_r(&when, &tm);
+            strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &tm);
+        }
+
+        T("TPK is %slive as of %s", *expired ? "not " : "", buffer);
+    }
+#endif
+    if (*expired)
+        goto out;
+
+    // Are there at least one certification subkey, one signing subkey
+    // and one encryption subkey that are live?
+    //    int can_certify = 0, can_encrypt = 0, can_sign = 0;
+    int can_encrypt = 0, can_sign = 0;
+
+    pgp_tpk_key_iter_t key_iter = pgp_tpk_key_iter_valid(tpk);
+    pgp_key_t key;
+    pgp_signature_t sig;
+    pgp_revocation_status_t rev;
+    while ((key = pgp_tpk_key_iter_next(key_iter, &sig, &rev))) {
+        if (! sig)
+            continue;
+
+        if (pgp_signature_can_encrypt_for_transport(sig)
+            || pgp_signature_can_encrypt_at_rest(sig))
+            can_encrypt = 1;
+        if (pgp_signature_can_sign(sig))
+            can_sign = 1;
+        // if (pgp_signature_can_certify(sig))
+        //     can_certify = 1;
+
+//        if (can_encrypt && can_sign && can_certify)
+        if (can_encrypt && can_sign)
+            break;
+    }
+    pgp_tpk_key_iter_free(key_iter);
+
+//    *expired = !(can_encrypt && can_sign && can_certify);
+    *expired = !(can_encrypt && can_sign);
+
+    T("Key can%s encrypt, can%s sign, can%s certify => %sexpired",
+      can_encrypt ? "" : "not",
+      can_sign ? "" : "not",
+      // can_certify ? "" : "not",
+      *expired ? "" : "not ");
+      
+out:
+    // Er, this might be problematic in terms of internal vs. external in log. FIXME?
+    T("(%s) -> %s (expired: %d)", fpr, pEp_status_to_string(status), *expired);
+    return;
+}
+                            
+PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
+                           const time_t when, bool *expired)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    pgp_tpk_t tpk = NULL;
+    T("(%s)", fpr);
+
+    assert(session);
+    assert(fpr);
+    assert(expired);
+
+    *expired = false;
+
+    pgp_fingerprint_t pgp_fpr = pgp_fingerprint_from_hex(fpr);
+    status = tpk_find_by_fpr(session, pgp_fpr, false, &tpk, NULL);
+    pgp_fingerprint_free(pgp_fpr);
+    ERROR_OUT(NULL, status, "Looking up %s", fpr);
+
+    _pgp_key_expired(tpk, when, expired);
+ out:
+    pgp_tpk_free(tpk);
+    T("(%s) -> %s (expired: %d)", fpr, pEp_status_to_string(status), *expired);
+    return status;
+}
+
+PEP_STATUS pgp_key_revoked(PEP_SESSION session, const char *fpr, bool *revoked)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    pgp_tpk_t tpk;
+
+    T("(%s)", fpr);
+
+    assert(session);
+    assert(fpr);
+    assert(revoked);
+
+    *revoked = false;
+
+    pgp_fingerprint_t pgp_fpr = pgp_fingerprint_from_hex(fpr);
+    status = tpk_find_by_fpr(session, pgp_fpr, false, &tpk, NULL);
+    pgp_fingerprint_free(pgp_fpr);
+    ERROR_OUT(NULL, status, "Looking up %s", fpr);
+
+    pgp_revocation_status_t rs = pgp_tpk_revocation_status(tpk);
+    *revoked = pgp_revocation_status_variant(rs) == PGP_REVOCATION_STATUS_REVOKED;
+    pgp_revocation_status_free (rs);
+    pgp_tpk_free(tpk);
+
+ out:
+    T("(%s) -> %s", fpr, pEp_status_to_string(status));
+    return status;
+}
+
 PEP_STATUS pgp_get_key_rating(
     PEP_SESSION session, const char *fpr, PEP_comm_type *comm_type)
 {
@@ -2331,10 +2651,20 @@ PEP_STATUS pgp_get_key_rating(
 
     *comm_type = PEP_ct_OpenPGP_unconfirmed;
 
-    if (pgp_tpk_expired(tpk)) {
+    bool expired = false;
+    
+    // MUST guarantee the same behaviour.
+    _pgp_key_expired(tpk, time(NULL), &expired);
+    
+    if (expired) {
         *comm_type = PEP_ct_key_expired;
-        goto out;
+        goto out;        
     }
+    
+    // if (pgp_tpk_expired(tpk)) {
+    //     *comm_type = PEP_ct_key_expired;
+    //     goto out;
+    // }
 
     pgp_revocation_status_t rs = pgp_tpk_revocation_status(tpk);
     pgp_revocation_status_variant_t rsv = pgp_revocation_status_variant(rs);
@@ -2390,225 +2720,12 @@ PEP_STATUS pgp_get_key_rating(
     }
 
  out:
-    if (tpk)
-        pgp_tpk_free(tpk);
-
-    T("(%s) -> %s", fpr, pep_comm_type_to_string(*comm_type));
-    return status;
-}
-
-
-PEP_STATUS pgp_renew_key(
-    PEP_SESSION session, const char *fpr, const timestamp *ts)
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-    pgp_error_t err = NULL;
-    pgp_tpk_t tpk = NULL;
-    pgp_tpk_key_iter_t iter = NULL;
-    pgp_key_pair_t keypair = NULL;
-    pgp_signer_t signer = NULL;
-    time_t t = mktime((struct tm *) ts);
-
-    T("(%s)", fpr);
-
-    status = tpk_find_by_fpr_hex(session, fpr, true, &tpk, NULL);
-    ERROR_OUT(NULL, status, "Looking up '%s'", fpr);
-
-    uint32_t creation_time = pgp_key_creation_time(pgp_tpk_primary(tpk));
-    if (creation_time > t)
-        // The creation time is after the expiration time!
-        ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
-                  "creation time can't be after expiration time");
-
-    uint32_t delta = t - creation_time;
-
-
-    iter = pgp_tpk_key_iter_valid(tpk);
-    pgp_tpk_key_iter_certification_capable (iter);
-    pgp_tpk_key_iter_unencrypted_secret (iter, true);
-
-    // If there are multiple certification capable subkeys, we just
-    // take the first one, whichever one that happens to be.
-    pgp_key_t key = pgp_tpk_key_iter_next (iter, NULL, NULL);
-    if (! key)
-        ERROR_OUT (err, PEP_UNKNOWN_ERROR,
-                   "%s has no usable certification capable key", fpr);
-
-    keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
-    if (! keypair)
-        ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
-
-    signer = pgp_key_pair_as_signer (keypair);
-    if (! signer)
-        ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
-
-    tpk = pgp_tpk_set_expiry(&err, tpk, signer, delta);
-    if (! tpk)
-        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "setting expiration");
-
-    status = tpk_save(session, tpk, NULL);
-    tpk = NULL;
-    ERROR_OUT(NULL, status, "Saving %s", fpr);
-
- out:
-    if (signer)
-        pgp_signer_free (signer);
-    if (keypair)
-        pgp_key_pair_free (keypair);
-    if (iter)
-        pgp_tpk_key_iter_free (iter);
-    if (tpk)
-        pgp_tpk_free(tpk);
-
-    T("(%s) -> %s", fpr, pEp_status_to_string(status));
-    return status;
-}
-
-PEP_STATUS pgp_revoke_key(
-    PEP_SESSION session, const char *fpr, const char *reason)
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-    pgp_error_t err = NULL;
-    pgp_tpk_t tpk = NULL;
-    pgp_tpk_key_iter_t iter = NULL;
-    pgp_key_pair_t keypair = NULL;
-    pgp_signer_t signer = NULL;
-
-    T("(%s)", fpr);
-
-    status = tpk_find_by_fpr_hex(session, fpr, true, &tpk, NULL);
-    ERROR_OUT(NULL, status, "Looking up %s", fpr);
-
-    iter = pgp_tpk_key_iter_valid(tpk);
-    pgp_tpk_key_iter_certification_capable (iter);
-    pgp_tpk_key_iter_unencrypted_secret (iter, true);
-
-    // If there are multiple certification capable subkeys, we just
-    // take the first one, whichever one that happens to be.
-    pgp_key_t key = pgp_tpk_key_iter_next (iter, NULL, NULL);
-    if (! key)
-        ERROR_OUT (err, PEP_UNKNOWN_ERROR,
-                   "%s has no usable certification capable key", fpr);
-
-    keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
-    if (! keypair)
-        ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
-
-    signer = pgp_key_pair_as_signer (keypair);
-    if (! signer)
-        ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
-
-    tpk = pgp_tpk_revoke_in_place(&err, tpk, signer,
-                                  PGP_REASON_FOR_REVOCATION_UNSPECIFIED,
-                                  reason);
-    if (! tpk)
-        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "setting expiration");
-
-    assert(pgp_revocation_status_variant(pgp_tpk_revocation_status(tpk))
-           == PGP_REVOCATION_STATUS_REVOKED);
-
-    status = tpk_save(session, tpk, NULL);
-    tpk = NULL;
-    ERROR_OUT(NULL, status, "Saving %s", fpr);
-
- out:
-    if (signer)
-        pgp_signer_free (signer);
-    if (keypair)
-        pgp_key_pair_free (keypair);
-    if (iter)
-        pgp_tpk_key_iter_free (iter);
-    if (tpk)
-        pgp_tpk_free(tpk);
-
-    T("(%s) -> %s", fpr, pEp_status_to_string(status));
-    return status;
-}
-
-PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
-                           const time_t when, bool *expired)
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-    pgp_tpk_t tpk = NULL;
-    T("(%s)", fpr);
-
-    assert(session);
-    assert(fpr);
-    assert(expired);
-
-    *expired = false;
-
-    pgp_fingerprint_t pgp_fpr = pgp_fingerprint_from_hex(fpr);
-    status = tpk_find_by_fpr(session, pgp_fpr, false, &tpk, NULL);
-    pgp_fingerprint_free(pgp_fpr);
-    ERROR_OUT(NULL, status, "Looking up %s", fpr);
-
-    // Is the TPK live?
-    *expired = !pgp_tpk_alive_at(tpk, when);
-    if (*expired)
-        goto out;
-
-    // Are there at least one certification subkey, one signing subkey
-    // and one encryption subkey that are live?
-    int can_certify = 0, can_encrypt = 0, can_sign = 0;
-
-    pgp_tpk_key_iter_t key_iter = pgp_tpk_key_iter_valid(tpk);
-    pgp_key_t key;
-    pgp_signature_t sig;
-    pgp_revocation_status_t rev;
-    while ((key = pgp_tpk_key_iter_next(key_iter, &sig, &rev))) {
-        if (! sig)
-            continue;
-
-        if (pgp_signature_can_encrypt_for_transport(sig)
-            || pgp_signature_can_encrypt_at_rest(sig))
-            can_encrypt = 1;
-        if (pgp_signature_can_sign(sig))
-            can_sign = 1;
-        if (pgp_signature_can_certify(sig))
-            can_certify = 1;
-
-        if (can_encrypt && can_sign && can_certify)
-            break;
-    }
-    pgp_tpk_key_iter_free(key_iter);
-
-    *expired = !(can_encrypt && can_sign && can_certify);
-
- out:
-    if (tpk)
-        pgp_tpk_free(tpk);
-    T("(%s) -> %s", fpr, pEp_status_to_string(status));
-    return status;
-}
-
-PEP_STATUS pgp_key_revoked(PEP_SESSION session, const char *fpr, bool *revoked)
-{
-    PEP_STATUS status = PEP_STATUS_OK;
-    pgp_tpk_t tpk;
-
-    T("(%s)", fpr);
-
-    assert(session);
-    assert(fpr);
-    assert(revoked);
-
-    *revoked = false;
-
-    pgp_fingerprint_t pgp_fpr = pgp_fingerprint_from_hex(fpr);
-    status = tpk_find_by_fpr(session, pgp_fpr, false, &tpk, NULL);
-    pgp_fingerprint_free(pgp_fpr);
-    ERROR_OUT(NULL, status, "Looking up %s", fpr);
-
-    pgp_revocation_status_t rs = pgp_tpk_revocation_status(tpk);
-    *revoked = pgp_revocation_status_variant(rs) == PGP_REVOCATION_STATUS_REVOKED;
-    pgp_revocation_status_free (rs);
     pgp_tpk_free(tpk);
 
- out:
-    T("(%s) -> %s", fpr, pEp_status_to_string(status));
+    T("(%s) -> %s", fpr, pEp_comm_type_to_string(*comm_type));
     return status;
 }
+
 
 PEP_STATUS pgp_key_created(PEP_SESSION session, const char *fpr, time_t *created)
 {
@@ -2655,4 +2772,3 @@ PEP_STATUS pgp_contains_priv_key(PEP_SESSION session, const char *fpr,
       fpr, *has_private ? "priv" : "pub", pEp_status_to_string(status));
     return status;
 }
-

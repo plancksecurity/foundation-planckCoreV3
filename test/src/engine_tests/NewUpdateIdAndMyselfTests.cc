@@ -500,10 +500,10 @@ void NewUpdateIdAndMyselfTests::key_elect_expired_key() {
     TEST_ASSERT_MSG((bernd->user_id), "bernd->user_id");
     TEST_ASSERT_MSG((strcmp(bernd->user_id, bernd_userid) == 0), "strcmp(bernd->user_id, bernd_userid) == 0"); // ???
     TEST_ASSERT_MSG((!bernd->me), "!bernd->me"); 
-    TEST_ASSERT_MSG((bernd->comm_type == PEP_ct_key_expired), "bernd->comm_type == PEP_ct_key_expired");
+    TEST_ASSERT_MSG((bernd->comm_type == PEP_ct_key_not_found), tl_ct_string(bernd->comm_type));
     TEST_ASSERT_MSG((strcmp(bernd->address, bernd_address) == 0), "strcmp(bernd->address, bernd_address) == 0");
 
-    cout << "PASS: update_identity() correctly rejected expired key with PEP_KEY_UNSUITABLE and PEP_ct_key_expired" << endl << endl;
+    cout << "PASS: update_identity() correctly rejected expired key with PEP_KEY_UNSUITABLE and PEP_ct_key_not_found" << endl << endl;
     free_identity(bernd);
     
 }

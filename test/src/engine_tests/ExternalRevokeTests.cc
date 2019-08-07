@@ -255,8 +255,9 @@ void ExternalRevokeTests::check_external_revoke() {
     
     status = get_trust(session, recip1);
 
-    cout << "Recip's trust DB comm_type (should be unknown, as we're using a keyring-only key, not in DB) = "  << tl_ct_string(recip1->comm_type) << endl;
-    TEST_ASSERT_MSG((recip1->comm_type != PEP_ct_OpenPGP_unconfirmed), "recip1->comm_type != PEP_ct_OpenPGP_unconfirmed");
+//    cout << "Recip's trust DB comm_type (should be unknown, as we're using a keyring-only key, not in DB) = "  << tl_ct_string(recip1->comm_type) << endl;
+    cout << "Recip's trust DB comm_type (should PEP_ct_OpenPGP_unconfirmed), as we now record this when using update_identity on no-default idents = "  << tl_ct_string(recip1->comm_type) << endl;
+    TEST_ASSERT_MSG((recip1->comm_type == PEP_ct_OpenPGP_unconfirmed), tl_ct_string(recip1->comm_type));
 
     // decrypt message
 //    free_message(outgoing_msg);
@@ -285,8 +286,9 @@ void ExternalRevokeTests::check_external_revoke() {
     
     status = get_trust(session, recip1);
     
-    cout << "Recip's trust DB comm_type (should be unknown - there's nothing in the DB) = "  << tl_ct_string(recip1->comm_type) << endl;
-    TEST_ASSERT_MSG((recip1->comm_type == PEP_ct_unknown), "recip1->comm_type == PEP_ct_unknown");
+//    cout << "Recip's trust DB comm_type (should be unknown - there's nothing in the DB) = "  << tl_ct_string(recip1->comm_type) << endl;
+    cout << "Recip's trust DB comm_type (should be PEP_ct_OpenPGP_unconfirmed, as we now store it.) = "  << tl_ct_string(recip1->comm_type) << endl;
+    TEST_ASSERT_MSG((recip1->comm_type == PEP_ct_OpenPGP_unconfirmed), tl_ct_string(recip1->comm_type));
 
     free_message(encrypted_outgoing_msg);
     free_message(decrypted_msg);
