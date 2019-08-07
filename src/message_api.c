@@ -1928,6 +1928,10 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         return PEP_UNENCRYPTED;
     }
     else {
+        // First, dedup the keylist
+        if (keys && keys->next)
+            dedup_stringlist(keys->next);
+            
         // FIXME - we need to deal with transport types (via flag)
         message_wrap_type wrap_type = PEP_message_unwrapped;
         if ((enc_format != PEP_enc_inline) && (!force_v_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
@@ -3848,7 +3852,9 @@ static PEP_STATUS _decrypt_message(
 
     // 2. Clean up message and prepare for return 
     if (msg) {
-        
+        if (_keylist && _keylist->next)
+            dedup_stringlist(_keylist->next);
+            
         /* add pEp-related status flags to header */
         decorate_message(msg, *rating, _keylist, false, false);
 
