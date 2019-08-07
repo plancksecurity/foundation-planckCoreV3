@@ -1118,8 +1118,9 @@ static bool _has_PGP_MIME_format(message* msg) {
         return false;
     if (msg->attachments->next->next)
         return false;
-    if (!msg->attachments->mime_type ||
-        strcmp(msg->attachments->mime_type, "application/pgp-encrypted") != 0)    
+    if (!msg->attachments->mime_type)
+        return false;        
+    if (strcmp(msg->attachments->mime_type, "application/pgp-encrypted") != 0)    
         return false;
     if (!msg->attachments->next->mime_type || 
         strcmp(msg->attachments->next->mime_type, "application/octet-stream") != 0)        
@@ -3417,7 +3418,8 @@ static PEP_STATUS _decrypt_message(
     // This import is from the outermost message.
     // We don't do this for PGP_mime.
     bool imported_keys = false;
-    if (!_has_PGP_MIME_format(src))
+    PEP_cryptotech enc_type = determine_encryption_format(src);
+    if (enc_type != PEP_crypt_OpenPGP || !(src->enc_format == PEP_enc_PGP_MIME || src->enc_format == PEP_enc_PGP_MIME_Outlook1))
         imported_keys = import_attached_keys(session, src, NULL);
             
     import_header_keys(session, src);
