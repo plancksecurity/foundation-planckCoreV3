@@ -17,6 +17,7 @@
 #include "OwnIdentitiesRetrieveTests.h"
 #include "ExpiredSubkeyTests.h"
 #include "VerifyTests.h"
+#include "DDLUpgradeTests.h"
 #include "UserIdCollisionTests.h"
 #include "Engine463Tests.h"
 #include "IOS1664Tests.h"
@@ -30,6 +31,7 @@
 #include "PgpBinaryTests.h"
 #include "SubkeyRatingEvalTests.h"
 #include "MessageNullFromTests.h"
+#include "Engine587Tests.h"
 #include "ExportKeyTests.h"
 #include "LeastCommonDenomColorTests.h"
 #include "StringlistTests.h"
@@ -86,6 +88,7 @@ const char* SuiteMaker::all_suites[] = {
     "OwnIdentitiesRetrieveTests",
     "ExpiredSubkeyTests",
     "VerifyTests",
+    "DDLUpgradeTests",
     "UserIdCollisionTests",
     "Engine463Tests",
     "IOS1664Tests",
@@ -99,6 +102,7 @@ const char* SuiteMaker::all_suites[] = {
     "PgpBinaryTests",
     "SubkeyRatingEvalTests",
     "MessageNullFromTests",
+    "Engine587Tests",
     "ExportKeyTests",
     "LeastCommonDenomColorTests",
     "StringlistTests",
@@ -150,7 +154,7 @@ const char* SuiteMaker::all_suites[] = {
 };
 
 // This file is generated, so magic constants are ok.
-int SuiteMaker::num_suites = 66;
+int SuiteMaker::num_suites = 68;
 
 void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_home, Test::Suite** test_suite) {
     if (strcmp(test_class_name, "URIAddressTests") == 0)
@@ -163,6 +167,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new ExpiredSubkeyTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "VerifyTests") == 0)
         *test_suite = new VerifyTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "DDLUpgradeTests") == 0)
+        *test_suite = new DDLUpgradeTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "UserIdCollisionTests") == 0)
         *test_suite = new UserIdCollisionTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "Engine463Tests") == 0)
@@ -189,6 +195,8 @@ void SuiteMaker::suitemaker_build(const char* test_class_name, const char* test_
         *test_suite = new SubkeyRatingEvalTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "MessageNullFromTests") == 0)
         *test_suite = new MessageNullFromTests(test_class_name, test_home);
+    else if (strcmp(test_class_name, "Engine587Tests") == 0)
+        *test_suite = new Engine587Tests(test_class_name, test_home);
     else if (strcmp(test_class_name, "ExportKeyTests") == 0)
         *test_suite = new ExportKeyTests(test_class_name, test_home);
     else if (strcmp(test_class_name, "LeastCommonDenomColorTests") == 0)
