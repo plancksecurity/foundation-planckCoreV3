@@ -11,7 +11,7 @@
 #include <time.h>
 #include <stdlib.h>
 
-#define _PEP_SQLITE_DEBUG 0
+#define _PEP_SQLITE_DEBUG 1
 #if _PEP_SQLITE_DEBUG
 #include <sqlite3.h>
 #endif
@@ -257,7 +257,7 @@ static const char* sql_update_identity_entry =
     "       flags = ?4, " 
     "       is_own = ?5, "
     "       pEp_version_major = ?6, "
-    "       pEp_version_major = ?7 "    
+    "       pEp_version_minor = ?7 "    
     "   where (case when (address = ?1) then (1)"
     "               when (lower(address) = lower(?1)) then (1)"
     "               when (replace(lower(address),'.','') = replace(lower(?1),'.','')) then (1) "
@@ -931,7 +931,7 @@ DYNAMIC_API PEP_STATUS init(
     sqlite3_busy_timeout(_session->system_db, 1000);
 
 // increment this when patching DDL
-#define _DDL_USER_VERSION "11"
+#define _DDL_USER_VERSION "12"
 
     if (in_first) {
 
