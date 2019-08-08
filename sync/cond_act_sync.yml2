@@ -324,6 +324,9 @@ action hideHandshakeDialog
 action showDeviceAdded
     call "show_handshake" with "type" > SYNC_NOTIFY_ACCEPTED_DEVICE_ADDED
 
+action showFormingGroup
+    call "show_handshake" with "type" > SYNC_NOTIFY_FORMING_GROUP
+    
 action showGroupCreated
     call "show_handshake" with "type" > SYNC_NOTIFY_ACCEPTED_GROUP_CREATED
 
