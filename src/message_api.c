@@ -1083,6 +1083,7 @@ pEp_error:
     return status;
 }
 
+/*
 static bool _has_PGP_MIME_format(message* msg) {
     if (!msg || !msg->attachments || !msg->attachments->next)
         return false;
@@ -1097,6 +1098,7 @@ static bool _has_PGP_MIME_format(message* msg) {
         return false;
     return true;    
 }
+*/
 
 static PEP_rating _rating(PEP_comm_type ct)
 {
