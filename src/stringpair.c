@@ -194,6 +194,41 @@ DYNAMIC_API void free_stringpair_list(stringpair_list_t *stringpair_list)
     }
 }
 
+// ONLY DELETES ONE.
+DYNAMIC_API stringpair_list_t *stringpair_list_delete_by_key(
+        stringpair_list_t *sp_list,
+        const char *key
+    )
+{
+    assert(sp_list);
+    assert(key);
+
+    if (sp_list->value == NULL) {
+        free_stringpair_list(sp_list);
+        return NULL;
+    }
+
+    if (key == NULL)
+        return sp_list;
+
+    stringpair_list_t *_sl;
+    stringpair_list_t *last = NULL;
+    for (_sl = sp_list; _sl && _sl->value && _sl->value->key; _sl = _sl->next) {
+        if (strcmp(_sl->value->key, key) == 0) {
+            if (last == NULL)
+                sp_list = sp_list->next;
+            else
+                last->next = _sl->next;
+            _sl->next = NULL;
+            free_stringpair_list(_sl);
+            break;
+        }
+        last = _sl;
+    }
+    return sp_list;
+}
+
+
 DYNAMIC_API stringpair_list_t *stringpair_list_find(
         stringpair_list_t *stringpair_list,
         const char *key

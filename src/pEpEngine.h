@@ -17,7 +17,7 @@ extern "C" {
 #include "labeled_int_list.h"    
 #include "timestamp.h"
 
-#define PEP_VERSION "2.0" // protocol version
+#define PEP_VERSION "2.1" // protocol version
 
 #define PEP_OWN_USERID "pEp_own_userId"
     
@@ -69,6 +69,7 @@ typedef enum {
     PEP_CANNOT_SET_TRUST                            = 0x0384,
     PEP_KEY_BLACKLISTED                             = 0x0385,
     PEP_CANNOT_FIND_PERSON                          = 0x0386,
+    PEP_CANNOT_SET_PEP_VERSION                      = 0X0387,
     
     PEP_CANNOT_FIND_ALIAS                           = 0x0391,
     PEP_CANNOT_SET_ALIAS                            = 0x0392,
@@ -597,6 +598,8 @@ typedef struct _pEp_identity {
     char lang[3];               // language of conversation
                                 // ISO 639-1 ALPHA-2, last byte is 0
     bool me;                    // if this is the local user herself/himself
+    int major_ver;              // highest version of pEp message received, if any
+    int minor_ver;              // highest version of pEp message received, if any
     identity_flags_t flags;     // identity_flag1 | identity_flag2 | ...
 } pEp_identity;
 
@@ -1354,6 +1357,15 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exis
 
 PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
 
+PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, unsigned int new_ver_major, unsigned int new_ver_minor);
+
+// Generally ONLY called by set_as_pEp_user, and ONLY from < 2.0 to 2.0.
+PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session, 
+        pEp_identity* ident, 
+        unsigned int new_ver_major,
+        unsigned int new_ver_minor
+    );
+     
 // exposed for testing
 PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,
                       bool guard_transaction);

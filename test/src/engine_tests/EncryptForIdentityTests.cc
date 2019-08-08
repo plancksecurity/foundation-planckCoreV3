@@ -96,7 +96,7 @@ void EncryptForIdentityTests::check_encrypt_for_identity() {
     cout << encoded_text << "\n";
 
     message* decoded_msg = nullptr;
-    status = mime_decode_message(encoded_text, strlen(encoded_text), &decoded_msg);
+    status = mime_decode_message(encoded_text, strlen(encoded_text), &decoded_msg, NULL);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     const string string3 = encoded_text;
 
