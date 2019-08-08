@@ -231,7 +231,16 @@ protocol Sync 1 {
             on Init {
                 do prepareOwnKeys;
                 send OwnKeysOfferer; // we're not grouped yet, this is our own keys
+                do showFormingGroup;
             }
+
+            on Cancel {
+                send Rollback;
+                go Sole;
+            }
+
+            on Rollback
+                go Sole;
 
             on OwnKeysRequester {
                 do saveGroupKeys;
@@ -242,14 +251,22 @@ protocol Sync 1 {
         }
 
         state FormingGroupRequester {
-            on Init {
-                do prepareOwnKeys;
-                send OwnKeysRequester; // we're not grouped yet, this is our own keys
+            on Init
+                do showFormingGroup;
+
+            on Cancel {
+                send Rollback;
+                go Sole;
             }
+
+            on Rollback
+                go Sole;
 
             on OwnKeysOfferer {
                 do saveGroupKeys;
+                do prepareOwnKeys;
                 do ownKeysAreDefaultKeys;
+                send OwnKeysRequester; // we're not grouped yet, this is our own keys
                 do showGroupCreated;
                 go Grouped;
             }

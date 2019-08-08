@@ -32,6 +32,9 @@ typedef enum _sync_handshake_signal {
     // handshake dialog must be closed
     SYNC_NOTIFY_OVERTAKEN = 9,
 
+    // formig group
+    SYNC_NOTIFY_FORMING_GROUP = 10,
+
     // notificaton of actual group status
     SYNC_NOTIFY_SOLE = 254,
     SYNC_NOTIFY_IN_GROUP = 255
