@@ -266,7 +266,7 @@ protocol Sync 1 {
                 do saveGroupKeys;
                 do prepareOwnKeys;
                 do ownKeysAreDefaultKeys;
-                send OwnKeysRequester; // we're not grouped yet, this is our own keys
+                send OwnKeysRequester;
                 do showGroupCreated;
                 go Grouped;
             }
