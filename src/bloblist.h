@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stddef.h> 
+
 #include "dynamic_api.h"
 #include "stringpair.h"
 
