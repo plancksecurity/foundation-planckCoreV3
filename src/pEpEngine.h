@@ -598,8 +598,8 @@ typedef struct _pEp_identity {
     char lang[3];               // language of conversation
                                 // ISO 639-1 ALPHA-2, last byte is 0
     bool me;                    // if this is the local user herself/himself
-    int major_ver;              // highest version of pEp message received, if any
-    int minor_ver;              // highest version of pEp message received, if any
+    unsigned int major_ver;              // highest version of pEp message received, if any
+    unsigned int minor_ver;              // highest version of pEp message received, if any
     identity_flags_t flags;     // identity_flag1 | identity_flag2 | ...
 } pEp_identity;
 

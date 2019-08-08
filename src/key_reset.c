@@ -4,6 +4,8 @@
 #include "pEp_internal.h"
 #include "dynamic_api.h"
 #include "message_api.h"
+#include "key_reset.h"
+
 
 #include <string.h>
 #include <stdlib.h>

@@ -1228,8 +1228,8 @@ PEP_STATUS _myself(PEP_SESSION session,
         identity->comm_type = PEP_ct_unknown;
     }
     
-    int major_ver = 0;
-    int minor_ver = 0;
+    unsigned int major_ver = 0;
+    unsigned int minor_ver = 0;
     pEp_version_major_minor(PEP_VERSION, &major_ver, &minor_ver);
     identity->major_ver = major_ver;
     identity->minor_ver = minor_ver;
