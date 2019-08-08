@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include "key_reset.h"
-
 #include "pEpEngine.h"
 #include "keymanagement.h"
 #include "message.h"
