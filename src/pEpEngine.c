@@ -1498,7 +1498,7 @@ DYNAMIC_API PEP_STATUS init(
                 // N.B. WE DEFINE PEP_VERSION - IF WE'RE AT 9-DIGIT MAJOR OR MINOR VERSIONS, ER, BAD.
                 char major_buf[10];
                 char minor_buf[10];
-                if (sscanf("%s.%s", major_buf, minor_buf) != 2)
+                if (sscanf(PEP_VERSION, "%s.%s", major_buf, minor_buf) != 2)
                     return PEP_UNKNOWN_ERROR; // DO BETTER
                 size_t major_len = strlen(major_buf);
                 size_t minor_len = strlen(minor_buf);
