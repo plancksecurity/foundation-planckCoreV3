@@ -1498,11 +1498,32 @@ DYNAMIC_API PEP_STATUS init(
                 // N.B. WE DEFINE PEP_VERSION - IF WE'RE AT 9-DIGIT MAJOR OR MINOR VERSIONS, ER, BAD.
                 char major_buf[10];
                 char minor_buf[10];
-                if (sscanf(PEP_VERSION, "%s.%s", major_buf, minor_buf) != 2)
-                    return PEP_UNKNOWN_ERROR; // DO BETTER
-                size_t major_len = strlen(major_buf);
-                size_t minor_len = strlen(minor_buf);
-                    
+                
+                // Guess we were abusing sscanf here, so we'll do it this way:
+                const char* cptr = PEP_VERSION;
+                size_t major_len = 0;
+                size_t minor_len = 0;
+                
+                char* bufptr = major_buf;
+                while (*cptr != '.' && *cptr != '\0') {
+                    *bufptr++ = *cptr++;
+                    major_len++;
+                }
+                *bufptr = '\0';
+                bufptr = minor_buf;
+
+                if (*cptr == '.') {
+                    cptr++;
+                    while (*cptr != '\0') {
+                        *bufptr++ = *cptr++;
+                        minor_len++;
+                    }
+                }
+                else {
+                    *bufptr++ = '0';
+                }
+                *bufptr = '\0';
+                                    
                 const char* _ver_12_startstr =                     
                     "update identity\n"
                     "    set pEp_version_major = ";
