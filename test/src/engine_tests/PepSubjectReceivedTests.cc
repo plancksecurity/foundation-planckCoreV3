@@ -61,7 +61,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     PEP_rating rating;
     PEP_decrypt_flags_t flags;
     
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
@@ -95,7 +95,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     keylist = nullptr;
     rating = PEP_rating_unreliable;
     
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
@@ -129,7 +129,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     
     mailtext = slurp("test_mails/pEp_subject_normal_signed_2a.eml");
     
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
@@ -162,7 +162,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     
     mailtext = slurp("test_mails/p3p_subject_normal_signed_2b.eml");
     
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
@@ -196,7 +196,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     
     mailtext = slurp("test_mails/pEp_encrypted_subject_IS_pEp_3a.eml");
     
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
@@ -230,7 +230,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     
     mailtext = slurp("test_mails/p3p_encrypted_subject_IS_pEp_3b.eml");
     
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
@@ -265,7 +265,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     
     mailtext = slurp("test_mails/pEp_subject_pEp_replaced_w_pEp_4a.eml");
     
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
@@ -299,7 +299,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     
     mailtext = slurp("test_mails/pEp_subject_pEp_replaced_w_p3p_4b.eml");
     
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
@@ -333,7 +333,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     
     mailtext = slurp("test_mails/pEp_subject_p3p_replaced_w_pEp_4c.eml");
     
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
@@ -367,7 +367,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     
     mailtext = slurp("test_mails/pEp_subject_p3p_replaced_w_p3p_4d.eml");
     
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
@@ -402,7 +402,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     
     mailtext = slurp("test_mails/pEp_unencrypted_pEp_subject_5a.eml");
     
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
@@ -437,7 +437,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     
     mailtext = slurp("test_mails/pEp_unencrypted_p3p_subject_5b.eml");
     
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;
@@ -471,7 +471,7 @@ void PepSubjectReceivedTests::check_pep_subject_received() {
     
     mailtext = slurp("test_mails/pEp_subject_normal_unencrypted_6.eml");
     
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;

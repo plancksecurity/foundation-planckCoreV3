@@ -29,7 +29,7 @@ void SimpleBodyNotAltTests::check_text_w_html_attach() {
     string msg = slurp("test_mails/text message with html attach.eml");
     message* parsed = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &parsed, NULL);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &parsed);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(parsed);
     TEST_ASSERT(parsed->longmsg);
@@ -47,7 +47,7 @@ void SimpleBodyNotAltTests::check_html_w_text_attach() {
     string msg = slurp("test_mails/HTML-only body w text attachment.eml");
     message* parsed = NULL;
 
-    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &parsed, NULL);
+    PEP_STATUS status = mime_decode_message(msg.c_str(), msg.size(), &parsed);
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
     TEST_ASSERT(parsed);
     TEST_ASSERT(parsed->longmsg == NULL);

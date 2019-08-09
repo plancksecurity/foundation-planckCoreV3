@@ -500,7 +500,7 @@ PEP_STATUS MIME_decrypt_message(
     message* dec_msg = NULL;
     *mime_plaintext = NULL;
 
-    status = mime_decode_message(mimetext, size, &tmp_msg, NULL);
+    status = mime_decode_message(mimetext, size, &tmp_msg);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
@@ -585,7 +585,7 @@ PEP_STATUS MIME_encrypt_message(
     message* tmp_msg = NULL;
     message* enc_msg = NULL;
 
-    status = mime_decode_message(mimetext, size, &tmp_msg, NULL);
+    status = mime_decode_message(mimetext, size, &tmp_msg);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
@@ -665,7 +665,7 @@ PEP_STATUS MIME_encrypt_message_for_self(
     message* tmp_msg = NULL;
     message* enc_msg = NULL;
 
-    status = mime_decode_message(mimetext, size, &tmp_msg, NULL);
+    status = mime_decode_message(mimetext, size, &tmp_msg);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 

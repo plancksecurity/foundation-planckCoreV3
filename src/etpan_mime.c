@@ -2724,6 +2724,16 @@ enomem:
 DYNAMIC_API PEP_STATUS mime_decode_message(
         const char *mimetext,
         size_t size,
+        message **msg
+    )
+{
+    return _mime_decode_message_internal(mimetext, size, msg, NULL);
+}        
+
+
+PEP_STATUS _mime_decode_message_internal(
+        const char *mimetext,
+        size_t size,
         message **msg,
         bool* raise_msg_attachment
     )
