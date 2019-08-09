@@ -520,11 +520,11 @@ PEP_STATUS key_reset(
                 // generate new key
                 if (status == PEP_STATUS_OK) {
                     tmp_ident->fpr = NULL;
-                    status = generate_keypair(session, tmp_ident);
+                    status = myself(session, tmp_ident);
                 }
-                if (status == PEP_STATUS_OK) {
+                if (status == PEP_STATUS_OK && tmp_ident->fpr && strcmp(fpr_copy, tmp_ident->fpr) != 0) {
                     new_key = strdup(tmp_ident->fpr);
-                    status = set_own_key(session, tmp_ident, new_key);
+//                    status = set_own_key(session, tmp_ident, new_key);
                 }
                 // mistrust fpr from trust
                 tmp_ident->fpr = fpr_copy;

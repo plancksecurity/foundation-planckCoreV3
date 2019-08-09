@@ -1104,6 +1104,7 @@ test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
     TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
 
     TEST_ASSERT(alex_id->fpr);
+    cout << "alex_id->fpr is " << alex_id->fpr << endl;
     TEST_ASSERT(strcmp(alex_id->fpr, pubkey1));
     TEST_ASSERT(strcmp(alex_id->fpr, pubkey2));
     TEST_ASSERT(strcmp(alex_id->fpr, pubkey3));
