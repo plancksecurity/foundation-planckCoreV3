@@ -3393,8 +3393,8 @@ static PEP_STATUS _decrypt_message(
     char* signer_fpr = NULL;
     bool is_pEp_msg = is_a_pEpmessage(src);
     bool myself_read_only = (src->dir == PEP_dir_incoming);
-    unsigned int major_ver;
-    unsigned int minor_ver;
+    unsigned int major_ver = 0;
+    unsigned int minor_ver = 0;
     
     // Grab input flags
     bool reencrypt = (((*flags & PEP_decrypt_flag_untrusted_server) > 0) && *keylist && !EMPTYSTR((*keylist)->value));
