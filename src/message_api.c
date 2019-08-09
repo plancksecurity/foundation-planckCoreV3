@@ -4030,8 +4030,8 @@ DYNAMIC_API PEP_STATUS decrypt_message(
             if (sender_fpr)
                 signal_Sync_message(session, *rating, data, size, msg->from, sender_fpr);
             // FIXME: this must be changed to sender_fpr
-            else if (*keylist)
-                signal_Sync_message(session, *rating, data, size, msg->from, (*keylist)->value);
+//            else if (*keylist)
+//                signal_Sync_message(session, *rating, data, size, msg->from, (*keylist)->value);
         }
         free(sender_fpr);
     }

@@ -170,7 +170,8 @@ PEP_STATUS base_extract_message(
             goto the_end;
         }
 
-        _fpr = strdup(keylist->value);
+//        _fpr = strdup(keylist->value);
+        _fpr = strdup(msg->_sender_fpr);
         assert(_fpr);
         if (!_fpr) {
             status = PEP_OUT_OF_MEMORY;
