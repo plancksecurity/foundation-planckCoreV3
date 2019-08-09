@@ -29,7 +29,7 @@ PEP_STATUS base_decorate_message(
         msg->attachments = bl;
     }
 
-    if (fpr) {
+    if (fpr && fpr[0] != '\0') {
         char *sign;
         size_t sign_size;
         status = sign_only(session,  payload, size, fpr, &sign, &sign_size);
