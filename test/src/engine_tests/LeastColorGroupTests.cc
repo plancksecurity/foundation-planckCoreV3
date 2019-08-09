@@ -69,7 +69,7 @@ void LeastColorGroupTests::check_least_color_group() {
     PEP_rating rating;
     PEP_decrypt_flags_t flags;
     
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     TEST_ASSERT_MSG((msg_ptr), "msg_ptr");
     final_ptr = msg_ptr;

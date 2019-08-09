@@ -80,7 +80,7 @@ void BlacklistAcceptNewKeyTests::check_blacklist_accept_new_key() {
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     
-    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr, NULL);
+    status = mime_decode_message(mailtext.c_str(), mailtext.length(), &msg_ptr);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), "status == PEP_STATUS_OK");
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
 

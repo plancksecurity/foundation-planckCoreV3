@@ -3527,7 +3527,7 @@ static PEP_STATUS _decrypt_message(
             case PEP_enc_PGP_MIME:
             case PEP_enc_PGP_MIME_Outlook1:
             
-                status = mime_decode_message(ptext, psize, &msg, &has_inner);
+                status = _mime_decode_message_internal(ptext, psize, &msg, &has_inner);
                 if (status != PEP_STATUS_OK)
                     goto pEp_error;
                 
@@ -3663,8 +3663,7 @@ static PEP_STATUS _decrypt_message(
                 if (message_blob) {              
                     status = mime_decode_message(message_blob->value, 
                                                  message_blob->size, 
-                                                 &inner_message,
-                                                 NULL);
+                                                 &inner_message);
                     if (status != PEP_STATUS_OK)
                         goto pEp_error;
                                 

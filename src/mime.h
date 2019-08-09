@@ -58,7 +58,6 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
 //      mimetext (in)           	MIME encoded text to decode
 //      size (in)               	size of text to decode
 //      msg (out)               	decoded message
-//      raise_msg_attachment (out)		
 //
 //  return value:
 //      PEP_STATUS_OK           if everything worked
@@ -74,6 +73,13 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
 //      will remain in the ownership of the caller
 
 DYNAMIC_API PEP_STATUS mime_decode_message(
+        const char *mimetext,
+        size_t size,
+        message **msg
+    );
+
+/* Carries extra return argument letting message api know if it needs to raise the attachment as 2.0/2.1 */
+PEP_STATUS _mime_decode_message_internal(
         const char *mimetext,
         size_t size,
         message **msg,
