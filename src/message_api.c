@@ -3414,36 +3414,31 @@ static PEP_STATUS _decrypt_message(
 
     /*** End init ***/
 
-    // KB: FIXME - we should do this once we've seen an inner message in the case 
-    // of pEp users. Since we've not used 1.0 in a billion years (but will receive 
-    // 1.0 messages from pEp users who don't yet know WE are pEp users), we should 
-    // sort this out sanely, not upfront.
-    //
-    // Was: Ok, before we do anything, if it's a pEp message, regardless of whether it's
+    // Ok, before we do anything, if it's a pEp message, regardless of whether it's
     // encrypted or not, we set the sender as a pEp user. This has NOTHING to do
     // with the key.
-    // if (src->from && !(is_me(session, src->from))) {
-    //     if (is_pEp_msg) {
-    //         pEp_identity* tmp_from = src->from;
-    // 
-    //         // Ensure there's a user id
-    //         if (EMPTYSTR(tmp_from->user_id) && tmp_from->address) {
-    //             status = update_identity(session, tmp_from);
-    //             if (status == PEP_CANNOT_FIND_IDENTITY) {
-    //                 tmp_from->user_id = calloc(1, strlen(tmp_from->address) + 6);
-    //                 if (!tmp_from->user_id)
-    //                     return PEP_OUT_OF_MEMORY;
-    //                 snprintf(tmp_from->user_id, strlen(tmp_from->address) + 6,
-    //                          "TOFU_%s", tmp_from->address);        
-    //                 status = PEP_STATUS_OK;
-    //             }
-    //         }
-    //         if (status == PEP_STATUS_OK) {
-    //             // Now set user as PEP (may also create an identity if none existed yet)
-    //             status = set_as_pEp_user(session, tmp_from);
-    //         }
-    //     }
-    // }
+    if (src->from && !(is_me(session, src->from))) {
+        if (is_pEp_msg) {
+            pEp_identity* tmp_from = src->from;
+    
+            // Ensure there's a user id
+            if (EMPTYSTR(tmp_from->user_id) && tmp_from->address) {
+                status = update_identity(session, tmp_from);
+                if (status == PEP_CANNOT_FIND_IDENTITY) {
+                    tmp_from->user_id = calloc(1, strlen(tmp_from->address) + 6);
+                    if (!tmp_from->user_id)
+                        return PEP_OUT_OF_MEMORY;
+                    snprintf(tmp_from->user_id, strlen(tmp_from->address) + 6,
+                             "TOFU_%s", tmp_from->address);        
+                    status = PEP_STATUS_OK;
+                }
+            }
+            if (status == PEP_STATUS_OK) {
+                // Now set user as PEP (may also create an identity if none existed yet)
+                status = set_as_pEp_user(session, tmp_from);
+            }
+        }
+    }
     // We really need key used in signing to do anything further on the pEp comm_type.
     // So we can't adjust the rating of the sender just yet.
 
