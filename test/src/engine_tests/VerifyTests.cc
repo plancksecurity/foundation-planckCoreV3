@@ -17,6 +17,8 @@ using namespace std;
 
 VerifyTests::VerifyTests(string suitename, string test_home_dir) :
     EngineTestIndividualSuite::EngineTestIndividualSuite(suitename, test_home_dir) {
+    // I have no idea how this should behave outside of Sequoia. Neal, please fix.
+#ifdef USE_SEQUOIA        
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("VerifyTests::check_revoked_tpk"),
                                                                       static_cast<Func>(&VerifyTests::check_revoked_tpk)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("VerifyTests::check_revoked_signing_key"),
@@ -245,4 +247,5 @@ void VerifyTests::check_expired_signing_key() {
     // No signer.
     TEST_ASSERT(strcmp(keylist->value, "") == 0);
     TEST_ASSERT(! keylist->next);
+#endif    
 }
