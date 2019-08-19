@@ -182,7 +182,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
-#define PEP_KEYS_PATH "/.pEp_keys.db"
+#define PEP_KEYS_PATH "/.pEp/keys.db"
 
     // Create the home directory.
     char *home_env = NULL;
