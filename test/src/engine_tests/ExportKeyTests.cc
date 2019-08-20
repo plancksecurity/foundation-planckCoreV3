@@ -21,8 +21,8 @@ ExportKeyTests::ExportKeyTests(string suitename, string test_home_dir) :
                                                                       static_cast<Func>(&ExportKeyTests::check_export_key_no_key)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("ExportKeyTests::check_export_key_pubkey"),
                                                                       static_cast<Func>(&ExportKeyTests::check_export_key_pubkey)));
-    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("ExportKeyTests::check_export_key_no_secret_key"),
-                                                                      static_cast<Func>(&ExportKeyTests::check_export_key_no_secret_key)));
+    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("ExportKeyTests::check_export_key_secret_key"),
+                                                                      static_cast<Func>(&ExportKeyTests::check_export_key_secret_key)));
     add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("ExportKeyTests::check_export_key_no_secret_key"),
                                                                       static_cast<Func>(&ExportKeyTests::check_export_key_no_secret_key)));
 }
@@ -82,7 +82,7 @@ void ExportKeyTests::check_export_key_secret_key() {
     
     bool has_private = false;
     contains_priv_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", &has_private);
-    TEST_ASSERT_MSG(has_private, "Secret key not found.")
+    TEST_ASSERT_MSG(has_private, "Secret key not found.");
     
     status = export_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", 
                                    &keydata, &keysize);

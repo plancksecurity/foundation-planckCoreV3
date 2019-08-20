@@ -1,47 +1,57 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
+// This file is under GNU General Public License 3.0// see LICENSE.txt#include <stdlib.h>#include <cstring>#include <string>#include "test_util.h"#include "pEpEngine.h"#include <gtest/gtest.h>
 
-#include <stdlib.h>
-#include <cstring>
-#include <string>
 
-#include <cpptest.h>
-#include "test_util.h"
+namespace {
 
-#include "pEpEngine.h"
+    //The fixture for ExportKeyTest
+    class ExportKeyTest public ::testing::Test {
+        public:
+            Engine engine;
+            PEP_SESSION session;
 
-#include "EngineTestIndividualSuite.h"
-#include "ExportKeyTests.h"
+        protected:
+            // You can remove any or all of the following functions if its body
+            // is empty.
+            ExportKeyTest() {
+                // You can do set-up work for each test here.
+            }
 
-using namespace std;
+            ~ExportKeyTest() override {
+                // You can do clean-up work that doesn't throw exceptions here.
+            }
 
-ExportKeyTests::ExportKeyTests(string suitename, string test_home_dir) :
-    EngineTestIndividualSuite::EngineTestIndividualSuite(suitename, test_home_dir) {
-    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("ExportKeyTests::check_export_key_no_key"),
-                                                                      static_cast<Func>(&ExportKeyTests::check_export_key_no_key)));
-    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("ExportKeyTests::check_export_key_pubkey"),
-                                                                      static_cast<Func>(&ExportKeyTests::check_export_key_pubkey)));
-    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("ExportKeyTests::check_export_key_no_secret_key"),
-                                                                      static_cast<Func>(&ExportKeyTests::check_export_key_no_secret_key)));
-    add_test_to_suite(std::pair<std::string, void (Test::Suite::*)()>(string("ExportKeyTests::check_export_key_no_secret_key"),
-                                                                      static_cast<Func>(&ExportKeyTests::check_export_key_no_secret_key)));
-}
+            // If the constructor and destructor are not enough for setting up
+            // and cleaning up each test, you can define the following methods:
+
+            void SetUp() override {
+                // Code here will be called immediately after the constructor (right
+                // before each test).
+            }
+
+            void TearDown() override {
+                // Code here will be called immediately after each test (right
+            }
+
+            // Objects declared here can be used by all tests in the ExportKeyTest suite.
+    };
+
+}  // namespace
+
 
 void ExportKeyTests::check_export_key_no_key() {
     char* keydata = NULL;
     size_t keysize = 0;
-    PEP_STATUS status = export_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", 
+    PEP_STATUS status = export_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39",
                                    &keydata, &keysize);
-    TEST_ASSERT_MSG(status == PEP_KEY_NOT_FOUND, tl_status_string(status));
+    ASSERT_EQ(status , PEP_KEY_NOT_FOUND);
     free(keydata);
     keydata = NULL;
     keysize = 0;
-    status = export_secret_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", 
+    status = export_secret_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39",
                                    &keydata, &keysize);
-    TEST_ASSERT_MSG(status == PEP_KEY_NOT_FOUND, tl_status_string(status));
+    ASSERT_EQ(status , PEP_KEY_NOT_FOUND);
     free(keydata);
 
-    TEST_ASSERT(true);
 }
 
 void ExportKeyTests::check_export_key_pubkey() {
@@ -53,16 +63,16 @@ void ExportKeyTests::check_export_key_pubkey() {
     size_t keysize = 0;
     stringlist_t* keylist = NULL;
     PEP_STATUS status = find_keys(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", &keylist);
-    TEST_ASSERT(keylist && keylist->value);
-    TEST_ASSERT(strcmp(keylist->value, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39") == 0);
+    ASSERT_TRUE(keylist && keylist->value);
+    ASSERT_STREQ(keylist->value, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39");
     free_stringlist(keylist);
 
-    status = export_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", 
+    status = export_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39",
                                    &keydata, &keysize);
-    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
-    TEST_ASSERT(keydata);
-    TEST_ASSERT(keysize > 0);
-    
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_NE(keydata, nullptr);
+    ASSERT_GT(keysize, 0);
+
     free(keydata);
 }
 
@@ -75,30 +85,29 @@ void ExportKeyTests::check_export_key_secret_key() {
     size_t keysize = 0;
     stringlist_t* keylist = NULL;
     PEP_STATUS status = find_keys(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", &keylist);
-    TEST_ASSERT(keylist && keylist->value);
-    TEST_ASSERT(strcmp(keylist->value, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39") == 0);
+    ASSERT_TRUE(keylist && keylist->value);
+    ASSERT_STREQ(keylist->value, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39");
     free_stringlist(keylist);
     keylist = NULL;
-    
+
     bool has_private = false;
     contains_priv_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", &has_private);
-    TEST_ASSERT_MSG(has_private, "Secret key not found.")
-    
-    status = export_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", 
+    ASSERT_TRUE(has_private);
+
+    status = export_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39",
                                    &keydata, &keysize);
-    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
-    TEST_ASSERT(keydata);
-    TEST_ASSERT(keysize > 0);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_NE(keydata, nullptr);
+    ASSERT_GT(keysize, 0);
 
     free(keydata);
     keydata = NULL;
     keysize = 0;
-    status = export_secret_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", 
+    status = export_secret_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39",
                                    &keydata, &keysize);
-    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    ASSERT_EQ(status , PEP_STATUS_OK);
 
     free(keydata);
-    TEST_ASSERT(true);
 }
 
 
@@ -111,18 +120,17 @@ void ExportKeyTests::check_export_key_no_secret_key() {
     size_t keysize = 0;
     stringlist_t* keylist = NULL;
     PEP_STATUS status = find_keys(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", &keylist);
-    TEST_ASSERT(keylist && keylist->value);
-    TEST_ASSERT(strcmp(keylist->value, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39") == 0);
+    ASSERT_TRUE(keylist && keylist->value);
+    ASSERT_STREQ(keylist->value, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39");
 
-    status = export_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", 
+    status = export_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39",
                                    &keydata, &keysize);
-    TEST_ASSERT_MSG(status == PEP_STATUS_OK, tl_status_string(status));
+    ASSERT_EQ(status , PEP_STATUS_OK);
     free(keydata);
     keydata = NULL;
     keysize = 0;
-    status = export_secret_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", 
+    status = export_secret_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39",
                                    &keydata, &keysize);
-    TEST_ASSERT_MSG(status == PEP_KEY_NOT_FOUND, tl_status_string(status));
+    ASSERT_EQ(status , PEP_KEY_NOT_FOUND);
     free(keydata);
-    TEST_ASSERT(true);
 }

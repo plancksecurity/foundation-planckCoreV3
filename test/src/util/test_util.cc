@@ -20,6 +20,23 @@
 
 using namespace std;
 
+std::string _main_test_home_dir;
+
+std::string get_main_test_home_dir() {
+    size_t BUF_MAX_PATHLEN = 4097; 
+    char buf[BUF_MAX_PATHLEN];// Linux max path size...
+
+    if (_main_test_home_dir.empty()) {
+        string curr_wd = getcwd(buf, BUF_MAX_PATHLEN);
+    
+        if (curr_wd.empty())
+            throw std::runtime_error("Error grabbing current working directory"); 
+
+        _main_test_home_dir = curr_wd + "/pEp_test_home";
+    }
+    return _main_test_home_dir;        
+}
+
 PEP_STATUS read_file_and_import_key(PEP_SESSION session, const char* fname) {
     const std::string key = slurp(fname);
     PEP_STATUS status = (key.empty() ? PEP_KEY_NOT_FOUND : PEP_STATUS_OK);
