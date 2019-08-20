@@ -12,12 +12,9 @@
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
-#include <glob.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <regex.h>
 
@@ -25,11 +22,7 @@
 
 #define MAX_PATH 1024
 #ifndef LOCAL_DB_FILENAME
-#define OLD_LOCAL_DB_FILENAME ".pEp_management.db"
-#define OLD_KEYS_DB_FILENAME ".pEp_keys.db"
-#define LOCAL_DB_DIR ".pEp"
-#define LOCAL_DB_FILENAME "management.db"
-#define KEYS_DB_FILENAME "keys.db"
+#define LOCAL_DB_FILENAME ".pEp_management.db"
 #endif
 #define SYSTEM_DB_FILENAME "system.db"
 
@@ -252,190 +245,40 @@ int regnexec(const regex_t* preg, const char* string,
 
 #endif
 
-static char *_stradd(char **first, const char *second)
-{
-    assert(first && *first && second);
-    if (!(first && *first && second))
-        return NULL;
-
-    size_t len1 = strlen(*first);
-    size_t len2 = strlen(second);
-    size_t size = len1 + len2 + 1;
-
-    char *_first = realloc(*first, size);
-    assert(_first);
-    if (!_first)
-        return NULL;
-    *first = _first;
-
-    strlcat(*first, second, size);
-    return *first;
-}
-
-static void _empty(char **p)
-{
-    free(*p);
-    *p = NULL;
-}
-
-static void _move(const char *o, const char *ext, const char *n)
-{
-    assert(o && ext && n);
-    if (!(o && ext && n))
-        return;
-
-    char *_old = strdup(o);
-    assert(_old);
-    if (!_old)
-        return;
-
-    char *r = _stradd(&_old, ext);
-    if (!r) {
-        free(_old);
-        return;
-    }
-
-    char *_new = strdup(n);
-    assert(_new);
-    if (!_new) {
-        free(_old);
-        return;
-    }
-
-    r = _stradd(&_new, ext);
-    if (r)
-        rename(_old, _new);
-
-    free(_old);
-    free(_new);
-}
-
 #ifdef NDEBUG
 const char *unix_local_db(void)
 #else
 const char *unix_local_db(int reset)
 #endif
 {
-    static char *path = NULL;
-    if (path)
-        return path;
+    static char buffer[MAX_PATH];
+    static bool done = false;
 
-    const char *home = NULL;
-#ifndef NDEBUG
-    home = getenv("PEP_HOME");
-    if (!home)
-#endif
-    home = getenv("HOME");
+    #ifdef NDEBUG
+    if (!done)
+    #else
+    if ((!done) || reset)
+    #endif
+    {
+        char *home_env;
+        if((home_env = getenv("HOME"))){
+            char *p = stpncpy(buffer, home_env, MAX_PATH);
+            ssize_t len = MAX_PATH - (p - buffer) - 2;
 
-    path = strdup(home);
-    assert(path);
-    if (!path)
-        return NULL;
-
-    char *path_c = NULL;
-    char *old_path = NULL;
-    char *old_path_c = NULL;
-
-    char *_path = _stradd(&path, "/");   
-    if (!_path)
-        goto error;
-
-    _path = _stradd(&path, LOCAL_DB_DIR);
-    if (!_path)
-        goto error;
-
-    struct stat dir;
-    int r = stat(path, &dir);
-    if (r) {
-        if (errno == ENOENT) {
-            // directory does not yet exist
-            r = mkdir(path, 0700);
-            if (r)
-                goto error;
-        }
-        else {
-            goto error;
-        }
-    }
-
-    _path = _stradd(&path, "/");   
-    if (!_path)
-        goto error;
-
-    // make a copy of this path in case we need to move files
-    path_c = strdup(path);
-    assert(path_c);
-    if (!path_c)
-        goto error;
-
-    _path = _stradd(&path, LOCAL_DB_FILENAME);
-    if (!_path)
-        goto error;
-
-    struct stat file;
-    r = stat(path, &file);
-    if (r) {
-        if (errno == ENOENT) {
-            // we do not have management.db yet, let's test if we need to move
-            // one with the old name
-            old_path = strdup(home);
-            assert(old_path);
-            if (!old_path)
-                goto error;
-
-            char *_old_path = _stradd(&old_path, "/");   
-            if (!_old_path)
-                goto error;
-
-            old_path_c = strdup(old_path);
-            assert(old_path_c);
-            if (!old_path_c)
-                goto error;
-
-            _old_path = _stradd(&old_path, OLD_LOCAL_DB_FILENAME);
-            if (!_old_path)
-                goto error;
-
-            struct stat old;
-            r = stat(old_path, &old);
-            if (r == 0) {
-                // old file existing, new file not yet existing, move
-                rename(old_path, path);
-
-                // if required move associated files, too
-                _move(old_path, "-shm", path);
-                _move(old_path, "-wal", path);
-
-                // move keys database
-                _old_path = _stradd(&old_path_c, OLD_KEYS_DB_FILENAME);
-                if (!_old_path)
-                    goto error;
-
-                _path = _stradd(&path_c, KEYS_DB_FILENAME);
-                if (!_path)
-                    goto error;
-
-                rename(old_path_c, path_c);
-
-                // if required move associated files, too
-                _move(old_path_c, "-shm", path_c);
-                _move(old_path_c, "-wal", path_c);
+            if (len < strlen(LOCAL_DB_FILENAME)) {
+                assert(0);
+                return NULL;
             }
+
+            *p++ = '/';
+            strncpy(p, LOCAL_DB_FILENAME, len);
+            done = true;
+        }else{
+            return NULL;
         }
-        else {
-            goto error;
-        }
+
     }
-    goto the_end;
-
-error:
-    _empty(&path);
-
-the_end:
-    free(path_c);
-    free(old_path);
-    free(old_path_c);
-    return path;
+    return buffer;
 }
 
 static const char *gpg_conf_path = ".gnupg";
