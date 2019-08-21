@@ -24,7 +24,7 @@
 
 // default keyserver
 #ifndef DEFAULT_KEYSERVER
-#define DEFAULT_KEYSERVER "hkp://keys.gnupg.net"
+#define DEFAULT_KEYSERVER "hkps://keys.openpgp.org"
 #endif
 
 // crashdump constants
@@ -73,8 +73,10 @@
 #else
 #define LOCAL_DB unix_local_db(false)
 #endif
-#ifndef SYSTEM_DB
-#define SYSTEM_DB "/usr/share/pEp/system.db"
+#ifdef ANDROID
+#define SYSTEM_DB android_system_db()
+#else
+#define SYSTEM_DB unix_system_db()
 #endif
 #ifndef LIBGPGME
 #define LIBGPGME "libgpgme-pthread.so"
@@ -563,3 +565,4 @@ static inline int Sqlite3_step(sqlite3_stmt* stmt)
     } while (rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
     return rc;
 }
+

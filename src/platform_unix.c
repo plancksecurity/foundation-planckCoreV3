@@ -9,6 +9,7 @@
 #endif
 #endif
 
+#include <stdbool.h>
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
@@ -22,22 +23,16 @@
 #include <regex.h>
 
 #include "platform_unix.h"
+#include "dynamic_api.h"
 
 #define MAX_PATH 1024
 #ifndef LOCAL_DB_FILENAME
 #define OLD_LOCAL_DB_FILENAME ".pEp_management.db"
 #define OLD_KEYS_DB_FILENAME ".pEp_keys.db"
-#define LOCAL_DB_DIR ".pEp"
 #define LOCAL_DB_FILENAME "management.db"
 #define KEYS_DB_FILENAME "keys.db"
 #endif
 #define SYSTEM_DB_FILENAME "system.db"
-
-#ifndef bool
-#define bool int
-#define true 1
-#define false 0
-#endif
 
 #ifdef ANDROID
 #include <uuid.h>
@@ -310,11 +305,7 @@ static void _move(const char *o, const char *ext, const char *n)
     free(_new);
 }
 
-#ifdef NDEBUG
-const char *unix_local_db(void)
-#else
-const char *unix_local_db(int reset)
-#endif
+DYNAMIC_API const char *per_user_directory(void)
 {
     static char *path = NULL;
     if (path)
@@ -326,8 +317,48 @@ const char *unix_local_db(int reset)
     if (!home)
 #endif
     home = getenv("HOME");
+    assert(home);
+    if (!home)
+        return NULL;
 
     path = strdup(home);
+    assert(path);
+    if (!path)
+        return NULL;
+
+    char *_path = _stradd(&path, "/");   
+    if (!_path)
+        goto error;
+
+    _path = _stradd(&path, PER_USER_DIRECTORY);
+    if (!_path)
+        goto error;
+
+    return path;
+
+error:
+    _empty(&path);
+    return NULL;
+}
+
+#ifdef NDEBUG
+const char *unix_local_db(void)
+#else
+const char *unix_local_db(int reset)
+#endif
+{
+    static char *path = NULL;
+#ifdef NDEBUG
+    if (path)
+#else
+    if (path && !reset)
+#endif
+        return path;
+
+    if (!per_user_directory())
+        return NULL;
+
+    path = strdup(per_user_directory());
     assert(path);
     if (!path)
         return NULL;
@@ -335,14 +366,6 @@ const char *unix_local_db(int reset)
     char *path_c = NULL;
     char *old_path = NULL;
     char *old_path_c = NULL;
-
-    char *_path = _stradd(&path, "/");   
-    if (!_path)
-        goto error;
-
-    _path = _stradd(&path, LOCAL_DB_DIR);
-    if (!_path)
-        goto error;
 
     struct stat dir;
     int r = stat(path, &dir);
@@ -358,7 +381,7 @@ const char *unix_local_db(int reset)
         }
     }
 
-    _path = _stradd(&path, "/");   
+    char *_path = _stradd(&path, "/");   
     if (!_path)
         goto error;
 
@@ -378,6 +401,16 @@ const char *unix_local_db(int reset)
         if (errno == ENOENT) {
             // we do not have management.db yet, let's test if we need to move
             // one with the old name
+            const char *home = NULL;
+#ifndef NDEBUG
+            home = getenv("PEP_HOME");
+            if (!home)
+#endif
+            home = getenv("HOME");
+            // we were already checking for HOME existing, so this is only a
+            // safeguard
+            assert(home);
+
             old_path = strdup(home);
             assert(old_path);
             if (!old_path)
@@ -643,3 +676,35 @@ const char *gpg_agent_conf(int reset)
     return NULL;
 }
 #endif
+
+DYNAMIC_API const char *per_machine_directory(void)
+{
+    return PER_MACHINE_DIRECTORY;
+}
+
+const char *unix_system_db(void)
+{
+    static char *path = NULL;
+    if (path)
+        return path;
+
+    path = strdup(per_machine_directory());
+    assert(path);
+    if (!path)
+        return NULL;
+
+    char *_path = _stradd(&path, "/");
+    if (!_path)
+        goto error;
+
+    _path = _stradd(&path, SYSTEM_DB_FILENAME);
+    if (!_path)
+        goto error;
+
+    return path;
+
+error:
+    _empty(&path);
+    return NULL;
+}
+
