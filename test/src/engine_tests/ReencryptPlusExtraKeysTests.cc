@@ -551,6 +551,9 @@ void ReencryptPlusExtraKeysTests::check_efficient_reencrypt() {
     TEST_ASSERT(dec_msg != NULL);
     TEST_ASSERT((flags & PEP_decrypt_flag_src_modified) == 0);
     TEST_ASSERT(enc_msg != NULL);
+    TEST_ASSERT(dec_msg->_sender_fpr);
+    TEST_ASSERT(keys);
+    TEST_ASSERT(strcmp(dec_msg->_sender_fpr, keys->value) != 0);
     
     cout << "PASS: Test 1" << endl << endl;
     
@@ -582,6 +585,10 @@ void ReencryptPlusExtraKeysTests::check_efficient_reencrypt() {
     TEST_ASSERT(dec_msg != NULL);
     TEST_ASSERT((flags & PEP_decrypt_flag_src_modified) == 0);
     TEST_ASSERT(enc_msg != NULL);
+    TEST_ASSERT(dec_msg->_sender_fpr);
+    TEST_ASSERT(keys);
+    TEST_ASSERT(strcmp(dec_msg->_sender_fpr, keys->value) != 0);
+
     
     cout << "PASS: Test 2" << endl << endl;
                                   
@@ -614,7 +621,10 @@ void ReencryptPlusExtraKeysTests::check_efficient_reencrypt() {
     TEST_ASSERT(dec_msg != NULL);
     TEST_ASSERT((flags & PEP_decrypt_flag_src_modified) == 0);
     TEST_ASSERT(enc_msg != NULL);
-    
+    TEST_ASSERT(dec_msg->_sender_fpr);
+    TEST_ASSERT(keys);
+    TEST_ASSERT(strcmp(dec_msg->_sender_fpr, keys->value) != 0);
+        
     cout << "PASS: Test 3" << endl << endl;                              
 
 }
