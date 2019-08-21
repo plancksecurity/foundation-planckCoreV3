@@ -3935,9 +3935,7 @@ static PEP_STATUS _decrypt_message(
     if (reencrypt) {
         if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
             const char* sfpr = NULL;
-            if (!EMPTYSTR(msg->_sender_fpr))
-                sfpr = msg->_sender_fpr;
-            else if (_keylist != NULL && !(EMPTYSTR(_keylist->value)))
+            if (_keylist != NULL && !(EMPTYSTR(_keylist->value)))
                 sfpr = _keylist->value;
              
             if (sfpr && decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
