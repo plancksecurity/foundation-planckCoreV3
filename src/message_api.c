@@ -3390,7 +3390,6 @@ static PEP_STATUS _decrypt_message(
     char *ptext = NULL;
     size_t psize;
     stringlist_t *_keylist = NULL;
-    char* signer_fpr = NULL;
     bool is_pEp_msg = is_a_pEpmessage(src);
     bool myself_read_only = (src->dir == PEP_dir_incoming);
     unsigned int major_ver = 0;
@@ -3935,39 +3934,50 @@ static PEP_STATUS _decrypt_message(
     // 5. Reencrypt if necessary
     if (reencrypt) {
         if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
-            message* reencrypt_msg = NULL;
-            PEP_STATUS reencrypt_status = PEP_CANNOT_REENCRYPT;
-            char* own_id = NULL;
-            status = get_default_own_userid(session, &own_id);
-            if (own_id) {
-                char* target_own_fpr = seek_good_trusted_private_fpr(session,
-                                                                     own_id,
-                                                                     _keylist);
-                if (target_own_fpr) {
-                    pEp_identity* target_id = new_identity(NULL, target_own_fpr, 
-                                                           own_id, NULL);
-                    if (target_id) {
-                        reencrypt_status = encrypt_message_for_self(session, target_id, msg,
-                                                                    extra, &reencrypt_msg, PEP_enc_PGP_MIME,
-                                                                    0);
-                        if (reencrypt_status != PEP_STATUS_OK)
-                            reencrypt_status = PEP_CANNOT_REENCRYPT;
-                        
-                        free_identity(target_id);
+            const char* sfpr = NULL;
+            if (_keylist != NULL && !(EMPTYSTR(_keylist->value)))
+                sfpr = _keylist->value;
+             
+            if (sfpr && decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
+                bool key_is_own_key = false;
+                own_key_is_listed(session, sfpr, &key_is_own_key);
+                
+                if (!key_is_own_key) {
+                    message* reencrypt_msg = NULL;
+                    PEP_STATUS reencrypt_status = PEP_CANNOT_REENCRYPT;
+                    char* own_id = NULL;
+                    status = get_default_own_userid(session, &own_id);
+                    if (own_id) {
+                        char* target_own_fpr = seek_good_trusted_private_fpr(session,
+                                                                             own_id,
+                                                                             _keylist);
+                        if (target_own_fpr) {
+                            pEp_identity* target_id = new_identity(NULL, target_own_fpr, 
+                                                                   own_id, NULL);
+                            if (target_id) {
+                                reencrypt_status = encrypt_message_for_self(session, target_id, msg,
+                                                                            extra, &reencrypt_msg, PEP_enc_PGP_MIME,
+                                                                            0);
+                                if (reencrypt_status != PEP_STATUS_OK)
+                                    reencrypt_status = PEP_CANNOT_REENCRYPT;
+                                
+                                free_identity(target_id);
+                            }
+                            free(target_own_fpr);
+                        }     
+                        free(own_id);
                     }
-                    free(target_own_fpr);
-                }     
-                free(own_id);
-            }
-            free_stringlist(extra); // This was an input variable for us. Keylist is overwritten above.
-            
-            if (reencrypt_status != PEP_CANNOT_REENCRYPT && reencrypt_msg) {
-                message_transfer(src, reencrypt_msg);
-                *flags |= PEP_decrypt_flag_src_modified;
-                free_message(reencrypt_msg);
-            }
-            else
-                decrypt_status = PEP_CANNOT_REENCRYPT;
+                    free_stringlist(extra); // This was an input variable for us. Keylist is overwritten above.
+                    
+                    if (reencrypt_status != PEP_CANNOT_REENCRYPT && reencrypt_msg) {
+                        message_transfer(src, reencrypt_msg);
+                        *flags |= PEP_decrypt_flag_src_modified;
+                        free_message(reencrypt_msg);
+                    }
+                    else
+                        decrypt_status = PEP_CANNOT_REENCRYPT;
+                }
+            }            
         }
     }
         
@@ -3981,7 +3991,6 @@ enomem:
 
 pEp_error:
     free(ptext);
-    free(signer_fpr);
     free_message(msg);
     free_message(reset_msg);
     free_stringlist(_keylist);

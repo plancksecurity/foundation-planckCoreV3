@@ -246,3 +246,34 @@ the_end:
     return status;
 }
 
+DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
+        pEp_identity *ident)
+{
+    assert(session && ident);
+    if (!(session && ident))
+        return PEP_ILLEGAL_VALUE;
+
+    PEP_STATUS status = unset_identity_flags(session, ident, PEP_idf_not_for_sync);
+    if (status)
+        return status;
+
+    status = set_identity_flags(session, ident, PEP_idf_devicegroup);
+    return status;
+}
+
+
+DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
+        pEp_identity *ident)
+{
+    assert(session && ident);
+    if (!(session && ident))
+        return PEP_ILLEGAL_VALUE;
+
+    PEP_STATUS status = unset_identity_flags(session, ident, PEP_idf_devicegroup);
+    if (status)
+        return status;
+
+    status = set_identity_flags(session, ident, PEP_idf_not_for_sync);
+    return status;
+}
+

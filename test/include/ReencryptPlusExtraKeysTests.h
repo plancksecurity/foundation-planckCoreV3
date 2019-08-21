@@ -14,6 +14,7 @@ class ReencryptPlusExtraKeysTests : public EngineTestSessionSuite {
         ReencryptPlusExtraKeysTests(string test_suite, string test_home_dir);
     private:
         void check_reencrypt_plus_extra_keys();
+        void check_efficient_reencrypt();
 };
 
 #endif
