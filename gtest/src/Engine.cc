@@ -36,12 +36,11 @@ Engine::Engine(string engine_home_dir) {
 
 Engine::~Engine() {}
 
-void Engine::prep(string homedir, messageToSend_t mts, inject_sync_event_t ise, 
+void Engine::prep(messageToSend_t mts, inject_sync_event_t ise, 
                   std::vector<std::pair<std::string, std::string>> init_files) {
-    if (homedir.empty())
+    if (engine_home.empty())
         throw std::runtime_error("Engine setup: BAD INITIALISATION. No test home.");
     
-    engine_home = homedir;
     cached_messageToSend = mts;
     cached_inject_sync_event = ise;
 

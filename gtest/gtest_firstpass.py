@@ -1,10 +1,17 @@
 import re 
 import sys
 
+def tb(n):
+    retval = ""
+    for i in range(n):
+        retval = retval + "    "
+    return retval
+        
 fixture_in = False 
 removing_old_constructor = False
 constructor_done = False
 modline = None
+eat_next_line = False;
 filename = sys.argv[1]
 outfile = sys.argv[2]
 
@@ -12,6 +19,9 @@ newfile = open(outfile,'w')
 
 with open(filename) as fp: 
     for line in fp:
+        if (eat_next_line):
+            eat_next_line = False;
+            continue;
         line = line.rstrip();
         
         if not fixture_in:
@@ -34,59 +44,76 @@ with open(filename) as fp:
                     modline = re.sub(r'(.*)Tests::(.*)Tests\(string suitename, string test_home_dir\) :', r'\1Test', line)                
                     
                 if(modline == line):
-                    newfile.write(line)
+                    newfile.write(line + "\n")
                     modline = None
                     continue
                 else:
                     if not (constructor_done):
                         removing_old_constructor = True
                         continue    
+                        
                     #*Tests::*Tests(string suitename, string test_home_dir)
                     # Put in fixture blob
                     # - delete through first }
                     #print(modline) 
+                    newfile.write("#include \"Engine.h\"\n\n")                    
                     newfile.write("#include <gtest/gtest.h>\n\n\n")
                     newfile.write("namespace {\n\n\t//The fixture for " + modline + "\n")
-                    newfile.write("\tclass " + modline + " public ::testing::Test {\n")
-                    newfile.write("\t\tpublic:\n")
-                    newfile.write("\t\t\tEngine engine;\n")
-                    newfile.write("\t\t\tPEP_SESSION session;\n\n")
-                    newfile.write("\t\tprotected:\n")
-                    newfile.write("\t\t\t// You can remove any or all of the following functions if its body\n")
-                    newfile.write("\t\t\t// is empty.\n")
-                    newfile.write("\t\t\t" + modline + "() {\n")
-                    newfile.write("\t\t\t\t// You can do set-up work for each test here.\n")
-                    newfile.write("\t\t\t\ttest_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();\n")
-                    newfile.write("\t\t\t\ttest_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();\n")
-                    newfile.write("\t\t\t\t")
-                    newfile.write("\t\t\t\t")
-                    newfile.write("\t\t\t\t")
-                    newfile.write("\t\t\t\t")                    
-                    newfile.write("\t\t\t}\n\n")
-                    newfile.write("\t\t\t~" + modline + "() override {\n")
-                    newfile.write("\t\t\t\t// You can do clean-up work that doesn't throw exceptions here.\n")
-                    newfile.write("\t\t\t}\n\n")
-                    newfile.write("\t\t\t// If the constructor and destructor are not enough for setting up\n")
-                    newfile.write("\t\t\t// and cleaning up each test, you can define the following methods:\n\n")
-                    newfile.write("\t\t\tvoid SetUp() override {\n")
-                    newfile.write("\t\t\t\t// Code here will be called immediately after the constructor (right\n")
-                    newfile.write("\t\t\t\t// before each test).\n")
-                    newfile.write("\t\t\t}\n\n")
-                    newfile.write("\t\t\tvoid TearDown() override {\n")
-                    newfile.write("\t\t\t\t// Code here will be called immediately after each test (right\n")
-                    newfile.write("\t\t\t}\n\n")
-                    newfile.write("\t\tprivate:\n");
-                    newfile.write("\t\t\tconst char* test_suite_name;\n")
-                    newfile.write("\t\t\tconst char* test_name;\n")                                        
-                    newfile.write("\t\t\t// Objects declared here can be used by all tests in the " + modline + " suite.\n\n")
-                    newfile.write("\t};\n\n")
+                    newfile.write(tb(1) + "class " + modline + " : public ::testing::Test {\n")
+                    newfile.write(tb(2) + "public:\n")
+                    newfile.write(tb(3) + "Engine* engine;\n")
+                    newfile.write(tb(3) + "PEP_SESSION session;\n\n")
+                    newfile.write(tb(2) + "protected:\n")
+                    newfile.write(tb(3) + "// You can remove any or all of the following functions if its body\n")
+                    newfile.write(tb(3) + "// is empty.\n")
+                    newfile.write(tb(3) + "" + modline + "() {\n")
+                    newfile.write(tb(4) + "// You can do set-up work for each test here.\n")
+                    newfile.write(tb(4) + "test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();\n")
+                    newfile.write(tb(4) + "test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();\n")
+                    newfile.write(tb(4) + "string test_path = get_main_test_home_dir() + \"/\" + test_suite_name + \"/\" + test_name;\n")
+                    newfile.write(tb(3) + "}\n\n")
+                    newfile.write(tb(3) + "~" + modline + "() override {\n")
+                    newfile.write(tb(4) + "// You can do clean-up work that doesn't throw exceptions here.\n")
+                    newfile.write(tb(3) + "}\n\n")
+                    newfile.write(tb(3) + "// If the constructor and destructor are not enough for setting up\n")
+                    newfile.write(tb(3) + "// and cleaning up each test, you can define the following methods:\n\n")
+                    newfile.write(tb(3) + "void SetUp() override {\n")
+                    newfile.write(tb(4) + "// Code here will be called immediately after the constructor (right\n")
+                    newfile.write(tb(4) + "// before each test).\n")
+                    newfile.write("\n" + tb(4) + "// Leave this empty if there are no files to copy to the home directory path\n")
+                    newfile.write(tb(4) + "std::vector<std::pair<std::string, std::string>> init_files = std::vector<std::pair<std::string, std::string>>();\n")                                        
+                    newfile.write("\n" + tb(4) + "// Get a new test Engine.\n")                    
+                    newfile.write(tb(4) + "engine = new Engine(test_path);\n");
+                    newfile.write(tb(4) + "ASSERT_NE(engine, nullptr);\n")
+                    newfile.write("\n" + tb(4) + "// Ok, let's initialize test directories etc.\n")                                        
+                    newfile.write(tb(4) + "engine->prep(NULL, NULL, init_files);\n")
+                    newfile.write("\n" + tb(4) + "// Ok, try to start this bugger.\n")                    
+                    newfile.write(tb(4) + "engine->start();\n")                    
+                    newfile.write(tb(4) + "ASSERT_NE(engine->session, nullptr);\n")                    
+                    newfile.write(tb(4) + "session = engine->session;\n") 
+                    newfile.write("\n" + tb(4) + "// Engine is up. Keep on truckin\'\n");                                                            
+                    newfile.write(tb(3) + "}\n\n")
+                    newfile.write(tb(3) + "void TearDown() override {\n")
+                    newfile.write(tb(4) + "// Code here will be called immediately after each test (right\n")
+                    newfile.write(tb(4) + "// before the destructor).\n")   
+                    newfile.write("\n" + tb(4) + "// While it would be nice to have this in the destructor, it can throw exceptions, so it's here.\n")                 
+                    newfile.write(tb(4) + "engine->shut_down();\n")
+                    newfile.write(tb(4) + "delete engine;\n")                    
+                    newfile.write(tb(4) + "engine = NULL;\n")                    
+                    newfile.write(tb(4) + "session = NULL;\n")                    
+                    newfile.write(tb(3) + "}\n\n")
+                    newfile.write(tb(2) + "private:\n");
+                    newfile.write(tb(3) + "const char* test_suite_name;\n")
+                    newfile.write(tb(3) + "const char* test_name;\n")                                        
+                    newfile.write(tb(3) + "// Objects declared here can be used by all tests in the " + modline + " suite.\n\n")
+                    newfile.write(tb(1) + "};\n\n")
                     newfile.write("}  // namespace\n\n\n")
 
                     fixture_in = True
         else:
             #void *Tests::check*() {
             # -> TEST_F(*Test, check*) {
-            modline = re.sub(r'void\s*(.*)Tests::check(.*)\(\);', r'TEST_F(\1Test, check\2);', line)
+            modline = re.sub(r'void\s*(.*)Tests::check(.*)\(\)\s*{', r'TEST_F(\1Test, check\2) {', line)
             if (line != modline):
                 newfile.write(modline + "\n")
                 continue
@@ -215,8 +242,22 @@ with open(filename) as fp:
             if (line != modline):
                 newfile.write(modline + "\n")
                 continue
+
+            #TEST_ASSERT_MSG(slurp_and_import_key(
+            #TEST_ASSERT(slurp_and_import_key(
+            # -> ASSERT_TRUE(slurp_and_import_key(
+            modline = re.sub(r'TEST_ASSERT_MSG\(slurp_and_import_key', r'ASSERT_TRUE(slurp_and_import_key',line)
+            if (line != modline):
+                if not line.endswith(";"):
+                    eat_next_line = True
+                    modline = re.sub(r'\),', r'\)\);', modline);
+                newfile.write(modline + "\n")
+                continue
+            modline = re.sub(r'TEST_ASSERT\(slurp_and_import_key', r'ASSERT_TRUE(slurp_and_import_key',line)
+            if (line != modline):
+                newfile.write(modline + "\n")
+                continue
             
-            # FIXME: either assume ptr or ask about it?
             #TEST_ASSERT_MSG(!<x>, *);
             #TEST_ASSERT(!<x>);
             # -> ASSERT_FALSE(<x>);

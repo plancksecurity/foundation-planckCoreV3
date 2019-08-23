@@ -1,12 +1,27 @@
-// This file is under GNU General Public License 3.0// see LICENSE.txt#include <stdlib.h>#include <cstring>#include <string>#include "test_util.h"#include "pEpEngine.h"#include <gtest/gtest.h>
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
+#include <stdlib.h>
+#include <cstring>
+#include <string>
+
+#include "test_util.h"
+
+#include "pEpEngine.h"
+
+
+
+#include "Engine.h"
+
+#include <gtest/gtest.h>
 
 
 namespace {
 
-    //The fixture for ExportKeyTest
-    class ExportKeyTest public ::testing::Test {
+	//The fixture for ExportKeyTest
+    class ExportKeyTest : public ::testing::Test {
         public:
-            Engine engine;
+            Engine* engine;
             PEP_SESSION session;
 
         protected:
@@ -14,6 +29,9 @@ namespace {
             // is empty.
             ExportKeyTest() {
                 // You can do set-up work for each test here.
+                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();
+                test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
+                string test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
             }
 
             ~ExportKeyTest() override {
@@ -26,19 +44,47 @@ namespace {
             void SetUp() override {
                 // Code here will be called immediately after the constructor (right
                 // before each test).
+
+                // Leave this empty if there are no files to copy to the home directory path
+                std::vector<std::pair<std::string, std::string>> init_files = std::vector<std::pair<std::string, std::string>>();
+
+                // Get a new test Engine.
+                engine = new Engine(test_path);
+                ASSERT_NE(engine, nullptr);
+
+                // Ok, let's initialize test directories etc.
+                engine->prep(NULL, NULL, init_files);
+
+                // Ok, try to start this bugger.
+                engine->start();
+                ASSERT_NE(engine->session, nullptr);
+                session = engine->session;
+
+                // Engine is up. Keep on truckin'
             }
 
             void TearDown() override {
                 // Code here will be called immediately after each test (right
+                // before the destructor).
+
+                // While it would be nice to have this in the destructor, it can throw exceptions, so it's here.
+                engine->shut_down();
+                delete engine;
+                engine = NULL;
+                session = NULL;
             }
 
+        private:
+            const char* test_suite_name;
+            const char* test_name;
             // Objects declared here can be used by all tests in the ExportKeyTest suite.
+
     };
 
 }  // namespace
 
 
-void ExportKeyTests::check_export_key_no_key() {
+TEST_F(ExportKeyTest, check_export_key_no_key) {
     char* keydata = NULL;
     size_t keysize = 0;
     PEP_STATUS status = export_key(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39",
@@ -54,10 +100,9 @@ void ExportKeyTests::check_export_key_no_key() {
 
 }
 
-void ExportKeyTests::check_export_key_pubkey() {
+TEST_F(ExportKeyTest, check_export_key_pubkey) {
     // Own pub key
-    TEST_ASSERT_MSG(slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc"),
-                    "Unable to import test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
+    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc"\)\);
 
     char* keydata = NULL;
     size_t keysize = 0;
@@ -76,11 +121,9 @@ void ExportKeyTests::check_export_key_pubkey() {
     free(keydata);
 }
 
-void ExportKeyTests::check_export_key_secret_key() {
-    TEST_ASSERT_MSG(slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc"),
-                    "Unable to import test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
-    TEST_ASSERT_MSG(slurp_and_import_key(session, "test_keys/priv/pep-test-bob-0xC9C2EE39_priv.asc"),
-                    "Unable to import test_keys/priv/pep-test-bob-0xC9C2EE39_priv.asc");
+TEST_F(ExportKeyTest, check_export_key_secret_key) {
+    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc"\)\);
+    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/priv/pep-test-bob-0xC9C2EE39_priv.asc"\)\);
     char* keydata = NULL;
     size_t keysize = 0;
     stringlist_t* keylist = NULL;
@@ -111,10 +154,9 @@ void ExportKeyTests::check_export_key_secret_key() {
 }
 
 
-void ExportKeyTests::check_export_key_no_secret_key() {
+TEST_F(ExportKeyTest, check_export_key_no_secret_key) {
     // Own pub key
-    TEST_ASSERT_MSG(slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc"),
-                    "Unable to import test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
+    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc"\)\);
 
     char* keydata = NULL;
     size_t keysize = 0;
