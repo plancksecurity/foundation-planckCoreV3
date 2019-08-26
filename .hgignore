@@ -78,11 +78,8 @@ sync/.codegen
 sync/.statemachines
 sync/.copy
 test/msg_2.0.asc
-test/*Tests
 test/*.txt
 lldb-history
 *.swo
-test/.scripts
-test/.suitemaker
-gtest/EngineTests
-gtest/googletest
+test/EngineTests
+test/googletest
