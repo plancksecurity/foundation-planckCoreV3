@@ -1944,7 +1944,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         }
         else {
             // hide subject
-            if (enc_format != PEP_enc_inline && !session->unencrypted_subject) {
+            if (enc_format != PEP_enc_inline /*&& !session->unencrypted_subject */) {
                 status = replace_subject(_src);
                 if (status == PEP_OUT_OF_MEMORY)
                     goto enomem;
@@ -2318,22 +2318,25 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
-     if (msg && msg->shortmsg == NULL) {
-         msg->shortmsg = _pEp_subj_copy();
-         assert(msg->shortmsg);
-         if (msg->shortmsg == NULL)
-             goto enomem;
-     }
+    if (msg && msg->shortmsg == NULL) {
+        if (session->unencrypted_subject && src->shortmsg)
+            msg->shortmsg = strdup(src->shortmsg);
+        else
+            msg->shortmsg = _pEp_subj_copy();
+        assert(msg->shortmsg);
+        if (msg->shortmsg == NULL)
+            goto enomem;
+    }
 
-     if (msg) {
-         if (_src->id) {
-             msg->id = strdup(_src->id);
-             assert(msg->id);
-             if (msg->id == NULL)
-                 goto enomem;
-         }
-         decorate_message(msg, PEP_rating_undefined, NULL, true, true);
-     }
+    if (msg) {
+        if (_src->id) {
+            msg->id = strdup(_src->id);
+            assert(msg->id);
+            if (msg->id == NULL)
+                goto enomem;
+        }
+        decorate_message(msg, PEP_rating_undefined, NULL, true, true);
+    }
 
     *dst = msg;
     
