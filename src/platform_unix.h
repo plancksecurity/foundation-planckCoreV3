@@ -23,11 +23,7 @@
 #endif
 
 #ifndef PER_MACHINE_DIRECTORY
-#ifdef __APPLE__
-#define PER_MACHINE_DIRECTORY "/usr/share/pEp"
-#else
 #define PER_MACHINE_DIRECTORY "/usr/local/share/pEp"
-#endif
 #endif
 
 
