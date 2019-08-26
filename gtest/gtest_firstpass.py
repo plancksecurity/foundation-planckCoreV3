@@ -70,7 +70,7 @@ with open(filename) as fp:
                     newfile.write(tb(4) + "// You can do set-up work for each test here.\n")
                     newfile.write(tb(4) + "test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();\n")
                     newfile.write(tb(4) + "test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();\n")
-                    newfile.write(tb(4) + "string test_path = get_main_test_home_dir() + \"/\" + test_suite_name + \"/\" + test_name;\n")
+                    newfile.write(tb(4) + "test_path = get_main_test_home_dir() + \"/\" + test_suite_name + \"/\" + test_name;\n")
                     newfile.write(tb(3) + "}\n\n")
                     newfile.write(tb(3) + "~" + modline + "() override {\n")
                     newfile.write(tb(4) + "// You can do clean-up work that doesn't throw exceptions here.\n")
@@ -96,7 +96,6 @@ with open(filename) as fp:
                     newfile.write(tb(3) + "void TearDown() override {\n")
                     newfile.write(tb(4) + "// Code here will be called immediately after each test (right\n")
                     newfile.write(tb(4) + "// before the destructor).\n")   
-                    newfile.write("\n" + tb(4) + "// While it would be nice to have this in the destructor, it can throw exceptions, so it's here.\n")                 
                     newfile.write(tb(4) + "engine->shut_down();\n")
                     newfile.write(tb(4) + "delete engine;\n")                    
                     newfile.write(tb(4) + "engine = NULL;\n")                    
@@ -104,7 +103,8 @@ with open(filename) as fp:
                     newfile.write(tb(3) + "}\n\n")
                     newfile.write(tb(2) + "private:\n");
                     newfile.write(tb(3) + "const char* test_suite_name;\n")
-                    newfile.write(tb(3) + "const char* test_name;\n")                                        
+                    newfile.write(tb(3) + "const char* test_name;\n")                                                            
+                    newfile.write(tb(3) + "string test_path;\n") 
                     newfile.write(tb(3) + "// Objects declared here can be used by all tests in the " + modline + " suite.\n\n")
                     newfile.write(tb(1) + "};\n\n")
                     newfile.write("}  // namespace\n\n\n")
@@ -250,7 +250,7 @@ with open(filename) as fp:
             if (line != modline):
                 if not line.endswith(";"):
                     eat_next_line = True
-                    modline = re.sub(r'\),', r'\)\);', modline);
+                    modline = re.sub(r'\),', r'));', modline);
                 newfile.write(modline + "\n")
                 continue
             modline = re.sub(r'TEST_ASSERT\(slurp_and_import_key', r'ASSERT_TRUE(slurp_and_import_key',line)

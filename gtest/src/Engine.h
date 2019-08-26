@@ -17,9 +17,10 @@ class Engine {
         void prep(messageToSend_t mts, inject_sync_event_t ise, std::vector<std::pair<std::string, std::string>> init_files);
         void start();
         void shut_down();
+
+        PEP_SESSION session;
         
     protected:
-        PEP_SESSION session;
         string engine_home;
         string real_home;
         string prev_pgp_home;

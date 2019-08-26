@@ -58,10 +58,10 @@ void Engine::prep(messageToSend_t mts, inject_sync_event_t ise,
         }
     }
     else {
-        int errchk = mkdir(engine_home.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-        cout << errchk << endl;
+        // Look, we're not creating all of these dirs...
+        const int errchk = system((string("mkdir -p ") + engine_home).c_str());
         if (errchk != 0)
-            throw std::runtime_error("ENGINE SETUP: Error creating a test directory.");
+            throw std::runtime_error("ENGINE SETUP: Error creating a test directory.");        
     }
 
     process_file_queue(engine_home, init_files);
@@ -69,7 +69,7 @@ void Engine::prep(messageToSend_t mts, inject_sync_event_t ise,
     // We will set homedirs etc outside this function. Right now, we're just making sure we can.
     // Let's make sure we're not trying to run it under the real current home, however.
     
-    if (engine_home.compare(real_home) != 0 || engine_home.compare(real_home + "/") != 0)
+    if (engine_home.compare(real_home) == 0 || engine_home.compare(real_home + "/") == 0)
         throw std::runtime_error("ENGINE SETUP: Cowardly refusing to set up for playing in what looks like the real home directory.");
     
 }

@@ -31,7 +31,7 @@ namespace {
                 // You can do set-up work for each test here.
                 test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();
                 test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-                string test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
+                test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
             }
 
             ~ExportKeyTest() override {
@@ -77,6 +77,7 @@ namespace {
         private:
             const char* test_suite_name;
             const char* test_name;
+            string test_path;
             // Objects declared here can be used by all tests in the ExportKeyTest suite.
 
     };
@@ -102,7 +103,7 @@ TEST_F(ExportKeyTest, check_export_key_no_key) {
 
 TEST_F(ExportKeyTest, check_export_key_pubkey) {
     // Own pub key
-    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc"\)\);
+    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc"));
 
     char* keydata = NULL;
     size_t keysize = 0;
@@ -122,8 +123,8 @@ TEST_F(ExportKeyTest, check_export_key_pubkey) {
 }
 
 TEST_F(ExportKeyTest, check_export_key_secret_key) {
-    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc"\)\);
-    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/priv/pep-test-bob-0xC9C2EE39_priv.asc"\)\);
+    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc"));
+    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/priv/pep-test-bob-0xC9C2EE39_priv.asc"));
     char* keydata = NULL;
     size_t keysize = 0;
     stringlist_t* keylist = NULL;
@@ -156,7 +157,7 @@ TEST_F(ExportKeyTest, check_export_key_secret_key) {
 
 TEST_F(ExportKeyTest, check_export_key_no_secret_key) {
     // Own pub key
-    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc"\)\);
+    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc"));
 
     char* keydata = NULL;
     size_t keysize = 0;

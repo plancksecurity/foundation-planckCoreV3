@@ -84,3 +84,5 @@ lldb-history
 *.swo
 test/.scripts
 test/.suitemaker
+gtest/EngineTests
+gtest/googletest

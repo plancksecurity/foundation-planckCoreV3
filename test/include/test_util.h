@@ -16,6 +16,8 @@ bool file_exists(std::string filename);
 
 extern std::string _main_test_home_dir;
 
+std::string get_main_test_home_dir();
+
 typedef enum _pEp_test_ident_preset {
     ALICE,
     APPLE,
