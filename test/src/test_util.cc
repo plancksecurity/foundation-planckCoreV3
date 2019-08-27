@@ -10,6 +10,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <iostream>
 #include <stdexcept>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -712,6 +713,8 @@ pEp_error:
     return status;
 }
 
+#endif
+
 PEP_STATUS set_up_preset(PEP_SESSION session,
                          pEp_test_ident_preset preset_name,
                          bool set_ident, 
@@ -961,4 +964,11 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
         
     return status;
 }
+
+int NullBuffer::overflow(int c) {
+    return c;
+}
+
+#ifndef DEBUG_OUTPUT
+std::ostream output_stream(new NullBuffer());
 #endif

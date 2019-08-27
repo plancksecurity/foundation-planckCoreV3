@@ -91,7 +91,7 @@ TEST_F(DecryptAttachPrivateKeyUntrustedTest, check_decrypt_attach_private_key_un
 
     const char* own_uid = PEP_OWN_USERID;
 
-    cout << "Importing keys..." << endl;
+    output_stream << "Importing keys..." << endl;
 
     string input_key;
     const char* main_addr = "priv-key-import-test-main@darthmama.cool";
@@ -117,10 +117,10 @@ TEST_F(DecryptAttachPrivateKeyUntrustedTest, check_decrypt_attach_private_key_un
     bool has_priv = false;
     // status = contains_priv_key(session, fpr_same_addr_same_uid, &has_priv);
     // if (status == PEP_STATUS_OK && has_priv) {
-    //     cout << "SORRY, have to delete keys here to run test correctly..." << endl;
+    //     output_stream << "SORRY, have to delete keys here to run test correctly..." << endl;
     //     status = delete_keypair(session, fpr_same_addr_same_uid);
     //     if (status == PEP_STATUS_OK)
-    //         cout << "Successfully deleted keypair for " << fpr_same_addr_same_uid << " - will now import the public key only" << endl;
+    //         output_stream << "Successfully deleted keypair for " << fpr_same_addr_same_uid << " - will now import the public key only" << endl;
     // }
 
     // key with same address and user_id
@@ -130,33 +130,33 @@ TEST_F(DecryptAttachPrivateKeyUntrustedTest, check_decrypt_attach_private_key_un
     ASSERT_EQ(status, PEP_TEST_KEY_IMPORT_SUCCESS);
 
 
-    cout << "Setting up own identity with default key " << fpr_main_me << endl;
+    output_stream << "Setting up own identity with default key " << fpr_main_me << endl;
     // Own identity with default key etc
     main_me = new_identity(main_addr, fpr_main_me, own_uid, "PrivateKey Import Test");
     status = set_own_key(session, main_me, fpr_main_me);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
     ASSERT_STREQ(main_me->fpr, fpr_main_me);
-    cout << "Done!" << endl << endl;
+    output_stream << "Done!" << endl << endl;
 
-    cout << "Setting up sender identities and resetting key trust." << endl;
-    cout << "Same address, same user_id - address: " << main_addr << ", user_id: " << own_uid << ", fpr: " << fpr_same_addr_same_uid << endl;
+    output_stream << "Setting up sender identities and resetting key trust." << endl;
+    output_stream << "Same address, same user_id - address: " << main_addr << ", user_id: " << own_uid << ", fpr: " << fpr_same_addr_same_uid << endl;
     same_addr_same_uid = new_identity(main_addr, fpr_same_addr_same_uid, own_uid, "PrivateKey Import Test");
-    ASSERT_EQ(status == PEP_STATUS_OK || status, PEP_CANNOT_FIND_IDENTITY);
+    ASSERT_TRUE(status == PEP_STATUS_OK || status == PEP_CANNOT_FIND_IDENTITY);
     ASSERT_NE(same_addr_same_uid->comm_type & PEP_ct_confirmed, PEP_ct_confirmed);
 
     status = key_reset_trust(session, same_addr_same_uid);
 
-    cout << "Done!" << endl << endl;
+    output_stream << "Done!" << endl << endl;
 
-    cout << "Reading in message..." << endl;
+    output_stream << "Reading in message..." << endl;
 
     string encoded_text = slurp("test_mails/priv_key_attach.eml");
 
-    cout << "Starting tests..." << endl;
+    output_stream << "Starting tests..." << endl;
     // Case 1:
     // Same address, same user_id, untrusted
-    cout << "Same address, same user_id, untrusted" << endl;
+    output_stream << "Same address, same user_id, untrusted" << endl;
     char* decrypted_text = NULL;
     stringlist_t* keylist_used = NULL;
     PEP_rating rating;
@@ -164,7 +164,7 @@ TEST_F(DecryptAttachPrivateKeyUntrustedTest, check_decrypt_attach_private_key_un
     char* modified_src = NULL;
 
     status = get_trust(session, same_addr_same_uid);
-    cout << tl_ct_string(same_addr_same_uid->comm_type) << endl;
+    output_stream << tl_ct_string(same_addr_same_uid->comm_type) << endl;
 
     ASSERT_NE(same_addr_same_uid->comm_type & PEP_ct_confirmed, PEP_ct_confirmed);
 
@@ -177,12 +177,12 @@ TEST_F(DecryptAttachPrivateKeyUntrustedTest, check_decrypt_attach_private_key_un
     status = get_trust(session, same_addr_same_uid);
     ASSERT_EQ(same_addr_same_uid->comm_type, PEP_ct_pEp_unconfirmed);
 
-    cout << "Case 1 Status: " << tl_status_string(status) << endl;
-    cout << "Private key is not trusted for " << same_addr_same_uid->fpr << ", as desired, as the public key was not trusted." << endl;
-    cout << "PASS!" << endl;
+    output_stream << "Case 1 Status: " << tl_status_string(status) << endl;
+    output_stream << "Private key is not trusted for " << same_addr_same_uid->fpr << ", as desired, as the public key was not trusted." << endl;
+    output_stream << "PASS!" << endl;
 
     // Case 2:
-    cout << decrypted_text << endl;
+    output_stream << decrypted_text << endl;
 
     status = key_reset_trust(session, main_me);
     status = key_reset_trust(session, same_addr_same_uid);

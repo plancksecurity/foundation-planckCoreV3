@@ -134,21 +134,21 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
     status = import_key(session, pub_extra_key_1.c_str(), pub_extra_key_1.length(), NULL);
     ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
 
-    cout << "Keys imported." << endl;
+    output_stream << "Keys imported." << endl;
 
     pEp_identity* me_recip_1 = new_identity("reencrypt_recip@darthmama.cool", fpr_own_recip_key, PEP_OWN_USERID, "Me Recipient");
     pEp_identity* me_recip_2 = new_identity("reencrypt_recip_numero_deux_test@darthmama.org", fpr_own_recip_2_key, PEP_OWN_USERID, "Me Recipient");
 
-    cout << "Inserting own identities and keys into database." << endl;
+    output_stream << "Inserting own identities and keys into database." << endl;
     status = set_own_key(session, me_recip_2, fpr_own_recip_2_key);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    cout << "Done: inserting own identities and keys into database." << endl;
+    output_stream << "Done: inserting own identities and keys into database." << endl;
 
     const string to_reencrypt_from_enigmail = slurp("test_mails/reencrypt_sent_by_enigmail.eml");
     const string to_reencrypt_from_enigmail_BCC = slurp("test_mails/reencrypt_BCC_sent_by_enigmail.eml");
     const string to_reencrypt_from_pEp = slurp("test_mails/reencrypt_encrypted_through_pEp.eml");
 
-    cout << endl << "Case 1a: Calling MIME_decrypt_message with reencrypt flag set on message sent from enigmail for recip 2 with no extra keys." << endl;
+    output_stream << endl << "Case 1a: Calling MIME_decrypt_message with reencrypt flag set on message sent from enigmail for recip 2 with no extra keys." << endl;
 
     char* decrypted_text = nullptr;
 
@@ -169,21 +169,21 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
                                   &flags,
                                   &modified_src);
 
-    cout << decrypted_text << endl;
+    output_stream << decrypted_text << endl;
 
-    cout << "Status is " << tl_status_string(status) << endl;
+    output_stream << "Status is " << tl_status_string(status) << endl;
     ASSERT_NE(decrypted_text , nullptr);
     ASSERT_EQ(flags & PEP_decrypt_flag_src_modified, 0);
 
     ASSERT_EQ(modified_src , nullptr);
-    //cout << modified_src << endl;
+    //output_stream << modified_src << endl;
 
     free(decrypted_text);
     decrypted_text = nullptr;
 
-    cout << "Case 1a: PASS" << endl << endl;
+    output_stream << "Case 1a: PASS" << endl << endl;
 
-    cout << "Case 1b: Calling MIME_decrypt_message with reencrypt flag set on message sent from enigmail for recip 2 extra keys." << endl;
+    output_stream << "Case 1b: Calling MIME_decrypt_message with reencrypt flag set on message sent from enigmail for recip 2 extra keys." << endl;
 
     // In: extra keys; Out: keys that were used to encrypt this.
     free_stringlist(keys);
@@ -201,8 +201,8 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
                                   &flags,
                                   &modified_src);
 
-    cout << decrypted_text << endl;
-    cout << "Status is " << tl_status_string(status) << endl;
+    output_stream << decrypted_text << endl;
+    output_stream << "Status is " << tl_status_string(status) << endl;
 
 
     ASSERT_NE(decrypted_text , nullptr);
@@ -211,7 +211,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
     free(decrypted_text);
     decrypted_text = nullptr;
 
-    cout << "CHECK: Decrypting to see what keys it was encrypted for." << endl;
+    output_stream << "CHECK: Decrypting to see what keys it was encrypted for." << endl;
 
     free(decrypted_text);
     decrypted_text = nullptr;
@@ -227,7 +227,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
                                   &flags,
                                   &throwaway);
 
-    cout << "keys used:\n";
+    output_stream << "keys used:\n";
 
     bool own_key_found = false;
     bool extra_key_0_found = false;
@@ -241,36 +241,36 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
     for (stringlist_t* kl = keys; kl && kl->value; kl = kl->next, i++)
     {
         if (i == 0) {
-              cout << "Signed by " << (strcasecmp("", kl->value) == 0 ? "NOBODY" : kl->value) << endl;
+              output_stream << "Signed by " << (strcasecmp("", kl->value) == 0 ? "NOBODY" : kl->value) << endl;
               ASSERT_EQ(strcasecmp(fpr_own_recip_2_key,kl->value) , 0);
         }
         else {
             if (strcasecmp(fpr_own_recip_2_key, kl->value) == 0) {
-                cout << "Encrypted for us." << endl;
+                output_stream << "Encrypted for us." << endl;
                 own_key_found = true;
             }
             else if (strcasecmp(fpr_pub_extra_key_0, kl->value) == 0) {
-                cout << "Encrypted for extra key 0." << endl;
+                output_stream << "Encrypted for extra key 0." << endl;
                 extra_key_0_found = true;
             }
             else if (strcasecmp(fpr_pub_extra_key_1, kl->value) == 0) {
-                cout << "Encrypted for extra key 1." << endl;
+                output_stream << "Encrypted for extra key 1." << endl;
                 extra_key_1_found = true;
             }
             else {
-                cout << "FAIL: Encrypted for " << kl->value << ", which it should not be." << endl;
+                output_stream << "FAIL: Encrypted for " << kl->value << ", which it should not be." << endl;
                 ASSERT_TRUE(false);
             }
-            cout << "\t " << kl->value << endl;
+            output_stream << "\t " << kl->value << endl;
         }
         ASSERT_LT(i , 4);
     }
     ASSERT_TRUE(own_key_found && extra_key_0_found && extra_key_1_found);
-    cout << "Message was encrypted for all the keys it should be, and none it should not!" << endl;
+    output_stream << "Message was encrypted for all the keys it should be, and none it should not!" << endl;
 
-    cout << "Case 1b: PASS" << endl << endl;
+    output_stream << "Case 1b: PASS" << endl << endl;
 
-    cout << "Case 2a: Calling MIME_decrypt_message with reencrypt flag set on message sent with recip 2 in BCC from enigmail with no extra keys." << endl;
+    output_stream << "Case 2a: Calling MIME_decrypt_message with reencrypt flag set on message sent with recip 2 in BCC from enigmail with no extra keys." << endl;
 
     free(modified_src);
     modified_src = NULL;
@@ -289,8 +289,8 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
                                   &flags,
                                   &modified_src);
 
-    cout << (decrypted_text ? decrypted_text : "No decrypted text") << endl;
-    cout << "Status is " << tl_status_string(status) << endl;
+    output_stream << (decrypted_text ? decrypted_text : "No decrypted text") << endl;
+    output_stream << "Status is " << tl_status_string(status) << endl;
 
     ASSERT_NE(decrypted_text , nullptr);
     ASSERT_EQ(flags & PEP_decrypt_flag_src_modified, 0);
@@ -300,9 +300,9 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
     decrypted_text = nullptr;
 
 
-    cout << "Case 2a: PASS" << endl << endl;
+    output_stream << "Case 2a: PASS" << endl << endl;
 
-    cout << "Case 2b: Calling MIME_decrypt_message with reencrypt flag set on message sent with recip 2 in BCC from enigmail with extra keys." << endl;
+    output_stream << "Case 2b: Calling MIME_decrypt_message with reencrypt flag set on message sent with recip 2 in BCC from enigmail with extra keys." << endl;
 
     free_stringlist(keys);
     keys = new_stringlist(fpr_pub_extra_key_0);
@@ -319,8 +319,8 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
                                   &flags,
                                   &modified_src);
 
-    cout << decrypted_text << endl;
-    cout << "Status is " << tl_status_string(status) << endl;
+    output_stream << decrypted_text << endl;
+    output_stream << "Status is " << tl_status_string(status) << endl;
 
     ASSERT_NE(decrypted_text , nullptr);
     ASSERT_NE(modified_src , nullptr);
@@ -328,7 +328,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
     free(decrypted_text);
     decrypted_text = nullptr;
 
-    cout << "CHECK: Decrypting to see what keys it was encrypted for." << endl;
+    output_stream << "CHECK: Decrypting to see what keys it was encrypted for." << endl;
 
     free(decrypted_text);
     decrypted_text = nullptr;
@@ -344,7 +344,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
                                   &flags,
                                   &throwaway);
 
-    cout << "keys used:\n";
+    output_stream << "keys used:\n";
 
     own_key_found = false;
     extra_key_0_found = false;
@@ -358,37 +358,37 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
     for (stringlist_t* kl = keys; kl && kl->value; kl = kl->next, i++)
     {
         if (i == 0) {
-              cout << "Signed by " << (strcasecmp("", kl->value) == 0 ? "NOBODY" : kl->value) << endl;
+              output_stream << "Signed by " << (strcasecmp("", kl->value) == 0 ? "NOBODY" : kl->value) << endl;
               // ASSERT_EQ(strcasecmp(fpr_own_recip_2_key,kl->value) , 0);
         }
         else {
             if (strcasecmp(fpr_own_recip_2_key, kl->value) == 0) {
-                cout << "Encrypted for us." << endl;
+                output_stream << "Encrypted for us." << endl;
                 own_key_found = true;
             }
             else if (strcasecmp(fpr_pub_extra_key_0, kl->value) == 0) {
-                cout << "Encrypted for extra key 0." << endl;
+                output_stream << "Encrypted for extra key 0." << endl;
                 extra_key_0_found = true;
             }
             else if (strcasecmp(fpr_pub_extra_key_1, kl->value) == 0) {
-                cout << "Encrypted for extra key 1." << endl;
+                output_stream << "Encrypted for extra key 1." << endl;
                 extra_key_1_found = true;
             }
             else {
-                cout << "FAIL: Encrypted for " << kl->value << ", which it should not be." << endl;
+                output_stream << "FAIL: Encrypted for " << kl->value << ", which it should not be." << endl;
                 // TEST_ASSERT_MSG(false, "Encrypted for someone it shouldn't have been.");
             }
-            cout << "\t " << kl->value << endl;
+            output_stream << "\t " << kl->value << endl;
         }
         ASSERT_LT(i , 4);
     }
 //        TEST_ASSERT_MSG(own_key_found && extra_key_0_found && extra_key_1_found, "Not encrypted for all desired keys.");
 
-    cout << "Message was encrypted for all the keys it should be, and none it should not!" << endl;
+    output_stream << "Message was encrypted for all the keys it should be, and none it should not!" << endl;
 
-    cout << "Case 2b: PASS" << endl << endl;
+    output_stream << "Case 2b: PASS" << endl << endl;
 
-    cout << "Case 3a: Calling MIME_decrypt_message with reencrypt flag set on message generated by pEp (message 2.0) with no extra keys." << endl;
+    output_stream << "Case 3a: Calling MIME_decrypt_message with reencrypt flag set on message generated by pEp (message 2.0) with no extra keys." << endl;
     free(modified_src);
     modified_src = NULL;
 
@@ -409,8 +409,8 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
                                   &flags,
                                   &modified_src);
 
-    cout << decrypted_text << endl;
-    cout << "Status is " << tl_status_string(status) << endl;
+    output_stream << decrypted_text << endl;
+    output_stream << "Status is " << tl_status_string(status) << endl;
 
     ASSERT_NE(decrypted_text , nullptr);
     ASSERT_EQ(flags & PEP_decrypt_flag_src_modified, 0);
@@ -419,10 +419,10 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
     free(decrypted_text);
     decrypted_text = nullptr;
 
-    cout << "Case 3a: PASS" << endl << endl;
+    output_stream << "Case 3a: PASS" << endl << endl;
 
 
-    cout << "Case 3b: Calling MIME_decrypt_message with reencrypt flag set on message generated by pEp (message 2.0) with extra keys." << endl;
+    output_stream << "Case 3b: Calling MIME_decrypt_message with reencrypt flag set on message generated by pEp (message 2.0) with extra keys." << endl;
 
     free_stringlist(keys);
     keys = new_stringlist(fpr_pub_extra_key_0);
@@ -439,15 +439,15 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
                                   &flags,
                                   &modified_src);
 
-    cout << decrypted_text << endl;
-    cout << "Status is " << tl_status_string(status) << endl;
+    output_stream << decrypted_text << endl;
+    output_stream << "Status is " << tl_status_string(status) << endl;
 
     ASSERT_NE(decrypted_text , nullptr);
 
     free(decrypted_text);
     decrypted_text = nullptr;
 
-    cout << "CHECK: Decrypting to see what keys it was encrypted for." << endl;
+    output_stream << "CHECK: Decrypting to see what keys it was encrypted for." << endl;
 
     free(decrypted_text);
     decrypted_text = nullptr;
@@ -463,7 +463,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
                                   &flags,
                                   &throwaway);
 
-    cout << "keys used:\n";
+    output_stream << "keys used:\n";
 
     own_key_found = false;
     extra_key_0_found = false;
@@ -478,34 +478,34 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
     for (stringlist_t* kl = keys; kl && kl->value; kl = kl->next, i++)
     {
         if (i == 0) {
-              cout << "Signed by " << (strcasecmp("", kl->value) == 0 ? "NOBODY" : kl->value) << endl;
+              output_stream << "Signed by " << (strcasecmp("", kl->value) == 0 ? "NOBODY" : kl->value) << endl;
 //              TEST_ASSERT_MSG(strcasecmp(fpr_own_recip_key,kl->value) == 0);
         }
         else {
             if (strcasecmp(fpr_own_recip_key, kl->value) == 0) {
-                cout << "Encrypted for us." << endl;
+                output_stream << "Encrypted for us." << endl;
                 own_key_found = true;
             }
             else if (strcasecmp(fpr_pub_extra_key_0, kl->value) == 0) {
-                cout << "Encrypted for extra key 0." << endl;
+                output_stream << "Encrypted for extra key 0." << endl;
                 extra_key_0_found = true;
             }
             else if (strcasecmp(fpr_pub_extra_key_1, kl->value) == 0) {
-                cout << "Encrypted for extra key 1." << endl;
+                output_stream << "Encrypted for extra key 1." << endl;
                 extra_key_1_found = true;
             }
             else {
-                cout << "FAIL: Encrypted for " << kl->value << ", which it should not be." << endl;
+                output_stream << "FAIL: Encrypted for " << kl->value << ", which it should not be." << endl;
 //                TEST_ASSERT_MSG(false);
             }
-            cout << "\t " << kl->value << endl;
+            output_stream << "\t " << kl->value << endl;
         }
         ASSERT_LT(i , 4);
     }
 //    TEST_ASSERT_MSG(own_key_found && extra_key_0_found && extra_key_1_found);
-    cout << "Message was encrypted for all the keys it should be, and none it should not!" << endl;
+    output_stream << "Message was encrypted for all the keys it should be, and none it should not!" << endl;
 
-    cout << "Case 3b: PASS" << endl << endl;
+    output_stream << "Case 3b: PASS" << endl << endl;
 
 }
 
@@ -555,21 +555,21 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt) {
     status = import_key(session, pub_extra_key_1.c_str(), pub_extra_key_1.length(), NULL);
     ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
 
-    cout << "Keys imported." << endl;
+    output_stream << "Keys imported." << endl;
 
     pEp_identity* me_recip_1 = new_identity("reencrypt_recip@darthmama.cool", fpr_own_recip_key, PEP_OWN_USERID, "Me Recipient");
     pEp_identity* me_recip_2 = new_identity("reencrypt_recip_numero_deux_test@darthmama.org", fpr_own_recip_2_key, PEP_OWN_USERID, "Me Recipient");
 
-    cout << "Inserting own identities and keys into database." << endl;
+    output_stream << "Inserting own identities and keys into database." << endl;
     status = set_own_key(session, me_recip_2, fpr_own_recip_2_key);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    cout << "Done: inserting own identities and keys into database." << endl;
+    output_stream << "Done: inserting own identities and keys into database." << endl;
 
     const string to_reencrypt_from_enigmail = slurp("test_mails/reencrypt_sent_by_enigmail.eml");
     const string to_reencrypt_from_enigmail_BCC = slurp("test_mails/reencrypt_BCC_sent_by_enigmail.eml");
     const string to_reencrypt_from_pEp = slurp("test_mails/reencrypt_encrypted_through_pEp.eml");
 
-    cout << endl << "Case 1a: Calling MIME_decrypt_message with reencrypt flag set on message sent from enigmail for recip 2 with no extra keys." << endl;
+    output_stream << endl << "Case 1a: Calling MIME_decrypt_message with reencrypt flag set on message sent from enigmail for recip 2 with no extra keys." << endl;
 
     message* dec_msg = NULL;
     message* enc_msg = NULL;
@@ -581,7 +581,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt) {
 
     flags = PEP_decrypt_flag_untrusted_server;
 
-    cout << "Case 1: Calling MIME_decrypt_message with reencrypt flag set on message sent from enigmail for recip 2 extra keys." << endl;
+    output_stream << "Case 1: Calling MIME_decrypt_message with reencrypt flag set on message sent from enigmail for recip 2 extra keys." << endl;
 
     // In: extra keys; Out: keys that were used to encrypt this.
     keys = new_stringlist(fpr_pub_extra_key_0);
@@ -600,7 +600,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt) {
     ASSERT_NE(flags & PEP_decrypt_flag_src_modified, 0);
     ASSERT_NE(enc_msg , nullptr);
 
-    cout << "CHECK: Do it again, and make sure there's no modified source!" << endl;
+    output_stream << "CHECK: Do it again, and make sure there's no modified source!" << endl;
 
     free_message(dec_msg);
     dec_msg = NULL;
@@ -615,9 +615,9 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt) {
     ASSERT_NE(keys, nullptr);
     ASSERT_STRNE(dec_msg->_sender_fpr, keys->value);
 
-    cout << "PASS: Test 1" << endl << endl;
+    output_stream << "PASS: Test 1" << endl << endl;
 
-    cout << "Case 2: Calling MIME_decrypt_message with reencrypt flag set on message sent with recip 2 in BCC from enigmail with extra keys." << endl;
+    output_stream << "Case 2: Calling MIME_decrypt_message with reencrypt flag set on message sent with recip 2 in BCC from enigmail with extra keys." << endl;
     keys = new_stringlist(fpr_pub_extra_key_0);
     stringlist_add(keys, fpr_pub_extra_key_1);
 
@@ -634,7 +634,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt) {
     ASSERT_NE(flags & PEP_decrypt_flag_src_modified, 0);
     ASSERT_NE(enc_msg , nullptr);
 
-    cout << "CHECK: Do it again, and make sure there's no modified source!" << endl;
+    output_stream << "CHECK: Do it again, and make sure there's no modified source!" << endl;
 
     free_message(dec_msg);
     dec_msg = NULL;
@@ -650,9 +650,9 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt) {
     ASSERT_STRNE(dec_msg->_sender_fpr, keys->value);
 
 
-    cout << "PASS: Test 2" << endl << endl;
+    output_stream << "PASS: Test 2" << endl << endl;
 
-    cout << "Case 3: Calling MIME_decrypt_message with reencrypt flag set on message generated by pEp (message 2.0) with extra keys." << endl;
+    output_stream << "Case 3: Calling MIME_decrypt_message with reencrypt flag set on message generated by pEp (message 2.0) with extra keys." << endl;
 
     keys = new_stringlist(fpr_pub_extra_key_0);
     stringlist_add(keys, fpr_pub_extra_key_1);
@@ -670,7 +670,7 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt) {
     ASSERT_NE(flags & PEP_decrypt_flag_src_modified, 0);
     ASSERT_NE(enc_msg , nullptr);
 
-    cout << "CHECK: Do it again, and make sure there's no modified source!" << endl;
+    output_stream << "CHECK: Do it again, and make sure there's no modified source!" << endl;
 
     free_message(dec_msg);
     dec_msg = NULL;
@@ -685,6 +685,6 @@ TEST_F(ReencryptPlusExtraKeysTest, check_efficient_reencrypt) {
     ASSERT_NE(keys, nullptr);
     ASSERT_STRNE(dec_msg->_sender_fpr, keys->value);
 
-    cout << "PASS: Test 3" << endl << endl;
+    output_stream << "PASS: Test 3" << endl << endl;
 
 }

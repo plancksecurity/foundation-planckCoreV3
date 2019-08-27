@@ -97,36 +97,36 @@ namespace {
 TEST_F(RevokeRegenAttachTest, check_revoke_regen_attach) {
     PEP_STATUS status = PEP_STATUS_OK;
 
-    cout << "creating own id for : ";
+    output_stream << "creating own id for : ";
     char *uniqname = strdup("AAAAtestuser@testdomain.org");
     srandom(time(NULL));
     for(int i=0; i < 4;i++)
         uniqname[i] += random() & 0xf;
 
-    cout << uniqname << "\n";
+    output_stream << uniqname << "\n";
     pEp_identity * me = new_identity(uniqname, NULL, PEP_OWN_USERID, "Test User");
     free(uniqname);
     myself(session, me);
 
-    cout << "generated fingerprint \n";
-    cout << me->fpr << "\n";
+    output_stream << "generated fingerprint \n";
+    output_stream << me->fpr << "\n";
 
     const char *prev_fpr = strdup(me->fpr);
 
-    cout << "revoke \n";
+    output_stream << "revoke \n";
 
     key_mistrusted(session, me);
 
-    cout << "re-generated fingerprint \n";
+    output_stream << "re-generated fingerprint \n";
     free(me->fpr);
     me->fpr = NULL;
     status = myself(session, me);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    cout << me->fpr << "\n";
+    output_stream << me->fpr << "\n";
 
     ASSERT_NE(me->fpr, nullptr);
     ASSERT_STRNE(me->fpr, prev_fpr);
-    cout << "New fpr is: " << me->fpr;
+    output_stream << "New fpr is: " << me->fpr;
 
     me->fpr = NULL;
     me->comm_type = PEP_ct_unknown;
@@ -138,24 +138,24 @@ TEST_F(RevokeRegenAttachTest, check_revoke_regen_attach) {
     msg->from = me;
     msg->to = to;
     msg->shortmsg = strdup("hello, world");
-    cout << "message created.\n";
+    output_stream << "message created.\n";
 
-    cout << "encrypting message as MIME multipart…\n";
+    output_stream << "encrypting message as MIME multipart…\n";
     message *enc_msg;
-    cout << "calling encrypt_message()\n";
+    output_stream << "calling encrypt_message()\n";
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(enc_msg, nullptr);
-    cout << "message encrypted.\n";
+    output_stream << "message encrypted.\n";
 
-    // cout << msg->attachments->filename;
+    // output_stream << msg->attachments->filename;
     // int bl_len = bloblist_length(msg->attachments);
-    // cout << "Message contains " << bloblist_length(msg->attachments) << " attachments." << endl;
+    // output_stream << "Message contains " << bloblist_length(msg->attachments) << " attachments." << endl;
     // ASSERT_EQ(bloblist_length(msg->attachments) , 2);
     // ASSERT_EQ((strcmp(msg->attachments->filename, "file://pEpkey.asc") , 0), "strcmp(msg->attachments->filename);
     // ASSERT_EQ((strcmp(msg->attachments->next->filename, "file://pEpkey.asc") , 0), "strcmp(msg->attachments->next->filename);
     //
-    // cout << "message contains 2 key attachments.\n";
+    // output_stream << "message contains 2 key attachments.\n";
 
     free_message(msg);
     free_message(enc_msg);

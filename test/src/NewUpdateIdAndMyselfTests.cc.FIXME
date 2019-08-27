@@ -130,7 +130,7 @@ void NewUpdateIdAndMyselfTests::myself_no_input_fpr_w_record() {
 
     TEST_ASSERT_MSG((strcmp(new_me->user_id, default_own_id) == 0), "strcmp(new_me->user_id, default_own_id) == 0");
     
-    cout << "PASS: myself() retrieved the correct fpr, username and default user id" << endl << endl;
+    output_stream << "PASS: myself() retrieved the correct fpr, username and default user id" << endl << endl;
 
     free_identity(new_me);
 }
@@ -157,8 +157,8 @@ void NewUpdateIdAndMyselfTests::myself_no_input_fpr_diff_user_id_w_record() {
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     TEST_ASSERT_MSG((strcmp(tmp_def, default_own_id) == 0), "strcmp(tmp_def, default_own_id) == 0");
 
-    cout << "PASS: myself() retrieved the correct fpr, username and default user id, and put the right alias in for the default";
-    cout << endl << endl;
+    output_stream << "PASS: myself() retrieved the correct fpr, username and default user id, and put the right alias in for the default";
+    output_stream << endl << endl;
     
     free(tmp_def);
     free_identity(new_me); 
@@ -170,8 +170,8 @@ void NewUpdateIdAndMyselfTests::myself_replace_fpr() {
     status = generate_keypair(session, new_me);
     TEST_ASSERT_MSG((new_me->fpr), "new_me->fpr");
     
-    cout << "Generated fingerprint ";
-    cout << new_me->fpr << "\n";
+    output_stream << "Generated fingerprint ";
+    output_stream << new_me->fpr << "\n";
 
     new_fpr = strdup(new_me->fpr);
 
@@ -187,8 +187,8 @@ void NewUpdateIdAndMyselfTests::myself_replace_fpr() {
     TEST_ASSERT_MSG((new_me->me), "new_me->me");
     TEST_ASSERT_MSG((new_me->comm_type == PEP_ct_pEp), "new_me->comm_type == PEP_ct_pEp");
 
-    cout << "PASS: myself() set and retrieved the new fpr, username and default user id, and put the right alias in for the default";
-    cout << endl << endl;
+    output_stream << "PASS: myself() set and retrieved the new fpr, username and default user id, and put the right alias in for the default";
+    output_stream << endl << endl;
 
     // since that worked, we'll set it back as the default
     free(new_me->fpr);
@@ -219,8 +219,8 @@ void NewUpdateIdAndMyselfTests::myself_replace_fpr_revoke_key() {
     TEST_ASSERT_MSG((new_me->me), "new_me->me");
     TEST_ASSERT_MSG((new_me->comm_type == PEP_ct_pEp), "new_me->comm_type == PEP_ct_pEp");
     
-    cout << "PASS: myself() retrieved the new fpr, username and default user id, and put the right alias in for the default";
-    cout << endl << endl;
+    output_stream << "PASS: myself() retrieved the new fpr, username and default user id, and put the right alias in for the default";
+    output_stream << endl << endl;
     free_identity(new_me);
 }
 
@@ -255,7 +255,7 @@ void NewUpdateIdAndMyselfTests::update_identity_w_matching_address_user_id_usern
     TEST_ASSERT_MSG((alex->comm_type == PEP_ct_OpenPGP_unconfirmed), "alex->comm_type == PEP_ct_OpenPGP_unconfirmed");
     TEST_ASSERT_MSG((strcmp(alex->address, alex_address) == 0), "strcmp(alex->address, alex_address) == 0");
 
-    cout << "PASS: update_identity() correctly retrieved extant record with matching address, id, and username" << endl << endl;
+    output_stream << "PASS: update_identity() correctly retrieved extant record with matching address, id, and username" << endl << endl;
     free_identity(alex);
 }
 
@@ -287,7 +287,7 @@ void NewUpdateIdAndMyselfTests::update_identity_w_matching_address_user_id_new_u
     TEST_ASSERT_MSG((alex->comm_type == PEP_ct_OpenPGP_unconfirmed), "alex->comm_type == PEP_ct_OpenPGP_unconfirmed");
     TEST_ASSERT_MSG((strcmp(alex->address, alex_address) == 0), "strcmp(alex->address, alex_address) == 0");
 
-    cout << "PASS: update_identity() correctly retrieved extant record with matching address, id, and username" << endl << endl;
+    output_stream << "PASS: update_identity() correctly retrieved extant record with matching address, id, and username" << endl << endl;
     free_identity(alex);
 }
 
@@ -325,7 +325,7 @@ void NewUpdateIdAndMyselfTests::update_identity_use_address_username_only() {
     TEST_ASSERT_MSG((alex->comm_type == PEP_ct_OpenPGP_unconfirmed), "alex->comm_type == PEP_ct_OpenPGP_unconfirmed");
     TEST_ASSERT_MSG((strcmp(alex->address, alex_address) == 0), "strcmp(alex->address, alex_address) == 0");
 
-    cout << "PASS: update_identity() correctly retrieved extant record with matching address and username" << endl << endl;
+    output_stream << "PASS: update_identity() correctly retrieved extant record with matching address and username" << endl << endl;
     free_identity(alex);
 }
 
@@ -343,7 +343,7 @@ void NewUpdateIdAndMyselfTests::update_identity_use_address_only() {
     TEST_ASSERT_MSG((alex->comm_type == PEP_ct_OpenPGP_unconfirmed), "alex->comm_type == PEP_ct_OpenPGP_unconfirmed");
     TEST_ASSERT_MSG((strcmp(alex->address, alex_address) == 0), "strcmp(alex->address, alex_address) == 0");
 
-    cout << "PASS: update_identity() correctly retrieved extant record with just matching address. Retrieved previously patched username." << endl << endl;
+    output_stream << "PASS: update_identity() correctly retrieved extant record with just matching address. Retrieved previously patched username." << endl << endl;
     free_identity(alex);
 }
 
@@ -362,8 +362,8 @@ void NewUpdateIdAndMyselfTests::update_identity_use_address_only_on_own_ident() 
     TEST_ASSERT_MSG((somebody->comm_type == PEP_ct_pEp), "somebody->comm_type == PEP_ct_pEp");
     TEST_ASSERT_MSG((strcmp(somebody->address, uniqname) == 0), "strcmp(somebody->address, uniqname) == 0");
     
-    cout << "PASS: update_identity() retrieved the right identity information given just an address";
-    cout << endl << endl;
+    output_stream << "PASS: update_identity() retrieved the right identity information given just an address";
+    output_stream << endl << endl;
 
     free_identity(somebody);
 }
@@ -375,7 +375,7 @@ void NewUpdateIdAndMyselfTests::update_identity_non_existent_user_id_address() {
     TEST_ASSERT_MSG((!somebody->fpr), "!somebody->fpr");
     TEST_ASSERT_MSG((somebody->comm_type == PEP_ct_key_not_found), "somebody->comm_type == PEP_ct_key_not_found");
     
-    cout << "PASS: update_identity() returns identity with no key and unknown comm type" << endl << endl;
+    output_stream << "PASS: update_identity() returns identity with no key and unknown comm type" << endl << endl;
 
     free_identity(somebody);
 }
@@ -397,7 +397,7 @@ void NewUpdateIdAndMyselfTests::update_identity_address_username_userid_no_recor
     TEST_ASSERT_MSG((somebody->comm_type == PEP_ct_key_not_found), "somebody->comm_type == PEP_ct_key_not_found");
     TEST_ASSERT_MSG((strcmp(somebody->address, rando_address) == 0), "strcmp(somebody->address, rando_address) == 0");
 
-    cout << "PASS: update_identity() correctly created record with no key" << endl << endl;
+    output_stream << "PASS: update_identity() correctly created record with no key" << endl << endl;
     free_identity(somebody);
 }
 
@@ -418,7 +418,7 @@ void NewUpdateIdAndMyselfTests::update_identity_address_username_no_record() {
     TEST_ASSERT_MSG((somebody->comm_type == PEP_ct_key_not_found), "somebody->comm_type == PEP_ct_key_not_found");
     TEST_ASSERT_MSG((strcmp(somebody->address, rando2_address) == 0), "strcmp(somebody->address, rando2_address) == 0");
 
-    cout << "PASS: update_identity() correctly created record with no key" << endl << endl;
+    output_stream << "PASS: update_identity() correctly created record with no key" << endl << endl;
     free_identity(somebody);
 }
 
@@ -503,25 +503,25 @@ void NewUpdateIdAndMyselfTests::key_elect_expired_key() {
     TEST_ASSERT_MSG((bernd->comm_type == PEP_ct_key_not_found), tl_ct_string(bernd->comm_type));
     TEST_ASSERT_MSG((strcmp(bernd->address, bernd_address) == 0), "strcmp(bernd->address, bernd_address) == 0");
 
-    cout << "PASS: update_identity() correctly rejected expired key with PEP_KEY_UNSUITABLE and PEP_ct_key_not_found" << endl << endl;
+    output_stream << "PASS: update_identity() correctly rejected expired key with PEP_KEY_UNSUITABLE and PEP_ct_key_not_found" << endl << endl;
     free_identity(bernd);
     
 }
 
 void NewUpdateIdAndMyselfTests::key_elect_only_revoked_mistrusted() {
     // Create id with no key
-    cout << "Creating new id with no key for : ";
+    output_stream << "Creating new id with no key for : ";
     char *uniqname_10000 = strdup("AAAAtestfool@testdomain.org");
     for(int i=0; i < 4;i++)
         uniqname_10000[i] += random() & 0xf;
     
-    cout << uniqname_10000 << "\n";
+    output_stream << uniqname_10000 << "\n";
 
     char* revoke_uuid = get_new_uuid();
 
     pEp_identity * revokemaster_3000 = new_identity(uniqname_10000, NULL, revoke_uuid, start_username);
     
-    cout << "Generate three keys for "  << uniqname_10000 << " who has user_id " << revoke_uuid << endl; 
+    output_stream << "Generate three keys for "  << uniqname_10000 << " who has user_id " << revoke_uuid << endl; 
 
     char* revoke_fpr_arr[3];
     
@@ -530,23 +530,23 @@ void NewUpdateIdAndMyselfTests::key_elect_only_revoked_mistrusted() {
     revoke_fpr_arr[0] = strdup(revokemaster_3000->fpr);
     free(revokemaster_3000->fpr);
     revokemaster_3000->fpr = NULL;
-    cout << "revoke_fpr_arr[0] is " << revoke_fpr_arr[0] << endl; 
+    output_stream << "revoke_fpr_arr[0] is " << revoke_fpr_arr[0] << endl; 
     
     status = generate_keypair(session, revokemaster_3000);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK && revokemaster_3000->fpr), (string(tl_status_string(status)) + " " + revokemaster_3000->fpr).c_str());
     revoke_fpr_arr[1] = strdup(revokemaster_3000->fpr);
     free(revokemaster_3000->fpr);
     revokemaster_3000->fpr = NULL;
-    cout << "revoke_fpr_arr[1] is " << revoke_fpr_arr[1] << endl; 
+    output_stream << "revoke_fpr_arr[1] is " << revoke_fpr_arr[1] << endl; 
     
     status = generate_keypair(session, revokemaster_3000);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK && revokemaster_3000->fpr), (string(tl_status_string(status)) + " " + revokemaster_3000->fpr).c_str());
     revoke_fpr_arr[2] = strdup(revokemaster_3000->fpr);
     free(revokemaster_3000->fpr);
     revokemaster_3000->fpr = NULL;
-    cout << "revoke_fpr_arr[2] is " << revoke_fpr_arr[2] << endl; 
+    output_stream << "revoke_fpr_arr[2] is " << revoke_fpr_arr[2] << endl; 
     
-    cout << "Trust "  << revoke_fpr_arr[2] << " (default for identity) and " << revoke_fpr_arr[0] << endl;
+    output_stream << "Trust "  << revoke_fpr_arr[2] << " (default for identity) and " << revoke_fpr_arr[0] << endl;
     
     free(revokemaster_3000->fpr);
     revokemaster_3000->fpr = strdup(revoke_fpr_arr[2]);
@@ -570,11 +570,11 @@ void NewUpdateIdAndMyselfTests::key_elect_only_revoked_mistrusted() {
     TEST_ASSERT_MSG((strcmp(revokemaster_3000->fpr, revoke_fpr_arr[2]) == 0), (string("Expected ") + revoke_fpr_arr[2] + ", Got " + revokemaster_3000->fpr).c_str());
     TEST_ASSERT_MSG((revokemaster_3000->comm_type & PEP_ct_confirmed), tl_ct_string(revokemaster_3000->comm_type));
 
-    cout << "update_identity returns the correct identity default." << endl;
+    output_stream << "update_identity returns the correct identity default." << endl;
     
-    cout << "Ok, now... we revoke the default..." << endl;
+    output_stream << "Ok, now... we revoke the default..." << endl;
     
-    cout << "Revoking " << revoke_fpr_arr[2] << endl;
+    output_stream << "Revoking " << revoke_fpr_arr[2] << endl;
 
     status = revoke_key(session, revoke_fpr_arr[2], "This little pubkey went to market");
     TEST_ASSERT (status == PEP_STATUS_OK);
@@ -584,10 +584,10 @@ void NewUpdateIdAndMyselfTests::key_elect_only_revoked_mistrusted() {
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     TEST_ASSERT_MSG((is_revoked), "is_revoked");
 
-    cout << "Success revoking " << revoke_fpr_arr[2] << "!!! get_trust for this fpr gives us " << revokemaster_3000->comm_type << endl;
+    output_stream << "Success revoking " << revoke_fpr_arr[2] << "!!! get_trust for this fpr gives us " << revokemaster_3000->comm_type << endl;
 
 //  BAD ASSUMPTION - this only works if we query the trust DB in elect_pubkey, and we don't.    
-//    cout << "Now see if update_identity gives us " << revoke_fpr_arr[0] << ", the only trusted key left." << endl;
+//    output_stream << "Now see if update_identity gives us " << revoke_fpr_arr[0] << ", the only trusted key left." << endl;
     status = update_identity(session, revokemaster_3000);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     TEST_ASSERT_MSG((revokemaster_3000->fpr), revokemaster_3000->fpr);
@@ -602,7 +602,7 @@ void NewUpdateIdAndMyselfTests::key_elect_only_revoked_mistrusted() {
         TEST_ASSERT_MSG((revokemaster_3000->comm_type & PEP_ct_OpenPGP_unconfirmed), tl_ct_string(revokemaster_3000->comm_type));
     }
                 
-    cout << "Success! So let's mistrust " << revoke_fpr_arr[0] << ", because seriously, that key was so uncool." << endl;
+    output_stream << "Success! So let's mistrust " << revoke_fpr_arr[0] << ", because seriously, that key was so uncool." << endl;
     
     free(revokemaster_3000->fpr);
     revokemaster_3000->fpr = strdup(revoke_fpr_arr[0]);
@@ -613,9 +613,9 @@ void NewUpdateIdAndMyselfTests::key_elect_only_revoked_mistrusted() {
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     TEST_ASSERT_MSG((revokemaster_3000->comm_type == PEP_ct_mistrusted), tl_ct_string(revokemaster_3000->comm_type));
     
-    cout << "Success! get_trust for this fpr gives us " << revokemaster_3000->comm_type << endl;
+    output_stream << "Success! get_trust for this fpr gives us " << revokemaster_3000->comm_type << endl;
 
-    cout << "The only fpr left is an untrusted one - let's make sure this is what we get from update_identity." << endl;
+    output_stream << "The only fpr left is an untrusted one - let's make sure this is what we get from update_identity." << endl;
 
     status = update_identity(session, revokemaster_3000);
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
@@ -623,9 +623,9 @@ void NewUpdateIdAndMyselfTests::key_elect_only_revoked_mistrusted() {
     TEST_ASSERT_MSG((strcmp(revokemaster_3000->fpr, revoke_fpr_arr[1]) == 0), (string("Expected ") + revoke_fpr_arr[1] + ", Got " + revokemaster_3000->fpr).c_str());
     TEST_ASSERT_MSG((!(revokemaster_3000->comm_type & PEP_ct_confirmed)), tl_ct_string(revokemaster_3000->comm_type));    
 
-    cout << "Success! We got " << revoke_fpr_arr[1] << "as the fpr with comm_type " << revokemaster_3000->comm_type << endl;
+    output_stream << "Success! We got " << revoke_fpr_arr[1] << "as the fpr with comm_type " << revokemaster_3000->comm_type << endl;
     
-    cout << "But, you know... let's revoke that one too and see what update_identity gives us." << endl;
+    output_stream << "But, you know... let's revoke that one too and see what update_identity gives us." << endl;
 
     status = revoke_key(session, revoke_fpr_arr[1], "Because it's more fun to revoke ALL of someone's keys");
     TEST_ASSERT (status == PEP_STATUS_OK);
@@ -634,9 +634,9 @@ void NewUpdateIdAndMyselfTests::key_elect_only_revoked_mistrusted() {
     TEST_ASSERT_MSG((status == PEP_STATUS_OK), tl_status_string(status));
     TEST_ASSERT_MSG((is_revoked), "is_revoked");
     
-    cout << "Success! get_trust for this fpr gives us " << revokemaster_3000->comm_type << endl;
+    output_stream << "Success! get_trust for this fpr gives us " << revokemaster_3000->comm_type << endl;
 
-    cout << "Call update_identity - we expect nothing, plus an error comm type." << endl;
+    output_stream << "Call update_identity - we expect nothing, plus an error comm type." << endl;
 
     status = update_identity(session, revokemaster_3000);
     TEST_ASSERT_MSG((status != PEP_STATUS_OK), tl_status_string(status));
@@ -644,7 +644,7 @@ void NewUpdateIdAndMyselfTests::key_elect_only_revoked_mistrusted() {
     TEST_ASSERT_MSG((revokemaster_3000->username), "No revokemaster_3000->username");
     TEST_ASSERT_MSG((strcmp(revokemaster_3000->user_id, revoke_uuid) == 0), (string("Expected ") + revoke_uuid + ", Got " + revokemaster_3000->user_id).c_str());
     TEST_ASSERT_MSG((revokemaster_3000->comm_type == PEP_ct_key_not_found), tl_ct_string(revokemaster_3000->comm_type));
-    cout << "Success! No key found. The comm_status error was " << revokemaster_3000->comm_type << "and the return status was " << tl_status_string(status) << endl;
+    output_stream << "Success! No key found. The comm_status error was " << revokemaster_3000->comm_type << "and the return status was " << tl_status_string(status) << endl;
 
     free_identity(revokemaster_3000);    
 }

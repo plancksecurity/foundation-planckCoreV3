@@ -101,15 +101,15 @@ TEST_F(LeastColorGroupTest, check_least_color_group) {
                           };
 
     for (auto name : keynames) {
-        cout << "\t read keyfile \"" << name << "\"..." << std::endl;
+        output_stream << "\t read keyfile \"" << name << "\"..." << std::endl;
         const string keytextkey = slurp(name);
         PEP_STATUS statuskey = import_key(session, keytextkey.c_str(), keytextkey.length(), NULL);
         ASSERT_EQ(statuskey , PEP_TEST_KEY_IMPORT_SUCCESS);
     }
 
-    cout << "\t read keyfile mailfile \"" << mailfile << "\"..." << std::endl;
+    output_stream << "\t read keyfile mailfile \"" << mailfile << "\"..." << std::endl;
     const string mailtext = slurp(mailfile);
-    cout << "\t All files read successfully." << std::endl;
+    output_stream << "\t All files read successfully." << std::endl;
 
     pEp_identity * me1 = new_identity("pep.color.test.P@kgrothoff.org",
                                       "7EE6C60C68851954E1797F81EA59715E3EBE215C",
@@ -139,18 +139,18 @@ TEST_F(LeastColorGroupTest, check_least_color_group) {
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
-    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
-    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
-    cout << "rating: " << rating << endl << endl;
-    cout << "keys used: " << endl;
+    output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    output_stream << "longmsg: " << final_ptr->longmsg << endl << endl;
+    output_stream << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+    output_stream << "rating: " << rating << endl << endl;
+    output_stream << "keys used: " << endl;
 
     int i = 0;
     for (stringlist_t* k = keylist; k; k = k->next) {
         if (i == 0)
-            cout << "\t Signer (key 0):\t" << k->value << endl;
+            output_stream << "\t Signer (key 0):\t" << k->value << endl;
         else
-            cout << "\t #" << i << ":\t" << k->value << endl;
+            output_stream << "\t #" << i << ":\t" << k->value << endl;
         i++;
     }
 

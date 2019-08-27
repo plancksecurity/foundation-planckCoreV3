@@ -6,6 +6,7 @@
 #include <string>
 
 #include "test_util.h"
+#include "TestConstants.h"
 
 #include "pEpEngine.h"
 
@@ -102,7 +103,7 @@ TEST_F(URIAddressTest, check_uri_address_genkey) {
 
     ASSERT_GT(keydata && keysize, 0);
     // no guarantee of NUL-termination atm.
-//    cout << keydata << endl;
+//    output_stream << keydata << endl;
 
     free(keydata);
     free_identity(me);

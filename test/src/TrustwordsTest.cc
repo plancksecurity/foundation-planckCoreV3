@@ -82,7 +82,7 @@ namespace {
 
 
 TEST_F(TrustwordsTest, check_trustwords) {
-    cout << "\n*** get_trustwords test ***\n\n";
+    output_stream << "\n*** get_trustwords test ***\n\n";
 
     PEP_STATUS status;
 
@@ -113,83 +113,83 @@ TEST_F(TrustwordsTest, check_trustwords) {
     size_t wsize2 = 0;
     size_t wsize_full = 0;
 
-    cout << "\nTest 1: fpr1 > fpr2, short" << endl;
+    output_stream << "\nTest 1: fpr1 > fpr2, short" << endl;
 
-    cout << "\nfinding German trustwords for " << fingerprint1 << "...\n";
+    output_stream << "\nfinding German trustwords for " << fingerprint1 << "...\n";
     trustwords(session, fingerprint1.c_str(), "de", &words1, &wsize1, 5);
     ASSERT_NE(words1, nullptr);
-    cout << words1 << "\n";
+    output_stream << words1 << "\n";
 
     free(words1);
     words1 = nullptr;
 
-    cout << "\nfinding German trustwords for " << fingerprint2 << "...\n";
+    output_stream << "\nfinding German trustwords for " << fingerprint2 << "...\n";
     trustwords(session, fingerprint2.c_str(), "de", &words2, &wsize2, 5);
     ASSERT_NE(words2, nullptr);
-    cout << words2 << "\n";
+    output_stream << words2 << "\n";
 
     free(words2);
     words1 = nullptr;
 
-    cout << "\nfinding German trustwords for " << identity1->address << " and " << identity2->address << "...\n";
+    output_stream << "\nfinding German trustwords for " << identity1->address << " and " << identity2->address << "...\n";
     get_trustwords(session, identity1, identity2, "de", &full_wordlist, &wsize_full, false);
     ASSERT_NE(full_wordlist, nullptr);
-    cout << full_wordlist << "\n";
+    output_stream << full_wordlist << "\n";
 
     free(full_wordlist);
     full_wordlist = nullptr;
 
-    cout << "\nfinding English trustwords for " << identity1->address << " and " << identity2->address << "... with spaces\n";
+    output_stream << "\nfinding English trustwords for " << identity1->address << " and " << identity2->address << "... with spaces\n";
     get_trustwords(session, identity1, identity2_with_spaces, "en", &full_wordlist, &wsize_full, false);
     ASSERT_NE(full_wordlist, nullptr);
-    cout << full_wordlist << "\n";
+    output_stream << full_wordlist << "\n";
 
     free(full_wordlist);
     full_wordlist = nullptr;
 
-    cout << "\nTest 2: fpr1 == fpr1, short" << endl;
+    output_stream << "\nTest 2: fpr1 == fpr1, short" << endl;
 
-    cout << "\nfinding French trustwords for " << fingerprint2 << "...\n";
+    output_stream << "\nfinding French trustwords for " << fingerprint2 << "...\n";
     trustwords(session, fingerprint1.c_str(), "fr", &words1, &wsize1, 5);
     ASSERT_NE(words1, nullptr);
-    cout << words1 << "\n";
+    output_stream << words1 << "\n";
 
-    cout << "\nfinding French trustwords for " << identity2->address << " and " << identity2->address << "...\n";
+    output_stream << "\nfinding French trustwords for " << identity2->address << " and " << identity2->address << "...\n";
     status = get_trustwords(session, identity2, identity2, "fr", &full_wordlist, &wsize_full, false);
     ASSERT_EQ(status , PEP_TRUSTWORDS_DUPLICATE_FPR);
-    cout << "Discovered duplicate fprs as desired" << endl;
+    output_stream << "Discovered duplicate fprs as desired" << endl;
 
-    cout << "\nfinding English trustwords for " << identity2->address << " and " << identity2->address << "... with spaces\n";
+    output_stream << "\nfinding English trustwords for " << identity2->address << " and " << identity2->address << "... with spaces\n";
     get_trustwords(session, identity2, identity2_with_spaces, "en", &full_wordlist, &wsize_full, false);
     ASSERT_EQ(status , PEP_TRUSTWORDS_DUPLICATE_FPR);
-    cout << "Discovered duplicate fprs as desired" << endl;
+    output_stream << "Discovered duplicate fprs as desired" << endl;
 
     pEp_free(words1);
     words1 = nullptr;
     pEp_free(full_wordlist);
     full_wordlist = nullptr;
 
-    cout << "\nTest 3: fpr1 < fpr2, long" << endl;
+    output_stream << "\nTest 3: fpr1 < fpr2, long" << endl;
 
-    cout << "\nfinding English trustwords for " << fingerprint2 << "...\n";
+    output_stream << "\nfinding English trustwords for " << fingerprint2 << "...\n";
     trustwords(session, fingerprint2.c_str(), "en", &words1, &wsize1, 0);
     ASSERT_NE(words1, nullptr);
-    cout << words1 << "\n";
+    output_stream << words1 << "\n";
 
-    cout << "\nfinding English trustwords for " << fingerprint1 << "...\n";
+    output_stream << "\nfinding English trustwords for " << fingerprint1 << "...\n";
     trustwords(session, fingerprint1.c_str(), "en", &words2, &wsize2, 0);
     ASSERT_NE(words2, nullptr);
-    cout << words2 << "\n";
+    output_stream << words2 << "\n";
 
-    cout << "\nfinding English trustwords for " << identity2->address << " and " << identity1->address << "...\n";
+    output_stream << "\nfinding English trustwords for " << identity2->address << " and " << identity1->address << "...\n";
     get_trustwords(session, identity2, identity1, "en", &full_wordlist, &wsize_full, true);
     ASSERT_NE(full_wordlist, nullptr);
-    cout << full_wordlist << "\n";
+    output_stream << full_wordlist << "\n";
 
-    cout << "\nfinding English trustwords for " << identity2->address << " and " << identity1->address << "... with spaces\n";
+    output_stream << "\nfinding English trustwords for " << identity2->address << " and " << identity1->address << "... with spaces\n";
     get_trustwords(session, identity2_with_spaces, identity1, "en", &full_wordlist, &wsize_full, true);
     ASSERT_NE(full_wordlist, nullptr);
-    cout << full_wordlist << "\n";
+    output_stream << full_wordlist << "\n";
 
     pEp_free(words1);
     words1 = nullptr;
@@ -198,7 +198,7 @@ TEST_F(TrustwordsTest, check_trustwords) {
     pEp_free(full_wordlist);
     full_wordlist = nullptr;
 
-    cout << "\nTest 4: fpr1 < fpr2, leading zeros (fpr1 has more), long" << endl;
+    output_stream << "\nTest 4: fpr1 < fpr2, leading zeros (fpr1 has more), long" << endl;
 
     pEp_identity* identity3 = new_identity(
         "nobody@kgrothoff.org",
@@ -222,20 +222,20 @@ TEST_F(TrustwordsTest, check_trustwords) {
     string fingerprint4 = identity4->fpr;
     string fingerprint5 = identity5->fpr;
 
-    cout << "\nfinding Catalan trustwords for " << fingerprint3 << "...\n";
+    output_stream << "\nfinding Catalan trustwords for " << fingerprint3 << "...\n";
     trustwords(session, fingerprint3.c_str(), "ca", &words1, &wsize1, 0);
     ASSERT_NE(words1, nullptr);
-    cout << words1 << "\n";
+    output_stream << words1 << "\n";
 
-    cout << "\nfinding Catalan trustwords for " << fingerprint4 << "...\n";
+    output_stream << "\nfinding Catalan trustwords for " << fingerprint4 << "...\n";
     trustwords(session, fingerprint4.c_str(), "ca", &words2, &wsize2, 0);
     ASSERT_NE(words2, nullptr);
-    cout << words2 << "\n";
+    output_stream << words2 << "\n";
 
-    cout << "\nfinding Catalan trustwords for " << identity3->address << " and " << identity4->address << "...\n";
+    output_stream << "\nfinding Catalan trustwords for " << identity3->address << " and " << identity4->address << "...\n";
     get_trustwords(session, identity3, identity4, "ca", &full_wordlist, &wsize_full, true);
     ASSERT_NE(full_wordlist, nullptr);
-    cout << full_wordlist << "\n";
+    output_stream << full_wordlist << "\n";
 
     pEp_free(words1);
     words1 = nullptr;
@@ -244,22 +244,22 @@ TEST_F(TrustwordsTest, check_trustwords) {
     pEp_free(full_wordlist);
     full_wordlist = nullptr;
 
-    cout << "\nTest 5: fpr1 > fpr2, leading zeros (same number), interior digit difference, short" << endl;
+    output_stream << "\nTest 5: fpr1 > fpr2, leading zeros (same number), interior digit difference, short" << endl;
 
-    cout << "\nfinding Turkish trustwords for " << fingerprint4 << "...\n";
+    output_stream << "\nfinding Turkish trustwords for " << fingerprint4 << "...\n";
     trustwords(session, fingerprint4.c_str(), "tr", &words1, &wsize1, 5);
     ASSERT_NE(words1, nullptr);
-    cout << words1 << "\n";
+    output_stream << words1 << "\n";
 
-    cout << "\nfinding Turkish trustwords for " << fingerprint5 << "...\n";
+    output_stream << "\nfinding Turkish trustwords for " << fingerprint5 << "...\n";
     trustwords(session, fingerprint5.c_str(), "tr", &words2, &wsize2, 5);
     ASSERT_NE(words2, nullptr);
-    cout << words2 << "\n";
+    output_stream << words2 << "\n";
 
-    cout << "\nfinding Turkish trustwords for " << identity4->address << " and " << identity5->address << "...\n";
+    output_stream << "\nfinding Turkish trustwords for " << identity4->address << " and " << identity5->address << "...\n";
     get_trustwords(session, identity4, identity5, "tr", &full_wordlist, &wsize_full, false);
     ASSERT_NE(full_wordlist, nullptr);
-    cout << full_wordlist << "\n";
+    output_stream << full_wordlist << "\n";
 
     pEp_free(words1);
     words1 = nullptr;
@@ -268,7 +268,7 @@ TEST_F(TrustwordsTest, check_trustwords) {
     pEp_free(full_wordlist);
     full_wordlist = nullptr;
 
-    cout << "\nTest 6: fpr2 is shorter" << endl;
+    output_stream << "\nTest 6: fpr2 is shorter" << endl;
 
     pEp_identity* identity6 = new_identity(
         "nobody4@kgrothoff.org",
@@ -276,10 +276,10 @@ TEST_F(TrustwordsTest, check_trustwords) {
         "blargh",
         "Krista Grothoff");
 
-    cout << "\nfinding Turkish trustwords for " << identity5->address << " and " << identity6->address << "...\n";
+    output_stream << "\nfinding Turkish trustwords for " << identity5->address << " and " << identity6->address << "...\n";
     PEP_STATUS status6 = get_trustwords(session, identity5, identity6, "tr", &full_wordlist, &wsize_full, false);
     ASSERT_EQ(status6 , PEP_STATUS_OK);
-    cout << full_wordlist << endl;
+    output_stream << full_wordlist << endl;
 
     pEp_identity* identity7 = new_identity(
         "nobody5@kgrothoff.org",
@@ -287,12 +287,12 @@ TEST_F(TrustwordsTest, check_trustwords) {
         "blargh",
         "Krista Grothoff");
 
-    cout << "\nTest 7: fpr2 has a non-hex character" << endl;
+    output_stream << "\nTest 7: fpr2 has a non-hex character" << endl;
 
-    cout << "\nfinding Turkish trustwords for " << identity1->address << " and " << identity7->address << "...\n";
+    output_stream << "\nfinding Turkish trustwords for " << identity1->address << " and " << identity7->address << "...\n";
     PEP_STATUS status7 = get_trustwords(session, identity1, identity7, "tr", &full_wordlist, &wsize_full, true);
     ASSERT_EQ(status7 , PEP_ILLEGAL_VALUE);
-    cout << "Illegal digit value correctly recognised." << "\n";
+    output_stream << "Illegal digit value correctly recognised." << "\n";
 
 
     free_identity(identity1);

@@ -126,11 +126,11 @@ TEST_F(KeyringImportTest, check_import1) {
         const char *address = entries[i].address;
         const char *fpr = entries[i].fingerprint;
 
-        cout << "Looking up: " << address << ", should have fingerprint: " << fpr << endl;
+        output_stream << "Looking up: " << address << ", should have fingerprint: " << fpr << endl;
         pEp_identity *id = new_identity(address, NULL, NULL, NULL);
         PEP_STATUS status = update_identity(session, id);
         ASSERT_EQ(status , PEP_STATUS_OK);
-        cout << "Got: " << (id->fpr ?: "NULL") << " -> " << (id->address ?: "NULL") << endl;
+        output_stream << "Got: " << (id->fpr ?: "NULL") << " -> " << (id->address ?: "NULL") << endl;
 
         // We should always get the same fingerprint.
         ASSERT_NE(id->fpr, nullptr);
@@ -193,11 +193,11 @@ TEST_F(KeyringImportTest, check_import2) {
         const char *address = entries[i].address;
         const char *fpr = entries[i].fingerprint;
 
-        cout << "Looking up: " << address << ", should have fingerprint: " << fpr << endl;
+        output_stream << "Looking up: " << address << ", should have fingerprint: " << fpr << endl;
         pEp_identity *id = new_identity(address, NULL, NULL, NULL);
         PEP_STATUS status = update_identity(session, id);
         ASSERT_EQ(status , PEP_STATUS_OK);
-        cout << "Got: " << (id->fpr ?: "NULL") << " (expected: " << fpr << ") -> " << (id->address ?: "NULL") << endl;
+        output_stream << "Got: " << (id->fpr ?: "NULL") << " (expected: " << fpr << ") -> " << (id->address ?: "NULL") << endl;
 
         // We should always get the same fingerprint.
         ASSERT_NE(id->fpr, nullptr);

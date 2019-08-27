@@ -94,9 +94,9 @@ TEST_F(PgpBinaryTest, check_pgp_binary) {
     ASSERT_NE(path, nullptr);
 #endif
     if (path)
-        cout << "PGP binary at " << path << "\n";
+        output_stream << "PGP binary at " << path << "\n";
     else
-        cout << "no PGP binary path available\n";
+        output_stream << "no PGP binary path available\n";
 
-    cout << "calling release()\n";
+    output_stream << "calling release()\n";
 }

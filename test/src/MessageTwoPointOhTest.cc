@@ -109,7 +109,7 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
     ASSERT_EQ(statuspub , PEP_TEST_KEY_IMPORT_SUCCESS);
     ASSERT_EQ(statuspriv , PEP_TEST_KEY_IMPORT_SUCCESS);
 
-    cout << "creating message…\n";
+    output_stream << "creating message…\n";
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", PEP_OWN_USERID, "Alice Test");
     pEp_identity* carol = new_identity("pep-test-carol@pep-project.org", NULL, "TOFU_pep-test-carol@pep-project.org", "Carol Test");
 
@@ -139,35 +139,35 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
     stringlist_add(outgoing_message->references, "two-dfddffd839274982347239847@pep-project.org");
     stringlist_add(outgoing_message->references, "three-OMGWTFBBQ.edfddffd839274982347239847@pep-project.org");
 
-    cout << "message created.\n";
+    output_stream << "message created.\n";
 
     char* encoded_text = nullptr;
     status = mime_encode_message(outgoing_message, false, &encoded_text);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(encoded_text, nullptr);
 
-    cout << "unencrypted:\n\n";
-    cout << encoded_text << "\n";
+    output_stream << "unencrypted:\n\n";
+    output_stream << encoded_text << "\n";
 
     free(encoded_text);
 
-    cout << "encrypting message as MIME multipart…\n";
+    output_stream << "encrypting message as MIME multipart…\n";
     message* encrypted_msg = nullptr;
-    cout << "calling encrypt_message\n";
+    output_stream << "calling encrypt_message\n";
     status = encrypt_message(session, outgoing_message, NULL,
         &encrypted_msg, PEP_enc_PGP_MIME, 0);
-    cout << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
+    output_stream << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(encrypted_msg, nullptr);
-    cout << "message encrypted.\n";
+    output_stream << "message encrypted.\n";
 
     encrypted_msg->enc_format = PEP_enc_none;
     status = mime_encode_message(encrypted_msg, false, &encoded_text);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(encoded_text, nullptr);
 
-    cout << "encrypted:\n\n";
-    cout << encoded_text << "\n";
+    output_stream << "encrypted:\n\n";
+    output_stream << encoded_text << "\n";
 
     char* decrypted_text;
 
@@ -179,8 +179,8 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
 
 //    MIME_decrypt_message(session, encoded_text, strlen(encoded_text), &decrypted_text, &keylist_used, &rating, &flags);
 
-//    cout << "HEY!" << endl;
-//    cout << decrypted_text << endl;
+//    output_stream << "HEY!" << endl;
+//    output_stream << decrypted_text << endl;
 
     message* decoded_msg = nullptr;
     status = mime_decode_message(encoded_text, strlen(encoded_text), &decoded_msg);
@@ -209,23 +209,23 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
     //PEP_comm_type ct = encrypted_msg->from->comm_type;
     //ASSERT_EQ(ct , PEP_ct_pEp);
 
-    cout << "keys used:\n";
+    output_stream << "keys used:\n";
 
     for (stringlist_t* kl4 = keylist_used; kl4 && kl4->value; kl4 = kl4->next)
     {
-       cout << "\t " << kl4->value << endl;
+       output_stream << "\t " << kl4->value << endl;
     }
 
     decrypted_msg->enc_format = PEP_enc_none;
     status = _mime_encode_message_internal(decrypted_msg, false, &encoded_text, false, false);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(encoded_text, nullptr);
-    cout << "Decrypted message: " << endl;
-    cout << encoded_text << endl;
+    output_stream << "Decrypted message: " << endl;
+    output_stream << encoded_text << endl;
 
-    cout << "freeing messages…\n";
+    output_stream << "freeing messages…\n";
     free_message(encrypted_msg);
     free_message(decrypted_msg);
     free_message(outgoing_message);
-    cout << "done.\n";
+    output_stream << "done.\n";
 }

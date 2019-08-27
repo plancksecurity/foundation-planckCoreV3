@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <ftw.h>
+#include <iostream>
 
 #include "pEpEngine.h"
 #include "message_api.h"
@@ -15,6 +16,12 @@ void test_init();
 bool file_exists(std::string filename);
 
 extern std::string _main_test_home_dir;
+
+#ifndef DEBUG_OUTPUT
+extern std::ostream output_stream;
+#else
+#define output_stream std::cerr
+#endif
 
 std::string get_main_test_home_dir();
 
@@ -100,6 +107,11 @@ int util_delete_filepath(const char *filepath,
                          const struct stat *file_stat, 
                          int ftw_info, 
                          struct FTW * ftw_struct);
+                         
+class NullBuffer : public std::streambuf {
+    public:
+        int overflow(int c);
+};                         
                          
 #ifndef ENIGMAIL_MAY_USE_THIS
 
@@ -231,7 +243,4 @@ PEP_STATUS MIME_encrypt_message_for_self(
 );
 
 #endif
-
-
-        
 #endif

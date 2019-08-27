@@ -9,7 +9,7 @@
 #include "pEpEngine.h"
 
 #include "test_util.h"
-
+#include "TestConstants.h"
 
 #include "Engine.h"
 
@@ -82,7 +82,8 @@ namespace {
 
 }  // namespace
 
-
+// Neal: how are these supposed to behave under gnupg? Or is this again sequoia-specific?
+#ifdef USE_SEQUOIA
 TEST_F(VerifyTest, check_revoked_tpk) {
     slurp_and_import_key(session, "test_keys/priv/pep-test-mary-0x7F59F03CD04A226E_priv.asc");
 
@@ -103,7 +104,7 @@ TEST_F(VerifyTest, check_revoked_tpk) {
     ASSERT_NE(keylist, nullptr);
     // Signer is mary.
     ASSERT_NE(keylist->value, nullptr);
-    cout << "fpr: " << mary_fpr << "; got: " << keylist->value << endl;
+    output_stream << "fpr: " << mary_fpr << "; got: " << keylist->value << endl;
     ASSERT_STREQ(mary_fpr, keylist->value);
     // Recipient is mary.
     ASSERT_NE(keylist->next, nullptr);
@@ -302,3 +303,4 @@ TEST_F(VerifyTest, check_expired_signing_key) {
     ASSERT_STREQ(keylist->value, "");
     ASSERT_EQ(keylist->next, nullptr);
 }
+#endif

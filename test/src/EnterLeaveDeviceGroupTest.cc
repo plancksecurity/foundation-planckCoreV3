@@ -8,6 +8,8 @@
 #include "pEpEngine.h"
 
 #include "test_util.h"
+#include "TestConstants.h"
+
 #include "sync_api.h"
 
 

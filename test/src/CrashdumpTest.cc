@@ -86,5 +86,5 @@ TEST_F(CrashdumpTest, check_crashdump) {
     char *text;
     PEP_STATUS status2 = get_crashdump_log(session, 0, &text);
     ASSERT_EQ(status2 , PEP_STATUS_OK);
-    cout << text;
+    output_stream << text;
 }

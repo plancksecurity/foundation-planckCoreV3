@@ -93,7 +93,7 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
     const char* diff_uid_0 = "TASTY_TEST_UID_0";
     const char* diff_uid_1 = "TASTY_TEST_UID_1";
 
-    cout << "Importing keys..." << endl;
+    output_stream << "Importing keys..." << endl;
 
     string input_key;
     const char* main_addr = "priv-key-import-test-main@darthmama.cool";
@@ -148,19 +148,19 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
     input_key = slurp("test_keys/pub/priv-key-import-test-other_1-0xC785F20A_pub.asc");
     status = import_key(session, input_key.c_str(), input_key.length(), NULL);
     ASSERT_EQ(status, PEP_TEST_KEY_IMPORT_SUCCESS);
-    cout << "Done!" << endl << endl;
+    output_stream << "Done!" << endl << endl;
 
-    cout << "Setting up own identity with default key " << fpr_main_me << endl;
+    output_stream << "Setting up own identity with default key " << fpr_main_me << endl;
     // Own identity with default key etc
     main_me = new_identity(main_addr, fpr_main_me, own_uid, "PrivateKey Import Test");
     status = set_own_key(session, main_me, fpr_main_me);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
     ASSERT_STREQ(main_me->fpr, fpr_main_me);
-    cout << "Done!" << endl << endl;
+    output_stream << "Done!" << endl << endl;
 
-    cout << "Setting up recipient identities and resetting key trust." << endl;
-    cout << "#1: same address, same user_id - address: " << main_addr << ", user_id: " << own_uid << ", fpr: " << fpr_same_addr_same_uid << endl;
+    output_stream << "Setting up recipient identities and resetting key trust." << endl;
+    output_stream << "#1: same address, same user_id - address: " << main_addr << ", user_id: " << own_uid << ", fpr: " << fpr_same_addr_same_uid << endl;
     // Identity with same address and user_id - the fpr here will be ignored in update_identity and friends.
     same_addr_same_uid = new_identity(main_addr, fpr_same_addr_same_uid, own_uid, "PrivateKey Import Test");
     status = key_reset_trust(session, same_addr_same_uid);
@@ -168,7 +168,7 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
     ASSERT_STREQ(same_addr_same_uid->fpr, fpr_same_addr_same_uid);
 
     // Identity with same address and different user_id
-    cout << "#2: same address, different user_id - address: " << main_addr << ", user_id: " << diff_uid_0 << ", fpr: " << fpr_same_addr_diff_uid << endl;
+    output_stream << "#2: same address, different user_id - address: " << main_addr << ", user_id: " << diff_uid_0 << ", fpr: " << fpr_same_addr_diff_uid << endl;
     same_addr_diff_uid = new_identity(main_addr, fpr_same_addr_diff_uid, diff_uid_0, "PrivateKey Import Test");
     ASSERT_NE(same_addr_diff_uid, nullptr);
     status = key_reset_trust(session, same_addr_diff_uid);
@@ -176,7 +176,7 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
     ASSERT_STREQ(same_addr_diff_uid->fpr, fpr_same_addr_diff_uid);
 
     // Identity with diff address and same user_id
-    cout << "#3: different address, same user_id - address: " << diff_addr_0 << ", user_id: " << own_uid << ", fpr: " << fpr_diff_addr_same_uid << endl;
+    output_stream << "#3: different address, same user_id - address: " << diff_addr_0 << ", user_id: " << own_uid << ", fpr: " << fpr_diff_addr_same_uid << endl;
     diff_addr_same_uid = new_identity(diff_addr_0, fpr_diff_addr_same_uid, own_uid, "PrivateKey Import Test");
     ASSERT_NE(diff_addr_same_uid, nullptr);
     status = key_reset_trust(session, diff_addr_same_uid);
@@ -184,13 +184,13 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
     ASSERT_STREQ(diff_addr_same_uid->fpr, fpr_diff_addr_same_uid);
 
     // Identity with different address and different user_id
-    cout << "#4: different address, different user_id - address: " << diff_addr_1 << ", user_id: " << diff_uid_1 << ", fpr: " << fpr_diff_addr_diff_uid << endl;
+    output_stream << "#4: different address, different user_id - address: " << diff_addr_1 << ", user_id: " << diff_uid_1 << ", fpr: " << fpr_diff_addr_diff_uid << endl;
     diff_addr_diff_uid = new_identity(diff_addr_1, fpr_diff_addr_diff_uid, diff_uid_1, "PrivateKey Import Test");
     ASSERT_NE(diff_addr_diff_uid, nullptr);
     status = key_reset_trust(session, diff_addr_diff_uid);
     ASSERT_TRUE(status == PEP_STATUS_OK || status == PEP_CANNOT_FIND_IDENTITY);
     ASSERT_STREQ(diff_addr_diff_uid->fpr, fpr_diff_addr_diff_uid);
-    cout << "Done!" << endl << endl;
+    output_stream << "Done!" << endl << endl;
 
     message* msg_same_addr_same_uid = new_message(PEP_dir_outgoing);
     msg_same_addr_same_uid->from = main_me;
@@ -202,10 +202,10 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
     message* msg_diff_addr_same_uid = message_dup(msg_same_addr_same_uid);
     message* msg_diff_addr_diff_uid = message_dup(msg_same_addr_same_uid);
 
-    cout << "Starting tests..." << endl;
+    output_stream << "Starting tests..." << endl;
     // Case 1:
     // Same address, same user_id, untrusted
-    cout << "Case 1: Same address, same user_id, untrusted" << endl;
+    output_stream << "Case 1: Same address, same user_id, untrusted" << endl;
     ASSERT_NE(msg_same_addr_same_uid, nullptr);
     identity_list* to_list = new_identity_list(same_addr_same_uid);
     msg_same_addr_same_uid->to = to_list;
@@ -217,15 +217,15 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
                                               PEP_enc_PGP_MIME,
                                               0);
 
-    cout << "Case 1 Status: " << tl_status_string(status) << endl;
+    output_stream << "Case 1 Status: " << tl_status_string(status) << endl;
     ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
-    cout << "PASS!" << endl;
+    output_stream << "PASS!" << endl;
 
     // Case 2:
     // Same address, same_user_id, trusted
-    cout << "Case 2: Same address, same user_id, trusted" << endl;
+    output_stream << "Case 2: Same address, same user_id, trusted" << endl;
     status = trust_own_key(session, same_addr_same_uid);
-    cout << "Trust personal key for " << same_addr_same_uid << " gives status " << tl_status_string(status) << " (" << status << ")" << endl;
+    output_stream << "Trust personal key for " << same_addr_same_uid << " gives status " << tl_status_string(status) << " (" << status << ")" << endl;
     ASSERT_EQ(status, PEP_STATUS_OK);
     message* enc_same_addr_same_uid_trusted = NULL;
     status = encrypt_message_and_add_priv_key(session,
@@ -235,13 +235,13 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
                                               PEP_enc_PGP_MIME,
                                               0);
 
-    cout << "Case 2 Status: " << tl_status_string(status) << endl;
+    output_stream << "Case 2 Status: " << tl_status_string(status) << endl;
     ASSERT_EQ(status, PEP_STATUS_OK);
-    cout << "PASS!" << endl;
+    output_stream << "PASS!" << endl;
 
     // Case 3:
     // Different address, same user_id, untrusted
-    cout << "Case 3: Different address, same user_id, untrusted" << endl;
+    output_stream << "Case 3: Different address, same user_id, untrusted" << endl;
     ASSERT_NE(msg_diff_addr_same_uid, nullptr);
     identity_list* to_list_1 = new_identity_list(diff_addr_same_uid);
     msg_diff_addr_same_uid->to = to_list_1;
@@ -253,13 +253,13 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
                                               PEP_enc_PGP_MIME,
                                               0);
 
-    cout << "Case 3 Status: " << tl_status_string(status) << endl;
+    output_stream << "Case 3 Status: " << tl_status_string(status) << endl;
     ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
-    cout << "PASS!" << endl;
+    output_stream << "PASS!" << endl;
 
     // Case 4:
     // Different address, same user_id, trusted
-    cout << "Case 4: Different address, same user_id, trusted" << endl;
+    output_stream << "Case 4: Different address, same user_id, trusted" << endl;
     status = trust_own_key(session, diff_addr_same_uid);
     ASSERT_EQ(status, PEP_STATUS_OK);
     message* enc_diff_addr_same_uid_trusted = NULL;
@@ -270,13 +270,13 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
                                               PEP_enc_PGP_MIME,
                                               0);
 
-    cout << "Case 4 Status: " << tl_status_string(status) << endl;
+    output_stream << "Case 4 Status: " << tl_status_string(status) << endl;
     ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
-    cout << "PASS!" << endl;
+    output_stream << "PASS!" << endl;
 
     // Case 5:
     // Same address, different user_id, untrusted
-    cout << "Case 5: Same address, different user_id, untrusted" << endl;
+    output_stream << "Case 5: Same address, different user_id, untrusted" << endl;
     ASSERT_NE(msg_same_addr_diff_uid, nullptr);
     identity_list* to_list_2 = new_identity_list(same_addr_diff_uid);
     msg_same_addr_diff_uid->to = to_list_2;
@@ -288,13 +288,13 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
                                               PEP_enc_PGP_MIME,
                                               0);
 
-    cout << "Case 5 Status: " << tl_status_string(status) << endl;
+    output_stream << "Case 5 Status: " << tl_status_string(status) << endl;
     ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
-    cout << "PASS!" << endl;
+    output_stream << "PASS!" << endl;
 
     // Case 6:
     // Same address, different user_id, trusted
-    cout << "Case 6: Same address, different user_id, trusted" << endl;
+    output_stream << "Case 6: Same address, different user_id, trusted" << endl;
     status = trust_personal_key(session, same_addr_diff_uid);
     ASSERT_EQ(status, PEP_STATUS_OK);
     message* enc_same_addr_diff_uid_trusted = NULL;
@@ -305,13 +305,13 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
                                               PEP_enc_PGP_MIME,
                                               0);
 
-    cout << "Case 6 Status: " << tl_status_string(status) << endl;
+    output_stream << "Case 6 Status: " << tl_status_string(status) << endl;
     ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
-    cout << "PASS!" << endl;
+    output_stream << "PASS!" << endl;
 
     // Case 7:
     // Different address, different user_id, untrusted
-    cout << "Case 7: Different address, different user_id, untrusted" << endl;
+    output_stream << "Case 7: Different address, different user_id, untrusted" << endl;
     ASSERT_NE(msg_diff_addr_diff_uid, nullptr);
     identity_list* to_list_3 = new_identity_list(diff_addr_diff_uid);
     msg_diff_addr_diff_uid->to = to_list_3;
@@ -323,13 +323,13 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
                                               PEP_enc_PGP_MIME,
                                               0);
 
-    cout << "Case 7 Status: " << tl_status_string(status) << endl;
+    output_stream << "Case 7 Status: " << tl_status_string(status) << endl;
     ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
-    cout << "PASS!" << endl;
+    output_stream << "PASS!" << endl;
 
     // Case 8:
     // Different address, different user_id, trusted
-    cout << "Case 8: Different address, different user_id, trusted" << endl;
+    output_stream << "Case 8: Different address, different user_id, trusted" << endl;
     status = trust_personal_key(session, diff_addr_diff_uid);
     ASSERT_EQ(status, PEP_STATUS_OK);
     message* enc_diff_addr_diff_uid_trusted = NULL;
@@ -340,14 +340,14 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
                                               PEP_enc_PGP_MIME,
                                               0);
 
-    cout << "Case 8 Status: " << tl_status_string(status) << endl;
+    output_stream << "Case 8 Status: " << tl_status_string(status) << endl;
     ASSERT_EQ(status, PEP_ILLEGAL_VALUE);
-    cout << "PASS!" << endl;
+    output_stream << "PASS!" << endl;
 
-    cout << "Correctly encrypted message:" << endl << endl;
+    output_stream << "Correctly encrypted message:" << endl << endl;
     char* encrypted_msg_text = NULL;
     mime_encode_message(enc_same_addr_same_uid_trusted, false, &encrypted_msg_text);
-    cout << encrypted_msg_text << endl << endl;
+    output_stream << encrypted_msg_text << endl << endl;
 
     // FIXME: Free all the damned things
 }

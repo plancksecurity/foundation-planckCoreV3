@@ -141,9 +141,9 @@ TEST_F(LeastCommonDenomColorTest, check_least_common_denom_color) {
     /* message is signed and no recip is mistrusted... */
     ASSERT_EQ(color_from_rating(rating) , PEP_color_yellow);
 
-    cout << "shortmsg: " << dest_msg->shortmsg << endl << endl;
-    cout << "longmsg: " << dest_msg->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (dest_msg->longmsg_formatted ? dest_msg->longmsg_formatted : "(empty)") << endl << endl;
+    output_stream << "shortmsg: " << dest_msg->shortmsg << endl << endl;
+    output_stream << "longmsg: " << dest_msg->longmsg << endl << endl;
+    output_stream << "longmsg_formatted: " << (dest_msg->longmsg_formatted ? dest_msg->longmsg_formatted : "(empty)") << endl << endl;
 
     PEP_rating decrypt_rating = rating;
 
@@ -185,9 +185,9 @@ TEST_F(LeastCommonDenomColorTest, check_least_common_denom_color) {
     flags = 0;
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
 
-    cout << "shortmsg: " << dest_msg->shortmsg << endl << endl;
-    cout << "longmsg: " << dest_msg->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (dest_msg->longmsg_formatted ? dest_msg->longmsg_formatted : "(empty)") << endl << endl;
+    output_stream << "shortmsg: " << dest_msg->shortmsg << endl << endl;
+    output_stream << "longmsg: " << dest_msg->longmsg << endl << endl;
+    output_stream << "longmsg_formatted: " << (dest_msg->longmsg_formatted ? dest_msg->longmsg_formatted : "(empty)") << endl << endl;
 
     /* message is signed and no recip is mistrusted... */
     ASSERT_EQ(color_from_rating(rating) , PEP_color_red);

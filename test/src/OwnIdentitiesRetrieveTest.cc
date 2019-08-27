@@ -8,6 +8,7 @@
 #include "keymanagement.h"
 
 #include "test_util.h"
+#include "TestConstants.h"
 
 #include "Engine.h"
 
@@ -104,7 +105,7 @@ TEST_F(OwnIdentitiesRetrieveTest, check_own_identities_retrieve) {
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(keylist, nullptr);
     ASSERT_NE(keylist->value, nullptr);
-    cout << keylist->value << endl;
+    output_stream << keylist->value << endl;
 
     status = own_identities_retrieve(session, &id_list);
     ASSERT_EQ(status, PEP_STATUS_OK);

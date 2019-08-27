@@ -103,7 +103,7 @@ namespace {
 
 TEST_F(MessageNullFromTest, check_message_null_from_no_header_key_unencrypted) {
     string null_from_msg = slurp("test_files/432_no_from_2.eml");
-    cout << null_from_msg << endl;
+    output_stream << null_from_msg << endl;
     stringlist_t* keylist = NULL;
     PEP_decrypt_flags_t flags = 0;
     PEP_rating rating;
@@ -121,7 +121,7 @@ TEST_F(MessageNullFromTest, check_message_null_from_no_header_key_unencrypted) {
 
 TEST_F(MessageNullFromTest, check_message_null_from_header_key_unencrypted) {
     string null_from_msg = slurp("test_files/432_no_from.eml");
-    cout << null_from_msg << endl;
+    output_stream << null_from_msg << endl;
     stringlist_t* keylist = NULL;
     PEP_decrypt_flags_t flags = 0;
     PEP_rating rating;
@@ -140,7 +140,7 @@ TEST_F(MessageNullFromTest, check_message_null_from_header_key_unencrypted) {
 TEST_F(MessageNullFromTest, check_message_null_from_encrypted_not_signed) {
     import_alice_pub();
     string null_from_msg = slurp("test_files/432_no_from_encrypted_not_signed.eml");
-    cout << null_from_msg << endl;
+    output_stream << null_from_msg << endl;
     stringlist_t* keylist = NULL;
     PEP_decrypt_flags_t flags = 0;
     PEP_rating rating;
@@ -160,7 +160,7 @@ TEST_F(MessageNullFromTest, check_message_null_from_encrypted_not_signed) {
 TEST_F(MessageNullFromTest, check_message_null_from_encrypted_and_signed) {
     import_alice_pub();
     string null_from_msg = slurp("test_files/432_no_from_encrypted_and_signed.eml");
-    cout << null_from_msg << endl;
+    output_stream << null_from_msg << endl;
     stringlist_t* keylist = NULL;
     PEP_decrypt_flags_t flags = 0;
     PEP_rating rating;

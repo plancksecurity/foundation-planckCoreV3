@@ -6,11 +6,10 @@
 #include <string>
 
 #include "test_util.h"
+#include "TestConstants.h"
 
 #include "pEpEngine.h"
 #include "mime.h"
-
-
 
 #include "Engine.h"
 
@@ -131,7 +130,7 @@ TEST_F(SenderFPRTest, check_sender_f_p_r) {
 
     char* text = NULL;
     mime_encode_message(dec_msg, false, &text);
-    cout << text << endl;
+    output_stream << text << endl;
     free(text);
 
     stringpair_list_t* fpr_node = stringpair_list_find(dec_msg->opt_fields, "X-pEp-Sender-FPR");

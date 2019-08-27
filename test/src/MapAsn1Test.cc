@@ -86,7 +86,7 @@ namespace {
 
 TEST_F(MapAsn1Test, check_map_asn1) {
 
-    cout << "creating new identity...\n";
+    output_stream << "creating new identity...\n";
 
     pEp_identity *ident1 = new_identity("vb@dingens.org",
             "DB4713183660A12ABAFA7714EBE90D44146F62F4", "42", "Volker Birk");
@@ -95,12 +95,12 @@ TEST_F(MapAsn1Test, check_map_asn1) {
     ident1->lang[1] = 'e';
     ident1->comm_type = PEP_ct_pEp;
 
-    cout << "converting identity to ASN.1...\n";
+    output_stream << "converting identity to ASN.1...\n";
 
     Identity_t *ident_asn1 = Identity_from_Struct(ident1, NULL);
     ASSERT_NE(ident_asn1, nullptr);
 
-    cout << "converting identity from ASN.1...\n";
+    output_stream << "converting identity from ASN.1...\n";
 
     pEp_identity *ident2 = Identity_to_Struct(ident_asn1, NULL);
     ASSERT_NE(ident2, nullptr);
@@ -112,7 +112,7 @@ TEST_F(MapAsn1Test, check_map_asn1) {
     ASSERT_EQ(ident2->comm_type, PEP_ct_pEp);
     ASSERT_STREQ(ident2->lang,"de");
 
-    cout << "freeing identities...\n";
+    output_stream << "freeing identities...\n";
 
     asn_DEF_Identity.free_struct(&asn_DEF_Identity, ident_asn1, 0);
     free_identity(ident1);

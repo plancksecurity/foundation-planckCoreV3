@@ -137,7 +137,7 @@ TEST_F(EncryptMissingPrivateKeyTest, check_encrypt_missing_private_key) {
 
 
     char* new_key = enc_msg->from->fpr;
-    cout << "Encrypted with key " << new_key << endl;
+    output_stream << "Encrypted with key " << new_key << endl;
 
     free_message(tmp_msg);
     free_message(enc_msg);

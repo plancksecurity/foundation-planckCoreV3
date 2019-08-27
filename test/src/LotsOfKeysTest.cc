@@ -14,6 +14,7 @@
 #include "pEpEngine.h"
 
 #include "test_util.h"
+#include "TestConstants.h"
 
 #include "Engine.h"
 
@@ -198,6 +199,7 @@ namespace {
 
 
 TEST_F(LotsOfKeysTest, check) {
+#ifndef USE_GPG // Our gnupg implementation only accepts the default cipher suite right now    
     struct tm tm;
     time_t t = time((time_t *) NULL);
     localtime_r(&t, &tm);
@@ -207,11 +209,12 @@ TEST_F(LotsOfKeysTest, check) {
     struct stats *get_identity_stats = stats_new("get-identity");
 
     int benchmark = 0;
-    PEP_STATUS status;
+    PEP_STATUS status = PEP_STATUS_OK;
     pEp_identity **ids = (pEp_identity **) calloc(N, sizeof(*ids));
     assert(ids);
 
     status = config_cipher_suite(session, PEP_CIPHER_SUITE_CV25519);
+    PEP_STATUS expected_value = PEP_STATUS_OK;
     ASSERT_EQ(status , PEP_STATUS_OK);
 
     for (int key = 0; key < N; key ++) {
@@ -329,4 +332,5 @@ TEST_F(LotsOfKeysTest, check) {
 
         benchmark++;
     }
+#endif    
 }

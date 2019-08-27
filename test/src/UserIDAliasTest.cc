@@ -87,7 +87,7 @@ namespace {
 
 
 TEST_F(UserIDAliasTest, check_userid_aliases) {
-    cout << "\n*** userid_alias_test ***\n\n";
+    output_stream << "\n*** userid_alias_test ***\n\n";
 
     PEP_STATUS status = PEP_STATUS_OK;
 
@@ -109,41 +109,41 @@ TEST_F(UserIDAliasTest, check_userid_aliases) {
     if (!own_id)
         own_id = strdup(PEP_OWN_USERID);
 
-    cout << "First, set up an identity with PEP_OWN_USERID as user_id." << endl;
+    output_stream << "First, set up an identity with PEP_OWN_USERID as user_id." << endl;
     status = myself(session, alice);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    cout << "After myself, user_id is " << alice->user_id << endl;
+    output_stream << "After myself, user_id is " << alice->user_id << endl;
     ASSERT_STREQ(alice->user_id, own_id);
 
-    cout << "Now set up an identity with " << alias1 << " as user_id." << endl;
+    output_stream << "Now set up an identity with " << alias1 << " as user_id." << endl;
     free(alice->user_id);
 
     alice->user_id = strdup(alias1);
     status = myself(session, alice);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    cout << "After myself, user_id is " << alice->user_id << endl;
+    output_stream << "After myself, user_id is " << alice->user_id << endl;
     ASSERT_STREQ(alice->user_id, own_id);
 
-    cout << "Now set up an identity with " << alias2 << " as user_id." << endl;
+    output_stream << "Now set up an identity with " << alias2 << " as user_id." << endl;
     free(alice->user_id);
 
     alice->user_id = strdup(alias2);
     status = myself(session, alice);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    cout << "After myself, user_id is " << alice->user_id << endl;
+    output_stream << "After myself, user_id is " << alice->user_id << endl;
     ASSERT_STREQ(alice->user_id, own_id);
 
     char* default_id = NULL;
     status = get_userid_alias_default(session, alias1, &default_id);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    cout << "Default user_id for " << alias1 << " is " << default_id << endl;
+    output_stream << "Default user_id for " << alias1 << " is " << default_id << endl;
     ASSERT_STREQ(default_id, own_id);
 
     free(default_id);
     default_id = NULL;
     status = get_userid_alias_default(session, alias2, &default_id);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    cout << "Default user_id for " << alias2 << " is " << default_id << endl;
+    output_stream << "Default user_id for " << alias2 << " is " << default_id << endl;
     ASSERT_STREQ(default_id, own_id);
 
 }

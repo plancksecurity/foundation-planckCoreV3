@@ -89,7 +89,7 @@ TEST_F(KeyeditTest, check_keyedit) {
 
     // generate test key
 
-    cout << "\ngenerating key for keyedit test\n";
+    output_stream << "\ngenerating key for keyedit test\n";
     pEp_identity *identity = new_identity(
             "expire@dingens.org",
             NULL,
@@ -98,9 +98,9 @@ TEST_F(KeyeditTest, check_keyedit) {
         );
     ASSERT_NE(identity, nullptr);
     PEP_STATUS generate_status = generate_keypair(session, identity);
-    cout << "generate_keypair() exits with " << generate_status << "\n";
+    output_stream << "generate_keypair() exits with " << generate_status << "\n";
     ASSERT_EQ(generate_status, PEP_STATUS_OK);
-    cout << "generated key is " << identity->fpr << "\n";
+    output_stream << "generated key is " << identity->fpr << "\n";
 
     string key(identity->fpr);
     free_identity(identity);
@@ -110,28 +110,28 @@ TEST_F(KeyeditTest, check_keyedit) {
     timestamp *ts = new_timestamp(time(0));
     ts->tm_year += 2;
 
-    cout << "key shell expire on " << asctime(ts) << "\n";
+    output_stream << "key shell expire on " << asctime(ts) << "\n";
 
     PEP_STATUS status2 = renew_key(session, key.c_str(), ts);
-    cout << "renew_key() exited with " << status2 << "\n";
+    output_stream << "renew_key() exited with " << status2 << "\n";
     ASSERT_EQ(status2, PEP_STATUS_OK);
     free_timestamp(ts);
 
-    cout << "key renewed.\n";
+    output_stream << "key renewed.\n";
 
-    cout << "key will be revoked\n";
+    output_stream << "key will be revoked\n";
     PEP_STATUS status3 = revoke_key(session, key.c_str(), "revoke test");
-    cout << "revoke_key() exited with " << status3 << "\n";
+    output_stream << "revoke_key() exited with " << status3 << "\n";
     ASSERT_EQ(status3, PEP_STATUS_OK);
 
-    cout << "key revoked.\n";
+    output_stream << "key revoked.\n";
 
     // Because pEp's policy is never to delete keys from the keyring and delete_keypair
     // though gnupg makes responding to a dialog mandatory under Debian, we will not test
     // this anymore.
 
-    // cout << "deleting key pair " << key.c_str() << "\n";
+    // output_stream << "deleting key pair " << key.c_str() << "\n";
     // PEP_STATUS delete_status = delete_keypair(session, key.c_str());
-    // cout << "delete_keypair() exits with " << delete_status << "\n";
+    // output_stream << "delete_keypair() exits with " << delete_status << "\n";
     // ASSERT_EQ(delete_status , PEP_STATUS_OK);
 }

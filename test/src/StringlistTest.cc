@@ -10,7 +10,7 @@
 
 #include "stringlist.h"
 
-
+#include "test_util.h"
 
 #include "Engine.h"
 
@@ -26,39 +26,39 @@ namespace {
 
 
 TEST_F(StringlistTest, check_stringlists) {
-    cout << "\n*** data structures: stringlist_test ***\n\n";
+    output_stream << "\n*** data structures: stringlist_test ***\n\n";
 
     const char* str0 = "I am your father, Luke\n";
 
     // new_stringlist test code
-    cout << "creating one-element stringlist…\n";
+    output_stream << "creating one-element stringlist…\n";
 
     stringlist_t* src = new_stringlist(str0);
     ASSERT_NE((src), nullptr);
     ASSERT_STREQ(src->value, str0);
-    cout << "Value: " << src->value;
+    output_stream << "Value: " << src->value;
     ASSERT_EQ(src->next, nullptr);
-    cout << "one-element stringlist created, next element is NULL\n";
+    output_stream << "one-element stringlist created, next element is NULL\n";
 
-    cout << "freeing stringlist…\n\n";
+    output_stream << "freeing stringlist…\n\n";
     free_stringlist(src);
     src = NULL;
 
     // test stringlist_add with four-element list
-    cout << "creating four-element stringlist…\n";
+    output_stream << "creating four-element stringlist…\n";
     const char* str1 = "String 1";
     const char* str2 = "\tString 2";
     const char* str3 = "\tString 3";
     const char* str4 = "\tString 4\n";
     const char* strarr[4] = {str1, str2, str3, str4};
-    cout << "stringlist_add on empty list…\n";
+    output_stream << "stringlist_add on empty list…\n";
     src = stringlist_add(src, str1); // src is NULL
     ASSERT_NE(src, nullptr);
     ASSERT_NE(stringlist_add(src, str2), nullptr); // returns ptr to new elt
     ASSERT_NE(stringlist_add(src, str3), nullptr);
     ASSERT_NE(stringlist_add(src, str4), nullptr);
 
-    cout << "checking contents\n";
+    output_stream << "checking contents\n";
     stringlist_t* p = src;
     int i = 0;
     while (p) {
@@ -70,41 +70,41 @@ TEST_F(StringlistTest, check_stringlists) {
     }
     ASSERT_EQ(p, nullptr); // list ends properly
 
-    cout << "\nduplicating four-element stringlist…\n";
+    output_stream << "\nduplicating four-element stringlist…\n";
     stringlist_t* dst = stringlist_dup(src);
     ASSERT_NE(dst, nullptr);
 
     stringlist_t* p_dst = dst;
     p = src;
 
-    cout << "checking contents\n";
+    output_stream << "checking contents\n";
     while (p_dst) {
         ASSERT_NE(p_dst->value, nullptr);
         ASSERT_STREQ(p->value, p_dst->value);
         ASSERT_NE(p->value , p_dst->value); // ensure this is a copy
-        cout << p_dst->value;
+        output_stream << p_dst->value;
         p = p->next;
         p_dst = p_dst->next;
         ASSERT_TRUE((p == NULL) == (p_dst == NULL));
     }
     ASSERT_EQ(p_dst, nullptr);
 
-    cout << "freeing stringlists…\n\n";
+    output_stream << "freeing stringlists…\n\n";
     free_stringlist(src);
     free_stringlist(dst);
     src = NULL;
     dst = NULL;
 
-    cout << "duplicating one-element stringlist…\n";
+    output_stream << "duplicating one-element stringlist…\n";
     src = new_stringlist(str0);
     ASSERT_NE(src, nullptr);
     dst = stringlist_dup(src);
     ASSERT_STREQ(dst->value, str0);
-    cout << "Value: " << src->value;
+    output_stream << "Value: " << src->value;
     ASSERT_EQ(dst->next, nullptr);
-    cout << "one-element stringlist duped, next element is NULL\n";
+    output_stream << "one-element stringlist duped, next element is NULL\n";
 
-    cout << "\nAdd to empty stringlist (node exists, but no value…)\n";
+    output_stream << "\nAdd to empty stringlist (node exists, but no value…)\n";
     if (src->value)
         free(src->value);
     src->value = NULL;
@@ -112,16 +112,16 @@ TEST_F(StringlistTest, check_stringlists) {
     ASSERT_NE(src->value, nullptr);
     ASSERT_STREQ(src->value, str2);
     ASSERT_NE(src->value , str2); // ensure this is a copy
-    cout << src->value;
+    output_stream << src->value;
 
-    cout << "\nfreeing stringlists…\n\n";
+    output_stream << "\nfreeing stringlists…\n\n";
     free_stringlist(src);
     free_stringlist(dst);
 
     src = NULL;
     dst = NULL;
 
-    cout << "done.\n";
+    output_stream << "done.\n";
 }
 
 TEST_F(StringlistTest, check_dedup_stringlist) {

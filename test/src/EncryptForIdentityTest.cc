@@ -113,7 +113,7 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     const char* bella_fpr = "5631BF1357326A02AA470EEEB815EF7FA4516AAE";
     const char* nobody_fpr = "1111111111111111111111111111111111111111";
 
-    cout << "creating message…\n";
+    output_stream << "creating message…\n";
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", alice_fpr, PEP_OWN_USERID, "Alice Test");
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, "42", "Bob Test");
 
@@ -130,32 +130,32 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     outgoing_message->shortmsg = strdup("Greetings, humans!");
     outgoing_message->longmsg = strdup("This is a test of the emergency message system. This is only a test. BEEP.");
     outgoing_message->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
-    cout << "message created.\n";
+    output_stream << "message created.\n";
 
     char* encoded_text = nullptr;
     PEP_STATUS status = mime_encode_message(outgoing_message, false, &encoded_text);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(encoded_text, nullptr);
 
-    cout << "decrypted:\n\n";
-    cout << encoded_text << "\n";
+    output_stream << "decrypted:\n\n";
+    output_stream << encoded_text << "\n";
 
     free(encoded_text);
 
     message* encrypted_msg = nullptr;
-    cout << "calling encrypt_message_for_identity()\n";
+    output_stream << "calling encrypt_message_for_identity()\n";
     status = encrypt_message_for_self(session, alice, outgoing_message, NULL, &encrypted_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);
-    cout << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
+    output_stream << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(encrypted_msg, nullptr);
-    cout << "message encrypted.\n";
+    output_stream << "message encrypted.\n";
 
     status = mime_encode_message(encrypted_msg, false, &encoded_text);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(encoded_text, nullptr);
 
-    cout << "encrypted:\n\n";
-    cout << encoded_text << "\n";
+    output_stream << "encrypted:\n\n";
+    output_stream << encoded_text << "\n";
 
     message* decoded_msg = nullptr;
     status = mime_decode_message(encoded_text, strlen(encoded_text), &decoded_msg);
@@ -182,7 +182,7 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     PEP_comm_type ct = encrypted_msg->from->comm_type;
     ASSERT_TRUE(ct == PEP_ct_pEp || ct == PEP_ct_pEp_unconfirmed || ct == PEP_ct_OpenPGP || ct == PEP_ct_OpenPGP_unconfirmed);
 
-    cout << "keys used:\n";
+    output_stream << "keys used:\n";
 
     int i = 0;
 
@@ -192,33 +192,33 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
             ASSERT_STRCASEEQ("",kl4->value);
         }
         else {
-            cout << "\t " << kl4->value << endl;
+            output_stream << "\t " << kl4->value << endl;
             ASSERT_STRCASEEQ("4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", kl4->value);
-            cout << "Encrypted for Alice! Yay! It worked!" << endl;
+            output_stream << "Encrypted for Alice! Yay! It worked!" << endl;
         }
         ASSERT_LT(i , 2);
     }
-    cout << "Encrypted ONLY for Alice! Test passed. Move along. These are not the bugs you are looking for." << endl;
+    output_stream << "Encrypted ONLY for Alice! Test passed. Move along. These are not the bugs you are looking for." << endl;
 
-    cout << "freeing messages…\n";
+    output_stream << "freeing messages…\n";
     free_message(encrypted_msg);
     free_message(decrypted_msg);
     free_stringlist (keylist_used);
-    cout << "done.\n";
+    output_stream << "done.\n";
 
-    cout << "Now encrypt for self with extra keys." << endl;
+    output_stream << "Now encrypt for self with extra keys." << endl;
     stringlist_t* extra_keys = new_stringlist(gabrielle_fpr);
     stringlist_add(extra_keys, bella_fpr);
     encrypted_msg = NULL;
     decrypted_msg = NULL;
     keylist_used = NULL;
 
-    cout << "calling encrypt_message_for_identity()\n";
+    output_stream << "calling encrypt_message_for_identity()\n";
     status = encrypt_message_for_self(session, alice, outgoing_message, extra_keys, &encrypted_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);
-    cout << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
+    output_stream << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(encrypted_msg, nullptr);
-    cout << "message encrypted.\n";
+    output_stream << "message encrypted.\n";
 
     flags = 0;
     status = decrypt_message(session, encrypted_msg, &decrypted_msg, &keylist_used, &rating, &flags);
@@ -229,29 +229,29 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     ct = encrypted_msg->from->comm_type;
     ASSERT_TRUE(ct == PEP_ct_pEp || ct == PEP_ct_pEp_unconfirmed || ct == PEP_ct_OpenPGP || ct == PEP_ct_OpenPGP_unconfirmed);
 
-    cout << "keys used:\n";
+    output_stream << "keys used:\n";
 
     for (stringlist_t* incoming_kl = extra_keys; incoming_kl && incoming_kl->value; incoming_kl = incoming_kl->next) {
         bool found = false;
-        cout << "Encrypted for: ";
+        output_stream << "Encrypted for: ";
         for (stringlist_t* kl4 = keylist_used; kl4 && kl4->value; kl4 = kl4->next, i++) {
             if (strcasecmp(incoming_kl->value, kl4->value) == 0) {
-                cout << "\t " << kl4->value;
+                output_stream << "\t " << kl4->value;
                 found = true;
                 break;
             }
         }
-        cout << endl;
+        output_stream << endl;
         ASSERT_TRUE(found);
     }
-    cout << "Encrypted for all the extra keys!" << endl;
+    output_stream << "Encrypted for all the extra keys!" << endl;
 
     bool found = false;
     for (stringlist_t* kl4 = keylist_used; kl4 && kl4->value; kl4 = kl4->next)
     {
         if (strcasecmp(alice_fpr, kl4->value) == 0) {
             found = true;
-            cout << "Encrypted also for Alice! Yay!" << endl;
+            output_stream << "Encrypted also for Alice! Yay!" << endl;
             break;
         }
     }
@@ -264,13 +264,13 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     free_stringlist(keylist_used);
     keylist_used = NULL;
 
-    cout << "Now add a bad fpr." << endl;
+    output_stream << "Now add a bad fpr." << endl;
 
     stringlist_add(extra_keys, nobody_fpr);
 
-    cout << "calling encrypt_message_for_identity()\n";
+    output_stream << "calling encrypt_message_for_identity()\n";
     status = encrypt_message_for_self(session, alice, outgoing_message, extra_keys, &encrypted_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);
-    cout << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
+    output_stream << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
     ASSERT_NE(status, PEP_STATUS_OK);
 
     free_message(outgoing_message);
@@ -283,20 +283,20 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     keylist_used = NULL;
 
 
-    cout << "*** Now testing MIME_encrypt_for_self ***" << endl;
+    output_stream << "*** Now testing MIME_encrypt_for_self ***" << endl;
 
     alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, "Alice Test");
     bob = new_identity("pep.test.bob@pep-project.org", NULL, "42", "Bob Test");
 
-    cout << "Reading in alice_bob_encrypt_test_plaintext_mime.eml..." << endl;
+    output_stream << "Reading in alice_bob_encrypt_test_plaintext_mime.eml..." << endl;
 
     const string mimetext = slurp("test_mails/alice_bob_encrypt_test_plaintext_mime.eml");
 
-    cout << "Text read:" << endl;
-    cout << mimetext.c_str() << endl;
+    output_stream << "Text read:" << endl;
+    output_stream << mimetext.c_str() << endl;
     char* encrypted_mimetext = nullptr;
 
-    cout << "Calling MIME_encrypt_message_for_self" << endl;
+    output_stream << "Calling MIME_encrypt_message_for_self" << endl;
     status = MIME_encrypt_message_for_self(session, alice, mimetext.c_str(),
                                            mimetext.size(),
                                            NULL,
@@ -304,10 +304,10 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
                                            PEP_enc_PGP_MIME,
                                            PEP_encrypt_flag_force_unsigned | PEP_encrypt_flag_force_no_attached_key);
 
-    cout << "Encrypted message:" << endl;
-    cout << encrypted_mimetext << endl;
+    output_stream << "Encrypted message:" << endl;
+    output_stream << encrypted_mimetext << endl;
 
-    cout << "Calling MIME_decrypt_message" << endl;
+    output_stream << "Calling MIME_decrypt_message" << endl;
 
     char* decrypted_mimetext = nullptr;
     free_stringlist(keylist_used);
@@ -332,10 +332,10 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
 
     ASSERT_TRUE(status == PEP_DECRYPTED && mimerating == PEP_rating_unreliable);
 
-    cout << "Decrypted message:" << endl;
-    cout << decrypted_mimetext << endl;
+    output_stream << "Decrypted message:" << endl;
+    output_stream << decrypted_mimetext << endl;
 
-    cout << "keys used:\n";
+    output_stream << "keys used:\n";
 
     i = 0;
 
@@ -345,11 +345,11 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
             ASSERT_STRCASEEQ("",kl4->value);
         }
         else {
-            cout << "\t " << kl4->value << endl;
+            output_stream << "\t " << kl4->value << endl;
             ASSERT_STRCASEEQ("4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", kl4->value);
-            cout << "Encrypted for Alice! Yay! It worked!" << endl;
+            output_stream << "Encrypted for Alice! Yay! It worked!" << endl;
         }
         ASSERT_LT(i , 2);
     }
-    cout << "Encrypted ONLY for Alice! Test passed. Move along. These are not the bugs you are looking for." << endl;
+    output_stream << "Encrypted ONLY for Alice! Test passed. Move along. These are not the bugs you are looking for." << endl;
 }

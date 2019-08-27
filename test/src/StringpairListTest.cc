@@ -39,7 +39,7 @@ namespace {
 
 
 TEST_F(StringpairListTest, check_stringpair_lists) {
-    cout << "\n*** data structures: stringpair_list_test ***\n\n";
+    output_stream << "\n*** data structures: stringpair_list_test ***\n\n";
 
     const char* val_1_arr[4] = {"I am your father, Luke",
                                 "These are not the droids you're looking for",
@@ -58,7 +58,7 @@ TEST_F(StringpairListTest, check_stringpair_lists) {
 //        stringpair_arr[i] = new stringpair(val_1_arr[i], val_2_arr[i]);
 //    }
 
-    cout << "creating one-element stringpair_list...\n";
+    output_stream << "creating one-element stringpair_list...\n";
 
     stringpair_t* strpair = new_stringpair(val_1_arr[0], val_2_arr[0]);
     ASSERT_NE(strpair, nullptr);
@@ -66,9 +66,9 @@ TEST_F(StringpairListTest, check_stringpair_lists) {
     ASSERT_NE(pairlist->value, nullptr);
     ASSERT_TRUE(test_stringpair_equals(strpair, pairlist->value));
     ASSERT_EQ(pairlist->next , nullptr);
-    cout << "one-element stringpair_list created, next element is NULL\n\n";
+    output_stream << "one-element stringpair_list created, next element is NULL\n\n";
 
-    cout << "duplicating one-element list...\n";
+    output_stream << "duplicating one-element list...\n";
     stringpair_list_t* duplist = stringpair_list_dup(pairlist);
     stringpair_t* srcpair = pairlist->value;
     stringpair_t* dstpair = duplist->value;
@@ -78,9 +78,9 @@ TEST_F(StringpairListTest, check_stringpair_lists) {
     ASSERT_NE(srcpair->key , dstpair->key);   // test deep copies (to be fixed in next 2 commits)
     ASSERT_NE(srcpair->value , dstpair->value);
     ASSERT_EQ(duplist->next , nullptr);
-    cout << "one-element stringpair_list duplicated.\n\n";
+    output_stream << "one-element stringpair_list duplicated.\n\n";
 
-    cout << "freeing stringpair_lists...\n";
+    output_stream << "freeing stringpair_lists...\n";
     free_stringpair_list(pairlist); // will free strpair
     free_stringpair_list(duplist);
     pairlist = NULL;
@@ -88,7 +88,7 @@ TEST_F(StringpairListTest, check_stringpair_lists) {
     strpair = NULL;
 
     stringpair_list_t* p;
-    cout << "\ncreating four-element list...\n";
+    output_stream << "\ncreating four-element list...\n";
     pairlist = stringpair_list_add(pairlist, new_stringpair(val_1_arr[0], val_2_arr[0]));
     for (i = 1; i < 4; i++) {
         p = stringpair_list_add(pairlist, new_stringpair(val_1_arr[i], val_2_arr[i]));
@@ -116,7 +116,7 @@ TEST_F(StringpairListTest, check_stringpair_lists) {
     }
     ASSERT_EQ(p , nullptr);
 
-    cout << "\nduplicating four-element list...\n\n";
+    output_stream << "\nduplicating four-element list...\n\n";
     duplist = stringpair_list_dup(pairlist);
 
     p = pairlist;
@@ -129,7 +129,7 @@ TEST_F(StringpairListTest, check_stringpair_lists) {
         ASSERT_NE(dstpair, nullptr);
         ASSERT_NE(dstpair->value, nullptr);
 
-        cout << srcpair->key << ":" << srcpair->value << " / " << dstpair->key << ":" << dstpair->value << "\n";
+        output_stream << srcpair->key << ":" << srcpair->value << " / " << dstpair->key << ":" << dstpair->value << "\n";
         ASSERT_TRUE(test_stringpair_equals(srcpair, dstpair));
 
         ASSERT_NE(srcpair->key , dstpair->key);   // test deep copies (to be fixed in next 2 commits)
@@ -141,13 +141,13 @@ TEST_F(StringpairListTest, check_stringpair_lists) {
         dup_p = dup_p->next;
         ASSERT_TRUE((p == NULL) == (dup_p == NULL));
     }
-    cout << "\nfour-element stringpair_list successfully duplicated.\n\n";
+    output_stream << "\nfour-element stringpair_list successfully duplicated.\n\n";
 
-    cout << "freeing stringpair_lists...\n";
+    output_stream << "freeing stringpair_lists...\n";
     free_stringpair_list(pairlist); // will free strpair
     free_stringpair_list(duplist);
     pairlist = NULL;
     duplist = NULL;
 
-    cout << "done.\n";
+    output_stream << "done.\n";
 }

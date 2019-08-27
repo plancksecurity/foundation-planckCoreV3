@@ -147,7 +147,7 @@ TEST_F(LookupTest, check_lookup) {
         ASSERT_FALSE(hans->me);
         ASSERT_EQ(hans->comm_type , PEP_ct_OpenPGP_unconfirmed);
 
-        cout << "PASS: update_identity() correctly retrieved OpenPGP key for '" << expected_address << "' using '" << address << "'" << endl << endl;
+        output_stream << "PASS: update_identity() correctly retrieved OpenPGP key for '" << expected_address << "' using '" << address << "'" << endl << endl;
         free_identity(hans);
     }
 }

@@ -91,7 +91,7 @@ TEST_F(I18nTest, check_i18n) {
     ASSERT_EQ(status2 , PEP_STATUS_OK);
     ASSERT_NE(languages, nullptr);
 
-    cout << languages;
+    output_stream << languages;
     pEp_free(languages);
 
     char *phrase;
@@ -99,7 +99,7 @@ TEST_F(I18nTest, check_i18n) {
     ASSERT_EQ(status3 , PEP_STATUS_OK);
     ASSERT_NE(phrase, nullptr);
 
-    cout << "\nGerman: " << phrase << "\n";
+    output_stream << "\nGerman: " << phrase << "\n";
     pEp_free(phrase);
 
     status3 = get_phrase(session, "zz", 1000, &phrase);

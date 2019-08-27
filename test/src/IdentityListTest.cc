@@ -2,6 +2,8 @@
 // see LICENSE.txt
 
 #include "TestConstants.h"
+#include "test_util.h"
+
 #include <stdlib.h>
 #include <string>
 #include <cstring>
@@ -84,7 +86,7 @@ TEST_F(IdentityListTest, check_identity_list) {
 
     int i;
 
-    cout << "creating one-element identity_list...\n";
+    output_stream << "creating one-element identity_list...\n";
 
     pEp_identity* new_id = identity_dup(id1);
     ASSERT_NE(new_id, nullptr);
@@ -92,9 +94,9 @@ TEST_F(IdentityListTest, check_identity_list) {
     ASSERT_NE(idlist->ident, nullptr);
     ASSERT_TRUE(test_identity_equals(id1, idlist->ident));
     ASSERT_EQ(idlist->next, nullptr);
-    cout << "one-element identity_list created, next element is NULL\n\n";
+    output_stream << "one-element identity_list created, next element is NULL\n\n";
 
-    cout << "duplicating one-element list...\n";
+    output_stream << "duplicating one-element list...\n";
     identity_list* duplist = identity_list_dup(idlist);
     pEp_identity* srcid = idlist->ident;
     pEp_identity* dstid = duplist->ident;
@@ -104,9 +106,9 @@ TEST_F(IdentityListTest, check_identity_list) {
     ASSERT_NE(srcid->fpr, dstid->fpr);
     ASSERT_NE(srcid->username, dstid->username);
     ASSERT_EQ(duplist->next, nullptr);
-    cout << "one-element identity_list duplicated.\n\n";
+    output_stream << "one-element identity_list duplicated.\n\n";
 
-    cout << "freeing identity_lists...\n";
+    output_stream << "freeing identity_lists...\n";
     free_identity_list(idlist); // will free srcid
     free_identity_list(duplist);
     idlist = NULL;
@@ -114,7 +116,7 @@ TEST_F(IdentityListTest, check_identity_list) {
     srcid = NULL;
 
     identity_list* p;
-    cout << "\ncreating four-element list...\n";
+    output_stream << "\ncreating four-element list...\n";
     idlist = identity_list_add(idlist, identity_dup(id_arr[0]));
     for (i = 1; i < 4; i++) {
         p = identity_list_add(idlist, identity_dup(id_arr[i]));
@@ -138,7 +140,7 @@ TEST_F(IdentityListTest, check_identity_list) {
     }
     ASSERT_EQ(p , nullptr);
 
-    cout << "\nduplicating four-element list...\n\n";
+    output_stream << "\nduplicating four-element list...\n\n";
     duplist = identity_list_dup(idlist);
 
     p = idlist;
@@ -163,13 +165,13 @@ TEST_F(IdentityListTest, check_identity_list) {
         dup_p = dup_p->next;
         ASSERT_EQ((p == NULL), (dup_p == NULL));
     }
-    cout << "\nfour-element identity_list successfully duplicated.\n\n";
+    output_stream << "\nfour-element identity_list successfully duplicated.\n\n";
 
-    cout << "freeing identity_lists...\n";
+    output_stream << "freeing identity_lists...\n";
     free_identity_list(idlist); // will free srcid
     free_identity_list(duplist);
     idlist = NULL;
     duplist = NULL;
 
-    cout << "done.\n";
+    output_stream << "done.\n";
 }

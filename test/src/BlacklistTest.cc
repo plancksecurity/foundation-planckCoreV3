@@ -105,16 +105,16 @@ namespace {
 TEST_F(BlacklistTest, check_blacklist) {
     // blacklist test code
 
-    cout << "adding 23 to blacklist\n";
+    output_stream << "adding 23 to blacklist\n";
     PEP_STATUS status2 = blacklist_add(session, "23");
     ASSERT_EQ(status2 , PEP_STATUS_OK);
-    cout << "added.\n";
+    output_stream << "added.\n";
 
     bool listed;
     PEP_STATUS status3 = blacklist_is_listed(session, "23", &listed);
     ASSERT_EQ(status3 , PEP_STATUS_OK);
     ASSERT_TRUE(listed);
-    cout << "23 is listed.\n";
+    output_stream << "23 is listed.\n";
 
     stringlist_t *blacklist;
     PEP_STATUS status6 = blacklist_retrieve(session, &blacklist);
@@ -122,32 +122,32 @@ TEST_F(BlacklistTest, check_blacklist) {
     ASSERT_NE(blacklist, nullptr);
 
     bool in23 = false;
-    cout << "the blacklist contains now: ";
+    output_stream << "the blacklist contains now: ";
     for (stringlist_t *bl = blacklist; bl && bl->value; bl = bl->next) {
-        cout << bl->value << ", ";
+        output_stream << bl->value << ", ";
         if (std::strcmp(bl->value, "23") == 0)
             in23 = true;
     }
-    cout << "END\n";
+    output_stream << "END\n";
     ASSERT_TRUE(in23);
     free_stringlist(blacklist);
 
-    cout << "deleting 23 from blacklist\n";
+    output_stream << "deleting 23 from blacklist\n";
     PEP_STATUS status4 = blacklist_delete(session, "23");
     ASSERT_EQ(status4 , PEP_STATUS_OK);
-    cout << "deleted.\n";
+    output_stream << "deleted.\n";
 
     PEP_STATUS status5 = blacklist_is_listed(session, "23", &listed);
     ASSERT_EQ(status5 , PEP_STATUS_OK);
     ASSERT_TRUE(!listed);
-    cout << "23 is not listed any more.\n";
+    output_stream << "23 is not listed any more.\n";
 
-    cout << "blacklist only key for identity / unblacklist key / add key" << endl;
+    output_stream << "blacklist only key for identity / unblacklist key / add key" << endl;
 
 
     // 2797 65A2 FEB5 B7C7 31B8  61D9 3E4C EFD9 F7AF 4684 - this is the blacklisted key in blacklisted_pub.asc
 
-    const string keytext = slurp("test_mails/blacklisted_pub.asc");
+    const string keytext = slurp("test_keys/pub/blacklisted_pub.asc");
 
     /* FIXME: put in automated test stuff (N.B. only gdb mem examination to this point to get
      *        fix in */
@@ -197,14 +197,14 @@ TEST_F(BlacklistTest, check_blacklist) {
                                 &id_def, &us_def, &addr_def, true);
 
     if (!(blacklisted_identity->fpr))
-        cout << "OK! blacklisted_identity->fpr is empty. Yay!" << endl;
+        output_stream << "OK! blacklisted_identity->fpr is empty. Yay!" << endl;
     else if (strcmp(blacklisted_identity->fpr, bl_fpr_2) == 0)
-        cout << "OK! While this should be empty, you are probably running " <<
+        output_stream << "OK! While this should be empty, you are probably running " <<
                 "this in your home directory instead of the test environment " <<
                 "and have leftover keys. This is an acceptable result here then. But you " <<
                 "should probably clean up after yourself :)" << endl;
     else
-        cout << "Not OK. blacklisted_identity->fpr is " << blacklisted_identity->fpr << "." << endl
+        output_stream << "Not OK. blacklisted_identity->fpr is " << blacklisted_identity->fpr << "." << endl
              << "Expected it to be empty or (possibly) " << bl_fpr_2 << endl;
 
     ASSERT_TRUE(blacklisted_identity->fpr == NULL || blacklisted_identity->fpr[0] == '\0' || strcmp(blacklisted_identity->fpr, bl_fpr_2) == 0);
@@ -221,14 +221,14 @@ TEST_F(BlacklistTest, check_blacklist) {
     ASSERT_TRUE(msg23->to != NULL && msg23->to->ident != NULL);
     PEP_rating rating23;
 
-    cout << "testing outgoing_message_rating() with blacklisted key in to\n";
+    output_stream << "testing outgoing_message_rating() with blacklisted key in to\n";
     PEP_STATUS status23 = outgoing_message_rating(session, msg23, &rating23);
     ASSERT_EQ(status23 , PEP_STATUS_OK);
     ASSERT_EQ(rating23 , PEP_rating_unencrypted);
 
     free_message(msg23);
 
-    const string keytext2 = slurp("test_mails/blacklisted_pub2.asc");
+    const string keytext2 = slurp("test_keys/pub/blacklisted_pub2.asc");
     PEP_STATUS status14 = import_key(session, keytext2.c_str(), keytext2.length(), NULL);
 
     pEp_identity* blacklisted_identity2 = new_identity("blacklistedkeys@kgrothoff.org",
@@ -239,9 +239,9 @@ TEST_F(BlacklistTest, check_blacklist) {
     //
     // ASSERT_EQ((blacklisted_identity2->fpr && strcmp(blacklisted_identity2->fpr, bl_fpr_2) , 0), "blacklisted_identity2->fpr && strcmp(blacklisted_identity2->fpr);
     // if (blacklisted_identity2->fpr && strcmp(blacklisted_identity2->fpr, bl_fpr_2) == 0)
-    //     cout << "blacklisted identity's fpr successfully replaced by the unblacklisted one" << endl;
+    //     output_stream << "blacklisted identity's fpr successfully replaced by the unblacklisted one" << endl;
     // // else
-    // //     cout << "blacklisted_identity->fpr should be " << bl_fpr_2 << " but is " << blacklisted_identity->fpr << endl;
+    // //     output_stream << "blacklisted_identity->fpr should be " << bl_fpr_2 << " but is " << blacklisted_identity->fpr << endl;
     //
     // PEP_STATUS status12 = blacklist_delete(session, bl_fpr_1);
     // PEP_STATUS status13 = update_identity(session, blacklisted_identity);

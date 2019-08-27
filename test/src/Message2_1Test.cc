@@ -6,10 +6,9 @@
 #include <string>
 
 #include "test_util.h"
+#include "TestConstants.h"
 
 #include "pEpEngine.h"
-
-
 
 #include "Engine.h"
 
@@ -87,7 +86,7 @@ namespace {
                                                        &ptext, &psize, &keylist,
                                                        NULL);
 
-                cout << ptext << endl;
+                output_stream << ptext << endl;
 
                 // fixme, check status
                 if (strstr(ptext, "pEp-Wrapped-Message-Info: OUTER") != NULL && strstr(ptext, "pEp-Wrapped-Message-Info: INNER") != NULL) {

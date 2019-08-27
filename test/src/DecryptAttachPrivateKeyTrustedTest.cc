@@ -93,7 +93,7 @@ TEST_F(DecryptAttachPrivateKeyTrustedTest, check_decrypt_attach_private_key_trus
 
     const char* own_uid = PEP_OWN_USERID;
 
-    cout << "Importing keys..." << endl;
+    output_stream << "Importing keys..." << endl;
 
     string input_key;
     const char* main_addr = "priv-key-import-test-main@darthmama.cool";
@@ -125,48 +125,48 @@ TEST_F(DecryptAttachPrivateKeyTrustedTest, check_decrypt_attach_private_key_trus
     ASSERT_EQ(status, PEP_TEST_KEY_IMPORT_SUCCESS);
 
 
-    cout << "Setting up own identity with default key " << fpr_main_me << endl;
+    output_stream << "Setting up own identity with default key " << fpr_main_me << endl;
     // Own identity with default key etc
     main_me = new_identity(main_addr, fpr_main_me, own_uid, "PrivateKey Import Test");
     status = set_own_key(session, main_me, fpr_main_me);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
     ASSERT_STREQ(main_me->fpr, fpr_main_me);
-    cout << "Done!" << endl << endl;
+    output_stream << "Done!" << endl << endl;
 
-    cout << "Setting up sender identities and resetting key trust." << endl;
-    cout << "Same address, same user_id - address: " << main_addr << ", user_id: " << own_uid << ", fpr: " << fpr_same_addr_same_uid << endl;
+    output_stream << "Setting up sender identities and resetting key trust." << endl;
+    output_stream << "Same address, same user_id - address: " << main_addr << ", user_id: " << own_uid << ", fpr: " << fpr_same_addr_same_uid << endl;
     same_addr_same_uid = new_identity(main_addr, fpr_same_addr_same_uid, own_uid, "PrivateKey Import Test");
     ASSERT_TRUE(status == PEP_STATUS_OK || status == PEP_CANNOT_FIND_IDENTITY);
     ASSERT_NE(same_addr_same_uid->comm_type & PEP_ct_confirmed, PEP_ct_confirmed);
 
     status = key_reset_trust(session, same_addr_same_uid);
 
-    cout << "Done!" << endl << endl;
+    output_stream << "Done!" << endl << endl;
 
-    cout << "Reading in message..." << endl;
+    output_stream << "Reading in message..." << endl;
 
     string encoded_text = slurp("test_mails/priv_key_attach.eml");
 
-    cout << "Starting test..." << endl;
+    output_stream << "Starting test..." << endl;
     // Case 1:
     // Same address, same user_id, untrusted
-    cout << "decrypt with attached private key: Same address, same user_id, trusted" << endl;
+    output_stream << "decrypt with attached private key: Same address, same user_id, trusted" << endl;
     char* decrypted_text = NULL;
     stringlist_t* keylist_used = NULL;
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     char* modified_src = NULL;
 
-    cout << "Trusting own key for " << same_addr_same_uid->user_id << " and " << same_addr_same_uid->fpr << endl;
+    output_stream << "Trusting own key for " << same_addr_same_uid->user_id << " and " << same_addr_same_uid->fpr << endl;
     status = trust_own_key(session, same_addr_same_uid);
-    cout << "Status is " << tl_status_string(status) << endl;
+    output_stream << "Status is " << tl_status_string(status) << endl;
     ASSERT_EQ(status, PEP_STATUS_OK);
     free(decrypted_text);
     decrypted_text = NULL;
 
     status = get_trust(session, same_addr_same_uid);
-    cout << tl_ct_string(same_addr_same_uid->comm_type) << endl;
+    output_stream << tl_ct_string(same_addr_same_uid->comm_type) << endl;
 
     ASSERT_EQ(same_addr_same_uid->comm_type, PEP_ct_pEp);
 
@@ -185,17 +185,17 @@ TEST_F(DecryptAttachPrivateKeyTrustedTest, check_decrypt_attach_private_key_trus
                                   &keylist_used, &rating, &flags,
                                   &modified_src);
 
-    cout << "Status: " << tl_status_string(status) << endl;
+    output_stream << "Status: " << tl_status_string(status) << endl;
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    cout << decrypted_text << endl;
+    output_stream << decrypted_text << endl;
 
     has_priv = false;
     status = contains_priv_key(session, fpr_same_addr_same_uid, &has_priv);
     ASSERT_TRUE(has_priv);
-    cout << "Private key was also imported." << endl;
+    output_stream << "Private key was also imported." << endl;
 
-    cout << "PASS!" << endl;
+    output_stream << "PASS!" << endl;
 
     // FIXME: rework this in new framework
     status = key_reset_trust(session, main_me);

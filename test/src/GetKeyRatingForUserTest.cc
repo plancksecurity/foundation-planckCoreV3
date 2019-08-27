@@ -6,6 +6,7 @@
 #include <string>
 
 #include "test_util.h"
+#include "TestConstants.h"
 
 #include "pEpEngine.h"
 
@@ -103,5 +104,5 @@ TEST_F(GetKeyRatingForUserTest, check_get_key_rating_for_user) {
     PEP_rating rating;
     status = get_key_rating_for_user(session, alice->user_id, alice->fpr, &rating);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    cout << tl_rating_string(rating) << endl;
+    output_stream << tl_rating_string(rating) << endl;
 }

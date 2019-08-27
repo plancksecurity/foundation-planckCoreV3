@@ -110,9 +110,9 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     trust_personal_key(session, you);
     status = update_identity(session, you);
 
-    cout << "------------------------------------------------------------------------------------------" << endl;
-    cout << "Test 1a: Normal encrypted mail, pEp as substitute subject, regular subject in crypto text." << endl;
-    cout << "------------------------------------------------------------------------------------------" << endl;
+    output_stream << "------------------------------------------------------------------------------------------" << endl;
+    output_stream << "Test 1a: Normal encrypted mail, pEp as substitute subject, regular subject in crypto text." << endl;
+    output_stream << "------------------------------------------------------------------------------------------" << endl;
 
     string mailtext = slurp("test_mails/pEp_subject_normal_1a.eml");
 
@@ -132,22 +132,22 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
-    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
-    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+    output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    output_stream << "longmsg: " << final_ptr->longmsg << endl << endl;
+    output_stream << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
     ASSERT_STREQ("This is the usual pEp subject that should replace the above.", final_ptr->shortmsg);
 
-    cout << "Test 1a: Subject replaced as expected." << endl << endl;
+    output_stream << "Test 1a: Subject replaced as expected." << endl << endl;
 
     if (final_ptr == dest_msg)
     	free_message(dest_msg);
     free_message(msg_ptr);
     free_stringlist(keylist);
 
-    cout << "------------------------------------------------------------------------------------------" << endl;
-    cout << "Test 1b: Normal encrypted mail, p≡p as substitute subject, regular subject in crypto text." << endl;
-    cout << "------------------------------------------------------------------------------------------" << endl;
+    output_stream << "------------------------------------------------------------------------------------------" << endl;
+    output_stream << "Test 1b: Normal encrypted mail, p≡p as substitute subject, regular subject in crypto text." << endl;
+    output_stream << "------------------------------------------------------------------------------------------" << endl;
 
     mailtext = slurp("test_mails/p3p_subject_normal_1b.eml");
 
@@ -166,22 +166,22 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
-    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
-    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+    output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    output_stream << "longmsg: " << final_ptr->longmsg << endl << endl;
+    output_stream << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
     ASSERT_STREQ("This is the usual pEp subject that should replace the above.", final_ptr->shortmsg);
 
-    cout << "Test 1b: Subject replaced as expected." << endl << endl;
+    output_stream << "Test 1b: Subject replaced as expected." << endl << endl;
 
     if (final_ptr == dest_msg)
     	free_message(dest_msg);
     free_message(msg_ptr);
     free_stringlist(keylist);
 
-    cout << "-------------------------------------------------------------------------------------------------" << endl;
-    cout << "Test 2a: Normal encrypted/signed mail, pEp as substitute subject, regular subject in crypto text." << endl;
-    cout << "-------------------------------------------------------------------------------------------------" << endl;
+    output_stream << "-------------------------------------------------------------------------------------------------" << endl;
+    output_stream << "Test 2a: Normal encrypted/signed mail, pEp as substitute subject, regular subject in crypto text." << endl;
+    output_stream << "-------------------------------------------------------------------------------------------------" << endl;
 
     msg_ptr = nullptr;
     dest_msg = nullptr;
@@ -199,22 +199,22 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
-    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
-    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+    output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    output_stream << "longmsg: " << final_ptr->longmsg << endl << endl;
+    output_stream << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
     ASSERT_STREQ("Now signed!", final_ptr->shortmsg);
 
-    cout << "Test 2a: Subject replaced as expected." << endl << endl;
+    output_stream << "Test 2a: Subject replaced as expected." << endl << endl;
 
     if (final_ptr == dest_msg)
         free_message(dest_msg);
     free_message(msg_ptr);
     free_stringlist(keylist);
 
-    cout << "-------------------------------------------------------------------------------------------------" << endl;
-    cout << "Test 2b: Normal encrypted/signed mail, p≡p as substitute subject, regular subject in crypto text." << endl;
-    cout << "-------------------------------------------------------------------------------------------------" << endl;
+    output_stream << "-------------------------------------------------------------------------------------------------" << endl;
+    output_stream << "Test 2b: Normal encrypted/signed mail, p≡p as substitute subject, regular subject in crypto text." << endl;
+    output_stream << "-------------------------------------------------------------------------------------------------" << endl;
 
     msg_ptr = nullptr;
     dest_msg = nullptr;
@@ -232,13 +232,13 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
-    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
-    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+    output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    output_stream << "longmsg: " << final_ptr->longmsg << endl << endl;
+    output_stream << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
     ASSERT_STREQ("Now signed!", final_ptr->shortmsg);
 
-    cout << "Test 2b: Subject replaced as expected." << endl << endl;
+    output_stream << "Test 2b: Subject replaced as expected." << endl << endl;
 
     if (final_ptr == dest_msg)
         free_message(dest_msg);
@@ -246,9 +246,9 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     free_stringlist(keylist);
 
 
-    cout << "---------------------------------------------------------------------------" << endl;
-    cout << "Test 3a: Encrypted mail, pEp as displayed subject, no subject in body text." << endl;
-    cout << "---------------------------------------------------------------------------" << endl;
+    output_stream << "---------------------------------------------------------------------------" << endl;
+    output_stream << "Test 3a: Encrypted mail, pEp as displayed subject, no subject in body text." << endl;
+    output_stream << "---------------------------------------------------------------------------" << endl;
 
     msg_ptr = nullptr;
     dest_msg = nullptr;
@@ -267,22 +267,22 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
-    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
-    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+    output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    output_stream << "longmsg: " << final_ptr->longmsg << endl << endl;
+    output_stream << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
     ASSERT_STREQ("pEp", final_ptr->shortmsg);
 
-    cout << "Test 3a: Subject remains intact as desired." << endl << endl;
+    output_stream << "Test 3a: Subject remains intact as desired." << endl << endl;
 
     if (final_ptr == dest_msg)
         free_message(dest_msg);
     free_message(msg_ptr);
     free_stringlist(keylist);
 
-    cout << "---------------------------------------------------------------------------" << endl;
-    cout << "Test 3b: Encrypted mail, p≡p as displayed subject, no subject in body text." << endl;
-    cout << "---------------------------------------------------------------------------" << endl;
+    output_stream << "---------------------------------------------------------------------------" << endl;
+    output_stream << "Test 3b: Encrypted mail, p≡p as displayed subject, no subject in body text." << endl;
+    output_stream << "---------------------------------------------------------------------------" << endl;
 
     msg_ptr = nullptr;
     dest_msg = nullptr;
@@ -301,13 +301,13 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
-    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
-    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+    output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    output_stream << "longmsg: " << final_ptr->longmsg << endl << endl;
+    output_stream << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
     ASSERT_STREQ("pEp", final_ptr->shortmsg);
 
-    cout << "Test 3: Subject remains intact as desired." << endl << endl;
+    output_stream << "Test 3: Subject remains intact as desired." << endl << endl;
 
     if (final_ptr == dest_msg)
         free_message(dest_msg);
@@ -315,9 +315,9 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     free_stringlist(keylist);
 
 
-    cout << "----------------------------------------------------------------------------" << endl;
-    cout << "Test 4a: Encrypted mail, pEp as displayed subject, pEp subject in body text." << endl;
-    cout << "----------------------------------------------------------------------------" << endl;
+    output_stream << "----------------------------------------------------------------------------" << endl;
+    output_stream << "Test 4a: Encrypted mail, pEp as displayed subject, pEp subject in body text." << endl;
+    output_stream << "----------------------------------------------------------------------------" << endl;
 
     msg_ptr = nullptr;
     dest_msg = nullptr;
@@ -336,22 +336,22 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
-    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
-    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+    output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    output_stream << "longmsg: " << final_ptr->longmsg << endl << endl;
+    output_stream << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
     ASSERT_STREQ("pEp", final_ptr->shortmsg);
 
-    cout << "Test 4a: Subject correct." << endl << endl;
+    output_stream << "Test 4a: Subject correct." << endl << endl;
 
     if (final_ptr == dest_msg)
         free_message(dest_msg);
     free_message(msg_ptr);
     free_stringlist(keylist);
 
-    cout << "----------------------------------------------------------------------------" << endl;
-    cout << "Test 4b: Encrypted mail, p≡p as displayed subject, pEp subject in body text." << endl;
-    cout << "----------------------------------------------------------------------------" << endl;
+    output_stream << "----------------------------------------------------------------------------" << endl;
+    output_stream << "Test 4b: Encrypted mail, p≡p as displayed subject, pEp subject in body text." << endl;
+    output_stream << "----------------------------------------------------------------------------" << endl;
 
     msg_ptr = nullptr;
     dest_msg = nullptr;
@@ -370,22 +370,22 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
-    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
-    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+    output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    output_stream << "longmsg: " << final_ptr->longmsg << endl << endl;
+    output_stream << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
     ASSERT_STREQ("pEp", final_ptr->shortmsg);
 
-    cout << "Test 4b: Subject correct." << endl << endl;
+    output_stream << "Test 4b: Subject correct." << endl << endl;
 
     if (final_ptr == dest_msg)
         free_message(dest_msg);
     free_message(msg_ptr);
     free_stringlist(keylist);
 
-    cout << "----------------------------------------------------------------------------" << endl;
-    cout << "Test 4c: Encrypted mail, pEp as displayed subject, p≡p subject in body text." << endl;
-    cout << "----------------------------------------------------------------------------" << endl;
+    output_stream << "----------------------------------------------------------------------------" << endl;
+    output_stream << "Test 4c: Encrypted mail, pEp as displayed subject, p≡p subject in body text." << endl;
+    output_stream << "----------------------------------------------------------------------------" << endl;
 
     msg_ptr = nullptr;
     dest_msg = nullptr;
@@ -404,22 +404,22 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
-    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
-    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+    output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    output_stream << "longmsg: " << final_ptr->longmsg << endl << endl;
+    output_stream << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
     ASSERT_STREQ("p≡p", final_ptr->shortmsg);
 
-    cout << "Test 4c: Subject correct." << endl << endl;
+    output_stream << "Test 4c: Subject correct." << endl << endl;
 
     if (final_ptr == dest_msg)
         free_message(dest_msg);
     free_message(msg_ptr);
     free_stringlist(keylist);
 
-    cout << "----------------------------------------------------------------------------" << endl;
-    cout << "Test 4d: Encrypted mail, p≡p as displayed subject, p≡p subject in body text." << endl;
-    cout << "----------------------------------------------------------------------------" << endl;
+    output_stream << "----------------------------------------------------------------------------" << endl;
+    output_stream << "Test 4d: Encrypted mail, p≡p as displayed subject, p≡p subject in body text." << endl;
+    output_stream << "----------------------------------------------------------------------------" << endl;
 
     msg_ptr = nullptr;
     dest_msg = nullptr;
@@ -438,13 +438,13 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
-    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
-    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+    output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    output_stream << "longmsg: " << final_ptr->longmsg << endl << endl;
+    output_stream << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
     ASSERT_STREQ("p≡p", final_ptr->shortmsg);
 
-    cout << "Test 4d: Subject correct, in any event." << endl << endl;
+    output_stream << "Test 4d: Subject correct, in any event." << endl << endl;
 
     if (final_ptr == dest_msg)
         free_message(dest_msg);
@@ -452,9 +452,9 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     free_stringlist(keylist);
 
 
-    cout << "-------------------------------------------------------------------------" << endl;
-    cout << "Test 5a: Unencrypted variant where pEp in the subject line is the subject." << endl;
-    cout << "-------------------------------------------------------------------------" << endl;
+    output_stream << "-------------------------------------------------------------------------" << endl;
+    output_stream << "Test 5a: Unencrypted variant where pEp in the subject line is the subject." << endl;
+    output_stream << "-------------------------------------------------------------------------" << endl;
 
     msg_ptr = nullptr;
     dest_msg = nullptr;
@@ -473,13 +473,13 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
-    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
-    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+    output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    output_stream << "longmsg: " << final_ptr->longmsg << endl << endl;
+    output_stream << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
     ASSERT_STREQ("pEp", final_ptr->shortmsg);
 
-    cout << "Test 5a: Subject remains intact." << endl << endl;
+    output_stream << "Test 5a: Subject remains intact." << endl << endl;
 
     if (final_ptr == dest_msg)
         free_message(dest_msg);
@@ -487,9 +487,9 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     free_stringlist(keylist);
 
 
-    cout << "--------------------------------------------------------------------------" << endl;
-    cout << "Test 5b: Unencrypted variant where p≡p in the subject line is the subject." << endl;
-    cout << "--------------------------------------------------------------------------" << endl;
+    output_stream << "--------------------------------------------------------------------------" << endl;
+    output_stream << "Test 5b: Unencrypted variant where p≡p in the subject line is the subject." << endl;
+    output_stream << "--------------------------------------------------------------------------" << endl;
 
     msg_ptr = nullptr;
     dest_msg = nullptr;
@@ -508,22 +508,22 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
-    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
-    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+    output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    output_stream << "longmsg: " << final_ptr->longmsg << endl << endl;
+    output_stream << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
     ASSERT_STREQ("p≡p", final_ptr->shortmsg);
 
-    cout << "Test 5b: Subject remains intact." << endl << endl;
+    output_stream << "Test 5b: Subject remains intact." << endl << endl;
 
     if (final_ptr == dest_msg)
         free_message(dest_msg);
     free_message(msg_ptr);
     free_stringlist(keylist);
 
-    cout << "----------------------------------------------------------------------------------------------------------------------" << endl;
-    cout << "Test 6: Normal unencrypted email where a subject line exists in the text but the subject is not a replacement subject." << endl;
-    cout << "----------------------------------------------------------------------------------------------------------------------" << endl;
+    output_stream << "----------------------------------------------------------------------------------------------------------------------" << endl;
+    output_stream << "Test 6: Normal unencrypted email where a subject line exists in the text but the subject is not a replacement subject." << endl;
+    output_stream << "----------------------------------------------------------------------------------------------------------------------" << endl;
 
     msg_ptr = nullptr;
     dest_msg = nullptr;
@@ -542,13 +542,13 @@ TEST_F(PepSubjectReceivedTest, check_pep_subject_received) {
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
-    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
-    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+    output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    output_stream << "longmsg: " << final_ptr->longmsg << endl << endl;
+    output_stream << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
     ASSERT_STREQ("This is just a normal subject, really", final_ptr->shortmsg);
 
-    cout << "Test 6: Subject remains intact." << endl << endl;
+    output_stream << "Test 6: Subject remains intact." << endl << endl;
 
     if (final_ptr == dest_msg)
         free_message(dest_msg);

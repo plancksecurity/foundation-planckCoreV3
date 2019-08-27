@@ -135,9 +135,9 @@ TEST_F(AppleMailTest, check_apple_mail_text_signed_encrypted) {
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
-    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
-    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+    output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    output_stream << "longmsg: " << final_ptr->longmsg << endl << endl;
+    output_stream << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
     ASSERT_EQ(color_from_rating(rating) , PEP_color_green);
 
@@ -192,9 +192,9 @@ TEST_F(AppleMailTest, check_apple_mail_html_signed_encrypted) {
     status = decrypt_message(session, msg_ptr, &dest_msg, &keylist, &rating, &flags);
     final_ptr = dest_msg ? dest_msg : msg_ptr;
 
-    cout << "shortmsg: " << final_ptr->shortmsg << endl << endl;
-    cout << "longmsg: " << final_ptr->longmsg << endl << endl;
-    cout << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
+    output_stream << "shortmsg: " << final_ptr->shortmsg << endl << endl;
+    output_stream << "longmsg: " << final_ptr->longmsg << endl << endl;
+    output_stream << "longmsg_formatted: " << (final_ptr->longmsg_formatted ? final_ptr->longmsg_formatted : "(empty)") << endl << endl;
 
     ASSERT_EQ(color_from_rating(rating) , PEP_color_green);
 

@@ -331,7 +331,7 @@ TEST_F(KeyAttachmentTest, check_many_keys_with_many_files_inline) {
         ASSERT_NE(curr_att, nullptr);
         ASSERT_NE(curr_att->filename, nullptr);
         ASSERT_NE(curr_att->mime_type, nullptr);
-        cout << (*it).first << endl;
+        output_stream << (*it).first << endl;
         ASSERT_STREQ(curr_att->filename, (*it).first.c_str());
         ASSERT_STREQ(curr_att->mime_type, (*it).second.c_str());
         it++;
@@ -478,7 +478,7 @@ TEST_F(KeyAttachmentTest, check_many_keys_OpenPGP) {
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status , PEP_DECRYPTED);
     ASSERT_NE(dec_msg, nullptr);
-    ASSERT_NE(dec_msg->attachments, nullptr);
+    ASSERT_EQ(dec_msg->attachments, nullptr);
     free_message(enc_msg);
     free_message(dec_msg);
     free_stringlist(keylist);

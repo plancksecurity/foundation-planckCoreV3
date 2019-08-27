@@ -80,7 +80,7 @@ void Engine::start() {
 
     assert(engine_home.compare(real_home) != 0);
     assert(engine_home.compare(real_home + "/") != 0);
-    cout << "Test home directory is " << engine_home << endl;
+    output_stream << "Test home directory is " << engine_home << endl;
     
     int success = 0;
     
@@ -108,7 +108,7 @@ void Engine::start() {
     if (success != 0)
         throw std::runtime_error("SETUP: Error when setting GNUPGHOME.");
 
-    cout << "New GNUPGHOME is " << getenv("GNUPGHOME") << endl << endl;
+    output_stream << "New GNUPGHOME is " << getenv("GNUPGHOME") << endl << endl;
 
 #endif
     

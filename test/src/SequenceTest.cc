@@ -83,7 +83,7 @@ namespace {
 
 
 TEST_F(SequenceTest, check_sequences) {
-    cout << "\n*** sequence_test ***\n\n";
+    output_stream << "\n*** sequence_test ***\n\n";
 
     // sequence test code
 
@@ -91,12 +91,12 @@ TEST_F(SequenceTest, check_sequences) {
     PEP_STATUS status2 = sequence_value(session, "test1", &value1);
     ASSERT_EQ(status2, PEP_STATUS_OK);
 
-    cout << "test sequence: " << value1 << "\n";
+    output_stream << "test sequence: " << value1 << "\n";
 
     int32_t value2;
     PEP_STATUS status3 = sequence_value(session, "test1", &value2);
     ASSERT_EQ(status3, PEP_STATUS_OK);
 
-    cout << "test sequence: " << value2 << "\n";
+    output_stream << "test sequence: " << value2 << "\n";
     ASSERT_EQ(value2, value1 + 1);
 }

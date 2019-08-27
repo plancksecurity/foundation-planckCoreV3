@@ -6,6 +6,7 @@
 #include <string>
 
 #include "test_util.h"
+#include "TestConstants.h"
 
 #include "pEpEngine.h"
 

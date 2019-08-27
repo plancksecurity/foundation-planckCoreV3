@@ -87,7 +87,7 @@ namespace {
 
 
 TEST_F(CaseAndDotAddressTest, check_case_and_dot_address) {
-    cout << "\n*** case_and_dot_address_test.cc ***\n\n";
+    output_stream << "\n*** case_and_dot_address_test.cc ***\n\n";
 
     char* user_id = get_new_uuid();
 
@@ -117,7 +117,7 @@ TEST_F(CaseAndDotAddressTest, check_case_and_dot_address) {
     alice_id = new_identity(alice_email_case, NULL, user_id, "Alice Test");
     status = update_identity(session, alice_id);
     ASSERT_NE(alice_id->fpr, nullptr);
-    cout << "Alice email: " << alice_email_case << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
+    output_stream << "Alice email: " << alice_email_case << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
     ASSERT_STREQ(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
     free_identity(alice_id);
     alice_id = NULL;
@@ -125,7 +125,7 @@ TEST_F(CaseAndDotAddressTest, check_case_and_dot_address) {
     alice_id = new_identity(alice_email_dot, NULL, user_id, "Alice Test");
     status = update_identity(session, alice_id);
     ASSERT_NE(alice_id->fpr, nullptr);
-    cout << "Alice email: " << alice_email_dot << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
+    output_stream << "Alice email: " << alice_email_dot << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
     ASSERT_STREQ(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
     free_identity(alice_id);
     alice_id = NULL;
@@ -133,7 +133,7 @@ TEST_F(CaseAndDotAddressTest, check_case_and_dot_address) {
     alice_id = new_identity(alice_email_dotless, NULL, user_id, "Alice Test");
     status = update_identity(session, alice_id);
     ASSERT_NE(alice_id->fpr, nullptr);
-    cout << "Alice email: " << alice_email_dotless << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
+    output_stream << "Alice email: " << alice_email_dotless << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
     ASSERT_STREQ(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
     free_identity(alice_id);
     alice_id = NULL;
@@ -141,7 +141,7 @@ TEST_F(CaseAndDotAddressTest, check_case_and_dot_address) {
     alice_id = new_identity(alice_email_case_and_dot, NULL, user_id, "Alice Test");
     status = update_identity(session, alice_id);
     ASSERT_NE(alice_id->fpr, nullptr);
-    cout << "Alice email: " << alice_email_case_and_dot << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
+    output_stream << "Alice email: " << alice_email_case_and_dot << " Alice fpr (should be 4ABE3AAF59AC32CFE4F86500A9411D176FF00E97): " << alice_id->fpr << endl;
     ASSERT_STREQ(alice_id->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
     free_identity(alice_id);
     alice_id = NULL;

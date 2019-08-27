@@ -8,7 +8,7 @@
 
 #include "pEpEngine.h"
 #include "test_util.h"
-
+#include "TestConstants.h"
 
 #include "Engine.h"
 
@@ -377,7 +377,7 @@ TEST_F(DeleteKeyTest, check_delete_key_not_found) {
     // Is it there?
     PEP_STATUS status = find_keys(session, "74D79B4496E289BD8A71B70BA8E2C4530019697D", &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_EQ(keylist, nullptr);
     free_stringlist(keylist);
     keylist = NULL;
 
@@ -401,7 +401,7 @@ TEST_F(DeleteKeyTest, check_delete_empty_keyring) {
     // Is it there?
     PEP_STATUS status = find_keys(session, "74D79B4496E289BD8A71B70BA8E2C4530019697D", &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_EQ(keylist, nullptr);
     free_stringlist(keylist);
     keylist = NULL;
 

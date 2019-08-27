@@ -14,7 +14,7 @@
 #include "key_reset.h"
 
 #include "test_util.h"
-
+#include "TestConstants.h"
 
 
 #include "Engine.h"
@@ -206,17 +206,17 @@ class KeyResetMessageTest : public ::testing::Test {
             outgoing_msg->shortmsg = strdup("Well isn't THIS a useless message...");
             outgoing_msg->longmsg = strdup("Hi Mom...\n");
             outgoing_msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
-            cout << "Message created.\n\n";
-            cout << "Encrypting message as MIME multipart…\n";
+            output_stream << "Message created.\n\n";
+            output_stream << "Encrypting message as MIME multipart…\n";
             message* enc_outgoing_msg = nullptr;
-            cout << "Calling encrypt_message()\n";
+            output_stream << "Calling encrypt_message()\n";
             status = encrypt_message(session, outgoing_msg, NULL, &enc_outgoing_msg, PEP_enc_PGP_MIME, 0);
             ASSERT_EQ(status , PEP_STATUS_OK);
             ASSERT_NE(enc_outgoing_msg, nullptr);
-            cout << "Message encrypted.\n";
+            output_stream << "Message encrypted.\n";
             char* outstring = NULL;
             mime_encode_message(enc_outgoing_msg, false, &outstring);
-            cout << outstring << endl;
+            output_stream << outstring << endl;
             free_message(enc_outgoing_msg);
             free(outstring);
         }
@@ -266,7 +266,7 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
         ASSERT_EQ(status , PEP_STATUS_OK);
     }
 
-    cout << "Creating outgoing message to update DB" << endl;
+    output_stream << "Creating outgoing message to update DB" << endl;
     message* outgoing_msg = new_message(PEP_dir_outgoing);
     ASSERT_NE(outgoing_msg, nullptr);
     outgoing_msg->from = from_ident;
@@ -275,14 +275,14 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
     outgoing_msg->longmsg = strdup("Hi Mom...\n");
     // outgoing_msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
     // that's illegal - VB.
-    cout << "Message created.\n\n";
-    cout << "Encrypting message as MIME multipart…\n";
+    output_stream << "Message created.\n\n";
+    output_stream << "Encrypting message as MIME multipart…\n";
     message* enc_outgoing_msg = nullptr;
-    cout << "Calling encrypt_message()\n";
+    output_stream << "Calling encrypt_message()\n";
     status = encrypt_message(session, outgoing_msg, NULL, &enc_outgoing_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(enc_outgoing_msg, nullptr);
-    cout << "Message encrypted.\n";
+    output_stream << "Message encrypted.\n";
 
     // If this all worked, we should have a list of recent guys in our DB which, when we reset Alice's
     // key, will get sent some nice key reset messages.
@@ -343,12 +343,12 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
         // if (strcmp(curr_sent_msg->to->ident->user_id, bob_user_id.c_str()) == 0) {
         //     char* bob_msg = NULL;
         //     mime_encode_message(curr_sent_msg, false, &bob_msg);
-        //     cout << bob_msg;
+        //     output_stream << bob_msg;
         // }
         // else if (strcmp(curr_sent_msg->to->ident->user_id, fenris_user_id.c_str()) == 0) {
         //     char* fenris_msg = NULL;
         //     mime_encode_message(curr_sent_msg, false, &fenris_msg);
-        //     cout << fenris_msg;
+        //     output_stream << fenris_msg;
         // }
     }
 
@@ -489,7 +489,7 @@ TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_contact) {
 
     // Send Gabrielle a message
     identity_list* send_idents = new_identity_list(new_identity("pep-test-gabrielle@pep-project.org", NULL, "Gabi", "Gabi"));
-    cout << "Creating outgoing message to update DB" << endl;
+    output_stream << "Creating outgoing message to update DB" << endl;
     message* outgoing_msg = new_message(PEP_dir_outgoing);
     ASSERT_NE(outgoing_msg, nullptr);
     outgoing_msg->from = from_ident;
@@ -497,14 +497,14 @@ TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_contact) {
     outgoing_msg->shortmsg = strdup("Well isn't THIS a useless message...");
     outgoing_msg->longmsg = strdup("Hi Mom...\n");
     outgoing_msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
-    cout << "Message created.\n\n";
-    cout << "Encrypting message as MIME multipart…\n";
+    output_stream << "Message created.\n\n";
+    output_stream << "Encrypting message as MIME multipart…\n";
     message* enc_outgoing_msg = nullptr;
-    cout << "Calling encrypt_message()\n";
+    output_stream << "Calling encrypt_message()\n";
     status = encrypt_message(session, outgoing_msg, NULL, &enc_outgoing_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status , PEP_UNENCRYPTED);
     //
-    cout << "Message created." << endl;
+    output_stream << "Message created." << endl;
 
     // Make the update have occurred earlier, so we don't notify her
     // (We have no key for her yet anyway!)
@@ -1094,7 +1094,7 @@ test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
     ASSERT_EQ(status , PEP_STATUS_OK);
 
     ASSERT_NE(alex_id->fpr, nullptr);
-    cout << "alex_id->fpr is " << alex_id->fpr << endl;
+    output_stream << "alex_id->fpr is " << alex_id->fpr << endl;
     ASSERT_STRNE(alex_id->fpr, pubkey1);
     ASSERT_STRNE(alex_id->fpr, pubkey2);
     ASSERT_STRNE(alex_id->fpr, pubkey3);

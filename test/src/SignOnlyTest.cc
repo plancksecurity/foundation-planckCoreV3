@@ -9,7 +9,7 @@
 #include "pEpEngine.h"
 
 #include "test_util.h"
-
+#include "TestConstants.h"
 
 #include "Engine.h"
 
@@ -99,7 +99,7 @@ TEST_F(SignOnlyTest, check_sign_only) {
 
     PEP_STATUS status = sign_only(session, msg_text.c_str(), msg_text.size(), alice_fpr, &signed_text, &signed_text_size);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    cout << signed_text << endl;
+    output_stream << signed_text << endl;
     test_file.open("signature.txt");
     test_file << signed_text;
     test_file.close();

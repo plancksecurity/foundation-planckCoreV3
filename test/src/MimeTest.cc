@@ -76,14 +76,14 @@ namespace {
                 session = NULL;
             }
             void test_mime_decoding(string filename) {
-                cout << "opening " << filename << " for reading\n";
+                output_stream << "opening " << filename << " for reading\n";
                 ifstream inFile3 (filename.c_str());
 
                 ASSERT_TRUE(inFile3.is_open());
 
                 string mimetext3;
 
-                cout << "reading mime sample\n";
+                output_stream << "reading mime sample\n";
                 while (!inFile3.eof()) {
                     static string line;
                     getline(inFile3, line);
@@ -91,22 +91,22 @@ namespace {
                 }
                 inFile3.close();
 
-                cout << "decoding message…\n";
+                output_stream << "decoding message…\n";
                 message *msg3;
                 PEP_STATUS status3 = mime_decode_message(mimetext3.c_str(), mimetext3.length(), &msg3);
                 assert(status3 == PEP_STATUS_OK);
                 assert(msg3);
-                cout << "decoded.\n\n";
-                cout << "Subject: " << msg3->shortmsg << "\n\n";
+                output_stream << "decoded.\n\n";
+                output_stream << "Subject: " << msg3->shortmsg << "\n\n";
                 if (msg3->longmsg)
-                    cout << msg3->longmsg << "\n\n";
+                    output_stream << msg3->longmsg << "\n\n";
                 if (msg3->longmsg_formatted)
-                    cout << msg3->longmsg_formatted << "\n\n";
+                    output_stream << msg3->longmsg_formatted << "\n\n";
                 bloblist_t *_b;
                 for (_b = msg3->attachments; _b; _b = _b->next) {
-                    cout << "attachment of type " << _b->mime_type << "\n";
+                    output_stream << "attachment of type " << _b->mime_type << "\n";
                     if (_b->filename) {
-                        cout << "filename: " << _b->filename << "\n";
+                        output_stream << "filename: " << _b->filename << "\n";
                         unlink(_b->filename);
                         ofstream outFile3(_b->filename);
                         outFile3.write(_b->value, _b->size);
@@ -145,14 +145,14 @@ TEST_F(MimeTest, check_mime) {
     msg2->longmsg_formatted = strdup(html2.c_str());
     ASSERT_NE(msg2->longmsg_formatted, nullptr);
 
-    cout << "encoding message…\n";
+    output_stream << "encoding message…\n";
     char *result2;
     PEP_STATUS status2 = mime_encode_message(msg2, false, &result2);
     ASSERT_NE(result2, nullptr);
     ASSERT_EQ(status2, PEP_STATUS_OK);
 
-    cout << "result:\n";
-    cout << result2 << "\n";
+    output_stream << "result:\n";
+    output_stream << result2 << "\n";
 
     free(result2);
     free_message(msg2);

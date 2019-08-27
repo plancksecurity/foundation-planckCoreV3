@@ -99,7 +99,7 @@ TEST_F(DecorateTest, check_decorate) {
     ASSERT_EQ(statuspriv , PEP_TEST_KEY_IMPORT_SUCCESS);
     ASSERT_EQ(statusbob , PEP_TEST_KEY_IMPORT_SUCCESS);
 
-    cout << "creating message…\n";
+    output_stream << "creating message…\n";
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, "Alice Test");
     pEp_identity* alice_dup = identity_dup(alice);
     PEP_STATUS status = set_own_key(session, alice_dup, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
@@ -117,17 +117,17 @@ TEST_F(DecorateTest, check_decorate) {
     outgoing_message->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
     outgoing_message->longmsg = strdup("This is a dumb message.\nBut it's done.\n");
     ASSERT_NE(outgoing_message->longmsg, nullptr);
-    cout << "message created.\n";
+    output_stream << "message created.\n";
 
     char* encoded_text = nullptr;
 
     message* encrypted_msg = nullptr;
-    cout << "calling encrypt_message\n";
+    output_stream << "calling encrypt_message\n";
     status = encrypt_message (session, outgoing_message, NULL, &encrypted_msg, PEP_enc_PGP_MIME, 0);
-    cout << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
+    output_stream << "encrypt_message() returns " << tl_status_string(status) << '.' << endl;
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(encrypted_msg, nullptr);
-    cout << "message encrypted.\n";
+    output_stream << "message encrypted.\n";
 
     status = mime_encode_message(encrypted_msg, false, &encoded_text);
     ASSERT_EQ(status , PEP_STATUS_OK);
@@ -147,5 +147,5 @@ TEST_F(DecorateTest, check_decorate) {
     ASSERT_TRUE(contains_version);
 
     if (contains_version)
-        cout << "Version string in encrypted message, as it should be." << endl;
+        output_stream << "Version string in encrypted message, as it should be." << endl;
 }

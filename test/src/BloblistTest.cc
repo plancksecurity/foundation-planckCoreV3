@@ -11,7 +11,7 @@
 #include "bloblist.h"
 #include "TestConstants.h"
 
-
+#include "test_util.h"
 
 #include "Engine.h"
 
@@ -49,7 +49,7 @@ namespace {
 
 
 TEST_F(BloblistTest, check_bloblists) {
-    cout << "\n*** data structures: bloblist_test ***\n\n";
+    output_stream << "\n*** data structures: bloblist_test ***\n\n";
     char* text1 = strdup("This is just some text.");
     char* text2 = strdup("More text.");
     char* text3 = strdup("Unpleasant news and witty one-liners.");
@@ -63,7 +63,7 @@ TEST_F(BloblistTest, check_bloblists) {
 
     int i;
 
-    cout << "duping one-element bloblist...\n";
+    output_stream << "duping one-element bloblist...\n";
 
     bloblist_t* new_bl = bloblist_dup(bl1);
     ASSERT_NE(new_bl, nullptr);
@@ -72,14 +72,14 @@ TEST_F(BloblistTest, check_bloblists) {
     ASSERT_NE(bl1->value , new_bl->value);
     ASSERT_TRUE(bl1->mime_type != new_bl->mime_type || !(bl1->mime_type || new_bl->mime_type));
     ASSERT_TRUE(bl1->filename != new_bl->filename || !(bl1->filename || new_bl->filename));
-    cout << "one-element bloblist duplicated.\n\n";
+    output_stream << "one-element bloblist duplicated.\n\n";
 
-    cout << "freeing bloblist...\n";
+    output_stream << "freeing bloblist...\n";
     free_bloblist(new_bl);
     new_bl = NULL;
 
     bloblist_t* p;
-    cout << "\ncreating four-element list...\n";
+    output_stream << "\ncreating four-element list...\n";
     bloblist_t* to_copy = bl_arr[0];
     new_bl = bloblist_add(new_bl, strdup(to_copy->value), to_copy->size, to_copy->mime_type, to_copy->filename);
     for (i = 1; i < 4; i++) {
@@ -103,7 +103,7 @@ TEST_F(BloblistTest, check_bloblists) {
     }
     ASSERT_EQ(p , nullptr);
 
-    cout << "\nduplicating four-element list...\n\n";
+    output_stream << "\nduplicating four-element list...\n\n";
     bloblist_t* duplist = bloblist_dup(new_bl);
 
     p = new_bl;
@@ -120,9 +120,9 @@ TEST_F(BloblistTest, check_bloblists) {
         p = p->next;
         ASSERT_TRUE((p == NULL) == (dup_p == NULL));
     }
-    cout << "\nfour-element bloblist successfully duplicated.\n\n";
+    output_stream << "\nfour-element bloblist successfully duplicated.\n\n";
 
-    cout << "freeing bloblists...\n";
+    output_stream << "freeing bloblists...\n";
     free_bloblist(new_bl);
     free_bloblist(duplist);
     new_bl = NULL;
@@ -131,5 +131,5 @@ TEST_F(BloblistTest, check_bloblists) {
     free(text2);
     free(text3);
     free(text4);
-    cout << "done.\n";
+    output_stream << "done.\n";
 }

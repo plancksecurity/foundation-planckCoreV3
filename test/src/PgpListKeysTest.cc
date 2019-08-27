@@ -77,11 +77,11 @@ namespace {
             void print_stringpair_list(stringpair_list_t* spl) {
                 for ( ; spl != NULL; spl = spl->next) {
                     if (spl->value) {
-                        cout << "Key:" << endl;
+                        output_stream << "Key:" << endl;
                         if (spl->value->key)
-                            cout << "\tFPR: " << spl->value->key << endl;
+                            output_stream << "\tFPR: " << spl->value->key << endl;
                         if (spl->value->value)
-                            cout << "\tUID: " << spl->value->value << endl;
+                            output_stream << "\tUID: " << spl->value->value << endl;
                     }
                 }
             }
@@ -99,39 +99,39 @@ namespace {
 // FIXME: This test appears to be inspection-only. That isn't super-helpful for regression testing.
 TEST_F(PgpListKeysTest, check_pgp_list_keys) {
 
-    cout << "Listing all the keys:" << endl;
+    output_stream << "Listing all the keys:" << endl;
     stringpair_list_t* all_the_ids = NULL;
     OpenPGP_list_keyinfo(session, "", &all_the_ids);
     print_stringpair_list(all_the_ids);
     free_stringpair_list(all_the_ids);
 
-    cout << "**********************" << endl << endl << "Checking on Alice, Bob and John" << endl;
+    output_stream << "**********************" << endl << endl << "Checking on Alice, Bob and John" << endl;
     all_the_ids = NULL;
     OpenPGP_list_keyinfo(session, "pEp Test", &all_the_ids);
     print_stringpair_list(all_the_ids);
     free_stringpair_list(all_the_ids);
 
-    cout << "**********************" << endl << endl << "Compare to find_keys for Alice, Bob and John" << endl;
+    output_stream << "**********************" << endl << endl << "Compare to find_keys for Alice, Bob and John" << endl;
     stringlist_t* all_the_keys;
     find_keys(session, "pEp Test", &all_the_keys);
     stringlist_t* i;
     for (i = all_the_keys; i; i = i->next) {
-        cout << i->value << endl;
+        output_stream << i->value << endl;
     }
     free_stringlist(all_the_keys);
 
 
-    cout << "**********************" << endl << endl << "Checking FPR" << endl;
+    output_stream << "**********************" << endl << endl << "Checking FPR" << endl;
     all_the_ids = NULL;
     OpenPGP_list_keyinfo(session, "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39", &all_the_ids);
     print_stringpair_list(all_the_ids);
     free_stringpair_list(all_the_ids);
 
-    cout << "**********************" << endl << endl << "Checking on nothing" << endl;
+    output_stream << "**********************" << endl << endl << "Checking on nothing" << endl;
     all_the_ids = NULL;
     OpenPGP_list_keyinfo(session, "ekhwr89234uh4rknfjsklejfnlskjflselkflkserjs", &all_the_ids);
     print_stringpair_list(all_the_ids);
     free_stringpair_list(all_the_ids);
 
-    cout << "calling release()\n";
+    output_stream << "calling release()\n";
 }

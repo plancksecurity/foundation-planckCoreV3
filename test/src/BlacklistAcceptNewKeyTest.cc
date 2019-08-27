@@ -92,12 +92,12 @@ TEST_F(BlacklistAcceptNewKeyTest, check_blacklist_accept_new_key) {
 
     // blacklist test code
 
-    cout << "blacklist only key for identity / add key / check which key is used" << endl;
+    output_stream << "blacklist only key for identity / add key / check which key is used" << endl;
 
     // 2797 65A2 FEB5 B7C7 31B8  61D9 3E4C EFD9 F7AF 4684 - this is the blacklisted key in blacklisted_pub.asc
 
     /* read the key into memory */
-    const string keytext = slurp("test_mails/blacklisted_pub.asc");
+    const string keytext = slurp("test_keys/pub/blacklisted_pub.asc");
 
     /* import it into pep */
     PEP_STATUS status7 = import_key(session, keytext.c_str(), keytext.length(), NULL);
@@ -123,9 +123,9 @@ TEST_F(BlacklistAcceptNewKeyTest, check_blacklist_accept_new_key) {
     ASSERT_EQ(blacklisted_identity->comm_type , PEP_ct_unknown);
 
     if (!(blacklisted_identity->fpr))
-        cout << "OK! blacklisted_identity->fpr is empty. Yay!" << endl;
+        output_stream << "OK! blacklisted_identity->fpr is empty. Yay!" << endl;
     else
-        cout << "Not OK. blacklisted_identity->fpr is " << blacklisted_identity->fpr << "." << endl
+        output_stream << "Not OK. blacklisted_identity->fpr is " << blacklisted_identity->fpr << "." << endl
              << "Expected it to be empty." << endl;
     ASSERT_TRUE(blacklisted_identity->fpr == NULL || blacklisted_identity->fpr[0] == '\0');
 
