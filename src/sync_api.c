@@ -257,7 +257,13 @@ DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
     if (status)
         return status;
 
-    status = set_identity_flags(session, ident, PEP_idf_devicegroup);
+    bool grouped;
+    status = deviceGrouped(session, &grouped);
+    if (status)
+        return status;
+
+    if (grouped)
+        status = set_identity_flags(session, ident, PEP_idf_devicegroup);
     return status;
 }
 
