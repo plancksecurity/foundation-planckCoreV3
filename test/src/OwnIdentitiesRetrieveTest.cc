@@ -7,7 +7,7 @@
 #include "pEpEngine.h"
 #include "keymanagement.h"
 
-
+#include "test_util.h"
 
 #include "Engine.h"
 

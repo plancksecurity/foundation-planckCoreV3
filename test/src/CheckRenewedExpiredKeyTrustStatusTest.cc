@@ -165,7 +165,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     ASSERT_EQ(status , PEP_KEY_UNSUITABLE);
     PEP_comm_type ct = expired_inquisitor->comm_type;
     ASSERT_EQ(ct , PEP_ct_key_not_found);
-    ASSERT_NE(expired_inquisitor->fpr, nullptr);
+    ASSERT_EQ(expired_inquisitor->fpr, nullptr);
 
     expired_inquisitor->fpr = strdup(inquisitor_fpr);
     status = get_trust(session, expired_inquisitor);
@@ -314,7 +314,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     ASSERT_EQ(status , PEP_KEY_UNSUITABLE);
     PEP_comm_type ct = expired_inquisitor->comm_type;
     ASSERT_EQ(ct, PEP_ct_key_not_found);
-    ASSERT_NE(expired_inquisitor->fpr, nullptr);
+    ASSERT_EQ(expired_inquisitor->fpr, nullptr);
 
     expired_inquisitor->fpr = strdup(inquisitor_fpr);
     status = get_trust(session, expired_inquisitor);

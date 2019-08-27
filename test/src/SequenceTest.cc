@@ -8,7 +8,7 @@
 #include <assert.h>
 #include "pEpEngine.h"
 
-
+#include "test_util.h"
 
 #include "Engine.h"
 

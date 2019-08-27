@@ -11,7 +11,7 @@
 #include "pEpEngine.h"
 #include "platform.h"
 
-
+#include "test_util.h"
 
 #include "Engine.h"
 

@@ -284,8 +284,7 @@ TEST_F(LotsOfKeysTest, check) {
                 stringlist_t* keylist = NULL;
                 status = find_keys(session, ids[i]->address, &keylist);
                 free_stringlist(keylist);
-                TEST_ASSERT_MSG(status == PEP_STATUS_OK,
-                                tl_status_string(status));
+                ASSERT_EQ(status, PEP_STATUS_OK);
                 ops ++;
                 elapsed = time() - start;
             } while (elapsed < TIME);
@@ -312,11 +311,9 @@ TEST_F(LotsOfKeysTest, check) {
                 pEp_identity *id = NULL;
                 status = get_identity(session, ids[i]->address,
                                       ids[i]->user_id, &id);
-                TEST_ASSERT_MSG(status == PEP_STATUS_OK,
-                                tl_status_string(status));
+                ASSERT_EQ(status, PEP_STATUS_OK);
                 ASSERT_NE(id->fpr, nullptr);
-                TEST_ASSERT_MSG(strcmp(ids[i]->fpr, id->fpr) == 0,
-                                "fingerprint mismatch");
+                ASSERT_STREQ(ids[i]->fpr, id->fpr);
                 free_identity(id);
 
                 ops ++;

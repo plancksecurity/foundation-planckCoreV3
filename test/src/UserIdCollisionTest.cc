@@ -408,7 +408,7 @@ TEST_F(UserIdCollisionTest, merge_records_set) {
     ASSERT_EQ(real_alex_6a->comm_type , PEP_ct_pEp);
     bool pEp_peep = false;
     status = is_pEp_user(session, real_alex_6a, &pEp_peep);
-    ASSERT_NE(pEp_peep, nullptr);
+    ASSERT_TRUE(pEp_peep);
     free(real_alex_6a->fpr);
     real_alex_6a->fpr = strdup(alex6c_keyid);
     status = get_trust(session, real_alex_6a);
@@ -450,7 +450,7 @@ TEST_F(UserIdCollisionTest, merge_records_set_2) {
     ASSERT_EQ(real_alex_6a->comm_type , PEP_ct_pEp);
     bool pEp_peep = false;
     status = is_pEp_user(session, real_alex_6a, &pEp_peep);
-    ASSERT_NE(pEp_peep, nullptr);
+    ASSERT_TRUE(pEp_peep);
     free(real_alex_6a->fpr);
     real_alex_6a->fpr = strdup(alex6c_keyid);
     status = get_trust(session, real_alex_6a);

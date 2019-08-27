@@ -163,7 +163,7 @@ TEST_F(DeleteKeyTest, check_delete_single_pubkey) {
     // Is it gone?
     status = find_keys(session, fenris_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_EQ(keylist, nullptr);
 
     // Yay.
 }
@@ -187,7 +187,7 @@ TEST_F(DeleteKeyTest, check_delete_pub_priv_keypair) {
     // Is it gone?
     status = find_keys(session, alice_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_EQ(keylist, nullptr);
 
     // Yay.
 }
@@ -231,15 +231,15 @@ TEST_F(DeleteKeyTest, check_delete_multiple_keys) {
     // Is it gone?
     status = find_keys(session, alice_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_EQ(keylist, nullptr);
 
     status = find_keys(session, dave_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_EQ(keylist, nullptr);
 
     status = find_keys(session, fenris_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_EQ(keylist, nullptr);
 
     // Yay. Make sure everyone else is still there.
     status = find_keys(session, bob_fpr, &keylist);
@@ -333,37 +333,37 @@ TEST_F(DeleteKeyTest, check_delete_all_keys) {
     // Is it gone?
     status = find_keys(session, alice_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_EQ(keylist, nullptr);
     free_stringlist(keylist);
     keylist = NULL;
 
     status = find_keys(session, bob_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_EQ(keylist, nullptr);
     free_stringlist(keylist);
     keylist = NULL;
 
     status = find_keys(session, carol_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_EQ(keylist, nullptr);
     free_stringlist(keylist);
     keylist = NULL;
 
     status = find_keys(session, dave_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_EQ(keylist, nullptr);
     free_stringlist(keylist);
     keylist = NULL;
 
     status = find_keys(session, erin_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_EQ(keylist, nullptr);
     free_stringlist(keylist);
     keylist = NULL;
 
     status = find_keys(session, fenris_fpr, &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_EQ(keylist, nullptr);
     free_stringlist(keylist);
     keylist = NULL;
 
@@ -388,7 +388,7 @@ TEST_F(DeleteKeyTest, check_delete_key_not_found) {
     // Is it still gone?
     status = find_keys(session, "74D79B4496E289BD8A71B70BA8E2C4530019697D", &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_EQ(keylist, nullptr);
     free_stringlist(keylist);
     keylist = NULL;
 
@@ -412,7 +412,7 @@ TEST_F(DeleteKeyTest, check_delete_empty_keyring) {
     // Is it still gone?
     status = find_keys(session, "74D79B4496E289BD8A71B70BA8E2C4530019697D", &keylist);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_EQ(keylist, nullptr);
     free_stringlist(keylist);
     keylist = NULL;
 

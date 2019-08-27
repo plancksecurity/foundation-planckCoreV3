@@ -21,220 +21,218 @@
 
 #include <gtest/gtest.h>
 
+PEP_STATUS KRMT_message_send_callback(message* msg);
 
-namespace {
+static void* KRMT_fake_this;
 
-	//The fixture for KeyResetMessageTest
-    class KeyResetMessageTest : public ::testing::Test {
-        public:
-            Engine* engine;
-            PEP_SESSION session;
+//The fixture for KeyResetMessageTest
+class KeyResetMessageTest : public ::testing::Test {
+    public:
+        Engine* engine;
+        PEP_SESSION session;
 
-        protected:
-            
-            KeyResetMessageTests* fake_this;
+        vector<message*> m_queue;
         
-            vector<message*> m_queue;
-            
-            PEP_STATUS message_send_callback(message* msg) {
-                fake_this->m_queue.push_back(msg);
-                return PEP_STATUS_OK;
-            }
+    protected:
+                    
+        const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
+        const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
+    
+        const char* alice_receive_reset_fpr = "6A349E4F68801E39145CD4C5712616A385412538";
+
+        const string alice_user_id = PEP_OWN_USERID;
+        const string bob_user_id = "BobId";
+        const string carol_user_id = "carolId";
+        const string dave_user_id = "DaveId";
+        const string erin_user_id = "ErinErinErin";
+        const string fenris_user_id = "BadWolf";
+
+        // You can remove any or all of the following functions if its body
+        // is empty.
+        KeyResetMessageTest() {
+            // You can do set-up work for each test here.
+            test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();
+            test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
+            test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
+        }
+
+        ~KeyResetMessageTest() override {
+            // You can do clean-up work that doesn't throw exceptions here.
+        }
+
+        // If the constructor and destructor are not enough for setting up
+        // and cleaning up each test, you can define the following methods:
+
+        void SetUp() override {
+            // Code here will be called immediately after the constructor (right
+            // before each test).
+
+            KRMT_fake_this = (void*)this;
+            // Leave this empty if there are no files to copy to the home directory path
+            std::vector<std::pair<std::string, std::string>> init_files = std::vector<std::pair<std::string, std::string>>();
+
+            // Get a new test Engine.
+            engine = new Engine(test_path);
+            ASSERT_NE(engine, nullptr);
+
+            // Ok, let's initialize test directories etc.
+            engine->prep(&KRMT_message_send_callback, NULL, init_files);
+
+            // Ok, try to start this bugger.
+            engine->start();
+            ASSERT_NE(engine->session, nullptr);
+            session = engine->session;
+
+            // Engine is up. Keep on truckin'
+            m_queue.clear();
+        }
+
+        void TearDown() override {
+            // Code here will be called immediately after each test (right
+            // before the destructor).
+            KRMT_fake_this = NULL;            
+            engine->shut_down();
+            delete engine;
+            engine = NULL;
+            session = NULL;
+        }
         
-            const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
-            const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
+        void send_setup() {
+            // Setup own identity
+            PEP_STATUS status = read_file_and_import_key(session,
+                        "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
+            assert(status == PEP_KEY_IMPORTED);
+            status = set_up_ident_from_scratch(session,
+                        "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc",
+                        "pep.test.alice@pep-project.org", alice_fpr,
+                        alice_user_id.c_str(), "Alice in Wonderland", NULL, true
+                    );
+            ASSERT_EQ(status, PEP_STATUS_OK);
+
+            status = set_up_ident_from_scratch(session,
+                        "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc",
+                        "pep.test.bob@pep-project.org", NULL, bob_user_id.c_str(), "Bob's Burgers",
+                        NULL, false
+                    );
+            ASSERT_EQ(status, PEP_STATUS_OK);
+
+            status = set_up_ident_from_scratch(session,
+                        "test_keys/pub/pep-test-carol-0x42A85A42_pub.asc",
+                        "pep-test-carol@pep-project.org", NULL, carol_user_id.c_str(), "Carol Burnett",
+                        NULL, false
+                    );
+            ASSERT_EQ(status, PEP_STATUS_OK);
+
+            status = set_up_ident_from_scratch(session,
+                        "test_keys/pub/pep-test-dave-0xBB5BCCF6_pub.asc",
+                        "pep-test-dave@pep-project.org", NULL, dave_user_id.c_str(),
+                        "David Hasselhoff (Germans Love Me)", NULL, false
+                    );
+            ASSERT_EQ(status, PEP_STATUS_OK);
+
+            status = set_up_ident_from_scratch(session,
+                        "test_keys/pub/pep-test-erin-0x9F8D7CBA_pub.asc",
+                        "pep-test-erin@pep-project.org", NULL, erin_user_id.c_str(),
+                        "Éirinn go Brách", NULL, false
+                    );
+            ASSERT_EQ(status, PEP_STATUS_OK);
+
+            status = set_up_ident_from_scratch(session,
+                        "test_keys/pub/pep.test.fenris-0x4F3D2900_pub.asc",
+                        "pep.test.fenris@thisstilldoesntwork.lu", NULL, fenris_user_id.c_str(),
+                        "Fenris Leto Hawke", NULL, false
+                    );
+            ASSERT_EQ(status, PEP_STATUS_OK);
+        }
+
+        void receive_setup() {
+            PEP_STATUS status = read_file_and_import_key(session,
+                        "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
+            assert(status == PEP_KEY_IMPORTED);
+            status = set_up_ident_from_scratch(session,
+                        "test_keys/priv/pep-test-bob-0xC9C2EE39_priv.asc",
+                        "pep.test.bob@pep-project.org", bob_fpr,
+                        bob_user_id.c_str(), "Robert Redford", NULL, true
+                    );
+            ASSERT_EQ(status, PEP_STATUS_OK);
+
+            status = set_up_ident_from_scratch(session,
+                        "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc",
+                        "pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), "Alice is tired of Bob",
+                        NULL, false
+                    );
+            ASSERT_EQ(status, PEP_STATUS_OK);
+        }
         
-            const char* alice_receive_reset_fpr = "6A349E4F68801E39145CD4C5712616A385412538";
+        void create_msg_for_revoked_key() {
+            PEP_STATUS status = set_up_ident_from_scratch(session,
+                        "test_keys/pub/pep-test-gabrielle-0xE203586C_pub.asc",
+                        "pep-test-gabrielle@pep-project.org", NULL, PEP_OWN_USERID,
+                        "Gabi", NULL, false
+                    );
+            ASSERT_EQ(status, PEP_STATUS_OK);
+            status = set_up_ident_from_scratch(session,
+                        "test_keys/priv/pep-test-gabrielle-0xE203586C_priv.asc",
+                        "pep-test-gabrielle@pep-project.org", NULL, PEP_OWN_USERID,
+                        "Gabi", NULL, false
+                    );
+            ASSERT_EQ(status, PEP_STATUS_OK);
 
-            const string alice_user_id = PEP_OWN_USERID;
-            const string bob_user_id = "BobId";
-            const string carol_user_id = "carolId";
-            const string dave_user_id = "DaveId";
-            const string erin_user_id = "ErinErinErin";
-            const string fenris_user_id = "BadWolf";
+            status = set_up_ident_from_scratch(session,
+                        "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc",
+                        "pep.test.alice@pep-project.org", NULL, "AliceOther", "Alice is tired of Bob",
+                        NULL, false
+                    );
 
-            // You can remove any or all of the following functions if its body
-            // is empty.
-            KeyResetMessageTest() {
-                // You can do set-up work for each test here.
-                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();
-                test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-                test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
-            }
+            pEp_identity* from_ident = new_identity("pep-test-gabrielle@pep-project.org", NULL, PEP_OWN_USERID, NULL);
+            status = myself(session, from_ident);
+            ASSERT_EQ(status , PEP_STATUS_OK);
+            ASSERT_NE(from_ident->fpr, nullptr);
+            ASSERT_STRCASEEQ(from_ident->fpr, "906C9B8349954E82C5623C3C8C541BD4E203586C");
+            ASSERT_TRUE(from_ident->me);
 
-            ~KeyResetMessageTest() override {
-                // You can do clean-up work that doesn't throw exceptions here.
-            }
+            // "send" some messages to update the social graph entries
+            identity_list* send_idents =
+                new_identity_list(
+                    new_identity("pep.test.alice@pep-project.org", NULL, "AliceOther", NULL));
+            status = update_identity(session, send_idents->ident);
+            ASSERT_EQ(status , PEP_STATUS_OK);
+            status = set_as_pEp_user(session, send_idents->ident);
 
-            // If the constructor and destructor are not enough for setting up
-            // and cleaning up each test, you can define the following methods:
+            message* outgoing_msg = new_message(PEP_dir_outgoing);
+            ASSERT_NE(outgoing_msg, nullptr);
+            outgoing_msg->from = from_ident;
+            outgoing_msg->to = send_idents;
+            outgoing_msg->shortmsg = strdup("Well isn't THIS a useless message...");
+            outgoing_msg->longmsg = strdup("Hi Mom...\n");
+            outgoing_msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
+            cout << "Message created.\n\n";
+            cout << "Encrypting message as MIME multipart…\n";
+            message* enc_outgoing_msg = nullptr;
+            cout << "Calling encrypt_message()\n";
+            status = encrypt_message(session, outgoing_msg, NULL, &enc_outgoing_msg, PEP_enc_PGP_MIME, 0);
+            ASSERT_EQ(status , PEP_STATUS_OK);
+            ASSERT_NE(enc_outgoing_msg, nullptr);
+            cout << "Message encrypted.\n";
+            char* outstring = NULL;
+            mime_encode_message(enc_outgoing_msg, false, &outstring);
+            cout << outstring << endl;
+            free_message(enc_outgoing_msg);
+            free(outstring);
+        }
 
-            void SetUp() override {
-                // Code here will be called immediately after the constructor (right
-                // before each test).
+    private:
+        const char* test_suite_name;
+        const char* test_name;
+        string test_path;
+        // Objects declared here can be used by all tests in the KeyResetMessageTest suite.
 
-                fake_this = this;
-                // Leave this empty if there are no files to copy to the home directory path
-                std::vector<std::pair<std::string, std::string>> init_files = std::vector<std::pair<std::string, std::string>>();
+};
 
-                // Get a new test Engine.
-                engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
-
-                // Ok, let's initialize test directories etc.
-                engine->prep(&KeyResetMessageTest::message_send_callback, NULL, init_files);
-
-                // Ok, try to start this bugger.
-                engine->start();
-                ASSERT_NE(engine->session, nullptr);
-                session = engine->session;
-
-                // Engine is up. Keep on truckin'
-                m_queue.clear();
-            }
-
-            void TearDown() override {
-                // Code here will be called immediately after each test (right
-                // before the destructor).
-                engine->shut_down();
-                delete engine;
-                engine = NULL;
-                session = NULL;
-            }
-            
-            void send_setup() {
-                // Setup own identity
-                PEP_STATUS status = read_file_and_import_key(session,
-                            "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
-                assert(status == PEP_KEY_IMPORTED);
-                status = set_up_ident_from_scratch(session,
-                            "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc",
-                            "pep.test.alice@pep-project.org", alice_fpr,
-                            alice_user_id.c_str(), "Alice in Wonderland", NULL, true
-                        );
-                ASSERT_EQ(status, PEP_STATUS_OK);
-
-                status = set_up_ident_from_scratch(session,
-                            "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc",
-                            "pep.test.bob@pep-project.org", NULL, bob_user_id.c_str(), "Bob's Burgers",
-                            NULL, false
-                        );
-                ASSERT_EQ(status, PEP_STATUS_OK);
-
-                status = set_up_ident_from_scratch(session,
-                            "test_keys/pub/pep-test-carol-0x42A85A42_pub.asc",
-                            "pep-test-carol@pep-project.org", NULL, carol_user_id.c_str(), "Carol Burnett",
-                            NULL, false
-                        );
-                ASSERT_EQ(status, PEP_STATUS_OK);
-
-                status = set_up_ident_from_scratch(session,
-                            "test_keys/pub/pep-test-dave-0xBB5BCCF6_pub.asc",
-                            "pep-test-dave@pep-project.org", NULL, dave_user_id.c_str(),
-                            "David Hasselhoff (Germans Love Me)", NULL, false
-                        );
-                ASSERT_EQ(status, PEP_STATUS_OK);
-
-                status = set_up_ident_from_scratch(session,
-                            "test_keys/pub/pep-test-erin-0x9F8D7CBA_pub.asc",
-                            "pep-test-erin@pep-project.org", NULL, erin_user_id.c_str(),
-                            "Éirinn go Brách", NULL, false
-                        );
-                ASSERT_EQ(status, PEP_STATUS_OK);
-
-                status = set_up_ident_from_scratch(session,
-                            "test_keys/pub/pep.test.fenris-0x4F3D2900_pub.asc",
-                            "pep.test.fenris@thisstilldoesntwork.lu", NULL, fenris_user_id.c_str(),
-                            "Fenris Leto Hawke", NULL, false
-                        );
-                ASSERT_EQ(status, PEP_STATUS_OK);
-            }
-
-            void receive_setup() {
-                PEP_STATUS status = read_file_and_import_key(session,
-                            "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
-                assert(status == PEP_KEY_IMPORTED);
-                status = set_up_ident_from_scratch(session,
-                            "test_keys/priv/pep-test-bob-0xC9C2EE39_priv.asc",
-                            "pep.test.bob@pep-project.org", bob_fpr,
-                            bob_user_id.c_str(), "Robert Redford", NULL, true
-                        );
-                ASSERT_EQ(status, PEP_STATUS_OK);
-
-                status = set_up_ident_from_scratch(session,
-                            "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc",
-                            "pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), "Alice is tired of Bob",
-                            NULL, false
-                        );
-                ASSERT_EQ(status, PEP_STATUS_OK);
-            }
-            
-            void create_msg_for_revoked_key() {
-                PEP_STATUS status = set_up_ident_from_scratch(session,
-                            "test_keys/pub/pep-test-gabrielle-0xE203586C_pub.asc",
-                            "pep-test-gabrielle@pep-project.org", NULL, PEP_OWN_USERID,
-                            "Gabi", NULL, false
-                        );
-                ASSERT_EQ(status, PEP_STATUS_OK);
-                status = set_up_ident_from_scratch(session,
-                            "test_keys/priv/pep-test-gabrielle-0xE203586C_priv.asc",
-                            "pep-test-gabrielle@pep-project.org", NULL, PEP_OWN_USERID,
-                            "Gabi", NULL, false
-                        );
-                ASSERT_EQ(status, PEP_STATUS_OK);
-
-                status = set_up_ident_from_scratch(session,
-                            "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc",
-                            "pep.test.alice@pep-project.org", NULL, "AliceOther", "Alice is tired of Bob",
-                            NULL, false
-                        );
-
-                pEp_identity* from_ident = new_identity("pep-test-gabrielle@pep-project.org", NULL, PEP_OWN_USERID, NULL);
-                status = myself(session, from_ident);
-                ASSERT_EQ(status , PEP_STATUS_OK);
-                TEST_ASSERT_MSG(from_ident->fpr && strcasecmp(from_ident->fpr, "906C9B8349954E82C5623C3C8C541BD4E203586C") == 0,
-                                from_ident->fpr);
-                ASSERT_NE(from_ident->me, nullptr);
-
-                // "send" some messages to update the social graph entries
-                identity_list* send_idents =
-                    new_identity_list(
-                        new_identity("pep.test.alice@pep-project.org", NULL, "AliceOther", NULL));
-                status = update_identity(session, send_idents->ident);
-                ASSERT_EQ(status , PEP_STATUS_OK);
-                status = set_as_pEp_user(session, send_idents->ident);
-
-                message* outgoing_msg = new_message(PEP_dir_outgoing);
-                ASSERT_NE(outgoing_msg, nullptr);
-                outgoing_msg->from = from_ident;
-                outgoing_msg->to = send_idents;
-                outgoing_msg->shortmsg = strdup("Well isn't THIS a useless message...");
-                outgoing_msg->longmsg = strdup("Hi Mom...\n");
-                outgoing_msg->attachments = new_bloblist(NULL, 0, "application/octet-stream", NULL);
-                cout << "Message created.\n\n";
-                cout << "Encrypting message as MIME multipart…\n";
-                message* enc_outgoing_msg = nullptr;
-                cout << "Calling encrypt_message()\n";
-                status = encrypt_message(session, outgoing_msg, NULL, &enc_outgoing_msg, PEP_enc_PGP_MIME, 0);
-                ASSERT_EQ(status , PEP_STATUS_OK);
-                ASSERT_NE(enc_outgoing_msg, nullptr);
-                cout << "Message encrypted.\n";
-                char* outstring = NULL;
-                mime_encode_message(enc_outgoing_msg, false, &outstring);
-                cout << outstring << endl;
-                free_message(enc_outgoing_msg);
-                free(outstring);
-            }
-
-        private:
-            const char* test_suite_name;
-            const char* test_name;
-            string test_path;
-            // Objects declared here can be used by all tests in the KeyResetMessageTest suite.
-
-    };
-
-}  // namespace
+PEP_STATUS KRMT_message_send_callback(message* msg) {
+    ((KeyResetMessageTest*)KRMT_fake_this)->m_queue.push_back(msg);
+    return PEP_STATUS_OK;
+}
 
 TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
     send_setup();
@@ -242,9 +240,9 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
     pEp_identity* from_ident = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
     PEP_STATUS status = myself(session, from_ident);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    TEST_ASSERT_MSG(from_ident->fpr && strcasecmp(from_ident->fpr, alice_fpr) == 0,
-                    from_ident->fpr);
-    ASSERT_NE(from_ident->me, nullptr);
+    ASSERT_NE(from_ident->fpr, nullptr);
+    ASSERT_STRCASEEQ(from_ident->fpr, alice_fpr);
+    ASSERT_TRUE(from_ident->me);
 
     // "send" some messages to update the social graph entries
     identity_list* send_idents =
@@ -330,7 +328,7 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
         ASSERT_NE(curr_sent_msg, nullptr);
         ASSERT_NE(curr_sent_msg->to, nullptr);
         ASSERT_NE(curr_sent_msg->to->ident, nullptr);
-        ASSERT_NE(curr_sent_msg->to->next, nullptr);
+        ASSERT_EQ(curr_sent_msg->to->next, nullptr);
         pEp_identity* to = curr_sent_msg->to->ident;
         ASSERT_NE(to, nullptr);
         ASSERT_NE(to->user_id, nullptr);
@@ -387,13 +385,11 @@ TEST_F(KeyResetMessageTest, check_non_reset_receive_revoked) {
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(keylist, nullptr);
     if (keylist) // there's a test option to continue when asserts fail, so...
-        TEST_ASSERT_MSG(strcmp(keylist->value, alice_receive_reset_fpr) == 0,
-                        keylist->value);
+        ASSERT_STREQ(keylist->value,alice_receive_reset_fpr);
 
     status = update_identity(session, alice_ident);
     ASSERT_NE(alice_ident->fpr, nullptr);
-    TEST_ASSERT_MSG(strcmp(alice_receive_reset_fpr, alice_ident->fpr) == 0,
-                    alice_ident->fpr);
+    ASSERT_STREQ(alice_receive_reset_fpr,alice_ident->fpr);
 
     keylist = NULL;
 
@@ -458,8 +454,8 @@ TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_unknown) {
     pEp_identity* from_ident = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
     PEP_STATUS status = myself(session, from_ident);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    TEST_ASSERT_MSG(from_ident->fpr && strcasecmp(from_ident->fpr, alice_fpr) == 0,
-                    from_ident->fpr);
+    ASSERT_NE(from_ident->fpr, nullptr);
+    ASSERT_STRCASEEQ(from_ident->fpr, alice_fpr);
     ASSERT_TRUE(from_ident->me);
 
     status = key_reset(session, alice_fpr, from_ident);
@@ -568,8 +564,8 @@ TEST_F(KeyResetMessageTest, check_multiple_resets_single_key) {
     pEp_identity* from_ident = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
     PEP_STATUS status = myself(session, from_ident);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    TEST_ASSERT_MSG(from_ident->fpr && strcasecmp(from_ident->fpr, alice_fpr) == 0,
-                    from_ident->fpr);
+    ASSERT_NE(from_ident->fpr, nullptr);
+    ASSERT_STRCASEEQ(from_ident->fpr, alice_fpr);
     ASSERT_TRUE(from_ident->me);
 
     status = key_reset(session, NULL, NULL);

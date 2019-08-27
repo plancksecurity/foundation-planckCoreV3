@@ -7,7 +7,7 @@ HERE:=$(CURDIR)
 
 include ../Makefile.conf
 
-GTEST_DIR:=googletest
+GTEST_DIR:=googletest/googletest
 SRCS:=$(wildcard src/*.cc) $(wildcard src/*/*.cc)
 OBJS:=$(addsuffix .o,$(basename $(SRCS)))
 DEPS:=$(OBJS:.o=.d)

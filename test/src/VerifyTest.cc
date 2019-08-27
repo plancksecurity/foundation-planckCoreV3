@@ -18,12 +18,12 @@
 
 namespace {
 
-	//The fixture for VerifyTest
+	//The fixture for VerifyTest(keylist->next) != (nullptr)
     class VerifyTest : public ::testing::Test {
         public:
             Engine* engine;
             PEP_SESSION session;
-
+            const char *mary_fpr = "599B3D67800DB37E2DCE05C07F59F03CD04A226E";
         protected:
             // You can remove any or all of the following functions if its body
             // is empty.
@@ -153,7 +153,7 @@ TEST_F(VerifyTest, check_revoked_tpk) {
     ASSERT_NE(keylist, nullptr);
     // No signer.
     ASSERT_STREQ(keylist->value, "");
-    ASSERT_NE( keylist->next, nullptr);
+    ASSERT_EQ(keylist->next, nullptr);
 }
 
 TEST_F(VerifyTest, check_revoked_signing_key) {
@@ -202,7 +202,7 @@ TEST_F(VerifyTest, check_revoked_signing_key) {
     ASSERT_NE(keylist, nullptr);
     // No signer.
     ASSERT_STREQ(keylist->value, "");
-    ASSERT_NE( keylist->next, nullptr);
+    ASSERT_EQ(keylist->next, nullptr);
 }
 
 TEST_F(VerifyTest, check_expired_tpk) {
@@ -251,7 +251,7 @@ TEST_F(VerifyTest, check_expired_tpk) {
     ASSERT_NE(keylist, nullptr);
     // No signer.
     ASSERT_STREQ(keylist->value, "");
-    ASSERT_NE( keylist->next, nullptr);
+    ASSERT_EQ(keylist->next, nullptr);
 }
 
 TEST_F(VerifyTest, check_expired_signing_key) {
@@ -300,5 +300,5 @@ TEST_F(VerifyTest, check_expired_signing_key) {
     ASSERT_NE(keylist, nullptr);
     // No signer.
     ASSERT_STREQ(keylist->value, "");
-    ASSERT_NE( keylist->next, nullptr);
+    ASSERT_EQ(keylist->next, nullptr);
 }

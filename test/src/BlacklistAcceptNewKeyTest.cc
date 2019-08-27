@@ -97,7 +97,7 @@ TEST_F(BlacklistAcceptNewKeyTest, check_blacklist_accept_new_key) {
     // 2797 65A2 FEB5 B7C7 31B8  61D9 3E4C EFD9 F7AF 4684 - this is the blacklisted key in blacklisted_pub.asc
 
     /* read the key into memory */
-    const string keytext = slurp("blacklisted_pub.asc");
+    const string keytext = slurp("test_mails/blacklisted_pub.asc");
 
     /* import it into pep */
     PEP_STATUS status7 = import_key(session, keytext.c_str(), keytext.length(), NULL);

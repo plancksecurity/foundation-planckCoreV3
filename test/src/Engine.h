@@ -14,7 +14,7 @@ class Engine {
         Engine(string engine_home_dir);
         virtual ~Engine();
         
-        void prep(messageToSend_t mts, inject_sync_event_t ise, std::vector<std::pair<std::string, std::string>> init_files);
+        void prep(const messageToSend_t mts, const inject_sync_event_t ise, std::vector<std::pair<std::string, std::string>> init_files);
         void start();
         void shut_down();
 

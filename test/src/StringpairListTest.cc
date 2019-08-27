@@ -11,7 +11,7 @@
 
 #include "stringpair.h"
 
-
+#include "test_util.h"
 
 #include "Engine.h"
 
@@ -22,57 +22,7 @@ namespace {
 
 	//The fixture for StringpairListTest
     class StringpairListTest : public ::testing::Test {
-        public:
-            Engine* engine;
-            PEP_SESSION session;
-
         protected:
-            // You can remove any or all of the following functions if its body
-            // is empty.
-            StringpairListTest() {
-                // You can do set-up work for each test here.
-                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();
-                test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-                test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
-            }
-
-            ~StringpairListTest() override {
-                // You can do clean-up work that doesn't throw exceptions here.
-            }
-
-            // If the constructor and destructor are not enough for setting up
-            // and cleaning up each test, you can define the following methods:
-
-            void SetUp() override {
-                // Code here will be called immediately after the constructor (right
-                // before each test).
-
-                // Leave this empty if there are no files to copy to the home directory path
-                std::vector<std::pair<std::string, std::string>> init_files = std::vector<std::pair<std::string, std::string>>();
-
-                // Get a new test Engine.
-                engine = new Engine(test_path);
-                ASSERT_NE(engine, nullptr);
-
-                // Ok, let's initialize test directories etc.
-                engine->prep(NULL, NULL, init_files);
-
-                // Ok, try to start this bugger.
-                engine->start();
-                ASSERT_NE(engine->session, nullptr);
-                session = engine->session;
-
-                // Engine is up. Keep on truckin'
-            }
-
-            void TearDown() override {
-                // Code here will be called immediately after each test (right
-                // before the destructor).
-                engine->shut_down();
-                delete engine;
-                engine = NULL;
-                session = NULL;
-            }
             bool test_stringpair_equals(stringpair_t* val1, stringpair_t* val2) {
                 assert(val1);
                 assert(val2);
@@ -82,13 +32,6 @@ namespace {
                 assert(val2->value);
                 return((strcmp(val1->key, val2->key) == 0) && (strcmp(val1->value, val2->value) == 0));
             }
-
-        private:
-            const char* test_suite_name;
-            const char* test_name;
-            string test_path;
-            // Objects declared here can be used by all tests in the StringpairListTest suite.
-
     };
 
 }  // namespace
@@ -122,7 +65,7 @@ TEST_F(StringpairListTest, check_stringpair_lists) {
     stringpair_list_t* pairlist = new_stringpair_list(strpair);
     ASSERT_NE(pairlist->value, nullptr);
     ASSERT_TRUE(test_stringpair_equals(strpair, pairlist->value));
-    ASSERT_EQ(pairlist->next , NULL);
+    ASSERT_EQ(pairlist->next , nullptr);
     cout << "one-element stringpair_list created, next element is NULL\n\n";
 
     cout << "duplicating one-element list...\n";
@@ -171,7 +114,7 @@ TEST_F(StringpairListTest, check_stringpair_lists) {
 
         p = p->next;
     }
-    ASSERT_EQ(p , NULL);
+    ASSERT_EQ(p , nullptr);
 
     cout << "\nduplicating four-element list...\n\n";
     duplist = stringpair_list_dup(pairlist);

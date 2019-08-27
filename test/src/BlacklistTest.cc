@@ -147,7 +147,7 @@ TEST_F(BlacklistTest, check_blacklist) {
 
     // 2797 65A2 FEB5 B7C7 31B8  61D9 3E4C EFD9 F7AF 4684 - this is the blacklisted key in blacklisted_pub.asc
 
-    const string keytext = slurp("blacklisted_pub.asc");
+    const string keytext = slurp("test_mails/blacklisted_pub.asc");
 
     /* FIXME: put in automated test stuff (N.B. only gdb mem examination to this point to get
      *        fix in */
@@ -228,7 +228,7 @@ TEST_F(BlacklistTest, check_blacklist) {
 
     free_message(msg23);
 
-    const string keytext2 = slurp("blacklisted_pub2.asc");
+    const string keytext2 = slurp("test_mails/blacklisted_pub2.asc");
     PEP_STATUS status14 = import_key(session, keytext2.c_str(), keytext2.length(), NULL);
 
     pEp_identity* blacklisted_identity2 = new_identity("blacklistedkeys@kgrothoff.org",

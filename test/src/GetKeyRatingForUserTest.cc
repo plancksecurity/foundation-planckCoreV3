@@ -90,7 +90,7 @@ TEST_F(GetKeyRatingForUserTest, check_get_key_rating_for_user) {
     const char* fpr_save = alice->fpr;
     alice->fpr = NULL;
     status = get_identity(session, alice->address, alice->user_id, &test_null);
-    ASSERT_NE(test_null, nullptr);
+    ASSERT_EQ(test_null, nullptr);
     ASSERT_EQ(status , PEP_CANNOT_FIND_IDENTITY);
     ASSERT_EQ(alice->comm_type , PEP_ct_unknown);
 

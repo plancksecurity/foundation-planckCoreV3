@@ -102,7 +102,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_single_private) {
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(keylist, nullptr);
     ASSERT_NE(keylist->value, nullptr);
-    ASSERT_NE(keylist->next, nullptr);
+    ASSERT_EQ(keylist->next, nullptr);
 
     ASSERT_STREQ(keylist->value, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
 }
@@ -148,7 +148,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_single_private_single_pub) {
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(keylist, nullptr);
     ASSERT_NE(keylist->value, nullptr);
-    ASSERT_NE(keylist->next, nullptr);
+    ASSERT_EQ(keylist->next, nullptr);
 
     ASSERT_STREQ(keylist->value, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
 }
@@ -379,7 +379,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multiple_private_and_pub) {
     }
     ASSERT_EQ(fpr_count , 5);
     for (int j = 0; j < 5; j++) {
-        ASSERT_NE(found_list[j], nullptr);
+        ASSERT_TRUE(found_list[j]);
     }
     free(found_list);
     free_stringlist(keylist);
@@ -457,7 +457,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_pub_only) {
 
     status = _own_keys_retrieve(session, &keylist, 0, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_EQ(keylist, nullptr);
 
     free_stringlist(keylist);
 }
@@ -520,7 +520,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_no_own) {
 
     status = _own_keys_retrieve(session, &keylist, 0, true);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(keylist, nullptr);
+    ASSERT_EQ(keylist, nullptr);
 
     free_stringlist(keylist);
 }
@@ -566,7 +566,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_idents_one_key) {
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(keylist, nullptr);
     ASSERT_NE(keylist->value, nullptr);
-    ASSERT_NE(keylist->next, nullptr);
+    ASSERT_EQ(keylist->next, nullptr);
 
     ASSERT_STREQ(keylist->value, "F4598A17D4690EB3B5B0F6A344F04E963B7302DB");
 
@@ -666,7 +666,7 @@ TEST_F(OwnKeysRetrieveTest, check_own_keys_retrieve_multi_idents_one_priv_key_mu
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(keylist, nullptr);
     ASSERT_NE(keylist->value, nullptr);
-    ASSERT_NE(keylist->next, nullptr);
+    ASSERT_EQ(keylist->next, nullptr);
 
     ASSERT_STREQ(keylist->value, "F4598A17D4690EB3B5B0F6A344F04E963B7302DB");
 }

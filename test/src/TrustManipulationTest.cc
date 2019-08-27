@@ -164,7 +164,7 @@ TEST_F(TrustManipulationTest, check_trust_manipulation) {
     cout << "Hoorah, we now do not trust key 1. (TRUST NO ONE)" << endl;
     cout << "Now we call update_identity to see what gifts it gives us (should be an empty key and a key not found comm_type.)" << endl;
     status = update_identity(session, user);
-    ASSERT_EQ(user->fpr , NULL);
+    ASSERT_EQ(user->fpr , nullptr);
     ASSERT_EQ(user->comm_type , PEP_ct_key_not_found);
     cout << "Yup, we trust no keys from " << uniqname << endl;
 
