@@ -240,7 +240,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     bool pEp_user = false;
     status = is_pEp_user(session, expired_inquisitor, &pEp_user);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(pEp_user, nullptr);
+    ASSERT_TRUE(pEp_user);
 
     // Ok, so I want to make sure we make an entry, so I'll try to decrypt the message WITH
     // the expired key:
@@ -307,7 +307,7 @@ TEST_F(CheckRenewedExpiredKeyTrustStatusTest, check_renewed_expired_key_trust_st
     bool pEp_user = false;
     status = is_pEp_user(session, expired_inquisitor, &pEp_user);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(pEp_user, nullptr);
+    ASSERT_TRUE(pEp_user);
 
     // Ok, now update_identity - we'll discover it's expired
     status = update_identity(session, expired_inquisitor);

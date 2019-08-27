@@ -125,7 +125,7 @@ TEST_F(HeaderKeyImportTest, base_64_minimal_padded_1) {
 }
 
 TEST_F(HeaderKeyImportTest, base_64_minimal_padded_2) {
-    ASSERT_EQ(verify_base_64_test("TQ, ", "M"));
+    ASSERT_TRUE(verify_base_64_test("TQ==", "M"));
 }
 
 TEST_F(HeaderKeyImportTest, base_64_minimal_unpadded_1) {
@@ -145,7 +145,7 @@ TEST_F(HeaderKeyImportTest, base_64_minimal_leading_whitespace_padded_1) {
 }
 
 TEST_F(HeaderKeyImportTest, base_64_minimal_leading_whitespace_padded_2) {
-    ASSERT_EQ(verify_base_64_test("\nTQ, ", "M"));
+    ASSERT_TRUE(verify_base_64_test("\nTQ==", "M"));
 }
 
 TEST_F(HeaderKeyImportTest, base_64_minimal_leading_whitespace_unpadded_1) {
@@ -164,7 +164,7 @@ TEST_F(HeaderKeyImportTest, base_64_minimal_trailing_whitespace_padded_1) {
 }
 
 TEST_F(HeaderKeyImportTest, base_64_minimal_trailing_whitespace_padded_2) {
-    ASSERT_EQ(verify_base_64_test("TQ, \n \t", "M"));
+    ASSERT_TRUE(verify_base_64_test("TQ==                 \n \t", "M"));
 }
 
 TEST_F(HeaderKeyImportTest, base_64_minimal_trailing_whitespace_unpadded_1) {
@@ -184,7 +184,7 @@ TEST_F(HeaderKeyImportTest, base_64_minimal_internal_whitespace_padded_1) {
 }
 
 TEST_F(HeaderKeyImportTest, base_64_minimal_internal_whitespace_padded_2) {
-    ASSERT_EQ(verify_base_64_test("T  Q, ", "M"));
+    ASSERT_TRUE(verify_base_64_test("T  Q==", "M"));
 }
 
 TEST_F(HeaderKeyImportTest, base_64_minimal_internal_whitespace_unpadded_1) {

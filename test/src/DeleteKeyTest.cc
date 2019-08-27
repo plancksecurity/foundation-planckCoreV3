@@ -10,19 +10,11 @@
 #include "test_util.h"
 
 
-
-const string DeleteKeyTests::alice_user_id = PEP_OWN_USERID;
-const string DeleteKeyTests::bob_user_id = "BobId";
-const string DeleteKeyTests::carol_user_id = "carolId";
-const string DeleteKeyTests::dave_user_id = "DaveId";
-const string DeleteKeyTests::erin_user_id = "ErinErinErin";
-const string DeleteKeyTests::fenris_user_id = "BadWolf";
-
-
 #include "Engine.h"
 
 #include <gtest/gtest.h>
 
+using namespace std;
 
 namespace {
 
@@ -31,6 +23,20 @@ namespace {
         public:
             Engine* engine;
             PEP_SESSION session;
+
+            const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
+            const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
+            const char* carol_fpr = "8DD4F5827B45839E9ACCA94687BDDFFB42A85A42";
+            const char* dave_fpr = "E8AC9779A2D13A15D8D55C84B049F489BB5BCCF6";
+            const char* erin_fpr = "1B0E197E8AE66277B8A024B9AEA69F509F8D7CBA";
+            const char* fenris_fpr = "0969FA229DF21C832A64A04711B1B9804F3D2900";
+
+            const string alice_user_id = PEP_OWN_USERID;
+            const string bob_user_id = "BobId";
+            const string carol_user_id = "carolId";
+            const string dave_user_id = "DaveId";
+            const string erin_user_id = "ErinErinErin";
+            const string fenris_user_id = "BadWolf";
 
         protected:
             // You can remove any or all of the following functions if its body

@@ -301,5 +301,4 @@ TEST_F(VerifyTest, check_expired_signing_key) {
     // No signer.
     ASSERT_STREQ(keylist->value, "");
     ASSERT_NE( keylist->next, nullptr);
-#endif
 }

@@ -136,14 +136,14 @@ TEST_F(DecryptAttachPrivateKeyUntrustedTest, check_decrypt_attach_private_key_un
     status = set_own_key(session, main_me, fpr_main_me);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
-    ASSERT_EQ((strcmp(main_me->fpr, fpr_main_me), 0), "strcmp(main_me->fpr);
+    ASSERT_STREQ(main_me->fpr, fpr_main_me);
     cout << "Done!" << endl << endl;
 
     cout << "Setting up sender identities and resetting key trust." << endl;
     cout << "Same address, same user_id - address: " << main_addr << ", user_id: " << own_uid << ", fpr: " << fpr_same_addr_same_uid << endl;
     same_addr_same_uid = new_identity(main_addr, fpr_same_addr_same_uid, own_uid, "PrivateKey Import Test");
     ASSERT_EQ(status == PEP_STATUS_OK || status, PEP_CANNOT_FIND_IDENTITY);
-    ASSERT_NE(((same_addr_same_uid->comm_type & PEP_ct_confirmed) , PEP_ct_confirmed));
+    ASSERT_NE(same_addr_same_uid->comm_type & PEP_ct_confirmed, PEP_ct_confirmed);
 
     status = key_reset_trust(session, same_addr_same_uid);
 

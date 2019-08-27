@@ -189,11 +189,11 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     for (stringlist_t* kl4 = keylist_used; kl4 && kl4->value; kl4 = kl4->next, i++)
     {
         if (i == 0) {
-            ASSERT_EQ((strcasecmp("",kl4->value), 0), "strcasecmp(\"\");
+            ASSERT_STRCASEEQ("",kl4->value);
         }
         else {
             cout << "\t " << kl4->value << endl;
-            ASSERT_EQ((strcasecmp("4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", kl4->value), 0), "strcasecmp(\"4ABE3AAF59AC32CFE4F86500A9411D176FF00E97\");
+            ASSERT_STRCASEEQ("4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", kl4->value);
             cout << "Encrypted for Alice! Yay! It worked!" << endl;
         }
         ASSERT_LT(i , 2);

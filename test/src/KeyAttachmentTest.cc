@@ -65,6 +65,11 @@ namespace {
                 session = engine->session;
 
                 // Engine is up. Keep on truckin'
+                ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/inquisitor-0xA4728718_renewed_pub.asc"));
+                ASSERT_TRUE(slurp_and_import_key(session, "test_keys/priv/inquisitor-0xA4728718_renewed_priv.asc"));
+                // accidentally encrypted the encrypted attachment to alice - this really doesn't matter here tbh
+                ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc"));
+                ASSERT_TRUE(slurp_and_import_key(session, "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc"));                
             }
 
             void TearDown() override {
@@ -86,15 +91,6 @@ namespace {
 
 }  // namespace
 
-
-void KeyAttachmentTests::setup() {
-    EngineTestIndividualSuite::setup();
-    assert(slurp_and_import_key(session, "test_keys/pub/inquisitor-0xA4728718_renewed_pub.asc"));
-    assert(slurp_and_import_key(session, "test_keys/priv/inquisitor-0xA4728718_renewed_priv.asc"));
-    // accidentally encrypted the encrypted attachment to alice - this really doesn't matter here tbh
-    assert(slurp_and_import_key(session, "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc"));
-    assert(slurp_and_import_key(session, "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc"));
-}
 
 TEST_F(KeyAttachmentTest, check_key_attach_inline) {
     string msg = slurp("test_mails/Inline PGP test.eml");
@@ -336,12 +332,8 @@ TEST_F(KeyAttachmentTest, check_many_keys_with_many_files_inline) {
         ASSERT_NE(curr_att->filename, nullptr);
         ASSERT_NE(curr_att->mime_type, nullptr);
         cout << (*it).first << endl;
-        TEST_ASSERT_MSG(strcmp(curr_att->filename,
-                               (*it).first.c_str()) == 0,
-                        curr_att->filename);
-        TEST_ASSERT_MSG(strcmp(curr_att->mime_type,
-                                (*it).second.c_str()) == 0,
-                        curr_att->mime_type);
+        ASSERT_STREQ(curr_att->filename, (*it).first.c_str());
+        ASSERT_STREQ(curr_att->mime_type, (*it).second.c_str());
         it++;
         curr_att = curr_att->next;
     }
@@ -580,12 +572,8 @@ TEST_F(KeyAttachmentTest, check_many_keys_w_many_files_OpenPGP) {
         ASSERT_NE(curr_att, nullptr);
         ASSERT_NE(curr_att->filename, nullptr);
         ASSERT_NE(curr_att->mime_type, nullptr);
-        TEST_ASSERT_MSG(strcmp(curr_att->filename,
-                               (*it).first.c_str()) == 0,
-                        curr_att->filename);
-        TEST_ASSERT_MSG(strcmp(curr_att->mime_type,
-                                (*it).second.c_str()) == 0,
-                        curr_att->mime_type);
+        ASSERT_STREQ(curr_att->filename, (*it).first.c_str());
+        ASSERT_STREQ(curr_att->mime_type, (*it).second.c_str());
         it++;
         curr_att = curr_att->next;
     }

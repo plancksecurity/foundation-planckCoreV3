@@ -25,14 +25,14 @@ namespace {
     class IdentityListTest : public ::testing::Test {
         protected:    
             int test_identity_equals(pEp_identity* val1, pEp_identity* val2) {
-                ASSERT_NE(val1, nullptr);
-                ASSERT_NE(val2, nullptr);
-                ASSERT_NE(val1->address, nullptr);
-                ASSERT_NE(val2->address, nullptr);
-                ASSERT_NE(val1->fpr, nullptr);
-                ASSERT_NE(val2->fpr, nullptr);
-                ASSERT_NE(val1->username, nullptr);
-                ASSERT_NE(val2->username, nullptr);
+                assert(val1 != nullptr);
+                assert(val2 != nullptr);
+                assert(val1->address != nullptr);
+                assert(val2->address != nullptr);
+                assert(val1->fpr != nullptr);
+                assert(val2->fpr != nullptr);
+                assert(val1->username != nullptr);
+                assert(val2->username != nullptr);
                 return((strcmp(val1->address, val2->address) == 0) && (strcmp(val1->fpr, val2->fpr) == 0)
                     && (strcmp(val1->username, val2->username) == 0) && (val1->comm_type == val2->comm_type)
                     && (val1->lang[0] == val2->lang[0]) && (val1->lang[1] == val2->lang[1])
@@ -91,7 +91,7 @@ TEST_F(IdentityListTest, check_identity_list) {
     identity_list* idlist = new_identity_list(new_id);
     ASSERT_NE(idlist->ident, nullptr);
     ASSERT_TRUE(test_identity_equals(id1, idlist->ident));
-    ASSERT_EQ(idlist->next , NULL);
+    ASSERT_EQ(idlist->next, nullptr);
     cout << "one-element identity_list created, next element is NULL\n\n";
 
     cout << "duplicating one-element list...\n";
@@ -99,7 +99,7 @@ TEST_F(IdentityListTest, check_identity_list) {
     pEp_identity* srcid = idlist->ident;
     pEp_identity* dstid = duplist->ident;
     ASSERT_NE(dstid, nullptr);
-    ASSERT_TRUE(test_identity_equals(srcid, dstid), "test_identity_equals(srcid);
+    ASSERT_TRUE(test_identity_equals(srcid, dstid));
     ASSERT_NE(srcid->address, dstid->address);   // test deep copies
     ASSERT_NE(srcid->fpr, dstid->fpr);
     ASSERT_NE(srcid->username, dstid->username);
@@ -136,7 +136,7 @@ TEST_F(IdentityListTest, check_identity_list) {
 
         p = p->next;
     }
-    ASSERT_EQ(p , NULL);
+    ASSERT_EQ(p , nullptr);
 
     cout << "\nduplicating four-element list...\n\n";
     duplist = identity_list_dup(idlist);

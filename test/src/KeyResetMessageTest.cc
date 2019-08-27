@@ -487,7 +487,7 @@ TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_contact) {
     pEp_identity* from_ident = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
     PEP_STATUS status = myself(session, from_ident);
     ASSERT_EQ(status , PEP_STATUS_OK);
-    ASSERT_NE(from_ident->fpr);
+    ASSERT_NE(from_ident->fpr, nullptr);
     ASSERT_STRCASEEQ(from_ident->fpr, alice_fpr);
     ASSERT_TRUE(from_ident->me);
 

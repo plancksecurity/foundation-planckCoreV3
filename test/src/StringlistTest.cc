@@ -158,7 +158,7 @@ TEST_F(StringlistTest, check_stringlists) {
     src = new_stringlist(str0);
     ASSERT_NE(src, nullptr);
     dst = stringlist_dup(src);
-    ASSERT_STREQ(dst->value, str0;
+    ASSERT_STREQ(dst->value, str0);
     cout << "Value: " << src->value;
     ASSERT_EQ(dst->next , nullptr);
     cout << "one-element stringlist duped, next element is NULL\n";

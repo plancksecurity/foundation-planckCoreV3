@@ -129,8 +129,9 @@ TEST_F(LookupTest, check_lookup) {
         ASSERT_EQ(status , PEP_STATUS_OK);
 
         // We should always get the same fingerprint.
-        ASSERT_NE((hans->fpr), nullptr);
-        ASSERT_STREQ(hans->fpr);
+        ASSERT_NE(hans->fpr, nullptr);
+        // Doublecheck FIXME (autogen)
+        ASSERT_STREQ(hans->fpr, fpr);
 
         // We don't compare hans->username or hans->user_id in case
         // the engine doesn't have the same concept of equality (as of
@@ -141,7 +142,7 @@ TEST_F(LookupTest, check_lookup) {
 
         // We should get the address that we looked up; no
         // normalization is done.
-        ASSERT_EQ((strcmp(hans->address, address) , 0), "strcmp(hans->address);
+        ASSERT_STREQ(hans->address, address);
 
         ASSERT_FALSE(hans->me);
         ASSERT_EQ(hans->comm_type , PEP_ct_OpenPGP_unconfirmed);
