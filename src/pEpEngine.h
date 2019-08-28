@@ -1293,6 +1293,20 @@ DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session,
                                    pEp_identity *identity, 
                                    bool* is_pEp);
 
+// per_user_directory() - returns the directory for pEp management db
+//
+//  return_value:
+//      path to actual per user directory or NULL on failure
+
+DYNAMIC_API const char *per_user_directory(void);
+
+
+// per_machine_directory() - returns the directory for pEp system db
+//
+//  return value:
+//      path to actual per user directory or NULL on failure
+
+DYNAMIC_API const char *per_machine_directory(void);
 
 
 DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session);

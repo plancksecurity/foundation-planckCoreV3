@@ -17,9 +17,13 @@
 #include <string>
 #include <stdexcept>
 #include "platform_windows.h"
+#include "dynamic_api.h"
 #include <fcntl.h>
 #include <tchar.h>
 #include <sys\stat.h>
+
+#define LOCAL_DB_FILENAME "management.db"
+#define SYSTEM_DB_FILENAME "system.db"
 
 #ifndef WC_ERR_INVALID_CHARS
 #define WC_ERR_INVALID_CHARS      0x00000080  // error for invalid chars
@@ -114,7 +118,7 @@ static const DWORD PATH_BUF_SIZE = 32768;
 static inline string managementPath(const char *file_path, const char *file_name)
 {
     string path;
-	static TCHAR tPath[PATH_BUF_SIZE];
+    TCHAR tPath[PATH_BUF_SIZE];
 
     DWORD length = ExpandEnvironmentStringsW(utf16_string(file_path).c_str(),
             tPath, PATH_BUF_SIZE);
@@ -133,6 +137,40 @@ static inline string managementPath(const char *file_path, const char *file_name
 }
 
 extern "C" {
+
+DYNAMIC_API const char *per_user_directory(void)
+{
+    static string path;
+    if (path.length())
+        return path.c_str();
+
+    TCHAR tPath[PATH_BUF_SIZE];
+    DWORD length = ExpandEnvironmentStringsW(utf16_string(string(PER_USER_DIRECTORY)).c_str(),
+            tPath, PATH_BUF_SIZE);
+	assert(length);
+    if (length == 0)
+        throw bad_alloc(); // BUG: there are other errors possible beside out of memory
+
+    path = utf8_string(wstring(tPath));
+    return path.c_str();
+}
+
+DYNAMIC_API const char *per_machine_directory(void)
+{
+    static string path;
+    if (path.length())
+        return path.c_str();
+
+    TCHAR tPath[PATH_BUF_SIZE];
+    DWORD length = ExpandEnvironmentStringsW(utf16_string(string(PER_MACHINE_DIRECTORY)).c_str(),
+            tPath, PATH_BUF_SIZE);
+	assert(length);
+    if (length == 0)
+        throw bad_alloc(); // BUG: there are other errors possible beside out of memory
+
+    path = utf8_string(wstring(tPath));
+    return path.c_str();
+}
 
 void *dlopen(const char *filename, int flag) {
 	static TCHAR path[PATH_BUF_SIZE];
@@ -196,14 +234,14 @@ void *dlsym(void *handle, const char *symbol) {
 const char *windoze_local_db(void) {
 	static string path;
 	if (path.length() == 0)
-        path = managementPath("%LOCALAPPDATA%\\pEp", "management.db");
+        path = managementPath(PER_USER_DIRECTORY, LOCAL_DB_FILENAME);
     return path.c_str();
 }
 
 const char *windoze_system_db(void) {
 	static string path;
 	if (path.length() == 0)
-		path = managementPath("%ALLUSERSPROFILE%\\pEp", "system.db");
+		path = managementPath(PER_MACHINE_DIRECTORY, SYSTEM_DB_FILENAME);
     return path.c_str();
 }
 

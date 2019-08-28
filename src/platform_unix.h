@@ -16,6 +16,16 @@
 #include <uuid/uuid.h>
 #endif
 
+// pEp files and directories
+
+#ifndef PER_USER_DIRECTORY
+#define PER_USER_DIRECTORY ".pEp"
+#endif
+
+#ifndef PER_MACHINE_DIRECTORY
+#define PER_MACHINE_DIRECTORY "/usr/local/share/pEp"
+#endif
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,6 +42,7 @@ const char *gpg_conf(int reset);
 const char *gpg_agent_conf(int reset);
 const char *gpg_home(int reset);
 #endif
+const char *unix_system_db(void);
 
 
 #ifdef ANDROID

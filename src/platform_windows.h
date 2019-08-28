@@ -22,6 +22,16 @@
 #include <basetsd.h>
 #include <time.h>
 
+// pEp files and directories
+
+#ifndef PER_USER_DIRECTORY
+#define PER_USER_DIRECTORY "%LOCALAPPDATA%\\pEp"
+#endif
+
+#ifndef PER_MACHINE_DIRECTORY
+#define PER_MACHINE_DIRECTORY "%ALLUSERSPROFILE%\\pEp"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
