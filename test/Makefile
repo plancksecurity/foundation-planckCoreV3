@@ -5,9 +5,12 @@
 
 HERE:=$(CURDIR)
 
+# Presumably can be changed in local.conf by putting this here?
+GTEST_DIR:=googletest/googletest
+GTEST_PL_DIR:=googletest/gtest-parallel
+
 include ../Makefile.conf
 
-GTEST_DIR:=googletest/googletest
 SRCS:=$(wildcard src/*.cc) $(wildcard src/*/*.cc)
 OBJS:=$(addsuffix .o,$(basename $(SRCS)))
 DEPS:=$(OBJS:.o=.d)
@@ -106,11 +109,11 @@ gtest_main.o: $(GTEST_DIR)/src/gtest_main.cc
 	${CXX} ${CXXFLAGS} $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -isystem $(GTEST_DIR)/include -o $@ -c $<
 
 test: all
-	$(TEST_CMD_PFX) $(TEST_DEBUGGER) ./$(TARGET)
+	$(TEST_CMD_PFX) $(TEST_DEBUGGER) python3 $(GTEST_PL_DIR)/gtest_parallel.py ./$(TARGET)
 
 clean:
 	$(RM) $(TARGET) $(TARGET).o $(TARGET).d $(OBJS) $(notdir $(basename $(OBJS))) $(DEPS)
-
+	$(RM) gtest_main.o gtest-all.o
 # If only the goal 'clean' is given, do not generate and include the '%.d' files.¬
 ifneq ($(MAKECMDGOALS),clean)
     -include $(DEPS)
