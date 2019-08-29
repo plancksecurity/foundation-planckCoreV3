@@ -52,10 +52,10 @@ else ifeq ($(OPENPGP),NETPGP)
     endif
 endif
 
-CXXFLAGS:=$(filter-out -DNDEBUG,$(CXXFLAGS))
+CXXFLAGS:=-I$(GTEST_INC_DIR) $(filter-out -DNDEBUG,$(CXXFLAGS))
 
 # FIXME Possibly missing incdirs: ASN1C_INC
-CXXFLAGS+= -I./src -I../sync $(CPPUNIT_INC) $(INC_FLAGS) -I$(GTEST_INC_DIR) -Wno-deprecated
+CXXFLAGS+= -I./src -I../sync $(CPPUNIT_INC) $(INC_FLAGS) -Wno-deprecated
 
 ifeq ($(OPENPGP),GPG)
     CXXFLAGS+= -DUSE_GPG $(GPGME_INC)

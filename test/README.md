@@ -43,15 +43,18 @@ Presuming the above works, then from the top test directory, simply run make.
 
 # Running the Engine Test Suite
 
-If you simply want to run the suite and see what tests fail, either:
+## To simply run the test suite and see what tests fail...
+
+Do one of:
 
 1. make test OR
 2. python3 \<path to gtest-parallel.py\> ./EngineTests
 
-To run individual tests, especially for debugging purposes:
+## To run individual test suites, especially for debugging purposes
 
-1. Blah, and, for example,
-2. {lldb ./EngineTests some-blah-args-here}
+1. To run sequentially, IN THE SAME PROCESS: ./EngineTests TestSuiteName* (for example, for DeleteKeyTest: ./EngineTests DeleteKeyTest*) 
+2. To debug the same: lldb ./EngineTests TestSuiteName*
+3. To run sequentially IN DIFFERENT PROCESSES: (FIXME - is this really the case?) 
 
 # Creating new tests
 
