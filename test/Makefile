@@ -8,6 +8,7 @@ HERE:=$(CURDIR)
 # Presumably can be changed in local.conf by putting this here?
 GTEST_DIR:=googletest/googletest
 GTEST_PL_DIR:=googletest/gtest-parallel
+GTEST_INC_DIR:=$(GTEST_DIR)/include
 
 include ../Makefile.conf
 
@@ -54,7 +55,7 @@ endif
 CXXFLAGS:=$(filter-out -DNDEBUG,$(CXXFLAGS))
 
 # FIXME Possibly missing incdirs: ASN1C_INC
-CXXFLAGS+= -I./include -I../sync $(CPPUNIT_INC) $(INC_FLAGS) -Wno-deprecated
+CXXFLAGS+= -I./src -I../sync $(CPPUNIT_INC) $(INC_FLAGS) -I$(GTEST_INC_DIR) -Wno-deprecated
 
 ifeq ($(OPENPGP),GPG)
     CXXFLAGS+= -DUSE_GPG $(GPGME_INC)
