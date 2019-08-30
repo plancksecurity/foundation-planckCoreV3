@@ -25,13 +25,17 @@
 #define WC_ERR_INVALID_CHARS      0x00000080  // error for invalid chars
 #endif
 
-#define SYSTEM_FOLDER_DEFAULT "%ALLUSERSPROFILE%\\pEp"
-#define USER_FOLDER_DEFAULT "%LOCALAPPDATA%\\pEp"
+#define PER_MACHINE_DIRECTORY "%ALLUSERSPROFILE%\\pEp"
+#define PER_USER_DIRECTORY "%LOCALAPPDATA%\\pEp"
 #define KEYS_DB "keys.db"
 #define MANAGEMENT_DB "management.db"
 #define SYSTEM_DB "system.db"
+#ifndef USER_FOLDER_PATH
 #define USER_FOLDER_PATH pEpUserFolderPath().c_str()
+#endif
+#ifndef SYSTEM_FOLDER_PATH
 #define SYSTEM_FOLDER_PATH pEpSystemFolderPath().c_str()
+#endif
 
 using namespace std;
 
@@ -143,7 +147,7 @@ static inline string managementPath(const char *file_path, const char *file_name
 static inline string pEpSystemFolderPath(void)
 {
 	static TCHAR tPath[PATH_BUF_SIZE];
-	string path = SYSTEM_FOLDER_DEFAULT;
+	string path = PER_MACHINE_DIRECTORY;
 
 	// Get SystemFolder Registry value and use if available
 	bool result = readRegistryString(HKEY_CURRENT_USER,
@@ -159,7 +163,7 @@ static inline string pEpSystemFolderPath(void)
 static inline string pEpUserFolderPath(void)
 {
 	static TCHAR tPath[PATH_BUF_SIZE];
-	string path = USER_FOLDER_DEFAULT;
+	string path = PER_USER_DIRECTORY;
 
 	// Get UserFolder Registry value and use if available
 	bool result = readRegistryString(HKEY_CURRENT_USER,
