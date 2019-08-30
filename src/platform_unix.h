@@ -67,11 +67,14 @@ const char *android_system_db(void);
 #elif __APPLE__
 #include "TargetConditionals.h"
 #include <string.h>
-#if TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE //read as `if iOS`
 
-extern char* SystemDB;
-#define SYSTEM_DB SystemDB
-    
+extern char* perMachineDirectory;
+#define PER_MACHINE_DIRECTORY perMachineDirectory
+
+extern char* perUserDirectory;
+#define PER_MACHINE_DIRECTORY perUserDirectory
+
 #endif
 #endif
 
