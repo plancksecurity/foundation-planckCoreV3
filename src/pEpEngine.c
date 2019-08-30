@@ -2155,6 +2155,10 @@ DYNAMIC_API PEP_STATUS log_event(
     )
 {
 
+#if defined(_WIN32) && !defined(NDEBUG)
+	log_output_debug(title, entity, description, comment);
+#endif
+
 // N.B. If testing (so NDEBUG not defined) but this message is spam,
 //      put -D_PEP_SERVICE_LOG_OFF into CFLAGS/CXXFLAGS     
 #if !defined(NDEBUG) && !defined(_PEP_SERVICE_LOG_OFF)

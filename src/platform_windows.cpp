@@ -24,10 +24,14 @@
 
 #define LOCAL_DB_FILENAME "management.db"
 #define SYSTEM_DB_FILENAME "system.db"
+#define KEYS_DB "keys.db"
+#define USER_FOLDER_PATH pEpUserFolderPath().c_str()
+#define SYSTEM_FOLDER_PATH pEpSystemFolderPath().c_str()
 
 #ifndef WC_ERR_INVALID_CHARS
 #define WC_ERR_INVALID_CHARS      0x00000080  // error for invalid chars
 #endif
+
 
 using namespace std;
 
@@ -136,6 +140,38 @@ static inline string managementPath(const char *file_path, const char *file_name
 	return path;
 }
 
+static inline string pEpSystemFolderPath(void)
+{
+	static TCHAR tPath[PATH_BUF_SIZE];
+	string path = PER_MACHINE_DIRECTORY;
+
+	// Get SystemFolder Registry value and use if available
+	bool result = readRegistryString(HKEY_CURRENT_USER,
+		TEXT("SOFTWARE\\pEp"), TEXT("SystemFolder"), tPath,
+		PATH_BUF_SIZE, NULL);
+
+	if (result)
+		path = utf8_string(tPath);
+
+	return path;
+}
+
+static inline string pEpUserFolderPath(void)
+{
+	static TCHAR tPath[PATH_BUF_SIZE];
+	string path = PER_USER_DIRECTORY;
+
+	// Get UserFolder Registry value and use if available
+	bool result = readRegistryString(HKEY_CURRENT_USER,
+		TEXT("SOFTWARE\\pEp"), TEXT("UserFolder"), tPath,
+		PATH_BUF_SIZE, NULL);
+
+	if (result)
+		path = utf8_string(tPath);
+	
+	return path;
+}
+
 extern "C" {
 
 DYNAMIC_API const char *per_user_directory(void)
@@ -229,6 +265,14 @@ int dlclose(void *handle) {
 
 void *dlsym(void *handle, const char *symbol) {
 	return (void *) (intptr_t) GetProcAddress((HMODULE) handle, symbol);
+}
+
+const char *windoze_keys_db(void) {
+	static string path;
+	if (path.length() == 0) {
+		path = managementPath(USER_FOLDER_PATH, KEYS_DB);
+	}
+	return path.c_str();
 }
 
 const char *windoze_local_db(void) {
@@ -395,6 +439,18 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out)
     else { // if (rpc_status == RPC_S_OUT_OF_MEMORY)
         memset(out, 0, 37);
     }
+}
+
+void log_output_debug(const char *title,
+                       const char *entity,
+                       const char *description,
+                       const char *comment)
+{
+	const size_t size = 256;
+	char str[size];
+	
+	snprintf(str, size, "*** %s %s %s %s\n", title, entity, description, comment);
+	OutputDebugStringA(str);
 }
 
 time_t timegm(struct tm* tm) {

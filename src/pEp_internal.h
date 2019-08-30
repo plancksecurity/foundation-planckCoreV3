@@ -62,6 +62,7 @@
 #include "platform.h"
 
 #ifdef WIN32
+#define KEYS_DB windoze_keys_db()
 #define LOCAL_DB windoze_local_db()
 #define SYSTEM_DB windoze_system_db()
 #define LIBGPGME "libgpgme-11.dll"

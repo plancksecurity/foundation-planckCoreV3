@@ -3,6 +3,8 @@
 
 #pragma once
 
+#define _EXPORT_PEP_ENGINE_DLL
+
 #include <libetpan/libetpan.h>
 #include <libetpan/mailmime.h>
 #include <libetpan/mailmime_encode.h>

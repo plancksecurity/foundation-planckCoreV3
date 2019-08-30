@@ -7,7 +7,7 @@
 
 #include "platform.h"
 #include "pEp_internal.h"
-#include "pgp_gpg.h"
+#include "pgp_sequoia.h"
 
 #include <limits.h>
 #include <sys/stat.h>
@@ -34,6 +34,13 @@
         __android_log_print(ANDROID_LOG_DEBUG, "pEpEngine-sequoia",     \
                             ##__VA_ARGS__);                             \
     } while (0)
+#  elif _WIN32
+#    define _T(...) do {                        \
+		char str[256];                          \
+		snprintf(str, 256, ##__VA_ARGS__);      \
+		OutputDebugStringA(str);                \
+    } while (0)
+
 #  else
 #    define _T(...) do {                        \
         fprintf(stderr, ##__VA_ARGS__);         \
@@ -182,15 +189,27 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
-#define PEP_KEYS_PATH "/.pEp_keys.db"
-
+#ifdef _WIN32
+	int sqlite_result;
+	sqlite_result = sqlite3_open_v2(KEYS_DB,
+		&session->key_db,
+		SQLITE_OPEN_READWRITE
+		| SQLITE_OPEN_CREATE
+		| SQLITE_OPEN_FULLMUTEX
+		| SQLITE_OPEN_PRIVATECACHE,
+		NULL);
+#else
     // Create the home directory.
     char *home_env = NULL;
 #ifndef NDEBUG
     home_env = getenv("PEP_HOME");
 #endif
+
+#define PEP_KEYS_PATH "/.pEp/keys.db"
+
     if (!home_env)
         home_env = getenv("HOME");
+
     if (!home_env)
         ERROR_OUT(NULL, PEP_INIT_GPGME_INIT_FAILED, "HOME unset");
 
@@ -201,7 +220,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     if (!path)
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
 
-    int r = snprintf(path, path_size, "%s" PEP_KEYS_PATH, home_env);
+	int r = snprintf(path, path_size, "%s" PEP_KEYS_PATH, home_env);
     assert(r >= 0 && r < path_size);
     if (r < 0)
         ERROR_OUT(NULL, PEP_UNKNOWN_ERROR, "snprintf");
@@ -215,6 +234,8 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                                     | SQLITE_OPEN_PRIVATECACHE,
                                     NULL);
     free(path);
+#endif
+
     if (sqlite_result != SQLITE_OK)
         ERROR_OUT(NULL, PEP_INIT_CANNOT_OPEN_DB,
                   "opening keys DB: %s", sqlite3_errmsg(session->key_db));
