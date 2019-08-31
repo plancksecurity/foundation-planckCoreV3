@@ -547,4 +547,3 @@ action disable
 
     session->inject_sync_event(SHUTDOWN, NULL);
 ||
-
