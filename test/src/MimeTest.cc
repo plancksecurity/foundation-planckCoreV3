@@ -157,7 +157,7 @@ TEST_F(MimeTest, check_mime) {
     free(result2);
     free_message(msg2);
 
-    test_mime_decoding("msg1.asc");
-    test_mime_decoding("msg2.asc");
-    test_mime_decoding("msg3.asc");
+    test_mime_decoding("test_mails/msg1.asc");
+    test_mime_decoding("test_mails/msg2.asc");
+    test_mime_decoding("test_mails/msg3.asc");
 }

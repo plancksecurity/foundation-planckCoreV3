@@ -162,8 +162,8 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     ASSERT_EQ(status, PEP_STATUS_OK);
     const string string3 = encoded_text;
 
-    unlink("msg_encrypt_for_self.asc");
-    ofstream outFile3("msg_encrypt_for_self.asc");
+    unlink("tmp/msg_encrypt_for_self.asc");
+    ofstream outFile3("tmp/msg_encrypt_for_self.asc");
     outFile3.write(string3.c_str(), string3.size());
     outFile3.close();
 
