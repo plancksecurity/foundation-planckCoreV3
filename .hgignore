@@ -81,5 +81,7 @@ test/msg_2.0.asc
 test/*.txt
 lldb-history
 *.swo
+*.smp
 test/EngineTests
 test/googletest
+test/tmp/*

@@ -148,8 +148,8 @@ TEST_F(MessageApiTest, check_message_api) {
     const string string3 = text2;
     //free(text2);
 
-    unlink("msg4.asc");
-    ofstream outFile3("msg4.asc");
+    unlink("tmp/msg4.asc");
+    ofstream outFile3("tmp/msg4.asc");
     outFile3.write(string3.c_str(), string3.size());
     outFile3.close();
 
@@ -181,7 +181,7 @@ TEST_F(MessageApiTest, check_message_api) {
     free_stringlist(keylist4);
 
     output_stream << "opening msg_no_key.asc for reading\n";
-    ifstream inFile3 ("msg_no_key.asc");
+    ifstream inFile3 ("test_mails/msg_no_key.asc");
     ASSERT_TRUE(inFile3.is_open());
 
     string text3;

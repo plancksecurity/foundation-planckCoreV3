@@ -89,7 +89,7 @@ TEST_F(SignOnlyTest, check_sign_only) {
     const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
     string msg_text = "Grrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr! I mean, yo. Greetings to Meesti.\n - Alice";
     ofstream test_file;
-    test_file.open("signed_text.txt");
+    test_file.open("tmp/signed_text.txt");
     test_file << msg_text;
     test_file.close();
     char* signed_text = NULL;
@@ -100,7 +100,7 @@ TEST_F(SignOnlyTest, check_sign_only) {
     PEP_STATUS status = sign_only(session, msg_text.c_str(), msg_text.size(), alice_fpr, &signed_text, &signed_text_size);
     ASSERT_EQ(status , PEP_STATUS_OK);
     output_stream << signed_text << endl;
-    test_file.open("signature.txt");
+    test_file.open("tmp/signature.txt");
     test_file << signed_text;
     test_file.close();
 
