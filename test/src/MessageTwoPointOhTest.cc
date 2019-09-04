@@ -187,8 +187,8 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
     ASSERT_EQ(status , PEP_STATUS_OK);
     const string string3 = encoded_text;
 
-    unlink("msg_2.0.asc");
-    ofstream outFile3("msg_2.0.asc");
+    unlink("tmp/msg_2.0.asc");
+    ofstream outFile3("tmp/msg_2.0.asc");
     outFile3.write(string3.c_str(), string3.size());
     outFile3.close();
 
