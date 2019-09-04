@@ -105,7 +105,7 @@ clean:
 # CAVEAT:
 # install_headers is needed for building pEp MIME
 
-install_headers:
+install_headers: $(TARGET)
 	mkdir -p $(PREFIX)/include/pEp
 	cp pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
 	   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h \
