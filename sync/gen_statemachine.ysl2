@@ -820,6 +820,23 @@ tstylesheet {
                 if (ev->sender_fpr) {
                     free(session->«yml:lcase(@name)»_state.transport.sender_fpr);
                     session->«yml:lcase(@name)»_state.transport.sender_fpr = ev->sender_fpr;
+                    
+                    // Check against saved comm_partner sender_fpr state, if there is one yet
+                    if (session->«yml:lcase(@name)»_state.comm_partner.sender_fpr) {
+                        // 1. Does it match sender_fpr?
+                        if (strcasecmp(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr, ev->sender_fpr) != 0) {
+                            // 2. If not, is it a group key?
+                            bool is_own_key = false;
+                            status = own_key_is_listed(session, ev->sender_fpr, &is_own_key);
+                            if (status)
+                                goto the_end;
+                            if (!is_own_key) {
+                                status = PEP_ILLEGAL_VALUE;
+                                goto the_end;
+                            }    
+                        }
+                    }
+                                                            
                     ev->sender_fpr = NULL;
                 }
 
@@ -831,6 +848,7 @@ tstylesheet {
                     ev->own_identities = NULL;
                 }
 
+                
                 status = «@name»_driver(session, fsm, event);
 
             the_end:

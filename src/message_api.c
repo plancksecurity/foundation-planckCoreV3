@@ -3983,8 +3983,19 @@ static PEP_STATUS _decrypt_message(
             }            
         }
     }
+    
+    // Double-check for message 2.1:
+    if (major_ver > 2 || (major_ver == 2 && minor_ver > 0)) {
+        if (EMPTYSTR((*dst)->_sender_fpr) || 
+           (!EMPTYSTR(_keylist->value) && (strcasecmp((*dst)->_sender_fpr, _keylist->value) != 0))) {
+            if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
+                decrypt_status = PEP_DECRYPTED;
+            if (*rating > PEP_rating_unreliable)
+                *rating = PEP_rating_unreliable;
+        }
+    }
         
-    if(decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
+    if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
         return PEP_STATUS_OK;
     else
         return decrypt_status;
@@ -4027,20 +4038,24 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     message *msg = *dst ? *dst : src;
 
-    if (session->inject_sync_event && msg && msg->from &&
-            !(*flags & PEP_decrypt_flag_dont_trigger_sync)) {
-        size_t size;
-        const char *data;
-        char *sender_fpr = NULL;
-        PEP_STATUS tmpstatus = base_extract_message(session, msg, &size, &data, &sender_fpr);
-        if (!tmpstatus && size && data) {
-            if (sender_fpr)
-                signal_Sync_message(session, *rating, data, size, msg->from, sender_fpr);
-            // FIXME: this must be changed to sender_fpr
-            else if (*keylist)
-                signal_Sync_message(session, *rating, data, size, msg->from, (*keylist)->value);
+    if (status == PEP_UNENCRYPTED || status == PEP_DECRYPTED_AND_VERIFIED) {
+        if (session->inject_sync_event && msg && msg->from &&
+                !(*flags & PEP_decrypt_flag_dont_trigger_sync)) {
+            size_t size;
+            const char *data;
+            char *sender_fpr = NULL;
+            
+            PEP_STATUS tmpstatus = base_extract_message(session, msg, &size, &data, &sender_fpr);
+            if (!tmpstatus && size && data) {
+                const char* event_sender_fpr = ((*dst)->_sender_fpr ? (*dst)->_sender_fpr : sender_fpr);
+                // FIXME - I don't think this is OK anymore. We either have a signed beacon or a properly encrypted/signed 2.1 message
+                // if ((!event_sender_fpr) && *keylist)
+                //     event_sender_fpr = (*keylist)->value;
+                if (event_sender_fpr)
+                    signal_Sync_message(session, *rating, data, size, msg->from, event_sender_fpr);
+            }
+            free(sender_fpr);
         }
-        free(sender_fpr);
     }
 
     return status;
