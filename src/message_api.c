@@ -3934,6 +3934,8 @@ static PEP_STATUS _decrypt_message(
     *dst = msg;
     *keylist = _keylist;
 
+    bool reenc_signer_key_is_own_key = false; // only matters for reencrypted messages 
+    
     // 5. Reencrypt if necessary
     if (reencrypt) {
         if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
@@ -3942,10 +3944,9 @@ static PEP_STATUS _decrypt_message(
                 sfpr = _keylist->value;
              
             if (sfpr && decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
-                bool key_is_own_key = false;
-                own_key_is_listed(session, sfpr, &key_is_own_key);
+                own_key_is_listed(session, sfpr, &reenc_signer_key_is_own_key);
                 
-                if (!key_is_own_key) {
+                if (!reenc_signer_key_is_own_key) {
                     message* reencrypt_msg = NULL;
                     PEP_STATUS reencrypt_status = PEP_CANNOT_REENCRYPT;
                     char* own_id = NULL;
@@ -3984,17 +3985,19 @@ static PEP_STATUS _decrypt_message(
         }
     }
     
-    // Double-check for message 2.1:
-    if (major_ver > 2 || (major_ver == 2 && minor_ver > 0)) {
-        if (EMPTYSTR((*dst)->_sender_fpr) || 
-           (!EMPTYSTR(_keylist->value) && (strcasecmp((*dst)->_sender_fpr, _keylist->value) != 0))) {
-            if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
-                decrypt_status = PEP_DECRYPTED;
-            if (*rating > PEP_rating_unreliable)
-                *rating = PEP_rating_unreliable;
+    // Double-check for message 2.1: (note, we don't do this for already-reencrypted-messages)
+    if (!(reencrypt && reenc_signer_key_is_own_key)) { 
+        if (major_ver > 2 || (major_ver == 2 && minor_ver > 0)) {
+            if (EMPTYSTR((*dst)->_sender_fpr) || 
+               (!EMPTYSTR(_keylist->value) && (strcasecmp((*dst)->_sender_fpr, _keylist->value) != 0))) {
+                if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
+                    decrypt_status = PEP_DECRYPTED;
+                if (*rating > PEP_rating_unreliable)
+                    *rating = PEP_rating_unreliable;
+            }
         }
     }
-        
+    
     if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
         return PEP_STATUS_OK;
     else
