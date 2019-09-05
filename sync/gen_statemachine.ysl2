@@ -554,7 +554,7 @@ tstylesheet {
                                 goto the_end;
                             }
                             add_opt_field(m, "pEp-auto-consume", "yes");
-                            add_opt_field(msg, "in-reply-to:", "pEp-auto-consume@pEp.foundation");
+                            add_opt_field(m, "in-reply-to:", "pEp-auto-consume@pEp.foundation");
                             free_message(_m);
                             break;
 
@@ -733,7 +733,7 @@ tstylesheet {
                                 goto the_end;
                             }
                             add_opt_field(m, "pEp-auto-consume", "yes");
-                            add_opt_field(msg, "in-reply-to:", "pEp-auto-consume@pEp.foundation");
+                            add_opt_field(m, "in-reply-to:", "pEp-auto-consume@pEp.foundation");
                             free_message(_m);
                             break;
 
@@ -758,7 +758,7 @@ tstylesheet {
                                 goto the_end;
                             }
                             add_opt_field(m, "pEp-auto-consume", "yes");
-                            add_opt_field(msg, "in-reply-to:", "pEp-auto-consume@pEp.foundation");
+                            add_opt_field(m, "in-reply-to:", "pEp-auto-consume@pEp.foundation");
                             free_message(_m);
                     }
 
