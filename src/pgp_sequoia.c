@@ -701,10 +701,14 @@ static PEP_STATUS tpk_find_by_email(PEP_SESSION session,
 // Saves the specified TPK.
 //
 // This function takes ownership of TPK.
-static PEP_STATUS tpk_save(PEP_SESSION, pgp_tpk_t, identity_list **)
+// Also, since this apparently only saves one primary key (since it only generates one identity in the private key case),
+// it will also only RETURN one. So the private_ident and imported_key return values are 
+// singular, and we expect a valid ** which points to the address of an empty list element IF 
+// that value should be filled.
+static PEP_STATUS tpk_save(PEP_SESSION, pgp_tpk_t, identity_list **, stringlist_t **)
     __attribute__((nonnull(1, 2)));
 static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
-                           identity_list **private_idents)
+                           identity_list **private_ident, stringlist_t **imported_key)
 {
     PEP_STATUS status = PEP_STATUS_OK;
     pgp_error_t err = NULL;
@@ -717,6 +721,12 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
     pgp_user_id_binding_iter_t user_id_iter = NULL;
     char *email = NULL;
     char *name = NULL;
+    
+    if (private_ident)
+        *private_ident = NULL;
+        
+    if (imported_key)
+        *imported_key = NULL;
 
     sqlite3_stmt *stmt = session->sq_sql.begin_transaction;
     int sqlite_result = Sqlite3_step(stmt);
@@ -728,7 +738,8 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
 
     pgp_fpr = pgp_tpk_fingerprint(tpk);
     fpr = pgp_fingerprint_to_hex(pgp_fpr);
-    T("(%s, private_idents: %s)", fpr, private_idents ? "yes" : "no");
+    
+    T("(%s, private_ident: %s)", fpr, private_ident ? "yes" : "no");
 
     // Merge any existing data into TPK.
     pgp_tpk_t current = NULL;
@@ -742,6 +753,12 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
         if (! tpk)
             ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Merging TPKs");
     }
+
+    // Save the import info for return.
+    if (imported_key) {
+        if ((*imported_key = new_stringlist(fpr)) == NULL)
+            ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "new_stringlist");
+    }        
 
     int is_tsk = pgp_tpk_is_tsk(tpk);
 
@@ -839,20 +856,17 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
                           "Updating userids: %s", sqlite3_errmsg(session->key_db));
             }
         }
-
-        if (first && private_idents && is_tsk) {
+        
+        if (private_ident && is_tsk && first) {
             first = 0;
-
             // Create an identity for the primary user id.
             pEp_identity *ident = new_identity(email, fpr, NULL, name);
             if (ident == NULL)
                 ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "new_identity");
 
-            *private_idents = identity_list_add(*private_idents, ident);
-            if (*private_idents == NULL)
-                ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "identity_list_add");
-        }
-
+            if ((*private_ident = new_identity_list(ident)) == NULL) 
+                ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "new_identity_list");
+        }        
     }
     pgp_user_id_binding_iter_free(user_id_iter);
     user_id_iter = NULL;
@@ -1849,7 +1863,7 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     pgp_fpr = pgp_tpk_fingerprint(tpk);
     fpr = pgp_fingerprint_to_hex(pgp_fpr);
 
-    status = tpk_save(session, tpk, NULL);
+    status = tpk_save(session, tpk, NULL, NULL);
     tpk = NULL;
     if (status != 0)
         ERROR_OUT(NULL, PEP_CANNOT_CREATE_KEY, "saving TSK");
@@ -1922,15 +1936,22 @@ static unsigned int count_keydata_parts(const char* key_data, size_t size) {
     return retval;
  }
 
+// FIXME: arg names, because of below
+// N.B. This is a misnomer - this only imports one key at a time, regardless 
+// of what sequoia supports, for reasons (getting fprs back, multiple statuses, etc)
 PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
-                              size_t size, identity_list **private_idents)
+                              size_t size, identity_list **private_ident,
+                              stringlist_t ** imported_key)
 {
     PEP_STATUS status = PEP_NO_KEY_IMPORTED;
     pgp_error_t err;
     pgp_tpk_parser_t parser = NULL;
+    
+    if (imported_key)
+        *imported_key = NULL;
 
-    if (private_idents)
-        *private_idents = NULL;
+    if (private_ident)
+        *private_ident = NULL;
 
     T("parsing %zd bytes", size);
 
@@ -1998,7 +2019,7 @@ PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
             if (! tpk)
                 ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Merging signature");
 
-            status = tpk_save(session, tpk, NULL);
+            status = tpk_save(session, tpk, NULL, NULL);
             if (status)
                 ERROR_OUT(NULL, status, "saving merged TPK");
             status = PEP_KEY_IMPORTED;
@@ -2020,7 +2041,7 @@ PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
 
             // If private_idents is not NULL and there is any private key
             // material, it will be saved.
-            status = tpk_save(session, tpk, private_idents);
+            status = tpk_save(session, tpk, private_ident, imported_key);
             if (status == PEP_STATUS_OK)
                 status = PEP_KEY_IMPORTED;
             else
@@ -2054,12 +2075,16 @@ PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
     return status;
 }
 
+// private_idents has to point to a valid identity_list* (which can point to NULL) for private idents to be filled in.
+// imported_keys has to do the same, but with a stringlist_t*.
+// Because the outer function breaks things up to calculate status correctly, the internal function only ever sends back
+// one identity and one fpr, so we can do this by double pointer advancement.
 PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
-                              size_t size, identity_list **private_idents)
+                              size_t size, identity_list **private_idents, stringlist_t** imported_keys)
 {
     unsigned int keycount = count_keydata_parts(key_data, size);
     if (keycount < 2)
-        return(_pgp_import_keydata(session, key_data, size, private_idents));
+        return(_pgp_import_keydata(session, key_data, size, private_idents, imported_keys));
 
     const char* pgp_begin = "-----BEGIN PGP";
     size_t prefix_len = strlen(pgp_begin);
@@ -2068,10 +2093,12 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
     const char* curr_begin;
     size_t curr_size;
     
-    identity_list* collected_idents = NULL;        
+    stringlist_t** keylist_curr = imported_keys;
+    identity_list** identlist_curr = private_idents;      
     
     PEP_STATUS retval = PEP_KEY_IMPORTED;
     
+    // We STILL only import individual keys. So...    
     for (i = 0, curr_begin = key_data; i < keycount; i++) {
         const char* next_begin = NULL;
 
@@ -2086,15 +2113,14 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
         else
             curr_size = (key_data + size) - curr_begin;
         
-        PEP_STATUS curr_status = _pgp_import_keydata(session, curr_begin, curr_size, private_idents);
-        if (private_idents && *private_idents) {
-            if (!collected_idents)
-                collected_idents = *private_idents;
-            else 
-                identity_list_join(collected_idents, *private_idents);
-            *private_idents = NULL;    
-        }
+        PEP_STATUS curr_status = _pgp_import_keydata(session, curr_begin, curr_size, identlist_curr, keylist_curr);
         
+        // If we added an element to the list, advance head->next ptr
+        if (identlist_curr && *identlist_curr && (*identlist_curr)->ident)
+            identlist_curr = &((*identlist_curr)->next);
+        if (keylist_curr && *keylist_curr && (*keylist_curr)->value)
+            keylist_curr = &((*keylist_curr)->next);
+            
         if (curr_status != retval) {
             switch (curr_status) {
                 case PEP_NO_KEY_IMPORTED:
@@ -2119,10 +2145,7 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
         }        
         curr_begin = next_begin;     
     }
-    
-    if (private_idents)
-        *private_idents = collected_idents;
-    
+                
     return retval;    
 }
 
@@ -2463,7 +2486,7 @@ PEP_STATUS pgp_renew_key(
     if (! tpk)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "setting expiration");
 
-    status = tpk_save(session, tpk, NULL);
+    status = tpk_save(session, tpk, NULL, NULL);
     tpk = NULL;
     ERROR_OUT(NULL, status, "Saving %s", fpr);
 
@@ -2520,7 +2543,7 @@ PEP_STATUS pgp_revoke_key(
     assert(pgp_revocation_status_variant(pgp_tpk_revocation_status(tpk))
            == PGP_REVOCATION_STATUS_REVOKED);
 
-    status = tpk_save(session, tpk, NULL);
+    status = tpk_save(session, tpk, NULL, NULL);
     tpk = NULL;
     ERROR_OUT(NULL, status, "Saving %s", fpr);
 

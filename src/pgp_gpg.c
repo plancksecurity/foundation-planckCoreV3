@@ -1481,7 +1481,8 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr)
 }
 
 PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
-                              size_t size, identity_list **private_idents)
+                              size_t size, identity_list **private_idents,
+                              stringlist_t** imported_keys)
 {
     gpgme_error_t gpgme_error;
     gpgme_data_t dh;
@@ -1491,6 +1492,9 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
 
     if(private_idents)
         *private_idents = NULL;
+        
+    if(imported_keys)
+        *imported_keys = NULL;
 
     gpgme_error = gpg.gpgme_data_new_from_mem(&dh, key_data, size, 0);
     gpgme_error = _GPGERR(gpgme_error);
@@ -1524,64 +1528,80 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
             gpg.gpgme_data_release(dh);
             return PEP_UNKNOWN_ERROR;
         }
-        // considered seems to only be true if it was 
-        // actually a key
-        if (gpgme_import_result->considered > 0)
-            // gpgme_import_result->imported > 0 ||
-            // gpgme_import_result->secret_imported > 0 ||
-            // gpgme_import_result->unchanged > 0 ||
-            // gpgme_import_result->secret_unchanged > 0)
-            key_imported = true;
+
+        /* N.B. If this breaks, maybe we need to use considered again also? Documentation is 
+           totally freaking unclear if the struct did not in fact actually get 
+           broken without however it changed in 2.2.17. */
+        key_imported = gpgme_import_result->imported |
+                       gpgme_import_result->secret_imported |
+                       gpgme_import_result->unchanged |
+                       gpgme_import_result->secret_unchanged |
+                       gpgme_import_result->secret_imported |
+                       gpgme_import_result->secret_read |
+                       gpgme_import_result->new_user_ids |
+                       gpgme_import_result->new_sub_keys |
+                       gpgme_import_result->new_revocations |
+                       gpgme_import_result->new_signatures;
             
-        if(private_idents)
+        if(private_idents || imported_keys)
         {
             gpgme_import_status_t import;
+            identity_list** identcurr_pp = private_idents;
+            stringlist_t** keylist_pp = imported_keys;
             for (import = gpgme_import_result->imports;
                  import;
                  import = import->next)
              {
                 if (import &&
-                    import->result == GPG_ERR_NO_ERROR &&
-                    import->status & GPGME_IMPORT_SECRET )
-                {
-                    gpgme_key_t key = NULL;
-
-                    gpgme_error = gpg.gpgme_get_key(session->ctx,
-                        import->fpr, &key, 0);
-                    gpgme_error = _GPGERR(gpgme_error);
-                    assert(gpgme_error != GPG_ERR_ENOMEM);
-                    if (gpgme_error == GPG_ERR_ENOMEM) {
-                        gpg.gpgme_data_release(dh);
-                        return PEP_OUT_OF_MEMORY;
+                    import->result == GPG_ERR_NO_ERROR) {
+                        
+                    if (keylist_pp) {
+                        if ((*keylist_pp = new_stringlist(import->fpr)) == NULL) {
+                            gpg.gpgme_data_release(dh);
+                            return PEP_OUT_OF_MEMORY;
+                        }
+                        keylist_pp = &((*keylist_pp)->next);    
                     }
 
-                    if (gpgme_error == GPG_ERR_NO_ERROR &&
-                        key && key->uids &&
-                        key->uids->email && key->uids->name)
-                    {
-                        pEp_identity *ident = new_identity(
-                             key->uids->email, import->fpr, NULL, key->uids->name);
+                    // This might not work - if they key was already known, this might be 0!
+                    // We don't differentiate between known keys and new keys, so we will have 
+                    // to do something else here.
 
-                        gpg.gpgme_key_unref(key);
+                    if (identcurr_pp && import->status & GPGME_IMPORT_SECRET) {
+                        gpgme_key_t key = NULL;
 
-                        if (ident == NULL) {
+                        gpgme_error = gpg.gpgme_get_key(session->ctx,
+                            import->fpr, &key, 0);
+                        gpgme_error = _GPGERR(gpgme_error);
+                        assert(gpgme_error != GPG_ERR_ENOMEM);
+                        if (gpgme_error == GPG_ERR_ENOMEM) {
                             gpg.gpgme_data_release(dh);
                             return PEP_OUT_OF_MEMORY;
                         }
 
-                        *private_idents = identity_list_add(*private_idents, ident);
+                        if (gpgme_error == GPG_ERR_NO_ERROR &&
+                            key && key->uids &&
+                            key->uids->email && key->uids->name)
+                        {
+                            pEp_identity *ident = new_identity(
+                                 key->uids->email, import->fpr, NULL, key->uids->name);
 
-                        if (*private_idents == NULL) {
-                            gpg.gpgme_data_release(dh);
-                            return PEP_OUT_OF_MEMORY;
+                            gpg.gpgme_key_unref(key);
+
+                            if (ident == NULL ||
+                                (*identcurr_pp = new_identity_list(ident)) == NULL) {
+                                gpg.gpgme_data_release(dh);
+                                return PEP_OUT_OF_MEMORY;
+                            }
+                            identcurr_pp = &((*identcurr_pp)->next);
                         }
-                    }
-                    else
-                    {
-                        gpg.gpgme_key_unref(key);
-                        gpg.gpgme_data_release(dh);
-                        return PEP_UNKNOWN_ERROR;
-                    }
+                        else
+                        {
+                            gpg.gpgme_key_unref(key);
+                            gpg.gpgme_data_release(dh);
+                            return PEP_UNKNOWN_ERROR;
+                        }
+                    }    
                 }
             }
         }
@@ -3129,4 +3149,3 @@ PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
             return PEP_CANNOT_CONFIG;
     }
 }
-

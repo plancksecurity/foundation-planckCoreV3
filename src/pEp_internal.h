@@ -298,6 +298,13 @@ void decorate_message(
     bool add_version,
     bool clobber);
 
+PEP_STATUS _import_key_with_fpr_return(
+        PEP_SESSION session,
+        const char *key_data,
+        size_t size,
+        identity_list **private_idents,
+        stringlist_t** imported_keys);
+
 #if defined(NDEBUG) || defined(NOLOG)
 #define DEBUG_LOG(TITLE, ENTITY, DESC)
 #else
@@ -566,4 +573,3 @@ static inline int Sqlite3_step(sqlite3_stmt* stmt)
     } while (rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
     return rc;
 }
-
