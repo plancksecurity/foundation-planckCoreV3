@@ -1542,12 +1542,13 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
                        gpgme_import_result->new_sub_keys |
                        gpgme_import_result->new_revocations |
                        gpgme_import_result->new_signatures;
+
+        identity_list** identcurr_pp = private_idents;
+        stringlist_t** keylist_pp = advance_to_end(imported_keys);
             
-        if(private_idents || imported_keys)
+        if(identcurr_pp || keylist_pp)
         {
             gpgme_import_status_t import;
-            identity_list** identcurr_pp = private_idents;
-            stringlist_t** keylist_pp = imported_keys;
             for (import = gpgme_import_result->imports;
                  import;
                  import = import->next)
