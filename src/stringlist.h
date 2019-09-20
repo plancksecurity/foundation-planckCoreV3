@@ -134,6 +134,7 @@ DYNAMIC_API stringlist_t *stringlist_delete(
 DYNAMIC_API void free_stringlist(stringlist_t *stringlist);
 
 stringlist_t* stringlist_search(stringlist_t* head, const char* value);
+stringlist_t** advance_to_end(stringlist_t** head_pp);
 
 void dedup_stringlist(stringlist_t* stringlist);
 
