@@ -115,6 +115,7 @@ test: all
 clean:
 	$(RM) $(TARGET) $(TARGET).o $(TARGET).d $(OBJS) $(notdir $(basename $(OBJS))) $(DEPS)
 	$(RM) gtest_main.o gtest-all.o
+	$(RM) -rf ./pEp_test_home/*
 # If only the goal 'clean' is given, do not generate and include the '%.d' files.¬
 ifneq ($(MAKECMDGOALS),clean)
     -include $(DEPS)
