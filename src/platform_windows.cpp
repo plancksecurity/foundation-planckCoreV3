@@ -25,8 +25,8 @@
 #define LOCAL_DB_FILENAME "management.db"
 #define SYSTEM_DB_FILENAME "system.db"
 #define KEYS_DB "keys.db"
-#define USER_FOLDER_PATH pEpUserFolderPath().c_str()
-#define SYSTEM_FOLDER_PATH pEpSystemFolderPath().c_str()
+#define USER_FOLDER_PATH _per_user_directory()
+#define SYSTEM_FOLDER_PATH _per_machine_directory()
 
 #ifndef WC_ERR_INVALID_CHARS
 #define WC_ERR_INVALID_CHARS      0x00000080  // error for invalid chars
@@ -140,72 +140,68 @@ static inline string managementPath(const char *file_path, const char *file_name
 	return path;
 }
 
-static inline string pEpSystemFolderPath(void)
+const char *_per_machine_directory(void)
 {
-	static TCHAR tPath[PATH_BUF_SIZE];
-	string path = PER_MACHINE_DIRECTORY;
+	static string path;
+	if (path.length())
+		return path.c_str();
+
+	TCHAR tPath[PATH_BUF_SIZE];
 
 	// Get SystemFolder Registry value and use if available
 	bool result = readRegistryString(HKEY_CURRENT_USER,
 		TEXT("SOFTWARE\\pEp"), TEXT("SystemFolder"), tPath,
 		PATH_BUF_SIZE, NULL);
 
-	if (result)
-		path = utf8_string(tPath);
+	// If not Registry value was found, use default
+	if (!result) {
+		DWORD length = ExpandEnvironmentStringsW(utf16_string(string(PER_MACHINE_DIRECTORY)).c_str(),
+			tPath, PATH_BUF_SIZE);
+		assert(length);
+		if (length == 0)
+			throw bad_alloc(); // BUG: there are other errors possible beside out of memory
+	}
 
-	return path;
+	path = utf8_string(wstring(tPath));
+	return path.c_str();
 }
 
-static inline string pEpUserFolderPath(void)
+const char *_per_user_directory(void)
 {
-	static TCHAR tPath[PATH_BUF_SIZE];
-	string path = PER_USER_DIRECTORY;
+	static string path;
+	if (path.length())
+		return path.c_str();
+
+	TCHAR tPath[PATH_BUF_SIZE];
 
 	// Get UserFolder Registry value and use if available
 	bool result = readRegistryString(HKEY_CURRENT_USER,
 		TEXT("SOFTWARE\\pEp"), TEXT("UserFolder"), tPath,
 		PATH_BUF_SIZE, NULL);
 
-	if (result)
-		path = utf8_string(tPath);
-	
-	return path;
+	// If not Registry value was found, use default
+	if (!result) {
+		DWORD length = ExpandEnvironmentStringsW(utf16_string(string(PER_USER_DIRECTORY)).c_str(),
+			tPath, PATH_BUF_SIZE);
+		assert(length);
+		if (length == 0)
+			throw bad_alloc(); // BUG: there are other errors possible beside out of memory
+	}
+
+	path = utf8_string(wstring(tPath));
+	return path.c_str();
 }
 
 extern "C" {
 
 DYNAMIC_API const char *per_user_directory(void)
 {
-    static string path;
-    if (path.length())
-        return path.c_str();
-
-    TCHAR tPath[PATH_BUF_SIZE];
-    DWORD length = ExpandEnvironmentStringsW(utf16_string(string(PER_USER_DIRECTORY)).c_str(),
-            tPath, PATH_BUF_SIZE);
-	assert(length);
-    if (length == 0)
-        throw bad_alloc(); // BUG: there are other errors possible beside out of memory
-
-    path = utf8_string(wstring(tPath));
-    return path.c_str();
+	return _per_user_directory();
 }
 
 DYNAMIC_API const char *per_machine_directory(void)
 {
-    static string path;
-    if (path.length())
-        return path.c_str();
-
-    TCHAR tPath[PATH_BUF_SIZE];
-    DWORD length = ExpandEnvironmentStringsW(utf16_string(string(PER_MACHINE_DIRECTORY)).c_str(),
-            tPath, PATH_BUF_SIZE);
-	assert(length);
-    if (length == 0)
-        throw bad_alloc(); // BUG: there are other errors possible beside out of memory
-
-    path = utf8_string(wstring(tPath));
-    return path.c_str();
+	return _per_machine_directory();
 }
 
 void *dlopen(const char *filename, int flag) {
@@ -278,7 +274,7 @@ const char *windoze_keys_db(void) {
 const char *windoze_local_db(void) {
 	static string path;
 	if (path.length() == 0)
-        path = managementPath(PER_USER_DIRECTORY, LOCAL_DB_FILENAME);
+        path = managementPath(USER_FOLDER_PATH, LOCAL_DB_FILENAME);
     return path.c_str();
 }
 

@@ -39,6 +39,10 @@ enum {
     Extra = 128 // messages will be below this ID
 };
 
+enum {
+    SHUTDOWN = 0
+};
+
 #ifdef __cplusplus
 }
 #endif
