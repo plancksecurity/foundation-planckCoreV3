@@ -3360,6 +3360,13 @@ pEp_free:
 
 }
 
+static bool _have_extrakeys(stringlist_t *keylist)
+{
+    return keylist
+        && keylist->value
+        && keylist->value[0];
+}
+
 static PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -3399,15 +3406,13 @@ static PEP_STATUS _decrypt_message(
     unsigned int minor_ver = 0;
     
     // Grab input flags
-    bool reencrypt = (((*flags & PEP_decrypt_flag_untrusted_server) > 0) && *keylist && !EMPTYSTR((*keylist)->value));
+    bool reencrypt = ((*flags & PEP_decrypt_flag_untrusted_server) &&
+            (_have_extrakeys(*keylist) || session->unencrypted_subject));
     
     // We own this pointer, and we take control of *keylist if reencrypting.
     stringlist_t* extra = NULL;
-    if (reencrypt) {
-        if (*keylist) {
-            extra = *keylist;
-        }
-    }
+    if (reencrypt)
+        extra = *keylist;
             
     *dst = NULL;
     *keylist = NULL;
@@ -3929,7 +3934,7 @@ static PEP_STATUS _decrypt_message(
             }
         }
     }
-    
+
     // 4. Set up return values
     *dst = msg;
     *keylist = _keylist;
@@ -3938,7 +3943,7 @@ static PEP_STATUS _decrypt_message(
     if (reencrypt) {
         if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
             const char* sfpr = NULL;
-            if (_keylist != NULL && !(EMPTYSTR(_keylist->value)))
+            if (_have_extrakeys(*keylist))
                 sfpr = _keylist->value;
              
             if (sfpr && decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
@@ -3981,6 +3986,13 @@ static PEP_STATUS _decrypt_message(
                         decrypt_status = PEP_CANNOT_REENCRYPT;
                 }
             }            
+            else if (!_have_extrakeys(*keylist) && session->unencrypted_subject) {
+                free(src->shortmsg);
+                src->shortmsg = strdup(msg->shortmsg);
+                assert(src->shortmsg);
+                if (!src->shortmsg)
+                    goto enomem;
+            }
         }
     }
         
