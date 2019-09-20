@@ -81,6 +81,7 @@ PEP_STATUS base_prepare_message(
         goto enomem;
 
     add_opt_field(msg, "pEp-auto-consume", "yes");
+    add_opt_field(msg, "in-reply-to", "pEp-auto-consume@pEp.foundation");
 
     msg->from = identity_dup(me);
     if (!msg->from)
