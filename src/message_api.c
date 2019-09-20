@@ -3992,6 +3992,7 @@ static PEP_STATUS _decrypt_message(
                 assert(src->shortmsg);
                 if (!src->shortmsg)
                     goto enomem;
+                *flags |= PEP_decrypt_flag_src_modified;
             }
         }
     }
