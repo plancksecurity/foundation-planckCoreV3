@@ -4360,7 +4360,8 @@ PEP_STATUS sign_only(PEP_SESSION session,
                      size_t data_size, 
                      const char *fpr, 
                      char **sign, 
-                     size_t *sign_size) {
+                     size_t *sign_size,
+                     PEP_HASH_ALGO* hash_algo) {
     assert(session);
     assert(fpr);
     assert(data);
@@ -4372,7 +4373,7 @@ PEP_STATUS sign_only(PEP_SESSION session,
         return PEP_ILLEGAL_VALUE;
 
     return session->cryptotech[PEP_crypt_OpenPGP].sign_only(session,
-                                fpr, data, data_size, sign, sign_size);
+                                fpr, data, data_size, sign, sign_size, hash_algo);
                          
 }
 

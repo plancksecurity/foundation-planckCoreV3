@@ -1893,6 +1893,77 @@ enomem:
     return status;
 }
 
+static PEP_STATUS mime_encode_message_sign_only(
+        const message * msg,
+        bool omit_fields,
+        struct mailmime **result
+    )
+{
+    struct mailmime * mime = NULL;
+    struct mailmime * submime = NULL;
+	struct mailmime_parameter * param;
+    int r;
+    PEP_STATUS status;
+    char *plaintext;
+    size_t plaintext_size;
+
+    assert(msg->attachments && msg->attachments->next &&
+            msg->attachments->next->value);
+
+    plaintext = msg->attachments->next->value;
+    plaintext_size = msg->attachments->next->size;
+
+    mime = part_multiple_new("multipart/signed");
+    assert(mime);
+    if (mime == NULL)
+        goto enomem;
+
+    if (msg->attachments && msg->attachments->value && msg->attachments->mime_type) {
+        if (strcmp(msg->attachments->mime_type, "multipart/signed")) {
+            param = mailmime_param_new_with_data("micalg", strdup(msg->attachments->value));
+            clist_append(mime->mm_content_type->ct_parameters, param);    
+        }
+    }
+
+    r = mailmime_set_body_text(mime, msg->longmsg, strlen(msg->longmsg));
+    if (r != 0)
+        goto enomem;
+            
+    pEp_rid_list_t* resource = new_rid_node(PEP_RID_FILENAME, "signature.asc");
+    submime = get_text_part(resource, "application/pgp-signature", msg->attachments->next->value,
+            msg->attachments->next->size, MAILMIME_MECHANISM_7BIT);
+            
+    free_rid_list(resource);
+    
+    assert(submime);
+    if (submime == NULL)
+        goto enomem;
+
+    r = mailmime_smart_add_part(mime, submime);
+    assert(r == MAILIMF_NO_ERROR);
+    if (r == MAILIMF_ERROR_MEMORY) {
+        goto enomem;
+    }
+    else {
+        // mailmime_smart_add_part() takes ownership of submime
+        submime = NULL;
+    }
+
+    *result = mime;
+    return PEP_STATUS_OK;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+    if (mime)
+        mailmime_free(mime);
+
+    if (submime)
+        mailmime_free(submime);
+
+    return status;
+}
+
 PEP_STATUS _mime_encode_message_internal(
         const message * msg,
         bool omit_fields,
@@ -1935,6 +2006,10 @@ PEP_STATUS _mime_encode_message_internal(
 
         case PEP_enc_PEP:
             NOT_IMPLEMENTED
+            
+        case PEP_enc_sign_only:
+            status = mime_encode_message_sign_only(msg, omit_fields, &mime);
+            break;
 
         default:
             NOT_IMPLEMENTED

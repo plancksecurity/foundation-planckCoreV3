@@ -101,7 +101,7 @@ PEP_STATUS pgp_encrypt_and_sign(
 
 PEP_STATUS pgp_sign_only(
         PEP_SESSION session, const char* fpr, const char *ptext,
-        size_t psize, char **stext, size_t *ssize
+        size_t psize, char **stext, size_t *ssize, PEP_HASH_ALGO* micalg
     );
 
 // pgp_encrypt_only() - encrypt plaintext

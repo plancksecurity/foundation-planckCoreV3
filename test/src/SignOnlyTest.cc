@@ -97,7 +97,7 @@ TEST_F(SignOnlyTest, check_sign_only) {
 
     stringlist_t* keylist = NULL;
 
-    PEP_STATUS status = sign_only(session, msg_text.c_str(), msg_text.size(), alice_fpr, &signed_text, &signed_text_size);
+    PEP_STATUS status = sign_only(session, msg_text.c_str(), msg_text.size(), alice_fpr, &signed_text, &signed_text_size, NULL);
     ASSERT_EQ(status , PEP_STATUS_OK);
     output_stream << signed_text << endl;
     test_file.open("tmp/signature.txt");

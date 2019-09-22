@@ -1030,7 +1030,7 @@ static PEP_STATUS encrypt_PGP_MIME(
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
-    if (free_ptext){
+    if (free_ptext){ 
         free(ptext);
         free_ptext=0;
     }
@@ -1081,6 +1081,91 @@ pEp_error:
         free(ptext);
     free(_src);
     free(ctext);
+    return status;
+}
+
+static PEP_STATUS sign_PGP_MIME(
+    PEP_SESSION session,
+    const message *src,
+    const char* sign_fpr,
+    message *dst
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    char *stext = NULL;
+    char *mimetext = NULL;
+    size_t ssize;
+    assert(dst->longmsg == NULL);
+    dst->enc_format = PEP_enc_none;
+
+    if (src->shortmsg)
+        dst->shortmsg = strdup(src->shortmsg);
+        
+    message *_src = calloc(1, sizeof(message));
+    assert(_src);
+    if (_src == NULL)
+        goto enomem;
+    _src->longmsg = src->longmsg;
+    _src->longmsg_formatted = src->longmsg_formatted;
+    _src->attachments = src->attachments;
+    _src->enc_format = PEP_enc_none;
+    
+    // These vars are here to be clear, and because I don't know how this may change in the near future.
+    status = _mime_encode_message_internal(_src, true, &mimetext, true, true);
+    assert(status == PEP_STATUS_OK);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+
+    free(_src);
+    _src = NULL;
+    assert(mimetext);
+    if (EMPTYSTR(mimetext))
+        goto pEp_error;
+        
+    PEP_HASH_ALGO micalg = UNKNOWN_HASH_ALGO;
+        
+    status = sign_only(session, mimetext,
+                       strlen(mimetext),
+                       sign_fpr, 
+                       &stext, &ssize, &micalg);
+        
+    if (stext == NULL)
+        goto pEp_error;
+
+    dst->longmsg = strdup(mimetext);
+    assert(dst->longmsg);
+    if (dst->longmsg == NULL)
+        goto enomem;
+
+    const char* micalg_string = get_micalg_string(micalg);
+    if (!micalg_string) {
+        status = PEP_UNKNOWN_ERROR;
+        goto pEp_error;    
+    }
+        
+    char *v = strdup(micalg_string);
+    assert(v);
+    if (v == NULL)
+        goto enomem;
+
+    bloblist_t *_a = new_bloblist(v, strlen(v), "multipart/signed", NULL);
+    if (_a == NULL)
+        goto enomem;
+    dst->attachments = _a;
+
+    _a = bloblist_add(_a, stext, ssize, "application/pgp-signature",
+        "file://signature.asc");
+    if (_a == NULL)
+        goto enomem;
+
+    return PEP_STATUS_OK;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+pEp_error:
+    free(_src);
+    free(stext);
     return status;
 }
 

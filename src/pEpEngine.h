@@ -1406,12 +1406,47 @@ PEP_STATUS get_identities_by_main_key_id(
         const char *fpr,
         identity_list **identities);
         
+/*
+    'pgp-md5',
+    'pgp-sha1',
+    'pgp-ripemd160',
+    'pgp-md2',
+    'pgp-tiger192',
+    'pgp-haval',
+    'pgp-sha256',
+    'pgp-sha384',
+    'pgp-sha512',
+    'pgp-md4',
+    'pgp-crc32',
+    'pgp-crc32rfc1510',
+    'pgp-crc24rfc2440'
+*/
+           
+typedef enum {
+    MD5,
+    SHA1,
+    RMD160,
+    MD2,
+    TIGER,
+    HAVAL,
+    SHA256,
+    SHA384,
+    SHA512,
+    SHA224,
+    MD4,
+    CRC32,
+    CRC32_RFC1510,
+    CRC32_RFC2440,
+    UNKNOWN_HASH_ALGO
+} PEP_HASH_ALGO;
+        
 PEP_STATUS sign_only(PEP_SESSION session, 
                      const char *data, 
                      size_t data_size, 
                      const char *fpr, 
                      char **sign, 
-                     size_t *sign_size);
+                     size_t *sign_size,
+                     PEP_HASH_ALGO* hash_algo);
 
 #ifdef __cplusplus
 }

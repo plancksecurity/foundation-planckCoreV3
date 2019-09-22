@@ -356,6 +356,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         DLOAD(gpgme_op_encrypt_sign);
         DLOAD(gpgme_op_encrypt);
         DLOAD(gpgme_op_sign);
+        DLOAD(gpgme_op_sign_result);
         DLOAD(gpgme_op_verify_result);
         DLOAD(gpgme_signers_clear);
         DLOAD(gpgme_signers_add);
@@ -935,9 +936,44 @@ PEP_STATUS pgp_verify_text(
     return result;
 }
 
+static PEP_HASH_ALGO convert_hash_algo_enum(gpgme_hash_algo_t gpg_enum) {
+    switch (gpg_enum) {
+        case GPGME_MD_MD5:
+            return MD5;
+        case GPGME_MD_SHA1:
+            return SHA1;
+        case GPGME_MD_RMD160:
+            return RMD160;
+        case GPGME_MD_MD2:
+            return MD2;
+        case GPGME_MD_TIGER:
+            return TIGER;
+        case GPGME_MD_HAVAL:
+            return HAVAL;
+        case GPGME_MD_SHA256:
+            return SHA256;
+        case GPGME_MD_SHA384:
+            return SHA384;
+        case GPGME_MD_SHA512:
+            return SHA512;
+        case GPGME_MD_SHA224:
+            return SHA224;
+        case GPGME_MD_MD4:
+            return MD4;
+        case GPGME_MD_CRC32:
+            return CRC32;
+        case GPGME_MD_CRC32_RFC1510:
+            return CRC32_RFC1510;
+        case GPGME_MD_CRC24_RFC2440:
+            return CRC32_RFC2440;
+        default:
+            return UNKNOWN_HASH_ALGO;
+    }
+}
+
 PEP_STATUS pgp_sign_only(    
     PEP_SESSION session, const char* fpr, const char *ptext,
-    size_t psize, char **stext, size_t *ssize
+    size_t psize, char **stext, size_t *ssize, PEP_HASH_ALGO* micalg
 )
 {
     assert(session);
@@ -953,6 +989,10 @@ PEP_STATUS pgp_sign_only(
     gpgme_key_t* signer_key_ptr;
 
     gpgme_sig_mode_t sign_mode = GPGME_SIG_MODE_DETACH;
+    gpgme_sign_result_t sign_result;
+    
+    if (micalg)
+        *micalg = UNKNOWN_HASH_ALGO;
        
     *stext = NULL;
     *ssize = 0;
@@ -1034,6 +1074,14 @@ PEP_STATUS pgp_sign_only(
     switch (gpgme_error) {
     case GPG_ERR_NO_ERROR:
     {
+        sign_result = gpg.gpgme_op_sign_result(session->ctx);
+        if (!sign_result) {
+            result = PEP_UNKNOWN_ERROR;
+            break;
+        }
+        if (micalg && sign_result->signatures && sign_result->signatures->hash_algo)
+            *micalg = convert_hash_algo_enum(sign_result->signatures->hash_algo);
+        
         char *_buffer = NULL;
         size_t reading;
         size_t length = gpg.gpgme_data_seek(signed_text, 0, SEEK_END);
