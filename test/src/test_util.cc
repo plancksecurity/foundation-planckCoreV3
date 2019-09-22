@@ -33,7 +33,7 @@ std::string get_main_test_home_dir() {
         if (curr_wd.empty())
             throw std::runtime_error("Error grabbing current working directory"); 
 
-        _main_test_home_dir = curr_wd + "/pEp_test_home";
+        _main_test_home_dir = "/tmp/pEp_test_home";
     }
     return _main_test_home_dir;        
 }
