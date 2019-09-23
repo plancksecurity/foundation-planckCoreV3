@@ -120,7 +120,7 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     }
 
     if (*flags & PEP_decrypt_flag_src_modified) {
-        _mime_encode_message_internal(tmp_msg, false, modified_src, true, false);
+        _mime_encode_message_internal(tmp_msg, false, modified_src, true, false, false);
         if (!modified_src) {
             *flags &= (~PEP_decrypt_flag_src_modified);
             decrypt_status = PEP_CANNOT_REENCRYPT; // Because we couldn't return it, I guess.
@@ -128,7 +128,7 @@ DYNAMIC_API PEP_STATUS MIME_decrypt_message(
     }
 
     // FIXME: test with att
-    status = _mime_encode_message_internal(dec_msg, false, mime_plaintext, true, false);
+    status = _mime_encode_message_internal(dec_msg, false, mime_plaintext, true, false, false);
 
     if (status == PEP_STATUS_OK)
     {
@@ -214,7 +214,7 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
         goto pEp_error;
     }
 
-    status = _mime_encode_message_internal(enc_msg, false, mime_ciphertext, false, false);
+    status = _mime_encode_message_internal(enc_msg, false, mime_ciphertext, false, false, false);
 
 pEp_error:
     free_message(tmp_msg);

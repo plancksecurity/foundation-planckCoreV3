@@ -916,7 +916,7 @@ static message* wrap_message_as_attachment(message* envelope,
               );
             
     /* Turn message into a MIME-blob */
-    status = _mime_encode_message_internal(attachment, false, &message_text, true, false);
+    status = _mime_encode_message_internal(attachment, false, &message_text, true, false, false);
         
     if (status != PEP_STATUS_OK)
         goto enomem;
@@ -1025,7 +1025,7 @@ static PEP_STATUS encrypt_PGP_MIME(
     // These vars are here to be clear, and because I don't know how this may change in the near future.
     bool wrapped = (wrap_type != PEP_message_unwrapped);
     bool mime_encode = !wrapped;
-    status = _mime_encode_message_internal(_src, true, &mimetext, mime_encode, wrapped);
+    status = _mime_encode_message_internal(_src, true, &mimetext, mime_encode, wrapped, false);
     assert(status == PEP_STATUS_OK);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
@@ -1111,7 +1111,7 @@ static PEP_STATUS sign_PGP_MIME(
     _src->enc_format = PEP_enc_none;
     
     // These vars are here to be clear, and because I don't know how this may change in the near future.
-    status = _mime_encode_message_internal(_src, true, &mimetext, true, true);
+    status = _mime_encode_message_internal(_src, true, &mimetext, true, false, true);
     assert(status == PEP_STATUS_OK);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
@@ -2003,7 +2003,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     if (max_version_major == 1)
         force_v_1 = true;
         
-    if (enc_format == PEP_enc_none || !dest_keys_found ||
+    if (enc_format == PEP_enc_none || enc_format == PEP_enc_sign_only ||
+        !dest_keys_found || 
         stringlist_length(keys)  == 0 ||
         _rating(max_comm_type) < PEP_rating_reliable)
     {
@@ -2014,6 +2015,21 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             added_key_to_real_src = true;
         }
         decorate_message(src, PEP_rating_undefined, NULL, true, true);
+        
+        // Now sign it
+        if (!(flags & PEP_encrypt_flag_force_unsigned) 
+            && (enc_format != PEP_enc_none) && !EMPTYSTR(src->from->fpr)) {
+            msg = clone_to_empty_message(_src);                
+            status = sign_PGP_MIME(session, _src, src->from->fpr, msg);
+            if (status == PEP_STATUS_OK) {                
+                msg->enc_format = PEP_enc_sign_only;
+                *dst = msg;
+            }
+            else {
+                status = PEP_CANNOT_SIGN;
+                goto pEp_error;
+            }    
+        }
         return PEP_UNENCRYPTED;
     }
     else {

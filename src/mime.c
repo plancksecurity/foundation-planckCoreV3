@@ -39,5 +39,5 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
         char **mimetext
     )
 {
-    return _mime_encode_message_internal(msg, omit_fields, mimetext, true, false);
+    return _mime_encode_message_internal(msg, omit_fields, mimetext, true, false, false);
 }

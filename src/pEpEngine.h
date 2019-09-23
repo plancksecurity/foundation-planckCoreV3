@@ -84,6 +84,7 @@ typedef enum {
     PEP_VERIFY_NO_KEY                               = 0x0407,
     PEP_VERIFIED_AND_TRUSTED                        = 0x0408,
     PEP_CANNOT_REENCRYPT                            = 0x0409,
+    PEP_CANNOT_SIGN                                 = 0x040a,
     PEP_CANNOT_DECRYPT_UNKNOWN                      = 0x04ff,
 
     PEP_TRUSTWORD_NOT_FOUND                         = 0x0501,

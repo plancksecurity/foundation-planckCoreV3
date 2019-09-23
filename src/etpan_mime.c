@@ -183,6 +183,28 @@ enomem:
     return NULL;
 }
 
+struct mailmime * get_signed_text_part(const char* body_text)
+{
+    struct mailmime* mime = mailmime_new(MAILMIME_SINGLE,
+                                         NULL, 0, 
+                                         NULL, NULL, NULL,
+                                         NULL, NULL, NULL, NULL, NULL);
+
+    int encoding = MAILMIME_MECHANISM_7BIT; // ????
+    struct mailmime_data * data = mailmime_data_new(MAILMIME_DATA_TEXT, encoding, 0, 
+                                                    body_text, strlen(body_text), NULL);
+    if (data == NULL)
+        goto pEp_error; 
+
+    mime->mm_data.mm_single = data;
+    return mime;   
+     
+pEp_error:
+    mailmime_free(mime);
+    return NULL;
+        
+}
+
 struct mailmime * get_pgp_encrypted_part(void)
 {
     struct mailmime * mime = NULL;
@@ -1919,16 +1941,28 @@ static PEP_STATUS mime_encode_message_sign_only(
         goto enomem;
 
     if (msg->attachments && msg->attachments->value && msg->attachments->mime_type) {
-        if (strcmp(msg->attachments->mime_type, "multipart/signed")) {
+        if (strcmp(msg->attachments->mime_type, "multipart/signed") == 0) {
+            param = mailmime_param_new_with_data("protocol", strdup("application/pgp-signature"));
+            clist_append(mime->mm_content_type->ct_parameters, param);                
             param = mailmime_param_new_with_data("micalg", strdup(msg->attachments->value));
             clist_append(mime->mm_content_type->ct_parameters, param);    
         }
     }
-
-    r = mailmime_set_body_text(mime, msg->longmsg, strlen(msg->longmsg));
-    if (r != 0)
+    submime = get_signed_text_part(msg->longmsg);
+    assert(submime);
+    if (submime == NULL)
         goto enomem;
-            
+
+    r = mailmime_smart_add_part(mime, submime);
+    assert(r == MAILIMF_NO_ERROR);
+    if (r == MAILIMF_ERROR_MEMORY) {
+        goto enomem;
+    }
+    else {
+        // mailmime_smart_add_part() takes ownership of submime
+        submime = NULL;
+    }
+                
     pEp_rid_list_t* resource = new_rid_node(PEP_RID_FILENAME, "signature.asc");
     submime = get_text_part(resource, "application/pgp-signature", msg->attachments->next->value,
             msg->attachments->next->size, MAILMIME_MECHANISM_7BIT);
@@ -1969,7 +2003,8 @@ PEP_STATUS _mime_encode_message_internal(
         bool omit_fields,
         char **mimetext,
         bool transport_encode,
-        bool set_attachment_forward_comment
+        bool set_attachment_forward_comment,
+        bool omit_version
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -2023,6 +2058,13 @@ PEP_STATUS _mime_encode_message_internal(
     if (msg_mime == NULL)
         goto enomem;
 
+    if (omit_version) {
+        mailmime_fields_free(msg_mime->mm_mime_fields);
+        msg_mime->mm_mime_fields = mailmime_fields_new_empty();
+        if (msg_mime->mm_mime_fields == NULL)
+            goto enomem;
+    }
+    
     r = mailmime_add_part(msg_mime, mime);
     if (r) {
         mailmime_free(mime);
