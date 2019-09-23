@@ -1594,7 +1594,7 @@ PEP_STATUS pgp_verify_text(
 
 PEP_STATUS pgp_sign_only(
     PEP_SESSION session, const char* fpr, const char *ptext,
-    size_t psize, char **stext, size_t *ssize)
+    size_t psize, char **stext, size_t *ssize, PEP_HASH_ALGO* micalg)
 {
     assert(session);
     assert(fpr && fpr[0]);
@@ -1604,6 +1604,10 @@ PEP_STATUS pgp_sign_only(
     assert(ssize);
     *stext = NULL;
     *ssize = 0;
+    
+    // FIXME: Hardcoded for now because it's what sequoia uses. Change here if this changes. 
+    if (micalg)
+        *micalg = SHA512;
 
     PEP_STATUS status = PEP_STATUS_OK;
     pgp_error_t err = NULL;
