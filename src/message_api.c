@@ -1742,6 +1742,132 @@ static void _cleanup_src(message* src, bool remove_attached_key) {
     }                   
 }
 
+
+DYNAMIC_API PEP_STATUS message_sign_only(
+        PEP_SESSION session,
+        message *src,
+        message **dst
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    message * msg = NULL;
+    message* _src = src;    
+    
+    assert(session);
+    assert(src && src->from);
+    assert(dst);
+
+    if (!(session && src && src->from && dst))
+        return PEP_ILLEGAL_VALUE;
+
+    if (src->dir == PEP_dir_incoming)
+        return PEP_ILLEGAL_VALUE;
+
+    *dst = NULL;
+
+    if (!src->from->user_id || src->from->user_id[0] == '\0') {
+        char* own_id = NULL;
+        status = get_default_own_userid(session, &own_id);
+        if (own_id) {
+            free(src->from->user_id);
+            src->from->user_id = own_id; // ownership transfer
+        }
+    }
+
+    status = myself(session, src->from);
+    
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
+
+    char* send_fpr = src->from->fpr;
+    if (EMPTYSTR(send_fpr))
+        return PEP_CANNOT_SIGN;
+        
+    identity_list * _il = NULL;
+
+    for (_il = src->to; _il && _il->ident; _il = _il->next) {
+        PEP_STATUS _status = PEP_STATUS_OK;
+        if (!is_me(session, _il->ident)) {
+            // Do this to get saved user data (name, etc), not for keys here
+            _status = update_identity(session, _il->ident);
+            if (_status == PEP_CANNOT_FIND_IDENTITY)
+                _status = PEP_STATUS_OK;
+                        
+            _status = bind_own_ident_with_contact_ident(session, src->from, _il->ident);
+            if (_status != PEP_STATUS_OK) {
+                status = PEP_UNKNOWN_DB_ERROR;
+                goto pEp_error;
+            }
+        }
+        else
+            _status = myself(session, _il->ident);
+            
+        if (_status != PEP_STATUS_OK)
+            goto pEp_error;
+    }
+
+    for (_il = src->cc; _il && _il->ident; _il = _il->next) {
+        PEP_STATUS _status = PEP_STATUS_OK;
+        if (!is_me(session, _il->ident)) {
+            // Do this to get saved user data (name, etc), not for keys here
+            _status = update_identity(session, _il->ident);
+            if (_status == PEP_CANNOT_FIND_IDENTITY)
+                _status = PEP_STATUS_OK;
+                        
+            _status = bind_own_ident_with_contact_ident(session, src->from, _il->ident);
+            if (_status != PEP_STATUS_OK) {
+                status = PEP_UNKNOWN_DB_ERROR;
+                goto pEp_error;
+            }
+        }
+        else
+            _status = myself(session, _il->ident);
+            
+        if (_status != PEP_STATUS_OK)
+            goto pEp_error;
+    }
+    // We can do a whole BCC list since this is signing, not encrypting
+    for (_il = src->bcc; _il && _il->ident; _il = _il->next) {
+        PEP_STATUS _status = PEP_STATUS_OK;
+        if (!is_me(session, _il->ident)) {
+            // Do this to get saved user data (name, etc), not for keys here
+            _status = update_identity(session, _il->ident);
+            if (_status == PEP_CANNOT_FIND_IDENTITY)
+                _status = PEP_STATUS_OK;
+                        
+            _status = bind_own_ident_with_contact_ident(session, src->from, _il->ident);
+            if (_status != PEP_STATUS_OK) {
+                status = PEP_UNKNOWN_DB_ERROR;
+                goto pEp_error;
+            }
+        }
+        else
+            _status = myself(session, _il->ident);
+            
+        if (_status != PEP_STATUS_OK)
+            goto pEp_error;
+    }
+
+    msg = clone_to_empty_message(_src);                
+    status = sign_PGP_MIME(session, _src, src->from->fpr, msg);
+    if (status == PEP_STATUS_OK) {                
+        msg->enc_format = PEP_enc_sign_only;
+        *dst = msg;
+        return PEP_SIGNED_ONLY;
+    }
+    else {
+        status = PEP_CANNOT_SIGN;
+        goto pEp_error;
+    }    
+    
+pEp_error:
+    free_message(msg);
+    if (_src && _src != src)
+        free_message(_src);
+    return status;
+}
+
+
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
         message *src,
@@ -2019,16 +2145,12 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         // Now sign it
         if (!(flags & PEP_encrypt_flag_force_unsigned) 
             && (enc_format != PEP_enc_none) && !EMPTYSTR(src->from->fpr)) {
-            msg = clone_to_empty_message(_src);                
-            status = sign_PGP_MIME(session, _src, src->from->fpr, msg);
-            if (status == PEP_STATUS_OK) {                
-                msg->enc_format = PEP_enc_sign_only;
-                *dst = msg;
-            }
-            else {
-                status = PEP_CANNOT_SIGN;
+            status = message_sign_only(session, src, dst);
+            if (status != PEP_SIGNED_ONLY)
                 goto pEp_error;
-            }    
+
+            _cleanup_src(src, added_key_to_real_src);
+            return status;
         }
         return PEP_UNENCRYPTED;
     }

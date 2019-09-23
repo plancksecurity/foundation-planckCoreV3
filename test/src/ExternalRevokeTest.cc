@@ -249,8 +249,9 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
 
     status = encrypt_message(session, outgoing_msg, NULL, &encrypted_outgoing_msg, PEP_enc_PGP_MIME, 0);
     output_stream << "Encryption returns with status " << tl_status_string(status) << endl;
-    ASSERT_EQ(status, PEP_UNENCRYPTED);
-    ASSERT_EQ(encrypted_outgoing_msg, nullptr);
+    ASSERT_EQ(status, PEP_SIGNED_ONLY);
+    ASSERT_NE(encrypted_outgoing_msg, nullptr);
+    ASSERT_EQ(encrypted_outgoing_msg->enc_format, PEP_enc_sign_only);
     status = update_identity(session, recip1);
     ASSERT_EQ(recip1->comm_type, PEP_ct_key_not_found);
 

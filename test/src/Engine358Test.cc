@@ -110,7 +110,8 @@ TEST_F(Engine358Test, check_engine358) {
     message* enc_msg = NULL;
 
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
-    ASSERT_EQ(enc_msg, nullptr);
+    ASSERT_NE(enc_msg, nullptr);
     ASSERT_TRUE(msg->to && msg->to->ident);
-    ASSERT_EQ(status , PEP_UNENCRYPTED);
+    ASSERT_EQ(status , PEP_SIGNED_ONLY);
+    ASSERT_EQ(enc_msg->enc_format, PEP_enc_sign_only);
 }
