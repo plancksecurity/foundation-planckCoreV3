@@ -545,5 +545,5 @@ action disable
     if (!session->inject_sync_event)
         return PEP_SYNC_NO_INJECT_CALLBACK;
 
-    session->inject_sync_event(SHUTDOWN, NULL);
+    session->inject_sync_event((void *) SHUTDOWN, NULL);
 ||

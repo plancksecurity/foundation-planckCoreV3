@@ -1944,7 +1944,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         }
         else {
             // hide subject
-            if (enc_format != PEP_enc_inline /*&& !session->unencrypted_subject */) {
+            if (enc_format != PEP_enc_inline) {
                 status = replace_subject(_src);
                 if (status == PEP_OUT_OF_MEMORY)
                     goto enomem;
@@ -3360,6 +3360,13 @@ pEp_free:
 
 }
 
+static bool _have_extrakeys(stringlist_t *keylist)
+{
+    return keylist
+        && keylist->value
+        && keylist->value[0];
+}
+
 static PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -3399,15 +3406,13 @@ static PEP_STATUS _decrypt_message(
     unsigned int minor_ver = 0;
     
     // Grab input flags
-    bool reencrypt = (((*flags & PEP_decrypt_flag_untrusted_server) > 0) && *keylist && !EMPTYSTR((*keylist)->value));
+    bool reencrypt = ((*flags & PEP_decrypt_flag_untrusted_server) &&
+            (_have_extrakeys(*keylist) || session->unencrypted_subject));
     
     // We own this pointer, and we take control of *keylist if reencrypting.
     stringlist_t* extra = NULL;
-    if (reencrypt) {
-        if (*keylist) {
-            extra = *keylist;
-        }
-    }
+    if (reencrypt)
+        extra = *keylist;
             
     *dst = NULL;
     *keylist = NULL;
@@ -3929,23 +3934,24 @@ static PEP_STATUS _decrypt_message(
             }
         }
     }
-    
+
     // 4. Set up return values
     *dst = msg;
     *keylist = _keylist;
 
+    bool reenc_signer_key_is_own_key = false; // only matters for reencrypted messages 
+    
     // 5. Reencrypt if necessary
     if (reencrypt) {
         if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
             const char* sfpr = NULL;
-            if (_keylist != NULL && !(EMPTYSTR(_keylist->value)))
+            if (_have_extrakeys(*keylist))
                 sfpr = _keylist->value;
              
             if (sfpr && decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
-                bool key_is_own_key = false;
-                own_key_is_listed(session, sfpr, &key_is_own_key);
+                own_key_is_listed(session, sfpr, &reenc_signer_key_is_own_key);
                 
-                if (!key_is_own_key) {
+                if (!reenc_signer_key_is_own_key) {
                     message* reencrypt_msg = NULL;
                     PEP_STATUS reencrypt_status = PEP_CANNOT_REENCRYPT;
                     char* own_id = NULL;
@@ -3981,10 +3987,31 @@ static PEP_STATUS _decrypt_message(
                         decrypt_status = PEP_CANNOT_REENCRYPT;
                 }
             }            
+            else if (!_have_extrakeys(*keylist) && session->unencrypted_subject) {
+                free(src->shortmsg);
+                src->shortmsg = strdup(msg->shortmsg);
+                assert(src->shortmsg);
+                if (!src->shortmsg)
+                    goto enomem;
+                *flags |= PEP_decrypt_flag_src_modified;
+            }
         }
     }
-        
-    if(decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
+    
+    // Double-check for message 2.1: (note, we don't do this for already-reencrypted-messages)
+    if (!(reencrypt && reenc_signer_key_is_own_key)) { 
+        if (major_ver > 2 || (major_ver == 2 && minor_ver > 0)) {
+            if (EMPTYSTR((*dst)->_sender_fpr) || 
+               (!EMPTYSTR(_keylist->value) && (strcasecmp((*dst)->_sender_fpr, _keylist->value) != 0))) {
+                if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
+                    decrypt_status = PEP_DECRYPTED;
+                if (*rating > PEP_rating_unreliable)
+                    *rating = PEP_rating_unreliable;
+            }
+        }
+    }
+    
+    if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
         return PEP_STATUS_OK;
     else
         return decrypt_status;
@@ -4027,20 +4054,24 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     message *msg = *dst ? *dst : src;
 
-    if (session->inject_sync_event && msg && msg->from &&
-            !(*flags & PEP_decrypt_flag_dont_trigger_sync)) {
-        size_t size;
-        const char *data;
-        char *sender_fpr = NULL;
-        PEP_STATUS tmpstatus = base_extract_message(session, msg, &size, &data, &sender_fpr);
-        if (!tmpstatus && size && data) {
-            if (sender_fpr)
-                signal_Sync_message(session, *rating, data, size, msg->from, sender_fpr);
-            // FIXME: this must be changed to sender_fpr
-            else if (*keylist)
-                signal_Sync_message(session, *rating, data, size, msg->from, (*keylist)->value);
+    if (status == PEP_UNENCRYPTED || status == PEP_DECRYPTED_AND_VERIFIED) {
+        if (session->inject_sync_event && msg && msg->from &&
+                !(*flags & PEP_decrypt_flag_dont_trigger_sync)) {
+            size_t size;
+            const char *data;
+            char *sender_fpr = NULL;
+            
+            PEP_STATUS tmpstatus = base_extract_message(session, msg, &size, &data, &sender_fpr);
+            if (!tmpstatus && size && data) {
+                const char* event_sender_fpr = ((*dst)->_sender_fpr ? (*dst)->_sender_fpr : sender_fpr);
+                // FIXME - I don't think this is OK anymore. We either have a signed beacon or a properly encrypted/signed 2.1 message
+                // if ((!event_sender_fpr) && *keylist)
+                //     event_sender_fpr = (*keylist)->value;
+                if (event_sender_fpr)
+                    signal_Sync_message(session, *rating, data, size, msg->from, event_sender_fpr);
+            }
+            free(sender_fpr);
         }
-        free(sender_fpr);
     }
 
     return status;
