@@ -4063,7 +4063,10 @@ DYNAMIC_API PEP_STATUS decrypt_message(
             
             PEP_STATUS tmpstatus = base_extract_message(session, msg, &size, &data, &sender_fpr);
             if (!tmpstatus && size && data) {
-                const char* event_sender_fpr = ((*dst)->_sender_fpr ? (*dst)->_sender_fpr : sender_fpr);
+                bool use_extracted_fpr = (status != PEP_DECRYPTED_AND_VERIFIED) ||
+                                          !dst || !(*dst) || !((*dst)->_sender_fpr);
+                
+                const char* event_sender_fpr = (use_extracted_fpr ? sender_fpr : (*dst)->_sender_fpr);
                 // FIXME - I don't think this is OK anymore. We either have a signed beacon or a properly encrypted/signed 2.1 message
                 // if ((!event_sender_fpr) && *keylist)
                 //     event_sender_fpr = (*keylist)->value;
