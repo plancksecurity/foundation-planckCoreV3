@@ -4054,28 +4054,47 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     message *msg = *dst ? *dst : src;
 
-    if (status == PEP_UNENCRYPTED || status == PEP_DECRYPTED_AND_VERIFIED) {
-        if (session->inject_sync_event && msg && msg->from &&
-                !(*flags & PEP_decrypt_flag_dont_trigger_sync)) {
-            size_t size;
-            const char *data;
-            char *sender_fpr = NULL;
-            
-            PEP_STATUS tmpstatus = base_extract_message(session, msg, &size, &data, &sender_fpr);
-            if (!tmpstatus && size && data) {
-                bool use_extracted_fpr = (status != PEP_DECRYPTED_AND_VERIFIED) ||
-                                          !dst || !(*dst) || !((*dst)->_sender_fpr);
-                
-                const char* event_sender_fpr = (use_extracted_fpr ? sender_fpr : (*dst)->_sender_fpr);
-                // FIXME - I don't think this is OK anymore. We either have a signed beacon or a properly encrypted/signed 2.1 message
-                // if ((!event_sender_fpr) && *keylist)
-                //     event_sender_fpr = (*keylist)->value;
-                if (event_sender_fpr)
-                    signal_Sync_message(session, *rating, data, size, msg->from, event_sender_fpr);
-            }
-            free(sender_fpr);
+    if (session->inject_sync_event && msg && msg->from &&
+            !(*flags & PEP_decrypt_flag_dont_trigger_sync)) {
+        size_t size;
+        const char *data;
+        char *sender_fpr = NULL;
+        PEP_STATUS tmpstatus = base_extract_message(session, msg, &size, &data, &sender_fpr);
+        if (!tmpstatus && size && data) {
+            if (sender_fpr)
+                signal_Sync_message(session, *rating, data, size, msg->from, sender_fpr);
+            // FIXME: this must be changed to sender_fpr
+            else if (*keylist)
+                signal_Sync_message(session, *rating, data, size, msg->from, (*keylist)->value);
         }
+        free(sender_fpr);
     }
+
+
+    // Removed for now - partial fix in ENGINE-647, but we have sync issues. Need to 
+    // fix testing issue.
+    //
+    // if (status == PEP_UNENCRYPTED || status == PEP_DECRYPTED_AND_VERIFIED) {
+    //     if (session->inject_sync_event && msg && msg->from &&
+    //             !(*flags & PEP_decrypt_flag_dont_trigger_sync)) {
+    //         size_t size;
+    //         const char *data;
+    //         char *sender_fpr = NULL;
+    // 
+    //         PEP_STATUS tmpstatus = base_extract_message(session, msg, &size, &data, &sender_fpr);
+    //         if (!tmpstatus && size && data) {
+    //             bool use_extracted_fpr = (status != PEP_DECRYPTED_AND_VERIFIED) ||
+    //                                       !dst || !(*dst) || !((*dst)->_sender_fpr);
+    // 
+    //             const char* event_sender_fpr = (use_extracted_fpr ? sender_fpr : (*dst)->_sender_fpr);
+    //             // FIXME - I don't think this is OK anymore. We either have a signed beacon or a properly encrypted/signed 2.1 message
+    //             // if ((!event_sender_fpr) && *keylist)
+    //             //     event_sender_fpr = (*keylist)->value;
+    //             if (event_sender_fpr)
+    //                 signal_Sync_message(session, *rating, data, size, msg->from, event_sender_fpr);
+    //         }
+    //         free(sender_fpr);
+    //     }
 
     return status;
 }
