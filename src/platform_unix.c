@@ -305,11 +305,25 @@ static void _move(const char *o, const char *ext, const char *n)
     free(_new);
 }
 
-DYNAMIC_API const char *per_user_directory(void)
+#ifndef NDEBUG
+static const char *_per_user_directory(int reset)
+#else 
+static const char *_per_user_directory(void)
+#endif
 {
     static char *path = NULL;
+
+#ifdef NDEBUG    
     if (path)
         return path;
+#else        
+    if (path && !reset)
+        return path;
+    else if (path) {
+        free(path);
+        path = NULL;
+    }
+#endif    
 
     const char *home = NULL;
 #ifndef NDEBUG
@@ -355,10 +369,17 @@ const char *unix_local_db(int reset)
 #endif
         return path;
 
-    if (!per_user_directory())
+    char* pathret = NULL;
+#ifndef NDEBUG 
+    pathret = _per_user_directory(reset);
+#else 
+    pathret = _per_user_directory();
+#endif
+
+    if (!pathret)
         return NULL;
 
-    path = strdup(per_user_directory());
+    path = strdup(pathret);
     assert(path);
     if (!path)
         return NULL;
@@ -470,6 +491,15 @@ the_end:
     free(old_path_c);
     return path;
 }
+
+DYNAMIC_API const char *per_user_directory(void) {
+#ifdef NDEBUG
+    return _per_user_directory(void);
+#else 
+    return _per_user_directory(false);
+#endif
+}
+
 
 static const char *gpg_conf_path = ".gnupg";
 static const char *gpg_conf_name = "gpg.conf";
@@ -707,4 +737,3 @@ error:
     _empty(&path);
     return NULL;
 }
-

@@ -17,15 +17,15 @@ protocol Sync 1 {
             on Init {
                 if deviceGrouped
                     go Grouped;
+                do newChallengeAndNegotiationBase;
+                send Beacon;
                 go Sole;
             }
         }
 
         state Sole timeout=off {
             on Init {
-                do newChallengeAndNegotiationBase;
                 do showBeingSole;
-                send Beacon;
             }
 
             on KeyGen {

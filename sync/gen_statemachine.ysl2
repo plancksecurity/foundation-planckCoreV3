@@ -824,6 +824,7 @@ tstylesheet {
                     free(session->«yml:lcase(@name)»_state.transport.sender_fpr);
                     session->«yml:lcase(@name)»_state.transport.sender_fpr = ev->sender_fpr;
                     
+                    /* Removed for temp ENGINE-647 fix. Will be reenabled once better sync debugging is in.
                     // Check against saved comm_partner sender_fpr state, if there is one yet
                     if (session->«yml:lcase(@name)»_state.comm_partner.sender_fpr) {
                         // 1. Does it match sender_fpr?
@@ -839,6 +840,7 @@ tstylesheet {
                             }    
                         }
                     }
+                    */
                                                             
                     ev->sender_fpr = NULL;
                 }
