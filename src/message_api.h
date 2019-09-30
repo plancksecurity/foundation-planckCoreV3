@@ -41,8 +41,12 @@ typedef enum _PEP_encrypt_flags {
     // This is mainly used by pEp clients to send private keys to 
     // their own PGP-only device
     PEP_encrypt_flag_force_version_1 = 0x10,
+        
+    PEP_encrypt_flag_key_reset_only = 0x20,
     
-    PEP_encrypt_flag_key_reset_only = 0x20
+    // This flag is used to let internal functions know that an encryption 
+    // call is being used as part of a reencryption operation
+    PEP_encrypt_reencrypt = 0x40
     
 } PEP_encrypt_flags; 
 
