@@ -494,7 +494,7 @@ the_end:
 
 DYNAMIC_API const char *per_user_directory(void) {
 #ifdef NDEBUG
-    return _per_user_directory(void);
+    return _per_user_directory();
 #else 
     return _per_user_directory(false);
 #endif
