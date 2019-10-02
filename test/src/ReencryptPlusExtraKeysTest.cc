@@ -131,7 +131,70 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj) {
     status = mime_decode_message(mailfile.c_str(), mailfile.size(), &src_msg);
     ASSERT_NE(src_msg, nullptr);
     ASSERT_STREQ(src_msg->attachments->next->value, checker->attachments->next->value);
+    config_unencrypted_subject(session, false);
+
 }
+
+TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_check_efficient) {
+    config_unencrypted_subject(session, true);
+    pEp_identity* carol = NULL;
+
+    PEP_STATUS status = set_up_preset(session, CAROL,
+                                      true, true, true, true, true, &carol);
+
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_NE(carol, nullptr);
+
+    string mailfile = slurp("test_mails/From_M2_1.eml");
+
+    char* decrypted_text = nullptr;
+
+    // In: extra keys; Out: keys that were used to encrypt this.
+    stringlist_t* keys = NULL;
+    PEP_decrypt_flags_t flags = PEP_decrypt_flag_untrusted_server;
+    PEP_rating rating;
+
+    flags = PEP_decrypt_flag_untrusted_server;
+    char* modified_src = NULL;
+
+    status = MIME_decrypt_message(session,
+                                  mailfile.c_str(),
+                                  mailfile.size(),
+                                  &decrypted_text,
+                                  &keys,
+                                  &rating,
+                                  &flags,
+                                  &modified_src);
+                                       
+    ASSERT_NE(decrypted_text , nullptr);
+    ASSERT_NE(modified_src , nullptr);
+    message* checker = NULL;
+    status = mime_decode_message(modified_src, strlen(modified_src), &checker);
+    ASSERT_NE(checker, nullptr);
+    ASSERT_STREQ(checker->shortmsg, "Boom shaka laka");
+    cout << modified_src << endl;
+    message* src_msg = NULL;
+    status = mime_decode_message(mailfile.c_str(), mailfile.size(), &src_msg);
+    ASSERT_NE(src_msg, nullptr);
+    ASSERT_STREQ(src_msg->attachments->next->value, checker->attachments->next->value);
+    
+    message* dec_msg = NULL;
+    flags = PEP_decrypt_flag_untrusted_server;
+    free_stringlist(keys);
+    keys = NULL; // remember, this is no extra_keys in this test
+
+    status = decrypt_message(session, checker, &dec_msg, &keys, &rating, &flags);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_NE(dec_msg , nullptr);
+    ASSERT_EQ(flags & PEP_decrypt_flag_src_modified, 0);
+    ASSERT_NE(checker, nullptr);
+    ASSERT_NE(dec_msg->_sender_fpr, nullptr);
+    ASSERT_NE(keys, nullptr);
+    ASSERT_STREQ(dec_msg->_sender_fpr, keys->value); // should be the same, since not reencrypted
+    
+    config_unencrypted_subject(session, false);    
+}
+
 
 TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys) {
     config_unencrypted_subject(session, true);
@@ -145,7 +208,6 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys) 
     stringlist_t* keys = new_stringlist(fpr_pub_extra_key_0);
     stringlist_add(keys, fpr_pub_extra_key_1);
     
-    config_unencrypted_subject(session, true);
     pEp_identity* carol = NULL;
 
     PEP_STATUS status = set_up_preset(session, CAROL,
@@ -180,7 +242,6 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys) 
     status = mime_decode_message(modified_src, strlen(modified_src), &checker);
     ASSERT_NE(checker, nullptr);
     ASSERT_STREQ(checker->shortmsg, "Boom shaka laka");
-    config_unencrypted_subject(session, false);
     cout << modified_src << endl;
     message* src_msg = NULL;
     status = mime_decode_message(mailfile.c_str(), mailfile.size(), &src_msg);
@@ -220,6 +281,76 @@ TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys) 
     ASSERT_TRUE(own_key_found && extra_key_0_found && extra_key_1_found);  
     config_unencrypted_subject(session, false);      
 }
+
+TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_unencrypted_subj_extra_keys_efficient) {
+    config_unencrypted_subject(session, true);
+    
+    const char* fpr_pub_extra_key_0 = "33BB6C92EBFB6F29641C75B5B79D916C828AA789";
+    const char* fpr_pub_extra_key_1 = "3DB93A746785FDD6110798AB3B193A9E8B026AEC";
+
+    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/reencrypt_extra_keys_0-0x828AA789_pub.asc"));
+    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/reencrypt_extra_keys_1-0x8B026AEC_pub.asc"));
+    
+    stringlist_t* keys = new_stringlist(fpr_pub_extra_key_0);
+    stringlist_add(keys, fpr_pub_extra_key_1);
+    
+    pEp_identity* carol = NULL;
+
+    PEP_STATUS status = set_up_preset(session, CAROL,
+                                      true, true, true, true, true, &carol);
+
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(carol, nullptr);
+
+    string mailfile = slurp("test_mails/From_M2_1.eml");
+
+    char* decrypted_text = nullptr;
+
+    // In: extra keys; Out: keys that were used to encrypt this.
+    PEP_decrypt_flags_t flags = PEP_decrypt_flag_untrusted_server;
+    PEP_rating rating;
+
+    flags = PEP_decrypt_flag_untrusted_server;
+    char* modified_src = NULL;
+
+    status = MIME_decrypt_message(session,
+                                  mailfile.c_str(),
+                                  mailfile.size(),
+                                  &decrypted_text,
+                                  &keys,
+                                  &rating,
+                                  &flags,
+                                  &modified_src);
+                                       
+    ASSERT_NE(decrypted_text , nullptr);
+    ASSERT_NE(modified_src , nullptr);
+    message* checker = NULL;
+    status = mime_decode_message(modified_src, strlen(modified_src), &checker);
+    ASSERT_NE(checker, nullptr);
+    ASSERT_STREQ(checker->shortmsg, "Boom shaka laka");
+    cout << modified_src << endl;
+    message* src_msg = NULL;
+    status = mime_decode_message(mailfile.c_str(), mailfile.size(), &src_msg);
+    ASSERT_NE(src_msg, nullptr);
+    ASSERT_STRNE(src_msg->attachments->next->value, checker->attachments->next->value);
+
+    free_stringlist(keys);
+    keys = new_stringlist(fpr_pub_extra_key_0);
+    stringlist_add(keys, fpr_pub_extra_key_1);
+    flags = PEP_decrypt_flag_untrusted_server;
+    message* decryptomatic = NULL;
+    status = decrypt_message(session, checker, &decryptomatic, &keys, &rating, &flags);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_NE(decryptomatic, nullptr);
+    ASSERT_EQ(flags & PEP_decrypt_flag_src_modified, 0);
+    ASSERT_NE(checker, nullptr);
+    ASSERT_NE(decryptomatic->_sender_fpr, nullptr);
+    ASSERT_NE(keys, nullptr);
+    ASSERT_STRNE(decryptomatic->_sender_fpr, keys->value); // should be the same, since not reencrypted
+    
+    config_unencrypted_subject(session, false);    
+}
+
 
 TEST_F(ReencryptPlusExtraKeysTest, check_reencrypt_plus_extra_keys) {
     PEP_STATUS status = PEP_STATUS_OK;

@@ -3943,12 +3943,22 @@ static PEP_STATUS _decrypt_message(
     bool reenc_signer_key_is_own_key = false; // only matters for reencrypted messages 
     
     // 4. Reencrypt if necessary
+    bool has_extra_keys = _have_extrakeys(extra);
+    if (reencrypt && session->unencrypted_subject && !has_extra_keys) {
+        if (src->shortmsg && msg->shortmsg) {
+            if (strcmp(src->shortmsg, msg->shortmsg) == 0)
+                reencrypt = false;
+        }
+        else if (src->shortmsg == NULL && msg->shortmsg == NULL)
+            reencrypt = false;
+    }    
+
     if (reencrypt) {
         if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
             const char* sfpr = NULL;
-            if (_have_extrakeys(extra))
+            if (has_extra_keys)
                 sfpr = _keylist->value;
-             
+
             if (sfpr && decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
                 own_key_is_listed(session, sfpr, &reenc_signer_key_is_own_key);
                 
@@ -3988,7 +3998,7 @@ static PEP_STATUS _decrypt_message(
                         decrypt_status = PEP_CANNOT_REENCRYPT;
                 }
             }            
-            else if (!_have_extrakeys(extra) && session->unencrypted_subject) {
+            else if (!has_extra_keys && session->unencrypted_subject) {
                 free(src->shortmsg);
                 src->shortmsg = strdup(msg->shortmsg);
                 assert(src->shortmsg);
