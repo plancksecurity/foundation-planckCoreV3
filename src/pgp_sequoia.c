@@ -1706,8 +1706,8 @@ static PEP_STATUS pgp_encrypt_sign_optional(
         ERROR_OUT(NULL, status, "Looking up key for signing '%s'", keylist->value);
     }
 
-    pgp_writer_t writer = pgp_writer_alloc((void **) ctext, csize);
-    writer = pgp_armor_writer_new(&err, writer,
+    pgp_writer_t writer_alloc = pgp_writer_alloc((void **) ctext, csize);
+    pgp_writer_t writer = pgp_armor_writer_new(&err, writer_alloc,
                                   PGP_ARMOR_KIND_MESSAGE, NULL, 0);
     if (!writer)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Setting up armor writer");
@@ -1758,6 +1758,8 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     ws = NULL;
     if (pgp_status != 0)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "Flushing writer");
+
+    pgp_writer_free (writer_alloc);
 
     // Add a terminating NUL for naive users
     void *t = realloc(*ctext, *csize + 1);
