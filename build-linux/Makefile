@@ -6,9 +6,12 @@
 #  based on pEpJNIAdapter/android/external/Makefile
 #------------------------------------------------------------------------------#
 
-all: build 
+all:
+	@echo use make install to install GnuPG dependencies
+	@echo this is not needed for builds with other OpenPGP implementations
+	@echo use the Makefile in main directory and depend on README.md there
 
-build: libetpan-install gnupg-install gpgme-install
+install: libetpan-install gnupg-install gpgme-install
 
 PREFIX ?= $(HOME)
 
