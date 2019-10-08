@@ -10,7 +10,9 @@
 #include <boost/interprocess/containers/vector.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-
+#include <boost/interprocess/sync/scoped_lock.hpp>
+#include <boost/interprocess/sync/named_mutex.hpp>
+    
 #include "pEpEngine.h"
 #include "pEp_internal.h"
 #include "sync_api.h"
@@ -34,18 +36,6 @@ typedef boost::interprocess::allocator<std::string, managed_shared_memory::segme
 //its values from the segment
 typedef boost::interprocess::vector<std::string, ShmemAllocator> MailList;
 
-class LockedMailList
-{
-public:
-    MailList vec;
-    boost::interprocess::interprocess_mutex mutex;
-
-    LockedMailList(ShmemAllocator sm) 
-       : vec(sm) 
-    {}    
-};
-
-
 PEP_STATUS SyncTwoParty_message_send_callback(message* msg);
 int SyncTwoParty_inject_sync_event(SYNC_EVENT ev, void *management);
 SYNC_EVENT SyncTwoParty_retrieve_next_sync_event(void *management, unsigned threshold);
@@ -55,44 +45,56 @@ static void* SyncTwoParty_fake_this;
 
 #define SyncTwoParty_segment_name "MessageQueueMem"
 #define SyncTwoParty_vector_name "MessageQueue"
-#define SyncTwoParty_locked_vector_name "LockedMessageQueue"
+#define SyncTwoParty_mutex_name "MessageQueueMutex"
         
 //The fixture for SyncTwoPartyTest
 class SyncTwoPartyTest : public ::testing::Test {
     public:
         std::deque<SYNC_EVENT> ev_q;
-        LockedMailList* mail_queue = NULL;
+        MailList* mail_queue = NULL;
         const char* test_suite_name;
         std::string test_name;
         std::string test_path;
+        Engine* engine;
+        PEP_SESSION session;        
         // Objects declared here can be used by all tests in the SyncTwoPartyTest suite.
 };
 
 
 int SyncTwoParty_inject_sync_event(SYNC_EVENT ev, void *management)
 {
-    try {
-        ((SyncTwoPartyTest*)SyncTwoParty_fake_this)->ev_q.push_front(ev);
-    }
-    catch (exception&) {
-        return 1;
-    }
-    return 0;
+    PEP_STATUS status = do_sync_protocol_step(((SyncTwoPartyTest*)SyncTwoParty_fake_this)->session, NULL, ev);
+    return status == PEP_STATUS_OK ? 0 : 1;
+    // try {
+    //     ((SyncTwoPartyTest*)SyncTwoParty_fake_this)->ev_q.push_front(ev);
+    // }
+    // catch (exception&) {
+    //     return 1;
+    // }
 }
 
 PEP_STATUS SyncTwoParty_message_send_callback(message* msg) {
     PEP_STATUS status = PEP_STATUS_OK;
     char* msg_str = NULL;
     mime_encode_message(msg, false, &msg_str);
-    LockedMailList* lml = ((SyncTwoPartyTest*)SyncTwoParty_fake_this)->mail_queue;
-    boost::posix_time::ptime end_time = boost::posix_time::second_clock::universal_time() + boost::posix_time::seconds(5);
-    bool locked = lml->mutex.timed_lock(end_time);
-    if (locked) {
-        lml->vec.push_back(string(msg_str));
-        lml->mutex.unlock();
-    }    
-    else 
+    MailList* lml = ((SyncTwoPartyTest*)SyncTwoParty_fake_this)->mail_queue;
+    try {
+        boost::posix_time::ptime end_time = boost::posix_time::second_clock::universal_time() + boost::posix_time::seconds(5);
+
+        named_mutex the_mutex = 
+        //This will timed_lock the mutex
+        boost::interprocess::scoped_lock<named_mutex> lock(), end_time);
+
+        if (!lock) {
+            cerr << "Um, what? An exception should have been thrown." << endl;
+        }
+        lml->push_back(string(msg_str));
+        cerr << ((SyncTwoPartyTest*)SyncTwoParty_fake_this)->test_name << " sent message." << endl << *(lml->end()) << endl;        
+    }   
+    catch (interprocess_exception e) {
+        cerr << ((SyncTwoPartyTest*)SyncTwoParty_fake_this)->test_name << " timed out sending message." << endl;
         status = PEP_UNKNOWN_ERROR;
+    }    
     free(msg_str);
     return status;
 }
@@ -118,9 +120,6 @@ SYNC_EVENT SyncTwoParty_retrieve_next_sync_event(void *management, unsigned thre
         break;
     }
     
-    if (!syncEvent)
-        return new_sync_timeout_event();
-
     return syncEvent;
 }
 
@@ -143,12 +142,10 @@ TEST_F(SyncTwoPartyTest, check_sync_two_party) {
     pid_t pid = fork();
     
     managed_shared_memory segment;
+    managed_shared_memory mutex_segment;
     
     PEP_STATUS status = PEP_STATUS_OK;
-    
-    Engine* engine;
-    PEP_SESSION session;
-    
+        
     // Create process specific variables and shared mail queue
     if (pid == 0) { // child
         sleep(1);
@@ -160,46 +157,90 @@ TEST_F(SyncTwoPartyTest, check_sync_two_party) {
         
         // Give the other process a while to set up the queue
         while (curr - start < 10) {
+            cout << curr - start << endl;
             // Try stuff here
             try {
                 //Open the managed segment
-                segment = managed_shared_memory(open_only, SyncTwoParty_segment_name);  
+                segment = managed_shared_memory(open_or_create, SyncTwoParty_segment_name, 1048576);  
+                mutex_segment = managed_shared_memory(open_or_create, "MutexMemory", 65536);                
             }
-            catch (interprocess_exception e) {    
+            catch (interprocess_exception e) {
+                cout << e.what() << endl;
+                sleep(1);   
                 curr = time(NULL);
                 continue;    
             }
             break;
         }   
 
-        if ((mail_queue = (segment.find<LockedMailList>(SyncTwoParty_locked_vector_name).first)) == NULL) {
-            cerr << "CHILD UNABLE TO OPEN SHARED MEMORY SEGMENT" << endl;
+        if ((mail_queue = (segment.find<MailList>(SyncTwoParty_vector_name).first)) == NULL) {        
+            cerr << "CHILD UNABLE TO OPEN SHARED MEMORY SEGMENT: " << SyncTwoParty_segment_name << " - " << SyncTwoParty_vector_name << endl;
             exit(-1);
+        }
+        else {
+            cout << "OPENED IT!" << endl;
         }
     }
     else if (pid > 0) { // parent
         test_name = (test_name + "_0");
-        
-        //Remove shared memory on construction and destruction        
-        struct shm_remove {
-            shm_remove() { shared_memory_object::remove(SyncTwoParty_segment_name); }
-            ~shm_remove(){ shared_memory_object::remove(SyncTwoParty_segment_name); }
-        } remover;
+        cout << "Got to " << test_name << endl;
 
-        //Create a new segment with given name and size
-        segment = managed_shared_memory(create_only, SyncTwoParty_segment_name, 1048576);
+        // Apparently, this is unnecessary?
+        // //Remove shared memory on construction and destruction        
+        // struct shm_remove {
+        //     shm_remove() { shared_memory_object::remove(SyncTwoParty_segment_name); }
+        //     ~shm_remove(){ shared_memory_object::remove(SyncTwoParty_segment_name); }
+        // } remover;
+        // 
+        // struct mutex_remove
+        // {
+        //     mutex_remove() { named_mutex::remove("fstream_named_mutex"); }
+        //     ~mutex_remove(){ named_mutex::remove("fstream_named_mutex"); }
+        // } mutex_remover;
 
+        try {
+            //Create a new segment with given name and size
+            segment = managed_shared_memory(open_or_create, SyncTwoParty_segment_name, 1048576);
+            
+            //Create a new segment with given name and size
+            mutex_segment = managed_shared_memory(open_or_create, "MutexMemory", 65536);
+            
+        }    
+        catch (interprocess_exception e) {
+            cerr << "PARENT UNABLE TO OPEN SHARED MEMORY SEGMENT" << endl;            
+            int status;    
+            wait(&status);
+            exit(-1);
+        }
+        sleep(1);
         //Initialize shared memory STL-compatible allocator
         const ShmemAllocator alloc_inst(segment.get_segment_manager());
 
         //Construct a vector named "MailList" in shared memory with argument alloc_inst
-        mail_queue = segment.construct<LockedMailList>(SyncTwoParty_locked_vector_name)(alloc_inst);
+        mail_queue = segment.construct<MailList>(SyncTwoParty_vector_name)(alloc_inst);
+                
+        cerr << SyncTwoParty_segment_name << " - " << SyncTwoParty_vector_name << endl;
+        
     }
     else {
         // OMGWTFBBQ
         exit(-1);
     }
+
+
+    named_mutex mutex(open_or_create, SyncTwoParty_mutex_name);        
+
+    //Open or create the named mutex
+    try {
+        mutex_ptr = &mutex;
+    }
+    catch (interprocess_exception e) {
+        cerr << "WTF? " << test_name << ":" << e.what();
+        exit(-1);
+    }    
     
+    cout << test_name << endl;
+
     // After this, this all happens in separate address spaces, so fake_this is safe
 
     SyncTwoParty_fake_this = this;
@@ -228,6 +269,7 @@ TEST_F(SyncTwoPartyTest, check_sync_two_party) {
     // Generate new identity for this device
     pEp_identity* me = new_identity("pickles@boofy.org", NULL, PEP_OWN_USERID, "Pickley Boofboof");
     status = myself(session, me);
+    cout << test_name << ": " << me->fpr << endl;
     assert(status == PEP_STATUS_OK && me->fpr != NULL && me->fpr[0] != '\0');
 
     status = register_sync_callbacks(session, NULL, &SyncTwoParty_notify_handshake, &SyncTwoParty_retrieve_next_sync_event);
@@ -245,16 +287,22 @@ TEST_F(SyncTwoPartyTest, check_sync_two_party) {
         bool msg_received = false;
         bool event_processed = false;
         
-        boost::posix_time::ptime end_time = boost::posix_time::second_clock::universal_time() + boost::posix_time::seconds(5);
-        bool locked = mail_queue->mutex.timed_lock(end_time);
+        if (mail_queue->size() > last_message_index) {
+            try {
+                boost::posix_time::ptime end_time = boost::posix_time::second_clock::universal_time() + boost::posix_time::seconds(5);
 
-        if (locked) {
-            if (mail_queue->vec.size() > last_message_index) {
+                //This will timed_lock the mutex
+                boost::interprocess::scoped_lock<named_mutex> the_lock(*mutex_ptr, end_time);
+
+                if (!the_lock) {
+                    cerr << "Um, what? An exception should have been thrown." << endl;
+                }
+                
                 message* next_msg = NULL;
                 PEP_decrypt_flags_t flags = 0;
                 PEP_rating rating;
                 stringlist_t* keylist = NULL;
-                std::string msg_str = mail_queue->vec.at(last_message_index++);
+                std::string msg_str = mail_queue->at(last_message_index++);
                 message* actual_msg = NULL;
                 mime_decode_message(msg_str.c_str(), msg_str.length(), &actual_msg);
                 status = decrypt_message(session, actual_msg, &next_msg, &keylist, &rating, &flags);
@@ -267,18 +315,23 @@ TEST_F(SyncTwoPartyTest, check_sync_two_party) {
                 free_message(next_msg);
                 msg_received = true;
             }
-            mail_queue->mutex.unlock();
+            catch (interprocess_exception e) {
+                cerr << test_name << " trying to lock queue. " << e.what() << endl;
+            }
         }    
             
+        // This doesn't mean anything anymore I think...
+        /*    
         event = session->retrieve_next_sync_event(session->sync_management,
                 SYNC_THRESHOLD);
                 
         if (event) {
             event_processed = true;
             do_sync_protocol_step(session, NULL, event);
-        }    
+        } 
+        */   
         now = time(NULL);
-        if (msg_received || event_processed)
+        if (msg_received)
             prev_change = now;
     } 
     
@@ -302,7 +355,7 @@ TEST_F(SyncTwoPartyTest, check_sync_two_party) {
         }   
         
         // When done, destroy the vector from the segment
-        segment.destroy<LockedMailList>(SyncTwoParty_locked_vector_name);    
+        segment.destroy<MailList>(SyncTwoParty_vector_name);    
     }
     else {
         engine->shut_down();
