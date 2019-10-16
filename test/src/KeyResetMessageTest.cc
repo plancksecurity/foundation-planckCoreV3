@@ -6,6 +6,8 @@
 #include <vector>
 #include <unordered_map>
 #include <assert.h>
+#include <iostream>
+#include <fstream>
 
 #include "pEpEngine.h"
 #include "pEp_internal.h"
@@ -1149,7 +1151,7 @@ test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
     ASSERT_TRUE(status == PEP_STATUS_OK && keylist && !EMPTYSTR(keylist->value));
 
     free_stringlist(keylist);
-    keylist = NULL;
+        keylist = NULL;
 
     alex_id->fpr = pubkey2;
     status = get_trust(session, alex_id);
@@ -1178,4 +1180,100 @@ test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
     free(pubkey4);
     free_identity(alex_id);
 
+}
+
+// TEST_F(KeyResetMessageTest, check_reset_mistrust_next_msg_have_mailed) {
+// 
+// }
+
+TEST_F(KeyResetMessageTest, not_a_test) {
+    pEp_identity* bob = NULL;
+    PEP_STATUS status = set_up_preset(session, BOB,
+                                      true, true, true, true, true, &bob);
+                                                                
+    const char* carol_fpr = "8DD4F5827B45839E9ACCA94687BDDFFB42A85A42";                                                                
+    slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");    
+    slurp_and_import_key(session, "test_keys/pub/pep-test-carol-0x42A85A42_pub.asc");
+                                      
+    pEp_identity* carol = new_identity("pep-test-carol@pep-project.org", carol_fpr, carol_user_id.c_str(), "Christmas Carol");
+    status = update_identity(session, carol);
+    
+    message* bob_msg = new_message(PEP_dir_outgoing);
+    bob_msg->from = identity_dup(bob);
+    bob_msg->to = new_identity_list(carol);
+    bob_msg->shortmsg = strdup("Engine bugs suck\n");
+    bob_msg->longmsg = strdup("Everything is the engine's fault.\n");
+    
+    char* enc_msg_str = NULL;
+    message* enc_msg = NULL;
+    
+    status = encrypt_message(session, bob_msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    status = mime_encode_message(enc_msg, false, &enc_msg_str);
+    
+    ofstream myfile;
+    myfile.open("test_mails/ENGINE-654_bob_mail.eml");
+    myfile << enc_msg_str;
+    myfile.close();      
+}
+
+
+TEST_F(KeyResetMessageTest, check_reset_mistrust_next_msg_have_not_mailed) {
+    pEp_identity* carol = NULL;
+    PEP_STATUS status = set_up_preset(session, CAROL,
+                                      true, true, true, true, true, &carol);
+                                      
+    status = myself(session, carol);
+    ASSERT_STREQ(carol->fpr, "8DD4F5827B45839E9ACCA94687BDDFFB42A85A42");                                  
+
+    slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");                                      
+    pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", bob_fpr, NULL, "Bob's Burgers");
+    status = update_identity(session, bob);
+    
+    cout << bob->fpr << endl;
+    
+    status = key_mistrusted(session, bob);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    status = update_identity(session, bob);
+    ASSERT_EQ(bob->fpr, nullptr);
+    
+    string mail_from_bob = slurp("test_mails/ENGINE-654_bob_mail.eml");
+    
+    // Ok, so let's see if the thing is mistrusted
+    message* bob_enc_msg = NULL;
+    
+    mime_decode_message(mail_from_bob.c_str(), mail_from_bob.size(), &bob_enc_msg);
+    
+    message* bob_dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+    
+    status = decrypt_message(session, bob_enc_msg, &bob_dec_msg, &keylist, &rating, &flags);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_mistrust);
+    
+    free_message(bob_enc_msg);
+    free_message(bob_dec_msg);
+    
+    status = key_reset_identity(session, bob, NULL);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    status = identity_rating(session, bob, &rating);
+    status = update_identity(session, bob);
+    status = identity_rating(session, bob, &rating);
+    ASSERT_EQ(rating, PEP_rating_have_no_key);
+    //update_identity(session, bob);
+            //    ASSERT_EQ(bob->fpr, nullptr);
+
+    mime_decode_message(mail_from_bob.c_str(), mail_from_bob.size(), &bob_enc_msg);
+    
+    bob_dec_msg = NULL;
+    free_stringlist(keylist);
+    keylist = NULL;
+    flags = 0;
+    
+    status = decrypt_message(session, bob_enc_msg, &bob_dec_msg, &keylist, &rating, &flags);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_EQ(rating, PEP_rating_reliable);
+    
 }

@@ -1343,6 +1343,29 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
 
         if (!revoked)
             revoke_key(session, ident->fpr, NULL);
+    }
+    else {
+        if (ident->fpr) {
+            // Make sure there was a default in the DB for this identity;
+            // if not, set one, even though we're going to mistrust this. Otherwise,
+            // cannot reset.
+            char* fpr_cache = ident->fpr;
+            ident->fpr = NULL;
+            update_identity(session, ident);
+            if (!ident->fpr) {
+                ident->fpr = fpr_cache;
+                // set defaults
+                status = set_identity(session, ident);
+                if (status != PEP_STATUS_OK)
+                    return status; // Will this make trouble?
+            }
+            else {
+                // set it back...
+                char* switch_fpr = ident->fpr;
+                ident->fpr = fpr_cache;
+                free(switch_fpr);
+            }
+        }
     }            
             
     // double-check to be sure key is even in the DB

@@ -451,7 +451,7 @@ PEP_STATUS key_reset(
                 // There's no identity default. Try resetting user default
                 status = get_user_default_key(session, tmp_ident->user_id, &fpr_copy);
             }            
-            
+                        
             if (!fpr_copy || status != PEP_STATUS_OK) // No default to free. We're done here.
                 goto pEp_free;            
         }
