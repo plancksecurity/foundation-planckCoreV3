@@ -336,6 +336,10 @@ static const char *sql_update_trust =
     "update trust set comm_type = ?3 " 
     "   where user_id = ?1 and pgp_keypair_fpr = upper(replace(?2,' ',''));";
 
+static const char *sql_clear_trust_info =
+    "delete from trust "
+    "   where user_id = ?1 and pgp_keypair_fpr = upper(replace(?2,' ',''));";
+
 static const char *sql_update_trust_to_pEp =
     "update trust set comm_type = comm_type + 71 "
     "   where (user_id = ?1 "
@@ -1760,6 +1764,10 @@ DYNAMIC_API PEP_STATUS init(
             NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_clear_trust_info,
+            (int)strlen(sql_clear_trust_info), &_session->clear_trust_info, NULL);
+    assert(int_result == SQLITE_OK);
+
     int_result = sqlite3_prepare_v2(_session->db, sql_set_trust,
             (int)strlen(sql_set_trust), &_session->set_trust, NULL);
     assert(int_result == SQLITE_OK);
@@ -2034,6 +2042,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->set_pEp_version);                
             if (session->exists_trust_entry)
                 sqlite3_finalize(session->exists_trust_entry);                                
+            if (session->clear_trust_info)
+                sqlite3_finalize(session->clear_trust_info);                
             if (session->set_trust)
                 sqlite3_finalize(session->set_trust);
             if (session->update_trust)
@@ -2993,6 +3003,28 @@ PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr) {
     sqlite3_reset(session->set_pgp_keypair);
     if (result != SQLITE_DONE) {
         return PEP_CANNOT_SET_PGP_KEYPAIR;
+    }
+    
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS clear_trust_info(PEP_SESSION session,
+                            const char* user_id,
+                            const char* fpr) {
+    if (!session || EMPTYSTR(fpr) || EMPTYSTR(user_id))
+        return PEP_ILLEGAL_VALUE;
+        
+    int result;
+    
+    sqlite3_reset(session->clear_trust_info);
+    sqlite3_bind_text(session->clear_trust_info, 1, user_id, -1,
+            SQLITE_STATIC);    
+    sqlite3_bind_text(session->clear_trust_info, 2, fpr, -1,
+            SQLITE_STATIC);
+    result = Sqlite3_step(session->clear_trust_info);
+    sqlite3_reset(session->clear_trust_info);
+    if (result != SQLITE_DONE) {
+        return PEP_UNKNOWN_ERROR;
     }
     
     return PEP_STATUS_OK;
