@@ -866,11 +866,11 @@
 			};
 			buildConfigurationList = 64796A3A1B455AA5004B1C24 /* Build configuration list for PBXProject "pEpEngine" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				English,
 				en,
+				Base,
 			);
 			mainGroup = 64796A361B455AA5004B1C24;
 			productRefGroup = 64796A401B455AA5004B1C24 /* Products */;
