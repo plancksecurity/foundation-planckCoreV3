@@ -1373,6 +1373,10 @@ PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
 
 PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, unsigned int new_ver_major, unsigned int new_ver_minor);
 
+PEP_STATUS clear_trust_info(PEP_SESSION session,
+                            const char* user_id,
+                            const char* fpr);
+                            
 // Generally ONLY called by set_as_pEp_user, and ONLY from < 2.0 to 2.0.
 PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session, 
         pEp_identity* ident, 
