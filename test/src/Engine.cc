@@ -133,7 +133,7 @@ void Engine::start() {
 }
 
 void Engine::copy_conf_file_to_test_dir(const char* dest_path, const char* conf_orig_path, const char* conf_dest_name) {
-    string conf_dest_path = dest_path;
+    string conf_dest_path = string(dest_path) + "/.pEp/";
     
     struct stat pathinfo;
 
