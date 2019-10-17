@@ -451,7 +451,7 @@ PEP_STATUS key_reset(
                 // There's no identity default. Try resetting user default
                 status = get_user_default_key(session, tmp_ident->user_id, &fpr_copy);
             }            
-            
+                        
             if (!fpr_copy || status != PEP_STATUS_OK) // No default to free. We're done here.
                 goto pEp_free;            
         }
@@ -563,6 +563,16 @@ PEP_STATUS key_reset(
             }        
         } // end is_own_private
         else {
+            // if it's mistrusted, make it not be so.
+            bool mistrusted_key = false;
+            is_mistrusted_key(session, fpr_copy, &mistrusted_key);
+
+            if (mistrusted_key)
+                delete_mistrusted_key(session, fpr_copy);
+            
+            if (tmp_ident->user_id)
+                status = clear_trust_info(session, tmp_ident->user_id, fpr_copy);
+
             // This is a public key (or a private key that isn't ours, which means
             // we want it gone anyway)
             //
