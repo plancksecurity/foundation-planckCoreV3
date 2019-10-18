@@ -1100,7 +1100,7 @@ static bool _has_PGP_MIME_format(message* msg) {
 }
 */
 
-static PEP_rating _rating(PEP_comm_type ct)
+static inline PEP_rating _rating(PEP_comm_type ct)
 {
     if (ct == PEP_ct_unknown)
         return PEP_rating_undefined;
@@ -1129,6 +1129,11 @@ static PEP_rating _rating(PEP_comm_type ct)
 
     else
         return PEP_rating_unreliable;
+}
+
+DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct)
+{
+    return _rating(ct);
 }
 
 static bool is_encrypted_attachment(const bloblist_t *blob)

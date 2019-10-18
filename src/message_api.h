@@ -512,6 +512,18 @@ DYNAMIC_API PEP_STATUS get_key_rating_for_user(
         PEP_rating *rating
     );
 
+// rating_from_comm_type()  - get the rating for a comm type
+//
+//  parameters:
+//
+//      ct (in)                 the comm type to deliver the rating for
+//
+//  returns:
+//      rating value for comm type ct
+
+DYNAMIC_API PEP_rating rating_from_comm_type(PEP_comm_type ct);
+
+
 #ifdef __cplusplus
 }
 #endif
