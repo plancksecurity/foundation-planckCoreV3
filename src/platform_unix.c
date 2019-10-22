@@ -369,7 +369,7 @@ const char *unix_local_db(int reset)
 #endif
         return path;
 
-    char* pathret = NULL;
+    const char* pathret = NULL;
 #ifndef NDEBUG 
     pathret = _per_user_directory(reset);
 #else 

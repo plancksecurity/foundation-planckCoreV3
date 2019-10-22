@@ -3231,7 +3231,7 @@ DYNAMIC_API PEP_STATUS set_identity(
         sqlite3_reset(session->set_pgp_keypair);
         sqlite3_bind_text(session->set_pgp_keypair, 1, identity->fpr, -1,
                 SQLITE_STATIC);
-        result = Sqlite3_step(session->set_pgp_keypair);
+        result = sqlite3_step(session->set_pgp_keypair);
         sqlite3_reset(session->set_pgp_keypair);
         if (result != SQLITE_DONE) {
             sqlite3_exec(session->db, "ROLLBACK ;", NULL, NULL, NULL);
