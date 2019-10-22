@@ -93,6 +93,34 @@
     }                                                               \
 } while(0)
 
+#if 1
+int sq_sql_trace_callback (unsigned trace_constant, 
+                        void* context_ptr,
+                        void* P,
+                        void* X) {
+    switch (trace_constant) {
+        case SQLITE_TRACE_STMT:
+            fprintf(stderr, "SEQUOIA_SQL_DEBUG: STMT - ");
+            const char* X_str = (const char*) X;
+            if (!EMPTYSTR(X_str) && X_str[0] == '-' && X_str[1] == '-')
+                fprintf(stderr, "%s\n", X_str);
+            else
+                fprintf(stderr, "%s\n", sqlite3_expanded_sql((sqlite3_stmt*)P));
+            break;
+        case SQLITE_TRACE_ROW:
+            fprintf(stderr, "SEQUOIA_SQL_DEBUG: ROW - ");
+            fprintf(stderr, "%s\n", sqlite3_expanded_sql((sqlite3_stmt*)P));
+            break;            
+        case SQLITE_TRACE_CLOSE:
+            fprintf(stderr, "SEQUOIA_SQL_DEBUG: CLOSE - ");
+            break;
+        default:
+            break;
+    }
+    return 0;
+}
+#endif
+
 PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
         PEP_CIPHER_SUITE suite)
 {
@@ -235,6 +263,13 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                                     NULL);
     free(path);
 #endif
+
+#if 1      
+    sqlite3_trace_v2(session->key_db, 
+        SQLITE_TRACE_STMT | SQLITE_TRACE_ROW | SQLITE_TRACE_CLOSE,
+        sq_sql_trace_callback,
+        NULL);    
+#endif            
 
     if (sqlite_result != SQLITE_OK)
         ERROR_OUT(NULL, PEP_INIT_CANNOT_OPEN_DB,

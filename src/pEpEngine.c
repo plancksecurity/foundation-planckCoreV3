@@ -11,8 +11,7 @@
 #include <time.h>
 #include <stdlib.h>
 
-#define _PEP_SQLITE_DEBUG 0
-#if _PEP_SQLITE_DEBUG
+#ifdef _PEP_SQLITE_DEBUG
 #include <sqlite3.h>
 #endif
 
@@ -42,7 +41,7 @@ static void _sql_lower(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
     }
 }
 
-#if _PEP_SQLITE_DEBUG
+#ifdef _PEP_SQLITE_DEBUG
 int sql_trace_callback (unsigned trace_constant, 
                         void* context_ptr,
                         void* P,
@@ -875,7 +874,7 @@ DYNAMIC_API PEP_STATUS init(
         goto pEp_error;
     }
     
-#if _PEP_SQLITE_DEBUG    
+#ifdef _PEP_SQLITE_DEBUG    
     sqlite3_config(SQLITE_CONFIG_LOG, errorLogCallback, NULL);
 #endif
 
@@ -906,7 +905,7 @@ DYNAMIC_API PEP_STATUS init(
 
     sqlite3_busy_timeout(_session->db, BUSY_WAIT_TIME);
 
-#if _PEP_SQLITE_DEBUG
+#ifdef _PEP_SQLITE_DEBUG
     sqlite3_trace_v2(_session->db, 
         SQLITE_TRACE_STMT | SQLITE_TRACE_ROW | SQLITE_TRACE_CLOSE,
         sql_trace_callback,
