@@ -93,7 +93,7 @@
     }                                                               \
 } while(0)
 
-#if 1
+#ifdef _PEP_SQLITE_DEBUG
 int sq_sql_trace_callback (unsigned trace_constant, 
                         void* context_ptr,
                         void* P,
@@ -264,7 +264,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     free(path);
 #endif
 
-#if 1      
+#ifdef _PEP_SQLITE_DEBUG
     sqlite3_trace_v2(session->key_db, 
         SQLITE_TRACE_STMT | SQLITE_TRACE_ROW | SQLITE_TRACE_CLOSE,
         sq_sql_trace_callback,

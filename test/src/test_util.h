@@ -24,6 +24,7 @@ extern std::ostream output_stream;
 #endif
 
 std::string get_main_test_home_dir();
+std::string random_string( size_t length );
 
 typedef enum _pEp_test_ident_preset {
     ALICE,
