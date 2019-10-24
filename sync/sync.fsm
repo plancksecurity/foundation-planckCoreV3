@@ -55,6 +55,7 @@ protocol Sync 1 {
                 }
             }
 
+            // we get this from another sole device
             on NegotiationRequest {
                 if sameChallenge { // challenge accepted
                     if sameNegotiation {
@@ -64,11 +65,18 @@ protocol Sync 1 {
                         do storeNegotiation;
                         // offerer is accepting by confirming NegotiationOpen
                         send NegotiationOpen;
-                        if partnerIsGrouped
-                            go HandshakingToJoin;
-                        else
-                            go HandshakingOfferer;
+                        go HandshakingOfferer;
                     }
+                }
+            }
+
+            // we get this from an existing device group
+            on NegotiationRequestGrouped {
+                if sameChallenge { // challenge accepted
+                    do storeNegotiation;
+                    // offerer is accepting by confirming NegotiationOpen
+                    send NegotiationOpen;
+                    go HandshakingToJoin;
                 }
             }
 
@@ -289,14 +297,22 @@ protocol Sync 1 {
             on Beacon {
                 do openNegotiation;
                 do tellWeAreGrouped;
-                send NegotiationRequest;
+                send NegotiationRequestGrouped;
                 do useOwnChallenge;
             }
 
             on NegotiationOpen if sameNegotiationAndPartner {
                 do storeNegotiation;
+                send GroupHandshake;
                 go HandshakingGrouped;
             }
+
+/*
+            on GroupHandshake {
+                do storeNegotiation;
+                go HandshakingGrouped;
+            }
+*/
 
             on GroupTrustThisKey
                 do trustThisKey;
@@ -534,6 +550,18 @@ protocol Sync 1 {
 
         message OwnKeysRequester 14, security=attach_own_keys {
             field IdentityList ownIdentities;
+        }
+
+        // grouped handshake
+        message NegotiationRequestGrouped 15, security=untrusted {
+            field TID challenge;
+            auto Version version;
+            field TID negotiation;
+            field bool is_group;
+        }
+
+        message GroupHandshake 16 {
+            field TID negotiation;
         }
     }
 }

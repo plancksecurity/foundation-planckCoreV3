@@ -24,6 +24,9 @@
 #  endif
 #endif
 
+#define fprintf _ignore_
+void _ignore_(FILE *f, ...) { }
+
 // enable tracing if in debugging mode
 #if TRACING
 #include "status_to_string.h"
