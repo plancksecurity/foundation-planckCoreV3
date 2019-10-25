@@ -149,6 +149,8 @@
 		43370834203C075A004E6547 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 43370832203C075A004E6547 /* sqlite3.h */; };
 		438C43B52167752C00C7425B /* labeled_int_list.h in Headers */ = {isa = PBXBuildFile; fileRef = 438C43AF2167752C00C7425B /* labeled_int_list.h */; };
 		438C43B62167752C00C7425B /* labeled_int_list.c in Sources */ = {isa = PBXBuildFile; fileRef = 438C43B42167752C00C7425B /* labeled_int_list.c */; };
+		43E4FBB22362C05600BC01F4 /* NegotiationRequestGrouped.c in Sources */ = {isa = PBXBuildFile; fileRef = 43E4FBAD2362C05600BC01F4 /* NegotiationRequestGrouped.c */; };
+		43E4FBB42362C29100BC01F4 /* GroupHandshake.c in Sources */ = {isa = PBXBuildFile; fileRef = 43E4FBB32362C29100BC01F4 /* GroupHandshake.c */; };
 		43F6921D1F164A47009418F5 /* resource_id.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F6921C1F164A47009418F5 /* resource_id.c */; };
 		43F73C0B2166282C00AB4524 /* openpgp_compat.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73C032166282C00AB4524 /* openpgp_compat.c */; };
 		43F73C0D2166282C00AB4524 /* key_reset.c in Sources */ = {isa = PBXBuildFile; fileRef = 43F73C052166282C00AB4524 /* key_reset.c */; };
@@ -377,6 +379,8 @@
 		438C43AF2167752C00C7425B /* labeled_int_list.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = labeled_int_list.h; path = ../src/labeled_int_list.h; sourceTree = "<group>"; };
 		438C43B42167752C00C7425B /* labeled_int_list.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = labeled_int_list.c; path = ../src/labeled_int_list.c; sourceTree = "<group>"; };
 		43D47A8A225CC60600E97C5B /* pEpTrustWords-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "pEpTrustWords-Info.plist"; path = "/Users/dirk/projects/pEp/pEpEngine/build-mac/pEpTrustWords-Info.plist"; sourceTree = "<absolute>"; };
+		43E4FBAD2362C05600BC01F4 /* NegotiationRequestGrouped.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NegotiationRequestGrouped.c; path = ../asn.1/NegotiationRequestGrouped.c; sourceTree = "<group>"; };
+		43E4FBB32362C29100BC01F4 /* GroupHandshake.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupHandshake.c; path = ../asn.1/GroupHandshake.c; sourceTree = "<group>"; };
 		43F6921C1F164A47009418F5 /* resource_id.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = resource_id.c; path = ../src/resource_id.c; sourceTree = "<group>"; };
 		43F73C032166282C00AB4524 /* openpgp_compat.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = openpgp_compat.c; path = ../src/openpgp_compat.c; sourceTree = "<group>"; };
 		43F73C052166282C00AB4524 /* key_reset.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = key_reset.c; path = ../src/key_reset.c; sourceTree = "<group>"; };
@@ -478,6 +482,8 @@
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
 			isa = PBXGroup;
 			children = (
+				43E4FBB32362C29100BC01F4 /* GroupHandshake.c */,
+				43E4FBAD2362C05600BC01F4 /* NegotiationRequestGrouped.c */,
 				15B037A822B2B822002D664C /* asn_application.h */,
 				15B0379A22B2B821002D664C /* asn_codecs_prim.c */,
 				15B0377022B2B81C002D664C /* asn_codecs_prim.h */,
@@ -981,6 +987,7 @@
 				15B037E322B2B822002D664C /* GroupKeys.c in Sources */,
 				15B037B122B2B822002D664C /* NegotiationRequest.c in Sources */,
 				15B037FC22B2B822002D664C /* Hex.c in Sources */,
+				43E4FBB22362C05600BC01F4 /* NegotiationRequestGrouped.c in Sources */,
 				15B0380722B2B822002D664C /* constr_CHOICE.c in Sources */,
 				15B037B922B2B822002D664C /* NativeEnumerated.c in Sources */,
 				15B037B022B2B822002D664C /* UTF8String.c in Sources */,
@@ -999,6 +1006,7 @@
 				15B037FB22B2B822002D664C /* Hash.c in Sources */,
 				154918BB22B940200091B6D6 /* aux_mime_msg.c in Sources */,
 				15B037CD22B2B822002D664C /* PString.c in Sources */,
+				43E4FBB42362C29100BC01F4 /* GroupHandshake.c in Sources */,
 				15B037F622B2B822002D664C /* Version.c in Sources */,
 				15B037C622B2B822002D664C /* xer_support.c in Sources */,
 				15B037EC22B2B822002D664C /* constraints.c in Sources */,
