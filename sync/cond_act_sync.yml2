@@ -480,6 +480,31 @@ action receivedKeysAreDefaultKeys
     free(user_id);
 ||
 
+action useThisKey
+||
+    assert(session->sync_state.comm_partner.sender_fpr);
+    if (!session->sync_state.comm_partner.sender_fpr)
+        return PEP_ILLEGAL_VALUE;
+
+    const char *fpr = session->sync_state.comm_partner.sender_fpr;
+    OCTET_STRING_fromBuf(&session->sync_state.keysync.key, fpr, strlen(fpr));
+||
+
+action storeThisKey
+||
+    assert(session->sync_state.keysync.key.buf && session->sync_state.keysync.key.size);
+    if (!(session->sync_state.keysync.key.buf && session->sync_state.keysync.key.size))
+        return PEP_ILLEGAL_VALUE;
+
+    char *fpr = strndup(session->sync_state.keysync.key.buf, session->sync_state.keysync.key.size);
+    assert(fpr);
+    if (!fpr)
+        return PEP_OUT_OF_MEMORY;
+
+    free(session->sync_state.comm_partner.sender_fpr);
+    session->sync_state.comm_partner.sender_fpr = fpr;
+||
+
 action trustThisKey
 ||
     assert(session->sync_state.transport.from && session->sync_state.comm_partner.sender_fpr);
