@@ -2171,7 +2171,13 @@ DYNAMIC_API PEP_STATUS log_event(
 // N.B. If testing (so NDEBUG not defined) but this message is spam,
 //      put -D_PEP_SERVICE_LOG_OFF into CFLAGS/CXXFLAGS     
 #if !defined(NDEBUG) && !defined(_PEP_SERVICE_LOG_OFF)
+#ifndef NDEBUG
+    printf("\x1b[%dm", session->debug_color);
+#endif
     fprintf(stdout, "\n*** %s %s %s %s\n", title, entity, description, comment);
+#ifndef NDEBUG
+    printf("\x1b[0m");
+#endif
     session->service_log = true;
 
     int result;
@@ -5368,10 +5374,10 @@ DYNAMIC_API void _service_error_log(PEP_SESSION session, const char *entity,
     log_service(session, "### service error log ###", entity, buffer, where);
 }
 
-#ifndef NDEBUG
 DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color)
 {
+#ifndef NDEBUG
     session->debug_color = ansi_color;
-}
 #endif
+}
 

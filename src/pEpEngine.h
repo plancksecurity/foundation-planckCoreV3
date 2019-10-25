@@ -406,9 +406,7 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
     );
 
 
-#ifndef NDEBUG
 DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color);
-#endif
 
 // log_event() - log a user defined event defined by UTF-8 encoded strings into
 // management log
