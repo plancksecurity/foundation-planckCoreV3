@@ -23,6 +23,24 @@ using namespace std;
 
 std::string _main_test_home_dir;
 
+// Lazy:
+// https://stackoverflow.com/questions/440133/how-do-i-create-a-random-alpha-numeric-string-in-c
+std::string random_string( size_t length )
+{
+    auto randchar = []() -> char
+    {
+        const char charset[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+        const size_t max_index = (sizeof(charset) - 1);
+        return charset[ rand() % max_index ];
+    };
+    std::string str(length,0);
+    std::generate_n( str.begin(), length, randchar );
+    return str;
+}
+
 std::string get_main_test_home_dir() {
     size_t BUF_MAX_PATHLEN = 4097; 
     char buf[BUF_MAX_PATHLEN];// Linux max path size...
