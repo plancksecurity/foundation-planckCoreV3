@@ -1121,6 +1121,7 @@ tstylesheet {
         }
         ||
                 default:
+                    assert(0);
                     return "unknown state";
             }
         }
@@ -1142,6 +1143,7 @@ tstylesheet {
         }
         ||
                 default:
+                    assert(0);
                     return "unknown event";
             }
         }
@@ -1194,6 +1196,7 @@ tstylesheet {
                 `` apply "state", 2, mode=fsm
                 default:
                     «@name»_ERR_LOG("invalid state", «@name»_state_name(state));
+                    assert(0);
                     return invalid_state;
             }
             
@@ -1292,6 +1295,7 @@ tstylesheet {
             return out_of_memory;
         if (status) {
             «$fsm/@name»_ERR_LOG_HEX("executing action «@name»() failed", status);
+            assert(0);
             return invalid_action;
         }
         ||
@@ -1306,6 +1310,7 @@ tstylesheet {
             return out_of_memory;
         if (status) {
             «$fsm/@name»_ERR_LOG_HEX("computing condition «@name» failed", status);
+            assert(0);
             return invalid_condition;
         }
         if (result) {

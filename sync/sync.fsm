@@ -307,13 +307,13 @@ protocol Sync 1 {
                 send GroupHandshake;
                 go HandshakingGrouped;
             }
-/*
+
             on GroupHandshake {
-                do storeThisKey;
                 do storeNegotiation;
+                do storeThisKey;
                 go HandshakingGrouped;
             }
-*/
+
             on GroupTrustThisKey
                 do trustThisKey;
         }

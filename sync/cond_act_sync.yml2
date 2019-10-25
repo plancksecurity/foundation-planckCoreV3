@@ -492,8 +492,8 @@ action useThisKey
 
 action storeThisKey
 ||
-    assert(session->sync_state.keysync.key.buf && session->sync_state.keysync.key.size);
-    if (!(session->sync_state.keysync.key.buf && session->sync_state.keysync.key.size))
+    assert(session->sync_state.keysync.key.size);
+    if (!session->sync_state.keysync.key.size)
         return PEP_ILLEGAL_VALUE;
 
     char *fpr = strndup(session->sync_state.keysync.key.buf, session->sync_state.keysync.key.size);
