@@ -5367,3 +5367,11 @@ DYNAMIC_API void _service_error_log(PEP_SESSION session, const char *entity,
 #endif
     log_service(session, "### service error log ###", entity, buffer, where);
 }
+
+#ifndef NDEBUG
+DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color)
+{
+    session->debug_color = ansi_color;
+}
+#endif
+
