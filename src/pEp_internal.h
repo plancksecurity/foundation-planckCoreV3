@@ -277,8 +277,11 @@ struct _pEpSession {
     bool unencrypted_subject;
     bool service_log;
     
-#ifdef DEBUG_ERRORSTACK
+#ifndef NDEBUG
+#   ifdef DEBUG_ERRORSTACK
     stringlist_t* errorstack;
+#   endif
+    int debug_color;
 #endif
 };
 
@@ -567,3 +570,4 @@ static inline int Sqlite3_step(sqlite3_stmt* stmt)
     } while (rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
     return rc;
 }
+
