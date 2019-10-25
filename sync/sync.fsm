@@ -309,8 +309,8 @@ protocol Sync 1 {
             }
 
             on GroupHandshake {
-                do storeThisKey;
                 do storeNegotiation;
+                do storeThisKey;
                 go HandshakingGrouped;
             }
 
