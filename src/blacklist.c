@@ -20,7 +20,7 @@ DYNAMIC_API PEP_STATUS blacklist_add(PEP_SESSION session, const char *fpr)
 
     int result;
 
-    result = Sqlite3_step(session->blacklist_add);
+    result = sqlite3_step(session->blacklist_add);
     switch (result) {
     case SQLITE_DONE:
         status = PEP_STATUS_OK;
@@ -50,7 +50,7 @@ DYNAMIC_API PEP_STATUS blacklist_delete(PEP_SESSION session, const char *fpr)
 
     int result;
 
-    result = Sqlite3_step(session->blacklist_delete);
+    result = sqlite3_step(session->blacklist_delete);
     switch (result) {
     case SQLITE_DONE:
         status = PEP_STATUS_OK;
@@ -85,7 +85,7 @@ DYNAMIC_API PEP_STATUS blacklist_is_listed(
 
     int result;
 
-    result = Sqlite3_step(session->blacklist_is_listed);
+    result = sqlite3_step(session->blacklist_is_listed);
     switch (result) {
     case SQLITE_ROW:
         count = sqlite3_column_int(session->blacklist_is_listed, 0);
@@ -125,7 +125,7 @@ DYNAMIC_API PEP_STATUS blacklist_retrieve(
 
     stringlist_t *_bl = _blacklist;
     do {
-        result = Sqlite3_step(session->blacklist_retrieve);
+        result = sqlite3_step(session->blacklist_retrieve);
         switch (result) {
         case SQLITE_ROW:
         {
