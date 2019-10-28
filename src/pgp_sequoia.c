@@ -508,7 +508,7 @@ static PEP_STATUS key_load(PEP_SESSION session, sqlite3_stmt *stmt,
                            pgp_tpk_t *tpkp, int *secretp)
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    int sqlite_result = Sqlite3_step(stmt);
+    int sqlite_result = sqlite3_step(stmt);
     switch (sqlite_result) {
     case SQLITE_ROW:
         if (tpkp) {
@@ -754,7 +754,7 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
     char *name = NULL;
 
     sqlite3_stmt *stmt = session->sq_sql.begin_transaction;
-    int sqlite_result = Sqlite3_step(stmt);
+    int sqlite_result = sqlite3_step(stmt);
     sqlite3_reset(stmt);
     if (sqlite_result != SQLITE_DONE)
         ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
@@ -800,7 +800,7 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
     sqlite3_bind_int(stmt, 2, is_tsk);
     sqlite3_bind_blob(stmt, 3, tsk_buffer, tsk_buffer_len, SQLITE_STATIC);
 
-    sqlite_result = Sqlite3_step(stmt);
+    sqlite_result = sqlite3_step(stmt);
     sqlite3_reset(stmt);
     if (sqlite_result != SQLITE_DONE)
         ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
@@ -818,7 +818,7 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
         sqlite3_bind_text(stmt, 1, keyid_hex, -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, fpr, -1, SQLITE_STATIC);
 
-        sqlite_result = Sqlite3_step(stmt);
+        sqlite_result = sqlite3_step(stmt);
         sqlite3_reset(stmt);
         free(keyid_hex);
         pgp_keyid_free(keyid);
@@ -865,7 +865,7 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
             sqlite3_bind_text(stmt, 1, email, -1, SQLITE_STATIC);
             sqlite3_bind_text(stmt, 2, fpr, -1, SQLITE_STATIC);
 
-            sqlite_result = Sqlite3_step(stmt);
+            sqlite_result = sqlite3_step(stmt);
             sqlite3_reset(stmt);
 
             if (sqlite_result != SQLITE_DONE) {
@@ -899,7 +899,7 @@ static PEP_STATUS tpk_save(PEP_SESSION session, pgp_tpk_t tpk,
         stmt = status == PEP_STATUS_OK
             ? session->sq_sql.commit_transaction
             : session->sq_sql.rollback_transaction;
-        int sqlite_result = Sqlite3_step(stmt);
+        int sqlite_result = sqlite3_step(stmt);
         sqlite3_reset(stmt);
         if (sqlite_result != SQLITE_DONE)
             ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
@@ -1923,7 +1923,7 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr_raw)
     sqlite3_stmt *stmt = session->sq_sql.delete_keypair;
     sqlite3_bind_text(stmt, 1, fpr, -1, free);
 
-    int sqlite_result = Sqlite3_step(stmt);
+    int sqlite_result = sqlite3_step(stmt);
     sqlite3_reset(stmt);
     if (sqlite_result != SQLITE_DONE)
         ERROR_OUT(NULL, PEP_CANNOT_DELETE_KEY,
