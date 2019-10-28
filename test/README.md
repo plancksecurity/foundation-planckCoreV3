@@ -52,8 +52,8 @@ Do one of:
 
 ## To run individual test suites, especially for debugging purposes
 
-1. To run sequentially, IN THE SAME PROCESS: ./EngineTests TestSuiteName* (for example, for DeleteKeyTest: ./EngineTests DeleteKeyTest*) 
-2. To debug the same: lldb ./EngineTests TestSuiteName*
+1. To run sequentially, IN THE SAME PROCESS: ./EngineTests --gtest_filter=TestSuiteName* (for example, for DeleteKeyTest: ./EngineTests DeleteKeyTest*) 
+2. To debug the same: lldb ./EngineTests -- --gtest_filter=TestSuiteName*
 3. To run sequentially IN DIFFERENT PROCESSES: (FIXME - is this really the case?) 
 
 # Creating new tests
