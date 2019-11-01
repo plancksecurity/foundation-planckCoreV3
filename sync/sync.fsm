@@ -433,6 +433,8 @@ protocol Sync 1 {
             on GroupTrustThisKey {
                 do hideHandshakeDialog;
                 do trustThisKey;
+                if sameNegotiation
+                    go Grouped;
             }
 
             on GroupKeys
@@ -454,6 +456,8 @@ protocol Sync 1 {
 
             on GroupTrustThisKey {
                 do trustThisKey;
+                if sameNegotiation
+                    go Grouped;
             }
 
             on GroupKeys
@@ -481,6 +485,8 @@ protocol Sync 1 {
 
             on GroupTrustThisKey {
                 do trustThisKey;
+                if sameNegotiation
+                    go Grouped;
             }
 
             on GroupKeys
@@ -537,6 +543,7 @@ protocol Sync 1 {
         // default: security=trusted only
         message GroupTrustThisKey 11 {
             field Hash key;
+            field TID negotiation;
         }
 
         // trust in future
