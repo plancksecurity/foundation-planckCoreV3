@@ -2625,11 +2625,10 @@ static void _pgp_key_expired(pgp_tpk_t tpk, const time_t when, bool* expired)
 //    *expired = !(can_encrypt && can_sign && can_certify);
     *expired = !(can_encrypt && can_sign);
 
-    T("Key can%s encrypt, can%s sign, can%s certify => %sexpired",
+    T("Key can%s encrypt, can%s sign => %s expired",
       can_encrypt ? "" : "not",
       can_sign ? "" : "not",
-      // can_certify ? "" : "not",
-      *expired ? "" : "not ");
+      *expired ? "" : "not");
       
 out:
     // Er, this might be problematic in terms of internal vs. external in log. FIXME?

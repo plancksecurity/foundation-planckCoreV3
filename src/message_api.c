@@ -2741,13 +2741,18 @@ static PEP_STATUS get_crypto_text(message* src, char** crypto_text, size_t* text
                     
     switch (src->enc_format) {
         case PEP_enc_PGP_MIME:
-            *crypto_text = src->attachments->next->value;
-            *text_size = src->attachments->next->size;
-            break;
-
-        case PEP_enc_PGP_MIME_Outlook1:
-            *crypto_text = src->attachments->value;
-            *text_size = src->attachments->size;
+		case PEP_enc_PGP_MIME_Outlook1:
+			*crypto_text = src->attachments->next->value;
+			if (src->attachments->next->value[src->attachments->next->size - 1]) {
+				// if the attachment is not ending with a trailing 0
+				// then it is containing the crypto text directly
+				*text_size = src->attachments->next->size;
+			}
+			else {
+				// if the attachment is ending with trailing 0
+				// then it is containting a string
+				*text_size = strlen(src->attachments->next->value);
+			}
             break;
 
         case PEP_enc_inline:

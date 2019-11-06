@@ -1,0 +1,10 @@
+pEpEngine => yml2   => Python 3
+                    -> lxml
+          => asn1c 0.9.28
+          => GNU make
+          => c99
+          => binutils
+          -> fdik/libetpan | pEpMIME
+          -> sequoia
+                    => Rust
+                    -> libnettle
