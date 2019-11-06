@@ -69,7 +69,7 @@ typedef enum _message_wrap_type {
 //      extra (in)          extra keys for encryption
 //      dst (out)           pointer to new encrypted message or NULL if no
 //                          encryption could take place
-//      enc_format (in)     encrypted format
+//      enc_format (in)     The desired format this message should be encrypted with
 //      flags (in)          flags to set special encryption features
 //
 //  return value:
