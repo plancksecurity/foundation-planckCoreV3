@@ -29,7 +29,7 @@ PEP_STATUS base_decorate_message(
         msg->attachments = bl;
     }
 
-    if (fpr) {
+    if (fpr && fpr[0] != '\0') {
         char *sign;
         size_t sign_size;
         status = sign_only(session,  payload, size, fpr, &sign, &sign_size);
@@ -81,6 +81,7 @@ PEP_STATUS base_prepare_message(
         goto enomem;
 
     add_opt_field(msg, "pEp-auto-consume", "yes");
+    msg->in_reply_to = stringlist_add(msg->in_reply_to, "pEp-auto-consume@pEp.foundation");
 
     msg->from = identity_dup(me);
     if (!msg->from)
@@ -164,7 +165,7 @@ PEP_STATUS base_extract_message(
     char *_fpr = NULL;
     if (_sign) {
         status = verify_text(session, _payload, _payload_size, _sign, _sign_size, &keylist);
-        if (status != PEP_VERIFIED || !keylist || !keylist->value) {
+        if (!(status == PEP_VERIFIED || status == PEP_VERIFIED_AND_TRUSTED) || !keylist || !keylist->value) {
             // signature invalid or does not match; ignore sync message
             status = PEP_STATUS_OK;
             goto the_end;
@@ -187,4 +188,3 @@ the_end:
     free_stringlist(keylist);
     return status;
 }
-

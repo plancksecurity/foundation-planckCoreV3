@@ -8,34 +8,24 @@ tstylesheet {
     ||
     digraph finite_state_machine {
         rankdir=LR;
-        node [shape = doublecircle];
-        `apply "state[@end='1']" mode=end`;
-        node [shape = circle];
+        node [shape=point];
+        InitState;
+        node [shape=doublecircle];
+        End;
+        node [shape=circle, style=filled, fillcolor=lightgrey];
 
-        `` apply "state" mode=do
+        `` apply "descendant::transition";
     }
     ||
 
-    template "state", mode=end > «@name» 
-    template "state", mode=do apply "event", 0 with "state", "@name";
-
-    template "event" {
-        param "state";
-        choose {
-            when "count(transition) > 0"
-                apply "transition|condition/transition", 0
-                    with "state", "$state", with "event", "@name";
-            otherwise
-                if "@name != 'Init'"
-                    | «$state» -> «$state» [ label="«@name»" ];
-        }
-    }
-
     template "transition" {
-        param "state";
-        param "event";
-
-        | «$state» -> «@target» [ label ="«$event»" ];
+        const "event", "ancestor::event/@name";
+        choose {
+            when "ancestor::fsm/message[@name=$event]"
+                | «ancestor::state/@name» -> «@target» [ label="«ancestor::event/@name»", color=blue ];
+            otherwise
+                | «ancestor::state/@name» -> «@target» [ label="«ancestor::event/@name»", color=red ];
+        }
     }
 }
 

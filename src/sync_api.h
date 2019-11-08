@@ -32,6 +32,9 @@ typedef enum _sync_handshake_signal {
     // handshake dialog must be closed
     SYNC_NOTIFY_OVERTAKEN = 9,
 
+    // formig group
+    SYNC_NOTIFY_FORMING_GROUP = 10,
+
     // notificaton of actual group status
     SYNC_NOTIFY_SOLE = 254,
     SYNC_NOTIFY_IN_GROUP = 255
@@ -205,6 +208,23 @@ DYNAMIC_API PEP_STATUS enter_device_group(
 
 DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session);
 
+
+// enable_identity_for_sync() - enable sync for this identity
+//  parameters:
+//      session                 pEp session
+//      ident                   identity to enable
+
+DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
+        pEp_identity *ident);
+
+
+// disable_identity_for_sync() - disable sync for this identity
+//  parameters:
+//      session                 pEp session
+//      ident                   identity to disable
+
+DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
+        pEp_identity *ident);
 
 #ifdef __cplusplus
 }

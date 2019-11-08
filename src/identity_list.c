@@ -108,6 +108,23 @@ DYNAMIC_API identity_list *identity_list_add(identity_list *id_list, pEp_identit
     return list_curr->next;
 }
 
+// returns *head* of list
+DYNAMIC_API identity_list* identity_list_join(identity_list *first_list, identity_list *second_list) {
+    if (!first_list) {
+        if (!second_list)
+            return NULL;
+        return second_list;
+    }
+    if (second_list) {
+        identity_list* list_curr = first_list;
+        while (list_curr->next)
+            list_curr = list_curr->next;    
+            
+        list_curr->next = second_list;
+    }        
+    return first_list;    
+}
+
 DYNAMIC_API int identity_list_length(const identity_list *id_list)
 {
     int len = 0;

@@ -44,6 +44,7 @@ DYNAMIC_API void free_message(message *msg)
         free_stringlist(msg->keywords);
         free(msg->comments);
         free_stringpair_list(msg->opt_fields);
+        free(msg->_sender_fpr);
         free(msg);
     }
 }
@@ -185,6 +186,12 @@ DYNAMIC_API message * message_dup(const message *src)
             goto enomem;
     }
 
+    if (src->_sender_fpr) {
+        msg->_sender_fpr = strdup(src->_sender_fpr);
+        if (msg->_sender_fpr == NULL)
+            goto enomem;
+    }
+    
     msg->enc_format = src->enc_format;
 
     return msg;
@@ -218,13 +225,15 @@ DYNAMIC_API void message_transfer(message* dst, message *src)
     free(dst->longmsg);
     free(dst->longmsg_formatted);
     free(dst->comments);
+    free(dst->_sender_fpr);
     dst->id = src->id;
     dst->shortmsg = src->shortmsg;
     dst->longmsg = src->longmsg;
     dst->longmsg_formatted = src->longmsg_formatted;
     dst->comments = src->comments;    
+    dst->_sender_fpr = src->_sender_fpr;
     src->id = src->shortmsg = src->longmsg = src->longmsg_formatted = NULL;
-    src->comments = NULL;
+    src->comments = src->_sender_fpr = NULL;
     
     /* bloblists */
     free_bloblist(dst->attachments);

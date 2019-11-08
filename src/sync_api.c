@@ -19,6 +19,15 @@ DYNAMIC_API PEP_STATUS register_sync_callbacks(
     if (!(session && notifyHandshake && retrieve_next_sync_event))
         return PEP_ILLEGAL_VALUE;
 
+    identity_list *own_identities = NULL;
+    PEP_STATUS status = own_identities_retrieve(session, &own_identities);
+    if (status)
+        return status;
+    bool own_identities_available = own_identities && own_identities->ident;
+    free_identity_list(own_identities);
+    if (!own_identities_available)
+        return PEP_SYNC_CANNOT_START;
+
     session->sync_management = management;
     session->notifyHandshake = notifyHandshake;
     session->retrieve_next_sync_event = retrieve_next_sync_event;
@@ -234,6 +243,42 @@ DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session)
 
 the_end:
     free_identity_list(il);
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
+        pEp_identity *ident)
+{
+    assert(session && ident);
+    if (!(session && ident))
+        return PEP_ILLEGAL_VALUE;
+
+    PEP_STATUS status = unset_identity_flags(session, ident, PEP_idf_not_for_sync);
+    if (status)
+        return status;
+
+    bool grouped;
+    status = deviceGrouped(session, &grouped);
+    if (status)
+        return status;
+
+    if (grouped)
+        status = set_identity_flags(session, ident, PEP_idf_devicegroup);
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
+        pEp_identity *ident)
+{
+    assert(session && ident);
+    if (!(session && ident))
+        return PEP_ILLEGAL_VALUE;
+
+    PEP_STATUS status = unset_identity_flags(session, ident, PEP_idf_devicegroup);
+    if (status)
+        return status;
+
+    status = set_identity_flags(session, ident, PEP_idf_not_for_sync);
     return status;
 }
 

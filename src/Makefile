@@ -5,7 +5,15 @@
 
 include ../Makefile.conf
 
-CFLAGS+= $(ETPAN_INC) $(PEP_MIME_INC) -I../asn.1 -DSYSTEM_DB=\"$(SYSTEM_DB)\" $(EXTRA_MACROS)
+ifdef PER_USER_DIRECTORY
+	EXTRA_MACROS+= -DPER_USER_DIRECTORY=$(PER_USER_DIRECTORY)
+endif
+
+ifdef PER_MACHINE_DIRECTORY
+	EXTRA_MACROS+= -DPER_MACHINE_DIRECTORY=\"$(PER_MACHINE_DIRECTORY)\"
+endif
+
+CFLAGS+= $(ETPAN_INC) $(PEP_MIME_INC) -I../asn.1 $(EXTRA_MACROS)
 LDFLAGS+= $(ETPAN_LIB) $(PEP_MIME_LIB) -L../asn.1 -shared
 LDLIBS+= -lc -lasn1
 NO_SOURCE=
@@ -97,7 +105,7 @@ clean:
 # CAVEAT:
 # install_headers is needed for building pEp MIME
 
-install_headers:
+install_headers: $(TARGET)
 	mkdir -p $(PREFIX)/include/pEp
 	cp pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
 	   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h \

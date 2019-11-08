@@ -1,25 +1,24 @@
-# Copyright 2017, pEp Foundation
+# Copyright 2019, pEp Foundation
 # This file is part of pEpEngine
 # This file may be used under the terms of the GNU General Public License version 3
 # see LICENSE.txt
 
 HERE:=$(CURDIR)
 
+# Presumably can be changed in local.conf by putting this here?
+GTEST_DIR:=googletest/googletest
+GTEST_PL_DIR:=googletest/gtest-parallel
+GTEST_INC_DIR:=$(GTEST_DIR)/include
+
 include ../Makefile.conf
-
-# User's without python3 will skip the generated parts of the test suite. That's OK.
-PY_ENV:=$(shell command -v python3 2> /dev/null)
-
-TEST_HOME=$(HERE)/pEp_test_home
-
-TARGET=TestDriver
 
 SRCS:=$(wildcard src/*.cc) $(wildcard src/*/*.cc)
 OBJS:=$(addsuffix .o,$(basename $(SRCS)))
 DEPS:=$(OBJS:.o=.d)
 
-
 LDFLAGS+= -L../asn.1 -L../src $(ETPAN_LIB) $(CPPUNIT_LIB)
+
+TARGET:=EngineTests 
 
 ifeq ($(OPENPGP),GPG)
     LDFLAGS+= $(GPGME_LIB)
@@ -27,8 +26,7 @@ else ifeq ($(OPENPGP),NETPGP)
     LDFLAGS+= $(NETGPG_LIB)
 endif
 
-
-LDLIBS+= -letpan -lpEpEngine -lstdc++ -lasn1 -lcpptest
+LDLIBS+= -letpan -lpEpEngine -lstdc++ -lasn1
 
 ifeq ($(BUILD_FOR),Linux)
     LDLIBS+= -luuid
@@ -54,18 +52,16 @@ else ifeq ($(OPENPGP),NETPGP)
     endif
 endif
 
-
-CXXFLAGS:=$(filter-out -DNDEBUG,$(CXXFLAGS))
+CXXFLAGS:=-I$(GTEST_INC_DIR) $(filter-out -DNDEBUG,$(CXXFLAGS))
 
 # FIXME Possibly missing incdirs: ASN1C_INC
-CXXFLAGS+= -I./include -I../sync $(CPPUNIT_INC) $(INC_FLAGS) -Wno-deprecated
+CXXFLAGS+= -I./src -I../sync $(CPPUNIT_INC) $(INC_FLAGS) -Wno-deprecated -Wno-unused-variable
 
 ifeq ($(OPENPGP),GPG)
     CXXFLAGS+= -DUSE_GPG $(GPGME_INC)
 else ifeq ($(OPENPGP),NETPGP)
     CXXFLAGS+= -DUSE_NETPGP $(NETPGP_INC)
 endif
-
 
 EXTRA_LIB_PATHS=.:../src:
 ifdef ETPAN_LIB
@@ -98,41 +94,28 @@ TEST_CMD_PFX=
 .PHONY: all clean test
 
 all:
-	make .suitemaker
-	make $(TARGET) .scripts
-	touch .suitemaker
+	make $(TARGET)
 
 %.d: %.cc
 	$(CXX) -MM $(CPPFLAGS) $(CXXFLAGS) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
 
-.suitemaker: src
-ifndef PY_ENV
-	@echo "WARNING: Can't find python3 - this is fine unless you're adding test suites. If so, please install python3."
-else
-ifndef EXCLUDE
-	$(PY_ENV) gensuitemaker.py
-else
-	# Comma-separated list, no spaces
-	$(PY_ENV) gensuitemaker.py --exclude=$(EXCLUDE)
-endif
-endif
+$(TARGET): $(OBJS) gtest-all.o gtest_main.o
+#	$(LINK.cc) $(OBJS) $(LOADLIBES) $(LDLIBS) -o $@
+	${CXX} ${LDFLAGS} -L${PREFIX}/lib -o $@ $^ -lpEpEngine $(LDLIBS)
 
-$(TARGET): $(OBJS)
-	$(LINK.cc) $(OBJS) $(LOADLIBES) $(LDLIBS) -o $@
+gtest-all.o: $(GTEST_DIR)/src/gtest-all.cc
+	${CXX} ${CXXFLAGS} $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -isystem $(GTEST_DIR)/include -o $@ -c $<
 
-.scripts:
-ifdef PY_ENV
-	$(PY_ENV) genscripts.py
-	touch .scripts
-endif
+gtest_main.o: $(GTEST_DIR)/src/gtest_main.cc
+	${CXX} ${CXXFLAGS} $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -isystem $(GTEST_DIR)/include -o $@ -c $<
 
 test: all
-	$(TEST_CMD_PFX) $(TEST_DEBUGGER) ./$(TARGET)
+	$(TEST_CMD_PFX) $(TEST_DEBUGGER) python3 $(GTEST_PL_DIR)/gtest_parallel.py ./$(TARGET)
 
 clean:
 	$(RM) $(TARGET) $(TARGET).o $(TARGET).d $(OBJS) $(notdir $(basename $(OBJS))) $(DEPS)
-	$(RM) $(HERE)/*Tests msg_2.0.asc $(HERE)/pEp_test_home .scripts .suitemaker
-
+	$(RM) gtest_main.o gtest-all.o
+	$(RM) -rf ./pEp_test_home/*
 # If only the goal 'clean' is given, do not generate and include the '%.d' files.¬
 ifneq ($(MAKECMDGOALS),clean)
     -include $(DEPS)

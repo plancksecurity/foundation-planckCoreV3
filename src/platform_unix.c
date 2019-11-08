@@ -9,28 +9,30 @@
 #endif
 #endif
 
+#include <stdbool.h>
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdio.h>
+#include <glob.h>
+#include <errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <regex.h>
 
 #include "platform_unix.h"
+#include "dynamic_api.h"
 
 #define MAX_PATH 1024
 #ifndef LOCAL_DB_FILENAME
-#define LOCAL_DB_FILENAME ".pEp_management.db"
+#define OLD_LOCAL_DB_FILENAME ".pEp_management.db"
+#define OLD_KEYS_DB_FILENAME ".pEp_keys.db"
+#define LOCAL_DB_FILENAME "management.db"
+#define KEYS_DB_FILENAME "keys.db"
 #endif
 #define SYSTEM_DB_FILENAME "system.db"
-
-#ifndef bool
-#define bool int
-#define true 1
-#define false 0
-#endif
 
 #ifdef ANDROID
 #include <uuid.h>
@@ -198,6 +200,43 @@ size_t strlcat(char* dst, const	char* src, size_t size) {
     return retval;
 }
 
+char *strnstr(const char *big, const char *little, size_t len) {
+    if (big == NULL || little == NULL)
+        return NULL;
+        
+    if (*little == '\0')
+        return (char*)big;
+        
+    const char* curr_big = big;
+    
+    size_t little_len = strlen(little);
+    size_t remaining = len;
+
+    const char* retval = NULL;
+    
+    for (remaining = len; remaining >= little_len && *curr_big != '\0'; remaining--, curr_big++) {
+        // find first-char match
+        if (*curr_big != *little) {
+            continue;
+        }
+        retval = curr_big;
+
+        const char* inner_big = retval + 1;
+        const char* curr_little = little + 1;
+        int j;
+        for (j = 1; j < little_len; j++, inner_big++, curr_little++) {
+            if (*inner_big != *curr_little) {
+                retval = NULL;
+                break;
+            }    
+        }
+        if (retval)
+            break;
+    }
+    return (char*)retval;
+}
+
+
 #ifdef USE_NETPGP
 // FIXME: This may cause problems - this is a quick compatibility fix for netpgp code
 int regnexec(const regex_t* preg, const char* string,
@@ -208,41 +247,259 @@ int regnexec(const regex_t* preg, const char* string,
 
 #endif
 
+static char *_stradd(char **first, const char *second)
+{
+    assert(first && *first && second);
+    if (!(first && *first && second))
+        return NULL;
+
+    size_t len1 = strlen(*first);
+    size_t len2 = strlen(second);
+    size_t size = len1 + len2 + 1;
+
+    char *_first = realloc(*first, size);
+    assert(_first);
+    if (!_first)
+        return NULL;
+    *first = _first;
+
+    strlcat(*first, second, size);
+    return *first;
+}
+
+static void _empty(char **p)
+{
+    free(*p);
+    *p = NULL;
+}
+
+static void _move(const char *o, const char *ext, const char *n)
+{
+    assert(o && ext && n);
+    if (!(o && ext && n))
+        return;
+
+    char *_old = strdup(o);
+    assert(_old);
+    if (!_old)
+        return;
+
+    char *r = _stradd(&_old, ext);
+    if (!r) {
+        free(_old);
+        return;
+    }
+
+    char *_new = strdup(n);
+    assert(_new);
+    if (!_new) {
+        free(_old);
+        return;
+    }
+
+    r = _stradd(&_new, ext);
+    if (r)
+        rename(_old, _new);
+
+    free(_old);
+    free(_new);
+}
+
+#ifndef NDEBUG
+static const char *_per_user_directory(int reset)
+#else 
+static const char *_per_user_directory(void)
+#endif
+{
+    static char *path = NULL;
+
+#ifdef NDEBUG    
+    if (path)
+        return path;
+#else        
+    if (path && !reset)
+        return path;
+    else if (path) {
+        free(path);
+        path = NULL;
+    }
+#endif    
+
+    const char *home = NULL;
+#ifndef NDEBUG
+    home = getenv("PEP_HOME");
+    if (!home)
+#endif
+    home = getenv("HOME");
+    assert(home);
+    if (!home)
+        return NULL;
+
+    path = strdup(home);
+    assert(path);
+    if (!path)
+        return NULL;
+
+    char *_path = _stradd(&path, "/");   
+    if (!_path)
+        goto error;
+
+    _path = _stradd(&path, PER_USER_DIRECTORY);
+    if (!_path)
+        goto error;
+
+    return path;
+
+error:
+    _empty(&path);
+    return NULL;
+}
+
 #ifdef NDEBUG
 const char *unix_local_db(void)
 #else
 const char *unix_local_db(int reset)
 #endif
 {
-    static char buffer[MAX_PATH];
-    static bool done = false;
+    static char *path = NULL;
+#ifdef NDEBUG
+    if (path)
+#else
+    if (path && !reset)
+#endif
+        return path;
 
-    #ifdef NDEBUG
-    if (!done)
-    #else
-    if ((!done) || reset)
-    #endif
-    {
-        char *home_env;
-        if((home_env = getenv("HOME"))){
-            char *p = stpncpy(buffer, home_env, MAX_PATH);
-            ssize_t len = MAX_PATH - (p - buffer) - 2;
+    const char* pathret = NULL;
+#ifndef NDEBUG 
+    pathret = _per_user_directory(reset);
+#else 
+    pathret = _per_user_directory();
+#endif
 
-            if (len < strlen(LOCAL_DB_FILENAME)) {
-                assert(0);
-                return NULL;
-            }
+    if (!pathret)
+        return NULL;
 
-            *p++ = '/';
-            strncpy(p, LOCAL_DB_FILENAME, len);
-            done = true;
-        }else{
-            return NULL;
+    path = strdup(pathret);
+    assert(path);
+    if (!path)
+        return NULL;
+
+    char *path_c = NULL;
+    char *old_path = NULL;
+    char *old_path_c = NULL;
+
+    struct stat dir;
+    int r = stat(path, &dir);
+    if (r) {
+        if (errno == ENOENT) {
+            // directory does not yet exist
+            r = mkdir(path, 0700);
+            if (r)
+                goto error;
         }
-
+        else {
+            goto error;
+        }
     }
-    return buffer;
+
+    char *_path = _stradd(&path, "/");   
+    if (!_path)
+        goto error;
+
+    // make a copy of this path in case we need to move files
+    path_c = strdup(path);
+    assert(path_c);
+    if (!path_c)
+        goto error;
+
+    _path = _stradd(&path, LOCAL_DB_FILENAME);
+    if (!_path)
+        goto error;
+
+    struct stat file;
+    r = stat(path, &file);
+    if (r) {
+        if (errno == ENOENT) {
+            // we do not have management.db yet, let's test if we need to move
+            // one with the old name
+            const char *home = NULL;
+#ifndef NDEBUG
+            home = getenv("PEP_HOME");
+            if (!home)
+#endif
+            home = getenv("HOME");
+            // we were already checking for HOME existing, so this is only a
+            // safeguard
+            assert(home);
+
+            old_path = strdup(home);
+            assert(old_path);
+            if (!old_path)
+                goto error;
+
+            char *_old_path = _stradd(&old_path, "/");   
+            if (!_old_path)
+                goto error;
+
+            old_path_c = strdup(old_path);
+            assert(old_path_c);
+            if (!old_path_c)
+                goto error;
+
+            _old_path = _stradd(&old_path, OLD_LOCAL_DB_FILENAME);
+            if (!_old_path)
+                goto error;
+
+            struct stat old;
+            r = stat(old_path, &old);
+            if (r == 0) {
+                // old file existing, new file not yet existing, move
+                rename(old_path, path);
+
+                // if required move associated files, too
+                _move(old_path, "-shm", path);
+                _move(old_path, "-wal", path);
+
+                // move keys database
+                _old_path = _stradd(&old_path_c, OLD_KEYS_DB_FILENAME);
+                if (!_old_path)
+                    goto error;
+
+                _path = _stradd(&path_c, KEYS_DB_FILENAME);
+                if (!_path)
+                    goto error;
+
+                rename(old_path_c, path_c);
+
+                // if required move associated files, too
+                _move(old_path_c, "-shm", path_c);
+                _move(old_path_c, "-wal", path_c);
+            }
+        }
+        else {
+            goto error;
+        }
+    }
+    goto the_end;
+
+error:
+    _empty(&path);
+
+the_end:
+    free(path_c);
+    free(old_path);
+    free(old_path_c);
+    return path;
 }
+
+DYNAMIC_API const char *per_user_directory(void) {
+#ifdef NDEBUG
+    return _per_user_directory();
+#else 
+    return _per_user_directory(false);
+#endif
+}
+
 
 static const char *gpg_conf_path = ".gnupg";
 static const char *gpg_conf_name = "gpg.conf";
@@ -450,3 +707,33 @@ const char *gpg_agent_conf(int reset)
 }
 #endif
 
+DYNAMIC_API const char *per_machine_directory(void)
+{
+    return PER_MACHINE_DIRECTORY;
+}
+
+const char *unix_system_db(void)
+{
+    static char *path = NULL;
+    if (path)
+        return path;
+
+    path = strdup(per_machine_directory());
+    assert(path);
+    if (!path)
+        return NULL;
+
+    char *_path = _stradd(&path, "/");
+    if (!_path)
+        goto error;
+
+    _path = _stradd(&path, SYSTEM_DB_FILENAME);
+    if (!_path)
+        goto error;
+
+    return path;
+
+error:
+    _empty(&path);
+    return NULL;
+}

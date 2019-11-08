@@ -3,15 +3,19 @@
 
 #pragma once
 
+#define _EXPORT_PEP_ENGINE_DLL
+
 #include <libetpan/libetpan.h>
 #include <libetpan/mailmime.h>
 #include <libetpan/mailmime_encode.h>
 
 #include "resource_id.h"
+#include "stringpair.h"
 
 struct mailmime * part_new_empty(
         struct mailmime_content * content,
         struct mailmime_fields * mime_fields,
+        stringpair_list_t* param_keyvals,        
         int force_single
     );
 
@@ -30,7 +34,8 @@ struct mailmime * get_file_part(
         const char * mime_type,
         char * data,
         size_t length,
-        bool transport_encode
+        bool transport_encode,
+        bool set_attachment_forward_comment
     );
 
 struct mailmime * part_multiple_new(const char *type);

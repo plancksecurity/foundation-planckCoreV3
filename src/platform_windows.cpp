@@ -17,13 +17,21 @@
 #include <string>
 #include <stdexcept>
 #include "platform_windows.h"
+#include "dynamic_api.h"
 #include <fcntl.h>
 #include <tchar.h>
 #include <sys\stat.h>
 
+#define LOCAL_DB_FILENAME "management.db"
+#define SYSTEM_DB_FILENAME "system.db"
+#define KEYS_DB "keys.db"
+#define USER_FOLDER_PATH _per_user_directory()
+#define SYSTEM_FOLDER_PATH _per_machine_directory()
+
 #ifndef WC_ERR_INVALID_CHARS
 #define WC_ERR_INVALID_CHARS      0x00000080  // error for invalid chars
 #endif
+
 
 using namespace std;
 
@@ -114,7 +122,7 @@ static const DWORD PATH_BUF_SIZE = 32768;
 static inline string managementPath(const char *file_path, const char *file_name)
 {
     string path;
-	static TCHAR tPath[PATH_BUF_SIZE];
+    TCHAR tPath[PATH_BUF_SIZE];
 
     DWORD length = ExpandEnvironmentStringsW(utf16_string(file_path).c_str(),
             tPath, PATH_BUF_SIZE);
@@ -132,7 +140,69 @@ static inline string managementPath(const char *file_path, const char *file_name
 	return path;
 }
 
+const char *_per_machine_directory(void)
+{
+	static string path;
+	if (path.length())
+		return path.c_str();
+
+	TCHAR tPath[PATH_BUF_SIZE];
+
+	// Get SystemFolder Registry value and use if available
+	bool result = readRegistryString(HKEY_CURRENT_USER,
+		TEXT("SOFTWARE\\pEp"), TEXT("SystemFolder"), tPath,
+		PATH_BUF_SIZE, NULL);
+
+	// If not Registry value was found, use default
+	if (!result) {
+		DWORD length = ExpandEnvironmentStringsW(utf16_string(string(PER_MACHINE_DIRECTORY)).c_str(),
+			tPath, PATH_BUF_SIZE);
+		assert(length);
+		if (length == 0)
+			throw bad_alloc(); // BUG: there are other errors possible beside out of memory
+	}
+
+	path = utf8_string(wstring(tPath));
+	return path.c_str();
+}
+
+const char *_per_user_directory(void)
+{
+	static string path;
+	if (path.length())
+		return path.c_str();
+
+	TCHAR tPath[PATH_BUF_SIZE];
+
+	// Get UserFolder Registry value and use if available
+	bool result = readRegistryString(HKEY_CURRENT_USER,
+		TEXT("SOFTWARE\\pEp"), TEXT("UserFolder"), tPath,
+		PATH_BUF_SIZE, NULL);
+
+	// If not Registry value was found, use default
+	if (!result) {
+		DWORD length = ExpandEnvironmentStringsW(utf16_string(string(PER_USER_DIRECTORY)).c_str(),
+			tPath, PATH_BUF_SIZE);
+		assert(length);
+		if (length == 0)
+			throw bad_alloc(); // BUG: there are other errors possible beside out of memory
+	}
+
+	path = utf8_string(wstring(tPath));
+	return path.c_str();
+}
+
 extern "C" {
+
+DYNAMIC_API const char *per_user_directory(void)
+{
+	return _per_user_directory();
+}
+
+DYNAMIC_API const char *per_machine_directory(void)
+{
+	return _per_machine_directory();
+}
 
 void *dlopen(const char *filename, int flag) {
 	static TCHAR path[PATH_BUF_SIZE];
@@ -193,17 +263,25 @@ void *dlsym(void *handle, const char *symbol) {
 	return (void *) (intptr_t) GetProcAddress((HMODULE) handle, symbol);
 }
 
+const char *windoze_keys_db(void) {
+	static string path;
+	if (path.length() == 0) {
+		path = managementPath(USER_FOLDER_PATH, KEYS_DB);
+	}
+	return path.c_str();
+}
+
 const char *windoze_local_db(void) {
 	static string path;
 	if (path.length() == 0)
-        path = managementPath("%LOCALAPPDATA%\\pEp", "management.db");
+        path = managementPath(USER_FOLDER_PATH, LOCAL_DB_FILENAME);
     return path.c_str();
 }
 
 const char *windoze_system_db(void) {
 	static string path;
 	if (path.length() == 0)
-		path = managementPath("%ALLUSERSPROFILE%\\pEp", "system.db");
+		path = managementPath(PER_MACHINE_DIRECTORY, SYSTEM_DB_FILENAME);
     return path.c_str();
 }
 
@@ -283,6 +361,41 @@ size_t strlcat(char* dst, const	char* src, size_t size) {
     dst[start_len + size_to_copy] = '\0';
     return retval;
 }
+char *strnstr(const char *big, const char *little, size_t len) {
+    if (big == NULL || little == NULL)
+        return NULL;
+        
+    if (*little == '\0')
+        return (char*)big;
+        
+    const char* curr_big = big;
+    
+    size_t little_len = strlen(little);
+    size_t remaining = len;
+
+    const char* retval = NULL;
+    
+    for (remaining = len; remaining >= little_len && *curr_big != '\0'; remaining--, curr_big++) {
+        // find first-char match
+        if (*curr_big != *little) {
+            continue;
+        }
+        retval = curr_big;
+
+        const char* inner_big = retval + 1;
+        const char* curr_little = little + 1;
+        int j;
+        for (j = 1; j < little_len; j++, inner_big++, curr_little++) {
+            if (*inner_big != *curr_little) {
+                retval = NULL;
+                break;
+            }    
+        }
+        if (retval)
+            break;
+    }
+    return (char*)retval;
+}
 
 int mkstemp(char *templ)
 {
@@ -322,6 +435,18 @@ void uuid_unparse_upper(pEpUUID uu, uuid_string_t out)
     else { // if (rpc_status == RPC_S_OUT_OF_MEMORY)
         memset(out, 0, 37);
     }
+}
+
+void log_output_debug(const char *title,
+                       const char *entity,
+                       const char *description,
+                       const char *comment)
+{
+	const size_t size = 256;
+	char str[size];
+	
+	snprintf(str, size, "*** %s %s %s %s\n", title, entity, description, comment);
+	OutputDebugStringA(str);
 }
 
 time_t timegm(struct tm* tm) {

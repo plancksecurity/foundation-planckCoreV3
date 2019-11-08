@@ -33,9 +33,6 @@
     <ClCompile Include="..\src\cryptotech.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\pgp_gpg.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\email.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
@@ -52,9 +49,6 @@
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="..\src\bloblist.c">
-      <Filter>Quelldateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\etpan_mime.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
     <ClCompile Include="..\src\identity_list.c">
@@ -120,6 +114,12 @@
     <ClCompile Include="..\src\base64.c">
       <Filter>Quelldateien</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\pgp_sequoia.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\etpan_mime.c">
+      <Filter>Quelldateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\keymanagement.h">
@@ -140,13 +140,7 @@
     <ClInclude Include="..\src\cryptotech.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\pgp_gpg.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\pEp_internal.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\pgp_gpg_internal.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="..\src\resource.h">
@@ -174,9 +168,6 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="..\src\dynamic_api.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\etpan_mime.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="..\src\identity_list.h">
@@ -236,12 +227,6 @@
     <ClInclude Include="..\src\Sync_event.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Sync_func.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Sync_impl.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\growing_buf.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
@@ -257,8 +242,29 @@
     <ClInclude Include="..\src\KeySync_fsm.h">
       <Filter>Quelldateien</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\fsm_common.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\pgp_sequoia.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\pgp_sequoia_internal.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Sync_func.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Sync_impl.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\etpan_mime.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\LICENSE.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

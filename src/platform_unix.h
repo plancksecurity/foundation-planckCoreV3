@@ -16,6 +16,16 @@
 #include <uuid/uuid.h>
 #endif
 
+// pEp files and directories
+
+#ifndef PER_USER_DIRECTORY
+#define PER_USER_DIRECTORY ".pEp"
+#endif
+
+#ifndef PER_MACHINE_DIRECTORY
+#define PER_MACHINE_DIRECTORY "/usr/local/share/pEp"
+#endif
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,6 +42,7 @@ const char *gpg_conf(int reset);
 const char *gpg_agent_conf(int reset);
 const char *gpg_home(int reset);
 #endif
+const char *unix_system_db(void);
 
 
 #ifdef ANDROID
@@ -56,17 +67,18 @@ const char *android_system_db(void);
 #elif __APPLE__
 #include "TargetConditionals.h"
 #include <string.h>
-#if TARGET_OS_IPHONE
-
-extern char* SystemDB;
-#define SYSTEM_DB SystemDB
-    
+#if TARGET_OS_IPHONE //read as `if iOS`
+    extern char* perMachineDirectory;
+#define PER_MACHINE_DIRECTORY perMachineDirectory
+    // It has been decided not to define PER_USER_DIRECTORY for iOS but HOME (which is defined by
+    // the OS), at least temporarely.
 #endif
 #endif
 
 #if !defined(BSD) && !defined(__APPLE__)
 size_t strlcpy(char* dst, const	char* src, size_t size);
 size_t strlcat(char* dst, const	char* src, size_t size);
+char *strnstr(const char *big, const char *little, size_t len);
 
 // N.B. This is ifdef'd out because NDK users sometimes have trouble finding regex functions in
 //      the library in spite of the inclusion of regex.h - this is a FIXME, but since iOS is

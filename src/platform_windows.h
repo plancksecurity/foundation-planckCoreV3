@@ -22,6 +22,16 @@
 #include <basetsd.h>
 #include <time.h>
 
+// pEp files and directories
+
+#ifndef PER_USER_DIRECTORY
+#define PER_USER_DIRECTORY "%LOCALAPPDATA%\\pEp"
+#endif
+
+#ifndef PER_MACHINE_DIRECTORY
+#define PER_MACHINE_DIRECTORY "%ALLUSERSPROFILE%\\pEp"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -74,11 +84,16 @@ char *stpcpy(char *dst, const char *src);
 
 size_t strlcpy(char* dst, const	char* src, size_t size);
 size_t strlcat(char* dst, const	char* src, size_t size);
+char *strnstr(const char *big, const char *little, size_t len);
 
+
+const char *windoze_keys_db(void);
 const char *windoze_local_db(void);
 const char *windoze_system_db(void);
 const char *gpg_conf(void);
 const char *gpg_agent_conf(void);
+
+void log_output_debug(const char *title, const char *entity, const char *description, const char *comment);
 
 long random(void);
 

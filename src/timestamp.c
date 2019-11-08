@@ -30,7 +30,6 @@ DYNAMIC_API void free_timestamp(timestamp *ts)
 
 DYNAMIC_API timestamp * timestamp_dup(const timestamp *src)
 {
-    assert(src);
     if (!src)
         return NULL;
 
@@ -42,4 +41,3 @@ DYNAMIC_API timestamp * timestamp_dup(const timestamp *src)
     memcpy(dst, src, sizeof(timestamp));
     return dst;
 }
-

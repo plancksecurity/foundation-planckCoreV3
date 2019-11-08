@@ -17,7 +17,7 @@ extern "C" {
 #include "labeled_int_list.h"    
 #include "timestamp.h"
 
-#define PEP_VERSION "2.0" // protocol version
+#define PEP_VERSION "2.1" // protocol version
 
 #define PEP_OWN_USERID "pEp_own_userId"
     
@@ -60,6 +60,7 @@ typedef enum {
     PEP_KEY_IMPORTED                                = 0x0220,
     PEP_NO_KEY_IMPORTED                             = 0x0221,
     PEP_KEY_IMPORT_STATUS_UNKNOWN                   = 0x0222,
+    PEP_SOME_KEYS_IMPORTED                          = 0x0223,
     
     PEP_CANNOT_FIND_IDENTITY                        = 0x0301,
     PEP_CANNOT_SET_PERSON                           = 0x0381,
@@ -68,6 +69,7 @@ typedef enum {
     PEP_CANNOT_SET_TRUST                            = 0x0384,
     PEP_KEY_BLACKLISTED                             = 0x0385,
     PEP_CANNOT_FIND_PERSON                          = 0x0386,
+    PEP_CANNOT_SET_PEP_VERSION                      = 0X0387,
     
     PEP_CANNOT_FIND_ALIAS                           = 0x0391,
     PEP_CANNOT_SET_ALIAS                            = 0x0392,
@@ -103,6 +105,7 @@ typedef enum {
     PEP_SYNC_NO_CHANNEL                             = 0x0904,
     PEP_SYNC_CANNOT_ENCRYPT                         = 0x0905,
     PEP_SYNC_NO_MESSAGE_SEND_CALLBACK               = 0x0906,
+    PEP_SYNC_CANNOT_START                           = 0x0907,
 
     PEP_CANNOT_INCREASE_SEQUENCE                    = 0x0971,
 
@@ -403,6 +406,8 @@ DYNAMIC_API PEP_STATUS encrypt_and_sign(
     );
 
 
+DYNAMIC_API void set_debug_color(PEP_SESSION session, int ansi_color);
+
 // log_event() - log a user defined event defined by UTF-8 encoded strings into
 // management log
 //
@@ -437,6 +442,11 @@ DYNAMIC_API PEP_STATUS log_service(PEP_SESSION session, const char *title,
 #define SERVICE_LOG(session, title, entity, desc) \
     log_service((session), (title), (entity), (desc), "service " __FILE__ ":" S_LINE)
 
+DYNAMIC_API void _service_error_log(PEP_SESSION session, const char *entity,
+        PEP_STATUS status, const char *where);
+
+#define SERVICE_ERROR_LOG(session, entity, status) \
+    _service_error_log((session), (entity), (status), __FILE__ ":" S_LINE)
 
 // trustword() - get the corresponding trustword for a 16 bit value
 //
@@ -562,47 +572,6 @@ typedef enum _PEP_comm_type {
     PEP_ct_pEp = 0xff
 } PEP_comm_type;
 
-static inline const char *pep_comm_type_to_string(PEP_comm_type ct) {
-    switch (ct) {
-    case PEP_ct_unknown: return "unknown";
-    case PEP_ct_no_encryption: return "no_encryption";
-    case PEP_ct_no_encrypted_channel: return "no_encrypted_channel";
-    case PEP_ct_key_not_found: return "key_not_found";
-    case PEP_ct_key_expired: return "key_expired";
-    case PEP_ct_key_revoked: return "key_revoked";
-    case PEP_ct_key_b0rken: return "key_b0rken";
-    case PEP_ct_my_key_not_included: return "my_key_not_included";
-    case PEP_ct_security_by_obscurity: return "security_by_obscurity";
-    case PEP_ct_b0rken_crypto: return "b0rken_crypto";
-    case PEP_ct_key_too_short: return "key_too_short";
-    case PEP_ct_compromised: return "compromised";
-    case PEP_ct_mistrusted: return "mistrusted";
-    case PEP_ct_unconfirmed_encryption: return "unconfirmed_encryption";
-    case PEP_ct_OpenPGP_weak_unconfirmed: return "OpenPGP_weak_unconfirmed";
-    case PEP_ct_to_be_checked: return "to_be_checked";
-    case PEP_ct_SMIME_unconfirmed: return "SMIME_unconfirmed";
-    case PEP_ct_CMS_unconfirmed: return "CMS_unconfirmed";
-    case PEP_ct_strong_but_unconfirmed: return "strong_but_unconfirmed";
-    case PEP_ct_OpenPGP_unconfirmed: return "OpenPGP_unconfirmed";
-    case PEP_ct_OTR_unconfirmed: return "OTR_unconfirmed";
-    case PEP_ct_unconfirmed_enc_anon: return "unconfirmed_enc_anon";
-    case PEP_ct_pEp_unconfirmed: return "pEp_unconfirmed";
-    case PEP_ct_confirmed: return "confirmed";
-    case PEP_ct_confirmed_encryption: return "confirmed_encryption";
-    case PEP_ct_OpenPGP_weak: return "OpenPGP_weak";
-    case PEP_ct_to_be_checked_confirmed: return "to_be_checked_confirmed";
-    case PEP_ct_SMIME: return "SMIME";
-    case PEP_ct_CMS: return "CMS";
-    case PEP_ct_strong_encryption: return "strong_encryption";
-    case PEP_ct_OpenPGP: return "OpenPGP";
-    case PEP_ct_OTR: return "OTR";
-    case PEP_ct_confirmed_enc_anon: return "confirmed_enc_anon";
-    case PEP_ct_pEp: return "pEp";
-    default: return "invalid comm type";
-    }
-}
-
-
 typedef enum _identity_flags {
     // the first octet flags are app defined settings
     PEP_idf_not_for_sync = 0x0001,   // don't use this identity for sync
@@ -631,6 +600,8 @@ typedef struct _pEp_identity {
     char lang[3];               // language of conversation
                                 // ISO 639-1 ALPHA-2, last byte is 0
     bool me;                    // if this is the local user herself/himself
+    unsigned int major_ver;              // highest version of pEp message received, if any
+    unsigned int minor_ver;              // highest version of pEp message received, if any
     identity_flags_t flags;     // identity_flag1 | identity_flag2 | ...
 } pEp_identity;
 
@@ -1300,6 +1271,10 @@ PEP_STATUS find_private_keys(PEP_SESSION session, const char* pattern,
 //
 DYNAMIC_API const char* get_engine_version();
 
+// get_protocol_version() - returns the pEp protocol version
+
+DYNAMIC_API const char *get_protocol_version();
+
 // is_pEp_user() - returns true if the USER corresponding to this identity 
 //                 has been listed in the *person* table as a pEp user. 
 //
@@ -1320,6 +1295,20 @@ DYNAMIC_API PEP_STATUS is_pEp_user(PEP_SESSION session,
                                    pEp_identity *identity, 
                                    bool* is_pEp);
 
+// per_user_directory() - returns the directory for pEp management db
+//
+//  return_value:
+//      path to actual per user directory or NULL on failure
+
+DYNAMIC_API const char *per_user_directory(void);
+
+
+// per_machine_directory() - returns the directory for pEp system db
+//
+//  return value:
+//      path to actual per user directory or NULL on failure
+
+DYNAMIC_API const char *per_machine_directory(void);
 
 
 DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session);
@@ -1384,6 +1373,19 @@ PEP_STATUS exists_person(PEP_SESSION session, pEp_identity* identity, bool* exis
 
 PEP_STATUS set_pgp_keypair(PEP_SESSION session, const char* fpr);
 
+PEP_STATUS set_pEp_version(PEP_SESSION session, pEp_identity* ident, unsigned int new_ver_major, unsigned int new_ver_minor);
+
+PEP_STATUS clear_trust_info(PEP_SESSION session,
+                            const char* user_id,
+                            const char* fpr);
+                            
+// Generally ONLY called by set_as_pEp_user, and ONLY from < 2.0 to 2.0.
+PEP_STATUS upgrade_pEp_version_by_user_id(PEP_SESSION session, 
+        pEp_identity* ident, 
+        unsigned int new_ver_major,
+        unsigned int new_ver_minor
+    );
+     
 // exposed for testing
 PEP_STATUS set_person(PEP_SESSION session, pEp_identity* identity,
                       bool guard_transaction);

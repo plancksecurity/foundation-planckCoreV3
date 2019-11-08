@@ -454,7 +454,11 @@ static void adjust_pEp_trust_status(PEP_SESSION session, pEp_identity* identity)
     
     if (pEp_user) {
         PEP_comm_type confirmation_status = identity->comm_type & PEP_ct_confirmed;
-        identity->comm_type = PEP_ct_pEp_unconfirmed | confirmation_status;    
+        identity->comm_type = PEP_ct_pEp_unconfirmed | confirmation_status;
+        if (identity->major_ver == 0) {
+            identity->major_ver = 2;
+            identity->minor_ver = 0;
+        }    
     }
 }
 
@@ -470,6 +474,8 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     PEP_STATUS status;
     
     bool is_identity_default, is_user_default, is_address_default;
+    bool no_stored_default = EMPTYSTR(stored_ident->fpr);
+    
     status = get_valid_pubkey(session, stored_ident,
                                 &is_identity_default,
                                 &is_user_default,
@@ -488,7 +494,12 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
             stored_ident->comm_type = ct;
         }
     }
-    else {
+    else if (status != PEP_STATUS_OK) {
+        free(stored_ident->fpr);
+        stored_ident->fpr = NULL;
+        stored_ident->comm_type = PEP_ct_key_not_found;        
+    }
+    else { // no key returned, but status ok?
         if (stored_ident->comm_type == PEP_ct_unknown)
             stored_ident->comm_type = PEP_ct_key_not_found;
     }
@@ -521,6 +532,9 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     
     return_id->me = stored_ident->me;
     
+    return_id->major_ver = stored_ident->major_ver;
+    return_id->minor_ver = stored_ident->minor_ver;
+
     // FIXME: Do we ALWAYS do this? We probably should...
     if (EMPTYSTR(return_id->user_id)) {
         free(return_id->user_id);
@@ -536,8 +550,17 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
          // or identity AND is valid for this address, set in DB
          // as default
          status = set_identity(session, return_id);
+    } 
+    else if (no_stored_default && !EMPTYSTR(return_id->fpr) 
+             && return_id->comm_type != PEP_ct_key_revoked
+             && return_id->comm_type != PEP_ct_key_expired
+             && return_id->comm_type != PEP_ct_key_expired_but_confirmed
+             && return_id->comm_type != PEP_ct_mistrusted 
+             && return_id->comm_type != PEP_ct_key_b0rken) { 
+        // We would have stored this anyway for a first-time elected key. We just have an ident w/ no default already.
+        status = set_identity(session, return_id);
     }
-    else {
+    else { // this is a key other than the default, but there IS a default (FIXME: fdik, do we really want behaviour below?)
         // Store without default fpr/ct, but return the fpr and ct 
         // for current use
         char* save_fpr = return_id->fpr;
@@ -553,7 +576,7 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
     }
     
     transfer_ident_lang_and_flags(return_id, stored_ident);
-    
+        
     if (return_id->comm_type == PEP_ct_unknown)
         return_id->comm_type = PEP_ct_key_not_found;
     
@@ -1060,6 +1083,9 @@ PEP_STATUS _myself(PEP_SESSION session,
         if (read_only) {
             free(identity->user_id);
             identity->user_id = strdup(default_own_id);
+            assert(identity->user_id);
+            if (!identity->user_id)
+                return PEP_OUT_OF_MEMORY;
         }
         else {
             status = set_userid_alias(session, default_own_id, identity->user_id);
@@ -1069,6 +1095,7 @@ PEP_STATUS _myself(PEP_SESSION session,
                 
             free(identity->user_id);
             identity->user_id = strdup(default_own_id);
+            assert(identity->user_id);
             if (identity->user_id == NULL) {
                 status = PEP_OUT_OF_MEMORY;
                 goto pEp_free;
@@ -1108,11 +1135,14 @@ PEP_STATUS _myself(PEP_SESSION session,
     if (EMPTYSTR(identity->username) || read_only) {
         bool stored_uname = (stored_identity && !EMPTYSTR(stored_identity->username));
         char* uname = (stored_uname ? stored_identity->username : identity->address);
-        free(identity->username);
-        identity->username = strdup(uname);
-        if (identity->username == NULL) {
-            status = PEP_OUT_OF_MEMORY;
-            goto pEp_free;
+        if (uname) {
+            free(identity->username);
+            identity->username = strdup(uname);
+            assert(identity->username);
+            if (identity->username == NULL) {
+                status = PEP_OUT_OF_MEMORY;
+                goto pEp_free;
+            }
         }
     }
 
@@ -1197,6 +1227,12 @@ PEP_STATUS _myself(PEP_SESSION session,
         identity->fpr = NULL;
         identity->comm_type = PEP_ct_unknown;
     }
+    
+    unsigned int major_ver = 0;
+    unsigned int minor_ver = 0;
+    pEp_version_major_minor(PEP_VERSION, &major_ver, &minor_ver);
+    identity->major_ver = major_ver;
+    identity->minor_ver = minor_ver;
     
     // We want to set an identity in the DB even if a key isn't found, but we have to preserve the status if
     // it's NOT ok
@@ -1307,6 +1343,29 @@ DYNAMIC_API PEP_STATUS key_mistrusted(
 
         if (!revoked)
             revoke_key(session, ident->fpr, NULL);
+    }
+    else {
+        if (ident->fpr) {
+            // Make sure there was a default in the DB for this identity;
+            // if not, set one, even though we're going to mistrust this. Otherwise,
+            // cannot reset.
+            pEp_identity* stored_ident = NULL;
+            get_identity(session, ident->address, ident->user_id, &stored_ident);
+            bool set_in_db = true;
+            if (!stored_ident)
+                stored_ident = identity_dup(ident);
+            else if (!stored_ident->fpr)
+                stored_ident->fpr = strdup(ident->fpr);
+            else
+                set_in_db = false;
+                        
+            if (set_in_db)
+                status = set_identity(session, stored_ident);    
+            
+            free_identity(stored_ident);
+            if (status != PEP_STATUS_OK)
+                return status;
+        }
     }            
             
     // double-check to be sure key is even in the DB
