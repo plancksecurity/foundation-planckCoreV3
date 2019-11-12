@@ -110,11 +110,25 @@ enum comm_type {
 
 
 struct identity {
-    field string address doc="SMTP address or URI";
-    field hash fpr doc="fingerprint of key being used as ID";
-    field string user_id doc="ID for person or entity in M2M case";
-    field string username doc="descriptive string";
-    field ISO639_1 lang doc="two-digit language code or null bytes";
+    field string address doc="SMTP address or URI. String with address UTF-8 encoded";
+    field hash fpr doc="fingerprint of key being used as ID. String with fingerprint UTF-8 encoded";
+    field string user_id 
+    doc="""
+        ID for person or entity in M2M case. String with user ID UTF-8 encoded
+        user_id MIGHT be set to "pEp_own_userId" (use PEP_OWN_USERID preprocessor define)
+        if this is own user's identity. But it is not REQUIRED to be.
+        """;
+    field string username doc="descriptive string. String with user name UTF-8 encoded";
+    field comm_type comm_type doc="type of communication with this ID";
+    field ISO639_1 lang[3] 
+    doc="""
+        two-digit language code or null bytes. 
+        language of conversation ISO 639-1 ALPHA-2, last byte is 0
+        """;
+    field bool me doc="if this is the local user herself/himself";
+    field unsigned int major_ver doc="highest version of pEp message received, if any";
+    field unsigned int minor_ver doc="highest version of pEp message received, if any";
+    field identity_flags_t flags doc="identity_flag1 | identity_flag2 | ...";
 } // struct Identity
 
 
@@ -392,5 +406,20 @@ protocol session {
         throws illegal_value doc="if no user_id in input";
 
         throws cannot_find_person doc="if user_id doesn't exist";
+    }
+
+
+    method per_user_directory doc="returns the directory for pEp management db"
+    {
+        // exceptions
+
+        throws any doc="path to actual per user directory or NULL on failure";
+    }
+
+    method per_machine_directory doc="returns the directory for pEp system db"
+    {
+        // exceptions
+
+        throws any doc="path to actual per user directory or NULL on failure";
     }
 }
