@@ -54,7 +54,7 @@ enum comm_type {
     hex key_revoked 0x05;
     hex key_b0rken 0x06;
 
-    hex key_expired_but_confirmed 0x07
+    hex key_expired_but_confirmed 0x07 
         doc="NOT with confirmed bit. Just retaining info here in case of renewal.";
 
     hex my_key_not_included 0x09;
@@ -110,7 +110,6 @@ enum comm_type {
 
 
 struct identity {
-    
     field string address doc="SMTP address or URI";
     field hash fpr doc="fingerprint of key being used as ID";
     field string user_id doc="ID for person or entity in M2M case";
@@ -134,8 +133,7 @@ flags {
 
 
 protocol session {
-    callback messageToSend
-        doc="a message needs to be delivered by application"
+    callback messageToSend doc="a message needs to be delivered by application"
     {
         // parms
 
@@ -147,8 +145,7 @@ protocol session {
     }
 
 
-    method config_passive_mode 
-        doc="enable passive mode"
+    method config_passive_mode doc="enable passive mode"
     {
         // parms
 
@@ -156,8 +153,7 @@ protocol session {
     }
 
 
-    method config_unencrypted_subject
-        doc="disable subject encryption"
+    method config_unencrypted_subject doc="disable subject encryption"
     {
         // parms
 
@@ -165,8 +161,7 @@ protocol session {
     }
 
 
-    method config_use_only_own_private_keys
-        doc="enable passive mode"
+    method config_use_only_own_private_keys doc="enable passive mode"
     {
         // parms
 
@@ -174,8 +169,7 @@ protocol session {
     }
 
 
-    method config_service_log
-        doc="log more for service purposes"
+    method config_service_log doc="log more for service purposes"
     {
         // parms
 
@@ -183,8 +177,7 @@ protocol session {
     }
 
 
-    method config_cipher_suite
-        doc="cipher suite being used when encrypting"
+    method config_cipher_suite doc="cipher suite being used when encrypting"
     {
         // parms
 
@@ -193,19 +186,19 @@ protocol session {
         // exceptions
 
         throws cannot_config 
-            doc="""
-                configuration failed; falling back to default. the default
-                ciphersuite for a crypt tech implementation is implementation 
-                defined.
-                """;
+        doc="""
+            configuration failed; falling back to default. the default
+            ciphersuite for a crypt tech implementation is implementation 
+            defined.
+            """;
     }
 
 
     method log_event
-        doc="""
-            log a user defined event defined by UTF-8 encoded strings into 
-            management log.
-            """
+    doc="""
+        log a user defined event defined by UTF-8 encoded strings into 
+        management log.
+        """
     {
         // parms
 
@@ -219,8 +212,7 @@ protocol session {
     }
 
 
-    method get_default own_userid
-        doc="get the user_id of the own user"
+    method get_default own_userid doc="get the user_id of the own user"
     {
         // parms
 
@@ -228,7 +220,7 @@ protocol session {
         doc="""
             own user id (if it exists). userid will be NULL if not found; otherwise, 
             returned string belongs to the caller.
-            """
+            """;
 
         // exceptions
 
@@ -242,21 +234,18 @@ protocol session {
     }
 
 
-    method mark_as_compromised
-        doc="mark key in trust db as compromised"
+    method mark_as_compromised doc="mark key in trust db as compromised"
     {
         // parms
 
-        use hash fpr doc="fingerprint of key to mark"
+        use hash fpr doc="fingerprint of key to mark";
     }
 
 
-    method mark_as_compromized
-        doc="deprecated to fix misspelling. Please move to mark_as_compromised"
+    method mark_as_compromized doc="deprecated to fix misspelling. Please move to mark_as_compromised"
 
 
-    method import_key
-        doc="import key from data"
+    method import_key doc="import key from data"
     {
         // parms
 
@@ -272,8 +261,7 @@ protocol session {
     }
 
 
-    method export_key
-        doc="export ascii armored key"
+    method export_key doc="export ascii armored key"
     {
         // parms
 
@@ -295,12 +283,11 @@ protocol session {
     }
 
 
-    method export_secret_key
-        doc="export secret key ascii armored"
+    method export_secret_key doc="export secret key ascii armored"
     {
         // parms
 
-        use hash fpr doc="fingerprint of key, at least 16 hex digits"
+        use hash fpr doc="fingerprint of key, at least 16 hex digits";
 
         create string key_data 
         doc="""
@@ -321,12 +308,10 @@ protocol session {
     }
 
 
-    method export_secrect_key 
-        doc="deprecated misspelled function. Please replace with export_secret_key"
+    method export_secrect_key doc="deprecated misspelled function. Please replace with export_secret_key"
 
 
-    method get_crashdump_log
-        doc="get the last log messages out"
+    method get_crashdump_log doc="get the last log messages out"
     {
         // parms
 
@@ -343,8 +328,7 @@ protocol session {
     }
 
 
-    method get_languagelist
-        doc="get the list of languages"
+    method get_languagelist doc="get the list of languages"
     {
         //parms
 
@@ -357,8 +341,7 @@ protocol session {
     }
 
 
-    method get_phrase
-        doc="get phrase in a dedicated language through i18n"
+    method get_phrase doc="get phrase in a dedicated language through i18n"
     {
         // parms
 
@@ -371,19 +354,24 @@ protocol session {
 
 
     method get_engine_version
-        doc="""
-            returns the current version of pEpEngine (this is different
-            from the pEp protocol version!).
-            """
+    doc="""
+        returns the current version of pEpEngine (this is different
+        from the pEp protocol version!).
+        """
     {
-        // parms doc="none. return_value: const char* to the engine version string constant" 
+        // parms doc="none"
 
-   method is_pEp_user
-        doc="""
-            returns true if the USER corresponding to this identity has been listed 
-            in the *person* table as a pEp user.
-            This *does not check comm_type*.
-            """
+        // exceptions
+
+        throws any doc="string to the engine version string constant"; 
+    }
+
+    method is_pEp_user
+    doc="""
+        returns true if the USER corresponding to this identity has been listed 
+        in the *person* table as a pEp user.
+        This *does not check comm_type*.
+        """
     {
         // parms
 

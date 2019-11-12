@@ -4,7 +4,7 @@
 // this file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-// written by Volker Birk
+//  written by Volker Birk and Nana Karlstetter
 
 
 enum text_format {
@@ -86,12 +86,11 @@ struct message {
 
 
 protocol session {
-    method encrypt_message
-        doc="encrypt message in memory"
+    method encrypt_message doc="encrypt message in memory"
     {
         // parms
 
-        supply message src
+        lend message src
         doc="""
             message to encrypt - usually in-only, but can be in-out for
             unencrypted messages; in that case, we may attach the key and
@@ -106,7 +105,7 @@ protocol session {
             take place
             """;
 
-        use enc_format format doc="encrypted format";
+        use enc_format format doc="The desired format this message should be encrypted with";
 
         // flags
 
@@ -117,7 +116,11 @@ protocol session {
             flag force_no_attached_key 0x4;
             flag inner_message 0x8 doc='This is mainly used by pEp clients to send private keys to their own PGP-only device.';
             flag force_version_1 0x10 doc='This is mainly used by pEp clients to send private keys to their own PGP-only device';
-            flag key_reset_only 0x20;
+            flag key_reset_only 0x20 
+            doc="""This flag is used to let internal functions know that an encryption call is being 
+                used as part of a reencryption operation
+                """;
+            flag encrypt_reencrypt 0x40;
         }
 
         // exceptions
@@ -133,7 +136,10 @@ protocol session {
 
 
     method encrypt_message_and_add_priv_key
-        doc="encrypt message in memory, adding an encrypted private key (encrypted separately and sent within the inner message)"
+    doc="""
+        encrypt message in memory, adding an encrypted private key (encrypted separately 
+        and sent within the inner message)
+        """
     {
         // parms
 
@@ -172,10 +178,10 @@ protocol session {
 
 
     method encrypt_message_for_self
-        doc="""
-            encrypt message in memory for user's identity only,
-            ignoring recipients and other identities from the message
-            """
+    doc="""
+        encrypt message in memory for user's identity only,
+        ignoring recipients and other identities from the message
+        """
     {
         // parms
 
@@ -215,12 +221,11 @@ protocol session {
     }
 
 
-    method decrypt_message
-        doc="decrypt message in memory"
+    method decrypt_message doc="decrypt message in memory"
     {
         // parms
 
-        supply message src
+        lend message src
         doc="""
             message to decrypt. 
             The ownership of src remains with the caller - however, the contents 
@@ -230,7 +235,7 @@ protocol session {
 
         create message dst doc="pointer to new decrypted message or empty on failure";
 
-        supply hash_list keylist
+        lend hash_list keylist
         doc="""
             in: stringlist with additional keyids for reencryption if needed
                 (will be freed and replaced with output keylist)
@@ -265,118 +270,114 @@ protocol session {
                 input flag. Used to signal that decrypt function should engage in behaviour
                 specified for when the server storing the source is untrusted.
                 """;
-            flag decrypt_flag_dont_trigger_sync 0x200 
+            flag decrypt_flag_dont_trigger_sync 0x200;
         }
 
-    // exceptions
+        // exceptions
     
-    throws decrypted doc="if message decrypted but not verified";
+        throws decrypted doc="if message decrypted but not verified";
 
-    throws cannot_reencrypt
+        throws cannot_reencrypt
         doc="""
             if message was decrypted (and possibly verified) but a reencryption 
             operation is expected by the caller and failed.
             """;
 
-    throws unencrypted
+        throws unencrypted
         doc="""
             if src is unencrypted this function returns unencrypted and sets
             dst to empty.
             """;
 
-    throws any doc="all error status values allowed";
+        throws any doc="all error status values allowed";
     }
 
 
     method own_message_private_key_details
+    doc="""
+        details on own key in own message. Note: In order to obtain details about key 
+        to be possibly imported as a replacement of key currently used as own identity, 
+        application passes message that have been previously flagged by decrypt_message() 
+        as own message containing own key to this function.
+        """
+    {
+        // parms
+
+        use message msg
         doc="""
-            details on own key in own message. Note: In order to obtain details about key 
-            to be possibly imported as a replacement of key currently used as own identity, 
-            application passes message that have been previously flagged by decrypt_message() 
-            as own message containing own key to this function.
-            """
-    {
-    //parms
+            message to decrypt. msg MUST be encrypted so that this function 
+            can check own signature.
+            """;
 
-    use message msg
-    doc="""
-        message to decrypt. msg MUST be encrypted so that this function 
-        can check own signature.
-        """;
+        create identity ident doc="identity containing uid, address and fpr of key";
 
-    create identity ident doc="identity containing uid, address and fpr of key";
+        // exceptions
 
-    // exceptions
-
-    throws any doc="error status"
+        throws any doc="error status";
     }
 
 
-    method outgoing_message_rating
-        doc="get rating for an outgoing message"
+    method outgoing_message_rating doc="get rating for an outgoing message"
     {
-    //parms
+        // parms
 
-    use message msg
-    doc="""
-        message to get the rating for. From must point to a valid pEp_identity.
-        Dir must be dir_outgoing.
-        """;
+        use message msg
+        doc="""
+            message to get the rating for. From must point to a valid pEp_identity.
+            Dir must be dir_outgoing.
+            """;
 
-    return rating msg_rating doc="rating for the message";
+        return rating msg_rating doc="rating for the message";
 
-    // exceptions
+        // exceptions
 
-    throws any doc="error status"
+        throws any doc="error status";
     }
 
 
-    method outgoing_message_rating_preview
-        doc="get rating preview"
+    method outgoing_message_rating_preview doc="get rating preview"
     {
-    //parms
+        // parms
 
-    use message msg
-    doc="""
-        message to get the rating for. From must point to a valid pEp_identity.
-        Dir must be dir_outgoing.
-        """;
+        use message msg
+        doc="""
+            message to get the rating for. From must point to a valid pEp_identity.
+            Dir must be dir_outgoing.
+            """;
 
-    return rating msg_rating doc="rating preview for the message";
+        return rating msg_rating doc="rating preview for the message";
 
-    // exceptions
+        // exceptions
 
-    throws any doc="error status"
+        throws any doc="error status";
     }
 
 
-    method identity_rating
-        doc="get rating for a single identity"
+    method identity_rating doc="get rating for a single identity"
     {
-    //parms
+        // parms
 
-    use identity ident doc="identity to get the rating for";
+        use identity ident doc="identity to get the rating for";
 
-    return rating identity_rating doc="rating for the identity";
+        return rating identity_rating doc="rating for the identity";
 
-    // exceptions
+        // exceptions
 
-    throws any doc="error status"
+        throws any doc="error status";
     }
 
 
-    method get_trustwords
-        doc="get full trustwords string for a *pair* of identities"
+    method get_trustwords doc="get full trustwords string for a *pair* of identities"
     {
-    //parms
+        // parms
 
-    use identity id1 doc="identity of first party in communication - fpr can't be empty";
+        use identity id1 doc="identity of first party in communication - fpr can't be empty";
 
-    use identity id2 doc="identity of second party in communication - fpr can't be empty";
+        use identity id2 doc="identity of second party in communication - fpr can't be empty";
 
-    use ISO639_1 lang doc="string with ISO 639-1 language code";
+        use ISO639_1 lang doc="string with ISO 639-1 language code";
 
-    create string words
+        create string words
         doc="""
             string with all trustwords, separated 
             by a blank each. Empty if language is not supported or trustword 
@@ -385,129 +386,164 @@ protocol session {
             The caller is responsible to free() it (on Windoze use pEp_free())
             """;
 
-    use bool full
+        use bool full
         doc="""
             if true, generate ALL trustwords for these identities.
             else, generate a fixed-size subset. (TODO: fixed-minimum-entropy
             subset in next version)
             """;
 
-    // exceptions
+        // exceptions
 
-    throws out_of_memory
-        doc="out of memory";
+        throws out_of_memory doc="out of memory";
 
-    throws trustword_not_found
-        doc="at least one trustword not found";
+        throws trustword_not_found doc="at least one trustword not found";
     }
 
 
-    method get_message_trustwords
-        doc="get full trustwords string for message sender and reciever identities"
+    method get_message_trustwords doc="get full trustwords string for message sender and reciever identities"
     {
-    //parms
+        // parms
 
-    use message msg doc="message to get sender identity from";
+        use message msg doc="message to get sender identity from";
 
-    use hash_list keylist
-        doc="empty if message to be decrypted, keylist returned by decrypt_message() otherwise.";
+        use hash_list keylist doc="empty if message to be decrypted, keylist returned by decrypt_message() otherwise.";
 
-    use identity received_by doc="identity for account receiving message can't be empty";
+        use identity received_by doc="identity for account receiving message can't be empty";
 
-    use ISO639_1 lang doc="string with ISO 639-1 language code";
+        use ISO639_1 lang doc="string with ISO 639-1 language code";
 
-    create string words
+        create string words
         doc="""
             string with all trustwords, separated by a blank each.
             Empty if language is not supported or trustword  wordlist is damaged or unavailable.
             """;
 
-    use bool full
+        use bool full
         doc="""
             if true, generate ALL trustwords for these identities.
             else, generate a fixed-size subset. (TODO: fixed-minimum-entropy
             subset in next version)
             """;
 
-    // exceptions
+        // exceptions
 
-    throws out_of_memory doc="out of memory";
+        throws out_of_memory doc="out of memory";
 
-    throws trustword_not_found doc="at least one trustword not found";
+        throws trustword_not_found doc="at least one trustword not found";
 
-    throws like decrypt_message doc="error status of decrypt_message() if decryption fails"
+        throws like decrypt_message doc="error status of decrypt_message() if decryption fails";
     }
 
 
-    method re_evaluate_message_rating
-        doc="re-evaluate already decrypted message rating"
+    method get_trustwords_for_fprs doc="get full trustwords string for a pair of fingerprints"
     {
-    //parms
+        // parms
 
-    use message msg
-        doc="message to get the rating for. msg->from must point to a valid pEp_identity";
+        use string fpr1 doc="fingerprint 1";
 
-    use hash_list x_keylist doc="decrypted message recipients keys fpr";
+        use string fpr2 doc="fingerprint 2";
 
-    use rating x_enc_status doc="original rating for the decrypted message";
+        use ISO639_1 lang doc="string with ISO 639-1 language code";
 
-    return rating msg_rating doc="rating for the message";
+        create string words 
+        doc="""
+            pointer to string with all trustwords UTF-8 encoded, separated by a blank each. 
+            NULL if language is not supported or trustword wordlist is damaged or unavailable.
+            The caller is responsible to free() it (on Windoze use pEp_free()).
+            """;
 
-    // exceptions
+        return size_t wsize doc="length of full trustwords string";
 
-    throws illegal_value
+        use bool full
+        doc="""
+            if true, generate ALL trustwords for these identities. Else, generate a fixed-size
+            subset. (TODO: fixed-minimum-entropy subset in next version)
+            """;
+
+        // exceptions
+
+        throws out_of_memory doc="out of memory";
+
+        throws trustword_not_found doc="at least one trustword not found";
+    }
+
+
+    method re_evaluate_message_rating doc="re-evaluate already decrypted message rating"
+    {
+        // parms
+
+        use message msg doc="message to get the rating for. msg->from must point to a valid pEp_identity";
+
+        use hash_list x_keylist doc="decrypted message recipients keys fpr";
+
+        use rating x_enc_status doc="original rating for the decrypted message";
+
+        return rating msg_rating doc="rating for the message";
+
+        // exceptions
+
+        throws illegal_value
         doc="""
             if decrypted message doesn't contain X-EncStatus optional field and 
             x_enc_status is pEp_rating_udefined or if decrypted message doesn't 
             contain X-Keylist optional field and x_keylist is empty.
             """;
 
-    throws out_of_memory doc="if not enough memory could be allocated";
+        throws out_of_memory doc="if not enough memory could be allocated";
     }
 
 
-    method get_key_rating_for_user
-        doc="get the rating of a certain key for a certain user"
+    method get_key_rating_for_user doc="get the rating of a certain key for a certain user"
     {
-    //parms
+        // parms
 
-    use string user_id doc="string with user ID";
+        use string user_id doc="string with user ID";
 
-    use string fpr doc="string with fingerprint";
+        use string fpr doc="string with fingerprint";
 
-    return rating key_rating doc="rating of key for this user";
+        return rating key_rating doc="rating of key for this user";
         
-    // exceptions
+        // exceptions
 
-    throws record_not_found
-        doc="if no trust record for user_id and fpr can be found"
+        throws record_not_found doc="if no trust record for user_id and fpr can be found";
+    }
+
+
+    method rating_from_comm_type doc="get the rating for a comm type"
+    {
+        // parms
+
+        use comm_type ct doc="the comm type to deliver the rating for";
+
+        // exceptions
+
+        throws any doc="rating value for comm type ct";
     }
 }
 
 
-func color_from_rating
-    doc="calculate color from rating"
+func color_from_rating doc="calculate color from rating"
 {
     // parms
 
-    use color_from_rating rating doc="color representing that rating"
+    use color_from_rating rating doc="color representing that rating";
 
     // return value
-    return color rating_color doc="color representing that rating"
+
+    return color rating_color doc="color representing that rating";
 }
 
 
-func get_binary_path
-    doc="retrieve path of cryptotech binary if available"
+func get_binary_path doc="retrieve path of cryptotech binary if available"
 {
     //parms
 
-    use cryptotech tech
-    doc="cryptotech to get the binary for";
+    use cryptotech tech doc="cryptotech to get the binary for";
 
     use string path
     doc="""
         path to cryptotech binary or empty if not available. **path is owned by 
-        the library, do not change it!;
-        """
+        the library, do not change it!
+        """;
 }

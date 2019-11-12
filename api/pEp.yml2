@@ -4,7 +4,7 @@
 // this file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-// written by Volker Birk
+// written by Volker Birk and Nana Karlstetter
 
 
 decl package @name;
@@ -24,7 +24,7 @@ decl construct, new is construct;
 // use: readonly in parm, ownership remains with caller
 decl use @type @name (mode=use) alias parm;
 
-// supply: inout parm, ownership remains with caller
+// lend: inout parm, ownership remains with caller
 decl supply @type @name (mode=supply) alias parm;
 
 // create: factory delivers this, ownership goes to caller
@@ -42,7 +42,11 @@ decl caveat(mode=caveat) alias doc;
 
 // base types
 
-// string:  text
+// string:  text  
+    doc="""
+        p≡p engine uses UTF-8 strings which are NFC normalized. 
+        Cf. https://dev.pep.foundation/Engine/Basic%20Concepts%20of%20the%20pEp%20Engine
+        """
 // int:     integer number
 // blob:    Binary Large Object
 // size_t:  size in memory
