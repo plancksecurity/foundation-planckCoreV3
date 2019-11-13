@@ -1165,19 +1165,23 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
     struct decrypt_cookie *cookie = cookie_opaque;
     PEP_SESSION session = cookie->session;
 
+    T(" called.");
     pgp_message_structure_iter_t iter
         = pgp_message_structure_iter (structure);
     for (pgp_message_layer_t layer = pgp_message_structure_iter_next (iter);
          layer;
          layer = pgp_message_structure_iter_next (iter)) {
         pgp_verification_result_iter_t results;
+        T("processing a signature layer");
 
         switch (pgp_message_layer_variant (layer)) {
         case PGP_MESSAGE_LAYER_COMPRESSION:
         case PGP_MESSAGE_LAYER_ENCRYPTION:
+            T("compression or encryption layer (ignoring)");
             break;
 
         case PGP_MESSAGE_LAYER_SIGNATURE_GROUP:
+            T("Signature group...");
             pgp_message_layer_signature_group(layer, &results);
             pgp_verification_result_t result;
             while ((result = pgp_verification_result_iter_next (results))) {
@@ -1187,6 +1191,7 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
 
                 switch (pgp_verification_result_variant (result)) {
                 case PGP_VERIFICATION_RESULT_GOOD_CHECKSUM:
+                    T("signature with good checksum");
                     // We need to add the fingerprint of the primary
                     // key to cookie->signer_keylist.
 
@@ -1217,10 +1222,12 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
 
                     pgp_tpk_t tpk;
                     if (tpk_find_by_keyid(session, keyid, false,
-                                          &tpk, NULL) != PEP_STATUS_OK)
-                        ; // Soft error.  Ignore.
+                                          &tpk, NULL) != PEP_STATUS_OK) {
+                        T("soft error loading key"); // Soft error.  Ignore.
+                    }
 
                     keyid_str = pgp_keyid_to_string (keyid);
+                    T("keyid: %s", keyid_str);
 
                     if (tpk) {
                         // Ok, we have a TPK.
@@ -1231,13 +1238,19 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
                             = pgp_tpk_fingerprint(tpk);
                         char *primary_fpr_str
                             = pgp_fingerprint_to_hex(primary_fpr);
+                        T("have a TPK: %s", primary_fpr_str);
 
                         bool good = true;
 
                         // Make sure the TPK is not revoked, it's
                         // creation time is <= now, and it hasn't
                         // expired.
+<<<<<<< local
                         pgp_revocation_status_t rs = pgp_tpk_revocation_status(tpk);
+=======
+                        T("checking TPK's revocation status");
+                        pgp_revocation_status_t rs = pgp_tpk_revoked(tpk, 0);
+>>>>>>> graft
                         bool revoked = (pgp_revocation_status_variant(rs)
                                         == PGP_REVOCATION_STATUS_REVOKED);
                         pgp_revocation_status_free(rs);
@@ -1253,6 +1266,7 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
 
                         // Same thing for the signing key.
                         if (good) {
+                            T("checking signing key");
                             pgp_tpk_key_iter_t iter = pgp_tpk_key_iter_all(tpk);
                             pgp_key_t key;
                             pgp_signature_t sig;
@@ -1262,6 +1276,8 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
                                 if (pgp_keyid_equal(keyid, x)) {
                                     // Found the signing key.  Let's make
                                     // sure it is valid.
+
+                                    T("Found signing key");
 
                                     revoked = (pgp_revocation_status_variant(rs)
                                                == PGP_REVOCATION_STATUS_REVOKED);
@@ -1292,6 +1308,9 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
                             T("Good signature from %s", primary_fpr_str);
 
                             cookie->good_checksums ++;
+                        } else {
+                            T("Decided to mark the signature from %s as bad",
+                              primary_fpr_str);
                         }
 
                         free(primary_fpr_str);
@@ -1308,6 +1327,7 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
                           keyid_str);
                         cookie->missing_keys ++;
                     }
+                    T("End of processing sig.");
                     break;
 
                 case PGP_VERIFICATION_RESULT_MISSING_KEY:
@@ -1351,6 +1371,7 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
         pgp_message_layer_free (layer);
     }
 
+    T("End of signature layer processing; returning");
     pgp_message_structure_iter_free (iter);
     pgp_message_structure_free (structure);
 
@@ -1455,6 +1476,11 @@ PEP_STATUS pgp_decrypt_and_verify(
         // **********************************
         // Sync changes with pgp_verify_text.
         // **********************************
+
+        T("status is ok");
+        T("good checksums: %d", cookie.good_checksums);
+        T("bad sigs: %d", cookie.bad_checksums);
+        T("missing keys: %d", cookie.missing_keys);
 
         if (cookie.good_checksums) {
             // If there is at least one signature that we can verify,
