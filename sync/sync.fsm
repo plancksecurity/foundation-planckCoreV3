@@ -239,7 +239,6 @@ protocol Sync 1 {
             on Init {
                 do prepareOwnKeys;
                 send OwnKeysOfferer; // we're not grouped yet, this is our own keys
-                do showFormingGroup;
             }
 
             on Cancel {
@@ -259,9 +258,6 @@ protocol Sync 1 {
         }
 
         state FormingGroupRequester {
-            on Init
-                do showFormingGroup;
-
             on Cancel {
                 send Rollback;
                 go Sole;
@@ -391,7 +387,7 @@ protocol Sync 1 {
                 do saveGroupKeys;
                 do receivedKeysAreDefaultKeys;
                 do prepareOwnKeys;
-                send GroupKeys;
+                send GroupKeysAndClose;
                 do showDeviceAdded;
                 go Grouped;
             }
@@ -422,8 +418,6 @@ protocol Sync 1 {
             // Accept is Phase1Commit
             on Accept {
                 do trustThisKey;
-                send GroupTrustThisKey;
-                send CommitAcceptForGroup;
                 go HandshakingGroupedPhase1;
             }
 
@@ -431,7 +425,6 @@ protocol Sync 1 {
                 go HandshakingGroupedPhase2;
 
             on GroupTrustThisKey {
-                do hideHandshakeDialog;
                 do trustThisKey;
                 if sameNegotiation
                     go Grouped;
@@ -442,6 +435,11 @@ protocol Sync 1 {
         }
 
         state HandshakingGroupedPhase1 {
+            on Init {
+                send GroupTrustThisKey;
+                send CommitAcceptForGroup;
+            }
+
             on Rollback if sameNegotiationAndPartner
                 go Grouped;
 
@@ -451,17 +449,20 @@ protocol Sync 1 {
             on CommitAccept if sameNegotiationAndPartner {
                 do prepareOwnKeys;
                 send GroupKeys;
+                do showDeviceAccepted;
                 go Grouped;
             }
 
-            on GroupTrustThisKey {
+            on GroupTrustThisKey
                 do trustThisKey;
-                if sameNegotiation
-                    go Grouped;
-            }
 
             on GroupKeys
                 do saveGroupKeys;
+            
+            on GroupKeysAndClose {
+                do saveGroupKeys;
+                go Grouped;
+            }
         }
 
         state HandshakingGroupedPhase2 {
@@ -480,17 +481,20 @@ protocol Sync 1 {
                 send GroupTrustThisKey;
                 do prepareOwnKeys;
                 send GroupKeys;
+                do showDeviceAccepted;
                 go Grouped;
             }
 
-            on GroupTrustThisKey {
+            on GroupTrustThisKey
                 do trustThisKey;
-                if sameNegotiation
-                    go Grouped;
-            }
 
             on GroupKeys
                 do saveGroupKeys;
+            
+            on GroupKeysAndClose {
+                do saveGroupKeys;
+                go Grouped;
+            }
         }
  
         external Accept 129;
@@ -551,23 +555,27 @@ protocol Sync 1 {
             field IdentityList ownIdentities;
         }
 
-        message OwnKeysOfferer 13, security=attach_own_keys {
+        message GroupKeysAndClose 13, security=attach_own_keys {
             field IdentityList ownIdentities;
         }
 
-        message OwnKeysRequester 14, security=attach_own_keys {
+        message OwnKeysOfferer 14, security=attach_own_keys {
+            field IdentityList ownIdentities;
+        }
+
+        message OwnKeysRequester 15, security=attach_own_keys {
             field IdentityList ownIdentities;
         }
 
         // grouped handshake
-        message NegotiationRequestGrouped 15, security=untrusted {
+        message NegotiationRequestGrouped 16, security=untrusted {
             field TID challenge;
             auto Version version;
             field TID negotiation;
             field bool is_group;
         }
 
-        message GroupHandshake 16 {
+        message GroupHandshake 17 {
             field TID negotiation;
             field Hash key;
         }

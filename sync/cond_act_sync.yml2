@@ -318,15 +318,12 @@ action showJoinGroupHandshake
 action showGroupedHandshake
     call "show_handshake" with "type" > SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE
 
-action hideHandshakeDialog
-    call "show_handshake" with "type" > SYNC_NOTIFY_OVERTAKEN
-
 action showDeviceAdded
     call "show_handshake" with "type" > SYNC_NOTIFY_ACCEPTED_DEVICE_ADDED
 
-action showFormingGroup
-    call "show_handshake" with "type" > SYNC_NOTIFY_FORMING_GROUP
-    
+action showDeviceAccepted
+    call "show_handshake" with "type" > SYNC_NOTIFY_ACCEPTED_DEVICE_ACCEPTED
+
 action showGroupCreated
     call "show_handshake" with "type" > SYNC_NOTIFY_ACCEPTED_GROUP_CREATED
 
@@ -496,7 +493,7 @@ action storeThisKey
     if (!session->sync_state.keysync.key.size)
         return PEP_ILLEGAL_VALUE;
 
-    char *fpr = strndup(session->sync_state.keysync.key.buf, session->sync_state.keysync.key.size);
+    char *fpr = strndup((const char *) session->sync_state.keysync.key.buf, session->sync_state.keysync.key.size);
     assert(fpr);
     if (!fpr)
         return PEP_OUT_OF_MEMORY;
