@@ -239,7 +239,6 @@ protocol Sync 1 {
             on Init {
                 do prepareOwnKeys;
                 send OwnKeysOfferer; // we're not grouped yet, this is our own keys
-                do showFormingGroup;
             }
 
             on Cancel {
@@ -259,9 +258,6 @@ protocol Sync 1 {
         }
 
         state FormingGroupRequester {
-            on Init
-                do showFormingGroup;
-
             on Cancel {
                 send Rollback;
                 go Sole;
@@ -431,7 +427,6 @@ protocol Sync 1 {
                 go HandshakingGroupedPhase2;
 
             on GroupTrustThisKey {
-                do hideHandshakeDialog;
                 do trustThisKey;
                 if sameNegotiation
                     go Grouped;
@@ -451,6 +446,7 @@ protocol Sync 1 {
             on CommitAccept if sameNegotiationAndPartner {
                 do prepareOwnKeys;
                 send GroupKeys;
+                do showDeviceAccepted;
                 go Grouped;
             }
 
@@ -480,6 +476,7 @@ protocol Sync 1 {
                 send GroupTrustThisKey;
                 do prepareOwnKeys;
                 send GroupKeys;
+                do showDeviceAccepted;
                 go Grouped;
             }
 

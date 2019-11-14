@@ -27,13 +27,13 @@ typedef enum _sync_handshake_signal {
     // handshake accepted by user
     SYNC_NOTIFY_ACCEPTED_DEVICE_ADDED = 6,
     SYNC_NOTIFY_ACCEPTED_GROUP_CREATED = 7,
-    // SYNC_NOTIFY_ACCEPTED_DEVICE_MOVED = 8,
+    SYNC_NOTIFY_ACCEPTED_DEVICE_ACCEPTED = 8,
 
     // handshake dialog must be closed
-    SYNC_NOTIFY_OVERTAKEN = 9,
+    // SYNC_NOTIFY_OVERTAKEN = 9,
 
     // forming group
-    SYNC_NOTIFY_FORMING_GROUP = 10,
+    // SYNC_NOTIFY_FORMING_GROUP = 10,
 
     // notification of actual group status
     SYNC_NOTIFY_SOLE = 254,
