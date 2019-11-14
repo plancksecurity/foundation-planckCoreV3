@@ -15,8 +15,10 @@ in the test/src directory!)*
 
 In addition to the engine requirements, you will need:
 
-  * `cmake` `python3` `git` (for getting the `gtest-parallel` repository, unless
-  * you grab the tarball from somewhere)
+  * `cmake`
+  * `python3`
+  * `git` (for getting the `gtest-parallel` repository, unless you grab the
+  tarball from somewhere)
 
 ## Building the prerequisites
 
