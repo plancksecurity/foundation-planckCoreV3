@@ -210,8 +210,8 @@ protocol Sync 1 {
             }
 
             on Accept {
-                send CommitAcceptOfferer;
                 do trustThisKey;
+                send CommitAcceptOfferer;
                 go FormingGroupOfferer;
             }
         }
@@ -229,8 +229,8 @@ protocol Sync 1 {
             }
 
             on Accept {
-                send CommitAcceptRequester;
                 do trustThisKey;
+                send CommitAcceptRequester;
                 go FormingGroupRequester;
             }
         }
@@ -378,6 +378,7 @@ protocol Sync 1 {
 
             on Accept {
                 do trustThisKey;
+                send CommitAccept;
                 go JoiningGroup;
             }
         }
