@@ -496,7 +496,7 @@ action storeThisKey
     if (!session->sync_state.keysync.key.size)
         return PEP_ILLEGAL_VALUE;
 
-    char *fpr = strndup(session->sync_state.keysync.key.buf, session->sync_state.keysync.key.size);
+    char *fpr = strndup((const char *) session->sync_state.keysync.key.buf, session->sync_state.keysync.key.size);
     assert(fpr);
     if (!fpr)
         return PEP_OUT_OF_MEMORY;
