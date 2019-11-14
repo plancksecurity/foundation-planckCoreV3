@@ -71,16 +71,39 @@ goes in. Guessing `/opt/local/src`.
 
 #### Downloading and compiling the source yourself
 
-For now, don't.
+  1. Get the source, Fred. (Luke is tired of the source, I hear.)
+  ```
+  git clone https://github.com/google/googletest.git
+  ```
+  
+  2. Switch into the source directory and find the directory 
+  containing the `src` and `include` directories. Mark this directory
+  for later. (For me, this is `./googletest/googletest`)
+  
+  3. Edit `CMakeLists.txt` here to contain the following line at the top:
+  ```
+  set (CMAKE_CXX_STANDARD 11)
+  ```
+  (If you don't, it won't compile, and I will shake my fist at you.)
+  
+  4. Execute, in this directory:
+  ```
+  cmake CMakeLists.txt
+  make
+  ```
+  
+  5. In the lib directory of your current directory are located the
+  library files you'll use. Copy or symlink them to the library location 
+  of your choice (make sure this is a directory that can be seen during 
+  the test build process - i.e. one that's in one of the library paths 
+  used in building. Mine are located in `$HOME/lib`.
 
-Or do, and document it for me.
-
-If you were using the git repo and it was working before, please follow the
-instructions above for Debian/Ubuntu, only with your source repository in mind
-instead of `/usr/src`, and pay attention to the variables you'll need to set in
-`local.conf` for the Makefile - they are different from before.
-It should work, but I haven't tested it yet.
-
+  6. See `Makefile` and `local.conf` under "Building the test suite" -
+  In this scenario, I set GTEST_SRC_DIR googletest/googletest under the 
+  directory I checked out googletest in (i.e. the absolute path of where 
+  the `src` and `include` directories were above - for me, 
+  `/Users/krista/googletest/googletest`).
+  
 ### Installing `gtest-parallel`
 
 Pick a source directory and put your `gtest-parallel` source there
@@ -98,9 +121,9 @@ variables here, but if you need to override them, please either create or modify
 `local.conf` in the top-level engine directory as needed. The relevant variables
 are:
 
-  * `GTEST_SRC_DIR`: This is the directory where the gtest source you compiled
-  above is located (defaults to `/usr/src/gtest`)
-  * `GTEST_INC_DIR`: This is where the include files for gtest are located
+  * `GTEST_SRC_DIR`: This is the directory where you compiled googletest above
+  (defaults to `/usr/src/gtest`)
+  * `GTEST_INC_DIR`: This is where the include files for googletest are located
   (defaults to `$(GTEST_SRC_DIR)/include`)
   * `GTEST_PL`: This is the full path to the *python file* for `gtest_parallel`
   (default presumes you cloned it under `src` in your home directory, i.e. it is
@@ -168,3 +191,17 @@ have found a dastardly bug in the engine, but it can also be a test issue.
 # Creating new tests
 
 Script next on the agenda...
+
+# Known Problems
+
+There are 5 (maybe 6) tests that currently fail which are the function of
+broken tests, not the engine. They are on the agenda to fix (expired
+keys inside imported mails, etc). You'll see something like this - please
+ignore for this particular second in time:
+```
+    170 ms: ./EngineTests SubkeyRatingEvalTest.check_subkey_rating_eval_no_es
+     170 ms: ./EngineTests SubkeyRatingEvalTest.check_subkey_rating_eval_revoked_sign_no_alt
+     253 ms: ./EngineTests SubkeyRatingEvalTest.check_subkey_rating_eval_weak_e_strong_ecc_se
+    1189 ms: ./EngineTests KeyResetMessageTest.check_non_reset_receive_revoked
+    1376 ms: ./EngineTests KeyResetMessageTest.check_reset_receive_revoked
+```
