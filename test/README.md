@@ -1,6 +1,6 @@
 # Building and Running the Tests for the p≡p Engine
 
-Work in progress... Currently have the debian build/run instructions in.
+Work in progress.
 
 ## Caveat, before you begin
 
@@ -106,7 +106,8 @@ Ubuntu](https://www.eriksmistad.no/getting-started-with-google-test-on-ubuntu/))
   used in building. Mine are located in `$HOME/lib`.
 
   6. See `Makefile` and `local.conf` under "Building the test suite" below -
-  In this scenario, I set `GTEST_SRC_DIR` as `<clone_path>/googletest/googletest` (i.e. the absolute path of where the `src` and `include` directories were 
+  In this scenario, I set `GTEST_SRC_DIR` as  `<clone_path>/googletest/googletest`
+  (i.e. the absolute path of where the `src` and `include` directories were 
   above - for me, `/Users/krista/googletest/googletest`).
   
 ### Installing `gtest-parallel`
