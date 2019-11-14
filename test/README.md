@@ -127,20 +127,43 @@ have found a dastardly bug in the engine, but it can also be a test issue.
 
 *Caveat lector*.
 
-  1. To run sequentially, *in the same process*: `./EngineTests
-  --gtest_filter=TestSuiteName*` (for example, for `DeleteKeyTest`:
-  `./EngineTests DeleteKeyTest*`)
-  2. To debug the same with lldb: `lldb ./EngineTests -- --gtest_filter=TestSuiteName*`
-  3. To debug with gdb: `gdb --args ./EngineTests --gtest_filter=TestSuiteName*`
+  1. To run sequentially, *in the same process*:
+  ```
+  ./EngineTests --gtest_filter=TestSuiteName*
+  ```
+  For example, for `DeleteKeyTest`:
+  ```
+  ./EngineTests DeleteKeyTest*
+  ```
+
+  2. To debug the same with lldb:
+  ```
+  lldb ./EngineTests -- --gtest_filter=TestSuiteName*
+  ```
+  3. To debug with gdb:
+  ```
+  gdb --args ./EngineTests --gtest_filter=TestSuiteName*
+  ```
 
 ### To run and/or debug individual test cases   
-  1. To run: `./EngineTests --gtest_filter=TestSuiteName.test_function_name`
-  (for example, for `check_delete_single_pubkey` in `DeleteKeyTest`:
-  `./EngineTests DeleteKeyTest.check_delete_single_pubkey`)
+  1. To run:
+  ```
+  ./EngineTests --gtest_filter=TestSuiteName.test_function_name
+  ```
+  For example, for `check_delete_single_pubkey` in `DeleteKeyTest`:
+  ```
+  ./EngineTests DeleteKeyTest.check_delete_single_pubkey
+  ```
+
   2. To debug the same with lldb:
-  `lldb ./EngineTests -- --gtest_filter=TestSuiteName.test_function_name`
+  ```
+  lldb ./EngineTests -- --gtest_filter=TestSuiteName.test_function_name
+  ```
+
   3. To debug with gdb:
-  `gdb --args ./EngineTests --gtest_filter=TestSuiteName.test_function_name`
+  ```
+  gdb --args ./EngineTests --gtest_filter=TestSuiteName.test_function_name
+  ```
 
 # Creating new tests
 
