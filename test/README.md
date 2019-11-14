@@ -65,9 +65,16 @@ Ubuntu](https://www.eriksmistad.no/getting-started-with-google-test-on-ubuntu/))
 
 ##### MacOS
 
-I am totally guessing for now - this is a placeholder - that
-macports gtest install will do the same. Will need to find the directories this
-goes in. Guessing `/opt/local/src`.
+  1. Install package `gtest` from Macports
+  
+  2. Macports will build the libraries for you.
+  
+  3. In the next major section ("Building the Test Suite"), under 
+  "Makefile and local.conf", set `GTEST_SRC_DIR` to 
+  `/opt/local/src/googletest` in `local.conf` (see instructions below)
+  
+  4. Make sure `/opt/local/lib` is in your library path when compiling and 
+  linking the tests.
 
 #### Downloading and compiling the source yourself
 
@@ -93,16 +100,14 @@ goes in. Guessing `/opt/local/src`.
   ```
   
   5. In the lib directory of your current directory are located the
-  library files you'll use. Copy or symlink them to the library location 
-  of your choice (make sure this is a directory that can be seen during 
-  the test build process - i.e. one that's in one of the library paths 
+  library files you'll use (`lib/*.a`). Copy or symlink them to the library 
+  location  of your choice (make sure this is a directory that can be seen 
+  during the test build process - i.e. one that's in one of the library paths 
   used in building. Mine are located in `$HOME/lib`.
 
-  6. See `Makefile` and `local.conf` under "Building the test suite" -
-  In this scenario, I set GTEST_SRC_DIR googletest/googletest under the 
-  directory I checked out googletest in (i.e. the absolute path of where 
-  the `src` and `include` directories were above - for me, 
-  `/Users/krista/googletest/googletest`).
+  6. See `Makefile` and `local.conf` under "Building the test suite" below -
+  In this scenario, I set `GTEST_SRC_DIR` as `<clone_path>/googletest/googletest` (i.e. the absolute path of where the `src` and `include` directories were 
+  above - for me, `/Users/krista/googletest/googletest`).
   
 ### Installing `gtest-parallel`
 
@@ -123,8 +128,10 @@ are:
 
   * `GTEST_SRC_DIR`: This is the directory where you compiled googletest above
   (defaults to `/usr/src/gtest`)
+  
   * `GTEST_INC_DIR`: This is where the include files for googletest are located
   (defaults to `$(GTEST_SRC_DIR)/include`)
+  
   * `GTEST_PL`: This is the full path to the *python file* for `gtest_parallel`
   (default presumes you cloned it under `src` in your home directory, i.e. it is
   `$(HOME)/src/gtest-parallel/gtest_parallel.py`)
@@ -140,6 +147,7 @@ Presuming the above works, then from the top test directory, simply run make.
 Do one of:
 
   1. `make test` OR
+  
   2. `python3 <path to gtest-parallel.py> ./EngineTests`
 
 ### To run individual test suites, especially for debugging purposes
