@@ -230,6 +230,9 @@ DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session)
     if (!session)
         return PEP_ILLEGAL_VALUE;
 
+    if (session->inject_sync_event)
+        session->inject_sync_event((void *) SHUTDOWN, NULL);
+
     identity_list *il = NULL;
     PEP_STATUS status = own_identities_retrieve(session, &il);
     if (status)

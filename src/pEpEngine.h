@@ -157,7 +157,7 @@ typedef struct Sync_event *SYNC_EVENT;
 //  parameters:
 //      ev (in)         event to free
 
-void free_Sync_event(SYNC_EVENT ev);
+DYNAMIC_API void free_Sync_event(SYNC_EVENT ev);
 
 
 // inject_sync_event - inject sync protocol message
@@ -168,6 +168,10 @@ void free_Sync_event(SYNC_EVENT ev);
 //
 //  return value:
 //      0 if event could be stored successfully or nonzero otherwise
+//
+//  caveat:
+//      if ev is SHUTDOWN then the implementation has to be synchronous
+//      and the shutdown must be immediate
 
 typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 

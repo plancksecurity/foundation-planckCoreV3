@@ -58,7 +58,7 @@ tstylesheet {
         //      event must be valid for fsm or None
         //      in case msg is given event will be calculated out of message
 
-        «@name»_event_t *new_«@name»_event(«yml:ucase(@name)»_PR fsm, int event, «yml:ucase(@name)» *msg);
+        DYNAMIC_API «@name»_event_t *new_«@name»_event(«yml:ucase(@name)»_PR fsm, int event, «yml:ucase(@name)» *msg);
 
         #define «yml:ucase(@name)»_TIMEOUT_EVENT new_«@name»_event(«@name»_PR_NOTHING, 0, NULL);
 
@@ -68,7 +68,7 @@ tstylesheet {
         //  parameters:
         //      ev (in)         event to free
 
-        void free_«@name»_event(«@name»_event_t *ev);
+        DYNAMIC_API void free_«@name»_event(«@name»_event_t *ev);
 
 
         #ifdef __cplusplus
@@ -89,7 +89,7 @@ tstylesheet {
         #include "«@name»_func.h"
         `` for "fsm" | #include "«@name»_fsm.h"
 
-        «@name»_event_t *new_«@name»_event(«yml:ucase(@name)»_PR fsm, int event, «@name»_t *msg)
+        DYNAMIC_API «@name»_event_t *new_«@name»_event(«yml:ucase(@name)»_PR fsm, int event, «@name»_t *msg)
         {
             «@name»_event_t *ev = («@name»_event_t *) calloc(1, sizeof(«@name»_event_t));
             assert(ev);
@@ -113,7 +113,7 @@ tstylesheet {
             return ev;
         }
 
-        void free_«@name»_event(«@name»_event_t *ev)
+        DYNAMIC_API void free_«@name»_event(«@name»_event_t *ev)
         {
             if (ev) {
                 free_identity_list(ev->own_identities);
