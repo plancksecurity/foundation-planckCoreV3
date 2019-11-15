@@ -157,7 +157,7 @@ typedef struct Sync_event *SYNC_EVENT;
 //  parameters:
 //      ev (in)         event to free
 
-void free_Sync_event(SYNC_EVENT ev);
+DYNAMIC_API void free_Sync_event(SYNC_EVENT ev);
 
 
 // inject_sync_event - inject sync protocol message
@@ -1422,6 +1422,9 @@ PEP_STATUS sign_only(PEP_SESSION session,
                      const char *fpr, 
                      char **sign, 
                      size_t *sign_size);
+                     
+PEP_STATUS set_all_userids_to_own(PEP_SESSION session, 
+                                  identity_list* id_list);
 
 #ifdef __cplusplus
 }

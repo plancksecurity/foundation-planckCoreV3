@@ -201,7 +201,7 @@ DYNAMIC_API PEP_STATUS enter_device_group(
     );
 
 
-// leave_device_group() - leave a device group
+// leave_device_group() - leave a device group and shutdown sync
 //
 //  parameters:
 //      session                 pEp session

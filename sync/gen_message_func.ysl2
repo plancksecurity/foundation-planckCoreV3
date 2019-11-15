@@ -318,6 +318,11 @@ template "field", mode=update_message {
                     &session->«$state».«@name», NULL);
             if (!il)
                 return PEP_OUT_OF_MEMORY;
+
+            PEP_STATUS own_idents_status = set_all_userids_to_own(session, il);
+            if (own_idents_status != PEP_STATUS_OK)
+                return own_idents_status;
+                
             IdentityList_t *_il = IdentityList_from_identity_list(il,
                     &msg->choice.«yml:lcase(../../@name)».choice.«$message_name».«@name»);
             free_identity_list(il);
@@ -398,6 +403,11 @@ template "field", mode=update_state {
                     &msg->choice.«yml:lcase(../../@name)».choice.«$message_name».«@name», NULL);
             if (!il)
                 return PEP_OUT_OF_MEMORY;
+                
+            PEP_STATUS own_idents_status = set_all_userids_to_own(session, il);
+            if (own_idents_status != PEP_STATUS_OK)
+                return own_idents_status;
+                
             IdentityList_t *_il = IdentityList_from_identity_list(il,
                     &session->«yml:lcase(../../../@name)»_state.«yml:lcase(../../@name)».«@name»);
             free_identity_list(il);
@@ -427,4 +437,3 @@ case «../@name»_PR_«yml:lcase(@name)»:
 ||
 
 }
-

@@ -368,6 +368,11 @@ action saveGroupKeys
         free(user_id);
         return PEP_OUT_OF_MEMORY;
     }
+    status = set_all_userids_to_own(session, il);
+    if (status != PEP_STATUS_OK) {
+        free(user_id);
+        return status;
+    }
     
     identity_list *oil = session->sync_state.own.identities;
 
@@ -451,6 +456,12 @@ action receivedKeysAreDefaultKeys
     identity_list *il = IdentityList_to_identity_list(&session->sync_state.keysync.ownIdentities, NULL);
     if (!il)
         return PEP_OUT_OF_MEMORY;
+
+    status = set_all_userids_to_own(session, il);
+    if (status != PEP_STATUS_OK) {
+        free(user_id);
+        return status;
+    }
 
     for (identity_list *_il = il; _il && _il->ident ; _il = _il->next) {
         // replace partner's user_id with own user_id
