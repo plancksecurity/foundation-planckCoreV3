@@ -47,7 +47,7 @@ newfile.write(tb(3) + "// You can remove any or all of the following functions i
 newfile.write(tb(3) + "// is empty.\n")
 newfile.write(tb(3) + test_suite + "() {\n")
 newfile.write(tb(4) + "// You can do set-up work for each test here.\n")
-newfile.write(tb(4) + "test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();\n")
+newfile.write(tb(4) + "test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->GTEST_SUITE_SYM();\n")
 newfile.write(tb(4) + "test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();\n")
 newfile.write(tb(4) + "test_path = get_main_test_home_dir() + \"/\" + test_suite_name + \"/\" + test_name;\n")
 newfile.write(tb(3) + "}\n\n")
