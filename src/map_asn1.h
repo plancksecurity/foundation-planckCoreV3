@@ -80,4 +80,3 @@ identity_list *IdentityList_to_identity_list(IdentityList_t *list, identity_list
 #ifdef __cplusplus
 }
 #endif
-
