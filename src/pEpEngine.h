@@ -157,7 +157,7 @@ typedef struct Sync_event *SYNC_EVENT;
 //  parameters:
 //      ev (in)         event to free
 
-void free_Sync_event(SYNC_EVENT ev);
+DYNAMIC_API void free_Sync_event(SYNC_EVENT ev);
 
 
 // inject_sync_event - inject sync protocol message
