@@ -147,7 +147,7 @@ PEP_STATUS set_all_userids_in_list(identity_list* id_list, const char* user_id) 
                 return PEP_OUT_OF_MEMORY;
             curr_list->ident->user_id = dup_userid;    
         }    
-        curr_list = id_list->next;
+        curr_list = curr_list->next;
     }
     return PEP_STATUS_OK;
 }
