@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		15147EF0237E9EA7003989FE /* NegotiationRequestGrouped.h in Headers */ = {isa = PBXBuildFile; fileRef = 15147EE8237E9EA7003989FE /* NegotiationRequestGrouped.h */; };
+		15147EF1237E9EA7003989FE /* GroupHandshake.h in Headers */ = {isa = PBXBuildFile; fileRef = 15147EED237E9EA7003989FE /* GroupHandshake.h */; };
+		15147EF2237E9EA7003989FE /* GroupKeysAndClose.c in Sources */ = {isa = PBXBuildFile; fileRef = 15147EEE237E9EA7003989FE /* GroupKeysAndClose.c */; };
+		15147EF3237E9EA7003989FE /* GroupKeysAndClose.h in Headers */ = {isa = PBXBuildFile; fileRef = 15147EEF237E9EA7003989FE /* GroupKeysAndClose.h */; };
 		154917FD22B926700091B6D6 /* libnettle.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 154917F922B9266F0091B6D6 /* libnettle.a */; };
 		154917FE22B926700091B6D6 /* libsequoia_openpgp_ffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 154917FA22B926700091B6D6 /* libsequoia_openpgp_ffi.a */; };
 		154917FF22B926700091B6D6 /* libhogweed.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 154917FB22B926700091B6D6 /* libhogweed.a */; };
@@ -147,7 +151,6 @@
 		431F04B722733A7E00CCE960 /* key_reset.h in Headers */ = {isa = PBXBuildFile; fileRef = 431F04B222733A7E00CCE960 /* key_reset.h */; };
 		43370833203C075A004E6547 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 4337082D203C075A004E6547 /* sqlite3.c */; };
 		43370834203C075A004E6547 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 43370832203C075A004E6547 /* sqlite3.h */; };
-		433CD798237EB65000F73AE4 /* GroupKeysAndClose.c in Sources */ = {isa = PBXBuildFile; fileRef = 433CD793237EB65000F73AE4 /* GroupKeysAndClose.c */; };
 		438C43B52167752C00C7425B /* labeled_int_list.h in Headers */ = {isa = PBXBuildFile; fileRef = 438C43AF2167752C00C7425B /* labeled_int_list.h */; };
 		438C43B62167752C00C7425B /* labeled_int_list.c in Sources */ = {isa = PBXBuildFile; fileRef = 438C43B42167752C00C7425B /* labeled_int_list.c */; };
 		43E4FBB22362C05600BC01F4 /* NegotiationRequestGrouped.c in Sources */ = {isa = PBXBuildFile; fileRef = 43E4FBAD2362C05600BC01F4 /* NegotiationRequestGrouped.c */; };
@@ -235,6 +238,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		15147EE8237E9EA7003989FE /* NegotiationRequestGrouped.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NegotiationRequestGrouped.h; path = ../asn.1/NegotiationRequestGrouped.h; sourceTree = "<group>"; };
+		15147EED237E9EA7003989FE /* GroupHandshake.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GroupHandshake.h; path = ../asn.1/GroupHandshake.h; sourceTree = "<group>"; };
+		15147EEE237E9EA7003989FE /* GroupKeysAndClose.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysAndClose.c; path = ../asn.1/GroupKeysAndClose.c; sourceTree = "<group>"; };
+		15147EEF237E9EA7003989FE /* GroupKeysAndClose.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GroupKeysAndClose.h; path = ../asn.1/GroupKeysAndClose.h; sourceTree = "<group>"; };
 		154917F922B9266F0091B6D6 /* libnettle.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libnettle.a; path = ../../sequoia4ios/build/lib/libnettle.a; sourceTree = "<group>"; };
 		154917FA22B926700091B6D6 /* libsequoia_openpgp_ffi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsequoia_openpgp_ffi.a; path = ../../sequoia4ios/build/lib/libsequoia_openpgp_ffi.a; sourceTree = "<group>"; };
 		154917FB22B926700091B6D6 /* libhogweed.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libhogweed.a; path = ../../sequoia4ios/build/lib/libhogweed.a; sourceTree = "<group>"; };
@@ -376,7 +383,6 @@
 		431F04B222733A7E00CCE960 /* key_reset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = key_reset.h; path = ../src/key_reset.h; sourceTree = "<group>"; };
 		4337082D203C075A004E6547 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = ../src/sqlite3.c; sourceTree = "<group>"; };
 		43370832203C075A004E6547 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = ../src/sqlite3.h; sourceTree = "<group>"; };
-		433CD793237EB65000F73AE4 /* GroupKeysAndClose.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysAndClose.c; path = ../asn.1/GroupKeysAndClose.c; sourceTree = "<group>"; };
 		438C43962167582400C7425B /* sync_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sync_api.h; path = ../src/sync_api.h; sourceTree = "<group>"; };
 		438C43AF2167752C00C7425B /* labeled_int_list.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = labeled_int_list.h; path = ../src/labeled_int_list.h; sourceTree = "<group>"; };
 		438C43B42167752C00C7425B /* labeled_int_list.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = labeled_int_list.c; path = ../src/labeled_int_list.c; sourceTree = "<group>"; };
@@ -484,7 +490,10 @@
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
 			isa = PBXGroup;
 			children = (
-				433CD793237EB65000F73AE4 /* GroupKeysAndClose.c */,
+				15147EED237E9EA7003989FE /* GroupHandshake.h */,
+				15147EEE237E9EA7003989FE /* GroupKeysAndClose.c */,
+				15147EEF237E9EA7003989FE /* GroupKeysAndClose.h */,
+				15147EE8237E9EA7003989FE /* NegotiationRequestGrouped.h */,
 				43E4FBB32362C29100BC01F4 /* GroupHandshake.c */,
 				43E4FBAD2362C05600BC01F4 /* NegotiationRequestGrouped.c */,
 				15B037A822B2B822002D664C /* asn_application.h */,
@@ -745,6 +754,7 @@
 				15B0381322B2B823002D664C /* asn_application.h in Headers */,
 				15B0380322B2B822002D664C /* OwnKeysRequester.h in Headers */,
 				154918AB22B940200091B6D6 /* fsm_common.h in Headers */,
+				15147EF3237E9EA7003989FE /* GroupKeysAndClose.h in Headers */,
 				15B037E722B2B822002D664C /* GroupTrustThisKey.h in Headers */,
 				15B037C522B2B822002D664C /* Beacon.h in Headers */,
 				15B0380622B2B822002D664C /* CommitAcceptForGroup.h in Headers */,
@@ -786,6 +796,7 @@
 				15B037C822B2B822002D664C /* ISO639-1.h in Headers */,
 				15B037C922B2B822002D664C /* xer_decoder.h in Headers */,
 				43370834203C075A004E6547 /* sqlite3.h in Headers */,
+				15147EF1237E9EA7003989FE /* GroupHandshake.h in Headers */,
 				15B037D522B2B822002D664C /* TID.h in Headers */,
 				15B037AD22B2B822002D664C /* Rollback.h in Headers */,
 				154918BF22B940200091B6D6 /* sync_codec.h in Headers */,
@@ -795,6 +806,7 @@
 				154918AC22B940200091B6D6 /* status_to_string.h in Headers */,
 				15B037DA22B2B822002D664C /* asn_SET_OF.h in Headers */,
 				154918C222B940200091B6D6 /* Sync_impl.h in Headers */,
+				15147EF0237E9EA7003989FE /* NegotiationRequestGrouped.h in Headers */,
 				15B037D422B2B822002D664C /* NegotiationRequest.h in Headers */,
 				430BCC482015EE800077E998 /* pEp_string.h in Headers */,
 				15B037F122B2B822002D664C /* OCTET_STRING.h in Headers */,
@@ -987,7 +999,7 @@
 				15B0380D22B2B822002D664C /* CommitReject.c in Sources */,
 				15B0380B22B2B822002D664C /* NativeInteger.c in Sources */,
 				154918B322B940200091B6D6 /* Sync_impl.c in Sources */,
-				433CD798237EB65000F73AE4 /* GroupKeysAndClose.c in Sources */,
+				15147EF2237E9EA7003989FE /* GroupKeysAndClose.c in Sources */,
 				15B037E322B2B822002D664C /* GroupKeys.c in Sources */,
 				15B037B122B2B822002D664C /* NegotiationRequest.c in Sources */,
 				15B037FC22B2B822002D664C /* Hex.c in Sources */,
