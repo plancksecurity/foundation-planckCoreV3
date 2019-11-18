@@ -10,10 +10,13 @@
 #include "pEpEngine.h"
 #include "message_api.h"
 #include "aux_mime_msg.h"
+#include "mime.h"
 
 void test_init();
 
 bool file_exists(std::string filename);
+bool is_pEpmsg(const message *msg); // duplicates static func in message_api.c, fyi
+
 
 extern std::string _main_test_home_dir;
 

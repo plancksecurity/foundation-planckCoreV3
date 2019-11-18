@@ -57,6 +57,15 @@ std::string get_main_test_home_dir() {
     return _main_test_home_dir;
 }
 
+bool is_pEpmsg(const message *msg)
+{
+    for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
+        if (strcasecmp(i->value->key, "X-pEp-Version") == 0)
+            return true;
+    }
+    return false;
+}
+
 PEP_STATUS read_file_and_import_key(PEP_SESSION session, const char* fname) {
     const std::string key = slurp(fname);
     PEP_STATUS status = (key.empty() ? PEP_KEY_NOT_FOUND : PEP_STATUS_OK);
@@ -608,7 +617,7 @@ pEp_error:
     return status;
 }
 
-PEP_STATUS MIME_encrypt_message(
+DYNAMIC_API PEP_STATUS MIME_encrypt_message(
     PEP_SESSION session,
     const char *mimetext,
     size_t size,
@@ -631,34 +640,34 @@ PEP_STATUS MIME_encrypt_message(
         char* own_id = NULL;
         status = get_default_own_userid(session, &own_id);
         free(tmp_msg->from->user_id);
-
+        
         if (status != PEP_STATUS_OK || !own_id) {
             tmp_msg->from->user_id = strdup(PEP_OWN_USERID);
         }
         else {
             tmp_msg->from->user_id = own_id; // ownership transfer
         }
-
+            
         status = myself(session, tmp_msg->from);
         if (status != PEP_STATUS_OK)
             goto pEp_error;
     }
-
+    
     // Own identities can be retrieved here where they would otherwise
     // fail because we lack all other information. This is ok and even
     // desired. FIXME: IS it?
     status = update_identity_recip_list(session, tmp_msg->to);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
-
+    
     status = update_identity_recip_list(session, tmp_msg->cc);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
-
+    
     status = update_identity_recip_list(session, tmp_msg->bcc);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
-
+    
     // This isn't incoming, though... so we need to reverse the direction
     tmp_msg->dir = PEP_dir_outgoing;
     status = encrypt_message(session,
@@ -667,17 +676,24 @@ PEP_STATUS MIME_encrypt_message(
                              &enc_msg,
                              enc_format,
                              flags);
-
-    if (status != PEP_STATUS_OK)
+                             
+    message* ret_msg = NULL;                         
+    if (status == PEP_STATUS_OK || status == PEP_UNENCRYPTED)
+        ret_msg = (status == PEP_STATUS_OK ? enc_msg : tmp_msg);
+    else                                
         goto pEp_error;
 
-
-    if (!enc_msg) {
+    if (status == PEP_STATUS_OK && !enc_msg) {
         status = PEP_UNKNOWN_ERROR;
         goto pEp_error;
     }
-
-    status = _mime_encode_message_internal(enc_msg, false, mime_ciphertext, false, false);
+    
+    PEP_STATUS tmp_status = _mime_encode_message_internal(
+                                    ret_msg, 
+                                    false, 
+                                    mime_ciphertext, 
+                                    false, 
+                                    false);
 
 pEp_error:
     free_message(tmp_msg);
