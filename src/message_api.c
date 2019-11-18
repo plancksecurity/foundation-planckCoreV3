@@ -4413,7 +4413,6 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
                                     ret_msg, 
                                     false, 
                                     mime_ciphertext, 
-                                    false, 
                                     false);
 
 pEp_error:
