@@ -222,6 +222,9 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
                                     mime_ciphertext, 
                                     false, 
                                     false);
+    
+    if (tmp_status != PEP_STATUS_OK)
+        status = tmp_status;
 
 pEp_error:
     free_message(tmp_msg);

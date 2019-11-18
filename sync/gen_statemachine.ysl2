@@ -307,6 +307,10 @@ tstylesheet {
                     goto the_end;
                 }
 
+                status = set_all_userids_to_own(session, own_identities);
+                if (status != PEP_STATUS_OK)
+                    goto the_end;
+                    
                 ev->own_identities = own_identities;
 
                 int result = session->inject_«yml:lcase(@name)»_event(ev,
