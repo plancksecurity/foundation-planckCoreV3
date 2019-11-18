@@ -4354,7 +4354,7 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
 
     status = mime_decode_message(mimetext, size, &tmp_msg);
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        goto pEp_error;
 
     // MIME decode message delivers only addresses. We need more.
     if (tmp_msg->from) {
@@ -4371,7 +4371,7 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
             
         status = myself(session, tmp_msg->from);
         if (status != PEP_STATUS_OK)
-            goto pep_error;
+            goto pEp_error;
     }
     
     // Own identities can be retrieved here where they would otherwise
@@ -4379,15 +4379,15 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
     // desired. FIXME: IS it?
     status = update_identity_recip_list(session, tmp_msg->to);
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        goto pEp_error;
     
     status = update_identity_recip_list(session, tmp_msg->cc);
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        goto pEp_error;
     
     status = update_identity_recip_list(session, tmp_msg->bcc);
     if (status != PEP_STATUS_OK)
-        goto pep_error;
+        goto pEp_error;
     
     // This isn't incoming, though... so we need to reverse the direction
     tmp_msg->dir = PEP_dir_outgoing;
@@ -4398,18 +4398,25 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
                              enc_format,
                              flags);
                              
-    if (status != PEP_STATUS_OK)
-        goto pep_error;
+    message* ret_msg = NULL;                         
+    if (status == PEP_STATUS_OK || status == PEP_UNENCRYPTED)
+        ret_msg = (status == PEP_STATUS_OK ? enc_msg : tmp_msg);
+    else                                
+        goto pEp_error;
 
-
-    if (!enc_msg) {
+    if (status == PEP_STATUS_OK && !enc_msg) {
         status = PEP_UNKNOWN_ERROR;
-        goto pep_error;
+        goto pEp_error;
     }
+    
+    PEP_STATUS tmp_status = _mime_encode_message_internal(
+                                    ret_msg, 
+                                    false, 
+                                    mime_ciphertext, 
+                                    false, 
+                                    false);
 
-    status = _mime_encode_message_internal(enc_msg, false, mime_ciphertext, false);
-
-pep_error:
+pEp_error:
     free_message(tmp_msg);
     free_message(enc_msg);
 
