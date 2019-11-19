@@ -5393,9 +5393,6 @@ PEP_STATUS set_all_userids_to_own(PEP_SESSION session, identity_list* id_list) {
         if (ownid) {
             status = set_all_userids_in_list(id_list, ownid);
         }
-        else {
-            status = PEP_UNKNOWN_ERROR;
-        }
     }
     return status;    
 }

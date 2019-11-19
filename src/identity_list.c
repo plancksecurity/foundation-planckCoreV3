@@ -136,6 +136,9 @@ DYNAMIC_API int identity_list_length(const identity_list *id_list)
 }
 
 PEP_STATUS set_all_userids_in_list(identity_list* id_list, const char* user_id) {
+    if (!user_id || user_id[0] = '\0')
+        return PEP_ILLEGAL_VALUE;
+        
     identity_list* curr_list = id_list;
     
     while (curr_list) {
