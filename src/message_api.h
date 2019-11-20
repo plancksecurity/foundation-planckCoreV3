@@ -134,7 +134,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_and_add_priv_key(
 //  parameters:
 //      session (in)        session handle
 //      target_id (in)      self identity this message should be encrypted for
-//      src (inout)         message to encrypt
+//      src (in)            message to encrypt
 //      extra (in)          extra keys for encryption
 //      dst (out)           pointer to new encrypted message or NULL on failure
 //      enc_format (in)     encrypted format
