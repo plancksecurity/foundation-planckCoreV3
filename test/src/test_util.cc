@@ -24,6 +24,15 @@ using namespace std;
 
 std::string _main_test_home_dir;
 
+bool is_pEpmsg(const message *msg)
+{
+    for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
+        if (strcasecmp(i->value->key, "X-pEp-Version") == 0)
+            return true;
+    }
+    return false;
+}
+
 // Lazy:
 // https://stackoverflow.com/questions/440133/how-do-i-create-a-random-alpha-numeric-string-in-c
 std::string random_string( size_t length )
@@ -55,15 +64,6 @@ std::string get_main_test_home_dir() {
         _main_test_home_dir = curr_wd + "/pEp_test_home";
     }
     return _main_test_home_dir;
-}
-
-bool is_pEpmsg(const message *msg)
-{
-    for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
-        if (strcasecmp(i->value->key, "X-pEp-Version") == 0)
-            return true;
-    }
-    return false;
 }
 
 PEP_STATUS read_file_and_import_key(PEP_SESSION session, const char* fname) {
@@ -617,7 +617,7 @@ pEp_error:
     return status;
 }
 
-DYNAMIC_API PEP_STATUS MIME_encrypt_message(
+PEP_STATUS MIME_encrypt_message(
     PEP_SESSION session,
     const char *mimetext,
     size_t size,
@@ -628,8 +628,10 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
 )
 {
     PEP_STATUS status = PEP_STATUS_OK;
+    PEP_STATUS tmp_status = PEP_STATUS_OK;
     message* tmp_msg = NULL;
     message* enc_msg = NULL;
+    message* ret_msg = NULL;                             
 
     status = mime_decode_message(mimetext, size, &tmp_msg);
     if (status != PEP_STATUS_OK)
@@ -640,14 +642,14 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
         char* own_id = NULL;
         status = get_default_own_userid(session, &own_id);
         free(tmp_msg->from->user_id);
-        
+    
         if (status != PEP_STATUS_OK || !own_id) {
             tmp_msg->from->user_id = strdup(PEP_OWN_USERID);
         }
         else {
             tmp_msg->from->user_id = own_id; // ownership transfer
         }
-            
+    
         status = myself(session, tmp_msg->from);
         if (status != PEP_STATUS_OK)
             goto pEp_error;
@@ -676,8 +678,7 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
                              &enc_msg,
                              enc_format,
                              flags);
-                             
-    message* ret_msg = NULL;                         
+    
     if (status == PEP_STATUS_OK || status == PEP_UNENCRYPTED)
         ret_msg = (status == PEP_STATUS_OK ? enc_msg : tmp_msg);
     else                                
@@ -688,12 +689,15 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
         goto pEp_error;
     }
     
-    PEP_STATUS tmp_status = _mime_encode_message_internal(
-                                    ret_msg, 
-                                    false, 
-                                    mime_ciphertext, 
-                                    false, 
-                                    false);
+    tmp_status = _mime_encode_message_internal(
+                    ret_msg, 
+                    false, 
+                    mime_ciphertext, 
+                    false, 
+                    false);
+    
+    if (tmp_status != PEP_STATUS_OK)
+        status = tmp_status;
 
 pEp_error:
     free_message(tmp_msg);
