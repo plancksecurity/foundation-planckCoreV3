@@ -13,6 +13,7 @@
 #include <sstream>
 #include <iostream>
 #include <stdexcept>
+#include <algorithm>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <errno.h>
