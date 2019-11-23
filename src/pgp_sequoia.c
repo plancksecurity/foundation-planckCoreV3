@@ -251,8 +251,10 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
 	int r = snprintf(path, path_size, "%s" PEP_KEYS_PATH, home_env);
     assert(r >= 0 && r < path_size);
-    if (r < 0)
+    if (r < 0) {
+        free(path);
         ERROR_OUT(NULL, PEP_UNKNOWN_ERROR, "snprintf");
+    }
 
     int sqlite_result;
     sqlite_result = sqlite3_open_v2(path,
