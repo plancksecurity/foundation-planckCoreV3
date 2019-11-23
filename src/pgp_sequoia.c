@@ -244,7 +244,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 
     // Create the DB and initialize it.
     size_t path_size = strlen(home_env) + sizeof(PEP_KEYS_PATH);
-    char *path = (char *) calloc(1, path_size);
+    char *path = (char *) calloc(path_size, 1);
     assert(path);
     if (!path)
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
