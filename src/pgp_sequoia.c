@@ -12,6 +12,7 @@
 #include <limits.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <stdlib.h>
 
 #include "wrappers.h"
 
@@ -121,6 +122,24 @@ int sq_sql_trace_callback (unsigned trace_constant,
     return 0;
 }
 #endif
+
+/* This is reallocarray taken from OpenBSD. See README.md for licensing. */
+/* Symbols are renamed for clashes, not to hide source. */
+/*
+ * This is sqrt(SIZE_MAX+1), as s1*s2 <= SIZE_MAX
+ * if both s1 < MUL_NO_OVERFLOW and s2 < MUL_NO_OVERFLOW
+ */
+#define PEP_MUL_NO_OVERFLOW ((size_t)1 << (sizeof(size_t) * 4))
+static void* _pEp_reallocarray(void *optr, size_t nmemb, size_t size)
+{
+    if ((nmemb >= PEP_MUL_NO_OVERFLOW || size >= PEP_MUL_NO_OVERFLOW) &&
+        nmemb > 0 && SIZE_MAX / nmemb < size) {
+            errno = ENOMEM;
+            return NULL;
+    }
+    return realloc(optr, size * nmemb);
+}
+
 
 PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
         PEP_CIPHER_SUITE suite)
@@ -1790,13 +1809,13 @@ static PEP_STATUS pgp_encrypt_sign_optional(
                 assert(recipient_alloc > 0);
                 recipient_alloc *= 2;
 
-                void *t = reallocarray(recipient_keys, recipient_alloc,
+                void *t = _pEp_reallocarray(recipient_keys, recipient_alloc,
                                        sizeof(*recipient_keys));
                 if (! t)
                     ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
                 recipient_keys = t;
 
-                t = reallocarray(recipients, recipient_alloc,
+                t = _pEp_reallocarray(recipients, recipient_alloc,
                                  sizeof(*recipients));
                 if (! t)
                     ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");

@@ -56,5 +56,11 @@ Accompanying documentation is licensed under the terms of the Creative Commons A
 Each file includes a notice near its beginning, that indicates the applicable license.
 If you wish to license the p≡p Engine under different terms, please contact <mailto:council@pep.foundation>.
 
+_pEp_reallocarray in pgp_sequoia.c is reallocarray from the OpenBSD source. It is 
+copyright (c) 2008 Otto Moerbeek <otto@drijf.net> with the following permissions: 
+Permission to use, copy, modify, and distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
 # Contact
 The p≡p foundation and the developers of the p≡p Engine can be reached as detailed here: <https://pep.foundation/contact-us/index.html>.
