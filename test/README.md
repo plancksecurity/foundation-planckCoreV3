@@ -41,29 +41,27 @@ anyway and who am I to judge?
 
 ##### Debian and Ubuntu (and derivatives)
 
-Using the libgtest-dev is easy, but not straightforward.
-Unfortunately, the version of google test in Debian Buster is too old:
-it's version 1.8 and we require version 1.9.  Version 1.9 is available
-in Debian Testing, but it is built with g++ 9.0, which is ABI
-incompatible with binaries built with g++ 8.0, which is in Debian
-stable.  Specifically, gcc has changed the semantics of std::string
-with C++11 and using g++ 8.0 results in the errors like the following:
+Thanks to Erik Smistad for this starting point (condensed from [Getting Started
+with Google Test On
+Ubuntu](https://www.eriksmistad.no/getting-started-with-google-test-on-ubuntu/)):
 
-    undefined reference to `std::__cxx11::basic_stringstream<char, std::char_traits<char>, std::allocator<char> >::basic_stringstream()'
+  1. Install the packages `cmake` and `libgtest-dev` from the repository. This
+  will install the gtest source files to `/usr/src/gtest`. You'll still need to
+  compile the code and link the library files to be able to use them.
 
-It's possible to install g++ 9.0 from testing to get the test suite
-working, but that breaks other things (at least for me -Neal).
-Instead, the easiest thing to do it to rebuild gtest for Debian
-Stable.  This is straightforward:
+  2. Compile the source files:
+  ```
+  cd /usr/src/gtest
+  sudo cmake CMakeLists.txt
+  sudo make
+  ```
 
-  $ sudo apt install build-essential cmake debhelper
-  $ apt source -t testing libgtest-dev
-  $ cd googletest-1.9.0.20190831
-  $ dpkg-buildpackage -us -uc
-  ...
-  $ sudo dpkg -i googletest_1.9.0.20190831-1_amd64.deb libgtest-dev_1.9.0.20190831-1_amd64.deb
-
-That's it.
+  3. Copy/symlink the libraries to the library location of your choice (here,
+  it's `/usr/lib`, hence the `sudo`, but as long as it's in your library path,
+  it shouldn't matter where you stick it):
+  ```
+  sudo cp *.a /usr/lib
+  ```
 
 ##### MacOS
 
