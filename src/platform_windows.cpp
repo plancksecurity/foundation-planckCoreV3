@@ -84,37 +84,37 @@ static bool readRegistryString(
 {
     assert(lpResult);
 
-	HKEY theKey;
-	DWORD type;
-	DWORD bytesCopied = dwSize;
-	HRESULT result;
+    HKEY theKey;
+    DWORD type;
+    DWORD bytesCopied = dwSize;
+    HRESULT result;
 
-	result = RegOpenKeyEx(hKey, lpSubKey, 0, KEY_READ, &theKey);
-	if (result != ERROR_SUCCESS) {
-		if (lpDefault) {
-			wcsncpy_s(lpResult, dwSize, lpDefault, _TRUNCATE);
-			return true;
-		}
-		else
-			return false;
-	}
+    result = RegOpenKeyEx(hKey, lpSubKey, 0, KEY_READ, &theKey);
+    if (result != ERROR_SUCCESS) {
+        if (lpDefault) {
+            wcsncpy_s(lpResult, dwSize, lpDefault, _TRUNCATE);
+            return true;
+        }
+        else
+            return false;
+    }
 
-	result = RegQueryValueEx(theKey, lpValueName, NULL, &type,
+    result = RegQueryValueEx(theKey, lpValueName, NULL, &type,
             (LPBYTE) lpResult, &bytesCopied);
     if (result != ERROR_SUCCESS || (type != REG_EXPAND_SZ && type != REG_SZ)) {
-		if (lpDefault) {
-			wcsncpy_s(lpResult, dwSize, lpDefault, _TRUNCATE);
-			RegCloseKey(theKey);
-			return true;
-		}
-		else {
-			RegCloseKey(theKey);
-			return false;
-		}
-	}
+        if (lpDefault) {
+            wcsncpy_s(lpResult, dwSize, lpDefault, _TRUNCATE);
+            RegCloseKey(theKey);
+            return true;
+        }
+        else {
+            RegCloseKey(theKey);
+            return false;
+        }
+    }
 
-	RegCloseKey(theKey);
-	return true;
+    RegCloseKey(theKey);
+    return true;
 }
 
 static const DWORD PATH_BUF_SIZE = 32768;
@@ -126,102 +126,102 @@ static inline string managementPath(const char *file_path, const char *file_name
 
     DWORD length = ExpandEnvironmentStringsW(utf16_string(file_path).c_str(),
             tPath, PATH_BUF_SIZE);
-	assert(length);
+    assert(length);
     if (length == 0)
         throw bad_alloc(); // BUG: there are other errors possible beside out of memory
 
-	CreateDirectory(tPath, NULL);
-	DWORD error = GetLastError();
+    CreateDirectory(tPath, NULL);
+    DWORD error = GetLastError();
 
-	path = utf8_string(tPath);
-	path += "\\";
-	path += file_name;
+    path = utf8_string(tPath);
+    path += "\\";
+    path += file_name;
 
-	return path;
+    return path;
 }
 
 const char *_per_machine_directory(void)
 {
-	static string path;
-	if (path.length())
-		return path.c_str();
+    static string path;
+    if (path.length())
+        return path.c_str();
 
-	TCHAR tPath[PATH_BUF_SIZE];
+    TCHAR tPath[PATH_BUF_SIZE];
 
-	// Get SystemFolder Registry value and use if available
-	bool result = readRegistryString(HKEY_CURRENT_USER,
-		TEXT("SOFTWARE\\pEp"), TEXT("SystemFolder"), tPath,
-		PATH_BUF_SIZE, NULL);
+    // Get SystemFolder Registry value and use if available
+    bool result = readRegistryString(HKEY_CURRENT_USER,
+        TEXT("SOFTWARE\\pEp"), TEXT("SystemFolder"), tPath,
+        PATH_BUF_SIZE, NULL);
 
-	// If not Registry value was found, use default
-	if (!result) {
-		DWORD length = ExpandEnvironmentStringsW(utf16_string(string(PER_MACHINE_DIRECTORY)).c_str(),
-			tPath, PATH_BUF_SIZE);
-		assert(length);
-		if (length == 0)
-			throw bad_alloc(); // BUG: there are other errors possible beside out of memory
-	}
+    // If not Registry value was found, use default
+    if (!result) {
+        DWORD length = ExpandEnvironmentStringsW(utf16_string(string(PER_MACHINE_DIRECTORY)).c_str(),
+            tPath, PATH_BUF_SIZE);
+        assert(length);
+        if (length == 0)
+            throw bad_alloc(); // BUG: there are other errors possible beside out of memory
+    }
 
-	path = utf8_string(wstring(tPath));
-	return path.c_str();
+    path = utf8_string(wstring(tPath));
+    return path.c_str();
 }
 
 const char *_per_user_directory(void)
 {
-	static string path;
-	if (path.length())
-		return path.c_str();
+    static string path;
+    if (path.length())
+        return path.c_str();
 
-	TCHAR tPath[PATH_BUF_SIZE];
+    TCHAR tPath[PATH_BUF_SIZE];
 
-	// Get UserFolder Registry value and use if available
-	bool result = readRegistryString(HKEY_CURRENT_USER,
-		TEXT("SOFTWARE\\pEp"), TEXT("UserFolder"), tPath,
-		PATH_BUF_SIZE, NULL);
+    // Get UserFolder Registry value and use if available
+    bool result = readRegistryString(HKEY_CURRENT_USER,
+        TEXT("SOFTWARE\\pEp"), TEXT("UserFolder"), tPath,
+        PATH_BUF_SIZE, NULL);
 
-	// If not Registry value was found, use default
-	if (!result) {
-		DWORD length = ExpandEnvironmentStringsW(utf16_string(string(PER_USER_DIRECTORY)).c_str(),
-			tPath, PATH_BUF_SIZE);
-		assert(length);
-		if (length == 0)
-			throw bad_alloc(); // BUG: there are other errors possible beside out of memory
-	}
+    // If not Registry value was found, use default
+    if (!result) {
+        DWORD length = ExpandEnvironmentStringsW(utf16_string(string(PER_USER_DIRECTORY)).c_str(),
+            tPath, PATH_BUF_SIZE);
+        assert(length);
+        if (length == 0)
+            throw bad_alloc(); // BUG: there are other errors possible beside out of memory
+    }
 
-	path = utf8_string(wstring(tPath));
-	return path.c_str();
+    path = utf8_string(wstring(tPath));
+    return path.c_str();
 }
 
 extern "C" {
 
 DYNAMIC_API const char *per_user_directory(void)
 {
-	return _per_user_directory();
+    return _per_user_directory();
 }
 
 DYNAMIC_API const char *per_machine_directory(void)
 {
-	return _per_machine_directory();
+    return _per_machine_directory();
 }
 
 void *dlopen(const char *filename, int flag) {
-	static TCHAR path[PATH_BUF_SIZE];
+    static TCHAR path[PATH_BUF_SIZE];
 
     assert(filename);
-	assert(flag == RTLD_LAZY); // only lazy binding is implemented
+    assert(flag == RTLD_LAZY); // only lazy binding is implemented
 
-	// Look up GnuPG installation in current user scope
-	bool result = readRegistryString(HKEY_CURRENT_USER,
-		TEXT("SOFTWARE\\GnuPG"), TEXT("Install Directory"), path,
-		PATH_BUF_SIZE, NULL);
-	// If not found in current user, look up in local machine
-	if (!result)
-		result = readRegistryString(HKEY_LOCAL_MACHINE,
-			TEXT("SOFTWARE\\GnuPG"), TEXT("Install Directory"), path,
-			PATH_BUF_SIZE, NULL);
-	assert(result);
-	if (!result)
-		return NULL;
+    // Look up GnuPG installation in current user scope
+    bool result = readRegistryString(HKEY_CURRENT_USER,
+        TEXT("SOFTWARE\\GnuPG"), TEXT("Install Directory"), path,
+        PATH_BUF_SIZE, NULL);
+    // If not found in current user, look up in local machine
+    if (!result)
+        result = readRegistryString(HKEY_LOCAL_MACHINE,
+            TEXT("SOFTWARE\\GnuPG"), TEXT("Install Directory"), path,
+            PATH_BUF_SIZE, NULL);
+    assert(result);
+    if (!result)
+        return NULL;
 
     SetDllDirectory(TEXT(""));
     BOOL _result = SetDllDirectory(path);
@@ -229,12 +229,12 @@ void *dlopen(const char *filename, int flag) {
     if (_result == 0)
         return NULL;
 
-	HMODULE module = LoadLibrary(utf16_string(filename).c_str());
+    HMODULE module = LoadLibrary(utf16_string(filename).c_str());
 
     if (module == NULL) {
         SetDllDirectory(NULL);
                     
-		_tcscat_s(path, TEXT("\\bin"));
+        _tcscat_s(path, TEXT("\\bin"));
         
         SetDllDirectory(TEXT(""));
         _result = SetDllDirectory(path);
@@ -242,46 +242,46 @@ void *dlopen(const char *filename, int flag) {
         if (_result == 0)
             return NULL;
 
-    	module = LoadLibrary(utf16_string(filename).c_str());
+        module = LoadLibrary(utf16_string(filename).c_str());
     }
     
     SetDllDirectory(NULL);
-	if (module == NULL)
-		return NULL;
-	else
-		return (void *) module;
+    if (module == NULL)
+        return NULL;
+    else
+        return (void *) module;
 }
 
 int dlclose(void *handle) {
-	if (FreeLibrary((HMODULE) handle))
-		return 0;
-	else
-		return 1;
+    if (FreeLibrary((HMODULE) handle))
+        return 0;
+    else
+        return 1;
 }
 
 void *dlsym(void *handle, const char *symbol) {
-	return (void *) (intptr_t) GetProcAddress((HMODULE) handle, symbol);
+    return (void *) (intptr_t) GetProcAddress((HMODULE) handle, symbol);
 }
 
 const char *windoze_keys_db(void) {
-	static string path;
-	if (path.length() == 0) {
-		path = managementPath(USER_FOLDER_PATH, KEYS_DB);
-	}
-	return path.c_str();
+    static string path;
+    if (path.length() == 0) {
+        path = managementPath(USER_FOLDER_PATH, KEYS_DB);
+    }
+    return path.c_str();
 }
 
 const char *windoze_local_db(void) {
-	static string path;
-	if (path.length() == 0)
+    static string path;
+    if (path.length() == 0)
         path = managementPath(USER_FOLDER_PATH, LOCAL_DB_FILENAME);
     return path.c_str();
 }
 
 const char *windoze_system_db(void) {
-	static string path;
-	if (path.length() == 0)
-		path = managementPath(PER_MACHINE_DIRECTORY, SYSTEM_DB_FILENAME);
+    static string path;
+    if (path.length() == 0)
+        path = managementPath(PER_MACHINE_DIRECTORY, SYSTEM_DB_FILENAME);
     return path.c_str();
 }
 
@@ -442,11 +442,11 @@ void log_output_debug(const char *title,
                        const char *description,
                        const char *comment)
 {
-	const size_t size = 256;
-	char str[size];
-	
-	snprintf(str, size, "*** %s %s %s %s\n", title, entity, description, comment);
-	OutputDebugStringA(str);
+    const size_t size = 256;
+    char str[size];
+    
+    snprintf(str, size, "*** %s %s %s %s\n", title, entity, description, comment);
+    OutputDebugStringA(str);
 }
 
 time_t timegm(struct tm* tm) {
