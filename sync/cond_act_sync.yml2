@@ -236,7 +236,7 @@ function "show_handshake" {
         assert(session->notifyHandshake);
         if (!session->notifyHandshake)
             return PEP_SYNC_NO_NOTIFY_CALLBACK;
-     
+
     ||
     choose {
     when "$type = 'SYNC_NOTIFY_INIT_ADD_OUR_DEVICE' or $type = 'SYNC_NOTIFY_INIT_ADD_OTHER_DEVICE' or $type = 'SYNC_NOTIFY_INIT_FORM_GROUP'"
@@ -252,7 +252,7 @@ function "show_handshake" {
         if (status)
             return status;
         assert(strcmp(me->fpr, session->sync_state.comm_partner.sender_fpr) != 0);
-        
+
         assert(me->fpr && me->fpr[0]);
         if (!(me->fpr && me->fpr[0])) {
             free_identity(me);
@@ -373,7 +373,7 @@ action saveGroupKeys
         free(user_id);
         return status;
     }
-    
+
     identity_list *oil = session->sync_state.own.identities;
 
     // BUG: this should be a transaction and been rolled back completely on error
@@ -418,7 +418,9 @@ action saveGroupKeys
     }
 
     free(user_id);
-    free_identity_list(il);
+    // NO! This contains the references we add above and belongs to
+    // session->sync_state.own.identities!
+    // free_identity_list(il);
 ||
 
 action ownKeysAreDefaultKeys
@@ -441,7 +443,7 @@ action receivedKeysAreDefaultKeys
     // set flag for all keys
     for (identity_list *il = session->sync_state.own.identities; il && il->ident ; il = il->next) {
         if (!(il->ident->flags && PEP_idf_not_for_sync)) {
-            
+
             status = set_identity_flags(session, il->ident, PEP_idf_devicegroup);
             if (status)
                 return status;
@@ -473,7 +475,7 @@ action receivedKeysAreDefaultKeys
             free(user_id);
             return PEP_OUT_OF_MEMORY;
         }
-    
+
         const char *own_key = _il->ident->fpr;
         _il->ident->fpr = NULL;
         status = set_own_key(session, _il->ident, own_key);
