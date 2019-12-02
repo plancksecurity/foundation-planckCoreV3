@@ -429,15 +429,14 @@ action ownKeysAreDefaultKeys
 
     bool is_grouped = false;
     status = deviceGrouped(session, &is_grouped);
-    if (status)
+    // If this device is already grouped, the requisite flags have already been set.
+    // Don't set again, lest we pick up new idents.
+    if (status || is_grouped)
         return status;
 
     // set flag for all keys; don't change anything else
     for (identity_list *il = session->sync_state.own.identities; il && il->ident ; il = il->next) {
-        // if the keys are not already marked as not for sync and the 
-        // device isn't already grouped (because those identities should 
-        // already have the flag set), set the device group flag.
-        if (!(il->ident->flags & PEP_idf_not_for_sync) && !(is_grouped)) {
+        if (!(il->ident->flags & PEP_idf_not_for_sync)) {
             status = set_identity_flags(session, il->ident, PEP_idf_devicegroup);
             if (status)
                 return status;
