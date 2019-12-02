@@ -427,9 +427,17 @@ action ownKeysAreDefaultKeys
 ||
     PEP_STATUS status = PEP_STATUS_OK;
 
+    bool is_grouped = false;
+    status = deviceGrouped(session, &is_grouped);
+    if (status)
+        return status;
+
     // set flag for all keys; don't change anything else
     for (identity_list *il = session->sync_state.own.identities; il && il->ident ; il = il->next) {
-        if (!(il->ident->flags && PEP_idf_not_for_sync)) {
+        // if the keys are not already marked as not for sync and the 
+        // device isn't already grouped (because those identities should 
+        // already have the flag set), set the device group flag.
+        if (!(il->ident->flags & PEP_idf_not_for_sync) && !(is_grouped)) {
             status = set_identity_flags(session, il->ident, PEP_idf_devicegroup);
             if (status)
                 return status;
