@@ -427,11 +427,7 @@ action ownKeysAreDefaultKeys
 ||
     PEP_STATUS status = PEP_STATUS_OK;
 
-    bool is_grouped = false;
-    status = deviceGrouped(session, &is_grouped);
-    // If this device is already grouped, the requisite flags have already been set.
-    // Don't set again, lest we pick up new idents.
-    if (status || is_grouped)
+    if (status)
         return status;
 
     // set flag for all keys; don't change anything else
