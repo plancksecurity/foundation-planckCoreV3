@@ -256,7 +256,12 @@ DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
     if (!(session && ident))
         return PEP_ILLEGAL_VALUE;
 
-    PEP_STATUS status = unset_identity_flags(session, ident, PEP_idf_not_for_sync);
+    // create the identity in the database if it is not yet there
+    PEP_STATUS status = _myself(session, ident, false, true, false);
+    if (status)
+        return status;
+
+    status = unset_identity_flags(session, ident, PEP_idf_not_for_sync);
     if (status)
         return status;
 
@@ -277,7 +282,12 @@ DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
     if (!(session && ident))
         return PEP_ILLEGAL_VALUE;
 
-    PEP_STATUS status = unset_identity_flags(session, ident, PEP_idf_devicegroup);
+    // create the identity in the database if it is not yet there
+    PEP_STATUS status = _myself(session, ident, false, true, false);
+    if (status)
+        return status;
+
+    status = unset_identity_flags(session, ident, PEP_idf_devicegroup);
     if (status)
         return status;
 
