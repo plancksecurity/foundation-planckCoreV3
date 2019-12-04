@@ -1487,7 +1487,7 @@ PEP_STATUS pgp_decrypt_and_verify(
             status = PEP_DECRYPTED_AND_VERIFIED;
         } else if (cookie.good_but_revoked) {
             // If there are any signatures from revoked keys, fail.
-            status = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
+            status = PEP_VERIFY_SIGNER_KEY_REVOKED;
         } else if (cookie.bad_checksums) {
             // If there are any bad signatures, fail.
             status = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
@@ -1611,7 +1611,7 @@ PEP_STATUS pgp_verify_text(
             status = PEP_UNENCRYPTED;
         } else if (cookie.good_but_revoked) {
             // If there are any signatures from revoked keys, fail.
-            status = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
+            status = PEP_VERIFY_SIGNER_KEY_REVOKED;
         } else if (cookie.bad_checksums) {
             // If there are any bad signatures, fail.
             status = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
