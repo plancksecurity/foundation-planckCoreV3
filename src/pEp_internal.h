@@ -143,17 +143,17 @@ struct _pEpSession {
         sqlite3_stmt *begin_transaction;
         sqlite3_stmt *commit_transaction;
         sqlite3_stmt *rollback_transaction;
-        sqlite3_stmt *tpk_find;
+        sqlite3_stmt *cert_find;
         sqlite3_stmt *tsk_find;
-        sqlite3_stmt *tpk_find_by_keyid;
+        sqlite3_stmt *cert_find_by_keyid;
         sqlite3_stmt *tsk_find_by_keyid;
-        sqlite3_stmt *tpk_find_by_email;
+        sqlite3_stmt *cert_find_by_email;
         sqlite3_stmt *tsk_find_by_email;
-        sqlite3_stmt *tpk_all;
+        sqlite3_stmt *cert_all;
         sqlite3_stmt *tsk_all;
-        sqlite3_stmt *tpk_save_insert_primary;
-        sqlite3_stmt *tpk_save_insert_subkeys;
-        sqlite3_stmt *tpk_save_insert_userids;
+        sqlite3_stmt *cert_save_insert_primary;
+        sqlite3_stmt *cert_save_insert_subkeys;
+        sqlite3_stmt *cert_save_insert_userids;
         sqlite3_stmt *delete_keypair;
     } sq_sql;
 #endif
