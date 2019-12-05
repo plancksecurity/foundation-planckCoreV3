@@ -957,6 +957,7 @@ struct decrypt_cookie {
     int good_checksums;
     int good_but_expired;
     int good_but_revoked;
+    int not_alive;
     int missing_keys;
     int bad_checksums;
 
@@ -1335,6 +1336,16 @@ check_signatures_cb(void *cookie_opaque, pgp_message_structure_t structure)
                     }
                     break;
 
+                case PGP_VERIFICATION_RESULT_NOT_ALIVE:
+                    pgp_verification_result_not_alive
+                        (result, &sig, NULL, NULL, NULL, NULL);
+                    keyid = pgp_signature_issuer (sig);
+                    keyid_str = pgp_keyid_to_string (keyid);
+                    T("Signature from from %s is not alive", keyid_str);
+
+                    cookie->not_alive ++;
+                    break;
+
                 case PGP_VERIFICATION_RESULT_MISSING_KEY:
                     pgp_verification_result_missing_key (result, &sig);
                     keyid = pgp_signature_issuer (sig);
@@ -1413,7 +1424,7 @@ PEP_STATUS pgp_decrypt_and_verify(
     char** filename_ptr)
 {
     PEP_STATUS status = PEP_STATUS_OK;
-    struct decrypt_cookie cookie = { session, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, NULL };
+    struct decrypt_cookie cookie = { session, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, NULL };
     pgp_reader_t reader = NULL;
     pgp_writer_t writer = NULL;
     pgp_reader_t decryptor = NULL;
