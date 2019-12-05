@@ -678,6 +678,8 @@ PEP_STATUS pgp_decrypt_and_verify(
                             break;
                         }
                         case GPG_ERR_CERT_REVOKED:
+                            result = PEP_VERIFY_SIGNER_KEY_REVOKED;
+                            break;
                         case GPG_ERR_BAD_SIGNATURE:
                             result = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
                             //result = PEP_DECRYPT_BAD_SIGNATURE;
@@ -3129,4 +3131,3 @@ PEP_STATUS pgp_config_cipher_suite(PEP_SESSION session,
             return PEP_CANNOT_CONFIG;
     }
 }
-
