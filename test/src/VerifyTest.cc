@@ -126,7 +126,7 @@ TEST_F(VerifyTest, check_revoked_tpk) {
                                 &keylist, NULL);
 
     // Now it should fail.
-    ASSERT_EQ(status , PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
+    ASSERT_EQ(status , PEP_VERIFY_SIGNER_KEY_REVOKED);
     ASSERT_NE(keylist, nullptr);
     // No signer.
     ASSERT_STREQ(keylist->value, "");
@@ -150,7 +150,7 @@ TEST_F(VerifyTest, check_revoked_tpk) {
                          &keylist);
 
     // Now it should fail.
-    ASSERT_EQ(status , PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
+    ASSERT_EQ(status , PEP_VERIFY_SIGNER_KEY_REVOKED);
     ASSERT_NE(keylist, nullptr);
     // No signer.
     ASSERT_STREQ(keylist->value, "");
@@ -175,7 +175,7 @@ TEST_F(VerifyTest, check_revoked_signing_key) {
                                            &keylist, NULL);
 
     // It should fail.
-    ASSERT_EQ(status , PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
+    ASSERT_EQ(status , PEP_VERIFY_SIGNER_KEY_REVOKED);
     ASSERT_NE(keylist, nullptr);
     // No signer.
     ASSERT_STREQ(keylist->value, "");
@@ -199,7 +199,7 @@ TEST_F(VerifyTest, check_revoked_signing_key) {
                          &keylist);
 
     // Now it should fail.
-    ASSERT_EQ(status , PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH);
+    ASSERT_EQ(status , PEP_VERIFY_SIGNER_KEY_REVOKED);
     ASSERT_NE(keylist, nullptr);
     // No signer.
     ASSERT_STREQ(keylist->value, "");

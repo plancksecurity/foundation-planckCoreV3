@@ -113,7 +113,7 @@ $(TARGET): $(OBJS)
 
 test: all
 	$(RM) -rf ./pEp_test_home/*
-	$(TEST_CMD_PFX) $(TEST_DEBUGGER) python3 $(GTEST_PL) ./$(TARGET)
+	$(TEST_CMD_PFX) $(TEST_DEBUGGER) GTEST_COLOR=no python3 $(GTEST_PL) --gtest_color=no ./$(TARGET)
 clean:
 	$(RM) $(TARGET) $(TARGET).o $(TARGET).d $(OBJS) $(notdir $(basename $(OBJS))) $(DEPS)
 	$(RM) -rf ./pEp_test_home/*

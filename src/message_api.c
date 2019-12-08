@@ -1208,6 +1208,7 @@ static PEP_rating decrypt_rating(PEP_STATUS status)
         return PEP_rating_unencrypted;
 
     case PEP_DECRYPTED:
+    case PEP_VERIFY_SIGNER_KEY_REVOKED:
     case PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH:
         return PEP_rating_unreliable;
 
@@ -3419,6 +3420,8 @@ static PEP_STATUS _decrypt_message(
     unsigned int major_ver = 0;
     unsigned int minor_ver = 0;
     
+    stringpair_list_t* revoke_replace_pairs = NULL;
+    
     // Grab input flags
     bool reencrypt = ((*flags & PEP_decrypt_flag_untrusted_server) &&
             (_have_extrakeys(*keylist) || session->unencrypted_subject));
@@ -3546,9 +3549,7 @@ static PEP_STATUS _decrypt_message(
                 status = _mime_decode_message_internal(ptext, psize, &msg, &has_inner);
                 if (status != PEP_STATUS_OK)
                     goto pEp_error;
-                
-                /* Ensure messages whose maintext is in the attachments
-                   move main text into message struct longmsg et al */
+                                
                 /* KG: This IS a src modification of old - we're adding to it
                    w/ memhole subject, but the question is whether or not
                    this is OK overall... */
@@ -3616,7 +3617,8 @@ static PEP_STATUS _decrypt_message(
         if (status != PEP_STATUS_OK)
             goto pEp_error;
 
-        if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
+        if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED || 
+            decrypt_status == PEP_VERIFY_SIGNER_KEY_REVOKED) {
             char* wrap_info = NULL;
             
             if (!has_inner) {
@@ -3888,67 +3890,69 @@ static PEP_STATUS _decrypt_message(
     } // End prepare output message for return
 
     // 3. Check to see if the sender used any of our revoked keys
-    stringpair_list_t* revoke_replace_pairs = NULL;
-    status = check_for_own_revoked_key(session, _keylist, &revoke_replace_pairs);
+    if (!is_me(session, msg->from)) {
+        status = check_for_own_revoked_key(session, _keylist, &revoke_replace_pairs);
 
-    //assert(status != PEP_STATUS_OK); // FIXME: FOR DEBUGGING ONLY DO NOT LEAVE IN    
-    if (status != PEP_STATUS_OK) {
-        // This should really never choke unless the DB is broken.
-        status = PEP_UNKNOWN_DB_ERROR;
-        goto pEp_error;
-    }
-    
-    if (msg) {
-        stringpair_list_t* curr_pair_node;
-        stringpair_t* curr_pair;
+        //assert(status != PEP_STATUS_OK); // FIXME: FOR DEBUGGING ONLY DO NOT LEAVE IN    
+        if (status != PEP_STATUS_OK) {
+            // This should really never choke unless the DB is broken.
+            status = PEP_UNKNOWN_DB_ERROR;
+            goto pEp_error;
+        }
+        
+        if (msg) {
+            stringpair_list_t* curr_pair_node;
+            stringpair_t* curr_pair;
 
-        for (curr_pair_node = revoke_replace_pairs; curr_pair_node; curr_pair_node = curr_pair_node->next) {
-            curr_pair = curr_pair_node->value;
+            for (curr_pair_node = revoke_replace_pairs; curr_pair_node; curr_pair_node = curr_pair_node->next) {
+                curr_pair = curr_pair_node->value;
 
-            if (!curr_pair)
-                continue; // Again, shouldn't occur
+                if (!curr_pair)
+                    continue; // Again, shouldn't occur
 
-            if (curr_pair->key && curr_pair->value) {
-                status = create_standalone_key_reset_message(session,
-                    &reset_msg,
-                    msg->from,
-                    curr_pair->key,
-                    curr_pair->value);
+                if (curr_pair->key && curr_pair->value) {
+                    status = create_standalone_key_reset_message(session,
+                        &reset_msg,
+                        msg->from,
+                        curr_pair->key,
+                        curr_pair->value);
 
-                // If we can't find the identity, this is someone we've never mailed, so we just
-                // go on letting them use the wrong key until we mail them ourselves. (Spammers, etc)
-                if (status != PEP_CANNOT_FIND_IDENTITY) {
-                    if (status != PEP_STATUS_OK)
-                        goto pEp_error;
-
-                    if (!reset_msg) {
-                        status = PEP_OUT_OF_MEMORY;
-                        goto pEp_error;
-                    }
-                    // insert into queue
-                    if (session->messageToSend)
-                        status = session->messageToSend(reset_msg);
-                    else
-                        status = PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
-
-
-                    if (status == PEP_STATUS_OK) {
-                        // Put into notified DB
-                        status = set_reset_contact_notified(session, curr_pair->key, msg->from->user_id);
-                        if (status != PEP_STATUS_OK) // It's ok to barf because it's a DB problem??
+                    // If we can't find the identity, this is someone we've never mailed, so we just
+                    // go on letting them use the wrong key until we mail them ourselves. (Spammers, etc)
+                    if (status != PEP_CANNOT_FIND_IDENTITY) {
+                        if (status != PEP_STATUS_OK)
                             goto pEp_error;
-                    }
-                    else {
-                        // According to Volker, this would only be a fatal error, so...
-                        free_message(reset_msg); // ??
-                        reset_msg = NULL; // ??
-                        goto pEp_error;
+
+                        if (!reset_msg) {
+                            status = PEP_OUT_OF_MEMORY;
+                            goto pEp_error;
+                        }
+                        // insert into queue
+                        if (session->messageToSend)
+                            status = session->messageToSend(reset_msg);
+                        else
+                            status = PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
+
+
+                        if (status == PEP_STATUS_OK) {
+                            // Put into notified DB
+                            status = set_reset_contact_notified(session, curr_pair->key, msg->from->user_id);
+                            if (status != PEP_STATUS_OK) // It's ok to barf because it's a DB problem??
+                                goto pEp_error;
+                        }
+                        else {
+                            // According to Volker, this would only be a fatal error, so...
+                            free_message(reset_msg); // ??
+                            reset_msg = NULL; // ??
+                            goto pEp_error;
+                        }
                     }
                 }
             }
         }
-    }
-
+        free_stringpair_list(revoke_replace_pairs);
+        revoke_replace_pairs = NULL;
+    } // end !is_me(msg->from)    
 
     bool reenc_signer_key_is_own_key = false; // only matters for reencrypted messages 
     
@@ -3964,7 +3968,8 @@ static PEP_STATUS _decrypt_message(
     }    
 
     if (reencrypt) {
-        if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
+        if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED
+            || decrypt_status == PEP_VERIFY_SIGNER_KEY_REVOKED) {
             const char* sfpr = NULL;
             if (has_extra_keys)
                 sfpr = _keylist->value;
@@ -4049,6 +4054,7 @@ pEp_error:
     free_message(msg);
     free_message(reset_msg);
     free_stringlist(_keylist);
+    free_stringpair_list(revoke_replace_pairs);
 
     return status;
 }

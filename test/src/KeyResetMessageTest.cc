@@ -1217,6 +1217,36 @@ TEST_F(KeyResetMessageTest, not_a_test) {
     myfile.close();      
 }
 
+TEST_F(KeyResetMessageTest, check_no_reset_message_to_self) {
+    pEp_identity* bob = NULL;
+    PEP_STATUS status = set_up_preset(session, BOB,
+                                      true, true, true, true, true, &bob);
+                                                                
+    slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");    
+                                          
+    message* bob_msg = new_message(PEP_dir_outgoing);
+    bob_msg->from = identity_dup(bob);
+    bob_msg->to = new_identity_list(identity_dup(bob));
+    bob_msg->shortmsg = strdup("Engine bugs suck\n");
+    bob_msg->longmsg = strdup("Everything is the engine's fault.\n");
+    
+    message* enc_msg = NULL;
+    
+    status = encrypt_message(session, bob_msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    key_reset_all_own_keys(session);
+    
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+    
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_EQ(m_queue.size(), 0);
+    ASSERT_EQ(status, PEP_VERIFY_SIGNER_KEY_REVOKED);
+}
+
 
 TEST_F(KeyResetMessageTest, check_reset_mistrust_next_msg_have_not_mailed) {
     pEp_identity* carol = NULL;
