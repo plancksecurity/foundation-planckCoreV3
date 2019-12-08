@@ -580,6 +580,16 @@ protocol Sync 1 {
             field TID negotiation;
             field Hash key;
         }
+
+        // key reset for group
+        message InitGroupKeyReset 18 {
+            field IdentityList ownIdentities;
+        }
+
+        message GroupKeyReset 19 {
+            field TID challenge;
+            field IdentityList ownIdentities;
+        }
     }
 }
 
