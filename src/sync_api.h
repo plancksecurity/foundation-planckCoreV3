@@ -226,6 +226,7 @@ DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
 DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
         pEp_identity *ident);
 
+
 #ifdef __cplusplus
 }
 #endif

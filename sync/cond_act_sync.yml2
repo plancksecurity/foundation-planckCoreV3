@@ -575,10 +575,7 @@ action tellWeAreNotGrouped
 action disable
 ||
     leave_device_group(session);
-    // ignore the result, disable anyway
-
-    if (!session->inject_sync_event)
-        return PEP_SYNC_NO_INJECT_CALLBACK;
-
-    session->inject_sync_event((void *) SHUTDOWN, NULL);
 ||
+
+action ResetGroupKeys;
+

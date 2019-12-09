@@ -312,6 +312,23 @@ protocol Sync 1 {
 
             on GroupTrustThisKey
                 do trustThisKey;
+
+            on GroupKeyResetRequired
+                send InitGroupKeyReset;
+
+            on GroupKeyResetRequiredAndDisable {
+                send InitGroupKeyReset;
+                disable;
+            }
+
+            on InitGroupKeyReset {
+                do ResetGroupKeys;
+                send GroupKeyReset;
+            }
+
+            on GroupKeyReset {
+
+            }
         }
 
         // sole device handshaking with group
