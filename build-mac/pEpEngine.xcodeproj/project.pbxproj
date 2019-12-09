@@ -151,6 +151,8 @@
 		431F04B722733A7E00CCE960 /* key_reset.h in Headers */ = {isa = PBXBuildFile; fileRef = 431F04B222733A7E00CCE960 /* key_reset.h */; };
 		43370833203C075A004E6547 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 4337082D203C075A004E6547 /* sqlite3.c */; };
 		43370834203C075A004E6547 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 43370832203C075A004E6547 /* sqlite3.h */; };
+		43495980239E40F200CF1E12 /* InitGroupKeyReset.c in Sources */ = {isa = PBXBuildFile; fileRef = 4349597B239E40F200CF1E12 /* InitGroupKeyReset.c */; };
+		43495982239E417300CF1E12 /* GroupKeyReset.c in Sources */ = {isa = PBXBuildFile; fileRef = 43495981239E417300CF1E12 /* GroupKeyReset.c */; };
 		438C43B52167752C00C7425B /* labeled_int_list.h in Headers */ = {isa = PBXBuildFile; fileRef = 438C43AF2167752C00C7425B /* labeled_int_list.h */; };
 		438C43B62167752C00C7425B /* labeled_int_list.c in Sources */ = {isa = PBXBuildFile; fileRef = 438C43B42167752C00C7425B /* labeled_int_list.c */; };
 		43E4FBB22362C05600BC01F4 /* NegotiationRequestGrouped.c in Sources */ = {isa = PBXBuildFile; fileRef = 43E4FBAD2362C05600BC01F4 /* NegotiationRequestGrouped.c */; };
@@ -383,6 +385,8 @@
 		431F04B222733A7E00CCE960 /* key_reset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = key_reset.h; path = ../src/key_reset.h; sourceTree = "<group>"; };
 		4337082D203C075A004E6547 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = ../src/sqlite3.c; sourceTree = "<group>"; };
 		43370832203C075A004E6547 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = ../src/sqlite3.h; sourceTree = "<group>"; };
+		4349597B239E40F200CF1E12 /* InitGroupKeyReset.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = InitGroupKeyReset.c; path = ../asn.1/InitGroupKeyReset.c; sourceTree = "<group>"; };
+		43495981239E417300CF1E12 /* GroupKeyReset.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeyReset.c; path = ../asn.1/GroupKeyReset.c; sourceTree = "<group>"; };
 		438C43962167582400C7425B /* sync_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sync_api.h; path = ../src/sync_api.h; sourceTree = "<group>"; };
 		438C43AF2167752C00C7425B /* labeled_int_list.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = labeled_int_list.h; path = ../src/labeled_int_list.h; sourceTree = "<group>"; };
 		438C43B42167752C00C7425B /* labeled_int_list.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = labeled_int_list.c; path = ../src/labeled_int_list.c; sourceTree = "<group>"; };
@@ -490,6 +494,8 @@
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
 			isa = PBXGroup;
 			children = (
+				43495981239E417300CF1E12 /* GroupKeyReset.c */,
+				4349597B239E40F200CF1E12 /* InitGroupKeyReset.c */,
 				15147EED237E9EA7003989FE /* GroupHandshake.h */,
 				15147EEE237E9EA7003989FE /* GroupKeysAndClose.c */,
 				15147EEF237E9EA7003989FE /* GroupKeysAndClose.h */,
@@ -993,6 +999,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				64A826871B455D0800EECAF0 /* stringpair.c in Sources */,
+				43495980239E40F200CF1E12 /* InitGroupKeyReset.c in Sources */,
 				15B037C122B2B822002D664C /* Identity.c in Sources */,
 				15B037B522B2B822002D664C /* OCTET_STRING.c in Sources */,
 				64A826831B455D0800EECAF0 /* platform_unix.c in Sources */,
@@ -1001,6 +1008,7 @@
 				154918B322B940200091B6D6 /* Sync_impl.c in Sources */,
 				15147EF2237E9EA7003989FE /* GroupKeysAndClose.c in Sources */,
 				15B037E322B2B822002D664C /* GroupKeys.c in Sources */,
+				43495982239E417300CF1E12 /* GroupKeyReset.c in Sources */,
 				15B037B122B2B822002D664C /* NegotiationRequest.c in Sources */,
 				15B037FC22B2B822002D664C /* Hex.c in Sources */,
 				43E4FBB22362C05600BC01F4 /* NegotiationRequestGrouped.c in Sources */,

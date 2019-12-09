@@ -16,6 +16,8 @@ $(SRCROOT)/../asn.1/CommitReject.c
 $(SRCROOT)/../asn.1/CommitReject.h
 $(SRCROOT)/../asn.1/GroupHandshake.c
 $(SRCROOT)/../asn.1/GroupHandshake.h
+$(SRCROOT)/../asn.1/GroupKeyReset.c
+$(SRCROOT)/../asn.1/GroupKeyReset.h
 $(SRCROOT)/../asn.1/GroupKeys.c
 $(SRCROOT)/../asn.1/GroupKeys.h
 $(SRCROOT)/../asn.1/GroupKeysAndClose.c
@@ -34,6 +36,8 @@ $(SRCROOT)/../asn.1/Identity.c
 $(SRCROOT)/../asn.1/Identity.h
 $(SRCROOT)/../asn.1/IdentityList.c
 $(SRCROOT)/../asn.1/IdentityList.h
+$(SRCROOT)/../asn.1/InitGroupKeyReset.c
+$(SRCROOT)/../asn.1/InitGroupKeyReset.h
 $(SRCROOT)/../asn.1/KeySync.c
 $(SRCROOT)/../asn.1/KeySync.h
 $(SRCROOT)/../asn.1/NativeEnumerated.c
