@@ -574,8 +574,7 @@ action tellWeAreNotGrouped
 
 action disable
 ||
-    leave_device_group(session);
+    disable_sync(session);
 ||
 
 action ResetGroupKeys;
-

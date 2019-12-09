@@ -224,7 +224,7 @@ the_end:
     return status;
 }
 
-DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session)
+PEP_STATUS disable_sync(PEP_SESSION session)
 {
     assert(session);
     if (!session)
@@ -247,6 +247,14 @@ DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session)
 the_end:
     free_identity_list(il);
     return status;
+}
+
+DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session) {
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+        
+    return signal_Sync_event(session, Sync_PR_keysync, GroupKeyResetRequiredAndDisable, NULL);
 }
 
 DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
@@ -294,4 +302,3 @@ DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
     status = set_identity_flags(session, ident, PEP_idf_not_for_sync);
     return status;
 }
-
