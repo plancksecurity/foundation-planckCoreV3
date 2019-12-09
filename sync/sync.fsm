@@ -318,17 +318,20 @@ protocol Sync 1 {
 
             on GroupKeyResetRequiredAndDisable {
                 send InitGroupKeyReset;
-                disable;
+                go DisableOnInitGroupKeyReset;
             }
 
-            on InitGroupKeyReset {
-                do ResetGroupKeys;
+            on InitGroupKeyReset
                 send GroupKeyReset;
-            }
 
             on GroupKeyReset {
 
             }
+        }
+
+        state DisableOnInitGroupKeyReset {
+            on InitGroupKeyReset
+                do disable;
         }
 
         // sole device handshaking with group
@@ -600,10 +603,9 @@ protocol Sync 1 {
 
         // key reset for group
         message InitGroupKeyReset 18 {
-            field IdentityList ownIdentities;
         }
 
-        message GroupKeyReset 19 {
+        message GroupKeyReset 19, security=key_reset {
             field TID challenge;
             field IdentityList ownIdentities;
         }

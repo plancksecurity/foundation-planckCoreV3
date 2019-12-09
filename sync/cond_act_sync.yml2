@@ -576,5 +576,3 @@ action disable
 ||
     disable_sync(session);
 ||
-
-action ResetGroupKeys;
