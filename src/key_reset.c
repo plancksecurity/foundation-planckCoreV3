@@ -556,7 +556,7 @@ PEP_STATUS key_reset(
                     status = myself(session, tmp_ident);
                 }
                 
-                if (own_identities) {
+                if (status == PEP_STATUS_OK && own_identities) {
                     if (!(*own_identities))
                         *own_identities = new_identity_list(NULL);
                     
@@ -696,6 +696,7 @@ PEP_STATUS key_reset_own_and_deliver_revocations(PEP_SESSION session,
                 if (datasize > 0 && key_material)
                     stringlist_add(keydata, key_material);
             }
+            curr_ident = curr_ident->next;
         }
     }
     

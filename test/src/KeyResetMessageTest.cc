@@ -1308,3 +1308,132 @@ TEST_F(KeyResetMessageTest, check_reset_mistrust_next_msg_have_not_mailed) {
     ASSERT_EQ(rating, PEP_rating_reliable);
     
 }
+
+TEST_F(KeyResetMessageTest, check_reset_own_with_revocations) {
+    pEp_identity* id1 = new_identity("krista-not-real@darthmama.org", NULL, PEP_OWN_USERID, "Krista at Home");    
+    PEP_STATUS status = myself(session, id1);
+    pEp_identity* id2 = NULL;
+    status = set_up_preset(session, ALICE, true, true, false, false, false, &id2);
+    pEp_identity* id3 = new_identity("krista-not-real@angryshark.eu", NULL, PEP_OWN_USERID, "Krista at Shark");
+    status = myself(session, id3);
+    pEp_identity* id4 = NULL;    
+    status = set_up_preset(session, BOB, true, false, false, false, false, &id4);
+    pEp_identity* id5 = new_identity("krista-not-real@pep.foundation", NULL, PEP_OWN_USERID, "Krista at Work");
+    status = myself(session, id5);
+    pEp_identity* id6 = new_identity("grrrr-not-real@angryshark.eu", NULL, PEP_OWN_USERID, "GRRRR is a Shark");
+    status = myself(session, id6);
+    pEp_identity* id7 = NULL;
+    status = set_up_preset(session, CAROL, true, false, true, false, false, &id7);
+    pEp_identity* id8 = NULL;    
+    status = set_up_preset(session, DAVE, true, true, true, false, false, &id8);
+
+    identity_list* own_identities = NULL;
+    stringlist_t* revocations = NULL;
+    stringlist_t* keys = NULL;
+    
+    stringlist_t* first_keylist = new_stringlist(NULL);
+    stringlist_add(first_keylist, strdup(id1->fpr));
+    stringlist_add(first_keylist, strdup(id3->fpr));
+    stringlist_add(first_keylist, strdup(id5->fpr));
+    stringlist_add(first_keylist, strdup(id6->fpr));
+    
+    status = key_reset_own_and_deliver_revocations(session, 
+                                                   &own_identities, 
+                                                   &revocations, 
+                                                   &keys);
+                                                                                                      
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(own_identities, nullptr);
+    ASSERT_NE(revocations, nullptr);
+    ASSERT_NE(keys, nullptr);
+
+    int i = 0;
+    identity_list* curr_ident = own_identities;
+    stringlist_t* second_keylist = new_stringlist(NULL);
+    
+    for (i = 0; i < 4 && curr_ident; i++, curr_ident = curr_ident->next) {
+        ASSERT_NE(curr_ident->ident, nullptr);
+        ASSERT_NE(curr_ident->ident->fpr, nullptr);        
+        stringlist_t* found = stringlist_search(first_keylist, curr_ident->ident->fpr);
+        ASSERT_EQ(found, nullptr);
+        PEP_comm_type ct = PEP_ct_unknown;
+        status = get_key_rating(session, curr_ident->ident->fpr, &ct);
+        ASSERT_EQ(ct, PEP_ct_OpenPGP_unconfirmed);    
+        stringlist_add(second_keylist, strdup(curr_ident->ident->fpr));            
+    }
+    ASSERT_EQ(i, 4);
+    ASSERT_EQ(curr_ident, nullptr);
+    
+    stringlist_t* curr_key = first_keylist;
+    for (i = 0; i < 4; i++, curr_key = curr_key->next) {
+        PEP_comm_type ct = PEP_ct_unknown;
+        status = get_key_rating(session, curr_key->value, &ct);
+        ASSERT_EQ(ct, PEP_ct_key_revoked);
+    }
+    
+    // Ok, now we're going to delete all the keys, and then try to reimport.
+    curr_key = first_keylist;
+    for (i = 0; i < 4; curr_key = curr_key->next, i++) {
+        status = delete_keypair(session, curr_key->value);
+        ASSERT_EQ(status, PEP_STATUS_OK);
+    }
+    ASSERT_EQ(i, 4);
+    ASSERT_EQ(curr_key, nullptr);
+    
+    curr_key = second_keylist;
+    for (i = 0; i < 4; curr_key = curr_key->next, i++) {
+        status = delete_keypair(session, curr_key->value);
+        ASSERT_EQ(status, PEP_STATUS_OK);
+    }
+    ASSERT_EQ(i, 4);
+    ASSERT_EQ(curr_key, nullptr);
+    
+    // Make sure we can't find them
+    curr_key = first_keylist;
+    for (i = 0; i < 4; curr_key = curr_key->next, i++) {
+        PEP_comm_type ct = PEP_ct_unknown;
+        status = get_key_rating(session, curr_key->value, &ct);
+        ASSERT_EQ(status, PEP_KEY_NOT_FOUND);    
+    }
+    curr_key = second_keylist;
+    for (i = 0; i < 4; curr_key = curr_key->next, i++) {
+        PEP_comm_type ct = PEP_ct_unknown;
+        status = get_key_rating(session, curr_key->value, &ct);
+        ASSERT_EQ(status, PEP_KEY_NOT_FOUND);
+    }
+    
+    
+    // Reimport
+    curr_key = revocations;
+    for (i = 0; i < 4; curr_key = curr_key->next, i++) {
+        status = import_key(session, curr_key->value, strlen(curr_key->value), NULL);
+        ASSERT_EQ(status, PEP_KEY_IMPORTED);
+    }
+    ASSERT_EQ(i, 4);
+    ASSERT_EQ(curr_key, nullptr);
+    
+    curr_key = keys;
+    for (i = 0; i < 4; curr_key = curr_key->next, i++) {
+        status = import_key(session, curr_key->value, strlen(curr_key->value), NULL);
+        ASSERT_EQ(status, PEP_KEY_IMPORTED);
+    }
+    ASSERT_EQ(i, 4);
+    ASSERT_EQ(curr_key, nullptr);
+    
+    // Check the revoked keys to be sure they are revoked
+    curr_key = first_keylist;
+    for (i = 0; i < 4; curr_key = curr_key->next, i++) {
+        PEP_comm_type ct = PEP_ct_unknown;
+        status = get_key_rating(session, curr_key->value, &ct);
+        ASSERT_EQ(ct, PEP_ct_key_revoked);
+        ASSERT_EQ(status, PEP_STATUS_OK);
+    }
+    // Check the imported keys to be sure they are OK
+    curr_key = second_keylist;
+    for (i = 0; i < 4; curr_key = curr_key->next, i++) {
+        PEP_comm_type ct = PEP_ct_unknown;
+        status = get_key_rating(session, curr_key->value, &ct);
+        ASSERT_EQ(ct, PEP_ct_OpenPGP_unconfirmed);
+        ASSERT_EQ(status, PEP_STATUS_OK);
+    }
+}
