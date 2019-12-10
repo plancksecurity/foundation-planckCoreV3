@@ -228,6 +228,7 @@ struct _pEpSession {
     sqlite3_stmt *is_own_address;
     sqlite3_stmt *own_identities_retrieve;
     sqlite3_stmt *own_keys_retrieve;
+    sqlite3_stmt *key_identities_retrieve;
     sqlite3_stmt *get_user_default_key;
     sqlite3_stmt *get_all_keys_for_user;
         
@@ -570,4 +571,3 @@ static inline int Sqlite3_step(sqlite3_stmt* stmt)
     } while (rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
     return rc;
 }
-

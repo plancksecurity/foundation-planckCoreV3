@@ -122,9 +122,16 @@ DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session);
 PEP_STATUS key_reset(
         PEP_SESSION session,
         const char* fpr,
-        pEp_identity* ident
+        pEp_identity* ident,
+        identity_list** own_identities,
+        stringlist_t** own_revoked_fprs
     );
 
+
+PEP_STATUS key_reset_own_and_deliver_revocations(PEP_SESSION session, 
+                                                 identity_list** own_identities, 
+                                                 stringlist_t** revocations, 
+                                                 stringlist_t** keys);
 
 
 PEP_STATUS has_key_reset_been_sent(

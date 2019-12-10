@@ -156,7 +156,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
     new_fpr = strdup(p + 5);
         
     // Reset the original key
-    status = key_reset(session, old_fpr, temp_ident);
+    status = key_reset(session, old_fpr, temp_ident, NULL, NULL);
     if (status != PEP_STATUS_OK)
         goto pEp_free;
         
@@ -334,7 +334,7 @@ DYNAMIC_API PEP_STATUS key_reset_identity(
     if (!session || !ident || (ident && (EMPTYSTR(ident->user_id) || EMPTYSTR(ident->address))))
         return PEP_ILLEGAL_VALUE;
     
-    return key_reset(session, fpr, ident);    
+    return key_reset(session, fpr, ident, NULL, NULL);    
 }
 
 DYNAMIC_API PEP_STATUS key_reset_user(
@@ -353,13 +353,13 @@ DYNAMIC_API PEP_STATUS key_reset_user(
     if (is_me(session, input_ident) && EMPTYSTR(fpr))
         return PEP_ILLEGAL_VALUE;
         
-    PEP_STATUS status = key_reset(session, fpr, input_ident);
+    PEP_STATUS status = key_reset(session, fpr, input_ident, NULL, NULL);
     free_identity(input_ident);
     return status;
 }
 
 DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session) {
-    return key_reset(session, NULL, NULL);
+    return key_reset(session, NULL, NULL, NULL, NULL);
 }
 
 // Notes to integrate into header:
@@ -367,7 +367,9 @@ DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session) {
 PEP_STATUS key_reset(
         PEP_SESSION session,
         const char* key_id,
-        pEp_identity* ident
+        pEp_identity* ident,
+        identity_list** own_identities,
+        stringlist_t** own_revoked_fprs
     )
 {
     if (!session || (ident && EMPTYSTR(ident->user_id)))
@@ -417,7 +419,7 @@ PEP_STATUS key_reset(
             
             for (curr_key = keys; curr_key && curr_key->value; curr_key = curr_key->next) {
                 // FIXME: Is the ident really necessary?
-                status = key_reset(session, curr_key->value, tmp_ident);
+                status = key_reset(session, curr_key->value, tmp_ident, own_identities, own_revoked_fprs);
                 if (status != PEP_STATUS_OK)
                     break;
             }
@@ -497,7 +499,7 @@ PEP_STATUS key_reset(
                             
                             pEp_identity* this_identity = curr_ident->ident;
                             // Do the full reset on this identity        
-                            status = key_reset(session, fpr_copy, this_identity);
+                            status = key_reset(session, fpr_copy, this_identity, own_identities, own_revoked_fprs);
                             
                             // Ident list gets freed below, do not free here!
 
@@ -512,7 +514,8 @@ PEP_STATUS key_reset(
                 }    
             }
             
-            // Create revocation
+            // Base case for is_own_private starts here
+            
             status = revoke_key(session, fpr_copy, NULL);
             
             // If we have a full identity, we have some cleanup and generation tasks here
@@ -526,9 +529,23 @@ PEP_STATUS key_reset(
                     new_key = strdup(tmp_ident->fpr);
 //                    status = set_own_key(session, tmp_ident, new_key);
                 }
+
+                if (own_revoked_fprs) {
+                    // We can dedup this later
+                    if (!(*own_revoked_fprs))
+                        *own_revoked_fprs = new_stringlist(NULL);
+                    
+                    char* revkey = strdup(fpr_copy);
+                    if (!revkey) {
+                        status = PEP_OUT_OF_MEMORY;
+                        goto pEp_free;
+                    }
+                    stringlist_add(*own_revoked_fprs, revkey);                
+                }
+                
                 // mistrust fpr from trust
                 tmp_ident->fpr = fpr_copy;
-                
+                                                
                 tmp_ident->comm_type = PEP_ct_mistrusted;
                 status = set_trust(session, tmp_ident);
                 tmp_ident->fpr = NULL;
@@ -538,6 +555,18 @@ PEP_STATUS key_reset(
                     // Update fpr for outgoing
                     status = myself(session, tmp_ident);
                 }
+                
+                if (status == PEP_STATUS_OK && own_identities) {
+                    if (!(*own_identities))
+                        *own_identities = new_identity_list(NULL);
+                    
+                    pEp_identity* new_ident = identity_dup(tmp_ident);
+                    if (!new_ident) {
+                        status = PEP_OUT_OF_MEMORY;
+                        goto pEp_free;
+                    }
+                    identity_list_add(*own_identities, new_ident);            
+                }    
             }    
             
             if (status == PEP_STATUS_OK)
@@ -577,6 +606,7 @@ PEP_STATUS key_reset(
             // we want it gone anyway)
             //
             // Delete this key from the keyring.
+            // FIXME: when key election disappears, so should this!
             status = delete_keypair(session, fpr_copy);
         }
 
@@ -603,4 +633,76 @@ pEp_free:
     free_stringlist(keys);
     free(new_key);    
     return status;
+}
+
+static stringlist_t* collect_key_material(PEP_SESSION session, stringlist_t* fprs) {
+    stringlist_t* keydata = NULL;    
+    stringlist_t* curr_fpr = fprs;    
+    while (curr_fpr) {
+        if (curr_fpr->value) {
+            char* key_material = NULL;
+            size_t datasize = 0;
+            PEP_STATUS status = export_key(session, curr_fpr->value, &key_material, &datasize);
+            if (status) {
+                free_stringlist(keydata);
+                return NULL;
+            }
+            if (datasize > 0 && key_material) {
+                if (!(keydata))
+                    keydata = new_stringlist(NULL);
+                    
+                stringlist_add(keydata, key_material);
+            }
+        }
+        curr_fpr = curr_fpr->next;        
+    }   
+    return keydata; 
+}
+
+PEP_STATUS key_reset_own_and_deliver_revocations(PEP_SESSION session, 
+                                                 identity_list** own_identities, 
+                                                 stringlist_t** revocations, 
+                                                 stringlist_t** keys) {
+
+    if (!(session && own_identities && revocations && keys))
+        return PEP_ILLEGAL_VALUE;
+        
+    stringlist_t* revoked_fprs = NULL;
+    identity_list* affected_idents = NULL;
+        
+    PEP_STATUS status = key_reset(session, NULL, NULL, &affected_idents, &revoked_fprs);                                                 
+
+    // FIXME: free things
+    if (status != PEP_STATUS_OK)
+        return status;
+    
+    dedup_stringlist(revoked_fprs);
+
+    *revocations = collect_key_material(session, revoked_fprs);
+    stringlist_t* keydata = NULL;
+    
+    if (affected_idents) {
+        keydata = new_stringlist(NULL);
+        identity_list* curr_ident = affected_idents;
+        while (curr_ident) {
+            if (curr_ident->ident && curr_ident->ident->fpr) {
+                char* key_material = NULL;
+                size_t datasize = 0;
+                status = export_key(session, curr_ident->ident->fpr, &key_material, &datasize);
+                if (status) {
+                    free_stringlist(keydata);
+                    return status;
+                }
+                if (datasize > 0 && key_material)
+                    stringlist_add(keydata, key_material);
+            }
+            curr_ident = curr_ident->next;
+        }
+    }
+    
+    *own_identities = affected_idents;
+    *keys = keydata;
+    
+    free(revoked_fprs);
+    return PEP_STATUS_OK;
 }

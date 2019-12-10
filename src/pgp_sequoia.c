@@ -2842,6 +2842,14 @@ PEP_STATUS pgp_get_key_rating(
 
     *comm_type = PEP_ct_OpenPGP_unconfirmed;
 
+    pgp_revocation_status_t rs = pgp_cert_revoked(cert, 0);
+    pgp_revocation_status_variant_t rsv = pgp_revocation_status_variant(rs);
+    pgp_revocation_status_free(rs);
+    if (rsv == PGP_REVOCATION_STATUS_REVOKED) {
+        *comm_type = PEP_ct_key_revoked;
+        goto out;
+    }
+
     bool expired = false;
     
     // MUST guarantee the same behaviour.
@@ -2857,13 +2865,6 @@ PEP_STATUS pgp_get_key_rating(
     //     goto out;
     // }
 
-    pgp_revocation_status_t rs = pgp_cert_revoked(cert, 0);
-    pgp_revocation_status_variant_t rsv = pgp_revocation_status_variant(rs);
-    pgp_revocation_status_free(rs);
-    if (rsv == PGP_REVOCATION_STATUS_REVOKED) {
-        *comm_type = PEP_ct_key_revoked;
-        goto out;
-    }
 
     PEP_comm_type best_enc = PEP_ct_no_encryption, best_sign = PEP_ct_no_encryption;
     pgp_cert_key_iter_t key_iter = pgp_cert_key_iter_valid(cert);
