@@ -312,6 +312,26 @@ protocol Sync 1 {
 
             on GroupTrustThisKey
                 do trustThisKey;
+
+            on GroupKeyResetRequired
+                send InitGroupKeyReset;
+
+            on GroupKeyResetRequiredAndDisable {
+                send InitGroupKeyReset;
+                go DisableOnInitGroupKeyReset;
+            }
+
+            on InitGroupKeyReset
+                send GroupKeyReset;
+
+            on GroupKeyReset {
+
+            }
+        }
+
+        state DisableOnInitGroupKeyReset {
+            on InitGroupKeyReset
+                do disable;
         }
 
         // sole device handshaking with group
@@ -579,6 +599,15 @@ protocol Sync 1 {
         message GroupHandshake 17 {
             field TID negotiation;
             field Hash key;
+        }
+
+        // key reset for group
+        message InitGroupKeyReset 18 {
+        }
+
+        message GroupKeyReset 19, security=key_reset {
+            field TID challenge;
+            field IdentityList ownIdentities;
         }
     }
 }

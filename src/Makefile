@@ -122,5 +122,5 @@ uninstall:
 	rm -rf $(PREFIX)/include/pEp
 
 tags: $(wildcard *.c) $(wildcard *.h)
-	ctags *.c *.h
+	ctags --sort=yes *.c *.h
 

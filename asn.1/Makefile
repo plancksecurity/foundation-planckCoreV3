@@ -30,4 +30,4 @@ install:
 uninstall:
 
 tags: $(wildcard *.c) $(wildcard *.h)
-	ctags *.c *.h
+	ctags --sort=yes *.c *.h

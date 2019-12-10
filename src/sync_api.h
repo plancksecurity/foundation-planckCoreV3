@@ -201,13 +201,20 @@ DYNAMIC_API PEP_STATUS enter_device_group(
     );
 
 
-// leave_device_group() - leave a device group and shutdown sync
+// disable_sync() - leave a device group and shutdown sync
+//
+//  parameters:
+//      session                 pEp session
+
+PEP_STATUS disable_sync(PEP_SESSION session);
+
+// leave_device_group() - Issue a group key reset request and 
+// leave the device group, shutting down sync \
 //
 //  parameters:
 //      session                 pEp session
 
 DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session);
-
 
 // enable_identity_for_sync() - enable sync for this identity
 //  parameters:
@@ -226,7 +233,7 @@ DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
 DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
         pEp_identity *ident);
 
+
 #ifdef __cplusplus
 }
 #endif
-
