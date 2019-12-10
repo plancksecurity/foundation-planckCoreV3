@@ -113,6 +113,11 @@ DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session);
 //                              if NULL and fpr is non-NULL, we'll reset the key for all
 //                              associated identities. If both ident and fpr are NULL, see 
 //                              the fpr arg documentation.
+//      own_identities (out)    IF this is resetting own identities, passing in a pointer here 
+//                              will cause key_reset to return a list of own_identities featuring 
+//                              the new keys
+//      own_revoked_fprs (out)  IF this is resetting own identities, passing in a pointer here 
+//                              will cause key_reset to send a list of the revoked fprs
 //
 //      Note: ident->fpr is always ignored
 //
