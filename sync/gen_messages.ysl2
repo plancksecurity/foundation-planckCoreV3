@@ -15,7 +15,7 @@ tstylesheet {
     include ./functions.ysl2
 
     function "pEp_imports"
-        | IMPORTS Identity, IdentityList, TID, Hash FROM PEP;
+        | IMPORTS Version, Identity, IdentityList, TID, Hash FROM PEP;
 
     function "header"
     ||
@@ -70,11 +70,6 @@ tstylesheet {
 
         EXPORTS «@name»;
         `` call "pEp_imports"
-
-        Version ::= SEQUENCE {
-            major INTEGER (0..255) DEFAULT «version/@major»,
-            minor INTEGER (0..255) DEFAULT «version/@minor»
-        }
 
         `` apply "message", 0, mode=impl;
         «@name» ::= CHOICE {
