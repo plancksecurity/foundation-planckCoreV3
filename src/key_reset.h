@@ -165,8 +165,8 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
                                      const char* old_fpr, 
                                      const char* new_fpr);
  
-PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, char **cmds);
-PEP_STATUS PER_to_key_reset_commands(const char **cmds, keyreset_command_list **command_list);
+PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, char **cmds, size_t *size);
+PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_command_list **command_list);
 
 #ifdef __cplusplus
 }

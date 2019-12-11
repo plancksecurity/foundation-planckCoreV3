@@ -709,13 +709,26 @@ PEP_STATUS key_reset_own_and_deliver_revocations(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, char **cmds)
+PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, char **cmds, size_t *size)
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(command_list && cmds);
     if (!(command_list && cmds))
         return PEP_ILLEGAL_VALUE;
+
+    *cmds = NULL;
+    *size = 0;
+
+    Distribution_t *dist = (Distribution_t *) calloc(1, sizeof(Distribution_t));
+    assert(dist);
+    if (!dist)
+        goto enomem;
+
+    dist->present = Distribution_PR_keyreset;
+    dist->choice.keyreset.present = KeyReset_PR_commands;
+
+    // convert to ASN.1 struct
 
     for (const keyreset_command_list *cl = command_list; cl && cl->command; cl = cl->next) {
         Command_t *c = (Command_t *) calloc(1, sizeof(Command_t));
@@ -729,20 +742,39 @@ PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, 
         }
 
         if (OCTET_STRING_fromString(&c->newkey, cl->command->new_key)) {
-            ASN_STRUCT_FREE(asn_DEF_Identity, &c->ident);
-            free(c);
+            ASN_STRUCT_FREE(asn_DEF_Command, c);
             goto enomem;
         }
+
+        if (ASN_SEQUENCE_ADD(&dist->choice.keyreset.choice.commands.commandlist, c)) {
+            ASN_STRUCT_FREE(asn_DEF_Command, c);
+            goto enomem;
+        }
+
+        ASN_STRUCT_FREE(asn_DEF_Command, c);
     }
+
+    // encode
+
+    char *_cmds;
+    size_t _size;
+    status = encode_Distribution_message(dist, &_cmds, &_size);
+    if (status)
+        goto the_end;
+
+    *cmds = _cmds;
+    *size = _size;
+    goto the_end;
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
 
 the_end:
+    ASN_STRUCT_FREE(asn_DEF_Distribution, dist);
     return status;
 }
 
-PEP_STATUS PER_to_key_reset_commands(const char **cmds, keyreset_command_list **command_list)
+PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_command_list **command_list)
 {
     assert(command_list && cmds);
     if (!(command_list && cmds))
