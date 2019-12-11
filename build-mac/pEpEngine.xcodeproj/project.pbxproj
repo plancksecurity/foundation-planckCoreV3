@@ -39,7 +39,6 @@
 		159EF42822B6D3E900149C0C /* pgp_sequoia.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42522B6D3E900149C0C /* pgp_sequoia.h */; };
 		159EF42922B6D3E900149C0C /* pgp_sequoia_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */; };
 		15B037AA22B2B822002D664C /* ber_tlv_length.c in Sources */ = {isa = PBXBuildFile; fileRef = 15B0373F22B2B816002D664C /* ber_tlv_length.c */; };
-		15B037AB22B2B822002D664C /* GroupKeys.h in Headers */ = {isa = PBXBuildFile; fileRef = 15B0374022B2B817002D664C /* GroupKeys.h */; };
 		15B037AC22B2B822002D664C /* CommitAccept.c in Sources */ = {isa = PBXBuildFile; fileRef = 15B0374122B2B817002D664C /* CommitAccept.c */; };
 		15B037AD22B2B822002D664C /* Rollback.h in Headers */ = {isa = PBXBuildFile; fileRef = 15B0374222B2B817002D664C /* Rollback.h */; };
 		15B037AE22B2B822002D664C /* NegotiationOpen.c in Sources */ = {isa = PBXBuildFile; fileRef = 15B0374322B2B817002D664C /* NegotiationOpen.c */; };
@@ -95,7 +94,6 @@
 		15B037E022B2B822002D664C /* TID.c in Sources */ = {isa = PBXBuildFile; fileRef = 15B0377522B2B81D002D664C /* TID.c */; };
 		15B037E122B2B822002D664C /* GroupTrustThisKey.c in Sources */ = {isa = PBXBuildFile; fileRef = 15B0377622B2B81D002D664C /* GroupTrustThisKey.c */; };
 		15B037E222B2B822002D664C /* per_encoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 15B0377722B2B81D002D664C /* per_encoder.h */; };
-		15B037E322B2B822002D664C /* GroupKeys.c in Sources */ = {isa = PBXBuildFile; fileRef = 15B0377822B2B81D002D664C /* GroupKeys.c */; };
 		15B037E422B2B822002D664C /* xer_decoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 15B0377922B2B81D002D664C /* xer_decoder.c */; };
 		15B037E522B2B822002D664C /* constr_SEQUENCE.h in Headers */ = {isa = PBXBuildFile; fileRef = 15B0377A22B2B81D002D664C /* constr_SEQUENCE.h */; };
 		15B037E622B2B822002D664C /* constr_CHOICE.h in Headers */ = {isa = PBXBuildFile; fileRef = 15B0377B22B2B81D002D664C /* constr_CHOICE.h */; };
@@ -149,6 +147,8 @@
 		430BCC492015EE800077E998 /* pEp_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 430BCC472015EE800077E998 /* pEp_string.c */; };
 		430D258B1C9ED75A00B94535 /* blacklist.c in Sources */ = {isa = PBXBuildFile; fileRef = 430D258A1C9ED75A00B94535 /* blacklist.c */; };
 		431F04B722733A7E00CCE960 /* key_reset.h in Headers */ = {isa = PBXBuildFile; fileRef = 431F04B222733A7E00CCE960 /* key_reset.h */; };
+		432713B023A10B07007EAD4A /* GroupKeysForNewMember.c in Sources */ = {isa = PBXBuildFile; fileRef = 432713AF23A10B07007EAD4A /* GroupKeysForNewMember.c */; };
+		432714AB23A10B3B007EAD4A /* GroupKeysUpdate.c in Sources */ = {isa = PBXBuildFile; fileRef = 432714AA23A10B3B007EAD4A /* GroupKeysUpdate.c */; };
 		43370833203C075A004E6547 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 4337082D203C075A004E6547 /* sqlite3.c */; };
 		43370834203C075A004E6547 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 43370832203C075A004E6547 /* sqlite3.h */; };
 		43495980239E40F200CF1E12 /* InitGroupKeyReset.c in Sources */ = {isa = PBXBuildFile; fileRef = 4349597B239E40F200CF1E12 /* InitGroupKeyReset.c */; };
@@ -273,7 +273,6 @@
 		159EF42522B6D3E900149C0C /* pgp_sequoia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pgp_sequoia.h; path = ../src/pgp_sequoia.h; sourceTree = "<group>"; };
 		159EF42622B6D3E900149C0C /* pgp_sequoia_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pgp_sequoia_internal.h; path = ../src/pgp_sequoia_internal.h; sourceTree = "<group>"; };
 		15B0373F22B2B816002D664C /* ber_tlv_length.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ber_tlv_length.c; path = ../asn.1/ber_tlv_length.c; sourceTree = "<group>"; };
-		15B0374022B2B817002D664C /* GroupKeys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GroupKeys.h; path = ../asn.1/GroupKeys.h; sourceTree = "<group>"; };
 		15B0374122B2B817002D664C /* CommitAccept.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = CommitAccept.c; path = ../asn.1/CommitAccept.c; sourceTree = "<group>"; };
 		15B0374222B2B817002D664C /* Rollback.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Rollback.h; path = ../asn.1/Rollback.h; sourceTree = "<group>"; };
 		15B0374322B2B817002D664C /* NegotiationOpen.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NegotiationOpen.c; path = ../asn.1/NegotiationOpen.c; sourceTree = "<group>"; };
@@ -329,7 +328,6 @@
 		15B0377522B2B81D002D664C /* TID.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = TID.c; path = ../asn.1/TID.c; sourceTree = "<group>"; };
 		15B0377622B2B81D002D664C /* GroupTrustThisKey.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupTrustThisKey.c; path = ../asn.1/GroupTrustThisKey.c; sourceTree = "<group>"; };
 		15B0377722B2B81D002D664C /* per_encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = per_encoder.h; path = ../asn.1/per_encoder.h; sourceTree = "<group>"; };
-		15B0377822B2B81D002D664C /* GroupKeys.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeys.c; path = ../asn.1/GroupKeys.c; sourceTree = "<group>"; };
 		15B0377922B2B81D002D664C /* xer_decoder.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xer_decoder.c; path = ../asn.1/xer_decoder.c; sourceTree = "<group>"; };
 		15B0377A22B2B81D002D664C /* constr_SEQUENCE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = constr_SEQUENCE.h; path = ../asn.1/constr_SEQUENCE.h; sourceTree = "<group>"; };
 		15B0377B22B2B81D002D664C /* constr_CHOICE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = constr_CHOICE.h; path = ../asn.1/constr_CHOICE.h; sourceTree = "<group>"; };
@@ -383,6 +381,8 @@
 		430BCC472015EE800077E998 /* pEp_string.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEp_string.c; path = ../src/pEp_string.c; sourceTree = "<group>"; };
 		430D258A1C9ED75A00B94535 /* blacklist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = blacklist.c; path = ../src/blacklist.c; sourceTree = "<group>"; };
 		431F04B222733A7E00CCE960 /* key_reset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = key_reset.h; path = ../src/key_reset.h; sourceTree = "<group>"; };
+		432713AF23A10B07007EAD4A /* GroupKeysForNewMember.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysForNewMember.c; path = ../asn.1/GroupKeysForNewMember.c; sourceTree = "<group>"; };
+		432714AA23A10B3B007EAD4A /* GroupKeysUpdate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysUpdate.c; path = ../asn.1/GroupKeysUpdate.c; sourceTree = "<group>"; };
 		4337082D203C075A004E6547 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = ../src/sqlite3.c; sourceTree = "<group>"; };
 		43370832203C075A004E6547 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = ../src/sqlite3.h; sourceTree = "<group>"; };
 		4349597B239E40F200CF1E12 /* InitGroupKeyReset.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = InitGroupKeyReset.c; path = ../asn.1/InitGroupKeyReset.c; sourceTree = "<group>"; };
@@ -494,6 +494,8 @@
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
 			isa = PBXGroup;
 			children = (
+				432714AA23A10B3B007EAD4A /* GroupKeysUpdate.c */,
+				432713AF23A10B07007EAD4A /* GroupKeysForNewMember.c */,
 				43495981239E417300CF1E12 /* GroupKeyReset.c */,
 				4349597B239E40F200CF1E12 /* InitGroupKeyReset.c */,
 				15147EED237E9EA7003989FE /* GroupHandshake.h */,
@@ -548,8 +550,6 @@
 				15B0377122B2B81C002D664C /* constraints.h */,
 				15B0375022B2B818002D664C /* der_encoder.c */,
 				15B0378322B2B81E002D664C /* der_encoder.h */,
-				15B0377822B2B81D002D664C /* GroupKeys.c */,
-				15B0374022B2B817002D664C /* GroupKeys.h */,
 				15B0377622B2B81D002D664C /* GroupTrustThisKey.c */,
 				15B0377C22B2B81D002D664C /* GroupTrustThisKey.h */,
 				15B0379022B2B81F002D664C /* Hash.c */,
@@ -786,7 +786,6 @@
 				15B037F922B2B822002D664C /* per_support.h in Headers */,
 				15B037C022B2B822002D664C /* per_opentype.h in Headers */,
 				15B0380222B2B822002D664C /* ber_tlv_length.h in Headers */,
-				15B037AB22B2B822002D664C /* GroupKeys.h in Headers */,
 				15B037B622B2B822002D664C /* IdentityList.h in Headers */,
 				15B037E622B2B822002D664C /* constr_CHOICE.h in Headers */,
 				646C414F1D510D8800C63EFF /* baseprotocol.h in Headers */,
@@ -1007,10 +1006,10 @@
 				15B0380B22B2B822002D664C /* NativeInteger.c in Sources */,
 				154918B322B940200091B6D6 /* Sync_impl.c in Sources */,
 				15147EF2237E9EA7003989FE /* GroupKeysAndClose.c in Sources */,
-				15B037E322B2B822002D664C /* GroupKeys.c in Sources */,
 				43495982239E417300CF1E12 /* GroupKeyReset.c in Sources */,
 				15B037B122B2B822002D664C /* NegotiationRequest.c in Sources */,
 				15B037FC22B2B822002D664C /* Hex.c in Sources */,
+				432714AB23A10B3B007EAD4A /* GroupKeysUpdate.c in Sources */,
 				43E4FBB22362C05600BC01F4 /* NegotiationRequestGrouped.c in Sources */,
 				15B0380722B2B822002D664C /* constr_CHOICE.c in Sources */,
 				15B037B922B2B822002D664C /* NativeEnumerated.c in Sources */,
@@ -1082,6 +1081,7 @@
 				430D258B1C9ED75A00B94535 /* blacklist.c in Sources */,
 				15B0380E22B2B822002D664C /* PrintableString.c in Sources */,
 				15B037E922B2B822002D664C /* CommitAcceptOfferer.c in Sources */,
+				432713B023A10B07007EAD4A /* GroupKeysForNewMember.c in Sources */,
 				154918B922B940200091B6D6 /* Sync_func.c in Sources */,
 				646C414E1D510D8800C63EFF /* baseprotocol.c in Sources */,
 				15B037C722B2B822002D664C /* per_decoder.c in Sources */,

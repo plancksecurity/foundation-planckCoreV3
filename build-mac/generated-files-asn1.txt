@@ -18,10 +18,12 @@ $(SRCROOT)/../asn.1/GroupHandshake.c
 $(SRCROOT)/../asn.1/GroupHandshake.h
 $(SRCROOT)/../asn.1/GroupKeyReset.c
 $(SRCROOT)/../asn.1/GroupKeyReset.h
-$(SRCROOT)/../asn.1/GroupKeys.c
-$(SRCROOT)/../asn.1/GroupKeys.h
 $(SRCROOT)/../asn.1/GroupKeysAndClose.c
 $(SRCROOT)/../asn.1/GroupKeysAndClose.h
+$(SRCROOT)/../asn.1/GroupKeysForNewMember.c
+$(SRCROOT)/../asn.1/GroupKeysForNewMember.h
+$(SRCROOT)/../asn.1/GroupKeysUpdate.c
+$(SRCROOT)/../asn.1/GroupKeysUpdate.h
 $(SRCROOT)/../asn.1/GroupTrustThisKey.c
 $(SRCROOT)/../asn.1/GroupTrustThisKey.h
 $(SRCROOT)/../asn.1/Hash.c
