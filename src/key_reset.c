@@ -718,7 +718,7 @@ PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, 
         return PEP_ILLEGAL_VALUE;
 
     for (const keyreset_command_list *cl = command_list; cl && cl->command; cl = cl->next) {
-        Commands_t *c = calloc(1, sizeof(Commands_t));
+        Command_t *c = (Command_t *) calloc(1, sizeof(Command_t));
         assert(c);
         if (!c)
             goto enomem;

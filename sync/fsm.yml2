@@ -61,3 +61,7 @@ decl field @type @name;
 
 decl auto < field >;
 
+// … or list of fields
+
+decl list < field >;
+

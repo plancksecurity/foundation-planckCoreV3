@@ -13,8 +13,10 @@ protocol Distribution 2 {
     fsm KeyReset 1 {
         message Commands 1 {
             auto Version version;
-            field Identity ident;
-            field Hash newkey;
+            list Command commandlist {
+                field Identity ident;
+                field Hash newkey;
+            }
         }
     }
 }
