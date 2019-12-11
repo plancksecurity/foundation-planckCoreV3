@@ -5,7 +5,9 @@
 #include "dynamic_api.h"
 #include "message_api.h"
 #include "key_reset.h"
-
+#include "distribution_codec.h"
+#include "map_asn1.h"
+#include "../asn.1/Distribution.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -707,19 +709,43 @@ PEP_STATUS key_reset_own_and_deliver_revocations(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS key_reset_commands_to_binary(const keyreset_command_list *kcl, char **cmds)
+PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, char **cmds)
 {
-    assert(kcl && cmds);
-    if (!(kcl && cmds))
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(command_list && cmds);
+    if (!(command_list && cmds))
         return PEP_ILLEGAL_VALUE;
 
-    return PEP_STATUS_OK;
+    for (const keyreset_command_list *cl = command_list; cl && cl->command; cl = cl->next) {
+        Commands_t *c = calloc(1, sizeof(Commands_t));
+        assert(c);
+        if (!c)
+            goto enomem;
+
+        if (!Identity_from_Struct(cl->command->ident, &c->ident)) {
+            free(c);
+            goto enomem;
+        }
+
+        if (OCTET_STRING_fromString(&c->newkey, cl->command->new_key)) {
+            ASN_STRUCT_FREE(asn_DEF_Identity, &c->ident);
+            free(c);
+            goto enomem;
+        }
+    }
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+the_end:
+    return status;
 }
 
-PEP_STATUS binary_to_key_reset_commands(const char **cmds, keyreset_command_list **kcl)
+PEP_STATUS PER_to_key_reset_commands(const char **cmds, keyreset_command_list **command_list)
 {
-    assert(kcl && cmds);
-    if (!(kcl && cmds))
+    assert(command_list && cmds);
+    if (!(command_list && cmds))
         return PEP_ILLEGAL_VALUE;
 
     return PEP_STATUS_OK;
