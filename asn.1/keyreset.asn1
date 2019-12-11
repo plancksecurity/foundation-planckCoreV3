@@ -6,7 +6,7 @@
 -- Written by Volker Birk
 
 KEYRESET
-    { iso(1) org(3) dod(6) internet(1) private(4) enterprise(1) pEp(47878) distribution(2) keyreset(2) }
+    { iso(1) org(3) dod(6) internet(1) private(4) enterprise(1) pEp(47878) distribution(2) keyreset(1) }
 
 DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
 

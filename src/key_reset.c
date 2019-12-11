@@ -706,3 +706,22 @@ PEP_STATUS key_reset_own_and_deliver_revocations(PEP_SESSION session,
     free(revoked_fprs);
     return PEP_STATUS_OK;
 }
+
+PEP_STATUS key_reset_commands_to_binary(const keyreset_command_list *kcl, char **cmds)
+{
+    assert(kcl && cmds);
+    if (!(kcl && cmds))
+        return PEP_ILLEGAL_VALUE;
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS binary_to_key_reset_commands(const char **cmds, keyreset_command_list **kcl)
+{
+    assert(kcl && cmds);
+    if (!(kcl && cmds))
+        return PEP_ILLEGAL_VALUE;
+
+    return PEP_STATUS_OK;
+}
+

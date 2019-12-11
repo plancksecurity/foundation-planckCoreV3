@@ -8,6 +8,7 @@
 #include "message.h"
 #include "message_api.h"
 #include "cryptotech.h"
+#include "keyreset_command.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -163,7 +164,10 @@ PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
 PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
                                      const char* old_fpr, 
                                      const char* new_fpr);
-    
+ 
+PEP_STATUS key_reset_commands_to_binary(const keyreset_command_list *kcl, char **cmds);
+PEP_STATUS binary_to_key_reset_commands(const char **cmds, keyreset_command_list **kcl);
+
 #ifdef __cplusplus
 }
 #endif
