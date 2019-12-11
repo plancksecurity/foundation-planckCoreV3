@@ -1,18 +1,19 @@
 -- This file is under BSD License 2.0
 
--- Key Reset protocol for p≡p
--- Copyleft 2019 by p≡p foundation
+-- KeyReset protocol for p≡p
+-- Copyleft 2016-2019 by p≡p foundation
 
 -- Written by Volker Birk
 
 KEYRESET
-    { iso(1) org(3) dod(6) internet(1) private(4) enterprise(1) pEp(47878) keyreset(2) }
+    { iso(1) org(3) dod(6) internet(1) private(4) enterprise(1) pEp(47878) distribution(2) keyreset(2) }
 
 DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
 
 BEGIN
 
-IMPORTS Version, Identity, Hash FROM PEP;
+EXPORTS KeyReset;
+IMPORTS Version, Identity, IdentityList, TID, Hash FROM PEP;
 
 Commands ::= SEQUENCE {
     version Version,
