@@ -282,12 +282,12 @@ protocol Sync 1 {
                 do showBeingInGroup;
             }
 
-            on GroupKeys
+            on GroupKeysUpdate
                 do saveGroupKeys;
 
             on KeyGen {
                 do prepareOwnKeys;
-                send GroupKeys;
+                send GroupKeysUpdate;
             }
 
             on Beacon {
@@ -404,7 +404,7 @@ protocol Sync 1 {
         }
 
         state JoiningGroup {
-            on GroupKeys {
+            on GroupKeysForNewMember {
                 do saveGroupKeys;
                 do receivedKeysAreDefaultKeys;
                 do prepareOwnKeys;
@@ -451,7 +451,7 @@ protocol Sync 1 {
                     go Grouped;
             }
 
-            on GroupKeys
+            on GroupKeysUpdate
                 do saveGroupKeys;
         }
 
@@ -469,7 +469,7 @@ protocol Sync 1 {
 
             on CommitAccept if sameNegotiationAndPartner {
                 do prepareOwnKeys;
-                send GroupKeys;
+                send GroupKeysForNewMember;
                 do showDeviceAccepted;
                 go Grouped;
             }
@@ -477,7 +477,7 @@ protocol Sync 1 {
             on GroupTrustThisKey
                 do trustThisKey;
 
-            on GroupKeys
+            on GroupKeysUpdate
                 do saveGroupKeys;
             
             on GroupKeysAndClose {
@@ -501,7 +501,7 @@ protocol Sync 1 {
                 do trustThisKey;
                 send GroupTrustThisKey;
                 do prepareOwnKeys;
-                send GroupKeys;
+                send GroupKeysForNewMember;
                 do showDeviceAccepted;
                 go Grouped;
             }
@@ -509,7 +509,7 @@ protocol Sync 1 {
             on GroupTrustThisKey
                 do trustThisKey;
 
-            on GroupKeys
+            on GroupKeysUpdate
                 do saveGroupKeys;
             
             on GroupKeysAndClose {
@@ -572,19 +572,19 @@ protocol Sync 1 {
         }
 
         // trust in future
-        message GroupKeys 12, security=attach_own_keys {
+        message GroupKeysForNewMember 12, security=attach_own_keys_for_new_member {
             field IdentityList ownIdentities;
         }
 
-        message GroupKeysAndClose 13, security=attach_own_keys {
+        message GroupKeysAndClose 13, security=attach_own_keys_for_new_member {
             field IdentityList ownIdentities;
         }
 
-        message OwnKeysOfferer 14, security=attach_own_keys {
+        message OwnKeysOfferer 14, security=attach_own_keys_for_new_member {
             field IdentityList ownIdentities;
         }
 
-        message OwnKeysRequester 15, security=attach_own_keys {
+        message OwnKeysRequester 15, security=attach_own_keys_for_new_member {
             field IdentityList ownIdentities;
         }
 
@@ -601,11 +601,16 @@ protocol Sync 1 {
             field Hash key;
         }
 
-        // key reset for group
-        message InitGroupKeyReset 18 {
+        // update group
+        message GroupKeysUpdate 18, security=attach_own_keys_for_group {
+            field IdentityList ownIdentities;
         }
 
-        message GroupKeyReset 19, security=key_reset {
+        // key reset for group
+        message InitGroupKeyReset 19 {
+        }
+
+        message GroupKeyReset 20, security=attach_own_keys_for_group {
             field TID challenge;
             field IdentityList ownIdentities;
         }

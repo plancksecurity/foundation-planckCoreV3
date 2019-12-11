@@ -231,6 +231,7 @@ tstylesheet {
             #include "«@name»_event.h"
             #include "«yml:lcase(@name)»_codec.h"
             #include "baseprotocol.h"
+            #include "security_checks.h"
             `` for "fsm" | #include "«@name»_fsm.h"
 
             `` apply "fsm", 0, mode=timeout
@@ -562,7 +563,7 @@ tstylesheet {
                             free_message(_m);
                             break;
 
-                    `` for "fsm/message[@security='attach_own_keys']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                    `` for "fsm/message[@security='attach_own_keys_for_new_member']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
                             // check if we had a former negotiation
 
                             transaction = false;
@@ -722,6 +723,109 @@ tstylesheet {
 
                             // N.B. The -1 makes sure we do NOT add a NUL into the mime stream!
                             bloblist_t *bl = bloblist_add(_m->attachments, key_data, key_data_size - 1,
+                                    "application/octet-stream", "file://own.key");
+                            if (!bl) {
+                                free(_data);
+                                free_message(_m);
+                                status = PEP_OUT_OF_MEMORY;
+                                goto the_end;
+                            }
+                            key_data = NULL;
+
+                            status = encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
+                            if (status) {
+                                status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                goto the_end;
+                            }
+                            add_opt_field(m, "pEp-auto-consume", "yes");
+                            m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
+                            free_message(_m);
+                            break;
+
+                    `` for "fsm/message[@security='attach_own_keys_for_group']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                            status = base_prepare_message(
+                                    session,
+                                    li->ident,
+                                    li->ident,
+                                    _data,
+                                    size,
+                                    NULL,
+                                    &_m
+                                );
+                            if (status) {
+                                free(_data);
+                                goto the_end;
+                            }
+
+                            // export secret keys into memory
+
+                            key_data = strdup("");
+                            assert(key_data);
+                            if (!key_data) {
+                                free(_data);
+                                free_message(_m);
+                                status = PEP_OUT_OF_MEMORY;
+                                goto the_end;
+                            }
+                            key_data_size = 1; // N.B. If null termination makes us happy for debugging, fine, but 
+                                               // if we include this in the size, libetpan will null terminate and 
+                                               // go bananas. We can't have a NUL in the mime text.
+
+                            for (stringlist_t *sl = session->«yml:lcase(@name)»_state.own.keys;
+                                    sl && sl->value ; sl = sl->next)
+                            {
+                                char *_key_data = NULL;
+                                size_t _size = 0;
+                                status = export_secret_key(session, sl->value, &_key_data, &_size);
+                                if (status && status != PEP_KEY_NOT_FOUND) {
+                                    free(_data);
+                                    free_message(_m);
+                                    goto the_end;
+                                }
+
+                                if (status != PEP_KEY_NOT_FOUND) {
+                                    assert(_key_data && _size);
+                                    char *n = realloc(key_data, key_data_size + _size);
+                                    if (!n) {
+                                        free(_data);
+                                        free_message(_m);
+                                        status = PEP_OUT_OF_MEMORY;
+                                        goto the_end;
+                                    }
+                                    key_data = n;
+                                    key_data_size += _size;
+                                    strlcat(key_data, _key_data, key_data_size);
+                                    free(_key_data);
+                                    _key_data = NULL;
+                                }
+                                status = export_key(session, sl->value, &_key_data, &_size);
+                                if (status && status != PEP_KEY_NOT_FOUND) {
+                                    free(_data);
+                                    free_message(_m);
+                                    goto the_end;
+                                }
+
+                                if (status != PEP_KEY_NOT_FOUND) {
+                                    assert(_key_data && _size);
+                                    char *n = realloc(key_data, key_data_size + _size);
+                                    if (!n) {
+                                        free(_data);
+                                        free_message(_m);
+                                        status = PEP_OUT_OF_MEMORY;
+                                        goto the_end;
+                                    }
+                                    key_data = n;
+                                    key_data_size += _size;
+                                    strlcat(key_data, _key_data, key_data_size);
+                                    free(_key_data);
+                                    _key_data = NULL;
+                                }
+                            }
+
+                            // add secret key data as attachment
+
+                            // N.B. The -1 makes sure we do NOT add a NUL into the mime stream!
+                            bl = bloblist_add(_m->attachments, key_data, key_data_size - 1,
                                     "application/octet-stream", "file://own.key");
                             if (!bl) {
                                 free(_data);
