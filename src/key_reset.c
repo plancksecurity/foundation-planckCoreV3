@@ -810,8 +810,6 @@ keyreset_command_list * Distribution_to_keyreset_command_list(
     if (!dist)
         return NULL;
 
-    // convert from ASN.1 struct
-
     if (allocated)
         command_list = new_keyreset_command_list(NULL);
     if (!command_list)
