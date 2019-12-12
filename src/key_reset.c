@@ -709,20 +709,20 @@ PEP_STATUS key_reset_own_and_deliver_revocations(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
-PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, char **cmds, size_t *size)
+Distribution_t *Distribution_from_keyreset_command_list(
+        const keyreset_command_list *command_list,
+        Distribution_t *dist
+    )
 {
-    PEP_STATUS status = PEP_STATUS_OK;
+    bool allocated = !dist;
 
-    assert(command_list && cmds);
-    if (!(command_list && cmds))
-        return PEP_ILLEGAL_VALUE;
+    assert(command_list);
+    if (!command_list)
+        return NULL;
 
-    *cmds = NULL;
-    *size = 0;
+    if (allocated)
+        dist = (Distribution_t *) calloc(1, sizeof(Distribution_t));
 
-    // convert to ASN.1 struct
-
-    Distribution_t *dist = (Distribution_t *) calloc(1, sizeof(Distribution_t));
     assert(dist);
     if (!dist)
         goto enomem;
@@ -752,6 +752,31 @@ PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, 
         }
     }
 
+    return dist;
+
+enomem:
+    ASN_STRUCT_FREE(asn_DEF_Distribution, dist);
+    return NULL;
+}
+
+PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, char **cmds, size_t *size)
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(command_list && cmds);
+    if (!(command_list && cmds))
+        return PEP_ILLEGAL_VALUE;
+
+    *cmds = NULL;
+    *size = 0;
+
+    // convert to ASN.1 struct
+
+    Distribution_t *dist = Distribution_from_keyreset_command_list(command_list, NULL);
+    assert(dist);
+    if (!dist)
+        goto enomem;
+
     // encode
 
     char *_cmds;
@@ -774,6 +799,53 @@ the_end:
     return status;
 }
 
+keyreset_command_list * Distribution_to_keyreset_command_list(
+        Distribution_t *dist,
+        keyreset_command_list *command_list
+    )
+{
+    bool allocated = !command_list;
+
+    assert(dist);
+    if (!dist)
+        return NULL;
+
+    // convert from ASN.1 struct
+
+    if (allocated)
+        command_list = new_keyreset_command_list(NULL);
+    if (!command_list)
+        goto enomem;
+
+    struct Commands__commandlist *cl = &dist->choice.keyreset.choice.commands.commandlist;
+    keyreset_command_list *_result = command_list;
+    for (int i=0; i<cl->list.count; i++) {
+        pEp_identity *ident = Identity_to_Struct(&cl->list.array[i]->ident, NULL);
+        if (!ident)
+            goto enomem;
+
+        const char *new_key = (const char *) cl->list.array[i]->newkey.buf;
+
+        keyreset_command *command = new_keyreset_command(ident, new_key);
+        if (!command) {
+            free_identity(ident);
+            goto enomem;
+        }
+
+        _result = keyreset_command_list_add(_result, command);
+        free_identity(ident);
+        if (!_result)
+            goto enomem;
+    }
+
+    return command_list;
+
+enomem:
+    if (allocated)
+        free_keyreset_command_list(command_list);
+    return NULL;
+}
+
 PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_command_list **command_list)
 {
     assert(command_list && cmds);
@@ -781,7 +853,6 @@ PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_com
         return PEP_ILLEGAL_VALUE;
 
     *command_list = NULL;
-    keyreset_command_list *result = NULL;
 
     // decode
 
@@ -803,30 +874,9 @@ PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_com
 
     // convert from ASN.1 struct
 
-    result = new_keyreset_command_list(NULL);
+    keyreset_command_list *result = Distribution_to_keyreset_command_list(dist, NULL);
     if (!result)
         goto enomem;
-
-    struct Commands__commandlist *cl = &dist->choice.keyreset.choice.commands.commandlist;
-    keyreset_command_list *_result = result;
-    for (int i=0; i<cl->list.count; i++) {
-        pEp_identity *ident = Identity_to_Struct(&cl->list.array[i]->ident, NULL);
-        if (!ident)
-            goto enomem;
-
-        const char *new_key = (const char *) cl->list.array[i]->newkey.buf;
-
-        keyreset_command *command = new_keyreset_command(ident, new_key);
-        if (!command) {
-            free_identity(ident);
-            goto enomem;
-        }
-
-        _result = keyreset_command_list_add(_result, command);
-        free_identity(ident);
-        if (!_result)
-            goto enomem;
-    }
 
     // return result
 
