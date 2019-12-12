@@ -816,6 +816,7 @@ PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_com
             goto enomem;
     }
 
+    *command_list = result;
     goto the_end;
 
 enomem:
