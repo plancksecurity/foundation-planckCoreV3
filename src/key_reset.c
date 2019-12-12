@@ -770,7 +770,7 @@ PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, 
     *cmds = NULL;
     *size = 0;
 
-    // convert to ASN.1 struct
+    // convert from pEp engine struct
 
     Distribution_t *dist = Distribution_from_keyreset_command_list(command_list, NULL);
     assert(dist);
@@ -870,7 +870,7 @@ PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_com
         goto the_end;
     }
 
-    // convert from ASN.1 struct
+    // convert to pEp engine struct
 
     keyreset_command_list *result = Distribution_to_keyreset_command_list(dist, NULL);
     if (!result)
