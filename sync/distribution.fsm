@@ -11,7 +11,7 @@ protocol Distribution 2 {
 
     // this protocol is stateless
     fsm KeyReset 1 {
-        message Commands 1 {
+        message Commands 2 {
             auto Version version;
             list Command commandlist {
                 field Identity ident;
