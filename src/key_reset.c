@@ -821,10 +821,10 @@ PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_com
 
 enomem:
     status = PEP_OUT_OF_MEMORY;
+    free_keyreset_command_list(result);
 
 the_end:
     ASN_STRUCT_FREE(asn_DEF_Distribution, dist);
-    free_keyreset_command_list(result);
     return status;
 }
 
