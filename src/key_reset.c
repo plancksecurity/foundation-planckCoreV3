@@ -720,6 +720,8 @@ PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, 
     *cmds = NULL;
     *size = 0;
 
+    // convert to ASN.1 struct
+
     Distribution_t *dist = (Distribution_t *) calloc(1, sizeof(Distribution_t));
     assert(dist);
     if (!dist)
@@ -727,8 +729,6 @@ PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, 
 
     dist->present = Distribution_PR_keyreset;
     dist->choice.keyreset.present = KeyReset_PR_commands;
-
-    // convert to ASN.1 struct
 
     for (const keyreset_command_list *cl = command_list; cl && cl->command; cl = cl->next) {
         Command_t *c = (Command_t *) calloc(1, sizeof(Command_t));
@@ -760,6 +760,8 @@ PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, 
     if (status)
         goto the_end;
 
+    // return result
+
     *cmds = _cmds;
     *size = _size;
     goto the_end;
@@ -781,10 +783,14 @@ PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_com
     *command_list = NULL;
     keyreset_command_list *result = NULL;
 
+    // decode
+
     Distribution_t *dist = NULL;
     PEP_STATUS status = decode_Distribution_message(cmds, size, &dist);
     if (status)
         goto the_end;
+
+    // check if these are key reset commands or not
 
     assert(dist && dist->present == Distribution_PR_keyreset
             && dist->choice.keyreset.present == KeyReset_PR_commands);
@@ -794,6 +800,8 @@ PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_com
         status = PEP_ILLEGAL_VALUE;
         goto the_end;
     }
+
+    // convert from ASN.1 struct
 
     result = new_keyreset_command_list(NULL);
     if (!result)
@@ -818,6 +826,8 @@ PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_com
         if (!_result)
             goto enomem;
     }
+
+    // return result
 
     *command_list = result;
     goto the_end;
