@@ -786,9 +786,12 @@ PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_com
     if (status)
         goto the_end;
 
+    assert(dist && dist->present == Distribution_PR_keyreset
+            && dist->choice.keyreset.present == KeyReset_PR_commands);
+
     if (!(dist && dist->present == Distribution_PR_keyreset
             && dist->choice.keyreset.present == KeyReset_PR_commands)) {
-        status = PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
+        status = PEP_ILLEGAL_VALUE;
         goto the_end;
     }
 
