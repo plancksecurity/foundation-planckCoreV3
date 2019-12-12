@@ -750,8 +750,6 @@ PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, 
             ASN_STRUCT_FREE(asn_DEF_Command, c);
             goto enomem;
         }
-
-        ASN_STRUCT_FREE(asn_DEF_Command, c);
     }
 
     // encode
@@ -780,6 +778,52 @@ PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_com
     if (!(command_list && cmds))
         return PEP_ILLEGAL_VALUE;
 
-    return PEP_STATUS_OK;
+    *command_list = NULL;
+    keyreset_command_list *result = NULL;
+
+    Distribution_t *dist = NULL;
+    PEP_STATUS status = decode_Distribution_message(cmds, size, &dist);
+    if (status)
+        goto the_end;
+
+    if (!(dist && dist->present == Distribution_PR_keyreset
+            && dist->choice.keyreset.present == KeyReset_PR_commands)) {
+        status = PEP_DISTRIBUTION_ILLEGAL_MESSAGE;
+        goto the_end;
+    }
+
+    result = new_keyreset_command_list(NULL);
+    if (!result)
+        goto enomem;
+
+    struct Commands__commandlist *cl = &dist->choice.keyreset.choice.commands.commandlist;
+    keyreset_command_list *_result = result;
+    for (int i=0; i<cl->list.count; i++) {
+        pEp_identity *ident = Identity_to_Struct(&cl->list.array[i]->ident, NULL);
+        if (!ident)
+            goto enomem;
+
+        const char *new_key = (const char *) cl->list.array[i]->newkey.buf;
+        keyreset_command *command = new_keyreset_command(ident, new_key);
+        if (!command) {
+            free_identity(ident);
+            goto enomem;
+        }
+
+        _result = keyreset_command_list_add(_result, command);
+        free_identity(ident);
+        if (!_result)
+            goto enomem;
+    }
+
+    goto the_end;
+
+enomem:
+    status = PEP_OUT_OF_MEMORY;
+
+the_end:
+    ASN_STRUCT_FREE(asn_DEF_Distribution, dist);
+    free_keyreset_command_list(result);
+    return status;
 }
 
