@@ -815,6 +815,7 @@ PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_com
             goto enomem;
 
         const char *new_key = (const char *) cl->list.array[i]->newkey.buf;
+
         keyreset_command *command = new_keyreset_command(ident, new_key);
         if (!command) {
             free_identity(ident);
