@@ -1429,6 +1429,11 @@ PEP_STATUS sign_only(PEP_SESSION session,
                      
 PEP_STATUS set_all_userids_to_own(PEP_SESSION session, 
                                   identity_list* id_list);
+                                  
+PEP_STATUS replace_fpr_for_identity(PEP_SESSION session, 
+                                    const char* user_id,
+                                    const char* address, 
+                                    const char* new_fpr);                                  
 
 #ifdef __cplusplus
 }

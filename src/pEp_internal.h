@@ -174,6 +174,7 @@ struct _pEpSession {
     sqlite3_stmt *get_identities_by_userid;
     sqlite3_stmt *get_identities_by_main_key_id;
     sqlite3_stmt *replace_identities_fpr;
+    sqlite3_stmt *replace_fpr_for_identity;
     sqlite3_stmt *replace_main_user_fpr;
     sqlite3_stmt *get_main_user_fpr;
     sqlite3_stmt *refresh_userid_default_key;
@@ -303,6 +304,11 @@ void decorate_message(
     bool add_version,
     bool clobber);
 
+PEP_STATUS package_key_attachment(char* keydata, 
+                                  size_t size, 
+                                  const char* filename,
+                                  bloblist_t** attachment);
+                                  
 #if defined(NDEBUG) || defined(NOLOG)
 #define DEBUG_LOG(TITLE, ENTITY, DESC)
 #else

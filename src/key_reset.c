@@ -226,6 +226,25 @@ PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
     reset_message->longmsg = longmsg; 
     reset_message->shortmsg = strdup("Key reset");    
     
+    char* key_data = NULL;
+    size_t* key_data_size = 0;
+    status = export_key(session, old_fpr, &key_data, &key_data_size);
+    if (status || !key_data || !key_data_size)
+        return PEP_KEY_NOT_FOUND;
+
+    bloblist_t* bl = NULL;
+    
+    // Better add old revoked key 
+    status = package_key_attachment(key_data, 
+                                    key_data_size,
+                                    "file://revoked.key", 
+                                    &bl);   
+
+    if (!bl)
+        status = PEP_OUT_OF_MEMORY;
+
+    key_data = NULL;
+        
     message* output_msg = NULL;
     
     status = encrypt_message(session, reset_message, NULL,
@@ -637,30 +656,305 @@ pEp_free:
     return status;
 }
 
-static stringlist_t* collect_key_material(PEP_SESSION session, stringlist_t* fprs) {
-    stringlist_t* keydata = NULL;    
-    stringlist_t* curr_fpr = fprs;    
-    while (curr_fpr) {
-        if (curr_fpr->value) {
-            char* key_material = NULL;
-            size_t datasize = 0;
-            PEP_STATUS status = export_key(session, curr_fpr->value, &key_material, &datasize);
-            if (status) {
-                free_stringlist(keydata);
-                return NULL;
-            }
-            if (datasize > 0 && key_material) {
-                if (!(keydata))
-                    keydata = new_stringlist(NULL);
+PEP_STATUS initiate_group_key_reset(PEP_SESSION session, 
+                                    keyreset_command_list** commands,
+                                    stringlist_t** new_key_material) {
+    
+    if (!session || !old_new_fpr_pairs || !new_keys)
+        return PEP_ILLEGAL_VALUE;
+        
+    PEP_STATUS status = get_all_keys_for_user(session, user_id, &keys);
+
+    if (!status)
+        return status;
+    
+    keyreset_command_list* new_cmd_list = new_keyreset_command_list(NULL);
+        
+    // TODO: free
+    stringlist_t* curr_key;
+    
+    for (curr_key = keys; curr_key && curr_key->value; curr_key = curr_key->next) {
+        char* curr_fpr = curr_key->value;
+        status = get_identities_by_main_key_id(session, curr_key->value, &key_idents);
                     
-                stringlist_add(keydata, key_material);
-            }
-        }
-        curr_fpr = curr_fpr->next;        
-    }   
-    return keydata; 
+        if (status != PEP_CANNOT_FIND_IDENTITY) {
+            if (status == PEP_STATUS_OK) {
+                                
+                // now have ident list, or should
+                identity_list* curr_ident;
+                for (curr_ident = key_idents; curr_ident && curr_ident->ident; 
+                                  curr_ident = curr_ident->next) {
+                
+                    pEp_identity* this_identity = curr_ident->ident;
+                    
+                    // 0. Make sure this is a group key to begin with
+                    if (!(curr_ident->flags & PEP_idf_devicegroup))
+                        continue;
+
+                    // 1. Preserve this sad old identity so we can look on it 
+                    //    fondly later and tell people who needs to replace what 
+                    pEp_identity* replacement_id = identity_dup(curr_ident->ident);
+                        
+                    if (!replacement_id)
+                        return PEP_OUT_OF_MEMORY;
+                        
+                    // 2. Get this identity a new key, woman! (ROAR!)
+                    status = generate_keypair(session, this_identity);
+                    
+                    if (!status)
+                        return status;
+                        
+                    char* new_fpr = strdup(this_identity->fpr);
+                    if (!new_fpr)
+                        return PEP_OUT_OF_MEMORY;
+                        
+                    // 3. bind the old and new
+                    keyreset_command* new_cmd = new_keyreset_command(replacement_id, new_fpr);
+                    if (!new_cmd)
+                        return PEP_OUT_OF_MEMORY;
+                        
+                    keyreset_command_list_add(new_cmd_list, new_cmd);    
+                    
+                    // 4. Get the new key material
+                    char* keydata = NULL;
+                    size_t keysize = 0;
+
+                    status = export_key(session, this_identity->fpr, &keydata, &keysize);
+                    if (!status)
+                        return status;
+                        
+                    if (keydata)
+                        stringlist_add(new_keys, keydata);
+                    
+                    status = export_secret_key(session, this_identity->fpr, &keydata, &keysize);
+                    if (!status)
+                        return status;
+                        
+                    if (keydata)
+                        stringlist_add(new_keys, keydata);
+                    
+                    // on to the next identity for this key
+                        
+                } // end loop through idents for this key
+            } // end if identities found without error 
+        } // end if identitiies found for current key
+    } // end loop through keys  
+    
+    // Ok - we have it all. Now, let's package up the message and put 
+    // it into the queue.
+    message* grp_reset_msg = NULL;
+    status = create_group_key_reset_message(session, 
+                                            &grp_reset_msg, 
+                                            new_cmd_list,
+                                            keys)
+    
+    // Ok, here's the real fun - now we have to revoke for each 
+    // identity, set the replacement, and notify.
+    
+    keyreset_command_list* curr_cmd = new_cmd_list;
+    for ( ; curr_cmd && curr_cmd->command; curr_cmd = curr_cmd->next) {
+        pEp_identity* ident = curr_cmd->command->ident;
+
+        // 1. Revoke 
+        status = revoke_key(session, ident->fpr, NULL);
+
+        // 2. record replacement 
+        if (status == PEP_STATUS_OK) 
+            status = set_revoked(session, fpr_copy, new_key, time(NULL));            
+    
+        // 3. send revocation for recent partners
+        // FIXME: WE NEED AN IDENT FOR THE FUNCTION BELOW
+        if (status == PEP_STATUS_OK)
+            status = send_key_reset_to_recents(session, fpr_copy, new_key);            
+    }
+    
+    return status;
 }
 
+PEP_STATUS create_group_key_reset_message(PEP_SESSION session,
+                                          message** dst, 
+                                          keyreset_command_list* commands,
+                                          stringlist_t* new_key_material) {
+                                                   
+    if (!dst || !commands || !new_key_material)
+        return PEP_ILLEGAL_VALUE;
+
+    if (!commands->command || !commands->command->ident)
+        return PEP_ILLEGAL_VALUE;
+        
+    *dst = NULL;
+
+    // the keyreset_command_list contains own grouped identities - we 
+    // only need to take one, so we arbitrarily take the first.
+    
+    // Get own identity user has corresponded with
+    pEp_identity* own_identity = identity_dup(commands->command->ident);
+
+    if (!own_identity)
+        return PEP_OUT_OF_MEMORY;
+        
+    message* reset_message = new_message(PEP_dir_outgoing);
+    reset_message->from = own_identity;
+    reset_message->to = new_identity_list(identity_dup(own_identity)); // ?
+    
+    reset_message->shortmsg = strdup("p≡p key reset message - please ignore");
+    assert(msg->shortmsg);
+    if (!msg->shortmsg)
+        goto enomem;
+
+    reset_message->longmsg = strdup("This message is part of p≡p's key reset protocol.\n\n"
+                                    "You can safely ignore it. It will be deleted automatically.\n");
+
+    add_opt_field(reset_message, "pEp-auto-consume", "yes");
+    msg->in_reply_to = stringlist_add(reset_message->in_reply_to, "pEp-auto-consume@pEp.foundation");
+
+    assert(reset_message->longmsg);
+    if (!reset_message->longmsg)
+        goto enomem;
+
+    // Add keys
+    stringlist_t* sl = *new_key_material;
+    char* keydata = calloc(1,1);
+    size_t key_data_size = 1;
+    
+    while (sl && sl->value) {
+        char *_key_data = sl->value;
+        assert(_key_data);
+        if (!_key_data)
+            return PEP_ILLEGAL_VALUE;
+            
+        size_t _size = strlen(_key_data);
+        assert(_size);
+            
+        // We take ownership of the key material and remove the node.
+        char *n = realloc(key_data, key_data_size + _size);
+        if (!n)
+            return PEP_OUT_OF_MEMORY;
+    
+        key_data = n;
+        key_data_size += _size;
+        strlcat(key_data, _key_data, key_data_size);
+
+        stringlist_t* tmp = sl;
+        sl = sl->next;
+        tmp->next = NULL;
+        stringlist_delete(tmp);            
+    }    
+    
+    bloblist_t* bl = NULL;
+    status = package_key_attachment(key_data, 
+                                    key_data_size,
+                                    "file://groupreset.key", 
+                                    &bl);   
+                                        
+    if (!bl)
+        status = PEP_OUT_OF_MEMORY;
+
+    reset_message->attachments = bl;
+
+    key_data = NULL;
+
+    // Add identities 
+    char* payload = NULL;
+    size_t size = 0;
+    
+    status = key_reset_commands_to_PER(commands, &payload, &size);    
+    if (!status)
+        return status;
+        
+    if (commands && (!payload || size = 0))
+        return PEP_UNKNOWN_ERROR;
+        
+    bl = bloblist_add(reset_message->attachments, payload, size,
+                      "application/pEp.keyreset", "ignore_this_attachment.pEp");
+            
+    message* output_msg = NULL;
+    
+    status = encrypt_message(session, reset_message, NULL,
+                             &output_msg, PEP_enc_PGP_MIME,
+                             PEP_encrypt_flag_group_key_reset);
+
+    if (status == PEP_STATUS_OK)
+        *dst = output_msg;
+        
+    free_message(reset_message);
+    
+    return status;
+}
+
+PEP_STATUS process_group_key_reset(PEP_SESSION session, 
+                                   keyreset_command_list* commands) {
+    if (!session || !old_idents || !new_keys)
+        return PEP_ILLEGAL_VALUE;
+
+    char* user_id = NULL;
+    PEP_STATUS status = get_default_own_userid(session, &user_id);
+    if (status != PEP_STATUS_OK || !user_id)
+        goto pEp_free;   
+    
+    // identity_list* curr_ident = old_idents;
+    // stringlist_t* curr_fpr = new_keys;
+
+    keyreset_command_list* curr_cmd = commands;
+    
+    for ( ; curr_cmd && curr_cmd->command; curr_ident = curr_cmd->next) {
+        keyreset_command* command = curr_cmd->command;
+        if (!command->ident || !command->new_key)
+            return PEP_UNKNOWN_ERROR;
+            
+        pEp_identity* this_id = command->ident;
+        pEp_identity* this_key = command->new_key;
+            
+        // 0. check that we even have this identity and the new key
+        bool ident_exists = NULL;
+        status = exists_identity(session, this_id, &ident_exists);
+        
+        if (status)
+            return status;
+            
+        if (!ident_exists)
+            continue;
+        
+        stringlist_t* keylist = NULL;
+        status = find_key(session, this_key, &keylist);
+        if (status)
+            return status;
+        if (!keylist)
+            return PEP_KEY_NOT_FOUND;
+        
+        // 1. replace its main key (what other checks do we want?)
+        status = replace_fpr_for_identity(session, user_id, address, this_key);
+
+        if (!status)
+            return status;
+            
+        // 2. ???
+        
+        // 3. revoke old key
+        status = revoke_key(session, this_id->fpr, NULL);
+                                                    
+        this_id->comm_type = PEP_ct_mistrusted;
+        status = set_trust(session, this_id);
+                    
+        if (status == PEP_STATUS_OK)
+            // cascade that mistrust for anyone using this key
+            status = mark_as_compromised(session, this_key);
+                
+        if (status == PEP_STATUS_OK)
+            status = remove_fpr_as_default(session, this_key);
+        if (status == PEP_STATUS_OK)
+            status = add_mistrusted_key(session, this_key);
+
+        // add to revocation list 
+        if (status == PEP_STATUS_OK) 
+            status = set_revoked(session, this_key, new_key, time(NULL));            
+        
+        // 4. Profit!
+    }           
+    return commands;
+}
+
+/*
 PEP_STATUS key_reset_own_and_deliver_revocations(PEP_SESSION session, 
                                                  identity_list** own_identities, 
                                                  stringlist_t** revocations, 
@@ -690,7 +984,7 @@ PEP_STATUS key_reset_own_and_deliver_revocations(PEP_SESSION session,
             if (curr_ident->ident && curr_ident->ident->fpr) {
                 char* key_material = NULL;
                 size_t datasize = 0;
-                status = export_key(session, curr_ident->ident->fpr, &key_material, &datasize);
+                status = export_private_keys(session, curr_ident->ident->fpr, &key_material, &datasize);
                 if (status) {
                     free_stringlist(keydata);
                     return status;
@@ -708,6 +1002,7 @@ PEP_STATUS key_reset_own_and_deliver_revocations(PEP_SESSION session,
     free(revoked_fprs);
     return PEP_STATUS_OK;
 }
+*/
 
 Distribution_t *Distribution_from_keyreset_command_list(
         const keyreset_command_list *command_list,
@@ -889,4 +1184,3 @@ the_end:
     ASN_STRUCT_FREE(asn_DEF_Distribution, dist);
     return status;
 }
-

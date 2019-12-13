@@ -155,6 +155,12 @@ static const char *sql_replace_identities_fpr =
     "   set main_key_id = ?1 "
     "   where main_key_id = ?2 ;";
     
+static const char *sql_replace_fpr_for_identity =
+    "update identity"
+    "   set main_key_id = ?1 "
+    "   where identity.user_id = ?2 "
+    "      and identity.address = ?3; ";
+    
 static const char *sql_remove_fpr_as_default =
     "update person set main_key_id = NULL where main_key_id = ?1 ;"
     "update identity set main_key_id = NULL where main_key_id = ?1 ;";
@@ -1656,6 +1662,11 @@ DYNAMIC_API PEP_STATUS init(
             (int)strlen(sql_replace_identities_fpr), 
             &_session->replace_identities_fpr, NULL);
     assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_replace_fpr_for_identity,
+            (int)strlen(sql_replace_fpr_for_identity), 
+            &_session->replace_fpr_for_identity, NULL);
+    assert(int_result == SQLITE_OK);
     
     int_result = sqlite3_prepare_v2(_session->db, sql_remove_fpr_as_default,
             (int)strlen(sql_remove_fpr_as_default), 
@@ -1998,7 +2009,9 @@ DYNAMIC_API void release(PEP_SESSION session)
             if (session->add_userid_alias)
                 sqlite3_finalize(session->add_userid_alias);
             if (session->replace_identities_fpr)
-                sqlite3_finalize(session->replace_identities_fpr);        
+                sqlite3_finalize(session->replace_identities_fpr);   
+            if (session->replace_fpr_for_identity)
+                sqlite3_finalize(session->replace_fpr_for_identity);
             if (session->remove_fpr_as_default)
                 sqlite3_finalize(session->remove_fpr_as_default);            
             if (session->set_person)
@@ -3632,10 +3645,38 @@ PEP_STATUS remove_fpr_as_default(PEP_SESSION session,
     return PEP_STATUS_OK;
 }
 
+PEP_STATUS replace_fpr_for_identity(PEP_SESSION session, 
+                                    const char* user_id,
+                                    const char* address, 
+                                    const char* new_fpr) 
+{
+    assert(user_id);
+    assert(address);
+    assert(new_fpr);
+    
+    if (!user_id || !address || !new_fpr)
+        return PEP_ILLEGAL_VALUE;
+            
+    sqlite3_reset(session->replace_fpr_for_identity);
+    sqlite3_bind_text(session->replace_fpr_for_identity, 1, new_fpr, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->replace_fpr_for_identity, 2, user_id, -1,
+                      SQLITE_STATIC);
+    sqlite3_bind_text(session->replace_fpr_for_identity, 2, address, -1,
+                      SQLITE_STATIC);
+
+    int result = sqlite3_step(session->replace_fpr_for_identity);
+    sqlite3_reset(session->replace_fpr_for_identity);
+    
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_IDENTITY;
+
+    return PEP_STATUS_OK;
+}
 
 PEP_STATUS replace_identities_fpr(PEP_SESSION session, 
-                                 const char* old_fpr, 
-                                 const char* new_fpr) 
+                                  const char* old_fpr, 
+                                  const char* new_fpr) 
 {
     assert(old_fpr);
     assert(new_fpr);

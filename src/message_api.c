@@ -861,6 +861,8 @@ static message* wrap_message_as_attachment(message* envelope,
             case PEP_message_key_reset:
                 inner_type_string = "KEY_RESET";
                 break;
+            case PEP_message_group_key_reset:
+                inner_type_string = "GROUP_KEY_RESET"    
             default:
                 inner_type_string = "INNER";
         }
@@ -1943,7 +1945,13 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         // FIXME - we need to deal with transport types (via flag)
         message_wrap_type wrap_type = PEP_message_unwrapped;
         if ((enc_format != PEP_enc_inline) && (!force_v_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
-            wrap_type = ((flags & PEP_encrypt_flag_key_reset_only) ? PEP_message_key_reset : PEP_message_default);
+            if (flags & PEP_encrypt_flag_key_reset_only)
+                wrap_type = PEP_message_key_reset;
+            else if (flags & PEP_encrypt_flag_group_key_reset)
+                wrap_type = PEP_message_group_key_reset;    
+            else
+                wrap_type = PEP_message_default;
+                
             _src = wrap_message_as_attachment(NULL, src, wrap_type, false, max_version_major, max_version_minor);
             if (!_src)
                 goto pEp_error;
@@ -4901,4 +4909,28 @@ DYNAMIC_API PEP_STATUS get_key_rating_for_user(
 the_end:
     free_identity(ident);
     return status;
+}
+
+PEP_STATUS package_key_attachment(char* keydata, 
+                                  size_t size, 
+                                  const char* filename,
+                                  bloblist_t** attachment) 
+{
+    if (!keydata || !size || !attachment)
+        return PEP_ILLEGAL_VALUE;
+        
+    // Ensure we don't inject NUL chars into MIME stream.
+    char* last_char = key_data + size;
+    while (*last_char == '\0') {
+        last_char--;
+        size--;
+    }
+
+    *attachment = new_bloblist(key_data, size,
+                               "application/octet-stream", 
+                               filename);
+    if (!(*attachment))
+        return PEP_OUT_OF_MEMORY;
+    
+    return PEP_STATUS_OK;                                           
 }

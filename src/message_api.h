@@ -43,10 +43,12 @@ typedef enum _PEP_encrypt_flags {
     PEP_encrypt_flag_force_version_1 = 0x10,
         
     PEP_encrypt_flag_key_reset_only = 0x20,
+    PEP_encrypt_flag_group_key_reset = 0x40,
     
     // This flag is used to let internal functions know that an encryption 
     // call is being used as part of a reencryption operation
-    PEP_encrypt_reencrypt = 0x40
+
+    PEP_encrypt_reencrypt = 0x80
     
 } PEP_encrypt_flags; 
 
@@ -56,7 +58,8 @@ typedef enum _message_wrap_type {
     PEP_message_unwrapped,  // 1.0 or anything we don't wrap    
     PEP_message_default,    // typical inner/outer message 2.0
     PEP_message_transport,  // e.g. for onion layers
-    PEP_message_key_reset   // for wrapped key reset information
+    PEP_message_key_reset,   // for wrapped key reset information
+    PEP_message_group_key_reset // for wrapped group key reset info
 } message_wrap_type;
 
 // encrypt_message() - encrypt message in memory
