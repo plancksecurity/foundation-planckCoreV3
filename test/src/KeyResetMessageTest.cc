@@ -1437,3 +1437,100 @@ TEST_F(KeyResetMessageTest, check_reset_own_with_revocations) {
         ASSERT_EQ(status, PEP_STATUS_OK);
     }
 }
+
+TEST_F(KeyResetMessageTest, codec_test) {
+    // create input values
+
+    pEp_identity *ident1 = new_identity("alice@pep-project.org", "23", "42", "Alice Miller");
+    ASSERT_NE(ident1, nullptr);
+    const char *key1 = "0123456789abcdef";
+    keyreset_command *cmd1 = new_keyreset_command(ident1, key1);
+    ASSERT_NE(cmd1, nullptr);
+
+    keyreset_command_list *il = new_keyreset_command_list(cmd1);
+    ASSERT_NE(il, nullptr);
+
+    pEp_identity *ident2 = new_identity("alice@peptest.ch", "423", "42", "Alice Miller");
+    ASSERT_NE(ident2, nullptr);
+    const char *key2 = "fedcba9876543210";
+    keyreset_command *cmd2 = new_keyreset_command(ident2, key2);
+    ASSERT_NE(cmd2, nullptr);
+
+    keyreset_command_list *_il = keyreset_command_list_add(il, cmd2);
+    ASSERT_NE(_il, nullptr);
+
+    // check created struct
+
+    ASSERT_NE(il->command, nullptr);
+    ASSERT_NE(il->command->ident, nullptr);
+    ASSERT_NE(il->command->new_key, nullptr);
+
+    ASSERT_STREQ(il->command->ident->address, ident1->address);
+    ASSERT_STRCASEEQ(il->command->ident->fpr, ident1->fpr);
+    ASSERT_STREQ(il->command->ident->user_id, ident1->user_id);
+    ASSERT_STREQ(il->command->ident->username, ident1->username);
+    ASSERT_STREQ(il->command->new_key, key1);
+
+    ASSERT_NE(il->next, nullptr);
+    ASSERT_NE(il->next->command, nullptr);
+    ASSERT_NE(il->next->command->ident, nullptr);
+    ASSERT_NE(il->next->command->new_key, nullptr);
+
+    ASSERT_STREQ(il->next->command->ident->address, ident2->address);
+    ASSERT_STRCASEEQ(il->next->command->ident->fpr, ident2->fpr);
+    ASSERT_STREQ(il->next->command->ident->user_id, ident2->user_id);
+    ASSERT_STREQ(il->next->command->ident->username, ident2->username);
+    ASSERT_STREQ(il->next->command->new_key, key2);
+
+    ASSERT_EQ(il->next->next, nullptr);
+
+    // encode
+ 
+    char *cmds = nullptr;
+    size_t size = 0;
+    PEP_STATUS status = key_reset_commands_to_PER(il, &cmds, &size);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(cmds, nullptr);
+    ASSERT_NE(size, 0);
+
+    // decode
+    
+    keyreset_command_list *ol = nullptr;
+    status = PER_to_key_reset_commands(cmds, size, &ol);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(ol, nullptr);
+
+    // compare
+
+    ASSERT_NE(ol->command, nullptr);
+    ASSERT_NE(ol->command->ident, nullptr);
+    ASSERT_NE(ol->command->new_key, nullptr);
+
+    ASSERT_STREQ(ol->command->ident->address, ident1->address);
+    ASSERT_STRCASEEQ(ol->command->ident->fpr, ident1->fpr);
+    ASSERT_STREQ(ol->command->ident->user_id, ident1->user_id);
+    ASSERT_STREQ(ol->command->ident->username, ident1->username);
+    ASSERT_STREQ(ol->command->new_key, key1);
+
+    ASSERT_NE(ol->next, nullptr);
+    ASSERT_NE(ol->next->command, nullptr);
+    ASSERT_NE(ol->next->command->ident, nullptr);
+    ASSERT_NE(ol->next->command->new_key, nullptr);
+
+    ASSERT_STREQ(ol->next->command->ident->address, ident2->address);
+    ASSERT_STRCASEEQ(ol->next->command->ident->fpr, ident2->fpr);
+    ASSERT_STREQ(ol->next->command->ident->user_id, ident2->user_id);
+    ASSERT_STREQ(ol->next->command->ident->username, ident2->username);
+    ASSERT_STREQ(ol->next->command->new_key, key2);
+
+    ASSERT_EQ(ol->next->next, nullptr);
+
+    // free
+
+    free_keyreset_command_list(ol);
+    free(cmds);
+
+    free_identity(ident1);
+    free_identity(ident2);
+    free_keyreset_command_list(il);
+}
