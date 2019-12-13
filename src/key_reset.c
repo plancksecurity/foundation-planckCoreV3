@@ -12,6 +12,11 @@
 #include <string.h>
 #include <stdlib.h>
 
+// FIXME: these should be taken from sync/Distribution.fsm
+
+#define KEY_RESET_MAJOR_VERSION 1L
+#define KEY_RESET_MINOR_VERSION 0L
+
 PEP_STATUS has_key_reset_been_sent(
         PEP_SESSION session, 
         const char* user_id, 
@@ -729,6 +734,20 @@ Distribution_t *Distribution_from_keyreset_command_list(
 
     dist->present = Distribution_PR_keyreset;
     dist->choice.keyreset.present = KeyReset_PR_commands;
+
+    long *major = malloc(sizeof(long));
+    assert(major);
+    if (!major)
+        goto enomem;
+    *major = KEY_RESET_MAJOR_VERSION;
+    dist->choice.keyreset.choice.commands.version.major = major;
+
+    long *minor = malloc(sizeof(long));
+    assert(minor);
+    if (!minor)
+        goto enomem;
+    *minor = KEY_RESET_MINOR_VERSION;
+    dist->choice.keyreset.choice.commands.version.minor = minor;
 
     for (const keyreset_command_list *cl = command_list; cl && cl->command; cl = cl->next) {
         Command_t *c = (Command_t *) calloc(1, sizeof(Command_t));
