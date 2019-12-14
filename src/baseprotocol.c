@@ -3,10 +3,12 @@
 
 #include "pEp_internal.h"
 #include "message_api.h"
+#include "baseprotocol.h"
 
 PEP_STATUS base_decorate_message(
         PEP_SESSION session,
         message *msg,
+        base_protocol_type type,
         char *payload,
         size_t size,
         const char *fpr
@@ -57,6 +59,7 @@ PEP_STATUS base_prepare_message(
         PEP_SESSION session,
         const pEp_identity *me,
         const pEp_identity *partner,
+        base_protocol_type type,
         char *payload,
         size_t size,
         const char *fpr,
@@ -102,7 +105,7 @@ PEP_STATUS base_prepare_message(
     if (!msg->longmsg)
         goto enomem;
 
-    status = base_decorate_message(session, msg, payload, size, fpr);
+    status = base_decorate_message(session, msg, type, payload, size, fpr);
     if (status == PEP_STATUS_OK)
         *result = msg;
     return status;
@@ -115,6 +118,7 @@ enomem:
 PEP_STATUS base_extract_message(
         PEP_SESSION session,
         message *msg,
+        base_protocol_type type,
         size_t *size,
         const char **payload,
         char **fpr

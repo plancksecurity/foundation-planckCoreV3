@@ -4090,7 +4090,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         size_t size;
         const char *data;
         char *sender_fpr = NULL;
-        PEP_STATUS tmpstatus = base_extract_message(session, msg, &size, &data, &sender_fpr);
+        PEP_STATUS tmpstatus = base_extract_message(session, msg, BASE_SYNC, &size, &data, &sender_fpr);
         if (!tmpstatus && size && data) {
             if (sender_fpr)
                 signal_Sync_message(session, *rating, data, size, msg->from, sender_fpr);
