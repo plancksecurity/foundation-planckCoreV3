@@ -1450,9 +1450,9 @@ TEST_F(KeyResetMessageTest, codec_test) {
     keyreset_command_list *il = new_keyreset_command_list(cmd1);
     ASSERT_NE(il, nullptr);
 
-    pEp_identity *ident2 = new_identity("alice@peptest.ch", "0123456789ABCDEF", "42", "Alice Miller");
+    pEp_identity *ident2 = new_identity("alice@peptest.ch", "0123456789abcdef", "42", "Alice Miller");
     ASSERT_NE(ident2, nullptr);
-    const char *key2 = "FEDCBA9876543210";
+    const char *key2 = "fedcba9876543210";
     keyreset_command *cmd2 = new_keyreset_command(ident2, key2);
     ASSERT_NE(cmd2, nullptr);
 
@@ -1477,10 +1477,10 @@ TEST_F(KeyResetMessageTest, codec_test) {
     ASSERT_NE(il->next->command->new_key, nullptr);
 
     ASSERT_STREQ(il->next->command->ident->address, ident2->address);
-    ASSERT_STREQ(il->next->command->ident->fpr, ident2->fpr);
+    ASSERT_STRCASEEQ(il->next->command->ident->fpr, ident2->fpr);
     ASSERT_STREQ(il->next->command->ident->user_id, ident2->user_id);
     ASSERT_STREQ(il->next->command->ident->username, ident2->username);
-    ASSERT_STREQ(il->next->command->new_key, key2);
+    ASSERT_STRCASEEQ(il->next->command->new_key, key2);
 
     ASSERT_EQ(il->next->next, nullptr);
 
@@ -1518,10 +1518,10 @@ TEST_F(KeyResetMessageTest, codec_test) {
     ASSERT_NE(ol->next->command->new_key, nullptr);
 
     ASSERT_STREQ(ol->next->command->ident->address, ident2->address);
-    ASSERT_STREQ(ol->next->command->ident->fpr, ident2->fpr);
+    ASSERT_STRCASEEQ(ol->next->command->ident->fpr, ident2->fpr);
     ASSERT_STREQ(ol->next->command->ident->user_id, ident2->user_id);
     ASSERT_STREQ(ol->next->command->ident->username, ident2->username);
-    ASSERT_STREQ(ol->next->command->new_key, key2);
+    ASSERT_STRCASEEQ(ol->next->command->new_key, key2);
 
     ASSERT_EQ(ol->next->next, nullptr);
 
