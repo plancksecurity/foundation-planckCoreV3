@@ -5,6 +5,12 @@
 #include "message_api.h"
 #include "baseprotocol.h"
 
+static const char *_base_type[] = {
+    "application/pEp.unknown",
+    "application/pEp.sync",
+    "application/pEp.keyreset"
+};
+
 PEP_STATUS base_decorate_message(
         PEP_SESSION session,
         message *msg,
@@ -19,14 +25,16 @@ PEP_STATUS base_decorate_message(
     assert(msg);
     assert(payload);
     assert(size);
+    assert(type == BASE_SYNC || type == BASE_KEYRESET);
 
-    if (!(msg && payload && size))
+    if (!(msg && payload && size && type))
         return PEP_ILLEGAL_VALUE;
 
     bloblist_t *bl = bloblist_add(msg->attachments, payload, size,
             "application/pEp.sync", "ignore_this_attachment.pEp");
-    if (bl == NULL)
+    if (bl == NULL) {
         goto enomem;
+    }
     else if (!msg->attachments) {
         msg->attachments = bl;
     }
@@ -73,8 +81,9 @@ PEP_STATUS base_prepare_message(
     assert(payload);
     assert(size);
     assert(result);
+    assert(type == BASE_SYNC || type == BASE_KEYRESET);
 
-    if (!(me && partner && payload && size && result))
+    if (!(me && partner && payload && size && result && type))
         return PEP_ILLEGAL_VALUE;
 
     *result = NULL;
@@ -127,7 +136,8 @@ PEP_STATUS base_extract_message(
     PEP_STATUS status = PEP_STATUS_OK;
 
     assert(session && msg && size && payload && fpr);
-    if (!(session && msg && size && payload && fpr))
+    assert(type == BASE_SYNC || type == BASE_KEYRESET);
+    if (!(session && msg && size && payload && fpr && type))
         return PEP_ILLEGAL_VALUE;
 
     *size = 0;
