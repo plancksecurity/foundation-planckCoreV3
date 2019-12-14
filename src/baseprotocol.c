@@ -103,12 +103,12 @@ PEP_STATUS base_prepare_message(
     if (!msg->to)
         goto enomem;
 
-    msg->shortmsg = strdup("p≡p synchronization message - please ignore");
+    msg->shortmsg = strdup("p≡p key management message - please ignore");
     assert(msg->shortmsg);
     if (!msg->shortmsg)
         goto enomem;
 
-    msg->longmsg = strdup("This message is part of p≡p's concept to synchronize.\n\n"
+    msg->longmsg = strdup("This message is part of p≡p's concept to manage keys.\n\n"
                         "You can safely ignore it. It will be deleted automatically.\n");
     assert(msg->longmsg);
     if (!msg->longmsg)
@@ -180,7 +180,7 @@ PEP_STATUS base_extract_message(
     if (_sign) {
         status = verify_text(session, _payload, _payload_size, _sign, _sign_size, &keylist);
         if (!(status == PEP_VERIFIED || status == PEP_VERIFIED_AND_TRUSTED) || !keylist || !keylist->value) {
-            // signature invalid or does not match; ignore sync message
+            // signature invalid or does not match; ignore message
             status = PEP_STATUS_OK;
             goto the_end;
         }
