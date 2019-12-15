@@ -746,7 +746,7 @@ PEP_STATUS initiate_group_key_reset(PEP_SESSION session,
     status = create_group_key_reset_message(session, 
                                             &grp_reset_msg, 
                                             new_cmd_list,
-                                            keys)
+                                            new_keys); // ??
     
     // Ok, here's the real fun - now we have to revoke for each 
     // identity, set the replacement, and notify.
@@ -760,12 +760,11 @@ PEP_STATUS initiate_group_key_reset(PEP_SESSION session,
 
         // 2. record replacement 
         if (status == PEP_STATUS_OK) 
-            status = set_revoked(session, fpr_copy, new_key, time(NULL));            
+            status = set_revoked(session, ident->fpr, ident->new_key, time(NULL));            
     
         // 3. send revocation for recent partners
-        // FIXME: WE NEED AN IDENT FOR THE FUNCTION BELOW
         if (status == PEP_STATUS_OK)
-            status = send_key_reset_to_recents(session, fpr_copy, new_key);            
+            status = send_key_reset_to_recents(session, ident->fpr, ident->new_key);            
     }
     
     return status;
