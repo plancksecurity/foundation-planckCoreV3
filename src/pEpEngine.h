@@ -45,6 +45,7 @@ typedef enum {
     PEP_INIT_SQLITE3_WITHOUT_MUTEX                  = 0x0120,
     PEP_INIT_CANNOT_OPEN_DB                         = 0x0121,
     PEP_INIT_CANNOT_OPEN_SYSTEM_DB                  = 0x0122,
+    PEP_INIT_DB_DOWNGRADE_NOT_POSSIBLE              = 0x0123,
     PEP_UNKNOWN_DB_ERROR                            = 0x01ff,
     
     PEP_KEY_NOT_FOUND                               = 0x0201,
@@ -716,6 +717,36 @@ DYNAMIC_API PEP_STATUS set_identity(
         PEP_SESSION session, const pEp_identity *identity
     );
 
+// _own_identities_retrieve() - retrieve all own identities
+//
+//  parameters:
+//      session (in)            session to use
+//      own_identities (out)    list of own identities
+//      excluded_flags (int)    flags to exclude from results
+//
+//  caveat:
+//      the ownership of the copy of own_identities goes to the caller
+
+DYNAMIC_API PEP_STATUS _own_identities_retrieve(
+        PEP_SESSION session,
+        identity_list **own_identities,
+        identity_flags_t excluded_flags
+    );
+
+// own_identities_retrieve() - retrieve all own identities
+//
+//  parameters:
+//      session (in)            session to use
+//      own_identities (out)    list of own identities
+//
+//  caveat:
+//      the ownership of the copy of own_identities goes to the caller
+
+DYNAMIC_API PEP_STATUS own_identities_retrieve(
+        PEP_SESSION session,
+        identity_list **own_identities
+    );
+
 // get_default own_userid() - get the user_id of the own user
 //
 //    parameters:
@@ -1210,7 +1241,6 @@ DYNAMIC_API PEP_STATUS sequence_value(
         int32_t *value
     );
 
-
 // set_revoked() - records relation between a revoked key and its replacement
 //
 //  parameters:
@@ -1221,10 +1251,11 @@ DYNAMIC_API PEP_STATUS sequence_value(
 
 DYNAMIC_API PEP_STATUS set_revoked(
        PEP_SESSION session,
+       const char *own_address,
        const char *revoked_fpr,
        const char *replacement_fpr,
        const uint64_t revocation_date
-    );
+    )
 
 
 // get_revoked() - find revoked key that may have been replaced by given key, if any
@@ -1239,8 +1270,9 @@ DYNAMIC_API PEP_STATUS get_revoked(
         PEP_SESSION session,
         const char *fpr,
         char **revoked_fpr,
+        char **own_address,        
         uint64_t *revocation_date
-    );
+    )
 
 // key_created() - get creation date of a key
 //
@@ -1365,9 +1397,16 @@ PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
     
 DYNAMIC_API PEP_STATUS get_replacement_fpr(
         PEP_SESSION session,
-        const char *fpr,
-        char **revoked_fpr,
+        const char *revoked_fpr,
+        const char *address,
+        char **replacement_fpr,
         uint64_t *revocation_date
+    );
+
+DYNAMIC_API PEP_STATUS get_replacement_fprs(
+        PEP_SESSION session,
+        const char *revoked_fpr,
+        revocation_info_list_t** replacement_fprs_info
     );
     
 PEP_STATUS refresh_userid_default_key(PEP_SESSION session, const char* user_id);

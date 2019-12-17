@@ -469,18 +469,26 @@ static const char *sql_sequence_value2 =
 // Revocation tracking
 static const char *sql_set_revoked =
     "insert or replace into revoked_keys ("
-    "    revoked_fpr, replacement_fpr, revocation_date) "
+    "    revoked_fpr, own_address, replacement_fpr, revocation_date) "
     "values (upper(replace(?1,' ','')),"
-    "        upper(replace(?2,' ','')),"
-    "        ?3) ;";
-        
+    "        ?2, "
+    "        upper(replace(?3,' ','')),"
+    "        ?4) ;";
+
+// FIXME: If we ever have more than one revoked fpr per replacement fpr, this 
+// must change                
 static const char *sql_get_revoked = 
-    "select revoked_fpr, revocation_date from revoked_keys"
+    "select revoked_fpr, own_address, revocation_date from revoked_keys"
     "    where replacement_fpr = upper(replace(?1,' ','')) ;";
 
 static const char *sql_get_replacement_fpr = 
     "select replacement_fpr, revocation_date from revoked_keys"
-    "    where revoked_fpr = upper(replace(?1,' ','')) ;";
+    "    where revoked_fpr = upper(replace(?1,' ','')) "
+    "        and own_address = ?2;";
+
+// static const char *sql_get_replacement_fprs = 
+//     "select replacement_fpr, own_address, revocation_date from revoked_keys"
+//     "    where revoked_fpr = upper(replace(?1,' ','')) ;";
 
 static const char *sql_get_userid_alias_default =
     "select default_id from alternate_user_id "
@@ -628,6 +636,171 @@ static int table_contains_column(PEP_SESSION session, const char* table_name,
     sqlite3_finalize(stmt);      
         
     return retval;
+}
+
+// To be used until we hit a steady state
+static PEP_STATUS propagate_revocation_addresses(PEP_SESSION session) {
+    PEP_STATUS status = PEP_STATUS_OK;
+        
+    // Apparently sqlite won't let you use this as part of the update 
+    // statement? Which is fine, because honestly. too much. I'm 
+    // a doctor, Jim, not a database analyst! XD
+    const char* sql_query = 
+        "SELECT T_NULL.revoked_fpr, T_ADDR.own_address "
+        "    FROM (SELECT revoked_fpr, replacement_fpr FROM revoked_keys where own_address is NULL) as T_NULL "
+        "    JOIN (SELECT revoked_fpr, own_address FROM revoked_keys where 1) as T_ADDR "            
+        "    ON T_ADDR.revoked_fpr = T_NULL.replacement_fpr; ";
+
+    sqlite3_stmt *query_stmt; 
+    sqlite3_prepare_v2(session->db, sql_query, -1, &query_stmt, NULL);
+    sql_query = 
+        "UPDATE revoked_keys SET own_address = ?1 WHERE revoked_fpr = ?2; ";
+    sqlite3_stmt *update_stmt; 
+    sqlite3_prepare_v2(session->db, sql_query, -1, &update_stmt, NULL);
+
+    bool changed = true;
+    int result;
+    
+    while (changed) {
+        stringpair_t* update_list = NULL;
+        changed = false;
+        do {
+            result = sqlite3_step(query_stmt);
+            switch (result) {
+                case SQLITE_ROW:
+                    const char* revfpr = sqlite3_column_text(query_stmt, 0);
+                    const char* addr = sqlite3_column_text(query_stmt, 1);
+                    if (revfpr && addr && *revfpr != '\0' && *attr != '\0') {
+                        if (!update_list)
+                            update_list = new stringpair_list(strdup(revfpr), strdup(addr));
+                        else
+                            stringpair_list_add(update_list, strdup(revfpr), strdup(addr));
+                        changed = true;    
+                    }
+                    break;
+                case SQLITE_DONE:
+                    // done changing
+                    break;
+                default:
+                    free_stringlist(update_list);
+                    update_list = NULL;
+                    status = PEP_UNKNOWN_DB_ERROR;
+                    result = SQLITE_DONE;    
+            }
+        } while (result != SQLITE_DONE);
+        sqlite3_reset(query_stmt);
+        
+        // Update all the stuff we've got
+        if (!update_list)
+            break;
+        
+        stringpair_list_t* curr_rev = update_list;
+        for ( ; update_list && update_list->key && update_list->value; 
+              update_list = update_list->next) {
+            sqlite3_bind_text(update_stmt, 1, update_list->value, -1,
+                                      SQLITE_STATIC);
+            sqlite3_bind_text(update_stmt, 2, update_list->key, -1,
+                                      SQLITE_STATIC);
+            
+            result = sqlite3_step(update_stmt);
+            if (result != SQLITE_DONE)
+                break; // FIXME
+            
+            sqlite3_reset(update_stmt);        
+        }           
+        // Ok, if nothing changed this time, we're done
+    }
+    sqlite3_finalize(query_stmt);
+    sqlite3_finalize(update_stmt);
+    return status;
+}
+
+static PEP_STATUS modify_pre_v_13_revoked_key_db(PEP_SESSION session) {
+    // I HATE SQLITE.
+    
+    PEP_STATUS status = PEP_STATUS_OK;
+    int int_result = 0;
+
+    // Ok, first we ADD the column so we can USE it.
+    int_result = sqlite3_exec(
+        _session->db,
+        "alter table revoked_keys\n"
+        "   add column own_address text;\n",
+        NULL,
+        NULL,
+        NULL
+    );
+    assert(int_result == SQLITE_OK);
+            
+    identity_list* id_list = NULL;
+    status = own_identities_retrieve(session, &id_list);
+
+    if (!status || !id_list)
+        return PEP_STATUS_OK; // it's empty AFAIK (FIXME)
+    
+    // the best we can do here is look at current keys and follow the 
+    // chains back.    
+    sqlite3_stmt* update_revoked_w_addr_stmt = NULL;
+    const char* sql_query = "update revoked_keys set own_address = ?1 where replacement_fpr = ?2;";
+    sqlite3_prepare_v2(session->db, sql_query, -1, &update_revoked_w_addr_stmt, NULL);
+                                    
+    pEp_identity* curr_own = NULL;
+        
+    // Because before DDL v. 13 there was only one mapping of fpr to 
+    // revocation, we can do this    
+    for (curr_own = id_list; curr_own && curr_own->ident; curr_own = curr_own->next) {            
+        const char* curr_fpr = curr_own->ident->fpr;
+        if (!curr_fpr)
+            continue;
+
+        sqlite3_bind_text(update_revoked_w_addr_stmt, 1, curr_own->ident->address, -1,
+                          SQLITE_STATIC);
+        sqlite3_bind_text(update_revoked_w_addr_stmt, 2, curr_fpr, -1,
+                          SQLITE_STATIC);
+                
+        int_result = sqlite3_step(stmt);
+        assert(int_result == SQLITE_DONE);                  
+        sqlite3_reset(stmt);                      
+    }
+    
+    status = propagate_revocation_addresses(PEP_SESSION session);
+    
+    int_result = sqlite3_exec(
+        _session->db,
+        "PRAGMA foreign_keys=off;\n"
+        "BEGIN TRANSACTION;\n"
+        "create table if not exists _revoked_keys_new (\n"
+        "   revoked_fpr text not null,\n"
+        "   own_address text default 'UNKNOWN',"
+        "   replacement_fpr text not null\n"
+        "       references pgp_keypair (fpr)\n"
+        "       on delete cascade,\n"
+        "   revocation_date integer\n"
+        "   primary key (revoked_fpr, own_address)\n"                
+        ");\n"
+        "INSERT INTO _revoked_keys_new (revoked_fpr, "
+        "                               own_address, "
+        "                               replacement_fpr, "
+        "                               revocation_date) "
+        "   SELECT revoked_keys.revoked_fpr, "
+        "          revoked_keys.own_address, "
+        "          revoked_keys.replacement_fpr, "
+        "          revoked_keys.revocation_date "
+        "   FROM revoked_keys "
+        "   WHERE 1;\n"
+        "DROP TABLE revoked_keys;\n"
+        "ALTER TABLE _revoked_keys_new RENAME TO revoked_keys;\n"
+        "COMMIT;\n"
+        "\n"
+        "PRAGMA foreign_keys=on;\n"
+        ,
+        NULL,
+        NULL,
+        NULL
+    );
+    assert(int_result == SQLITE_OK);    
+    
+    return status;
 }
 
 PEP_STATUS repair_altered_tables(PEP_SESSION session) {
@@ -940,7 +1113,7 @@ DYNAMIC_API PEP_STATUS init(
     sqlite3_busy_timeout(_session->system_db, 1000);
 
 // increment this when patching DDL
-#define _DDL_USER_VERSION "12"
+#define _DDL_USER_VERSION "13"
 
     if (in_first) {
 
@@ -1028,11 +1201,13 @@ DYNAMIC_API PEP_STATUS init(
                 "   value integer default 0\n"
                 ");\n"
                 "create table if not exists revoked_keys (\n"
-                "   revoked_fpr text primary key,\n"
+                "   revoked_fpr text,\n"
+                "   own_address text,"
                 "   replacement_fpr text not null\n"
                 "       references pgp_keypair (fpr)\n"
                 "       on delete cascade,\n"
                 "   revocation_date integer\n"
+                "   primary key (revoked_fpr, own_address)\n"                
                 ");\n"
                 // user id aliases
                 "create table if not exists alternate_user_id (\n"
@@ -1109,7 +1284,10 @@ DYNAMIC_API PEP_STATUS init(
         // Sometimes the user_version wasn't set correctly. 
         if (version == 1) {
             bool version_changed = true;
-            if (table_contains_column(_session, "identity", "pEp_version_major")) {
+            if (table_contains_column(_session, "revoked_keys", "own_address")) {
+                version = 13;
+            }            
+            else if (table_contains_column(_session, "identity", "pEp_version_major")) {
                 version = 12;
             }
             else if (db_contains_table(_session, "social_graph") > 0) {
@@ -1159,6 +1337,10 @@ DYNAMIC_API PEP_STATUS init(
 
 
         if(version != 0) { 
+            if (version > atoi(_DDL_USER_VERSION)) {
+                status = PEP_INIT_DB_DOWNGRADE_NOT_POSSIBLE;
+                goto pEp_error;
+            }    
             // Version has been already set
 
             // Early mistake : version 0 shouldn't have existed.
@@ -1561,6 +1743,10 @@ DYNAMIC_API PEP_STATUS init(
                 if (status != PEP_STATUS_OK)
                     return status;                      
             }
+            if (version < 13) {
+                status = modify_pre_v_13_revoked_key_db(session);
+            }
+            
         }        
         else { 
             // Version from DB was 0, it means this is initial setup.
@@ -2644,6 +2830,110 @@ DYNAMIC_API PEP_STATUS get_identity(
 
     sqlite3_reset(session->get_identity);
     return status;
+}
+
+PEP_STATUS _own_identities_retrieve(
+        PEP_SESSION session,
+        identity_list **own_identities,
+        identity_flags_t excluded_flags
+      )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    assert(session && own_identities);
+    if (!(session && own_identities))
+        return PEP_ILLEGAL_VALUE;
+    
+    *own_identities = NULL;
+    identity_list *_own_identities = new_identity_list(NULL);
+    if (_own_identities == NULL)
+        goto enomem;
+    
+    sqlite3_reset(session->own_identities_retrieve);
+    
+    int result;
+    // address, fpr, username, user_id, comm_type, lang, flags
+    const char *address = NULL;
+    const char *fpr = NULL;
+    const char *username = NULL;
+    const char *user_id = NULL;
+    PEP_comm_type comm_type = PEP_ct_unknown;
+    const char *lang = NULL;
+    unsigned int flags = 0;
+    
+    identity_list *_bl = _own_identities;
+
+    sqlite3_bind_int(session->own_identities_retrieve, 1, excluded_flags);
+
+    do {
+        result = sqlite3_step(session->own_identities_retrieve);
+        switch (result) {
+            case SQLITE_ROW:
+                address = (const char *)
+                    sqlite3_column_text(session->own_identities_retrieve, 0);
+                fpr = (const char *)
+                    sqlite3_column_text(session->own_identities_retrieve, 1);
+                user_id = (const char *)
+                    sqlite3_column_text(session->own_identities_retrieve, 2);
+                username = (const char *)
+                    sqlite3_column_text(session->own_identities_retrieve, 3);
+                comm_type = PEP_ct_pEp;
+                lang = (const char *)
+                    sqlite3_column_text(session->own_identities_retrieve, 4);
+                flags = (unsigned int)
+                    sqlite3_column_int(session->own_identities_retrieve, 5);
+
+                pEp_identity *ident = new_identity(address, fpr, user_id, username);
+                if (!ident)
+                    goto enomem;
+                ident->comm_type = comm_type;
+                if (lang && lang[0]) {
+                    ident->lang[0] = lang[0];
+                    ident->lang[1] = lang[1];
+                    ident->lang[2] = 0;
+                }
+                ident->me = true;
+                ident->flags = flags;
+
+                _bl = identity_list_add(_bl, ident);
+                if (_bl == NULL) {
+                    free_identity(ident);
+                    goto enomem;
+                }
+                
+                break;
+                
+            case SQLITE_DONE:
+                break;
+                
+            default:
+                status = PEP_UNKNOWN_ERROR;
+                result = SQLITE_DONE;
+        }
+    } while (result != SQLITE_DONE);
+    
+    sqlite3_reset(session->own_identities_retrieve);
+    if (status == PEP_STATUS_OK)
+        *own_identities = _own_identities;
+    else
+        free_identity_list(_own_identities);
+    
+    goto the_end;
+    
+enomem:
+    free_identity_list(_own_identities);
+    status = PEP_OUT_OF_MEMORY;
+    
+the_end:
+    return status;
+}
+
+DYNAMIC_API PEP_STATUS own_identities_retrieve(
+        PEP_SESSION session,
+        identity_list **own_identities
+      )
+{
+    return _own_identities_retrieve(session, own_identities, 0);
 }
 
 PEP_STATUS get_identities_by_userid(
@@ -5118,6 +5408,7 @@ PEP_STATUS is_own_key(PEP_SESSION session, const char* fpr, bool* own_key) {
 
 DYNAMIC_API PEP_STATUS set_revoked(
        PEP_SESSION session,
+       const char *own_address,
        const char *revoked_fpr,
        const char *replacement_fpr,
        const uint64_t revocation_date
@@ -5127,20 +5418,24 @@ DYNAMIC_API PEP_STATUS set_revoked(
     
     assert(session &&
            revoked_fpr && revoked_fpr[0] &&
-           replacement_fpr && replacement_fpr[0]
+           replacement_fpr && replacement_fpr[0] &&
+           own_address && own_address[0]
           );
     
     if (!(session &&
           revoked_fpr && revoked_fpr[0] &&
-          replacement_fpr && replacement_fpr[0]
+          replacement_fpr && replacement_fpr[0] &&
+          own_address && own_address[0] 
          ))
         return PEP_ILLEGAL_VALUE;
     
     sqlite3_reset(session->set_revoked);
     sqlite3_bind_text(session->set_revoked, 1, revoked_fpr, -1, SQLITE_STATIC);
-    sqlite3_bind_text(session->set_revoked, 2, replacement_fpr, -1,
+    sqlite3_bind_text(session->set_revoked, 2, own_address, -1,
+            SQLITE_STATIC);    
+    sqlite3_bind_text(session->set_revoked, 3, replacement_fpr, -1,
             SQLITE_STATIC);
-    sqlite3_bind_int64(session->set_revoked, 3, revocation_date);
+    sqlite3_bind_int64(session->set_revoked, 4, revocation_date);
 
     int result;
     
@@ -5162,6 +5457,7 @@ DYNAMIC_API PEP_STATUS get_revoked(
         PEP_SESSION session,
         const char *fpr,
         char **revoked_fpr,
+        char **own_address,        
         uint64_t *revocation_date
     )
 {
@@ -5169,11 +5465,13 @@ DYNAMIC_API PEP_STATUS get_revoked(
 
     assert(session &&
            revoked_fpr &&
+           own_address &&
            fpr && fpr[0]
           );
     
     if (!(session &&
            revoked_fpr &&
+           own_address &&           
            fpr && fpr[0]
           ))
         return PEP_ILLEGAL_VALUE;
@@ -5191,9 +5489,11 @@ DYNAMIC_API PEP_STATUS get_revoked(
         case SQLITE_ROW: {
             *revoked_fpr = strdup((const char *)
                     sqlite3_column_text(session->get_revoked, 0));
+            *own_address = strdup((const char *)
+                    sqlite3_column_text(session->get_revoked, 1));                    
             if(*revoked_fpr)
                 *revocation_date = sqlite3_column_int64(session->get_revoked,
-                        1);
+                        2);
             else
                 status = PEP_OUT_OF_MEMORY;
 
@@ -5210,32 +5510,35 @@ DYNAMIC_API PEP_STATUS get_revoked(
 
 DYNAMIC_API PEP_STATUS get_replacement_fpr(
         PEP_SESSION session,
-        const char *fpr,
-        char **revoked_fpr,
+        const char *revoked_fpr,
+        const char *address,
+        char **replacement_fpr,
         uint64_t *revocation_date
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
 
-    assert(session && revoked_fpr && !EMPTYSTR(fpr) && revocation_date);
+    assert(session && replacement_fpr && !EMPTYSTR(revoked_fpr) && revocation_date);
+    assert(!EMPTYSTR(address));
     
-    if (!session || !revoked_fpr || EMPTYSTR(fpr) || !revocation_date)
+    if (!session || !replacement_fpr || EMPTYSTR(revoked_fpr) || EMPTYSTR(address) || !revocation_date)
         return PEP_ILLEGAL_VALUE;
 
-    *revoked_fpr = NULL;
+    *replacement_fpr = NULL;
     *revocation_date = 0;
 
     sqlite3_reset(session->get_replacement_fpr);
-    sqlite3_bind_text(session->get_replacement_fpr, 1, fpr, -1, SQLITE_STATIC);
+    sqlite3_bind_text(session->get_replacement_fpr, 1, revoked_fpr, -1, SQLITE_STATIC);
+    sqlite3_bind_text(session->get_replacement_fpr, 2, address, -1, SQLITE_STATIC);
 
     int result;
     
     result = sqlite3_step(session->get_replacement_fpr);
     switch (result) {
         case SQLITE_ROW: {
-            *revoked_fpr = strdup((const char *)
+            *replacement_fpr = strdup((const char *)
                     sqlite3_column_text(session->get_replacement_fpr, 0));
-            if(*revoked_fpr)
+            if(*replacement_fpr)
                 *revocation_date = sqlite3_column_int64(session->get_replacement_fpr,
                         1);
             else
@@ -5248,6 +5551,70 @@ DYNAMIC_API PEP_STATUS get_replacement_fpr(
     }
 
     sqlite3_reset(session->get_replacement_fpr);
+
+    return status;
+}
+
+
+DYNAMIC_API PEP_STATUS get_replacement_fprs(
+        PEP_SESSION session,
+        const char *revoked_fpr,
+        revocation_info_list_t** replacement_fprs_info
+    )
+{
+    PEP_STATUS status = PEP_STATUS_OK;
+
+    assert(session && replacement_fpr && !EMPTYSTR(revoked_fpr) && revocation_date);
+    assert(repl_fpr_for_addr);
+    
+    if (!session || !replacement_fpr || EMPTYSTR(revoked_fpr) || !repl_fpr_for_addr || !revocation_date)
+        return PEP_ILLEGAL_VALUE;
+
+
+    *replacement_fprs_info = new_revocation_info_list(NULL);
+    
+    sqlite3_reset(session->get_replacement_fprs);
+    sqlite3_bind_text(session->get_replacement_fprs, 1, revoked_fpr, -1, SQLITE_STATIC);
+    sqlite3_bind_text(session->get_replacement_fprs, 2, address, -1, SQLITE_STATIC);
+
+    int result;
+    
+    do {
+        char* replacement_fpr = NULL;
+        char* own_address = NULL;
+        revocation_date = 0;
+
+        result = sqlite3_step(session->get_replacement_fprs);
+        switch (result) {
+            case SQLITE_ROW: {
+                replacement_fpr = strdup((const char *)
+                        sqlite3_column_text(session->get_replacement_fprs, 0));
+                if (replacement_fpr) {        
+                    own_address = strdup((const char *)
+                                    sqlite3_column_text(session->get_replacement_fprs, 1));                        
+                    revocation_date = sqlite3_column_int64(session->get_replacement_fprs, 2);
+                    revocation_info* rev_info = new_revocation_info(strdup(revoked_fpr), own_address, replacement_fpr, revocation_date);
+                    if (!rev_info) {
+                        status = PEP_OUT_OF_MEMORY;
+                        result = SQLITE_DONE;
+                    }    
+                    revocation_info_list_add(*replacement_fprs_info, rev_info);
+                }    
+                else {
+                    status = PEP_OUT_OF_MEMORY;
+                    result = SQLITE_DONE;
+                }
+                break;
+            }
+            case SQLITE_DONE:
+                break;
+            default:
+                status = PEP_CANNOT_FIND_IDENTITY;
+                result = SQLITE_DONE;
+        }
+    } while (result != SQLITE_DONE);
+        
+    sqlite3_reset(session->get_replacement_fprs);
 
     return status;
 }

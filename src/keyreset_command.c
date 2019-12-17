@@ -27,10 +27,20 @@ DYNAMIC_API keyreset_command * new_keyreset_command(const pEp_identity *ident, c
     if (command->ident == NULL)
         goto enomem;
 
+    if (command->ident && command->ident->fpr) {
+        // make hex code uppercase
+        for (size_t i=0; i<strlen(command->ident->fpr); i++)
+            command->ident->fpr[i] = toupper(command->ident->fpr[i]);
+    }
+
     command->new_key = new_key ? strdup(new_key) : strdup("");
     assert(command->new_key);
     if (command->new_key == NULL)
         goto enomem;
+
+    // make hex code uppercase
+    for (size_t i=0; i<strlen(command->new_key); i++)
+        command->new_key[i] = toupper(command->new_key[i]);
 
     return command;
 
