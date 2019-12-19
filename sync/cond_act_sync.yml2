@@ -88,6 +88,11 @@ condition keyElectionWon
     free_identity(me);
 ||
 
+condition isLedGroupKeyReset
+||
+    *result = session->sync_state.keysync.led;
+||
+
 // action: PEP_STATUS «@name»(PEP_SESSION session)
 
 function "new_UUID" {
@@ -575,4 +580,14 @@ action tellWeAreNotGrouped
 action disable
 ||
     disable_sync(session);
+||
+
+action ledGroupKeyReset
+||
+    session->sync_state.keysync.led = true;
+||
+
+action unledGroupKeyReset
+||
+    session->sync_state.keysync.led = false;
 ||

@@ -314,23 +314,40 @@ protocol Sync 1 {
                 do trustThisKey;
 
             on GroupKeyResetRequired
-                send InitGroupKeyReset;
+                send InitUnledGroupKeyReset;
 
             on GroupKeyResetRequiredAndDisable {
-                send InitGroupKeyReset;
-                go DisableOnInitGroupKeyReset;
+                send InitUnledGroupKeyReset;
+                go DisableOnInitUnledGroupKeyReset;
             }
 
-            on InitGroupKeyReset
+            on InitUnledGroupKeyReset {
+                // unled group key reset; new group keys will be elected
+                do unledGroupKeyReset;
                 send GroupKeyReset;
+            }
 
             on GroupKeyReset {
-
+                do saveGroupKeys;
+                if isLedGroupKeyReset {
+                    // led group key reset is executed without questions
+                    do receivedKeysAreDefaultKeys;
+                }
+                else {
+                    // unled group key reset; election takes place
+                    if keyElectionWon {
+                        // this is already the case:
+                        // do ownKeysAreDefaultKeys;
+                    }
+                    else {
+                        do receivedKeysAreDefaultKeys;
+                    }
+                }
             }
         }
 
-        state DisableOnInitGroupKeyReset {
-            on InitGroupKeyReset
+        state DisableOnInitUnledGroupKeyReset {
+            on InitUnledGroupKeyReset
                 do disable;
         }
 
@@ -606,12 +623,16 @@ protocol Sync 1 {
             field IdentityList ownIdentities;
         }
 
-        // key reset for group
-        message InitGroupKeyReset 19 {
+        // initiate unled group key reset
+        message InitUnledGroupKeyReset 19 {
         }
 
         message GroupKeyReset 20, security=attach_own_keys_for_group {
             field TID challenge;
+            // set this flag for led group key reset; delivered group keys will
+            // be accepted by all group members; if not set group keys will be
+            // elected
+            field bool led;
             field IdentityList ownIdentities;
         }
     }
