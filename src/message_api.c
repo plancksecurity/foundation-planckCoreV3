@@ -2741,20 +2741,33 @@ static PEP_STATUS get_crypto_text(message* src, char** crypto_text, size_t* text
     PEP_STATUS status = PEP_STATUS_OK;
                     
     switch (src->enc_format) {
-        case PEP_enc_PGP_MIME:
-		case PEP_enc_PGP_MIME_Outlook1:
-			*crypto_text = src->attachments->next->value;
-			if (src->attachments->next->value[src->attachments->next->size - 1]) {
-				// if the attachment is not ending with a trailing 0
-				// then it is containing the crypto text directly
-				*text_size = src->attachments->next->size;
-			}
-			else {
-				// if the attachment is ending with trailing 0
-				// then it is containting a string
-				*text_size = strlen(src->attachments->next->value);
-			}
-            break;
+    case PEP_enc_PGP_MIME:
+        *crypto_text = src->attachments->next->value;
+        if (src->attachments->next->value[src->attachments->next->size - 1]) {
+            // if the attachment is not ending with a trailing 0
+            // then it is containing the crypto text directly
+            *text_size = src->attachments->next->size;
+        }
+        else {
+            // if the attachment is ending with trailing 0
+            // then it is containting a string
+            *text_size = strlen(src->attachments->next->value);
+        }
+        break;
+
+    case PEP_enc_PGP_MIME_Outlook1:
+        *crypto_text = src->attachments->value;
+        if (src->attachments->value[src->attachments->size - 1]) {
+            // if the attachment is not ending with a trailing 0
+            // then it is containing the crypto text directly
+            *text_size = src->attachments->size;
+        }
+        else {
+            // if the attachment is ending with trailing 0
+            // then it is containting a string
+            *text_size = strlen(src->attachments->value);
+        }
+        break;
 
         case PEP_enc_inline:
             *crypto_text = src->longmsg;
