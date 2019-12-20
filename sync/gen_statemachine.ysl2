@@ -839,7 +839,8 @@ tstylesheet {
                             }
                             key_data = NULL;
 
-                            status = encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
+                            // we do not support extra keys here and will only encrypt to ourselves
+                            status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
                             if (status) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;

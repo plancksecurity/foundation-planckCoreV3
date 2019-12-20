@@ -60,6 +60,12 @@ condition sameNegotiationAndPartner
             && s1 && s2 && strcmp(s1, s2) == 0;
 ||
 
+condition fromGroupMember
+||
+    const char *sender_fpr = session->sync_state.comm_partner.sender_fpr;
+    return is_own_key(session, sender_fpr, result);
+||
+
 condition keyElectionWon
 ||
     pEp_identity *from = session->sync_state.transport.from;

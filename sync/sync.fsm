@@ -249,7 +249,7 @@ protocol Sync 1 {
             on Rollback
                 go Sole;
 
-            on OwnKeysRequester {
+            on OwnKeysRequester if sameNegotiationAndPartner {
                 do saveGroupKeys;
                 do receivedKeysAreDefaultKeys;
                 do showGroupCreated;
@@ -266,7 +266,7 @@ protocol Sync 1 {
             on Rollback
                 go Sole;
 
-            on OwnKeysOfferer {
+            on OwnKeysOfferer if sameNegotiationAndPartner {
                 do saveGroupKeys;
                 do prepareOwnKeys;
                 do ownKeysAreDefaultKeys;
@@ -282,7 +282,7 @@ protocol Sync 1 {
                 do showBeingInGroup;
             }
 
-            on GroupKeysUpdate
+            on GroupKeysUpdate if fromGroupMember // double check
                 do saveGroupKeys;
 
             on KeyGen {
@@ -310,12 +310,15 @@ protocol Sync 1 {
                 go HandshakingGrouped;
             }
 
-            on GroupTrustThisKey
+            on GroupTrustThisKey if fromGroupMember // double check
                 do trustThisKey;
 
-            on GroupKeyResetRequired
-                send InitUnledGroupKeyReset;
+            on GroupKeyResetRequired {
+                do ledGroupKeyReset;
+                send GroupKeyReset;
+            }
 
+            // this is for a leaving group member
             on GroupKeyResetRequiredAndDisable {
                 send InitUnledGroupKeyReset;
                 go DisableOnInitUnledGroupKeyReset;
@@ -327,7 +330,7 @@ protocol Sync 1 {
                 send GroupKeyReset;
             }
 
-            on GroupKeyReset {
+            on GroupKeyReset if fromGroupMember { // double check
                 do saveGroupKeys;
                 if isLedGroupKeyReset {
                     // led group key reset is executed without questions
@@ -421,7 +424,7 @@ protocol Sync 1 {
         }
 
         state JoiningGroup {
-            on GroupKeysForNewMember {
+            on GroupKeysForNewMember if sameNegotiationAndPartner {
                 do saveGroupKeys;
                 do receivedKeysAreDefaultKeys;
                 do prepareOwnKeys;
@@ -462,13 +465,13 @@ protocol Sync 1 {
             on CommitAccept if sameNegotiationAndPartner
                 go HandshakingGroupedPhase2;
 
-            on GroupTrustThisKey {
+            on GroupTrustThisKey if fromGroupMember { // double check
                 do trustThisKey;
                 if sameNegotiation
                     go Grouped;
             }
 
-            on GroupKeysUpdate
+            on GroupKeysUpdate if fromGroupMember // double check
                 do saveGroupKeys;
         }
 
@@ -491,13 +494,13 @@ protocol Sync 1 {
                 go Grouped;
             }
 
-            on GroupTrustThisKey
+            on GroupTrustThisKey if fromGroupMember // double check
                 do trustThisKey;
 
-            on GroupKeysUpdate
+            on GroupKeysUpdate if fromGroupMember // double check
                 do saveGroupKeys;
             
-            on GroupKeysAndClose {
+            on GroupKeysAndClose if fromGroupMember { // double check
                 do saveGroupKeys;
                 go Grouped;
             }
@@ -523,13 +526,13 @@ protocol Sync 1 {
                 go Grouped;
             }
 
-            on GroupTrustThisKey
+            on GroupTrustThisKey if fromGroupMember // double check
                 do trustThisKey;
 
-            on GroupKeysUpdate
+            on GroupKeysUpdate if fromGroupMember // double check
                 do saveGroupKeys;
             
-            on GroupKeysAndClose {
+            on GroupKeysAndClose if fromGroupMember { // double check
                 do saveGroupKeys;
                 go Grouped;
             }
@@ -582,7 +585,8 @@ protocol Sync 1 {
             field TID negotiation;
         }
 
-        // default: security=trusted only
+        // default: security=truste
+        // messages are only accepted when coming from the device group
         message GroupTrustThisKey 11 {
             field Hash key;
             field TID negotiation;
