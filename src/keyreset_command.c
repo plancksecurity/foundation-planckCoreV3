@@ -9,9 +9,9 @@
 
 #include "keyreset_command.h"
 
-DYNAMIC_API keyreset_command * new_keyreset_command(const pEp_identity *ident, const char *new_key)
+DYNAMIC_API keyreset_command * new_keyreset_command(const pEp_identity * ident, const char * new_key)
 {
-    keyreset_command *command = NULL;
+    keyreset_command * command = NULL;
 
     // key and command should not be NULL, that's bad style (while legal)
 
@@ -26,22 +26,22 @@ DYNAMIC_API keyreset_command * new_keyreset_command(const pEp_identity *ident, c
     command->ident = ident ? identity_dup(ident) : new_identity(NULL, NULL, NULL, NULL);
     if (command->ident == NULL)
         goto enomem;
-
+    
     if (command->ident && command->ident->fpr) {
-        // make hex code uppercase
+        // make content uppercase
         for (size_t i=0; i<strlen(command->ident->fpr); i++)
             command->ident->fpr[i] = toupper(command->ident->fpr[i]);
     }
-
+    
     command->new_key = new_key ? strdup(new_key) : strdup("");
     assert(command->new_key);
     if (command->new_key == NULL)
         goto enomem;
 
-    // make hex code uppercase
+    // make content uppercase
     for (size_t i=0; i<strlen(command->new_key); i++)
         command->new_key[i] = toupper(command->new_key[i]);
-
+    
     return command;
 
 enomem:
@@ -58,7 +58,7 @@ DYNAMIC_API void free_keyreset_command(keyreset_command * command)
     }
 }
 
-DYNAMIC_API keyreset_command * keyreset_command_dup(const keyreset_command *src)
+DYNAMIC_API keyreset_command * keyreset_command_dup(const keyreset_command * src)
 {
     assert(src);
     if (src == NULL)
@@ -67,9 +67,9 @@ DYNAMIC_API keyreset_command * keyreset_command_dup(const keyreset_command *src)
     return new_keyreset_command(src->ident, src->new_key);
 }
 
-DYNAMIC_API keyreset_command_list *new_keyreset_command_list(keyreset_command *command)
+DYNAMIC_API keyreset_command_list * new_keyreset_command_list(keyreset_command * command)
 {
-    keyreset_command_list *result = calloc(1, sizeof(keyreset_command_list));
+    keyreset_command_list * result = calloc(1, sizeof(keyreset_command_list));
     assert(result);
 
     if (result && command)
@@ -78,32 +78,32 @@ DYNAMIC_API keyreset_command_list *new_keyreset_command_list(keyreset_command *c
     return result;
 }
 
-DYNAMIC_API keyreset_command_list *keyreset_command_list_dup(
-        const keyreset_command_list *src
+DYNAMIC_API keyreset_command_list * keyreset_command_list_dup(
+        const keyreset_command_list * src
     )
 {
     assert(src);
     if (src == NULL)
         return NULL;
 
-    keyreset_command* copy_pair = keyreset_command_dup(src->command);
+    keyreset_command * cpy = keyreset_command_dup(src->command);
     
-    keyreset_command_list *dst = new_keyreset_command_list(copy_pair);
+    keyreset_command_list * dst = new_keyreset_command_list(cpy);
     if (dst == NULL)
         return NULL;
 
-    keyreset_command_list* src_curr = src->next;
-    keyreset_command_list** dst_curr_ptr = &dst->next;
+    keyreset_command_list * src_curr = src->next;
+    keyreset_command_list ** dst_curr_ptr = &dst->next;
 
     while (src_curr) {
-        copy_pair = keyreset_command_dup(src_curr->command);
-        if (copy_pair == NULL) {
+        cpy = keyreset_command_dup(src_curr->command);
+        if (cpy == NULL) {
             free_keyreset_command_list(dst);
             return NULL;
         }
-        *dst_curr_ptr = new_keyreset_command_list(copy_pair);
+        *dst_curr_ptr = new_keyreset_command_list(cpy);
         if (*dst_curr_ptr == NULL) {
-            free_keyreset_command(copy_pair);
+            free_keyreset_command(cpy);
             free_keyreset_command_list(dst);
             return NULL;
         }
@@ -112,12 +112,11 @@ DYNAMIC_API keyreset_command_list *keyreset_command_list_dup(
     }
 
     return dst;
-    
 }
 
-DYNAMIC_API keyreset_command_list *keyreset_command_list_add(
-        keyreset_command_list *command_list,
-        keyreset_command *command
+DYNAMIC_API keyreset_command_list * keyreset_command_list_add(
+        keyreset_command_list * command_list,
+        keyreset_command * command
     )
 {
     assert(command);
@@ -140,7 +139,7 @@ DYNAMIC_API keyreset_command_list *keyreset_command_list_add(
         return command_list;
     }
     
-    keyreset_command_list* list_curr = command_list;
+    keyreset_command_list * list_curr = command_list;
     
     while (list_curr->next)
         list_curr = list_curr->next;
@@ -152,12 +151,11 @@ DYNAMIC_API keyreset_command_list *keyreset_command_list_add(
         return NULL;
 
     return list_curr->next;
-    
 }
 
-DYNAMIC_API keyreset_command_list *keyreset_command_list_append(
-        keyreset_command_list *command_list,
-        keyreset_command_list *second
+DYNAMIC_API keyreset_command_list * keyreset_command_list_append(
+        keyreset_command_list * command_list,
+        keyreset_command_list * second
     )
 {
     assert(command_list);
@@ -168,9 +166,9 @@ DYNAMIC_API keyreset_command_list *keyreset_command_list_append(
     if (second == NULL || second->command == NULL)
         return command_list;
 
-    keyreset_command_list *_s = command_list;
-    for (keyreset_command_list *_s2 = second; _s2 != NULL; _s2 = _s2->next) {
-        keyreset_command *_sp = keyreset_command_dup(_s2->command);
+    keyreset_command_list * _s = command_list;
+    for (keyreset_command_list * _s2 = second; _s2 != NULL; _s2 = _s2->next) {
+        keyreset_command * _sp = keyreset_command_dup(_s2->command);
         if (_sp == NULL)
             return NULL;
         _s = keyreset_command_list_add(_s, _sp);
@@ -183,18 +181,18 @@ DYNAMIC_API keyreset_command_list *keyreset_command_list_append(
 }
 
 DYNAMIC_API int keyreset_command_list_length(
-        const keyreset_command_list *command_list
+        const keyreset_command_list * command_list
     )
 {
     int len = 0;
 
-    for (const keyreset_command_list *_sl = command_list; _sl && _sl->command; _sl = _sl->next)
+    for (const keyreset_command_list * _sl = command_list; _sl && _sl->command; _sl = _sl->next)
         len++;
 
     return len;
 }
 
-DYNAMIC_API void free_keyreset_command_list(keyreset_command_list *command_list)
+DYNAMIC_API void free_keyreset_command_list(keyreset_command_list * command_list)
 {
     if (command_list) {
         free_keyreset_command_list(command_list->next);

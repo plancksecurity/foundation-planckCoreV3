@@ -11,8 +11,8 @@ extern "C" {
 #endif
 
 typedef struct _keyreset_command {
-    pEp_identity *ident;
-    char *new_key;
+    pEp_identity * ident;
+    char * new_key;
 } keyreset_command;
 
 // new_keyreset_command() - allocate new keyreset_command
@@ -21,13 +21,13 @@ typedef struct _keyreset_command {
 //      ident (in)      identity to reset, including fpr of existing key
 //      new_key (in)    fpr of new key
 //
-//  return command:
+//  return value:
 //      pointer to keyreset_command or NULL on failure
 //
 //  caveat:
-//      ident and new_key are copied and remain in the ownership of the caller
+//      ident, new_key are copied and remain in the ownership of the caller
 
-DYNAMIC_API keyreset_command * new_keyreset_command(const pEp_identity *ident, const char *new_key);
+DYNAMIC_API keyreset_command * new_keyreset_command(const pEp_identity * ident, const char * new_key);
 
 
 // free_keyreset_command() - free memory allocated by keyreset_command
@@ -35,7 +35,7 @@ DYNAMIC_API keyreset_command * new_keyreset_command(const pEp_identity *ident, c
 //  parameters:
 //      command (in)    pointer to keyreset_command to free
 
-DYNAMIC_API void free_keyreset_command(keyreset_command *command);
+DYNAMIC_API void free_keyreset_command(keyreset_command * command);
 
 
 // keyreset_command_dup() - duplicate keyreset_command (deep copy)
@@ -43,15 +43,15 @@ DYNAMIC_API void free_keyreset_command(keyreset_command *command);
 //  parameters:
 //      src (in)        pointer to keyreset_command to duplicate
 //
-//  return command:
+//  return value:
 //      pointer to copy of src or NULL on failure
 
-DYNAMIC_API keyreset_command * keyreset_command_dup(const keyreset_command *src);
+DYNAMIC_API keyreset_command * keyreset_command_dup(const keyreset_command * src);
 
 
 typedef struct _keyreset_command_list {
-    keyreset_command *command;
-    struct _keyreset_command_list *next;
+    keyreset_command * command;
+    struct _keyreset_command_list * next;
 } keyreset_command_list;
 
 
@@ -60,14 +60,14 @@ typedef struct _keyreset_command_list {
 //  parameters:
 //      command (in)              initial command
 //
-//  return command:
+//  return value:
 //      pointer to keyreset_command_list object or NULL if out of memory
 //
 //  caveat:
 //      the ownership of the command goes to the keyreset_command_list
 //      next pointer is NULL
 
-DYNAMIC_API keyreset_command_list *new_keyreset_command_list(keyreset_command *command);
+DYNAMIC_API keyreset_command_list * new_keyreset_command_list(keyreset_command * command);
 
 
 // keyreset_command_list_dup() - duplicate a keyreset_command_list (deep copy)
@@ -75,12 +75,12 @@ DYNAMIC_API keyreset_command_list *new_keyreset_command_list(keyreset_command *c
 //  parameters:
 //      src (in)                keyreset_command_list to copy
 //
-//  return command:
+//  return value:
 //      pointer to keyreset_command_list object or NULL if out of memory
 //      keyreset_command command copies created by this function belong to the returned list
 
-DYNAMIC_API keyreset_command_list *keyreset_command_list_dup(
-        const keyreset_command_list *src
+DYNAMIC_API keyreset_command_list * keyreset_command_list_dup(
+        const keyreset_command_list * src
     );
 
 
@@ -90,15 +90,15 @@ DYNAMIC_API keyreset_command_list *keyreset_command_list_dup(
 //      command_list (in)       keyreset_command_list struct or NULL to create a new one
 //      command (in)            keyreset_command to add
 //
-//  return command:
+//  return value:
 //      pointer to last element in keyreset_command_list or NULL if out of memory
 //
 //  caveat:
 //      the ownership of the command goes to the keyreset_command_list if add is successful
 
-DYNAMIC_API keyreset_command_list *keyreset_command_list_add(
-        keyreset_command_list *command_list,
-        keyreset_command *command
+DYNAMIC_API keyreset_command_list * keyreset_command_list_add(
+        keyreset_command_list * command_list,
+        keyreset_command * command
     );
 
 
@@ -108,7 +108,7 @@ DYNAMIC_API keyreset_command_list *keyreset_command_list_add(
 //      command_list (in)       keyreset_command_list struct to append to
 //      second (in)             keyreset_command_list struct to append
 //
-//  return command:
+//  return value:
 //      pointer to last element in command_list or NULL if out of memory
 //      or command_list is NULL
 //
@@ -116,9 +116,9 @@ DYNAMIC_API keyreset_command_list *keyreset_command_list_add(
 //      all commands are being copied before being added to the list
 //      the original commands are still being owned by the caller
 
-DYNAMIC_API keyreset_command_list *keyreset_command_list_append(
-        keyreset_command_list *command_list,
-        keyreset_command_list *second
+DYNAMIC_API keyreset_command_list * keyreset_command_list_append(
+        keyreset_command_list * command_list,
+        keyreset_command_list * second
     );
 
 
@@ -127,11 +127,11 @@ DYNAMIC_API keyreset_command_list *keyreset_command_list_append(
 //  parameters:
 //      command_list (in)       keyreset_command_list struct to determine length of
 //
-//  return command:
+//  return value:
 //      length of command_list in number of elements
 
 DYNAMIC_API int keyreset_command_list_length(
-        const keyreset_command_list *command_list
+        const keyreset_command_list * command_list
     );
 
 
@@ -140,7 +140,7 @@ DYNAMIC_API int keyreset_command_list_length(
 //  parameters:
 //      command_list (in)       keyreset_command_list to free
 
-DYNAMIC_API void free_keyreset_command_list(keyreset_command_list *command_list);
+DYNAMIC_API void free_keyreset_command_list(keyreset_command_list * command_list);
 
 
 #ifdef __cplusplus
