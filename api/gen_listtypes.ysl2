@@ -1,0 +1,410 @@
+include yslt.yml2
+
+tstylesheet {
+    include ./ctypes.ysl2
+
+template "/listtypes" apply "type", 0;
+
+template "attribute"
+| «func:C(@type)» «@name»;
+
+template "attribute", mode=param
+> const «func:C(@type)» «@name»`if "position()!=last()" > , `
+
+template "attribute", mode=doc
+| //      «@name» (in) «str:padding(9-string-length(@name))» «@doc»
+
+template "attribute", mode=namelist
+> «@name»`if "position()!=last()" > , `
+
+template "attribute", mode=with_src
+> src->«@name»`if "position()!=last()" > , `
+
+template "attribute", mode=assert
+| assert(«@name»);
+
+template "attribute[@type='identity']", mode=dup
+||
+«../@obj»->ident = ident ? identity_dup(ident) : new_identity(NULL, NULL, NULL, NULL);
+if («../@obj»->ident == NULL)
+    goto enomem;
+
+if («../@obj»->ident && «../@obj»->ident->fpr) {
+    // make content uppercase
+    for (size_t i=0; i<strlen(«../@obj»->ident->fpr); i++)
+        «../@obj»->ident->fpr[i] = toupper(«../@obj»->ident->fpr[i]);
+}
+
+||
+
+template "attribute[@type='string']", mode=dup
+    call "string";
+
+function "string"
+||
+    «../@obj»->«@name» = «@name» ? strdup(«@name») : strdup("");
+    assert(«../@obj»->«@name»);
+    if («../@obj»->«@name» == NULL)
+        goto enomem;
+
+||
+
+template "attribute[@type='ustring']", mode=dup {
+call "string";
+||
+// make content uppercase
+for (size_t i=0; i<strlen(«../@obj»->«@name»); i++)
+    «../@obj»->«@name»[i] = toupper(«../@obj»->«@name»[i]);
+
+||
+}
+
+template "attribute[@type='identity']", mode=free
+| free_identity(«../@obj»->«@name»);
+
+template "attribute[@type='string' or @type='ustring']", mode=free
+| free(«../@obj»->«@name»);
+
+template "type" {
+
+document "{@name}.h", "text"
+||
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
+#pragma once
+
+#include "dynamic_api.h"
+#include "pEpEngine.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct _«@name» {
+`` apply "attribute";
+} «@name»;
+
+// new_«@name»() - allocate new «@name»
+//
+//  parameters:
+`` apply "attribute", 0, mode=doc
+//
+//  return value:
+//      pointer to «@name» or NULL on failure
+//
+//  caveat:
+//      `apply "attribute", mode=namelist` are copied and remain in the ownership of the caller
+
+DYNAMIC_API «@name» * new_«@name»(`apply "attribute", mode=param`);
+
+
+// free_«@name»() - free memory allocated by «@name»
+//
+//  parameters:
+//      «@obj» (in)    pointer to «@name» to free
+
+DYNAMIC_API void free_«@name»(«@name» * «@obj»);
+
+
+// «@name»_dup() - duplicate «@name» (deep copy)
+//
+//  parameters:
+//      src (in)        pointer to «@name» to duplicate
+//
+//  return value:
+//      pointer to copy of src or NULL on failure
+
+DYNAMIC_API «@name» * «@name»_dup(const «@name» * src);
+
+
+typedef struct _«@name»_list {
+    «@name» * «@obj»;
+    struct _«@name»_list * next;
+} «@name»_list;
+
+
+// new_«@name»_list() - allocate a new «@name»_list
+//
+//  parameters:
+//      «@obj» (in)              initial «@obj»
+//
+//  return value:
+//      pointer to «@name»_list object or NULL if out of memory
+//
+//  caveat:
+//      the ownership of the «@obj» goes to the «@name»_list
+//      next pointer is NULL
+
+DYNAMIC_API «@name»_list * new_«@name»_list(«@name» * «@obj»);
+
+
+// «@name»_list_dup() - duplicate a «@name»_list (deep copy)
+//
+//  parameters:
+//      src (in)                «@name»_list to copy
+//
+//  return value:
+//      pointer to «@name»_list object or NULL if out of memory
+//      «@name» «@obj» copies created by this function belong to the returned list
+
+DYNAMIC_API «@name»_list * «@name»_list_dup(
+        const «@name»_list * src
+    );
+
+
+// «@name»_list_add() - add key to «@name»_list
+//
+//  parameters:
+//      «@obj»_list (in)       «@name»_list struct or NULL to create a new one
+//      «@obj» (in)            «@name» to add
+//
+//  return value:
+//      pointer to last element in «@name»_list or NULL if out of memory
+//
+//  caveat:
+//      the ownership of the «@obj» goes to the «@name»_list if add is successful
+
+DYNAMIC_API «@name»_list * «@name»_list_add(
+        «@name»_list * «@obj»_list,
+        «@name» * «@obj»
+    );
+
+
+// «@name»_list_append() - append «@name»_list to «@name»_list
+//
+//  parameters:
+//      «@obj»_list (in)       «@name»_list struct to append to
+//      second (in)             «@name»_list struct to append
+//
+//  return value:
+//      pointer to last element in «@obj»_list or NULL if out of memory
+//      or «@obj»_list is NULL
+//
+//  caveat:
+//      all «@obj»s are being copied before being added to the list
+//      the original «@obj»s are still being owned by the caller
+
+DYNAMIC_API «@name»_list * «@name»_list_append(
+        «@name»_list * «@obj»_list,
+        «@name»_list * second
+    );
+
+
+// «@name»_list_length() - get length of «@name»_list
+//
+//  parameters:
+//      «@obj»_list (in)       «@name»_list struct to determine length of
+//
+//  return value:
+//      length of «@obj»_list in number of elements
+
+DYNAMIC_API int «@name»_list_length(
+        const «@name»_list * «@obj»_list
+    );
+
+
+// free_«@name»_list() - free memory occupied by «@obj»_list
+//
+//  parameters:
+//      «@obj»_list (in)       «@name»_list to free
+
+DYNAMIC_API void free_«@name»_list(«@name»_list * «@obj»_list);
+
+
+#ifdef __cplusplus
+}
+#endif
+
+||
+
+document "{@name}.c", "text"
+||
+// This file is under GNU General Public License 3.0
+// see LICENSE.txt
+
+#include "pEp_internal.h"
+
+#include <stdlib.h>
+#include <assert.h>
+#include <string.h>
+
+#include "«@name».h"
+
+DYNAMIC_API «@name» * new_«@name»(`apply "attribute", mode=param`)
+{
+    «@name» * «@obj» = NULL;
+
+    // key and «@obj» should not be NULL, that's bad style (while legal)
+
+`` apply "attribute", mode=assert
+
+    «@obj» = calloc(1, sizeof(«@name»));
+    assert(«@obj»);
+    if («@obj» == NULL)
+        goto enomem;
+
+`` apply "attribute", mode=dup
+    return «@obj»;
+
+enomem:
+    free_«@name»(«@obj»);
+    return NULL;
+}
+
+DYNAMIC_API void free_«@name»(«@name» * «@obj»)
+{
+    if («@obj») {
+`` apply "attribute", 2, mode=free
+        free(«@obj»);
+    }
+}
+
+DYNAMIC_API «@name» * «@name»_dup(const «@name» * src)
+{
+    assert(src);
+    if (src == NULL)
+        return NULL;
+    
+    return new_«@name»(`apply "attribute", mode=with_src`);
+}
+
+DYNAMIC_API «@name»_list * new_«@name»_list(«@name» * «@obj»)
+{
+    «@name»_list * result = calloc(1, sizeof(«@name»_list));
+    assert(result);
+
+    if (result && «@obj»)
+        result->«@obj» = «@obj»;
+    
+    return result;
+}
+
+DYNAMIC_API «@name»_list * «@name»_list_dup(
+        const «@name»_list * src
+    )
+{
+    assert(src);
+    if (src == NULL)
+        return NULL;
+
+    «@name» * cpy = «@name»_dup(src->«@obj»);
+    
+    «@name»_list * dst = new_«@name»_list(cpy);
+    if (dst == NULL)
+        return NULL;
+
+    «@name»_list * src_curr = src->next;
+    «@name»_list ** dst_curr_ptr = &dst->next;
+
+    while (src_curr) {
+        cpy = «@name»_dup(src_curr->«@obj»);
+        if (cpy == NULL) {
+            free_«@name»_list(dst);
+            return NULL;
+        }
+        *dst_curr_ptr = new_«@name»_list(cpy);
+        if (*dst_curr_ptr == NULL) {
+            free_«@name»(cpy);
+            free_«@name»_list(dst);
+            return NULL;
+        }
+        src_curr = src_curr->next;
+        dst_curr_ptr = &((*dst_curr_ptr)->next);
+    }
+
+    return dst;
+}
+
+DYNAMIC_API «@name»_list * «@name»_list_add(
+        «@name»_list * «@obj»_list,
+        «@name» * «@obj»
+    )
+{
+    assert(«@obj»);
+
+    // empty list (no nodes)
+    if («@obj»_list == NULL)
+        return new_«@name»_list(«@obj»);
+
+    // empty list (one node, no «@obj»)
+    if («@obj»_list->«@obj» == NULL) {
+        if («@obj»_list->next)
+            return NULL; // invalid list
+            
+        «@obj»_list->«@obj» = «@obj»;
+        assert(«@obj»_list->«@obj»);
+        
+        if («@obj»_list->«@obj» == NULL)
+            return NULL;
+        
+        return «@obj»_list;
+    }
+    
+    «@name»_list * list_curr = «@obj»_list;
+    
+    while (list_curr->next)
+        list_curr = list_curr->next;
+     
+    list_curr->next = new_«@name»_list(«@obj»);
+
+    assert(list_curr->next);
+    if (list_curr->next == NULL)
+        return NULL;
+
+    return list_curr->next;
+}
+
+DYNAMIC_API «@name»_list * «@name»_list_append(
+        «@name»_list * «@obj»_list,
+        «@name»_list * second
+    )
+{
+    assert(«@obj»_list);
+    if («@obj»_list == NULL)
+        return NULL;
+
+    // second list is empty
+    if (second == NULL || second->«@obj» == NULL)
+        return «@obj»_list;
+
+    «@name»_list * _s = «@obj»_list;
+    for («@name»_list * _s2 = second; _s2 != NULL; _s2 = _s2->next) {
+        «@name» * _sp = «@name»_dup(_s2->«@obj»);
+        if (_sp == NULL)
+            return NULL;
+        _s = «@name»_list_add(_s, _sp);
+        if (_s == NULL){
+            free_«@name»(_sp);
+            return NULL;
+        }
+    }
+    return _s;
+}
+
+DYNAMIC_API int «@name»_list_length(
+        const «@name»_list * «@obj»_list
+    )
+{
+    int len = 0;
+
+    for (const «@name»_list * _sl = «@obj»_list; _sl && _sl->«@obj»; _sl = _sl->next)
+        len++;
+
+    return len;
+}
+
+DYNAMIC_API void free_«@name»_list(«@name»_list * «@obj»_list)
+{
+    if («@obj»_list) {
+        free_«@name»_list(«@obj»_list->next);
+        free_«@name»(«@obj»_list->«@obj»);
+        free(«@obj»_list);
+    }
+}
+
+||
+
+}
+}
+

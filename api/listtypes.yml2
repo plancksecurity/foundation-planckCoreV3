@@ -1,0 +1,9 @@
+decl type @name @obj;
+decl attribute @type @name;
+
+listtypes {
+    type keyreset_command command {
+        attribute identity ident doc="identity to reset, including fpr of existing key";
+        attribute ustring new_key doc="fpr of new key";
+    }
+}

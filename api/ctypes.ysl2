@@ -1,0 +1,12 @@
+def "func:C" {
+    param "type";
+
+    choose {
+        when "$type='identity'"
+            result > pEp_identity *
+        when "$type='string' or $type='ustring'"
+            result > char *
+        otherwise
+            result > «$type»
+    }
+}
