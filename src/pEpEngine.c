@@ -627,7 +627,7 @@ static int table_contains_column(PEP_SESSION session, const char* table_name,
 PEP_STATUS repair_altered_tables(PEP_SESSION session) {
     PEP_STATUS status = PEP_STATUS_OK;
     
-    const unsigned int _PEP_MAX_AFFECTED = 5;
+    const int _PEP_MAX_AFFECTED = 5;
     char** table_names = calloc(_PEP_MAX_AFFECTED, sizeof(char*));
     if (!table_names)
         return PEP_OUT_OF_MEMORY;

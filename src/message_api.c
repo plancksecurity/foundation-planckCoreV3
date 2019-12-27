@@ -2995,7 +2995,7 @@ static PEP_STATUS import_priv_keys_from_decrypted_msg(PEP_SESSION session,
         return PEP_ILLEGAL_VALUE;
 
     PEP_STATUS status = PEP_STATUS_OK;
-    *imported_keys = NULL;
+    *imported_keys = false;
     *imported_private = false;
     if (private_il)
         *private_il = NULL;

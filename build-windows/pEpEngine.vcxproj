@@ -134,11 +134,13 @@
     <ClCompile Include="..\src\blacklist.c" />
     <ClCompile Include="..\src\bloblist.c" />
     <ClCompile Include="..\src\cryptotech.c" />
+    <ClCompile Include="..\src\distribution_codec.c" />
     <ClCompile Include="..\src\email.c" />
     <ClCompile Include="..\src\etpan_mime.c" />
     <ClCompile Include="..\src\growing_buf.c" />
     <ClCompile Include="..\src\identity_list.c" />
     <ClCompile Include="..\src\keymanagement.c" />
+    <ClCompile Include="..\src\keyreset_command.c" />
     <ClCompile Include="..\src\KeySync_fsm.c" />
     <ClCompile Include="..\src\key_reset.c" />
     <ClCompile Include="..\src\labeled_int_list.c" />
