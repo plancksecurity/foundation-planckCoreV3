@@ -1420,7 +1420,7 @@ static bool is_key(const bloblist_t *bl)
 // }
 
 static bool compare_first_n_bytes(const char* first, const char* second, size_t n) {
-    int i;
+    size_t i;
     for (i = 0; i < n; i++) {
         char num1 = *first;
         char num2 = *second;
