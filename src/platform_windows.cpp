@@ -384,7 +384,7 @@ char *strnstr(const char *big, const char *little, size_t len) {
 
         const char* inner_big = retval + 1;
         const char* curr_little = little + 1;
-        int j;
+        size_t j;
         for (j = 1; j < little_len; j++, inner_big++, curr_little++) {
             if (*inner_big != *curr_little) {
                 retval = NULL;

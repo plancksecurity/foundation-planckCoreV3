@@ -983,8 +983,8 @@ get_public_keys_cb(void *cookie_raw,
         return PGP_STATUS_UNKNOWN_ERROR;
     *our_free = free;
 
-    int i, j;
-    j = 0;
+    size_t i;
+    int j = 0;
     for (i = 0; i < keyids_len; i ++) {
         pgp_cert_t cert = NULL;
         PEP_STATUS status
@@ -1019,7 +1019,7 @@ decrypt_cb(void *cookie_opaque,
 
     T("%zd PKESKs", pkesk_count);
 
-    for (int i = 0; i < pkesk_count; i ++) {
+    for (size_t i = 0; i < pkesk_count; i ++) {
         pgp_pkesk_t pkesk = pkesks[i];
         pgp_keyid_t keyid = pgp_pkesk_recipient(pkesk); /* Reference. */
         char *keyid_str = pgp_keyid_to_hex(keyid);
@@ -1102,7 +1102,7 @@ decrypt_cb(void *cookie_opaque,
     }
 
     // Consider wildcard recipients.
-    if (wildcards) for (int i = 0; i < pkesk_count && !cookie->decrypted; i ++) {
+    if (wildcards) for (size_t i = 0; i < pkesk_count && !cookie->decrypted; i ++) {
         pgp_pkesk_t pkesk = pkesks[i];
         pgp_keyid_t keyid = pgp_pkesk_recipient(pkesk); /* Reference. */
         char *keyid_str = pgp_keyid_to_hex(keyid);
@@ -2598,13 +2598,13 @@ PEP_STATUS pgp_renew_key(
     status = cert_find_by_fpr_hex(session, fpr, true, &cert, NULL);
     ERROR_OUT(NULL, status, "Looking up '%s'", fpr);
 
-    uint32_t creation_time = pgp_key_creation_time(pgp_cert_primary_key(cert));
+    time_t creation_time = pgp_key_creation_time(pgp_cert_primary_key(cert));
     if (creation_time > t)
         // The creation time is after the expiration time!
         ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
                   "creation time can't be after expiration time");
 
-    uint32_t delta = t - creation_time;
+    uint32_t delta = (uint32_t) (t - creation_time);
 
 
     iter = pgp_cert_key_iter_valid(cert);
