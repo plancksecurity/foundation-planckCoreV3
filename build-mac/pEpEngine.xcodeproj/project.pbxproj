@@ -159,6 +159,8 @@
 		43188A9F23C4B2DE008EF79C /* Sync_actions.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A9223C4B2DE008EF79C /* Sync_actions.c */; };
 		43188AA823C4B4B3008EF79C /* keyreset_command.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188AA223C4B4B3008EF79C /* keyreset_command.c */; };
 		43188AA923C4B4B3008EF79C /* keyreset_command.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188AA723C4B4B3008EF79C /* keyreset_command.h */; };
+		43188AAC23C4B549008EF79C /* Commands.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188AAA23C4B549008EF79C /* Commands.c */; };
+		43188AAD23C4B549008EF79C /* Commands.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188AAB23C4B549008EF79C /* Commands.h */; };
 		431F04B722733A7E00CCE960 /* key_reset.h in Headers */ = {isa = PBXBuildFile; fileRef = 431F04B222733A7E00CCE960 /* key_reset.h */; };
 		432713B023A10B07007EAD4A /* GroupKeysForNewMember.c in Sources */ = {isa = PBXBuildFile; fileRef = 432713AF23A10B07007EAD4A /* GroupKeysForNewMember.c */; };
 		432714AB23A10B3B007EAD4A /* GroupKeysUpdate.c in Sources */ = {isa = PBXBuildFile; fileRef = 432714AA23A10B3B007EAD4A /* GroupKeysUpdate.c */; };
@@ -405,6 +407,8 @@
 		43188A9223C4B2DE008EF79C /* Sync_actions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_actions.c; path = ../src/Sync_actions.c; sourceTree = "<group>"; };
 		43188AA223C4B4B3008EF79C /* keyreset_command.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = keyreset_command.c; path = ../src/keyreset_command.c; sourceTree = "<group>"; };
 		43188AA723C4B4B3008EF79C /* keyreset_command.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = keyreset_command.h; path = ../src/keyreset_command.h; sourceTree = "<group>"; };
+		43188AAA23C4B549008EF79C /* Commands.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Commands.c; path = ../asn.1/Commands.c; sourceTree = "<group>"; };
+		43188AAB23C4B549008EF79C /* Commands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Commands.h; path = ../asn.1/Commands.h; sourceTree = "<group>"; };
 		431F04B222733A7E00CCE960 /* key_reset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = key_reset.h; path = ../src/key_reset.h; sourceTree = "<group>"; };
 		432713AF23A10B07007EAD4A /* GroupKeysForNewMember.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysForNewMember.c; path = ../asn.1/GroupKeysForNewMember.c; sourceTree = "<group>"; };
 		432714AA23A10B3B007EAD4A /* GroupKeysUpdate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysUpdate.c; path = ../asn.1/GroupKeysUpdate.c; sourceTree = "<group>"; };
@@ -538,6 +542,8 @@
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
 			isa = PBXGroup;
 			children = (
+				43188AAA23C4B549008EF79C /* Commands.c */,
+				43188AAB23C4B549008EF79C /* Commands.h */,
 				158FF95823C49ED600CB1016 /* Distribution.c */,
 				158FF95523C49ED600CB1016 /* Distribution.h */,
 				158FF95723C49ED600CB1016 /* GroupKeyReset.h */,
@@ -835,6 +841,7 @@
 				15B037F922B2B822002D664C /* per_support.h in Headers */,
 				15B037C022B2B822002D664C /* per_opentype.h in Headers */,
 				15B0380222B2B822002D664C /* ber_tlv_length.h in Headers */,
+				43188AAD23C4B549008EF79C /* Commands.h in Headers */,
 				15B037B622B2B822002D664C /* IdentityList.h in Headers */,
 				15B037E622B2B822002D664C /* constr_CHOICE.h in Headers */,
 				646C414F1D510D8800C63EFF /* baseprotocol.h in Headers */,
@@ -1103,6 +1110,7 @@
 				64A8267D1B455D0800EECAF0 /* keymanagement.c in Sources */,
 				64A8267C1B455D0800EECAF0 /* identity_list.c in Sources */,
 				43F73C0D2166282C00AB4524 /* key_reset.c in Sources */,
+				43188AAC23C4B549008EF79C /* Commands.c in Sources */,
 				15B0380C22B2B822002D664C /* BOOLEAN.c in Sources */,
 				64A8268A1B455D0800EECAF0 /* transport.c in Sources */,
 				15B037EA22B2B822002D664C /* BIT_STRING.c in Sources */,
