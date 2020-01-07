@@ -28,7 +28,7 @@ Distribution.c: distribution.asn1 keyreset.asn1 pEp.asn1
 	touch Distribution.c
 
 clean:
-	rm -f *.a *.o *.c *.h *.sample sync.asn1 keysync.asn1
+	rm -f *.a *.o *.c *.h *.sample sync.asn1 keysync.asn1 distribution.asn1 keyreset.asn1
 
 install:
 
