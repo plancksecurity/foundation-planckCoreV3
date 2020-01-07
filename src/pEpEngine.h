@@ -1430,6 +1430,8 @@ PEP_STATUS sign_only(PEP_SESSION session,
 PEP_STATUS set_all_userids_to_own(PEP_SESSION session, 
                                   identity_list* id_list);
 
+PEP_STATUS has_partner_contacted_address(PEP_SESSION session, const char* partner_id,
+                                         const char* own_address, bool* was_contacted);
 #ifdef __cplusplus
 }
 #endif

@@ -80,7 +80,6 @@ typedef struct _message_ref_list {
     struct _message_ref_list *next;
 } message_ref_list;
 
-
 // new_message() - allocate new message
 //
 //  parameters:
