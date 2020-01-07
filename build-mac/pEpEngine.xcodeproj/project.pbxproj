@@ -157,6 +157,8 @@
 		43188A9D23C4B2DE008EF79C /* Sync_event.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A9023C4B2DE008EF79C /* Sync_event.c */; };
 		43188A9E23C4B2DE008EF79C /* sync_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A9123C4B2DE008EF79C /* sync_codec.h */; };
 		43188A9F23C4B2DE008EF79C /* Sync_actions.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A9223C4B2DE008EF79C /* Sync_actions.c */; };
+		43188AA823C4B4B3008EF79C /* keyreset_command.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188AA223C4B4B3008EF79C /* keyreset_command.c */; };
+		43188AA923C4B4B3008EF79C /* keyreset_command.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188AA723C4B4B3008EF79C /* keyreset_command.h */; };
 		431F04B722733A7E00CCE960 /* key_reset.h in Headers */ = {isa = PBXBuildFile; fileRef = 431F04B222733A7E00CCE960 /* key_reset.h */; };
 		432713B023A10B07007EAD4A /* GroupKeysForNewMember.c in Sources */ = {isa = PBXBuildFile; fileRef = 432713AF23A10B07007EAD4A /* GroupKeysForNewMember.c */; };
 		432714AB23A10B3B007EAD4A /* GroupKeysUpdate.c in Sources */ = {isa = PBXBuildFile; fileRef = 432714AA23A10B3B007EAD4A /* GroupKeysUpdate.c */; };
@@ -401,6 +403,8 @@
 		43188A9023C4B2DE008EF79C /* Sync_event.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_event.c; path = ../src/Sync_event.c; sourceTree = "<group>"; };
 		43188A9123C4B2DE008EF79C /* sync_codec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sync_codec.h; path = ../src/sync_codec.h; sourceTree = "<group>"; };
 		43188A9223C4B2DE008EF79C /* Sync_actions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_actions.c; path = ../src/Sync_actions.c; sourceTree = "<group>"; };
+		43188AA223C4B4B3008EF79C /* keyreset_command.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = keyreset_command.c; path = ../src/keyreset_command.c; sourceTree = "<group>"; };
+		43188AA723C4B4B3008EF79C /* keyreset_command.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = keyreset_command.h; path = ../src/keyreset_command.h; sourceTree = "<group>"; };
 		431F04B222733A7E00CCE960 /* key_reset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = key_reset.h; path = ../src/key_reset.h; sourceTree = "<group>"; };
 		432713AF23A10B07007EAD4A /* GroupKeysForNewMember.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysForNewMember.c; path = ../asn.1/GroupKeysForNewMember.c; sourceTree = "<group>"; };
 		432714AA23A10B3B007EAD4A /* GroupKeysUpdate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysUpdate.c; path = ../asn.1/GroupKeysUpdate.c; sourceTree = "<group>"; };
@@ -708,6 +712,8 @@
 		64A8264B1B455C5600EECAF0 /* srcref */ = {
 			isa = PBXGroup;
 			children = (
+				43188AA223C4B4B3008EF79C /* keyreset_command.c */,
+				43188AA723C4B4B3008EF79C /* keyreset_command.h */,
 				154918A222B9401F0091B6D6 /* aux_mime_msg.c */,
 				1549189922B9401E0091B6D6 /* aux_mime_msg.h */,
 				154918AA22B940200091B6D6 /* blacklist.h */,
@@ -865,6 +871,7 @@
 				159EF42922B6D3E900149C0C /* pgp_sequoia_internal.h in Headers */,
 				15B037BD22B2B822002D664C /* CommitAcceptOfferer.h in Headers */,
 				15B037CA22B2B822002D664C /* PrintableString.h in Headers */,
+				43188AA923C4B4B3008EF79C /* keyreset_command.h in Headers */,
 				15B037B222B2B822002D664C /* Identity.h in Headers */,
 				154918BD22B940200091B6D6 /* growing_buf.h in Headers */,
 				15B037D322B2B822002D664C /* CommitReject.h in Headers */,
@@ -1063,6 +1070,7 @@
 				158FF96323C49ED600CB1016 /* InitUnledGroupKeyReset.c in Sources */,
 				159EF42722B6D3E900149C0C /* pgp_sequoia.c in Sources */,
 				43188A9323C4B2DE008EF79C /* sync_codec.c in Sources */,
+				43188AA823C4B4B3008EF79C /* keyreset_command.c in Sources */,
 				64A8267B1B455D0800EECAF0 /* etpan_mime.c in Sources */,
 				15B037AC22B2B822002D664C /* CommitAccept.c in Sources */,
 				64A8267A1B455D0800EECAF0 /* email.c in Sources */,
