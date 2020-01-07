@@ -155,6 +155,13 @@
 		430BCC482015EE800077E998 /* pEp_string.h in Headers */ = {isa = PBXBuildFile; fileRef = 430BCC462015EE800077E998 /* pEp_string.h */; };
 		430BCC492015EE800077E998 /* pEp_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 430BCC472015EE800077E998 /* pEp_string.c */; };
 		430D258B1C9ED75A00B94535 /* blacklist.c in Sources */ = {isa = PBXBuildFile; fileRef = 430D258A1C9ED75A00B94535 /* blacklist.c */; };
+		43188A6123C4A81F008EF79C /* sync_codec.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A5A23C4A81F008EF79C /* sync_codec.c */; };
+		43188A6223C4A81F008EF79C /* Sync_actions.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A5B23C4A81F008EF79C /* Sync_actions.c */; };
+		43188A6323C4A81F008EF79C /* Sync_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A5C23C4A81F008EF79C /* Sync_impl.c */; };
+		43188A6423C4A81F008EF79C /* distribution_codec.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A5D23C4A81F008EF79C /* distribution_codec.c */; };
+		43188A6523C4A81F008EF79C /* KeySync_fsm.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A5E23C4A81F008EF79C /* KeySync_fsm.c */; };
+		43188A6623C4A81F008EF79C /* Sync_event.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A5F23C4A81F008EF79C /* Sync_event.c */; };
+		43188A6723C4A81F008EF79C /* Sync_func.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A6023C4A81F008EF79C /* Sync_func.c */; };
 		431F04B722733A7E00CCE960 /* key_reset.h in Headers */ = {isa = PBXBuildFile; fileRef = 431F04B222733A7E00CCE960 /* key_reset.h */; };
 		432713B023A10B07007EAD4A /* GroupKeysForNewMember.c in Sources */ = {isa = PBXBuildFile; fileRef = 432713AF23A10B07007EAD4A /* GroupKeysForNewMember.c */; };
 		432714AB23A10B3B007EAD4A /* GroupKeysUpdate.c in Sources */ = {isa = PBXBuildFile; fileRef = 432714AA23A10B3B007EAD4A /* GroupKeysUpdate.c */; };
@@ -397,6 +404,13 @@
 		430BCC462015EE800077E998 /* pEp_string.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pEp_string.h; path = ../src/pEp_string.h; sourceTree = "<group>"; };
 		430BCC472015EE800077E998 /* pEp_string.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEp_string.c; path = ../src/pEp_string.c; sourceTree = "<group>"; };
 		430D258A1C9ED75A00B94535 /* blacklist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = blacklist.c; path = ../src/blacklist.c; sourceTree = "<group>"; };
+		43188A5A23C4A81F008EF79C /* sync_codec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_codec.c; path = ../sync/generated/sync_codec.c; sourceTree = "<group>"; };
+		43188A5B23C4A81F008EF79C /* Sync_actions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_actions.c; path = ../sync/generated/Sync_actions.c; sourceTree = "<group>"; };
+		43188A5C23C4A81F008EF79C /* Sync_impl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_impl.c; path = ../sync/generated/Sync_impl.c; sourceTree = "<group>"; };
+		43188A5D23C4A81F008EF79C /* distribution_codec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = distribution_codec.c; path = ../sync/generated/distribution_codec.c; sourceTree = "<group>"; };
+		43188A5E23C4A81F008EF79C /* KeySync_fsm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = KeySync_fsm.c; path = ../sync/generated/KeySync_fsm.c; sourceTree = "<group>"; };
+		43188A5F23C4A81F008EF79C /* Sync_event.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_event.c; path = ../sync/generated/Sync_event.c; sourceTree = "<group>"; };
+		43188A6023C4A81F008EF79C /* Sync_func.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_func.c; path = ../sync/generated/Sync_func.c; sourceTree = "<group>"; };
 		431F04B222733A7E00CCE960 /* key_reset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = key_reset.h; path = ../src/key_reset.h; sourceTree = "<group>"; };
 		432713AF23A10B07007EAD4A /* GroupKeysForNewMember.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysForNewMember.c; path = ../asn.1/GroupKeysForNewMember.c; sourceTree = "<group>"; };
 		432714AA23A10B3B007EAD4A /* GroupKeysUpdate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysUpdate.c; path = ../asn.1/GroupKeysUpdate.c; sourceTree = "<group>"; };
@@ -505,6 +519,20 @@
 				154917FA22B926700091B6D6 /* libsequoia_openpgp_ffi.a */,
 			);
 			name = sequoia4ios;
+			sourceTree = "<group>";
+		};
+		43188A5523C4A7F8008EF79C /* sync-generated */ = {
+			isa = PBXGroup;
+			children = (
+				43188A5D23C4A81F008EF79C /* distribution_codec.c */,
+				43188A5E23C4A81F008EF79C /* KeySync_fsm.c */,
+				43188A5B23C4A81F008EF79C /* Sync_actions.c */,
+				43188A5A23C4A81F008EF79C /* sync_codec.c */,
+				43188A5F23C4A81F008EF79C /* Sync_event.c */,
+				43188A6023C4A81F008EF79C /* Sync_func.c */,
+				43188A5C23C4A81F008EF79C /* Sync_impl.c */,
+			);
+			name = "sync-generated";
 			sourceTree = "<group>";
 		};
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
@@ -662,6 +690,7 @@
 				1549181322B92EA50091B6D6 /* libz.dylib */,
 				64951A1B1BE0FCD800B10E71 /* system.db */,
 				64DA24121B832EBA000BEE80 /* libetpan.xcodeproj */,
+				43188A5523C4A7F8008EF79C /* sync-generated */,
 				6406CE811CE382F400C14D77 /* asn.1 */,
 				64A8264B1B455C5600EECAF0 /* srcref */,
 				644297C01BE11C65002BC73B /* pEpTrustWords */,
@@ -1039,6 +1068,8 @@
 				43495982239E417300CF1E12 /* GroupKeyReset.c in Sources */,
 				15B037B122B2B822002D664C /* NegotiationRequest.c in Sources */,
 				15B037FC22B2B822002D664C /* Hex.c in Sources */,
+				43188A6323C4A81F008EF79C /* Sync_impl.c in Sources */,
+				43188A6723C4A81F008EF79C /* Sync_func.c in Sources */,
 				432714AB23A10B3B007EAD4A /* GroupKeysUpdate.c in Sources */,
 				43E4FBB22362C05600BC01F4 /* NegotiationRequestGrouped.c in Sources */,
 				15B0380722B2B822002D664C /* constr_CHOICE.c in Sources */,
@@ -1073,6 +1104,7 @@
 				64A826891B455D0800EECAF0 /* trans_auto.c in Sources */,
 				15B0380922B2B822002D664C /* per_support.c in Sources */,
 				15B037D222B2B822002D664C /* CommitAcceptRequester.c in Sources */,
+				43188A6523C4A81F008EF79C /* KeySync_fsm.c in Sources */,
 				15B037E122B2B822002D664C /* GroupTrustThisKey.c in Sources */,
 				43F73C112166282C00AB4524 /* sync_api.c in Sources */,
 				64A8267D1B455D0800EECAF0 /* keymanagement.c in Sources */,
@@ -1096,6 +1128,7 @@
 				154918B022B940200091B6D6 /* KeySync_fsm.c in Sources */,
 				43370833203C075A004E6547 /* sqlite3.c in Sources */,
 				15B0380122B2B822002D664C /* asn_SET_OF.c in Sources */,
+				43188A6123C4A81F008EF79C /* sync_codec.c in Sources */,
 				154918B522B940200091B6D6 /* sync_codec.c in Sources */,
 				15B037DE22B2B822002D664C /* KeySync.c in Sources */,
 				15B037C322B2B822002D664C /* constr_SEQUENCE_OF.c in Sources */,
@@ -1111,6 +1144,7 @@
 				15B037AA22B2B822002D664C /* ber_tlv_length.c in Sources */,
 				15B037F822B2B822002D664C /* OwnKeysOfferer.c in Sources */,
 				430D258B1C9ED75A00B94535 /* blacklist.c in Sources */,
+				43188A6423C4A81F008EF79C /* distribution_codec.c in Sources */,
 				15B0380E22B2B822002D664C /* PrintableString.c in Sources */,
 				15B037E922B2B822002D664C /* CommitAcceptOfferer.c in Sources */,
 				432713B023A10B07007EAD4A /* GroupKeysForNewMember.c in Sources */,
@@ -1120,6 +1154,8 @@
 				6467888C1CEB3D120001F54C /* map_asn1.c in Sources */,
 				43F73C122166282C00AB4524 /* growing_buf.c in Sources */,
 				64A826801B455D0800EECAF0 /* mime.c in Sources */,
+				43188A6623C4A81F008EF79C /* Sync_event.c in Sources */,
+				43188A6223C4A81F008EF79C /* Sync_actions.c in Sources */,
 				64A8267F1B455D0800EECAF0 /* message.c in Sources */,
 				64A826811B455D0800EECAF0 /* pEpEngine.c in Sources */,
 				15B037FF22B2B822002D664C /* per_opentype.c in Sources */,
