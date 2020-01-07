@@ -144,19 +144,19 @@
 		430BCC482015EE800077E998 /* pEp_string.h in Headers */ = {isa = PBXBuildFile; fileRef = 430BCC462015EE800077E998 /* pEp_string.h */; };
 		430BCC492015EE800077E998 /* pEp_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 430BCC472015EE800077E998 /* pEp_string.c */; };
 		430D258B1C9ED75A00B94535 /* blacklist.c in Sources */ = {isa = PBXBuildFile; fileRef = 430D258A1C9ED75A00B94535 /* blacklist.c */; };
-		43188A6123C4A81F008EF79C /* sync_codec.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A5A23C4A81F008EF79C /* sync_codec.c */; };
-		43188A6223C4A81F008EF79C /* Sync_actions.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A5B23C4A81F008EF79C /* Sync_actions.c */; };
-		43188A6323C4A81F008EF79C /* Sync_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A5C23C4A81F008EF79C /* Sync_impl.c */; };
-		43188A6423C4A81F008EF79C /* distribution_codec.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A5D23C4A81F008EF79C /* distribution_codec.c */; };
-		43188A6523C4A81F008EF79C /* KeySync_fsm.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A5E23C4A81F008EF79C /* KeySync_fsm.c */; };
-		43188A6623C4A81F008EF79C /* Sync_event.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A5F23C4A81F008EF79C /* Sync_event.c */; };
-		43188A6723C4A81F008EF79C /* Sync_func.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A6023C4A81F008EF79C /* Sync_func.c */; };
-		43188A7A23C4B070008EF79C /* Sync_event.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A7023C4B06F008EF79C /* Sync_event.h */; };
-		43188A7B23C4B070008EF79C /* Sync_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A7523C4B070008EF79C /* Sync_impl.h */; };
-		43188A7C23C4B070008EF79C /* sync_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A7623C4B070008EF79C /* sync_codec.h */; };
-		43188A7D23C4B070008EF79C /* Sync_func.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A7723C4B070008EF79C /* Sync_func.h */; };
-		43188A7E23C4B070008EF79C /* distribution_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A7823C4B070008EF79C /* distribution_codec.h */; };
-		43188A7F23C4B070008EF79C /* KeySync_fsm.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A7923C4B070008EF79C /* KeySync_fsm.h */; };
+		43188A9323C4B2DE008EF79C /* sync_codec.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A8623C4B2DD008EF79C /* sync_codec.c */; };
+		43188A9423C4B2DE008EF79C /* Sync_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A8723C4B2DD008EF79C /* Sync_impl.h */; };
+		43188A9523C4B2DE008EF79C /* Sync_event.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A8823C4B2DD008EF79C /* Sync_event.h */; };
+		43188A9623C4B2DE008EF79C /* KeySync_fsm.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A8923C4B2DD008EF79C /* KeySync_fsm.h */; };
+		43188A9723C4B2DE008EF79C /* distribution_codec.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A8A23C4B2DD008EF79C /* distribution_codec.c */; };
+		43188A9823C4B2DE008EF79C /* KeySync_fsm.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A8B23C4B2DE008EF79C /* KeySync_fsm.c */; };
+		43188A9923C4B2DE008EF79C /* Sync_func.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A8C23C4B2DE008EF79C /* Sync_func.h */; };
+		43188A9A23C4B2DE008EF79C /* distribution_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A8D23C4B2DE008EF79C /* distribution_codec.h */; };
+		43188A9B23C4B2DE008EF79C /* Sync_func.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A8E23C4B2DE008EF79C /* Sync_func.c */; };
+		43188A9C23C4B2DE008EF79C /* Sync_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A8F23C4B2DE008EF79C /* Sync_impl.c */; };
+		43188A9D23C4B2DE008EF79C /* Sync_event.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A9023C4B2DE008EF79C /* Sync_event.c */; };
+		43188A9E23C4B2DE008EF79C /* sync_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A9123C4B2DE008EF79C /* sync_codec.h */; };
+		43188A9F23C4B2DE008EF79C /* Sync_actions.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A9223C4B2DE008EF79C /* Sync_actions.c */; };
 		431F04B722733A7E00CCE960 /* key_reset.h in Headers */ = {isa = PBXBuildFile; fileRef = 431F04B222733A7E00CCE960 /* key_reset.h */; };
 		432713B023A10B07007EAD4A /* GroupKeysForNewMember.c in Sources */ = {isa = PBXBuildFile; fileRef = 432713AF23A10B07007EAD4A /* GroupKeysForNewMember.c */; };
 		432714AB23A10B3B007EAD4A /* GroupKeysUpdate.c in Sources */ = {isa = PBXBuildFile; fileRef = 432714AA23A10B3B007EAD4A /* GroupKeysUpdate.c */; };
@@ -388,19 +388,19 @@
 		430BCC462015EE800077E998 /* pEp_string.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pEp_string.h; path = ../src/pEp_string.h; sourceTree = "<group>"; };
 		430BCC472015EE800077E998 /* pEp_string.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pEp_string.c; path = ../src/pEp_string.c; sourceTree = "<group>"; };
 		430D258A1C9ED75A00B94535 /* blacklist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = blacklist.c; path = ../src/blacklist.c; sourceTree = "<group>"; };
-		43188A5A23C4A81F008EF79C /* sync_codec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_codec.c; path = ../sync/generated/sync_codec.c; sourceTree = "<group>"; };
-		43188A5B23C4A81F008EF79C /* Sync_actions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_actions.c; path = ../sync/generated/Sync_actions.c; sourceTree = "<group>"; };
-		43188A5C23C4A81F008EF79C /* Sync_impl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_impl.c; path = ../sync/generated/Sync_impl.c; sourceTree = "<group>"; };
-		43188A5D23C4A81F008EF79C /* distribution_codec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = distribution_codec.c; path = ../sync/generated/distribution_codec.c; sourceTree = "<group>"; };
-		43188A5E23C4A81F008EF79C /* KeySync_fsm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = KeySync_fsm.c; path = ../sync/generated/KeySync_fsm.c; sourceTree = "<group>"; };
-		43188A5F23C4A81F008EF79C /* Sync_event.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_event.c; path = ../sync/generated/Sync_event.c; sourceTree = "<group>"; };
-		43188A6023C4A81F008EF79C /* Sync_func.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_func.c; path = ../sync/generated/Sync_func.c; sourceTree = "<group>"; };
-		43188A7023C4B06F008EF79C /* Sync_event.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Sync_event.h; path = ../sync/generated/Sync_event.h; sourceTree = "<group>"; };
-		43188A7523C4B070008EF79C /* Sync_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Sync_impl.h; path = ../sync/generated/Sync_impl.h; sourceTree = "<group>"; };
-		43188A7623C4B070008EF79C /* sync_codec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sync_codec.h; path = ../sync/generated/sync_codec.h; sourceTree = "<group>"; };
-		43188A7723C4B070008EF79C /* Sync_func.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Sync_func.h; path = ../sync/generated/Sync_func.h; sourceTree = "<group>"; };
-		43188A7823C4B070008EF79C /* distribution_codec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = distribution_codec.h; path = ../sync/generated/distribution_codec.h; sourceTree = "<group>"; };
-		43188A7923C4B070008EF79C /* KeySync_fsm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KeySync_fsm.h; path = ../sync/generated/KeySync_fsm.h; sourceTree = "<group>"; };
+		43188A8623C4B2DD008EF79C /* sync_codec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sync_codec.c; path = ../src/sync_codec.c; sourceTree = "<group>"; };
+		43188A8723C4B2DD008EF79C /* Sync_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Sync_impl.h; path = ../src/Sync_impl.h; sourceTree = "<group>"; };
+		43188A8823C4B2DD008EF79C /* Sync_event.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Sync_event.h; path = ../src/Sync_event.h; sourceTree = "<group>"; };
+		43188A8923C4B2DD008EF79C /* KeySync_fsm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KeySync_fsm.h; path = ../src/KeySync_fsm.h; sourceTree = "<group>"; };
+		43188A8A23C4B2DD008EF79C /* distribution_codec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = distribution_codec.c; path = ../src/distribution_codec.c; sourceTree = "<group>"; };
+		43188A8B23C4B2DE008EF79C /* KeySync_fsm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = KeySync_fsm.c; path = ../src/KeySync_fsm.c; sourceTree = "<group>"; };
+		43188A8C23C4B2DE008EF79C /* Sync_func.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Sync_func.h; path = ../src/Sync_func.h; sourceTree = "<group>"; };
+		43188A8D23C4B2DE008EF79C /* distribution_codec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = distribution_codec.h; path = ../src/distribution_codec.h; sourceTree = "<group>"; };
+		43188A8E23C4B2DE008EF79C /* Sync_func.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_func.c; path = ../src/Sync_func.c; sourceTree = "<group>"; };
+		43188A8F23C4B2DE008EF79C /* Sync_impl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_impl.c; path = ../src/Sync_impl.c; sourceTree = "<group>"; };
+		43188A9023C4B2DE008EF79C /* Sync_event.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_event.c; path = ../src/Sync_event.c; sourceTree = "<group>"; };
+		43188A9123C4B2DE008EF79C /* sync_codec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sync_codec.h; path = ../src/sync_codec.h; sourceTree = "<group>"; };
+		43188A9223C4B2DE008EF79C /* Sync_actions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_actions.c; path = ../src/Sync_actions.c; sourceTree = "<group>"; };
 		431F04B222733A7E00CCE960 /* key_reset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = key_reset.h; path = ../src/key_reset.h; sourceTree = "<group>"; };
 		432713AF23A10B07007EAD4A /* GroupKeysForNewMember.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysForNewMember.c; path = ../asn.1/GroupKeysForNewMember.c; sourceTree = "<group>"; };
 		432714AA23A10B3B007EAD4A /* GroupKeysUpdate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysUpdate.c; path = ../asn.1/GroupKeysUpdate.c; sourceTree = "<group>"; };
@@ -514,19 +514,19 @@
 		43188A5523C4A7F8008EF79C /* sync-generated */ = {
 			isa = PBXGroup;
 			children = (
-				43188A5D23C4A81F008EF79C /* distribution_codec.c */,
-				43188A7823C4B070008EF79C /* distribution_codec.h */,
-				43188A5E23C4A81F008EF79C /* KeySync_fsm.c */,
-				43188A7923C4B070008EF79C /* KeySync_fsm.h */,
-				43188A5B23C4A81F008EF79C /* Sync_actions.c */,
-				43188A5A23C4A81F008EF79C /* sync_codec.c */,
-				43188A7623C4B070008EF79C /* sync_codec.h */,
-				43188A5F23C4A81F008EF79C /* Sync_event.c */,
-				43188A7023C4B06F008EF79C /* Sync_event.h */,
-				43188A6023C4A81F008EF79C /* Sync_func.c */,
-				43188A7723C4B070008EF79C /* Sync_func.h */,
-				43188A5C23C4A81F008EF79C /* Sync_impl.c */,
-				43188A7523C4B070008EF79C /* Sync_impl.h */,
+				43188A8A23C4B2DD008EF79C /* distribution_codec.c */,
+				43188A8D23C4B2DE008EF79C /* distribution_codec.h */,
+				43188A8B23C4B2DE008EF79C /* KeySync_fsm.c */,
+				43188A8923C4B2DD008EF79C /* KeySync_fsm.h */,
+				43188A9223C4B2DE008EF79C /* Sync_actions.c */,
+				43188A8623C4B2DD008EF79C /* sync_codec.c */,
+				43188A9123C4B2DE008EF79C /* sync_codec.h */,
+				43188A9023C4B2DE008EF79C /* Sync_event.c */,
+				43188A8823C4B2DD008EF79C /* Sync_event.h */,
+				43188A8E23C4B2DE008EF79C /* Sync_func.c */,
+				43188A8C23C4B2DE008EF79C /* Sync_func.h */,
+				43188A8F23C4B2DE008EF79C /* Sync_impl.c */,
+				43188A8723C4B2DD008EF79C /* Sync_impl.h */,
 			);
 			name = "sync-generated";
 			sourceTree = "<group>";
@@ -792,7 +792,6 @@
 				15B037EF22B2B822002D664C /* ber_decoder.h in Headers */,
 				158FF95E23C49ED600CB1016 /* Distribution.h in Headers */,
 				15B037B822B2B822002D664C /* NativeInteger.h in Headers */,
-				43188A7B23C4B070008EF79C /* Sync_impl.h in Headers */,
 				438C43B52167752C00C7425B /* labeled_int_list.h in Headers */,
 				159EF42822B6D3E900149C0C /* pgp_sequoia.h in Headers */,
 				15B037E222B2B822002D664C /* per_encoder.h in Headers */,
@@ -804,11 +803,12 @@
 				154918AB22B940200091B6D6 /* fsm_common.h in Headers */,
 				15147EF3237E9EA7003989FE /* GroupKeysAndClose.h in Headers */,
 				15B037E722B2B822002D664C /* GroupTrustThisKey.h in Headers */,
+				43188A9523C4B2DE008EF79C /* Sync_event.h in Headers */,
 				15B037C522B2B822002D664C /* Beacon.h in Headers */,
 				15B0380622B2B822002D664C /* CommitAcceptForGroup.h in Headers */,
 				15B037D622B2B822002D664C /* KeySync.h in Headers */,
 				15B037FD22B2B822002D664C /* Hex.h in Headers */,
-				43188A7E23C4B070008EF79C /* distribution_codec.h in Headers */,
+				43188A9A23C4B2DE008EF79C /* distribution_codec.h in Headers */,
 				15B0381222B2B823002D664C /* OwnKeysOfferer.h in Headers */,
 				15B037ED22B2B822002D664C /* BIT_STRING.h in Headers */,
 				15B037DC22B2B822002D664C /* constraints.h in Headers */,
@@ -817,15 +817,14 @@
 				15B037CC22B2B822002D664C /* ber_tlv_tag.h in Headers */,
 				154918BC22B940200091B6D6 /* openpgp_compat.h in Headers */,
 				154918B222B940200091B6D6 /* aux_mime_msg.h in Headers */,
-				43188A7C23C4B070008EF79C /* sync_codec.h in Headers */,
 				15B0381422B2B823002D664C /* asn_SEQUENCE_OF.h in Headers */,
+				43188A9623C4B2DE008EF79C /* KeySync_fsm.h in Headers */,
 				158FF95D23C49ED600CB1016 /* InitUnledGroupKeyReset.h in Headers */,
 				15B037FA22B2B822002D664C /* INTEGER.h in Headers */,
 				15B037F322B2B822002D664C /* CommitAccept.h in Headers */,
 				15B037CF22B2B822002D664C /* NativeEnumerated.h in Headers */,
 				15B037D822B2B822002D664C /* Version.h in Headers */,
 				15B037D022B2B822002D664C /* constr_TYPE.h in Headers */,
-				43188A7A23C4B070008EF79C /* Sync_event.h in Headers */,
 				15B037B422B2B822002D664C /* PString.h in Headers */,
 				15B037F922B2B822002D664C /* per_support.h in Headers */,
 				15B037C022B2B822002D664C /* per_opentype.h in Headers */,
@@ -833,20 +832,21 @@
 				15B037B622B2B822002D664C /* IdentityList.h in Headers */,
 				15B037E622B2B822002D664C /* constr_CHOICE.h in Headers */,
 				646C414F1D510D8800C63EFF /* baseprotocol.h in Headers */,
-				43188A7F23C4B070008EF79C /* KeySync_fsm.h in Headers */,
+				43188A9423C4B2DE008EF79C /* Sync_impl.h in Headers */,
 				15B0381022B2B823002D664C /* CommitAcceptRequester.h in Headers */,
 				15B0380A22B2B822002D664C /* asn_internal.h in Headers */,
 				15B037D922B2B822002D664C /* xer_encoder.h in Headers */,
 				154918C322B940200091B6D6 /* blacklist.h in Headers */,
 				158FF95C23C49ED600CB1016 /* KeyReset.h in Headers */,
 				15B037BF22B2B822002D664C /* BOOLEAN.h in Headers */,
+				43188A9E23C4B2DE008EF79C /* sync_codec.h in Headers */,
 				6467888D1CEB3D120001F54C /* map_asn1.h in Headers */,
 				154918BA22B940200091B6D6 /* resource_id.h in Headers */,
 				15B037BA22B2B822002D664C /* asn_system.h in Headers */,
 				15B037E522B2B822002D664C /* constr_SEQUENCE.h in Headers */,
 				15B037C822B2B822002D664C /* ISO639-1.h in Headers */,
 				15B037C922B2B822002D664C /* xer_decoder.h in Headers */,
-				43188A7D23C4B070008EF79C /* Sync_func.h in Headers */,
+				43188A9923C4B2DE008EF79C /* Sync_func.h in Headers */,
 				43370834203C075A004E6547 /* sqlite3.h in Headers */,
 				15147EF1237E9EA7003989FE /* GroupHandshake.h in Headers */,
 				15B037D522B2B822002D664C /* TID.h in Headers */,
@@ -1053,8 +1053,6 @@
 				43495982239E417300CF1E12 /* GroupKeyReset.c in Sources */,
 				15B037B122B2B822002D664C /* NegotiationRequest.c in Sources */,
 				15B037FC22B2B822002D664C /* Hex.c in Sources */,
-				43188A6323C4A81F008EF79C /* Sync_impl.c in Sources */,
-				43188A6723C4A81F008EF79C /* Sync_func.c in Sources */,
 				432714AB23A10B3B007EAD4A /* GroupKeysUpdate.c in Sources */,
 				43E4FBB22362C05600BC01F4 /* NegotiationRequestGrouped.c in Sources */,
 				15B0380722B2B822002D664C /* constr_CHOICE.c in Sources */,
@@ -1064,6 +1062,7 @@
 				15B037FE22B2B822002D664C /* xer_encoder.c in Sources */,
 				158FF96323C49ED600CB1016 /* InitUnledGroupKeyReset.c in Sources */,
 				159EF42722B6D3E900149C0C /* pgp_sequoia.c in Sources */,
+				43188A9323C4B2DE008EF79C /* sync_codec.c in Sources */,
 				64A8267B1B455D0800EECAF0 /* etpan_mime.c in Sources */,
 				15B037AC22B2B822002D664C /* CommitAccept.c in Sources */,
 				64A8267A1B455D0800EECAF0 /* email.c in Sources */,
@@ -1079,17 +1078,18 @@
 				43E4FBB42362C29100BC01F4 /* GroupHandshake.c in Sources */,
 				15B037F622B2B822002D664C /* Version.c in Sources */,
 				15B037C622B2B822002D664C /* xer_support.c in Sources */,
+				43188A9B23C4B2DE008EF79C /* Sync_func.c in Sources */,
 				15B037EC22B2B822002D664C /* constraints.c in Sources */,
 				15B0380522B2B822002D664C /* asn_codecs_prim.c in Sources */,
 				64A8267E1B455D0800EECAF0 /* message_api.c in Sources */,
 				15B037D122B2B822002D664C /* per_encoder.c in Sources */,
 				15B037CB22B2B822002D664C /* ISO639-1.c in Sources */,
 				15B037AF22B2B822002D664C /* constr_SEQUENCE.c in Sources */,
+				43188A9723C4B2DE008EF79C /* distribution_codec.c in Sources */,
 				15B037B722B2B822002D664C /* Sync.c in Sources */,
 				64A826891B455D0800EECAF0 /* trans_auto.c in Sources */,
 				15B0380922B2B822002D664C /* per_support.c in Sources */,
 				15B037D222B2B822002D664C /* CommitAcceptRequester.c in Sources */,
-				43188A6523C4A81F008EF79C /* KeySync_fsm.c in Sources */,
 				15B037E122B2B822002D664C /* GroupTrustThisKey.c in Sources */,
 				43F73C112166282C00AB4524 /* sync_api.c in Sources */,
 				64A8267D1B455D0800EECAF0 /* keymanagement.c in Sources */,
@@ -1102,6 +1102,7 @@
 				15B037C222B2B822002D664C /* asn_SEQUENCE_OF.c in Sources */,
 				64A826791B455D0800EECAF0 /* cryptotech.c in Sources */,
 				64A826781B455D0800EECAF0 /* bloblist.c in Sources */,
+				43188A9F23C4B2DE008EF79C /* Sync_actions.c in Sources */,
 				15B0381122B2B823002D664C /* CommitAcceptForGroup.c in Sources */,
 				C46EBAED216E445F0042A6A3 /* base64.c in Sources */,
 				430BCC492015EE800077E998 /* pEp_string.c in Sources */,
@@ -1112,7 +1113,6 @@
 				15B037F422B2B822002D664C /* ber_decoder.c in Sources */,
 				43370833203C075A004E6547 /* sqlite3.c in Sources */,
 				15B0380122B2B822002D664C /* asn_SET_OF.c in Sources */,
-				43188A6123C4A81F008EF79C /* sync_codec.c in Sources */,
 				15B037DE22B2B822002D664C /* KeySync.c in Sources */,
 				15B037C322B2B822002D664C /* constr_SEQUENCE_OF.c in Sources */,
 				15B037DF22B2B822002D664C /* IdentityList.c in Sources */,
@@ -1125,20 +1125,20 @@
 				15B037AA22B2B822002D664C /* ber_tlv_length.c in Sources */,
 				15B037F822B2B822002D664C /* OwnKeysOfferer.c in Sources */,
 				430D258B1C9ED75A00B94535 /* blacklist.c in Sources */,
-				43188A6423C4A81F008EF79C /* distribution_codec.c in Sources */,
 				15B0380E22B2B822002D664C /* PrintableString.c in Sources */,
 				15B037E922B2B822002D664C /* CommitAcceptOfferer.c in Sources */,
 				432713B023A10B07007EAD4A /* GroupKeysForNewMember.c in Sources */,
 				646C414E1D510D8800C63EFF /* baseprotocol.c in Sources */,
 				15B037C722B2B822002D664C /* per_decoder.c in Sources */,
 				6467888C1CEB3D120001F54C /* map_asn1.c in Sources */,
+				43188A9C23C4B2DE008EF79C /* Sync_impl.c in Sources */,
 				43F73C122166282C00AB4524 /* growing_buf.c in Sources */,
 				64A826801B455D0800EECAF0 /* mime.c in Sources */,
-				43188A6623C4A81F008EF79C /* Sync_event.c in Sources */,
-				43188A6223C4A81F008EF79C /* Sync_actions.c in Sources */,
+				43188A9D23C4B2DE008EF79C /* Sync_event.c in Sources */,
 				64A8267F1B455D0800EECAF0 /* message.c in Sources */,
 				64A826811B455D0800EECAF0 /* pEpEngine.c in Sources */,
 				15B037FF22B2B822002D664C /* per_opentype.c in Sources */,
+				43188A9823C4B2DE008EF79C /* KeySync_fsm.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
