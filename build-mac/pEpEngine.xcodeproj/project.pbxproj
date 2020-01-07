@@ -148,10 +148,8 @@
 		43188A9423C4B2DE008EF79C /* Sync_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A8723C4B2DD008EF79C /* Sync_impl.h */; };
 		43188A9523C4B2DE008EF79C /* Sync_event.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A8823C4B2DD008EF79C /* Sync_event.h */; };
 		43188A9623C4B2DE008EF79C /* KeySync_fsm.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A8923C4B2DD008EF79C /* KeySync_fsm.h */; };
-		43188A9723C4B2DE008EF79C /* distribution_codec.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A8A23C4B2DD008EF79C /* distribution_codec.c */; };
 		43188A9823C4B2DE008EF79C /* KeySync_fsm.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A8B23C4B2DE008EF79C /* KeySync_fsm.c */; };
 		43188A9923C4B2DE008EF79C /* Sync_func.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A8C23C4B2DE008EF79C /* Sync_func.h */; };
-		43188A9A23C4B2DE008EF79C /* distribution_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188A8D23C4B2DE008EF79C /* distribution_codec.h */; };
 		43188A9B23C4B2DE008EF79C /* Sync_func.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A8E23C4B2DE008EF79C /* Sync_func.c */; };
 		43188A9C23C4B2DE008EF79C /* Sync_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A8F23C4B2DE008EF79C /* Sync_impl.c */; };
 		43188A9D23C4B2DE008EF79C /* Sync_event.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188A9023C4B2DE008EF79C /* Sync_event.c */; };
@@ -163,6 +161,8 @@
 		43188AAD23C4B549008EF79C /* Commands.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188AAB23C4B549008EF79C /* Commands.h */; };
 		43188AB623C4B6B9008EF79C /* Command.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188AB023C4B6B9008EF79C /* Command.c */; };
 		43188AB723C4B6B9008EF79C /* Command.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188AB523C4B6B9008EF79C /* Command.h */; };
+		43188AC023C4BBDE008EF79C /* distribution_codec.c in Sources */ = {isa = PBXBuildFile; fileRef = 43188ABE23C4BBDD008EF79C /* distribution_codec.c */; };
+		43188AC123C4BBDE008EF79C /* distribution_codec.h in Headers */ = {isa = PBXBuildFile; fileRef = 43188ABF23C4BBDE008EF79C /* distribution_codec.h */; };
 		431F04B722733A7E00CCE960 /* key_reset.h in Headers */ = {isa = PBXBuildFile; fileRef = 431F04B222733A7E00CCE960 /* key_reset.h */; };
 		432713B023A10B07007EAD4A /* GroupKeysForNewMember.c in Sources */ = {isa = PBXBuildFile; fileRef = 432713AF23A10B07007EAD4A /* GroupKeysForNewMember.c */; };
 		432714AB23A10B3B007EAD4A /* GroupKeysUpdate.c in Sources */ = {isa = PBXBuildFile; fileRef = 432714AA23A10B3B007EAD4A /* GroupKeysUpdate.c */; };
@@ -398,10 +398,8 @@
 		43188A8723C4B2DD008EF79C /* Sync_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Sync_impl.h; path = ../src/Sync_impl.h; sourceTree = "<group>"; };
 		43188A8823C4B2DD008EF79C /* Sync_event.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Sync_event.h; path = ../src/Sync_event.h; sourceTree = "<group>"; };
 		43188A8923C4B2DD008EF79C /* KeySync_fsm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KeySync_fsm.h; path = ../src/KeySync_fsm.h; sourceTree = "<group>"; };
-		43188A8A23C4B2DD008EF79C /* distribution_codec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = distribution_codec.c; path = ../src/distribution_codec.c; sourceTree = "<group>"; };
 		43188A8B23C4B2DE008EF79C /* KeySync_fsm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = KeySync_fsm.c; path = ../src/KeySync_fsm.c; sourceTree = "<group>"; };
 		43188A8C23C4B2DE008EF79C /* Sync_func.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Sync_func.h; path = ../src/Sync_func.h; sourceTree = "<group>"; };
-		43188A8D23C4B2DE008EF79C /* distribution_codec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = distribution_codec.h; path = ../src/distribution_codec.h; sourceTree = "<group>"; };
 		43188A8E23C4B2DE008EF79C /* Sync_func.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_func.c; path = ../src/Sync_func.c; sourceTree = "<group>"; };
 		43188A8F23C4B2DE008EF79C /* Sync_impl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_impl.c; path = ../src/Sync_impl.c; sourceTree = "<group>"; };
 		43188A9023C4B2DE008EF79C /* Sync_event.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Sync_event.c; path = ../src/Sync_event.c; sourceTree = "<group>"; };
@@ -413,6 +411,8 @@
 		43188AAB23C4B549008EF79C /* Commands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Commands.h; path = ../asn.1/Commands.h; sourceTree = "<group>"; };
 		43188AB023C4B6B9008EF79C /* Command.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Command.c; path = ../asn.1/Command.c; sourceTree = "<group>"; };
 		43188AB523C4B6B9008EF79C /* Command.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Command.h; path = ../asn.1/Command.h; sourceTree = "<group>"; };
+		43188ABE23C4BBDD008EF79C /* distribution_codec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = distribution_codec.c; path = ../src/distribution_codec.c; sourceTree = "<group>"; };
+		43188ABF23C4BBDE008EF79C /* distribution_codec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = distribution_codec.h; path = ../src/distribution_codec.h; sourceTree = "<group>"; };
 		431F04B222733A7E00CCE960 /* key_reset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = key_reset.h; path = ../src/key_reset.h; sourceTree = "<group>"; };
 		432713AF23A10B07007EAD4A /* GroupKeysForNewMember.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysForNewMember.c; path = ../asn.1/GroupKeysForNewMember.c; sourceTree = "<group>"; };
 		432714AA23A10B3B007EAD4A /* GroupKeysUpdate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysUpdate.c; path = ../asn.1/GroupKeysUpdate.c; sourceTree = "<group>"; };
@@ -526,8 +526,6 @@
 		43188A5523C4A7F8008EF79C /* sync-generated */ = {
 			isa = PBXGroup;
 			children = (
-				43188A8A23C4B2DD008EF79C /* distribution_codec.c */,
-				43188A8D23C4B2DE008EF79C /* distribution_codec.h */,
 				43188A8B23C4B2DE008EF79C /* KeySync_fsm.c */,
 				43188A8923C4B2DD008EF79C /* KeySync_fsm.h */,
 				43188A9223C4B2DE008EF79C /* Sync_actions.c */,
@@ -724,6 +722,8 @@
 		64A8264B1B455C5600EECAF0 /* srcref */ = {
 			isa = PBXGroup;
 			children = (
+				43188ABE23C4BBDD008EF79C /* distribution_codec.c */,
+				43188ABF23C4BBDE008EF79C /* distribution_codec.h */,
 				43188AA223C4B4B3008EF79C /* keyreset_command.c */,
 				43188AA723C4B4B3008EF79C /* keyreset_command.h */,
 				154918A222B9401F0091B6D6 /* aux_mime_msg.c */,
@@ -826,12 +826,12 @@
 				15B0380622B2B822002D664C /* CommitAcceptForGroup.h in Headers */,
 				15B037D622B2B822002D664C /* KeySync.h in Headers */,
 				15B037FD22B2B822002D664C /* Hex.h in Headers */,
-				43188A9A23C4B2DE008EF79C /* distribution_codec.h in Headers */,
 				15B0381222B2B823002D664C /* OwnKeysOfferer.h in Headers */,
 				15B037ED22B2B822002D664C /* BIT_STRING.h in Headers */,
 				15B037DC22B2B822002D664C /* constraints.h in Headers */,
 				15B037F222B2B822002D664C /* constr_SEQUENCE_OF.h in Headers */,
 				15B0380022B2B822002D664C /* xer_support.h in Headers */,
+				43188AC123C4BBDE008EF79C /* distribution_codec.h in Headers */,
 				15B037CC22B2B822002D664C /* ber_tlv_tag.h in Headers */,
 				154918BC22B940200091B6D6 /* openpgp_compat.h in Headers */,
 				154918B222B940200091B6D6 /* aux_mime_msg.h in Headers */,
@@ -1107,7 +1107,6 @@
 				15B037D122B2B822002D664C /* per_encoder.c in Sources */,
 				15B037CB22B2B822002D664C /* ISO639-1.c in Sources */,
 				15B037AF22B2B822002D664C /* constr_SEQUENCE.c in Sources */,
-				43188A9723C4B2DE008EF79C /* distribution_codec.c in Sources */,
 				15B037B722B2B822002D664C /* Sync.c in Sources */,
 				64A826891B455D0800EECAF0 /* trans_auto.c in Sources */,
 				15B0380922B2B822002D664C /* per_support.c in Sources */,
@@ -1150,6 +1149,7 @@
 				430D258B1C9ED75A00B94535 /* blacklist.c in Sources */,
 				15B0380E22B2B822002D664C /* PrintableString.c in Sources */,
 				15B037E922B2B822002D664C /* CommitAcceptOfferer.c in Sources */,
+				43188AC023C4BBDE008EF79C /* distribution_codec.c in Sources */,
 				432713B023A10B07007EAD4A /* GroupKeysForNewMember.c in Sources */,
 				646C414E1D510D8800C63EFF /* baseprotocol.c in Sources */,
 				43188AB623C4B6B9008EF79C /* Command.c in Sources */,
