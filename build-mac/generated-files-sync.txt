@@ -7,5 +7,7 @@ $(SRCROOT)/../src/Sync_func.c
 $(SRCROOT)/../src/Sync_func.h
 $(SRCROOT)/../src/Sync_impl.c
 $(SRCROOT)/../src/Sync_impl.h
+$(SRCROOT)/../src/distribution_codec.c
+$(SRCROOT)/../src/distribution_codec.h
 $(SRCROOT)/../src/sync_codec.c
 $(SRCROOT)/../src/sync_codec.h
