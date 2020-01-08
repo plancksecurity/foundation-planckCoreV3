@@ -3610,6 +3610,7 @@ static PEP_STATUS _decrypt_message(
     
     bool imported_private_key_address = false;
     bool has_inner = false;
+    bool is_key_reset = false;
 
     if (ptext) { 
         /* we got a plaintext from decryption */
@@ -3777,7 +3778,6 @@ static PEP_STATUS _decrypt_message(
                         // Sort out pEp user status and version number based on INNER message.
                         
                         bool is_inner = false;
-                        bool is_key_reset = false;
 
                         // Deal with plaintext modification in 1.0 and 2.0 messages
                         status = unencapsulate_hidden_fields(inner_message, NULL, &wrap_info);   
@@ -3815,6 +3815,7 @@ static PEP_STATUS _decrypt_message(
                                     goto pEp_error;
                                 }
                                 *flags |= PEP_decrypt_flag_consume;
+                                calculated_src = msg = inner_message;                                    
                             }
                         }
                         else if (is_inner) {
@@ -3896,17 +3897,20 @@ static PEP_STATUS _decrypt_message(
         // Ok, so if it was signed and it's all verified, we can update
         // eligible signer comm_types to PEP_ct_pEp_*
         // This also sets and upgrades pEp version
-        if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && is_pEp_msg && calculated_src->from)
+        if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && !is_key_reset && is_pEp_msg && calculated_src->from)
             status = update_sender_to_pEp_trust(session, calculated_src->from, _keylist, major_ver, minor_ver);
 
         /* Ok, now we have a keylist used for decryption/verification.
            now we need to update the message rating with the 
            sender and recipients in mind */
-        status = amend_rating_according_to_sender_and_recipients(session,
-                 rating, calculated_src->from, _keylist);
-
-        if (status != PEP_STATUS_OK)
-            goto pEp_error;
+           
+        if (!is_key_reset) { // key reset messages invalidate some of the ratings in the DB by now.
+            status = amend_rating_according_to_sender_and_recipients(session,
+                     rating, calculated_src->from, _keylist);
+            if (status != PEP_STATUS_OK)
+                goto pEp_error;
+         
+        }             
         
         /* We decrypted ok, hallelujah. */
         msg->enc_format = PEP_enc_none;    

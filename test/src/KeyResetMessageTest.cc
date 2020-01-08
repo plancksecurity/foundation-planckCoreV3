@@ -40,7 +40,7 @@ class KeyResetMessageTest : public ::testing::Test {
         const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
         const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
     
-        const char* alice_receive_reset_fpr = "6A349E4F68801E39145CD4C5712616A385412538";
+        const char* alice_receive_reset_fpr = "B6C09F07E93CEEC39E5326DF1CCD0383597D2701";
 
         const string alice_user_id = PEP_OWN_USERID;
         const string bob_user_id = "BobId";
@@ -160,7 +160,7 @@ class KeyResetMessageTest : public ::testing::Test {
 
             status = set_up_ident_from_scratch(session,
                         "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc",
-                        "pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), "Alice is tired of Bob",
+                        "pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), "Alice in Wonderland",
                         NULL, false
                     );
             ASSERT_EQ(status, PEP_STATUS_OK);
@@ -182,7 +182,7 @@ class KeyResetMessageTest : public ::testing::Test {
 
             status = set_up_ident_from_scratch(session,
                         "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc",
-                        "pep.test.alice@pep-project.org", NULL, "AliceOther", "Alice is tired of Bob",
+                        "pep.test.alice@pep-project.org", NULL, "AliceOther", "Alice in Wonderland",
                         NULL, false
                     );
 
@@ -236,6 +236,7 @@ PEP_STATUS KRMT_message_send_callback(message* msg) {
     return PEP_STATUS_OK;
 }
 
+// FAIL
 TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
     send_setup();
 
@@ -342,16 +343,24 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
 
         // Uncomment to regenerate received message - remember to update
         // alice_receive_reset_fpr
-        // if (strcmp(curr_sent_msg->to->ident->user_id, bob_user_id.c_str()) == 0) {
-        //     char* bob_msg = NULL;
-        //     mime_encode_message(curr_sent_msg, false, &bob_msg);
-        //     output_stream << bob_msg;
-        // }
-        // else if (strcmp(curr_sent_msg->to->ident->user_id, fenris_user_id.c_str()) == 0) {
-        //     char* fenris_msg = NULL;
-        //     mime_encode_message(curr_sent_msg, false, &fenris_msg);
-        //     output_stream << fenris_msg;
-        // }
+        if (false) {
+            if (strcmp(curr_sent_msg->to->ident->user_id, bob_user_id.c_str()) == 0) {
+                ofstream outfile;
+                outfile.open("test_files/398_reset_from_alice_to_bob.eml");
+                char* bob_msg = NULL;
+                mime_encode_message(curr_sent_msg, false, &bob_msg);
+                outfile << bob_msg;
+                outfile.close();
+            }
+            else if (strcmp(curr_sent_msg->to->ident->user_id, fenris_user_id.c_str()) == 0) {
+                ofstream outfile;
+                outfile.open("test_files/398_reset_from_alice_to_fenris.eml");            
+                char* fenris_msg = NULL;
+                mime_encode_message(curr_sent_msg, false, &fenris_msg);
+                outfile << fenris_msg;
+                outfile.close();
+            }
+        }    
     }
 
     // MESSAGE LIST NOW INVALID.
@@ -364,8 +373,10 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
     ASSERT_FALSE(hashmap[dave_user_id]);
     ASSERT_TRUE(hashmap[erin_user_id]);
     ASSERT_TRUE(hashmap[fenris_user_id]);
+    cout << "HEY! reset_fpr is " << new_fpr << endl;    
 }
 
+// PASS
 TEST_F(KeyResetMessageTest, check_non_reset_receive_revoked) {
     receive_setup();
     pEp_identity* alice_ident = new_identity("pep.test.alice@pep-project.org", NULL,
@@ -398,6 +409,7 @@ TEST_F(KeyResetMessageTest, check_non_reset_receive_revoked) {
     free(keylist);
 }
 
+// FAIL (fix mail)
 TEST_F(KeyResetMessageTest, check_reset_receive_revoked) {
     PEP_STATUS status = set_up_ident_from_scratch(session,
                 "test_keys/pub/pep.test.fenris-0x4F3D2900_pub.asc",
@@ -408,19 +420,19 @@ TEST_F(KeyResetMessageTest, check_reset_receive_revoked) {
     status = set_up_ident_from_scratch(session,
                 "test_keys/priv/pep.test.fenris-0x4F3D2900_priv.asc",
                 "pep.test.fenris@thisstilldoesntwork.lu", NULL, fenris_user_id.c_str(),
-                "Fenris Leto Hawke", NULL, false
+                "Fenris Leto Hawke", NULL, true
             );
     ASSERT_EQ(status, PEP_STATUS_OK);
 
     status = set_up_ident_from_scratch(session,
                 "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc",
-                "pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), "Alice is tired of Bob",
+                "pep.test.alice@pep-project.org", NULL, "ALICE_IS_NOT_OWN_ID", "Alice in Wonderland",
                 NULL, false
             );
     ASSERT_EQ(status, PEP_STATUS_OK);
 
     pEp_identity* alice_ident = new_identity("pep.test.alice@pep-project.org", NULL,
-                                            alice_user_id.c_str(), NULL);
+                                            "ALICE_IS_NOT_OWN_ID", "Alice in Wonderland");
 
     status = update_identity(session, alice_ident);
     ASSERT_EQ(status , PEP_STATUS_OK);
@@ -449,7 +461,7 @@ TEST_F(KeyResetMessageTest, check_reset_receive_revoked) {
     free(keylist);
 }
 
-
+// PASS
 TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_unknown) {
     // create_msg_for_revoked_key(); // call to recreate msg
     send_setup();
@@ -479,6 +491,7 @@ TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_unknown) {
     free_identity(from_ident);
 }
 
+// FAIL
 TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_contact) {
     // create_msg_for_revoked_key(); // call to recreate msg
     send_setup();
@@ -560,6 +573,7 @@ TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_contact) {
     }
 }
 
+// FAIL
 TEST_F(KeyResetMessageTest, check_multiple_resets_single_key) {
     send_setup();
 
@@ -581,6 +595,7 @@ TEST_F(KeyResetMessageTest, check_multiple_resets_single_key) {
     ASSERT_TRUE(from_ident->fpr != NULL && from_ident->fpr[0] != 0);
 }
 
+// PASS
 TEST_F(KeyResetMessageTest, check_reset_ident_uid_only) {
     send_setup(); // lazy
     pEp_identity* bob = new_identity(NULL, NULL, bob_user_id.c_str(), NULL);
@@ -590,6 +605,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_uid_only) {
     ASSERT_EQ(status , PEP_ILLEGAL_VALUE);
 }
 
+// PASS
 TEST_F(KeyResetMessageTest, check_reset_ident_address_only) {
     send_setup(); // lazy
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, NULL, NULL);
@@ -598,12 +614,14 @@ TEST_F(KeyResetMessageTest, check_reset_ident_address_only) {
     ASSERT_EQ(status , PEP_ILLEGAL_VALUE);
 }
 
+// PASS
 TEST_F(KeyResetMessageTest, check_reset_ident_null_ident) {
     // Ok, let's reset it
     PEP_STATUS status = key_reset_identity(session, NULL, NULL);
     ASSERT_EQ(status , PEP_ILLEGAL_VALUE);
 }
 
+// PASS
 TEST_F(KeyResetMessageTest, check_reset_ident_other_pub_fpr) {
     send_setup(); // lazy
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, bob_user_id.c_str(), NULL);
@@ -627,6 +645,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_other_pub_fpr) {
     // TODO: import key, verify PEP_ct_OpenPGP_unconfirmed
 }
 
+// PASS
 // Corner case?
 TEST_F(KeyResetMessageTest, check_reset_ident_other_priv_fpr) {
     send_setup(); // lazy
@@ -657,6 +676,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_other_priv_fpr) {
     // TODO: import key, verify PEP_ct_OpenPGP_unconfirmed
 }
 
+// PASS
 TEST_F(KeyResetMessageTest, check_reset_ident_other_pub_no_fpr) {
     send_setup(); // lazy
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, bob_user_id.c_str(), NULL);
@@ -685,6 +705,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_other_pub_no_fpr) {
 //    const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
 // TODO: multiplr keys above
 
+// PASS
 TEST_F(KeyResetMessageTest, check_reset_ident_other_priv_no_fpr) {
     send_setup(); // lazy
     // Also import Bob's private key, because that dude is a fool.
@@ -715,6 +736,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_other_priv_no_fpr) {
     // TODO: import key, verify PEP_ct_OpenPGP_unconfirmed
 }
 
+// PASS
 TEST_F(KeyResetMessageTest, check_reset_ident_own_pub_fpr) {
     send_setup(); // lazy
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
@@ -744,6 +766,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_own_pub_fpr) {
     ASSERT_EQ(status , PEP_CANNOT_FIND_IDENTITY);
 }
 
+// PASS
 TEST_F(KeyResetMessageTest, check_reset_ident_own_priv_fpr) {
     send_setup(); // lazy
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
@@ -762,6 +785,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_own_priv_fpr) {
     ASSERT_STRNE(alice_fpr, alice_new_fpr);
 }
 
+// PASS
 TEST_F(KeyResetMessageTest, check_reset_ident_own_priv_no_fpr) {
     send_setup(); // lazy
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
@@ -781,6 +805,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_own_priv_no_fpr) {
     ASSERT_STRNE(alice_fpr, alice_new_fpr);
 }
 
+// PASS
 TEST_F(KeyResetMessageTest, check_reset_user_other_no_fpr) {
       char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
       char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
@@ -841,6 +866,7 @@ test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
 
 }
 
+// PASS
 TEST_F(KeyResetMessageTest, check_reset_user_other_fpr) {
       char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
       char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
@@ -912,6 +938,7 @@ test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
     free_identity(alex_id);
 }
 
+// FAIL
 TEST_F(KeyResetMessageTest, check_reset_user_own_fpr) {
       char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
       char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
@@ -978,6 +1005,7 @@ test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
     free_identity(alex_id);
 }
 
+// PASS
 TEST_F(KeyResetMessageTest, check_reset_user_no_fpr) {
       char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
       char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
@@ -1020,6 +1048,7 @@ test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
     free_identity(alex_id);
 }
 
+// FAIL
 TEST_F(KeyResetMessageTest, check_reset_all_own_keys) {
       char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
       char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
@@ -1110,6 +1139,7 @@ test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
     free_identity(alex_id);
 }
 
+// PASS
 TEST_F(KeyResetMessageTest, check_reset_all_own_no_own) {
       char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
       char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
@@ -1217,6 +1247,7 @@ TEST_F(KeyResetMessageTest, not_a_test) {
     myfile.close();      
 }
 
+// PASS
 TEST_F(KeyResetMessageTest, check_no_reset_message_to_self) {
     pEp_identity* bob = NULL;
     PEP_STATUS status = set_up_preset(session, BOB,
@@ -1247,7 +1278,7 @@ TEST_F(KeyResetMessageTest, check_no_reset_message_to_self) {
     ASSERT_EQ(status, PEP_VERIFY_SIGNER_KEY_REVOKED);
 }
 
-
+// PASS
 TEST_F(KeyResetMessageTest, check_reset_mistrust_next_msg_have_not_mailed) {
     pEp_identity* carol = NULL;
     PEP_STATUS status = set_up_preset(session, CAROL,
@@ -1438,6 +1469,8 @@ TEST_F(KeyResetMessageTest, check_reset_own_with_revocations) {
     }
 }
 */
+
+// PASS
 TEST_F(KeyResetMessageTest, codec_test) {
     // create input values
 

@@ -41,6 +41,8 @@ static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
     
     stringlist_t* keydata = NULL;
     
+    message* msg = NULL;
+    
     // Ok, generate payload here...
     pEp_identity* outgoing_ident = identity_dup(from_ident);
     if (!outgoing_ident)
@@ -56,7 +58,6 @@ static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
     char* payload = NULL;
     size_t size = 0;
     status = key_reset_commands_to_PER(kr_list, &payload, &size);
-    message* msg = NULL;
     status = base_prepare_message(session, outgoing_ident, to_ident,
                                   BASE_KEYRESET, payload, size, NULL,
                                   &msg);
@@ -98,6 +99,8 @@ static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
         bloblist_add(msg->attachments, curr_key->value, size, "application/pgp-keys",
                                                               "file://pEpkey.asc");
     }
+    if (msg)
+        *dst = msg;
     return status;
 }
 
@@ -204,6 +207,13 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
 
     bool revoked = false;
 
+    // Check to see if sender fpr is revoked already - if this was 
+    // from us, we won't have done it yet for obvious reasons (i.e. 
+    // we need to verify it's from us before we accept someone telling
+    // us to reset our private key), and if this was from someone else,
+    // a key reset message will be signed by their new key, because 
+    // we presume the old one was compromised (and we remove trust from 
+    // the replacement key until verified)
     status = key_revoked(session, sender_fpr, &revoked); 
     
     if (status != PEP_STATUS_OK)
@@ -244,6 +254,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
     }
     
     bool sender_own_key = false;
+    bool from_me = is_me(session, sender_id);
     
     if (is_me(session, sender_id)) {
         // Do own-reset-checks
@@ -274,12 +285,13 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
     size_t size = 0;
     const char* payload = NULL;
 
+    char* not_used_fpr = NULL;
     status = base_extract_message(session,
                                   reset_msg,
                                   BASE_KEYRESET,
                                   &size,
                                   &payload,
-                                  NULL);
+                                  &not_used_fpr);
                                   
     if (status != PEP_STATUS_OK)
         return status;
@@ -298,21 +310,24 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         return PEP_MALFORMED_KEY_RESET_MSG;
 
     keyreset_command_list* curr_cl = resets;
-    
+
+    // Ok, go through the list of reset commands. Right now, this 
+    // is actually only one, but could be more later.
     for ( ; curr_cl && curr_cl->command; curr_cl = curr_cl->next) {    
         keyreset_command* curr_cmd = curr_cl->command;
         if (!curr_cmd || !curr_cmd->ident || !curr_cmd->ident->fpr ||
             !curr_cmd->ident->address) {
             return PEP_MALFORMED_KEY_RESET_MSG;        
         }
-        // Make sure that this key is at least one we associate 
-        // with the sender. FIXME: check key election interaction
-        // N.B. If we ever allow ourselves to send resets to ourselves
-        // for not-own stuff, this will have to be revised
         pEp_identity* curr_ident = curr_cmd->ident;
         
         old_fpr = curr_ident->fpr;
         new_fpr = curr_cmd->new_key;
+
+        // Make sure that this key is at least one we associate 
+        // with the sender. FIXME: check key election interaction
+        // N.B. If we ever allow ourselves to send resets to ourselves
+        // for not-own stuff, this will have to be revised
         
         status = find_keys(session, new_fpr, &keylist);
         if (status != PEP_STATUS_OK)
@@ -324,39 +339,91 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         
         // We need to update the identity to get the user_id
         curr_ident->fpr = NULL; // ensure old_fpr is preserved
+        free(curr_ident->user_id);
+        curr_ident->user_id = NULL;
         status = update_identity(session, curr_ident);
         
+        // Ok, now check the old fpr to see if we have an entry for it
         // temp fpr set for function call
-        curr_ident->fpr = (char*)sender_fpr;
+        curr_ident->fpr = old_fpr;
         status = get_trust(session, curr_ident);
-        
-        PEP_comm_type ct_result = curr_ident->comm_type;
-        
-        // Reset fpr on ident struct in case we bail to fulfill ownership contract
-        curr_ident->fpr = old_fpr;    
-
         if (status != PEP_STATUS_OK)
             return status;
+        
+        PEP_comm_type ct_result = curr_ident->comm_type;
 
         // Basically, see if fpr is even in the database
         // for this user - we'll get PEP_ct_unknown if it isn't
-        if (ct_result < PEP_ct_strong_but_unconfirmed)
+        if (ct_result == PEP_ct_unknown)
             return PEP_KEY_NOT_RESET;
-            
+        
+        // Alright, so we have a key to reset. Good.
+        
+        // If this is a non-own user, for NOW, we presume key reset 
+        // by email for non-own keys is ONLY in case of revoke-and-replace. 
+        // This means we have, at a *minimum*, an object that once 
+        // required the initial private key in order to replace that key 
+        // with another.
+        //
+        // The limitations on what this guarantees are known - this does 
+        // not prevent, for example, replay attacks from someone with 
+        // access to the original revocation cert are possible if they 
+        // get to us before we receive this object from the original sender.
+        // The best we can do in this case is to NOT trust the new key.
+        // It will be used by default, but if the original was trusted,
+        // the rating will visibly change for the sender, and even if it was 
+        // not, if we do use it, the sender can report unreadable mails to us 
+        // and detect it that way. FIXME: We may need to have some kind 
+        // of even alert the user when such a change occurs for their contacts
+        //
+        // If this is from US, we already made sure that the sender_fpr 
+        // was a valid own key, so we don't consider it here.
+        if (!from_me) {
+            revoked = false;
+            status = key_revoked(session, old_fpr, &revoked); 
+
+            if (!revoked)
+                return PEP_KEY_NOT_RESET;            
+
+            // Also don't let someone change the replacement fpr 
+            // if the replacement fpr was also revoked - we really need 
+            // to detect that something fishy is going on at this point
+            // FIXME: ensure that PEP_KEY_NOT_RESET responses to 
+            // automated key reset functions are propagated upward - 
+            // app should be made aware if someone is trying to reset someone 
+            // else's key and it's failing for some reason.
+            revoked = false;
+            status = key_revoked(session, new_fpr, &revoked); 
+
+            if (revoked)
+                return PEP_KEY_NOT_RESET;                        
+        }
+        
+        // temp fpr set for function call
+        // curr_ident->fpr = (char*)sender_fpr;
+        // status = get_trust(session, curr_ident);
+        // 
+        // PEP_comm_type ct_result = curr_ident->comm_type;
+        // 
+        // // Basically, see if fpr is even in the database
+        // // for this user - we'll get PEP_ct_unknown if it isn't
+        // if (ct_result < PEP_ct_strong_but_unconfirmed)
+        //     return PEP_KEY_NOT_RESET;            
         // Now check the fpr we're trying to change (old_fpr), which we reset a few lines above -
         // again, if it doesn't belong to the user, we won't use it.
-        status = get_trust(session, curr_ident);
-
-        if (status != PEP_STATUS_OK)
-            return status;            
-
-        if (curr_ident->comm_type < PEP_ct_strong_but_unconfirmed)
-            return PEP_KEY_NOT_RESET;
+        // status = get_trust(session, curr_ident);
+        // 
+        // if (status != PEP_STATUS_OK)
+        //     return status;            
+        // 
+        // if (curr_ident->comm_type < PEP_ct_strong_but_unconfirmed)
+        //     return PEP_KEY_NOT_RESET;
             
         // Hooray! We apparently now are dealing with keys 
-        // belonging to the user from a message signed by 
-        // the user.
+        // belonging to the user from a message at least marginally
+        // from the user
         if (!sender_own_key) {
+            // Clear all info (ALSO REMOVES OLD KEY RIGHT NOW!!!)            
             status = key_reset(session, old_fpr, curr_ident);
             if (status != PEP_STATUS_OK)
                 return status;
@@ -365,7 +432,21 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             curr_ident->fpr = new_fpr;
     
             // This only sets as the default, does NOT TRUST IN ANY WAY
-            curr_ident->comm_type = curr_ident->comm_type & (~PEP_ct_confirmed);
+            PEP_comm_type new_key_rating = PEP_ct_unknown;
+            
+            // No key is ever returned as "confirmed" from here - it's based on raw key
+            status = get_key_rating(session, new_fpr, &new_key_rating);
+            if (status != PEP_STATUS_OK)
+                return status;
+
+            if (new_key_rating >= PEP_ct_strong_but_unconfirmed) {
+                bool is_pEp = false;
+                status = is_pEp_user(session, curr_ident, &is_pEp);
+                if (is_pEp)
+                    curr_ident->comm_type = PEP_ct_pEp_unconfirmed;
+                else    
+                    curr_ident->comm_type = new_key_rating & (~PEP_ct_confirmed);
+            }    
             status = set_identity(session, curr_ident);  
             if (status != PEP_STATUS_OK)
                 goto pEp_free; 
@@ -500,7 +581,7 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
             
         // Make sure they've ever *contacted* this address    
         bool in_contact_w_this_address = false;
-        status = has_partner_contacted_address(session, from_ident->address, curr_id->user_id, 
+        status = has_partner_contacted_address(session, curr_id->user_id, from_ident->address,  
                                                &in_contact_w_this_address);
         
         if (!in_contact_w_this_address)

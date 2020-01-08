@@ -3712,8 +3712,11 @@ PEP_STATUS has_partner_contacted_address(PEP_SESSION session, const char* partne
     PEP_STATUS status = PEP_STATUS_OK;
     
     sqlite3_reset(session->has_id_contacted_address);
-    sqlite3_bind_text(session->has_id_contacted_address, 1, partner_id, -1,
+    sqlite3_bind_text(session->has_id_contacted_address, 1, own_address, -1,
+            SQLITE_STATIC);            
+    sqlite3_bind_text(session->has_id_contacted_address, 2, partner_id, -1,
             SQLITE_STATIC);
+            
     int result = sqlite3_step(session->has_id_contacted_address);
     switch (result) {
         case SQLITE_ROW: {
