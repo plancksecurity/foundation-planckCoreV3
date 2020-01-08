@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 
 
+// Entering and leaving device group now requires sync events to happen, and this test needs to be upgraded. Will only run one test now, intended to fail.
 namespace {
 
 	//The fixture for EnterLeaveDeviceGroupTest
@@ -84,7 +85,11 @@ namespace {
 
 }  // namespace
 
+TEST_F(EnterLeaveDeviceGroupTest, INTENTIONAL_FAIL_UPGRADE_TEST_SUITE_FOR_SYNC_EVENT_QUEUE) {
+    ASSERT_TRUE(false);    
+}
 
+#if 0
 TEST_F(EnterLeaveDeviceGroupTest, check_enter_device_group_no_own) {
     pEp_identity* alice_id = NULL;
     ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc"));
@@ -999,3 +1004,4 @@ TEST_F(EnterLeaveDeviceGroupTest, check_leave_device_group_two_in_one_out) {
     free_identity_list(ids_to_group);
     free_identity(alice_id3);
 }
+#endif
