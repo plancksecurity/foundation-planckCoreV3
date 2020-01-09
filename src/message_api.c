@@ -4003,7 +4003,7 @@ static PEP_STATUS _decrypt_message(
                             goto pEp_error; // out of memory
 
                         identity_list* used_cc_ids = NULL;    
-                        status = ident_list_intersect(my_rev_ids, msg->to, &used_cc_ids);
+                        status = ident_list_intersect(my_rev_ids, msg->cc, &used_cc_ids);
                         if (status != PEP_STATUS_OK)
                             goto pEp_error;
 

@@ -967,8 +967,10 @@ test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
 
     alex_id->me = true;
     status = set_own_key(session, alex_id, pubkey1);
-    status = set_own_key(session, alex_id, pubkey3);
     status = set_own_key(session, alex_id, pubkey4);
+    status = set_own_key(session, alex_id, pubkey3);
+    
+    status = myself(session, alex_id);
 
     status = key_reset_user(session, alex_id->user_id, pubkey3);
 
@@ -1050,22 +1052,22 @@ test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
 
 // FAIL
 TEST_F(KeyResetMessageTest, check_reset_all_own_keys) {
-      char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
-      char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
-      char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
-      char* pubkey4 = strdup("B4CE2F6947B6947C500F0687AEFDE530BDA17020");
+    char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
+    char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
+    char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
+    char* pubkey4 = strdup("B4CE2F6947B6947C500F0687AEFDE530BDA17020");
 
-      pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
-                                            NULL,
-                                            "AlexID",
-                                            "Alexander Braithwaite");
+    pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
+                                         NULL,
+                                         "AlexID",
+                                         "Alexander Braithwaite");
 
-/*
-test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc
-test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc
-test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc
-test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
-*/
+    pEp_identity* alex_id2 = new_identity("pep.test.alexander6@darthmama.org",
+                                          NULL,
+                                          "AlexID",
+                                          "Alexander Braithwaite");
+
+
     PEP_STATUS status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc");
     status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc");
     status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc");
@@ -1076,9 +1078,14 @@ test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
     status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0xBDA17020_priv.asc");
 
     alex_id->me = true;
-    status = set_own_key(session, alex_id, pubkey1);
     status = set_own_key(session, alex_id, pubkey3);
-    status = set_own_key(session, alex_id, pubkey4);
+    status = myself(session, alex_id);
+    status = set_own_key(session, alex_id, pubkey1);
+    status = myself(session, alex_id);
+    
+    alex_id2->me = true;
+    status = set_own_key(session, alex_id2, pubkey4);
+    status = myself(session, alex_id2);
 
     status = key_reset_all_own_keys(session);
 
@@ -1104,16 +1111,16 @@ test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
 
     alex_id->fpr = pubkey3;
     status = get_trust(session, alex_id);
-    ASSERT_EQ(alex_id->comm_type , PEP_ct_mistrusted);
+    ASSERT_EQ(alex_id->comm_type , PEP_ct_pEp);
     status = find_keys(session, pubkey3, &keylist);
     ASSERT_TRUE(status == PEP_STATUS_OK && keylist && !EMPTYSTR(keylist->value));
 
     free_stringlist(keylist);
     keylist = NULL;
 
-    alex_id->fpr = pubkey4;
-    status = get_trust(session, alex_id);
-    ASSERT_EQ(alex_id->comm_type , PEP_ct_mistrusted);
+    alex_id2->fpr = pubkey4;
+    status = get_trust(session, alex_id2);
+    ASSERT_EQ(alex_id2->comm_type , PEP_ct_mistrusted);
     status = find_keys(session, pubkey4, &keylist);
     ASSERT_TRUE(status == PEP_STATUS_OK && keylist && !EMPTYSTR(keylist->value));
 
@@ -1131,6 +1138,14 @@ test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
     ASSERT_STRNE(alex_id->fpr, pubkey3);
     ASSERT_STRNE(alex_id->fpr, pubkey4);
     ASSERT_EQ(alex_id->comm_type , PEP_ct_pEp);
+
+    alex_id2->fpr = NULL;
+    status = myself(session, alex_id2);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_STRNE(alex_id2->fpr, pubkey1);
+    ASSERT_STRNE(alex_id2->fpr, pubkey2);
+    ASSERT_STRNE(alex_id2->fpr, pubkey3);
+    ASSERT_STRNE(alex_id2->fpr, pubkey4);
 
     free(pubkey1);
     free(pubkey2);

@@ -446,7 +446,10 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
                     curr_ident->comm_type = PEP_ct_pEp_unconfirmed;
                 else    
                     curr_ident->comm_type = new_key_rating & (~PEP_ct_confirmed);
-            }    
+            }
+            else
+                curr_ident->comm_type = new_key_rating;
+                
             status = set_identity(session, curr_ident);  
             if (status != PEP_STATUS_OK)
                 goto pEp_free; 
@@ -827,8 +830,10 @@ PEP_STATUS key_reset(
             for (curr_key = keys; curr_key && curr_key->value; curr_key = curr_key->next) {
                 // FIXME: Is the ident really necessary?
                 status = key_reset(session, curr_key->value, tmp_ident);
-                if (status != PEP_STATUS_OK)
+                if (status != PEP_STATUS_OK && status != PEP_CANNOT_FIND_IDENTITY)
                     break;
+                else 
+                    status = PEP_STATUS_OK;
             }
         }
         goto pEp_free;
@@ -919,12 +924,11 @@ PEP_STATUS key_reset(
                     // Ok, we've either now reset for each own identity with this key, or 
                     // we got an error and want to bail anyway.
                     goto pEp_free;
-                }    
+                }
+                else 
+                    return PEP_CANNOT_FIND_IDENTITY;
             }
             
-            if (EMPTYSTR(tmp_ident->address)) {
-                return PEP_UNKNOWN_ERROR; // FIXME - what case IS this?
-            }
             
             // Ok, first we generate a new key.
             
