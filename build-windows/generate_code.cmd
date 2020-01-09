@@ -5,11 +5,12 @@ cd %pwd%\sync
 if not exist generated mkdir generated
 
 py "%YML_PATH%\yml2proc" -E utf-8 -y gen_actions.ysl2 sync.fsm
-py "%YML_PATH%\yml2proc" -E utf-8 -y gen_statemachine.ysl2 sync.fsm
-py "%YML_PATH%\yml2proc" -E utf-8 -y gen_codec.ysl2 sync.fsm
 py "%YML_PATH%\yml2proc" -E utf-8 -y gen_codec.ysl2 distribution.fsm
+py "%YML_PATH%\yml2proc" -E utf-8 -y gen_codec.ysl2 sync.fsm
 py "%YML_PATH%\yml2proc" -E utf-8 -y gen_messages.ysl2 sync.fsm
+py "%YML_PATH%\yml2proc" -E utf-8 -y gen_messages.ysl2 distribution.fsm
 py "%YML_PATH%\yml2proc" -E utf-8 -y gen_message_func.ysl2 sync.fsm
+py "%YML_PATH%\yml2proc" -E utf-8 -y gen_statemachine.ysl2 sync.fsm
 
 xcopy /y generated\*.asn1 ..\asn.1\
 xcopy /y generated\*.c ..\src\
