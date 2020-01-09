@@ -895,96 +895,94 @@ PEP_STATUS key_reset(
         
         if (is_own_private) {
             
-            // If there's no address, we want to reset this key for every identity 
-            // it's a part of. Since this means generating new keys, we have to 
-            // grab all the identities associated with it.
-            if (EMPTYSTR(tmp_ident->address)) {
-                status = get_identities_by_main_key_id(session, fpr_copy, &key_idents);
-                
-                if (status != PEP_CANNOT_FIND_IDENTITY) {
-                    if (status == PEP_STATUS_OK) {
-                        // now have ident list, or should
-                        identity_list* curr_ident;
+            // This is now the "is_own" base case - we don't do this 
+            // per-identity, because all identities using this key will 
+            // need new ones. That said, this is really only a problem 
+            // with manual key management, something which we only support 
+            // to a limited extent in any event.
+            
+            bool is_grouped = false;
+            status = deviceGrouped(session, &is_grouped);
+             
+            // Regardless of the single identity this is for, for own keys, we do this 
+            // for all keys associated with the identity.
+            status = get_identities_by_main_key_id(session, fpr_copy, &key_idents);
+            
+            if (status != PEP_CANNOT_FIND_IDENTITY) {
+                if (is_grouped) 
+                    status = _key_reset_device_group_for_shared_key(session, key_idents, fpr_copy);
+                else if (status == PEP_STATUS_OK) {
+                    // now have ident list, or should
+                    identity_list* curr_ident;
 
-                        bool is_grouped = false;
-                        if (!deviceGrouped(session, &is_grouped)) {
-                            for (curr_ident = key_idents; curr_ident && curr_ident->ident; 
-                                                            curr_ident = curr_ident->next) {
-                                
-                                pEp_identity* this_identity = curr_ident->ident;
-                                // Do the full reset on this identity        
-                                status = key_reset(session, fpr_copy, this_identity);
-                                
-                                // Ident list gets freed below, do not free here!
+                    for (curr_ident = key_idents; curr_ident && curr_ident->ident; 
+                                                    curr_ident = curr_ident->next) {
+                        
+                        pEp_identity* this_identity = curr_ident->ident;
+                        
+                        // Do the full reset on this identity        
+                        // Base case for is_own_private starts here
+                        // tmp ident is an actual identity now (not just a skeleton?)
+                        status = revoke_key(session, fpr_copy, NULL);
+                        
+                        // If we have a full identity, we have some cleanup and generation tasks here
+                        if (!EMPTYSTR(tmp_ident->address)) {
+                            // generate new key
+                            if (status == PEP_STATUS_OK) {
+                                tmp_ident->fpr = NULL;
+                                status = myself(session, tmp_ident);
                             }
-                        }
-                        else {
-                            status = _key_reset_device_group_for_shared_key(session, key_idents, fpr_copy);                        }    
-                    }
-                    // Ok, we've either now reset for each own identity with this key, or 
-                    // we got an error and want to bail anyway.
-                    goto pEp_free;
-                }
-                else 
-                    return PEP_CANNOT_FIND_IDENTITY;
-            }
-            
-            
-            // Ok, first we generate a new key.
-            
-            // Base case for is_own_private starts here
-            // tmp ident is an actual identity now (not just a skeleton?)
-            status = revoke_key(session, fpr_copy, NULL);
-            
-            // If we have a full identity, we have some cleanup and generation tasks here
-            if (!EMPTYSTR(tmp_ident->address)) {
-                // generate new key
-                if (status == PEP_STATUS_OK) {
-                    tmp_ident->fpr = NULL;
-                    status = myself(session, tmp_ident);
-                }
-                if (status == PEP_STATUS_OK && tmp_ident->fpr && strcmp(fpr_copy, tmp_ident->fpr) != 0)
-                    new_key = strdup(tmp_ident->fpr);
-                // Error handling?    
-                
-                // mistrust fpr from trust
-                tmp_ident->fpr = fpr_copy;
-                                                
-                tmp_ident->comm_type = PEP_ct_mistrusted;
-                status = set_trust(session, tmp_ident);
-                tmp_ident->fpr = NULL;
-                
-                // Done with old use of ident.
-                if (status == PEP_STATUS_OK) {
-                    // Update fpr for outgoing
-                    status = myself(session, tmp_ident);
-                }
-            }    
-            
-            if (status == PEP_STATUS_OK)
-                // cascade that mistrust for anyone using this key
-                status = mark_as_compromised(session, fpr_copy);
-                
-            if (status == PEP_STATUS_OK)
-                status = remove_fpr_as_default(session, fpr_copy);
-            if (status == PEP_STATUS_OK)
-                status = add_mistrusted_key(session, fpr_copy);
+                            if (status == PEP_STATUS_OK && tmp_ident->fpr && strcmp(fpr_copy, tmp_ident->fpr) != 0)
+                                new_key = strdup(tmp_ident->fpr);
+                            // Error handling?    
+                            
+                            // mistrust fpr from trust
+                            tmp_ident->fpr = fpr_copy;
+                                                            
+                            tmp_ident->comm_type = PEP_ct_mistrusted;
+                            status = set_trust(session, tmp_ident);
+                            tmp_ident->fpr = NULL;
+                            
+                            // Done with old use of ident.
+                            if (status == PEP_STATUS_OK) {
+                                // Update fpr for outgoing
+                                status = myself(session, tmp_ident);
+                            }
+                        }    
+                        
+                        if (status == PEP_STATUS_OK)
+                            // cascade that mistrust for anyone using this key
+                            status = mark_as_compromised(session, fpr_copy);
+                            
+                        if (status == PEP_STATUS_OK)
+                            status = remove_fpr_as_default(session, fpr_copy);
+                        if (status == PEP_STATUS_OK)
+                            status = add_mistrusted_key(session, fpr_copy);
 
-            // If there's a new key, do the DB linkage with the revoked one, and 
-            // send the key reset mail opportunistically to recently contacted
-            // partners
-            if (new_key) {
-                // add to revocation list 
-                if (status == PEP_STATUS_OK) 
-                    status = set_revoked(session, fpr_copy, new_key, time(NULL));            
-                // for all active communication partners:
-                //      active_send revocation
-                
-                tmp_ident->fpr = fpr_copy;
-                if (status == PEP_STATUS_OK)
-                    status = send_key_reset_to_recents(session, tmp_ident, fpr_copy, new_key);        
-                tmp_ident->fpr = NULL;    
-            }        
+                        // If there's a new key, do the DB linkage with the revoked one, and 
+                        // send the key reset mail opportunistically to recently contacted
+                        // partners
+                        if (new_key) {
+                            // add to revocation list 
+                            if (status == PEP_STATUS_OK) 
+                                status = set_revoked(session, fpr_copy, new_key, time(NULL));            
+                            // for all active communication partners:
+                            //      active_send revocation
+                            
+                            tmp_ident->fpr = fpr_copy;
+                            if (status == PEP_STATUS_OK)
+                                status = send_key_reset_to_recents(session, tmp_ident, fpr_copy, new_key);        
+                            tmp_ident->fpr = NULL;    
+                        }                    
+                        // Ident list gets freed below, do not free here!
+                    }
+                }
+                // Ok, we've either now reset for each own identity with this key, or 
+                // we got an error and want to bail anyway.
+                goto pEp_free;
+            }
+            else 
+                return PEP_CANNOT_FIND_IDENTITY;
         } // end is_own_private
         else {
             // if it's mistrusted, make it not be so.

@@ -622,6 +622,30 @@ TEST_F(KeyResetMessageTest, check_reset_ident_null_ident) {
 }
 
 // PASS
+TEST_F(KeyResetMessageTest, check_reset_grouped_own) {
+    send_setup(); // lazy
+    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
+    PEP_STATUS status = myself(session, alice);
+
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_TRUE(alice->fpr && alice->fpr[0]);
+    ASSERT_TRUE(alice->me);
+    ASSERT_STREQ(alice->fpr, alice_fpr);
+
+    status = set_identity_flags(session, alice, alice->flags | PEP_idf_devicegroup);
+    status = key_reset_identity(session, alice, alice_fpr);
+    status = myself(session, alice);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    char* alice_new_fpr = alice->fpr;
+    ASSERT_TRUE(alice_new_fpr && alice_new_fpr[0]);
+    ASSERT_STRNE(alice_fpr, alice_new_fpr);
+    
+    ASSERT_EQ(m_queue.size(), 1);
+
+}
+
+
+// PASS
 TEST_F(KeyResetMessageTest, check_reset_ident_other_pub_fpr) {
     send_setup(); // lazy
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, bob_user_id.c_str(), NULL);
