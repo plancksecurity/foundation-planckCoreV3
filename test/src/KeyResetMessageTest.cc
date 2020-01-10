@@ -621,7 +621,6 @@ TEST_F(KeyResetMessageTest, check_reset_ident_null_ident) {
     ASSERT_EQ(status , PEP_ILLEGAL_VALUE);
 }
 
-// PASS
 TEST_F(KeyResetMessageTest, check_reset_grouped_own) {
     send_setup(); // lazy
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
@@ -641,7 +640,52 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own) {
     ASSERT_STRNE(alice_fpr, alice_new_fpr);
     
     ASSERT_EQ(m_queue.size(), 1);
+    
+    if (false) {
+        ofstream outfile;
+        outfile.open("test_mails/check_reset_grouped_own_recv.eml");
+        message* curr_sent_msg = m_queue.at(0);
+        char* msg_txt = NULL;
+        mime_encode_message(curr_sent_msg, false, &msg_txt);
+        outfile << msg_txt;
+        outfile.close();
+    }
+}
 
+TEST_F(KeyResetMessageTest, check_reset_grouped_own_recv) {
+    send_setup(); // lazy
+    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
+    PEP_STATUS status = myself(session, alice);
+
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_TRUE(alice->fpr && alice->fpr[0]);
+    ASSERT_TRUE(alice->me);
+    ASSERT_STREQ(alice->fpr, alice_fpr);
+
+    status = set_identity_flags(session, alice, alice->flags | PEP_idf_devicegroup);
+    ASSERT_EQ(status , PEP_STATUS_OK);    
+    status = myself(session, alice);
+    ASSERT_EQ(status , PEP_STATUS_OK);    
+
+    string received_mail = slurp("test_mails/check_reset_grouped_own_recv.eml");
+    char* decrypted_msg = NULL;
+    char* modified_src = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags;
+    status = MIME_decrypt_message(session, received_mail.c_str(), received_mail.size(),
+                                  &decrypted_msg, &keylist, &rating, &flags, &modified_src);
+
+    status = myself(session, alice);
+    ASSERT_EQ(status , PEP_STATUS_OK);                                     
+    ASSERT_STRNE(alice->fpr, alice_fpr);
+    ASSERT_STREQ(alice->fpr, "6E8AD7C3AB59FFBE62CDC1B5B625A54EB1D486E9");
+    
+    bool revoked = false;
+    status = key_revoked(session, alice_fpr, &revoked);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_TRUE(revoked);
+                                  
 }
 
 

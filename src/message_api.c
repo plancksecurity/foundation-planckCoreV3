@@ -3805,6 +3805,24 @@ static PEP_STATUS _decrypt_message(
                                 is_key_reset = (strcmp(wrap_info, "KEY_RESET") == 0);
                         }
                             
+                        // check for private key in decrypted message attachment while importing
+                        // N.B. Apparently, we always import private keys into the keyring; however,
+                        // we do NOT always allow those to be used for encryption. THAT is controlled
+                        // by setting it as an own identity associated with the key in the DB.
+                        
+                        // If we have a message 2.0 message, we are ONLY going to be ok with keys
+                        // we imported from THIS part of the message.
+                        imported_private_key_address = false;
+                        free(private_il); 
+                        private_il = NULL;
+                        
+                        // import keys from decrypted INNER source
+                        status = import_priv_keys_from_decrypted_msg(session, inner_message,
+                                                                     &imported_keys,
+                                                                     &imported_private_key_address,
+                                                                     private_il);
+                        if (status != PEP_STATUS_OK)
+                            goto pEp_error;            
 
                         if (is_key_reset) {
                             if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
@@ -3819,25 +3837,6 @@ static PEP_STATUS _decrypt_message(
                             }
                         }
                         else if (is_inner) {
-
-                            // check for private key in decrypted message attachment while importing
-                            // N.B. Apparently, we always import private keys into the keyring; however,
-                            // we do NOT always allow those to be used for encryption. THAT is controlled
-                            // by setting it as an own identity associated with the key in the DB.
-                            
-                            // If we have a message 2.0 message, we are ONLY going to be ok with keys
-                            // we imported from THIS part of the message.
-                            imported_private_key_address = false;
-                            free(private_il); 
-                            private_il = NULL;
-                            
-                            // import keys from decrypted INNER source
-                            status = import_priv_keys_from_decrypted_msg(session, inner_message,
-                                                                         &imported_keys,
-                                                                         &imported_private_key_address,
-                                                                         private_il);
-                            if (status != PEP_STATUS_OK)
-                                goto pEp_error;            
 
                             // THIS is our message
                             // Now, let's make sure we've copied in 

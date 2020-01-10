@@ -38,9 +38,7 @@ static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
     PEP_STATUS status = PEP_STATUS_OK;
         
     *dst = NULL;
-    
-    stringlist_t* keydata = NULL;
-    
+        
     message* msg = NULL;
     
     // Ok, generate payload here...
@@ -70,35 +68,53 @@ static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
     if (!msg->attachments)
         return PEP_UNKNOWN_ERROR;
     
-    char* key_material = NULL;
+    char* key_material_old = NULL;
+    char* key_material = NULL;    
     size_t datasize = 0;
+    
+    status = export_key(session, old_fpr, &key_material_old, &datasize);
+    key_material = key_material_old;
+    if (datasize > 0 && key_material) {         
+        if (status)
+            return status;
+
+        if (!msg->attachments)
+            msg->attachments = new_bloblist(key_material, datasize, 
+                                            "application/pgp-keys",
+                                            "file://pEpkey_old.asc");
+        else                                    
+            bloblist_add(msg->attachments, key_material, datasize, "application/pgp-keys",
+                                                                   "file://pEpkey_old.asc");
+    }
+    datasize = 0;
+    key_material = NULL;
+                                                                      
     status = export_key(session, new_fpr, &key_material, &datasize);
 
-    if (datasize > 0 && key_material) { 
-        if (status) {
-            free_stringlist(keydata);
+    if (datasize > 0 && key_material) {         
+        if (status)
             return status;
-        }
-        stringlist_add(keydata, key_material);
+
+        if (!msg->attachments)
+            msg->attachments = new_bloblist(key_material, datasize, 
+                                            "application/pgp-keys",
+                                            "file://pEpkey_pub.asc");
+        else                                    
+            bloblist_add(msg->attachments, key_material, datasize, "application/pgp-keys",
+                                                                   "file://pEpkey_pub.asc");
                         
         key_material = NULL;
         datasize = 0;    
         if (is_private) {
             status = export_secret_key(session, new_fpr, &key_material, &datasize);    
-            if (status) {
-                free_stringlist(keydata);
+            if (status)
                 return status;
-            }
-            if (datasize > 0 && key_material)
-                stringlist_add(keydata, key_material);
+            if (datasize > 0 && key_material) {
+                bloblist_add(msg->attachments, key_material, datasize, "application/pgp-keys",
+                                                                       "file://pEpkey_priv.asc");
+            }                                                      
         }    
     }    
-    // Attach to message
-    stringlist_t* curr_key = keydata;
-    for ( ; curr_key && curr_key->value; curr_key = curr_key->next) {
-        bloblist_add(msg->attachments, curr_key->value, size, "application/pgp-keys",
-                                                              "file://pEpkey.asc");
-    }
     if (msg)
         *dst = msg;
     return status;
@@ -322,7 +338,20 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         pEp_identity* curr_ident = curr_cmd->ident;
         
         old_fpr = curr_ident->fpr;
-        new_fpr = curr_cmd->new_key;
+        new_fpr = strdup(curr_cmd->new_key);
+        
+        bool is_old_own = false;
+        // if it's our key and the old one is revoked, we skip it.
+        // Sorry, them's the rules/
+        if (sender_own_key) {
+            status = is_own_key(session, old_fpr, &is_old_own);
+            if (is_old_own) {
+                bool old_revoked = false;
+                status = key_revoked(session, old_fpr, &old_revoked);
+                if (old_revoked)
+                    continue;
+            }
+        }
 
         // Make sure that this key is at least one we associate 
         // with the sender. FIXME: check key election interaction
@@ -466,13 +495,26 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             
             if (status != PEP_STATUS_OK)
                 return status;
+            
+            status = myself(session, curr_ident);
                 
             // key reset on old key
-            status = key_reset(session, old_fpr, curr_ident);
+            status = revoke_key(session, old_fpr, NULL);
+
             if (status != PEP_STATUS_OK)
-                return status;            
-        }
+                goto pEp_free;
+        
+            // N.B. This sort of sucks because we overwrite this every time.
+            // But this case is infrequent and we don't rely on the binding.
+
+            if (status == PEP_STATUS_OK) 
+                status = set_revoked(session, old_fpr, curr_ident->fpr, time(NULL));            
+
+            if (status != PEP_STATUS_OK)
+                goto pEp_free;
+        }    
         old_fpr = NULL;
+        free(new_fpr);
         new_fpr = NULL;    
     }
 
@@ -719,7 +761,7 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
             
             // encrypt this baby and get out
             // extra keys???
-            status = encrypt_message(session, outmsg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+            status = encrypt_message(session, outmsg, NULL, &enc_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_key_reset_only);
             
             if (status != PEP_STATUS_OK) {
                 goto pEp_free;
@@ -740,7 +782,7 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
     // Revoke that baby.
     status = revoke_key(session, old_key, NULL);
 
-    if (!status)
+    if (status != PEP_STATUS_OK)
         goto pEp_free;
         
     for (curr_ident = key_idents; curr_ident && curr_ident->ident; curr_ident = curr_ident->next) {
@@ -752,7 +794,7 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
             if (status == PEP_STATUS_OK) 
                 status = set_revoked(session, old_key, curr_ident->ident->fpr, time(NULL));            
 
-            if (!status)
+            if (status != PEP_STATUS_OK)
                 goto pEp_free;
                 
             pEp_identity* tmp_ident = identity_dup(ident);
@@ -917,8 +959,6 @@ PEP_STATUS key_reset(
 
                     for (curr_ident = key_idents; curr_ident && curr_ident->ident; 
                                                     curr_ident = curr_ident->next) {
-                        
-                        pEp_identity* this_identity = curr_ident->ident;
                         
                         // Do the full reset on this identity        
                         // Base case for is_own_private starts here
