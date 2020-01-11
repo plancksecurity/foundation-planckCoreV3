@@ -490,7 +490,10 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             // ensure that in this case, we end up with a private one,
             // so talk to vb about this.
             // Make new key the default    
-            curr_ident->fpr = new_fpr;
+            
+            // This is REQUIRED for set_own_key (see doc)
+            curr_ident->fpr = NULL;
+            
             status = set_own_key(session, curr_ident, new_fpr);
             
             if (status != PEP_STATUS_OK)
