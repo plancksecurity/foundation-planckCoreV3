@@ -236,7 +236,7 @@ PEP_STATUS KRMT_message_send_callback(message* msg) {
     return PEP_STATUS_OK;
 }
 
-// FAIL
+
 TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
     send_setup();
 
@@ -376,7 +376,7 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
     cout << "HEY! reset_fpr is " << new_fpr << endl;    
 }
 
-// PASS
+
 TEST_F(KeyResetMessageTest, check_non_reset_receive_revoked) {
     receive_setup();
     pEp_identity* alice_ident = new_identity("pep.test.alice@pep-project.org", NULL,
@@ -409,7 +409,6 @@ TEST_F(KeyResetMessageTest, check_non_reset_receive_revoked) {
     free(keylist);
 }
 
-// FAIL (fix mail)
 TEST_F(KeyResetMessageTest, check_reset_receive_revoked) {
     PEP_STATUS status = set_up_ident_from_scratch(session,
                 "test_keys/pub/pep.test.fenris-0x4F3D2900_pub.asc",
@@ -461,7 +460,7 @@ TEST_F(KeyResetMessageTest, check_reset_receive_revoked) {
     free(keylist);
 }
 
-// PASS
+
 TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_unknown) {
     // create_msg_for_revoked_key(); // call to recreate msg
     send_setup();
@@ -491,7 +490,7 @@ TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_unknown) {
     free_identity(from_ident);
 }
 
-// FAIL
+
 TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_contact) {
     // create_msg_for_revoked_key(); // call to recreate msg
     send_setup();
@@ -573,7 +572,7 @@ TEST_F(KeyResetMessageTest, check_receive_message_to_revoked_key_from_contact) {
     }
 }
 
-// FAIL
+
 TEST_F(KeyResetMessageTest, check_multiple_resets_single_key) {
     send_setup();
 
@@ -595,7 +594,7 @@ TEST_F(KeyResetMessageTest, check_multiple_resets_single_key) {
     ASSERT_TRUE(from_ident->fpr != NULL && from_ident->fpr[0] != 0);
 }
 
-// PASS
+
 TEST_F(KeyResetMessageTest, check_reset_ident_uid_only) {
     send_setup(); // lazy
     pEp_identity* bob = new_identity(NULL, NULL, bob_user_id.c_str(), NULL);
@@ -605,7 +604,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_uid_only) {
     ASSERT_EQ(status , PEP_ILLEGAL_VALUE);
 }
 
-// PASS
+
 TEST_F(KeyResetMessageTest, check_reset_ident_address_only) {
     send_setup(); // lazy
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, NULL, NULL);
@@ -614,7 +613,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_address_only) {
     ASSERT_EQ(status , PEP_ILLEGAL_VALUE);
 }
 
-// PASS
+
 TEST_F(KeyResetMessageTest, check_reset_ident_null_ident) {
     // Ok, let's reset it
     PEP_STATUS status = key_reset_identity(session, NULL, NULL);
@@ -688,8 +687,296 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_recv) {
                                   
 }
 
+TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr) {
+    char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
 
-// PASS
+    pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
+                                        NULL,
+                                        "AlexID",
+                                        "Alexander Braithwaite");
+
+    pEp_identity* alex_id2 = new_identity("pep.test.alexander6@darthmama.org",
+                                          NULL,
+                                          "AlexID",
+                                          "Alexander Braithwaite");
+    
+    pEp_identity* alex_id3 = new_identity("pep.test.alexander6a@darthmama.org",
+                                          NULL,
+                                          "AlexID",
+                                          "Alexander Braithwaite");
+
+    PEP_STATUS status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0x0019697D_priv.asc");
+
+    alex_id->me = true;
+    status = set_own_key(session, alex_id, pubkey1);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+
+    alex_id2->me = true;
+    status = set_own_key(session, alex_id2, pubkey1);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+
+    alex_id3->me = true;
+    status = set_own_key(session, alex_id3, pubkey1);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+        
+    status = myself(session, alex_id);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_STREQ(pubkey1, alex_id->fpr);
+    
+    status = myself(session, alex_id2);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_STREQ(pubkey1, alex_id2->fpr);
+
+    status = myself(session, alex_id3);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_STREQ(pubkey1, alex_id3->fpr);
+
+    status = key_reset(session, pubkey1, alex_id);
+
+    alex_id->fpr = pubkey1;
+    status = get_trust(session, alex_id);
+    ASSERT_EQ(alex_id->comm_type , PEP_ct_mistrusted);
+
+    bool revoked = false;
+    status = key_revoked(session, pubkey1, &revoked);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_TRUE(revoked);    
+    
+    status = myself(session, alex_id);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_STRNE(pubkey1, alex_id->fpr);
+    
+    status = myself(session, alex_id2);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_STRNE(pubkey1, alex_id2->fpr);
+
+    status = myself(session, alex_id3);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_STRNE(pubkey1, alex_id3->fpr);
+    
+    ASSERT_STRNE(alex_id->fpr, alex_id2->fpr);
+    ASSERT_STRNE(alex_id->fpr, alex_id3->fpr);
+    ASSERT_STRNE(alex_id2->fpr, alex_id3->fpr);
+
+    free_identity(alex_id);
+    free_identity(alex_id2);
+    free_identity(alex_id3);    
+}
+
+TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_idents_reset_all) {
+    char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
+    char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
+    char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
+
+    pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
+                                        NULL,
+                                        "AlexID",
+                                        "Alexander Braithwaite");
+
+    pEp_identity* alex_id2 = new_identity("pep.test.alexander6@darthmama.org",
+                                          NULL,
+                                          "AlexID",
+                                          "Alexander Braithwaite");
+    
+    pEp_identity* alex_id3 = new_identity("pep.test.alexander6a@darthmama.org",
+                                          NULL,
+                                          "AlexID",
+                                          "Alexander Braithwaite");
+
+
+    PEP_STATUS status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0x0019697D_priv.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0x503B14D8_priv.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0xA216E95A_priv.asc");
+
+    alex_id->me = true;
+    status = set_own_key(session, alex_id, pubkey1);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+
+    alex_id2->me = true;
+    status = set_own_key(session, alex_id2, pubkey2);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+
+    alex_id3->me = true;
+    status = set_own_key(session, alex_id3, pubkey3);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+        
+    status = myself(session, alex_id);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_STREQ(pubkey1, alex_id->fpr);
+    
+    status = myself(session, alex_id2);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_STREQ(pubkey2, alex_id2->fpr);
+
+    status = myself(session, alex_id3);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_STREQ(pubkey3, alex_id3->fpr);
+
+    status = key_reset(session, NULL, NULL);
+
+    free(alex_id->fpr);
+    alex_id->fpr = pubkey1;
+    status = get_trust(session, alex_id);
+    ASSERT_EQ(alex_id->comm_type , PEP_ct_mistrusted);
+
+    free(alex_id2->fpr);
+    alex_id2->fpr = pubkey2;
+    status = get_trust(session, alex_id2);
+    ASSERT_EQ(alex_id->comm_type , PEP_ct_mistrusted);
+
+    free(alex_id3->fpr);
+    alex_id3->fpr = pubkey3;
+    status = get_trust(session, alex_id3);
+    ASSERT_EQ(alex_id->comm_type , PEP_ct_mistrusted);
+
+    bool revoked = false;
+    status = key_revoked(session, pubkey1, &revoked);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_TRUE(revoked);    
+
+    revoked = false;
+    status = key_revoked(session, pubkey2, &revoked);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_TRUE(revoked);    
+
+    revoked = false;
+    status = key_revoked(session, pubkey3, &revoked);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_TRUE(revoked);    
+    
+    status = myself(session, alex_id);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_STRNE(pubkey1, alex_id->fpr);
+    
+    status = myself(session, alex_id2);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_STRNE(pubkey2, alex_id2->fpr);
+
+    status = myself(session, alex_id3);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_STRNE(pubkey3, alex_id3->fpr);
+    
+    // Not reaaaally necessary, but...
+    ASSERT_STRNE(alex_id->fpr, alex_id2->fpr);
+    ASSERT_STRNE(alex_id->fpr, alex_id3->fpr);
+    ASSERT_STRNE(alex_id2->fpr, alex_id3->fpr);
+
+    free_identity(alex_id);
+    free_identity(alex_id2);
+    free_identity(alex_id3);    
+}
+
+TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_idents_reset_one) {
+    char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
+    char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
+    char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
+
+    pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
+                                        NULL,
+                                        "AlexID",
+                                        "Alexander Braithwaite");
+
+    pEp_identity* alex_id2 = new_identity("pep.test.alexander6@darthmama.org",
+                                          NULL,
+                                          "AlexID",
+                                          "Alexander Braithwaite");
+    
+    pEp_identity* alex_id3 = new_identity("pep.test.alexander6a@darthmama.org",
+                                          NULL,
+                                          "AlexID",
+                                          "Alexander Braithwaite");
+
+
+    PEP_STATUS status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0x0019697D_priv.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0x503B14D8_priv.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0xA216E95A_priv.asc");
+
+    alex_id->me = true;
+    status = set_own_key(session, alex_id, pubkey1);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+
+    alex_id2->me = true;
+    status = set_own_key(session, alex_id2, pubkey2);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+
+    alex_id3->me = true;
+    status = set_own_key(session, alex_id3, pubkey3);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+        
+    status = myself(session, alex_id);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_STREQ(pubkey1, alex_id->fpr);
+    
+    status = myself(session, alex_id2);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_STREQ(pubkey2, alex_id2->fpr);
+
+    status = myself(session, alex_id3);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_STREQ(pubkey3, alex_id3->fpr);
+
+    status = key_reset_user(session, alex_id2->user_id, pubkey2);
+
+    free(alex_id->fpr);
+    alex_id->fpr = pubkey1;
+    status = get_trust(session, alex_id);
+    ASSERT_EQ(alex_id->comm_type , PEP_ct_pEp);
+
+    free(alex_id2->fpr);
+    alex_id2->fpr = pubkey2;
+    status = get_trust(session, alex_id2);
+    ASSERT_EQ(alex_id2->comm_type , PEP_ct_mistrusted);
+
+    free(alex_id3->fpr);
+    alex_id3->fpr = pubkey3;
+    status = get_trust(session, alex_id3);
+    ASSERT_EQ(alex_id3->comm_type , PEP_ct_pEp);
+
+    bool revoked = false;
+    status = key_revoked(session, pubkey1, &revoked);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_FALSE(revoked);    
+
+    revoked = false;
+    status = key_revoked(session, pubkey2, &revoked);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_TRUE(revoked);    
+
+    revoked = false;
+    status = key_revoked(session, pubkey3, &revoked);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_FALSE(revoked);    
+    
+    status = myself(session, alex_id);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_STREQ(pubkey1, alex_id->fpr);
+    
+    status = myself(session, alex_id2);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_STRNE(pubkey2, alex_id2->fpr);
+
+    status = myself(session, alex_id3);
+    ASSERT_EQ(status, PEP_STATUS_OK);    
+    ASSERT_STREQ(pubkey3, alex_id3->fpr);
+    
+    // Not reaaaally necessary, but...
+    ASSERT_STRNE(alex_id->fpr, alex_id2->fpr);
+    ASSERT_STRNE(alex_id->fpr, alex_id3->fpr);
+    ASSERT_STRNE(alex_id2->fpr, alex_id3->fpr);
+
+    free_identity(alex_id);
+    free_identity(alex_id2);
+    free_identity(alex_id3);    
+}
+
+
 TEST_F(KeyResetMessageTest, check_reset_ident_other_pub_fpr) {
     send_setup(); // lazy
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, bob_user_id.c_str(), NULL);
@@ -713,7 +1000,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_other_pub_fpr) {
     // TODO: import key, verify PEP_ct_OpenPGP_unconfirmed
 }
 
-// PASS
+
 // Corner case?
 TEST_F(KeyResetMessageTest, check_reset_ident_other_priv_fpr) {
     send_setup(); // lazy
@@ -744,7 +1031,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_other_priv_fpr) {
     // TODO: import key, verify PEP_ct_OpenPGP_unconfirmed
 }
 
-// PASS
+
 TEST_F(KeyResetMessageTest, check_reset_ident_other_pub_no_fpr) {
     send_setup(); // lazy
     pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, bob_user_id.c_str(), NULL);
@@ -773,7 +1060,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_other_pub_no_fpr) {
 //    const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
 // TODO: multiplr keys above
 
-// PASS
+
 TEST_F(KeyResetMessageTest, check_reset_ident_other_priv_no_fpr) {
     send_setup(); // lazy
     // Also import Bob's private key, because that dude is a fool.
@@ -804,7 +1091,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_other_priv_no_fpr) {
     // TODO: import key, verify PEP_ct_OpenPGP_unconfirmed
 }
 
-// PASS
+
 TEST_F(KeyResetMessageTest, check_reset_ident_own_pub_fpr) {
     send_setup(); // lazy
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
@@ -834,7 +1121,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_own_pub_fpr) {
     ASSERT_EQ(status , PEP_CANNOT_FIND_IDENTITY);
 }
 
-// PASS
+
 TEST_F(KeyResetMessageTest, check_reset_ident_own_priv_fpr) {
     send_setup(); // lazy
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
@@ -853,7 +1140,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_own_priv_fpr) {
     ASSERT_STRNE(alice_fpr, alice_new_fpr);
 }
 
-// PASS
+
 TEST_F(KeyResetMessageTest, check_reset_ident_own_priv_no_fpr) {
     send_setup(); // lazy
     pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, alice_user_id.c_str(), NULL);
@@ -873,7 +1160,7 @@ TEST_F(KeyResetMessageTest, check_reset_ident_own_priv_no_fpr) {
     ASSERT_STRNE(alice_fpr, alice_new_fpr);
 }
 
-// PASS
+
 TEST_F(KeyResetMessageTest, check_reset_user_other_no_fpr) {
       char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
       char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
@@ -934,7 +1221,7 @@ test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
 
 }
 
-// PASS
+
 TEST_F(KeyResetMessageTest, check_reset_user_other_fpr) {
       char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
       char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
@@ -1006,7 +1293,7 @@ test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
     free_identity(alex_id);
 }
 
-// FAIL
+
 TEST_F(KeyResetMessageTest, check_reset_user_own_fpr) {
       char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
       char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
@@ -1075,7 +1362,7 @@ test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
     free_identity(alex_id);
 }
 
-// PASS
+
 TEST_F(KeyResetMessageTest, check_reset_user_no_fpr) {
       char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
       char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
@@ -1118,7 +1405,7 @@ test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc
     free_identity(alex_id);
 }
 
-// FAIL
+
 TEST_F(KeyResetMessageTest, check_reset_all_own_keys) {
     char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
     char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
@@ -1222,7 +1509,7 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_keys) {
     free_identity(alex_id);
 }
 
-// PASS
+
 TEST_F(KeyResetMessageTest, check_reset_all_own_no_own) {
       char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
       char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
@@ -1330,7 +1617,7 @@ TEST_F(KeyResetMessageTest, not_a_test) {
     myfile.close();      
 }
 
-// PASS
+
 TEST_F(KeyResetMessageTest, check_no_reset_message_to_self) {
     pEp_identity* bob = NULL;
     PEP_STATUS status = set_up_preset(session, BOB,
@@ -1361,7 +1648,7 @@ TEST_F(KeyResetMessageTest, check_no_reset_message_to_self) {
     ASSERT_EQ(status, PEP_VERIFY_SIGNER_KEY_REVOKED);
 }
 
-// PASS
+
 TEST_F(KeyResetMessageTest, check_reset_mistrust_next_msg_have_not_mailed) {
     pEp_identity* carol = NULL;
     PEP_STATUS status = set_up_preset(session, CAROL,
@@ -1553,7 +1840,7 @@ TEST_F(KeyResetMessageTest, check_reset_own_with_revocations) {
 }
 */
 
-// PASS
+
 TEST_F(KeyResetMessageTest, codec_test) {
     // create input values
 
