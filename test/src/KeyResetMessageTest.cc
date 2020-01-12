@@ -732,7 +732,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr) {
     ASSERT_EQ(status, PEP_STATUS_OK);    
     ASSERT_STREQ(pubkey1, alex_id3->fpr);
 
-    status = key_reset(session, pubkey1, alex_id);
+    status = key_reset_identity(session, alex_id, pubkey1);
 
     alex_id->fpr = pubkey1;
     status = get_trust(session, alex_id);
@@ -816,7 +816,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     ASSERT_EQ(status, PEP_STATUS_OK);    
     ASSERT_STREQ(pubkey3, alex_id3->fpr);
 
-    status = key_reset(session, NULL, NULL);
+    status = key_reset_all_own_keys(session);
 
     free(alex_id->fpr);
     alex_id->fpr = pubkey1;
@@ -922,7 +922,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     ASSERT_EQ(status, PEP_STATUS_OK);    
     ASSERT_STREQ(pubkey3, alex_id3->fpr);
 
-    status = key_reset_user(session, alex_id2->user_id, pubkey2);
+    status = key_reset_identity(session, alex_id2, alex_id2->fpr);
 
     free(alex_id->fpr);
     alex_id->fpr = pubkey1;
