@@ -40,7 +40,7 @@ class KeyResetMessageTest : public ::testing::Test {
         const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
         const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
 
-        const char* alice_receive_reset_fpr = "B6C09F07E93CEEC39E5326DF1CCD0383597D2701";
+        const char* alice_receive_reset_fpr = "3340B36010854C3F52E97A30FA7B63E0202523DA";
 
         const string alice_user_id = PEP_OWN_USERID;
         const string bob_user_id = "BobId";
@@ -648,6 +648,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own) {
         mime_encode_message(curr_sent_msg, false, &msg_txt);
         outfile << msg_txt;
         outfile.close();
+        cout << "    ASSERT_STREQ(alice->fpr, \"" << alice_new_fpr << "\");" << endl;
     }
 }
 
@@ -678,8 +679,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_recv) {
     status = myself(session, alice);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_STRNE(alice->fpr, alice_fpr);
-    ASSERT_STREQ(alice->fpr, "6E8AD7C3AB59FFBE62CDC1B5B625A54EB1D486E9");
-
+    ASSERT_STREQ(alice->fpr, "C2F84F14A5D150720C3F4360F0670D700975FFA7");
     bool revoked = false;
     status = key_revoked(session, alice_fpr, &revoked);
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -711,14 +711,20 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr) {
     alex_id->me = true;
     status = set_own_key(session, alex_id, pubkey1);
     ASSERT_EQ(status, PEP_STATUS_OK);
+    status = set_identity_flags(session, alex_id, alex_id->flags | PEP_idf_devicegroup);
+    ASSERT_EQ(status , PEP_STATUS_OK);
 
     alex_id2->me = true;
     status = set_own_key(session, alex_id2, pubkey1);
     ASSERT_EQ(status, PEP_STATUS_OK);
+    status = set_identity_flags(session, alex_id2, alex_id2->flags | PEP_idf_devicegroup);
+    ASSERT_EQ(status , PEP_STATUS_OK);
 
     alex_id3->me = true;
     status = set_own_key(session, alex_id3, pubkey1);
     ASSERT_EQ(status, PEP_STATUS_OK);
+    status = set_identity_flags(session, alex_id3, alex_id3->flags | PEP_idf_devicegroup);
+    ASSERT_EQ(status , PEP_STATUS_OK);
 
     status = myself(session, alex_id);
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -760,9 +766,104 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr) {
     ASSERT_STRNE(alex_id->fpr, alex_id3->fpr);
     ASSERT_STRNE(alex_id2->fpr, alex_id3->fpr);
 
+    ASSERT_EQ(m_queue.size(),1);
+    if (false) {
+        ofstream outfile;
+        message* curr_sent_msg = m_queue.at(0);        
+        string fname = "test_mails/check_reset_grouped_own_multi_ident_one_fpr.eml";
+        outfile.open(fname);
+        char* msg_txt = NULL;
+        mime_encode_message(curr_sent_msg, false, &msg_txt);
+        outfile << msg_txt;
+        outfile.close();        
+        cout <<  "    const char* replkey1 = \"" << alex_id->fpr << "\";" << endl;    
+        cout <<  "    const char* replkey2 = \"" << alex_id2->fpr << "\";" << endl;    
+        cout <<  "    const char* replkey3 = \"" << alex_id3->fpr << "\";" << endl;        
+    }    
+
     free_identity(alex_id);
     free_identity(alex_id2);
     free_identity(alex_id3);
+}
+
+TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr_recv) {
+    PEP_STATUS status = PEP_STATUS_OK;
+    const char* replkey1 = "E156365983580C383C88633E679BB4390FE19A13";
+    const char* replkey2 = "DB99E4658C118CE07A04A776CAE223F4448CD681";
+    const char* replkey3 = "23DD709081909353B5A1E87DA4D5D01137A1E07E";
+    
+    // set up device own state
+    char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
+
+    pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
+                                        NULL,
+                                        "AlexID",
+                                        "Alexander Braithwaite");
+
+    pEp_identity* alex_id2 = new_identity("pep.test.alexander6@darthmama.org",
+                                          NULL,
+                                          "AlexID",
+                                          "Alexander Braithwaite");
+
+    pEp_identity* alex_id3 = new_identity("pep.test.alexander6a@darthmama.org",
+                                          NULL,
+                                          "AlexID",
+                                          "Alexander Braithwaite");
+
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0x0019697D_priv.asc");
+
+    alex_id->me = true;
+    status = set_own_key(session, alex_id, pubkey1);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    alex_id2->me = true;
+    status = set_own_key(session, alex_id2, pubkey1);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    alex_id3->me = true;
+    status = set_own_key(session, alex_id3, pubkey1);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    status = myself(session, alex_id);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_STREQ(pubkey1, alex_id->fpr);
+
+    status = myself(session, alex_id2);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_STREQ(pubkey1, alex_id2->fpr);
+
+    status = myself(session, alex_id3);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_STREQ(pubkey1, alex_id3->fpr);
+
+    // receive reset messages
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    string fname = "test_mails/check_reset_grouped_own_multi_ident_one_fpr.eml";
+    string mailstr = slurp(fname.c_str());
+    message* new_msg = NULL;
+    status = mime_decode_message(mailstr.c_str(), mailstr.size(), &new_msg);
+    ASSERT_NE(new_msg, nullptr);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    status = decrypt_message(session, new_msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_EQ(status, PEP_STATUS_OK);        
+
+    status = myself(session, alex_id);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_STREQ(replkey1, alex_id->fpr);
+
+    status = myself(session, alex_id2);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_STREQ(replkey2, alex_id2->fpr);
+
+    status = myself(session, alex_id3);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_STREQ(replkey3, alex_id3->fpr);
 }
 
 TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_idents_reset_all) {

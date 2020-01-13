@@ -20,6 +20,179 @@
 #define KEY_RESET_MAJOR_VERSION 1L
 #define KEY_RESET_MINOR_VERSION 0L
 
+static PEP_STATUS _generate_reset_structs(PEP_SESSION session,
+                                          const pEp_identity* reset_ident,
+                                          const char* old_fpr,
+                                          const char* new_fpr,
+                                          bloblist_t** key_attachments,
+                                          keyreset_command_list** command_list,
+                                          bool include_secret) {
+
+    if (!session || !reset_ident || EMPTYSTR(old_fpr) || EMPTYSTR(new_fpr) ||
+        !key_attachments || !command_list)
+        return PEP_ILLEGAL_VALUE;
+    
+    // Ok, generate payload here...
+    pEp_identity* outgoing_ident = identity_dup(reset_ident);
+    if (!outgoing_ident)
+        return PEP_OUT_OF_MEMORY;
+    free(outgoing_ident->fpr);
+    outgoing_ident->fpr = strdup(old_fpr);
+    if (!outgoing_ident->fpr)
+        return PEP_OUT_OF_MEMORY;
+        
+    keyreset_command* kr_command = new_keyreset_command(outgoing_ident, new_fpr);
+    if (!kr_command)
+        return PEP_OUT_OF_MEMORY;
+    if (!*command_list)
+        *command_list = new_keyreset_command_list(kr_command);
+    else
+        if (keyreset_command_list_add(*command_list, kr_command) == NULL)
+            return PEP_OUT_OF_MEMORY;
+    
+    bloblist_t* keys = NULL;
+    
+    char* key_material_old = NULL;
+    char* key_material_new = NULL;   
+    char* key_material_priv = NULL;
+     
+    size_t datasize = 0;
+    
+    PEP_STATUS status = export_key(session, old_fpr, &key_material_old, &datasize);
+    if (datasize > 0 && key_material_old) {         
+        if (status)
+            return status;
+
+        if (!keys)
+            keys = new_bloblist(key_material_old, datasize, 
+                                            "application/pgp-keys",
+                                            "file://pEpkey_old.asc");
+        else                                    
+            bloblist_add(keys, key_material_old, datasize, "application/pgp-keys",
+                                                                   "file://pEpkey_old.asc");
+    }
+    datasize = 0;
+                                                                      
+    status = export_key(session, new_fpr, &key_material_new, &datasize);
+
+    if (datasize > 0 && key_material_new) {         
+        if (status)
+            return status;
+
+        if (!keys)
+            keys = new_bloblist(key_material_new, datasize, 
+                                            "application/pgp-keys",
+                                            "file://pEpkey_new_pub.asc");
+        else                                    
+            bloblist_add(keys, key_material_new, datasize, "application/pgp-keys", "file://pEpkey_new_pub.asc");
+                        
+        datasize = 0;    
+        if (include_secret) {
+            status = export_secret_key(session, new_fpr, &key_material_priv, &datasize);    
+            if (status)
+                return status;
+            if (datasize > 0 && key_material_priv) {
+                bloblist_add(keys, key_material_priv, datasize, "application/pgp-keys",
+                                                                            "file://pEpkey_priv.asc");
+            }                                                      
+        }    
+    }
+    if (keys) {
+        if (*key_attachments)
+            bloblist_join(*key_attachments, keys);
+        else
+            *key_attachments = keys;
+    }        
+    return status;
+}
+
+// For multiple idents under a single key
+// idents contain new fprs
+static PEP_STATUS _generate_own_commandlist_msg(PEP_SESSION session,
+                                                identity_list* from_idents,
+                                                const char* old_fpr,
+                                                message** dst) {                                                
+    PEP_STATUS status = PEP_STATUS_OK;
+    message* msg = NULL;                                                
+    identity_list* list_curr = from_idents;
+    keyreset_command_list* kr_commands = NULL;
+    bloblist_t* key_attachments = NULL;
+    
+    for ( ; list_curr && list_curr->ident; list_curr = list_curr->next) {
+        pEp_identity* curr_ident = list_curr->ident;
+        
+        if (curr_ident->flags & PEP_idf_devicegroup) {                
+        
+            PEP_STATUS status = _generate_reset_structs(session,
+                                                        curr_ident,
+                                                        old_fpr,
+                                                        curr_ident->fpr,
+                                                        &key_attachments,
+                                                        &kr_commands,
+                                                        true);
+            if (status != PEP_STATUS_OK)
+                return status; // FIXME
+            if (!key_attachments || !kr_commands)
+                return PEP_UNKNOWN_ERROR;
+        }        
+    }
+    
+    
+    // DEBUG CODE HERE
+    keyreset_command_list* cl_curr = kr_commands;
+    for (list_curr = from_idents; list_curr && list_curr->ident; list_curr = list_curr->next, cl_curr = cl_curr->next) {
+        assert(cl_curr && cl_curr->command);
+        assert(strcmp(cl_curr->command->new_key, list_curr->ident->fpr) == 0);
+    }    
+    //
+    
+    char* payload = NULL;
+    size_t size = 0;
+    status = key_reset_commands_to_PER(kr_commands, &payload, &size);
+    if (status != PEP_STATUS_OK)
+        return status;
+    
+    // DEBUG CODE HERE 
+    keyreset_command_list* rebuild = NULL;
+    keyreset_command_list* curr_cmd;
+    
+    status = PER_to_key_reset_commands(payload, size, &rebuild);
+    assert(status == PEP_STATUS_OK);
+    curr_cmd = rebuild;
+    
+    for (cl_curr = kr_commands; curr_cmd && curr_cmd->command; curr_cmd = curr_cmd->next, cl_curr = cl_curr->next) {
+        assert(strcmp(curr_cmd->command->new_key, cl_curr->command->new_key) == 0);
+    }        
+    //
+
+    // From and to our first ident - this only goes to us.
+    pEp_identity* from = identity_dup(from_idents->ident);
+    pEp_identity* to = identity_dup(from);    
+    status = base_prepare_message(session, from, to,
+                                  BASE_KEYRESET, payload, size, NULL,
+                                  &msg);
+
+    if (status != PEP_STATUS_OK) {
+        free(msg);
+        return status;
+    }    
+    if (!msg)
+        return PEP_OUT_OF_MEMORY;
+    if (!msg->attachments)
+        return PEP_UNKNOWN_ERROR;
+    
+    if (!bloblist_join(msg->attachments, key_attachments))
+        return PEP_UNKNOWN_ERROR;
+
+    if (msg)
+        *dst = msg;
+
+    free_keyreset_command_list(kr_commands);
+        
+    return status;
+
+}
+
 static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
                                                      const pEp_identity* from_ident,
                                                      const pEp_identity* to_ident,
@@ -50,9 +223,22 @@ static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
     if (!outgoing_ident->fpr)
         return PEP_OUT_OF_MEMORY;
         
-    // Need payload now
-    keyreset_command* kr_command = new_keyreset_command(outgoing_ident, new_fpr);
-    keyreset_command_list* kr_list = new_keyreset_command_list(kr_command);
+    keyreset_command_list* kr_list = NULL;
+    bloblist_t* key_attachments = NULL;
+            
+    // Check memory        
+    status = _generate_reset_structs(session,
+                                     outgoing_ident,
+                                     old_fpr,
+                                     new_fpr,
+                                     &key_attachments,
+                                     &kr_list,
+                                     is_private);
+    if (status != PEP_STATUS_OK)
+        return status; // FIXME
+    if (!key_attachments || !kr_list)
+        return PEP_UNKNOWN_ERROR;
+        
     char* payload = NULL;
     size_t size = 0;
     status = key_reset_commands_to_PER(kr_list, &payload, &size);
@@ -68,53 +254,6 @@ static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
     if (!msg->attachments)
         return PEP_UNKNOWN_ERROR;
     
-    char* key_material_old = NULL;
-    char* key_material = NULL;    
-    size_t datasize = 0;
-    
-    status = export_key(session, old_fpr, &key_material_old, &datasize);
-    key_material = key_material_old;
-    if (datasize > 0 && key_material) {         
-        if (status)
-            return status;
-
-        if (!msg->attachments)
-            msg->attachments = new_bloblist(key_material, datasize, 
-                                            "application/pgp-keys",
-                                            "file://pEpkey_old.asc");
-        else                                    
-            bloblist_add(msg->attachments, key_material, datasize, "application/pgp-keys",
-                                                                   "file://pEpkey_old.asc");
-    }
-    datasize = 0;
-    key_material = NULL;
-                                                                      
-    status = export_key(session, new_fpr, &key_material, &datasize);
-
-    if (datasize > 0 && key_material) {         
-        if (status)
-            return status;
-
-        if (!msg->attachments)
-            msg->attachments = new_bloblist(key_material, datasize, 
-                                            "application/pgp-keys",
-                                            "file://pEpkey_pub.asc");
-        else                                    
-            bloblist_add(msg->attachments, key_material, datasize, "application/pgp-keys",
-                                                                   "file://pEpkey_pub.asc");
-                        
-        key_material = NULL;
-        datasize = 0;    
-        if (is_private) {
-            status = export_secret_key(session, new_fpr, &key_material, &datasize);    
-            if (status)
-                return status;
-            if (datasize > 0 && key_material) {
-                bloblist_add(msg->attachments, key_material, datasize, "application/pgp-keys",
-                                                                       "file://pEpkey_priv.asc");
-            }                                                      
-        }    
-    }    
     if (msg)
         *dst = msg;
     return status;
@@ -747,39 +886,29 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
         
     // Ok, everyone's got a new keypair. Hoorah! 
     // generate, sign, and push messages into queue
-    for (curr_ident = key_idents; curr_ident && curr_ident->ident; curr_ident = curr_ident->next) {
-        if (curr_ident->ident->flags & PEP_idf_devicegroup) {
-            message* outmsg = NULL;
-            
-            // FIXME - do we have to? Maybe check IN the funct
-            pEp_identity* to_me = identity_dup(curr_ident->ident);
-            if (!to_me)
-                return PEP_OUT_OF_MEMORY;
-                
-            status = _generate_keyreset_command_message(session, curr_ident->ident, to_me,
-                                                        old_key, curr_ident->ident->fpr,
-                                                        true, &outmsg);
-            
-            message* enc_msg = NULL;
-            
-            // encrypt this baby and get out
-            // extra keys???
-            status = encrypt_message(session, outmsg, NULL, &enc_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_key_reset_only);
-            
-            if (status != PEP_STATUS_OK) {
-                goto pEp_free;
-            }
-            
-            // insert into queue
-            status = send_cb(enc_msg);
-
-            if (status != PEP_STATUS_OK) {
-                free(enc_msg);
-                goto pEp_free;            
-            }                         
-            // Does there need to be some kind of signal here for sync?                                               
-        }    
+    message* outmsg = NULL;
+    status = _generate_own_commandlist_msg(session,
+                                           key_idents,
+                                           old_key,
+                                           &outmsg);
+    
+    message* enc_msg = NULL;
+    
+    // encrypt this baby and get out
+    // extra keys???
+    status = encrypt_message(session, outmsg, NULL, &enc_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_key_reset_only);
+    
+    if (status != PEP_STATUS_OK) {
+        goto pEp_free;
     }
+
+    // insert into queue
+    status = send_cb(enc_msg);
+
+    if (status != PEP_STATUS_OK) {
+        free(enc_msg);
+        goto pEp_free;            
+    }                         
     
     // Ok, we've signed everything we need to with the old key,
     // Revoke that baby.
@@ -815,6 +944,16 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
             free_identity(tmp_ident);
         }    
     }    
+    
+    if (status == PEP_STATUS_OK)
+        // cascade that mistrust for anyone using this key
+        status = mark_as_compromised(session, old_key);
+        
+    if (status == PEP_STATUS_OK)
+        status = remove_fpr_as_default(session, old_key);
+    if (status == PEP_STATUS_OK)
+        status = add_mistrusted_key(session, old_key);
+    
 pEp_free:
     return status;
 }
