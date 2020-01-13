@@ -1151,14 +1151,20 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     alex_id->me = true;
     status = set_own_key(session, alex_id, pubkey1);
     ASSERT_EQ(status, PEP_STATUS_OK);
+    status = set_identity_flags(session, alex_id2, alex_id2->flags | PEP_idf_devicegroup);
+    ASSERT_EQ(status , PEP_STATUS_OK);
 
     alex_id2->me = true;
     status = set_own_key(session, alex_id2, pubkey2);
     ASSERT_EQ(status, PEP_STATUS_OK);
+    status = set_identity_flags(session, alex_id2, alex_id2->flags | PEP_idf_devicegroup);
+    ASSERT_EQ(status , PEP_STATUS_OK);
 
     alex_id3->me = true;
     status = set_own_key(session, alex_id3, pubkey3);
     ASSERT_EQ(status, PEP_STATUS_OK);
+    status = set_identity_flags(session, alex_id2, alex_id2->flags | PEP_idf_devicegroup);
+    ASSERT_EQ(status , PEP_STATUS_OK);
 
     status = myself(session, alex_id);
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -1220,6 +1226,105 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     ASSERT_STRNE(alex_id->fpr, alex_id2->fpr);
     ASSERT_STRNE(alex_id->fpr, alex_id3->fpr);
     ASSERT_STRNE(alex_id2->fpr, alex_id3->fpr);
+
+    ASSERT_EQ(m_queue.size(),1);
+    if (false) {
+        ofstream outfile;
+        message* curr_sent_msg = m_queue.at(0);        
+        string fname = "test_mails/check_reset_grouped_own_multiple_keys_multiple_idents_reset_one.eml";
+        outfile.open(fname);
+        char* msg_txt = NULL;
+        mime_encode_message(curr_sent_msg, false, &msg_txt);
+        outfile << msg_txt;
+        outfile.close();        
+        cout <<  "    const char* replkey2 = \"" << alex_id2->fpr << "\";" << endl;    
+    }    
+    
+
+    free_identity(alex_id);
+    free_identity(alex_id2);
+    free_identity(alex_id3);
+}
+
+TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_idents_reset_one_recv) {
+    char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
+    char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
+    char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
+    const char* replkey2 = "E08F5E0AB145AFF1DBC4D0FB49F3D5CAC8A47991";
+          
+    pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
+                                        NULL,
+                                        "AlexID",
+                                        "Alexander Braithwaite");
+
+    pEp_identity* alex_id2 = new_identity("pep.test.alexander6@darthmama.org",
+                                          NULL,
+                                          "AlexID",
+                                          "Alexander Braithwaite");
+
+    pEp_identity* alex_id3 = new_identity("pep.test.alexander6a@darthmama.org",
+                                          NULL,
+                                          "AlexID",
+                                          "Alexander Braithwaite");
+
+
+    PEP_STATUS status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x0019697D_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0x503B14D8_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0x0019697D_priv.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0x503B14D8_priv.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0xA216E95A_priv.asc");
+
+    alex_id->me = true;
+    status = set_own_key(session, alex_id, pubkey1);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    alex_id2->me = true;
+    status = set_own_key(session, alex_id2, pubkey2);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    alex_id3->me = true;
+    status = set_own_key(session, alex_id3, pubkey3);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    status = myself(session, alex_id);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_STREQ(pubkey1, alex_id->fpr);
+
+    status = myself(session, alex_id2);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_STREQ(pubkey2, alex_id2->fpr);
+
+    status = myself(session, alex_id3);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_STREQ(pubkey3, alex_id3->fpr);
+
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    string fname = "test_mails/check_reset_grouped_own_multiple_keys_multiple_idents_reset_one.eml";
+    string mailstr = slurp(fname.c_str());
+    message* new_msg = NULL;
+    status = mime_decode_message(mailstr.c_str(), mailstr.size(), &new_msg);
+    ASSERT_NE(new_msg, nullptr);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    status = decrypt_message(session, new_msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_EQ(status, PEP_STATUS_OK);        
+
+    status = myself(session, alex_id);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_STREQ(pubkey1, alex_id->fpr);
+
+    status = myself(session, alex_id2);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_STREQ(replkey2, alex_id2->fpr);
+
+    status = myself(session, alex_id3);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_STREQ(pubkey3, alex_id3->fpr);
 
     free_identity(alex_id);
     free_identity(alex_id2);
