@@ -136,13 +136,18 @@ static PEP_STATUS _generate_own_commandlist_msg(PEP_SESSION session,
                 return PEP_UNKNOWN_ERROR;
         }        
     }
-        
+    
+    if (!kr_commands) {
+        // There was nothing for us to send to self - we could be ungrouped,
+        // etc
+        return PEP_STATUS_OK;
+    }    
     char* payload = NULL;
     size_t size = 0;
     status = key_reset_commands_to_PER(kr_commands, &payload, &size);
     if (status != PEP_STATUS_OK)
         return status;
-    
+        
     // From and to our first ident - this only goes to us.
     pEp_identity* from = identity_dup(from_idents->ident);
     pEp_identity* to = identity_dup(from);    
@@ -862,19 +867,12 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
     // each of these has the same key and needs a new one.
     identity_list* curr_ident;
     for (curr_ident = key_idents; curr_ident && curr_ident->ident; curr_ident = curr_ident->next) {
-        if (curr_ident->ident->flags & PEP_idf_devicegroup) {
-            pEp_identity* ident = curr_ident->ident;
-            free(ident->fpr);
-            ident->fpr = NULL;
-            status = generate_keypair(session, ident);
-            if (status != PEP_STATUS_OK)
-                return status;
-                
-        }
-        // FIXME: BUG - this will cause early revocation for grouped idents!! 
-        else {
-            status = key_reset(session, old_key, curr_ident->ident); 
-        }        
+        pEp_identity* ident = curr_ident->ident;
+        free(ident->fpr);
+        ident->fpr = NULL;
+        status = generate_keypair(session, ident);
+        if (status != PEP_STATUS_OK)
+            return status;            
     }
         
     // Ok, everyone's got a new keypair. Hoorah! 
@@ -884,24 +882,28 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
                                            key_idents,
                                            old_key,
                                            &outmsg);
-    
-    message* enc_msg = NULL;
-    
-    // encrypt this baby and get out
-    // extra keys???
-    status = encrypt_message(session, outmsg, NULL, &enc_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_key_reset_only);
-    
-    if (status != PEP_STATUS_OK) {
-        goto pEp_free;
+                                           
+    // Following will only be true if some idents were grouped,
+    // and will only include grouped idents!                                       
+    if (outmsg) {    
+        message* enc_msg = NULL;
+        
+        // encrypt this baby and get out
+        // extra keys???
+        status = encrypt_message(session, outmsg, NULL, &enc_msg, PEP_enc_PGP_MIME, PEP_encrypt_flag_key_reset_only);
+        
+        if (status != PEP_STATUS_OK) {
+            goto pEp_free;
+        }
+
+        // insert into queue
+        status = send_cb(enc_msg);
+
+        if (status != PEP_STATUS_OK) {
+            free(enc_msg);
+            goto pEp_free;            
+        }                         
     }
-
-    // insert into queue
-    status = send_cb(enc_msg);
-
-    if (status != PEP_STATUS_OK) {
-        free(enc_msg);
-        goto pEp_free;            
-    }                         
     
     // Ok, we've signed everything we need to with the old key,
     // Revoke that baby.
