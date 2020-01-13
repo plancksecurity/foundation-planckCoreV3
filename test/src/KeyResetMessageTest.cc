@@ -649,6 +649,28 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own) {
         outfile << msg_txt;
         outfile.close();
         cout << "    ASSERT_STREQ(alice->fpr, \"" << alice_new_fpr << "\");" << endl;
+        
+        // Check what we have here, because it looks wrong
+        char* ptext = NULL;
+        stringlist_t* _keylist;
+        size_t psize = 0;
+        status = decrypt_and_verify(session, curr_sent_msg->attachments->next->value,
+                                                       strlen(curr_sent_msg->attachments->next->value), NULL, 0,
+                                                       &ptext, &psize, &_keylist,
+                                                       NULL);
+        message* inner_msg = NULL;
+        status = mime_decode_message(ptext, psize, &inner_msg);
+        
+        bloblist_t* key_reset_payload = inner_msg->attachments;  
+        message* keyreset_msg = NULL;
+        status = mime_decode_message(key_reset_payload->value, key_reset_payload->size, &keyreset_msg);
+        keyreset_command_list* cl = NULL;
+        status = PER_to_key_reset_commands(keyreset_msg->attachments->value, keyreset_msg->attachments->size, &cl);                                             
+        ASSERT_NE(cl, nullptr);
+        ASSERT_STREQ(cl->command->ident->address, "pep.test.alice@pep-project.org");
+        ASSERT_STREQ(cl->command->ident->fpr, alice_fpr);        
+        ASSERT_STREQ(cl->command->new_key, alice_new_fpr);                
+        ASSERT_EQ(cl->next, nullptr);
     }
 }
 
@@ -679,7 +701,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_recv) {
     status = myself(session, alice);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_STRNE(alice->fpr, alice_fpr);
-    ASSERT_STREQ(alice->fpr, "C2F84F14A5D150720C3F4360F0670D700975FFA7");
+    ASSERT_STREQ(alice->fpr, "0D9374B9573548600272BF1D84A892F08ED7BBBF");
     bool revoked = false;
     status = key_revoked(session, alice_fpr, &revoked);
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -788,10 +810,10 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr) {
 
 TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr_recv) {
     PEP_STATUS status = PEP_STATUS_OK;
-    const char* replkey1 = "E156365983580C383C88633E679BB4390FE19A13";
-    const char* replkey2 = "DB99E4658C118CE07A04A776CAE223F4448CD681";
-    const char* replkey3 = "23DD709081909353B5A1E87DA4D5D01137A1E07E";
-    
+    const char* replkey1 = "369BD11FB63BAE28105085BFE399BE76DA9EB063";
+    const char* replkey2 = "6F61E78E8250F1CA7573F01F53F6467C533334F7";
+    const char* replkey3 = "0ECDE4A782182BD5B59BF7D25738C0F2C6D2D837";
+        
     // set up device own state
     char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
 

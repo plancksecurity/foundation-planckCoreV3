@@ -136,35 +136,13 @@ static PEP_STATUS _generate_own_commandlist_msg(PEP_SESSION session,
                 return PEP_UNKNOWN_ERROR;
         }        
     }
-    
-    
-    // DEBUG CODE HERE
-    keyreset_command_list* cl_curr = kr_commands;
-    for (list_curr = from_idents; list_curr && list_curr->ident; list_curr = list_curr->next, cl_curr = cl_curr->next) {
-        assert(cl_curr && cl_curr->command);
-        assert(strcmp(cl_curr->command->new_key, list_curr->ident->fpr) == 0);
-    }    
-    //
-    
+        
     char* payload = NULL;
     size_t size = 0;
     status = key_reset_commands_to_PER(kr_commands, &payload, &size);
     if (status != PEP_STATUS_OK)
         return status;
     
-    // DEBUG CODE HERE 
-    keyreset_command_list* rebuild = NULL;
-    keyreset_command_list* curr_cmd;
-    
-    status = PER_to_key_reset_commands(payload, size, &rebuild);
-    assert(status == PEP_STATUS_OK);
-    curr_cmd = rebuild;
-    
-    for (cl_curr = kr_commands; curr_cmd && curr_cmd->command; curr_cmd = curr_cmd->next, cl_curr = cl_curr->next) {
-        assert(strcmp(curr_cmd->command->new_key, cl_curr->command->new_key) == 0);
-    }        
-    //
-
     // From and to our first ident - this only goes to us.
     pEp_identity* from = identity_dup(from_idents->ident);
     pEp_identity* to = identity_dup(from);    
@@ -466,6 +444,8 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
 
     keyreset_command_list* curr_cl = resets;
 
+    stringpair_list_t* rev_pairs = NULL;
+    
     // Ok, go through the list of reset commands. Right now, this 
     // is actually only one, but could be more later.
     for ( ; curr_cl && curr_cl->command; curr_cl = curr_cl->next) {    
@@ -567,26 +547,6 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
                 return PEP_KEY_NOT_RESET;                        
         }
         
-        // temp fpr set for function call
-        // curr_ident->fpr = (char*)sender_fpr;
-        // status = get_trust(session, curr_ident);
-        // 
-        // PEP_comm_type ct_result = curr_ident->comm_type;
-        // 
-        // // Basically, see if fpr is even in the database
-        // // for this user - we'll get PEP_ct_unknown if it isn't
-        // if (ct_result < PEP_ct_strong_but_unconfirmed)
-        //     return PEP_KEY_NOT_RESET;            
-        // Now check the fpr we're trying to change (old_fpr), which we reset a few lines above -
-        // again, if it doesn't belong to the user, we won't use it.
-        // status = get_trust(session, curr_ident);
-        // 
-        // if (status != PEP_STATUS_OK)
-        //     return status;            
-        // 
-        // if (curr_ident->comm_type < PEP_ct_strong_but_unconfirmed)
-        //     return PEP_KEY_NOT_RESET;
-            
         // Hooray! We apparently now are dealing with keys 
         // belonging to the user from a message at least marginally
         // from the user
@@ -639,29 +599,61 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
                 return status;
             
             status = myself(session, curr_ident);
-                
-            // key reset on old key
-            status = revoke_key(session, old_fpr, NULL);
 
-            if (status != PEP_STATUS_OK)
-                goto pEp_free;
-        
-            // N.B. This sort of sucks because we overwrite this every time.
-            // But this case is infrequent and we don't rely on the binding.
+            char* old_copy = NULL;
+            char* new_copy = NULL;
+            old_copy = strdup(old_fpr);
+            new_copy = strdup(new_fpr);
+            if (!old_copy || !new_copy)
+                return PEP_OUT_OF_MEMORY;
 
-            if (status == PEP_STATUS_OK) 
-                status = set_revoked(session, old_fpr, curr_ident->fpr, time(NULL));            
-
-            if (status != PEP_STATUS_OK)
-                goto pEp_free;
+            stringpair_t* revp = new_stringpair(old_copy, new_copy);                
+            if (!rev_pairs) {
+                rev_pairs = new_stringpair_list(revp);
+                if (!rev_pairs)
+                    return PEP_OUT_OF_MEMORY;
+            }
+            else    
+                stringpair_list_add(rev_pairs, revp);
+                            
         }    
+        
         old_fpr = NULL;
         free(new_fpr);
         new_fpr = NULL;    
     }
 
+    // actually revoke
+    stringpair_list_t* curr_rev_pair = rev_pairs;
+    while (curr_rev_pair && curr_rev_pair->value) {
+        char* rev_key = curr_rev_pair->value->key;
+        char* new_key = curr_rev_pair->value->value;
+        if (EMPTYSTR(rev_key) || EMPTYSTR(new_key))
+            return PEP_UNKNOWN_ERROR;
+        bool revoked = false;
+        status = key_revoked(session, rev_key, &revoked);
+        if (!revoked) {
+            // key reset on old key
+            status = revoke_key(session, rev_key, NULL);
+
+            if (status != PEP_STATUS_OK)
+                goto pEp_free;    
+        }
+        // N.B. This sort of sucks because we overwrite this every time.
+        // But this case is infrequent and we don't rely on the binding.
+
+        if (status == PEP_STATUS_OK) 
+            status = set_revoked(session, rev_key, new_key, time(NULL));            
+
+        if (status != PEP_STATUS_OK)
+            goto pEp_free;        
+        curr_rev_pair = curr_rev_pair->next;    
+    }
+
+
 pEp_free:    
     free_stringlist(keylist);    
+    free_stringpair_list(rev_pairs);
     free(old_fpr);
     free(new_fpr);
     return status;
@@ -879,6 +871,7 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
                 return status;
                 
         }
+        // FIXME: BUG - this will cause early revocation for grouped idents!! 
         else {
             status = key_reset(session, old_key, curr_ident->ident); 
         }        
@@ -921,10 +914,23 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
         if (curr_ident->ident->flags & PEP_idf_devicegroup) {
             pEp_identity* ident = curr_ident->ident;
             
+            // set own key, you fool.
+            // Grab ownership first.
+            char* new_key = ident->fpr;
+            ident->fpr = NULL;
+            status = set_own_key(session, ident, new_key);
+            if (status != PEP_STATUS_OK) {
+                // scream loudly and cry, then hang head in shame
+                return status;
+            }
+            free(ident->fpr);
+            // release ownership to the struct again
+            ident->fpr = new_key;
+                
             // N.B. This sort of sucks because we overwrite this every time.
             // But this case is infrequent and we don't rely on the binding.
             if (status == PEP_STATUS_OK) 
-                status = set_revoked(session, old_key, curr_ident->ident->fpr, time(NULL));            
+                status = set_revoked(session, old_key, new_key, time(NULL));            
 
             if (status != PEP_STATUS_OK)
                 goto pEp_free;
