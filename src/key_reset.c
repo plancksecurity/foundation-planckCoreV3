@@ -58,25 +58,28 @@ static PEP_STATUS _generate_reset_structs(PEP_SESSION session,
      
     size_t datasize = 0;
     
-    PEP_STATUS status = export_key(session, old_fpr, &key_material_old, &datasize);
-    if (datasize > 0 && key_material_old) {         
-        if (status)
-            return status;
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    if (!include_secret) { // This isn't to own recips, so shipping the rev'd key is OK. Own keys are revoked on each device.
+        status = export_key(session, old_fpr, &key_material_old, &datasize);
+        if (datasize > 0 && key_material_old) {         
+            if (status != PEP_STATUS_OK)
+                return status;
 
-        if (!keys)
-            keys = new_bloblist(key_material_old, datasize, 
-                                            "application/pgp-keys",
-                                            "file://pEpkey_old.asc");
-        else                                    
-            bloblist_add(keys, key_material_old, datasize, "application/pgp-keys",
-                                                                   "file://pEpkey_old.asc");
-    }
-    datasize = 0;
-                                                                      
+            if (!keys)
+                keys = new_bloblist(key_material_old, datasize, 
+                                                "application/pgp-keys",
+                                                "file://pEpkey_old.asc");
+            else                                    
+                bloblist_add(keys, key_material_old, datasize, "application/pgp-keys",
+                                                                       "file://pEpkey_old.asc");
+        }
+        datasize = 0;
+    }                                                                  
     status = export_key(session, new_fpr, &key_material_new, &datasize);
 
     if (datasize > 0 && key_material_new) {         
-        if (status)
+        if (status != PEP_STATUS_OK)
             return status;
 
         if (!keys)
@@ -89,7 +92,7 @@ static PEP_STATUS _generate_reset_structs(PEP_SESSION session,
         datasize = 0;    
         if (include_secret) {
             status = export_secret_key(session, new_fpr, &key_material_priv, &datasize);    
-            if (status)
+            if (status != PEP_STATUS_OK)
                 return status;
             if (datasize > 0 && key_material_priv) {
                 bloblist_add(keys, key_material_priv, datasize, "application/pgp-keys",
