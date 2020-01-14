@@ -191,6 +191,7 @@ struct _pEpSession {
     sqlite3_stmt *set_revoke_contact_as_notified;
     sqlite3_stmt *get_contacted_ids_from_revoke_fpr;
     sqlite3_stmt *was_id_for_revoke_contacted;
+    sqlite3_stmt *has_id_contacted_address;
     sqlite3_stmt *get_last_contacted;
     // sqlite3_stmt *set_device_group;
     // sqlite3_stmt *get_device_group;

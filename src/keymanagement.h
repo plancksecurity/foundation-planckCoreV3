@@ -370,7 +370,10 @@ DYNAMIC_API PEP_STATUS own_keys_retrieve(
 //      myself() is called by set_own_key() without key generation
 //      me->flags are ignored
 //      me->address must not be an alias
-//      me->fpr will be ignored and replaced by fpr
+//      me->fpr will be ignored and replaced by fpr, but
+//      caller MUST surrender ownership of the me->fpr reference, because 
+//      it may be freed and replaced within the myself call. caller owns 
+//      me->fpr memory again upon return.
 
 DYNAMIC_API PEP_STATUS set_own_key(
        PEP_SESSION session,

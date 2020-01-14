@@ -163,6 +163,22 @@ DYNAMIC_API bloblist_t *bloblist_add(bloblist_t *bloblist, char *blob, size_t si
     return list_curr->next;
 }
 
+DYNAMIC_API bloblist_t* bloblist_join(bloblist_t* first, bloblist_t* second) {
+    if (!first)
+        return second;
+    if (!second)
+        return first;
+    
+    bloblist_t* list_curr = first;
+    
+    while (list_curr->next) {
+        list_curr = list_curr->next;
+    }
+    list_curr->next = second;
+    
+    return first;
+}
+
 DYNAMIC_API int bloblist_length(const bloblist_t *bloblist)
 {
     int len = 0;

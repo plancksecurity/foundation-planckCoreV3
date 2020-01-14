@@ -114,11 +114,6 @@ DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session);
 //                              if NULL and fpr is non-NULL, we'll reset the key for all
 //                              associated identities. If both ident and fpr are NULL, see 
 //                              the fpr arg documentation.
-//      own_identities (out)    IF this is resetting own identities, passing in a pointer here 
-//                              will cause key_reset to return a list of own_identities featuring 
-//                              the new keys
-//      own_revoked_fprs (out)  IF this is resetting own identities, passing in a pointer here 
-//                              will cause key_reset to send a list of the revoked fprs
 //
 //      Note: ident->fpr is always ignored
 //
@@ -128,26 +123,26 @@ DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session);
 PEP_STATUS key_reset(
         PEP_SESSION session,
         const char* fpr,
-        pEp_identity* ident,
-        identity_list** own_identities,
-        stringlist_t** own_revoked_fprs
+        pEp_identity* ident
     );
 
-
+/*
 PEP_STATUS key_reset_own_and_deliver_revocations(PEP_SESSION session, 
                                                  identity_list** own_identities, 
                                                  stringlist_t** revocations, 
                                                  stringlist_t** keys);
-
+*/
 
 PEP_STATUS has_key_reset_been_sent(
         PEP_SESSION session, 
+        const char* from_addr,
         const char* user_id, 
         const char* revoked_fpr,
         bool* contacted);
 
 PEP_STATUS set_reset_contact_notified(
         PEP_SESSION session,
+        const char* own_address,
         const char* revoke_fpr,
         const char* contact_id
     );
@@ -157,11 +152,14 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
 
 PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
                                                message** dst, 
+                                               pEp_identity* own_identity,
                                                pEp_identity* recip,
                                                const char* old_fpr,
                                                const char* new_fpr);
+
                                                
 PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
+                                     pEp_identity* from_ident,
                                      const char* old_fpr, 
                                      const char* new_fpr);
  

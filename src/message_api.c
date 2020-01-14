@@ -3395,6 +3395,65 @@ static bool _have_extrakeys(stringlist_t *keylist)
         && keylist->value[0];
 }
 
+// practically speaking, only useful to get user_id/address intersection
+// we presume no dups in the first list if you're looking for
+// a unique result.
+static PEP_STATUS ident_list_intersect(identity_list* list_a, 
+                                       identity_list* list_b,
+                                       identity_list** intersection) {
+
+    if (!intersection)
+        return PEP_ILLEGAL_VALUE;
+                                           
+    *intersection = NULL;                                       
+    if (!list_a || !list_b || !list_a->ident || !list_b->ident)
+        return PEP_STATUS_OK;
+                
+        
+    *intersection = NULL;
+    
+    identity_list* isect = NULL;
+    
+    identity_list* curr_a = list_a;
+    for ( ; curr_a && curr_a->ident; curr_a = curr_a->next) {
+        pEp_identity* id_a = curr_a->ident;
+        if (EMPTYSTR(id_a->user_id) || EMPTYSTR(id_a->address))
+            continue;
+
+        identity_list* curr_b = list_b;
+        for ( ; curr_b && curr_b->ident; curr_b = curr_b->next) {
+            pEp_identity* id_b = curr_b->ident;
+            if (EMPTYSTR(id_b->user_id) || EMPTYSTR(id_b->address))
+                continue;
+                
+            if (strcmp(id_a->user_id, id_b->user_id) == 0 &&
+                strcmp(id_a->address, id_b->address) == 0) {
+                pEp_identity* result_id = identity_dup(id_b);
+                if (!id_b) 
+                    goto enomem;
+                    
+                if (!isect) {
+                    isect = new_identity_list(result_id);
+                    if (!isect) 
+                        goto enomem;
+                }    
+                else {
+                    if (!identity_list_add(isect, result_id))
+                        goto enomem;
+                }   
+                break;  
+            }
+        }
+    }
+    *intersection = isect;
+    return PEP_STATUS_OK;
+
+enomem:
+    free_identity_list(isect);
+    return PEP_OUT_OF_MEMORY;
+    
+}
+
 static PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -3551,6 +3610,7 @@ static PEP_STATUS _decrypt_message(
     
     bool imported_private_key_address = false;
     bool has_inner = false;
+    bool is_key_reset = false;
 
     if (ptext) { 
         /* we got a plaintext from decryption */
@@ -3718,7 +3778,6 @@ static PEP_STATUS _decrypt_message(
                         // Sort out pEp user status and version number based on INNER message.
                         
                         bool is_inner = false;
-                        bool is_key_reset = false;
 
                         // Deal with plaintext modification in 1.0 and 2.0 messages
                         status = unencapsulate_hidden_fields(inner_message, NULL, &wrap_info);   
@@ -3746,6 +3805,24 @@ static PEP_STATUS _decrypt_message(
                                 is_key_reset = (strcmp(wrap_info, "KEY_RESET") == 0);
                         }
                             
+                        // check for private key in decrypted message attachment while importing
+                        // N.B. Apparently, we always import private keys into the keyring; however,
+                        // we do NOT always allow those to be used for encryption. THAT is controlled
+                        // by setting it as an own identity associated with the key in the DB.
+                        
+                        // If we have a message 2.0 message, we are ONLY going to be ok with keys
+                        // we imported from THIS part of the message.
+                        imported_private_key_address = false;
+                        free(private_il); 
+                        private_il = NULL;
+                        
+                        // import keys from decrypted INNER source
+                        status = import_priv_keys_from_decrypted_msg(session, inner_message,
+                                                                     &imported_keys,
+                                                                     &imported_private_key_address,
+                                                                     private_il);
+                        if (status != PEP_STATUS_OK)
+                            goto pEp_error;            
 
                         if (is_key_reset) {
                             if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
@@ -3756,28 +3833,10 @@ static PEP_STATUS _decrypt_message(
                                     goto pEp_error;
                                 }
                                 *flags |= PEP_decrypt_flag_consume;
+                                calculated_src = msg = inner_message;                                    
                             }
                         }
                         else if (is_inner) {
-
-                            // check for private key in decrypted message attachment while importing
-                            // N.B. Apparently, we always import private keys into the keyring; however,
-                            // we do NOT always allow those to be used for encryption. THAT is controlled
-                            // by setting it as an own identity associated with the key in the DB.
-                            
-                            // If we have a message 2.0 message, we are ONLY going to be ok with keys
-                            // we imported from THIS part of the message.
-                            imported_private_key_address = false;
-                            free(private_il); 
-                            private_il = NULL;
-                            
-                            // import keys from decrypted INNER source
-                            status = import_priv_keys_from_decrypted_msg(session, inner_message,
-                                                                         &imported_keys,
-                                                                         &imported_private_key_address,
-                                                                         private_il);
-                            if (status != PEP_STATUS_OK)
-                                goto pEp_error;            
 
                             // THIS is our message
                             // Now, let's make sure we've copied in 
@@ -3837,17 +3896,20 @@ static PEP_STATUS _decrypt_message(
         // Ok, so if it was signed and it's all verified, we can update
         // eligible signer comm_types to PEP_ct_pEp_*
         // This also sets and upgrades pEp version
-        if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && is_pEp_msg && calculated_src->from)
+        if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && !is_key_reset && is_pEp_msg && calculated_src->from)
             status = update_sender_to_pEp_trust(session, calculated_src->from, _keylist, major_ver, minor_ver);
 
         /* Ok, now we have a keylist used for decryption/verification.
            now we need to update the message rating with the 
            sender and recipients in mind */
-        status = amend_rating_according_to_sender_and_recipients(session,
-                 rating, calculated_src->from, _keylist);
-
-        if (status != PEP_STATUS_OK)
-            goto pEp_error;
+           
+        if (!is_key_reset) { // key reset messages invalidate some of the ratings in the DB by now.
+            status = amend_rating_according_to_sender_and_recipients(session,
+                     rating, calculated_src->from, _keylist);
+            if (status != PEP_STATUS_OK)
+                goto pEp_error;
+         
+        }             
         
         /* We decrypted ok, hallelujah. */
         msg->enc_format = PEP_enc_none;    
@@ -3924,42 +3986,73 @@ static PEP_STATUS _decrypt_message(
                     continue; // Again, shouldn't occur
 
                 if (curr_pair->key && curr_pair->value) {
-                    status = create_standalone_key_reset_message(session,
-                        &reset_msg,
-                        msg->from,
-                        curr_pair->key,
-                        curr_pair->value);
+                    /* Figure out which address(es) this came to so we know who to reply from */                    
 
-                    // If we can't find the identity, this is someone we've never mailed, so we just
-                    // go on letting them use the wrong key until we mail them ourselves. (Spammers, etc)
-                    if (status != PEP_CANNOT_FIND_IDENTITY) {
+                    identity_list* my_rev_ids = NULL;
+                    
+                    /* check by replacement ID for identities which used this key? */
+                    status = get_identities_by_main_key_id(session, curr_pair->value,
+                                                           &my_rev_ids);
+                                                                                                                      
+                    if (status == PEP_STATUS_OK && my_rev_ids) {
+                        // get identities in this list the message was to/cc'd to (not for bcc)
+                        identity_list* used_ids_for_key = NULL;
+                        status = ident_list_intersect(my_rev_ids, msg->to, &used_ids_for_key);
+                        if (status != PEP_STATUS_OK)
+                            goto pEp_error; // out of memory
+
+                        identity_list* used_cc_ids = NULL;    
+                        status = ident_list_intersect(my_rev_ids, msg->cc, &used_cc_ids);
                         if (status != PEP_STATUS_OK)
                             goto pEp_error;
 
-                        if (!reset_msg) {
-                            status = PEP_OUT_OF_MEMORY;
-                            goto pEp_error;
-                        }
-                        // insert into queue
-                        if (session->messageToSend)
-                            status = session->messageToSend(reset_msg);
-                        else
-                            status = PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
+                        used_ids_for_key = identity_list_join(used_ids_for_key, used_cc_ids);
+                        
+                        identity_list* curr_recip = used_ids_for_key;
+                        
+                        for ( ; curr_recip && curr_recip->ident; curr_recip = curr_recip->next) {
+                            if (!is_me(session, curr_recip->ident))
+                                continue;
+                        
+                            status = create_standalone_key_reset_message(session,
+                                &reset_msg,
+                                curr_recip->ident,
+                                msg->from,
+                                curr_pair->key,
+                                curr_pair->value);
+
+                            // If we can't find the identity, this is someone we've never mailed, so we just
+                            // go on letting them use the wrong key until we mail them ourselves. (Spammers, etc)
+                            if (status != PEP_CANNOT_FIND_IDENTITY) {
+                                if (status != PEP_STATUS_OK)
+                                    goto pEp_error;
+
+                                if (!reset_msg) {
+                                    status = PEP_OUT_OF_MEMORY;
+                                    goto pEp_error;
+                                }
+                                // insert into queue
+                                if (session->messageToSend)
+                                    status = session->messageToSend(reset_msg);
+                                else
+                                    status = PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
 
 
-                        if (status == PEP_STATUS_OK) {
-                            // Put into notified DB
-                            status = set_reset_contact_notified(session, curr_pair->key, msg->from->user_id);
-                            if (status != PEP_STATUS_OK) // It's ok to barf because it's a DB problem??
-                                goto pEp_error;
-                        }
-                        else {
-                            // According to Volker, this would only be a fatal error, so...
-                            free_message(reset_msg); // ??
-                            reset_msg = NULL; // ??
-                            goto pEp_error;
-                        }
-                    }
+                                if (status == PEP_STATUS_OK) {
+                                    // Put into notified DB
+                                    status = set_reset_contact_notified(session, curr_recip->ident->address, curr_pair->key, msg->from->user_id);
+                                    if (status != PEP_STATUS_OK) // It's ok to barf because it's a DB problem??
+                                        goto pEp_error;
+                                }
+                                else {
+                                    // According to Volker, this would only be a fatal error, so...
+                                    free_message(reset_msg); // ??
+                                    reset_msg = NULL; // ??
+                                    goto pEp_error;
+                                }
+                            }
+                        }    
+                    } // else we couldn't find an ident for replacement key    
                 }
             }
         }
