@@ -44,8 +44,9 @@ public:
 void Sync_Adapter::processing()
 {
     output_stream << "waiting for processing\n";
+    const struct timespec arr[] = {{0, 100000000L}};
     while (!q.empty()) {
-        nanosleep((const struct timespec[]){{0, 100000000L}}, NULL);
+        nanosleep(arr, NULL);
     }
 }
 
@@ -90,7 +91,8 @@ Sync_event_t *Sync_Adapter::retrieve_next_sync_event(void *management, unsigned 
             }
             i = 0;
         }
-        nanosleep((const struct timespec[]){{0, 100000000L}}, NULL);
+        const struct timespec arr[] = {{0, 100000000L}};        
+        nanosleep(arr, NULL);
     }
 
     if (timeout)

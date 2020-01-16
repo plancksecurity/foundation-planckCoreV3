@@ -96,7 +96,7 @@
 } while(0)
 
 #ifdef _PEP_SQLITE_DEBUG
-int sq_sql_trace_callback (unsigned trace_constant, 
+int sq_sql_trace_callback (unsigned trace_constant,
                         void* context_ptr,
                         void* P,
                         void* X) {
@@ -112,7 +112,7 @@ int sq_sql_trace_callback (unsigned trace_constant,
         case SQLITE_TRACE_ROW:
             fprintf(stderr, "SEQUOIA_SQL_DEBUG: ROW - ");
             fprintf(stderr, "%s\n", sqlite3_expanded_sql((sqlite3_stmt*)P));
-            break;            
+            break;
         case SQLITE_TRACE_CLOSE:
             fprintf(stderr, "SEQUOIA_SQL_DEBUG: CLOSE - ");
             break;
@@ -285,11 +285,11 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
 #endif
 
 #ifdef _PEP_SQLITE_DEBUG
-    sqlite3_trace_v2(session->key_db, 
+    sqlite3_trace_v2(session->key_db,
         SQLITE_TRACE_STMT | SQLITE_TRACE_ROW | SQLITE_TRACE_CLOSE,
         sq_sql_trace_callback,
-        NULL);    
-#endif            
+        NULL);
+#endif
 
     if (sqlite_result != SQLITE_OK)
         ERROR_OUT(NULL, PEP_INIT_CANNOT_OPEN_DB,
@@ -2071,11 +2071,11 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr_raw)
 
 static unsigned int count_keydata_parts(const char* key_data, size_t size) {
     unsigned int retval = 0;
-    
+
     const char* pgp_begin = "-----BEGIN PGP";
     size_t prefix_len = strlen(pgp_begin);
     size_t size_remaining = size;
-    
+
     while (key_data) {
         if (size_remaining <= prefix_len || key_data[0] == '\0')
             break;
@@ -2230,19 +2230,19 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
 
     const char* pgp_begin = "-----BEGIN PGP";
     size_t prefix_len = strlen(pgp_begin);
-        
+
     unsigned int i;
     const char* curr_begin;
     size_t curr_size;
-    
-    identity_list* collected_idents = NULL;        
-    
+
+    identity_list* collected_idents = NULL;
+
     PEP_STATUS retval = PEP_KEY_IMPORTED;
-    
+
     for (i = 0, curr_begin = key_data; i < keycount; i++) {
         const char* next_begin = NULL;
 
-        // This is assured to be OK because the count function above 
+        // This is assured to be OK because the count function above
         // made sure that THIS round contains at least prefix_len chars
         // We used strnstr to count, so we know that strstr will be ok.
         if (strlen(curr_begin + prefix_len) > prefix_len)
@@ -2252,16 +2252,16 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
             curr_size = next_begin - curr_begin;
         else
             curr_size = (key_data + size) - curr_begin;
-        
+
         PEP_STATUS curr_status = _pgp_import_keydata(session, curr_begin, curr_size, private_idents);
         if (private_idents && *private_idents) {
             if (!collected_idents)
                 collected_idents = *private_idents;
-            else 
+            else
                 identity_list_join(collected_idents, *private_idents);
-            *private_idents = NULL;    
+            *private_idents = NULL;
         }
-        
+
         if (curr_status != retval) {
             switch (curr_status) {
                 case PEP_NO_KEY_IMPORTED:
@@ -2282,15 +2282,15 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
                     retval = PEP_SOME_KEYS_IMPORTED;
                 default:
                     break;
-            }        
-        }        
-        curr_begin = next_begin;     
+            }
+        }
+        curr_begin = next_begin;
     }
-    
+
     if (private_idents)
         *private_idents = collected_idents;
-    
-    return retval;    
+
+    return retval;
 }
 
 PEP_STATUS pgp_export_keydata(
@@ -2851,15 +2851,15 @@ PEP_STATUS pgp_get_key_rating(
     }
 
     bool expired = false;
-    
+
     // MUST guarantee the same behaviour.
     _pgp_key_expired(cert, time(NULL), &expired);
-    
+
     if (expired) {
         *comm_type = PEP_ct_key_expired;
-        goto out;        
+        goto out;
     }
-    
+
     // if (pgp_cert_expired(cert)) {
     //     *comm_type = PEP_ct_key_expired;
     //     goto out;

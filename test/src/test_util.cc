@@ -25,6 +25,8 @@ using namespace std;
 
 std::string _main_test_home_dir;
 
+#define BUF_MAX_PATHLEN 4097
+
 bool is_pEpmsg(const message *msg)
 {
     for (stringpair_list_t *i = msg->opt_fields; i && i->value ; i=i->next) {
@@ -53,7 +55,6 @@ std::string random_string( size_t length )
 }
 
 std::string get_main_test_home_dir() {
-    size_t BUF_MAX_PATHLEN = 4097;
     char buf[BUF_MAX_PATHLEN];// Linux max path size...
 
     if (_main_test_home_dir.empty()) {

@@ -209,7 +209,7 @@ DYNAMIC_API PEP_STATUS enter_device_group(
 PEP_STATUS disable_sync(PEP_SESSION session);
 
 // leave_device_group() - Issue a group key reset request and 
-// leave the device group, shutting down sync \
+// leave the device group, shutting down sync 
 //
 //  parameters:
 //      session                 pEp session
