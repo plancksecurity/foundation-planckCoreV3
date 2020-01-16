@@ -18,7 +18,7 @@ protocol Sync 1 {
                 if deviceGrouped
                     go Grouped;
                 do newChallengeAndNegotiationBase;
-                debug > initial beacon
+                debug > initial Beacon
                 send Beacon;
                 go Sole;
             }
@@ -46,13 +46,14 @@ protocol Sync 1 {
                 else {
                     if weAreOfferer {
                         do useOwnChallenge;
-                        debug > we are offerer
+                        debug > we are Offerer
                         send Beacon;
                     }
                     else /* we are requester */ {
                         do openNegotiation;
                         do tellWeAreNotGrouped;
                         // requester is sending NegotiationRequest
+                        do useOwnResponse;
                         send NegotiationRequest;
                         do useOwnChallenge;
                     }
@@ -62,21 +63,16 @@ protocol Sync 1 {
             // we get this from another sole device
             on NegotiationRequest {
                 if sameChallenge { // challenge accepted
-                    if sameNegotiation {
-                        debug > this is our own NegotiationRequest; ignore
-                    }
-                    else {
-                        do storeNegotiation;
-                        // offerer is accepting by confirming NegotiationOpen
-                        send NegotiationOpen;
-                        go HandshakingOfferer;
-                    }
+                    do storeNegotiation;
+                    // offerer is accepting by confirming NegotiationOpen
+                    send NegotiationOpen;
+                    go HandshakingOfferer;
                 }
             }
 
             // we get this from an existing device group
             on NegotiationRequestGrouped {
-                if sameChallenge { debub > challenge accepted
+                if sameChallenge { // challenge accepted
                     do storeNegotiation;
                     // offerer is accepting by confirming NegotiationOpen
                     send NegotiationOpen;
@@ -84,10 +80,15 @@ protocol Sync 1 {
                 }
             }
 
-            on NegotiationOpen if sameNegotiationAndPartner {
-                debug > requester is receiving NegotiationOpen
-                do storeNegotiation;
-                go HandshakingRequester;
+            on NegotiationOpen {
+                if sameResponse {
+                    debug > Requester is receiving NegotiationOpen
+                    do storeNegotiation;
+                    go HandshakingRequester;
+                }
+                else {
+                    debug > cannot approve NegotiationOpen
+                }
             }
         }
 
@@ -555,12 +556,14 @@ protocol Sync 1 {
 
         message NegotiationRequest 3, security=untrusted {
             field TID challenge;
+            field TID response;
             auto Version version;
             field TID negotiation;
             field bool is_group;
         }
 
         message NegotiationOpen 4, security=untrusted {
+            field TID response;
             auto Version version;
             field TID negotiation;
         }

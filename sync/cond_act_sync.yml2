@@ -37,6 +37,14 @@ condition sameChallenge
     *result = t1->size == t2->size && memcmp(t1->buf, t2->buf, t1->size) == 0;
 ||
 
+condition sameResponse
+||
+    TID_t *t1 = &session->sync_state.keysync.response;
+    TID_t *t2 = &session->sync_state.own.response;
+
+    *result = t1->size == t2->size && memcmp(t1->buf, t2->buf, t1->size) == 0;
+||
+
 condition sameNegotiation
 ||
     TID_t *t1 = &session->sync_state.keysync.negotiation;
@@ -154,6 +162,13 @@ action newChallengeAndNegotiationBase {
         with "dst" > &session->sync_state.keysync.challenge
     }
 
+    // random new response
+    call "new_UUID" with "dst" > &session->sync_state.own.response
+    call "copy_UUID" {
+        with "src" > &session->sync_state.own.response
+        with "dst" > &session->sync_state.keysync.response
+    }
+
     // this is the random data we are using as a base
     call "new_UUID" with "dst" > &session->sync_state.own.negotiation
 ||
@@ -167,6 +182,11 @@ action newChallengeAndNegotiationBase {
 action useOwnChallenge call "copy_UUID" {
     with "src" > &session->sync_state.own.challenge
     with "dst" > &session->sync_state.keysync.challenge
+}
+
+action useOwnResponse call "copy_UUID" {
+    with "src" > &session->sync_state.own.response
+    with "dst" > &session->sync_state.keysync.response
 }
 
 action openNegotiation {
