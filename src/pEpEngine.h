@@ -1319,6 +1319,10 @@ DYNAMIC_API const char *per_user_directory(void);
 DYNAMIC_API const char *per_machine_directory(void);
 
 
+PEP_STATUS _generate_keypair(PEP_SESSION session, 
+                             pEp_identity *identity,
+                             bool suppress_event);
+
 DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session);
 
 // This is used internally when there is a temporary identity to be retrieved

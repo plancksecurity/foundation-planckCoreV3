@@ -873,7 +873,7 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
         pEp_identity* ident = curr_ident->ident;
         free(ident->fpr);
         ident->fpr = NULL;
-        status = generate_keypair(session, ident);
+        status = _generate_keypair(session, ident, true);
         if (status != PEP_STATUS_OK)
             return status;            
     }
@@ -1221,90 +1221,6 @@ pEp_free:
     return status;
 }
 
-/*
-static stringlist_t* collect_key_material(PEP_SESSION session, stringlist_t* fprs) {
-    stringlist_t* keydata = NULL;    
-    stringlist_t* curr_fpr = fprs;    
-    while (curr_fpr) {
-        if (curr_fpr->value) {
-            char* key_material = NULL;
-            size_t datasize = 0;
-            PEP_STATUS status = export_key(session, curr_fpr->value, &key_material, &datasize);
-            if (status) {
-                free_stringlist(keydata);
-                return NULL;
-            }
-            if (datasize > 0 && key_material) {
-                if (!(keydata))
-                    keydata = new_stringlist(NULL);
-                    
-                stringlist_add(keydata, key_material);
-            }
-        }
-        curr_fpr = curr_fpr->next;        
-    }   
-    return keydata; 
-}
-
-PEP_STATUS key_reset_own_and_deliver_revocations(PEP_SESSION session, 
-                                                 identity_list** own_identities, 
-                                                 stringlist_t** revocations, 
-                                                 stringlist_t** keys) {
-
-    if (!(session && own_identities && revocations && keys))
-        return PEP_ILLEGAL_VALUE;
-        
-    stringlist_t* revoked_fprs = NULL;
-    identity_list* affected_idents = NULL;
-        
-    PEP_STATUS status = key_reset(session, NULL, NULL, &affected_idents, &revoked_fprs);                                                 
-
-    // FIXME: free things
-    if (status != PEP_STATUS_OK)
-        return status;
-    
-    dedup_stringlist(revoked_fprs);
-
-    *revocations = collect_key_material(session, revoked_fprs);
-    stringlist_t* keydata = NULL;
-    
-    if (affected_idents) {
-        keydata = new_stringlist(NULL);
-        identity_list* curr_ident = affected_idents;
-        while (curr_ident) {
-            if (curr_ident->ident && curr_ident->ident->fpr) {
-                char* key_material = NULL;
-                size_t datasize = 0;
-                status = export_key(session, curr_ident->ident->fpr, &key_material, &datasize);
-                if (status) {
-                    free_stringlist(keydata);
-                    return status;
-                }
-                if (datasize > 0 && key_material)
-                    stringlist_add(keydata, key_material);
-                    
-                key_material = NULL;
-                datasize = 0;    
-                status = export_private_keys(session, curr_ident->ident->fpr, &key_material, &datasize);    
-                if (status) {
-                    free_stringlist(keydata);
-                    return status;
-                }
-                if (datasize > 0 && key_material)
-                    stringlist_add(keydata, key_material);
-
-            }
-            curr_ident = curr_ident->next;
-        }
-    }
-    
-    *own_identities = affected_idents;
-    *keys = keydata;
-    
-    free(revoked_fprs);
-    return PEP_STATUS_OK;
-}
-*/
 Distribution_t *Distribution_from_keyreset_command_list(
         const keyreset_command_list *command_list,
         Distribution_t *dist

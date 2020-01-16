@@ -4678,6 +4678,14 @@ DYNAMIC_API PEP_STATUS generate_keypair(
         PEP_SESSION session, pEp_identity *identity
     )
 {
+    return _generate_keypair(session, identity, false);
+}
+
+PEP_STATUS _generate_keypair(PEP_SESSION session, 
+                             pEp_identity *identity,
+                             bool suppress_event
+    )
+{
     assert(session);
     assert(identity);
     assert(identity->address);
@@ -4722,11 +4730,13 @@ DYNAMIC_API PEP_STATUS generate_keypair(
     if (identity->fpr)
         status = set_pgp_keypair(session, identity->fpr);
 
-    signal_Sync_event(session, Sync_PR_keysync, KeyGen, NULL);
+    if (!suppress_event)
+        signal_Sync_event(session, Sync_PR_keysync, KeyGen, NULL);
 
     // add to known keypair DB, as this might not end up being a default
     return status;
 }
+
 
 DYNAMIC_API PEP_STATUS get_key_rating(
         PEP_SESSION session,
