@@ -38,7 +38,7 @@ protocol Sync 1 {
 
             on Beacon {
                 if sameChallenge {
-                    // this is our own Beacon; ignore
+                    debug > this is our own Beacon; ignore
                 }
                 else {
                     if weAreOfferer {

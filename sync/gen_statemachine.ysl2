@@ -1361,7 +1361,7 @@ tstylesheet {
         if "condition|action|send" |
         ||
             «../../@name»_SERVICE_LOG("received event", "«@name»");
-            `` apply "transition|action|condition|else|send";
+            `` apply "transition|action|condition|else|send|debug";
         ||
         if "name(*[last()])!='transition'" {
             |
@@ -1399,6 +1399,9 @@ tstylesheet {
         ||
     }
 
+    template "debug"
+        | KeySync_SERVICE_LOG("«.»", "«ancestor::protocol/@name»");
+
     template "action" {
         const "fsm", "ancestor::fsm";
         ||
@@ -1430,7 +1433,7 @@ tstylesheet {
         if (result) {
             «$fsm/@name»_SERVICE_LOG("condition applies", "«@name»");
         ||
-        apply "transition|action|condition|else|send";
+        apply "transition|action|condition|else|send|debug";
         | }
     }
 
@@ -1440,7 +1443,7 @@ tstylesheet {
 
         | else {
         |> «ancestor::fsm/@name»_SERVICE_LOG("condition does not apply", "«preceding-sibling::*[last()]/@name»");
-        apply "transition|action|condition|else|send";
+        apply "transition|action|condition|else|send|debug";
         | }
     }
 }
