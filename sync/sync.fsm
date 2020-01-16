@@ -380,15 +380,18 @@ protocol Sync 1 {
         state WaitForGroupKeyReset {
             on ElectGroupKeyResetLeader {
                 if sameResponse {
+                    // the first one is from us, we're leading this
                     send GroupKeyReset;
                     go Grouped;
                 }
                 else {
+                    // the first one is not from us
                     go Grouped;
                 }
             }
 
             on GroupKeyReset {
+                // safeguard; break this in case there's another reset
                 if fromGroupMember { // double check
                     do saveGroupKeys;
                     do receivedKeysAreDefaultKeys;
