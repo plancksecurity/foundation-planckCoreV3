@@ -18,6 +18,7 @@ protocol Sync 1 {
                 if deviceGrouped
                     go Grouped;
                 do newChallengeAndNegotiationBase;
+                debug > initial beacon
                 send Beacon;
                 go Sole;
             }
@@ -29,10 +30,12 @@ protocol Sync 1 {
             }
 
             on KeyGen {
+                debug > key generated
                 send Beacon;
             }
 
-            on CannotDecrypt { // cry baby
+            on CannotDecrypt {
+                debug > cry, baby
                 send Beacon;
             }
 
@@ -43,6 +46,7 @@ protocol Sync 1 {
                 else {
                     if weAreOfferer {
                         do useOwnChallenge;
+                        debug > we are offerer
                         send Beacon;
                     }
                     else /* we are requester */ {
@@ -59,7 +63,7 @@ protocol Sync 1 {
             on NegotiationRequest {
                 if sameChallenge { // challenge accepted
                     if sameNegotiation {
-                        // this is our own NegotiationRequest; ignore
+                        debug > this is our own NegotiationRequest; ignore
                     }
                     else {
                         do storeNegotiation;
@@ -72,7 +76,7 @@ protocol Sync 1 {
 
             // we get this from an existing device group
             on NegotiationRequestGrouped {
-                if sameChallenge { // challenge accepted
+                if sameChallenge { debub > challenge accepted
                     do storeNegotiation;
                     // offerer is accepting by confirming NegotiationOpen
                     send NegotiationOpen;
@@ -81,7 +85,7 @@ protocol Sync 1 {
             }
 
             on NegotiationOpen if sameNegotiationAndPartner {
-                // requester is receiving NegotiationOpen
+                debug > requester is receiving NegotiationOpen
                 do storeNegotiation;
                 go HandshakingRequester;
             }
@@ -238,7 +242,7 @@ protocol Sync 1 {
         state FormingGroupOfferer {
             on Init {
                 do prepareOwnKeys;
-                send OwnKeysOfferer; // we're not grouped yet, this is our own keys
+                send OwnKeysOfferer; debug > we're not grouped yet, this is our own keys
             }
 
             on Cancel {
@@ -325,7 +329,7 @@ protocol Sync 1 {
             }
 
             on InitUnledGroupKeyReset {
-                // unled group key reset; new group keys will be elected
+                debug > unled group key reset; new group keys will be elected
                 do unledGroupKeyReset;
                 send GroupKeyReset;
             }
@@ -333,11 +337,11 @@ protocol Sync 1 {
             on GroupKeyReset if fromGroupMember { // double check
                 do saveGroupKeys;
                 if isLedGroupKeyReset {
-                    // led group key reset is executed without questions
+                    debug > led group key reset is executed without questions
                     do receivedKeysAreDefaultKeys;
                 }
                 else {
-                    // unled group key reset; election takes place
+                    debug > unled group key reset; election takes place
                     if keyElectionWon {
                         // this is already the case:
                         // do ownKeysAreDefaultKeys;
