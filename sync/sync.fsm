@@ -353,9 +353,6 @@ protocol Sync 1 {
                     do trustThisKey;
             }
 
-            on GroupKeyResetRequired
-                send GroupKeyReset;
-
             // this is for a leaving group member
             on GroupKeyResetRequiredAndDisable {
                 send InitUnledGroupKeyReset;
@@ -368,35 +365,19 @@ protocol Sync 1 {
                 send ElectGroupKeyResetLeader;
                 go WaitForGroupKeyReset;
             }
-
-            on GroupKeyReset {
-                if fromGroupMember { // double check
-                    do saveGroupKeys;
-                    do receivedKeysAreDefaultKeys;
-                }
-            }
         }
 
         state WaitForGroupKeyReset {
             on ElectGroupKeyResetLeader {
                 if sameResponse {
                     // the first one is from us, we're leading this
-                    send GroupKeyReset;
+                    do resetOwnGroupedKeys;
                     go Grouped;
                 }
                 else {
                     // the first one is not from us
                     go Grouped;
                 }
-            }
-
-            on GroupKeyReset {
-                // safeguard; break this in case there's another reset
-                if fromGroupMember { // double check
-                    do saveGroupKeys;
-                    do receivedKeysAreDefaultKeys;
-                }
-                go Grouped;
             }
         }
 
@@ -729,13 +710,6 @@ protocol Sync 1 {
 
         message ElectGroupKeyResetLeader 20 {
             field TID response;
-        }
-
-        message GroupKeyReset 21, security=attach_own_keys_for_group {
-            // set this flag for led group key reset; delivered group keys will
-            // be accepted by all group members; if not set group keys will be
-            // elected
-            field IdentityList ownIdentities;
         }
     }
 }
