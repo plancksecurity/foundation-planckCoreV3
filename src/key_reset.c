@@ -850,13 +850,43 @@ DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session) {
     return key_reset(session, NULL, NULL);
 }
 
-DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session) {
-    return PEP_STATUS_OK;
+static PEP_STATUS _dup_grouped_only(identity_list* idents, identity_list** filtered) {
+    if (!idents)
+        return PEP_STATUS_OK;
+        
+    identity_list* id_node;
+    pEp_identity* curr_ident = NULL;
+    
+    identity_list* ret_list = NULL;
+    identity_list** ret_list_pp = &ret_list;
+    
+    for (id_node = idents; id_node && id_node->ident; id_node = id_node->next) {
+        curr_ident = id_node->ident;
+        if (curr_ident->flags & PEP_idf_devicegroup) {
+            pEp_identity* new_ident = identity_dup(curr_ident);
+            if (!new_ident) {
+                free_identity_list(ret_list);
+                return PEP_OUT_OF_MEMORY;
+            }
+            identity_list* new_ident_il = new_identity_list(new_ident);
+            if (!new_ident_il) {
+                free(new_ident);
+                free_identity_list(ret_list);
+                return PEP_OUT_OF_MEMORY;
+            }
+                
+            *ret_list_pp = new_ident_il;
+            ret_list_pp = &(new_ident_il->next);                
+        }
+    }
+    *filtered = ret_list;
+    return PEP_STATUS_OK;    
 }
 
 static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session, 
                                                          identity_list* key_idents, 
-                                                         const char* old_key) {
+                                                         const char* old_key,
+                                                         bool grouped_only) {
     assert(session);
     assert(key_idents);
     assert(old_key);
@@ -869,6 +899,18 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
         return PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
         
     PEP_STATUS status = PEP_STATUS_OK;
+        
+    // if we only want grouped identities, we do this:
+    if (grouped_only) {
+        identity_list* new_list = NULL;        
+        status = _dup_grouped_only(key_idents, &new_list);
+        if (status != PEP_STATUS_OK)
+            return status;
+        key_idents = new_list; // local var change, won't impact caller    
+    }
+    
+    if (!key_idents)
+        return PEP_STATUS_OK;
         
     // each of these has the same key and needs a new one.
     identity_list* curr_ident;
@@ -969,6 +1011,49 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
         status = add_mistrusted_key(session, old_key);
     
 pEp_free:
+    return status;
+}
+
+
+DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session) {
+    assert(session);
+    
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    stringlist_t* keys = NULL;
+    char* user_id = NULL;    
+    PEP_STATUS status = get_default_own_userid(session, &user_id);
+
+    if (status != PEP_STATUS_OK || !user_id)
+        goto pEp_free;                    
+
+    
+    status = get_all_keys_for_user(session, user_id, &keys);
+
+    // TODO: free
+    if (status == PEP_STATUS_OK) {
+        stringlist_t* curr_key;
+        
+        for (curr_key = keys; curr_key && curr_key->value; curr_key = curr_key->next) {
+            identity_list* key_idents = NULL;
+            const char* own_key = curr_key->value;
+            status = get_identities_by_main_key_id(session, own_key, &key_idents);
+            
+            if (status != PEP_CANNOT_FIND_IDENTITY)
+                status = _key_reset_device_group_for_shared_key(session, key_idents, own_key, true);
+            
+            if (status != PEP_STATUS_OK)
+                goto pEp_free;
+            
+            free_identity_list(key_idents);    
+        }
+    }
+    goto pEp_free;
+
+pEp_free:
+    free_stringlist(keys);
+    free(user_id);
     return status;
 }
 
@@ -1108,7 +1193,7 @@ PEP_STATUS key_reset(
             
             if (status != PEP_CANNOT_FIND_IDENTITY) {
                 if (is_grouped) 
-                    status = _key_reset_device_group_for_shared_key(session, key_idents, fpr_copy);
+                    status = _key_reset_device_group_for_shared_key(session, key_idents, fpr_copy, false);
                 else if (status == PEP_STATUS_OK) {
                     // now have ident list, or should
                     identity_list* curr_ident;
