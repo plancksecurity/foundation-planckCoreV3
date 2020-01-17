@@ -363,11 +363,11 @@ protocol Sync 1 {
                 debug > unled group key reset; new group keys will be elected
                 do useOwnResponse;
                 send ElectGroupKeyResetLeader;
-                go WaitForGroupKeyReset;
+                go GroupKeyResetElection;
             }
         }
 
-        state WaitForGroupKeyReset {
+        state GroupKeyResetElection {
             on ElectGroupKeyResetLeader {
                 if sameResponse {
                     // the first one is from us, we're leading this

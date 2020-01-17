@@ -605,5 +605,5 @@ action disable
 
 action resetOwnGroupedKeys
 ||
-
+    return key_reset_own_grouped_keys(session);
 ||
