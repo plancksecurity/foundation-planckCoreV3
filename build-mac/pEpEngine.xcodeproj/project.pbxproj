@@ -29,7 +29,6 @@
 		158FF95D23C49ED600CB1016 /* InitUnledGroupKeyReset.h in Headers */ = {isa = PBXBuildFile; fileRef = 158FF95423C49ED500CB1016 /* InitUnledGroupKeyReset.h */; };
 		158FF95E23C49ED600CB1016 /* Distribution.h in Headers */ = {isa = PBXBuildFile; fileRef = 158FF95523C49ED600CB1016 /* Distribution.h */; };
 		158FF95F23C49ED600CB1016 /* GroupKeysUpdate.h in Headers */ = {isa = PBXBuildFile; fileRef = 158FF95623C49ED600CB1016 /* GroupKeysUpdate.h */; };
-		158FF96023C49ED600CB1016 /* GroupKeyReset.h in Headers */ = {isa = PBXBuildFile; fileRef = 158FF95723C49ED600CB1016 /* GroupKeyReset.h */; };
 		158FF96123C49ED600CB1016 /* Distribution.c in Sources */ = {isa = PBXBuildFile; fileRef = 158FF95823C49ED600CB1016 /* Distribution.c */; };
 		158FF96223C49ED600CB1016 /* GroupKeysForNewMember.h in Headers */ = {isa = PBXBuildFile; fileRef = 158FF95923C49ED600CB1016 /* GroupKeysForNewMember.h */; };
 		158FF96323C49ED600CB1016 /* InitUnledGroupKeyReset.c in Sources */ = {isa = PBXBuildFile; fileRef = 158FF95A23C49ED600CB1016 /* InitUnledGroupKeyReset.c */; };
@@ -168,7 +167,6 @@
 		432714AB23A10B3B007EAD4A /* GroupKeysUpdate.c in Sources */ = {isa = PBXBuildFile; fileRef = 432714AA23A10B3B007EAD4A /* GroupKeysUpdate.c */; };
 		43370833203C075A004E6547 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 4337082D203C075A004E6547 /* sqlite3.c */; };
 		43370834203C075A004E6547 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 43370832203C075A004E6547 /* sqlite3.h */; };
-		43495982239E417300CF1E12 /* GroupKeyReset.c in Sources */ = {isa = PBXBuildFile; fileRef = 43495981239E417300CF1E12 /* GroupKeyReset.c */; };
 		4378C79123D1AF1700D1AF3F /* ElectGroupKeyResetLeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 4378C78B23D1AF1700D1AF3F /* ElectGroupKeyResetLeader.h */; };
 		4378C79223D1AF1700D1AF3F /* ElectGroupKeyResetLeader.c in Sources */ = {isa = PBXBuildFile; fileRef = 4378C79023D1AF1700D1AF3F /* ElectGroupKeyResetLeader.c */; };
 		438C43B52167752C00C7425B /* labeled_int_list.h in Headers */ = {isa = PBXBuildFile; fileRef = 438C43AF2167752C00C7425B /* labeled_int_list.h */; };
@@ -281,7 +279,6 @@
 		158FF95423C49ED500CB1016 /* InitUnledGroupKeyReset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InitUnledGroupKeyReset.h; path = ../asn.1/InitUnledGroupKeyReset.h; sourceTree = "<group>"; };
 		158FF95523C49ED600CB1016 /* Distribution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Distribution.h; path = ../asn.1/Distribution.h; sourceTree = "<group>"; };
 		158FF95623C49ED600CB1016 /* GroupKeysUpdate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GroupKeysUpdate.h; path = ../asn.1/GroupKeysUpdate.h; sourceTree = "<group>"; };
-		158FF95723C49ED600CB1016 /* GroupKeyReset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GroupKeyReset.h; path = ../asn.1/GroupKeyReset.h; sourceTree = "<group>"; };
 		158FF95823C49ED600CB1016 /* Distribution.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Distribution.c; path = ../asn.1/Distribution.c; sourceTree = "<group>"; };
 		158FF95923C49ED600CB1016 /* GroupKeysForNewMember.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GroupKeysForNewMember.h; path = ../asn.1/GroupKeysForNewMember.h; sourceTree = "<group>"; };
 		158FF95A23C49ED600CB1016 /* InitUnledGroupKeyReset.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = InitUnledGroupKeyReset.c; path = ../asn.1/InitUnledGroupKeyReset.c; sourceTree = "<group>"; };
@@ -420,7 +417,6 @@
 		432714AA23A10B3B007EAD4A /* GroupKeysUpdate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeysUpdate.c; path = ../asn.1/GroupKeysUpdate.c; sourceTree = "<group>"; };
 		4337082D203C075A004E6547 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = ../src/sqlite3.c; sourceTree = "<group>"; };
 		43370832203C075A004E6547 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = ../src/sqlite3.h; sourceTree = "<group>"; };
-		43495981239E417300CF1E12 /* GroupKeyReset.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeyReset.c; path = ../asn.1/GroupKeyReset.c; sourceTree = "<group>"; };
 		4378C78B23D1AF1700D1AF3F /* ElectGroupKeyResetLeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ElectGroupKeyResetLeader.h; path = ../asn.1/ElectGroupKeyResetLeader.h; sourceTree = "<group>"; };
 		4378C79023D1AF1700D1AF3F /* ElectGroupKeyResetLeader.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ElectGroupKeyResetLeader.c; path = ../asn.1/ElectGroupKeyResetLeader.c; sourceTree = "<group>"; };
 		438C43962167582400C7425B /* sync_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sync_api.h; path = ../src/sync_api.h; sourceTree = "<group>"; };
@@ -556,7 +552,6 @@
 				43188AAB23C4B549008EF79C /* Commands.h */,
 				158FF95823C49ED600CB1016 /* Distribution.c */,
 				158FF95523C49ED600CB1016 /* Distribution.h */,
-				158FF95723C49ED600CB1016 /* GroupKeyReset.h */,
 				158FF95923C49ED600CB1016 /* GroupKeysForNewMember.h */,
 				158FF95623C49ED600CB1016 /* GroupKeysUpdate.h */,
 				158FF95A23C49ED600CB1016 /* InitUnledGroupKeyReset.c */,
@@ -565,7 +560,6 @@
 				158FF95323C49ED500CB1016 /* KeyReset.h */,
 				432714AA23A10B3B007EAD4A /* GroupKeysUpdate.c */,
 				432713AF23A10B07007EAD4A /* GroupKeysForNewMember.c */,
-				43495981239E417300CF1E12 /* GroupKeyReset.c */,
 				15147EED237E9EA7003989FE /* GroupHandshake.h */,
 				15147EEE237E9EA7003989FE /* GroupKeysAndClose.c */,
 				15147EEF237E9EA7003989FE /* GroupKeysAndClose.h */,
@@ -822,7 +816,6 @@
 				15B0380F22B2B823002D664C /* Sync.h in Headers */,
 				15B0380422B2B822002D664C /* constr_SET_OF.h in Headers */,
 				15B0381322B2B823002D664C /* asn_application.h in Headers */,
-				158FF96023C49ED600CB1016 /* GroupKeyReset.h in Headers */,
 				15B0380322B2B822002D664C /* OwnKeysRequester.h in Headers */,
 				154918AB22B940200091B6D6 /* fsm_common.h in Headers */,
 				15147EF3237E9EA7003989FE /* GroupKeysAndClose.h in Headers */,
@@ -1078,7 +1071,6 @@
 				15B0380B22B2B822002D664C /* NativeInteger.c in Sources */,
 				15147EF2237E9EA7003989FE /* GroupKeysAndClose.c in Sources */,
 				158FF95B23C49ED600CB1016 /* KeyReset.c in Sources */,
-				43495982239E417300CF1E12 /* GroupKeyReset.c in Sources */,
 				15B037B122B2B822002D664C /* NegotiationRequest.c in Sources */,
 				15B037FC22B2B822002D664C /* Hex.c in Sources */,
 				432714AB23A10B3B007EAD4A /* GroupKeysUpdate.c in Sources */,

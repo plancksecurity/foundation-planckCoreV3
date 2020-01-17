@@ -24,8 +24,6 @@ $(SRCROOT)/../asn.1/ElectGroupKeyResetLeader.c
 $(SRCROOT)/../asn.1/ElectGroupKeyResetLeader.h
 $(SRCROOT)/../asn.1/GroupHandshake.c
 $(SRCROOT)/../asn.1/GroupHandshake.h
-$(SRCROOT)/../asn.1/GroupKeyReset.c
-$(SRCROOT)/../asn.1/GroupKeyReset.h
 $(SRCROOT)/../asn.1/GroupKeysAndClose.c
 $(SRCROOT)/../asn.1/GroupKeysAndClose.h
 $(SRCROOT)/../asn.1/GroupKeysForNewMember.c
