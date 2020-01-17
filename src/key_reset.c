@@ -850,6 +850,9 @@ DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session) {
     return key_reset(session, NULL, NULL);
 }
 
+DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session) {
+    return PEP_STATUS_OK;
+}
 
 static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session, 
                                                          identity_list* key_idents, 

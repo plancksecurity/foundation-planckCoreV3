@@ -89,6 +89,8 @@ DYNAMIC_API PEP_STATUS key_reset_user(
 //
 DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session);
 
+// FIXME: Doc
+DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session);
 
 // key_reset() - reset the database status for a key, removing all trust information
 //               and default database connections. For own keys, also revoke the key
