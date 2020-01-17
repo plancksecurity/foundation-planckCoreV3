@@ -169,6 +169,8 @@
 		43370833203C075A004E6547 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = 4337082D203C075A004E6547 /* sqlite3.c */; };
 		43370834203C075A004E6547 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = 43370832203C075A004E6547 /* sqlite3.h */; };
 		43495982239E417300CF1E12 /* GroupKeyReset.c in Sources */ = {isa = PBXBuildFile; fileRef = 43495981239E417300CF1E12 /* GroupKeyReset.c */; };
+		4378C79123D1AF1700D1AF3F /* ElectGroupKeyResetLeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 4378C78B23D1AF1700D1AF3F /* ElectGroupKeyResetLeader.h */; };
+		4378C79223D1AF1700D1AF3F /* ElectGroupKeyResetLeader.c in Sources */ = {isa = PBXBuildFile; fileRef = 4378C79023D1AF1700D1AF3F /* ElectGroupKeyResetLeader.c */; };
 		438C43B52167752C00C7425B /* labeled_int_list.h in Headers */ = {isa = PBXBuildFile; fileRef = 438C43AF2167752C00C7425B /* labeled_int_list.h */; };
 		438C43B62167752C00C7425B /* labeled_int_list.c in Sources */ = {isa = PBXBuildFile; fileRef = 438C43B42167752C00C7425B /* labeled_int_list.c */; };
 		43E4FBB22362C05600BC01F4 /* NegotiationRequestGrouped.c in Sources */ = {isa = PBXBuildFile; fileRef = 43E4FBAD2362C05600BC01F4 /* NegotiationRequestGrouped.c */; };
@@ -419,6 +421,8 @@
 		4337082D203C075A004E6547 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = ../src/sqlite3.c; sourceTree = "<group>"; };
 		43370832203C075A004E6547 /* sqlite3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = ../src/sqlite3.h; sourceTree = "<group>"; };
 		43495981239E417300CF1E12 /* GroupKeyReset.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GroupKeyReset.c; path = ../asn.1/GroupKeyReset.c; sourceTree = "<group>"; };
+		4378C78B23D1AF1700D1AF3F /* ElectGroupKeyResetLeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ElectGroupKeyResetLeader.h; path = ../asn.1/ElectGroupKeyResetLeader.h; sourceTree = "<group>"; };
+		4378C79023D1AF1700D1AF3F /* ElectGroupKeyResetLeader.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ElectGroupKeyResetLeader.c; path = ../asn.1/ElectGroupKeyResetLeader.c; sourceTree = "<group>"; };
 		438C43962167582400C7425B /* sync_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sync_api.h; path = ../src/sync_api.h; sourceTree = "<group>"; };
 		438C43AF2167752C00C7425B /* labeled_int_list.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = labeled_int_list.h; path = ../src/labeled_int_list.h; sourceTree = "<group>"; };
 		438C43B42167752C00C7425B /* labeled_int_list.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = labeled_int_list.c; path = ../src/labeled_int_list.c; sourceTree = "<group>"; };
@@ -544,6 +548,8 @@
 		6406CE811CE382F400C14D77 /* asn.1 */ = {
 			isa = PBXGroup;
 			children = (
+				4378C79023D1AF1700D1AF3F /* ElectGroupKeyResetLeader.c */,
+				4378C78B23D1AF1700D1AF3F /* ElectGroupKeyResetLeader.h */,
 				43188AB023C4B6B9008EF79C /* Command.c */,
 				43188AB523C4B6B9008EF79C /* Command.h */,
 				43188AAA23C4B549008EF79C /* Commands.c */,
@@ -836,6 +842,7 @@
 				154918BC22B940200091B6D6 /* openpgp_compat.h in Headers */,
 				154918B222B940200091B6D6 /* aux_mime_msg.h in Headers */,
 				15B0381422B2B823002D664C /* asn_SEQUENCE_OF.h in Headers */,
+				4378C79123D1AF1700D1AF3F /* ElectGroupKeyResetLeader.h in Headers */,
 				43188A9623C4B2DE008EF79C /* KeySync_fsm.h in Headers */,
 				158FF95D23C49ED600CB1016 /* InitUnledGroupKeyReset.h in Headers */,
 				15B037FA22B2B822002D664C /* INTEGER.h in Headers */,
@@ -1158,6 +1165,7 @@
 				43188A9C23C4B2DE008EF79C /* Sync_impl.c in Sources */,
 				43F73C122166282C00AB4524 /* growing_buf.c in Sources */,
 				64A826801B455D0800EECAF0 /* mime.c in Sources */,
+				4378C79223D1AF1700D1AF3F /* ElectGroupKeyResetLeader.c in Sources */,
 				43188A9D23C4B2DE008EF79C /* Sync_event.c in Sources */,
 				64A8267F1B455D0800EECAF0 /* message.c in Sources */,
 				64A826811B455D0800EECAF0 /* pEpEngine.c in Sources */,
