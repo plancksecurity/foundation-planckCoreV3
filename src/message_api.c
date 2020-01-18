@@ -3803,7 +3803,7 @@ static PEP_STATUS _decrypt_message(
                             is_inner = (strcmp(wrap_info, "INNER") == 0);
                             if (!is_inner)
                                 is_key_reset = (strcmp(wrap_info, "KEY_RESET") == 0);
-                        }
+                        }                        
                             
                         // check for private key in decrypted message attachment while importing
                         // N.B. Apparently, we always import private keys into the keyring; however,
@@ -3812,26 +3812,54 @@ static PEP_STATUS _decrypt_message(
                         
                         // If we have a message 2.0 message, we are ONLY going to be ok with keys
                         // we imported from THIS part of the message.
-                        imported_private_key_address = false;
-                        free(private_il); 
-                        private_il = NULL;
-                        
-                        // import keys from decrypted INNER source
-                        status = import_priv_keys_from_decrypted_msg(session, inner_message,
-                                                                     &imported_keys,
-                                                                     &imported_private_key_address,
-                                                                     private_il);
-                        if (status != PEP_STATUS_OK)
-                            goto pEp_error;            
+                                                        
+                        bool ignore_msg = false;
+                            
+                        if (is_key_reset) {
+                            if (inner_message->_sender_fpr) {
+                                bool sender_key_is_me = false;
+                                status = is_own_key(session, inner_message->_sender_fpr, &sender_key_is_me);
+                                if (status != PEP_STATUS_OK && status != PEP_KEY_NOT_FOUND)
+                                    goto pEp_error;
+                                
+                                if (sender_key_is_me) {    
+                                    bool grouped = false;
+                                    status = deviceGrouped(session, &grouped);
+                                    
+                                    if (status != PEP_STATUS_OK)
+                                        goto pEp_error;
+                                    
+                                    if (!grouped)
+                                        ignore_msg = true;    
+                                }
+                            }
+                            else
+                                ignore_msg = true;
+                        }
 
+                        if (!ignore_msg) {
+                            imported_private_key_address = false;
+                            free(private_il); 
+                            private_il = NULL;
+                            
+                            // import keys from decrypted INNER source
+                            status = import_priv_keys_from_decrypted_msg(session, inner_message,
+                                                                         &imported_keys,
+                                                                         &imported_private_key_address,
+                                                                         private_il);
+                            if (status != PEP_STATUS_OK)
+                                goto pEp_error;            
+                        }        
                         if (is_key_reset) {
                             if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
-                                status = receive_key_reset(session,
-                                                           inner_message);
-                                if (status != PEP_STATUS_OK) {
-                                    free_message(inner_message);
-                                    goto pEp_error;
-                                }
+                                if (!ignore_msg) {
+                                    status = receive_key_reset(session,
+                                                               inner_message);
+                                    if (status != PEP_STATUS_OK) {
+                                        free_message(inner_message);
+                                        goto pEp_error;
+                                    }
+                                }    
                                 *flags |= PEP_decrypt_flag_consume;
                                 calculated_src = msg = inner_message;                                    
                             }

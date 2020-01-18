@@ -838,14 +838,20 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr_recv) {
     alex_id->me = true;
     status = set_own_key(session, alex_id, pubkey1);
     ASSERT_EQ(status, PEP_STATUS_OK);
+    status = set_identity_flags(session, alex_id, alex_id->flags | PEP_idf_devicegroup);
+    ASSERT_EQ(status , PEP_STATUS_OK);
 
     alex_id2->me = true;
     status = set_own_key(session, alex_id2, pubkey1);
     ASSERT_EQ(status, PEP_STATUS_OK);
+    status = set_identity_flags(session, alex_id2, alex_id2->flags | PEP_idf_devicegroup);
+    ASSERT_EQ(status , PEP_STATUS_OK);
 
     alex_id3->me = true;
     status = set_own_key(session, alex_id3, pubkey1);
     ASSERT_EQ(status, PEP_STATUS_OK);
+    status = set_identity_flags(session, alex_id3, alex_id3->flags | PEP_idf_devicegroup);
+    ASSERT_EQ(status , PEP_STATUS_OK);
 
     status = myself(session, alex_id);
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -1500,14 +1506,20 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     alex_id->me = true;
     status = set_own_key(session, alex_id, pubkey1);
     ASSERT_EQ(status, PEP_STATUS_OK);
+    status = set_identity_flags(session, alex_id2, alex_id2->flags | PEP_idf_devicegroup);
+    ASSERT_EQ(status , PEP_STATUS_OK);
 
     alex_id2->me = true;
     status = set_own_key(session, alex_id2, pubkey2);
     ASSERT_EQ(status, PEP_STATUS_OK);
+    status = set_identity_flags(session, alex_id2, alex_id2->flags | PEP_idf_devicegroup);
+    ASSERT_EQ(status , PEP_STATUS_OK);
 
     alex_id3->me = true;
     status = set_own_key(session, alex_id3, pubkey3);
     ASSERT_EQ(status, PEP_STATUS_OK);
+    status = set_identity_flags(session, alex_id2, alex_id2->flags | PEP_idf_devicegroup);
+    ASSERT_EQ(status , PEP_STATUS_OK);
 
     status = myself(session, alex_id);
     ASSERT_EQ(status, PEP_STATUS_OK);
