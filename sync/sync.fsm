@@ -329,16 +329,20 @@ protocol Sync 1 {
             on Beacon {
                 do openNegotiation;
                 do tellWeAreGrouped;
+                do useOwnResponse;
                 send NegotiationRequestGrouped;
                 do useOwnChallenge;
             }
 
             on NegotiationOpen {
-                if sameNegotiationAndPartner {
+                if sameResponse {
                     do storeNegotiation;
                     do useThisKey;
                     send GroupHandshake;
                     go HandshakingGrouped;
+                }
+                else {
+                    debug > cannot approve NegotiationOpen
                 }
             }
 
