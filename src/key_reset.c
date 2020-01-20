@@ -1040,10 +1040,11 @@ DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session) {
             const char* own_key = curr_key->value;
             status = get_identities_by_main_key_id(session, own_key, &key_idents);
             
-            if (status != PEP_CANNOT_FIND_IDENTITY)
-                status = _key_reset_device_group_for_shared_key(session, key_idents, own_key, true);
-            
-            if (status != PEP_STATUS_OK)
+            if (status == PEP_CANNOT_FIND_IDENTITY)
+                continue;
+            else if (status == PEP_STATUS_OK)    
+                status = _key_reset_device_group_for_shared_key(session, key_idents, own_key, true);            
+            else 
                 goto pEp_free;
             
             free_identity_list(key_idents);    

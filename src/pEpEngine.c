@@ -5225,9 +5225,6 @@ DYNAMIC_API PEP_STATUS sequence_value(
 
 PEP_STATUS is_own_key(PEP_SESSION session, const char* fpr, bool* own_key) {
     
-    assert(session);
-    assert(!EMPTYSTR(fpr));
-
     if (!session || EMPTYSTR(fpr))
         return PEP_ILLEGAL_VALUE;
     
