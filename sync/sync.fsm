@@ -386,8 +386,10 @@ protocol Sync 1 {
         }
 
         state DisableOnInitUnledGroupKeyReset {
-            on InitUnledGroupKeyReset
+            on InitUnledGroupKeyReset {
                 do disable;
+                do resetOwnKeysUngrouped;
+            }    
         }
 
         // sole device handshaking with group
@@ -717,4 +719,3 @@ protocol Sync 1 {
         }
     }
 }
-
