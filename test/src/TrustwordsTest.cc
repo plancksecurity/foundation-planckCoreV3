@@ -150,19 +150,26 @@ TEST_F(TrustwordsTest, check_trustwords) {
     output_stream << "\nTest 2: fpr1 == fpr1, short" << endl;
 
     output_stream << "\nfinding French trustwords for " << fingerprint2 << "...\n";
-    trustwords(session, fingerprint1.c_str(), "fr", &words1, &wsize1, 5);
+    trustwords(session, fingerprint2.c_str(), "fr", &words1, &wsize1, 5);
     ASSERT_NE(words1, nullptr);
     output_stream << words1 << "\n";
 
     output_stream << "\nfinding French trustwords for " << identity2->address << " and " << identity2->address << "...\n";
     status = get_trustwords(session, identity2, identity2, "fr", &full_wordlist, &wsize_full, false);
-    ASSERT_EQ(status , PEP_TRUSTWORDS_DUPLICATE_FPR);
-    output_stream << "Discovered duplicate fprs as desired" << endl;
+    ASSERT_STREQ(words1, full_wordlist);
+    // ASSERT_EQ(status , PEP_TRUSTWORDS_DUPLICATE_FPR);
+    // output_stream << "Discovered duplicate fprs as desired" << endl;
+
+    output_stream << "\nfinding English trustwords for " << fingerprint2 << "...\n";
+    trustwords(session, fingerprint2.c_str(), "en", &words1, &wsize1, 5);
+    ASSERT_NE(words1, nullptr);
+    output_stream << words1 << "\n";
 
     output_stream << "\nfinding English trustwords for " << identity2->address << " and " << identity2->address << "... with spaces\n";
     get_trustwords(session, identity2, identity2_with_spaces, "en", &full_wordlist, &wsize_full, false);
-    ASSERT_EQ(status , PEP_TRUSTWORDS_DUPLICATE_FPR);
-    output_stream << "Discovered duplicate fprs as desired" << endl;
+    ASSERT_STREQ(words1, full_wordlist);    
+    // ASSERT_EQ(status , PEP_TRUSTWORDS_DUPLICATE_FPR);
+    // output_stream << "Discovered duplicate fprs as desired" << endl;
 
     pEp_free(words1);
     words1 = nullptr;

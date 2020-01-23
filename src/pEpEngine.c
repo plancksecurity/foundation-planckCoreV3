@@ -843,7 +843,6 @@ static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
     // mean we should use it, and we should be *safe*, not relying 
     // on an implementation-specific quirk which might be sanely removed 
     // in a future sqlite version.
-    stringpair_t* revoked_key_to_own_address = NULL;
     
     identity_list* id_list = NULL;
     status = own_identities_retrieve(session, &id_list);
