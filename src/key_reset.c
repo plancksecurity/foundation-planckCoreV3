@@ -1204,33 +1204,36 @@ PEP_STATUS key_reset(
                     for (curr_ident = key_idents; curr_ident && curr_ident->ident; 
                                                     curr_ident = curr_ident->next) {
                         
+                        pEp_identity* this_ident = curr_ident->ident;
                         // Do the full reset on this identity        
                         // Base case for is_own_private starts here
-                        // tmp ident is an actual identity now (not just a skeleton?)
+                        // Note that we reset this key for ANY own ident that has it. And if 
+                        // tmp_ident did NOT have this key, it won't matter. We will reset the 
+                        // key for all idents for this user.
                         status = revoke_key(session, fpr_copy, NULL);
                         
                         // If we have a full identity, we have some cleanup and generation tasks here
-                        if (!EMPTYSTR(tmp_ident->address)) {
+                        if (!EMPTYSTR(this_ident->address)) {
                             // generate new key
                             if (status == PEP_STATUS_OK) {
-                                tmp_ident->fpr = NULL;
-                                status = myself(session, tmp_ident);
+                                this_ident->fpr = NULL;
+                                status = myself(session, this_ident);
                             }
-                            if (status == PEP_STATUS_OK && tmp_ident->fpr && strcmp(fpr_copy, tmp_ident->fpr) != 0)
-                                new_key = strdup(tmp_ident->fpr);
+                            if (status == PEP_STATUS_OK && this_ident->fpr && strcmp(fpr_copy, this_ident->fpr) != 0)
+                                new_key = strdup(this_ident->fpr);
                             // Error handling?    
                             
                             // mistrust fpr from trust
-                            tmp_ident->fpr = fpr_copy;
+                            this_ident->fpr = fpr_copy;
                                                             
-                            tmp_ident->comm_type = PEP_ct_mistrusted;
-                            status = set_trust(session, tmp_ident);
-                            tmp_ident->fpr = NULL;
+                            this_ident->comm_type = PEP_ct_mistrusted;
+                            status = set_trust(session, this_ident);
+                            this_ident->fpr = NULL;
                             
                             // Done with old use of ident.
                             if (status == PEP_STATUS_OK) {
-                                // Update fpr for outgoing
-                                status = myself(session, tmp_ident);
+                                // Generate new key
+                                status = myself(session, this_ident);
                             }
                         }    
                         
@@ -1255,11 +1258,10 @@ PEP_STATUS key_reset(
                             
                             tmp_ident->fpr = fpr_copy;
                             if (status == PEP_STATUS_OK)
-                                status = send_key_reset_to_recents(session, tmp_ident, fpr_copy, new_key);        
+                                status = send_key_reset_to_recents(session, this_ident, fpr_copy, new_key);        
                             tmp_ident->fpr = NULL;    
                         }                    
-                        // Ident list gets freed below, do not free here!
-                    }
+                    }  // Ident list gets freed below, do not free here!
                 }
                 // Ok, we've either now reset for each own identity with this key, or 
                 // we got an error and want to bail anyway.

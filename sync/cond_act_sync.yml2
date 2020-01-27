@@ -277,7 +277,6 @@ function "show_handshake" {
         assert(status == PEP_STATUS_OK);
         if (status)
             return status;
-        assert(strcmp(me->fpr, session->sync_state.comm_partner.sender_fpr) != 0);
 
         assert(me->fpr && me->fpr[0]);
         if (!(me->fpr && me->fpr[0])) {
@@ -312,7 +311,6 @@ function "show_handshake" {
             return PEP_OUT_OF_MEMORY;
         }
 
-        assert(strcmp(me->fpr, partner->fpr) != 0);
         status = session->notifyHandshake(me, partner, «$type»);
         if (status)
             return status;
