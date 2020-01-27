@@ -20,6 +20,11 @@
 #define KEY_RESET_MAJOR_VERSION 1L
 #define KEY_RESET_MINOR_VERSION 0L
 
+static void _add_auto_consume(message* msg) {
+    add_opt_field(msg, "pEp-auto-consume", "yes");
+    msg->in_reply_to = stringlist_add(msg->in_reply_to, "pEp-auto-consume@pEp.foundation");
+}
+
 static PEP_STATUS _generate_reset_structs(PEP_SESSION session,
                                           const pEp_identity* reset_ident,
                                           const char* old_fpr,
@@ -793,7 +798,8 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
             free(reset_msg);
             goto pEp_free;
         }
-        
+
+        _add_auto_consume(reset_msg);        
         // insert into queue
         status = send_cb(reset_msg);
 
@@ -943,7 +949,8 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
         if (status != PEP_STATUS_OK) {
             goto pEp_free;
         }
-
+        _add_auto_consume(enc_msg);
+        
         // insert into queue
         status = send_cb(enc_msg);
 
