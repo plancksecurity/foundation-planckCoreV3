@@ -315,7 +315,7 @@ DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
         return status;
 
     // if identity is already disabled for sync do nothing
-    if (!(ident->flags & PEP_idf_devicegroup) || (ident->flags & PEP_idf_not_for_sync))
+    if (!(ident->flags & PEP_idf_devicegroup) && (ident->flags & PEP_idf_not_for_sync))
         return PEP_STATUS_OK;
 
     status = unset_identity_flags(session, ident, PEP_idf_devicegroup);
