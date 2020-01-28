@@ -1118,6 +1118,7 @@ PEP_STATUS _myself(PEP_SESSION session,
     // this user_id + address
 //    DEBUG_LOG("myself", "debug", identity->address);
  
+    // This will grab the actual flags from the db
     status = get_identity(session,
                           identity->address,
                           identity->user_id,

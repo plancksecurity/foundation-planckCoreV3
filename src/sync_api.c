@@ -264,23 +264,38 @@ DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
     if (!(session && ident))
         return PEP_ILLEGAL_VALUE;
 
-    // create the identity in the database if it is not yet there
+    // create the identity in the database if it is not yet there.
+    // This generates no events.
     PEP_STATUS status = _myself(session, ident, false, true, false);
-    if (status)
+    if (status != PEP_STATUS_OK)
         return status;
 
     status = unset_identity_flags(session, ident, PEP_idf_not_for_sync);
-    if (status)
+    if (status != PEP_STATUS_OK) // explicit. sorry, but lazy makes mistakes in C
         return status;
 
-    bool grouped;
-    status = deviceGrouped(session, &grouped);
-    if (status)
+    status = set_identity_flags(session, ident, PEP_idf_devicegroup);    
+    if (status != PEP_STATUS_OK)
         return status;
 
-    if (grouped)
-        status = set_identity_flags(session, ident, PEP_idf_devicegroup);
-    return status;
+    // Let's make sure whatever flags are on the retval are at least correct
+    // so as to unnecessary reduce dev freakout.
+    ident->flags = (ident->flags | PEP_idf_devicegroup) & ~PEP_idf_not_for_sync;
+
+    // If no key was actually in the DB, make one now.
+    // This will trigger a sync event. 
+    if (EMPTYSTR(ident->fpr)) {
+        status = _myself(session, ident, true, true, false);
+        if (status != PEP_STATUS_OK)
+            return status;
+    }
+    else {
+        // Ok, we actually had a key. We pretend we generated one to make 
+        // sync play nice.
+        signal_Sync_event(session, Sync_PR_keysync, KeyGen, NULL);
+    }        
+
+    return PEP_STATUS_OK;
 }
 
 DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
@@ -300,5 +315,11 @@ DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
         return status;
 
     status = set_identity_flags(session, ident, PEP_idf_not_for_sync);
+    if (status)
+        return status;
+        
+    ident->flags = (ident->flags | PEP_idf_not_for_sync) & ~PEP_idf_devicegroup;   
+
+    status = key_reset_identity(session, ident, NULL);
     return status;
 }

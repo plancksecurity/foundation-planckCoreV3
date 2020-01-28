@@ -4729,7 +4729,7 @@ PEP_STATUS _generate_keypair(PEP_SESSION session,
     if (identity->fpr)
         status = set_pgp_keypair(session, identity->fpr);
 
-    if (!suppress_event)
+    if ((!suppress_event) && (identity->flags & PEP_idf_devicegroup))
         signal_Sync_event(session, Sync_PR_keysync, KeyGen, NULL);
 
     // add to known keypair DB, as this might not end up being a default
