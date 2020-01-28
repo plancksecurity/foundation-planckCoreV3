@@ -4235,7 +4235,6 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         free(sender_fpr);
     }
 
-
     // Removed for now - partial fix in ENGINE-647, but we have sync issues. Need to 
     // fix testing issue.
     //
