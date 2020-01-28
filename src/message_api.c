@@ -4615,6 +4615,25 @@ DYNAMIC_API PEP_STATUS get_trustwords(
             wsize, full);
 }
 
+static void remove_separators(const char* str1, char* str2, int str1len) {
+    int i = 0;
+    char* curr_write = str2;
+    for ( ; i < str1len; i++) {
+        switch (str1[i]) {
+            case ' ':
+            case '\t':
+            case '\r':
+            case '\n':
+            case '\0':
+                continue;
+            default:
+                *curr_write = str1[i];
+                curr_write++;
+        }
+    }
+    *curr_write = '\0';
+}
+
 DYNAMIC_API PEP_STATUS get_trustwords_for_fprs(
         PEP_SESSION session, const char* fpr1, const char* fpr2,
         const char* lang, char **words, size_t *wsize, bool full
@@ -4699,6 +4718,10 @@ DYNAMIC_API PEP_STATUS get_trustwords_for_fprs(
     
     status = check_for_zero_fpr(XORed_fpr);
     
+    if (status == PEP_TRUSTWORDS_DUPLICATE_FPR) {
+        remove_separators(fpr1, XORed_fpr, fpr1_len);
+        status = PEP_STATUS_OK;
+    }
     if (status != PEP_STATUS_OK)
         goto error_release;
     

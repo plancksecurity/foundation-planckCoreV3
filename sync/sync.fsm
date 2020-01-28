@@ -360,7 +360,8 @@ protocol Sync 1 {
             // this is for a leaving group member
             on GroupKeyResetRequiredAndDisable {
                 send InitUnledGroupKeyReset;
-                go DisableOnInitUnledGroupKeyReset;
+                do disable;
+                do resetOwnKeysUngrouped;
             }
 
             on InitUnledGroupKeyReset {
@@ -383,13 +384,6 @@ protocol Sync 1 {
                     go Grouped;
                 }
             }
-        }
-
-        state DisableOnInitUnledGroupKeyReset {
-            on InitUnledGroupKeyReset {
-                do disable;
-                do resetOwnKeysUngrouped;
-            }    
         }
 
         // sole device handshaking with group
