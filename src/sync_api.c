@@ -270,6 +270,10 @@ DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
     if (status != PEP_STATUS_OK)
         return status;
 
+    // if identity is already enabled for sync do nothing
+    if ((ident->flags & PEP_idf_devicegroup) && !(ident->flags & PEP_idf_not_for_sync))
+        return PEP_STATUS_OK;
+
     status = unset_identity_flags(session, ident, PEP_idf_not_for_sync);
     if (status != PEP_STATUS_OK) // explicit. sorry, but lazy makes mistakes in C
         return status;
@@ -309,6 +313,10 @@ DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
     PEP_STATUS status = _myself(session, ident, false, true, false);
     if (status)
         return status;
+
+    // if identity is already disabled for sync do nothing
+    if (!(ident->flags & PEP_idf_devicegroup) || (ident->flags & PEP_idf_not_for_sync))
+        return PEP_STATUS_OK;
 
     status = unset_identity_flags(session, ident, PEP_idf_devicegroup);
     if (status)
