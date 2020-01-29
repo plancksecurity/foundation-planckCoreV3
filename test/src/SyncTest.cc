@@ -277,9 +277,16 @@ TEST_F(SyncTest, check_sync_enable)
 
 // Passes if you step through and ignore the send_key_to_recents part of key reset, because the attempt to pass the static class vars above doesn't work.
 // FIXME: KB, reimplement according to now-standard method used in key reset tests
-//    disable_identity_for_sync(session, julio);
-//    adapter.processing();
-//    myself(session, julio);
-//    ASSERT_EQ(julio->flags, PEP_idf_not_for_sync);
-//    ASSERT_STRNE(current_fpr.c_str(), julio->fpr);
+   // disable_identity_for_sync(session, julio);
+   // adapter.processing();
+   // myself(session, julio);
+   // ASSERT_EQ(julio->flags, PEP_idf_not_for_sync);
+   // ASSERT_STRNE(current_fpr.c_str(), julio->fpr);
+   // 
+   // pEp_identity* juan = new_identity("juan.valdez@columbian.coffee.co", NULL, PEP_OWN_USERID, "Juan Valdez");
+   // disable_identity_for_sync(session, juan);
+   // adapter.processing();
+   // myself(session, juan);
+   // ASSERT_EQ(juan->flags, PEP_idf_not_for_sync);
+   // ASSERT_FALSE(EMPTYSTR(juan->fpr));
 }

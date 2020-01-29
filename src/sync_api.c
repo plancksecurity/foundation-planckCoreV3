@@ -302,12 +302,26 @@ DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
 
     // create the identity in the database if it is not yet there
     PEP_STATUS status = _myself(session, ident, false, true, false);
-    if (status)
+    if (status != PEP_STATUS_OK && status != PEP_KEY_NOT_FOUND && status != PEP_GET_KEY_FAILED)
         return status;
-
+        
+    bool explicitly_enabled = ident->flags & PEP_idf_devicegroup;
+        
     // if identity is already disabled for sync do nothing
-    if (!(ident->flags & PEP_idf_devicegroup) && (ident->flags & PEP_idf_not_for_sync))
+    if ((!explicitly_enabled) && (ident->flags & PEP_idf_not_for_sync))
         return PEP_STATUS_OK;
+
+    bool key_genned = false;
+    
+    // status != PEP_STATUS_OK means there was no key and, probably, no record.    
+    if (!explicitly_enabled && ((status != PEP_STATUS_OK) || EMPTYSTR(ident->fpr))) {
+        // safe to gen here, no event will happen
+        status = myself(session, ident);
+        if (status != PEP_STATUS_OK)
+            return status;
+            
+        key_genned = true;
+    }        
 
     status = unset_identity_flags(session, ident, PEP_idf_devicegroup);
     if (status)
@@ -319,6 +333,9 @@ DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
         
     ident->flags = (ident->flags | PEP_idf_not_for_sync) & ~PEP_idf_devicegroup;   
 
-    status = key_reset_identity(session, ident, NULL);
+    // If the key is new, it hasn't been sync'd. If it's not, it has. If it has, reset it.
+    if (!key_genned)
+        status = key_reset_identity(session, ident, NULL);
+        
     return status;
 }
