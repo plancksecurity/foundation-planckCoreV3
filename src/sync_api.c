@@ -264,15 +264,21 @@ DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
     if (!(session && ident))
         return PEP_ILLEGAL_VALUE;
 
-    // create the identity in the database if it is not yet there.
-    // This generates no events.
+    // Find out if flags are already set. If there's no identity, this won't
+    // create one.
     PEP_STATUS status = _myself(session, ident, false, true, false);
-    if (status != PEP_STATUS_OK)
+    if (status != PEP_STATUS_OK && status != PEP_KEY_NOT_FOUND && status != PEP_GET_KEY_FAILED)
         return status;
 
-    // if identity is already enabled for sync do nothing
     if ((ident->flags & PEP_idf_devicegroup) && !(ident->flags & PEP_idf_not_for_sync))
         return PEP_STATUS_OK;
+
+    // Ok, this is kind of annoying - if the flags aren't set, we won't create 
+    // a keygen event anyway, so we're going to have to call myself and issue 
+    // an unconditional keygen event.
+    status = myself(session, ident);
+    if (status != PEP_STATUS_OK)
+        return status;
 
     status = unset_identity_flags(session, ident, PEP_idf_not_for_sync);
     if (status != PEP_STATUS_OK) // explicit. sorry, but lazy makes mistakes in C
@@ -282,22 +288,7 @@ DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
     if (status != PEP_STATUS_OK)
         return status;
 
-    // Let's make sure whatever flags are on the retval are at least correct
-    // so as to unnecessary reduce dev freakout.
-    ident->flags = (ident->flags | PEP_idf_devicegroup) & ~PEP_idf_not_for_sync;
-
-    // If no key was actually in the DB, make one now.
-    // This will trigger a sync event. 
-    if (EMPTYSTR(ident->fpr)) {
-        status = _myself(session, ident, true, true, false);
-        if (status != PEP_STATUS_OK)
-            return status;
-    }
-    else {
-        // Ok, we actually had a key. We pretend we generated one to make 
-        // sync play nice.
-        signal_Sync_event(session, Sync_PR_keysync, KeyGen, NULL);
-    }        
+    signal_Sync_event(session, Sync_PR_keysync, KeyGen, NULL);
 
     return PEP_STATUS_OK;
 }

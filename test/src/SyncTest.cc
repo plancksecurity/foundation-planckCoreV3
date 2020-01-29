@@ -265,3 +265,21 @@ TEST_F(SyncTest, check_sync)
     output_stream << "check_sync(): cry for unknown key\n";
     signal_Sync_event(sync, Sync_PR_keysync, CannotDecrypt, NULL);
 }
+
+TEST_F(SyncTest, check_sync_enable)
+{
+    pEp_identity* julio = new_identity("julio.iglesias@truhan.senor.es", NULL, PEP_OWN_USERID, "Julio Iglesias");
+    enable_identity_for_sync(session, julio);
+    adapter.processing();
+    myself(session, julio);
+    ASSERT_EQ(julio->flags, PEP_idf_devicegroup);
+    string current_fpr = julio->fpr;
+
+// Passes if you step through and ignore the send_key_to_recents part of key reset, because the attempt to pass the static class vars above doesn't work.
+// FIXME: KB, reimplement according to now-standard method used in key reset tests
+//    disable_identity_for_sync(session, julio);
+//    adapter.processing();
+//    myself(session, julio);
+//    ASSERT_EQ(julio->flags, PEP_idf_not_for_sync);
+//    ASSERT_STRNE(current_fpr.c_str(), julio->fpr);
+}
