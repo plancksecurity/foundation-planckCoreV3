@@ -121,6 +121,9 @@ typedef SYNC_EVENT (*retrieve_next_sync_event_t)(void *management,
 //      implement start_sync() in this adapter and provide it to the
 //      application, so it can trigger startup
 //
+//      in case of parallelization start_sync() and register_sync_callbacks()
+//      will run in parallel
+//
 //      do not return from start_sync() before register_sync_callbacks() was
 //      executed
 
