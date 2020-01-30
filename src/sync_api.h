@@ -106,7 +106,7 @@ typedef SYNC_EVENT (*retrieve_next_sync_event_t)(void *management,
 // register_sync_callbacks() - register adapter's callbacks
 //
 //  parameters:
-//      session (in)                    session where to store obj handle
+//      session (in)                    session where to register callbacks
 //      management (in)                 application defined; usually a locked queue
 //      notifyHandshake (in)            callback for doing the handshake
 //      retrieve_next_sync_event (in)   callback for receiving sync event
