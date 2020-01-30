@@ -255,12 +255,15 @@ DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session) {
         return PEP_ILLEGAL_VALUE;
 
     bool grouped = false;
-    status = deviceGrouped(session, &grouped);
+    PEP_STATUS status = deviceGrouped(session, &grouped);
     if (status)
         return status;
 
-    if (!grouped)
+    if (!grouped) {
+        if (session->inject_sync_event)
+            session->inject_sync_event((void *) SHUTDOWN, NULL);
         return PEP_STATUS_OK;
+    }
 
     return signal_Sync_event(session, Sync_PR_keysync, LeaveDeviceGroup, NULL);
 }
