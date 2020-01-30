@@ -126,6 +126,9 @@ typedef SYNC_EVENT (*retrieve_next_sync_event_t)(void *management,
 //
 //      do not return from start_sync() before register_sync_callbacks() was
 //      executed
+//
+//      when execution of the sync state machine ends a call to
+//      unregister_sync_callbacks() is required
 
 DYNAMIC_API PEP_STATUS register_sync_callbacks(
         PEP_SESSION session,
