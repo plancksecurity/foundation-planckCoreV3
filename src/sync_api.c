@@ -253,7 +253,15 @@ DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session) {
     assert(session);
     if (!session)
         return PEP_ILLEGAL_VALUE;
-        
+
+    bool grouped = false;
+    status = deviceGrouped(session, &grouped);
+    if (status)
+        return status;
+
+    if (!grouped)
+        return PEP_STATUS_OK;
+
     return signal_Sync_event(session, Sync_PR_keysync, LeaveDeviceGroup, NULL);
 }
 
