@@ -260,35 +260,48 @@ DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session) {
 DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
         pEp_identity *ident)
 {
-    assert(session && ident);
-    if (!(session && ident))
+    assert(session && ident && ident->user_id && ident->user_id[0] && ident->address && ident->address[0]);
+    if (!(session && ident && ident->user_id && ident->user_id[0] && ident->address && ident->address[0]))
         return PEP_ILLEGAL_VALUE;
 
-    // Find out if flags are already set. If there's no identity, this won't
-    // create one.
-    PEP_STATUS status = _myself(session, ident, false, true, false);
-    if (status != PEP_STATUS_OK && status != PEP_KEY_NOT_FOUND && status != PEP_GET_KEY_FAILED)
-        return status;
+    // safeguard: in case the delivered identity is not valid fetch flags from the database
+    //            while doing this check if this is an own identity and return an error if not
 
+    pEp_identity *stored_ident = NULL;
+    PEP_STATUS status = get_identity(session, ident->address, ident->user_id, &stored_ident);
+    if (status)
+        return status;
+    assert(stored_ident);
+    if (!stored_ident->me) {
+        free_identity(stored_ident);
+        return PEP_ILLEGAL_VALUE;
+    }
+    ident->flags = stored_ident->flags;
+    free_identity(stored_ident);
+
+    // if we're grouped and this identity is enabled already we can stop here
     if ((ident->flags & PEP_idf_devicegroup) && !(ident->flags & PEP_idf_not_for_sync))
         return PEP_STATUS_OK;
 
-    // Ok, this is kind of annoying - if the flags aren't set, we won't create 
-    // a keygen event anyway, so we're going to have to call myself and issue 
-    // an unconditional keygen event.
-    status = myself(session, ident);
-    if (status != PEP_STATUS_OK)
-        return status;
+    // if the identity is marked not for sync unset this to enable
+    if (ident->flags & PEP_idf_not_for_sync) {
+        status = unset_identity_flags(session, ident, PEP_idf_not_for_sync);
+        if (status)
+            return status;
+    }
 
-    status = unset_identity_flags(session, ident, PEP_idf_not_for_sync);
-    if (status != PEP_STATUS_OK) // explicit. sorry, but lazy makes mistakes in C
+    // if we're grouped then add the identity to the group
+    bool grouped = false;
+    status = deviceGrouped(session, &grouped);
+    if (status)
         return status;
-
-    status = set_identity_flags(session, ident, PEP_idf_devicegroup);    
-    if (status != PEP_STATUS_OK)
-        return status;
-
-    signal_Sync_event(session, Sync_PR_keysync, KeyGen, NULL);
+    if (grouped) {
+        status = set_identity_flags(session, ident, PEP_idf_devicegroup);    
+        if (status)
+            return status;
+        // signal we have a new identity in the group
+        signal_Sync_event(session, Sync_PR_keysync, KeyGen, NULL);
+    }
 
     return PEP_STATUS_OK;
 }

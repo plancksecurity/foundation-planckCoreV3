@@ -222,7 +222,7 @@ DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session);
 //      ident                   identity to enable
 //
 //  caveat:
-//      do not call this function without sync running
+//      ident must be an own identity
 
 DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
         pEp_identity *ident);
