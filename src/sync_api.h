@@ -115,7 +115,14 @@ typedef SYNC_EVENT (*retrieve_next_sync_event_t)(void *management,
 //      PEP_STATUS_OK or any other value on errror
 //
 //  caveat:
-//      call that BEFORE you're using any other part of the engine
+//      use this function in an adapter where you're processing the sync
+//      state machine
+//
+//      implement start_sync() in this adapter and provide it to the
+//      application, so it can trigger startup
+//
+//      do not return from start_sync() before register_sync_callbacks() was
+//      executed
 
 DYNAMIC_API PEP_STATUS register_sync_callbacks(
         PEP_SESSION session,
