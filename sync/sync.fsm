@@ -357,8 +357,7 @@ protocol Sync 1 {
                     do trustThisKey;
             }
 
-            // this is for a leaving group member
-            on GroupKeyResetRequiredAndDisable {
+            on LeaveDeviceGroup {
                 send InitUnledGroupKeyReset;
                 do disable;
                 do resetOwnKeysUngrouped;

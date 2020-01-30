@@ -254,7 +254,7 @@ DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session) {
     if (!session)
         return PEP_ILLEGAL_VALUE;
         
-    return signal_Sync_event(session, Sync_PR_keysync, GroupKeyResetRequiredAndDisable, NULL);
+    return signal_Sync_event(session, Sync_PR_keysync, LeaveDeviceGroup, NULL);
 }
 
 DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
