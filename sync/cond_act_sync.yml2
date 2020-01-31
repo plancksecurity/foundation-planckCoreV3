@@ -426,7 +426,7 @@ action ownKeysAreDefaultKeys
 
     // set flag for all keys; don't change anything else
     for (identity_list *il = session->sync_state.own.identities; il && il->ident ; il = il->next) {
-        if (!(il->ident->flags && PEP_idf_not_for_sync)) {
+        if (!(il->ident->flags & PEP_idf_not_for_sync)) {
             status = set_identity_flags(session, il->ident, PEP_idf_devicegroup);
             if (status)
                 return status;
@@ -439,7 +439,7 @@ action receivedKeysAreDefaultKeys
     PEP_STATUS status = PEP_STATUS_OK;
     // set flag for all keys
     for (identity_list *il = session->sync_state.own.identities; il && il->ident ; il = il->next) {
-        if (!(il->ident->flags && PEP_idf_not_for_sync)) {
+        if (!(il->ident->flags & PEP_idf_not_for_sync)) {
 
             status = set_identity_flags(session, il->ident, PEP_idf_devicegroup);
             if (status)
