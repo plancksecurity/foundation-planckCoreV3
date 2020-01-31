@@ -1898,12 +1898,12 @@ DYNAMIC_API PEP_STATUS set_own_key(
     assert(!EMPTYSTR(me->user_id));
     assert(!EMPTYSTR(me->username));
 
-    // deliver a copy
-    assert(me->fpr != fpr);
-
     if (!session || !me || EMPTYSTR(fpr) || EMPTYSTR(me->address) ||
-            EMPTYSTR(me->user_id) || EMPTYSTR(me->username) || me->fpr == fpr)
+            EMPTYSTR(me->user_id) || EMPTYSTR(me->username))
         return PEP_ILLEGAL_VALUE;
+
+    if (me->fpr == fpr)
+        me->fpr = NULL;
 
     status = _myself(session, me, false, true, false);
     // we do not need a valid key but dislike other errors

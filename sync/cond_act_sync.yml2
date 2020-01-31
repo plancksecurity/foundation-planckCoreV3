@@ -399,13 +399,9 @@ action saveGroupKeys
     }
 
     identity_list *oil = session->sync_state.own.identities;
-    char *fpr = NULL;
 
     // BUG: this should be a transaction and been rolled back completely on error
     for (identity_list *_il = il; _il && _il->ident; _il = _il->next) {
-        if (fpr)
-            free(fpr);
-
         bool found = false;
         status = _have_identity_in(oil, _il->ident, &found);
         if (status)
@@ -414,20 +410,12 @@ action saveGroupKeys
         if (!found) {
             _il->ident->me = true;
 
-            fpr = strdup(_il->ident->fpr);
-            assert(fpr);
-            if (!fpr) {
-                status = PEP_OUT_OF_MEMORY;
-                break;
-            }
-
-            status = set_own_key(session, _il->ident, fpr);
+            status = set_own_key(session, _il->ident, _il->ident->fpr);
             if (status)
                 break;
         }
     }
 
-    free(fpr);
     free(user_id);
     free_identity_list(il);
 ||
@@ -475,19 +463,7 @@ action receivedKeysAreDefaultKeys
     }
 
     for (identity_list *_il = il; _il && _il->ident ; _il = _il->next) {
-        // replace partner's user_id with own user_id
-        free(_il->ident->user_id);
-        _il->ident->user_id = strdup(user_id);
-        assert(_il->ident->user_id);
-        if (!_il->ident->user_id) {
-            free_identity_list(il);
-            free(user_id);
-            return PEP_OUT_OF_MEMORY;
-        }
-
-        const char *own_key = _il->ident->fpr;
-        _il->ident->fpr = NULL;
-        status = set_own_key(session, _il->ident, own_key);
+        status = set_own_key(session, _il->ident, _il->ident->fpr);
         if (status) {
             free_identity_list(il);
             free(user_id);
