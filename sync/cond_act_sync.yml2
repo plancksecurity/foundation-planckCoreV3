@@ -400,7 +400,7 @@ action saveGroupKeys
 
     identity_list *oil = session->sync_state.own.identities;
 
-    // BUG: this should be a transaction and been rolled back completely on error
+    // FIXME: this should be a transaction and been rolled back completely on error
     for (identity_list *_il = il; _il && _il->ident; _il = _il->next) {
         bool found = false;
         status = _have_identity_in(oil, _il->ident, &found);
