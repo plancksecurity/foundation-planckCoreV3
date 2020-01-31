@@ -399,60 +399,35 @@ action saveGroupKeys
     }
 
     identity_list *oil = session->sync_state.own.identities;
+    char *fpr = NULL;
 
     // BUG: this should be a transaction and been rolled back completely on error
     for (identity_list *_il = il; _il && _il->ident; _il = _il->next) {
-        pEp_identity *ident = _il->ident;
-        bool is_own_already = false;
+        if (fpr)
+            free(fpr);
 
-        status = is_own_address(session, ident->address, &is_own_already);
-        if (status) {
-            free_identity_list(il);
-            free(user_id);
-            return status;
-        }
+        bool found = false;
+        status = _have_identity_in(oil, _il->ident, &found);
+        if (status)
+            break;
 
-        free(ident->user_id);
-        ident->user_id = strdup(user_id);
-        assert(ident->user_id);
-        if (!ident->user_id) {
-            free_identity_list(il);
-            free(user_id);
-            return PEP_OUT_OF_MEMORY;
-        }
+        if (!found) {
+            _il->ident->me = true;
 
-        if (is_own_already) {
-            ident->comm_type = PEP_ct_pEp;
-            status = set_trust(session, ident);
-        }
-        else {
-            pEp_identity *_ident = identity_dup(ident);
-            if (!_ident) {
-                free_identity_list(il);
-                free(user_id);
-                return PEP_OUT_OF_MEMORY;
+            fpr = strdup(_il->ident->fpr);
+            assert(fpr);
+            if (!fpr) {
+                status = PEP_OUT_OF_MEMORY;
+                break;
             }
-            oil = identity_list_add(oil, _ident);
-            if (!oil) {
-                free_identity_list(il);
-                free(user_id);
-                return PEP_OUT_OF_MEMORY;
-            }
-            status = _myself(session, _ident, false, true, false);
-            if (status) {
-                free_identity_list(il);
-                free(user_id);
-                return status;
-            }
-            status = set_own_key(session, _ident, ident->fpr);
-        }
-        if (status) {
-            free_identity_list(il);
-            free(user_id);
-            return status;
+
+            status = set_own_key(session, _il->ident, fpr);
+            if (status)
+                break;
         }
     }
 
+    free(fpr);
     free(user_id);
     free_identity_list(il);
 ||

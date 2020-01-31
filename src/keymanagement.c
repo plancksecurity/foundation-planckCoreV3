@@ -1898,8 +1898,11 @@ DYNAMIC_API PEP_STATUS set_own_key(
     assert(!EMPTYSTR(me->user_id));
     assert(!EMPTYSTR(me->username));
 
+    // deliver a copy
+    assert(me->fpr != fpr);
+
     if (!session || !me || EMPTYSTR(fpr) || EMPTYSTR(me->address) ||
-            EMPTYSTR(me->user_id) || EMPTYSTR(me->username))
+            EMPTYSTR(me->user_id) || EMPTYSTR(me->username) || me->fpr == fpr)
         return PEP_ILLEGAL_VALUE;
 
     status = _myself(session, me, false, true, false);
