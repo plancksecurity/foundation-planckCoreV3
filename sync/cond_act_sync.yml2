@@ -445,11 +445,6 @@ action saveGroupKeys
                 return status;
             }
             status = set_own_key(session, _ident, ident->fpr);
-            if (status) {
-                free_identity_list(il);
-                free(user_id);
-                return status;
-            }
         }
         if (status) {
             free_identity_list(il);
