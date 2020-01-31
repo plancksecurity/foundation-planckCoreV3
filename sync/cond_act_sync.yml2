@@ -410,7 +410,7 @@ action saveGroupKeys
         if (!found) {
             _il->ident->me = true;
 
-            status = set_own_key(session, _il->ident, _il->ident->fpr);
+            status = set_identity(session, _il->ident);
             if (status)
                 break;
         }
