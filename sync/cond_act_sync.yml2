@@ -438,9 +438,18 @@ action saveGroupKeys
                 free(user_id);
                 return PEP_OUT_OF_MEMORY;
             }
-            status = myself(session, _ident);
-            _ident->comm_type = PEP_ct_pEp;
-            status = set_trust(session, _ident);
+            status = _myself(session, _ident, false, true, false);
+            if (status) {
+                free_identity_list(il);
+                free(user_id);
+                return status;
+            }
+            status = set_own_key(session, _ident, ident->fpr);
+            if (status) {
+                free_identity_list(il);
+                free(user_id);
+                return status;
+            }
         }
         if (status) {
             free_identity_list(il);
