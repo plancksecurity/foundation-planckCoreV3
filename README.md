@@ -40,7 +40,7 @@ Various adapters are also available at the link provided for the p≡p Engine's 
 # What is the current state of the project?
 The p≡p Engine is production-ready.
 It is under active development by several full-time employees of the p≡p foundation and its partner organizations.
-The most recent version of the source code can be obtained here: <https://cacert.pep.foundation/dev>.
+The most recent version of the source code can be obtained here: <https://pep.foundation/dev/repos>.
 This is the only offical way to obtain a copy of the source code.
 
 # I would like to contribute to the p≡p Engine or a realated project, where do I start?
