@@ -426,13 +426,21 @@ action saveGroupKeys
             status = set_trust(session, ident);
         }
         else {
-            oil = identity_list_add(oil, ident);
+            pEp_identity *_ident = identity_dup(ident);
+            if (!_ident) {
+                free_identity_list(il);
+                free(user_id);
+                return PEP_OUT_OF_MEMORY;
+            }
+            oil = identity_list_add(oil, _ident);
             if (!oil) {
                 free_identity_list(il);
                 free(user_id);
                 return PEP_OUT_OF_MEMORY;
             }
-            status = myself(session, ident);
+            status = myself(session, _ident);
+            _ident->comm_type = PEP_ct_pEp;
+            status = set_trust(session, _ident);
         }
         if (status) {
             free_identity_list(il);
@@ -442,9 +450,7 @@ action saveGroupKeys
     }
 
     free(user_id);
-    // NO! This contains the references we add above and belongs to
-    // session->sync_state.own.identities!
-    // free_identity_list(il);
+    free_identity_list(il);
 ||
 
 action ownKeysAreDefaultKeys
