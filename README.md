@@ -44,13 +44,10 @@ The most recent version of the source code can be obtained here: <https://pep.fo
 This is the only offical way to obtain a copy of the source code.
 
 # I would like to contribute to the p≡p Engine or a realated project, where do I start?
-First of all, excellent!
-We'd love to dicuss this opportunity further with you.
-Please contact the upstream developers to get started.
-See the [Contact](#contact) section.
+First of all, excellent! You can find further information here: <https://contribution.pep.foundation/>
 
 # Legal notes
-The p≡p Engine is Copyright 2015-2017 by p≡p foundation, Switzerland.
+The p≡p Engine is Copyright 2015-2020 by p≡p foundation, Switzerland.
 The source code of the p≡p Engine is licensed under the terms of the GNU General Public License version 3.
 Accompanying documentation is licensed under the terms of the Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) License.
 Each file includes a notice near its beginning, that indicates the applicable license.
