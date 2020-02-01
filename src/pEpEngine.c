@@ -80,7 +80,7 @@ static const char *sql_trustword =
 
 // FIXME?: problems if we don't have a key for the user - we get nothing
 static const char *sql_get_identity =  
-    "select fpr, username, comm_type, lang,"
+    "select identity.main_key_id, username, comm_type, lang,"
     "   identity.flags | pgp_keypair.flags,"
     "   is_own, pEp_version_major, pEp_version_minor"
     "   from identity"
