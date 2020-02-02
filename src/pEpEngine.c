@@ -138,7 +138,7 @@ static const char *sql_get_identities_by_address =
     "   timestamp desc; ";
     
 static const char *sql_get_identities_by_userid =  
-    "select address, fpr, username, comm_type, lang,"
+    "select address, identity.main_key_id, username, comm_type, lang,"
     "   identity.flags | pgp_keypair.flags,"
     "   is_own, pEp_version_major, pEp_version_minor"
     "   from identity"
@@ -422,7 +422,7 @@ static const char *sql_is_own_address =
     ");";
 
 static const char *sql_own_identities_retrieve =  
-    "select address, fpr, identity.user_id, username,"
+    "select address, identity.main_key_id, identity.user_id, username,"
     "   lang, identity.flags | pgp_keypair.flags, pEp_version_major, pEp_version_minor"
     "   from identity"
     "   join person on id = identity.user_id"
@@ -2779,7 +2779,7 @@ PEP_STATUS get_identities_by_userid(
 
     int result = -1;
     while ((result = sqlite3_step(session->get_identities_by_userid)) == SQLITE_ROW) {
-            // "select address, fpr, username, comm_type, lang,"
+            // "select address, identity.main_key_id, username, comm_type, lang,"
             // "   identity.flags | pgp_keypair.flags,"
             // "   is_own"
             // "   from identity"
