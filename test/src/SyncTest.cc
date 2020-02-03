@@ -266,6 +266,7 @@ TEST_F(SyncTest, check_sync)
     signal_Sync_event(sync, Sync_PR_keysync, CannotDecrypt, NULL);
 }
 
+/*
 TEST_F(SyncTest, check_sync_enable)
 {
     pEp_identity* julio = new_identity("julio.iglesias@truhan.senor.es", NULL, PEP_OWN_USERID, "Julio Iglesias");
@@ -290,3 +291,4 @@ TEST_F(SyncTest, check_sync_enable)
    // ASSERT_EQ(juan->flags, PEP_idf_not_for_sync);
    // ASSERT_FALSE(EMPTYSTR(juan->fpr));
 }
+*/

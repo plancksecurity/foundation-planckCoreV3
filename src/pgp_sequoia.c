@@ -2978,19 +2978,13 @@ PEP_STATUS pgp_get_key_rating(
         goto out;
     }
 
-    // if (pgp_cert_expired(cert)) {
-    //     *comm_type = PEP_ct_key_expired;
-    //     goto out;
-    // }
-
-
-    PEP_comm_type best_enc = PEP_ct_no_encryption, best_sign = PEP_ct_no_encryption;
+    PEP_comm_type worst_enc = PEP_ct_no_encryption, worst_sign = PEP_ct_no_encryption;
     pgp_cert_key_iter_t key_iter = pgp_cert_key_iter_valid(cert);
     pgp_key_t key;
     pgp_signature_t sig;
     pgp_revocation_status_t rev;
     while ((key = pgp_cert_key_iter_next(key_iter, &sig, &rev))) {
-        if (! sig)
+        if (!sig)
             continue;
 
         PEP_comm_type curr = PEP_ct_no_encryption;
@@ -3015,18 +3009,22 @@ PEP_STATUS pgp_get_key_rating(
         }
 
         if (can_enc)
-            best_enc = _MAX(best_enc, curr);
-
+            worst_enc = (worst_enc == PEP_ct_no_encryption ? curr : _MIN(worst_enc, curr));
+            
         if (can_sign)
-            best_sign = _MAX(best_sign, curr);
+            worst_sign = (worst_sign == PEP_ct_no_encryption ? curr : _MIN(worst_sign, curr));
+
     }
     pgp_cert_key_iter_free(key_iter);
 
-    if (best_enc == PEP_ct_no_encryption || best_sign == PEP_ct_no_encryption) {
+    // This may be redundant because of the broken check above; we should revisit later.
+    // But because this case was falling under expired because of how that is written, this 
+    // was probably never hiit here
+    if (worst_enc == PEP_ct_no_encryption || worst_sign == PEP_ct_no_encryption) {
         *comm_type = PEP_ct_key_b0rken;
         goto out;
     } else {
-        *comm_type = _MIN(best_enc, best_sign);
+        *comm_type = _MIN(worst_enc, worst_sign);
     }
 
  out:
