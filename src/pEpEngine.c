@@ -216,7 +216,7 @@ static const char *sql_refresh_userid_default_key =
     "       (select identity.main_key_id from identity "
     "           join trust on trust.user_id = identity.user_id "
     "               and trust.pgp_keypair_fpr = identity.main_key_id "
-    "           join person on identity.user_id = identity.user_id "
+    "           join person on person.id = identity.user_id "
     "       where identity.user_id = ?1 "
     "       order by trust.comm_type desc "
     "       limit 1) "

@@ -2729,6 +2729,10 @@ static void _pgp_key_expired(pgp_cert_t cert, const time_t when, bool* expired)
     if (*expired)
         goto out;
 
+    // Why is this an indicator of just an expired key and not a broken one?
+    // This will also reject keys that are not expired, but rather missing 
+    // subkeys.
+    //    
     // Are there at least one certification subkey, one signing subkey
     // and one encryption subkey that are live?
     //    int can_certify = 0, can_encrypt = 0, can_sign = 0;
@@ -2849,6 +2853,9 @@ PEP_STATUS pgp_get_key_rating(
         *comm_type = PEP_ct_key_revoked;
         goto out;
     }
+
+    // Why was this in "expired"???
+
 
     bool expired = false;
 
