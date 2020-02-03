@@ -106,7 +106,7 @@ protocol Sync 1 {
             }
 
             on Rollback {
-                if sameNegotiationAndPartner
+                if sameNegotiation
                     go Sole;
             }
 
@@ -118,7 +118,7 @@ protocol Sync 1 {
             }
 
             on CommitReject {
-                if sameNegotiationAndPartner {
+                if sameNegotiation {
                     do disable;
                     go End;
                 }
@@ -133,7 +133,7 @@ protocol Sync 1 {
 
             // got a CommitAccept from requester
             on CommitAcceptRequester {
-                if sameNegotiationAndPartner
+                if sameNegotiation
                     go HandshakingPhase2Offerer;
             }
         }
@@ -150,7 +150,7 @@ protocol Sync 1 {
             }
 
             on Rollback {
-                if sameNegotiationAndPartner
+                if sameNegotiation
                     go Sole;
             }
 
@@ -162,7 +162,7 @@ protocol Sync 1 {
             }
 
             on CommitReject {
-                if sameNegotiationAndPartner {
+                if sameNegotiation {
                     do disable;
                     go End;
                 }
@@ -177,21 +177,21 @@ protocol Sync 1 {
 
             // got a CommitAccept from offerer
             on CommitAcceptOfferer {
-                if sameNegotiationAndPartner
+                if sameNegotiation
                     go HandshakingPhase2Requester;
             }
         }
 
         state HandshakingPhase1Offerer {
             on Rollback {
-                if sameNegotiationAndPartner {
+                if sameNegotiation {
                     do untrustThisKey;
                     go Sole;
                 }
             }
             
             on CommitReject {
-                if sameNegotiationAndPartner {
+                if sameNegotiation {
                     do untrustThisKey;
                     do disable;
                     go End;
@@ -199,21 +199,21 @@ protocol Sync 1 {
             }
 
             on CommitAcceptRequester {
-                if sameNegotiationAndPartner
+                if sameNegotiation
                     go FormingGroupOfferer;
             }
         }
 
         state HandshakingPhase1Requester {
             on Rollback {
-                if sameNegotiationAndPartner {
+                if sameNegotiation {
                     do untrustThisKey;
                     go Sole;
                 }
             }
             
             on CommitReject {
-                if sameNegotiationAndPartner {
+                if sameNegotiation {
                     do untrustThisKey;
                     do disable;
                     go End;
@@ -221,7 +221,7 @@ protocol Sync 1 {
             }
 
             on CommitAcceptOfferer {
-                if sameNegotiationAndPartner
+                if sameNegotiation
                     go FormingGroupRequester;
             }
         }
@@ -397,7 +397,7 @@ protocol Sync 1 {
             }
 
             on Rollback {
-                if sameNegotiationAndPartner
+                if sameNegotiation
                     go Sole;
             }
 
@@ -409,12 +409,12 @@ protocol Sync 1 {
             }
 
             on CommitAcceptForGroup {
-                if sameNegotiationAndPartner
+                if sameNegotiation
                     go HandshakingToJoinPhase2;
             }
 
             on CommitReject {
-                if sameNegotiationAndPartner {
+                if sameNegotiation {
                     do disable;
                     go End;
                 }
@@ -430,19 +430,19 @@ protocol Sync 1 {
 
         state HandshakingToJoinPhase1 {
             on Rollback {
-                if sameNegotiationAndPartner
+                if sameNegotiation
                     go Sole;
             }
 
             on CommitReject {
-                if sameNegotiationAndPartner {
+                if sameNegotiation {
                     do disable;
                     go End;
                 }
             }
 
             on CommitAcceptForGroup {
-                if sameNegotiationAndPartner
+                if sameNegotiation
                     go JoiningGroup;
             }
         }
@@ -490,7 +490,7 @@ protocol Sync 1 {
             }
 
             on Rollback {
-                if sameNegotiationAndPartner
+                if sameNegotiation
                     go Grouped;
             }
 
@@ -501,7 +501,7 @@ protocol Sync 1 {
             }
 
             on CommitReject {
-                if sameNegotiationAndPartner
+                if sameNegotiation
                     go Grouped;
             }
 
@@ -512,7 +512,7 @@ protocol Sync 1 {
             }
 
             on CommitAccept {
-                if sameNegotiationAndPartner
+                if sameNegotiation
                     go HandshakingGroupedPhase2;
             }
 
@@ -537,17 +537,17 @@ protocol Sync 1 {
             }
 
             on Rollback {
-                if sameNegotiationAndPartner
+                if sameNegotiation
                     go Grouped;
             }
 
             on CommitReject {
-                if sameNegotiationAndPartner
+                if sameNegotiation
                     go Grouped;
             }
 
             on CommitAccept {
-                if sameNegotiationAndPartner {
+                if sameNegotiation {
                     do prepareOwnKeys;
                     send GroupKeysForNewMember;
                     do showDeviceAccepted;
