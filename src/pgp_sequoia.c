@@ -2705,6 +2705,45 @@ PEP_STATUS pgp_revoke_key(
     return status;
 }
 
+// NOTE: Doesn't check the *validity* of these subkeys. Just checks to see 
+// if they exist.
+static void _pgp_contains_encryption_subkey(pgp_cert_t cert, bool* has_subkey) {
+    pgp_cert_key_iter_t key_iter = pgp_cert_key_iter_all(cert);
+    
+    // Calling these two allegedly gives the union, I think? :)
+    pgp_cert_key_iter_for_transport_encryption(key_iter);
+    pgp_cert_key_iter_for_storage_encryption(key_iter);    
+    
+    *has_subkey = (pgp_cert_key_iter_next(key_iter, NULL, NULL) != NULL);    
+    pgp_cert_key_iter_free(key_iter);    
+}
+
+// NOTE: Doesn't check the *validity* of these subkeys. Just checks to see 
+// if they exist.
+static void _pgp_contains_sig_subkey(pgp_cert_t cert, bool* has_subkey) {
+    pgp_cert_key_iter_t key_iter = pgp_cert_key_iter_all(cert);
+    
+    // Calling these two allegedly gives the union, I think? :)
+    pgp_cert_key_iter_for_signing(key_iter);
+    
+    *has_subkey = (pgp_cert_key_iter_next(key_iter, NULL, NULL) != NULL);    
+    pgp_cert_key_iter_free(key_iter);        
+}
+
+// Check to see that key, at a minimum, even contains encryption or signing subkeys
+static void _pgp_key_broken(pgp_cert_t cert, bool* is_broken) {
+    *is_broken = false;
+    bool unbroken = false;
+    _pgp_contains_sig_subkey(cert, &unbroken);
+    if (!unbroken)
+        *is_broken = true;
+    else {
+        _pgp_contains_encryption_subkey(cert, &unbroken);
+        if (!unbroken)
+            *is_broken = true;
+    }    
+}
+
 static void _pgp_key_expired(pgp_cert_t cert, const time_t when, bool* expired)
 {
     // Is the certificate live?
@@ -2799,6 +2838,66 @@ PEP_STATUS pgp_key_expired(PEP_SESSION session, const char *fpr,
     return status;
 }
 
+static void _pgp_key_revoked(pgp_cert_t cert, bool* revoked) {
+    pgp_revocation_status_t rs = pgp_cert_revoked(cert, 0);
+    *revoked = pgp_revocation_status_variant(rs) == PGP_REVOCATION_STATUS_REVOKED;
+    pgp_revocation_status_free (rs); 
+    
+    if (*revoked)
+        return;
+        
+    // Ok, at this point, we need to know if for signing or encryption there is
+    // ONLY a revoked key available. If so, this key is also considered revoked 
+    pgp_cert_key_iter_t key_iter = pgp_cert_key_iter_all(cert);
+    pgp_cert_key_iter_for_signing(key_iter);
+
+    bool has_non_revoked_sig_key = false;
+    bool has_revoked_sig_key = false;
+    
+    pgp_key_t key;
+    pgp_signature_t sig;
+    while ((key = pgp_cert_key_iter_next(key_iter, &sig, &rs)) &&
+            !(has_non_revoked_sig_key)) {
+        if (!sig)
+            continue;
+        if (pgp_revocation_status_variant(rs) == PGP_REVOCATION_STATUS_REVOKED)
+            has_revoked_sig_key = true;
+        else
+            has_non_revoked_sig_key = true;
+                        
+        pgp_revocation_status_free(rs);
+    }    
+    if (has_non_revoked_sig_key) {
+        key_iter = pgp_cert_key_iter_all(cert);
+        pgp_cert_key_iter_for_transport_encryption(key_iter);
+        pgp_cert_key_iter_for_storage_encryption(key_iter);
+
+        bool has_non_revoked_enc_key = false;
+        bool has_revoked_enc_key = false;
+
+        pgp_key_t key;
+        pgp_signature_t sig;
+        while ((key = pgp_cert_key_iter_next(key_iter, &sig, &rs)) &&
+                !(has_non_revoked_enc_key)) {
+            if (!sig)
+                continue;
+            if (pgp_revocation_status_variant(rs) == PGP_REVOCATION_STATUS_REVOKED)
+                has_revoked_enc_key = true;
+            else
+                has_non_revoked_enc_key = true;
+                            
+            pgp_revocation_status_free(rs);
+        }    
+        if (!has_non_revoked_enc_key) { // this does NOT mean revoked. it MAY mean broken.
+            if (has_revoked_enc_key)
+                *revoked = true;
+        }        
+    }
+    else if (has_revoked_sig_key) {
+        *revoked = true;
+    }
+}
+
 PEP_STATUS pgp_key_revoked(PEP_SESSION session, const char *fpr, bool *revoked)
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -2817,9 +2916,10 @@ PEP_STATUS pgp_key_revoked(PEP_SESSION session, const char *fpr, bool *revoked)
     pgp_fingerprint_free(pgp_fpr);
     ERROR_OUT(NULL, status, "Looking up %s", fpr);
 
-    pgp_revocation_status_t rs = pgp_cert_revoked(cert, 0);
-    *revoked = pgp_revocation_status_variant(rs) == PGP_REVOCATION_STATUS_REVOKED;
-    pgp_revocation_status_free (rs);
+    // pgp_revocation_status_t rs = pgp_cert_revoked(cert, 0);
+    // *revoked = pgp_revocation_status_variant(rs) == PGP_REVOCATION_STATUS_REVOKED;
+    // pgp_revocation_status_free (rs);
+    _pgp_key_revoked(cert, revoked);
     pgp_cert_free(cert);
 
  out:
@@ -2846,19 +2946,30 @@ PEP_STATUS pgp_get_key_rating(
 
     *comm_type = PEP_ct_OpenPGP_unconfirmed;
 
-    pgp_revocation_status_t rs = pgp_cert_revoked(cert, 0);
-    pgp_revocation_status_variant_t rsv = pgp_revocation_status_variant(rs);
-    pgp_revocation_status_free(rs);
-    if (rsv == PGP_REVOCATION_STATUS_REVOKED) {
+    // pgp_revocation_status_t rs = pgp_cert_revoked(cert, 0);
+    // pgp_revocation_status_variant_t rsv = pgp_revocation_status_variant(rs);
+    // pgp_revocation_status_free(rs);
+    // if (rsv == PGP_REVOCATION_STATUS_REVOKED) {
+    //     *comm_type = PEP_ct_key_revoked;
+    //     goto out;
+    // }
+
+    bool revoked = false;
+    _pgp_key_revoked(cert, &revoked);
+    
+    if (revoked) {
         *comm_type = PEP_ct_key_revoked;
         goto out;
+    }    
+
+    bool broken = false;
+    _pgp_key_broken(cert, &broken);
+    if (broken) {
+        *comm_type = PEP_ct_key_b0rken;
+        goto out;
     }
-
-    // Why was this in "expired"???
-
-
+            
     bool expired = false;
-
     // MUST guarantee the same behaviour.
     _pgp_key_expired(cert, time(NULL), &expired);
 
