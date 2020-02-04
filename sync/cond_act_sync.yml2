@@ -186,19 +186,10 @@ action useOwnResponse call "copy_UUID" {
 
 action openNegotiation {
 ||
-    // sender key must be stable while transaction
-
-    // we take the actual signature of the last message and store it in our
-    // state for the comm partner
-    assert(session->sync_state.transport.sender_fpr);
+    // clear comm_partner's key until we have decided
 
     free(session->sync_state.comm_partner.sender_fpr);
-
-    session->sync_state.comm_partner.sender_fpr
-            = strdup(session->sync_state.transport.sender_fpr);
-    assert(session->sync_state.comm_partner.sender_fpr);
-    if (!session->sync_state.comm_partner.sender_fpr)
-        return PEP_OUT_OF_MEMORY;
+    session->sync_state.comm_partner.sender_fpr = NULL;
 
     // we need a unique TID for the Negotiation with each single comm_partner
     // we identify the comm_partners by their Challenge
@@ -235,7 +226,7 @@ action openNegotiation {
 
 action storeNegotiation {
 ||
-    // sender key must be stable while transaction
+    // sender key must be stable from now on
 
     // we take the actual signature of the last message and store it in our
     // state for the comm partner

@@ -505,7 +505,8 @@ tstylesheet {
                     memcpy(_data, data, size);
 
                     switch (message_type) {
-                    `` for "fsm/message[@security='unencrypted']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                    `` for "fsm/message[@security='unencrypted' and ../@name!='KeySync']" | #error unencrypted only allowed with KeySync
+                    `` for "fsm/message[@security='unencrypted' and ../@name='KeySync']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
                             status = base_prepare_message(
                                     session,
                                     li->ident,
@@ -525,16 +526,17 @@ tstylesheet {
                             m = _m;
                             break;
 
-                    `` for "fsm/message[@security='untrusted']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                    `` for "fsm/message[@security='untrusted' and ../@name!='KeySync']" | #error untrusted only allowed with KeySync
+                    `` for "fsm/message[@security='untrusted' and ../@name='KeySync']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
                             // add fpr of key of comm partner
 
-                            assert(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr);
-                            if (!session->«yml:lcase(@name)»_state.comm_partner.sender_fpr) {
+                            assert(session->«yml:lcase(@name)»_state.transport.sender_fpr);
+                            if (!session->«yml:lcase(@name)»_state.transport.sender_fpr) {
                                 status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                 goto the_end;
                             }
 
-                            extra = new_stringlist(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr);
+                            extra = new_stringlist(session->«yml:lcase(@name)»_state.transport.sender_fpr);
                             if (!extra) {
                                 status = PEP_OUT_OF_MEMORY;
                                 goto the_end;
