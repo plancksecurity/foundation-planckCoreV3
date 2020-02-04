@@ -54,6 +54,7 @@ struct «@name»_state_s {
     struct comm_partner_state_s {
         // transport data we expect
         char *sender_fpr;
+        pEp_identity *identity;
 
         // TIDs our comm partner wants to have
         `` for "func:distinctName(fsm/message/field[@type='TID'])" |>> «func:ctype()» «@name»;

@@ -191,6 +191,11 @@ action openNegotiation {
     free(session->sync_state.comm_partner.sender_fpr);
     session->sync_state.comm_partner.sender_fpr = NULL;
 
+    // clear comm_partner's identity
+
+    free_identity(session->sync_state.comm_partner.identity);
+    session->sync_state.comm_partner.identity = NULL;
+
     // we need a unique TID for the Negotiation with each single comm_partner
     // we identify the comm_partners by their Challenge
     // we derive the actual Negotiation TID by having random data and XORing it
@@ -226,10 +231,11 @@ action openNegotiation {
 
 action storeNegotiation {
 ||
-    // sender key must be stable from now on
+    // comm_partner must be stable from now on
 
     // we take the actual signature of the last message and store it in our
-    // state for the comm partner
+    // state for the comm_partner
+
     assert(session->sync_state.transport.sender_fpr);
 
     free(session->sync_state.comm_partner.sender_fpr);
@@ -238,6 +244,17 @@ action storeNegotiation {
             = strdup(session->sync_state.transport.sender_fpr);
     assert(session->sync_state.comm_partner.sender_fpr);
     if (!session->sync_state.comm_partner.sender_fpr)
+        return PEP_OUT_OF_MEMORY;
+
+    // we store the comm_partner's identity
+    
+    assert(session->sync_state.transport.from);
+
+    free_identity(session->sync_state.comm_partner.identity);
+
+    session->sync_state.comm_partner.identity
+            = identity_dup(session->sync_state.transport.from);
+    if (!session->sync_state.comm_partner.identity)
         return PEP_OUT_OF_MEMORY;
 
 ||

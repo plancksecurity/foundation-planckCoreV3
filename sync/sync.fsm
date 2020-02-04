@@ -17,15 +17,15 @@ protocol Sync 1 {
             on Init {
                 if deviceGrouped
                     go Grouped;
-                do newChallengeAndNegotiationBase;
-                debug > initial Beacon
-                send Beacon;
                 go Sole;
             }
         }
 
         state Sole timeout=off {
             on Init {
+                do newChallengeAndNegotiationBase;
+                debug > initial Beacon
+                send Beacon;
                 do showBeingSole;
             }
 
@@ -660,7 +660,7 @@ protocol Sync 1 {
             field TID negotiation;
         }
 
-        // default: security=truste
+        // default: security=trusted
         // messages are only accepted when coming from the device group
         message GroupTrustThisKey 11 {
             field Hash key;
