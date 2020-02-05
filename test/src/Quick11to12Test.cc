@@ -83,4 +83,9 @@ namespace {
 
 TEST_F(Quick11to12Test, check_if_init_succeeds) {
     ASSERT_TRUE(true); 
+    identity_list* ids = NULL;
+    PEP_STATUS status = own_identities_retrieve(session, &ids);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(ids, nullptr);
 }
+

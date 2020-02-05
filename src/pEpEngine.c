@@ -822,16 +822,13 @@ static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
     int_result = sqlite3_exec(
         session->db,
         "alter table revocation_contact_list\n"
-        "   add column own_address text\n",
+        "   add column own_address text;\n",
         NULL,
         NULL,
         NULL
     );
     assert(int_result == SQLITE_OK);
 
-    sqlite3_stmt* update_revoked_w_addr_stmt = NULL;
-    const char* sql_query = "update revocation_contact_list set own_address = ?1 where fpr = ?2;";
-    sqlite3_prepare_v2(session->db, sql_query, -1, &update_revoked_w_addr_stmt, NULL);
                 
     // the best we can do here is search per address, since these
     // are no longer associated with an identity. For now, if we find 
@@ -845,12 +842,25 @@ static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
     // in a future sqlite version.
     
     identity_list* id_list = NULL;
+
+    sqlite3_stmt* tmp_own_id_retrieve = NULL;
+    sqlite3_prepare_v2(session->db, sql_own_identities_retrieve, -1, &tmp_own_id_retrieve, NULL);
+    
+    // Kludgey - put the stmt in temporarily, and then remove again, so less code dup.
+    // FIXME LATER: refactor if possible, but... chicken and egg, and thiis case rarely happens.
+    session->own_identities_retrieve = tmp_own_id_retrieve;
     status = own_identities_retrieve(session, &id_list);
+    sqlite3_finalize(tmp_own_id_retrieve);
+    session->own_identities_retrieve = NULL;
 
     if (!status || !id_list)
         return PEP_STATUS_OK; // it's empty AFAIK (FIXME)
     
     identity_list* curr_own = id_list;
+
+    sqlite3_stmt* update_revoked_w_addr_stmt = NULL;
+    const char* sql_query = "update revocation_contact_list set own_address = ?1 where fpr = ?2;";
+    sqlite3_prepare_v2(session->db, sql_query, -1, &update_revoked_w_addr_stmt, NULL);
     
     // Ok, go through and find any keys associated with this address  
     for ( ; curr_own && curr_own->ident; curr_own = curr_own->next) {
