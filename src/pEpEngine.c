@@ -210,6 +210,11 @@ static const char *sql_get_main_user_fpr =
     "select main_key_id from person"
     "   where id = ?1 ;";
 
+static const char *sql_replace_main_user_fpr_if_equal =  
+    "update person "
+    "   set main_key_id = ?1 "
+    "   where id = ?2 and main_key_id = ?3;";
+
 static const char *sql_refresh_userid_default_key =
     "update person "
     "   set main_key_id = "
@@ -886,7 +891,7 @@ static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
         }
     }  
     sqlite3_finalize(update_revoked_w_addr_stmt);
-                
+                    
     int_result = sqlite3_exec(
         session->db,
         "delete from revocation_contact_list where own_address is NULL;\n"        
@@ -1772,6 +1777,10 @@ DYNAMIC_API PEP_STATUS init(
             (int)strlen(sql_replace_main_user_fpr), &_session->replace_main_user_fpr, NULL);
     assert(int_result == SQLITE_OK);
 
+    int_result = sqlite3_prepare_v2(_session->db, sql_replace_main_user_fpr_if_equal,
+            (int)strlen(sql_replace_main_user_fpr_if_equal), &_session->replace_main_user_fpr_if_equal, NULL);
+    assert(int_result == SQLITE_OK);
+
     int_result = sqlite3_prepare_v2(_session->db, sql_get_main_user_fpr,
             (int)strlen(sql_get_main_user_fpr), &_session->get_main_user_fpr, NULL);
     assert(int_result == SQLITE_OK);
@@ -2207,6 +2216,8 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->delete_key);                
             if (session->replace_main_user_fpr)
                 sqlite3_finalize(session->replace_main_user_fpr);                
+            if (session->replace_main_user_fpr_if_equal)
+                sqlite3_finalize(session->replace_main_user_fpr_if_equal);                                
             if (session->get_main_user_fpr)
                 sqlite3_finalize(session->get_main_user_fpr);
             if (session->refresh_userid_default_key)
@@ -4337,6 +4348,35 @@ PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
             SQLITE_STATIC);
     result = sqlite3_step(session->replace_main_user_fpr);
     sqlite3_reset(session->replace_main_user_fpr);
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_PERSON;
+
+    return PEP_STATUS_OK;
+}
+
+PEP_STATUS replace_main_user_fpr_if_equal(PEP_SESSION session, const char* user_id,
+                                          const char* new_fpr, const char* compare_fpr) {
+    assert(session);
+    assert(user_id);
+    assert(new_fpr);
+    
+    if (!session || !user_id || !compare_fpr)
+        return PEP_ILLEGAL_VALUE;
+
+    // N.B. new_fpr can be NULL - if there's no key to replace it, this is fine.
+    // See sqlite3 documentation on sqlite3_bind_text() and sqlite3_bind_null()
+
+    int result;
+
+    sqlite3_reset(session->replace_main_user_fpr_if_equal);
+    sqlite3_bind_text(session->replace_main_user_fpr, 1, new_fpr, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->replace_main_user_fpr_if_equal, 2, user_id, -1,
+            SQLITE_STATIC);
+    sqlite3_bind_text(session->replace_main_user_fpr_if_equal, 3, compare_fpr, -1,
+            SQLITE_STATIC);            
+    result = sqlite3_step(session->replace_main_user_fpr_if_equal);
+    sqlite3_reset(session->replace_main_user_fpr_if_equal);
     if (result != SQLITE_DONE)
         return PEP_CANNOT_SET_PERSON;
 

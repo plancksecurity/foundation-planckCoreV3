@@ -572,6 +572,11 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             // Make new key the default    
             curr_ident->fpr = new_fpr;
     
+            // Whether new_key is NULL or not, if this key is equal to the current user default, we 
+            // replace it.
+            status = replace_main_user_fpr_if_equal(session, curr_ident->user_id, 
+                                                    new_fpr, old_fpr);                    
+
             // This only sets as the default, does NOT TRUST IN ANY WAY
             PEP_comm_type new_key_rating = PEP_ct_unknown;
             
@@ -601,6 +606,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             // then so be it - but we need to double-check to 
             // ensure that in this case, we end up with a private one,
             // so talk to vb about this.
+            
             // Make new key the default    
             
             // This is REQUIRED for set_own_key (see doc)
@@ -610,8 +616,19 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             
             if (status != PEP_STATUS_OK)
                 return status;
-            
+
+            // Whether new_key is NULL or not, if this key is equal to the current user default, we 
+            // replace it.
+            status = replace_main_user_fpr_if_equal(session, curr_ident->user_id, 
+                                                    new_fpr, old_fpr);                    
+
+            if (status != PEP_STATUS_OK)
+                return status;            
+                
             status = myself(session, curr_ident);
+
+            if (status != PEP_STATUS_OK)
+                return status;            
 
             char* old_copy = NULL;
             char* new_copy = NULL;
@@ -619,6 +636,7 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             new_copy = strdup(new_fpr);
             if (!old_copy || !new_copy)
                 return PEP_OUT_OF_MEMORY;
+                                
 
             stringpair_t* revp = new_stringpair(old_copy, new_copy);                
             if (!rev_pairs) {
@@ -636,11 +654,12 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
         new_fpr = NULL;    
     }
 
-    // actually revoke
+    // actually revoke - list only exists with own keys
     stringpair_list_t* curr_rev_pair = rev_pairs;
     while (curr_rev_pair && curr_rev_pair->value) {
         char* rev_key = curr_rev_pair->value->key;
         char* new_key = curr_rev_pair->value->value;
+            
         if (EMPTYSTR(rev_key) || EMPTYSTR(new_key))
             return PEP_UNKNOWN_ERROR;
         bool revoked = false;
@@ -659,7 +678,8 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
             status = set_revoked(session, rev_key, new_key, time(NULL));            
 
         if (status != PEP_STATUS_OK)
-            goto pEp_free;        
+            goto pEp_free;      
+                  
         curr_rev_pair = curr_rev_pair->next;    
     }
 
@@ -981,6 +1001,7 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
                 return status;
             }
             free(ident->fpr);
+
             // release ownership to the struct again
             ident->fpr = new_key;
                 
@@ -989,6 +1010,16 @@ static PEP_STATUS _key_reset_device_group_for_shared_key(PEP_SESSION session,
             if (status == PEP_STATUS_OK) 
                 status = set_revoked(session, old_key, new_key, time(NULL));            
 
+            if (status != PEP_STATUS_OK)
+                goto pEp_free;
+
+            // Whether new_key is NULL or not, if this key is equal to the current user default, we 
+            // replace it.
+            status = replace_main_user_fpr_if_equal(session, 
+                                                    ident->user_id, 
+                                                    new_key, 
+                                                    old_key);                    
+            
             if (status != PEP_STATUS_OK)
                 goto pEp_free;
                 
@@ -1202,6 +1233,10 @@ PEP_STATUS key_reset(
             status = get_identities_by_main_key_id(session, fpr_copy, &key_idents);
             
             if (status != PEP_CANNOT_FIND_IDENTITY) {
+                
+                // N.B. Possible user default key replacement will happen inside
+                //      _key_reset_device_group_for_shared_key in the first case.
+                //      We handle the reassignment for the second case in the block here.
                 if (is_grouped) 
                     status = _key_reset_device_group_for_shared_key(session, key_idents, fpr_copy, false);
                 else if (status == PEP_STATUS_OK) {
@@ -1267,7 +1302,11 @@ PEP_STATUS key_reset(
                             if (status == PEP_STATUS_OK)
                                 status = send_key_reset_to_recents(session, this_ident, fpr_copy, new_key);        
                             tmp_ident->fpr = NULL;    
-                        }                    
+                        }
+                        
+                        // Whether new_key is NULL or not, if this key is equal to the current user default, we 
+                        // replace it.
+                        status = replace_main_user_fpr_if_equal(session, this_ident->user_id, new_key, fpr_copy);                    
                     }  // Ident list gets freed below, do not free here!
                 }
                 // Ok, we've either now reset for each own identity with this key, or 
