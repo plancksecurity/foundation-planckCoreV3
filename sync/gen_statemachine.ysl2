@@ -436,9 +436,9 @@ tstylesheet {
 
                 // we never use this
                 if (session->«yml:lcase(@name)»_state.comm_partner.identity
-                        && session->«yml:lcase(@name)»_state.comm_partner.identity.fpr) {
-                    free(session->«yml:lcase(@name)»_state.comm_partner.identity.fpr);
-                    session->«yml:lcase(@name)»_state.comm_partner.identity.fpr = NULL;
+                        && session->«yml:lcase(@name)»_state.comm_partner.identity->fpr) {
+                    free(session->«yml:lcase(@name)»_state.comm_partner.identity->fpr);
+                    session->«yml:lcase(@name)»_state.comm_partner.identity->fpr = NULL;
                 }
 
                 // if we have this we always use this
