@@ -434,6 +434,13 @@ tstylesheet {
                 if (status)
                     goto the_end;
 
+                // we never use this
+                if (session->«yml:lcase(@name)»_state.comm_partner.identity
+                        && session->«yml:lcase(@name)»_state.comm_partner.identity.fpr) {
+                    free(session->«yml:lcase(@name)»_state.comm_partner.identity.fpr);
+                    session->«yml:lcase(@name)»_state.comm_partner.identity.fpr = NULL;
+                }
+
                 switch (message_type) {
                     // these messages are being broadcasted
                     `` for "fsm/message[@type='broadcast']" |>> case «../@name»_PR_«yml:mixedCase(@name)»:

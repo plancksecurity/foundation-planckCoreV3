@@ -135,6 +135,8 @@ void free_«@name»_state(PEP_SESSION session)
 
     free(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr);
     session->«yml:lcase(@name)»_state.comm_partner.sender_fpr = NULL;
+    free_identity(session->«yml:lcase(@name)»_state.comm_partner.identity);
+    session->«yml:lcase(@name)»_state.comm_partner.identity = NULL;
 
     // TIDs our comm partner wants to have
 ||
