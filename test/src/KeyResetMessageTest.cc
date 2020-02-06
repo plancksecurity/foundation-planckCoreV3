@@ -629,6 +629,10 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own) {
     ASSERT_TRUE(alice->fpr && alice->fpr[0]);
     ASSERT_TRUE(alice->me);
     ASSERT_STREQ(alice->fpr, alice_fpr);
+    
+    char* main_key = NULL;
+    status = get_main_user_fpr(session, alice->user_id, &main_key);
+    ASSERT_STREQ(main_key, alice_fpr);        
 
     status = set_identity_flags(session, alice, alice->flags | PEP_idf_devicegroup);
     status = key_reset_identity(session, alice, alice_fpr);
@@ -637,6 +641,11 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own) {
     char* alice_new_fpr = alice->fpr;
     ASSERT_TRUE(alice_new_fpr && alice_new_fpr[0]);
     ASSERT_STRNE(alice_fpr, alice_new_fpr);
+
+    main_key = NULL;
+    status = get_main_user_fpr(session, alice->user_id, &main_key);
+    ASSERT_STRNE(main_key, alice_fpr);
+
 
     ASSERT_EQ(m_queue.size(), 1);
 
@@ -683,6 +692,10 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_recv) {
     ASSERT_TRUE(alice->fpr && alice->fpr[0]);
     ASSERT_TRUE(alice->me);
     ASSERT_STREQ(alice->fpr, alice_fpr);
+    
+    char* main_key = NULL;
+    status = get_main_user_fpr(session, alice->user_id, &main_key);
+    ASSERT_STREQ(main_key, alice_fpr);    
 
     status = set_identity_flags(session, alice, alice->flags | PEP_idf_devicegroup);
     ASSERT_EQ(status , PEP_STATUS_OK);
@@ -707,6 +720,10 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_recv) {
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_TRUE(revoked);
 
+    main_key = NULL;
+    status = get_main_user_fpr(session, alice->user_id, &main_key);
+    ASSERT_STRNE(main_key, alice_fpr);
+    ASSERT_STREQ(main_key, "0D9374B9573548600272BF1D84A892F08ED7BBBF");    
 }
 
 TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr) {
@@ -1217,6 +1234,11 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_recv) {
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_STREQ(pubkey3, alex_id3->fpr);
 
+    char* old_main_key = NULL;
+    status = get_main_user_fpr(session, "AlexID", &old_main_key);
+    ASSERT_NE(old_main_key, nullptr);
+
+
     const int num_msgs = 2;
     for (int i = 0; i < num_msgs; i++) {
         // receive reset messages
@@ -1235,6 +1257,10 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_recv) {
         status = decrypt_message(session, new_msg, &dec_msg, &keylist, &rating, &flags);
         ASSERT_EQ(status, PEP_STATUS_OK);        
     }
+
+    char* new_main_key = NULL;
+    status = get_main_user_fpr(session, "AlexID", &new_main_key);
+    ASSERT_STRNE(old_main_key, new_main_key);
 
     status = myself(session, alex_id);
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -1580,8 +1606,19 @@ TEST_F(KeyResetMessageTest, check_reset_ident_other_pub_fpr) {
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(bob->comm_type , PEP_ct_pEp);
 
+    char* main_key = NULL;
+    status = get_main_user_fpr(session, bob->user_id, &main_key);
+    ASSERT_STREQ(main_key, bob->fpr);
+
+    
     // Ok, let's reset it
     status = key_reset_identity(session, bob, bob->fpr);
+    
+    main_key = NULL;
+    status = get_main_user_fpr(session, bob->user_id, &main_key);
+    ASSERT_EQ(status, PEP_KEY_NOT_FOUND);
+    ASSERT_STREQ(main_key, nullptr);
+    
     status = update_identity(session, bob);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_EQ(bob->comm_type , PEP_ct_key_not_found);
@@ -2120,6 +2157,52 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_keys) {
     free_identity(alex_id);
 }
 
+TEST_F(KeyResetMessageTest, check_reset_replace_user_fpr_own_direct_reset) {
+    char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
+    char* pubkey4 = strdup("B4CE2F6947B6947C500F0687AEFDE530BDA17020");
+
+    pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
+                                         NULL,
+                                         "AlexID",
+                                         "Alexander Braithwaite");
+
+    pEp_identity* alex_id2 = new_identity("pep.test.alexander6@darthmama.org",
+                                          NULL,
+                                          "AlexID",
+                                          "Alexander Braithwaite");
+
+
+    PEP_STATUS status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xA216E95A_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/pub/pep.test.alexander6-0xBDA17020_pub.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0xA216E95A_priv.asc");
+    status = read_file_and_import_key(session, "test_keys/priv/pep.test.alexander6-0xBDA17020_priv.asc");
+
+    alex_id->me = true;
+    status = set_own_key(session, alex_id, pubkey3);
+    status = myself(session, alex_id);
+
+    char* main_key = NULL;
+    
+    status = get_main_user_fpr(session, alex_id->user_id, &main_key);
+    ASSERT_NE(main_key, nullptr);
+    ASSERT_STREQ(main_key, pubkey3);
+    
+    alex_id2->me = true;
+    status = set_own_key(session, alex_id2, pubkey4);
+    status = myself(session, alex_id2);
+
+    status = key_reset_all_own_keys(session);
+
+    stringlist_t* keylist = NULL;
+
+    status = get_main_user_fpr(session, alex_id->user_id, &main_key);
+    ASSERT_NE(main_key, nullptr);
+    ASSERT_STRNE(main_key, pubkey3);
+
+    free(pubkey3);
+    free(pubkey4);
+    free_identity(alex_id);
+}
 
 TEST_F(KeyResetMessageTest, check_reset_all_own_no_own) {
       char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
