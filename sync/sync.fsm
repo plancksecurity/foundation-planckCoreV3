@@ -587,6 +587,7 @@ protocol Sync 1 {
             on Accept {
                 do trustThisKey;
                 send GroupTrustThisKey;
+                send CommitAcceptForGroup;
                 do prepareOwnKeys;
                 send GroupKeysForNewMember;
                 do showDeviceAccepted;
