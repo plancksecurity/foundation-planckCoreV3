@@ -1366,6 +1366,9 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
 
 PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
                               const char* new_fpr);
+
+PEP_STATUS replace_main_user_fpr_if_equal(PEP_SESSION session, const char* user_id,
+                                          const char* new_fpr, const char* compare_fpr);
     
 DYNAMIC_API PEP_STATUS get_replacement_fpr(
         PEP_SESSION session,
