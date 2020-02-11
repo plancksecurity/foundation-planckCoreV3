@@ -449,8 +449,4 @@ void log_output_debug(const char *title,
     OutputDebugStringA(str);
 }
 
-time_t timegm(struct tm* tm) {
-    return _mkgmtime(tm);
-}
-
 } // "C"
