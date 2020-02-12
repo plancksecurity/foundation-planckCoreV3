@@ -37,6 +37,9 @@ install: build
 	$(MAKE) -C src install
 	$(MAKE) -C asn.1 install
 
+beinstall:
+	$(MAKE) -C src beinstall
+
 dbinstall: db
 	$(MAKE) -C db install
 

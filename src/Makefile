@@ -90,7 +90,7 @@ endif
 $(TARGET): libpEpEngine.a
 	$(CC) $(CFLAGS) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
 
-.PHONY: objects clean install_headers install uninstall
+.PHONY: objects clean install_headers install uninstall beinstall
 
 objects: $(ALL_OBJECTS)
 
@@ -117,6 +117,9 @@ install_headers: $(TARGET)
 install: $(TARGET) install_headers
 	mkdir -p "$(PREFIX)/lib/"
 	cp $< $(PREFIX)/lib/
+
+beinstall: install
+	cp platform*.h $(PREFIX)/include/pEp/
 
 uninstall:
 	rm -f $(PREFIX)/lib/$(TARGET)
