@@ -1194,7 +1194,7 @@ tstylesheet {
         // events
 
         typedef enum _«@name»_event {
-            «@name»_event_None = None,
+            «@name»_event_Timeout = None,
             «@name»_event_Init = Init,
         ||
         for "message" {
