@@ -1276,7 +1276,7 @@ tstylesheet {
         {
             switch (event) {
                 case None:
-                    return "None";
+                    return "Timeout";
                 case Init:
                     return "Init";
         ||
@@ -1360,7 +1360,7 @@ tstylesheet {
 
             switch (event) {
                 case None:
-                    «../@name»_SERVICE_LOG("received None event", "ignoring");
+                    «../@name»_SERVICE_LOG("received Timeout event", "ignoring");
                     break;
      
         ||
