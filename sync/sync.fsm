@@ -673,7 +673,7 @@ protocol Sync 1 {
             field IdentityList ownIdentities;
         }
 
-        message GroupKeysAndClose 13, security=attach_own_keys_for_new_member {
+        message GroupKeysAndClose 13, security=attach_own_keys {
             field IdentityList ownIdentities;
         }
 

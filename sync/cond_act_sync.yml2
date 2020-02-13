@@ -406,6 +406,17 @@ action saveGroupKeys
         return status;
     }
 
+    // if own identities are not yet fetched from the database do this now
+    if (!session->sync_state.own.identities) {
+        identity_list *il;
+        status = _own_identities_retrieve(session, &il, PEP_idf_not_for_sync);
+        if (status) {
+            free(user_id);
+            return status;
+        }
+        session->sync_state.own.identities = il;
+    }
+
     identity_list *oil = session->sync_state.own.identities;
 
     // FIXME: this should be a transaction and been rolled back completely on error
