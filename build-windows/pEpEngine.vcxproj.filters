@@ -270,7 +270,4 @@
   <ItemGroup>
     <Text Include="..\LICENSE.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
 </Project>
