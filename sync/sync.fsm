@@ -290,6 +290,16 @@ protocol Sync 1 {
                 do showBeingInGroup;
             }
 
+            on CannotDecrypt {
+                debug > cry, baby
+                send SynchronizeGroupKeys;
+            }
+
+            on SynchronizeGroupKeys {
+                do prepareOwnKeys;
+                send GroupKeysUpdate;
+            }
+
             on GroupKeysUpdate {
                 if fromGroupMember // double check
                     do saveGroupKeys;
@@ -641,6 +651,9 @@ protocol Sync 1 {
 
         message ElectGroupKeyResetLeader 20 {
             field TID response;
+        }
+
+        message SynchronizeGroupKeys 21 {
         }
     }
 }
