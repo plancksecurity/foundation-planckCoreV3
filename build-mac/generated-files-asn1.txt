@@ -74,6 +74,8 @@ $(SRCROOT)/../asn.1/Rollback.c
 $(SRCROOT)/../asn.1/Rollback.h
 $(SRCROOT)/../asn.1/Sync.c
 $(SRCROOT)/../asn.1/Sync.h
+$(SRCROOT)/../asn.1/SynchronizeGroupKeys.c
+$(SRCROOT)/../asn.1/SynchronizeGroupKeys.h
 $(SRCROOT)/../asn.1/TID.c
 $(SRCROOT)/../asn.1/TID.h
 $(SRCROOT)/../asn.1/UTF8String.c
