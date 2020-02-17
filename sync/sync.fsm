@@ -127,7 +127,6 @@ protocol Sync 1 {
             // Accept means init Phase1Commit
             on Accept {
                 do trustThisKey;
-                send CommitAcceptOfferer;
                 go HandshakingPhase1Offerer;
             }
 
@@ -174,12 +173,6 @@ protocol Sync 1 {
                 send CommitAcceptRequester;
                 go HandshakingPhase1Requester;
             }
-
-            // got a CommitAccept from offerer
-            on CommitAcceptOfferer {
-                if sameNegotiation
-                    go HandshakingPhase2Requester;
-            }
         }
 
         state HandshakingPhase1Offerer {
@@ -199,8 +192,10 @@ protocol Sync 1 {
             }
 
             on CommitAcceptRequester {
-                if sameNegotiation
+                if sameNegotiation {
+                    send CommitAcceptOfferer;
                     go FormingGroupOfferer;
+                }
             }
         }
 
@@ -221,8 +216,11 @@ protocol Sync 1 {
             }
 
             on CommitAcceptOfferer {
-                if sameNegotiation
+                if sameNegotiation {
+                    do prepareOwnKeys;
+                    send OwnKeysRequester;
                     go FormingGroupRequester;
+                }
             }
         }
 
@@ -245,32 +243,7 @@ protocol Sync 1 {
             }
         }
 
-        state HandshakingPhase2Requester {
-            on Cancel {
-                send Rollback;
-                go Sole;
-            }
-
-            on Reject {
-                send CommitReject;
-                do disable;
-                go End;
-            }
-
-            on Accept {
-                do trustThisKey;
-                send CommitAcceptRequester;
-                go FormingGroupRequester;
-            }
-        }
-
         state FormingGroupOfferer {
-            on Init {
-                do prepareOwnKeys;
-                send OwnKeysOfferer;
-                debug > we're not grouped yet, this is our own keys
-            }
-
             on Cancel {
                 send Rollback;
                 go Sole;
@@ -283,6 +256,8 @@ protocol Sync 1 {
                 if sameNegotiationAndPartner {
                     do saveGroupKeys;
                     do receivedKeysAreDefaultKeys;
+                    do prepareOwnKeys;
+                    send OwnKeysOfferer;
                     do showGroupCreated;
                     go Grouped;
                 }
@@ -299,11 +274,10 @@ protocol Sync 1 {
                 go Sole;
 
             on OwnKeysOfferer {
-                if sameNegotiationAndPartner {
+                if sameNegotiation {
                     do saveGroupKeys;
                     do prepareOwnKeys;
                     do ownKeysAreDefaultKeys;
-                    send OwnKeysRequester;
                     do showGroupCreated;
                     go Grouped;
                 }
@@ -314,6 +288,16 @@ protocol Sync 1 {
             on Init {
                 do newChallengeAndNegotiationBase;
                 do showBeingInGroup;
+            }
+
+            on CannotDecrypt {
+                debug > cry, baby
+                send SynchronizeGroupKeys;
+            }
+
+            on SynchronizeGroupKeys {
+                do prepareOwnKeys;
+                send GroupKeysUpdate;
             }
 
             on GroupKeysUpdate {
@@ -423,7 +407,6 @@ protocol Sync 1 {
             // Accept is Phase1Commit
             on Accept {
                 do trustThisKey;
-                send CommitAccept;
                 go HandshakingToJoinPhase1;
             }
         }
@@ -442,8 +425,10 @@ protocol Sync 1 {
             }
 
             on CommitAcceptForGroup {
-                if sameNegotiation
+                if sameNegotiation {
+                    send CommitAccept;
                     go JoiningGroup;
+                }
             }
         }
 
@@ -511,11 +496,6 @@ protocol Sync 1 {
                 go HandshakingGroupedPhase1;
             }
 
-            on CommitAccept {
-                if sameNegotiation
-                    go HandshakingGroupedPhase2;
-            }
-
             on GroupTrustThisKey {
                 if fromGroupMember { // double check
                     do trustThisKey;
@@ -573,45 +553,6 @@ protocol Sync 1 {
             }
         }
 
-        state HandshakingGroupedPhase2 {
-            on Cancel {
-                send Rollback;
-                go Grouped;
-            }
-
-            on Reject {
-                send CommitReject;
-                go Grouped;
-            }
-
-            on Accept {
-                do trustThisKey;
-                send GroupTrustThisKey;
-                send CommitAcceptForGroup;
-                do prepareOwnKeys;
-                send GroupKeysForNewMember;
-                do showDeviceAccepted;
-                go Grouped;
-            }
-
-            on GroupTrustThisKey {
-                if fromGroupMember // double check
-                    do trustThisKey;
-            }
-
-            on GroupKeysUpdate {
-                if fromGroupMember // double check
-                    do saveGroupKeys;
-            }
-
-            on GroupKeysAndClose {
-                if fromGroupMember { // double check
-                    do saveGroupKeys;
-                    go Grouped;
-                }
-            }
-        }
- 
         external Accept 129;
         external Reject 130;
         external Cancel 131;
@@ -677,7 +618,7 @@ protocol Sync 1 {
             field IdentityList ownIdentities;
         }
 
-        message OwnKeysOfferer 14, security=attach_own_keys_for_new_member {
+        message OwnKeysOfferer 14, security=attach_own_keys {
             field IdentityList ownIdentities;
         }
 
@@ -710,6 +651,9 @@ protocol Sync 1 {
 
         message ElectGroupKeyResetLeader 20 {
             field TID response;
+        }
+
+        message SynchronizeGroupKeys 21 {
         }
     }
 }
