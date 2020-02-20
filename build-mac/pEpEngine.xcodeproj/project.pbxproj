@@ -929,7 +929,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 64796A531B455AA5004B1C24 /* Build configuration list for PBXNativeTarget "pEpEngine" */;
 			buildPhases = (
-				43D47B08225DEBD600E97C5B /* ShellScript */,
+				43D47B08225DEBD600E97C5B /* Generate src files */,
 				64796A3B1B455AA5004B1C24 /* Sources */,
 				64796A3C1B455AA5004B1C24 /* Frameworks */,
 				64796A3D1B455AA5004B1C24 /* CopyFiles */,
@@ -1024,7 +1024,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		43D47B08225DEBD600E97C5B /* ShellScript */ = {
+		43D47B08225DEBD600E97C5B /* Generate src files */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1033,6 +1033,7 @@
 			);
 			inputPaths = (
 			);
+			name = "Generate src files";
 			outputFileListPaths = (
 				"$(SRCROOT)/generated-files-asn1.txt",
 				"$(SRCROOT)/generated-files-sync.txt",
