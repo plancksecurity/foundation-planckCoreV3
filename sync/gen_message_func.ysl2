@@ -44,6 +44,7 @@ struct «@name»_state_s {
     struct own_«@name»_state_s {
         stringlist_t *keys;
         identity_list *identities;
+        identity_list *backup;
 
         // TIDs we're using ourselves
         `` for "func:distinctName(fsm/message/field[@type='TID'])" |>> «func:ctype()» «@name»;

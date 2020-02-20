@@ -453,6 +453,22 @@ action ownKeysAreDefaultKeys
     }
 ||
 
+action backupOwnKeys
+||
+    identity_list *il = identity_list_dup(session->sync_state.own.identities);
+    if (!il)
+        return PEP_OUT_OF_MEMORY;
+
+    free_identity_list(session->sync_state.own.backup);
+    session->sync_state.own.backup = il;
+||
+
+action prepareOwnKeysFromBackup
+||
+    IdentityList_from_identity_list(session->sync_state.own.backup,
+            &session->sync_state.keysync.ownIdentities);
+||
+
 action receivedKeysAreDefaultKeys
 ||
     PEP_STATUS status = PEP_STATUS_OK;
