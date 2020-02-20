@@ -43,7 +43,7 @@ tstylesheet {
             identity_list *own_identities;
         } «@name»_event_t;
 
- 
+
         // new_«@name»_event() - allocate a new «@name»_event
         //
         //  parameters:
@@ -62,7 +62,7 @@ tstylesheet {
 
         #define «yml:ucase(@name)»_TIMEOUT_EVENT new_«@name»_event(«@name»_PR_NOTHING, 0, NULL);
 
-    
+
         // free_«@name»_event() - free memory occupied by event
         //
         //  parameters:
@@ -137,7 +137,7 @@ tstylesheet {
             #include "«@name»_event.h"
             #include "message_api.h"
             #include "../asn.1/«@name».h"
-            
+
             #define «yml:ucase(@name)»_THRESHOLD «@threshold»
             `` for "fsm" | #define «yml:ucase(@name)»_THRESHOLD «@threshold»
 
@@ -160,7 +160,7 @@ tstylesheet {
             ||
 
             // timeout handler
-            
+
             ||
             for "fsm[@threshold > 0]"
                 | PEP_STATUS «@name»TimeoutHandler(PEP_SESSION session);
@@ -169,7 +169,7 @@ tstylesheet {
             // send message about an event to communication partners using state
 
             PEP_STATUS send_«@name»_message(
-                    PEP_SESSION session, 
+                    PEP_SESSION session,
                     «@name»_PR fsm,
                     int message_type
                 );
@@ -180,7 +180,7 @@ tstylesheet {
                     PEP_SESSION session,
                     «@name»_event_t *ev
                 );
-        
+
             // state machine driver
             // if fsm or event set to 0 use fields in src if present
 
@@ -196,17 +196,17 @@ tstylesheet {
             // caveat: the ownership of own_identities goes to the callee
 
             PEP_STATUS signal_«@name»_event(
-                    PEP_SESSION session, 
+                    PEP_SESSION session,
                     «@name»_PR fsm,
                     int event,
                     identity_list *own_identities
                 );
-            
+
             // call this if you are a transport and are receiving
             // a «@name» message
 
             PEP_STATUS signal_«@name»_message(
-                    PEP_SESSION session, 
+                    PEP_SESSION session,
                     PEP_rating rating,
                     const char *data,
                     size_t size,
@@ -225,7 +225,7 @@ tstylesheet {
             ||
             // This file is under GNU General Public License 3.0
             // see LICENSE.txt
-        
+
             #include "«@name»_impl.h"
             #include "pEp_internal.h"
             #include "«@name»_event.h"
@@ -262,7 +262,7 @@ tstylesheet {
                 int next_state = None;
                 do {
                     switch (fsm) {
-                        `` apply "fsm", 3, mode=driver               
+                        `` apply "fsm", 3, mode=driver
                         default:
                             return PEP_ILLEGAL_VALUE;
                     }
@@ -272,7 +272,7 @@ tstylesheet {
             }
 
             PEP_STATUS signal_«@name»_event(
-                    PEP_SESSION session, 
+                    PEP_SESSION session,
                     «@name»_PR fsm,
                     int event,
                     identity_list *own_identities
@@ -311,7 +311,7 @@ tstylesheet {
                 status = set_all_userids_to_own(session, own_identities);
                 if (status != PEP_STATUS_OK)
                     goto the_end;
-                    
+
                 ev->own_identities = own_identities;
 
                 int result = session->inject_«yml:lcase(@name)»_event(ev,
@@ -328,7 +328,7 @@ tstylesheet {
             }
 
             PEP_STATUS signal_«@name»_message(
-                    PEP_SESSION session, 
+                    PEP_SESSION session,
                     PEP_rating rating,
                     const char *data,
                     size_t size,
@@ -402,17 +402,17 @@ tstylesheet {
             }
 
             PEP_STATUS send_«@name»_message(
-                    PEP_SESSION session, 
+                    PEP_SESSION session,
                     «@name»_PR fsm,
                     int message_type
                 )
             {
                 PEP_STATUS status = PEP_STATUS_OK;
 
-                assert(session && fsm > None && message_type > None);
-                if (!(session && fsm > None && message_type > None))
+                assert(session && fsm > «@name»_PR_NOTHING && message_type > None);
+                if (!(session && fsm > «@name»_PR_NOTHING && message_type > None))
                     return PEP_ILLEGAL_VALUE;
-                
+
                 «@name»_t *msg = new_«@name»_message(fsm, message_type);
                 if (!msg)
                     return PEP_OUT_OF_MEMORY;
@@ -522,7 +522,7 @@ tstylesheet {
                 for (identity_list *li = channels; li && li->ident ; li = li->next) {
                     message *_m = NULL;
                     char *_data = NULL;
-                    
+
                     _data = malloc(size);
                     assert(_data);
                     if (!_data) {
@@ -604,7 +604,7 @@ tstylesheet {
                                     break;
                                 }
                             }
-    
+
                             // if it is a former negotiation check if the key
                             // is fully trusted and the sender key of this
                             // transaction; if so add the sender key to extra
@@ -622,7 +622,7 @@ tstylesheet {
                                     status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                     goto the_end;
                                 }
-                            
+
                                 // test if this is a green channel
 
                                 pEp_identity *ident = new_identity(NULL,
@@ -670,7 +670,7 @@ tstylesheet {
                                     goto the_end;
                                 }
                             }
-                            
+
                             status = base_prepare_message(
                                     session,
                                     li->ident,
@@ -696,8 +696,8 @@ tstylesheet {
                                 status = PEP_OUT_OF_MEMORY;
                                 goto the_end;
                             }
-                            key_data_size = 1; // N.B. If null termination makes us happy for debugging, fine, but 
-                                               // if we include this in the size, libetpan will null terminate and 
+                            key_data_size = 1; // N.B. If null termination makes us happy for debugging, fine, but
+                                               // if we include this in the size, libetpan will null terminate and
                                                // go bananas. We can't have a NUL in the mime text.
 
                             for (stringlist_t *sl = session->«yml:lcase(@name)»_state.own.keys;
@@ -800,8 +800,8 @@ tstylesheet {
                                 status = PEP_OUT_OF_MEMORY;
                                 goto the_end;
                             }
-                            key_data_size = 1; // N.B. If null termination makes us happy for debugging, fine, but 
-                                               // if we include this in the size, libetpan will null terminate and 
+                            key_data_size = 1; // N.B. If null termination makes us happy for debugging, fine, but
+                                               // if we include this in the size, libetpan will null terminate and
                                                // go bananas. We can't have a NUL in the mime text.
 
                             for (stringlist_t *sl = session->«yml:lcase(@name)»_state.own.keys;
@@ -966,7 +966,7 @@ tstylesheet {
                 if (ev->sender_fpr) {
                     free(session->«yml:lcase(@name)»_state.transport.sender_fpr);
                     session->«yml:lcase(@name)»_state.transport.sender_fpr = ev->sender_fpr;
-                    
+
                     /* Removed for temp ENGINE-647 fix. Will be reenabled once better sync debugging is in.
                     // Check against saved comm_partner sender_fpr state, if there is one yet
                     if (session->«yml:lcase(@name)»_state.comm_partner.sender_fpr) {
@@ -980,11 +980,11 @@ tstylesheet {
                             if (!is_own_key) {
                                 status = PEP_ILLEGAL_VALUE;
                                 goto the_end;
-                            }    
+                            }
                         }
                     }
                     */
-                                                            
+
                     ev->sender_fpr = NULL;
                 }
 
@@ -996,7 +996,7 @@ tstylesheet {
                     ev->own_identities = NULL;
                 }
 
-                
+
                 status = «@name»_driver(session, fsm, event);
 
             the_end:
@@ -1052,7 +1052,7 @@ tstylesheet {
                         `` if "@threshold > 0" |>>>>> «@name»TimeoutHandler(session);
                     }
                     break;
-                
+
                 default:
                     _«@name»_timeout(None);
             }
@@ -1332,7 +1332,7 @@ tstylesheet {
             if (!session)
                 return invalid_state;
 
-            if (state == None)
+            if (state == «@name»_state_None)
                 state = «@name»_state_Init;
 
             switch (state) {
@@ -1342,14 +1342,14 @@ tstylesheet {
                     assert(0);
                     return invalid_state;
             }
-            
+
             return None;
         }
 
         ||
         }
     }
-    
+
     template "state", mode=fsm {
         choose {
             when "@name='InitState'" | case «../@name»_state_Init:
@@ -1362,7 +1362,7 @@ tstylesheet {
                 case None:
                     «../@name»_SERVICE_LOG("received Timeout event", "ignoring");
                     break;
-     
+
         ||
         if "not(event[@name='Init'])"
         ||
@@ -1399,7 +1399,7 @@ tstylesheet {
         }
         ||
         }
-        
+
         ||
     }
 
