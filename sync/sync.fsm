@@ -454,6 +454,7 @@ protocol Sync 1 {
         state JoiningGroup {
             on Init {
                 // we need to keep in memory which keys we have before joining
+                do prepareOwnKeys;
                 do backupOwnKeys;
             }
             on GroupKeysForNewMember {
