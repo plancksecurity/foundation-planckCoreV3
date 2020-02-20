@@ -452,11 +452,16 @@ protocol Sync 1 {
         }
 
         state JoiningGroup {
+            on Init {
+                // we need to keep in memory which keys we have before joining
+                do backupOwnKeys;
+            }
             on GroupKeysForNewMember {
                 if sameNegotiationAndPartner {
                     do saveGroupKeys;
                     do receivedKeysAreDefaultKeys;
-                    do prepareOwnKeys;
+                    // send the keys we had before joining
+                    do prepareOwnKeysFromBackup;
                     send GroupKeysAndClose;
                     do showDeviceAdded;
                     go Grouped;
@@ -547,7 +552,8 @@ protocol Sync 1 {
 
             on GroupKeysAndClose {
                 if fromGroupMember { // double check
-                    do saveGroupKeys;
+                    // do not save GroupKeys as default keys; key data is
+                    // already imported
                     go Grouped;
                 }
             }
