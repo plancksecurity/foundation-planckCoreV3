@@ -30,7 +30,7 @@ for root, dirs, files in os.walk(SRC_PATH_STR):
 #
 # let's run some tests!
 # (Put in  --leak-check=full --show-leak-kinds=all for leak tests)
-CMD_STR_PREFIX = "valgrind ./EngineTests --gtest_filter="
+CMD_STR_PREFIX = "valgrind --track-origins=yes ./EngineTests --gtest_filter="
 
 for test in function_list:
     CMD_STR = CMD_STR_PREFIX + test
