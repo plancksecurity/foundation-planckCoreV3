@@ -5,6 +5,11 @@ include ../Makefile.conf
 
 ALL_SOURCE=$(subst $(NO_SOURCE),,$(wildcard *.c))
 ALL_OBJECTS=$(subst .c,.o,$(ALL_SOURCE))
+CPPFLAGS+=$(CFLAGS_GENERATED)
+ASN1_INCL_LIST=-I.
+#ifdef ASN1C_INC
+#ASN1_INCL_LIST+= -I$(ASN1C_INC)
+#endif
 
 .PHONY: all clean install uninstall
 
@@ -15,7 +20,7 @@ libasn1.a: $(ALL_OBJECTS)
 	$(AR) -rc $@ $(ALL_OBJECTS)
 
 %.o: %.c %.h
-	$(CC) $(CFLAGS) $(OPTIMIZE) -I. $(ASN1C_INC) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(OPTIMIZE) $(ASN1_INC_LIST) -c $< -o $@
 
 Sync.c: sync.asn1 keysync.asn1 pEp.asn1
 	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keysync.asn1 $<
