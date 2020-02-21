@@ -25,7 +25,8 @@ build: asn1
 	$(MAKE) -C src
 
 all: build
-	make -C test
+# `make all` is not for tests, that's what `make test` is for
+#	$(MAKE) -C test
 
 sync:
 	$(MAKE) -C sync
@@ -51,8 +52,8 @@ clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C test clean
 	$(MAKE) -C db clean
-	$(MAKE) -C sync clean
 	$(MAKE) -C asn.1 clean
+	$(MAKE) -C sync clean
 
 tags:
 	$(MAKE) -C asn.1 tags
