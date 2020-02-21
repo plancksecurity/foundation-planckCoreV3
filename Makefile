@@ -25,7 +25,8 @@ build: asn1
 	$(MAKE) -C src
 
 all: build
-	$(MAKE) -C test
+# `make all` is not for tests, that's what `make test` is for
+#	$(MAKE) -C test
 
 sync:
 	$(MAKE) -C sync
