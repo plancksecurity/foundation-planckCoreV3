@@ -25,7 +25,7 @@ build: asn1
 	$(MAKE) -C src
 
 all: build
-	make -C test
+	$(MAKE) -C test
 
 sync:
 	$(MAKE) -C sync
