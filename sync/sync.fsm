@@ -244,6 +244,13 @@ protocol Sync 1 {
         }
 
         state FormingGroupOfferer {
+            on Init {
+                // we need to keep in memory which keys we have before forming
+                // a new group
+                do prepareOwnKeys;
+                do backupOwnKeys;
+            }
+
             on Cancel {
                 send Rollback;
                 go Sole;
@@ -256,7 +263,8 @@ protocol Sync 1 {
                 if sameNegotiationAndPartner {
                     do saveGroupKeys;
                     do receivedKeysAreDefaultKeys;
-                    do prepareOwnKeys;
+                    // send the keys we had before forming a new group
+                    do prepareOwnKeysFromBackup;
                     send OwnKeysOfferer;
                     do showGroupCreated;
                     go Grouped;
