@@ -455,18 +455,22 @@ action ownKeysAreDefaultKeys
 
 action backupOwnKeys
 ||
-    identity_list *il = identity_list_dup(session->sync_state.own.identities);
-    if (!il)
-        return PEP_OUT_OF_MEMORY;
+    if (session->sync_state.own.backup)
+        free_stringlist(session->sync_state.own.backup);
 
-    free_identity_list(session->sync_state.own.backup);
-    session->sync_state.own.backup = il;
+    session->sync_state.own.backup = stringlist_dup(session->sync_state.own.keys);
+    if (session->sync_state.own.backup == NULL)
+        return PEP_OUT_OF_MEMORY;
 ||
 
 action prepareOwnKeysFromBackup
 ||
-    IdentityList_from_identity_list(session->sync_state.own.backup,
-            &session->sync_state.keysync.ownIdentities);
+    if (session->sync_state.own.keys)
+        free_stringlist(session->sync_state.own.keys);
+
+    session->sync_state.own.keys = stringlist_dup(session->sync_state.own.backup);
+    if (session->sync_state.own.keys == NULL)
+        return PEP_OUT_OF_MEMORY;
 ||
 
 action receivedKeysAreDefaultKeys
