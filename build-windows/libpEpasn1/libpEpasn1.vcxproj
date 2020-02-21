@@ -82,7 +82,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PreBuildEvent>
-      <Command>"$(ProjectDir)..\generate_code.cmd" "$(ProjectDir)..\.."</Command>
+      <Command>cd "$(ProjectDir)..\.." &amp;&amp; "$(ProjectDir)..\generate_code.cmd"</Command>
       <Message>Generating Code for pEp Sync</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
