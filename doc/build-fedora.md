@@ -18,7 +18,7 @@ dnf install -y python-lxml automake libtool autoconf
 dnf groupinstall -y "Development Tools"
 
 # other engine dependencies (uuid, gpg, sqlite)
-dnf install -y uuid-devel gpgme-devel libsqlite3x-devel libsqlite3x sqlite
+dnf install -y libuuid-devel gpgme-devel libsqlite3x-devel libsqlite3x sqlite
 
 # asn1c
 dnf -y install asn1c
