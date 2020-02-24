@@ -87,7 +87,10 @@ make dbinstall
 make install
 ~~~
 
-## Testing
+## Testing (optional)
+
+TODO: Instructions for dependencies (see also ../test/README.md)
+
 The unit tests can be run without the engine library being installed, however `system.db` must be installed:
 
 ~~~
