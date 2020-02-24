@@ -16,12 +16,10 @@ dnf install -y python-lxml automake libtool autoconf
 
 # build-essentials equivalent for rpm based systems
 dnf groupinstall -y "Development Tools"
+dnf install -y g++
 
-# other engine dependencies (uuid, gpg, sqlite)
-dnf install -y libuuid-devel gpgme-devel libsqlite3x-devel libsqlite3x sqlite
-
-# asn1c
-dnf -y install asn1c
+# other engine dependencies (uuid, gpg, sqlite, asn1c)
+dnf install -y libuuid-devel gpgme-devel libsqlite3x-devel libsqlite3x sqlite asn1c
 ~~~
 
 # Installing unpackaged dependencies
