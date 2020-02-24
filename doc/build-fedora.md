@@ -72,6 +72,7 @@ ETPAN_INC=-I$(HOME)/code/libetpan/build/include
 LIBGPGME=libgpgme.so
 ~~~
 
+## Building
 The engine is built as follows:
 
 ~~~
@@ -79,13 +80,14 @@ make all
 make db
 ~~~
 
-Installation:
+## Installation
 
 ~~~
 make dbinstall
 make install
 ~~~
 
+## Testing
 The unit tests can be run without the engine library being installed, however `system.db` must be installed:
 
 ~~~
