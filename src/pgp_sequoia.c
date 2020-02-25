@@ -2459,8 +2459,8 @@ static PEP_STATUS list_keys(PEP_SESSION session,
     while (*pattern == ' ')
         pattern ++;
 
-    if (strchr(pattern, '@')) {
-        // Looks like a mailbox.
+    if (strchr(pattern, '@') || strchr(pattern, ':')) {
+        // Looks like a mailbox or URI.
         pgp_cert_t *certs = NULL;
         int count = 0;
         status = cert_find_by_email(session, pattern, private_only, &certs, &count);
