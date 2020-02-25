@@ -109,6 +109,30 @@ TEST_F(URIAddressTest, check_uri_address_genkey) {
     free_identity(me);
 }
 
+TEST_F(URIAddressTest, check_uri_address_genkey_empty_uname) {
+    const char* uri_addr = "payto://BIC/SYSTEMB";
+    const char* uname = "Jonas's Broken Identity";
+
+    pEp_identity* me = new_identity(uri_addr, NULL, "SystemA", NULL);
+
+    PEP_STATUS status = myself(session, me);
+
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_TRUE(me->fpr && me->fpr[0] != '\0');
+
+    char* keydata = NULL;
+    size_t keysize = 0;
+    status = export_key(session, me->fpr,
+                        &keydata, &keysize);
+
+    ASSERT_GT(keydata && keysize, 0);
+    // no guarantee of NUL-termination atm.
+//    output_stream << keydata << endl;
+
+    free(keydata);
+    free_identity(me);
+}
+
 // FIXME: URL, URN
 TEST_F(URIAddressTest, check_uri_address_encrypt) {
     const char* uri_addr = "shark://grrrr/39874293847092837443987492834";

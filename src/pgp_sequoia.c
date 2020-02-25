@@ -1981,7 +1981,7 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     assert(identity);
     assert(identity->address);
     assert(identity->fpr == NULL || identity->fpr[0] == 0);
-    assert(identity->username);
+//    assert(identity->username);
 
     userid_packet = pgp_user_id_from_unchecked_address(&err,
                                                        identity->username, NULL,

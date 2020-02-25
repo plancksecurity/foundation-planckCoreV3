@@ -4739,32 +4739,37 @@ PEP_STATUS _generate_keypair(PEP_SESSION session,
     assert(identity);
     assert(identity->address);
     assert(identity->fpr == NULL || identity->fpr[0] == 0);
-    assert(identity->username);
+//    assert(identity->username);
+    // N.B. We now allow empty usernames, so the underlying layer for 
+    // non-sequoia crypto implementations will have to deal with this.
 
     if (!(session && identity && identity->address &&
-            (identity->fpr == NULL || identity->fpr[0] == 0) &&
-            identity->username))
+            (identity->fpr == NULL || identity->fpr[0] == 0)))
         return PEP_ILLEGAL_VALUE;
 
     char* saved_username = NULL;
-    char* at = NULL;
-    size_t uname_len = strlen(identity->username);
-    
-    if (uname_len > 0)
-        at = strstr(identity->username, "@"); 
-    
-    if (at) {
-        saved_username = identity->username;
-        identity->username = calloc(uname_len + 3, 1);
-        if (!identity->username) {
-            identity->username = saved_username;
-            return PEP_OUT_OF_MEMORY;
-        }
-        identity->username[0] = '"';
-        strlcpy((identity->username) + 1, saved_username, uname_len + 1);
-        identity->username[uname_len + 1] = '"';        
-    }
 
+    // KB: In light of the above, remove? FIXME.
+    if (identity->username) {    
+        char* at = NULL;
+        size_t uname_len = strlen(identity->username);
+        
+        if (uname_len > 0)
+            at = strstr(identity->username, "@"); 
+        
+        if (at) {
+            saved_username = identity->username;
+            identity->username = calloc(uname_len + 3, 1);
+            if (!identity->username) {
+                identity->username = saved_username;
+                return PEP_OUT_OF_MEMORY;
+            }
+            identity->username[0] = '"';
+            strlcpy((identity->username) + 1, saved_username, uname_len + 1);
+            identity->username[uname_len + 1] = '"';        
+        }
+    }
+        
     PEP_STATUS status =
         session->cryptotech[PEP_crypt_OpenPGP].generate_keypair(session,
                 identity);
