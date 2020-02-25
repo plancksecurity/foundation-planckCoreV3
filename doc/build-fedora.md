@@ -16,12 +16,10 @@ dnf install -y python-lxml automake libtool autoconf
 
 # build-essentials equivalent for rpm based systems
 dnf groupinstall -y "Development Tools"
+dnf install -y g++
 
-# other engine dependencies (uuid, gpg, sqlite)
-dnf install -y uuid-devel gpgme-devel libsqlite3x-devel libsqlite3x sqlite
-
-# asn1c
-dnf -y install asn1c
+# other engine dependencies (uuid, gpg, sqlite, asn1c)
+dnf install -y libuuid-devel gpgme-devel libsqlite3x-devel libsqlite3x sqlite asn1c
 ~~~
 
 # Installing unpackaged dependencies
@@ -74,6 +72,7 @@ ETPAN_INC=-I$(HOME)/code/libetpan/build/include
 LIBGPGME=libgpgme.so
 ~~~
 
+## Building
 The engine is built as follows:
 
 ~~~
@@ -81,12 +80,16 @@ make all
 make db
 ~~~
 
-Installation:
+## Installation
 
 ~~~
 make dbinstall
 make install
 ~~~
+
+## Testing (optional)
+
+TODO: Instructions for dependencies (see also ../test/README.md)
 
 The unit tests can be run without the engine library being installed, however `system.db` must be installed:
 
