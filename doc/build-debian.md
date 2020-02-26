@@ -74,7 +74,7 @@ Below is a sample `./local.conf` file, for orientation.
 
 ~~~
 PREFIX=$(HOME)/code/pep-engine/build
-SYSTEM_DB=$(PREFIX)/share/pEp/system.db
+PER_MACHINE_DIRECTORY=$(PREFIX)/share/pEp
 
 YML2_PATH=$(HOME)/code/yml2
 
