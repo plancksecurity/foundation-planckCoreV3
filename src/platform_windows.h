@@ -13,6 +13,9 @@
 // It seems some of our code includes sync.h before including winsock.h, leading to the failure.
 // Including winsock2.h here fixes the problem for now...
 #ifdef WIN32 
+// winsock2.h includes windows.h and that leads to the definition of `min` and `max`
+// which causes compile errors elsewhere.
+#define NOMINMAX
 #include <winsock2.h>
 #endif // WIN32 
 
