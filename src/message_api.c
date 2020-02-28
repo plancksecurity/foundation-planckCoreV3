@@ -4092,15 +4092,20 @@ static PEP_STATUS _decrypt_message(
     
     // 4. Reencrypt if necessary
     bool has_extra_keys = _have_extrakeys(extra);
-    if (reencrypt && session->unencrypted_subject && !has_extra_keys) {
-        if (src->shortmsg && msg->shortmsg) {
-            if (strcmp(src->shortmsg, msg->shortmsg) == 0)
-                reencrypt = false;
-        }
-        else if (src->shortmsg == NULL && msg->shortmsg == NULL)
-            reencrypt = false;
-    }    
 
+    bool subjects_match = false;
+    if (src->shortmsg && msg->shortmsg) {
+        if (strcmp(src->shortmsg, msg->shortmsg) == 0)
+            subjects_match = true;
+    }
+    else if (src->shortmsg == msg->shortmsg) {
+        if (!src->shortmsg) 
+            subjects_match = true;    
+    }
+    
+    if (reencrypt && session->unencrypted_subject && !has_extra_keys && subjects_match) 
+        reencrypt = false;
+    
     if (reencrypt) {
         if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED
             || decrypt_status == PEP_VERIFY_SIGNER_KEY_REVOKED) {
@@ -4110,8 +4115,22 @@ static PEP_STATUS _decrypt_message(
 
             if (sfpr && decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
                 own_key_is_listed(session, sfpr, &reenc_signer_key_is_own_key);
-                
-                if (!reenc_signer_key_is_own_key) {
+
+                bool key_missing = false;
+
+                // Also, see if extra keys are all in the encrypted-to keys; otherwise, we do it again                 
+                if (extra) {
+                    stringlist_t* curr_key = NULL;
+                    for (curr_key = extra; curr_key && curr_key->value; curr_key = curr_key->next) {
+                        stringlist_t* found = stringlist_search(_keylist, curr_key->value);
+                        if (!found) {
+                            key_missing = true;
+                            break;
+                        }
+                    }
+                }
+                    
+                if (key_missing || (!reenc_signer_key_is_own_key) || ((!subjects_match) && session->unencrypted_subject)) {
                     message* reencrypt_msg = NULL;
                     PEP_STATUS reencrypt_status = PEP_CANNOT_REENCRYPT;
                     char* own_id = NULL;
