@@ -594,7 +594,8 @@ tstylesheet {
                             free_message(_m);
                             break;
 
-                    `` for "fsm/message[@security='attach_own_keys_for_new_member']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                        // attach own keys for new member
+                        `` for "fsm/message[@security='attach_own_keys_for_new_member']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
                             // check if we had a former negotiation
 
                             transaction = false;
@@ -774,7 +775,8 @@ tstylesheet {
                             free_message(_m);
                             break;
 
-                    `` for "fsm/message[@security='attach_own_keys_for_group']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                        // attach own keys for group
+                        `` for "fsm/message[@security='attach_own_keys_for_group']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
                             status = base_prepare_message(
                                     session,
                                     li->ident,

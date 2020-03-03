@@ -512,8 +512,6 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
                     
     // We patch the DB with the input username, but if we didn't have
     // one, we pull it out of storage if available.
-    // (also, if the input username is "anonymous" and there exists
-    //  a DB username, we replace)
     if (!EMPTYSTR(stored_ident->username)) {
         if (!EMPTYSTR(return_id->username) && 
             (strcasecmp(return_id->username, return_id->address) == 0)) {
@@ -675,8 +673,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                             // FIXME: should we also be fixing pEp_own_userId in this
                             // function here?
                             
-                            // if usernames match, we replace the userid. Or if the temp username
-                            // is anonymous.
+                            // if usernames match, we replace the userid.
                             // FIXME: do we need to create an address match function which
                             // matches the whole dot-and-case rigamarole from 
                             if (EMPTYSTR(this_id->username) ||

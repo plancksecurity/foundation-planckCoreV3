@@ -629,11 +629,11 @@ protocol Sync 1 {
             field IdentityList ownIdentities;
         }
 
-        message GroupKeysAndClose 13, security=attach_own_keys {
+        message GroupKeysAndClose 13, security=attach_own_keys_for_group {
             field IdentityList ownIdentities;
         }
 
-        message OwnKeysOfferer 14, security=attach_own_keys {
+        message OwnKeysOfferer 14, security=attach_own_keys_for_group {
             field IdentityList ownIdentities;
         }
 
