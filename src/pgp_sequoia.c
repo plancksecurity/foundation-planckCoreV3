@@ -2607,14 +2607,15 @@ PEP_STATUS pgp_renew_key(
     uint32_t delta = (uint32_t) (t - creation_time);
 
 
-    iter = pgp_cert_key_iter_valid(cert);
+    iter = pgp_cert_key_iter_all(cert);
     pgp_cert_key_iter_for_certification (iter);
     pgp_cert_key_iter_unencrypted_secret (iter);
+    pgp_cert_key_iter_revoked(iter, false);
 
     // If there are multiple certification capable subkeys, we just
     // take the first one, whichever one that happens to be.
     pgp_key_t key = pgp_cert_key_iter_next (iter, NULL, NULL);
-    if (! key)
+    if (! key) 
         ERROR_OUT (err, PEP_UNKNOWN_ERROR,
                    "%s has no usable certification capable key", fpr);
 
