@@ -111,7 +111,6 @@ TEST_F(Engine704Test, check_engine704) {
     pEp_identity* bob = new_identity(alice_is_bob->address, NULL, alice_is_bob->user_id, alice_is_bob->username);
     ASSERT_STRNE(alice->username, alice_is_bob->username);
     char* bobname = strdup(alice_is_bob->username);
-    
     message* cheesy_message = new_message(PEP_dir_outgoing);
     cheesy_message->from = alice2;
     cheesy_message->to = new_identity_list(bob);

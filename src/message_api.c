@@ -3918,6 +3918,9 @@ static PEP_STATUS _decrypt_message(
                     // update the own from identity, read_only, but preserve username 
                     // for returned message.
                     char* cached_ownname = cs_from->username;
+                    // Shouldn't be possible, but just in case.
+                    if (!cached_ownname)
+                        cached_ownname = strdup(cs_from->address);
                     cs_from->username = NULL;
                     status = _myself(session, cs_from, false, false, myself_read_only);
                     free(cs_from->username);
