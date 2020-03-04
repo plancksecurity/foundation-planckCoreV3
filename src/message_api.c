@@ -3914,8 +3914,15 @@ static PEP_STATUS _decrypt_message(
                         status = PEP_STATUS_OK;
                     }
                 }
-                else
+                else {
+                    // update the own from identity, read_only, but preserve username 
+                    // for returned message.
+                    char* cached_ownname = cs_from->username;
+                    cs_from->username = NULL;
                     status = _myself(session, cs_from, false, false, myself_read_only);
+                    free(cs_from->username);
+                    cs_from->username = cached_ownname;
+                }    
             }                                                                        
         } // end if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
         
