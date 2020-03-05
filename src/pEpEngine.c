@@ -2317,6 +2317,11 @@ DYNAMIC_API PEP_STATUS log_event(
 	log_output_debug(title, entity, description, comment);
 #endif
 
+#if defined(ANDROID) && !defined(NDEBUG)
+    __android_log_print(ANDROID_LOG_DEBUG, "pEpEngine", " %s :: %s :: %s :: %s ",
+            title, entity, description, comment);
+#endif
+
 // N.B. If testing (so NDEBUG not defined) but this message is spam,
 //      put -D_PEP_SERVICE_LOG_OFF into CFLAGS/CXXFLAGS     
 #if !defined(NDEBUG) && !defined(_PEP_SERVICE_LOG_OFF)
