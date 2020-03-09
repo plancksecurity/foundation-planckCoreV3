@@ -257,7 +257,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         home_env = getenv("HOME");
 
     if (!home_env)
-        ERROR_OUT(NULL, PEP_INIT_GPGME_INIT_FAILED, "HOME unset");
+        ERROR_OUT(NULL, PEP_INIT_CRYPTO_LIB_INIT_FAILED, "HOME unset");
 
     // Create the DB and initialize it.
     size_t path_size = strlen(home_env) + sizeof(PEP_KEYS_PATH);

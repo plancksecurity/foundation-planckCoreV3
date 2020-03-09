@@ -89,9 +89,7 @@ void Engine::start() {
         throw std::runtime_error("SETUP: Cannot set engine_home for init.");
             
     unix_local_db(true);
-    gpg_conf(true);
-    gpg_agent_conf(true);
-        
+            
     PEP_STATUS status = init(&session, cached_messageToSend, cached_inject_sync_event);
     assert(status == PEP_STATUS_OK);
     assert(session);
@@ -156,7 +154,4 @@ void Engine::shut_down() {
         throw std::runtime_error("RESTORE: Cannot reset home directory! Either set environment variable manually back to your home, or quit this session!");
 
     unix_local_db(true);
-    gpg_conf(true);
-    gpg_agent_conf(true);
-
 }

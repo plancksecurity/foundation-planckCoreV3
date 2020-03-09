@@ -19,17 +19,9 @@ extern "C" {
 #include "dynamic_api.h"
 #include "stringpair.h"    
 
-#ifdef USE_GPG
-#include "pgp_gpg.h"
-#else
-#ifdef USE_NETPGP
-#include "pgp_netpgp.h"
-#else
 #ifdef USE_SEQUOIA
 #include "pgp_sequoia.h"
 #endif
-#endif
-#endif    
     
 //  OpenPGP_list_keyinfo() - get a key/UID list for pattern matches in keyring (NULL or ""
 //                           to return entire keyring), filtering out revoked keys in the results
