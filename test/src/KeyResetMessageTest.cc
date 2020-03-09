@@ -376,6 +376,48 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
     cout << "HEY! reset_fpr is " << new_fpr << endl;
 }
 
+TEST_F(KeyResetMessageTest, check_reset_partner_mistrust_w_multikeys) {
+    // Ok, let's take a key, make it the default, then mistrust it.
+    slurp_and_import_key(session, "test_keys/pub/notsibu-0xBD69BE73_pub.asc");
+    pEp_identity* notsibu = new_identity("notsibu@test.darthmama.cool", NULL, "sibu_id", "Not Sibu Test Guy");
+    PEP_STATUS status = update_identity(session, notsibu);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(notsibu->fpr, nullptr);
+    ASSERT_NE(strstr(notsibu->fpr, "BD69BE73"), nullptr);
+    status = set_identity(session, notsibu);
+
+    // Let's accidentally mistrust the recipient, who is totally not Sibu! (N.B. This casts no aspersions on
+    // Sibu, this is just a RL test case and he is an innocent bystander :)
+    status = key_mistrusted(session, notsibu);
+    free(notsibu->fpr);
+    notsibu->fpr = strdup("0EF85D242241DF992ACAE0C62B4FA23EBD69BE73");    
+    status = get_trust(session, notsibu);
+    ASSERT_EQ(notsibu->comm_type, PEP_ct_mistrusted);
+    cout << tl_ct_string(notsibu->comm_type) << endl;
+
+    // And then let's get another key in there for fun, because.
+    slurp_and_import_key(session, "test_keys/pub/notsibu-0x12C85E4A_pub.asc");    
+    status = update_identity(session, notsibu);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(notsibu->fpr, nullptr);
+    ASSERT_NE(strstr(notsibu->fpr, "12C85E4A"), nullptr);
+    status = set_identity(session, notsibu);
+
+    slurp_and_import_key(session, "test_keys/pub/notsibu-0xBD69BE73_pub.asc");
+    
+    // Can we somehow reset the first one?
+    free(notsibu->fpr);
+    notsibu->fpr = NULL;
+    status = key_reset_user(session, notsibu->user_id, NULL);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    free(notsibu->fpr);
+    notsibu->fpr = strdup("0EF85D242241DF992ACAE0C62B4FA23EBD69BE73");    
+    status = get_trust(session, notsibu);
+    ASSERT_NE(notsibu->comm_type, PEP_ct_mistrusted);
+    cout << tl_ct_string(notsibu->comm_type) << endl;
+    
+//    status = key_reset_user(session, notsibu);    
+}
 
 TEST_F(KeyResetMessageTest, check_non_reset_receive_revoked) {
     receive_setup();
