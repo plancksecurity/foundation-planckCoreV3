@@ -200,6 +200,11 @@ have found a dastardly bug in the engine, but it can also be a test issue.
 When debugging a failing test, use '--gtest_break_on_failure' to have
 gtest automatically break into the debugger where the assertion fails.
 
+### Output
+
+Compile tests with -DDEBUG_OUTPUT to (possibly) see output to cout. May only work
+in the tests run directly from ./EngineTests (with or without filter)
+
 # Creating new tests
 
 Script next on the agenda...
