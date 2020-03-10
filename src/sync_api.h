@@ -35,6 +35,8 @@ typedef enum _sync_handshake_signal {
     // forming group
     // SYNC_NOTIFY_FORMING_GROUP = 10,
 
+    SYNC_NOTIFY_KEYS_ARRIVED = 11,
+
     // notification of actual group status
     SYNC_NOTIFY_SOLE = 254,
     SYNC_NOTIFY_IN_GROUP = 255
