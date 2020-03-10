@@ -361,6 +361,10 @@ protocol Sync 1 {
                 send ElectGroupKeyResetLeader;
                 go GroupKeyResetElection;
             }
+
+            on GroupKeysAndClose {
+                showKeysArrived;
+            }
         }
 
         state GroupKeyResetElection {
@@ -518,6 +522,15 @@ protocol Sync 1 {
                 }
             }
 
+            on GroupKeysAndClose {
+                if fromGroupMember { // double check
+                    showKeysArrived;
+                    // do not save GroupKeys as default keys; key data is
+                    // already imported
+                    go Grouped;
+                }
+            }
+
             on GroupKeysUpdate {
                 if fromGroupMember // double check
                     do saveGroupKeys;
@@ -561,6 +574,7 @@ protocol Sync 1 {
 
             on GroupKeysAndClose {
                 if fromGroupMember { // double check
+                    showKeysArrived;
                     // do not save GroupKeys as default keys; key data is
                     // already imported
                     go Grouped;
