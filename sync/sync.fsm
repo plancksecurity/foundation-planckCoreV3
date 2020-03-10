@@ -363,7 +363,7 @@ protocol Sync 1 {
             }
 
             on GroupKeysAndClose {
-                showKeysArrived;
+                do showKeysArrived;
             }
         }
 
