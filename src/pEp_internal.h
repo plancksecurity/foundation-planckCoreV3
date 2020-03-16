@@ -156,6 +156,8 @@ struct _pEpSession {
         sqlite3_stmt *cert_save_insert_userids;
         sqlite3_stmt *delete_keypair;
     } sq_sql;
+
+    pgp_policy_t policy;
 #endif
 
     PEP_cryptotech_t *cryptotech;
