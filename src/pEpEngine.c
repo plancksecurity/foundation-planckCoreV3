@@ -824,16 +824,19 @@ static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
     // (one-to-one revoke-replace relationships), but since key reset
     // hasn't been used in production, this is not a customer-facing 
     // issue.
-    int_result = sqlite3_exec(
-        session->db,
-        "alter table revocation_contact_list\n"
-        "   add column own_address text;\n",
-        NULL,
-        NULL,
-        NULL
-    );
-    assert(int_result == SQLITE_OK);
-
+    
+    // Note: the check upfront is to deal with partially-upgraded DB issues
+    if (!table_contains_column(session, "revocation_contact_list", "own_address")) {
+        int_result = sqlite3_exec(
+            session->db,
+            "alter table revocation_contact_list\n"
+            "   add column own_address text;\n",
+            NULL,
+            NULL,
+            NULL
+        );
+        assert(int_result == SQLITE_OK);
+    }    
                 
     // the best we can do here is search per address, since these
     // are no longer associated with an identity. For now, if we find 
