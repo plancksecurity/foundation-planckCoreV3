@@ -2023,9 +2023,18 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     assert(identity->fpr == NULL || identity->fpr[0] == 0);
 //    assert(identity->username);
 
+    char* cached_username = identity->username;
+    
+    if (identity->username && strcmp(identity->address, identity->username) == 0) {
+        cached_username = identity->username;
+        identity->username = NULL;
+    }
+    
     userid_packet = pgp_user_id_from_unchecked_address(&err,
                                                        identity->username, NULL,
-                                                       identity->address);
+                                                       identity->address);           
+    identity->username = cached_username;                                                   
+
     if (!userid_packet)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "pgp_user_id_from_other_address");
 

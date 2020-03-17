@@ -2410,6 +2410,29 @@ TEST_F(KeyResetMessageTest, check_reset_mistrust_next_msg_have_not_mailed) {
     ASSERT_EQ(rating, PEP_rating_reliable);
 
 }
+
+// ENGINE-716
+TEST_F(KeyResetMessageTest, check_reset_all_own_keys_one_URI_partner) {
+    // me
+    pEp_identity* me = new_identity("payto://BIC/SYSTEMA", NULL, "SystemA", NULL);
+    PEP_STATUS status = myself(session, me);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(me->fpr, nullptr);  
+    char* copy_fpr = strdup(me->fpr);
+    
+    // I don't think this is relevant.
+    pEp_identity* you = new_identity("payto://BIC/SYSTEMB", NULL, "SystemB", NULL); 
+    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/SYSTEMB-0xD47A817B3_pub.asc"));
+    status = update_identity(session, you);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(you->fpr, nullptr);  
+    
+    status = key_reset_all_own_keys(session);    
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    status = myself(session, me);
+    ASSERT_STRNE(me->fpr, copy_fpr);
+}
+
 /*
 TEST_F(KeyResetMessageTest, check_reset_own_with_revocations) {
     pEp_identity* id1 = new_identity("krista-not-real@darthmama.org", NULL, PEP_OWN_USERID, "Krista at Home");
