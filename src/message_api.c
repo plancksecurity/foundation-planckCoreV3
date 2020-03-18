@@ -3603,6 +3603,9 @@ static PEP_STATUS _decrypt_message(
                                                    &ptext, &psize, &_keylist,
                                                    NULL);
 
+    if (status == PEP_DECRYPT_NO_KEY)
+        signal_Sync_event(session, Sync_PR_keysync, CannotDecrypt, NULL);
+
     if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
         goto pEp_error;
 
