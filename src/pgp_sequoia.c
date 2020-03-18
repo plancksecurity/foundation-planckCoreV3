@@ -2007,7 +2007,7 @@ PEP_STATUS pgp_encrypt_and_sign(
 }
 
 
-PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
+PEP_STATUS _pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity, time_t when)
 {
     PEP_STATUS status = PEP_STATUS_OK;
     pgp_error_t err = NULL;
@@ -2036,7 +2036,7 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     identity->username = cached_username;                                                   
 
     if (!userid_packet)
-        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "pgp_user_id_from_other_address");
+        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "pgp_user_id_from_unchecked_address");
 
     size_t userid_len = 0;
     const uint8_t *raw = pgp_user_id_value(userid_packet, &userid_len);
@@ -2054,6 +2054,9 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
     // Generate a key.
     pgp_cert_builder_t certb = pgp_cert_builder_general_purpose(
         cipher_suite(session->cipher_suite), userid);
+
+    pgp_cert_builder_set_creation_time(&certb, when);
+
     pgp_signature_t rev;
     if (pgp_cert_builder_generate(&err, certb, &cert, &rev))
         ERROR_OUT(err, PEP_CANNOT_CREATE_KEY, "Generating a key pair");
@@ -2083,6 +2086,11 @@ PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
 
     T("-> %s", pEp_status_to_string(status));
     return status;
+}
+
+PEP_STATUS pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity)
+{
+    return _pgp_generate_keypair(session, identity, 0);
 }
 
 PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr_raw)
