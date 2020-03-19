@@ -2155,7 +2155,7 @@ PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
 
     if (private_idents)
         *private_idents = NULL;
-
+        
     T("parsing %zd bytes", size);
 
     pgp_packet_parser_result_t ppr
@@ -2649,7 +2649,7 @@ PEP_STATUS pgp_renew_key(
     pgp_cert_valid_key_iter_t iter = NULL;
     pgp_key_pair_t keypair = NULL;
     pgp_signer_t signer = NULL;
-    time_t t = mktime((struct tm *) ts);
+    time_t t = timegm((struct tm *) ts);
 
     T("(%s)", fpr);
 
@@ -2686,7 +2686,7 @@ PEP_STATUS pgp_renew_key(
         ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
 
     cert = pgp_cert_set_expiration_time(&err, cert, session->policy,
-                                        signer, delta);
+                                        signer, t);
     if (! cert)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "setting expiration");
 
