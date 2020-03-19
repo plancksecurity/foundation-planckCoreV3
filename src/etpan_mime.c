@@ -1934,7 +1934,9 @@ PEP_STATUS _mime_encode_message_internal(
             break;
 
         case PEP_enc_PEP:
-            NOT_IMPLEMENTED
+            // today's pEp message format is PGP/MIME from the outside
+            status = mime_encode_message_PGP_MIME(msg, omit_fields, &mime);
+            break;
 
         default:
             NOT_IMPLEMENTED
