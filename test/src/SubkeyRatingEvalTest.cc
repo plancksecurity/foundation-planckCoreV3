@@ -92,6 +92,9 @@ TEST_F(SubkeyRatingEvalTest, check_subkey_rating_eval_no_es) {
     PEP_comm_type ct = PEP_ct_unknown;
     PEP_STATUS status = get_key_rating(session, "F0D03C842C0770C2C2A9FEAF2A1ED9814929DC45", &ct);
     ASSERT_EQ(status , PEP_STATUS_OK);
+    bool expired = false;
+    status = key_expired(session, "F0D03C842C0770C2C2A9FEAF2A1ED9814929DC45", time(NULL), &expired);
+    ASSERT_FALSE(expired);
     ASSERT_EQ(ct , PEP_ct_key_b0rken);
 }
 

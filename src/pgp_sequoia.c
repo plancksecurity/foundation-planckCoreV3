@@ -2666,10 +2666,9 @@ PEP_STATUS pgp_renew_key(
 
 
     iter = pgp_cert_valid_key_iter(cert, session->policy, 0);
-    pgp_cert_valid_key_iter_alive (iter);
-    pgp_cert_valid_key_iter_revoked (iter, false);
     pgp_cert_valid_key_iter_for_certification (iter);
     pgp_cert_valid_key_iter_unencrypted_secret (iter);
+    pgp_cert_valid_key_iter_revoked(iter, false);
 
     // If there are multiple certification capable subkeys, we just
     // take the first one, whichever one that happens to be.
@@ -2774,8 +2773,6 @@ static void _pgp_contains_encryption_subkey(PEP_SESSION session, pgp_cert_t cert
     pgp_cert_valid_key_iter_t key_iter
         = pgp_cert_valid_key_iter(cert, session->policy, 0);
 
-    pgp_cert_valid_key_iter_alive(key_iter);
-    pgp_cert_valid_key_iter_revoked(key_iter, false);
     // Calling these two allegedly gives the union, I think? :)
     pgp_cert_valid_key_iter_for_transport_encryption(key_iter);
     pgp_cert_valid_key_iter_for_storage_encryption(key_iter);
@@ -2792,8 +2789,6 @@ static void _pgp_contains_sig_subkey(PEP_SESSION session, pgp_cert_t cert, bool*
     pgp_cert_valid_key_iter_t key_iter
         = pgp_cert_valid_key_iter(cert, session->policy, 0);
 
-    pgp_cert_valid_key_iter_alive(key_iter);
-    pgp_cert_valid_key_iter_revoked(key_iter, false);
     pgp_cert_valid_key_iter_for_signing(key_iter);
 
     pgp_key_t key = pgp_cert_valid_key_iter_next(key_iter, NULL, NULL);
@@ -2838,6 +2833,13 @@ static void _pgp_key_expired(PEP_SESSION session, pgp_cert_t cert, const time_t 
     if (*expired)
         goto out;
 
+    // Check to see if the key is broken. Ideally, we'd do this in one pass below, but 
+    // givem the choice for how to check for expiry, this is the simplest solutiom.
+    bool broken = false;
+    _pgp_key_broken(session, cert, &broken);
+    if (broken)
+        goto out; // still isn't expired. is broken. there's a difference and a different check.    
+        
     // Why is this an indicator of just an expired key and not a broken one?
     // This will also reject keys that are not expired, but rather missing 
     // subkeys.
@@ -2924,7 +2926,6 @@ static void _pgp_key_revoked(PEP_SESSION session, pgp_cert_t cert, bool* revoked
     // ONLY a revoked key available. If so, this key is also considered revoked 
     pgp_cert_valid_key_iter_t key_iter
         = pgp_cert_valid_key_iter(cert, session->policy, 0);
-    pgp_cert_valid_key_iter_alive(key_iter);
     pgp_cert_valid_key_iter_for_signing(key_iter);
 
     bool has_non_revoked_sig_key = false;
@@ -2947,7 +2948,6 @@ static void _pgp_key_revoked(PEP_SESSION session, pgp_cert_t cert, bool* revoked
 
     if (has_non_revoked_sig_key) {
         key_iter = pgp_cert_valid_key_iter(cert, session->policy, 0);
-        pgp_cert_valid_key_iter_alive(key_iter);
         pgp_cert_valid_key_iter_for_transport_encryption(key_iter);
         pgp_cert_valid_key_iter_for_storage_encryption(key_iter);
 
