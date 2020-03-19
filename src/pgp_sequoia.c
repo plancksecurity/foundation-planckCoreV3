@@ -2833,6 +2833,13 @@ static void _pgp_key_expired(PEP_SESSION session, pgp_cert_t cert, const time_t 
     if (*expired)
         goto out;
 
+    // Check to see if the key is broken. Ideally, we'd do this in one pass below, but 
+    // givem the choice for how to check for expiry, this is the simplest solutiom.
+    bool broken = false;
+    _pgp_key_broken(session, cert, &broken);
+    if (broken)
+        goto out; // still isn't expired. is broken. there's a difference and a different check.    
+        
     // Why is this an indicator of just an expired key and not a broken one?
     // This will also reject keys that are not expired, but rather missing 
     // subkeys.
