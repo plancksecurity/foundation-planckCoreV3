@@ -2281,12 +2281,24 @@ PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
 PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
                               size_t size, identity_list **private_idents)
 {
-    unsigned int keycount = count_keydata_parts(key_data, size);
-    if (keycount < 2)
-        return(_pgp_import_keydata(session, key_data, size, private_idents));
 
     const char* pgp_begin = "-----BEGIN PGP";
     size_t prefix_len = strlen(pgp_begin);
+
+    // Because we also import binary keys we have to be careful with this.
+    // 
+    if (strlen(key_data + prefix_len) > prefix_len) {
+        const char* subtract_junk = strnstr(key_data, pgp_begin, size);
+        // If it's not in there, we just try to import it as is...
+        if (subtract_junk) {
+            size -= (subtract_junk - key_data);
+            key_data = subtract_junk;
+        }    
+    }
+
+    unsigned int keycount = count_keydata_parts(key_data, size);
+    if (keycount < 2)
+        return(_pgp_import_keydata(session, key_data, size, private_idents));
 
     unsigned int i;
     const char* curr_begin;
@@ -2295,7 +2307,7 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
     identity_list* collected_idents = NULL;
 
     PEP_STATUS retval = PEP_KEY_IMPORTED;
-
+            
     for (i = 0, curr_begin = key_data; i < keycount; i++) {
         const char* next_begin = NULL;
 
