@@ -158,6 +158,7 @@ struct _pEpSession {
     } sq_sql;
 
     pgp_policy_t policy;
+    pgp_policy_t standard_policy;
 #endif
 
     PEP_cryptotech_t *cryptotech;

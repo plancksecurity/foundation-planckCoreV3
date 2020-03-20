@@ -485,7 +485,12 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
     session->policy = pgp_null_policy ();
     if (! session->policy)
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY,
-                  "initializing openpgp policy");
+                  "initializing null policy");
+
+    session->standard_policy = pgp_standard_policy ();
+    if (! session->policy)
+        ERROR_OUT(NULL, PEP_OUT_OF_MEMORY,
+                  "initializing standard openpgp policy");
 
  out:
     if (status != PEP_STATUS_OK)
@@ -3202,25 +3207,35 @@ PEP_STATUS pgp_get_key_rating(
             || pgp_signature_for_storage_encryption(sig);
         int can_sign = pgp_signature_for_signing(sig);
 
-        pgp_public_key_algo_t pk_algo = pgp_key_public_key_algo(key);
+        pgp_error_t err = NULL;
+        pgp_valid_key_amalgamation_t strict_ka
+            = pgp_valid_key_amalgamation_with_policy (&err,
+                                                      pgp_valid_key_amalgamation_clone (ka),
+                                                      session->standard_policy, 0);
 
-        if (pk_algo == PGP_PUBLIC_KEY_ALGO_RSA_ENCRYPT_SIGN
-            || pk_algo == PGP_PUBLIC_KEY_ALGO_RSA_ENCRYPT
-            || pk_algo == PGP_PUBLIC_KEY_ALGO_RSA_SIGN) {
-            int bits = pgp_key_public_key_bits(key);
-            if (bits < 1024)
-                curr = PEP_ct_key_too_short;
-            else if (bits == 1024)
-                curr = PEP_ct_OpenPGP_weak_unconfirmed;
-            else
-                curr = PEP_ct_OpenPGP_unconfirmed;
+        if (! strict_ka) {
+            assert(err);
+            if (TRACING) {
+                pgp_keyid_t keyid = pgp_key_keyid (key);
+                char *keyid_str = pgp_keyid_to_string (keyid);
+                DUMP_ERR(err, PEP_KEY_UNSUITABLE, "Weak key %s", keyid_str);
+                free (keyid_str);
+                pgp_keyid_free (keyid);
+            } else {
+                pgp_error_free (err);
+            }
+        }
+
+        if (! strict_ka) {
+            curr = PEP_ct_b0rken_crypto;
         } else {
+            pgp_valid_key_amalgamation_free (strict_ka);
             curr = PEP_ct_OpenPGP_unconfirmed;
         }
 
         if (can_enc)
             worst_enc = (worst_enc == PEP_ct_no_encryption ? curr : _MIN(worst_enc, curr));
-            
+
         if (can_sign)
             worst_sign = (worst_sign == PEP_ct_no_encryption ? curr : _MIN(worst_sign, curr));
 
