@@ -839,12 +839,17 @@ static PEP_STATUS cert_save(PEP_SESSION session, pgp_cert_t cert,
     // This inserts all of the keys in the certificate, i.e.,
     // including revoked and expired keys, which is what we want.
     key_iter = pgp_cert_key_iter(cert);
-    pgp_key_t key;
-    while ((key = pgp_cert_key_iter_next(key_iter))) {
+    pgp_key_amalgamation_t ka;
+    while ((ka = pgp_cert_key_iter_next(key_iter))) {
+        pgp_key_t key = pgp_key_amalgamation_key (ka);
+
         pgp_keyid_t keyid = pgp_key_keyid(key);
         char *keyid_hex = pgp_keyid_to_hex(keyid);
         sqlite3_bind_text(stmt, 1, keyid_hex, -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, fpr, -1, SQLITE_STATIC);
+
+        pgp_key_free (key);
+        pgp_key_amalgamation_free (ka);
 
         sqlite_result = sqlite3_step(stmt);
         sqlite3_reset(stmt);
@@ -1036,6 +1041,8 @@ decrypt_cb(void *cookie_opaque,
         pgp_keyid_t keyid = pgp_pkesk_recipient(pkesk); /* Reference. */
         char *keyid_str = pgp_keyid_to_hex(keyid);
         pgp_cert_key_iter_t key_iter = NULL;
+        pgp_key_amalgamation_t ka = NULL;
+        pgp_key_t key = NULL;
         pgp_session_key_t sk = NULL;
 
         T("Considering PKESK for %s", keyid_str);
@@ -1068,8 +1075,8 @@ decrypt_cb(void *cookie_opaque,
             goto eol;
 
         key_iter = pgp_cert_key_iter(cert);
-        pgp_key_t key;
-        while ((key = pgp_cert_key_iter_next(key_iter))) {
+        while (key = NULL, (ka = pgp_cert_key_iter_next(key_iter))) {
+            key = pgp_key_amalgamation_key (ka);
             pgp_keyid_t this_keyid = pgp_key_keyid(key);
             char *this_keyid_hex = pgp_keyid_to_hex(this_keyid);
             pgp_keyid_free(this_keyid);
@@ -1078,6 +1085,9 @@ decrypt_cb(void *cookie_opaque,
             free(this_keyid_hex);
             if (match)
                 break;
+
+            pgp_key_free (key);
+            pgp_key_amalgamation_free (ka);
         }
 
         if (key == NULL) {
@@ -1109,6 +1119,8 @@ decrypt_cb(void *cookie_opaque,
     eol:
         pgp_session_key_free (sk);
         free(keyid_str);
+        pgp_key_free (key);
+        pgp_key_amalgamation_free (ka);
         pgp_cert_key_iter_free(key_iter);
         pgp_cert_free(cert);
     }
@@ -1119,6 +1131,8 @@ decrypt_cb(void *cookie_opaque,
         pgp_keyid_t keyid = pgp_pkesk_recipient(pkesk); /* Reference. */
         char *keyid_str = pgp_keyid_to_hex(keyid);
         pgp_cert_key_iter_t key_iter = NULL;
+        pgp_key_amalgamation_t ka = NULL;
+        pgp_key_t key = NULL;
         pgp_session_key_t sk = NULL;
 
         if (strcmp(keyid_str, "0000000000000000") != 0)
@@ -1135,8 +1149,9 @@ decrypt_cb(void *cookie_opaque,
 
             key_iter = pgp_cert_key_iter(tsk);
 
-            pgp_key_t key;
-            while ((key = pgp_cert_key_iter_next(key_iter))) {
+            while (key = NULL, (ka = pgp_cert_key_iter_next(key_iter))) {
+                key = pgp_key_amalgamation_key (ka);
+
                 // Note: for decryption to appear to succeed, we must
                 // get a valid algorithm (8 of 256 values) and a
                 // 16-bit checksum must match.  Thus, we have about a
@@ -1148,6 +1163,8 @@ decrypt_cb(void *cookie_opaque,
                                       &algo, session_key, &session_key_len)) {
                     pgp_error_free(err);
                     err = NULL;
+                    pgp_key_free (key);
+                    pgp_key_amalgamation_free (ka);
                     continue;
                 }
 
@@ -1173,12 +1190,18 @@ decrypt_cb(void *cookie_opaque,
                 break;
             }
 
+            pgp_key_free (key);
+            key = NULL;
+            pgp_key_amalgamation_free (ka);
+            ka = NULL;
             pgp_cert_key_iter_free(key_iter);
             key_iter = NULL;
         }
     eol2:
         pgp_session_key_free (sk);
         free(keyid_str);
+        pgp_key_free (key);
+        pgp_key_amalgamation_free (ka);
         pgp_cert_key_iter_free(key_iter);
     }
 
@@ -1692,6 +1715,7 @@ PEP_STATUS pgp_sign_only(
     pgp_error_t err = NULL;
     pgp_cert_t signer_cert = NULL;
     pgp_cert_valid_key_iter_t iter = NULL;
+    pgp_valid_key_amalgamation_t ka = NULL;
     pgp_key_pair_t signing_keypair = NULL;
     pgp_signer_t signer = NULL;
     pgp_writer_stack_t ws = NULL;
@@ -1707,12 +1731,16 @@ PEP_STATUS pgp_sign_only(
 
     // If there are multiple signing capable subkeys, we just take
     // the first one, whichever one that happens to be.
-    pgp_key_t key = pgp_cert_valid_key_iter_next (iter, NULL, NULL);
-    if (! key)
+    ka = pgp_cert_valid_key_iter_next (iter, NULL, NULL);
+    if (! ka)
         ERROR_OUT (err, PEP_UNKNOWN_ERROR,
                    "%s has no signing capable key", fpr);
 
+    // pgp_key_into_key_pair needs to own the key, but here we
+    // only get a reference (which we still need to free).
+    pgp_key_t key = pgp_valid_key_amalgamation_key (ka);
     signing_keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
+    pgp_key_free (key);
     if (! signing_keypair)
         ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
 
@@ -1764,6 +1792,7 @@ PEP_STATUS pgp_sign_only(
     // will become a leak.
     //
     //pgp_key_pair_free (signing_keypair);
+    pgp_valid_key_amalgamation_free (ka);
     pgp_cert_valid_key_iter_free (iter);
     pgp_cert_free(signer_cert);
 
@@ -1790,6 +1819,7 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     pgp_cert_t signer_cert = NULL;
     pgp_writer_stack_t ws = NULL;
     pgp_cert_valid_key_iter_t iter = NULL;
+    pgp_valid_key_amalgamation_t ka = NULL;
     pgp_key_pair_t signing_keypair = NULL;
     pgp_signer_t signer = NULL;
 
@@ -1840,48 +1870,52 @@ static PEP_STATUS pgp_encrypt_sign_optional(
 
         // Collect all of the keys that have the encryption for
         // transport capability.
-        pgp_cert_valid_key_iter_t iter
-            = pgp_cert_valid_key_iter(cert, session->policy, 0);
+        iter = pgp_cert_valid_key_iter(cert, session->policy, 0);
         if (! iter)
             ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
         pgp_cert_valid_key_iter_alive(iter);
         pgp_cert_valid_key_iter_revoked(iter, false);
         pgp_cert_valid_key_iter_for_transport_encryption(iter);
 
-        pgp_key_t key;
-        while ((key = pgp_cert_valid_key_iter_next (iter, NULL, NULL))) {
+        while ((ka = pgp_cert_valid_key_iter_next (iter, NULL, NULL))) {
             assert(recipient_count == recipient_keys_count);
             if (recipient_count == recipient_alloc) {
                 assert(recipient_alloc > 0);
                 recipient_alloc *= 2;
 
                 void *t = _pEp_reallocarray(recipient_keys, recipient_alloc,
-                                       sizeof(*recipient_keys));
+                                            sizeof(*recipient_keys));
                 if (! t)
                     ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
                 recipient_keys = t;
 
                 t = _pEp_reallocarray(recipients, recipient_alloc,
-                                 sizeof(*recipients));
+                                      sizeof(*recipients));
                 if (! t)
                     ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
                 recipients = t;
             }
 
-            // pgp_recipient_new consumes the passed key id, but it
-            // only references key (i.e., we still have to free key).
-            pgp_keyid_t keyid = pgp_key_keyid(key);
-            if (! key)
+            // pgp_valid_key_amalgamation_key returns a reference to
+            // ka.  We need to keep it around after this iteration.
+            // So, we clone it.  Unfortunately, although
+            // pgp_recipient_new consumes the passed key id, it only
+            // references the key.  So, we need to remember to free it
+            // at the end.
+            pgp_key_t key = pgp_valid_key_amalgamation_key (ka);
+            recipient_keys[recipient_keys_count ++] = pgp_key_clone (key);
+            pgp_key_free (key);
+
+            pgp_keyid_t keyid = pgp_key_keyid(recipient_keys[recipient_keys_count - 1]);
+            if (! keyid)
                 ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
 
-            key = pgp_key_clone(key);
-            if (! key)
-                ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "out of memory");
-            recipient_keys[recipient_keys_count++] = key;
+            recipients[recipient_count++] = pgp_recipient_new(keyid, recipient_keys[recipient_keys_count - 1]);
 
-            recipients[recipient_count++] = pgp_recipient_new(keyid, key);
+            pgp_valid_key_amalgamation_free (ka);
         }
         pgp_cert_valid_key_iter_free(iter);
+        iter = NULL;
     }
 
     if (sign) {
@@ -1915,12 +1949,16 @@ static PEP_STATUS pgp_encrypt_sign_optional(
 
         // If there are multiple signing capable subkeys, we just take
         // the first one, whichever one that happens to be.
-        pgp_key_t key = pgp_cert_valid_key_iter_next (iter, NULL, NULL);
-        if (! key)
+        ka = pgp_cert_valid_key_iter_next (iter, NULL, NULL);
+        if (! ka)
             ERROR_OUT (err, PEP_UNKNOWN_ERROR,
                        "%s has no signing capable key", keylist->value);
 
+        // pgp_key_into_key_pair needs to own the key, but here we
+        // only get a reference (which we still need to free).
+        pgp_key_t key = pgp_valid_key_amalgamation_key (ka);
         signing_keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
+        pgp_key_free (key);
         if (! signing_keypair)
             ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
 
@@ -1973,6 +2011,7 @@ static PEP_STATUS pgp_encrypt_sign_optional(
     // will become a leak.
     //
     // pgp_key_pair_free (signing_keypair);
+    pgp_valid_key_amalgamation_free (ka);
     pgp_cert_valid_key_iter_free (iter);
     pgp_cert_free(signer_cert);
 
@@ -2647,6 +2686,7 @@ PEP_STATUS pgp_renew_key(
     pgp_error_t err = NULL;
     pgp_cert_t cert = NULL;
     pgp_cert_valid_key_iter_t iter = NULL;
+    pgp_valid_key_amalgamation_t primary = NULL;
     pgp_key_pair_t keypair = NULL;
     pgp_signer_t signer = NULL;
     time_t t = timegm((struct tm *) ts);
@@ -2662,9 +2702,6 @@ PEP_STATUS pgp_renew_key(
         ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
                   "creation time can't be after expiration time");
 
-    uint32_t delta = (uint32_t) (t - creation_time);
-
-
     iter = pgp_cert_valid_key_iter(cert, session->policy, 0);
     pgp_cert_valid_key_iter_for_certification (iter);
     pgp_cert_valid_key_iter_unencrypted_secret (iter);
@@ -2672,12 +2709,16 @@ PEP_STATUS pgp_renew_key(
 
     // If there are multiple certification capable subkeys, we just
     // take the first one, whichever one that happens to be.
-    pgp_key_t key = pgp_cert_valid_key_iter_next (iter, NULL, NULL);
-    if (! key)
+    primary = pgp_cert_valid_key_iter_next (iter, NULL, NULL);
+    if (! primary)
         ERROR_OUT (err, PEP_UNKNOWN_ERROR,
                    "%s has no usable certification capable key", fpr);
 
+    // pgp_key_into_key_pair needs to own the key, but here we
+    // only get a reference (which we still need to free).
+    pgp_key_t key = pgp_valid_key_amalgamation_key (primary);
     keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
+    pgp_key_free (key);
     if (! keypair)
         ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
 
@@ -2688,7 +2729,7 @@ PEP_STATUS pgp_renew_key(
     cert = pgp_cert_set_expiration_time(&err, cert, session->policy,
                                         signer, t);
     if (! cert)
-        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "setting expiration");
+        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "setting expiration (updating cert)");
 
     status = cert_save(session, cert, NULL);
     cert = NULL;
@@ -2701,6 +2742,7 @@ PEP_STATUS pgp_renew_key(
     // will become a leak.
     //
     pgp_key_pair_free (keypair);
+    pgp_valid_key_amalgamation_free (primary);
     pgp_cert_valid_key_iter_free (iter);
     pgp_cert_free(cert);
 
@@ -2715,6 +2757,7 @@ PEP_STATUS pgp_revoke_key(
     pgp_error_t err = NULL;
     pgp_cert_t cert = NULL;
     pgp_cert_valid_key_iter_t iter = NULL;
+    pgp_valid_key_amalgamation_t ka = NULL;
     pgp_key_pair_t keypair = NULL;
     pgp_signer_t signer = NULL;
 
@@ -2731,12 +2774,16 @@ PEP_STATUS pgp_revoke_key(
 
     // If there are multiple certification capable subkeys, we just
     // take the first one, whichever one that happens to be.
-    pgp_key_t key = pgp_cert_valid_key_iter_next (iter, NULL, NULL);
-    if (! key)
+    ka = pgp_cert_valid_key_iter_next (iter, NULL, NULL);
+    if (! ka)
         ERROR_OUT (err, PEP_UNKNOWN_ERROR,
                    "%s has no usable certification capable key", fpr);
 
+    // pgp_key_into_key_pair needs to own the key, but here we
+    // only get a reference (which we still need to free).
+    pgp_key_t key = pgp_valid_key_amalgamation_key (ka);
     keypair = pgp_key_into_key_pair (NULL, pgp_key_clone (key));
+    pgp_key_free (key);
     if (! keypair)
         ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a keypair");
 
@@ -2745,8 +2792,8 @@ PEP_STATUS pgp_revoke_key(
         ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
 
     cert = pgp_cert_revoke_in_place(&err, cert, signer,
-                                  PGP_REASON_FOR_REVOCATION_UNSPECIFIED,
-                                  reason);
+                                    PGP_REASON_FOR_REVOCATION_UNSPECIFIED,
+                                    reason);
     if (! cert)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "setting expiration");
 
@@ -2760,6 +2807,7 @@ PEP_STATUS pgp_revoke_key(
  out:
     pgp_signer_free (signer);
     pgp_key_pair_free (keypair);
+    pgp_valid_key_amalgamation_free (ka);
     pgp_cert_valid_key_iter_free (iter);
     pgp_cert_free(cert);
 
@@ -2777,9 +2825,10 @@ static void _pgp_contains_encryption_subkey(PEP_SESSION session, pgp_cert_t cert
     pgp_cert_valid_key_iter_for_transport_encryption(key_iter);
     pgp_cert_valid_key_iter_for_storage_encryption(key_iter);
 
-    pgp_key_t key = pgp_cert_valid_key_iter_next(key_iter, NULL, NULL);
-    *has_subkey = key != NULL;
-    pgp_key_free (key);
+    pgp_valid_key_amalgamation_t ka
+        = pgp_cert_valid_key_iter_next(key_iter, NULL, NULL);
+    *has_subkey = ka != NULL;
+    pgp_valid_key_amalgamation_free (ka);
     pgp_cert_valid_key_iter_free(key_iter);
 }
 
@@ -2791,9 +2840,10 @@ static void _pgp_contains_sig_subkey(PEP_SESSION session, pgp_cert_t cert, bool*
 
     pgp_cert_valid_key_iter_for_signing(key_iter);
 
-    pgp_key_t key = pgp_cert_valid_key_iter_next(key_iter, NULL, NULL);
-    *has_subkey = key != NULL;
-    pgp_key_free (key);
+    pgp_valid_key_amalgamation_t ka
+        = pgp_cert_valid_key_iter_next(key_iter, NULL, NULL);
+    *has_subkey = ka != NULL;
+    pgp_valid_key_amalgamation_free (ka);
     pgp_cert_valid_key_iter_free(key_iter);
 }
 
@@ -2854,13 +2904,9 @@ static void _pgp_key_expired(PEP_SESSION session, pgp_cert_t cert, const time_t 
     pgp_cert_valid_key_iter_alive(key_iter);
     pgp_cert_valid_key_iter_revoked(key_iter, false);
 
-    pgp_key_t key;
+    pgp_valid_key_amalgamation_t ka;
     pgp_signature_t sig;
-    pgp_revocation_status_t rev;
-    while ((key = pgp_cert_valid_key_iter_next(key_iter, &sig, &rev))) {
-        if (! sig)
-            continue;
-
+    while ((ka = pgp_cert_valid_key_iter_next(key_iter, &sig, NULL))) {
         if (pgp_signature_for_transport_encryption(sig)
             || pgp_signature_for_storage_encryption(sig))
             can_encrypt = 1;
@@ -2868,6 +2914,9 @@ static void _pgp_key_expired(PEP_SESSION session, pgp_cert_t cert, const time_t 
             can_sign = 1;
         // if (pgp_signature_for_certification(sig))
         //     can_certify = 1;
+
+        pgp_signature_free (sig);
+        pgp_valid_key_amalgamation_free (ka);
 
 //        if (can_encrypt && can_sign && can_certify)
         if (can_encrypt && can_sign)
@@ -2930,19 +2979,17 @@ static void _pgp_key_revoked(PEP_SESSION session, pgp_cert_t cert, bool* revoked
 
     bool has_non_revoked_sig_key = false;
     bool has_revoked_sig_key = false;
-    
-    pgp_key_t key;
-    pgp_signature_t sig;
-    while ((key = pgp_cert_valid_key_iter_next(key_iter, &sig, &rs)) &&
-            !(has_non_revoked_sig_key)) {
-        if (!sig)
-            continue;
+
+    pgp_valid_key_amalgamation_t ka;
+    while (!has_non_revoked_sig_key
+           && (ka = pgp_cert_valid_key_iter_next(key_iter, NULL, &rs))) {
         if (pgp_revocation_status_variant(rs) == PGP_REVOCATION_STATUS_REVOKED)
             has_revoked_sig_key = true;
         else
             has_non_revoked_sig_key = true;
-                        
+
         pgp_revocation_status_free(rs);
+        pgp_valid_key_amalgamation_free (ka);
     }
     pgp_cert_valid_key_iter_free(key_iter);
 
@@ -2954,23 +3001,21 @@ static void _pgp_key_revoked(PEP_SESSION session, pgp_cert_t cert, bool* revoked
         bool has_non_revoked_enc_key = false;
         bool has_revoked_enc_key = false;
 
-        pgp_key_t key;
-        pgp_signature_t sig;
-        while ((key = pgp_cert_valid_key_iter_next(key_iter, &sig, &rs)) &&
-                !(has_non_revoked_enc_key)) {
-            if (!sig)
-                continue;
+        pgp_valid_key_amalgamation_t ka;
+        while (!has_non_revoked_enc_key
+               && (ka = pgp_cert_valid_key_iter_next(key_iter, NULL, &rs))) {
             if (pgp_revocation_status_variant(rs) == PGP_REVOCATION_STATUS_REVOKED)
                 has_revoked_enc_key = true;
             else
                 has_non_revoked_enc_key = true;
-                            
+
             pgp_revocation_status_free(rs);
-        }    
+            pgp_valid_key_amalgamation_free (ka);
+        }
         if (!has_non_revoked_enc_key) { // this does NOT mean revoked. it MAY mean broken.
             if (has_revoked_enc_key)
                 *revoked = true;
-        }        
+        }
         pgp_cert_valid_key_iter_free (key_iter);
     }
     else if (has_revoked_sig_key) {
@@ -3064,12 +3109,10 @@ PEP_STATUS pgp_get_key_rating(
     pgp_cert_valid_key_iter_alive(key_iter);
     pgp_cert_valid_key_iter_revoked(key_iter, false);
 
-    pgp_key_t key;
+    pgp_valid_key_amalgamation_t ka;
     pgp_signature_t sig;
-    pgp_revocation_status_t rev;
-    while ((key = pgp_cert_valid_key_iter_next(key_iter, &sig, &rev))) {
-        if (!sig)
-            continue;
+    while ((ka = pgp_cert_valid_key_iter_next(key_iter, &sig, NULL))) {
+        pgp_key_t key = pgp_valid_key_amalgamation_key (ka);
 
         PEP_comm_type curr = PEP_ct_no_encryption;
 
@@ -3078,6 +3121,7 @@ PEP_STATUS pgp_get_key_rating(
         int can_sign = pgp_signature_for_signing(sig);
 
         pgp_public_key_algo_t pk_algo = pgp_key_public_key_algo(key);
+
         if (pk_algo == PGP_PUBLIC_KEY_ALGO_RSA_ENCRYPT_SIGN
             || pk_algo == PGP_PUBLIC_KEY_ALGO_RSA_ENCRYPT
             || pk_algo == PGP_PUBLIC_KEY_ALGO_RSA_SIGN) {
@@ -3098,6 +3142,9 @@ PEP_STATUS pgp_get_key_rating(
         if (can_sign)
             worst_sign = (worst_sign == PEP_ct_no_encryption ? curr : _MIN(worst_sign, curr));
 
+        pgp_key_free (key);
+        pgp_signature_free (sig);
+        pgp_valid_key_amalgamation_free (ka);
     }
     pgp_cert_valid_key_iter_free(key_iter);
 
