@@ -2690,6 +2690,11 @@ PEP_STATUS pgp_renew_key(
     pgp_key_pair_t keypair = NULL;
     pgp_signer_t signer = NULL;
     time_t t = timegm((struct tm *) ts);
+    pgp_cert_valid_key_iter_t key_iter = NULL;
+    pgp_valid_key_amalgamation_t ka = NULL;
+    pgp_packet_t *packets = NULL;
+    size_t packet_count = 0;
+    size_t packet_capacity = 0;
 
     T("(%s)", fpr);
 
@@ -2726,8 +2731,64 @@ PEP_STATUS pgp_renew_key(
     if (! signer)
         ERROR_OUT (err, PEP_UNKNOWN_ERROR, "Creating a signer");
 
-    cert = pgp_cert_set_expiration_time(&err, cert, session->policy,
-                                        signer, t);
+    // Set the expiration for all non-revoked keys.
+    key_iter = pgp_cert_valid_key_iter(cert, session->policy, 0);
+    pgp_cert_valid_key_iter_revoked(key_iter, false);
+
+    while ((ka = pgp_cert_valid_key_iter_next(key_iter, NULL, NULL))) {
+        pgp_error_t err;
+        pgp_packet_t *packets_tmp = NULL;
+        size_t packet_count_tmp = 0;
+
+        status = pgp_valid_key_amalgamation_set_expiration_time
+            (&err, ka, signer, t, &packets_tmp, &packet_count_tmp);
+        if (status)
+            ERROR_OUT(err, PEP_UNKNOWN_ERROR,
+                      "setting expiration (generating self signatures)");
+
+        if (! packets) {
+            assert(packet_count == 0);
+            assert(packet_capacity == 0);
+
+            packets = packets_tmp;
+            packet_count = packet_count_tmp;
+            packet_capacity = packet_count_tmp;
+        } else {
+            assert(packet_capacity > 0);
+            if (packet_capacity - packet_count < packet_count_tmp) {
+                // Grow the array.
+                int c = packet_capacity;
+                while (c < packet_count + packet_count_tmp) {
+                    c *= 2;
+                }
+
+                void * tmp = _pEp_reallocarray(packets, c, sizeof (*packets));
+                if (! tmp)
+                    ERROR_OUT(NULL, PEP_OUT_OF_MEMORY,
+                              "setting expiration (resizing buffer)");
+
+                packets = tmp;
+                packet_capacity = c;
+            }
+
+            int i;
+            for (i = 0; i < packet_count_tmp; i ++) {
+                packets[packet_count + i] = packets_tmp[i];
+            }
+            packet_count += packet_count_tmp;
+        }
+
+        pgp_valid_key_amalgamation_free (ka);
+    }
+
+    // We're going to mutate cert, which key_iter references.
+    // Deallocate it first.
+    pgp_cert_valid_key_iter_free (key_iter);
+    key_iter = NULL;
+
+    cert = pgp_cert_merge_packets (&err, cert, packets, packet_count);
+    // The packets (but not the array) are now owned by cert.
+    packet_count = 0;
     if (! cert)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "setting expiration (updating cert)");
 
@@ -2736,6 +2797,15 @@ PEP_STATUS pgp_renew_key(
     ERROR_OUT(NULL, status, "Saving %s", fpr);
 
  out:
+    if (packets) {
+        for (int i = 0; i < packet_count; i ++) {
+            pgp_packet_free (packets[i]);
+        }
+        free (packets);
+    }
+
+    pgp_valid_key_amalgamation_free (ka);
+    pgp_cert_valid_key_iter_free (key_iter);
     pgp_signer_free (signer);
     // XXX: pgp_key_pair_as_signer is only supposed to reference
     // signing_keypair, but it consumes it.  If this is fixed, this
