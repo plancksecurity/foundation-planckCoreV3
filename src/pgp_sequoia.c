@@ -1541,11 +1541,11 @@ PEP_STATUS pgp_decrypt_and_verify(
             status = PEP_VERIFY_SIGNER_KEY_REVOKED;
         } else if (cookie.expired_key) {
             // If there are any signatures from expired keys, fail.
-            status = PEP_DECRYPTED;
+            status = PEP_VERIFY_SIGNER_KEY_EXPIRED;
         } else if (cookie.bad_key) {
             // If there are any signatures from invalid keys (keys
             // that are not signing capable), fail.
-            status = PEP_DECRYPTED;
+            status = PEP_VERIFY_SIGNER_KEY_INVALID;
         } else if (cookie.bad_checksums) {
             // If there are any bad signatures, fail.
             status = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
@@ -1671,11 +1671,11 @@ PEP_STATUS pgp_verify_text(
             status = PEP_VERIFY_SIGNER_KEY_REVOKED;
         } else if (cookie.expired_key) {
             // If there are any signatures from expired keys, fail.
-            status = PEP_DECRYPTED;
+            status = PEP_VERIFY_SIGNER_KEY_EXPIRED;
         } else if (cookie.bad_key) {
             // If there are any signatures from invalid keys (keys
             // that are not signing capable), fail.
-            status = PEP_DECRYPTED;
+            status = PEP_VERIFY_SIGNER_KEY_INVALID;
         } else if (cookie.bad_checksums) {
             // If there are any bad signatures, fail.
             status = PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH;
