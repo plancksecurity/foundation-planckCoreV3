@@ -2748,13 +2748,14 @@ PEP_STATUS pgp_renew_key(
     pgp_cert_valid_key_iter_revoked(key_iter, false);
 
     while ((ka = pgp_cert_valid_key_iter_next(key_iter, NULL, NULL))) {
+        pgp_status_t sq_status;
         pgp_error_t err;
         pgp_packet_t *packets_tmp = NULL;
         size_t packet_count_tmp = 0;
 
-        status = pgp_valid_key_amalgamation_set_expiration_time
+        sq_status = pgp_valid_key_amalgamation_set_expiration_time
             (&err, ka, signer, t, &packets_tmp, &packet_count_tmp);
-        if (status)
+        if (sq_status)
             ERROR_OUT(err, PEP_UNKNOWN_ERROR,
                       "setting expiration (generating self signatures)");
 
