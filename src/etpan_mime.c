@@ -1136,7 +1136,7 @@ static PEP_STATUS mime_html_text(
     if (mime == NULL)
         goto enomem;
 
-    pEp_rid_list_t* resource = new_rid_node(PEP_RID_FILENAME, "msg.txt");
+    pEp_rid_list_t* resource = NULL;
     
     int encoding_type = (transport_encode ? MAILMIME_MECHANISM_QUOTED_PRINTABLE : 0);
     submime = get_text_part(NULL, "text/plain", plaintext, strlen(plaintext),
@@ -1725,13 +1725,13 @@ static PEP_STATUS mime_encode_message_plain(
     else {
         pEp_rid_list_t* resource = NULL;
         if (is_PGP_message_text(plaintext)) {
-            resource = new_rid_node(PEP_RID_FILENAME, "msg.asc");
+            resource = NULL;
             int encoding_type = (transport_encode ? MAILMIME_MECHANISM_7BIT : 0);
             mime = get_text_part(resource, "application/octet-stream", plaintext,
                     strlen(plaintext), encoding_type);
         }
         else {
-            resource = new_rid_node(PEP_RID_FILENAME, "msg.txt");
+            resource = NULL;
             int encoding_type = (transport_encode ? MAILMIME_MECHANISM_QUOTED_PRINTABLE : 0);
             mime = get_text_part(resource, "text/plain", plaintext, strlen(plaintext),
                     encoding_type);
