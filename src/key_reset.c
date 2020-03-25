@@ -184,7 +184,7 @@ static PEP_STATUS _generate_own_commandlist_msg(PEP_SESSION session,
 
 }
 
-PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
+static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
                                                      const pEp_identity* from_ident,
                                                      const pEp_identity* to_ident,
                                                      const char* old_fpr,
