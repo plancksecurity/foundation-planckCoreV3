@@ -184,7 +184,7 @@ static PEP_STATUS _generate_own_commandlist_msg(PEP_SESSION session,
 
 }
 
-static PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
+PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
                                                      const pEp_identity* from_ident,
                                                      const pEp_identity* to_ident,
                                                      const char* old_fpr,
@@ -747,7 +747,7 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
     assert(old_fpr);
     assert(new_fpr);
     assert(session);
-    assert(session->messageToSend);
+//    assert(session->messageToSend); NO. Don't assert this, FFS.
     
     if (!session || !old_fpr || !new_fpr)
         return PEP_ILLEGAL_VALUE;

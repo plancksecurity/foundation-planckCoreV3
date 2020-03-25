@@ -168,6 +168,14 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
 PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, char **cmds, size_t *size);
 PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_command_list **command_list);
 
+PEP_STATUS _generate_keyreset_command_message(PEP_SESSION session,
+                                                     const pEp_identity* from_ident,
+                                                     const pEp_identity* to_ident,
+                                                     const char* old_fpr,
+                                                     const char* new_fpr,
+                                                     bool is_private,
+                                                     message** dst);
+
 #ifdef __cplusplus
 }
 #endif
