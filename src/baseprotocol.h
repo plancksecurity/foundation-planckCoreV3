@@ -10,11 +10,20 @@ extern "C" {
 #endif
 
 
+typedef enum _base_protocol_type {
+    BASE_SIGN = 0,
+
+    BASE_SYNC = 1,
+    BASE_KEYRESET = 2
+} base_protocol_type;
+
+
 // base_decorate_message() - decorate a message with payload
 //
 //  parameters:
 //      session (in)    session handle
 //      msg (inout)     message to decorate
+//      type (in)       base protocol type
 //      payload (in)    payload to send
 //      size (in)       size of payload
 //      fpr (in)        optional key to sign or NULL
@@ -29,6 +38,7 @@ extern "C" {
 PEP_STATUS base_decorate_message(
         PEP_SESSION session,
         message *msg,
+        base_protocol_type type,
         char *payload,
         size_t size,
         const char *fpr
@@ -41,6 +51,7 @@ PEP_STATUS base_decorate_message(
 //      session (in)    session handle
 //      me (in)         identity to use for the sender
 //      partner (in)    identity to use for the receiver
+//      type (in)       base protocol type
 //      payload (in)    payload to send
 //      size (in)       size of payload
 //      fpr (in)        optional key to sign or NULL
@@ -57,6 +68,7 @@ PEP_STATUS base_prepare_message(
         PEP_SESSION session,
         const pEp_identity *me,
         const pEp_identity *partner,
+        base_protocol_type type,
         char *payload,
         size_t size,
         const char *fpr,
@@ -69,6 +81,7 @@ PEP_STATUS base_prepare_message(
 //  parameters:
 //      session (in)    session handle
 //      msg (in)        message to analyze
+//      type (in)       base protocol type to extract
 //      size (out)      size of extracted payload or 0 if not found
 //      payload (out)   extraced payload
 //      fpr (out)       if message was correctly signed then fpr of signature's
@@ -86,6 +99,7 @@ PEP_STATUS base_prepare_message(
 PEP_STATUS base_extract_message(
         PEP_SESSION session,
         message *msg,
+        base_protocol_type type,
         size_t *size,
         const char **payload,
         char **fpr

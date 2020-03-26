@@ -28,7 +28,7 @@ namespace {
             // is empty.
             Message2_1Test() {
                 // You can do set-up work for each test here.
-                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->test_suite_name();
+                test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->GTEST_SUITE_SYM();
                 test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
                 test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
             }
@@ -403,6 +403,11 @@ TEST_F(Message2_1Test, check_message2_1_recip_2_1_from_msg) {
     ASSERT_EQ(status , PEP_STATUS_OK);
     // generate message
 
+    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, NULL, NULL);
+    status = update_identity(session, alice);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_EQ(alice->comm_type, PEP_ct_pEp_unconfirmed);
+    
     message* msg = new_message(PEP_dir_outgoing);
 
     msg->from = carol;

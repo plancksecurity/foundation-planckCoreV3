@@ -1208,6 +1208,7 @@ static PEP_rating decrypt_rating(PEP_STATUS status)
         return PEP_rating_unencrypted;
 
     case PEP_DECRYPTED:
+    case PEP_VERIFY_SIGNER_KEY_REVOKED:
     case PEP_DECRYPT_SIGNATURE_DOES_NOT_MATCH:
         return PEP_rating_unreliable;
 
@@ -1419,7 +1420,7 @@ static bool is_key(const bloblist_t *bl)
 // }
 
 static bool compare_first_n_bytes(const char* first, const char* second, size_t n) {
-    int i;
+    size_t i;
     for (i = 0; i < n; i++) {
         char num1 = *first;
         char num2 = *second;
@@ -2740,20 +2741,33 @@ static PEP_STATUS get_crypto_text(message* src, char** crypto_text, size_t* text
     PEP_STATUS status = PEP_STATUS_OK;
                     
     switch (src->enc_format) {
-        case PEP_enc_PGP_MIME:
-		case PEP_enc_PGP_MIME_Outlook1:
-			*crypto_text = src->attachments->next->value;
-			if (src->attachments->next->value[src->attachments->next->size - 1]) {
-				// if the attachment is not ending with a trailing 0
-				// then it is containing the crypto text directly
-				*text_size = src->attachments->next->size;
-			}
-			else {
-				// if the attachment is ending with trailing 0
-				// then it is containting a string
-				*text_size = strlen(src->attachments->next->value);
-			}
-            break;
+    case PEP_enc_PGP_MIME:
+        *crypto_text = src->attachments->next->value;
+        if (src->attachments->next->value[src->attachments->next->size - 1]) {
+            // if the attachment is not ending with a trailing 0
+            // then it is containing the crypto text directly
+            *text_size = src->attachments->next->size;
+        }
+        else {
+            // if the attachment is ending with trailing 0
+            // then it is containting a string
+            *text_size = strlen(src->attachments->next->value);
+        }
+        break;
+
+    case PEP_enc_PGP_MIME_Outlook1:
+        *crypto_text = src->attachments->value;
+        if (src->attachments->value[src->attachments->size - 1]) {
+            // if the attachment is not ending with a trailing 0
+            // then it is containing the crypto text directly
+            *text_size = src->attachments->size;
+        }
+        else {
+            // if the attachment is ending with trailing 0
+            // then it is containting a string
+            *text_size = strlen(src->attachments->value);
+        }
+        break;
 
         case PEP_enc_inline:
             *crypto_text = src->longmsg;
@@ -2981,7 +2995,7 @@ static PEP_STATUS import_priv_keys_from_decrypted_msg(PEP_SESSION session,
         return PEP_ILLEGAL_VALUE;
 
     PEP_STATUS status = PEP_STATUS_OK;
-    *imported_keys = NULL;
+    *imported_keys = false;
     *imported_private = false;
     if (private_il)
         *private_il = NULL;
@@ -3381,6 +3395,65 @@ static bool _have_extrakeys(stringlist_t *keylist)
         && keylist->value[0];
 }
 
+// practically speaking, only useful to get user_id/address intersection
+// we presume no dups in the first list if you're looking for
+// a unique result.
+static PEP_STATUS ident_list_intersect(identity_list* list_a, 
+                                       identity_list* list_b,
+                                       identity_list** intersection) {
+
+    if (!intersection)
+        return PEP_ILLEGAL_VALUE;
+                                           
+    *intersection = NULL;                                       
+    if (!list_a || !list_b || !list_a->ident || !list_b->ident)
+        return PEP_STATUS_OK;
+                
+        
+    *intersection = NULL;
+    
+    identity_list* isect = NULL;
+    
+    identity_list* curr_a = list_a;
+    for ( ; curr_a && curr_a->ident; curr_a = curr_a->next) {
+        pEp_identity* id_a = curr_a->ident;
+        if (EMPTYSTR(id_a->user_id) || EMPTYSTR(id_a->address))
+            continue;
+
+        identity_list* curr_b = list_b;
+        for ( ; curr_b && curr_b->ident; curr_b = curr_b->next) {
+            pEp_identity* id_b = curr_b->ident;
+            if (EMPTYSTR(id_b->user_id) || EMPTYSTR(id_b->address))
+                continue;
+                
+            if (strcmp(id_a->user_id, id_b->user_id) == 0 &&
+                strcmp(id_a->address, id_b->address) == 0) {
+                pEp_identity* result_id = identity_dup(id_b);
+                if (!id_b) 
+                    goto enomem;
+                    
+                if (!isect) {
+                    isect = new_identity_list(result_id);
+                    if (!isect) 
+                        goto enomem;
+                }    
+                else {
+                    if (!identity_list_add(isect, result_id))
+                        goto enomem;
+                }   
+                break;  
+            }
+        }
+    }
+    *intersection = isect;
+    return PEP_STATUS_OK;
+
+enomem:
+    free_identity_list(isect);
+    return PEP_OUT_OF_MEMORY;
+    
+}
+
 static PEP_STATUS _decrypt_message(
         PEP_SESSION session,
         message *src,
@@ -3418,6 +3491,8 @@ static PEP_STATUS _decrypt_message(
     bool myself_read_only = (src->dir == PEP_dir_incoming);
     unsigned int major_ver = 0;
     unsigned int minor_ver = 0;
+    
+    stringpair_list_t* revoke_replace_pairs = NULL;
     
     // Grab input flags
     bool reencrypt = ((*flags & PEP_decrypt_flag_untrusted_server) &&
@@ -3528,6 +3603,9 @@ static PEP_STATUS _decrypt_message(
                                                    &ptext, &psize, &_keylist,
                                                    NULL);
 
+    if (status == PEP_DECRYPT_NO_KEY)
+        signal_Sync_event(session, Sync_PR_keysync, CannotDecrypt, NULL);
+
     if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
         goto pEp_error;
 
@@ -3535,6 +3613,7 @@ static PEP_STATUS _decrypt_message(
     
     bool imported_private_key_address = false;
     bool has_inner = false;
+    bool is_key_reset = false;
 
     if (ptext) { 
         /* we got a plaintext from decryption */
@@ -3546,9 +3625,7 @@ static PEP_STATUS _decrypt_message(
                 status = _mime_decode_message_internal(ptext, psize, &msg, &has_inner);
                 if (status != PEP_STATUS_OK)
                     goto pEp_error;
-                
-                /* Ensure messages whose maintext is in the attachments
-                   move main text into message struct longmsg et al */
+                                
                 /* KG: This IS a src modification of old - we're adding to it
                    w/ memhole subject, but the question is whether or not
                    this is OK overall... */
@@ -3616,7 +3693,8 @@ static PEP_STATUS _decrypt_message(
         if (status != PEP_STATUS_OK)
             goto pEp_error;
 
-        if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
+        if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED || 
+            decrypt_status == PEP_VERIFY_SIGNER_KEY_REVOKED) {
             char* wrap_info = NULL;
             
             if (!has_inner) {
@@ -3703,7 +3781,6 @@ static PEP_STATUS _decrypt_message(
                         // Sort out pEp user status and version number based on INNER message.
                         
                         bool is_inner = false;
-                        bool is_key_reset = false;
 
                         // Deal with plaintext modification in 1.0 and 2.0 messages
                         status = unencapsulate_hidden_fields(inner_message, NULL, &wrap_info);   
@@ -3729,29 +3806,43 @@ static PEP_STATUS _decrypt_message(
                             is_inner = (strcmp(wrap_info, "INNER") == 0);
                             if (!is_inner)
                                 is_key_reset = (strcmp(wrap_info, "KEY_RESET") == 0);
-                        }
+                        }                        
                             
-
+                        // check for private key in decrypted message attachment while importing
+                        // N.B. Apparently, we always import private keys into the keyring; however,
+                        // we do NOT always allow those to be used for encryption. THAT is controlled
+                        // by setting it as an own identity associated with the key in the DB.
+                        
+                        // If we have a message 2.0 message, we are ONLY going to be ok with keys
+                        // we imported from THIS part of the message.
+                                                        
+                        bool ignore_msg = false;
+                            
                         if (is_key_reset) {
-                            if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
-                                status = receive_key_reset(session,
-                                                           inner_message);
-                                if (status != PEP_STATUS_OK) {
-                                    free_message(inner_message);
+                            if (decrypt_status == PEP_VERIFY_SIGNER_KEY_REVOKED)
+                                ignore_msg = true;
+                            else if (inner_message->_sender_fpr) {
+                                bool sender_key_is_me = false;
+                                status = is_own_key(session, inner_message->_sender_fpr, &sender_key_is_me);
+                                if (status != PEP_STATUS_OK && status != PEP_KEY_NOT_FOUND)
                                     goto pEp_error;
+                                
+                                if (sender_key_is_me) {    
+                                    bool grouped = false;
+                                    status = deviceGrouped(session, &grouped);
+                                    
+                                    if (status != PEP_STATUS_OK)
+                                        goto pEp_error;
+                                    
+                                    if (!grouped)
+                                        ignore_msg = true;    
                                 }
-                                *flags |= PEP_decrypt_flag_consume;
                             }
+                            else
+                                ignore_msg = true;    
                         }
-                        else if (is_inner) {
 
-                            // check for private key in decrypted message attachment while importing
-                            // N.B. Apparently, we always import private keys into the keyring; however,
-                            // we do NOT always allow those to be used for encryption. THAT is controlled
-                            // by setting it as an own identity associated with the key in the DB.
-                            
-                            // If we have a message 2.0 message, we are ONLY going to be ok with keys
-                            // we imported from THIS part of the message.
+                        if (!ignore_msg) {
                             imported_private_key_address = false;
                             free(private_il); 
                             private_il = NULL;
@@ -3763,6 +3854,25 @@ static PEP_STATUS _decrypt_message(
                                                                          private_il);
                             if (status != PEP_STATUS_OK)
                                 goto pEp_error;            
+                        }
+                        else {
+                            // Simply put, we bail. We should not be returning ANYTHERE here.
+                            status = decrypt_status;    
+                            goto pEp_error;
+                        }
+                        if (is_key_reset) {
+                            if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
+                                status = receive_key_reset(session,
+                                                           inner_message);
+                                if (status != PEP_STATUS_OK) {
+                                    free_message(inner_message);
+                                    goto pEp_error;
+                                }
+                                *flags |= PEP_decrypt_flag_consume;
+                                calculated_src = msg = inner_message;                                    
+                            }
+                        }
+                        else if (is_inner) {
 
                             // THIS is our message
                             // Now, let's make sure we've copied in 
@@ -3812,8 +3922,18 @@ static PEP_STATUS _decrypt_message(
                         status = PEP_STATUS_OK;
                     }
                 }
-                else
+                else {
+                    // update the own from identity, read_only, but preserve username 
+                    // for returned message.
+                    char* cached_ownname = cs_from->username;
+                    // Shouldn't be possible, but just in case.
+                    if (!cached_ownname)
+                        cached_ownname = strdup(cs_from->address);
+                    cs_from->username = NULL;
                     status = _myself(session, cs_from, false, false, myself_read_only);
+                    free(cs_from->username);
+                    cs_from->username = cached_ownname;
+                }    
             }                                                                        
         } // end if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
         
@@ -3822,17 +3942,20 @@ static PEP_STATUS _decrypt_message(
         // Ok, so if it was signed and it's all verified, we can update
         // eligible signer comm_types to PEP_ct_pEp_*
         // This also sets and upgrades pEp version
-        if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && is_pEp_msg && calculated_src->from)
+        if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && !is_key_reset && is_pEp_msg && calculated_src->from)
             status = update_sender_to_pEp_trust(session, calculated_src->from, _keylist, major_ver, minor_ver);
 
         /* Ok, now we have a keylist used for decryption/verification.
            now we need to update the message rating with the 
            sender and recipients in mind */
-        status = amend_rating_according_to_sender_and_recipients(session,
-                 rating, calculated_src->from, _keylist);
-
-        if (status != PEP_STATUS_OK)
-            goto pEp_error;
+           
+        if (!is_key_reset) { // key reset messages invalidate some of the ratings in the DB by now.
+            status = amend_rating_according_to_sender_and_recipients(session,
+                     rating, calculated_src->from, _keylist);
+            if (status != PEP_STATUS_OK)
+                goto pEp_error;
+         
+        }             
         
         /* We decrypted ok, hallelujah. */
         msg->enc_format = PEP_enc_none;    
@@ -3888,91 +4011,144 @@ static PEP_STATUS _decrypt_message(
     } // End prepare output message for return
 
     // 3. Check to see if the sender used any of our revoked keys
-    stringpair_list_t* revoke_replace_pairs = NULL;
-    status = check_for_own_revoked_key(session, _keylist, &revoke_replace_pairs);
+    if (!is_me(session, msg->from)) {
+        status = check_for_own_revoked_key(session, _keylist, &revoke_replace_pairs);
 
-    //assert(status != PEP_STATUS_OK); // FIXME: FOR DEBUGGING ONLY DO NOT LEAVE IN    
-    if (status != PEP_STATUS_OK) {
-        // This should really never choke unless the DB is broken.
-        status = PEP_UNKNOWN_DB_ERROR;
-        goto pEp_error;
-    }
-    
-    if (msg) {
-        stringpair_list_t* curr_pair_node;
-        stringpair_t* curr_pair;
+        //assert(status != PEP_STATUS_OK); // FIXME: FOR DEBUGGING ONLY DO NOT LEAVE IN    
+        if (status != PEP_STATUS_OK) {
+            // This should really never choke unless the DB is broken.
+            status = PEP_UNKNOWN_DB_ERROR;
+            goto pEp_error;
+        }
+        
+        if (msg) {
+            stringpair_list_t* curr_pair_node;
+            stringpair_t* curr_pair;
 
-        for (curr_pair_node = revoke_replace_pairs; curr_pair_node; curr_pair_node = curr_pair_node->next) {
-            curr_pair = curr_pair_node->value;
+            for (curr_pair_node = revoke_replace_pairs; curr_pair_node; curr_pair_node = curr_pair_node->next) {
+                curr_pair = curr_pair_node->value;
 
-            if (!curr_pair)
-                continue; // Again, shouldn't occur
+                if (!curr_pair)
+                    continue; // Again, shouldn't occur
 
-            if (curr_pair->key && curr_pair->value) {
-                status = create_standalone_key_reset_message(session,
-                    &reset_msg,
-                    msg->from,
-                    curr_pair->key,
-                    curr_pair->value);
+                if (curr_pair->key && curr_pair->value) {
+                    /* Figure out which address(es) this came to so we know who to reply from */                    
 
-                // If we can't find the identity, this is someone we've never mailed, so we just
-                // go on letting them use the wrong key until we mail them ourselves. (Spammers, etc)
-                if (status != PEP_CANNOT_FIND_IDENTITY) {
-                    if (status != PEP_STATUS_OK)
-                        goto pEp_error;
+                    identity_list* my_rev_ids = NULL;
+                    
+                    /* check by replacement ID for identities which used this key? */
+                    status = get_identities_by_main_key_id(session, curr_pair->value,
+                                                           &my_rev_ids);
+                                                                                                                      
+                    if (status == PEP_STATUS_OK && my_rev_ids) {
+                        // get identities in this list the message was to/cc'd to (not for bcc)
+                        identity_list* used_ids_for_key = NULL;
+                        status = ident_list_intersect(my_rev_ids, msg->to, &used_ids_for_key);
+                        if (status != PEP_STATUS_OK)
+                            goto pEp_error; // out of memory
 
-                    if (!reset_msg) {
-                        status = PEP_OUT_OF_MEMORY;
-                        goto pEp_error;
-                    }
-                    // insert into queue
-                    if (session->messageToSend)
-                        status = session->messageToSend(reset_msg);
-                    else
-                        status = PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
-
-
-                    if (status == PEP_STATUS_OK) {
-                        // Put into notified DB
-                        status = set_reset_contact_notified(session, curr_pair->key, msg->from->user_id);
-                        if (status != PEP_STATUS_OK) // It's ok to barf because it's a DB problem??
+                        identity_list* used_cc_ids = NULL;    
+                        status = ident_list_intersect(my_rev_ids, msg->cc, &used_cc_ids);
+                        if (status != PEP_STATUS_OK)
                             goto pEp_error;
-                    }
-                    else {
-                        // According to Volker, this would only be a fatal error, so...
-                        free_message(reset_msg); // ??
-                        reset_msg = NULL; // ??
-                        goto pEp_error;
-                    }
+
+                        used_ids_for_key = identity_list_join(used_ids_for_key, used_cc_ids);
+                        
+                        identity_list* curr_recip = used_ids_for_key;
+                        
+                        for ( ; curr_recip && curr_recip->ident; curr_recip = curr_recip->next) {
+                            if (!is_me(session, curr_recip->ident))
+                                continue;
+                        
+                            status = create_standalone_key_reset_message(session,
+                                &reset_msg,
+                                curr_recip->ident,
+                                msg->from,
+                                curr_pair->key,
+                                curr_pair->value);
+
+                            // If we can't find the identity, this is someone we've never mailed, so we just
+                            // go on letting them use the wrong key until we mail them ourselves. (Spammers, etc)
+                            if (status != PEP_CANNOT_FIND_IDENTITY) {
+                                if (status != PEP_STATUS_OK)
+                                    goto pEp_error;
+
+                                if (!reset_msg) {
+                                    status = PEP_OUT_OF_MEMORY;
+                                    goto pEp_error;
+                                }
+                                // insert into queue
+                                if (session->messageToSend)
+                                    status = session->messageToSend(reset_msg);
+                                else
+                                    status = PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
+
+
+                                if (status == PEP_STATUS_OK) {
+                                    // Put into notified DB
+                                    status = set_reset_contact_notified(session, curr_recip->ident->address, curr_pair->key, msg->from->user_id);
+                                    if (status != PEP_STATUS_OK) // It's ok to barf because it's a DB problem??
+                                        goto pEp_error;
+                                }
+                                else {
+                                    // According to Volker, this would only be a fatal error, so...
+                                    free_message(reset_msg); // ??
+                                    reset_msg = NULL; // ??
+                                    goto pEp_error;
+                                }
+                            }
+                        }    
+                    } // else we couldn't find an ident for replacement key    
                 }
             }
         }
-    }
-
+        free_stringpair_list(revoke_replace_pairs);
+        revoke_replace_pairs = NULL;
+    } // end !is_me(msg->from)    
 
     bool reenc_signer_key_is_own_key = false; // only matters for reencrypted messages 
     
     // 4. Reencrypt if necessary
     bool has_extra_keys = _have_extrakeys(extra);
-    if (reencrypt && session->unencrypted_subject && !has_extra_keys) {
-        if (src->shortmsg && msg->shortmsg) {
-            if (strcmp(src->shortmsg, msg->shortmsg) == 0)
-                reencrypt = false;
-        }
-        else if (src->shortmsg == NULL && msg->shortmsg == NULL)
-            reencrypt = false;
-    }    
 
+    bool subjects_match = false;
+    if (src->shortmsg && msg->shortmsg) {
+        if (strcmp(src->shortmsg, msg->shortmsg) == 0)
+            subjects_match = true;
+    }
+    else if (src->shortmsg == msg->shortmsg) {
+        if (!src->shortmsg) 
+            subjects_match = true;    
+    }
+    
+    if (reencrypt && session->unencrypted_subject && !has_extra_keys && subjects_match) 
+        reencrypt = false;
+    
     if (reencrypt) {
-        if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
+        if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED
+            || decrypt_status == PEP_VERIFY_SIGNER_KEY_REVOKED) {
             const char* sfpr = NULL;
             if (has_extra_keys)
                 sfpr = _keylist->value;
 
             if (sfpr && decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
                 own_key_is_listed(session, sfpr, &reenc_signer_key_is_own_key);
-                
-                if (!reenc_signer_key_is_own_key) {
+
+                bool key_missing = false;
+
+                // Also, see if extra keys are all in the encrypted-to keys; otherwise, we do it again                 
+                if (extra) {
+                    stringlist_t* curr_key = NULL;
+                    for (curr_key = extra; curr_key && curr_key->value; curr_key = curr_key->next) {
+                        stringlist_t* found = stringlist_search(_keylist, curr_key->value);
+                        if (!found) {
+                            key_missing = true;
+                            break;
+                        }
+                    }
+                }
+                    
+                if (key_missing || (!reenc_signer_key_is_own_key) || ((!subjects_match) && session->unencrypted_subject)) {
                     message* reencrypt_msg = NULL;
                     PEP_STATUS reencrypt_status = PEP_CANNOT_REENCRYPT;
                     char* own_id = NULL;
@@ -4049,6 +4225,7 @@ pEp_error:
     free_message(msg);
     free_message(reset_msg);
     free_stringlist(_keylist);
+    free_stringpair_list(revoke_replace_pairs);
 
     return status;
 }
@@ -4084,7 +4261,7 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         size_t size;
         const char *data;
         char *sender_fpr = NULL;
-        PEP_STATUS tmpstatus = base_extract_message(session, msg, &size, &data, &sender_fpr);
+        PEP_STATUS tmpstatus = base_extract_message(session, msg, BASE_SYNC, &size, &data, &sender_fpr);
         if (!tmpstatus && size && data) {
             if (sender_fpr)
                 signal_Sync_message(session, *rating, data, size, msg->from, sender_fpr);
@@ -4094,7 +4271,6 @@ DYNAMIC_API PEP_STATUS decrypt_message(
         }
         free(sender_fpr);
     }
-
 
     // Removed for now - partial fix in ENGINE-647, but we have sync issues. Need to 
     // fix testing issue.
@@ -4476,6 +4652,25 @@ DYNAMIC_API PEP_STATUS get_trustwords(
             wsize, full);
 }
 
+static void remove_separators(const char* str1, char* str2, int str1len) {
+    int i = 0;
+    char* curr_write = str2;
+    for ( ; i < str1len; i++) {
+        switch (str1[i]) {
+            case ' ':
+            case '\t':
+            case '\r':
+            case '\n':
+            case '\0':
+                continue;
+            default:
+                *curr_write = str1[i];
+                curr_write++;
+        }
+    }
+    *curr_write = '\0';
+}
+
 DYNAMIC_API PEP_STATUS get_trustwords_for_fprs(
         PEP_SESSION session, const char* fpr1, const char* fpr2,
         const char* lang, char **words, size_t *wsize, bool full
@@ -4560,6 +4755,10 @@ DYNAMIC_API PEP_STATUS get_trustwords_for_fprs(
     
     status = check_for_zero_fpr(XORed_fpr);
     
+    if (status == PEP_TRUSTWORDS_DUPLICATE_FPR) {
+        remove_separators(fpr1, XORed_fpr, fpr1_len);
+        status = PEP_STATUS_OK;
+    }
     if (status != PEP_STATUS_OK)
         goto error_release;
     

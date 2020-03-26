@@ -224,11 +224,14 @@ the_end:
     return status;
 }
 
-DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session)
+PEP_STATUS disable_sync(PEP_SESSION session)
 {
     assert(session);
     if (!session)
         return PEP_ILLEGAL_VALUE;
+
+    if (session->inject_sync_event)
+        session->inject_sync_event((void *) SHUTDOWN, NULL);
 
     identity_list *il = NULL;
     PEP_STATUS status = own_identities_retrieve(session, &il);
@@ -246,25 +249,79 @@ the_end:
     return status;
 }
 
+DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session) {
+    assert(session);
+    if (!session)
+        return PEP_ILLEGAL_VALUE;
+
+    bool grouped = false;
+    PEP_STATUS status = deviceGrouped(session, &grouped);
+    if (status)
+        return status;
+
+    if (!grouped) {
+        if (session->inject_sync_event)
+            session->inject_sync_event((void *) SHUTDOWN, NULL);
+        return PEP_STATUS_OK;
+    }
+
+    return signal_Sync_event(session, Sync_PR_keysync, LeaveDeviceGroup, NULL);
+}
+
 DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
         pEp_identity *ident)
 {
-    assert(session && ident);
-    if (!(session && ident))
+    assert(session && ident && ident->user_id && ident->user_id[0] && ident->address && ident->address[0]);
+    if (!(session && ident && ident->user_id && ident->user_id[0] && ident->address && ident->address[0]))
         return PEP_ILLEGAL_VALUE;
 
-    PEP_STATUS status = unset_identity_flags(session, ident, PEP_idf_not_for_sync);
+    // safeguard: in case the delivered identity is not valid fetch flags from the database
+    //            while doing this check if this is an own identity and return an error if not
+
+    pEp_identity *stored_ident = NULL;
+    PEP_STATUS status = get_identity(session, ident->address, ident->user_id, &stored_ident);
     if (status)
         return status;
+    assert(stored_ident);
+    if (!stored_ident->me) {
+        free_identity(stored_ident);
+        return PEP_ILLEGAL_VALUE;
+    }
+    ident->flags = stored_ident->flags;
+    free_identity(stored_ident);
 
-    bool grouped;
+    // this is an invalid state; detect while debugging
+
+    assert(!((ident->flags & PEP_idf_devicegroup) && (ident->flags & PEP_idf_not_for_sync)));
+
+    // if we're grouped and this identity is enabled already we can stop here
+
+    if ((ident->flags & PEP_idf_devicegroup) && !(ident->flags & PEP_idf_not_for_sync))
+        return PEP_STATUS_OK;
+
+    // if the identity is marked not for sync unset this to enable
+
+    if (ident->flags & PEP_idf_not_for_sync) {
+        status = unset_identity_flags(session, ident, PEP_idf_not_for_sync);
+        if (status)
+            return status;
+    }
+
+    // if we're grouped then add the identity to the group
+
+    bool grouped = false;
     status = deviceGrouped(session, &grouped);
     if (status)
         return status;
+    if (grouped) {
+        status = set_identity_flags(session, ident, PEP_idf_devicegroup);    
+        if (status)
+            return status;
+        // signal we have a new identity in the group
+        signal_Sync_event(session, Sync_PR_keysync, KeyGen, NULL);
+    }
 
-    if (grouped)
-        status = set_identity_flags(session, ident, PEP_idf_devicegroup);
-    return status;
+    return PEP_STATUS_OK;
 }
 
 DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
@@ -274,11 +331,47 @@ DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
     if (!(session && ident))
         return PEP_ILLEGAL_VALUE;
 
-    PEP_STATUS status = unset_identity_flags(session, ident, PEP_idf_devicegroup);
+    // safeguard: in case the delivered identity is not valid fetch flags from the database
+    //            while doing this check if this is an own identity and return an error if not
+
+    pEp_identity *stored_ident = NULL;
+    PEP_STATUS status = get_identity(session, ident->address, ident->user_id, &stored_ident);
+    if (status)
+        return status;
+    assert(stored_ident);
+    if (!stored_ident->me) {
+        free_identity(stored_ident);
+        return PEP_ILLEGAL_VALUE;
+    }
+    ident->flags = stored_ident->flags;
+    free_identity(stored_ident);
+
+    // this is an invalid state; detect while debugging
+
+    assert(!((ident->flags & PEP_idf_devicegroup) && (ident->flags & PEP_idf_not_for_sync)));
+
+    // if this identity is disabled already we can end here
+
+    if (ident->flags & PEP_idf_not_for_sync)
+        return PEP_STATUS_OK;
+
+    // if the identity is not part of a device group just disable it to keep this
+
+    if (!(ident->flags & PEP_idf_devicegroup)) {
+        status = set_identity_flags(session, ident, PEP_idf_not_for_sync);
+        return status;
+    }
+
+    // we are grouped and this identity is part of a device group => key reset in all cases
+
+    status = unset_identity_flags(session, ident, PEP_idf_devicegroup);
     if (status)
         return status;
 
     status = set_identity_flags(session, ident, PEP_idf_not_for_sync);
+    if (status)
+        return status;
+
+    status = key_reset_identity(session, ident, NULL);
     return status;
 }
-

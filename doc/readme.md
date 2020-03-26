@@ -13,7 +13,12 @@ The p≡p Engine depends on the following projects:
     - GnuPG version 2.1.17 or later with GPGME (at least version 1.7.0) [https://gnupg.org/](https://gnupg.org/)
     - For platforms not supporting pinentry (e.g. Android) - GnuPG version 2.0.30 with GPGME version 1.6.0 (or later) [https://gnupg.org/](https://gnupg.org/)
     - a fork of NetPGP, [https://pep.foundation/dev/repos/netpgp-et/](https://pep.foundation/dev/repos/netpgp-et/)
-  - a fork of libetpan, [https://github.com/fdik/libetpan](https://github.com/fdik/libetpan)
+    - Sequoia, which in turn requires:
+      - Rust
+      - libnettle
+  - One of the following MIME libraries:
+    - a fork of libetpan, [https://github.com/fdik/libetpan](https://github.com/fdik/libetpan)
+    - pEpMIME
   - zlib, [http://zlib.net/](http://zlib.net/)
   - libcurl (Only with NetPGP), [https://curl.haxx.se/libcurl/](https://curl.haxx.se/libcurl/)
   - libuuid, [https://www.kernel.org/pub/linux/utils/util-linux/](https://www.kernel.org/pub/linux/utils/util-linux/)
@@ -22,6 +27,8 @@ The p≡p Engine depends on the following projects:
 - compile-time dependencies
   - asn1c (version v0.9.28), [http://lionet.info/asn1c/blog/](http://lionet.info/asn1c/blog/)
   - yml2, [https://fdik.org/yml//toolchain](https://fdik.org/yml//toolchain)
+    - Python 3
+    - LXML
   - One of the following build systems:
     - GNU make (on Linux and macOS)
     - MSBuild distributed with Microsoft Visual Studio 2015 (on Windows)
@@ -30,6 +37,7 @@ The p≡p Engine depends on the following projects:
     - Apple "clang" LLVM (on MacOS)
     - Microsoft MSVC/MSVC++ distributed with Microsoft Visual Studio 2015 (on Windows)
   - A script for compiling OpenSSL for iOS, [https://github.com/sinofool/build-openssl-ios/](https://github.com/sinofool/build-openssl-ios/)
+  - binutils
 
 # The pEp Engine's databases
 The p≡p Engine uses two databases:

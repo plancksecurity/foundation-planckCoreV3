@@ -90,7 +90,7 @@ endif
 $(TARGET): libpEpEngine.a
 	$(CC) $(CFLAGS) $(ALL_OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
 
-.PHONY: objects clean install_headers install uninstall
+.PHONY: objects clean install_headers install uninstall beinstall
 
 objects: $(ALL_OBJECTS)
 
@@ -100,7 +100,7 @@ libpEpEngine.a: $(ALL_OBJECTS)
 clean:
 	rm -f *.d *.o *.a $(TARGET) *.dll *.so *.zip *.d.* *.def *~
 	rm -Rf $(TARGET).dSYM
-	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.*
+	rm -f KeySync_fsm.* Sync_actions.c Sync_event.* Sync_func.* Sync_impl.* sync_codec.* distribution_codec.*
 
 # CAVEAT:
 # install_headers is needed for building pEp MIME
@@ -110,17 +110,21 @@ install_headers: $(TARGET)
 	cp pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
 	   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h \
 	   cryptotech.h sync_api.h blacklist.h pEp_string.h openpgp_compat.h \
-	   labeled_int_list.h key_reset.h base64.h sync_codec.h status_to_string.h\
-	   aux_mime_msg.h ../asn.1/*.h $(PREFIX)/include/pEp/
+	   labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h \
+	   status_to_string.h aux_mime_msg.h keyreset_command.h ../asn.1/*.h \
+ 	   $(PREFIX)/include/pEp/
 
 install: $(TARGET) install_headers
 	mkdir -p "$(PREFIX)/lib/"
 	cp $< $(PREFIX)/lib/
+
+beinstall: install
+	cp platform*.h $(PREFIX)/include/pEp/
 
 uninstall:
 	rm -f $(PREFIX)/lib/$(TARGET)
 	rm -rf $(PREFIX)/include/pEp
 
 tags: $(wildcard *.c) $(wildcard *.h)
-	ctags *.c *.h
+	ctags --sort=yes *.c *.h
 

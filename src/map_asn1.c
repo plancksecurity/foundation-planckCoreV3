@@ -15,9 +15,8 @@ Identity_t *Identity_from_Struct(
     if (!ident)
         return NULL;
 
-    if (allocated){
+    if (allocated)
         result = (Identity_t *) calloc(1, sizeof(Identity_t));
-    }
     assert(result);
     if (!result)
         return NULL;
@@ -65,9 +64,8 @@ Identity_t *Identity_from_Struct(
     return result;
 
 enomem:
-    if (allocated){
+    if (allocated)
         ASN_STRUCT_FREE(asn_DEF_Identity, result);
-    }
     return NULL;
 }
 

@@ -5,12 +5,12 @@
 
 HERE:=$(CURDIR)
 
-# Presumably can be changed in local.conf by putting this here?
-GTEST_DIR:=googletest/googletest
-GTEST_PL_DIR:=googletest/gtest-parallel
-GTEST_INC_DIR:=$(GTEST_DIR)/include
+GTEST_SRC_DIR:=/usr/src/gtest
+GTEST_INC_DIR:=$(GTEST_SRC_DIR)/include
+GTEST_PL:=$(HOME)/src/gtest-parallel/gtest_parallel.py
 
-include ../Makefile.conf
+include ../Makefile.conf # This should import changed values for the above from
+                         # local.conf
 
 SRCS:=$(wildcard src/*.cc) $(wildcard src/*/*.cc)
 OBJS:=$(addsuffix .o,$(basename $(SRCS)))
@@ -18,7 +18,15 @@ DEPS:=$(OBJS:.o=.d)
 
 LDFLAGS+= -L../asn.1 -L../src $(ETPAN_LIB) $(CPPUNIT_LIB)
 
-TARGET:=EngineTests 
+TARGET:=EngineTests
+
+GTEST_SUITE_SYM:=test_suite_name
+
+ifeq ($(shell grep -c $(GTEST_SUITE_SYM) $(GTEST_SRC_DIR)/src/gtest.cc),0)
+    GTEST_SUITE_SYM=test_case_name
+endif
+
+CXXFLAGS+= -DGTEST_SUITE_SYM=$(GTEST_SUITE_SYM)
 
 ifeq ($(OPENPGP),GPG)
     LDFLAGS+= $(GPGME_LIB)
@@ -99,22 +107,15 @@ all:
 %.d: %.cc
 	$(CXX) -MM $(CPPFLAGS) $(CXXFLAGS) $< | sed -e 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
 
-$(TARGET): $(OBJS) gtest-all.o gtest_main.o
-#	$(LINK.cc) $(OBJS) $(LOADLIBES) $(LDLIBS) -o $@
-	${CXX} ${LDFLAGS} -L${PREFIX}/lib -o $@ $^ -lpEpEngine $(LDLIBS)
+$(TARGET): $(OBJS)
+	${CXX} ${LDFLAGS} -L${PREFIX}/lib -o $@ $^ -lpEpEngine -lgtest -lgtest_main -lsequoia_openpgp_ffi $(LDLIBS)
 
-gtest-all.o: $(GTEST_DIR)/src/gtest-all.cc
-	${CXX} ${CXXFLAGS} $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -isystem $(GTEST_DIR)/include -o $@ -c $<
-
-gtest_main.o: $(GTEST_DIR)/src/gtest_main.cc
-	${CXX} ${CXXFLAGS} $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -isystem $(GTEST_DIR)/include -o $@ -c $<
 
 test: all
-	$(TEST_CMD_PFX) $(TEST_DEBUGGER) python3 $(GTEST_PL_DIR)/gtest_parallel.py ./$(TARGET)
-
+	$(RM) -rf ./pEp_test_home/*
+	$(TEST_CMD_PFX) $(TEST_DEBUGGER) GTEST_COLOR=no python3 $(GTEST_PL) --gtest_color=no ./$(TARGET)
 clean:
 	$(RM) $(TARGET) $(TARGET).o $(TARGET).d $(OBJS) $(notdir $(basename $(OBJS))) $(DEPS)
-	$(RM) gtest_main.o gtest-all.o
 	$(RM) -rf ./pEp_test_home/*
 # If only the goal 'clean' is given, do not generate and include the '%.d' files.¬
 ifneq ($(MAKECMDGOALS),clean)

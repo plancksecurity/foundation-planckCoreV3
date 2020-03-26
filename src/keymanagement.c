@@ -512,8 +512,6 @@ static PEP_STATUS prepare_updated_identity(PEP_SESSION session,
                     
     // We patch the DB with the input username, but if we didn't have
     // one, we pull it out of storage if available.
-    // (also, if the input username is "anonymous" and there exists
-    //  a DB username, we replace)
     if (!EMPTYSTR(stored_ident->username)) {
         if (!EMPTYSTR(return_id->username) && 
             (strcasecmp(return_id->username, return_id->address) == 0)) {
@@ -675,8 +673,7 @@ DYNAMIC_API PEP_STATUS update_identity(
                             // FIXME: should we also be fixing pEp_own_userId in this
                             // function here?
                             
-                            // if usernames match, we replace the userid. Or if the temp username
-                            // is anonymous.
+                            // if usernames match, we replace the userid.
                             // FIXME: do we need to create an address match function which
                             // matches the whole dot-and-case rigamarole from 
                             if (EMPTYSTR(this_id->username) ||
@@ -1076,7 +1073,7 @@ PEP_STATUS _myself(PEP_SESSION session,
         
     char* default_own_id = NULL;
     status = get_default_own_userid(session, &default_own_id);
-
+    
     // Deal with non-default user_ids.
     // FIXME: if non-default and read-only, reject totally?
     if (default_own_id && strcmp(default_own_id, identity->user_id) != 0) {
@@ -1118,6 +1115,7 @@ PEP_STATUS _myself(PEP_SESSION session,
     // this user_id + address
 //    DEBUG_LOG("myself", "debug", identity->address);
  
+    // This will grab the actual flags from the db
     status = get_identity(session,
                           identity->address,
                           identity->user_id,
@@ -1900,6 +1898,9 @@ DYNAMIC_API PEP_STATUS set_own_key(
     if (!session || !me || EMPTYSTR(fpr) || EMPTYSTR(me->address) ||
             EMPTYSTR(me->user_id) || EMPTYSTR(me->username))
         return PEP_ILLEGAL_VALUE;
+
+    if (me->fpr == fpr)
+        me->fpr = NULL;
 
     status = _myself(session, me, false, true, false);
     // we do not need a valid key but dislike other errors

@@ -166,15 +166,26 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
 
 typedef enum _PEP_rating {
     PEP_rating_undefined = 0,
+
+    // no color
+
     PEP_rating_cannot_decrypt,
     PEP_rating_have_no_key,
     PEP_rating_unencrypted,
     PEP_rating_unencrypted_for_some, // don't use this any more
     PEP_rating_unreliable,
+
+    // yellow
+
     PEP_rating_reliable,
+
+    // green
+
     PEP_rating_trusted,
     PEP_rating_trusted_and_anonymized,
     PEP_rating_fully_anonymous,   
+
+    // red
 
     PEP_rating_mistrust = -1,
     PEP_rating_b0rken = -2,

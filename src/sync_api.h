@@ -27,15 +27,15 @@ typedef enum _sync_handshake_signal {
     // handshake accepted by user
     SYNC_NOTIFY_ACCEPTED_DEVICE_ADDED = 6,
     SYNC_NOTIFY_ACCEPTED_GROUP_CREATED = 7,
-    // SYNC_NOTIFY_ACCEPTED_DEVICE_MOVED = 8,
+    SYNC_NOTIFY_ACCEPTED_DEVICE_ACCEPTED = 8,
 
     // handshake dialog must be closed
-    SYNC_NOTIFY_OVERTAKEN = 9,
+    // SYNC_NOTIFY_OVERTAKEN = 9,
 
-    // formig group
-    SYNC_NOTIFY_FORMING_GROUP = 10,
+    // forming group
+    // SYNC_NOTIFY_FORMING_GROUP = 10,
 
-    // notificaton of actual group status
+    // notification of actual group status
     SYNC_NOTIFY_SOLE = 254,
     SYNC_NOTIFY_IN_GROUP = 255
 } sync_handshake_signal;
@@ -106,7 +106,7 @@ typedef SYNC_EVENT (*retrieve_next_sync_event_t)(void *management,
 // register_sync_callbacks() - register adapter's callbacks
 //
 //  parameters:
-//      session (in)                    session where to store obj handle
+//      session (in)                    session where to register callbacks
 //      management (in)                 application defined; usually a locked queue
 //      notifyHandshake (in)            callback for doing the handshake
 //      retrieve_next_sync_event (in)   callback for receiving sync event
@@ -115,7 +115,20 @@ typedef SYNC_EVENT (*retrieve_next_sync_event_t)(void *management,
 //      PEP_STATUS_OK or any other value on errror
 //
 //  caveat:
-//      call that BEFORE you're using any other part of the engine
+//      use this function in an adapter where you're processing the sync
+//      state machine
+//
+//      implement start_sync() in this adapter and provide it to the
+//      application, so it can trigger startup
+//
+//      in case of parallelization start_sync() and register_sync_callbacks()
+//      will run in parallel
+//
+//      do not return from start_sync() before register_sync_callbacks() was
+//      executed
+//
+//      when execution of the sync state machine ends a call to
+//      unregister_sync_callbacks() is recommended
 
 DYNAMIC_API PEP_STATUS register_sync_callbacks(
         PEP_SESSION session,
@@ -201,7 +214,16 @@ DYNAMIC_API PEP_STATUS enter_device_group(
     );
 
 
-// leave_device_group() - leave a device group
+// disable_sync() - leave a device group and shutdown sync
+//
+//  parameters:
+//      session                 pEp session
+
+PEP_STATUS disable_sync(PEP_SESSION session);
+
+
+// leave_device_group() - Issue a group key reset request and 
+// leave the device group, shutting down sync 
 //
 //  parameters:
 //      session                 pEp session
@@ -212,7 +234,7 @@ DYNAMIC_API PEP_STATUS leave_device_group(PEP_SESSION session);
 // enable_identity_for_sync() - enable sync for this identity
 //  parameters:
 //      session                 pEp session
-//      ident                   identity to enable
+//      ident                   own identity to enable
 
 DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
         pEp_identity *ident);
@@ -221,12 +243,12 @@ DYNAMIC_API PEP_STATUS enable_identity_for_sync(PEP_SESSION session,
 // disable_identity_for_sync() - disable sync for this identity
 //  parameters:
 //      session                 pEp session
-//      ident                   identity to disable
+//      ident                   own identity to disable
 
 DYNAMIC_API PEP_STATUS disable_identity_for_sync(PEP_SESSION session,
         pEp_identity *ident);
 
+
 #ifdef __cplusplus
 }
 #endif
-

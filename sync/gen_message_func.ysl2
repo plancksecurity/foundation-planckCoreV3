@@ -43,6 +43,7 @@ struct «@name»_state_s {
 
     struct own_«@name»_state_s {
         stringlist_t *keys;
+        stringlist_t *backup;
         identity_list *identities;
 
         // TIDs we're using ourselves
@@ -54,6 +55,7 @@ struct «@name»_state_s {
     struct comm_partner_state_s {
         // transport data we expect
         char *sender_fpr;
+        pEp_identity *identity;
 
         // TIDs our comm partner wants to have
         `` for "func:distinctName(fsm/message/field[@type='TID'])" |>> «func:ctype()» «@name»;
@@ -134,6 +136,8 @@ void free_«@name»_state(PEP_SESSION session)
 
     free(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr);
     session->«yml:lcase(@name)»_state.comm_partner.sender_fpr = NULL;
+    free_identity(session->«yml:lcase(@name)»_state.comm_partner.identity);
+    session->«yml:lcase(@name)»_state.comm_partner.identity = NULL;
 
     // TIDs our comm partner wants to have
 ||
@@ -318,6 +322,11 @@ template "field", mode=update_message {
                     &session->«$state».«@name», NULL);
             if (!il)
                 return PEP_OUT_OF_MEMORY;
+
+            PEP_STATUS own_idents_status = set_all_userids_to_own(session, il);
+            if (own_idents_status != PEP_STATUS_OK)
+                return own_idents_status;
+                
             IdentityList_t *_il = IdentityList_from_identity_list(il,
                     &msg->choice.«yml:lcase(../../@name)».choice.«$message_name».«@name»);
             free_identity_list(il);
@@ -398,6 +407,11 @@ template "field", mode=update_state {
                     &msg->choice.«yml:lcase(../../@name)».choice.«$message_name».«@name», NULL);
             if (!il)
                 return PEP_OUT_OF_MEMORY;
+                
+            PEP_STATUS own_idents_status = set_all_userids_to_own(session, il);
+            if (own_idents_status != PEP_STATUS_OK)
+                return own_idents_status;
+                
             IdentityList_t *_il = IdentityList_from_identity_list(il,
                     &session->«yml:lcase(../../../@name)»_state.«yml:lcase(../../@name)».«@name»);
             free_identity_list(il);
@@ -427,4 +441,3 @@ case «../@name»_PR_«yml:lcase(@name)»:
 ||
 
 }
-

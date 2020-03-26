@@ -4,7 +4,7 @@
 
 // generate message functions
 
-// Copyleft (c) 2017-2019, p≡p foundation
+// Copyleft (c) 2017-2020, p≡p foundation
 
 // Written by Volker Birk
 
@@ -15,14 +15,14 @@ tstylesheet {
     include ./functions.ysl2
 
     function "pEp_imports"
-        | IMPORTS Identity, IdentityList, TID, Hash FROM PEP;
+        | IMPORTS Version, Identity, IdentityList, TID, Hash FROM PEP;
 
     function "header"
     ||
     -- This file is under BSD License 2.0
 
     -- «@name» protocol for p≡p
-    -- Copyleft 2016-2019 by p≡p foundation
+    -- Copyleft 2016-2020 by p≡p foundation
 
     -- Written by Volker Birk
 
@@ -71,12 +71,7 @@ tstylesheet {
         EXPORTS «@name»;
         `` call "pEp_imports"
 
-        Version ::= SEQUENCE {
-            major INTEGER (0..255) DEFAULT «version/@major»,
-            minor INTEGER (0..255) DEFAULT «version/@minor»
-        }
-
-        `` apply "message", 0, mode=impl;
+        `` apply "message//list|message", 0, mode=impl;
         «@name» ::= CHOICE {
         `` for "message" |> «yml:mixedCase(@name)» [APPLICATION «@id»] «@name»`if "position()!=last()" > ,`
         }
@@ -89,9 +84,23 @@ tstylesheet {
     template "message", mode=impl
     ||
     «@name» ::= SEQUENCE {
-    `` for "field|auto" |> «func:asn1name()» «func:asn1type()»`if "position()!=last()" > ,`
+    `` apply "field|auto|list", mode=direct
     }
 
     ||
+
+    template "list", mode=impl
+    ||
+    «@type» ::= SEQUENCE {
+    `` apply "field|auto|list", mode=direct
+    }
+
+    ||
+
+    template "field|auto", mode=direct
+        | «func:asn1name()» «func:asn1type()»`if "position()!=last()" > ,`
+
+    template "list", mode=direct
+        | «func:asn1name()» SEQUENCE OF «func:asn1type()»`if "position()!=last()" > ,`
 }
 

@@ -156,8 +156,10 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
 )
 {
     PEP_STATUS status = PEP_STATUS_OK;
+    PEP_STATUS tmp_status = PEP_STATUS_OK;
     message* tmp_msg = NULL;
     message* enc_msg = NULL;
+    message* ret_msg = NULL;                             
 
     status = mime_decode_message(mimetext, size, &tmp_msg);
     if (status != PEP_STATUS_OK)
@@ -205,16 +207,25 @@ DYNAMIC_API PEP_STATUS MIME_encrypt_message(
                              enc_format,
                              flags);
                              
-    if (status != PEP_STATUS_OK)
+    if (status == PEP_STATUS_OK || status == PEP_UNENCRYPTED)
+        ret_msg = (status == PEP_STATUS_OK ? enc_msg : tmp_msg);
+    else                                
         goto pEp_error;
 
-
-    if (!enc_msg) {
+    if (status == PEP_STATUS_OK && !enc_msg) {
         status = PEP_UNKNOWN_ERROR;
         goto pEp_error;
     }
-
-    status = _mime_encode_message_internal(enc_msg, false, mime_ciphertext, false, false);
+    
+    tmp_status = _mime_encode_message_internal(
+                                ret_msg, 
+                                false, 
+                                mime_ciphertext, 
+                                false, 
+                                false);
+    
+    if (tmp_status != PEP_STATUS_OK)
+        status = tmp_status;
 
 pEp_error:
     free_message(tmp_msg);

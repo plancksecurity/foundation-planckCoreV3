@@ -14,19 +14,19 @@
     <ProjectGuid>{146E69F8-E1DA-456A-B048-6DD29D9ACF6B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>pEpEngine</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -134,11 +134,13 @@
     <ClCompile Include="..\src\blacklist.c" />
     <ClCompile Include="..\src\bloblist.c" />
     <ClCompile Include="..\src\cryptotech.c" />
+    <ClCompile Include="..\src\distribution_codec.c" />
     <ClCompile Include="..\src\email.c" />
     <ClCompile Include="..\src\etpan_mime.c" />
     <ClCompile Include="..\src\growing_buf.c" />
     <ClCompile Include="..\src\identity_list.c" />
     <ClCompile Include="..\src\keymanagement.c" />
+    <ClCompile Include="..\src\keyreset_command.c" />
     <ClCompile Include="..\src\KeySync_fsm.c" />
     <ClCompile Include="..\src\key_reset.c" />
     <ClCompile Include="..\src\labeled_int_list.c" />
@@ -220,17 +222,6 @@
       <Project>{9a67164d-b8f8-4601-a24b-28afe774d41c}</Project>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\..\packages\boost.1.71.0.0\build\boost.targets" Condition="Exists('..\..\packages\boost.1.71.0.0\build\boost.targets')" />
-  </ImportGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\..\packages\boost.1.71.0.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost.1.71.0.0\build\boost.targets'))" />
-  </Target>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

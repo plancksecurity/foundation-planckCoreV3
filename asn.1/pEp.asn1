@@ -12,7 +12,7 @@ DEFINITIONS AUTOMATIC TAGS EXTENSIBILITY IMPLIED ::=
 
 BEGIN
 
-EXPORTS Identity, IdentityList, TID, Hash;
+EXPORTS Identity, IdentityList, TID, Hash, Version;
 
 ISO639-1 ::= PrintableString(FROM ("a".."z")) (SIZE(2))
 Hex ::= PrintableString(FROM ("A".."F") | FROM ("0".."9"))
@@ -30,6 +30,11 @@ Identity ::= SEQUENCE {
 }
 
 IdentityList ::= SEQUENCE OF Identity
+
+Version ::= SEQUENCE {
+    major INTEGER (0..255) DEFAULT 1,
+    minor INTEGER (0..255) DEFAULT 2
+}
 
 END
 

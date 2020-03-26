@@ -143,19 +143,21 @@ struct _pEpSession {
         sqlite3_stmt *begin_transaction;
         sqlite3_stmt *commit_transaction;
         sqlite3_stmt *rollback_transaction;
-        sqlite3_stmt *tpk_find;
+        sqlite3_stmt *cert_find;
         sqlite3_stmt *tsk_find;
-        sqlite3_stmt *tpk_find_by_keyid;
+        sqlite3_stmt *cert_find_by_keyid;
         sqlite3_stmt *tsk_find_by_keyid;
-        sqlite3_stmt *tpk_find_by_email;
+        sqlite3_stmt *cert_find_by_email;
         sqlite3_stmt *tsk_find_by_email;
-        sqlite3_stmt *tpk_all;
+        sqlite3_stmt *cert_all;
         sqlite3_stmt *tsk_all;
-        sqlite3_stmt *tpk_save_insert_primary;
-        sqlite3_stmt *tpk_save_insert_subkeys;
-        sqlite3_stmt *tpk_save_insert_userids;
+        sqlite3_stmt *cert_save_insert_primary;
+        sqlite3_stmt *cert_save_insert_subkeys;
+        sqlite3_stmt *cert_save_insert_userids;
         sqlite3_stmt *delete_keypair;
     } sq_sql;
+
+    pgp_policy_t policy;
 #endif
 
     PEP_cryptotech_t *cryptotech;
@@ -175,6 +177,7 @@ struct _pEpSession {
     sqlite3_stmt *get_identities_by_main_key_id;
     sqlite3_stmt *replace_identities_fpr;
     sqlite3_stmt *replace_main_user_fpr;
+    sqlite3_stmt *replace_main_user_fpr_if_equal;
     sqlite3_stmt *get_main_user_fpr;
     sqlite3_stmt *refresh_userid_default_key;
     sqlite3_stmt *delete_key;
@@ -191,6 +194,7 @@ struct _pEpSession {
     sqlite3_stmt *set_revoke_contact_as_notified;
     sqlite3_stmt *get_contacted_ids_from_revoke_fpr;
     sqlite3_stmt *was_id_for_revoke_contacted;
+    sqlite3_stmt *has_id_contacted_address;
     sqlite3_stmt *get_last_contacted;
     // sqlite3_stmt *set_device_group;
     // sqlite3_stmt *get_device_group;
@@ -228,6 +232,7 @@ struct _pEpSession {
     sqlite3_stmt *is_own_address;
     sqlite3_stmt *own_identities_retrieve;
     sqlite3_stmt *own_keys_retrieve;
+    sqlite3_stmt *key_identities_retrieve;
     sqlite3_stmt *get_user_default_key;
     sqlite3_stmt *get_all_keys_for_user;
         
@@ -570,4 +575,3 @@ static inline int Sqlite3_step(sqlite3_stmt* stmt)
     } while (rc == SQLITE_BUSY || rc == SQLITE_LOCKED);
     return rc;
 }
-

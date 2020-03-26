@@ -84,7 +84,9 @@ typedef enum {
     PEP_VERIFY_NO_KEY                               = 0x0407,
     PEP_VERIFIED_AND_TRUSTED                        = 0x0408,
     PEP_CANNOT_REENCRYPT                            = 0x0409,
+    PEP_VERIFY_SIGNER_KEY_REVOKED                   = 0x040a,
     PEP_CANNOT_DECRYPT_UNKNOWN                      = 0x04ff,
+
 
     PEP_TRUSTWORD_NOT_FOUND                         = 0x0501,
     PEP_TRUSTWORDS_FPR_WRONG_LENGTH                 = 0x0502,
@@ -117,6 +119,8 @@ typedef enum {
     PEP_STATEMACHINE_INVALID_ACTION                 = 0x0985,
     PEP_STATEMACHINE_INHIBITED_EVENT                = 0x0986,
     PEP_STATEMACHINE_CANNOT_SEND                    = 0x0987,
+
+    PEP_DISTRIBUTION_ILLEGAL_MESSAGE                = 0x1002,
 
     PEP_COMMIT_FAILED                               = 0xff01,
     PEP_MESSAGE_CONSUME                             = 0xff02,
@@ -157,7 +161,7 @@ typedef struct Sync_event *SYNC_EVENT;
 //  parameters:
 //      ev (in)         event to free
 
-void free_Sync_event(SYNC_EVENT ev);
+DYNAMIC_API void free_Sync_event(SYNC_EVENT ev);
 
 
 // inject_sync_event - inject sync protocol message
@@ -168,6 +172,10 @@ void free_Sync_event(SYNC_EVENT ev);
 //
 //  return value:
 //      0 if event could be stored successfully or nonzero otherwise
+//
+//  caveat:
+//      if ev is SHUTDOWN then the implementation has to be synchronous
+//      and the shutdown must be immediate
 
 typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 
@@ -1311,6 +1319,10 @@ DYNAMIC_API const char *per_user_directory(void);
 DYNAMIC_API const char *per_machine_directory(void);
 
 
+PEP_STATUS _generate_keypair(PEP_SESSION session, 
+                             pEp_identity *identity,
+                             bool suppress_event);
+
 DYNAMIC_API PEP_STATUS reset_pEptest_hack(PEP_SESSION session);
 
 // This is used internally when there is a temporary identity to be retrieved
@@ -1354,6 +1366,9 @@ PEP_STATUS get_main_user_fpr(PEP_SESSION session,
 
 PEP_STATUS replace_main_user_fpr(PEP_SESSION session, const char* user_id,
                               const char* new_fpr);
+
+PEP_STATUS replace_main_user_fpr_if_equal(PEP_SESSION session, const char* user_id,
+                                          const char* new_fpr, const char* compare_fpr);
     
 DYNAMIC_API PEP_STATUS get_replacement_fpr(
         PEP_SESSION session,
@@ -1418,7 +1433,12 @@ PEP_STATUS sign_only(PEP_SESSION session,
                      const char *fpr, 
                      char **sign, 
                      size_t *sign_size);
+                     
+PEP_STATUS set_all_userids_to_own(PEP_SESSION session, 
+                                  identity_list* id_list);
 
+PEP_STATUS has_partner_contacted_address(PEP_SESSION session, const char* partner_id,
+                                         const char* own_address, bool* was_contacted);
 #ifdef __cplusplus
 }
 #endif

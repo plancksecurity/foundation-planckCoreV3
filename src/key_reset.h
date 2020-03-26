@@ -8,6 +8,7 @@
 #include "message.h"
 #include "message_api.h"
 #include "cryptotech.h"
+#include "keyreset_command.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -88,6 +89,8 @@ DYNAMIC_API PEP_STATUS key_reset_user(
 //
 DYNAMIC_API PEP_STATUS key_reset_all_own_keys(PEP_SESSION session);
 
+// FIXME: Doc
+DYNAMIC_API PEP_STATUS key_reset_own_grouped_keys(PEP_SESSION session);
 
 // key_reset() - reset the database status for a key, removing all trust information
 //               and default database connections. For own keys, also revoke the key
@@ -125,16 +128,23 @@ PEP_STATUS key_reset(
         pEp_identity* ident
     );
 
-
+/*
+PEP_STATUS key_reset_own_and_deliver_revocations(PEP_SESSION session, 
+                                                 identity_list** own_identities, 
+                                                 stringlist_t** revocations, 
+                                                 stringlist_t** keys);
+*/
 
 PEP_STATUS has_key_reset_been_sent(
         PEP_SESSION session, 
+        const char* from_addr,
         const char* user_id, 
         const char* revoked_fpr,
         bool* contacted);
 
 PEP_STATUS set_reset_contact_notified(
         PEP_SESSION session,
+        const char* own_address,
         const char* revoke_fpr,
         const char* contact_id
     );
@@ -144,14 +154,20 @@ PEP_STATUS receive_key_reset(PEP_SESSION session,
 
 PEP_STATUS create_standalone_key_reset_message(PEP_SESSION session,
                                                message** dst, 
+                                               pEp_identity* own_identity,
                                                pEp_identity* recip,
                                                const char* old_fpr,
                                                const char* new_fpr);
+
                                                
 PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
+                                     pEp_identity* from_ident,
                                      const char* old_fpr, 
                                      const char* new_fpr);
-    
+ 
+PEP_STATUS key_reset_commands_to_PER(const keyreset_command_list *command_list, char **cmds, size_t *size);
+PEP_STATUS PER_to_key_reset_commands(const char *cmds, size_t size, keyreset_command_list **command_list);
+
 #ifdef __cplusplus
 }
 #endif
