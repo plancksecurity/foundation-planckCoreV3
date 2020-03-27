@@ -73,17 +73,17 @@ enum comm_type {
     hex OpenPGP_weak_unconfirmed 0x11      doc="RSA 1024 is weak";
 
     hex to_be_checked 0x20                 doc="generic";
-    hex SMIME_unconfirmed 0x21;
+    hex SMIME_unconfirmed 0x21             doc="encrypted with S/MIME";
     hex CMS_unconfirmed 0x22;
 
     hex strong_but_unconfirmed 0x30        doc="generic";
-    hex OpenPGP_unconfirmed 0x38           doc="key at least 2048 bit RSA or EC";
-    hex OTR_unconfirmed 0x3a;
+    hex OpenPGP_unconfirmed 0x38           doc="key at least 2048 bit RSA, EC, or anything useful";
+    hex OTR_unconfirmed 0x3a               doc="encrypted with OTR";
 
     doc > range 0x40 to 0x7f: unconfirmed encryption and anonymization
 
     hex unconfirmed_enc_anon 0x40          doc="generic";
-    hex pEp_unconfirmed 0x7f 
+    hex pEp_unconfirmed 0x7f               doc="encrypted with pEp";
 
     hex confirmed 0x80                     doc="this bit decides if trust is confirmed";
 
@@ -112,22 +112,17 @@ enum comm_type {
 struct identity {
     field string address doc="SMTP address or URI. String with address UTF-8 encoded";
     field hash fpr doc="fingerprint of key being used as ID. String with fingerprint UTF-8 encoded";
-    field string user_id 
-    doc="""
-        ID for person or entity in M2M case. String with user ID UTF-8 encoded
+    field string user_id doc="ID for person or system in case of M2M";
+    doc ||
         user_id MIGHT be set to "pEp_own_userId" (use PEP_OWN_USERID preprocessor define)
         if this is own user's identity. But it is not REQUIRED to be.
-        """;
+        ||
     field string username doc="descriptive string. String with user name UTF-8 encoded";
     field comm_type comm_type doc="type of communication with this ID";
-    field ISO639_1 lang[3] 
-    doc="""
-        two-digit language code or null bytes. 
-        language of conversation ISO 639-1 ALPHA-2, last byte is 0
-        """;
+    field ISO639_1 lang[3] doc="ISO 639-1 ALPHA-2, last byte is 0";
     field bool me doc="if this is the local user herself/himself";
-    field unsigned int major_ver doc="highest version of pEp message received, if any";
-    field unsigned int minor_ver doc="highest version of pEp message received, if any";
+    field unsigned major_ver doc="highest version of pEp message received, if any";
+    field unsigned minor_ver doc="highest version of pEp message received, if any";
     field identity_flags_t flags doc="identity_flag1 | identity_flag2 | ...";
 } // struct Identity
 

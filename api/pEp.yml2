@@ -1,6 +1,6 @@
 // p≡p API Y language
 
-// Copyleft (c) 2019, p≡p foundation
+// Copyleft (c) 2019-2020, p≡p foundation
 // this file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -21,19 +21,19 @@ decl protocol @name;
 decl method @name;
 decl construct, new is construct;
 
-// use: readonly in parm, ownership remains with caller
+// readonly in parm, ownership remains with caller
 decl use @type @name (mode=use) alias parm;
 
-// lend: inout parm, ownership remains with caller
+// inout parm, ownership remains with caller
 decl supply @type @name (mode=supply) alias parm;
 
-// create: factory delivers this, ownership goes to caller
+// factory delivers this, ownership goes to caller
 decl create @type @name (mode=create) alias parm;
 
-// provide: in parm, ownership goes to callee
+// in parm, ownership goes to callee
 decl provide @type @name (mode=provide) alias parm;
 
-// return: out parm, ownership goes to callee
+// out parm, ownership goes to callee
 decl return @type @name (mode=return) alias parm;
 
 decl throws @except;
@@ -42,23 +42,21 @@ decl caveat(mode=caveat) alias doc;
 
 // base types
 
-// string:  text  
-    doc="""
-        p≡p engine uses UTF-8 strings which are NFC normalized. 
-        Cf. https://dev.pep.foundation/Engine/Basic%20Concepts%20of%20the%20pEp%20Engine
-        """
-// int:     integer number
-// blob:    Binary Large Object
-// size_t:  size in memory
-// bool:    true or false
+// string   text  
+//          p≡p engine uses UTF-8 strings which are NFC normalized. 
+//          Cf. https //dev.pep.foundation/Engine/Basic%20Concepts%20of%20the%20pEp%20Engine
+
+// int      integer number
+// blob     Binary Large Object
+// size_t   size in memory
+// bool     true or false
 
 
 // collections
 
-// list:    one or more elements, which have a sequence
-// set:     one or more elements, which do not have a sequence
-// pair:    two elements in sequence
-
+// list     one or more elements, which have a sequence
+// set      one or more elements, which do not have a sequence
+// pair     two elements in sequence
 
 
 package pEp {

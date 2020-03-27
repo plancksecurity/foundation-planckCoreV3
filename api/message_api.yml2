@@ -8,55 +8,67 @@
 
 
 enum text_format {
-    hex text_format_plain 0;
-    hex text_format_html 1;
-    hex text_format_other 0xff;
+    hex plain 0;
+    hex html 1;
+    hex other 0xff;
 }
 
 
-enum msg_direction {
-    item dir_incoming 0;
-    item dir_outgoing 1;
+enum direction {
+    item incoming 0;
+    item outgoing 1;
 }
 
 
 enum enc_format {
-    item enc_none 0 doc='message is not encrypted';
-    item enc_pieces 1 doc='inline PGP + PGP extensions';
-    item enc_S_MIME 2 doc='RFC5751';
-    item enc_PGP_MIME 3 doc='RFC3156';
-    item enc_PEP 4 doc='pEp encryption format';
-    item enc_PGP_MIME_Outlook1 5 doc='Message B0rken by Outlook type 1';
+    item none 0 doc='message is not encrypted';
+    item pieces 1 doc='inline PGP + PGP extensions';
+    item S_MIME 2 doc='RFC5751';
+    item PGP_MIME 3 doc='RFC3156';
+    item PEP 4 doc='pEp encryption format';
+    item PGP_MIME_Outlook1 5 doc='Message B0rken by Outlook type 1';
 }
 
 
-enum ratings {
-    item rating_undefined 0;
-    item rating_cannot_decrypt 1;
-    item rating_have_no_key 2;
-    item rating_unencrypted 3;
-    item rating_unencrypted_for_some doc="don't use this any more",
-    item rating_unreliable 4;
-    item rating_reliable 5;
-    item rating_trusted 6;
-    item rating_trusted_and_anonymized 7;
-    item rating_fully_anonymous 8;
-    item rating_mistrust -1;
-    item rating_b0rken -2;
-    item rating_under_attack -3;
+enum rating {
+    item undefined 0 doc="no rating available";
+
+    doc "no color";
+
+    item cannot_decrypt 1;
+    item have_no_key 2;
+    item unencrypted 3;
+    // 5 is reserved
+    item unreliable 5;
+
+    doc "yellow";
+
+    item reliable 6;
+
+    doc "green";
+
+    item trusted 7;
+    item trusted_and_anonymized 8;
+    item fully_anonymous 9;
+
+    doc "red";
+
+    item mistrust -1;
+    item b0rken -2;
+    item under_attack -3;
 }
     
 
-enum colors {
-    item color_no_color 0;
-    item color_yellow 1;
-    item color_green 2;
-    item color_red -1;
+enum color {
+    item no_color 0;
+    item yellow 1;
+    item green 2;
+    item red -1;
 }
 
 
 struct message {
-    field msg_direction dir;
+    field direction dir;
     field string id doc='string of message ID';
     field string shortmsg doc='string of short message';
     field string longmsg doc='string of long message (plain)';

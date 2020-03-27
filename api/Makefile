@@ -1,4 +1,4 @@
-all: pEp.xml basic_api.h
+all: basic_api.h
 
 YML2=$(wildcard *.yml2)
 YSL2=$(wildcard *.ysl2)
@@ -9,7 +9,7 @@ YSL2=$(wildcard *.ysl2)
 %.xsl: %.ysl2
 	yml2proc -DP $< -o $@
 
-%.h: $(YML2) $(YSL2)
+%.h: $(YML2) $(YSL2) pEp.xml
 	yml2proc -y gen_c_header.ysl2 pEp.yml2
 
 .PHONY: clean

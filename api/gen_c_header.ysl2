@@ -1,6 +1,6 @@
 // p≡p API header generator
 
-// Copyleft (c) 2019, p≡p foundation
+// Copyleft (c) 2019-2020, p≡p foundation
 // this file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -12,6 +12,7 @@ include ./config.yml2
 
 tstylesheet {
     include ./to_c.ysl2
+    include standardlib.ysl2
 
     const "version" **version;
     const "copyleft" **copyleft;
@@ -45,7 +46,7 @@ tstylesheet {
     }
 
     template "type" {
-        if "@doc" | // «@doc»
+        apply "@doc", 0;
         | typedef «func:basetype(@name)» «@name»;
         |
     }
@@ -54,7 +55,7 @@ tstylesheet {
     ||
     typedef struct _«func:name()» {
     ||
-    apply "field";
+    apply "field|doc";
     ||
     } «func:name()»;
 
@@ -62,9 +63,8 @@ tstylesheet {
     }
 
     template "field" {
-        if "@doc" | // «@doc»
+        apply "@doc", 0;
         | «func:c-type(@type)» «@name»;
-        |
     }
 
     template "enum" {
@@ -78,18 +78,24 @@ tstylesheet {
     ||
     }
 
-    template "doc"
-    ||
-
-    // «.»
-
-    ||
+    template "doc|@doc" {
+    > \n
+    choose {
+        when "contains(., '\n')"
+            | /* */
+        otherwise
+            | // «.»
+    }
+    > \n
+    }
 
     template "item" {
-        0> «func:name()»`if "text()" { " = " value "." }``if "position()!=last()" > ,`
+        apply "@doc", 0;
         choose {
-            when "@doc" >  // «@doc»\n
-            otherwise > \n
+            when "@output='hex'"
+                | «func:name()»`if "text()" { " = 0x" value "yml:dec2hex(., 2)" }``if "position()!=last()" > ,`
+            otherwise
+                | «func:name()»`if "text()" { " = " value "." }``if "position()!=last()" > ,`
         }
     }
 }

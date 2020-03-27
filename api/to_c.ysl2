@@ -11,14 +11,11 @@ template "*", mode=name {
     param "abbr", "false()";
     if ".!=/*" {
         apply "..", 0, mode=name;
-        > _
+        if "@name!='basic' and @name != string(../@name)"
+            > _
     }
-    choose {
-        when '@name="basic"'
-            > «/*/@name»
-        otherwise
-            > «@name»
-    }
+    if "@name!='basic' and @name != string(../@name)"
+        > «@name»
 }
 
 function "name" {
@@ -45,8 +42,12 @@ def "func:basetype" {
 def "func:c-type" {
     param "dsltype";
     choose {
-        when "$dsltype = 'string' or $dsltype = 'binary'"
-            result "'char *'";
+        when "$dsltype = 'string'"
+            result > char *
+        when "$dsltype = 'binary'"
+            result > unsigned char *
+        when "$dsltype = 'unsigned'"
+            result > unsigned int
         otherwise
             result "$dsltype";
     }
