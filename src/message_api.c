@@ -838,7 +838,9 @@ enomem:
 }
 
 static message* wrap_message_as_attachment(message* envelope, 
-    message* attachment, message_wrap_type wrap_type, bool keep_orig_subject, unsigned int max_major, unsigned int max_minor) {
+    message* attachment, message_wrap_type wrap_type, 
+    bool keep_orig_subject, stringlist_t* extra_keys,
+    unsigned int max_major, unsigned int max_minor) {
     
     if (!attachment)
         return NULL;
@@ -848,7 +850,13 @@ static message* wrap_message_as_attachment(message* envelope,
     PEP_STATUS status = PEP_STATUS_OK;
 
     replace_opt_field(attachment, "X-pEp-Version", PEP_VERSION, true);
-        
+
+    if (extra_keys) {
+        char* ex_keystr = stringlist_to_string(extra_keys);
+        if (ex_keystr)
+            add_opt_field(attachment, "X-pEp-extra-keys", ex_keystr);
+    }
+
     if (!_envelope && (wrap_type != PEP_message_transport)) {
         _envelope = extract_minimal_envelope(attachment, PEP_dir_outgoing);
         status = generate_message_id(_envelope);
@@ -1944,7 +1952,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         message_wrap_type wrap_type = PEP_message_unwrapped;
         if ((enc_format != PEP_enc_inline) && (!force_v_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
             wrap_type = ((flags & PEP_encrypt_flag_key_reset_only) ? PEP_message_key_reset : PEP_message_default);
-            _src = wrap_message_as_attachment(NULL, src, wrap_type, false, max_version_major, max_version_minor);
+            _src = wrap_message_as_attachment(NULL, src, wrap_type, false, extra, max_version_major, max_version_minor);
             if (!_src)
                 goto pEp_error;
         }
@@ -2014,6 +2022,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
     if (_src && _src != src)
         free_message(_src);
     
+    // Do similar for extra key list...
     _cleanup_src(src, added_key_to_real_src);
         
     return status;
@@ -2292,7 +2301,7 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
 
     unsigned int major_ver, minor_ver;
     pEp_version_major_minor(PEP_VERSION, &major_ver, &minor_ver);
-    _src = wrap_message_as_attachment(NULL, src, PEP_message_default, false, major_ver, minor_ver);
+    _src = wrap_message_as_attachment(NULL, src, PEP_message_default, false, extra, major_ver, minor_ver);
     if (!_src)
         goto pEp_error;
 
