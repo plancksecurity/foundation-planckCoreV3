@@ -79,14 +79,9 @@ tstylesheet {
     }
 
     template "doc|@doc" {
-    > \n
-    choose {
-        when "contains(., '\n')"
-            | /* */
-        otherwise
+        > \n
+        for "str:split(., '\n')"
             | // «.»
-    }
-    > \n
     }
 
     template "item" {

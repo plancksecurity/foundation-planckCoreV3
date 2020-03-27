@@ -30,15 +30,15 @@ type string_pair is pair< string, string >;
 
 
 enum cipher_suite {
-    item cipher_suite_default 0;
-    item cipher_suite_cv25519 1;
-    item cipher_suite_p256 2;
-    item cipher_suite_p384 3;
-    item cipher_suite_p521 4;
-    item cipher_suite_rsa2k 5;
-    item cipher_suite_rsa3k 6;
-    item cipher_suite_rsa4k 7;
-    item cipher_suite_rsa8k 8;
+    item default 0;
+    item cv25519 1;
+    item p256 2;
+    item p384 3;
+    item p521 4;
+    item rsa2k 5;
+    item rsa3k 6;
+    item rsa4k 7;
+    item rsa8k 8;
 }
 
 
@@ -47,7 +47,7 @@ enum comm_type {
 
     doc > range 0x01 to 0x09: no encryption, 0x0a to 0x0e: nothing reasonable
 
-    hex no_encryption 0x01                 doc="generic";
+    hex no_encryption 0x01;
     hex no_encrypted_channel 0x02;
     hex key_not_found 0x03;
     hex key_expired 0x04;
@@ -64,7 +64,6 @@ enum comm_type {
     hex key_too_short 0x0c;
 
     hex compromised 0x0e                   doc="known compromised connection";
-    hex compromized 0x0e                   doc="deprecated misspelling";
     hex mistrusted 0x0f                    doc="known mistrusted key";
 
     doc > range 0x10 to 0x3f: unconfirmed encryption
