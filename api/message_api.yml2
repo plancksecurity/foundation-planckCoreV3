@@ -4,7 +4,7 @@
 // this file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-//  written by Volker Birk and Nana Karlstetter
+// written by Volker Birk and Nana Karlstetter
 
 
 enum text_format {
