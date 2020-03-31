@@ -20,6 +20,24 @@ type hash_list doc="sequence of fingerprints of keys"
 type TID doc="UUID version 4 variant 1"
     is binary size=16;
 
+type binary_ref is binary;
+
+enum content_disposition {
+    item attachment 0;
+    item inline 1;
+    item other -1  doc="must be affirmatively set";
+}
+
+struct blob {
+    field binary_ref value;
+    field size_t size;
+    field string mime_type;
+    field string filename;
+    content_disposition disposition;
+
+    internal any_ref release_value;
+}
+
 type blob_list is list< blob >;
 
 type identity_list is list< identity >;

@@ -45,9 +45,9 @@ decl caveat(mode=caveat) alias doc;
 // string   text  
 //          p≡p engine uses UTF-8 strings which are NFC normalized. 
 //          Cf. https //dev.pep.foundation/Engine/Basic%20Concepts%20of%20the%20pEp%20Engine
-
-// int      integer number
-// blob     Binary Large Object
+// binary   binary data
+// int      signed integer number
+// unsigned unsigned integer number
 // size_t   size in memory
 // bool     true or false
 

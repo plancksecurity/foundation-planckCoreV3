@@ -1,6 +1,6 @@
 // p≡p Message API
 
-// Copyleft (c) 2019, p≡p foundation
+// Copyleft (c) 2019-2020, p≡p foundation
 // this file is under GNU General Public License 3.0
 // see LICENSE.txt
 
@@ -38,7 +38,7 @@ enum rating {
     item cannot_decrypt 1;
     item have_no_key 2;
     item unencrypted 3;
-    // 5 is reserved
+    // 4 is reserved
     item unreliable 5;
 
     doc "yellow";
@@ -74,7 +74,7 @@ struct message {
     field string longmsg doc='string of long message (plain)';
     field string longmsg_formatted doc='string of long message (formatted)';
     field blob_list attachments doc='blobs with attachements';
-    field blob_ref rawmsg_ref doc='reference to raw message data';
+    field binary_ref rawmsg_ref doc='reference to raw message data';
     field size_t rawmsg_size doc='size of raw message data';
     field timestamp sent doc='when the message is sent';
     field timestamp recv doc='when the message is received';
@@ -85,7 +85,7 @@ struct message {
     field identity_list bcc doc='whom a BCC is being sent';
     field identity_list reply_to doc='where a reply should go to';
     field string_list in_reply_to doc='list of strings with MessageIDs of refering messages';
-    field message_ref refering_msg_ref doc='reference to refering message';
+    internal field message_ref refering_msg_ref doc='reference to refering message';
     field string_list references doc='list of strings with references';
     field message_ref_list refered_by doc='list of references to messages being refered';
     field string_list keywords doc='list of strings with keywords';

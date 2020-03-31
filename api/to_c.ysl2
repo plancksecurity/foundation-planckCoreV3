@@ -42,14 +42,27 @@ def "func:basetype" {
 def "func:c-type" {
     param "dsltype";
     choose {
+        // base types
         when "$dsltype = 'string'"
             result > char *
         when "$dsltype = 'binary'"
-            result > unsigned char *
+            result > char *
+        when "$dsltype = 'int'"
+            result > int
         when "$dsltype = 'unsigned'"
             result > unsigned int
+        when "$dsltype = 'size_t'"
+            result > size_t
+        when "$dsltype = 'bool'"
+            result > bool
+
+        // basic type definitions
+        when "/package/package[@name='basic']/type[@name=$dsltype]"
+            result > «$dsltype»
+
+        // other
         otherwise
-            result "$dsltype";
+            result call "name" with "abbr", "$dsltype";
     }
 }
 
