@@ -20,7 +20,7 @@ type hash_list doc="sequence of fingerprints of keys"
 type TID doc="UUID version 4 variant 1"
     is binary size=16;
 
-type binary_ref is binary;
+type binary_ref is weak< binary >;
 
 enum content_disposition {
     item attachment 0;
@@ -29,14 +29,14 @@ enum content_disposition {
 }
 
 struct blob {
-    field binary_ref value;
+    field function=free binary_ref value;
+
     field size_t size;
     field string mime_type;
     field string filename;
-    content_disposition disposition;
-
-    internal any_ref release_value;
+    field content_disposition disposition;
 }
+
 
 type blob_list is list< blob >;
 
@@ -45,6 +45,10 @@ type identity_list is list< identity >;
 type string_list is list< string >; 
 
 type string_pair is pair< string, string >;
+
+type string_pair_list is list< string_pair >;
+
+type any_ref is weak< any >;
 
 
 enum cipher_suite {
@@ -140,22 +144,20 @@ struct identity {
     field bool me doc="if this is the local user herself/himself";
     field unsigned major_ver doc="highest version of pEp message received, if any";
     field unsigned minor_ver doc="highest version of pEp message received, if any";
-    field identity_flags_t flags doc="identity_flag1 | identity_flag2 | ...";
+
+    flags {
+        flag not_for_sync 0x0001
+            doc="don't use this identity for Sync";
+
+        flag list 0x0002
+            doc="identity of list of persons";
+
+        doc | the second octet flags are calculated
+
+        flag devicegroup 0x0100
+            doc="identity of a device group member";
+    }
 } // struct Identity
-
-
-flags {
-    flag not_for_sync 0x0001
-        doc="don't use this identity for Sync";
-
-    flag list 0x0002
-        doc="identity of list of persons";
-
-    doc | the second octet flags are calculated
-
-    flag devicegroup 0x0100
-        doc="identity of a device group member";
-}
 
 
 protocol session {

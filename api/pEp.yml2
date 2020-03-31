@@ -15,6 +15,7 @@ decl enum @name;
 decl item @name;
 decl struct @name;
 decl field @type @name;
+decl internal < field >; // internal field, p≡p engine only
 decl hex is item (output=hex);
 decl flag @name;
 decl protocol @name;
@@ -42,14 +43,16 @@ decl caveat(mode=caveat) alias doc;
 
 // base types
 
-// string   text  
-//          p≡p engine uses UTF-8 strings which are NFC normalized. 
-//          Cf. https //dev.pep.foundation/Engine/Basic%20Concepts%20of%20the%20pEp%20Engine
-// binary   binary data
-// int      signed integer number
-// unsigned unsigned integer number
-// size_t   size in memory
-// bool     true or false
+// string       text  
+//              p≡p engine uses UTF-8 strings which are NFC normalized. 
+//              Cf. https //dev.pep.foundation/Engine/Basic%20Concepts%20of%20the%20pEp%20Engine
+// binary       binary data
+// int          signed integer number
+// unsigned     unsigned integer number
+// size_t       size in memory
+// bool         true or false
+// timestamp    point of time
+// any          any type
 
 
 // collections

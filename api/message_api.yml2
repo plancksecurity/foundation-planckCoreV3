@@ -85,12 +85,12 @@ struct message {
     field identity_list bcc doc='whom a BCC is being sent';
     field identity_list reply_to doc='where a reply should go to';
     field string_list in_reply_to doc='list of strings with MessageIDs of refering messages';
-    internal field message_ref refering_msg_ref doc='reference to refering message';
+    field any_ref refering_msg_ref doc='reference to refering message';
     field string_list references doc='list of strings with references';
-    field message_ref_list refered_by doc='list of references to messages being refered';
+    field string_list refered_by doc='list of references to messages being refered';
     field string_list keywords doc='list of strings with keywords';
     field string comments doc='string with comments';
-    field stringpair_list opt_fields doc='optional fields';
+    field string_pair_list opt_fields doc='optional fields';
     field enc_format format doc='format of encrypted data';
 
     new (msg_direction dir);

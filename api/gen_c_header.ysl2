@@ -34,6 +34,8 @@ tstylesheet {
     extern "C" {
     #endif
 
+    #include <pEp/basic_types.h>
+
     ||
     apply "doc|type|enum|struct", 0;
     ||
@@ -55,17 +57,25 @@ tstylesheet {
     ||
     typedef struct _«func:name()» {
     ||
-    apply "field|doc";
+    apply "field|internal|doc";
+    apply "field[@function='free']", mode=free;
     ||
     } «func:name()»;
 
     ||
     }
 
-    template "field" {
+    template "field|internal" {
         apply "@doc", 0;
         | «func:c-type(@type)» «@name»;
     }
+
+    template "field", mode=free
+    ||
+    
+    // free function for «@name»
+    void (*release_«@name»)(«func:c-type(@type)» «@name»);
+    ||
 
     template "enum" {
     ||
