@@ -932,10 +932,6 @@ static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
     return status;
 }
 
-#ifdef USE_GPG
-PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session);
-#endif // USE_GPG
-
 DYNAMIC_API PEP_STATUS init(
         PEP_SESSION *session,
         messageToSend_t messageToSend,
@@ -2061,25 +2057,6 @@ DYNAMIC_API PEP_STATUS init(
         goto pEp_error;
 
     // runtime config
-
-    if (very_first)
-    {
-#ifdef USE_GPG
-        // On first run, all private keys already present in PGP keyring 
-        // are taken as own in order to seamlessly integrate with
-        // pre-existing GPG setup.
-
-        // Note: earlier fears about danger because of DB reinitialisation should
-        // be a non-issue here, as we ONLY take the ultimately trusted keys now.
-        // Thus, unless the user has assigned ultimate trust through PGP, there is
-        // no chance of automatically imported pEp keys from a previous run making
-        // their way into PEP trusted status without explicit action (Bare imported
-        // private keys have an 'unknown' trust designation in PGP).
-
-        // We don't really worry about the status here.
-        status = pgp_import_ultimately_trusted_keypairs(_session);        
-#endif // USE_GPG
-    }
 
     *session = _session;
     

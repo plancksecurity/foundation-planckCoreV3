@@ -93,8 +93,6 @@ char *strnstr(const char *big, const char *little, size_t len);
 const char *windoze_keys_db(void);
 const char *windoze_local_db(void);
 const char *windoze_system_db(void);
-const char *gpg_conf(void);
-const char *gpg_agent_conf(void);
 
 void log_output_debug(const char *title, const char *entity, const char *description, const char *comment);
 

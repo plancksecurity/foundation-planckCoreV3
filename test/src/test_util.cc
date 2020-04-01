@@ -203,14 +203,14 @@ const char* tl_status_string(PEP_STATUS status) {
     switch (status) {
         case PEP_STATUS_OK:
             return "PEP_STATUS_OK";
-        case PEP_INIT_CANNOT_LOAD_GPGME:
-            return "PEP_INIT_CANNOT_LOAD_GPGME";
-        case PEP_INIT_GPGME_INIT_FAILED:
-            return "PEP_INIT_GPGME_INIT_FAILED";
-        case PEP_INIT_NO_GPG_HOME:
-            return "PEP_INIT_NO_GPG_HOME";
-        case PEP_INIT_NETPGP_INIT_FAILED:
-            return "PEP_INIT_NETPGP_INIT_FAILED";
+        case PEP_INIT_CANNOT_LOAD_CRYPTO_LIB:
+            return "PEP_INIT_CANNOT_LOAD_CRYPTO_LIB";
+        case PEP_INIT_CRYPTO_LIB_INIT_FAILED:
+            return "PEP_INIT_CRYPTO_LIB_INIT_FAILED";
+        case PEP_INIT_NO_CRYPTO_HOME:
+            return "PEP_INIT_NO_CRYPTO_HOME";
+        // case PEP_INIT_NETPGP_INIT_FAILED:
+        //     return "PEP_INIT_NETPGP_INIT_FAILED";
         case PEP_INIT_SQLITE3_WITHOUT_MUTEX:
             return "PEP_INIT_SQLITE3_WITHOUT_MUTEX";
         case PEP_INIT_CANNOT_OPEN_DB:

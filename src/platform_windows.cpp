@@ -285,23 +285,6 @@ const char *windoze_system_db(void) {
     return path.c_str();
 }
 
-const char *gpg_conf(void)
-{
-    static string path;
-    if (path.length() == 0)
-        path = managementPath("%APPDATA%\\gnupg", "gpg.conf");
-    return path.c_str();
-}
-
-const char *gpg_agent_conf(void)
-{
-    static string agent_path;
-    if (agent_path.length() == 0)
-        agent_path = managementPath("%APPDATA%\\gnupg", "gpg-agent.conf");
-    return agent_path.c_str();
-}
-
-
 long random(void)
 {
     unsigned int r;

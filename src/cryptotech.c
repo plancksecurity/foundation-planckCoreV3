@@ -3,16 +3,8 @@
 
 #include "pEp_internal.h"
 
-#ifdef USE_GPG
-#include "pgp_gpg.h"
-#else
-#ifdef USE_NETPGP
-#include "pgp_netpgp.h"
-#else
 #ifdef USE_SEQUOIA
 #include "pgp_sequoia.h"
-#endif
-#endif
 #endif
 // 
 
