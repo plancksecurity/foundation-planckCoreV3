@@ -1,0 +1,30 @@
+13:08:31.532 | ThisAddIn_Startup: Disable GPGOL
+13:08:32.111 | ThisAddIn_Startup: Set UI language
+13:08:32.111 | ThisAddIn_Startup: en language detected.
+13:08:32.111 | ThisAddIn_Startup: Connect Events
+13:08:32.111 | ThisAddIn_Startup: Loading settings
+13:08:32.126 |W| GetRegistryBoolean: No value retrieved for IsCrashReportVisible. Returning default value True.
+13:08:32.126 |W| GetRegistryBoolean: No value retrieved for IsDeveloperModeEnabled. Returning default value False.
+13:08:32.126 |W| GetRegistryBoolean: No value retrieved for IsDisableProtectionForContactsEnabled. Returning default value False.
+13:08:32.126 |W| GetRegistryBoolean: No value retrieved for IsGrouped. Returning default value False.
+13:08:32.126 |W| GetRegistryBoolean: No value retrieved for IsSensitiveDataLoggingEnabled. Returning default value False.
+13:08:32.126 |W| GetRegistryBoolean: No value retrieved for IsUXImprovementEnabled. Returning default value True.
+13:08:32.157 | ThisAddIn_Startup: Register callbacks
+13:08:32.173 | ThisAddIn_Startup: Setting cipher suite pEpCipherSuiteDefault
+13:08:32.173 | ThisAddIn_Startup: Register myself
+13:08:32.189 | ThisAddIn_Startup: Sync settings
+13:08:33.876 | ThisAddIn_Startup: Get Outlook options and set pEp required values.
+13:08:33.876 | ThisAddIn_Startup: Connect Watched objects
+13:08:33.939 | ThisAddIn_Startup: Connect Application Events.
+13:08:33.939 | ThisAddIn_Startup: Initializing inbox cleaner.
+13:08:33.954 | ThisAddIn_Startup: Main program started.
+13:09:31.876 |E| OpenDialogAndImportKeys: Error occured. System.IndexOutOfRangeException: Index was outside the bounds of the array.
+   at pEp.UI.FormControlOptions.State.OpenDialogAndImportKeys()
+13:10:24.563 |E| OpenDialogAndImportKeys: Error occured. System.IndexOutOfRangeException: Index was outside the bounds of the array.
+   at pEp.UI.FormControlOptions.State.OpenDialogAndImportKeys()
+13:10:38.519 |W| GetRegistryBoolean: No value retrieved for IsCrashReportVisible. Returning default value True.
+13:10:38.519 |W| GetRegistryBoolean: No value retrieved for IsDeveloperModeEnabled. Returning default value False.
+13:10:38.519 |W| GetRegistryBoolean: No value retrieved for IsDisableProtectionForContactsEnabled. Returning default value False.
+13:10:38.519 |W| GetRegistryBoolean: No value retrieved for IsGrouped. Returning default value False.
+13:10:38.519 |W| GetRegistryBoolean: No value retrieved for IsSensitiveDataLoggingEnabled. Returning default value False.
+13:10:38.519 |W| GetRegistryBoolean: No value retrieved for IsUXImprovementEnabled. Returning default value True.

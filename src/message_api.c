@@ -3603,6 +3603,9 @@ static PEP_STATUS _decrypt_message(
                                                    &ptext, &psize, &_keylist,
                                                    NULL);
 
+    if (status == PEP_DECRYPT_NO_KEY)
+        signal_Sync_event(session, Sync_PR_keysync, CannotDecrypt, NULL);
+
     if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
         goto pEp_error;
 
@@ -3816,7 +3819,9 @@ static PEP_STATUS _decrypt_message(
                         bool ignore_msg = false;
                             
                         if (is_key_reset) {
-                            if (inner_message->_sender_fpr) {
+                            if (decrypt_status == PEP_VERIFY_SIGNER_KEY_REVOKED)
+                                ignore_msg = true;
+                            else if (inner_message->_sender_fpr) {
                                 bool sender_key_is_me = false;
                                 status = is_own_key(session, inner_message->_sender_fpr, &sender_key_is_me);
                                 if (status != PEP_STATUS_OK && status != PEP_KEY_NOT_FOUND)
@@ -3834,7 +3839,7 @@ static PEP_STATUS _decrypt_message(
                                 }
                             }
                             else
-                                ignore_msg = true;
+                                ignore_msg = true;    
                         }
 
                         if (!ignore_msg) {
@@ -3849,17 +3854,20 @@ static PEP_STATUS _decrypt_message(
                                                                          private_il);
                             if (status != PEP_STATUS_OK)
                                 goto pEp_error;            
-                        }        
+                        }
+                        else {
+                            // Simply put, we bail. We should not be returning ANYTHERE here.
+                            status = decrypt_status;    
+                            goto pEp_error;
+                        }
                         if (is_key_reset) {
                             if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED) {
-                                if (!ignore_msg) {
-                                    status = receive_key_reset(session,
-                                                               inner_message);
-                                    if (status != PEP_STATUS_OK) {
-                                        free_message(inner_message);
-                                        goto pEp_error;
-                                    }
-                                }    
+                                status = receive_key_reset(session,
+                                                           inner_message);
+                                if (status != PEP_STATUS_OK) {
+                                    free_message(inner_message);
+                                    goto pEp_error;
+                                }
                                 *flags |= PEP_decrypt_flag_consume;
                                 calculated_src = msg = inner_message;                                    
                             }

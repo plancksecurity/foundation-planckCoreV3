@@ -1074,8 +1074,6 @@ PEP_STATUS _myself(PEP_SESSION session,
     char* default_own_id = NULL;
     status = get_default_own_userid(session, &default_own_id);
     
-    bool no_uname_on_entry = EMPTYSTR(identity->username);
-
     // Deal with non-default user_ids.
     // FIXME: if non-default and read-only, reject totally?
     if (default_own_id && strcmp(default_own_id, identity->user_id) != 0) {
@@ -1199,15 +1197,7 @@ PEP_STATUS _myself(PEP_SESSION session,
 
             free(identity->fpr);
             identity->fpr = NULL;
-            char* namecache = NULL;
-            if (no_uname_on_entry) {
-                namecache = identity->username;
-                identity->username = NULL;
-            }
             status = generate_keypair(session, identity);
-            if (namecache) {
-                identity->username = namecache;
-            }
             assert(status != PEP_OUT_OF_MEMORY);
 
             if (status != PEP_STATUS_OK) {

@@ -200,20 +200,16 @@ have found a dastardly bug in the engine, but it can also be a test issue.
 When debugging a failing test, use '--gtest_break_on_failure' to have
 gtest automatically break into the debugger where the assertion fails.
 
+### Output
+
+Compile tests with -DDEBUG_OUTPUT to (possibly) see output to cout. May only work
+in the tests run directly from ./EngineTests (with or without filter)
+
 # Creating new tests
 
 Script next on the agenda...
 
 # Known Problems
 
-There are 5 (maybe 6) tests that currently fail which are the function of
-broken tests, not the engine. They are on the agenda to fix (expired
-keys inside imported mails, etc). You'll see something like this - please
-ignore for this particular second in time:
-```
-    170 ms: ./EngineTests SubkeyRatingEvalTest.check_subkey_rating_eval_no_es
-     170 ms: ./EngineTests SubkeyRatingEvalTest.check_subkey_rating_eval_revoked_sign_no_alt
-     253 ms: ./EngineTests SubkeyRatingEvalTest.check_subkey_rating_eval_weak_e_strong_ecc_se
-    1189 ms: ./EngineTests KeyResetMessageTest.check_non_reset_receive_revoked
-    1376 ms: ./EngineTests KeyResetMessageTest.check_reset_receive_revoked
-```
+The normal run of the tests in parallel eats output. Try running the individual test case as above if you need to see a test case's output.
+

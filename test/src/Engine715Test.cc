@@ -1,18 +1,10 @@
-// This file is under GNU General Public License 3.0
-// see LICENSE.txt
-
-#include "TestConstants.h"
 #include <stdlib.h>
 #include <string>
-#include <iostream>
-#include <fstream>
 #include <cstring>
 
 #include "pEpEngine.h"
-#include "platform.h"
-
 #include "test_util.h"
-
+#include "TestConstants.h"
 #include "Engine.h"
 
 #include <gtest/gtest.h>
@@ -20,8 +12,8 @@
 
 namespace {
 
-	//The fixture for KeyeditTest
-    class KeyeditTest : public ::testing::Test {
+	//The fixture for Engine715Test
+    class Engine715Test : public ::testing::Test {
         public:
             Engine* engine;
             PEP_SESSION session;
@@ -29,14 +21,14 @@ namespace {
         protected:
             // You can remove any or all of the following functions if its body
             // is empty.
-            KeyeditTest() {
+            Engine715Test() {
                 // You can do set-up work for each test here.
                 test_suite_name = ::testing::UnitTest::GetInstance()->current_test_info()->GTEST_SUITE_SYM();
                 test_name = ::testing::UnitTest::GetInstance()->current_test_info()->name();
                 test_path = get_main_test_home_dir() + "/" + test_suite_name + "/" + test_name;
             }
 
-            ~KeyeditTest() override {
+            ~Engine715Test() override {
                 // You can do clean-up work that doesn't throw exceptions here.
             }
 
@@ -78,62 +70,17 @@ namespace {
             const char* test_suite_name;
             const char* test_name;
             string test_path;
-            // Objects declared here can be used by all tests in the KeyeditTest suite.
+            // Objects declared here can be used by all tests in the Engine715Test suite.
 
     };
 
 }  // namespace
 
 
-TEST_F(KeyeditTest, check_keyedit) {
-
-    // generate test key
-
-    output_stream << "\ngenerating key for keyedit test\n";
-    pEp_identity *identity = new_identity(
-            "expire@dingens.org",
-            NULL,
-            "423",
-            "expire test key"
-        );
-    ASSERT_NE(identity, nullptr);
-    PEP_STATUS generate_status = generate_keypair(session, identity);
-    output_stream << "generate_keypair() exits with " << generate_status << "\n";
-    ASSERT_EQ(generate_status, PEP_STATUS_OK);
-    output_stream << "generated key is " << identity->fpr << "\n";
-
-    string key(identity->fpr);
-    free_identity(identity);
-
-    // keyedit test code
-
-    time_t now = time(NULL);
-    output_stream << "Time is " << now << endl;
-    timestamp *ts = new_timestamp(now);
-    ts->tm_year += 2;
-
-    output_stream << "key shall expire on " << asctime(ts) << "\n";
-
-    PEP_STATUS status2 = renew_key(session, key.c_str(), ts);
-    output_stream << "renew_key() exited with " << status2 << "\n";
-    ASSERT_EQ(status2, PEP_STATUS_OK);
-    free_timestamp(ts);
-
-    output_stream << "key renewed.\n";
-
-    output_stream << "key will be revoked\n";
-    PEP_STATUS status3 = revoke_key(session, key.c_str(), "revoke test");
-    output_stream << "revoke_key() exited with " << status3 << "\n";
-    ASSERT_EQ(status3, PEP_STATUS_OK);
-
-    output_stream << "key revoked.\n";
-
-    // Because pEp's policy is never to delete keys from the keyring and delete_keypair
-    // though gnupg makes responding to a dialog mandatory under Debian, we will not test
-    // this anymore.
-
-    // output_stream << "deleting key pair " << key.c_str() << "\n";
-    // PEP_STATUS delete_status = delete_keypair(session, key.c_str());
-    // output_stream << "delete_keypair() exits with " << delete_status << "\n";
-    // ASSERT_EQ(delete_status , PEP_STATUS_OK);
+TEST_F(Engine715Test, check_engine_715) {
+    // This is just a dummy test case. The convention is check_whatever_you_are_checking
+    // so for multiple test cases in a suite, be more explicit ;)
+    string keyfile = slurp("test_keys/t001.asc");
+    PEP_STATUS status = import_key(session, keyfile.c_str(), keyfile.size(), NULL);
+    ASSERT_EQ(status, PEP_KEY_IMPORTED);
 }

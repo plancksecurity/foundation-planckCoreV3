@@ -747,7 +747,7 @@ PEP_STATUS send_key_reset_to_recents(PEP_SESSION session,
     assert(old_fpr);
     assert(new_fpr);
     assert(session);
-    assert(session->messageToSend);
+//    assert(session->messageToSend); NO. Don't assert this, FFS.
     
     if (!session || !old_fpr || !new_fpr)
         return PEP_ILLEGAL_VALUE;
