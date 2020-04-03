@@ -40,7 +40,7 @@ class KeyResetMessageTest : public ::testing::Test {
         const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
         const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
 
-        const char* alice_receive_reset_fpr = "3340B36010854C3F52E97A30FA7B63E0202523DA";
+        const char* alice_receive_reset_fpr = "9B3CC93A689B1167082A90C80766A463E439CB71";
 
         const string alice_user_id = PEP_OWN_USERID;
         const string bob_user_id = "BobId";
@@ -344,6 +344,8 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
         // Uncomment to regenerate received message - remember to update
         // alice_receive_reset_fpr
         if (false) {
+            output_stream << "WARNING: alice_receive_reset_fpr is now " << new_fpr << endl;
+            output_stream << "PLEASE CHANGE THE VALUE IN KeyResetMessageTest.cc!!!!" << endl;
             if (strcmp(curr_sent_msg->to->ident->user_id, bob_user_id.c_str()) == 0) {
                 ofstream outfile;
                 outfile.open("test_files/398_reset_from_alice_to_bob.eml");
@@ -714,7 +716,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_recv) {
     status = myself(session, alice);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_STRNE(alice->fpr, alice_fpr);
-    ASSERT_STREQ(alice->fpr, "0D9374B9573548600272BF1D84A892F08ED7BBBF");
+    ASSERT_STREQ(alice->fpr, "924DFC739144B9A6060A92D6EE9B17DF9E1B5A1B");
     bool revoked = false;
     status = key_revoked(session, alice_fpr, &revoked);
     ASSERT_EQ(status, PEP_STATUS_OK);
@@ -723,7 +725,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_recv) {
     main_key = NULL;
     status = get_main_user_fpr(session, alice->user_id, &main_key);
     ASSERT_STRNE(main_key, alice_fpr);
-    ASSERT_STREQ(main_key, "0D9374B9573548600272BF1D84A892F08ED7BBBF");    
+    ASSERT_STREQ(alice->fpr, "924DFC739144B9A6060A92D6EE9B17DF9E1B5A1B");
 }
 
 TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr) {
@@ -815,6 +817,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr) {
         mime_encode_message(curr_sent_msg, false, &msg_txt);
         outfile << msg_txt;
         outfile.close();        
+        cout <<  "    // check_reset_grouped_own_multi_ident_one_fpr_recv" << endl;
         cout <<  "    const char* replkey1 = \"" << alex_id->fpr << "\";" << endl;    
         cout <<  "    const char* replkey2 = \"" << alex_id2->fpr << "\";" << endl;    
         cout <<  "    const char* replkey3 = \"" << alex_id3->fpr << "\";" << endl;        
@@ -827,10 +830,12 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr) {
 
 TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr_recv) {
     PEP_STATUS status = PEP_STATUS_OK;
-    const char* replkey1 = "369BD11FB63BAE28105085BFE399BE76DA9EB063";
-    const char* replkey2 = "6F61E78E8250F1CA7573F01F53F6467C533334F7";
-    const char* replkey3 = "0ECDE4A782182BD5B59BF7D25738C0F2C6D2D837";
-        
+    
+    // check_reset_grouped_own_multi_ident_one_fpr_recv
+    const char* replkey1 = "BC8037710E12554418BAF475402E6E25F05AD93E";
+    const char* replkey2 = "966CCF30267B521BD63365D2514B67B7EFAE8417";
+    const char* replkey3 = "82D78C9C0071FF287EE854FCAF7A21CFC49C2C5C";
+    
     // set up device own state
     char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
 
@@ -1031,6 +1036,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
             outfile << msg_txt;
             outfile.close();        
         }
+        cout <<  "    // check_reset_grouped_own_multiple_keys_multiple_idents_reset_all_recv" << endl;        
         cout <<  "    // For " << alex_id->address << endl;
         cout <<  "    const char* replkey1 = \"" << alex_id->fpr << "\";" << endl;    
         cout <<  "    // For " << alex_id2->address << endl;        
@@ -1177,10 +1183,10 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_recv) {
     char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
 
     // For pep.test.alexander@darthmama.org
-    const char* replkey1 = "80C297DEA68620511456DEE3AA0383505C87139D";
+    const char* replkey1 = "0F9C2FBFB898AD3A1242257F300EFFDE4CE2C33F";
     // For pep.test.alexander6a@darthmama.org
-    const char* replkey3 = "1F541C9A0EB643403035AC820A13A27FBC1A77EC";
-    
+    const char* replkey3 = "3671C09D3C79260C65045AE9A62A64E4CBEDAFDA";
+        
     pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
                                         NULL,
                                         "AlexID",
@@ -1281,13 +1287,14 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
     char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
 
+    // check_reset_grouped_own_multiple_keys_multiple_idents_reset_all
     // For pep.test.alexander@darthmama.org
-    const char* replkey1 = "D3F3F1A71B90AB972965983A425AF48C11059347";
+    const char* replkey1 = "16F48D6762AF45EC975C9AFBF749EC76C057320A";
     // For pep.test.alexander6@darthmama.org
-    const char* replkey2 = "C3752B57BDFD8969AD77DA73B00EC49BF2B71A66";
+    const char* replkey2 = "7FD82B86E27D6720CC2F9662DA3C4948313AFDAC";
     // For pep.test.alexander6a@darthmama.org
-    const char* replkey3 = "52E8C995B74990EC258BD7B1C27D8251B345F01F";
-    
+    const char* replkey3 = "CD270BBF3E9B086BA667B3BF5183787E27DC58FD";
+            
     pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
                                         NULL,
                                         "AlexID",
@@ -1490,7 +1497,8 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
         char* msg_txt = NULL;
         mime_encode_message(curr_sent_msg, false, &msg_txt);
         outfile << msg_txt;
-        outfile.close();        
+        outfile.close();   
+        cout <<  "    // check_reset_grouped_own_multiple_keys_multiple_idents_reset_one_recv" << endl;  
         cout <<  "    const char* replkey2 = \"" << alex_id2->fpr << "\";" << endl;    
     }    
     
@@ -1504,8 +1512,10 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     char* pubkey1 = strdup("74D79B4496E289BD8A71B70BA8E2C4530019697D");
     char* pubkey2 = strdup("2E21325D202A44BFD9C607FCF095B202503B14D8");
     char* pubkey3 = strdup("3C1E713D8519D7F907E3142D179EAA24A216E95A");
-    const char* replkey2 = "E08F5E0AB145AFF1DBC4D0FB49F3D5CAC8A47991";
-          
+    
+    // check_reset_grouped_own_multiple_keys_multiple_idents_reset_one_recv
+    const char* replkey2 = "0D02665E48972A2F383EBE5FE3A14718A47460DB";
+    
     pEp_identity* alex_id = new_identity("pep.test.alexander@darthmama.org",
                                         NULL,
                                         "AlexID",

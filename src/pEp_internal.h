@@ -19,9 +19,6 @@
 // maximum busy wait time in ms
 #define BUSY_WAIT_TIME 5000
 
-// maximum line length for reading gpg.conf
-#define MAX_LINELENGTH 1024
-
 // default keyserver
 #ifndef DEFAULT_KEYSERVER
 #define DEFAULT_KEYSERVER "hkps://keys.openpgp.org"
@@ -65,7 +62,6 @@
 #define KEYS_DB windoze_keys_db()
 #define LOCAL_DB windoze_local_db()
 #define SYSTEM_DB windoze_system_db()
-#define LIBGPGME "libgpgme-11.dll"
 #else // UNIX
 #define _POSIX_C_SOURCE 200809L
 #include <dlfcn.h>
@@ -78,9 +74,6 @@
 #define SYSTEM_DB android_system_db()
 #else
 #define SYSTEM_DB unix_system_db()
-#endif
-#ifndef LIBGPGME
-#define LIBGPGME "libgpgme-pthread.so"
 #endif
 #endif
 
@@ -100,21 +93,13 @@
 
 #include "pEpEngine.h"
 
-// If not specified, build for GPG
+// If not specified, build for Sequoia
 #ifndef USE_SEQUOIA
-#ifndef USE_NETPGP
-#ifndef USE_GPG
-#define USE_GPG
-#endif
-#endif
+#define USE_SEQUOIA
 #endif
 
 #if defined(USE_SEQUOIA)
 #include "pgp_sequoia_internal.h"
-#elif defined(USE_NETPGP)
-#include "pgp_netpgp_internal.h"
-#elif defined(USE_GPG)
-#include "pgp_gpg_internal.h"
 #endif
 
 #include "keymanagement.h"
@@ -133,11 +118,7 @@ struct _pEpSession {
     const char *version;
     messageToSend_t messageToSend;
 
-#ifdef USE_GPG
-    gpgme_ctx_t ctx;
-#elif defined(USE_NETPGP)
-    pEpNetPGPSession ctx;
-#elif defined(USE_SEQUOIA)
+#if defined(USE_SEQUOIA)
     sqlite3 *key_db;
     struct {
         sqlite3_stmt *begin_transaction;
