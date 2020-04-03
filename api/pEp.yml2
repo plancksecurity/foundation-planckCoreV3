@@ -14,7 +14,7 @@ decl extends @type;
 decl enum @name;
 decl item @name;
 decl struct @name;
-decl field @type @name;
+decl field @type @name;  // optional: function=free for a free function
 decl internal < field >; // internal field, p≡p engine only
 decl hex is item (output=hex);
 decl flag @name;
