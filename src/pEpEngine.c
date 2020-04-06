@@ -1226,6 +1226,10 @@ DYNAMIC_API PEP_STATUS init(
 
         assert(int_result == SQLITE_OK);
 
+        if (user_version > _DDL_USER_VERSION) {
+            // This is *explicitly* not allowed.
+            return PEP_INIT_DB_DOWNGRADE_VIOLATION;
+        }
         
         // Sometimes the user_version wasn't set correctly. 
         if (version == 1) {

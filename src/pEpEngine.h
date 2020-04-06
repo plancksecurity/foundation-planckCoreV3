@@ -45,6 +45,7 @@ typedef enum {
     PEP_INIT_SQLITE3_WITHOUT_MUTEX                  = 0x0120,
     PEP_INIT_CANNOT_OPEN_DB                         = 0x0121,
     PEP_INIT_CANNOT_OPEN_SYSTEM_DB                  = 0x0122,
+    PEP_INIT_DB_DOWNGRADE_VIOLATION                 = 0x0123,                        
     PEP_UNKNOWN_DB_ERROR                            = 0x01ff,
     
     PEP_KEY_NOT_FOUND                               = 0x0201,
