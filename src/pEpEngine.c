@@ -2479,13 +2479,13 @@ DYNAMIC_API PEP_STATUS trustwords(
             break; // buffer full
         }
 
-        if (source < fingerprint + fsize
-                && dest + _wsize < buffer + MAX_TRUSTWORDS_SPACE - 1)
-            *dest++ = ' ';
-
         ++n_words;
         if (max_words && n_words >= max_words)
             break;
+            
+        if (source < fingerprint + fsize
+                && dest + _wsize < buffer + MAX_TRUSTWORDS_SPACE - 1)
+            *dest++ = ' ';
     }
 
     *words = buffer;
