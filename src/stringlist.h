@@ -135,6 +135,10 @@ DYNAMIC_API void free_stringlist(stringlist_t *stringlist);
 
 stringlist_t* stringlist_search(stringlist_t* head, const char* value);
 
+// create comma-separated string
+char* stringlist_to_string(stringlist_t* list);
+stringlist_t* string_to_stringlist(const char* str);
+
 void dedup_stringlist(stringlist_t* stringlist);
 
 #ifdef __cplusplus

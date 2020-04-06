@@ -285,3 +285,60 @@ DYNAMIC_API void free_stringlist(stringlist_t *stringlist)
         curr = next;
     }
 }
+
+char* stringlist_to_string(stringlist_t* list) {
+    if (!list)
+        return NULL;
+    
+    unsigned int size = 0;
+    unsigned int count = 0;
+    stringlist_t* curr;
+
+    // calc size
+    for (curr = list; curr; curr = curr->next) {
+        if (!curr->value)
+            return NULL;
+        size += strlen(curr->value);
+        count++;
+    }    
+    
+    size += (count - 1) + 1;
+    
+    char* retval = calloc(size, 1);
+    
+    int i;
+    strlcpy(retval, list->value, size);
+    
+    for (i = 1, curr = list->next; curr && (i < count); i++, curr = curr->next) {
+        strlcat(retval, ",", size);
+        strlcat(retval, curr->value, size);
+    }
+    
+    return retval;
+}
+
+stringlist_t* string_to_stringlist(const char* str) {
+    if (!str || str[0] == '\0')
+        return NULL;
+        
+    // Because of strtok, we do this
+    char* workstr = strdup(str);
+    if (!workstr)
+        return NULL;
+        
+    char* token = strtok(workstr, ",");
+    stringlist_t* retval = new_stringlist(NULL);
+    
+    while (token) {
+        if (token && token[0] != '\0')
+            stringlist_add(retval, token);
+        token = strtok(NULL, ",");
+    }    
+    free(workstr);
+    
+    if (!retval->value) {
+        free_stringlist(retval);
+        retval = NULL;
+    }
+    return retval;
+}
