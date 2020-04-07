@@ -2027,12 +2027,15 @@ static identity_list * mal_to_identity_list(
         const struct mailimf_address_list *mal
     )
 {
-    assert(mal);
-    clist *list = mal->ad_list;
-
     identity_list *il = new_identity_list(NULL);
     if (il == NULL)
         goto enomem;
+
+    // if we have nothing to translate then return an empty list
+    if (!mal)
+        return il;
+
+    clist *list = mal->ad_list;
 
     identity_list *_il = il;
     for (clistiter *cur = clist_begin(list); cur != NULL ; cur = clist_next(cur)) {
