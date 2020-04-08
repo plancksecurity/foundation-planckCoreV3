@@ -898,7 +898,9 @@ int _get_content_type(
 
         switch  (content->ct_type->tp_data.tp_discrete_type->dt_type) {
             case MAILMIME_DISCRETE_TYPE_TEXT:
-                _main_type = "text";
+                _main_type = (content->ct_subtype && 
+                              strcasecmp(content->ct_subtype, "rfc822") == 0 ?
+                              "message" : "text");
                 break;
             case MAILMIME_DISCRETE_TYPE_IMAGE:
                 _main_type = "image";
