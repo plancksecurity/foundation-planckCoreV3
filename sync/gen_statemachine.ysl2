@@ -412,7 +412,42 @@ tstylesheet {
                 assert(session && fsm > None && message_type > None);
                 if (!(session && fsm > None && message_type > None))
                     return PEP_ILLEGAL_VALUE;
-                
+            ||
+            if "fsm/message[@ratelimit>0]" {
+            ||
+
+                // test if a message with a rate limit just was sent; in case drop
+                time_t now = time(NULL);
+                switch (fsm) {
+            ||
+            for "fsm[message/@ratelimit>0]" {
+            ||
+                    case Sync_PR_«yml:lcase(@name)»:
+                        switch (message_type) {
+            ||
+            for "message[@ratelimit>0]"
+            ||
+                            case «../@name»_PR_«yml:mixedCase(@name)»:
+                                if (now < session->«yml:lcase(../../@name)»_state.own.last_«../@name»_«@name» + «@ratelimit»)
+                                    return PEP_STATUS_OK;
+                                session->«yml:lcase(../../@name)»_state.own.last_«../@name»_«@name» = now;
+                                break;
+            ||
+            ||
+                            default:
+                                break;
+                        }
+                        break;
+            ||
+            }
+            ||
+                    default:
+                        break;
+                }
+            ||
+            }
+            ||
+
                 «@name»_t *msg = new_«@name»_message(fsm, message_type);
                 if (!msg)
                     return PEP_OUT_OF_MEMORY;
