@@ -416,7 +416,7 @@ tstylesheet {
             if "fsm/message[@ratelimit>0]" {
             ||
 
-                // test if a message with a rate limit just was sent; in case drop
+                // test if a message with a rate limit was just sent; in case drop
                 time_t now = time(NULL);
                 switch (fsm) {
             ||
