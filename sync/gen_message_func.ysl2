@@ -45,6 +45,7 @@ struct «@name»_state_s {
         stringlist_t *keys;
         stringlist_t *backup;
         identity_list *identities;
+        `` for "fsm/message[@ratelimit>0]" |>> time_t last_«../@name»_«@name»;
 
         // TIDs we're using ourselves
         `` for "func:distinctName(fsm/message/field[@type='TID'])" |>> «func:ctype()» «@name»;
