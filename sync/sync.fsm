@@ -668,7 +668,7 @@ protocol Sync 1 {
             field TID response;
         }
 
-        message SynchronizeGroupKeys 21, ratelimit=10 {
+        message SynchronizeGroupKeys 21, ratelimit=60 {
         }
     }
 }
