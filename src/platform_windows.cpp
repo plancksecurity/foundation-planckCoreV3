@@ -388,7 +388,7 @@ int mkstemp(char *templ)
     return _open(pathname, _O_RDWR | _O_CREAT | _O_EXCL, _S_IREAD | _S_IWRITE);
 }
 
-time_t timegm(timestamp *timeptr)
+DYNAMIC_API time_t timegm(timestamp *timeptr)
 {
     time_t result = _mkgmtime((struct tm *) timeptr);
     return result += timeptr->tm_gmtoff;

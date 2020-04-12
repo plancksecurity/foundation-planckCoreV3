@@ -54,7 +54,7 @@ int dlclose(void *handle);
 void *dlsym(void *handle, const char *symbol);
 int mkstemp(char *templ);
 
-time_t timegm(timestamp *timeptr);
+DYNAMIC_API time_t timegm(timestamp *timeptr);
 
 #ifndef strdup
 #define strdup(A) _strdup((A))
