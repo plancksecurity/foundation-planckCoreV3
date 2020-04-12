@@ -430,7 +430,6 @@ tstylesheet {
                             case «../@name»_PR_«yml:mixedCase(@name)»:
                                 if (now < session->«yml:lcase(../../@name)»_state.own.last_«../@name»_«@name» + «@ratelimit»)
                                     return PEP_STATUS_OK;
-                                session->«yml:lcase(../../@name)»_state.own.last_«../@name»_«@name» = now;
                                 break;
             ||
             ||
@@ -945,6 +944,37 @@ tstylesheet {
                     status = session->messageToSend(m);
                     m = NULL;
                 }
+            ||
+            if "fsm/message[@ratelimit>0]" {
+            ||
+
+                switch (fsm) {
+            ||
+            for "fsm[message/@ratelimit>0]" {
+            ||
+                    case Sync_PR_«yml:lcase(@name)»:
+                        switch (message_type) {
+            ||
+            for "message[@ratelimit>0]"
+            ||
+                            case «../@name»_PR_«yml:mixedCase(@name)»:
+                                session->«yml:lcase(../../@name)»_state.own.last_«../@name»_«@name» = now;
+                                break;
+            ||
+            ||
+                            default:
+                                break;
+                        }
+                        break;
+            ||
+            }
+            ||
+                    default:
+                        break;
+                }
+            ||
+            }
+            ||
 
             the_end:
                 free_stringlist(extra);
