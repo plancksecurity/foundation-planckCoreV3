@@ -391,7 +391,7 @@ int mkstemp(char *templ)
 DYNAMIC_API time_t timegm(timestamp *timeptr)
 {
     time_t result = _mkgmtime((struct tm *) timeptr);
-    return result += timeptr->tm_gmtoff;
+    return result + timeptr->tm_gmtoff;
 }
 
 void uuid_generate_random(pEpUUID out)
