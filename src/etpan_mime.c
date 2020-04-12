@@ -511,7 +511,7 @@ int _append_field(
 
 // http://media2.giga.de/2014/02/Image-28.jpg
 
-struct mailimf_date_time * timestamp_to_etpantime(const struct tm *ts)
+struct mailimf_date_time * timestamp_to_etpantime(const timestamp *ts)
 {
     struct mailimf_date_time * result = calloc(1,
             sizeof(struct mailimf_date_time));
@@ -527,15 +527,13 @@ struct mailimf_date_time * timestamp_to_etpantime(const struct tm *ts)
     result->dt_day = ts->tm_mday;
     result->dt_month = ts->tm_mon + 1;
     result->dt_year = ts->tm_year + 1900;
-#ifndef WIN32
     result->dt_zone = (int) (ts->tm_gmtoff / 36L);
-#endif
     return result;
 }
 
-struct tm * etpantime_to_timestamp(const struct mailimf_date_time *et)
+timestamp * etpantime_to_timestamp(const struct mailimf_date_time *et)
 {
-    struct tm * result = calloc(1, sizeof(struct tm));
+    timestamp * result = calloc(1, sizeof(timestamp));
     assert(result);
     if (result == NULL)
         return NULL;
@@ -548,9 +546,7 @@ struct tm * etpantime_to_timestamp(const struct mailimf_date_time *et)
     result->tm_mday = et->dt_day;
     result->tm_mon = et->dt_month - 1;
     result->tm_year = et->dt_year - 1900;
-#ifndef WIN32
     result->tm_gmtoff = 36L * (long) et->dt_zone;
-#endif
     return result;
 }
 

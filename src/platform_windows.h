@@ -53,7 +53,7 @@ int dlclose(void *handle);
 void *dlsym(void *handle, const char *symbol);
 int mkstemp(char *templ);
 
-#define timegm _mkgmtime
+time_t timegm(timestamp *timeptr);
 
 #ifndef strdup
 #define strdup(A) _strdup((A))
