@@ -24,6 +24,7 @@
 #include <io.h>
 #include <basetsd.h>
 #include <time.h>
+#include "timestamp.h"
 
 // pEp files and directories
 
