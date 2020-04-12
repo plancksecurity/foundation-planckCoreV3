@@ -390,7 +390,14 @@ int mkstemp(char *templ)
 
 DYNAMIC_API time_t timegm(timestamp *timeptr)
 {
+    assert(timeptr);
+    if (!timeptr)
+        return -1;
+
     time_t result = _mkgmtime((struct tm *) timeptr);
+    if (result == -1)
+        return -1;
+
     return result + timeptr->tm_gmtoff;
 }
 
