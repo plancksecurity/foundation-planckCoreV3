@@ -24,6 +24,7 @@
 #include <io.h>
 #include <basetsd.h>
 #include <time.h>
+#include "timestamp.h"
 
 // pEp files and directories
 
@@ -53,7 +54,7 @@ int dlclose(void *handle);
 void *dlsym(void *handle, const char *symbol);
 int mkstemp(char *templ);
 
-#define timegm _mkgmtime
+DYNAMIC_API time_t timegm(timestamp *timeptr);
 
 #ifndef strdup
 #define strdup(A) _strdup((A))
@@ -93,8 +94,6 @@ char *strnstr(const char *big, const char *little, size_t len);
 const char *windoze_keys_db(void);
 const char *windoze_local_db(void);
 const char *windoze_system_db(void);
-const char *gpg_conf(void);
-const char *gpg_agent_conf(void);
 
 void log_output_debug(const char *title, const char *entity, const char *description, const char *comment);
 

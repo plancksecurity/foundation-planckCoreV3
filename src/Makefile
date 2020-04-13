@@ -49,18 +49,7 @@ ifdef SQLITE3_FROM_OS
     LDLIBS+= -lsqlite3
 endif
 
-ifeq ($(OPENPGP),GPG)
-    NO_SOURCE+= pgp_netpgp.c pgp_sequoia.c
-    CFLAGS+= -DUSE_GPG $(GPGME_INC) -DLIBGPGME=\"$(LIBGPGME)\"
-    LDFLAGS+= $(GPGME_LIB)
-    # No extra LDLIBS are needed here, because GPGME is dynamically loaded
-else ifeq ($(OPENPGP),NETPGP)
-    NO_SOURCE+= pgp_gpg.c pgp_sequoia.c
-    CFLAGS+= -DUSE_NETPGP $(NETGPG_INC)
-    LDFLAGS+= $(NETGPG_LIB)
-    LDLIBS+= -lnetpgp -lcurl
-else ifeq ($(OPENPGP),SEQUOIA)
-    NO_SOURCE+= pgp_gpg.c pgp_netpgp.c
+ifeq ($(OPENPGP),SEQUOIA)
     CFLAGS+= -DUSE_SEQUOIA $(SEQUOIA_CFLAGS) $(SEQUOIA_INC)
     LDFLAGS+= $(SEQUOIA_LDFLAGS)
     LDLIBS+= $(SEQUOIA_LIB)
@@ -109,7 +98,7 @@ install_headers: $(TARGET)
 	mkdir -p $(PREFIX)/include/pEp
 	cp pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
 	   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h \
-	   cryptotech.h sync_api.h blacklist.h pEp_string.h openpgp_compat.h \
+	   cryptotech.h sync_api.h blacklist.h pEp_string.h openpgp_compat.h mime.h \
 	   labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h \
 	   status_to_string.h aux_mime_msg.h keyreset_command.h ../asn.1/*.h \
  	   $(PREFIX)/include/pEp/

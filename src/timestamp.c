@@ -17,7 +17,7 @@ DYNAMIC_API timestamp * new_timestamp(time_t clock)
         return NULL;
 
     if (clock)
-        gmtime_r(&clock, ts);
+        gmtime_r(&clock, (struct tm *) ts);
 
     return ts;
 }
@@ -33,7 +33,7 @@ DYNAMIC_API timestamp * timestamp_dup(const timestamp *src)
     if (!src)
         return NULL;
 
-    timestamp *dst = malloc(sizeof(timestamp));
+    timestamp *dst = calloc(1, sizeof(timestamp));
     assert(dst);
     if (!dst)
         return NULL;

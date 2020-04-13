@@ -932,10 +932,6 @@ static PEP_STATUS upgrade_revoc_contact_to_13(PEP_SESSION session) {
     return status;
 }
 
-#ifdef USE_GPG
-PEP_STATUS pgp_import_ultimately_trusted_keypairs(PEP_SESSION session);
-#endif // USE_GPG
-
 DYNAMIC_API PEP_STATUS init(
         PEP_SESSION *session,
         messageToSend_t messageToSend,
@@ -1226,6 +1222,10 @@ DYNAMIC_API PEP_STATUS init(
 
         assert(int_result == SQLITE_OK);
 
+        if (version > atoi(_DDL_USER_VERSION)) {
+            // This is *explicitly* not allowed.
+            return PEP_INIT_DB_DOWNGRADE_VIOLATION;
+        }
         
         // Sometimes the user_version wasn't set correctly. 
         if (version == 1) {
@@ -2062,25 +2062,6 @@ DYNAMIC_API PEP_STATUS init(
 
     // runtime config
 
-    if (very_first)
-    {
-#ifdef USE_GPG
-        // On first run, all private keys already present in PGP keyring 
-        // are taken as own in order to seamlessly integrate with
-        // pre-existing GPG setup.
-
-        // Note: earlier fears about danger because of DB reinitialisation should
-        // be a non-issue here, as we ONLY take the ultimately trusted keys now.
-        // Thus, unless the user has assigned ultimate trust through PGP, there is
-        // no chance of automatically imported pEp keys from a previous run making
-        // their way into PEP trusted status without explicit action (Bare imported
-        // private keys have an 'unknown' trust designation in PGP).
-
-        // We don't really worry about the status here.
-        status = pgp_import_ultimately_trusted_keypairs(_session);        
-#endif // USE_GPG
-    }
-
     *session = _session;
     
     // Note: Following statement is NOT for any cryptographic/secure functionality; it is
@@ -2502,13 +2483,13 @@ DYNAMIC_API PEP_STATUS trustwords(
             break; // buffer full
         }
 
-        if (source < fingerprint + fsize
-                && dest + _wsize < buffer + MAX_TRUSTWORDS_SPACE - 1)
-            *dest++ = ' ';
-
         ++n_words;
         if (max_words && n_words >= max_words)
             break;
+            
+        if (source < fingerprint + fsize
+                && dest + _wsize < buffer + MAX_TRUSTWORDS_SPACE - 1)
+            *dest++ = ' ';
     }
 
     *words = buffer;

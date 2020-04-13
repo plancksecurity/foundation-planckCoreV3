@@ -511,7 +511,7 @@ int _append_field(
 
 // http://media2.giga.de/2014/02/Image-28.jpg
 
-struct mailimf_date_time * timestamp_to_etpantime(const struct tm *ts)
+struct mailimf_date_time * timestamp_to_etpantime(const timestamp *ts)
 {
     struct mailimf_date_time * result = calloc(1,
             sizeof(struct mailimf_date_time));
@@ -527,15 +527,13 @@ struct mailimf_date_time * timestamp_to_etpantime(const struct tm *ts)
     result->dt_day = ts->tm_mday;
     result->dt_month = ts->tm_mon + 1;
     result->dt_year = ts->tm_year + 1900;
-#ifndef WIN32
     result->dt_zone = (int) (ts->tm_gmtoff / 36L);
-#endif
     return result;
 }
 
-struct tm * etpantime_to_timestamp(const struct mailimf_date_time *et)
+timestamp * etpantime_to_timestamp(const struct mailimf_date_time *et)
 {
-    struct tm * result = calloc(1, sizeof(struct tm));
+    timestamp * result = calloc(1, sizeof(timestamp));
     assert(result);
     if (result == NULL)
         return NULL;
@@ -548,9 +546,7 @@ struct tm * etpantime_to_timestamp(const struct mailimf_date_time *et)
     result->tm_mday = et->dt_day;
     result->tm_mon = et->dt_month - 1;
     result->tm_year = et->dt_year - 1900;
-#ifndef WIN32
     result->tm_gmtoff = 36L * (long) et->dt_zone;
-#endif
     return result;
 }
 
@@ -898,7 +894,9 @@ int _get_content_type(
 
         switch  (content->ct_type->tp_data.tp_discrete_type->dt_type) {
             case MAILMIME_DISCRETE_TYPE_TEXT:
-                _main_type = "text";
+                _main_type = (content->ct_subtype && 
+                              strcasecmp(content->ct_subtype, "rfc822") == 0 ?
+                              "message" : "text");
                 break;
             case MAILMIME_DISCRETE_TYPE_IMAGE:
                 _main_type = "image";
@@ -1410,7 +1408,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
 #else
     char* altstr = (char*)pEpstr;
 #endif        
-    char *subject = msg->shortmsg ? msg->shortmsg : altstr;
+    char *subject = msg->shortmsg && msg->shortmsg[0] ? msg->shortmsg : altstr;
 
     assert(msg);
     assert(result);
@@ -1422,7 +1420,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
     if (fields_list == NULL)
         goto enomem;
 
-    if (msg->id) {
+    if (msg->id && msg->id[0]) {
         char *_msgid = strdup(msg->id);
         assert(_msgid);
         if (_msgid == NULL)
@@ -1463,7 +1461,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
         }
     }
 
-    if (msg->to) {
+    if (msg->to && msg->to->ident) {
         struct mailimf_address_list *to = identity_list_to_mal(msg->to);
         if (to == NULL)
             goto enomem;
@@ -1494,7 +1492,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
         goto enomem;
     }
 
-    if (msg->cc) {
+    if (msg->cc && msg->cc->ident) {
         struct mailimf_address_list *cc = identity_list_to_mal(msg->cc);
         if (cc == NULL)
             goto enomem;
@@ -1507,7 +1505,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
         }
     }
     
-    if (msg->bcc) {
+    if (msg->bcc && msg->bcc->ident) {
         struct mailimf_address_list *bcc = identity_list_to_mal(msg->bcc);
         if (bcc == NULL)
             goto enomem;
@@ -1520,7 +1518,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
         }
     }
     
-    if (msg->reply_to) {
+    if (msg->reply_to && msg->reply_to->ident) {
         struct mailimf_address_list *reply_to = identity_list_to_mal(msg->reply_to);
         if (reply_to == NULL)
             goto enomem;
@@ -1533,7 +1531,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
         }
     }
 
-    if (msg->in_reply_to) {
+    if (msg->in_reply_to && msg->in_reply_to->value) {
         clist *in_reply_to = stringlist_to_clist(msg->in_reply_to, true);
         if (in_reply_to == NULL)
             goto enomem;
@@ -1546,7 +1544,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
         }
     }
 
-    if (msg->references) {
+    if (msg->references && msg->references->value) {
         clist *references = stringlist_to_clist(msg->references, true);
         if (references == NULL)
             goto enomem;
@@ -1559,7 +1557,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
         }
     }
 
-    if (msg->keywords) {
+    if (msg->keywords && msg->keywords->value) {
         clist *keywords = stringlist_to_clist(msg->keywords, true);
         if (keywords == NULL)
             goto enomem;
@@ -1572,7 +1570,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
         }
     }
 
-    if (msg->comments) {
+    if (msg->comments && msg->comments[0]) {
         char *comments = NULL;
         if (!must_field_value_be_encoded(msg->comments)) {
             comments = strdup(msg->comments);
@@ -1592,7 +1590,7 @@ static PEP_STATUS build_fields(const message *msg, struct mailimf_fields **resul
         }
     }
 
-    if (msg->opt_fields) {
+    if (msg->opt_fields && msg->opt_fields->value) {
         stringpair_list_t *_l;
         for (_l = msg->opt_fields; _l && _l->value; _l = _l->next) {
             char *key = _l->value->key;
@@ -2027,12 +2025,15 @@ static identity_list * mal_to_identity_list(
         const struct mailimf_address_list *mal
     )
 {
-    assert(mal);
-    clist *list = mal->ad_list;
-
     identity_list *il = new_identity_list(NULL);
     if (il == NULL)
         goto enomem;
+
+    // if we have nothing to translate then return an empty list
+    if (!mal)
+        return il;
+
+    clist *list = mal->ad_list;
 
     identity_list *_il = il;
     for (clistiter *cur = clist_begin(list); cur != NULL ; cur = clist_next(cur)) {

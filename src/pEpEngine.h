@@ -34,17 +34,18 @@ typedef struct _pEpSession * PEP_SESSION;
 typedef enum {
     PEP_STATUS_OK                                   = 0,
 
-    PEP_INIT_CANNOT_LOAD_GPGME                      = 0x0110,
-    PEP_INIT_GPGME_INIT_FAILED                      = 0x0111,
-    PEP_INIT_NO_GPG_HOME                            = 0x0112,
-    PEP_INIT_NETPGP_INIT_FAILED                     = 0x0113,
-    PEP_INIT_CANNOT_DETERMINE_GPG_VERSION           = 0x0114,
-    PEP_INIT_UNSUPPORTED_GPG_VERSION                = 0x0115,
-    PEP_INIT_CANNOT_CONFIG_GPG_AGENT                = 0x0116,
+    PEP_INIT_CANNOT_LOAD_CRYPTO_LIB                 = 0x0110,
+    PEP_INIT_CRYPTO_LIB_INIT_FAILED                 = 0x0111,
+    PEP_INIT_NO_CRYPTO_HOME                         = 0x0112,
+//    PEP_INIT_NETPGP_INIT_FAILED                     = 0x0113,
+    PEP_INIT_CANNOT_DETERMINE_CRYPTO_VERSION        = 0x0114,
+    PEP_INIT_UNSUPPORTED_CRYPTO_VERSION             = 0x0115,
+    PEP_INIT_CANNOT_CONFIG_CRYPTO_AGENT             = 0x0116,
 
     PEP_INIT_SQLITE3_WITHOUT_MUTEX                  = 0x0120,
     PEP_INIT_CANNOT_OPEN_DB                         = 0x0121,
     PEP_INIT_CANNOT_OPEN_SYSTEM_DB                  = 0x0122,
+    PEP_INIT_DB_DOWNGRADE_VIOLATION                 = 0x0123,                        
     PEP_UNKNOWN_DB_ERROR                            = 0x01ff,
     
     PEP_KEY_NOT_FOUND                               = 0x0201,
@@ -193,8 +194,8 @@ typedef int (*inject_sync_event_t)(SYNC_EVENT ev, void *management);
 //      PEP_STATUS_OK = 0                   if init() succeeds
 //      PEP_INIT_SQLITE3_WITHOUT_MUTEX      if SQLite3 was compiled with
 //                                          SQLITE_THREADSAFE 0
-//      PEP_INIT_CANNOT_LOAD_GPGME          if libgpgme.dll cannot be found
-//      PEP_INIT_GPGME_INIT_FAILED          if GPGME init fails
+//      PEP_INIT_CANNOT_LOAD_CRYPTO_LIB     if crypto lin cannot be found
+//      PEP_INIT_CRYPTO_LIB_INIT_FAILED          if CRYPTO_LIB init fails
 //      PEP_INIT_CANNOT_OPEN_DB             if user's management db cannot be
 //                                          opened
 //      PEP_INIT_CANNOT_OPEN_SYSTEM_DB      if system's management db cannot be
@@ -849,8 +850,10 @@ DYNAMIC_API PEP_STATUS mark_as_compromized(
 //        PEP_CANNOT_CREATE_KEY   key engine is on strike
 //
 //  caveat:
-//      address and username fields must be set to UTF-8 strings
+//      address must be set to UTF-8 string
 //      the fpr field must be set to NULL
+//      username field must either be NULL or be a UTF8-string conforming 
+//      to RFC4880 for PGP uid usernames  
 //
 //      this function allocates a string and sets set fpr field of identity
 //      the caller is responsible to call free() for that string or use

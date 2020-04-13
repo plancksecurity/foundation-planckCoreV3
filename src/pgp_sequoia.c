@@ -257,7 +257,7 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
         home_env = getenv("HOME");
 
     if (!home_env)
-        ERROR_OUT(NULL, PEP_INIT_GPGME_INIT_FAILED, "HOME unset");
+        ERROR_OUT(NULL, PEP_INIT_CRYPTO_LIB_INIT_FAILED, "HOME unset");
 
     // Create the DB and initialize it.
     size_t path_size = strlen(home_env) + sizeof(PEP_KEYS_PATH);
@@ -2701,7 +2701,7 @@ PEP_STATUS pgp_renew_key(
     pgp_valid_key_amalgamation_t primary = NULL;
     pgp_key_pair_t keypair = NULL;
     pgp_signer_t signer = NULL;
-    time_t t = timegm((struct tm *) ts);
+    time_t t = timegm((timestamp *) ts); // timestamp because of Windows
     pgp_cert_valid_key_iter_t key_iter = NULL;
     pgp_valid_key_amalgamation_t ka = NULL;
     pgp_packet_t *packets = NULL;

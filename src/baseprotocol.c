@@ -8,7 +8,7 @@
 static const char *_base_type[] = {
     "application/pEp.sign",
     "application/pEp.sync",
-    "application/pEp.keyreset"
+    "application/pEp.distribution"
 };
 
 PEP_STATUS base_decorate_message(

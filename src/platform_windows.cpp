@@ -285,23 +285,6 @@ const char *windoze_system_db(void) {
     return path.c_str();
 }
 
-const char *gpg_conf(void)
-{
-    static string path;
-    if (path.length() == 0)
-        path = managementPath("%APPDATA%\\gnupg", "gpg.conf");
-    return path.c_str();
-}
-
-const char *gpg_agent_conf(void)
-{
-    static string agent_path;
-    if (agent_path.length() == 0)
-        agent_path = managementPath("%APPDATA%\\gnupg", "gpg-agent.conf");
-    return agent_path.c_str();
-}
-
-
 long random(void)
 {
     unsigned int r;
@@ -403,6 +386,19 @@ int mkstemp(char *templ)
     if (!pathname)
         return -1;
     return _open(pathname, _O_RDWR | _O_CREAT | _O_EXCL, _S_IREAD | _S_IWRITE);
+}
+
+DYNAMIC_API time_t timegm(timestamp *timeptr)
+{
+    assert(timeptr);
+    if (!timeptr)
+        return -1;
+
+    time_t result = _mkgmtime((struct tm *) timeptr);
+    if (result == -1)
+        return -1;
+
+    return result + timeptr->tm_gmtoff;
 }
 
 void uuid_generate_random(pEpUUID out)
