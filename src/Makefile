@@ -111,7 +111,7 @@ install_headers: $(TARGET)
 	   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h \
 	   cryptotech.h sync_api.h blacklist.h pEp_string.h openpgp_compat.h mime.h \
 	   labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h \
-	   status_to_string.h aux_mime_msg.h keyreset_command.h ../asn.1/*.h \
+	   status_to_string.h aux_mime_msg.h keyreset_command.h platform.h platform_unix.h ../asn.1/*.h \
  	   $(PREFIX)/include/pEp/
 
 install: $(TARGET) install_headers
