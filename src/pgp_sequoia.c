@@ -2062,21 +2062,38 @@ PEP_STATUS _pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity, ti
     assert(identity->fpr == NULL || identity->fpr[0] == 0);
 //    assert(identity->username);
 
-    char* cached_username = identity->username;
+    //    char* cached_username = identity->username;    
+    // if (identity->username && strcmp(identity->address, identity->username) == 0) {
+    //     cached_username = identity->username;
+    //     identity->username = NULL;
+    // }
+    // 
+    // userid_packet = pgp_user_id_from_unchecked_address(&err,
+    //                                                    identity->username, NULL,
+    //                                                    identity->address);           
+    // identity->username = cached_username;                                                   
+    // 
+    // if (!userid_packet)
+    //     ERROR_OUT(err, PEP_UNKNOWN_ERROR, "pgp_user_id_from_unchecked_address");
     
-    if (identity->username && strcmp(identity->address, identity->username) == 0) {
-        cached_username = identity->username;
-        identity->username = NULL;
-    }
+    int addr_len = strlen(identity->address);
+    int user_id_alloc_len = (identity->username ? strlen(identity->username) : addr_len) +
+                              2 + addr_len + 2; // Name <addr>\0
+                              
+    char* user_id_str = calloc(user_id_alloc_len, 1);
+    strlcpy(user_id_str, (identity->username ? identity->username : identity->address),
+            user_id_alloc_len);
     
-    userid_packet = pgp_user_id_from_unchecked_address(&err,
-                                                       identity->username, NULL,
-                                                       identity->address);           
-    identity->username = cached_username;                                                   
+    strlcat(user_id_str, " <", user_id_alloc_len);
+    strlcat(user_id_str, identity->address, user_id_alloc_len);
+    user_id_str[user_id_alloc_len - 2] = '>';
+                                      
+    userid_packet = pgp_user_id_from_raw(user_id_str, user_id_alloc_len - 1);
 
-    if (!userid_packet)
-        ERROR_OUT(err, PEP_UNKNOWN_ERROR, "pgp_user_id_from_unchecked_address");
-
+    if (!userid_packet)    
+        ERROR_OUT(NULL, PEP_UNKNOWN_ERROR, "pgp_user_id_from_raw");
+    
+    // KLB: Is this still necessary?
     size_t userid_len = 0;
     const uint8_t *raw = pgp_user_id_value(userid_packet, &userid_len);
 
@@ -2089,7 +2106,8 @@ PEP_STATUS _pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity, ti
     userid[userid_len] = 0;
 
     T("(%s)", userid);
-
+    //
+    
     // Generate a key.
     pgp_cert_builder_t certb = pgp_cert_builder_general_purpose(
         cipher_suite(session->cipher_suite), userid);
