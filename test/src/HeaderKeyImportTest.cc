@@ -742,4 +742,10 @@ TEST_F(HeaderKeyImportTest, check_header_key_import) {
     free(dec_msg);
     free(modified_src);
     free_identity(alice_check);
+    
+    char* outkey = NULL;
+    size_t size = 0;
+    status = export_key(session, alice_fpr, &outkey, &size);    
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    cout << outkey << endl;
 }

@@ -147,22 +147,28 @@ const char *_per_machine_directory(void)
         return path.c_str();
 
     TCHAR tPath[PATH_BUF_SIZE];
+    TCHAR tPath2[PATH_BUF_SIZE];
 
     // Get SystemFolder Registry value and use if available
-    bool result = readRegistryString(HKEY_CURRENT_USER,
-        TEXT("SOFTWARE\\pEp"), TEXT("SystemFolder"), tPath,
-        PATH_BUF_SIZE, NULL);
+    bool result = readRegistryString(HKEY_CURRENT_USER, TEXT("SOFTWARE\\pEp"),
+            TEXT("SystemFolder"), tPath2, PATH_BUF_SIZE, NULL);
 
-    // If not Registry value was found, use default
+    DWORD length = 0;
+
+    // If no Registry value was found, use default
     if (!result) {
-        DWORD length = ExpandEnvironmentStringsW(utf16_string(string(PER_MACHINE_DIRECTORY)).c_str(),
+        length = ExpandEnvironmentStringsW(utf16_string(string(PER_MACHINE_DIRECTORY)).c_str(),
             tPath, PATH_BUF_SIZE);
-        assert(length);
-        if (length == 0)
-            throw bad_alloc(); // BUG: there are other errors possible beside out of memory
+    }
+    else {
+        length = ExpandEnvironmentStringsW(tPath2, tPath, PATH_BUF_SIZE);
     }
 
-    path = utf8_string(wstring(tPath));
+    assert(length);
+    if (length == 0)
+        throw bad_alloc(); // BUG: there are other errors possible beside out of memory
+
+    path = utf8_string(wstring(tPath, length));
     return path.c_str();
 }
 
@@ -173,20 +179,26 @@ const char *_per_user_directory(void)
         return path.c_str();
 
     TCHAR tPath[PATH_BUF_SIZE];
+    TCHAR tPath2[PATH_BUF_SIZE];
 
     // Get UserFolder Registry value and use if available
-    bool result = readRegistryString(HKEY_CURRENT_USER,
-        TEXT("SOFTWARE\\pEp"), TEXT("UserFolder"), tPath,
-        PATH_BUF_SIZE, NULL);
+    bool result = readRegistryString(HKEY_CURRENT_USER, TEXT("SOFTWARE\\pEp"),
+            TEXT("UserFolder"), tPath2, PATH_BUF_SIZE, NULL);
 
-    // If not Registry value was found, use default
+    DWORD length = 0;
+
+    // If no Registry value was found, use default
     if (!result) {
-        DWORD length = ExpandEnvironmentStringsW(utf16_string(string(PER_USER_DIRECTORY)).c_str(),
+        length = ExpandEnvironmentStringsW(utf16_string(string(PER_USER_DIRECTORY)).c_str(),
             tPath, PATH_BUF_SIZE);
-        assert(length);
-        if (length == 0)
-            throw bad_alloc(); // BUG: there are other errors possible beside out of memory
     }
+    else {
+        length = ExpandEnvironmentStringsW(tPath2, tPath, PATH_BUF_SIZE);
+    }
+
+    assert(length);
+    if (length == 0)
+        throw bad_alloc(); // BUG: there are other errors possible beside out of memory
 
     path = utf8_string(wstring(tPath));
     return path.c_str();
