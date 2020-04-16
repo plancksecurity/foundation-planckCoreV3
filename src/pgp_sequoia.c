@@ -2045,6 +2045,55 @@ PEP_STATUS pgp_encrypt_and_sign(
         psize, ctext, csize, true);
 }
 
+static char* _filter_parentheses(const char* input) {
+    if (!input)
+        return NULL;
+    
+    int input_len = strlen(input) + 1;
+    char* retval = calloc(input_len, 1);
+    strlcpy(retval, input, input_len);
+
+    char* curr_c;
+    
+    for (curr_c = retval; curr_c && *curr_c != '\0'; curr_c++) {
+        switch(*curr_c) {
+            case '(':
+                *curr_c = '[';
+                break;
+            case ')':
+                *curr_c = ']';
+                break;
+            default:
+                break;
+        }
+    }  
+    
+    return retval;
+}
+
+static char* _flatten_to_alphanum(const char* input) {
+    if (!input)
+        return NULL;
+    
+    int input_len = strlen(input) + 1;
+    char* retval = calloc(input_len, 1);
+    strlcpy(retval, input, input_len);
+
+    char* curr_c;
+    
+    for (curr_c = retval; curr_c && *curr_c != '\0'; curr_c++) {
+        char c = *curr_c;
+
+        if (c == ' ' || (c >= 'A' && c <= 'Z') || 
+                        (c >= 'a' && c <= 'z') ||
+                        (c >= '0' && c <= '9'))
+            continue;           
+
+        *curr_c = '_';
+    }  
+    
+    return retval;
+}
 
 PEP_STATUS _pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity, time_t when)
 {
@@ -2069,11 +2118,29 @@ PEP_STATUS _pgp_generate_keypair(PEP_SESSION session, pEp_identity *identity, ti
         identity->username = NULL;
     }
     
+
     userid_packet = pgp_user_id_from_unchecked_address(&err,
                                                        identity->username, NULL,
                                                        identity->address);           
-    identity->username = cached_username;                                                   
+                                                   
+    if (!userid_packet) {
+        char* tmpname = _filter_parentheses(identity->username);
+        userid_packet = pgp_user_id_from_unchecked_address(&err,
+                                                           tmpname, NULL,
+                                                           identity->address);               
+        free(tmpname);                                                   
+    }
 
+    if (!userid_packet) {
+        char* tmpname = _flatten_to_alphanum(identity->username);
+        userid_packet = pgp_user_id_from_unchecked_address(&err,
+                                                           tmpname, NULL,
+                                                           identity->address);               
+        free(tmpname);                                                           
+    }
+                                            
+    identity->username = cached_username;                                                   
+    
     if (!userid_packet)
         ERROR_OUT(err, PEP_UNKNOWN_ERROR, "pgp_user_id_from_unchecked_address");
 
