@@ -70,8 +70,6 @@ static const char * rating_to_string(PEP_rating rating)
         return "have_no_key";
     case PEP_rating_unencrypted:
         return "unencrypted";
-    case PEP_rating_unencrypted_for_some: // don't use this any more
-        return "undefined";
     case PEP_rating_unreliable:
         return "unreliable";
     case PEP_rating_reliable:
