@@ -18,13 +18,6 @@ LDFLAGS+= $(ETPAN_LIB) $(PEP_MIME_LIB) -L../asn.1 -shared
 LDLIBS+= -lc -lasn1
 NO_SOURCE=
 
-ifndef PEP_MIME
-LDLIBS+= -letpan
-else
-LDLIBS+= -lpEpMIME
-NO_SOURCE+= etpan_mime.c
-endif
-
 ifeq ($(BUILD_ON),Darwin)
     ifeq ($(BUILD_FOR),Darwin)
         CFLAGS+= -DSQLITE_THREADSAFE=1
@@ -55,6 +48,19 @@ ifeq ($(OPENPGP),SEQUOIA)
     LDLIBS+= $(SEQUOIA_LIB)
 else
     $(error Unknown OpenPGP library: $(OPENPGP))
+endif
+
+ifeq ($(MIME_LIBRARY),ETPAN)
+    CFLAGS+= -DUSE_ETPAN $(ETPAN_INC)
+    LDFLAGS+= $(ETPAN_LIB)
+    LDLIBS+= -letpan
+else ifeq ($(MIME_LIBRARY),PEP_MIME)
+    CFLAGS+= -DUSE_PEPMIME $(PEP_MIME_INC)
+    LDFLAGS+= $(PEP_MIME_LIB)
+    LDLIBS+= -lpEpMIME
+    NO_SOURCE+= etpan_mime.c
+else
+    $(error Unknown MIME library: $(MIME_LIBRARY))
 endif
 
 ALL_SOURCE=$(filter-out $(NO_SOURCE),$(wildcard *.c))
