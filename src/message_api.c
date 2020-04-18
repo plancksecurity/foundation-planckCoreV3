@@ -1314,11 +1314,12 @@ static PEP_comm_type _get_comm_type(
     if (max_comm_type == PEP_ct_mistrusted)
         return PEP_ct_mistrusted;
 
-    if (!is_me(session, ident))
+    if (!is_me(session, ident)) {
         status = update_identity(session, ident);
-    else
-        // ???
+    }
+    else {
         status = _myself(session, ident, false, false, true);
+    }
 
     if (status == PEP_STATUS_OK) {
         if (ident->comm_type == PEP_ct_compromised)
