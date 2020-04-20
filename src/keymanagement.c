@@ -1061,11 +1061,19 @@ PEP_STATUS _myself(PEP_SESSION session,
     assert(session);
     assert(identity);
     assert(!EMPTYSTR(identity->address));
-    assert(!EMPTYSTR(identity->user_id));
 
-    if (!session || !identity || EMPTYSTR(identity->address) ||
-        EMPTYSTR(identity->user_id))
+    if (!session || EMPTYSTR(identity->address))
         return PEP_ILLEGAL_VALUE;
+
+    // this is leading to crashes otherwise
+
+    if (!(identity->user_id && identity->user_id[0])) {
+        free(identity->user_id);
+        identity->user_id = strdup(PEP_OWN_USERID);
+        assert(identity->user_id);
+        if (!identity->user_id)
+            return PEP_OUT_OF_MEMORY;
+    }
 
     pEp_identity *stored_identity = NULL;
     char* revoked_fpr = NULL; 

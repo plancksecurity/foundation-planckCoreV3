@@ -70,8 +70,6 @@ static const char * rating_to_string(PEP_rating rating)
         return "have_no_key";
     case PEP_rating_unencrypted:
         return "unencrypted";
-    case PEP_rating_unencrypted_for_some: // don't use this any more
-        return "undefined";
     case PEP_rating_unreliable:
         return "unreliable";
     case PEP_rating_reliable:
@@ -1316,11 +1314,12 @@ static PEP_comm_type _get_comm_type(
     if (max_comm_type == PEP_ct_mistrusted)
         return PEP_ct_mistrusted;
 
-    if (!is_me(session, ident))
+    if (!is_me(session, ident)) {
         status = update_identity(session, ident);
-    else
-        // ???
+    }
+    else {
         status = _myself(session, ident, false, false, true);
+    }
 
     if (status == PEP_STATUS_OK) {
         if (ident->comm_type == PEP_ct_compromised)
