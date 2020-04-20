@@ -1129,33 +1129,35 @@ static PEP_STATUS mime_html_text(
 
     *result = NULL;
 
-    mime = part_multiple_new("multipart/alternative");
-    assert(mime);
-    if (mime == NULL)
-        goto enomem;
-
-    pEp_rid_list_t* resource = NULL;
-    
     int encoding_type = (transport_encode ? MAILMIME_MECHANISM_QUOTED_PRINTABLE : 0);
-    submime = get_text_part(NULL, "text/plain", plaintext, strlen(plaintext),
-            encoding_type);
-    free_rid_list(resource);
-    resource = NULL;
+    pEp_rid_list_t* resource = NULL;
+        
+    if (*plaintext != '\0') {
+        mime = part_multiple_new("multipart/alternative");
+        assert(mime);
+        if (mime == NULL)
+            goto enomem;
+        
+        submime = get_text_part(NULL, "text/plain", plaintext, strlen(plaintext),
+                encoding_type);
+        free_rid_list(resource);
+        resource = NULL;
+        
+        assert(submime);
+        if (submime == NULL)
+            goto enomem;
+
+        r = mailmime_smart_add_part(mime, submime);
+        assert(r == MAILIMF_NO_ERROR);
+        if (r == MAILIMF_ERROR_MEMORY) {
+            goto enomem;
+        }
+        else {
+            // mailmime_smart_add_part() takes ownership of submime
+            submime = NULL;
+        }
+    }
     
-    assert(submime);
-    if (submime == NULL)
-        goto enomem;
-
-    r = mailmime_smart_add_part(mime, submime);
-    assert(r == MAILIMF_NO_ERROR);
-    if (r == MAILIMF_ERROR_MEMORY) {
-        goto enomem;
-    }
-    else {
-        // mailmime_smart_add_part() takes ownership of submime
-        submime = NULL;
-    }
-
     bool inlined_attachments = false;
     
     bloblist_t* traversal_ptr = attachments;
@@ -1175,19 +1177,26 @@ static PEP_STATUS mime_html_text(
         if (submime == NULL)
             goto enomem;
 
+        // This is where all of the html MIME stuff will go
         top_level_html_mime = submime;
         
-        r = mailmime_smart_add_part(mime, top_level_html_mime);
-        assert(r == MAILIMF_NO_ERROR);
-        if (r == MAILIMF_ERROR_MEMORY) {
-            goto enomem;
-        }
-        else {
-            // mailmime_smart_add_part() takes ownership of submime
-            submime = NULL;
-        }
+        if (!mime)
+            mime = top_level_html_mime;
+        else {    
+            r = mailmime_smart_add_part(mime, top_level_html_mime);
+            assert(r == MAILIMF_NO_ERROR);
+            if (r == MAILIMF_ERROR_MEMORY) {
+                goto enomem;
+            }
+            else {
+                // mailmime_smart_add_part() takes ownership of submime
+                submime = NULL;
+            }
+        }    
     }
     else {
+        // Otherwise, html MIME stuff gets added to the top node 
+        // - may be NULL if there's no multipart!
         top_level_html_mime = mime;
     }
 
@@ -1200,35 +1209,45 @@ static PEP_STATUS mime_html_text(
     assert(submime);
     if (submime == NULL)
         goto enomem;
+        
+    // IF there are no inlined attachments AND mime is NULL, then 
+    // we just have an HTML body here and won't need to 
+    // process inlined attachments - submime will actually be 
+    // the mime root of from this function, at least.    
 
-    r = mailmime_smart_add_part(top_level_html_mime, submime);
-    assert(r == MAILIMF_NO_ERROR);
-    if (r == MAILIMF_ERROR_MEMORY)
-        goto enomem;
-    else {
-        // mailmime_smart_add_part() takes ownership of submime
+    if (!top_level_html_mime) {
+        mime = submime;
         submime = NULL;
     }
-
-    bloblist_t *_a;
-    for (_a = attachments; _a != NULL; _a = _a->next) {
-        if (_a->disposition != PEP_CONTENT_DISP_INLINE)
-            continue;
-        status = mime_attachment(_a, &submime, transport_encode, false);
-        if (status != PEP_STATUS_OK)
-            return PEP_UNKNOWN_ERROR; // FIXME
-
+    else {    
         r = mailmime_smart_add_part(top_level_html_mime, submime);
         assert(r == MAILIMF_NO_ERROR);
-        if (r == MAILIMF_ERROR_MEMORY) {
+        if (r == MAILIMF_ERROR_MEMORY)
             goto enomem;
-        }
         else {
             // mailmime_smart_add_part() takes ownership of submime
             submime = NULL;
         }
-    }
 
+        bloblist_t *_a;
+        for (_a = attachments; _a != NULL; _a = _a->next) {
+            if (_a->disposition != PEP_CONTENT_DISP_INLINE)
+                continue;
+            status = mime_attachment(_a, &submime, transport_encode, false);
+            if (status != PEP_STATUS_OK)
+                return PEP_UNKNOWN_ERROR; // FIXME
+
+            r = mailmime_smart_add_part(top_level_html_mime, submime);
+            assert(r == MAILIMF_NO_ERROR);
+            if (r == MAILIMF_ERROR_MEMORY) {
+                goto enomem;
+            }
+            else {
+                // mailmime_smart_add_part() takes ownership of submime
+                submime = NULL;
+            }
+        }
+    }    
     *result = mime;
     return PEP_STATUS_OK;
 
@@ -1700,13 +1719,12 @@ static PEP_STATUS mime_encode_message_plain(
     int r;
     PEP_STATUS status;
     //char *subject;
-    char *plaintext;
+    const char *plaintext;
     char *htmltext;
 
     assert(msg);
     assert(result);
     
-    //subject = (msg->shortmsg) ? msg->shortmsg : "pEp";  // not used, yet.
     plaintext = (msg->longmsg) ? msg->longmsg : "";
     htmltext = msg->longmsg_formatted;
 
