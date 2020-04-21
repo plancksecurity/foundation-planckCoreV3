@@ -2496,6 +2496,26 @@ static PEP_STATUS process_multipart_related(struct mailmime *mime,
     return status;
 }
 
+static bool _is_marked_as_attachment(struct mailmime_fields *fields)
+{
+    if (!(fields && fields->fld_list))
+        return false;
+
+    clistiter *cur;
+    for (cur = clist_begin(fields->fld_list); cur != NULL ; cur = clist_next(cur)) {
+        struct mailmime_field * field = clist_content(cur);
+        if (!(field && field->fld_type == MAILMIME_FIELD_DISPOSITION &&
+                    field->fld_data.fld_disposition &&
+                    field->fld_data.fld_disposition->dsp_type))
+            continue;
+        if (field->fld_data.fld_disposition->dsp_type->dsp_type ==
+                MAILMIME_DISPOSITION_TYPE_ATTACHMENT)
+            return true;
+    }
+
+    return false;
+}
+
 static PEP_STATUS interpret_MIME(
         struct mailmime *mime,
         message *msg,
@@ -2507,6 +2527,7 @@ static PEP_STATUS interpret_MIME(
     assert(mime);
     assert(msg);
 
+    struct mailmime_fields *fields = mime->mm_mime_fields;
     struct mailmime_content *content = mime->mm_content_type;
     if (content) {
         if (_is_multipart(content, "alternative")) {
@@ -2596,8 +2617,9 @@ static PEP_STATUS interpret_MIME(
         }
         else {
             if (_is_text_part(content, "html") &&
-                msg->longmsg_formatted == NULL &&
-                msg->longmsg == NULL) {
+                    !_is_marked_as_attachment(fields) &&
+                    msg->longmsg_formatted == NULL &&
+                    msg->longmsg == NULL) {
                 status = interpret_body(mime, &msg->longmsg_formatted,
                                         NULL);
                 if (status)
@@ -2609,14 +2631,16 @@ static PEP_STATUS interpret_MIME(
                     return status;
             }
             else if (_is_text_part(content, "plain") && 
-                     msg->longmsg == NULL && msg->longmsg_formatted == NULL) {
+                    !_is_marked_as_attachment(fields) &&
+                    msg->longmsg == NULL && msg->longmsg_formatted == NULL) {
                 status = interpret_body(mime, &msg->longmsg, NULL);
                 if (status)
                     return status;
             }            
             else if (_is_text_part(content, NULL) && 
-                     !_is_text_part(content, "plain") &&
-                     msg->longmsg == NULL) {
+                    !_is_marked_as_attachment(fields) &&
+                    !_is_text_part(content, "plain") &&
+                    msg->longmsg == NULL) {
                 status = interpret_body(mime, &msg->longmsg, NULL);
                 if (status)
                     return status;
