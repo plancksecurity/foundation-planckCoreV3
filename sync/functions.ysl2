@@ -9,7 +9,7 @@ def "func:distinctName" {
         when "not($nodes)"
             result "/..";
         otherwise
-            result "$nodes[1] | func:distinctName($nodes[position() > 1])[@name != $nodes[1]/@name]";
+            result "$nodes[1] | func:distinctName($nodes[@name != $nodes[1]/@name])";
     }
 }
 
@@ -19,7 +19,7 @@ def "func:distinctType" {
         when "not($nodes)"
             result "/..";
         otherwise
-            result "$nodes[1] | func:distinctType($nodes[position() > 1])[@type != $nodes[1]/@type]";
+            result "$nodes[1] | func:distinctType($nodes[@type != $nodes[1]/@type]";
     }
 }
 

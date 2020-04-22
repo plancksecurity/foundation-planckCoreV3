@@ -368,6 +368,8 @@ action showBeingInGroup
 timeout KeySync
     call "show_handshake" with "type" > SYNC_NOTIFY_TIMEOUT
 
+timeout TrustSync;
+
 action prepareOwnKeys
 ||
     stringlist_t *own_keys;

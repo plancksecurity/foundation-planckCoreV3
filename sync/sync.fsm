@@ -675,7 +675,22 @@ protocol Sync 1 {
     fsm TrustSync 2, threshold=300 {
         version 1, 0;
 
-        state InitState;
+        state InitState {
+            on Init {
+                if deviceGrouped
+                    go TrustSyncActive;
+            }
+        }
+
+        state TrustSyncActive {
+            on UpdateTrust {
+                send TrustUpdate;
+            }
+
+            on TrustUpdate {
+
+            }
+        }
 
         message TrustUpdate 2 {
             auto Version version;

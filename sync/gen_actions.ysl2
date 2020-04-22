@@ -99,6 +99,7 @@ tstylesheet {
 
     template "condition" | #error condition «@name» not implemented\n
     template "action" | #error action «@name» not implemented\n
+    template "fsm" | #error timeout handler for «@name» not implemented\n
 
     function "condition" {
         param "content";
