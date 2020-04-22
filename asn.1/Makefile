@@ -20,7 +20,7 @@ libasn1.a: $(ALL_OBJECTS)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(OPTIMIZE) $(ASN1C_INC) -c $< -o $@
 
 Sync.c: sync.asn1 keysync.asn1 pEp.asn1
-	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keysync.asn1 $<
+	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keysync.asn1 trustsync.asn1 $<
 	rm -f converter-sample.c
 	touch Sync.c
 

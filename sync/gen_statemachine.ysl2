@@ -487,67 +487,91 @@ tstylesheet {
                     }
                 }
 
-                switch (message_type) {
-                    // these messages are being broadcasted
-                    `` for "fsm/message[@type='broadcast']" |>> case «../@name»_PR_«yml:mixedCase(@name)»:
-                        status = _own_identities_retrieve(session, &channels, PEP_idf_not_for_«yml:lcase(@name)»);
-                        if (status)
-                            goto the_end;
+                switch (fsm) {
+            ||
+            for "fsm" {
+            ||
+                    case Sync_PR_«yml:lcase(@name)»:
+                        switch (message_type) {
+                            `` for "message[@type='broadcast']" |>>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+            ||
+            if "message[@type='broadcast']"
+            ||
+                                // these messages are being broadcasted
+                                status = _own_identities_retrieve(session, &channels, PEP_idf_not_for_«yml:lcase(../@name)»);
+                                if (status)
+                                    goto the_end;
 
-                        if (!(channels && channels->ident)) {
-                            // status = PEP_«yml:ucase(@name)»_NO_CHANNEL;
-                            // we don't check for having a channel, because if
-                            // this is initial setup before having an own
-                            // identity we're fine
-                            goto the_end;
+                                if (!(channels && channels->ident)) {
+                                    // status = PEP_«yml:ucase(../@name)»_NO_CHANNEL;
+                                    // we don't check for having a channel, because if
+                                    // this is initial setup before having an own
+                                    // identity we're fine
+                                    goto the_end;
+                                }
+                                break;
+
+            ||
+            ||
+                            `` for "message[@type='anycast']" |>>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+            ||
+            if "message[@type='anycast']"
+            ||
+                                // these go anycast; previously used address is sticky (unicast)
+                                // if we have a comm_partner fixed send it there
+                                if (session->«yml:lcase(../@name)»_state.comm_partner.identity) {
+                                    pEp_identity *channel = identity_dup(session->«yml:lcase(../@name)»_state.comm_partner.identity);
+                                    if (!channel) {
+                                        status = PEP_OUT_OF_MEMORY;
+                                        goto the_end;
+                                    }
+
+                                    channels = new_identity_list(channel);
+                                    if (!channels) {
+                                        status = PEP_OUT_OF_MEMORY;
+                                        goto the_end;
+                                    }
+                                }
+                                // if we can reply just do
+                                else if (session->«yml:lcase(../@name)»_state.transport.from) {
+                                    pEp_identity *channel = identity_dup(session->«yml:lcase(../@name)»_state.transport.from);
+                                    if (!channel) {
+                                        status = PEP_OUT_OF_MEMORY;
+                                        goto the_end;
+                                    }
+
+                                    channels = new_identity_list(channel);
+                                    if (!channels) {
+                                        status = PEP_OUT_OF_MEMORY;
+                                        goto the_end;
+                                    }
+                                }
+                                // real anycast, send it to the first matching
+                                else {
+                                    status = _own_identities_retrieve(session, &channels, PEP_idf_not_for_«yml:lcase(../@name)»);
+                                    if (status)
+                                        goto the_end;
+                                    if (!channels)
+                                        goto the_end;
+
+                                    if (channels->next) {
+                                        free_identity_list(channels->next);
+                                        channels->next = NULL;
+                                    }
+                                }
+                                break;
+
+            ||
+            ||
+                            default:
+                                status = PEP_«yml:ucase(../@name)»_ILLEGAL_MESSAGE;
+                                goto the_end;
                         }
                         break;
 
-                    // these go anycast; previously used address is sticky (unicast)
-                    `` for "fsm/message[@type='anycast']" |>> case «../@name»_PR_«yml:mixedCase(@name)»:
-                        // if we have a comm_partner fixed send it there
-                        if (session->«yml:lcase(@name)»_state.comm_partner.identity) {
-                            pEp_identity *channel = identity_dup(session->«yml:lcase(@name)»_state.comm_partner.identity);
-                            if (!channel) {
-                                status = PEP_OUT_OF_MEMORY;
-                                goto the_end;
-                            }
-
-                            channels = new_identity_list(channel);
-                            if (!channels) {
-                                status = PEP_OUT_OF_MEMORY;
-                                goto the_end;
-                            }
-                        }
-                        // if we can reply just do
-                        else if (session->«yml:lcase(@name)»_state.transport.from) {
-                            pEp_identity *channel = identity_dup(session->«yml:lcase(@name)»_state.transport.from);
-                            if (!channel) {
-                                status = PEP_OUT_OF_MEMORY;
-                                goto the_end;
-                            }
-
-                            channels = new_identity_list(channel);
-                            if (!channels) {
-                                status = PEP_OUT_OF_MEMORY;
-                                goto the_end;
-                            }
-                        }
-                        // real anycast, send it to the first matching
-                        else {
-                            status = _own_identities_retrieve(session, &channels, PEP_idf_not_for_«yml:lcase(@name)»);
-                            if (status)
-                                goto the_end;
-                            if (!channels)
-                                goto the_end;
-
-                            if (channels->next) {
-                                free_identity_list(channels->next);
-                                channels->next = NULL;
-                            }
-                        }
-                        break;
-
+            ||
+            }
+            ||
                     default:
                         status = PEP_«yml:ucase(@name)»_ILLEGAL_MESSAGE;
                         goto the_end;

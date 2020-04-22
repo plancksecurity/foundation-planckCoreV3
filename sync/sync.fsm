@@ -671,4 +671,14 @@ protocol Sync 1 {
         message SynchronizeGroupKeys 21, ratelimit=60 {
         }
     }
+
+    fsm TrustSync 2, threshold=300 {
+        version 1, 0;
+
+        state InitState;
+
+        message TrustUpdate 2 {
+            auto Version version;
+        }
+    }
 }
