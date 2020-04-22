@@ -589,380 +589,410 @@ tstylesheet {
                     }
                     memcpy(_data, data, size);
 
-                    switch (message_type) {
-                    `` for "fsm/message[@security='unencrypted' and ../@name!='KeySync']" | #error unencrypted only allowed with KeySync
-                    `` for "fsm/message[@security='unencrypted' and ../@name='KeySync']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
-                            status = base_prepare_message(
-                                    session,
-                                    li->ident,
-                                    li->ident,
-                                    BASE_SYNC,
-                                    _data,
-                                    size,
-                                    li->ident->fpr,
-                                    &_m
-                                );
-                            if (status) {
-                                free(_data);
-                                goto the_end;
-                            }
-                            attach_own_key(session, _m);
-                            decorate_message(_m, PEP_rating_undefined, NULL, true, true);
-                            m = _m;
-                            break;
-
-                    `` for "fsm/message[@security='untrusted' and ../@name!='KeySync']" | #error untrusted only allowed with KeySync
-                    `` for "fsm/message[@security='untrusted' and ../@name='KeySync']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
-                            // add fpr of key of comm partner
-
-                            assert(session->«yml:lcase(@name)»_state.transport.sender_fpr);
-                            if (!session->«yml:lcase(@name)»_state.transport.sender_fpr) {
-                                status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
-                                goto the_end;
-                            }
-
-                            extra = new_stringlist(session->«yml:lcase(@name)»_state.transport.sender_fpr);
-                            if (!extra) {
-                                status = PEP_OUT_OF_MEMORY;
-                                goto the_end;
-                            }
-
-                            status = base_prepare_message(
-                                    session,
-                                    li->ident,
-                                    li->ident,
-                                    BASE_SYNC,
-                                    _data,
-                                    size,
-                                    NULL,
-                                    &_m
-                                );
-                            if (status) {
-                                free(_data);
-                                goto the_end;
-                            }
-
-                            status = encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
-                            if (status) {
-                                status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
-                                goto the_end;
-                            }
-                            add_opt_field(m, "pEp-auto-consume", "yes");
-                            m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
-                            free_message(_m);
-                            break;
-
-                        // attach own keys for new member
-                        `` for "fsm/message[@security='attach_own_keys_for_new_member']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
-                            // check if we had a former negotiation
-
-                            transaction = false;
-                            for (int i=0; i < session->«yml:lcase(@name)»_state.own.negotiation.size; i++) {
-                                if (session->«yml:lcase(@name)»_state.own.negotiation.buf[i]) {
-                                    transaction = true;
-                                    break;
-                                }
-                            }
-    
-                            // if it is a former negotiation check if the key
-                            // is fully trusted and the sender key of this
-                            // transaction; if so add the sender key to extra
-                            // keys allowing this new partner to read the
-                            // secret keys
-
-                            if (transaction) {
-                                assert(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr &&
-                                    session->«yml:lcase(@name)»_state.transport.from &&
-                                    session->«yml:lcase(@name)»_state.transport.from->user_id);
-                                if (!(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr &&
-                                        session->«yml:lcase(@name)»_state.transport.from &&
-                                        session->«yml:lcase(@name)»_state.transport.from->user_id))
-                                {
-                                    status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
-                                    goto the_end;
-                                }
-                            
-                                // test if this is a green channel
-
-                                pEp_identity *ident = new_identity(NULL,
-                                        session->«yml:lcase(@name)»_state.comm_partner.sender_fpr,
-                                        session->«yml:lcase(@name)»_state.transport.from->user_id,
-                                        NULL
+                    if (fsm == Sync_PR_keysync) {
+                        switch (message_type) {
+                        `` for "fsm/message[@security='unencrypted' and ../@name!='KeySync']" | #error unencrypted only allowed with KeySync
+                        `` for "fsm/message[@security='unencrypted' and ../@name='KeySync']" |>>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                                status = base_prepare_message(
+                                        session,
+                                        li->ident,
+                                        li->ident,
+                                        BASE_SYNC,
+                                        _data,
+                                        size,
+                                        li->ident->fpr,
+                                        &_m
                                     );
-                                if (!ident) {
-                                    status = PEP_OUT_OF_MEMORY;
-                                    goto the_end;
-                                }
-                                status = get_trust(session, ident);
                                 if (status) {
-                                    free_identity(ident);
+                                    free(_data);
                                     goto the_end;
                                 }
-                                assert(ident->comm_type == PEP_ct_pEp); // we don't deliver otherwise
-                                if (ident->comm_type != PEP_ct_pEp) {
-                                    free_identity(ident);
-                                    status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
-                                    goto the_end;
-                                }
-                                free_identity(ident);
+                                attach_own_key(session, _m);
+                                decorate_message(_m, PEP_rating_undefined, NULL, true, true);
+                                m = _m;
+                                break;
 
-                                // test if we accepted this as own key already
+                        `` for "fsm/message[@security='untrusted' and ../@name!='KeySync']" | #error untrusted only allowed with KeySync
+                        `` for "fsm/message[@security='untrusted' and ../@name='KeySync']" |>>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                                // add fpr of key of comm partner
 
-                                bool is_own_key = false;
-                                status = own_key_is_listed(session,
-                                        session->«yml:lcase(@name)»_state.comm_partner.sender_fpr,
-                                        &is_own_key);
-                                assert(!status);
-                                if (status)
-                                    goto the_end;
-                                assert(is_own_key);
-                                if (!is_own_key) {
+                                assert(session->«yml:lcase(@name)»_state.transport.sender_fpr);
+                                if (!session->«yml:lcase(@name)»_state.transport.sender_fpr) {
                                     status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
                                     goto the_end;
                                 }
 
-                                // if so add key of comm partner to extra keys
-
-                                extra = new_stringlist(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr);
+                                extra = new_stringlist(session->«yml:lcase(@name)»_state.transport.sender_fpr);
                                 if (!extra) {
                                     status = PEP_OUT_OF_MEMORY;
                                     goto the_end;
                                 }
-                            }
-                            
-                            status = base_prepare_message(
-                                    session,
-                                    li->ident,
-                                    li->ident,
-                                    BASE_SYNC,
-                                    _data,
-                                    size,
-                                    NULL,
-                                    &_m
-                                );
-                            if (status) {
-                                free(_data);
-                                goto the_end;
-                            }
 
-                            // export secret keys into memory
-
-                            key_data = strdup("");
-                            assert(key_data);
-                            if (!key_data) {
-                                free(_data);
-                                free_message(_m);
-                                status = PEP_OUT_OF_MEMORY;
-                                goto the_end;
-                            }
-                            key_data_size = 1; // N.B. If null termination makes us happy for debugging, fine, but 
-                                               // if we include this in the size, libetpan will null terminate and 
-                                               // go bananas. We can't have a NUL in the mime text.
-
-                            for (stringlist_t *sl = session->«yml:lcase(@name)»_state.own.keys;
-                                    sl && sl->value ; sl = sl->next)
-                            {
-                                char *_key_data = NULL;
-                                size_t _size = 0;
-                                status = export_secret_key(session, sl->value, &_key_data, &_size);
-                                if (status && status != PEP_KEY_NOT_FOUND) {
+                                status = base_prepare_message(
+                                        session,
+                                        li->ident,
+                                        li->ident,
+                                        BASE_SYNC,
+                                        _data,
+                                        size,
+                                        NULL,
+                                        &_m
+                                    );
+                                if (status) {
                                     free(_data);
-                                    free_message(_m);
                                     goto the_end;
                                 }
 
-                                if (status != PEP_KEY_NOT_FOUND) {
-                                    assert(_key_data && _size);
-                                    char *n = realloc(key_data, key_data_size + _size);
-                                    if (!n) {
-                                        free(_data);
-                                        free_message(_m);
+                                status = encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
+                                if (status) {
+                                    status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                    goto the_end;
+                                }
+                                add_opt_field(m, "pEp-auto-consume", "yes");
+                                m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
+                                free_message(_m);
+                                break;
+
+                            // attach own keys for new member
+                            `` for "fsm/message[@security='attach_own_keys_for_new_member' and ../@name!='KeySync']" | #error attach_own_keys_for_new_member only allowed with KeySync
+                            `` for "fsm/message[@security='attach_own_keys_for_new_member']" |>>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                                // check if we had a former negotiation
+
+                                transaction = false;
+                                for (int i=0; i < session->«yml:lcase(@name)»_state.own.negotiation.size; i++) {
+                                    if (session->«yml:lcase(@name)»_state.own.negotiation.buf[i]) {
+                                        transaction = true;
+                                        break;
+                                    }
+                                }
+        
+                                // if it is a former negotiation check if the key
+                                // is fully trusted and the sender key of this
+                                // transaction; if so add the sender key to extra
+                                // keys allowing this new partner to read the
+                                // secret keys
+
+                                if (transaction) {
+                                    assert(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr &&
+                                        session->«yml:lcase(@name)»_state.transport.from &&
+                                        session->«yml:lcase(@name)»_state.transport.from->user_id);
+                                    if (!(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr &&
+                                            session->«yml:lcase(@name)»_state.transport.from &&
+                                            session->«yml:lcase(@name)»_state.transport.from->user_id))
+                                    {
+                                        status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                        goto the_end;
+                                    }
+                                
+                                    // test if this is a green channel
+
+                                    pEp_identity *ident = new_identity(NULL,
+                                            session->«yml:lcase(@name)»_state.comm_partner.sender_fpr,
+                                            session->«yml:lcase(@name)»_state.transport.from->user_id,
+                                            NULL
+                                        );
+                                    if (!ident) {
                                         status = PEP_OUT_OF_MEMORY;
                                         goto the_end;
                                     }
-                                    key_data = n;
-                                    key_data_size += _size;
-                                    strlcat(key_data, _key_data, key_data_size);
-                                    free(_key_data);
-                                    _key_data = NULL;
+                                    status = get_trust(session, ident);
+                                    if (status) {
+                                        free_identity(ident);
+                                        goto the_end;
+                                    }
+                                    assert(ident->comm_type == PEP_ct_pEp); // we don't deliver otherwise
+                                    if (ident->comm_type != PEP_ct_pEp) {
+                                        free_identity(ident);
+                                        status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                        goto the_end;
+                                    }
+                                    free_identity(ident);
+
+                                    // test if we accepted this as own key already
+
+                                    bool is_own_key = false;
+                                    status = own_key_is_listed(session,
+                                            session->«yml:lcase(@name)»_state.comm_partner.sender_fpr,
+                                            &is_own_key);
+                                    assert(!status);
+                                    if (status)
+                                        goto the_end;
+                                    assert(is_own_key);
+                                    if (!is_own_key) {
+                                        status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                        goto the_end;
+                                    }
+
+                                    // if so add key of comm partner to extra keys
+
+                                    extra = new_stringlist(session->«yml:lcase(@name)»_state.comm_partner.sender_fpr);
+                                    if (!extra) {
+                                        status = PEP_OUT_OF_MEMORY;
+                                        goto the_end;
+                                    }
                                 }
-                                status = export_key(session, sl->value, &_key_data, &_size);
-                                if (status && status != PEP_KEY_NOT_FOUND) {
+                                
+                                status = base_prepare_message(
+                                        session,
+                                        li->ident,
+                                        li->ident,
+                                        BASE_SYNC,
+                                        _data,
+                                        size,
+                                        NULL,
+                                        &_m
+                                    );
+                                if (status) {
                                     free(_data);
-                                    free_message(_m);
                                     goto the_end;
                                 }
 
-                                if (status != PEP_KEY_NOT_FOUND) {
-                                    assert(_key_data && _size);
-                                    char *n = realloc(key_data, key_data_size + _size);
-                                    if (!n) {
-                                        free(_data);
-                                        free_message(_m);
-                                        status = PEP_OUT_OF_MEMORY;
-                                        goto the_end;
-                                    }
-                                    key_data = n;
-                                    key_data_size += _size;
-                                    strlcat(key_data, _key_data, key_data_size);
-                                    free(_key_data);
-                                    _key_data = NULL;
-                                }
-                            }
+                                // export secret keys into memory
 
-                            // add secret key data as attachment
-
-                            // N.B. The -1 makes sure we do NOT add a NUL into the mime stream!
-                            bloblist_t *bl = bloblist_add(_m->attachments, key_data, key_data_size - 1,
-                                    "application/octet-stream", "file://own.key");
-                            if (!bl) {
-                                free(_data);
-                                free_message(_m);
-                                status = PEP_OUT_OF_MEMORY;
-                                goto the_end;
-                            }
-                            key_data = NULL;
-
-                            status = encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
-                            if (status) {
-                                status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
-                                goto the_end;
-                            }
-                            add_opt_field(m, "pEp-auto-consume", "yes");
-                            m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
-                            free_message(_m);
-                            break;
-
-                        // attach own keys for group
-                        `` for "fsm/message[@security='attach_own_keys_for_group']" |>>> case «../@name»_PR_«yml:mixedCase(@name)»:
-                            status = base_prepare_message(
-                                    session,
-                                    li->ident,
-                                    li->ident,
-                                    BASE_SYNC,
-                                    _data,
-                                    size,
-                                    NULL,
-                                    &_m
-                                );
-                            if (status) {
-                                free(_data);
-                                goto the_end;
-                            }
-
-                            // export secret keys into memory
-
-                            key_data = strdup("");
-                            assert(key_data);
-                            if (!key_data) {
-                                free(_data);
-                                free_message(_m);
-                                status = PEP_OUT_OF_MEMORY;
-                                goto the_end;
-                            }
-                            key_data_size = 1; // N.B. If null termination makes us happy for debugging, fine, but 
-                                               // if we include this in the size, libetpan will null terminate and 
-                                               // go bananas. We can't have a NUL in the mime text.
-
-                            for (stringlist_t *sl = session->«yml:lcase(@name)»_state.own.keys;
-                                    sl && sl->value ; sl = sl->next)
-                            {
-                                char *_key_data = NULL;
-                                size_t _size = 0;
-                                status = export_secret_key(session, sl->value, &_key_data, &_size);
-                                if (status && status != PEP_KEY_NOT_FOUND) {
+                                key_data = strdup("");
+                                assert(key_data);
+                                if (!key_data) {
                                     free(_data);
                                     free_message(_m);
+                                    status = PEP_OUT_OF_MEMORY;
+                                    goto the_end;
+                                }
+                                key_data_size = 1; // N.B. If null termination makes us happy for debugging, fine, but 
+                                                   // if we include this in the size, libetpan will null terminate and 
+                                                   // go bananas. We can't have a NUL in the mime text.
+
+                                for (stringlist_t *sl = session->«yml:lcase(@name)»_state.own.keys;
+                                        sl && sl->value ; sl = sl->next)
+                                {
+                                    char *_key_data = NULL;
+                                    size_t _size = 0;
+                                    status = export_secret_key(session, sl->value, &_key_data, &_size);
+                                    if (status && status != PEP_KEY_NOT_FOUND) {
+                                        free(_data);
+                                        free_message(_m);
+                                        goto the_end;
+                                    }
+
+                                    if (status != PEP_KEY_NOT_FOUND) {
+                                        assert(_key_data && _size);
+                                        char *n = realloc(key_data, key_data_size + _size);
+                                        if (!n) {
+                                            free(_data);
+                                            free_message(_m);
+                                            status = PEP_OUT_OF_MEMORY;
+                                            goto the_end;
+                                        }
+                                        key_data = n;
+                                        key_data_size += _size;
+                                        strlcat(key_data, _key_data, key_data_size);
+                                        free(_key_data);
+                                        _key_data = NULL;
+                                    }
+                                    status = export_key(session, sl->value, &_key_data, &_size);
+                                    if (status && status != PEP_KEY_NOT_FOUND) {
+                                        free(_data);
+                                        free_message(_m);
+                                        goto the_end;
+                                    }
+
+                                    if (status != PEP_KEY_NOT_FOUND) {
+                                        assert(_key_data && _size);
+                                        char *n = realloc(key_data, key_data_size + _size);
+                                        if (!n) {
+                                            free(_data);
+                                            free_message(_m);
+                                            status = PEP_OUT_OF_MEMORY;
+                                            goto the_end;
+                                        }
+                                        key_data = n;
+                                        key_data_size += _size;
+                                        strlcat(key_data, _key_data, key_data_size);
+                                        free(_key_data);
+                                        _key_data = NULL;
+                                    }
+                                }
+
+                                // add secret key data as attachment
+
+                                // N.B. The -1 makes sure we do NOT add a NUL into the mime stream!
+                                bloblist_t *bl = bloblist_add(_m->attachments, key_data, key_data_size - 1,
+                                        "application/octet-stream", "file://own.key");
+                                if (!bl) {
+                                    free(_data);
+                                    free_message(_m);
+                                    status = PEP_OUT_OF_MEMORY;
+                                    goto the_end;
+                                }
+                                key_data = NULL;
+
+                                status = encrypt_message(session, _m, extra, &m, PEP_enc_PEP, 0);
+                                if (status) {
+                                    status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                    goto the_end;
+                                }
+                                add_opt_field(m, "pEp-auto-consume", "yes");
+                                m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
+                                free_message(_m);
+                                break;
+
+                            // attach own keys for group
+                            `` for "fsm/message[@security='attach_own_keys_for_group' and ../@name!='KeySync']" | #error attach_own_keys_for_group only allowed with KeySync
+                            `` for "fsm/message[@security='attach_own_keys_for_group']" |>>>> case «../@name»_PR_«yml:mixedCase(@name)»:
+                                status = base_prepare_message(
+                                        session,
+                                        li->ident,
+                                        li->ident,
+                                        BASE_SYNC,
+                                        _data,
+                                        size,
+                                        NULL,
+                                        &_m
+                                    );
+                                if (status) {
+                                    free(_data);
                                     goto the_end;
                                 }
 
-                                if (status != PEP_KEY_NOT_FOUND) {
-                                    assert(_key_data && _size);
-                                    char *n = realloc(key_data, key_data_size + _size);
-                                    if (!n) {
-                                        free(_data);
-                                        free_message(_m);
-                                        status = PEP_OUT_OF_MEMORY;
-                                        goto the_end;
-                                    }
-                                    key_data = n;
-                                    key_data_size += _size;
-                                    strlcat(key_data, _key_data, key_data_size);
-                                    free(_key_data);
-                                    _key_data = NULL;
-                                }
-                                status = export_key(session, sl->value, &_key_data, &_size);
-                                if (status && status != PEP_KEY_NOT_FOUND) {
+                                // export secret keys into memory
+
+                                key_data = strdup("");
+                                assert(key_data);
+                                if (!key_data) {
                                     free(_data);
                                     free_message(_m);
+                                    status = PEP_OUT_OF_MEMORY;
+                                    goto the_end;
+                                }
+                                key_data_size = 1; // N.B. If null termination makes us happy for debugging, fine, but 
+                                                   // if we include this in the size, libetpan will null terminate and 
+                                                   // go bananas. We can't have a NUL in the mime text.
+
+                                for (stringlist_t *sl = session->«yml:lcase(@name)»_state.own.keys;
+                                        sl && sl->value ; sl = sl->next)
+                                {
+                                    char *_key_data = NULL;
+                                    size_t _size = 0;
+                                    status = export_secret_key(session, sl->value, &_key_data, &_size);
+                                    if (status && status != PEP_KEY_NOT_FOUND) {
+                                        free(_data);
+                                        free_message(_m);
+                                        goto the_end;
+                                    }
+
+                                    if (status != PEP_KEY_NOT_FOUND) {
+                                        assert(_key_data && _size);
+                                        char *n = realloc(key_data, key_data_size + _size);
+                                        if (!n) {
+                                            free(_data);
+                                            free_message(_m);
+                                            status = PEP_OUT_OF_MEMORY;
+                                            goto the_end;
+                                        }
+                                        key_data = n;
+                                        key_data_size += _size;
+                                        strlcat(key_data, _key_data, key_data_size);
+                                        free(_key_data);
+                                        _key_data = NULL;
+                                    }
+                                    status = export_key(session, sl->value, &_key_data, &_size);
+                                    if (status && status != PEP_KEY_NOT_FOUND) {
+                                        free(_data);
+                                        free_message(_m);
+                                        goto the_end;
+                                    }
+
+                                    if (status != PEP_KEY_NOT_FOUND) {
+                                        assert(_key_data && _size);
+                                        char *n = realloc(key_data, key_data_size + _size);
+                                        if (!n) {
+                                            free(_data);
+                                            free_message(_m);
+                                            status = PEP_OUT_OF_MEMORY;
+                                            goto the_end;
+                                        }
+                                        key_data = n;
+                                        key_data_size += _size;
+                                        strlcat(key_data, _key_data, key_data_size);
+                                        free(_key_data);
+                                        _key_data = NULL;
+                                    }
+                                }
+
+                                // add secret key data as attachment
+
+                                // N.B. The -1 makes sure we do NOT add a NUL into the mime stream!
+                                bl = bloblist_add(_m->attachments, key_data, key_data_size - 1,
+                                        "application/octet-stream", "file://own.key");
+                                if (!bl) {
+                                    free(_data);
+                                    free_message(_m);
+                                    status = PEP_OUT_OF_MEMORY;
+                                    goto the_end;
+                                }
+                                key_data = NULL;
+
+                                // we do not support extra keys here and will only encrypt to ourselves
+                                status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
+                                if (status) {
+                                    status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                    goto the_end;
+                                }
+                                add_opt_field(m, "pEp-auto-consume", "yes");
+                                m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
+                                free_message(_m);
+                                break;
+
+                            default: // security=trusted only
+                                status = base_prepare_message(
+                                        session,
+                                        li->ident,
+                                        li->ident,
+                                        BASE_SYNC,
+                                        _data,
+                                        size,
+                                        NULL,
+                                        &_m
+                                    );
+                                if (status) {
+                                    free(_data);
                                     goto the_end;
                                 }
 
-                                if (status != PEP_KEY_NOT_FOUND) {
-                                    assert(_key_data && _size);
-                                    char *n = realloc(key_data, key_data_size + _size);
-                                    if (!n) {
-                                        free(_data);
-                                        free_message(_m);
-                                        status = PEP_OUT_OF_MEMORY;
-                                        goto the_end;
-                                    }
-                                    key_data = n;
-                                    key_data_size += _size;
-                                    strlcat(key_data, _key_data, key_data_size);
-                                    free(_key_data);
-                                    _key_data = NULL;
+                                status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
+                                if (status) {
+                                    status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                                    goto the_end;
                                 }
-                            }
-
-                            // add secret key data as attachment
-
-                            // N.B. The -1 makes sure we do NOT add a NUL into the mime stream!
-                            bl = bloblist_add(_m->attachments, key_data, key_data_size - 1,
-                                    "application/octet-stream", "file://own.key");
-                            if (!bl) {
-                                free(_data);
+                                add_opt_field(m, "pEp-auto-consume", "yes");
+                                m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
                                 free_message(_m);
-                                status = PEP_OUT_OF_MEMORY;
-                                goto the_end;
-                            }
-                            key_data = NULL;
+                        }
+                    }
+                    else {
+                        // for other protocols than KeySync security=trusted only
+                        status = base_prepare_message(
+                                session,
+                                li->ident,
+                                li->ident,
+                                BASE_SYNC,
+                                _data,
+                                size,
+                                NULL,
+                                &_m
+                            );
+                        if (status) {
+                            free(_data);
+                            goto the_end;
+                        }
 
-                            // we do not support extra keys here and will only encrypt to ourselves
-                            status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
-                            if (status) {
-                                status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
-                                goto the_end;
-                            }
-                            add_opt_field(m, "pEp-auto-consume", "yes");
-                            m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
-                            free_message(_m);
-                            break;
-
-                        default: // security=trusted only
-                            status = base_prepare_message(
-                                    session,
-                                    li->ident,
-                                    li->ident,
-                                    BASE_SYNC,
-                                    _data,
-                                    size,
-                                    NULL,
-                                    &_m
-                                );
-                            if (status) {
-                                free(_data);
-                                goto the_end;
-                            }
-
-                            status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
-                            if (status) {
-                                status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
-                                goto the_end;
-                            }
-                            add_opt_field(m, "pEp-auto-consume", "yes");
-                            m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
-                            free_message(_m);
+                        status = encrypt_message(session, _m, NULL, &m, PEP_enc_PEP, 0);
+                        if (status) {
+                            status = PEP_«yml:ucase(@name)»_CANNOT_ENCRYPT;
+                            goto the_end;
+                        }
+                        add_opt_field(m, "pEp-auto-consume", "yes");
+                        m->in_reply_to = stringlist_add(m->in_reply_to, "pEp-auto-consume@pEp.foundation");
+                        free_message(_m);
                     }
 
                     status = session->messageToSend(m);

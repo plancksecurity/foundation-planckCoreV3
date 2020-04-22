@@ -693,7 +693,6 @@ protocol Sync 1 {
         }
 
         message TrustUpdate 2 {
-            auto Version version;
         }
     }
 }
