@@ -678,11 +678,11 @@ protocol Sync 1 {
         state InitState {
             on Init {
                 if deviceGrouped
-                    go TrustSyncActive;
+                    go Grouped;
             }
         }
 
-        state TrustSyncActive {
+        state Grouped {
             on UpdateTrust {
                 send TrustUpdate;
             }

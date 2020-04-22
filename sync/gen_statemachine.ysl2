@@ -1136,7 +1136,7 @@ tstylesheet {
         case «../@name»_PR_«yml:lcase(@name)»: {
             int state = session->«yml:lcase(../@name)»_state.«yml:lcase(@name)».state;
             switch (state) {
-                `` for "state[@name!='InitState' and @timeout != 'off']" |>>> case «@name»:
+                `` for "state[@name!='InitState' and @timeout != 'off']" |>>> case «../@name»_state_«@name»:
                     if (_«@name»_timeout(state)) {
                         session->«yml:lcase(../@name)»_state.«yml:lcase(@name)».state = Init;
                         event = Init;
@@ -1277,8 +1277,8 @@ tstylesheet {
             «@name»_state_None = None,
             «@name»_state_Init = Init,
         ||
-        for "func:distinctName(state[not(@name='InitState')])"
-            |> «@name»`if "position()!=last()" > , `
+        for "state[not(@name='InitState')]"
+            |> «../@name»_state_«@name»`if "position()!=last()" > , `
         ||
         } «@name»_state;
 
@@ -1349,9 +1349,9 @@ tstylesheet {
                 case Init:
                     return "InitState";
         ||
-        for "func:distinctName(state[not(@name='InitState')])" {
-            |>> case «@name»:
-            |>>> return "«@name»";
+        for "state[not(@name='InitState')]" {
+            |>> case «../@name»_state_«@name»:
+            |>>> return "«../@name»_state_«@name»";
         }
         ||
                 default:
@@ -1444,7 +1444,7 @@ tstylesheet {
     template "state", mode=fsm {
         choose {
             when "@name='InitState'" | case «../@name»_state_Init:
-            otherwise | case «@name»:
+            otherwise | case «../@name»_state_«@name»:
         }
         ||
             «../@name»_SERVICE_LOG("in state", "«@name»");
@@ -1498,9 +1498,14 @@ tstylesheet {
         const "fsm", "ancestor::fsm";
         ||
 
-        «$fsm/@name»_SERVICE_LOG("transition to state", "«@target»");
-        return «@target»;
+        «$fsm/@name»_SERVICE_LOG("transition to state", "«$fsm/@name»_state_«@target»");
         ||
+        choose {
+            when "@target='InitState' or @target='End'"
+                | return «@target»;
+            otherwise
+                | return «$fsm/@name»_state_«@target»;
+        }
     }
 
     template "send" {
