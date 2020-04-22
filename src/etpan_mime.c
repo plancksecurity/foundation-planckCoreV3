@@ -1763,6 +1763,15 @@ static PEP_STATUS mime_encode_message_plain(
     
     bloblist_t* traversal_ptr = msg->attachments;
     
+    // If there were any inline attachments, they should have 
+    // been stripped out in mime_html_text and dealt with. 
+    // I'm not entirely sure what the alternative case 
+    // is here. But basically, if there are any non-inlined 
+    // attachments to deal with, this is designed to 
+    // make sure we process them. So flag it for 
+    // "hey, Bob, you got some regular attachments here"
+    // so Bob (obviously, the MIME engine is called Bob)
+    // can do the right thing in the next block.
     while (traversal_ptr) {
         if (traversal_ptr->disposition != PEP_CONTENT_DISP_INLINE) {
             normal_attachments = true;
@@ -1791,6 +1800,7 @@ static PEP_STATUS mime_encode_message_plain(
         bloblist_t *_a;
         bool first_one = true;
         
+        // Go through the non-inline attachments and add em.
         for (_a = msg->attachments; _a != NULL; _a = _a->next) {
 
             if (_a->disposition == PEP_CONTENT_DISP_INLINE)
