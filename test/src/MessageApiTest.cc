@@ -117,7 +117,7 @@ TEST_F(MessageApiTest, check_message_api) {
     output_stream << "message created.\n";
 
     char *text2 = nullptr;
-    PEP_STATUS status2 = mime_encode_message(msg2, false, &text2);
+    PEP_STATUS status2 = mime_encode_message(msg2, false, &text2, false);
     ASSERT_EQ(status2 , PEP_STATUS_OK);
     ASSERT_NE(text2, nullptr);
 
@@ -135,7 +135,7 @@ TEST_F(MessageApiTest, check_message_api) {
     ASSERT_NE(enc_msg2, nullptr);
     output_stream << "message encrypted.\n";
 
-    status2 = mime_encode_message(enc_msg2, false, &text2);
+    status2 = mime_encode_message(enc_msg2, false, &text2, false);
     ASSERT_EQ(status2 , PEP_STATUS_OK);
     ASSERT_NE(text2, nullptr);
 

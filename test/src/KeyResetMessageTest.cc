@@ -217,7 +217,7 @@ class KeyResetMessageTest : public ::testing::Test {
             ASSERT_NE(enc_outgoing_msg, nullptr);
             output_stream << "Message encrypted.\n";
             char* outstring = NULL;
-            mime_encode_message(enc_outgoing_msg, false, &outstring);
+            mime_encode_message(enc_outgoing_msg, false, &outstring, false);
             output_stream << outstring << endl;
             free_message(enc_outgoing_msg);
             free(outstring);
@@ -350,7 +350,7 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
                 ofstream outfile;
                 outfile.open("test_files/398_reset_from_alice_to_bob.eml");
                 char* bob_msg = NULL;
-                mime_encode_message(curr_sent_msg, false, &bob_msg);
+                mime_encode_message(curr_sent_msg, false, &bob_msg, false);
                 outfile << bob_msg;
                 outfile.close();
             }
@@ -358,7 +358,7 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
                 ofstream outfile;
                 outfile.open("test_files/398_reset_from_alice_to_fenris.eml");
                 char* fenris_msg = NULL;
-                mime_encode_message(curr_sent_msg, false, &fenris_msg);
+                mime_encode_message(curr_sent_msg, false, &fenris_msg, false);
                 outfile << fenris_msg;
                 outfile.close();
             }
@@ -656,7 +656,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own) {
         outfile.open("test_mails/check_reset_grouped_own_recv.eml");
         message* curr_sent_msg = m_queue.at(0);
         char* msg_txt = NULL;
-        mime_encode_message(curr_sent_msg, false, &msg_txt);
+        mime_encode_message(curr_sent_msg, false, &msg_txt, false);
         outfile << msg_txt;
         outfile.close();
         cout << "    ASSERT_STREQ(alice->fpr, \"" << alice_new_fpr << "\");" << endl;
@@ -814,7 +814,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr) {
         string fname = "test_mails/check_reset_grouped_own_multi_ident_one_fpr.eml";
         outfile.open(fname);
         char* msg_txt = NULL;
-        mime_encode_message(curr_sent_msg, false, &msg_txt);
+        mime_encode_message(curr_sent_msg, false, &msg_txt, false);
         outfile << msg_txt;
         outfile.close();        
         cout <<  "    // check_reset_grouped_own_multi_ident_one_fpr_recv" << endl;
@@ -1032,7 +1032,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
             string fname = string("test_mails/check_reset_grouped_own_multiple_keys_multiple_idents_reset_all_") + to_string(i) + ".eml";
             outfile.open(fname);
             char* msg_txt = NULL;
-            mime_encode_message(curr_sent_msg, false, &msg_txt);
+            mime_encode_message(curr_sent_msg, false, &msg_txt, false);
             outfile << msg_txt;
             outfile.close();        
         }
@@ -1161,7 +1161,7 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped) {
             string fname = string("test_mails/check_reset_all_own_grouped") + to_string(i) + ".eml";
             outfile.open(fname);
             char* msg_txt = NULL;
-            mime_encode_message(curr_sent_msg, false, &msg_txt);
+            mime_encode_message(curr_sent_msg, false, &msg_txt, false);
             outfile << msg_txt;
             outfile.close();        
         }
@@ -1495,7 +1495,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
         string fname = "test_mails/check_reset_grouped_own_multiple_keys_multiple_idents_reset_one.eml";
         outfile.open(fname);
         char* msg_txt = NULL;
-        mime_encode_message(curr_sent_msg, false, &msg_txt);
+        mime_encode_message(curr_sent_msg, false, &msg_txt, false);
         outfile << msg_txt;
         outfile.close();   
         cout <<  "    // check_reset_grouped_own_multiple_keys_multiple_idents_reset_one_recv" << endl;  
@@ -2320,7 +2320,7 @@ TEST_F(KeyResetMessageTest, not_a_test) {
 
     status = encrypt_message(session, bob_msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    status = mime_encode_message(enc_msg, false, &enc_msg_str);
+    status = mime_encode_message(enc_msg, false, &enc_msg_str, false);
 
     ofstream myfile;
     myfile.open("test_mails/ENGINE-654_bob_mail.eml");

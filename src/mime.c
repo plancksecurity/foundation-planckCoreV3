@@ -32,12 +32,3 @@ DYNAMIC_API bool is_PGP_message_text(const char *text)
 
     return strncmp(text, "-----BEGIN PGP MESSAGE-----", 27) == 0;
 }
-
-DYNAMIC_API PEP_STATUS mime_encode_message(
-        const message * msg,
-        bool omit_fields,
-        char **mimetext
-    )
-{
-    return _mime_encode_message_internal(msg, omit_fields, mimetext, false);
-}

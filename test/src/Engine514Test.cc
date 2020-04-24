@@ -92,7 +92,7 @@ TEST_F(Engine514Test, check_engine514_unencrypted) {
     not_the_msg->shortmsg = strdup("This is an ATTACHMENT");
     not_the_msg->longmsg = strdup("Some body text here.");
 
-    mime_encode_message(not_the_msg, false, &attachment_text);
+    mime_encode_message(not_the_msg, false, &attachment_text, false);
     ASSERT_NE(attachment_text, nullptr);
     free_message(not_the_msg);
         
@@ -120,7 +120,7 @@ TEST_F(Engine514Test, check_engine514_unencrypted) {
     
     // Funny, it's not reproduceable here.
     char* output_str = NULL;
-    mime_encode_message(msg, false, &output_str);
+    mime_encode_message(msg, false, &output_str, false);
     char* find_the_mimetype = strstr(output_str, "message/rfc822");
     ASSERT_NE(find_the_mimetype, nullptr);
     find_the_mimetype = strstr(output_str, "text/rfc822");
@@ -143,7 +143,7 @@ TEST_F(Engine514Test, check_engine514_unencrypted_second_position) {
     not_the_msg->shortmsg = strdup("This is an ATTACHMENT");
     not_the_msg->longmsg = strdup("Some body text here.");
 
-    mime_encode_message(not_the_msg, false, &attachment_text);
+    mime_encode_message(not_the_msg, false, &attachment_text, false);
     ASSERT_NE(attachment_text, nullptr);
     free_message(not_the_msg);
         
@@ -173,7 +173,7 @@ TEST_F(Engine514Test, check_engine514_unencrypted_second_position) {
     
     // Still not reproduceable
     char* output_str = NULL;
-    mime_encode_message(msg, false, &output_str);
+    mime_encode_message(msg, false, &output_str, false);
     cout << output_str << endl;
     char* find_the_mimetype = strstr(output_str, "message/rfc822");
     ASSERT_NE(find_the_mimetype, nullptr);
@@ -192,7 +192,7 @@ TEST_F(Engine514Test, check_engine514_encode_and_decode) {
     not_the_msg->shortmsg = strdup("This is an ATTACHMENT");
     not_the_msg->longmsg = strdup("Some body text here.");
 
-    mime_encode_message(not_the_msg, false, &attachment_text);
+    mime_encode_message(not_the_msg, false, &attachment_text, false);
     ASSERT_NE(attachment_text, nullptr);
     free_message(not_the_msg);
         
@@ -213,7 +213,7 @@ TEST_F(Engine514Test, check_engine514_encode_and_decode) {
     msg->attachments = new_bloblist(attachment_text, strlen(attachment_text), "message/rfc822", NULL); 
     
     char* output_str = NULL;
-    mime_encode_message(msg, false, &output_str);
+    mime_encode_message(msg, false, &output_str, false);
     cout << output_str << endl;
     char* find_the_mimetype = strstr(output_str, "message/rfc822");
     ASSERT_NE(find_the_mimetype, nullptr);
@@ -239,7 +239,7 @@ TEST_F(Engine514Test, check_engine514_encrypted) {
     not_the_msg->shortmsg = strdup("This is an ATTACHMENT");
     not_the_msg->longmsg = strdup("Some body text here.");
 
-    mime_encode_message(not_the_msg, false, &attachment_text);
+    mime_encode_message(not_the_msg, false, &attachment_text, false);
     ASSERT_NE(attachment_text, nullptr);
     free_message(not_the_msg);
         
@@ -276,7 +276,7 @@ TEST_F(Engine514Test, check_engine514_encrypted) {
     
     // Funny, it's not reproduceable here.
     // char* output_str = NULL;
-    // mime_encode_message(msg, false, &output_str);
+    // mime_encode_message(msg, false, &output_str, false);
     // char* find_the_mimetype = strstr(output_str, "message/rfc822");
     // ASSERT_NE(find_the_mimetype, nullptr);
     // find_the_mimetype = strstr(output_str, "text/rfc822");

@@ -1746,7 +1746,7 @@ static PEP_STATUS mime_encode_message_plain(
         const message *msg,
         bool omit_fields,
         struct mailmime **result,
-        bool contains_non_fwd_msg_att
+        bool has_pEp_msg_attachment
     )
 {
     struct mailmime * mime = NULL;
@@ -1859,7 +1859,7 @@ static PEP_STATUS mime_encode_message_plain(
                 continue;
 
             // solely for readability.
-            bool is_pEp_msg_attachment = (first_one && contains_non_fwd_msg_att);
+            bool is_pEp_msg_attachment = (first_one && has_pEp_msg_attachment);
 
             status = mime_attachment(_a, &submime, 
                                      is_pEp_msg_attachment);                         
@@ -1975,11 +1975,11 @@ enomem:
     return status;
 }
 
-PEP_STATUS _mime_encode_message_internal(
+DYNAMIC_API PEP_STATUS mime_encode_message(
         const message * msg,
         bool omit_fields,
         char **mimetext,
-        bool set_attachment_forward_comment
+        bool has_pEp_msg_attachment
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -1999,10 +1999,10 @@ PEP_STATUS _mime_encode_message_internal(
 
     switch (msg->enc_format) {
         case PEP_enc_none:
-            status = mime_encode_message_plain(msg, omit_fields, &mime, set_attachment_forward_comment);
+            status = mime_encode_message_plain(msg, omit_fields, &mime, has_pEp_msg_attachment);
             break;
 
-        // I'm presuming we should hardcore ignoring set_attachment_forward_comment here...
+        // I'm presuming we should hardcore ignoring has_pEp_msg_attachment here...
         case PEP_enc_inline:
             status = mime_encode_message_plain(msg, omit_fields, &mime, false);
             break;

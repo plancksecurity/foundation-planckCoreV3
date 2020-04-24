@@ -147,7 +147,7 @@ TEST_F(MimeTest, check_mime) {
 
     output_stream << "encoding message…\n";
     char *result2;
-    PEP_STATUS status2 = mime_encode_message(msg2, false, &result2);
+    PEP_STATUS status2 = mime_encode_message(msg2, false, &result2, false);
     ASSERT_NE(result2, nullptr);
     ASSERT_EQ(status2, PEP_STATUS_OK);
 

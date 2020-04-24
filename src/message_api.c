@@ -921,7 +921,7 @@ static message* wrap_message_as_attachment(message* envelope,
               );
             
     /* Turn message into a MIME-blob */
-    status = _mime_encode_message_internal(attachment, false, &message_text, false);
+    status = mime_encode_message(attachment, false, &message_text, false);
         
     if (status != PEP_STATUS_OK)
         goto enomem;
@@ -1028,7 +1028,7 @@ static PEP_STATUS encrypt_PGP_MIME(
     _src->enc_format = PEP_enc_none;
     
     bool wrapped = (wrap_type != PEP_message_unwrapped);
-    status = _mime_encode_message_internal(_src, true, &mimetext, wrapped);
+    status = mime_encode_message(_src, true, &mimetext, wrapped);
     assert(status == PEP_STATUS_OK);
     if (status != PEP_STATUS_OK)
         goto pEp_error;

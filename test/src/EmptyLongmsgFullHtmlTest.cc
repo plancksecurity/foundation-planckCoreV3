@@ -133,7 +133,7 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_NULL) {
     msg->shortmsg = strdup("Eat Moar Cheese");
     
     char* outmsg = NULL;
-    mime_encode_message(msg, false, &outmsg);
+    mime_encode_message(msg, false, &outmsg, false);
     
     cout << outmsg << endl;
     
@@ -157,7 +157,7 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_att) {
     msg->attachments = new_bloblist(text_att, strlen(text_att), "text/plain", NULL);
     
     char* outmsg = NULL;
-    mime_encode_message(msg, false, &outmsg);
+    mime_encode_message(msg, false, &outmsg, false);
     
     ASSERT_EQ(strstr(outmsg, "alternative"), nullptr);
     
@@ -183,7 +183,7 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_html_att) {
     msg->attachments = new_bloblist(text_att, strlen(text_att), "text/plain", NULL);
     
     char* outmsg = NULL;
-    mime_encode_message(msg, false, &outmsg);
+    mime_encode_message(msg, false, &outmsg, false);
     
     ASSERT_EQ(strstr(outmsg, "alternative"), nullptr);
     ASSERT_EQ(strstr(outmsg, "related"), nullptr);
@@ -213,7 +213,7 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_html_atts) {
     bloblist_add(msg->attachments, html_att, strlen(html_att), "text/html", "stupid_msg.html");
 
     char* outmsg = NULL;
-    mime_encode_message(msg, false, &outmsg);
+    mime_encode_message(msg, false, &outmsg, false);
     
     // Could do more here, but honestly, these are just sanity checks, as mostly this is getting checked by inspection
     ASSERT_EQ(strstr(outmsg, "alternative"), nullptr);
@@ -255,7 +255,7 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_html_text_atts) {
     msg->attachments->next = new_bloblist(text_att, strlen(text_att), "text/plain", "blargh.txt");
     
     char* outmsg = NULL;
-    mime_encode_message(msg, false, &outmsg);
+    mime_encode_message(msg, false, &outmsg, false);
     
     cout << outmsg << endl;
         
@@ -293,7 +293,7 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_empty) {
     msg->longmsg = strdup("");
         
     char* outmsg = NULL;
-    mime_encode_message(msg, false, &outmsg);
+    mime_encode_message(msg, false, &outmsg, false);
         
     cout << outmsg << endl;
     
@@ -338,7 +338,7 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_inline_att) 
     msg->attachments = new_bloblist(img, img_size, "image/jpeg", "cid://part1.21156198.7E41C8BF@darthmama.org");
         
     char* outmsg = NULL;
-    mime_encode_message(msg, false, &outmsg);
+    mime_encode_message(msg, false, &outmsg, false);
         
     ASSERT_EQ(strstr(outmsg, "alternative"), nullptr);
     ASSERT_NE(strstr(outmsg, "related"), nullptr);
@@ -388,7 +388,7 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_empty_longmsg_full_html_text_inline_att_p
     bloblist_add(msg->attachments, img, img_size, "image/jpeg", "meow.jpg");
         
     char* outmsg = NULL;
-    mime_encode_message(msg, false, &outmsg);
+    mime_encode_message(msg, false, &outmsg, false);
         
     ASSERT_EQ(strstr(outmsg, "alternative"), nullptr);
     ASSERT_NE(strstr(outmsg, "related"), nullptr);
