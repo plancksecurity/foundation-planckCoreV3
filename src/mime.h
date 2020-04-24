@@ -68,9 +68,16 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
 // mime_decode_message() - decode a MIME message
 //
 //  parameters:
-//      mimetext (in)           	MIME encoded text to decode
-//      size (in)               	size of text to decode
-//      msg (out)               	decoded message
+//      mimetext (in)           	   MIME encoded text to decode
+//      size (in)               	   size of text to decode
+//      msg (out)               	   decoded message
+//      has_possible_pEp_msg (inout)   If non-NULL, will return 
+//                                     true when the first attachment 
+//                                     is a potential pEp message
+//                                     (mime-type = message/rfc822 and 
+//                                     content-disposition parameter
+//                                     forwarded=no) 
+//      
 //
 //  return value:
 //      PEP_STATUS_OK           if everything worked
@@ -88,15 +95,8 @@ DYNAMIC_API PEP_STATUS mime_encode_message(
 DYNAMIC_API PEP_STATUS mime_decode_message(
         const char *mimetext,
         size_t size,
-        message **msg
-    );
-
-/* Carries extra return argument letting message api know if it needs to raise the attachment as 2.0/2.1 */
-PEP_STATUS _mime_decode_message_internal(
-        const char *mimetext,
-        size_t size,
         message **msg,
-        bool* raise_msg_attachment
+        bool* has_possible_pEp_msg
     );
 
 #ifdef __cplusplus

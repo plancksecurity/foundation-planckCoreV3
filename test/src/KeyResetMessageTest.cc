@@ -670,11 +670,11 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own) {
                                                        &ptext, &psize, &_keylist,
                                                        NULL);
         message* inner_msg = NULL;
-        status = mime_decode_message(ptext, psize, &inner_msg);
+        status = mime_decode_message(ptext, psize, &inner_msg, NULL);
         
         bloblist_t* key_reset_payload = inner_msg->attachments;  
         message* keyreset_msg = NULL;
-        status = mime_decode_message(key_reset_payload->value, key_reset_payload->size, &keyreset_msg);
+        status = mime_decode_message(key_reset_payload->value, key_reset_payload->size, &keyreset_msg, NULL);
         keyreset_command_list* cl = NULL;
         status = PER_to_key_reset_commands(keyreset_msg->attachments->value, keyreset_msg->attachments->size, &cl);                                             
         ASSERT_NE(cl, nullptr);
@@ -896,7 +896,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multi_ident_one_fpr_recv) {
     string fname = "test_mails/check_reset_grouped_own_multi_ident_one_fpr.eml";
     string mailstr = slurp(fname.c_str());
     message* new_msg = NULL;
-    status = mime_decode_message(mailstr.c_str(), mailstr.size(), &new_msg);
+    status = mime_decode_message(mailstr.c_str(), mailstr.size(), &new_msg, NULL);
     ASSERT_NE(new_msg, nullptr);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
@@ -1256,7 +1256,7 @@ TEST_F(KeyResetMessageTest, check_reset_all_own_grouped_recv) {
         string fname = string("test_mails/check_reset_all_own_grouped") + to_string(i) + ".eml";
         string mailstr = slurp(fname.c_str());
         message* new_msg = NULL;
-        status = mime_decode_message(mailstr.c_str(), mailstr.size(), &new_msg);
+        status = mime_decode_message(mailstr.c_str(), mailstr.size(), &new_msg, NULL);
         ASSERT_NE(new_msg, nullptr);
         ASSERT_EQ(status, PEP_STATUS_OK);
 
@@ -1359,7 +1359,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
         string fname = string("test_mails/check_reset_grouped_own_multiple_keys_multiple_idents_reset_all_") + to_string(i) + ".eml";
         string mailstr = slurp(fname.c_str());
         message* new_msg = NULL;
-        status = mime_decode_message(mailstr.c_str(), mailstr.size(), &new_msg);
+        status = mime_decode_message(mailstr.c_str(), mailstr.size(), &new_msg, NULL);
         ASSERT_NE(new_msg, nullptr);
         ASSERT_EQ(status, PEP_STATUS_OK);
 
@@ -1577,7 +1577,7 @@ TEST_F(KeyResetMessageTest, check_reset_grouped_own_multiple_keys_multiple_ident
     string fname = "test_mails/check_reset_grouped_own_multiple_keys_multiple_idents_reset_one.eml";
     string mailstr = slurp(fname.c_str());
     message* new_msg = NULL;
-    status = mime_decode_message(mailstr.c_str(), mailstr.size(), &new_msg);
+    status = mime_decode_message(mailstr.c_str(), mailstr.size(), &new_msg, NULL);
     ASSERT_NE(new_msg, nullptr);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
@@ -2381,7 +2381,7 @@ TEST_F(KeyResetMessageTest, check_reset_mistrust_next_msg_have_not_mailed) {
     // // Ok, so let's see if the thing is mistrusted
     message* bob_enc_msg = NULL;
     //
-    // mime_decode_message(mail_from_bob.c_str(), mail_from_bob.size(), &bob_enc_msg);
+    // mime_decode_message(mail_from_bob.c_str(), mail_from_bob.size(), &bob_enc_msg, NULL);
     //
     message* bob_dec_msg = NULL;
     stringlist_t* keylist = NULL;
@@ -2408,7 +2408,7 @@ TEST_F(KeyResetMessageTest, check_reset_mistrust_next_msg_have_not_mailed) {
     //update_identity(session, bob);
             //    ASSERT_EQ(bob->fpr, nullptr);
 
-    mime_decode_message(mail_from_bob.c_str(), mail_from_bob.size(), &bob_enc_msg);
+    mime_decode_message(mail_from_bob.c_str(), mail_from_bob.size(), &bob_enc_msg, NULL);
 
     bob_dec_msg = NULL;
     free_stringlist(keylist);

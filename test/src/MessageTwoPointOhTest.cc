@@ -183,7 +183,7 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
 //    output_stream << decrypted_text << endl;
 
     message* decoded_msg = nullptr;
-    status = mime_decode_message(encoded_text, strlen(encoded_text), &decoded_msg);
+    status = mime_decode_message(encoded_text, strlen(encoded_text), &decoded_msg, NULL);
     ASSERT_EQ(status , PEP_STATUS_OK);
     const string string3 = encoded_text;
 

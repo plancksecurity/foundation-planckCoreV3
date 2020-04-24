@@ -92,7 +92,7 @@ TEST_F(IOS1664Test, check_i_o_s1664) {
     message* message_mail = NULL;
     bool raise_att;
 
-    PEP_STATUS status = _mime_decode_message_internal(email.c_str(), email.size(), &message_mail, &raise_att);
+    PEP_STATUS status = mime_decode_message(email.c_str(), email.size(), &message_mail, &raise_att);
     ASSERT_EQ(status , PEP_STATUS_OK && message_mail);
 
     // create own identity here, because we want to reply, before we start.

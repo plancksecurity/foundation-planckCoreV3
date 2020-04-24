@@ -221,7 +221,7 @@ TEST_F(Engine514Test, check_engine514_encode_and_decode) {
     ASSERT_EQ(find_the_mimetype, nullptr);            
 
     message* checker = NULL;
-    mime_decode_message(output_str, strlen(output_str), &checker);    
+    mime_decode_message(output_str, strlen(output_str), &checker, NULL);    
     ASSERT_STREQ(checker->attachments->mime_type, "message/rfc822");    
 }
 

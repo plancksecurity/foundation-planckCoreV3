@@ -193,7 +193,7 @@ TEST_F(UnencryptedPepMailTest, check_unencrypted_pep_message_rcpt) {
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     
-    mime_decode_message(msgstr.c_str(), msgstr.size(), &enc_msg);
+    mime_decode_message(msgstr.c_str(), msgstr.size(), &enc_msg, NULL);
     ASSERT_TRUE(is_pEpmsg(enc_msg));
     
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);

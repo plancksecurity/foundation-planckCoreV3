@@ -403,7 +403,7 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_parse_simple_html_only) {
     string msg_str = slurp("test_mails/htmlonly_simple.eml");
     message* msg = NULL;
     int size = 0;
-    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg);
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
     
     ASSERT_NE(msg, nullptr);
     ASSERT_EQ(msg->longmsg, nullptr);
@@ -417,7 +417,7 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_parse_simple_html_text_attachment) {
     string msg_str = slurp("test_mails/html_with_text_attachment.eml");
     message* msg = NULL;
     int size = 0;
-    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg);
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
     
     ASSERT_NE(msg, nullptr);
     ASSERT_EQ(msg->longmsg, nullptr);
@@ -434,7 +434,7 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_parse_simple_html_text_html_attachment) {
     string msg_str = slurp("test_mails/htmlonly_simple_text_html.eml");
     message* msg = NULL;
     int size = 0;
-    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg);
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
     
     ASSERT_NE(msg, nullptr);
     ASSERT_EQ(msg->longmsg, nullptr);
@@ -455,7 +455,7 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_parse_simple_html_html_text_attachment) {
     string msg_str = slurp("test_mails/htmlonly_simple_html_text.eml");
     message* msg = NULL;
     int size = 0;
-    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg);
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
 
     ASSERT_EQ(msg->longmsg, nullptr);
     ASSERT_NE(msg->longmsg_formatted, nullptr);
@@ -475,7 +475,7 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_parse_simple_inline_html) {
     string msg_str = slurp("test_mails/inlinecat.eml");
     message* msg = NULL;
     int size = 0;
-    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg);
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
     
     ASSERT_NE(msg, nullptr);
     ASSERT_EQ(msg->longmsg, nullptr);
@@ -512,7 +512,7 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_parse_inline_html_text_attachment) {
     string msg_str = slurp("test_mails/htmlonlycatwtextatt.eml");
     message* msg = NULL;
     int size = 0;
-    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg);
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
     
     ASSERT_NE(msg, nullptr);
     ASSERT_EQ(msg->longmsg, nullptr);
@@ -552,7 +552,7 @@ TEST_F(EmptyLongmsgFullHtmlTest, check_parse_inline_html_img_attachment) {
     string msg_str = slurp("test_mails/htmlonlycatwithMOARCAT.eml");
     message* msg = NULL;
     int size = 0;
-    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg);
+    mime_decode_message(msg_str.c_str(), msg_str.size(), &msg, NULL);
     
     ASSERT_NE(msg, nullptr);
     ASSERT_EQ(msg->longmsg, nullptr);

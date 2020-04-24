@@ -1006,7 +1006,7 @@ bool must_chunk_be_encoded(const void* value, size_t size, bool ignore_fws) {
 
 static PEP_STATUS interpret_MIME(struct mailmime *mime,
                                  message *msg,
-                                 bool* raise_msg_attachment);
+                                 bool* has_possible_pEp_msg);
 
 // This function was rewritten to use in-memory buffers instead of
 // temporary files when the pgp/mime support was implemented for
@@ -2602,7 +2602,7 @@ static bool _is_marked_as_attachment(struct mailmime_fields *fields)
 static PEP_STATUS interpret_MIME(
         struct mailmime *mime,
         message *msg,
-        bool* raise_msg_attachment
+        bool* has_possible_pEp_msg
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -2687,13 +2687,13 @@ static PEP_STATUS interpret_MIME(
                 return PEP_ILLEGAL_VALUE;
 
             clistiter *cur;
-            // only add raise_msg_attachment on 2nd part!
+            // only add has_possible_pEp_msg on 2nd part!
             int _att_count = 0;
             for (cur = clist_begin(partlist); cur; cur = clist_next(cur), _att_count++) {
                 struct mailmime *part= clist_content(cur);
                 if (part == NULL)
                     return PEP_ILLEGAL_VALUE;
-                status = interpret_MIME(part, msg, _att_count == 1 ? raise_msg_attachment : NULL);
+                status = interpret_MIME(part, msg, _att_count == 1 ? has_possible_pEp_msg : NULL);
                 if (status != PEP_STATUS_OK)
                     return status;
             }
@@ -2730,7 +2730,7 @@ static PEP_STATUS interpret_MIME(
             }
             else {
                 // Fixme - we need a control on recursion level here - KG: maybe NOT. We only go to depth 1.
-                if (raise_msg_attachment != NULL) {
+                if (has_possible_pEp_msg != NULL) {
                     bool is_msg = (_is_message_part(content, "rfc822") || _is_text_part(content, "rfc822"));
                     if (is_msg) {
                         if (content->ct_parameters) {
@@ -2740,7 +2740,7 @@ static PEP_STATUS interpret_MIME(
                                 struct mailmime_parameter * param = clist_content(cur);
                                 if (param && param->pa_name && strcasecmp(param->pa_name, "forwarded") == 0) {
                                     if (param->pa_value && strcasecmp(param->pa_value, "no") == 0) {
-                                        *raise_msg_attachment = true;
+                                        *has_possible_pEp_msg = true;
                                         break;
                                     }
                                 }
@@ -2834,18 +2834,8 @@ enomem:
 DYNAMIC_API PEP_STATUS mime_decode_message(
         const char *mimetext,
         size_t size,
-        message **msg
-    )
-{
-    return _mime_decode_message_internal(mimetext, size, msg, NULL);
-}        
-
-
-PEP_STATUS _mime_decode_message_internal(
-        const char *mimetext,
-        size_t size,
         message **msg,
-        bool* raise_msg_attachment
+        bool* has_possible_pEp_msg
     )
 {
     PEP_STATUS status = PEP_STATUS_OK;
@@ -2889,7 +2879,7 @@ PEP_STATUS _mime_decode_message_internal(
 
     if (content) {
         status = interpret_MIME(mime->mm_data.mm_message.mm_msg_mime,
-                _msg, raise_msg_attachment);
+                _msg, has_possible_pEp_msg);
         if (status != PEP_STATUS_OK)
             goto pEp_error;
     }
