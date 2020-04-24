@@ -15,8 +15,10 @@ protocol Sync 1 {
 
         state InitState {
             on Init {
-                if deviceGrouped
+                if deviceGrouped {
+                    send SynchronizeGroupKeys;
                     go Grouped;
+                }
                 go Sole;
             }
         }
