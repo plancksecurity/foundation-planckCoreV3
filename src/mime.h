@@ -91,7 +91,6 @@ PEP_STATUS _mime_encode_message_internal(
         const message * msg,
         bool omit_fields,
         char **mimetext,
-        bool transport_encode,
         bool set_attachment_forward_comment        
     );
 

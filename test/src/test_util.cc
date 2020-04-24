@@ -593,7 +593,7 @@ PEP_STATUS MIME_decrypt_message(
     }
 
     if (*flags & PEP_decrypt_flag_src_modified) {
-        _mime_encode_message_internal(tmp_msg, false, modified_src, true, false);
+        _mime_encode_message_internal(tmp_msg, false, modified_src, false);
         if (!modified_src) {
             *flags &= (~PEP_decrypt_flag_src_modified);
             decrypt_status = PEP_CANNOT_REENCRYPT; // Because we couldn't return it, I guess.
@@ -601,7 +601,7 @@ PEP_STATUS MIME_decrypt_message(
     }
 
     // FIXME: test with att
-    status = _mime_encode_message_internal(dec_msg, false, mime_plaintext, true, false);
+    status = _mime_encode_message_internal(dec_msg, false, mime_plaintext, false);
 
     if (status == PEP_STATUS_OK)
     {
@@ -693,7 +693,6 @@ PEP_STATUS MIME_encrypt_message(
                     ret_msg, 
                     false, 
                     mime_ciphertext, 
-                    false, 
                     false);
     
     if (tmp_status != PEP_STATUS_OK)

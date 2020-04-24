@@ -217,7 +217,7 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
     }
 
     decrypted_msg->enc_format = PEP_enc_none;
-    status = _mime_encode_message_internal(decrypted_msg, false, &encoded_text, false, false);
+    status = _mime_encode_message_internal(decrypted_msg, false, &encoded_text, false);
     ASSERT_EQ(status , PEP_STATUS_OK);
     ASSERT_NE(encoded_text, nullptr);
     output_stream << "Decrypted message: " << endl;
