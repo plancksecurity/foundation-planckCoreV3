@@ -133,7 +133,7 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     output_stream << "message created.\n";
 
     char* encoded_text = nullptr;
-    PEP_STATUS status = mime_encode_message(outgoing_message, false, &encoded_text);
+    PEP_STATUS status = mime_encode_message(outgoing_message, false, &encoded_text, false);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(encoded_text, nullptr);
 
@@ -150,7 +150,7 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     ASSERT_NE(encrypted_msg, nullptr);
     output_stream << "message encrypted.\n";
 
-    status = mime_encode_message(encrypted_msg, false, &encoded_text);
+    status = mime_encode_message(encrypted_msg, false, &encoded_text, false);
     ASSERT_EQ(status, PEP_STATUS_OK);
     ASSERT_NE(encoded_text, nullptr);
 
@@ -158,7 +158,7 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     output_stream << encoded_text << "\n";
 
     message* decoded_msg = nullptr;
-    status = mime_decode_message(encoded_text, strlen(encoded_text), &decoded_msg);
+    status = mime_decode_message(encoded_text, strlen(encoded_text), &decoded_msg, NULL);
     ASSERT_EQ(status, PEP_STATUS_OK);
     const string string3 = encoded_text;
 

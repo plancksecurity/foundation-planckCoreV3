@@ -129,7 +129,7 @@ TEST_F(SenderFPRTest, check_sender_f_p_r) {
     ASSERT_EQ(status , PEP_STATUS_OK);
 
     char* text = NULL;
-    mime_encode_message(dec_msg, false, &text);
+    mime_encode_message(dec_msg, false, &text, false);
     output_stream << text << endl;
     free(text);
 

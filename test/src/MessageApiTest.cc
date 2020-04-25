@@ -117,7 +117,7 @@ TEST_F(MessageApiTest, check_message_api) {
     output_stream << "message created.\n";
 
     char *text2 = nullptr;
-    PEP_STATUS status2 = mime_encode_message(msg2, false, &text2);
+    PEP_STATUS status2 = mime_encode_message(msg2, false, &text2, false);
     ASSERT_EQ(status2 , PEP_STATUS_OK);
     ASSERT_NE(text2, nullptr);
 
@@ -135,7 +135,7 @@ TEST_F(MessageApiTest, check_message_api) {
     ASSERT_NE(enc_msg2, nullptr);
     output_stream << "message encrypted.\n";
 
-    status2 = mime_encode_message(enc_msg2, false, &text2);
+    status2 = mime_encode_message(enc_msg2, false, &text2, false);
     ASSERT_EQ(status2 , PEP_STATUS_OK);
     ASSERT_NE(text2, nullptr);
 
@@ -143,7 +143,7 @@ TEST_F(MessageApiTest, check_message_api) {
     output_stream << text2 << "\n";
 
     message *msg3 = nullptr;
-    PEP_STATUS status3 = mime_decode_message(text2, strlen(text2), &msg3);
+    PEP_STATUS status3 = mime_decode_message(text2, strlen(text2), &msg3, NULL);
     ASSERT_EQ(status3 , PEP_STATUS_OK);
     const string string3 = text2;
     //free(text2);
@@ -195,7 +195,7 @@ TEST_F(MessageApiTest, check_message_api) {
     inFile3.close();
 
     message *msg5 = nullptr;
-    PEP_STATUS status5 = mime_decode_message(text3.c_str(), text3.length(), &msg5);
+    PEP_STATUS status5 = mime_decode_message(text3.c_str(), text3.length(), &msg5, NULL);
     ASSERT_EQ(status5 , PEP_STATUS_OK);
 
     message *msg6 = nullptr;

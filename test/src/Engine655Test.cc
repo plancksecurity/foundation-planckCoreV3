@@ -84,7 +84,7 @@ namespace {
 TEST_F(Engine655Test, check_engine655) {
     string msg_block = slurp("test_mails/655_msg_huss.eml"); 
     message* msg = NULL;
-    PEP_STATUS status = mime_decode_message(msg_block.c_str(), msg_block.size(), &msg);
+    PEP_STATUS status = mime_decode_message(msg_block.c_str(), msg_block.size(), &msg, NULL);
         
     for (int i = 0; i < 1; i++) {
         char* ptext = NULL;
@@ -138,7 +138,7 @@ TEST_F(Engine655Test, check_engine655) {
         
         // // Let's see what this does...
         // message* parse_verify;
-        // status = mime_decode_message(ptext, psize, &parse_verify);    
+        // status = mime_decode_message(ptext, psize, &parse_verify, NULL);    
         // 
         keylist = NULL;
         message* dec_msg = NULL;

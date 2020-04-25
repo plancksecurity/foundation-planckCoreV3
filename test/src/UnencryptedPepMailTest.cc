@@ -120,7 +120,7 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
     ASSERT_TRUE(is_pEpmsg(msg));
     
     // char* outmsg = NULL;
-    // mime_encode_message(msg, false, &outmsg);
+    // mime_encode_message(msg, false, &outmsg, false);
     // ofstream outfile;
     // outfile.open("tmp/unenc_pep_msg_test_1.eml");
     // outfile << outmsg;
@@ -161,7 +161,7 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
                           "I do not want a cup of 'Hoffee', and you are not singlehandedly\n" 
                           "responsible for bringing down the Berlin Wall.\n\nGo away. - Alice");
     char* outmsg = NULL;
-    mime_encode_message(msg, false, &outmsg);
+    mime_encode_message(msg, false, &outmsg, false);
     char* encmsg = NULL;
         
     status = MIME_encrypt_message(session, outmsg, strlen(outmsg), NULL, &encmsg, PEP_enc_PGP_MIME, 0);
@@ -174,7 +174,7 @@ PEP_STATUS set_up_preset(PEP_SESSION session,
     ASSERT_NE(encmsg, nullptr);
     
     // char* outmsg = NULL;
-    // mime_encode_message(msg, false, &outmsg);
+    // mime_encode_message(msg, false, &outmsg, false);
     // ofstream outfile;
     // outfile.open("tmp/unenc_pep_msg_test_1.eml");
     // outfile << outmsg;
@@ -193,7 +193,7 @@ TEST_F(UnencryptedPepMailTest, check_unencrypted_pep_message_rcpt) {
     PEP_rating rating;
     PEP_decrypt_flags_t flags = 0;
     
-    mime_decode_message(msgstr.c_str(), msgstr.size(), &enc_msg);
+    mime_decode_message(msgstr.c_str(), msgstr.size(), &enc_msg, NULL);
     ASSERT_TRUE(is_pEpmsg(enc_msg));
     
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);

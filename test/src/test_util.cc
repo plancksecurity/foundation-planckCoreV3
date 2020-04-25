@@ -546,7 +546,7 @@ PEP_STATUS MIME_decrypt_message(
     message* dec_msg = NULL;
     *mime_plaintext = NULL;
 
-    status = mime_decode_message(mimetext, size, &tmp_msg);
+    status = mime_decode_message(mimetext, size, &tmp_msg, NULL);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
@@ -593,7 +593,7 @@ PEP_STATUS MIME_decrypt_message(
     }
 
     if (*flags & PEP_decrypt_flag_src_modified) {
-        _mime_encode_message_internal(tmp_msg, false, modified_src, true, false);
+        mime_encode_message(tmp_msg, false, modified_src, false);
         if (!modified_src) {
             *flags &= (~PEP_decrypt_flag_src_modified);
             decrypt_status = PEP_CANNOT_REENCRYPT; // Because we couldn't return it, I guess.
@@ -601,7 +601,7 @@ PEP_STATUS MIME_decrypt_message(
     }
 
     // FIXME: test with att
-    status = _mime_encode_message_internal(dec_msg, false, mime_plaintext, true, false);
+    status = mime_encode_message(dec_msg, false, mime_plaintext, false);
 
     if (status == PEP_STATUS_OK)
     {
@@ -633,7 +633,7 @@ PEP_STATUS MIME_encrypt_message(
     message* enc_msg = NULL;
     message* ret_msg = NULL;                             
 
-    status = mime_decode_message(mimetext, size, &tmp_msg);
+    status = mime_decode_message(mimetext, size, &tmp_msg, NULL);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
@@ -689,13 +689,7 @@ PEP_STATUS MIME_encrypt_message(
         goto pEp_error;
     }
     
-    tmp_status = _mime_encode_message_internal(
-                    ret_msg, 
-                    false, 
-                    mime_ciphertext, 
-                    false, 
-                    false);
-    
+    tmp_status = mime_encode_message(ret_msg, false, mime_ciphertext, false);     
     if (tmp_status != PEP_STATUS_OK)
         status = tmp_status;
 
@@ -722,7 +716,7 @@ PEP_STATUS MIME_encrypt_message_for_self(
     message* tmp_msg = NULL;
     message* enc_msg = NULL;
 
-    status = mime_decode_message(mimetext, size, &tmp_msg);
+    status = mime_decode_message(mimetext, size, &tmp_msg, NULL);
     if (status != PEP_STATUS_OK)
         goto pEp_error;
 
@@ -743,7 +737,7 @@ PEP_STATUS MIME_encrypt_message_for_self(
         goto pEp_error;
     }
 
-    status = mime_encode_message(enc_msg, false, mime_ciphertext);
+    status = mime_encode_message(enc_msg, false, mime_ciphertext, false);
 
 pEp_error:
     free_message(tmp_msg);
