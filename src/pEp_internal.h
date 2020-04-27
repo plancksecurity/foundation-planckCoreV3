@@ -1,7 +1,14 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#define PEP_ENGINE_VERSION "1.1.1"
+
+// RELEASE version this targets
+// (string: major.minor.patch)
+#define PEP_ENGINE_VERSION "2.0.1"
+// Numeric values of above:
+#define PEP_ENGINE_VERSION_MAJOR 2
+#define PEP_ENGINE_VERSION_MINOR 0
+#define PEP_ENGINE_VERSION_PATCH 1
 
 // maximum attachment size to import as key 1MB, maximum of 20 attachments
 
