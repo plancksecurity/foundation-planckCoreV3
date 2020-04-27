@@ -1,8 +1,6 @@
 // This file is under GNU General Public License 3.0
 // see LICENSE.txt
 
-#define PEP_ENGINE_VERSION "1.1.1"
-
 // maximum attachment size to import as key 1MB, maximum of 20 attachments
 
 #define MAX_KEY_SIZE (1024 * 1024)
