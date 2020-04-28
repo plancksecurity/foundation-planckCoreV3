@@ -65,7 +65,9 @@ test: all
 # CAVEAT:
 # install_headers is needed for building pEp MIME
 
-install_headers: asn1 sync
+install_headers:
+	$(MAKE) -C sync 
+	cd asn.1; $(MAKE) gen_asn1; cd ..
 	mkdir -p $(PREFIX)/include/pEp
 	cd src; cp pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
 	   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h \

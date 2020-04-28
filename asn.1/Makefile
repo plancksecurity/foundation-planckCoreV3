@@ -10,7 +10,7 @@ ASN1C_INC+= -I.
 
 .PHONY: all clean install uninstall
 
-all: Sync.c Distribution.c
+all: gen_asn1
 	$(MAKE) libasn1.a
 
 libasn1.a: $(ALL_OBJECTS)
@@ -18,6 +18,11 @@ libasn1.a: $(ALL_OBJECTS)
 
 %.o: %.c %.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(OPTIMIZE) $(ASN1C_INC) -c $< -o $@
+
+gen_asn1: gen_sync Sync.c Distribution.c
+	
+gen_sync:
+	$(MAKE) -C ../sync
 
 Sync.c: sync.asn1 keysync.asn1 pEp.asn1
 	$(ASN1C) -gen-PER -fincludes-quoted -fcompound-names -pdu=auto pEp.asn1 keysync.asn1 $<
@@ -31,6 +36,7 @@ Distribution.c: distribution.asn1 keyreset.asn1 pEp.asn1
 
 clean:
 	rm -f *.a *.o *.c *.h *.sample sync.asn1 keysync.asn1 distribution.asn1 keyreset.asn1
+
 
 install:
 
