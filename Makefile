@@ -19,7 +19,7 @@ ifdef BUILD_CONFIG
     $(info ================================================)
 endif
 
-.PHONY: all sync asn1 build install dbinstall uninstall clean tags test package db
+.PHONY: all sync asn1 build install install_headers dbinstall uninstall clean tags test package db
 
 build: asn1
 	$(MAKE) -C src
@@ -34,7 +34,7 @@ sync:
 asn1: sync
 	$(MAKE) -C asn.1
 
-install: build
+install: build install_headers
 	$(MAKE) -C src install
 	$(MAKE) -C asn.1 install
 
@@ -61,6 +61,18 @@ tags:
 
 test: all
 	$(MAKE) -C test test
+
+# CAVEAT:
+# install_headers is needed for building pEp MIME
+
+install_headers: asn1 sync
+	mkdir -p $(PREFIX)/include/pEp
+	cd src; cp pEpEngine.h keymanagement.h message_api.h dynamic_api.h stringlist.h \
+	   timestamp.h identity_list.h bloblist.h stringpair.h message.h mime.h \
+	   cryptotech.h sync_api.h blacklist.h pEp_string.h openpgp_compat.h mime.h \
+	   labeled_int_list.h key_reset.h base64.h sync_codec.h distribution_codec.h \
+	   status_to_string.h aux_mime_msg.h keyreset_command.h platform.h platform_unix.h ../asn.1/*.h \
+ 	   $(PREFIX)/include/pEp/
 
 package: clean
 	cd .. ; COPYFILE_DISABLE=true tar cjf pEpEngine.tar.bz2 "$(HERE_REL)"
