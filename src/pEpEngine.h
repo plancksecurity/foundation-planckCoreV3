@@ -1020,6 +1020,24 @@ DYNAMIC_API PEP_STATUS send_key(PEP_SESSION session, const char *pattern);
 DYNAMIC_API void pEp_free(void *p);
 
 
+// pEp_realloc() - reallocate memory allocated by pEp engine
+//
+//  parameters:
+//      p (in)                  pointer to free
+//      size (in)               new memory size
+//
+//  returns:
+//      pointer to allocated memory
+//
+//  The reason for this function is that heap management can be a pretty
+//  complex task with Windoze. This realloc() version calls the realloc()
+//  implementation of the C runtime library which was used to build pEp engine,
+//  so you're using the correct heap. For more information, see:
+//  <http://msdn.microsoft.com/en-us/library/windows/desktop/aa366711(v=vs.85).aspx>
+
+DYNAMIC_API void *pEp_realloc(void *p, size_t size);
+
+
 // get_trust() - get the trust level a key has for a person
 //
 //  parameters:

@@ -4448,11 +4448,15 @@ DYNAMIC_API PEP_STATUS mark_as_compromised(
     return PEP_STATUS_OK;
 }
 
-void pEp_free(void *p)
+DYNAMIC_API void pEp_free(void *p)
 {
     free(p);
 }
 
+DYNAMIC_API void *pEp_realloc(void *p, size_t size)
+{
+    return realloc(p, size);
+}
 
 DYNAMIC_API PEP_STATUS get_trust(PEP_SESSION session, pEp_identity *identity)
 {
