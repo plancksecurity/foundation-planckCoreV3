@@ -438,7 +438,7 @@ static const char *sql_own_identities_retrieve =
     "       and (identity.flags & ?1) = 0;";
 
 static const char *sql_own_keys_retrieve = 
-    "select pgp_keypair_fpr from trust"
+    "select distinct pgp_keypair_fpr from trust"
     "   join identity on trust.user_id = identity.user_id"
     "   where identity.is_own = 1";
 
