@@ -115,7 +115,7 @@ DYNAMIC_API PEP_STATUS decode_internal(
         return PEP_ILLEGAL_VALUE;
 
     *value = NULL;
-    *size = 0,
+    *size = 0;
 
     if (code[0]) {
         assert(0); // safety functionality, we don't use this
