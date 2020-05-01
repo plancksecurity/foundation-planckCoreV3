@@ -134,6 +134,7 @@ DYNAMIC_API PEP_STATUS decode_internal(
     }
 
     // elevated attachments have at least 5 bytes
+    assert(code_size > 4);
     if (code_size < 5)
         return PEP_ILLEGAL_VALUE;
 
