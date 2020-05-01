@@ -257,7 +257,18 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
     ASSERT_STREQ(ad->mime_type, "application/pgp-encrypted");
     ASSERT_STREQ(ad->filename, "file://pEpkey.asc.pgp");
 
+    // decrypt this message
+    
+    message *dec_msg = NULL;
+    stringlist_t *keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+
     free_message(msg);
     free_message(enc_msg);
+    free_message(dec_msg);
 }
 
