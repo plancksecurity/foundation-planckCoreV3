@@ -116,6 +116,7 @@ DYNAMIC_API PEP_STATUS decode_internal(
 
     *value = NULL;
     *size = 0;
+    *mime_type = NULL;
 
     if (code[0]) {
         assert(0); // safety functionality, we don't use this
@@ -172,6 +173,7 @@ DYNAMIC_API PEP_STATUS decode_internal(
 
     *value = result;
     *size = code_size - 4;
+    *mime_type = _mime_type;
 
     return PEP_STATUS_OK;
 }
