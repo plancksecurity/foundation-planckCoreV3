@@ -190,3 +190,52 @@ TEST_F(ElevatedAttachmentsTest, check_internal_format) {
     free(code);
 }
 
+TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
+    // a message from me, Alice, to Bob
+
+    const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
+    const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
+    PEP_STATUS status = read_file_and_import_key(session,
+                "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
+    ASSERT_EQ(status , PEP_KEY_IMPORTED);
+    status = set_up_ident_from_scratch(session,
+                "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc",
+                "pep.test.alice@pep-project.org", alice_fpr,
+                PEP_OWN_USERID, "Alice in Wonderland", NULL, true
+            );
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc"));
+
+    message* msg = new_message(PEP_dir_outgoing);
+    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
+    pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, "Bob", NULL);
+    status = myself(session, alice);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    status = update_identity(session, bob);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+
+    status = set_as_pEp_user(session, bob);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+
+    msg->to = new_identity_list(bob);
+    msg->from = alice;
+    msg->shortmsg = strdup("Yo Bob!");
+    msg->longmsg = strdup("Look at my hot new sender fpr field!");
+
+    message* enc_msg = NULL;
+
+    // encrypt this message inline
+
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_inline, 0);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    
+    // .shortmsg will stay unencrypted
+    ASSERT_STREQ(msg->shortmsg, enc_msg->shortmsg);
+
+    // .longmsg will go encrypted
+    ASSERT_TRUE(is_PGP_message_text(enc_msg->longmsg));
+
+    free_message(msg);
+    free_message(enc_msg);
+}
+
