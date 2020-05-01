@@ -4,6 +4,7 @@
 #pragma once
 
 #include "message.h"
+#include "cryptotech.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,28 +13,45 @@ extern "C" {
 // encode_internal() - encode to the internal message format
 //
 //  parameters:
-//      value (in)      blob
-//      mime_type (in)  string of MIME type
-//      code (out)      blob in Internal Message Format
+//      value (in)          blob
+//      size (in)           size of value
+//      mime_type (in)      string of MIME type
+//      code (out)          blob in Internal Message Format
+//      code_size (out)     size of code
 //
 //  see also:
 //      https://dev.pep.foundation/Engine/ElevatedAttachments
 
-DYNAMIC_API PEP_STATUS encode_internal(const char *value, const char *mime_type, char **code);
+DYNAMIC_API PEP_STATUS encode_internal(
+        const char *value,
+        size_t size,
+        const char *mime_type,
+        char **code,
+        size_t *code_size
+    );
 
 
 // decode_internal() - decode from internal message format
 //
 //  parameters:
-//      code (in)       blob in Internal Message Format
-//      value (out)     blob or string for longmsg
-//      mime_type (out) string with MIME type or NULL for longmsg
+//      code (in)           blob in Internal Message Format
+//      code_size (in)      size of code
+//      tech (in)           crypto tech for MIME type, PEP_crypt_none for auto
+//      value (out)         blob or string for longmsg
+//      size (out)          size of value
+//      mime_type (out)     string with MIME type or NULL for longmsg
 //
 //  caveat:
 //      in case there is no internal message in the code a string for longmsg
 //      is returned
 
-DYNAMIC_API PEP_STATUS decode_internal(const char *code, char **value, char **mime_type);
+DYNAMIC_API PEP_STATUS decode_internal(
+        const char *code,
+        size_t code_size,
+        char **value,
+        size_t *size,
+        char **mime_type
+    );
 
 
 #ifdef __cplusplus
