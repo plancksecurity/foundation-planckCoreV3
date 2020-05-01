@@ -90,7 +90,7 @@ DYNAMIC_API PEP_STATUS encode_internal(
     result[2] = subtype;
     result[3] = 0;
 
-    memcpy(result+4, value, size);
+    memcpy(result + 4, value, size);
     
     *code = result;
     *code_size = size + 4;
@@ -109,6 +109,61 @@ DYNAMIC_API PEP_STATUS decode_internal(
     assert(value && size && mime_type && code && code_size);
     if (!(value && size && mime_type && code && code_size))
         return PEP_ILLEGAL_VALUE;
+
+    if (code[0]) {
+        assert(0); // safety functionality, we don't use this
+
+        // this is not an elevated attachment
+        char *result  = strndup(code, code_size);
+        assert(result);
+        if (!result)
+            return PEP_OUT_OF_MEMORY;
+
+        *value = result;
+        *size = strlen(result) + 1;
+        *mime_type = NULL;
+
+        return PEP_STATUS_OK;
+    }
+
+    // elevated attachments have at least 5 bytes
+    if (code_size < 5)
+        return PEP_ILLEGAL_VALUE;
+
+    assert(!code[0]);
+    char type = code[1];
+    char subtype = code[2];
+    // char reserved = code[3];
+
+    char *_mime_type = NULL;
+
+    struct _internal_message_type *mt;
+    for (mt = message_type; mt->type; ++mt) {
+        if (type == mt->type && subtype == mt->subtype) {
+            assert(mt->mime_type);
+            _mime_type = strdup(mt->mime_type);
+            assert(_mime_type);
+            if (!_mime_type)
+                return PEP_OUT_OF_MEMORY;
+
+            break;
+        }
+    }
+
+    if (!_mime_type)
+        return PEP_ILLEGAL_VALUE;
+
+    char *result = malloc(code_size - 4);
+    assert(result);
+    if (!result) {
+        free(_mime_type);
+        return PEP_OUT_OF_MEMORY;
+    }
+
+    memcpy(result, code + 4, code_size - 4);
+
+    *value = result;
+    *size = code_size - 4;
 
     return PEP_STATUS_OK;
 }
