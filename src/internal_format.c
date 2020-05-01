@@ -64,11 +64,11 @@ DYNAMIC_API PEP_STATUS encode_internal(
     if (!(value && size && mime_type && code && code_size))
         return PEP_ILLEGAL_VALUE;
 
-    char type = 0;
-    char subtype;
-
     *code = NULL;
     *code_size = 0;
+
+    char type = 0;
+    char subtype;
 
     struct _internal_message_type *mt;
     for (mt = message_type; mt->type; ++mt) {
