@@ -67,6 +67,9 @@ DYNAMIC_API PEP_STATUS encode_internal(
     char type = 0;
     char subtype;
 
+    *code = NULL;
+    *code_size = 0;
+
     struct _internal_message_type *mt;
     for (mt = message_type; mt->type; ++mt) {
         if (strcasecmp(mime_type, mt->mime_type) == 0) {
@@ -76,8 +79,9 @@ DYNAMIC_API PEP_STATUS encode_internal(
         }
     }
 
+    // unsupported MIME type
     if (!type)
-        return PEP_ILLEGAL_VALUE;
+        return PEP_STATUS_OK;
 
     // those are more BSOBs than BLOBS, so we copy
     char *result = malloc(size + 4);
@@ -109,6 +113,9 @@ DYNAMIC_API PEP_STATUS decode_internal(
     assert(value && size && mime_type && code && code_size);
     if (!(value && size && mime_type && code && code_size))
         return PEP_ILLEGAL_VALUE;
+
+    *value = NULL;
+    *size = 0,
 
     if (code[0]) {
         assert(0); // safety functionality, we don't use this

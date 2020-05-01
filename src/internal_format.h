@@ -20,7 +20,13 @@ extern "C" {
 //      code_size (out)     size of code
 //
 //  caveat:
-//      this function copies the data in value
+//      call this for the data in an attachment
+//
+//      for unsupported MIME types this function is returning NULL for code and
+//      does not fail
+//
+//      for supported MIME types this function is creating the internal message
+//      format by copying the data in value
 //
 //      code goes into the ownership of the caller
 //
