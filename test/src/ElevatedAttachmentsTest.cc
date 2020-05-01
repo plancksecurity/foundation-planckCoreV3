@@ -245,7 +245,7 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
 
     // distribution message is encrypted
     ASSERT_TRUE(is_PGP_message_text(ad->value));
-    ASSERT_STREQ(ad->mime_type, "application/pgp-encrypted");
+    ASSERT_STREQ(ad->mime_type, "application/octet-stream");
     ASSERT_STREQ(ad->filename, "file://distribution.per.pgp");
 
     // next attachment
@@ -254,7 +254,7 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
 
     // attached key is encrypted
     ASSERT_TRUE(is_PGP_message_text(ad->value));
-    ASSERT_STREQ(ad->mime_type, "application/pgp-encrypted");
+    ASSERT_STREQ(ad->mime_type, "application/octet-stream");
     ASSERT_STREQ(ad->filename, "file://pEpkey.asc.pgp");
 
     // decrypt this message
@@ -265,7 +265,17 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
     PEP_decrypt_flags_t flags = 0;
 
     status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
-    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_STREQ(dec_msg->shortmsg, enc_msg->shortmsg);
+    ASSERT_STREQ(msg->longmsg, dec_msg->longmsg);
+    
+    // check attachments
+    ASSERT_TRUE(dec_msg->attachments);
+    ASSERT_TRUE(dec_msg->attachments->value);
+    bloblist_t *as = dec_msg->attachments;
+    bloblist_t *bl = msg->attachments;
+
+    ASSERT_STREQ(as->filename, "file://distribution.per");
 
     free_message(msg);
     free_message(enc_msg);

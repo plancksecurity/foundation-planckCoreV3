@@ -1033,7 +1033,7 @@ static PEP_STATUS encrypt_PGP_inline(
             memcpy(filename, as->filename, len);
             memcpy(filename + len, ".pgp", 5);
 
-            ad = bloblist_add(ad, _ctext, csize + 1, "application/pgp-encrypted", filename);
+            ad = bloblist_add(ad, _ctext, csize + 1, "application/octet-stream", filename);
             free(filename);
             filename = NULL;
             if (!ad)
