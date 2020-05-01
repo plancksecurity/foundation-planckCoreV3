@@ -46,8 +46,10 @@ typedef enum _PEP_encrypt_flags {
     
     // This flag is used to let internal functions know that an encryption 
     // call is being used as part of a reencryption operation
-    PEP_encrypt_reencrypt = 0x40
-    
+    PEP_encrypt_reencrypt = 0x40,
+
+    // enable elevated attachment functionality
+    PEP_encrypt_elevated_attachments = 0x80
 } PEP_encrypt_flags; 
 
 typedef unsigned int PEP_encrypt_flags_t;
@@ -83,6 +85,14 @@ typedef enum _message_wrap_type {
 //  caveat:
 //      the ownership of src remains with the caller
 //      the ownership of dst goes to the caller
+//
+//      PEP_enc_inline only:
+//          If flags contain PEP_encrypt_elevated_attachments set then the
+//          internal format of the encrypted attachments is changing, see
+//          https://dev.pep.foundation/Engine/ElevatedAttachments
+//
+//          Only use this for transports without support for attachments
+//          when attached data must be sent inline
 
 DYNAMIC_API PEP_STATUS encrypt_message(
         PEP_SESSION session,
