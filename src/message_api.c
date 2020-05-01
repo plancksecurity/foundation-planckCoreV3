@@ -985,13 +985,63 @@ static PEP_STATUS encrypt_PGP_inline(
 
     dst->longmsg = _ctext;
 
-    // longmsg_formatted is unsupported
-
-    // attachments are going unencrypted
-    bloblist_t *bl = bloblist_dup(src->attachments);
-    if (!bl)
+    dst->attachments = new_bloblist(NULL, 0, NULL, NULL);
+    if (!dst->attachments)
         return PEP_OUT_OF_MEMORY;
-    dst->attachments = bl;
+
+    bloblist_t *ad = dst->attachments;
+
+    if (!EMPTYSTR(src->longmsg_formatted)) {
+        status = encrypt_and_sign(session, keys, src->longmsg_formatted,
+                strlen(src->longmsg_formatted), &ctext, &csize);
+        if (status)
+            return status;
+
+        char *_ctext = realloc(ctext, csize + 1);
+        assert(_ctext);
+        if (!_ctext)
+            return PEP_OUT_OF_MEMORY;
+        _ctext[csize] = 0;
+
+        ad = bloblist_add(ad, _ctext, csize + 1, "text/html", NULL);
+        if (!ad)
+            return PEP_OUT_OF_MEMORY;
+
+        ad->disposition = PEP_CONTENT_DISP_INLINE;
+    }
+
+    if (src->attachments && src->attachments->value) {
+        bloblist_t *as;
+        for (as = src->attachments; as && as->value; as = as->next) {
+            status = encrypt_and_sign(session, keys, as->value, as->size,
+                    &ctext, &csize);
+            if (status)
+                return status;
+
+            char *_ctext = realloc(ctext, csize + 1);
+            assert(_ctext);
+            if (!_ctext)
+                return PEP_OUT_OF_MEMORY;
+            _ctext[csize] = 0;
+
+            size_t len = strlen(as->filename);
+            char *filename = malloc(len + 5);
+            assert(filename);
+            if (!filename)
+                return PEP_OUT_OF_MEMORY;
+
+            memcpy(filename, as->filename, len);
+            memcpy(filename + len, ".pgp", 5);
+
+            ad = bloblist_add(ad, _ctext, csize + 1, "application/pgp-encrypted", filename);
+            free(filename);
+            filename = NULL;
+            if (!ad)
+                return PEP_OUT_OF_MEMORY;
+
+            ad->disposition = as->disposition;
+        }
+    }
 
     return PEP_STATUS_OK;
 }
