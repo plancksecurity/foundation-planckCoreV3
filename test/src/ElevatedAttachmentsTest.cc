@@ -82,8 +82,6 @@ TEST_F(ElevatedAttachmentsTest, check_internal_format) {
     const char *data = "simulated data";
     size_t data_size = strlen(data) + 1;
 
-    // encode
-
     char *code;
     size_t code_size;
 
