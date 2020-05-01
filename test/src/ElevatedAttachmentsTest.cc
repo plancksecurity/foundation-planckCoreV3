@@ -276,6 +276,9 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
     bloblist_t *bl = msg->attachments;
 
     ASSERT_STREQ(as->filename, "file://distribution.per");
+    // the MIME type does not survive like this
+    ASSERT_STRNE(as->mime_type, "application/pEp.distribution");
+    ASSERT_STREQ(as->mime_type, "application/octet-stream");
 
     free_message(msg);
     free_message(enc_msg);
