@@ -100,9 +100,12 @@ TEST_F(ElevatedAttachmentsTest, check_internal_format) {
 
     ASSERT_STREQ(code + 4, data);
 
+    // decode
+
     char *value;
     size_t size;
     char *mime_type;
+
     status = decode_internal(code, code_size, &value, &size, &mime_type);
     ASSERT_EQ(status, PEP_STATUS_OK);
 
@@ -125,6 +128,17 @@ TEST_F(ElevatedAttachmentsTest, check_internal_format) {
     ASSERT_EQ(code[2], 0);
 
     ASSERT_STREQ(code + 4, data);
+
+    // decode
+
+    status = decode_internal(code, code_size, &value, &size, &mime_type);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    ASSERT_EQ(size, data_size);
+    ASSERT_STREQ(value, data);
+    ASSERT_STREQ(mime_type, "application/pEp.sync");
+
+    free(value);
     free(code);
 
     // test Distribution
@@ -139,6 +153,17 @@ TEST_F(ElevatedAttachmentsTest, check_internal_format) {
     ASSERT_EQ(code[2], 0);
 
     ASSERT_STREQ(code + 4, data);
+
+    // decode
+
+    status = decode_internal(code, code_size, &value, &size, &mime_type);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    ASSERT_EQ(size, data_size);
+    ASSERT_STREQ(value, data);
+    ASSERT_STREQ(mime_type, "application/pEp.distribution");
+
+    free(value);
     free(code);
 
     // test PGP signature
@@ -153,7 +178,17 @@ TEST_F(ElevatedAttachmentsTest, check_internal_format) {
     ASSERT_EQ(code[2], 2);
 
     ASSERT_STREQ(code + 4, data);
-    free(code);
 
+    // decode
+
+    status = decode_internal(code, code_size, &value, &size, &mime_type);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    ASSERT_EQ(size, data_size);
+    ASSERT_STREQ(value, data);
+    ASSERT_STREQ(mime_type, "application/pgp-signature");
+
+    free(value);
+    free(code);
 }
 
