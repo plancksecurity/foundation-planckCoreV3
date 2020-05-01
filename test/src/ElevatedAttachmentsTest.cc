@@ -222,10 +222,13 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
     msg->shortmsg = strdup("Yo Bob!");
     msg->longmsg = strdup("Look at my hot new sender fpr field!");
 
-    message* enc_msg = NULL;
+    const char *distribution = "simulation of distribution data";
+    msg->attachments = new_bloblist(strdup(distribution), strlen(distribution)
+            + 1, "application/pEp.distribution", "file://distribution.per");
 
     // encrypt this message inline
 
+    message* enc_msg = NULL;
     status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_inline, 0);
     ASSERT_EQ(status , PEP_STATUS_OK);
     
@@ -234,6 +237,25 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
 
     // .longmsg will go encrypted
     ASSERT_TRUE(is_PGP_message_text(enc_msg->longmsg));
+
+    ASSERT_TRUE(enc_msg->attachments);
+    ASSERT_TRUE(enc_msg->attachments->value);
+
+    bloblist_t *ad = enc_msg->attachments;
+
+    // distribution message is encrypted
+    ASSERT_TRUE(is_PGP_message_text(ad->value));
+    ASSERT_STREQ(ad->mime_type, "application/pgp-encrypted");
+    ASSERT_STREQ(ad->filename, "file://distribution.per.pgp");
+
+    // next attachment
+    ASSERT_TRUE(ad->next);
+    ad = ad->next;
+
+    // attached key is encrypted
+    ASSERT_TRUE(is_PGP_message_text(ad->value));
+    ASSERT_STREQ(ad->mime_type, "application/pgp-encrypted");
+    ASSERT_STREQ(ad->filename, "file://pEpkey.asc.pgp");
 
     free_message(msg);
     free_message(enc_msg);
