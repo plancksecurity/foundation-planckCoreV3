@@ -3759,11 +3759,9 @@ static PEP_STATUS _decrypt_message(
                         goto enomem;
                     default:
                         decrypt_status = _decrypt_in_pieces_status;
-                        break;
                 }
-                break;
 
-                if (*flags & PEP_decrypt_flag_elevated_attachments && !ptext[0]) {
+                if (*flags & PEP_decrypt_flag_elevated_attachments) {
                     char *value;
                     size_t size;
                     char *mime_type;
@@ -3771,14 +3769,6 @@ static PEP_STATUS _decrypt_message(
                     status = decode_internal(ptext, psize, &value, &size, &mime_type);
                     if (status)
                         goto pEp_error;
-                    if (EMPTYSTR(src->shortmsg)) {
-                        msg->shortmsg = strdup("pEp");
-                        assert(msg->shortmsg);
-                        if (!msg->shortmsg) {
-                            status = PEP_OUT_OF_MEMORY;
-                            goto pEp_error;
-                        }
-                    }
                     if (strcasecmp(mime_type, "application/pEp.sync") == 0)
                         filename = "file://sync.pEp";
                     else if (strcasecmp(mime_type, "application/pEp.distribution") == 0)
@@ -3804,6 +3794,7 @@ static PEP_STATUS _decrypt_message(
                         goto pEp_error;
                     }
                 }
+                break;
 
             default:
                 // BUG: must implement more
@@ -4320,6 +4311,15 @@ static PEP_STATUS _decrypt_message(
         }
     }
     
+    // by convention
+    if (EMPTYSTR(msg->shortmsg) && EMPTYSTR(msg->longmsg) && EMPTYSTR(msg->longmsg_formatted)) {
+        free(msg->shortmsg);
+        msg->shortmsg = strdup("pEp");
+        assert(msg->shortmsg);
+        if (!msg->shortmsg)
+            goto enomem;
+    }
+
     // 5. Set up return values
     *dst = msg;
     *keylist = _keylist;

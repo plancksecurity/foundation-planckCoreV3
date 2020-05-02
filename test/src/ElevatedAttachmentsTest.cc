@@ -348,8 +348,6 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message_elevated) {
     ASSERT_STREQ(ad->mime_type, "application/octet-stream");
     ASSERT_STREQ(ad->filename, "file://pEpkey.asc.pgp");
 
-    // create artificial message for Key
-
     char *ct = strdup(ad->value);
 
     {
@@ -380,6 +378,8 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message_elevated) {
         free_stringlist(keylist);
     }
 
+    // create artificial message for Key like a transport would do
+
     message *art_msg = new_message(PEP_dir_incoming);
     art_msg->from = identity_dup(enc_msg->to->ident);
     art_msg->to = new_identity_list(identity_dup(enc_msg->from));
@@ -394,7 +394,8 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message_elevated) {
 
     status = decrypt_message(session, art_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status, PEP_STATUS_OK);
-//    ASSERT_STREQ(dec_msg->attachments->mime_type, "application/pgp-keys");
+    ASSERT_STREQ(dec_msg->attachments->mime_type, "application/pgp-keys");
+    ASSERT_STREQ(dec_msg->shortmsg, "pEp");
 
     free_message(msg);
     free_message(enc_msg);
