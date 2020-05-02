@@ -4540,11 +4540,7 @@ DYNAMIC_API PEP_STATUS least_trust(
 
 static void sanitize_pgp_filename(char *filename)
 {
-    int start = 0;
-    if (strncasecmp(filename, "file://", 7) == 0)
-        start = 7;
-
-    for (int i=start; filename[i]; ++i) {
+    for (int i=0; filename[i]; ++i) {
         switch(filename[i]) {
             // path separators
             case '/':
