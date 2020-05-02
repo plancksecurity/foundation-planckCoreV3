@@ -2973,8 +2973,13 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                         if (!has_uri_prefix)
                             filename_uri = build_uri("file", pgp_filename);
 
-                        _m = bloblist_add(_m, ptext, psize, mime_type,
-                             (filename_uri ? filename_uri : pgp_filename));
+                        char *_filename = filename_uri ? filename_uri : pgp_filename;
+                        if (strcasecmp(_filename, "file://distribution.pEp") == 0)
+                            _m = bloblist_add(_m, ptext, psize, "application/pEp.distribution", _filename);
+                        else if (strcasecmp(_filename, "file://sync.pEp") == 0)
+                            _m = bloblist_add(_m, ptext, psize, "application/pEp.sync", _filename);
+                        else
+                            _m = bloblist_add(_m, ptext, psize, mime_type, _filename);
 
                         free(pgp_filename);
                         free(filename_uri);
@@ -2990,8 +2995,14 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                         if (!has_uri_prefix)
                             filename_uri = build_uri("file", filename);
 
-                        _m = bloblist_add(_m, ptext, psize, mime_type,
-                             (filename_uri ? filename_uri : filename));
+                        char *_filename = filename_uri ? filename_uri : filename;
+                        if (strcasecmp(_filename, "file://distribution.pEp") == 0)
+                            _m = bloblist_add(_m, ptext, psize, "application/pEp.distribution", _filename);
+                        else if (strcasecmp(_filename, "file://sync.pEp") == 0)
+                            _m = bloblist_add(_m, ptext, psize, "application/pEp.sync", _filename);
+                        else
+                            _m = bloblist_add(_m, ptext, psize, mime_type, _filename);
+
                         free(filename);
                         free(filename_uri);
                         if (_m == NULL)

@@ -224,7 +224,7 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
 
     const char *distribution = "simulation of distribution data";
     msg->attachments = new_bloblist(strdup(distribution), strlen(distribution)
-            + 1, "application/pEp.distribution", "file://distribution.per");
+            + 1, "application/pEp.distribution", "distribution.pEp");
 
     // encrypt this message inline
 
@@ -246,7 +246,7 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
     // distribution message is encrypted
     ASSERT_TRUE(is_PGP_message_text(ad->value));
     ASSERT_STREQ(ad->mime_type, "application/octet-stream");
-    ASSERT_STREQ(ad->filename, "file://distribution.per.pgp");
+    ASSERT_STREQ(ad->filename, "distribution.pEp.pgp");
 
     // next attachment
     ASSERT_TRUE(ad->next);
@@ -275,10 +275,9 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
     bloblist_t *as = dec_msg->attachments;
     bloblist_t *bl = msg->attachments;
 
-    ASSERT_STREQ(as->filename, "file://distribution.per");
-    // the MIME type does not survive like this
-    ASSERT_STRNE(as->mime_type, "application/pEp.distribution");
-    ASSERT_STREQ(as->mime_type, "application/octet-stream");
+    ASSERT_STREQ(as->filename, "file://distribution.pEp");
+    // the MIME will be derived from filename
+    ASSERT_STREQ(as->mime_type, "application/pEp.distribution");
 
     free_message(msg);
     free_message(enc_msg);
