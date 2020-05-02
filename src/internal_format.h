@@ -57,14 +57,6 @@ DYNAMIC_API PEP_STATUS encode_internal(
 //
 //      value goes into the ownership of the caller
 //      mime_type goes into the ownership of the caller
-//
-//      in case there is no internal message in the code a string for longmsg
-//      is returned
-//
-//      this function copies the data in blob; in case it's called for a
-//      payload it is equivalent to strndup(3), but size will include the
-//      trailing 0 as code_size is expected to include the trailing 0
-//      (size not length)
 
 DYNAMIC_API PEP_STATUS decode_internal(
         const char *code,

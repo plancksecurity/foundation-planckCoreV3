@@ -110,29 +110,13 @@ DYNAMIC_API PEP_STATUS decode_internal(
         char **mime_type
     )
 {
-    assert(value && size && mime_type && code && code_size);
-    if (!(value && size && mime_type && code && code_size))
+    assert(value && size && mime_type && code && !code[0] && code_size);
+    if (!(value && size && mime_type && code && !code[0] && code_size))
         return PEP_ILLEGAL_VALUE;
 
     *value = NULL;
     *size = 0;
     *mime_type = NULL;
-
-    if (code[0]) {
-        assert(0); // safety functionality, we don't use this
-
-        // this is not an elevated attachment
-        char *result  = strndup(code, code_size);
-        assert(result);
-        if (!result)
-            return PEP_OUT_OF_MEMORY;
-
-        *value = result;
-        *size = strlen(result) + 1;
-        *mime_type = NULL;
-
-        return PEP_STATUS_OK;
-    }
 
     // elevated attachments have at least 5 bytes
     assert(code_size > 4);
