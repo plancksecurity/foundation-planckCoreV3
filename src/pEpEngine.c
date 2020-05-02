@@ -4553,8 +4553,9 @@ static void sanitize_pgp_filename(char *filename)
             // expansion operators
             case '%':
             case '$':
-            // code execution operator
+            // code execution operators
             case '`':
+            case '|':
                 filename[i] = '-';
                 break;
         }
