@@ -284,3 +284,121 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message) {
     free_message(dec_msg);
 }
 
+TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message_elevated) {
+    // a message from me, Alice, to Bob
+
+    const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";
+    const char* bob_fpr = "BFCDB7F301DEEEBBF947F29659BFF488C9C2EE39";
+    PEP_STATUS status = read_file_and_import_key(session,
+                "test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
+    ASSERT_EQ(status , PEP_KEY_IMPORTED);
+    status = set_up_ident_from_scratch(session,
+                "test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc",
+                "pep.test.alice@pep-project.org", alice_fpr,
+                PEP_OWN_USERID, "Alice in Wonderland", NULL, true
+            );
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_TRUE(slurp_and_import_key(session, "test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc"));
+
+    message* msg = new_message(PEP_dir_outgoing);
+    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, NULL);
+    pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, "Bob", NULL);
+    status = myself(session, alice);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    status = update_identity(session, bob);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+
+    status = set_as_pEp_user(session, bob);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+
+    msg->to = new_identity_list(bob);
+    msg->from = alice;
+    msg->shortmsg = strdup("Yo Bob!");
+    msg->longmsg = strdup("Look at my hot new sender fpr field!");
+
+    const char *distribution = "simulation of distribution data";
+    msg->attachments = new_bloblist(strdup(distribution), strlen(distribution)
+            + 1, "application/pEp.distribution", "distribution.pEp");
+
+    // encrypt this message inline
+
+    message* enc_msg = NULL;
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_inline, PEP_encrypt_elevated_attachments);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    
+    // .longmsg will go encrypted
+    ASSERT_TRUE(is_PGP_message_text(enc_msg->longmsg));
+
+    ASSERT_TRUE(enc_msg->attachments);
+    ASSERT_TRUE(enc_msg->attachments->value);
+
+    bloblist_t *ad = enc_msg->attachments;
+
+    // distribution message is encrypted
+    ASSERT_TRUE(is_PGP_message_text(ad->value));
+    ASSERT_STREQ(ad->mime_type, "application/octet-stream");
+    ASSERT_STREQ(ad->filename, "distribution.pEp.pgp");
+
+    // next attachment
+    ASSERT_TRUE(ad->next);
+    ad = ad->next;
+
+    // attached key is encrypted
+    ASSERT_TRUE(is_PGP_message_text(ad->value));
+    ASSERT_STREQ(ad->mime_type, "application/octet-stream");
+    ASSERT_STREQ(ad->filename, "file://pEpkey.asc.pgp");
+
+    // create artificial message for Key
+
+    char *ct = strdup(ad->value);
+
+    {
+        // test if this is an elevated attachment
+
+        char *pt;
+        size_t pt_size;
+        stringlist_t *keylist;
+
+        // decrypt this part
+
+        status = decrypt_and_verify(session, ct, strlen(ct) + 1, NULL, 0, &pt, &pt_size, &keylist, NULL);
+        ASSERT_EQ(status, PEP_DECRYPTED_AND_VERIFIED);
+
+        // decode internal message format
+
+        char *dt;
+        size_t dt_size;
+        char *mime_type;
+        status = decode_internal(pt, pt_size, &dt, &dt_size, &mime_type);
+        ASSERT_EQ(status, PEP_STATUS_OK);
+        ASSERT_TRUE(dt);
+        ASSERT_STREQ(mime_type, "application/pgp-keys");
+
+        free(pt);
+        free(dt);
+        free(mime_type);
+        free_stringlist(keylist);
+    }
+
+    message *art_msg = new_message(PEP_dir_incoming);
+    art_msg->from = identity_dup(enc_msg->to->ident);
+    art_msg->to = new_identity_list(identity_dup(enc_msg->from));
+    art_msg->longmsg = ct;
+
+    // decrypt this message
+    
+    message *dec_msg = NULL;
+    stringlist_t *keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = PEP_decrypt_flag_elevated_attachments;
+
+    status = decrypt_message(session, art_msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+//    ASSERT_STREQ(dec_msg->attachments->mime_type, "application/pgp-keys");
+
+    free_message(msg);
+    free_message(enc_msg);
+    free_message(dec_msg);
+    free_message(art_msg);
+}
+

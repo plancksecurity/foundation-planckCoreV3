@@ -3744,42 +3744,6 @@ static PEP_STATUS _decrypt_message(
                 break;
 
             case PEP_enc_inline: {
-                if (*flags & PEP_decrypt_flag_elevated_attachments && !ptext[0]) {
-                    char *value;
-                    size_t size;
-                    char *mime_type;
-                    const char *filename = NULL;
-                    status = decode_internal(ptext, psize, &value, &size, &mime_type);
-                    if (status)
-                        goto pEp_error;
-                    ptext = strdup("");
-                    assert(ptext);
-                    if (!ptext) {
-                        status = PEP_OUT_OF_MEMORY;
-                        goto pEp_error;
-                    }
-                    psize = 1;
-                    if (strcasecmp(mime_type, "application/pEp.sync") == 0)
-                        filename = "file://sync.pEp";
-                    else if (strcasecmp(mime_type, "application/pEp.distribution") == 0)
-                        filename = "file://distribution.pEp";
-                    else if (strcasecmp(mime_type, "application/pgp-keys") == 0)
-                        filename = "file://pEpkey.asc";
-                    else if (strcasecmp(mime_type, "application/pgp-signature") == 0)
-                        filename = "file://electronic_signature.asc";
-
-                    bloblist_t *bl = new_bloblist(value, size, mime_type, filename);
-                    free(mime_type);
-                    if (bl) {
-                        msg->attachments = bl;
-                    }
-                    else {
-                        free(value);
-                        status = PEP_OUT_OF_MEMORY;
-                        goto pEp_error;
-                    }
-                }
-
                 status = PEP_STATUS_OK;
                 _decrypt_in_pieces_status = _decrypt_in_pieces(session, src, &msg, ptext, psize);
             
@@ -3798,6 +3762,49 @@ static PEP_STATUS _decrypt_message(
                         break;
                 }
                 break;
+
+                if (*flags & PEP_decrypt_flag_elevated_attachments && !ptext[0]) {
+                    char *value;
+                    size_t size;
+                    char *mime_type;
+                    const char *filename = NULL;
+                    status = decode_internal(ptext, psize, &value, &size, &mime_type);
+                    if (status)
+                        goto pEp_error;
+                    if (EMPTYSTR(src->shortmsg)) {
+                        msg->shortmsg = strdup("pEp");
+                        assert(msg->shortmsg);
+                        if (!msg->shortmsg) {
+                            status = PEP_OUT_OF_MEMORY;
+                            goto pEp_error;
+                        }
+                    }
+                    if (strcasecmp(mime_type, "application/pEp.sync") == 0)
+                        filename = "file://sync.pEp";
+                    else if (strcasecmp(mime_type, "application/pEp.distribution") == 0)
+                        filename = "file://distribution.pEp";
+                    else if (strcasecmp(mime_type, "application/pgp-keys") == 0)
+                        filename = "file://pEpkey.asc";
+                    else if (strcasecmp(mime_type, "application/pgp-signature") == 0)
+                        filename = "file://electronic_signature.asc";
+                    bloblist_t *bl = new_bloblist(value, size, mime_type, filename);
+                    free(mime_type);
+                    if (bl) {
+                        msg->attachments = bl;
+                        if (msg->longmsg != ptext)
+                            free(msg->longmsg);
+                        msg->longmsg = NULL;
+                        free(ptext);
+                        ptext = NULL;
+                        psize = 0;
+                    }
+                    else {
+                        free(value);
+                        status = PEP_OUT_OF_MEMORY;
+                        goto pEp_error;
+                    }
+                }
+
             default:
                 // BUG: must implement more
                 NOT_IMPLEMENTED
