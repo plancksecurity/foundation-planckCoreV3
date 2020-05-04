@@ -2031,6 +2031,13 @@ static PEP_STATUS _wipe_default_key_if_invalid(PEP_SESSION session,
     if (!ident->user_id)
         return PEP_ILLEGAL_VALUE;
         
+    if (!ident->fpr)
+        return status;
+    
+    char* cached_fpr = strdup(ident->fpr);
+    if (!ident->fpr)
+        return PEP_OUT_OF_MEMORY;
+        
     PEP_STATUS keystatus = validate_fpr(session, ident, true, false);
     switch (keystatus) {
         case PEP_STATUS_OK:
@@ -2043,11 +2050,12 @@ static PEP_STATUS _wipe_default_key_if_invalid(PEP_SESSION session,
         case PEP_KEY_UNSUITABLE:
         case PEP_KEY_BLACKLISTED:
             // Remove key as default for all identities and users 
-            status = remove_fpr_as_default(session, ident->fpr);
+            status = remove_fpr_as_default(session, cached_fpr);
             break;   
         default:
             break;
     }     
+    free(cached_fpr);
     return status;                                        
 }
 
