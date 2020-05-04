@@ -4312,18 +4312,24 @@ static PEP_STATUS _decrypt_message(
     }
     
     // by convention
+
     if (EMPTYSTR(msg->shortmsg) && EMPTYSTR(msg->longmsg) && EMPTYSTR(msg->longmsg_formatted)) {
         free(msg->shortmsg);
         msg->shortmsg = strdup("pEp");
         assert(msg->shortmsg);
         if (!msg->shortmsg)
             goto enomem;
-        stringpair_t *entry = new_stringpair("pEp-auto-consume", "yes");
-        if (!entry)
-            goto enomem;
-        stringpair_list_t * spl = stringpair_list_add(msg->opt_fields, entry);
-        if (!spl)
-            goto enomem;
+
+        if (*flags & PEP_decrypt_flag_elevated_attachments) {
+            stringpair_t *entry = new_stringpair("pEp-auto-consume", "yes");
+            if (!entry)
+                goto enomem;
+            stringpair_list_t * spl = stringpair_list_add(msg->opt_fields, entry);
+            if (!spl)
+                goto enomem;
+            if (!msg->opt_fields)
+                msg->opt_fields = spl;
+        }
     }
 
     // 5. Set up return values
