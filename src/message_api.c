@@ -4318,6 +4318,12 @@ static PEP_STATUS _decrypt_message(
         assert(msg->shortmsg);
         if (!msg->shortmsg)
             goto enomem;
+        stringpair_t *entry = new_stringpair("pEp-auto-consume", "yes");
+        if (!entry)
+            goto enomem;
+        stringpair_list_t * spl = stringpair_list_add(msg->opt_fields, entry);
+        if (!spl)
+            goto enomem;
     }
 
     // 5. Set up return values

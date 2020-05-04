@@ -397,6 +397,17 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message_elevated) {
     ASSERT_STREQ(dec_msg->attachments->mime_type, "application/pgp-keys");
     ASSERT_STREQ(dec_msg->shortmsg, "pEp");
 
+    stringpair_list_t *of;
+    bool pEp_auto_consume_found = false;
+    for (of = dec_msg->opt_fields; of && of->value; of = of->next) {
+        if (strcasecmp(of->value->key, "pEp-auto-consume") == 0) {
+            ASSERT_STREQ(of->value->value, "yes");
+            pEp_auto_consume_found = true;
+            break;
+        }
+    }
+    ASSERT_TRUE(pEp_auto_consume_found);
+
     free_message(msg);
     free_message(enc_msg);
     free_message(dec_msg);
