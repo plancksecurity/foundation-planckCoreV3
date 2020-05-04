@@ -454,7 +454,7 @@ static const char* sql_get_default_own_userid =
     "select id from person"
     "   join identity on id = identity.user_id"
     "   where identity.is_own = 1";
-
+    
 // Sequence
 static const char *sql_sequence_value1 = 
     "insert or replace into sequences (name, value) "
@@ -2080,6 +2080,11 @@ DYNAMIC_API PEP_STATUS init(
         status = pgp_import_ultimately_trusted_keypairs(_session);        
 #endif // USE_GPG
     }
+    
+    // clean up invalid keys 
+    status = clean_own_key_defaults(_session);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
 
     *session = _session;
     
