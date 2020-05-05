@@ -2056,6 +2056,10 @@ static PEP_STATUS _wipe_default_key_if_invalid(PEP_SESSION session,
             break;
     }     
     free(cached_fpr);
+    
+    if (status == PEP_STATUS_OK)
+        status = myself(session, ident);
+            
     return status;                                        
 }
 
