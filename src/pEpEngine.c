@@ -85,8 +85,8 @@ static const char *sql_get_identity =
     "   is_own, pEp_version_major, pEp_version_minor"
     "   from identity"
     "   join person on id = identity.user_id"
-    "   join pgp_keypair on fpr = identity.main_key_id"
-    "   join trust on id = trust.user_id"
+    "   left join pgp_keypair on fpr = identity.main_key_id"
+    "   left join trust on id = trust.user_id"
     "       and pgp_keypair_fpr = identity.main_key_id"    
     "   where (case when (address = ?1) then (1)"
     "               when (lower(address) = lower(?1)) then (1)"
@@ -103,8 +103,8 @@ static const char *sql_get_identities_by_main_key_id =
     "   is_own, pEp_version_major, pEp_version_minor"
     "   from identity"
     "   join person on id = identity.user_id"
-    "   join pgp_keypair on fpr = identity.main_key_id"
-    "   join trust on id = trust.user_id"
+    "   left join pgp_keypair on fpr = identity.main_key_id"
+    "   left join trust on id = trust.user_id"
     "       and pgp_keypair_fpr = identity.main_key_id"    
     "   where identity.main_key_id = ?1" 
     "   order by is_own desc, "
@@ -143,8 +143,8 @@ static const char *sql_get_identities_by_userid =
     "   is_own, pEp_version_major, pEp_version_minor"
     "   from identity"
     "   join person on id = identity.user_id"
-    "   join pgp_keypair on fpr = identity.main_key_id"
-    "   join trust on id = trust.user_id"
+    "   left join pgp_keypair on fpr = identity.main_key_id"
+    "   left join trust on id = trust.user_id"
     "       and pgp_keypair_fpr = identity.main_key_id"    
     "   where identity.user_id = ?1" 
     "   order by is_own desc, "
@@ -155,10 +155,12 @@ static const char *sql_replace_identities_fpr =
     "   set main_key_id = ?1 "
     "   where main_key_id = ?2 ;";
     
-static const char *sql_remove_fpr_as_default =
-    "update person set main_key_id = NULL where main_key_id = ?1 ;"
+static const char *sql_remove_fpr_as_identity_default =
     "update identity set main_key_id = NULL where main_key_id = ?1 ;";
 
+static const char *sql_remove_fpr_as_user_default =
+    "update person set main_key_id = NULL where main_key_id = ?1 ;";
+    
 // Set person, but if already exist, only update.
 // if main_key_id already set, don't touch.
 static const char *sql_set_person = 
@@ -431,8 +433,8 @@ static const char *sql_own_identities_retrieve =
     "   lang, identity.flags | pgp_keypair.flags, pEp_version_major, pEp_version_minor"
     "   from identity"
     "   join person on id = identity.user_id"
-    "   join pgp_keypair on fpr = identity.main_key_id"
-    "   join trust on id = trust.user_id"
+    "   left join pgp_keypair on fpr = identity.main_key_id"
+    "   left join trust on id = trust.user_id"
     "       and pgp_keypair_fpr = identity.main_key_id"
     "   where identity.is_own = 1"
     "       and (identity.flags & ?1) = 0;";
@@ -454,7 +456,7 @@ static const char* sql_get_default_own_userid =
     "select id from person"
     "   join identity on id = identity.user_id"
     "   where identity.is_own = 1";
-
+    
 // Sequence
 static const char *sql_sequence_value1 = 
     "insert or replace into sequences (name, value) "
@@ -1797,9 +1799,14 @@ DYNAMIC_API PEP_STATUS init(
             &_session->replace_identities_fpr, NULL);
     assert(int_result == SQLITE_OK);
     
-    int_result = sqlite3_prepare_v2(_session->db, sql_remove_fpr_as_default,
-            (int)strlen(sql_remove_fpr_as_default), 
-            &_session->remove_fpr_as_default, NULL);
+    int_result = sqlite3_prepare_v2(_session->db, sql_remove_fpr_as_identity_default,
+            (int)strlen(sql_remove_fpr_as_identity_default), 
+            &_session->remove_fpr_as_identity_default, NULL);
+    assert(int_result == SQLITE_OK);
+
+    int_result = sqlite3_prepare_v2(_session->db, sql_remove_fpr_as_user_default,
+            (int)strlen(sql_remove_fpr_as_user_default), 
+            &_session->remove_fpr_as_user_default, NULL);
     assert(int_result == SQLITE_OK);
 
     int_result = sqlite3_prepare_v2(_session->db, sql_set_person,
@@ -2080,6 +2087,11 @@ DYNAMIC_API PEP_STATUS init(
         status = pgp_import_ultimately_trusted_keypairs(_session);        
 #endif // USE_GPG
     }
+    
+    // clean up invalid keys 
+    status = clean_own_key_defaults(_session);
+    if (status != PEP_STATUS_OK)
+        goto pEp_error;
 
     *session = _session;
     
@@ -2145,8 +2157,10 @@ DYNAMIC_API void release(PEP_SESSION session)
                 sqlite3_finalize(session->add_userid_alias);
             if (session->replace_identities_fpr)
                 sqlite3_finalize(session->replace_identities_fpr);        
-            if (session->remove_fpr_as_default)
-                sqlite3_finalize(session->remove_fpr_as_default);            
+            if (session->remove_fpr_as_identity_default)
+                sqlite3_finalize(session->remove_fpr_as_identity_default);            
+            if (session->remove_fpr_as_user_default)
+                sqlite3_finalize(session->remove_fpr_as_user_default);            
             if (session->set_person)
                 sqlite3_finalize(session->set_person);
             if (session->delete_person)
@@ -3814,16 +3828,26 @@ PEP_STATUS remove_fpr_as_default(PEP_SESSION session,
     if (!session || !fpr)
         return PEP_ILLEGAL_VALUE;
             
-    sqlite3_reset(session->remove_fpr_as_default);
-    sqlite3_bind_text(session->remove_fpr_as_default, 1, fpr, -1,
+    sqlite3_reset(session->remove_fpr_as_identity_default);
+    sqlite3_bind_text(session->remove_fpr_as_identity_default, 1, fpr, -1,
                       SQLITE_STATIC);
 
-    int result = sqlite3_step(session->remove_fpr_as_default);
-    sqlite3_reset(session->remove_fpr_as_default);
+    int result = sqlite3_step(session->remove_fpr_as_identity_default);
+    sqlite3_reset(session->remove_fpr_as_identity_default);
     
     if (result != SQLITE_DONE)
-        return PEP_CANNOT_SET_IDENTITY; // misleading - could also be person
+        return PEP_CANNOT_SET_IDENTITY; 
 
+    sqlite3_reset(session->remove_fpr_as_user_default);
+    sqlite3_bind_text(session->remove_fpr_as_user_default, 1, fpr, -1,
+                      SQLITE_STATIC);
+
+    result = sqlite3_step(session->remove_fpr_as_user_default);
+    sqlite3_reset(session->remove_fpr_as_user_default);
+    
+    if (result != SQLITE_DONE)
+        return PEP_CANNOT_SET_PERSON; 
+        
     return PEP_STATUS_OK;
 }
 
