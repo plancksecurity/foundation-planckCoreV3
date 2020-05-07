@@ -3909,30 +3909,30 @@ static PEP_STATUS _decrypt_message(
                 
             } // this we do if this isn't an inner message
             
-            pEp_identity* cs_from = calculated_src->from;
-            if (cs_from && !EMPTYSTR(cs_from->address)) {
-                if (!is_me(session, cs_from)) {
-                    status = update_identity(session, cs_from);
+            pEp_identity* msg_from = msg->from;
+            if (msg_from && !EMPTYSTR(msg_from->address)) {
+                if (!is_me(session, msg_from)) {
+                    status = update_identity(session, msg_from);
                     if (status == PEP_CANNOT_FIND_IDENTITY) {
-                        cs_from->user_id = calloc(1, strlen(cs_from->address) + 6);
-                        if (!cs_from->user_id)
+                        msg_from->user_id = calloc(1, strlen(msg_from->address) + 6);
+                        if (!msg_from->user_id)
                             return PEP_OUT_OF_MEMORY;
-                        snprintf(cs_from->user_id, strlen(cs_from->address) + 6,
-                                 "TOFU_%s", cs_from->address);        
+                        snprintf(msg_from->user_id, strlen(msg_from->address) + 6,
+                                 "TOFU_%s", msg_from->address);        
                         status = PEP_STATUS_OK;
                     }
                 }
                 else {
                     // update the own from identity, read_only, but preserve username 
                     // for returned message.
-                    char* cached_ownname = cs_from->username;
+                    char* cached_ownname = msg_from->username;
                     // Shouldn't be possible, but just in case.
                     if (!cached_ownname)
-                        cached_ownname = strdup(cs_from->address);
-                    cs_from->username = NULL;
-                    status = _myself(session, cs_from, false, false, myself_read_only);
-                    free(cs_from->username);
-                    cs_from->username = cached_ownname;
+                        cached_ownname = strdup(msg_from->address);
+                    msg_from->username = NULL;
+                    status = _myself(session, msg_from, false, false, myself_read_only);
+                    free(msg_from->username);
+                    msg_from->username = cached_ownname;
                 }    
             }                                                                        
         } // end if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
@@ -3943,7 +3943,7 @@ static PEP_STATUS _decrypt_message(
         // eligible signer comm_types to PEP_ct_pEp_*
         // This also sets and upgrades pEp version
         if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && !is_key_reset && is_pEp_msg && calculated_src->from)
-            status = update_sender_to_pEp_trust(session, calculated_src->from, _keylist, major_ver, minor_ver);
+            status = update_sender_to_pEp_trust(session, msg->from, _keylist, major_ver, minor_ver);
 
         /* Ok, now we have a keylist used for decryption/verification.
            now we need to update the message rating with the 
@@ -3951,7 +3951,7 @@ static PEP_STATUS _decrypt_message(
            
         if (!is_key_reset) { // key reset messages invalidate some of the ratings in the DB by now.
             status = amend_rating_according_to_sender_and_recipients(session,
-                     rating, calculated_src->from, _keylist);
+                     rating, msg->from, _keylist);
             if (status != PEP_STATUS_OK)
                 goto pEp_error;
          
