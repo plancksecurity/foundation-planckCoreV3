@@ -87,10 +87,10 @@ TEST_F(CleanInvalidOwnKeysTest, check_clean_invalid_own_keys_no_alts_revoked) {
     pEp_identity* alice = NULL;
     PEP_STATUS status = get_identity(session, "pep.test.alice@pep-project.org", "ALICE", &alice);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(alice->fpr, nullptr);
+    ASSERT_STRNE(alice->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
     char* fpr = NULL;
     status = get_user_default_key(session, "ALICE", &fpr);
-    ASSERT_EQ(fpr, nullptr);
+    ASSERT_STREQ(fpr, alice->fpr);
     ASSERT_EQ(status, PEP_STATUS_OK);    
 }
 
@@ -100,10 +100,10 @@ TEST_F(CleanInvalidOwnKeysTest, check_clean_invalid_own_keys_no_alts_mistrusted)
     pEp_identity* alice = NULL;
     PEP_STATUS status = get_identity(session, "pep.test.alice@pep-project.org", "ALICE", &alice);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_EQ(alice->fpr, nullptr);
+    ASSERT_STRNE(alice->fpr, "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97");
     char* fpr = NULL;
     status = get_user_default_key(session, "ALICE", &fpr);
-    ASSERT_EQ(fpr, nullptr);
+    ASSERT_STREQ(fpr, alice->fpr);
     ASSERT_EQ(status, PEP_STATUS_OK);    
 }
 
@@ -113,13 +113,12 @@ TEST_F(CleanInvalidOwnKeysTest, check_clean_invalid_own_keys_no_alts_expired) {
     pEp_identity* bob = NULL;
     PEP_STATUS status = get_identity(session, "expired_bob_0@darthmama.org", "BOB", &bob);
     ASSERT_EQ(status, PEP_STATUS_OK);
-    ASSERT_NE(bob->fpr, nullptr);
+    ASSERT_STREQ(bob->fpr, "E4A8CD51C25D0ED5BAD0834BD2FDE305A35FE3F5");
     char* fpr = NULL;
     status = get_user_default_key(session, "BOB", &fpr);
-    ASSERT_NE(fpr, nullptr);
+    ASSERT_STREQ(fpr, "E4A8CD51C25D0ED5BAD0834BD2FDE305A35FE3F5");
     ASSERT_EQ(status, PEP_STATUS_OK);    
     bool expired = true;
     status = key_expired(session, bob->fpr, time(NULL), &expired);
     ASSERT_FALSE(expired);
-    ASSERT_STREQ(bob->fpr, fpr);
 }
