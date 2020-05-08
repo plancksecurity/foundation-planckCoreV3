@@ -17,7 +17,16 @@ extern "C" {
 #include "labeled_int_list.h"    
 #include "timestamp.h"
 
-#define PEP_VERSION "2.1" // protocol version
+#define PEP_VERSION "2.1" // pEp *protocol* version
+
+// RELEASE version this targets
+// (string: major.minor.patch)
+#define PEP_ENGINE_VERSION "2.1.0"
+// Numeric values of above:
+#define PEP_ENGINE_VERSION_MAJOR 2
+#define PEP_ENGINE_VERSION_MINOR 1
+#define PEP_ENGINE_VERSION_PATCH 0
+
 
 #define PEP_OWN_USERID "pEp_own_userId"
     
@@ -1009,6 +1018,24 @@ DYNAMIC_API PEP_STATUS send_key(PEP_SESSION session, const char *pattern);
 //  <http://msdn.microsoft.com/en-us/library/windows/desktop/aa366711(v=vs.85).aspx>
 
 DYNAMIC_API void pEp_free(void *p);
+
+
+// pEp_realloc() - reallocate memory allocated by pEp engine
+//
+//  parameters:
+//      p (in)                  pointer to free
+//      size (in)               new memory size
+//
+//  returns:
+//      pointer to allocated memory
+//
+//  The reason for this function is that heap management can be a pretty
+//  complex task with Windoze. This realloc() version calls the realloc()
+//  implementation of the C runtime library which was used to build pEp engine,
+//  so you're using the correct heap. For more information, see:
+//  <http://msdn.microsoft.com/en-us/library/windows/desktop/aa366711(v=vs.85).aspx>
+
+DYNAMIC_API void *pEp_realloc(void *p, size_t size);
 
 
 // get_trust() - get the trust level a key has for a person

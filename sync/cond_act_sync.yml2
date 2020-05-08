@@ -505,15 +505,15 @@ action receivedKeysAreDefaultKeys
 
     for (identity_list *_il = il; _il && _il->ident ; _il = _il->next) {
         status = set_own_key(session, _il->ident, _il->ident->fpr);
-        if (status) {
-            free_identity_list(il);
-            free(user_id);
-            return status;
-        }
+        if (status != PEP_STATUS_OK && status != PEP_KEY_UNSUITABLE)
+            break;
     }
 
     free_identity_list(il);
     free(user_id);
+
+    if (status == PEP_KEY_UNSUITABLE)
+        status = PEP_STATUS_OK;
 ||
 
 action useThisKey
