@@ -960,7 +960,7 @@ static PEP_STATUS encrypt_PGP_inline(
     if (status)
         return status;
 
-    dst->enc_format = PEP_enc_inline;
+    dst->enc_format = src->enc_format;
 
     // shortmsg is being copied
     if (src->shortmsg) {
@@ -1016,7 +1016,7 @@ static PEP_STATUS encrypt_PGP_inline(
         for (as = src->attachments; as && as->value; as = as->next) {
             char *value = NULL;
             size_t size = 0;
-            if (flags & PEP_encrypt_elevated_attachments) {
+            if (src->enc_format == PEP_enc_inline_EA) {
                 status = encode_internal(as->value, as->size, as->mime_type,
                         &value, &size);
                 if (status)
@@ -1681,7 +1681,8 @@ PEP_cryptotech determine_encryption_format(message *msg)
     assert(msg);
 
     if (is_PGP_message_text(msg->longmsg)) {
-        msg->enc_format = PEP_enc_inline;
+        if (msg->enc_format != PEP_enc_inline_EA)
+            msg->enc_format = PEP_enc_inline;
         return PEP_crypt_OpenPGP;
     }
     else if (msg->attachments && msg->attachments->next &&
@@ -2016,7 +2017,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
             
         // FIXME - we need to deal with transport types (via flag)
         message_wrap_type wrap_type = PEP_message_unwrapped;
-        if ((enc_format != PEP_enc_inline) && (!force_v_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
+        if ((enc_format != PEP_enc_inline) && (enc_format != PEP_enc_inline_EA) && (!force_v_1) && ((max_comm_type | PEP_ct_confirmed) == PEP_ct_pEp)) {
             wrap_type = ((flags & PEP_encrypt_flag_key_reset_only) ? PEP_message_key_reset : PEP_message_default);
             _src = wrap_message_as_attachment(NULL, src, wrap_type, false, extra, max_version_major, max_version_minor);
             if (!_src)
@@ -2024,7 +2025,7 @@ DYNAMIC_API PEP_STATUS encrypt_message(
         }
         else {
             // hide subject
-            if (enc_format != PEP_enc_inline) {
+            if (enc_format != PEP_enc_inline && enc_format != PEP_enc_inline_EA) {
                 status = replace_subject(_src);
                 if (status == PEP_OUT_OF_MEMORY)
                     goto enomem;
@@ -2046,6 +2047,8 @@ DYNAMIC_API PEP_STATUS encrypt_message(
                 break;
 
             case PEP_enc_inline:
+            case PEP_enc_inline_EA:
+                _src->enc_format = enc_format;
                 status = encrypt_PGP_inline(session, _src, keys, msg, flags);
                 break;
 
@@ -2384,6 +2387,8 @@ DYNAMIC_API PEP_STATUS encrypt_message_for_self(
             break;
 
         case PEP_enc_inline:
+        case PEP_enc_inline_EA:
+            _src->enc_format = enc_format;
             status = encrypt_PGP_inline(session, _src, keys, msg, flags);
             break;
 
@@ -2735,6 +2740,7 @@ static PEP_STATUS unencapsulate_hidden_fields(message* src, message* msg,
     switch (src->enc_format) {
         case PEP_enc_PGP_MIME:
         case PEP_enc_inline:
+        case PEP_enc_inline_EA:
         case PEP_enc_PGP_MIME_Outlook1:
 //        case PEP_enc_none: // FIXME - this is wrong
 
@@ -2845,6 +2851,7 @@ static PEP_STATUS get_crypto_text(message* src, char** crypto_text, size_t* text
         break;
 
         case PEP_enc_inline:
+        case PEP_enc_inline_EA:
             *crypto_text = src->longmsg;
             *text_size = strlen(*crypto_text);
             break;
@@ -3743,7 +3750,9 @@ static PEP_STATUS _decrypt_message(
                 }
                 break;
 
-            case PEP_enc_inline: {
+            case PEP_enc_inline:
+            case PEP_enc_inline_EA:
+            {
                 status = PEP_STATUS_OK;
                 _decrypt_in_pieces_status = _decrypt_in_pieces(session, src, &msg, ptext, psize);
             
@@ -3761,7 +3770,7 @@ static PEP_STATUS _decrypt_message(
                         decrypt_status = _decrypt_in_pieces_status;
                 }
 
-                if (*flags & PEP_decrypt_flag_elevated_attachments) {
+                if (src->enc_format == PEP_enc_inline_EA) {
                     char *value;
                     size_t size;
                     char *mime_type;
@@ -4329,7 +4338,7 @@ static PEP_STATUS _decrypt_message(
         if (!msg->shortmsg)
             goto enomem;
 
-        if (*flags & PEP_decrypt_flag_elevated_attachments) {
+        if (src->enc_format == PEP_enc_inline_EA) {
             stringpair_t *entry = new_stringpair("pEp-auto-consume", "yes");
             if (!entry)
                 goto enomem;
