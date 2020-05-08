@@ -21,11 +21,11 @@ extern "C" {
 
 // RELEASE version this targets
 // (string: major.minor.patch)
-#define PEP_ENGINE_VERSION "2.0.4"
+#define PEP_ENGINE_VERSION "2.0.5"
 // Numeric values of above:
 #define PEP_ENGINE_VERSION_MAJOR 2
 #define PEP_ENGINE_VERSION_MINOR 0
-#define PEP_ENGINE_VERSION_PATCH 4
+#define PEP_ENGINE_VERSION_PATCH 5
 
 
 #define PEP_OWN_USERID "pEp_own_userId"
