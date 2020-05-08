@@ -3916,30 +3916,30 @@ static PEP_STATUS _decrypt_message(
                 
             } // this we do if this isn't an inner message
             
-            pEp_identity* cs_from = calculated_src->from;
-            if (cs_from && !EMPTYSTR(cs_from->address)) {
-                if (!is_me(session, cs_from)) {
-                    status = update_identity(session, cs_from);
+            pEp_identity* msg_from = msg->from;
+            if (msg_from && !EMPTYSTR(msg_from->address)) {
+                if (!is_me(session, msg_from)) {
+                    status = update_identity(session, msg_from);
                     if (status == PEP_CANNOT_FIND_IDENTITY) {
-                        cs_from->user_id = calloc(1, strlen(cs_from->address) + 6);
-                        if (!cs_from->user_id)
+                        msg_from->user_id = calloc(1, strlen(msg_from->address) + 6);
+                        if (!msg_from->user_id)
                             return PEP_OUT_OF_MEMORY;
-                        snprintf(cs_from->user_id, strlen(cs_from->address) + 6,
-                                 "TOFU_%s", cs_from->address);        
+                        snprintf(msg_from->user_id, strlen(msg_from->address) + 6,
+                                 "TOFU_%s", msg_from->address);        
                         status = PEP_STATUS_OK;
                     }
                 }
                 else {
                     // update the own from identity, read_only, but preserve username 
                     // for returned message.
-                    char* cached_ownname = cs_from->username;
+                    char* cached_ownname = msg_from->username;
                     // Shouldn't be possible, but just in case.
                     if (!cached_ownname)
-                        cached_ownname = strdup(cs_from->address);
-                    cs_from->username = NULL;
-                    status = _myself(session, cs_from, false, false, myself_read_only);
-                    free(cs_from->username);
-                    cs_from->username = cached_ownname;
+                        cached_ownname = strdup(msg_from->address);
+                    msg_from->username = NULL;
+                    status = _myself(session, msg_from, false, false, myself_read_only);
+                    free(msg_from->username);
+                    msg_from->username = cached_ownname;
                 }    
             }                                                                        
         } // end if (decrypt_status == PEP_DECRYPTED || decrypt_status == PEP_DECRYPTED_AND_VERIFIED)
@@ -3950,7 +3950,7 @@ static PEP_STATUS _decrypt_message(
         // eligible signer comm_types to PEP_ct_pEp_*
         // This also sets and upgrades pEp version
         if (decrypt_status == PEP_DECRYPTED_AND_VERIFIED && !is_key_reset && is_pEp_msg && calculated_src->from)
-            status = update_sender_to_pEp_trust(session, calculated_src->from, _keylist, major_ver, minor_ver);
+            status = update_sender_to_pEp_trust(session, msg->from, _keylist, major_ver, minor_ver);
 
         /* Ok, now we have a keylist used for decryption/verification.
            now we need to update the message rating with the 
@@ -3958,7 +3958,7 @@ static PEP_STATUS _decrypt_message(
            
         if (!is_key_reset) { // key reset messages invalidate some of the ratings in the DB by now.
             status = amend_rating_according_to_sender_and_recipients(session,
-                     rating, calculated_src->from, _keylist);
+                     rating, msg->from, _keylist);
             if (status != PEP_STATUS_OK)
                 goto pEp_error;
          
@@ -4017,98 +4017,107 @@ static PEP_STATUS _decrypt_message(
         }
     } // End prepare output message for return
 
-    // 3. Check to see if the sender used any of our revoked keys
-    if (!is_me(session, msg->from)) {
-        status = check_for_own_revoked_key(session, _keylist, &revoke_replace_pairs);
+    // 3. Check to see if the sender is a pEp user who used any of our revoked keys
+    if (msg->from && !is_me(session, msg->from)) {
+        bool pEp_peep = false;
 
-        //assert(status != PEP_STATUS_OK); // FIXME: FOR DEBUGGING ONLY DO NOT LEAVE IN    
-        if (status != PEP_STATUS_OK) {
-            // This should really never choke unless the DB is broken.
-            status = PEP_UNKNOWN_DB_ERROR;
-            goto pEp_error;
-        }
-        
-        if (msg) {
-            stringpair_list_t* curr_pair_node;
-            stringpair_t* curr_pair;
+        if (!EMPTYSTR(msg->from->user_id)) {
+            status = is_pEp_user(session, msg->from, &pEp_peep);
+            
+            // If it's a pEp user, check if there was a revoked key used so we can notify
+            if (pEp_peep) {
+                status = check_for_own_revoked_key(session, _keylist, &revoke_replace_pairs);
 
-            for (curr_pair_node = revoke_replace_pairs; curr_pair_node; curr_pair_node = curr_pair_node->next) {
-                curr_pair = curr_pair_node->value;
+                //assert(status != PEP_STATUS_OK); // FIXME: FOR DEBUGGING ONLY DO NOT LEAVE IN    
+                if (status != PEP_STATUS_OK) {
+                    // This should really never choke unless the DB is broken.
+                    status = PEP_UNKNOWN_DB_ERROR;
+                    goto pEp_error;
+                }
+                
+                if (msg) {
+                    stringpair_list_t* curr_pair_node;
+                    stringpair_t* curr_pair;
 
-                if (!curr_pair)
-                    continue; // Again, shouldn't occur
+                    for (curr_pair_node = revoke_replace_pairs; curr_pair_node; curr_pair_node = curr_pair_node->next) {
+                        curr_pair = curr_pair_node->value;
 
-                if (curr_pair->key && curr_pair->value) {
-                    /* Figure out which address(es) this came to so we know who to reply from */                    
+                        if (!curr_pair)
+                            continue; // Again, shouldn't occur
 
-                    identity_list* my_rev_ids = NULL;
-                    
-                    /* check by replacement ID for identities which used this key? */
-                    status = get_identities_by_main_key_id(session, curr_pair->value,
-                                                           &my_rev_ids);
-                                                                                                                      
-                    if (status == PEP_STATUS_OK && my_rev_ids) {
-                        // get identities in this list the message was to/cc'd to (not for bcc)
-                        identity_list* used_ids_for_key = NULL;
-                        status = ident_list_intersect(my_rev_ids, msg->to, &used_ids_for_key);
-                        if (status != PEP_STATUS_OK)
-                            goto pEp_error; // out of memory
+                        if (curr_pair->key && curr_pair->value) {
+                            /* Figure out which address(es) this came to so we know who to reply from */                    
 
-                        identity_list* used_cc_ids = NULL;    
-                        status = ident_list_intersect(my_rev_ids, msg->cc, &used_cc_ids);
-                        if (status != PEP_STATUS_OK)
-                            goto pEp_error;
+                            identity_list* my_rev_ids = NULL;
+                            
+                            /* check by replacement ID for identities which used this key? */
+                            status = get_identities_by_main_key_id(session, curr_pair->value,
+                                                                   &my_rev_ids);
+                                                                                                                              
+                            if (status == PEP_STATUS_OK && my_rev_ids) {
+                                // get identities in this list the message was to/cc'd to (not for bcc)
+                                identity_list* used_ids_for_key = NULL;
+                                status = ident_list_intersect(my_rev_ids, msg->to, &used_ids_for_key);
+                                if (status != PEP_STATUS_OK)
+                                    goto pEp_error; // out of memory
 
-                        used_ids_for_key = identity_list_join(used_ids_for_key, used_cc_ids);
-                        
-                        identity_list* curr_recip = used_ids_for_key;
-                        
-                        for ( ; curr_recip && curr_recip->ident; curr_recip = curr_recip->next) {
-                            if (!is_me(session, curr_recip->ident))
-                                continue;
-                        
-                            status = create_standalone_key_reset_message(session,
-                                &reset_msg,
-                                curr_recip->ident,
-                                msg->from,
-                                curr_pair->key,
-                                curr_pair->value);
-
-                            // If we can't find the identity, this is someone we've never mailed, so we just
-                            // go on letting them use the wrong key until we mail them ourselves. (Spammers, etc)
-                            if (status != PEP_CANNOT_FIND_IDENTITY) {
+                                identity_list* used_cc_ids = NULL;    
+                                status = ident_list_intersect(my_rev_ids, msg->cc, &used_cc_ids);
                                 if (status != PEP_STATUS_OK)
                                     goto pEp_error;
 
-                                if (!reset_msg) {
-                                    status = PEP_OUT_OF_MEMORY;
-                                    goto pEp_error;
-                                }
-                                // insert into queue
-                                if (session->messageToSend)
-                                    status = session->messageToSend(reset_msg);
-                                else
-                                    status = PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
+                                used_ids_for_key = identity_list_join(used_ids_for_key, used_cc_ids);
+                                
+                                identity_list* curr_recip = used_ids_for_key;
+                                
+                                for ( ; curr_recip && curr_recip->ident; curr_recip = curr_recip->next) {
+                                    if (!is_me(session, curr_recip->ident))
+                                        continue;
+                                
+                                    status = create_standalone_key_reset_message(session,
+                                        &reset_msg,
+                                        curr_recip->ident,
+                                        msg->from,
+                                        curr_pair->key,
+                                        curr_pair->value);
+
+                                    // If we can't find the identity, this is someone we've never mailed, so we just
+                                    // go on letting them use the wrong key until we mail them ourselves. (Spammers, etc)
+                                    if (status != PEP_CANNOT_FIND_IDENTITY) {
+                                        if (status != PEP_STATUS_OK)
+                                            goto pEp_error;
+
+                                        if (!reset_msg) {
+                                            status = PEP_OUT_OF_MEMORY;
+                                            goto pEp_error;
+                                        }
+                                        // insert into queue
+                                        if (session->messageToSend)
+                                            status = session->messageToSend(reset_msg);
+                                        else
+                                            status = PEP_SYNC_NO_MESSAGE_SEND_CALLBACK;
 
 
-                                if (status == PEP_STATUS_OK) {
-                                    // Put into notified DB
-                                    status = set_reset_contact_notified(session, curr_recip->ident->address, curr_pair->key, msg->from->user_id);
-                                    if (status != PEP_STATUS_OK) // It's ok to barf because it's a DB problem??
-                                        goto pEp_error;
-                                }
-                                else {
-                                    // According to Volker, this would only be a fatal error, so...
-                                    free_message(reset_msg); // ??
-                                    reset_msg = NULL; // ??
-                                    goto pEp_error;
-                                }
-                            }
-                        }    
-                    } // else we couldn't find an ident for replacement key    
+                                        if (status == PEP_STATUS_OK) {
+                                            // Put into notified DB
+                                            status = set_reset_contact_notified(session, curr_recip->ident->address, curr_pair->key, msg->from->user_id);
+                                            if (status != PEP_STATUS_OK) // It's ok to barf because it's a DB problem??
+                                                goto pEp_error;
+                                        }
+                                        else {
+                                            // According to Volker, this would only be a fatal error, so...
+                                            free_message(reset_msg); // ??
+                                            reset_msg = NULL; // ??
+                                            goto pEp_error;
+                                        }
+                                    }
+                                }    
+                            } // else we couldn't find an ident for replacement key    
+                        }
+                    }        
                 }
             }
-        }
+        }    
         free_stringpair_list(revoke_replace_pairs);
         revoke_replace_pairs = NULL;
     } // end !is_me(msg->from)    
