@@ -46,10 +46,7 @@ typedef enum _PEP_encrypt_flags {
     
     // This flag is used to let internal functions know that an encryption 
     // call is being used as part of a reencryption operation
-    PEP_encrypt_reencrypt = 0x40,
-
-    // enable elevated attachment functionality
-    PEP_encrypt_elevated_attachments = 0x80
+    PEP_encrypt_reencrypt = 0x40
 } PEP_encrypt_flags; 
 
 typedef unsigned int PEP_encrypt_flags_t;
@@ -86,8 +83,7 @@ typedef enum _message_wrap_type {
 //      the ownership of src remains with the caller
 //      the ownership of dst goes to the caller
 //
-//      PEP_enc_inline only:
-//          If flags contain PEP_encrypt_elevated_attachments set then the
+//      enc_format PEP_enc_inline_EA:
 //          internal format of the encrypted attachments is changing, see
 //          https://dev.pep.foundation/Engine/ElevatedAttachments
 //
@@ -226,10 +222,7 @@ typedef enum _PEP_decrypt_flags {
 
     // input flags    
     PEP_decrypt_flag_untrusted_server = 0x100,
-    PEP_decrypt_flag_dont_trigger_sync = 0x200,
-
-    // enable elevated attachment functionality
-    PEP_decrypt_flag_elevated_attachments = 0x400
+    PEP_decrypt_flag_dont_trigger_sync = 0x200
 } PEP_decrypt_flags; 
 
 typedef unsigned int PEP_decrypt_flags_t;
@@ -286,7 +279,10 @@ typedef unsigned int PEP_decrypt_flags_t;
 //      the ownership of dst goes to the caller
 //      the ownership of keylist goes to the caller
 //      if src is unencrypted this function returns PEP_UNENCRYPTED and sets
-//         dst to NULL
+//          dst to NULL
+//      if src->enc_format is PEP_enc_inline_EA on input then elevated attachments
+//          will be expected
+
 DYNAMIC_API PEP_STATUS decrypt_message(
         PEP_SESSION session,
         message *src,

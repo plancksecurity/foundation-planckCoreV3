@@ -323,7 +323,7 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message_elevated) {
     // encrypt this message inline
 
     message* enc_msg = NULL;
-    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_inline, PEP_encrypt_elevated_attachments);
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_inline_EA, 0);
     ASSERT_EQ(status , PEP_STATUS_OK);
     
     // .longmsg will go encrypted
@@ -381,6 +381,7 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message_elevated) {
     // create artificial message for Key like a transport would do
 
     message *art_msg = new_message(PEP_dir_incoming);
+    art_msg->enc_format = PEP_enc_inline_EA;
     art_msg->from = identity_dup(enc_msg->to->ident);
     art_msg->to = new_identity_list(identity_dup(enc_msg->from));
     art_msg->longmsg = ct;
@@ -390,10 +391,11 @@ TEST_F(ElevatedAttachmentsTest, check_encrypt_decrypt_message_elevated) {
     message *dec_msg = NULL;
     stringlist_t *keylist = NULL;
     PEP_rating rating;
-    PEP_decrypt_flags_t flags = PEP_decrypt_flag_elevated_attachments;
+    PEP_decrypt_flags_t flags = 0;
 
     status = decrypt_message(session, art_msg, &dec_msg, &keylist, &rating, &flags);
     ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_TRUE(dec_msg);
     ASSERT_STREQ(dec_msg->attachments->mime_type, "application/pgp-keys");
     ASSERT_STREQ(dec_msg->shortmsg, "pEp");
 
