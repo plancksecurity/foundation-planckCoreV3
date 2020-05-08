@@ -262,6 +262,8 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
 
     for (curr_ident = send_idents; curr_ident && curr_ident->ident; curr_ident = curr_ident->next) {
         status = update_identity(session, curr_ident->ident);
+        
+        // Poor Bob. He doesn't get to be a pEp user.
         if (strcmp(curr_ident->ident->user_id, bob_user_id.c_str()) == 0)
             continue;
 
@@ -324,7 +326,7 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
     hashmap[fenris_user_id] = false;
 
     // Number of messages we SHOULD be sending.
-    ASSERT_EQ(m_queue.size(), 4);
+    ASSERT_EQ(m_queue.size(), 3);
 
     for (vector<message*>::iterator it = m_queue.begin(); it != m_queue.end(); it++) {
         message* curr_sent_msg = *it;
@@ -368,7 +370,7 @@ TEST_F(KeyResetMessageTest, check_reset_key_and_notify) {
 
     // Make sure we have messages only to desired recips
     ASSERT_FALSE(hashmap[alice_user_id]);
-    ASSERT_TRUE(hashmap[bob_user_id]);
+    ASSERT_FALSE(hashmap[bob_user_id]); // non-pEp user
     ASSERT_TRUE(hashmap[carol_user_id]);
     ASSERT_FALSE(hashmap[dave_user_id]);
     ASSERT_TRUE(hashmap[erin_user_id]);
@@ -458,6 +460,40 @@ TEST_F(KeyResetMessageTest, check_reset_receive_revoked) {
     keylist = NULL;
 
     free(keylist);
+}
+
+TEST_F(KeyResetMessageTest, revoke_and_check_receive_message) {
+    pEp_identity* me = new_identity("inquisitor@darthmama.org", NULL, PEP_OWN_USERID, "INQUISITOR");
+    string inbox = slurp("test_mails/to_inquisitor_pgp.eml");
+    slurp_and_import_key(session, "test_keys/pub/inquisitor-0xA4728718_renewed_pub.asc");
+    slurp_and_import_key(session, "test_keys/priv/inquisitor-0xA4728718_renewed_priv.asc");
+
+    PEP_STATUS status = set_own_key(session, me, "8E8D2381AE066ABE1FEE509821BA977CA4728718");
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    status = key_reset(session, "8E8D2381AE066ABE1FEE509821BA977CA4728718", me);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    status = myself(session, me);
+    ASSERT_NE(me->fpr, nullptr);
+    ASSERT_STRNE(me->fpr, "8E8D2381AE066ABE1FEE509821BA977CA4728718");
+    ASSERT_EQ(m_queue.size() , 0);
+    m_queue.clear();
+    
+    message* enc_msg = NULL;
+    mime_decode_message(inbox.c_str(), inbox.size(), &enc_msg, NULL);
+    
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_decrypt_flags_t flags = 0;
+    PEP_rating rating;
+    
+    status = decrypt_message(session, enc_msg, &dec_msg, &keylist, &rating, &flags);
+    ASSERT_EQ(status, PEP_STATUS_OK);        
+    ASSERT_NE(dec_msg, nullptr);
+    ASSERT_EQ(m_queue.size() , 0);
+    m_queue.clear();
+    free_stringlist(keylist);
+    free_message(enc_msg);
+    free_message(dec_msg);
 }
 
 

@@ -4013,10 +4013,9 @@ static PEP_STATUS _decrypt_message(
     // 3. Check to see if the sender is a pEp user who used any of our revoked keys
     if (msg->from && !is_me(session, msg->from)) {
         bool pEp_peep = false;
-        pEp_identity* sender_ident = (msg->from->user_id ? msg->from : src->from);
 
-        if (!EMPTYSTR(sender_ident->user_id)) {
-            status = is_pEp_user(session, sender_ident, &pEp_peep);
+        if (!EMPTYSTR(msg->from->user_id)) {
+            status = is_pEp_user(session, msg->from, &pEp_peep);
             
             // If it's a pEp user, check if there was a revoked key used so we can notify
             if (pEp_peep) {
