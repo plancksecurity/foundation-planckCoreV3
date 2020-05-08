@@ -11,6 +11,7 @@
 #include "KeySync_fsm.h"
 #include "base64.h"
 #include "resource_id.h"
+#include "internal_format.h"
 
 #include <assert.h>
 #include <string.h>
@@ -985,13 +986,81 @@ static PEP_STATUS encrypt_PGP_inline(
 
     dst->longmsg = _ctext;
 
-    // longmsg_formatted is unsupported
-
-    // attachments are going unencrypted
-    bloblist_t *bl = bloblist_dup(src->attachments);
-    if (!bl)
+    dst->attachments = new_bloblist(NULL, 0, NULL, NULL);
+    if (!dst->attachments)
         return PEP_OUT_OF_MEMORY;
-    dst->attachments = bl;
+
+    bloblist_t *ad = dst->attachments;
+
+    if (!EMPTYSTR(src->longmsg_formatted)) {
+        status = encrypt_and_sign(session, keys, src->longmsg_formatted,
+                strlen(src->longmsg_formatted), &ctext, &csize);
+        if (status)
+            return status;
+
+        char *_ctext = realloc(ctext, csize + 1);
+        assert(_ctext);
+        if (!_ctext)
+            return PEP_OUT_OF_MEMORY;
+        _ctext[csize] = 0;
+
+        ad = bloblist_add(ad, _ctext, csize + 1, "text/html", NULL);
+        if (!ad)
+            return PEP_OUT_OF_MEMORY;
+
+        ad->disposition = PEP_CONTENT_DISP_INLINE;
+    }
+
+    if (src->attachments && src->attachments->value) {
+        bloblist_t *as;
+        for (as = src->attachments; as && as->value; as = as->next) {
+            char *value = NULL;
+            size_t size = 0;
+            if (flags & PEP_encrypt_elevated_attachments) {
+                status = encode_internal(as->value, as->size, as->mime_type,
+                        &value, &size);
+                if (status)
+                    return status;
+                if (!value) {
+                    value = as->value;
+                    size = as->size;
+                }
+            }
+            else {
+                value = as->value;
+                size = as->size;
+            }
+            status = encrypt_and_sign(session, keys, value, size, &ctext,
+                    &csize);
+            if (value != as->value)
+                free(value);
+            if (status)
+                return status;
+
+            char *_ctext = realloc(ctext, csize + 1);
+            assert(_ctext);
+            if (!_ctext)
+                return PEP_OUT_OF_MEMORY;
+            _ctext[csize] = 0;
+
+            size_t len = strlen(as->filename);
+            char *filename = malloc(len + 5);
+            assert(filename);
+            if (!filename)
+                return PEP_OUT_OF_MEMORY;
+
+            memcpy(filename, as->filename, len);
+            memcpy(filename + len, ".pgp", 5);
+
+            ad = bloblist_add(ad, _ctext, csize + 1, "application/octet-stream", filename);
+            free(filename);
+            filename = NULL;
+            if (!ad)
+                return PEP_OUT_OF_MEMORY;
+
+            ad->disposition = as->disposition;
+        }
+    }
 
     return PEP_STATUS_OK;
 }
@@ -2923,8 +2992,13 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                         if (!has_uri_prefix)
                             filename_uri = build_uri("file", pgp_filename);
 
-                        _m = bloblist_add(_m, ptext, psize, mime_type,
-                             (filename_uri ? filename_uri : pgp_filename));
+                        char *_filename = filename_uri ? filename_uri : pgp_filename;
+                        if (strcasecmp(_filename, "file://distribution.pEp") == 0)
+                            _m = bloblist_add(_m, ptext, psize, "application/pEp.distribution", _filename);
+                        else if (strcasecmp(_filename, "file://sync.pEp") == 0)
+                            _m = bloblist_add(_m, ptext, psize, "application/pEp.sync", _filename);
+                        else
+                            _m = bloblist_add(_m, ptext, psize, mime_type, _filename);
 
                         free(pgp_filename);
                         free(filename_uri);
@@ -2940,8 +3014,14 @@ static PEP_STATUS _decrypt_in_pieces(PEP_SESSION session,
                         if (!has_uri_prefix)
                             filename_uri = build_uri("file", filename);
 
-                        _m = bloblist_add(_m, ptext, psize, mime_type,
-                             (filename_uri ? filename_uri : filename));
+                        char *_filename = filename_uri ? filename_uri : filename;
+                        if (strcasecmp(_filename, "file://distribution.pEp") == 0)
+                            _m = bloblist_add(_m, ptext, psize, "application/pEp.distribution", _filename);
+                        else if (strcasecmp(_filename, "file://sync.pEp") == 0)
+                            _m = bloblist_add(_m, ptext, psize, "application/pEp.sync", _filename);
+                        else
+                            _m = bloblist_add(_m, ptext, psize, mime_type, _filename);
+
                         free(filename);
                         free(filename_uri);
                         if (_m == NULL)
@@ -3604,13 +3684,8 @@ static PEP_STATUS _decrypt_message(
         return status;
         
     /** Ok, we should be ready to decrypt. Try decrypt and verify first! **/
-    status = cryptotech[crypto].decrypt_and_verify(session, ctext,
-                                                   csize, dsig_text, dsig_size,
-                                                   &ptext, &psize, &_keylist,
-                                                   NULL);
-
-    if (status == PEP_DECRYPT_NO_KEY)
-        signal_Sync_event(session, Sync_PR_keysync, CannotDecrypt, NULL);
+    status = decrypt_and_verify(session, ctext, csize, dsig_text, dsig_size,
+            &ptext, &psize, &_keylist, NULL);
 
     if (status > PEP_CANNOT_DECRYPT_UNKNOWN)
         goto pEp_error;
@@ -3668,9 +3743,8 @@ static PEP_STATUS _decrypt_message(
                 }
                 break;
 
-            case PEP_enc_inline:
+            case PEP_enc_inline: {
                 status = PEP_STATUS_OK;
-                
                 _decrypt_in_pieces_status = _decrypt_in_pieces(session, src, &msg, ptext, psize);
             
                 switch (_decrypt_in_pieces_status) {
@@ -3685,12 +3759,47 @@ static PEP_STATUS _decrypt_message(
                         goto enomem;
                     default:
                         decrypt_status = _decrypt_in_pieces_status;
-                        break;
+                }
+
+                if (*flags & PEP_decrypt_flag_elevated_attachments) {
+                    char *value;
+                    size_t size;
+                    char *mime_type;
+                    const char *filename = NULL;
+                    status = decode_internal(ptext, psize, &value, &size, &mime_type);
+                    if (status)
+                        goto pEp_error;
+                    if (strcasecmp(mime_type, "application/pEp.sync") == 0)
+                        filename = "file://sync.pEp";
+                    else if (strcasecmp(mime_type, "application/pEp.distribution") == 0)
+                        filename = "file://distribution.pEp";
+                    else if (strcasecmp(mime_type, "application/pgp-keys") == 0)
+                        filename = "file://pEpkey.asc";
+                    else if (strcasecmp(mime_type, "application/pgp-signature") == 0)
+                        filename = "file://electronic_signature.asc";
+                    bloblist_t *bl = new_bloblist(value, size, mime_type, filename);
+                    free(mime_type);
+                    if (bl) {
+                        msg->attachments = bl;
+                        if (msg->longmsg != ptext)
+                            free(msg->longmsg);
+                        msg->longmsg = NULL;
+                        free(ptext);
+                        ptext = NULL;
+                        psize = 0;
+                    }
+                    else {
+                        free(value);
+                        status = PEP_OUT_OF_MEMORY;
+                        goto pEp_error;
+                    }
                 }
                 break;
+
             default:
                 // BUG: must implement more
                 NOT_IMPLEMENTED
+            }
         }
 
         if (status == PEP_OUT_OF_MEMORY)
@@ -4211,6 +4320,27 @@ static PEP_STATUS _decrypt_message(
         }
     }
     
+    // by convention
+
+    if (EMPTYSTR(msg->shortmsg) && EMPTYSTR(msg->longmsg) && EMPTYSTR(msg->longmsg_formatted)) {
+        free(msg->shortmsg);
+        msg->shortmsg = strdup("pEp");
+        assert(msg->shortmsg);
+        if (!msg->shortmsg)
+            goto enomem;
+
+        if (*flags & PEP_decrypt_flag_elevated_attachments) {
+            stringpair_t *entry = new_stringpair("pEp-auto-consume", "yes");
+            if (!entry)
+                goto enomem;
+            stringpair_list_t * spl = stringpair_list_add(msg->opt_fields, entry);
+            if (!spl)
+                goto enomem;
+            if (!msg->opt_fields)
+                msg->opt_fields = spl;
+        }
+    }
+
     // 5. Set up return values
     *dst = msg;
     *keylist = _keylist;
@@ -4267,7 +4397,6 @@ DYNAMIC_API PEP_STATUS decrypt_message(
 
     if (!(*flags & PEP_decrypt_flag_untrusted_server))
         *keylist = NULL;
-    //*keylist = NULL; // NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO!!!!!! This fucks up reencryption
     PEP_STATUS status = _decrypt_message(session, src, dst, keylist, rating, flags, NULL);
 
     message *msg = *dst ? *dst : src;
@@ -4332,7 +4461,7 @@ DYNAMIC_API PEP_STATUS own_message_private_key_details(
     message *dst = NULL;
     stringlist_t *keylist = NULL;
     PEP_rating rating;
-    PEP_decrypt_flags_t flags;
+    PEP_decrypt_flags_t flags = PEP_decrypt_flag_dont_trigger_sync;
 
     *ident = NULL;
 

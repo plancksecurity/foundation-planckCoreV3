@@ -30,14 +30,26 @@ PEP_STATUS base_decorate_message(
     if (!(msg && payload && size && type))
         return PEP_ILLEGAL_VALUE;
 
-    bloblist_t *bl = bloblist_add(msg->attachments, payload, size,
-            _base_type[type], "ignore_this_attachment.pEp");
-    if (bl == NULL) {
+    bloblist_t *bl;
+
+    switch (type) {
+        case BASE_SYNC:
+            bl = bloblist_add(msg->attachments, payload, size,
+                    _base_type[type], "sync.pEp");
+            break;
+        case BASE_KEYRESET:
+            bl = bloblist_add(msg->attachments, payload, size,
+                    _base_type[type], "distribution.pEp");
+            break;
+        default:
+            bl = bloblist_add(msg->attachments, payload, size,
+                    _base_type[type], "ignore_this_attachment.pEp");
+    }
+
+    if (bl == NULL)
         goto enomem;
-    }
-    else if (!msg->attachments) {
+    else if (!msg->attachments)
         msg->attachments = bl;
-    }
 
     if (fpr && fpr[0] != '\0') {
         char *sign;
