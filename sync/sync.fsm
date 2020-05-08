@@ -681,10 +681,15 @@ protocol Sync 1 {
             on Init {
                 if deviceGrouped
                     go Grouped;
+                go Sole;
             }
         }
+        
+        // recheck for being grouped regulary
+        state Sole timeout=on;
 
-        state Grouped {
+        // leave device group is shutting down sync so no check needed
+        state Grouped timeout=off {
             on UpdateTrust {
                 send TrustUpdate;
             }
@@ -694,7 +699,21 @@ protocol Sync 1 {
             }
         }
 
-        message TrustUpdate 2 {
+        // active mode and passive mode
+
+        message DefaultKeyUpdate 2 {
+        }
+
+        message TrustUpdate 3 {
+        }
+
+        // passive mode
+
+        message RequestDefaultKeyUpdate 4 {
+        }
+
+        message RequestTrustUpdate 5 {
+
         }
     }
 }
