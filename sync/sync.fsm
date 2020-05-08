@@ -690,30 +690,38 @@ protocol Sync 1 {
 
         // leave device group is shutting down sync so no check needed
         state Grouped timeout=off {
+
+            // UpdateTrust is an event being triggered:
+            // - when new Key material arrives
+            // - when a default key was set for a Communication Partner
+            // - when the Trust status is chaning for a Communication Partner
             on UpdateTrust {
                 send TrustUpdate;
             }
 
             on TrustUpdate {
+                if sameChallenge {
+                    // we'll ignore our own TrustUpdates
+                }
+                else {
 
+                }
             }
         }
 
         // active mode and passive mode
 
-        message DefaultKeyUpdate 2 {
-        }
-
-        message TrustUpdate 3 {
+        // actual default key is in fpr
+        // actual trust status is in comm_type
+        message TrustUpdate 2 {
+            field TID challenge;
+            field IdentityList commPartners;
         }
 
         // passive mode
 
-        message RequestDefaultKeyUpdate 4 {
-        }
-
-        message RequestTrustUpdate 5 {
-
+        message RequestTrustUpdate 3 {
+            field TID challenge;
         }
     }
 }
