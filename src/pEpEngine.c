@@ -4562,6 +4562,26 @@ DYNAMIC_API PEP_STATUS least_trust(
     return status;
 }
 
+static void sanitize_pgp_filename(char *filename)
+{
+    for (int i=0; filename[i]; ++i) {
+        switch(filename[i]) {
+            // path separators
+            case '/':
+            case ':':
+            case '\\':
+            // expansion operators
+            case '%':
+            case '$':
+            // code execution operators
+            case '`':
+            case '|':
+                filename[i] = '-';
+                break;
+        }
+    }
+}
+
 DYNAMIC_API PEP_STATUS decrypt_and_verify(
     PEP_SESSION session, const char *ctext, size_t csize,
     const char *dsigtext, size_t dsigsize,
@@ -4585,6 +4605,9 @@ DYNAMIC_API PEP_STATUS decrypt_and_verify(
 
     if (status == PEP_DECRYPT_NO_KEY)
         signal_Sync_event(session, Sync_PR_keysync, CannotDecrypt, NULL);
+
+    if (filename_ptr && *filename_ptr)
+        sanitize_pgp_filename(*filename_ptr);
 
     return status;
 }
