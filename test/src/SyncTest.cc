@@ -219,8 +219,8 @@ namespace {
                 );
                 if (status != PEP_STATUS_OK)
                     throw std::runtime_error((string("register sync status returned ") + tl_status_string(status)).c_str());
-                if (sync->sync_state.keysync.state != Sole)
-                    throw std::runtime_error((string("keysync.state was supposed to be ") + to_string((int)Sole) + " but was " + to_string((int)(sync->sync_state.keysync.state))).c_str());
+                if (sync->sync_state.keysync.state != KeySync_state_Sole)
+                    throw std::runtime_error((string("keysync.state was supposed to be ") + to_string((int)KeySync_state_Sole) + " but was " + to_string((int)(sync->sync_state.keysync.state))).c_str());
 
                 output_stream << "creating thread for sync\n";
                 sync_thread = new thread(Sync_Adapter::sync_thread, sync, &adapter);
