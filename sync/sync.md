@@ -513,6 +513,8 @@ the other Devices. Therefore, a Device, which is in state Sole, is sending a
 Beacon Message, so it can be detected by a second Sole Device or by Devices,
 which are already forming a Device Group.
 
+#### Relating Beacons
+
 To make it distinguishable, which Device is sending which Beacon, Beacons have
 the Field `challenge`. This field is of type `TID` (transaction ID), which is
 defined as UUID version 4 variant 1: a completely random UUID (see
@@ -522,6 +524,8 @@ The `challenge` is initialized with new random data whenever one of the two
 Stable States (Sole or Grouped) are being reached. It is a pseudonym for the
 Device. The initialization takes place by executing the Action
 `newChallengeAndNegotiationBase`.
+
+#### The Handshake
 
 By reading a Beacon, which does not deliver the own `challenge`, a Device can
 learn of a new other Device. Beacons are then answered with a
@@ -547,20 +551,112 @@ NegotiationOpen is opening a [distributed
 transaction](https://en.wikipedia.org/wiki/Distributed_transaction), the
 Negotiation.
 
-### Forming a Device Group
+### Forming a Device Group by two Sole Devices
 
 In case there is no Device Group existing yet, then two Sole devices can form
 one. There is an extra problem then: the symmetry of the situation. Which
-Device does have the role of sending out Beacons and which has the role to
-answer with a NegotiationRequest Message? This must be decided first. Hence
+Device does have the role of sending out Beacons and which has the role of
+answerng with a NegotiationRequest Message? This must be decided first. Hence
 there are two roles a Device can go into: the Offerer, who is sending the
 Beacon, and the Requester, who is answering with a NegotiationRequest Message.
 
-Both devices have to decide their role independently from each other, and it
+#### Deciding Roles
+
+Both Devices have to decide their role independently from each other, and it
 must be guaranteed that the decision is correspondent on both sides,
 respectively.
 
-To make this possible the criterion to decide this 
+To make this possible the criterion to decide whether a Device is Offerer or
+Requester there is the Condition `weAreOfferer`. The Device is Offerer if the
+`challenge` of the other Device is greater than its own `challenge`, otherwise
+it is Requester.
+
+The decision is being made on a Beacon Message arriving. Then the Device is
+knowing both Challenge TIDs.
+
+#### Starting the Negotiation as Offerer
+
+If the Device is Offerer and it gets a Beacon it may be the case that the
+former own Beacon timed out so the other Device couldn’t see it. Hence another
+Beacon is sent out to make sure the other Device can see that we’re Offerer.
+
+Being Offerer the Device is waiting for a NegotiationRequest coming from the
+Requester. When a NegotiationRequest is arriving the Device is checking if the
+own `challenge` was repeated. By doing so it is checking if the Requester is
+authenticated and can read the Channel. In case it is storing the `negotiation`
+TID for further use. From then on it is basing its communication on this TID
+while it is in this Negotiation. It tells this to the other Device by sending
+the NegotiationOpen Message repeating the `response`. There is no Action to
+repeat the `response`, because repeating what is in the I/O Buffer is the
+default. Then it is transitioning to the State HandshakingOfferer, which is a
+Transitional State to start the Handshake process.
+
+#### Starting the Negotiation as Requester
+
+If the Device is Sole and Requester the flag `is_grouped` is cleared in the I/O
+Buffer by executing `tellWeAreNotGrouped` to signal its Sole State to the
+Offerer. Executing `useOwnResponse` is copying the own Response TID into the
+I/O Buffer.
+
+Executing the Action `openNegotiation` is calculating the Negotiation TID as
+Challenge of the other Device XOR Negotiation Base. By doing so each possible
+partner is having its own Negotiation ID in case multiple Sole Devices are
+active at the same time. Then the Message NegotiationRequest is being sent out.
+
+After sending the NegotiationRequest the value of the `challenge` in the I/O
+Buffer is reverted to the own Challenge TID to answer other Beacons, which may
+arrive from other Devices.
+
+The Requester is then waiting for the NegotiationOpen Message from the Offerer.
+It is checking if the `response` was correctly repeated. By doing so it is
+checking if the Offerer is authenticated and can read the Channel. The
+Requester is storing the `negotiation` TID for further use. The Device is
+transitioning to the Transitional State HandshakingRequester to start the
+Handshake process.
+
+#### Handshaking with two Sole Devices
+
+Each Device is waiting for two Events, which both must happen: the User
+must Accept the Handshake on the Offerer Device and the User must Accept the
+Handshake on the Requester Device. Only if both Accepts where received the
+Handshake is accpeted. 
+
+The Offerer is sending the Message CommitAcceptOfferer in case it gets
+signalled Accept from the User, so the Requester gets informed about this.
+Accordingly, the Requester is sending CommitAcceptRequester in case it is
+getting signalled Accept from its User.
+
+The sending of CommitAcceptOfferer and CommitAcceptRequester are not arbitrary
+in sequence, though. To keep the wanted asymmetry the Offerer is only sending
+CommitAcceptOfferer after it was receiving CommitAcceptRequester AND it was
+signalled the Accept Event by the User. The Requester is sending
+CommitAcceptRequester immediately after it got signalled the Accept Event from
+the User. As a result the CommitAcceptRequester Message is always sent before
+the CommitAcceptOfferer is being sent.
+
+The Negotiation is considered committed with result Accept if and only if both
+Commit Messages where received. This is fulfilling the pattern of the
+[Two-phase commit
+protocol](https://en.wikipedia.org/wiki/Two-phase_commit_protocol).
+
+#### In case of Reject or Cancel
+
+If the User selects Reject on Offerer or Requester, then the CommitReject
+Message is being sent and p≡p Sync is being disabled.  If the CommitReject
+Message is received because the User selected Reject on the other Device, p≡p
+Sync is disabled, too.
+
+The Negotiation is considered committed with result Reject if Offerer OR
+Requester sent CommitReject. This is a derivate of the Two-phase commit
+protocol.
+
+In case the User selects Cancel then the Rollback Message is being sent, and
+the Device is transitioned to State Sole. The Negotiation is then cancelled,
+but a next Negotiation can happen after this.  In case a Rollback Message is
+being received then the Device is transitioned to State Sole. The Negotiation
+is then cancelled, but a next Negotiation can happen after this.
+
+The Rollback is fulfilling the pattern of the Two-phase commit protocol.
 
 ### Joining an already existing Device Group
 
