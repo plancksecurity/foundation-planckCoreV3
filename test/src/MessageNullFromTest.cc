@@ -42,16 +42,16 @@ namespace {
 
             void import_alice_pub() {
                 const string alice_pub_key = slurp("test_keys/pub/pep-test-alice-0x6FF00E97_pub.asc");
-                PEP_STATUS status = import_key(session, alice_pub_key.c_str(), alice_pub_key.length(), NULL);
+                PEP_STATUS status = import_key(session, alice_pub_key.c_str(), alice_pub_key.length(), NULL, NULL, NULL);
                 assert(status == PEP_TEST_KEY_IMPORT_SUCCESS);
             }
 
             void import_bob_pair_and_set_own() {
                 const string bob_pub_key = slurp("test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
                 const string bob_priv_key = slurp("test_keys/priv/pep-test-bob-0xC9C2EE39_priv.asc");
-                PEP_STATUS status = import_key(session, bob_pub_key.c_str(), bob_pub_key.length(), NULL);
+                PEP_STATUS status = import_key(session, bob_pub_key.c_str(), bob_pub_key.length(), NULL, NULL, NULL);
                 assert(status == PEP_TEST_KEY_IMPORT_SUCCESS);
-                status = import_key(session, bob_priv_key.c_str(), bob_priv_key.length(), NULL);
+                status = import_key(session, bob_priv_key.c_str(), bob_priv_key.length(), NULL, NULL, NULL);
                 assert(status == PEP_TEST_KEY_IMPORT_SUCCESS);
             }
 

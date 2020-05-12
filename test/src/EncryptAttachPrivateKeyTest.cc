@@ -118,35 +118,35 @@ TEST_F(EncryptAttachPrivateKeyTest, check_encrypt_attach_private_key) {
     // key for main own user
     // 8AB616A3BD51DEF714B5E688EFFB540C3276D2E5
     input_key = slurp("test_keys/pub/priv-key-import-test-main_0-0x3276D2E5_pub.asc");
-    status = import_key(session, input_key.c_str(), input_key.length(), NULL);
+    status = import_key(session, input_key.c_str(), input_key.length(), NULL, NULL, NULL);
     ASSERT_EQ(status, PEP_TEST_KEY_IMPORT_SUCCESS);
 
     input_key = slurp("test_keys/priv/priv-key-import-test-main_0-0x3276D2E5_priv.asc");
-    status = import_key(session, input_key.c_str(), input_key.length(), NULL);
+    status = import_key(session, input_key.c_str(), input_key.length(), NULL, NULL, NULL);
     ASSERT_EQ(status, PEP_TEST_KEY_IMPORT_SUCCESS);
 
     // key with same address and user_id (initially untrusted, then trusted)
     // 359DD8AC87D1F5E4304D08338D7185F180C8CD87
     input_key = slurp("test_keys/pub/priv-key-import-test-main_1-0x80C8CD87_pub.asc");
-    status = import_key(session, input_key.c_str(), input_key.length(), NULL);
+    status = import_key(session, input_key.c_str(), input_key.length(), NULL, NULL, NULL);
     ASSERT_EQ(status, PEP_TEST_KEY_IMPORT_SUCCESS);
 
     // key with same address and to have different (non-aliased) user_id (initially untrusted, then trusted)
     // B044B83639E292283A3F6E14C2E64B520B74809C
     input_key = slurp("test_keys/pub/priv-key-import-test-main_2-0x0B74809C_pub.asc");
-    status = import_key(session, input_key.c_str(), input_key.length(), NULL);
+    status = import_key(session, input_key.c_str(), input_key.length(), NULL, NULL, NULL);
     ASSERT_EQ(status, PEP_TEST_KEY_IMPORT_SUCCESS);
 
     // key with different address to have same user_id (initially untrusted, then trusted)
     // C52911EBA0D34B0F549594A15A7A363BD11252C9
     input_key = slurp("test_keys/pub/priv-key-import-test-other_0-0xD11252C9_pub.asc");
-    status = import_key(session, input_key.c_str(), input_key.length(), NULL);
+    status = import_key(session, input_key.c_str(), input_key.length(), NULL, NULL, NULL);
     ASSERT_EQ(status, PEP_TEST_KEY_IMPORT_SUCCESS);
 
     // key with different address to have different user_id (initially untrusted, then trusted)
     // 567212EFB8A3A76B1D32B9565F45BEA9C785F20A
     input_key = slurp("test_keys/pub/priv-key-import-test-other_1-0xC785F20A_pub.asc");
-    status = import_key(session, input_key.c_str(), input_key.length(), NULL);
+    status = import_key(session, input_key.c_str(), input_key.length(), NULL, NULL, NULL);
     ASSERT_EQ(status, PEP_TEST_KEY_IMPORT_SUCCESS);
     output_stream << "Done!" << endl << endl;
 

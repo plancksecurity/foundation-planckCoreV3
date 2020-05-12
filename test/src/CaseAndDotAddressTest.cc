@@ -98,7 +98,7 @@ TEST_F(CaseAndDotAddressTest, check_case_and_dot_address) {
     const char* alice_email_dotless = "peptestalice@pep-project.org";
     const char* alice_email_case_and_dot = "PE.p.teS.t.ALICE@pep-project.OrG";
 
-    PEP_STATUS statuspub = import_key(session, alice_pub_key.c_str(), alice_pub_key.length(), NULL);
+    PEP_STATUS statuspub = import_key(session, alice_pub_key.c_str(), alice_pub_key.length(), NULL, NULL, NULL);
     ASSERT_EQ(statuspub , PEP_TEST_KEY_IMPORT_SUCCESS);
 
     pEp_identity * alice_id = new_identity("pep.test.alice@pep-project.org", "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97", user_id, "Alice Test");

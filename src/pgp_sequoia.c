@@ -2253,7 +2253,9 @@ static unsigned int count_keydata_parts(const char* key_data, size_t size) {
  }
 
 PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
-                              size_t size, identity_list **private_idents)
+                               size_t size, identity_list **private_idents,
+                               stringlist_t** imported_keys,
+                               uint64_t* changed_key_index)
 {
     PEP_STATUS status = PEP_NO_KEY_IMPORTED;
     pgp_error_t err;
@@ -2385,7 +2387,9 @@ PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
 }
 
 PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
-                              size_t size, identity_list **private_idents)
+                              size_t size, identity_list **private_idents,
+                              stringlist_t** imported_keys,
+                              uint64_t* changed_key_index)
 {
 
     const char* pgp_begin = "-----BEGIN PGP";
@@ -2404,7 +2408,8 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
 
     unsigned int keycount = count_keydata_parts(key_data, size);
     if (keycount < 2)
-        return(_pgp_import_keydata(session, key_data, size, private_idents));
+        return(_pgp_import_keydata(session, key_data, size, private_idents,
+                                   imported_keys, changed_key_index));
 
     unsigned int i;
     const char* curr_begin;
@@ -2428,7 +2433,12 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
         else
             curr_size = (key_data + size) - curr_begin;
 
-        PEP_STATUS curr_status = _pgp_import_keydata(session, curr_begin, curr_size, private_idents);
+        PEP_STATUS curr_status = _pgp_import_keydata(session, 
+                                                     curr_begin, 
+                                                     curr_size, 
+                                                     private_idents,
+                                                     imported_keys,
+                                                     changed_key_index);
         if (private_idents && *private_idents) {
             if (!collected_idents)
                 collected_idents = *private_idents;

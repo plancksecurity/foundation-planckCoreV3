@@ -102,8 +102,8 @@ TEST_F(ExternalRevokeTest, check_external_revoke) {
     ASSERT_NE(fenris_pub_key.length() , 0);
     ASSERT_NE(fenris_priv_key.length() , 0);
 
-    PEP_STATUS statuspub = import_key(session, fenris_pub_key.c_str(), fenris_pub_key.length(), NULL);
-    PEP_STATUS statuspriv = import_key(session, fenris_priv_key.c_str(), fenris_priv_key.length(), NULL);
+    PEP_STATUS statuspub = import_key(session, fenris_pub_key.c_str(), fenris_pub_key.length(), NULL, NULL, NULL);
+    PEP_STATUS statuspriv = import_key(session, fenris_priv_key.c_str(), fenris_priv_key.length(), NULL, NULL, NULL);
     ASSERT_EQ(statuspub , PEP_TEST_KEY_IMPORT_SUCCESS);
     ASSERT_EQ(statuspriv , PEP_TEST_KEY_IMPORT_SUCCESS);
 

@@ -99,35 +99,35 @@ namespace {
                 const string own_recip_priv_key = slurp("test_keys/priv/reencrypt_recip_0-0xB1A2BE89_priv.asc");
                 const string own_recip_2_pub_key = slurp("test_keys/pub/reencrypt_recip_numero_deux_test_0-0xD6E75FFF_pub.asc");
                 const string own_recip_2_priv_key = slurp("test_keys/priv/reencrypt_recip_numero_deux_test_0-0xD6E75FFF_priv.asc");
-                status = import_key(session, own_recip_pub_key.c_str(), own_recip_pub_key.length(), NULL);
+                status = import_key(session, own_recip_pub_key.c_str(), own_recip_pub_key.length(), NULL, NULL, NULL);
                 ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
-                status = import_key(session, own_recip_priv_key.c_str(), own_recip_priv_key.length(), NULL);
+                status = import_key(session, own_recip_priv_key.c_str(), own_recip_priv_key.length(), NULL, NULL, NULL);
                 ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
-                status = import_key(session, own_recip_2_pub_key.c_str(), own_recip_2_pub_key.length(), NULL);
+                status = import_key(session, own_recip_2_pub_key.c_str(), own_recip_2_pub_key.length(), NULL, NULL, NULL);
                 ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
-                status = import_key(session, own_recip_2_priv_key.c_str(), own_recip_2_priv_key.length(), NULL);
+                status = import_key(session, own_recip_2_priv_key.c_str(), own_recip_2_priv_key.length(), NULL, NULL, NULL);
                 ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
 
                 // Import sender key
                 const string sender_pub_key = slurp("test_keys/pub/reencrypt_sender_0-0x3B508C8E_pub.asc");
-                status = import_key(session, sender_pub_key.c_str(), sender_pub_key.length(), NULL);
+                status = import_key(session, sender_pub_key.c_str(), sender_pub_key.length(), NULL, NULL, NULL);
                 ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
                 
                 // Import other recips
                 const string recip_0_pub_key = slurp("test_keys/pub/reencrypt_other_recip_0-0x1F4A5986_pub.asc");
-                status = import_key(session, recip_0_pub_key.c_str(), recip_0_pub_key.length(), NULL);
+                status = import_key(session, recip_0_pub_key.c_str(), recip_0_pub_key.length(), NULL, NULL, NULL);
                 ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
                 // we're leaving recip_1 out for the Hell of it - D3886D0DF75113BE2799C9374D6B99FE0F8273D8    
                 const string recip_2_pub_key = slurp("test_keys/pub/reencrypt_other_recip_2-0x1EDBE691_pub.asc");
-                status = import_key(session, recip_2_pub_key.c_str(), recip_2_pub_key.length(), NULL);
+                status = import_key(session, recip_2_pub_key.c_str(), recip_2_pub_key.length(), NULL, NULL, NULL);
                 ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
 
                 // Import extra keys
                 const string pub_extra_key_0 = slurp("test_keys/pub/reencrypt_extra_keys_0-0x828AA789_pub.asc");    
                 const string pub_extra_key_1 = slurp("test_keys/pub/reencrypt_extra_keys_1-0x8B026AEC_pub.asc");
-                status = import_key(session, pub_extra_key_0.c_str(), pub_extra_key_0.length(), NULL);
+                status = import_key(session, pub_extra_key_0.c_str(), pub_extra_key_0.length(), NULL, NULL, NULL);
                 ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
-                status = import_key(session, pub_extra_key_1.c_str(), pub_extra_key_1.length(), NULL);
+                status = import_key(session, pub_extra_key_1.c_str(), pub_extra_key_1.length(), NULL, NULL, NULL);
                 ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
 
                 output_stream << "Keys imported." << endl;

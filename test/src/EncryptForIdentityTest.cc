@@ -98,14 +98,14 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     const string gabrielle_pub_key = slurp("test_keys/pub/pep-test-gabrielle-0xE203586C_pub.asc");
     const string bella_pub_key = slurp("test_keys/pub/pep.test.bella-0xAF516AAE_pub.asc");
 
-    PEP_STATUS statuspub = import_key(session, alice_pub_key.c_str(), alice_pub_key.length(), NULL);
-    PEP_STATUS statuspriv = import_key(session, alice_priv_key.c_str(), alice_priv_key.length(), NULL);
+    PEP_STATUS statuspub = import_key(session, alice_pub_key.c_str(), alice_pub_key.length(), NULL, NULL, NULL);
+    PEP_STATUS statuspriv = import_key(session, alice_priv_key.c_str(), alice_priv_key.length(), NULL, NULL, NULL);
     ASSERT_EQ(statuspub, PEP_TEST_KEY_IMPORT_SUCCESS);
     ASSERT_EQ(statuspriv, PEP_TEST_KEY_IMPORT_SUCCESS);
 
-    statuspub = import_key(session, gabrielle_pub_key.c_str(), gabrielle_pub_key.length(), NULL);
+    statuspub = import_key(session, gabrielle_pub_key.c_str(), gabrielle_pub_key.length(), NULL, NULL, NULL);
     ASSERT_EQ(statuspub, PEP_TEST_KEY_IMPORT_SUCCESS);
-    statuspub = import_key(session, bella_pub_key.c_str(), bella_pub_key.length(), NULL);
+    statuspub = import_key(session, bella_pub_key.c_str(), bella_pub_key.length(), NULL, NULL, NULL);
     ASSERT_EQ(statuspub, PEP_TEST_KEY_IMPORT_SUCCESS);
 
     const char* alice_fpr = "4ABE3AAF59AC32CFE4F86500A9411D176FF00E97";

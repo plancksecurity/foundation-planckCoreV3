@@ -93,7 +93,7 @@ TEST_F(RevocationTest, check_revocation) {
     // Read the key.
     const string key = slurp("test_keys/priv/pep-test-linda-0xDCD555B6055ADE22_priv.asc");
 
-    PEP_STATUS status = import_key(session, key.c_str(), key.length(), NULL);
+    PEP_STATUS status = import_key(session, key.c_str(), key.length(), NULL, NULL, NULL);
     ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
 
     pEp_identity* pre = new_identity("linda@example.org", NULL, NULL, NULL);
@@ -104,7 +104,7 @@ TEST_F(RevocationTest, check_revocation) {
     // Read in the revocation certificate.
     const string rev = slurp("test_keys/priv/pep-test-linda-0xDCD555B6055ADE22.rev");
 
-    status = import_key(session, rev.c_str(), rev.length(), NULL);
+    status = import_key(session, rev.c_str(), rev.length(), NULL, NULL, NULL);
     ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
 
     pEp_identity* post = new_identity("linda@example.org", NULL, NULL, NULL);

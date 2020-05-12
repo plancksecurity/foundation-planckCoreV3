@@ -81,6 +81,6 @@ TEST_F(Engine715Test, check_engine_715) {
     // This is just a dummy test case. The convention is check_whatever_you_are_checking
     // so for multiple test cases in a suite, be more explicit ;)
     string keyfile = slurp("test_keys/t001.asc");
-    PEP_STATUS status = import_key(session, keyfile.c_str(), keyfile.size(), NULL);
+    PEP_STATUS status = import_key(session, keyfile.c_str(), keyfile.size(), NULL, NULL, NULL);
     ASSERT_EQ(status, PEP_KEY_IMPORTED);
 }

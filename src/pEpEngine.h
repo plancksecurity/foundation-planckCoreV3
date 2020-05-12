@@ -895,10 +895,17 @@ DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr);
 // import_key() - import key from data
 //
 //  parameters:
-//      session (in)            session handle
-//      key_data (in)           key data, i.e. ASCII armored OpenPGP key
-//      size (in)               amount of data to handle
-//      private_keys (out)      list of private keys that have been imported
+//      session (in)                session handle
+//      key_data (in)               key data, i.e. ASCII armored OpenPGP key
+//      size (in)                   amount of data to handle
+//      private_keys (out)          list of identities containing the 
+//                                  private keys that have been imported
+//      imported_keys (out)         list of actual keys imported
+//      changed_key_index (out)     bitvector - corresponds to the first 64 keys
+//                                  imported. If nth bit is set, import changed a
+//                                  key corresponding to the nth element in
+//                                  imported keys (i.e. key was in DB and was
+//                                  changed by import)
 //
 //  return value:
 //      PEP_STATUS_OK = 0       key was successfully imported
@@ -913,7 +920,9 @@ DYNAMIC_API PEP_STATUS import_key(
         PEP_SESSION session,
         const char *key_data,
         size_t size,
-        identity_list **private_keys
+        identity_list **private_keys,
+        stringlist_t** imported_keys,
+        uint64_t* changed_key_index        
     );
 
 

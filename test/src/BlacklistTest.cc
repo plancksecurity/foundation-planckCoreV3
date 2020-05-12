@@ -152,7 +152,7 @@ TEST_F(BlacklistTest, check_blacklist) {
     /* FIXME: put in automated test stuff (N.B. only gdb mem examination to this point to get
      *        fix in */
     /* import it into pep */
-    PEP_STATUS status7 = import_key(session, keytext.c_str(), keytext.length(), NULL);
+    PEP_STATUS status7 = import_key(session, keytext.c_str(), keytext.length(), NULL, NULL, NULL);
 
     const char* bl_fpr_1 = "279765A2FEB5B7C731B861D93E4CEFD9F7AF4684";
     const char* bl_fpr_2 = "634FAC4417E9B2A5DC2BD4AAC4AEEBBE7E62701B";
@@ -229,7 +229,7 @@ TEST_F(BlacklistTest, check_blacklist) {
     free_message(msg23);
 
     const string keytext2 = slurp("test_keys/pub/blacklisted_pub2.asc");
-    PEP_STATUS status14 = import_key(session, keytext2.c_str(), keytext2.length(), NULL);
+    PEP_STATUS status14 = import_key(session, keytext2.c_str(), keytext2.length(), NULL, NULL, NULL);
 
     pEp_identity* blacklisted_identity2 = new_identity("blacklistedkeys@kgrothoff.org",
                                                        bl_fpr_2,

@@ -96,7 +96,7 @@ TEST_F(LookupTest, check_lookup) {
     const char* username = "SuperDuperHans";
     const string pub_key = slurp("test_keys/pub/hans@xn--bcher-kva.tld_-0x08AD6E9400D38894_pub.asc");
 
-    PEP_STATUS statuspub = import_key(session, pub_key.c_str(), pub_key.length(), NULL);
+    PEP_STATUS statuspub = import_key(session, pub_key.c_str(), pub_key.length(), NULL, NULL, NULL);
     ASSERT_EQ(statuspub , PEP_TEST_KEY_IMPORT_SUCCESS);
 
     pEp_identity* hans = new_identity(expected_address, NULL, userid, username);

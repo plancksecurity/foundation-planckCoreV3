@@ -98,10 +98,10 @@ TEST_F(LeastCommonDenomColorTest, check_least_common_denom_color) {
     const string keytextkey3 = slurp("test_keys/pub/pep.never.me.test-0x79C11D1D_pub.asc");
     const string keytextkey4 = slurp("test_keys/priv/pep.never.me.test-0x79C11D1D_priv.asc");
 
-    PEP_STATUS statuskey1 = import_key(session, keytextkey1.c_str(), keytextkey1.length(), NULL);
-    PEP_STATUS statuskey2 = import_key(session, keytextkey2.c_str(), keytextkey2.length(), NULL);
-    PEP_STATUS statuskey3 = import_key(session, keytextkey3.c_str(), keytextkey3.length(), NULL);
-    PEP_STATUS statuskey4 = import_key(session, keytextkey4.c_str(), keytextkey4.length(), NULL);
+    PEP_STATUS statuskey1 = import_key(session, keytextkey1.c_str(), keytextkey1.length(), NULL, NULL, NULL);
+    PEP_STATUS statuskey2 = import_key(session, keytextkey2.c_str(), keytextkey2.length(), NULL, NULL, NULL);
+    PEP_STATUS statuskey3 = import_key(session, keytextkey3.c_str(), keytextkey3.length(), NULL, NULL, NULL);
+    PEP_STATUS statuskey4 = import_key(session, keytextkey4.c_str(), keytextkey4.length(), NULL, NULL, NULL);
 
     pEp_identity * sender = new_identity("pep.never.me.test@kgrothoff.org", NULL, "TOFU_pep.never.me.test@kgrothoff.org", "pEp Never Me Test");
     sender->me = false;

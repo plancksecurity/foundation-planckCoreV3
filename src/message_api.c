@@ -1575,8 +1575,13 @@ bool import_attached_keys(
                     continue;
                 }
             }
+            
+            // FIXME: free these guys if we choke, yeah?
             identity_list *local_private_idents = NULL;
-            PEP_STATUS import_status = import_key(session, blob_value, blob_size, &local_private_idents);
+            stringlist_t* imported_keylist = NULL;
+            uint64_t changed_keys = 0;
+            PEP_STATUS import_status = import_key(session, blob_value, blob_size, &local_private_idents,
+                                                  &imported_keylist, &changed_keys);
             bloblist_t* to_delete = NULL;
             switch (import_status) {
                 case PEP_NO_KEY_IMPORTED:
@@ -3408,7 +3413,10 @@ static bool import_header_keys(PEP_SESSION session, message* src) {
     bloblist_t* the_key = base64_str_to_binary_blob(start_key, length);
     if (!the_key)
         return false;
-    PEP_STATUS status = import_key(session, the_key->value, the_key->size, NULL);
+    stringlist_t* imported_keys = NULL;
+    uint64_t changed_keys = 0;    
+    PEP_STATUS status = import_key(session, the_key->value, the_key->size, NULL,
+                                   &imported_keys, &changed_keys);
     free_bloblist(the_key);
     if (status == PEP_STATUS_OK || status == PEP_KEY_IMPORTED)
         return true;

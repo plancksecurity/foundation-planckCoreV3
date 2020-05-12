@@ -100,12 +100,12 @@ TEST_F(MessageTwoPointOhTest, check_message_two_point_oh) {
     const string carol_pub_key = slurp("test_keys/pub/pep-test-carol-0x42A85A42_pub.asc");
     const string carol_priv_key = slurp("test_keys/priv/pep-test-carol-0x42A85A42_priv.asc");
 
-    PEP_STATUS statuspub = import_key(session, alice_pub_key.c_str(), alice_pub_key.length(), NULL);
-    PEP_STATUS statuspriv = import_key(session, alice_priv_key.c_str(), alice_priv_key.length(), NULL);
+    PEP_STATUS statuspub = import_key(session, alice_pub_key.c_str(), alice_pub_key.length(), NULL, NULL, NULL);
+    PEP_STATUS statuspriv = import_key(session, alice_priv_key.c_str(), alice_priv_key.length(), NULL, NULL, NULL);
     ASSERT_EQ(statuspub , PEP_TEST_KEY_IMPORT_SUCCESS);
     ASSERT_EQ(statuspriv , PEP_TEST_KEY_IMPORT_SUCCESS);
-    statuspub = import_key(session, carol_pub_key.c_str(), carol_pub_key.length(), NULL);
-    statuspriv = import_key(session, carol_priv_key.c_str(), carol_priv_key.length(), NULL);
+    statuspub = import_key(session, carol_pub_key.c_str(), carol_pub_key.length(), NULL, NULL, NULL);
+    statuspriv = import_key(session, carol_priv_key.c_str(), carol_priv_key.length(), NULL, NULL, NULL);
     ASSERT_EQ(statuspub , PEP_TEST_KEY_IMPORT_SUCCESS);
     ASSERT_EQ(statuspriv , PEP_TEST_KEY_IMPORT_SUCCESS);
 
