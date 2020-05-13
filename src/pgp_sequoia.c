@@ -361,9 +361,23 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                                  "CREATE INDEX IF NOT EXISTS userids_index\n"
                                  "  ON userids (userid COLLATE EMAIL, primary_key)\n",
                                  NULL, NULL, NULL);
+
     if (sqlite_result != SQLITE_OK)
         ERROR_OUT(NULL, PEP_INIT_CANNOT_OPEN_DB,
                   "creating userids table: %s",
+                  sqlite3_errmsg(session->key_db));
+
+    sqlite_result = sqlite3_exec(session->key_db,
+                                 "CREATE TABLE IF NOT EXISTS ascii_import_hashes (\n"
+                                 "   fpr TEXT PRIMARY KEY NOT NULL,\n"
+                                 "   last_import_hash INT,\n"
+                                 "   UNIQUE(fpr, last_import_hash)\n"
+                                 ");\n",
+                                 NULL, NULL, NULL);
+                                 
+    if (sqlite_result != SQLITE_OK)
+        ERROR_OUT(NULL, PEP_INIT_CANNOT_OPEN_DB,
+                  "creating ascii import hashes table: %s",
                   sqlite3_errmsg(session->key_db));
 
     sqlite_result
@@ -482,6 +496,24 @@ PEP_STATUS pgp_init(PEP_SESSION session, bool in_first)
                              -1, &session->sq_sql.delete_keypair, NULL);
     assert(sqlite_result == SQLITE_OK);
 
+
+    // Extra stuff to make the engine happy for the purposes of detecting 
+    // possibly-changed key *files*. This is ONLY a heuristic
+    sqlite_result
+        = sqlite3_prepare_v2(session->key_db,
+                             "INSERT OR REPLACE INTO ascii_import_hashes"
+                             "    (fpr, last_import_hash)"
+                             " VALUES (?, ?)",
+                             -1, &session->sq_sql.insert_ascii_import_hash, NULL);
+    assert(sqlite_result == SQLITE_OK);
+
+    sqlite_result
+        = sqlite3_prepare_v2(session->key_db,
+                             "select last_import_hash from ascii_import_hashes"
+                             "    where fpr = ?1",
+                             -1, &session->sq_sql.get_ascii_import_hash_for_fpr, NULL);
+    assert(sqlite_result == SQLITE_OK);
+    
     session->policy = pgp_null_policy ();
     if (! session->policy)
         ERROR_OUT(NULL, PEP_OUT_OF_MEMORY,
@@ -2232,6 +2264,135 @@ PEP_STATUS pgp_delete_keypair(PEP_SESSION session, const char *fpr_raw)
     return status;
 }
 
+// Fun stuff for import key and heuristics follows...
+//
+
+// start detect possibly changed key stuff
+
+// NON-CRYPTOGRAPHIC HASH: take note - this is djb2 with XOR and is NEVER used 
+// by sequoia or for any cryptographic purpose. We are using this to determine 
+// if two ascii-armored keys for a given primary key are different, and that 
+// is all. This is engine internal and our way of heuristically and cheaply 
+// determining if a given key has *possibly* changed - we don't mind false 
+// positives.
+static uint32_t _non_crypto_hash_djb2(const char* str, const char* end) {
+    uint32_t hash = 5381; // will also be returned if !str. That's OK.
+    int c;
+
+    while ((str < end) && (c = *str++))
+        hash = ((hash << 5) + hash) ^ c; // hash(i - 1) * 33 ^ str[i]
+
+    return hash;
+} 
+
+static void _trim_ascii_key(const char* keystring, const char** start, 
+                            const char** stop) {
+    *start = NULL;
+    *stop = NULL;
+    
+    const char* header = "-----BEGIN PGP PUBLIC KEY BLOCK-----";
+    const char* footer = "-----END PGP PUBLIC KEY BLOCK-----";    
+    const int _KEY_HEADER_LEN = 36; // strlen(header)
+    const char* begin = strstr(keystring, header);
+    if (!begin)
+        return;
+    begin = header + _KEY_HEADER_LEN;
+    const char* end = strstr(begin, footer);
+    if (!end)
+        return;
+    while (isspace(*begin) && begin < end) {
+        begin++;
+    }
+    if (begin == end)
+        return;
+    while (isspace(*end) && end > begin) {
+        end--;
+    }
+    if (end == begin)
+        return;
+    *start = begin;
+    *stop = end + 1;        
+}
+
+static PEP_STATUS _has_hash_changed(PEP_SESSION session,
+                                    uint32_t test_hash, 
+                                    const char* fpr, 
+                                    bool* differs) {
+
+    bool changed = false;
+    sqlite3_stmt* stmt = session->sq_sql.get_ascii_import_hash_for_fpr;
+    sqlite3_bind_text(stmt, 1, 
+                      fpr, -1, SQLITE_STATIC);
+    int sqlite_result = sqlite3_step(stmt);                  
+
+    uint32_t old_hash = 0;
+    
+    PEP_STATUS status = PEP_STATUS_OK;
+    
+    switch (sqlite_result) {
+        case SQLITE_ROW:
+            old_hash = (uint32_t) sqlite3_column_int(stmt, 0);
+            changed = (old_hash != test_hash);
+            break;
+        case SQLITE_DONE:
+            // Not yet in database. Whee!
+            changed = true;
+            break;
+        default:
+           ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
+                     "stepping: %s", sqlite3_errmsg(session->key_db));
+    }
+                    
+    *differs = changed;
+                                        
+out:
+    sqlite3_reset(stmt);
+    T(" -> %s", pEp_status_to_string(status));
+    return status;
+}
+
+static PEP_STATUS _update_ascii_hash_for_key(PEP_SESSION session, 
+                                             uint32_t new_hash, 
+                                             const char* fpr) {
+    PEP_STATUS status = PEP_STATUS_OK;
+    sqlite3_stmt* stmt = session->sq_sql.insert_ascii_import_hash;
+    sqlite3_bind_text(stmt, 1, fpr, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 2, new_hash);                      
+    int sqlite_result = sqlite3_step(stmt);
+    sqlite3_reset(stmt);    
+    if (sqlite_result != SQLITE_DONE)
+        ERROR_OUT(NULL, PEP_UNKNOWN_ERROR,
+                  "Updating hash: %s", sqlite3_errmsg(session->key_db));
+
+out:
+    T(" -> %s", pEp_status_to_string(status));
+    return status;    
+}
+
+static PEP_STATUS _detect_and_update_changed_ascii_key(PEP_SESSION session,
+                                                       const char* keydata,
+                                                       const char* fpr,
+                                                       bool* changed) {
+    const char* keydata_begin = NULL;
+    const char* keydata_end = NULL;
+    
+    _trim_ascii_key(keydata, &keydata_begin, &keydata_end);
+    if (!(keydata_begin && keydata_end))
+        return PEP_ILLEGAL_VALUE;
+    
+    uint32_t hashval = _non_crypto_hash_djb2(keydata_begin, keydata_end);    
+    PEP_STATUS status = _has_hash_changed(session, hashval, fpr, changed);
+
+    if (status != PEP_STATUS_OK)
+        return status;
+    
+    if (*changed)
+        status = _update_ascii_hash_for_key(session, hashval, fpr);    
+    
+    return status;    
+}
+// end detect possibly changed key stuff
+
 static unsigned int count_keydata_parts(const char* key_data, size_t size) {
     unsigned int retval = 0;
 
@@ -2252,14 +2413,23 @@ static unsigned int count_keydata_parts(const char* key_data, size_t size) {
     return retval;
  }
 
+// This is for single keys, which is why we're using a boolean here.
 PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
                                size_t size, identity_list **private_idents,
                                stringlist_t** imported_keys,
-                               uint64_t* changed_key_index)
+                               bool* changed)
 {
     PEP_STATUS status = PEP_NO_KEY_IMPORTED;
     pgp_error_t err;
     pgp_cert_parser_t parser = NULL;
+    stringlist_t* keylist = NULL;
+    *changed = false;
+    
+    if (imported_keys) {
+        keylist = ((*imported_keys) ? *imported_keys : new_stringlist(NULL));
+        if (!keylist)
+            ERROR_OUT(NULL, PEP_OUT_OF_MEMORY, "setting retval keylist");
+    }    
 
     if (private_idents)
         *private_idents = NULL;
@@ -2353,8 +2523,21 @@ PEP_STATUS _pgp_import_keydata(PEP_SESSION session, const char *key_data,
             // If private_idents is not NULL and there is any private key
             // material, it will be saved.
             status = cert_save(session, cert, private_idents);
-            if (status == PEP_STATUS_OK)
+            if (status == PEP_STATUS_OK) {
                 status = PEP_KEY_IMPORTED;
+                if (imported_keys) {
+                    char* fpr = pgp_fingerprint_to_hex(pgp_cert_fingerprint(cert));
+                    if (!fpr) {
+                        status = PEP_UNKNOWN_ERROR; // KB: Should we do this?
+                        ERROR_OUT(NULL, status, "getting cert fingerprint hex");                    
+                    }
+                    stringlist_add(keylist, fpr); 
+                    
+                    status = _detect_and_update_changed_ascii_key(session, key_data, fpr, changed);  
+                    if (status != PEP_STATUS_OK)
+                        ERROR_OUT(NULL, status, "detecting / changing ascii key in DB");                    
+                }    
+            }    
             else
                 ERROR_OUT(NULL, status, "saving certificate");
         }
@@ -2391,9 +2574,12 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
                               stringlist_t** imported_keys,
                               uint64_t* changed_key_index)
 {
-
+    *changed_key_index = 0;
+    
     const char* pgp_begin = "-----BEGIN PGP";
     size_t prefix_len = strlen(pgp_begin);
+    
+    PEP_STATUS retval = PEP_STATUS_OK;
 
     // Because we also import binary keys we have to be careful with this.
     // 
@@ -2407,9 +2593,15 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
     }
 
     unsigned int keycount = count_keydata_parts(key_data, size);
-    if (keycount < 2)
-        return(_pgp_import_keydata(session, key_data, size, private_idents,
-                                   imported_keys, changed_key_index));
+    if (keycount < 2) {
+        bool changed = false;
+        retval = _pgp_import_keydata(session, key_data, size, private_idents,
+                                     imported_keys, &changed);
+        if (retval == PEP_KEY_IMPORTED)
+            *changed_key_index = 1; // only one key 
+        
+        return retval;    
+    }        
 
     unsigned int i;
     const char* curr_begin;
@@ -2417,7 +2609,9 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
 
     identity_list* collected_idents = NULL;
 
-    PEP_STATUS retval = PEP_KEY_IMPORTED;
+    retval = PEP_KEY_IMPORTED;
+    
+    int imported_key_index = 0;
             
     for (i = 0, curr_begin = key_data; i < keycount; i++) {
         const char* next_begin = NULL;
@@ -2433,12 +2627,13 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
         else
             curr_size = (key_data + size) - curr_begin;
 
+        bool changed = false;    
         PEP_STATUS curr_status = _pgp_import_keydata(session, 
                                                      curr_begin, 
                                                      curr_size, 
                                                      private_idents,
                                                      imported_keys,
-                                                     changed_key_index);
+                                                     &changed);
         if (private_idents && *private_idents) {
             if (!collected_idents)
                 collected_idents = *private_idents;
@@ -2446,6 +2641,10 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
                 identity_list_join(collected_idents, *private_idents);
             *private_idents = NULL;
         }
+
+        // Set changed bit for appropriately-indexed key
+        if (changed && curr_status == PEP_KEY_IMPORTED)
+            *changed_key_index |= (1 << imported_key_index++);
 
         if (curr_status != retval) {
             switch (curr_status) {

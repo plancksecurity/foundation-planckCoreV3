@@ -134,6 +134,9 @@ struct _pEpSession {
         sqlite3_stmt *cert_save_insert_subkeys;
         sqlite3_stmt *cert_save_insert_userids;
         sqlite3_stmt *delete_keypair;
+        // engine convenience hacks
+        sqlite3_stmt *insert_ascii_import_hash;
+        sqlite3_stmt *get_ascii_import_hash_for_fpr;
     } sq_sql;
 
     pgp_policy_t policy;
