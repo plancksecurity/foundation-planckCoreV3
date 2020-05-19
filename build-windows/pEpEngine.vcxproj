@@ -139,6 +139,7 @@
     <ClCompile Include="..\src\etpan_mime.c" />
     <ClCompile Include="..\src\growing_buf.c" />
     <ClCompile Include="..\src\identity_list.c" />
+    <ClCompile Include="..\src\internal_format.c" />
     <ClCompile Include="..\src\keymanagement.c" />
     <ClCompile Include="..\src\keyreset_command.c" />
     <ClCompile Include="..\src\KeySync_fsm.c" />
@@ -180,6 +181,7 @@
     <ClInclude Include="..\src\fsm_common.h" />
     <ClInclude Include="..\src\growing_buf.h" />
     <ClInclude Include="..\src\identity_list.h" />
+    <ClInclude Include="..\src\internal_format.h" />
     <ClInclude Include="..\src\keymanagement.h" />
     <ClInclude Include="..\src\KeySync_fsm.h" />
     <ClInclude Include="..\src\key_reset.h" />
