@@ -13,9 +13,11 @@ extern "C" {
 #endif
 
 bool import_attached_keys(
-        PEP_SESSION session, 
+        PEP_SESSION session,
         message *msg,
-        identity_list **private_idents
+        identity_list **private_idents, 
+        stringlist_t** imported_keys,
+        uint64_t* changed_keys
     );
 
 void attach_own_key(PEP_SESSION session, message *msg);

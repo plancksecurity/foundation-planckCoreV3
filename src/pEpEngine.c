@@ -4863,6 +4863,9 @@ DYNAMIC_API PEP_STATUS import_key(
 
     if (!(session && key_data))
         return PEP_ILLEGAL_VALUE;
+        
+    if (imported_keys && !*imported_keys && changed_key_index)
+        *changed_key_index = 0;
 
     return session->cryptotech[PEP_crypt_OpenPGP].import_key(session, key_data,
             size, private_keys, imported_keys, changed_key_index);
