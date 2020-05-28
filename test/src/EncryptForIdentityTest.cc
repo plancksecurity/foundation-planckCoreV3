@@ -114,8 +114,8 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
     const char* nobody_fpr = "1111111111111111111111111111111111111111";
 
     output_stream << "creating message…\n";
-    pEp_identity* alice = new_identity("pep.test.alice@pep-project.org", alice_fpr, PEP_OWN_USERID, "Alice Test");
-    pEp_identity* bob = new_identity("pep.test.bob@pep-project.org", NULL, "42", "Bob Test");
+    pEp_identity* alice = new_identity("payto://BIC/SYSTEMA", alice_fpr, PEP_OWN_USERID, "Alice Test");
+    pEp_identity* bob = new_identity("payto://BIC/SYSTEMB", NULL, "42", "Bob Test");
 
     alice->me = true;
 
@@ -285,8 +285,8 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity) {
 
     output_stream << "*** Now testing MIME_encrypt_for_self ***" << endl;
 
-    alice = new_identity("pep.test.alice@pep-project.org", NULL, PEP_OWN_USERID, "Alice Test");
-    bob = new_identity("pep.test.bob@pep-project.org", NULL, "42", "Bob Test");
+    alice = new_identity("payto://BIC/SYSTEMA", NULL, PEP_OWN_USERID, "Alice Test");
+    bob = new_identity("payto://BIC/SYSTEMB", NULL, "42", "Bob Test");
 
     output_stream << "Reading in alice_bob_encrypt_test_plaintext_mime.eml..." << endl;
 
