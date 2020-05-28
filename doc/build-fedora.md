@@ -48,7 +48,6 @@ make install
 mkdir -p ~/code/pep-engine
 hg clone https://pep.foundation/dev/repos/pEpEngine/ ~/code/pep-engine
 cd ~/code/pep-engine
-hg update sync
 mkdir ~/code/pep-engine/build
 ~~~
 
