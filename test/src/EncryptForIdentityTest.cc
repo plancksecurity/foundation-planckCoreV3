@@ -618,4 +618,3 @@ TEST_F(EncryptForIdentityTest, check_encrypt_for_identity_with_URI) {
     }
     output_stream << "Encrypted ONLY for Alice! Test passed. Move along. These are not the bugs you are looking for." << endl;
 }
-

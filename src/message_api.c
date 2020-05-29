@@ -3296,8 +3296,11 @@ static PEP_STATUS reconcile_src_and_inner_messages(message* src,
 
     PEP_STATUS status = PEP_STATUS_OK;
     
-    if (strcasecmp(src->from->address, inner_message->from->address) == 0)
+    if (src->from && inner_message->from && 
+           src->from->address && inner_message->from->address && 
+           strcasecmp(src->from->address, inner_message->from->address) == 0) {
         status = reconcile_identity(src->from, inner_message->from);
+    }    
     
     if (status == PEP_STATUS_OK && inner_message->to)
         status = reconcile_identity_lists(src->to, inner_message->to);
