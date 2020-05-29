@@ -479,7 +479,7 @@ TEST_F(KeyResetMessageTest, revoke_and_check_receive_message) {
     m_queue.clear();
     
     message* enc_msg = NULL;
-    mime_decode_message(inbox.c_str(), inbox.size(), &enc_msg, NULL);
+    mime_decode_message(inbox.c_str(), inbox.size(), &enc_msg);
     
     message* dec_msg = NULL;
     stringlist_t* keylist = NULL;
