@@ -566,10 +566,25 @@ struct mailimf_mailbox * mailbox_from_string(
     if (_name == NULL)
         goto enomem;
 
-    _address = strdup(address);
-    if (_address == NULL)
-        goto enomem;
-
+    char* at = strstr(address, "@");
+    if (!at) {
+        // Presumed URI
+        int added_char_len = 6; // " " @URI 
+        int new_addr_len = strlen(address) + added_char_len + 1;
+        _address = calloc(new_addr_len, 1);
+        if (_address == NULL)
+            goto enomem;
+        
+        _address[0] = '"';
+        strlcat(_address, address, new_addr_len);
+        strlcat(_address, "\"@URI", new_addr_len);
+    }
+    else {
+        _address = strdup(address);
+        if (_address == NULL)
+            goto enomem;
+    }
+            
     mb = mailimf_mailbox_new(_name, _address);
     assert(mb);
     if (mb == NULL)
@@ -2071,6 +2086,7 @@ pEp_error:
 static pEp_identity *mailbox_to_identity(const struct mailimf_mailbox * mb)
 {
     char *username = NULL;
+    char *address = NULL;
 
     assert(mb);
     assert(mb->mb_addr_spec);
@@ -2086,14 +2102,30 @@ static pEp_identity *mailbox_to_identity(const struct mailimf_mailbox * mb)
             goto enomem;
     }
 
-    pEp_identity *ident = new_identity(mb->mb_addr_spec, NULL, NULL, username);
+    const char* raw_addr = mb->mb_addr_spec;
+    if (raw_addr && raw_addr[0] == '"') {
+        int addr_len = strlen(raw_addr);
+        if (addr_len >= 6) { // ""@URI
+            const char* endcheck = strstr(raw_addr + 1, "\"@URI");
+            if (endcheck && *(endcheck + 5) == '\0') {
+                int actual_size = addr_len - 6;
+                address = calloc(actual_size + 1, 1);
+                if (!address)
+                    goto enomem;
+                strlcpy(address, raw_addr + 1, actual_size + 1);    
+            }
+        }
+    }
+
+    pEp_identity *ident = new_identity(address ? address : raw_addr, NULL, NULL, username);
     if (ident == NULL)
         goto enomem;
     free(username);
-
+    free(address);
     return ident;
 
 enomem:
+    free(address);
     free(username);
     return NULL;
 }
