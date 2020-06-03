@@ -273,3 +273,99 @@ TEST_F(URIAddressTest, check_uri_address_encrypt) {
     
     // We don't check for anything here??? FIXME! WTF!
 }
+
+TEST_F(URIAddressTest, check_uri_address_tofu_1) {
+    const char* sys_a_addr = "payto://BIC/SYSTEMA";
+    const char* sys_b_addr = "payto://BIC/SYSTEMB";
+    const char* sys_a_fpr = "4334D6DB751A8CA2B4944075462AFDB6DA3FB4B9";
+    const char* sys_b_fpr = "F5199E0B0AC4059572DAD8EA76B63B2954139F26";
+    
+    slurp_and_import_key(session, "test_keys/priv/BIC_SYSTEMA_0xDA3FB4B9_priv.asc");
+    slurp_and_import_key(session, "test_keys/pub/BIC_SYSTEMA_0xDA3FB4B9_pub.asc");
+    slurp_and_import_key(session, "test_keys/pub/BIC_SYSTEMB_0x54139F26_pub.asc");
+
+    pEp_identity* me = new_identity(sys_a_addr, NULL, PEP_OWN_USERID, sys_a_addr);
+    PEP_STATUS status = set_own_key(session, me, sys_a_fpr);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+
+    status = myself(session, me);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_TRUE(me->fpr && me->fpr[0] != '\0');
+
+    pEp_identity* you = new_identity(sys_b_addr, NULL, "SYSTEM_B", NULL);
+
+/*
+    stringlist_t* keylist = NULL;
+    status = update_identity(session, you);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_TRUE(you->fpr && you->fpr[0] != '\0');
+*/
+    message* msg = new_message(PEP_dir_outgoing);
+
+    msg->from = me;
+    msg->to = new_identity_list(you);
+    msg->shortmsg = strdup("Smurfs");
+    msg->longmsg = strdup("Are delicious?");
+
+    message* enc_msg = NULL;
+    
+    // We are doing key election here on purpose.
+    status = encrypt_message(session, msg, NULL, &enc_msg, PEP_enc_PGP_MIME, 0);
+    ASSERT_EQ(status, PEP_STATUS_OK);
+
+    char* outmsg = NULL;
+    mime_encode_message(enc_msg, false, &outmsg, false);
+    output_stream << outmsg << endl;
+    
+    if (false) {
+        ofstream outfile;
+        outfile.open("test_mails/system_a_to_b_755_part_1.eml");
+        outfile << outmsg;    
+        outfile.close();    
+    }
+    free(outmsg);
+    free_message(msg);
+    free_message(enc_msg);
+}
+
+TEST_F(URIAddressTest, check_uri_address_tofu_2) {
+    const char* sys_a_addr = "payto://BIC/SYSTEMA";
+    const char* sys_b_addr = "payto://BIC/SYSTEMB";
+    const char* sys_a_fpr = "4334D6DB751A8CA2B4944075462AFDB6DA3FB4B9";
+    const char* sys_b_fpr = "F5199E0B0AC4059572DAD8EA76B63B2954139F26";
+    
+    slurp_and_import_key(session, "test_keys/pub/BIC_SYSTEMB_0x54139F26_pub.asc");
+    slurp_and_import_key(session, "test_keys/priv/BIC_SYSTEMB_0x54139F26_priv.asc");
+    slurp_and_import_key(session, "test_keys/pub/BIC_SYSTEMA_0xDA3FB4B9_pub.asc");
+
+    pEp_identity* me = new_identity(sys_b_addr, NULL, PEP_OWN_USERID, sys_b_addr);
+    PEP_STATUS status = set_own_key(session, me, sys_b_fpr);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+
+    status = myself(session, me);
+    ASSERT_EQ(status , PEP_STATUS_OK);
+    ASSERT_TRUE(me->fpr && me->fpr[0] != '\0');  
+    
+    pEp_identity* you = new_identity(sys_b_addr, NULL, "SYSTEM_B", NULL);
+    status = update_identity(session, you);
+        
+    string msg_txt = slurp("test_mails/system_a_to_b_755_part_1.eml");
+    message* msg = NULL;
+    
+    mime_decode_message(msg_txt.c_str(), msg_txt.size(), &msg, NULL);
+
+    message* dec_msg = NULL;
+    stringlist_t* keylist = NULL;
+    PEP_rating rating;
+    PEP_decrypt_flags_t flags = 0;
+
+    status = decrypt_message(session, msg, &dec_msg, &keylist, &rating, &flags); 
+
+    ASSERT_EQ(status, PEP_STATUS_OK);
+    ASSERT_NE(dec_msg, nullptr);
+    ASSERT_NE(dec_msg->from, nullptr);
+    ASSERT_NE(dec_msg->to, nullptr);
+    ASSERT_NE(dec_msg->to->ident, nullptr);
+    ASSERT_STREQ(dec_msg->from->address, "payto://BIC/SYSTEMA");
+    ASSERT_STREQ(dec_msg->to->ident->address, "payto://BIC/SYSTEMB");    
+}
