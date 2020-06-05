@@ -2582,7 +2582,7 @@ PEP_STATUS pgp_import_keydata(PEP_SESSION session, const char *key_data,
                               stringlist_t** imported_keys,
                               uint64_t* changed_key_index)
 {
-    if (imported_keys && !changed_key_index)
+    if (!imported_keys && changed_key_index)
         return PEP_ILLEGAL_VALUE;
         
     const char* pgp_begin = "-----BEGIN PGP";
