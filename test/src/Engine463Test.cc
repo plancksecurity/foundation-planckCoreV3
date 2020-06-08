@@ -88,9 +88,9 @@ TEST_F(Engine463Test, check_engine_463_no_own_key) {
     const string claudio_keys = slurp("test_keys/priv/notfound-alt-pub_and_private.asc");
     const string fake_schleuder_key = slurp("test_keys/pub/fake-schleuder.asc");
 
-    PEP_STATUS status = import_key(session, claudio_keys.c_str(), claudio_keys.length(), NULL, NULL, NULL);
+    PEP_STATUS status = import_key(session, claudio_keys.c_str(), claudio_keys.length(), NULL);
     ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
-    status = import_key(session, fake_schleuder_key.c_str(), fake_schleuder_key.length(), NULL, NULL, NULL);
+    status = import_key(session, fake_schleuder_key.c_str(), fake_schleuder_key.length(), NULL);
     ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
 
     // Ok, bring in message, decrypt, and see what happens.
@@ -111,9 +111,9 @@ TEST_F(Engine463Test, check_engine_463_own_key) {
     const string claudio_keys = slurp("test_keys/priv/notfound-alt-pub_and_private.asc");
     const string fake_schleuder_key = slurp("test_keys/pub/fake-schleuder.asc");
 
-    PEP_STATUS status = import_key(session, claudio_keys.c_str(), claudio_keys.length(), NULL, NULL, NULL);
+    PEP_STATUS status = import_key(session, claudio_keys.c_str(), claudio_keys.length(), NULL);
     ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
-    status = import_key(session, fake_schleuder_key.c_str(), fake_schleuder_key.length(), NULL, NULL, NULL);
+    status = import_key(session, fake_schleuder_key.c_str(), fake_schleuder_key.length(), NULL);
     ASSERT_EQ(status , PEP_TEST_KEY_IMPORT_SUCCESS);
 
     pEp_identity* own_ident = new_identity("claudio+engine-463@pep.foundation", "A039BC60E43E0DFDDC9DE8663B48C38325210C88", PEP_OWN_USERID, "Not Actually Claudio");

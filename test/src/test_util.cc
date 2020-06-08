@@ -72,7 +72,7 @@ PEP_STATUS read_file_and_import_key(PEP_SESSION session, const char* fname) {
     const std::string key = slurp(fname);
     PEP_STATUS status = (key.empty() ? PEP_KEY_NOT_FOUND : PEP_STATUS_OK);
     if (status == PEP_STATUS_OK)
-        status = import_key(session, key.c_str(), key.size(), NULL, NULL, NULL);
+        status = import_key(session, key.c_str(), key.size(), NULL);
     return status;
 }
 
@@ -450,7 +450,7 @@ std::string tl_ident_flags_String(identity_flags_t fl) {
 }
 bool slurp_and_import_key(PEP_SESSION session, const char* key_filename) {
     std::string keyfile = slurp(key_filename);
-    if (import_key(session, keyfile.c_str(), keyfile.size(), NULL, NULL, NULL) != PEP_TEST_KEY_IMPORT_SUCCESS)
+    if (import_key(session, keyfile.c_str(), keyfile.size(), NULL) != PEP_TEST_KEY_IMPORT_SUCCESS)
         return false;
     return true;
 }

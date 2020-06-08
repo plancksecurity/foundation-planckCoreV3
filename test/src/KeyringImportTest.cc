@@ -93,7 +93,7 @@ TEST_F(KeyringImportTest, check_import1) {
 #ifdef USE_SEQUOIA
     const string pub_key = slurp("test_keys/pub/pep-test-keyring.asc");
 
-    PEP_STATUS statuspub = import_key(session, pub_key.c_str(), pub_key.length(), NULL, NULL, NULL);
+    PEP_STATUS statuspub = import_key(session, pub_key.c_str(), pub_key.length(), NULL);
     ASSERT_EQ(statuspub , PEP_TEST_KEY_IMPORT_SUCCESS);
 
     struct entry {
@@ -145,7 +145,7 @@ TEST_F(KeyringImportTest, check_import2) {
 #ifdef USE_SEQUOIA
     const string pub_key = slurp("test_keys/pub/pep-test-android-keyring.pgp");
 
-    PEP_STATUS statuspub = import_key(session, pub_key.c_str(), pub_key.length(), NULL, NULL, NULL);
+    PEP_STATUS statuspub = import_key(session, pub_key.c_str(), pub_key.length(), NULL);
     ASSERT_EQ(statuspub , PEP_TEST_KEY_IMPORT_SUCCESS);
 
     struct entry {

@@ -71,7 +71,7 @@ namespace {
 
                 // Engine is up. Keep on truckin'
                 string recip_key = slurp("test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
-                PEP_STATUS status = import_key(session, recip_key.c_str(), recip_key.size(), NULL, NULL, NULL);
+                PEP_STATUS status = import_key(session, recip_key.c_str(), recip_key.size(), NULL);
                 ASSERT_EQ(status, PEP_TEST_KEY_IMPORT_SUCCESS);
 
             }

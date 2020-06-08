@@ -900,12 +900,6 @@ DYNAMIC_API PEP_STATUS delete_keypair(PEP_SESSION session, const char *fpr);
 //      size (in)                   amount of data to handle
 //      private_keys (out)          list of identities containing the 
 //                                  private keys that have been imported
-//      imported_keys (out)         list of actual keys imported
-//      changed_key_index (out)     bitvector - corresponds to the first 64 keys
-//                                  imported. If nth bit is set, import changed a
-//                                  key corresponding to the nth element in
-//                                  imported keys (i.e. key was in DB and was
-//                                  changed by import)
 //
 //  return value:
 //      PEP_STATUS_OK = 0       key was successfully imported
@@ -920,10 +914,46 @@ DYNAMIC_API PEP_STATUS import_key(
         PEP_SESSION session,
         const char *key_data,
         size_t size,
-        identity_list **private_keys,
-        stringlist_t** imported_keys,
-        uint64_t* changed_key_index        
+        identity_list **private_keys       
     );
+
+// _import_key_with_fpr_return() - 
+//                INTERNAL FUNCTION - import keys from data, return optional list 
+//                of fprs imported
+//
+//  parameters:
+//      session (in)                session handle
+//      key_data (in)               key data, i.e. ASCII armored OpenPGP key
+//      size (in)                   amount of data to handle
+//      private_keys (out)          list of identities containing the 
+//                                  private keys that have been imported
+//      imported_keys (out)         if non-NULL, list of actual keys imported
+//      changed_public_keys (out)   if non-NULL AND imported_keys is non-NULL:
+//                                  bitvector - corresponds to the first 64 keys
+//                                  imported. If nth bit is set, import changed a
+//                                  key corresponding to the nth element in
+//                                  imported keys (i.e. key was in DB and was
+//                                  changed by import)
+//
+//  return value:
+//      PEP_STATUS_OK = 0       key was successfully imported
+//      PEP_OUT_OF_MEMORY       out of memory
+//      PEP_ILLEGAL_VALUE       there is no key data to import, or imported keys was NULL and 
+//                              changed_public_keys was not
+//
+//  caveat:
+//      private_keys and imported_keys goes to the ownership of the caller
+//      private_keys and imported_keys can be left NULL, it is then ignored
+//      *** THIS IS THE ACTUAL FUNCTION IMPLEMENTED BY CRYPTOTECH "import_key" ***
+
+PEP_STATUS _import_key_with_fpr_return(
+        PEP_SESSION session,
+        const char *key_data,
+        size_t size,
+        identity_list** private_keys,
+        stringlist_t** imported_keys,
+        uint64_t* changed_public_keys // use as bit field for the first 64 changed keys
+);
 
 
 // export_key() - export ascii armored key

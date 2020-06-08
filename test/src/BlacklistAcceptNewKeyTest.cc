@@ -100,7 +100,7 @@ TEST_F(BlacklistAcceptNewKeyTest, check_blacklist_accept_new_key) {
     const string keytext = slurp("test_keys/pub/blacklisted_pub.asc");
 
     /* import it into pep */
-    PEP_STATUS status7 = import_key(session, keytext.c_str(), keytext.length(), NULL, NULL, NULL);
+    PEP_STATUS status7 = import_key(session, keytext.c_str(), keytext.length(), NULL);
 
     const char* bl_fpr_1 = "279765A2FEB5B7C731B861D93E4CEFD9F7AF4684";
     bool is_blacklisted = false;

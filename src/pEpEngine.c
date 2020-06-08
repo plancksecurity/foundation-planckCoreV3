@@ -4853,9 +4853,18 @@ DYNAMIC_API PEP_STATUS import_key(
         PEP_SESSION session,
         const char *key_data,
         size_t size,
+        identity_list **private_keys)
+{
+    return _import_key_with_fpr_return(session, key_data, size, private_keys, NULL, NULL);
+}
+
+PEP_STATUS _import_key_with_fpr_return(
+        PEP_SESSION session,
+        const char *key_data,
+        size_t size,
         identity_list **private_keys,
         stringlist_t** imported_keys,
-        uint64_t* changed_key_index        
+        uint64_t* changed_public_keys        
     )
 {
     assert(session);
@@ -4864,11 +4873,11 @@ DYNAMIC_API PEP_STATUS import_key(
     if (!(session && key_data))
         return PEP_ILLEGAL_VALUE;
         
-    if (imported_keys && !*imported_keys && changed_key_index)
-        *changed_key_index = 0;
+    if (imported_keys && !*imported_keys && changed_public_keys)
+        *changed_public_keys = 0;
 
     return session->cryptotech[PEP_crypt_OpenPGP].import_key(session, key_data,
-            size, private_keys, imported_keys, changed_key_index);
+            size, private_keys, imported_keys, changed_public_keys);
 }
 
 DYNAMIC_API PEP_STATUS recv_key(PEP_SESSION session, const char *pattern)

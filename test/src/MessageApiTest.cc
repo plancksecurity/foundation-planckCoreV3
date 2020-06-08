@@ -94,11 +94,11 @@ TEST_F(MessageApiTest, check_message_api) {
     const string alice_priv_key = slurp("test_keys/priv/pep-test-alice-0x6FF00E97_priv.asc");
     const string bob_pub_key = slurp("test_keys/pub/pep-test-bob-0xC9C2EE39_pub.asc");
 
-    PEP_STATUS status0 = import_key(session, alice_pub_key.c_str(), alice_pub_key.size(), NULL, NULL, NULL);
+    PEP_STATUS status0 = import_key(session, alice_pub_key.c_str(), alice_pub_key.size(), NULL);
     ASSERT_EQ(status0 , PEP_TEST_KEY_IMPORT_SUCCESS);
-    status0 = import_key(session, alice_priv_key.c_str(), alice_priv_key.size(), NULL, NULL, NULL);
+    status0 = import_key(session, alice_priv_key.c_str(), alice_priv_key.size(), NULL);
     ASSERT_EQ(status0 , PEP_TEST_KEY_IMPORT_SUCCESS);
-    status0 = import_key(session, bob_pub_key.c_str(), bob_pub_key.size(), NULL, NULL, NULL);
+    status0 = import_key(session, bob_pub_key.c_str(), bob_pub_key.size(), NULL);
     ASSERT_EQ(status0 , PEP_TEST_KEY_IMPORT_SUCCESS);
     // message_api test code
 

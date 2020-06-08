@@ -103,7 +103,7 @@ TEST_F(LeastColorGroupTest, check_least_color_group) {
     for (auto name : keynames) {
         output_stream << "\t read keyfile \"" << name << "\"..." << std::endl;
         const string keytextkey = slurp(name);
-        PEP_STATUS statuskey = import_key(session, keytextkey.c_str(), keytextkey.length(), NULL, NULL, NULL);
+        PEP_STATUS statuskey = import_key(session, keytextkey.c_str(), keytextkey.length(), NULL);
         ASSERT_EQ(statuskey , PEP_TEST_KEY_IMPORT_SUCCESS);
     }
 

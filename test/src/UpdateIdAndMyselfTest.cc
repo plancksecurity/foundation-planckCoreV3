@@ -258,7 +258,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     // 1. create original identity
     const string alex_pub_key = slurp("test_keys/pub/pep.test.alexander-0x26B54E4E_pub.asc");
 
-    PEP_STATUS statuspub = import_key(session, alex_pub_key.c_str(), alex_pub_key.length(), NULL, NULL, NULL);
+    PEP_STATUS statuspub = import_key(session, alex_pub_key.c_str(), alex_pub_key.length(), NULL);
     ASSERT_EQ(statuspub, PEP_TEST_KEY_IMPORT_SUCCESS);
 
     pEp_identity* alex = new_identity(alex_address, alex_fpr, alex_userid, alex_username);
@@ -451,7 +451,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     const char* bella_username = "Annabella the Great";
     const string bella_pub_key = slurp("test_keys/pub/pep.test.bella-0xAF516AAE_pub.asc");
 
-    statuspub = import_key(session, bella_pub_key.c_str(), bella_pub_key.length(), NULL, NULL, NULL);
+    statuspub = import_key(session, bella_pub_key.c_str(), bella_pub_key.length(), NULL);
     ASSERT_EQ(statuspub, PEP_TEST_KEY_IMPORT_SUCCESS);
 
     pEp_identity* bella = new_identity(bella_address, bella_fpr, bella_userid, bella_username);
@@ -500,7 +500,7 @@ TEST_F(UpdateIdAndMyselfTest, check_update_identity_and_myself) {
     const char* bernd_username = "Bernd das Brot der Ultimative Testkandidat";
     const string bernd_pub_key = slurp("test_keys/pub/bernd.das.brot-0xCAFAA422_pub.asc");
 
-    statuspub = import_key(session, bernd_pub_key.c_str(), bernd_pub_key.length(), NULL, NULL, NULL);
+    statuspub = import_key(session, bernd_pub_key.c_str(), bernd_pub_key.length(), NULL);
     ASSERT_EQ(statuspub, PEP_TEST_KEY_IMPORT_SUCCESS);
 
     pEp_identity* bernd = new_identity(bernd_address, bernd_fpr, bernd_userid, bernd_username);
